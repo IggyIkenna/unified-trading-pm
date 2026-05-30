@@ -126,8 +126,11 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
       forward-poll failure. Root cause: `launch-footystats-forward-poll.sh` passed `VM_ASSET_GROUP=SPORTS` (uppercase)
       → `InstrumentsHandler.preflight()` raised "Unknown asset_group 'SPORTS'" → immediate exit 1. Fix landed in
       deployment-service@9ded013 (lowercase `VM_ASSET_GROUP=sports`). See also §6G for full diagnosis. — deployment-service@9ded013
-- [ ] [AGENT] P2. **GCE-stuck-RUNNING after self-terminate** (us-backfill: done on Understat 404-wall 3+ days ago but
+- [x] ✅ [AGENT] P2. **GCE-stuck-RUNNING after self-terminate** (us-backfill: done on Understat 404-wall 3+ days ago but
       GCE still RUNNING): ensure `VM_SHUTDOWN_ON_COMPLETION` actually deletes the instance, not just exits the process.
+      Root cause: `backup-vm-logs.sh` in the self-delete block had no timeout — a network hang blocked `gcloud instances
+      delete` indefinitely. Also: `launch-understat-backfill-vm.sh` had uppercase `VM_ASSET_GROUP=SPORTS` (same bug
+      fixed for footystats in 9ded013 but missed for understat). Fixed both: — deployment-service@9aa0446
 - [x] ✅ [AGENT] P1. **tradfi reprocess**: the 5 tradfi MDPS VMs (deleted 2026-05-27) ran the pre-2026-05-26 OHLCV adapter
       that emitted 1.15M `SCHEMA_VALIDATION_FAILED` NaN rows. Reprocess fresh on the fixed session-grid adapter.
       Launched 4 VMs on fixed MDPS code (tarball 2026-05-28 19:51 GMT, includes session-grid fix @b67cddd):
