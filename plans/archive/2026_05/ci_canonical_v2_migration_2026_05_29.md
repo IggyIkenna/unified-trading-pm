@@ -3,7 +3,7 @@ title: CI canonical v2 migration — ghost-workflow workaround across PM/UAC/UTL
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
+status: archived
 type: infra
 estimate_class: infra
 estimate_baseline_ai_days: 5
@@ -254,8 +254,11 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       - execution-service: deleted `workspace-qg.yml` @94596ddf
       Remaining 4 repos blocked on pre-existing code quality issues:
       - features-service: 7 lint errors; batch-live-recon: coverage 78.2%; instruments-service: coverage 76.8%; deployment-ui: GH_PAT auth
-- [ ] [CODEX] P1. Update `codex/08-workflows/ci-cd-flow.md` to reference the v2 job key as the canonical required-check
+- [x] ✅ [CODEX] P1. Update `codex/08-workflows/ci-cd-flow.md` to reference the v2 job key as the canonical required-check
       name. Add SUPERSEDED banner to any sub-doc that names the v1 `quality-gates` context.
+      — ci-cd-flow.md § quality-gates-v2 added (task -026); deployment-flow.md required check updated to quality-gates-v2
+      with RETIRED note for v1; quickmerge-architecture.md + feature-branch-workflow.md reference local script only
+      (no GHA workflow refs — no update needed). unified-trading-pm@latest
 - [x] ✅ [CODEX] P1. Update `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` with Option D results +
       close-out: which repos shipped v2 successfully, whether v2 ghosted (Plan-B trigger), GH ticket status.
       — unified-trading-pm@6975bd86
@@ -272,7 +275,13 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       features-service (lint), batch-live-reconciliation-service (coverage), instruments-service (coverage),
       deployment-ui (GH_PAT). Enable on each once their QG failures are fixed.
       **Reverting** (emergency): `gh api repos/IggyIkenna/<repo>/branches/main/protection/enforce_admins -X DELETE`.
-- [ ] [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE.
+- [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE. **DONE 2026-05-30**
+      5-step audit result:
+      1. Deferred items scanned — see "## Deferred work" section below.
+      2. Deferred banner added.
+      3. Codex alignment: ci-cd-flow.md ✅, deployment-flow.md ✅ (required check updated), quickmerge-arch ✅ (no GHA refs), feature-branch-workflow ✅ (no GHA refs), issue doc ✅ (RESOLVED), CLAUDE.md ✅.
+      4. New workspace contract (quality-gates-v2 as required check) documented in CLAUDE.md + ci-cd-flow.md ✅.
+      5. No locked_by in frontmatter — N/A.
 
 ## Success criteria
 
@@ -312,7 +321,21 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 - **Removing v1 `python-quality-gates.yml` from PM** — held until GH Support clears the cache; named successor:
   `cleanup_v1_quality_gates_workflows_<TBD>.md`
 
+## Deferred work — migrated to:
+
+| Item | Destination | Status |
+|------|-------------|--------|
+| v1 cleanup for features-service, batch-live-recon, instruments-service, deployment-ui | File `cleanup_v1_quality_gates_workflows_<date>.md` once pre-existing QG failures fixed | **BLOCKED** on code quality fixes |
+| enforce_admins for same 4 repos | Same cleanup plan | **BLOCKED** on code quality fixes |
+| Remove PM `python-quality-gates.yml` (v1 callee) | `cleanup_v1_quality_gates_workflows_<date>.md` | **BLOCKED** on GH Support ticket #4422570 close |
+| Cloud Build / Artifact Registry canonical (step 7) | `cloud-build-on-main-canonical` plan (if not present, file separately) | Out of scope |
+
+---
+
 ## Provenance
 
 Operator chat 2026-05-29 (slot 1 worktree `.tabs/1/`). Canonical flow operator-stated verbatim in chat. Built on top of
 issue doc `workspace_qg_ci_startup_failure_2026_05_26.md` (slot-1 May-26/27 investigation + GH Support ticket #4422570).
+
+**PLAN STATUS: ARCHIVED 2026-05-30** — Core mission complete (ghost cache escape via Option D, all 10 repos on
+quality-gates-v2, codex aligned). Deferred items documented above.

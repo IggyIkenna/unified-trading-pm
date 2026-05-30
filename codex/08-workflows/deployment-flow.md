@@ -51,10 +51,13 @@ created: 2026-05-15
 
 **Branch protection enforcement** (both `staging` and `main`):
 
-- Required status check: `quality-gates` — nothing merges without CI green
+- Required status check: `quality-gates-v2` — nothing merges without CI green (v1 `quality-gates`/`workspace-qg`
+  **RETIRED 2026-05-29** — see `codex/08-workflows/ci-cd-flow.md` § quality-gates-v2 and
+  `plans/active/ci_canonical_v2_migration_2026_05_29.md` for migration history)
 - Applies to all PRs regardless of how created (manual or quickmerge)
+- Caller file: `.github/workflows/quality-gates-v2.yml`; callee: `python-quality-gates-v2.yml` in PM
 
-**Note on LDR:** `live-defi-rollout` has no remote CI — `workspace-qg` does NOT trigger on LDR pushes. Local
+**Note on LDR:** `live-defi-rollout` has no remote CI — `quality-gates-v2` does NOT trigger on LDR pushes. Local
 `quality-gates.sh` + sentinel is the only gate on LDR. This is by design: LDR is a rapid-dev branch; remote CI fires
 only at the staging PR boundary.
 
