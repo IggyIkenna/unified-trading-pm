@@ -1,3 +1,8 @@
+---
+scope: [engineer, admin]
+last_reviewed: 2026-05-30
+---
+
 # Agent Orchestrator — Backlog ↔ State DB Alignment Architecture
 
 > **SSOT**: `agent-orchestrator/server/regen_backlog_from_plan.py`

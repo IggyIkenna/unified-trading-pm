@@ -1,3 +1,8 @@
+---
+scope: [engineer, admin]
+last_reviewed: 2026-05-30
+---
+
 # Agent Orchestrator — AutoSpawn Architecture
 
 > **SSOT**: `agent-orchestrator/server/autospawn.py`

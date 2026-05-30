@@ -1,3 +1,8 @@
+---
+scope: [engineer, admin]
+last_reviewed: 2026-05-30
+---
+
 # Agent Orchestrator — Host-Offline Failover Architecture
 
 > **SSOT**: `agent-orchestrator/server/failover.py`
