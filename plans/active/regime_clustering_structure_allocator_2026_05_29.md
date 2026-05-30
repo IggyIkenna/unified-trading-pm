@@ -141,8 +141,11 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   features" lever — it enriches regime discovery beyond price/fundamental features alone.
   `vectorise_pnl_sub_vectors()` in rolling_compute.py: pivots tall→wide, {archetype}_{metric} columns, null for absent
   archetypes. 5 unit tests; basedpyright 0 errors. Pushed features-service 936032d0.
-- [ ] [TEST] P2. PIT test: assert every `strategy_pnl_archetype` value is knowable strictly before its row `timestamp`
+- [x] [TEST] P2. PIT test: assert every `strategy_pnl_archetype` value is knowable strictly before its row `timestamp`
   (extend `LookaheadBiasError` coverage).
+  11 tests across 4 classes (TestInputEventsPitSafe, TestWindowBoundaryPitCorrectness,
+  TestAvailableAtSemanticsNotFuture, TestPitEnforcerAndComputeAgreement); 0 ruff/basedpyright errors.
+  Pushed features-service 994e2479.
 
 ## Phase 1 — Regime clustering as a PIT feature (features-service)
 
