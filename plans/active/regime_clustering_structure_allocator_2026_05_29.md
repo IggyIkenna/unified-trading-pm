@@ -258,9 +258,11 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 5 — Analog-based execution gate (steal from Blue Flame — the genuinely good idea)
 
-- [ ] [EXECUTION] P2. Risk overlay: kNN of analogous historical states → if analogs executed with heavy slippage/loss,
+- [x] ✅ [EXECUTION] P2. Risk overlay: kNN of analogous historical states → if analogs executed with heavy slippage/loss,
   size down or veto; if clean, soft-Kelly up. Conditions on realised execution quality (≈exogenous), so survives the
   selection-bias critique. Layered on top of Phase 3 sizing, reads the same regime artifact.
+  — strategy-service@8d81652 | `AnalogExecutionGate` kNN gate; veto/size-down/neutral/kelly-boost ladder;
+  13 unit tests; pure stdlib, no I/O.
 
 ## Phase 6 — Multi-timeframe + fusion
 
