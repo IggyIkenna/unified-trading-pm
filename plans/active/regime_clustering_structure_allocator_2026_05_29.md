@@ -125,8 +125,11 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Phase 0 — Unblock per-archetype PnL attribution (foundation)
 
-- [ ] [STRATEGY] P2. Wire real per-archetype `pnl_realized` / `pnl_unrealized` into `StrategyPnlStreamEvent` — replace the
+- [x] ✅ [STRATEGY] P2. Wire real per-archetype `pnl_realized` / `pnl_unrealized` into `StrategyPnlStreamEvent` — replace the
   `0` placeholders (`strategy-service/.../carry_and_yield/staked_basis.py:601-620` + APD `price_dispersion.py`).
+  **DONE 2026-05-30** — strategy-service@8deaf28: `_session_pnl_realized` + `_session_pnl_unrealized` added to
+  `BaseArchetypeEngineV2`; staked_basis accumulates net_carry bps/yr income per elapsed hour; APD accumulates
+  expected round-trip PnL (gross − cost) per instruction. 8 tests pass; ruff + basedpyright clean.
 - [ ] [FEATURES] P2. Subscribe the PnL stream in features-service, roll to lagged 30d/Nd windows, land as feature group
   `strategy_pnl_archetype` through the existing `FeatureWriter` PIT path. Regime-focused → lag is acceptable by design.
 - [ ] [FEATURES] P2. **PnL vectorisation = one sub-vector per archetype** (each archetype contributes its own
