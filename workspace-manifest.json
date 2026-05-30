@@ -106,7 +106,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 87,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -332,7 +332,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "LOCAL_PASS",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -875,7 +875,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1086,7 +1086,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1143,7 +1143,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1197,7 +1197,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1223,6 +1223,40 @@
         "cefi",
         "data-ingestion",
         "standard"
+      ]
+    },
+    "ml-inference-service": {
+      "type": "service",
+      "tier": 3,
+      "status": "consolidated-into-ml-service",
+      "archived_into": "ml-service",
+      "archive_date": "2026-05-20",
+      "consolidation_plan": "ml_repo_consolidation_2026_05_19",
+      "github_url": "https://github.com/IggyIkenna/ml-inference-service",
+      "note": "Awaiting operator: gh repo archive IggyIkenna/ml-inference-service",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "NO_QG",
+      "coverage_pct": 0,
+      "bypass_audit_path": null,
+      "testing_level": "none",
+      "skipped_gates": [
+        "all"
+      ],
+      "tags": [
+        "ml",
+        "archived",
+        "supporting"
       ]
     },
     "ml-service": {
@@ -1281,10 +1315,47 @@
         "ml",
         "consolidation-target"
       ],
-      "consolidates": [],
+      "consolidates": [
+        "ml-training-service",
+        "ml-inference-service"
+      ],
       "consolidation_status": "skeleton",
       "consolidation_plan": "plans/active/ml_repo_consolidation_2026_05_19.md",
       "created": "2026-05-19"
+    },
+    "ml-training-service": {
+      "type": "service",
+      "tier": 3,
+      "status": "consolidated-into-ml-service",
+      "archived_into": "ml-service",
+      "archive_date": "2026-05-20",
+      "consolidation_plan": "ml_repo_consolidation_2026_05_19",
+      "github_url": "https://github.com/IggyIkenna/ml-training-service",
+      "note": "Awaiting operator: gh repo archive IggyIkenna/ml-training-service",
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "unified-api-contracts",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        }
+      ],
+      "ci_status": "NO_QG",
+      "coverage_pct": 0,
+      "bypass_audit_path": null,
+      "testing_level": "none",
+      "skipped_gates": [
+        "all"
+      ],
+      "tags": [
+        "ml",
+        "archived",
+        "supporting"
+      ]
     },
     "pnl-attribution-service": {
       "type": "service",
@@ -1309,7 +1380,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "coverage_pct": 46,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1664,7 +1735,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1777,7 +1848,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "LOCAL_PASS",
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
@@ -2003,6 +2074,8 @@
           "fund-administration-service",
           "market-data-processing-service",
           "market-tick-data-service",
+          "ml-inference-service",
+          "ml-training-service",
           "strategy-service",
           "trading-agent-service"
         ]
@@ -2278,6 +2351,8 @@
         "features-delta-one-service",
         "features-calendar-service",
         "features-volatility-service",
+        "ml-training-service",
+        "ml-inference-service",
         "strategy-service (+ live mode seams; subsumes risk/position/pnl sub-packages 2026-05-19)",
         "execution-service",
         "alerting-service"
@@ -2331,6 +2406,8 @@
         "unified-trading-library",
         "unified-domain-client",
         "unified-ml-interface",
+        "ml-training-service",
+        "ml-inference-service",
         "strategy-service (sports strategy module + pnl sub-package, absorbed pnl-attribution-service 2026-05-19)"
       ],
       "requires_cefi_path": false,

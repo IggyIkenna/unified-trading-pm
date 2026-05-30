@@ -202,8 +202,10 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   top-of-book size). Tardis historical sub = `BLOCKED-CREDENTIALS` (operator-acked 2026-05-30). **Gaps to build**: full
   order-book depth per strike (only top-of-book size today); live Deribit REST chain (not just Tardis batch); multi-venue
   (Binance/Bybit/OKX).
-- [ ] [EXECUTION] P1. Slippage model uses quote **size/depth + partial fills**, not just spread width — options books are
+- [x] ✅ [EXECUTION] P1. Slippage model uses quote **size/depth + partial fills**, not just spread width — options books are
   thin; "can't fill the size" is the binding constraint.
+  `OptionsSlippageModel`: top-of-book size check + linear price impact for excess qty; plugged into
+  `DiscreteStructureAllocator` via `slippage_fn` parameter. 12 unit tests. strategy-service@10b8eaa.
 - [ ] [STRATEGY] P1. P&L computed on rounded discrete contracts incl. exchange fees + modelled slippage (no synthetic-mid
   fills).
 

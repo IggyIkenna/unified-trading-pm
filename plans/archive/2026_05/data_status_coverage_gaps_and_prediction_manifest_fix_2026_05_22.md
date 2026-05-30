@@ -7,21 +7,9 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 priority: P2
-status: active
-locked_since: 2026-05-21
+status: archived
+archived: 2026-05-23
 ---
-
-## Deferred work — migrated to:
-
-- P1: Schema column in drilldown (UI shows schema per canonical_question_group; verify UAC CANONICAL_GROUP_METADATA link
-  per group) → `plans/epics/predictions_master.md` P3 block (**MIGRATED FROM:**
-  data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22)
-- P1: Prediction bucket naming mismatch fix (IS writes to old bucket; Cloud Run consolidator targets new prd bucket) →
-  already tracked in `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e (env-tier rollout to IS prediction
-  bucket) (**MIGRATED FROM:** data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22)
-- P1 BACKGROUND: `instr-backfill-sports` VM long-running historical fill (ETA >60 days) →
-  `plans/epics/instruments_master.md` P2 block (**MIGRATED FROM:**
-  data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22)
 
 ## Context
 
@@ -159,8 +147,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       Consolidator run evidence: `bwckg12s1.output`. Successor for systemic fix:
       `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e (sports). Completed: slot-7 2026-05-22.
 
-- [x] ✅ DEFERRED-BACKGROUND [VM-RUNNING: instr-backfill-sports ETA ~1460h — long-running background P1, no May-23
-      dependency] [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Monitor `instr-backfill-sports` VM**: check
       `gcloud compute instances describe instr-backfill-sports --zone=asia-northeast1-c` until STATUS=TERMINATED. Verify
       3063 missing dates drop to < 200. **Current status (14:05 UTC)**: VM RUNNING since ~08:00 UTC. Shard
       `instr-backfill-sports.parquet` at 2020-06-01→2020-06-09 (589 rows, all `empty_confirmed` — COVID era no
@@ -231,8 +218,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 
 #### 3.4b — Prediction bucket naming mismatch (P1 deferred)
 
-- [x] ✅ DEFERRED [BUCKET-NAMING-MIGRATION: tracked in bucket_name_ssot_canonicalisation_2026_05_10 Phase 0e] [SCRIPT]
-      P1. **Fix prediction bucket naming mismatch** `**DEFERRED**`: IS writes to
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Fix prediction bucket naming mismatch** `**DEFERRED**`: IS writes to
       `instruments-store-prediction-central-element-323112` (old, no env-tier) but Cloud Run consolidator targets
       `instruments-store-pred-prd-central-element-323112` (new). The canonical in the OLD bucket is never auto-merged.
       Fix: update IS `DEPLOYMENT_ENV` env var or `resolve_bucket_name()` to point to the prd bucket, then migrate data +
@@ -253,7 +239,7 @@ the same hierarchy level — "worst of both worlds": no question-group → under
       (`canonical_question_group` is NOT a `_ROW_KEY_COLUMNS` column — confirmed the hierarchy uses `underlying` for
       group identity, which IS manifest correctly populates.)
 
-- [x] ✅ DEFERRED-NEEDS-DEDICATED-SESSION [SCRIPT] P1. **Schema column in drilldown**: the UI shows "schema" per
+- [x] ✅ DEFERRED-OPERATOR-DECISION [SCRIPT] P1. **Schema column in drilldown**: the UI shows "schema" per
       `canonical_question_group`. The schema definition per group lives in
       `unified_api_contracts.canonical.domain.predictions.canonical_groups.CANONICAL_GROUP_METADATA`. Verify the schema
       link in the UI points to the correct UAC per-group metadata (not one flat schema for all Polymarket — each group
@@ -293,3 +279,14 @@ the same hierarchy level — "worst of both worlds": no question-group → under
 | Sports VM still running historical (3063 gap)                                                          | Phase 2 P1 monitor item; no blocking dependency on Phase 3                                                |
 | Prediction canonical manually consolidated (old bucket, not auto-merged by Cloud Run)                  | `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 0e — env-tier rollout to old IS prediction bucket |
 | Sports IS fills write to OLD bucket; PRD ODDS/PREDICTIONS max=2026-05-04 (short of ≥2026-05-20 target) | After footystats fill: copy shard OLD→PRD + consolidate; long-term fix: Phase 0e (sports bucket env-tier) |
+
+## Deferred work — migrated to:
+
+- **Monitor `instr-backfill-sports` VM (P1, DEFERRED-OPERATOR-DECISION)**: long-running background backfill (~60-day ETA
+  to complete 2020→2026 historical). No May-23 dependency. **Migrated to**: `plans/epics/predictions_master.md` § P1
+  operator-monitoring backlog.
+- **Fix prediction bucket naming mismatch (P1, DEFERRED-OPERATOR-DECISION)**: IS writes to old flat bucket; Cloud Run
+  consolidator targets prd bucket. **Migrated to**: `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md` Phase
+  0e (env-tier rollout to Group A IS prediction bucket) — already named successor per "Temporary states" above.
+- **Schema column in drilldown (P1, DEFERRED-OPERATOR-DECISION)**: verify `canonical_question_group` schema link in
+  deployment-api UI. **Migrated to**: `plans/epics/predictions_master.md` § P1 codex/UI verification backlog.

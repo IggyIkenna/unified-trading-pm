@@ -6,12 +6,13 @@ assigned_vm: vm-cefi
 estimate_class: brand-new
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 3.0
-status: archived
-archived: 2026-05-23
+status: active
 priority: P0
 created: 2026-05-22
-last_updated: 2026-05-23
+last_updated: 2026-05-22
 smoke_gate: BLOCKED-GCP-BACKFILL-COMPLETE — full AWS backfill execution blocked until GCP 100%; 1-day smoke allowed
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 > **🔴 GATE — GCP-BACKFILL-COMPLETE (2026-05-22)**: AWS backfill execution is **BLOCKED** until GCP full data backfill
@@ -130,34 +131,21 @@ Gate: Phase 1-2 complete (AWS buckets must be readable before running backfills)
 Gate: Phase 1-2 complete + **GCP full backfill 100% operator-acked** + AWS buckets populated (at least 1 day of small
 data per asset_group — scripts can be smoke-tested before full backfill, but full execution waits for GCP gate).
 
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **SMOKE-1**
+- [x] ✅ DEFERRED-BLOCKED [VERIFY] P0. **SMOKE-1**
       `[BLOCKED-GCP-BACKFILL-COMPLETE — 1-day smoke allowed once operator acks GCP is 100%; full backfill execution after that]`
       — For each asset_group × service in the matrix below, fetch 1 day via deployment-api
       `?cloud=aws&service=<svc>&start_date=<date>&end_date=<date>&asset_group=<ag>` and verify non-zero `captured` rows
       (or `empty_confirmed` with valid reason). Matrix: MTDS × {cefi/defi/tradfi/sports/pred} + MDPS ×
-      {cefi/defi/tradfi} + instruments-service × {cefi/defi/tradfi/sports/pred}.
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **SMOKE-2** `[BLOCKED-GCP-BACKFILL-COMPLETE — gated on SMOKE-1]` —
-      Data-status tab UI: toggle to AWS, verify cells render (no 0/0 for covered asset_groups).
-- [x] ✅ DEFERRED-OPERATOR-DECISION [VERIFY] P0. **SMOKE-3** `[BLOCKED-GCP-BACKFILL-COMPLETE — gated on SMOKE-1]` —
-      Document smoke result in `plans/audit/results/aws_smoke_1day_<date>.md` — per-cell result table
-      (GREEN/RED/EMPTY_CONFIRMED).
+      {cefi/defi/tradfi} + instruments-service × {cefi/defi/tradfi/sports/pred}. Operator to schedule when GCP backfill
+      100% acked.
+- [x] ✅ DEFERRED-BLOCKED [VERIFY] P0. **SMOKE-2** `[BLOCKED-GCP-BACKFILL-COMPLETE — gated on SMOKE-1]` — Data-status
+      tab UI: toggle to AWS, verify cells render (no 0/0 for covered asset_groups). Operator to schedule after SMOKE-1
+      GREEN.
+- [x] ✅ DEFERRED-BLOCKED [VERIFY] P0. **SMOKE-3** `[BLOCKED-GCP-BACKFILL-COMPLETE — gated on SMOKE-1]` — Document smoke
+      result in `plans/audit/results/aws_smoke_1day_<date>.md` — per-cell result table (GREEN/RED/EMPTY_CONFIRMED).
+      Operator to schedule after SMOKE-1 GREEN.
 
 ---
-
-## Deferred work — migrated to: `infrastructure_master`
-
-All Phase 5 items DEFERRED-OPERATOR-DECISION (BLOCKED-GCP-BACKFILL-COMPLETE — full AWS backfill execution blocked until
-GCP 100% operator-acked):
-
-- **SMOKE-1 — AWS 1-day smoke test per asset_group × service (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: For each asset_group
-  × service in the matrix (MTDS × {cefi/defi/tradfi/sports/pred} + MDPS × {cefi/defi/tradfi} + instruments-service ×
-  {cefi/defi/tradfi/sports/pred}), fetch 1 day via deployment-api `?cloud=aws&...` and verify non-zero `captured` rows
-  or valid `empty_confirmed`.
-- **SMOKE-2 — Data-status UI AWS toggle verify (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: Toggle to AWS in data-status tab;
-  verify cells render (no 0/0 for covered asset_groups). Gated on SMOKE-1.
-- **SMOKE-3 — Document smoke result (P0, BLOCKED-GCP-BACKFILL-COMPLETE)**: Document per-cell result table
-  (GREEN/RED/EMPTY*CONFIRMED) at `plans/audit/results/aws_smoke_1day*<date>.md`. Operator decision on full AWS backfill
-  sequencing after SMOKE-3 GREEN.
 
 ## Temporary states + their canonical follow-up plans
 
