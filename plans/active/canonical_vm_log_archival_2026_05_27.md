@@ -105,6 +105,7 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       Logging (automatic), VM workloads → vm-logs/ + log-archive/. Standard documented in vm-log-archival.md §
       "Per-Service Log-Destination Convention". One operator item pending: Cloud Logging retention policy confirmation
       (30-day default vs custom _Default bucket retention). No mass retrofit needed.
-- [ ] [AGENT] P2. **Deployment-UI integration**: the History tab links each archived run to its
+- [x] [AGENT] P2. ✅ **Deployment-UI integration**: the History tab links each archived run to its
       `gs://deployment-scripts-{pid}/log-archive/…` run.log + serial-console (cross-ref
       `deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md` §2).
+      — deployment-service@80c0fba | deployment-api@70291c4 | deployment-ui@dca0fc5 | pw:L2 ✓ 140/140 | regression: tests/smoke/vm_deployments_archive_history.spec.ts
