@@ -232,7 +232,7 @@ source:
       `vm:mtds-solana-drift-backfill` zone `asia-northeast1-c`, range 2025-01-09→2026-05-28, market SOL-PERP, verified
       RUNNING T+10min @ 15:49:32Z (STARTED event 15:41:57Z + 17 event files streaming, run.log shows per-date Helius
       progress through 2025-01-12 by 15:44Z).
-- [ ] [MTDS] P1. **Solana gas-fees chain_id=99999 is not registered in the gas-fee chain map → entire
+- [x] ✅ [MTDS] P1. **Solana gas-fees chain_id=99999 is not registered in the gas-fee chain map → entire
       `mtds-gas-fees-solana` backfill silent no-op.** Launcher passes `--gas-fee-chains 99999` (per
       `setup-data-pipeline-vm.sh:1004`), but the gas-fees handler logs `"Unknown chain_id 99999, skipping"` for every
       date. Solana doesn't have an EVM-style numeric chain_id — the correct value is the canonical chain key from UAC
@@ -240,6 +240,9 @@ source:
       replace `--gas-fee-chains 99999` with the correct Solana chain key in `setup-data-pipeline-vm.sh`
       `solana-gas-backfill` block; OR add a numeric→str mapping in the gas-fees handler. Provenance: slot-1 2026-05-28
       run.log `gs://deployment-scripts-central-element-323112/vm-logs/mtds-gas-fees-solana/run.log`.
+      **FIXED 2026-05-30** (MTDS@c3ae794c + deployment-service@3e83f30): handler accepts `solana` sentinel;
+      setup-data-pipeline-vm.sh passes `--gas-fee-chains solana`. Backfill VM `mtds-gas-fees-solana` relaunched
+      2026-05-30 (slot-1) with tarball@cef599e, range 2025-01-17→2026-05-28, verified RUNNING.
 - [ ] [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check — only
       the latest date emits a real APY row.** `launch-marinade-solana-backfill-vm.sh` routes through `collect-lst-rates`
       which uses an LST-rates handler keyed on sentinel-cluster completion at the latest date; with the latest date
