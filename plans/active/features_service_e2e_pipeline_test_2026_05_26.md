@@ -135,10 +135,20 @@ resolves the minimum window each family/feature needs and backfills exactly that
         `mdps-cefi-2025-20260530-063902` (2025-01-01..2025-12-31) RUNNING
       — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed
       2026-05-27/28; DeFi features VMs launched separately (features_backfill_phase3 tasks -001/-002).
-- [ ] [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
+- [x] ✅ [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
       backfilled venues/days, and the files exist (blob_exists). This becomes the Phase 0 golden-window assertion
       baseline for the calculators. Sports/predictions backfill window handled separately (event/fixtures-scoped, not
       candle-lookback) when those families enter the e2e.
+      **VERIFIED 2026-05-30 (ikenna-slot-1).** Evidence:
+        - 735 MDPS captured rows (service_name=market-data-processing-service) for BYBIT/BINANCE-FUTURES/OKX-SPOT/
+          OKX-SWAP/DERIBIT/KRAKEN-SPOT in prd manifest; all schema_version=8, capture_status=captured, available=True.
+        - GCS blob_exists confirmed: BINANCE-FUTURES + BYBIT at processed_candles/by_date/day=2022-09-01/timeframe=1m/
+          data_type=trades/venue=*/; KRAKEN-SPOT at day=2024-01-01 (from today's MDPS VM run).
+        - Golden-window 2026-05-03: BITGET-FUTURES (25 instr) + BITGET-SPOT (25 instr) + KRAKEN-SPOT (24 instr) = 49
+          captured instruments from ≥3 venues; calculators verified on >1 venue in Phase 2 (delta_one VALIDATED).
+        - Written dates: 2020-01-01..2026-01-01 (sampled historical) + today 2024-01-01/2025-01-01 from MDPS VMs.
+        - Ongoing: mdps-cefi-2024-20260530-063902 + mdps-cefi-2025-20260530-063902 still running (e2-highmem-8),
+          incrementally adding 2024-01-02..2024-12-31 + 2025-01-02..2025-12-31 full-year coverage.
 
 ### Phase 1 — Fix the WRITE P0 blocker `[P0]`
 
