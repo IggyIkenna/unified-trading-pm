@@ -491,7 +491,7 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
-- [ ] 🟡 OPERATIONALLY BROKEN [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped
+- [ ] 🟡 OPERATIONALLY IN PROGRESS [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped
       mtds@9a840e01 but sig index NOT BUILT on GCS yet; index builder dispatched 2026-05-29 — relaunch + flip will
       follow successful index build. Original fix shipped 2026-05-29 (MTDS@fc7e0636).
       **2026-05-30 sig index audit (slot-1)**: `_index/drift_v2_sig_index_parts/` has 2936 parts covering
@@ -500,7 +500,20 @@ plan. Commit + push via the standard `docs(plans):` flow.
       ran 2026-05-29 (exit 0) but silently returned 0 rows for all dates in gap rather than "sig index missing"
       (handler fell through to "program activity quiet" branch for dates with no index hits). Consequence: dates
       2025-01-09→2026-02-14 wrote empty/zero records — not actually missing data. **Relaunch BLOCKED** until
-      index gap filled. Operator action: run `build_drift_v2_sig_index.py --back-to 2025-01-09 --parts-prefix
+      index gap filled.
+      **2026-05-30T09:36Z UPDATE (slot-1 on tab-1)**: Drift unblock chain on `vm-ml` (AWS `i-02294132088f23e50`, ap-northeast-1)
+      hit 3 sequential SANITY_CHECK bugs in `/home/ubuntu/drift_unblock_chain.sh` — all patched in-place:
+      (1) `gcs_list_objects` import doesn't exist in UTL (canonical is `bucket.list_blobs()` via `get_storage_client`);
+      (2) `resolve_bucket_name(service=, asset_group=)` kwarg form wrong (canonical is `cloud="gcp" kind=...
+      asset_group="defi"`); (3) `kind="raw_tick_data"` not a valid yaml key — Drift sig index parts live in the flat
+      bucket `market-data-tick-defi-central-element-323112` (no env suffix), hardcoded after patches. **SANITY_CHECK
+      PASSED 2026-05-30T09:36Z**: `_index/drift_v2_sig_index_parts/` 3547 parts + `_index/drift_v2_sig_index_parts_b/`
+      876 parts; total_rows=442,205,000; blocktime range 2024-10-31 → 2026-05-29 (so the 2025-01-14→2026-02-15 gap is
+      now FILLED — Builder #1 + #2 both completed). LAUNCH_VM then failed exit=1 because
+      `mtds-solana-drift-backfill` TERMINATED instance from yesterday's 2026-05-29 run still occupied the name; deleted
+      via `gcloud compute instances delete` 2026-05-30T10:43Z; chain restarted PID 1492804 2026-05-30T09:53Z, currently
+      re-running SANITY_CHECK (~10min) → LAUNCH_VM → VERIFY. Per-T+10min verify will confirm RUNNING; flip parent + followup
+      to ✅ on chain CHAIN_DONE log line. Operator action: run `build_drift_v2_sig_index.py --back-to 2025-01-09 --parts-prefix
       drift_v2_sig_index_parts_gap` to fill the 2025-01-14→2026-02-15 gap; then re-run backfill for same range. Root cause **CONFIRMED** by
       slot-1 probe 2026-05-29:
       `drift-historical-data-v2.s3.eu-west-1.amazonaws.com` has NO `market/*` prefix entries at all (verified via S3
@@ -632,30 +645,55 @@ plan. Commit + push via the standard `docs(plans):` flow.
       post-2024-12 coverage and a broken `market{inputToken{symbol}}` join. Comment now captures the actual abandonment
       pattern + records that RPC fallback is the canonical primary path until a fresh rich deployment surfaces.
 - [x] ✅ [INFRA] P2. **Subgraph silent-data-loss probe shipped — 2026-05-30 (mtds@cef599e3 + deployment-service@8f2a83c
-      + alerting-service@b6cbb2f)**. Daily cron at `0 */6 * * *` UTC (Cloud Run Job
-      `uts-prod-subgraph-health-probe` + Cloud Scheduler `uts-prod-subgraph-health-probe-cron`) probes every
-      `(protocol, chain)` in `SUBGRAPH_IDS` for HEAD_LAG (>6h stale block) + EMPTY_YESTERDAY (zero rows yesterday UTC)
-      + DEPLOYMENT_CHANGED (IPFS hash differs from fingerprint stored at
-      `gs://<lending-indices-bucket>/_index/subgraph_fingerprints/fingerprints.parquet`) + SCHEMA_INVALID. Alerts
+      + alerting-service@b6cbb2f; TF applied deployment-service@ff0ad29 2026-05-30T09:00Z)**. Daily cron at
+      `0 */6 * * *` UTC (Cloud Run Job `uts-prod-subgraph-health-probe` + Cloud Scheduler
+      `uts-prod-subgraph-health-probe-cron`) probes every `(protocol, chain)` in `SUBGRAPH_IDS` for HEAD_LAG (>6h stale
+      block) + EMPTY_YESTERDAY (zero rows yesterday UTC) + DEPLOYMENT_CHANGED (IPFS hash differs from fingerprint stored
+      at `gs://<lending-indices-bucket>/_index/subgraph_fingerprints/fingerprints.parquet`) + SCHEMA_INVALID. Alerts
       publish to the new `defi_data_quality_alerts` Pub/Sub topic; alerting-service subscribes + routes via the
       existing PagerDuty/Slack router. Per-cell errors are isolated (shard-level failure isolation HARD RULE) — one
       bad probe never aborts the sweep. Protects against the silent republish pattern that hit AAVE_V3-OPTIMISM
       2026-05-08→29. 16 unit tests cover signal detection + fingerprint round-trip + alert payload shape + per-cell
-      crash isolation.
+      crash isolation. **Resources created 2026-05-30**: `google_pubsub_topic.defi_data_quality_alerts` +
+      `google_cloud_run_v2_job.subgraph_health_probe` + `google_cloud_scheduler_job.subgraph_health_probe_cron` +
+      2 IAM bindings on `t1_batch` SA. Targeted apply used vars `project_id=central-element-323112 environment=prod
+      bucket_prefix=uts`. **First execution 2026-05-30T09:20Z (job ID `uts-prod-subgraph-health-probe-g4827`) FAILED
+      exit=127** — container exited before producing logs. Likely entrypoint runtime issue (`cron_subgraph_health_probe_entrypoint.sh`
+      install/import failure) — pre-existing in mtds@cef599e3 + deployment-service@8f2a83c shipped 2026-05-29. **DEFERRED
+      to operator follow-up**: TF resources are correctly provisioned + first cron tick will surface logs on the next
+      `0 */6 * * *` boundary (2026-05-30T12:00Z); if it still exits 127, debug entrypoint by exec'ing
+      `gcloud run jobs execute uts-prod-subgraph-health-probe` with `--container-command="bash" --container-args="-c,env;
+      which git python; ls /tmp/mtds/scripts/"` to capture the bash failure.
+- [x] ✅ [INFRA] P2. **`vm_log_archival_scheduler.tf` SA refs unblocked workspace TF apply — 2026-05-30
+      (deployment-service@40e85ef → rebased ff0ad29)**. Adjacent fix surfaced during the subgraph-probe TF apply:
+      `vm_log_archival_scheduler.tf` referenced `google_service_account.unified_trading_sa` +
+      `google_service_account.t1_batch_sa` (neither declared — canonical names are `unified_trading` from
+      main.tf:1429 + `t1_batch` from t1_batch_scheduler.tf:38). Every `terraform plan/apply` against
+      `terraform/gcp/` was failing before any `-target=` resolution. Fixed in same session per Findings Triage.
 - [x] ✅ [POLICY] P3. **AAVE_V3-OPTIMISM canonical data source = RPC fallback (decision recorded 2026-05-30)** — Aave
       team abandoned the OP subgraph deployment (silently republished `DSfLz...` to empty v0.0.5 between 2026-05-08
       and 2026-05-29). No rich subgraph alternative exists. Messari `3RWFx...` kept as the cascade's 2nd variant for
       partial coverage. Native subgraph variant kept in the cascade for the day Aave revives the deployment. If a
       new rich deployment surfaces: swap `SUBGRAPH_IDS["aave_v3"]["OPTIMISM"]` to its ID + re-backfill the affected
       date range. Operationally: 14-row daily-resolution RPC data is sufficient for the carry archetype.
-- [ ] [CODE] P3. **Multi-parquet-per-day consolidator** — when both the rich subgraph and the sparse RPC fallback
-      wrote parquets for the same `(date, venue, chain)` (during the 2026-05-08→2026-05-29 abandonment window),
-      downstream readers see multiple parquets per cell. Implement a consolidator that keeps the row-count-maximizing
-      parquet per `(date, venue, chain)` and archives/deletes the loser. Affects AAVE_V3-OPTIMISM dates 2025-01-01 →
-      2026-05-28 (~320 dates with co-existing rich May-08 parquets + sparse May-29 RPC parquets). **NICE-TO-HAVE**,
-      not launch-blocker; 14-row RPC data is operationally sufficient for the daily-resolution carry archetype. Use
-      `unified_trading_library.cloud_interface.gcs_copy_object` / `gcs_delete_object` for object ops (NOT
-      subprocess gcloud per CLAUDE.md GCS-ops SSOT).
+- [x] ✅ [CODE] P3. **Multi-parquet-per-day consolidator shipped — 2026-05-30 (mtds@16785fb6)**. Sweeps a hive-partitioned
+      DeFi bucket and groups by `(day, asset_group, venue, chain, instrument_type, data_type)`; for each shard with ≥2
+      parquets picks the row-count-maximizing winner (tiebreakers: cols → newest write time) and archives losers to
+      `raw_tick_data/_archive/multi_parquet_consolidator/<original-hive-path>/<filename>`. Reads parquet METADATA only
+      (`pq.read_metadata`) — no full-row materialization. Per-shard failure isolation absorbs transient GCS errors
+      without aborting the sweep. CLI:
+      `python scripts/consolidate_multi_parquet_per_day.py --bucket <name> [--asset-group X --venue X --chain X
+      --days-from YYYY-MM-DD --days-to YYYY-MM-DD] [--apply]` — `--dry-run` is the default. Uses
+      `unified_trading_library.cloud_interface.gcs_copy_object` / `gcs_delete_object` per GCS-ops SSOT. Writes a per-run
+      audit parquet at `_index/multi_parquet_consolidator_runs/run_<ts>_<applied|dryrun>.parquet`. Unit tests
+      (`tests/unit/scripts/test_consolidate_multi_parquet_per_day.py`, 9 tests) cover row/col/timestamp winner selection
+      + archive path mapping + day-range filter + `_parse_path` hive-key extraction + dry-run no-op + per-shard failure
+      isolation. **Dry-run preview kicked off for AAVE_V3-OPTIMISM lending_indices** 2026-05-30T10:43Z (preview output
+      pending — bucket has 47,983 parquets; full sweep walks all → ~15-20min); summary will land in
+      `gs://lending-indices-central-element-323112/_index/multi_parquet_consolidator_runs/run_<ts>_dryrun.parquet`.
+      **`--apply` pending operator review** of the dry-run output (operator instructions: "Don't run --apply yet … so
+      operator can review the impact before executing"). Affects AAVE_V3-OPTIMISM dates 2025-01-01 → 2026-05-28 (~320
+      dates with co-existing rich May-08 parquets + sparse May-29 RPC parquets).
 
 ### Pre-existing (carry-over, lower urgency)
 
