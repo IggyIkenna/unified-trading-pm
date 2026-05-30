@@ -302,8 +302,12 @@ Concrete questions to answer + corresponding redesigns to ship:
       **DONE 2026-05-30** — same commit a82706e: `TestFallbackPathCanonicalFilter` (2 tests). Pre-existing
       `TestCanonicalInstrumentIdMatching` (4 tests) already covered the primary path canonical cases. 12 tests total
       in test_orchestration_scanner.py, all pass.
-- [ ] [AGENT] P1. **3.4 Update the launcher pass-through documentation** in `launch-mdps-backfill-vm.sh` to recommend
+- [x] ✅ [AGENT] P1. **3.4 Update the launcher pass-through documentation** in `launch-mdps-backfill-vm.sh` to recommend
       canonical form. The bare-symbol form should be tagged as legacy.
+      **DONE 2026-05-30** — deployment-service@28aadd8: expanded `--instrument-ids` header comment with
+      RECOMMENDED/LEGACY labels, hive-path segment explanation, codex SSOT cross-link
+      (`codex/06-coding-standards/cli-convention.md §Instrument Identity and CLI Granularity`), and
+      UAC import hint (`from unified_api_contracts.canonical import parse_instrument_key`).
 
 ## Phase 4 — Implement the chosen execution + engine model
 
