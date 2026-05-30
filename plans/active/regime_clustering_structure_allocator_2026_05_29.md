@@ -160,8 +160,9 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   Post-PCA Euclidean distances (= Mahalanobis in original space). `ClusterAssignment` dataclass +
   `assignment_to_dataframe()`. 14 new unit tests (30 total); 0 ruff/basedpyright errors.
   Pushed features-service 68817bfb.
-- [ ] [SCRIPT] P3. Use **exact** distances (data is ~MBs; no IVF-PQ/quantisation). Metric = Mahalanobis / post-PCA
+- [x] ✅ [SCRIPT] P3. Use **exact** distances (data is ~MBs; no IVF-PQ/quantisation). Metric = Mahalanobis / post-PCA
   Euclidean, never raw correlated-feature Euclidean.
+  — Already implemented in `assign_clusters()` / `compute_proximity()` at features-service@68817bfb (post-PCA Euclidean = Mahalanobis in original space). No additional code needed.
 - [x] [UAC] P2. Register `regime_clustering` (+ `strategy_pnl_archetype`) in
   `unified_api_contracts/.../features/registry.py EXPECTED_FEATURE_GROUPS_BY_SERVICE`.
   Both added under cross-instrument section in `EXPECTED_FEATURE_GROUPS_BY_SERVICE["features-service"]`.
