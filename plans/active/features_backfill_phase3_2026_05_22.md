@@ -76,29 +76,23 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
 - [x] ✅ [SCRIPT] P0. **FEAT-3.4.DeFi.Onchain** — Launch features-onchain-defi compute VM. On-chain analytics: LST APR
       delta / DEX pool utilisation / oracle deviation signals. **Gate cleared 2026-05-28** (banner #2 — dex-swaps
       backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1 — runs on prd).
-      VM launched 2026-05-30: features-onchain-defi-20260530-025827 (asia-northeast1-c, e2-standard-8)
+      VM launched 2026-05-30: features-onchain-defi-20260530-025827 (FAILED rc=2 — empty INSTALL_ARGS_NODEPS bug)
+      VM re-launched 2026-05-30: features-onchain-defi-20260530-032606 (asia-northeast1-c, e2-standard-8) — fixed setup script
       cmd: python -m features_service --feature-family onchain --operation compute --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
 - [x] ✅ [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd
       `processed_candles`, 118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **Gate cleared 2026-05-28**
       (banner #2 — dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1).
-      VM launched 2026-05-30: features-delta-one-defi-20260530-025907 (asia-northeast1-c, e2-standard-8)
+      VM launched 2026-05-30: features-delta-one-defi-20260530-025907 (FAILED rc=2 — empty INSTALL_ARGS_NODEPS bug)
+      VM re-launched 2026-05-30: features-delta-one-defi-20260530-032619 (asia-northeast1-c, e2-standard-8) — fixed setup script + UAC export fix
       cmd: python -m features_service --feature-family delta_one --operation compute --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
 - [ ] [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
-      **PARTIAL VERIFY 2026-05-30 (slot-1 / BLK-062521f7):**
-      Onchain PASS: gs://features-onchain-defi-prd-central-element-323112 — 15 days (Apr 3–19 2026),
-        schema_version=8, 95k+ rows/day (lending_rates), 0 LookaheadBias violations.
-        Feature groups observed: lending_rates, lst_yields. VM features-onchain-defi-20260530-030630 STAGING.
-      Delta-one BLOCKED: gs://features-delta-one-defi-central-element-323112/_index/availability_index.parquet
-        shows 2 attempted_failed entries (dates 2024-07-15 + 2024-07-22, error: orchestrator_returned_false,
-        instrument_count=0). No delta-one VM running. Cause unknown — possibly features-delta-one-defi
-        025907 VM failed fast (not in gcloud VMs list) or date-range issue vs bucket-split at 2026-01-24.
-- [ ] [P1 — found during features_backfill_phase3-003] Investigate features-delta-one-defi
-      `orchestrator_returned_false` failure. Manifest shows attempts for 2024-07-15 + 2024-07-22 (dates
-      BEFORE bucket-split at 2026-01-24) with error `orchestrator_returned_false`, instrument_count=0.
-      Diagnose: (a) did 025907 VM try dates outside 2026-01-25→2026-05-22? (b) is prd processed_candles
-      actually populated for the Jan–May 2026 range (check mdps-backfill-defi-20260528 completion)?
-      (c) is the delta_one orchestrator returning False for the DEFI asset_group specifically?
-      Fix before re-launching delta-one compute. BLK-062521f7.
+      **Root cause identified 2026-05-30 (slot-1):** rc=2 bug in setup-data-pipeline-vm.sh —
+        `INSTALL_ARGS_NODEPS` array has no `-e` entries for VM_TASK=features-backfill, causing
+        `uv pip install --no-sources --no-deps` (no packages) → rc=2. Fixed with guard: only run
+        NODEPS install when array has >2 elements. Also: UAC missing export of
+        `resolve_data_type_for_feature_group` fixed (commit eb9c0b2). Both tarballs rebuilt.
+      Re-launched VMs (2026-05-30 03:26): features-onchain-defi-20260530-032606 + features-delta-one-defi-20260530-032619.
+      Awaiting VM completion for final verification.
 
 ## Phase 3 — TradFi features compute
 
