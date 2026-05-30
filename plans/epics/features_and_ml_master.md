@@ -16,6 +16,7 @@ related_plans:
   - ../active/features_service_qg_cleanup_2026_05_11.md
   - ../active/ml_repo_consolidation_2026_05_19.md
   - ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md
+  - ../active/regime_clustering_structure_allocator_2026_05_29.md
 ---
 
 # ML + Features Master (umbrella)

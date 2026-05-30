@@ -281,9 +281,10 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 - [x] ✅ [TEST] P1. All fitting under purged+embargoed walk-forward; report deflated OOS Sharpe per regime + abstain
   coverage on OOD live states.
   `purge_embargo_split()` + `WalkForwardReport` + `RegimeOosReport`. 20 unit tests. strategy-service@cbd9660.
-- [ ] [CODEX] P2. Write `codex/04-architecture/regime-clustering-structure-allocator.md` (pipeline, batch=live seam,
+- [x] ✅ [CODEX] P2. Write `codex/04-architecture/regime-clustering-structure-allocator.md` (pipeline, batch=live seam,
   abstain semantics, discrete-grid execution contract, three-layer policy/construction/risk decision matrix) + update
   `features_and_ml_master` related_plans.
+  — unified-trading-pm (codex doc created; features_and_ml_master related_plans updated).
 
 ---
 
