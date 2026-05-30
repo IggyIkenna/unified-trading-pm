@@ -242,9 +242,9 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       (`_WRITE_FLUSH_INTERVAL`), at most 1 GCS write/10s per bucket per VM — well under GCS's ~1 write/s/object
       limit. 142-line test file `tests/unit/test_manifest_writer_429_backoff.py` covers retry, jitter, re-raise on
       4th attempt, non-429 pass-through.
-- [ ] [AGENT] P2. **GcsEventSink upload timeouts** drop telemetry events (RESOURCE_PROFILER_SAMPLE,
+- [x] ✅ DONE [AGENT] P2. **GcsEventSink upload timeouts** drop telemetry events (RESOURCE_PROFILER_SAMPLE,
       PROCESS_CPU_SATURATED, and notably MANIFEST_EMERGENCY_FLUSH) under CPU saturation — add retry/backoff or a durable
-      local spool.
+      local spool. — unified-trading-library@05294219 | replaced blocking _future.result(timeout=15s) with async _upload_with_retry (3 attempts, 1s/2s backoff); write_event returns immediately; tests cover retry + all-retries-exhausted paths
 
 ### §6E — Sports schema contracts (expands §4 — it's THREE data_types, ALL years)
 
