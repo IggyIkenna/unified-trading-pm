@@ -121,6 +121,11 @@ impact, no walk needed now.
 - [ ] [AGENT] P1. Update `deployment-ui` data-status drilldown to surface `pipeline_mode` as a visible column / filter
       chip in coverage views. Per CLAUDE.md UI HARD RULE: `pw:L2 ✓` + regression spec evidence required before checkbox
       tick.
+      **[BLOCKED-PLAYWRIGHT]**: Code shipped — deployment-api@0ae5230 (pipeline_mode filter in /turbo), unified-trading-system-ui@ee457621
+      (10 pipeline_mode chips in DataStatusFiltersUpper, pipeline_mode wired into context + fetchData + getDataStatusTurbo call).
+      Regression spec: `tests/e2e/data-status-pipeline-mode-filter.spec.ts` (4 L2 tests).
+      Checkbox requires `pw:L2 ✓ | regression: tests/e2e/data-status-pipeline-mode-filter.spec.ts` evidence from a
+      UI-capable slot running `npx playwright test --project=chromium tests/smoke/`.
 - [ ] [AGENT] P1. Update `instrument_catalogue_availability_matrix_2026_04_29` outputs to include `pipeline_mode` as a
       dimension in the catalogue parquet + the published markdown matrix.
 
