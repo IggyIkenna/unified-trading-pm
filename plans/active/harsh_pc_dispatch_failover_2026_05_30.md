@@ -106,7 +106,7 @@ Same as `autospawn_idle_vms_2026_05_30.md` § CI-safety contract — cross-link 
 
 ### Phase 5 — Codify in CLAUDE.md (small docs PR, fast-path)
 
-- [ ] [DOCS] P0. Add to `unified-trading-pm/.claude/CLAUDE.md` under `### Other key rules`: **"Orchestrator host-offline failover: soft-pinned tasks fall over to fleet VMs when host heartbeat silent > 10 min. Hard pins (failover_allowed: false) stay. ORCHESTRATOR_FAILOVER_ENABLED=true on vm-orchestrator only (single source of failover decisions)."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day.
+- [x] ✅ [DOCS] P0. Add to `unified-trading-pm/.claude/CLAUDE.md` under `### Other key rules`: **"Orchestrator host-offline failover: soft-pinned tasks fall over to fleet VMs when host heartbeat silent > 10 min. Hard pins (failover_allowed: false) stay. ORCHESTRATOR_FAILOVER_ENABLED=true on vm-orchestrator only (single source of failover decisions)."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** — Added HARD RULE block under `### Other key rules` in `cursor-configs/CLAUDE.md`: 10-min threshold, hard-pin opt-in, vm-orchestrator only, activity events, rollback semantics, SSOT link.
 - [ ] [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-host-offline-failover.md` — full architecture: heartbeat lifecycle, affinity-matching algorithm, rollback semantics, audit trail (`failover_origin`), interaction with collision_group. Collision group: none. Estimate: 0.1 AI-day.
 - [ ] [QG] P0. PM PR via fast-path (docs change → targets `main`). Verify `gh run list --branch main` shows PR-trigger CI run; fix root cause if checks fail. Collision group: none. Estimate: 0.05 AI-day.
 

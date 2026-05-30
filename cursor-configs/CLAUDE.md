@@ -270,6 +270,13 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   Manual SSM spawn (`/api/slots/<id>/spawn`) is only needed for cold-start of a new VM that has never had a drop-in written.
   If a VM stays idle > 15 min with queued tasks, check that the drop-in exists and `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` is
   in the unit env. SSOT: `plans/active/autospawn_idle_vms_2026_05_30.md`.
+- **Orchestrator host-offline failover (HARD RULE codified 2026-05-30)**: Soft-pinned tasks fall over to fleet VMs
+  automatically when a host's heartbeat is silent > 10 min. Hard pins (`failover_allowed: false` in plan task YAML)
+  stay — honoured regardless of host state. `ORCHESTRATOR_FAILOVER_ENABLED=true` on **vm-orchestrator only** (single
+  source of failover decisions — enabling on multiple VMs causes race conditions). Enabled via
+  `/etc/systemd/system/orchestrator.service.d/failover.conf`. Re-routing is logged as `failover_rerouted` activity
+  events + rolls back automatically (`failover_rolled_back`) when the host returns with unclaimed tasks. Script:
+  `scripts/orchestrator/enable_failover.sh`. SSOT: `plans/active/harsh_pc_dispatch_failover_2026_05_30.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
