@@ -86,9 +86,12 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       captures serial via `get_serial_port_output()`, stores to canonical
       `log-archive/serial-rolling/{date}/{vm}/serial-console.txt`. Added `vm_serial_rolling_uri()` helper to
       `deployments_registry.py`. Daily cron now covers both log rolling AND serial history.
-- [ ] [AGENT] P2. **Codex SSOT**: document the two canonical paths + the backup/retention contract in
+- [x] [AGENT] P2. **Codex SSOT**: document the two canonical paths + the backup/retention contract in
       `codex/05-infrastructure/vm-tarball-deployment.md` (or a new `codex/05-infrastructure/vm-log-archival.md`), and
-      reference it from the kill/teardown runbook.
+      reference it from the kill/teardown runbook. — unified-trading-pm@2844421c ✅
+      New `codex/05-infrastructure/vm-log-archival.md`: live stream + durable snapshot + daily rolling + serial-rolling
+      paths; backup-vm-logs.sh usage; pre-kill hook table; throwaway-bucket retirement recipe; verify runbook.
+      Added reference from `vm-launcher-runbook.md` kill/teardown section.
 - [ ] [AGENT] P2. **Per-repo log-destination convention**: extend the canonical-path idea beyond VMs — every
       service/repo that emits operational logs (Cloud Run services, local dev, batch jobs) declares a canonical archive
       destination so backups + analysis are uniform. Audit current per-service log sinks; document the standard;
