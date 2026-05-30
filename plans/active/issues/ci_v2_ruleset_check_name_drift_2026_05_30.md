@@ -6,6 +6,39 @@ source:
   - plans/active/ci_canonical_v2_migration_2026_05_29.md
   - "observation workflow wf_0cd5b4b6-464 (per-repo ruleset vs emitted check-run names, 2026-05-30)"
 locked_by: live-defi-rollout
+status: RESOLVED — rulesets aligned 2026-05-30
+---
+
+## ✅ RESOLVED 2026-05-30 — rulesets aligned fleet-wide
+
+After `ci_canonical_v2_migration` landed (archived; v1 `quality-gates.yml` deleted where
+`quality-gates-v2.yml` is canonical), all branch-protection rulesets were aligned to the
+**actual emitted check-run name derived per-repo from each repo's current workflow file**:
+
+- `require-quality-gates` (main) → `[Quality Gates (<repo>) / <suffix>]`
+- `require-staging-lock-check` (staging) → `[Quality Gates (<repo>) / <suffix>, check-staging-lock]`
+
+where `<suffix>` = `quality-gates-v2` for repos on `quality-gates-v2.yml`, and `quality-gates`
+for repos still on `workspace-qg.yml` (batch-live-reconciliation-service, client-reporting-api,
+deployment-api, deployment-ui, ibkr-gateway-infra, market-data-processing-service,
+system-integration-tests, trading-agent-service) — these re-pin to `quality-gates-v2` when they migrate.
+
+**33 ruleset edits across 17 repos applied + independently re-read; `ALL RULESETS CONSISTENT: True`.**
+The earlier "deployment-api name bug" was a FALSE ALARM (garbled cached API response during an
+output-channel lag) — deployment-api's `workspace-qg.yml` job name is correct.
+
+**Verification (re-runnable):** `python3 scripts/repo-management/verify_branch_protection_check_names.py`
+→ prints per-repo MAIN/STAGING required contexts + `ALL RULESETS CONSISTENT: True`.
+
+### Residual follow-ups (small, non-blocking)
+
+1. **8 repos still on `workspace-qg.yml`** (pinned correctly to `… / quality-gates`). Re-run the
+   pin when they migrate to `quality-gates-v2.yml`.
+2. **No IaC owns these rulesets** — set manually via `gh api`; will drift if workflow names change.
+   RECOMMEND codifying (committed verify script + a sibling apply script that derives names from live
+   workflow files — no hardcoded strings — or Terraform `github_repository_ruleset`).
+3. Old open PRs predating the workflow-name fix may show a missing required check until re-run; new PRs match immediately.
+
 ---
 
 ## What I found
