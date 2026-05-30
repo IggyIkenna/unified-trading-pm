@@ -84,6 +84,21 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
       VM launched 2026-05-30: features-delta-one-defi-20260530-025907 (asia-northeast1-c, e2-standard-8)
       cmd: python -m features_service --feature-family delta_one --operation compute --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
 - [ ] [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
+      **PARTIAL VERIFY 2026-05-30 (slot-1 / BLK-062521f7):**
+      Onchain PASS: gs://features-onchain-defi-prd-central-element-323112 — 15 days (Apr 3–19 2026),
+        schema_version=8, 95k+ rows/day (lending_rates), 0 LookaheadBias violations.
+        Feature groups observed: lending_rates, lst_yields. VM features-onchain-defi-20260530-030630 STAGING.
+      Delta-one BLOCKED: gs://features-delta-one-defi-central-element-323112/_index/availability_index.parquet
+        shows 2 attempted_failed entries (dates 2024-07-15 + 2024-07-22, error: orchestrator_returned_false,
+        instrument_count=0). No delta-one VM running. Cause unknown — possibly features-delta-one-defi
+        025907 VM failed fast (not in gcloud VMs list) or date-range issue vs bucket-split at 2026-01-24.
+- [ ] [P1 — found during features_backfill_phase3-003] Investigate features-delta-one-defi
+      `orchestrator_returned_false` failure. Manifest shows attempts for 2024-07-15 + 2024-07-22 (dates
+      BEFORE bucket-split at 2026-01-24) with error `orchestrator_returned_false`, instrument_count=0.
+      Diagnose: (a) did 025907 VM try dates outside 2026-01-25→2026-05-22? (b) is prd processed_candles
+      actually populated for the Jan–May 2026 range (check mdps-backfill-defi-20260528 completion)?
+      (c) is the delta_one orchestrator returning False for the DEFI asset_group specifically?
+      Fix before re-launching delta-one compute. BLK-062521f7.
 
 ## Phase 3 — TradFi features compute
 
