@@ -155,9 +155,12 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       mirror it). Kraken `/` and Bitfinex `:`-in-symbol now flow through correctly; malformed rows (empty venue/id, or
       **empty `instrument_type` — Bitfinex's manifest rows lack it**) are skipped honestly. Validated: discovery returns
       0 bare/malformed ids. — features-service@cedd31f5
-  - [ ] 🟠 [UPSTREAM] P2. **Bitfinex manifest rows have empty `instrument_type`** → features can't form their canonical
+  - [x] ✅ [UPSTREAM] P2. **Bitfinex manifest rows have empty `instrument_type`** → features can't form their canonical
         id, so they're skipped. Needs the manifest writer to populate `instrument_type` for Bitfinex. Added to issue
         `cefi_processed_candles_manifest_file_disconnect_2026_05_25.md`.
+        **FIXED (2026-05-30 slot-2)**: UTL@a9fc5146. compose_instrument_ids now infers instrument_type from venue
+        suffix (BITFINEX-SPOT→"spot", BITFINEX-FUTURES→"perpetual") when the manifest row has an empty value.
+        Logs a WARNING when inference fires. 10 unit tests added (test_manifest_discovery.py). QG green (UTL).
 - [x] ✅ [INFRA] P1. **MTDS dual-writes legacy + canonical buckets** — legacy `market-data-tick-cefi-{pid}` still
       receives writes (2,099 per-VM shards, full history) alongside canonical `-prd`. Per bucket-SSOT migration the
       legacy bucket should be drained/cutover. Cross-side → flag Ikenna (MTDS/infra). Provenance: same investigation.
