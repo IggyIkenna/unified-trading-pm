@@ -206,6 +206,9 @@ priority `None` → dispatcher de-prioritizes → task rots in the queue. Non-ca
   `[TAG] [P<n>]`, and bare `[P<n>]` (→ `[AGENT] P<n>.` default tag) to canonical. Run with `--apply` to write changes in
   place.
 
+**Full hygiene stack doc** (4 silent-failure modes, severity ladder, cron schedules):
+`codex/12-agent-workflow/plan-hygiene.md`
+
 **Closed set of canonical tags** (case-sensitive uppercase; PR to PLAN_FORMAT.md to add a new tag):
 
 ```
