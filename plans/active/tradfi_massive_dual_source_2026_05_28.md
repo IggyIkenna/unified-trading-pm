@@ -148,9 +148,19 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       `F:ES` prefix = continuous front-month (not specific contract); `ES:H26` / `ES.H26` are incorrect separators.
       Live confirmation requires `MASSIVE_API_KEY` in SM + Futures endpoint 404 fix (Phase 0.5 note: endpoint shape mismatch).
       Codification of `massive_futures_ticker()` helper in `registry/tradfi_symbology.py` deferred to Phase 4 connector work once live-confirmed.
-- [ ] [AUDIT] P1. BTC/ETH ETF backfill audit — confirm Databento has historical bars for all 18 ETF tickers (10 BTC + 8
+- [x] ✅ [AUDIT] P1. BTC/ETH ETF backfill audit — confirm Databento has historical bars for all 18 ETF tickers (10 BTC + 8
       ETH) since each ETF's listing date. Per Mega-Audit 2026-05-20 0% v8 incident, "constant says v8" is not evidence;
-      read actual GCS rows. Status TBC pending audit script run.
+      read actual GCS rows. **AUDIT RESULT (2026-05-30 slot-2)**: Read actual rows from both TradFi GCS manifests
+      (`market-data-tick-tradfi-central-element-323112` + `-prd-` variant). Databento (`pipeline_mode=batch_databento`)
+      ETF coverage: **IBIT COVERED** — 590 captured rows (ohlcv_1m) from 2023-04-24 through 2026-05-15, listing
+      2024-01-11 fully covered (note: ticker was reused from iShares India ETF pre-2024; BTC ETF day-1 row confirmed
+      2024-01-11); **ETHA COVERED** — 456 captured rows (ohlcv_1m) from 2024-07-23=listing date through 2026-05-15.
+      **16 other tickers ABSENT from Databento manifest**: FBTC, BITB, ARKB, BTCO, BRRR, HODL, EZBC, GBTC, BITO,
+      FETH, ETHE, ETHV, ETHW, CETH, QETH, EZET — all show either 0 rows or only `attempted_failed`/`empty_confirmed`
+      rows from MDPS batch runs (no captured bars). Conclusion: **Databento backfill is 2/18 for this ETF set**.
+      This is acceptable per task -007 (Massive Stocks Starter verified sufficient for all 18 — s3://flatfiles/
+      bulk download preferred for Phase 4). Databento gaps for 16 tickers do not block the dual-source plan;
+      Massive covers full history for all 18 ETFs within its 5-year window.
 - [x] ✅ [AUDIT] P1. Massive Stocks Starter coverage of BTC/ETH ETFs verified live 2026-05-28 — operator added Stocks
       Starter tier; smoke-tested 1m OHLCV for every ETF on its listing day; all 18 return data: 9 BTC spot at 2024-01-11
       (IBIT/FBTC/BITB/ARKB/BTCO/BRRR/HODL/EZBC/GBTC), BITO at 2021-10-19 (BTC futures ETF), 8 ETH spot at 2024-07-23
