@@ -474,7 +474,7 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
-- [ ] 🟡 OPERATIONALLY BROKEN [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped
       mtds@9a840e01 but sig index NOT BUILT on GCS yet; index builder dispatched 2026-05-29 — relaunch + flip will
       follow successful index build. Original fix shipped 2026-05-29 (MTDS@fc7e0636). Root cause **CONFIRMED** by
       slot-1 probe 2026-05-29:
