@@ -138,10 +138,16 @@ operator intervention.
 
 ## Phase 5 — Resource limits as belt-and-braces (P1)
 
-- [ ] [AGENT] P1. Add systemd resource limits to `orchestrator.service`: `MemoryHigh=48G` `MemoryMax=56G`
+- [x] ✅ [AGENT] P1. Add systemd resource limits to `orchestrator.service`: `MemoryHigh=48G` `MemoryMax=56G`
       `TasksMax=10000` so the service can't consume the whole VM. Trade: OOM-killer fires on orchestrator before host
       goes impaired; orchestrator restart is fast vs full host reboot.
-- [ ] [AGENT] P1. Same limits on the new watchdog service (Phase 2) so it can't itself eat memory.
+      **DONE 2026-05-30** — `scripts/orchestrator/apply_resource_limits.sh` written. Writes
+      `/etc/systemd/system/orchestrator.service.d/resource-limits.conf` with `MemoryHigh=48G MemoryMax=56G TasksMax=10000`.
+      Sized for m8i.4xlarge (64 GB): soft ceiling 75%, hard ceiling 87.5%. daemon-reload + restart. Idempotent.
+      **[OPERATOR-SSM]** Run on `i-0c9b283b31d6b5ca7`: `bash scripts/orchestrator/apply_resource_limits.sh`
+- [x] ✅ [AGENT] P1. Same limits on the new watchdog service (Phase 2) so it can't itself eat memory.
+      **DONE 2026-05-30** — Same script applies `/etc/systemd/system/orch-watchdog.service.d/resource-limits.conf`
+      with `MemoryHigh=256M MemoryMax=512M TasksMax=50` if `orch-watchdog.service` exists.
 
 ## Phase 6 — Codex SSOT updates (P2)
 
