@@ -177,11 +177,14 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
   - Added `get_all_sources_with_priority(asset_group, data_type) -> list[tuple[str, PipelineMode]]` returning full
     ordered source list (primary first). Multi-source cells like `("tradfi","trades")` return `[("databento", BATCH_DATABENTO), ("massive", BATCH_MASSIVE)]`.
   - 6 new tests; 73 total pass. Exposed via crosscutting facade. UAC@87570f4d
-- [ ] [UAC] P1. Tie-breaker implementation per module docstring:
+- [x] ✅ [UAC] P1. Tie-breaker implementation per module docstring:
   1. Timestamp-availability (live-time emitters win over archive-only)
   2. Coverage (broader-coverage wins where overlap)
   3. Information richness (more-fields wins)
   4. Merge-different-fields (non-overlapping field sets → consumers union)
+  - `select_primary_available_source(asset_group, data_type, available_sources)` applies rules 1-3 (list order)
+    at runtime: databento absent + massive present → returns massive. Rule 4 (field union) is consumer-layer.
+  - 7 new tests; 80 total pass. UAC@898bc948
 - [ ] [UAC] P1. Conflict detection: same (asset_group, venue, day, ticker, ts) appearing in both sources → log + count,
       emit to manifest as `divergence_kind=DUAL_SOURCE_DUPLICATE`. Do NOT silently drop.
 - [ ] [UAC] P1. Unit tests: dual-source happy path, conflict path, missing-source-A-present-source-B path, field-union
