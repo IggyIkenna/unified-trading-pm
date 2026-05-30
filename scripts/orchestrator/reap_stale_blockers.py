@@ -44,7 +44,6 @@ import tempfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-
 # ---------------------------------------------------------------------------
 # Config + defaults
 # ---------------------------------------------------------------------------
@@ -78,12 +77,11 @@ def _load_backlog_yaml(path: Path) -> list[dict]:
 
     # Fallback: use json alternative embedded in the server if reachable
     try:
-        import json as _json
         # Try to import the server's backlog module via sys.path manipulation
         srv = _WORKSPACE / "agent-orchestrator"
         if str(srv) not in sys.path:
             sys.path.insert(0, str(srv))
-        from server.backlog import BacklogTask, load_backlog  # type: ignore[import-not-found]
+        from server.backlog import load_backlog  # type: ignore[import-not-found]
         tasks = load_backlog(path)
         return [t.model_dump() for t in tasks]
     except Exception:

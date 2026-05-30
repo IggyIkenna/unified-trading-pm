@@ -72,10 +72,7 @@ def _load_keyword_surface(path: Path) -> dict[str, dict[str, list[str]]]:
         # Second-level key (keywords: / repos:)
         if current_epic and re.match(r"^\s{2,4}\w+\s*:$", line):
             key = stripped.rstrip(":")
-            if key in ("keywords", "repos"):
-                current_section = key
-            else:
-                current_section = None
+            current_section = key if key in ("keywords", "repos") else None
             continue
 
         # List item under current section
