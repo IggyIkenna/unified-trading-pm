@@ -358,8 +358,12 @@ start implementation against an unconfirmed shape.
       shard_date, shard_type, shard_data_type, memory_rss_mb, memory_rss_bytes, instruments_processed, success_count.
       Per-instrument omitted — psutil call per instrument × hundreds of instruments = performance regression;
       existing `PROCESSING_COMPLETED` covers per-instrument observability. 2026-05-30.
-- [ ] [AGENT] P2. **5.2** Per-shard wall-clock timing emitted as a `SHARD_COMPLETED` event with structured fields, so
-      the per-shard cost model in Phase 0.3 can be validated against real production data.
+- [x] ✅ [AGENT] P2. **5.2** Per-shard wall-clock timing emitted as a `SHARD_COMPLETED` event with structured fields, so
+      the per-shard cost model in Phase 0.3 can be validated against real production data. Shipped at MDPS@684e114:
+      per-data_type SHARD_COMPLETED in `_process_files_parallel` (batch_workers.py) with wall_clock_sec,
+      instruments_per_sec, success_count, error_count, total_candles, shard_category; per-date SHARD_COMPLETED in
+      `_log_category_summary` (orchestration_service.py) aggregating all data_types. Regression guard:
+      test_batch_workers_shard_completed.py (two cases: success path + error path). 2026-05-30.
 - [ ] [AGENT] P2. **5.3** The 526 MB manifest read should emit a `MANIFEST_LOAD_SIZE_BYTES` event so future regressions
       ("the manifest is now 1.2 GB") are caught before they OOM a small box.
 
