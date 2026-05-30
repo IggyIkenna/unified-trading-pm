@@ -349,17 +349,12 @@ Per operator 2026-05-28 EOD, the sequence is:
       `codex/06-coding-standards/read-time-filter-pushdown.md`. Covers: rule, anti-pattern, correct pattern,
       verification recipe, reference implementation (MDPS `e47205d`), incidents, cross-service generalization.
       Checkbox flip 2026-05-30.
-- [ ] [AGENT] P2. **4.2 ~~Remove the now-stale workspace mitigations~~ Re-scope the TradFi mitigation in the sharded
-      launcher.** **Refinement** (discovered 2026-05-28 during Phase 3 prep): the TradFi `e2-highmem-8 + max-workers=2`
-      mitigation in `launch-mdps-sharded-backfill.sh:174,184` targets a _different_ root cause than the scanner
-      over-queueing fixed in Phase 2.1 — namely per-file Polars memory from legacy `ticks.parquet` bundles with 4000+
-      symbols loaded as one DataFrame (incidents 2026-05-06 + 2026-05-07 per the script's own header comment). The
-      scanner fix does NOT shrink any individual file's footprint, so reverting the TradFi mitigation would re-OOM.
-      CeFi/DeFi/Sports/ Prediction were already on `e2-standard-8 + default workers` — nothing to revert for them.
-      Replacement action: update the comment block in the launcher header to attribute the TradFi- specific mitigation
-      to the _bundle-reader_ issue (separate from filter-pushdown), and reference the bundle-reader streaming refactor
-      as the unblock for that mitigation (out of scope for this plan). Leave the mitigation code untouched until the
-      bundle reader is lazified.
+- [x] ✅ [AGENT] P2. **4.2 ~~Remove the now-stale workspace mitigations~~ Re-scope the TradFi mitigation in the sharded
+      launcher.** Updated header comment + `_machine_type_for` inline comment in
+      `deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh` to attribute the TradFi `e2-highmem-8 +
+      max-workers=2` mitigation to the BUNDLE-READER issue (not filter-pushdown), name the unblock (bundle-reader
+      streaming refactor tracked in `mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`), and leave
+      mitigation code untouched. Shipped deployment-service@c566e3e → live-defi-rollout. 2026-05-30.
 
 ## DO NOT (anti-patterns the next agent should avoid)
 
