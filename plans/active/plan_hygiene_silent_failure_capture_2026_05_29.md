@@ -88,7 +88,7 @@ indefinitely with no auto-unblock when blockers complete.
 
 ## Phase 1 — `parent_epic` semantic check (P1)
 
-- [ ] [AGENT] P1. Build initial keyword-surface YAML at `codex/12-agent-workflow/epic-keyword-surface.yaml`. Format:
+- [x] ✅ [AGENT] P1. Build initial keyword-surface YAML at `codex/12-agent-workflow/epic-keyword-surface.yaml`. Format:
       `yaml     mtds_mdps_master:       keywords: [mtds, mdps, instruments-service, manifest, market-tick, candle, backfill]       repos: [market-tick-data-service, market-data-processing-service, instruments-service]     features_and_ml_master:       keywords: [features-service, feature-, ml-, training, registry, polars, formula]       repos: [features-service, ml-service, ml-training-service]     # ... one entry per epic in plans/epics/README.md (19 epics)     `
       Seed each epic's keywords by scanning the epic master plan + its currently-active child plans for distinctive
       tokens (the audit doc from Phase 0 lists existing plan→epic mappings).
