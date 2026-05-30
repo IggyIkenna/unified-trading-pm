@@ -104,7 +104,7 @@ Operator sweep captured. Worker spawn done manually via SSM on 10 VMs.
 After Phase 2 PR lands on LDR, `pm-pull.timer` propagates the new agent-orchestrator HEAD to all 11 VMs. Then enable
 the flag via systemd drop-in + restart orchestrator. **Sequential per-VM** so a bug doesn't melt the fleet.
 
-- [ ] [SCRIPT] P0. Write `unified-trading-pm/scripts/orchestrator/enable_autospawn.sh` — SSM script that writes `/etc/systemd/system/orchestrator.service.d/autospawn.conf` with `Environment=ORCHESTRATOR_AUTOSPAWN_ENABLED=true` then `systemctl daemon-reload + restart orchestrator`. Collision group: none. Estimate: 0.05 AI-day.
+- [x] ✅ [SCRIPT] P0. Write `unified-trading-pm/scripts/orchestrator/enable_autospawn.sh` — SSM script that writes `/etc/systemd/system/orchestrator.service.d/autospawn.conf` with `Environment=ORCHESTRATOR_AUTOSPAWN_ENABLED=true` then `systemctl daemon-reload + restart orchestrator`. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** — script at `scripts/orchestrator/enable_autospawn.sh`. Idempotent; reports slot + tmux state after restart; includes kill-to-verify instructions in header comment.
 - [ ] [SCRIPT] P0. Roll the flag to all 11 VMs **sequentially**: vm-orchestrator first → wait 10 min → verify autospawn fires on a slot you manually kill → expand to next VM. Document each VM's enable-time + first-autospawn-time in this plan. Collision group: `ao_autospawn_rollout`. Estimate: 0.3 AI-day.
 - [ ] [VERIFY] P0. Kill a worker on a Phase-3-enabled VM (`tmux kill-session -t orch-slot-N`) → confirm autospawn re-spawns within 1 minute. Confirm Slack alert fires when 3 consecutive autospawns produce no task claim. Collision group: none. Estimate: 0.1 AI-day.
 
