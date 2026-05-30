@@ -2,8 +2,24 @@
 
 > SSOT for the plan-hygiene guard system: what can go silently wrong, which script catches it,
 > how severe it is, and when the automated sweeps run.
+> Cross-referenced from `plans/PLAN_FORMAT.md` § "Canonical form + automated hygiene".
 >
 > Codified 2026-05-30 per `plan_hygiene_silent_failure_capture_2026_05_29.md` Phase 5.
+
+---
+
+## Why plan hygiene matters
+
+Plans are the primary input to `regen_backlog_from_plan.py`, which seeds the dispatcher. A plan bug
+that isn't caught within one cron cycle can:
+
+- Cause tasks to rot in the queue (no P-priority → dispatcher de-prioritizes to `None`)
+- Route work to the wrong VM (wrong `parent_epic` → operator confusion, no auto-detection)
+- Make an entire plan invisible (authored but unpushed → zero tasks ingested)
+- Leave tasks permanently blocked (prereq done but no one ran the unblock query)
+
+The hygiene stack closes each of these gaps with an automated check that fires within 24 hours of
+a regression being introduced.
 
 ---
 
@@ -24,12 +40,58 @@
 
 ## The 4 Silent-Failure Modes
 
-| # | Mode | What goes wrong | Detection | Severity |
-|---|------|-----------------|-----------|----------|
-| 1 | **Malformed todo format** | `- [ ]` line has wrong tag/priority format. `regen_backlog_from_plan.py` ingests any `- [ ]` line, but a line with no `P[0-3]` anywhere gets `priority=None` — the dispatcher de-prioritises it to the bottom of the queue indefinitely. | `check_todo_format.sh` | HARD (missing P-tag) / SOFT (has priority, wrong format) |
-| 2 | **Wrong `parent_epic`** | An active plan's `parent_epic:` frontmatter value doesn't match any known epic keyword. The regen loop treats the plan as an orphan and the inventory regenerator flags it in the dashboard. | `check_parent_epic_alignment.py` | SOFT |
-| 3 | **Unpushed plan files** | A worker authors or updates a plan locally but never pushes. The regen loop on the orchestrator host never sees the change — todos stay invisible and are not dispatched. | `slot-git-status-report.sh` (posts to `/api/slots/<N>/git-status` every 5 min; dirty `plans/active/*.md` paths trigger a Slack alert throttled to 1/slot/30 min) | HARD (alert-on-detect; operator must push) |
-| 4 | **Stale-blocked tasks** | A task's prereq task is itself stuck (`queued` with unmet prereqs), or the prereq task_id no longer exists in the backlog. The dispatcher skips the blocked task silently on every worker `/boot` cycle — it never escalates. | `reap_stale_blockers.py` — classifies `DEADLOCK` (both blocked), `ORPHAN` (missing prereq), `PHANTOM_DONE` (resolves next boot) | HARD for DEADLOCK/ORPHAN (exit 1 → Slack alert) |
+| # | Mode | Root cause | Detector | Severity |
+|---|------|-----------|----------|---------|
+| 1 | **Malformed todo format** | `- [ ]` line missing `P[0-3]` tag → regen assigns priority `None` → task sinks | `check_todo_format.sh` | **HARD** (exit 1 on NO_PRIORITY) |
+| 2 | **Wrong `parent_epic`** | Plan body content mismatches declared epic → work routed to wrong VM | `check_parent_epic_alignment.py` | SOFT (warn only) |
+| 3 | **Unpushed plan files** | Plan file dirty/untracked in a slot's PM worktree → invisible to all other VMs | `slot-git-status-report.sh` + Slack alert | Immediate Slack alert (no threshold) |
+| 4 | **Stale blockers** | Blocker task `done` but blocked task stays `queued` forever | `reap_stale_blockers.py` cron (04:00 UTC) | Exit 1 on DEADLOCK/ORPHAN; info on PHANTOM_DONE |
+
+### Mode 1: Malformed todo format
+
+`check_todo_format.sh` scans every `- [ ]` line in `plans/active/*.md` and
+`plans/active/issues/*.md` for two failures:
+
+- **NO_PRIORITY** (❌ HARD): no `P[0-3]` tag anywhere → regen defaults priority to `None` →
+  dispatcher de-prioritizes.
+- **NON_CANONICAL** (⚠️ SOFT): has P-tag but bracket order is wrong (e.g. `[TAG][P0]`,
+  `[P0][TAG]`, `[P0]` alone).
+
+Auto-fixer: `bash scripts/plan-hygiene/fix_todo_format.sh` (dry-run by default; `--apply` to
+write). Handles edge cases including `[TAG — qualifier] P<n>.` → `[TAG] P<n>. body — qualifier`
+and `[CLAUDE.md] P<n>.` → `[CLAUDE-MD] P<n>.` (dots banned in tags).
+
+### Mode 2: Wrong `parent_epic`
+
+`check_parent_epic_alignment.py` scores each plan body against the keyword surfaces defined in
+`codex/12-agent-workflow/epic-keyword-surface.yaml`. If the highest-scoring epic differs from the
+plan's declared `parent_epic:`, a WARN is emitted with the top-3 scores. Soft check: the
+heuristic can misfire on cross-domain plans (e.g. a CEFI backfill plan touches manifest + MDPS
+keywords). Operators review the WARN list; no auto-fix.
+
+### Mode 3: Unpushed plan files
+
+`scripts/dev/slot-git-status-report.sh` reports an `unpushed_plans: [list]` field whenever a
+plan file (`plans/active/*.md` or `plans/active/issues/*.md`) is dirty or untracked in the slot's
+PM worktree. The orchestrator's `WorkerLivenessKicker._maybe_alert_unpushed_plans()` fires a
+Slack alert immediately on first detection (no staleness threshold — any dirty plan is
+operator-actionable). Alert format: `🔴 Slot N has unpushed plan(s): X.md, Y.md`.
+Throttled to once per 30 min per slot to avoid spam.
+
+### Mode 4: Stale blockers
+
+`scripts/orchestrator/reap_stale_blockers.py` queries tasks where `status=queued`,
+`prereqs.completed_tasks` includes a task not yet `done`, and `queued_at < now - 3 days`. Three
+outcomes per finding:
+
+- **PHANTOM_DONE** (info): blocker is `done` but the blocked task hasn't been picked up → auto-info
+  log only; dispatcher will catch it on next tick.
+- **DEADLOCK** (exit 1): both the task AND its blocker are stuck in `queued` → Slack alert with
+  both task IDs; operator intervention required.
+- **ORPHAN** (exit 1): blocker task ID not found in backlog at all → Slack alert; operator
+  must reconcile or remove the prereq.
+
+Run `--dry-run` to preview without alerts. Full doc: `codex/12-agent-workflow/stale-blocker-reaper.md`.
 
 ---
 
@@ -68,9 +130,8 @@ The reaper (`reap_stale_blockers.py`) runs at **04:00 UTC**, 1 hour before the h
 
 ## Closed Set of Valid Tags
 
-Tags appear in the role-tag bracket immediately after `- [ ] ` (canonical form: `- [ ] [TAG] P<n>. description`).
-
-The tag set is **closed** — the regex enforces `[A-Z][A-Z0-9_-]*` (uppercase, digits, hyphens only; no dots, no spaces, no em-dashes in the tag itself).
+Defined in `plans/PLAN_FORMAT.md` § "Canonical form + automated hygiene". Reproduced here for
+quick reference (case-sensitive uppercase):
 
 ### Role tags
 
@@ -104,11 +165,11 @@ BLOCKED-INFRA              Infrastructure blocker (e.g. quota, VM unavailable)
 
 ### How to add a new tag
 
-1. Open a PR to `plans/PLAN_FORMAT.md` — add the tag to the closed-set table in § "Cursor-Friendly Todo Checkboxes".
+1. Open a PR to `plans/PLAN_FORMAT.md` — add the tag to the closed-set block in § "Cursor-Friendly Todo Checkboxes".
 2. Update `CANONICAL_BODY_RE` in `scripts/plan-hygiene/check_todo_format.sh` if the tag has unusual casing or structure
    (standard `[A-Z][A-Z0-9_-]*` pattern covers most new tags automatically).
 3. Run `bash scripts/plan-hygiene/check_todo_format.sh` after merging to confirm no existing todos are newly flagged.
-4. Cross-link the new tag in `codex/12-agent-workflow/plan-hygiene.md` (this file) under the correct category.
+4. Cross-link the new tag in this file under the correct category.
 
 > A tag with dots (e.g. `[CLAUDE.md]`) or em-dashes inside brackets (e.g. `[BLOCKED — REASON]`) is **invalid** —
 > the regex won't match it and `check_todo_format.sh` will flag all lines using it as NON_CANONICAL. Use hyphens:
@@ -118,13 +179,13 @@ BLOCKED-INFRA              Infrastructure blocker (e.g. quota, VM unavailable)
 
 ## Automated Cron Schedules
 
-Three sweeps run on a fixed UTC schedule. All three are installed on the orchestrator VM:
+Three sweeps run on a fixed UTC schedule, offset to avoid resource contention on the planning VM:
 
-| Sweep | Schedule | Script | Exit semantics |
-|-------|----------|--------|----------------|
-| Stale-blocker reaper | **04:00 UTC daily** (systemd timer: `reap-stale-blockers.timer`) | `scripts/orchestrator/reap_stale_blockers.py` | Exit 1 → DEADLOCK/ORPHAN found → Slack alert |
-| Plan-hygiene sweep | **05:00 UTC daily** (systemd timer: `cron_hygiene_sweep_entrypoint.sh`) | `scripts/plan-hygiene/run_hygiene_sweep.sh --ci` | Exit 1 → any HARD check fails → orchestrator inboxes notified |
-| Orphan-ping audit | **Every 4h** at `15 2,6,10,14,18,22 UTC` (GCP Cloud Scheduler + local crontab) | `scripts/agents/audit_ping_orphans.sh` | Appends `## [orphan-ping-cron]` notification to both orchestrator inboxes if orphans found |
+| Sweep | Schedule | Mechanism | Log |
+|-------|----------|-----------|-----|
+| Stale-blocker reaper | **04:00 UTC daily** | systemd `reap-stale-blockers.timer` on orchestrator VM | `/var/log/orchestrator/reap_<date>.log` |
+| Plan-hygiene sweep | **05:00 UTC daily** | GCP Cloud Run Job `uts-prod-plan-hygiene-sweep` (+ systemd `plan-hygiene-sweep.timer`) | Cloud Run Logs |
+| Orphan-ping audit | **Every 4h** (`15 2,6,10,14,18,22 UTC`) | GCP Cloud Scheduler `uts-prod-orphan-ping-audit` + local crontab | `/tmp/orphan_pings_audit.log` |
 
 ### Why the reaper runs 1 hour before the hygiene sweep
 
@@ -137,13 +198,10 @@ prereq chains. This avoids false-positive DEADLOCK alerts that would self-resolv
 # Stale-blocker reaper systemd timer
 sudo bash scripts/orchestrator/install_reap_stale_blockers.sh
 
-# Plan-hygiene sweep systemd timer
-# (entrypoint: scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh)
-sudo systemctl enable --now plan-hygiene-sweep.timer
-
-# Orphan-ping (local cron)
+# Orphan-ping (local crontab)
 crontab -e
-# Add: 15 */4 * * * cd ${WORKSPACE_ROOT}/unified-trading-pm && bash scripts/agents/audit_ping_orphans.sh >> /tmp/orphan_pings_audit.log 2>&1
+# Add:
+0 */4 * * * cd ${WORKSPACE_ROOT}/unified-trading-pm && bash scripts/agents/audit_ping_orphans.sh >> /tmp/orphan_pings_audit.log 2>&1
 ```
 
 ---
@@ -171,10 +229,11 @@ bash unified-trading-pm/scripts/plan-hygiene/fix_todo_format.sh --apply
 
 ## Cross-References
 
-- `plans/PLAN_FORMAT.md` — canonical todo format + full tag table (§ "Cursor-Friendly Todo Checkboxes")
+- `plans/PLAN_FORMAT.md` — canonical tag set + todo format spec (§ "Cursor-Friendly Todo Checkboxes")
 - `scripts/plan-hygiene/check_todo_format.sh` — NO_PRIORITY / NON_CANONICAL detection logic
 - `scripts/plan-hygiene/fix_todo_format.sh` — mechanical rewriter for NON_CANONICAL patterns
 - `scripts/plan-hygiene/run_hygiene_sweep.sh` — the full 9-check sweep orchestrator
 - `codex/12-agent-workflow/stale-blocker-reaper.md` — blocker-reaper design, DEADLOCK/ORPHAN/PHANTOM_DONE categories
-- `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` — unpushed-plan alert (silent-failure mode 3)
+- `codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md` — unpushed-plan Slack alert (silent-failure mode 3)
+- `codex/12-agent-workflow/epic-keyword-surface.yaml` — epic keyword surface for parent_epic alignment check
 - `plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md` — the plan that produced this doc
