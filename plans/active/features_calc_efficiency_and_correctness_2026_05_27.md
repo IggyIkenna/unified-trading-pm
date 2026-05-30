@@ -147,12 +147,24 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       ~0.8-3.2 s per (instrument, feature_group, timeframe)); now fire concurrently. 4-8× wall-clock win on the
       GCS-latency-bound write path. File count unchanged; deeper file-consolidation (fewer-larger-objects) deferred per
       plan note "design carefully; coordinate with the writegate" — captured as 1.3b below.
-- [ ] [DEFERRED] P2. **1.3b File consolidation (one parquet per (day,fg,tf) with all instruments as rows).** Real
+- [x] ✅ [DEFERRED] P2. **1.3b File consolidation (one parquet per (day,fg,tf) with all instruments as rows).** Real
       object-count reduction (3.5M tiny files → ~225K consolidated). Blocked on: (i) reader-layout change in mtf +
       cross_instrument data_loader; (ii) manifest shard-granularity revision; (iii) migration of existing -test/-prd
       output. Multi-day work; named-successor for the deeper batching goal in 1.3. **Operator 2026-05-28**: needs deeper
       investigation — dig in before scheduling a migration window.
-- [ ] [DEFERRED] P2. **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
+      **INVESTIGATION RESULT (2026-05-30 slot-2)**: Dug into all 3 blockers. Complexity summary:
+      - **(i) Reader layout (~80 lines, 6-8h, moderate)**: mtf `engine/orchestrator.py:419-438` (`_load_spec`) + cross_instrument
+        `cli/handlers/batch_handler.py:133-160` (`_load_parquets_concat` / `_ingest_delta_one`) both split GCS path to extract
+        `instrument_id` from filename — obsolete when `instrument_id` is a column. ~2 files, ~80 lines.
+      - **(ii) Manifest shard-granularity (~150 lines, 10-14h, high)**: `delta_one/engine/orchestrator.py:340-387`
+        (`_write_feature_group_manifest`) emits per-instrument rows; changing to per-(day,fg,tf) aggregates requires UTL
+        manifest schema + inference logic update + downstream consumer audit. High risk.
+      - **(iii) GCS migration (~250 lines new script, 12-16h, high)**: walk existing layout per-instrument → group by
+        (day,fg,tf) → consolidate → update manifest → audit. Must use `gcs_copy_object` (not gsutil). Test + prod buckets.
+      **VERDICT**: 28-38h total. Not schedulable as a P2 ad-hoc fix — needs a dedicated migration window + operator
+      coordination (reader layout change affects mtf + cross_instrument live path). File a successor active plan when
+      features end-to-end + correctness is GREEN per operator priority order (see 1.4 note). Investigation complete.
+- [x] ✅ [DEFERRED] P2. **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
       successor `plans/active/colocated_feature_pipeline_in_memory_handoff_TBD.md`** (operator to schedule). Honest
       scope assessment: within delta_one there are **zero inter-group computational dependencies** — every feature_group
       (candlestick_patterns / momentum / moving_averages / oscillators / technical_indicators / volatility_realized /
@@ -167,6 +179,8 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       priority order is (1) features-service end-to-end correct, then (2) function correctness, then (3)
       colocation/parallelism optimisations to eliminate IO waste. This is a (3) item — don't pull forward; revisit after
       end-to-end + correctness ship.
+      **ACK (2026-05-30 slot-2)**: Operator direction confirmed. No code shipped — deferred per priority order.
+      Successor plan `colocated_feature_pipeline_in_memory_handoff_TBD.md` to be filed when (1)+(2) are GREEN. — PM@b4be0743
 - [x] ✅ [P2] **1.5 Idempotent skip (delta_one writer).** — **DONE** features@670fd76e. The orchestrator's
       `_process_instrument` already short-circuited on `force_reprocess=False` + `check_exists=True`, but
       `FeatureWriter.check_exists` was a stub returning False — making every backfill recompute+rewrite even
