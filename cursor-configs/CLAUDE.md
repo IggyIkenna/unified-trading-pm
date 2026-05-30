@@ -142,6 +142,12 @@ categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2
   `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
 - Cluster validation MANDATORY at `record_captured()` for bundled data_types. QG STEP 5.64 enforces. UTL raises
   `MissingClusterValidationError` if kwargs absent.
+- **TradFi `source` column (v9 schema)**: `record_captured(source=...)` REQUIRED for all TradFi writes. UTL raises
+  `MissingSourceError` when `asset_group="tradfi"` and `source` omitted. QG STEP 5.64 enforces. Multi-source union
+  semantics: if ≥1 source is `captured`, downstream treats the cell as `captured`. Source priority:
+  `select_primary_available_source()` in `unified_api_contracts.canonical.crosscutting.source_priority`. SSOT:
+  `codex/02-data/honest-absence-downstream-handling.md` § "Multi-source cell consumer policy". Landed:
+  `tradfi_massive_dual_source_2026_05_28.md` Phase 3.
 - `available_at` is per-row write-time. UTL `record_captured` asserts presence internally.
 - Service-output emission: every publish path through `_resolve_policy_output_data_type` + `_publish_emission_check`.
   SSOT: `codex/02-data/service-output-emission-semantics.md`.
