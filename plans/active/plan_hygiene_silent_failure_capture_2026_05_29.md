@@ -135,11 +135,15 @@ indefinitely with no auto-unblock when blockers complete.
       IS the `blocked_on` list — the dispatcher skips `queued` tasks whose `prereqs.completed_tasks` have any entry
       not yet `done`. `TaskRow.queued_at` is the staleness timestamp. The reaper queries `status=queued` tasks where
       `prereqs.completed_tasks` includes any task not `done`, with `queued_at < now-3d`. No new DB column needed.
-- [ ] [AGENT] P1. Write `scripts/orchestrator/reap_stale_blockers.py`: query backlog for tasks in `state=blocked` with
+- [x] ✅ [AGENT] P1. Write `scripts/orchestrator/reap_stale_blockers.py`: query backlog for tasks in `state=blocked` with
       `assigned_at >= now-3d`; for each, look up the blocker dependency. Three outcomes: - Blocker `done` or `archived`
       → auto-unblock the task; log a `docs(backlog): unblock <task> — blocker <id> resolved` entry to a daily summary
       file. - Blocker also `blocked` → flag as deadlock; emit a Slack alert with both task IDs. - Blocker missing /
       unknown → flag as orphan-blocked; emit Slack alert.
+      Three categories: DEADLOCK (both queued), ORPHAN (blocker missing from backlog), PHANTOM_DONE (blocker done
+      but dispatcher hasn't picked up — info only). Reads backlog.yaml via PyYAML + SQLite tasks table directly.
+      Exit 1 on DEADLOCK/ORPHAN. `--dry-run` default recommended. First run: 0 findings/260 tasks (all clean).
+      — unified-trading-pm@<sha>
 - [ ] [AGENT] P1. Cloud Scheduler entry: daily at 04:00 UTC (offset from the 05:00 UTC hygiene sweep so they don't
       compete). Tag with `orchestrator_master` so logs surface in the standard orchestrator dashboard.
 - [ ] [AGENT] P1. Document the reaper in `codex/12-agent-workflow/` (new sub-doc or extension of existing).
