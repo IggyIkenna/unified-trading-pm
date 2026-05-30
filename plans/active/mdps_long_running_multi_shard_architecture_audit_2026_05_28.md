@@ -287,14 +287,21 @@ Concrete questions to answer + corresponding redesigns to ship:
       `derive_symbol_set`. Exported from `unified_api_contracts.canonical`. 16 tests in `tests/test_instrument_key.py`.
       No existing parser in UAC — confirmed via grep before adding. MDPS `utils/path_parsing.py` implementation kept
       as the MDPS-internal caller; downstream callers should migrate to `unified_api_contracts.canonical.parse_instrument_key`.
-- [ ] [AGENT] P1. **3.2 Replace the substring filter in `_collect_matching_parquet_blobs`** with a structured check
+- [x] ✅ [AGENT] P1. **3.2 Replace the substring filter in `_collect_matching_parquet_blobs`** with a structured check
       derived from the parsed canonical id. Each blob path is matched on (venue, instrument_type, symbol) extracted from
       the path, against the per-axis derived sets. Bare-symbol matching (`BTCUSDT`) stays supported as a fallback for
       legacy / convenience use cases but emits a deprecation log.
-- [ ] [AGENT] P1. **3.3 Update the regression tests** in `test_orchestration_scanner.py`. Add cases for canonical
+      **DONE 2026-05-30** — market-data-processing-service@a82706e: fallback path (line 393) replaced
+      `any(iid in blob_name ...)` with `blob_matches_any_instrument_id`. Primary path (line 475) was already using
+      the canonical-aware function (shipped at 9ea08c8). Fix: canonical ids like BINANCE-FUTURES:PERPETUAL:BTCUSDT
+      now correctly match hive-format paths in the fallback branch. 2 new tests in TestFallbackPathCanonicalFilter.
+- [x] ✅ [AGENT] P1. **3.3 Update the regression tests** in `test_orchestration_scanner.py`. Add cases for canonical
       matching (`["BINANCE-FUTURES:PERPETUAL:BTCUSDT"]` → exactly the BINANCE-FUTURES perpetual BTCUSDT blob, even if a
       BYBIT perpetual BTCUSDT exists in the same scope) and the bare-symbol fallback (with the deprecation log
       assertion).
+      **DONE 2026-05-30** — same commit a82706e: `TestFallbackPathCanonicalFilter` (2 tests). Pre-existing
+      `TestCanonicalInstrumentIdMatching` (4 tests) already covered the primary path canonical cases. 12 tests total
+      in test_orchestration_scanner.py, all pass.
 - [ ] [AGENT] P1. **3.4 Update the launcher pass-through documentation** in `launch-mdps-backfill-vm.sh` to recommend
       canonical form. The bare-symbol form should be tagged as legacy.
 
