@@ -148,9 +148,9 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   Euclidean, never raw correlated-feature Euclidean.
 - [ ] [UAC] P2. Register `regime_clustering` (+ `strategy_pnl_archetype`) in
   `unified_api_contracts/.../features/registry.py EXPECTED_FEATURE_GROUPS_BY_SERVICE`.
-- [ ] [FEATURES] P1. **Compute forward price `F`** (ABSENT today) from perp mark + funding
+- [x] ✅ [FEATURES] P1. **Compute forward price `F`** (ABSENT today) from perp mark + funding
   (`F ≈ S·(1 + funding·τ_next)`) or futures mark; land as a small PIT feature/ledger field. Prerequisite for the
-  forward-log-moneyness normalisation (Phase 3).
+  forward-log-moneyness normalisation (Phase 3). **DONE 2026-05-30** — `features_service/delta_one/app/calculators/forward_price.py` (ForwardPrice calculator): perp path `F = mark*(1+funding*tau_next)` with tau resolved from 00/08/16 UTC boundaries or next_funding_ts column; futures path `F = close`. Outputs `forward_price` + `tau_next_funding`. 18 unit tests; basedpyright 0 errors; ruff clean. Pushed to features-service @ 7d9222bd.
 
 ## Phase 2 — Consume regime in supervised layer (ml-service) — *no new service*
 
