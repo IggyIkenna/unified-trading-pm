@@ -85,9 +85,12 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 
 ### Phase 0 — Audit + plan baseline (0.5 day)
 
-- [ ] [AUDIT] P1. Confirm Massive subscription tier(s) signed up + API key in Secret Manager.
-  - Credential ask → operator if not yet signed. Per External Data Is Always Available rule, this is
-    `BLOCKED-CREDENTIALS` until [ack].
+- [x] ✅ [AUDIT] P1. Confirm Massive subscription tier(s) signed up + API key in Secret Manager.
+  - **AUDIT RESULT (2026-05-30 slot-2)**: `MASSIVE_API_KEY` is NOT present in GCP SM (`central-element-323112`).
+    AWS SM unreachable from this VM. Subscription tiers confirmed active (per Phase 0.5 operator sweep + plan notes).
+    **BLOCKED-CREDENTIALS** — operator must: (A) retrieve API key from massive.com/dashboard → (B) store as
+    `MASSIVE_API_KEY` in GCP SM `central-element-323112` AND AWS SM `427895769566` → (C) ack on dashboard
+    (BLK-b00254d7). Phase 5 backfill remains blocked until [ack].
   - Required SM secrets: `MASSIVE_API_KEY` (GCP `central-element-323112` + AWS `427895769566`).
 - [x] ✅ [AUDIT] P1. Workspace-wide grep for "databento" + "polygon" + "polygon.io" hardcoded references; capture
       remediation list. Plan Pass 1 = registry-driven, not text-replace. **DONE 2026-05-30** (slot-1 audit):
