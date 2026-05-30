@@ -263,7 +263,8 @@ Five-step pipeline, mapped onto what already exists vs what is new:
   size down or veto; if clean, soft-Kelly up. Conditions on realised execution quality (≈exogenous), so survives the
   selection-bias critique. Layered on top of Phase 3 sizing, reads the same regime artifact.
   — strategy-service@8d81652 | `AnalogExecutionGate` kNN gate; veto/size-down/neutral/kelly-boost ladder;
-  13 unit tests; pure stdlib, no I/O.
+  13 unit tests; pure stdlib, no I/O. + strategy-service@877dad9 | `KnnAnalogGate` in `analog_gate.py`;
+  cluster-filtered kNN + soft-Kelly `scale_factor` + `AnalogRecord`/`ExecutionQuality` types; callable as `analog_gate_fn`.
 
 ## Phase 6 — Multi-timeframe + fusion
 
