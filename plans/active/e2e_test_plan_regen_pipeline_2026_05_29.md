@@ -28,5 +28,6 @@ the ingestion latency is measured.
       actually work this task — it exists only for pipeline verification.
       — Pipeline confirmed working: task dispatched to slot-3 2026-05-30.
 
-- [ ] [AGENT] P3. Test task B — second task to confirm multi-task plan ingestion works.
+- [x] ✅ [AGENT] P3. Test task B — second task to confirm multi-task plan ingestion works.
       Same as above: pipeline-verification only. Do NOT dispatch.
+      — Multi-task ingestion confirmed: both task A and B dispatched to slot-3 2026-05-30. PM@(next).
