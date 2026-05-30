@@ -1,0 +1,23 @@
+[Unit]
+Description=Reap stale-blocked backlog tasks and alert on deadlocks/orphans
+Documentation=unified-trading-pm/scripts/orchestrator/reap_stale_blockers.py
+After=network.target
+
+[Service]
+Type=oneshot
+# Run as root (same as pm-pull) to ensure access to the orchestrator state.db
+User=root
+EnvironmentFile=-/etc/orchestrator-env
+# Inherit AGENT_ORCHESTRATOR_SLACK_WEBHOOK from the orchestrator service drop-in
+ExecStart=/usr/bin/python3 \
+    /home/ubuntu/unified-trading-system-repos/unified-trading-pm/scripts/orchestrator/reap_stale_blockers.py \
+    --stale-days 3 \
+    --summary-dir /var/log/orchestrator
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=reap-stale-blockers
+# Tag all log lines with orchestrator_master for dashboard surfacing
+Environment=ORCHESTRATOR_TAG=orchestrator_master
+
+[Install]
+WantedBy=multi-user.target

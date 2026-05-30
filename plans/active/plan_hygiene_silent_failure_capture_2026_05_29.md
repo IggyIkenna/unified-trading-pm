@@ -144,8 +144,14 @@ indefinitely with no auto-unblock when blockers complete.
       but dispatcher hasn't picked up — info only). Reads backlog.yaml via PyYAML + SQLite tasks table directly.
       Exit 1 on DEADLOCK/ORPHAN. `--dry-run` default recommended. First run: 0 findings/260 tasks (all clean).
       — unified-trading-pm@<sha>
-- [ ] [AGENT] P1. Cloud Scheduler entry: daily at 04:00 UTC (offset from the 05:00 UTC hygiene sweep so they don't
+- [x] ✅ [AGENT] P1. Cloud Scheduler entry: daily at 04:00 UTC (offset from the 05:00 UTC hygiene sweep so they don't
       compete). Tag with `orchestrator_master` so logs surface in the standard orchestrator dashboard.
+      **Implementation**: systemd timer (not GCP Cloud Scheduler) because the reaper reads SQLite state.db
+      directly and must run on the orchestrator VM. Pattern mirrors `pm-pull.timer`.
+      `reap-stale-blockers.service` + `reap-stale-blockers.timer` (OnCalendar=*-*-* 04:00:00 UTC) +
+      `install_reap_stale_blockers.sh` (sudo bash to install). Logs to `/var/log/orchestrator/reap_<date>.log`.
+      **[OPERATOR-SSM]**: run `sudo bash scripts/orchestrator/install_reap_stale_blockers.sh`
+      on the orchestrator VM to activate. — unified-trading-pm@<sha>
 - [ ] [AGENT] P1. Document the reaper in `codex/12-agent-workflow/` (new sub-doc or extension of existing).
 
 ## Phase 4 — Edge-case extensions to check_todo_format (P2)

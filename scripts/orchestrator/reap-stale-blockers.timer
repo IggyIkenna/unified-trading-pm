@@ -1,0 +1,15 @@
+[Unit]
+Description=Daily stale-blocker reaper timer (04:00 UTC)
+Documentation=unified-trading-pm/scripts/orchestrator/reap_stale_blockers.py
+Requires=reap-stale-blockers.service
+
+[Timer]
+# Fire daily at 04:00 UTC — 1 hour before the plan-hygiene sweep at 05:00 UTC
+# so they don't compete for git pull / disk I/O.
+OnCalendar=*-*-* 04:00:00 UTC
+# If the system was down at 04:00, fire within 10 minutes of restart.
+Persistent=true
+AccuracySec=60
+
+[Install]
+WantedBy=timers.target
