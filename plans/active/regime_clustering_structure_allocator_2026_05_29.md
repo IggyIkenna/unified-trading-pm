@@ -195,11 +195,15 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 - [ ] [GREEKS] P2. **Extend greeks-service BS kernel with vanna + volga** (`greeks_service/kernels/black_scholes.py` —
   today Δ/Γ/Θ/Vega/Ρ only; UAC `OptionGreeks` already has vanna/volga slots). REUSE the existing PricingLedger output
   path. The factor-target objective needs these second-order greeks.
-- [ ] [STRATEGY] P2. **Normalised strike/term coordinates — RESOLVED 2026-05-30**: model/select in **forward
+- [x] ✅ [STRATEGY] P2. **Normalised strike/term coordinates — RESOLVED 2026-05-30**: model/select in **forward
   log-moneyness `k = ln(K/F)` + business-day tenor `τ`** (arbitrage-correct, stationary across underlyings + time).
   Depends on forward `F` (Phase 1 forward-price item). Delta-space is a deferred upgrade (needs the vol surface).
   Training/clustering + the factor-target solve run in this normalised space; the real listed strike/expiry is recovered
   in Phase 4.
+  **DONE 2026-05-30 slot-2** — `strategy_service/engine/strategies/v2/vol_trading/discrete_structure_allocator.py`:
+  `ListedOption.forward_price: Decimal | None` field + `ListedOption.log_moneyness` property (`k = ln(K/F)`);
+  `business_day_tenor()` standalone function (Mon–Fri calendar, 252 d/yr). 12 new tests (ATM/OTM/ITM sign semantics
+  + FD-verified values). basedpyright + ruff clean. QG green — strategy-service@9d53bee.
 - [x] ✅ [STRATEGY] P1. **Solve over the discrete listed universe directly** (constrained/combinatorial over real listed
   strikes×expiries) — NOT optimise-continuous-then-snap (nearest-strike ≠ nearest-risk; snapping distorts the engineered
   profile).
