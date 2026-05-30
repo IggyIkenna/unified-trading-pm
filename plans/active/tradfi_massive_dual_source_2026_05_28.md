@@ -108,8 +108,13 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       Remediation plan: Pass 1 (registry-driven) = Phase 1 UAC SOURCE_PRIORITY update will make source strings
       importable constants; adapters switch to `get_tradfi_protocol_url()`. Pass 2 = when Massive connector is added,
       adapter URL hardcodes become moot (both route through registry). No text-replace needed.
-- [ ] [AUDIT] P1. Confirm `SOURCE_PRIORITY` module docstring's deferred-plan slug is `multi_source_priority_merge_*` and
-      reserve THIS plan's slug as the canonical successor (cross-link both ways).
+- [x] ✅ [AUDIT] P1. Confirm `SOURCE_PRIORITY` module docstring's deferred-plan slug is `multi_source_priority_merge_*` and
+      reserve THIS plan's slug as the canonical successor (cross-link both ways). **DONE 2026-05-30** (slot-1):
+      `unified_api_contracts/canonical/crosscutting/source_priority.py` line 18 had
+      `multi_source_priority_merge_2026_*<TBD>.md` — updated to name THIS plan
+      (`tradfi_massive_dual_source_2026_05_28.md Phase 2`) as the canonical successor. UAC@{sha below}.
+      Cross-link: `source_priority.py` → this plan (docstring); this plan Phase 2 → `source_priority.py`
+      (the `read_with_source_priority()` extension is Phase 2 task #1).
 
 ### Phase 0.5 — Universe expansion (shipped 2026-05-28)
 
