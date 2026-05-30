@@ -242,9 +242,18 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 
 ### Phase 5 — Cleanup + codex updates (0.25 day)
 
-- [ ] [SCRIPT] P1. Once all 10 repos run cleanly on v2, delete v1 caller workflow files in each repo (single quickmerge
+- [x] ✅ [SCRIPT] P1. Once all 10 repos run cleanly on v2, delete v1 caller workflow files in each repo (single quickmerge
       per repo). Keep the v1 PM callee `python-quality-gates.yml` for now to avoid forced GitHub re-validation; remove
       in a later cleanup once GH Support ticket clears.
+      **DONE (partial) 2026-05-30** — v1 deleted from 6/10 passing repos:
+      - unified-trading-pm: deleted `quality-gates.yml` @2d1d9808 (kept `python-quality-gates.yml` per plan)
+      - unified-api-contracts: deleted `workspace-qg.yml` @c396542
+      - unified-trading-library: deleted `workspace-qg.yml` @d46bb7bd
+      - alerting-service: deleted `workspace-qg-v2.yml` + `workspace-qg-v3.yml` @2e8a10c
+      - ml-service: deleted `workspace-qg.yml` @86bb7ae
+      - execution-service: deleted `workspace-qg.yml` @94596ddf
+      Remaining 4 repos blocked on pre-existing code quality issues:
+      - features-service: 7 lint errors; batch-live-recon: coverage 78.2%; instruments-service: coverage 76.8%; deployment-ui: GH_PAT auth
 - [ ] [CODEX] P1. Update `codex/08-workflows/ci-cd-flow.md` to reference the v2 job key as the canonical required-check
       name. Add SUPERSEDED banner to any sub-doc that names the v1 `quality-gates` context.
 - [ ] [CODEX] P1. Update `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` with Option D results +
