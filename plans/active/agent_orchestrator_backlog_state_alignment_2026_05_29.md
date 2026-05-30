@@ -188,10 +188,10 @@ VMs = 6,397 lines (271 tasks).
 Either (a) per-VM plan-scope logic in regen treats these two as workspace-aggregator roles, or (b) the same plan gets
 imported 24×.
 
-- [ ] [RESEARCH] P1. Read `regen_backlog_from_plan.py` to find per-VM scope logic. Capture: where does it decide "which
+- [x] ✅ [RESEARCH] P1. Read `regen_backlog_from_plan.py` to find per-VM scope logic. Capture: where does it decide "which
       plans does this VM own"? Is there an `assigned_vm` filter? If so why does it produce 21× for these two VMs?
       Compare regen output on vm-cefi vs vm-ml side-by-side. Affinity: agent-orchestrator-familiar slot. Collision
-      group: `ao_regen_scope_code`. Estimate: 0.3 AI-day.
+      group: `ao_regen_scope_code`. Estimate: 0.3 AI-day. **DONE 2026-05-30** — FINDINGS: (1) NO per-VM scope filter exists in regen. `regen_backlog_from_plan.py` scans ALL `plans/active/*.md` indiscriminately; `assigned_vm` frontmatter field is NEVER read. All VMs get all tasks. (2) Dedup is text-exact on brief (raw `- [ ] description text`). Any edit to an unchecked line produces a new task ID — old ID becomes orphan. (3) 21×/24× bloat root cause = brief-mutation accumulation: plan lines were extensively edited (adding operator-acked notes, credential blocks, etc.) generating new task IDs on each regen tick WITHOUT prune_stale. Current unchecked count = 140 tasks across 38 plans; vm-ml has 6,595 = ~47×. (4) `prune_stale=True` (already shipped) addresses symptom. Structural fix (task -017): add `assigned_vm` filter so each VM only ingests plans where `assigned_vm` matches its VM id.
 - [ ] [CODE] P1. Fix the per-VM scope bug surfaced in research phase. Could be filter logic, dedup logic, or
       epic-fan-out logic. Write a unit test reproducing the 21× bloat with current plan set. Then fix + verify. QG
       green + quickmerge. Collision group: `ao_regen_scope_code`. Estimate: 0.5 AI-day.
