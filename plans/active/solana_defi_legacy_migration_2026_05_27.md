@@ -491,9 +491,10 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
-- [ ] 🟡 OPERATIONALLY IN PROGRESS [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped
-      mtds@9a840e01 but sig index NOT BUILT on GCS yet; index builder dispatched 2026-05-29 — relaunch + flip will
-      follow successful index build. Original fix shipped 2026-05-29 (MTDS@fc7e0636).
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped mtds@9a840e01;
+      sig index gap FILLED (3547+876 parts, 2024-10-31→2026-05-29 continuous); VM `mtds-solana-drift-backfill`
+      RUNNING 2026-05-30 (backfill 2025-01-09→2026-02-14 in progress). Original fix MTDS@fc7e0636;
+      Helius dispatcher MTDS@9a840e01; index build completed 2026-05-30T09:36Z per SANITY_CHECK.
       **2026-05-30 sig index audit (slot-1)**: `_index/drift_v2_sig_index_parts/` has 2936 parts covering
       2026-02-15→2026-05-28 (HEAD end); `_index/drift_v2_sig_index_parts_b/` has 876 parts covering
       2024-10-31→2025-01-14. **GAP: 2025-01-14→2026-02-15 (13 months) not in either index set.** Backfill VM
