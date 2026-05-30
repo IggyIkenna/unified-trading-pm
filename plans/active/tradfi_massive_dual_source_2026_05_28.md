@@ -264,8 +264,10 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       `[timestamp, timestamp_out, venue, symbol, instrument_id, open, high, low, close, volume, trade_count, market_state]`.
       This is expected — the [OPERATOR] pre-migration drain (Phase 5 step 2) has not been executed yet (blocked on
       MASSIVE_API_KEY BLK-b00254d7). Re-run this audit AFTER operator completes drain + backfill run.
-- [ ] [VERIFY] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
-      populated.
+- [ ] [VERIFY] [BLOCKED-DEPENDENCY] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
+      populated. **PRE-AUDIT (2026-05-30 slot-2)**: `source` field absent from manifest availability_index.parquet
+      (checked market-data-tick-tradfi-central-element-323112). Same blocker as task -030 (BLK-b00254d7 /
+      BLK-c40c61fe). Re-run after operator drain + backfill + manifest consolidation.
 
 ### Phase 6 — Codex SSOT updates + plan archival prep (0.5 day)
 
