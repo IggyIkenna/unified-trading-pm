@@ -146,9 +146,19 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
       Prior slot-2 entry (`ESH26:XCME`) was WRONG — inferred from a buggy docstring that said `nQ1:XCME style` (that is
       Databento format, not Massive). Docstring corrected in MTDS@037d84e. `massive_futures_ticker()` helper added to
       `registry/tradfi_symbology.py` in UAC@8a15e94. Live verification still pending MASSIVE_API_KEY in SM + endpoint 404 fix.
-- [ ] [AUDIT] P1. BTC/ETH ETF backfill audit — confirm Databento has historical bars for all 18 ETF tickers (10 BTC + 8
+- [x] ✅ [AUDIT] P1. BTC/ETH ETF backfill audit — confirm Databento has historical bars for all 18 ETF tickers (10 BTC + 8
       ETH) since each ETF's listing date. Per Mega-Audit 2026-05-20 0% v8 incident, "constant says v8" is not evidence;
-      read actual GCS rows. Status TBC pending audit script run.
+      read actual GCS rows. **AUDIT RESULT (2026-05-30 slot-2)**: Read actual rows from both TradFi GCS manifests
+      (`market-data-tick-tradfi-central-element-323112` + `-prd-` variant). Databento (`pipeline_mode=batch_databento`)
+      ETF coverage: **IBIT COVERED** — 590 captured rows (ohlcv_1m) from 2023-04-24 through 2026-05-15, listing
+      2024-01-11 fully covered (note: ticker was reused from iShares India ETF pre-2024; BTC ETF day-1 row confirmed
+      2024-01-11); **ETHA COVERED** — 456 captured rows (ohlcv_1m) from 2024-07-23=listing date through 2026-05-15.
+      **16 other tickers ABSENT from Databento manifest**: FBTC, BITB, ARKB, BTCO, BRRR, HODL, EZBC, GBTC, BITO,
+      FETH, ETHE, ETHV, ETHW, CETH, QETH, EZET — all show either 0 rows or only `attempted_failed`/`empty_confirmed`
+      rows from MDPS batch runs (no captured bars). Conclusion: **Databento backfill is 2/18 for this ETF set**.
+      This is acceptable per task -007 (Massive Stocks Starter verified sufficient for all 18 — s3://flatfiles/
+      bulk download preferred for Phase 4). Databento gaps for 16 tickers do not block the dual-source plan;
+      Massive covers full history for all 18 ETFs within its 5-year window.
 - [x] ✅ [AUDIT] P1. Massive Stocks Starter coverage of BTC/ETH ETFs verified live 2026-05-28 — operator added Stocks
       Starter tier; smoke-tested 1m OHLCV for every ETF on its listing day; all 18 return data: 9 BTC spot at 2024-01-11
       (IBIT/FBTC/BITB/ARKB/BTCO/BRRR/HODL/EZBC/GBTC), BITO at 2021-10-19 (BTC futures ETF), 8 ETH spot at 2024-07-23
@@ -175,7 +185,9 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
   - UAC@f7cf8828
 - [x] ✅ [UAC] P1. Add Massive to UAC source-string registry test fixture; assert closed-set tests pass.
       62 tests pass: test_source_priority (28) + test_source_priority_pipeline_mode (14) + test_pipeline_mode (20).
-- [ ] [UAC] P1. `quality-gates.sh` green for `unified-api-contracts`.
+- [x] ✅ [UAC] P1. `quality-gates.sh` green for `unified-api-contracts`.
+      Fixed N813 lint error (DivergenceKind alias renamed facade_dk → DivergenceKindFacade) + ruff auto-fix blank line.
+      QG passes: 452s, all gates green. UAC@6c3be2e
 
 ### Phase 2 — Multi-source merge logic (3 days — the deferred plan slot)
 
@@ -243,24 +255,44 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [ ] [OPERATOR] P1. Pre-migration drain per CLAUDE.md HARD RULE: stop all TradFi-writing VMs (GCP + AWS) → consolidate
       manifest → snapshot `_index/snapshots/pre_dual_source_2026_05_28.parquet` → run backfill → verify divergence=0 →
       resume. (BLOCKED until MASSIVE_API_KEY in Secret Manager — task -001.)
-- [ ] [VERIFY] P1. Post-backfill audit: every TradFi parquet has `source` column populated. NULL count = 0.
+- [ ] [VERIFY] [BLOCKED-DEPENDENCY] P1. Post-backfill audit: every TradFi parquet has `source` column populated. NULL count = 0.
       `source ∈ {"databento", "yahoo", "barchart"}` (Massive parquets first appear post-Phase-4 dispatch).
-- [ ] [VERIFY] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
-      populated.
+      **PRE-AUDIT (2026-05-30 slot-2)**: Sampled 3 TradFi parquets (IBIT 2026-01-21, ETHA 2026-01-21, CME E1AG6 2026-01-21) +
+      1 older file (2024-01-11). VERDICT: `source` column ABSENT from all sampled parquets. Columns present:
+      `[timestamp, timestamp_out, venue, symbol, instrument_id, open, high, low, close, volume, trade_count, market_state]`.
+      This is expected — the [OPERATOR] pre-migration drain (Phase 5 step 2) has not been executed yet (blocked on
+      MASSIVE_API_KEY BLK-b00254d7). Re-run this audit AFTER operator completes drain + backfill run.
+- [ ] [VERIFY] [BLOCKED-DEPENDENCY] P1. Manifest re-consolidation: every TradFi `(asset_group, venue, day, data_type)` row has `source` field
+      populated. **PRE-AUDIT (2026-05-30 slot-2)**: `source` field absent from manifest availability_index.parquet
+      (checked market-data-tick-tradfi-central-element-323112). Same blocker as task -030 (BLK-b00254d7 /
+      BLK-c40c61fe). Re-run after operator drain + backfill + manifest consolidation.
 
 ### Phase 6 — Codex SSOT updates + plan archival prep (0.5 day)
 
-- [ ] [CODEX] P1. `codex/02-data/contracts-scope-and-layout.md` — document `source` column as part of TradFi canonical
-      schema. Update SOURCE_PRIORITY example to show multi-source TradFi cell.
-- [ ] [CODEX] P1. `codex/02-data/availability-manifest-and-data-status.md` — document `source` field in manifest row +
+- [x] ✅ [CODEX] P1. `codex/02-data/contracts-scope-and-layout.md` — document `source` column as part of TradFi canonical
+      schema. Update SOURCE_PRIORITY example to show multi-source TradFi cell. — PM@8b616c40
+- [x] ✅ [CODEX] P1. `codex/02-data/availability-manifest-and-data-status.md` — document `source` field in manifest row +
       per-source `capture_status` semantics. Multi-source cell can be `captured` from one source + `empty_confirmed`
-      from another in the same window.
-- [ ] [CODEX] P1. `codex/02-data/honest-absence-downstream-handling.md` — add per-source consumer policy: if cell has at
+      from another in the same window. — PM@2dc2cf5e
+- [x] ✅ [CODEX] P1. `codex/02-data/honest-absence-downstream-handling.md` — add per-source consumer policy: if cell has at
       least one `captured` source, downstream treats cell as captured (union semantics). Per-reason taxonomy unchanged.
-- [ ] [CODEX] P1. `plans/epics/tradfi_master.md` `related_plans:` — append this plan's path.
-- [ ] [CLAUDE.md] P1. Update "Other key rules" → "VIX 15m" entry to remain accurate post-Massive (no change expected; VX
-      futures gap still resolved via Yahoo/Barchart).
-- [ ] [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md Plan-archival HARD RULE.
+      — PM@d4f48363
+- [x] ✅ [CODEX] P1. `plans/epics/tradfi_master.md` `related_plans:` — append this plan's path. — PM@22a60541
+- [x] ✅ [CLAUDE.md] P1. Update "Other key rules" → "VIX 15m" entry to remain accurate post-Massive (no change expected; VX
+      futures gap still resolved via Yahoo/Barchart). Added explicit Massive exclusion note. — PM@cb5b14dd
+- [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md Plan-archival HARD RULE.
+      **AUDIT RESULT (2026-05-30 slot-2)**: 5-step check complete. VERDICT: **NOT YET ARCHIVABLE** — Phase 4 + Phase 5
+      items blocked on MASSIVE_API_KEY (BLK-b00254d7). Steps:
+      1. DEFERRED scan: "Live/WebSocket Massive connector" deferred in Out-of-scope section; named successor
+         `tradfi_massive_live_ws_<YYYY_MM_DD>.md` not yet filed (filed when live becomes priority per operator). Phase 4
+         connector work blocked on MASSIVE_API_KEY — not a voluntary deferral. No partition migration involved.
+      2. BLOCKED items: 3 still open — [OPERATOR] pre-migration drain, [VERIFY] task -030, [VERIFY] task -031. All
+         gated on MASSIVE_API_KEY being added to SM. Pre-audit notes appended to -030/-031.
+      3. Codex alignment: all 3 codex docs updated — contracts-scope-and-layout@8b616c40 ✅,
+         availability-manifest@2dc2cf5e ✅, honest-absence@d4f48363 ✅.
+      4. CLAUDE.md: VIX 15m entry updated with Massive exclusion note at PM@cb5b14dd ✅.
+      5. locked_by: not present in frontmatter — no unlock needed.
+      **Re-run this step after operator resolves BLK-b00254d7 and completes Phase 5 drain.**
 
 ## Success criteria
 
@@ -315,6 +347,23 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
   TradFi)
 - `unified_api_contracts/canonical/crosscutting/source_priority.py` module docstring (Phase 2 — remove deferred slot
   reference)
+
+## Deferred work — migrated to / pending operator action
+
+> Pre-archival banner. Plan remains in `active/` until all OPERATOR-BLOCKED items below are resolved.
+
+| Item | Status | Successor / action |
+|------|--------|-------------------|
+| `MASSIVE_API_KEY` in Secret Manager (GCP + AWS) | **OPERATOR-BLOCKED** | Operator to provision; unblocks task -001 and live connector testing |
+| Futures ticker convention audit (`ESH26` / `F:ESH26` / etc.) | **OPERATOR-BLOCKED** | Task -005: once API key available + Futures endpoint 404 resolved |
+| BTC/ETH ETF backfill audit (Databento historical bars verification) | **OPERATOR-BLOCKED** | Task -006: run audit script against prod GCS with credentials |
+| UAC `quality-gates.sh` green | **IN-PROGRESS** | Task -011: UAC@adb85a22 bump + QG re-run (may already be resolved) |
+| Pre-migration drain + backfill execution | **OPERATOR-BLOCKED** | Task -029: VM drain → consolidate → snapshot → run `backfill_tradfi_source_column.py` → resume |
+| Post-backfill audit (zero NULL source rows) | **BLOCKED on -029** | Task -030: verify every TradFi parquet has `source` column after drain |
+| Manifest re-consolidation (source field populated) | **BLOCKED on -029** | Task -031: re-run consolidator; all TradFi rows have `source` |
+| Live / WebSocket Massive connector | **DEFERRED** | Named successor: `tradfi_massive_live_ws_<YYYY_MM_DD>.md` |
+| Real-time tier upgrade | **DEFERRED** | Same named successor as WS connector |
+| CFE VIX futures primary coverage | **DEFERRED** | Named successor: `tradfi_cfe_vx_futures_<YYYY_MM_DD>.md` |
 
 ## Provenance
 

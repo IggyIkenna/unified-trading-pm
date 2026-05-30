@@ -292,6 +292,72 @@ grep -r "\"swaps\"\|\"liquidity\"\|\"rate_indices\"\|\"mev_bundles\"\|\"bridge_f
 
 ---
 
+## TradFi canonical schema — dual-source `source` column (Phase 3+)
+
+**Plan SSOT**: `plans/active/tradfi_massive_dual_source_2026_05_28.md` Phases 1–3.
+
+### `source` column — every TradFi parquet + manifest row
+
+From Phase 3 (UTL@c7bfa427, MANIFEST_SCHEMA_VERSION=9), every TradFi parquet **must** carry a `source: str` column.
+
+- **Writer enforcement**: `record_captured(source=...)` raises `MissingSourceError` when `category=="tradfi"` and
+  `source` is omitted. QG STEP 5.64 enforces via `check_tradfi_source_explicit_at_record_captured.py`.
+- **Schema version**: TradFi parquets are v9 (v8 → v9 bump at Phase 3). The `MANIFEST_SCHEMA_VERSION` constant in UTL
+  reflects this.
+- **`source` is NOT a hive partition key** — it is a row-level column within the parquet. Co-mingled sources under the
+  same `day=…/asset_group=tradfi/venue=…/` prefix are disambiguated by the `source` column value, not by a separate
+  hive shard.
+- **Backfill**: pre-Phase-3 TradFi parquets are retroactively stamped `source='databento'` by
+  `market_tick_data_service/scripts/backfill_tradfi_source_column.py`. Run only after the pre-migration drain (operator
+  step) per the single-walk discipline.
+
+Canonical source strings for TradFi:
+
+| Source value   | Meaning                                                         |
+| -------------- | --------------------------------------------------------------- |
+| `"databento"`  | Databento historical/live TradFi data                           |
+| `"massive"`    | Massive (formerly Polygon.io) batch REST data (Starter tier)    |
+| `"yahoo"`      | Yahoo Finance rolling 60-day fallback (VIX 15m only)            |
+| `"barchart"`   | Barchart preload (VIX 15m only)                                 |
+
+### SOURCE_PRIORITY — multi-source TradFi cells
+
+`unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY` records ordered source lists per
+`(asset_group, data_type)` cell. TradFi cells after Phase 1 of `tradfi_massive_dual_source_2026_05_28.md`:
+
+```python
+SOURCE_PRIORITY = {
+    ("tradfi", "trades"):        ["databento", "massive"],
+    ("tradfi", "tbbo"):          ["databento", "massive"],
+    ("tradfi", "ohlcv_1m"):      ["databento", "massive"],
+    # databento primary; massive secondary; yahoo/barchart: VIX 15m rolling fallback
+    ("tradfi", "ohlcv_15m"):     ["databento", "massive", "yahoo", "barchart"],
+    ("tradfi", "options_chain"): ["databento", "massive"],
+    ("tradfi", "futures_chain"): ["databento", "massive"],
+    ...
+}
+```
+
+Tie-breaker rule: first-in-list = primary (databento emits before Massive's 15-min delayed feed). When databento is
+absent and massive is present, `select_primary_available_source()` returns `"massive"` automatically.
+
+Emission latency for massive: 900,000 ms (15 min Starter-tier delayed feed).
+
+### Multi-source merge helpers (Phase 2)
+
+| Helper                                                              | Returns                                                   |
+| ------------------------------------------------------------------- | --------------------------------------------------------- |
+| `get_all_sources_with_priority(asset_group, data_type)`             | `list[tuple[str, PipelineMode]]` — ordered source list    |
+| `select_primary_available_source(asset_group, data_type, avail)`    | `str` — highest-priority available source                 |
+| `detect_dual_source_conflicts(source_a, keys_a, source_b, keys_b)` | `list[tuple]` — conflicting rows (logs WARNING)           |
+
+Conflict rows are emitted to the manifest with `divergence_kind=DUAL_SOURCE_DUPLICATE` — never silently dropped.
+
+Import surface: `from unified_api_contracts.canonical.crosscutting.source_priority import (SOURCE_PRIORITY,
+get_all_sources_with_priority, select_primary_available_source, detect_dual_source_conflicts)`.
+
+---
+
 ## Audit-confirmed canonical picks — 2026-05-12 SSOT cleanup (Phase 1)
 
 Six canonical decisions codified by the 2026-05-08/05-12 cross-asset-group catalogue audit
@@ -306,3 +372,58 @@ Six canonical decisions codified by the 2026-05-08/05-12 cross-asset-group catal
 | 5   | **LST_TOKEN_TO_PROTOCOL_ASSET location unknown**                                                                                                                                                                                      | Confirmed at `unified_api_contracts.internal.domain.defi.lst` as `LST_TOKEN_TO_PROTOCOL_ASSET: dict[str, tuple[str, str]]` (LST token symbol → (protocol, base_asset)) + helpers `iter_lst_tokens_for_protocol` / `resolve_lst_protocol_asset`. Placement under `internal/` is correct (resolver scope, not contract-facing schema). | `unified_api_contracts/internal/domain/defi/lst.py`                                                                                      |
 | 6   | **Chain-set fragmentation** — `MAINNET_CHAIN_IDS` (19), `CHAIN_GENESIS_DATES` (21), `GAS_FEE_CHAIN_START_DATES` (14) were inconsistent subsets                                                                                        | Invariant: `MAINNET_CHAIN_IDS ⊇ CHAIN_GENESIS_DATES keys ⊇ GAS_FEE_CHAIN_START_DATES keys`. SCROLL+ZKSYNC added to `MAINNET_CHAIN_IDS`/`TESTNET_CHAIN_IDS`; BLAST+MODE+GNOSIS+SCROLL+ZKSYNC added to `GAS_FEE_CHAIN_START_DATES` (14→19 entries). Mainnet now 21 chains.                                                             | `registry/chain_env.py` UAC@`6dd274b`                                                                                                    |
 | 7   | **Kalshi API host migration** — `trading-api.kalshi.com` became `api.elections.kalshi.com` (election markets endpoint). 17 code sites across 5 repos pointed at the old host. Bug was dormant while Kalshi was `BLOCKED-CREDENTIALS`. | All UAC external schemas + 9 REST URL files + 1 WS URL file updated to new host. Cassettes re-recorded against new host. Phases 2-4 (live diff + credential unblock + canary) gated on Kalshi API key provisioning. Demo URL `demo-api.kalshi.co` unchanged.                                                                         | `unified_api_contracts/external/kalshi/` + instruments-service@`79ad855` + MTDS@`28b84ce` + execution-service@`8a3cbe48` (UAC@`5729197`) |
+
+---
+
+## TradFi `source` column — v9 canonical schema addition (2026-05-30)
+
+**Plan**: `tradfi_massive_dual_source_2026_05_28.md` Phase 3 (task -017).
+**Manifest schema version**: bumped 8 → 9 (`MANIFEST_SCHEMA_VERSION = 9` in `unified_trading_library/manifest_writer.py`).
+
+### What it is
+
+Every TradFi parquet shard now carries a `source: str` column identifying which upstream data provider produced the rows. This resolves the dual-source ambiguity introduced when Massive (formerly Polygon.io) was added alongside Databento as a second TradFi feed.
+
+### Closed-set values
+
+Values mirror the `SOURCE_PRIORITY` source strings defined in `unified_api_contracts`:
+
+| Value | Provider | Notes |
+|-------|----------|-------|
+| `"databento"` | Databento | All pre-Phase-3 TradFi data. Stamped by Phase 5 backfill script. |
+| `"massive"` | Massive (formerly Polygon.io) | New feed added by this plan. `MassiveTradfiRestConnector` stamps this value. |
+
+The set is intentionally closed. Adding a new TradFi source requires: (1) a new `SOURCE_PRIORITY` entry in UAC, (2) an explicit string constant in the adapter (`MASSIVE_SOURCE`, `DATABENTO_SOURCE`, etc.), and (3) a `source=` kwarg at every `record_captured` callsite for that category.
+
+### Enforcement
+
+`MissingSourceError` (UTL `manifest_writer.py`) is raised when `record_captured(category="tradfi", ...)` is called without a non-empty `source=` kwarg. Non-TradFi categories (`cefi`, `defi`, `onchain`, etc.) are unaffected — `source` defaults to `""` for those cells.
+
+QG STEP 5.64 (`check_tradfi_source_explicit_at_record_captured.py`, wired into `unified-trading-library/scripts/quality-gates.sh`) performs a static AST walk to catch new `record_captured` callsites that omit `source=`. Callsites that forward `source` via `**kwargs` must carry the `# QG-allow: tradfi-source-not-applicable` inline marker.
+
+### Dual-source cell example
+
+A TradFi OHLCV cell covering a day where both Databento and Massive ran produces two separate shards, distinguished by `source`:
+
+```
+raw_tick_data/by_date/day=2026-05-30/asset_group=tradfi/venue=NYSE/data_type=ohlcv_1m/source=databento/SPY.parquet
+raw_tick_data/by_date/day=2026-05-30/asset_group=tradfi/venue=NYSE/data_type=ohlcv_1m/source=massive/SPY.parquet
+```
+
+Consumers that need the best-available signal consult `SOURCE_PRIORITY` to select the preferred shard; consumers that need auditable provenance can read both.
+
+### Manifest row wiring
+
+`AvailabilityRecord` gained a `source: str = ""` field (v9). The manifest `_ROW_KEY_COLUMNS` tuple includes `"source"` after `"pipeline_mode"`. Rows written by pre-v9 code have `source=""` until the Phase 5 backfill script (`backfill_tradfi_source_column.py`) stamps `source="databento"` on every legacy TradFi parquet.
+
+### Phase 5 backfill
+
+The backfill script is at `market-tick-data-service/market_tick_data_service/scripts/backfill_tradfi_source_column.py`. It performs a single GCS walk over all TradFi parquets under `raw_tick_data/by_date`, stamps `source="databento"` on rows where the column is absent or empty, and rewrites the file in-place (idempotent). A `--dry-run` mode prints what would change without touching GCS.
+
+**Pre-execution operator checklist** (execution blocked pending scheduling — see task -029):
+1. Stop all TradFi-writing VMs
+2. Consolidate the manifest
+3. Snapshot `catalogue.parquet` to `_index/snapshots/pre_dual_source_2026_05_28.parquet`
+4. Run the backfill script
+5. Run the post-backfill audit (task -030/-031)
+6. Resume TradFi VMs

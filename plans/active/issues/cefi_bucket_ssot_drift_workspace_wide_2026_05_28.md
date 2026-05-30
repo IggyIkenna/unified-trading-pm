@@ -176,3 +176,13 @@ data-pipeline owner.
 
 - 2026-05-28 harsh-main filed this issue doc during §6I.A investigation; cross-pinged ikenna-main; cefi §6I.A item
   marked `[BLOCKED-DEPENDENCY]` pending Ikenna's scope decision.
+- 2026-05-30 ikenna-8 scope decision: **Option B selected**. `get_bucket_name()` in
+  `unified_trading_library/core/cloud_constants.py` now delegates to `_resolve_bucket_name()` for all GCP domain
+  lookups via `_DOMAIN_TO_YAML_KIND` map. Group A kinds (market-data, instruments-store, features-calendar,
+  ml-models-store, ml-predictions-store, features-sports, features-prediction) return env-tiered names;
+  Group B rolled-back kinds (features-delta-one, features-onchain, features-volatility, execution-store,
+  strategy-store, ml-artifacts, ml-training-artifacts) return same no-env names as before (yaml is rolled back).
+  AWS excluded (on-disk AWS names pre-date Phase 5 migration). library@6c8a1175.
+  **Deployment gate**: HARD RULE — drain all running VMs before deploying; migrate 22-day data gap first.
+  §6I.A plan checkbox flipped. Remaining work: full Option A migration (workspace-wide callsite sweep to
+  `resolve_bucket_name()` direct calls) deferred to `bucket_name_ssot_canonicalisation_2026_05_10.md` Phase 3.

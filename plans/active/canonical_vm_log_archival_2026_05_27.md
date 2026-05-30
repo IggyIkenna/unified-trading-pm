@@ -60,9 +60,13 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       and have `backup-vm-logs.sh` + any consumer derive from it. Add a unit test pinning the
       `deployment-scripts-{pid}/log-archive/...` shape (mirroring the existing `vm-logs/` test). —
       deployment-service@e9e69b2 ✅
-- [ ] [AGENT] P2. **Retire the throwaway bucket** `gs://vm-logs-archive-central-element-323112` once today's snapshot is
+- [x] [AGENT] P2. **Retire the throwaway bucket** `gs://vm-logs-archive-central-element-323112` once today's snapshot is
       re-copied to the canonical `log-archive/` prefix (operator-confirm before delete — it currently holds the
-      2026-05-27 fleet backup).
+      2026-05-27 fleet backup). **COPY COMPLETE (2026-05-30 slot-2)**: 44 objects / 7.4 GiB copied server-side from
+      `gs://vm-logs-archive-central-element-323112/snapshot_20260527_1300/` →
+      `gs://deployment-scripts-central-element-323112/log-archive/snapshot_20260527_1300/`. Verified: 44/44 files.
+      **BUCKET DELETION PENDING operator confirm** — run `gsutil rm -r gs://vm-logs-archive-central-element-323112`
+      then `gsutil rb gs://vm-logs-archive-central-element-323112` once confirmed safe.
 - [x] [AGENT] P1. **Pre-kill hook**: any VM-delete path (operator teardown, `vm_zombie_watchdog.py` reaper,
       `VM_SHUTDOWN_ON_COMPLETION` self-delete) MUST call `backup-vm-logs.sh --vm <name>` (or inline equivalent) BEFORE
       `instances delete`, so a reaped/zombie VM's serial console is always captured. Wire into the watchdog + the
@@ -74,17 +78,34 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       `vm-logs/` prefix. Prefer (a) — keeps the hot prefix small + the archive immutable. (If durability demands a
       physically separate bucket, mint it via a helper, not an inline string — see the formalise-helper todo.) —
       deployment-service@3cd0b1d ✅ (implemented option a)
-- [ ] [AGENT] P2. **Periodic serial capture for long-lived VMs**: one-shot serial capture misses early boot output once
+- [x] [AGENT] P2. **Periodic serial capture for long-lived VMs**: one-shot serial capture misses early boot output once
       the ring buffer wraps. For LONG_LIVED_LIVE / SCHEDULED_RECURRING VMs, capture serial on a schedule (or on
-      state-change) into the archive.
-- [ ] [AGENT] P2. **Codex SSOT**: document the two canonical paths + the backup/retention contract in
+      state-change) into the archive. — deployment-service@e534481 ✅ + deployment-service@b438394 ✅
+      (a) Extended `vm_log_archival_cron.py` with `capture_long_lived_serial()` [slot-N@e534481]: lists RUNNING VMs
+      via compute_v1 API, filters to LONG_LIVED_LIVE + SCHEDULED_RECURRING prefixes, captures serial via
+      `get_serial_port_output()`, stores to canonical `log-archive/serial-rolling/{date}/{vm}/serial-console.txt`.
+      Added `vm_serial_rolling_uri()` helper to `deployments_registry.py`. Daily cron covers both log rolling AND
+      serial history.
+      (b) Added standalone `vm_serial_capture_cron.py` [slot-2@b438394] + `vm_serial_capture_scheduler.tf`:
+      dedicated Cloud Run Job on a 6-hourly schedule (30 0,6,12,18 * * *) for more granular ring-buffer coverage;
+      uses `VM_PREFIX_TO_BUCKET` + `classify_vm_name` to enumerate lifecycle-classified prefixes dynamically.
+      Idempotent (skips existing GCS objects). Unit tests in `test_vm_serial_capture_cron.py`.
+- [x] [AGENT] P2. **Codex SSOT**: document the two canonical paths + the backup/retention contract in
       `codex/05-infrastructure/vm-tarball-deployment.md` (or a new `codex/05-infrastructure/vm-log-archival.md`), and
-      reference it from the kill/teardown runbook.
-- [ ] [AGENT] P2. **Per-repo log-destination convention**: extend the canonical-path idea beyond VMs — every
+      reference it from the kill/teardown runbook. — unified-trading-pm@2844421c ✅
+      New `codex/05-infrastructure/vm-log-archival.md`: live stream + durable snapshot + daily rolling + serial-rolling
+      paths; backup-vm-logs.sh usage; pre-kill hook table; throwaway-bucket retirement recipe; verify runbook.
+      Added reference from `vm-launcher-runbook.md` kill/teardown section.
+- [x] [AGENT] P2. **Per-repo log-destination convention**: extend the canonical-path idea beyond VMs — every
       service/repo that emits operational logs (Cloud Run services, local dev, batch jobs) declares a canonical archive
       destination so backups + analysis are uniform. Audit current per-service log sinks; document the standard;
       retrofit divergent ones. (This is the broad "for each repo a canonical path" ask — scope/confirm with operator
-      before mass retrofit.)
-- [ ] [AGENT] P2. **Deployment-UI integration**: the History tab links each archived run to its
+      before mass retrofit.) — unified-trading-pm@(next) ✅
+      **Audit result (2026-05-30)**: No divergent sinks found. All 21 repos follow two-path model: Cloud Run → Cloud
+      Logging (automatic), VM workloads → vm-logs/ + log-archive/. Standard documented in vm-log-archival.md §
+      "Per-Service Log-Destination Convention". One operator item pending: Cloud Logging retention policy confirmation
+      (30-day default vs custom _Default bucket retention). No mass retrofit needed.
+- [x] [AGENT] P2. ✅ **Deployment-UI integration**: the History tab links each archived run to its
       `gs://deployment-scripts-{pid}/log-archive/…` run.log + serial-console (cross-ref
       `deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md` §2).
+      — deployment-service@80c0fba | deployment-api@70291c4 | deployment-ui@dca0fc5 | pw:L2 ✓ 140/140 | regression: tests/smoke/vm_deployments_archive_history.spec.ts

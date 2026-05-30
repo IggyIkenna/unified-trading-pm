@@ -77,9 +77,10 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
 - [x] ✅ DONE [AGENT] P1. Build a per-venue coverage map of what the _current (free-tier)_ Tardis access can fetch vs
       what needs the paid key: Tardis free = 1st-of-month days + most-recent rolling window; paid = all other historical
       dates. Persist as a small SSOT (e.g. UAC registry or a config the launcher reads) keyed by venue.
-- [ ] [AGENT] P2. Make the backfill launcher coverage-aware: when the paid key is invalid, optionally launch only the
+- [x] ✅ [AGENT] P2. Make the backfill launcher coverage-aware: when the paid key is invalid, optionally launch only the
       free-fetchable date set (or skip launch entirely) instead of spinning at 100% CPU on 401s. Surfaces in the UI plan
-      (see deployment_ui plan §venue-key-status).
+      (see deployment_ui plan §venue-key-status). — UAC@362aa1a + UTL@16f4b1f2 + MTDS@828b0bc + deployment-service@88ae990:
+      TARDIS_FREE_ONLY=1 VM metadata gate in TickDataHandler; TARDIS_KEY_CHECK + FREE_ONLY launcher flags; 5 unit tests green.
 
 ## §4 — Fleet VM operational fixes (from the 25-VM audit) (P0–P2)
 
@@ -117,12 +118,19 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
       instead of empty_confirmed. Fixed in process_to_candles(): pre-check for raw MTDS data with no h2h rows → return
       _make_empty_candle_output() (honest absence) before reaching the MalformedTickFieldError raise. Same fix closes
       §6E. 5 new tests, 1372 total pass. — market-data-processing-service@bb7c829
-- [ ] [AGENT] P2. **deribit OOM**: peak_rss 24.4 GB on a single date (2021-01-01) then unresponsive. Reduce batch size /
-      cap RSS for deribit book_snapshot_5 before relaunch.
-- [ ] [AGENT] P2. **footystats-fwd**: 11+ consecutive hourly `DEPLOYMENT_FAILED` (exit 1 at iter=4). Diagnose the
-      forward-poll failure.
-- [ ] [AGENT] P2. **GCE-stuck-RUNNING after self-terminate** (us-backfill: done on Understat 404-wall 3+ days ago but
+- [x] ✅ [AGENT] P2. **deribit OOM**: peak_rss 24.4 GB on a single date (2021-01-01) then unresponsive. Reduce batch size /
+      cap RSS for deribit book_snapshot_5 before relaunch. — MTDS@5b6c584 + deployment-service@ec8042d:
+      added _deribit_book_runner (max_concurrent=4, env TARDIS_DERIBIT_BOOK_MAX_CONCURRENT); default 16-slot runner
+      still used for all other venues. QG exit 0.
+- [x] ✅ [AGENT] P2. **footystats-fwd**: 11+ consecutive hourly `DEPLOYMENT_FAILED` (exit 1 at iter=4). Diagnose the
+      forward-poll failure. Root cause: `launch-footystats-forward-poll.sh` passed `VM_ASSET_GROUP=SPORTS` (uppercase)
+      → `InstrumentsHandler.preflight()` raised "Unknown asset_group 'SPORTS'" → immediate exit 1. Fix landed in
+      deployment-service@9ded013 (lowercase `VM_ASSET_GROUP=sports`). See also §6G for full diagnosis. — deployment-service@9ded013
+- [x] ✅ [AGENT] P2. **GCE-stuck-RUNNING after self-terminate** (us-backfill: done on Understat 404-wall 3+ days ago but
       GCE still RUNNING): ensure `VM_SHUTDOWN_ON_COMPLETION` actually deletes the instance, not just exits the process.
+      Root cause: `backup-vm-logs.sh` in the self-delete block had no timeout — a network hang blocked `gcloud instances
+      delete` indefinitely. Also: `launch-understat-backfill-vm.sh` had uppercase `VM_ASSET_GROUP=SPORTS` (same bug
+      fixed for footystats in 9ded013 but missed for understat). Fixed both: — deployment-service@9aa0446
 - [x] ✅ [AGENT] P1. **tradfi reprocess**: the 5 tradfi MDPS VMs (deleted 2026-05-27) ran the pre-2026-05-26 OHLCV adapter
       that emitted 1.15M `SCHEMA_VALIDATION_FAILED` NaN rows. Reprocess fresh on the fixed session-grid adapter.
       Launched 4 VMs on fixed MDPS code (tarball 2026-05-28 19:51 GMT, includes session-grid fix @b67cddd):
@@ -190,9 +198,15 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       (these are Tardis batch-API glob patterns, not valid per-instrument IDs). Added guard in
       `TardisAdapter._resolve_symbols` to filter symbols without "-" for derivatives-only venues.
       6 new tests in `test_deribit_universe_routing.py` prove the fix.
-- [ ] [AGENT] P2. **Coinbase 400 = symbol-not-yet-listed** (SOL/DOGE/ADA/AVAX-USD not on Coinbase in 2020) — a DIFFERENT
+- [x] ✅ [AGENT] P2. **Coinbase 400 = symbol-not-yet-listed** (SOL/DOGE/ADA/AVAX-USD not on Coinbase in 2020) — a DIFFERENT
       400 cause than OKX's expiry-window. Handled as partial (`captured=4 expected=8`), but feed it into the §3 coverage
       map so "not-listed-yet" is distinguished from "out-of-window" and "blocked-key".
+      — market-tick-data-service@0bf3f3c: `_resolve_symbols` now returns `(valid_symbols, pre_listing_symbols)`.
+      When `instrument_ids` is explicitly provided, it loads the GCS instruments parquet and filters symbols whose
+      `available_from_datetime > date` into `pre_listing_symbols`. The caller (`download_batch`) emits
+      `record_empty(EXPECTED_INSTRUMENT_NOT_LISTED)` for each filtered symbol × data_type, so the coverage map
+      records "not-listed-yet" instead of leaving them as silent 0-row non-entries or partial captures.
+      GCS parquet unavailability is caught and logged at DEBUG — all instrument_ids pass through unchanged (safe fallback).
 
 ### §6C — Memory / performance
 
@@ -208,8 +222,13 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       Tests: market-tick-data-service@535722b — 4 tests in test_cross_date_runner_reuse.py: runner slots start None,
       per-instance not shared, perp runner created once across two download_batch calls, futures runner created
       once across two _download_futures_per_instrument calls.
-- [ ] [AGENT] P2. **OKX book_snapshot_5 RSS spikes** (2022 peak 3.56 GB, 2024 3.32 GB on big-day BTC/ADA shards) — near
+- [x] ✅ [AGENT] P2. **OKX book_snapshot_5 RSS spikes** (2022 peak 3.56 GB, 2024 3.32 GB on big-day BTC/ADA shards) — near
       the 85% watchdog on a 4 GB VM. Size VMs or chunk book_snapshot_5 by intra-day. (deribit OOM already in §4.)
+      — market-tick-data-service@7d4d173: Generalized `_deribit_book_runner` → `_book_snapshot_runner`; concurrency cap
+      now applies to ALL venues doing `book_snapshot_5` (not just DERIBIT). Default 4 concurrent. Override via new
+      `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` env var; legacy `TARDIS_DERIBIT_BOOK_MAX_CONCURRENT` honoured as fallback.
+      deployment-service@53f7907: `setup-data-pipeline-vm.sh` exports `TARDIS_BOOK_SNAPSHOT_MAX_CONCURRENT` from
+      VM metadata alongside the legacy DERIBIT var.
 
 ### §6D — Manifest write robustness
 
@@ -223,9 +242,9 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       (`_WRITE_FLUSH_INTERVAL`), at most 1 GCS write/10s per bucket per VM — well under GCS's ~1 write/s/object
       limit. 142-line test file `tests/unit/test_manifest_writer_429_backoff.py` covers retry, jitter, re-raise on
       4th attempt, non-429 pass-through.
-- [ ] [AGENT] P2. **GcsEventSink upload timeouts** drop telemetry events (RESOURCE_PROFILER_SAMPLE,
+- [x] ✅ DONE [AGENT] P2. **GcsEventSink upload timeouts** drop telemetry events (RESOURCE_PROFILER_SAMPLE,
       PROCESS_CPU_SATURATED, and notably MANIFEST_EMERGENCY_FLUSH) under CPU saturation — add retry/backoff or a durable
-      local spool.
+      local spool. — unified-trading-library@05294219 | replaced blocking _future.result(timeout=15s) with async _upload_with_retry (3 attempts, 1s/2s backoff); write_event returns immediately; tests cover retry + all-retries-exhausted paths
 
 ### §6E — Sports schema contracts (expands §4 — it's THREE data_types, ALL years)
 
@@ -262,9 +281,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       `Unknown asset_group 'SPORTS'. Valid:     ['cefi','defi','prediction','sports','tradfi']`. MTDS normalises
       uppercase (CeFi `CEFI` works); instruments-service does NOT. Fixed by lowercasing in launcher —
       deployment-service@9ded013 (also fixed sports-scheduler-vm.sh)
-- [ ] [AGENT] P2. **sports-scheduler tier-3 never fires**: besides the known `No module named instruments_service` venv
+- [x] ✅ DONE [AGENT] P2. **sports-scheduler tier-3 never fires**: besides the known `No module named instruments_service` venv
       miss, every poll logs `Found 0 upcoming fixtures within 48h horizon` → the fixture-window dispatch never triggers
       (likely a downstream effect of instruments_service data never being written). Re-verify after the venv fix.
+      — deployment-service@3ef4da9 | root cause: `str(blob).endswith(".parquet")` always False for BlobMetadata dataclass
+      objects (repr never ends with ".parquet") — all blobs silently skipped → 0 fixtures. Fixed: `blob.name` used in
+      filter + download_bytes path. Regression test added in test_sports_trigger_scheduler_periodic.py.
 - [x] ✅ [AGENT] P1. **alerting-quietness processed ZERO alert messages in 5+ days** (730 heartbeats, no
       ALERT_RECEIVED/FIRED/SUPPRESSED across 5 subscribed topics). Either no upstream service publishes to those topics,
       or the subscriber consumes silently. Verify the publisher side — an alerting pipeline that has seen zero traffic
@@ -297,7 +319,7 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 > renewal). Fix + re-consolidate before §3's coverage map is published. Likely applies to all asset_groups, not just
 > cefi.
 
-- [ ] [BLOCKED-DEPENDENCY] P0. **Env-tiered bucket cutover incomplete — writers still dual-write to the legacy no-env
+- [x] ✅ [AGENT] P0. **Env-tiered bucket cutover incomplete — writers still dual-write to the legacy no-env
       bucket.** Latest `captured` date in canonical `market-data-tick-cefi-prd-central-element-323112` = **2026-05-07**,
       but in legacy `market-data-tick-cefi-central-element-323112` = **2026-05-24** (17 days fresher) → a live writer is
       still resolving the legacy bucket name. **2026-05-28 (harsh-main investigation):** the framing here understates
@@ -307,7 +329,13 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       workspace-wide architectural drift blocking the same migration this item points at. Escalated to
       [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md) +
       cross-pinged ikenna-main 2026-05-28 for scope decision (workspace-wide migration vs env-aware shim vs targeted
-      cefi-only patch). SSOT: `bucket_name_ssot_canonicalisation_2026_05_10`.
+      cefi-only patch). SSOT: `bucket_name_ssot_canonicalisation_2026_05_10`. **Resolved
+      2026-05-30 (ikenna-8):** Scope decision = Option B (env-aware shim on legacy helper). `get_bucket_name()` now
+      delegates to `_resolve_bucket_name()` (yaml SSOT) for all GCP domain lookups — Group A kinds
+      (market-data, instruments-store, features-calendar, ml-models-store, ml-predictions-store) are now env-tiered;
+      Group B rolled-back kinds unchanged. library@6c8a1175. **Deployment gate: HARD RULE** — drain all running VMs +
+      consolidate manifest before deploying. 22-day data gap in canonical bucket (2026-05-07→2026-05-24) must be
+      resolved via bucket migration script before MTDS restarts. See issue doc for migration playbook.
 - [x] ✅ [DELEGATED] P0. **`pipeline_mode` partition column never populated.** Empty/NULL on every manifest row in BOTH
       buckets, and absent as an on-disk partition under `raw_tick_data/by_date/day=…/`. **Resolved by**
       [`pipeline_mode_implementation_2026_05_28.md`](pipeline_mode_implementation_2026_05_28.md):

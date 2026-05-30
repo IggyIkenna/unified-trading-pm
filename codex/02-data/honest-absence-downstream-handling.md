@@ -544,6 +544,120 @@ The season-bounds table lives in `unified_api_contracts.canonical.domain.sports.
 
 ---
 
+## Multi-source cell consumer policy (TradFi dual-source, v9)
+
+> Added 2026-05-28 — Phase 6 of `tradfi_massive_dual_source_2026_05_28.md`. Applies to `asset_group=tradfi` only when a
+> `(shard_key, day)` cell has manifest rows from multiple sources (e.g. `source=databento` + `source=massive`).
+> Requires v9 manifest schema with the `source` column populated.
+
+### Union semantics for multi-source cells
+
+When a TradFi cell has manifest rows from more than one source, the downstream consumer resolves the cell's effective
+`capture_status` by **union**: if at least one source row has `capture_status=captured`, the cell is treated as
+`captured` for all downstream purposes.
+
+| Source A `capture_status`  | Source B `capture_status`  | Resolved cell status | Downstream action                                                                                                                   |
+| -------------------------- | -------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `captured`                 | `captured`                 | `captured`           | Use highest-priority source per `SOURCE_PRIORITY`; log divergence if content differs (`DivergenceKind.DUAL_SOURCE_DUPLICATE`)       |
+| `captured`                 | `empty_confirmed`          | `captured`           | Use the captured source; source B's empty reason noted but does NOT downgrade the cell                                              |
+| `captured`                 | `attempted_failed`         | `captured`           | Use the captured source; alert on source B's failure separately (per-source alert, not cell-level `DependencyError`)                |
+| `empty_confirmed`          | `empty_confirmed`          | `empty_confirmed`    | Both absent; apply normal per-reason taxonomy (see `## Reason taxonomy`) — the stricter / more informative reason wins for logging |
+| `attempted_failed`         | `attempted_failed`         | `attempted_failed`   | Both failed; block live trade, alert                                                                                                |
+
+**Critical rule**: a single `attempted_failed` source does NOT block a consumer when another source is `captured`. The
+failure is recorded and alerted per source, but the cell-level status is `captured`. This is the key difference from the
+single-source world where any `attempted_failed` immediately triggers `DependencyError`.
+
+### Per-reason taxonomy unchanged
+
+The `error_reason` taxonomy (see `## Reason taxonomy` and `## Per-reason-group → consumer policy`) applies **per source
+row** — not to the resolved cell status. A source B row with `capture_status=empty_confirmed[EXPECTED_HOLIDAY]` still
+means "source B expected empty on that holiday." The union resolution step runs AFTER per-source reason validation.
+
+Consumers do NOT need to modify their reason-group handling (NaN-fill / skip / adjust denominator). Those rules apply
+to the resolved cell status. If the resolved status is `captured` (because source A is captured), the consumer proceeds
+normally; it never sees the source B empty row directly.
+
+### Source priority resolution
+
+When the resolved cell status is `captured` and multiple sources contributed captured rows, the consumer selects the
+primary source using `select_primary_available_source()` from
+`unified_api_contracts.canonical.crosscutting.source_priority`:
+
+```python
+from unified_api_contracts.canonical.crosscutting.source_priority import (
+    select_primary_available_source,
+    detect_dual_source_conflicts,
+)
+
+# rows_by_source: dict[str, pd.DataFrame] — keyed by source string
+primary_source = select_primary_available_source(
+    rows_by_source=rows_by_source,
+    asset_group="tradfi",
+    data_type=data_type,
+)
+df = rows_by_source[primary_source]
+```
+
+`SOURCE_PRIORITY[("tradfi", data_type)]` determines source preference order (e.g. `["databento", "massive"]` for OHLCV
+data types). `select_primary_available_source` returns the highest-priority source whose manifest row is `captured`.
+
+### Conflict detection when both sources are captured
+
+If both sources have `captured` status for the same cell (expected state after Phase 5 Massive backfill), call
+`detect_dual_source_conflicts()` to surface any divergences before committing to a primary:
+
+- `DivergenceKind.DUAL_SOURCE_DUPLICATE` — both sources present but content is identical; deduplicate silently
+- `DivergenceKind.VALUE_DIVERGENCE` — OHLCV values differ between sources beyond tolerance; log + alert (primary source
+  wins; do NOT blend or average the two)
+- `DivergenceKind.COVERAGE_DIVERGENCE` — one source has more bars than the other; primary source wins
+
+These divergences are soft warnings for the reconciliation audit; the primary source's data is always the authoritative
+downstream output.
+
+### Pre-flight gate adaptation
+
+When the pre-flight gate checks a TradFi cell's upstream status (step 2 from `## Pre-flight validation`), it MUST apply
+union semantics before deciding whether to proceed or raise `DependencyError`:
+
+```python
+def resolve_cell_status(
+    manifest_rows: list[AvailabilityRecord],  # one per source for this (shard_key, day)
+) -> CaptureStatus:
+    """Union: captured beats empty_confirmed beats attempted_failed."""
+    statuses = {r.capture_status for r in manifest_rows}
+    if CaptureStatus.CAPTURED in statuses:
+        return CaptureStatus.CAPTURED
+    if CaptureStatus.EMPTY_CONFIRMED in statuses:
+        return CaptureStatus.EMPTY_CONFIRMED
+    return CaptureStatus.ATTEMPTED_FAILED
+```
+
+A cell with `attempted_failed` from source A but `captured` from source B resolves to `captured` — no
+`DependencyError`. The source B failure is tracked and alerted via per-source alerting without blocking the consumer.
+
+### Scope
+
+This section applies only when ALL of the following are true:
+
+- `asset_group=tradfi`
+- v9 manifest schema — `source` column populated (non-empty) on TradFi rows
+- Multiple source rows exist for the same `(shard_key, day)` combination
+
+For `asset_group` ≠ `tradfi`, each cell has exactly one source row (source column is `""`); this section does not apply
+and standard single-source rules govern.
+
+### Cross-references
+
+- `SOURCE_PRIORITY` registry + UAC multi-source merge logic:
+  `unified_api_contracts.canonical.crosscutting.source_priority`
+- v9 `source` column definition + backfill plan:
+  [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) § _Schema v9_
+- Phase 5 Massive backfill (blocked BLK-b00254d7 pending MASSIVE_API_KEY credential):
+  `tradfi_massive_dual_source_2026_05_28.md` Phase 5
+
+---
+
 ## Per-service consumer-class — 4-state `capture_status` handling
 
 > **Codified 2026-05-22** — fills the P0 gap from `writegate_honest_coverage_endtoend_2026_05_06.md` Phase 3.D.3.
@@ -914,3 +1028,49 @@ NaN payload conforms to the ODDS UAC schema: all price/volume columns are `float
 
 **Cluster validation**: `expected_root_clusters = {fixture_id: len(EXPECTED_BOOKMAKER_MARKET_SETS[tier])}` ensures the
 validator sees the correct denominator including NaN-fill rows.
+
+---
+
+## Per-source consumer policy — TradFi dual-source cells (v9, 2026-05-30)
+
+**Plan**: `tradfi_massive_dual_source_2026_05_28.md`. **Live**: UTL@`c7bfa427`.
+
+When both Databento and Massive run for the same TradFi `(venue, data_type, day)`, the manifest holds two rows
+distinguished by `source`. Each row carries an independent `capture_status`.
+
+### Union semantics — cell-level coverage
+
+> **Rule**: a TradFi cell is treated as `captured` by downstream consumers if **at least one** source row has
+> `capture_status=captured`. A cell is `attempted_failed` only when **all** source rows failed.
+
+This matches the honest-coverage denominator policy: the `compute_honest_coverage` numerator counts a cell once
+(captured) as long as any source delivered data, not once per source.
+
+### Per-consumer policy table
+
+| Consumer | Policy when ≥1 source captured | Policy when all sources failed |
+|----------|-------------------------------|-------------------------------|
+| **Feature pipeline** (MDPS → features-service) | Read the `SOURCE_PRIORITY`-ranked shard. Prefer `"massive"` over `"databento"` when both are `captured` (SOURCE_PRIORITY rank order). | Propagate `attempted_failed` upstream. Feature service records `EXPECTED_UNATTEMPTED` for downstream ML. |
+| **ML training** | Use highest-priority captured source. Add `data_quality_flag=TRADFI_SINGLE_SOURCE` when only one of two expected sources is present. | Mark training window as `DATA_MISSING`; do not impute. |
+| **Execution service** | Use highest-priority captured source for reference pricing. | Block execution for the affected instrument on that day; log `NO_TRADFI_DATA`. |
+| **Data-status UI** | Show cell as `captured` (green). Tooltip lists per-source status breakdown. | Show cell as `attempted_failed` (red). |
+| **Honest-coverage rollup** | Cell counts as 1 captured row in numerator. | Cell counts as 1 attempted_failed row; excluded from numerator. |
+
+### Source priority for TradFi
+
+The canonical ranking is defined in `unified_api_contracts.canonical.crosscutting.source_priority.SOURCE_PRIORITY`.
+For TradFi cells, `"massive"` ranks above `"databento"` when both are present (Massive has lower scrape latency and
+broader options chain coverage). Consumers must not hard-code the order — read it from `SOURCE_PRIORITY` at runtime.
+
+### Empty-confirmed from one source, captured from another
+
+A cell where Massive returned zero rows for a day (legitimate market holiday gap) while Databento captured data is
+valid:
+
+```
+(source=databento) → capture_status=captured
+(source=massive)   → capture_status=empty_confirmed  (reason=SOURCE_RETURNED_ZERO)
+```
+
+Downstream consumers treat this cell as `captured` (union semantics). The `empty_confirmed` Massive row is logged and
+visible in the data-status UI tooltip but does not degrade coverage percentage.
