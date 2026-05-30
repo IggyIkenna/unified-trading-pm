@@ -555,6 +555,23 @@ these venues.
       Balancer V3 subgraph ID for each chain (not yet in UAC `_defi.py`), (2) new architectural query pattern
       (loop-over-pools → filter-by-date). Root cause of deferral: not just a query rename. Ping filed slot_2.md
       2026-05-20. Post-cutover unless operator provides V3 subgraph IDs.
+- [ ] **[DEFERRED-POST-CUTOVER]** [DATA] P2. **Evaluate Allium (on-chain data vendor) as a BOUNDED fallback — Solana
+      lending gap + backfill-resilience ONLY.** Scope is deliberately narrow: (a) the two currently-unsourced Solana
+      lending cells — **Kamino** (`solana_defi_handler.py` returns 0 rows, no subgraph registered) and **Marginfi**
+      (DeFiLlama source deprecated, returns empty); (b) a historical-backfill fallback for subgraph degradation (e.g.
+      Aave V3 Optimism 2025+ `reserveParamsHistoryItems` empty → currently per-block Alchemy `eth_call`); (c) Hyperliquid
+      funding/fills as a no-rate-limit supplement to the Drift-only Solana perp coverage. **Method**: spike against
+      Allium's **free tier first** (20k API credits + 100 Explorer units, no cost, no sales call) to confirm Kamino/
+      Marginfi coverage is real and cross-validates our existing on-chain/subgraph sources; only pursue the enterprise
+      Datashares/Realtime contract (quote-only, annual commit) **if** the free spike proves the gap-fill. **Explicitly
+      OUT OF SCOPE** (do NOT expand without a fresh operator decision): (1) 1inch / 0x aggregator routes — those are
+      live route-quote APIs Allium structurally cannot serve; they stay `BLOCKED-CREDENTIALS` on free-tier 1inch/0x keys,
+      Allium is NOT a substitute; (2) Allium as a **primary** source for any already-GREEN cell (LST APRs, Aave/Compound
+      lending, the 9 DEXs, Chainlink/Pyth oracles) — those remain on-chain-canonical; Allium is fallback/backfill only;
+      (3) any CeFi venue (Kraken/Binance/etc. — out of Allium's on-chain-only scope). MCP connector (`mcp-oauth.allium.so`)
+      is a dev-time cross-validation tool only, NOT a production data-plane source. Provenance: research 2026-05-29/30
+      (operator ask — "do Allium plug our blocked-credential gaps?"; answer: not the critical-path blockers, but yes the
+      two P2 Solana-lending cells + resilience). Coverage docs: https://docs.allium.so/llms.txt.
 
 ### MTDS DeFi slice (`market_tick_data_to_100pct` — DeFi)
 
