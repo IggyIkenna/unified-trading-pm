@@ -92,11 +92,15 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       New `codex/05-infrastructure/vm-log-archival.md`: live stream + durable snapshot + daily rolling + serial-rolling
       paths; backup-vm-logs.sh usage; pre-kill hook table; throwaway-bucket retirement recipe; verify runbook.
       Added reference from `vm-launcher-runbook.md` kill/teardown section.
-- [ ] [AGENT] P2. **Per-repo log-destination convention**: extend the canonical-path idea beyond VMs — every
+- [x] [AGENT] P2. **Per-repo log-destination convention**: extend the canonical-path idea beyond VMs — every
       service/repo that emits operational logs (Cloud Run services, local dev, batch jobs) declares a canonical archive
       destination so backups + analysis are uniform. Audit current per-service log sinks; document the standard;
       retrofit divergent ones. (This is the broad "for each repo a canonical path" ask — scope/confirm with operator
-      before mass retrofit.)
+      before mass retrofit.) — unified-trading-pm@(next) ✅
+      **Audit result (2026-05-30)**: No divergent sinks found. All 21 repos follow two-path model: Cloud Run → Cloud
+      Logging (automatic), VM workloads → vm-logs/ + log-archive/. Standard documented in vm-log-archival.md §
+      "Per-Service Log-Destination Convention". One operator item pending: Cloud Logging retention policy confirmation
+      (30-day default vs custom _Default bucket retention). No mass retrofit needed.
 - [ ] [AGENT] P2. **Deployment-UI integration**: the History tab links each archived run to its
       `gs://deployment-scripts-{pid}/log-archive/…` run.log + serial-console (cross-ref
       `deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md` §2).

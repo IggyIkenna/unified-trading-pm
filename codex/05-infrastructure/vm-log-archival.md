@@ -144,6 +144,45 @@ gsutil ls -r gs://deployment-scripts-central-element-323112/log-archive/serial-r
 
 ---
 
+## Per-Service Log-Destination Convention (Beyond VMs)
+
+### Standard
+
+Every service or script that runs in production MUST have an explicit declared log destination:
+
+| Runtime | Log destination | Retention | Action required |
+|---|---|---|---|
+| **GCE VM** (workload, backfill, live) | `vm-logs/` → `log-archive/` (this doc) | 14-day live; indefinite archive | `heartbeat_daemon.py` wired by `setup-data-pipeline-vm.sh` |
+| **Cloud Run service** (API, background workers) | stdout → Cloud Logging (managed) | GCP default 30 days in `_Default` bucket | No custom sink — Cloud Logging automatic |
+| **Cloud Run Job** (cron, batch) | stdout → Cloud Logging (managed) | Same as above | No custom sink — Cloud Logging automatic |
+| **Local dev script** | stderr only | None (ephemeral) | No archival needed |
+
+### Audit — 2026-05-30 findings
+
+All 21 workspace repos have Dockerfiles (Cloud Run capable). Production service log paths:
+
+| Service | Runtime | Log destination | Status |
+|---|---|---|---|
+| `deployment-api`, `unified-trading-api`, `client-reporting-api` | Cloud Run service | Cloud Logging stdout | ✅ canonical |
+| `execution-service`, `strategy-service`, `features-service` | Cloud Run Job / Cloud Run | Cloud Logging stdout | ✅ canonical |
+| `market-tick-data-service`, `market-data-processing-service` | Cloud Run Job + GCE VM | Cloud Logging + `vm-logs/` | ✅ canonical |
+| `instruments-service`, `alerting-service`, `greeks-service` | Cloud Run | Cloud Logging stdout | ✅ canonical |
+| `agent-orchestrator` | Cloud Run (API) + GCE VMs (workers) | Cloud Logging + `vm-logs/` | ✅ canonical |
+| `deployment-service` crons | Cloud Run Jobs | Cloud Logging stdout | ✅ canonical |
+| Local dev scripts (`scripts/`) | Manual run | stderr | ✅ no archival needed |
+
+**No divergent sinks found** in the 2026-05-30 audit. All production workloads follow the two-path model:
+Cloud Run → Cloud Logging (automatic), VM workloads → `vm-logs/` + `log-archive/` (this doc).
+
+### Operator items (pending confirmation before retrofit)
+
+| Item | Status | Notes |
+|---|---|---|
+| Cloud Logging retention | ❓ Confirm current retention | GCP default is 30 days. For compliance/forensics, operator should confirm whether 30-day is sufficient or a custom `_Default` bucket retention + BigQuery export sink should be configured. |
+| Mass retrofit | ⏸ Pending operator confirm | No divergent services found — no mass retrofit needed as of 2026-05-30. |
+
+---
+
 ## Related Docs
 
 - `codex/05-infrastructure/vm-tarball-deployment.md` — VM launch + live-stream log path
