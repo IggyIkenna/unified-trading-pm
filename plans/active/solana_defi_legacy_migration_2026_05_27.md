@@ -259,7 +259,7 @@ source:
       `launch-marinade-solana-backfill-vm.sh` uses `collect-lst-rates` (wrong path for this fix); re-launch done via
       direct `collect-solana-defi --protocols marinade --solana-lending-backfill` VM
       `mtds-marinade-bugm-relaunch-20260530-052448` (asia-northeast1-c), range 2025-01-17→2026-05-28, verified RUNNING.
-- [ ] [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema error
+- [x] ✅ [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema error
       every date.** `solana_defi_handler._collect_kamino` emits rows with `vault_address` not `pool_id` but the
       `dex_pools` SchemaContract for `defi/pool/dex_pools` requires `pool_id`. Fix: rename the column in
       `_collect_kamino` (alias `vault_address` → `pool_id` for the dex_pools contract; keep `vault_address` as a
@@ -267,6 +267,9 @@ source:
       `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-defi-backfill/run.log` (one warning per
       processed date). Composes with Gate 1 schema-contracts work above — if a `solana_vault` instrument_type lands as
       planned, the Kamino vault rows route there instead and this becomes moot. Capture so it doesn't slip.
+      **FIXED 2026-05-30** (MTDS@c3ae794c): `_collect_kamino` now emits `pool_id` (aliased from vault PDA `address`) +
+      `vault_address` (secondary) + `token_a`/`token_b` from resolved mint symbols. Kamino backfill rerun via
+      collect-solana-defi --protocols kamino (see Bug-K "Bug fixes" section above — already `[x] ✅`).
 - [ ] [MTDS] P2. **Jito Stakenet API `pool_token_supply=0` returned every fetch → `"cannot compute exchange rate"` every
       date in the new VM run.** `solana_defi_handler._collect_jito` hits
       `kobe.mainnet.jito.network/api/v1/     stake_pool_stats` and gets back a body whose `pool_token_supply` field is 0
