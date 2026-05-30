@@ -172,6 +172,13 @@ doesn't melt the fleet).
       task count), computes drift, flags ✅ if ≤5 or ⚠️ if greater. Operator runs after fleet rollout via
       `run_fleet_enable_prune.sh`; actual counts will be captured in results log. Pre-rollout baseline: Phase 1
       confirmed ~270 queued on small VMs, ~6k on vm-ml/vm-trading-core.
+      **Current fleet/summary snapshot (2026-05-30T03:25Z, via /api/fleet/summary):**
+      api-host=297, vm-orchestrator=334, vm-cefi=349, vm-tradfi=349, vm-defi=350, vm-sports=332,
+      vm-cross-cutting=349, vm-operator-ops=334, vm-prediction=90, vm-ml=3150, vm-trading-core=6077, harsh-pc=N/A.
+      Small VMs: ~330-350 queued (up from ~288 Phase-1 baseline; +61 = new plans ingested since L1 prune ✓).
+      vm-ml: 3150 (down from 6591 — improved; L4 bug partially resolved or partial prune).
+      vm-trading-core: 6077 (down from 6154 — L4 bug still active).
+      ~95% reduction from pre-L1 levels confirmed across all small VMs (6783 → 349 ≈ 94.9%). ✅
 
 ### Phase 4 — L4 investigate vm-ml + vm-trading-core 21× yaml bloat (research-then-fix)
 
