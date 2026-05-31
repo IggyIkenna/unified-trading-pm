@@ -107,6 +107,49 @@ gsutil ls -l gs://market-data-tick-defi-central-element-323112/_index/drift_v2_s
 
 **Pass on Bug-D-prime (1+2); fail on Bug 3 (bucket-SSOT for sig index).**
 
+## Status update — Drift sig-index gap-fill walk launched (2026-05-31 21:52Z)
+
+- **State**: Bug-3 buckets are now in sync (prd + legacy both mirror the same
+  `_index/drift_v2_sig_index_parts/` + `_parts_b/`), but the sig-index parts
+  collectively cover only `2024-10-31 → 2025-01-15` (`_parts_b/`, 876 parts) +
+  `2026-02-06 09:50:47 → 2026-05-29 HEAD` (`_parts/`, 3547 parts). The
+  **12-month gap 2025-01-15 → 2026-02-06** means the in-flight Drift backfill
+  VM `mtds-solana-drift-backfill` (RUNNING since 11:43Z on tarball `mtds@7e09b2ab`)
+  correctly emits `record_failed(reason="sig index missing")` for every 2025
+  date — honest absence, no silent loss, but no captured rows either.
+- **Gap-fill walk launched 2026-05-31 22:52Z** on fresh ephemeral GCE VM
+  `mtds-solana-drift-backfill-sigidx-20260531-225220` (`e2-standard-4`,
+  `asia-northeast1-c`, `EPHEMERAL_BATCH`, `VM_SHUTDOWN_ON_COMPLETION=true`).
+  Fallback path — vm-ml SSM was Online-but-silently-failing (`echo hello`
+  succeeded once, then everything Failed empty even post-reboot), so ephemeral
+  GCE VM per operator-brief fallback.
+- **Workload**: canonical `setup-data-pipeline-vm.sh` + `VM_TASK=mdps-backfill`
+  + `VM_BACKFILL_CMD="python -m market_tick_data_service.scripts.build_drift_v2_sig_index --back-to 2025-01-14 --chunk-size 100000 --resume"`.
+  The script's `--resume` reads existing `_parts/` (default prefix; 3547 parts),
+  finds the oldest signature (oldest=2026-02-06 09:50:47), seeds
+  `before=<oldest_sig>` and walks back, writing new parts as
+  `part-003547+.parquet`. ETA 6-12h.
+- **Operator poll command**:
+  ```bash
+  gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill-sigidx-20260531-225220/mdps-backfill.log 2>/dev/null | tail -40
+  ```
+- **CHAIN_COMPLETE signal**: VM auto-shuts-down on script exit
+  (`VM_SHUTDOWN_ON_COMPLETION=true`). To verify completion:
+  ```bash
+  gcloud compute instances describe mtds-solana-drift-backfill-sigidx-20260531-225220 \
+    --zone=asia-northeast1-c --format='value(status)'
+  # Expected: TERMINATED (auto-shutdown). Then verify parts cover 2025:
+  gsutil ls gs://market-data-tick-defi-prd-central-element-323112/_index/drift_v2_sig_index_parts/ | wc -l
+  # Expected: > 3547 (probably 4500-5500).
+  ```
+  Once parts cover the gap, the running `mtds-solana-drift-backfill` VM
+  transitions from `attempted_failed` → `captured` for 2025 dates without
+  restart (handler reads on each per-date `_load_drift_v2_sig_index` call).
+  At that point flip **Bug-D ✅** in the next operator turn after
+  re-verifying ≥5 of first 10 2025 dates capture > 0 rows.
+- **Do NOT** touch the running `mtds-solana-drift-backfill` VM, the
+  consolidator workstream, or the probe — all running cleanly.
+
 ## Recommended decision
 
 Two ops, in order:
