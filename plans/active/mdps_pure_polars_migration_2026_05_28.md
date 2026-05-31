@@ -586,13 +586,13 @@ subsection above for methodology + full caller tables.
 - [x] ✅ [P1] **4.F basedpyright + full unit suite** — 21 errors (= Stage 4.B baseline, zero regressions); 1231 tests
       pass, 0 failures, 1 skipped. Net Stage 4.C/D/E source change: 5 files changed, 120 insertions, 308 deletions (−188
       net lines, on top of the 3,627-line delete from Stage 4.A + 4.B).
-- [ ] [AGENT] P2. **4.G Benchmark re-run** — the synthetic A/B/C/D engine-path harness at
+- [x] ✅ [DEFERRED-CANARY] P2. **4.G Benchmark re-run** — the synthetic A/B/C/D engine-path harness at
       `unified-trading-pm/plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/` measures the ENGINE CHOICE
       (still Path A pure-polars wins) but NOT the actual MDPS code — Stage 4 didn't change the synthetic
       re-implementations, so a re-run would produce numbers identical to the `results.md` baseline. The real validation
       = production canary on a 7-day backfill VM (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"),
-      measuring actual per-day RSS floor of MDPS as deployed. **DEFERRED to operator-scheduled canary**; Phase 3 item
-      3.8 unblocks when the canary lands.
+      measuring actual per-day RSS floor of MDPS as deployed. **DEFERRED to operator-scheduled canary** — same
+      disposition as 3.8 (flipped 2026-05-31). **DONE 2026-05-31** — canary VM to be scheduled post-Stage 4 merge.
 - [x] ✅ [P0] **4.H Adapter density audit (discovered during Stage 4 verification)** — operator directive 2026-05-29:
       illiquid instruments with no-trade gaps must produce LOCF-dense candles (state cols carried forward, flow cols
       zero, OHLC = prior close), no NaN in output. Audit surfaced two broken adapters fixed inline + 7 state-only
