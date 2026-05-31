@@ -78,14 +78,12 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
       missing in slot env | regression: tests/smoke/venue_credentials.spec.ts. Backend: GET /api/venue-credentials
       probes Secret Manager → Tardis api-key-info (5s timeout); returns active/expired/missing/error; mock mode returns
       simulated EXPIRED. Frontend: VenueCredentialsPanel.tsx added to VmDeployments page with 7 unit tests.
-- [x] ✅ [AGENT][UI] P2. Show, per venue, which date ranges are fetchable on the _current_ key vs which need a
-      renewed/paid key (free = 1st-of-month + recent; paid = rest) — consumes the per-venue coverage map from
-      `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §3. — deployment-api@f15ecdd | deployment-ui@c610c8f |
-      pw:L2 BLOCKED-INFRA: Playwright executable not installed in slot env | regression:
-      tests/smoke/venue_date_ranges.spec.ts. Backend: GET /api/venue-date-ranges returns per-venue free_date_count +
-      paid_date_count + sample dates; 8 unit tests green; QG ✅ 330s. Frontend: VenueDateRangePanel.tsx rendered on
-      VmDeployments page after VenueCredentialsPanel; mock-api handler returns 6 CeFi venues with computed free/paid
-      counts.
+- [x] ✅ [AGENT][UI] P2. Show, per venue, which date ranges are fetchable on the _current_ key vs which need a renewed/paid
+      key (free = 1st-of-month + recent; paid = rest) — consumes the per-venue coverage map from
+      `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §3. — unified-trading-system-ui@929542db |
+      VenueDateRangePanel.tsx: per-venue DateCountBar + free/paid counts + sample dates + KeyStatusBadge; proxy rewrites
+      for /api/venue-date-ranges; mock-handler routes; 8 vitest unit tests pass; regression spec
+      tests/e2e/venue-date-ranges.spec.ts (pw:L2 BLOCKED-INFRA: libatk missing on EC2; spec complete).
 
 ## §4 — Coverage / remaining-to-download view (P1)
 
@@ -97,14 +95,9 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
       component wired as "Venue Coverage" tab on market-tick-data-service; `getVenueYearCoverage` API client; Playwright
       smoke spec (5 tests, pw:L2 BLOCKED-INFRA: libatk missing). pending_paid_key rows show "★key" marker, NOT
       complete/empty.
-- [x] ✅ [AGENT][UI] P2. "What a relaunch will uncover" estimate: given current key status + coverage map, show how many
+- [ ] [AGENT][UI] P2. "What a relaunch will uncover" estimate: given current key status + coverage map, show how many
       (venue, date) cells would be filled by a relaunch now vs after key renewal — so launches are decided with eyes
       open.
-      — deployment-api@e157a68 | deployment-ui@7e54ae2 | pw:L2 BLOCKED-INFRA: Playwright executable not installed in
-      slot env | regression: tests/smoke/venue_relaunch_estimate.spec.ts. Backend: GET /api/venue-relaunch-estimate
-      returns per-(venue, asset_group, year) estimate of pending_paid_key cells unlockable now (free-tier ~3% for
-      historical years, ~23% for current year) vs after key renewal (100%). 11 unit tests; QG 235s.
-      Frontend: VenueRelaunchEstimatePanel.tsx with summary bar + per-row breakdown on VmDeployments page.
 
 ## §5 — Verification
 
