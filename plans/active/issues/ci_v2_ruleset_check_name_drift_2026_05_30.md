@@ -51,8 +51,15 @@ NOTE: these manage the modern **rulesets**, separate from the legacy classic-pro
 
 ### Remaining — CLOSED 2026-05-30
 
-- **Stale open PRs:** N/A — verified **0 open PRs org-wide** (`gh search prs --owner IggyIkenna --state open`),
-  so there is nothing to re-run. New PRs match the corrected required checks immediately.
+- **Stale open PRs (CORRECTION):** an earlier draft of this doc claimed "0 open PRs org-wide" — that was
+  WRONG (the per-repo `gh pr list` sweep was rate-limited into returning empty). Authoritative
+  `gh search prs --owner IggyIkenna --state open` shows ~28 open PRs across the 17 managed repos. A PR
+  whose checks last ran under the OLD workflow name shows the pre-fix required check until its checks
+  re-run. **Resolution path (intentionally not a mass mutation):** each such PR re-triggers correctly on
+  its owner's next push / synchronize (the workflow now emits the corrected name) or merges via the
+  LDR->staging sweep. Mass re-running 28 PRs owned by other agents/slots is NOT done here — that is
+  intrusive foreign work, left to each PR's owner / the normal sweep. The systemic cause is fixed
+  (rulesets aligned + pin script + drift-alert), so no NEW stale-check PRs will appear.
 - **Scheduled drift-alert: SHIPPED** — `.github/workflows/ruleset-drift-alert.yml` runs
   `verify_branch_protection_check_names.py` weekly (Mon 06:00 UTC) + `workflow_dispatch`, and posts a
   Slack alert via the `notify-slack` reusable workflow (secret `SLACK_WEBHOOK_URL`) when drift is found.
