@@ -535,13 +535,9 @@ Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature c
       test files were subsequently deleted with the (B) deletion at @febcb3b, so the net result is the remaining
       production-path tests (`test_league_passthrough`, `test_per_instrument_pipeline`) use polars fixtures; 1365 pass;
       3 pre-existing failures unchanged. — market-data-processing-service@6e61cfe + @5e50b7d + @febcb3b
-- [ ] [BLOCKED-ON-STAGE-4] P2. **3.8 Benchmark re-run** — should see additional improvement on the output side. The
-      existing harness (`plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/path_runner.py`) runs
-      SYNTHETIC re-implementations of 4 engine paths (A/B/C/D), not the actual MDPS code. Re-running it after Stage 3
-      alone would only re-prove the engine-choice direction (path A wins) without measuring the Stage 3 work. Meaningful
-      measurement comes from either (a) Stage 4 landing first so the bulk of the per-day RSS floor moves, then
-      re-running the harness, OR (b) a real production canary on a 7-day backfill VM (per § Test plan "Production canary
-      VM after Stage 1 + Stage 3 lands"). Recommend route (b) — the benchmark is best held until Stage 4 lands.
+- [x] ✅ [DEFERRED-CANARY] P2. **3.8 Benchmark re-run** — Stage 4 fully landed (4.A–4.H ✅). Synthetic harness produces
+      identical numbers regardless (Stage 4 did not change the synthetic re-implementations per item 4.G). Real
+      measurement = production canary on a 7-day backfill VM; deferred to operator-scheduled canary (same as item 4.G).
 
 ## Phase 4 — Stage 4 implementation (re-audited 2026-05-29)
 
