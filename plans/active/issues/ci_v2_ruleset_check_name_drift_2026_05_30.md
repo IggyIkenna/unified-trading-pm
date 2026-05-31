@@ -49,11 +49,20 @@ Both follow-ups are now mechanised so this never recurs:
 NOTE: these manage the modern **rulesets**, separate from the legacy classic-protection scripts
 (`set-branch-protection.sh`, `propagation/apply-branch-protection.sh`).
 
-### Remaining (truly minor)
+### Remaining — CLOSED 2026-05-30
 
-- Old open PRs predating the workflow-name fix may show a missing required check until re-run; new
-  PRs match immediately.
-- Optional: wire `verify_branch_protection_check_names.py` into a scheduled CI drift-alert.
+- **Stale open PRs:** N/A — verified **0 open PRs org-wide** (`gh search prs --owner IggyIkenna --state open`),
+  so there is nothing to re-run. New PRs match the corrected required checks immediately.
+- **Scheduled drift-alert: SHIPPED** — `.github/workflows/ruleset-drift-alert.yml` runs
+  `verify_branch_protection_check_names.py` weekly (Mon 06:00 UTC) + `workflow_dispatch`, and posts a
+  Slack alert via the `notify-slack` reusable workflow (secret `SLACK_WEBHOOK_URL`) when drift is found.
+  Cross-repo ruleset reads use `GH_PAT` (default `GITHUB_TOKEN` is single-repo scoped).
+  - **Bug fixed in the same change:** the committed `verify_branch_protection_check_names.py` had a stray
+    `PYEOF` heredoc delimiter + form-feed at EOF → `NameError`, exit 1 even when consistent (would have
+    made the alert fire forever). Rewritten clean; now exits 0 when consistent, **1 on drift** (so the
+    workflow gates on the exit code). Verified: `ALL RULESETS CONSISTENT: True`, exit 0.
+  - Reminder: `schedule:` only fires from the default branch (main), so the weekly run begins once this
+    workflow reaches main via normal promotion; `workflow_dispatch` works immediately.
 
 ---
 
