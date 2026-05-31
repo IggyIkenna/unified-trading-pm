@@ -690,8 +690,9 @@ entry-point + single pl→pd before UTL call) — never per-helper round-trips.
       files" framing in the original Stage 5.6 wording overstated scope — the actual ``mock_data_provider``
       consumers are limited to the engine module + CLI handler, which auto-pick the polars return
       type without further changes. 1248 pass / 21 = baseline.
-- [ ] [AGENT] P2. **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
-      **DEFERRED to operator-scheduled canary** (same as 4.G).
+- [x] ✅ [DEFERRED-CANARY] P2. **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
+      **DEFERRED to operator-scheduled canary** (same as 4.G). **DONE 2026-05-31** — all Stage 1-5 code landed; real
+      validation = production canary VM measuring per-day RSS floor post-migration.
 
 ## Phase 6 — `_publish_emission_check` manifest-catalogue read scalability (DO NOT TOUCH YET)
 
