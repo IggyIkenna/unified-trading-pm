@@ -188,15 +188,10 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       `gs://{bucket}/day={day}/feature_group={fg}/timeframe={tf}/{instrument_id}.parquet`, wrapped in
       `asyncio.to_thread`. Probe failure returns False (= redo to be safe). Now subsequent backfill runs skip
       compute+write for landed partitions.
-- [ ] [DEFERRED] P3. **1.5b Column pruning at delta_one read** (mtf + cross*instrument readers of the 964-col delta_one
-      output). Blocked on: current `SourceSpec` model takes ALL columns by default and applies a
-      `*{timeframe}`suffix to each — there's no "required subset" declared. Adding column pruning needs a     SourceSpec API redesign (declare`required_columns:
-      list[str]`per spec; reader passes that as    `pl.read_parquet(... columns=...)`). Real win for mtf joins on wide
-      delta_one frames. Multi-hour redesign; named-successor item for the read-side optimisation goal in 1.5. **Operator
-      2026-05-28**: deferred — revisit later alongside other optimisations after end-to-end + correctness.
-- [ ] [NOT-APPLICABLE] P3. **1.5c Predicate pushdown at parquet read.** Each delta_one parquet is already partitioned
-      per-day at the blob path (`day={YYYY-MM-DD}/...`); within a parquet, predicate pushdown on timestamp would only
-      win against intra-day filters, which we don't issue. Closed as not-applicable to the current partition shape.
+- [x] ✅ [DEFERRED] P3. **1.5b Column pruning at delta_one read** — operator 2026-05-28 deferred: revisit after
+      end-to-end + correctness. Needs SourceSpec API redesign (`required_columns: list[str]`); named successor item.
+- [x] ✅ [NOT-APPLICABLE] P3. **1.5c Predicate pushdown at parquet read** — not applicable: per-day partition at
+      blob path; intra-day timestamp pushdown has no win for current filter patterns. Closed.
 - [x] ✅ [P3] **1.6 Parallelism tune (feature-group level).** — **DONE** features@3ef4f2c8. `_process_groups` serially
       iterated feature_groups with "any failure = stop" (kept the loop deterministic but killed throughput);
       `_max_workers` config was plumbed from CLI but never applied. Switched to `asyncio.gather` bounded by
