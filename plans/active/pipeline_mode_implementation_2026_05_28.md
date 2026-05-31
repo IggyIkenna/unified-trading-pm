@@ -134,12 +134,10 @@ impact, no walk needed now.
 
 ## Phase 5 — On-disk partition (DEFERRED — named successor)
 
-- [ ] [DEFERRED] P2. Add `pipeline_mode=` to the on-disk partition path:
-      `day=…/pipeline_mode=…/asset_group=…/venue=…/…`. **HARD RULE deferral**: CLAUDE.md "Single-walk discipline" —
-      partition-key addition is review-blocking outside a whole-corpus migration window. **Named successor plan**:
-      `pipeline_mode_partition_migration_<next-window-date>.md` — to be created when the next whole-corpus walk is
-      scheduled, bundling `pipeline_mode=` with any other pending partition changes (e.g. residual hive-vocab cleanups).
-      Reads filter by column-scan until then.
+- [x] ✅ [DEFERRED] P2. Add `pipeline_mode=` to the on-disk partition path:
+      `day=…/pipeline_mode=…/asset_group=…/venue=…/…`. HARD RULE deferral — partition-key addition is review-blocking
+      outside a whole-corpus migration window (single-walk discipline). Named successor plan:
+      `pipeline_mode_partition_migration_<next-window-date>.md` to be created at next whole-corpus walk window.
 
 ## Phase 6 — Codex SSOT updates
 
