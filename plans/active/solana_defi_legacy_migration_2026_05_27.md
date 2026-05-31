@@ -663,11 +663,20 @@ plan. Commit + push via the standard `docs(plans):` flow.
       2 IAM bindings on `t1_batch` SA. Targeted apply used vars `project_id=central-element-323112 environment=prod
       bucket_prefix=uts`. **First execution 2026-05-30T09:20Z (job ID `uts-prod-subgraph-health-probe-g4827`) FAILED
       exit=127** — container exited before producing logs. Likely entrypoint runtime issue (`cron_subgraph_health_probe_entrypoint.sh`
-      install/import failure) — pre-existing in mtds@cef599e3 + deployment-service@8f2a83c shipped 2026-05-29. **DEFERRED
-      to operator follow-up**: TF resources are correctly provisioned + first cron tick will surface logs on the next
-      `0 */6 * * *` boundary (2026-05-30T12:00Z); if it still exits 127, debug entrypoint by exec'ing
-      `gcloud run jobs execute uts-prod-subgraph-health-probe` with `--container-command="bash" --container-args="-c,env;
-      which git python; ls /tmp/mtds/scripts/"` to capture the bash failure.
+      install/import failure) — pre-existing in mtds@cef599e3 + deployment-service@8f2a83c shipped 2026-05-29.
+      **Entrypoint + probe runtime fixes shipped 2026-05-31** (mtds@e431e483 + deployment-service@ba635bf):
+      (1) `_load_fingerprints` / `_write_fingerprints` were calling non-existent `download_blob_to_file` /
+      `upload_blob` methods on `GCSStorageClient` — fixed to use the canonical UTL protocol methods
+      `download_bytes(bucket, blob_path)` / `upload_bytes(bucket, blob_path, data, content_type=None)` (the
+      AttributeError at line 451 was the actual cause of the post-127 exit-1 runs visible 2026-05-30T15:01Z
+      onward). (2) `uts-prod-batch-sa` lacked Storage Object Admin on `gs://lending-indices-central-element-323112`;
+      ad-hoc grant applied + made durable via new TF binding `google_storage_bucket_iam_member.t1_batch_lending_indices_object_admin`.
+      (3) Entrypoint cleaned up: `python3 -u` for unbuffered stdio + 2s post-flush sleep + stderr routing for
+      diagnostics (Cloud Run gen2 + `google-cloud-cli:slim` + `command=bash, args=-c` silently drops container
+      STDOUT from Cloud Logging — confirmed against sister `orphan-ping-audit` job which also emits zero
+      entrypoint stdout). Verified: `gcloud run jobs execute uts-prod-subgraph-health-probe` exits 0 in 1m20s
+      (execution `uts-prod-subgraph-health-probe-lbxrp` 2026-05-31T10:41Z) and writes the 7.65 KB fingerprints
+      parquet to `gs://lending-indices-central-element-323112/_index/subgraph_fingerprints/fingerprints.parquet`.
 - [x] ✅ [INFRA] P2. **`vm_log_archival_scheduler.tf` SA refs unblocked workspace TF apply — 2026-05-30
       (deployment-service@40e85ef → rebased ff0ad29)**. Adjacent fix surfaced during the subgraph-probe TF apply:
       `vm_log_archival_scheduler.tf` referenced `google_service_account.unified_trading_sa` +
