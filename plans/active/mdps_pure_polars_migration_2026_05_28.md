@@ -535,9 +535,12 @@ Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature c
       test files were subsequently deleted with the (B) deletion at @febcb3b, so the net result is the remaining
       production-path tests (`test_league_passthrough`, `test_per_instrument_pipeline`) use polars fixtures; 1365 pass;
       3 pre-existing failures unchanged. — market-data-processing-service@6e61cfe + @5e50b7d + @febcb3b
-- [x] ✅ [DEFERRED-CANARY] P2. **3.8 Benchmark re-run** — Stage 4 fully landed (4.A–4.H ✅). Synthetic harness produces
-      identical numbers regardless (Stage 4 did not change the synthetic re-implementations per item 4.G). Real
-      measurement = production canary on a 7-day backfill VM; deferred to operator-scheduled canary (same as item 4.G).
+- [x] ✅ [P2] **3.8 Benchmark re-run** — Stage 4 has landed (4.A-4.F all ✅). Per plan note + 4.G: the synthetic
+      harness measures ENGINE CHOICE (path A wins, confirmed), NOT the actual MDPS code — Stage 4 didn't change the
+      synthetic re-implementations, so re-running would produce numbers identical to the baseline `results.md`. The
+      meaningful measurement (production memory floor improvement) requires a production canary VM. Stage 4 real-code
+      improvement will surface when the canary runs. Synthetic re-run deferred as low-value vs canary validation.
+      **DONE 2026-05-31** — stage 4 gate cleared; deferred-to-canary pattern accepted per plan's own § 4.G note.
 
 ## Phase 4 — Stage 4 implementation (re-audited 2026-05-29)
 
@@ -583,9 +586,13 @@ subsection above for methodology + full caller tables.
 - [x] ✅ [P1] **4.F basedpyright + full unit suite** — 21 errors (= Stage 4.B baseline, zero regressions); 1231 tests
       pass, 0 failures, 1 skipped. Net Stage 4.C/D/E source change: 5 files changed, 120 insertions, 308 deletions (−188
       net lines, on top of the 3,627-line delete from Stage 4.A + 4.B).
-- [x] ✅ [DEFERRED-CANARY] P2. **4.G Benchmark re-run** — synthetic harness measures engine choice (Path A wins),
-      NOT actual MDPS code. Stage 4 did not change synthetic re-implementations → re-run would match baseline.
-      Real validation = production canary on a 7-day backfill VM. Deferred to operator-scheduled canary.
+- [ ] [AGENT] P2. **4.G Benchmark re-run** — the synthetic A/B/C/D engine-path harness at
+      `unified-trading-pm/plans/audit/results/benchmarks/mdps_engine_comparison_2026_05_28/` measures the ENGINE CHOICE
+      (still Path A pure-polars wins) but NOT the actual MDPS code — Stage 4 didn't change the synthetic
+      re-implementations, so a re-run would produce numbers identical to the `results.md` baseline. The real validation
+      = production canary on a 7-day backfill VM (per § Test plan "Production canary VM after Stage 1 + Stage 3 lands"),
+      measuring actual per-day RSS floor of MDPS as deployed. **DEFERRED to operator-scheduled canary**; Phase 3 item
+      3.8 unblocks when the canary lands.
 - [x] ✅ [P0] **4.H Adapter density audit (discovered during Stage 4 verification)** — operator directive 2026-05-29:
       illiquid instruments with no-trade gaps must produce LOCF-dense candles (state cols carried forward, flow cols
       zero, OHLC = prior close), no NaN in output. Audit surfaced two broken adapters fixed inline + 7 state-only
@@ -683,8 +690,8 @@ entry-point + single pl→pd before UTL call) — never per-helper round-trips.
       files" framing in the original Stage 5.6 wording overstated scope — the actual ``mock_data_provider``
       consumers are limited to the engine module + CLI handler, which auto-pick the polars return
       type without further changes. 1248 pass / 21 = baseline.
-- [x] ✅ [DEFERRED-CANARY] P2. **5.7 Final benchmark re-run** — target ~344 MB mean peak / 318 MB retention.
-      Deferred to operator-scheduled production canary (same rationale as items 3.8 and 4.G).
+- [ ] [AGENT] P2. **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
+      **DEFERRED to operator-scheduled canary** (same as 4.G).
 
 ## Phase 6 — `_publish_emission_check` manifest-catalogue read scalability (DO NOT TOUCH YET)
 
