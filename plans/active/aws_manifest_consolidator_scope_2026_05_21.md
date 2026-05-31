@@ -68,7 +68,9 @@ because EventBridge Scheduler does not support Batch as a direct target in ap-no
       ECR repo `427895769566.dkr.ecr.ap-northeast-1.amazonaws.com/market-tick-data-service`. Current ECR repo exists but
       is empty. Jobs fire and submit correctly (EventBridge invocations metric = 1, FailedInvocations = 0) but fail at
       Fargate startup with `ResourceInitializationError: ecr:GetAuthorizationToken`. ECR pull auth now granted via
-      `AmazonEC2ContainerRegistryReadOnly` on `unified-trading-role-prod`. Unblocked once image is pushed.
+      `AmazonEC2ContainerRegistryReadOnly` on `unified-trading-role-prod`. **Script ready** market-tick-data-service@3e011da
+      (`scripts/push-to-ecr.sh`). **Operator action required**: `AWS_PROFILE=<profile> bash scripts/push-to-ecr.sh --spot-check`
+      from a machine with Docker + AWS creds. Unblocked once image pushed + spot-check passes.
 
 ### Phase D — Coverage gap extension (16 more buckets) (0.7 cal-AI-days)
 
