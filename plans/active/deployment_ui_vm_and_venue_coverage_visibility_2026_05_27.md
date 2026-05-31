@@ -95,9 +95,11 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
       component wired as "Venue Coverage" tab on market-tick-data-service; `getVenueYearCoverage` API client; Playwright
       smoke spec (5 tests, pw:L2 BLOCKED-INFRA: libatk missing). pending_paid_key rows show "★key" marker, NOT
       complete/empty.
-- [ ] [AGENT][UI] P2. "What a relaunch will uncover" estimate: given current key status + coverage map, show how many
+- [x] ✅ [AGENT][UI] P2. "What a relaunch will uncover" estimate: given current key status + coverage map, show how many
       (venue, date) cells would be filled by a relaunch now vs after key renewal — so launches are decided with eyes
-      open.
+      open. — unified-trading-system-ui@d30648fa | VenueRelaunchEstimate.tsx: 3-cell summary banner (pending/now/after)
+      + per-row table + decision hint for expired keys; mock route added; 8 vitest unit tests pass; regression:
+      tests/e2e/venue-relaunch-estimate.spec.ts (pw:L2 BLOCKED-INFRA: libatk missing on EC2).
 
 ## §5 — Verification
 
