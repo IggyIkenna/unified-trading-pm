@@ -95,6 +95,10 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - Two-pass: Pass 1 = `bash scripts/quality-gates.sh`. Pass 2 = `quickmerge --agent` (lint/format/typecheck/codex, no
   tests).
 - `--dep-branch` is human-only.
+- **`git pull` rejected with `(would clobber existing tag)`** (stale local release tag vs semver-agent's canonical
+  remote tag, e.g. `v1.0.0`/`v1.2.0`): fix with `git fetch origin --tags --force` (local-only; remote is canonical for
+  release tags — never force-push tags the other way), then `git pull --ff-only`. SSOT:
+  `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 — troubleshooting".
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
 - **agent-orchestrator EXCEPTION (codified 2026-06-01)**: `agent-orchestrator` is the ONE repo whose integration target
