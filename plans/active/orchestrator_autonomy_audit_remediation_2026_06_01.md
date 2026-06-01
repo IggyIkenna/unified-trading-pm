@@ -282,7 +282,12 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       campaign flow (the LDR→main promotion is owned by the reconciliation campaign; quickmerge-to-main not run by this
       slot). Commits: @1f9af64 (FM2/3/8/8b) · @0b6b12e (FM8-addendum) · @977e2e1 (FM1/5/6/7+FM4/5) · @f31f8ff (worker.md)
       · @7950ab0 (main→LDR correction). Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
-- [ ] [DOCS] P1. Codex `codex/05-infrastructure/per-tab-worktrees.md` — document the pre-spawn branch-state gate +
+- [x] ✅ [DOCS] P1. ✅ DONE 2026-06-01 — PM@74a557f1f (codex) + @3f2d5e3f6 (CLAUDE.md). Added the "Pre-spawn branch-state
+      + liveness-gated dirty resolution (Phase 4)" section to `codex/05-infrastructure/per-tab-worktrees.md` (FM2/FM3/FM8/
+      FM8b coordinator + FM1/5/6/7 gate + FM6 LDR-not-main correction + FM4/5 prompt inlining) and the canonical
+      liveness-gated/role-aware inherited-dirty-WIP rule to `cursor-configs/CLAUDE.md` § Other key rules (edited while
+      clean — the earlier foreign-dirty window had passed). Cross-linked this plan + worktree_clean_check.py. Codex
+      `codex/05-infrastructure/per-tab-worktrees.md` — document the pre-spawn branch-state gate +
       **liveness-gated** dirty resolution (slot-isolation invariant: dirty == a prior-you that's gone → inherit; only a
       provably-LIVE peer is protected; quarantine is never terminal) + slot-tagged-stash discipline + the 9-FM coverage
       table above. Add a `cursor-configs/CLAUDE.md` rule (canonical — do NOT edit per-repo copies) under
