@@ -31,9 +31,9 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
 
 ### From `cefi_venue_backfill_coverage_remediation`
 
-- [ ] [OPERATOR] P-. **Tardis paid key intentionally NOT activated.** All code is coverage-aware (free-only). Paid
+- [ ] [OPERATOR] P3. **Tardis paid key intentionally NOT activated.** All code is coverage-aware (free-only). Paid
       historical CeFi backfill is out of scope until the operator activates `tardis-api-key`.
-- [ ] [DATA] P-. **GCS manifest migration / 22-day-gap reconcile (2026-05-07→05-24) deferred until operator sees fit.**
+- [ ] [DATA] P3. **GCS manifest migration / 22-day-gap reconcile (2026-05-07→05-24) deferred until operator sees fit.**
       Manifest remains not-fully-trustworthy for a spend decision until phantom-sweep + re-consolidation runs. Playbook
       in `cefi_..._2026_05_27.md` §6I + `bucket_name_ssot_canonicalisation_2026_05_10`.
 

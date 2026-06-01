@@ -3,6 +3,7 @@ name: codex_vs_repo_docs_ssot_audit
 title: "Codex-vs-repo-docs SSOT audit + consolidation (all active repos)"
 parent_epic: plan_hygiene_master
 assigned_vm: vm-ml
+priority: P1
 created: 2026-06-01
 author: harsh + claude (session 67c17024)
 estimate_class: refactor

@@ -10,6 +10,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 created: 2026-06-01
+locked_by: live-defi-rollout
 ---
 
 **MIGRATED FROM:** `plans/archive/2026_06/pipeline_mode_implementation_2026_05_28.md` Phase 5 (on-disk partition —

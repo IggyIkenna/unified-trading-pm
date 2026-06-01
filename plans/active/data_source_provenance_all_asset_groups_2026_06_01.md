@@ -355,19 +355,21 @@ re-consolidation). Backfilling the existing corpus is therefore **two distinct s
 
 This plan is closeable only when ALL of the following are GREEN (no asset_group, no step skipped):
 
-- [ ] **Write-path** — universal gate live (`source` blank OR not-in-`SOURCE_PRIORITY` → raise) for every asset group;
-      every MTDS/MDPS writer (cefi/defi/sports/prediction/tradfi) stamps `source`; QG STEP 5.64 generalised + green.
-- [ ] **Data parquets** — `source` column populated on every ingested cell across all five asset groups, read from
-      ACTUAL prod rows (data-state, not the constant): **zero blank `source`**. Sports migrated path→column. MDPS
+- [ ] [DATA] P0. **Write-path** — universal gate live (`source` blank OR not-in-`SOURCE_PRIORITY` → raise) for every
+      asset group; every MTDS/MDPS writer (cefi/defi/sports/prediction/tradfi) stamps `source`; QG STEP 5.64
+      generalised + green.
+- [ ] [DATA] P0. **Data parquets** — `source` column populated on every ingested cell across all five asset groups, read
+      from ACTUAL prod rows (data-state, not the constant): **zero blank `source`**. Sports migrated path→column. MDPS
       candles carry the inherited upstream source.
-- [ ] **Manifest** — re-consolidated; manifest `source` populated for every cell; multi-source cells = two rows.
-- [ ] **Downstream** — consumer read path resolves source priority for every multi-source asset group (one row per
-      instrument+ts, no double-count); `detect_dual_source_conflicts()` surfaces divergence; `available_at` parity
-      holds.
-- [ ] **Sequencing honoured** — source backfill ran behind / folded into the running tick-bucket remediation, on
-      canonical buckets, no race.
-- [ ] **Codex + audit instructions** updated to the universal rule; audit result archived when every todo above is
-      `[x]`.
+- [ ] [DATA] P0. **Manifest** — re-consolidated; manifest `source` populated for every cell; multi-source cells = two
+      rows.
+- [ ] [DATA] P0. **Downstream** — consumer read path resolves source priority for every multi-source asset group (one
+      row per instrument+ts, no double-count); `detect_dual_source_conflicts()` surfaces divergence; `available_at`
+      parity holds.
+- [ ] [DATA] P0. **Sequencing honoured** — source backfill ran behind / folded into the running tick-bucket remediation,
+      on canonical buckets, no race.
+- [ ] [CODEX] P1. **Codex + audit instructions** updated to the universal rule; audit result archived when every todo
+      above is `[x]`.
 
 Scope exemptions (by design, not gaps): features-service / strategy / execution outputs (computed — no vendor source).
 
