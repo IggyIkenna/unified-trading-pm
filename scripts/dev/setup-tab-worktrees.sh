@@ -185,17 +185,33 @@ ensure_repo_worktree() {
     fi
     mkdir -p "$(slot_dir "${slot}")"
 
-    # Reuse branch if it exists; otherwise create from integration branch.
+    # Branch resolution, in priority order:
+    #   1. Local branch exists           → reuse it.
+    #   2. origin/<branch> exists         → reuse the PUSHED slot branch (so a
+    #      fresh VM / worker host lands on the SAME branch state another host
+    #      already created + pushed, instead of forking a divergent branch off
+    #      the integration branch). This is the case that lets remote hosts pick
+    #      up slot branches the operator's laptop created.
+    #   3. neither                        → create fresh from origin/<integration>.
     if git -C "${sibling}" show-ref --verify --quiet "refs/heads/${branch}"; then
         git -C "${sibling}" worktree add "${slot_repo_dir}" "${branch}" >/dev/null
+        log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, local)"
+        return 0
+    fi
+    # Refresh remote-tracking refs for both the slot branch + the integration
+    # branch before deciding (operator/host may not have fetched in a while).
+    git -C "${sibling}" fetch --quiet origin \
+        "+${branch}:refs/remotes/origin/${branch}" 2>/dev/null || true
+    git -C "${sibling}" fetch --quiet origin "${INTEGRATION_BRANCH}" 2>/dev/null || true
+    if git -C "${sibling}" show-ref --verify --quiet "refs/remotes/origin/${branch}"; then
+        git -C "${sibling}" worktree add --track -b "${branch}" \
+            "${slot_repo_dir}" "origin/${branch}" >/dev/null
+        log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, tracking origin)"
     else
-        # Make sure the integration branch is up-to-date on origin before
-        # branching off it (operator may not have fetched in a while).
-        git -C "${sibling}" fetch --quiet origin "${INTEGRATION_BRANCH}" 2>/dev/null || true
         git -C "${sibling}" worktree add "${slot_repo_dir}" -b "${branch}" \
             "origin/${INTEGRATION_BRANCH}" >/dev/null
+        log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, new from ${INTEGRATION_BRANCH})"
     fi
-    log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch})"
 }
 
 write_slot_envrc() {
