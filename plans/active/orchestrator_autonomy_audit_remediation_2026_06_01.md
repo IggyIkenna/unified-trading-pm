@@ -128,6 +128,13 @@ context-full + cap-hit alerts). The audit E1 expected-count (10/8) and the codex
 
 ### Phase 4 — P0/P1: respawn working-tree hygiene (9-failure-mode audit 2026-06-01)
 
+> **🟡 IN-FLIGHT — Phase-4 implementation owned by a parallel session (since 2026-06-01 ~20:25).** In the slot-1
+> agent-orchestrator worktree, `server/worktree_clean_check.py` carries +389 lines of uncommitted WIP (the full
+> `classify_maker_liveness` / FM2 wiped-index / FM3 restore / FM8b slot-tagged-stash implementation) and
+> `server/worker_liveness.py` is also modified — actively edited (mtime within seconds). **Do NOT duplicate or stomp**;
+> coordinate with the owning session. Slot-1 interactive operator session confirmed "back off" 2026-06-01. Banner-remove
+> when that session commits + flips these todos.
+
 A follow-on autonomy audit (this session 2026-06-01 — fan-out + adversarial verify, all verdicts confirmed against
 `agent-orchestrator@HEAD` + `unified-trading-pm/scripts/dev`) checked the operator's standing concern: **"if things stop
 halfway, they don't restart with a good working tree on the right branches."** It mapped the 9 working-tree pathologies
@@ -166,6 +173,14 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       in an isolated slot worktree is still slot-owned; (ii) terminal quarantine — a dead maker's WIP must eventually be
       inherited, never left dirty forever. Removes the FM8 HARD-RULE violation without wedging respawn-inherit.
       Collision group: `ao_respawn_hygiene`. Estimate: 0.5 AI-day.
+- [ ] [CODE] P0. **FM8 addendum — interactive-editor liveness (3rd signal beyond claim-TTL + tmux).** The claim+tmux
+      liveness test misses a LIVE interactive operator/Cursor editor: it writes no `.agent-claim` and runs under no
+      `orch-slot-*` tmux session, so `classify_maker_liveness` returns `"absent" → inherit` and would STOMP active
+      interactive edits. **Observed live 2026-06-01 20:25** — the Phase-4 WIP itself was being edited ~40s prior with no
+      claim and no orch-slot tmux present; the claim-only classifier would have mis-read it as a dead/absent maker. Add
+      **working-tree mtime-recency** as a third LIVE input: if any dirty file in the slot was modified within the last N
+      seconds (e.g. 120s) treat the maker as LIVE regardless of claim/tmux. Combine: LIVE if (fresh claim + live tmux)
+      OR (recent dirty-file mtime). Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
 - [ ] [CODE] P0. **FM8b — slot-tagged stashes (shared stash stack).** Linked worktrees share one `.git`, so
       `git stash list` exposes every slot's stashes (slot-3 incident: stashes tagged `On tab/.../1|7|8`).
       `stash_dirty_repos()` must `git stash push -m "slot-<N>-orphan-<ts>"` and only ever inspect/pop the stash whose
