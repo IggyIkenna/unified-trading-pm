@@ -136,6 +136,35 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       **legacy-only CELLS = 0** (838-gap closed). Closes `data_source_provenance` cefi + `pipeline_mode_partition` cefi.
       C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission.
 
+## Execution checklist (grounded — next session, finish in full)
+
+> CF debt is in the `_index` MANIFEST + object PATHS, NOT the raw tick parquets (cefi raw = pure market data). See
+> `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § MECHANISM + complete layout map. cefi is the HARDEST:
+> `raw_tick_data/by_date/{SYMBOL}.parquet` is FULLY FLAT (day/venue/data_type only in cols + epoch-µs ts).
+>
+> ⚠️ **IRREVERSIBLE — E8 DELETES the legacy bucket permanently.** Do not run E2–E8 until the canonical target (schema =
+> v9, paths = `day=/pipeline_mode=/asset_group=cefi/venue=/chain=/instrument_type=/data_type=`, source/available_at
+> semantics) is CONFIRMED CORRECT on the verify step. One pass, no confusion — once legacy is deleted it is gone.
+
+- [ ] [DATA] P0. E1 Phase-0 layout audit on `cefi-prd` + legacy `market-data-tick-cefi` (`cf_layout_audit`); confirm the
+      2 layouts (flat raw + `processed_candles/…day=/timeframe=/data_type=/venue=`).
+- [ ] [DATA] P0. E2 Build NEW `migrate_cefi_flat_to_v9_canonical.py` (no existing tool; perf-contract): read each flat
+      `by_date/{symbol}.parquet`, derive `day` (from epoch-µs `timestamp`), `venue` (from `exchange`/`symbol`),
+      `data_type` (col) PER ROW → **group-by-day and fan out** to canonical `day=/pipeline_mode=/asset_group=cefi/venue=/
+      data_type=…` objects (`gcs_copy_object` only for already-hive `processed_candles/`; flat raw needs read+regroup+write).
+      Copy the 5,233 legacy-only cells. ThreadPoolExecutor + wired knobs + `python -u` + per-object isolation + idempotent.
+- [ ] [DATA] P0. E3 Confirm cefi writer drained (mdps-backfill-cefi already self-terminated); snapshot `cefi-prd/_index`.
+- [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise →
+      full-VM run (no fire-and-forget verification).
+- [ ] [DATA] P0. E5 Manifest rebuild: scan canonical cefi paths → `ManifestWriter.add/record_empty` stamping
+      `source=tardis` (single-source) + `pipeline_mode` + `available_at` → consolidator merge → v9.
+- [ ] [DATA] P1. E6 CF-7 relabel: `COINBASE`↔`COINBASE-SPOT`, blank venue/data_type → canonical (diagnose, don't bulk).
+      Investigate the 50% `attempted_failed` rows (1.33M) — flag to cefi AG owner (separate from canonicalisation).
+- [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-cefi-prd-…` → CF-1…CF-12 GREEN on
+      data-state; flip CF-coverage rows in `cefi_master_audit_instructions.md`.
+- [ ] [DATA] P0. E8 ⚠️ IRREVERSIBLE — only after E7 GREEN: hand C-GREEN to `bucket_name_ssot…` L6 → **delete legacy
+      `market-data-tick-cefi` permanently** (single source of truth; legacy data is gone).
+
 ## Success criteria
 
 - Canonical `cefi-prd` `_index` DATA-STATE: **v9 on 100% of rows** (was v8) + `asset_group` column + `pipeline_mode=`

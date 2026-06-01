@@ -125,6 +125,27 @@ VM. Runs behind the pre-migration drain.
 - [ ] [DATA] P0. Post-walk: re-run the P0 CF audit → all CF GREEN (data-state) for every in-scope instruments bucket; 0
       legacy-only cells vs canonical. C-GREEN signal for `bucket_name_ssot…` L6 instruments legacy decommission.
 
+## Execution checklist (grounded — next session, finish in full)
+
+> CF debt is in the `_index` MANIFEST + object PATHS. See `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md`
+> § MECHANISM + layout map. Scope = non-sports instruments-store (cefi/tradfi/pred); sports reference rides the sports plan.
+> instruments-store cells carry **blank `data_type`** (keyed date+venue) — verify intent.
+>
+> ⚠️ **IRREVERSIBLE — E6 DELETES the legacy instruments-store buckets permanently.** Do not run E2–E6 until the canonical
+> target (v9, `asset_group=`, pipeline_mode, source, available_at) is CONFIRMED CORRECT at verify. One pass, no confusion.
+
+- [ ] [DATA] P0. E1 Phase-0 layout audit on `instruments-store-{cefi,tradfi,pred}-prd` + their legacy buckets
+      (`cf_layout_audit`); record per-bucket layouts + object counts.
+- [ ] [DATA] P0. E2 Build/extend the instruments migrator (perf-contract) per bucket: `category=`→`asset_group=` +
+      `pipeline_mode=` partition + canonical names; copy legacy-only cells (cefi 23 / tradfi 60 / pred re-diff).
+- [ ] [DATA] P0. E3 Confirm instruments writer drained; snapshot each `_index`.
+- [ ] [DATA] P0. E4 Dry-VM → timing → optimise → run (small: 30k/20k/493 rows — likely fast; still no fire-and-forget).
+- [ ] [DATA] P0. E5 Manifest rebuild per bucket: `ManifestWriter` stamping `source` + `pipeline_mode` + `available_at` +
+      typed reasons → consolidator → v9. Writer-fix CF-5/CF-11 so future writes are honest.
+- [ ] [DATA] P0. E6 Verify: `cf_manifest_audit_2026_06_01.py` per instruments-store bucket → CF-1…CF-12 GREEN; flip
+      CF-coverage in `instruments_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 →
+      **delete the legacy instruments-store buckets permanently**.
+
 ## Success criteria
 
 - Every in-scope instruments `_index` = v9 + `asset_group=` + `pipeline_mode=` partition + `source` column + typed

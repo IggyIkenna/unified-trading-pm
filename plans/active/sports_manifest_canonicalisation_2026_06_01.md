@@ -210,6 +210,34 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       season/transfer-window/genesis reason); `available_at` honest. 0 legacy-only cells. C-GREEN signal for
       `bucket_name_ssot…` Phase 6/7 sports legacy bucket decommission.
 
+## Execution checklist (grounded — next session, finish in full)
+
+> CF debt is in the `_index` MANIFEST + object PATHS, NOT the raw tick parquets. See
+> `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § MECHANISM + layout map. sports raw = full hive
+> `day=/category=/data_source=/venue=/league_id=/instrument_type=/data_type=` (parquet already has `source`+`data_source`
+> cols). **Keystone**: 584,177 empties are blanket `SOURCE_RETURNED_ZERO` — relabel to typed fixture/season reasons.
+>
+> ⚠️ **IRREVERSIBLE — E8 DELETES legacy `market-data-tick-sports` permanently.** Do not run E2–E8 until the canonical
+> target (v9, `day=/pipeline_mode=/asset_group=sports/…`, source col, typed reasons) is CONFIRMED CORRECT at verify.
+> One pass, no confusion — once legacy is deleted it is gone.
+
+- [ ] [DATA] P0. E1 Phase-0 layout audit on both sports surfaces (`market-data-tick-sports-prd` + `instruments-store-sports-prd`)
+      via `cf_layout_audit`; confirm `processed/` + `raw_tick_data/` (category=/data_source=) + `sports_reference/`.
+- [ ] [DATA] P0. E2 Build/extend `migrate_sports_canonical.py` to v9-canonical (perf-contract): `category=`→`asset_group=sports`,
+      add `pipeline_mode=batch_{api_football,footystats,odds_api,understat,transfermarkt,…}`; keep `source` col (already present).
+- [ ] [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
+- [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
+- [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): at manifest rebuild, relabel the 584,177 `SOURCE_RETURNED_ZERO`
+      empties → typed UAC reasons (`EXPECTED_NO_FIXTURE`/`PRE_SEASON`/`POST_SEASON`/`PAUSED_LEAGUE`/`OUTSIDE_TRANSFER_WINDOW`/
+      `SOURCE_DOES_NOT_COVER_LEAGUE`/`FIXTURE_POSTPONED|CANCELLED`/`KNOWN_SOURCE_GAP`/`NO_MAPPING`) via the UAC coverage
+      oracle (`clip_dates_to_source_coverage`/`is_in_known_gap`/`league_data`) — never re-derived per consumer.
+- [ ] [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` + `available_at`
+      → consolidator → v9. Also fix the writer to emit typed reasons going forward (CF-5 write-path).
+- [ ] [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank venue.
+- [ ] [DATA] P0. E8 Verify: `cf_manifest_audit_2026_06_01.py` on both sports surfaces → CF-1…CF-12 GREEN (esp. 0 blanket
+      SOURCE_RETURNED_ZERO); flip CF-coverage in `sports_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after
+      GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-sports` permanently**.
+
 ## Success criteria
 
 - Canonical sports `_index` = v9 + `pipeline_mode=` partition + `source` column + canonical venue/league/data_type.

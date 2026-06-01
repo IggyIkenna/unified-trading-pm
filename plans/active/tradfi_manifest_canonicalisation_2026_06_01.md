@@ -159,6 +159,31 @@ VM.
 - [ ] [DATA] P1. Notify `tradfi_massive_dual_source` to flip its Task -031 (manifest re-consolidation) — executed here
       as the C-source rider; cross-link both ways.
 
+## Execution checklist (grounded — next session, finish in full)
+
+> CF debt is in the `_index` MANIFEST + object PATHS, NOT the raw tick parquets. See
+> `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § MECHANISM + layout map. tradfi raw =
+> HYPHEN pseudo-hive (`day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/`) — parse `-`-delim, not `=`.
+>
+> ⚠️ **IRREVERSIBLE — E7 DELETES legacy `market-data-tick-tradfi` permanently.** Do not run E2–E7 until the canonical
+> target (v9 data-state, `day=/pipeline_mode=/asset_group=tradfi/…`, source re-consolidated, available_at added) is
+> CONFIRMED CORRECT at verify. One pass, no confusion — once legacy is deleted it is gone.
+
+- [ ] [DATA] P0. E1 Phase-0 layout audit on `tradfi-prd` + legacy (`cf_layout_audit`); confirm hyphen raw + candle +
+      `databento-batch-registry/` trees; verify the 0-row raw sample isn't systemic-empty.
+- [ ] [DATA] P0. E2 Build/extend `migrate_tradfi_canonical.py` to the v9-canonical target (perf-contract): parse the
+      hyphen pseudo-hive → canonical `day=/pipeline_mode=batch_{databento,massive,yahoo,barchart}/asset_group=tradfi/
+      venue=/…/data_type=`; copy the 71 legacy-only cells (NYSE tbbo 2023-05 …).
+- [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive -029).
+- [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
+- [ ] [DATA] P0. E5 Manifest rebuild: scan canonical paths → `ManifestWriter` stamping `source` (per UAC SOURCE_PRIORITY /
+      BARCHART·YAHOO_FINANCE·DATABENTO·MASSIVE venue→source) + `pipeline_mode` + `available_at` → consolidator → v9. This
+      executes `tradfi_massive` Task -031 (source re-consolidation) — cross-link + flip there.
+- [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical (diagnose, don't bulk-rename).
+- [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
+      data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in `tradfi_master_audit_instructions.md`.
+      ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-tradfi` permanently**.
+
 ## Success criteria
 
 - Canonical `tradfi-prd` `_index` = **v9** (data-state verified) + `pipeline_mode=` partition + `source` populated +

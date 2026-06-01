@@ -14,6 +14,17 @@ Read with `cf_manifest_audit_2026_06_01.py` against the **actual** prod `_index`
 `MANIFEST_SCHEMA_VERSION` constant — the manifest-v8 lesson). This is the audit-first P0 result for
 all six slot-4 plans. **defi = slot-2** (not audited here).
 
+> ⚠️ **IRREVERSIBILITY — THE MIGRATION DELETES ALL LEGACY DATA PERMANENTLY (operator 2026-06-01).** The end-state is a
+> SINGLE source of truth: every legacy bucket + every legacy/duplicate path is **deleted** so data-status/manifest shows
+> exactly one canonical view and we can truly see what data is missing. Therefore there can be **NO confusion** about the
+> canonical form before running: the schema (v9), the path layout
+> (`day=/pipeline_mode=/asset_group=/venue=/chain=/instrument_type=/data_type=`), the `source`-column + `available_at`
+> semantics, and which layout is the source-of-truth where copies overlap must be **KNOWN FOR SURE** and verified GREEN
+> on real data-state BEFORE the delete. **Do it ONCE, correctly** — there is no rollback once legacy is gone. The Phase-0
+> layout audit + the CF verify step are the guards; the delete (L6) runs ONLY after `cf_manifest_audit` is CF-1…CF-12
+> GREEN on the canonical bucket. This is why the operator gated the whole programme on "only once we're on v9, because we
+> keep missing things."
+
 ## The systemic finding (uniform across the ENTIRE non-defi corpus)
 
 Every canonical MTDS-AG `_index` **and** every instruments-store `_index` audited shows the **same**

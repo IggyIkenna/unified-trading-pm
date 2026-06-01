@@ -150,6 +150,36 @@ be fixed first if run on a VM.
       per venue) — closes `data_source_provenance` Phase 6 prediction**. This is the C-GREEN signal `bucket_name_ssot…`
       Phase 6/7 waits on for the prediction legacy bucket decommission.
 
+## Execution checklist (grounded — next session, finish in full)
+
+> Supersedes the old "rewrite every parquet's columns" framing: the CF debt is in the `_index` MANIFEST (rebuilt via
+> the UTL `ManifestWriter`, which auto-stamps v9) + object PATHS — NOT the raw tick parquets. See
+> `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § MECHANISM + the BUILD-GAP block above.
+>
+> ⚠️ **IRREVERSIBLE — E8 DELETES legacy `market-data-tick-prediction` + stale pred-prd `category=` paths permanently.**
+> Do not run E2–E8 until the canonical target (v9, `day=/pipeline_mode=/asset_group=prediction/…`, source=API) is
+> CONFIRMED CORRECT at the verify step. One pass, no confusion — once legacy is deleted it is gone.
+
+- [ ] [DATA] P0. E1 Phase-0 layout audit on legacy `market-data-tick-prediction` + canonical `pred-prd` (run
+      `cf_layout_audit_2026_06_01.py`); confirm legacy=`asset_group=` hive (fresher, 2,822 cells), pred-prd=`category=`
+      (stale, 805) — pick legacy as source-of-truth.
+- [ ] [DATA] P0. E2 Build `migrate_prediction_to_pred_prd_v9.py` (bespoke, perf-contract: ThreadPoolExecutor + wired
+      `--workers`/`--start`/`--end` + `gcs_copy_object` + `python -u` progress + per-object try/except + idempotent):
+      copy legacy canonical-path objects → `pred-prd` at `day=/pipeline_mode=batch_polymarket_clob/asset_group=prediction/
+      venue=/chain=/instrument_type=/data_type=`; covers the 2,039 legacy-only cells; drop stale pred-prd `category=` objects.
+- [ ] [DATA] P0. E3 Confirm `mdps-prediction-2025` writer drained; snapshot `pred-prd/_index` →
+      `_index/snapshots/pre_v9_canonical_2026_06_01.parquet`.
+- [ ] [DATA] P0. E4 Dry-VM (`launch-canonical-migration-vm.sh` style) → review planned moves + timing → optimise workers
+      if >1h → full-VM run (no fire-and-forget: STARTED<60s + progress/hr + STOPPED; T+10min describe).
+- [ ] [DATA] P0. E5 Manifest rebuild: generalise `rebuild_prediction_manifest.py` to target `pred-prd` + scan the
+      `asset_group=` paths + stamp `source=polymarket_clob` + `pipeline_mode` + `available_at` → consolidator merge → v9.
+- [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank/`prediction_trades` data_type → canonical.
+- [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-pred-prd-…` → CF-1…CF-12 GREEN on
+      data-state (v9, source populated, pipeline_mode, asset_group, available_at, 0 legacy-only). Flip the CF-coverage
+      rows in `predictions_master_audit_instructions.md`.
+- [ ] [DATA] P0. E8 Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy `market-data-tick-prediction` + stale
+      pred-prd `category=` paths (single source of truth).
+
 ## Success criteria
 
 - 0 legacy-only prediction cells (canonical holds all historical POLYMARKET data + question-groups).
