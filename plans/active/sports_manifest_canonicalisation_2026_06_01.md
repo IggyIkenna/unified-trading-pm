@@ -297,14 +297,18 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       data_type canonical relabel for any P0 drift; (e) `available_at` preserve / honest derivation. Server-side
       `gcs_copy_object`, layout-aware (`sports_reference/` + `processed/`). RUN ON A VM (gated on L0 tarball-prune) OR
       locally if scope is small (P0 decides).
+      **SCRIPTS READY** — `migrate_sports_canonical_v9.py` (E2) + `rebuild_sports_manifest_v9.py` (E5/E6) at market-tick-data-service@eb5eaad2.
+      Dry-run verified 2026-06-01: MDPS prd raw 70 objects + candles 50 + legacy 140 = 260 planned for 3-day window (all `category=`→`asset_group=`, pipeline_mode= inserted). VM execution pending E3 drain.
 - [ ] [DATA] P0. C-reasons RIDER (the keystone): relabel every blank / mislabeled empty row to the correct typed UAC
       reason via the coverage oracle (`clip_dates_to_source_coverage` / `is_in_known_gap` / season / transfer-window /
       fixture-status / league-coverage) — the table in § Sports honest-absence. Snapshot-protected, idempotent,
       oracle-driven (never re-derived per consumer).
+      **SCRIPT READY** — `rebuild_sports_manifest_v9.py` with oracle relabel baked in. Dry-run result: 584,177 empties ALL classified as `keep_src_zero` (oracle says genuinely expected) for `odds_api` source — correct: coverage started for ODDS_API so all empty cells ARE genuine source returns. CF-5 audit will verify on instruments-store surface (1.9M rows with non-canonical free-text + typed reasons).
 - [ ] [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
       source walk.
+      **SCRIPT READY** — `rebuild_sports_manifest_v9.py` extracts source via `_source_from_row()` and re-emits captured rows with `writer.add(source=...)`. VM execution pending E3 drain.
 - [x] ✅ [CODE] P1. C-writer: instruments-service sports handlers emit the typed fixture/season/transfer-window reasons at
       write time (writer analogue of defi A1/A2b) so future writes are honest — no blank/`SOURCE_RETURNED_ZERO` for a
       no-fixture / off-season / out-of-window / uncovered-league day. — instruments-service@608e7ca7: wired
