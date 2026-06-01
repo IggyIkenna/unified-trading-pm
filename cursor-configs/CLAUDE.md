@@ -287,6 +287,18 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   `/etc/systemd/system/orchestrator.service.d/failover.conf`. Re-routing is logged as `failover_rerouted` activity
   events + rolls back automatically (`failover_rolled_back`) when the host returns with unclaimed tasks. Script:
   `scripts/orchestrator/enable_failover.sh`. SSOT: `plans/active/harsh_pc_dispatch_failover_2026_05_30.md`.
+- **Orchestrator worker liveness: WorkerLivenessWatchdog auto-kills stuck/silent/context-full workers (HARD RULE codified 2026-06-01)**:
+  `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true` is the default on every fleet VM (enabled via
+  `/etc/systemd/system/orchestrator.service.d/watchdog.conf`). The `WorkerLivenessWatchdog` in
+  `server/worker_liveness_watchdog.py` detects three failure modes every 60 s: (1) **stuck-at-prompt** — pane shows
+  non-empty buffered input with no delta for ≥3 consecutive ticks; (2) **heartbeat-silent** — no `/progress` ping in
+  >900 s AND tmux alive AND slot not blocked; (3) **context-full** — pane matches `/clear to save Xk tokens`
+  (immediate kill). After a kill, `AutoSpawnLoop` respawns a fresh session within 60 s. **Operator must not manually
+  kill tmux sessions to restore velocity** — the watchdog handles it. Anti-thrash: per-slot 5-min kill cooldown +
+  per-VM 20 kills/day cap (Slack alert fires + watchdog goes dormant on cap). Never kill a `blocked` slot. Never kill
+  during `Crunched for / Cogitated for / Worked for / Baked for` pane state (active extended-thinking). Rollout
+  script: `scripts/orchestrator/enable_worker_watchdog.sh`. SSOT:
+  `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
