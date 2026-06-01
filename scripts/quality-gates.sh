@@ -189,6 +189,14 @@ DEEP_IMPORT_EXCLUDE_GLOBS=(
     "!**/test_check_removed_symbols.py"
     "!**/test_check_canonical_futures_construction.py"
 )
+# STEP 5.63 — run_lifecycle pairing exclusions for setup_events() entry-points.
+# PM scripts are operational CLI tools / diagnostics, not long-lived services.
+# smoke-test-dev intentionally exercises setup_events() STANDALONE as Check 6;
+# check_data_completeness is a short-lived diagnostic that emits its own report.
+LIFECYCLE_EXCLUDE_GLOBS=(
+    "!**/smoke-test-dev.py"
+    "!**/check_data_completeness.py"
+)
 
 # Exclude diagram generator from basedpyright/codex checks (uses stdlib only,
 # no project deps — type-checking it would require installing graphviz stubs)

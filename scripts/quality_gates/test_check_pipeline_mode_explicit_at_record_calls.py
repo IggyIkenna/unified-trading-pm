@@ -72,7 +72,7 @@ def test_scan_file_clean_when_pipeline_mode_kwarg_present(tmp_path: Path) -> Non
         from unified_trading_library import ManifestWriter
 
         def write_row(writer):
-            writer.record_captured(asset_group="cefi", pipeline_mode="BATCH_TARDIS")
+            writer.record_captured(asset_group="cefi", pipeline_mode="BATCH_TARDIS")  # QG-allow: pipeline-mode-string-literal
         """,
     )
     findings = _scan_file(target, repo="testrepo", repo_root=tmp_path)
@@ -159,7 +159,7 @@ def test_main_clean_returns_zero(tmp_path: Path, capsys: pytest.CaptureFixture[s
         "writer.py",
         """
         def emit(writer):
-            writer.record_captured(pipeline_mode="BATCH_TARDIS", asset_group="cefi")
+            writer.record_captured(pipeline_mode="BATCH_TARDIS", asset_group="cefi")  # QG-allow: pipeline-mode-string-literal
         """,
     )
     rc = main(["--workspace-root", str(tmp_path), "--scope", "myrepo"])

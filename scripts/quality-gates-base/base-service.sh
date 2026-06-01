@@ -1447,11 +1447,16 @@ fi
 #   * ServiceBootstrap(...)     (services — UTL handles lifecycle internally)
 #   * ad-hoc log_event _RUN_STARTED + _RUN_(COMPLETED|FAILED) pair (legacy)
 # The UTL helper definition itself + repos that define setup_events are skipped.
+_LIFECYCLE_EXTRA_GLOBS=()
+for g in ${LIFECYCLE_EXCLUDE_GLOBS[@]+"${LIFECYCLE_EXCLUDE_GLOBS[@]}"}; do
+    _LIFECYCLE_EXTRA_GLOBS+=(--glob "$g")
+done
 _LIFECYCLE_FILES=$(rg -l 'setup_events\(' --type py \
     --glob '!.venv*' \
     --glob '!**/tests/**' \
     --glob '!**/run_lifecycle.py' \
     --glob '!**/events/__init__.py' \
+    ${_LIFECYCLE_EXTRA_GLOBS[@]+"${_LIFECYCLE_EXTRA_GLOBS[@]}"} \
     "$SOURCE_DIR/" 2>/dev/null || :)
 _LIFECYCLE_VIOLATIONS=""
 for _f in $_LIFECYCLE_FILES; do

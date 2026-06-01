@@ -4,7 +4,7 @@
 Per ``manifest_schema_final_gate_2026_05_09.md`` Phase 4.GREP-VERIFY:
 
   Naive grep ``grep -rln 'record_captured' --include='*.py' | xargs grep -L
-  'pipeline_mode='`` returns false positives for files containing only docstring
+  'pipeline_mode='`` returns false positives for files containing only docstring  # QG-allow: pipeline-mode-string-literal
   / comment / dict-key / string-literal references. The 2026-05-12 slot 2 audit
   found 7 grep hits all false-positive across deployment-api /
   system-integration-tests / unified-trading-pm/scripts/. AST-walk is the
