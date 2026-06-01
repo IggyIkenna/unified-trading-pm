@@ -145,6 +145,13 @@ operator questions:
 
 ## Operator action required
 
+> **🅿️ PARKED 2026-06-01 (harsh, operator-directed) — tracked P2, intentionally not actionable now.** The 8 uncovered
+> codes (5 ML + 3 risk-rule) **cannot be baselined yet**: ML, features, and backtesting are not running, and the data
+> backfills they depend on are not complete — so there is no real ML-inference / risk-rule / archetype traffic to
+> baseline against. The "P0 ML baseline" + "P1 risk-rule" actions below are blocked on those subsystems going live, NOT
+> on alerting work. **Do NOT re-investigate or attempt a baseline until ML/features/backtesting are live and backfills
+> land.** The 21 covered codes remain validated (0-FP).
+
 ### P0 — run targeted ML baseline (no live positions blocked, but ML alerts unvalidated)
 
 The 5 ML alert codes (`ML_SIGNAL_STALENESS`, `ML_MODEL_DRIFT_DETECTED`, `ML_PNL_DEVIATION`,
