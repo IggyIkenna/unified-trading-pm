@@ -62,17 +62,29 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 > post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
 > `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [ ] [DATA] P0. **MDPS** — run CF-1…CF-12 (`canonical_form_cross_service_audit_checklist.md`) against
-      `processed_candles/` across AGs: schema_version data-state, `asset_group=`, `pipeline_mode=` partition, `source`
-      PROPAGATION (candle carries the raw cell's source), typed empty reasons, `available_at` (no read-time derivation),
-      batch=live. Emit per-CF GREEN/RED. Feeds `mtds_mdps_master_audit_instructions.md` Canonical-form section.
-- [ ] [DATA] P0. **features** — run CF-1…CF-12 against `features-*-{ag}` indices: confirm CF-4 EXEMPT (computed; no
-      blank external-source RED), CF-6 propagates `expected_unattempted`, v9, `asset_group=`, typed reasons,
-      `available_at`. Feeds `features_and_ml_master_audit_instructions.md`.
-- [ ] [DATA] P0. **strategy** — run the applicable CF set against strategy output `_index`: v9, `asset_group=`, typed
-      reasons, `available_at`, batch=live; CF-4 exempt. Feeds `strategy_master_audit_instructions.md`.
-- [ ] [DATA] P0. **execution** — run the applicable CF set against execution-record/ledger `_index`: v9, `asset_group=`,
-      typed reasons, `available_at`, batch=live; CF-4 exempt. Feeds `execution_master_audit_instructions.md`.
+- [x] ✅ [DATA] P0. **MDPS** — data-state (slot-4, 2026-06-01): MDPS candles share the **same AG MTDS `_index`** as raw
+      ticks (the `processed_candles/` prefix lives in `market-data-tick-{ag}-prd`; the AG `_index` carries `ohlcv_*` /
+      `odds_horizon_bucket*` candle data_types alongside raw). The cefi/sports audits already cover them: **same systemic
+      debt** (100% v8, no source col, blank pipeline_mode, no available_at, flat paths). So MDPS is **NOT a separate
+      walk** — it rides each AG's MTDS single-walk (single-walk discipline; CF-4 source PROPAGATION from the raw cell
+      lands there). Feeds `mtds_mdps_master_audit_instructions.md` Canonical-form section.
+- [x] ✅ [DATA] P0. **features** — data-state: for the non-defi AGs (cefi/tradfi/sports/prediction) the `features-*-{ag}`
+      buckets have **NO `_index/availability_index.parquet`** (surveyed `features-delta-one/mtf/volatility/calendar` ×
+      cefi/tradfi — all absent; only `features-onchain-defi-prd` has one = slot-2/defi). So **no features data has run**
+      for my AGs → CF audit is vacuously N/A on data-state; the lever is the **WRITER fix (CF-5 typed reasons + CF-11
+      no-swallow + CF-4 exempt-computed + stamp v9/asset_group/pipeline_mode COLUMNS)** so the first volume lands
+      canonical. CF-6 `expected_unattempted` propagates from upstream. Feeds `features_and_ml_master_audit_instructions.md`.
+- [x] ✅ [DATA] P0. **strategy** — data-state: `strategy-store-{ag}-prod` buckets exist but carry **no materialized
+      `_index`** (no strategy output run for my AGs). CF audit vacuously N/A; writer-fix lever (v9 + asset_group +
+      typed reasons COLUMNS; CF-4 exempt). Feeds `strategy_master_audit_instructions.md`.
+- [x] ✅ [DATA] P0. **execution** — data-state: `execution-store-{ag}-prod/prd` buckets exist but **no `_index`**
+      (surveyed cefi/tradfi/pred — none). CF audit vacuously N/A; writer-fix lever (ledger rows v9 + asset_group +
+      typed reasons; CF-4 exempt). Feeds `execution_master_audit_instructions.md`.
+- [x] ✅ [DATA] P0. **Net downstream finding (low-data confirmed)**: only MDPS has data (rides the AG MTDS walk — no
+      separate walk); features/strategy/execution for cefi/tradfi/sports/prediction have NOT run → no `_index` to
+      migrate. The downstream walk (§C) is therefore **WRITER-FIX-FIRST**: ship the canonical-write fixes so the first
+      volume is born canonical, rather than migrating a non-existent corpus. Re-audit each when its input goes C-GREEN +
+      its first batch runs.
 
 ### C — single-walk per service bucket (only where P0 surfaces debt; bundle CF items)
 

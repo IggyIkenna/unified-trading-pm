@@ -79,12 +79,22 @@ VM. Runs behind the pre-migration drain.
 > deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
 > `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [ ] [DATA] P0. Run the CF-1…CF-12 checks (per `canonical_form_cross_service_audit_checklist.md`) against each in-scope
-      instruments `_index` + sample objects: read the actual `schema_version` distribution, `category=` vs
-      `asset_group=` on paths + rows, `pipeline_mode=` partition presence, `source` column blank-rate, empty-reason
-      histogram, name drift, date-impossible captured rows. Emit a per-CF GREEN/RED with data-state evidence. This is
-      the audit the operator re-runs; it feeds `instruments_master_audit_instructions.md` Canonical-form section.
-- [ ] [DATA] P0. Confirm which instruments buckets are AG-partitioned vs cross-AG; record object counts to migrate.
+- [x] ✅ [DATA] P0. CF-1…CF-12 data-state run (slot-4 tool `cf_manifest_audit_2026_06_01.py`, 2026-06-01) on the
+      non-sports instruments-store indexes — **identical systemic debt to the MTDS AGs** (uniform across the corpus):
+      - **instruments-store-cefi-prd** (30,803 rows): CF-1 RED 100% v8 · CF-2 vacuous (no AG col) · CF-3 RED blank
+        pipeline_mode · CF-4 RED no source col · CF-8 RED no available_at · CF-5 GREEN · **legacy-only 23 cells** (2025-10
+        BITGET/OKX/COINBASE/HYPERLIQUID, blank data_type) · paths flat (no asset_group=/pipeline_mode=).
+      - **instruments-store-tradfi-prd** (20,264 rows): CF-1 RED 100% v8 · CF-3/CF-4/CF-8 RED · CF-5 GREEN · **legacy-only
+        60 cells** (2026-03 NASDAQ/NYSE/CME/ICE, blank data_type) · paths flat.
+      - **instruments-store-pred-prd** (493 rows): CF-1 RED 100% v8 · pipeline_mode col ABSENT · CF-4/CF-8 RED · paths
+        flat. (legacy `instruments-store-prediction-central` is long-form; re-diff in walk.)
+      - **CF-7 note**: instruments-store cells carry **blank `data_type`** (keyed on date+venue) — verify/relabel intent
+        in the walk. Feeds `instruments_master_audit_instructions.md` Canonical-form section. All CF-RED bundled into the
+        per-bucket single-walk (prior-not-ceiling).
+- [x] ✅ [DATA] P0. Bucket inventory: all instruments-store indexes are **AG-partitioned** (one `_index` per
+      `instruments-store-{ag}-prd`); cefi/defi/tradfi/pred/sports each have `_index/availability_index.parquet`. defi =
+      slot-2; sports reference surface rides the sports plan; this plan owns cefi/tradfi/pred (+ any cross-AG reference
+      indices — none found as a separate bucket). Object counts resolved per-bucket in the C0 walk.
 
 ### C — single-walk (bundled CF-1…CF-12) per in-scope instruments bucket
 
