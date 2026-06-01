@@ -757,7 +757,7 @@ jobs:
 
   # Stage 1: Notify that the agent is working
   notify-working:
-    name: Telegram — Agent Working
+    name: Slack — Agent Working
     if: always()
     uses: ./.github/workflows/notify-slack.yml
     with:
@@ -823,7 +823,7 @@ jobs:
 
   # Stage 3: Send the notification
   notify-result:
-    name: Telegram — Fix Result
+    name: Slack — Fix Result
     needs: [fix-downstream, notify-result-build]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

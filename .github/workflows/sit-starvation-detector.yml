@@ -82,9 +82,9 @@ jobs:
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — SIT Starvation Detector
+    name: Slack — SIT Starvation Detector
     needs: [check-stale-lock]
     if: always() && needs.check-stale-lock.outputs.stale == 'true'
     uses: ./.github/workflows/notify-slack.yml

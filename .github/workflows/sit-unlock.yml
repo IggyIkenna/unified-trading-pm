@@ -140,9 +140,9 @@ jobs:
           fi
           echo "Dispatched staging-unlocked to all repos"
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — SIT Unlock
+    name: Slack — SIT Unlock
     needs: [unlock-staging]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

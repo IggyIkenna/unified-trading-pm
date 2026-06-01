@@ -631,7 +631,7 @@ jobs:
 
   # Stage 1: Notify that the agent is working on the conflict
   notify-working:
-    name: Telegram — Agent Working
+    name: Slack — Agent Working
     if: always()
     uses: ./.github/workflows/notify-slack.yml
     with:
@@ -647,7 +647,7 @@ jobs:
 
   # Stage 2: Notify validation failure (apply step failed)
   notify-validation-failure:
-    name: Telegram — Validation Failure
+    name: Slack — Validation Failure
     needs: [resolve-conflict]
     if: always() && needs.resolve-conflict.outputs.apply_outcome == 'failure'
     uses: ./.github/workflows/notify-slack.yml
@@ -702,7 +702,7 @@ jobs:
           echo "conclusion=$CONCLUSION" >> "$GITHUB_OUTPUT"
 
   notify-result:
-    name: Telegram — Resolution Result
+    name: Slack — Resolution Result
     needs: [resolve-conflict, notify-result-build]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

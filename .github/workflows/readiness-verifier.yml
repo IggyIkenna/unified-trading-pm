@@ -86,9 +86,9 @@ jobs:
           cat readiness-report.txt >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Readiness Verifier
+    name: Slack — Readiness Verifier
     needs: [verify-readiness]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

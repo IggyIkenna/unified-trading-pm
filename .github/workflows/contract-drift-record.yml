@@ -48,7 +48,7 @@ jobs:
           # with updated cassettes for human review
 
   notify-failure:
-    name: Telegram — Contract Drift Failure
+    name: Slack — Contract Drift Failure
     needs: [record]
     if: always() && needs.record.result == 'failure'
     uses: ./.github/workflows/notify-slack.yml

@@ -291,7 +291,7 @@ jobs:
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify-summary:
-    name: Telegram — Auto-Merge Summary
+    name: Slack — Auto-Merge Summary
     needs: [auto-merge]
     if: always() && (needs.auto-merge.outputs.merged_count != '0' || needs.auto-merge.outputs.skipped_count != '0')
     uses: ./.github/workflows/notify-slack.yml

@@ -397,7 +397,7 @@ jobs:
 
   # ── TELEGRAM NOTIFY ──────────────────────────────────────────────────────
   notify:
-    name: Telegram — Cold Storage Cleanup
+    name: Slack — Cold Storage Cleanup
     needs: [cold-storage-cleanup]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

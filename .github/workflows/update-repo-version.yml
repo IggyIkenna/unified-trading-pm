@@ -337,7 +337,7 @@ jobs:
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify:
-    name: Telegram — Version Update
+    name: Slack — Version Update
     needs: [update-manifest]
     if: always() && needs.update-manifest.outputs.skip != 'true'
     uses: ./.github/workflows/notify-slack.yml
@@ -352,7 +352,7 @@ jobs:
     secrets: inherit
 
   notify-loop-breaker:
-    name: Telegram — Version Bump Loop Breaker
+    name: Slack — Version Bump Loop Breaker
     needs: [update-manifest]
     if: always() && needs.update-manifest.outputs.loop_breaker_triggered == 'true'
     uses: ./.github/workflows/notify-slack.yml

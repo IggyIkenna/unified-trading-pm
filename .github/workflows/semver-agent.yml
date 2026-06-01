@@ -465,9 +465,9 @@ jobs:
             exit 1
           fi
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Semver Agent
+    name: Slack — Semver Agent
     needs: [semver]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

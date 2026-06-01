@@ -190,9 +190,9 @@ jobs:
           gh issue close "$ISSUE_NUMBER"
           # Telegram alert migrated to notify job
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Major Bump Approval
+    name: Slack — Major Bump Approval
     needs: [handle-approval]
     if: always() && needs.handle-approval.result == 'success'
     uses: ./.github/workflows/notify-slack.yml

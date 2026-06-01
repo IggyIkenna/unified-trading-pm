@@ -200,9 +200,9 @@ jobs:
           echo "No docs/rules reference changed symbols in ${{ steps.parse.outputs.repo }} v${{ steps.parse.outputs.version }}"
           echo "Skipping rules-alignment dispatch."
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Schema Changed Handler
+    name: Slack — Schema Changed Handler
     needs: [handle-schema-change]
     if: always() && needs.handle-schema-change.outputs.repo != ''
     uses: ./.github/workflows/notify-slack.yml
