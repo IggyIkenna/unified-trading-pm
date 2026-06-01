@@ -224,12 +224,21 @@ Coverage cells that actually gate go-live (audit these specifically):
 - [ ] [DATA] P1. **LIGHTER** perp_funding returns `SOURCE_RETURNED_ZERO` across its whole post-launch life (2024-09→now)
       — verify the Lighter (zkSync) funding endpoint/adapter; real source/adapter fix, not pre-launch. parent_epic:
       defi_master
-- [ ] [MIGRATION] P1. **Reason relabeling** — pre-launch/pre-genesis rows recorded as `SOURCE_RETURNED_ZERO` or
-      **blank** (LIDO/ETHERFI/MARINADE/PACIFICA/ASTER pre-launch; CHAINLINK 453 blank) → `EXPECTED_PRE_VENUE_LAUNCH` /
+- [x] ✅ [CODE] **Writer fix shipped** — `oracle_prices_handler.py` + `evm_defi_handler.py` now classify pre-genesis
+      empties via UAC `get_chain_genesis_date()` (→ `EXPECTED_PRE_GENESIS_CHAIN`) instead of blanket
+      `SOURCE_RETURNED_ZERO`. market-tick-data-service@840d85f1 (ruff clean, parse OK, UAC import resolves). Future
+      writes correct.
+- [ ] [MIGRATION] P1. **Legacy reason relabeling** (writer now fixed @840d85f1; this is the back-data migration) —
+      pre-launch/pre-genesis rows recorded as `SOURCE_RETURNED_ZERO` or **blank** (LIDO/ETHERFI/MARINADE/PACIFICA/ASTER
+      pre-launch; CHAINLINK 453 blank + BASE 2022-11→2023-08) → `EXPECTED_PRE_VENUE_LAUNCH` /
       `EXPECTED_PRE_GENESIS_CHAIN`; clears `LegacyBlankErrorReasonError` violations + lifts venue %s without backfill.
       parent_epic: defi_master
 - [ ] [CLEANUP] P1. **Pyth chain-label duplication** — oracle_prices Pyth captured under chain=`''` (1,185) but
-      phantom-empty under chain=`SOLANA` (1,296). Reconcile (`''`→`SOLANA`); fixes "Solana oracle 0%" without backfill.
+      phantom-empty under chain=`SOLANA` (1,296). Objects are correctly stored at `venue=PYTH/chain=SOLANA` — only the
+      INDEX is wrong; legacy captured rows recorded chain=`''`. Reconcile (`''`→`SOLANA`) + drop the duplicate empties
+      on shared dates; fixes "Solana oracle 0%" without backfill. parent_epic: defi_master
+- [ ] [DATA] P2. **Pyth ~5-week recent backfill** — captured stops 2026-04-14, today 06-01 → real Pyth coverage ≈82%
+      (1,185/1,447 after dedup), not 100%. Run a VM backfill of Pyth oracle 2026-04-15→present (Hermes API; small).
       parent_epic: defi_master
 - [ ] [CODE] P0. Fix `data_status_service._build_coverage_for_cat` (`/api/coverage-summary`) denominator: replace
       `len(index)` self-reference with the expected-dates oracle (`_mtds_expected_dates_cached`) + apply `is_expected()`
