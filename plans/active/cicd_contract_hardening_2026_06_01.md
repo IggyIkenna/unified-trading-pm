@@ -160,7 +160,7 @@ Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab
       `base_branch_for_repo()` (LDR) + per-tab-worktrees FM6. A recovered AO worker would FF to `origin/main` and read
       as diverged. → make the boot prompt use `live-defi-rollout` for all repos (drop the agent-orchestrator
       special-case).
-- [ ] [DESIGN] P2. Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01):
+- [x] ✅ [OPERATOR-DECIDED 2026-06-01] P2. APPROVED — agent-orchestrator deploys from BOTH `live-defi-rollout` (rapid dev) AND `main`; deployment-service CLAUDE.md AO-exception to be updated (LDR now allowed — follow-up). Original eval: Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01):
       allow deploying the dashboard SPA from `live-defi-rollout` (not only `main`) so server + UI iterate on one branch
       without the FF-to-`main` hop. Scope the CI-gate + Firebase-Hosting target implications.
 
