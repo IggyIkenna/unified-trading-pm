@@ -149,11 +149,15 @@ satisfied* by a PR:
 
 ### Ordered unified backlog (workstream A repair + workstream B greening; same plan)
 
-- [ ] [SCRIPT] P0. **(do FIRST) Loud alerting watcher** — central PM `workflow_run` (conclusion=failure) → `#ci-failures`
-      Slack for EVERY workflow (not just per-repo QG), with **failure→recovery transition** alerts ("X failing" / "X
-      recovered"). PLUS a scheduled **auto-merge-stuck poller**: LDR→staging PRs sitting `CONFLICTING`/`BLOCKED` > N min
-      → alert (auto-merge-stuck is a PR state, NOT a `workflow_run` failure, so the watcher alone misses it). This makes
-      every later step's failures loud + is the antidote to the silent-rot that hid all of Phase 6 for months.
+- [x] ✅ [SCRIPT] P0. **(do FIRST) Loud alerting watcher** — `unified-trading-pm@d60ae903f` (LDR). Built
+      `scripts/repo-management/ci_failure_watcher.py` + `.github/workflows/ci-failure-watcher.yml` (cron `*/15`). Pages
+      `#ci-failures` Slack via `notify-slack.yml` + `SLACK_CI_WEBHOOK_URL` (NOT legacy Telegram). Covers EVERY workflow on
+      main+staging across the canonical 17-repo fleet (reuses `pin_branch_protection_rulesets.REPOS`), with
+      **failure→recovery transition** alerts (stateless — derives flips from GitHub run history; `--fresh-hours` recency
+      guard so ancient dead workflows never re-page) PLUS the scheduled **auto-merge-stuck poller** (scoped to auto-merge-ON
+      or LDR→staging promotion PRs sitting `CONFLICTING`/`DIRTY`/`BLOCKED` > `--stuck-minutes`). Validated against the live
+      fleet (exit 0, GITHUB_OUTPUT emission, deterministic `--now`): surfaced 6 fresh PM/SIT/mdps flips + 7 genuinely-stuck
+      promotion PRs. NOTE: `schedule:` only fires from main → goes live once promoted; `workflow_dispatch` works meanwhile.
 - [ ] [SCRIPT] P0. **semver rollout to all 16 repos' default branches** — render the fixed `semver-agent.yml` (trigger
       `quality-gates-v2`, from the template) onto each repo's default branch. PR-per-repo passes its own v2 (workflow-file
       change) and auto-merges; for a repo whose main v2 is RED, do its (B) greening first (or admin per the force rule).
