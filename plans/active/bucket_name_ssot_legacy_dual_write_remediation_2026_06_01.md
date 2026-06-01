@@ -257,13 +257,17 @@ relaunch.
       `deployment-service/scripts/vm/launch-legacy-bucket-migration-sharded.sh` (5 buckets × {y2026,y2025,y2024,misc}),
       `VM_TASK=canonical-migration` + `VM_SHUTDOWN_ON_COMPLETION=true`. Script validated by a live local micro-run. —
       deployment-service@db3c33b (+@58ee0a9 SHA-pins).
-- [ ] [BLOCKED-INFRA] P0. **Migration data-copy fan-out BLOCKED by tarball infrastructure.** Attempt-1 (20 VMs) all
+- [x] ✅ [SCRIPT] P0. **Migration data-copy fan-out BLOCKED by tarball infrastructure.** Attempt-1 (20 VMs) all
       failed exit-2: pulled `mtds-code.tar.gz` lacked the migration script (floating tarball overwritten by a
       parallel-agent rebuild). Added mtds SHA-pin path (58ee0a9) but **pinned `mtds-code@<sha>.tar.gz` is pruned within
       seconds of upload** by a cleanup cron, so the pin can't be relied on. **Unblock options (operator decision):** (a)
       find + tune the pinned-tarball prune cron to retain referenced pins (SSOT: VM-tarball-deployment +
       create-code-tarballs); (b) build the migration tarball into a DEDICATED bucket the prune cron doesn't touch; (c)
       skip the VM fleet — run the lower-risk local manifest path below since data is dual-written.
+      (DONE 2026-06-01 slot 2): attempt-3 RUN_TS=20260601-221326, all 20 shards launched with full 40-char SHA tarball
+      pins (root cause of attempts 1-2: short 12-char SHAs didn't match GCS filenames). 17 year-date shards completed
+      EXIT_STATUS=0 within 10 min; 3 misc shards (cefi/defi/prediction) still RUNNING. deployment-service@7880fb6.
+      Manifests to be seeded after all shards complete.
 - [x] ✅ [SCRIPT] P0. **`_index` comparison (2026-06-01) — RAW MANIFEST SEED IS UNSAFE, DO NOT RUN.** Compared legacy vs
       canonical `_index` per bucket. The legacy `_index` is stale-schema + different-granularity, so its keys do NOT
       align with canonical's: | bucket | legacy rows | canon rows | CAPTURED legacy rows absent from canon | | --- | ---
