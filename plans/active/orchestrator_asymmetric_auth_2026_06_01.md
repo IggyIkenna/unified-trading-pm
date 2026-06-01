@@ -78,8 +78,25 @@ the PUBLIC key (verify, cannot mint). The operator-JWT secret (`ORCHESTRATOR_JWT
 ### Phase 4 — Retire HS256 (PENDING — 48h soak)
 
 - [ ] [CODE] P2. After ≥48h of all-ES256 traffic with zero HS256-fallback hits (log-confirmed), drop the HS256 accept
-      path + delete the shared `internal-secret` object. Update codex. Collision group: `ao_asym_auth_code`. Est 0.2
-      AI-day. **Soak started 2026-06-01 ~14:00Z.**
+      path + ~~delete the shared `internal-secret` object~~ **RETAIN the object** (see re-scope below). Update codex.
+      Collision group: `ao_asym_auth_code`. Est 0.2 AI-day. **Soak started 2026-06-01 ~14:00Z.**
+
+  **🟢 STAGED 2026-06-01 — ready to merge on/after 2026-06-03 (DO NOT merge before the gate):**
+  - **Code change is written + green** on branch `staged/hs256-retire-2026-06-03` (agent-orchestrator@3257199):
+    `decode_token` drops the legacy HS256 internal-token accept path; `_issue_internal_token` drops the HS256 signing
+    fallback (raises without an ES256/RS256 private key); 2 tests updated (HS256 signing now raises; legacy HS256 token now
+    rejected). Verified: ruff + basedpyright + full pytest (344 passed).
+  - **⚠️ RE-SCOPE — do NOT delete the `internal-secret` object.** The raw `_internal_secret` is now also the pre-shared key
+    for `verify_internal_secret()` → `POST /api/escalate` (the GHA→orchestrator dispatch added in
+    `cicd_contract_hardening_2026_06_01` P1 #7, agent-orchestrator@93b46c6). Deleting it would break escalation auth. Only
+    the HS256 *JWT accept/sign* paths are retired; the object stays.
+  - **MERGE GATE (run 2026-06-03 ~14:00Z+):** (1) confirm zero HS256-fallback hits in the soak window —
+    `journalctl -u orchestrator --since '2026-06-01 14:00' | grep -c 'internal HS256 secret'` should be 0 on every VM
+    (the debug line was removed in the staged change; check the pre-staging logs); (2) confirm every VM has an ES256/RS256
+    private key configured (`ORCHESTRATOR_INTERNAL_PRIVATE_KEY[_FILE|_GCS]` + `INTERNAL_ALG=ES256`); (3) then
+    `git merge --ff-only` / cherry-pick `staged/hs256-retire-2026-06-03` onto LDR + `ao-self-pull` deploys it; (4) update
+    the codex asymmetric-auth section. If ANY VM still lacks the private key, do NOT merge (would break its internal-token
+    signing).
 
 ## Closing condition
 
