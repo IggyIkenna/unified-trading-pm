@@ -387,9 +387,15 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       just `market-data-tick-defi` phantom grid). `coverage-summary` already does via `_read_defi_merged_index` +
       `_filter_to_canonical_defi_venues` ✅ — confirm it stays that way and that the rollup worker does too. -
       **Per-venue AND per-chain breakdown surfaced** (DeFi venues are PROTOCOL-CHAIN; split them). Currently
-      per-venue-string only — per-chain is computed for expected-dates but not displayed. Any divergence = a
-      code-alignment finding → fix in `data_status_service.py` so the tab is honest by default, then the audit just
-      re-confirms. **The audit and the dashboard must compute coverage the SAME way.**
+      per-venue-string only — per-chain is computed for expected-dates but not displayed. - **Drilldown (the most useful
+      "where's the missing data" UI)**: `/api/data-status/drilldown/{service}/{asset_group}` →
+      `data_status_hierarchical.get_hierarchical_drilldown` + `data_status_drilldown.get_shard_info`. Verify it shows
+      the **full 4-state validity per cell** incl. `expected_unattempted`/`MISSING_EXPECTED` (2026-06-01: only 3-state →
+      genuinely-missing cells absent from the tree, invisible to the operator), and its denominator is IS∩UAC expected,
+      not `captured/(captured+empty+failed)`. It already reads dedicated buckets + breaks down per venue×chain×date +
+      shows `error_reason` ✅. Any divergence = a code-alignment finding → fix in `data_status_service.py` /
+      `data_status_hierarchical.py` so the tab is honest by default, then the audit just re-confirms. **The audit and
+      the dashboard must compute coverage the SAME way.**
 
 - [ ] (x) **L1 — Manifest integrity: are all the scattered data_types/schemas recorded correctly + completely IN?**
       (codified 2026-06-01). The DeFi corpus is spread across many dedicated buckets each with its own schema spread and

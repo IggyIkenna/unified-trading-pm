@@ -120,6 +120,16 @@ The audit must separate three things; here is where each stands:
 
 - `coverage-summary` denominator self-referential + no `is_expected()` gate + disagrees with `manifest-status` (Gaps
   A–C); reads dedicated buckets ✅. 🔴 — see "Data-status tab code alignment" above.
+- **Drilldown** (`/api/data-status/drilldown/...` → `data_status_hierarchical.get_hierarchical_drilldown`) — the most
+  useful "where's the missing data" UI surface. Audited 2026-06-01:
+  - ✅ reads the **dedicated** per-asset_group buckets (not phantom grid) + filters ghost venues
+  - ✅ breaks down **per venue × chain × instrument × data_type × date** (full shard tree, leaf = date)
+  - ✅ surfaces `error_reason` + captured/empty_confirmed/attempted_failed per cell (validity partly shown)
+  - 🔴 **only 3-state** — no `expected_unattempted`/`MISSING_EXPECTED` bin: counts only manifest-present rows, so a cell
+    that SHOULD exist but was never attempted is **invisible in the tree** (operator can't see it as missing).
+  - 🔴 **denominator self-referential** — `completion% = captured/(captured+empty+failed)`; no IS∩UAC expected set, no
+    chain-genesis/venue-launch clipping. So the drilldown shows _validity per present cell_ but not _what should exist
+    but doesn't_. Fixes: canonicalisation plan B2/B3.
 
 ### L3 — Pipeline coverage propagated IS → MTDS → MDPS → features (THE new big finding)
 
