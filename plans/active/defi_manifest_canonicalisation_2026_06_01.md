@@ -18,6 +18,18 @@ source:
 
 # DeFi Manifest + Data-Status Canonicalisation
 
+> **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (2026-06-01)**:
+> the C0 single-walk on `market-data-tick-defi-prd-…` (`migrate_defi_canonical.py`: venue relabel / phantom-grid delete /
+> v4–v8→v9 / snapshot) mutates the **same `_index`** that the bucket-remediation plan's `--manifest-only` seed writes
+> legacy→canonical rows into. Single-walk discipline (HARD RULE) forbids two concurrent whole-corpus walks on that
+> `_index`. **Ordering (HARD)**: the bucket plan's DeFi manifest seed runs **BEFORE** this plan's `C0` single-walk —
+> otherwise the seed re-injects un-canonicalised legacy rows (old venue strings, v4–v8, phantom grid) *after* C0 cleans
+> them. As of 2026-06-01 **neither DeFi walk has launched** (bucket "Manifest seed" P0 + this plan's "C0 — RUN ON A VM"
+> P0 both open) — no live race yet; do NOT launch C0 without confirming the bucket DeFi-`_index` seed is not mid-run
+> (and vice-versa). `data_source_provenance_all_asset_groups_2026_06_01.md` `source`-column backfill must ride **this
+> plan's C0 single-walk** — it must NOT open a third walk on the DeFi `_index`. Coordination owner: epic
+> `mtds_mdps_master`. Banner-remove when the DeFi `_index` is seeded (bucket) + canonical (this plan C-GREEN).
+
 > **Why this exists**: the 2026-06-01 DeFi coverage audit took many passes because the data is **not in canonical form**
 > — scattered buckets, hyphen/underscore + VENUE-CHAIN + blank-chain duplicates, a phantom grid, a v4–v8 schema spread,
 > mislabeled empty reasons, and (the keystone) **no materialised `expected_unattempted` state**. The hard-to-find-ness
@@ -180,8 +192,21 @@ What to verify/wire (B0 corrected scope):
       + stamp schema v9. Then: **(1)** extend `migrate_defi_canonical.py` (+ tests) for C9/v9; **(2)** `… defi … dry` VM →
       review the planned rewrites in the VM log; **(3)** pre-migration drain (stop GCP+AWS fleet + snapshot per the HARD
       RULE); **(4)** `… defi … full` VM → monitor (STARTED<60s, ≥1 progress/hr, STOPPED at exit, T+10min check); **(5)**
-      verify + delete legacy originals after cutover. (`defi_object_path_canonicalisation_2026_06_01.py` is the
-      from-scratch fallback if the existing tool can't be extended.) parent_epic: manifest_master.
+      verify + delete legacy originals after cutover. **Read+rewrite tool WRITTEN (step 1 done 2026-06-01)**:
+      `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (proper home beside the other
+      `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified). Does asset_group=defi + pipeline_mode={MODE}
+      partition + schema_version=9 + `source` column (per UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (via UAC SSOT).
+      parent_epic: manifest_master.
+- [ ] [CODE] P0. C12-UAC **fix UAC venue SSOT to `_V{N}` everywhere FIRST** — `ALL_DEFI_VENUES` +
+      `DEFI_VENUE_LAUNCH_DATES` + `LEGACY_DEFI_VENUE_ALIASES` + `canonicalize_defi_venue` carry `TRADER_JOEV2`/
+      `VELODROMEV2` (no underscore); fix to `TRADER_JOE_V2`/`VELODROME_V2` so the migration tool (which trusts UAC)
+      canonicalises them. Also fix the MISLEADING docstring in `migrate_mtds_defi_legacy_venue_underscore.py` ("no-underscore
+      canonical" — its code actually maps to UAC underscore form). Then wire `migrate_defi_full_v9_canonical` into
+      `launch-canonical-migration-vm.sh defi`. parent_epic: manifest_master.
+- [ ] [CHORE] P2. C13 **move misplaced migration scripts** out of `plans/audit/results/` (PM docs dir) into
+      `market-tick-data-service/scripts/` (the runnable ones: oracle_relabel / chain_genesis / venue_launch /
+      phantom_captured / captured_pre_existence / captured_vs_objects / index_venue_canonicalise / object_path); the
+      `.md` audit RESULTS + the coverage QUERY stay. parent_epic: manifest_master.
 - [x] ✅ [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — **APPLIED 2026-06-01** via
       `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py --apply`: 728 pre-genesis relabel →
       `EXPECTED_PRE_GENESIS_CHAIN`; Pyth 1,185 chain `''`→`SOLANA` + dropped 1,034 dup empties; 9,717→8,683 rows; PYTH
