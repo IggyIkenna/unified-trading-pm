@@ -22,6 +22,18 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Sports manifest + data canonicalisation (L3 owner for sports)
 
+> **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
+> `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** and glued
+> venues — a FULL re-canonicalisation, not the headline cell-count (same shape as the cefi reference incident). **CF-2
+> gotcha**: the migrate tool emitted `asset_group=` to the object PATH but did NOT stamp it as a parquet COLUMN → the
+> rebuilt `_index` lacked the column. Fix = stamp `asset_group` (+ `schema_version`/`source`/`pipeline_mode`) as
+> COLUMNS, never rely on the consolidator deriving them from the path. **Action**: run a CF data-state audit on sports'
+> two `_index` surfaces as pre-flight + verify (reusable:
+> `market-tick-data-service/market_tick_data_service/scripts/audit_canonical_form.py` or
+> `plans/audit/results/cf_manifest_audit_2026_06_01.py`) — trust the real data-state, never the v9 constant. If the same
+> debt shows → fix fully in-walk (scope is a prior, not a ceiling). SSOT:
+> `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`.
+
 > **MASTER**: `defi_manifest_canonicalisation_2026_06_01.md` §MASTER (L3, sports lane). The master listed sports as
 > "verify-only" because the DATA copy is complete (0 legacy-only cells) — but the canonical **FORM** + the
 > **fixture-dependent typed honest-absence** are still owed. This plan is the sports analogue of `defi_manifest`'s §C
