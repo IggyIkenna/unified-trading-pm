@@ -214,11 +214,17 @@ What to verify/wire (B0 corrected scope):
       marked `captured` for a (chain, date) before the chain's UAC genesis (no backing objects — verified) →
       `empty_confirmed/EXPECTED_PRE_GENESIS_CHAIN`. dex-pools 8,410 (BASE 4,750 / ARBITRUM 1,452 / OPTIMISM 1,396 /
       ZKSYNC 812), dex-swaps 61, oracle 6. Snapshotted. Removes the false-captured coverage inflation. parent_epic: manifest_master.
-- [ ] [DATA] P0. C11 **deeper phantom audit — are the REST of the dex `captured` rows object-backed?** The uniform
-      first-captured `2021-01-01` across all chains (the genesis ones now fixed) is a red flag that the dex backfill
-      enumerated `captured` without object-backing. Walk dex-pools/dex-swaps `captured` rows vs actual GCS objects;
-      any captured row with no object → relabel honest (`MISSING_EXPECTED`/`attempted_failed`/`empty_confirmed`). Likely a
-      VM job (object listing at scale). parent_epic: manifest_master.
+- [x] ✅ [DATA] P0. C10b **captured-pre-VENUE-launch fix APPLIED 2026-06-01**
+      (`plans/audit/results/defi_captured_pre_existence_fix_2026_06_01.py --apply`): **401** more captured rows dated
+      before the VENUE launched (UAC `DEFI_VENUE_LAUNCH_DATES`) → `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`
+      (dex-pools GMX-AVALANCHE 370 / GMX-ARBITRUM 1, lst-rates ETHENA 29 / ROCKETPOOL 1). Snapshotted. **Combined with
+      C10: all 8,878 date-impossible captured rows (pre-chain-genesis + pre-venue-launch) are now corrected — no more bad
+      pre-genesis/pre-launch labelling.** parent_epic: manifest_master.
+- [ ] [DATA] P0. C11 **deeper phantom audit — are the POST-launch dex `captured` rows object-backed?** Date-impossible
+      ones are done (C10/C10b); the remaining question is whether post-launch captured rows have real objects. Spot-check
+      2026-06-01: `dex-pools day=2025-06-01` HAS objects ✅ but `day=2024-01-01` returned 0 (inconclusive — read flaked).
+      The uniform `2021-01-01` first-captured still warrants a full **captured-vs-objects walk** (dex-pools/dex-swaps),
+      relabeling any captured row with no object honest. **VM job** (object listing at scale). parent_epic: manifest_master.
 
 ## D. Features propagation (L3) — coverage must reach features-service
 
