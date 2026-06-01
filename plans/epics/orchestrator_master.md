@@ -181,6 +181,33 @@ conditional-push + `rebase --abort` rules + agent judgment), not enforcement.
       green" contract explicitly in `agent-orchestrator/agents/worker.md` + codex orchestrator overview, so a worker
       cannot infer "pushed to my tab branch" == "integrated to LDR".
 
+### VM `.git` file-ownership rot (root-owned objects) — fleet-wide (discovery 2026-06-01)
+
+**status**: 🟡 MITIGATED 2026-06-01 (fleet-wide `chown -R ubuntu:ubuntu ~/unified-trading-system-repos` applied to all
+10 VMs — root-owned count went 121–133 → 0 each); durable fix OPEN. · **provenance**: slot-1 main during code-freeze
+cleanup.
+
+**What I found**: Every orchestrator VM had ~121–133 root-owned files under `~/unified-trading-system-repos/**/.git/`
+(objects). `bootstrap_vm.sh` chowns after its initial clones (lines 291/316), so provisioning is NOT the origin — a
+LATER root-run operation created them (most likely the VM code-tarball redeploy extracting as root, or a `sudo git`/cron
+on the box). Symptoms already observed: `error: task 'gc' failed`, `failed to run reflog`, and
+`cannot lock ref … Permission denied` on fetch. On **vm-ml** this tipped into real corruption — a fetch interrupted by
+the permission error left a missing parent object (`83fac638`), breaking history walks across all 7 pm worktrees (the
+bogus "2858 ahead" reading). Healed via ownership fix + `git fetch --refetch`; 3 uncommitted base edits preserved on
+`chore/ml-base-wip-2026-06-01`. No existing plan/issue tracked VM `.git` ownership (closest are Claude/API-auth plans —
+different scope).
+
+**Why it matters**: latent fleet-wide git breakage — silent fetch/gc/ref-lock failures degrade the FF-pull + LDR
+integration machinery and can corrupt object stores (as on ml). Directly undermines the "clean start" + data-pipeline
+correctness the freeze protects.
+
+- [ ] [INFRA] P0. Find the root operation writing root-owned files into VM `.git` (audit
+      `deployment-service/scripts/vm/create-code-tarballs.sh` + the VM redeploy/extract path + any `sudo git` cron) and
+      make it run as `ubuntu` or `chown -R ubuntu:ubuntu` immediately after. This is the durable root-cause fix.
+- [ ] [INFRA] P1. Add a fleet git-health guard: periodic `chown -R ubuntu:ubuntu ~/unified-trading-system-repos` +
+      `git fsck --connectivity-only` that pings the orchestrator inbox on any root-owned file or missing/broken object.
+      Compose with the `worker_liveness.py` git-staleness alert.
+
 ## P1 — important; post-current-gate
 
 ### [`d0_orchestrator_migration_2026_05_20`](../archive/2026_05/d0_orchestrator_migration_2026_05_20.md)
