@@ -498,10 +498,11 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       longer ran on main (main PRs were fully **BLOCKED**) — relaxed `require-quality-gates` enforcement, landed the
       fix, re-pointed the ruleset to `Quality Gates (trading-agent-service) / quality-gates-v2`, re-enabled enforcement.
       `verify_branch_protection_check_names.py` confirms main=v2 + CONSISTENT. main is now unblocked + on v2.
-- [ ] [SCRIPT] P1. **trading-agent-service STAGING + LDR — finish the migration.** STAGING ruleset still requires v1 and
-      staging has NO `quality-gates-v2.yml` (left intentionally — re-pinning would block staging). LDR still has
-      `workspace-qg.yml`. Roll out `quality-gates-v2.yml` to staging + LDR (remove `workspace-qg.yml`), confirm green,
-      then `pin_branch_protection_rulesets.py --apply --repo trading-agent-service` (now safe — derives v2 for both).
+- [x] ✅ [SCRIPT] P1. **trading-agent-service STAGING + LDR migration — DONE (verified 2026-06-01).** Both staging + LDR
+      now carry `quality-gates-v2.yml` (+ `semver-agent.yml`) with `workspace-qg.yml` removed; staging v2 latest run
+      `126a15d21` = **success**; the required-check context is `Quality Gates (trading-agent-service) / quality-gates-v2`
+      and `verify_branch_protection_check_names.py` reports trading-agent CONSISTENT on main+staging. (The campaign +
+      prior per-repo migration closed this out; the original finding was stale.)
 
 ### Phase 1 — Workspace-wide branch-protection + required-check enforcement (audit i1/i2)
 
