@@ -126,6 +126,15 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 | ibkr-gateway-infra | #13 | ✅ resolved (workflow take-LDR) → auto-merge ON |
 | system-integration-tests | #16 | ✅ resolved (take-LDR behaviour-identical scorecard refactor) → auto-merge ON |
 
+> **LESSON — promote in DEPENDENCY ORDER (use quickmerge's dep-checker) to avoid cross-repo merge-storm skew
+> (operator 2026-06-01).** Opening all 15 LDR→main PRs simultaneously caused transient v2 failures: each PR's v2 clones
+> its sibling dep repos, and during the storm those siblings were mid-merge (e.g. instruments cloned UAC-`main` BEFORE
+> UAC#62's `EXPECTED_NO_MAPPING` enum landed → `AttributeError`, a phantom failure that clears on re-run). The
+> structural fix is **`quickmerge`'s dependency checker, which refuses to promote a repo until its downstream deps are
+> clean vs remote** — forcing promotion in dependency order (UAC → UTL → services → apps), so by the time a dependent's
+> CI clones its deps they are already promoted + green. **Future LDR→main promotions: order by dep graph (or drive via
+> quickmerge), one wave at a time with a green settle between waves — do NOT fan out all repos at once.**
+
 > **All 15 green-repo promotion PRs resolved + auto-merge ON (2026-06-01)** — each merges to `main` when its PR's
 > `quality-gates-v2` passes. Method: back-merge `origin/main`→LDR (take-best; LDR is the newer canonical line; recurring
 > conflict was the functionally-identical `quality-gates-v2.yml` add/add → took LDR's PM-template version). If a PR's v2
