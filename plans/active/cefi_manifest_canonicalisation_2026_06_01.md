@@ -177,13 +177,21 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       regexes + `prefix_templates` do NOT account for the NEW `pipeline_mode=` segment between `day=` and `asset_group=`
       → list per `raw_tick_data/by_date/day={d}/` and extend `parse_hive_path` to capture an optional
       `pipeline_mode=(?P<pipeline_mode>[^/]+)/`; (2) stamp v9 cols: pass `source` (cefi single-source `tardis`;
-      HYPERLIQUID→`hyperliquid_rest`) + `pipeline_mode` to the writer. **OPEN INTERNALS Q (resolve first):** confirm
-      `ManifestWriter.add()` PERSISTS `pipeline_mode` (the live cefi `add()` at orchestrator.py:2957 does NOT pass it →
-      that's why CF-3 is blank); the manifest row schema HAS `pipeline_mode`/`source`/`available_at` cols
-      (manifest_writer.py:1129/1138/74) + `_coerce_pipeline_mode`. If `add()` drops pipeline_mode (→ \*\*kwargs), use
-      `record_captured`/`record_captured_from_counts` (which take `pipeline_mode=` explicitly) instead. `available_at`:
-      prefer the parquet's column; else day-EOD-UTC (never migration-time). Then consolidator merge → v9 `_index`. Same
-      adaptation applies to `rebuild_prediction_manifest.py` for prediction E5.
+      HYPERLIQUID→`hyperliquid_rest`) + `pipeline_mode`. **INTERNALS Q — RESOLVED (slot-3 2026-06-01):** `add()`
+      persists `source` (auto-resolved via SOURCE_PRIORITY at manifest_writer.py:236) but does **NOT** persist
+      `pipeline_mode` (no kwarg; goes to `**kwargs` → dropped) — that is exactly why CF-3 reads blank corpus-wide (the
+      live per-instrument cefi `add()` at orchestrator.py:2957 also omits it). `record_captured_from_counts`
+      (mw.py:2840) takes `pipeline_mode` but **REQUIRES** `expected_root_clusters` + `observed_clusters` +
+      `available_at_envelope` (the BUNDLED path). `record_captured` takes `pipeline_mode` but needs a `df` (read every
+      parquet). **DESIGN FORK (pick deliberately — feeds the irreversible delete):** (A) **[RECOMMENDED]** add a
+      back-compatible `pipeline_mode: PipelineMode|str = ""` kwarg to `ManifestWriter.add()` that coerces
+      (`_coerce_pipeline_mode`) + persists it like `source` (default "" = today's behavior → zero back-compat risk; ALSO
+      closes the live-writer CF-3 gap so batch=live). Then rebuild via `add(...,     pipeline_mode=, source=)`. Needs
+      UTL QG. (B) use `record_captured_from_counts` with trivial single-cluster maps (`{instrument_id: rows}` as both
+      expected+observed) — hacky for per-instrument. (C) `record_captured(df=...)` reading each parquet — correct but
+      slow. `available_at`: parquet col if present, else day-EOD-UTC (never migration-time). Same fork applies to
+      `rebuild_prediction_manifest.py`. **Do NOT build until the fork is chosen** — wrong choice corrupts the `_index`
+      that gates L6 delete.
 - [ ] [DATA] P1. E6 CF-7 relabel: `COINBASE`↔`COINBASE-SPOT`, blank venue/data_type → canonical (diagnose, don't bulk).
       Investigate the 50% `attempted_failed` rows (1.33M) — flag to cefi AG owner (separate from canonicalisation).
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-cefi-prd-…` → CF-1…CF-12 GREEN on
