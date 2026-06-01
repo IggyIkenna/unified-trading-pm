@@ -68,43 +68,66 @@ related:
 **Invariant**: legacy buckets are deleted ONLY after canonical provably holds ALL data + an authoritative v9 manifest.
 One single-walk per `_index` (HARD RULE). Layers gate top-down; asset_groups parallelise within a layer.
 
-**L0 — INFRA UNBLOCK (gates every VM step below).** `issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01.md` —
-fix pinned-tarball persistence (prune-cron tune OR dedicated bucket). Until fixed, any VM migration/backfill can silently
-run stale code. BLOCKS L3 + L5.
+The exact plan todos that execute each layer (the operator's "mention the plan todos across PM active plans"):
 
-**L1 — CODE SSOT (write path)** — *mostly DONE*. This plan Phase 1 (resolver fix MTDS @0b575651 / MDPS @61900a3 /
-deploy @d667422,58ee0a9) ✅ + QG grep-guard (no string-concat bucket names) + UTL dead-code removal + workspace QG green
-(`utl_full_quality_gates_green_2026_06_01`). ⇒ every writer resolves canonical-only.
+**L0 — INFRA UNBLOCK (gates every VM step).**
+- `issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01.md` — fix pinned-tarball persistence (prune-cron tune OR
+  dedicated un-pruned bucket). BLOCKS every `RUN ON A VM` todo below (defi_manifest C0, C6, G1; this plan Phase 2 tarball
+  + Phase 4 relaunch).
 
-**L2 — STOP LEGACY-SIDE ACTIVITY** — writers drained ✅; pause the 10 `*-legacy-cron` consolidators + remove from
-Terraform (coord: `manifest_consolidator_liveness_health` watchdog + `aws_manifest_consolidator_scope` for AWS). ⇒ legacy
-fully frozen.
+**L1 — CODE SSOT (write path).**
+- THIS plan Phase 1: resolver fix ✅ (MTDS@0b575651 / MDPS@61900a3 / deploy@d667422,58ee0a9) · OPEN: `[SCRIPT] P0` QG
+  grep-guard (no string-concat bucket names) · `[SCRIPT] P1` UTL dead-code removal (`constants.py` flat `get_bucket_name`).
+- `defi_manifest…` **A**: `A2a` populate `DEFI_VENUE_LAUNCH_DATES` · `A2b` wire lst_rates/solana empty branches · `A4`
+  chain-dim QG guard · `A5` perp_funding `SOURCE_RETURNED_ZERO`. (A1/A3/A6/A7 ✅.)
+- `data_source_provenance…` **Phased**: UAC source-priority helper · UTL drop the tradfi-only `source` gate ·
+  `DefiManifestRecorder.record_captured(source=)` · MTDS thread `source=` through DeFi+CeFi+Sports handlers · stamp
+  per-row `pipeline_mode` at oracle/staking callsites. ⇒ write path emits `source` + `pipeline_mode`.
+- `pipeline_mode_implementation…` — ✅ DONE (Phases 0–6).
 
-**L3 — HISTORICAL DATA+MANIFEST CANONICALISATION (per asset_group, ONE bundled single-walk).** Migrates legacy-only DATA
-→ canonical + rewrites manifest to v9 (venue relabel, granularity) + rides `data_source_provenance` (source col) +
-`pipeline_mode_implementation` (done). Owners:
-- defi (16,206 legacy-only cells): `defi_manifest_canonicalisation_2026_06_01.md` C — GATES defi backfill.
-- prediction (2,039 legacy-only, only 783 overlap → canonical largely INCOMPLETE): **NO PLAN YET — must create
-  `prediction_manifest_canonicalisation_*` (analogous to defi).**
-- cefi (838 legacy-only recent cells): explicit gap-fill into canonical — **assign owner (this plan or a cefi analogue).**
-- tradfi (4) / sports (0): data complete → manifest v4–v8→v9 canonicalisation only.
+**L2 — STOP LEGACY-SIDE ACTIVITY.**
+- THIS plan Phase 3 drain ✅ · Phase 7 `[SCRIPT] P0` **pause the 10 `*-legacy-cron` consolidators + remove from
+  `manifest_consolidator_scheduler.tf`** (coord `manifest_consolidator_liveness_health` watchdog so it doesn't restart;
+  AWS side via `aws_manifest_consolidator_scope`). ⇒ legacy fully frozen.
 
-**L4 — CONSOLIDATOR SSOT (go-forward manifest)** — keep the 10 env-tiered consolidator crons (self-maintain canonical
-`_index`); `manifest_consolidator_liveness_health` (GCP fresh) + `aws_manifest_consolidator_scope` (AWS S3 live). ⇒
-canonical `_index` authoritative + v9.
+**L3 — HISTORICAL DATA + MANIFEST CANONICALISATION — THE FOUNDATION GATE** (`defi_manifest…` §Sequencing: "no backfill
+until C is GREEN"). ONE bundled single-walk per bucket → canonical target form (env-split · `asset_group=` ·
+`pipeline_mode=` partition · v9 · underscore data_type · flat venue+chain · typed empty-reason · `expected_unattempted`):
+- **defi** (16,206 legacy-only cells): `defi_manifest…` **C** single-walk — `C0` path+bucket canonicalisation RUN ON A VM
+  (gated L0) · `C12-WIRE` wire `migrate_defi_full_v9_canonical` into the launcher · `C2` data_type alias dedup · `C3`
+  venue-chain→flat · `C4` v4–v8→v9 · `C5` phantom-grid delete · `C8` under-enumeration (90 venue-keys) · `C9` legacy
+  object paths · `C11` post-launch phantom audit · then `B0` run `expected_unattempted` chain (gated C-GREEN). Riders on
+  the SAME walk: `data_source_provenance` source-col + `pipeline_mode`.
+- **prediction** (2,039 legacy-only, only 783 overlap → canonical LEAST complete): ⚠️ **NO PLAN — file
+  `prediction_manifest_canonicalisation_2026_06_0X.md`** (analogous C single-walk: migrate POLYMARKET ohlcv_* +
+  `prediction_canonical_question_group` history → canonical, v→v9, `pipeline_mode`).
+- **cefi** (838 recent legacy-only cells): ⚠️ **no owner — file `cefi_legacy_gap_fill` or add a C-task to a cefi plan**
+  (gap-fill BINANCE/UPBIT/COINBASE book/trades 2026-03→05 into canonical).
+- **tradfi (4) / sports (0)**: canonical DATA complete → verify-only; no migration needed before decommission.
 
-**L5 — BACKFILL/WRITER RELAUNCH (go-forward data)** — after L0 + L3-green for the asset_group: relaunch the 3 drained
-writers on fixed code → canonical-only (Phase 4 here). Other launchers already fixed.
+**L4 — CONSOLIDATOR SSOT (go-forward manifest).**
+- `aws_manifest_consolidator_scope…` `[HUMAN] P1.10` `tofu apply` Phase D + verify 26 schedules ENABLED (only open todo;
+  P0.1–P1.9 ✅). · `manifest_consolidator_liveness_health…` keeps GCP canonical `_index` fresh. Keep the 10 env-tiered
+  crons. ⇒ canonical `_index` self-maintains, v9, authoritative.
 
-**L6 — DECOMMISSION → SINGLE SSOT (Phase 7 here)** — verify 0 legacy-only cells + canonical `_index` v9 authoritative +
-0 legacy writes for soak → delete legacy flat/tier-first/long-form buckets (tick + instruments-store legacy, GCP+AWS).
+**L5 — BACKFILL / WRITER RELAUNCH (go-forward data).**
+- THIS plan Phase 4 `[SCRIPT] P0` GATED relaunch of `mdps-backfill-defi`/`mdps-prediction-2025`/`sports-scheduler` on
+  fixed code (after L0+L3-green per asset_group). · `defi_manifest…` `C6` Pyth backfill · `D1` features-onchain · `E1`
+  cefi fetch-fix · `G1` Solana basis backfill — ALL gated on C-GREEN per §Sequencing.
 
-**L7 — GUARDRAILS** — QG grep-guard (L1) + `batch_live_symmetry` audit recurring check (added) + codex bucket-naming SSOT
-doc ("writer uses resolve_bucket_name, never string-concat").
+**L6 — DECOMMISSION → SINGLE SSOT.**
+- THIS plan Phase 6 verify (`0` new legacy `_index` writes ≥1h · canonical ≥ legacy∪canonical · 0 dupes) → Phase 7
+  `[SCRIPT] P0` delete legacy flat/tier-first/long-form buckets (tick + instruments-store legacy, GCP+AWS) + snapshot.
 
-**Newly-exposed gaps to file**: (1) prediction has no canonicalisation plan but is the LEAST-complete canonical; (2) cefi
-838-cell gap-fill needs an owner; (3) the per-asset_group data layouts differ (defi=`dex_pools/lending_indices/lst_rates`,
-sports=`processed/`, cefi `raw_tick_data` has no `by_date/`) — any data-copy must be layout-aware.
+**L7 — GUARDRAILS (regression).**
+- THIS plan: QG grep-guard (L1) · `batch_live_symmetry` audit recurring check ✅ · Phase 8 codex bucket-naming SSOT doc.
+- `defi_manifest…` `F1–F4` codex docs · `data_source_provenance…` generalise QG STEP 5.64 + codex.
+
+**Newly-exposed gaps to FILE (no current owner)**: (1) **`prediction_manifest_canonicalisation`** — prediction canonical
+is the least-complete; highest decommission data-loss risk. (2) **cefi 838-cell gap-fill** owner. (3) per-asset_group
+data layouts differ (defi=`dex_pools/lending_indices/lst_rates`, sports=`processed/`, cefi `raw_tick_data` lacks
+`by_date/`) → any data-copy must be layout-aware (the original migration script was tradfi-shaped → would have missed
+defi entirely).
 
 ---
 
