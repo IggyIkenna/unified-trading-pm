@@ -126,14 +126,124 @@ context-full + cap-hit alerts). The audit E1 expected-count (10/8) and the codex
       `notify_watchdog_kill`, `notify_sync`) + corrected the false "both expose the same set" intro. Audit e1 (13/9 +
       slack-only/telegram-only lists) + j3 (S/T-matrix match) updated.
 
+### Phase 4 — P0/P1: respawn working-tree hygiene (9-failure-mode audit 2026-06-01)
+
+A follow-on autonomy audit (this session 2026-06-01 — fan-out + adversarial verify, all verdicts confirmed against
+`agent-orchestrator@HEAD` + `unified-trading-pm/scripts/dev`) checked the operator's standing concern: **"if things stop
+halfway, they don't restart with a good working tree on the right branches."** It mapped the 9 working-tree pathologies
+surfaced by the slot-3 manual cleanup against the spawn/respawn/restart machinery. Root cause: the ONLY pre-spawn gate,
+`worktree_clean_check.check_slot_clean()`, inspects `git status --porcelain` (dirtiness) ONLY — upstream-correctness,
+divergence, behind-ness, branch-identity, and per-repo base are all delegated to the worker's own boot prompt
+(`agents/worker.md` step 1b), an **unenforced soft instruction** that the recovery / auth-fail respawn prompts don't
+even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-respawn defaults are actively dangerous.
+
+| FM  | Pathology (on respawn / restart)                                  | Verdict        | Manual fix that's missing from the auto-path       |
+| --- | ----------------------------------------------------------------- | -------------- | -------------------------------------------------- |
+| FM1 | Stale `origin/tab/<op>/N` upstream → bogus ahead/behind           | 🟡 partial     | `git branch -u origin/<base>` (never self-heals)   |
+| FM2 | Wiped index (staged-`D `+`??`) → `git add -A` pushes mass-delete  | 🟡 dangerous   | `git reset --mixed HEAD` (absent)                  |
+| FM3 | Regenerated tracked artifact committed as orphan-wip / left stale | 🔴 no          | `git restore` (enum has no discard option)         |
+| FM4 | Behind-but-FF-able recovered session on stale base                | 🟡 partial     | server-driven FF (only worker.md + cron do it)     |
+| FM5 | Genuine divergence auto-resolved instead of quarantined           | 🟡 partial     | pre-spawn merge-base STOP (absent)                 |
+| FM6 | Per-repo base ignored (agent-orchestrator must track `main`)      | 🔴 no          | per-repo base resolution (hardcoded to LDR)        |
+| FM7 | Existing worktree on wrong/detached branch spawned into           | 🟡 partial     | `HEAD == tab/<op>/N` assertion (absent)            |
+| FM8 | `git add -A` / `git stash` sweep foreign (cross-slot) WIP         | 🟡 HARD-RULE ✗ | claim-gated slot-lineage check (never consulted)   |
+| FM9 | Autostash rebase conflict destroys foreign WIP                    | ✅ handled     | — (FF-only paths + `rebase --abort`; hook-blocked) |
+
+- [ ] [CODE] P0. **FM8 — liveness-gated dirty-state resolution (slot-isolation invariant, NOT per-file).** The worktree
+      `.tabs/<N>/<repo>` is exclusively this slot's, and the orchestrator runs ONE worker per slot (pruner/watchdog
+      kills the prior session before respawn), so dirty content in your own slot worktree is almost always **a previous
+      session of you that is now gone → inherit it** (keep the current `git add -A` + orphan-wip commit). The
+      discriminator is **LIVENESS, not identity**: in `commit_and_push_dirty_repos()` / `stash_dirty_repos()`, read
+      `.agent-claim` (`worktree_claim.read_claim`) + `expires_at` (1h TTL, heartbeat-bumped) + tmux/heartbeat state,
+      then — - **maker provably DEAD** (claim expired OR no tmux session OR heartbeat stale) → dead predecessor →
+      **inherit + commit**. This is the common case and resolves the "dead agent ⇒ slot is infinitely dirty, nobody ever
+      cleans it" failure — **quarantine must NEVER be terminal**. - **maker provably LIVE** (fresh claim + live
+      tmux/heartbeat — realistically the operator's own interactive session on the same slot, per the "operator session
+      counts as a slot" rule) → do NOT stomp it; resolve **role-aware**: a background autonomous worker `notify_*`-pings
+      the operator and waits out the TTL (then inherits on expiry); an interactive/operator session ASKS the operator
+      ("are other agents finished? OK to commit this WIP?") and commits on confirmation. **Forbidden anti-patterns**:
+      (i) per-file foreign attribution — `in_flight_files_json` is a refinement, never a gate; an unreported dirty file
+      in an isolated slot worktree is still slot-owned; (ii) terminal quarantine — a dead maker's WIP must eventually be
+      inherited, never left dirty forever. Removes the FM8 HARD-RULE violation without wedging respawn-inherit.
+      Collision group: `ao_respawn_hygiene`. Estimate: 0.5 AI-day.
+- [ ] [CODE] P0. **FM8b — slot-tagged stashes (shared stash stack).** Linked worktrees share one `.git`, so
+      `git stash list` exposes every slot's stashes (slot-3 incident: stashes tagged `On tab/.../1|7|8`).
+      `stash_dirty_repos()` must `git stash push -m "slot-<N>-orphan-<ts>"` and only ever inspect/pop the stash whose
+      message matches this slot's tag — never assume `stash@{0}` is ours. Collision group: `ao_respawn_hygiene`.
+      Estimate: 0.15 AI-day.
+- [ ] [CODE] P0. **FM2 — wiped-index guard (prevent pushed mass-delete).** In `check_slot_clean` /
+      `_git_status_porcelain` detect the FM2 signature (staged `D ` deletes each with a matching `??` on-disk path). On
+      match: `git reset --mixed     HEAD` FIRST, re-run the clean check, log `slot_wiped_index_reconciled` (NOT
+      `orphan_wip`); if files are genuinely gone after the reset, do NOT auto-commit/push the deletion — quarantine +
+      alert. Hard guardrail in `commit_and_push_dirty_repos`: refuse to commit when the staged set is pure deletions
+      of >20 tracked files absent an explicit operator override, so a corrupt index can never be pushed as orphan-wip.
+      Collision group: `ao_respawn_hygiene`. Estimate: 0.3 AI-day.
+- [ ] [CODE] P1. **FM1/FM5/FM6/FM7 — structural pre-spawn branch-state gate.** Add
+      `worktree_clean_check.check_slot_branch_state(slot_id, slot_dir, operator)` parallel to `check_slot_clean`. Per
+      repo assert: (a) `@{u}` == the repo's correct base, repairing a stale `origin/tab/<op>/N` with
+      `git branch -u     origin/<base>` (FM1); (b) `HEAD` == `tab/<op>/<N>` — STOP on detached / base / other branch
+      (FM7); (c) base resolved PER-REPO — `main` for agent-orchestrator, `live-defi-rollout` else (FM6); (d)
+      `git fetch` + merge-base classify → FF when behind+clean (FM4), else quarantine-on-divergence (FM5). Wire into ALL
+      THREE spawn paths: `server.py::spawn_slot` (~2156, after the dirty gate),
+      `worker_liveness.py::_do_auth_fail_respawn` (~711) + `_maybe_auto_respawn_stuck_slot` (~1033), and
+      `autospawn.py::_do_spawn` (~224 — currently NO pre-spawn gate at all). Collision group: `ao_branch_state_gate`.
+      Estimate: 0.6 AI-day.
+- [ ] [CODE] P1. **FM6 support — machine-readable per-repo base.** Add an `integration_branch` field to each repo block
+      in `workspace-manifest.json` (`main` for agent-orchestrator; `live-defi-rollout` everywhere else incl.
+      trading-agent-service, which CI-promotes LDR→main). Replace the single `INTEGRATION_BRANCH` constant in
+      `scripts/dev/setup-tab-worktrees.sh:51` with a `base_branch_for_repo()` helper reading it; make `worker.md`
+      fresh-pull (1b) resolve base per-repo; GENERATE `cron-branch-overrides.txt` from the manifest (it is currently
+      EMPTY, so the per-repo hook in `slot-cron-ff-pull.sh` does nothing today). Collision group:
+      `ao_branch_state_gate`. Estimate: 0.3 AI-day.
+- [ ] [CODE] P1. **FM4/FM5 — recovery boot prompts must inline the fresh-pull block.**
+      `worker_liveness.py::_build_recovery_boot_prompt` (~1109) + the auth-fail respawn prompt (~701) currently only say
+      "Read worker.md then /boot" — they do NOT inline the FF / divergence-STOP block the autospawn path gets via the
+      rendered template, so a recovered session is weaker than a cold autospawn. Inline the full `worker.md` step-1b
+      fresh-pull-with-divergence-STOP block (or render the worker template). Collision group: `ao_branch_state_gate`.
+      Estimate: 0.15 AI-day.
+- [ ] [CODE] P2. **FM3 — discard regenerated tracked artifacts (the slot-3 cleanup trigger).** Maintain a workspace
+      allowlist of regenerated tracked build outputs (`playwright-report/`, tracked coverage reports). Before the
+      COMMIT_AND_PUSH/STASH branch (and in `worker.md` fresh-pull before its dirty-check) run
+      `git restore -- <allowlist>` ONLY (never `.`), re-check, feed only residual human-dirty files to resolution.
+      Belt-and-suspenders: `git rm     --cached` + `.gitignore` `playwright-report/` in deployment-ui +
+      user-management-ui (keep `unified-trading-pm/presentations/tests/playwright-report` intentionally tracked →
+      allowlist-restore still needed there). Collision group: `ao_respawn_hygiene`. Estimate: 0.25 AI-day.
+- [ ] [TEST] P0. Unit tests for all the above: (a) same-slot claim → inherit; (b) mismatched-slot/operator claim →
+      quarantine, no commit/push; (c) no-claim → inherit; (d) FM2 `D `+`??` signature → reset --mixed → clean, no
+      commit; (e) FM2 true file-loss → quarantine, no push; (f) pure-deletion >20 files → refuse; (g) branch-state gate:
+      stale upstream repaired, detached/base/wrong-branch → STOP, divergence → quarantine, behind+clean → FF; (h)
+      per-repo base resolves `main` for agent-orchestrator; (i) slot-tagged stash never pops a foreign tag; (j)
+      generated-artifact allowlist-restore leaves human-dirty files intact. Collision group: `ao_respawn_hygiene`.
+      Estimate: 0.4 AI-day.
+- [ ] [QG] P0. `bash scripts/quality-gates.sh` exit 0 in agent-orchestrator → sentinel sha →
+      `bash scripts/quickmerge.sh     "feat(respawn-hygiene): claim-gated dirty resolution + wiped-index guard + pre-spawn branch-state gate" --agent`.
+      Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
+- [ ] [DOCS] P1. Codex `codex/05-infrastructure/per-tab-worktrees.md` — document the pre-spawn branch-state gate +
+      **liveness-gated** dirty resolution (slot-isolation invariant: dirty == a prior-you that's gone → inherit; only a
+      provably-LIVE peer is protected; quarantine is never terminal) + slot-tagged-stash discipline + the 9-FM coverage
+      table above. Add a `cursor-configs/CLAUDE.md` rule (canonical — do NOT edit per-repo copies) under
+      `### Other key     rules`: **an agent resolving inherited dirty WIP must first detect whether it is a background
+      autonomous worker (tmux `orch-slot-*` session / `ORCHESTRATOR_*` env / claim `role`) or an interactive operator
+      session — background: `notify_*`-ping the operator + inherit once the prior maker's claim TTL expires;
+      interactive: ASK the operator whether other agents are finished, then commit. Never stomp a provably-live peer;
+      never leave a dead maker's slot infinitely dirty.** Cross-link this plan. ⚠️ `cursor-configs/CLAUDE.md` was
+      actively foreign-dirty at 2026-06-01 19:40 (another agent mid-edit) — make this CLAUDE.md edit only when that
+      worktree is clean, to avoid the very FM8 collision this plan fixes. Collision group: none. Estimate: 0.2 AI-day.
+
 ## Closing condition
 
 Closes when: Phase 1 S3 snapshot ships + a snapshot object is verified on S3 for ≥1 AWS VM; Phase 2 health-check script
-ships + the fleet table shows all 11 VMs at LDR HEAD with all four flags live; Phase 3 doc counts match code. All code
-phases QG-green + quickmerged; docs via fast-path.
+ships + the fleet table shows all 11 VMs at LDR HEAD with all four flags live; Phase 3 doc counts match code; **Phase 4
+ships the claim-gated dirty resolution + wiped-index guard + pre-spawn branch-state gate (all three spawn paths) with
+the test matrix green, and a respawn on a slot left behind/diverged/wrong-branch is observed to either self-heal (FF) or
+quarantine — never auto-push foreign WIP or a mass-delete.** All code phases QG-green + quickmerged; docs via fast-path.
 
 ## What NOT to do
 
 - **Do NOT duplicate the watchdog/autospawn/backlog rollout work** — those are owned by their respective plans (see the
   reconciliation table). This plan is residual-findings-only.
-- **Do NOT raw-subprocess `aws s3 cp`** for the snapshot path — use the workspace cloud-interface S3 helpers. </content>
+- **Do NOT raw-subprocess `aws s3 cp`** for the snapshot path — use the workspace cloud-interface S3 helpers.
+- **Do NOT make the Phase-4 FM8 gate quarantine-terminal or per-file.** The slot-isolation invariant means dirty WIP
+  from a dead predecessor must be inherited (it is you-in-a-prior-session, and the maker is gone); the only protected
+  case is a provably-LIVE peer. A terminal quarantine recreates the "infinitely dirty dead slot" failure the gate exists
+  to prevent. Liveness (claim TTL + tmux/heartbeat), not slot-id identity, is the discriminator.

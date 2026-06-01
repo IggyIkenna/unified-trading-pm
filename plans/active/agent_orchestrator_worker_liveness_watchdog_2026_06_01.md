@@ -189,6 +189,11 @@ This plan closes when:
   slot-level liveness (180s-15min thresholds). Different layers, both required for full self-healing.
 - `agent_orchestrator_backlog_state_alignment_2026_05_29.md` — prune-stale ensures workers always have honest queue
   state to /boot against; without it, watchdog would respawn workers into zombie-task purgatory.
+- `orchestrator_autonomy_audit_remediation_2026_06_01.md` § Phase 4 — this watchdog is the _trigger_ (kill → respawn);
+  Phase 4 there hardens the **respawn** so the fresh worker comes up on a good working tree (liveness-gated dirty
+  resolution, wiped-index guard, pre-spawn branch/upstream/per-repo-base gate). Without Phase 4, the watchdog can
+  respawn a worker onto a dirty/diverged/wrong-branch tree or auto-push a dead predecessor's WIP / a wiped-index
+  mass-delete. The two close the kill→clean-respawn loop together.
 
 ## Anti-patterns explicitly forbidden
 
