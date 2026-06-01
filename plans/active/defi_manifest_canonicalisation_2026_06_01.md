@@ -462,6 +462,41 @@ What to verify/wire (B0 corrected scope):
 > - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4
 >       GREEN, so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
 
+### C0-CN — Canonical-naming reconciliation (operator-locked 2026-06-01) — SSOT `codex/02-data/defi-canonical-naming-ssot.md`
+
+> A naming-alignment audit (codex + IS + MTDS + MDPS, 2026-06-01) found the migration would have regressed
+> consumers (it normalised the on-disk `data_type` to the logical manifest name, and the live readers don't read
+> `pipeline_mode=`). Operator directive: **converge on the canonical form, fix the readers/writers + plans + codex —
+> do not bend the migration to legacy.** Locked canonical: path `…/day=/pipeline_mode={mode}/asset_group=defi/venue=/
+> chain=/instrument_type=/data_type=/…`; data_type `dex_pool_state`/`dex_pool_swaps` (collapsed ONE name everywhere,
+> not the legacy on-disk-vs-manifest split) + `lst_rates`/`lending_indices`/`oracle_prices`/`perp_funding`; chain
+> `HYPERLIQUID` (not `HYPERLIQUID_L1`); `instrument_type=perpetual` VALID for DeFi on-chain perps (Drift/GMX/HL);
+> bare `venue=` + separate `chain=`; dedicated `{stem}-prd-` buckets. **Migration already conforms (mtds@6a8372b2).**
+> **The apply is GATED on the reader fixes landing** (else migrated data is unreadable). Full status + sequencing:
+> the codex SSOT above.
+
+- [x] ✅ [CODE] P0. C0-CN1 — migration writes canonical (`dex_pool_state`/`dex_pool_swaps`, `pipeline_mode=` path,
+      `HYPERLIQUID`, `perpetual`). mtds@6a8372b2 + codex `defi-canonical-naming-ssot.md`. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. C0-CN2 — **MTDS handlers**: `dex_pools_handler._DATA_TYPE`→`dex_pool_state`,
+      `dex_swaps_handler._DATA_TYPE`→`dex_pool_swaps`; emit the `pipeline_mode=` path partition on write (live = batch).
+      Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. C0-CN3 — **manifest consolidator + `_PATH_DATA_TYPE`/bucket-domain maps**: drop the on-disk→logical
+      `dex_pool_state→dex_pools` remap (now identity — `dex_pool_state` is the manifest data_type too). Repos:
+      market-tick-data-service + features-service `onchain/app/core/mtds_output_config.py`. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. C0-CN4 — **features-onchain readers pipeline_mode-aware**: pass `pipeline_mode` to
+      `candidate_parquet_paths(...)` (or update the canonical reader) so calculators find `…/pipeline_mode=…/…`;
+      `_PATH_DATA_TYPE` becomes identity. Repo: features-service. parent_epic: features_and_ml_master.
+- [ ] [CODE] P0. C0-CN5 — **MDPS reader pipeline_mode-aware** + data_type `dex_pool_state`. Repo:
+      market-data-processing-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. C0-CN6 — **UAC**: make `pipeline_mode=` canonical in `build_defi_partition_path` (not just a probe in
+      `candidate_parquet_paths`); set `ChainKind.HYPERLIQUID_L1.value='HYPERLIQUID'` (or add wire alias). Repo:
+      unified-api-contracts. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. C0-CN7 — **instruments-service**: add `PERPETUAL` to `DEFI_ONCHAIN_INSTRUMENT_TYPES` (DeFi has
+      on-chain perps — Drift/GMX/HL). Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [DOCS] P1. C0-CN8 — update codex `02-data/defi-data-types-catalog.md` + `availability-manifest-and-data-status.md`
+      to the canonical forms (data_type `dex_pool_state`, `pipeline_mode=` path, `HYPERLIQUID`, DeFi `perpetual`); cross-ref
+      the new `defi-canonical-naming-ssot.md`. parent_epic: mtds_mdps_master.
+
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
       2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
       VENUE-CHAIN→flat (C3), data*type canonicalisation (C2), `{NAME}_V{N}` promotion, instrument_type + canonical
@@ -515,8 +550,11 @@ What to verify/wire (B0 corrected scope):
       now all `chain=SOLANA` (1,447 = 1,185 captured + 262 owed). Original snapshotted →
       `_index/snapshots/pre_relabel_2026_06_01.parquet`. Fixes the consolidated index; durable until a full consolidator
       rebuild (which needs the source rows fixed too — the bundled C2–C7 walk). Writer A1 makes future writes correct.
-- [ ] [DATA] P1. C2 data_type alias dedup across buckets: `lending-indices`→`lending_indices`, `dex-pools`→`dex_pools`,
-      `dex-swaps`→`dex_swaps`, `staking_yields`→`lst_rates` (rename rows; data exists). ONE walk.
+- [ ] [DATA] P1. C2 data_type alias dedup across buckets — **canonical is the ON-DISK form (operator-locked 2026-06-01,
+      see C0-CN + codex `defi-canonical-naming-ssot.md`)**: hyphen→underscore (`lending-indices`→`lending_indices`),
+      `staking_yields`→`lst_rates`, and the pool/swap data_type collapses to `dex_pool_state`/`dex_pool_swaps`
+      EVERYWHERE (NOT the logical `dex_pools`/`dex_swaps` — that was the regression the naming audit caught). Rides the
+      C0 walk (the migration already writes `dex_pool_state`/`dex_pool_swaps`). ONE walk.
 - [ ] [DATA] P1. C3 VENUE-CHAIN→flat: legacy `UNISWAPV3-ETHEREUM` venue strings → flat `venue` + populated `chain`. Same
       walk.
 - [ ] [DATA] P1. C4 schema v4–v8 → v9 re-version across the dedicated DeFi buckets. Same walk. parent_epic:
