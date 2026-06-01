@@ -122,14 +122,23 @@ The S3 archive (`drift-historical-data-v2`) covers Drift V2 launch (2022-11-04) 
 trades, swaps, and derived AMM-level data (mark/oracle TWAP, open interest). Free tier; no auth; per-day endpoints
 paginated via `?page=N` (1-indexed).
 
-The IS adapter `instruments-service/instruments_service/reference_data/adapters/defi/drift.py` SHOULD expose a
-parallel `_DRIFT_VELOCITY_API_URL_TEMPLATE` alongside `_DRIFT_S3_ARCHIVE_URL_TEMPLATE` so MTDS handlers derive the
-Velocity API URL from IS catalogue, never hardcode (per the IS→MTDS contract). **Follow-up tracked in
-`plans/active/defi_manifest_canonicalisation_2026_06_01.md` § G**: verify whether the template was actually coded
-into the IS adapter source or only documented in the archived MVP plan; if missing, file P3 follow-up. The
-new MTDS handler is the `DriftV2HistoricalIngester` (script-mode) in
-`market_tick_data_service/scripts/backfill_drift_v2_historical.py` — flow: IS catalogue read → Velocity API GET →
-schema translation → manifest emission per shard.
+The Velocity API base URL is registered in UAC's `SOLANA_DEFI_PROTOCOLS["drift"]["api_url"]` (see
+`unified_api_contracts/registry/capability_declarations/_defi_chain_data.py`) and accessed via the public
+`get_solana_protocol_url("drift", "api_url")` helper. Both the IS adapter (`drift.py:32`) and the MTDS
+`DriftV2HistoricalIngester` (`drift_v2_historical_handler.py:76`, mtds@081ff1cf) use this canonical helper —
+no hardcoded URLs. The per-day URL path (`/market/{symbol}/fundingRates/{Y}/{M}/{D}` etc.) is constructed
+inline in the MTDS handler because the path is data-type-specific and per-instrument, which is MTDS-domain;
+the IS→MTDS contract is about the venue BASE URL, which lives in UAC + flows through the helper.
+
+The S3 archive template (`_DRIFT_S3_ARCHIVE_URL_TEMPLATE`) remains in IS because it's a per-day URL pattern
+that the IS adapter exposes via `InstrumentRecord.source_archive_url_template` — that path is appropriate
+because S3 history is per-instrument-discoverable (each market gets its own archive prefix). The Velocity
+API base URL is venue-wide (one host serves all markets), so the UAC registry path is the right SSOT for it.
+
+The new MTDS handler is the `DriftV2HistoricalIngester` (script-mode) in
+`market_tick_data_service/scripts/backfill_drift_v2_historical.py` — flow: IS catalogue read (instrument list)
+→ `get_solana_protocol_url("drift", "api_url")` → Velocity API GET → schema translation → manifest emission
+per shard.
 
 ## Current state + pipeline migration context
 

@@ -131,9 +131,10 @@ UTL resolver, never hardcode (per `defi_manifest_canonicalisation_2026_06_01.md`
 ## Composes with
 
 - `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — Drift IS adapter populates
-  `source_archive_url_template` for the S3 archive; the parallel `_DRIFT_VELOCITY_API_URL_TEMPLATE` for the
-  Velocity Data API is the new primary historical source (track follow-up: ensure template is in the IS adapter
-  source, not just documented here)
+  `source_archive_url_template` for the S3 archive (per-instrument per-day pattern); the **Velocity Data API
+  base URL** lives in UAC's `SOLANA_DEFI_PROTOCOLS["drift"]["api_url"]` (venue-wide, one host serves all markets)
+  and is accessed via the public `get_solana_protocol_url("drift", "api_url")` helper. Both IS adapter and
+  MTDS `DriftV2HistoricalIngester` (mtds@081ff1cf) use this canonical helper — no hardcoded URLs anywhere.
 - `codex/04-architecture/solana-defi-coverage.md` — Solana DeFi adapter registry; DRIFT-SOLANA row references this
   doc for the Velocity Data API path
 - `codex/02-data/defi-data-types-catalog.md` — canonical data_type definitions including new types from this MVP:
