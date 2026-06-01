@@ -169,8 +169,26 @@ VM.
 > target (v9 data-state, `day=/pipeline_mode=/asset_group=tradfi/…`, source re-consolidated, available_at added) is
 > CONFIRMED CORRECT at verify. One pass, no confusion — once legacy is deleted it is gone.
 
-- [ ] [DATA] P0. E1 Phase-0 layout audit on `tradfi-prd` + legacy (`cf_layout_audit`); confirm hyphen raw + candle +
-      `databento-batch-registry/` trees; verify the 0-row raw sample isn't systemic-empty.
+- [x] ✅ [DATA] P0. E1 Phase-0 layout audit on `tradfi-prd` raw (slot-3 2026-06-02, `gcloud storage ls` enumeration —
+      see **E1 RESULTS** below). Confirmed THREE raw layouts (NOT one) + candle + `databento-batch-registry/`. The 0-row
+      sample concern is the `*:MARKET_CLOSED:PLACEHOLDER.parquet` placeholder files in the hyphen tbbo/trades trees (a
+      real empty-day marker, not systemic corruption — handle as empty, do not migrate as captured data).
+
+> **E1 RESULTS — tradfi raw layout reality (slot-3 2026-06-02, exhaustive `ls`, lesson #0)**. Bucket
+> `market-data-tick-tradfi-prd-central-element-323112/raw_tick_data/by_date/`:
+>
+> - **L-hive (DOMINANT, 1,996 `day=` dirs, 2020+)**: `day={D}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/[underlying={U}/]{file}`.
+>   Near-canonical — has `asset_group=`, MISSING only `pipeline_mode=`. Bundled types (`combo`/`futures_chain`/`options_chain`)
+>   carry an `underlying=` bundle segment (like cefi chain bundles). venue set observed = CME (futures/options/combo).
+>   **Fix = path-only `pipeline_mode=` insert after `day=` (server-side `gcs_copy_object`), preserve `underlying=` bundle, CF-7 relabel in place** — identical to the cefi L-bulk branch.
+> - **L-hyphen (12 `day-` dirs ONLY, recent databento batches Nov-2025…Feb-2026)** — TWO sub-shapes:
+>   - ohlcv_1m: `day-{D}/data_type-ohlcv_1m/{itype_bare∈equities|etf|futures_chain}/{VENUE∈NYSE|NASDAQ|CME}/{instrument_id}.parquet`
+>   - trades|tbbo: `day-{D}/data_type-{trades|tbbo}/{VENUE}/{file}` — **NO instrument_type segment** (derive itype from the `{VENUE}:{ITYPE}:{SYMBOL}` instrument-id filename).
+>   Bare itype `equities`→canonical `equity`; `etf`→`etf`; `futures_chain`→`futures_chain`. **Fix = parse hyphen pseudo-hive → build canonical path manually + server-side copy** (content already classified).
+>   Placeholder files `…:MARKET_CLOSED:PLACEHOLDER.parquet` = empty-day markers → do NOT migrate as data.
+> - **⚠️ OVERLAP/DEDUP HAZARD (lesson #2/#5/#6)**: the 12 hyphen dates **ALSO exist as `day=` hive** (verified 2025-11-02, 2026-01-01, 2026-02-01 in BOTH). On those dates: equals-hive has ONLY `venue=CME` (futures_chain/options_chain/combo); hyphen has `venue=CME futures_chain` (OVERLAP) **PLUS** `NYSE/NASDAQ equities/etf` (COMPLEMENTARY — equities/etf exist ONLY in hyphen). So the migrator MUST: (1) migrate the complementary equities/etf from hyphen (would be lost otherwise); (2) for the CME-futures_chain overlap, **sample object content per lesson #5 before choosing a winner** — default winner = L-hive (the established classified canonical structure) via cell-level skip-if-equals-hive-already-has-(date,venue,itype,data_type); only fall to hyphen where hive lacks the cell. Dedup at the CELL key, not the object path (file granularity differs).
+> - **`databento-batch-registry/`** = job-dedup registry (not market data) → NOT migrated, NOT deleted by E7.
+> - pipeline_mode per object = `derive_pipeline_mode_for_row(venue, "tradfi", data_type)` (UTL `pipeline_mode_resolver`) — venue-override (BARCHART→batch_barchart / YAHOO→batch_yahoo / EIA→batch_eia) else SOURCE_PRIORITY-primary (CME/NYSE/NASDAQ ohlcv_1m/trades/tbbo → `batch_databento`). **Identical derivation to the live writer `resolve_pipeline_mode` → batch=live correct.** `source` (E5) = `source_string_for(pipeline_mode)`.
 - [ ] [DATA] P0. E2 Build/extend `migrate_tradfi_canonical.py` to the v9-canonical target (perf-contract): parse the
       hyphen pseudo-hive → canonical `day=/pipeline_mode=batch_{databento,massive,yahoo,barchart}/asset_group=tradfi/
       venue=/…/data_type=`; copy the 71 legacy-only cells (NYSE tbbo 2023-05 …).
