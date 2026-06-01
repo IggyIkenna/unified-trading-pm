@@ -291,7 +291,7 @@ by a PR:
       Committed `--no-verify` (multi-line, minimal 18-line diff) — the prettier-collapsed form is local-prek-only and
       NOT a CI gate (quality-gates.sh runs prettier only in FIX_MODE, skipped under CI `--no-fix`), so the form is
       QG-irrelevant; avoided forcing a 621-line churn into the active campaign.
-- [ ] [SCRIPT] P1. **Orchestrator-dispatch escalation (the agent hookup)** — for the JUDGMENT cases only (merge-conflict
+- [x] ✅ [SCRIPT] P1. **Orchestrator-dispatch escalation (the agent hookup)** — for the JUDGMENT cases only (merge-conflict
       resolution, commit-label-mismatch remediation, SIT-failure triage; the deterministic compute stays in the
       workflows). GHA detects the wall → `repository_dispatch` to the agent-orchestrator API (AWS VM,
       `agent-orchestrator.odum-research.com`) → spawns a worker under the long-lived **setup-token** accounts
@@ -516,7 +516,7 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       line in-place (preserves other secrets); `workspace-bootstrap.sh` calls `--refresh` before sourcing
       `load-gh-token.sh` so the cache rarely goes stale. No-op when SM unavailable (manual-fill fallback preserved). —
       complements the runtime validity-probe (`@e93aacbc8`).
-- [ ] [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
+- [x] ✅ [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
       currently fetches `GH_PAT` only for clone-time HTTPS; also export it as `GH_TOKEN`/`GITHUB_TOKEN` in the worker
       systemd env (or source `load-gh-token.sh` at worker start) so VM workers can edit workflows too. — repo:
       agent-orchestrator
@@ -714,7 +714,7 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
       (label vs API diff is a script), `staging-to-main.yml`, `sit-gate.yml` — these just need repair, NOT an agent. (2)
       JUDGMENT (agent): staging-merge conflict resolution, commit-label-mismatch remediation, SIT-failure triage — these
       escalate to an agent. Don't put Claude where a script suffices.
-- [ ] [SCRIPT] P1. **GHA → orchestrator dispatch for the judgment cases (operator preference: setup-token auth, not API
+- [x] ✅ [SCRIPT] P1. **GHA → orchestrator dispatch for the judgment cases (operator preference: setup-token auth, not API
       credits).** When a deterministic workflow hits a judgment wall (conflict / label mismatch / SIT red), it
       `repository_dispatch`es to the **agent-orchestrator** API (AWS VM, `agent-orchestrator.odum-research.com`), which
       spawns a worker under the cheap+stable long-lived **setup-token** accounts (`accounts.json`) to do the work and
