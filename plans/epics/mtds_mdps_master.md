@@ -449,18 +449,28 @@ MTDS `scripts/quality-gates.sh` is **pre-existing-red** on LDR (independent of F
       stays BLOCKED-CREDENTIALS per operator — see `running_vm_fleet_status` + `fleet_audit_triad_deferred_followups`).
       Repo: market-tick-data-service (CEX historical download) / instruments-service (venue symbol map) — diagnose which
       side owns the OKX symbol map first.
-  - **Slot-7 diagnosis 2026-06-01 (why this is NOT a 1-liner — read before picking up)**: the 400 is on the
-    **download-request symbol**, not on parsing. The per-venue Tardis normalisers in
-    `market_interface/adapters/cefi/tardis_shared.py` (`normalise_kraken_futures_symbol` /
-    `normalise_bitfinex_futures_symbol` / `parse_deribit_*`) map **Tardis→canonical (read-side)** — there is **no
-    canonical→Tardis OKX builder**, and OKX symbols are sourced via **instrument discovery**
-    (`market_interface/adapters/tradfi/tardis_adapter.py` `fetch_exchange_instruments` + `_apply_metadata_overrides`),
-    which currently yields `BTC-USDT`-style IDs that Tardis's `okex-futures` exchange rejects. Fix = resolve OKX-FUTURES
-    download symbols to Tardis's `okex-futures` grammar (`BASE-USD-YYMMDD` linear-quarterly; `BASE-USD_UM-YYMMDD`
-    USDT-margined), most likely via an OKX branch in `_apply_metadata_overrides` or a discovery-side map. **Data-correctness
-    caveat**: enumerating which dated OKX contracts existed per historical date requires Tardis's `okex-futures` exchanges
-    API (needs the BLOCKED Tardis key to verify the per-date valid set) — do NOT guess the contract calendar and re-request
-    bad symbols. Validate the symbol set against the live exchange listing before relaunching the OKX backfill VMs.
+  - **Slot-7 FULL diagnosis + LIVE-VALIDATED fix spec 2026-06-01 — root cause is in instruments-service, NOT MTDS.**
+    Traced end-to-end:
+    1. **Venue→exchange map is CORRECT**: UAC `registry/venue_mapping.py` + `canonical/canonical_mappings.py` map
+       `OKX-FUTURES` ↔ Tardis exchange **`okex-futures`** (OKX has 3 Tardis exchanges: `okex` spot / `okex-swap` perps /
+       `okex-futures` fixed-expiry — instruments-service `engine/orchestrator.py` knows this).
+    2. **The `/exchanges/okex-futures` metadata endpoint is FREE (no paid key)** + authoritative — **probed live
+       2026-06-01**: 5,740 `availableSymbols` with native ids `BTC-USD-260626` / `BTC-USDT-260626` / `BTC-USD_UM-260626`
+       (USDT-margined = `_UM`, `YYMMDD` expiry), each carrying `availableSince`/`availableTo`. instruments-service already
+       uses this pattern: `reference_data/adapters/cefi/tardis.py::_fetch_exchange_instruments` (`/exchanges/{exchange}`).
+    3. **The bug**: MTDS futures download takes its symbol list from **instruments-service's per-date parquet** via
+       `market_interface/adapters/tradfi/tardis_adapter.py::_resolve_dated_future_symbols` (IS→MTDS contract — MTDS must
+       NOT hardcode the universe). For OKX-FUTURES, IS is emitting canonical `BTC-USDT`-style symbols (looks sourced from
+       `okex` spot), NOT the `okex-futures` native dated ids → Tardis 400.
+    4. **Fix (owner = instruments-service, the universe SSOT)**: make OKX-FUTURES discovery pull from the **`okex-futures`**
+       exchange's `availableSymbols[].id` (native dated ids) filtered by `availableSince`/`availableTo` — the same
+       `_fetch_exchange_instruments` path it already uses for other venues; confirm it keys on `okex-futures` (not `okex`/
+       `okex-swap`) for the FUTURE instrument_type. **No MTDS change** needed if IS emits native ids (MTDS passes
+       `_resolve_dated_future_symbols` output straight to the okex-futures CSV URL). **Data-correctness gate**: dry-run
+       validate the rebuilt OKX-FUTURES symbol set against the live free `/exchanges/okex-futures` listing BEFORE relaunch
+       — never re-request unverified symbols. **Independent of the BLOCKED Tardis paid key** (metadata endpoint is free;
+       only the historical CSV *download* needs the key). Repo: **instruments-service** (OKX discovery) + verify MTDS
+       consumes unchanged.
 
 ## Code-freeze + migration window estimate
 
