@@ -43,8 +43,8 @@
 
 **Architecture**:
 
-- ONE AWS Batch Fargate job definition per bucket → currently 10 Group A jobs (Phase C, 2026-05-26); 16 Group B (Phase
-  D) authored in TF at `deployment-service@effdcb2`, pending `tofu apply`.
+- ONE AWS Batch Fargate job definition per bucket → 10 Group A jobs (Phase C, 2026-05-26) + 16 Group B jobs (Phase D,
+  **applied 2026-06-01**) = **26 ACTIVE job definitions**.
 - ONE EventBridge **Rule** per bucket (NOT EventBridge Scheduler — ap-northeast-1 does not support Batch as a direct
   Scheduler target; switched at abdb1fb). Rules use `aws_cloudwatch_event_rule` + `aws_cloudwatch_event_target`.
   Schedule expression: `rate(1 minute)`, all ENABLED.
@@ -61,8 +61,15 @@
     `bucket_env_split_rollout_2026_06.md` Phase 1 provisions + migrates data.
 - Task timeout: 1800s (bumped from 60s default at effdcb2 — matches GCP-side bump at 03b9d22).
 
-**Phase D status (2026-05-26)**: TF authored (deployment-service@effdcb2), `terraform plan` verified (89 add / 23 change
-/ 17 destroy). Pending `tofu apply` by operator (P1.10 in `plans/active/aws_manifest_consolidator_scope_2026_05_21.md`).
+**Phase D status — LIVE 2026-06-01**: `terraform apply` targeted to the consolidator modules
+(`module.manifest_consolidator_job_extended` + `module.manifest_consolidator_schedule_extended` +
+`aws_iam_policy.manifest_consolidator`) → `64 added, 1 changed, 0 destroyed`. Targeted deliberately: the full-module plan
+showed `89 add / 23 change / 17 destroy`, but the 17 destroys / 23 changes were unrelated drift in other AWS resources;
+targeting kept blast radius to the 16 Group B consolidator buckets only (correct during the legacy-bucket migration
+freeze). Verified: 26 EventBridge rules, all ENABLED; 26 ACTIVE Batch job definitions. Prereq: `api_host_auto_reboot.tf`
+duplicate `required_providers` block fixed (deployment-service@6a4194f) — it had broken `terraform init` for the whole
+AWS dir. **Note**: run terraform with the native arm64 binary (`/opt/homebrew/bin/terraform`) on Apple Silicon — the x86
+`/usr/local/bin/terraform` under Rosetta hangs on provider plugin start.
 
 **AWS verification**:
 

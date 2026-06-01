@@ -203,7 +203,7 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   parquets to mask phantoms.
 - **Manifest consolidator runtime**: GCP: Cloud Run Jobs + Cloud Scheduler (20 Phase A jobs — 10 env-tiered + 10 legacy
   flat, all `*/1 * * * *`; Phase D 14 Group B jobs TF authored pending `tofu apply`). AWS: Batch Fargate + EventBridge
-  Rules (10 Phase C live, Phase D 16 Group B TF authored pending `tofu apply`). Terraform:
+  Rules (10 Phase C + 16 Phase D Group B both LIVE 2026-06-01 — 26 rules ENABLED, 26 Batch job defs). Terraform:
   `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` (GCP) +
   `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf` (AWS). Legacy GCE VM launcher DELETED 2026-05-20
   (was `launch-manifest-consolidator-vm.sh`). DO NOT relaunch the VM. **Liveness contract (2026-06-01, live)**: the read

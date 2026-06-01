@@ -16,6 +16,17 @@ Gate cleared: `aws_migration_defi_first_2026_05_07` archived 2026-05-26 (Phase 5
 
 # AWS Manifest Consolidator — AWS Batch + EventBridge
 
+> **✅ COMPLETE — ARCHIVED 2026-06-01.** All phases A–D done. Phase D applied 2026-06-01 (`64 added, 1 changed, 0
+> destroyed`; targeted to consolidator modules to avoid unrelated full-module drift during the migration freeze).
+> Verified: 26 EventBridge rules all ENABLED + 26 ACTIVE Batch job definitions. Codex `manifest-consolidator-ssot.md` +
+> CLAUDE.md updated to "Phase D LIVE". Prereq landed-bug fix: deployment-service@6a4194f (duplicate `required_providers`).
+>
+> ## Deferred work — migrated to:
+>
+> - None — all todos closed. The `🟡 DRAINED-WRITER DEPENDENCY` note below is a cross-reference (the consolidator only
+>   reads parquets + writes `_index`; it does NOT relaunch the drained writer VMs). That relaunch gate lives in
+>   `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 4 and is unaffected by this archival.
+
 Port of the GCP Cloud Run manifest consolidator to AWS. GCP runs 10 Cloud Run Jobs + Cloud Scheduler crons at
 `*/1 * * * *`. AWS equivalent uses the existing `container-job/aws` (AWS Batch Fargate) and `scheduler/aws` (EventBridge
 Scheduler) Terraform modules in `deployment-service/terraform/modules/`.
@@ -76,7 +87,15 @@ because EventBridge Scheduler does not support Batch as a direct target in ap-no
 - [x] ✅ [SCRIPT] P1.9. `tofu plan` Phase D — `Plan: 89 to add, 23 to change, 17 to destroy` — Phase D module calls
       (manifest_consolidator_job_extended + manifest_consolidator_schedule_extended) present in plan output. —
       deployment-service@effdcb2 | terraform plan ✓ 2026-05-26
-- [ ] [HUMAN] P1.10. `tofu apply` Phase D + verify 26 schedules ENABLED.
+- [x] ✅ [HUMAN] P1.10. **APPLIED 2026-06-01** — `terraform apply` Phase D (account 427895769566, ap-northeast-1):
+      `Apply complete! Resources: 64 added, 1 changed, 0 destroyed` (32 job_extended + 32 schedule_extended for 16 Group
+      B buckets + IAM policy in-place for the new bucket ARNs; 0 destroy — targeted to the consolidator modules so the
+      full-module drift is untouched during the migration freeze). Verified:
+      `aws events list-rules --name-prefix uts-prod-consolidator` → **26 rules, all 26 ENABLED, 0 disabled**; 26 ACTIVE
+      Batch job definitions. Prereq fix: `api_host_auto_reboot.tf` duplicate `required_providers` block (broke
+      `terraform init` workspace-wide) consolidated into main.tf — deployment-service@6a4194f. Apply run with the native
+      arm64 terraform (`/opt/homebrew/bin/terraform`); the x86 `/usr/local/bin/terraform` under Rosetta hangs on
+      provider plugin start. — deployment-service (state: s3://uts-terraform-state-427895769566/terraform/state/prod)
 
 ---
 
