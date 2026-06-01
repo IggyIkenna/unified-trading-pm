@@ -156,23 +156,24 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
 | FM8 | `git add -A` / `git stash` sweep foreign (cross-slot) WIP         | 🟡 HARD-RULE ✗ | claim-gated slot-lineage check (never consulted)   |
 | FM9 | Autostash rebase conflict destroys foreign WIP                    | ✅ handled     | — (FF-only paths + `rebase --abort`; hook-blocked) |
 
-- [ ] [CODE] P0. **FM8 — liveness-gated dirty-state resolution (slot-isolation invariant, NOT per-file).** The worktree
-      `.tabs/<N>/<repo>` is exclusively this slot's, and the orchestrator runs ONE worker per slot (pruner/watchdog
-      kills the prior session before respawn), so dirty content in your own slot worktree is almost always **a previous
-      session of you that is now gone → inherit it** (keep the current `git add -A` + orphan-wip commit). The
-      discriminator is **LIVENESS, not identity**: in `commit_and_push_dirty_repos()` / `stash_dirty_repos()`, read
-      `.agent-claim` (`worktree_claim.read_claim`) + `expires_at` (1h TTL, heartbeat-bumped) + tmux/heartbeat state,
-      then — - **maker provably DEAD** (claim expired OR no tmux session OR heartbeat stale) → dead predecessor →
-      **inherit + commit**. This is the common case and resolves the "dead agent ⇒ slot is infinitely dirty, nobody ever
-      cleans it" failure — **quarantine must NEVER be terminal**. - **maker provably LIVE** (fresh claim + live
-      tmux/heartbeat — realistically the operator's own interactive session on the same slot, per the "operator session
-      counts as a slot" rule) → do NOT stomp it; resolve **role-aware**: a background autonomous worker `notify_*`-pings
-      the operator and waits out the TTL (then inherits on expiry); an interactive/operator session ASKS the operator
-      ("are other agents finished? OK to commit this WIP?") and commits on confirmation. **Forbidden anti-patterns**:
-      (i) per-file foreign attribution — `in_flight_files_json` is a refinement, never a gate; an unreported dirty file
-      in an isolated slot worktree is still slot-owned; (ii) terminal quarantine — a dead maker's WIP must eventually be
-      inherited, never left dirty forever. Removes the FM8 HARD-RULE violation without wedging respawn-inherit.
-      Collision group: `ao_respawn_hygiene`. Estimate: 0.5 AI-day.
+- [x] ✅ [CODE] P0. **FM8 — liveness-gated dirty-state resolution (slot-isolation invariant, NOT per-file).** ✅ DONE
+      2026-06-01 — agent-orchestrator@1f9af64 (LDR). `classify_maker_liveness()` in `worktree_clean_check.py`:
+      dead/absent/expired (incl. the very session being respawned) → inherit; a DIFFERENT live tmux session owning a
+      fresh `.agent-claim` → PROTECT (never stomp); quarantine never terminal. Wired via `resolve_dirty_state()`
+      coordinator into both spawn paths (server.py `/api/slots/{id}/spawn` → 409 on protected*live_peer/quarantined;
+      worker_liveness `_resolve_predecessor_wip` → skip respawn). The worktree `.tabs/<N>/<repo>` is exclusively this
+      slot's, and the orchestrator runs ONE worker per slot (pruner/watchdog kills the prior session before respawn), so
+      dirty content in your own slot worktree is almost always **a previous session of you that is now gone → inherit
+      it** (keep the current `git add -A` + orphan-wip commit). The discriminator is **LIVENESS, not identity**: in
+      `commit_and_push_dirty_repos()` / `stash_dirty_repos()`, read `.agent-claim` (`worktree_claim.read_claim`) +
+      `expires_at` (1h TTL, heartbeat-bumped) + tmux/heartbeat state, then — - **maker provably DEAD** (claim expired OR
+      no tmux session OR heartbeat stale) → dead predecessor → **inherit + commit**. This is the common case and
+      resolves the "dead agent ⇒ slot is infinitely dirty, nobody ever cleans it" failure — **quarantine must NEVER be
+      terminal**. - **maker provably LIVE** (fresh claim + live tmux/heartbeat — realistically the operator's own
+      interactive session on the same slot, per the "operator session counts as a slot" rule) → do NOT stomp it; resolve
+      **role-aware**: a background autonomous worker
+      `notify*\*`-pings     the operator and waits out the TTL (then inherits on expiry); an interactive/operator session ASKS the operator     ("are other agents finished? OK to commit this WIP?") and commits on confirmation. **Forbidden anti-patterns**:     (i) per-file foreign attribution — `in_flight_files_json`is a refinement, never a gate; an unreported dirty file     in an isolated slot worktree is still slot-owned; (ii) terminal quarantine — a dead maker's WIP must eventually be     inherited, never left dirty forever. Removes the FM8 HARD-RULE violation without wedging respawn-inherit.     Collision group:`ao_respawn_hygiene`.
+      Estimate: 0.5 AI-day.
 - [ ] [CODE] P0. **FM8 addendum — interactive-editor liveness (3rd signal beyond claim-TTL + tmux).** The claim+tmux
       liveness test misses a LIVE interactive operator/Cursor editor: it writes no `.agent-claim` and runs under no
       `orch-slot-*` tmux session, so `classify_maker_liveness` returns `"absent" → inherit` and would STOMP active
@@ -181,18 +182,23 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       **working-tree mtime-recency** as a third LIVE input: if any dirty file in the slot was modified within the last N
       seconds (e.g. 120s) treat the maker as LIVE regardless of claim/tmux. Combine: LIVE if (fresh claim + live tmux)
       OR (recent dirty-file mtime). Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
-- [ ] [CODE] P0. **FM8b — slot-tagged stashes (shared stash stack).** Linked worktrees share one `.git`, so
-      `git stash list` exposes every slot's stashes (slot-3 incident: stashes tagged `On tab/.../1|7|8`).
-      `stash_dirty_repos()` must `git stash push -m "slot-<N>-orphan-<ts>"` and only ever inspect/pop the stash whose
-      message matches this slot's tag — never assume `stash@{0}` is ours. Collision group: `ao_respawn_hygiene`.
-      Estimate: 0.15 AI-day.
-- [ ] [CODE] P0. **FM2 — wiped-index guard (prevent pushed mass-delete).** In `check_slot_clean` /
-      `_git_status_porcelain` detect the FM2 signature (staged `D ` deletes each with a matching `??` on-disk path). On
-      match: `git reset --mixed     HEAD` FIRST, re-run the clean check, log `slot_wiped_index_reconciled` (NOT
-      `orphan_wip`); if files are genuinely gone after the reset, do NOT auto-commit/push the deletion — quarantine +
-      alert. Hard guardrail in `commit_and_push_dirty_repos`: refuse to commit when the staged set is pure deletions
-      of >20 tracked files absent an explicit operator override, so a corrupt index can never be pushed as orphan-wip.
-      Collision group: `ao_respawn_hygiene`. Estimate: 0.3 AI-day.
+- [x] ✅ [CODE] P0. **FM8b — slot-tagged stashes (shared stash stack).** ✅ DONE 2026-06-01 —
+      agent-orchestrator@1f9af64. `stash_dirty_repos(slot_id=...)` tags `slot-<N>-orphan-<ts>` (via `slot_stash_tag()`)
+      and `find_slot_stash_ref(repo, slot_id)` only ever matches THIS slot's tag on the shared stash stack — never
+      assumes `stash@{0}`. Test: `test_slot_tagged_stash_never_pops_foreign`. Linked worktrees share one `.git`, so
+      `git stash list` exposes every slot's stashes (slot-3 incident: stashes tagged `On tab/.../1|7|8`). Collision
+      group: `ao_respawn_hygiene`. Estimate: 0.15 AI-day.
+- [x] ✅ [CODE] P0. **FM2 — wiped-index guard (prevent pushed mass-delete).** ✅ DONE 2026-06-01 —
+      agent-orchestrator@1f9af64. `detect_wiped_index()` (staged-`D` + same path on disk as `??`) +
+      `is_pure_mass_deletion()` (>20 pure deletes); `reconcile_wiped_index()` runs `git reset --mixed HEAD` first;
+      `commit_and_push_dirty_repos()` REFUSES a wiped/mass-delete index → `resolve_dirty_state` returns `quarantined`
+      (nothing pushed). Tests: `test_resolve_reconciles_wiped_index` + `test_resolve_quarantines_pure_mass_deletion`. In
+      `check_slot_clean` / `_git_status_porcelain` detect the FM2 signature (staged `D ` deletes each with a matching
+      `??` on-disk path). On match: `git reset --mixed     HEAD` FIRST, re-run the clean check, log
+      `slot_wiped_index_reconciled` (NOT `orphan_wip`); if files are genuinely gone after the reset, do NOT
+      auto-commit/push the deletion — quarantine + alert. Hard guardrail in `commit_and_push_dirty_repos`: refuse to
+      commit when the staged set is pure deletions of >20 tracked files absent an explicit operator override, so a
+      corrupt index can never be pushed as orphan-wip. Collision group: `ao_respawn_hygiene`. Estimate: 0.3 AI-day.
 - [ ] [CODE] P1. **FM1/FM5/FM6/FM7 — structural pre-spawn branch-state gate.** Add
       `worktree_clean_check.check_slot_branch_state(slot_id, slot_dir, operator)` parallel to `check_slot_clean`. Per
       repo assert: (a) `@{u}` == the repo's correct base, repairing a stale `origin/tab/<op>/N` with
@@ -216,9 +222,15 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       rendered template, so a recovered session is weaker than a cold autospawn. Inline the full `worker.md` step-1b
       fresh-pull-with-divergence-STOP block (or render the worker template). Collision group: `ao_branch_state_gate`.
       Estimate: 0.15 AI-day.
-- [ ] [CODE] P2. **FM3 — discard regenerated tracked artifacts (the slot-3 cleanup trigger).** Maintain a workspace
-      allowlist of regenerated tracked build outputs (`playwright-report/`, tracked coverage reports). Before the
-      COMMIT_AND_PUSH/STASH branch (and in `worker.md` fresh-pull before its dirty-check) run
+- [x] ✅ [CODE] P2. **FM3 — discard regenerated tracked artifacts (the slot-3 cleanup trigger).** ✅ DONE (orchestrator
+      side) 2026-06-01 — agent-orchestrator@1f9af64. `restore_generated_artifacts()` runs
+      `git restore --staged --worktree     -- <allowlist>` (playwright-report/blob-report/test-results), NEVER
+      `git restore .`, as the first step of `resolve_dirty_state` — re-checks, feeds only residual human-dirty files
+      onward. Test: `test_restore_generated_artifacts_leaves_human_dirty`. **REMAINING (foreign repos, not
+      agent-orchestrator):** the belt-and-suspenders `git rm --cached` + `.gitignore playwright-report/` in
+      deployment-ui + user-management-ui — filed as a finding for those repos' owners (out of agent-orchestrator scope).
+      Maintain a workspace allowlist of regenerated tracked build outputs (`playwright-report/`, tracked coverage
+      reports). Before the COMMIT_AND_PUSH/STASH branch (and in `worker.md` fresh-pull before its dirty-check) run
       `git restore -- <allowlist>` ONLY (never `.`), re-check, feed only residual human-dirty files to resolution.
       Belt-and-suspenders: `git rm     --cached` + `.gitignore` `playwright-report/` in deployment-ui +
       user-management-ui (keep `unified-trading-pm/presentations/tests/playwright-report` intentionally tracked →
