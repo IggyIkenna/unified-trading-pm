@@ -308,6 +308,35 @@ What to verify/wire (B0 corrected scope):
 >
 > **C is the foundation gate** (see Sequencing). One bundled single-walk per bucket applies C0+C2+C3+C4+C5+C7+C9
 > together (no N ad-hoc walks). Backfills (C6/D1/E1) + B0-run are blocked until C is GREEN for the affected bucket.
+
+### Migration-script performance contract (HARD RULE — codified 2026-06-01)
+
+> **Whole-corpus GCS migration scripts MUST be built parallel + observable + shardable from day one.** Incident
+> 2026-06-01: the C0 tool (`migrate_defi_full_v9_canonical.py`) walked ~40–50K objects **single-threaded** (~26% CPU of
+> an 8-vCPU VM, projected **hours**), and `--workers`/`--start-date`/`--end-date` were parsed but **never used** (dead
+> args). Fixed at mtds@92b8d25b. Every migration/backfill/reconciler script that walks a bucket MUST satisfy:
+>
+> 1. **Parallelise the object walk** with `ThreadPoolExecutor(max_workers=workers)` — GCS read/write **release the GIL**,
+>    so I/O-bound walks overlap and get 5–10× (the dominant cost is GCS round-trips, not CPU). A bare `for obj in objs:`
+>    loop over a remote bucket is **review-blocking**. (CPU-bound *serialize* is GIL-capped; if profiling shows
+>    serialize-bound, escalate to `ProcessPoolExecutor`/multiprocessing — but threads first for pure I/O.)
+> 2. **Wire the knobs — no dead args.** `--workers` actually sizes the pool; `--start-date`/`--end-date` actually filter
+>    the walk (this also makes the job **date-shardable across many VMs** — the real horizontal scale lever; see
+>    `launch-legacy-bucket-migration-sharded.sh`). A parsed-but-unused arg is a latent perf/scope bug.
+> 3. **Path-only move ⇒ `gcs_copy_object` (server-side, ~250× faster); content/column transform ⇒ download+transform+
+>    upload (unavoidable) but parallelised.** Never download+reupload when only the path changes. Idempotent: re-running
+>    on already-canonical objects is a no-op (skip).
+> 4. **Observability**: log a progress counter every N objects (e.g. 1000) AND run under `python -u` /
+>    `PYTHONUNBUFFERED=1` — otherwise block-buffered stdout hides all progress until exit (the C0 dry showed only 3
+>    sample lines for 25 min, indistinguishable from a hang without an SSH CPU check).
+> 5. **Per-object failure isolation** — `try/except … continue` per object (log + skip), never `raise` inside the walk
+>    (composes with shard-level failure isolation). The run completes; the verify step (C0e) catches any gaps.
+> 6. **Tune for the bottleneck**: I/O-bound → more workers + GCS client connection-pool headroom (gcsfs/aiohttp default
+>    ~100 conns covers workers≤~64); CPU/bandwidth-bound → bigger VM (more vCPU + egress) or shard across VMs by date.
+>    GCS has **no client-side warm cache** — concurrency (in-flight requests), not "warming", is the throughput lever.
+>
+> SSOT for GCS object ops + this contract: `codex/05-infrastructure/gcs-object-operations.md` (add a
+> "migration-script performance contract" section there when this plan archives).
 >
 > **`source` is a COLUMN, not a path key (provenance SSOT — operator 2026-06-01)**: all sources co-mingle on the SAME
 > read path, so the consumer-facing layout is identical ("data looks the same") — the `source` column exists only so WE
