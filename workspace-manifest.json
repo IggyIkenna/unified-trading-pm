@@ -2419,7 +2419,24 @@
       "note": "Sports services consolidated 2026-03-01: sports-reference-data-service merged into instruments-service, sports-odds-processing-service merged into market-data-processing-service, sports-strategy-service merged into strategy-service, sports-execution-service merged into execution-service. features-sports-service and unified-sports-execution-interface remain standalone. Can develop sports ML pipeline in parallel with CeFi. Only needs USEI v1.0.0 for live execution."
     }
   },
-  "staging_versions": {},
+  "staging_versions": {
+    "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` — the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
+    "batch-live-reconciliation-service": "0.1.0",
+    "deployment-api": "0.1.1",
+    "deployment-service": "0.1.1",
+    "deployment-ui": "0.1.0",
+    "execution-service": "0.1.1",
+    "features-service": "0.0.1",
+    "fund-administration-service": "0.1.0",
+    "ibkr-gateway-infra": "0.1.0",
+    "instruments-service": "0.1.22",
+    "market-tick-data-service": "0.3.1",
+    "system-integration-tests": "0.2.0",
+    "unified-api-contracts": "0.1.20",
+    "unified-trading-library": "0.3.167",
+    "unified-trading-pm": "1.2.0",
+    "user-management-ui": "0.2.0"
+  },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
