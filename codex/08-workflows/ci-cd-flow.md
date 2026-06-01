@@ -64,6 +64,17 @@ Pass 2 — Quickmerge (--agent fast-path)
 re-running Pass 1. The SHA check is the enforcement mechanism — no partial run can fake a full pass. Pass 2 no longer
 re-runs lint/typecheck/codex: the sentinel guarantees they passed.
 
+**Pass 1 is now the SOLE upstream quality checkpoint (codified 2026-06-02).** With human approvals removed fleet-wide
+(`required_approving_review_count=0` — autonomous CI/CD, see § "Agent vs Human Paths" + feature-branch-workflow.md
+§ "Zero human-approvals"), **nobody reviews an agent's PR before it auto-merges on a green gate.** So the FULL local
+`quality-gates.sh` (Pass 1) + the quickmerge `--agent` sentinel check are no longer just a fast-path convenience — they
+are the load-bearing quality bar. Two non-negotiables follow: (1) **always run the FULL Pass 1** (no skip flags) before
+quickmerge — a partial run writes no sentinel and quickmerge will refuse; (2) **never hand-`git push`/merge to a
+protected branch to "save time"** — that bypasses the sentinel + the gate entirely. The whole point of being on
+`quality-gates-v2` everywhere is that **quickmerge is the agent gate in every case**, replacing manual push-and-merge.
+The remote `quality-gates-v2` re-run on the staging PR is the backstop (fresh-deps Linux), but the local Pass 1 is what
+keeps red code off LDR in the first place.
+
 ---
 
 ## Quickmerge Variants
@@ -204,7 +215,7 @@ Both are escape hatches for iteration speed; the canonical production path stays
 | Quickmerge         | `bash scripts/quickmerge.sh "..." --agent --files '...'` | `bash scripts/quickmerge.sh "..."`                       |
 | SHA sentinel check | Automatic in `--agent` — blocks on mismatch              | Not enforced (human responsibility)                      |
 | Push to LDR        | quickmerge pushes branch, creates staging PR             | Same via quickmerge                                      |
-| Promote LDR → main | ❌ NOT ALLOWED (operator only)                           | Via staging→main PR flow                                 |
+| Promote LDR → main | ✅ Autonomous, green-gated: quickmerge → staging (auto-merge on green `quality-gates-v2`) → automated staging→main (semver/SIT). **No human merge** — the green gate is the approval (`required_approving_review_count=0`, codified 2026-06-02). | Same; admin-merge only a genuinely-stuck promotion |
 | Dep-branch work    | ❌ NOT ALLOWED (`--dep-branch` human-only)               | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
 | Version graduation | ❌ NOT ALLOWED                                           | `gh workflow run request-major-bump.yml ...`             |
 | Kill-switch arming | ❌ NOT ALLOWED                                           | Manual via deployment-service API                        |
@@ -279,8 +290,11 @@ service repos). **EXCEPTION — orchestration repos that DIRECT-push `[skip ci]`
 `sit-debounce-trigger` write staging lock/mode state) **run `enforce_admins=FALSE`.** A `[skip ci]` commit never
 produces a `quality-gates-v2` run, and a required-check PR would deadlock (the check can only run *after* the push it is
 blocking), so these direct pushes cannot satisfy a v2 gate — they bypass it as the admin `GH_PAT`. The ruleset
-(`require-quality-gates`, admin `bypass_mode: always`) + classic `required_status_checks` / `required_pull_request_reviews`
-still fully gate **non-admins**; only repo admins (incl the automation's admin PAT) bypass. Verified by the #257 chain
+(`require-quality-gates`, admin `bypass_mode: always`) + classic `required_status_checks` fully gate **everyone**
+(the green `quality-gates-v2` check is the merge criterion). **Human review is NOT a gate** — `required_pull_request_reviews`
+is `required_approving_review_count=0` fleet-wide (codified 2026-06-02, autonomous CI/CD: see § "Two-Pass" + feature-branch-workflow.md
+§ "Zero human-approvals"); a green gate auto-merges, so agents promote via quickmerge with no manual merge. Only the special
+PM SIT-chain `[skip ci]` manifest pushes bypass via `enforce_admins=false` as described above. Verified by the #257 chain
 e2e: with `enforce_admins=true` the `staging-to-main` manifest push was REJECTED (`GH013 … "quality-gates-v2" is
 expected` / `Changes must be made through a pull request`); with `enforce_admins=false` it pushes (`Bypassed rule
 violations for refs/heads/main`) and the promote job is green. **Do NOT "restore" PM `main` to `enforce_admins=true`** —
