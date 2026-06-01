@@ -204,10 +204,17 @@ by a PR:
       against the live fleet (exit 0, GITHUB_OUTPUT emission, deterministic `--now`): surfaced 6 fresh PM/SIT/mdps
       flips + 7 genuinely-stuck promotion PRs. NOTE: `schedule:` only fires from main → goes live once promoted;
       `workflow_dispatch` works meanwhile.
-- [ ] [SCRIPT] P0. **semver rollout to all 16 repos' default branches** — render the fixed `semver-agent.yml` (trigger
-      `quality-gates-v2`, from the template) onto each repo's default branch. PR-per-repo passes its own v2
-      (workflow-file change) and auto-merges; for a repo whose main v2 is RED, do its (B) greening first (or admin per
-      the force rule). Verifies: semver fires on the next staging `quality-gates-v2` success.
+- [x] ✅ [SCRIPT] P0. **semver rollout — DONE 2026-06-01** (LDR, all 24 repos). Rendered the fixed `semver-agent.yml`
+      (trigger `workflow_run:["quality-gates-v2"]` + pyproject-derived `dep_repos`) via
+      `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` and committed+pushed to each repo's
+      `live-defi-rollout` (23 pushed this pass: alerting `5969240`, batch-live `3c43571`, client-reporting `6e463ad`,
+      deployment-api `c8f7994`, deployment-service `1def93f`, execution `b4d9b4c01`, features `f7ee20c1`, fund-admin
+      `a9ea9ab`, greeks `97401de`, ibkr `8fc9918`, instruments `5b6b2445`, mdps `cb1de50`, mtds `546537ee`, ml `47fcb01`,
+      strategy `a7f81933`, SIT `19facf9`, trading-agent `1b95f93`, uac `6b98c9d9`, utl `009f76e3`, uta `df373c1`, ui
+      `5f07060f`, deployment-ui `44cc5d5`, e2e `cd9f084`; agent-orchestrator already current). Verified: strategy LDR
+      `semver-agent.yml` now triggers on `quality-gates-v2`/`staging`. Each repo's reconciliation auto-merge carries it to
+      main; semver fires on the next staging `quality-gates-v2` success (needs the `staging_versions` baseline restored —
+      P1 #6, done).
 - [ ] [TEST] P0. **(B) per-repo QG-debt green** (surgical, real fixes — see standard above). Status 2026-06-01:
       - ✅ **`instruments-service`** — `instruments-service@851559f4` (LDR). Coverage **76.82% → 77.69%** via 13 real
         unit tests for the venus/fluid/radiant curated-EVM-lending adapters (offline, credential-free; mirrors the
