@@ -2640,3 +2640,22 @@ STAGE 1.5 is unblocked. Root causes + fixes:
 **Left active (legitimate trackers — residual gaps not all dispatched):** `batch_live_reconciliation_service_audit`
 (G1–G12 tracked gaps beyond D2/D3/D4), `features_service_defi_data_loading_blockers` (Issue-4 lookback-rows + CeFi-path
 items beyond DeFi #1–4). — slot-7 / ikenna 2026-06-01
+
+---
+
+## [2026-06-01 final] slot-7 — features-service branch misconfig FIXED → everything on LDR
+
+Operator-flagged: quality-gates-v2 was gating features-service **LDR** (contradicts the model — v2 gates main/staging only).
+**Root cause**: features-service had **only `live-defi-rollout`** (no `main`, no `staging`), so its GitHub default branch
+was LDR and the `require-quality-gates` ruleset (target `~DEFAULT_BRANCH`) landed on LDR. **Fixed** (operator-approved):
+created `main`+`staging` from LDR HEAD (`dba0f5bf`) + set default → `main`. Ruleset now gates `main`; **LDR is free-push
+again**. The coverage-floor / per-family `PYTEST_UNIT_DIR` QG-red now correctly gates main-promotion (tracked in
+`cicd_contract_hardening`), not LDR.
+
+→ **features-service bucket-override fix LANDED on LDR** (`587e494e`); issue
+`features_service_failed_manifest_bucket_override` ARCHIVED. **10 issues now archived this cycle.**
+
+**EVERYTHING IS ON LDR** — PM, MTDS, alerting, execution, strategy, features-service all ahead-of-LDR=0, clean.
+Remaining un-shipped (all tracked todos, none mine to force): deployment-log-churn (untouched, own [INFRA] todos),
+OKX symbol-mapping (P1 todo — needs blocked Tardis key to validate), DeFi #1/#4 (todos in features_and_ml_master).
+— slot-7 / ikenna 2026-06-01
