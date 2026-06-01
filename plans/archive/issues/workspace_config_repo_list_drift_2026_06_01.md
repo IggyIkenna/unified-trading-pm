@@ -11,10 +11,24 @@ source:
 parent_epic: infrastructure_master
 assigned_vm: planning-vm
 priority: P2
-status: active
+status: resolved-archived
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
+resolved: 2026-06-01
 ---
+
+> **✅ RESOLVED 2026-06-01 — acked into
+> [`plans/active/workspace_config_drift_remediation_2026_06_01.md`](../../active/workspace_config_drift_remediation_2026_06_01.md).**
+> All 5 "Recommended decision" items shipped/resolved:
+> - Item 1 (commit canonical fix): `unified-trading-pm@73963a354`.
+> - Item 2 (generator path-style fix): `unified-trading-pm@c6dab6afd`.
+> - Item 3 (regression guard QG step + pytest): `unified-trading-pm@79263233d`.
+> - Item 4 (features-service `ci_status` adjudication): investigated — `quality-gates-v2` GREEN on LDR HEAD;
+>   the slot-5 `FAILING` flip was stale; dropped slot-5 `stash@{0}` (operator-acked); slot-5 PM tree unblocked.
+> - Item 5 (FF-pull starvation watchdog): spec delivered in the remediation plan (wiring is an optional P3 follow-up).
+>
+> Codex `codex/05-infrastructure/per-tab-worktrees.md` documents the canonical-vs-slot `.code-workspace` path-style
+> contract + guard. Archived per the issue-doc lifecycle (acked ⇒ archive immediately).
 
 > **Provenance**: Surfaced while cleaning slot-5 working trees on 2026-06-01. The operator saw VS Code report
 > `risk-and-exposure-service does not appear to be a git repository`. Root-caused to stale multi-root workspace config.
