@@ -145,10 +145,11 @@ Watch 1h on vm-orchestrator before expanding fleet.
 
 ### Phase 4 — Codify CLAUDE.md HARD RULE + codex doc
 
-- [ ] [DOCS] P0. Add to `cursor-configs/CLAUDE.md` under `### Other key rules`: **"Orchestrator worker liveness:
+- [x] ✅ [DOCS] P0. Add to `cursor-configs/CLAUDE.md` under `### Other key rules`: **"Orchestrator worker liveness:
       WorkerLivenessWatchdog auto-kills stuck-at-prompt + heartbeat-silent + context-full workers.
       ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true is the default everywhere. Operator should not need to manually kill
       tmux sessions to restore velocity."** Cross-link this plan. Collision group: none. Estimate: 0.05 AI-day.
+      ✅ DONE 2026-06-01 — unified-trading-pm@a4a9297c.
 - [ ] [DOCS] P1. Codex doc `codex/04-architecture/agent-orchestrator-worker-liveness.md` — full architecture (was
       drafted in Phase 1; promote to final). Collision group: none. Estimate: 0.1 AI-day.
 - [ ] [QG] P0. PM PR via fast-path (docs change → targets `main`). Collision group: none. Estimate: 0.05 AI-day.
