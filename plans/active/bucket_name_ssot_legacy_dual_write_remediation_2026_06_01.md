@@ -31,6 +31,10 @@ related:
 
 # Legacy non-canonical tick-bucket dual-write remediation
 
+> **🟢 VM RUNNING — 2026-06-01**: 20 sharded `canonical-migration-legacy-*` VMs migrating legacy→canonical tick data
+> (asia-northeast1-c, self-deleting). 3 writer VMs (`mdps-backfill-defi`, `mdps-prediction-2025`, `sports-scheduler`)
+> DRAINED/stopped pending Phase-4 relaunch. Banner removed by launcher at migration completion.
+
 **Finding (operator-directed 2026-06-01)**: legacy flat tick-data buckets
 (`market-data-tick-<group>-central-element-323112`, plus long-form `market-data-tick-prediction-…`) are **still
 receiving live writes today** alongside their canonical env-tiered counterparts
