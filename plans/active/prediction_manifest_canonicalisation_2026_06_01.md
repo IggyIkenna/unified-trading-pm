@@ -80,13 +80,13 @@ be fixed first if run on a VM.
 > `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
 - [x] ✅ [DATA] P0. Legacy→canonical diff (slot-3 tool, 2026-06-01): **2,039 legacy-only cells confirmed** (legacy 2,822
-      · canonical 805 · overlap 783) — matches the headline; mostly `POLYMARKET ohlcv_*` + `prediction_canonical_question_group`
-      from 2025-03-14 on. Per-data_type object counts resolved in the C0 copy walk (idempotent). Data-loss risk on delete
-      → these MUST land in canonical before L6.
+      · canonical 805 · overlap 783) — matches the headline; mostly `POLYMARKET ohlcv_*` +
+      `prediction_canonical_question_group` from 2025-03-14 on. Per-data_type object counts resolved in the C0 copy walk
+      (idempotent). Data-loss risk on delete → these MUST land in canonical before L6.
 - [x] ✅ [DATA] P0. Canonical `pred-prd` `_index` DATA-STATE: **100% v8** (0/16,812 v9 — CF-1 RED); **`asset_group` col
       present** (CF-2 rows GREEN) but **object PATHS still `category=prediction`** + **`data_source=POLYMARKET_CLOB` in
-      path** (CF-2 paths RED, CF-4 source-in-path); **`pipeline_mode` blank 0/16,812 + no path segment** (CF-3 RED); **no
-      `source` column** (CF-4 RED); **no `available_at` column** (CF-8 RED — only `written_at`); CF-5 typed GREEN
+      path** (CF-2 paths RED, CF-4 source-in-path); **`pipeline_mode` blank 0/16,812 + no path segment** (CF-3 RED);
+      **no `source` column** (CF-4 RED); **no `available_at` column** (CF-8 RED — only `written_at`); CF-5 typed GREEN
       (`EXPECTED_PRE_VENUE_LAUNCH` 2,280 / `SOURCE_RETURNED_ZERO` 41). **CF-7 drift**: venue includes `UNKNOWN` + blank
       `''`; data_type includes blank `''` + `prediction_trades`/`trades` — diagnose/relabel in the walk. Path sample:
       `raw_tick_data/by_date/day=2025-03-14/category=prediction/data_source=POLYMARKET_CLOB/venue=POLYMARKET`.
@@ -95,29 +95,32 @@ be fixed first if run on a VM.
 
 > **🔎 BUILD-GAP FINDING (slot-3, 2026-06-01) — the existing tools do NOT achieve the v9 single-SSOT target; this is the
 > bespoke build spec.** `migrate_polymarket_canonical.py` rewrites the **legacy** `market-data-tick-prediction` bucket
-> **IN-PLACE** (`category=`→`asset_group=`, `DEFAULT_BUCKET_PREFIX="market-data-tick-prediction"`) — which is why
-> legacy raw is near-canonical (`day=/asset_group=/venue=/instrument_type=/data_type=`) but the SEPARATE canonical
+> **IN-PLACE** (`category=`→`asset_group=`, `DEFAULT_BUCKET_PREFIX="market-data-tick-prediction"`) — which is why legacy
+> raw is near-canonical (`day=/asset_group=/venue=/instrument_type=/data_type=`) but the SEPARATE canonical
 > `market-data-tick-pred-prd` bucket holds **older, less-complete** data (`category=/data_source=` paths, 805 captured
 > cells vs legacy's 2,822, v8). `rebuild_prediction_manifest.py` rebuilds the manifest via `ManifestWriter` (→v9) but
 > ALSO targets the legacy long-form bucket and its `CANONICAL_PATH_RE` expects `category=…/market_category=…`. **Neither
 > consolidates legacy's richer data ONTO `pred-prd` in v9-canonical form.** Required build (single bundled walk):
+>
 > 1. **Reconcile source-of-truth**: legacy (2,822 cells, asset_group= hive) is the FRESHER/more-complete copy; pred-prd
->    (805 cells, category=) is stale. Migrate legacy → `pred-prd` at canonical `day=/pipeline_mode=batch_polymarket_clob/
->    asset_group=prediction/venue=/chain=/instrument_type=/data_type=` (gcs_copy_object server-side; the 2,039
->    legacy-only cells are the data-loss gap). Drop the stale pred-prd `category=` objects after the copy.
+>    (805 cells, category=) is stale. Migrate legacy → `pred-prd` at canonical
+>    `day=/pipeline_mode=batch_polymarket_clob/ asset_group=prediction/venue=/chain=/instrument_type=/data_type=`
+>    (gcs_copy_object server-side; the 2,039 legacy-only cells are the data-loss gap). Drop the stale pred-prd
+>    `category=` objects after the copy.
 > 2. **Manifest rebuild on `pred-prd`**: generalise `rebuild_prediction_manifest.py` to target `pred-prd` + scan the
 >    canonical `asset_group=` paths + stamp `source=polymarket_clob` (from the `data_source` path/col) + `pipeline_mode`
->    + `available_at` → `ManifestWriter` auto-stamps v9.
+>    - `available_at` → `ManifestWriter` auto-stamps v9.
 > 3. **CF-7 relabel**: `UNKNOWN`/blank venue + blank/`prediction_trades` data_type → canonical.
 > 4. Verify with `cf_manifest_audit_2026_06_01.py` (CF-1…CF-12 GREEN on pred-prd data-state) → delete legacy bucket.
-> VM-run (object scan + consolidator); prediction-writer (`mdps-prediction-2025`) confirmed drained before `--apply`.
+>    VM-run (object scan + consolidator); prediction-writer (`mdps-prediction-2025`) confirmed drained before `--apply`.
 
 - [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
       top-level trees + nested layouts in the prediction source + canonical buckets before the walk (`raw_tick_data/`,
-      `processed_candles/`, the 6-dimension `day=/category=/data_source=/venue=/…/market_category=/…` polymarket layout);
-      classify duplicate (keep freshest) vs complementary (migrate all → canonical v9). The existing
+      `processed_candles/`, the 6-dimension `day=/category=/data_source=/venue=/…/market_category=/…` polymarket
+      layout); classify duplicate (keep freshest) vs complementary (migrate all → canonical v9). The existing
       `rebuild_prediction_manifest.py` (ManifestWriter rebuild) is the manifest-side template. Cover every in-scope
-      layout or the walk is incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
+      layout or the walk is incomplete (review-blocking). SSOT:
+      `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -152,27 +155,34 @@ be fixed first if run on a VM.
 
 ## Execution checklist (grounded — next session, finish in full)
 
-> Supersedes the old "rewrite every parquet's columns" framing: the CF debt is in the `_index` MANIFEST (rebuilt via
-> the UTL `ManifestWriter`, which auto-stamps v9) + object PATHS — NOT the raw tick parquets. See
+> Supersedes the old "rewrite every parquet's columns" framing: the CF debt is in the `_index` MANIFEST (rebuilt via the
+> UTL `ManifestWriter`, which auto-stamps v9) + object PATHS — NOT the raw tick parquets. See
 > `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + the BUILD-GAP block above.
 >
 > ⚠️ **IRREVERSIBLE — E8 DELETES legacy `market-data-tick-prediction` + stale pred-prd `category=` paths permanently.**
 > Do not run E2–E8 until the canonical target (v9, `day=/pipeline_mode=/asset_group=prediction/…`, source=API) is
 > CONFIRMED CORRECT at the verify step. One pass, no confusion — once legacy is deleted it is gone.
 
-- [ ] [DATA] P0. E1 Phase-0 layout audit on legacy `market-data-tick-prediction` + canonical `pred-prd` (run
-      `cf_layout_audit_2026_06_01.py`); confirm legacy=`asset_group=` hive (fresher, 2,822 cells), pred-prd=`category=`
-      (stale, 805) — pick legacy as source-of-truth.
-- [ ] [DATA] P0. E2 Build `migrate_prediction_to_pred_prd_v9.py` (bespoke, perf-contract: ThreadPoolExecutor + wired
-      `--workers`/`--start`/`--end` + `gcs_copy_object` + `python -u` progress + per-object try/except + idempotent):
-      copy legacy canonical-path objects → `pred-prd` at `day=/pipeline_mode=batch_polymarket_clob/asset_group=prediction/
-      venue=/chain=/instrument_type=/data_type=`; covers the 2,039 legacy-only cells; drop stale pred-prd `category=` objects.
+- [x] ✅ [DATA] P0. E1 Phase-0 layout audit on legacy `market-data-tick-prediction` + canonical `pred-prd` (ran
+      `cf_layout_audit_2026_06_01.py` 2026-06-01): legacy raw = **near-canonical**
+      `raw_tick_data/by_date/day=/     asset_group=prediction/venue=/instrument_type=/data_type=` (fresher
+      source-of-truth) + `processed_candles/by_date/     day=/timeframe=/data_type=/venue=`; pred-prd raw tree is
+      sparse/stale (no leaf shallowly — the stale `category=` copy). **Legacy = source-of-truth confirmed.** — slot-3
+      2026-06-01.
+- [x] ✅ [DATA] P0. E2 Built `migrate_prediction_to_pred_prd_v9.py` (perf-contract: ThreadPoolExecutor + wired
+      `--workers`/`--start-date`/`--end-date` + `gcs_copy_object` server-side + `python -u` progress + per-object
+      try/except + idempotent `gcs_describe_object` skip): copies legacy `raw_tick_data/` + `processed_candles/` →
+      `pred-prd` at canonical `day=/pipeline_mode=/asset_group=prediction/…` via the **UAC `candidate_parquet_paths`
+      SSOT** (byte-exact batch=live; pipeline_mode LEFT of asset_group= per writer+reader+UAC). `--drop-stale` (E8)
+      deletes stale `category=` objects post-verify (IRREVERSIBLE). Path transforms unit-validated. —
+      market-tick-data-service@456ae08a, slot-3 2026-06-01.
 - [ ] [DATA] P0. E3 Confirm `mdps-prediction-2025` writer drained; snapshot `pred-prd/_index` →
       `_index/snapshots/pre_v9_canonical_2026_06_01.parquet`.
 - [ ] [DATA] P0. E4 Dry-VM (`launch-canonical-migration-vm.sh` style) → review planned moves + timing → optimise workers
       if >1h → full-VM run (no fire-and-forget: STARTED<60s + progress/hr + STOPPED; T+10min describe).
 - [ ] [DATA] P0. E5 Manifest rebuild: generalise `rebuild_prediction_manifest.py` to target `pred-prd` + scan the
-      `asset_group=` paths + stamp `source=polymarket_clob` + `pipeline_mode` + `available_at` → consolidator merge → v9.
+      `asset_group=` paths + stamp `source=polymarket_clob` + `pipeline_mode` + `available_at` → consolidator merge →
+      v9.
 - [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank/`prediction_trades` data_type → canonical.
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-pred-prd-…` → CF-1…CF-12 GREEN on
       data-state (v9, source populated, pipeline_mode, asset_group, available_at, 0 legacy-only). Flip the CF-coverage
