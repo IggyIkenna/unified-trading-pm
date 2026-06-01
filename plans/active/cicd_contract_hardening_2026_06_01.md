@@ -51,6 +51,24 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 
 ## Phased execution
 
+> **🔑 PREREQUISITE BLOCKER (discovered 2026-06-01): the v1→v2 workflow migrations need a `workflow`-scope token.**
+> The slot/agent gh token has scopes `repo, read:org, gist, admin:public_key` — **no `workflow` scope** — so it cannot
+> create/update `.github/workflows/*.yml` in any repo (GitHub refuses). Every remaining migration below requires editing
+> a workflow file (roll out `quality-gates-v2.yml`, remove `workspace-qg.yml`, or fix a job-name). **Operator action:**
+> provide a token/app with `workflow` scope to the migrating slot, OR perform the workflow-file edits. Until then these
+> are `BLOCKED-CREDENTIALS`, not deferrable. (Ruleset re-pins via `pin_branch_protection_rulesets.py` do NOT need
+> workflow scope — only the workflow-file edits do.)
+
+- [ ] [BLOCKED-CREDENTIALS] P0. **Grant `workflow` scope** to the migration runner (slot token / GitHub App), or have
+      operator apply the per-repo workflow-file edits below. Unblocks all 8 v1→v2 migrations. — repo: (org-level)
+- [ ] [SCRIPT] P1. **trading-agent-service** — v2 is GREEN on `main`, BUT (a) its `quality-gates-v2.yml` has a
+      **job-name bug**: it emits `Quality Gates (alerting-service) / quality-gates-v2` (copied from alerting-service,
+      `name:` not updated) — fix the job name to `Quality Gates (trading-agent-service)` (workflow-file edit → needs
+      workflow scope); (b) its `main` PRs are currently **BLOCKED** (ruleset requires v1 `quality-gates` which no longer
+      runs on main — v1 workflow was removed). After fixing the job name + getting LDR onto v2, re-pin
+      (`pin_branch_protection_rulesets.py --apply --repo trading-agent-service`). NB: do NOT re-pin before the job-name
+      fix — it would require a misnamed check. (This is the 8th not-on-v2 repo; was untracked until now.)
+
 ### Phase 1 — Workspace-wide branch-protection + required-check enforcement (audit i1/i2)
 
 **CORRECTED 2026-06-01: canonical mechanism = RULESETS** (`require-quality-gates`), verified by
