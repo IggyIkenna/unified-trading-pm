@@ -232,16 +232,27 @@ by a PR:
       Dedicated per-file sweep → canonical `inst.instrument_key.endswith(f":{symbol}")` + a test each (kept separate to
       avoid pulling unrelated files into the codex changed-files scan). `parent_epic: infrastructure_master` (or reassign
       to the instruments/defi reference-data epic at triage).
-- [ ] [SCRIPT] P1. **Revive the SIT chain** — PARTIALLY DIAGNOSED 2026-06-01. Mapped chain: `sit-debounce-trigger.yml`
-      (cron `*/2` + `repository_dispatch:staging-changed`) → on trigger dispatches `staging-changed` to **the
-      `system-integration-tests` repo** (not PM `sit-gate`) → SIT runs there → should dispatch `staging-validated` →
-      PM `staging-to-main.yml`. PM `sit-gate.yml` consumes `sit-lock` (zero runs). **Finding:** the entry WAS firing on
-      cron but the *run* showed `failure` purely because the notify job crashed (see next item — now FIXED), which may
-      have masked/short-circuited downstream. **Remaining (cross-repo, hand to a SIT-repo slot):** confirm
-      `system-integration-tests` actually receives `staging-changed` and re-dispatches into the gate (sit-gate `sit-lock`
-      / `staging-validated`); the zero `sit-gate` runs point at the SIT-repo side, not PM. `staging-to-main.yml` is
-      current and fires once it receives `staging-validated`. Re-evaluate after P1 #5's notify fix reaches main via the
-      promotion campaign (the `*/2` cron runs from the default branch).
+- [ ] [SCRIPT] P1. **Revive the SIT chain** — FULLY DIAGNOSED 2026-06-01 (corrects the original "workflow_run
+      name-mismatch" hypothesis — that was WRONG). Actual topology + state:
+      - `system-integration-tests/full-workspace-sit.yml` (cron `0 3 * * *` nightly + `repository_dispatch:full-workspace-sit`)
+        **runs nightly and SUCCEEDS** — the SIT itself is healthy, NOT dead.
+      - `system-integration-tests/smoke-test-gate.yml` is the staging→main gate: `on: push:[staging]` + `workflow_dispatch`;
+        it dispatches `sit-lock` (line ~240) and, on pass, `staging-validated` (line ~499) to PM. **It is `completed/cancelled`
+        on its runs** (SIT Setup cancelled → all downstream skipped → neither dispatch fires → PM `sit-gate` zero runs →
+        `staging-to-main` never triggered). Cause is its `concurrency: {group: sit-staging, cancel-in-progress: true}` +
+        a 600s quiet-period wait. SIT-repo `staging` is pushed RARELY (today's campaign `merge main into staging`, prior
+        was March), so "continuous activity" is NOT why; the single 2026-06-01 16:13 run cancelled for a not-yet-pinned
+        reason (likely a same-group collision during the campaign's active staging back-merge phase).
+      - PM `sit-debounce-trigger.yml` dispatches `staging-changed` to the SIT repo, but **NO SIT-repo workflow listens for
+        `staging-changed`** → that dispatch is ORPHANED. Naively adding a `repository_dispatch:[staging-changed]` listener
+        to `smoke-test-gate` is UNSAFE as-is: the body keys off `github.sha`/`github.ref_name`, which under
+        `repository_dispatch` resolve to the **default branch, not staging** → it would gate the wrong commit. A correct
+        wiring must pass the staging SHA in `client_payload` and check it out.
+      **Remaining (campaign-gated):** the campaign is ACTIVELY churning SIT `staging` (its back-merge phase) → cannot
+      cleanly verify the gate end-to-end until that settles. Then: (a) pin the 16:13 cancel cause; (b) either tune the
+      600s/concurrency debounce or wire the orphaned `staging-changed` dispatch properly (payload SHA + checkout); (c) e2e
+      verify push-SIT-staging → gate completes → `sit-lock`→PM `sit-gate` locks → `staging-validated`→`staging-to-main`
+      promotes. P1 #5's notify fix (shipped) removes the run-failure noise that previously masked this.
 - [x] ✅ [SCRIPT] P1. **sit-debounce notify empty/invalid-secret guard** — `unified-trading-pm@242fe1d2c` (LDR). Root
       cause: `notify-slack.yml` (the reusable the "Telegram — SIT Debounce Triggered" job actually calls) built
       `urllib.request.Request(webhook)` OUTSIDE its try and only guarded the EMPTY case → a misconfigured/masked
