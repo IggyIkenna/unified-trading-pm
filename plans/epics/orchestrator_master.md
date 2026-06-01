@@ -168,10 +168,14 @@ instance at freeze: `vm-cefi:.tabs/2/market-tick-data-service` = **6 ahead / 34 
 gates" — the exact failure the 2026-06-01 freeze was called to stop. The protection today is soft governance (CLAUDE.md
 conditional-push + `rebase --abort` rules + agent judgment), not enforcement.
 
-- [ ] [SCRIPT] P0. Add a pre-LDR-push gate (server-side pre-receive hook OR `quickmerge`/conditional-push wrapper) that
-      BLOCKS any non-fast-forward push to `HEAD:live-defi-rollout` unless either (a) the rebase replayed with ZERO
-      conflicts, or (b) the push carries an explicit plan-reference + human/main-agent ack. Force-resolved integrations
-      are rejected by default. Composes with the `Commit + Push + Flip` HARD RULE.
+- [x] ✅ [SCRIPT] P0. **OWNED BY QUICKMERGE (operator decision 2026-06-01).** The pre-LDR-push gate lives in
+      `quickmerge`'s conditional-push / SHA-sentinel path (QG must have passed on the exact SHA, else blocked) — NOT a
+      separate orchestrator hook. A fleet-wide git `pre-push` hook was evaluated + rejected: it requires `core.hooksPath`
+      (collides with prek's pre-commit hooks), only adds "block non-FF" (which GitHub already rejects server-side), and
+      carries fleet-wide blast radius for ~zero marginal value. Any hardening of the force-resolved-integration guard is
+      tracked against quickmerge (PM), not here. Originally: add a pre-LDR-push gate that BLOCKS any non-fast-forward push
+      to `HEAD:live-defi-rollout` unless (a) the rebase replayed with ZERO conflicts, or (b) explicit plan-ref + ack.
+      Composes with the `Commit + Push + Flip` HARD RULE.
 - [x] ✅ [SCRIPT] P1. ✅ DONE 2026-06-01 (live). `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` now SET fleet-wide: enabled on both
       running orchestrator VMs (`agent-orchestrator-vm-1` i-0c9b283b31d6b5ca7 + `agent-orch-vm-orchestrator-20260522`
       i-007e8d99d12831578) via systemd drop-in `slack-alerts.conf` (webhook fetched from GCP SM
