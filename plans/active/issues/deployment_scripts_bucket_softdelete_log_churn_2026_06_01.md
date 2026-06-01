@@ -57,19 +57,21 @@ the storage bloat.
 
 ## Recommended decision / tracked follow-ups
 
-- [ ] [INFRA] P1. Fix the VM `run.log` whole-file re-upload churn. `LogUploader.upload_once()`
-      (`unified-trading-library/unified_trading_library/lifecycle/uploader.py`) re-uploads the entire growing log to a
-      fixed GCS key every `UPLOAD_INTERVAL_SEC` (default 30 s) for the life of every VM. With soft-delete now off this
-      no longer bloats storage, but it still re-uploads GiB of redundant bytes per multi-hour VM. Fix: upload only the
-      tail/delta since the last byte offset (preferred), OR raise the default interval to ≥120 s + add a
-      min-growth-bytes threshold, OR drop the GCS live-log re-upload in favour of Cloud Logging + the existing daily
-      `log-archive` snapshot. Keep `final_upload()` on exit. Add a unit test bounding upload byte-volume/cadence. Repos:
-      unified-trading-library + deployment-service (`heartbeat_cli.py`). QG both.
+- [x] ✅ [INFRA] P1. **DONE 2026-06-01 (slot 7) — VM `run.log` re-upload churn fixed.** `LogUploader.upload_once()` now
+      re-uploads only when the log grew by ≥ `min_growth_bytes` (default 256 KiB) instead of byte-for-byte-changed, and
+      the default interval is 30 s → 120 s; idle-skip + shrink/rotation re-sync preserved; `final_upload()` still flushes
+      the full tail on exit; +5 unit tests bound upload cadence/volume. **unified-trading-library@`2bfb6a16`** (uploader
+      + tests) + **deployment-service@`130c85c`** (heartbeat_cli upload-interval default 30→120). Both QG-green for the
+      touched files (deployment-service has 1 pre-existing foreign failure — see flake note below).
 - [ ] [INFRA] P1. Schedule `cleanup_old_tarballs.py` (deployment-service/scripts/vm/) — currently never run (0 cron/TF/
       cloud-build references); 366 live `@sha` tarballs accumulate unbounded. Wire a daily Cloud Scheduler + Cloud Run
-      Job (or fold into an existing maintenance cron) running `--keep 5`. Also fix the stale docstring (lines 14-18) —
-      `@sha` naming IS adopted, cleanup IS needed. Terraform SSOT: deployment-service/terraform/gcp/. Add a
-      `owner/cadence/verifier/last_executed` runbook block. QG deployment-service.
+      Job (or fold into an existing maintenance cron) running `--keep 5`. (**Docstring fix DONE** deployment-service@`130c85c`
+      — `@sha` naming IS adopted, cleanup IS needed; only the TF scheduling remains.) Terraform SSOT:
+      deployment-service/terraform/gcp/. Add a `owner/cadence/verifier/last_executed` runbook block. QG deployment-service.
+- [ ] [TEST] P2. **(discovered 2026-06-01, slot 7)** deployment-service QG has a pre-existing foreign date-window flake:
+      `tests/unit/test_sports_tier3_fixture_diagnostic.py::TestFixtureCalendarDiagnostic::test_fixture_within_window_returned`
+      fails (current date moved outside a hardcoded fixture window). Unrelated to VM-infra. Fix the test to use a
+      relative/frozen window. Repo: deployment-service.
 - [ ] [INFRA] P2. Add prefix-scoped lifecycle rules to `gs://deployment-scripts-<pid>` (zero rules today). Delete
       `vm-logs/` live objects > 14 d and `log-archive/` > 90 d (currently indefinite). Verify the daily
       `vm_log_archival_cron` snapshots `run.log` → `log-archive/rolling/` before the vm-logs deletion window. Set via
