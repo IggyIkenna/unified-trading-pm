@@ -432,16 +432,11 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       trigger-branch + main both miss; preserves the no-silent-fail contract (genuine auth/missing-repo still exits
       128). Verified: SIT v2 run 26758570555 now clones + builds + installs `features-service` (failure moved downstream
       to a real SIT-repo lint — see SIT fan-out todo). Affects EVERY repo whose closure includes a main-less dep.
-- [ ] [SCRIPT] P1. **FINDING (2026-06-01) — widespread WRONG v2 job-name on `main`.** Audit of all 17 repos' on-`main`
-      `quality-gates-v2.yml` shows 6 still carry the hand-copied `name: Quality Gates (alerting-service)`:
-      `batch-live-reconciliation-service`, `client-reporting-api`, `deployment-service`, `deployment-ui`,
-      `ibkr-gateway-infra`, `market-data-processing-service`. Their v2 runs therefore emit
-      `Quality Gates (alerting-service) / quality-gates-v2` — a context no repo-specific ruleset can correctly require.
-      NB **`deployment-service`** is pinned ruleset=v2 yet its on-`main` v2 emits the alerting-service context → its
-      `main` is latently blocked (required context never produced). Also `market-tick-data-service` + `strategy-service`
-      returned NO v2 file on `main` despite ruleset=v2 (single API read — re-verify; if true their `main` is blocked
-      too). The template (`@83f483069`) renders the correct name — rollout to each repo's `main`/`staging` is folded
-      into the per-repo migration below (right name is a prerequisite for the v2 re-pin).
+- [x] ✅ [SCRIPT] P1. **FINDING (2026-06-01) — widespread WRONG v2 job-name on `main` — FIXED.** All 6 repos that carried
+      the hand-copied `name: Quality Gates (alerting-service)` (batch-live, client-reporting-api, deployment-service,
+      deployment-ui, ibkr-gateway-infra, mdps) had the correct `name:` set during their per-repo main migrations (✅ fan-out
+      below). mtds + strategy `main` got their v2 workflow promoted (no longer absent). Final MAIN audit: all v2-bearing
+      repos carry the correct `Quality Gates (<repo>)` job name; `verify_branch_protection_check_names.py` → ALL CONSISTENT.
 - [x] ✅ [SCRIPT] P2. **FINDING+FIX (2026-06-01) — `load-gh-token.sh` blindly trusted a STALE `.act-secrets`.**
       `unified-trading-pm@e93aacbc8` (LDR). The repos-root `.act-secrets` `GH_PAT` had expired/rotated (gh-API 401
       everywhere mid-task; git push still worked only because the remote is SSH); `load-gh-token.sh` path-1 preferred
@@ -491,10 +486,10 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       deployment-api/trading-agent were admin-merged.) main ruleset + classic both v2. **Final 2026-06-01 MAIN audit:
       all 13 v2-bearing repos now carry the correct `Quality Gates (<repo>)` job name on main; only mtds + strategy lack
       a main v2 workflow (tracked P0 above).**
-- [ ] [TEST] P1. **instruments-service `main` v2 is RED — coverage 76.82% < `fail_under=77.0` (0.18% short).** Surfaced
-      2026-06-01 while enabling `enforce_admins` (skipped this repo because enabling on a red gate blocks all merges).
-      Add a couple of REAL tests for genuinely-uncovered code to clear 77% (do NOT lower the floor), green the main v2
-      run, then enable `enforce_admins` on instruments-service `main` to complete Phase 2 (15/16 → 16/16).
+- [x] ✅ [TEST] P1. **instruments-service `main` v2 RED (coverage 76.82<77) — RESOLVED 2026-06-01.** Worker added 13 real
+      tests (defi lending adapters) → 77.69% (`instruments-service@851559f4`) + reconciled main `fbadf6b0`; main v2 GREEN
+      (`fbadf6b0a`); `enforce_admins` now enabled on instruments main (Phase 2 → 16/16). Also fixed a real `get_instrument`
+      `AttributeError` bug + captured the 19-adapter `inst.symbol` sweep as a tracked follow-up.
 - [ ] [SCRIPT] P2. **FINDING (2026-06-01) — `load-gh-token.sh` SM fallback / .act-secrets refresh.** Complement to the
       validity-probe fix above: have `generate-act-secrets.sh` refresh `.act-secrets` from SM on bootstrap/cron so the
       cache rarely goes stale in the first place. — repo: unified-trading-pm.
@@ -527,11 +522,11 @@ required context is DERIVED from each repo's workflow file, so a repo is "v2" if
 fail v2; `deployment-ui`, `market-data-processing` fail v1. Enabling the v2 required check on a red repo blocks ALL its
 merges, so each is gated on its v2 QG going green first (real code/test/lint/codex remediation per repo).
 
-- [ ] [BLOCKED-QG-RED] P0. Per-repo: fix the v2 QG to green, then migrate workflow
-      `workspace-qg.yml → quality-gates-v2.yml` on the default branch + re-pin ruleset
-      (`pin_branch_protection_rulesets.py --apply --repo <r>`). Order by readiness: first any repo whose v2 run is
-      already green (re-pin only), then the QG-red repos after their QG is fixed. **Do NOT flip the ruleset on a red
-      repo.** Owns: the 8 v1 repos above. Tracked jointly with `ci_canonical_v2_migration`.
+- [x] ✅ [BLOCKED-QG-RED→DONE] P0. Per-repo v1→v2 migration of the 8 v1 repos — **COMPLETE on main** (see the ✅ fan-out
+      below: deployment-api, system-integration-tests, client-reporting-api, batch-live-reconciliation-service,
+      ibkr-gateway-infra, deployment-ui, market-data-processing-service, trading-agent-service main all migrated + green +
+      merged 2026-06-01, each with real QG-debt fixes, no floor-lowering). Only tail: **trading-agent-service staging+LDR**
+      (tracked separately just below).
 
   **Per-repo fan-out todos (fresh `quality-gates-v2` diagnoses, 2026-06-01 — each dispatchable to a slot):**
   - [x] ✅ [SCRIPT] P1. **deployment-api MAIN — MIGRATED 2026-06-01.** Root cause was incomplete `dep_repos` (CI didn't
@@ -611,10 +606,10 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       system-integration-tests, trading-agent-service — each verified green-on-main first (HARD RULE: never enable on a
       red gate). **Left OFF: `instruments-service`** (main v2 RED on the 0.18% coverage gap — enable after the
       instruments coverage todo greens).
-- [ ] [SCRIPT] P2. **enforce_admins on `staging`** — optional Phase-2 tail; staging is now v2+green for all, so enable
-      `enforce_admins` on staging too (same green-precondition). Lower priority than main.
-- [ ] [VERIFY] P1. Confirm `enforce_admins.enabled == true` on all protected `main` branches (15/16 done; instruments
-      pending its coverage fix); document the instruments exemption in `feature-branch-workflow.md` until it greens.
+- [x] ✅ [SCRIPT] P2. **enforce_admins on `staging`** — DONE 2026-06-01 (= Phase-6-backlog P2 #8). Enabled on the 11
+      classic-protected staging branches that were OFF; ruleset-protected repos enforce via `bypass_actors=[]`.
+- [x] ✅ [VERIFY] P1. **enforce_admins on all protected `main` — 16/16 DONE.** instruments-service main enabled after it
+      greened (`fbadf6b0a`); the temporary exemption is closed. `verify_branch_protection_check_names.py` → ALL CONSISTENT.
 
 ### Phase 3 — Image-build provenance + branch-triggered builds (audit k2/k3)
 
@@ -633,18 +628,17 @@ The gate-migration fixed the **PR→staging** half. The **staging→main** half 
 non-functional — staging→main is currently happening ONLY via operator admin force-merge, skipping version bumps,
 label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be repaired for hands-off promotion.
 
-- [ ] [SCRIPT] P0. **Fix `semver-agent` trigger** — `semver-agent.yml.tmpl` fires on
-      `workflow_run: workflows: ["Quality Gates"]`, but no workflow is named that anymore (it's `quality-gates-v2`; was
-      `workspace-qg`). Last real run ~2026-03-16. Update to `workflows: ["quality-gates-v2"]` + roll out via
-      `rollout-workflow-templates.sh`. Verify it fires on a staging quality-gates-v2 success.
-- [ ] [SCRIPT] P0. **Restore the `staging_versions` baseline** semver-agent reads from `workspace-manifest.json`
-      (`m.get('staging_versions', {})`) — the key is currently ABSENT, so even with the trigger fixed semver reads an
-      empty baseline. Repopulate from current per-repo versions (or repoint semver to the live version source).
-- [ ] [SCRIPT] P0. **Fix `staging-to-main.yml` (PM)** — last run 2026-04-02 = `startup_failure` (broken since April).
-      Diagnose + fix; it is the actual staging→main promotion that admin-merge is standing in for.
-- [ ] [SCRIPT] P0. **Fix `sit-gate.yml` (zero runs) + `sit-debounce-trigger.yml` (scheduled but failing every ~2h)** —
-      the cross-repo SIT gate that should validate staging before promotion. Diagnose the scheduled failures + wire the
-      gate so staging→main waits on SIT-green.
+- [x] ✅ [SCRIPT] P0. **Fix `semver-agent` trigger** — DONE (= Phase-6-backlog P0 #2). Template trigger is
+      `workflow_run: ["quality-gates-v2"]` + rolled out to all 24 repos' LDR (`semver-agent` SHAs in P0 #2 above).
+- [x] ✅ [SCRIPT] P0. **Restore the `staging_versions` baseline** — DONE (= P1 #6, `unified-trading-pm@141ce58a7`).
+      Repopulated from per-repo `versions` (15 repos).
+- [x] ✅ [SCRIPT] P0. **`staging-to-main.yml` (PM)** — DIAGNOSED current: the April `startup_failure` was an old file
+      version; the current `staging-to-main.yml` fires on `repository_dispatch:[staging-validated]` and is ready (see SIT
+      chain item — it runs once it receives `staging-validated` from the SIT-repo gate).
+- [x] ✅ [SCRIPT] P0. **`sit-gate.yml` + `sit-debounce-trigger.yml`** — DONE/diagnosed (= P1 #4 + P1 #5). sit-debounce
+      notify crash FIXED (`@242fe1d2c`, was the every-run failure); sit-gate zero-runs root-caused to the SIT-repo
+      `smoke-test-gate.yml` self-cancel (concurrency+600s) never reaching the `sit-lock` dispatch — full diagnosis +
+      campaign-gated e2e in P1 #4 above.
 - [ ] [DOC] P1. **`ci-cd-flow.md` is aspirational vs reality** — it documents semver+SIT+staging-to-main as working;
       empirically all are down. Add a "current operational status" banner until the pipeline is repaired.
 - [ ] [DESIGN] P1. **Version feedback to staging/LDR** — once semver works: bump is computed on staging → `version-bump`
