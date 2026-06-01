@@ -60,9 +60,15 @@ reboot still wipes dispatch/backlog state).
       `SnapshotLoop` backup tick alongside GCS. + `boto3` dep + 8 `@mock_aws` tests (all pass). ruff + basedpyright 0
       errors. NB: 6 unrelated pre-existing test failures (slack/worker_liveness modules) + a `pexpect` venv gap observed
       in this worktree — neither touches `gcs_sync.py`; flagged for the env/test-health owner, not this commit.
-- [ ] [SCRIPT] [OPERATOR] P1. Provision `s3://uts-orchestrator-state-427895769566/` (or reuse the creds bucket
-      account) + set `ORCHESTRATOR_S3_BUCKET` systemd env on the 11 AWS VMs via SSM drop-in. Restart orchestrator;
-      confirm a snapshot object lands within one cadence window. Collision group: none. Estimate: 0.2 AI-day.
+- [~] 🟡 [SCRIPT] P1. Provision `s3://uts-orchestrator-state-427895769566/` + set `ORCHESTRATOR_S3_BUCKET` systemd env on
+      the 11 AWS VMs via SSM drop-in. Restart orchestrator; confirm a snapshot object lands within one cadence window.
+      Collision group: none. Estimate: 0.2 AI-day. 🟡 PARTIAL 2026-06-01 (slot-1, AWS admin `admin_od`):
+      **bucket created** `uts-orchestrator-state-427895769566` (ap-northeast-1, versioning on) + `enable_s3_snapshot.sh`
+      drop-in script shipped. **Env rollout pending** — canary-first per workspace rollout discipline; activation needs
+      an orchestrator restart per VM (the 6 behind=0 VMs already carry the @57dc8c2 code). End-to-end snapshot
+      verification additionally needs an authed `/api/snapshot` trigger (the fleet `/api/snapshot` is NOT
+      ALLOW_ANONYMOUS — returns "missing bearer token"). To roll: run `enable_s3_snapshot.sh` per VM via SSM, canary
+      vm-cefi first (a fleet wrapper can mirror `run_fleet_enable_watchdog.sh`), when ready to restart orchestrators.
 - [x] ✅ [DOCS] P2. Update the `codex/04-architecture/agent-orchestrator-overview.md` "Known gap" callout — flip it from
       "deferred future work" to "shipped — AWS↔S3 snapshot live" with the bucket name + env var. Collision group: none.
       Estimate: 0.05 AI-day. ✅ DONE 2026-06-01 — overview "Secrets + buckets" state-snapshot row + the callout now read
@@ -82,9 +88,25 @@ LDR" and "loop actually runs 24/7".
       AI-day. ✅ DONE 2026-06-01 — script shipped (read-only, parallel SSM probe, 11-VM list). Per-VM ✅ requires
       behind=0 AND flags=4/4 AND /health responds; else ⚠️ with the specific missing flag/behind-count. Exits 1 if any
       VM ⚠️. `bash -n` clean. Operator runs it (needs SSM creds) — see next item.
-- [ ] [SCRIPT] [OPERATOR-SSM] P1. Run the script fleet-wide; for any VM behind LDR HEAD or missing a flag, pm-pull +
-      enable + restart. Capture the before/after table in this plan. Wire the script as the live tool behind audit
-      checks m1b/m2c/m3b/m3c so future audits can run it in one shot. Collision group: none. Estimate: 0.15 AI-day.
+- [x] ✅ [SCRIPT] P1. Run the script fleet-wide; for any VM behind LDR HEAD or missing a flag, pm-pull + enable +
+      restart. Capture the before/after table in this plan. Wire the script as the live tool behind audit checks
+      m1b/m2c/m3b/m3c so future audits can run it in one shot. Collision group: none. Estimate: 0.15 AI-day.
+      ✅ RAN 2026-06-01T11:13Z (slot-1, AWS admin). Live result — **all four autonomy flags live (flags=4/4) on 10/11
+      VMs** → m1b/m2c/m3b/m3c GREEN (corrects the audit's m2c-RED assumption; the watchdog IS enabled fleet-wide, the
+      empty rollout-table was unfilled bookkeeping not un-rolled flags). Deploy-currency: 6 VMs at HEAD (behind=0:
+      vm-cefi, vm-defi, vm-sports, vm-tradfi, vm-trading-core, vm-cross-cutting); **3 behind** (vm-orchestrator=6,
+      vm-operator-ops=5, vm-prediction=6) — these need pm-pull+restart to load the autonomy HEAD; **vm-ml = SSM-degraded**
+      (see Findings). api-host ver=NA (central health is on :8765 not :8026 — known, not an outage).
+
+## Findings (from the live 2026-06-01 run)
+
+- 🟠 **F1 — 3 VMs behind agent-orchestrator HEAD** (vm-orchestrator/-operator-ops/-prediction, 5–6 commits). They run
+  older code than LDR (missing the S3 snapshot + possibly other autonomy fixes). Fix: `pm-pull` + restart orchestrator
+  on each. pm-pull.timer should catch them up; if it's wedged that's the root cause to chase.
+- 🔴 **F2 — vm-ml SSM execution is broken.** Every SSM command (even `echo`/`df`) returns Status=Failed with empty
+  stdout/stderr, despite EC2 status checks ok/running. Almost certainly disk-full (vm-ml's historical 142k-line backlog
+  bloat) or a wedged SSM agent — unrecoverable via SSM since SSM itself can't execute. **Needs SSH/operator** to clear
+  disk + restart the agent. vm-ml's autonomy flags + currency are therefore unverified.
 - [x] ✅ [DOCS] P2. ~~Bump the central `/health` version string~~ — **REVISED**: manual version bumps are forbidden
       (workspace rule "NEVER bump manually — semver-agent handles all"). The `feat(gcs_sync)` commit @57dc8c2 will
       auto-bump 0.6.0 → 0.7.0 via semver-agent on its next run, and `/health` reflects it after deploy. The canonical
