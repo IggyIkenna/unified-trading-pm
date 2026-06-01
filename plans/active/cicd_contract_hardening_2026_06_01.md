@@ -114,6 +114,18 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 - [x] ✅ [SCRIPT] P0. **Workflow-capable GH_TOKEN provisioning** — created `scripts/workspace/load-gh-token.sh` (SSOT),
       wired into `workspace-bootstrap.sh`, added a workflow-capability probe to `verify-slot-host-symmetry.sh`, codified
       the HARD RULE in CLAUDE.md. (PM-side, 2026-06-01.)
+- [x] ✅ [SCRIPT] P0. **DURABLE FIX — canonical `quality-gates-v2.yml.tmpl` + pyproject-derived dep_repos closure** —
+      `unified-trading-pm@83f483069` (LDR). Replaces the manual per-repo procedure for the v2 rollout. Two root causes
+      fixed: (1) the hand-copied per-repo `quality-gates-v2.yml` workflows all carried the stale job
+      `name: Quality Gates (alerting-service)`, breaking `pin_branch_protection_rulesets.py`'s required-check derivation
+      (`<job name:> / quality-gates-v2`) — the new template renders the correct `Quality Gates (__REPO_NAME__)`;
+      (2) `rollout-workflow-templates.sh get_dep_repos` derived `dep_repos` from `workspace-manifest.json`, which is
+      INCOMPLETE — SIT's manifest closure was 10 vs the pyproject closure 12 (missing `alerting-service` +
+      `client-reporting-api`, the exact `metadata for alerting-service==0.1.0 @ editable+../alerting-service` install
+      failure), and `ml-service` carried a phantom `unified-trading-deployment`. `get_dep_repos` now BFS-walks each
+      repo's pyproject `path = "../<repo>"` editable deps (what `uv sync` actually resolves), manifest fallback for
+      nodes lacking a pyproject. Validated via `--dry-run`: SIT=12, deployment-api=5, green repos
+      (strategy/alerting) closures unchanged → regression-free for already-green repos.
 - [ ] [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
       currently fetches `GH_PAT` only for clone-time HTTPS; also export it as `GH_TOKEN`/`GITHUB_TOKEN` in the worker
       systemd env (or source `load-gh-token.sh` at worker start) so VM workers can edit workflows too. — repo:
