@@ -116,17 +116,18 @@ estimate_calibrated_ai_days: 1.2
       **Verified**: pushing the fix (features-service@dba0f5bf) created **zero** agent-audit runs (vs a startup_failure on
       every prior push) → compiles clean + correctly dispatch-only. — features-service@dba0f5bf | provenance: Item 4
       investigation 2026-06-01. **Cross-repo follow-ups tracked below.**
-- [ ] [SCRIPT] P3. **Migrate `market-data-processing-service` `agent-audit.yml` to the canonical thin form** (same
-      `startup_failure`-on-push defect as features-service — has the `fromJSON(inputs.attempt` self-dispatch step).
-      Replace `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin form (model on
-      `execution-service`/`features-service@dba0f5bf`); set `dep_repos` to match its own `quality-gates-v2.yml`. Verify a
-      push to `live-defi-rollout` produces no new agent-audit run (`gh run list --workflow agent-audit.yml --repo
-      IggyIkenna/market-data-processing-service`). Land on LDR. Provenance: agent-audit.yml discovery 2026-06-01.
-- [ ] [SCRIPT] P3. **Migrate `market-tick-data-service` `agent-audit.yml` to the canonical thin form** (same
-      `startup_failure`-on-push defect — confirmed 0s push failures + has the `fromJSON(inputs.attempt` self-dispatch
-      step). Replace `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin form;
-      set `dep_repos` to match its own `quality-gates-v2.yml`. Verify a push to `live-defi-rollout` produces no new
-      agent-audit run. Land on LDR. Provenance: agent-audit.yml discovery 2026-06-01.
+- [x] ✅ [SCRIPT] P3. **Migrate `market-data-processing-service` `agent-audit.yml` to the canonical thin form** (same
+      `startup_failure`-on-push defect as features-service — had the `fromJSON(inputs.attempt` self-dispatch step).
+      Replaced `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin form;
+      `dep_repos: "unified-trading-library market-tick-data-service unified-api-contracts"` (matches its own
+      `quality-gates-v2.yml`). **Verified**: push of the fix created zero new agent-audit runs (latest run predates it). —
+      market-data-processing-service@e992a71 | provenance: agent-audit.yml discovery 2026-06-01.
+- [x] ✅ [SCRIPT] P3. **Migrate `market-tick-data-service` `agent-audit.yml` to the canonical thin form** (same
+      `startup_failure`-on-push defect — confirmed 0s push failures + had the `fromJSON(inputs.attempt` self-dispatch
+      step). Replaced `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin form;
+      `dep_repos: "unified-trading-library unified-api-contracts"` (matches its own `quality-gates-v2.yml`). **Verified**:
+      push of the fix created zero new agent-audit runs (latest run predates it). — market-tick-data-service@6fcca80f |
+      provenance: agent-audit.yml discovery 2026-06-01.
 - [x] ✅ [SCRIPT] P2. **Runbook Execution-Owner check fails on a vendored codex mirror** (surfaced running the Item 5b
       merge-prerequisite QG). `scripts/quality_gates/check_runbook_execution_owner.py` walks the whole workspace for
       `*runbook*.md` and flagged `unified-trading-system-ui/context/codex/05-infrastructure/sit-runbook.md` (no
