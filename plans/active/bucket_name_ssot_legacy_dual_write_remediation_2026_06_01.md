@@ -38,10 +38,18 @@ related:
 > an aggressive prune cron deletes unreferenced pinned tarballs within seconds of upload, so the pin can't be used
 > either. All 20 VMs deleted; **no data harm** (script never ran). 3 writer VMs still DRAINED. See Phase 5 blocker todo.
 >
-> **Key mitigating finding**: a live micro-run (tradfi day-2025-11-02) returned `skipped=3 copied=0` → the tick DATA was
-> **dual-written to both legacy AND canonical**. So canonical already holds the data; the real gap is the MANIFEST
-> (`_index` rows), which can be closed by the `--manifest-only` seed once data completeness is verified — a path that
-> does NOT need the VM/tarball fleet.
+> **DUAL-WRITE IS THE BUG, NOT A SHORTCUT (operator 2026-06-01)**: the END STATE is a single CANONICAL SSOT —
+> legacy buckets DELETED, not left in place. Status of the two legacy-side activities:
+> - **New legacy DATA writes: STOPPED** — writers drained + code fixed; `day-2026-05` sample = `total=0` on all 5
+>   buckets (no recent legacy data). Where legacy data DOES exist (tradfi day-2025-11-02) it was dual-written, so
+>   canonical holds it too.
+> - **Legacy `_index` maintenance: STILL RUNNING** — 10 `uts-prod-manifest-consolidator-*-legacy-cron` Cloud Scheduler
+>   jobs (5 market-data + 5 instruments) run `*/1 * * * *`, keeping legacy `_index` warm = a parallel SSOT. MUST be
+>   paused as decommission (coordinate with `manifest_consolidator_liveness_health_2026_06_01.md` +
+>   `aws_manifest_consolidator_scope_2026_05_21.md`).
+>
+> **Path to single canonical SSOT**: verify canonical holds all legacy data → close the manifest gap
+> (`--manifest-only` seed) → pause the 10 legacy crons → DELETE the legacy buckets.
 
 **Finding (operator-directed 2026-06-01)**: legacy flat tick-data buckets
 (`market-data-tick-<group>-central-element-323112`, plus long-form `market-data-tick-prediction-…`) are **still
@@ -167,11 +175,24 @@ relaunch.
       `_index` rows as a per-VM shard in canonical; the running consolidator folds + dedups them in, preserving
       `pipeline_mode`. Then verify canonical row parity (legacy ∪ canonical).
 
-## Phase 4 — Relaunch clean (P0) — AFTER migration (operator sequence)
+## Phase 4 — Relaunch drained writers (P0) — GATED on associated migration plans (operator 2026-06-01)
 
-- [ ] [SCRIPT] P0. Relaunch the 3 drained writers (`mdps-backfill-defi`, `mdps-prediction-2025`, `sports-scheduler`)
-      from the Phase-2 tarball; T+10min verify each writes ONLY to the canonical `-prd-`/`-pred-prd-` bucket
-      (`_index` mtime advances on canonical, NOT on the flat legacy name).
+**The 3 writer VMs stay DOWN** (operator decision 2026-06-01) until the associated migration/manifest plans below have
+run — so the legacy buckets stay frozen through the manifest work and the writers come back only onto fully-canonical
+infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before these complete for their asset_group):
+
+- `plans/active/defi_manifest_canonicalisation_2026_06_01.md` (defi → `mdps-backfill-defi`)
+- `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`
+- `plans/active/pipeline_mode_implementation_2026_05_28.md` + `pipeline_mode_audit_2026_05_28.md`
+- `plans/active/manifest_consolidator_liveness_health_2026_06_01.md`
+- `plans/active/aws_manifest_consolidator_scope_2026_05_21.md`
+- this plan's Phase-5 manifest seed + verify.
+
+- [ ] [SCRIPT] P0. **GATED** — after the prerequisite plans above complete for each asset_group, relaunch
+      `mdps-backfill-defi` (defi), `mdps-prediction-2025` (prediction), `sports-scheduler` (sports) from a tarball that
+      carries the MDPS canonical-bucket fix (`market-data-processing-service@61900a3`); T+10min verify each writes ONLY
+      to the canonical `-prd-`/`-pred-prd-` bucket (`_index` mtime advances on canonical, NOT the flat legacy name).
+      NOTE: same pinned-tarball-prune blocker applies — resolve tarball persistence first.
 
 ## Phase 6 — Verify (P0)
 
@@ -179,10 +200,18 @@ relaunch.
 - [ ] [SCRIPT] P0. Canonical row count ≥ pre-migration (legacy ∪ canonical), zero `pipeline_mode IS NULL`, zero
       shard-key dupes. Per-asset_group A3 manifest-divergence check clean.
 
-## Phase 7 — Decommission legacy buckets (P1)
+## Phase 7 — Decommission legacy → single canonical SSOT (P0 — operator: "stop dual-writing, need SSOT canonical")
 
-- [ ] [SCRIPT] P1. After verification + a 48h soak: empty + delete (or lifecycle-tombstone) the legacy flat +
-      tier-first + long-form buckets. Remove any lingering references. Record decommission in
+- [ ] [SCRIPT] P0. **Pause the 10 legacy consolidator crons** (they keep the legacy `_index` warm as a parallel SSOT).
+      `gcloud scheduler jobs pause <name> --location=asia-northeast1 --project=central-element-323112` for:
+      `uts-prod-manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}-legacy-cron` +
+      `uts-prod-manifest-consolidator-instruments-{cefi,defi,tradfi,sports,prediction}-legacy-cron`. Coordinate with
+      `manifest_consolidator_liveness_health_2026_06_01.md` so the liveness watchdog does not alert/restart them. Then
+      remove the legacy entries from the Terraform (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`)
+      so they are not re-created on `tofu apply`.
+- [ ] [SCRIPT] P0. After migration verified (data + manifest fully in canonical) + a short soak: empty + delete the
+      legacy flat + tier-first + long-form tick buckets (and the instruments-store legacy buckets per the adjacent
+      drift). Canonical `-prd-`/`-pred-prd-` becomes the sole SSOT. Record in
       `_index/snapshots/decommission_2026_06_0X.md`.
 
 ## Phase 8 — Governance + codex (P1)
