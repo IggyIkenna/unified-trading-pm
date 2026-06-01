@@ -43,8 +43,11 @@ import pandas as pd
 
 try:
     from unified_api_contracts import external_sources_for, has_source_priority
-except Exception as exc:  # noqa: BLE001 — degrade to no-op if UAC absent
-    print(f"[audit_source_column_distribution] unified_api_contracts not importable: {exc} — cannot audit.", file=sys.stderr)
+except Exception as exc:
+    print(
+        f"[audit_source_column_distribution] unified_api_contracts not importable: {exc} — cannot audit.",
+        file=sys.stderr,
+    )
     raise SystemExit(0) from exc
 
 
@@ -125,8 +128,12 @@ def report(cells: list[CellStats]) -> tuple[int, int]:
 
 def main(argv: Iterable[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Read-only audit of the manifest source-column distribution.")
-    parser.add_argument("--manifest-path", required=True, help="Consolidated availability-index parquet (local or gs:// URI).")
-    parser.add_argument("--strict", action="store_true", help="Exit 1 if any external-vendor cell has blank source rows.")
+    parser.add_argument(
+        "--manifest-path", required=True, help="Consolidated availability-index parquet (local or gs:// URI)."
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="Exit 1 if any external-vendor cell has blank source rows."
+    )
     args = parser.parse_args(list(argv) if argv is not None else None)
 
     df = _read_manifest(args.manifest_path)

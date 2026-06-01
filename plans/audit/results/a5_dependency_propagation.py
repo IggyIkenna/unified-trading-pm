@@ -1,7 +1,7 @@
-"""A5 — Dependency-fail propagation audit (per service × mode).
+"""A5 - Dependency-fail propagation audit (per service x mode).
 
 Mega-audit Phase A5 (operator directive 2026-05-20). Every service that
-consumes upstream data must FAIL LOUDLY when upstream data is missing —
+consumes upstream data must FAIL LOUDLY when upstream data is missing -
 never silently `record_empty(reason="")` or fall through to zero rows.
 
 Two sub-dimensions:
@@ -17,19 +17,19 @@ Two sub-dimensions:
 
 The scanner classifies files by what dependency-check patterns they exhibit:
 
-- `READS_UPSTREAM_MANIFEST` — code reads `availability_index` / manifest rows
-- `RAISES_DEPENDENCY_ERROR` — has `raise DependencyError(...)` or `fail_fast=True`
-- `CATCHES_DEPENDENCY_ERROR_SILENTLY` — `except DependencyError: pass` /
+- `READS_UPSTREAM_MANIFEST` - code reads `availability_index` / manifest rows
+- `RAISES_DEPENDENCY_ERROR` - has `raise DependencyError(...)` or `fail_fast=True`
+- `CATCHES_DEPENDENCY_ERROR_SILENTLY` - `except DependencyError: pass` /
   `except DependencyError: continue` / `except ... return None/[]` patterns
-  (these are the BUGS — silent swallowing)
-- `RAISES_STALE_UPSTREAM_ERROR` — `raise StaleUpstreamError(...)`
-- `WARNS_BUT_PROCEEDS` — `logger.warning(...)` + no raise inside an
+  (these are the BUGS - silent swallowing)
+- `RAISES_STALE_UPSTREAM_ERROR` - `raise StaleUpstreamError(...)`
+- `WARNS_BUT_PROCEEDS` - `logger.warning(...)` + no raise inside an
   upstream-check block (suspicious)
-- `RECORD_EMPTY_WITHOUT_TYPED_REASON` — calls `record_empty(reason="")` or
+- `RECORD_EMPTY_WITHOUT_TYPED_REASON` - calls `record_empty(reason="")` or
   `record_empty(reason="SOMETHING_FREE_FORM_NOT_IN_ENUM")` after an upstream
   miss
 
-Per service × mode, every (consumer, upstream) edge MUST resolve to one
+Per service x mode, every (consumer, upstream) edge MUST resolve to one
 of: RAISES_DEPENDENCY_ERROR (batch) / RAISES_STALE_UPSTREAM_ERROR (live).
 Anything else is review-blocking.
 
@@ -122,8 +122,12 @@ RECORD_EMPTY_FREEFORM = re.compile(r"""record_empty\s*\([^)]*reason\s*=\s*["']([
 EMPTY_CONFIRMED_REASONS: set[str] = set()
 try:
     hc_path = (
-        WORKSPACE_ROOT / "unified-api-contracts" / "unified_api_contracts"
-        / "canonical" / "crosscutting" / "honest_coverage.py"
+        WORKSPACE_ROOT
+        / "unified-api-contracts"
+        / "unified_api_contracts"
+        / "canonical"
+        / "crosscutting"
+        / "honest_coverage.py"
     )
     if hc_path.exists():
         for m in re.finditer(
@@ -244,7 +248,7 @@ def main() -> int:
                 ]
             )
 
-    # Per-service × mode summary.
+    # Per-service x mode summary.
     per_service_handler_total: dict[str, int] = defaultdict(int)
     per_service_batch_handler: dict[str, int] = defaultdict(int)
     per_service_live_handler: dict[str, int] = defaultdict(int)
@@ -274,15 +278,15 @@ def main() -> int:
 
     summary_path = out_dir / "dependency_propagation_2026_05_20_summary.md"
     with summary_path.open("w", encoding="utf-8") as fh:
-        fh.write("# A5 — Dependency-fail propagation summary\n\n")
+        fh.write("# A5 - Dependency-fail propagation summary\n\n")
         fh.write(f"_Generated: {datetime.now(UTC).isoformat()}_\n\n")
         fh.write(f"Files scanned: {total_files}\n\n")
         fh.write(f"Known EmptyConfirmedReason enum members harvested from UAC: {len(EMPTY_CONFIRMED_REASONS)}\n\n")
 
-        fh.write("## Per-service × mode summary\n\n")
+        fh.write("## Per-service x mode summary\n\n")
         fh.write(
             "| Service | Batch handlers | Live handlers | Files raising DependencyError"
-            " | Files raising StaleUpstreamError | Silent catches | Blank `reason=\"\"`"
+            ' | Files raising StaleUpstreamError | Silent catches | Blank `reason=""`'
             " | Freeform reason |\n"
         )
         fh.write("|---|---:|---:|---:|---:|---:|---:|---:|\n")
@@ -315,11 +319,11 @@ def main() -> int:
                 fh.write(f"- Warn-but-proceed pattern (lines): {top.warns_but_proceeds[:5]}\n")
             if top.record_empty_with_blank_reason:
                 fh.write(
-                    f"- `record_empty(reason=\"\")` blank-reason (lines): {top.record_empty_with_blank_reason[:5]}\n"
+                    f'- `record_empty(reason="")` blank-reason (lines): {top.record_empty_with_blank_reason[:5]}\n'
                 )
             if top.record_empty_with_freeform_reason:
                 fh.write(
-                    "- `record_empty(reason=\"NOT_IN_ENUM\")` freeform-reason (lines):"
+                    '- `record_empty(reason="NOT_IN_ENUM")` freeform-reason (lines):'
                     f" {top.record_empty_with_freeform_reason[:5]}\n"
                 )
 
@@ -330,7 +334,7 @@ def main() -> int:
         )
         fh.write(
             "- Wire a new QG step `scripts/quality_gates/check_dependency_fail_propagation.py`"
-            " that ratchets these counts down per service × mode.\n"
+            " that ratchets these counts down per service x mode.\n"
         )
         fh.write(
             "- Per CLAUDE.md HARD RULE, slots doing layer-N+1 work on services with open A5 violations"

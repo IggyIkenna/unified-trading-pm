@@ -594,7 +594,7 @@ def add_to_project(issue_url: str, dry_run: bool) -> bool:
     ]
 
     result: subprocess.CompletedProcess[str] = subprocess.run(cmd, capture_output=True, text=True)
-    if result.returncode != 0:
+    if result.returncode != 0:  # noqa: SIM103
         # Silently continue if already added or other error
         return False
     return True

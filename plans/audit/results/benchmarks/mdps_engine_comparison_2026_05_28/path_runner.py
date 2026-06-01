@@ -30,7 +30,7 @@ import json
 import os
 import sys
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import psutil
@@ -38,8 +38,7 @@ import psutil
 TIMEFRAMES_SEC = [15, 60, 300, 900, 3600, 14400, 86400]
 TIMEFRAME_NAMES = ["15s", "1m", "5m", "15m", "1h", "4h", "24h"]
 DAY_STR = "2026-04-15"
-DAY_START_US = int(datetime.strptime(DAY_STR, "%Y-%m-%d")
-                   .replace(tzinfo=timezone.utc).timestamp() * 1_000_000)
+DAY_START_US = int(datetime.strptime(DAY_STR, "%Y-%m-%d").replace(tzinfo=UTC).timestamp() * 1_000_000)
 PRICE_COL = "price"
 SIZE_COL = "amount"
 TS_COL_NS = "local_timestamp"
@@ -53,31 +52,31 @@ def rss_mb() -> float:
 # PATH A — pure polars (LazyFrame, scan_parquet, group_by, write_parquet)
 # ---------------------------------------------------------------------------
 
+
 def path_a_pure_polars(parquet_path: Path, out_dir: Path) -> dict:
     import polars as pl
+
     t0 = time.perf_counter()
     peak_rss = rss_mb()
 
-    base = pl.scan_parquet(parquet_path).with_columns(
-        ((pl.col(TS_COL_NS) // 1000) - DAY_START_US).alias("ts_us")
-    )
+    base = pl.scan_parquet(parquet_path).with_columns(((pl.col(TS_COL_NS) // 1000) - DAY_START_US).alias("ts_us"))
 
-    for tf_name, tf_sec in zip(TIMEFRAME_NAMES, TIMEFRAMES_SEC):
+    for tf_name, tf_sec in zip(TIMEFRAME_NAMES, TIMEFRAMES_SEC, strict=False):
         interval_us = tf_sec * 1_000_000
         n_candles = 86400 // tf_sec
         candles = (
-            base
-            .with_columns((pl.col("ts_us") // interval_us).alias("interval_idx"))
-            .filter((pl.col("interval_idx") >= 0)
-                    & (pl.col("interval_idx") < n_candles))
+            base.with_columns((pl.col("ts_us") // interval_us).alias("interval_idx"))
+            .filter((pl.col("interval_idx") >= 0) & (pl.col("interval_idx") < n_candles))
             .group_by("interval_idx")
-            .agg([
-                pl.col(PRICE_COL).first().alias("open"),
-                pl.col(PRICE_COL).max().alias("high"),
-                pl.col(PRICE_COL).min().alias("low"),
-                pl.col(PRICE_COL).last().alias("close"),
-                pl.col(SIZE_COL).sum().alias("volume"),
-            ])
+            .agg(
+                [
+                    pl.col(PRICE_COL).first().alias("open"),
+                    pl.col(PRICE_COL).max().alias("high"),
+                    pl.col(PRICE_COL).min().alias("low"),
+                    pl.col(PRICE_COL).last().alias("close"),
+                    pl.col(SIZE_COL).sum().alias("volume"),
+                ]
+            )
             .sort("interval_idx")
             .collect()
         )
@@ -95,6 +94,7 @@ def path_a_pure_polars(parquet_path: Path, out_dir: Path) -> dict:
 # PATH B — pandas + pyarrow dtype_backend end-to-end
 # ---------------------------------------------------------------------------
 
+
 def path_b_pandas_pyarrow(parquet_path: Path, out_dir: Path) -> dict:
     import pandas as pd
     import pyarrow as pa
@@ -108,22 +108,25 @@ def path_b_pandas_pyarrow(parquet_path: Path, out_dir: Path) -> dict:
     ts_us = (df[TS_COL_NS] // 1000) - DAY_START_US
     peak_rss = max(peak_rss, rss_mb())
 
-    for tf_name, tf_sec in zip(TIMEFRAME_NAMES, TIMEFRAMES_SEC):
+    for tf_name, tf_sec in zip(TIMEFRAME_NAMES, TIMEFRAMES_SEC, strict=False):
         interval_us = tf_sec * 1_000_000
         n_candles = 86400 // tf_sec
         interval_idx = ts_us // interval_us
         mask = (interval_idx >= 0) & (interval_idx < n_candles)
         sub = df.loc[mask].assign(_idx=interval_idx[mask])
-        agg = sub.groupby("_idx", as_index=False).agg(
-            open=(PRICE_COL, "first"),
-            high=(PRICE_COL, "max"),
-            low=(PRICE_COL, "min"),
-            close=(PRICE_COL, "last"),
-            volume=(SIZE_COL, "sum"),
-        ).sort_values("_idx")
+        agg = (
+            sub.groupby("_idx", as_index=False)
+            .agg(
+                open=(PRICE_COL, "first"),
+                high=(PRICE_COL, "max"),
+                low=(PRICE_COL, "min"),
+                close=(PRICE_COL, "last"),
+                volume=(SIZE_COL, "sum"),
+            )
+            .sort_values("_idx")
+        )
         out_path = out_dir / f"{parquet_path.stem}_{tf_name}.parquet"
-        pq.write_table(pa.Table.from_pandas(agg, preserve_index=False),
-                       str(out_path))
+        pq.write_table(pa.Table.from_pandas(agg, preserve_index=False), str(out_path))
         peak_rss = max(peak_rss, rss_mb())
         del sub, agg
     del df, ts_us
@@ -138,8 +141,10 @@ def path_b_pandas_pyarrow(parquet_path: Path, out_dir: Path) -> dict:
 #                              polars group_by → polars write)
 # ---------------------------------------------------------------------------
 
+
 def path_c_current_mdps(parquet_path: Path, out_dir: Path) -> dict:
     import io
+
     import polars as pl
 
     t0 = time.perf_counter()
@@ -157,26 +162,24 @@ def path_c_current_mdps(parquet_path: Path, out_dir: Path) -> dict:
     del pd_df
     peak_rss = max(peak_rss, rss_mb())
 
-    base = pl_df2.with_columns(
-        ((pl.col(TS_COL_NS) // 1000) - DAY_START_US).alias("ts_us")
-    )
+    base = pl_df2.with_columns(((pl.col(TS_COL_NS) // 1000) - DAY_START_US).alias("ts_us"))
 
-    for tf_name, tf_sec in zip(TIMEFRAME_NAMES, TIMEFRAMES_SEC):
+    for tf_name, tf_sec in zip(TIMEFRAME_NAMES, TIMEFRAMES_SEC, strict=False):
         interval_us = tf_sec * 1_000_000
         n_candles = 86400 // tf_sec
         candles = (
-            base
-            .with_columns((pl.col("ts_us") // interval_us).alias("interval_idx"))
-            .filter((pl.col("interval_idx") >= 0)
-                    & (pl.col("interval_idx") < n_candles))
+            base.with_columns((pl.col("ts_us") // interval_us).alias("interval_idx"))
+            .filter((pl.col("interval_idx") >= 0) & (pl.col("interval_idx") < n_candles))
             .group_by("interval_idx")
-            .agg([
-                pl.col(PRICE_COL).first().alias("open"),
-                pl.col(PRICE_COL).max().alias("high"),
-                pl.col(PRICE_COL).min().alias("low"),
-                pl.col(PRICE_COL).last().alias("close"),
-                pl.col(SIZE_COL).sum().alias("volume"),
-            ])
+            .agg(
+                [
+                    pl.col(PRICE_COL).first().alias("open"),
+                    pl.col(PRICE_COL).max().alias("high"),
+                    pl.col(PRICE_COL).min().alias("low"),
+                    pl.col(PRICE_COL).last().alias("close"),
+                    pl.col(SIZE_COL).sum().alias("volume"),
+                ]
+            )
             .sort("interval_idx")
         )
         # Mimic the second to_pandas round trip if writer needs pandas
@@ -196,6 +199,7 @@ def path_c_current_mdps(parquet_path: Path, out_dir: Path) -> dict:
 # PATH D — polars eager read (no to_pandas round trip; minimum-rewrite target)
 # ---------------------------------------------------------------------------
 
+
 def path_d_polars_eager(parquet_path: Path, out_dir: Path) -> dict:
     import polars as pl
 
@@ -205,26 +209,24 @@ def path_d_polars_eager(parquet_path: Path, out_dir: Path) -> dict:
     df = pl.read_parquet(parquet_path, low_memory=True)
     peak_rss = max(peak_rss, rss_mb())
 
-    base = df.with_columns(
-        ((pl.col(TS_COL_NS) // 1000) - DAY_START_US).alias("ts_us")
-    )
+    base = df.with_columns(((pl.col(TS_COL_NS) // 1000) - DAY_START_US).alias("ts_us"))
 
-    for tf_name, tf_sec in zip(TIMEFRAME_NAMES, TIMEFRAMES_SEC):
+    for tf_name, tf_sec in zip(TIMEFRAME_NAMES, TIMEFRAMES_SEC, strict=False):
         interval_us = tf_sec * 1_000_000
         n_candles = 86400 // tf_sec
         candles = (
-            base
-            .with_columns((pl.col("ts_us") // interval_us).alias("interval_idx"))
-            .filter((pl.col("interval_idx") >= 0)
-                    & (pl.col("interval_idx") < n_candles))
+            base.with_columns((pl.col("ts_us") // interval_us).alias("interval_idx"))
+            .filter((pl.col("interval_idx") >= 0) & (pl.col("interval_idx") < n_candles))
             .group_by("interval_idx")
-            .agg([
-                pl.col(PRICE_COL).first().alias("open"),
-                pl.col(PRICE_COL).max().alias("high"),
-                pl.col(PRICE_COL).min().alias("low"),
-                pl.col(PRICE_COL).last().alias("close"),
-                pl.col(SIZE_COL).sum().alias("volume"),
-            ])
+            .agg(
+                [
+                    pl.col(PRICE_COL).first().alias("open"),
+                    pl.col(PRICE_COL).max().alias("high"),
+                    pl.col(PRICE_COL).min().alias("low"),
+                    pl.col(PRICE_COL).last().alias("close"),
+                    pl.col(SIZE_COL).sum().alias("volume"),
+                ]
+            )
             .sort("interval_idx")
         )
         out_path = out_dir / f"{parquet_path.stem}_{tf_name}.parquet"
@@ -279,33 +281,39 @@ def main():
         gc.collect()
         rss_after = rss_mb()
         cumulative_rss_after_each.append(rss_after)
-        results.append({
-            "file": p.name,
-            "file_size_mb": p.stat().st_size / 1024 / 1024,
-            "wall_clock_s": r["wall_clock_s"],
-            "peak_rss_mb": r["peak_rss_mb"],
-            "rss_after_mb": rss_after,
-        })
+        results.append(
+            {
+                "file": p.name,
+                "file_size_mb": p.stat().st_size / 1024 / 1024,
+                "wall_clock_s": r["wall_clock_s"],
+                "peak_rss_mb": r["peak_rss_mb"],
+                "rss_after_mb": rss_after,
+            }
+        )
 
     total_wall = time.perf_counter() - overall_t0
     final_rss = rss_mb()
 
-    print(json.dumps({
-        "path_id": path_id,
-        "label": label,
-        "polars": __import__("polars").__version__,
-        "pandas": __import__("pandas").__version__,
-        "pyarrow": __import__("pyarrow").__version__,
-        "python": sys.version.split()[0],
-        "pid": os.getpid(),
-        "rss_after_warmup_mb": rss_after_warmup,
-        "rss_final_mb": final_rss,
-        "rss_retention_mb": final_rss - rss_after_warmup,
-        "total_wall_s": total_wall,
-        "n_instruments": len(parquets),
-        "per_instrument": results,
-        "cumulative_rss_after_each_mb": cumulative_rss_after_each,
-    }))
+    print(
+        json.dumps(
+            {
+                "path_id": path_id,
+                "label": label,
+                "polars": __import__("polars").__version__,
+                "pandas": __import__("pandas").__version__,
+                "pyarrow": __import__("pyarrow").__version__,
+                "python": sys.version.split()[0],
+                "pid": os.getpid(),
+                "rss_after_warmup_mb": rss_after_warmup,
+                "rss_final_mb": final_rss,
+                "rss_retention_mb": final_rss - rss_after_warmup,
+                "total_wall_s": total_wall,
+                "n_instruments": len(parquets),
+                "per_instrument": results,
+                "cumulative_rss_after_each_mb": cumulative_rss_after_each,
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -56,7 +56,11 @@ MAX_DATE = date(2026, 5, 20)
 def load_expected_dump() -> pd.DataFrame:
     """Read the A2 dump as a pandas DataFrame."""
     dump_path = (
-        WORKSPACE_ROOT / "unified-trading-pm" / "plans" / "audit" / "results"
+        WORKSPACE_ROOT
+        / "unified-trading-pm"
+        / "plans"
+        / "audit"
+        / "results"
         / "expected_coverage_dump_2026_05_20.parquet"
     )
     if not dump_path.exists():

@@ -118,7 +118,8 @@ def audit_data_side(fs: gcsfs.GCSFileSystem) -> list[dict[str, object]]:
             vc = df["schema_version"].value_counts(dropna=False).to_dict()
             for sv, count in vc.items():
                 sv_key = (
-                    "NULL" if (sv is None or (isinstance(sv, float) and sv != sv))
+                    "NULL"
+                    if (sv is None or (isinstance(sv, float) and sv != sv))
                     else str(int(sv) if isinstance(sv, (int, float)) else sv)
                 )
                 rows.append(
@@ -223,8 +224,7 @@ def main() -> int:
         fh.write("| asset_group | bucket | schema_version | rows |\n|---|---|---:|---:|\n")
         for row in sorted(data_rows, key=lambda r: (r["asset_group"], r["bucket"], r["schema_version"])):
             fh.write(
-                f"| {row['asset_group']} | {row['bucket']} | "
-                f"{row['schema_version']} | {row['row_count']:,} |\n",
+                f"| {row['asset_group']} | {row['bucket']} | {row['schema_version']} | {row['row_count']:,} |\n",
             )
 
         fh.write("\n## Data side — per-asset-group v<8 row counts (review-blocking)\n\n")

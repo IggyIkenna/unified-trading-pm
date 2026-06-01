@@ -22,7 +22,6 @@ import time
 
 import gcsfs
 import pandas as pd
-
 from unified_api_contracts.registry.chain_env import get_chain_genesis_date
 
 PROJECT_ID = "central-element-323112"
@@ -39,7 +38,7 @@ def _read_retry(fs, path, tries=6):
     for i in range(tries):
         try:
             return pd.read_parquet(fs.open(path))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             last = exc
             time.sleep(1.5 * (i + 1))
     raise last  # type: ignore[misc]
@@ -53,7 +52,7 @@ def main() -> int:
         index = f"{bucket}/_index/availability_index.parquet"
         try:
             df = _read_retry(fs, index)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"{name}: SKIP after retries ({type(exc).__name__})")
             continue
         df = df[[c for c in df.columns if not c.startswith("__")]].copy()

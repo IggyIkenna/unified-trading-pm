@@ -1,8 +1,8 @@
-"""A6 — Batch-live adapter parity audit.
+"""A6 - Batch-live adapter parity audit.
 
 Mega-audit Phase A6 (operator directive 2026-05-20). Per CLAUDE.md
-"Batch = Live (CRITICAL)" — live + batch are operational modes of the
-same pipeline. For every venue × data_type with a batch adapter, there
+"Batch = Live (CRITICAL)" - live + batch are operational modes of the
+same pipeline. For every venue x data_type with a batch adapter, there
 MUST be a live adapter (potentially from a different upstream source,
 but same schema + same manifest emission contract).
 
@@ -119,7 +119,7 @@ def extract_venue_data_type(path_str: str) -> tuple[set[str], set[str]]:
     return venues, data_types
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     paths = walk_repos()
     print(f"Walking {len(paths):,} files across {len(ADAPTER_REPOS)} adapter repos ...", flush=True)
 
@@ -155,7 +155,7 @@ def main() -> int:
                 if is_live:
                     matrix[(v, dt)]["live"].add(rel)
                 if not is_batch and not is_live:
-                    # Shared/ambiguous — count as batch by default (most adapters are batch first).
+                    # Shared/ambiguous - count as batch by default (most adapters are batch first).
                     matrix[(v, dt)]["batch"].add(rel)
 
     # Cross-reference against scope policy.
@@ -223,7 +223,7 @@ def main() -> int:
 
     summary_path = out_dir / "batch_live_adapter_parity_2026_05_20_summary.md"
     with summary_path.open("w", encoding="utf-8") as fh:
-        fh.write("# A6 — Batch-live adapter parity summary\n\n")
+        fh.write("# A6 - Batch-live adapter parity summary\n\n")
         fh.write(f"_Generated: {datetime.now(UTC).isoformat()}_\n\n")
         fh.write(f"Adapter files scanned: {len(paths):,} across {len(ADAPTER_REPOS)} repos.\n")
         fh.write(f"In-scope (asset_group, venue_token, data_type) tuples checked: {len(rows):,}.\n\n")
@@ -242,7 +242,7 @@ def main() -> int:
         batch_only = [r for r in rows if r["parity_status"] == "BATCH_ONLY"]
         fh.write(
             f"Total BATCH_ONLY cells: **{len(batch_only)}**"
-            " (review-blocking — every batch adapter MUST have a live equivalent)\n\n"
+            " (review-blocking - every batch adapter MUST have a live equivalent)\n\n"
         )
         if batch_only:
             fh.write("| asset_group | venue | data_type | batch file count | sample |\n|---|---|---|---:|---|\n")
@@ -252,9 +252,9 @@ def main() -> int:
                     f" | {r['batch_files']} | `{r['sample_batch_path']}` |\n",
                 )
             if len(batch_only) > 40:
-                fh.write(f"\n_(showing first 40 of {len(batch_only)} BATCH_ONLY cells — see CSV for full list)_\n")
+                fh.write(f"\n_(showing first 40 of {len(batch_only)} BATCH_ONLY cells - see CSV for full list)_\n")
 
-        fh.write("\n## MISSING_BOTH cells (no adapter detected — silent gap)\n\n")
+        fh.write("\n## MISSING_BOTH cells (no adapter detected - silent gap)\n\n")
         missing_both = [r for r in rows if r["parity_status"] == "MISSING_BOTH"]
         fh.write(f"Total MISSING_BOTH cells: **{len(missing_both)}**\n\n")
         if missing_both:
@@ -265,7 +265,7 @@ def main() -> int:
                 fh.write(f"\n_(showing first 40 of {len(missing_both)} MISSING_BOTH cells)_\n")
 
         fh.write(
-            "\n## LIVE_ONLY cells (suspicious — usually intentional only for derived/streaming-only data_types)\n\n"
+            "\n## LIVE_ONLY cells (suspicious - usually intentional only for derived/streaming-only data_types)\n\n"
         )
         live_only = [r for r in rows if r["parity_status"] == "LIVE_ONLY"]
         fh.write(f"Total LIVE_ONLY cells: **{len(live_only)}**\n\n")
@@ -285,7 +285,7 @@ def main() -> int:
         )
         fh.write(
             "- An adapter may exist in code but not be wired into the orchestrator scope"
-            " — A6 only checks *adapter file existence*, not whether it's enumerated.\n"
+            " - A6 only checks *adapter file existence*, not whether it's enumerated.\n"
         )
         fh.write(
             "- A6 does not check schema parity between batch + live adapters (would require running them)."
@@ -295,7 +295,7 @@ def main() -> int:
         fh.write(
             "- Tokens collapsed (e.g. `OKX` and `okx` and `binance-futures`"
             " → split into `binance` + `futures`)."
-            " Per-token false positives possible — see CSV `venue_token` column for exact match.\n"
+            " Per-token false positives possible - see CSV `venue_token` column for exact match.\n"
         )
 
     print("A6 scan complete:")

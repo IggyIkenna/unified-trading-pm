@@ -19,7 +19,6 @@ import time
 
 import gcsfs
 import pandas as pd
-
 from unified_api_contracts.registry.chain_env import get_chain_genesis_date
 from unified_api_contracts.registry.venue_launch_dates import DEFI_VENUE_LAUNCH_DATES
 
@@ -40,7 +39,7 @@ def _read_retry(fs, path, tries=6):
     for i in range(tries):
         try:
             return pd.read_parquet(fs.open(path))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             last = exc
             time.sleep(1.5 * (i + 1))
     raise last  # type: ignore[misc]
@@ -58,7 +57,7 @@ def main() -> int:
         index = f"{bucket}/_index/availability_index.parquet"
         try:
             df = _read_retry(fs, index)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"{name}: SKIP after retries ({type(exc).__name__})")
             continue
         df = df[[c for c in df.columns if not c.startswith("__")]].copy()
@@ -88,7 +87,9 @@ def main() -> int:
                     df.loc[pre_gen | pre_launch, col] = val
             df.to_parquet(fs.open(index, "wb"), index=False)
             print(f"  -> snapshotted + wrote {index}")
-    print(f"\nTOTAL pre-genesis-captured={total_gen}  pre-venue-launch-captured={total_launch}{'  (DRY-RUN)' if not apply else ''}")
+    print(
+        f"\nTOTAL pre-genesis-captured={total_gen}  pre-venue-launch-captured={total_launch}{'  (DRY-RUN)' if not apply else ''}"
+    )
     return 0
 
 

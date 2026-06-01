@@ -138,18 +138,38 @@ def main() -> int:
             df = probe_gcs_index(fs, bucket)
         except (OSError, FileNotFoundError) as err:
             per_bucket_stats.append(
-                {"asset_group": ag, "service_kind": kind, "bucket": bucket, "exists": "ERROR",
-                 "rows": 0, "v8_rows": 0, "v_lt_8_rows": 0, "null_version_rows": 0,
-                 "captured": 0, "empty_confirmed": 0, "attempted_failed": 0,
-                 "error_summary": str(err)[:120]},
+                {
+                    "asset_group": ag,
+                    "service_kind": kind,
+                    "bucket": bucket,
+                    "exists": "ERROR",
+                    "rows": 0,
+                    "v8_rows": 0,
+                    "v_lt_8_rows": 0,
+                    "null_version_rows": 0,
+                    "captured": 0,
+                    "empty_confirmed": 0,
+                    "attempted_failed": 0,
+                    "error_summary": str(err)[:120],
+                },
             )
             continue
         if df is None:
             per_bucket_stats.append(
-                {"asset_group": ag, "service_kind": kind, "bucket": bucket, "exists": "NO_INDEX",
-                 "rows": 0, "v8_rows": 0, "v_lt_8_rows": 0, "null_version_rows": 0,
-                 "captured": 0, "empty_confirmed": 0, "attempted_failed": 0,
-                 "error_summary": ""},
+                {
+                    "asset_group": ag,
+                    "service_kind": kind,
+                    "bucket": bucket,
+                    "exists": "NO_INDEX",
+                    "rows": 0,
+                    "v8_rows": 0,
+                    "v_lt_8_rows": 0,
+                    "null_version_rows": 0,
+                    "captured": 0,
+                    "empty_confirmed": 0,
+                    "attempted_failed": 0,
+                    "error_summary": "",
+                },
             )
             print(f"  {kind:24s} {bucket}: NO _index/availability_index.parquet", flush=True)
             continue

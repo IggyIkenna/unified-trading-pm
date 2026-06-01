@@ -59,7 +59,7 @@ def _retry(fn, *a, tries: int = 6):
     for i in range(tries):
         try:
             return fn(*a)
-        except Exception as exc:  # noqa: BLE001 — transient warmup
+        except Exception as exc:
             last = exc
             time.sleep(1.5 * (i + 1))
     raise last  # type: ignore[misc]

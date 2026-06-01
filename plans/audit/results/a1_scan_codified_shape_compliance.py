@@ -468,7 +468,7 @@ def write_summary(scans: list[FileScan], out_path: Path, total_files: int) -> No
         fh.write(
             "| `typed_empty_reason` | Runtime-only via `LegacyBlankErrorReasonError`; no static catch."
             " | Add `scripts/quality_gates/check_typed_empty_reason.py` that scans for"
-            " `record_empty(reason=\"...\")` string literals and asserts `EmptyConfirmedReason.X` usage. |\n"
+            ' `record_empty(reason="...")` string literals and asserts `EmptyConfirmedReason.X` usage. |\n'
         )
         fh.write(
             "| `uac_import_surface` | Cursor rule only (`imports/uac-import-surface-enforcement.mdc`)"

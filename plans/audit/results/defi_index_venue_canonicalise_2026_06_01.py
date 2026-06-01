@@ -33,7 +33,7 @@ def _retry(fn, tries=6):
     for i in range(tries):
         try:
             return fn()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             last = exc
             time.sleep(1.5 * (i + 1))
     raise last  # type: ignore[misc]

@@ -20,7 +20,6 @@ from collections import Counter
 
 import gcsfs
 import pandas as pd
-
 from unified_api_contracts.registry.venue_launch_dates import DEFI_VENUE_LAUNCH_DATES
 
 PROJECT_ID = "central-element-323112"
@@ -40,7 +39,7 @@ def _read_retry(fs, path, tries=6):
     for i in range(tries):
         try:
             return pd.read_parquet(fs.open(path))
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             last = exc
             time.sleep(1.5 * (i + 1))
     raise last  # type: ignore[misc]
@@ -59,7 +58,7 @@ def main() -> int:
         index = f"{bucket}/_index/availability_index.parquet"
         try:
             df = _read_retry(fs, index)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             print(f"{name}: SKIP after retries ({type(exc).__name__})")
             continue
         df = df[[c for c in df.columns if not c.startswith("__")]].copy()
@@ -77,9 +76,7 @@ def main() -> int:
             & (date_str < launch_s.fillna("9999"))
         )
         # report venues with pre-launch-looking empties but NO UAC launch date
-        no_uac = (
-            (df["capture_status"] == "empty_confirmed") & reason.isin(_RELABEL_FROM) & launch_s.isna()
-        )
+        no_uac = (df["capture_status"] == "empty_confirmed") & reason.isin(_RELABEL_FROM) & launch_s.isna()
         for v, c in zip(df.loc[no_uac, "venue"], df.loc[no_uac, "chain"], strict=False):
             missing_uac[f"{v}-{c}"] += 1
         n = int(mask.sum())
@@ -93,7 +90,7 @@ def main() -> int:
             df.to_parquet(fs.open(index, "wb"), index=False)
             print(f"  -> snapshotted + wrote {index}")
     print(f"\nTOTAL venue-launch relabels: {total}{'  (DRY-RUN)' if not apply else ''}")
-    print(f"\nVenues with pre-launch empties but NO UAC launch date (ADD to DEFI_VENUE_LAUNCH_DATES):")
+    print("\nVenues with pre-launch empties but NO UAC launch date (ADD to DEFI_VENUE_LAUNCH_DATES):")
     for k, v in missing_uac.most_common():
         print(f"  {k}: {v} rows")
     return 0

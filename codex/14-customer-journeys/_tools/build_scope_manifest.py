@@ -237,7 +237,8 @@ def main(argv: list[str] | None = None) -> int:
     here = Path(__file__).resolve().parent
     pm_root = args.root.resolve() if args.root is not None else find_pm_root(here)
     output = (
-        args.output if args.output is not None
+        args.output
+        if args.output is not None
         else pm_root / "codex/14-customer-journeys/_generated/scope-manifest.json"
     )
 

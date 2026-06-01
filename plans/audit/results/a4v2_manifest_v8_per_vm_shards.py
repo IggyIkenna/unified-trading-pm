@@ -130,8 +130,14 @@ def main() -> int:
         writer = csv.DictWriter(
             fh,
             fieldnames=[
-                "asset_group", "bucket", "vm_shard",
-                "total_rows", "v8_rows", "v_lt_8_rows", "null_rows", "schema_versions_seen",
+                "asset_group",
+                "bucket",
+                "vm_shard",
+                "total_rows",
+                "v8_rows",
+                "v_lt_8_rows",
+                "null_rows",
+                "schema_versions_seen",
             ],
         )
         writer.writeheader()
@@ -173,8 +179,7 @@ def main() -> int:
         if bad:
             fh.write(f"Total problematic shards: **{len(bad)}**\n\n")
             fh.write(
-                "| asset_group | bucket | shard | total | v<8 | NULL | versions |\n"
-                "|---|---|---|---:|---:|---:|---|\n"
+                "| asset_group | bucket | shard | total | v<8 | NULL | versions |\n|---|---|---|---:|---:|---:|---|\n"
             )
             for r in sorted(bad, key=lambda x: -int(x["v_lt_8_rows"]) - int(x["null_rows"]))[:50]:
                 fh.write(
