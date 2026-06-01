@@ -121,7 +121,8 @@ jobs:
       severity: ${{ (needs.health-check.outputs.error_class == 'billing_credits' || needs.health-check.outputs.error_class == 'auth_error') && 'CRITICAL' || (needs.health-check.outputs.health_state == 'healthy' && 'INFO' || 'WARNING') }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    secrets: inherit
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
 
   persist:
     name: Persist — Claude API Health Event
