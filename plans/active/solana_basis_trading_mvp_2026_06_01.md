@@ -6,6 +6,8 @@ assigned_vm: vm-defi
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 status: active
+model_tier: opus-required
+thinking_tier: max
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 3

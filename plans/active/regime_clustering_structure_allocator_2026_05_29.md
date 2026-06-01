@@ -4,6 +4,8 @@ title: "Regime Clustering + Proximity → Factor-Targeted Structure Allocator"
 parent_epic: features_and_ml_master
 priority: P1
 status: active
+model_tier: opus-required
+thinking_tier: max
 estimate_class: brand-new
 estimate_baseline_ai_days: 18
 estimate_calibrated_ai_days: 18

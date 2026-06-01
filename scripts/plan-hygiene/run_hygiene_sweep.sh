@@ -53,6 +53,13 @@ echo ""
 echo "--- Archive candidates ---"
 bash "$SCRIPT_DIR/check_archive_candidates.sh" || true
 
+# Model-tier coverage is informational — surfaces opus-candidates + plans on the
+# silent Sonnet default for human review (SSOT: codex/06-coding-standards/model-tier-selection.md).
+echo ""
+echo "--- Model-tier coverage (advisory) ---"
+cd "$PM_DIR" && python3 scripts/plans/audit_model_tier.py 2>&1 \
+  | grep -E "active plans:|declare model_tier:|opus-candidates:|mismatch:|⬅ OPUS" || true
+
 echo ""
 echo "--- Results ---"
 for r in "${RESULTS[@]}"; do
