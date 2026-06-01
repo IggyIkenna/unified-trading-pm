@@ -351,6 +351,20 @@ in-flight work. **Do not touch files outside your clear context.**
   reference: slot-1 2026-05-19 strategy-service autostash drop (recovered via dangling commit, logged in
   `ikenna_orchestrator/pings/slot_1.md`). Full SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 —
   troubleshooting".
+- **Concurrent agent in your shared `.tabs/<N>/` worktree (refs move under you) → isolated-worktree promotion, NOT
+  `FETCH_HEAD`.** When another session OR an orchestrator-spawned worker shares your slot's `.git`, it rewrites
+  `HEAD` / `FETCH_HEAD` / the slot branch mid-task: your push to `live-defi-rollout` is rejected and `FETCH_HEAD`-based
+  diagnostics LIE (you may wrongly conclude "my work is already on LDR" — the moving `FETCH_HEAD` briefly pointed at the
+  worker's local tip that contained your own commit). (1) Verify ONLY against the stable remote-tracking ref:
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>` —
+  never `FETCH_HEAD`. (2) Do NOT autostash-rebase the shared dirty tree (same foreign-WIP foot-gun as above). (3) Promote
+  YOUR work via a throwaway worktree off the integration branch — never touches the shared `.tabs/<N>/` tree, so the
+  concurrent worker is undisturbed: `git worktree add --detach /tmp/promote-$$ origin/live-defi-rollout` → cherry-pick
+  your commit → on conflict KEEP LDR's side for the other agent's hunks + trim any of their snapshot that auto-merged in
+  but isn't on LDR (`git checkout origin/live-defi-rollout -- <file>` then re-add only your hunk) → gate on
+  `git diff --cached origin/live-defi-rollout` showing YOURS-ONLY lines → push → `git worktree remove --force`. Full
+  SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Isolated-worktree promotion under shared-worktree ref races".
+  Incident: slot-1 2026-06-01 data-source-provenance promotion.
 
 ### Clear context = implement, don't ask
 
