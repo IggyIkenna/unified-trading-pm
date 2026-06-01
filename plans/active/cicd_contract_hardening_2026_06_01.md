@@ -79,6 +79,24 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 
 ---
 
+## CI-robustness gaps + promotion-convergence (operator 2026-06-01)
+
+- [ ] [SCRIPT] P0. **Every v2 failure must Slack-alert — INCLUDING timeout/crash/cancel.** Today the `#ci-failures`
+      Slack notify fires from inside `quality-gates.sh` (so a job that TIMES OUT, OOM-crashes, or is cancelled before the
+      script's notify step fails SILENTLY — no alert). Add a workflow-level notify in `python-quality-gates-v2.yml` with
+      `if: failure() || cancelled()` (+ a job `timeout-minutes`) that posts repo/PR/sha/conclusion to `#ci-failures`
+      regardless of how the job ended. Acceptance: a deliberately-timed-out run posts a Slack alert.
+- [ ] [SCRIPT] P0. **v2 runs must not time-out / crash — without gutting coverage or bloating memory.** Several v2 runs
+      are slow/heavy (execution 40-45min tests, big basedpyright). Bound them: set a sane `timeout-minutes`; cap memory
+      (QG_MEM_CAP / xdist workers) so they don't OOM; keep full coverage + checks (do NOT skip tests to pass). Profile
+      the slow steps (`profile_qg_steps.py`) and fix the hotspots rather than removing checks. Acceptance: v2 completes
+      under the timeout on the heaviest repo with full checks + no OOM.
+- [ ] [PROCESS] P0. **Promotion convergence — freeze LDR + promote in dependency order (don't whack-a-mole).** Opening
+      all LDR→main PRs while LDR keeps churning means each concurrent LDR push re-merges the PR and re-introduces
+      merge-only issues (e.g. mtds#112 I001 recurred on a fresh sha). Fix: a brief LDR-write freeze (pause crons +
+      coordinate agents) + promote in dep order via `quickmerge` (QG-pre-promote + dep-checker), one wave with a green
+      settle between waves. Ad-hoc simultaneous PRs do NOT converge against a moving LDR.
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
