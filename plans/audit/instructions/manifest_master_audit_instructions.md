@@ -143,4 +143,4 @@ Result file at `plans/audit/results/manifest_master_audit_YYYY_MM_DD.md`. Same s
 
 | Date       | Result file                                                                                     | Status                                                       |
 | ---------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 2026-06-01 | [manifest_master_capture_status_audit_2026_06_01.md](../results/manifest_master_capture_status_audit_2026_06_01.md) | per-service write-path: 23 raw → **18 confirmed** (adversarially verified; 5 false-positives) — P0:3 P1:9 P2:6 — fixes pending |
+| 2026-06-01 | [manifest_master_capture_status_audit_2026_06_01.md](../results/manifest_master_capture_status_audit_2026_06_01.md) | per-service write-path: 23 violations (P0:3 P1:13 P2:7) — fixes pending |

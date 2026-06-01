@@ -25,9 +25,9 @@ codex_ssots_to_check_drift_against:
 DeFi adapters, on-chain execution, Copper custody path, and the DeFi MVP archetypes. Two audit dimensions share this
 doc:
 
-| Dimension | What it checks | Section |
-| --- | --- | --- |
-| **Code ↔ codex correctness** | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift | [Checklist](#checklist) items (a)–(n) |
+| Dimension                                                              | What it checks                                                                                                                                                                              | Section                                                                                                 |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Code ↔ codex correctness**                                           | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                   | [Checklist](#checklist) items (a)–(n)                                                                   |
 | **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(v) |
 
 ### Archetypes / strategies in scope (operator's words → codebase archetype)
@@ -35,18 +35,36 @@ doc:
 The operator audits these as **"funding rate arb, staked basis carry, basis carry"** plus the price-dispersion MVP. The
 canonical archetype files live under `codex/09-strategy/architecture-v2/archetypes/`:
 
-| Operator's name | Canonical archetype | Archetype file | Strategy-engine file |
-| --- | --- | --- | --- |
-| **staked basis carry** | `carry_staked_basis` | `carry-staked-basis.md` | `strategy-service/.../v2/carry_and_yield/staked_basis.py` |
-| **funding rate arb** | `carry_basis_perp` (incl. `funding_rate_dispersion` variant) | `carry-basis-perp.md` | `.../carry_and_yield/basis_perp.py` + `funding_rate_dispersion.py` |
-| **basis carry** | `carry_basis_dated` | `carry-basis-dated.md` | `.../carry_and_yield/basis_dated.py` |
-| (price-dispersion MVP) | `arbitrage_price_dispersion` | `arbitrage-price-dispersion.md` | (DEX/CEX cross-venue dispersion) |
+| Operator's name        | Canonical archetype                                          | Archetype file                  | Strategy-engine file                                               |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------- | ------------------------------------------------------------------ |
+| **staked basis carry** | `carry_staked_basis`                                         | `carry-staked-basis.md`         | `strategy-service/.../v2/carry_and_yield/staked_basis.py`          |
+| **funding rate arb**   | `carry_basis_perp` (incl. `funding_rate_dispersion` variant) | `carry-basis-perp.md`           | `.../carry_and_yield/basis_perp.py` + `funding_rate_dispersion.py` |
+| **basis carry**        | `carry_basis_dated`                                          | `carry-basis-dated.md`          | `.../carry_and_yield/basis_dated.py`                               |
+| (price-dispersion MVP) | `arbitrage_price_dispersion`                                 | `arbitrage-price-dispersion.md` | (DEX/CEX cross-venue dispersion)                                   |
 
-Inverse / dated variants also exist (`carry-basis-perp-inv.md`, `carry-basis-dated-inv.md`, `carry-staked-basis-dated.md`)
-— audit them only when a slot uses them. **DeFi+CeFi hybrid (CRITICAL)**: DeFi = the long/stake/lend leg (on-chain);
-the hedge/short leg runs on CeFi perp venues. So a "DeFi" strategy's data coverage spans BOTH `asset_group=defi` (LST
-rates, lending indices, DEX, oracle) AND `asset_group=cefi` (perp funding, perp marks) — the coverage audit MUST cover
-both legs or it is incomplete.
+Inverse / dated variants also exist (`carry-basis-perp-inv.md`, `carry-basis-dated-inv.md`,
+`carry-staked-basis-dated.md`) — audit them only when a slot uses them. **DeFi+CeFi hybrid (CRITICAL)**: DeFi = the
+long/stake/lend leg (on-chain); the hedge/short leg runs on CeFi perp venues. So a "DeFi" strategy's data coverage spans
+BOTH `asset_group=defi` (LST rates, lending indices, DEX, oracle) AND `asset_group=cefi` (perp funding, perp marks) —
+the coverage audit MUST cover both legs or it is incomplete.
+
+**Active MVP critical path — Solana basis trade (2026-06-01)**: the concrete first-live target is
+[`plans/active/solana_basis_trading_mvp_2026_06_01.md`](../../active/solana_basis_trading_mvp_2026_06_01.md)
+(`parent_epic: mtds_mdps_master`) — **long SOL spot on Orca (Whirlpool SOL/USDC, primary) / Raydium + short SOL-PERP on
+Drift V2 = funding carry**. It re-scopes the Solana data sources after the Bug-D Drift-backfill saga
+(`issues/bug_d_prime_drift_backfill_2026_05_31.md`). Audit implications this doc MUST honour:
+
+- **Drift V2 funding/trades come from the Velocity Data API** (`data.api.drift.trade/market/SOL-PERP/...`), free tier,
+  full history verified — NOT from Helius signature-walking (explicitly out of MVP scope). When auditing `perp_funding`
+  coverage for Solana, the source of truth is this API + the `perp-funding-*` bucket, not the `market-data-tick-defi`
+  grid.
+- **New canonical data_types the plan introduces** (audit their bucket + manifest presence once landed): `perp_trades`,
+  `perp_mark_oracle`, `perp_open_interest`, `dex_pool_state` (time-series, distinct from snapshot `dex_pools`),
+  `dex_trades`, `dex_spot_price`. The existing `solana_defi_handler.py` routes Orca→`dex_pools/orca/SOLANA/`,
+  Raydium→`dex_pools/raydium/SOLANA/` (snapshots) — the MVP needs the per-swap/time-series extension.
+- **Solana chain coverage is the live gate** — in the per-chain breakdown (item v), `SOLANA` rows for `perp_funding`
+  (Drift), `dex_pool_state`/`dex_trades` (Orca/Raydium), and `oracle_prices` (Pyth) are the cells that actually block
+  go-live; weight them accordingly.
 
 Key code surfaces:
 
@@ -58,8 +76,8 @@ Key code surfaces:
 - Custody: `CLOUD_KMS_ENCRYPTED` path (May-23); Copper post-June-1
 - Pyth oracle: Solana-only on-chain price feeds
 - Chain RPC: `CHAIN_RPC_TEMPLATES` in UAC `registry/capability_declarations/_defi.py`
-- Error classification: 35 `DefiErrorCode` values in UAC (13 Aave-family + 7 `RECURSIVE_*` + 8 `HL_*` + 2 `ORACLE_*` +
-  5 `CCTP_*`; **count the enum, do not trust this number**)
+- Error classification: 35 `DefiErrorCode` values in UAC (13 Aave-family + 7 `RECURSIVE_*` + 8 `HL_*` + 2 `ORACLE_*` + 5
+  `CCTP_*`; **count the enum, do not trust this number**)
 
 ## Triggers
 
@@ -68,15 +86,16 @@ Key code surfaces:
 - After any new chain or LST is added to the universe
 - When `manifest_master` audit surfaces new `empty_confirmed` rows for `asset_group=defi`
 - When `batch_live_symmetry_master` audit surfaces adapter parity gaps for DeFi adapters
-- **Before any DeFi archetype goes to paper/live** — run the [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension)
-  first; a strategy cannot paper-trade on a data_type that isn't backfilled over its required history
+- **Before any DeFi archetype goes to paper/live** — run the
+  [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) first; a strategy cannot
+  paper-trade on a data_type that isn't backfilled over its required history
 - After any manifest schema bump (the corpus must be re-checked against the new version per-data_type — code constant ≠
   data state; see incident: 0% of 7.4M rows at v8 despite the constant, 2026-05-20)
 
 ## Checklist
 
-- [ ] (a) **35 DefiErrorCode coverage**: all 35 codes (13 Aave-family + 7 `RECURSIVE_*` + 8 `HL_*` + 2 `ORACLE_*` +
-      5 `CCTP_*`; **count the enum, don't trust this number** — it grows) present in UAC
+- [ ] (a) **35 DefiErrorCode coverage**: all 35 codes (13 Aave-family + 7 `RECURSIVE_*` + 8 `HL_*` + 2 `ORACLE_*` + 5
+      `CCTP_*`; **count the enum, don't trust this number** — it grows) present in UAC
       `unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode`. Count members:
       `awk '/class DefiErrorCode/{f=1;next} f&&/^class /{exit} f&&/^    [A-Z_]+ =/{c++} END{print c}' unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/defi.py`
 
@@ -139,8 +158,8 @@ grep code truth, compare to the doc, classify each as `aligned` / `codex-stale` 
 
 > **This is the operator's standing question** ("fresh look at funding rate arb, staked basis carry, basis carry — audit
 > instruments-service, MTDS, MDPS, features data available for those strategies and over what timeframe; what's missing,
-> what needs downloading"). The items above (a–n) check that the *code* is correct. The items below check that the
-> *corpus* is actually present for each strategy to run. **Both must be GREEN before an archetype papers/lives.**
+> what needs downloading"). The items above (a–n) check that the _code_ is correct. The items below check that the
+> _corpus_ is actually present for each strategy to run. **Both must be GREEN before an archetype papers/lives.**
 >
 > Method per cell: do NOT trust code constants or catalog docs — **read the actual manifest / data-status rows**
 > (`asset_group`, `venue`, `data_type`, `schema_version`, min/max `available_at`). Composes with the
@@ -157,29 +176,29 @@ reference, not a substitute for reading the source):
 
 **staked basis carry (`carry_staked_basis`)** — DeFi long/stake leg + CeFi hedge leg:
 
-| data_type | venue(s) | asset_group | producing service | feature consumed | required history |
-| --- | --- | --- | --- | --- | --- |
-| `lst_rates` | LIDO/stETH, ROCKETPOOL/rETH, ETHERFI/weETH, COINBASE/cbETH, JITO/jitoSOL, MARINADE/mSOL (+ ANKR/STADER/SWELL/PUFFER/MANTLE/STAKEWISE as universe grows) | defi | MTDS → features-onchain | `staking_apy_bps`, `lst_native_rate`, `lst_native_rate_ts` | ≥ enough daily snapshots to compute rate-diff APY (≥30d for a stable APY; ≥1y preferred for backtest) |
-| `perp_funding` | DRIFT, HYPERLIQUID, GMX (DeFi perps); DERIBIT, BYBIT, BINANCE, OKX (CeFi hedge) | defi + **cefi** | MTDS → features-delta-one | `funding_rate_apy_bps` | full funding-cycle history over backtest window (4–8h cadence) |
-| `oracle_prices` | Chainlink (ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON), Pyth (Solana) | defi | MTDS → features-onchain | spot price, health-factor inputs | continuous over window |
-| `lending_indices` | AAVE_V3, SPARK, COMPOUND_V3 | defi | MTDS → features-onchain | `usdc_idle_yield_apy_bps` (optional; defaults 0), `health_factor` | window length |
+| data_type         | venue(s)                                                                                                                                                | asset_group     | producing service         | feature consumed                                                  | required history                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ------------------------- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `lst_rates`       | LIDO/stETH, ROCKETPOOL/rETH, ETHERFI/weETH, COINBASE/cbETH, JITO/jitoSOL, MARINADE/mSOL (+ ANKR/STADER/SWELL/PUFFER/MANTLE/STAKEWISE as universe grows) | defi            | MTDS → features-onchain   | `staking_apy_bps`, `lst_native_rate`, `lst_native_rate_ts`        | ≥ enough daily snapshots to compute rate-diff APY (≥30d for a stable APY; ≥1y preferred for backtest) |
+| `perp_funding`    | DRIFT, HYPERLIQUID, GMX (DeFi perps); DERIBIT, BYBIT, BINANCE, OKX (CeFi hedge)                                                                         | defi + **cefi** | MTDS → features-delta-one | `funding_rate_apy_bps`                                            | full funding-cycle history over backtest window (4–8h cadence)                                        |
+| `oracle_prices`   | Chainlink (ETHEREUM/ARBITRUM/BASE/OPTIMISM/POLYGON), Pyth (Solana)                                                                                      | defi            | MTDS → features-onchain   | spot price, health-factor inputs                                  | continuous over window                                                                                |
+| `lending_indices` | AAVE_V3, SPARK, COMPOUND_V3                                                                                                                             | defi            | MTDS → features-onchain   | `usdc_idle_yield_apy_bps` (optional; defaults 0), `health_factor` | window length                                                                                         |
 
 **funding rate arb (`carry_basis_perp` / `funding_rate_dispersion`)** — CeFi-perp-heavy:
 
-| data_type | venue(s) | asset_group | producing service | feature consumed | required history |
-| --- | --- | --- | --- | --- | --- |
-| `perp_funding` | BINANCE, OKX, BYBIT, DERIBIT, HYPERLIQUID, ASTER, KRAKEN (dispersion needs **all** venues simultaneously) | cefi (+ defi perps) | MTDS → features-delta-one | `funding_rate_annualised_bps` | full funding-cycle history; dispersion needs same timestamps across venues |
-| `book_snapshot_5` / derivative_ticker | same perp venues (Tardis) | cefi | MTDS → MDPS → features-delta-one | mark price, index, current funding | window length |
-| `trades` (spot leg) | BINANCE/OKX/BYBIT spot; UNISWAP_V3, JUPITER (DEX spot) | cefi + defi | MTDS → MDPS candles | spot fills / slippage sim | window length |
-| processed candles `1h`/`4h` | (derived) | per leg | MDPS | `realized_vol_20` (vol-cap clamp) | ≥ vol-lookback window |
+| data_type                             | venue(s)                                                                                                  | asset_group         | producing service                | feature consumed                   | required history                                                           |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------- | -------------------------------- | ---------------------------------- | -------------------------------------------------------------------------- |
+| `perp_funding`                        | BINANCE, OKX, BYBIT, DERIBIT, HYPERLIQUID, ASTER, KRAKEN (dispersion needs **all** venues simultaneously) | cefi (+ defi perps) | MTDS → features-delta-one        | `funding_rate_annualised_bps`      | full funding-cycle history; dispersion needs same timestamps across venues |
+| `book_snapshot_5` / derivative_ticker | same perp venues (Tardis)                                                                                 | cefi                | MTDS → MDPS → features-delta-one | mark price, index, current funding | window length                                                              |
+| `trades` (spot leg)                   | BINANCE/OKX/BYBIT spot; UNISWAP_V3, JUPITER (DEX spot)                                                    | cefi + defi         | MTDS → MDPS candles              | spot fills / slippage sim          | window length                                                              |
+| processed candles `1h`/`4h`           | (derived)                                                                                                 | per leg             | MDPS                             | `realized_vol_20` (vol-cap clamp)  | ≥ vol-lookback window                                                      |
 
 **basis carry (`carry_basis_dated`)** — dated future vs spot:
 
-| data_type | venue(s) | asset_group | producing service | feature consumed | required history |
-| --- | --- | --- | --- | --- | --- |
-| `trades` (spot leg) | DERIBIT (BTC/ETH), CME/Databento (TradFi), UNISWAP_V3 (DEX spot) | defi/cefi/tradfi | MTDS → MDPS | `basis_bps` numerator | window length |
-| `trades` (dated future leg) | DERIBIT quarterly, CME/ICE (TradFi) | cefi/tradfi | MTDS → MDPS | `basis_bps` | per-contract life + roll window (`rollover_days_before_expiry`) |
-| `ohlcv_1m` / processed candles | Databento pass-through (TradFi), MDPS (crypto) | tradfi/cefi/defi | MTDS/MDPS | basis convergence + `realized_vol_*` | window + roll |
+| data_type                      | venue(s)                                                         | asset_group      | producing service | feature consumed                     | required history                                                |
+| ------------------------------ | ---------------------------------------------------------------- | ---------------- | ----------------- | ------------------------------------ | --------------------------------------------------------------- |
+| `trades` (spot leg)            | DERIBIT (BTC/ETH), CME/Databento (TradFi), UNISWAP_V3 (DEX spot) | defi/cefi/tradfi | MTDS → MDPS       | `basis_bps` numerator                | window length                                                   |
+| `trades` (dated future leg)    | DERIBIT quarterly, CME/ICE (TradFi)                              | cefi/tradfi      | MTDS → MDPS       | `basis_bps`                          | per-contract life + roll window (`rollover_days_before_expiry`) |
+| `ohlcv_1m` / processed candles | Databento pass-through (TradFi), MDPS (crypto)                   | tradfi/cefi/defi | MTDS/MDPS         | basis convergence + `realized_vol_*` | window + roll                                                   |
 
 > Sources for the expected set (read these, don't copy the snapshot): archetype files in
 > `codex/09-strategy/architecture-v2/archetypes/`; `Features expected` lists in the
@@ -194,42 +213,93 @@ reference, not a substitute for reading the source):
 > `_TRADFI` venue→data_type maps, with `is_expected()` + `get_source_coverage_start_for_data_type()` +
 > `is_before_source_coverage_start()` helpers). Enumerate **every** venue × data_type that map declares for the
 > strategy's data_types — do not trim to a representative subset. The venue universe is the union of `_CEFI` (the full
-> CeFi perp set — Binance/Bybit/OKX/Deribit/Kraken + on-chain perps Hyperliquid/Aster/Pacifica/Lighter/GMX/Drift),
-> the DeFi venues in `registry/defi_venues.py` (`ALL_DEFI_VENUES`), and the chain dimension `ChainKind`
+> CeFi perp set — Binance/Bybit/OKX/Deribit/Kraken + on-chain perps Hyperliquid/Aster/Pacifica/Lighter/GMX/Drift), the
+> DeFi venues in `registry/defi_venues.py` (`ALL_DEFI_VENUES`), and the chain dimension `ChainKind`
 > (`canonical/crosscutting/defi.py`, 22 chains). `perp_funding_cadence.py` gives per-venue funding cadence for the
 > window check.
 
+### Step 1.5 — Find the data before declaring it missing (MANDATORY — anti "0% captured" lie)
+
+> **Genesis (2026-06-01)**: a first run of this audit read only
+> `market-data-tick-defi-*/_index/availability_index.parquet` and reported **"0% captured / lst_rates absent / data
+> genuinely missing"** for every DeFi data_type. That was FALSE. The real data lives in **dedicated per-data_type
+> buckets** (`lst-rates-*` 92% captured back to 2020, `lending-indices-*` 91%, `oracle-prices-*` 79%, `perp-funding-*`
+> 55%, `dex-pools-*` 96%, `dex-swaps-*` 93%), each with its **own** `_index/availability_index.parquet`. The
+> `market-data-tick-defi` index held only a **phantom empty grid** (a cartesian `data_type × venue` cross-product in
+> legacy `VENUE-CHAIN` format with everything `empty_confirmed`). Reading one index and concluding "missing" is a
+> **grep-then-conclude** violation. **Data is almost never genuinely missing — it is in the wrong bucket, under a
+> hyphen/underscore alias, on an old schema version, or behind a phantom placeholder grid.**
+
+Before any cell can be called "missing", **exhaust where the data could be hiding**:
+
+- [ ] **Enumerate ALL candidate buckets per data_type, not just `market-data-tick-{ag}`.** DeFi data_types have
+      **dedicated buckets**: `lst-rates-*`, `lending-indices-*`, `oracle-prices-*`, `perp-funding-*`, `dex-pools-*`,
+      `dex-swaps-*` (+ `evm-defi-*`, `features-onchain-defi-*` for derived). Resolve the canonical bucket per
+      `(data_type, kind)` from `resolve_bucket_name()` / `deployment-service/configs/cloud-providers.yaml`, then list
+      **every** bucket whose name matches the data_type.
+      `gcloud storage ls | grep -iE 'lst-rates|lending-indic|perp-funding|oracle-price|dex-pool|dex-swap'`. Each has its
+      own `_index/availability_index.parquet` — read **all** of them and the `market-data-tick-*` one, then reconcile.
+- [ ] **Check object reality, not just the index.** If an index says empty but `gcloud storage ls gs://<bucket>/day=*/`
+      returns thousands of parquet files, the **index is stale/phantom** — that is a manifest-consolidation finding, not
+      an absence. Count objects (`... | grep -c '\.parquet'`) and sample recent `day=` partitions.
+- [ ] **Look under aliases + wrong forms of the same data_type.** The same logical data_type appears as: hyphen vs
+      underscore (`lending-indices` AND `lending_indices`, `dex-pools` AND `dex_pools`, `dex-swaps` AND `dex_swaps` all
+      coexist in their buckets — 2026-06-01); legacy semantic name (`staking_yields` vs canonical `lst_rates`); legacy
+      `VENUE-CHAIN`-embedded venue strings (`UNISWAPV3-ETHEREUM`) vs flat venue + `chain` column. Query
+      `df.data_type.unique()` and `df.venue.unique()` in **every** index and treat any alias/variant as the SAME data —
+      it is data-in-wrong-form to be cleaned up, NOT missing data.
+- [ ] **Two indexes disagreeing = phantom-grid finding.** When the dedicated bucket shows `captured` but
+      `market-data-tick-defi` shows `empty_confirmed` for the same `(data_type, venue, date)`, the `market-data-tick`
+      row is a phantom placeholder. Flag it for deletion/reconciliation — never let the phantom drive a "missing"
+      verdict.
+- [ ] **Classify every gap into one of: wrong-bucket / wrong-name-alias / phantom-index-grid / old-schema-version /
+      genuinely-partial-window / genuinely-missing.** Only the last is "download more"; the rest are **cleanup /
+      consolidation / migration** of data that already exists. The result MUST state which of these each gap is — a bare
+      "X% captured" with no wrong-form classification is review-blocking.
+
 ### Step 2 — Coverage checklist (compare expected set vs actual corpus)
 
-- [ ] (o) **instruments-service universe present**: every venue × symbol the matrix needs is an active `InstrumentRecord`
-      in instruments-service (IS is SSOT for the universe; MTDS derives URLs from it — never hardcoded). For each
-      strategy, confirm the LST tokens, perp contracts, dated-future contracts, and DEX pools it trades are listed (not
-      phantom / not deprecated). Gap here = MTDS will never attempt the cell → silent `MISSING_EXPECTED` downstream.
+- [ ] (o) **instruments-service universe present**: every venue × symbol the matrix needs is an active
+      `InstrumentRecord` in instruments-service (IS is SSOT for the universe; MTDS derives URLs from it — never
+      hardcoded). For each strategy, confirm the LST tokens, perp contracts, dated-future contracts, and DEX pools it
+      trades are listed (not phantom / not deprecated). Gap here = MTDS will never attempt the cell → silent
+      `MISSING_EXPECTED` downstream.
 
 - [ ] (p) **Expected-coverage dump regenerated**: materialise the expected `(asset_group, venue, data_type, date)` cell
-      set for the in-scope archetypes. Run / adapt: `python3 plans/audit/results/a2_materialize_expected_coverage_dump.py`
-      (writes `expected_coverage_dump_<date>.parquet`). This is the denominator for "what's missing".
+      set for the in-scope archetypes. Run / adapt:
+      `python3 plans/audit/results/a2_materialize_expected_coverage_dump.py` (writes
+      `expected_coverage_dump_<date>.parquet`). This is the denominator for "what's missing".
 
-- [ ] (q) **Manifest divergence for the strategy cells = 0**: run the divergence scan and filter to the matrix cells.
-      Run: `python3 plans/audit/results/a3_manifest_divergence.py` (and the all-services variant
-      `a3v2_manifest_divergence_all_services.py`). For every `data_type` in the matrix, **zero** `MISSING_EXPECTED` and
-      **zero** `DIVERGENT_EMPTY` for `asset_group ∈ {defi, cefi, tradfi}` rows the strategy needs. Each non-zero cell
-      becomes a download backlog item (Step 3), NOT a deferral.
+- [ ] (q) **Manifest divergence for the strategy cells = 0 — across ALL candidate buckets (per Step 1.5)**: run the
+      divergence scan and filter to the matrix cells. Run: `python3 plans/audit/results/a3_manifest_divergence.py` (and
+      the all-services variant `a3v2_manifest_divergence_all_services.py`). **`a3` reads only `market-data-tick-{ag}` —
+      for DeFi data_types that is the phantom grid; you MUST also read the dedicated-bucket indexes** (`lst-rates-*`,
+      `lending-indices-*`, `oracle-prices-*`, `perp-funding-*`, `dex-pools-*`, `dex-swaps-*`) and use the **max**
+      captured state across buckets as truth. For every `data_type` in the matrix, **zero** `MISSING_EXPECTED` and
+      **zero** `DIVERGENT_EMPTY` once the dedicated buckets are included. A cell that is `captured` in the dedicated
+      bucket but `empty_confirmed` in `market-data-tick-defi` is a **phantom-grid finding** (cleanup), not a download
+      item.
 
 - [ ] (r) **Per-data_type schema-version compliance read from DATA (not the constant)**: the manifest is on **v9**
       (`MANIFEST_SCHEMA_VERSION = 9`; v9 added the tradfi `source` column). Read the actual `schema_version` column
       distribution **per data_type** for each strategy's cells — ≥95% at v9. Run / adapt
       `plans/audit/results/a4_manifest_v8_compliance.py` (rename target → v9; the script name still says v8 — that is a
       **stale-tooling finding**, fix it). **Do not trust the code constant** — incident 2026-05-20: 0% of 7.4M prod rows
-      were at v8 despite the constant being bumped. A data_type stuck at v4–v7 = a migration backlog item.
+      were at v8 despite the constant being bumped. Read the dedicated buckets (Step 1.5): 2026-06-01 found a **schema
+      spread v4–v8 with ZERO v9** (`lst-rates` v6/7/8, `lending-indices` v4/6/7/8, `dex-pools` v4/5/6). Old-version rows
+      are **data-in-wrong-form → re-version migration of existing data**, NOT missing data and NOT a re-download.
 
-- [ ] (s) **Venue + data_type names migrated to SSOT in the actual rows**: the manifest rows' `data_type` and `venue`
-      string values use the **canonical** names, not legacy aliases. Canonical data_types: `dex_swaps` / `dex_pool_state`
-      / `lending_indices` / `perp_funding` / `lst_rates` / `vault_share_price` / `oracle_prices` (NOT `swap_events` /
-      `pool_state` / `lending_metrics` / `funding_rates`). Query the manifest for distinct `data_type` and `venue` values
-      for `asset_group=defi` and diff against the catalog + `defi_venues.py` `ALL_DEFI_VENUES`. Any legacy alias still
-      appearing in **written rows** (not just code) = an un-migrated-SSOT finding → rename/backfill item. This is the
-      per-corpus expression of code items (j)/(l)/(n) above.
+- [ ] (s) **Venue + data_type names migrated to SSOT in the actual rows (data-in-wrong-form sweep)**: the manifest rows'
+      `data_type` and `venue` string values use the **canonical** names, not legacy aliases. Canonical data_types:
+      `dex_swaps` / `dex_pool_state` / `lending_indices` / `perp_funding` / `lst_rates` / `vault_share_price` /
+      `oracle_prices` (NOT `swap_events` / `pool_state` / `lending_metrics` / `funding_rates`). Query **every** index
+      (dedicated buckets + `market-data-tick`) for distinct `data_type` and `venue` values and flag each wrong-form
+      found 2026-06-01: **(1) hyphen-vs-underscore duplicates of the same data_type coexisting** (`lending-indices` +
+      `lending_indices`; `dex-pools` + `dex_pools`; `dex-swaps` + `dex_swaps`) — pick the underscore canonical, migrate
+      the hyphen rows; **(2) legacy semantic alias** (`staking_yields` rows that are really `lst_rates`); **(3) legacy
+      `VENUE-CHAIN`-embedded venue strings** (`UNISWAPV3-ETHEREUM`) that should be flat `venue` + a populated `chain`
+      column. Any alias/variant in **written rows** = an un-migrated-SSOT finding → **rename/normalise migration** (the
+      data exists; this is cleanup, not download). Per-corpus expression of code items (j)/(l)/(n) above.
 
 - [ ] (t) **Required-history window actually covered (timeframe audit)**: for each strategy's cells, read min/max
       `available_at` from the manifest and confirm the **continuous** window meets the strategy's lookback need (Step 1
@@ -248,48 +318,52 @@ reference, not a substitute for reading the source):
       coverage finding, not "fine because it has a default". Cross-ref the features-and-ml audit
       (`features_and_ml_master_audit_instructions.md`) per-feature backfill state.
 
-- [ ] (v) **Honest-coverage totality breakdown — per data_type × venue/chain (THE deliverable)**: do not report a
-      single roll-up % per strategy. Produce the full breakdown where **every** expected cell carries one of the
-      4-state honest-coverage verdicts read from the manifest — `captured` / `empty_confirmed[reason=<typed>]` /
+- [ ] (v) **Honest-coverage totality breakdown — per data_type × venue/chain (THE deliverable)**: do not report a single
+      roll-up % per strategy. Produce the full breakdown where **every** expected cell carries one of the 4-state
+      honest-coverage verdicts read from the manifest — `captured` / `empty_confirmed[reason=<typed>]` /
       `attempted_failed` / `expected_unattempted` — or `MISSING_EXPECTED` if the manifest has no row at all. Two
-      breakdowns are mandatory, both enumerated from the SSOTs (no representative subsetting):
-      - **Per data_type × venue (in totality)**: for `perp_funding`, enumerate the **complete** CeFi perp venue set from
-        `_CEFI` in `expected_coverage.py` (Binance/Bybit/OKX/Deribit/Kraken) **plus** the on-chain perps
-        (Hyperliquid/Aster/Pacifica/Lighter/GMX/Drift) — every venue gets a row even if the current strategy only hedges
-        on a subset, because funding-dispersion needs the whole set and the operator wants the venue universe assessed in
-        totality. Likewise `lst_rates` → every LST venue, `lending_indices` → every lending venue, `dex_swaps`/
-        `dex_pool_state` → every DEX, `oracle_prices` → every oracle.
-      - **Per data_type × chain**: for chain-scoped data_types (`lst_rates`, `oracle_prices`, `lending_indices`,
-        `dex_swaps`, `dex_pool_state`), break coverage down across `ChainKind` (Ethereum, Arbitrum, Base, Optimism,
-        Polygon, …, Solana, plus the perp L1s) — a data_type "captured" on Ethereum but absent on Arbitrum/Base is a
-        per-chain gap, not a green cell.
-      A cell counts as honest-green only when its verdict is `captured` over the required window (item t) at v9 (item r)
-      with canonical names (item s). `empty_confirmed` is green **only** when the typed reason is verified against
+      breakdowns are mandatory, both enumerated from the SSOTs (no representative subsetting): - **Per data_type × venue
+      (in totality)**: for `perp_funding`, enumerate the **complete** CeFi perp venue set from `_CEFI` in
+      `expected_coverage.py` (Binance/Bybit/OKX/Deribit/Kraken) **plus** the on-chain perps
+      (Hyperliquid/Aster/Pacifica/Lighter/GMX/Drift) — every venue gets a row even if the current strategy only hedges
+      on a subset, because funding-dispersion needs the whole set and the operator wants the venue universe assessed in
+      totality. Likewise `lst_rates` → every LST venue, `lending_indices` → every lending venue, `dex_swaps`/
+      `dex_pool_state` → every DEX, `oracle_prices` → every oracle. - **Per data_type × chain**: for chain-scoped
+      data_types (`lst_rates`, `oracle_prices`, `lending_indices`, `dex_swaps`, `dex_pool_state`), break coverage down
+      across `ChainKind` (Ethereum, Arbitrum, Base, Optimism, Polygon, …, Solana, plus the perp L1s) — a data_type
+      "captured" on Ethereum but absent on Arbitrum/Base is a per-chain gap, not a green cell. A cell counts as
+      honest-green only when its verdict is `captured` over the required window (item t) at v9 (item r) with canonical
+      names (item s). `empty_confirmed` is green **only** when the typed reason is verified against
       `is_before_source_coverage_start()` / `is_in_known_gap()`; an `empty_confirmed` on an owed-data branch is a
       silent-lie finding, not coverage. Everything else is a download/migration backlog row (Step 3).
 
-### Step 3 — Output: the download backlog (what's missing, what to download)
+### Step 3 — Output: classify every gap (cleanup vs download), then backlog it
 
-Every RED/AMBER cell from items (o)–(u) becomes an explicit, actionable backlog line — **not** a "deferred" note. Per
-the `External Data Is Always Available` + `Data Pipeline Correctness Is The Heartbeat` HARD RULES, a missing cell is one
-of exactly:
+Every RED/AMBER cell from items (o)–(v) becomes an explicit, actionable backlog line — **not** a "deferred" note. **Most
+DeFi "gaps" are data-in-wrong-form (the data already exists), NOT missing data — classify before you write "download".**
+Per `External Data Is Always Available` + `Data Pipeline Correctness Is The Heartbeat`, each cell is exactly one of:
 
-1. **Download/backfill item** — data exists, just not captured yet → `- [ ] [DATA] P#. Backfill <data_type> for
-   <venue> <asset_group> over <start>..<end> — parent_epic: defi_master`. Name the exact venue × data_type × date range
-   and the MTDS `collect-*` operation that captures it.
-2. **`BLOCKED-CREDENTIALS`** — public/free path exhausted; file the credential ask ping (vendor + tier + what's
-   unblocked) per the workspace rule. Adapter scaffold + unit tests still ship; status stays `BLOCKED-CREDENTIALS`, NOT
-   `DEFERRED`.
-3. **Migration item** — present but wrong `schema_version` (item r) or legacy data_type/venue name (item s) → rename /
-   re-version backfill, ideally bundled into the single-walk migration window (no new whole-corpus GCS walk without
-   operator ack).
-4. **Genuine `empty_confirmed`** — source truly has no data for that cell over that window (verified via
-   `is_in_known_gap()` / source-coverage docs) → typed `EmptyConfirmedReason`, recorded, and **excluded** from the
-   download backlog (this is the only legitimate "missing").
+1. **Cleanup — wrong bucket / phantom index** (most common, 2026-06-01): data is `captured` in a dedicated bucket
+   (`lst-rates-*` etc.) but the `market-data-tick-defi` grid shows it empty → reconcile/delete the phantom grid + point
+   the data-status denominator at the real index.
+   `- [ ] [CLEANUP] P#. Reconcile <data_type> phantom-empty grid in market-data-tick-defi vs captured rows in <dedicated-bucket> — parent_epic: defi_master`.
+2. **Cleanup — alias / name normalisation** (item s): hyphen-vs-underscore duplicates, `staking_yields`→`lst_rates`,
+   `VENUE-CHAIN`→flat venue+chain.
+   `- [ ] [MIGRATION] P#. Normalise <alias> → <canonical> in <bucket> (data exists) — …`.
+3. **Migration — re-version** (item r): present at v4–v8, needs v9. Bundle into the single-walk migration window (no new
+   whole-corpus GCS walk without operator ack).
+4. **Download/backfill** — genuinely-partial window or venue truly never captured (only after Step 1.5 exhausted all
+   buckets/aliases): `- [ ] [DATA] P#. Backfill <data_type> <venue> <ag> over <start>..<end> via <collect-op> — …`.
+5. **`BLOCKED-CREDENTIALS`** — public/free path exhausted; file the credential ask ping. Status stays
+   `BLOCKED-CREDENTIALS`, NOT `DEFERRED`.
+6. **Genuine `empty_confirmed`** — source truly has no data over that window (verified via `is_in_known_gap()` /
+   `is_before_source_coverage_start()`) → typed reason, **excluded** from the backlog (the only legitimate "missing").
 
-Render the result as a coverage matrix (rows = strategy × data_type × venue; columns = `expected / captured / v9% /
-window-covered / verdict`) plus the download backlog list. Wire each backlog line back into an active plan under
-`parent_epic: defi_master` immediately (Capture Discoveries As Plan Todos HARD RULE).
+Render the result as a coverage matrix (rows = strategy × data_type × venue; columns =
+`expected / captured / v-spread / window-covered / which-bucket / verdict (one of the 6 above)`) plus the classified
+backlog list. **A bare "X% captured" with no wrong-form classification + no list of buckets searched is
+review-blocking.** Wire each backlog line into an active plan under `parent_epic: defi_master` immediately (Capture
+Discoveries HARD RULE).
 
 ### E2E Batch, Paper, and Live Verification
 
@@ -330,11 +404,11 @@ Result file at `plans/audit/results/defi_master_audit_YYYY_MM_DD.md` must contai
 
 1. Frontmatter: `type: audit-result`, `epic: defi_master`, `instructions_ref: this file`, `auditor:`, `date:`, `status:`
 2. Each checklist item (a)–(u): GREEN / AMBER / RED + grep output or script result as evidence
-3. **Honest-coverage totality breakdown (item v)** — TWO tables, every expected cell present (no subsetting):
-   (a) **per data_type × venue** with the complete CeFi perp set + on-chain perps + LST/lending/DEX/oracle venues, and
-   (b) **per data_type × chain** across `ChainKind` for the chain-scoped data_types. Each cell column set:
-   `expected | capture_status (captured/empty_confirmed[reason]/attempted_failed/expected_unattempted/MISSING) | v9% |
-   window-covered | verdict`. This is the per-data_type, per-venue/chain answer the operator asked for.
+3. **Honest-coverage totality breakdown (item v)** — TWO tables, every expected cell present (no subsetting): (a) **per
+   data_type × venue** with the complete CeFi perp set + on-chain perps + LST/lending/DEX/oracle venues, and (b) **per
+   data_type × chain** across `ChainKind` for the chain-scoped data_types. Each cell column set:
+   `expected | capture_status (captured/empty_confirmed[reason]/attempted_failed/expected_unattempted/MISSING) | v9% | window-covered | verdict`.
+   This is the per-data_type, per-venue/chain answer the operator asked for.
 4. **Download backlog**: one `- [ ] [DATA|BLOCKED-CREDENTIALS] P#. <venue × data_type × date-range × collect-op>` line
    per missing/partial/mis-versioned cell, each already wired into an active plan under `parent_epic: defi_master`
 5. Gap items: `- [ ] [TYPE] P#. <description> — parent_epic: defi_master` for each RED/AMBER code item
@@ -343,6 +417,7 @@ Result file at `plans/audit/results/defi_master_audit_YYYY_MM_DD.md` must contai
 
 ## Linked Results
 
-| Date       | Result file                                                                                                       | Status                                |
-| ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n) |
+| Date       | Result file                                                                                                       | Status                                                                                                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-01 | [`results/defi_master_audit_2026_06_01.md`](../results/defi_master_audit_2026_06_01.md)                           | **AMBER** — strategy data-coverage (o–v): data EXISTS 79–96% in dedicated buckets; real issues are wrong-form (phantom grid + alias dupes + v4–v8 schema). Genesis of Step 1.5. |
+| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n)                                                                                                                                            |

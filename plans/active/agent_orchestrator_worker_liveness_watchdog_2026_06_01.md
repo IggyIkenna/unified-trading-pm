@@ -129,19 +129,17 @@ Watch 1h on vm-orchestrator before expanding fleet.
 
 | VM | Enabled at (UTC) | First legit kill (reason) | Notes |
 |---|---|---|---|
-| vm-orchestrator (canary) | 2026-06-01T09:40:45Z | TBD (Phase 3 verify script reads activity_log) | drop-in + env=true verified in /proc/<pid>/environ |
-| vm-cefi | 2026-06-01T09:40:45Z | TBD | env=true verified |
-| vm-defi | 2026-06-01T09:40:49Z | TBD | env=true verified |
-| vm-ml | **FAILED 2026-06-01T09:40:52Z** | n/a | SSM `[Failed]` — vm-ml has had recurring issues this session (empty tmux ls earlier); needs separate retry. Drop-in NOT written. |
-| vm-operator-ops | 2026-06-01T09:40:52Z | TBD | env=true verified |
-| vm-prediction | 2026-06-01T09:40:52Z | TBD | env=true verified |
-| vm-sports | 2026-06-01T09:40:53Z | TBD | env=true verified |
-| vm-tradfi | 2026-06-01T09:40:56Z | TBD | env=true verified |
-| vm-trading-core | 2026-06-01T09:40:58Z | TBD | env=true verified |
-| vm-cross-cutting | 2026-06-01T09:41:01Z | TBD | env=true verified |
-| api-host | 2026-06-01T09:41:02Z | TBD | env=true verified |
-
-**Rollout summary**: 10/11 VMs enabled within 17 seconds via operator parallel SSM (skipped the autonomous-worker `run_fleet_enable_watchdog.sh` sequential wrapper — same SSM get-command-invocation timeout class as the earlier prune + autospawn rollouts; direct parallel SendCommand is faster). vm-ml needs separate retry — recurring SSM/SSM-agent issue surfaced multiple times this session. First-kill timestamps will populate as the watchdog encounters real stuck-prompt / heartbeat-silent / context-full panes; check via `bash scripts/orchestrator/verify_watchdog_e2e.sh` (shipped @ 66b3645c) which reads activity_log entries `watchdog_killed_*` across the fleet.
+| vm-orchestrator (canary) | | | |
+| vm-cefi | | | |
+| vm-defi | | | |
+| vm-ml | | | |
+| vm-operator-ops | | | |
+| vm-prediction | | | |
+| vm-sports | | | |
+| vm-tradfi | | | |
+| vm-trading-core | | | |
+| vm-cross-cutting | | | |
+| api-host | | | |
 - [x] ✅ [VERIFY] P0. End-to-end test: leave a worker idle until it hits stuck-at-prompt → confirm watchdog kills within
       180s → confirm AutoSpawnLoop respawns within 60s of kill → confirm new worker claims a fresh task. Capture
       kill_count + respawn_count per VM over 24h. Collision group: none. Estimate: 0.15 AI-day.
