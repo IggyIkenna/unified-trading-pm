@@ -232,17 +232,34 @@ EOF
 }
 
 copy_workspace_file() {
-    # Copy the canonical multi-root .code-workspace into the slot dir so the
-    # operator can `File → Open Workspace from File` and get the labelled
-    # multi-root view (relative paths in the workspace file resolve against
-    # the slot dir; per-slot copy keeps each slot self-contained).
+    # Materialise the canonical multi-root .code-workspace into the slot dir so the
+    # operator can `File → Open Workspace from File` and get the labelled multi-root
+    # view, with each `folders[].path` pointing at the slot's OWN worktree.
+    #
+    # Canonical vs slot copies — path-style contract (SSOT for this divergence):
+    #   * Canonical (`${WORKSPACE_ROOT}/unified-trading-system-repos.code-workspace`,
+    #     a symlink → unified-trading-pm/cursor-configs/...) uses `../../<repo>` paths,
+    #     correct for its real home 2 levels deep under `cursor-configs/` → they resolve
+    #     to the repos-root (main worktree). The repos-root symlink view consumes this.
+    #   * Slot copies live at `.tabs/N/unified-trading-system-repos.code-workspace` (ONE
+    #     level deep). A plain `cp` would carry the `../../<repo>` paths verbatim, which
+    #     from `.tabs/N/` resolve to the MAIN worktree's `/repos/<repo>` — NOT the slot's
+    #     `.tabs/N/<repo>`. That fails SILENTLY (the dirs exist), so the operator edits in
+    #     slot N but the SCM panel / multi-root tree points at the main checkout.
+    #   * Fix: rewrite paths to BARE-RELATIVE on copy — `../../<repo>` → `<repo>` and the
+    #     workspace-root `../../` → `.` — so they resolve against the slot dir. This is the
+    #     style the deployed tab files already use. Settings arrays (git.scanRepositories /
+    #     git.ignoredRepositories) hold absolute paths and are copied as-is (harmless).
     local slot="$1" sd src dst
     sd="$(slot_dir "${slot}")"
     src="${WORKSPACE_ROOT}/unified-trading-system-repos.code-workspace"
     dst="${sd}/unified-trading-system-repos.code-workspace"
     if [[ -f "${src}" ]]; then
-        cp "${src}" "${dst}"
-        log "  WS   slot ${slot} workspace file copied (${dst})"
+        # Order matters: collapse the exact `"../../"` workspace-root first, then strip
+        # the `"../../` prefix from the remaining `"../../<repo>"` entries. Use a redirect
+        # (not `sed -i`) for BSD/GNU portability.
+        sed -e 's#"\.\./\.\./"#"."#g' -e 's#"\.\./\.\./#"#g' "${src}" > "${dst}"
+        log "  WS   slot ${slot} workspace file written, paths slot-relative (${dst})"
     else
         log "  WS   slot ${slot} skipped (no canonical .code-workspace at ${src})"
     fi
