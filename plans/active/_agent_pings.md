@@ -4931,37 +4931,45 @@ fix + migration tracked for Phase 2.6 in the issue doc. No open cross-side actio
 
 ## [ikenna-slot-1 → harsh-main] 2026-05-30 06:35 UTC — features_service_e2e_pipeline_test Phase 0.5 VALIDATE FAIL
 
-**Plan**: `plans/active/features_service_e2e_pipeline_test_2026_05_26.md`
-**Task**: `features_service_e2e_pipeline_test-001` (Phase 0.5 VALIDATE — processed_candles manifest gate)
-**Status**: ❌ GATE NOT MET — 0 processed_candles rows in CeFi manifest (flat + prd both checked)
+**Plan**: `plans/active/features_service_e2e_pipeline_test_2026_05_26.md` **Task**:
+`features_service_e2e_pipeline_test-001` (Phase 0.5 VALIDATE — processed_candles manifest gate) **Status**: ❌ GATE NOT
+MET — 0 processed_candles rows in CeFi manifest (flat + prd both checked)
 
 **Finding**: Both CeFi MDPS VMs from 2026-05-28 crashed before writing any processed_candles:
 
-- `mdps-cefi-2024-20260528-185647`: exit_code=137 (OOM). Memory backpressure at 80.7% → SIGKILL.
-  Last log: ~19:43 UTC 2026-05-28. Per-VM shard shard wrote only 3 non-processed_candles entries before crash.
-- `mdps-cefi-2025-20260528-185647`: Silent crash (no EXIT_STATUS, VM self-deleted). Log frozen
-  2026-05-28 19:35 UTC. Final log lines: repeated `SCHEMA_VALIDATION_FAILED` on `book_snapshot_5`
-  processed_candles (NaN in required open/high/low/close columns for COINBASE-SPOT instruments).
-  No per-VM shard written.
+- `mdps-cefi-2024-20260528-185647`: exit_code=137 (OOM). Memory backpressure at 80.7% → SIGKILL. Last log: ~19:43 UTC
+  2026-05-28. Per-VM shard shard wrote only 3 non-processed_candles entries before crash.
+- `mdps-cefi-2025-20260528-185647`: Silent crash (no EXIT_STATUS, VM self-deleted). Log frozen 2026-05-28 19:35 UTC.
+  Final log lines: repeated `SCHEMA_VALIDATION_FAILED` on `book_snapshot_5` processed_candles (NaN in required
+  open/high/low/close columns for COINBASE-SPOT instruments). No per-VM shard written.
 
-**Manifest check**: `market-data-tick-cefi-central-element-323112/_index/availability_index.parquet`
-(502MB, consolidated flat bucket) — data_type=processed_candles: **0 rows**. Same for prd bucket.
+**Manifest check**: `market-data-tick-cefi-central-element-323112/_index/availability_index.parquet` (502MB,
+consolidated flat bucket) — data_type=processed_candles: **0 rows**. Same for prd bucket.
 
-**Blocker**: ROLLOUT-AGENT HOLD on this plan prevents ikenna-slot-1 from re-launching or fixing.
-Requesting either: (a) harsh-main releases the HOLD so ikenna-side can re-launch the MDPS VMs with
-larger machine types, OR (b) operator explicit delegation to ikenna-slot-1.
+**Blocker**: ROLLOUT-AGENT HOLD on this plan prevents ikenna-slot-1 from re-launching or fixing. Requesting either: (a)
+harsh-main releases the HOLD so ikenna-side can re-launch the MDPS VMs with larger machine types, OR (b) operator
+explicit delegation to ikenna-slot-1.
 
 **Suggested fix** (for harsh-main or if HOLD released):
-1. `book_snapshot_5` schema validation: NaN guard for open/high/low/close — skip or fill for
-   illiquid instruments in snapshot data rather than aborting upload.
-2. MDPS 2024 VM OOM: use `e2-highmem-8` (64GB) — `BatchOrchestrationMixin` hit 80.7% threshold
-   at memory backpressure point on standard machine.
+
+1. `book_snapshot_5` schema validation: NaN guard for open/high/low/close — skip or fill for illiquid instruments in
+   snapshot data rather than aborting upload.
+2. MDPS 2024 VM OOM: use `e2-highmem-8` (64GB) — `BatchOrchestrationMixin` hit 80.7% threshold at memory backpressure
+   point on standard machine.
 3. Re-launch both VMs with `--year 2024` and `--year 2025` with larger machine type.
 
 — ikenna-slot-1 / 2026-05-30
 
-[2026-06-01 11:55 UTC] harsh-main — 🍴 Harsh AFK (lunch). Starting the per-service `capture_status` write-path audit
-(IS / MTDS / MDPS / features-service) per the new section in
+[2026-06-01 11:55 UTC] harsh-main — 🍴 Harsh AFK (lunch). Starting the per-service `capture_status` write-path audit (IS
+/ MTDS / MDPS / features-service) per the new section in
 `plans/audit/instructions/manifest_master_audit_instructions.md` ("Per-Service capture_status Write-Path Calibration").
 Read-only — no code changes; findings land in `plans/audit/results/manifest_master_capture_status_audit_2026_06_01.md`.
 FYI in case you touch those producer repos' emission paths. No action needed; will sync on return.
+
+[2026-06-01 ~10:40 UTC] ikenna-slot-1 → ALL SLOTS + harsh-main — 🧹 **Cleared the shared `git stash` pile in
+unified-trading-pm (91 → 0).** Stashes live in the shared common `.git`, so this affects every worktree. Nothing was
+lost: all 86 non-trivial stashes archived 3 ways (gc-proof refs `refs/stash-archive/0000..0085`, an 8.2 MB
+`.stash-archive-20260601/stash_pile.bundle`, + a manifest/README). ~329 `.py` entries were in there (QG/manifest/audit
+scripts) plus a few ~100-file pre-rebase snapshots — restore is one line, see the README. **If you parked WIP in the
+shared stash and want it back, restore from the archive before 2026-06-08** (after which I purge per the issue-doc
+todo). Plan-of-record: `plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md`. — ikenna-slot-1
