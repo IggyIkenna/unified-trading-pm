@@ -6,7 +6,7 @@ from typing import cast
 
 ServiceDict = dict[str, object]
 
-__all__ = ["ServiceDict", "Subtask", "Task", "Epic"]
+__all__ = ["Epic", "ServiceDict", "Subtask", "Task"]
 
 # Epic/Task/Subtask Structure
 # ============================================================================

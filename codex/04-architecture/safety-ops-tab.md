@@ -1,3 +1,7 @@
+---
+last_reviewed: 2026-05-29
+---
+
 # Safety Ops Tab
 
 Shipped: 2026-05-23. Plan: `plans/active/deployment_ui_safety_ops_tab_2026_05_23.md` (archived).

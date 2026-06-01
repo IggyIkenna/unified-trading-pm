@@ -17,9 +17,9 @@ from .engine_utils import create_all_tables, drop_all_tables
 
 __all__ = [
     "Base",
+    "core_api",
     "create_all_tables",
     "drop_all_tables",
-    "core_api",
     "external",
     "feature_store",
     "feature_vectors_1",

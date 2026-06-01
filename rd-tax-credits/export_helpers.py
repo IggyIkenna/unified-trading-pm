@@ -6,7 +6,6 @@ import re
 import subprocess
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 DEFAULT_REPOS = [
     "unified-trading-deployment-v3",
@@ -26,7 +25,7 @@ DEFAULT_REPOS = [
 ]
 
 
-def run_command(cmd: list[str], cwd: Optional[Path] = None) -> str:
+def run_command(cmd: list[str], cwd: Path | None = None) -> str:
     """Run shell command and return output."""
     try:
         result = subprocess.run(
@@ -113,7 +112,7 @@ def calculate_actual_hours(commits: list[dict], issue_closed_at: str) -> float:
     return min(hours, max_hours)
 
 
-def extract_time_estimate(issue_body: str) -> Optional[float]:
+def extract_time_estimate(issue_body: str) -> float | None:
     """Extract time estimate from issue body."""
     if not issue_body:
         return None
@@ -138,7 +137,7 @@ def extract_time_estimate(issue_body: str) -> Optional[float]:
     return None
 
 
-def extract_data_cost(issue_body: str) -> Optional[float]:
+def extract_data_cost(issue_body: str) -> float | None:
     """Extract data cost from issue body."""
     if not issue_body:
         return None
@@ -288,7 +287,7 @@ def print_export_summary(all_data: list[dict], output_path: Path) -> None:
         print(f"  {it}: {cnt} issues, {hrs:.2f} hours")
 
     print("\nBreakdown by area:")
-    for area in sorted(set(d["area"] for d in all_data)):
+    for area in sorted({d["area"] for d in all_data}):
         cnt = sum(1 for d in all_data if d["area"] == area)
         hrs = sum(float(d["actual_hours"]) for d in all_data if d["area"] == area and d["actual_hours"])
         print(f"  {area}: {cnt} issues, {hrs:.2f} hours")

@@ -47,14 +47,14 @@ class GitHubIssueGenerator:
         """Load JSON file."""
         if not path.exists():
             return {}
-        with open(path, "r") as f:
+        with open(path) as f:
             return cast(JsonDict, json.load(f))
 
     def _load_yaml(self, path: Path) -> JsonDict:
         """Load YAML file."""
         if not path.exists():
             return {}
-        with open(path, "r") as f:
+        with open(path) as f:
             return cast(JsonDict, yaml.safe_load(f) or {})
 
     def generate_issues_for_epic(self, epic_name: str, dry_run: bool = False) -> list[JsonDict]:
@@ -65,7 +65,7 @@ class GitHubIssueGenerator:
             print(f"  Classification not found: {classification_file}")
             return []
 
-        with open(classification_file, "r") as f:
+        with open(classification_file) as f:
             data: JsonDict = cast(JsonDict, json.load(f))
 
         raw_tasks: object = data.get("tasks") or []
