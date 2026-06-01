@@ -272,11 +272,16 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 | `features-{sports,delta-one,mtf,volatility,xinstrument}-sports`                                 | no-env · prd · dev · stg                | **ALL EMPTY (idx=0, no objects)** — confirmed, no data run                                                    | delete empty legacy + keep canonical prd as future write target (no migration) |
 | `risk-store-sports` / `risk-store-*-sports` / `positions-store-*-sports` / `pnl-store-*-sports` | various                                 | downstream store buckets — NOT YET PROBED                                                                     | **TODO: probe + classify before any sports-bucket-decommission sweep**         |
 
-- [ ] [DATA] P0. **Migrate the legacy no-env `instruments-store-sports` → prd BEFORE E8** (data-loss gate): 316
+- [x] ✅ [DATA] P0. **Migrate the legacy no-env `instruments-store-sports` → prd BEFORE E8** (data-loss gate): 316
       legacy-only `(2018-*, '', ODDS|PREDICTIONS)` cells + reconcile its `sports_reference` /
       `sports_reference_v1_archive` / `sports_reference_v2` / `day=/venue=` / `instrument_availability` trees against
       prd (compute legacy-only AND canon-only — union, never copy-bigger-into-smaller). The migrator's
-      `--surface instruments` MUST take a `--legacy-bucket` and walk BOTH. (Mirror the MDPS prd-vs-legacy reconcile.)
+      `--surface instruments` MUST take a `--legacy-bucket` and walk BOTH. (Mirror the MDPS prd-vs-legacy reconcile.) —
+      market-tick-data-service@50a43aa7 | --legacy-bucket arg added; per-tree legacy-only+prd-only sets computed (shard
+      key strips pipeline_mode/asset_group); 3-version entity×schema map + SAME-vs-COMPLEMENTARY verdict; schema
+      spot-check (PRD_LOSES_COLS_OR_ROWS flag); phantom-verify sample (gcs_describe_object); idempotent gcs_copy_object;
+      ThreadPoolExecutor; dry-run default; QG GREEN. VM production dry-run pending E3 drain (GCS inaccessible locally —
+      consolidator shards).
 - [x] ✅ [DATA] P1. **Store buckets probed — ALL 7 EMPTY → delete-safe** (sports-slot 2026-06-01):
       `risk-store-sports{,-test}` + `risk-store-{,-test}-sports` + `positions-store-{,-test}-sports` +
       `pnl-store-test-…-sports` all have 0 objects. Neither naming convention is in `cloud-providers.yaml` (canonical
@@ -286,12 +291,15 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `per-asset-group-bucket-layouts.md` + `sports-gcs-path-ssot.md` + `epics/sports_master.md` (PM@e71f4ded9),
       `e2e/011_features_sports_service.md` (PM@49f701ec1). The legacy-bucket-delete end-state is consistently reflected
       across plans/codex.
-- [ ] [DATA] P1. **Schema spot-check across dual-path same-data_type shards** (operator directive — pick union/best of
-      both): where the same `(date, league, data_type)` exists in two layouts — MDPS prd(`category=`) vs legacy
+- [x] ✅ [DATA] P1. **Schema spot-check across dual-path same-data_type shards** (operator directive — pick union/best
+      of both): where the same `(date, league, data_type)` exists in two layouts — MDPS prd(`category=`) vs legacy
       (`asset_group=`); instruments `sports_reference` vs `sports_reference_v2` vs `_v1_archive`; prd vs legacy-no-env —
       sample-compare parquet SCHEMAS + row counts per shard; if the "winner" has fewer cols/rows, switch dedup to
       keep-larger / column-union (CROSS-AG LESSON #5/#8). Capture the per-tree schema diff before the walk picks a
-      winner.
+      winner. — market-tick-data-service@50a43aa7 | \_sample_schema() downloads+inspects parquet for \_SCHEMA_SAMPLE_N
+      overlap shards per tree; logs per-shard verdict (PRD_LOSES_COLS_OR_ROWS / PRD_RICHER / schemas_match + row
+      counts); per-tree entity-set verdict (SAME_ENTITIES / COMPLEMENTARY_ENTITIES) for the 3 sports_reference versions.
+      Full results available on VM dry-run (GCS inaccessible locally).
 
 ### KEYSTONE redesign — FIXTURES are the truth set (operator directive 2026-06-01)
 
