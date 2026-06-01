@@ -273,8 +273,19 @@ merges silently dead-lock:
 
 **`enforce_admins`** (classic) makes the required check bind admins too — so once on, you can no longer admin-bypass a
 red/blocked branch. Only enable it on a branch whose v2 is **green** (enabling on red blocks all merges). Target state
-(Phase 2): true on every protected `main`. `[skip ci]` automation reaches `main` via the staging→main PR flow, so
-enforce_admins does not strand it.
+(Phase 2): true on every protected `main` **whose `main` receives code only via gated staging→main PR merges** (all
+service repos). **EXCEPTION — orchestration repos that DIRECT-push `[skip ci]` bookkeeping commits to their own `main`**
+(`unified-trading-pm`: `staging-to-main` promotes the manifest; `sit-gate` / `sit-unlock` / `hotfix-mode` /
+`sit-debounce-trigger` write staging lock/mode state) **run `enforce_admins=FALSE`.** A `[skip ci]` commit never
+produces a `quality-gates-v2` run, and a required-check PR would deadlock (the check can only run *after* the push it is
+blocking), so these direct pushes cannot satisfy a v2 gate — they bypass it as the admin `GH_PAT`. The ruleset
+(`require-quality-gates`, admin `bypass_mode: always`) + classic `required_status_checks` / `required_pull_request_reviews`
+still fully gate **non-admins**; only repo admins (incl the automation's admin PAT) bypass. Verified by the #257 chain
+e2e: with `enforce_admins=true` the `staging-to-main` manifest push was REJECTED (`GH013 … "quality-gates-v2" is
+expected` / `Changes must be made through a pull request`); with `enforce_admins=false` it pushes (`Bypassed rule
+violations for refs/heads/main`) and the promote job is green. **Do NOT "restore" PM `main` to `enforce_admins=true`** —
+it strands the SIT-chain manifest writes. (The earlier claim that `[skip ci]` automation reaches `main` via the
+staging→main PR flow was wrong: `staging-to-main` STEP 10 is a plain `git push`, not a PR.)
 
 ## Force-push vs let-CI/CD — the decision rule (codified 2026-06-01)
 
@@ -294,8 +305,10 @@ direction (protected > unprotected).
 
 ## Operational status — promotion automation (snapshot 2026-06-01; being repaired)
 
-The **PR→staging gate** (`quality-gates-v2`) is healthy + enforced workspace-wide. The **staging→main half is being
-revived** — as of 2026-06-01 it was found DEAD and bypassed via admin force-merge. Progress (2026-06-01 evening):
+The **PR→staging gate** (`quality-gates-v2`) is healthy + enforced workspace-wide. The **staging→main half is REVIVED +
+e2e-green (2026-06-01, #257)** — it was found DEAD (admin-force-merged as a stopgap) and is now fully wired: a real
+`staging-validated` dispatch drives `staging-to-main` to an all-steps-green promote job (see the SIT-chain bullet
+below). Progress (2026-06-01 evening):
 
 - **Loud alerting — SHIPPED** (`scripts/repo-management/ci_failure_watcher.py` +
   `.github/workflows/ci-failure-watcher.yml`, cron `*/15`): cross-repo `workflow_run` failure→recovery transitions
@@ -308,9 +321,19 @@ revived** — as of 2026-06-01 it was found DEAD and bypassed via admin force-me
   bump baseline). Repopulated from the per-repo `versions` SSOT.
 - `semver-agent` — **SHIPPED 2026-06-01**: trigger `quality-gates-v2`; covers **24 repos**; callee contract requires
   `timeout-minutes: 135` + `if: failure()||cancelled()` cleanup step. Rolled out to all repo default branches.
-- SIT chain (`sit-gate` ← `sit-lock`; `staging-to-main` ← `staging-validated`) — PM-side mapped: `sit-debounce-trigger`
-  (cron `*/2`) dispatches `staging-changed` to the `system-integration-tests` repo; the dead link is on the SIT-repo
-  side (zero `sit-gate` runs ⇒ `sit-lock`/`staging-validated` never re-dispatched). Cross-repo trace remaining.
+- SIT chain (`sit-gate` ← `sit-lock`; `staging-to-main` ← `staging-validated`) — **REVIVED + e2e-green 2026-06-01
+  (#257)**. Four stacked bugs, all fixed: (1) `system-integration-tests/smoke-test-gate.yml` self-cancelled — its setup
+  job's first step was `sleep 600` and `concurrency: cancel-in-progress: true` killed it mid-wait, so it never reached
+  the `sit-lock`/`staging-validated` dispatch; AND it never listened for PM's `staging-changed` dispatch (orphaned). Fix:
+  `on: repository_dispatch:[staging-changed]` (PM is the single debouncer), drop the in-job sleep, `cancel-in-progress:
+  false`, `ref: staging` on checkouts, resolve real staging SHA. (2) 4 PM workflows (`staging-to-main`, `sit-gate`,
+  `sit-unlock`, `hotfix-mode`) crashed with `SyntaxError` on a broken heredoc terminator `PYEOF || exit 1` (trailing text
+  → not recognised → Python swallowed it) → bare `PYEOF`. (3) `staging-to-main` STEP 10 manifest `[skip ci]` push to PM
+  `main` rejected by `enforce_admins=true` (GH013) → `enforce_admins=false` on PM `main` (see branch-protection §
+  exception above). (4) STEP 11 cascade `KeyError: 'OWNER'` (shell vars not exported to the heredoc) → declared in the
+  step `env:`. e2e: `repository_dispatch staging-changed` → gate runs green; `staging-validated` →
+  `staging-to-main` promote job **all-steps green** (merge → record → promote+clear-lock → commit-manifest → cascade →
+  staging-unlocked).
 - orchestrator-dispatch escalation for judgment cases (conflict / label-mismatch / SIT-triage) via the setup-token
   worker fleet — NOT API credits in GHA — remaining.
 
