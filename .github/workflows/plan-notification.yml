@@ -159,7 +159,7 @@ jobs:
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify-plan-change-telegram:
-    name: Telegram — Plan Change
+    name: Slack — Plan Change
     needs: [notify-plan-change]
     if: always() && needs.notify-plan-change.result == 'success'
     uses: ./.github/workflows/notify-slack.yml
@@ -174,7 +174,7 @@ jobs:
     secrets: inherit
 
   notify-plan-approval-telegram:
-    name: Telegram — Plan Approval
+    name: Slack — Plan Approval
     needs: [handle-plan-approval]
     if: always() && needs.handle-plan-approval.result == 'success'
     uses: ./.github/workflows/notify-slack.yml

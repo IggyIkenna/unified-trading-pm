@@ -154,9 +154,9 @@ jobs:
           echo "reason=" >> "$GITHUB_OUTPUT"
           echo "::notice::No active freeze window — $CHECK_TYPE operations allowed"
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify-freeze-block:
-    name: Telegram — Change Freeze Block
+    name: Slack — Change Freeze Block
     needs: [check]
     if: always() && needs.check.outputs.blocked == 'true'
     uses: ./.github/workflows/notify-slack.yml

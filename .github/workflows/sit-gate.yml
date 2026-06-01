@@ -151,7 +151,7 @@ jobs:
 
   # ── NOTIFICATION (reusable workflow) ─────────────────────────────────────────
   notify:
-    name: Telegram — SIT Gate
+    name: Slack — SIT Gate
     needs: [lock-staging]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

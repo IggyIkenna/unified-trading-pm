@@ -43,7 +43,7 @@ jobs:
           #   - Flag any new/removed fields as potential drift
 
   notify-failure:
-    name: Telegram — Contract Replay Failure
+    name: Slack — Contract Replay Failure
     needs: [replay]
     if: always() && needs.replay.result == 'failure'
     uses: ./.github/workflows/notify-slack.yml

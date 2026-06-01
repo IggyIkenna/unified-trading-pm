@@ -86,7 +86,7 @@ jobs:
           git push
 
   notify-failure:
-    name: Telegram — Hotfix Mode Failure
+    name: Slack — Hotfix Mode Failure
     needs: [update-hotfix-mode]
     if: always() && needs.update-hotfix-mode.result == 'failure'
     uses: ./.github/workflows/notify-slack.yml

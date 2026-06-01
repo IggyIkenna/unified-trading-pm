@@ -723,7 +723,7 @@ jobs:
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify-partial-failure:
-    name: Telegram — Partial Promotion Failure
+    name: Slack — Partial Promotion Failure
     needs: [promote-staging-to-main]
     if:
       always() && needs.promote-staging-to-main.outputs.failed_count != '0' &&
@@ -741,7 +741,7 @@ jobs:
     secrets: inherit
 
   notify-promotion-complete:
-    name: Telegram — Staging Promotion
+    name: Slack — Staging Promotion
     needs: [promote-staging-to-main]
     if:
       always() && (needs.promote-staging-to-main.outputs.failed_count == '0' ||
