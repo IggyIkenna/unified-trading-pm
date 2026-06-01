@@ -27,6 +27,7 @@ jobs:
       should_alert: ${{ steps.health-ping.outputs.should_alert }}
       health_state: ${{ steps.health-ping.outputs.health_state }}
       error_class: ${{ steps.health-ping.outputs.error_class }}
+      error_detail: ${{ steps.health-ping.outputs.error_detail }}
 
     steps:
       - name: Install Claude CLI
@@ -47,26 +48,46 @@ jobs:
           # Read previous state from cache (written by previous run)
           PREV_STATE=$(cat /tmp/claude_health_prev 2>/dev/null || echo "unknown")
 
-          # Ping Claude API with 30s timeout
+          # Primary check: can the CLI (the agent path) actually run a request?
           NEW_STATE="healthy"
           ERROR_CLASS="none"
+          ERROR_DETAIL=""
           if ! timeout 30 claude --print "ping: respond with the single word OK" \
             2>/tmp/health_err.txt | grep -qi "ok"; then
 
-            ERR=$(head -c 200 /tmp/health_err.txt 2>/dev/null || echo "")
-            if echo "$ERR" | grep -qiE '401|403|unauthorized|invalid.*key'; then
-              ERROR_CLASS="auth_error"
-            elif echo "$ERR" | grep -qiE '429|529|rate.limit|overload'; then
-              ERROR_CLASS="rate_limited"
-            elif echo "$ERR" | grep -qiE '503|502|connection.refused|unreachable'; then
-              ERROR_CLASS="service_down"
-            else
-              ERROR_CLASS="unknown"
-            fi
             NEW_STATE="degraded"
+            CLI_ERR=$(head -c 300 /tmp/health_err.txt 2>/dev/null | tr '\n\r' '  ' || echo "")
+
+            # The CLI obscures the API error — probe the API DIRECTLY to get the precise reason
+            HTTP=$(curl -s -o /tmp/api_probe.json -w "%{http_code}" --max-time 25 \
+              https://api.anthropic.com/v1/messages \
+              -H "x-api-key: ${ANTHROPIC_API_KEY}" -H "anthropic-version: 2023-06-01" \
+              -H "content-type: application/json" \
+              -d '{"model":"claude-haiku-4-5-20251001","max_tokens":8,"messages":[{"role":"user","content":"OK"}]}' \
+              2>/dev/null || echo "000")
+            API_MSG=$(python3 -c "import json;print(json.load(open('/tmp/api_probe.json')).get('error',{}).get('message',''))" 2>/dev/null || echo "")
+            SCAN="${API_MSG} ${CLI_ERR}"
+
+            if echo "$SCAN" | grep -qiE 'credit balance|too low|plans & billing|insufficient|payment|billing'; then
+              ERROR_CLASS="billing_credits"; ERROR_DETAIL="${API_MSG:-credit/billing issue}"
+            elif [ "$HTTP" = "401" ] || [ "$HTTP" = "403" ] || echo "$SCAN" | grep -qiE 'unauthorized|invalid.*key|authentication'; then
+              ERROR_CLASS="auth_error"; ERROR_DETAIL="${API_MSG:-invalid or expired API key}"
+            elif [ "$HTTP" = "429" ] || echo "$SCAN" | grep -qiE 'rate.limit|overload|529'; then
+              ERROR_CLASS="rate_limited"; ERROR_DETAIL="${API_MSG:-rate limited / overloaded}"
+            elif [ "${HTTP:0:1}" = "5" ] || echo "$SCAN" | grep -qiE 'connection|unreachable|timed out|50[23]'; then
+              ERROR_CLASS="service_down"; ERROR_DETAIL="${API_MSG:-Anthropic service unreachable (HTTP ${HTTP})}"
+            elif [ "$HTTP" = "200" ]; then
+              # SEPARATE issue: the API key is valid AND funded (direct call OK) but the CLI ping failed → CLI/runtime/env
+              ERROR_CLASS="cli_runtime"; ERROR_DETAIL="API key valid + funded (HTTP 200) but claude CLI ping failed — CLI/runtime issue. CLI stderr: ${CLI_ERR:0:140}"
+            else
+              ERROR_CLASS="unknown"; ERROR_DETAIL="HTTP ${HTTP}; ${API_MSG:0:120}${CLI_ERR:0:120}"
+            fi
+            rm -f /tmp/api_probe.json
+            # sanitise for GITHUB_OUTPUT + Slack message (single line, no quotes/backticks, capped)
+            ERROR_DETAIL=$(printf '%s' "$ERROR_DETAIL" | tr -d '"`'"'"'' | tr '\n\r' '  ' | cut -c1-200)
           fi
 
-          echo "Previous state: $PREV_STATE → New state: $NEW_STATE ($ERROR_CLASS)"
+          echo "Previous state: $PREV_STATE → New state: $NEW_STATE (${ERROR_CLASS}: ${ERROR_DETAIL})"
 
           # Determine if we should send an alert (state transition only)
           SHOULD_ALERT="false"
@@ -83,6 +104,7 @@ jobs:
           echo "$NEW_STATE" > /tmp/claude_health_current
           echo "health_state=$NEW_STATE" >> "$GITHUB_OUTPUT" 2>/dev/null || true
           echo "error_class=$ERROR_CLASS" >> "$GITHUB_OUTPUT" 2>/dev/null || true
+          echo "error_detail=$ERROR_DETAIL" >> "$GITHUB_OUTPUT" 2>/dev/null || true
           echo "should_alert=$SHOULD_ALERT" >> "$GITHUB_OUTPUT" 2>/dev/null || true
           echo "prev_state=$PREV_STATE" >> "$GITHUB_OUTPUT" 2>/dev/null || true
 
@@ -93,8 +115,10 @@ jobs:
     if: always() && needs.health-check.outputs.should_alert == 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: "Claude API Health Monitor — state transition detected"
-      severity: "WARNING"
+      # Say WHY: billing/credits vs auth vs a valid-but-failing (cli_runtime) separate issue.
+      message: "Claude API ${{ needs.health-check.outputs.health_state }} — ${{ needs.health-check.outputs.error_class }}: ${{ needs.health-check.outputs.error_detail }}"
+      # billing/credits + auth = CRITICAL (api-key agentic work can't run); recovery = INFO; everything else = WARNING.
+      severity: ${{ (needs.health-check.outputs.error_class == 'billing_credits' || needs.health-check.outputs.error_class == 'auth_error') && 'CRITICAL' || (needs.health-check.outputs.health_state == 'healthy' && 'INFO' || 'WARNING') }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
