@@ -42,32 +42,37 @@ the PUBLIC key (verify, cannot mint). The operator-JWT secret (`ORCHESTRATOR_JWT
 
 ## Phases
 
-### Phase 1 — Design + key provisioning
-- [ ] [DESIGN] P2. Decide RS256 vs ES256 (ES256 = smaller keys/faster; RS256 = ubiquitous). Document key lifecycle:
-      generation, storage (GCP KMS asymmetric key + S3/SM mirror for AWS fleet), rotation, and the dual-accept rollout
-      window. Update `codex/04-architecture/agent-orchestrator-overview.md` § two-secret model. Collision group:
-      `ao_asym_auth_design`. Est 0.4 AI-day.
-- [ ] [SCRIPT] [OPERATOR] P2. Provision the asymmetric keypair: GCP KMS asymmetric-sign key (private, central-only) +
-      publish the PUBLIC key to `gs://…/orchestrator/internal-public.pem` (+ S3 mirror). Est 0.2 AI-day.
+### Phase 1 — Design + key provisioning ✅ DONE 2026-06-01
+- [x] ✅ [DESIGN] P2. **Chose ES256** (P-256 — smaller/faster than RS256; PyJWT+cryptography support it). Key channel:
+      PUBLIC key in fleet-readable GCS; PRIVATE key central-only via a local mode-600 FILE (NOT the worker-readable
+      bucket; multi-line PEM doesn't fit systemd `Environment=`). DR copy of the private key in GCP Secret Manager.
+      Dual-accept window documented below. Collision group: `ao_asym_auth_design`.
+- [x] ✅ [SCRIPT] P2. Provisioned the ES256 keypair: PUBLIC →
+      `gs://central-element-323112-orchestrator-creds/orchestrator/internal-public.pem` (fleet-readable, verified);
+      PRIVATE → GCP Secret Manager `ORCHESTRATOR_INTERNAL_PRIVATE_KEY` (central-only). (KMS-asymmetric-signing is the
+      future hardening — local-file private key is the v1.)
 
-### Phase 2 — Code: dual-accept verify + RS256 sign (single PR)
-- [ ] [CODE] P2. `server/auth.py`: add RS256/ES256 signing (central, private key) + verification (public key). Verifier
-      accepts BOTH HS256 (legacy) and RS256 during the window (try RS256, fall back to HS256). Env:
-      `ORCHESTRATOR_INTERNAL_ALG` (HS256|RS256), `ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS`,
-      `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS`. Unit tests: sign-RS256→verify-RS256, legacy-HS256 still verifies,
-      worker-with-only-public-key CANNOT mint. QG green + quickmerge --agent. Collision group: `ao_asym_auth_code`.
-      Est 0.7 AI-day.
+### Phase 2 — Code: dual-accept verify + ES256 sign ✅ DONE 2026-06-01
+- [x] ✅ [CODE] P2. `server/auth.py`: ES256/RS256 signing (central private key) + DUAL-ACCEPT verify (public-key
+      asymmetric pass restricted to ES256/RS256 — closes alg-confusion — THEN legacy HS256). Operator JWT untouched
+      (separate `INTERNAL_ALG`). Env: `ORCHESTRATOR_INTERNAL_ALG` + `ORCHESTRATOR_INTERNAL_{PRIVATE,PUBLIC}_KEY[_FILE|_GCS]`.
+      Default HS256 → zero behavior change until configured. 7 unit tests (sign/verify ES256, dual-accept legacy HS256,
+      alg-confusion guard, FILE-load). agent-orchestrator@3538894 + @4f2c65f (LDR). ruff + basedpyright clean.
 
-### Phase 3 — Rollout (canary-first)
-- [ ] [SCRIPT] P2. Per-VM systemd drop-in: workers get `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS` + `ALG=RS256`; central
-      gets the private key + `ALG=RS256`. Canary central + one worker first; verify proxy calls succeed; then fleet.
-      Reuse the `verify_fleet_autonomy_health.sh` pattern for confirmation. Collision group: `ao_asym_auth_rollout`.
-      Est 0.3 AI-day.
+### Phase 3 — Rollout (canary-first) ✅ DONE 2026-06-01
+- [x] ✅ [SCRIPT] P2. **Pass A** — deployed @4f2c65f + `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS` systemd drop-in to **all 11
+      VMs** (dual-accept-ready: workers verify HS256+ES256, central still HS256 → zero behavior change). **Pass B** —
+      flipped CENTRAL (api-host) to `INTERNAL_ALG=ES256` + private-key FILE + restart. **E2E verified**: central signs
+      ES256 (validated in-process), and a worker (vm-cefi 172.31.11.51) returned **HTTP 200** for a central-minted ES256
+      internal token vs **401** with no token — i.e. workers verify the central's ES256 tokens via the public key over
+      the live VPC proxy. Zero non-localhost proxy-401s post-flip. Rollback = remove the central ES256 drop-in (workers
+      still dual-accept HS256). NB: the localhost `/git-status` 401s seen during rollout are a PRE-EXISTING local-cron
+      auth issue, unrelated to this migration (separate finding).
 
-### Phase 4 — Retire HS256
-- [ ] [CODE] P2. After ≥48h of all-RS256 traffic with zero HS256-fallback hits (log-confirmed), drop the HS256 accept
+### Phase 4 — Retire HS256 (PENDING — 48h soak)
+- [ ] [CODE] P2. After ≥48h of all-ES256 traffic with zero HS256-fallback hits (log-confirmed), drop the HS256 accept
       path + delete the shared `internal-secret` object. Update codex. Collision group: `ao_asym_auth_code`. Est 0.2
-      AI-day.
+      AI-day. **Soak started 2026-06-01 ~14:00Z.**
 
 ## Closing condition
 All proxy auth is RS256/ES256; no worker holds a signing key; HS256 shared-secret path removed; codex two-secret-model
