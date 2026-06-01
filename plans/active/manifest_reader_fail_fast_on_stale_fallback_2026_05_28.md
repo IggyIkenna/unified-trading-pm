@@ -136,6 +136,50 @@ in incrementally.
 Default behavior unchanged — every caller above sees the same fallback path until the env var is explicitly opted in.
 The cefi-heavy backfill launcher is the first opt-in caller (paired with the shell preflight as defense in depth).
 
+## Follow-up — consolidator LIVENESS, not reader fallback (operator direction 2026-06-01)
+
+> Operator 2026-06-01: "we should never not have consolidator running, so I'm not sure we need a fallback — isn't the
+> fix to loud-fail an event that manifest consolidation isn't running, or check a directory for consolidator events to
+> ensure it's running, where consolidator can ping somehow even if nothing to consolidate. Improve preflight manifest
+> consolidator health."
+
+**Reframe (correct): the per-VM-merge fallback masks a consolidator OUTAGE. The real contract is consolidator
+liveness.** Grounding (verified 2026-06-01):
+
+- The consolidator **already heartbeats every cycle, including no-op cycles**: `manifest_consolidator.py:290` emits
+  `MANIFEST_CONSOLIDATED {no_op: True}` (nothing to consolidate) and `:341` emits `{no_op_unchanged: True}` (shards all
+  already merged), and **both touch the canonical `_index/availability_index.parquet` mtime**. So "fresh canonical
+  mtime" already == "consolidator ran this cycle"; in healthy operation the per-VM fallback should NEVER fire.
+- **Gap**: nothing watches for the heartbeat's ABSENCE. `MANIFEST_CONSOLIDATED` has no liveness consumer, and
+  `MANIFEST_CONSOLIDATION_FAILED` is emitted but consumed by NOTHING (verified by workspace grep) → consolidator
+  outages + failures are currently silent until a downstream reader trips the slow fallback (or OOMs).
+
+Todos (this plan extends from "opt-in read fail-fast" → "consolidator-liveness contract"; the opt-in fail-fast already
+shipped is retained as the read-side enforcement of that contract):
+
+- [ ] [UTL] P1. **Consolidator liveness watchdog** — a checker that reads, per manifest bucket, the last
+      `MANIFEST_CONSOLIDATED` heartbeat (or the canonical `_index/availability_index.parquet` mtime / the
+      `consolidator_run_at` GCS object-metadata marker already stamped each write) and fires a **loud
+      `CONSOLIDATOR_DOWN` alert event** when a bucket misses > N cycles (default N=5 at `*/1`). The heartbeat already
+      exists (incl. no-op ping) — only the watcher is missing. Cadence: own Cloud Run Job + Scheduler, OR fold into the
+      existing freshness-monitor (`feature_service_base/health.py` / freshness_monitor).
+- [ ] [UTL] P1. **Wire `MANIFEST_CONSOLIDATION_FAILED` to alerting** — it is emitted on every failed cycle but currently
+      consumed by nothing. Route it to the same alert sink as `CONSOLIDATOR_DOWN` so a crash-looping consolidator pages
+      instead of silently degrading.
+- [ ] [UTL] P1. **Promote read-path fail-fast from opt-in → DEFAULT** — flip the default of
+      `MANIFEST_FAIL_ON_STALE_FALLBACK` so a stale/missing consolidated index RAISES `ManifestConsolidatorStaleError`
+      + emits a `CONSOLIDATOR_STALE` alert by default. The ~1700-shard per-VM merge stops being an automatic reader path
+      and becomes an explicit, rate-limited recovery escape-hatch (opt-IN, the inverse of today). Audit all callers in
+      the Consumer-audit table above before flipping the default (some batch/preflight callers may legitimately want the
+      recovery merge — make THOSE opt-in).
+- [ ] [UTL] P2. **`assert_consolidator_healthy(bucket)` preflight** — a shared SSOT helper that checks heartbeat/mtime
+      freshness and fails fast with "consolidator down for bucket X, last heartbeat T + remediation" BEFORE a job trusts
+      the index. Replaces each caller spinning its own shell preflight (`deployment-service@7add531` becomes a thin
+      wrapper over this). Composes with the per-group consolidation-health audit checks added 2026-06-01.
+- [ ] [DOC] P2. Codex SSOT: document the liveness contract (heartbeat-every-cycle + watchdog + loud-fail-default +
+      preflight gate) in `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health" and cross-link
+      from `codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast".
+
 ## Success criteria
 
 - C2: unit test passes — 3-case truth table (env-unset / env-set-stale / env-set-fresh).
