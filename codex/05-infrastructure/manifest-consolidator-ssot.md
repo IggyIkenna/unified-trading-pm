@@ -175,8 +175,12 @@ one container invocation. Owner: slot 5 to design + apply.
    `launch-manifest-consolidator-vm.sh`.
 2. **One consolidator per env tier**. Currently only `prd` jobs exist; `dev` + `staging` consolidators must be
    deliberately provisioned + paired with corresponding bucket sets per `cloud-providers.yaml` env-tier policy.
-3. **Idempotent + tolerates missed cycles**. The reader fallback (UTL `read_availability_index`) handles up to 120s of
-   consolidator staleness; anything longer surfaces as a freshness alert in deployment-ui.
+3. **Idempotent + tolerates missed cycles, then LOUD-FAILS**. The consolidator heartbeats every cycle (incl. no-op —
+   it touches the canonical mtime + emits `MANIFEST_CONSOLIDATED`). A reader tolerates up to
+   `MANIFEST_CONSOLIDATED_STALENESS_SEC` of staleness; **beyond that, with other VMs' shards present,
+   `read_availability_index` RAISES `ManifestConsolidatorStaleError` by default** (NOT a silent per-VM merge — see
+   § "Liveness + health contract"). The silent fallback is gone; a stale consolidator is an incident, not a degraded
+   read.
 4. **Singleton per (service_kind, asset_group) job**. Cloud Run guarantees at-most-one execution per cron trigger.
    Manual `gcloud run jobs execute` invocations during operator interventions are safe (CAS on canonical blob prevents
    double-write).
@@ -184,6 +188,35 @@ one container invocation. Owner: slot 5 to design + apply.
    without downgrading `schema_version` (preserve source version). A4 v2 verifies this. The DuckDB merge (§ "Merge
    engine") preserves source version via `union_by_name`; a NULL version in the output traces to a source shard that
    OMITS the column (enumerator-writer gap), not a consolidator downgrade.
+
+## Liveness + health contract (shipped `unified-trading-library@3732ffaa`, 2026-06-01)
+
+The consolidator is infrastructure that **must always run**. The contract makes its absence loud instead of silently
+degrading reads (operator direction 2026-06-01; plan `manifest_consolidator_liveness_health_2026_06_01`).
+
+- **Heartbeat (already existed)** — the consolidator touches the canonical `_index/availability_index.parquet` mtime
+  and emits `MANIFEST_CONSOLIDATED` **every cycle, including no-op cycles** (`manifest_consolidator.py` no-op paths
+  emit `{no_op}` / `{no_op_unchanged}`). So "fresh mtime" == "consolidator ran this cycle".
+- **Read-path loud-fail by DEFAULT** — `read_availability_index`: a stale/missing consolidated index WHILE other VMs'
+  per-VM shards exist raises `ManifestConsolidatorStaleError` + emits `CONSOLIDATOR_STALE`. The ~1700-shard per-VM
+  recovery merge (12+ GB heap → OOM on cefi) is now an explicit opt-IN escape-hatch via `MANIFEST_ALLOW_STALE_FALLBACK=true`
+  (inverse of the legacy opt-in `MANIFEST_FAIL_ON_STALE_FALLBACK`, which still forces fail-fast). A genuinely-empty
+  bucket, and a writer-VM reading back its OWN just-written self-shard on a fresh bucket, are NOT outages (the
+  `exclude_self` guard) and read normally.
+- **Preflight gate** — `assert_consolidator_healthy(bucket)` (exported from `unified_trading_library`): a shared SSOT
+  that raises if the heartbeat is stale past `MANIFEST_CONSOLIDATED_STALENESS_SEC` while other-VM shards exist. VM
+  bootstrap / batch preflight / the shell preflight in `setup-data-pipeline-vm.sh` (`deployment-service@7add531`)
+  should wrap this instead of spinning their own `gsutil` stat.
+- **Liveness watchdog** — `unified_trading_library.monitors.consolidator_liveness.ConsolidatorLivenessMonitor` +
+  `check_buckets()` + CLI (`python -m unified_trading_library.monitors.consolidator_liveness --buckets a,b`). Per
+  bucket it reads the heartbeat age and emits `CONSOLIDATOR_DOWN` (ERROR) when it misses > N cycles (default 5 × 60s),
+  `CONSOLIDATOR_RECOVERED` on return. **Deploy as its own Cloud Run Job + Scheduler (`*/2 * * * *`)** — pending
+  (plan Phase P2 / terraform in `deployment-service/terraform/gcp/`).
+- **Failed-cycle alerting** — `MANIFEST_CONSOLIDATION_FAILED` is now emitted with `severity=ERROR` so the alert sink
+  routes it (it was previously consumed by nothing → silent crash-loops).
+
+Per-asset-group consolidation freshness is audited in each asset-group audit instruction (`(consolidation-health)`
+item) + the engine invariant in `manifest_master_audit_instructions.md` (h2/h3/h4).
 
 ## Composes with
 

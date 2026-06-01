@@ -54,30 +54,30 @@ Models to reuse: `monitors/freshness_monitor.py::FreshnessMonitor.check_and_emit
 
 ## Implementation steps
 
-- [ ] [UTL] P1. **Add event types** `CONSOLIDATOR_DOWN` (critical — heartbeat absent > N cycles) + `CONSOLIDATOR_STALE`
+- [x] ✅ [UTL] P1. UTL@3732ffaa — **Add event types** `CONSOLIDATOR_DOWN` (critical — heartbeat absent > N cycles) + `CONSOLIDATOR_STALE`
       (warn — a reader hit a stale/missing consolidated index) to `events/event_types.py` + re-export from
       `events/__init__.py`. Mirror the `DATA_STALE` / `FEED_UNHEALTHY` severity convention.
-- [ ] [UTL] P1. **`assert_consolidator_healthy(bucket)` preflight helper** in `manifest_writer.py` (or
+- [x] ✅ [UTL] P1. UTL@3732ffaa — **`assert_consolidator_healthy(bucket)` preflight helper** in `manifest_writer.py` (or
       `monitors/consolidator_liveness.py`): reads the consolidator heartbeat age (canonical mtime + `consolidator_run_at`
       marker, max-of), and raises `ManifestConsolidatorStaleError` + emits `CONSOLIDATOR_STALE` when age exceeds the
       staleness budget. Shared SSOT — the shell preflight (`deployment-service@7add531`) becomes a thin wrapper.
-- [ ] [UTL] P1. **Promote read-path fail-fast opt-in → DEFAULT**: flip `_resolve_fail_on_stale_fallback` so a
+- [x] ✅ [UTL] P1. UTL@3732ffaa (guarded: only-when-other-VM-shards-exist + MANIFEST_ALLOW_STALE_FALLBACK opt-out + emit-not-silent; legacy opt-in retained) — **Promote read-path fail-fast opt-in → DEFAULT**: flip `_resolve_fail_on_stale_fallback` so a
       stale/missing consolidated index (when per-VM shards DO exist) RAISES `ManifestConsolidatorStaleError` + emits
       `CONSOLIDATOR_STALE` by **default**. The ~1700-shard per-VM merge becomes an explicit, opt-IN recovery escape-hatch
       via `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverse of today). The genuinely-empty-bucket `_empty` path is
       unchanged. **Audit all 9 callers** in the read-fail-fast plan's Consumer-audit table before flipping; any caller
       that legitimately needs the recovery merge (e.g. a deliberate one-off reconcile) sets the opt-out.
-- [ ] [UTL] P1. **Consolidator liveness watchdog** `monitors/consolidator_liveness.py::ConsolidatorLivenessMonitor`
+- [x] ✅ [UTL] P1. UTL@3732ffaa — **Consolidator liveness watchdog** `monitors/consolidator_liveness.py::ConsolidatorLivenessMonitor`
       (modelled on `FreshnessMonitor`): per manifest bucket, reads last heartbeat age; emits `CONSOLIDATOR_DOWN`
       (critical) when a bucket misses > N cycles (default N=5 at `*/1`), recovery event when it returns. CLI entrypoint
       `python -m unified_trading_library.monitors.consolidator_liveness --buckets ...` for a Cloud Run Job.
-- [ ] [UTL] P1. **Wire `MANIFEST_CONSOLIDATION_FAILED` to alerting**: route it (and `CONSOLIDATOR_DOWN`) to the same
+- [x] ✅ [UTL] P1. UTL@3732ffaa (severity=ERROR) — **Wire `MANIFEST_CONSOLIDATION_FAILED` to alerting**: route it (and `CONSOLIDATOR_DOWN`) to the same
       alert sink as the existing `DATA_FRESHNESS_ALERT_ROUTED` path so a crash-looping consolidator pages.
-- [ ] [TEST] P1. Unit tests: heartbeat-fresh → healthy; heartbeat-stale → `CONSOLIDATOR_DOWN` + `assert_*` raises;
+- [x] ✅ [TEST] P1. UTL@3732ffaa — 141 tests green (13 (re-)written). Unit tests: heartbeat-fresh → healthy; heartbeat-stale → `CONSOLIDATOR_DOWN` + `assert_*` raises;
       recovery emits recovery; fail-fast default raises while opt-out merges; empty-bucket path unaffected.
 - [ ] [INFRA] P2. **Deploy the watchdog**: Cloud Run Job + Cloud Scheduler (`*/2 * * * *`) per env, terraform in
       `deployment-service/terraform/gcp/`. Mirror the consolidator scheduler TF. (Runs-to-completion gate.)
-- [ ] [DOC] P2. **Codex SSOT**: new "Liveness + health contract" section in
+- [x] ✅ [DOC] P2. codex@(this PR) — **Codex SSOT**: new "Liveness + health contract" section in
       `codex/05-infrastructure/manifest-consolidator-ssot.md` (heartbeat-every-cycle + watchdog + loud-fail-default +
       preflight gate) + cross-link from `codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast".
 
