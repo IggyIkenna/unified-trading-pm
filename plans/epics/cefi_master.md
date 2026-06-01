@@ -576,8 +576,8 @@ _(no plans currently assigned at this priority)_
 
 ### [`venue_heartbeat_calibration_2026_05_post23`](../archive/2026_05/venue_heartbeat_calibration_2026_05_post23.md)
 
-**status**: ✅ ARCHIVED 2026-05-23 — All 5 items DEFERRED-OPERATOR-DECISION; blocked on ≥7 days MTDS live telemetry.
-· **estimate**: 1.8 cal AI-days (class: research)
+**status**: ✅ ARCHIVED 2026-05-23 — All 5 items DEFERRED-OPERATOR-DECISION; blocked on ≥7 days MTDS live telemetry. ·
+**estimate**: 1.8 cal AI-days (class: research)
 
 **Deferred (MIGRATED FROM archived plan)** — P0/P1 post-cutover backlog:
 

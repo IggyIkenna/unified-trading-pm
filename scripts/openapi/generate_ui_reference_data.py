@@ -359,7 +359,7 @@ def extract_execution_algos() -> dict[str, object]:
             VALID_INSTRUCTION_TYPES,
         )
 
-        VALID_OMS_TYPES: list[str] = ["NETTING", "HEDGING"]
+        VALID_OMS_TYPES: list[str] = ["NETTING", "HEDGING"]  # noqa: N806
 
         algos["algorithms"] = list(VALID_ALGORITHMS)
         algos["book_types"] = list(VALID_BOOK_TYPES)

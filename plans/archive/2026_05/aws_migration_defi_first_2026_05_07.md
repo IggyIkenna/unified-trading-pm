@@ -18,27 +18,26 @@ related_plans:
 ## Deferred work — migrated to:
 
 DeFi S3/Athena/Glue migration complete (10 buckets, 346,920 objects, 36.83 GB). Post-cutover items migrated to:
-- `plans/epics/infrastructure_master.md` § P3: GCP Pub/Sub inventory, UCI MessageBus abstraction,
-  buildspec.aws.yaml parity (BLOCKED-OPERATOR), reconciler --cloud flag, defi-validation key,
-  AWS IAM perms, operator dual-cloud sign-off, sports/predictions repeat (P3), CI/CD cutover (P3),
-  GCP decommission (P3).
-Archiving 2026-05-23.
-> **🟢 SEQUENCING UPDATE 2026-05-13 — AWS AFTER GCP** (operator direction)
->
-> AWS migration is no longer May-23 critical path. **GCP-only ships May-23**; AWS dual-cloud parity becomes post-cutover
-> (target 2026-06-04, sliding by GCP-green-date). Don't double cloud load before manifest + data-quality is confirmed
-> green on GCP primary. Phases 1-4 (audit + provisioning + ECR + secrets) can run in parallel with GCP backfills (no
-> live blast radius); **Phase 5 cross-cloud data rsync** and **Phase 6 ECS Fargate deployment** are GATED on master plan
-> Gate 4 (GCP manifest+data-quality verification).
->
-> **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
->
-> [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
-> sequences this plan's **Phase 5 cross-cloud rsync AFTER `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 2** GCS
-> bundled migration. Stop in-flight rsync if it crosses the Phase 2 window; restart post-2.2. Also: confirm AWS-side
-> bucket-name resolution uses the same Phase 1.B `bucket_name_ssot_canonicalisation_2026_05_10` UAC SSOT as GCP-side
-> (per Tab 4 close-out 2026-05-08 bucket-name SSOT triple-drift incident — yaml config + per-family config.py + UTL
-> resolver previously diverged).
+
+- `plans/epics/infrastructure_master.md` § P3: GCP Pub/Sub inventory, UCI MessageBus abstraction, buildspec.aws.yaml
+  parity (BLOCKED-OPERATOR), reconciler --cloud flag, defi-validation key, AWS IAM perms, operator dual-cloud sign-off,
+  sports/predictions repeat (P3), CI/CD cutover (P3), GCP decommission (P3). Archiving 2026-05-23.
+  > **🟢 SEQUENCING UPDATE 2026-05-13 — AWS AFTER GCP** (operator direction)
+  >
+  > AWS migration is no longer May-23 critical path. **GCP-only ships May-23**; AWS dual-cloud parity becomes
+  > post-cutover (target 2026-06-04, sliding by GCP-green-date). Don't double cloud load before manifest + data-quality
+  > is confirmed green on GCP primary. Phases 1-4 (audit + provisioning + ECR + secrets) can run in parallel with GCP
+  > backfills (no live blast radius); **Phase 5 cross-cloud data rsync** and **Phase 6 ECS Fargate deployment** are
+  > GATED on master plan Gate 4 (GCP manifest+data-quality verification).
+  >
+  > **🟡 IN-FLIGHT REFACTOR — code-freeze sequencing 2026-05-10** (BE-AWARE)
+  >
+  > [`plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md`](code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+  > sequences this plan's **Phase 5 cross-cloud rsync AFTER `gcs_migration_bundle_pipeline_mode_2026_05_08` Phase 2**
+  > GCS bundled migration. Stop in-flight rsync if it crosses the Phase 2 window; restart post-2.2. Also: confirm
+  > AWS-side bucket-name resolution uses the same Phase 1.B `bucket_name_ssot_canonicalisation_2026_05_10` UAC SSOT as
+  > GCP-side (per Tab 4 close-out 2026-05-08 bucket-name SSOT triple-drift incident — yaml config + per-family
+  > config.py + UTL resolver previously diverged).
 
 # AWS Migration — DeFi-First, May-23 Critical Path
 
@@ -804,8 +803,13 @@ migrated, Glue DB + Athena workgroup configured. Events bucket go-forward only p
 
 _Archived 2026-05-23 slot 2. Phases 1-5b complete (DeFi-first). Post-cutover phases migrated to infrastructure_master._
 
-- **Phase 5 — Cross-cloud data rsync**: DEFERRED-POST-CUTOVER. Gated on master plan Gate 4 (GCP manifest + data-quality green). GCS→S3 rsync per bucket when GCP primary confirmed green.
-- **Phase 6 — ECS Fargate deployment (OPERATOR ACTION)**: BLOCKED-OPERATOR. Full service deployment to AWS ECS Fargate using ECR images. Operator must kick off after GCP primary stable.
-- **Phase 7 — Dual-cloud active mode**: Post-cutover target 2026-06-04. Shadow-mode validation + dual-write routing via UTL `cloud_interface/factory.py`.
-- **Phase 8 — Shadow-mode validation**: Validate byte-equal or within 0.5% drift between GCP↔AWS for all service writes.
-- **Phase 9 — Full-workspace rollout**: Extend AWS dual-cloud from DeFi-first to all asset groups (CeFi, TradFi, Sports, Predictions).
+- **Phase 5 — Cross-cloud data rsync**: DEFERRED-POST-CUTOVER. Gated on master plan Gate 4 (GCP manifest + data-quality
+  green). GCS→S3 rsync per bucket when GCP primary confirmed green.
+- **Phase 6 — ECS Fargate deployment (OPERATOR ACTION)**: BLOCKED-OPERATOR. Full service deployment to AWS ECS Fargate
+  using ECR images. Operator must kick off after GCP primary stable.
+- **Phase 7 — Dual-cloud active mode**: Post-cutover target 2026-06-04. Shadow-mode validation + dual-write routing via
+  UTL `cloud_interface/factory.py`.
+- **Phase 8 — Shadow-mode validation**: Validate byte-equal or within 0.5% drift between GCP↔AWS for all service
+  writes.
+- **Phase 9 — Full-workspace rollout**: Extend AWS dual-cloud from DeFi-first to all asset groups (CeFi, TradFi, Sports,
+  Predictions).

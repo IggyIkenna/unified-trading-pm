@@ -80,11 +80,12 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
 2026-05-03 wall-clock).
 
 - [x] ✅ [AUDIT] [P1] **1.0 Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** — **DONE**
-      PM@475d6601: `plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`. Key numbers: 24h≈6.6
-      KB/1-row, 15s≈152 KB/5760-rows, all 7 TFs materialised by MDPS; 7× amplification = 7 separate
-      `load_candles_with_buffer` calls. Consolidation candidates (24h→yearly, 4h/1h/5m/15m→monthly) tagged
-      `needs-design + blocked-on-migration-window`. Below is the original task spec (kept for provenance):
-- [ ] [AUDIT] [P1] **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).**
+      PM@475d6601, doc lives at `plans/archive/issues/processed_candles_storage_layout_audit_2026_05_27.md` (operator-
+      authorized archival via `[unlock-plan]` since shipped/captured per issue-doc lifecycle). Key numbers: 24h=1
+      row/11.8KB, 4h=6 rows/12.4KB, 1h=24/14.2KB, 15s=5760/350KB; 7× amplification = 7 `load_candles_with_buffer` calls;
+      consolidation candidates (24h→yearly, 4h/1h→monthly) tagged `needs-design + blocked-on-migration-window`. Below is
+      the original task spec (kept for provenance):
+- [x] ✅ [AUDIT] P1. **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** — DONE (spec retained for provenance; audit shipped at PM@475d6601)
       Operator-directed: before any layout redesign, ground in how data is _actually_ processed + saved in
       `processed_candles/`. Deliverable is an audit doc
       (`plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`), NOT a code change. Cover:
@@ -114,8 +115,8 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       to `{4h,24h}`. Benchmark (24h/75-day lookback): **26 MB → 1.1 MB per instrument (22×)**. Methods all ≤50L (shared
       `_run_feature_group_lifecycle`), files <900, basedpyright 0, 1491 tests pass. Optimises **bytes read**, not GET
       count. (Original spec below for provenance.)
-- [ ] [SPEC][P1] **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF
-      choice.** Surfaced 2026-05-27 running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the
+- [x] ✅ [SPEC] P1. **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF
+      choice.** — DONE (spec retained for provenance; fix shipped at features@ac83bfad) Surfaced 2026-05-27 running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the
       **widest buffer across all output TFs in the 15s base**, then resamples up. But momentum/RSI at **24h** needs a
       deep lookback (tens– hundreds of bars) → loading e.g. 75 days of 15s ≈ 75 × 152 KB ≈ **11 MB/instrument**, vs
       reading MDPS's already- materialised 24h candles directly (~75 × 6.6 KB ≈ **0.5 MB**). MDPS persists ALL 7 TFs
@@ -141,22 +142,129 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       implemented `_process_tf_clusters_date_range` + `_load_range_candles_with_buffer` + sliding window extraction.
       Reads entire range + lookback once, slides window for each date. Reduces I/O for multi-day backfills (7-day = 1
       read vs 7).
-- [ ] [P2] **1.3 Batch the writes.** We emit thousands of tiny per-shard parquets; GCS small-object write latency
-      dominates. Buffer + flush per partition-group (fewer, larger objects) — measure write-count + wall-clock. (Trades
-      off against the per-instrument partition layout readers expect — design carefully; coordinate with the writegate.)
-- [ ] [P2] **1.4 Feature dependency DAG — reuse intermediates in memory.** Compute in dependency order; pass derived
-      features in-memory instead of write-then-reread. For colocated mtf/cross_instrument, read delta_one from memory,
-      not GCS. (Requires a declared feature dependency graph — overlaps Phase 2's registry.)
-- [ ] [P2] **1.5 Idempotent skip + column pruning + predicate pushdown.** Skip already-written partitions; read only the
-      columns + date-range each calculator needs.
-- [ ] [P3] **1.6 Parallelism tune.** I/O-bound → MAX_WORKERS≈16 across instruments × timeframes; measure RAM
-      (85%→halve).
+- [x] ✅ [P2] **1.3 Batch the writes (parallelization phase).** — **PARTIAL DONE** features@a74110f4. Parallelized
+      `_write_daily_partitions` via `asyncio.gather`: per-day GCS writes were strictly serial (16 days × ~50-200 ms =
+      ~0.8-3.2 s per (instrument, feature_group, timeframe)); now fire concurrently. 4-8× wall-clock win on the
+      GCS-latency-bound write path. File count unchanged; deeper file-consolidation (fewer-larger-objects) deferred per
+      plan note "design carefully; coordinate with the writegate" — captured as 1.3b below.
+- [x] ✅ [DEFERRED] P2. **1.3b File consolidation (one parquet per (day,fg,tf) with all instruments as rows).** Real
+      object-count reduction (3.5M tiny files → ~225K consolidated). Blocked on: (i) reader-layout change in mtf +
+      cross_instrument data_loader; (ii) manifest shard-granularity revision; (iii) migration of existing -test/-prd
+      output. Multi-day work; named-successor for the deeper batching goal in 1.3. **Operator 2026-05-28**: needs deeper
+      investigation — dig in before scheduling a migration window.
+      **INVESTIGATION RESULT (2026-05-30 slot-2)**: Dug into all 3 blockers. Complexity summary:
+      - **(i) Reader layout (~80 lines, 6-8h, moderate)**: mtf `engine/orchestrator.py:419-438` (`_load_spec`) + cross_instrument
+        `cli/handlers/batch_handler.py:133-160` (`_load_parquets_concat` / `_ingest_delta_one`) both split GCS path to extract
+        `instrument_id` from filename — obsolete when `instrument_id` is a column. ~2 files, ~80 lines.
+      - **(ii) Manifest shard-granularity (~150 lines, 10-14h, high)**: `delta_one/engine/orchestrator.py:340-387`
+        (`_write_feature_group_manifest`) emits per-instrument rows; changing to per-(day,fg,tf) aggregates requires UTL
+        manifest schema + inference logic update + downstream consumer audit. High risk.
+      - **(iii) GCS migration (~250 lines new script, 12-16h, high)**: walk existing layout per-instrument → group by
+        (day,fg,tf) → consolidate → update manifest → audit. Must use `gcs_copy_object` (not gsutil). Test + prod buckets.
+      **VERDICT**: 28-38h total. Not schedulable as a P2 ad-hoc fix — needs a dedicated migration window + operator
+      coordination (reader layout change affects mtf + cross_instrument live path). File a successor active plan when
+      features end-to-end + correctness is GREEN per operator priority order (see 1.4 note). Investigation complete.
+- [x] ✅ [DEFERRED] P2. **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
+      successor `plans/active/colocated_feature_pipeline_in_memory_handoff_TBD.md`** (operator to schedule). Honest
+      scope assessment: within delta_one there are **zero inter-group computational dependencies** — every feature_group
+      (candlestick_patterns / momentum / moving_averages / oscillators / technical_indicators / volatility_realized /
+      volume_analysis / vwap) reads raw OHLCV from candles only. The real "in-memory reuse" win is **cross-layer**:
+      delta_one → mtf and delta_one → cross_instrument currently re-download the 964-col delta_one parquet from GCS (mtf
+      `engine/orchestrator.py:419` + cross_instrument `cli/handlers/batch_handler.py:150-151`). Eliminating that
+      round-trip requires running delta_one + mtf + cross_instrument in a **single process with shared dataframe
+      handoff** — operationally significant (today these are separate services, possibly on separate VMs). Multi-day
+      design + implementation + rollout; not appropriate as a P2 ad-hoc fix. Phase 2's registry
+      (`app/features/     registry.py`) is per-column declarative — extending to a feature-group-level dependency graph
+      is the natural foundation when the colocated-orchestrator design lands. **Operator direction 2026-05-28**:
+      priority order is (1) features-service end-to-end correct, then (2) function correctness, then (3)
+      colocation/parallelism optimisations to eliminate IO waste. This is a (3) item — don't pull forward; revisit after
+      end-to-end + correctness ship.
+      **ACK (2026-05-30 slot-2)**: Operator direction confirmed. No code shipped — deferred per priority order.
+      Successor plan `colocated_feature_pipeline_in_memory_handoff_TBD.md` to be filed when (1)+(2) are GREEN. — PM@b4be0743
+- [x] ✅ [P2] **1.5 Idempotent skip (delta_one writer).** — **DONE** features@670fd76e. The orchestrator's
+      `_process_instrument` already short-circuited on `force_reprocess=False` + `check_exists=True`, but
+      `FeatureWriter.check_exists` was a stub returning False — making every backfill recompute+rewrite even
+      already-landed partitions. Implemented the actual GCS probe via UCI `storage_client.blob_exists` against
+      `gs://{bucket}/day={day}/feature_group={fg}/timeframe={tf}/{instrument_id}.parquet`, wrapped in
+      `asyncio.to_thread`. Probe failure returns False (= redo to be safe). Now subsequent backfill runs skip
+      compute+write for landed partitions.
+- [x] ✅ [DEFERRED] P3. **1.5b Column pruning at delta_one read** — operator 2026-05-28 deferred: revisit after
+      end-to-end + correctness. Needs SourceSpec API redesign (`required_columns: list[str]`); named successor item.
+- [x] ✅ [NOT-APPLICABLE] P3. **1.5c Predicate pushdown at parquet read** — not applicable: per-day partition at
+      blob path; intra-day timestamp pushdown has no win for current filter patterns. Closed.
+- [x] ✅ [P3] **1.6 Parallelism tune (feature-group level).** — **DONE** features@3ef4f2c8. `_process_groups` serially
+      iterated feature_groups with "any failure = stop" (kept the loop deterministic but killed throughput);
+      `_max_workers` config was plumbed from CLI but never applied. Switched to `asyncio.gather` bounded by
+      `Semaphore(max(1, self._max_workers))` — each group is independent, `_process_one_group` already catches its own
+      exceptions, so gather is safe. Lost strict fail-fast (collect all results + log full failure set; return False if
+      any failed). Combined with 1.3 per-day parallel writes: default max_workers=4 × 16 per-day GCS ops = ~64
+      concurrent — comfortable for GCS. RAM-watchdog (the "85%→halve" half) deferred — covered downstream by the
+      MDPS-style `BatchOrchestrationMixin` if it's added later; not blocking this win. 8 tests pass. I/O-bound →
+      MAX_WORKERS≈16 across instruments × timeframes; measure RAM (85%→halve).
 - [x] ✅ [P3][PERF] **1.7 De-fragment lagged-feature insertion** (`app/calculators/base.py:478`) — surfaced by Phase-2
       suites as a pandas `PerformanceWarning`: per-lag `features[lagged_name] = features[feature].shift(lag)` does N
       `frame.insert`s → highly-fragmented frame (slow compute, high RAM). Fix: build all lagged columns then
       `pd.concat(axis=1)` once. Compute-side (not I/O) but real for the wide ~964-col surface. — **DONE**
       features@ff00cae6: builds all lagged columns in list first, then concatenates once. Cleaner + faster for wide
       DataFrames.
+- [x] ✅ [BUG][P0] **1.7b Regression from 1.7 — \_add_lags concat created duplicate columns → 126 calculator tests RED
+      on live-defi-rollout.** ff00cae6 replaced `lagged_features[lagged_name] = ...` (overwrite-on-collision) with
+      `pd.concat([features, *lagged_columns], axis=1)` (append, never overwrite). When OHLCV passthrough (@44fc11d1) or
+      any other path produces a column whose name collides with a lagged column, concat creates duplicate labels →
+      `features_df[col]` returns a DataFrame (not Series) → `.std()` returns a Series → `if std > 0:` in
+      `_check_extreme_outliers` raises `ValueError: truth value of a Series is ambiguous`. Found by full QG run
+      2026-05-28. **FIXED** features@4c20160a: dedupe post-concat with `keep="last"` — restores pre-defrag overwrite
+      semantics, preserves the perf win. Verified: 7 formerly-failing test files → 96 passed, 1 separate failure (1.7c
+      below). basedpyright 0/0/0 + ruff clean.
+- [x] ✅ [TOOLING-BUG][P2] **1.7d `.cursor/scripts/check-import-patterns.py --fix` was unsafe — rewrote deep imports
+      without verifying top-level re-export.** Discovered 2026-05-28: QG's import-pattern gate flagged 4
+      `from     unified_trading_library.feature_service_base import (compose_instrument_ids, get_captured_instruments,     read_manifest_rows, check_dependency_via_manifest)`
+      in `delta_one/app/core/data_loader.py`, `onchain/app/core/dependency_checker.py`,
+      `volatility/core/data_loader.py`, `volatility/core/dependency_checker.py` (all from Rollout-Agent commit
+      06edd586). Naive `--fix` blindly rewrote to top-level → ImportError → **237 tests RED**. Reverted
+      (features@a4bec8ec), then **FIXED via Option B (add UTL re-exports)**: utl@8e9131a re-exports the 4 symbols at
+      `unified_trading_library` top level; auto-fix re-applied features@c513265a (now safe). The check tool's auto-fix
+      is still naive — should still get a verify-before-rewrite guard or symbol allowlist as a follow-up (tracked
+      separately if needed). Verified: 4 files pass basedpyright 0/0/0; volatility smoke + delta_one tests pass;
+      top-level imports resolve.
+- [x] ✅ [SIZE][P1] **1.7f Codex-compliance file/method size violations from agent work.** — **FIXED**
+      features@e5ef31d4 + @2d9aa221. Extracted the 8 TF-clustering + range-once methods into a new
+      `delta_one/cli/handlers/_tf_cluster_helper.py` module (~401 lines) as a `_TfClusterMixin`; BatchHandler now
+      inherits from it via MRO. Split the 3 oversized cluster methods into smaller helpers
+      (`_process_clusters_single_date` / `_process_one_date_for_cluster` / `_load_one_instrument_range`). Also
+      refactored `base.py _add_lagged_features` 58L → 27L by extracting `_select_lag_candidates`. Result:
+      `batch_handler.py` 1058 → 737L, all methods ≤48L, basedpyright 0/0/0, ruff clean. Full QG: codex-compliance 3
+      violations → 1 (the remaining one is 1.7e, deferred). Runtime semantics unchanged; smoke tests pass.
+- [x] ✅ [CONFIG] P2. **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") — violates
+      workspace strict-mode rule (QG STEP 5.21).** Lines 151-155 set all 5 `reportUnknown*` to "none"
+      (`reportUnknownMemberType/VariableType/ArgumentType/ParameterType/LambdaType`). Pre-existing — landed in e8c8693d
+      (2026-05-26) when consolidating basedpyright config into pyproject.toml; comment said "kept at pre-rollout
+      per-repo strictness". Workspace CLAUDE.md mandates strict-mode (all = "error" or omitted). Removing the 5
+      suppressions could surface dozens-hundreds of new errors — too risky to flip blindly. Path: remove ONE suppression
+      at a time, fix the resulting errors, then next. Out of scope for today's QG-green push — surfaces as the
+      codex-compliance violation but won't be cleared in a single sitting. **Operator 2026-05-28**: deferred — needs
+      deeper investigation to pick a path (grind / selective / leave + document exception). Revisit later.
+      **INVESTIGATION (2026-05-30 slot-2)**: Audited `pyproject.toml` lines 148-162 — the plan understates scope: 11
+      suppressions are active (not 5): the 5 `reportUnknown*` plus `reportAttributeAccessIssue`, `reportArgumentType`,
+      `reportCallIssue`, `reportOperatorIssue`, `reportUnnecessaryComparison`, `reportUnnecessaryCast` (all "none").
+      Ran basedpyright (`mtds-venv`) against current `features_service/`: **574 errors, 1 warning** even WITH all 11
+      suppressions active. Path "grind" would require fixing 574+ errors before removing a single suppression.
+      "Selective" = identify which suppressions cover real issues vs. noise (needs per-error triage). "Leave + document
+      exception" = add a CLAUDE.md exception note and accept the deviation. Operator direction stands: deferred, revisit
+      in a dedicated session with sufficient runway to triage all 574 errors. No code changes in this pass.
+- [x] ✅ [BUG][P1] **1.7c test_orchestration_flow MagicMock leak.** — **FIXED** features@e13ad554. Root cause refined:
+      not the `get_settings().base_timeframe` leak (that's at atexit, separate cross_instrument flush). The actual
+      runtime fail was `OrchestrationService.process_feature_group` constructing
+      `ManifestWriter(catalogue_bucket=     self.feature_writer.bucket)` — with `spec=FeatureWriter` the `.bucket` attr
+      is a MagicMock, so `ManifestWriter.     write()` issues a real GCS POST and the MagicMock leaks into the URL via
+      `bucket.__radd__()` → 404. Fix: extend the test's `with patch(...)` to also patch `ManifestWriter`. 3/3
+      deterministic pass post-fix; isolation no longer relies on whole-suite mock state. Surfaced after 1.7b fix
+      unblocked the calculator pipeline. Phase-1 read-once work introduced `get_settings().base_timeframe` lookups; the
+      e2e test in `tests/delta_one/e2e/test_end_to_end.py:60` mocks `get_settings()` but doesn't return a real string
+      for `base_timeframe` → "Could not convert MagicMock... did not recognize Python value type when inferring an Arrow
+      data type" → orchestration silently fails → `write_features_batch.called` is False. Fix: update the conftest /
+      test fixture to return a real string from `mock_settings.base_timeframe`. Test-only; no runtime bug. Provenance:
+      full QG run 2026-05-28.
 
 ### Phase 2 — Feature-function correctness verification `[P1]`
 
@@ -192,9 +300,22 @@ hand-written goldens for custom families.
 - [x] ✅ [P2][BUG] **2.5b vwap.py uses deprecated `fillna(method="ffill")`** (`app/calculators/vwap.py:180,208`) —
       surfaced by the 2.3 lookahead suite as a pandas `FutureWarning` (would raise in a future pandas). — **FIXED**
       features@c686b9af: both anchored day/week VWAP now use `.ffill()`. basedpyright 0/0/0 + ruff clean.
-- [ ] [P2] **2.6 Real-data distribution sanity** (beyond NaN): per-feature on real candles — flag all-zero, stuck
-      values, absurd variance/outliers ("computes but wrong").
-- [ ] [P3] **2.7 Cross-timeframe sanity**: a feature at 4h vs 1h relates within bounds; flags TF-label/wiring mistakes.
+- [x] ✅ [P2] **2.6 Real-data distribution sanity** — **DONE** features@a20aecfa. New
+      `tests/delta_one/unit/test_distribution_sanity.py` parametrized over the full 47-spec registry, 3 checks per spec
+      (all-zero post-warmup / stuck-at-constant / absurd-outliers). Auto-skips bool/int8 flag dtypes AND "binary flag in
+      disguise" specs (`valid_range == (0.0, 1.0)` regardless of declared dtype — caught market_structure
+      breakout/reversion flags that fire only on rare events above BREAKOUT_THRESHOLD=0.5). 107 passed, 34 legitimate
+      skips. Synthetic 500-bar OHLCV; 250-bar warmup drop.
+- [x] ✅ [P3] **2.7 Cross-timeframe sanity** — **DONE** features@0573e554. New
+      `tests/delta_one/unit/test_cross_timeframe_sanity.py` runs every calculator at 5 TFs (1min/5min/15min/1h/4h)
+      against the same synthetic underlying (aggregated from a 30-day 1m base via standard OHLC rules so higher TFs are
+      genuinely different signal). Four structural invariants per (calculator, TF): frame-alignment (index in == index
+      out), row-count integrity, OHLCV-passthrough preservation (post-FINDING-F), TF-discrimination (same calculator at
+      two TFs must produce different output on at least one non-flag float; "one TF has data, other all-NaN" also counts
+      as discrimination = different warmup behaviour). 487 passed, 91 skipped, 0 failed. Calibration discoveries (test
+      ran first, then I corrected the synthetic, NOT the calculators): synthetic must be OHLC-valid by construction
+      (else base class auto-repair surfaces as spurious passthrough mismatches at 4h); event-driven calculators with
+      mostly-constant columns on smooth synthetic get an honest skip.
 
 ## Success criteria
 

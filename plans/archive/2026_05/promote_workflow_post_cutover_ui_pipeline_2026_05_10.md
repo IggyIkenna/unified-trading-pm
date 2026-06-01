@@ -25,17 +25,18 @@ priority: P2
 
 ## Deferred work — migrated to:
 
-All 64 DEFERRED-OPERATOR-DECISION items represent post-cutover implementation scope. Migrated in 7 delivery
-groups to `plans/epics/dart_and_promote_master.md` § P3 (Groups A-G):
+All 64 DEFERRED-OPERATOR-DECISION items represent post-cutover implementation scope. Migrated in 7 delivery groups to
+`plans/epics/dart_and_promote_master.md` § P3 (Groups A-G):
+
 - A: StrategyMaturityPhase enum + lifecycle events
 - B: CandidateManifest enrichment + Firestore + BacktestRunManifest + ranking
 - C: Promote UI endpoints + event-stream convergence
 - D: DART all-archetype visualization
 - E: OperationalMode refactor (pvl-p17a-d)
 - F: Strategy drift watchdog + backtest cron VMs
-- G: Codex + CLAUDE.md post-cutover update
-Full 64-item spec preserved in this archived plan for reference.
-Archiving 2026-05-23.
+- G: Codex + CLAUDE.md post-cutover update Full 64-item spec preserved in this archived plan for reference. Archiving
+  2026-05-23.
+
 # Promote Workflow — Post-cutover UI pipeline + state-machine consolidation
 
 > **🔵 SLOT-7 AUDIT 2026-05-18**: All items in this plan require backend integration (Firestore
@@ -588,6 +589,11 @@ WORKSPACE-WIDE codex audit catches any drift after the post-cutover plan complet
 
 ## Deferred work — migrated to: dart_and_promote_master
 
-_Archived 2026-05-23 slot 2. This plan is the post-cutover companion to `promote_workflow_may23_cli_path_2026_05_10.md`. All 12 phases require post-cutover execution._
+_Archived 2026-05-23 slot 2. This plan is the post-cutover companion to `promote_workflow_may23_cli_path_2026_05_10.md`.
+All 12 phases require post-cutover execution._
 
-- **This entire plan is DEFERRED-POST-CUTOVER**: All 12 phases (lifecycle state-machine consolidation, `CandidateManifest` UAC type, `LifecycleEventType` enum, per-archetype Pydantic config schemas for 48/53 archetypes, drift detection, cross-service auto-registration, continuous backtest cron, backtest persistence + ranking, paper auto-launch, champion store, operational modes consolidation, multi-tenant client-id flow) are gated on DeFi 7-day live soak completing. Pick up after `promote_workflow_may23_cli_path_2026_05_10.md` Phase 13.A completes.
+- **This entire plan is DEFERRED-POST-CUTOVER**: All 12 phases (lifecycle state-machine consolidation,
+  `CandidateManifest` UAC type, `LifecycleEventType` enum, per-archetype Pydantic config schemas for 48/53 archetypes,
+  drift detection, cross-service auto-registration, continuous backtest cron, backtest persistence + ranking, paper
+  auto-launch, champion store, operational modes consolidation, multi-tenant client-id flow) are gated on DeFi 7-day
+  live soak completing. Pick up after `promote_workflow_may23_cli_path_2026_05_10.md` Phase 13.A completes.

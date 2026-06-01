@@ -64,7 +64,7 @@ def add_text_box(
     alignment=PP_ALIGN.LEFT,
     font_color_override=None,
 ):
-    txBox = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))
+    txBox = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(height))  # noqa: N806
     tf = txBox.text_frame
     tf.word_wrap = True
     p = tf.paragraphs[0]

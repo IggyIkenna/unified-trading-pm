@@ -70,8 +70,10 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 3. `.cursor/rules/no-type-any-use-specific.mdc` — no Any types
 4. `unified-trading-pm/codex/06-coding-standards/README.md` — coding standards
 5. `unified-trading-pm/plans/PLAN_FORMAT.md` — plan format; Cursor checkboxes (`- [x]` / `- [ ]`) required
-6. `plans/audit/README.md` — audit lifecycle; every epic has instructions in `plans/audit/instructions/`
-7. **Asset-group vocabulary**: `asset_group` (not `category`). CLI `--asset-group`, envs
+6. `unified-trading-pm/codex/12-agent-workflow/canonical-plan-flow.md` — end-to-end audit → issue → plan → backlog →
+   worker → ship loop (cron timings, silent-failure modes, hygiene scripts)
+7. `plans/audit/README.md` — audit lifecycle; every epic has instructions in `plans/audit/instructions/`
+8. **Asset-group vocabulary**: `asset_group` (not `category`). CLI `--asset-group`, envs
    `VM_ASSET_GROUP`/`MDPS_ASSET_GROUP`. Keys lowercase: `cefi`/`defi`/`tradfi`/`sports`/`prediction`. GCS hive-key:
    `asset_group=` canonical. Plan: `plans/active/venue_axis_asset_group_vocabulary_2026_04_25.md`.
 
@@ -116,6 +118,16 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - Every adapter MUST classify errors via UAC `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED`.
 - Service CLIs: `--operation` (what) `--mode` (batch/live) `--asset-group` (domain). SSOT:
   `codex/06-coding-standards/cli-convention.md`.
+- **Feature formula versioning** (delta_one): every parquet in `features-delta-one-{ag}-{pid}` carries
+  `feature_group_version` as a (1) HIVE PARTITION KEY in the GCS path
+  (`.../feature_group=X/feature_group_version={N}/timeframe=Y/day=Z/instr.parquet`)
+  - (2) file-level parquet footer metadata (`feature_group_version` / `feature_column_versions` JSON / `feature_group`).
+    NO per-row column (path-partitioning beats per-row at millions-of-files scale — selective reads list paths instead
+    of scanning every file). Group version resolves as
+    `max(spec.formula_version for spec in get_specs_by_group(group))`. Registry SSOT:
+    `features_service/delta_one/app/features/registry.py` (1,382 specs / 34 groups). CLI:
+    `features-status [--detailed|--group X|--next N|--export csv|markdown|--check-drift]`. Bump formula_version on MATH
+    change only (NOT config — RSI_14 vs RSI_18 is config). SSOT: `codex/02-data/feature-formula-versioning.md`.
 
 ### Manifest + honest absence
 
@@ -128,8 +140,16 @@ categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2
   `LegacyBlankErrorReasonError`. Enum:
   `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. Per-reason consumer policy table:
   `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
-- Cluster validation MANDATORY at `record_captured()` for bundled data_types. QG STEP 5.64 enforces. UTL raises
+- Cluster validation MANDATORY at `record_captured()` for bundled data_types. UTL raises
   `MissingClusterValidationError` if kwargs absent.
+- **TradFi `source` column (v9 schema)**: `record_captured(source=...)` REQUIRED for all TradFi writes. UTL raises
+  `MissingSourceError` when `asset_group="tradfi"` and `source` omitted. Closed set: `"databento"` / `"massive"`.
+  QG STEP 5.64 enforces; use `# QG-allow: tradfi-source-not-applicable` for kwargs-forwarding patterns.
+  MANIFEST_SCHEMA_VERSION bumped 8→9. Multi-source union semantics: if ≥1 source is `captured`, downstream treats
+  the cell as `captured`. Source priority: `select_primary_available_source()` in
+  `unified_api_contracts.canonical.crosscutting.source_priority`. SSOT:
+  `codex/02-data/honest-absence-downstream-handling.md` § "Multi-source cell consumer policy". Landed:
+  `tradfi_massive_dual_source_2026_05_28.md` Phase 3.
 - `available_at` is per-row write-time. UTL `record_captured` asserts presence internally.
 - Service-output emission: every publish path through `_resolve_policy_output_data_type` + `_publish_emission_check`.
   SSOT: `codex/02-data/service-output-emission-semantics.md`.
@@ -175,7 +195,9 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in
   `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage: `clip_dates_to_source_coverage()` +
   `is_in_known_gap()`.
-- **VIX 15m**: Barchart preload + Yahoo rolling 60d + honest gap. UAC constants in `registry/data_source_continuity.py`.
+- **VIX 15m**: Barchart preload + Yahoo rolling 60d + honest gap. Massive does NOT cover VIX/VX futures — gap remains
+  Barchart+Yahoo post-dual-source (tradfi_massive_dual_source_2026_05_28.md verified 2026-05-30). UAC constants in
+  `registry/data_source_continuity.py`.
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms.
@@ -210,6 +232,73 @@ Todos on fleet VMs without a dev server stay `[BLOCKED-PLAYWRIGHT]` until a UI-c
   `gcs_delete_object` / `gcs_describe_object` — never subprocess `gcloud`/`gsutil` for per-object ops. 250× faster (REST
   API ~100ms vs CLI ~500ms; GIL released → true thread parallelism at workers=32). SSOT:
   `codex/05-infrastructure/gcs-object-operations.md`.
+- **Agent-orchestrator two-secret auth model (HARD RULE codified 2026-05-29)**: the orchestrator runs on TWO
+  cryptographically distinct HS256 secrets — never collapse them into one shared key. (1) `ORCHESTRATOR_JWT_SECRET` —
+  operator dashboard login JWT, **central VM only**, never wired into worker `.env.local`. (2)
+  `ORCHESTRATOR_INTERNAL_SECRET` — central↔worker proxy auth, fleet-shared via
+  `gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret` (workers wire
+  `ORCHESTRATOR_INTERNAL_SECRET_GCS=gs://…/internal-secret`; central holds the literal value because its AWS-host ADC
+  has no GCP project context). The central terminates the operator JWT at the perimeter then mints a fresh 5-min
+  internal-secret-signed token (`auth.get_internal_service_token`) for the upstream Authorization. Operator JWT never
+  reaches a worker. Symptom of regression: dashboard log-in succeeds (200 on `/api/auth/login`) but every
+  `/api/backends` + `/api/vms/<id>/*` returns 401, bouncing the operator back to the login screen. Diagnosis: SSH a
+  worker + check journal for `"Loaded internal central↔worker secret from GCS."` startup line; absence ⇒ `.env.local`
+  missing the GCS URI or `GOOGLE_APPLICATION_CREDENTIALS` unset. Rotation: overwrite the GCS object + restart each
+  orchestrator (`reload_secret()` hot-swap fires on next config-poller tick and clears the cached internal token).
+  SSOTs: `codex/04-architecture/agent-orchestrator-overview.md` § "Auth (two-secret model)" +
+  `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` § "Auth: two-secret model".
+- **Agent-orchestrator auth — setup-tokens only (HARD RULE codified 2026-05-28, Phase 4b-cleanup)**: every account in
+  `agent-orchestrator/data/config/accounts.json` MUST authenticate via its own `oauth_token_env_file`
+  (`~/.claude-accounts/<id>.env`) containing a long-lived setup-token minted via `claude setup-token`. **Never copy
+  `~/.claude/.credentials.json` between machines**. The legacy `.credentials.<id>.json` swap path + the
+  `swap_claude_account.sh` flow are removed; the runtime refuses to spawn a worker / agent / `/usage` probe for an
+  account with no env file. To onboard a new account: (1) run `claude setup-token` on a browser machine, (2) write
+  `CLAUDE_CODE_OAUTH_TOKEN=…` + `unset ANTHROPIC_API_KEY` to `~/.claude-accounts/<id>.env` (mode 600), (3) push to the
+  creds bucket (`gs://central-element-323112-orchestrator-creds/accounts/` and
+  `s3://uts-orchestrator-creds-427895769566/accounts/`), (4) add `oauth_token_env_file` + `setup_token_expires_at` to
+  `accounts.json`. SSOT: `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+- **Agent-orchestrator backlog is plan-driven (HARD RULE codified 2026-05-28, Phase 6)**: tasks in
+  `agent-orchestrator/data/config/backlog.yaml` are auto-derived from `- [ ]` checkboxes in `plans/active/*.md` by
+  `server/regen_backlog_from_plan.py`. **Do not hand-edit `backlog.yaml` to add new tasks** — write the todo in the
+  relevant active plan file using the canonical format (`- [ ] [CATEGORY] P<0-3>. Description`) and let the next
+  `PlanRegenLoop` tick (≤6h, or POST `/api/backlog/regen` for immediate) pull it into the backlog. Idempotency is
+  content-based (dedup by raw todo line), so flipping or editing a todo in the plan won't reset the backlog state.
+  Hand-edits are still legitimate for _tuning_ derived tasks (priority, repos, target_slot, est_hours, collision_group)
+  once they've been auto-created. SSOT: `agent-orchestrator/server/regen_backlog_from_plan.py` +
+  `unified-trading-pm/plans/PLAN_FORMAT.md`.
+- **Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. (HARD RULE codified 2026-05-30)**:
+  `regen_backlog_from_plan.py` is the single source of truth for backlog state. `backlog.yaml` and `state.db` MUST reflect only
+  tasks whose `- [ ]` checkbox is open in an active plan. `ORCHESTRATOR_REGEN_PRUNE_STALE=true` is the default on every fleet VM
+  (enabled via `/etc/systemd/system/orchestrator.service.d/prune-stale.conf`). If you observe `state.db` queued-row count drifting
+  more than ±5 from `backlog.yaml` task count on any VM, run
+  `scripts/orchestrator/verify_fleet_prune_state.sh` to audit and
+  `scripts/orchestrator/enable_prune_stale.sh` to re-enable pruning. SSOT:
+  `plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md`.
+- **Orchestrator autospawn: workers self-heal (HARD RULE codified 2026-05-30)**: `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` is the
+  default on every fleet VM (enabled via `/etc/systemd/system/orchestrator.service.d/autospawn.conf`). The `AutoSpawnLoop`
+  in `server/autospawn.py` wakes a slot automatically when queue > 0 AND no active worker AND account headroom > 50%.
+  Manual SSM spawn (`/api/slots/<id>/spawn`) is only needed for cold-start of a new VM that has never had a drop-in written.
+  If a VM stays idle > 15 min with queued tasks, check that the drop-in exists and `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` is
+  in the unit env. SSOT: `plans/active/autospawn_idle_vms_2026_05_30.md`.
+- **Orchestrator host-offline failover (HARD RULE codified 2026-05-30)**: Soft-pinned tasks fall over to fleet VMs
+  automatically when a host's heartbeat is silent > 10 min. Hard pins (`failover_allowed: false` in plan task YAML)
+  stay — honoured regardless of host state. `ORCHESTRATOR_FAILOVER_ENABLED=true` on **vm-orchestrator only** (single
+  source of failover decisions — enabling on multiple VMs causes race conditions). Enabled via
+  `/etc/systemd/system/orchestrator.service.d/failover.conf`. Re-routing is logged as `failover_rerouted` activity
+  events + rolls back automatically (`failover_rolled_back`) when the host returns with unclaimed tasks. Script:
+  `scripts/orchestrator/enable_failover.sh`. SSOT: `plans/active/harsh_pc_dispatch_failover_2026_05_30.md`.
+- **Orchestrator worker liveness: WorkerLivenessWatchdog auto-kills stuck/silent/context-full workers (HARD RULE codified 2026-06-01)**:
+  `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true` is the default on every fleet VM (enabled via
+  `/etc/systemd/system/orchestrator.service.d/watchdog.conf`). The `WorkerLivenessWatchdog` in
+  `server/worker_liveness_watchdog.py` detects three failure modes every 60 s: (1) **stuck-at-prompt** — pane shows
+  non-empty buffered input with no delta for ≥3 consecutive ticks; (2) **heartbeat-silent** — no `/progress` ping in
+  >900 s AND tmux alive AND slot not blocked; (3) **context-full** — pane matches `/clear to save Xk tokens`
+  (immediate kill). After a kill, `AutoSpawnLoop` respawns a fresh session within 60 s. **Operator must not manually
+  kill tmux sessions to restore velocity** — the watchdog handles it. Anti-thrash: per-slot 5-min kill cooldown +
+  per-VM 20 kills/day cap (Slack alert fires + watchdog goes dormant on cap). Never kill a `blocked` slot. Never kill
+  during `Crunched for / Cogitated for / Worked for / Baked for` pane state (active extended-thinking). Rollout
+  script: `scripts/orchestrator/enable_worker_watchdog.sh`. SSOT:
+  `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
@@ -588,6 +677,7 @@ phase — plans omitting this are review-blocking.
 
 - Pushes to `main` / PRs → CI runs. **Always verify** via
   `gh run list --branch <branch> --repo <owner>/<repo> --limit 5`.
+- **Required check name (all repos)**: `quality-gates-v2` (v1 `quality-gates`/`workspace-qg` retired 2026-05-29 — see `codex/08-workflows/ci-cd-flow.md` § quality-gates-v2).
 - Pushes to `live-defi-rollout` / `feat/*` → NO remote CI. Quality enforced locally via `quality-gates.sh`.
 - On CI fail: `gh run view <run-id> --log-failed`. Fix root cause. Push again.
 - CI failures are NOT issues to flag — fix in real time.

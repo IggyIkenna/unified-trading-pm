@@ -73,7 +73,7 @@ def find_schema_definitions(content: str) -> list[str]:
     so the per-line `# CORRECT-LOCAL` marker is honored consistently across every QG schema check,
     matching the operator's Q3-A1 disposition: features-service-only types stay local with the marker.
     Harsh slot-2 follow-up 2026-05-12 — the header may span multiple physical lines
-    (`class Foo(\n    BaseModel,\n):  # CORRECT-LOCAL ...`); scan the whole header block, not just
+    (`class Foo(\n    BM,\n):  # CORRECT-LOCAL ...`); scan the whole header block, not just
     the `class <name>` line, so multi-line signatures honor the marker too.)
     """
     found: set[str] = set()
@@ -82,7 +82,7 @@ def find_schema_definitions(content: str) -> list[str]:
     def _decl_header(name: str) -> str:
         """Return the full class-declaration header text (start line through the body `:`).
 
-        Handles single-line (`class Foo(BaseModel):  # marker`) and multi-line
+        Handles single-line (`class Foo(BM):  # marker`) and multi-line
         (`class Foo(\n    BaseModel,\n):  # marker`) signatures alike.
         """
         for i, ln in enumerate(lines):

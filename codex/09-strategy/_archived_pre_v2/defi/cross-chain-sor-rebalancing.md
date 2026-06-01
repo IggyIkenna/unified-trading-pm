@@ -104,19 +104,19 @@ Cost analysis for $100,000 rebalance:
 
 ## Instruments
 
-| Instrument Key                     | Venue        | Type     | Role                            |
-| ---------------------------------- | ------------ | -------- | ------------------------------- |
-| `AAVE_V3-ETHEREUM:A_TOKEN:USDC`    | Aave V3 ETH  | aToken   | Lending position (source chain) |
-| `AAVE_V3-ARBITRUM:A_TOKEN:USDC`    | Aave V3 ARB  | aToken   | Lending position (target chain) |
-| `AAVE_V3-OPTIMISM:A_TOKEN:USDC`    | Aave V3 OP   | aToken   | Lending position (target chain) |
-| `AAVE_V3-BASE:A_TOKEN:USDC`        | Aave V3 BASE | aToken   | Lending position (target chain) |
-| `AAVE_V3-POLYGON:A_TOKEN:USDC`     | Aave V3 POLY | aToken   | Lending position (target chain) |
-| `AAVE_V3-AVALANCHE:A_TOKEN:USDC`   | Aave V3 AVAX | aToken   | Lending position (target chain) |
+| Instrument Key                      | Venue        | Type     | Role                            |
+| ----------------------------------- | ------------ | -------- | ------------------------------- |
+| `AAVE_V3-ETHEREUM:A_TOKEN:USDC`     | Aave V3 ETH  | aToken   | Lending position (source chain) |
+| `AAVE_V3-ARBITRUM:A_TOKEN:USDC`     | Aave V3 ARB  | aToken   | Lending position (target chain) |
+| `AAVE_V3-OPTIMISM:A_TOKEN:USDC`     | Aave V3 OP   | aToken   | Lending position (target chain) |
+| `AAVE_V3-BASE:A_TOKEN:USDC`         | Aave V3 BASE | aToken   | Lending position (target chain) |
+| `AAVE_V3-POLYGON:A_TOKEN:USDC`      | Aave V3 POLY | aToken   | Lending position (target chain) |
+| `AAVE_V3-AVALANCHE:A_TOKEN:USDC`    | Aave V3 AVAX | aToken   | Lending position (target chain) |
 | `UNISWAP_V3-ETHEREUM:LP_POSITION:*` | Uniswap V3   | LP NFT   | LP position (source/target)     |
-| `WALLET:SPOT_ASSET:USDC`           | Wallet       | Spot     | In-transit / undeployed capital |
-| `WALLET:SPOT_ASSET:ETH`            | Wallet       | Spot     | Gas token (Ethereum)            |
-| `WALLET:SPOT_ASSET:MATIC`          | Wallet       | Spot     | Gas token (Polygon)             |
-| `SOCKET-BRIDGE:TRANSFER:*`         | Socket       | Transfer | Bridge transaction in flight    |
+| `WALLET:SPOT_ASSET:USDC`            | Wallet       | Spot     | In-transit / undeployed capital |
+| `WALLET:SPOT_ASSET:ETH`             | Wallet       | Spot     | Gas token (Ethereum)            |
+| `WALLET:SPOT_ASSET:MATIC`           | Wallet       | Spot     | Gas token (Polygon)             |
+| `SOCKET-BRIDGE:TRANSFER:*`          | Socket       | Transfer | Bridge transaction in flight    |
 
 ## Key Features Consumed
 
@@ -188,14 +188,14 @@ assessment -> rebalance/exit decisions)
 
 ### Exposure Subscriptions
 
-| Instrument Pattern          | Exposure Type             | Used For                              |
-| --------------------------- | ------------------------- | ------------------------------------- |
-| `AAVE_V3-*:A_TOKEN:*`       | Lending position value    | Per-chain capital deployment tracking |
+| Instrument Pattern           | Exposure Type             | Used For                              |
+| ---------------------------- | ------------------------- | ------------------------------------- |
+| `AAVE_V3-*:A_TOKEN:*`        | Lending position value    | Per-chain capital deployment tracking |
 | `UNISWAP_V3-*:LP_POSITION:*` | LP position value         | Per-chain LP capital tracking         |
-| `WALLET:SPOT_ASSET:*`       | Undeployed capital        | Idle capital detection                |
-| `SOCKET-BRIDGE:TRANSFER:*`  | In-transit capital        | Capital stuck in bridge monitoring    |
-| `WALLET:SPOT_ASSET:ETH`     | Gas token balance (ETH)   | Ensure sufficient gas on Ethereum     |
-| `WALLET:SPOT_ASSET:MATIC`   | Gas token balance (MATIC) | Ensure sufficient gas on Polygon      |
+| `WALLET:SPOT_ASSET:*`        | Undeployed capital        | Idle capital detection                |
+| `SOCKET-BRIDGE:TRANSFER:*`   | In-transit capital        | Capital stuck in bridge monitoring    |
+| `WALLET:SPOT_ASSET:ETH`      | Gas token balance (ETH)   | Ensure sufficient gas on Ethereum     |
+| `WALLET:SPOT_ASSET:MATIC`    | Gas token balance (MATIC) | Ensure sufficient gas on Polygon      |
 
 **SSOT:** `component_config.exposure_monitor.instrument_subscriptions` in strategy config. Schema:
 [`ExposureMonitorConfig`](../../strategy-service/strategy_service/config.py)

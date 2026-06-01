@@ -74,7 +74,8 @@ raw_tick_data/by_date/day=YYYY-MM-DD/asset_group=defi/venue=<V>/chain=<C>/instru
 processed_candles/by_date/day=YYYY-MM-DD/timeframe={15s|1m|5m|15m|1h|4h|24h}/data_type=dex_swaps/...   ← MDPS output
         (verified: only data_type=dex_swaps materialises for DeFi)
 _index/  _manifests/  _vm_staging/  backfill-logs/  configs/
-⚠ lst_rates/  lending_indices/  dex_pools/   ← LEGACY prefixes, stale 2026-04-14 (D2); canonical data is in the dedicated buckets above
+✅ lst_rates/ DELETED 2026-05-28 (1,200 parquets; canonical: lst-rates-central-element-323112 superset)
+⚠ lending_indices/  dex_pools/   ← LEGACY Solana-only prefixes, stale 2026-04-14 (D2 partial); deletion deferred until Gate 2 full migration completes
 ```
 
 The running backfill (`mtds-dex-swaps-backfill`, `collect-dex-swaps`, 2023-01-01→2026-05-25) writes `dex_swaps` +
@@ -110,7 +111,7 @@ instruments" line in MTDS logs (`loaded N stamped instruments for venue=BALANCER
 | `collect-lending-indices` / `collect-evm-defi`                                                                                          | `lending_indices` (+ `utilization`, `risk_params` derived)  | The Graph (Aave native / Messari / Compound custom); DeFiLlama (Solana)   |
 | `collect-lst-rates`                                                                                                                     | `lst_rates`                                                 | EVM: `eth_call` at historical block (Alchemy). Solana: Marinade/Jito REST |
 | `collect-oracle-prices`                                                                                                                 | `oracle_prices`                                             | Chainlink `latestRoundData()` (EVM) + Pyth Hermes REST (Solana)           |
-| `collect-solana-defi`                                                                                                                   | `dex_pools`, `lending_indices`, `lst_rates`, `perp_funding` | Orca/Raydium/Phoenix/Kamino REST, DeFiLlama, Drift S3+API                 |
+| ~~`collect-solana-defi`~~ **(DEPRECATED — MTDS@896d5c9)**                                                                               | ~~`dex_pools`, `lending_indices`, `lst_rates`, `perp_funding`~~ | Monolithic Solana handler deleted Gate 5. Solana venues now in per-data-type handlers: Solana lending (Kamino/Solend/Marginfi) → `collect-lending-indices`; Solana AMM (Orca/Raydium/Phoenix) + Kamino vault → `collect-dex-pools`; LST (Marinade/Jito) → `collect-lst-rates`; Drift → `collect-perp-funding`. instrument_types: `solana_lending`, `solana_vault`, `solana_amm_pool` (UAC@7e9f4ad9 + UAC@90b2bb9d). |
 | `collect-vault-share-price`                                                                                                             | `vault_share_price`                                         | ERC-4626 `convertToAssets`                                                |
 | `collect-perp-funding`                                                                                                                  | `perp_funding`                                              | Drift / GMX / Hyperliquid                                                 |
 | `collect-eigenlayer-rewards`, `-liquidations`, `-flash-loan-events`, `-bridge-events`, `-mev-events`, `-gas-fees`, `-aggregator-routes` | as named                                                    | per-protocol                                                              |

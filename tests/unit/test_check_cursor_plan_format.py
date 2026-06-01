@@ -159,7 +159,7 @@ class TestValidatePlan:
         errors = MOD.validate_plan(plan)
         assert any("overview" in e for e in errors)
 
-    def test_missing_isProject(self, tmp_path: Path) -> None:  # noqa: N802 — mirrors camelCase field name `isProject` in plan frontmatter
+    def test_missing_isProject(self, tmp_path: Path) -> None:  # noqa: N802
         plan = tmp_path / "no-isproject.md"
         plan.write_text(
             "---\nname: Plan\noverview: An overview\ntodos:\n  - id: 1\n    content: foo\n    status: done\n---\nBody\n"

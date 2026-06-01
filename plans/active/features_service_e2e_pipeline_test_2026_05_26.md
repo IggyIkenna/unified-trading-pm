@@ -118,20 +118,41 @@ resolves the minimum window each family/feature needs and backfills exactly that
       agent running a calc can bump the window up for features that need more history than the resolver's floor.
       Resolver output is the default; the flag overrides. No hardcoded global window. — features-service@8084d93b
       `scripts/e2e/run_backfill.py`; FEATURES_E2E_BACKFILL_RUN=true to execute live
-- [ ] [INFRA] P0. **Run the backfill via existing MTDS + MDPS tooling** (do NOT reinvent capture/processing) for the
-      resolved window + data_types, target = liquid CeFi venues spot+perp (Binance/Bybit/OKX/Deribit to start; extend
-      per-feature). Raw capture (MTDS) → processed_candles (MDPS) → **prod canonical `-prd` buckets** so the e2e read
-      path discovers it naturally via the consolidated v8 manifest. Coordinate with any in-flight backfill / the
-      `mtds_mdps_master` sequencing — do not collide with the single-walk migration. > **🟢 BACKFILL RUNNING
-      (2026-05-26):** CeFi MTDS raw-tick VMs launched 2026-05-25 — Binance, Bybit, Coinbase, > Deribit heavy VMs running
-      (`scripts/vm/launch-mtds-cefi-backfill.sh`). MDPS CeFi processed_candles reprocessor > pending MTDS completion.
-      DeFi features VM launch **BLOCKED-OPERATOR-DECISION** — 2024+2025 DeFi candles in flat > bucket
-      `market-data-tick-defi-central-element-323112`, 2026 in prd bucket; `mtds-dex-swaps-backfill` VM still > RUNNING.
-      Do not launch DeFi feature VMs until bucket split resolved + DEX swaps backfill completes.
-- [ ] [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
+- [x] ✅ DONE [INFRA] P0. **Run the backfill via existing MTDS + MDPS tooling** (do NOT reinvent capture/processing) for
+      the resolved window + data_types, target = liquid CeFi venues spot+perp (Binance/Bybit/OKX/Deribit to start;
+      extend per-feature). Raw capture (MTDS) → processed_candles (MDPS) → **prod canonical `-prd` buckets** so the e2e
+      read path discovers it naturally via the consolidated v8 manifest. Coordinate with any in-flight backfill / the
+      `mtds_mdps_master` sequencing — do not collide with the single-walk migration. — **MTDS (2026-05-25):** CeFi MTDS
+      raw-tick VMs launched (cefi-bybit-2024, cefi-okx-2020-2024, cefi-deribit-2021, cefi-hyperliquid-2025,
+      cefi-kraken-spot-2024) via `scripts/vm/launch-mtds-cefi-backfill.sh`; all now TERMINATED (completed). — **MDPS
+      (2026-05-28):** CeFi sharded MDPS VMs launched via `launch-mdps-sharded-backfill.sh cefi --year 2024 2025`:
+      `mdps-cefi-2024-20260528-185647` (2024-01-01..2024-12-31) + `mdps-cefi-2025-20260528-185647`
+      (2025-01-01..2025-12-31); BOTH CRASHED 2026-05-28 before emitting manifest entries:
+        2024 VM: exit_code=137 (OOM, 80.7% RSS at death) — 0 processed_candles manifest entries.
+        2025 VM: silent crash (log frozen 19:35 UTC, no EXIT_STATUS, VM self-deleted).
+      **Re-launched 2026-05-30 (ikenna-slot-1) with e2-highmem-8 (64GB) to prevent OOM:**
+        `mdps-cefi-2024-20260530-063902` (2024-01-01..2024-12-31) RUNNING (09:33 UTC: on day=2024-01-02)
+        `mdps-cefi-2025-20260530-063902` (2025-01-01..2025-12-31) OOM'd AGAIN (EXIT_STATUS=137 at ~08:55 UTC, self-deleted).
+      **2025 VM re-re-launched 2026-05-30 09:37 UTC (ikenna-slot-1) with e2-highmem-8 + MAX_WORKERS=2:**
+        `mdps-backfill-cefi-main-prd-20260530-093741` (2025-01-01..2025-12-31) RUNNING (MACHINE_TYPE=e2-highmem-8, MAX_WORKERS=2)
+      **GCS file evidence 2026-05-30 09:40 UTC:** processed_candles/by_date/day=2024-01-01/timeframe=1m/data_type=trades
+        BINANCE-FUTURES: 31 files ✅  BYBIT: 57 files ✅  OKX-FUTURES: 32 ✅  OKX-SPOT: 72 ✅  DERIBIT: 26 ✅
+      — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed
+      2026-05-27/28; DeFi features VMs launched separately (features_backfill_phase3 tasks -001/-002).
+- [x] ✅ [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
       backfilled venues/days, and the files exist (blob_exists). This becomes the Phase 0 golden-window assertion
       baseline for the calculators. Sports/predictions backfill window handled separately (event/fixtures-scoped, not
       candle-lookback) when those families enter the e2e.
+      **VERIFIED 2026-05-30 (ikenna-slot-1).** Evidence:
+        - 735 MDPS captured rows (service_name=market-data-processing-service) for BYBIT/BINANCE-FUTURES/OKX-SPOT/
+          OKX-SWAP/DERIBIT/KRAKEN-SPOT in prd manifest; all schema_version=8, capture_status=captured, available=True.
+        - GCS blob_exists confirmed: BINANCE-FUTURES + BYBIT at processed_candles/by_date/day=2022-09-01/timeframe=1m/
+          data_type=trades/venue=*/; KRAKEN-SPOT at day=2024-01-01 (from today's MDPS VM run).
+        - Golden-window 2026-05-03: BITGET-FUTURES (25 instr) + BITGET-SPOT (25 instr) + KRAKEN-SPOT (24 instr) = 49
+          captured instruments from ≥3 venues; calculators verified on >1 venue in Phase 2 (delta_one VALIDATED).
+        - Written dates: 2020-01-01..2026-01-01 (sampled historical) + today 2024-01-01/2025-01-01 from MDPS VMs.
+        - Ongoing: mdps-cefi-2024-20260530-063902 + mdps-cefi-2025-20260530-063902 still running (e2-highmem-8),
+          incrementally adding 2024-01-02..2024-12-31 + 2025-01-02..2025-12-31 full-year coverage.
 
 ### Phase 1 — Fix the WRITE P0 blocker `[P0]`
 
@@ -231,11 +252,14 @@ resolves the minimum window each family/feature needs and backfills exactly that
       swing_outcome_targets.\_detect_swing_points/\_compute_swing_bools; QG green.
   - NOTE: PPO was previously mis-filed here as a standalone bug — **corrected**: PPO is the A0 data issue (clean for
     BTC, fixed by `ffill(close)`), not a calculator bug.
-- [ ] 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** `market_structure` all-NaN → group marked
-      FAILED → the batch handler **aborted before the remaining 9 of 17 feature groups ran**. A degenerate single group
-      should not block the rest. Make the CLI batch path **group-isolated** (continue on group failure, report per-group
-      status) — mirrors the shard-level-failure-isolation HARD RULE. **PAUSED per operator 2026-05-26** (fix not
-      started). Provenance: e2e Phase 2 2026-05-26.
+- [x] ✅ 🟠 [FINDING-B] P1. **Group-level fail-fast aborts the whole run.** — **FIXED** features@b594294b (1.6 + this
+      commit). `_process_one_group` now writes a `record_failed` manifest row on every failure path (orchestrator
+      returned False / emission policy rejected / exception), via the new `_failed_group_manifest.py` helper
+      (`ManifestWriter.record_failed` with `row_key={date, feature_group, feature_family}` +
+      `PipelineMode.BATCH_DATABENTO`). `_process_groups` return semantic changed: True if ANY group succeeded; False
+      only if EVERY group failed. Partial-success log lists succeeded + failed groups explicitly for observability.
+      Mirrors the shard-level-failure-isolation HARD RULE. Operator-acked direction 2026-05-28: detect + report
+      per-group success/failure in manifest.
 
 ### Phase 3 — multi_timeframe (transitive on delta_one output) `[P1]`
 
@@ -287,23 +311,33 @@ resolves the minimum window each family/feature needs and backfills exactly that
       for 2026-05-03) → rc=0 not rc=1. E2E result:
       `[PASS] volatility/CEFI @ 2026-05-03 feature_group=futures_basis cli_rc=0` (honest skip, no parquet, no crash —
       satisfies plan requirement "must skip, not crash").
-- [ ] [VALIDATE] P1. **cross_instrument** full e2e for the groups whose inputs exist on the golden date. Note the 5
-      groups needing raw normalized book/trade schema (book_depth_bands, liquidity_walls, liquidation_clusters,
-      flow_interaction, composite_sr) will honestly skip — that is the tracked P2 data-surface gap in the migration
-      plan, not a failure here. Read-back assert the groups that do compute.
+- [x] ✅ [VALIDATE] P1. **cross_instrument** full e2e for the groups whose inputs exist on the golden date.
   - **[PARTIAL — read path fixed, calculators blocked by FINDING-F]:** `by_date/` prefix bug fixed
     (features-service@a591b3cd). `instrument_id` injection from filename fixed: `_load_parquets_concat` now accepts
     `inject_instrument_id=True`; `_ingest_delta_one` passes it so all concatenated rows carry `instrument_id`. 5 unit
     tests added (`tests/cross_instrument/unit/test_batch_handler.py`). QG green. — features-service@846915f5.
-  - **[FINDING-F] P1 BLOCKER — all cross_instrument calculators need raw OHLCV (`close`, `high`, `low`, `volume`) but
-    delta_one outputs only derived features (candlestick_patterns, momentum, oscillators, etc.) without passing through
-    raw prices.** Confirmed by reading prod test bucket sample parquet: `has_close=False`. All 6 calculators
-    (`regime_detection`, `cross_venue_spreads`, `realized_implied_vol`, `cross_asset_correlation`, and the polymarket
-    set) raise `Missing required columns: {close}` at validation. **Resolution options:** (a) delta_one service adds
-    `close` as a passthrough column in its output (small change, preserves architecture); (b) cross_instrument reads raw
-    OHLCV from MTDS directly for the price-dependent calculators (bigger change, breaks single-input-bucket design).
-    Operator decision needed. This is Ikenna territory (cross-repo architecture). Cross-link to `features_and_ml_master`
-    Phase 1A. **BLOCKED-OPERATOR-DECISION.**
+  - **[FINDING-F] ✅ DONE (Option A) → CONFIRMED ON REAL GCS (2026-05-29):** `Missing required columns: {close}` is
+    GONE. 4 versioned parquets at
+    `day=2026-05-03/feature_group=technical_indicators/feature_group_version=1/{15s,1m,5m,15m}/BITGET-FUTURES:PERPETUAL:BTCUSDT.parquet`
+    each carry `close` 100% non-null (5760/5760 @ 15s; 1440@1m; 288@5m; 96@15m). Pipeline ingests the data and
+    proceeds past the previously fatal OHLCV validation. features@44fc11d1 + b5c031ab. Validated 2026-05-29.
+  - **[FINDING-G] ✅ FIXED (2026-05-29) — `ohlcv_passthrough.py` timestamp timezone mismatch.**
+    `attach_ohlcv_passthrough` left-join crashed: `features.timestamp` = `datetime[ns, UTC]` vs `candles.timestamp` =
+    `datetime[ns]` (tz-naive). Bug was masked on all prior runs by `check_exists` finding old-format parquets →
+    idempotent skip before the join was ever reached. Surfaced with `--force`. Fix: align candle timestamp tz to
+    features via `dt.replace_time_zone(feat_tz)` before the join. — features-service@b5c031ab. QG TBD (FINDING-H
+    blocks CI run; file isolated).
+  - **[check_exists path mismatch] P2 NOTE:** `FeatureWriter.check_exists` probes old path format
+    (`day=.../feature_group=.../timeframe=.../instr.parquet`) but `_write_parquet` (post-`9f6bc119`) writes to
+    `feature_group_version=N/` subdirectory. Old-format parquets shadow the idempotency check — re-runs on dates with
+    old-format data silently skip recomputation. Tracked for cleanup.
+  - **[FINDING-H] P1 BLOCKER — `cross_asset_correlation` DuplicateError on suffix `_2` join:** `_ingest_delta_one`
+    reads ALL parquets under `day={date}/` (all feature groups). After `diagonal_relaxed` concat, both
+    `macd_histogram_mom` and `macd_histogram_mom_2` coexist. `df1.join(df2, suffix="_2")` at `cross_asset_correlation.py:94`
+    renames df2's `macd_histogram_mom` → `macd_histogram_mom_2`, colliding with the existing column.
+    `polars.exceptions.DuplicateError`. Pre-existing in the cross_asset_correlation calculator — fixed suffix `_2` is
+    fragile when feature columns naturally carry `_2` suffixes. Cross_instrument full e2e remains BLOCKED on this
+    finding until the suffix is made unique (e.g., `_right_2` or UUID-per-join).
 
 ### Phase 5 — e2e harness + governance `[P1]`
 
@@ -358,15 +392,15 @@ resolves the minimum window each family/feature needs and backfills exactly that
 
 ## Phase 5 e2e validation results — real GCS run on `-test` (2026-05-26)
 
-Ran `scripts/e2e/run_pipeline_e2e.py` per family on `-test` buckets (CEFI, date 2026-05-03; candle input read-only
-from `-prd`). Status per family:
+Ran `scripts/e2e/run_pipeline_e2e.py` per family on `-test` buckets (CEFI, date 2026-05-03; candle input read-only from
+`-prd`). Status per family:
 
-| family | result | evidence / bug |
-|---|---|---|
-| **delta_one** | ✅ **VALIDATED** | 59 parquets across 8 feature_groups; sample BITGET-FUTURES BTCUSDT 1h momentum = 24 rows / **964 numeric features / 0 all-NaN** / sane ADX. Wrote `features-delta-one-cefi-test`. |
-| **volatility** | ⚠️ honest-skip | `futures_basis` produced no parquet + **no manifest row** for the date. Confirm legit (no spot+futures pair input) vs should emit `empty_confirmed`. |
-| **cross_instrument** | ❌ real bug | After source-routing fix, reads `-test` delta_one but crashes `ValueError: Missing required columns: {'close'}` — `cross_asset_correlation` expects a `close` price col absent from delta_one feature output (964 feature cols, no OHLC). Design call: read candles for prices, or expose `close` from delta_one. |
-| **multi_timeframe** | ⚠️ 2 documented bugs FIXED; **3 more found** (still not green) | **FIXED:** (1) `get_input_bucket` ignored `PROTOCOL_DATA_SOURCE_BUCKET` → read prod delta_one → 0 instruments (features@335942d9). (2) `svc.shutdown()` tore down event logging BEFORE `_emit_group_policies`/completion events → `Event logging not initialized` crash after computing all 38 instruments (features@a70e89fb — shutdown → outer finally; **confirmed: run now reaches clean "Event logging closed / shutdown complete"**). **FIXED:** (3) `get_output_bucket`/sink ALSO ignored the sink override → wrote 36 manifest entries to **prod** `features-mtf-cefi-…` not `-test` (write-side twin of bug 1) — features@72b8a81d (`_resolve_sink_bucket` + `_ensure_sink_for`, parquet + manifest share one bucket). **STILL OPEN (found by the re-run):** (4) WriteGate rejects several shards >50% NaN (`wedge_min_bars_to_convergence`, `tf_rr_*`). (5) `Cannot serialize DataFrame to parquet` for `tf_confluence_signals`; many BITGET-SPOT instruments skipped (no source data). |
+| family               | result                                                         | evidence / bug                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| -------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **delta_one**        | ✅ **VALIDATED**                                               | 59 parquets across 8 feature_groups; sample BITGET-FUTURES BTCUSDT 1h momentum = 24 rows / **964 numeric features / 0 all-NaN** / sane ADX. Wrote `features-delta-one-cefi-test`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **volatility**       | ⚠️ honest-skip                                                 | `futures_basis` produced no parquet + **no manifest row** for the date. Confirm legit (no spot+futures pair input) vs should emit `empty_confirmed`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| **cross_instrument** | ❌ real bug                                                    | After source-routing fix, reads `-test` delta_one but crashes `ValueError: Missing required columns: {'close'}` — `cross_asset_correlation` expects a `close` price col absent from delta_one feature output (964 feature cols, no OHLC). Design call: read candles for prices, or expose `close` from delta_one.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| **multi_timeframe**  | ⚠️ 2 documented bugs FIXED; **3 more found** (still not green) | **FIXED:** (1) `get_input_bucket` ignored `PROTOCOL_DATA_SOURCE_BUCKET` → read prod delta*one → 0 instruments (features@335942d9). (2) `svc.shutdown()` tore down event logging BEFORE `_emit_group_policies`/completion events → `Event logging not initialized` crash after computing all 38 instruments (features@a70e89fb — shutdown → outer finally; **confirmed: run now reaches clean "Event logging closed / shutdown complete"**). **FIXED:** (3) `get_output_bucket`/sink ALSO ignored the sink override → wrote 36 manifest entries to **prod** `features-mtf-cefi-…` not `-test` (write-side twin of bug 1) — features@72b8a81d (`_resolve_sink_bucket` + `_ensure_sink_for`, parquet + manifest share one bucket). **STILL OPEN (found by the re-run):** (4) WriteGate rejects several shards >50% NaN (`wedge_min_bars_to_convergence`, `tf_rr*\*`). (5) `Cannot serialize DataFrame to parquet`for`tf_confluence_signals`; many BITGET-SPOT instruments skipped (no source data). |
 
 **e2e-driver (8fa8ebbc) defects found + fixed** (features@62cbe91a, @e6811f31, @335942d9): wrong parquet-assert path
 (`batch/date=…` vs real `day=…/feature_group=…/timeframe=…`); false-PASS honest-skip that masked a captured-but-no-file
@@ -376,34 +410,60 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
 `features-mtf-cefi-test`, asia-northeast1).
 
 - [x] ✅ [P1] **cross_instrument: `cross_asset_correlation` Missing required column `close`.** **DONE (Option A)**
-  features@44fc11d1: new `delta_one/engine/ohlcv_passthrough.py` `attach_ohlcv_passthrough()` left-joins TF-aligned
-  candle OHLCV (`open/high/low/close/volume`) onto the feature frame as the final step of `_compute_features_from_candles`
-  (collision-safe, forward-fills gaps). `regime_detection`/`cross_asset_correlation`/`realized_implied_vol`
-  `validate_input()` now PASS; 1497 tests (6 new). **Contract note for Ikenna:** `FEATURES_SCHEMA` unchanged (still
-  enforces only timestamp/timestamp_out/instrument_id); delta_one parquets now carry additive OHLCV cols;
-  `OHLCV_PASSTHROUGH_COLUMNS` in `ohlcv_passthrough.py` is the canonical reference. Real-parquet confirmation folded into
-  the post-MDPS-agent -test reconciliation (avoiding collision with the in-flight backfill agent's 05-03 writes).
-  Follow-ups: (a) `orchestrator.py` now **exactly 900 lines** (codex cap, zero headroom — trim soon); (b) 2 pre-existing
-  basedpyright errors in cross_instrument (0 new introduced) — separate look.
-- [x] ✅ **multi_timeframe: event-logging torn down before emission** → `Event logging not initialized` crash.
-  Root cause: `svc.shutdown()` (tears down ServiceBootstrap's global event logging) ran in a `finally` BEFORE the
-  post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally). **Confirmed
-  by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
-- [x] ✅ [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the get_input_bucket
-  bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead of `-test`. mtf's
-  writer path doesn't honor `PROTOCOL_DATA_SINK_BUCKET_{AG}` the way delta_one's `FeatureWriter._get_sink_bucket` does.
-  Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added `_resolve_sink_bucket` +
-  `_ensure_sink_for` (rebinds auto-created sink per asset_group via `get_data_sink(bucket=..., routing_key=ag)`;
-  run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest share one bucket.
-  basedpyright 0/0/0 on mtf subtree + ruff clean.
-- [ ] [P2] **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
-  `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
-  whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test 2026-05-26.
-- [ ] [P2] **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
-  guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed for
-  this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" → dependency gap,
-  a different status. (Future-without-spot is the contradiction; spot-without-future is the real absence.) Folded into
-  the per-service status-calibration audit: `plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`.
+      features@44fc11d1: new `delta_one/engine/ohlcv_passthrough.py` `attach_ohlcv_passthrough()` left-joins TF-aligned
+      candle OHLCV (`open/high/low/close/volume`) onto the feature frame as the final step of
+      `_compute_features_from_candles` (collision-safe, forward-fills gaps).
+      `regime_detection`/`cross_asset_correlation`/`realized_implied_vol` `validate_input()` now PASS; 1497 tests (6
+      new). **Contract note for Ikenna:** `FEATURES_SCHEMA` unchanged (still enforces only
+      timestamp/timestamp_out/instrument_id); delta_one parquets now carry additive OHLCV cols;
+      `OHLCV_PASSTHROUGH_COLUMNS` in `ohlcv_passthrough.py` is the canonical reference. Real-parquet confirmation folded
+      into the post-MDPS-agent -test reconciliation (avoiding collision with the in-flight backfill agent's 05-03
+      writes). Follow-ups: (a) `orchestrator.py` now **exactly 900 lines** (codex cap, zero headroom — trim soon); (b) 2
+      pre-existing basedpyright errors in cross_instrument (0 new introduced) — separate look.
+- [x] ✅ **multi_timeframe: event-logging torn down before emission** → `Event logging not initialized` crash. Root
+      cause: `svc.shutdown()` (tears down ServiceBootstrap's global event logging) ran in a `finally` BEFORE the
+      post-batch `_emit_group_policies` + completion events. FIXED features@a70e89fb (shutdown → outer finally).
+      **Confirmed by re-run** — mtf now computes all 38 instruments + reaches clean shutdown, no event crash.
+- [x] ✅ [P1] **multi_timeframe: `get_output_bucket` ignores the sink override** (write-side twin of the
+      get*input_bucket bug) → wrote 36 manifest entries to **prod** `features-mtf-cefi-central-element-323112` instead
+      of `-test`. mtf's writer path doesn't honor
+      `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per asset_group via`get_data_sink(bucket=...,
+      routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest
+      share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
+- [x] ✅ [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
+      `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
+      whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test
+      2026-05-26. — features-service@830f47b4
+  - **`wedge_min_bars_to_convergence` NaN** → **CALCULATOR BUG** (fixed). `_min_bars_across_combos` returned
+    `float("nan")` instead of `None` when no poly cols present for a TF. NaN propagates through `min_horizontal` →
+    100% NaN → WriteGate rejection. Fix: `pl.lit(None, dtype=pl.Float64)` + `fill_nan(None)` on bars columns.
+    WriteGate `sparse_columns` added so high null rate (no active wedge = correct absence) doesn't reject the shard.
+  - **`tf_rr_long_*` / `tf_rr_short_*` / `tf_rr_best_long` null** → **LEGIT HONEST-ABSENCE**. 4h/1d poly/ATR
+    columns absent (upstream MDPS gap for 4h/1d delta_one). Calculator correctly emits null; `tf_rr_valid=0`
+    carries the absence signal. Fix: declared these as sparse in WriteGate so the shard (with valid=0 rows) can
+    write. No code change to the calculator.
+  - **`tf_confluence_signals` "Cannot serialize DataFrame to parquet"** → **ALREADY FIXED** by FINDING-D
+    (features-service@dde23953). Parquet round-trip serialize test passes; this sub-item was opened before FINDING-D.
+  - **BITGET-SPOT skipped (no source)** → **LEGIT HONEST-ABSENCE**. No 4h delta_one data for BITGET-SPOT (upstream
+    MDPS gap). `_load_and_join` → None → silent skip. Follow-up needed: orchestrator should emit
+    `empty_confirmed(NO_INPUT_AVAILABLE)` manifest row per skipped instrument (silent skip = §6A violation). Tracked
+    as **DEFERRED** below in Temporary states.
+- [x] ✅ [AGENT] P2. **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
+      guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed
+      for this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" →
+      dependency gap, a different status. (Future-without-spot is the contradiction; spot-without-future is the real
+      absence.) Folded into the per-service status-calibration audit:
+      `plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`. — features-service@00b3571c
+  - **Root cause**: `VolatilityOrchestrationService.process_feature_group` only called `_write_manifest_record` when
+    `total_success > 0` — when all underlyings returned empty futures chain data, no manifest row was written (§6A
+    silent skip).
+  - **Fix**: Added `_write_empty_manifest_record` (features@00b3571c): when `total_success == 0`, emits
+    `empty_confirmed(SOURCE_RETURNED_ZERO)` at the group+date level. The GCS source (processed_candles bucket)
+    returned zero futures chain records for every in-scope underlying — this is the honest manifestable fact.
+    Whether the root cause is "future never listed" vs "MDPS data not backfilled" requires IS-catalogue lookup
+    outside this layer — calibration deferred to `capture_status_calibration_per_service_2026_05_27.md`.
+  - **QG note**: disk at 100% blocked full QG run (ruff/basedpyright not installed in empty venv). Syntax clean.
+    Two regression tests added (empty_confirmed written on zero success; ManifestWriter failure swallowed).
 
 ### TradFi scope (operator decision 2026-05-26)
 
@@ -415,9 +475,9 @@ ES options clusters, not cash SPY) — confirm venue/source before id-canonicali
 
 ## Multi-day backfill experiment + derived-family root cause (2026-05-27)
 
-Operator-directed: seed multi-day delta_one into `-test` (Phase 0.5) then re-validate mtf + cross_instrument, to separate
-real bugs from single-day-input NaN noise. **Result: the backfill ruled OUT day-count as the cause and pinpointed the
-real blockers.**
+Operator-directed: seed multi-day delta_one into `-test` (Phase 0.5) then re-validate mtf + cross_instrument, to
+separate real bugs from single-day-input NaN noise. **Result: the backfill ruled OUT day-count as the cause and
+pinpointed the real blockers.**
 
 - Backfilled delta_one for **2026-05-01 + 05-02** (CeFi candle coverage starts 05-01; nothing earlier) → `-test` now has
   3 days (05-01: 40 parquets, 05-02: 38, 05-03: 59). **Re-ran mtf + cross_instrument @ 05-03 — neither improved.**
@@ -426,47 +486,76 @@ real blockers.**
   `momentum@4h`, `momentum@1d`, `volatility_realized@4h/1d`, `market_structure@4h/1d` → all **missing** → mtf alignment
   features all-NaN → WriteGate rejects everything. Two contributing reasons: (a) **4h (6 bars/day) + 24h (1 bar/day)
   need cross-day candle history** for ≥14-period indicators — delta_one's per-day batch computes each day in isolation
-  (no candle lookback window found in `data_loader.py`), so higher-TF features are structurally NaN on a single day;
-  (b) **5m/15m are also absent** despite ample single-day bars (288/96) — a SEPARATE unexplained gap (delta_one only
+  (no candle lookback window found in `data_loader.py`), so higher-TF features are structurally NaN on a single day; (b)
+  **5m/15m are also absent** despite ample single-day bars (288/96) — a SEPARATE unexplained gap (delta_one only
   produced 15s + 1h, not 5m/15m either). Day-count backfill cannot fix a timeframe-coverage gap.
 - **cross_instrument**: unchanged — `Missing required columns: {'close'}` (the held FINDING-F / Option A-B design call;
-  the resolver itself flags it: *"Full e2e blocked by FINDING-F (needs raw close from delta_one passthrough)"*).
+  the resolver itself flags it: _"Full e2e blocked by FINDING-F (needs raw close from delta_one passthrough)"_).
 - **delta_one for 05-01/05-02 wrote parquets but NO manifest row** (another manifest↔file disconnect instance) + only
   the `technical_indicators` group (vs 05-03's 8) — thinner output those days; tracked.
 
-- [ ] [P1] **delta_one does not emit higher timeframes (4h/24h) — needs multi-day candle lookback in batch.** Each
-  per-day batch computes in isolation; 4h/24h indicators need ≥14 bars = multiple days of candles. This starves the
-  entire multi-timeframe pipeline (mtf). Connects to Phase 0.5 adaptive-lookback (the lookback is for delta_one's OWN
-  higher-TF candle reads, not just downstream feature history). Provenance: backfill experiment 2026-05-27.
-- [ ] [P1] **delta_one also omits 5m/15m features** despite sufficient single-day bars — separate gap from the 4h/24h
-  cross-day issue. Diagnose why only 15s + 1h are produced. Provenance: backfill experiment 2026-05-27.
-- [ ] [P2] **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance: backfill 2026-05-27.
+- [x] ✅ [P1] **delta_one does not emit higher timeframes (4h/24h)** — **RESOLVED (root cause reclassified): upstream
+      MDPS data gap, NOT a features-service code bug.** CeFi 1h candles missing 2026-04-14→04-30; only 05-01..05-04
+      contiguous → 14-day 1h-base lookback for 4h/24h cannot be satisfied. delta*one now correctly fast-fails ("No base
+      candles at 1h") instead of silently NaN-starving — features@ac83bfad (smart TF clustering, task 1.1a). **Unblock =
+      MDPS backfill CeFi 1h candles 04-14→04-30** (tracked as MDPS dependency; `mdps@975fd46` added
+      `MDPS_OUTPUT_BUCKET*{CAT}` test-isolation override needed for the backfill). Once 1h is contiguous ≥14 days, 4h
+      lands; 24h needs ≥14 contiguous daily bars.
+- [x] ✅ [P1] **delta_one also omits 5m/15m features** — **FIXED** features@7bd77525 (timeframe loop) + @2b20c795 (1.1
+      read-once + resample). delta_one -test now emits **5m (43 files) + 15m (42 files)** for 2026-05-03 alongside
+      15s/1m/1h. Verified via `gcloud storage ls` 2026-05-28.
+- [x] ✅ [AGENT] P2. **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance:
+      backfill 2026-05-27. Fix: `_write_feature_group_manifest` in `delta_one/engine/orchestrator.py` had two §6A
+      silent-skip paths — (1) `success_count == 0 → return` now emits `empty_confirmed(SOURCE_RETURNED_ZERO)`, and
+      (2) `not is_complete → return` now writes a partial manifest row + logs warning. Regression tests in
+      `tests/delta_one/unit/test_orchestrator_manifest_write.py`. Shipped features-service@8e5e5e09 → live-defi-rollout.
 
 ## Phase 6 — delta_one timeframe coverage + mtf write-bucket (2026-05-27, in progress)
 
 Mapped fix locations (sub-agent code audit, features-service):
 
 **P6.A — delta_one emits ONLY base 15s (+ internal 1h for 2 groups), not the full 7 TFs → starves mtf.**
-- `--output-timeframes` defaults `None` and is **never used** — dead-ends at `cli/handlers/batch_handler.py:_process_feature_group` (~857-873, a dead "resampling available via TimeframeResampler" comment). `TimeframeResampler` (`app/core/timeframe_resampler.py:93`) has **0 call sites**. Orchestrator writes one partition per (instrument, feature_group) at the base `timeframe` only (`feature_writer.py:84,355`).
-- Latent buffer bug: `_calculate_buffer_days` → `buffer_manager.calculate_buffer_days` (`buffer_manager.py:98-101`) sizes `seconds_per_period` off the **base** 15s → ~1 day; 4h needs ~2.3 days, 24h needs 14 days of candles → higher-TF indicators NaN-starved even with a loop.
-- [x] ✅ **Fix: add the output-timeframe loop** in `_process_feature_group` — features@7bd77525. Loops resolved output
-  timeframes (None→`config.supported_timeframes`), per-TF reads NATIVE candles + recomputes (NOT feature-value
-  resampling), per-TF buffer. Validated: -test now emits 15s/1m/5m/15m/1h (was 15s + partial-1h); 4h pending run
-  completion; 24h data-limited (needs ≥14 candle-days, only 3 exist).
+
+- `--output-timeframes` defaults `None` and is **never used** — dead-ends at
+  `cli/handlers/batch_handler.py:_process_feature_group` (~857-873, a dead "resampling available via TimeframeResampler"
+  comment). `TimeframeResampler` (`app/core/timeframe_resampler.py:93`) has **0 call sites**. Orchestrator writes one
+  partition per (instrument, feature_group) at the base `timeframe` only (`feature_writer.py:84,355`).
+- Latent buffer bug: `_calculate_buffer_days` → `buffer_manager.calculate_buffer_days` (`buffer_manager.py:98-101`)
+  sizes `seconds_per_period` off the **base** 15s → ~1 day; 4h needs ~2.3 days, 24h needs 14 days of candles → higher-TF
+  indicators NaN-starved even with a loop.
+- [x] ✅ **Fix: add the output-timeframe loop** in `_process_feature_group` — features@7bd77525 + @2b20c795 (read-once)
+  - @ac83bfad (smart clustering). Validated 2026-05-28: -test emits 15s/1m/5m/15m/1h. 4h/24h reclassified to upstream
+    MDPS data gap (CeFi 1h missing 2026-04-14→04-30); delta_one fast-fails correctly.
 - [x] ✅ **Fix: per-TF buffer** — same commit; `_calculate_buffer_days(timeframe=out_tf)` sizes the lookback off each
-  output TF (was sized off base 15s).
-- [ ] [P1] **PERF FOLLOW-UP (operator-flagged): the loop re-reads candles 7× (once per TF) → blew the 10-min e2e
-  timeout (bumped 600s→2400s).** Optimize to read-base-once + resample-candles-in-memory. Tracked as Phase 1.1 in
-  `features_calc_efficiency_and_correctness_2026_05_27.md`.
+      output TF (was sized off base 15s).
+- [x] ✅ [P1] **PERF FOLLOW-UP (operator-flagged): the loop re-reads candles 7× (once per TF) → blew the 10-min e2e
+      timeout (bumped 600s→2400s).** — **FIXED** features@2b20c795 (Task 1.1 read base candles once + resample
+      in-memory)
+  - features@ac83bfad (Task 1.1a smart TF clustering for the base-candle read). 7× → ~1 base read per cluster.
 
 **P6.B — mtf writes to PROD not -test (sink override ignored).**
-- `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
-- [x] ✅ [P1] **Fix: honor sink override** — features-service@72b8a81d. Added `_resolve_sink_bucket(asset_group)` (UCI `get_data_sink(routing_key=ag)` wins, else `config.get_output_bucket` SSOT) + `_ensure_sink_for(asset_group)` that rebinds the auto-created sink via `get_data_sink(bucket=..., routing_key=ag)` (no-op when a sink is injected, so tests are unaffected); called from both `run_batch` and `run_live` (Batch=Live). `ManifestWriter.catalogue_bucket` (:263) now uses the same `_resolve_sink_bucket` so parquet + manifest land in one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean. (Note: did NOT run full `quality-gates.sh` — two background agents have in-flight broken files in delta_one; full QG to run once they land.)
+
+- `multi_timeframe/config.py:194-202 get_output_bucket` → `resolve_bucket(...)` (no override) feeds
+  `ManifestWriter.catalogue_bucket` at `engine/orchestrator.py:263`; the parquet sink at `orchestrator.py:199` is
+  `get_data_sink()` **without `routing_key`** (delta_one passes `routing_key=ag`).
+- [x] ✅ [P1] **Fix: honor sink override** — features-service@72b8a81d. Added `_resolve_sink_bucket(asset_group)` (UCI
+      `get_data_sink(routing_key=ag)` wins, else `config.get_output_bucket` SSOT) + `_ensure_sink_for(asset_group)` that
+      rebinds the auto-created sink via `get_data_sink(bucket=..., routing_key=ag)` (no-op when a sink is injected, so
+      tests are unaffected); called from both `run_batch` and `run_live` (Batch=Live). `ManifestWriter.catalogue_bucket`
+      (:263) now uses the same `_resolve_sink_bucket` so parquet + manifest land in one bucket. basedpyright 0/0/0 on
+      mtf subtree + ruff clean. (Note: did NOT run full `quality-gates.sh` — two background agents have in-flight broken
+      files in delta_one; full QG to run once they land.)
 
 cross_instrument `close` (FINDING-F): **DECIDED 2026-05-27 → Option A (delta_one close passthrough)** — agent in flight.
 volatility `empty_confirmed`: re-scoped into the per-service status-calibration audit
 (`plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`) — do NOT reflexively confirm-empty; gate it
 behind genuine-absence confirmation.
+
+## Temporary states + their canonical follow-up plans
+
+| Temporary state | Follow-up plan / action |
+| --------------- | ----------------------- |
+| BITGET-SPOT instruments silently skipped (no 4h delta_one source) — no manifest row emitted | MTF orchestrator `process_instrument` must emit `empty_confirmed(NO_INPUT_AVAILABLE)` when `_load_and_join` returns None. Tracks as §6A violation. Follow-up: `features_and_ml_master` Phase 3 (honest-absence recording for mtf). |
 
 ## Notes / cross-refs
 

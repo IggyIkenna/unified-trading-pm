@@ -1,0 +1,71 @@
+name: ruleset-drift-alert
+
+# Scheduled drift detector for branch-protection RULESETS across the UTS fleet.
+# Runs verify_branch_protection_check_names.py; if any repo's required status-check
+# contexts no longer match the check-run names its workflows emit (e.g. after a
+# Quality Gates workflow rename), it posts a Slack alert via the notify-slack
+# reusable workflow.
+#
+# Remediate by re-running:  python3 scripts/repo-management/pin_branch_protection_rulesets.py --apply
+# (or apply terraform/github-branch-protection/). SSOT / history:
+#   plans/active/issues/ci_v2_ruleset_check_name_drift_2026_05_30.md
+#
+# NOTE: GitHub `schedule:` triggers only fire from the repo's DEFAULT branch (main),
+# so this alerts once it reaches main via the normal promotion path. Use the manual
+# `workflow_dispatch` to run it on demand from any branch in the meantime.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      drift: ${{ steps.verify.outputs.drift }}
+      report: ${{ steps.verify.outputs.report }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Verify ruleset check-name consistency
+        id: verify
+        env:
+          # Cross-repo ruleset reads need org admin; the default GITHUB_TOKEN is
+          # scoped to this repo only. GH_PAT carries admin:repo across the fleet.
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set +e
+          out=$(python3 scripts/repo-management/verify_branch_protection_check_names.py 2>&1)
+          code=$?
+          echo "$out"
+          if [ "$code" -ne 0 ]; then drift=true; else drift=false; fi
+          {
+            echo "drift=$drift"
+            echo "report<<__RPT__"
+            echo "$out" | grep -E '<-- CHECK|ALL RULESETS CONSISTENT' | head -30
+            echo "__RPT__"
+          } >> "$GITHUB_OUTPUT"
+
+  notify:
+    needs: check
+    if: needs.check.outputs.drift == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: |
+        :rotating_light: Branch-protection ruleset DRIFT detected — required status-check contexts no longer match the check-run names workflows emit (PRs may be un-mergeable).
+        Fix: `python3 scripts/repo-management/pin_branch_protection_rulesets.py --apply` (or apply terraform/github-branch-protection/).
+        Inconsistent rows:
+        ${{ needs.check.outputs.report }}
+      severity: warning
+      workflow_name: ruleset-drift-alert
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

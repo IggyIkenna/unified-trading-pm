@@ -171,10 +171,8 @@ def _call_has_timeframe_arg(call: ast.Call) -> bool:
 def _replace_has_truncation_kwargs(call: ast.Call) -> bool:
     """Return True if .replace(...) has truncation kwargs zeroed out."""
     for kw in call.keywords:
-        if kw.arg in _REPLACE_TRUNCATION_KWARGS:
-            # Match zero/0 literal value
-            if isinstance(kw.value, ast.Constant) and kw.value.value == 0:
-                return True
+        if kw.arg in _REPLACE_TRUNCATION_KWARGS and isinstance(kw.value, ast.Constant) and kw.value.value == 0:
+            return True
     return False
 
 

@@ -258,9 +258,7 @@ class HardcodedPathChecker(ViolationChecker):
             return True
         if '": "/' in stripped or "': '/" in stripped:  # API path in dict
             return True
-        if "{" in stripped and '"/' in stripped:  # Path with param e.g. "/path/{id}"
-            return True
-        return False
+        return "{" in stripped and '"/' in stripped  # Path with param e.g. "/path/{id}"
 
     @override
     def check(self) -> CheckResult:
@@ -505,7 +503,7 @@ def main():
                 results = all_results.get(repo_name) or {}
                 total = sum(r.count for r in results.values())
                 f.write(f"\n## {repo_name} ({total} violations)\n\n")
-                for check_name, result in results.items():
+                for _check_name, result in results.items():
                     if result.count == 0:
                         continue
                     f.write(f"### {result.name} ({result.count})\n\n")

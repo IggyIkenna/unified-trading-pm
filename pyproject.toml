@@ -61,21 +61,11 @@ max-complexity = 26
 "scripts/dev/seed_features.py" = ["BLE001"]
 "scripts/dev/smoke-test-dev.py" = ["BLE001", "S102"]
 # Audit result scripts + one-shot migration scripts: long GCS paths/query strings exceed 120 chars
-"plans/audit/results/*.py" = ["E501", "RUF001", "RUF002", "RUF003", "C901"]
+"plans/audit/results/*.py" = ["E501"]
 "scripts/plans/*.py" = ["E501"]
 "scripts/quality_gates/check_record_empty_reason_closed_set.py" = ["E501"]
 "codex/14-customer-journeys/_tools/build_scope_manifest.py" = ["E501"]
 "codex/06-coding-standards/test-templates/test_event_logging.py" = ["E501"]
-# CI canonical v2 migration 2026-05-29 — workspace tooling scripts have ambient
-# unicode (em-dashes in comments/strings), single-letter or CONSTANT-style local
-# vars in matrix-DAG builders, nested-if patterns mirroring config-tree walks,
-# function complexity > max-complexity=26 in canonical fix-up scripts.
-# These are tool scripts, not production service code — visual-similarity rules
-# (RUF001/002/003), SIM nested-collapse rules, N806 (variable-naming in
-# matrix/manifest scripts), C901 (complexity in canonical fixer scripts), and
-# B007 (loop variable kept-as-iteration-position) are noisy in this surface.
-"scripts/**/*.py" = ["RUF001", "RUF002", "RUF003", "SIM102", "SIM103", "SIM108", "SIM117", "N802", "N806", "C901", "B007", "RUF012"]
-"github-integration/**/*.py" = ["B007", "SIM103"]
 
 # ── basedpyright (typecheck) — CONSOLIDATED; pyrightconfig.json deleted ──────────
 # DEVIATION (scripts-only): include = ["scripts"] instead of a package dir.
@@ -166,6 +156,10 @@ ignore = [
 reportImplicitOverride = "none"
 reportExplicitAny = "none"
 reportAny = "error"
+reportUnknownArgumentType = "error"
+reportUnknownVariableType = "error"
+reportUnknownMemberType = "error"
+reportUnknownParameterType = "error"
 reportUnnecessaryComparison = "warning"
 reportUnreachable = "warning"
 [[tool.basedpyright.executionEnvironments]]

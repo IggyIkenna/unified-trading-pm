@@ -63,6 +63,23 @@ rules, same accountability.
 
 `unified-trading-pm/scripts/dev/slot-git-status-report.sh` — cross-platform
 
+The drift reporter runs every 5 minutes and posts repo state to
+`/api/slots/<N>/git-status`. In addition to standard dirty/ahead/behind
+detection, it **also detects unpushed plan files**:
+
+- Any dirty or untracked path matching `plans/active/*.md` or
+  `plans/active/issues/*.md` in a `unified-trading-pm` worktree is collected
+  into an `unpushed_plans` field in the JSON payload.
+- The `WorkerLivenessKicker` reads this field on every liveness tick and fires
+  a Slack alert **immediately** (no 15-minute threshold) when any plan file is
+  unpushed. Throttled to 1 alert per slot per 30 min.
+- Alert text: `:warning: Slot N has unpushed plan(s): X.md, Y.md`
+
+**Rule**: a dirty plan file is always operator-actionable. The 15-minute staleness
+grace that applies to code repos does not apply to plan files — a plan edit left
+unpushed is invisible to every other VM and breaks the regen loop (see
+`codex/12-agent-workflow/canonical-plan-flow.md`).
+
 ### Verification
 
 `unified-trading-pm/scripts/verify-slot-host-symmetry.sh` — test new hosts

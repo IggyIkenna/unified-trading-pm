@@ -193,9 +193,9 @@ Total defi manifest rows: 1,606,190.
 | attempted_failed | 606,368     | 37.8%     |
 | **captured**     | **311,602** | **19.4%** |
 
-Captured venues (top): UNISWAP_V3 (187,769), MORPHO (45,936), AAVE_V3 (29,782), UNISWAP_V2 (22,168), UNISWAP_V4 (15,093),
-CURVE (2,905), ETHENA (1,537), ETHERFI (1,225), MAKER (1,207), FRAX (933). Solana captures thin (KAMINO 32, RAYDIUM 31,
-ORCA 31, MARINADE 30, SOLEND 29, MARGINFI 16). Captured date range: 2022-11-01 → 2026-05-08.
+Captured venues (top): UNISWAP_V3 (187,769), MORPHO (45,936), AAVE_V3 (29,782), UNISWAP_V2 (22,168), UNISWAP_V4
+(15,093), CURVE (2,905), ETHENA (1,537), ETHERFI (1,225), MAKER (1,207), FRAX (933). Solana captures thin (KAMINO 32,
+RAYDIUM 31, ORCA 31, MARINADE 30, SOLEND 29, MARGINFI 16). Captured date range: 2022-11-01 → 2026-05-08.
 
 ### Sample-verification of corrections (5/5 ✅ no parquet, as expected)
 

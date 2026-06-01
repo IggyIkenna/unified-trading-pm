@@ -30,6 +30,7 @@ make zero network calls.
 from __future__ import annotations
 
 import sys
+import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -59,7 +60,7 @@ from gcs_migration_bundle_2026_05_08 import (  # type: ignore[import-not-found]
     run_migration,
     run_v8_column_backfill,
 )
-from unified_trading_library.manifest_migrations import (  # type: ignore[import-not-found]  # noqa: qg-deep-import
+from unified_trading_library import (  # type: ignore[import-not-found]
     V7ToV8MigrationResult,
 )
 
@@ -533,7 +534,7 @@ def test_parse_rescan_output_counts_class_a_auto_fixes_and_class_c() -> None:
     )
     class_a, class_c = _parse_rescan_output(stdout)
     assert class_a == 2
-    # PHANTOM × 2 + explicit class-C × 1 = 3 triage entries.
+    # PHANTOM x 2 + explicit class-C x 1 = 3 triage entries.
     assert class_c == 3
 
 
@@ -612,7 +613,7 @@ def test_run_cross_asset_rescan_subprocess_command_shape() -> None:
     result = run_cross_asset_rescan(
         asset_group="cefi",
         apply=True,
-        rescan_script=Path("/tmp/dummy_cross_asset_rescan.py"),
+        rescan_script=Path(tempfile.gettempdir()) / "dummy_cross_asset_rescan.py",
         run_fn=fake_run,
     )
     assert len(captured) == 1
@@ -636,7 +637,7 @@ def test_run_cross_asset_rescan_dry_run_omits_apply_flag() -> None:
     run_cross_asset_rescan(
         asset_group="defi",
         apply=False,
-        rescan_script=Path("/tmp/dummy_cross_asset_rescan.py"),
+        rescan_script=Path(tempfile.gettempdir()) / "dummy_cross_asset_rescan.py",
         run_fn=fake_run,
     )
     cmd = captured[0]
@@ -648,7 +649,7 @@ def test_run_cross_asset_rescan_subprocess_failure_surfaces_rc() -> None:
     result = run_cross_asset_rescan(
         asset_group="sports",
         apply=False,
-        rescan_script=Path("/tmp/dummy_cross_asset_rescan.py"),
+        rescan_script=Path(tempfile.gettempdir()) / "dummy_cross_asset_rescan.py",
         run_fn=lambda _cmd: (1, "", "rescan failed: catalog missing"),
     )
     assert result.return_code == 1

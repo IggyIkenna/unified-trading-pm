@@ -77,7 +77,7 @@ def normalize(name: str) -> str:
     return name.lower().replace("_", "-").strip()
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     parser = argparse.ArgumentParser()
     parser.add_argument("--repo", help="Check single repo only")
     parser.add_argument("--json", action="store_true", help="Machine-readable output")

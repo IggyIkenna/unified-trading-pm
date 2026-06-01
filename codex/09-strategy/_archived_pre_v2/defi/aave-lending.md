@@ -29,9 +29,9 @@ Step 2 - WITHDRAW: aUSDT --> USDT  (burn aUSDT, receive USDT + accrued interest)
 
 ## Instruments
 
-| Instrument Key                           | Venue   | Type   | Role                   |
-| ---------------------------------------- | ------- | ------ | ---------------------- |
-| `WALLET:SPOT_ASSET:USDT`                 | Wallet  | Spot   | Initial capital        |
+| Instrument Key                            | Venue   | Type   | Role                   |
+| ----------------------------------------- | ------- | ------ | ---------------------- |
+| `WALLET:SPOT_ASSET:USDT`                  | Wallet  | Spot   | Initial capital        |
 | `AAVE_V3_ETHEREUM:A_TOKEN:AUSDT@ETHEREUM` | Aave V3 | aToken | Yield-bearing position |
 
 ## Data Architecture

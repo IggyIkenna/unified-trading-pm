@@ -372,14 +372,17 @@ def _parse_service_names_from_uac(uac_path: Path) -> list[str]:
         if not isinstance(node, ast.Assign):
             continue
         for target in node.targets:
-            if isinstance(target, ast.Name) and target.id == "SERVICE_OUTPUT_POLICIES":
-                if isinstance(node.value, ast.Dict):
-                    for key_node in node.value.keys:
-                        # Keys are tuples: (service_name, data_type)
-                        if isinstance(key_node, ast.Tuple) and len(key_node.elts) == 2:
-                            svc_node = key_node.elts[0]
-                            if isinstance(svc_node, ast.Constant) and isinstance(svc_node.value, str):
-                                services.append(svc_node.value)
+            if (
+                isinstance(target, ast.Name)
+                and target.id == "SERVICE_OUTPUT_POLICIES"
+                and isinstance(node.value, ast.Dict)
+            ):
+                for key_node in node.value.keys:
+                    # Keys are tuples: (service_name, data_type)
+                    if isinstance(key_node, ast.Tuple) and len(key_node.elts) == 2:
+                        svc_node = key_node.elts[0]
+                        if isinstance(svc_node, ast.Constant) and isinstance(svc_node.value, str):
+                            services.append(svc_node.value)
     return list(set(services))
 
 

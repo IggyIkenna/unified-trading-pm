@@ -19,9 +19,10 @@ priority: P0
 ## Deferred work — migrated to:
 
 Cloud-KMS signing + venue auth + wallet provisioning shipped. Post-cutover items migrated to:
-- `plans/epics/defi_master.md` § P3: AWS SNS/SQS mirroring (1.F), Cross-cloud WIF (1.H), CEFFU (3.B),
-  ltv_safety_margin tuning (R-17), DeFi-data credentials (5.C), Firebase SA JSON (6.B).
-Archiving 2026-05-23.
+
+- `plans/epics/defi_master.md` § P3: AWS SNS/SQS mirroring (1.F), Cross-cloud WIF (1.H), CEFFU (3.B), ltv_safety_margin
+  tuning (R-17), DeFi-data credentials (5.C), Firebase SA JSON (6.B). Archiving 2026-05-23.
+
 # API keys + wallets + accounts readiness — May-23 cutover plan
 
 ## Why this plan exists
@@ -938,13 +939,30 @@ June-1 (successor: `fireblocks_copper_client_integration_2026_06_01.md`).
 
 _Archived 2026-05-23 slot 2. Operator actions and post-cutover items migrated to defi_master backlog._
 
-- **Phase 1.B — AWS IAM matrix provisioning (OPERATOR ACTION)**: `harsh-worker` + `uts-orchestrator-epic-role` both lack `iam:CreateRole`. 30 IAM roles (10 services × 3 tiers) code shipped at `deployment-service/scripts/aws/setup-iam-roles.sh` + `configs/aws_iam_roles.yaml`. Operator must run `bash scripts/aws/setup-iam-roles.sh --apply` as admin IAM user. Successor: `aws_migration_defi_first_2026_05_07.md`. DEFERRED-POST-CUTOVER.
-- **Phase 2.B — Native venue adapter build (6 venues)**: DEFERRED post-cutover. CCXT pass-through acceptable for ≥7-day live smoke on operator funds.
-- **Phase 2.C/D/E — Per-scope key separation / account-limits SSOT / per-venue rate-limit token bucket**: All DEFERRED post-cutover per operator 2026-05-12 scope contraction.
-- **Phase 3.A — Copper sandbox + Phase 3.B — CEFFU KYB + Phase 3.C.2 — Fireblocks**: DEFERRED-AFTER-CUTOVER. Successor plan: `fireblocks_copper_client_integration_2026_06_01.md`.
-- **Phase 5.B.2 — Kalshi API key (OPERATOR ACTION)**: `kalshi-api-key` + `kalshi-private-key-pem` NOT FOUND in SM `central-element-323112`. Full KalshiAdapter shipped at execution-service. Credential approval request in `ikenna_orchestrator/pings/slot_8.md`.
-- **Phase 5.C — CoinGecko API key (OPERATOR ACTION)**: `coingecko-api-key` NOT FOUND in SM. Request in `ikenna_orchestrator/pings/slot_8.md`.
-- **Phase 6.A — Telegram per-env tokens (OPERATOR ACTION)**: Scaffold shipped (3 per-env bot token slots in `notify-telegram.yml`). Operator must provision 3 Telegram bots + set `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV` + `TELEGRAM_CHAT_ID_PROD/STAGING/DEV` GitHub secrets. BLOCKED-OPERATOR.
-- **Phase 6.B — Firebase SA JSON storage**: DEFERRED-AFTER-CUTOVER per operator 2026-05-12 PM. Non-Firebase DeFi auth path needed; spawn `defi_client_auth_path_2026_06_XX.md` when DeFi client auth decided.
-- **Phase 6.C — GHA WIF upgrade (OPERATOR ACTION)**: GCP WIF pool provisioning + GitHub App creation BLOCKED-OPERATOR. Run `gha-wif-migration.md § 1` commands. Scaffold at `codex/07-security/gha-wif-migration.md`.
-- **Phase 8.D — Pre-cutover credential probe (OPERATOR ACTION)**: Must run `credential-probe.sh --mode live --archetype carry_staked_basis` from GCE VM with trading-VM SA. Provision 10 wrapped wallet keys (`csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` etc.) + 11 canonical SM name aliases + 3 infra keys. Pre-cutover-test-wallets-runbook at `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`.
+- **Phase 1.B — AWS IAM matrix provisioning (OPERATOR ACTION)**: `harsh-worker` + `uts-orchestrator-epic-role` both lack
+  `iam:CreateRole`. 30 IAM roles (10 services × 3 tiers) code shipped at
+  `deployment-service/scripts/aws/setup-iam-roles.sh` + `configs/aws_iam_roles.yaml`. Operator must run
+  `bash scripts/aws/setup-iam-roles.sh --apply` as admin IAM user. Successor: `aws_migration_defi_first_2026_05_07.md`.
+  DEFERRED-POST-CUTOVER.
+- **Phase 2.B — Native venue adapter build (6 venues)**: DEFERRED post-cutover. CCXT pass-through acceptable for ≥7-day
+  live smoke on operator funds.
+- **Phase 2.C/D/E — Per-scope key separation / account-limits SSOT / per-venue rate-limit token bucket**: All DEFERRED
+  post-cutover per operator 2026-05-12 scope contraction.
+- **Phase 3.A — Copper sandbox + Phase 3.B — CEFFU KYB + Phase 3.C.2 — Fireblocks**: DEFERRED-AFTER-CUTOVER. Successor
+  plan: `fireblocks_copper_client_integration_2026_06_01.md`.
+- **Phase 5.B.2 — Kalshi API key (OPERATOR ACTION)**: `kalshi-api-key` + `kalshi-private-key-pem` NOT FOUND in SM
+  `central-element-323112`. Full KalshiAdapter shipped at execution-service. Credential approval request in
+  `ikenna_orchestrator/pings/slot_8.md`.
+- **Phase 5.C — CoinGecko API key (OPERATOR ACTION)**: `coingecko-api-key` NOT FOUND in SM. Request in
+  `ikenna_orchestrator/pings/slot_8.md`.
+- **Phase 6.A — Telegram per-env tokens (OPERATOR ACTION)**: Scaffold shipped (3 per-env bot token slots in
+  `notify-telegram.yml`). Operator must provision 3 Telegram bots + set `TELEGRAM_BOT_TOKEN_PROD/STAGING/DEV` +
+  `TELEGRAM_CHAT_ID_PROD/STAGING/DEV` GitHub secrets. BLOCKED-OPERATOR.
+- **Phase 6.B — Firebase SA JSON storage**: DEFERRED-AFTER-CUTOVER per operator 2026-05-12 PM. Non-Firebase DeFi auth
+  path needed; spawn `defi_client_auth_path_2026_06_XX.md` when DeFi client auth decided.
+- **Phase 6.C — GHA WIF upgrade (OPERATOR ACTION)**: GCP WIF pool provisioning + GitHub App creation BLOCKED-OPERATOR.
+  Run `gha-wif-migration.md § 1` commands. Scaffold at `codex/07-security/gha-wif-migration.md`.
+- **Phase 8.D — Pre-cutover credential probe (OPERATOR ACTION)**: Must run
+  `credential-probe.sh --mode live --archetype carry_staked_basis` from GCE VM with trading-VM SA. Provision 10 wrapped
+  wallet keys (`csb-{eth,arb,base,poly,sol}-hot-*-v1-wrapped` etc.) + 11 canonical SM name aliases + 3 infra keys.
+  Pre-cutover-test-wallets-runbook at `codex/05-infrastructure/pre-cutover-test-wallets-runbook.md`.

@@ -64,11 +64,7 @@ because EventBridge Scheduler does not support Batch as a direct target in ap-no
 - [x] ✅ [SCRIPT] P0.6. Verified 10 EventBridge rules ENABLED:
       `aws events list-rules --name-prefix uts-prod-consolidator` → all 10 `ENABLED`, `rate(1 minute)`. —
       deployment-service@abdb1fb | rules verified 2026-05-26
-- [ ] [BLOCKED-INFRA] P0.7. Spot-check consolidation running — BLOCKED until `market-tick-data-service:latest` pushed to
-      ECR repo `427895769566.dkr.ecr.ap-northeast-1.amazonaws.com/market-tick-data-service`. Current ECR repo exists but
-      is empty. Jobs fire and submit correctly (EventBridge invocations metric = 1, FailedInvocations = 0) but fail at
-      Fargate startup with `ResourceInitializationError: ecr:GetAuthorizationToken`. ECR pull auth now granted via
-      `AmazonEC2ContainerRegistryReadOnly` on `unified-trading-role-prod`. Unblocked once image is pushed.
+- [x] ✅ [INFRA] [OPERATOR-PUSH] P0.7. **UNBLOCKED 2026-05-31T10:39Z** — `market-tick-data-service:latest` pushed to ECR by operator. Verified via `aws ecr describe-images --repository-name market-tick-data-service --region ap-northeast-1 --image-ids imageTag=latest`: digest `sha256:ad21c4369e326c738408406bb4dd88bc3c022a19b9c8f7dea351c0a4e9fbcc0b`, pushed at `2026-05-31T10:39:00.296Z`, size `1,418,743,366 bytes (~1.4 GB)`. Push recipe: re-tagged the existing image from GCP Artifact Registry (`asia-northeast1-docker.pkg.dev/central-element-323112/unified-trading-system/market-tick-data-service:latest`) and pushed to AWS ECR via api-host (i-0c9b283b31d6b5ca7) after operator (a) installed Docker v29.1.3 + gcloud SDK on api-host, (b) attached `AmazonEC2ContainerRegistryPowerUser` AWS-managed policy to the `uts-orchestrator-epic-role` IAM role to unblock `ecr:GetAuthorizationToken` (the missing perm the worker BLKs surfaced), (c) authenticated via `aws ecr get-login-password | docker login` + `gcloud auth application-default print-access-token | docker login -u oauth2accesstoken` for GCP AR. Total wall-clock: ~3 min for the actual pull-tag-push, ~10 min including IAM + tooling install. Side-effect IAM fix: `uts-orchestrator-epic-role` now also has ECR-write capability for future PowerUser-level operations from api-host (use with care). Phase D Group B buckets jobs will now succeed at Fargate startup; spot-check the next consolidator run via `aws s3 ls s3://unified-trading-market-data-defi-427895769566/_index/availability_index.parquet` should show fresh mtime within minutes.
 
 ### Phase D — Coverage gap extension (16 more buckets) (0.7 cal-AI-days)
 

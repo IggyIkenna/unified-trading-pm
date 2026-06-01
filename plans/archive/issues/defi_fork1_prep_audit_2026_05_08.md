@@ -38,8 +38,8 @@ locked_since: 2026-05-08
 > deployment-ui data-status denominator (post-launch SOURCE_RETURNED_ZERO miscategorisation).
 >
 > **Suggested owner**: operator triage. Bug-class-4 UAC date drifts → **dedicated tab** (mirror Tab 9 precedent for
-> AAVE_V3-ETHEREUM); collisions with Ikenna's writegate / Tab 9's PM stack mean Tab 14 cannot ship the UAC fix itself per
-> workspace "Two teammates × multiple parallel agents" rule. Bug-class-1/2/3 are diagnostic-only — no code changes
+> AAVE_V3-ETHEREUM); collisions with Ikenna's writegate / Tab 9's PM stack mean Tab 14 cannot ship the UAC fix itself
+> per workspace "Two teammates × multiple parallel agents" rule. Bug-class-1/2/3 are diagnostic-only — no code changes
 > flagged from this audit.
 
 ## Filing rationale
@@ -160,8 +160,8 @@ rule (avoids collisions with Ikenna's writegate + Tab 9's pending PM rebase).
 
 ### Drift table — Fork 1 lending + DEX
 
-| (chain, protocol) pair    | UAC entry                  | actual earliest event (subgraph)                    | drift          | shape                                                                                      |
-| ------------------------- | -------------------------- | --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------ |
+| (chain, protocol) pair     | UAC entry                  | actual earliest event (subgraph)                    | drift          | shape                                                                                      |
+| -------------------------- | -------------------------- | --------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------ |
 | **AAVE_V3 / ETHEREUM**     | 2023-01-27                 | 2023-01-27 08:00:11 UTC                             | 0d             | ✅ correct (Tab 9 fixed)                                                                   |
 | AAVE_V3 / ARBITRUM         | 2022-03-16                 | 2022-03-16 16:00:45 UTC                             | 0d             | ✅ correct                                                                                 |
 | **AAVE_V3 / OPTIMISM**     | 2022-08-04                 | 2022-03-15 21:48:18 UTC                             | UAC 142d LATE  | ❌ **silent data loss** — 142 days clipped as `EXPECTED_PRE_GENESIS_CHAIN`                 |
@@ -178,7 +178,7 @@ rule (avoids collisions with Ikenna's writegate + Tab 9's pending PM rebase).
 | **COMPOUND_V3 / OPTIMISM** | 2024-02-15                 | 2024-04-06 17:09:21 UTC                             | UAC 51d EARLY  | 51d false-empty                                                                            |
 | COMPOUND_V3 / POLYGON      | 2023-02-14                 | (no subgraph in `SUBGRAPH_IDS`)                     | n/a            | UAC entry but no subgraph wired — coverage gap (handler skips, manifest empty)             |
 | COMPOUND_V3 / SCROLL       | 2024-04-22                 | (not probed)                                        | —              | n/a                                                                                        |
-| **SPARK / ETHEREUM**      | (PENDING_INVESTIGATION)    | 2023-03-07 04:31:11 UTC                             | needs entry    | ❌ **add to PROTOCOL_LAUNCH_DATES** + remove from `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` |
+| **SPARK / ETHEREUM**       | (PENDING_INVESTIGATION)    | 2023-03-07 04:31:11 UTC                             | needs entry    | ❌ **add to PROTOCOL_LAUNCH_DATES** + remove from `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION` |
 | **UNISWAP_V3 / ETHEREUM**  | 2021-05-04                 | 2021-05-04 00:00:00 UTC                             | 0d             | ✅ correct                                                                                 |
 | **UNISWAP_V3 / ARBITRUM**  | 2021-08-31 (chain genesis) | 2021-06-01 00:00:00 UTC                             | UAC 91d LATE   | ❌ **silent data loss** — 91 days clipped (subgraph indexes pre-Arb-mainnet-open)          |
 | **UNISWAP_V3 / BASE**      | 2023-08-09 (chain genesis) | 2023-07-31 00:00:00 UTC                             | UAC 9d LATE    | minor — 9d data loss                                                                       |
@@ -277,9 +277,9 @@ into **four batches** that can each be a Tab-9-style fix tab. **Batches don't ru
 
 | Batch | Pairs                                                                                                                                       | Owner / collision risk                    |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
-| **A** | AAVE_V3 / OPTIMISM, POLYGON, AVALANCHE, BASE, LINEA, BSC                                                                                     | UAC + Tab 9's pending PM rebase queue     |
-| **B** | COMPOUND_V3 / ETHEREUM, ARBITRUM, BASE, OPTIMISM                                                                                             | UAC + Ikenna's writegate-related work     |
-| **C** | UNISWAP_V3 / ARBITRUM, BASE, OPTIMISM                                                                                                        | UAC standalone — DEX scope, low collision |
+| **A** | AAVE_V3 / OPTIMISM, POLYGON, AVALANCHE, BASE, LINEA, BSC                                                                                    | UAC + Tab 9's pending PM rebase queue     |
+| **B** | COMPOUND_V3 / ETHEREUM, ARBITRUM, BASE, OPTIMISM                                                                                            | UAC + Ikenna's writegate-related work     |
+| **C** | UNISWAP_V3 / ARBITRUM, BASE, OPTIMISM                                                                                                       | UAC standalone — DEX scope, low collision |
 | **D** | SPARK / ETHEREUM (add to PROTOCOL_LAUNCH_DATES + remove from PENDING_INVESTIGATION) + bSOL (add to LST_TOKEN_GENESIS + LST_VENUE_TO_TOKENS) | UAC + instruments-service catalog impl    |
 
 **Each batch's spawn prompt** mirrors Tab 9's shape (probe → UAC update → MTDS pre-flight test → handler short-circuit

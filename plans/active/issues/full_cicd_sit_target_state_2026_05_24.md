@@ -130,7 +130,7 @@ makes staging current), so Tier C automation starts from a current baseline.
     constructions updated; (3) reason-classifier precedence test re-scoped; (4) **broken deps**: `starlette>=1.0.1` was
     unsatisfiable with `fastapi<1.0.0` → reverted + PYSEC-2026-161 tracked. Pattern for downstream repos: expect
     UAC-contract-drift + cross-repo-SSOT + per-repo accumulated codex-red, not just the SIT skip-guard.
-- [ ] Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks)
+- [ ] [AGENT] P0. Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks)
 - [~] Tier B: full-workspace SIT job **BUILT** (system-integration-tests@f881579):
   `scripts/run_cross_repo_invariants.sh` (asserts full workspace assembled; runs the guarded invariants for real; fails
   on any failure OR skip) + `.github/workflows/full-workspace-sit.yml` (clones all 31 active repos from manifest
@@ -144,6 +144,6 @@ makes staging current), so Tier C automation starts from a current baseline.
   `liquidity`→`dex_pools`, `rate_indices`→`lending_indices`) across UNISWAP_V2/V3/V4-ETHEREUM, CURVE-ETHEREUM,
   AAVE_V3_ETH, MORPHO-ETHEREUM, FLUID-ETHEREUM. This drift is invisible to per-repo CI (UAC's test returns `[]` when the
   MTDS sibling is absent). Tracked below + needs config-vs-data-migration diagnosis before fix.
-- [ ] Tier C: auto LDR→staging promotion bot (dep-order)
-- [ ] Tier D: per-service Cloud Run deploy-config audit
-- [ ] Tier E: game-day + synthetic smokes as staging SIT
+- [ ] [AGENT] P1. Tier C: auto LDR→staging promotion bot (dep-order)
+- [ ] [AGENT] P1. Tier D: per-service Cloud Run deploy-config audit
+- [ ] [AGENT] P2. Tier E: game-day + synthetic smokes as staging SIT

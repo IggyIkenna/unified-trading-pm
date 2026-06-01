@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-21
+last_reviewed: 2026-05-28
 ---
 
 # Orchestrator Safety Mechanisms (SSOT)
@@ -43,60 +43,79 @@ Three signals classify a slot as STUCK (action: respawn after Telegram alert):
 4. `POST /api/slots/<N>/spawn` with the slot's current account (or failover if expired)
 5. Verify new tmux session within 30s; if not, escalate to operator (Telegram + dashboard banner)
 
-## B) Auth failover (non-blocking)
+## B) Auth failover (per-spawn, not mid-session)
 
-When the active credentials for a slot 401 OR Anthropic returns billing/rate-limit error:
+When the active account for a slot hits the rate-limit window OR is otherwise marked unhealthy:
 
-1. Detect at spawn time (slot pane shows `401 Invalid authentication credentials`) OR mid-session (agent's tool call
-   returns 401).
-2. **Do NOT respawn the agent** — that loses context.
-3. Switch the per-account env file via `source ~/.claude-accounts/<next-id>.env` to the next failover account
-   (lowest-weekly-pct-first across the VM's 3 non-primary accounts). Per
-   [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md): env files set
-   `CLAUDE_CODE_OAUTH_TOKEN` to a long-lived 1-year `sk-ant-oat01-...` token; no `.credentials.json` swap.
-4. The in-memory claude session still has the dead token — kicker sends `/clear` or `/login` nudge so claude re-reads
-   env from the shell on next invocation (Anthropic's CLI doesn't auto-detect env change but `/clear` forces fresh
-   session init).
-5. If `/clear` works (verified by next heartbeat succeeding) → done.
-6. If `/clear` doesn't work (e.g. CLI doesn't re-read) → respawn the slot per § A.
+1. Detect via `usage_poller` ticks (5h / weekly / weekly-Sonnet ≥ 95%) or at `/done` time when
+   `account_is_rate_limited()` is true.
+2. **Mid-session token swap is not supported.** claude CLI doesn't re-read env mid-process, and there is no
+   `.credentials.json` to swap (that path was removed in Phase 4b-cleanup 2026-05-28).
+3. `rotate_all_slots_off_account(account_id, trigger=...)` walks every slot currently on the exhausted account, picks a
+   healthy sibling (`_pick_next_account`: lowest-weekly-pct first across accounts.json), and **respawns** each slot on
+   the new account: kill tmux session → re-spawn with `env_file=~/.claude-accounts/<next-id>.env` sourced fresh (per
+   [`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md)).
+4. Workers receive `dispatch_reason: "account-rotated:<new-id> — exiting, new session spawning"` on their next `/done`
+   response and exit cleanly; the orchestrator backend spawns the replacement with the new env file.
+5. If no sibling account is healthy →
+   `dispatch_reason: "Account <X> is rate-limited — no fallback accounts available. Slot held idle until window resets."` +
+   Telegram `notify_all_accounts_exhausted`. No further action until quota resets or operator intervenes.
 
-### Failover selection algorithm (`server/account_failover.py`)
+**Why not mid-session swap?** Setup-tokens are sourced once at `bash -c 'source <env_file>; exec claude'` time; the
+authenticated session caches the token in-process. There is no `/clear`-then-reauth path that re-reads env on a live
+session — the spawn must be replaced. This is intentional: a clean respawn preserves no half-state, and the new worker
+reads the freshest `accounts.json` + creds-bucket state.
+
+### Failover selection algorithm
+
+Implementation in `server/server.py::_pick_next_account` (called from `rotate_all_slots_off_account`):
 
 ```python
-def pick_failover_account(vm_id, current_account, exclude=None):
-    candidates = registry[vm_id].failover_accounts
-    candidates = [a for a in candidates if a != current_account and a not in (exclude or [])]
-    # Filter out exhausted (weekly_pct >= 95, sonnet_pct >= 95, 5h_pct >= 95) + rate_limited_until > now
-    healthy = [a for a in candidates if account_healthy(a)]
-    if not healthy:
-        return None  # Telegram alert: all-VM-accounts-exhausted
-    # Sort by remaining headroom (lowest_weekly_pct first)
-    return min(healthy, key=lambda a: account_state[a].weekly_pct)
+def _pick_next_account(current_account_id, session):
+    # Iterate accounts.json in declared order; skip current + skip exhausted
+    # (weekly_pct >= 95 OR weekly_sonnet_pct >= 95 OR five_hour_pct >= 95 OR
+    #  rate_limited_until > now). Return first healthy match.
+    # If no healthy match: return None → Telegram notify_all_accounts_exhausted.
 ```
 
-## C) Telegram alerts (workspace-wide alert framework)
+Lowest-pct-first selection is a future refinement; today the algorithm is "first healthy in declared order" which is
+deterministic and simple. Refining to `min(healthy, key=lambda a: a.weekly_pct)` is a single-line change in
+`_pick_next_account` when the operator decides headroom-aware routing is worth the added complexity.
 
-| Event                           | When                                                             | Severity  |
-| ------------------------------- | ---------------------------------------------------------------- | --------- |
-| `notify_agent_stuck_respawned`  | Auto-respawn fired per § A                                       | warn      |
-| `notify_agent_stuck_escalation` | Respawn failed; operator needs to intervene                      | crit      |
-| `notify_account_failover`       | Active account swapped per § B                                   | info      |
-| `notify_all_accounts_exhausted` | Failover ran out of healthy accounts                             | crit      |
-| `notify_setup_token_required`   | 1-year long-lived token dead; operator must regenerate (replaces | crit      |
-|                                 | `notify_oauth_refresh_failed` under r3 auth — see auth SSOT)     |           |
-| `notify_setup_token_expiring`   | Token within 30-day (warn) or 7-day (crit) window of expiry      | warn/crit |
-| `notify_git_staleness_red`      | Slot git_status red >15 min AND no auto-pull within 5 min        | warn      |
-| `notify_vm_unreachable`         | Dashboard's `/api/vm/summary` 5xx'd for >5 min                   | warn      |
+## C) Telegram / Slack alerts (workspace-wide alert framework)
+
+Current inventory (verified 2026-05-28; both `server/notifications/slack.py` and `server/notifications/telegram.py`
+expose this set):
+
+| Event                              | When                                                              | Severity  |
+| ---------------------------------- | ----------------------------------------------------------------- | --------- |
+| `notify_slot_blocked`              | Slot calls `/blocked` (operator answer needed)                    | warn      |
+| `notify_slot_stale`                | HealthMonitor sees working slot silent >25 min                    | warn      |
+| `notify_slot_failed`               | HealthMonitor sees idle slot dead                                 | crit      |
+| `notify_spawn_failure`             | `tmux_spawn.spawn` raised inside the spawn endpoint               | crit      |
+| `notify_agent_stuck_respawned`     | Auto-respawn fired per § A                                        | warn      |
+| `notify_agent_stuck_escalation`    | Respawn failed; operator needs to intervene                       | crit      |
+| `notify_account_rotated`           | Active account swapped per § B (slot respawned with new env file) | info      |
+| `notify_all_accounts_exhausted`    | Failover ran out of healthy accounts                              | crit      |
+| `notify_setup_token_expiring`      | Token within 30-day (warn) or 7-day (crit) window of expiry       | warn/crit |
+| `notify_git_staleness_red`         | Slot git_status red >15 min AND no auto-pull within 5 min         | warn      |
+| `notify_orchestrator_restart_loop` | systemd OnFailure fires >N restarts in window (Telegram only)     | crit      |
 
 All channels: same group chat (`-5288420200`) for now. Per-VM channels deferred.
 
-**Deprecated under r3 auth** (see
-[`claude-cli-multi-account-headless-auth.md`](claude-cli-multi-account-headless-auth.md)):
+**Removed 2026-05-28 (Phase 4b-cleanup)** — the short-lived OAuth refresh path no longer exists, so neither do its
+notifications. If you see code referencing any of these, treat it as stale documentation:
 
-- ❌ `notify_oauth_token_expiring` (was firing at 1h-out for 8h tokens — replaced by `notify_setup_token_expiring` at
-  30-day-out)
-- ❌ `notify_oauth_refresh_succeeded` (no refresh under r3; 1-year tokens don't rotate)
-- ❌ `notify_oauth_refresh_failed` (replaced by `notify_setup_token_required`)
+- ❌ `notify_oauth_token_expiring` — was firing at 1h-out for 8h tokens; replaced by `notify_setup_token_expiring` at
+  30-day-out
+- ❌ `notify_oauth_refresh_succeeded` — no refresh under r3; 1-year tokens don't rotate
+- ❌ `notify_oauth_refresh_failed` — no programmatic refresh attempts to fail
+
+**Not yet implemented** (referenced in earlier drafts of this doc):
+
+- `notify_setup_token_required` — when a 1-year token dies pre-expiry (e.g. operator revokes). Currently treated as the
+  same path as `notify_slot_failed` + manual investigation
+- `notify_vm_unreachable` — central API surfaces 5xx for >5 min. Currently surfaces via Fleet tab card state, not alert
 
 ## D) Git staleness ping + alert
 

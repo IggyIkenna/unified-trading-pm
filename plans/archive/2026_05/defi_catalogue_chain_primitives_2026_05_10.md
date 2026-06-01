@@ -624,8 +624,8 @@ Owner: harsh + parallel agents per protocol.
 >
 > **Per-pair capture status** (verified 2026-05-12, sample-inspected at slot 3 audit 2026-05-11):
 >
-> | Protocol   | Chain    | SUPPLY_APY / BORROW_APY / UTILISATION                                                                                    | Horizon                                                  | Slot 5 unblock |
-> | ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- | -------------- |
+> | Protocol    | Chain    | SUPPLY_APY / BORROW_APY / UTILISATION                                                                                    | Horizon                                                  | Slot 5 unblock |
+> | ----------- | -------- | ------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- | -------------- |
 > | AAVE_V3     | ETHEREUM | ✅ captured                                                                                                              | 2022-03-01 → 2026-05-07 (tail behind today)              | ✅ NOW         |
 > | AAVE_V3     | ARBITRUM | ✅ captured (consolidator-confirmed)                                                                                     | 2022-03-16 → 2026-05-07                                  | ✅ NOW         |
 > | AAVE_V3     | OPTIMISM | ✅ captured                                                                                                              | 2022-03-16 → 2026-05-07                                  | ✅ NOW         |
@@ -638,7 +638,7 @@ Owner: harsh + parallel agents per protocol.
 > | COMPOUND_V3 | OPTIMISM | ✅ adapter wired + dispatched                                                                                            | 2024-04-06 → present                                     | ✅ NOW         |
 > | COMPOUND_V3 | SCROLL   | ✅ adapter wired                                                                                                         | 2024-04-22 → present                                     | ✅ NOW         |
 > | COMPOUND_V3 | POLYGON  | ⛔ INTENTIONALLY EXCLUDED — Compound V3 not deployed on Polygon (`SUBGRAPH_IDS` no POLYGON entry per `chain_env.py:218`) | n/a                                                      | n/a            |
-> | SPARK      | ETHEREUM | ✅ adapter wired (`_DEFAULT_PROTOCOLS = ["aave_v3", "spark", "compound_v3"]`)                                            | 2023-05-09 → present                                     | ✅ NOW         |
+> | SPARK       | ETHEREUM | ✅ adapter wired (`_DEFAULT_PROTOCOLS = ["aave_v3", "spark", "compound_v3"]`)                                            | 2023-05-09 → present                                     | ✅ NOW         |
 >
 > **Family-1 backtest data envelope** (slot 5 plan dependency): ≥2-year window of SUPPLY_APY / BORROW_APY / UTILISATION
 > for Aave V3 + Compound V3 on Ethereum / Arbitrum / Base. **Met** for all 3 chains; per-pair launch dates per
@@ -692,10 +692,10 @@ Owner: harsh + parallel agents per protocol.
 >       which already covers exactly the (chain, protocol) → launch-date semantic the plan body asked for
 >       `LENDING_INDICES_COVERAGE_START` to provide. Per `lending_indices_handler.py:322` the handler reads
 >       `get_protocol_launch_date(chain, venue_prefix)` and short-circuits to `expected_unattempted` for pre-launch
->       dates (per MTDS@`c6bdf96`). Pairs covered: `(ETHEREUM, AAVE_V3)` 2022-03-16, `(ETHEREUM, COMPOUND_V3)` 2022-08-13,
->       `(ETHEREUM, SPARK)` 2023-05-09, etc. — full per-chain matrix already in the registry; slot 5 confirmed 45/46
->       pending-pairs shipped 2026-05-12 at UAC@`458f17d`. No separate `LENDING_INDICES_COVERAGE_START` constant needed
->       (single PROTOCOL_LAUNCH_DATES SSOT covers it).
+>       dates (per MTDS@`c6bdf96`). Pairs covered: `(ETHEREUM, AAVE_V3)` 2022-03-16, `(ETHEREUM, COMPOUND_V3)`
+>       2022-08-13, `(ETHEREUM, SPARK)` 2023-05-09, etc. — full per-chain matrix already in the registry; slot 5
+>       confirmed 45/46 pending-pairs shipped 2026-05-12 at UAC@`458f17d`. No separate `LENDING_INDICES_COVERAGE_START`
+>       constant needed (single PROTOCOL_LAUNCH_DATES SSOT covers it).
 > - [x] [VM] P0. **3-LENDING.4 — Lending-indices backfill VM**.
 >       `deployment-service/scripts/vm/launch-defi-lending-indices-backfill-vm.sh` (new launcher per VM-launcher-SSOT
 >       rule). Per CLAUDE.md "Plans Run To Actual Completion" — backfill VM must run to completion with
@@ -1286,8 +1286,8 @@ Per `work_split_2026_05_12_ikenna.md` row 2 cross-side handshake — "Ikenna des
 ### Critical-path handshake status
 
 - **Slot 5 (ikenna-recursive-borrow-tab) Family-1 design**: ✅ UNBLOCKED Day 1. Lending-indices data with 2-year+
-  horizons across AAVE_V3 (6 chains) + COMPOUND_V3 (5 chains) + SPARK (ETH). Slot 5 confirmed pivot per their STATUS line;
-  Family-1 + Family-2 topology design SSOT shipped same-day (PM@`5cb0952f` + PM@`3fbe82ca`).
+  horizons across AAVE_V3 (6 chains) + COMPOUND_V3 (5 chains) + SPARK (ETH). Slot 5 confirmed pivot per their STATUS
+  line; Family-1 + Family-2 topology design SSOT shipped same-day (PM@`5cb0952f` + PM@`3fbe82ca`).
 - **Slot 5 Day-3 (2026-05-14)**: pull fix after 3-LENDING.4 recent-days catch-up VM lands (slot 2 Day 2 AM action).
 
 ### Operator-triage closures (informational — closed by slot 3)

@@ -31,13 +31,13 @@ features-onchain-service (publishes: pool_price, tick, fee_apy, IL_pct, utilizat
 
 ## Pool Types & Mechanics
 
-| Pool Type  | Venue              | Liquidity Model                         | LP Token                       | IL Profile                       |
-| ---------- | ------------------ | --------------------------------------- | ------------------------------ | -------------------------------- |
+| Pool Type  | Venue               | Liquidity Model                         | LP Token                       | IL Profile                       |
+| ---------- | ------------------- | --------------------------------------- | ------------------------------ | -------------------------------- |
 | Uniswap V2 | UNISWAP_V2-ETHEREUM | Uniform (0→∞)                           | ERC-20 (fungible)              | Standard (~5.7% at 2x move)      |
 | Uniswap V3 | UNISWAP_V3-ETHEREUM | Concentrated (tick range)               | ERC-721 NFT (unique per range) | Amplified within range           |
 | Uniswap V4 | UNISWAP_V4-ETHEREUM | Concentrated + hooks                    | ERC-721 NFT                    | Hook-dependent                   |
-| Curve      | CURVE-ETHEREUM     | StableSwap (auto-concentrated near peg) | ERC-20 (fungible)              | Very low for like-kind assets    |
-| Balancer   | BALANCER-ETH       | Weighted (custom weights 2-8 tokens)    | ERC-20 (fungible)              | Weight-dependent (80/20 < 50/50) |
+| Curve      | CURVE-ETHEREUM      | StableSwap (auto-concentrated near peg) | ERC-20 (fungible)              | Very low for like-kind assets    |
+| Balancer   | BALANCER-ETH        | Weighted (custom weights 2-8 tokens)    | ERC-20 (fungible)              | Weight-dependent (80/20 < 50/50) |
 
 ### Uniswap V3 Concentrated Liquidity (primary use case)
 
@@ -80,11 +80,11 @@ Step 4 - REMOVE_LIQUIDITY + COLLECT_FEES: burn NFT, claim all fees
 
 ## Instruments
 
-| Instrument Key                                     | Venue      | Type   | Role               |
-| -------------------------------------------------- | ---------- | ------ | ------------------ |
+| Instrument Key                                      | Venue      | Type   | Role               |
+| --------------------------------------------------- | ---------- | ------ | ------------------ |
 | `UNISWAP_V3-ETHEREUM:LP_POSITION:ETH-USDT@ETHEREUM` | Uniswap V3 | LP NFT | Active LP position |
-| `WALLET:SPOT_ASSET:ETH`                            | Wallet     | Spot   | Deposited asset    |
-| `WALLET:SPOT_ASSET:USDT`                           | Wallet     | Spot   | Deposited asset    |
+| `WALLET:SPOT_ASSET:ETH`                             | Wallet     | Spot   | Deposited asset    |
+| `WALLET:SPOT_ASSET:USDT`                            | Wallet     | Spot   | Deposited asset    |
 
 ## Key Features Consumed
 

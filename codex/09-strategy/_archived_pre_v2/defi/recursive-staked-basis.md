@@ -121,12 +121,12 @@ collateral/debt pair across Aave markets.
 
 **SOR is ON by default for the swap legs only.**
 
-| Leg                               | SOR? | Allowed Venues                                         | SSOT                 |
-| --------------------------------- | ---- | ------------------------------------------------------ | -------------------- |
+| Leg                               | SOR? | Allowed Venues                                          | SSOT                 |
+| --------------------------------- | ---- | ------------------------------------------------------- | -------------------- |
 | Step 3 (WETH→weETH swap)          | YES  | `CURVE-ETHEREUM`, `BALANCER-ETH`, `UNISWAP_V3-ETHEREUM` | `defi_base.py:84-86` |
-| Step 1 (Flash borrow from Morpho) | NO   | Morpho Blue only (hardcoded)                           | —                    |
-| Step 4 (Deposit to Aave)          | NO   | Aave V3 only                                           | —                    |
-| Step 8 (Short perp)               | NO   | Hyperliquid only                                       | —                    |
+| Step 1 (Flash borrow from Morpho) | NO   | Morpho Blue only (hardcoded)                            | —                    |
+| Step 4 (Deposit to Aave)          | NO   | Aave V3 only                                            | —                    |
+| Step 8 (Short perp)               | NO   | Hyperliquid only                                        | —                    |
 
 SOR applies ONLY to the ETH→weETH swap within the atomic bundle. Flash loan provider, lending protocol, and perp venue
 are all fixed.
@@ -143,8 +143,8 @@ steps (perp hedge) are separate instructions.
 | Instrument Key                                   | Venue       | Type      | Role                              |
 | ------------------------------------------------ | ----------- | --------- | --------------------------------- |
 | `WALLET:SPOT_ASSET:USDT`                         | Wallet      | Spot      | Initial capital                   |
-| `AAVE_V3-ETHEREUM:A_TOKEN:AWEETH@ETHEREUM`        | Aave V3     | aToken    | Collateral (long, leveraged)      |
-| `AAVE_V3-ETHEREUM:DEBT_TOKEN:DEBTWETH@ETHEREUM`   | Aave V3     | debtToken | Debt (negative equity)            |
+| `AAVE_V3-ETHEREUM:A_TOKEN:AWEETH@ETHEREUM`       | Aave V3     | aToken    | Collateral (long, leveraged)      |
+| `AAVE_V3-ETHEREUM:DEBT_TOKEN:DEBTWETH@ETHEREUM`  | Aave V3     | debtToken | Debt (negative equity)            |
 | `HYPERLIQUID:PERPETUAL:ETH-USDC@LIN@HYPERLIQUID` | Hyperliquid | Perp      | Short leg (hedge, leveraged size) |
 
 ## Key Features Consumed

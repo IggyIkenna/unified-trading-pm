@@ -18,9 +18,8 @@ related:
 
 # RB-ALERT-002 — Physical Siren/GSM Alarm Setup
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
@@ -43,7 +42,7 @@ Category: **Alerting** · Runbook ID: **RB-ALERT-002**.
 ## Resolve
 
 - Wire SMS-trigger via Twilio SMS path (alerting-service notifier).
-- Configure SM secrets: alerting-physical-pager-* set to GSM_SIREN.
+- Configure SM secrets: alerting-physical-pager-\* set to GSM_SIREN.
 - Test: send synthetic SEV0-no-ack from staging → confirm audible alarm.
 - Document expected response time (5-15s for SMS).
 

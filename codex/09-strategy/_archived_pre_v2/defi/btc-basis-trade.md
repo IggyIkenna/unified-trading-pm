@@ -43,14 +43,14 @@ Net delta = 0 (long WBTC + short perp cancel)
 | ------------------------------------------------ | ----------- | ------ | -------------------------- |
 | `WALLET:SPOT_ASSET:USDT`                         | Wallet      | Spot   | Initial capital            |
 | `WALLET:SPOT_ASSET:WBTC`                         | Wallet      | Spot   | Long leg (basic variant)   |
-| `AAVE_V3-ETHEREUM:A_TOKEN:AWBTC`                  | Aave V3     | aToken | Long leg (stacked variant) |
+| `AAVE_V3-ETHEREUM:A_TOKEN:AWBTC`                 | Aave V3     | aToken | Long leg (stacked variant) |
 | `HYPERLIQUID:PERPETUAL:BTC-USDC@LIN@HYPERLIQUID` | Hyperliquid | Perp   | Short leg (hedge)          |
 
 **Multi-chain option:** Can also use cbBTC (Coinbase wrapped BTC) on Base or Arbitrum for lower gas costs:
 
-| Instrument Key (alternative)    | Venue   | Type   | Role                    |
-| ------------------------------- | ------- | ------ | ----------------------- |
-| `WALLET:SPOT_ASSET:CBBTC`       | Wallet  | Spot   | Long leg (Base/Arb)     |
+| Instrument Key (alternative)     | Venue   | Type   | Role                    |
+| -------------------------------- | ------- | ------ | ----------------------- |
+| `WALLET:SPOT_ASSET:CBBTC`        | Wallet  | Spot   | Long leg (Base/Arb)     |
 | `AAVE_V3-ARBITRUM:A_TOKEN:AWBTC` | Aave V3 | aToken | Long leg (Arb, stacked) |
 
 ## Key Features Consumed
@@ -96,10 +96,10 @@ wrapped BTC variant.
 
 **SOR is ON by default for the swap leg only.**
 
-| Leg                       | SOR? | Allowed Venues                                         | SSOT                 |
-| ------------------------- | ---- | ------------------------------------------------------ | -------------------- |
+| Leg                       | SOR? | Allowed Venues                                          | SSOT                 |
+| ------------------------- | ---- | ------------------------------------------------------- | -------------------- |
 | Step 1 (USDT-->WBTC swap) | YES  | `UNISWAP_V3-ETHEREUM`, `CURVE-ETHEREUM`, `BALANCER-ETH` | `defi_base.py:84-86` |
-| Step 3 (Short perp)       | NO   | Hyperliquid only (CLOB, no alternative)                | --                   |
+| Step 3 (Short perp)       | NO   | Hyperliquid only (CLOB, no alternative)                 | --                   |
 
 SOR picks the best price across DEX venues for the USDT-->WBTC swap. May route multi-hop (USDT-->WETH-->WBTC) for better
 pricing. The `allowed_venues` list is passed in `StrategyInstruction` to execution-service, which handles the actual
@@ -203,11 +203,11 @@ assessment --> rebalance/exit decisions)
 
 ### Exposure Subscriptions
 
-| Instrument Pattern              | Exposure Type           | Used For                                  |
-| ------------------------------- | ----------------------- | ----------------------------------------- |
-| `WALLET:SPOT_ASSET:WBTC`        | Spot value (long)       | Delta calculation                         |
+| Instrument Pattern               | Exposure Type           | Used For                                  |
+| -------------------------------- | ----------------------- | ----------------------------------------- |
+| `WALLET:SPOT_ASSET:WBTC`         | Spot value (long)       | Delta calculation                         |
 | `AAVE_V3-ETHEREUM:A_TOKEN:AWBTC` | Collateral value (long) | Delta calculation + Aave health (stacked) |
-| `HYPERLIQUID:PERPETUAL:*`       | Perp notional (short)   | Delta calculation                         |
+| `HYPERLIQUID:PERPETUAL:*`        | Perp notional (short)   | Delta calculation                         |
 
 Config: `defi_mode.enabled=True`, `ml_mode.track_perp_positions=True` SSOT:
 [`ExposureMonitorConfig`](../../../strategy-service/strategy_service/config.py)

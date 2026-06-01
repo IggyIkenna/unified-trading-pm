@@ -187,8 +187,8 @@ that plan was written (2026-05-09):
 - Rows with NULL backfilled v8 enhanced columns (service_emission_state=NULL) — acceptable until services start writing
   v8 rows natively (post-Phase 3 migration). Follow-up: services start writing real `service_emission_state` values as
   they process new shards.
-- DIVERGENT_EMPTY cells in defi (765 cells: AAVE_V3-OPTIMISM `flash_loan_events` + COMPOUND_V3-BASE `risk_params`) — Drift
-  S3 adapter bugs; MTDS handlers returned empty_confirmed historically when SHOULD_HAVE_DATA per oracle. Require MTDS
-  handler investigation + historical backfill. Follow-up: D4 (MTDS preflight) plan.
+- DIVERGENT_EMPTY cells in defi (765 cells: AAVE_V3-OPTIMISM `flash_loan_events` + COMPOUND_V3-BASE `risk_params`) —
+  Drift S3 adapter bugs; MTDS handlers returned empty_confirmed historically when SHOULD_HAVE_DATA per oracle. Require
+  MTDS handler investigation + historical backfill. Follow-up: D4 (MTDS preflight) plan.
 - DIVERGENT_EMPTY cells in sports/prediction/cefi/tradfi — addressed per their D4/D5/D1 plans after this D3 migration
   lands.

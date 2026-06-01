@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import ClassVar
 
 import pytest
 
@@ -41,7 +42,7 @@ def test_returns_violation_when_genesis_orphan(monkeypatch: pytest.MonkeyPatch) 
         class _Wrapped:
             MAINNET_CHAIN_IDS = real.MAINNET_CHAIN_IDS  # type: ignore[attr-defined]
             GAS_FEE_CHAIN_START_DATES = real.GAS_FEE_CHAIN_START_DATES  # type: ignore[attr-defined]
-            CHAIN_GENESIS_DATES = {**real.CHAIN_GENESIS_DATES, "GHOST_CHAIN": "2025-01-01"}  # type: ignore[attr-defined]
+            CHAIN_GENESIS_DATES: ClassVar[dict[str, str]] = {**real.CHAIN_GENESIS_DATES, "GHOST_CHAIN": "2025-01-01"}  # type: ignore[attr-defined]
 
         return _Wrapped()
 
@@ -63,7 +64,9 @@ def test_returns_violation_when_gas_fee_chain_id_orphan(monkeypatch: pytest.Monk
         class _Wrapped:
             MAINNET_CHAIN_IDS = real.MAINNET_CHAIN_IDS  # type: ignore[attr-defined]
             CHAIN_GENESIS_DATES = real.CHAIN_GENESIS_DATES  # type: ignore[attr-defined]
-            GAS_FEE_CHAIN_START_DATES = {**real.GAS_FEE_CHAIN_START_DATES, 99999999: "2025-01-01"}  # type: ignore[attr-defined]
+            GAS_FEE_CHAIN_START_DATES: ClassVar[dict[int, str]] = (  # type: ignore[attr-defined]
+                {**real.GAS_FEE_CHAIN_START_DATES, 99999999: "2025-01-01"}
+            )
 
         return _Wrapped()
 

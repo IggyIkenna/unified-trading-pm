@@ -128,13 +128,12 @@ def extract_all_names(init_path: Path) -> list[str]:
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, ast.Assign):
             for target in node.targets:
-                if isinstance(target, ast.Name) and target.id == "__all__":
-                    if isinstance(node.value, ast.List):
-                        names: list[str] = []
-                        for elt in node.value.elts:
-                            if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
-                                names.append(elt.value)
-                        return names
+                if isinstance(target, ast.Name) and target.id == "__all__" and isinstance(node.value, ast.List):
+                    names: list[str] = []
+                    for elt in node.value.elts:
+                        if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                            names.append(elt.value)
+                    return names
     logger.warning("Could not find __all__ in %s", init_path)
     return []
 

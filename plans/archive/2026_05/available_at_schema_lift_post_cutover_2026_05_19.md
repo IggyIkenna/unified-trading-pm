@@ -68,7 +68,7 @@ All 7 items DEFERRED-OPERATOR-DECISION (post-cutover architectural slice). Migra
 post-cutover backlog:
 
 - **UAC `AvailabilityRule` Protocol — Phase A (5 items, P1/P2, DEFERRED-POST-CUTOVER)**: Migrated to:
-  batch_live_symmetry_master § post-cutover backlog. Gate: monorepo migration Block B1 ADT lift.
-  Covers: `availability_rule.py`, row base class, per-source migration, `availability_stamping.py` reduction, SSOT update.
+  batch_live_symmetry_master § post-cutover backlog. Gate: monorepo migration Block B1 ADT lift. Covers:
+  `availability_rule.py`, row base class, per-source migration, `availability_stamping.py` reduction, SSOT update.
 - **QG STEP 5.67/5.68 static enforcement — Phase B (2 items, P2, DEFERRED-POST-CUTOVER)**: Migrated to:
   batch_live_symmetry_master § post-cutover backlog. Gate: Phase A + `features_repo_consolidation` Phase 5.c.

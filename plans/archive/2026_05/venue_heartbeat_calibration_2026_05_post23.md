@@ -79,10 +79,10 @@ None — this plan IS the canonical follow-up.
 All 5 items are **DEFERRED-OPERATOR-DECISION** pending ≥7 days of MTDS live telemetry. Migrated to `cefi_master` §
 post-cutover calibration backlog:
 
-- **Collect inter-message gap telemetry (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to: cefi_master §
-  post-cutover backlog. Gate: MTDS running live ≥7 days with `LiveConnectivityWatchdog` emitting events.
-- **Compute 99th-percentile gap per (venue, data_type) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to: cefi_master
-  § post-cutover backlog. Gate: telemetry collection above.
+- **Collect inter-message gap telemetry (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to: cefi_master § post-cutover
+  backlog. Gate: MTDS running live ≥7 days with `LiveConnectivityWatchdog` emitting events.
+- **Compute 99th-percentile gap per (venue, data_type) (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to: cefi_master §
+  post-cutover backlog. Gate: telemetry collection above.
 - **Update UAC `venue_thresholds.py` with calibrated timedeltas (P0, DEFERRED-OPERATOR-DECISION)**: Migrated to:
   cefi_master § post-cutover backlog. Gate: P99 computation above.
 - **Staging smoke test — no spurious `CONNECTIVITY_GAP_DETECTED` (P1, DEFERRED-OPERATOR-DECISION)**: Migrated to:

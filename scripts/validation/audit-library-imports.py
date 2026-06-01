@@ -27,6 +27,7 @@ import sys
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import ClassVar
 
 
 @dataclass
@@ -56,7 +57,7 @@ class ServiceImportReport:
 class ImportAuditor(ast.NodeVisitor):
     """AST visitor to detect import patterns."""
 
-    SPLIT_LIBRARIES = {
+    SPLIT_LIBRARIES: ClassVar[set[str]] = {
         "unified_trading_library.events",
         "unified_trading_library.config_interface",
         "unified_market_interface",
@@ -64,7 +65,7 @@ class ImportAuditor(ast.NodeVisitor):
         "execution_algo_library",
     }
 
-    UCS_RE_EXPORTS = {
+    UCS_RE_EXPORTS: ClassVar[set[str]] = {
         "setup_events",
         "log_event",
         "publish_coordination_event",
@@ -72,7 +73,7 @@ class ImportAuditor(ast.NodeVisitor):
         "load_config",
     }
 
-    STORAGECLIENT_PROBLEM_METHODS = {
+    STORAGECLIENT_PROBLEM_METHODS: ClassVar[set[str]] = {
         ".bucket(",
         "bucket(",
         "bucket_obj",
@@ -96,24 +97,23 @@ class ImportAuditor(ast.NodeVisitor):
 
     def visit_ImportFrom(self, node: ast.ImportFrom) -> None:
         """Visit 'from X import Y' statements."""
-        if node.module:
+        if node.module and (
+            node.module in self.SPLIT_LIBRARIES
+            or node.module.startswith(tuple(f"{lib}." for lib in self.SPLIT_LIBRARIES))
+            or node.module == "unified_trading_services"
+            or node.module.startswith("unified_trading_services.")
+        ):
             # Check for split library imports
-            if (
-                node.module in self.SPLIT_LIBRARIES
-                or node.module.startswith(tuple(f"{lib}." for lib in self.SPLIT_LIBRARIES))
-                or node.module == "unified_trading_services"
-                or node.module.startswith("unified_trading_services.")
-            ):
-                names = [alias.name for alias in node.names]
-                self.imports.append(
-                    ImportInfo(
-                        module=node.module,
-                        names=names,
-                        is_fallback=self.in_try_block,
-                        file_path=self.file_path,
-                        line_number=node.lineno,
-                    )
+            names = [alias.name for alias in node.names]
+            self.imports.append(
+                ImportInfo(
+                    module=node.module,
+                    names=names,
+                    is_fallback=self.in_try_block,
+                    file_path=self.file_path,
+                    line_number=node.lineno,
                 )
+            )
 
         self.generic_visit(node)
 
@@ -141,17 +141,16 @@ class ImportAuditor(ast.NodeVisitor):
     def visit_Attribute(self, node: ast.Attribute) -> None:
         """Visit attribute access (e.g., client.bucket())."""
         # Check for StorageClient abstraction leaks
-        if isinstance(node.value, ast.Name):
+        if isinstance(node.value, ast.Name) and node.attr == "bucket":
             # Check for .bucket() calls
-            if node.attr == "bucket":
-                self.storageclient_issues.append(
-                    {
-                        "method": ".bucket()",
-                        "file": self.file_path,
-                        "line": str(node.lineno),
-                        "context": "StorageClient has no .bucket() method (GCP-specific)",
-                    }
-                )
+            self.storageclient_issues.append(
+                {
+                    "method": ".bucket()",
+                    "file": self.file_path,
+                    "line": str(node.lineno),
+                    "context": "StorageClient has no .bucket() method (GCP-specific)",
+                }
+            )
 
         self.generic_visit(node)
 

@@ -14,7 +14,7 @@ Per-repo overrides:
   checked against that repo.
 
 Exit-code semantics:
-  0 — at or above target for every (repo × surface) tuple checked
+  0 — at or above target for every (repo x surface) tuple checked
   1 — one or more surfaces below target
   2 — yaml / coverage.xml / IO error
 
@@ -93,7 +93,7 @@ def _load_targets(path: Path) -> list[Surface]:
 def _parse_coverage_xml(path: Path) -> list[FileCoverage]:
     """Parse Cobertura-format coverage.xml emitted by pytest --cov."""
     try:
-        tree = ET.parse(path)
+        tree = ET.parse(path)  # nosec B320 — input is pytest-generated coverage.xml, not user-controlled
     except (OSError, ET.ParseError):
         return []
     root = tree.getroot()
@@ -250,7 +250,7 @@ def main() -> int:
             if not result.passed:
                 failures.append((repo_name, result))
 
-    print(f"\n=== Summary: {total_checks} (repo × surface) checks; {len(failures)} below target ===")
+    print(f"\n=== Summary: {total_checks} (repo x surface) checks; {len(failures)} below target ===")
     if failures:
         print("\nFailures:")
         for repo_name, r in failures:

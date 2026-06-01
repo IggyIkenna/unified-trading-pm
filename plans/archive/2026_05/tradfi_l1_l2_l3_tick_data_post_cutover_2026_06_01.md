@@ -165,16 +165,30 @@ the CME `mbp_10` book-depth declaration. Seed table (copied from the predecessor
 
 ## Deferred work — migrated to: `tradfi_master`
 
-All items DEFERRED-SERVICE-REPOS 2026-05-23 (post-cutover backlog; gated on DeFi-first 2026-05-23 cutover + operator decision on Databento PAYG spend):
+All items DEFERRED-SERVICE-REPOS 2026-05-23 (post-cutover backlog; gated on DeFi-first 2026-05-23 cutover + operator
+decision on Databento PAYG spend):
 
-- **Phase 1 — Restore UAC TRADFI_TICK_DATA_WINDOWS constant (P0, DEFERRED-POST-CUTOVER)**: Repopulate `TRADFI_TICK_DATA_WINDOWS` from `_DEFERRED_TRADFI_TICK_DATA_WINDOWS`; delete `_DEFERRED_*` constants.
-- **Phase 2 — Restore UAC capability matrix (P0, DEFERRED-POST-CUTOVER)**: Re-merge `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` into `VENUE_DATA_TYPE_CAPABILITIES` for CME/ICE/NASDAQ/NYSE trades + tbbo.
-- **Phase 3 — Restore codex coverage matrix (P0, DEFERRED-POST-CUTOVER)**: `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows; remove "DEFERRED-post-cutover" annotations.
-- **Phase 4 — Update availability-manifest codex (P0, DEFERRED-POST-CUTOVER)**: `codex/02-data/availability-manifest-and-data-status.md` — flip "TradFi L1-L3 tick data" bullet from "deferred to post-cutover" to "restored — `is_in_tradfi_tick_window` returns True for May 2023 + Jul 2024 windows".
-- **Phase 5 — Repair MTDS contract-pin test (P0, DEFERRED-POST-CUTOVER)**: Update `test_tradfi_tick_window_empty_means_always_suppressed` to pin the 2-window contract; rename UAC test to `test_tradfi_tick_window_2window_restoration.py`.
-- **Phase 6 — VM launchers for L1-L3 backfill (P0, DEFERRED-POST-CUTOVER)**: Create per-(venue, data_type) launchers: `launch-tradfi-bf-cme-{trades,tbbo,mbp_10}.sh`, `launch-tradfi-bf-ice-{trades,tbbo}.sh`, `launch-tradfi-bf-{nasdaq,nyse}-{trades,tbbo}.sh`.
-- **Phase 7 — Launch + validate VMs (P0, DEFERRED-POST-CUTOVER)**: Launch venue × data_type VMs serially; 4-pillar validation per shard; data-status rollup ≥99% for 2 reference months per venue.
-- **Phase 8 — Databento PAYG spend sign-off (P0, BLOCKED-OPERATOR)**: Track Databento PAYG spend (L1-L3 significantly higher than OHLCV-only); operator sign-off on actual vs projected spend before execution.
+- **Phase 1 — Restore UAC TRADFI_TICK_DATA_WINDOWS constant (P0, DEFERRED-POST-CUTOVER)**: Repopulate
+  `TRADFI_TICK_DATA_WINDOWS` from `_DEFERRED_TRADFI_TICK_DATA_WINDOWS`; delete `_DEFERRED_*` constants.
+- **Phase 2 — Restore UAC capability matrix (P0, DEFERRED-POST-CUTOVER)**: Re-merge
+  `_DEFERRED_VENUE_DATA_TYPE_COVERAGE_WINDOWS` into `VENUE_DATA_TYPE_CAPABILITIES` for CME/ICE/NASDAQ/NYSE trades +
+  tbbo.
+- **Phase 3 — Restore codex coverage matrix (P0, DEFERRED-POST-CUTOVER)**:
+  `codex/02-data/mtds-data-source-coverage-matrix.md` § 3 TRADFI: re-list trades + tbbo rows; remove
+  "DEFERRED-post-cutover" annotations.
+- **Phase 4 — Update availability-manifest codex (P0, DEFERRED-POST-CUTOVER)**:
+  `codex/02-data/availability-manifest-and-data-status.md` — flip "TradFi L1-L3 tick data" bullet from "deferred to
+  post-cutover" to "restored — `is_in_tradfi_tick_window` returns True for May 2023 + Jul 2024 windows".
+- **Phase 5 — Repair MTDS contract-pin test (P0, DEFERRED-POST-CUTOVER)**: Update
+  `test_tradfi_tick_window_empty_means_always_suppressed` to pin the 2-window contract; rename UAC test to
+  `test_tradfi_tick_window_2window_restoration.py`.
+- **Phase 6 — VM launchers for L1-L3 backfill (P0, DEFERRED-POST-CUTOVER)**: Create per-(venue, data_type) launchers:
+  `launch-tradfi-bf-cme-{trades,tbbo,mbp_10}.sh`, `launch-tradfi-bf-ice-{trades,tbbo}.sh`,
+  `launch-tradfi-bf-{nasdaq,nyse}-{trades,tbbo}.sh`.
+- **Phase 7 — Launch + validate VMs (P0, DEFERRED-POST-CUTOVER)**: Launch venue × data_type VMs serially; 4-pillar
+  validation per shard; data-status rollup ≥99% for 2 reference months per venue.
+- **Phase 8 — Databento PAYG spend sign-off (P0, BLOCKED-OPERATOR)**: Track Databento PAYG spend (L1-L3 significantly
+  higher than OHLCV-only); operator sign-off on actual vs projected spend before execution.
 
 ## Temporary states + their canonical follow-up plans
 

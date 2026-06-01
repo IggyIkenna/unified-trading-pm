@@ -41,13 +41,13 @@ Exit signal: spread narrows below 1% annualized (no venue offers sufficient edge
 
 ## Instruments
 
-| Instrument Key                         | Venue       | Type   | Role                             |
-| -------------------------------------- | ----------- | ------ | -------------------------------- |
-| `WALLET:SPOT_ASSET:USDC`               | Wallet      | Spot   | Initial capital                  |
+| Instrument Key                          | Venue       | Type   | Role                             |
+| --------------------------------------- | ----------- | ------ | -------------------------------- |
+| `WALLET:SPOT_ASSET:USDC`                | Wallet      | Spot   | Initial capital                  |
 | `AAVE_V3_{CHAIN}:A_TOKEN:AUSDC@{CHAIN}` | Aave V3     | aToken | Yield position (Aave, any chain) |
 | `COMPOUND_V3_{CHAIN}:C_TOKEN:CUSDC`     | Compound V3 | cToken | Yield position (Compound)        |
-| `MORPHO_{CHAIN}:M_TOKEN:MUSDC`         | Morpho      | mToken | Yield position (Morpho)          |
-| `SOCKET:BRIDGE:USDC`                   | Socket      | Bridge | Cross-chain capital transfer     |
+| `MORPHO_{CHAIN}:M_TOKEN:MUSDC`          | Morpho      | mToken | Yield position (Morpho)          |
+| `SOCKET:BRIDGE:USDC`                    | Socket      | Bridge | Cross-chain capital transfer     |
 
 **Same-protocol arb pairs (Aave V3 USDC):**
 
@@ -188,13 +188,13 @@ assessment -> rebalance/exit decisions)
 
 ### Exposure Subscriptions
 
-| Instrument Pattern       | Exposure Type                      | Used For                   |
-| ------------------------ | ---------------------------------- | -------------------------- |
+| Instrument Pattern        | Exposure Type                      | Used For                   |
+| ------------------------- | ---------------------------------- | -------------------------- |
 | `AAVE_V3_*:A_TOKEN:*`     | aToken balance (growing via index) | Yield tracking per chain   |
 | `COMPOUND_V3_*:C_TOKEN:*` | cToken balance (via exchange rate) | Yield tracking per chain   |
-| `MORPHO_*:M_TOKEN:*`     | mToken balance                     | Yield tracking per chain   |
-| `WALLET:SPOT_ASSET:*`    | Wallet balance (idle capital)      | Capital tracking           |
-| `SOCKET:BRIDGE:*`        | In-transit capital                 | Bridge exposure monitoring |
+| `MORPHO_*:M_TOKEN:*`      | mToken balance                     | Yield tracking per chain   |
+| `WALLET:SPOT_ASSET:*`     | Wallet balance (idle capital)      | Capital tracking           |
+| `SOCKET:BRIDGE:*`         | In-transit capital                 | Bridge exposure monitoring |
 
 Config: `defi_mode.enabled=True`, `defi_mode.track_aave_positions=True`, `defi_mode.track_compound_positions=True` SSOT:
 [`ExposureMonitorConfig`](../../../strategy-service/strategy_service/config.py)

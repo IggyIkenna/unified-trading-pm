@@ -826,11 +826,17 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
     # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
     _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357"
-    "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null \
-        && log_success "pip-audit clean" \
-        || {
-            log_fail "pip-audit vulnerabilities found"
-            python3 -c "
+    # run_timeout 180: OSV API can stall indefinitely in Cloud Build (no connection-level timeout
+    # in pip-audit itself). Exit 124 = timeout → warn-only; image still passes (advisory gate).
+    _pa_rc=0
+    run_timeout 180 "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null || _pa_rc=$?
+    if [[ $_pa_rc -eq 0 ]]; then
+        log_success "pip-audit clean"
+    elif [[ $_pa_rc -eq 124 ]]; then
+        log_warn "pip-audit: OSV query timed out after 180s (Cloud Build network) — skipping vulnerability gate (advisory)"
+    else
+        log_fail "pip-audit vulnerabilities found"
+        python3 -c "
 import json, sys
 try:
     data = json.load(open('/tmp/pip-audit-output.json'))
@@ -841,8 +847,8 @@ try:
 except Exception as e:
     print(f'  (could not parse pip-audit output: {e})')
 " 2>/dev/null || :
-            V=$(( V + 1 ))
-        }
+        V=$(( V + 1 ))
+    fi
     # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build)
     SERVICE_NAME="$SERVICE_NAME" python3 "$REPO_ROOT/unified-trading-pm/scripts/sbom-store.py" \
         /tmp/pip-audit-output.json 2>/dev/null || :
@@ -2199,6 +2205,33 @@ if [ -f "$_INLINE_COVERAGE_LINTER" ] && [ -n "${SOURCE_DIR:-}" ]; then
     fi
 else
     log_success "STEP 5.84: no-inline-coverage-formula — skipped (script absent or SOURCE_DIR not set)"
+fi
+
+# ── STEP 5.85: no inline string literal pipeline_mode values in service source ─
+#
+# Inline string literals like pipeline_mode="batch_tardis" in record_*() call-sites
+# bypass the PipelineMode enum type-check and can silently produce stale / typo'd
+# values. All service-code pipeline_mode= kwargs MUST use PipelineMode.<MEMBER>
+# or a call to resolve_pipeline_mode() — not a raw string literal.
+#
+# Test files are excluded (readers + test helpers legitimately filter by string).
+#
+# Escape hatch: add '# QG-allow: pipeline-mode-string-literal' on the line.
+#
+# Plan: pipeline_mode_implementation_2026_05_28.md Phase 2.3.
+# SSOT: resolve_pipeline_mode() in unified_trading_library.pipeline_mode_resolver.
+if [ -n "${SOURCE_DIR:-}" ] && [ -d "$SOURCE_DIR" ]; then
+    _PM_STR_HITS=$(grep -rn 'pipeline_mode\s*=\s*["'"'"']' "$SOURCE_DIR" \
+        --include="*.py" | grep -v '# QG-allow: pipeline-mode-string-literal' || true)
+    if [ -n "$_PM_STR_HITS" ]; then
+        log_fail "STEP 5.85: no-inline-pipeline-mode-string-literal — raw string literal pipeline_mode= value in service source. Use PipelineMode.<MEMBER> or resolve_pipeline_mode():"
+        echo "$_PM_STR_HITS"
+        V=$(( V + 1 ))
+    else
+        log_success "STEP 5.85: no-inline-pipeline-mode-string-literal — no raw string pipeline_mode values in service source"
+    fi
+else
+    log_success "STEP 5.85: no-inline-pipeline-mode-string-literal — skipped (SOURCE_DIR not set)"
 fi
 
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────

@@ -309,7 +309,7 @@ def _run_rg_files_only(
     return [line for line in result.stdout.strip().split("\n") if line]
 
 
-def _build_import_edges(
+def _build_import_edges(  # noqa: C901
     repo_path: Path,
     package_name: str,
     all_modules: list[ModuleInfo],
@@ -761,9 +761,12 @@ def _audit_service(
     #    If the fallback finds references, promote to DEAD_BRANCH (imported
     #    but still not reachable from entry points).
     for module in all_modules:
-        if module.classification == "ORPHAN_MODULE" and not module.is_init:
-            if _fallback_string_search(repo_path, package_name, module):
-                module.classification = "DEAD_BRANCH"
+        if (
+            module.classification == "ORPHAN_MODULE"
+            and not module.is_init
+            and _fallback_string_search(repo_path, package_name, module)
+        ):
+            module.classification = "DEAD_BRANCH"
 
     # 6b. Import-based verification: attempt to load entry points and check
     #     which modules Python actually imports (catches transitive chains,

@@ -221,12 +221,12 @@ Both belong in this plan — they are the math behind the drill-down hierarchy t
 
 - `unified_api_contracts/registry/chain_env.py` (or new `registry/protocol_launch.py` co-located with
   `CHAIN_GENESIS_DATES`) — add `PROTOCOL_LAUNCH_DATES: dict[tuple[str, str], str]` keyed by `(chain, protocol)` →
-  `YYYY-MM-DD` launch date. ~50 LOC + 30 LOC unit tests. Initial seed: AAVE_V3 (Arbitrum 2022-03-16, Optimism 2022-08-04,
-  Polygon 2022-03-16, Avalanche 2022-03-16, Base 2023-08-09, Ethereum 2022-03-14), AAVEV2 (Ethereum 2020-12-01),
-  UNISWAP_V3 (Ethereum 2021-05-04, Arbitrum 2021-08-31, Optimism 2021-12-16, Polygon 2021-12-21, Base 2023-08-09), CURVE
-  (Ethereum 2020-01-19), COMPOUND (Ethereum 2018-09-27), LIDO (Ethereum 2020-12-19), JITO (Solana 2022-08-15), MARINADE
-  (Solana 2021-08-02), ROCKETPOOL (Ethereum 2021-11-08), JUPITER (Solana 2024-01-31), RAYDIUM (Solana 2021-02-21).
-  Greenfield additions populate as adapters land.
+  `YYYY-MM-DD` launch date. ~50 LOC + 30 LOC unit tests. Initial seed: AAVE_V3 (Arbitrum 2022-03-16, Optimism
+  2022-08-04, Polygon 2022-03-16, Avalanche 2022-03-16, Base 2023-08-09, Ethereum 2022-03-14), AAVEV2 (Ethereum
+  2020-12-01), UNISWAP_V3 (Ethereum 2021-05-04, Arbitrum 2021-08-31, Optimism 2021-12-16, Polygon 2021-12-21, Base
+  2023-08-09), CURVE (Ethereum 2020-01-19), COMPOUND (Ethereum 2018-09-27), LIDO (Ethereum 2020-12-19), JITO (Solana
+  2022-08-15), MARINADE (Solana 2021-08-02), ROCKETPOOL (Ethereum 2021-11-08), JUPITER (Solana 2024-01-31), RAYDIUM
+  (Solana 2021-02-21). Greenfield additions populate as adapters land.
 - New helper `get_protocol_launch_date(chain: str, protocol: str) -> str | None` mirroring `get_chain_genesis_date`.
   Returns `None` if not declared (caller falls back to `CHAIN_GENESIS_DATES` for the chain).
 - Sanity test: every `(chain, protocol)` pair declared in `VENUES_BY_ASSET_GROUP["defi"]` has a `PROTOCOL_LAUNCH_DATES`
@@ -450,8 +450,8 @@ Successor plan TBD; Phase 3's preview shape is sufficient for live-defi-rollout'
 - **Test gates:** new hierarchical-drilldown unit tests pass; UI vitest covers every (service, asset_group) pair the
   SSOT declares; MTDS CLI flag tests pass.
 - **Visual gate:** screenshots from a follow-up Playwright walk show TradFi CME → ohlcv_1m → futures → ESH4 → 2024-01-15
-  → download (the user's specific TradFi concern); DeFi ARBITRUM → AAVE_V3 → lending_indices → 2024-03-04 → download (the
-  user's specific DeFi concern); CeFi BITFINEX-SPOT → trades → SPOT_PAIR → BTCUSDT → 2024-03-05 → download.
+  → download (the user's specific TradFi concern); DeFi ARBITRUM → AAVE_V3 → lending_indices → 2024-03-04 → download
+  (the user's specific DeFi concern); CeFi BITFINEX-SPOT → trades → SPOT_PAIR → BTCUSDT → 2024-03-05 → download.
 - **Surgical recovery gate:** clicking "Deploy Missing" on a single leaf in the data-status panel fires an MTDS VM with
   `--shard-key=...` that re-runs ONLY that shard (verify by inspecting the VM startup script metadata).
 

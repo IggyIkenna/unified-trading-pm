@@ -18,9 +18,8 @@ related:
 
 # RB-DEPLOY-001 — Production Rollback
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 
@@ -40,7 +39,7 @@ Category: **Deployment** · Runbook ID: **RB-DEPLOY-001**.
 
 ## Resolve
 
-- Use Safety Ops → REDEPLOY_<service>_to_<revision> with typed confirm.
+- Use Safety Ops → REDEPLOY*<service>\_to*<revision> with typed confirm.
 - Verify health checks on the rolled-back revision.
 - Verify trading state reconciles.
 

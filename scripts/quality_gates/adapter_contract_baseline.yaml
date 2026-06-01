@@ -226,8 +226,6 @@ baseline:
     count: 6
   market-tick-data-service/market_tick_data_service/cli/handlers/position_data_handler.py:
     count: 6
-  market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py:
-    count: 9
   market-tick-data-service/market_tick_data_service/cli/handlers/solana_lst_archival.py:
     count: 1
   market-tick-data-service/market_tick_data_service/cli/handlers/staking_yields_handler.py:

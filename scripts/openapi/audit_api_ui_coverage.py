@@ -260,7 +260,7 @@ def _strip_path_params(path: str) -> str:
 # ---------------------------------------------------------------------------
 
 
-def _match_endpoints(
+def _match_endpoints(  # noqa: C901
     api_endpoints: dict[str, list[str]],
     ui_paths: set[str],
     gateway_map: dict[str, str],

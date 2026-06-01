@@ -1,26 +1,36 @@
 ---
-title: agent-orchestrator — deploy + infra reference (EC2 VM primary, Cloud Run legacy)
+title: agent-orchestrator — deploy + infra reference (central API VM; fleet VMs in worker-topology SSOT)
 created: 2026-05-19
-last_updated: 2026-05-20
+last_updated: 2026-05-28
 author: ikenna-claude-subagent
 status: active
 ---
 
 # agent-orchestrator — Deploy + Infra Reference
 
-> **Cutover state 2026-05-20**: Ikenna's prod backend now runs on a dedicated EC2 VM (`m8i.4xlarge`, EIP
-> `13.113.200.22`, `ap-northeast-1`) under systemd. The original Cloud Run shape (still documented below) is being
-> decommissioned for Ikenna's side; Harsh continues to run his backend on his laptop. See
-> `unified-trading-pm/docs/ikenna-vm-setup.md` for the VM provisioning log.
+> **Scope (refreshed 2026-05-28)**: This doc covers the **central API VM** — the single TLS-terminating box that the
+> dashboard SPA talks to over HTTPS. It is one node of a larger 11-VM fleet (1 central + 10 epic VMs); the rest of the
+> fleet (the epic VMs at `vm-defi` / `vm-cefi` / …) is documented in
+> [`agent-orchestrator-worker-topology.md`](agent-orchestrator-worker-topology.md). The central VM **also acts as a
+> server-side proxy** to those fleet VMs over the private VPC (`ORCHESTRATOR_USE_PRIVATE_URLS=true`) — see
+> [`agent-orchestrator-overview.md`](../04-architecture/agent-orchestrator-overview.md) § "Connectivity model —
+> centralized API router".
 >
-> Architecture SSOT: `codex/04-architecture/agent-orchestrator-overview.md` Operator runbook:
-> `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` Plan-of-record:
-> `plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md` Launcher SSOT:
-> `codex/05-infrastructure/launcher-script-ssot.md` § "Cloud Run launchers"
+> **Cloud-agnostic posture (codified 2026-05-28)**: today the entire fleet (central VM + 10 epic VMs) runs on AWS EC2
+> ap-northeast-1. The bootstrap, secrets, and launcher pipeline support a `CLOUD_PROVIDER=gcp` toggle to re-spin the
+> fleet on GCE if cost / availability ever forces it; no GCP VMs are running at present, and there is no plan to switch
+> back. The Cloud Run shape documented further below is **historical reference only** — kept so the legacy deploy
+> scripts in `launcher-script-ssot.md` still make sense in context.
+>
+> Architecture SSOT:
+> [`../04-architecture/agent-orchestrator-overview.md`](../04-architecture/agent-orchestrator-overview.md) · Operator
+> runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md` · Plan-of-record (archived):
+> `plans/archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md` · Launcher SSOT:
+> `codex/05-infrastructure/launcher-script-ssot.md`
 
 ---
 
-## EC2 VM deploy (current primary for Ikenna)
+## Central API VM (EC2 — `13.113.200.22`)
 
 | Resource       | Value                                                                                              |
 | -------------- | -------------------------------------------------------------------------------------------------- |
@@ -102,7 +112,13 @@ dashboard talks to the right backend without same-origin nginx proxy.
 
 ---
 
-## Cloud Run service shape
+## Cloud Run service shape (HISTORICAL — superseded 2026-05-20 by EC2)
+
+> **Not running today.** The Cloud Run services described below were the first deployment target (mid-May 2026) and were
+> superseded by the EC2 central API VM during the 2026-05-20 cutover. The Cloud Run images and deploy script are still
+> in the repo for cloud-agnostic optionality (re-spin on Cloud Run if EC2 ever falls over and AWS is the wrong answer)
+> but the project is **AWS EC2 today and for the foreseeable future**. Treat this section as reference for what the
+> alternative shape would look like, not as current state.
 
 Two independent services — one per env. No silent default.
 

@@ -1,0 +1,553 @@
+# Epic keyword-surface SSOT for check_parent_epic_alignment.py
+#
+# Each epic entry lists the distinctive tokens that characterise plans
+# belonging to that epic. Used for soft parent_epic mismatch detection.
+# keyword matching is case-insensitive substring; shorter tokens (e.g.
+# "defi") must be distinctive enough to avoid false positives — prefer
+# compound terms or service names over single-letter acronyms.
+#
+# repos: the canonical git repo(s) touched by plans under this epic.
+#
+# Seeded 2026-05-30 by scanning plans/epics/<slug>.md + active child plans.
+# Regenerate by re-running scripts/plan-hygiene/check_parent_epic_alignment.py
+# with --emit-surface.
+
+defi_master:
+  keywords:
+    - defi
+    - onchain
+    - on-chain
+    - dex
+    - uniswap
+    - balancer
+    - compound
+    - aave
+    - hyperliquid
+    - aster
+    - copper
+    - copper-custody
+    - asset_group=defi
+    - defi-perp
+    - defi_perp
+    - mdps-backfill-defi
+    - defi_venue
+    - defi_master
+    - defi adapter
+    - defi archetype
+  repos:
+    - market-tick-data-service
+    - market-data-processing-service
+    - unified-api-contracts
+    - unified-trading-library
+
+cefi_master:
+  keywords:
+    - cefi
+    - binance
+    - binance-futures
+    - binance-spot
+    - okx
+    - bybit
+    - deribit
+    - ceffu
+    - ccxt
+    - perp-hedge
+    - perp hedge
+    - cefi adapter
+    - cefi archetype
+    - cefi_venue
+    - asset_group=cefi
+    - cefi_master
+    - hyperliquid
+    - cefi-perp
+    - venue-heartbeat
+    - venue_heartbeat
+  repos:
+    - market-tick-data-service
+    - market-data-processing-service
+    - unified-api-contracts
+    - unified-trading-library
+
+tradfi_master:
+  keywords:
+    - tradfi
+    - trad-fi
+    - cme
+    - futures
+    - dated-futures
+    - dated futures
+    - etf
+    - polygon
+    - yahoo
+    - nasdaq
+    - nyse
+    - sp500
+    - s&p
+    - tradfi adapter
+    - tradfi archetype
+    - asset_group=tradfi
+    - tradfi_master
+    - tradfi-perp
+  repos:
+    - market-tick-data-service
+    - market-data-processing-service
+    - unified-api-contracts
+    - unified-trading-library
+
+sports_master:
+  keywords:
+    - sports
+    - odds
+    - odds-api
+    - the-odds-api
+    - gbp-settlement
+    - gbp settlement
+    - sports archetype
+    - sports adapter
+    - asset_group=sports
+    - sports_master
+    - match-result
+    - match result
+    - prematch
+    - in-play
+  repos:
+    - market-tick-data-service
+    - market-data-processing-service
+    - unified-api-contracts
+    - unified-trading-library
+
+predictions_master:
+  keywords:
+    - polymarket
+    - kalshi
+    - predictions
+    - prediction market
+    - binary-outcome
+    - binary outcome
+    - clob
+    - prediction adapter
+    - prediction archetype
+    - asset_group=prediction
+    - predictions_master
+    - election
+    - elections-subdomain
+  repos:
+    - market-tick-data-service
+    - market-data-processing-service
+    - unified-api-contracts
+    - unified-trading-library
+
+instruments_master:
+  keywords:
+    - instruments-service
+    - instruments_service
+    - instrument-catalogue
+    - instrument_catalogue
+    - expected-universe
+    - expected_universe
+    - universe-ssot
+    - universe ssot
+    - instrument-id
+    - instrument_id
+    - is-hardening
+    - is_hardening
+    - availability-matrix
+    - availability matrix
+    - instrument type
+    - instrument_type
+    - instruments_master
+  repos:
+    - instruments-service
+    - unified-api-contracts
+    - unified-trading-library
+
+mtds_mdps_master:
+  keywords:
+    - mtds
+    - mdps
+    - market-tick-data-service
+    - market_tick_data_service
+    - market-data-processing-service
+    - market_data_processing_service
+    - candle
+    - candles
+    - writegate
+    - write-gate
+    - backfill
+    - market-tick
+    - market_tick
+    - adapter-registry
+    - adapter registry
+    - tardis
+    - databento
+    - resampling
+    - resample
+    - per-shard
+    - subprocess-per-date
+    - rss-accumulation
+    - memory-pressure
+    - mtds_mdps_master
+  repos:
+    - market-tick-data-service
+    - market-data-processing-service
+    - unified-api-contracts
+    - unified-trading-library
+
+features_and_ml_master:
+  keywords:
+    - features-service
+    - features_service
+    - ml-service
+    - ml_service
+    - ml-training
+    - ml_training
+    - feature-family
+    - feature family
+    - feature-formula
+    - feature formula
+    - training-service
+    - training service
+    - inference
+    - polars-feature
+    - feature pipeline
+    - feature_pipeline
+    - registry-formula
+    - features_and_ml_master
+    - greeks-service
+    - greeks_service
+    - greeks
+  repos:
+    - features-service
+    - ml-service
+    - greeks-service
+    - unified-api-contracts
+    - unified-trading-library
+
+manifest_master:
+  keywords:
+    - availability-manifest
+    - availability manifest
+    - availability_manifest
+    - availability_index
+    - availability-index
+    - manifest-schema
+    - manifest schema
+    - manifest_schema
+    - honest-absence
+    - honest absence
+    - empty_confirmed
+    - attempted_failed
+    - capture_status
+    - capture-status
+    - manifest-evolution
+    - manifest evolution
+    - manifest_v8
+    - manifest v8
+    - pipeline_mode
+    - pipeline-mode
+    - backfill-pipeline
+    - manifest_master
+    - manifest writer
+    - manifest_writer
+    - AvailabilityRecord
+  repos:
+    - unified-api-contracts
+    - unified-trading-library
+    - market-data-processing-service
+    - market-tick-data-service
+
+strategy_master:
+  keywords:
+    - strategy-service
+    - strategy_service
+    - archetype
+    - archetypes
+    - portfolio-allocator
+    - portfolio allocator
+    - portfolio_allocator
+    - risk-manager
+    - risk manager
+    - position-manager
+    - position manager
+    - pnl-service
+    - pnl service
+    - strategy-consolidation
+    - strategy consolidation
+    - config-grid
+    - config grid
+    - strategy_master
+  repos:
+    - strategy-service
+    - unified-api-contracts
+    - unified-trading-library
+
+execution_master:
+  keywords:
+    - execution-service
+    - execution_service
+    - execution-handler
+    - execution handler
+    - transfer
+    - treasury
+    - custody
+    - flash-loan
+    - flash loan
+    - matching-engine
+    - matching engine
+    - order-routing
+    - order routing
+    - execution_master
+  repos:
+    - execution-service
+    - unified-api-contracts
+    - unified-trading-library
+    - unified-trading-api
+
+trading_agent_master:
+  keywords:
+    - trading-agent-service
+    - trading_agent_service
+    - closed-loop
+    - closed loop
+    - allocator
+    - allocation
+    - position-sizing
+    - position sizing
+    - signal-aggregator
+    - signal aggregator
+    - trading_agent_master
+    - trading-agent
+  repos:
+    - trading-agent-service
+    - unified-api-contracts
+    - unified-trading-library
+
+global_ledger_pnl_attribution_master:
+  keywords:
+    - global-ledger
+    - global ledger
+    - global_ledger
+    - pnl-attribution
+    - pnl attribution
+    - pnl_attribution
+    - instruction-ledger
+    - passive-ledger
+    - treasury-ledger
+    - pricing-ledger
+    - exposure
+    - attribution
+    - ledger-ssot
+    - ledger ssot
+    - global_ledger_pnl_attribution_master
+  repos:
+    - execution-service
+    - strategy-service
+    - unified-api-contracts
+    - unified-trading-library
+
+dart_and_promote_master:
+  keywords:
+    - dart
+    - promote
+    - promotion
+    - promote-workflow
+    - promote workflow
+    - manual-trade-gate
+    - manual trade gate
+    - ManualTradeGate
+    - state-machine
+    - state machine
+    - dart_and_promote_master
+    - promote-dialog
+    - promote dialog
+  repos:
+    - strategy-service
+    - execution-service
+    - unified-trading-system-ui
+    - deployment-api
+
+deployment_and_user_management_master:
+  keywords:
+    - deployment-api
+    - deployment_api
+    - deployment-ui
+    - deployment_ui
+    - deployment-service
+    - deployment_service
+    - data-status
+    - data_status
+    - user-management
+    - user management
+    - user_management
+    - devops-tab
+    - devops tab
+    - deployment_and_user_management_master
+    - deploy-missing
+    - deploy missing
+    - turbo-mode
+    - turbo mode
+    - data-status-drilldown
+  repos:
+    - deployment-api
+    - deployment-service
+    - unified-trading-system-ui
+    - unified-api-contracts
+
+infrastructure_master:
+  keywords:
+    - infrastructure
+    - ec2
+    - gcs
+    - bucket
+    - gcp
+    - aws
+    - tarball
+    - worktree
+    - bootstrap
+    - cloud-run
+    - cloud run
+    - quality-gates
+    - quality gates
+    - quality_gates
+    - qg-step
+    - qg step
+    - base-service
+    - base_service
+    - infrastructure_master
+    - vm-topology
+    - vm topology
+    - partition-migration
+    - partition migration
+    - hive-partition
+  repos:
+    - unified-trading-pm
+    - agent-orchestrator
+
+observability_master:
+  keywords:
+    - alerting-service
+    - alerting_service
+    - monitoring
+    - telemetry
+    - alert-rule
+    - alert rule
+    - runbook
+    - 3am-recovery
+    - 3am recovery
+    - auto-recovery
+    - on-call
+    - oncall
+    - pagerduty
+    - slack-alert
+    - slack alert
+    - observability_master
+    - liveness
+    - health-check
+    - health check
+  repos:
+    - alerting-service
+    - agent-orchestrator
+
+batch_live_symmetry_master:
+  keywords:
+    - batch-live
+    - batch live
+    - batch_live
+    - reconciliation
+    - batch-live-reconciliation
+    - batch_live_reconciliation
+    - live-pipeline
+    - live pipeline
+    - batch-symmetry
+    - batch symmetry
+    - coverage-remediation
+    - coverage remediation
+    - batch_live_symmetry_master
+    - pipeline-mode
+    - pipeline_mode
+    - live_websocket
+    - batch_tardis
+  repos:
+    - batch-live-reconciliation-service
+    - unified-api-contracts
+    - unified-trading-library
+
+client_isolation_and_governance_master:
+  keywords:
+    - client-isolation
+    - client isolation
+    - client_isolation
+    - funds-isolation
+    - funds isolation
+    - per-client
+    - per client
+    - jurisdiction
+    - share-class
+    - share class
+    - governance
+    - uac-schema
+    - uac schema
+    - contract-governance
+    - client_isolation_and_governance_master
+    - org-id
+    - org_id
+    - tenant
+    - account-id
+    - account_id
+  repos:
+    - unified-api-contracts
+    - unified-trading-library
+    - client-reporting-api
+    - deployment-api
+
+orchestrator_master:
+  keywords:
+    - agent-orchestrator
+    - agent_orchestrator
+    - orchestrator
+    - worker-slot
+    - worker slot
+    - planning-vm
+    - planning vm
+    - dashboard
+    - backlog
+    - regen-backlog
+    - plan-regen
+    - pm-pull
+    - dispatch
+    - slot-liveness
+    - slot liveness
+    - orchestrator_master
+    - worker-lifecycle
+    - worker lifecycle
+    - heartbeat
+    - watchdog
+    - auth-failover
+  repos:
+    - agent-orchestrator
+
+plan_hygiene_master:
+  keywords:
+    - plan-hygiene
+    - plan hygiene
+    - plan_hygiene
+    - check-todo-format
+    - check_todo_format
+    - hygiene-sweep
+    - hygiene sweep
+    - plan-format
+    - plan format
+    - orphan-plan
+    - orphan plan
+    - parent_epic
+    - parent-epic
+    - silent-failure
+    - silent failure
+    - todo-format
+    - todo format
+    - plan_hygiene_master
+    - hygiene-cron
+    - keyword-surface
+    - keyword surface
+  repos:
+    - unified-trading-pm

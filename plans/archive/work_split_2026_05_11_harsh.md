@@ -165,10 +165,10 @@ under-utilisation is fine, mid-cycle collision is not.
 >   todo closes that way. Then launch backfill VMs for LINEA + BSC lending-indices (Q1-approved) with full event-stream
 >   verification per "No fire-and-forget VM launches" + `MANIFEST_PER_VM_SHARDS=true` + refresh code tarballs first if
 >   MTDS code changed.
-> - **Not blocked**: distinct workstream from Priority #1 (Ethereum-AAVE_V3 UAC fix — not slot 3's); the bucket-naming
+> - **Not blocked**: distinct workstream from Priority #1 (Ethereum-AAVE*V3 UAC fix — not slot 3's); the bucket-naming
 >   (b+) work (slot 4) doesn't touch `lending-indices-{pid}` (Phase 0e env-tiered only
 >   market-data/instruments-store/features-calendar/prediction kinds); the launch-date UAC fix is already shipped. **No
->   Ikenna-side overlap**: Ikenna slot 5 = `ikenna-defi-phase-1e-tab` does the Phase-1.E _sequencing readiness audits_
+>   Ikenna-side overlap**: Ikenna slot 5 = `ikenna-defi-phase-1e-tab` does the Phase-1.E \_sequencing readiness audits*
 >   (defi_catalogue / arbitrage_price_dispersion / cme_polymarket / recursive-borrow + (b+) cascade audit +
 >   EVENT_CONTRACT enum), NOT the lending-indices routing. If slot 3 needs to touch UAC `_defi.py`
 >   (capability-declaration add) → surgical `git add -p` (Ikenna slot 5 may also be in that file for unrelated
@@ -180,12 +180,12 @@ under-utilisation is fine, mid-cycle collision is not.
 >   (`▶ NEW ASSIGNMENT — START HERE`) + CLAUDE.md § "DeFi Execution Architecture" / "No fire-and-forget VM launches" /
 >   "VM launcher script SSOT" / "VM Naming Convention" / "Per-VM shard isolation" / "Manifest concurrency principle" /
 >   "Honest absence".
-> - **Done-definition + full-execution criterion** (per "Plans Run To Actual Completion"): ✅ LINEA + BSC AAVE_V3 routing
->   config shipped to `live-defi-rollout` (MTDS@<sha>); ✅ smoke-test passed (1 day/chain — manifest row `captured` with
->   sample-inspected real-data parquet, OR `empty_confirmed` with the subgraph-probe evidence if genuinely empty); ✅
->   backfill VMs ran to natural shutdown with manifest-verified LINEA/BSC lending-indices rows over the post-launch
->   window (sample-inspect a parquet, not just row counts); ✅ defi_master Priority-#5 checkbox `[x]` with
->   `<repo>@<sha>` + VM-name + manifest evidence + a `## DONE-<date>` block.
+> - **Done-definition + full-execution criterion** (per "Plans Run To Actual Completion"): ✅ LINEA + BSC AAVE_V3
+>   routing config shipped to `live-defi-rollout` (MTDS@<sha>); ✅ smoke-test passed (1 day/chain — manifest row
+>   `captured` with sample-inspected real-data parquet, OR `empty_confirmed` with the subgraph-probe evidence if
+>   genuinely empty); ✅ backfill VMs ran to natural shutdown with manifest-verified LINEA/BSC lending-indices rows over
+>   the post-launch window (sample-inspect a parquet, not just row counts); ✅ defi_master Priority-#5 checkbox `[x]`
+>   with `<repo>@<sha>` + VM-name + manifest evidence + a `## DONE-<date>` block.
 
 ---
 

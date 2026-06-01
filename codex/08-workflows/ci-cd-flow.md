@@ -41,24 +41,28 @@ main ───────────────► always stable; triggers ve
 Every shippable unit goes through exactly two passes:
 
 ```
-Pass 1 — Quality Gates
+Pass 1 — Quality Gates (MANDATORY — FULL run, no skip flags)
   bash scripts/quality-gates.sh
   • ruff format + check (lint + format)
   • pytest (tests, coverage)
   • basedpyright (type check)
   • STEP 5.x codex compliance (60+ rules)
-  Must exit 0 before Pass 2
+  • pip-audit (CVE scan)
+  On clean exit with NO skip flags → writes .qg_last_passed_sha = git rev-parse HEAD
+  Partial runs (--skip-tests / --skip-lint / --skip-codex / --quick) do NOT write sentinel
 
-Pass 2 — Quickmerge
-  bash scripts/quickmerge.sh "feat: description" --agent
-  • ruff + basedpyright re-run (fast — no tests)
-  • commits, creates PR, merges to target branch
-  • --agent skips act + tests (already passed in Pass 1)
-  • --to-staging routes to staging instead of main
+Pass 2 — Quickmerge (--agent fast-path)
+  bash scripts/quickmerge.sh "feat: description" --agent --files '...'
+  • Reads .qg_last_passed_sha — verifies SHA matches current HEAD
+    SHA mismatch / sentinel missing → EXIT 1: "Run quality-gates.sh on current HEAD first"
+    SHA match → skips all Pass 2 QG re-runs (sentinel IS the guarantee)
+  • commits, creates PR targeting staging, enables auto-merge
+  • --to-staging routes to staging instead of main (for breaking changes)
 ```
 
-**Why two passes?** Pass 1 runs tests with xdist parallelism (slow); Pass 2 skips tests to avoid double-running.
-Separating them ensures tests run once (and catch regressions) while the merge path stays fast.
+**Why the sentinel?** Eliminates the staleness gap where an agent calls quickmerge after incremental edits without
+re-running Pass 1. The SHA check is the enforcement mechanism — no partial run can fake a full pass. Pass 2 no longer
+re-runs lint/typecheck/codex: the sentinel guarantees they passed.
 
 ---
 
@@ -135,41 +139,40 @@ SSOT: `codex/08-workflows/version-graduation.md`.
 
 ---
 
-## Full CI/CD Flow (main → prod)
+## Full CI/CD Flow (LDR → Cloud Build)
+
+Canonical flow is in `codex/08-workflows/deployment-flow.md`. Summary:
 
 ```
-1. Developer/agent: bash scripts/quality-gates.sh  (Pass 1)
-2. Developer/agent: bash scripts/quickmerge.sh "..." --agent  (Pass 2)
-   → creates PR → CI runs:
-      a. ruff + basedpyright
-      b. pytest (full suite, not just unit)
-      c. STEP 5.x compliance (same as local QG)
-      d. dependency alignment check
-3. PR merges to main → semver-agent bumps version → image build triggered:
-      a. Cloud Build: test-in-image → vulnerability scan → push image
-      b. OR GitHub Actions: build + push to Artifact Registry
-4. Deployment-service polls new version → deploys to staging VM
-5. SIT smoke tests fire (L2 infrastructure verify tier)
-6. Manual promotion (or auto-promote if configured): staging → prod
+LDR: quality-gates.sh (full) → sentinel written → quickmerge --agent (SHA check)
+  → staging PR (auto-merge on) → workspace-qg GHA (full, ubuntu-latest, fresh deps)
+  → on failure: #ci-failures Slack alert with PR link + source/target branch
+  → staging merge → semver-agent bump → staging-to-main
+  → main: Cloud Build (docker build + QG --quick inside image + CVE scan + push)
 ```
 
-**Agents never reach step 4+** — agents push to LDR, not main. The full CI/CD flow runs when the operator promotes LDR
-to main.
+**workspace-qg GHA vs local quality-gates.sh**: same script, different env. GHA resolves deps against published git tags
+on Linux; local uses workspace path deps on macOS. The dep-resolution gap is the only meaningful divergence — caught at
+the staging PR boundary.
+
+**workspace-qg triggers**: `push: [main, staging]` + `pull_request: [main, staging]`. LDR is explicitly excluded — local
+QG + sentinel is the only gate on LDR (by design).
 
 ---
 
 ## Agent vs Human Paths
 
-| Operation          | Agent                                      | Human                                                    |
-| ------------------ | ------------------------------------------ | -------------------------------------------------------- |
-| Run quality gates  | `bash scripts/quality-gates.sh`            | Same                                                     |
-| Merge to branch    | `bash scripts/quickmerge.sh "..." --agent` | `bash scripts/quickmerge.sh "..."`                       |
-| Push to LDR        | `git push origin HEAD:live-defi-rollout`   | Same                                                     |
-| Promote LDR → main | ❌ NOT ALLOWED (operator only)             | `bash scripts/admin-sync-to-main.sh`                     |
-| Dep-branch work    | ❌ NOT ALLOWED                             | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
-| Version graduation | ❌ NOT ALLOWED                             | `gh workflow run request-major-bump.yml ...`             |
-| Kill-switch arming | ❌ NOT ALLOWED                             | Manual via deployment-service API                        |
-| Wallet key ops     | ❌ NOT ALLOWED                             | Hardware wallet / KMS console                            |
+| Operation          | Agent                                                    | Human                                                    |
+| ------------------ | -------------------------------------------------------- | -------------------------------------------------------- |
+| Run quality gates  | `bash scripts/quality-gates.sh` (FULL — no skip flags)   | Same                                                     |
+| Quickmerge         | `bash scripts/quickmerge.sh "..." --agent --files '...'` | `bash scripts/quickmerge.sh "..."`                       |
+| SHA sentinel check | Automatic in `--agent` — blocks on mismatch              | Not enforced (human responsibility)                      |
+| Push to LDR        | quickmerge pushes branch, creates staging PR             | Same via quickmerge                                      |
+| Promote LDR → main | ❌ NOT ALLOWED (operator only)                           | Via staging→main PR flow                                 |
+| Dep-branch work    | ❌ NOT ALLOWED (`--dep-branch` human-only)               | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
+| Version graduation | ❌ NOT ALLOWED                                           | `gh workflow run request-major-bump.yml ...`             |
+| Kill-switch arming | ❌ NOT ALLOWED                                           | Manual via deployment-service API                        |
+| Wallet key ops     | ❌ NOT ALLOWED                                           | Hardware wallet / KMS console                            |
 
 ---
 
@@ -247,6 +250,30 @@ the same file — resolve with their changes in mind (likely their work should b
 
 ---
 
+## quality-gates-v2 — canonical required-check name (codified 2026-05-29)
+
+**Job key**: `quality-gates-v2` (was `quality-gates` in v1 callers — retired).
+
+The v1 `quality-gates` check context was poisoned by GitHub's server-side BuildFailed ghost cache (GH Support ticket
+#4422570). Option D escape (2026-05-29): rename BOTH caller workflow file AND job key, reference a new callee path
+(`python-quality-gates-v2.yml`). GitHub has no prior cache entry for the new context.
+
+**Canonical workflow files** (as of 2026-05-29):
+
+| Repo type      | Caller                             | Callee                                                                                    |
+| -------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- |
+| PM             | `.github/workflows/quality-gates-v2.yml` | `.github/workflows/python-quality-gates-v2.yml` (local ref — PM calls itself)      |
+| Service repo   | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` |
+
+**Required status check across all repos**: `quality-gates-v2` (all 10 repos rotated 2026-05-29).
+
+**v1 cleanup status**: `quality-gates.yml` / `workspace-qg.yml` deleted from PM, UAC, UTL, alerting-service,
+ml-service, execution-service (2026-05-30). Keep `python-quality-gates.yml` in PM until GH ticket clears.
+
+**Plan reference**: `plans/active/ci_canonical_v2_migration_2026_05_29.md`
+
+---
+
 ## Workspace-qg unified trigger surface (codified 2026-05-16 — Phase B rollout complete)
 
 **SSOT template**: `unified-trading-pm/scripts/workflow-templates/workspace-qg.yml.tmpl`. All 21 Python service repos
@@ -307,8 +334,8 @@ references in old per-repo files (`unified-cloud-interface` / `unified-config-in
 | Field                   | Value                                                                                                                         |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | Item                    | CI workflow consistency across 21 Python repos                                                                                |
-| Cutover criterion       | All 21 repos have `workspace-qg.yml` (not `quality-gates.yml`); template rendered from PM SSOT                                |
-| Continuous verification | `gh workflow list --repo IggyIkenna/<repo> --json name` returns `workspace-qg`; per-repo `quality-gates.yml` no longer exists |
-| Cadence                 | Weekly drift-check (one repo per day across the week)                                                                         |
-| Owner                   | Slot 1 main pre-cutover; post-cutover cron VM (see `plans/epics/infrastructure_master.md` for VM assignment)                  |
-| Last verified           | 2026-05-16 (Phase B rollout — see `plans/active/issues/workspace_qg_yml_redesign_2026_05_15.md` § "PHASE B FULLY ROLLED OUT") |
+| Cutover criterion       | All 10 repos have `quality-gates-v2.yml`; required check = `quality-gates-v2`; v1 caller deleted |
+| Continuous verification | `gh run list --repo IggyIkenna/<repo> --workflow quality-gates-v2 --limit 1` shows `completed success` |
+| Cadence                 | Weekly drift-check (one repo per day across the week)                                              |
+| Owner                   | vm-cross-cutting (ci_canonical_v2_migration plan)                                                  |
+| Last verified           | 2026-05-30: 6/10 green; 4 have pre-existing code quality issues (see ci_canonical_v2_migration plan Phase 4) |

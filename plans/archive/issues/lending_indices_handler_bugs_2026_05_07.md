@@ -24,14 +24,14 @@ locked_since: 2026-05-07
 > (lending-indices handler) + instruments-service DeFi instrument discovery.
 >
 > **STATUS RE-FRAMING (2026-05-08, Tab 9 Q1/A1)**: Bug 1's "silent zero" was a **UAC SSOT misdiagnosis**, NOT a code
-> bug. UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVE_V3")]` was `2022-03-14` (the L2 cohort date) when AAVE V3 on Ethereum
-> mainnet actually deployed `2023-01-27`. The 11-month difference manifested as 343 days of `empty_confirmed` for AAVE
-> V3 ETH in the previous failed run — those days were genuinely pre-deployment, NOT silent-zero. Tab 5's 2026-05-07
-> cascade fix (`mtds@d2f365e`) was correct work for OTHER chains/protocols (it prevents silent-zero on schema-error days
-> for Compound V3 multi-chain) but didn't fix AAVE V3 ETH because the root cause was upstream of the cascade in UAC.
-> Probe-verified 2026-05-08 via the AAVE V3 ETH subgraph `Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g`: earliest
-> `reserveParamsHistoryItems` event is 2023-01-27 08:00:11 UTC (WETH reserve); 2022-03-14, 2022-12-08, 2023-01-26 all
-> return 0 rows.
+> bug. UAC `PROTOCOL_LAUNCH_DATES[("ETHEREUM","AAVE_V3")]` was `2022-03-14` (the L2 cohort date) when AAVE V3 on
+> Ethereum mainnet actually deployed `2023-01-27`. The 11-month difference manifested as 343 days of `empty_confirmed`
+> for AAVE V3 ETH in the previous failed run — those days were genuinely pre-deployment, NOT silent-zero. Tab 5's
+> 2026-05-07 cascade fix (`mtds@d2f365e`) was correct work for OTHER chains/protocols (it prevents silent-zero on
+> schema-error days for Compound V3 multi-chain) but didn't fix AAVE V3 ETH because the root cause was upstream of the
+> cascade in UAC. Probe-verified 2026-05-08 via the AAVE V3 ETH subgraph `Cd2gEDVeqnjBn1hSeqFMitw8Q1iiyV9FYUZkLNRcL87g`:
+> earliest `reserveParamsHistoryItems` event is 2023-01-27 08:00:11 UTC (WETH reserve); 2022-03-14, 2022-12-08,
+> 2023-01-26 all return 0 rows.
 
 ## Filing rationale
 
@@ -50,8 +50,8 @@ silently writing `empty_confirmed` for dates where data should exist.
 
 ### Per-(venue, chain) outcome from per-VM shard
 
-| venue / chain             | captured | empty_confirmed | verdict                                |
-| ------------------------- | -------- | --------------- | -------------------------------------- |
+| venue / chain              | captured | empty_confirmed | verdict                                |
+| -------------------------- | -------- | --------------- | -------------------------------------- |
 | AAVE_V3 / ARBITRUM         | 269      | 74              | ✅ working                             |
 | AAVE_V3 / OPTIMISM         | 270      | 73              | ✅ working                             |
 | AAVE_V3 / POLYGON          | 272      | 71              | ✅ working                             |
@@ -242,8 +242,8 @@ has been crossed.
 
 ### Per-(venue, chain) outcome at T+123min
 
-| venue / chain             | captured | empty_confirmed | verdict                                                                                                                                                                               |
-| ------------------------- | -------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| venue / chain              | captured | empty_confirmed | verdict                                                                                                                                                                               |
+| -------------------------- | -------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | AAVE_V3 / ARBITRUM         | 370      | 74              | ✅ unchanged — L2 cohort 2022-03-16 launch                                                                                                                                            |
 | AAVE_V3 / AVALANCHE        | 371      | 73              | ✅ unchanged — L2 cohort 2022-03-16 launch                                                                                                                                            |
 | AAVE_V3 / OPTIMISM         | 371      | 73              | ✅ unchanged — UAC says 2022-08-04, real subgraph 2022-03-15                                                                                                                          |
@@ -252,7 +252,7 @@ has been crossed.
 | AAVE_V3 / BASE/LINEA/BSC   | 0        | 444 each        | ✅ correct pre-launch (UAC: 2023-08-09 / 2024-09-26 / 2023-04-06)                                                                                                                     |
 | COMPOUND_V3 / ETHEREUM     | 208      | 236             | ✅ Bug 2 baseline preserved — captured starts 2022-08-25 launch boundary                                                                                                              |
 | COMPOUND_V3 / ARB/BASE/OPT | 0        | 444 each        | ⏳ correct pre-launch so far (UAC: 2023-04-13 / 2023-08-26 / 2024-02-15) — VM not yet at post-launch dates; defer Bug 2 multi-chain post-launch verdict to next run with new tarballs |
-| SPARK / ETHEREUM          | 1        | 443             | ✅ first captured row appears at the Spark mainnet boundary (2023-03-20)                                                                                                              |
+| SPARK / ETHEREUM           | 1        | 443             | ✅ first captured row appears at the Spark mainnet boundary (2023-03-20)                                                                                                              |
 
 ### Boundary verification — AAVE V3 ETHEREUM 2023-01-25 → 2023-02-05
 
@@ -295,7 +295,8 @@ The boundary lines up exactly with the 2023-01-27 08:00:11 UTC subgraph probe fi
 
 ### Commits
 
-- `unified-api-contracts@6a64a56` — UAC SSOT correction (`("ETHEREUM","AAVE_V3")` → `2023-01-27`) + test updated. PUSHED.
+- `unified-api-contracts@6a64a56` — UAC SSOT correction (`("ETHEREUM","AAVE_V3")` → `2023-01-27`) + test updated.
+  PUSHED.
 - `instruments-service@6ae50de` — `TestGetProtocolFloorDate` test updated to assert corrected floor. PUSHED.
 - `market-tick-data-service@c6bdf96` — pre-floor-date short-circuit in `lending_indices_handler.process()` + 2 new unit
   tests passing. PUSHED.
@@ -325,8 +326,8 @@ STARTED 06:18 UTC). At T+17min (processed dates 2022-01-01 → 2022-04-12, 1326 
 `gs://lending-indices-central-element-323112/_index/per_vm/mtds-lending-indices-20260508-114519.parquet`) the
 per-(venue, chain) outcome is:
 
-| venue / chain           | captured | empty_confirmed | error_reason           | verdict                                                                          |
-| ----------------------- | -------- | --------------- | ---------------------- | -------------------------------------------------------------------------------- |
+| venue / chain            | captured | empty_confirmed | error_reason           | verdict                                                                          |
+| ------------------------ | -------- | --------------- | ---------------------- | -------------------------------------------------------------------------------- |
 | AAVE_V3 / ARBITRUM       | 28       | 74              | (mix)                  | ✅ working post-2022-03-16 launch                                                |
 | AAVE_V3 / AVALANCHE      | 29       | 73              | (mix)                  | ✅ working post-2022-03-12                                                       |
 | AAVE_V3 / OPTIMISM       | 29       | 73              | (mix)                  | ✅ working post-2022-03-15                                                       |
@@ -334,7 +335,7 @@ per-(venue, chain) outcome is:
 | **AAVE_V3 / ETHEREUM**   | **0**    | **102**         | `SOURCE_RETURNED_ZERO` | ❌ **Bug 1 reproducer still fires**                                              |
 | AAVE_V3 / BASE/LINEA/BSC | 0        | 102 each        | `SOURCE_RETURNED_ZERO` | pre-launch (UAC dates 2023-08-09 / 2024-09-26 / 2023-04-06)                      |
 | COMPOUND_V3 / all 4      | 0        | 102 each        | `SOURCE_RETURNED_ZERO` | pre-launch (UAC ETH=2022-08-25, ARB=2023-04-13, BASE=2023-08-26, OPT=2024-02-15) |
-| SPARK / ETHEREUM        | 0        | 102             | `SOURCE_RETURNED_ZERO` | pre-launch (Spark mainnet ~2023-05-09)                                           |
+| SPARK / ETHEREUM         | 0        | 102             | `SOURCE_RETURNED_ZERO` | pre-launch (Spark mainnet ~2023-05-09)                                           |
 
 **Root cause traced via run.log** (line `06:28:03,338-3,602`):
 
@@ -433,9 +434,9 @@ diagnostic context is fresh, work is highest-leverage if you keep going.
    - If non-empty for any date → there's a different bug. Pause; raise Q2 here with the new evidence.
 
 2. **UAC SSOT correction** (P0): `unified_api_contracts/registry/chain_env.py:146`:
-   `("ETHEREUM", "AAVE_V3"): "2022-03-14"` → `"2023-01-27"`. Add a comment citing the AAVE V3 Ethereum mainnet deployment
-   date + verification source (your subgraph probe). Run UAC quality-gates.sh to ensure PROTOCOL_LAUNCH_DATES tests
-   still pass.
+   `("ETHEREUM", "AAVE_V3"): "2022-03-14"` → `"2023-01-27"`. Add a comment citing the AAVE V3 Ethereum mainnet
+   deployment date + verification source (your subgraph probe). Run UAC quality-gates.sh to ensure PROTOCOL_LAUNCH_DATES
+   tests still pass.
 
 3. **Handler pre-floor-date short-circuit** (P0): in `market_tick_data_service/cli/handlers/lending_indices_handler.py`
    `process()` method, BEFORE the cascade:

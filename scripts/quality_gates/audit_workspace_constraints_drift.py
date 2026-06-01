@@ -292,12 +292,11 @@ def _build_fixed_spec(err: DriftEntry, canon_raw: str) -> str:
     canon_floor = _parse_version_floor(canon_raw)
     canon_ceiling = _parse_version_ceiling(canon_raw)
 
-    if err.kind == "ceiling_above_canon" and dep_floor and canon_floor:
+    if err.kind == "ceiling_above_canon" and dep_floor and canon_floor and _ver_gt(dep_floor, canon_floor):
         # Preserve the repo's floor if it's tighter (higher) than canonical
-        if _ver_gt(dep_floor, canon_floor):
-            if canon_ceiling:
-                return f">={dep_floor},<{canon_ceiling}"
-            return f">={dep_floor}"
+        if canon_ceiling:
+            return f">={dep_floor},<{canon_ceiling}"
+        return f">={dep_floor}"
     # Default: use the full canonical spec
     spec_m = re.search(r"[><=!].*", canon_raw)
     return spec_m.group(0) if spec_m else ""

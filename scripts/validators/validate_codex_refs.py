@@ -1,8 +1,8 @@
 #!/usr/bin/env python3.13
-"""Validate codex references in T0–T2 repos and cursor rules.
+"""Validate codex references in T0-T2 repos and cursor rules.
 
 Phase 8: plans_to_deployable_unified_audit.md (Approach A — validator only).
-- Scans PM cursor-rules (canonical) and T0–T2 .py source for CODEX:/See codex patterns
+- Scans PM cursor-rules (canonical) and T0-T2 .py source for CODEX:/See codex patterns
 - Validates each codex path exists in unified-trading-codex
 - Validates manifest codex_sections exist
 - Skips refs to non-codex paths (unified-trading-pm/, etc.)
@@ -107,7 +107,7 @@ def resolve_codex_path(path: str, codex_root: Path) -> Path | None:
     return None
 
 
-def main() -> int:
+def main() -> int:  # noqa: C901
     parser = argparse.ArgumentParser()
     parser.add_argument("--workspace-root", type=Path, default=None)
     parser.add_argument("--manifest", type=Path, default=None)
@@ -192,7 +192,7 @@ def main() -> int:
                 print(f"BROKEN: {src} codex_section -> {ref}", file=sys.stderr)
         return 1
 
-    print("OK: All codex refs valid (T0–T2 + cursor-rules + manifest codex_sections)")
+    print("OK: All codex refs valid (T0-T2 + cursor-rules + manifest codex_sections)")
     return 0
 
 

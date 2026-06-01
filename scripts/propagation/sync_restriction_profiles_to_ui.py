@@ -138,7 +138,7 @@ def _load_profiles(pm_root: Path) -> list[dict[str, object]]:
         # YAMLs may carry extra documentation fields (display_name, email,
         # questionnaire_response, walkthrough_hints, etc.) that the TS schema
         # does not accept. Drop them at the sync boundary.
-        ALLOWED_FIELDS = {"persona_id", "base_audience", "description", "tiles", "flavour_overrides"}
+        ALLOWED_FIELDS = {"persona_id", "base_audience", "description", "tiles", "flavour_overrides"}  # noqa: N806
         translated: dict[str, object] = {  # pyright: ignore[reportUnknownArgumentType]
             k: v
             for k, v in raw.items()

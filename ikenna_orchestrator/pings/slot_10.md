@@ -173,3 +173,44 @@ agent-orchestrator Slack P0/P3 (plan already archived + fully done). **Nothing t
 **Wait for explicit dispatch** from main before starting either. Post READY ack below.
 
 — slot-1 main / ikenna / 2026-05-21
+
+---
+
+## [slot 10] 2026-05-28 14:15 UTC — pipeline_mode implementation progress
+
+**Plan**: `plans/active/pipeline_mode_implementation_2026_05_28.md`
+
+### Completed (Phase 0 + Phase 1):
+
+- ✅ Phase 0: Pre-audit complete — unified-trading-pm@3447596a
+  - Audited 331 files with pipeline_mode references
+  - Created derivation table mapping (asset_group, venue, service) → pipeline_mode
+  - Shipped audit doc: `pipeline_mode_audit_2026_05_28.md`
+  - Key finding: PipelineMode enum exists with 27 batch + 1 live values, but ALL ~38M manifest rows have NULL values
+
+- ✅ Phase 1: Contract tests complete — unified-api-contracts@9be72c15
+  - Added `test_pipeline_mode_manifest_contract.py` with 5 passing tests
+  - Tests validate enum membership, NULL rejection, and expected writer behavior
+  - PipelineMode already exists as StrEnum and is exported in UAC facade
+
+### In Progress (Phase 2):
+
+- 🔄 Adding UTL helper `resolve_pipeline_mode()` for centralized resolution
+- Will sweep all 26 MTDS handlers + other service writers to use helper
+- Will add QG grep gate to prevent string literals
+
+### Remaining Work:
+
+- Phase 3: Backfill script for ~38M existing NULL rows
+- Phase 4: Update consumers (batch-live-reconciliation, deployment-ui)
+- Phase 6: Codex documentation
+
+### Key Decisions:
+
+- NOT NULL constraint deferred to Phase 3 (after backfill)
+- On-disk partition `pipeline_mode=` deferred to next migration window (HARD RULE compliance)
+- Using column-scan filtering until partition lands (acceptable performance)
+
+**Estimated completion**: ~1.5 AI-days remaining (Phases 2-6)
+
+No blockers. Proceeding autonomously per plan.

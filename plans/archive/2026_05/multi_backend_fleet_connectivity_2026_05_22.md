@@ -6,10 +6,11 @@ assigned_vm: vm-orchestrator
 estimate_class: infra
 estimate_baseline_ai_days: 3.5
 estimate_calibrated_ai_days: 2.8
-status: active
+status: archived
 priority: P1
 created: 2026-05-22
-last_updated: 2026-05-22
+last_updated: 2026-05-23
+archived: 2026-05-23
 source:
   design discussion with operator (Harsh) + Ikenna 2026-05-22 — agent-orchestrator dashboard 401 triage →
   centralized-API decision (Ikenna, Slack 2026-05-22 17:1x)
@@ -19,16 +20,6 @@ gate:
 related_plans:
   - plans/epics/orchestrator_master.md
 ---
-
-## Deferred work — migrated to:
-
-- GCS JWT read for orchestrator secret (BLOCKED-OPERATOR: project-owner IAM grant needed) →
-  `plans/epics/orchestrator_master.md` P3 block (**MIGRATED FROM:** multi_backend_fleet_connectivity_2026_05_22)
-- `reload_secret()` poll wiring (BLOCKED-COUPLED: no-op until GCS-read lands) → `plans/epics/orchestrator_master.md` P3
-  block — ships together with GCS-read item (**MIGRATED FROM:** multi_backend_fleet_connectivity_2026_05_22)
-- RS256/ES256 asymmetric JWT migration (NEEDS-GO-AHEAD: deliberate fleet-wide auth migration) →
-  `plans/epics/orchestrator_master.md` P3 block — awaiting explicit operator go-ahead (**MIGRATED FROM:**
-  multi_backend_fleet_connectivity_2026_05_22)
 
 # Multi-backend fleet connectivity — centralized API router
 
@@ -79,18 +70,18 @@ All phases below are **code-complete + ruff/basedpyright/tsc green + dashboard b
 
 **Blocked / deferred (needs operator or explicit go-ahead):**
 
-- [x] ✅ DEFERRED-BLOCKED [BLOCKED-OPERATOR] P3. **GCS-read for the JWT secret.** Central VM authenticates to GCP as an
-      `authorized_user` (a person's `gcloud` OAuth ADC), not a service account, and that identity lacks read on
-      `central-element-323112-orchestrator-creds`. Switching off the env-var needs a **project-owner** action: either
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-OPERATOR] P3. **GCS-read for the JWT secret.** Central VM authenticates to
+      GCP as an `authorized_user` (a person's `gcloud` OAuth ADC), not a service account, and that identity lacks read
+      on `central-element-323112-orchestrator-creds`. Switching off the env-var needs a **project-owner** action: either
       grant the ADC identity `storage.objectViewer` on the bucket, or provision a VM service account (SA creation also
       needs owner — confirmed I lack it). Env-var distribution works fine in the meantime; GCS object is the SSOT.
-- [x] ✅ DEFERRED-BLOCKED [BLOCKED-COUPLED] P3. Wire `reload_secret()` to a poller — **no-op until GCS-read lands**:
-      with the env-var source `os.environ` is fixed at process start, so a poll re-reads the same value. Ships together
-      with the GCS-read item.
-- [x] ✅ DEFERRED-NEEDS-GO-AHEAD [NEEDS-GO-AHEAD] P3. **RS256/ES256.** Not IAM-blocked, but a deliberate fleet-wide auth
-      migration (generate keypair, refactor sign/verify, re-key + redeploy all 11 VMs, lockout risk if a key is wrong).
-      Plan sequences it after GCS-read. The HS256 shared-secret works for this internal tool — recommend doing RS256
-      deliberately, not in a batch. Awaiting explicit go-ahead.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [BLOCKED-COUPLED] P3. Wire `reload_secret()` to a poller — **no-op until GCS-read
+      lands**: with the env-var source `os.environ` is fixed at process start, so a poll re-reads the same value. Ships
+      together with the GCS-read item.
+- [x] ✅ DEFERRED-OPERATOR-DECISION [NEEDS-GO-AHEAD] P3. **RS256/ES256.** Not IAM-blocked, but a deliberate fleet-wide
+      auth migration (generate keypair, refactor sign/verify, re-key + redeploy all 11 VMs, lockout risk if a key is
+      wrong). Plan sequences it after GCS-read. The HS256 shared-secret works for this internal tool — recommend doing
+      RS256 deliberately, not in a batch. Awaiting explicit go-ahead.
 
 ## Why this replaces the earlier fan-out design
 
@@ -257,3 +248,12 @@ TLS / DNS-subzone design is abandoned (recorded above only as rationale). Single
   verifier).
 - **Out-of-VPC worker transport** — if a future worker lives outside `vpc-6ee70e08`, a reverse-WebSocket channel (VM
   holds an outbound connection the central API pushes commands over) replaces private-IP proxying for that VM.
+
+## Deferred work — migrated to:
+
+- **GCS JWT secret read (P3, BLOCKED-OPERATOR)** + **`reload_secret()` poller (P3, BLOCKED-COUPLED)**: operator must
+  grant `storage.objectViewer` on `central-element-323112-orchestrator-creds` to the central VM's ADC or provision a SA.
+  These two items ship together. **Migrated to**: `plans/epics/orchestrator_master.md` § P3 backlog.
+- **RS256/ES256 asymmetric auth (P3, NEEDS-GO-AHEAD)**: fleet-wide auth migration with explicit go-ahead. HS256 shared
+  secret works fine for this internal tool. **Migrated to**: future `orchestrator_asymmetric_auth_<date>.md` plan (per
+  "Temporary states" section above); operator triggers when ready.

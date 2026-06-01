@@ -172,9 +172,9 @@ def _compare_column(
         if not np.allclose(base_np, post_np, rtol=rtol, atol=atol, equal_nan=True):
             close_mask = np.isclose(base_np, post_np, rtol=rtol, atol=atol, equal_nan=True)
             n_off = int(np.count_nonzero(~close_mask))
-            # First few diverging row indices (cast: numpy's ``ndarray.tolist`` is
-            # typed ``list[Any]`` so the comprehension input is ``Any`` — the cast
-            # is the sanctioned narrowing per workspace strict-typing rules).
+            # First few diverging row indices (cast: numpy's ``ndarray.tolist``
+            # returns a loosely-typed list, so the cast is the sanctioned
+            # narrowing to ``list[int]`` per workspace strict-typing rules).
             off_idx: list[int] = cast("list[int]", np.flatnonzero(~close_mask).tolist())[:5]
             sample = f"; first divergent rows: {off_idx}" if off_idx else ""
             return (

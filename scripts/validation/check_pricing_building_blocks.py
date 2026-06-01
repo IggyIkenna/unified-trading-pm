@@ -2,7 +2,7 @@
 
 Stage 3E G3.2 Phase A. Asserts:
 
-1. The main 13-row pricing table exists and has 13 data rows × 4 columns of prices
+1. The main 13-row pricing table exists and has 13 data rows x 4 columns of prices
    (internal / Tier A / Tier B monthly / Tier B upfront) plus the leading "#" and
    "Block" columns.
 2. No ``codex-private (TBD)`` sentinel is present in any pricing cell after

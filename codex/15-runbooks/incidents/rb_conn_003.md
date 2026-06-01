@@ -18,9 +18,8 @@ related:
 
 # RB-CONN-003 — Internal Messaging Lag
 
-> **What this is:** the on-call operator's first stop when this incident class fires.
-> Read top-to-bottom on the page that comes up. First 60 seconds at the top;
-> post-mortem at the bottom.
+> **What this is:** the on-call operator's first stop when this incident class fires. Read top-to-bottom on the page
+> that comes up. First 60 seconds at the top; post-mortem at the bottom.
 
 ## TL;DR
 

@@ -398,7 +398,7 @@ def print_report(results: list[RepoFixResult], *, apply: bool) -> int:
     if repos_skipped:
         print("\n── SKIPPED ──────────────────────────────────────────────────────────")
         for r in repos_skipped:
-            print(f"  –  {r.repo}  ({r.skip_reason})")
+            print(f"  -  {r.repo}  ({r.skip_reason})")
 
     print(f"\n{'=' * 72}")
     if not apply:

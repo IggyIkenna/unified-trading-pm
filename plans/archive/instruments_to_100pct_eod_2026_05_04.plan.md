@@ -1766,9 +1766,9 @@ venues from Phase 2 backfill.
 
 | Venue               | Status | Active@day / Universe | Notes                                                              |
 | ------------------- | :----: | --------------------- | ------------------------------------------------------------------ |
-| AAVE_V3-ETHEREUM     |   ✅   | 52 / 89               | Lending markets (subgraph). 89 historical, 52 active.              |
-| UNISWAP_V3-ETHEREUM  |   ✅   | 318 / 5,997           | Pool universe (subgraph). 5.9k pools ever, 318 active.             |
-| UNISWAP_V2-ETHEREUM  |   ✅   | 24 / 772              | Pool universe (subgraph).                                          |
+| AAVE_V3-ETHEREUM    |   ✅   | 52 / 89               | Lending markets (subgraph). 89 historical, 52 active.              |
+| UNISWAP_V3-ETHEREUM |   ✅   | 318 / 5,997           | Pool universe (subgraph). 5.9k pools ever, 318 active.             |
+| UNISWAP_V2-ETHEREUM |   ✅   | 24 / 772              | Pool universe (subgraph).                                          |
 | CURVE-ETHEREUM      |   ✅   | 13 / 49               |                                                                    |
 | LIDO-ETHEREUM       |   ✅   | 2 / 2                 | Liquid-staking tokens (stETH, wstETH).                             |
 | BALANCER-ETHEREUM   |   ✅   | 1,249 / 2,072         | Pool universe — biggest write count, ~60% historical-pool dropout. |

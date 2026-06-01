@@ -236,8 +236,8 @@ instances grandfathered + tracked in a one-time cleanup tier.
 
 - [ ] `derive_protocol_launch_dates.py` SSOT script shipped + run; UAC `PROTOCOL_LAUNCH_DATES` table updated with
       truth-derived values + per-entry block_number/tx_hash comments.
-- [ ] AAVE_V3 ETHEREUM specifically: 2022-03-14 → 2023-01-27. Manifest rows for AAVE V3 ETH 2022 dates re-classified from
-      `SOURCE_RETURNED_ZERO` to `EXPECTED_PRE_GENESIS_CHAIN`.
+- [ ] AAVE_V3 ETHEREUM specifically: 2022-03-14 → 2023-01-27. Manifest rows for AAVE V3 ETH 2022 dates re-classified
+      from `SOURCE_RETURNED_ZERO` to `EXPECTED_PRE_GENESIS_CHAIN`.
 - [ ] Pre-commit gate: changes to PROTOCOL_LAUNCH_DATES require block_number + tx_hash citation in comment OR
       script-re-run evidence in commit message.
 - [ ] Cat A audit complete: token decimals, factory addresses, chain genesis dates all spot-checked against on-chain

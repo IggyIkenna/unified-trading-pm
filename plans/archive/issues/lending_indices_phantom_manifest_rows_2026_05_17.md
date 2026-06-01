@@ -107,9 +107,9 @@ generalisation. Owner: slot-3 (manifest reconciliation expertise) or features-se
 `reconcile_phantom_manifest_rows_all.py`: (a) new `--manifest-bucket` + `--manifest-index` CLI flags route both manifest
 read AND prefix-path probing to any override bucket (lending-indices, lst-rates, oracle-prices, perp-funding,
 eigenlayer-rewards), and (b) DeFi venue-needle now applies `_defi_protocol_variants()` so the substring check accepts
-both `AAVE_V3` ↔ `AAVE_V3` / `COMPOUND_V3` ↔ `COMPOUND_V3` spellings (was matching only the manifest's literal spelling
-even though the prefix template already probed both — root cause of 60/65 false phantoms on the original audit).
-Verified end-to-end against the lending-indices bucket:
+both `AAVE_V3` ↔ `AAVE_V3` / `COMPOUND_V3` ↔ `COMPOUND_V3` spellings (was matching only the manifest's literal
+spelling even though the prefix template already probed both — root cause of 60/65 false phantoms on the original
+audit). Verified end-to-end against the lending-indices bucket:
 `--asset-group defi --manifest-bucket lending-indices-central-element-323112 --dry-run --start-date 2026-04-15 --end-date 2026-04-19`
 now reports `65 real / 0 phantom`, matching the corrected manual state.
 

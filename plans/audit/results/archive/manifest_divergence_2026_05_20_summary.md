@@ -101,28 +101,28 @@ Output parquet: `plans/audit/results/manifest_divergence_2026_05_20.parquet` (0.
 
 ### defi
 
-| Venue              | Data type          | Classification     | Cells |
-| ------------------ | ------------------ | ------------------ | ----: |
-| MORPHO-ETHEREUM    | lending_indices    | `MISSING_EXPECTED` | 2,332 |
-| MORPHO-ETHEREUM    | liquidation_events | `MISSING_EXPECTED` | 2,332 |
-| MORPHO-ETHEREUM    | position_data      | `MISSING_EXPECTED` | 2,332 |
-| MORPHO-ETHEREUM    | risk_params        | `MISSING_EXPECTED` | 2,332 |
-| FLUID-ETHEREUM     | risk_params        | `MISSING_EXPECTED` | 2,332 |
-| FLUID-ETHEREUM     | position_data      | `MISSING_EXPECTED` | 2,332 |
-| FLUID-ETHEREUM     | liquidation_events | `MISSING_EXPECTED` | 2,332 |
-| FLUID-ETHEREUM     | lending_indices    | `MISSING_EXPECTED` | 2,332 |
-| CURVE-ETHEREUM     | dex_swaps          | `MISSING_EXPECTED` | 2,314 |
-| CURVE-ETHEREUM     | dex_pools          | `MISSING_EXPECTED` | 2,314 |
-| BALANCER-ETHEREUM  | dex_swaps          | `MISSING_EXPECTED` | 2,242 |
-| BALANCER-ETHEREUM  | dex_pools          | `MISSING_EXPECTED` | 2,242 |
+| Venue               | Data type          | Classification     | Cells |
+| ------------------- | ------------------ | ------------------ | ----: |
+| MORPHO-ETHEREUM     | lending_indices    | `MISSING_EXPECTED` | 2,332 |
+| MORPHO-ETHEREUM     | liquidation_events | `MISSING_EXPECTED` | 2,332 |
+| MORPHO-ETHEREUM     | position_data      | `MISSING_EXPECTED` | 2,332 |
+| MORPHO-ETHEREUM     | risk_params        | `MISSING_EXPECTED` | 2,332 |
+| FLUID-ETHEREUM      | risk_params        | `MISSING_EXPECTED` | 2,332 |
+| FLUID-ETHEREUM      | position_data      | `MISSING_EXPECTED` | 2,332 |
+| FLUID-ETHEREUM      | liquidation_events | `MISSING_EXPECTED` | 2,332 |
+| FLUID-ETHEREUM      | lending_indices    | `MISSING_EXPECTED` | 2,332 |
+| CURVE-ETHEREUM      | dex_swaps          | `MISSING_EXPECTED` | 2,314 |
+| CURVE-ETHEREUM      | dex_pools          | `MISSING_EXPECTED` | 2,314 |
+| BALANCER-ETHEREUM   | dex_swaps          | `MISSING_EXPECTED` | 2,242 |
+| BALANCER-ETHEREUM   | dex_pools          | `MISSING_EXPECTED` | 2,242 |
 | UNISWAP_V2-ETHEREUM | dex_pools          | `MISSING_EXPECTED` | 2,207 |
 | UNISWAP_V2-ETHEREUM | dex_swaps          | `MISSING_EXPECTED` | 2,207 |
-| MORPHO-POLYGON     | liquidation_events | `MISSING_EXPECTED` | 2,182 |
-| MORPHO-POLYGON     | lending_indices    | `MISSING_EXPECTED` | 2,182 |
-| MORPHO-POLYGON     | position_data      | `MISSING_EXPECTED` | 2,182 |
-| MORPHO-POLYGON     | risk_params        | `MISSING_EXPECTED` | 2,182 |
-| BALANCER-POLYGON   | dex_swaps          | `MISSING_EXPECTED` | 2,182 |
-| BALANCER-POLYGON   | dex_pools          | `MISSING_EXPECTED` | 2,182 |
+| MORPHO-POLYGON      | liquidation_events | `MISSING_EXPECTED` | 2,182 |
+| MORPHO-POLYGON      | lending_indices    | `MISSING_EXPECTED` | 2,182 |
+| MORPHO-POLYGON      | position_data      | `MISSING_EXPECTED` | 2,182 |
+| MORPHO-POLYGON      | risk_params        | `MISSING_EXPECTED` | 2,182 |
+| BALANCER-POLYGON    | dex_swaps          | `MISSING_EXPECTED` | 2,182 |
+| BALANCER-POLYGON    | dex_pools          | `MISSING_EXPECTED` | 2,182 |
 
 ### prediction
 

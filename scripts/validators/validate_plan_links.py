@@ -74,7 +74,7 @@ def main() -> int:
                 # that are either present-but-file-missing OR absent (partial
                 # workspace, e.g. GHA only clones PM + dep repos). PM-internal
                 # paths (plans/, codex/, scripts/, etc.) are checked strictly.
-                _PM_INTERNAL = frozenset(
+                _PM_INTERNAL = frozenset(  # noqa: N806
                     {
                         "plans",
                         "codex",

@@ -13,23 +13,53 @@ created: 2026-05-15
 
 ---
 
-## Overview: Three-Gate Promotion Model
+## Full Pipeline: LDR → Cloud Build
 
 ```
-Local work (feat/* or LDR)
-  │
-  ├─ Pass 1: bash scripts/quality-gates.sh
-  │
-  ├─ Pass 2: bash scripts/quickmerge.sh "msg" --agent  →  staging
-  │                                                          │
-  │                                        Full CI + SIT ────┤
-  │                                                          │
-  └──────────────────────────────────────────────────────► main
-                                                            │
-                                              semver-agent: bump + image build
+1. Push to live-defi-rollout (LDR)
+   └─ bash scripts/quality-gates.sh          ← FULL: lint+tests+typecheck+codex+pip-audit
+      └─ exit 0, no skip flags → writes .qg_last_passed_sha (SHA fingerprint)
+         partial run (--skip-tests etc.)     → sentinel NOT written
+
+2. bash scripts/quickmerge.sh "msg" --agent --files '...'
+   └─ reads .qg_last_passed_sha
+      SHA mismatch / missing → EXIT 1 ("Run quality-gates.sh on current HEAD first")
+      SHA match → skip Pass 2 QG re-runs → commit + push branch + gh pr create → staging
+                  auto-merge enabled on PR immediately
+
+3. workspace-qg GHA fires on the staging PR  ← triggers: push [main,staging] + PR→[main,staging]
+   └─ ubuntu-latest, fresh dep clone, published tag resolution
+      quality-gates.sh --no-fix (full suite — independent verification)
+      on failure → posts to #ci-failures Slack with PR link + source/target branch
+
+4. PR auto-merges to staging on green
+   └─ dispatch: qg-passed → PM cloud-build-router
+
+5. semver-agent: parses commit prefix → bumps pyproject.toml
+   → commits to staging → workspace-qg re-runs → if green, staging-to-main fires
+
+6. staging-to-main.yml: squash-merges staging → main
+
+7. Cloud Build triggers on main
+   └─ clone deps (live-defi-rollout branch)
+      docker build
+      quality-gates.sh --no-fix --quick inside container (lint+codex only, no tests)
+      push to Artifact Registry (tagged :VERSION :SHORT_SHA :latest)
+      CVE scan — CRITICAL gate
+      notify-deployment dispatch to deployment-service
 ```
 
-Every promotion through a gate requires the previous gate to be green. No bypassing.
+**Branch protection enforcement** (both `staging` and `main`):
+
+- Required status check: `quality-gates-v2` — nothing merges without CI green (v1 `quality-gates`/`workspace-qg`
+  **RETIRED 2026-05-29** — see `codex/08-workflows/ci-cd-flow.md` § quality-gates-v2 and
+  `plans/active/ci_canonical_v2_migration_2026_05_29.md` for migration history)
+- Applies to all PRs regardless of how created (manual or quickmerge)
+- Caller file: `.github/workflows/quality-gates-v2.yml`; callee: `python-quality-gates-v2.yml` in PM
+
+**Note on LDR:** `live-defi-rollout` has no remote CI — `quality-gates-v2` does NOT trigger on LDR pushes. Local
+`quality-gates.sh` + sentinel is the only gate on LDR. This is by design: LDR is a rapid-dev branch; remote CI fires
+only at the staging PR boundary.
 
 ---
 
@@ -40,9 +70,12 @@ cd <repo>
 bash scripts/quality-gates.sh
 ```
 
-Runs in order: ruff format → ruff check → basedpyright → bandit → vulture → pytest → codex audit. All must pass.
+Runs in order: ruff format → ruff check → basedpyright → pytest → codex audit → pip-audit. All must pass. On clean exit
+with **no skip flags**: writes `.qg_last_passed_sha` with current HEAD SHA.
 
-**Agent shortcut** (`--agent`): Pass 1 runs full QG. Pass 2 quickmerge skips act + tests (already passed in Pass 1).
+**Enforcement**: `quickmerge --agent` reads this sentinel and exits 1 if SHA doesn't match. Partial runs
+(`--skip-tests`, `--skip-lint`, `--quick`, `--skip-codex`) do NOT write the sentinel and cannot unblock a quickmerge.
+There is no way to fake a full pass.
 
 ---
 

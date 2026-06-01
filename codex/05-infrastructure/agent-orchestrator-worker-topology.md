@@ -3,7 +3,7 @@ title: Agent Orchestrator Worker Topology
 type: infrastructure
 status: active
 created: 2026-05-21
-last_reviewed: 2026-05-22
+last_reviewed: 2026-05-28
 owner: ikenna
 ---
 
@@ -128,12 +128,21 @@ Full slot-as-worker contract: `agents/worker.md` in the agent-orchestrator repo.
 
 ## Deferred (post-cutover)
 
-- **EIP allocation**: AWS VMs use dynamic public IPs; stable EIPs needed for DNS.
-- **DNS**: FQDNs `api-{vm}.agent-orchestrator.odum-research.com` → AWS EIPs. Post-cutover.
+- **EIP allocation**: shippable recipe in `deployment-service/scripts/aws/allocate-orchestrator-eips.sh`.
+  Operator-runnable; idempotent. Allocates + associates + tags one EIP per fleet VM. Run any time; safe to defer until
+  backends.json churn becomes a real pain point.
+- **DNS**: FQDNs `api-{vm}.agent-orchestrator.odum-research.com` per
+  [`./agent-orchestrator-dns-cutover.md`](agent-orchestrator-dns-cutover.md). Requires EIPs first. Operator-side action
+  on the `odum-research.com` zone.
+- **Prebaked AMI provisioning** (Phase 9): Packer template at `deployment-service/packer/agent-orchestrator/` bakes
+  Steps 1-2 + Step 4.5 of `bootstrap_vm.sh` into an AMI; `bootstrap_vm.sh` detects `/etc/orchestrator-ami-version` and
+  short-circuits the baked steps. Cuts cold-boot from ~5-15 min to <5 min. Operator-runnable via `packer build`; pass
+  `AMI_ID=<id>` to `launch-epic-vm-aws.sh` to use it.
 - **SSH-spawn per backend_id**: slots map to backend_ids; orchestrator ssh-tunnels spawn. Ships post-cutover.
 - **`.tabs/` 8-slot worktree population**: epic VMs currently have 4 cross-cutting repos; full service-repo clone ships
   with ssh-spawn + tarball-deploy work.
 - **STOPPED/FAILED events**: post-SSH-spawn.
 - **backends.json auto-sync**: currently updated manually when fleet is re-launched with new IPs. Should be driven by
   the registry `api_url` field post-EIP/DNS cutover.
-- **GCP planning VM**: remains live at 34.146.53.106 / `agent-orchestrator.odum-research.com` until DNS is wired to AWS.
+- **GCP planning VM**: decommissioned 2026-05-22 → 23 during the AWS migration. The central API role moved to
+  `13.113.200.22` (EC2 EIP) which is the "ikenna-vm" backend.

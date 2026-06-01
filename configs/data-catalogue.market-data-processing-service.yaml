@@ -626,8 +626,8 @@ priority_gaps:
       reason:
         CEFI blocked upstream -- TARDIS API issue means no raw tick data to process. 5859 prefixes queried, 0 found.
     - venue:
-        ALL DEFI (UNISWAP_V2-ETHEREUM, UNISWAP_V3-ETHEREUM, UNISWAP_V4-ETHEREUM, AAVE_V3_ETHEREUM, MORPHO-ETHEREUM, LIDO,
-        ETHERFI, ETHENA)
+        ALL DEFI (UNISWAP_V2-ETHEREUM, UNISWAP_V3-ETHEREUM, UNISWAP_V4-ETHEREUM, AAVE_V3_ETHEREUM, MORPHO-ETHEREUM,
+        LIDO, ETHERFI, ETHENA)
       category: DEFI
       completion_pct: 0.0
       timeframes_found: []

@@ -102,13 +102,13 @@ threaded at adapter construction. Post-cutover scope.
 All 5 items in this plan were marked **DEFERRED-OPERATOR-DECISION [DEFERRED-POST-CUTOVER]** on 2026-05-19 slot 2. No
 implementation occurred. These are migrated to `mtds_mdps_master` § post-cutover implementation backlog:
 
-- **UTL `zero_activity_bars()` primitive (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master §
-  post-cutover backlog. Gate: operator start signal + UTL-scoped tab. 8 AI-day brand-new estimate.
-- **MTDS adapter wire-in (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog.
-  Gate: UTL primitive must land first.
-- **MDPS calculator wire-in (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog.
-  Gate: UTL primitive must land first.
+- **UTL `zero_activity_bars()` primitive (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover
+  backlog. Gate: operator start signal + UTL-scoped tab. 8 AI-day brand-new estimate.
+- **MTDS adapter wire-in (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog. Gate: UTL
+  primitive must land first.
+- **MDPS calculator wire-in (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog. Gate:
+  UTL primitive must land first.
 - **features-service calculator wire-in (P1, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover
   backlog. Gate: UTL primitive must land first.
-- **Per-adapter smoke tests (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog.
-  Gate: UTL primitive + adapter wire-ins.
+- **Per-adapter smoke tests (P0, DEFERRED-POST-CUTOVER)**: Migrated to: mtds_mdps_master § post-cutover backlog. Gate:
+  UTL primitive + adapter wire-ins.

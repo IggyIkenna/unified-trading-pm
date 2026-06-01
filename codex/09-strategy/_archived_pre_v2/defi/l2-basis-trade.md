@@ -86,10 +86,10 @@ Future enhancement: auto-select L2 chain based on gas cost and DEX liquidity.
 
 **SOR is ON for the swap leg only (same as mainnet basis trade, but L2 venues).**
 
-| Leg                 | SOR? | Allowed Venues                                               | SSOT            |
-| ------------------- | ---- | ------------------------------------------------------------ | --------------- |
+| Leg                 | SOR? | Allowed Venues                                                 | SSOT            |
+| ------------------- | ---- | -------------------------------------------------------------- | --------------- |
 | Step 1 (USDC-->ETH) | YES  | `UNISWAP_V3-ARBITRUM`, `UNISWAP_V3-BASE`, `SUSHISWAP-ARBITRUM` | Strategy config |
-| Step 3 (Short perp) | NO   | Hyperliquid only (CLOB, no alternative)                      | --              |
+| Step 3 (Short perp) | NO   | Hyperliquid only (CLOB, no alternative)                        | --              |
 
 SOR picks the best price across L2 DEX venues. The `allowed_venues` list is passed in `StrategyInstruction` to
 execution-service. Strategy-service does NOT pick the venue -- it provides the allowed set.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gap-2.6.C — Verify env-tiered buckets are provisioned per cloud-providers.yaml SSOT.
 
-Phase 2.6 cutover prerequisite: every (kind × asset_group × env × cloud) tuple declared
+Phase 2.6 cutover prerequisite: every (kind x asset_group x env x cloud) tuple declared
 in `deployment-service/configs/cloud-providers.yaml` MUST have a corresponding bucket
 on the target cloud before Wave 1 rsync starts. This script enumerates the SSOT,
 resolves each bucket name template with the requested env, calls the cloud APIs

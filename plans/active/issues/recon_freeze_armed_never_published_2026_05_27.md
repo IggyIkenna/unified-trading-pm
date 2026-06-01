@@ -43,7 +43,7 @@ seeing a SEV0 recon incident has alerts but the system keeps accepting orders fo
 until a human manually intervenes. On the May-23 live path this is a real safety hole.
 
 Partial mitigation that DOES exist: `strategy-service/position/core/position_drift_monitor.py` independently fires
-`KILL_SWITCH_ACTIVATED` (STOP_NEW_ONLY) on CRITICAL equity/delta drift — so there is _a_ live reflex, but it is
+`KILL_SWITCH_ACTIVATED` (STOP*NEW_ONLY) on CRITICAL equity/delta drift — so there is \_a* live reflex, but it is
 drift-based, not the recon-age / 7-SEV0-override freeze the codex specifies, and it does not cover the immediate-SEV0
 conditions (e.g. open-orders-unconfirmable, balance-movement-unexplained).
 
