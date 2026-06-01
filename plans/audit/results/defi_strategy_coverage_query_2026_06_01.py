@@ -18,10 +18,23 @@ import pandas as pd
 
 PROJECT_ID = "central-element-323112"
 ENV = "prd"
+# market-data-tick-* indexes. NOTE: market-data-tick-defi holds a PHANTOM empty grid for DeFi
+# data_types — the real captured data is in the DEDICATED buckets below (Step 1.5). Read both.
 BUCKETS = {
     "defi": f"market-data-tick-defi-{ENV}-{PROJECT_ID}",
     "cefi": f"market-data-tick-cefi-{ENV}-{PROJECT_ID}",
     "tradfi": f"market-data-tick-tradfi-{ENV}-{PROJECT_ID}",
+}
+# Dedicated per-data_type DeFi buckets = SOURCE OF TRUTH for DeFi capture. Env-suffix convention
+# VARIES (lst-rates/lending-indices/oracle-prices/perp-funding have NO -prd; dex-* DO) — always
+# confirm with `gcloud storage ls | grep -iE 'lst-rates|lending-indic|perp-funding|oracle|dex-'`.
+DEDICATED_DEFI_BUCKETS = {
+    "lst-rates": f"lst-rates-{PROJECT_ID}",
+    "lending-indices": f"lending-indices-{PROJECT_ID}",
+    "oracle-prices": f"oracle-prices-{PROJECT_ID}",
+    "perp-funding": f"perp-funding-{PROJECT_ID}",
+    "dex-pools": f"dex-pools-{ENV}-{PROJECT_ID}",
+    "dex-swaps": f"dex-swaps-{ENV}-{PROJECT_ID}",
 }
 
 # Strategy → data_types it consumes (canonical names).
