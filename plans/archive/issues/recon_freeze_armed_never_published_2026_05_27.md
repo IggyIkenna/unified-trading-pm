@@ -15,6 +15,11 @@ status: active
 
 # RECON_FREEZE_ARMED never published — recon→order-block chain is dormant
 
+> **ARCHIVED 2026-06-01 (slot 7).** The G12 decision is dispatched (issue-doc-lifecycle: acked → archive): the
+> alerting-service recon-freeze publisher is a **P0 todo in `observability_master`** (per-incident-type granularity:
+> symbol-scoped for symbol breaks, account-wide for account-level SEV0s) + the **execution-side per-incident emit is a
+> P1 todo in `execution_master`**. In-scope for May-23. Operator decision ledger preserved below for provenance.
+
 > **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** FINAL ruling on the routed G12 decision:
 >
 > - **In-scope for May-23** — the recon-freeze publisher lands pre-cutover. The 7 immediate-SEV0 conditions are NOT

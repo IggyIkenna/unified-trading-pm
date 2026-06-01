@@ -10,6 +10,12 @@ source:
 
 # AUDIT-03 — findings routed to Ikenna
 
+> **ARCHIVED 2026-06-01 (slot 7).** All 9 routed findings are decided + dispatched (issue-doc-lifecycle: acked → archive,
+> no dual-track): F-22 ✅ shipped (mtds@`0716a544`); F-14 (1h price-move abort = P1 safety gap) + F-13/F-15 →
+> `strategy_master`; F-34 (SUPPORTED_ARCHETYPES) → `strategy_master`; F-32 (MEV size-escalation post-cutover) →
+> `execution_master`; F-45 + F-06 (Elysium scrub) → `codex_vs_repo_docs_ssot_audit`; F-25 (full ClientConfig) →
+> `client_isolation_and_governance_master`. Operator decision ledger preserved below for provenance.
+
 These AUDIT-03 findings are **Opus-confirmed real** but are NOT pure code fixes — each needs a judgment call,
 cross-cutting architecture decision, or a codex-intent ruling that Ikenna owns (trading-judgment / governance /
 cross-repo spec authority). They are deliberately kept OUT of the remediation plans (carry-safety, cron-provisioning,
