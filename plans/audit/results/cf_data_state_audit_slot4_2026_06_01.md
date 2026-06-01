@@ -84,3 +84,66 @@ performance contract (ThreadPoolExecutor parallel walk, wired `--workers`/`--sta
 cutover is additionally gated on the **fleet-wide pre-migration drain** (stop GCP+AWS writers → consolidate →
 snapshot each `_index`), which is shared with slot-2's defi walk and coordinated at epic `mtds_mdps_master`.
 **Dry-run is read-only and needs no drain.**
+
+## MECHANISM FINDING (system-first, 2026-06-01) — the `_index` columns come from the WRITER, not the data parquets
+
+A direct probe of a cefi raw parquet (`raw_tick_data/by_date/AVAXUSDT.parquet`, 122,179 rows) shows it carries
+**pure market data** (`exchange, symbol, timestamp, funding_rate, last_price, mark_price, …, data_type, instrument_id`)
+— **NOT** the manifest columns. So `schema_version` / `source` / `pipeline_mode` / `asset_group` / `available_at` are
+**MANIFEST `_index` columns**, produced by the UTL `ManifestWriter` + manifest-consolidator — they do not live in the
+data parquets. Implications for the walk design (corrects the "rewrite every data parquet's columns" framing inherited
+from the defi-dedicated-bucket tool, whose buckets store differently-shaped rows):
+
+- **The CF debt the audit reads is in the `_index` manifest + object PATHS** — fixing it means rebuilding the manifest
+  through the **v9 `ManifestWriter`**, not rewriting tick parquets.
+- **Sanctioned pattern = `rebuild_prediction_manifest.py`** (MTDS scripts): scan canonical object paths → derive shard
+  keys → `ManifestWriter.add(...)` / `record_empty(reason=…, pipeline_mode=…)` with `per_vm_shards=True` → consolidator
+  merges `_index/per_vm/*` into `availability_index.parquet`. The writer stamps the CURRENT (v9) schema + the canonical
+  columns (`pipeline_mode`, `source`, `asset_group`, `available_at`). **Re-consolidation alone won't add columns absent
+  from historical v8 per-shard fragments — the rebuild RE-DERIVES them from the canonical paths.**
+- **`source` per-row provenance**: cefi = single-source (`tardis`) → stamp directly. sports/prediction carry
+  `data_source=` IN the object path → the rebuild reads it from the path and stamps the `source` column (this is the
+  CF-4 path→column lift). tradfi = per UAC `SOURCE_PRIORITY` / the BARCHART·YAHOO_FINANCE·DATABENTO·MASSIVE venue→source
+  map. So `source` population REQUIRES the object-path scan (not derivable from the `_index` alone for multi-source AGs).
+
+## CROSS-AG LESSON from slot-2's live DeFi migration (operator 2026-06-01) — audit ALL layouts before migrating
+
+Slot-2's DeFi C0 run surfaced that a source bucket can hold **multiple overlapping legacy layouts** that a naive
+day-prefix walk silently under-migrates. DeFi `dex-pools` had THREE: (1) `day=/category=defi/venue=…` flat-legacy
+(~19K), (2) `raw_tick_data/by_date/day=/asset_group=defi/venue=/chain=/…/data_type=…` near-canonical (the bulk, missing
+`pipeline_mode=`), (3) `dex_pools/{venue}/{chain}/date=…` older (bare segments, `date=` not `day=`, no asset_group →
+the path parser skipped it). The day-prefix run migrated only #1 and would have left a **partial canonical set + data
+loss on legacy delete** — the exact failure this programme exists to end.
+
+**Operator directive (applies to EVERY slot-4 AG walk)**: the script must **audit all source layouts, determine overlap
+vs complementary, pick the freshest/best schema where they overlap, land EVERYTHING on the one v9 manifest + data
+schema, and only run the real migration once we're genuinely on v9 — "because we keep missing things."** Net end-state:
+**old buckets + old paths all deleted → ONE source of truth** so data-status/manifest shows true missing-data. So
+**Phase 0 (layout audit) is mandatory and blocking** before any AG walk — never assume a single layout from a sample.
+
+## Grounded per-AG walk recipe (the build, system-first on existing MTDS tools)
+
+**Phase 0 — layout audit per bucket (MANDATORY, blocking; the slot-2 DeFi lesson)**: enumerate ALL top-level trees +
+nested layouts in each source/canonical bucket (`day=/category=`, `raw_tick_data/by_date/…`, bare `{venue}/{chain}/date=`,
+`processed/`, `processed_candles/`, `sports_reference/`, …). For each: count objects, read a sample schema, determine
+which layouts are **duplicates** (→ keep the freshest/most-canonical, discard the rest) vs **complementary** (→ migrate
+all, mapping each to the canonical v9 form). Output a per-bucket layout manifest. The walk must cover EVERY in-scope
+layout or it is incomplete — review-blocking.
+
+Then, per AG, ONE bundled VM walk (single-walk discipline), built by generalising the proven tools:
+
+1. **Object-path re-partition + legacy-gap copy** — extend the per-AG layout tool (`migrate_{sports,tradfi,polymarket}_canonical.py`
+   exist; cefi needs one) to emit the canonical `…/day=/pipeline_mode={mode}/asset_group={ag}/…` layout and `gcs_copy_object`
+   the legacy-only objects (cefi 5,233 · tradfi 71 · prediction 2,039 · instruments cefi 23 / tradfi 60) into canonical paths.
+   ThreadPoolExecutor + wired `--workers`/`--start`/`--end` + idempotent (perf contract).
+2. **Manifest rebuild → v9** — generalise `rebuild_prediction_manifest.py` to `rebuild_{ag}_manifest_v9.py`: scan the
+   canonical paths, `ManifestWriter.add/record_empty` with `pipeline_mode` + `source` (from path `data_source=` / UAC
+   SOURCE_PRIORITY) → consolidator merge → `_index` becomes v9 + canonical columns + `available_at`.
+3. **sports keystone (CF-5)** — relabel the 584,177 `SOURCE_RETURNED_ZERO` empties to typed fixture/season/transfer-window
+   reasons via the UAC coverage oracle at rebuild time (`record_empty(reason=…)`), driven by `clip_dates_to_source_coverage`
+   / `is_in_known_gap` / `league_data`.
+4. **CF-7 relabel** — `UNKNOWN`/blank venue, `COINBASE`↔`COINBASE-SPOT`, sports ODDS case-drift, instruments blank data_type.
+5. **Verify** — re-run `cf_manifest_audit_2026_06_01.py` → all CF GREEN on data-state → hand C-GREEN to `bucket_name_ssot…` L6.
+
+Execution: VM in asia-northeast1 (object scan is ~25 min/AG for prediction-scale, more for cefi), `--apply` gated on the
+fleet drain. DeFi is slot-2's lane (the defi v9 tool + its dedicated-bucket shape) — not in slot-4 scope.

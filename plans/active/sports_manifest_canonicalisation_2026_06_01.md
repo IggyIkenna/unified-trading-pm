@@ -169,6 +169,12 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 ### C — single-walk (v9 + partition + typed reasons + source path→column + canonical verify)
 
+- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
+      top-level trees + nested layouts across BOTH sports surfaces (`processed/by_date/…`, `sports_reference/by_date/…`,
+      any `day=/category=` / `data_source=` variants) before the walk; classify duplicate (keep freshest) vs
+      complementary (migrate all → canonical v9). Cover every in-scope layout or the walk is incomplete (review-blocking).
+      SSOT: `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § grounded recipe Phase 0.
+
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
 > `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only

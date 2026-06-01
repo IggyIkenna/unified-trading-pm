@@ -93,6 +93,13 @@ be fixed first if run on a VM.
 
 ### C — single-walk migration (legacy `prediction` → canonical `pred-prd`)
 
+- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
+      top-level trees + nested layouts in the prediction source + canonical buckets before the walk (`raw_tick_data/`,
+      `processed_candles/`, the 6-dimension `day=/category=/data_source=/venue=/…/market_category=/…` polymarket layout);
+      classify duplicate (keep freshest) vs complementary (migrate all → canonical v9). The existing
+      `rebuild_prediction_manifest.py` (ManifestWriter rebuild) is the manifest-side template. Cover every in-scope
+      layout or the walk is incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § grounded recipe Phase 0.
+
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
 > `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only

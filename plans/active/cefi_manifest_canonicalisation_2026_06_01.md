@@ -101,6 +101,13 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 ### C — single-walk (gap-fill + canonicalisation)
 
+- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: before the walk,
+      enumerate ALL top-level trees + nested layouts in the cefi source + canonical buckets (`raw_tick_data/by_date/`
+      flat-symbol, `processed_candles/by_date/day=/timeframe=/…`, any `day=/category=` or bare `{venue}/{chain}/date=`).
+      Per layout: object count + sample schema; classify duplicate (keep freshest) vs complementary (migrate all). The
+      walk MUST cover every in-scope layout or it is incomplete (review-blocking). SSOT:
+      `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § Cross-AG lesson + grounded recipe Phase 0.
+
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
 > `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
