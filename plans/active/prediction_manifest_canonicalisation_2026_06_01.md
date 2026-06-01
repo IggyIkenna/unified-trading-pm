@@ -93,6 +93,25 @@ be fixed first if run on a VM.
 
 ### C — single-walk migration (legacy `prediction` → canonical `pred-prd`)
 
+> **🔎 BUILD-GAP FINDING (slot-4, 2026-06-01) — the existing tools do NOT achieve the v9 single-SSOT target; this is the
+> bespoke build spec.** `migrate_polymarket_canonical.py` rewrites the **legacy** `market-data-tick-prediction` bucket
+> **IN-PLACE** (`category=`→`asset_group=`, `DEFAULT_BUCKET_PREFIX="market-data-tick-prediction"`) — which is why
+> legacy raw is near-canonical (`day=/asset_group=/venue=/instrument_type=/data_type=`) but the SEPARATE canonical
+> `market-data-tick-pred-prd` bucket holds **older, less-complete** data (`category=/data_source=` paths, 805 captured
+> cells vs legacy's 2,822, v8). `rebuild_prediction_manifest.py` rebuilds the manifest via `ManifestWriter` (→v9) but
+> ALSO targets the legacy long-form bucket and its `CANONICAL_PATH_RE` expects `category=…/market_category=…`. **Neither
+> consolidates legacy's richer data ONTO `pred-prd` in v9-canonical form.** Required build (single bundled walk):
+> 1. **Reconcile source-of-truth**: legacy (2,822 cells, asset_group= hive) is the FRESHER/more-complete copy; pred-prd
+>    (805 cells, category=) is stale. Migrate legacy → `pred-prd` at canonical `day=/pipeline_mode=batch_polymarket_clob/
+>    asset_group=prediction/venue=/chain=/instrument_type=/data_type=` (gcs_copy_object server-side; the 2,039
+>    legacy-only cells are the data-loss gap). Drop the stale pred-prd `category=` objects after the copy.
+> 2. **Manifest rebuild on `pred-prd`**: generalise `rebuild_prediction_manifest.py` to target `pred-prd` + scan the
+>    canonical `asset_group=` paths + stamp `source=polymarket_clob` (from the `data_source` path/col) + `pipeline_mode`
+>    + `available_at` → `ManifestWriter` auto-stamps v9.
+> 3. **CF-7 relabel**: `UNKNOWN`/blank venue + blank/`prediction_trades` data_type → canonical.
+> 4. Verify with `cf_manifest_audit_2026_06_01.py` (CF-1…CF-12 GREEN on pred-prd data-state) → delete legacy bucket.
+> VM-run (object scan + consolidator); prediction-writer (`mdps-prediction-2025`) confirmed drained before `--apply`.
+
 - [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
       top-level trees + nested layouts in the prediction source + canonical buckets before the walk (`raw_tick_data/`,
       `processed_candles/`, the 6-dimension `day=/category=/data_source=/venue=/…/market_category=/…` polymarket layout);
