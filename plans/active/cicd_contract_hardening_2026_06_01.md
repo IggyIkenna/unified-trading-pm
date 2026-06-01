@@ -154,7 +154,7 @@ Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab
 **Captured discoveries (codex-vs-plans target-state audit,
 `plans/audit/results/codex_vs_plans_target_state_deviations_2026_06_01.md` §0):**
 
-- [ ] [CODE] P2. Fix stale boot-prompt string in `agent-orchestrator/server/worker_liveness.py:85`
+- [x] ✅ [CODE] P2. DONE (agent-orchestrator@7bfdd44 — base=`live-defi-rollout` for ALL repos incl AO, matching base_branch_for_repo): Fix stale boot-prompt string in `agent-orchestrator/server/worker_liveness.py:85`
       (`_FRESH_PULL_BOOT_BLOCK`): it instructs recovered agent-orchestrator workers to `git fetch/ff` against `main`
       (`"base = main for agent-orchestrator, live-defi-rollout for every other repo"`), contradicting
       `base_branch_for_repo()` (LDR) + per-tab-worktrees FM6. A recovered AO worker would FF to `origin/main` and read
