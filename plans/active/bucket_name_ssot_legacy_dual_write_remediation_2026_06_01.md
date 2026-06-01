@@ -226,12 +226,14 @@ relaunch.
 - [x] ✅ [SCRIPT] P0. QG exit 0 + push to `live-defi-rollout` for each touched repo. — market-tick-data-service@0b575651
       (RC1 + handler + tests, full QG exit 0) + @6372bd5d (migration script); market-data-processing-service@61900a3
       (RC4); deployment-service@d667422 (launchers). Phase-1 checkboxes flipped.
-- [ ] [SCRIPT] P0. Rebuild VM code tarball **from a CLEAN `live-defi-rollout` checkout** (NOT the slot worktree — it
+- [x] ✅ [SCRIPT] P0. Rebuild VM code tarball **from a CLEAN `live-defi-rollout` checkout** (NOT the slot worktree — it
       carries foreign-dirty backfill WIP; do not ship it).
       `bash deployment-service/scripts/vm/create-code-tarballs.sh     --asset-group <CEFI|DEFI|...> --include market-tick-data-service`
       → uploads SHA-pinned `mtds-code@<sha>.tar.gz` to `gs://deployment-scripts-central-element-323112/code/`. Smoke
       `get_tick_data_bucket` per asset_group resolves canonical. Needed before Phase 4 relaunch + the Phase 5 VM
-      fan-out.
+      fan-out. **DONE 2026-06-01 (slot 2)**: all CORE repos clean at LDR; `mtds-code@844124f7e0a3...tar.gz` + floating
+      `mtds-code.tar.gz` uploaded to GCS. Smoke: all 5 asset_groups resolve canonical
+      (`market-data-tick-{ag}-prd-central-element-323112`). PATH=/home/ubuntu/google-cloud-sdk/bin:$PATH (snap gcloud broken on this host).
 
 ## Phase 3 — Drain writer VMs (pre-migration drain gate — HARD RULE) (P0) — DONE
 
