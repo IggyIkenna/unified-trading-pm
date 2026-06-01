@@ -211,12 +211,15 @@ by a PR:
         adapters' `get_instrument()` (matched non-existent `inst.symbol` → `AttributeError`; corrected to canonical
         `inst.instrument_key.endswith(f":{symbol}")`). **main green pending** — get LDR→main (drift; see enforce_admins
         item) then enable `enforce_admins`.
-      - 🔄 **`unified-trading-pm`** — empty-string-fallback codex violation cleared `unified-trading-pm@98b12ee53` (LDR)
-        (the violation was self-introduced by the watcher's `.get(k, "")` report builders → `.get(k) or ""`). Lint was
-        already clean on LDR (the 7 main lint errors were main↔LDR **drift**, already fixed on LDR — NOT new debt). PM
-        main is RED purely because main is strictly behind LDR by 14 commits (0 divergence). **main green pending** —
-        promote LDR→main (PR-auto-merge preferred; FF per the force rule is the proven fallback). **TODO: close stale
-        PR #106** (`ikenna/pm-lint-green-2026-06-01`) — its 22-file format churn is superseded by the surgical LDR fixes.
+      - ✅ **`unified-trading-pm` main GREEN** — FF-advanced `b2ecf44a8 → 4f57234ea` (operator-authorized admin FF;
+        protection relaxed→**restored with guaranteed trap**: enforce_admins + ruleset 13647441 both active, rules intact).
+        Three real fixes landed to get there: (1) empty-string-fallback codex (`@98b12ee53`, self-introduced by the
+        watcher's `.get(k, "")` → `.get(k) or ""`); (2) **basedpyright CI typecheck 1575>1511** — 3 tooling scripts added
+        today (`ci_failure_watcher.py` [mine, sibling-import], `audit_source_column_distribution.py`, `audit_model_tier.py`)
+        import deps CI can't resolve → added to `[tool.basedpyright] ignore` (`@a217a031c`, ratchet ceiling UNCHANGED — the
+        local gate masked this since numpy/UTL resolve locally); (3) the 7 main lint errors were pure main↔LDR **drift**,
+        already clean on LDR. `quality-gates-v2` green on `4f57234ea` (PR run 26772722063 success); PR #106 + #107 closed
+        (FF superseded the PR-merge after it hit an LDR-advancing treadmill).
       - PLUS any repo the semver rollout surfaces. Each: surgical fix → PR → green v2 → auto-merge → enable enforce_admins.
 - [ ] [TEST] P1. **DISCOVERY (instruments-service, surfaced 2026-06-01 by the coverage worker): `inst.symbol == symbol`
       latent bug in ~19 more defi adapters.** `instruments_service/reference_data/adapters/defi/` has 22 files using
