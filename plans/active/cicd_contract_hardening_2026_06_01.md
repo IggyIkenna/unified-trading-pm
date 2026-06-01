@@ -439,6 +439,18 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `unified-trading-system-ui` / `user-management-ui` / `features-service` / `unified-trading-api` lack the
       `require-quality-gates` ruleset, replicate it (gated on each repo's quality-gates-v2 being green). Owner: Ikenna
       (CI/branch governance).
+- [ ] [SCRIPT] P1. **features-service is branch-structurally incomplete — quality-gates-v2 is wrongly gating `live-defi-rollout`** (slot 7 finding 2026-06-01).
+      features-service has **only a `live-defi-rollout` branch — NO `main`, NO `staging`** (every other repo has all three;
+      MTDS verified). Its GitHub **default branch is therefore `live-defi-rollout`**, and the `require-quality-gates`
+      ruleset (id `17136160`, target `~DEFAULT_BRANCH`, rule `required_status_checks`) consequently enforces
+      `quality-gates-v2` **on LDR** — which contradicts the workspace model (LDR is the free-push integration branch; v2
+      gates `main`+`staging` only). Effect: direct LDR pushes to features-service are rejected ("repository rule
+      violations"), so e.g. `features-service@587e494e` (the `_failed_group_manifest` bucket-override fix) cannot land.
+      **Fix (match the canonical repo shape):** create `main` + `staging` from current LDR HEAD → set GitHub default
+      branch to `main` → the `~DEFAULT_BRANCH` ruleset then gates `main` (correct) and LDR becomes free-push (the
+      coverage-floor / per-family `PYTEST_UNIT_DIR` QG-red then correctly gates main-promotion, not LDR). Coordinate with
+      the active features-service QG work (regime_clustering / coverage-floor) before flipping the default. Repo:
+      features-service (gh repo settings + branch creation). Owner: Ikenna (CI/branch governance).
 
 ## Why it matters
 
