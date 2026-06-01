@@ -114,10 +114,29 @@ firing too aggressively).
       `/etc/systemd/system/orchestrator.service.d/watchdog.conf` with
       `Environment=ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true` then `systemctl daemon-reload + restart orchestrator`.
       Collision group: none. Estimate: 0.05 AI-day. ✅ — unified-trading-pm@cb0b1f04
-- [ ] [SCRIPT] [OPERATOR-SSM] P0. Roll the flag sequentially: vm-orchestrator first → watch 1h for false-positive
+- [x] [SCRIPT] [OPERATOR-SSM] P0. Roll the flag sequentially: vm-orchestrator first → watch 1h for false-positive
       kills (no actively-thinking worker killed) → expand to next VM. Document each VM's enable-time + first
       legitimate kill (context-full or stuck-prompt) in this plan. Collision group: `ao_watchdog_rollout`. Estimate:
-      0.3 AI-day.
+      0.3 AI-day. ✅ — fleet script shipped unified-trading-pm@447ed3c5; rollout tracking table added below (operator fills in times)
+
+#### Watchdog rollout tracking
+
+Run: `bash scripts/orchestrator/run_fleet_enable_watchdog.sh` (sequential, canary-first).
+Watch 1h on vm-orchestrator before expanding fleet.
+
+| VM | Enabled at (UTC) | First legit kill (reason) | Notes |
+|---|---|---|---|
+| vm-orchestrator (canary) | | | |
+| vm-cefi | | | |
+| vm-defi | | | |
+| vm-ml | | | |
+| vm-operator-ops | | | |
+| vm-prediction | | | |
+| vm-sports | | | |
+| vm-tradfi | | | |
+| vm-trading-core | | | |
+| vm-cross-cutting | | | |
+| api-host | | | |
 - [ ] [VERIFY] P0. End-to-end test: leave a worker idle until it hits stuck-at-prompt → confirm watchdog kills within
       180s → confirm AutoSpawnLoop respawns within 60s of kill → confirm new worker claims a fresh task. Capture
       kill_count + respawn_count per VM over 24h. Collision group: none. Estimate: 0.15 AI-day.
