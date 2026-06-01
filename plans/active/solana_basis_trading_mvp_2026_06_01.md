@@ -164,15 +164,31 @@ For Raydium classic AMM, simpler decode (just reserveA, reserveB, fee).
 
 ## Implementation phases
 
-### Phase 1 — Drift V2 historical ingester (~1 day)
+### Phase 1 — Drift V2 historical ingester (~1 day) — ✅ SHIPPED 2026-06-01
 
-- New `DriftV2HistoricalIngester` class in MTDS handlers
-- CLI:
-  `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --market SOL-PERP --start 2025-01-08 --end 2026-06-01 --data-types funding,trades`
-- Pagination + retry on transient errors (the JSON-decode-error pattern won't reappear because we're not walking
-  individual sigs; we're paginating per-day endpoints)
-- Output: `perp_funding/drift/...parquet` (existing path) + new `perp_trades/drift/...parquet`
-- Unit tests + integration tests (mocked Drift API responses)
+**Status (2026-06-01)**: ✅ SHIPPED — uac@f26097f9, mtds@0f70f376. Local validation: SOL-PERP for 2025-08-01 captured
+24 funding rows + 29164 trade rows; for 2024-06-15 (deep history) 24 funding + 4583 trades; for 2026-05-30
+(post-coverage — free-tier API lags ~2 months) 0 / 0 rows confirming the `record_empty(SOURCE_RETURNED_ZERO)` path.
+12/12 unit tests pass (pagination via `meta.nextPage`, retry on `JSONDecodeError` + 5xx, schema canonicalisation,
+manifest emission routing). QG green both repos (UAC + MTDS exit 0). Adjacent fix: PM intra-active link
+`workspace_repo_branch_protection_gaps_2026_05_29.md` repaired (pm@ea8ee08a1).
+
+- ✅ New `DriftV2HistoricalIngester` class — `market_tick_data_service/cli/handlers/drift_v2_historical_handler.py`
+  (467 LOC)
+- ✅ CLI:
+  `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets SOL-PERP,BTC-PERP,ETH-PERP --start 2024-06-01 --end 2026-06-01 --data-types funding,trades`
+  (208 LOC)
+- ✅ Pagination + retry on transient errors (`json.JSONDecodeError`, `aiohttp.ClientError`, 429 / 5xx) — exp backoff
+  with jitter, 6 retries, 1s..30s cap
+- ✅ Output: `raw_tick_data/by_date/day={D}/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type={perp_funding|perp_trades}/{market}.parquet` via canonical `write_defi_rows`
+- ✅ Unit tests (12 passing) — `tests/unit/test_drift_v2_historical_handler.py` (404 LOC); integration test gating
+  deferred to Phase 4 paper-trade (no API auth required → no `requires_credentials` mark needed; can re-add later)
+
+**Coverage finding (2026-06-01 probe)**: Drift's free Velocity Data API historical coverage ends ~2026-04-01 (dates
+after return `meta.totalRecords=0`). Live mode (`solana_defi_handler._collect_drift`) covers the live window via
+`/stats/markets` endpoint, so this is NOT a blocker for the MVP archetype — backtest window 2024-06-01 → 2026-04-01
+is the working historical horizon. Captured as a NICE-TO-HAVE: probe whether a paid Drift API tier exists that
+extends the historical horizon to T-0.
 
 ### Phase 2 — Orca Whirlpool state ingester (~1.5 days)
 
@@ -198,7 +214,7 @@ For Raydium classic AMM, simpler decode (just reserveA, reserveB, fee).
 
 | Phase | Done-when                                                                                                                                                                                     |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | `perp_funding/drift/SOL-PERP/day=*/...parquet` exists for every day 2024-06-01 → 2026-06-01; `perp_trades/drift/SOL-PERP/day=*/...parquet` exists for every day with > 0 rows for active days |
+| 1     | ✅ Ingester + CLI + tests shipped (uac@f26097f9, mtds@0f70f376). Local validation green: 24 funding + 29164 trades for 2025-08-01; 24 funding + 4583 trades for 2024-06-15. Full backfill 2024-06-01 → 2026-04-01 (free-tier API coverage end) is a separate operator-launched VM job — out of scope for this Phase-1 dispatch per the plan's "DO NOT auto-trigger a full backfill" guard. |
 | 2     | `dex_pool_state/orca/SOLANA/Whirlpool_SOL_USDC/day=*/...parquet` exists with 1440 rows/day; sample-check derived price matches known SOL/USDC price within 1%                                 |
 | 3     | Backtest run for 2025-08-01 → 2025-08-31 produces non-fictional PnL series; matching engine documents top fills, slippage costs                                                               |
 | 4     | Paper trade 24h on SOL basis; flat PnL after fees ≈ funding earnings - slippage; promote to live wallet after operator ack                                                                    |
