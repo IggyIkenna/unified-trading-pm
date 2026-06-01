@@ -94,8 +94,9 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 
 > **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (2026-06-01)**:
-> the C0 single-walk on `market-data-tick-defi-prd-…` (`migrate_defi_canonical.py`: venue relabel / phantom-grid delete /
-> v4–v8→v9 / snapshot) mutates the **same `_index`** that the bucket-remediation plan's `--manifest-only` seed writes
+> the C0 single-walk on `market-data-tick-defi-prd-…` (`migrate_defi_full_v9_canonical.py`: read+rewrite to
+> `asset_group=defi` + `pipeline_mode=` partition + v9 + `source` + canonical `_V{N}` venue + `available_at`; launcher-wired
+> `launch-canonical-migration-vm.sh defi`) mutates the **same `_index`** that the bucket-remediation plan's `--manifest-only` seed writes
 > legacy→canonical rows into. Single-walk discipline (HARD RULE) forbids two concurrent whole-corpus walks on that
 > `_index`. **Ordering (HARD)**: the bucket plan's DeFi manifest seed runs **BEFORE** this plan's `C0` single-walk —
 > otherwise the seed re-injects un-canonicalised legacy rows (old venue strings, v4–v8, phantom grid) *after* C0 cleans
@@ -258,21 +259,17 @@ What to verify/wire (B0 corrected scope):
 > together (no N ad-hoc walks). Backfills (C6/D1/E1) + B0-run are blocked until C is GREEN for the affected bucket.
 
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
-      2026-06-01)**. **SYSTEM-FIRST: the tool already exists** —
-      `market-tick-data-service/.../scripts/migrate_defi_canonical.py` (+ unit tests) already does VENUE-CHAIN→flat (C3),
-      data_type canonicalisation (C2), the `{NAME}_V{N}` venue promotion (C12), instrument_type + canonical
-      instrument_id, across the dedicated buckets; VM launcher `deployment-service/scripts/vm/launch-canonical-migration-vm.sh defi <start> <end> dry|full`.
-      **GAP to close before the full run (C9/v9)**: the tool's target path keeps `category=defi` — must extend to
-      `asset_group=defi` + add the `pipeline_mode=` partition + write to the **env-split** `{kind}-prd-{project}` bucket
-      + stamp schema v9. Then: **(1)** extend `migrate_defi_canonical.py` (+ tests) for C9/v9; **(2)** `… defi … dry` VM →
-      review the planned rewrites in the VM log; **(3)** pre-migration drain (stop GCP+AWS fleet + snapshot per the HARD
-      RULE); **(4)** `… defi … full` VM → monitor (STARTED<60s, ≥1 progress/hr, STOPPED at exit, T+10min check); **(5)**
-      verify + delete legacy originals after cutover. **Read+rewrite tool WRITTEN (step 1 done 2026-06-01)**:
-      `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (proper home beside the other
-      `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified). Does asset_group=defi + pipeline_mode={MODE}
-      partition + schema_version=9 + `source` column (per UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (via UAC SSOT,
-      complete incl TraderJoe/Velodrome post-C12-UAC) + **`available_at` preserve-or-backfill** (preserve where present;
-      backfill only missing/null from day end-of-day UTC — never regenerate to migration-time, mtds@a07cea55).
+      2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
+      VENUE-CHAIN→flat (C3), data_type canonicalisation (C2), `{NAME}_V{N}` promotion, instrument_type + canonical
+      instrument_id — that step is DONE; the current dedicated-bucket objects are in the flat
+      `day=/category=defi/venue={FLAT}/chain=/…` form. The C0/**v9** step is a NEW, separate read+rewrite tool —
+      `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired 2026-06-01**,
+      proper home beside the other `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the
+      flat objects to FULL canonical: `category=defi`→`asset_group=defi` + `pipeline_mode={MODE}` partition +
+      schema_version=9 + `source` column (UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (UAC SSOT, complete incl
+      TraderJoe/Velodrome post-C12-UAC) + **`available_at` preserve-or-backfill** (preserve where present; backfill only
+      missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split `{kind}-prd-{project}`
+      bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f VM-cutover sub-todos below.**
       parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
   - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802; dry=default/full=--apply;
         `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day slice (rolls into C0b dry VM).
