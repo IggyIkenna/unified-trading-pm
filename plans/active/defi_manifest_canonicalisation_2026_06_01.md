@@ -107,11 +107,19 @@ What to verify/wire (B0 corrected scope):
 
 - [x] ✅ [CODE] P0. A1 pre-genesis empty-reason: oracle + evm-defi handlers classify via UAC `get_chain_genesis_date()`
       → `EXPECTED_PRE_GENESIS_CHAIN`. market-tick-data-service@840d85f1.
-- [ ] [CODE] P1. A2 pre-venue-launch empty-reason: young perp/LST venues (PACIFICA/ASTER/ETHERFI pre-launch) →
-      `EXPECTED_PRE_VENUE_LAUNCH` via UAC `get_protocol_launch_date()`/venue_launch_dates, same pattern as A1. Handlers:
-      perp_funding + lst_rates + solana/evm defi.
-- [ ] [CODE] P1. A3 data_type name SSOT at write: every handler writes the underscore canonical (`lending_indices` not
-      `lending-indices`, `dex_pools` not `dex-pools`, `dex_swaps` not `dex-swaps`, `lst_rates` not `staking_yields`).
+- [ ] [CODE] P1. A2 pre-venue-launch empty-reason → `EXPECTED_PRE_VENUE_LAUNCH`. **Scoped 2026-06-01**:
+      `perp_funding_handler` ALREADY does this for Aster (L344-353) — replicate for PACIFICA (currently
+      `SOURCE_RETURNED_ZERO` pre-2025-12). `lst_rates_handler` (L512-535) + `solana_defi_handler` (L344/1486/1876)
+      blanket-write `SOURCE_RETURNED_ZERO`. **Blocker found**: `get_venue_launch_date('defi', …)` returns None for
+      LIDO/ETHERFI/MARINADE/PACIFICA/ASTER (only ETHENA populated) → **A2a: populate `DEFI_VENUE_LAUNCH_DATES` in UAC
+      `registry/venue_launch_dates.py`** (parent_epic: manifest_master) OR wire the empty site to the token-level
+      `get_lst_token_genesis` via the handler's venue→token map (the captured path at lst_rates_handler:399-404 already
+      does this — extend it to the empty branch). Then A2b: wire the 3 handlers. Two clean units; do A2a first.
+- [x] ✅ [CODE] P1. A3 data_type name SSOT at write — **verify-done 2026-06-01**: every DeFi handler `_DATA_TYPE`
+      constant + `data_type=` literal is underscore-canonical
+      (`dex_pools`/`dex_swaps`/`lending_indices`/`lst_rates`/`oracle_prices`/ `perp_funding`/`dex_pool_state`); **zero
+      hyphen literals written by any handler**. The hyphen variants (`lending-indices`/`dex-pools`/`dex-swaps`) +
+      `staking_yields` in the corpus are purely LEGACY data → fixed by C2.
 - [ ] [CODE] P2. A4 chain dimension always populated: QG guard fails a DeFi `record_captured`/`record_empty` with blank
       `chain` for a chain-scoped data_type.
 - [ ] [CODE] P1. A5 LIGHTER perp_funding adapter fix: `SOURCE_RETURNED_ZERO` across full post-launch life (zkSync
