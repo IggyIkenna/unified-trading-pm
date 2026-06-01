@@ -82,10 +82,16 @@ estimate_calibrated_ai_days: 1.2
       pre-fix red state). Dropped `stash@{0}` from slot-5's PM worktree (recoverable commit `f98114f266` until GC); the
       two surviving `stash@{0..1}` are slot-1 WIP, untouched. Slot-5 PM tree now clean + 0 behind origin/LDR — FF-pull
       unblocked.
-- [x] ✅ [SCRIPT] P3. **Item 5 — FF-pull starvation watchdog signal (spec delivered; wiring optional).** Spec below
+- [x] ✅ [SCRIPT] P3. **Item 5 — FF-pull starvation watchdog signal (spec delivered).** Spec below
       (§ "Item 5 spec"). Proposes the detection rule + ping payload for the slot-5-963-behind failure mode.
-      Implementation (wiring into `slot-git-status-report.sh` / `slot-cron-ff-pull.sh`) left as an optional P3 follow-up —
-      capture as its own todo if/when prioritised.
+- [ ] [SCRIPT] P3. **Item 5b — implement the FF-pull starvation watchdog.** Wire the § "Item 5 spec" `collision`
+      detection (incoming-changed-files ∩ dirty-files ≠ ∅, gated on `behind ≥ FF_STARVE_COMMIT_THRESHOLD` or age >
+      `FF_STARVE_AGE_HOURS`) into `scripts/dev/slot-git-status-report.sh` (it already walks each repo's ahead/behind +
+      dirty state) and POST the one-per-(slot,repo) ping payload to the orchestrator backend the same way the
+      git-status reporter posts. Keep `slot-cron-ff-pull.sh` as the actor; the report cron is the detector/alerter.
+      Add a unit/bats test under `tests/` (mirror `test_tab_worktrees.bats`) covering: collision-detected → signal,
+      non-colliding-dirty → no signal, below-threshold → no signal. Update `codex/05-infrastructure/per-tab-worktrees.md`
+      § "Step 7 — troubleshooting". **Script → land on LDR** (same staging-632-behind deviation as Items 2/3).
 
 ## Discoveries (captured per HARD RULE)
 
