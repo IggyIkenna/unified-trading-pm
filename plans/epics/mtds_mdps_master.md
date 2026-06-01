@@ -440,6 +440,16 @@ MTDS `scripts/quality-gates.sh` is **pre-existing-red** on LDR (independent of F
       reformat). Run FIX-mode QG + commit. Repo: market-tick-data-service. (Foreign migration scripts — left for the
       MTDS / slots-2/3 owner, not swept by slot 7.)
 
+## Fleet data-fetch dispatch (slot 7, 2026-06-01 — from `running_vm_fleet_status_2026_05_27.md`)
+
+- [ ] [CODE] P1. **OKX-FUTURES Tardis symbol-mapping bug (HTTP 400, ~1,100–1,350/window, independent of the API key).**
+      Tardis rejects mapped symbols like `BTC-USDT` + dated contracts ("use the okex-futures exchanges API for allowed
+      values"); valid OKX-FUTURES IDs are `BTC-USD-260626` / `BTC-USD_UM-260626`. Fix the OKX-FUTURES → Tardis symbol
+      mapping so historical OKX downloads stop returning empty. **Independent of the Tardis paid-key unblock** (which
+      stays BLOCKED-CREDENTIALS per operator — see `running_vm_fleet_status` + `fleet_audit_triad_deferred_followups`).
+      Repo: market-tick-data-service (CEX historical download) / instruments-service (venue symbol map) — diagnose which
+      side owns the OKX symbol map first.
+
 ## Code-freeze + migration window estimate
 
 - Phase 1 (bucket symmetry audit + YAML diff): **~3 cal AI-days** (slot 2 + 3 in parallel).
