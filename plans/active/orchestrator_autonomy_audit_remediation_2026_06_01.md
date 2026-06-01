@@ -51,16 +51,22 @@ codex overview documents this as a "Known gap (carried as deferred 2026-05-28)" 
 fleet now self-healing 24/7 on AWS, the durability gap has real teeth (autospawn + watchdog restart workers; a host
 reboot still wipes dispatch/backlog state).
 
-- [ ] [CODE] P1. Add an S3 snapshot path to `server/gcs_sync.py` (or a sibling `s3_sync.py` sharing the `SnapshotLoop`
+- [x] ✅ [CODE] P1. Add an S3 snapshot path to `server/gcs_sync.py` (or a sibling `s3_sync.py` sharing the `SnapshotLoop`
       interface) gated on `ORCHESTRATOR_S3_BUCKET`. Mirror the GCS cadence (30-min auto + shutdown). Use the workspace
       cloud-interface S3 helpers, not raw boto subprocess. Unit-test the upload path with `@mock_aws`. QG green +
       quickmerge. Collision group: `ao_s3_snapshot_code`. Estimate: 0.5 AI-day.
+      ✅ DONE 2026-06-01 — agent-orchestrator@57dc8c2 (LDR). Added `upload_state_to_s3` + `backup_sqlite_to_s3` (boto3
+      client, not subprocess; gated on `ORCHESTRATOR_S3_BUCKET`; never-raise) wired into `snapshot_session()` +
+      `SnapshotLoop` backup tick alongside GCS. + `boto3` dep + 8 `@mock_aws` tests (all pass). ruff + basedpyright 0
+      errors. NB: 6 unrelated pre-existing test failures (slack/worker_liveness modules) + a `pexpect` venv gap observed
+      in this worktree — neither touches `gcs_sync.py`; flagged for the env/test-health owner, not this commit.
 - [ ] [SCRIPT] [OPERATOR] P1. Provision `s3://uts-orchestrator-state-427895769566/` (or reuse the creds bucket
       account) + set `ORCHESTRATOR_S3_BUCKET` systemd env on the 11 AWS VMs via SSM drop-in. Restart orchestrator;
       confirm a snapshot object lands within one cadence window. Collision group: none. Estimate: 0.2 AI-day.
-- [ ] [DOCS] P2. Update the `codex/04-architecture/agent-orchestrator-overview.md` "Known gap" callout — flip it from
+- [x] ✅ [DOCS] P2. Update the `codex/04-architecture/agent-orchestrator-overview.md` "Known gap" callout — flip it from
       "deferred future work" to "shipped — AWS↔S3 snapshot live" with the bucket name + env var. Collision group: none.
-      Estimate: 0.05 AI-day.
+      Estimate: 0.05 AI-day. ✅ DONE 2026-06-01 — overview "Secrets + buckets" state-snapshot row + the callout now read
+      "code shipped @57dc8c2; remaining operator step = provision bucket + set `ORCHESTRATOR_S3_BUCKET` on 11 VMs".
 
 ### Phase 2 — P1-1: standing deploy-currency + flag-liveness fleet check
 
@@ -69,17 +75,21 @@ HEAD that includes the autonomy commits, with all four flags live" check. The ce
 which predates the autonomy work — the running binary's currency is unverified. This is the gate between "code exists on
 LDR" and "loop actually runs 24/7".
 
-- [ ] [SCRIPT] P1. Write `unified-trading-pm/scripts/orchestrator/verify_fleet_autonomy_health.sh` — for each VM (via
+- [x] ✅ [SCRIPT] P1. Write `unified-trading-pm/scripts/orchestrator/verify_fleet_autonomy_health.sh` — for each VM (via
       SSM or authed proxy): report (a) deployed git HEAD short-sha of agent-orchestrator vs LDR HEAD, (b) presence +
       value of `ORCHESTRATOR_{AUTOSPAWN,WORKER_WATCHDOG,REGEN_PRUNE_STALE}_ENABLED` + `ORCHESTRATOR_VM_ID` in
       `/proc/<pid>/environ`, (c) `/health` version. Emit a per-VM ✅/⚠️ table. Collision group: none. Estimate: 0.3
-      AI-day.
+      AI-day. ✅ DONE 2026-06-01 — script shipped (read-only, parallel SSM probe, 11-VM list). Per-VM ✅ requires
+      behind=0 AND flags=4/4 AND /health responds; else ⚠️ with the specific missing flag/behind-count. Exits 1 if any
+      VM ⚠️. `bash -n` clean. Operator runs it (needs SSM creds) — see next item.
 - [ ] [SCRIPT] [OPERATOR-SSM] P1. Run the script fleet-wide; for any VM behind LDR HEAD or missing a flag, pm-pull +
       enable + restart. Capture the before/after table in this plan. Wire the script as the live tool behind audit
       checks m1b/m2c/m3b/m3c so future audits can run it in one shot. Collision group: none. Estimate: 0.15 AI-day.
-- [ ] [DOCS] P2. Bump the central `/health` version string when the autonomy code is the deployed HEAD, so
-      deploy-currency is observable from the unauthenticated health endpoint. Collision group: none. Estimate: 0.05
-      AI-day.
+- [x] ✅ [DOCS] P2. ~~Bump the central `/health` version string~~ — **REVISED**: manual version bumps are forbidden
+      (workspace rule "NEVER bump manually — semver-agent handles all"). The `feat(gcs_sync)` commit @57dc8c2 will
+      auto-bump 0.6.0 → 0.7.0 via semver-agent on its next run, and `/health` reflects it after deploy. The canonical
+      deploy-currency signal is the **git-HEAD `behind=` count** in `verify_fleet_autonomy_health.sh` (above), which is
+      finer-grained than the semver string. No manual action — resolved by the verify script + semver-agent.
 
 ### Phase 3 — P2-1: notification inventory doc drift
 
@@ -87,9 +97,12 @@ LDR" and "loop actually runs 24/7".
 context-full + cap-hit alerts). The audit E1 expected-count (10/8) and the codex
 `agent-orchestrator-slack-notifications.md` table both predate these.
 
-- [ ] [DOCS] P2. Refresh the codex `agent-orchestrator-slack-notifications.md` inventory table to the current 13 slack /
+- [x] ✅ [DOCS] P2. Refresh the codex `agent-orchestrator-slack-notifications.md` inventory table to the current 13 slack /
       9 telegram funcs (enumerate the new func names). Update the audit instructions E1 + j3 expected-counts to match.
-      Collision group: none. Estimate: 0.1 AI-day.
+      Collision group: none. Estimate: 0.1 AI-day. ✅ DONE 2026-06-01 — codex table rebuilt with an S/T column (marks
+      Slack vs Telegram export per func) + 4 new rows (`notify_unpushed_plans`, `notify_autospawn_flap`,
+      `notify_watchdog_kill`, `notify_sync`) + corrected the false "both expose the same set" intro. Audit e1 (13/9 +
+      slack-only/telegram-only lists) + j3 (S/T-matrix match) updated.
 
 ## Closing condition
 

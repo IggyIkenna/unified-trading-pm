@@ -177,11 +177,13 @@ cadence + completeness matters more than any single subsystem.
 
 ### E. Notifications
 
-- [ ] **(e1) Both notification modules export the same 11-function inventory.** Grep:
+- [ ] **(e1) Notification modules export the expected inventory (refreshed 2026-06-01 — the two modules diverge).**
+      Grep:
       `rg "^def notify_\|^async def notify_" agent-orchestrator/server/notifications/slack.py agent-orchestrator/server/notifications/telegram.py`
-      — slack should have 10 funcs (`notify_setup_token_expiring` included), telegram should have 8 funcs +
-      `notify_orchestrator_restart_loop`. Removed funcs must NOT appear: `notify_oauth_refresh_succeeded/failed`,
-      `notify_oauth_token_expiring`.
+      — **slack should have 13 funcs, telegram 9.** Slack-only:
+      `notify_slot_blocked`/`notify_slot_stale`/`notify_slot_failed`/`notify_unpushed_plans`/`notify_autospawn_flap`/`notify_watchdog_kill`.
+      Telegram-only: `notify_orchestrator_restart_loop`/`notify_sync`. Removed funcs must NOT appear:
+      `notify_oauth_refresh_succeeded/failed`, `notify_oauth_token_expiring`. Full S/T matrix in the codex SSOT (j3).
 
 - [ ] **(e2) Slack webhook is configured on the central VM.** SSH to central, run
       `sudo grep AGENT_ORCHESTRATOR_SLACK_WEBHOOK /home/ubuntu/unified-trading-system-repos/agent-orchestrator/.env.local`
@@ -266,9 +268,10 @@ cadence + completeness matters more than any single subsystem.
       `rg "OAuthBadge\|oauth_refresh\|GCSCredsPoller\|swap_claude_account" unified-trading-pm/codex/04-architecture/agent-orchestrator-overview.md unified-trading-pm/codex/05-infrastructure/agent-orchestrator-*.md unified-trading-pm/codex/12-agent-workflow/orchestrator-*.md unified-trading-pm/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`
       — expect either 0 hits OR every hit must be inside a "removed in Phase 4b-cleanup" historical note.
 
-- [ ] **(j3) Notification inventory matches.** Compare the table in
+- [ ] **(j3) Notification inventory matches.** Compare the S/T matrix table in
       [`codex/05-infrastructure/agent-orchestrator-slack-notifications.md`](../../../codex/05-infrastructure/agent-orchestrator-slack-notifications.md)
-      to the actual `def notify_*` inventory in `server/notifications/`. Counts must match.
+      to the actual `def notify_*` inventory in `server/notifications/`. Counts must match (13 slack / 9 telegram as of
+      2026-06-01) AND each function's S/T column must match which module actually exports it.
 
 - [ ] **(j4) Fleet topology table in worker-topology doc matches `backends.json`.** Read
       [`codex/05-infrastructure/agent-orchestrator-worker-topology.md`](../../../codex/05-infrastructure/agent-orchestrator-worker-topology.md)

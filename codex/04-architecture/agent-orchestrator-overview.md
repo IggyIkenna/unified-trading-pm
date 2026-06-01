@@ -101,16 +101,17 @@ equivalents are kept in sync for cloud-agnostic re-spin.
 | Per-VM env (JWT, Telegram, …)                | AWS Secrets Manager `ORCHESTRATOR_ENV_LOCAL`                              | GCP Secret Manager `ORCHESTRATOR_ENV_LOCAL`                                         | `bootstrap_vm.sh` writes `.env.local` on first boot                        |
 | Per-account setup-token env files            | `s3://uts-orchestrator-creds-<account>/accounts/<id>.env`                 | `gs://central-element-323112-orchestrator-creds/accounts/<id>.env`                  | `CredsEnvPoller` syncs to local `~/.claude-accounts/` every 5 min          |
 | VM lifecycle events (STARTED/STOPPED/FAILED) | `s3://uts-orchestrator-events-<account>/orchestrator/<role>/<vm>/STARTED` | `gs://<project>-events/orchestrator/<role>/<vm>/STARTED`                            | `bootstrap_vm.sh` emits STARTED; STOPPED/FAILED deferred to SSH-spawn work |
-| State snapshot (state.json + SQLite)         | not currently configured on AWS fleet                                     | `gs://agent-orchestrator-state-prod/` (controlled by `ORCHESTRATOR_GCS_BUCKET` env) | `SnapshotLoop` in `server/gcs_sync.py` — 30-min auto + shutdown            |
+| State snapshot (state.json + SQLite)         | `s3://<bucket>/` controlled by `ORCHESTRATOR_S3_BUCKET` env (code shipped) | `gs://agent-orchestrator-state-prod/` (controlled by `ORCHESTRATOR_GCS_BUCKET` env) | `SnapshotLoop` in `server/gcs_sync.py` — 30-min auto + shutdown; both clouds |
 
 Local dev: all of the above are no-ops when the corresponding env var is unset; state.json persists to local disk and
 creds env files are operator-managed manually.
 
-> **Known gap (carried as deferred 2026-05-28)**: `server/gcs_sync.py` is GCS-only — there is no S3 equivalent for the
-> state snapshot. AWS fleet VMs that don't set `ORCHESTRATOR_GCS_BUCKET` (with GCS ADC configured) keep state only on
-> local disk. This is fine in steady state (SQLite + state.json are reconstructable from backlog.yaml + SQLite-row
-> state) but the AWS↔S3 path would close the disaster-recovery loop. Listed for future work; not a blocker for current
-> operations.
+> **AWS↔S3 snapshot (code shipped 2026-06-01, agent-orchestrator@57dc8c2)**: `server/gcs_sync.py` now has
+> `upload_state_to_s3` + `backup_sqlite_to_s3`, mirroring the GCS path and gated on `ORCHESTRATOR_S3_BUCKET` (no-op when
+> unset, never-raise). When both `ORCHESTRATOR_GCS_BUCKET` and `ORCHESTRATOR_S3_BUCKET` are set the snapshot lands in
+> both clouds. **Remaining operator step**: provision the S3 state bucket + set `ORCHESTRATOR_S3_BUCKET` on the 11 AWS
+> VMs so the disaster-recovery loop is live (until then AWS hosts without a reachable GCS bucket still keep state on
+> local disk). Tracked: `plans/active/orchestrator_autonomy_audit_remediation_2026_06_01.md` Phase 1.
 
 ---
 
