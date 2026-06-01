@@ -11,8 +11,11 @@ last_updated: 2026-06-01
 
 ## Epic Scope
 
-Manifest v8 schema, 4-state `capture_status` (`captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`),
-honest absence (17 `EXPECTED_*` reasons + `SOURCE_RETURNED_ZERO`), cluster validation at `record_captured()`,
+Manifest **v9** schema (`MANIFEST_SCHEMA_VERSION = 9` — v9 added the tradfi `source` column), 4-state `capture_status`
+(`captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`), honest absence (the `EmptyConfirmedReason`
+closed set in UAC — **32 members** as of 2026-06-01: 28 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE` +
+`LEG_ABSENT_LEFT` + `LEG_ABSENT_RIGHT`; always read the enum, never trust this count), cluster validation at
+`record_captured()`,
 `available_at` semantics, single-walk discipline, and the manifest consolidator (Cloud Run + Cloud Scheduler).
 
 Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
@@ -33,10 +36,12 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
 ## Checklist
 
 - [ ] (a) **Schema version in actual PROD data**: read actual `schema_version` column from prod manifest (not code
-      constant). Must be ≥ 95% at v8 across all asset_groups. Do NOT trust the constant — read the data. Run:
-      `python3 plans/audit/results/a4_manifest_v8_compliance.py` or equivalent query
+      constant). Must be ≥ 95% at **v9** (`MANIFEST_SCHEMA_VERSION = 9`) across all asset_groups. Do NOT trust the
+      constant — read the data. Run: `python3 plans/audit/results/a4_manifest_v9_compliance.py` or equivalent query
 
-- [ ] (b) **All EmptyConfirmedReason values present**: 17 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` exist in UAC. Read:
+- [ ] (b) **All EmptyConfirmedReason values present**: the full closed set exists in UAC (32 members as of 2026-06-01 —
+      28 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE` + `LEG_ABSENT_LEFT` + `LEG_ABSENT_RIGHT`; **count
+      the enum, don't trust this number**). Read:
       `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason` — count members
 
 - [ ] (c) **No blank reason strings**: no `record_empty(reason="")` or `record_empty(reason=None)` anywhere. Grep:
