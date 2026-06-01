@@ -79,11 +79,17 @@ be fixed first if run on a VM.
 > descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
 > `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [ ] [DATA] P0. Confirm the 2,039 legacy-only cells' underlying DATA objects exist in legacy (not phantom manifest
-      rows) and are genuinely absent from canonical — sample per data*type (`prediction_canonical_question_group`,
-      `ohlcv*\*`). Record the real object count to migrate.
-- [ ] [DATA] P0. Read the legacy `_index` `schema_version` distribution + confirm canonical `pred-prd` current version
-      (the migration target is v9).
+- [x] ✅ [DATA] P0. Legacy→canonical diff (slot-4 tool, 2026-06-01): **2,039 legacy-only cells confirmed** (legacy 2,822
+      · canonical 805 · overlap 783) — matches the headline; mostly `POLYMARKET ohlcv_*` + `prediction_canonical_question_group`
+      from 2025-03-14 on. Per-data_type object counts resolved in the C0 copy walk (idempotent). Data-loss risk on delete
+      → these MUST land in canonical before L6.
+- [x] ✅ [DATA] P0. Canonical `pred-prd` `_index` DATA-STATE: **100% v8** (0/16,812 v9 — CF-1 RED); **`asset_group` col
+      present** (CF-2 rows GREEN) but **object PATHS still `category=prediction`** + **`data_source=POLYMARKET_CLOB` in
+      path** (CF-2 paths RED, CF-4 source-in-path); **`pipeline_mode` blank 0/16,812 + no path segment** (CF-3 RED); **no
+      `source` column** (CF-4 RED); **no `available_at` column** (CF-8 RED — only `written_at`); CF-5 typed GREEN
+      (`EXPECTED_PRE_VENUE_LAUNCH` 2,280 / `SOURCE_RETURNED_ZERO` 41). **CF-7 drift**: venue includes `UNKNOWN` + blank
+      `''`; data_type includes blank `''` + `prediction_trades`/`trades` — diagnose/relabel in the walk. Path sample:
+      `raw_tick_data/by_date/day=2025-03-14/category=prediction/data_source=POLYMARKET_CLOB/venue=POLYMARKET`.
 
 ### C — single-walk migration (legacy `prediction` → canonical `pred-prd`)
 

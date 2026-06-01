@@ -104,13 +104,21 @@ VM.
 > of it in this one walk — NOT descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not
 > a design fork). SSOT: `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [ ] [DATA] P0. Read the LIVE canonical `tradfi-prd` `_index` **actual `schema_version` distribution** (per-row, not
-      the constant — manifest-v8 lesson) + confirm the 4 legacy-only cells are real (objects exist) or phantom. Record
-      the row count to re-version.
-- [ ] [DATA] P0. Confirm `available_at` is non-null across the corpus (it should be — `tradfi_massive` shipped per-row
-      `available_at`); list any null rows the walk must backfill from day EOD UTC.
-- [ ] [DATA] P1. Verify the corpus venue / data_type strings are already underscore-canonical (no legacy drift); record
-      any non-canonical rows to relabel in the walk (do NOT bulk-rename ambiguous strings — diagnose first).
+- [x] ✅ [DATA] P0. LIVE canonical `tradfi-prd` `_index` DATA-STATE (slot-4 tool, 2026-06-01 — confirms CONFLICT-2):
+      **100% v8** (0/144,062 rows v9 — the constant lied, the data is v8); `asset_group` col present (CF-2 rows GREEN);
+      **`pipeline_mode` blank (0/144,062 — CF-3 RED)**; **no `source` column (CF-4 RED)**; CF-5 typed GREEN
+      (`EXPECTED_WEEKEND` 35,050 / `EXPECTED_HOLIDAY` 2,427 / `EXPECTED_OUT_OF_COVERAGE_WINDOW` 8 / `SOURCE_RETURNED_ZERO`
+      5). capture_status: captured 100,536 / empty 37,490 / attempted_failed 6,036.
+- [x] ✅ [DATA] P0. Legacy-only diff: **71 legacy-only cells** (NOT 4 — headline undershot; NYSE `tbbo` 2023-05 spread;
+      legacy 12,948 · canonical 17,941 · overlap 12,877). All 71 copied + re-versioned in the C0 walk.
+- [x] ✅ [DATA] P0. **`available_at` FINDING — there is NO `available_at` column in the canonical tradfi `_index`** (only
+      `written_at`), contradicting the plan's "tradfi_massive shipped per-row available_at" assumption (CF-8 RED). The C0
+      walk MUST add a per-row `available_at` (preserve from parquet where present; backfill missing from day EOD UTC —
+      never migration-time). Captured as expanded scope (prior-not-ceiling).
+- [ ] [DATA] P1. Verify the corpus venue / data_type strings are underscore-canonical: data-state shows venues
+      `BARCHART/CBOE/CME/FX/ICE/NASDAQ/NYSE/YAHOO_FINANCE` (canonical) BUT also `UNKNOWN` + blank `''` (drift to
+      diagnose); data_types `ohlcv_15m/ohlcv_1m/ohlcv_24h/options_chain/tbbo/trades` + blank `''`. Relabel/diagnose the
+      `UNKNOWN`/blank rows in the walk (do NOT bulk-rename ambiguous strings).
 
 ### C — single-walk (v9 + partition + canonical verify + source re-consolidate)
 

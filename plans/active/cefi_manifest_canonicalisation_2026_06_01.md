@@ -85,15 +85,19 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 ### P0 — audit
 
-- [ ] [DATA] P0. Confirm the 838 legacy-only cells' DATA objects exist in legacy + are genuinely absent from canonical
-      (sample per data_type, esp. `book_snapshot_5`/`trades`). Record exact object count (likely small — recent only).
+- [x] ✅ [DATA] P0. Legacy→canonical `(date,venue,data_type)` diff (slot-4 tool, 2026-06-01): **legacy-only CELLS =
+      5,233** (NOT 838 — the headline undershot; prior-not-ceiling). Oldest examples are 2020-01 `OKX-FUTURES
+      book_snapshot_5` (legacy captured 91,602 · canonical 90,931 · overlap 86,369). These must land in canonical
+      before L6 deletes legacy. Exact per-data_type object counts resolved in the C0 walk (idempotent copy of the gap).
 - [x] ✅ [DATA] P0. Read canonical `cefi-prd` `_index` DATA-STATE (2026-06-01 slot-4): **100% v8** (not v9), **no
       `source` column**, **no `category`/`asset_group` column**, **blank `pipeline_mode`** → the FULL-re-canonicalisation
       finding above. Whole corpus is in scope, not 838 cells.
-- [ ] [DATA] P0. Capture the REMAINING schema signal into a **reusable audit tool** (so the operator can re-run it on any
-      AG `_index`): per-column presence + distribution for `schema_version` / `source` / `category` / `asset_group` /
-      `pipeline_mode`, `error_reason` histogram (CF-5), and object-path probe (CF-2/3/9). Emit per-CF GREEN/RED
-      data-state. Feeds `cefi_master_audit_instructions.md` Canonical-form section + generalises to the other AGs.
+- [x] ✅ [DATA] P0. Reusable audit tool SHIPPED — `plans/audit/results/cf_manifest_audit_2026_06_01.py`
+      (PM@4be440b6a): per-CF GREEN/RED data-state for any AG `_index` (schema_version dist, `source`/`category`/
+      `asset_group`/`pipeline_mode` col presence, `error_reason` histogram CF-5, shallow object-path probe CF-2/3/9,
+      legacy-only cell diff). DNS-robust (`gcloud cp` retried + time-boxed shallow probe). Run on cefi/tradfi/sports/
+      prediction (results in their P0 blocks). Generalises to instruments + downstream. Feeds the audit-instruction
+      Canonical-form sections.
 
 ### C — single-walk (gap-fill + canonicalisation)
 

@@ -148,13 +148,24 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > this one walk — NOT descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design
 > fork). SSOT: `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [ ] [DATA] P0. Read the live sports `_index` **actual `schema_version` distribution** (per-row) + the current empty-
-      reason histogram — quantify how many rows are blank / `SOURCE_RETURNED_ZERO` that should be a typed
-      fixture/season/ transfer-window/genesis reason. Confirm the 0-legacy-only-cells finding (objects).
-- [ ] [DATA] P0. Confirm which sports object paths already carry `pipeline_mode=` vs which need it added (the audit said
-      it is in-path for some api_football data_types but not universal).
-- [ ] [DATA] P1. Verify venue/league/data_type strings are canonical (retired data_types absent per
-      `sports_retired_data_types_code_cleanup`); record any drift to relabel (diagnose, don't bulk-rename).
+- [x] ✅ [DATA] P0. Live sports `_index` DATA-STATE (slot-4 tool, 2026-06-01): **100% v8** (0/786,408 v9 — CF-1 RED);
+      no `category`/`asset_group` col (CF-2 rows vacuous); **`pipeline_mode` blank 0/786,408 (CF-3 RED)**; **no `source`
+      column (CF-4 RED)**; **no `available_at` column (CF-8 RED — only `written_at`)**. capture_status: empty_confirmed
+      **584,177** / captured 202,067 / attempted_failed 164. **KEYSTONE FINDING — CF-5 RED-by-mislabel: ALL 584,177
+      empties are labeled `SOURCE_RETURNED_ZERO`** (a single blanket reason on a schedule-driven AG) — these are exactly
+      the no-fixture/off-season/out-of-window/uncovered-league cells the C-reasons rider must relabel to typed UAC
+      reasons via the coverage oracle. (My generic tool scores CF-5 "GREEN=non-blank", but blanket SOURCE_RETURNED_ZERO
+      on sports IS the mislabel — treat CF-5 RED until the oracle relabel lands.)
+- [x] ✅ [DATA] P0. **0 legacy-only cells confirmed** (legacy 32,755 · canonical 32,869 · overlap 32,755) — sports DATA
+      is complete; the walk is FORM-only (v9 + partition + source + typed reasons), no data-loss-gap copy needed.
+- [ ] [DATA] P0. Object-path scheme (slot-4 probe): `processed/by_date/day=YYYY-MM-DD/data_type=…/league_id=…/
+      timeframe=…` — has `day=`/`data_type=`/`league_id=`/`timeframe=` hive BUT **no `asset_group=` and no
+      `pipeline_mode=` segment** (CF-2 paths + CF-3 partition RED). The C0 walk adds `asset_group=sports` +
+      `pipeline_mode=` to all object paths; lift `data_source=` (where present) → `source` column.
+- [ ] [DATA] P1. Verify venue/league/data_type strings are canonical: data-state shows data_type CASE DRIFT —
+      `ODDS`/`ODDS_MOVEMENT`/`ODDS_SNAPSHOT` (upper) coexist with `odds_horizon_bucket*` (lower) + `trades`/
+      `ARBITRAGE_OPPORTUNITY`; venue set looks canonical (bookmaker names) but blank `''` present. Diagnose/relabel the
+      case drift + blank in the walk (retired data_types confirmed absent per `sports_retired_data_types_code_cleanup`).
 
 ### C — single-walk (v9 + partition + typed reasons + source path→column + canonical verify)
 
