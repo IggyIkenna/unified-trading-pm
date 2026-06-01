@@ -189,9 +189,13 @@ VM.
 > - **⚠️ OVERLAP/DEDUP HAZARD (lesson #2/#5/#6)**: the 12 hyphen dates **ALSO exist as `day=` hive** (verified 2025-11-02, 2026-01-01, 2026-02-01 in BOTH). On those dates: equals-hive has ONLY `venue=CME` (futures_chain/options_chain/combo); hyphen has `venue=CME futures_chain` (OVERLAP) **PLUS** `NYSE/NASDAQ equities/etf` (COMPLEMENTARY — equities/etf exist ONLY in hyphen). So the migrator MUST: (1) migrate the complementary equities/etf from hyphen (would be lost otherwise); (2) for the CME-futures_chain overlap, **sample object content per lesson #5 before choosing a winner** — default winner = L-hive (the established classified canonical structure) via cell-level skip-if-equals-hive-already-has-(date,venue,itype,data_type); only fall to hyphen where hive lacks the cell. Dedup at the CELL key, not the object path (file granularity differs).
 > - **`databento-batch-registry/`** = job-dedup registry (not market data) → NOT migrated, NOT deleted by E7.
 > - pipeline_mode per object = `derive_pipeline_mode_for_row(venue, "tradfi", data_type)` (UTL `pipeline_mode_resolver`) — venue-override (BARCHART→batch_barchart / YAHOO→batch_yahoo / EIA→batch_eia) else SOURCE_PRIORITY-primary (CME/NYSE/NASDAQ ohlcv_1m/trades/tbbo → `batch_databento`). **Identical derivation to the live writer `resolve_pipeline_mode` → batch=live correct.** `source` (E5) = `source_string_for(pipeline_mode)`.
-- [ ] [DATA] P0. E2 Build/extend `migrate_tradfi_canonical.py` to the v9-canonical target (perf-contract): parse the
-      hyphen pseudo-hive → canonical `day=/pipeline_mode=batch_{databento,massive,yahoo,barchart}/asset_group=tradfi/
-      venue=/…/data_type=`; copy the 71 legacy-only cells (NYSE tbbo 2023-05 …).
+- [x] ✅ [DATA] P0. E2 BUILT `migrate_tradfi_to_v9_canonical.py` (NEW v9 path canonicaliser — NOT the old
+      content-reclassification `migrate_tradfi_canonical.py`) — mtds@ae9e1b31 + launcher deployment-service@4cbb2e2.
+      Handles all 3 layouts (E1 RESULTS): L-hive `pipeline_mode=` insert (preserve `underlying=` bundle), L-hyphen 2
+      sub-shapes parse → canonical, candles insert; overlap dedup (L-hive wins CME, hyphen fills equities/etf); chain
+      types built manually (UAC builder rejects futures_chain/options_chain); pipeline_mode via
+      `derive_pipeline_mode_for_row` (batch=live identical). 12 unit tests green (ruff+basedpyright clean). The 71
+      legacy-only cells ride `--also-legacy`. DRY-BY-DEFAULT + `--apply`. Source/v9 columns added by E5 rebuild (next).
 - [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive -029).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
 - [ ] [DATA] P0. E5 Manifest rebuild: scan canonical paths → `ManifestWriter` stamping `source` (per UAC SOURCE_PRIORITY /
