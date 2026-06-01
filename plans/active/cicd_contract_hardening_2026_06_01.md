@@ -19,6 +19,58 @@ source:
 
 # CI/CD contract hardening — workspace-wide gate enforcement + build provenance
 
+## HANDOFF — next agent (state as of 2026-06-01)
+
+**Goal:** every repo on `quality-gates-v2` (ruleset required-check = `…/quality-gates-v2`), on all branches
+(main + staging + live-defi-rollout), all green. 17-repo ruleset set; **8 were not on v2** at start.
+
+**Token (prerequisite — already solved):** `source unified-trading-pm/scripts/workspace/load-gh-token.sh` → exports
+`GH_TOKEN` from `.act-secrets` (workspace root) or Secret Manager; it has `Workflows: write`. The default gh keyring
+token does NOT (can't edit `.github/workflows`). Verify a host with `verify-slot-host-symmetry.sh`.
+
+**Per-repo status (8 repos):**
+
+| Repo | main ruleset | main v2 run | enforce | remaining |
+| ---- | ------------ | ----------- | ------- | --------- |
+| trading-agent-service | **v2** ✅ | **green** ✅ | active | staging+LDR roll v2 + re-pin |
+| deployment-api | **v2** ✅ | closure-fix in flight (verify) | active | confirm green; staging+LDR |
+| system-integration-tests | **v2** ✅ | **RED** (deeper harness issue) | active | diagnose next failure; staging+LDR |
+| deployment-ui | v1 | n/a (no v2 wf) | — | roll out v2 + closure dep_repos + diagnose v1; UI repo needs `pw:L2` |
+| market-data-processing-service | v1 | n/a (no v2 wf) | — | roll out v2 + closure + diagnose v1 |
+| client-reporting-api | v1 | RED **coverage 69<70** | — | write tests (~1% gap) → green → migrate |
+| batch-live-reconciliation-service | v1 | RED **coverage 78.2<80** | — | write tests (~2% gap) → green → migrate |
+| ibkr-gateway-infra | v1 | RED **MIN_COVERAGE=0 cfg + cov 46<51** | — | fix MIN_COVERAGE cfg + write tests → green → migrate |
+
+**SYSTEMIC ROOT CAUSE (the real bug):** there is **no canonical `quality-gates-v2` workflow template**, so every v2
+caller was hand-copied from `alerting-service` → two defects in nearly every repo: (1) wrong job `name:` (emits
+`Quality Gates (alerting-service)` → wrong check context), (2) stale/incomplete `dep_repos`. `dep_repos` MUST be the
+**full transitive editable-source closure** (uv resolves `editable+../sibling` recursively); the `workspace-manifest.json`
+deps list is **incomplete** vs the pyprojects, so compute the closure from pyprojects:
+```
+BFS over each repo's pyproject `path = "../<repo>"` lines (see deployment-api → 5, SIT → 12).
+```
+
+**DURABLE FIX (do this — prevents recurrence):**
+- [ ] [SCRIPT] P0. Create `scripts/workflow-templates/quality-gates-v2.yml.tmpl` (canonical): job `name: Quality Gates (__REPO_NAME__)` + `dep_repos: {{TRANSITIVE_CLOSURE}}` rendered from pyproject sources. Wire into `rollout-workflow-templates.sh` (closure computation). Roll out to ALL 17 repos × {main,staging,live-defi-rollout}; remove `workspace-qg.yml`. Then `pin_branch_protection_rulesets.py --apply` (now safe — derives v2 everywhere).
+- [ ] [SCRIPT] P1. `verify_branch_protection_check_names.py` reads `--ref live-defi-rollout` by default; after rollout all branches consistent.
+
+**PROVEN per-repo manual procedure (until the template lands):**
+1. `source load-gh-token.sh`. 2. Compute closure (BFS over pyproject sources). 3. Relax `require-quality-gates`
+ruleset (`gh api -X PUT .../rulesets/<id> -f enforcement=disabled`). 4. `gh api -X PUT` the workflow file: fix
+`name:` → `Quality Gates (<repo>)` + set `dep_repos` to the closure. 5. Re-point ONLY that ruleset's
+required-check context to `…/quality-gates-v2` (manual PATCH — do NOT use `pin --apply`, it re-pins staging too;
+staging has no v2 yet → would block staging). 6. Re-trigger v2; wait green; re-enable enforcement. 7. For
+"everything": roll v2 to staging+LDR, then re-pin staging ruleset.
+
+**SAFE-STATE NOTE:** all 3 touched repos (trading-agent, deployment-api, SIT) have enforcement **active** + main
+ruleset = v2. deployment-api/SIT main are blocked-on-v2 until their v2 greens (they were already blocked pre-migration
+— this is actionable now, not a regression). **Do not leave any ruleset `enforcement=disabled`.**
+
+**Coverage repos** (`client-reporting-api`, `batch-live`, `ibkr`) need **real tests written** (not floor-lowering /
+coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
+
+---
+
 ## Overview
 
 Named successor to the **workspace-wide branch-protection sweep** that
