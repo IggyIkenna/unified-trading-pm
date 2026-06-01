@@ -164,11 +164,27 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       a green ruleset check. Fix per repo: `gh api -X PATCH repos/IggyIkenna/<repo>/branches/main/protection/required_status_checks`
       with `checks=[{context: "Quality Gates (<repo>) / quality-gates-v2"}]` (done for SIT). Durable option for operator:
       a `pin_branch_protection_*` companion that mirrors the ruleset context into classic protection, OR retire classic
-      protection in favour of rulesets (the plan's canonical mechanism). Being fixed per-repo as each migration PR merges.
+      protection in favour of rulesets (the plan's canonical mechanism). Fixed per-repo as each migration PR merges
+      (done 2026-06-01: SIT, client-reporting-api, batch-live-reconciliation-service, ibkr-gateway-infra,
+      market-data-processing-service). **Still wrong-bare-context (non-admin-merge-blocked) on the already-"green"
+      repos**: deployment-api, trading-agent-service, execution-service, instruments-service, market-tick-data-service,
+      strategy-service, unified-api-contracts, unified-trading-library, alerting-service, deployment-service — sweep these.
+- [ ] [SCRIPT] P0. **FINDING (2026-06-01) — `market-tick-data-service` + `strategy-service` have NO quality-gates
+      workflow on `main` at all** (no `quality-gates-v2.yml`, no `workspace-qg.yml`), yet their `require-quality-gates`
+      ruleset requires `Quality Gates (<repo>) / quality-gates-v2`. So their `main` required check NEVER runs → main is
+      blocked-in-practice and only merges via admin bypass (`enforce_admins=false`) → these two foundational repos'
+      `main` is effectively **ungated**. Root cause: the correctly-named `quality-gates-v2.yml` exists on
+      `live-defi-rollout` (verified — `Quality Gates (market-tick-data-service)` / `Quality Gates (strategy-service)`)
+      but was never promoted to `main` (main is 76 / 27 commits behind LDR) or `staging`. Fix: promote the v2 workflow
+      file to `main` (+ `staging`) — minimal targeted PR adding the workflow, or a full LDR→main promotion — then get the
+      v2 run green on main (these are large repos; greening may need real work) → classic-protection context fix → done.
+- [ ] [SCRIPT] P1. **deployment-service `main` v2 — name + dep_repos fix in PR (in flight 2026-06-01).**
+      `deployment-service/pull/11`: main's v2 emitted the wrong `alerting-service` context AND dep_repos was missing
+      `deployment-api`/`strategy-service`/`market-tick-data-service` (CI: `Distribution not found at
+      editable+../deployment-api`). PR sets the correct name + full closure; merge + classic-context fix once v2 green.
 - [ ] [SCRIPT] P2. **FINDING (2026-06-01) — `load-gh-token.sh` SM fallback / .act-secrets refresh.** Complement to the
       validity-probe fix above: have `generate-act-secrets.sh` refresh `.act-secrets` from SM on bootstrap/cron so the
       cache rarely goes stale in the first place. — repo: unified-trading-pm.
-- [ ] [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
 - [ ] [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
       currently fetches `GH_PAT` only for clone-time HTTPS; also export it as `GH_TOKEN`/`GITHUB_TOKEN` in the worker
       systemd env (or source `load-gh-token.sh` at worker start) so VM workers can edit workflows too. — repo:
