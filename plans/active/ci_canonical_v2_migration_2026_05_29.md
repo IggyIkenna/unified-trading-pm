@@ -42,6 +42,17 @@ locked_since: 2026-05-21
 
 # CI canonical v2 migration — ghost-workflow workaround
 
+> **⚠️ REALITY CHECK (2026-06-01, via `verify_branch_protection_check_names.py`)** — this migration is **NOT complete**;
+> the "fully retired across N repos" framing is mark-drift. Live ruleset ground truth: **9/17 repos require
+> `quality-gates-v2`; 8 still require v1 `quality-gates`** (`batch-live-reconciliation`, `client-reporting-api`,
+> `deployment-api`, `deployment-ui`, `ibkr-gateway-infra`, `market-data-processing`, `system-integration-tests`,
+> `trading-agent-service`). The Phase-1 ✅ marks for **`batch-live-reconciliation-service` + `deployment-ui`** are
+> mark-drift: a v2 workflow file was created, but the ruleset still requires v1 AND the v2 QG is RED, so the migration
+> did not land. **Root blocker = per-repo pre-existing QG-RED** (enabling the v2 required check on a red repo blocks all
+> its merges) — this is real code remediation, repo-by-repo, not a config flip. Re-verify with the ruleset verifier and
+> only mark a repo done when its live required context is `…/quality-gates-v2`. Cross-ref:
+> `plans/audit/results/infrastructure_master_audit_2026_06_01.md` + `cicd_contract_hardening_2026_06_01.md` Phase 1.
+
 ## Overview
 
 Rolls every affected workspace repo onto the new canonical CI flow (`codex/08-workflows/ci-cd-flow.md`) AND applies a v2

@@ -53,21 +53,32 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 
 ### Phase 1 — Workspace-wide branch-protection + required-check enforcement (audit i1/i2)
 
-Baseline (2026-06-01): `main` v2 on 16/23; `staging` v2 on 9/23; 4 repos on stale v1; 10 staging-`none`.
+**CORRECTED 2026-06-01: canonical mechanism = RULESETS** (`require-quality-gates`), verified by
+`scripts/repo-management/verify_branch_protection_check_names.py` + applied by `pin_branch_protection_rulesets.py`. The
+required context is DERIVED from each repo's workflow file, so a repo is "v2" iff its default-branch workflow is
+`quality-gates-v2.yml`. Ground truth: **9/17 on v2; 8 still on v1**
+(`batch-live-reconciliation`, `client-reporting-api`, `deployment-api`, `deployment-ui`, `ibkr-gateway-infra`,
+`market-data-processing`, `system-integration-tests`, `trading-agent-service`).
 
-- [ ] [SCRIPT] P0. Add `quality-gates-v2` as required status check on `main` for the 6 unprotected service repos:
-      `fund-administration-service`, `greeks-service`, `ml-service`, `deployment-ui`. Bootstrap the v2 workflow onto the
-      target branch first (same admin-merge recipe as UAC/UTL), gated on that repo's QG being green.
-- [ ] [OPERATOR-DECISION] P1. `e2e-testing` + `agent-orchestrator` have no `main` required check — confirm whether these
-      are legitimately EXEMPT (test harness / separate Firebase+Packer deploy path) or need the gate. Record the
-      decision (exempt → `feature-branch-workflow.md` matrix; gate → add to Phase 1).
-- [ ] [SCRIPT] P0. Migrate the 4 repos still pinning the **retired v1** check on `staging` to `quality-gates-v2`:
-      `client-reporting-api`, `deployment-api`, `ibkr-gateway-infra`, `market-data-processing-service`. Order: drop v1 →
-      wait for v2 green → add v2 (minimize the no-check window; same agent turn).
-- [ ] [SCRIPT] P1. Add `quality-gates-v2` required on `staging` for the staging-`none` repos that have a `main` gate:
-      `batch-live-reconciliation-service`, `unified-trading-api`, `unified-trading-system-ui` (+ any others surfaced).
-- [ ] [VERIFY] P1. Re-run the audit i1/i2 sweep — `gh api repos/IggyIkenna/<repo>/branches/{main,staging}/protection`
-      across all active repos → every active non-exempt repo has `quality-gates-v2` on both branches; 0 on v1; 0 `none`.
+**This is the deferred `ci_canonical_v2_migration` Phase-4 work, BLOCKED on per-repo QG-RED — NOT a config sweep.**
+2026-06-01 CI: `batch-live`, `client-reporting-api`, `ibkr-gateway-infra`, `deployment-api`, `system-integration-tests`
+fail v2; `deployment-ui`, `market-data-processing` fail v1. Enabling the v2 required check on a red repo blocks ALL its
+merges, so each is gated on its v2 QG going green first (real code/test/lint/codex remediation per repo).
+
+- [ ] [BLOCKED-QG-RED] P0. Per-repo: fix the v2 QG to green, then migrate workflow `workspace-qg.yml → quality-gates-v2.yml`
+      on the default branch + re-pin ruleset (`pin_branch_protection_rulesets.py --apply --repo <r>`). Order by readiness:
+      first any repo whose v2 run is already green (re-pin only), then the QG-red repos after their QG is fixed. **Do NOT
+      flip the ruleset on a red repo.** Owns: the 8 v1 repos above. Tracked jointly with `ci_canonical_v2_migration`.
+- [ ] [VERIFY] P0. Re-run `verify_branch_protection_check_names.py` → every repo's required context is `…/quality-gates-v2`;
+      0 on v1. Mark each repo's todo done ONLY when its verifier line is live-v2.
+- [ ] [OPERATOR-DECISION] P1. Repos NOT in the 17-repo ruleset set (`fund-administration-service`, `greeks-service`,
+      `ml-service`, `unified-trading-api`, `unified-trading-system-ui`, `e2e-testing`, `agent-orchestrator`) — confirm
+      whether each needs the `require-quality-gates` ruleset added or is legitimately EXEMPT (harness / separate deploy
+      path). Record in `feature-branch-workflow.md`.
+
+**Do not duplicate**: the v1→v2 migration itself is owned by `ci_canonical_v2_migration_2026_05_29.md` (which has
+mark-drift — `batch-live` + `deployment-ui` marked ✅ but live-v1). This plan only adds the ruleset-mechanism framing +
+the not-in-ruleset-set decision; the migration todos live there.
 
 ### Phase 2 — enforce_admins workspace tail (audit i4)
 

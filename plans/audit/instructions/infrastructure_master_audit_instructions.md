@@ -110,17 +110,28 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
 
 **Branch protection enforces the gate everywhere (QG-green-everywhere precursor)**
 
-- [ ] (i1) **`main` requires `quality-gates-v2` on every active repo.** For each active repo in
-      `workspace-manifest.json` (`repositories[*].status == active`):
-      `gh api repos/IggyIkenna/<repo>/branches/main/protection` → `required_status_checks.contexts` contains
-      `quality-gates-v2`. 0 repos may be `none`. (2026-06-01 baseline: 16/23 green; **7 missing** — see result file.)
-- [ ] (i2) **`staging` requires `quality-gates-v2` (not retired v1) on every active repo.** Same call for `staging`.
-      **No repo may still pin `quality-gates` / `workspace-qg` (v1) as the required check** — v1 is retired
-      (`ci_canonical_v2_migration_2026_05_29.md`). (2026-06-01 baseline: 4 repos still on **v1**, several `none`.)
-- [ ] (i3) **Force-push disabled + linear history on `main`/`staging`.** `gh api .../branches/{main,staging}/protection`
-      → `allow_force_pushes.enabled == false` for every protected repo.
-- [ ] (i4) **`enforce_admins` enabled on `main`/`staging`** so the gate cannot be admin-bypassed. Same call →
-      `enforce_admins.enabled == true`. (2026-06-01 baseline: true on only 6/23 — admin bypass is widely possible.)
+> **CANONICAL MECHANISM = RULESETS, not classic branch protection (corrected 2026-06-01).** The workspace enforces the
+> QG gate via GitHub **rulesets** (`require-quality-gates` on main, `require-staging-lock-check` on staging), managed by
+> `scripts/repo-management/pin_branch_protection_rulesets.py` + verified by `verify_branch_protection_check_names.py`.
+> Classic `/branches/.../protection` is a SECONDARY/legacy surface that some repos also carry — do NOT audit it as the
+> primary gate (the first 2026-06-01 run did, and mis-reported the state). The required check context is DERIVED from
+> each repo's live workflow file, so the gate is "v2" iff the repo's default-branch workflow is `quality-gates-v2.yml`.
+
+- [ ] (i1) **Ruleset required-check is consistent on every repo.** Run (read-only):
+      `python3 scripts/repo-management/verify_branch_protection_check_names.py` → exit 0 / "ALL RULESETS CONSISTENT:
+      True". This confirms each repo's ruleset requires exactly what its workflow emits (no name drift).
+- [ ] (i2) **Every repo's required check is `quality-gates-v2`, not retired v1 `quality-gates`.** From the same
+      verifier output, **no repo's MAIN/STAGING required context may be `…/quality-gates` (v1)**. A repo shows v1 iff its
+      default-branch workflow is still `workspace-qg.yml` — migrate the workflow to `quality-gates-v2.yml` (then re-pin
+      with `pin_branch_protection_rulesets.py --apply --repo <r>`). **Migration is GATED on that repo's v2 QG being
+      green** — enabling the v2 required check on a red repo blocks ALL its merges. (2026-06-01 ground truth: 9/17 on
+      v2; **8 still on v1**, 7 of which are blocked on pre-existing QG-red — see result file + `ci_canonical_v2_migration`.)
+- [ ] (i3) **No force-push to `main`/`staging`.** Confirm via the ruleset (`non_fast_forward` rule present) and that no
+      repo allows force-push on protected refs.
+- [ ] (i4) **Admin bypass is constrained.** Where classic protection is also present, `enforce_admins.enabled == true`
+      (or the ruleset's `bypass_actors` is limited to intended roles). NB: `--admin`/admin merges are gated by
+      `enforce_admins`; a controlled admin-merge requires temporarily relaxing it (relax → merge → restore), never
+      leaving it off.
 - [ ] (i5) **LDR is unprotected-by-design but MONITORED.** LDR has no branch protection (rapid direct-push by design,
       per `ci-cd-flow.md`), so its CI-red must be a watched signal, not silently accumulated. Verify the Tier-A
       LDR-CI-red ping exists (cross-ref `full_cicd_sit_target_state_2026_05_24.md` Tier A `[AGENT] P0` item).
