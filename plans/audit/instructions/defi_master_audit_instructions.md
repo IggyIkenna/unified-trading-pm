@@ -357,6 +357,14 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       `VENUE-CHAIN`-embedded venue strings** (`UNISWAPV3-ETHEREUM`) that should be flat `venue` + a populated `chain`
       column. Any alias/variant in **written rows** = an un-migrated-SSOT finding → **rename/normalise migration** (the
       data exists; this is cleanup, not download). Per-corpus expression of code items (j)/(l)/(n) above.
+      **(4) INDEX-venue ≠ OBJECT-venue ≠ UAC-canonical (codified 2026-06-01)** — the manifest INDEX may carry a venue
+      string that differs from the venue in the actual GCS object paths AND from UAC `ALL_DEFI_VENUES`. 2026-06-01:
+      index `UNISWAPV3`/`AERODROMEV3`/`PANCAKESWAPV3`/`SUSHISWAPV3`/`CAMELOTV3`/`TRADER_JOEV2`/`VELODROMEV2` vs objects +
+      UAC `UNISWAP_V3`/`AERODROME_V3`/… (underscore before the version). This silently breaks any index↔object join (a
+      coverage-vs-objects walk falsely reports 74% "phantom"). **Check**: `set(index.venue) == set(object-path venue) ==
+      flat(UAC ALL_DEFI_VENUES)` per bucket. **Fix = MIGRATE the index venue values to the UAC/object canonical — do NOT
+      normalise venue names in read-path code** (a runtime band-aid causes downstream issues; the data must be canonical
+      at rest). Same applies to chain strings.
 
 - [ ] (t) **Required-history window actually covered (timeframe audit)**: for each strategy's cells, read min/max
       `available_at` from the manifest and confirm the **continuous** window meets the strategy's lookback need (Step 1

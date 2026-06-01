@@ -224,7 +224,24 @@ What to verify/wire (B0 corrected scope):
       ones are done (C10/C10b); the remaining question is whether post-launch captured rows have real objects. Spot-check
       2026-06-01: `dex-pools day=2025-06-01` HAS objects ✅ but `day=2024-01-01` returned 0 (inconclusive — read flaked).
       The uniform `2021-01-01` first-captured still warrants a full **captured-vs-objects walk** (dex-pools/dex-swaps),
-      relabeling any captured row with no object honest. **VM job** (object listing at scale). parent_epic: manifest_master.
+      relabeling any captured row with no object honest. **NOTE 2026-06-01**: an initial walk falsely reported 74%
+      phantom — that was an index-venue↔object-venue MISMATCH (`UNISWAPV3` vs `UNISWAP_V3`), now fixed for those venues
+      by C12. Re-run the walk AFTER C12 lands everywhere, WITHOUT any read-path normalisation. **VM job** (object listing
+      at scale). parent_epic: manifest_master.
+- [~] [DATA] P0. C12 **venue-name `{VENUE}_V{N}` canonicalisation — EVERYWHERE (code + manifest + data + docs)** (operator
+      2026-06-01: "switched to canonical form with `_V2` etc everywhere … TRADER_JOEV2/VELODROMEV2 is wrong"). Canonical =
+      underscore before the version (`UNISWAP_V3`, `TRADER_JOE_V2`, `VELODROME_V2`, `AERODROME_V3`, …). Surfaces:
+      - **UAC** (the SSOT — fix first): `registry/defi_venues.py`, `defi_venue_capabilities.py`, `defi_protocol_registry.py`,
+        `expected_coverage.py`, `venue_mapping.py`, `chain_env.py`, `capability_declarations/_defi*.py`,
+        `internal/reference/instrument_validation.py` + the `canonicalize_defi_venue` function + its tests
+        (`test_venue_key_parity.py`, `test_canonicalize_defi_venue_combined.py`). `TRADER_JOEV2`→`TRADER_JOE_V2`,
+        `VELODROMEV2`→`VELODROME_V2` (and confirm all `*V{N}` use the underscore).
+      - **Code (writers)**: MTDS `_instruments_metadata.py` + any handler that emits a venue string.
+      - **Data (objects)**: rename object paths `venue=TRADER_JOEV2`→`TRADER_JOE_V2` etc. — VM single-walk (bundle with C0).
+      - **Manifest index**: `dex-pools`/`dex-swaps` index — DONE for the already-underscore venues (UNISWAP_V3 39,355 +
+        dex-swaps); TODO TRADER_JOE_V2/VELODROME_V2 (coordinate with the object rename so index==object).
+      - **Docs**: `codex/02-data/availability-manifest-and-data-status.md`, `contracts-scope-and-layout.md`, etc.
+      Coordinated cross-repo migration (all surfaces together; objects = VM). parent_epic: manifest_master.
 
 ## D. Features propagation (L3) — coverage must reach features-service
 
