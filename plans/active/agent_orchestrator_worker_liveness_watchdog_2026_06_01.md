@@ -110,10 +110,10 @@ Observation captured during operator's 2026-05-30/06-01 manual kill cycles. Two 
 Roll the flag to all 11 VMs **sequentially** (canary on vm-orchestrator first; abort fleet rollout if cooldown is
 firing too aggressively).
 
-- [ ] [SCRIPT] P0. Write `unified-trading-pm/scripts/orchestrator/enable_worker_watchdog.sh` — SSM script that writes
+- [x] [SCRIPT] P0. Write `unified-trading-pm/scripts/orchestrator/enable_worker_watchdog.sh` — SSM script that writes
       `/etc/systemd/system/orchestrator.service.d/watchdog.conf` with
       `Environment=ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true` then `systemctl daemon-reload + restart orchestrator`.
-      Collision group: none. Estimate: 0.05 AI-day.
+      Collision group: none. Estimate: 0.05 AI-day. ✅ — unified-trading-pm@cb0b1f04
 - [ ] [SCRIPT] [OPERATOR-SSM] P0. Roll the flag sequentially: vm-orchestrator first → watch 1h for false-positive
       kills (no actively-thinking worker killed) → expand to next VM. Document each VM's enable-time + first
       legitimate kill (context-full or stuck-prompt) in this plan. Collision group: `ao_watchdog_rollout`. Estimate:
