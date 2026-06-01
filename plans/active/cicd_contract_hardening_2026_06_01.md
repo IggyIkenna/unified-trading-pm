@@ -598,12 +598,16 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
         `alerting-service` name; corrected stale test fixtures (`schema_version` 8→9 to match MANIFEST_SCHEMA_VERSION=9;
         candle BASE_TS to midnight so 1440 bars not 1439); 6 real `config_reloaders` tests → coverage 69.84%→70.11%.
         Ruleset + classic re-pinned to v2. **FOLLOW-UPS (capture, do not lose):**
-  - [ ] [DATA] P1. **mdps↔UAC divergence (from PR #85): `NEEDS_CANDLE_PROCESSING["lending_indices"]` is False in UAC but
-        MDPS registers `DefiLendingIndicesAdapter` in the CandleAdapterRegistry.** The PR's test now asserts the true
-        MDPS-side invariant (adapter registered) but the UAC↔MDPS contract divergence is UNRESOLVED — reconcile: either
-        UAC should be True or MDPS should not register a candle adapter for lending_indices (lending indices are
-        rate/index values, not OHLCV — likely UAC's False is correct and the MDPS candle-registry entry is the bug).
-        Data-pipeline HARD RULE / cross-repo. Diagnose both sides before changing either.
+  - [x] ✅ [DATA] P1. **mdps↔UAC divergence RECONCILED — mdps@c5c6980 2026-06-01.** Diagnosed BOTH sides: UAC's
+        `needs_candle_processing("lending_indices")=False` is CORRECT and already the operator-decided end-state (issue
+        defi_code_codex_drift **D3 RESOLVED 2026-05-27**, UAC reverts drift 4c98a635 — lending indices are rate/index
+        snapshots read raw by features-onchain, never OHLCV; no `lending_ohlcv` consumer). The real bug was on the MDPS
+        TEST side only: the main→LDR back-merge (`ae97d6c`) re-introduced main's adapter-backed
+        `test_defi_bypass_routing.py`, which imports a **deleted** `DefiLendingIndicesAdapter` module → test errored on
+        collection (LDR source already has NO adapter). Fix = restored the bypass invariant in the test
+        (`lending_indices` in `BYPASS_TYPES` + `test_lending_indices_is_bypass` asserts gate False AND no candle adapter
+        registered). **No UAC change** (already False). All 3 sources agree: lending_indices is bypass. mdps QG EXIT 0
+        (`✅ ALL QUALITY GATES PASSED`, sentinel written); `test_defi_bypass_routing` 42/42.
   - [ ] [TYPES] P2. **mdps pyright debt (from PR #85): 4 files added to the TEMPORARY PYRIGHT DEBT BYPASS exclude list**
         (`lending_indices_adapter.py`, `bucket_assignment_adapter.py`, `fast_candle_aggregation.py`,
         `candle_generator.py`) to land the migration — these have PRE-EXISTING basedpyright errors. Fix the type errors
