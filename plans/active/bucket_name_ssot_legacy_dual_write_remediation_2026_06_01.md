@@ -81,11 +81,14 @@ relaunch.
 
 ## Phase 1 — Code fix (root cause; ship BEFORE drain) (P0)
 
-- [ ] [SCRIPT] P0. `market-tick-data-service` `orchestrator.py:3832` `get_tick_data_bucket()` → resolve via the
-      canonical path: `get_market_data_bucket(asset_group.lower())` /
-      `resolve_bucket_name(kind="market-data", asset_group=…)`. Rework the `is_test_run` branch (3829-3830) + `except`
-      fallback (3833-3834) to canonical. Add a unit test asserting cefi→`…-cefi-prd-…`, prediction→`…-pred-prd-…` (NOT
-      `…-prediction-…`). QG green.
+- [x] ✅ [SCRIPT] P0. `market-tick-data-service` `orchestrator.py` `get_tick_data_bucket()` → delegates to the canonical
+      resolver (`get_market_data_bucket` for cefi/defi/tradfi/sports; dedicated `market-data-tick-prediction` kind →
+      short `pred` token for prediction), fails loud on empty asset_group, dropped the legacy flat/test-bucket/except
+      fallbacks. Handler `tick_data_handler.py` skips single-bucket resolution for the multi-AG `ALL` sentinel (no
+      synthesised `market-data-tick-all-…`). Test harness `conftest.py` provisions `AWS_ACCOUNT_ID` (canonical resolver
+      needs both cloud account ids under `CLOUD_PROVIDER=local`). New regression
+      `test_get_tick_data_bucket_canonical.py` + updated `test_orchestrator.py`/`test_handler.py`. —
+      market-tick-data-service@0b575651 | full QG exit 0 (2351 unit tests pass).
 - [x] ✅ [SCRIPT] P0. `market-data-processing-service` `dependency_checker.py:401` flat default →
       `resolve_bucket_name(kind="market-data", asset_group=…)`; `cloud_data_provider.py:41` instruments-store default →
       `resolve_bucket_name(kind="instruments-store", asset_group=…)`. QG green. —
