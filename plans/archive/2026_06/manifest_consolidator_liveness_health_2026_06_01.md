@@ -1,18 +1,35 @@
 ---
 title: "Manifest consolidator liveness + health contract (heartbeat watchdog, loud-fail-default, preflight gate)"
 created: 2026-06-01
-status: active
+status: archived
+archived: 2026-06-01
 parent_epic: manifest_master
 assigned_vm: vm-cross-cutting
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 priority: P1
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
 ---
 
 # Manifest consolidator liveness + health contract
+
+> ## ✅ COMPLETE — archived 2026-06-01
+>
+> All 8 implementation items shipped + verified; all 5 success criteria (C1–C5) met. The canonical liveness design is
+> **live in prod**: read-path loud-fail by DEFAULT (`ManifestConsolidatorStaleError`), `assert_consolidator_healthy`
+> preflight, and the `ConsolidatorLivenessMonitor` watchdog (Cloud Run Job `uts-prod-consolidator-liveness-watchdog` +
+> Scheduler `*/2`, ENABLED — executions complete `1/1` every 2 min as of 2026-06-01). The 20 manifest-consolidator
+> scheduler crons (10 env-tiered + 10 legacy) are all ENABLED and being watched.
+>
+> **No deferred items.** **C4 cross-reference (NOT a deferral)**: UTL repo-wide `quality-gates.sh` green is tracked
+> independently in [`issues/utl_full_qg_red_backlog_2026_06_01.md`](issues/utl_full_qg_red_backlog_2026_06_01.md)
+> (B1–B5, still open, referenced by multiple plans) — this plan's touched files are QG-clean and its C4 explicitly
+> delegates the repo-wide red to that issue. The issue doc correctly stays open; it is not owned by this plan.
+>
+> **Codex SSOTs verified aligned (archival step 3)**: `codex/05-infrastructure/manifest-consolidator-ssot.md` §
+> "Liveness + health contract" (watchdog status corrected pending→deployed) +
+> `codex/02-data/availability-manifest-and-data-status.md` § 7 read-path fail-fast cross-link. CLAUDE.md § "Manifest
+> consolidator runtime" updated with the live liveness-contract invariant (archival step 4).
 
 ## What this fixes
 
