@@ -75,29 +75,64 @@ fi
 
 REPOS=$(python3 -c "import json; [print(r) for r in json.load(open('$MANIFEST')).get('repositories',{})]")
 
-# dep_repos per repo from manifest (space-separated dep names)
-# TRANSITIVE: walks the full dep tree. Required because uv sync resolves
-# path-sourced deps recursively (deployment-api → position-balance-monitor-service
-# → market-tick-data-service); if a transitive dep isn't cloned, install
-# fails with "Distribution not found at file:///...". Fixed 2026-05-16 after
-# Phase B workspace-qg rollout exposed the issue across all 21 repos.
+# dep_repos per repo (space-separated dep names), as the TRANSITIVE EDITABLE CLOSURE.
+#
+# SOURCE OF TRUTH = each repo's pyproject `path = "../<repo>"` editable deps — NOT
+# workspace-manifest.json. The manifest's `dependencies` list was found INCOMPLETE
+# (2026-06-01): e.g. system-integration-tests' manifest closure was 10 but its
+# pyproject closure is 12 (missing alerting-service + client-reporting-api), which is
+# exactly why SIT's quality-gates-v2 install failed on
+# `metadata for alerting-service==0.1.0 @ editable+../alerting-service`. The manifest
+# also carried a phantom (`ml-service` → `unified-trading-deployment`). pyproject is
+# what `uv sync` actually resolves, so deriving from it makes CI clone precisely the
+# editable siblings the install needs.
+#
+# TRANSITIVE: walks the full editable tree (uv sync resolves path-sourced deps
+# recursively; a missing transitive dep fails install with "Distribution not found
+# at file:///..."). For any node lacking a pyproject (e.g. a not-checked-out sub-repo
+# referenced indirectly), fall back to that node's manifest deps so the closure is
+# never silently truncated.
 get_dep_repos() {
   local repo="$1"
-  python3 -c "
-import json
-m = json.load(open('$MANIFEST'))
-repos = m.get('repositories', {})
+  WS_ROOT="$WORKSPACE_ROOT" MANIFEST_PATH="$MANIFEST" python3 -c "
+import json, os, re
 
-def direct_deps(repo_name):
-    r = repos.get(repo_name, {})
-    deps = r.get('dependencies', [])
-    return [d['name'] for d in deps if isinstance(d, dict) and 'name' in d]
-
-# Transitive closure via BFS, preserving discovery order
-# Exclude self-reference (e.g. deployment-service → deployment-api → deployment-service)
+ws = os.environ['WS_ROOT']
+manifest_path = os.environ['MANIFEST_PATH']
 self_repo = '$repo'
+
+try:
+    repos = json.load(open(manifest_path)).get('repositories', {})
+except Exception:
+    repos = {}
+
+_PATH_RE = re.compile(r'path\s*=\s*\"\.\./([^\"]+)\"')
+
+def manifest_deps(name):
+    r = repos.get(name, {})
+    return [d['name'] for d in r.get('dependencies', []) if isinstance(d, dict) and 'name' in d]
+
+def pyproject_deps(name):
+    p = os.path.join(ws, name, 'pyproject.toml')
+    if not os.path.isfile(p):
+        return None  # signal: no pyproject for this node → caller falls back to manifest
+    out = []
+    with open(p) as fh:
+        for line in fh:
+            mm = _PATH_RE.search(line)
+            if mm:
+                dep = mm.group(1).strip().strip('/').split('/')[0]
+                if dep and dep not in out:
+                    out.append(dep)
+    return out
+
+def direct_deps(name):
+    py = pyproject_deps(name)
+    return py if py is not None else manifest_deps(name)
+
+# Transitive closure via BFS, preserving discovery order; exclude self-reference.
 visited = []
-queue = direct_deps(self_repo)
+queue = list(direct_deps(self_repo))
 while queue:
     dep = queue.pop(0)
     if dep in visited or dep == self_repo:
