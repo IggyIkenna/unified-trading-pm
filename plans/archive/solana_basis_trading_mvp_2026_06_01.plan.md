@@ -28,11 +28,14 @@ source:
 
 | Item | Migrated to | Status note |
 | --- | --- | --- |
-| Phase 2 Phoenix orderbook decode (currently stub) | `defi_manifest_canonicalisation_2026_06_01.md` § G follow-up table (P3 nice-to-have once paid Phoenix decode bandwidth available) | nice-to-have; not MVP-blocking; the JupiterQuoteIngester + Orca + Raydium ingesters cover the price-dispersion-arb need |
+| Phase 2 Phoenix orderbook decode (currently stub) | `defi_manifest_canonicalisation_2026_06_01.md` § **G5** (P1; full inline body migrated 2026-06-01) | post-MVP feature add; ships top-of-book first |
 | Full 2024-06-01 → 2026-06-01 backfill (G1) | `defi_manifest_canonicalisation_2026_06_01.md` § G1 | BLOCKED-OPERATOR (long wall-clock; 36GB; operator-launched on vm-defi) |
 | Live-mode snapshotters launch (G2) | `defi_manifest_canonicalisation_2026_06_01.md` § G2 | BLOCKED-OPERATOR (long-lived VMs; operator-launched) |
 | 24h paper trade run (G3) | `defi_manifest_canonicalisation_2026_06_01.md` § G3 | BLOCKED-OPERATOR (long wall-clock; operator-launched) |
 | Promote to live wallet (G4) | `defi_manifest_canonicalisation_2026_06_01.md` § G4 | HUMAN-ONLY per CLAUDE.md hard-stop list |
+| Jupiter historical reconstruction (P2) | `defi_manifest_canonicalisation_2026_06_01.md` § **G6** (migrated 2026-06-01) | post-MVP; replay from Orca/Raydium states; GATED on G1 |
+| Orca tick-array decode (P2) | `defi_manifest_canonicalisation_2026_06_01.md` § **G7** (migrated 2026-06-01) | post-MVP depth improvement; not GATED on G1-G4 |
+| Raydium second WSOL/USDC pool (P2) | `defi_manifest_canonicalisation_2026_06_01.md` § **G8** (migrated 2026-06-01) | trigger: TVL > $1M (currently $4.6K, below noise) |
 
 ## Codex SSOT alignment check (per CLAUDE.md plan-archival HARD RULE, 2026-05-22)
 
