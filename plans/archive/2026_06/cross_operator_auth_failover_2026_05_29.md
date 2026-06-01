@@ -4,9 +4,10 @@ title: "Cross-operator account rotation + auth-fail trigger + Slack alert on rot
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P1
-status: active
+status: archived
 created: 2026-05-29
 last_updated: 2026-05-29
+archived: 2026-06-01
 estimate_class: refactor
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 0.8
@@ -16,14 +17,16 @@ estimate_calibration_note: |
   after-spawn → mark auth_failed → rotate), and threading a rotation-reason field
   through the existing Slack-alert path. No new infra; one StrEnum + one server
   branch + one alert template.
-locked_by: live-defi-rollout
-locked_since: 2026-05-29
 related:
   - issues/cross_operator_auth_failover_2026_05_29.md
   - ../../codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md
 supersedes:
   - harsh_account_pool_expansion_2026_05_29.md # original misframing (operator corrected 2026-05-29)
 ---
+
+## ✅ ARCHIVED 2026-06-01
+
+Cross-operator auth-failover (account rotation on auth-fail, healing on heartbeat) shipped + deployed. 0 open todos. Fleet-verified live (both AWS orchestrator VMs @589b711). **Deferred work:** none. **Codex aligned** (agent-orchestrator-overview / -autospawn / -worker-liveness — all current 2026-06-01). Unlocked for archival.
 
 # Cross-operator account rotation + auth-fail trigger + Slack alert
 

@@ -4,20 +4,23 @@ title: "harsh-pc dispatch failover — when host offline > 10 min, roll its queu
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P0
-status: active
+status: archived
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
 created: 2026-05-30
 last_updated: 2026-05-30
-locked_by: live-defi-rollout
-locked_since: 2026-05-30
+archived: 2026-06-01
 codex_ssots:
   - codex/04-architecture/agent-orchestrator-overview.md
 related_plans:
   - plans/active/autospawn_idle_vms_2026_05_30.md
   - plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md
 ---
+
+## ✅ ARCHIVED 2026-06-01
+
+Harsh-PC dispatch failover shipped + deployed. 0 open todos. Fleet-verified live (both AWS orchestrator VMs @589b711). **Deferred work:** none. **Codex aligned** (agent-orchestrator-overview / -autospawn / -worker-liveness — all current 2026-06-01). Unlocked for archival.
 
 ## Why this exists
 
