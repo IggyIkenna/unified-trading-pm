@@ -2436,6 +2436,10 @@
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
       {
+        "promoted_at": "2026-06-01T22:04:58.793710Z",
+        "commits": {}
+      },
+      {
         "promoted_at": "2026-06-01T21:59:54.488350Z",
         "commits": {}
       }
