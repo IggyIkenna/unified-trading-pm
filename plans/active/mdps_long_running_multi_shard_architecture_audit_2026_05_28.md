@@ -4,6 +4,8 @@ title: "MDPS architectural audit — long-running multi-shard execution (2026-05
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 status: active
+model_tier: opus-required
+thinking_tier: max
 priority: P1
 created: 2026-05-28
 estimate_class: research

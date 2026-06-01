@@ -3,6 +3,8 @@ title: Global Ledger + PnL Attribution — Migration Sub-Plan
 parent_epic: global_ledger_pnl_attribution_master
 priority: P0
 status: active
+model_tier: opus-required
+thinking_tier: max
 estimate_class: refactor
 estimate_baseline_ai_days: 30
 estimate_calibrated_ai_days: 12

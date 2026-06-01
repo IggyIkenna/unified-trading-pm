@@ -4,6 +4,8 @@ title: "MDPS pure-Polars migration — staged engine cutover (2026-05-28)"
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 status: active
+model_tier: opus-required
+thinking_tier: high
 priority: P1
 created: 2026-05-28
 estimate_class: refactor

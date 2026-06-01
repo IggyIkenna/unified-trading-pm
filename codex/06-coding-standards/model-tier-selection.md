@@ -1,6 +1,6 @@
-# Model Tier Selection — Sonnet 4.6 vs Opus 4.7
+# Model Tier Selection — Sonnet 4.6 vs Opus 4.8
 
-**Rule**: Default to Sonnet 4.6. Opus 4.7 is a deliberate exception requiring justification. Every work-split MUST
+**Rule**: Default to Sonnet 4.6. Opus 4.8 is a deliberate exception requiring justification. Every work-split MUST
 classify each plan/slot as Sonnet-doable or Opus-required before spawning agents.
 
 ---
@@ -10,15 +10,15 @@ classify each plan/slot as Sonnet-doable or Opus-required before spawning agents
 | Tier           | Model               | Context | Cost          | Use when                                                                                        |
 | -------------- | ------------------- | ------- | ------------- | ----------------------------------------------------------------------------------------------- |
 | **Default**    | `claude-sonnet-4-6` | 200k    | Low           | Everything that fits in 200k context without multi-repo synthesis                               |
-| **Escalation** | `claude-opus-4-7`   | 1M      | High (~5-10×) | Main orchestrator, cross-repo architecture decisions, tasks whose context provably exceeds 200k |
+| **Escalation** | `claude-opus-4-8`   | 1M      | High (~5-10×) | Main orchestrator, cross-repo architecture decisions, tasks whose context provably exceeds 200k |
 
 ---
 
 ## Decision rule (apply at work-split time, per slot)
 
 ```
-IF slot is main orchestrator (slot 1)     → Opus 4.7
-IF task requires simultaneous reading of  → Opus 4.7
+IF slot is main orchestrator (slot 1)     → Opus 4.8
+IF task requires simultaneous reading of  → Opus 4.8
    >3 full service codebases OR
    a plan >50KB + multiple full files OR
    1M-context reasoning across the entire
@@ -49,7 +49,7 @@ in case" — that is money waste with no quality upside for bounded tasks.
 
 ---
 
-## Opus 4.7 — only for these
+## Opus 4.8 — only for these
 
 - **Slot 1 main orchestrator**: boot checklist, ledger sweep, cross-slot Q&A dispatch, plan curation, ping triage,
   master plan refresh. Orchestrator context = entire workspace state → requires 1M window.
@@ -72,7 +72,7 @@ Every slot in `work_split_<YYYY_MM_DD>_<side>.md` MUST include a `model_tier` fi
 ```markdown
 | Slot | Theme               | Plan-of-record                  | model_tier     | Cal AI-days |
 | ---- | ------------------- | ------------------------------- | -------------- | ----------- |
-| 1    | Main orchestrator   | LEDGER.md                       | **Opus 4.7**   | continuous  |
+| 1    | Main orchestrator   | LEDGER.md                       | **Opus 4.8**   | continuous  |
 | 2    | defi_catalogue impl | defi_catalogue_chain_primitives | **Sonnet 4.6** | ~16         |
 | 3    | code_freeze audit   | code_freeze_migrate_backfill    | **Sonnet 4.6** | ~14         |
 ```
@@ -103,6 +103,25 @@ When auditing `plans/active/` before drafting a work-split, classify each plan a
 Add `model_tier: sonnet-doable | opus-required` to each plan's frontmatter on the next substantive touch (same logical
 unit as the substantive change — do NOT mass-sweep, per Findings Triage).
 
+### Autonomous enforcement (wired 2026-06-01)
+
+The orchestrator now **reads both tier fields from plan frontmatter and spawns the worker accordingly** — declaring a
+tier is no longer advisory-only:
+
+- `model_tier: opus-required` → the regen-derived backlog task gets `model: opus`; else `sonnet`.
+- `thinking_tier: max | high | medium` → task `effort`/`thinking`: `max`→`effort=max`+extended-thinking on (pairs with
+  opus); `high`→`effort=high`; `medium`/absent → spawn default.
+- `AutoSpawnLoop` spawns an idle slot's worker at the **top queued task's** model+effort+thinking (the worker's model is
+  fixed at spawn, before dispatch picks its task — so it's chosen from the highest-priority pending task).
+
+Code: `agent-orchestrator/server/regen_backlog_from_plan.py` (`_parse_frontmatter_model_tier` +
+`_parse_frontmatter_thinking_tier`) → `server/backlog.py::BacklogTask` (`model`/`effort`/`thinking`) →
+`server/autospawn.py::_top_queued_task_params`. Coverage audit: `unified-trading-pm/scripts/plans/audit_model_tier.py`.
+Until a plan declares `model_tier`, it silently defaults to Sonnet. Backfilled opus set (2026-06-01):
+`master_to_live_defi`, `mdps_long_running_multi_shard_architecture_audit`, `mdps_pure_polars_migration`,
+`global_ledger_pnl_attribution_migration`, `regime_clustering_structure_allocator`, `solana_basis_trading_mvp`,
+`pipeline_mode_audit`.
+
 ---
 
 ## Continuation prompt template (model tier enforcement)
@@ -115,10 +134,10 @@ If you hit a genuine context wall (cannot fit all needed files), stop and report
 silently skip files or hallucinate from partial context.
 ```
 
-When spawning Opus 4.7, state the reason:
+When spawning Opus 4.8, state the reason:
 
 ```
-MODEL TIER: Opus 4.7 — REASON: [main orchestrator / cross-repo architecture / >200k context provably required].
+MODEL TIER: Opus 4.8 — REASON: [main orchestrator / cross-repo architecture / >200k context provably required].
 ```
 
 ---
@@ -136,7 +155,7 @@ which model you are.
 
 From (in priority order):
 
-1. The spawn prompt: look for `MODEL TIER: Sonnet 4.6` or `MODEL TIER: Opus 4.7 — REASON: ...`
+1. The spawn prompt: look for `MODEL TIER: Sonnet 4.6` or `MODEL TIER: Opus 4.8 — REASON: ...`
 2. The work-split slot row: `model_tier: sonnet-doable | opus-required`
 3. The plan frontmatter: `model_tier:` field
 4. If none of the above: apply the decision rule (main orchestrator → Opus; everything else → Sonnet)
@@ -146,29 +165,29 @@ From (in priority order):
 | Running model  | Required tier     | Action                                                             |
 | -------------- | ----------------- | ------------------------------------------------------------------ |
 | Sonnet 4.6     | sonnet-doable     | ✅ Proceed                                                         |
-| Opus 4.7       | opus-required     | ✅ Proceed                                                         |
+| Opus 4.8       | opus-required     | ✅ Proceed                                                         |
 | **Sonnet 4.6** | **opus-required** | 🔴 **STOP — flag to operator, do not proceed**                     |
-| **Opus 4.7**   | **sonnet-doable** | 🟡 **FLAG to operator, then proceed (don't block on money waste)** |
+| **Opus 4.8**   | **sonnet-doable** | 🟡 **FLAG to operator, then proceed (don't block on money waste)** |
 
 **When Sonnet 4.6 detects opus-required task** — output this block and stop:
 
 ```
 ⚠️ WRONG MODEL — CANNOT PROCEED
-Task requires: Opus 4.7 (1M context)
+Task requires: Opus 4.8 (1M context)
 Running as: Sonnet 4.6 (200k context)
 Reason this task needs Opus: <state the reason from spawn prompt or decision rule>
 
-ACTION REQUIRED: Please reopen this tab/slot on Opus 4.7.
-In Claude Code: use /model claude-opus-4-7 or restart with --model claude-opus-4-7
+ACTION REQUIRED: Please reopen this tab/slot on Opus 4.8.
+In Claude Code: use /model claude-opus-4-8 or restart with --model claude-opus-4-8
 I will not start the task until the model is correct.
 ```
 
-**When Opus 4.7 detects sonnet-doable task** — output this block then proceed:
+**When Opus 4.8 detects sonnet-doable task** — output this block then proceed:
 
 ```
 💸 WRONG MODEL — PROCEEDING BUT FLAGGING COST WASTE
 Task is: sonnet-doable
-Running as: Opus 4.7 (unnecessary — ~5-10× more expensive)
+Running as: Opus 4.8 (unnecessary — ~5-10× more expensive)
 Reason I'm not stopping: money waste doesn't break correctness; operator should know.
 
 ACTION FOR NEXT RUN: Use Sonnet 4.6 for this task.
@@ -213,7 +232,7 @@ Three levels. Declared alongside `model_tier` in every work-split slot row and s
 | ------------------ | ------------------------------------ | ------------------------------------------------------------ | ---------------------- |
 | `thinking: medium` | Default — omit or state explicitly   | Mechanical, impl-from-spec, script runs                      | 1×                     |
 | `thinking: high`   | State explicitly                     | Design, architecture within a single repo, plan writing      | ~2-3×                  |
-| `thinking: max`    | State explicitly + requires Opus 4.7 | Novel cross-repo design, complex debugging, trading judgment | ~8-15×                 |
+| `thinking: max`    | State explicitly + requires Opus 4.8 | Novel cross-repo design, complex debugging, trading judgment | ~8-15×                 |
 
 ### What goes in each tier
 
@@ -236,7 +255,7 @@ Three levels. Declared alongside `model_tier` in every work-split slot row and s
 - Cross-service wiring where the interaction is non-trivial but bounded
 - Debugging a single service's failing test with non-obvious root cause
 
-**`thinking: max`** — requires extended thinking; always paired with Opus 4.7:
+**`thinking: max`** — requires extended thinking; always paired with Opus 4.8:
 
 - Novel trading archetype topology (carry_staked_basis, leveraged_funding_arb family decisions)
 - Cross-repo migration pre-audit (all consumers must be in context, breakage is non-obvious)
@@ -269,7 +288,7 @@ this workspace's Claude Code configuration.
 ### Spawn prompt header (required fields)
 
 ```
-MODEL TIER: Sonnet 4.6 | Opus 4.7
+MODEL TIER: Sonnet 4.6 | Opus 4.8
 THINKING: medium | high | max
 [If max]: OPUS-REQUIRED — REASON: <one-line reason>
 ```
@@ -306,7 +325,7 @@ Reason: <one-line — e.g. "cross-repo migration pre-audit requires holding all 
 I cannot start this task at the declared thinking tier without risking silent quality degradation.
 
 To proceed:
-  Option A — fix the tier: re-spawn with THINKING: <required> (and MODEL: Opus 4.7 if max)
+  Option A — fix the tier: re-spawn with THINKING: <required> (and MODEL: Opus 4.8 if max)
   Option B — override: reply "proceed anyway" and I will start at the declared tier with a quality caveat
 ```
 

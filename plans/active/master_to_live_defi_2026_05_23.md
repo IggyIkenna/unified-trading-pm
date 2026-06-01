@@ -24,6 +24,8 @@ estimate_calibration_note: |
 parent_epic: orchestrator_master
 priority: P0
 status: active
+model_tier: opus-required
+thinking_tier: max
 ---
 
 > 2026-05-23. **Soft freeze**: NO new public-API surfaces, NO new top-level packages, NO module renames in any of the 4

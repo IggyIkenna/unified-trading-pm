@@ -5,6 +5,8 @@ parent_epic: batch_live_symmetry_master
 parent: pipeline_mode_implementation_2026_05_28
 priority: P2
 status: active
+model_tier: opus-required
+thinking_tier: high
 created: 2026-05-28
 estimate_class: research
 estimate_baseline_ai_days: 0
