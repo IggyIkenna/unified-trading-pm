@@ -583,10 +583,19 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 
 - [x] ✅ [VERIFY] P0. `verify_branch_protection_check_names.py` 2026-06-01: **ALL RULESETS CONSISTENT; every active repo
       requires `…/quality-gates-v2` on main + staging; 0 on v1; 0 none** (deployment-ui on its UI gate; PM no staging).
-- [ ] [OPERATOR-DECISION] P1. Repos NOT in the 17-repo ruleset set (`fund-administration-service`, `greeks-service`,
-      `ml-service`, `unified-trading-api`, `unified-trading-system-ui`, `e2e-testing`, `agent-orchestrator`) — confirm
-      whether each needs the `require-quality-gates` ruleset added or is legitimately EXEMPT (harness / separate deploy
-      path). Record in `feature-branch-workflow.md`.
+- [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P1. Ruleset-set decision made: **only `agent-orchestrator` is EXEMPT**
+      (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
+      Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
+- [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the 6 non-exempt repos (operator-decided 2026-06-01).**
+      Per-repo readiness audited 2026-06-01 (the gate's required context must be emitted + ideally green before/at enforce,
+      else blocks merges): **READY (v2 workflow present)** — `ml-service` (v2 **green** → add now), `greeks-service`
+      (v2 present, no run yet), `unified-trading-api` (v2 present, no run yet): create the ruleset targeting main+staging
+      with `bypass_actors:[]` + required context `Quality Gates (<repo>) / quality-gates-v2` (template from any of the 17;
+      or add to `pin_branch_protection_rulesets.REPOS` + `--apply`). **NEEDS WORKFLOW FIRST** — `fund-administration-service`
+      + `e2e-testing` (NO v2 workflow on default branch → roll out `quality-gates-v2.yml` first, green it, then add ruleset);
+      `unified-trading-system-ui` (TS/Vite — NOT python-v2: give it a ruleset on its **own** UI gate context
+      `Quality Gates (unified-trading-system-ui) / quality-gates`, like `deployment-ui`, NOT the python v2). Record the
+      single `agent-orchestrator` exemption + this 6-repo addition in `feature-branch-workflow.md`. — repo: unified-trading-pm (rulesets) + per-repo workflow rollout.
 
 **Do not duplicate**: the v1→v2 migration itself is owned by `ci_canonical_v2_migration_2026_05_29.md` (which has
 mark-drift — `batch-live` + `deployment-ui` marked ✅ but live-v1). This plan only adds the ruleset-mechanism framing +
@@ -685,10 +694,10 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
 
 ### Phase 4 — Concurrent-push serialization decision (audit j4)
 
-- [ ] [OPERATOR-DECISION] P2. Decide whether the current advisory `staging_status.locked` flag + GitHub's native
-      auto-merge queue is a sufficient concurrent-push guarantee, OR whether quickmerge needs hard cross-slot
-      serialization (flock / queue). Today there is no hard serialization beyond the advisory lock. Record the decision
-      in `codex/08-workflows/ci-cd-flow.md`; if "add hard serialization", spawn a follow-up implementation todo.
+- [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P2. **Decision: the advisory `staging_status.locked` flag + GitHub's
+      native auto-merge queue is SUFFICIENT** — no hard flock/queue serialization. Observed collisions are handled by the
+      conditional-push + rebase discipline (and, under shared-worktree ref-races, the isolated-worktree promotion). To
+      record in `codex/08-workflows/ci-cd-flow.md` (concurrent-push section). Revisit only if real contention surfaces.
 
 ### Phase 5 — PM main↔LDR back-merge drift (discovered 2026-06-01 attempting the LDR→main catch-up) **P0**
 
@@ -702,11 +711,11 @@ behind the exact drift this whole audit is about.
 - [x] ✅ [SCRIPT] P0. **Auto back-merge `main`→LDR — DONE.** `.github/workflows/main-backmerge-to-ldr.yml` exists on PM
       (trigger `push:[main]`; mirrors `tab-mirror-to-ldr.yml` in reverse) and ran green on the recent PM main pushes — so
       doc-fast-path commits no longer strand on main (this was the Phase-5 drift mechanism).
-- [ ] [OPERATOR-DECISION] P0. **Resolve the current `#103` catch-up.** ~95-file foreign-conflict merge of 670 commits
-      into shared `main` — needs operator-coordinated reconciliation (or the doc owners), NOT an autonomous slot merge.
-      Options: (a) back-merge `main`→LDR resolving the ~95 conflicts on the integration branch, then `#103` becomes a
-      clean FF; (b) reset main to LDR via `run-version-alignment.sh` + a controlled sync (NB:
-      `admin-force-sync-all-to-main.sh` can revert semver bumps — human-only). Surface to operator; do not auto-merge.
+- [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P0. **`#103` catch-up — RESOLVED.** Verified `gh pr view 103` =
+      **`MERGED`**, and PM `main` was independently FF-advanced to the verified-green LDR SHA `4f57234ea` (option (b)-style
+      controlled sync via the operator-authorized admin FF — see P0 #3(B) PM-main). So the PM main↔LDR catch-up no longer
+      requires the ~95-file hand-resolution; the auto back-merge GHA (above) keeps main↔LDR from re-diverging. No manual
+      95-file merge needed.
 - [ ] [DOC] P1. Document in `ci-cd-flow.md`: "PM doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by the
       Phase-5 GHA); never leave a main-only commit unmirrored."
 
