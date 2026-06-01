@@ -40,16 +40,16 @@ before cutover).
 
 ### Canonical target form — what "right format" means (every in-scope object + manifest row)
 
-| Dimension        | Legacy (now)                            | Canonical (target)                                                                            |
-| ---------------- | --------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------- |
-| Bucket env split | `oracle-prices-{project}` (no env)      | `oracle-prices-{env}-{project}` (`-prd`/`-test`) — or fold into `market-data-tick-defi-{env}` |
-| Asset-group key  | `category=defi`                         | `asset_group=defi`                                                                            |
-| Pipeline mode    | absent in path                          | `pipeline_mode={batch                                                                         | live}` hive partition |
-| Schema version   | v4–v8 spread                            | v9                                                                                            |
-| data_type name   | hyphen / `staking_yields`               | underscore canonical (`lst_rates`, `dex_pools`, …)                                            |
-| Venue / chain    | `UNISWAPV3-ETHEREUM`, blank chain       | flat `venue` + populated `chain`                                                              |
-| Empty reason     | blank / `SOURCE_RETURNED_ZERO` mislabel | typed (`EXPECTED_PRE_GENESIS_CHAIN`, …)                                                       |
-| 4th state        | absent                                  | `expected_unattempted` materialised by the run (B0)                                           |
+| Dimension | Legacy (now) | Canonical (target) |
+| --- | --- | --- |
+| Bucket env split | `oracle-prices-{project}` (no env) | `oracle-prices-{env}-{project}` (`-prd`/`-test`) — or fold into `market-data-tick-defi-{env}` |
+| Asset-group key | `category=defi` | `asset_group=defi` |
+| Pipeline mode | absent in path | `pipeline_mode=` hive partition (value `batch` or `live`) |
+| Schema version | v4–v8 spread | v9 |
+| data_type name | hyphen / `staking_yields` | underscore canonical (`lst_rates`, `dex_pools`, …) |
+| Venue / chain | `UNISWAPV3-ETHEREUM`, blank chain | flat `venue` + populated `chain` |
+| Empty reason | blank / `SOURCE_RETURNED_ZERO` mislabel | typed (`EXPECTED_PRE_GENESIS_CHAIN`, …) |
+| 4th state | absent | `expected_unattempted` materialised by the run (B0) |
 
 All of the above land in **one bundled single-walk** per bucket (C2–C5 + C7 + C9 + env-split), then the consolidated
 `_index` + data-status reflect the canonical form, then backfills run into the correct structure.
