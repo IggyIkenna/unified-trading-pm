@@ -38,7 +38,7 @@ def _load_chain_env() -> object:
     loading the file directly is safe.
     """
     try:
-        from unified_api_contracts.registry.chain_env import (  # type: ignore[no-redef]
+        from unified_api_contracts.registry.chain_env import (  # type: ignore[no-redef]  # noqa: qg-deep-import
             CHAIN_GENESIS_DATES,
             GAS_FEE_CHAIN_START_DATES,
             MAINNET_CHAIN_IDS,

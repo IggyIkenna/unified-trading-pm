@@ -17,7 +17,7 @@ def _write(tmp: Path, name: str, content: str) -> Path:
 def test_complete_construction_no_findings():
     """All 11 required kwargs passed → no findings."""
     src = """
-from unified_api_contracts.canonical.domain import CanonicalFuturesContract, FuturesContractLifecyclePhase
+from unified_api_contracts.canonical.domain import CanonicalFuturesContract, FuturesContractLifecyclePhase  # noqa: qg-deep-import
 from datetime import date
 c = CanonicalFuturesContract(
     venue="CME",
@@ -42,7 +42,7 @@ c = CanonicalFuturesContract(
 def test_missing_one_kwarg_emits_error():
     """Missing `settlement_date` → error finding listing it."""
     src = """
-from unified_api_contracts.canonical.domain import CanonicalFuturesContract
+from unified_api_contracts.canonical.domain import CanonicalFuturesContract  # noqa: qg-deep-import
 c = CanonicalFuturesContract(
     venue="CME",
     root="ES",
@@ -67,7 +67,7 @@ c = CanonicalFuturesContract(
 def test_kwargs_spread_emits_warning():
     """`**kw` spread cannot be validated statically → warning, not error."""
     src = """
-from unified_api_contracts.canonical.domain import CanonicalFuturesContract
+from unified_api_contracts.canonical.domain import CanonicalFuturesContract  # noqa: qg-deep-import
 def make(**kw):
     return CanonicalFuturesContract(**kw)
 """

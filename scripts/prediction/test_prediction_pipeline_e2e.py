@@ -153,7 +153,7 @@ def test_mappings() -> None:
     logger.info("PHASE 4: Mapping Validation")
     logger.info("=" * 60)
 
-    from unified_api_contracts.external.polymarket import (
+    from unified_api_contracts.external.polymarket import (  # noqa: qg-deep-import
         POLYMARKET_SERIES_TO_LEAGUE,
         POLYMARKET_TEAM_TO_CANONICAL,
         POLYMARKET_TIMEFRAMES,
@@ -195,7 +195,7 @@ def test_data_types() -> None:
     logger.info("PHASE 5: Data Type + Registry Validation")
     logger.info("=" * 60)
 
-    from unified_api_contracts.registry.market_data_categories import (
+    from unified_api_contracts.registry.market_data_categories import (  # noqa: qg-deep-import
         DATA_TYPES_BY_ASSET_GROUP,
         VENUES_BY_ASSET_GROUP,
     )

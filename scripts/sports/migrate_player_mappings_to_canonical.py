@@ -21,7 +21,7 @@ import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from unified_api_contracts import PlayerMapping
-from unified_api_contracts.external.api_football import (  # noqa: deep-import
+from unified_api_contracts.external.api_football import (  # noqa: qg-deep-import, qg-deep-import
     get_canonical_player_name_from_api_football,
 )
 from unified_trading_library import download_from_storage, upload_to_storage

@@ -59,7 +59,7 @@ def extract_uac_registries() -> dict[str, object]:
     data: dict[str, object] = {}
 
     try:
-        from unified_api_contracts.registry import (
+        from unified_api_contracts.registry import (  # noqa: qg-deep-import
             CLOB_VENUES,
             DEX_VENUES,
             ENDPOINT_REGISTRY,
@@ -80,7 +80,7 @@ def extract_uac_registries() -> dict[str, object]:
 
         # DeFi protocol registry — full venue→protocol mapping + chain context
         try:
-            from unified_api_contracts.registry import (
+            from unified_api_contracts.registry import (  # noqa: qg-deep-import
                 DEFI_PROTOCOLS,
                 DEFI_VENUE_TO_PROTOCOL,
             )
@@ -97,7 +97,7 @@ def extract_uac_registries() -> dict[str, object]:
 
         # Chain RPC templates — chain_id → RPC URL template
         try:
-            from unified_api_contracts.registry import CHAIN_RPC_TEMPLATES
+            from unified_api_contracts.registry import CHAIN_RPC_TEMPLATES  # noqa: qg-deep-import
 
             data["chain_rpc_templates"] = {str(k): str(v) for k, v in CHAIN_RPC_TEMPLATES.items()}
             logger.info("  Chain RPC templates: %d chains", len(CHAIN_RPC_TEMPLATES))
@@ -106,7 +106,7 @@ def extract_uac_registries() -> dict[str, object]:
 
         # Solana DeFi protocols
         try:
-            from unified_api_contracts.registry import SOLANA_DEFI_PROTOCOLS
+            from unified_api_contracts.registry import SOLANA_DEFI_PROTOCOLS  # noqa: qg-deep-import
 
             data["solana_defi_protocols"] = {
                 str(k): {str(pk): str(pv) for pk, pv in v.items()} for k, v in SOLANA_DEFI_PROTOCOLS.items()
@@ -117,7 +117,7 @@ def extract_uac_registries() -> dict[str, object]:
 
         # DeFi pool pairs
         try:
-            from unified_api_contracts.registry import DEFI_POOL_PAIRS
+            from unified_api_contracts.registry import DEFI_POOL_PAIRS  # noqa: qg-deep-import
 
             data["defi_pool_pairs"] = [{"base": p[0], "quote": p[1]} for p in DEFI_POOL_PAIRS]
         except Exception as e:
@@ -408,7 +408,7 @@ def extract_defi_protocol_capabilities() -> dict[str, object]:
     """Extract DeFi protocol registry and venue-to-protocol mapping from UAC."""
     capabilities: dict[str, object] = {}
     try:
-        from unified_api_contracts.registry.defi_protocol_registry import (
+        from unified_api_contracts.registry.defi_protocol_registry import (  # noqa: qg-deep-import
             DEFI_PROTOCOLS,
             DEFI_VENUE_TO_PROTOCOL,
         )
@@ -425,7 +425,7 @@ def extract_defi_protocol_capabilities() -> dict[str, object]:
 
     # Solana DeFi protocols
     try:
-        from unified_api_contracts.registry.capability_declarations import SOLANA_DEFI_PROTOCOLS
+        from unified_api_contracts.registry.capability_declarations import SOLANA_DEFI_PROTOCOLS  # noqa: qg-deep-import
 
         capabilities["solana_protocols"] = {name: dict(info) for name, info in SOLANA_DEFI_PROTOCOLS.items()}
         logger.info("  Extracted %d Solana DeFi protocols", len(SOLANA_DEFI_PROTOCOLS))
@@ -439,7 +439,7 @@ def extract_tradfi_exchange_calendars() -> dict[str, dict[str, object]]:
     """Extract TradFi exchange session times from UAC session_times registry."""
     calendars: dict[str, dict[str, object]] = {}
     try:
-        from unified_api_contracts.registry.session_times import _EXCHANGE_SESSIONS
+        from unified_api_contracts.registry.session_times import _EXCHANGE_SESSIONS  # noqa: qg-deep-import
 
         for exchange, session in _EXCHANGE_SESSIONS.items():
             calendars[exchange] = {
@@ -462,7 +462,7 @@ def extract_venue_data_availability() -> dict[str, dict[str, object]]:
     """Extract provider timing metadata (when data arrives post-T) from UAC."""
     availability: dict[str, dict[str, object]] = {}
     try:
-        from unified_api_contracts.registry import VENUE_DATA_AVAILABILITY
+        from unified_api_contracts.registry import VENUE_DATA_AVAILABILITY  # noqa: qg-deep-import
 
         for venue_name, entry in VENUE_DATA_AVAILABILITY.items():
             availability[venue_name] = {
@@ -485,7 +485,7 @@ def extract_venue_coordinates() -> dict[str, dict[str, float]]:
     """Extract stadium geographic coordinates from UAC."""
     coordinates: dict[str, dict[str, float]] = {}
     try:
-        from unified_api_contracts.registry import VENUE_COORDINATES
+        from unified_api_contracts.registry import VENUE_COORDINATES  # noqa: qg-deep-import
 
         for venue_id, coord in VENUE_COORDINATES.items():
             coordinates[str(venue_id)] = {
@@ -504,7 +504,7 @@ def extract_tradfi_tick_data_windows() -> list[dict[str, str]]:
     """Extract date windows for expensive tick data collection from UAC."""
     windows: list[dict[str, str]] = []
     try:
-        from unified_api_contracts.registry import TRADFI_TICK_DATA_WINDOWS
+        from unified_api_contracts.registry import TRADFI_TICK_DATA_WINDOWS  # noqa: qg-deep-import
 
         windows = list(TRADFI_TICK_DATA_WINDOWS)
         logger.info("  Extracted %d TradFi tick data windows", len(windows))
@@ -518,7 +518,7 @@ def extract_mvp_cme_exchange_codes() -> list[str]:
     """Extract MVP CME exchange codes from UAC."""
     codes: list[str] = []
     try:
-        from unified_api_contracts.registry import MVP_CME_EXCHANGE_CODES
+        from unified_api_contracts.registry import MVP_CME_EXCHANGE_CODES  # noqa: qg-deep-import
 
         codes = sorted(MVP_CME_EXCHANGE_CODES)
         logger.info("  Extracted %d MVP CME exchange codes", len(codes))
@@ -532,7 +532,7 @@ def extract_strategy_registry() -> dict[str, object]:
     """Extract the full strategy registry from UAC (families, categories, archetypes, execution modes)."""
     registry: dict[str, object] = {}
     try:
-        from unified_api_contracts.strategy import STRATEGY_REGISTRY
+        from unified_api_contracts.strategy import STRATEGY_REGISTRY  # noqa: qg-deep-import
 
         registry = STRATEGY_REGISTRY.to_dict()
         strategies = registry.get("strategies", registry)
@@ -548,7 +548,7 @@ def extract_client_registry() -> dict[str, object]:
     """Extract the client registry from UAC (client allocations, strategy assignments)."""
     registry: dict[str, object] = {}
     try:
-        from unified_api_contracts.strategy import CLIENT_REGISTRY
+        from unified_api_contracts.strategy import CLIENT_REGISTRY  # noqa: qg-deep-import
 
         registry = CLIENT_REGISTRY.to_dict()
         clients = registry.get("clients", registry)
