@@ -306,10 +306,14 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       `manifest_consolidator_liveness_health_2026_06_01.md` so the liveness watchdog does not alert/restart them. Then
       remove the legacy entries from the Terraform (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`)
       so they are not re-created on `tofu apply`.
-- [ ] [SCRIPT] P0. After migration verified (data + manifest fully in canonical) + a short soak: empty + delete the
-      legacy flat + tier-first + long-form tick buckets (and the instruments-store legacy buckets per the adjacent
-      drift). Canonical `-prd-`/`-pred-prd-` becomes the sole SSOT. Record in
-      `_index/snapshots/decommission_2026_06_0X.md`.
+- [ ] [SCRIPT] P0. **L6 decommission — gated PER asset_group on its L3 plan reporting C-GREEN** (legacy-only CELLS = 0 +
+      canonical v9). L3 owners: defi=`defi_manifest_canonicalisation` §C · prediction=`prediction_manifest_canonicalisation_2026_06_01`
+      · cefi=`cefi_manifest_canonicalisation_2026_06_01` · tradfi=`tradfi_massive_dual_source` re-walk (v9+partition,
+      master CONFLICT-2) · sports=verify-only. For each AG, after its L3 is C-GREEN + a short soak: empty + delete the
+      legacy flat + tier-first + long-form tick bucket (and the instruments-store legacy buckets per the adjacent drift),
+      GCP + AWS. Canonical `-prd-`/`-pred-prd-` becomes the sole SSOT. Record in
+      `_index/snapshots/decommission_2026_06_0X.md`. **Do NOT delete an AG's legacy bucket while its L3 plan is open** —
+      prediction/cefi hold legacy-only history.
 
 ## Phase 8 — Governance + codex (P1)
 

@@ -55,10 +55,11 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 - **L3 HISTORICAL DATA+MANIFEST CANONICALISATION — THE GATE** (one bundled single-walk per AG; riders =
   `data_source_provenance` source-col + `pipeline_mode_partition` partition + v9):
   - **defi** (16,206 legacy-only cells) → this plan §C (`C0`→`C12`, then `B0`). GATES DeFi backfill.
-  - **prediction** (2,039 legacy-only, only 783 overlap → LEAST complete) → ⚠️ **NO PLAN — file
-    `prediction_manifest_canonicalisation`**.
-  - **cefi** (838 recent legacy-only cells) → ⚠️ **no owner — file cefi gap-fill**.
-  - **tradfi (4) / sports (0)** → DATA complete → verify-only (BUT see CONFLICT-2: tradfi v9 + partition not landed).
+  - **prediction** (2,039 legacy-only, only 783 overlap → LEAST complete) → ✅ FILED
+    `prediction_manifest_canonicalisation_2026_06_01.md` (owner `vm-prediction`).
+  - **cefi** (838 recent legacy-only cells) → ✅ FILED `cefi_manifest_canonicalisation_2026_06_01.md` (owner `vm-cefi`).
+  - **tradfi (4) / sports (0)** → DATA complete → verify-only (tradfi owner = `tradfi_massive_dual_source` re-walk per
+    CONFLICT-2, `vm-tradfi`; sports = `vm-sports` verify-only).
 - **L4 CONSOLIDATOR SSOT** — `aws_manifest_consolidator_scope` P1.10 · `manifest_consolidator_liveness_health` ·
   `manifest_reader_fail_fast` follow-up (fail-fast default) · keep env-tiered crons.
 - **L5 BACKFILL/RELAUNCH** — bucket_ssot Phase 4 (writer relaunch) · this plan C6/D1/E1/G1 — gated C-GREEN.
@@ -90,7 +91,10 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
   `data_source_provenance` L1 threading (cefi/defi/sports/pred).
 - **Parallel-per-AG at L3** (one sub-agent per asset_group, each owns its single bundled walk): defi (this plan §C) ·
   prediction (new plan) · cefi (new gap-fill) · tradfi (re-walk per CONFLICT-2). NEVER two walks on one `_index`.
-- **Must-file-first** (no owner → blocks L6 for that AG): `prediction_manifest_canonicalisation`, cefi gap-fill.
+- **L3 owners (all asset_groups now covered)**: defi=this plan §C · prediction=`prediction_manifest_canonicalisation_2026_06_01` ·
+  cefi=`cefi_manifest_canonicalisation_2026_06_01` · tradfi=`tradfi_massive_dual_source` re-walk (CONFLICT-2) ·
+  sports=verify-only. **L6 decommission** (owner `bucket_name_ssot_legacy_dual_write_remediation` Phase 7) deletes each
+  legacy bucket ONLY after its AG's L3 plan reports C-GREEN (legacy-only CELLS = 0 + canonical v9).
 
 
 > **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (2026-06-01)**:
