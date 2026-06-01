@@ -20,6 +20,11 @@ related:
 
 # Deployment-UI: VM + venue-coverage visibility
 
+> **🗄️ ARCHIVED 2026-06-01 (status: done, operator-directed).** All 10 items shipped; §5 pw:L2 140/140
+> (deployment-ui@7bbc270). **Deferred work — migrated to:**
+> `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` (per-item pw:L2 BLOCKED-INFRA libatk in slot
+> env — superseded by §5 full-suite pass).
+
 **Why**: the 25-VM fleet audit had to be done entirely by hand because the deployment-ui surfaces that should show this
 are broken/empty. Operator 2026-05-27: "the vm deployments page … does not show anything, plus the history tab is also
 broken … fix those first so it's better to see the details properly", and add a venue API-key + coverage view ("not the

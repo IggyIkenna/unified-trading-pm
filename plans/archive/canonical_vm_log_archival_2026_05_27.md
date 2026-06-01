@@ -3,7 +3,9 @@ name: canonical_vm_log_archival
 title: "Canonical durable log archival for VMs (and per-repo log paths) — 2026-05-27"
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
-status: active
+status: done
+completed: 2026-06-01
+completed_note: "Operator-marked done 2026-06-01 (harsh). Throwaway bucket deleted. Live vm-logs/ stream healthy. Deferred (operator: 'let it be'): rolling-archive + serial-capture crons committed but never tofu-applied → durable 14-day-TTL survival NOT live in prod; doubled-path nesting in the 05-30 migration copy. Captured in issues/fleet_audit_triad_deferred_followups_2026_06_01.md."
 priority: P1
 created: 2026-05-27
 author: harsh (claude opus 4.7)
@@ -17,6 +19,10 @@ related:
 ---
 
 # Canonical durable log archival for VMs (and per-repo log paths)
+
+> **🗄️ ARCHIVED 2026-06-01 (status: done, operator-directed).** Throwaway bucket deleted; live `vm-logs/` stream
+> healthy. **Deferred work — migrated to:** `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md`
+> (rolling/serial crons never tofu-applied → 14-day-TTL durability not live in prod; doubled-path copy nesting).
 
 **Trigger (operator 2026-05-27)**: before we kill any VM we must be sure nothing important is lost. Need a reusable
 backup script + a canonical, durable archive path usable across services/repos — assignable to a separate agent.
@@ -65,8 +71,9 @@ test (`gs://deployment-scripts-{pid}/vm-logs/{vm}/run.log`).
       2026-05-27 fleet backup). **COPY COMPLETE (2026-05-30 slot-2)**: 44 objects / 7.4 GiB copied server-side from
       `gs://vm-logs-archive-central-element-323112/snapshot_20260527_1300/` →
       `gs://deployment-scripts-central-element-323112/log-archive/snapshot_20260527_1300/`. Verified: 44/44 files.
-      **BUCKET DELETION PENDING operator confirm** — run `gsutil rm -r gs://vm-logs-archive-central-element-323112`
-      then `gsutil rb gs://vm-logs-archive-central-element-323112` once confirmed safe.
+      **BUCKET DELETED 2026-06-01 (harsh, operator-confirmed)**: verified 44/44 objects present in canonical
+      `log-archive/snapshot_20260527_1300/` first, then `gcloud storage rm -r` + `buckets delete
+      gs://vm-logs-archive-central-element-323112`. Confirmed gone.
 - [x] [AGENT] P1. **Pre-kill hook**: any VM-delete path (operator teardown, `vm_zombie_watchdog.py` reaper,
       `VM_SHUTDOWN_ON_COMPLETION` self-delete) MUST call `backup-vm-logs.sh --vm <name>` (or inline equivalent) BEFORE
       `instances delete`, so a reaped/zombie VM's serial console is always captured. Wire into the watchdog + the

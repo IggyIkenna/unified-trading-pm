@@ -19,6 +19,10 @@ related:
 
 # CeFi/venue backfill coverage remediation + fleet VM fixes
 
+> **🗄️ ARCHIVED 2026-06-01 (status: done, operator-directed).** All code/data-correctness fixes shipped.
+> **Deferred work — migrated to:** `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` (Tardis paid
+> key intentionally not activated; GCS manifest migration / 22-day-gap reconcile deferred until operator sees fit).
+
 **Source of truth for the evidence**:
 [`issues/running_vm_fleet_status_2026_05_27.md`](issues/running_vm_fleet_status_2026_05_27.md) (25-VM audit, exact
 per-VM numbers, root causes, all backed up to `gs://vm-logs-archive-central-element-323112/snapshot_20260527_1300/`).
