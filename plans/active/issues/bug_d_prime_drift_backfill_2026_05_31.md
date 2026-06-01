@@ -210,3 +210,51 @@ Plan Todos Immediately" hard rule:
 - CLAUDE.md HARD RULE "Plans Run To Actual Completion" — VM relaunched +
   manifest-verified, but Bug 3 keeps zero rows captured.
 - `codex/02-data/data-pipeline-correctness-hard-rule.md`.
+
+## Status update 2026-06-01T00:14Z — gap-fill VM #3 launched after --resume OOM fix
+
+- **Fix shipped**: `mtds@8b9477f3` — `_load_parts_summary` uses metadata-only two-pass.
+  Pass 1: `pq.read_metadata(...)` row-group statistics across all 3547 existing parts
+  to find the global oldest blockTime (no row materialization). Pass 2: materialize
+  ONLY the single part containing that global min to extract its signature. Constant
+  memory regardless of part count. Replaces the prior `pd.read_parquet()` full-load
+  loop that silently OOM-killed the gap-fill VM #2.
+
+- **Gap-fill VM #3**: `mtds-drift-sigidx-gapfill-20260601-001358` (e2-standard-4,
+  asia-northeast1-c, 35.243.119.40), created `2026-06-01T00:14:01Z`. Launched via
+  inline `gcloud compute instances create` (no canonical launcher exists for this
+  task shape — VM_TASK=mdps-backfill + VM_BACKFILL_CMD metadata).
+
+  - `VM_TASK=mdps-backfill` routes through setup-data-pipeline-vm.sh:1004 which
+    reads VM_BACKFILL_CMD from instance metadata.
+  - `VM_BACKFILL_CMD="python -m market_tick_data_service.scripts.build_drift_v2_sig_index --back-to 2025-01-14 --chunk-size 100000 --resume"`
+  - `VM_SHUTDOWN_ON_COMPLETION=true` — auto-deletes on script exit.
+  - Tarball SHA verification: `mtds-code@8b9477f3.tar.gz` confirmed uploaded to
+    `gs://deployment-scripts-central-element-323112/code/` at 00:04:46Z, manifest
+    `git_status_clean: true`.
+
+- **Drift backfill VM `mtds-solana-drift-backfill`**: unchanged, still RUNNING +
+  honestly emitting `record_failed(reason="sig index missing")` for 2025 dates per
+  the honest-coverage fix (mtds@7e09b2ab). Transitions to `record_captured`
+  automatically when the gap-fill walk completes + parts land on GCS (handler reads
+  per-date via `_load_drift_v2_sig_index` which globs both `_parts/` and `_parts_b/`).
+
+- **On gap-fill completion** (~6-12h wall-clock per prior rate observations):
+  VM auto-deletes (VM_SHUTDOWN_ON_COMPLETION=true). Verify via:
+  - `gcloud compute instances describe mtds-drift-sigidx-gapfill-20260601-001358 ...` → TERMINATED
+  - `gsutil ls _index/drift_v2_sig_index_parts/ | wc -l` → > 4423 (new parts past 3547)
+  - Sample-check `gsutil ls .../day=2025-08-01/.../venue=DRIFT/` → rows > 0
+  - If yes → flip Bug-D parent + Bug-D-followup ✅ in
+    `plans/active/solana_defi_legacy_migration_2026_05_27.md`.
+
+- **Poll command**:
+  ```
+  gsutil cat gs://deployment-scripts-central-element-323112/vm-logs/mtds-drift-sigidx-gapfill-20260601-001358/run.log 2>/dev/null | tail -20
+  ```
+
+- **Hardening todos still open** (filed earlier this session, do not auto-flip):
+  - P0: bucket SSOT drift across other indices
+  - P2: VM bootstrap should clear stale EXIT_STATUS
+  - P2: manifest consolidator 11-day staleness on DeFi bucket
+  - P3: VM watchdog log-uploader silence detection
+  - P3: Cloud Run gen2 + slim image STDOUT truncation
