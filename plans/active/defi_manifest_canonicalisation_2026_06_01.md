@@ -199,7 +199,8 @@ What to verify/wire (B0 corrected scope):
       complete incl TraderJoe/Velodrome post-C12-UAC) + **`available_at` preserve-or-backfill** (preserve where present;
       backfill only missing/null from day end-of-day UTC — never regenerate to migration-time, mtds@a07cea55).
       parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
-  - [ ] [CODE] P0. C0a — wire the tool into the launcher (see C12-WIRE) + a `--start/--end` smoke on a 1-day slice.
+  - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802; dry=default/full=--apply;
+        `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day slice (rolls into C0b dry VM).
   - [ ] [DATA] P0. C0b — **dry VM** (`launch-canonical-migration-vm.sh defi <start> <end> dry`) → review the planned
         rewrites in the VM log (sample legacy→canonical paths, venue canonicalisation, v9/source/pipeline_mode/available_at).
   - [ ] [DATA] P0. C0c — **pre-migration drain (HARD RULE)**: stop GCP+AWS fleet (`vm_zombie_watchdog.py` inventory →
@@ -221,10 +222,12 @@ What to verify/wire (B0 corrected scope):
       `orchestrator.py`/`factory.py` + MTDS `_instruments_metadata.py`. Reverses DF-17 glued-canonical (operator
       "TRADER_JOEV2/VELODROMEV2 is wrong"). — uac@6261bea2 + instruments-service@ce85abb1 + mtds@a07cea55.
       parent_epic: manifest_master.
-- [ ] [CODE] P0. C12-WIRE **wire `migrate_defi_full_v9_canonical` into `launch-canonical-migration-vm.sh defi`** (the
-      tool now produces complete canonical `_V{N}` incl TraderJoe/Velodrome post-C12-UAC). Also fix the MISLEADING
-      docstring in `migrate_mtds_defi_legacy_venue_underscore.py` ("no-underscore canonical" — its code maps to UAC
-      underscore form). **Network-independent.** parent_epic: manifest_master.
+- [x] ✅ [CODE] P0. C12-WIRE **wire `migrate_defi_full_v9_canonical` into `launch-canonical-migration-vm.sh defi`**.
+      **DONE 2026-06-01**: launcher `defi` runs the v9 tool (complete canonical `_V{N}` incl TraderJoe/Velodrome
+      post-C12-UAC); mode convention dry=tool-default / full=`--apply`; `bash -n` + command-emission verified. Also fixed
+      the MISLEADING "no-underscore canonical" docstring in `migrate_mtds_defi_legacy_venue_underscore.py` (UAC keeps
+      underscores; transform is flat→combined VENUE-CHAIN). — deployment-service@4484802 + mtds@6dd8d8a1.
+      parent_epic: manifest_master.
 - [ ] [CHORE] P2. C13 **move misplaced migration scripts** out of `plans/audit/results/` (PM docs dir) into
       `market-tick-data-service/scripts/` (the runnable ones: oracle_relabel / chain_genesis / venue_launch /
       phantom_captured / captured_pre_existence / captured_vs_objects / index_venue_canonicalise / object_path); the
