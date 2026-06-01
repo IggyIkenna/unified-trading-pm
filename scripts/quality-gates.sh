@@ -59,6 +59,7 @@ EMPTY_STR_EXCLUDE_GLOBS=(
     "!**/audit_model_tier.py"
     "!**/invalidate-ci-status.py"
     "!**/gcs_bucket_stats.py"
+    "!**/check_workspace_code_workspace_drift.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
@@ -108,6 +109,7 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/populate_epic_bodies_2026_05_21.py"
     "!**/check_architectural_ratchets.py"
     "!**/gcs_migration_bundle_2026_05_08.py"
+    "!**/check_workspace_code_workspace_drift.py"
 )
 GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/rollout-quality-gates-ci-workflows.py"
@@ -430,6 +432,25 @@ if [ -f "$CRED_ASK_CHECKER" ]; then
         echo "❌ Credential-ask orphan regression — see CLAUDE.md § 'External Data Is Always Available'" >&2
         echo "   File the ping + reference it in the plan line, OR" >&2
         echo "   if intentional debt, re-baseline with: python3 ${CRED_ASK_CHECKER} --baseline-write" >&2
+        exit 1
+    fi
+fi
+
+# ── Post-gates: Workspace .code-workspace repo-list drift guard (HARD — blocking) ──
+# SSOT: plans/active/workspace_config_drift_remediation_2026_06_01.md (Item 3) +
+#       plans/active/issues/workspace_config_repo_list_drift_2026_06_01.md.
+# Asserts the canonical multi-root .code-workspace folders[] == active+scaffolded repo set in
+# workspace-manifest.json, and no listed path is a known archived/consolidated repo. Closes the
+# Finding-3 gap where the workspace file drifted both ways (stale deleted repos still listed +
+# real repos missing) until VS Code threw "<repo> does not appear to be a git repository".
+WS_DRIFT_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_workspace_code_workspace_drift.py"
+if [ -f "$WS_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
+    echo "Running .code-workspace repo-list drift guard..."
+    if python3 "$WS_DRIFT_CHECKER" --workspace-root "$WORKSPACE_ROOT"; then
+        log_success ".code-workspace repo-list drift guard passed"
+    else
+        echo "❌ .code-workspace repo-list drift — see plans/active/workspace_config_drift_remediation_2026_06_01.md" >&2
+        echo "   Sync cursor-configs/unified-trading-system-repos.code-workspace folders[] to the active repo set." >&2
         exit 1
     fi
 fi
