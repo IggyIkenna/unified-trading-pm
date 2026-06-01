@@ -87,11 +87,12 @@ Observation captured during operator's 2026-05-30/06-01 manual kill cycles. Two 
 
 ### Phase 2 — Implement WorkerLivenessWatchdog (single PR)
 
-- [ ] [CODE] P0. Add `server/worker_liveness_watchdog.py` with `WorkerLivenessWatchdog` class — periodic tick (default
+- [x] ✅ [CODE] P0. Add `server/worker_liveness_watchdog.py` with `WorkerLivenessWatchdog` class — periodic tick (default
       60s). Per slot: capture pane content via `tmux_spawn.capture_pane(session)`, check three patterns above, kill
       via `tmux_spawn.kill_session(session)` if matched. Env-flag-gated: `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true`
       default false. Per-slot cooldown in-memory dict `_last_kill_at: dict[int, datetime]`. Per-VM daily cap
       `_kills_today: int` reset at UTC midnight. Collision group: `ao_watchdog_code`. Estimate: 0.4 AI-day.
+      ✅ DONE 2026-06-01 — watchdog.py shipped by slot-5@97cda3f; server.py lifespan wiring (start/stop) agent-orchestrator@9e608f0.
 - [x] [CODE] P0. Pane-content regex helpers — `_is_stuck_at_prompt(pane: str, prev_pane: str) -> bool`,
       `_is_context_full(pane: str) -> bool`, `_is_actively_thinking(pane: str) -> bool` (allow-list for
       `Crunched|Cogitated|Worked|Baked for \d+m \d+s`). Tested via fixture-pane strings. Collision group:
