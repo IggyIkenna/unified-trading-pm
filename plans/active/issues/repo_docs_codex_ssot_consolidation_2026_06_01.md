@@ -74,6 +74,36 @@ Ordered by codex-duplication likelihood (data/arch/deploy SSOTs duplicated most)
       `codex/05-infrastructure` + `codex/08-workflows`, delete the dumps. Slim `DEPENDENCIES.md` / `ARCHITECTURE.md` to
       repo-local + codex links.
 
+## FIX-STALE pass 1 — landed 2026-06-01 (operator chose FIX-STALE-only; DELETEs/REDIRECTs held)
+
+Literal fixes only (env-tier bucket names → `{kind}-{ag}-{env}-{pid}` resolve via `resolve_bucket_name()`; hyphen
+hive partitions → `key=value`; `pip`→`uv`; `test-project`→`{project_id}`; Python 3.11→3.13; `batch only`→`batch|live`;
+retired names). ~340 fixes. All on `origin/live-defi-rollout`:
+
+- deployment-service @ `9627260` (~110 bucket + 8 hyphen + test-project)
+- instruments-service @ `8bea654` + `9ecc4b2` (27 bucket + 11 pip→uv; **URDI left — code still uses URDI symbols**, follow-up needed)
+- execution-service @ `4b0ea42f` (47 bucket + hyphen + py3.13 + uv)
+- market-data-processing-service @ `89161dc` (18 bucket + 15 hyphen)
+- strategy-service @ `80d298fe` (bucket + hyphen + batch=live + retired name)
+- e2e-testing @ `0de5471` (31 bucket/path)
+- unified-trading-library @ `168e649` + `c88278b` (resolve_bucket_name + setup_events + uv + 2 more docs)
+- market-tick-data-service @ `d97ca3c` (QUICK_START_GUIDE leftover)
+
+**Parked — features-service**: another agent actively working; `live-defi-rollout` is branch-protected (`quality-gates-v2`
+required). Docs commit `b9b4103e` is on `origin/tab/hk/10`; PR #4 exists but **bundles a foreign commit (`603c2b9c`) — do
+NOT merge as-is**. Left for the owning agent; NO git surgery performed.
+
+**Intentionally skipped in FIX-STALE** (handled elsewhere): delete-candidate docs (→ DELETE pass), MTDS `issues/*` +
+`plans/*` (historical records, not living docs), UI `context/codex|pm/*` (vendored mirrors — re-sync from canonical
+codex), legacy-example lines (deprecation notes, phase-2-6 cutover-runbook "from" state).
+
+**Not yet done**: UI `docs/audits/dart-v2-audit-context.md` + `docs/under-review/.../DATA_PIPELINE_SPEC.md` (UI
+branch-protection/ownership unverified); UAC deleted-dir refs (`SCHEMA_GOVERNANCE`/`MOCKS_AND_VCR`/`SCHEMA_CHANGELOG` —
+contextual, fold into UAC REDIRECT pass).
+
+**Follow-up finding**: `live-defi-rollout` branch protection is inconsistent across repos (features-service requires
+`quality-gates-v2`; the other 8 accept direct LDR push) — contradicts the workspace "no CI on LDR" rule. Capture as issue.
+
 ## Audit registry (read-only pass 1 — 8 repos, 2026-06-01)
 
 > **Caveat**: audit agents proposed codex SSOT targets by grep; **verify each target exists before redirecting** (some
