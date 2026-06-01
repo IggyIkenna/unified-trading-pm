@@ -179,13 +179,30 @@ relaunch.
       (a) find + tune the pinned-tarball prune cron to retain referenced pins (SSOT: VM-tarball-deployment +
       create-code-tarballs); (b) build the migration tarball into a DEDICATED bucket the prune cron doesn't touch;
       (c) skip the VM fleet — run the lower-risk local manifest path below since data is dual-written.
-- [ ] [SCRIPT] P0. **Verify data completeness** (replaces the assumption): sample N legacy data objects per bucket,
-      confirm each exists in canonical (the dual-write hypothesis). If 100% present → the data copy is unnecessary; if
-      gaps → gap-fill only the missing prefixes.
-- [ ] [SCRIPT] P0. **Manifest seed (no tarball needed)**: once data completeness is verified, run
-      `migrate_legacy_tick_buckets_to_canonical.py --apply --manifest-only` locally for the 5 buckets → drops legacy
-      `_index` rows as a per-VM shard in canonical; the running consolidator folds + dedups them in, preserving
-      `pipeline_mode`. Then verify canonical row parity (legacy ∪ canonical).
+- [x] ✅ [SCRIPT] P0. **`_index` comparison (2026-06-01) — RAW MANIFEST SEED IS UNSAFE, DO NOT RUN.** Compared legacy vs
+      canonical `_index` per bucket. The legacy `_index` is stale-schema + different-granularity, so its keys do NOT
+      align with canonical's:
+      | bucket | legacy rows | canon rows | CAPTURED legacy rows absent from canon |
+      | --- | --- | --- | --- |
+      | cefi | 35.8M | 2.6M | 716,159 |
+      | defi | 1.91M | 1.57M | 382,659 |
+      | tradfi | 579k | 144k | 289,176 |
+      | prediction | 449k | 16.8k | 430,414 |
+      | sports | 165k | 786k | **0** (already complete) |
+      BUT at `(date,venue,data_type)` granularity legacy is ~fully a subset of canonical (tradfi overlap 12,944/12,948)
+      → **canonical already covers the same cells**; the divergence is per-`instrument_id` representation + schema
+      version (legacy `_index` = mixed **v4/v6/v7/v8**; canonical = **v8**). A raw `--manifest-only` seed would inject
+      millions of un-canonicalised v4–v8 rows that won't dedup against canonical v8 → pollutes the SSOT. **Seed
+      abandoned.**
+- [ ] [SCRIPT] P0. **Manifest completion belongs to the canonicalisation plans, NOT this plan.** Canonical `_index` is
+      made authoritative by `defi_manifest_canonicalisation_2026_06_01.md` (defi) + the manifest v8/v9 schema migration +
+      `pipeline_mode_implementation` + `data_source_provenance` — they regenerate canonical-format rows from the (already
+      dual-written) canonical DATA. This plan COORDINATES (single-walk ordering, banner in defi_manifest) but does not
+      seed. Confirm canonical `_index` is `C-GREEN` per those plans before decommission.
+- [ ] [SCRIPT] P0. **Confirm canonical DATA coverage** per bucket (the part this plan owns): canonical holds every
+      legacy `(date,venue,data_type)` cell + the underlying objects (dual-write). tradfi confirmed (overlap
+      12,944/12,948 + object micro-check). Repeat the cheap `(date,venue,data_type)` set-subset check for
+      cefi/defi/prediction; gap-fill any genuinely legacy-only DATA objects (layout-aware prefixes — see note below).
 
 ## Phase 4 — Relaunch drained writers (P0) — GATED on associated migration plans (operator 2026-06-01)
 
