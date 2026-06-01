@@ -35,7 +35,8 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
 - After any writegate phase change
 - **Before any whole-corpus GCS migration window** — the deferred `pipeline_mode=` on-disk partition (Phase 5 successor)
   must be bundled into that walk per single-walk discipline; this audit flags it if still pending.
-- After any new asset_group bucket is provisioned (must verify its manifest rows carry non-null, in-enum `pipeline_mode`)
+- After any new asset_group bucket is provisioned (must verify its manifest rows carry non-null, in-enum
+  `pipeline_mode`)
 
 ## Checklist
 
@@ -66,8 +67,8 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
       sports, prediction, instruments-store-\*) and its `_index/per_vm/` shards, confirm
       `count(*) WHERE pipeline_mode IS NULL OR pipeline_mode = ''` equals 0 (or a documented exempt count for an active
       VM writing pre-Phase-2 rows). Re-run `unified-trading-pm/scripts/migration/backfill_pipeline_mode.py --verify` per
-      bucket. Any non-zero non-exempt count → a backfill/migration is owed; file it against
-      `batch_live_symmetry_master` (NOT a silent defer).
+      bucket. Any non-zero non-exempt count → a backfill/migration is owed; file it against `batch_live_symmetry_master`
+      (NOT a silent defer).
 
 - [ ] (h) **No inline `pipeline_mode` string literals at write sites**: every writer sources its value from
       `unified_trading_library.events.resolve_pipeline_mode(...)` or a `PipelineMode.X` enum member — no raw string
@@ -75,9 +76,9 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
       service) was added to the sweep. Grep cross-check:
       `rg -n "pipeline_mode\s*=\s*[\"']" --glob '!*.venv*' --glob '!node_modules' --glob '!tests'` — review every hit.
 
-- [ ] (i) **Reconciliation actually groups by `pipeline_mode`**: `batch-live-reconciliation-service` stage0 distinguishes
-      batch vs live row sets for the same shard via `_is_batch_mode()` / `_is_live_mode()` predicates (not an empty-column
-      no-op). Reconciliation tests fail when `pipeline_mode IS NULL` appears in input.
+- [ ] (i) **Reconciliation actually groups by `pipeline_mode`**: `batch-live-reconciliation-service` stage0
+      distinguishes batch vs live row sets for the same shard via `_is_batch_mode()` / `_is_live_mode()` predicates (not
+      an empty-column no-op). Reconciliation tests fail when `pipeline_mode IS NULL` appears in input.
 
 - [ ] (j) **Deferred on-disk partition tracked, not lost**: confirm the Phase 5 successor
       `pipeline_mode_partition_migration_<next-window-date>.md` either (i) does not yet exist because no whole-corpus

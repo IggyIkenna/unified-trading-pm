@@ -68,13 +68,14 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
       `record_empty_for_shard` / `record_failed_for_shard` accept + forward `source`.
       `market-data-processing-service/.../core/canonical_writer.py`. Read ACTUAL prod CeFi rows — **RED on any blank
       `source`** (not just multi-source cells). No `SOURCE_PRIORITY` change needed yet (`tardis` already declared).
-- [ ] (j) **Expand `SOURCE_PRIORITY` only when an alternative lands**: when a live per-venue path or a Tardis replacement
-      is actually added, append it to the entry (e.g. `["<venue>_live", "tardis"]`) — at which point resolution (item l)
-      engages. `unified-api-contracts/.../canonical/crosscutting/source_priority.py:152-160`.
+- [ ] (j) **Expand `SOURCE_PRIORITY` only when an alternative lands**: when a live per-venue path or a Tardis
+      replacement is actually added, append it to the entry (e.g. `["<venue>_live", "tardis"]`) — at which point
+      resolution (item l) engages. `unified-api-contracts/.../canonical/crosscutting/source_priority.py:152-160`.
 - [ ] (k) **`source` is a column, not a path key**: no `source=`/`data_source=` hive segment in CeFi GCS paths — both
       sources co-mingle on `day=…/asset_group=cefi/venue=…/data_type=…/`.
-- [ ] (l) **Read-time reconciliation wired**: 2-source fixture (Tardis + venue_live, same instrument+ts, co-mingled in one
-      folder) → consumer emits exactly ONE resolved row via `select_primary_available_source()`; no silent double-count.
+- [ ] (l) **Read-time reconciliation wired**: 2-source fixture (Tardis + venue_live, same instrument+ts, co-mingled in
+      one folder) → consumer emits exactly ONE resolved row via `select_primary_available_source()`; no silent
+      double-count.
 
 ### E2E Batch, Paper, and Live Verification
 

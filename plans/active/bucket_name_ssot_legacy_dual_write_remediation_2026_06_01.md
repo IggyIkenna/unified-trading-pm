@@ -38,8 +38,9 @@ related:
 > an aggressive prune cron deletes unreferenced pinned tarballs within seconds of upload, so the pin can't be used
 > either. All 20 VMs deleted; **no data harm** (script never ran). 3 writer VMs still DRAINED. See Phase 5 blocker todo.
 >
-> **DUAL-WRITE IS THE BUG, NOT A SHORTCUT (operator 2026-06-01)**: the END STATE is a single CANONICAL SSOT —
-> legacy buckets DELETED, not left in place. Status of the two legacy-side activities:
+> **DUAL-WRITE IS THE BUG, NOT A SHORTCUT (operator 2026-06-01)**: the END STATE is a single CANONICAL SSOT — legacy
+> buckets DELETED, not left in place. Status of the two legacy-side activities:
+>
 > - **New legacy DATA writes: STOPPED** — writers drained + code fixed; `day-2026-05` sample = `total=0` on all 5
 >   buckets (no recent legacy data). Where legacy data DOES exist (tradfi day-2025-11-02) it was dual-written, so
 >   canonical holds it too.
@@ -48,20 +49,21 @@ related:
 >   paused as decommission (coordinate with `manifest_consolidator_liveness_health_2026_06_01.md` +
 >   `aws_manifest_consolidator_scope_2026_05_21.md`).
 >
-> **Path to single canonical SSOT**: verify canonical holds all legacy data → close the manifest gap
-> (`--manifest-only` seed) → pause the 10 legacy crons → DELETE the legacy buckets.
+> **Path to single canonical SSOT**: verify canonical holds all legacy data → close the manifest gap (`--manifest-only`
+> seed) → pause the 10 legacy crons → DELETE the legacy buckets.
 
-> **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with `defi_manifest_canonicalisation_2026_06_01.md` (2026-06-01)**:
-> this plan's `--manifest-only` seed writes legacy→canonical rows into the **same `market-data-tick-defi-prd-…`
-> `_index`** that `defi_manifest_canonicalisation` rewrites (venue relabel / phantom-grid delete / v4–v8→v9 / snapshot,
-> via `migrate_defi_canonical.py`). Single-walk discipline (HARD RULE) forbids two concurrent whole-corpus walks on the
-> same `_index`. **Ordering (HARD)**: this plan's DeFi manifest seed runs **BEFORE** defi_manifest's `C0` single-walk —
-> otherwise the seed re-injects un-canonicalised legacy rows (old venue strings, v4–v8, phantom grid) *after* C0 cleans
-> them. As of 2026-06-01 **neither DeFi walk has launched** (this plan's "Manifest seed" P0 + defi_manifest's "C0 — RUN
-> ON A VM" P0 both open) — no live race yet; do NOT launch the DeFi-bucket seed without confirming defi_manifest C0 is
-> not mid-walk (and vice-versa). `data_source_provenance_all_asset_groups_2026_06_01.md` (`source`-column backfill) must
-> NOT open a third walk — its row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic
-> `mtds_mdps_master`. Banner-remove when the DeFi `_index` is canonical + seeded (defi_manifest C-GREEN).
+> **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with `defi_manifest_canonicalisation_2026_06_01.md`
+> (2026-06-01)**: this plan's `--manifest-only` seed writes legacy→canonical rows into the **same
+> `market-data-tick-defi-prd-…` `_index`** that `defi_manifest_canonicalisation` rewrites (venue relabel / phantom-grid
+> delete / v4–v8→v9 / snapshot, via `migrate_defi_canonical.py`). Single-walk discipline (HARD RULE) forbids two
+> concurrent whole-corpus walks on the same `_index`. **Ordering (HARD)**: this plan's DeFi manifest seed runs
+> **BEFORE** defi_manifest's `C0` single-walk — otherwise the seed re-injects un-canonicalised legacy rows (old venue
+> strings, v4–v8, phantom grid) _after_ C0 cleans them. As of 2026-06-01 **neither DeFi walk has launched** (this plan's
+> "Manifest seed" P0 + defi_manifest's "C0 — RUN ON A VM" P0 both open) — no live race yet; do NOT launch the
+> DeFi-bucket seed without confirming defi_manifest C0 is not mid-walk (and vice-versa).
+> `data_source_provenance_all_asset_groups_2026_06_01.md` (`source`-column backfill) must NOT open a third walk — its
+> row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic `mtds_mdps_master`. Banner-remove when the
+> DeFi `_index` is canonical + seeded (defi_manifest C-GREEN).
 
 ## Cross-plan ordering → single canonical SSOT (no fallback, no dual) — operator-requested 2026-06-01
 
@@ -71,13 +73,17 @@ One single-walk per `_index` (HARD RULE). Layers gate top-down; asset_groups par
 The exact plan todos that execute each layer (the operator's "mention the plan todos across PM active plans"):
 
 **L0 — INFRA UNBLOCK (gates every VM step).**
+
 - `issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01.md` — fix pinned-tarball persistence (prune-cron tune OR
-  dedicated un-pruned bucket). BLOCKS every `RUN ON A VM` todo below (defi_manifest C0, C6, G1; this plan Phase 2 tarball
-  + Phase 4 relaunch).
+  dedicated un-pruned bucket). BLOCKS every `RUN ON A VM` todo below (defi_manifest C0, C6, G1; this plan Phase 2
+  tarball
+  - Phase 4 relaunch).
 
 **L1 — CODE SSOT (write path).**
+
 - THIS plan Phase 1: resolver fix ✅ (MTDS@0b575651 / MDPS@61900a3 / deploy@d667422,58ee0a9) · OPEN: `[SCRIPT] P0` QG
-  grep-guard (no string-concat bucket names) · `[SCRIPT] P1` UTL dead-code removal (`constants.py` flat `get_bucket_name`).
+  grep-guard (no string-concat bucket names) · `[SCRIPT] P1` UTL dead-code removal (`constants.py` flat
+  `get_bucket_name`).
 - `defi_manifest…` **A**: `A2a` populate `DEFI_VENUE_LAUNCH_DATES` · `A2b` wire lst_rates/solana empty branches · `A4`
   chain-dim QG guard · `A5` perp_funding `SOURCE_RETURNED_ZERO`. (A1/A3/A6/A7 ✅.)
 - `data_source_provenance…` **Phased**: UAC source-priority helper · UTL drop the tradfi-only `source` gate ·
@@ -86,40 +92,47 @@ The exact plan todos that execute each layer (the operator's "mention the plan t
 - `pipeline_mode_implementation…` — ✅ DONE (Phases 0–6).
 
 **L2 — STOP LEGACY-SIDE ACTIVITY.**
+
 - THIS plan Phase 3 drain ✅ · Phase 7 `[SCRIPT] P0` **pause the 10 `*-legacy-cron` consolidators + remove from
   `manifest_consolidator_scheduler.tf`** (coord `manifest_consolidator_liveness_health` watchdog so it doesn't restart;
   AWS side via `aws_manifest_consolidator_scope`). ⇒ legacy fully frozen.
 
 **L3 — HISTORICAL DATA + MANIFEST CANONICALISATION — THE FOUNDATION GATE** (`defi_manifest…` §Sequencing: "no backfill
 until C is GREEN"). ONE bundled single-walk per bucket → canonical target form (env-split · `asset_group=` ·
-`pipeline_mode=` partition · v9 · underscore data_type · flat venue+chain · typed empty-reason · `expected_unattempted`):
-- **defi** (16,206 legacy-only cells): `defi_manifest…` **C** single-walk — `C0` path+bucket canonicalisation RUN ON A VM
-  (gated L0) · `C12-WIRE` wire `migrate_defi_full_v9_canonical` into the launcher · `C2` data_type alias dedup · `C3`
+`pipeline_mode=` partition · v9 · underscore data_type · flat venue+chain · typed empty-reason ·
+`expected_unattempted`):
+
+- **defi** (16,206 legacy-only cells): `defi_manifest…` **C** single-walk — `C0` path+bucket canonicalisation RUN ON A
+  VM (gated L0) · `C12-WIRE` wire `migrate_defi_full_v9_canonical` into the launcher · `C2` data_type alias dedup · `C3`
   venue-chain→flat · `C4` v4–v8→v9 · `C5` phantom-grid delete · `C8` under-enumeration (90 venue-keys) · `C9` legacy
   object paths · `C11` post-launch phantom audit · then `B0` run `expected_unattempted` chain (gated C-GREEN). Riders on
   the SAME walk: `data_source_provenance` source-col + `pipeline_mode`.
 - **prediction** (2,039 legacy-only, only 783 overlap → canonical LEAST complete): ⚠️ **NO PLAN — file
-  `prediction_manifest_canonicalisation_2026_06_0X.md`** (analogous C single-walk: migrate POLYMARKET ohlcv_* +
+  `prediction_manifest_canonicalisation_2026_06_0X.md`** (analogous C single-walk: migrate POLYMARKET ohlcv\_\* +
   `prediction_canonical_question_group` history → canonical, v→v9, `pipeline_mode`).
 - **cefi** (838 recent legacy-only cells): ⚠️ **no owner — file `cefi_legacy_gap_fill` or add a C-task to a cefi plan**
   (gap-fill BINANCE/UPBIT/COINBASE book/trades 2026-03→05 into canonical).
 - **tradfi (4) / sports (0)**: canonical DATA complete → verify-only; no migration needed before decommission.
 
 **L4 — CONSOLIDATOR SSOT (go-forward manifest).**
+
 - `aws_manifest_consolidator_scope…` `[HUMAN] P1.10` `tofu apply` Phase D + verify 26 schedules ENABLED (only open todo;
   P0.1–P1.9 ✅). · `manifest_consolidator_liveness_health…` keeps GCP canonical `_index` fresh. Keep the 10 env-tiered
   crons. ⇒ canonical `_index` self-maintains, v9, authoritative.
 
 **L5 — BACKFILL / WRITER RELAUNCH (go-forward data).**
+
 - THIS plan Phase 4 `[SCRIPT] P0` GATED relaunch of `mdps-backfill-defi`/`mdps-prediction-2025`/`sports-scheduler` on
   fixed code (after L0+L3-green per asset_group). · `defi_manifest…` `C6` Pyth backfill · `D1` features-onchain · `E1`
   cefi fetch-fix · `G1` Solana basis backfill — ALL gated on C-GREEN per §Sequencing.
 
 **L6 — DECOMMISSION → SINGLE SSOT.**
+
 - THIS plan Phase 6 verify (`0` new legacy `_index` writes ≥1h · canonical ≥ legacy∪canonical · 0 dupes) → Phase 7
   `[SCRIPT] P0` delete legacy flat/tier-first/long-form buckets (tick + instruments-store legacy, GCP+AWS) + snapshot.
 
 **L7 — GUARDRAILS (regression).**
+
 - THIS plan: QG grep-guard (L1) · `batch_live_symmetry` audit recurring check ✅ · Phase 8 codex bucket-naming SSOT doc.
 - `defi_manifest…` `F1–F4` codex docs · `data_source_provenance…` generalise QG STEP 5.64 + codex.
 
@@ -210,29 +223,31 @@ relaunch.
 
 ## Phase 2 — Ship + rebuild tarball (P0)
 
-- [x] ✅ [SCRIPT] P0. QG exit 0 + push to `live-defi-rollout` for each touched repo. —
-      market-tick-data-service@0b575651 (RC1 + handler + tests, full QG exit 0) + @6372bd5d (migration script);
-      market-data-processing-service@61900a3 (RC4); deployment-service@d667422 (launchers). Phase-1 checkboxes flipped.
+- [x] ✅ [SCRIPT] P0. QG exit 0 + push to `live-defi-rollout` for each touched repo. — market-tick-data-service@0b575651
+      (RC1 + handler + tests, full QG exit 0) + @6372bd5d (migration script); market-data-processing-service@61900a3
+      (RC4); deployment-service@d667422 (launchers). Phase-1 checkboxes flipped.
 - [ ] [SCRIPT] P0. Rebuild VM code tarball **from a CLEAN `live-defi-rollout` checkout** (NOT the slot worktree — it
-      carries foreign-dirty backfill WIP; do not ship it). `bash deployment-service/scripts/vm/create-code-tarballs.sh
-      --asset-group <CEFI|DEFI|...> --include market-tick-data-service` → uploads SHA-pinned
-      `mtds-code@<sha>.tar.gz` to `gs://deployment-scripts-central-element-323112/code/`. Smoke
-      `get_tick_data_bucket` per asset_group resolves canonical. Needed before Phase 4 relaunch + the Phase 5 VM fan-out.
+      carries foreign-dirty backfill WIP; do not ship it).
+      `bash deployment-service/scripts/vm/create-code-tarballs.sh     --asset-group <CEFI|DEFI|...> --include market-tick-data-service`
+      → uploads SHA-pinned `mtds-code@<sha>.tar.gz` to `gs://deployment-scripts-central-element-323112/code/`. Smoke
+      `get_tick_data_bucket` per asset_group resolves canonical. Needed before Phase 4 relaunch + the Phase 5 VM
+      fan-out.
 
 ## Phase 3 — Drain writer VMs (pre-migration drain gate — HARD RULE) (P0) — DONE
 
 - [x] ✅ [SCRIPT] P0. Inventoried running fleet 2026-06-01: `mdps-backfill-cefi-main-test` self-terminated; no tradfi
-      writer running (cefi+tradfi legacy already static). Drained the 3 live writers
-      (`mdps-backfill-defi`, `mdps-prediction-2025`, `sports-scheduler`) via graceful `gcloud compute instances stop`
-      → TERMINATED. Only `alerting-quietness` + `vm-zombie-watchdog` left up. **All 5 legacy buckets frozen.**
+      writer running (cefi+tradfi legacy already static). Drained the 3 live writers (`mdps-backfill-defi`,
+      `mdps-prediction-2025`, `sports-scheduler`) via graceful `gcloud compute instances stop` → TERMINATED. Only
+      `alerting-quietness` + `vm-zombie-watchdog` left up. **All 5 legacy buckets frozen.**
 - [x] ✅ [SCRIPT] P0. Snapshotted each frozen legacy `_index/availability_index.parquet` →
       `_index/snapshots/pre_migration_2026_06_01.parquet` (safety backup, exit 0).
 
 ## Phase 5 — Migrate legacy → canonical (P0) — DRAIN→MIGRATE→RELAUNCH (operator sequence 2026-06-01)
 
-- [x] ✅ [SCRIPT] P0. Date-shardable merge script `market-tick-data-service/scripts/migrate_legacy_tick_buckets_to_canonical.py`:
-      idempotent server-side `gcs_copy_object` data copy (skips objects already in canonical via `gcs_describe_object`)
-      + manifest seed via the consolidator's per-VM shard mechanism (drops legacy `_index` rows as
+- [x] ✅ [SCRIPT] P0. Date-shardable merge script
+      `market-tick-data-service/scripts/migrate_legacy_tick_buckets_to_canonical.py`: idempotent server-side
+      `gcs_copy_object` data copy (skips objects already in canonical via `gcs_describe_object`) + manifest seed via the
+      consolidator's per-VM shard mechanism (drops legacy `_index` rows as
       `_index/per_vm/legacy_bucket_migration_2026_06_01.parquet` → running consolidator folds + dedups on shard-key,
       **preserving `pipeline_mode`**). `--prefix` shards the DATA copy by date; `--manifest-only`/`--no-manifest` split
       the halves. — market-tick-data-service@6372bd5d (ruff clean; scripts/ exempt from strict pyright).
@@ -243,30 +258,24 @@ relaunch.
 - [ ] [BLOCKED-INFRA] P0. **Migration data-copy fan-out BLOCKED by tarball infrastructure.** Attempt-1 (20 VMs) all
       failed exit-2: pulled `mtds-code.tar.gz` lacked the migration script (floating tarball overwritten by a
       parallel-agent rebuild). Added mtds SHA-pin path (58ee0a9) but **pinned `mtds-code@<sha>.tar.gz` is pruned within
-      seconds of upload** by a cleanup cron, so the pin can't be relied on. **Unblock options (operator decision):**
-      (a) find + tune the pinned-tarball prune cron to retain referenced pins (SSOT: VM-tarball-deployment +
-      create-code-tarballs); (b) build the migration tarball into a DEDICATED bucket the prune cron doesn't touch;
-      (c) skip the VM fleet — run the lower-risk local manifest path below since data is dual-written.
+      seconds of upload** by a cleanup cron, so the pin can't be relied on. **Unblock options (operator decision):** (a)
+      find + tune the pinned-tarball prune cron to retain referenced pins (SSOT: VM-tarball-deployment +
+      create-code-tarballs); (b) build the migration tarball into a DEDICATED bucket the prune cron doesn't touch; (c)
+      skip the VM fleet — run the lower-risk local manifest path below since data is dual-written.
 - [x] ✅ [SCRIPT] P0. **`_index` comparison (2026-06-01) — RAW MANIFEST SEED IS UNSAFE, DO NOT RUN.** Compared legacy vs
       canonical `_index` per bucket. The legacy `_index` is stale-schema + different-granularity, so its keys do NOT
-      align with canonical's:
-      | bucket | legacy rows | canon rows | CAPTURED legacy rows absent from canon |
-      | --- | --- | --- | --- |
-      | cefi | 35.8M | 2.6M | 716,159 |
-      | defi | 1.91M | 1.57M | 382,659 |
-      | tradfi | 579k | 144k | 289,176 |
-      | prediction | 449k | 16.8k | 430,414 |
-      | sports | 165k | 786k | **0** (already complete) |
-      BUT at `(date,venue,data_type)` granularity legacy is ~fully a subset of canonical (tradfi overlap 12,944/12,948)
-      → **canonical already covers the same cells**; the divergence is per-`instrument_id` representation + schema
-      version (legacy `_index` = mixed **v4/v6/v7/v8**; canonical = **v8**). A raw `--manifest-only` seed would inject
-      millions of un-canonicalised v4–v8 rows that won't dedup against canonical v8 → pollutes the SSOT. **Seed
-      abandoned.**
+      align with canonical's: | bucket | legacy rows | canon rows | CAPTURED legacy rows absent from canon | | --- | ---
+      | --- | --- | | cefi | 35.8M | 2.6M | 716,159 | | defi | 1.91M | 1.57M | 382,659 | | tradfi | 579k | 144k |
+      289,176 | | prediction | 449k | 16.8k | 430,414 | | sports | 165k | 786k | **0** (already complete) | BUT at
+      `(date,venue,data_type)` granularity legacy is ~fully a subset of canonical (tradfi overlap 12,944/12,948) →
+      **canonical already covers the same cells**; the divergence is per-`instrument_id` representation + schema version
+      (legacy `_index` = mixed **v4/v6/v7/v8**; canonical = **v8**). A raw `--manifest-only` seed would inject millions
+      of un-canonicalised v4–v8 rows that won't dedup against canonical v8 → pollutes the SSOT. **Seed abandoned.**
 - [ ] [SCRIPT] P0. **Manifest completion belongs to the canonicalisation plans, NOT this plan.** Canonical `_index` is
-      made authoritative by `defi_manifest_canonicalisation_2026_06_01.md` (defi) + the manifest v8/v9 schema migration +
-      `pipeline_mode_implementation` + `data_source_provenance` — they regenerate canonical-format rows from the (already
-      dual-written) canonical DATA. This plan COORDINATES (single-walk ordering, banner in defi_manifest) but does not
-      seed. Confirm canonical `_index` is `C-GREEN` per those plans before decommission.
+      made authoritative by `defi_manifest_canonicalisation_2026_06_01.md` (defi) + the manifest v8/v9 schema
+      migration + `pipeline_mode_implementation` + `data_source_provenance` — they regenerate canonical-format rows from
+      the (already dual-written) canonical DATA. This plan COORDINATES (single-walk ordering, banner in defi_manifest)
+      but does not seed. Confirm canonical `_index` is `C-GREEN` per those plans before decommission.
 - [ ] [SCRIPT] P0. **Confirm canonical DATA coverage** per bucket (the part this plan owns): canonical holds every
       legacy `(date,venue,data_type)` cell + the underlying objects (dual-write). tradfi confirmed (overlap
       12,944/12,948 + object micro-check). Repeat the cheap `(date,venue,data_type)` set-subset check for
@@ -304,16 +313,17 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       `uts-prod-manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}-legacy-cron` +
       `uts-prod-manifest-consolidator-instruments-{cefi,defi,tradfi,sports,prediction}-legacy-cron`. Coordinate with
       `manifest_consolidator_liveness_health_2026_06_01.md` so the liveness watchdog does not alert/restart them. Then
-      remove the legacy entries from the Terraform (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`)
-      so they are not re-created on `tofu apply`.
+      remove the legacy entries from the Terraform
+      (`deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf`) so they are not re-created on
+      `tofu apply`.
 - [ ] [SCRIPT] P0. **L6 decommission — gated PER asset_group on its L3 plan reporting C-GREEN** (legacy-only CELLS = 0 +
-      canonical v9). L3 owners: defi=`defi_manifest_canonicalisation` §C · prediction=`prediction_manifest_canonicalisation_2026_06_01`
-      · cefi=`cefi_manifest_canonicalisation_2026_06_01` · tradfi=`tradfi_massive_dual_source` re-walk (v9+partition,
-      master CONFLICT-2) · sports=verify-only. For each AG, after its L3 is C-GREEN + a short soak: empty + delete the
-      legacy flat + tier-first + long-form tick bucket (and the instruments-store legacy buckets per the adjacent drift),
-      GCP + AWS. Canonical `-prd-`/`-pred-prd-` becomes the sole SSOT. Record in
-      `_index/snapshots/decommission_2026_06_0X.md`. **Do NOT delete an AG's legacy bucket while its L3 plan is open** —
-      prediction/cefi hold legacy-only history.
+      canonical v9). L3 owners: defi=`defi_manifest_canonicalisation` §C ·
+      prediction=`prediction_manifest_canonicalisation_2026_06_01` · cefi=`cefi_manifest_canonicalisation_2026_06_01` ·
+      tradfi=`tradfi_massive_dual_source` re-walk (v9+partition, master CONFLICT-2) · sports=verify-only. For each AG,
+      after its L3 is C-GREEN + a short soak: empty + delete the legacy flat + tier-first + long-form tick bucket (and
+      the instruments-store legacy buckets per the adjacent drift), GCP + AWS. Canonical `-prd-`/`-pred-prd-` becomes
+      the sole SSOT. Record in `_index/snapshots/decommission_2026_06_0X.md`. **Do NOT delete an AG's legacy bucket
+      while its L3 plan is open** — prediction/cefi hold legacy-only history.
 
 ## Phase 8 — Governance + codex (P1)
 

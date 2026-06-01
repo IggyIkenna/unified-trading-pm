@@ -12,11 +12,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
-> **2026-06-01 RESOLVED (obsolete — superseded by v2 migration)**: Verified on LDR — affected repos
-> (alerting-service, features-service, …) now ship **`quality-gates-v2.yml`** as their CI workflow and the legacy
-> **`workspace-qg.yml` ghost no longer exists** in-repo. The v1 `workspace-qg` BuildFailed-ghost this issue tracked is
-> gone; v2 is canonical (per `ci_canonical_v2_migration_2026_05_29` + the v1-retirement on 2026-05-30). **No GitHub
-> Support action needed** (operator confirmed). Archive this issue.
+> **2026-06-01 RESOLVED (obsolete — superseded by v2 migration)**: Verified on LDR — affected repos (alerting-service,
+> features-service, …) now ship **`quality-gates-v2.yml`** as their CI workflow and the legacy **`workspace-qg.yml`
+> ghost no longer exists** in-repo. The v1 `workspace-qg` BuildFailed-ghost this issue tracked is gone; v2 is canonical
+> (per `ci_canonical_v2_migration_2026_05_29` + the v1-retirement on 2026-05-30). **No GitHub Support action needed**
+> (operator confirmed). Archive this issue.
 >
 > **Residual (one real finding, P2)**: `ml-service` is MISSING `quality-gates-v2.yml` (alerting + features have it) —
 > ml-service is not running v2 quality-gates in CI. Roll the v2 workflow template to ml-service

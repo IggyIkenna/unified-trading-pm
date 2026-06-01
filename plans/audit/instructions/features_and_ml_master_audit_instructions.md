@@ -173,11 +173,11 @@ features-service (8 feature families: DeFi, CeFi, TradFi, Sports, Predictions, M
       2026-06-01)**: every features-service adapter doing external I/O (DefiLlama / on-chain RPC / vendor REST in
       `onchain/adapters/*`, `delta_one`, etc.) must route a fetch error to `record_failed` (`attempted_failed`), NOT
       swallow it (`except: … return []/None/empty-DataFrame`) into a `record_empty` (`empty_confirmed`) — a swallowed
-      timeout/RPC error mislabeled as honest-empty corrupts the features manifest + the strategy preflight that reads it.
-      Grep:
+      timeout/RPC error mislabeled as honest-empty corrupts the features manifest + the strategy preflight that reads
+      it. Grep:
       `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))" features-service/ --include="*.py" -g '!*test*'`
-      then read each adapter's outer fetch try/except. **Closed per-adapter checklist — check EVERY adapter.** Full spec:
-      `defi_master_audit_instructions.md` item (u)/(aa).
+      then read each adapter's outer fetch try/except. **Closed per-adapter checklist — check EVERY adapter.** Full
+      spec: `defi_master_audit_instructions.md` item (u)/(aa).
 
 ### Batch vs Live Parity
 

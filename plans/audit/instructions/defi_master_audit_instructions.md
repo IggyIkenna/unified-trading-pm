@@ -27,7 +27,7 @@ doc:
 
 | Dimension                                                              | What it checks                                                                                                                                                                              | Section                                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Code ↔ codex correctness**                                           | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                   | [Checklist](#checklist) items (a)–(n)                                                                   |
+| **Code ↔ codex correctness**                                          | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                  | [Checklist](#checklist) items (a)–(n)                                                                   |
 | **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(z) |
 
 ### Archetypes / strategies in scope (operator's words → codebase archetype)
@@ -164,7 +164,7 @@ grep code truth, compare to the doc, classify each as `aligned` / `codex-stale` 
 > **row-level `source` column** (NOT a path key), resolved downstream via `select_primary_available_source()`.
 > **Provenance is UNIVERSAL** (operator 2026-06-01): every DeFi cell stamps its `source` (`onchain_subgraph` etc.) — not
 > just the 2 multi-source cells — for swap-resilience. The multi-source cells (`oracle_prices`, `native_staking_rates`)
-> *additionally* need resolution.
+> _additionally_ need resolution.
 >
 > **Current state (audit 2026-06-01, RED): DeFi writes `source=""` with no gate and no read-time reconciliation.**
 > `DefiManifestRecorder.record_captured()` routes through the legacy `ManifestWriter.add()` path, which has no `source`
@@ -174,15 +174,16 @@ grep code truth, compare to the doc, classify each as `aligned` / `codex-stale` 
 - [ ] (n1) **DeFi writers carry `source` on EVERY cell**: `DefiManifestRecorder.record_captured()` accepts + forwards
       `source` via `ManifestWriter.record_captured()` (not the legacy `add()`); every DeFi handler passes `source` from
       the `SOURCE_PRIORITY` closed set. `market-tick-data-service/.../cli/handlers/_defi_manifest.py` + every
-      `*_handler.py`. Read ACTUAL prod rows — **RED on any blank `source`** (all defi cells, not only multi-source ones).
+      `*_handler.py`. Read ACTUAL prod rows — **RED on any blank `source`** (all defi cells, not only multi-source
+      ones).
 - [ ] (n2) **Per-row source on multi-provider handlers**: oracle (`pyth_hermes`/`chainlink`) and native-staking
       (`solana_rpc`/`helius_rpc`) handlers already resolve per-row `pipeline_mode` at the callsite — stamp the matching
       `source` on each row in the same place. APR/rate handlers stamp the actual provider used (`defillama` vs
       `onchain_subgraph` vs `solana_rpc`).
 - [ ] (n3) **`source` is a column, not a path key**: no `source=`/`data_source=` hive segment in DeFi GCS paths — all
       providers co-mingle on the dedicated-bucket layout; disambiguate by the column.
-- [ ] (n4) **Read-time reconciliation wired**: 2-source fixture (e.g. Pyth + Chainlink for the same feed+ts, or DefiLlama
-      + on-chain APR for the same protocol+day) → consumer emits exactly ONE resolved row via
+- [ ] (n4) **Read-time reconciliation wired**: 2-source fixture (e.g. Pyth + Chainlink for the same feed+ts, or
+      DefiLlama + on-chain APR for the same protocol+day) → consumer emits exactly ONE resolved row via
       `select_primary_available_source()`; divergence surfaced via `detect_dual_source_conflicts()`
       (`VALUE_DIVERGENCE`/`DUAL_SOURCE_DUPLICATE`), never silent last-write-wins. Cover features-onchain consumers.
 
@@ -359,15 +360,15 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       the hyphen rows; **(2) legacy semantic alias** (`staking_yields` rows that are really `lst_rates`); **(3) legacy
       `VENUE-CHAIN`-embedded venue strings** (`UNISWAPV3-ETHEREUM`) that should be flat `venue` + a populated `chain`
       column. Any alias/variant in **written rows** = an un-migrated-SSOT finding → **rename/normalise migration** (the
-      data exists; this is cleanup, not download). Per-corpus expression of code items (j)/(l)/(n) above.
-      **(4) INDEX-venue ≠ OBJECT-venue ≠ UAC-canonical (codified 2026-06-01)** — the manifest INDEX may carry a venue
-      string that differs from the venue in the actual GCS object paths AND from UAC `ALL_DEFI_VENUES`. 2026-06-01:
-      index `UNISWAPV3`/`AERODROMEV3`/`PANCAKESWAPV3`/`SUSHISWAPV3`/`CAMELOTV3`/`TRADER_JOEV2`/`VELODROMEV2` vs objects +
-      UAC `UNISWAP_V3`/`AERODROME_V3`/… (underscore before the version). This silently breaks any index↔object join (a
-      coverage-vs-objects walk falsely reports 74% "phantom"). **Check**: `set(index.venue) == set(object-path venue) ==
-      flat(UAC ALL_DEFI_VENUES)` per bucket. **Fix = MIGRATE the index venue values to the UAC/object canonical — do NOT
-      normalise venue names in read-path code** (a runtime band-aid causes downstream issues; the data must be canonical
-      at rest). Same applies to chain strings.
+      data exists; this is cleanup, not download). Per-corpus expression of code items (j)/(l)/(n) above. **(4)
+      INDEX-venue ≠ OBJECT-venue ≠ UAC-canonical (codified 2026-06-01)** — the manifest INDEX may carry a venue string
+      that differs from the venue in the actual GCS object paths AND from UAC `ALL_DEFI_VENUES`. 2026-06-01: index
+      `UNISWAPV3`/`AERODROMEV3`/`PANCAKESWAPV3`/`SUSHISWAPV3`/`CAMELOTV3`/`TRADER_JOEV2`/`VELODROMEV2` vs objects + UAC
+      `UNISWAP_V3`/`AERODROME_V3`/… (underscore before the version). This silently breaks any index↔object join (a
+      coverage-vs-objects walk falsely reports 74% "phantom"). **Check**:
+      `set(index.venue) == set(object-path venue) ==     flat(UAC ALL_DEFI_VENUES)` per bucket. **Fix = MIGRATE the
+      index venue values to the UAC/object canonical — do NOT normalise venue names in read-path code** (a runtime
+      band-aid causes downstream issues; the data must be canonical at rest). Same applies to chain strings.
 
 - [ ] (t) **Required-history window actually covered (timeframe audit)**: for each strategy's cells, read min/max
       `available_at` from the manifest and confirm the **continuous** window meets the strategy's lookback need (Step 1
@@ -491,23 +492,22 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       `plans/active/defi_manifest_canonicalisation_2026_06_01.md`.
 
 - [ ] (aa) **Fetch-failure must be `attempted_failed`, NOT `empty_confirmed` — per-adapter swallow audit (codified
-      2026-06-01, operator)**. Applies to **EVERY adapter/handler that does external I/O in instruments-service, MTDS, and
-      features-service** (RPC reads, REST/HTTP fetches, subgraph queries, vendor SDKs). The bug pattern: a fetch helper
-      does `except Exception: … return []` (or `return None` / empty DataFrame), **swallowing** the error, so the caller
-      sees "zero rows + no error" and records `record_empty(SOURCE_RETURNED_ZERO)` = `empty_confirmed` — a **silent lie**
-      that the data is genuinely empty when the fetch actually **failed** (timeout / DNS / RPC / auth). A transient
-      network failure then pollutes the manifest as honest-empty, corrupting coverage + downstream preflight.
-      - **Find every site**: `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))"
-        instruments-service/ market-tick-data-service/ features-service/ --include="*.py" -g '!*test*'` — plus read each
-        adapter's outermost fetch try/except.
-      - **For each**: confirm the failure path reaches `record_failed` (`attempted_failed`), not `record_empty`. A
-        swallow that returns empty → caller's `error` var stays None → `record_empty` is the bug. Fix = **re-raise** (or
-        return a typed failure sentinel) so the caller's existing `record_failed` fires. **Only a genuine source-zero
-        with no exception may be `empty_confirmed`.**
-      - 2026-06-01 instances found + fixed (mtds): `lst_rates_handler` Solana fetch (L697), `oracle_prices_handler` Pyth
-        L820/L948 → now re-raise. **Still open**: `lending_indices_handler` Aave RPC-fallback L989 (nested), + sweep
-        instruments-service + features-service. **Every adapter must be checked** — this is a closed per-adapter checklist,
-        not a spot-check. Composes with the `record_empty` honest-absence rules + UAC `classify_venue_error()`.
+      2026-06-01, operator)**. Applies to **EVERY adapter/handler that does external I/O in instruments-service, MTDS,
+      and features-service** (RPC reads, REST/HTTP fetches, subgraph queries, vendor SDKs). The bug pattern: a fetch
+      helper does `except Exception: … return []` (or `return None` / empty DataFrame), **swallowing** the error, so the
+      caller sees "zero rows + no error" and records `record_empty(SOURCE_RETURNED_ZERO)` = `empty_confirmed` — a
+      **silent lie** that the data is genuinely empty when the fetch actually **failed** (timeout / DNS / RPC / auth). A
+      transient network failure then pollutes the manifest as honest-empty, corrupting coverage + downstream
+      preflight. - **Find every site**:
+      `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))"       instruments-service/ market-tick-data-service/ features-service/ --include="*.py" -g '!*test*'`
+      — plus read each adapter's outermost fetch try/except. - **For each**: confirm the failure path reaches
+      `record_failed` (`attempted_failed`), not `record_empty`. A swallow that returns empty → caller's `error` var
+      stays None → `record_empty` is the bug. Fix = **re-raise** (or return a typed failure sentinel) so the caller's
+      existing `record_failed` fires. **Only a genuine source-zero with no exception may be `empty_confirmed`.** -
+      2026-06-01 instances found + fixed (mtds): `lst_rates_handler` Solana fetch (L697), `oracle_prices_handler` Pyth
+      L820/L948 → now re-raise. **Still open**: `lending_indices_handler` Aave RPC-fallback L989 (nested), + sweep
+      instruments-service + features-service. **Every adapter must be checked** — this is a closed per-adapter
+      checklist, not a spot-check. Composes with the `record_empty` honest-absence rules + UAC `classify_venue_error()`.
 
 ### Step 3 — Output: classify every gap (cleanup vs download), then backlog it
 
@@ -593,4 +593,4 @@ Result file at `plans/audit/results/defi_master_audit_YYYY_MM_DD.md` must contai
 | Date       | Result file                                                                                                       | Status                                                                                                                                                                          |
 | ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-06-01 | [`results/defi_master_audit_2026_06_01.md`](../results/defi_master_audit_2026_06_01.md)                           | **AMBER** — strategy data-coverage (o–v): data EXISTS 79–96% in dedicated buckets; real issues are wrong-form (phantom grid + alias dupes + v4–v8 schema). Genesis of Step 1.5. |
-| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n)                                                                                                                                            |
+| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n)                                                                                                                                           |

@@ -17,16 +17,18 @@ locked_since: 2026-06-01
 codex_ssots:
   - codex/04-architecture/agent-orchestrator-overview.md
   - codex/12-agent-workflow/orchestrator-multi-vm-topology.md
-migrated_from: "orchestrator_master P2 deferred backlog (multi_backend_fleet_connectivity_2026_05_22) — operator go-ahead 2026-06-01"
+migrated_from:
+  "orchestrator_master P2 deferred backlog (multi_backend_fleet_connectivity_2026_05_22) — operator go-ahead 2026-06-01"
 ---
 
 ## Why this exists
 
 Operator gave the go-ahead 2026-06-01 to start the fleet-wide auth migration deferred from
 `multi_backend_fleet_connectivity_2026_05_22`. Today the central↔worker proxy token auth is **HS256 with a single
-fleet-shared secret** (`ORCHESTRATOR_INTERNAL_SECRET`, distributed via `gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret`).
-The shared-secret model means **every worker VM holds the signing key** — a single compromised VM can mint valid
-internal tokens for the whole fleet. The Phase-4 connectivity work left an explicit seam for asymmetric auth.
+fleet-shared secret** (`ORCHESTRATOR_INTERNAL_SECRET`, distributed via
+`gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret`). The shared-secret model means **every
+worker VM holds the signing key** — a single compromised VM can mint valid internal tokens for the whole fleet. The
+Phase-4 connectivity work left an explicit seam for asymmetric auth.
 
 Target: **RS256/ES256** — the central API VM holds the PRIVATE key (signs internal proxy tokens); worker VMs hold only
 the PUBLIC key (verify, cannot mint). The operator-JWT secret (`ORCHESTRATOR_JWT_SECRET`, central-only) is unaffected.
@@ -43,6 +45,7 @@ the PUBLIC key (verify, cannot mint). The operator-JWT secret (`ORCHESTRATOR_JWT
 ## Phases
 
 ### Phase 1 — Design + key provisioning ✅ DONE 2026-06-01
+
 - [x] ✅ [DESIGN] P2. **Chose ES256** (P-256 — smaller/faster than RS256; PyJWT+cryptography support it). Key channel:
       PUBLIC key in fleet-readable GCS; PRIVATE key central-only via a local mode-600 FILE (NOT the worker-readable
       bucket; multi-line PEM doesn't fit systemd `Environment=`). DR copy of the private key in GCP Secret Manager.
@@ -53,15 +56,18 @@ the PUBLIC key (verify, cannot mint). The operator-JWT secret (`ORCHESTRATOR_JWT
       future hardening — local-file private key is the v1.)
 
 ### Phase 2 — Code: dual-accept verify + ES256 sign ✅ DONE 2026-06-01
+
 - [x] ✅ [CODE] P2. `server/auth.py`: ES256/RS256 signing (central private key) + DUAL-ACCEPT verify (public-key
       asymmetric pass restricted to ES256/RS256 — closes alg-confusion — THEN legacy HS256). Operator JWT untouched
-      (separate `INTERNAL_ALG`). Env: `ORCHESTRATOR_INTERNAL_ALG` + `ORCHESTRATOR_INTERNAL_{PRIVATE,PUBLIC}_KEY[_FILE|_GCS]`.
-      Default HS256 → zero behavior change until configured. 7 unit tests (sign/verify ES256, dual-accept legacy HS256,
-      alg-confusion guard, FILE-load). agent-orchestrator@3538894 + @4f2c65f (LDR). ruff + basedpyright clean.
+      (separate `INTERNAL_ALG`). Env: `ORCHESTRATOR_INTERNAL_ALG` +
+      `ORCHESTRATOR_INTERNAL_{PRIVATE,PUBLIC}_KEY[_FILE|_GCS]`. Default HS256 → zero behavior change until configured. 7
+      unit tests (sign/verify ES256, dual-accept legacy HS256, alg-confusion guard, FILE-load).
+      agent-orchestrator@3538894 + @4f2c65f (LDR). ruff + basedpyright clean.
 
 ### Phase 3 — Rollout (canary-first) ✅ DONE 2026-06-01
-- [x] ✅ [SCRIPT] P2. **Pass A** — deployed @4f2c65f + `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS` systemd drop-in to **all 11
-      VMs** (dual-accept-ready: workers verify HS256+ES256, central still HS256 → zero behavior change). **Pass B** —
+
+- [x] ✅ [SCRIPT] P2. **Pass A** — deployed @4f2c65f + `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS` systemd drop-in to **all
+      11 VMs** (dual-accept-ready: workers verify HS256+ES256, central still HS256 → zero behavior change). **Pass B** —
       flipped CENTRAL (api-host) to `INTERNAL_ALG=ES256` + private-key FILE + restart. **E2E verified**: central signs
       ES256 (validated in-process), and a worker (vm-cefi 172.31.11.51) returned **HTTP 200** for a central-minted ES256
       internal token vs **401** with no token — i.e. workers verify the central's ES256 tokens via the public key over
@@ -70,14 +76,17 @@ the PUBLIC key (verify, cannot mint). The operator-JWT secret (`ORCHESTRATOR_JWT
       auth issue, unrelated to this migration (separate finding).
 
 ### Phase 4 — Retire HS256 (PENDING — 48h soak)
+
 - [ ] [CODE] P2. After ≥48h of all-ES256 traffic with zero HS256-fallback hits (log-confirmed), drop the HS256 accept
       path + delete the shared `internal-secret` object. Update codex. Collision group: `ao_asym_auth_code`. Est 0.2
       AI-day. **Soak started 2026-06-01 ~14:00Z.**
 
 ## Closing condition
+
 All proxy auth is RS256/ES256; no worker holds a signing key; HS256 shared-secret path removed; codex two-secret-model
 doc updated; ≥48h clean RS256 traffic.
 
 ## Composes with
+
 `codex/04-architecture/agent-orchestrator-overview.md` § "two-secret model" + the Phase-4 connectivity seam in
 `server.py::proxy_to_vm`.

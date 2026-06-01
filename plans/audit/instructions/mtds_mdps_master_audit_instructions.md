@@ -93,19 +93,20 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
       downstream consumer. Grep:
       `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))" market-tick-data-service/ --include="*.py" -g '!*test*'`
       then read each adapter's outer fetch try/except. **Closed per-adapter checklist — check EVERY adapter.** Fix =
-      re-raise / typed failure sentinel so the caller's `record_failed` fires. 2026-06-01: fixed `lst_rates_handler` L697
-      + `oracle_prices_handler` L820/L948; OPEN `lending_indices_handler` L989. Full spec: `defi_master_audit_instructions.md`
-      item (aa).
+      re-raise / typed failure sentinel so the caller's `record_failed` fires. 2026-06-01: fixed `lst_rates_handler`
+      L697 + `oracle_prices_handler` L820/L948; OPEN `lending_indices_handler` L989. Full spec:
+      `defi_master_audit_instructions.md` item (aa).
 
 - [ ] (j) **Source provenance stamped at write time — UNIVERSAL (codified 2026-06-01, operator)**: **every** MTDS
-      adapter/handler MUST pass a non-blank `source=` (a closed-set string from `SOURCE_PRIORITY`) to `record_captured` —
-      on every cell, all asset groups, **even single-source ones** (operator: "I may find an alternative for Tardis, so
-      it's the same issue" — stamp now so a future source swap is distinguishable). NOT gated on cardinality. Today only
-      `category=="tradfi"` is gated; cefi (`tardis`)/defi/sports/prediction write `source=""`, and DeFi handlers route via
-      `DefiManifestRecorder` → legacy `ManifestWriter.add()` which drops `source` entirely (defi multi-source cells
-      additionally collapse last-write-wins). Verify by reading ACTUAL prod rows — **RED on any blank `source`**. Grep
-      callsites: `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg "source="`. SSOT:
-      `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home: `manifest_master` item (i).
+      adapter/handler MUST pass a non-blank `source=` (a closed-set string from `SOURCE_PRIORITY`) to `record_captured`
+      — on every cell, all asset groups, **even single-source ones** (operator: "I may find an alternative for Tardis,
+      so it's the same issue" — stamp now so a future source swap is distinguishable). NOT gated on cardinality. Today
+      only `category=="tradfi"` is gated; cefi (`tardis`)/defi/sports/prediction write `source=""`, and DeFi handlers
+      route via `DefiManifestRecorder` → legacy `ManifestWriter.add()` which drops `source` entirely (defi multi-source
+      cells additionally collapse last-write-wins). Verify by reading ACTUAL prod rows — **RED on any blank `source`**.
+      Grep callsites: `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg "source="`. SSOT:
+      `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home: `manifest_master` item
+      (i).
 
 ### Batch vs Live Parity
 

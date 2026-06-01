@@ -64,8 +64,8 @@ Key invariants: GCS paths always from `candidate_parquet_paths()`; date coverage
 > **Sports-specific divergence to fix (audit 2026-06-01)**: sports currently encodes the source in the **GCS PATH**, not
 > a column — legacy `day=…/asset_group=sports/data_source=ODDS_API/` and newer
 > `day=…/pipeline_mode=batch_api_football/asset_group=sports/venue=…/` (see item (f)). This contradicts the
-> operator-confirmed column model (2026-06-01: `source` is a column, better for batch=live symmetry). Sports must migrate
-> source-as-path → source-as-column to match the other asset groups.
+> operator-confirmed column model (2026-06-01: `source` is a column, better for batch=live symmetry). Sports must
+> migrate source-as-path → source-as-column to match the other asset groups.
 
 - [ ] (h) **Source recorded per row, not per path**: sports writers pass `source=` to `record_captured`; the `source`
       column is populated on sports parquet rows. RED if source lives only in the `data_source=`/`pipeline_mode=` path

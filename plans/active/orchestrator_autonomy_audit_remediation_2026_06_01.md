@@ -51,24 +51,24 @@ codex overview documents this as a "Known gap (carried as deferred 2026-05-28)" 
 fleet now self-healing 24/7 on AWS, the durability gap has real teeth (autospawn + watchdog restart workers; a host
 reboot still wipes dispatch/backlog state).
 
-- [x] ✅ [CODE] P1. Add an S3 snapshot path to `server/gcs_sync.py` (or a sibling `s3_sync.py` sharing the `SnapshotLoop`
-      interface) gated on `ORCHESTRATOR_S3_BUCKET`. Mirror the GCS cadence (30-min auto + shutdown). Use the workspace
-      cloud-interface S3 helpers, not raw boto subprocess. Unit-test the upload path with `@mock_aws`. QG green +
-      quickmerge. Collision group: `ao_s3_snapshot_code`. Estimate: 0.5 AI-day.
-      ✅ DONE 2026-06-01 — agent-orchestrator@57dc8c2 (LDR). Added `upload_state_to_s3` + `backup_sqlite_to_s3` (boto3
-      client, not subprocess; gated on `ORCHESTRATOR_S3_BUCKET`; never-raise) wired into `snapshot_session()` +
-      `SnapshotLoop` backup tick alongside GCS. + `boto3` dep + 8 `@mock_aws` tests (all pass). ruff + basedpyright 0
-      errors. NB: 6 unrelated pre-existing test failures (slack/worker_liveness modules) + a `pexpect` venv gap observed
-      in this worktree — neither touches `gcs_sync.py`; flagged for the env/test-health owner, not this commit.
-- [~] 🟡 [SCRIPT] P1. Provision `s3://uts-orchestrator-state-427895769566/` + set `ORCHESTRATOR_S3_BUCKET` systemd env on
-      the 11 AWS VMs via SSM drop-in. Restart orchestrator; confirm a snapshot object lands within one cadence window.
-      Collision group: none. Estimate: 0.2 AI-day. 🟡 PARTIAL 2026-06-01 (slot-1, AWS admin `admin_od`):
-      **bucket created** `uts-orchestrator-state-427895769566` (ap-northeast-1, versioning on) + `enable_s3_snapshot.sh`
-      drop-in script shipped. **Env rollout pending** — canary-first per workspace rollout discipline; activation needs
-      an orchestrator restart per VM (the 6 behind=0 VMs already carry the @57dc8c2 code). End-to-end snapshot
-      verification additionally needs an authed `/api/snapshot` trigger (the fleet `/api/snapshot` is NOT
-      ALLOW_ANONYMOUS — returns "missing bearer token"). To roll: run `enable_s3_snapshot.sh` per VM via SSM, canary
-      vm-cefi first (a fleet wrapper can mirror `run_fleet_enable_watchdog.sh`), when ready to restart orchestrators.
+- [x] ✅ [CODE] P1. Add an S3 snapshot path to `server/gcs_sync.py` (or a sibling `s3_sync.py` sharing the
+      `SnapshotLoop` interface) gated on `ORCHESTRATOR_S3_BUCKET`. Mirror the GCS cadence (30-min auto + shutdown). Use
+      the workspace cloud-interface S3 helpers, not raw boto subprocess. Unit-test the upload path with `@mock_aws`. QG
+      green + quickmerge. Collision group: `ao_s3_snapshot_code`. Estimate: 0.5 AI-day. ✅ DONE 2026-06-01 —
+      agent-orchestrator@57dc8c2 (LDR). Added `upload_state_to_s3` + `backup_sqlite_to_s3` (boto3 client, not
+      subprocess; gated on `ORCHESTRATOR_S3_BUCKET`; never-raise) wired into `snapshot_session()` + `SnapshotLoop`
+      backup tick alongside GCS. + `boto3` dep + 8 `@mock_aws` tests (all pass). ruff + basedpyright 0 errors. NB: 6
+      unrelated pre-existing test failures (slack/worker_liveness modules) + a `pexpect` venv gap observed in this
+      worktree — neither touches `gcs_sync.py`; flagged for the env/test-health owner, not this commit.
+- [~] 🟡 [SCRIPT] P1. Provision `s3://uts-orchestrator-state-427895769566/` + set `ORCHESTRATOR_S3_BUCKET` systemd env
+  on the 11 AWS VMs via SSM drop-in. Restart orchestrator; confirm a snapshot object lands within one cadence window.
+  Collision group: none. Estimate: 0.2 AI-day. 🟡 PARTIAL 2026-06-01 (slot-1, AWS admin `admin_od`): **bucket created**
+  `uts-orchestrator-state-427895769566` (ap-northeast-1, versioning on) + `enable_s3_snapshot.sh` drop-in script
+  shipped. **Env rollout pending** — canary-first per workspace rollout discipline; activation needs an orchestrator
+  restart per VM (the 6 behind=0 VMs already carry the @57dc8c2 code). End-to-end snapshot verification additionally
+  needs an authed `/api/snapshot` trigger (the fleet `/api/snapshot` is NOT ALLOW_ANONYMOUS — returns "missing bearer
+  token"). To roll: run `enable_s3_snapshot.sh` per VM via SSM, canary vm-cefi first (a fleet wrapper can mirror
+  `run_fleet_enable_watchdog.sh`), when ready to restart orchestrators.
 - [x] ✅ [DOCS] P2. Update the `codex/04-architecture/agent-orchestrator-overview.md` "Known gap" callout — flip it from
       "deferred future work" to "shipped — AWS↔S3 snapshot live" with the bucket name + env var. Collision group: none.
       Estimate: 0.05 AI-day. ✅ DONE 2026-06-01 — overview "Secrets + buckets" state-snapshot row + the callout now read
@@ -90,13 +90,13 @@ LDR" and "loop actually runs 24/7".
       VM ⚠️. `bash -n` clean. Operator runs it (needs SSM creds) — see next item.
 - [x] ✅ [SCRIPT] P1. Run the script fleet-wide; for any VM behind LDR HEAD or missing a flag, pm-pull + enable +
       restart. Capture the before/after table in this plan. Wire the script as the live tool behind audit checks
-      m1b/m2c/m3b/m3c so future audits can run it in one shot. Collision group: none. Estimate: 0.15 AI-day.
-      ✅ RAN 2026-06-01T11:13Z (slot-1, AWS admin). Live result — **all four autonomy flags live (flags=4/4) on 10/11
-      VMs** → m1b/m2c/m3b/m3c GREEN (corrects the audit's m2c-RED assumption; the watchdog IS enabled fleet-wide, the
-      empty rollout-table was unfilled bookkeeping not un-rolled flags). Deploy-currency: 6 VMs at HEAD (behind=0:
-      vm-cefi, vm-defi, vm-sports, vm-tradfi, vm-trading-core, vm-cross-cutting); **3 behind** (vm-orchestrator=6,
-      vm-operator-ops=5, vm-prediction=6) — these need pm-pull+restart to load the autonomy HEAD; **vm-ml = SSM-degraded**
-      (see Findings). api-host ver=NA (central health is on :8765 not :8026 — known, not an outage).
+      m1b/m2c/m3b/m3c so future audits can run it in one shot. Collision group: none. Estimate: 0.15 AI-day. ✅ RAN
+      2026-06-01T11:13Z (slot-1, AWS admin). Live result — **all four autonomy flags live (flags=4/4) on 10/11 VMs** →
+      m1b/m2c/m3b/m3c GREEN (corrects the audit's m2c-RED assumption; the watchdog IS enabled fleet-wide, the empty
+      rollout-table was unfilled bookkeeping not un-rolled flags). Deploy-currency: 6 VMs at HEAD (behind=0: vm-cefi,
+      vm-defi, vm-sports, vm-tradfi, vm-trading-core, vm-cross-cutting); **3 behind** (vm-orchestrator=6,
+      vm-operator-ops=5, vm-prediction=6) — these need pm-pull+restart to load the autonomy HEAD; **vm-ml =
+      SSM-degraded** (see Findings). api-host ver=NA (central health is on :8765 not :8026 — known, not an outage).
 
 ## Findings (from the live 2026-06-01 run)
 
@@ -119,10 +119,10 @@ LDR" and "loop actually runs 24/7".
 context-full + cap-hit alerts). The audit E1 expected-count (10/8) and the codex
 `agent-orchestrator-slack-notifications.md` table both predate these.
 
-- [x] ✅ [DOCS] P2. Refresh the codex `agent-orchestrator-slack-notifications.md` inventory table to the current 13 slack /
-      9 telegram funcs (enumerate the new func names). Update the audit instructions E1 + j3 expected-counts to match.
-      Collision group: none. Estimate: 0.1 AI-day. ✅ DONE 2026-06-01 — codex table rebuilt with an S/T column (marks
-      Slack vs Telegram export per func) + 4 new rows (`notify_unpushed_plans`, `notify_autospawn_flap`,
+- [x] ✅ [DOCS] P2. Refresh the codex `agent-orchestrator-slack-notifications.md` inventory table to the current 13
+      slack / 9 telegram funcs (enumerate the new func names). Update the audit instructions E1 + j3 expected-counts to
+      match. Collision group: none. Estimate: 0.1 AI-day. ✅ DONE 2026-06-01 — codex table rebuilt with an S/T column
+      (marks Slack vs Telegram export per func) + 4 new rows (`notify_unpushed_plans`, `notify_autospawn_flap`,
       `notify_watchdog_kill`, `notify_sync`) + corrected the false "both expose the same set" intro. Audit e1 (13/9 +
       slack-only/telegram-only lists) + j3 (S/T-matrix match) updated.
 

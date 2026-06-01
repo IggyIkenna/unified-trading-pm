@@ -63,13 +63,14 @@
 
 **Phase D status — LIVE 2026-06-01**: `terraform apply` targeted to the consolidator modules
 (`module.manifest_consolidator_job_extended` + `module.manifest_consolidator_schedule_extended` +
-`aws_iam_policy.manifest_consolidator`) → `64 added, 1 changed, 0 destroyed`. Targeted deliberately: the full-module plan
-showed `89 add / 23 change / 17 destroy`, but the 17 destroys / 23 changes were unrelated drift in other AWS resources;
-targeting kept blast radius to the 16 Group B consolidator buckets only (correct during the legacy-bucket migration
-freeze). Verified: 26 EventBridge rules, all ENABLED; 26 ACTIVE Batch job definitions. Prereq: `api_host_auto_reboot.tf`
-duplicate `required_providers` block fixed (deployment-service@6a4194f) — it had broken `terraform init` for the whole
-AWS dir. **Note**: run terraform with the native arm64 binary (`/opt/homebrew/bin/terraform`) on Apple Silicon — the x86
-`/usr/local/bin/terraform` under Rosetta hangs on provider plugin start.
+`aws_iam_policy.manifest_consolidator`) → `64 added, 1 changed, 0 destroyed`. Targeted deliberately: the full-module
+plan showed `89 add / 23 change / 17 destroy`, but the 17 destroys / 23 changes were unrelated drift in other AWS
+resources; targeting kept blast radius to the 16 Group B consolidator buckets only (correct during the legacy-bucket
+migration freeze). Verified: 26 EventBridge rules, all ENABLED; 26 ACTIVE Batch job definitions. Prereq:
+`api_host_auto_reboot.tf` duplicate `required_providers` block fixed (deployment-service@6a4194f) — it had broken
+`terraform init` for the whole AWS dir. **Note**: run terraform with the native arm64 binary
+(`/opt/homebrew/bin/terraform`) on Apple Silicon — the x86 `/usr/local/bin/terraform` under Rosetta hangs on provider
+plugin start.
 
 **AWS verification**:
 

@@ -18,8 +18,9 @@ First run of the **CI/CD pipeline contract** section added to the `infrastructur
 
 The branch-protection findings below (i1/i2/i4: "16/23 main, 4 on v1 staging, enforce_admins 6/23") were derived from
 **classic** branch protection (`/branches/.../protection`). **That is the wrong lens.** The workspace's canonical QG
-gate is **rulesets** (`require-quality-gates`), verified by `scripts/repo-management/verify_branch_protection_check_names.py`
-(exit 0 = consistent). Re-audited via the canonical verifier:
+gate is **rulesets** (`require-quality-gates`), verified by
+`scripts/repo-management/verify_branch_protection_check_names.py` (exit 0 = consistent). Re-audited via the canonical
+verifier:
 
 - **Rulesets are internally CONSISTENT** (each repo requires exactly the check its workflow emits — no name drift).
 - **9/17 repos require `quality-gates-v2`**: alerting, deployment-service, execution, instruments, market-tick-data,

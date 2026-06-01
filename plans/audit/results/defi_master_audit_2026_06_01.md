@@ -201,7 +201,7 @@ Coverage cells that actually gate go-live (audit these specifically):
 
 | Item                                   | Verdict         | Evidence                                                                                                                                    |
 | -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| (o) IS universe present                | 🟠 NOT VERIFIED | dedicated buckets enumerate real venues (LIDO/AAVE_V3/CHAINLINK/GMX…); IS↔manifest reconciliation still owed.                               |
+| (o) IS universe present                | 🟠 NOT VERIFIED | dedicated buckets enumerate real venues (LIDO/AAVE_V3/CHAINLINK/GMX…); IS↔manifest reconciliation still owed.                              |
 | (p) Expected-coverage dump             | 🟠 STALE        | a2 dump 12 days old, END_DATE hardcoded 2026-05-20 — re-run to today.                                                                       |
 | (q) Divergence = 0 (all buckets)       | 🟠 AMBER        | Across dedicated buckets, 79–96% captured. Phantom grid (C1) inflates `market-data-tick-defi` divergence falsely.                           |
 | (r) v9 per-data_type from data         | 🔴 RED          | v4–v8 spread, 0% v9 (C4) — migration of existing data.                                                                                      |

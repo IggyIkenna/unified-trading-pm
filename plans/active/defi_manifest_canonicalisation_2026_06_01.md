@@ -19,9 +19,9 @@ source:
 # MASTER: Canonical-SSOT for Data + Manifest (cross-plan coordinator) + DeFi Manifest Canonicalisation
 
 > **This file plays two roles** (operator 2026-06-01): (1) the **MASTER coordinator** for the whole "single canonical
-> SSOT — no fallback, no dual" programme (the `## MASTER` section sequences every sub-plan); (2) the **DeFi L3 executor**
-> (the `## A`–`## G` sections ARE the DeFi single-walk). An agent drives the MASTER section + delegates the sub-plans
-> (parallelisable where marked) to sub-agents.
+> SSOT — no fallback, no dual" programme (the `## MASTER` section sequences every sub-plan); (2) the **DeFi L3
+> executor** (the `## A`–`## G` sections ARE the DeFi single-walk). An agent drives the MASTER section + delegates the
+> sub-plans (parallelisable where marked) to sub-agents.
 
 ## MASTER — cross-plan execution order → single canonical SSOT (no fallback, no dual)
 
@@ -33,24 +33,24 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 ### Sub-plan registry (what this master wraps)
 
-| Plan | Role / layer | Status | Parallel? |
-| --- | --- | --- | --- |
-| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | L1 code-fix ✅ · L2 drain+cron-pause · L6 decommission | code shipped; decommission gated | after L3 per-AG |
-| THIS plan §A–G | L1 DeFi writer code · **L3 DeFi single-walk (§C)** · L5 DeFi backfill | C open (C0 RUN-ON-VM) | DeFi-only, serial within DeFi |
-| `data_source_provenance_all_asset_groups_2026_06_01` | L1 write-path `source=` · rides each L3 walk | open (tradfi done) | parallel per-AG (NOT tradfi) |
-| `pipeline_mode_implementation_2026_05_28` | L1 `pipeline_mode` column | ✅ DONE | — |
-| `pipeline_mode_partition_migration_2026_06_01` | L3 RIDER: on-disk `pipeline_mode=` partition | open P2 | **rides each AG's L3 walk** |
-| `tradfi_massive_dual_source_2026_05_28` | tradfi L1 source + L3 walk (source + v8→v9) | mostly ✅ | done — see CONFLICT-2 |
-| `manifest_reader_fail_fast_on_stale_fallback_2026_05_28` | **L4/L7 "no fallback"**: reader fail-fast default + liveness | step-1 ✅; follow-up open | parallel (independent) |
-| `aws_manifest_consolidator_scope_2026_05_21` | L4 AWS canonical consolidator | P1.10 `tofu apply` open (HUMAN) | parallel (AWS infra) |
-| `manifest_consolidator_liveness_health_2026_06_01` | L4 GCP consolidator liveness | (not on this branch) | parallel — CONFLICT-3 |
+| Plan                                                        | Role / layer                                                          | Status                           | Parallel?                     |
+| ----------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------- | ----------------------------- |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | L1 code-fix ✅ · L2 drain+cron-pause · L6 decommission                | code shipped; decommission gated | after L3 per-AG               |
+| THIS plan §A–G                                              | L1 DeFi writer code · **L3 DeFi single-walk (§C)** · L5 DeFi backfill | C open (C0 RUN-ON-VM)            | DeFi-only, serial within DeFi |
+| `data_source_provenance_all_asset_groups_2026_06_01`        | L1 write-path `source=` · rides each L3 walk                          | open (tradfi done)               | parallel per-AG (NOT tradfi)  |
+| `pipeline_mode_implementation_2026_05_28`                   | L1 `pipeline_mode` column                                             | ✅ DONE                          | —                             |
+| `pipeline_mode_partition_migration_2026_06_01`              | L3 RIDER: on-disk `pipeline_mode=` partition                          | open P2                          | **rides each AG's L3 walk**   |
+| `tradfi_massive_dual_source_2026_05_28`                     | tradfi L1 source + L3 walk (source + v8→v9)                           | mostly ✅                        | done — see CONFLICT-2         |
+| `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`    | **L4/L7 "no fallback"**: reader fail-fast default + liveness          | step-1 ✅; follow-up open        | parallel (independent)        |
+| `aws_manifest_consolidator_scope_2026_05_21`                | L4 AWS canonical consolidator                                         | P1.10 `tofu apply` open (HUMAN)  | parallel (AWS infra)          |
+| `manifest_consolidator_liveness_health_2026_06_01`          | L4 GCP consolidator liveness                                          | (not on this branch)             | parallel — CONFLICT-3         |
 
 ### Layered order (gates top-down; asset_groups parallelise within a layer)
 
 - **L0 INFRA UNBLOCK** — `issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01` (pinned-tarball prune). BLOCKS every
   `RUN ON A VM` todo (this plan C0/C6/G1; bucket_ssot Phase 2/4). **First.**
-- **L1 CODE SSOT (write path)** — bucket_ssot Phase 1 ✅ + QG grep-guard + UTL dead-code · this plan §A (A2a/A2b/A4/A5) ·
-  `data_source_provenance` §Phased `source=` threading · `pipeline_mode_implementation` ✅.
+- **L1 CODE SSOT (write path)** — bucket_ssot Phase 1 ✅ + QG grep-guard + UTL dead-code · this plan §A (A2a/A2b/A4/A5)
+  · `data_source_provenance` §Phased `source=` threading · `pipeline_mode_implementation` ✅.
 - **L2 STOP LEGACY-SIDE** — bucket_ssot Phase 3 drain ✅ · Phase 7 pause 10 `*-legacy-cron` + TF removal.
 - **L3 HISTORICAL DATA+MANIFEST CANONICALISATION — THE GATE** (one bundled single-walk per AG; riders =
   `data_source_provenance` source-col + `pipeline_mode_partition` partition + v9):
@@ -79,36 +79,39 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
   `schema_version` read before declaring tradfi decommission-ready.
 - **CONFLICT-3 — duplicate consolidator-liveness ownership.** `manifest_reader_fail_fast` §Follow-up and
   `manifest_consolidator_liveness_health` both define watchdog + alerting + fail-fast-default. ONE owns the watchdog
-  (recommend `manifest_consolidator_liveness_health`); `manifest_reader_fail_fast` keeps only the UTL reader-default flip.
+  (recommend `manifest_consolidator_liveness_health`); `manifest_reader_fail_fast` keeps only the UTL reader-default
+  flip.
 - **CONFLICT-4 — `data_source_provenance` must SKIP tradfi.** tradfi's `source` column already shipped via
   `tradfi_massive`; provenance must not re-walk tradfi. Scope it to cefi/defi/sports/prediction.
 
 ### Parallelisation guidance (for the dispatching agent)
 
 - **Strictly serial-gating**: L0 → (L1,L2) → L3-per-AG → L5-per-AG → L6. L6 (delete) waits for ALL AGs L3-green.
-- **Parallel-safe NOW** (independent of L3 walks): `manifest_reader_fail_fast` follow-up · `aws_manifest_consolidator_scope`
-  P1.10 · `manifest_consolidator_liveness_health` · bucket_ssot QG-guard + UTL dead-code · this plan §A writer fixes ·
-  `data_source_provenance` L1 threading (cefi/defi/sports/pred).
+- **Parallel-safe NOW** (independent of L3 walks): `manifest_reader_fail_fast` follow-up ·
+  `aws_manifest_consolidator_scope` P1.10 · `manifest_consolidator_liveness_health` · bucket_ssot QG-guard + UTL
+  dead-code · this plan §A writer fixes · `data_source_provenance` L1 threading (cefi/defi/sports/pred).
 - **Parallel-per-AG at L3** (one sub-agent per asset_group, each owns its single bundled walk): defi (this plan §C) ·
   prediction (new plan) · cefi (new gap-fill) · tradfi (re-walk per CONFLICT-2). NEVER two walks on one `_index`.
-- **L3 owners (all asset_groups now covered)**: defi=this plan §C · prediction=`prediction_manifest_canonicalisation_2026_06_01` ·
-  cefi=`cefi_manifest_canonicalisation_2026_06_01` · tradfi=`tradfi_massive_dual_source` re-walk (CONFLICT-2) ·
-  sports=verify-only. **L6 decommission** (owner `bucket_name_ssot_legacy_dual_write_remediation` Phase 7) deletes each
-  legacy bucket ONLY after its AG's L3 plan reports C-GREEN (legacy-only CELLS = 0 + canonical v9).
+- **L3 owners (all asset_groups now covered)**: defi=this plan §C ·
+  prediction=`prediction_manifest_canonicalisation_2026_06_01` · cefi=`cefi_manifest_canonicalisation_2026_06_01` ·
+  tradfi=`tradfi_massive_dual_source` re-walk (CONFLICT-2) · sports=verify-only. **L6 decommission** (owner
+  `bucket_name_ssot_legacy_dual_write_remediation` Phase 7) deletes each legacy bucket ONLY after its AG's L3 plan
+  reports C-GREEN (legacy-only CELLS = 0 + canonical v9).
 
-
-> **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (2026-06-01)**:
-> the C0 single-walk on `market-data-tick-defi-prd-…` (`migrate_defi_full_v9_canonical.py`: read+rewrite to
-> `asset_group=defi` + `pipeline_mode=` partition + v9 + `source` + canonical `_V{N}` venue + `available_at`; launcher-wired
-> `launch-canonical-migration-vm.sh defi`) mutates the **same `_index`** that the bucket-remediation plan's `--manifest-only` seed writes
-> legacy→canonical rows into. Single-walk discipline (HARD RULE) forbids two concurrent whole-corpus walks on that
-> `_index`. **Ordering (HARD)**: the bucket plan's DeFi manifest seed runs **BEFORE** this plan's `C0` single-walk —
-> otherwise the seed re-injects un-canonicalised legacy rows (old venue strings, v4–v8, phantom grid) *after* C0 cleans
-> them. As of 2026-06-01 **neither DeFi walk has launched** (bucket "Manifest seed" P0 + this plan's "C0 — RUN ON A VM"
-> P0 both open) — no live race yet; do NOT launch C0 without confirming the bucket DeFi-`_index` seed is not mid-run
-> (and vice-versa). `data_source_provenance_all_asset_groups_2026_06_01.md` `source`-column backfill must ride **this
-> plan's C0 single-walk** — it must NOT open a third walk on the DeFi `_index`. Coordination owner: epic
-> `mtds_mdps_master`. Banner-remove when the DeFi `_index` is seeded (bucket) + canonical (this plan C-GREEN).
+> **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with
+> `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (2026-06-01)**: the C0 single-walk on
+> `market-data-tick-defi-prd-…` (`migrate_defi_full_v9_canonical.py`: read+rewrite to `asset_group=defi` +
+> `pipeline_mode=` partition + v9 + `source` + canonical `_V{N}` venue + `available_at`; launcher-wired
+> `launch-canonical-migration-vm.sh defi`) mutates the **same `_index`** that the bucket-remediation plan's
+> `--manifest-only` seed writes legacy→canonical rows into. Single-walk discipline (HARD RULE) forbids two concurrent
+> whole-corpus walks on that `_index`. **Ordering (HARD)**: the bucket plan's DeFi manifest seed runs **BEFORE** this
+> plan's `C0` single-walk — otherwise the seed re-injects un-canonicalised legacy rows (old venue strings, v4–v8,
+> phantom grid) _after_ C0 cleans them. As of 2026-06-01 **neither DeFi walk has launched** (bucket "Manifest seed" P0 +
+> this plan's "C0 — RUN ON A VM" P0 both open) — no live race yet; do NOT launch C0 without confirming the bucket
+> DeFi-`_index` seed is not mid-run (and vice-versa). `data_source_provenance_all_asset_groups_2026_06_01.md`
+> `source`-column backfill must ride **this plan's C0 single-walk** — it must NOT open a third walk on the DeFi
+> `_index`. Coordination owner: epic `mtds_mdps_master`. Banner-remove when the DeFi `_index` is seeded (bucket) +
+> canonical (this plan C-GREEN).
 
 > **Why this exists**: the 2026-06-01 DeFi coverage audit took many passes because the data is **not in canonical form**
 > — scattered buckets, hyphen/underscore + VENUE-CHAIN + blank-chain duplicates, a phantom grid, a v4–v8 schema spread,
@@ -132,16 +135,16 @@ before cutover).
 
 ### Canonical target form — what "right format" means (every in-scope object + manifest row)
 
-| Dimension | Legacy (now) | Canonical (target) |
-| --- | --- | --- |
-| Bucket env split | `oracle-prices-{project}` (no env) | `oracle-prices-{env}-{project}` (`-prd`/`-test`) — or fold into `market-data-tick-defi-{env}` |
-| Asset-group key | `category=defi` | `asset_group=defi` |
-| Pipeline mode | absent in path | `pipeline_mode=` hive partition (value `batch` or `live`) |
-| Schema version | v4–v8 spread | v9 |
-| data_type name | hyphen / `staking_yields` | underscore canonical (`lst_rates`, `dex_pools`, …) |
-| Venue / chain | `UNISWAPV3-ETHEREUM`, blank chain | flat `venue` + populated `chain` |
-| Empty reason | blank / `SOURCE_RETURNED_ZERO` mislabel | typed (`EXPECTED_PRE_GENESIS_CHAIN`, …) |
-| 4th state | absent | `expected_unattempted` materialised by the run (B0) |
+| Dimension        | Legacy (now)                            | Canonical (target)                                                                            |
+| ---------------- | --------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Bucket env split | `oracle-prices-{project}` (no env)      | `oracle-prices-{env}-{project}` (`-prd`/`-test`) — or fold into `market-data-tick-defi-{env}` |
+| Asset-group key  | `category=defi`                         | `asset_group=defi`                                                                            |
+| Pipeline mode    | absent in path                          | `pipeline_mode=` hive partition (value `batch` or `live`)                                     |
+| Schema version   | v4–v8 spread                            | v9                                                                                            |
+| data_type name   | hyphen / `staking_yields`               | underscore canonical (`lst_rates`, `dex_pools`, …)                                            |
+| Venue / chain    | `UNISWAPV3-ETHEREUM`, blank chain       | flat `venue` + populated `chain`                                                              |
+| Empty reason     | blank / `SOURCE_RETURNED_ZERO` mislabel | typed (`EXPECTED_PRE_GENESIS_CHAIN`, …)                                                       |
+| 4th state        | absent                                  | `expected_unattempted` materialised by the run (B0)                                           |
 
 All of the above land in **one bundled single-walk** per bucket (C2–C5 + C7 + C9 + env-split), then the consolidated
 `_index` + data-status reflect the canonical form, then backfills run into the correct structure.
@@ -200,17 +203,18 @@ What to verify/wire (B0 corrected scope):
 - [x] ✅ [CODE] P0. A1 pre-genesis empty-reason: oracle + evm-defi handlers classify via UAC `get_chain_genesis_date()`
       → `EXPECTED_PRE_GENESIS_CHAIN`. market-tick-data-service@840d85f1.
 - [~] [DATA] P1. A2 pre-venue-launch reason — manifest migration (operator: "captured in UAC if genuinely pre venue +
-      migrated in manifest"). **UAC ALREADY HAS** most launch dates in `DEFI_VENUE_LAUNCH_DATES` keyed `VENUE-CHAIN`
-      (MARINADE-SOLANA 2021-08-02, JITO-SOLANA 2022-08-16, LIDO-ETHEREUM 2020-12-19, ETHERFI/ETHENA, …) — my earlier
-      "None" was a wrong-key lookup (flat `LIDO` vs `LIDO-ETHEREUM`). **APPLIED 2026-06-01**:
-      `plans/audit/results/defi_venue_launch_relabel_migration_2026_06_01.py --apply` relabeled **1,337** lst-rates rows
-      → `EXPECTED_PRE_VENUE_LAUNCH` (ETHENA/ETHERFI/LIDO 353 each + MARINADE 278), UAC-backed + snapshotted.
+  migrated in manifest"). **UAC ALREADY HAS** most launch dates in `DEFI_VENUE_LAUNCH_DATES` keyed `VENUE-CHAIN`
+  (MARINADE-SOLANA 2021-08-02, JITO-SOLANA 2022-08-16, LIDO-ETHEREUM 2020-12-19, ETHERFI/ETHENA, …) — my earlier "None"
+  was a wrong-key lookup (flat `LIDO` vs `LIDO-ETHEREUM`). **APPLIED 2026-06-01**:
+  `plans/audit/results/defi_venue_launch_relabel_migration_2026_06_01.py --apply` relabeled **1,337** lst-rates rows →
+  `EXPECTED_PRE_VENUE_LAUNCH` (ETHENA/ETHERFI/LIDO 353 each + MARINADE 278), UAC-backed + snapshotted.
 - [ ] [CODE] P1. A2a populate UAC `DEFI_VENUE_LAUNCH_DATES` for the venue-chains genuinely missing it (the migration
-      reports them): **perp** `ASTER`, `LIGHTER-ZKSYNC`, `PACIFICA-SOLANA`, `HYPERLIQUID` (clear new venues — add accurate
-      launch dates). **DEX per-chain** (`CURVE-OPTIMISM`, `PANCAKESWAPV3-BSC`, `UNISWAPV3-POLYGON`, `BALANCER-OPTIMISM`,
-      `AAVE_V3-BASE`, `SPARK-ETHEREUM`, …) — **data-quality flag**: their captured rows show a uniform first-captured
-      `2021-01-01` across ALL chains incl. Base (launched 2023), which is impossible → investigate (placeholder/wrong-date
-      captured rows) BEFORE adding launch dates. Do NOT bulk-add ambiguous dates. Then re-run the relabel. parent_epic: manifest_master.
+      reports them): **perp** `ASTER`, `LIGHTER-ZKSYNC`, `PACIFICA-SOLANA`, `HYPERLIQUID` (clear new venues — add
+      accurate launch dates). **DEX per-chain** (`CURVE-OPTIMISM`, `PANCAKESWAPV3-BSC`, `UNISWAPV3-POLYGON`,
+      `BALANCER-OPTIMISM`, `AAVE_V3-BASE`, `SPARK-ETHEREUM`, …) — **data-quality flag**: their captured rows show a
+      uniform first-captured `2021-01-01` across ALL chains incl. Base (launched 2023), which is impossible →
+      investigate (placeholder/wrong-date captured rows) BEFORE adding launch dates. Do NOT bulk-add ambiguous dates.
+      Then re-run the relabel. parent_epic: manifest_master.
 - [ ] [CODE] P1. A2b wire `lst_rates_handler` (L512-535) + `solana_defi_handler` empty branches to emit
       `EXPECTED_PRE_VENUE_LAUNCH` via the `VENUE-CHAIN` launch lookup (perp_funding_handler L344-353 already does it for
       Aster — the pattern). So future writes are correct. parent_epic: mtds_mdps_master.
@@ -226,16 +230,17 @@ What to verify/wire (B0 corrected scope):
 - [x] ✅ [CODE] P0. A6 `expected_unattempted` is ALREADY canonical in UAC (`honest_coverage.py`:
       `EXPECTED_UPSTREAM_EMPTY` + `EXPECTED_OUTSIDE_PROCESSING_SCOPE` reasons; shipped via
       `expected_unattempted_propagation_chain_2026_05_12.md` Phase 0). No new state to add — verified 2026-06-01.
-- [x] ✅ [CODE] P0. A7 **fetch-failure swallow bug — record `attempted_failed` not `empty_confirmed`** (operator 2026-06-01).
-      Systemic: a fetch helper does `except Exception: … return []`, swallowing a timeout/DNS/RPC error → caller sees
-      zero-rows-no-error → `record_empty(SOURCE_RETURNED_ZERO)` = a silent lie the data is genuinely empty.
+- [x] ✅ [CODE] P0. A7 **fetch-failure swallow bug — record `attempted_failed` not `empty_confirmed`** (operator
+      2026-06-01). Systemic: a fetch helper does `except Exception: … return []`, swallowing a timeout/DNS/RPC error →
+      caller sees zero-rows-no-error → `record_empty(SOURCE_RETURNED_ZERO)` = a silent lie the data is genuinely empty.
       **Fixed (mtds@d3d26f56, re-raise → caller `record_failed`)**: `lst_rates_handler` L697, `oracle_prices_handler`
-      L820/L948. **Swept clean**: instruments-service + features-service adapter I/O — **no swallow sites found** (the bug
-      was MTDS-specific). **`lending_indices_handler` L989** (Aave RPC fallback): the handler already routes subgraph
-      errors to `record_failed` (comments L736-741/L838-839 reference a prior fix for this exact class) — the residual
-      `_do_rpc_walk` `return []` is an ambiguous fallback path, NOT a clear bug; flagged for careful tracing under audit
-      item (i), do NOT rush a fix. Per-adapter audit codified in `defi_master`(aa)/`mtds_mdps`(i)/`instruments`(h)/
-      `features_and_ml`(u). 3 mtds fixes need QG green before LDR. parent_epic: mtds_mdps_master.
+      L820/L948. **Swept clean**: instruments-service + features-service adapter I/O — **no swallow sites found** (the
+      bug was MTDS-specific). **`lending_indices_handler` L989** (Aave RPC fallback): the handler already routes
+      subgraph errors to `record_failed` (comments L736-741/L838-839 reference a prior fix for this exact class) — the
+      residual `_do_rpc_walk` `return []` is an ambiguous fallback path, NOT a clear bug; flagged for careful tracing
+      under audit item (i), do NOT rush a fix. Per-adapter audit codified in
+      `defi_master`(aa)/`mtds_mdps`(i)/`instruments`(h)/ `features_and_ml`(u). 3 mtds fixes need QG green before LDR.
+      parent_epic: mtds_mdps_master.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
@@ -264,45 +269,46 @@ What to verify/wire (B0 corrected scope):
 
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
       2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
-      VENUE-CHAIN→flat (C3), data_type canonicalisation (C2), `{NAME}_V{N}` promotion, instrument_type + canonical
+      VENUE-CHAIN→flat (C3), data*type canonicalisation (C2), `{NAME}_V{N}` promotion, instrument_type + canonical
       instrument_id — that step is DONE; the current dedicated-bucket objects are in the flat
       `day=/category=defi/venue={FLAT}/chain=/…` form. The C0/**v9** step is a NEW, separate read+rewrite tool —
       `market-tick-data-service/.../scripts/migrate_defi_full_v9_canonical.py` (**WRITTEN + launcher-wired 2026-06-01**,
-      proper home beside the other `migrate_*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the
-      flat objects to FULL canonical: `category=defi`→`asset_group=defi` + `pipeline_mode={MODE}` partition +
-      schema_version=9 + `source` column (UAC SOURCE_PRIORITY) + canonical `_V{N}` venue (UAC SSOT, complete incl
-      TraderJoe/Velodrome post-C12-UAC) + **`available_at` preserve-or-backfill** (preserve where present; backfill only
-      missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split `{kind}-prd-{project}`
-      bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f VM-cutover sub-todos below.**
-      parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
-  - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802; dry=default/full=--apply;
-        `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day slice (rolls into C0b dry VM).
+      proper home beside the other
+      `migrate*\*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the     flat objects to FULL canonical: `category=defi`→`asset_group=defi`+`pipeline_mode={MODE}`partition +     schema_version=9 +`source`column (UAC SOURCE_PRIORITY) + canonical`\_V{N}` venue (UAC SSOT, complete incl     TraderJoe/Velodrome post-C12-UAC) + **`available_at`preserve-or-backfill** (preserve where present; backfill only     missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split`{kind}-prd-{project}`
+      bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f VM-cutover sub-todos
+      below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
+  - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802;
+        dry=default/full=--apply; `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day
+        slice (rolls into C0b dry VM).
   - [ ] [DATA] P0. C0b — **dry VM** (`launch-canonical-migration-vm.sh defi <start> <end> dry`) → review the planned
-        rewrites in the VM log (sample legacy→canonical paths, venue canonicalisation, v9/source/pipeline_mode/available_at).
+        rewrites in the VM log (sample legacy→canonical paths, venue canonicalisation,
+        v9/source/pipeline_mode/available_at).
   - [ ] [DATA] P0. C0c — **pre-migration drain (HARD RULE)**: stop GCP+AWS fleet (`vm_zombie_watchdog.py` inventory →
         per-prefix SIGTERM → wait STOPPED) + run consolidator + snapshot each in-scope `_index` to
-        `_index/snapshots/pre_migration_2026_06_01.parquet`. Confirm the bucket-remediation DeFi seed is NOT mid-walk first.
+        `_index/snapshots/pre_migration_2026_06_01.parquet`. Confirm the bucket-remediation DeFi seed is NOT mid-walk
+        first.
   - [ ] [DATA] P0. C0d — **full VM** (`… defi … full`) → monitor (STARTED<60s, ≥1 progress/hr, STOPPED at exit, T+10min
         registry+describe RUNNING check). No fire-and-forget.
   - [ ] [DATA] P0. C0e — **consolidator re-run + verify**: rebuild `_index/availability_index.parquet`; assert
         schema_version=9 = 100% of rewritten rows, canonical `_V{N}` venues only (0 glued ghosts), `pipeline_mode=`
         partition present, `source` populated for multi-source cells; produce the per-venue/chain coverage table.
-  - [ ] [DATA] P0. C0f — **delete legacy originals** after C0e verify GREEN (canonical objects confirmed; snapshot retained).
-- [x] ✅ [CODE] P0. C12-UAC **UAC venue SSOT `_V{N}` everywhere FIRST** — `TRADER_JOEV2`/`VELODROMEV2` → `TRADER_JOE_V2`/
-      `VELODROME_V2`. **DONE 2026-06-01**: authoritative `PROTOCOL_CAPABILITIES.venue_prefix` + `ALL_DEFI_VENUES` +
-      `LEGACY_DEFI_VENUE_ALIASES` (legacy glued bare + `-CHAIN` → underscore canonical) + `defi_protocol_registry` +
-      `defi_venue_capabilities` + `chain_env`/`venue_mapping` launch dates + `expected_coverage` docstrings +
-      `_defi_coverage` ghost set (+`TRADER_JOEV2`/`TRADERJOEV2`) + `instrument_validation` + regenerated
-      `ui-reference-data.json`; tests flipped (37 venue + 69 related green). **Write-time consumers** (slug→venue maps
-      that emit the venue string into data/manifest) also fixed so NEW writes are canonical: IS
-      `orchestrator.py`/`factory.py` + MTDS `_instruments_metadata.py`. Reverses DF-17 glued-canonical (operator
-      "TRADER_JOEV2/VELODROMEV2 is wrong"). — uac@6261bea2 + instruments-service@ce85abb1 + mtds@a07cea55.
+  - [ ] [DATA] P0. C0f — **delete legacy originals** after C0e verify GREEN (canonical objects confirmed; snapshot
+        retained).
+- [x] ✅ [CODE] P0. C12-UAC **UAC venue SSOT `_V{N}` everywhere FIRST** — `TRADER_JOEV2`/`VELODROMEV2` →
+      `TRADER_JOE_V2`/ `VELODROME_V2`. **DONE 2026-06-01**: authoritative `PROTOCOL_CAPABILITIES.venue_prefix` +
+      `ALL_DEFI_VENUES` + `LEGACY_DEFI_VENUE_ALIASES` (legacy glued bare + `-CHAIN` → underscore canonical) +
+      `defi_protocol_registry` + `defi_venue_capabilities` + `chain_env`/`venue_mapping` launch dates +
+      `expected_coverage` docstrings + `_defi_coverage` ghost set (+`TRADER_JOEV2`/`TRADERJOEV2`) +
+      `instrument_validation` + regenerated `ui-reference-data.json`; tests flipped (37 venue + 69 related green).
+      **Write-time consumers** (slug→venue maps that emit the venue string into data/manifest) also fixed so NEW writes
+      are canonical: IS `orchestrator.py`/`factory.py` + MTDS `_instruments_metadata.py`. Reverses DF-17 glued-canonical
+      (operator "TRADER_JOEV2/VELODROMEV2 is wrong"). — uac@6261bea2 + instruments-service@ce85abb1 + mtds@a07cea55.
       parent_epic: manifest_master.
 - [x] ✅ [CODE] P0. C12-WIRE **wire `migrate_defi_full_v9_canonical` into `launch-canonical-migration-vm.sh defi`**.
       **DONE 2026-06-01**: launcher `defi` runs the v9 tool (complete canonical `_V{N}` incl TraderJoe/Velodrome
-      post-C12-UAC); mode convention dry=tool-default / full=`--apply`; `bash -n` + command-emission verified. Also fixed
-      the MISLEADING "no-underscore canonical" docstring in `migrate_mtds_defi_legacy_venue_underscore.py` (UAC keeps
-      underscores; transform is flat→combined VENUE-CHAIN). — deployment-service@4484802 + mtds@6dd8d8a1.
+      post-C12-UAC); mode convention dry=tool-default / full=`--apply`; `bash -n` + command-emission verified. Also
+      fixed the MISLEADING "no-underscore canonical" docstring in `migrate_mtds_defi_legacy_venue_underscore.py` (UAC
+      keeps underscores; transform is flat→combined VENUE-CHAIN). — deployment-service@4484802 + mtds@6dd8d8a1.
       parent_epic: manifest_master.
 - [ ] [CHORE] P2. C13 **move misplaced migration scripts** out of `plans/audit/results/` (PM docs dir) into
       `market-tick-data-service/scripts/` (the runnable ones: oracle_relabel / chain_genesis / venue_launch /
@@ -326,11 +332,11 @@ What to verify/wire (B0 corrected scope):
       into the canonical env-split/`pipeline_mode`/`asset_group=` structure, never the legacy layout).
 - [x] ✅ [DATA] P2. C7 reason relabel — chain-genesis portion APPLIED 2026-06-01 (warmup-retry fix landed it locally) —
       `plans/audit/results/defi_chain_genesis_relabel_migration_2026_06_01.py` (snapshot-protected, idempotent,
-      `get_chain_genesis_date`-driven). Dry-run across all dedicated buckets: oracle ✅ done (C1, 728 rows); **lst-rates 75
-      rows (SOLANA pre-2020-03-16) pending** — apply kept failing on flaky LOCAL GCS DNS (lst-rates/lending-indices time
-      out); lending/perp/dex already clean on chain-genesis. **Run this on a VM in asia-northeast1** (stable in-region
-      network) to land lst-rates. **Pre-VENUE-launch portion** (PACIFICA/ASTER/ETHERFI/LIDO/MARINADE pre-launch) stays
-      blocked on A2a (`DEFI_VENUE_LAUNCH_DATES` populated) — bundle into the C2–C4 walk.
+      `get_chain_genesis_date`-driven). Dry-run across all dedicated buckets: oracle ✅ done (C1, 728 rows); **lst-rates
+      75 rows (SOLANA pre-2020-03-16) pending** — apply kept failing on flaky LOCAL GCS DNS (lst-rates/lending-indices
+      time out); lending/perp/dex already clean on chain-genesis. **Run this on a VM in asia-northeast1** (stable
+      in-region network) to land lst-rates. **Pre-VENUE-launch portion** (PACIFICA/ASTER/ETHERFI/LIDO/MARINADE
+      pre-launch) stays blocked on A2a (`DEFI_VENUE_LAUNCH_DATES` populated) — bundle into the C2–C4 walk.
 - [ ] [DATA] P1. C8 fill manifest under-enumeration: UAC declares 90 defi venue-keys but manifest enumerated only lst
       14/22, lending 6/21, perp 5/8; genuine absentees DRIFT-SOLANA (Solana MVP), FRAX, MORPHO, FLUID. parent_epic:
       defi_master.
@@ -344,35 +350,36 @@ What to verify/wire (B0 corrected scope):
       (`plans/audit/results/defi_phantom_captured_pre_genesis_fix_2026_06_01.py --apply`): **8,477** index rows falsely
       marked `captured` for a (chain, date) before the chain's UAC genesis (no backing objects — verified) →
       `empty_confirmed/EXPECTED_PRE_GENESIS_CHAIN`. dex-pools 8,410 (BASE 4,750 / ARBITRUM 1,452 / OPTIMISM 1,396 /
-      ZKSYNC 812), dex-swaps 61, oracle 6. Snapshotted. Removes the false-captured coverage inflation. parent_epic: manifest_master.
+      ZKSYNC 812), dex-swaps 61, oracle 6. Snapshotted. Removes the false-captured coverage inflation. parent_epic:
+      manifest_master.
 - [x] ✅ [DATA] P0. C10b **captured-pre-VENUE-launch fix APPLIED 2026-06-01**
       (`plans/audit/results/defi_captured_pre_existence_fix_2026_06_01.py --apply`): **401** more captured rows dated
-      before the VENUE launched (UAC `DEFI_VENUE_LAUNCH_DATES`) → `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`
-      (dex-pools GMX-AVALANCHE 370 / GMX-ARBITRUM 1, lst-rates ETHENA 29 / ROCKETPOOL 1). Snapshotted. **Combined with
-      C10: all 8,878 date-impossible captured rows (pre-chain-genesis + pre-venue-launch) are now corrected — no more bad
+      before the VENUE launched (UAC `DEFI_VENUE_LAUNCH_DATES`) → `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` (dex-pools
+      GMX-AVALANCHE 370 / GMX-ARBITRUM 1, lst-rates ETHENA 29 / ROCKETPOOL 1). Snapshotted. **Combined with C10: all
+      8,878 date-impossible captured rows (pre-chain-genesis + pre-venue-launch) are now corrected — no more bad
       pre-genesis/pre-launch labelling.** parent_epic: manifest_master.
 - [ ] [DATA] P0. C11 **deeper phantom audit — are the POST-launch dex `captured` rows object-backed?** Date-impossible
-      ones are done (C10/C10b); the remaining question is whether post-launch captured rows have real objects. Spot-check
-      2026-06-01: `dex-pools day=2025-06-01` HAS objects ✅ but `day=2024-01-01` returned 0 (inconclusive — read flaked).
-      The uniform `2021-01-01` first-captured still warrants a full **captured-vs-objects walk** (dex-pools/dex-swaps),
-      relabeling any captured row with no object honest. **NOTE 2026-06-01**: an initial walk falsely reported 74%
-      phantom — that was an index-venue↔object-venue MISMATCH (`UNISWAPV3` vs `UNISWAP_V3`), now fixed for those venues
-      by C12. Re-run the walk AFTER C12 lands everywhere, WITHOUT any read-path normalisation. **VM job** (object listing
-      at scale). parent_epic: manifest_master.
-- [~] [DATA] P0. C12 **venue-name `{VENUE}_V{N}` canonicalisation — EVERYWHERE (code + manifest + data + docs)** (operator
-      2026-06-01: "switched to canonical form with `_V2` etc everywhere … TRADER_JOEV2/VELODROMEV2 is wrong"). Canonical =
-      underscore before the version (`UNISWAP_V3`, `TRADER_JOE_V2`, `VELODROME_V2`, `AERODROME_V3`, …). Surfaces:
-      - **UAC** (the SSOT — fix first): `registry/defi_venues.py`, `defi_venue_capabilities.py`, `defi_protocol_registry.py`,
-        `expected_coverage.py`, `venue_mapping.py`, `chain_env.py`, `capability_declarations/_defi*.py`,
-        `internal/reference/instrument_validation.py` + the `canonicalize_defi_venue` function + its tests
-        (`test_venue_key_parity.py`, `test_canonicalize_defi_venue_combined.py`). `TRADER_JOEV2`→`TRADER_JOE_V2`,
-        `VELODROMEV2`→`VELODROME_V2` (and confirm all `*V{N}` use the underscore).
-      - **Code (writers)**: MTDS `_instruments_metadata.py` + any handler that emits a venue string.
-      - **Data (objects)**: rename object paths `venue=TRADER_JOEV2`→`TRADER_JOE_V2` etc. — VM single-walk (bundle with C0).
-      - **Manifest index**: `dex-pools`/`dex-swaps` index — DONE for the already-underscore venues (UNISWAP_V3 39,355 +
-        dex-swaps); TODO TRADER_JOE_V2/VELODROME_V2 (coordinate with the object rename so index==object).
-      - **Docs**: `codex/02-data/availability-manifest-and-data-status.md`, `contracts-scope-and-layout.md`, etc.
-      Coordinated cross-repo migration (all surfaces together; objects = VM). parent_epic: manifest_master.
+      ones are done (C10/C10b); the remaining question is whether post-launch captured rows have real objects.
+      Spot-check 2026-06-01: `dex-pools day=2025-06-01` HAS objects ✅ but `day=2024-01-01` returned 0 (inconclusive —
+      read flaked). The uniform `2021-01-01` first-captured still warrants a full **captured-vs-objects walk**
+      (dex-pools/dex-swaps), relabeling any captured row with no object honest. **NOTE 2026-06-01**: an initial walk
+      falsely reported 74% phantom — that was an index-venue↔object-venue MISMATCH (`UNISWAPV3` vs `UNISWAP_V3`), now
+      fixed for those venues by C12. Re-run the walk AFTER C12 lands everywhere, WITHOUT any read-path normalisation.
+      **VM job** (object listing at scale). parent_epic: manifest_master.
+- [~] [DATA] P0. C12 **venue-name `{VENUE}_V{N}` canonicalisation — EVERYWHERE (code + manifest + data + docs)**
+  (operator 2026-06-01: "switched to canonical form with `_V2` etc everywhere … TRADER_JOEV2/VELODROMEV2 is wrong").
+  Canonical = underscore before the version (`UNISWAP_V3`, `TRADER_JOE_V2`, `VELODROME_V2`, `AERODROME_V3`, …).
+  Surfaces: - **UAC** (the SSOT — fix first): `registry/defi_venues.py`, `defi_venue_capabilities.py`,
+  `defi_protocol_registry.py`, `expected_coverage.py`, `venue_mapping.py`, `chain_env.py`,
+  `capability_declarations/_defi*.py`, `internal/reference/instrument_validation.py` + the `canonicalize_defi_venue`
+  function + its tests (`test_venue_key_parity.py`, `test_canonicalize_defi_venue_combined.py`).
+  `TRADER_JOEV2`→`TRADER_JOE_V2`, `VELODROMEV2`→`VELODROME_V2` (and confirm all `*V{N}` use the underscore). - **Code
+  (writers)**: MTDS `_instruments_metadata.py` + any handler that emits a venue string. - **Data (objects)**: rename
+  object paths `venue=TRADER_JOEV2`→`TRADER_JOE_V2` etc. — VM single-walk (bundle with C0). - **Manifest index**:
+  `dex-pools`/`dex-swaps` index — DONE for the already-underscore venues (UNISWAP_V3 39,355 + dex-swaps); TODO
+  TRADER_JOE_V2/VELODROME_V2 (coordinate with the object rename so index==object). - **Docs**:
+  `codex/02-data/availability-manifest-and-data-status.md`, `contracts-scope-and-layout.md`, etc. Coordinated cross-repo
+  migration (all surfaces together; objects = VM). parent_epic: manifest_master.
 
 ## D. Features propagation (L3) — coverage must reach features-service
 
@@ -401,75 +408,71 @@ What to verify/wire (B0 corrected scope):
 ## G. Solana basis MVP — operationalisation (migrated from archived `solana_basis_trading_mvp_2026_06_01.md`)
 
 > **Migrated 2026-06-01** from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` (Phases 1–4 code SHIPPED;
-> these 4 follow-ups are the operationally-shipped half per CLAUDE.md "Plans Run To Actual Completion"). The Solana
-> MVP plan documented: Drift V2 historical ingester + 4 Solana spot DEX ingesters (Orca/Raydium/Phoenix-stub/Jupiter)
-> + 7 canonical UAC data types (PERP_TRADES, PERP_MARK_ORACLE, PERP_OPEN_INTEREST, DEX_POOL_STATE, DEX_ORDERBOOK,
-> DEX_QUOTE, DEX_TRADES) + `InstrumentType.DEX_POOL` + `SolanaBasisGcsLoader` wiring into the existing
-> `CARRY_BASIS_PERP@raydium-drift-sol-1h-sol-v5-prod` archetype + `--live --continuous` flag (the concrete
-> realization of CLAUDE.md "Live = batch" hard rule).
+> these 4 follow-ups are the operationally-shipped half per CLAUDE.md "Plans Run To Actual Completion"). The Solana MVP
+> plan documented: Drift V2 historical ingester + 4 Solana spot DEX ingesters (Orca/Raydium/Phoenix-stub/Jupiter)
 >
-> All four operator-launched follow-ups (G1–G4) must land in **canonical structure**
-> (env-split bucket + `pipeline_mode=` partition + `asset_group=defi`) — so they are **GATED on C-GREEN for the
-> dedicated DeFi buckets that hold the Solana writes** (`market-data-tick-defi-prd-…` for perp_funding/perp_trades +
-> dedicated `dex-pools-prd-…` / new `dex-pool-state-prd-…` / `dex-orderbook-prd-…` / `dex-quote-prd-…` if those
-> are split per A1 SSOT). If the dedicated bucket for a Solana data_type doesn't exist yet, that's a **bucket
-> provisioning** prerequisite (file under C0 / `cloud-providers.yaml`) — not a license to write to the legacy
-> `market-data-tick-defi-${PID}` (no env, no pipeline_mode) path.
+> - 7 canonical UAC data types (PERP_TRADES, PERP_MARK_ORACLE, PERP_OPEN_INTEREST, DEX_POOL_STATE, DEX_ORDERBOOK,
+>   DEX_QUOTE, DEX_TRADES) + `InstrumentType.DEX_POOL` + `SolanaBasisGcsLoader` wiring into the existing
+>   `CARRY_BASIS_PERP@raydium-drift-sol-1h-sol-v5-prod` archetype + `--live --continuous` flag (the concrete realization
+>   of CLAUDE.md "Live = batch" hard rule).
+>
+> All four operator-launched follow-ups (G1–G4) must land in **canonical structure** (env-split bucket +
+> `pipeline_mode=` partition + `asset_group=defi`) — so they are **GATED on C-GREEN for the dedicated DeFi buckets that
+> hold the Solana writes** (`market-data-tick-defi-prd-…` for perp_funding/perp_trades + dedicated `dex-pools-prd-…` /
+> new `dex-pool-state-prd-…` / `dex-orderbook-prd-…` / `dex-quote-prd-…` if those are split per A1 SSOT). If the
+> dedicated bucket for a Solana data_type doesn't exist yet, that's a **bucket provisioning** prerequisite (file under
+> C0 / `cloud-providers.yaml`) — not a license to write to the legacy `market-data-tick-defi-${PID}` (no env, no
+> pipeline_mode) path.
 
-| Dep | Item | Owner | Verification |
-| --- | --- | --- | --- |
+| Dep                        | Item       | Owner    | Verification                                          |
+| -------------------------- | ---------- | -------- | ----------------------------------------------------- |
 | (a) before (b) → (c) → (d) | sequential | operator | each gated on prior step's manifest-verified evidence |
 
 - [ ] [DATA] P0. G1 Launch the full 2024-06-01 → 2026-06-01 backfill VM (Drift V2 historical + Solana spot DEX state).
       Operator-launched from laptop OR `vm-defi`. Recipe: the four CLI scripts in
       `market_tick_data_service/scripts/backfill_drift_v2_historical.py` (perp_funding + perp_trades) +
-      `backfill_solana_dex_state.py` (Orca Whirlpool + Raydium classic AMM) for each day in window; estimated
-      ~36GB total payload across the 730-day window. **GATED on C-GREEN for the dedicated DeFi buckets** that hold
-      these writes (env-split + `pipeline_mode=batch` + `asset_group=defi`). Verification (per CLAUDE.md "Plans Run
-      To Actual Completion"): `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
+      `backfill_solana_dex_state.py` (Orca Whirlpool + Raydium classic AMM) for each day in window; estimated ~36GB
+      total payload across the 730-day window. **GATED on C-GREEN for the dedicated DeFi buckets** that hold these
+      writes (env-split + `pipeline_mode=batch` + `asset_group=defi`). Verification (per CLAUDE.md "Plans Run To Actual
+      Completion"):
+      `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
       returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
-      `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per
-      day-shard; equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]`
-      on quiet days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a
-      typed `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched
-      (long wall-clock; not a dispatch).**
+      `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per day-shard;
+      equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]` on quiet
+      days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a typed
+      `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched (long
+      wall-clock; not a dispatch).**
 - [ ] [DATA] P0. G2 Launch live-mode snapshotters via `--live --continuous` (mtds@1d35c7f2 unified live/batch path).
-      Terminal A: `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets SOL-PERP --live
-      --continuous --interval-seconds 3600 --data-types funding` (hourly). Terminal B:
-      `python -m market_tick_data_service.scripts.backfill_solana_dex_state --venues orca,raydium --live --continuous
-      --interval-seconds 60 --samples-per-day 60 --data-types pool_state` (1-min). These run as long-lived VMs on
-      `vm-defi` (lifecycle_class=LONG_LIVED_LIVE per CLAUDE.md vm naming SSOT). **GATED on G1** (need backfilled
-      history to be loadable as warmup) + **C-GREEN** (writes target canonical structure). Verification (per
-      CLAUDE.md "Plans Run To Actual Completion"): T+5min check post-launch — both VMs RUNNING in
-      `gcloud compute instances describe`; ≥1 parquet under `day=<TODAY>/pipeline_mode=live/asset_group=defi/…`
-      within the first interval (1 min for DEX, 1 h for Drift funding); manifest `capture_status=captured` rows
-      generated. Symptom of regression: `SolanaBasisGcsLoader` logs `no perp_funding rows for live`. Depends on
-      G1 (backfill warmup) before paper trade can run a meaningful history. parent_epic: mtds_mdps_master.
-      **Operator-launched.**
+      Terminal A:
+      `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets SOL-PERP --live     --continuous --interval-seconds 3600 --data-types funding`
+      (hourly). Terminal B:
+      `python -m market_tick_data_service.scripts.backfill_solana_dex_state --venues orca,raydium --live --continuous     --interval-seconds 60 --samples-per-day 60 --data-types pool_state`
+      (1-min). These run as long-lived VMs on `vm-defi` (lifecycle_class=LONG_LIVED_LIVE per CLAUDE.md vm naming SSOT).
+      **GATED on G1** (need backfilled history to be loadable as warmup) + **C-GREEN** (writes target canonical
+      structure). Verification (per CLAUDE.md "Plans Run To Actual Completion"): T+5min check post-launch — both VMs
+      RUNNING in `gcloud compute instances describe`; ≥1 parquet under
+      `day=<TODAY>/pipeline_mode=live/asset_group=defi/…` within the first interval (1 min for DEX, 1 h for Drift
+      funding); manifest `capture_status=captured` rows generated. Symptom of regression: `SolanaBasisGcsLoader` logs
+      `no perp_funding rows for live`. Depends on G1 (backfill warmup) before paper trade can run a meaningful history.
+      parent_epic: mtds_mdps_master. **Operator-launched.**
 - [ ] [PLAY] P0. G3 Run 24h paper trade via `e2e-testing/scripts/defi/run-paper.sh --strategy SOL_BASIS`. Recipe:
-      ```bash
-      cd e2e-testing && bash scripts/defi/run-paper.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \
-          --execution-provider solana-devnet --initial-capital-usd 100000
-      ```
-      Engine flows `--strategy SOL_BASIS` → `colocated_engine.py` → `SolanaBasisGcsLoader` → fill-sim on devnet
-      (signed, not broadcast). **GATED on G2** (live data must be flowing so the engine reads a non-stale tape).
-      Verification (per CLAUDE.md "Plans Run To Actual Completion" + Promote Workflow Path SSOT): 24h wall-clock
-      session writes a non-empty trade log + PnL series; Firestore `MinimalCandidateManifest` populated; Sharpe
-      ratio + realised funding earnings − slippage computed; sample-inspect 3 trades for honest fill simulation
-      (no NaN/inf, no fictional fills against zero-liquidity ticks); manifest path
-      `gs://market-data-tick-defi-prd-${PID}/paper_trade/…` (or whichever sink the engine writes to) has the
-      session's full output. **DART `ManualTradeGateDialog` enforces first-3-days hand-confirmation per CLAUDE.md
-      Promote Workflow Path.** parent_epic: mtds_mdps_master. **Operator-launched (long wall-clock; not a dispatch).**
-- [ ] [HUMAN] P0. G4 Promote to live wallet — **HUMAN-ONLY per CLAUDE.md hard-stop list** (`## Plans Run To Actual
-      Completion`: wallet keys + kill-switch arming are human-only; agent never runs `run-live.sh`). Valid promote
-      target per CLAUDE.md Promote Workflow Path is `paper_1d → live_early`; `live_full` is post-cutover. Operator
-      runs:
-      ```bash
-      cd e2e-testing && bash scripts/defi/run-live.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \
-          --execution-provider <copper|ceffu|cloud_kms_encrypted> --capital <amount> --wallet <KMS_KEY_ALIAS>
-      ```
-      **GATED on G3** (Sharpe-positive ack required) + **C-GREEN** + **G2 live data flowing**. Verification: real
-      wallet ≥7-day session per CLAUDE.md Master Plan (live DeFi 2026-05-23 gate already shipped — this is a
+      `bash     cd e2e-testing && bash scripts/defi/run-paper.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \         --execution-provider solana-devnet --initial-capital-usd 100000     `
+      Engine flows `--strategy SOL_BASIS` → `colocated_engine.py` → `SolanaBasisGcsLoader` → fill-sim on devnet (signed,
+      not broadcast). **GATED on G2** (live data must be flowing so the engine reads a non-stale tape). Verification
+      (per CLAUDE.md "Plans Run To Actual Completion" + Promote Workflow Path SSOT): 24h wall-clock session writes a
+      non-empty trade log + PnL series; Firestore `MinimalCandidateManifest` populated; Sharpe ratio + realised funding
+      earnings − slippage computed; sample-inspect 3 trades for honest fill simulation (no NaN/inf, no fictional fills
+      against zero-liquidity ticks); manifest path `gs://market-data-tick-defi-prd-${PID}/paper_trade/…` (or whichever
+      sink the engine writes to) has the session's full output. **DART `ManualTradeGateDialog` enforces first-3-days
+      hand-confirmation per CLAUDE.md Promote Workflow Path.** parent_epic: mtds_mdps_master. **Operator-launched (long
+      wall-clock; not a dispatch).**
+- [ ] [HUMAN] P0. G4 Promote to live wallet — **HUMAN-ONLY per CLAUDE.md hard-stop list**
+      (`## Plans Run To Actual     Completion`: wallet keys + kill-switch arming are human-only; agent never runs
+      `run-live.sh`). Valid promote target per CLAUDE.md Promote Workflow Path is `paper_1d → live_early`; `live_full`
+      is post-cutover. Operator runs:
+      `bash     cd e2e-testing && bash scripts/defi/run-live.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \         --execution-provider <copper|ceffu|cloud_kms_encrypted> --capital <amount> --wallet <KMS_KEY_ALIAS>     `
+      **GATED on G3** (Sharpe-positive ack required) + **C-GREEN** + **G2 live data flowing**. Verification: real wallet
+      ≥7-day session per CLAUDE.md Master Plan (live DeFi 2026-05-23 gate already shipped — this is a
       Solana-archetype-specific operational gate, not a master-plan blocker). The agent **never** ticks G4 — the
       operator does after the live run completes. parent_epic: mtds_mdps_master.
 
@@ -477,47 +480,48 @@ What to verify/wire (B0 corrected scope):
 
 > **MIGRATED FROM** `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` § "Phase 2 deferred / P1 follow-ups".
 > These were orphaned in the archive body — not picked up by the inventory regenerator, not in canon §G's G1–G4
-> operational chain. Restored to active inventory here so backlog-derivation crons + done-vs-left dashboards pick
-> them up. None are MVP-blockers (G1–G4 are sufficient to ship the basis trade); these are post-MVP feature
-> additions and depth-of-data improvements.
+> operational chain. Restored to active inventory here so backlog-derivation crons + done-vs-left dashboards pick them
+> up. None are MVP-blockers (G1–G4 are sufficient to ship the basis trade); these are post-MVP feature additions and
+> depth-of-data improvements.
 
 - [ ] [CODE] P1. G5 **Phoenix radix-slab decode (top-of-book bid + ask + size).** The market account is 1.7MB; the
       top-of-book decode is ~50-100 LOC of binary parsing against Phoenix's documented slab layout. Full L2 (deeper
       levels) is harder + can ship later. Current state: `PhoenixOrderbookIngester` (mtds@d3d26f56) fetches the market
-      account successfully (proves the RPC path) but routes via `record_failed(reason="SOURCE_HANDLER_TODO_PHOENIX_DECODE")`.
-      Acceptance: top-of-book parsed; `best_bid_price + best_ask_price + their sizes + spread_bps + mid_price` populated;
-      `record_captured` instead of `record_failed`; 5+ unit tests cover the binary decode against known slab states.
-      parent_epic: mtds_mdps_master. Not GATED on G1–G4 (independent feature add).
+      account successfully (proves the RPC path) but routes via
+      `record_failed(reason="SOURCE_HANDLER_TODO_PHOENIX_DECODE")`. Acceptance: top-of-book parsed;
+      `best_bid_price + best_ask_price + their sizes + spread_bps + mid_price` populated; `record_captured` instead of
+      `record_failed`; 5+ unit tests cover the binary decode against known slab states. parent_epic: mtds_mdps_master.
+      Not GATED on G1–G4 (independent feature add).
 - [ ] [CODE] P2. G6 **Jupiter historical reconstruction.** `JupiterQuoteIngester` (mtds@d3d26f56) is forward-only —
       Jupiter doesn't expose historical quote endpoints. For the 2024-06-01 → today backtest window, reconstruct
       historical Jupiter routes by simulating Jupiter's routing algorithm against the underlying Orca/Raydium pool
       states at the same timestamps. Acceptance: per (timestamp, size-bucket) row matching forward-collected quote
-      structure within ±5%; backtest harness can read Jupiter quotes for any day in window. parent_epic: mtds_mdps_master.
-      GATED on G1 (need Orca + Raydium pool states backfilled).
+      structure within ±5%; backtest harness can read Jupiter quotes for any day in window. parent_epic:
+      mtds_mdps_master. GATED on G1 (need Orca + Raydium pool states backfilled).
 - [ ] [CODE] P2. G7 **Orca tick-array decode** (concentrated-liquidity depth visualisation). Current MVP uses
       `sqrt_price` + `liquidity` scalars (sufficient for next-tick slippage approximation). Full tick-array decode
       enables tick-distribution depth maps + better mid-size-fill simulation. ~150-200 LOC binary parsing of the 3
-      nearest tick arrays around `tick_current_index`. Acceptance: per-snapshot tick array state captured alongside
-      pool state; downstream consumers can compute fill slippage at arbitrary sizes. parent_epic: mtds_mdps_master.
-      Not GATED on G1–G4 (independent depth improvement).
-- [ ] [CODE] P2. G8 **Raydium second WSOL/USDC pool** — extend `RaydiumClassicAmmIngester` defaults if a meaningful
-      TVL pool materialises. The plan-time secondary Raydium pool dropped to $4.6K TVL by 2026-06-01 (below noise
-      threshold); current default ingestion is just the top $8.8M pool. The constant scaffold is forward-compat —
-      adding a pool requires only updating `_RAYDIUM_POOLS` dict. Acceptance: if a second SOL/USDC Raydium pool
-      reaches > $1M TVL, add it; ingest from the canonical date; backtest harness reads both. parent_epic:
-      mtds_mdps_master. Trigger: TVL probe shows > $1M.
+      nearest tick arrays around `tick_current_index`. Acceptance: per-snapshot tick array state captured alongside pool
+      state; downstream consumers can compute fill slippage at arbitrary sizes. parent_epic: mtds_mdps_master. Not GATED
+      on G1–G4 (independent depth improvement).
+- [ ] [CODE] P2. G8 **Raydium second WSOL/USDC pool** — extend `RaydiumClassicAmmIngester` defaults if a meaningful TVL
+      pool materialises. The plan-time secondary Raydium pool dropped to $4.6K TVL by 2026-06-01 (below noise
+      threshold); current default ingestion is just the top $8.8M pool. The constant scaffold is forward-compat — adding
+      a pool requires only updating `_RAYDIUM_POOLS` dict. Acceptance: if a second SOL/USDC Raydium pool reaches > $1M
+      TVL, add it; ingest from the canonical date; backtest harness reads both. parent_epic: mtds_mdps_master. Trigger:
+      TVL probe shows > $1M.
 
 ### G — non-conflict notes (from conflict scan 2026-06-01)
 
 - `solana_defi_legacy_migration_2026_05_27.md` (active): canonical Solana types per that plan are
-  `dex_pools`+`SOLANA_AMM_POOL` (Kamino vault METADATA snapshot) vs the MVP's `DEX_POOL_STATE` (Orca/Raydium AMM
-  STATE time-series for fill-sim) — **complementary, not conflicting** (different shard grain, different consumers,
-  different UAC contracts). Both flow through the same dedicated-bucket SSOT (`get_write_bucket_name`); the new
-  `DEX_POOL_STATE` writes target their own dedicated bucket once provisioned (C0 prerequisite).
+  `dex_pools`+`SOLANA_AMM_POOL` (Kamino vault METADATA snapshot) vs the MVP's `DEX_POOL_STATE` (Orca/Raydium AMM STATE
+  time-series for fill-sim) — **complementary, not conflicting** (different shard grain, different consumers, different
+  UAC contracts). Both flow through the same dedicated-bucket SSOT (`get_write_bucket_name`); the new `DEX_POOL_STATE`
+  writes target their own dedicated bucket once provisioned (C0 prerequisite).
 - `plans/active/issues/bug_d_prime_drift_backfill_2026_05_31.md`: SUPERSEDED 2026-06-01 (the Helius sig-walking path
-  that issue documents is OBSOLETE — Drift V2 historical now flows via `data.api.drift.trade` Velocity Data API per
-  the archived MVP plan + new codex `codex/04-architecture/drift-v2-data-sources.md`). Issue doc gets a SUPERSEDED
-  banner in the same archival commit.
+  that issue documents is OBSOLETE — Drift V2 historical now flows via `data.api.drift.trade` Velocity Data API per the
+  archived MVP plan + new codex `codex/04-architecture/drift-v2-data-sources.md`). Issue doc gets a SUPERSEDED banner in
+  the same archival commit.
 
 ## Verification (full-execution criterion)
 
@@ -533,11 +537,12 @@ operationally-shipped (G4 human-only)**; the next audit needs one pass.
 > `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 4.
 
 > **🟡 CROSS-PLAN ISSUES/BLOCKERS (2026-06-01, from bucket_name_ssot_legacy_dual_write_remediation)**:
+>
 > 1. **Tarball-prune blocker** — `C0 — RUN ON A VM` is exposed to the pinned-tarball prune race: a VM can pull stale
 >    `mtds-code.tar.gz` and run wrong code / exit-2 silently. SSOT:
 >    `plans/active/issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01.md`. Verify the VM ran the intended sha
 >    before trusting C0 output.
 > 2. **DeFi `_index` single-walk ordering (HARD)** — the bucket-SSOT remediation seeds legacy→canonical rows into the
->    SAME `market-data-tick-defi-prd-…` `_index` this plan's C0 rewrites. The remediation seed must run BEFORE C0
->    (so C0 canonicalises the seeded legacy rows: old venue strings / v4–v8 / phantom grid). Do NOT run C0 while the
+>    SAME `market-data-tick-defi-prd-…` `_index` this plan's C0 rewrites. The remediation seed must run BEFORE C0 (so C0
+>    canonicalises the seeded legacy rows: old venue strings / v4–v8 / phantom grid). Do NOT run C0 while the
 >    remediation DeFi seed is mid-walk, and vice-versa. `data_source_provenance_…` rides C0 (no third walk).

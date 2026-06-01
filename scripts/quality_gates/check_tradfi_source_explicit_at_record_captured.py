@@ -188,7 +188,7 @@ def _line(lines: list[str], lineno: int) -> str:
     return lines[lineno - 1].strip() if 0 < lineno <= len(lines) else ""
 
 
-def _load_source_required() -> "object | None":
+def _load_source_required() -> object | None:
     """Import the UAC ``source_required`` helper, or None if UAC is absent.
 
     Degrading to None makes the check a no-op WARNing rather than a false-fail
@@ -198,7 +198,7 @@ def _load_source_required() -> "object | None":
         from unified_api_contracts import source_required  # noqa: qg-inside-import — optional dep
 
         return source_required
-    except Exception:  # noqa: BLE001 — any import failure → degrade to no-op
+    except Exception:
         return None
 
 
@@ -234,7 +234,7 @@ def _scan_file(
     path: Path,
     repo: str,
     repo_root: Path,
-    source_required: "object | None",
+    source_required: object | None,
 ) -> list[Finding]:
     try:
         src = path.read_text(encoding="utf-8")

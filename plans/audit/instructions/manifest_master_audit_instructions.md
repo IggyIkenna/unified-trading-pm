@@ -68,27 +68,27 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       (`launch-manifest-consolidator-vm.sh`) does NOT exist. Grep:
       `rg "launch-manifest-consolidator-vm" --include="*.sh"` — should be 0 hits
 
-- [ ] (i) **`source` column populated on EVERY cell — UNIVERSAL gate, all asset groups (codified 2026-06-01, operator)**:
-      v9 added the `source` column but enforcement (`MissingSourceError`) fires ONLY for `category=="tradfi"`
-      (`manifest_writer.py`). `source` is the SSOT for which provider produced a shard's rows. **Provenance is universal:
-      every captured cell stamps its source NOW, even single-source ones** — operator 2026-06-01: "I may find an
-      alternative for Tardis, so it's the same issue." Stamping only at multi-source onset leaves the existing
-      single-source corpus unlabelled and unresolvable after a swap. `source` is a **column, not a hive path key** (for
-      batch=live symmetry). Generalise + verify:
-      - **Gate is universal, not cardinality-gated**: raise `MissingSourceError` when `source` is **blank OR not a member
-        of** `SOURCE_PRIORITY[(asset_group, data_type)]`, for **every** cell, all asset groups (cefi `tardis`, prediction
-        `polymarket_clob`, etc. included). `SOURCE_PRIORITY` validates the allowed string + drives resolution when >1; it
-        does NOT decide whether to stamp. A cell with no `SOURCE_PRIORITY` entry = a registry gap to fix, not a pass.
-        NOT a hardcoded asset_group list.
-      - **Column populated in actual PROD rows** (DATA-STATE, not the constant): read the `source` distribution per
-        `(asset_group, venue, data_type)`; **zero blank `source` on ANY cell**. (manifest-v8 lesson: constant ≠ data —
-        0% of 7.4M rows were v8 despite the bump.)
-      - **Two rows per multi-source cell**: when >1 source runs for one cell, the manifest holds TWO rows distinguished by
-        `source`, each with its own `capture_status`. Union semantics downstream: cell is `captured` if ≥1 source row is
-        `captured`; `attempted_failed` only when all source rows failed.
-      - **Closed-set source strings** mirror `SOURCE_PRIORITY`; any blank/unknown source on any cell is RED.
-      SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; consumer policy:
-      `codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item (j).
+- [ ] (i) **`source` column populated on EVERY cell — UNIVERSAL gate, all asset groups (codified 2026-06-01,
+      operator)**: v9 added the `source` column but enforcement (`MissingSourceError`) fires ONLY for
+      `category=="tradfi"` (`manifest_writer.py`). `source` is the SSOT for which provider produced a shard's rows.
+      **Provenance is universal: every captured cell stamps its source NOW, even single-source ones** — operator
+      2026-06-01: "I may find an alternative for Tardis, so it's the same issue." Stamping only at multi-source onset
+      leaves the existing single-source corpus unlabelled and unresolvable after a swap. `source` is a **column, not a
+      hive path key** (for batch=live symmetry). Generalise + verify: - **Gate is universal, not cardinality-gated**:
+      raise `MissingSourceError` when `source` is **blank OR not a member of**
+      `SOURCE_PRIORITY[(asset_group, data_type)]`, for **every** cell, all asset groups (cefi `tardis`, prediction
+      `polymarket_clob`, etc. included). `SOURCE_PRIORITY` validates the allowed string + drives resolution when >1; it
+      does NOT decide whether to stamp. A cell with no `SOURCE_PRIORITY` entry = a registry gap to fix, not a pass. NOT
+      a hardcoded asset_group list. - **Column populated in actual PROD rows** (DATA-STATE, not the constant): read the
+      `source` distribution per `(asset_group, venue, data_type)`; **zero blank `source` on ANY cell**. (manifest-v8
+      lesson: constant ≠ data — 0% of 7.4M rows were v8 despite the bump.) - **Two rows per multi-source cell**: when >1
+      source runs for one cell, the manifest holds TWO rows distinguished by `source`, each with its own
+      `capture_status`. Union semantics downstream: cell is `captured` if ≥1 source row is `captured`;
+      `attempted_failed` only when all source rows failed. - **Closed-set source strings** mirror `SOURCE_PRIORITY`; any
+      blank/unknown source on any cell is RED. SSOT:
+      `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; consumer policy:
+      `codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item
+      (j).
 
 ### Batch vs Live Parity
 
@@ -152,8 +152,8 @@ operator-raised 2026-05-27; principle + instances folded inline above (this sect
 ## Success Criteria
 
 - All checklist items (a)–(i) GREEN
-- `source` column populated (closed-set, zero blank) on every multi-source cell in actual prod rows; registry-driven gate
-  enforced across all asset groups (item i)
+- `source` column populated (closed-set, zero blank) on every multi-source cell in actual prod rows; registry-driven
+  gate enforced across all asset groups (item i)
 - Per-service `capture_status` write-path calibration GREEN for every producer that has been run/matured (no reflexive
   `empty_confirmed` on owed-data branches, no silent no-row skips)
 - A3 manifest divergence: zero `DIVERGENT_EMPTY` + zero `MISSING_EXPECTED` across all asset_groups

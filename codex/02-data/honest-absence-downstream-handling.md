@@ -803,22 +803,23 @@ The season-bounds table lives in `unified_api_contracts.canonical.domain.sports.
 
 ## Multi-source cell consumer policy (TradFi dual-source, v9)
 
-> Added 2026-05-28 — Phase 6 of `tradfi_massive_dual_source_2026_05_28.md`. **Generalised 2026-06-01 to ALL asset groups**
-> (`data_source_provenance_all_asset_groups_2026_06_01.md`): the union semantics + `select_primary_available_source()`
-> resolution below are **asset-group-agnostic** and apply to every multi-source cell, not just tradfi —
-> defi `oracle_prices` (`pyth_hermes`/`chainlink`) + `native_staking_rates` (`solana_rpc`/`helius_rpc`), sports `FIXTURES`
-> (`api_football`/`footystats`), and any cefi/prediction cell once a 2nd source lands. Single-source cells now also carry
-> `source` (auto-stamped from the registry — universal stamping for swap-resilience); their consumer policy is trivial
-> (one source). Computed/service-emitted cells (`COMPUTED_SOURCES`) are exempt (no `source`).
+> Added 2026-05-28 — Phase 6 of `tradfi_massive_dual_source_2026_05_28.md`. **Generalised 2026-06-01 to ALL asset
+> groups** (`data_source_provenance_all_asset_groups_2026_06_01.md`): the union semantics +
+> `select_primary_available_source()` resolution below are **asset-group-agnostic** and apply to every multi-source
+> cell, not just tradfi — defi `oracle_prices` (`pyth_hermes`/`chainlink`) + `native_staking_rates`
+> (`solana_rpc`/`helius_rpc`), sports `FIXTURES` (`api_football`/`footystats`), and any cefi/prediction cell once a 2nd
+> source lands. Single-source cells now also carry `source` (auto-stamped from the registry — universal stamping for
+> swap-resilience); their consumer policy is trivial (one source). Computed/service-emitted cells (`COMPUTED_SOURCES`)
+> are exempt (no `source`).
 >
 > **Read-path status (2026-06-01 finding)**: the resolver primitives are generic + unit-tested (uac@559dc81b) but **not
 > yet wired into a non-test consumer**, and `manifest_consolidator.py` dedups multi-source rows by last-write-wins (its
 > dedup key omits `source`) — i.e. the manifest collapses to the union row; per-source provenance lives in the parquet
 > `source` column. Wiring the resolver into consumers + the consolidator-dedup-key decision are open Phase 5 todos.
 >
-> Applies to `asset_group=tradfi` (and now all multi-source groups) when a `(shard_key, day)` cell has manifest rows from
-> multiple sources (e.g. `source=databento` + `source=massive`). Requires v9 manifest schema with the `source` column
-> populated.
+> Applies to `asset_group=tradfi` (and now all multi-source groups) when a `(shard_key, day)` cell has manifest rows
+> from multiple sources (e.g. `source=databento` + `source=massive`). Requires v9 manifest schema with the `source`
+> column populated.
 
 ### Union semantics for multi-source cells
 

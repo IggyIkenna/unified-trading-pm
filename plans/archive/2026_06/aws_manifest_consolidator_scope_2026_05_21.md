@@ -16,10 +16,11 @@ Gate cleared: `aws_migration_defi_first_2026_05_07` archived 2026-05-26 (Phase 5
 
 # AWS Manifest Consolidator — AWS Batch + EventBridge
 
-> **✅ COMPLETE — ARCHIVED 2026-06-01.** All phases A–D done. Phase D applied 2026-06-01 (`64 added, 1 changed, 0
-> destroyed`; targeted to consolidator modules to avoid unrelated full-module drift during the migration freeze).
-> Verified: 26 EventBridge rules all ENABLED + 26 ACTIVE Batch job definitions. Codex `manifest-consolidator-ssot.md` +
-> CLAUDE.md updated to "Phase D LIVE". Prereq landed-bug fix: deployment-service@6a4194f (duplicate `required_providers`).
+> **✅ COMPLETE — ARCHIVED 2026-06-01.** All phases A–D done. Phase D applied 2026-06-01
+> (`64 added, 1 changed, 0 destroyed`; targeted to consolidator modules to avoid unrelated full-module drift during the
+> migration freeze). Verified: 26 EventBridge rules all ENABLED + 26 ACTIVE Batch job definitions. Codex
+> `manifest-consolidator-ssot.md` + CLAUDE.md updated to "Phase D LIVE". Prereq landed-bug fix:
+> deployment-service@6a4194f (duplicate `required_providers`).
 >
 > ## Deferred work — migrated to:
 >

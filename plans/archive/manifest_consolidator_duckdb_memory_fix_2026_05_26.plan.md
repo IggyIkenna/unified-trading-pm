@@ -26,7 +26,8 @@ locked_since: 2026-05-26
 >   NULL-`schema_version` fix shipped IS@9f831578, re-run pending) → **MIGRATED TO**
 >   `plans/audit/instructions/cefi_master_audit_instructions.md` § `(enumerator-reseed)`.
 > - **Continuous-verification recipe** (24h OOM/freshness watch) → promoted into
->   `plans/audit/instructions/manifest_master_audit_instructions.md` items (h2)/(h3) as the everlasting engine-audit home.
+>   `plans/audit/instructions/manifest_master_audit_instructions.md` items (h2)/(h3) as the everlasting engine-audit
+>   home.
 > - **Bench scratch dirs** (`/var/tmp/consolidator-bench/`, `/data/cefi_consolidate/`) — local-only, safe to delete.
 
 ## What this fixes

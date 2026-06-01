@@ -62,46 +62,48 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
 > v8.)
 
 - [ ] (h) **`source` column present + non-NULL on prod TradFi parquets** (DATA-STATE, not constant). Sample real prod
-      parquets across each `(venue, data_type)` TradFi cell and read the actual `source` column value distribution. RED if
-      any TradFi parquet has a missing / NULL / empty `source` column. Report the per-cell source-value histogram (how
-      many rows `databento` vs `massive` vs blank). Do NOT infer GREEN from `MANIFEST_SCHEMA_VERSION==9`.
+      parquets across each `(venue, data_type)` TradFi cell and read the actual `source` column value distribution. RED
+      if any TradFi parquet has a missing / NULL / empty `source` column. Report the per-cell source-value histogram
+      (how many rows `databento` vs `massive` vs blank). Do NOT infer GREEN from `MANIFEST_SCHEMA_VERSION==9`.
 
 - [ ] (i) **Manifest `source` field populated for every TradFi row**. Query consolidated manifest rows where
-      `asset_group=tradfi`; assert `source` ∈ closed set `{databento, massive, yahoo, barchart}` with zero blank. Confirm
-      the write-time gate is live: `MissingSourceError` raised when `category=="tradfi"` and `source==""`
+      `asset_group=tradfi`; assert `source` ∈ closed set `{databento, massive, yahoo, barchart}` with zero blank.
+      Confirm the write-time gate is live: `MissingSourceError` raised when `category=="tradfi"` and `source==""`
       (`unified-trading-library/.../manifest_writer.py`), and QG STEP 5.64
       (`check_tradfi_source_explicit_at_record_captured.py`) exits 0.
 
-- [ ] (j) **`source` is a column, NOT a hive partition key**. Verify no `source=` segment crept into any TradFi GCS
-      path — both vendors share `day=…/asset_group=tradfi/venue=…/data_type=…/`. Grep the writer path construction +
+- [ ] (j) **`source` is a column, NOT a hive partition key**. Verify no `source=` segment crept into any TradFi GCS path
+      — both vendors share `day=…/asset_group=tradfi/venue=…/data_type=…/`. Grep the writer path construction +
       `bucket_naming.py`: `rg "source=" market-data-processing-service/ market-tick-data-service/ --include="*.py"` must
       show no path-key usage (only the kwarg / column).
 
 - [ ] (k) **SOURCE_PRIORITY registry covers every multi-vendor TradFi cell**. For every `(tradfi, <data_type>)` that has
       ≥2 possible vendors, an ordered entry exists in
-      `unified-api-contracts/.../canonical/crosscutting/source_priority.py`; the source strings exactly match the adapter
-      constants (closed set, no typos); ordering reflects the intended preference (live-emitter / broader-coverage wins).
+      `unified-api-contracts/.../canonical/crosscutting/source_priority.py`; the source strings exactly match the
+      adapter constants (closed set, no typos); ordering reflects the intended preference (live-emitter /
+      broader-coverage wins).
 
 - [ ] (l) **Read-time reconciliation is WIRED in consumers** (the downstream-smoothness check). Read the canonical read
-      path (`unified-trading-library/.../manifest_reader_fallback.py` `read_manifest_with_source_priority()`) AND at least
-      one real consumer (features-service). Confirm that when both vendor parquets co-mingle in one folder, the consumer
-      resolves via the `source` column + `select_primary_available_source()` — it does NOT blindly glob+concat both files
-      (silent double-count) nor pick arbitrarily. Construct a 2-source fixture (same instrument+timestamp from
-      `databento` and `massive`) and assert the consumer emits exactly one resolved row per (instrument, ts).
+      path (`unified-trading-library/.../manifest_reader_fallback.py` `read_manifest_with_source_priority()`) AND at
+      least one real consumer (features-service). Confirm that when both vendor parquets co-mingle in one folder, the
+      consumer resolves via the `source` column + `select_primary_available_source()` — it does NOT blindly glob+concat
+      both files (silent double-count) nor pick arbitrarily. Construct a 2-source fixture (same instrument+timestamp
+      from `databento` and `massive`) and assert the consumer emits exactly one resolved row per (instrument, ts).
 
 - [ ] (m) **Conflict detection runs, never silently drops**. `detect_dual_source_conflicts()` is invoked at
-      consolidation / audit time; `DUAL_SOURCE_DUPLICATE` / `VALUE_DIVERGENCE` / `COVERAGE_DIVERGENCE` are emitted to the
-      manifest / divergence report (not swallowed). Verify on a divergent 2-source fixture that the divergence is surfaced.
+      consolidation / audit time; `DUAL_SOURCE_DUPLICATE` / `VALUE_DIVERGENCE` / `COVERAGE_DIVERGENCE` are emitted to
+      the manifest / divergence report (not swallowed). Verify on a divergent 2-source fixture that the divergence is
+      surfaced.
 
 - [ ] (n) **`available_at` parity across sources (batch = live)**. Historical rows from EITHER vendor are timestamped
-      with the `available_at` we'd have in live mode for the SOURCE_PRIORITY top entry (per `source_priority.py` header),
-      not the slower archive time of whichever vendor wrote them. Sample rows from each source and compare `available_at`
-      derivation — divergent per-source `available_at` for the same cell breaks batch-live symmetry.
+      with the `available_at` we'd have in live mode for the SOURCE_PRIORITY top entry (per `source_priority.py`
+      header), not the slower archive time of whichever vendor wrote them. Sample rows from each source and compare
+      `available_at` derivation — divergent per-source `available_at` for the same cell breaks batch-live symmetry.
 
 - [ ] (o) **Backfill provenance complete** (BLOCKED on Phase 5 / `MASSIVE_API_KEY`). Pre-Phase-3 TradFi parquets stamped
       `source='databento'` via the backfill script; zero NULL-`source` rows post-backfill; manifest re-consolidated with
-      `source` populated. Status stays `BLOCKED-CREDENTIALS` until the key lands — but item (h) still RED-flags any blank
-      source found in the meantime (it is a real data gap, not a pass).
+      `source` populated. Status stays `BLOCKED-CREDENTIALS` until the key lands — but item (h) still RED-flags any
+      blank source found in the meantime (it is a real data gap, not a pass).
 
 ### E2E Batch, Paper, and Live Verification
 
@@ -129,8 +131,8 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
 ## Success Criteria
 
 - All scaffold checklist items (a)–(g) GREEN (adapters scaffold present even if credentials are BLOCKED-CREDENTIALS)
-- All dual-source provenance items (h)–(n) GREEN against ACTUAL prod data-state (not constants); (o) GREEN or
-  explicitly `BLOCKED-CREDENTIALS` with a live ping
+- All dual-source provenance items (h)–(n) GREEN against ACTUAL prod data-state (not constants); (o) GREEN or explicitly
+  `BLOCKED-CREDENTIALS` with a live ping
 - Every prod TradFi parquet + manifest row carries a non-blank `source` from the closed set (item h/i) — zero blank
 - A 2-source fixture proves the consumer resolves to exactly one row per (instrument, ts) via SOURCE_PRIORITY, with no
   silent double-count and divergences surfaced (items l/m)

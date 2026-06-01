@@ -38,7 +38,8 @@ related:
 >   review-blocking outside a whole-corpus walk) →
 >   [`pipeline_mode_partition_migration_2026_06_01.md`](../active/pipeline_mode_partition_migration_2026_06_01.md)
 >   (named successor, created 2026-06-01). The DeFi bucket's partition already rides
->   `defi_manifest_canonicalisation_2026_06_01.md` C0 single-walk; the successor homes the remaining asset-group buckets.
+>   `defi_manifest_canonicalisation_2026_06_01.md` C0 single-walk; the successor homes the remaining asset-group
+>   buckets.
 
 **Operator decision 2026-05-28**: IMPLEMENT (vs REMOVE). Restores the original design intent — batch ↔ live
 reconciliation as `GROUP BY pipeline_mode` over the same manifest.

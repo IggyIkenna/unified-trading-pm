@@ -88,8 +88,8 @@ scope_note:
 
 ## H–I. Provisioning + EIP/DNS
 
-- ⏸ LIVE-DEFERRED / operator-cost. EIP + DNS remain operator-deferred per epic Phase 11 (not blocking; central API proxy
-  serves dynamic IPs). Packer `validate` not run this pass.
+- ⏸ LIVE-DEFERRED / operator-cost. EIP + DNS remain operator-deferred per epic Phase 11 (not blocking; central API
+  proxy serves dynamic IPs). Packer `validate` not run this pass.
 
 ## J. Codex doc alignment
 
@@ -157,7 +157,8 @@ scope_note:
 
 ### M.5 End-to-end PM-plan → completed-work trace
 
-- (m5) — ⏸ LIVE-DEFERRED (needs a mock instance). The `e2e_test_plan_regen_pipeline_2026_05_29.md` plan owns this trace.
+- (m5) — ⏸ LIVE-DEFERRED (needs a mock instance). The `e2e_test_plan_regen_pipeline_2026_05_29.md` plan owns this
+  trace.
 
 ### M.6 Soak windows
 

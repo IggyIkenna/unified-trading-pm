@@ -1,5 +1,7 @@
 ---
-title: "pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus walk"
+title:
+  "pipeline_mode on-disk partition migration — bundle pipeline_mode= hive partition into each bucket's next whole-corpus
+  walk"
 parent_epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 priority: P2
@@ -22,8 +24,8 @@ The `pipeline_mode` **column-level** implementation shipped fully in `pipeline_m
 an **on-disk hive partition key** in the GCS path: `day=…/pipeline_mode=…/asset_group=…/venue=…/…`.
 
 Partition-key addition is **review-blocking outside a whole-corpus migration window** (single-walk discipline — HARD
-RULE). It MUST bundle into each bucket's next scheduled whole-corpus walk; a standalone partition-only walk is forbidden.
-Reads filter by column-scan (low cardinality, ~10 enum values) until the partition lands — acceptable interim
+RULE). It MUST bundle into each bucket's next scheduled whole-corpus walk; a standalone partition-only walk is
+forbidden. Reads filter by column-scan (low cardinality, ~10 enum values) until the partition lands — acceptable interim
 performance per the parent plan's "Out of scope" note.
 
 ## Coverage status
@@ -45,8 +47,8 @@ performance per the parent plan's "Out of scope" note.
 
 ## Success criteria
 
-| Phase   | Gate                                              | Verification                                                       |
-| ------- | ------------------------------------------------- | ------------------------------------------------------------------ |
+| Phase   | Gate                                              | Verification                                                      |
+| ------- | ------------------------------------------------- | ----------------------------------------------------------------- |
 | Phase 1 | `pipeline_mode=` partition present in all buckets | `gcs ls` shows `pipeline_mode=` path segment across all 5 buckets |
 
 ## Codex SSOTs
@@ -57,6 +59,4 @@ performance per the parent plan's "Out of scope" note.
 ## Composes with
 
 - `defi_manifest_canonicalisation_2026_06_01.md` — DeFi bucket carries the partition inside its C0 single-walk.
-- Single-walk discipline (HARD RULE — CLAUDE.md § Manifest + honest absence).
-</content>
-</invoke>
+- Single-walk discipline (HARD RULE — CLAUDE.md § Manifest + honest absence). </content> </invoke>

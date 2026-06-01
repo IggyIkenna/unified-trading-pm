@@ -50,13 +50,13 @@ spread strategy. Key invariant: binary resolution events handled correctly; no h
 
 ### Data-source provenance — stamp source NOW; venue ≠ source still holds
 
-> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`).
-> **TWO distinct facts, both true:** (1) **provenance is universal** — every prediction cell stamps its `source`
+> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`). **TWO
+> distinct facts, both true:** (1) **provenance is universal** — every prediction cell stamps its `source`
 > (`polymarket_clob` / `polymarket_gamma_api` / `kalshi_*`) NOW, even though each venue has one source today, for
 > swap-resilience (a future Polymarket data-provider change is "the same issue"); a blank `source` is RED. (2) **venue ≠
-> source** — Polymarket and Kalshi are separate **venues**, NOT two sources of one shard; the `arbitrage_price_dispersion`
-> model compares across venues at the feature layer, never via per-row source merge. Stamping each venue-cell's own
-> `source` (fact 1) does NOT collapse venues into sources (fact 2).
+> source** — Polymarket and Kalshi are separate **venues**, NOT two sources of one shard; the
+> `arbitrage_price_dispersion` model compares across venues at the feature layer, never via per-row source merge.
+> Stamping each venue-cell's own `source` (fact 1) does NOT collapse venues into sources (fact 2).
 
 - [ ] (h) **Writers stamp `source` on every prediction cell now**: pass `source=` (the venue's data source string from
       `SOURCE_PRIORITY`) at every prediction write. Read ACTUAL prod rows — RED on any blank `source`.
@@ -64,8 +64,8 @@ spread strategy. Key invariant: binary resolution events handled correctly; no h
 - [ ] (i) **Venue ≠ source invariant holds**: prediction shards are keyed by `venue` (POLYMARKET / KALSHI); the
       dispersion strategy consumes separate per-venue rows. No code path merges two venues into one shard via source
       resolution. Trace: strategy-service prediction archetype → features-service spread calc.
-- [ ] (j) **Kalshi lands as a venue, not a source**: when Kalshi capture ships, it is a `venue=KALSHI` addition (with its
-      own `source` stamped) — NOT a second source of a Polymarket shard.
+- [ ] (j) **Kalshi lands as a venue, not a source**: when Kalshi capture ships, it is a `venue=KALSHI` addition (with
+      its own `source` stamped) — NOT a second source of a Polymarket shard.
 
 ### E2E Batch, Paper, and Live Verification
 

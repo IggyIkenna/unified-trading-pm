@@ -12,12 +12,19 @@ locked_by: live-defi-rollout
 
 ## What I found
 
-features-service delta_one has TWO bucket-resolution codepaths that DISAGREE on whether to honour the `PROTOCOL_DATA_SINK_BUCKET_{AG}` env override:
+features-service delta*one has TWO bucket-resolution codepaths that DISAGREE on whether to honour the
+`PROTOCOL_DATA_SINK_BUCKET*{AG}` env override:
 
-1. **Success path** — `feature_writer._get_sink_bucket(asset_group)` [features_service/delta_one/app/core/feature_writer.py:61-80](../../features-service/features_service/delta_one/app/core/feature_writer.py#L61-L80) → `get_data_sink(routing_key=asset_group.lower())` → honours `PROTOCOL_DATA_SINK_BUCKET_{AG}` ✓
-2. **Failure path** — `_failed_group_manifest._record_failed_group(...)` [features_service/delta_one/cli/handlers/_failed_group_manifest.py:46](../../features-service/features_service/delta_one/cli/handlers/_failed_group_manifest.py#L46) → `config.get_output_bucket(asset_group)` → `common.resolve_bucket(kind="features-delta-one", ...)` → `resolve_bucket_name(...)` straight to yaml SSOT, **never reads `PROTOCOL_DATA_SINK_BUCKET_*`** ✗
+1. **Success path** — `feature_writer._get_sink_bucket(asset_group)`
+   [features_service/delta_one/app/core/feature_writer.py:61-80](../../features-service/features_service/delta_one/app/core/feature_writer.py#L61-L80)
+   → `get_data_sink(routing_key=asset_group.lower())` → honours `PROTOCOL_DATA_SINK_BUCKET_{AG}` ✓
+2. **Failure path** — `_failed_group_manifest._record_failed_group(...)`
+   [features_service/delta_one/cli/handlers/\_failed_group_manifest.py:46](../../features-service/features_service/delta_one/cli/handlers/_failed_group_manifest.py#L46)
+   → `config.get_output_bucket(asset_group)` → `common.resolve_bucket(kind="features-delta-one", ...)` →
+   `resolve_bucket_name(...)` straight to yaml SSOT, **never reads `PROTOCOL_DATA_SINK_BUCKET_*`** ✗
 
 Reproduced 2026-06-01 with the post-MDPS-fix CeFi smoke:
+
 ```bash
 PROTOCOL_DATA_SOURCE_BUCKET_CEFI=market-data-tick-cefi-test-central-element-323112 \
 PROTOCOL_DATA_SINK_BUCKET_CEFI=features-delta-one-cefi-test-central-element-323112 \
@@ -29,6 +36,7 @@ features-service --feature-family delta_one --operation compute --mode batch \
 ```
 
 Log evidence:
+
 ```
 ManifestWriter: updated availability index (14 total entries, 2 new) in features-delta-one-cefi-test-central-element-323112   ← success path, honours SINK
 ManifestWriter: updated availability index (3 total entries, 1 new) in features-delta-one-cefi-central-element-323112        ← failure path, IGNORES SINK
@@ -37,15 +45,22 @@ Recorded record_failed manifest row for CEFI/technical_indicators on 2026-04-22 
 
 ## Why it matters
 
-Every test/smoke/dev features-service run **pollutes the canonical features-delta-one bucket** with `record_failed` rows whenever any feature group hits the orchestrator-returned-false path (which happens routinely on small/short smoke ranges due to the 50-candle minimum for technical_indicators). This breaks the test/prod bucket isolation contract that `PROTOCOL_DATA_SINK_BUCKET_*` is designed to enforce.
+Every test/smoke/dev features-service run **pollutes the canonical features-delta-one bucket** with `record_failed` rows
+whenever any feature group hits the orchestrator-returned-false path (which happens routinely on small/short smoke
+ranges due to the 50-candle minimum for technical*indicators). This breaks the test/prod bucket isolation contract that
+`PROTOCOL_DATA_SINK_BUCKET*\*` is designed to enforce.
 
 Downstream consequences:
+
 - Manifest consolidator + data-status endpoints reading the canonical features bucket pick up TEST data
-- Strategy / paper-trade / `_index/availability_index.parquet` consumers see phantom `attempted_failed` rows for instruments/dates that were never actually touched in prod
+- Strategy / paper-trade / `_index/availability_index.parquet` consumers see phantom `attempted_failed` rows for
+  instruments/dates that were never actually touched in prod
 - Smoke runs cannot be cleanly distinguished from prod runs in the canonical bucket
 - Operator-level cleanup needed after every smoke (I had to delete 1 polluting row after the 2026-06-01 smoke)
 
-The success path got the fix already (commit history references `_get_sink_bucket` introduction with rationale "Without this, an unset PROTOCOL_DATA_SINK_BUCKET made get_data_sink return a StorageDataSink with an empty bucket"). The failure path was missed in that same pass.
+The success path got the fix already (commit history references `_get_sink_bucket` introduction with rationale "Without
+this, an unset PROTOCOL_DATA_SINK_BUCKET made get_data_sink return a StorageDataSink with an empty bucket"). The failure
+path was missed in that same pass.
 
 ## Recommended decision
 
@@ -63,11 +78,18 @@ def get_output_bucket(self, asset_group: str) -> str:
     return resolve_bucket(kind="features-delta-one", asset_group=asset_group.lower())
 ```
 
-This makes BOTH success and failure paths honour the same env override + same yaml SSOT fallback. The change is ~10 LOC in [features_service/delta_one/config.py:162-164](../../features-service/features_service/delta_one/config.py#L162-L164) and removes the bucket-split bug for the failure path.
+This makes BOTH success and failure paths honour the same env override + same yaml SSOT fallback. The change is ~10 LOC
+in [features_service/delta_one/config.py:162-164](../../features-service/features_service/delta_one/config.py#L162-L164)
+and removes the bucket-split bug for the failure path.
 
-Also propagates to the analogous `get_instruments_store_bucket` + `get_input_bucket` callers in the same file — they likely have the same drift but I didn't reproduce for those (the SINK env exists for input only as `PROTOCOL_DATA_SOURCE_BUCKET_*` so the routing-key trick maps to `get_data_source` instead of `get_data_sink`).
+Also propagates to the analogous `get_instruments_store_bucket` + `get_input_bucket` callers in the same file — they
+likely have the same drift but I didn't reproduce for those (the SINK env exists for input only as
+`PROTOCOL_DATA_SOURCE_BUCKET_*` so the routing-key trick maps to `get_data_source` instead of `get_data_sink`).
 
-**Out of scope for today** — another agent is actively touching features-service files (CLAUDE.md "Two teammates × multiple parallel agents" rule), so I did not patch this. Filed for the next agent to land tomorrow. Estimated effort: 30 min (config.py + targeted unit test asserting PROTOCOL_DATA_SINK_BUCKET_CEFI override is honoured by the failure path).
+**Out of scope for today** — another agent is actively touching features-service files (CLAUDE.md "Two teammates ×
+multiple parallel agents" rule), so I did not patch this. Filed for the next agent to land tomorrow. Estimated effort:
+30 min (config.py + targeted unit test asserting PROTOCOL_DATA_SINK_BUCKET_CEFI override is honoured by the failure
+path).
 
 ## Related
 

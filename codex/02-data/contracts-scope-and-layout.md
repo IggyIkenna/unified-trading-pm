@@ -359,13 +359,13 @@ Import surface:
 ### Generalised beyond TradFi — `source` is universal across ALL asset groups (2026-06-01)
 
 `data_source_provenance_all_asset_groups_2026_06_01.md` generalised the `source` column from TradFi-only to **every
-external-vendor market-data cell** (cefi / defi / sports / prediction / tradfi). The write-path gate is **registry-driven,
-not asset_group-hardcoded** and uses the **universal-stamping** (auto-stamp) form:
+external-vendor market-data cell** (cefi / defi / sports / prediction / tradfi). The write-path gate is
+**registry-driven, not asset_group-hardcoded** and uses the **universal-stamping** (auto-stamp) form:
 
 - `source_required(asset_group, data_type)` — True iff the cell has **>1 external source** (must pass `source=`).
-- `default_source(asset_group, data_type)` — the sole external source for a single-source cell (the writer **auto-stamps**
-  it; no explicit `source=` needed). Universal stamping for swap-resilience: every external cell carries `source` even
-  when one vendor exists today, so a later vendor swap/addition stays distinguishable.
+- `default_source(asset_group, data_type)` — the sole external source for a single-source cell (the writer
+  **auto-stamps** it; no explicit `source=` needed). Universal stamping for swap-resilience: every external cell carries
+  `source` even when one vendor exists today, so a later vendor swap/addition stays distinguishable.
 - `COMPUTED_SOURCES` / `external_sources_for(...)` — internal emitters (`execution_service` / `strategy_service` /
   `features_onchain_service` / `cross_instrument`) are **exempt** (lineage is the upstream cell, not a vendor).
 - UTL `ManifestWriter._resolve_and_validate_source` applies this in `record_captured` **and** legacy `add`; raises
@@ -373,8 +373,8 @@ not asset_group-hardcoded** and uses the **universal-stamping** (auto-stamp) for
 
 Multi-source cells beyond TradFi: defi `oracle_prices` (`pyth_hermes`/`chainlink`) + `native_staking_rates`
 (`solana_rpc`/`helius_rpc`); sports `FIXTURES` (`api_football`/`footystats`). The merge helpers above are
-asset-group-agnostic (verified for cefi/defi/sports, uac@559dc81b). Landed: uac@aab101ad / utl@0f7198f2 /
-mtds@2ef636a6 / instruments-service@6bbd6919.
+asset-group-agnostic (verified for cefi/defi/sports, uac@559dc81b). Landed: uac@aab101ad / utl@0f7198f2 / mtds@2ef636a6
+/ instruments-service@6bbd6919.
 
 ---
 

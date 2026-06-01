@@ -160,8 +160,8 @@ Multi-coin rotation:
 
 ## Solana basis variant (DRIFT perp + ORCA spot) — added 2026-06-01
 
-> Added 2026-06-01 from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 3
-> (SolanaBasisGcsLoader wiring at strategy-service@6b7e03b7 / a6bbe54c). Strategy slot:
+> Added 2026-06-01 from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 3 (SolanaBasisGcsLoader wiring
+> at strategy-service@6b7e03b7 / a6bbe54c). Strategy slot:
 > `SOL_BASIS → CARRY_BASIS_PERP@raydium-drift-sol-1h-sol-v5-prod` (already mapped in
 > `archetype_slot_resolver.STRATEGY_TYPE_TO_SLOT` — no new archetype needed).
 
@@ -169,27 +169,27 @@ The Solana basis instance of this archetype runs:
 
 - **Short leg**: SOL-PERP on **DRIFT** (Solana CLOB hybrid w/ vAMM). Funding data via Drift Velocity Data API
   (`data.api.drift.trade`) per `codex/04-architecture/drift-v2-data-sources.md`. Hourly funding cadence.
-- **Long leg**: SOL on **ORCA** Whirlpool SOL/USDC ($28M TVL — most liquid Solana SOL/USDC pool). Pool state
-  ingested at 1-min cadence via Alchemy archive RPC (`getAccountInfo` of Whirlpool account at slot).
-  Secondary: RAYDIUM classic AMM WSOL/USDC pool ($14M combined TVL) for redundancy / cross-venue dispersion check.
+- **Long leg**: SOL on **ORCA** Whirlpool SOL/USDC ($28M TVL — most liquid Solana SOL/USDC pool). Pool state ingested at
+  1-min cadence via Alchemy archive RPC (`getAccountInfo` of Whirlpool account at slot). Secondary: RAYDIUM classic AMM
+  WSOL/USDC pool ($14M combined TVL) for redundancy / cross-venue dispersion check.
 - **Entry**: when annualised Drift SOL-PERP funding > entry threshold (e.g., +500 bps) after fees.
 - **Exit**: when funding inverts, drops below exit threshold, or delta-drift exceeds rebalance band.
-- **Backtest loader**: `SolanaBasisGcsLoader` (`strategy_service/engine/backtest/solana_basis_loader.py`) reads
-  Drift perp_funding + Orca/Raydium dex_pool_state parquets from
+- **Backtest loader**: `SolanaBasisGcsLoader` (`strategy_service/engine/backtest/solana_basis_loader.py`) reads Drift
+  perp_funding + Orca/Raydium dex_pool_state parquets from
   `gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode={batch|live}/asset_group=defi/…`.
   GCS-first with fixture fallback via `--source auto`.
 - **Live = batch**: the `--live --continuous` flag on the underlying MTDS backfill scripts
-  (`backfill_drift_v2_historical.py` + `backfill_solana_dex_state.py`, mtds@1d35c7f2) means the engine consumes
-  the same schema from the same path in both modes.
-- **Sign check (verified 2025-08-01 fixture run)**: positive Drift funding → SHORT perp + LONG spot → positive PnL
-  in funding-positive regime (mirrored on backtest harness e2e-testing@3d02c74).
+  (`backfill_drift_v2_historical.py` + `backfill_solana_dex_state.py`, mtds@1d35c7f2) means the engine consumes the same
+  schema from the same path in both modes.
+- **Sign check (verified 2025-08-01 fixture run)**: positive Drift funding → SHORT perp + LONG spot → positive PnL in
+  funding-positive regime (mirrored on backtest harness e2e-testing@3d02c74).
 - **Promote path**: per CLAUDE.md Promote Workflow Path SSOT, valid May-23 target is `paper_1d → live_early`;
   `live_full` is post-cutover. Solana basis MVP G3 (paper) → G4 (live wallet, HUMAN-ONLY) flow tracked in
   `plans/active/defi_manifest_canonicalisation_2026_06_01.md` § G.
 
-Capital efficiency note: Drift + Orca are NOT same-venue cross-margin netting (different programs). LEADER_HEDGE
-applies — sequential, not atomic. Solana same-block atomicity (sub-second) is the saving grace vs cross-chain
-sequential execution.
+Capital efficiency note: Drift + Orca are NOT same-venue cross-margin netting (different programs). LEADER_HEDGE applies
+— sequential, not atomic. Solana same-block atomicity (sub-second) is the saving grace vs cross-chain sequential
+execution.
 
 ## See also
 
@@ -198,5 +198,7 @@ sequential execution.
 - Recursive variant: [carry-recursive-staked.md](carry-recursive-staked.md)
 - Capital efficiency on same-venue netted basis:
   [../../../04-architecture/capital-efficiency-patterns.md](../../../04-architecture/capital-efficiency-patterns.md)
-- Drift V2 data sources: [../../../04-architecture/drift-v2-data-sources.md](../../../04-architecture/drift-v2-data-sources.md)
-- Solana DeFi coverage: [../../../04-architecture/solana-defi-coverage.md](../../../04-architecture/solana-defi-coverage.md)
+- Drift V2 data sources:
+  [../../../04-architecture/drift-v2-data-sources.md](../../../04-architecture/drift-v2-data-sources.md)
+- Solana DeFi coverage:
+  [../../../04-architecture/solana-defi-coverage.md](../../../04-architecture/solana-defi-coverage.md)

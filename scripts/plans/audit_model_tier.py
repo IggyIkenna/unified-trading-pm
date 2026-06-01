@@ -30,9 +30,23 @@ from pathlib import Path
 # opus-required criteria (cross-repo architecture / large migration / trading
 # judgment / master-orchestrator). Presence is a FLAG for human review, not a verdict.
 OPUS_KEYWORDS = (
-    "master", "architecture", "topology", "migration", "archetype", "ledger",
-    "regime", "allocator", "trading", "risk", "pre-audit", "cross-repo",
-    "cross_repo", "consolidat", "shard", "pnl", "attribution",
+    "master",
+    "architecture",
+    "topology",
+    "migration",
+    "archetype",
+    "ledger",
+    "regime",
+    "allocator",
+    "trading",
+    "risk",
+    "pre-audit",
+    "cross-repo",
+    "cross_repo",
+    "consolidat",
+    "shard",
+    "pnl",
+    "attribution",
 )
 # estimate_class values that lean opus (design/research = synthesis-heavy).
 OPUS_ESTIMATE_CLASSES = ("design", "research")
@@ -78,7 +92,9 @@ def main() -> int:
         print(f"ERROR: {plans_dir} not found (run from unified-trading-pm root)", file=sys.stderr)
         return 2
 
-    files = sorted(p for p in plans_dir.glob("*.md") if p.name not in ("INDEX.md", "_agent_pings.md", "task_template.md"))
+    files = sorted(
+        p for p in plans_dir.glob("*.md") if p.name not in ("INDEX.md", "_agent_pings.md", "task_template.md")
+    )
     declared = 0
     opus_candidates: list[str] = []
     mismatches: list[str] = []

@@ -120,12 +120,13 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
 - [ ] (i1) **Ruleset required-check is consistent on every repo.** Run (read-only):
       `python3 scripts/repo-management/verify_branch_protection_check_names.py` → exit 0 / "ALL RULESETS CONSISTENT:
       True". This confirms each repo's ruleset requires exactly what its workflow emits (no name drift).
-- [ ] (i2) **Every repo's required check is `quality-gates-v2`, not retired v1 `quality-gates`.** From the same
-      verifier output, **no repo's MAIN/STAGING required context may be `…/quality-gates` (v1)**. A repo shows v1 iff its
+- [ ] (i2) **Every repo's required check is `quality-gates-v2`, not retired v1 `quality-gates`.** From the same verifier
+      output, **no repo's MAIN/STAGING required context may be `…/quality-gates` (v1)**. A repo shows v1 iff its
       default-branch workflow is still `workspace-qg.yml` — migrate the workflow to `quality-gates-v2.yml` (then re-pin
       with `pin_branch_protection_rulesets.py --apply --repo <r>`). **Migration is GATED on that repo's v2 QG being
       green** — enabling the v2 required check on a red repo blocks ALL its merges. (2026-06-01 ground truth: 9/17 on
-      v2; **8 still on v1**, 7 of which are blocked on pre-existing QG-red — see result file + `ci_canonical_v2_migration`.)
+      v2; **8 still on v1**, 7 of which are blocked on pre-existing QG-red — see result file +
+      `ci_canonical_v2_migration`.)
 - [ ] (i3) **No force-push to `main`/`staging`.** Confirm via the ruleset (`non_fast_forward` rule present) and that no
       repo allows force-push on protected refs.
 - [ ] (i4) **Admin bypass is constrained.** Where classic protection is also present, `enforce_admins.enabled == true`
