@@ -130,7 +130,7 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 > `quality-gates-v2` passes. Method: back-merge `origin/main`→LDR (take-best; LDR is the newer canonical line; recurring
 > conflict was the functionally-identical `quality-gates-v2.yml` add/add → took LDR's PM-template version). If a PR's v2
 > goes RED on the merge it stays gated (un-merged) → that repo joins the QG-debt set; do NOT bypass the gate.
-| unified-trading-pm | #107 | 🔴 v2-RED (basedpyright over-ratchet: feature_parity_diff.py numpy/pyarrow + readiness scripts) — green first |
+| unified-trading-pm | #107 | ✅ GREEN — harsh-side fixed basedpyright over-ratchet (a217a031c, 3 CI-tooling scripts → [tool.basedpyright] ignore) + FF'd main 4f57234ea; #107 closed (direct FF). PM main green. |
 | deployment-service | — | 🔴 v2-RED — green first |
 | fund-administration-service / e2e-testing / greeks-service | — | v2 just added; no runs yet (open PR after first green v2) |
 
