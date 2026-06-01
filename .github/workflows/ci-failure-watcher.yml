@@ -1,0 +1,60 @@
+name: ci-failure-watcher
+
+# Central, cross-repo CI watcher — the antidote to the silent-rot that hid the whole
+# CI/CD promotion breakage for months (cicd_contract_hardening_2026_06_01.md backlog P0 #1).
+#
+# Two detectors (see scripts/repo-management/ci_failure_watcher.py):
+#   1. workflow failure -> recovery TRANSITIONS, for EVERY workflow on main+staging
+#      across the canonical fleet (not just per-repo Quality Gates).
+#   2. auto-merge-STUCK promotion PRs (a PR state, NOT a workflow_run failure, so the
+#      transition detector alone misses it).
+# On any failing-transition or stuck PR it pages #ci-failures via notify-slack.yml.
+#
+# NOTE: GitHub `schedule:` triggers only fire from the DEFAULT branch (main), so this
+# is only live once merged to main. Use `workflow_dispatch` to run on demand meanwhile.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # every 15 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      alert: ${{ steps.scan.outputs.alert }}
+      severity: ${{ steps.scan.outputs.severity }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Scan fleet for CI transitions + stuck promotion PRs
+        id: scan
+        env:
+          # Cross-repo run/PR reads need fleet-wide access; the default GITHUB_TOKEN is
+          # scoped to this repo only. GH_PAT carries the fleet read scope.
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: python3 scripts/repo-management/ci_failure_watcher.py
+
+  notify:
+    needs: watch
+    if: needs.watch.outputs.alert == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: |
+        CI watcher detected fleet activity (failures, recoveries, or stuck promotion PRs):
+        ${{ needs.watch.outputs.report }}
+      severity: ${{ needs.watch.outputs.severity }}
+      workflow_name: ci-failure-watcher
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      # Dedicated #ci-failures incoming webhook (falls back to general if unset).
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
