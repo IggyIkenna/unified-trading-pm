@@ -2609,3 +2609,34 @@ aiohttp/anthropic/fastapi lower-bounds in alerting). All my PM-markdown landed v
 escape hatch. Needs a dep-alignment owner to bump the repos (or correct the manifest). Foreign/out-of-scope for slot 7.
 
 Inventory regenerated + hygiene sweep GREEN (0 hard / 0 soft; 0 orphans). — slot-7 / ikenna 2026-06-01
+
+---
+
+## [2026-06-01 later] slot-7 — dependency-alignment FIXED + 2 more issues archived
+
+**Dependency-alignment is now GREEN (`check-dependency-alignment.py` → `aligned: true`, 0 issues)** — PM quickmerge
+STAGE 1.5 is unblocked. Root causes + fixes:
+- **Stale committed `derived-dependency-manifest.json`** (2500-line drift) caused web3 UTL/instruments
+  false-positive mismatches — regenerated.
+- **`workspace-constraints.toml` web3 was the stale SSOT outlier** (`>=6.0.0,<7.0.0`) vs the committed canonical +
+  features/deployment + installed web3 6.20.x → set to `>=6.20.0,<8.0.0` (PM@`09969498d`).
+- **Genuine repo-behind external bumps** (surgical, pushed to LDR): alerting-service@`ae0136b`
+  (aiohttp/anthropic/fastapi/pytest), execution-service@`87a56c79d` + strategy-service@`8322bc13` (python-multipart).
+  ⚠️ alerting installed anthropic = 0.84 < new spec 0.87 → alerting's next QG will upgrade it (SSOT-driven; owner
+  validates API). canonical-manifest python-multipart also corrected to `>=0.0.27`.
+- **Internal-dep drift**: added alerting-service + client-reporting-api to `system-integration-tests` deps in
+  `workspace-manifest.json` (SIT depends on all repos; manifest was missing them). NB the documented
+  `fix-internal-dependency-alignment.py --apply` is **LOSSY** (strips comments / reorders TOML) — reverted its SIT
+  rewrite and did the manifest-side fix by hand instead.
+- **features↔ml-service tier violation** (the last of 11): `regime_clustering.py:178` imports
+  `ml_service.training.backtest_v2.walk_forward` across a higher tier. features pyproject already omits ml-service, so
+  the stale (optional) `ml-service` entry was removed from the manifest to align manifest↔pyproject. The lazy import is a
+  latent leak → P1 cleanup todo filed in `features_and_ml_master` (move walk_forward to a lower tier). (PM@`0973b2097`)
+
+**2 more issues ARCHIVED** (issue-doc-lifecycle — all findings dispatched, no dual-track) — PM@`cf11d3dcc`:
+- `audit03_ikenna_review_routing` (all 9 F-items shipped/dispatched to strategy/execution/codex/client-isolation epics).
+- `recon_freeze_armed_never_published` (G12 dispatched to observability_master P0 + execution_master P1).
+
+**Left active (legitimate trackers — residual gaps not all dispatched):** `batch_live_reconciliation_service_audit`
+(G1–G12 tracked gaps beyond D2/D3/D4), `features_service_defi_data_loading_blockers` (Issue-4 lookback-rows + CeFi-path
+items beyond DeFi #1–4). — slot-7 / ikenna 2026-06-01

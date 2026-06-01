@@ -112,26 +112,26 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
-_Last regenerated: 2026-06-01 21:31 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+_Last regenerated: 2026-06-01 22:10 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|
 | [`data_source_provenance_all_asset_groups_2026_06_01`](./data_source_provenance_all_asset_groups_2026_06_01.md) | master | infra | 12/34 | 35% | 5.2 | — |
 | [`utl_full_quality_gates_green_2026_06_01`](./utl_full_quality_gates_green_2026_06_01.md) | master | infra | 0/13 | 0% | 4.8 | — |
 | [`codex_vs_repo_docs_ssot_audit_2026_06_01`](./codex_vs_repo_docs_ssot_audit_2026_06_01.md) | master | refactor | 1/24 | 4% | 3.1 | — |
-| [`defi_manifest_canonicalisation_2026_06_01`](./defi_manifest_canonicalisation_2026_06_01.md) | master | refactor | 11/51 | 22% | 2.8 | — |
+| [`defi_manifest_canonicalisation_2026_06_01`](./defi_manifest_canonicalisation_2026_06_01.md) | features_and_ml_master | refactor | 11/51 | 22% | 2.8 | — |
 | [`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01`](./bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md) | master | infra | 10/23 | 43% | 2.7 | — |
 | [`instruments_manifest_canonicalisation_2026_06_01`](./instruments_manifest_canonicalisation_2026_06_01.md) | master | infra | 2/13 | 15% | 2.0 | — |
-| [`sports_manifest_canonicalisation_2026_06_01`](./sports_manifest_canonicalisation_2026_06_01.md) | master | infra | 6/23 | 26% | 1.8 | — |
 | [`prediction_manifest_canonicalisation_2026_06_01`](./prediction_manifest_canonicalisation_2026_06_01.md) | master | infra | 4/15 | 27% | 1.8 | — |
 | [`ci_canonical_v2_migration_2026_05_29`](./ci_canonical_v2_migration_2026_05_29.md) | master | infra | 17/30 | 57% | 1.7 | — |
+| [`sports_manifest_canonicalisation_2026_06_01`](./sports_manifest_canonicalisation_2026_06_01.md) | master | infra | 9/23 | 39% | 1.5 | — |
 | [`tradfi_manifest_canonicalisation_2026_06_01`](./tradfi_manifest_canonicalisation_2026_06_01.md) | master | infra | 3/17 | 18% | 1.3 | — |
 | [`downstream_services_manifest_canonicalisation_2026_06_01`](./downstream_services_manifest_canonicalisation_2026_06_01.md) | master | infra | 5/11 | 45% | 1.3 | — |
 | [`pipeline_mode_partition_migration_2026_06_01`](./pipeline_mode_partition_migration_2026_06_01.md) | master | infra | 0/2 | 0% | 1.2 | — |
 | [`cefi_manifest_canonicalisation_2026_06_01`](./cefi_manifest_canonicalisation_2026_06_01.md) | master | infra | 5/16 | 31% | 1.1 | — |
 | [`human_work_backlog_2026_05_20`](./human_work_backlog_2026_05_20.md) | master | infra | — | — | 0.4 | — |
-| [`orchestrator_asymmetric_auth_2026_06_01`](./orchestrator_asymmetric_auth_2026_06_01.md) | master | design | 4/5 | 80% | 0.4 | — |
-| [`cicd_contract_hardening_2026_06_01`](./cicd_contract_hardening_2026_06_01.md) | master | infra | 65/75 | 87% | 0.2 | — |
+| [`cicd_contract_hardening_2026_06_01`](./cicd_contract_hardening_2026_06_01.md) | master | infra | 67/79 | 85% | 0.2 | — |
+| [`solana_defi_legacy_migration_2026_05_27`](./solana_defi_legacy_migration_2026_05_27.md) | master | infra | 33/34 | 97% | 0.1 | — |
 | [`master_to_live_defi_2026_05_23`](./master_to_live_defi_2026_05_23.md) | README | design | 168/172 | 98% | 0.1 | — |
 | [`manifest_reader_fail_fast_on_stale_fallback_2026_05_28`](./manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md) | master | refactor | 8/13 | 62% | 0.1 | — |
 | [`api_host_chronic_impairment_2026_05_29`](./api_host_chronic_impairment_2026_05_29.md) | master | infra | 16/16 | 100% | 0.0 | — |
@@ -150,11 +150,10 @@ _Last regenerated: 2026-06-01 21:31 UTC via `scripts/plans/regenerate_active_pla
 | [`mtds_backfill_phase3_2026_05_22`](./mtds_backfill_phase3_2026_05_22.md) | master | infra | 42/42 | 100% | 0.0 | — |
 | [`plan_hygiene_silent_failure_capture_2026_05_29`](./plan_hygiene_silent_failure_capture_2026_05_29.md) | master | refactor | 22/22 | 100% | 0.0 | — |
 | [`regime_clustering_structure_allocator_2026_05_29`](./regime_clustering_structure_allocator_2026_05_29.md) | features_and_ml_master | brand-new | 29/29 | 100% | 0.0 | — |
-| [`solana_defi_legacy_migration_2026_05_27`](./solana_defi_legacy_migration_2026_05_27.md) | master | infra | 32/32 | 100% | 0.0 | — |
 | [`sports_retired_data_types_code_cleanup_2026_05_13`](./sports_retired_data_types_code_cleanup_2026_05_13.md) | master | refactor | 12/12 | 100% | 0.0 | — |
 | [`tradfi_massive_dual_source_2026_05_28`](./tradfi_massive_dual_source_2026_05_28.md) | master | infra | 40/40 | 100% | 0.0 | — |
 | [`workspace_config_drift_remediation_2026_06_01`](./workspace_config_drift_remediation_2026_06_01.md) | master | infra | 11/11 | 100% | 0.0 | — |
-| **TOTAL** (38 plans) | 0 orphans, 0 TBD | — | — | **78% done** | **32** | — |
+| **TOTAL** (37 plans) | 0 orphans, 0 TBD | — | — | **78% done** | **31** | — |
 <!-- AUTO-INVENTORY-END -->
 
 > **Inventory divergence note (2026-05-20 — refresh on next regenerate)**: Both `strategy_repo_consolidation_2026_05_19`
