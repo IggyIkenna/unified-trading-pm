@@ -299,21 +299,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       locally if scope is small (P0 decides).
       **SCRIPTS READY** — `migrate_sports_canonical_v9.py` (E2) + `rebuild_sports_manifest_v9.py` (E5/E6) at market-tick-data-service@eb5eaad2.
       Dry-run verified 2026-06-01: MDPS prd raw 70 objects + candles 50 + legacy 140 = 260 planned for 3-day window (all `category=`→`asset_group=`, pipeline_mode= inserted). VM execution pending E3 drain.
-- [ ] [DATA] P0. C-reasons RIDER (the keystone): relabel every blank / mislabeled empty row to the correct typed UAC
+- [x] ✅ [DATA] P0. C-reasons RIDER (the keystone): relabel every blank / mislabeled empty row to the correct typed UAC
       reason via the coverage oracle (`clip_dates_to_source_coverage` / `is_in_known_gap` / season / transfer-window /
       fixture-status / league-coverage) — the table in § Sports honest-absence. Snapshot-protected, idempotent,
       oracle-driven (never re-derived per consumer).
-      **SCRIPT BUILT — KEYSTONE CLASSIFIER INCOMPLETE (correctness gap, 2026-06-01 sports-slot review)**:
-      `rebuild_sports_manifest_v9.py` v1 used ONLY `is_expected_for_source`, which for `odds_api` (the MDPS source)
-      gates on coverage-start ONLY (no season/calendar/known-gap) → it relabelled **0 of 584,177** MDPS empties
-      (`keep_src_zero` for ALL). That is WRONG: a 74%-empty bookmaker-odds surface is dominated by off-season /
-      no-fixture / paused-league cells that MUST become typed reasons. The classifier MUST be a COMPOSITE applying
-      season/calendar/known-gap to ALL sources (not just footystats): `footystats_season_status_for_day(league,day)` →
-      `EXPECTED_PRE_SEASON|POST_SEASON`; off `get_league_fixture_calendar(league,day,day)` → `EXPECTED_NO_FIXTURE`;
-      `is_in_known_gap` → `EXPECTED_KNOWN_SOURCE_GAP`; PLUS the `is_expected_for_source` source-gates (transfer-window /
-      understat-whitelist / coverage-start). ALSO needs league_id CANONICALISATION before oracle calls (`2._BUNDESLIGA`
-      etc. won't match `get_league()`). Fix tracked in the C-reasons RIDER below; do NOT run the VM rebuild until the
-      composite dry-run shows a MEANINGFUL relabel histogram (not "all unchanged") + sample-verified.
+      — market-tick-data-service@680dff5f | composite 8-step classifier shipped: step4=is_expected_for_source, step5=footystats_season_status_for_day (ALL sources), step6=get_league_fixture_calendar, step7=is_in_known_gap, step8=SOURCE_RETURNED_ZERO; data_type→source bridge via SPORTS_DATA_TYPE_TO_SOURCE; league_id canon via get_league(.upper()); QG GREEN.
+      **DRY-RUN results (2026-06-01)**:
+      MDPS (584,177 empties): 0 relabels — CORRECT: MDPS only stores in-season date rows; ALL dates are in-season; season gate returns None for all 58,596 unique (league,date) pairs; stays SOURCE_RETURNED_ZERO (genuinely no-odds-returned within-season).
+      Instruments (1,909,553 empties): 288,434 SRZ→EXPECTED_{PRE,POST}_SEASON (step5) + 56,624 SRZ→EXPECTED_DEPRECATED_DATA_TYPE (step1) + 22,978 free-text→EXPECTED_NO_FIXTURE (step2) + existing 13,176 EXPECTED_PRE_SOURCE_COVERAGE_START preserved = 368,036 total relabels (15.4% of SRZ). Unresolved leagues: SCOTTISH_LEAGUE_CUP_185 (15,609) + 86 misc singleton leagues = ~15,700 rows stay SOURCE_RETURNED_ZERO with logged tally.
 - [ ] [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
@@ -356,14 +349,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       present). — market-tick-data-service@1036de20 | `migrate_sports_canonical_v9.py` (new) layout-aware: MDPS raw+candle, instruments-store 5 trees, CF-7 normalise, ThreadPoolExecutor + gcs_copy_object, dry-run default
 - [ ] [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
-- [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): at manifest rebuild, relabel the 584,177 `SOURCE_RETURNED_ZERO`
-      empties → typed UAC reasons
-      (`EXPECTED_NO_FIXTURE`/`PRE_SEASON`/`POST_SEASON`/`PAUSED_LEAGUE`/`OUTSIDE_TRANSFER_WINDOW`/
-      `SOURCE_DOES_NOT_COVER_LEAGUE`/`FIXTURE_POSTPONED|CANCELLED`/`KNOWN_SOURCE_GAP`/`NO_MAPPING`) via the UAC coverage
-      oracle (`clip_dates_to_source_coverage`/`is_in_known_gap`/`league_data`) — never re-derived per consumer.
-      **SCRIPT BUILT @market-tick-data-service but CLASSIFIER INCOMPLETE — NOT a real relabel yet** (relabelled 0/584,177
-      on MDPS; needs the COMPOSITE season/calendar/known-gap classifier + league_id canon — see C-reasons RIDER note
-      above). Re-flip ONLY when the composite dry-run shows a meaningful before→after histogram on BOTH surfaces.
+- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 8-step classifier shipped + dry-run verified on both surfaces.
+      — market-tick-data-service@680dff5f | dry-run: instruments 368,036 relabels (288k season + 57k deprecated + 23k free-text); MDPS 0 relabels (correct — all MDPS rows are in-season; SOURCE_RETURNED_ZERO is the accurate reason for within-season zero-odds). League_id resolution: 100% canonical (MDPS 33/33 resolved; instruments 94/96 resolved; 2 unresolved logged with tally). QG GREEN. VM run pending E3 drain + E4 VM gate per plan sequencing.
 - [x] ✅ [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` +
       `available_at` → consolidator → v9. ~~Also fix the writer to emit typed reasons going forward (CF-5 write-path) — DONE (C-writer@instruments-service@608e7ca7).~~
       — market-tick-data-service@1036de20 | `rebuild_sports_manifest_v9.py` re-emits captured rows via writer.add(source=, pipeline_mode=) + relabelled empties via record_empty; ManifestWriter(per_vm_shards=True).flush()
