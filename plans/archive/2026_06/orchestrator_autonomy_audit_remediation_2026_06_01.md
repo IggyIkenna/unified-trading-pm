@@ -4,14 +4,13 @@ title: "orchestrator autonomy audit remediation — uncovered findings from the 
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P1
-status: active
+status: archived
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 created: 2026-06-01
 last_updated: 2026-06-01
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
+archived: 2026-06-01
 codex_ssots:
   - codex/04-architecture/agent-orchestrator-overview.md
   - codex/05-infrastructure/agent-orchestrator-slack-notifications.md
@@ -22,6 +21,30 @@ related_plans:
   - plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md
   - plans/active/harsh_pc_dispatch_failover_2026_05_30.md
 ---
+
+## ✅ ARCHIVED 2026-06-01 — all phases complete
+
+All Phase 1–4 todos shipped + flipped (0 open); fleet-verified live (both AWS
+orchestrator VMs @589b711: branch-state/respawn fixes, Slack alerts on, S3
+snapshots landing, git-health-guard + ao-self-pull crons installed). Code SHAs:
+agent-orchestrator @1f9af64 · @0b6b12e · @977e2e1 · @7950ab0 · @589b711.
+
+**Deferred work — migrated to:**
+
+- FM3 belt-and-suspenders (`git rm --cached` + `.gitignore playwright-report/` in
+  **deployment-ui** + **user-management-ui**) — foreign repos, out of
+  agent-orchestrator scope; for those repos' owners. The agent-orchestrator-side
+  FM3 (`restore_generated_artifacts`) shipped @1f9af64.
+- HS256 retirement is tracked in its own active plan
+  `orchestrator_asymmetric_auth_2026_06_01.md` (P2, time-gated to ~2026-06-03 soak)
+  — NOT part of this plan.
+- Two epic follow-ups captured + DONE in `plans/epics/orchestrator_master.md`
+  (guard-cron webhook self-fetch P2; AO main-checkout self-pull P1) @589b711.
+
+**Codex alignment (verified 2026-06-01):** `agent-orchestrator-overview.md` (S3
+gap callout flipped), `agent-orchestrator-slack-notifications.md` (inventory
+refreshed), `per-tab-worktrees.md` (new Phase-4 gate section) — all current.
+CLAUDE.md gained the liveness-gated inherited-dirty-WIP rule (@3f2d5e3f6).
 
 ## Why this exists
 
@@ -60,15 +83,11 @@ reboot still wipes dispatch/backlog state).
       backup tick alongside GCS. + `boto3` dep + 8 `@mock_aws` tests (all pass). ruff + basedpyright 0 errors. NB: 6
       unrelated pre-existing test failures (slack/worker_liveness modules) + a `pexpect` venv gap observed in this
       worktree — neither touches `gcs_sync.py`; flagged for the env/test-health owner, not this commit.
-- [~] 🟡 [SCRIPT] P1. Provision `s3://uts-orchestrator-state-427895769566/` + set `ORCHESTRATOR_S3_BUCKET` systemd env
-  on the 11 AWS VMs via SSM drop-in. Restart orchestrator; confirm a snapshot object lands within one cadence window.
-  Collision group: none. Estimate: 0.2 AI-day. 🟡 PARTIAL 2026-06-01 (slot-1, AWS admin `admin_od`): **bucket created**
-  `uts-orchestrator-state-427895769566` (ap-northeast-1, versioning on) + `enable_s3_snapshot.sh` drop-in script
-  shipped. **Env rollout pending** — canary-first per workspace rollout discipline; activation needs an orchestrator
-  restart per VM (the 6 behind=0 VMs already carry the @57dc8c2 code). End-to-end snapshot verification additionally
-  needs an authed `/api/snapshot` trigger (the fleet `/api/snapshot` is NOT ALLOW_ANONYMOUS — returns "missing bearer
-  token"). To roll: run `enable_s3_snapshot.sh` per VM via SSM, canary vm-cefi first (a fleet wrapper can mirror
-  `run_fleet_enable_watchdog.sh`), when ready to restart orchestrators.
+- [x] ✅ [SCRIPT] P1. ✅ DONE 2026-06-01 (verified live). `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` set
+  via `s3-snapshot.conf` systemd drop-in on **both** live orchestrator VMs (the fleet consolidated to 2 — not 11);
+  confirmed end-to-end: fresh snapshot objects landing every ~10–20 min in
+  `s3://uts-orchestrator-state-427895769566/snapshots/` (verified 2026-06-01 ~20:55Z, both VMs writing). Bucket
+  ap-northeast-1, versioning on; `enable_s3_snapshot.sh` is the drop-in. AWS disaster-recovery loop CLOSED.
 - [x] ✅ [DOCS] P2. Update the `codex/04-architecture/agent-orchestrator-overview.md` "Known gap" callout — flip it from
       "deferred future work" to "shipped — AWS↔S3 snapshot live" with the bucket name + env var. Collision group: none.
       Estimate: 0.05 AI-day. ✅ DONE 2026-06-01 — overview "Secrets + buckets" state-snapshot row + the callout now read
@@ -139,12 +158,8 @@ context-full + cap-hit alerts). The audit E1 expected-count (10/8) and the codex
 
 ### Phase 4 — P0/P1: respawn working-tree hygiene (9-failure-mode audit 2026-06-01)
 
-> **🟡 IN-FLIGHT — Phase-4 implementation owned by a parallel session (since 2026-06-01 ~20:25).** In the slot-1
-> agent-orchestrator worktree, `server/worktree_clean_check.py` carries +389 lines of uncommitted WIP (the full
-> `classify_maker_liveness` / FM2 wiped-index / FM3 restore / FM8b slot-tagged-stash implementation) and
-> `server/worker_liveness.py` is also modified — actively edited (mtime within seconds). **Do NOT duplicate or stomp**;
-> coordinate with the owning session. Slot-1 interactive operator session confirmed "back off" 2026-06-01. Banner-remove
-> when that session commits + flips these todos.
+> **✅ Phase-4 SHIPPED 2026-06-01** — all FM2/FM3/FM8/FM8b/FM1-5-6-7/FM4-5 + addendum landed on agent-orchestrator LDR
+> (@1f9af64 · @0b6b12e · @977e2e1 · @7950ab0) and deployed to the live fleet; the earlier IN-FLIGHT banner is cleared.
 
 A follow-on autonomy audit (this session 2026-06-01 — fan-out + adversarial verify, all verdicts confirmed against
 `agent-orchestrator@HEAD` + `unified-trading-pm/scripts/dev`) checked the operator's standing concern: **"if things stop
