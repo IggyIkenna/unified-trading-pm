@@ -40,8 +40,35 @@ locked_since: 2026-05-21
 - [ ] ☐ A5. LIGHTER perp_funding: real adapter fix — `SOURCE_RETURNED_ZERO` across full post-launch life (zkSync
       endpoint returns nothing). Verify endpoint/auth.
 
+## Architecture principle (codify — answers "manifest vs data-status job")
+
+**Annotate honestly ONCE at write-time (manifest, via the `expected_coverage()` oracle); READ everywhere else. Never
+re-derive the expected set in a consumer.**
+
+- **Manifest = the canonical honest 4-state ledger.** Its job: apply the IS∩UAC / genesis / launch constraint ONCE, at
+  write/consolidation time, materialising a row for **every expected cell** with one of: `captured` /
+  `empty_confirmed[typed reason]` / `attempted_failed` / **`expected_unattempted`** (owed but never attempted). The
+  typed empty reason (`EXPECTED_PRE_GENESIS_CHAIN`, `EXPECTED_PRE_VENUE_LAUNCH`, `EXPECTED_KNOWN_SOURCE_GAP`, …) **is**
+  the IS/UAC annotation. Confirmed gap 2026-06-01: `expected_unattempted` is **never materialised** (0 source hits;
+  oracle bucket has only the 3 attempted states; `expected=True` on every present row = useless for "what's missing"). A
+  cell that SHOULD exist but was never enumerated has **no row** → invisible to every consumer.
+- **Data-status summary + drilldown = VIEWS** over the manifest: group / aggregate / display. They must **read** the
+  manifest's 4-state, not re-derive the expected set. Operator filter-chips narrow at request time (never expand). The
+  drilldown's `_aggregate_counts` is **generic across all services** (one 3-tuple code path) — so materialising the 4th
+  state + reading it fixes IS / MTDS / MDPS / features **in one place**.
+- **Downstream preflight (strategy / features) = read the SAME 4-state.** "Can I run this archetype over this window?" =
+  read manifest `capture_status`, no re-deriving genesis/launch/IS.
+- **The benefit (the whole point of the manifest):** one canonical honest surface for preflight, instead of every
+  consumer re-implementing IS/UAC/genesis/launch rules. The audit found the failure mode this prevents: three consumers
+  (manifest-status ✅, coverage-summary self-referential ❌, drilldown 3-state ❌) re-derive "what should exist" three
+  different ways and **disagree**. Root fix = materialise-once, read-everywhere.
+
 ## B. Data-status tab + API (owner code) — honest numbers by default
 
+- [ ] ☐ B0. **ROOT FIX — materialise `expected_unattempted` in the manifest** (the `expected_coverage()` oracle already
+      computes the expected set): at consolidation, emit an `expected_unattempted` row for every IS∩UAC-expected cell
+      with no attempt. Then B1/B2/B3 collapse to "read the manifest 4-state" not re-derive. One fix → all services + all
+      consumers honest. parent_epic: manifest_master.
 - [ ] ☐ B1. `coverage-summary` (`data_status_service._build_coverage_for_cat`): replace `len(index)` self-referential
       denominator with the expected-dates oracle (`_mtds_expected_dates_cached`) + `is_expected()` scope gate; align
       with `manifest-status`. (audit Gap A/B/C)
