@@ -315,6 +315,35 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       legacy-only computation must run at ROW granularity, not just entity/column). This is the row-level analogue of the
       column check above; do NOT drop v1_archive on column-coverage alone.
 
+### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
+
+> Operator: "when there is an API issue somewhere in IS or MTDS for sports, is it correctly doing `attempted_failed`
+> where the attempt makes sense by fixtures / instrument / UAC bounds — RATHER THAN `empty_confirmed` which would not be
+> complete?" This is CF-11 (the defi A7 fetch-swallow bug) with a sports twist: a **fixture EXISTED but the derived
+> shard is empty** is almost certainly a masked fetch failure → `attempted_failed` (retry/backfill), NOT a false
+> `empty_confirmed` that claims "we know there's nothing" and freezes the gap forever.
+
+- [ ] [DATA] P0. **Rebuild classifier: add match-day-empty → `attempted_failed`** (`rebuild_sports_manifest_v9.py`).
+      Currently STEP 8 (line ~475) sends a match-day empty (`(league,date)` IN fixtures truthset) on a per-fixture
+      derived data_type to `keep_src_zero` → `SOURCE_RETURNED_ZERO` `empty_confirmed`. FIX: if fixture EXISTS + data_type
+      is **guaranteed-when-fixture-exists** (FIXTURES / FIXTURE_STATS / FIXTURE_EVENTS / STANDINGS — NOT INJURIES /
+      cards / PLAYER_VALUES which can legitimately be zero) + within UAC source-coverage bounds + not a known-gap →
+      classify as **`attempted_failed`** (`record_failed`) so it backfills, NOT `empty_confirmed`. Conservative
+      per-data_type guarantee set (a wrongly-upgraded INJURIES-empty is a false failure; a wrongly-kept FIXTURE_STATS
+      match-day empty is silent incompleteness — the operator's stated priority is the latter is worse).
+- [ ] [DATA] P0. **Rebuild: re-emit existing `attempted_failed` rows v9** (status preserved). The rebuild currently
+      only re-emits empty_confirmed + captured (line ~679); the `other` (attempted_failed: 164 MDPS + 178,025
+      instruments) rows are left v8. Re-emit them via the writer with `attempted_failed` status preserved so they're v9 +
+      still flagged for backfill (NEVER silently relabel a failure to empty).
+- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS sports adapters)**: on a genuine API error
+      (timeout/5xx/429/auth) for a `(league,date)` where a fixture exists / instrument valid / within UAC coverage
+      bounds, the handler MUST `record_failed` (→ `attempted_failed`) via `classify_venue_error()`, NOT `record_empty`.
+      Grep the sports fetch paths in instruments-service (`sports_fixtures_daily_repoll.py` + the per-entity handlers in
+      `orchestrator.py`) + MTDS sports handlers for `except … record_empty` / bare `return []` swallows; trace each to
+      its `record_*` call; gate the empty-vs-failed decision on fixture-existence + UAC bounds (the writer analogue of
+      the rebuild fix above). The 2026-06-01 writer fix (instruments-service@608e7ca7) handled the typed-EMPTY path; this
+      verifies the FAILED path is not masked as empty.
+
 ### KEYSTONE redesign — FIXTURES are the truth set (operator directive 2026-06-01)
 
 > Operator: "fixtures should be the truth set… sports is derived data from instruments; everything per-fixture should
