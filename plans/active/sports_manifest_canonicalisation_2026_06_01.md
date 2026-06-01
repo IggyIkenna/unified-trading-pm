@@ -210,23 +210,77 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       on sports IS the mislabel — treat CF-5 RED until the oracle relabel lands.)
 - [x] ✅ [DATA] P0. **0 legacy-only cells confirmed** (legacy 32,755 · canonical 32,869 · overlap 32,755) — sports DATA
       is complete; the walk is FORM-only (v9 + partition + source + typed reasons), no data-loss-gap copy needed.
-- [ ] [DATA] P0. Object-path scheme (slot-3 probe):
-      `processed/by_date/day=YYYY-MM-DD/data_type=…/league_id=…/     timeframe=…` — has
-      `day=`/`data_type=`/`league_id=`/`timeframe=` hive BUT **no `asset_group=` and no `pipeline_mode=` segment** (CF-2
-      paths + CF-3 partition RED). The C0 walk adds `asset_group=sports` + `pipeline_mode=` to all object paths; lift
-      `data_source=` (where present) → `source` column.
-- [ ] [DATA] P1. Verify venue/league/data_type strings are canonical: data-state shows data_type CASE DRIFT —
-      `ODDS`/`ODDS_MOVEMENT`/`ODDS_SNAPSHOT` (upper) coexist with `odds_horizon_bucket*` (lower) + `trades`/
-      `ARBITRAGE_OPPORTUNITY`; venue set looks canonical (bookmaker names) but blank `''` present. Diagnose/relabel the
-      case drift + blank in the walk (retired data_types confirmed absent per `sports_retired_data_types_code_cleanup`).
+- [x] ✅ [DATA] P0. Object-path scheme (sports slot reconfirm, 2026-06-01 — direct `gcloud ls` probe):
+      MDPS-prd `processed/by_date/day=/data_type=/league_id=/timeframe=/` + `raw_tick_data/by_date/day=…/` (deeper hive)
+      — has `day=`/`data_type=`/`league_id=`/`timeframe=` hive BUT **no `asset_group=` and no `pipeline_mode=` segment**
+      (CF-2 paths + CF-3 partition RED). Parquet rows DO carry `source` + `data_source` columns (layout audit). The C0
+      walk adds `asset_group=sports` + `pipeline_mode=` to all object paths; `source` lifts path→col (already in col too).
+- [x] ✅ [DATA] P1. data_type/venue canonical drift CONFIRMED (CF audit 2026-06-01). MDPS data_type CASE DRIFT —
+      `ODDS`/`ODDS_MOVEMENT`/`ODDS_SNAPSHOT` (upper) vs `odds_horizon_bucket*`/`odds`/`odds_movement`/`odds_snapshot`
+      (lower) + `trades`/`ARBITRAGE_OPPORTUNITY`; venue has blank `''` + suspicious non-bookmaker `FOOTBALL` + `KALSHI`
+      (prediction venue) — CF-7 relabel + CF-10 diagnose in the walk (E7). instruments-store has its OWN drift (below).
+
+> **🔎 SCOPE-IS-A-PRIOR EXPANSIONS (sports slot CF data-state audit 2026-06-01 — fix ALL in-walk, NOT descoped)**: the
+> two-surface CF + layout audit surfaced MORE form debt than the MDPS-786k headline implied. Per the HARD RULE these are
+> captured as todos + fixed in the SAME single walk. Evidence: `/tmp/cf_sports_{mdps,instr,layout}.log` (reproduce via
+> `cf_manifest_audit_2026_06_01.py <bucket> [--legacy …]` + `cf_layout_audit_2026_06_01.py`).
+
+- [ ] [DATA] P0. **instruments-store-sports-prd is 2,681,044 rows / 1,909,553 empties** (MUCH bigger than the MDPS 786k
+      keystone headline) — CF-1 RED (2,680,309 v8 + 735 v9 = 0.0% v9), CF-3 RED (pipeline_mode 0%), CF-4 RED (no
+      `source` col), CF-8 RED (no `available_at`). asset_group COL present (CF-2 rows GREEN) but paths have NO hive
+      (`day=2026-03-21/venue=BETFAIR/{uuid}.parquet` bare top-level + `sports_reference/by_date|fixtures|mappings|…`).
+      The keystone reason-relabel + v9 rebuild apply to BOTH surfaces — this surface carries the bulk of the empties.
+- [ ] [DATA] P0. **NON-CANONICAL free-text error_reason on instruments-store: 22,978 rows labeled
+      `flipped_via_recover_fixtures_from_truthset_20260506-165630__truth_says_empty`** (NOT a closed-set
+      `EmptyConfirmedReason` — violates `EMPTY_CONFIRMED_REASONS`; the generic CF-5 "non-blank=GREEN" heuristic missed
+      it). The truthset said the fixture is empty → relabel to `EXPECTED_NO_FIXTURE` (truthset-confirmed no-fixture) in
+      the keystone rebuild. instruments-store empty dist: SOURCE_RETURNED_ZERO 1,866,991 + this 22,978 +
+      EXPECTED_PRE_SOURCE_COVERAGE_START 13,176 + EXPECTED_NO_FIXTURE 6,408 (the last two already typed — preserve).
+- [ ] [DATA] P1. **instruments-store CF-10 phantom probe: 6,869 rows with `capture_status=None`** (malformed/phantom
+      manifest rows — neither captured/empty/failed). Diagnose object-backed vs phantom at rebuild; honest-drop the
+      object-less ones (never migrate a manifest row with no backing object). Also `attempted_failed` 178,025 (separate
+      coverage/health concern — surface to `epics/sports_master.md`, not a canonicalisation blocker).
+- [ ] [DATA] P1. **instruments-store CF-7 drift**: blank `data_type=''`, retired types still present
+      (`SFI_LEAGUES`/`SFI_PROGRESSIVE_STATS`/`SFI_STANDINGS`/`TRANSFERMARKT_LEAGUES` — owned by
+      `sports_retired_data_types_code_cleanup_2026_05_13.md`, relabel→`EXPECTED_DEPRECATED_DATA_TYPE` here), venue
+      CASE+alias drift (`API_FOOTBALL`/`api_football`/`API_FOOTBALL_FIXTURES`, `odds_api`, `footystats`, `open_meteo`,
+      `soccer_football_info`, `transfermarkt`, `mdps_odds_horizon_bucket`). Normalise in the migrator BEFORE dedup (CF-7).
+- [ ] [DATA] P1. **Multi-layout reality on instruments-store (Phase-0 must enumerate ALL)**: top-level trees =
+      `sports_reference/{by_date,fixtures,footystats_league_ids,mappings}/` + `sports_reference_v1_archive/` + a BARE
+      `day=YYYY-MM-DD/venue=…/{uuid}.parquet` tree + `instrument_availability/` + `availability_index/`. The migrator is
+      layout-dispatching across ALL of these (slot-2 DeFi "audit ALL layouts" lesson) — a single-tree walk under-migrates.
 
 ### C — single-walk (v9 + partition + typed reasons + source path→column + canonical verify)
 
-- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
-      top-level trees + nested layouts across BOTH sports surfaces (`processed/by_date/…`, `sports_reference/by_date/…`,
-      any `day=/category=` / `data_source=` variants) before the walk; classify duplicate (keep freshest) vs
-      complementary (migrate all → canonical v9). Cover every in-scope layout or the walk is incomplete
-      (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
+- [x] ✅ [DATA] P0. **Phase 0 — layout audit DONE (shallow-signature pass, sports slot 2026-06-01)** via
+      `cf_layout_audit_2026_06_01.py` on all 3 surfaces (MDPS-prd + MDPS-legacy + instruments-store-prd). **Full layout
+      map below**; per-layout object counts come with the VM walk's progress counters. Findings that EXPAND the migrator
+      design (scope-is-a-prior): (1) MDPS-prd raw is STILL `category=sports` while MDPS-**legacy** raw is `asset_group=`
+      — INVERTED AG key, like prediction (the canonical-named bucket is LESS canonical on the AG segment → the migrator
+      converges both onto `asset_group=`); (2) instruments-store has **8 distinct layouts** incl. 3 reference versions
+      (`sports_reference` current / `sports_reference_v1_archive` / `sports_reference_v2`) needing reconcile-to-freshest,
+      a bare `day=/venue=/{uuid}` instrument tree, a hyphen-delim `instrument_availability/by-date/day-…`, a legacy
+      `availability_index/instruments-service.parquet` (OLD manifest format, superseded by `_index/`), + `_audits`/
+      `_smoke_test` ARTIFACT trees (skip — not data). The migrator is layout-dispatching across ALL non-artifact trees.
+
+> **📐 Phase-0 LAYOUT MAP (sports slot 2026-06-01, `cf_layout_audit` shallow-signature pass)** — the migrator MUST
+> handle every non-artifact layout or it under-migrates (slot-2 DeFi lesson):
+>
+> | Surface | Tree | Layout signature | Disposition |
+> | --- | --- | --- | --- |
+> | MDPS-prd (canon) | `processed/by_date/` | `day=/data_type=/league_id=/timeframe=` | candles → add `asset_group=`+`pipeline_mode=` |
+> | MDPS-prd (canon) | `raw_tick_data/by_date/` | `day=/category=sports/data_source=/venue=/league_id=/instrument_type=/data_type=` | **`category=`→`asset_group=`** + insert `pipeline_mode=` |
+> | MDPS-legacy | `raw_tick_data/by_date/` | `day=/asset_group=sports/data_source=/venue=/league_id=/instrument_type=/data_type=` | near-canon (missing `pipeline_mode=`); reconcile vs prd (INVERTED) |
+> | instr-store-prd | `day=YYYY-MM-DD/venue=/{uuid}.parquet` | bare top-level instrument defs | → canonical reference layout |
+> | instr-store-prd | `sports_reference/by_date/` | `day=/entity=` (live reference) | freshest → canonical |
+> | instr-store-prd | `sports_reference_v2/by_date/` | `day=/entity=` (richer fixture_stats) | complementary → migrate |
+> | instr-store-prd | `sports_reference_v1_archive/by_date/` | `day=/entity=` | archived → superseded (verify no canon-only) |
+> | instr-store-prd | `instrument_availability/by-date/day-…/{league}/` | hyphen-delim | reconcile / verify |
+> | instr-store-prd | `availability_index/instruments-service.parquet` | OLD manifest format | superseded by `_index/` (drop after verify) |
+> | instr-store-prd | `_audits/` · `_smoke_test/` · `_catalogue/` | artifacts | **SKIP — not data** |
+>
+> Evidence: `/tmp/cf_sports_layout.log` (reproduce: `cf_layout_audit_2026_06_01.py market-data-tick-sports-prd-…
+> market-data-tick-sports-… instruments-store-sports-prd-…`).
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -275,9 +329,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > target (v9, `day=/pipeline_mode=/asset_group=sports/…`, source col, typed reasons) is CONFIRMED CORRECT at verify. One
 > pass, no confusion — once legacy is deleted it is gone.
 
-- [ ] [DATA] P0. E1 Phase-0 layout audit on both sports surfaces (`market-data-tick-sports-prd` +
-      `instruments-store-sports-prd`) via `cf_layout_audit`; confirm `processed/` + `raw_tick_data/`
-      (category=/data_source=) + `sports_reference/`.
+- [x] ✅ [DATA] P0. E1 Phase-0 layout audit DONE on all 3 surfaces (`market-data-tick-sports-prd` + `-sports` legacy +
+      `instruments-store-sports-prd`) via `cf_layout_audit_2026_06_01.py` + CF data-state via `cf_manifest_audit`. Full
+      layout map + scope-expansions captured in § P0 above (MDPS raw `category=` vs legacy `asset_group=` INVERTED;
+      instr-store 8 layouts; 2.68M instr rows / 1.9M empties; non-canonical free-text reason; CF-7 drift). Evidence:
+      `/tmp/cf_sports_{mdps,instr,layout}.log` — PM@<flip-sha>.
 - [ ] [DATA] P0. E2 Build/extend `migrate_sports_canonical.py` to v9-canonical (perf-contract):
       `category=`→`asset_group=sports`, add
       `pipeline_mode=batch_{api_football,footystats,odds_api,understat,transfermarkt,…}`; keep `source` col (already
