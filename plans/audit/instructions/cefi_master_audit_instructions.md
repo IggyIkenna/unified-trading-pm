@@ -107,6 +107,22 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
       re-run itself is still pending — without it the expected-universe (coverage denominator) for cefi is under-seeded
       relative to the captured numerator.
 
+## Canonical-form coverage (CF-1…CF-12)
+
+> Cites the SSOT `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`. Run CF-1…CF-12 against the
+> `market-data-tick-cefi-prd-…` `_index` + objects (DATA-STATE). Remediation owner =
+> `cefi_manifest_canonicalisation_2026_06_01.md`. CF-4 (`source` column = `tardis`, swap-resilient) covered by the
+> Dual-source provenance section above.
+
+- [ ] (CF-1/2/3/8/9/10/12) SSOT checks on `market-data-tick-cefi-prd-…`: schema_version=v9 (data-state) · `asset_group=`
+      not `category=` (paths+rows) · `pipeline_mode=` partition (`batch_tardis`/`live_websocket`) · honest
+      `available_at` · env-split bucket · no phantom captured · batch=live. GREEN = all data-state.
+- [ ] (CF-5 cefi reasons) every empty cefi cell typed: `EXPECTED_KNOWN_SOURCE_GAP` (documented outage) / genuine
+      `SOURCE_RETURNED_ZERO`; 0 blank/mislabeled.
+- [ ] (CF-7 cefi names) underscore data*type
+      (`book_snapshot_5`/`trades`/`derivative_ticker`/`liquidations`/`ohlcv*\*`) +     flat venue (`BINANCE-SPOT`/`UPBIT`/`COINBASE-SPOT`/…)
+      canonical.
+
 ## Success Criteria
 
 - All 8 scaffold checklist items (a)–(h) GREEN

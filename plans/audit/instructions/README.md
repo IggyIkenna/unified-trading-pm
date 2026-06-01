@@ -33,3 +33,11 @@ the same commit. Missing instruction files are review-blocking.
 | `batch_live_symmetry_master`             | L4   | `vm-cross-cutting`     | [batch_live_symmetry_master_audit_instructions.md](batch_live_symmetry_master_audit_instructions.md)                         |
 | `client_isolation_and_governance_master` | L4   | `vm-cross-cutting`     | [client_isolation_and_governance_master_audit_instructions.md](client_isolation_and_governance_master_audit_instructions.md) |
 | `orchestrator_master`                    | L5   | `vm-orchestrator`      | [orchestrator_master_audit_instructions.md](orchestrator_master_audit_instructions.md)                                       |
+
+## Cross-cutting audit SSOT (not an epic — a shared checklist)
+
+[`canonical_form_cross_service_audit_checklist.md`](canonical_form_cross_service_audit_checklist.md) — the **SSOT** for
+the canonical data+manifest form (CF-1…CF-12) + the (service × CF) coverage matrix. Every per-service and per-AG audit
+file above carries a **"Canonical-form coverage (CF-1…CF-12)"** section citing it, so that re-running the audits proves
+the whole data pipeline (`instruments → MTDS → MDPS → features → strategy → execution`) is canonical across all
+services. **A CF column with no owning audit is a coverage gap and review-blocking.** Codified 2026-06-01.

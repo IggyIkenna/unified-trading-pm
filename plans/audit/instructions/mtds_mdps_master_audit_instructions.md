@@ -118,6 +118,84 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
 - (mock-upstream) **Mock upstream pattern**: audits for this data layer MUST be runnable without hitting real APIs.
   Document fixture paths and `CLOUD_MOCK_MODE=true` invocations so downstream services can be audited independently.
 
+## Canonical-form cross-service audit coverage (CF-1…CF-12)
+
+SSOT: `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` — the everlasting enumeration of the
+twelve canonical data+manifest invariants the 2026-06-01 canonicalisation programme enforces. **MTDS + MDPS own the raw
+**tick** surface and the **processed_candles** surface** of that matrix (the `MTDS (raw tick)` + `MDPS (candles)` rows).
+Re-running this Mode-1 audit must collectively prove every CF item below is GREEN **read from actual prod data-state,
+not a code constant** (the manifest-v8 lesson: a constant said v8 while 0% of 7.4M rows were v8).
+
+**Mapping — CF items already covered by the existing Mode-1 checklist (do NOT re-run; cross-reference only):**
+
+| CF item | Canonical target (short)                                     | Owned by existing item   |
+| ------- | ------------------------------------------------------------ | ------------------------ |
+| CF-1    | `schema_version = v9` read from actual rows                  | item (g)                 |
+| CF-4    | `source` COLUMN stamped on every external ingest cell        | item (j)                 |
+| CF-5    | Typed `EmptyConfirmedReason` on every empty cell             | item (f)                 |
+| CF-9    | env-split bucket via `resolve_bucket_name()`                 | item (d)                 |
+| CF-11   | fetch-failure → `attempted_failed`, never `empty_confirmed`  | item (i)                 |
+| CF-12   | batch = live symmetry (schema / data_types / `available_at`) | "Batch vs Live Parity" § |
+
+> Note: item (g) checks "≥ 95% at current version (v8 as of 2026-05-20)" — CF-1's canonical target is now **v9**
+> (`MANIFEST_SCHEMA_VERSION` bumped 8→9, TradFi `source` column landed). When re-running (g) for CF-1, read the actual
+> `schema_version` distribution and assert v9, not v8.
+
+**Gap CF items — added below because the existing checklist does not cover them** (each reads prod data-state + greens):
+
+- [ ] (CF-2) **`asset_group=` not `category=` on BOTH object paths AND manifest rows**: the CODE side already emits
+      `asset_group=` (archived `venue_axis_asset_group_vocabulary`), but the DATA may still carry legacy `category=`.
+      Check both surfaces in the `market-data-tick-{cefi|tradfi|defi|sports|prediction}-*` buckets AND the
+      processed_candles buckets. Object paths: `gsutil ls -r gs://<bucket>/** | rg "category="` (or the UTL GCS
+      object-list path) — expect 0 hits. Manifest rows: read a sample of `_index/availability_index.parquet` rows and
+      assert no `category` field / no `category=` value in any partition column. **GREEN** = zero `category=` on paths
+      AND zero `category` field/value in `_index` rows for both MTDS-tick and MDPS-candle buckets.
+
+- [ ] (CF-3) **`pipeline_mode=` present as a HIVE PARTITION SEGMENT on object paths (not just the column)**: the column
+      already shipped (gcs_migration_bundle_pipeline_mode); CF-3 is the distinct check that the object PATH carries a
+      `pipeline_mode=batch…` / `pipeline_mode=live…` directory segment. List a sample of objects per bucket and confirm
+      the path contains a literal `pipeline_mode=` segment (NOT merely a `pipeline_mode` parquet column):
+      `<UTL gcs object-list> gs://<mtds-tick-bucket>/** | rg "pipeline_mode=(batch|live)"` and the same for the
+      MDPS-candle bucket. **GREEN** = every sampled tick + candle object path contains a `pipeline_mode=` partition
+      segment; zero objects with the column-but-no-path-segment shape.
+
+- [ ] (CF-7) **Canonical names — underscore data_type · flat `venue` · populated `chain` · `{VENUE}_V{N}` underscore
+      form; no legacy drift**: read the actual venue / data_type / source strings from a sample of prod manifest rows
+      AND grep handler `data_type=` / `_DATA_TYPE` literals. Confirm: data_type uses underscores (no hyphen, e.g.
+      `lst_rates` not `lst-rates`); `venue` is flat with `chain` populated as its own field (no glued `VENUE-CHAIN`);
+      any `{VENUE}_V{N}` token is underscore-canonical (e.g. `UNISWAP_V3`, never `UNISWAPV3` / `UNISWAP-V3`). Greps:
+      `rg "data_type=\"[^\"]*-" market-tick-data-service/ market-data-processing-service/ --include="*.py"` (expect 0);
+      `rg -o "[A-Z]+V[0-9]" market-tick-data-service/ --include="*.py"` (glued — expect 0). Then read corpus rows to
+      confirm no legacy hyphenated/glued strings already persisted. **GREEN** = handler literals + actual corpus
+      venue/data_type strings are all canonical; zero hyphen-data_type, zero `VENUE-CHAIN`, zero glued `_V{N}`.
+
+- [ ] (CF-8) **`available_at` per-row honest — never read-time / migration-time / lookahead derivation**: read the
+      actual `available_at` column from a sample of prod tick + candle rows and assert it sits at-or-after the row's
+      data day boundary (never before, never a migration-run timestamp, never a read-time `now()`). Distinct from
+      CF-12's batch=live derivation parity — CF-8 is the per-row honesty of the stamped value itself. Confirm the MDPS
+      candle `available_at` is derived from the candle close time / upstream tick availability at write time, not
+      synthesized at read. **GREEN** = every sampled row's `available_at` is ≥ its data-day boundary and ≤ a plausible
+      write time; zero rows with a uniform migration-batch timestamp or a read-time-derived value.
+
+- [ ] (CF-10) **No phantom / date-impossible `captured` — every captured cell is object-backed**: walk
+      captured-vs-objects per `(chain/venue, date)` for both the MTDS-tick and MDPS-candle buckets. Assert no
+      `capture_status=captured` row exists for a date before the chain genesis / venue launch with no backing object,
+      and that every post-launch `captured` row has a real object behind it. Reuse the
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run` pattern adapted to
+      the MTDS/MDPS buckets (do NOT write empty parquets to mask phantoms — relabel honestly via `record_empty` /
+      `record_failed`). **GREEN** = zero object-less `captured` rows; zero pre-genesis/pre-launch `captured` rows; every
+      sampled captured cell resolves to an existing GCS object.
+
+- [ ] (CF-4-prop / MDPS) **Processed candle propagates the upstream raw cell's `source` (distinct from item (j))**: item
+      (j) covers the MTDS ingest write-time `source` stamp on raw tick cells. This item is the MDPS-side PROPAGATION
+      check: a processed candle MUST carry the `source` of the raw tick cell(s) it was built from, so a `tardis`-derived
+      candle is distinguishable from a `venue`-derived candle (and from a future Tardis-alternative source). Read a
+      sample of processed-candle manifest rows and confirm `source` is non-blank and matches the upstream raw cell's
+      `source` for the same `(asset_group, venue, instrument, data_type, day)`. Multi-source upstream → candle carries
+      the resolved primary source per `select_primary_available_source()`. **GREEN** = zero blank `source` on candle
+      rows; candle `source` traces to the upstream tick `source` for every sampled cell. SSOT:
+      `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
+
 ## Success Criteria
 
 - All correctness checklist items (a)–(j) GREEN

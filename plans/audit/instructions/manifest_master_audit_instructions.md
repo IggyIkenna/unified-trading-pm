@@ -90,6 +90,111 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       `codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item
       (j).
 
+## Canonical-form cross-service audit coverage (CF-1…CF-12) — manifest SSOT home
+
+> **This epic is the cross-cutting HOME of the canonical-form checklist at the manifest layer.** The master list is the
+> SSOT [`canonical_form_cross_service_audit_checklist.md`](./canonical_form_cross_service_audit_checklist.md) — it
+> enumerates all 12 canonical data+manifest invariants (CF-1…CF-12) plus the (service × CF) ownership matrix. **Each
+> per-service audit-instruction file owns its slice** of that matrix (see the SSOT's "Per-service audit ownership"
+> table); the union of the per-service audits proves the whole pipeline is in canonical form. **A CF column with no
+> owning service audit is a coverage gap and is review-blocking** — file the missing check in the most-relevant service
+> audit before declaring the SSOT checklist green.
+>
+> **`manifest_master` owns the MANIFEST-LEVEL check** for CF-1, CF-2, CF-3, CF-4, CF-5, CF-6, CF-8, CF-9, CF-10, CF-11,
+> CF-12 (per the SSOT matrix row `manifest_master (cross-cutting SSOT home)`). CF-7 (canonical venue / data_type names)
+> lives with MTDS / instruments — see the one-line cross-ref below.
+>
+> **Audit method for every item below: read the DATA-STATE, never a code constant.** Walk the prod manifest `_index`
+> across ALL asset_groups (`defi`/`cefi`/`tradfi`/`sports`/`prediction`) and read the actual column distributions. **The
+> manifest-v8 lesson**: the `MANIFEST_SCHEMA_VERSION` constant said v8 while **0% of 7.4M prod rows** were v8 (and 1.3M
+> rows carried a NULL schema_version). A bumped constant is NOT evidence — the row distribution is. Where an item below
+> is already covered under a lettered checklist item above, it cross-references rather than duplicates.
+
+- [ ] **(CF-1) schema_version = v9 in actual `_index` rows** — read the `schema_version` column distribution from the
+      prod manifest `_index` per asset_group (NOT the `MANIFEST_SCHEMA_VERSION` constant); must be ≥95% at **v9** with
+      zero NULL-schema-version rows across every asset_group. **Cross-ref**: same check as lettered item (a) — that is
+      the concrete query (`a4_manifest_v9_compliance.py`); this CF row is its canonical-form alias. Green: v9 ≥95% every
+      AG, 0 NULL, 0 rows < v9 outside a documented in-flight migration window.
+
+- [ ] **(CF-2) `asset_group=` not `category=` — on BOTH paths and `_index` rows** — read the `_index` rows for any
+      surviving `category` field/value and grep object paths for a `category=` hive segment; the canonical key is
+      `asset_group=` (lowercase `cefi`/`defi`/`tradfi`/`sports`/`prediction`). Green: zero `category=` path segments,
+      zero `category` field in any `_index` row, every row carries a canonical lowercase `asset_group`. (CODE side
+      already emits `asset_group=` per archived `venue_axis_asset_group_vocabulary` — this audits the DATA-STATE that no
+      legacy `category=` rows/paths survive.)
+
+- [ ] **(CF-3) `pipeline_mode=` hive partition materialised** — confirm the `pipeline_mode=` partition SEGMENT exists on
+      object paths (`pipeline_mode=batch*` / `pipeline_mode=live*`), not merely that a `pipeline_mode` column was added
+      to the schema. List paths per asset_group and assert the segment is present on captured cells. Green: every
+      captured cell's object path carries a `pipeline_mode=` segment; manifest `_index` reflects the same partition
+      value. (Applies to mtds · mdps · instruments · features producers.)
+
+- [ ] **(CF-4) `source` is a COLUMN (not a path key), populated on every external cell** — read the `source` column
+      distribution per `(asset_group, venue, data_type)` in the `_index`; assert **zero blank `source` on any external
+      cell**, every value a member of `SOURCE_PRIORITY[(asset_group, data_type)]`, and multi-source cells held as TWO
+      rows distinguished by `source` (union semantics: cell `captured` if ≥1 source row `captured`). Confirm `source` is
+      a manifest column, NOT a hive path segment (batch=live symmetry). **Cross-ref**: this is the manifest-level
+      expression of lettered item (i) — the universal registry-driven gate (`MissingSourceError` when blank or not in
+      `SOURCE_PRIORITY`, all asset_groups). Write-time gate lives in `mtds_mdps_master` item (j). Green: 0 blank
+      `source` on any external cell, all asset_groups; computed/service outputs (features/strategy/execution) exempt.
+
+- [ ] **(CF-5) typed `EmptyConfirmedReason` on every empty cell** — read the empty-reason histogram from the `_index`
+      across all asset_groups; assert 0 blank / 0 untyped / 0 mislabeled `SOURCE_RETURNED_ZERO` (the AG-specific reason
+      sets — defi `EXPECTED_PRE_GENESIS_CHAIN`, sports `EXPECTED_NO_FIXTURE`/`EXPECTED_PRE_SEASON`/…, cefi/tradfi/pred
+      `EXPECTED_KNOWN_SOURCE_GAP` — are owned by the per-AG audits; this row is the cross-cutting manifest data-state
+      check). **Cross-ref**: composes with lettered items (b) (enum closed-set present in UAC), (c) (no blank reason
+      strings in code), (d) (`LegacyBlankErrorReasonError` not suppressed). Green: empty-reason histogram is 100% typed
+      members of the UAC closed set, 0 blank, every AG.
+
+- [ ] **(CF-6) `expected_unattempted` 4th state materialised in rows** — run a prod batch on post-Phase-1+2 code and
+      confirm the writer/orchestrator pre-flight reads the IS manifest and **records owed cells** as
+      `expected_unattempted` with `EXPECTED_OUTSIDE_PROCESSING_SCOPE` / `EXPECTED_UPSTREAM_EMPTY` — rather than a
+      reflexive `empty_confirmed` (the owed-data lie). Read the `capture_status` distribution and confirm the 4th state
+      is present and non-zero where cells are genuinely owed. **Cross-ref**: composes with the Per-Service write-path
+      calibration's "Anti-pattern 1 — reflexive `empty_confirmed`" below (the code-side audit) — this CF row is its
+      data-state counterpart. Green: owed cells appear as `expected_unattempted`, never `empty_confirmed`. (mtds · mdps
+      · features downstream-propagate.)
+
+- [ ] **(CF-7) canonical venue / data_type names** — **CROSS-REF ONLY**: owned by `mtds_mdps_master` +
+      `instruments_master` (underscore data_type · flat `venue` + populated `chain` · `{VENUE}_V{N}`
+      underscore-canonical, no hyphen / `VENUE-CHAIN` / glued `_V{N}` drift). The manifest carries whatever names the
+      producers stamp — if those audits are RED, the manifest `_index` venue/data_type strings will be RED too; do NOT
+      duplicate the check here.
+
+- [ ] **(CF-8) `available_at` per-row write-time, honest** — read the `available_at` distribution vs the day boundary in
+      the `_index`; assert no lookahead / migration-time / read-time derivation, and batch=live derivation parity (the
+      top `SOURCE_PRIORITY` entry's live `available_at`). **Cross-ref**: same invariant as lettered item (f) (no
+      read-time derivation in code; UTL `record_captured` asserts presence). This CF row reads the DATA-STATE
+      distribution rather than grepping code. Green: every row's `available_at` ≥ its data's logical close and < a
+      lookahead bound; batch and live derive identically.
+
+- [ ] **(CF-9) env-split bucket `{kind}-{env}-{project}`** — confirm every manifest `_index` lives in an env-tiered
+      canonical bucket (`-prd` / `-test`) resolved via `resolve_bucket_name()`; read which buckets actually hold
+      `_index` objects per asset_group. **Cross-ref**: composes with QG STEP 5.69 (no inline `gs://` f-strings) and
+      `manifest_master`'s consolidator-runtime item (h) (jobs read/write the env-tiered buckets). Green: every `_index`
+      object resides in a canonical env-split bucket; zero non-canonical / flat-legacy buckets still being written.
+
+- [ ] **(CF-10) no phantom / date-impossible `captured`** — captured-vs-objects walk per (chain/venue, date): assert no
+      `captured` row that is pre-genesis / pre-venue-launch with no backing object, and every post-launch `captured` row
+      is object-backed. **Cross-ref**: the existing phantom reconciler
+      (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --dry-run`) is the tooling; do NOT write
+      empty parquets to mask phantoms (relabel honestly to `empty_confirmed`/`expected_unattempted`). Green: zero
+      object-less `captured` rows; zero date-impossible captured rows across all asset_groups. (mtds · instruments.)
+
+- [ ] **(CF-11) fetch-failure → `attempted_failed`, never `empty_confirmed`** — per-adapter trace from a swallow pattern
+      (`except … return []` / `return {}`) to the `record_*` call; a fetch error must land as `attempted_failed` (+
+      `stack_trace`), never a silent `empty_confirmed`. Read the `_index` for `attempted_failed` rows actually appearing
+      on adapter-error branches (defi A7 precedent). **Cross-ref**: composes with the Per-Service write-path
+      calibration's "Anti-pattern 2 — silent no-row skip" below. Green: no adapter error path resolves to
+      `empty_confirmed`; error branches produce `attempted_failed` rows visible in the `_index`.
+
+- [ ] **(CF-12) batch = live symmetry** — diff the batch vs live manifest schema + data_type set per asset_group from
+      the actual `_index` rows; confirm identical schema / data_types / fields, `available_at` not derived at read-time,
+      and no live-only data_types (one code path). **Cross-ref**: this is the manifest-data-state expression of the
+      `### Batch vs Live Parity` section below (which audits the adapter invocation paths). Green: batch and live
+      `_index` rows carry the identical schema + data_type set per AG; zero live-only data_types; zero `DIVERGENT_EMPTY`
+      between modes.
+
 ### Batch vs Live Parity
 
 - (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with

@@ -1,0 +1,91 @@
+# Canonical-Form Cross-Service Audit Checklist (SSOT)
+
+> **Everlasting SSOT — never archive.** This file enumerates EVERY canonical data+manifest invariant the 2026-06-01
+> canonicalisation programme enforces, and maps each one to the per-service audit-instruction file that owns the
+> concrete check. **Goal (operator 2026-06-01)**: re-running the per-service audits — which need NOT be the same audit,
+> but MUST collectively cover this list — proves the whole data pipeline is in canonical form across every service. A
+> canonical-form item with no owning audit is a **coverage gap** and is review-blocking.
+>
+> **Driving plans** (the work this checklist audits): `defi_manifest_canonicalisation_2026_06_01.md` (§MASTER
+> coordinator) + the per-AG L3 walks (`cefi`/`tradfi`/`sports`/`prediction`\_manifest_canonicalisation) + the
+> per-service walks (`instruments`/`downstream_services`\_manifest_canonicalisation) + the riders
+> (`data_source_provenance_all_asset_groups`, `pipeline_mode_partition_migration`).
+
+## The matrix being audited — (service × asset_group) cells
+
+Every cell in this matrix has a manifest `_index` + data objects that MUST be in canonical form. The per-AG MTDS plans
+cover the **MTDS** row; the per-service plans cover the rest:
+
+| Service ↓ / AG →    | defi | cefi | tradfi | sports | prediction | Owning canonicalisation plan                               |
+| ------------------- | ---- | ---- | ------ | ------ | ---------- | ---------------------------------------------------------- |
+| instruments-service | ✓    | ✓    | ✓      | ✓      | ✓          | `instruments_manifest_canonicalisation_2026_06_01`         |
+| MTDS (raw tick)     | ✓    | ✓    | ✓      | ✓      | ✓          | per-AG `*_manifest_canonicalisation_2026_06_01`            |
+| MDPS (candles)      | ✓    | ✓    | ✓      | ✓      | ✓          | `downstream_services_manifest_canonicalisation_2026_06_01` |
+| features-service    | ✓    | ✓    | ✓      | ✓      | ✓          | `downstream_services_manifest_canonicalisation_2026_06_01` |
+| strategy-service    | ✓    | ✓    | ✓      | ✓      | ✓          | `downstream_services_manifest_canonicalisation_2026_06_01` |
+| execution-service   | ✓    | ✓    | ✓      | ✓      | ✓          | `downstream_services_manifest_canonicalisation_2026_06_01` |
+
+## Canonical-form invariants (CF-1 … CF-12)
+
+Each invariant lists the **canonical target**, the **audit method** (read DATA-STATE, never trust a code constant — the
+manifest-v8 lesson: a constant said v8 while 0% of 7.4M rows were v8), and **which services it applies to**.
+
+| ID    | Invariant (canonical target)                                                                                                                                     | Audit method (data-state)                                                                                                                                              | Applies to                                                                                                           |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| CF-1  | **schema_version = v9** on every manifest row + parquet                                                                                                          | Read the actual `schema_version` distribution from prod `_index` + a sample of parquets. NOT the `MANIFEST_SCHEMA_VERSION` constant.                                   | every service with a manifest                                                                                        |
+| CF-2  | **`asset_group=` not `category=`** on BOTH object PATHS and manifest `_index` ROWS                                                                               | grep object paths for `category=`; read `_index` rows for a `category` field. (CODE side already emits `asset_group=` — archived `venue_axis_asset_group_vocabulary`.) | every service                                                                                                        |
+| CF-3  | **`pipeline_mode=` hive partition** on object paths (column already shipped)                                                                                     | path-list `pipeline_mode=batch*` / `pipeline_mode=live*`; confirm the partition segment exists (not just the column).                                                  | mtds · mdps · instruments · features                                                                                 |
+| CF-4  | **`source` COLUMN** stamped on every external cell (column, NOT a path key — co-mingled, same read path); multi-source = 2 rows; computed/service outputs exempt | Read the `source` column distribution; assert **zero blank on every external cell**. Confirm `source` is a column not a path segment.                                  | external ingest: mtds · mdps · instruments · sports-fixtures. **Exempt (computed)**: features · strategy · execution |
+| CF-5  | **Typed `EmptyConfirmedReason`** on every empty cell; no blank / mislabeled `SOURCE_RETURNED_ZERO`                                                               | Read the empty-reason histogram; assert 0 blank/untyped. Service-specific reason sets below.                                                                           | every service that records empty                                                                                     |
+| CF-6  | **`expected_unattempted` 4th state materialised** (writer/orchestrator pre-flight reads the IS manifest + records owed cells)                                    | Run a prod batch on the post-Phase-1+2 code; confirm owed rows generate with `EXPECTED_OUTSIDE_PROCESSING_SCOPE` / `EXPECTED_UPSTREAM_EMPTY`.                          | mtds · mdps · features (downstream propagate)                                                                        |
+| CF-7  | **Canonical names**: underscore data_type · flat `venue` + populated `chain` · `{VENUE}_V{N}` underscore-canonical; no legacy drift                              | grep handler `data_type=`/`_DATA_TYPE` literals + read corpus venue/data_type strings; confirm no hyphen / `VENUE-CHAIN` / glued `_V{N}`.                              | mtds · instruments (market + reference)                                                                              |
+| CF-8  | **`available_at` per-row**, preserve-or-honest-derive; never lookahead / migration-time / read-time                                                              | Read `available_at` vs day boundary; assert batch=live derivation parity (top `SOURCE_PRIORITY` entry's live `available_at`).                                          | every service                                                                                                        |
+| CF-9  | **env-split bucket** `{kind}-{env}-{project}` (`-prd`/`-test`); resolved via `resolve_bucket_name()`                                                             | grep for inline `gs://` f-strings (QG STEP 5.69); confirm every bucket lookup is env-tiered + canonical.                                                               | every service                                                                                                        |
+| CF-10 | **No phantom / date-impossible `captured`** (pre-genesis / pre-launch with no backing object; post-launch captured object-backed)                                | captured-vs-objects walk per (chain/venue, date); relabel any object-less captured row honestly.                                                                       | mtds · instruments                                                                                                   |
+| CF-11 | **fetch-failure → `attempted_failed`, never `empty_confirmed`** (no `except: return []` swallow)                                                                 | per-adapter grep for `except … return []` / `return {}`; trace to the `record_*` call. (defi A7 precedent.)                                                            | every ingesting service                                                                                              |
+| CF-12 | **batch = live symmetry** — identical schema / data_types / fields; `available_at` not derived at read-time; no live-only data_types                             | diff batch vs live schema + data_type set per AG; confirm one code path.                                                                                               | every service                                                                                                        |
+
+### CF-5 service-specific typed-reason sets (the empty cell must carry the RIGHT reason)
+
+- **defi**: `EXPECTED_PRE_GENESIS_CHAIN` · `EXPECTED_PRE_VENUE_LAUNCH` (UAC `DEFI_VENUE_LAUNCH_DATES`) ·
+  `SOURCE_RETURNED_ZERO` only when genuinely empty.
+- **sports** (schedule-driven — the keystone): `EXPECTED_NO_FIXTURE` · `EXPECTED_PRE_SEASON` · `EXPECTED_POST_SEASON` ·
+  `EXPECTED_PAUSED_LEAGUE` · `EXPECTED_OUTSIDE_TRANSFER_WINDOW` · `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` ·
+  `EXPECTED_FIXTURE_POSTPONED` · `EXPECTED_FIXTURE_CANCELLED` · `EXPECTED_KNOWN_SOURCE_GAP` · `EXPECTED_NO_MAPPING`
+  (oracle: `clip_dates_to_source_coverage()` / `is_in_known_gap()`).
+- **cefi / tradfi / prediction**: `EXPECTED_KNOWN_SOURCE_GAP` (documented outage) · `SOURCE_RETURNED_ZERO` (genuine) ·
+  `EXPECTED_OUTSIDE_PROCESSING_SCOPE`.
+- **all**: `EXPECTED_DEPRECATED_DATA_TYPE` for retired types; `EXPECTED_UPSTREAM_EMPTY` for downstream-derived.
+
+## Per-service audit ownership (which audit-instruction file checks which CF item)
+
+Each per-service audit-instruction file MUST carry a "Canonical-form coverage" section that cites this SSOT and lists
+the CF items it owns with a concrete check. ✓ = owns the live check; (prop) = propagates upstream value; n/a = exempt.
+
+| Audit instruction file                                         | CF-1 | CF-2 | CF-3  | CF-4 | CF-5              | CF-6   | CF-7 | CF-8 | CF-9 | CF-10 | CF-11 | CF-12 |
+| -------------------------------------------------------------- | ---- | ---- | ----- | ---- | ----------------- | ------ | ---- | ---- | ---- | ----- | ----- | ----- |
+| `mtds_mdps_master` (MTDS+MDPS)                                 | ✓(g) | ✓    | ✓     | ✓(j) | ✓(f)              | ✓      | ✓    | ✓    | ✓(d) | ✓     | ✓(i)  | ✓     |
+| `instruments_master`                                           | ✓    | ✓    | ✓     | ✓    | ✓                 | ✓      | ✓    | ✓    | ✓    | ✓     | ✓     | ✓     |
+| `features_and_ml_master`                                       | ✓    | ✓    | ✓     | n/a  | ✓                 | (prop) | ✓    | ✓    | ✓    | n/a   | ✓     | ✓     |
+| `strategy_master`                                              | ✓    | ✓    | (n/a) | n/a  | ✓                 | n/a    | ✓    | ✓    | ✓    | n/a   | n/a   | ✓     |
+| `execution_master`                                             | ✓    | ✓    | (n/a) | n/a  | ✓                 | n/a    | ✓    | ✓    | ✓    | n/a   | n/a   | ✓     |
+| `manifest_master` (cross-cutting SSOT home)                    | ✓    | ✓    | ✓     | ✓    | ✓                 | ✓      | —    | ✓    | ✓    | ✓     | ✓     | ✓     |
+| per-AG (`defi`/`cefi`/`tradfi`/`sports`/`predictions`\_master) | ✓    | ✓    | ✓     | ✓    | ✓ (AG reason set) | ✓      | ✓    | ✓    | ✓    | ✓     | ✓     | ✓     |
+
+**Reading the matrix**: every CF column has at least one ✓ owner → the union of the audits covers everything. A column
+that goes all-n/a or all-blank is a coverage gap — file the missing check in the most-relevant service audit before
+declaring this checklist green.
+
+## How to run the combined audit (operator)
+
+1. Run each per-service audit instruction's "Canonical-form coverage" section (per the triggers in that file).
+2. Each emits a per-CF GREEN/RED with the data-state evidence (distribution reads, not constants).
+3. Aggregate: every (service × AG × CF) cell GREEN → the pipeline is canonical end-to-end → legacy buckets are
+   decommission-ready (hands C-GREEN to `bucket_name_ssot_legacy_dual_write_remediation` L6).
+4. Any RED → route to the owning canonicalisation plan's single-walk (never a second walk on the same `_index`).
+
+## Composes with
+
+- `defi_manifest_canonicalisation_2026_06_01.md` §MASTER — the cross-plan coordinator this checklist audits.
+- `codex/02-data/availability-manifest-and-data-status.md` — the canonical 4-state manifest contract.
+- Single-walk discipline + Data-Pipeline-Correctness HARD RULE (CLAUDE.md).

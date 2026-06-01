@@ -128,6 +128,22 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
       `manifest_consolidator_duckdb_memory_fix_2026_05_26.md` (the DuckDB memory-bound merge is UTL Tier-0, shared by
       every asset_group).
 
+## Canonical-form coverage (CF-1…CF-12)
+
+> Cites the SSOT `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`. Run CF-1…CF-12 against the
+> `market-data-tick-tradfi-prd-…` `_index` + objects (DATA-STATE — the live `_index` reads **v8** despite the v9
+> constant; CF-1 is RED until re-consolidated). Remediation owner = `tradfi_manifest_canonicalisation_2026_06_01.md`
+> (absorbs `tradfi_massive` -031). CF-4 (`source` column = databento/massive/yahoo/barchart) covered by the Dual-source
+> provenance section above.
+
+- [ ] (CF-1/2/3/8/9/12) SSOT checks on `market-data-tick-tradfi-prd-…`: schema_version=v9 (data-state — currently v8) ·
+      `asset_group=` not `category=` · `pipeline_mode=` partition (`batch_databento`/`batch_massive`) · honest
+      `available_at` · env-split bucket · batch=live. GREEN = all data-state.
+- [ ] (CF-5 tradfi reasons) every empty tradfi cell typed: `EXPECTED_KNOWN_SOURCE_GAP` / genuine `SOURCE_RETURNED_ZERO`;
+      0 blank.
+- [ ] (CF-7 tradfi names) underscore data_type (`trades`/`tbbo`/`ohlcv_1m`/`ohlcv_15m`/`options_chain`/`futures_chain`) +
+      canonical ticker/exchange-symbol `venue`.
+
 ## Success Criteria
 
 - All scaffold checklist items (a)–(g) GREEN (adapters scaffold present even if credentials are BLOCKED-CREDENTIALS)

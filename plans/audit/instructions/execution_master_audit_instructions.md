@@ -74,6 +74,61 @@ Codex SSOTs: `codex/04-architecture/client-funds-isolation.md`, `codex/04-archit
 - (mock-upstream) **Mock upstream pattern**: strategy and execution audits MUST be runnable with mock MTDS + features
   data. Document the mock fixture location and how to substitute upstream parquets for independent downstream testing.
 
+## Canonical-form cross-service audit coverage (CF-1 … CF-12)
+
+SSOT: `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` (CF-1…CF-12 definitions + service ×
+asset_group matrix). execution_master OWNS the live FORM checks against the execution-record `_index` (fills / transfers
+/ global-ledger `LedgerRow` rows): CF-1, CF-2, CF-5, CF-8, CF-9, CF-12. CF-4 is **EXEMPT** — execution outputs are
+computed, no vendor `source`. CF-3/6/7/10/11 are **n/a** — execution does not fetch raw market data. **Little-data
+note**: execution has run almost no real volume yet, so the data-state read is quick — but the FILL/LEDGER WRITER MUST
+already emit v9 + `asset_group=` + typed reasons + honest `available_at` BEFORE volume arrives, so audit the writer code
+path even when the corpus is near-empty.
+
+- [ ] (CF-1) **schema_version = v9 on execution-record + ledger rows (data-state, not constant)**: read the actual
+      `schema_version` distribution from the execution-record `_index` + global-ledger `_index` (and a parquet sample),
+      NOT `MANIFEST_SCHEMA_VERSION`. Then audit the writer: grep the fill/transfer/ledger emit path —
+      `rg "record_captured|record_empty|LedgerRow|schema_version" execution-service/ --include="*.py"` and the
+      `LedgerRow` construction sites — confirm v9 is what would be stamped on the next write. GREEN: every existing row
+      is v9 AND the writer stamps v9. (Manifest-v8 lesson: a constant said v8 while 0% of rows were v8.)
+
+- [ ] (CF-2) **`asset_group=` not `category=` on execution-record PATHS + `_index` ROWS**: grep object paths for the
+      legacy key `rg "category=" execution-service/ --include="*.py"` and read `_index` rows for any `category` field;
+      confirm the execution-record + ledger writers emit `asset_group=` on both the GCS path hive-key and the manifest
+      row. GREEN: 0 `category=` on paths/rows; `asset_group=` canonical everywhere.
+
+- [ ] (CF-5) **Typed `EmptyConfirmedReason` on every empty execution/ledger cell**: read the empty-reason histogram from
+      the execution-record + ledger `_index`; assert 0 blank / untyped. Audit the writer:
+      `rg "record_empty|EmptyConfirmedReason|EXPECTED_|SOURCE_RETURNED_ZERO" execution-service/ --include="*.py"` —
+      confirm execution emits the closed-set reasons (`EXPECTED_UPSTREAM_EMPTY` for no-signal days,
+      `EXPECTED_OUTSIDE_PROCESSING_SCOPE`, `SOURCE_RETURNED_ZERO` only when genuinely flat) and never a blank reason
+      (would trip `LegacyBlankErrorReasonError`). GREEN: 0 blank/untyped empty cells; writer uses typed reasons only.
+
+- [ ] (CF-8) **`available_at` per-row, honest — never lookahead / migration-time / read-time**: read `available_at` vs
+      the row's day boundary on execution-record + ledger rows; assert it is the real write/fill time, never derived at
+      read-time. Audit the writer: `rg "available_at" execution-service/ --include="*.py"` — confirm it is passed
+      per-row at write time (UTL `record_captured` asserts presence internally) and that batch and live derive it
+      identically (top `SOURCE_PRIORITY` entry's live `available_at`). GREEN: per-row honest `available_at`, batch=live
+      parity.
+
+- [ ] (CF-9) **env-split bucket `{kind}-{env}-{project}` via `resolve_bucket_name()`**: grep for inline `gs://` /
+      `s3://` f-strings `rg "gs://|s3://" execution-service/ --include="*.py"` (QG STEP 5.69 ratchet) — confirm every
+      execution-record / ledger bucket lookup routes through
+      `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=…, kind=…, asset_group=…, env=…)`
+      and is env-tiered (`-prd`/`-test`). GREEN: 0 inline bucket f-strings; all lookups canonical + env-split.
+
+- [ ] (CF-12) **batch = live symmetry on execution outputs**: diff the batch vs live execution-record + ledger schema /
+      data_type set / field set per asset_group; confirm one code path (only execution fills differ — never schema /
+      data_types / fields), and that no live-only execution data_type exists and `available_at` is not derived at
+      read-time. Grep for any live-only branch: `rg "is_live|live_only|if.*live" execution-service/ --include="*.py"`
+      and read each hit. GREEN: identical schema + data_types + fields batch vs live; single code path.
+
+- **n/a (with reason)**: CF-3 (`pipeline_mode=` partition) — execution does not write hive-partitioned raw market-data
+  paths; CF-4 (`source` column) — EXEMPT, execution outputs are computed (no vendor source); CF-6
+  (`expected_unattempted` 4th state) — execution does not pre-flight an IS-owed universe; CF-7 (canonical
+  venue/data_type names) — execution does not name raw-market data_types; CF-10 (phantom captured) — no
+  pre-genesis/date-impossible object walk for execution outputs; CF-11 (fetch-failure swallow) — execution does not
+  fetch raw market data (its venue-error classification is covered by checklist item (f)).
+
 ## Success Criteria
 
 - All 8 checklist items GREEN

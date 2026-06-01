@@ -90,6 +90,23 @@ spread strategy. Key invariant: binary resolution events handled correctly; no h
       `manifest_consolidator_duckdb_memory_fix_2026_05_26.md` (the DuckDB memory-bound merge is UTL Tier-0, shared by
       every asset_group).
 
+## Canonical-form coverage (CF-1…CF-12)
+
+> Cites the SSOT `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`. Run CF-1…CF-12 against the
+> `market-data-tick-pred-prd-…` `_index` + objects (DATA-STATE). Remediation owner =
+> `prediction_manifest_canonicalisation_2026_06_01.md`. CF-4 (`source` column = the API `polymarket_clob` /
+> `polymarket_gamma_api` / `kalshi_*`, stamped for swap-resilience) covered by the Dual-source provenance section above.
+> **Invariant**: venue ≠ source — Polymarket/Kalshi are VENUES (cross-venue dispersion is feature-layer); each venue's
+> cell still stamps its API source.
+
+- [ ] (CF-1/2/3/8/9/12) SSOT checks on `market-data-tick-pred-prd-…`: schema_version=v9 (data-state) · `asset_group=`
+      not `category=` · `pipeline_mode=` partition (`batch_polymarket_clob`/`batch_polymarket_gamma_api`) · honest
+      `available_at` · env-split bucket · batch=live.
+- [ ] (CF-5 prediction reasons) every empty prediction cell typed: genuine `SOURCE_RETURNED_ZERO` /
+      `EXPECTED_KNOWN_SOURCE_GAP`; 0 blank.
+- [ ] (CF-7 prediction names) underscore data*type
+      (`prediction_canonical_question_group`/`ohlcv*\*`) + canonical venue     (`POLYMARKET`/`KALSHI`).
+
 ## Success Criteria
 
 - All 7 checklist items GREEN

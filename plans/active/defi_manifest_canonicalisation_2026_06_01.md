@@ -43,6 +43,9 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 | `tradfi_massive_dual_source_2026_05_28`                     | tradfi L1 source write-path + Massive ingest (NOT the L3 walk)                                    | mostly ✅; -031 absorbed by ↓    | done — see CONFLICT-2         |
 | `tradfi_manifest_canonicalisation_2026_06_01`               | **L3 tradfi single-walk** (v9 + pipeline_mode partition + source re-consol)                       | open P0                          | parallel per-AG               |
 | `sports_manifest_canonicalisation_2026_06_01`               | **L3 sports single-walk** (v9 + partition + fixture-dependent typed reasons + source path→column) | open P0                          | parallel per-AG               |
+| `instruments_manifest_canonicalisation_2026_06_01`          | **L3 per-SERVICE** (instruments I/O input — all-AG reference/instrument indices, audit-first)     | open P0                          | parallel per-service          |
+| `downstream_services_manifest_canonicalisation_2026_06_01`  | **L3 per-SERVICE** (MDPS/features/strategy/execution — audit-first, low-data quick walk)          | open P1                          | parallel per-service          |
+| `canonical_form_cross_service_audit_checklist` (audit SSOT) | **L7 AUDIT SSOT**: CF-1…CF-12 union + (service×CF) coverage matrix — re-run proves canonical      | shipped                          | —                             |
 | `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`    | **L4/L7 "no fallback"**: reader fail-fast default + liveness                                      | step-1 ✅; follow-up open        | parallel (independent)        |
 | `aws_manifest_consolidator_scope_2026_05_21`                | L4 AWS canonical consolidator                                                                     | P1.10 `tofu apply` open (HUMAN)  | parallel (AWS infra)          |
 | `manifest_consolidator_liveness_health_2026_06_01`          | L4 GCP consolidator liveness                                                                      | (not on this branch)             | parallel — CONFLICT-3         |
@@ -66,12 +69,21 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
   - **sports** (0 legacy-only → DATA complete, but canonical FORM + fixture-dependent typed honest-absence owed) → ✅
     FILED `sports_manifest_canonicalisation_2026_06_01.md` (owner `vm-sports`; NOT pure verify-only — v9 + partition +
     typed reasons + source path→column).
+  - **PER-SERVICE axis (the data pipeline is `instruments → MTDS → MDPS → features → strategy → execution` — every
+    service's `_index` needs canonical form, not just MTDS)**: the per-AG plans above cover the **MTDS** row; the other
+    services are covered by ✅ FILED `instruments_manifest_canonicalisation_2026_06_01.md` (I/O input, all-AG reference
+    indices, `vm-cross-cutting`) + ✅ FILED `downstream_services_manifest_canonicalisation_2026_06_01.md`
+    (MDPS/features/strategy/execution — audit-first, low-data, `vm-ml`). Both are **audit-first** against the CF-1…CF-12
+    SSOT and bundle every transform into one walk per bucket (MDPS rides the AG tick walk — no second `_index` walk).
 - **L4 CONSOLIDATOR SSOT** — `aws_manifest_consolidator_scope` P1.10 · `manifest_consolidator_liveness_health` ·
   `manifest_reader_fail_fast` follow-up (fail-fast default) · keep env-tiered crons.
 - **L5 BACKFILL/RELAUNCH** — bucket_ssot Phase 4 (writer relaunch) · this plan C6/D1/E1/G1 — gated C-GREEN.
 - **L6 DECOMMISSION** — bucket_ssot Phase 6 verify → Phase 7 delete legacy buckets (GCP+AWS).
 - **L7 GUARDRAILS** — QG grep-guard · `batch_live_symmetry` audit check ✅ · codex docs (this plan F1–F4 +
-  `data_source_provenance` QG 5.64 + bucket_ssot codex).
+  `data_source_provenance` QG 5.64 + bucket_ssot codex) · **cross-service audit SSOT
+  `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`** (CF-1…CF-12 union + (service×CF) coverage
+  matrix; every per-service + per-AG audit-instruction file carries a "Canonical-form coverage" section citing it, so
+  re-running the audits proves the whole pipeline is canonical — a CF column with no owning audit is review-blocking).
 
 ### CONFLICTS found (cross-plan check 2026-06-01 — RESOLVE before parallel dispatch)
 
@@ -283,7 +295,7 @@ What to verify/wire (B0 corrected scope):
 ## C. Data / manifest migration (single-walk, bundled) — fix existing rows
 
 > **THE WHOLE POINT — fix the PAST, not just future writes (operator 2026-06-01, re-affirmed)**: the root of our
-> recurring problems has been fixing the *code* (so future writes are correct) while leaving the *past* data + past
+> recurring problems has been fixing the _code_ (so future writes are correct) while leaving the _past_ data + past
 > manifests in legacy form — which forces fallbacks, dual-write, and a split SSOT. This plan exists to END that. §C is
 > NOT manifest-only and NOT future-only. The C0 single-walk (`migrate_defi_full_v9_canonical.py`) **reads every past
 > parquet object** and rewrites BOTH its **columns** (`schema_version→9`, `venue`→canonical `_V{N}`, `source` populated,
@@ -291,8 +303,8 @@ What to verify/wire (B0 corrected scope):
 > `pipeline_mode=` partition + env-split `-prd` bucket). C0e then **rebuilds the past manifest** (consolidator) FROM the
 > rewritten data — so data + manifest + data-status are all in line. C0f + L6 **delete the legacy originals** (kills the
 > dual SSOT), and the reader is fail-fast-by-default with **no legacy fallback** (`manifest_reader_fail_fast`). A change
-> that only corrects new writes while leaving historical objects/manifests legacy is **review-blocking** — it
-> re-creates the exact fallback/dual-SSOT problem this plan deletes.
+> that only corrects new writes while leaving historical objects/manifests legacy is **review-blocking** — it re-creates
+> the exact fallback/dual-SSOT problem this plan deletes.
 >
 > **C is the foundation gate** (see Sequencing). One bundled single-walk per bucket applies C0+C2+C3+C4+C5+C7+C9
 > together (no N ad-hoc walks). Backfills (C6/D1/E1) + B0-run are blocked until C is GREEN for the affected bucket.

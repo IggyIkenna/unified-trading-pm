@@ -27,7 +27,7 @@ doc:
 
 | Dimension                                                              | What it checks                                                                                                                                                                              | Section                                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Code ↔ codex correctness**                                          | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                  | [Checklist](#checklist) items (a)–(n)                                                                   |
+| **Code ↔ codex correctness**                                           | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                   | [Checklist](#checklist) items (a)–(n)                                                                   |
 | **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(z) |
 
 ### Archetypes / strategies in scope (operator's words → codebase archetype)
@@ -554,6 +554,22 @@ plan under `parent_epic: defi_master` immediately (Capture Discoveries HARD RULE
   the exact `pytest` fixtures or `CLOUD_MOCK_MODE=true` invocation in `## Output Format` so any slot can run the
   downstream-only audit independently.
 
+## Canonical-form coverage (CF-1…CF-12)
+
+> Cites the SSOT `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`. Run CF-1…CF-12 against the
+> `market-data-tick-defi-prd-…` `_index` + objects (DATA-STATE, not constants). Remediation owner =
+> `defi_manifest_canonicalisation_2026_06_01.md` §C. CF-4 (`source` column) is covered by the Dual-source provenance
+> section above (defi multi-source: `oracle_prices`=pyth+chainlink, `native_staking_rates`=solana_rpc+helius_rpc).
+
+- [ ] (CF-1/2/3/8/9/10/12) SSOT checks on `market-data-tick-defi-prd-…`: schema_version=v9 (data-state) · `asset_group=`
+      not `category=` (paths+rows) · `pipeline_mode=` partition · honest `available_at` · env-split bucket · no
+      phantom/date-impossible captured · batch=live. GREEN = all data-state.
+- [ ] (CF-5 defi reasons) every empty defi cell typed: `EXPECTED_PRE_GENESIS_CHAIN` / `EXPECTED_PRE_VENUE_LAUNCH` (UAC
+      `DEFI_VENUE_LAUNCH_DATES`) / genuine `SOURCE_RETURNED_ZERO`; 0 blank/mislabeled.
+- [ ] (CF-7 defi names) underscore data_type
+      (`dex_pools`/`lst_rates`/`lending_indices`/`oracle_prices`/`perp_funding`) + flat `venue` + populated `chain` +
+      `{VENUE}_V{N}` (`UNISWAP_V3`/`TRADER_JOE_V2`/`VELODROME_V2`).
+
 ## Success Criteria
 
 - All code-correctness checklist items GREEN (incl. code↔codex drift items j–n)
@@ -593,4 +609,4 @@ Result file at `plans/audit/results/defi_master_audit_YYYY_MM_DD.md` must contai
 | Date       | Result file                                                                                                       | Status                                                                                                                                                                          |
 | ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-06-01 | [`results/defi_master_audit_2026_06_01.md`](../results/defi_master_audit_2026_06_01.md)                           | **AMBER** — strategy data-coverage (o–v): data EXISTS 79–96% in dedicated buckets; real issues are wrong-form (phantom grid + alias dupes + v4–v8 schema). Genesis of Step 1.5. |
-| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n)                                                                                                                                           |
+| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n)                                                                                                                                            |

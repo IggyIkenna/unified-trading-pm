@@ -100,6 +100,25 @@ Key invariants: GCS paths always from `candidate_parquet_paths()`; date coverage
       `manifest_consolidator_duckdb_memory_fix_2026_05_26.md` (the DuckDB memory-bound merge is UTL Tier-0, shared by
       every asset_group).
 
+## Canonical-form coverage (CF-1…CF-12)
+
+> Cites the SSOT `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md`. Run CF-1…CF-12 against BOTH
+> sports surfaces (`market-data-tick-sports-prd-…` odds + `instruments-store-sports-…` reference) — DATA-STATE.
+> Remediation owner = `sports_manifest_canonicalisation_2026_06_01.md`. CF-4 (`source` is a COLUMN not a path key — lift
+> the legacy `data_source=ODDS_API/` path segment into the column; multi-source `FIXTURES`=2 rows) covered by the
+> Dual-source provenance section above. **CF-5 is the sports keystone** (schedule-driven honest absence).
+
+- [ ] (CF-1/2/3/8/9/10/12) SSOT checks on both sports surfaces: schema_version=v9 (data-state) · `asset_group=` not
+      `category=` · `pipeline_mode=` partition on ALL paths · honest `available_at` (forecast-issue / poll-time) ·
+      env-split bucket · no phantom captured · batch=live.
+- [ ] (CF-5 sports reasons — KEYSTONE) every empty sports cell typed via the coverage oracle
+      (`clip_dates_to_source_coverage()` / `is_in_known_gap()` / season / transfer-window / fixture-status):
+      `EXPECTED_NO_FIXTURE` · `EXPECTED_PRE_SEASON` · `EXPECTED_POST_SEASON` · `EXPECTED_PAUSED_LEAGUE` ·
+      `EXPECTED_OUTSIDE_TRANSFER_WINDOW` · `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE` · `EXPECTED_FIXTURE_POSTPONED` /
+      `_CANCELLED` · `EXPECTED_KNOWN_SOURCE_GAP` · `EXPECTED_NO_MAPPING`; 0 blank/mislabeled `SOURCE_RETURNED_ZERO`.
+- [ ] (CF-7 sports names) underscore data_type (`FIXTURES`/`FIXTURE_EVENTS`/`INJURIES`/`ODDS`/`XG`/`PLAYER_VALUES`/… 20
+      canonical; retired `TRANSFERMARKT_LEAGUES`/`SFI_LEAGUES` absent) + canonical `league=` + flat bookmaker `venue`.
+
 ## Success Criteria
 
 - All 7 scaffold checklist items (a)–(g) GREEN
