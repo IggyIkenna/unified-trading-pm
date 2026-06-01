@@ -71,15 +71,31 @@ estimate_calibrated_ai_days: 1.2
       `scripts/quality_gates/check_workspace_code_workspace_drift.py` (basedpyright-clean, strict) wired into
       `quality-gates.sh` post-gates (blocking) + 9-case pytest `tests/unit/test_check_workspace_code_workspace_drift.py`.
       Verified clean on current workspace (25 repos), negative tests exit 1. Same LDR-not-staging deviation as Item 2.
-- [ ] [PM] P2. **Item 4 — adjudicate the features-service `ci_status` edit (Observation A).** Slot-5 `stash@{0}`
-      (`slot5-FOREIGN: features-service ci_status LOCAL_PASS->FAILING`) holds an uncommitted flip that was starving
-      slot-5 PM's FF-pull cron (963 behind). Decide WITH operator: is features-service CI actually FAILING (commit the
-      `workspace-manifest.json` flip + point at remediation) or stale WIP (drop the stash)? Either way a slot PM tree
-      must not carry a perpetually-dirty `workspace-manifest.json`.
+- [x] ✅ [PM] P2. **Item 4 — adjudicate the features-service `ci_status` edit (Observation A).** Slot-5 `stash@{0}`
+      (`slot5-FOREIGN: features-service ci_status LOCAL_PASS->FAILING`) held an uncommitted flip that was starving
+      slot-5 PM's FF-pull cron (963 behind). **Resolved 2026-06-01 (operator-acked: drop stash):** investigated the CI
+      first — the authoritative workflow `quality-gates-v2` is **GREEN** on features-service's current LDR HEAD
+      (`dd5812b5fb`); the earlier red `quality-gates-v2` runs were fixed by the latest `fix(tests): drop project_id
+      substitution assertions` commit. The failures flooding `gh run list` are all `agent-audit.yml` — infra noise (0s
+      duration, "log not found" = the workflow never starts; trigger/permission config), not test/quality failures. So
+      committed `ci_status: LOCAL_PASS` is currently accurate and the slot-5 `FAILING` flip was stale (reflected the
+      pre-fix red state). Dropped `stash@{0}` from slot-5's PM worktree (recoverable commit `f98114f266` until GC); the
+      two surviving `stash@{0..1}` are slot-1 WIP, untouched. Slot-5 PM tree now clean + 0 behind origin/LDR — FF-pull
+      unblocked.
 - [x] ✅ [SCRIPT] P3. **Item 5 — FF-pull starvation watchdog signal (spec delivered; wiring optional).** Spec below
       (§ "Item 5 spec"). Proposes the detection rule + ping payload for the slot-5-963-behind failure mode.
       Implementation (wiring into `slot-git-status-report.sh` / `slot-cron-ff-pull.sh`) left as an optional P3 follow-up —
       capture as its own todo if/when prioritised.
+
+## Discoveries (captured per HARD RULE)
+
+- [ ] [SCRIPT] P3. **`agent-audit.yml` fails at 0s with no logs on features-service LDR** (surfaced during Item 4
+      investigation). 8+ consecutive `agent-audit.yml` runs failed instantly ("log not found" = the job never starts —
+      trigger/permission/config), while the authoritative `quality-gates-v2` was green on the same HEAD. This is
+      misleading: a `gh run list` glance reads as "CI red" when the real quality gate is green (it nearly led to a wrong
+      `ci_status: FAILING` flip here). Investigate whether `agent-audit.yml` is broken features-service-only or
+      workspace-wide, and either fix its trigger/permissions or retire it. **DEFERRED** — out of this plan's scope;
+      provenance: Item 4 investigation 2026-06-01.
 
 ## Item 5 spec — FF-pull starvation watchdog signal
 
