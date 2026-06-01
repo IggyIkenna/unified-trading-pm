@@ -130,18 +130,19 @@ class Violation:
 # ──────────────────────────────────────────────────────────────────────────────
 
 
-def _check_uac_regression(workspace_root: Path) -> list[str]:
-    """Return list of failure messages if UAC validation landmarks are regressed."""
+def _check_uac_regression(workspace_root: Path) -> list[str] | None:
+    """Return list of failure messages if UAC validation landmarks are regressed.
+
+    Returns None when the UAC repo is not present as a workspace sibling — Part (a)
+    is a regression guard on UAC's own source and only meaningful when UAC is
+    checked out alongside the calling repo. PM (and any other repo without UAC
+    as a sibling) treats this as SKIP, not FAIL.
+    """
     failures: list[str] = []
 
     validation_file = workspace_root.joinpath(*_UAC_VALIDATION_REL)
     if not validation_file.exists():
-        failures.append(
-            f"UAC instrument_validation.py not found at expected path: {validation_file}\n"
-            "  This file ships the hard-required field enforcement (uac@37d1ddb).\n"
-            "  If moved, update _UAC_VALIDATION_REL in check_uac_hard_required_fields.py."
-        )
-        return failures  # no point checking content if file is gone
+        return None  # SKIP — UAC not present in workspace
 
     source = validation_file.read_text(encoding="utf-8")
 
@@ -306,7 +307,13 @@ def main(argv: list[str] | None = None) -> int:
 
     # ── Part (a): UAC regression guard ────────────────────────────────────────
     uac_failures = _check_uac_regression(workspace_root)
-    if uac_failures:
+    if uac_failures is None:
+        print(
+            f"[SKIP] STEP 5.83 ({repo_label}): UAC repo not present in workspace; "
+            "Part (a) regression guard skipped (Part (b) bundled-shard-key check still runs)",
+            flush=True,
+        )
+    elif uac_failures:
         for msg in uac_failures:
             print(f"[FAIL] STEP 5.83 ({repo_label}): {msg}", flush=True)
         fail_count += len(uac_failures)

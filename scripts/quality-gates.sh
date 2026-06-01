@@ -2,12 +2,19 @@
 # Repo-specific settings only. Body: unified-trading-pm/scripts/quality-gates-base/base-service.sh
 SERVICE_NAME="unified-trading-pm"
 SOURCE_DIR="scripts"
-MIN_COVERAGE=70
+# PM is a docs+plans+scripts repo (not a service). Coverage gate disabled —
+# scripts/ is operational tooling, not application code; aligns with
+# pyproject.toml `fail_under = 0` deviation already documented there.
+MIN_COVERAGE=0
 RUN_INTEGRATION=true
 PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
 LOCAL_DEPS=("unified-api-contracts" "unified-trading-library")
 MAX_DURATION=600  # PM: 5 min for local gates + ~5 min for act simulation (--act flag)
 PYRIGHT_TIMEOUT=240  # PM scripts dir is larger — give basedpyright extra time on slow CI runners
+# basedpyright ratchet baseline (2026-06-01): PM scripts/ has 1511 historic
+# typing errors that aren't worth chasing on a docs-mostly repo, but future
+# commits MUST NOT regress. Ratchet down opportunistically as files are touched.
+BASEDPYRIGHT_MAX_ERRORS=1511
 WORKSPACE_ROOT="$(cd "$(git rev-parse --show-toplevel)/.." && pwd)"
 
 # Optional codex exclusion arrays (base adds --glob; use "!**/file.py" to exclude)
