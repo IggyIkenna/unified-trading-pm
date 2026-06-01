@@ -172,20 +172,27 @@ conditional-push + `rebase --abort` rules + agent judgment), not enforcement.
       BLOCKS any non-fast-forward push to `HEAD:live-defi-rollout` unless either (a) the rebase replayed with ZERO
       conflicts, or (b) the push carries an explicit plan-reference + human/main-agent ack. Force-resolved integrations
       are rejected by default. Composes with the `Commit + Push + Flip` HARD RULE.
-- [ ] [SCRIPT] P1. Alerting mostly EXISTS — `worker_liveness.py` already flags `ahead>0 || diverged` for >15 min
-      (`any_red_15m`), fires `notify_git_staleness_red`, and nudges the worker. BUT it reaches **Telegram only**:
-      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is UNSET fleet-wide (verified vm-orchestrator 2026-06-01) so the Slack path in
-      `notifications/slack.py` is silently suppressed. Action: set the Slack webhook on the fleet if a Slack surface is
-      wanted, and confirm the threshold pages on a still-CLEAN-but-diverged worktree (not only dirty).
-- [ ] [DOC] P1. Document the tab-branch-vs-LDR topology + the "park-and-preserve, never force-resolve a conflict to get
-      green" contract explicitly in `agent-orchestrator/agents/worker.md` + codex orchestrator overview, so a worker
-      cannot infer "pushed to my tab branch" == "integrated to LDR".
+- [x] ✅ [SCRIPT] P1. ✅ DONE 2026-06-01 (live). `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` now SET fleet-wide: enabled on both
+      running orchestrator VMs (`agent-orchestrator-vm-1` i-0c9b283b31d6b5ca7 + `agent-orch-vm-orchestrator-20260522`
+      i-007e8d99d12831578) via systemd drop-in `slack-alerts.conf` (webhook fetched from GCP SM
+      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` — the AWS instance role is denied SM read, GCP gcloud auth is the working path),
+      orchestrator restarted, `slack_env_set=1` + test message delivered (`webhook_post=ok`) on both. The clean-but-diverged
+      page is already wired (`worker_liveness` L355 fires on `ahead>0||diverged` independent of dirty — verified). Tooling
+      for new/re-bootstrapped VMs: `bootstrap_vm.sh` 5.5b-quater (agent-orchestrator@a07a8bb/@34333b0) + drop-in
+      `scripts/orchestrator/enable_slack_alerts.sh` (PM@424b8db98/@a0fe469d6). (Live fleet is 2 VMs, not 11 — consolidated.)
+- [x] ✅ [DOC] P1. ✅ DONE 2026-06-01 — agent-orchestrator@f31f8ff (worker.md fresh-pull 1b: tab-branch-vs-integration-branch
+      topology + "park-and-preserve, never force-resolve" contract + per-repo base) + PM@74a557f1f (codex
+      `per-tab-worktrees.md` "Pre-spawn branch-state + liveness-gated dirty resolution" section). A worker can no longer
+      infer "pushed to my tab branch" == "integrated to LDR".
 
 ### VM `.git` file-ownership rot (root-owned objects) — fleet-wide (discovery 2026-06-01)
 
-**status**: 🟡 MITIGATED 2026-06-01 (fleet-wide `chown -R ubuntu:ubuntu ~/unified-trading-system-repos` applied to all
-10 VMs — root-owned count went 121–133 → 0 each); durable fix OPEN. · **provenance**: slot-1 main during code-freeze
-cleanup.
+**status**: ✅ RESOLVED 2026-06-01 — durable fix shipped: `fleet-git-health-guard.sh` (chown + fsck + alert) on a 30-min
+root cron on both live VMs (auto-heals root-owned objects + detects corruption). Root-cause investigation confirmed the
+tarball excludes `.git` and no standing root op creates them (all git runs as ubuntu). On install the guard caught + healed
+real object corruption on vm-2 (`unified-trading-api` + `instruments-service`). Earlier MITIGATED note (fleet-wide chown,
+121–133 → 0) stands; the guard makes it self-healing. · **provenance**: slot-1 main during code-freeze cleanup + the
+2026-06-01 agent-orchestrator campaign.
 
 **What I found**: Every orchestrator VM had ~121–133 root-owned files under `~/unified-trading-system-repos/**/.git/`
 (objects). `bootstrap_vm.sh` chowns after its initial clones (lines 291/316), so provisioning is NOT the origin — a
@@ -201,12 +208,34 @@ different scope).
 integration machinery and can corrupt object stores (as on ml). Directly undermines the "clean start" + data-pipeline
 correctness the freeze protects.
 
-- [ ] [INFRA] P0. Find the root operation writing root-owned files into VM `.git` (audit
-      `deployment-service/scripts/vm/create-code-tarballs.sh` + the VM redeploy/extract path + any `sudo git` cron) and
-      make it run as `ubuntu` or `chown -R ubuntu:ubuntu` immediately after. This is the durable root-cause fix.
-- [ ] [INFRA] P1. Add a fleet git-health guard: periodic `chown -R ubuntu:ubuntu ~/unified-trading-system-repos` +
-      `git fsck --connectivity-only` that pings the orchestrator inbox on any root-owned file or missing/broken object.
-      Compose with the `worker_liveness.py` git-staleness alert.
+- [x] ✅ [INFRA] P0. ✅ INVESTIGATED + durable fix shipped 2026-06-01. **The tarball is NOT the origin** —
+      `create-code-tarballs.sh` line 212 `--exclude='.git'`, so the redeploy/extract path carries no `.git` objects.
+      Audited the live fleet (both VMs via SSM): orchestrator.service runs as `User=ubuntu`; both git crons
+      (slot-cron-ff-pull, slot-git-status-report) run as ubuntu; `pm-pull.service` runs as `User=root` BUT wraps every git
+      call in `sudo -u ubuntu git` (verified); `bootstrap_vm.sh` chowns after its clones. **No standing root operation
+      creates root-owned `.git`** — the original 121–133 root-owned objects were episodic (ad-hoc root git ops / early
+      pre-chown bootstrap / now-retired VMs). Durable fix = the fleet git-health guard on a timer (INFRA P1 below), now
+      deployed. Residual hardening if ever needed: ensure ad-hoc root SSM ops that touch repos `chown` after (the guard
+      auto-heals regardless).
+- [x] ✅ [INFRA] P1. ✅ DONE 2026-06-01 — `agent-orchestrator/scripts/fleet-git-health-guard.sh` (@c5d7cc7: chown -R to slot
+      user + `git fsck --connectivity-only` per repo + orchestrator-inbox Slack alert) DEPLOYED + installed as a 30-min
+      root cron on both live VMs. **Caught + healed real corruption on its first run:** vm-2 had broken/missing git objects
+      in `unified-trading-api` + `instruments-service` (the same rot class as the vm-ml incident) — healed via
+      `git fetch --refetch` → both `fsck OK`. Composes with the `worker_liveness.py` git-staleness alert. NB follow-up: the
+      guard's Slack alert needs the webhook in the cron env (currently logs to `/var/log/fleet-git-health-guard.log`; the
+      chown+fsck heal works regardless) — see Findings.
+- [ ] [SCRIPT] P2. **Follow-up (2026-06-01 campaign): fleet-git-health-guard cron lacks the Slack webhook env** → it
+      logs problems to `/var/log/fleet-git-health-guard.log` but the `notify` POST no-ops (no
+      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the root cron). Make the guard self-fetch the webhook from SM (gcloud as the
+      slot user) when the env is unset, OR prefix the cron line with it. So corruption like the vm-2 find (healed) also
+      pages, not just logs.
+- [ ] [INFRA] P1. **Follow-up (2026-06-01 campaign): agent-orchestrator main-checkout deploy-currency drifts.** vm-2
+      (`agent-orch-vm-orchestrator-20260522`) was **14 commits behind** LDR (HEAD 3635d04) — running stale orchestrator
+      code (missing the @7950ab0 branch-state fix) — while vm-1 was current. FF-pulled + restarted vm-2 to @34333b0 in the
+      campaign, but there is no reliable standing mechanism that keeps the **main** `~/unified-trading-system-repos/agent-orchestrator`
+      checkout (the one systemd runs) current on every VM (pm-pull covers unified-trading-pm; slot-cron covers `.tabs/*`
+      worktrees, not the main checkout). Add an agent-orchestrator self-pull (timer/systemd) + `verify_fleet_autonomy_health.sh`
+      gate on it, so a VM can't silently run weeks-old server code.
 
 ## P1 — important; post-current-gate
 
