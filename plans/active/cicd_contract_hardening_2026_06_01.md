@@ -126,7 +126,7 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 | --- | --- |
 | unified-trading-pm | ✅ MAIN GREEN (harsh fix a217a031c + FF) — done |
 | instruments #392 · uac #62 · client-reporting #11 · ibkr #13 | ✅ MERGED to main |
-| trading-agent #7 · deployment-api #14 · execution #206 · mtds #112 · strategy #64 · utl #229 · mdps #87 · deployment-ui #13 · batch-live #13 · SIT #16 · alerting #20 | ⏳ conflict resolved take-best; PRs open, gated on v2 — re-promote in the frozen dep-ordered window |
+| trading-agent #7 · deployment-api #14 · execution #206 · mtds #112 · strategy #64 · utl #229 · mdps #87 · deployment-ui #13 · batch-live #13 · SIT #16 · alerting #20 | ⏳ resolutions already on LDR (take-best back-merges); ad-hoc PRs CLOSED 2026-06-01 (whack-a-mole vs churning LDR) — re-promote in the frozen dep-ordered window |
 | deployment-service | 🔴 v2-RED — green first |
 | fund-administration · e2e-testing · greeks-service | v2 just added; open PR after first green v2 |
 
