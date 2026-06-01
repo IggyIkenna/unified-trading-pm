@@ -97,14 +97,14 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - `--dep-branch` is human-only.
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
-- **agent-orchestrator EXCEPTION (codified 2026-06-01)**: `agent-orchestrator` is the ONE repo whose integration
-  target is **`main`, NOT `live-defi-rollout`**. It is operator/agent tooling — NOT production trading code — so it
-  **bypasses the production code-hardening path** (`live-defi-rollout` → `staging` → `main`). The slot model still
-  applies: commit to the slot branch `tab/<operator>/<N>` to isolate per-agent commits, then **fast-forward the slot
-  branch to `main`** (its slot branch tracks `origin/main`; every OTHER repo's slot branch tracks
-  `origin/live-defi-rollout`). Do NOT route agent-orchestrator changes through LDR/staging or treat its `main`-behind-LDR
-  as drift to "promote" — `main` is its canonical. (Its work may also appear on LDR via the `tab-mirror` GHA; that is
-  harmless mirroring, not the target.) SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
+- **agent-orchestrator EXCEPTION (codified 2026-06-01)**: `agent-orchestrator` is the ONE repo whose integration target
+  is **`main`, NOT `live-defi-rollout`**. It is operator/agent tooling — NOT production trading code — so it **bypasses
+  the production code-hardening path** (`live-defi-rollout` → `staging` → `main`). The slot model still applies: commit
+  to the slot branch `tab/<operator>/<N>` to isolate per-agent commits, then **fast-forward the slot branch to `main`**
+  (its slot branch tracks `origin/main`; every OTHER repo's slot branch tracks `origin/live-defi-rollout`). Do NOT route
+  agent-orchestrator changes through LDR/staging or treat its `main`-behind-LDR as drift to "promote" — `main` is its
+  canonical. (Its work may also appear on LDR via the `tab-mirror` GHA; that is harmless mirroring, not the target.)
+  SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ### Imports + types
 
@@ -1034,6 +1034,20 @@ Bootstrap: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --
 `--reset-slot N`, `--list`). Reconciliation: `bash unified-trading-pm/scripts/dev/slot-master-rebase.sh`.
 
 SSOTs: `codex/05-infrastructure/per-tab-worktrees.md` + `plans/active/per_agent_worktrees_2026_05_10.md`.
+
+### Respawn working-tree hygiene (background agents) — liveness-gated, not identity-gated
+
+On spawn/respawn/restart an agent MUST come up on a good tree. The discriminator for inherited dirty WIP is **liveness,
+not identity**: the slot worktree `.tabs/<N>/<repo>` is exclusively that slot's, so dirty content left by a dead
+predecessor (expired `.agent-claim` TTL / no tmux session / stale heartbeat) is _you-in-a-prior-session_ → **inherit +
+commit**. **Quarantine is NEVER terminal** — a dead maker must not leave the slot infinitely dirty. Only a provably-LIVE
+peer (realistically the operator's own interactive session on the slot, per the "operator session counts as a slot"
+rule) is protected: a **background** worker `notify_*`-pings the operator + inherits once the maker's claim TTL expires;
+an **interactive** session ASKS the operator whether other agents are finished, then commits. Forbidden: per-file
+foreign attribution (`in_flight_files` is a refinement, never a gate); pushing a wiped-index mass-delete
+(`git reset --mixed HEAD` first, quarantine if files truly gone); spawning without asserting `HEAD == tab/<op>/N` +
+upstream == the repo's correct base (per-repo: `main` for agent-orchestrator, `live-defi-rollout` else). SSOT:
+`plans/active/orchestrator_autonomy_audit_remediation_2026_06_01.md` § Phase 4.
 
 ---
 
