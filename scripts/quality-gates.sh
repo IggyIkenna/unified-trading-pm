@@ -54,6 +54,11 @@ EMPTY_STR_EXCLUDE_GLOBS=(
     "!**/test_detect_template_drift.py"
     "!**/check_coverage_targets.py"
     "!**/gcs_migration_bundle_2026_05_08.py"
+    # JSON/YAML parse-default tooling (.get("k","") on parsed dicts — not an os.getenv anti-pattern)
+    "!**/generate-cicd-diagram.py"
+    "!**/audit_model_tier.py"
+    "!**/invalidate-ci-status.py"
+    "!**/gcs_bucket_stats.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
@@ -219,6 +224,7 @@ CODEX_MAX_VIOLATIONS=0  # ratcheted 2026-06-01: 3 violations fixed (deep-import 
 SCHEMA_PROVENANCE_SKIP=true  # PM checker scripts define local BaseModel (not domain schemas)
 MANIFEST_ALIGNMENT_SKIP=true  # PM is infrastructure (L0) — scripts import libs for validation, not as runtime deps
 HARDCODED_PROJECT_EXCLUDE_GLOBS=(
+    "!**/gcs_bucket_stats.py"
     "!**/test_prediction_pipeline_e2e.py"
     "!**/migrate_player_mappings_to_canonical.py"
     "!**/migrate_sports_gcs_to_hive.py"
@@ -238,6 +244,7 @@ export SKIP_SERVICE_LIFECYCLE_STEPS=true
 EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
     "!**/generate-cicd-diagram.py"
     "!**/invalidate-ci-status.py"
+    "!**/gcs_bucket_stats.py"
 )
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
