@@ -13,7 +13,6 @@ to the issue doc above.
 """
 import json
 import subprocess
-import sys
 
 REPOS = [
     "alerting-service", "batch-live-reconciliation-service", "client-reporting-api",
@@ -61,7 +60,7 @@ def main():
         flag = "" if (m_ok and s_ok) else "  <-- CHECK"
         if flag:
             allok = False
-        print(f"{repo:<32} {str(m):<55} {str(s)}{flag}")
+        print(f"{repo:<32} {m!s:<55} {s!s}{flag}")
     print("\nALL RULESETS CONSISTENT:", allok)
     return 0 if allok else 1
 

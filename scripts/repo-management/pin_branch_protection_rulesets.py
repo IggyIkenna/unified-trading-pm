@@ -26,7 +26,7 @@ Usage:
   python3 scripts/repo-management/pin_branch_protection_rulesets.py            # dry-run, all repos
   python3 scripts/repo-management/pin_branch_protection_rulesets.py --apply    # apply, all repos
   python3 scripts/repo-management/pin_branch_protection_rulesets.py --repo strategy-service --apply
-  python3 scripts/repo-management/pin_branch_protection_rulesets.py --ref staging   # read workflow files from another branch
+  python3 scripts/repo-management/pin_branch_protection_rulesets.py --ref staging   # use another branch
 
 Requires: ``gh`` authenticated with admin on the IggyIkenna org repos.
 """
