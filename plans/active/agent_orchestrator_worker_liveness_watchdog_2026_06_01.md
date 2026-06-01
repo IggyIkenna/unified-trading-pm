@@ -78,7 +78,7 @@ Observation captured during operator's 2026-05-30/06-01 manual kill cycles. Two 
 
 ### Phase 1 — Design
 
-- [ ] [DESIGN] P0. Document `WorkerLivenessWatchdog` design in
+- [x] ✅ [DESIGN] P0. Document `WorkerLivenessWatchdog` design in
       `codex/04-architecture/agent-orchestrator-worker-liveness.md` (new doc): three trigger contracts (table above),
       anti-thrash gates (cooldown + daily cap), pane-content regex anchors (`Crunched for|Cogitated for|Worked for`
       for legitimate-thinking allow-list; `/clear to save .{1,10}k tokens` for context-full kill), interaction with
