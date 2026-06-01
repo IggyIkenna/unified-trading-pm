@@ -198,7 +198,7 @@ def _load_source_required() -> object | None:
         from unified_api_contracts import source_required  # noqa: qg-inside-import — optional dep
 
         return source_required
-    except Exception:
+    except ImportError:
         return None
 
 
