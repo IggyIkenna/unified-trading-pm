@@ -1,40 +1,49 @@
 #!/usr/bin/env python3
-"""AST-walk QG STEP 5.64 — explicit ``source=`` at every ``record_captured`` call.
+"""AST-walk QG STEP 5.64 — explicit ``source=`` at every *multi-source* manifest write.
 
-Per ``tradfi_massive_dual_source_2026_05_28.md`` Phase 3:
+Originally (``tradfi_massive_dual_source_2026_05_28.md`` Phase 3) this required
+``source=`` at *every* ``record_captured`` call. Generalised by
+``data_source_provenance_all_asset_groups_2026_06_01.md`` Phase 6 to the
+**registry-driven** rule that matches the UTL runtime gate + universal-stamping
+design:
 
-  ``MissingSourceError`` fires at runtime when ``category=="tradfi"`` and
-  ``source`` is omitted from ``record_captured``.  This static check catches
-  the bug at QG time — before any MTDS or consumer adapter ships — so TradFi
-  writers can never silently leave ``source=""`` in the manifest.
+  The UTL writer AUTO-STAMPS the sole external source for single-source cells
+  and only RAISES ``MissingSourceError`` when a cell has >1 external source
+  (``source_required(asset_group, data_type)`` is True) and ``source`` is blank.
+  Computed/service-emitted + unregistered cells are exempt.
 
-  Because detecting the runtime value of ``category`` from AST alone is
-  impractical (it may be a variable), this check takes the conservative
-  approach: **every ``record_captured(...)`` call site must pass ``source=``
-  explicitly**.  Non-TradFi adapters incur no runtime cost (the gate is a
-  no-op for non-tradfi categories), and passing ``source=None`` is
-  semantically identical to omitting it, so the burden on non-TradFi callers
-  is minimal: add ``source=None`` or ``source=""``.
+  So a static check that demands ``source=`` on *every* callsite would
+  false-fail the single-source callsites that legitimately rely on auto-stamp.
+  This check therefore flags a callsite ONLY when its ``category`` (asset_group)
+  and ``data_type`` are statically resolvable (string literal OR module-level
+  ``NAME = "literal"`` constant) AND the pair is multi-source per
+  ``source_required()`` AND ``source=`` is absent.
 
-  Existing call sites that predate Phase 3 are baselined in
-  ``tradfi_source_explicit_baseline.yaml`` and surface as WARNings (exit-clean)
-  until a follow-up sweep clears them.
+  Callsites whose category/data_type are runtime variables are NOT flagged
+  (the AST cannot resolve them) — the UTL runtime gate is the backstop there.
+  Both ``record_captured(...)`` and ``add(...)`` (the legacy DeFi path) are
+  scanned.
 
 How it works
 ------------
-1. Loads ``tradfi_source_explicit_baseline.yaml`` (workspace baseline of
-   CURRENTLY-KNOWN missing-source occurrences — these surface as WARNings,
-   exit-clean).
+1. Loads ``tradfi_source_explicit_baseline.yaml`` (baselined legacy
+   occurrences → WARNing, exit-clean).
 2. AST-walks every ``.py`` file under the given source dir(s) (skipping
-   venvs / build artefacts / archived trees / scripts/ / tests/).
-3. Flags every ``Call`` node where ``Call.func`` is an ``Attribute`` matching
-   ``"record_captured"`` AND ``source=`` is NOT in ``Call.keywords``.
-4. For each flagged occurrence: if ``(repo, file, line)`` is in the baseline →
-   WARNING (informational, exit-clean). Else → ERROR + ``file:line`` — exit 1.
+   venvs / build artefacts / archived trees / scripts/ / tests/), resolving
+   module-level string constants per file.
+3. Flags every ``Call`` to ``.record_captured`` / ``.add`` where the resolved
+   ``(category, data_type)`` is multi-source per ``source_required()`` and
+   ``source=`` is NOT in ``Call.keywords``.
+4. For each flagged occurrence: baselined → WARNING (exit-clean); else → ERROR
+   + ``file:line`` — exit 1.
 
 Whitelist inline marker: ``# QG-allow: tradfi-source-not-applicable`` on the
-same line bypasses the check for genuine exceptions (e.g. a test fixture that
-passes kwargs via ``**dict``).
+same line bypasses the check for genuine exceptions (e.g. a fixture that passes
+kwargs via ``**dict``).
+
+If ``unified_api_contracts.source_required`` cannot be imported (e.g. the
+scanning venv lacks UAC), the check degrades to a no-op WARNing rather than
+false-failing.
 
 Usage::
 
@@ -59,9 +68,9 @@ from typing import Final
 
 import yaml
 
-#: Only ``record_captured`` requires ``source=`` (the other record_* methods do
-#: not accept a ``source`` kwarg in the current UTL API surface).
-RECORD_METHOD_NAMES: Final[frozenset[str]] = frozenset({"record_captured"})
+#: ``record_captured`` + legacy ``add`` accept a ``source`` kwarg and apply the
+#: registry-driven gate (the other record_* methods do not).
+RECORD_METHOD_NAMES: Final[frozenset[str]] = frozenset({"record_captured", "add"})
 
 #: Top-level dir names to skip when walking.
 EXCLUDE_DIR_NAMES: Final[frozenset[str]] = frozenset(
@@ -181,7 +190,54 @@ def _line(lines: list[str], lineno: int) -> str:
     return lines[lineno - 1].strip() if 0 < lineno <= len(lines) else ""
 
 
-def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
+def _load_source_required() -> "object | None":
+    """Import the UAC ``source_required`` helper, or None if UAC is absent.
+
+    Degrading to None makes the check a no-op WARNing rather than a false-fail
+    when the scanning venv lacks UAC.
+    """
+    try:
+        from unified_api_contracts import source_required  # noqa: qg-inside-import — optional dep
+
+        return source_required
+    except Exception:  # noqa: BLE001 — any import failure → degrade to no-op
+        return None
+
+
+def _module_str_constants(tree: ast.Module) -> dict[str, str]:
+    """Collect module-level ``NAME = "literal"`` string constants for resolution.
+
+    Lets the check resolve ``data_type=_ORACLE_PRICES_DATA_TYPE`` where the
+    constant is ``_ORACLE_PRICES_DATA_TYPE = "oracle_prices"`` at module scope.
+    """
+    out: dict[str, str] = {}
+    for node in tree.body:
+        if isinstance(node, ast.Assign) and isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+            for target in node.targets:
+                if isinstance(target, ast.Name):
+                    out[target.id] = node.value.value
+    return out
+
+
+def _resolve_kwarg_str(node: ast.Call, name: str, consts: dict[str, str]) -> str | None:
+    """Return the static string value of kwarg ``name`` (literal or const), else None."""
+    for kw in node.keywords:
+        if kw.arg != name:
+            continue
+        if isinstance(kw.value, ast.Constant) and isinstance(kw.value.value, str):
+            return kw.value.value
+        if isinstance(kw.value, ast.Name) and kw.value.id in consts:
+            return consts[kw.value.id]
+        return None
+    return None
+
+
+def _scan_file(
+    path: Path,
+    repo: str,
+    repo_root: Path,
+    source_required: "object | None",
+) -> list[Finding]:
     try:
         src = path.read_text(encoding="utf-8")
         tree = ast.parse(src, filename=str(path))
@@ -190,6 +246,7 @@ def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
         return []
     rel = str(path.relative_to(repo_root)).replace("\\", "/")
     lines = src.splitlines()
+    consts = _module_str_constants(tree)
     findings: list[Finding] = []
     for node in ast.walk(tree):
         if not isinstance(node, ast.Call):
@@ -199,6 +256,14 @@ def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
             continue
         kwarg_names = {kw.arg for kw in node.keywords if kw.arg is not None}
         if "source" in kwarg_names:
+            continue
+        # Only flag when the cell is statically resolvable AND multi-source.
+        # Unresolvable (variable) category/data_type → skip (runtime gate backstop).
+        category = _resolve_kwarg_str(node, "category", consts)
+        data_type = _resolve_kwarg_str(node, "data_type", consts)
+        if category is None or data_type is None:
+            continue
+        if source_required is None or not source_required(category, data_type):  # type: ignore[operator]
             continue
         snippet = _line(lines, node.lineno)
         if WHITELIST_MARKER in snippet:
@@ -244,11 +309,19 @@ def main(argv: Iterable[str] | None = None) -> int:
         print("[check_tradfi_source_explicit_at_record_captured] no source trees to scan — skipping.")
         return 0
 
+    source_required = _load_source_required()
+    if source_required is None:
+        print(
+            "[check_tradfi_source_explicit_at_record_captured] WARN — unified_api_contracts.source_required "
+            "not importable in this venv; skipping registry-driven multi-source check (runtime gate is the backstop)."
+        )
+        return 0
+
     all_findings: list[Finding] = []
     for repo_name, scan_root in scopes:
         repo_root = workspace_root / repo_name
         for py in _iter_py_files(scan_root):
-            all_findings.extend(_scan_file(py, repo_name, repo_root))
+            all_findings.extend(_scan_file(py, repo_name, repo_root, source_required))
 
     errors: list[Finding] = []
     warnings: list[tuple[Finding, BaselineEntry]] = []
