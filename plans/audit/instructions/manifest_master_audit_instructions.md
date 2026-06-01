@@ -141,6 +141,6 @@ Result file at `plans/audit/results/manifest_master_audit_YYYY_MM_DD.md`. Same s
 
 ## Linked Results
 
-| Date                      | Result file | Status |
-| ------------------------- | ----------- | ------ |
-| (populated as audits run) |             |        |
+| Date       | Result file                                                                                     | Status                                                       |
+| ---------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| 2026-06-01 | [manifest_master_capture_status_audit_2026_06_01.md](../results/manifest_master_capture_status_audit_2026_06_01.md) | per-service write-path: 23 violations (P0:3 P1:13 P2:7) — fixes pending |
