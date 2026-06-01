@@ -92,10 +92,10 @@ Observation captured during operator's 2026-05-30/06-01 manual kill cycles. Two 
       via `tmux_spawn.kill_session(session)` if matched. Env-flag-gated: `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true`
       default false. Per-slot cooldown in-memory dict `_last_kill_at: dict[int, datetime]`. Per-VM daily cap
       `_kills_today: int` reset at UTC midnight. Collision group: `ao_watchdog_code`. Estimate: 0.4 AI-day.
-- [ ] [CODE] P0. Pane-content regex helpers — `_is_stuck_at_prompt(pane: str, prev_pane: str) -> bool`,
+- [x] [CODE] P0. Pane-content regex helpers — `_is_stuck_at_prompt(pane: str, prev_pane: str) -> bool`,
       `_is_context_full(pane: str) -> bool`, `_is_actively_thinking(pane: str) -> bool` (allow-list for
       `Crunched|Cogitated|Worked|Baked for \d+m \d+s`). Tested via fixture-pane strings. Collision group:
-      `ao_watchdog_code`. Estimate: 0.15 AI-day.
+      `ao_watchdog_code`. Estimate: 0.15 AI-day. ✅ — agent-orchestrator@97cda3f
 - [ ] [TEST] P0. 20+ unit tests: (a) stuck-at-prompt detection with 3-tick threshold, (b) actively-thinking pane is
       NOT killed even with stuck-looking text, (c) context-full pane IS killed immediately, (d) heartbeat-silent
       detection via mocked slot.last_heartbeat_at + tmux_has_session, (e) blocked-status slot is NOT killed even when
