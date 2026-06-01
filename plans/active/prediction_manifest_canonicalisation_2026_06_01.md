@@ -243,6 +243,30 @@ be fixed first if run on a VM.
 correct-by-construction (UAC `candidate_parquet_paths` SSOT, unit-validated). Remaining = run on VM + manifest rebuild +
 verify + the gated delete.
 
+### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
+
+> Operator: "when there is an API issue somewhere in IS or MTDS, is it correctly doing `attempted_failed` where the
+> attempt makes sense by instrument / UAC bounds — RATHER THAN `empty_confirmed` which would not be complete?" Prediction
+> twist: legitimate typed empties exist for `EXPECTED_PRE_VENUE_LAUNCH` (2,280 — market not yet listed) which stay
+> `empty_confirmed`. The risk is a Polymarket CLOB/Gamma API error for an EXISTING market (condition_id live, within the
+> market's active window) being mislabeled `SOURCE_RETURNED_ZERO` (41 such today — verify each) instead of
+> `attempted_failed`. Expected-attempt set = Polymarket market/condition universe × market-active window × UAC
+> SOURCE_PRIORITY data_type registration.
+
+- [ ] [DATA] P0. **E5 rebuild classifier (`rebuild_prediction_manifest.py`): within-bounds empty → `attempted_failed`.**
+      For every empty cell: if the market/condition exists + is within its active window + data_type
+      guaranteed-when-listed (trades / prices on a live market) + not pre-launch → `attempted_failed` (`record_failed`),
+      NOT `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 41 existing `SOURCE_RETURNED_ZERO` rows — genuine
+      source-zero vs masked fetch failure. Preserve the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
+- [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
+      failure to `empty_confirmed`; they stay flagged for backfill.
+- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS prediction Polymarket adapters)**: on a genuine API error
+      (timeout/5xx/429/auth) for a live market/condition within its active window, the handler MUST `record_failed` (→
+      `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the prediction
+      Polymarket CLOB/Gamma fetch paths for `except … record_empty` / bare `return []` swallows; gate empty-vs-failed on
+      market-exists + active-window + UAC coverage. Cross-ref the sports CF-11 model
+      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
+
 ## Success criteria
 
 - 0 legacy-only prediction cells (canonical holds all historical POLYMARKET data + question-groups).

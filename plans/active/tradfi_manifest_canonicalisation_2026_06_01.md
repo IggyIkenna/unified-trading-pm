@@ -206,6 +206,30 @@ VM.
       data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in `tradfi_master_audit_instructions.md`.
       ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-tradfi` permanently**.
 
+### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
+
+> Operator: "when there is an API issue somewhere in IS or MTDS, is it correctly doing `attempted_failed` where the
+> attempt makes sense by instrument / UAC bounds — RATHER THAN `empty_confirmed` which would not be complete?" TradFi
+> twist: tradfi has LEGITIMATE typed empties on non-trading days (`EXPECTED_WEEKEND` 35,050 / `EXPECTED_HOLIDAY` 2,427 /
+> `EXPECTED_OUT_OF_COVERAGE_WINDOW` 8) — those stay `empty_confirmed`. The risk is a databento/massive API error on a
+> TRADING day for an in-universe ticker within UAC coverage being mislabeled `SOURCE_RETURNED_ZERO` (only 5 such today —
+> verify each) instead of `attempted_failed`. The expected-attempt set = TRADFI_TICKER_UNIVERSE / databento universe ×
+> trading-calendar (weekday, non-holiday) × UAC SOURCE_PRIORITY data_type registration × coverage window.
+
+- [ ] [DATA] P0. **E5 rebuild classifier: within-bounds trading-day empty → `attempted_failed`.** For every empty cell:
+      if it is a trading day (NOT weekend/holiday) + ticker in universe + data_type guaranteed-when-listed (trades / tbbo
+      / ohlcv on an active venue+ticker) + within coverage window → `attempted_failed` (`record_failed`), NOT
+      `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 5 existing `SOURCE_RETURNED_ZERO` rows specifically — confirm
+      genuine source-zero vs masked fetch failure. Preserve the legit weekend/holiday/out-of-coverage typed empties.
+- [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows (6,036) v9, status PRESERVED** — never silently
+      relabel a failure to `empty_confirmed`; they stay flagged for backfill.
+- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS tradfi databento/massive adapters)**: on a genuine API error
+      (timeout/5xx/429/auth) for an in-universe ticker on a trading day within coverage bounds, the handler MUST
+      `record_failed` (→ `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep
+      the tradfi databento/massive fetch paths for `except … record_empty` / bare `return []` swallows; gate empty-vs-failed
+      on trading-calendar + ticker-in-universe + UAC coverage. Cross-ref the sports CF-11 model
+      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
+
 ## Success criteria
 
 - Canonical `tradfi-prd` `_index` = **v9** (data-state verified) + `pipeline_mode=` partition + `source` populated +

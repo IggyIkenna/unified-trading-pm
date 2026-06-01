@@ -199,6 +199,31 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 - [ ] [DATA] P0. E8 ⚠️ IRREVERSIBLE — only after E7 GREEN: hand C-GREEN to `bucket_name_ssot…` L6 → **delete legacy
       `market-data-tick-cefi` permanently** (single source of truth; legacy data is gone).
 
+### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
+
+> Operator: "when there is an API issue somewhere in IS or MTDS, is it correctly doing `attempted_failed` where the
+> attempt makes sense by instrument / UAC bounds — RATHER THAN `empty_confirmed` which would not be complete?" CeFi twist:
+> cefi is single-source (`tardis`). A Tardis fetch error for a `(venue, instrument, data_type, date)` cell INSIDE the
+> expected-attempt set — instrument in the IS CeFi universe, data_type registered in UAC SOURCE_PRIORITY, date within the
+> venue/instrument coverage window — is a masked fetch failure → `attempted_failed` (retry/backfill), NOT a false
+> `empty_confirmed`/`SOURCE_RETURNED_ZERO` that freezes the gap forever.
+
+- [ ] [DATA] P0. **Rebuild classifier (`rebuild_cefi_manifest.py` / E5): within-bounds empty → `attempted_failed`.** For
+      every empty cell: instrument in the IS CeFi universe + data_type guaranteed-when-listed (trades/ohlcv on an active
+      venue+symbol) + within coverage window + not a known gap → `attempted_failed` (`record_failed`), NOT
+      `empty_confirmed`. Conservative per-data_type guarantee set (funding / options_chain can be legitimately sparse →
+      keep typed-empty; a wrongly-kept trades/ohlcv empty on a live symbol-day is silent incompleteness — operator's
+      stated priority is the latter is worse).
+- [ ] [DATA] P0. **Rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
+      failure to `empty_confirmed`. (The existing 1.33M `attempted_failed` rows — E6 below — must survive as v9
+      `attempted_failed`, still flagged for backfill, not collapsed to empty.)
+- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS cefi/tardis adapters)**: on a genuine API error
+      (timeout/5xx/429/auth) for an in-universe instrument within coverage bounds, the handler MUST `record_failed` (→
+      `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the cefi/tardis
+      fetch paths in MTDS handlers + instruments-service for `except … record_empty` / bare `return []` swallows; gate the
+      empty-vs-failed decision on instrument-in-universe + UAC coverage bounds. Cross-ref the sports CF-11 model
+      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
+
 ## Success criteria
 
 - Canonical `cefi-prd` `_index` DATA-STATE: **v9 on 100% of rows** (was v8) + `asset_group` column + `pipeline_mode=`
