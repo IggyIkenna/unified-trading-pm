@@ -148,7 +148,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > this one walk — NOT descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design
 > fork). SSOT: `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [x] ✅ [DATA] P0. Live sports `_index` DATA-STATE (slot-4 tool, 2026-06-01): **100% v8** (0/786,408 v9 — CF-1 RED);
+- [x] ✅ [DATA] P0. Live sports `_index` DATA-STATE (slot-3 tool, 2026-06-01): **100% v8** (0/786,408 v9 — CF-1 RED);
       no `category`/`asset_group` col (CF-2 rows vacuous); **`pipeline_mode` blank 0/786,408 (CF-3 RED)**; **no `source`
       column (CF-4 RED)**; **no `available_at` column (CF-8 RED — only `written_at`)**. capture_status: empty_confirmed
       **584,177** / captured 202,067 / attempted_failed 164. **KEYSTONE FINDING — CF-5 RED-by-mislabel: ALL 584,177
@@ -158,7 +158,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       on sports IS the mislabel — treat CF-5 RED until the oracle relabel lands.)
 - [x] ✅ [DATA] P0. **0 legacy-only cells confirmed** (legacy 32,755 · canonical 32,869 · overlap 32,755) — sports DATA
       is complete; the walk is FORM-only (v9 + partition + source + typed reasons), no data-loss-gap copy needed.
-- [ ] [DATA] P0. Object-path scheme (slot-4 probe): `processed/by_date/day=YYYY-MM-DD/data_type=…/league_id=…/
+- [ ] [DATA] P0. Object-path scheme (slot-3 probe): `processed/by_date/day=YYYY-MM-DD/data_type=…/league_id=…/
       timeframe=…` — has `day=`/`data_type=`/`league_id=`/`timeframe=` hive BUT **no `asset_group=` and no
       `pipeline_mode=` segment** (CF-2 paths + CF-3 partition RED). The C0 walk adds `asset_group=sports` +
       `pipeline_mode=` to all object paths; lift `data_source=` (where present) → `source` column.
@@ -173,7 +173,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       top-level trees + nested layouts across BOTH sports surfaces (`processed/by_date/…`, `sports_reference/by_date/…`,
       any `day=/category=` / `data_source=` variants) before the walk; classify duplicate (keep freshest) vs
       complementary (migrate all → canonical v9). Cover every in-scope layout or the walk is incomplete (review-blocking).
-      SSOT: `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § grounded recipe Phase 0.
+      SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -213,7 +213,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 ## Execution checklist (grounded — next session, finish in full)
 
 > CF debt is in the `_index` MANIFEST + object PATHS, NOT the raw tick parquets. See
-> `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § MECHANISM + layout map. sports raw = full hive
+> `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + layout map. sports raw = full hive
 > `day=/category=/data_source=/venue=/league_id=/instrument_type=/data_type=` (parquet already has `source`+`data_source`
 > cols). **Keystone**: 584,177 empties are blanket `SOURCE_RETURNED_ZERO` — relabel to typed fixture/season reasons.
 >

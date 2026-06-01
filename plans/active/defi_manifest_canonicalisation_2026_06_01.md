@@ -112,7 +112,7 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 > defi C0 walk carries the defi riders (source col + pipeline_mode partition + v9 + category→asset_group) per § Rider
 > closure.
 >
-> **Slot 4 = everything else (the other four asset_groups + the per-service surfaces + their riders).** Owns, to
+> **Slot 3 = everything else (the other four asset_groups + the per-service surfaces + their riders).** Owns, to
 > C-GREEN:
 >
 > 1. `cefi_manifest_canonicalisation_2026_06_01.md` — cefi single-walk (838-cell gap-fill + v9 + partition + source).
@@ -127,7 +127,7 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 > 6. `downstream_services_manifest_canonicalisation_2026_06_01.md` — MDPS/features/strategy/execution canonical FORM,
 >    audit-first, low-data.
 >
-> Each slot-4 plan's single bundled walk INCLUDES its rider work — so completing them also closes
+> Each slot-3 plan's single bundled walk INCLUDES its rider work — so completing them also closes
 > `data_source_provenance_all_asset_groups_2026_06_01` (cefi/sports/prediction source; tradfi skipped per CONFLICT-4) +
 > `pipeline_mode_partition_migration_2026_06_01` (cefi/tradfi/sports/prediction/instruments) for those AGs. **No
 > second walk on any `_index`** (single-walk discipline). **NO DEFERS, NO FALLBACKS** (CLAUDE.md "Data Pipeline

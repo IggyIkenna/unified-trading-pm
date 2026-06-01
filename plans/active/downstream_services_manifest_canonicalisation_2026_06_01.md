@@ -62,7 +62,7 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 > post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
 > `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [x] ✅ [DATA] P0. **MDPS** — data-state (slot-4, 2026-06-01): MDPS candles share the **same AG MTDS `_index`** as raw
+- [x] ✅ [DATA] P0. **MDPS** — data-state (slot-3, 2026-06-01): MDPS candles share the **same AG MTDS `_index`** as raw
       ticks (the `processed_candles/` prefix lives in `market-data-tick-{ag}-prd`; the AG `_index` carries `ohlcv_*` /
       `odds_horizon_bucket*` candle data_types alongside raw). The cefi/sports audits already cover them: **same systemic
       debt** (100% v8, no source col, blank pipeline_mode, no available_at, flat paths). So MDPS is **NOT a separate

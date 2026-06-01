@@ -1,18 +1,18 @@
 ---
-title: "Consolidated CF-1…CF-12 data-state audit results — slot-4 surfaces (cefi/tradfi/sports/prediction + instruments + downstream)"
+title: "Consolidated CF-1…CF-12 data-state audit results — slot-3 surfaces (cefi/tradfi/sports/prediction + instruments + downstream)"
 created: 2026-06-01
-author: ikenna (slot-4)
+author: ikenna (slot-3)
 source:
   - plans/audit/results/cf_manifest_audit_2026_06_01.py (the reusable tool that produced these)
   - canonical_form_cross_service_audit_checklist.md (CF-1…CF-12 SSOT)
 master: defi_manifest_canonicalisation_2026_06_01.md
 ---
 
-# Consolidated CF data-state audit — slot-4 surfaces (2026-06-01)
+# Consolidated CF data-state audit — slot-3 surfaces (2026-06-01)
 
 Read with `cf_manifest_audit_2026_06_01.py` against the **actual** prod `_index` rows (never the
 `MANIFEST_SCHEMA_VERSION` constant — the manifest-v8 lesson). This is the audit-first P0 result for
-all six slot-4 plans. **defi = slot-2** (not audited here).
+all six slot-3 plans. **defi = slot-2** (not audited here).
 
 > ⚠️ **IRREVERSIBILITY — THE MIGRATION DELETES ALL LEGACY DATA PERMANENTLY (operator 2026-06-01).** The end-state is a
 > SINGLE source of truth: every legacy bucket + every legacy/duplicate path is **deleted** so data-status/manifest shows
@@ -126,7 +126,7 @@ day-prefix walk silently under-migrates. DeFi `dex-pools` had THREE: (1) `day=/c
 the path parser skipped it). The day-prefix run migrated only #1 and would have left a **partial canonical set + data
 loss on legacy delete** — the exact failure this programme exists to end.
 
-**Operator directive (applies to EVERY slot-4 AG walk)**: the script must **audit all source layouts, determine overlap
+**Operator directive (applies to EVERY slot-3 AG walk)**: the script must **audit all source layouts, determine overlap
 vs complementary, pick the freshest/best schema where they overlap, land EVERYTHING on the one v9 manifest + data
 schema, and only run the real migration once we're genuinely on v9 — "because we keep missing things."** Net end-state:
 **old buckets + old paths all deleted → ONE source of truth** so data-status/manifest shows true missing-data. So
@@ -157,7 +157,7 @@ Then, per AG, ONE bundled VM walk (single-walk discipline), built by generalisin
 5. **Verify** — re-run `cf_manifest_audit_2026_06_01.py` → all CF GREEN on data-state → hand C-GREEN to `bucket_name_ssot…` L6.
 
 Execution: VM in asia-northeast1 (object scan is ~25 min/AG for prediction-scale, more for cefi), `--apply` gated on the
-fleet drain. DeFi is slot-2's lane (the defi v9 tool + its dedicated-bucket shape) — not in slot-4 scope.
+fleet drain. DeFi is slot-2's lane (the defi v9 tool + its dedicated-bucket shape) — not in slot-3 scope.
 
 ## Phase-0 LAYOUT audit results (tool `cf_layout_audit_2026_06_01.py`, 2026-06-01)
 

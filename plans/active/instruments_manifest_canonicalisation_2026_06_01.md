@@ -79,7 +79,7 @@ VM. Runs behind the pre-migration drain.
 > deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
 > `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [x] ✅ [DATA] P0. CF-1…CF-12 data-state run (slot-4 tool `cf_manifest_audit_2026_06_01.py`, 2026-06-01) on the
+- [x] ✅ [DATA] P0. CF-1…CF-12 data-state run (slot-3 tool `cf_manifest_audit_2026_06_01.py`, 2026-06-01) on the
       non-sports instruments-store indexes — **identical systemic debt to the MTDS AGs** (uniform across the corpus):
       - **instruments-store-cefi-prd** (30,803 rows): CF-1 RED 100% v8 · CF-2 vacuous (no AG col) · CF-3 RED blank
         pipeline_mode · CF-4 RED no source col · CF-8 RED no available_at · CF-5 GREEN · **legacy-only 23 cells** (2025-10
@@ -101,7 +101,7 @@ VM. Runs behind the pre-migration drain.
 - [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
       top-level trees + nested layouts in each in-scope instruments-store bucket (cefi/tradfi/pred) before the walk;
       classify duplicate (keep freshest) vs complementary (migrate all → canonical v9). Cover every in-scope layout or
-      the walk is incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § grounded recipe Phase 0.
+      the walk is incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -127,7 +127,7 @@ VM. Runs behind the pre-migration drain.
 
 ## Execution checklist (grounded — next session, finish in full)
 
-> CF debt is in the `_index` MANIFEST + object PATHS. See `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md`
+> CF debt is in the `_index` MANIFEST + object PATHS. See `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md`
 > § MECHANISM + layout map. Scope = non-sports instruments-store (cefi/tradfi/pred); sports reference rides the sports plan.
 > instruments-store cells carry **blank `data_type`** (keyed date+venue) — verify intent.
 >

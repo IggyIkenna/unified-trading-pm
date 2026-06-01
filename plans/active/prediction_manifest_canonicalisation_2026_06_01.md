@@ -79,7 +79,7 @@ be fixed first if run on a VM.
 > descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
 > `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [x] ✅ [DATA] P0. Legacy→canonical diff (slot-4 tool, 2026-06-01): **2,039 legacy-only cells confirmed** (legacy 2,822
+- [x] ✅ [DATA] P0. Legacy→canonical diff (slot-3 tool, 2026-06-01): **2,039 legacy-only cells confirmed** (legacy 2,822
       · canonical 805 · overlap 783) — matches the headline; mostly `POLYMARKET ohlcv_*` + `prediction_canonical_question_group`
       from 2025-03-14 on. Per-data_type object counts resolved in the C0 copy walk (idempotent). Data-loss risk on delete
       → these MUST land in canonical before L6.
@@ -93,7 +93,7 @@ be fixed first if run on a VM.
 
 ### C — single-walk migration (legacy `prediction` → canonical `pred-prd`)
 
-> **🔎 BUILD-GAP FINDING (slot-4, 2026-06-01) — the existing tools do NOT achieve the v9 single-SSOT target; this is the
+> **🔎 BUILD-GAP FINDING (slot-3, 2026-06-01) — the existing tools do NOT achieve the v9 single-SSOT target; this is the
 > bespoke build spec.** `migrate_polymarket_canonical.py` rewrites the **legacy** `market-data-tick-prediction` bucket
 > **IN-PLACE** (`category=`→`asset_group=`, `DEFAULT_BUCKET_PREFIX="market-data-tick-prediction"`) — which is why
 > legacy raw is near-canonical (`day=/asset_group=/venue=/instrument_type=/data_type=`) but the SEPARATE canonical
@@ -117,7 +117,7 @@ be fixed first if run on a VM.
       `processed_candles/`, the 6-dimension `day=/category=/data_source=/venue=/…/market_category=/…` polymarket layout);
       classify duplicate (keep freshest) vs complementary (migrate all → canonical v9). The existing
       `rebuild_prediction_manifest.py` (ManifestWriter rebuild) is the manifest-side template. Cover every in-scope
-      layout or the walk is incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § grounded recipe Phase 0.
+      layout or the walk is incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -154,7 +154,7 @@ be fixed first if run on a VM.
 
 > Supersedes the old "rewrite every parquet's columns" framing: the CF debt is in the `_index` MANIFEST (rebuilt via
 > the UTL `ManifestWriter`, which auto-stamps v9) + object PATHS — NOT the raw tick parquets. See
-> `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § MECHANISM + the BUILD-GAP block above.
+> `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + the BUILD-GAP block above.
 >
 > ⚠️ **IRREVERSIBLE — E8 DELETES legacy `market-data-tick-prediction` + stale pred-prd `category=` paths permanently.**
 > Do not run E2–E8 until the canonical target (v9, `day=/pipeline_mode=/asset_group=prediction/…`, source=API) is

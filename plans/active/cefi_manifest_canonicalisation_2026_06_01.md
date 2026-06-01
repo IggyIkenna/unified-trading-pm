@@ -35,7 +35,7 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > column + `pipeline_mode=` partition** (see the data-state finding below) **AND** the 838-cell gap-fill; do NOT open a
 > second walk. `pipeline_mode_partition_migration` + `data_source_provenance` (cefi) ride THIS walk.
 
-> **🔴 DATA-STATE FINDING (2026-06-01, slot-4 audit) — cefi is a FULL re-canonicalisation, NOT an 838-cell gap-fill.**
+> **🔴 DATA-STATE FINDING (2026-06-01, slot-3 audit) — cefi is a FULL re-canonicalisation, NOT an 838-cell gap-fill.**
 > Reading the ACTUAL canonical cefi `_index` (not the constant — the manifest-v8 lesson): **100% of rows are v8 (CF-1
 > RED, not v9)**, there is **no `source` column (CF-4 RED)**, **no `category`/`asset_group` column (CF-2 RED)**, and
 > **`pipeline_mode` is blank (CF-3 RED)**. So the headline "~complete / 838-cell gap" was a coarse PRIOR; the data-state
@@ -85,11 +85,11 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 ### P0 — audit
 
-- [x] ✅ [DATA] P0. Legacy→canonical `(date,venue,data_type)` diff (slot-4 tool, 2026-06-01): **legacy-only CELLS =
+- [x] ✅ [DATA] P0. Legacy→canonical `(date,venue,data_type)` diff (slot-3 tool, 2026-06-01): **legacy-only CELLS =
       5,233** (NOT 838 — the headline undershot; prior-not-ceiling). Oldest examples are 2020-01 `OKX-FUTURES
       book_snapshot_5` (legacy captured 91,602 · canonical 90,931 · overlap 86,369). These must land in canonical
       before L6 deletes legacy. Exact per-data_type object counts resolved in the C0 walk (idempotent copy of the gap).
-- [x] ✅ [DATA] P0. Read canonical `cefi-prd` `_index` DATA-STATE (2026-06-01 slot-4): **100% v8** (not v9), **no
+- [x] ✅ [DATA] P0. Read canonical `cefi-prd` `_index` DATA-STATE (2026-06-01 slot-3): **100% v8** (not v9), **no
       `source` column**, **no `category`/`asset_group` column**, **blank `pipeline_mode`** → the FULL-re-canonicalisation
       finding above. Whole corpus is in scope, not 838 cells.
 - [x] ✅ [DATA] P0. Reusable audit tool SHIPPED — `plans/audit/results/cf_manifest_audit_2026_06_01.py`
@@ -106,7 +106,7 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       flat-symbol, `processed_candles/by_date/day=/timeframe=/…`, any `day=/category=` or bare `{venue}/{chain}/date=`).
       Per layout: object count + sample schema; classify duplicate (keep freshest) vs complementary (migrate all). The
       walk MUST cover every in-scope layout or it is incomplete (review-blocking). SSOT:
-      `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § Cross-AG lesson + grounded recipe Phase 0.
+      `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § Cross-AG lesson + grounded recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -139,7 +139,7 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 ## Execution checklist (grounded — next session, finish in full)
 
 > CF debt is in the `_index` MANIFEST + object PATHS, NOT the raw tick parquets (cefi raw = pure market data). See
-> `plans/audit/results/cf_data_state_audit_slot4_2026_06_01.md` § MECHANISM + complete layout map. cefi is the HARDEST:
+> `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + complete layout map. cefi is the HARDEST:
 > `raw_tick_data/by_date/{SYMBOL}.parquet` is FULLY FLAT (day/venue/data_type only in cols + epoch-µs ts).
 >
 > ⚠️ **IRREVERSIBLE — E8 DELETES the legacy bucket permanently.** Do not run E2–E8 until the canonical target (schema =
