@@ -129,7 +129,7 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "branch": branch,
                     "workflow": workflow_name,
                     "conclusion": latest.get("conclusion"),
-                    "url": latest.get("url", ""),
+                    "url": latest.get("url") or "",
                 }
             )
         elif not latest_failed and latest.get("conclusion") == "success" and prev_failed:
@@ -140,7 +140,7 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "branch": branch,
                     "workflow": workflow_name,
                     "conclusion": "success",
-                    "url": latest.get("url", ""),
+                    "url": latest.get("url") or "",
                 }
             )
     return transitions
@@ -185,12 +185,12 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "repo": repo,
                     "base": base,
                     "number": pr["number"],
-                    "title": pr.get("title", ""),
-                    "head": pr.get("headRefName", ""),
+                    "title": pr.get("title") or "",
+                    "head": pr.get("headRefName") or "",
                     "state": pr.get("mergeStateStatus"),
                     "auto_merge": pr.get("autoMergeRequest") is not None,
                     "age_min": int(age_min),
-                    "url": pr.get("url", ""),
+                    "url": pr.get("url") or "",
                 }
             )
     return stuck
