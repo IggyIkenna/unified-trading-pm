@@ -291,3 +291,15 @@ why the operator gated it on "only once we're on v9, no more missing things" —
 10. **Additive copy (`--apply`) is non-destructive; only the DELETE is irreversible + drain-gated.** Run dry →
     apply-copy → rebuild → CF verify freely (copies write NEW canonical paths). Gate ONLY the legacy/stale DELETE on
     CF-1…CF-12 GREEN on real data-state + the fleet drain (shared w/ slot-2). Verify-before-delete is the HARD guard.
+
+11. **DELETE ALL AT THE END, after a final strategically-sampled-across-shards verify — NEVER inline (operator
+    2026-06-01).** Migrators MUST be additive-only (`--apply` copies; deletion is a SEPARATE explicit end-stage flag,
+    never inside the copy loop). Reason: inline delete destroys the source BEFORE a migrator bug is found — the cefi
+    3-layout miss this session would have permanently deleted 2,613 day-dirs under inline delete. Mandatory end-delete
+    protocol (every AG): (a) `--apply` additive copy; (b) E5 manifest rebuild → v9 via `record_captured_from_counts` (it
+    takes `pipeline_mode`+`source`; `add()` does NOT persist pipeline_mode → that's why CF-3 reads blank); (c) CF-1…
+    CF-12 GREEN; (d) **completeness COUNT gate** — canonical distinct-cells ≥ UNION of every source layout's distinct
+    cells (a shortfall = a missed layout → STOP); (e) **strategically-sampled cross-shard verify** — sample across
+    (date-range × venue × data_type × EACH layout × AG); per sample confirm canonical object exists + content matches
+    legacy + manifest row v9-correct; (f) ONLY THEN bulk-delete legacy buckets + superseded in-bucket paths (prediction
+    `category=`, cefi `day=/asset_group=` lacking `pipeline_mode=`) at once; (g) fleet-drain (w/ slot-2) precedes it.
