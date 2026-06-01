@@ -101,6 +101,13 @@ Sports paths use the canonical hive vocabulary per CLAUDE.md "Asset-group vocabu
 
 The resolver writes canonical for new paths; reader fallback is hive-key-agnostic for backward compat.
 
+> **🔎 SPORTS-CANON ALIGNMENT (2026-06-01):** After the `sports_manifest_canonicalisation_2026_06_01.md` C0 walk
+> completes, the legacy no-env `instruments-store-sports-central-element-323112` bucket (which holds `category=` paths)
+> will be **migrated to `instruments-store-sports-prd-…` and DELETED** — the legacy reader-fallback path for the
+> instruments surface becomes redundant at that point. The `market-data-tick-sports-{no-env}` bucket will similarly be
+> deleted. SSOT for the delete schedule: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` §L6 + §L7. Do
+> NOT write new code that depends on the legacy no-env sports buckets existing after the C-GREEN hand-off.
+
 ## Cross-references
 
 - [`sports-data-source-coverage-matrix.md`](sports-data-source-coverage-matrix.md) — `SOURCE_COVERAGE_START` /

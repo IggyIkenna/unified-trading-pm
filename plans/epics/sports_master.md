@@ -320,6 +320,12 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       e2-small asia-northeast1-c, poll=300s). Sports rename fully shipped (fc7b306/94e43e8c); Phase 2B GCS migration
       done (739,594 files); Phase 4 smoke verified 2026-05-24. Backfill VMs resume on next scheduler tick.
 
+> **🔎 SPORTS-CANON ALIGNMENT (2026-06-01):** The sports-scheduler was **subsequently STOPPED again 2026-06-01** as part
+> of the pre-migration fleet drain in `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 3. Relaunch
+> is GATED on the sports L3 canonicalisation plan completing (C-GREEN) and the legacy tick + instruments-store buckets
+> being decommissioned. Do NOT relaunch the sports-scheduler before those gates. SSOT for relaunch prerequisites:
+> `bucket_name_ssot…` Phase 4 `[SCRIPT] P0 GATED` item.
+
 ### Sports honest-coverage architecture (`features_sports_honest_coverage`)
 
 - [x] [AGENT] P1. UAC `unified_api_contracts.sports`: add `UpstreamReq` dataclass + `FEATURE_UPSTREAM_REQUIREMENTS`
