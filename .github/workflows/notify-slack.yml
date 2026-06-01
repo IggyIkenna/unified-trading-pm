@@ -57,10 +57,20 @@ jobs:
         run: |
           set -euo pipefail
 
+          # Notifications are BEST-EFFORT — a missing OR misconfigured webhook must NEVER
+          # fail the calling workflow. Skip (exit 0) when the secret is unset, or is not an
+          # https URL (e.g. an empty/masked/placeholder value inherited via `secrets: inherit`).
+          # Without the https check, urllib.request.Request() raises an UNCAUGHT
+          # `ValueError: unknown url type: '***'` and fails the caller — this is exactly what
+          # killed sit-debounce-trigger.yml's entry run (cicd_contract_hardening P1 #5).
           if [ -z "${SLACK_WEBHOOK_URL:-}" ]; then
-            echo "SLACK_WEBHOOK_URL not set — skipping"
+            echo "SLACK_WEBHOOK_URL not set — skipping (notify is best-effort)"
             exit 0
           fi
+          case "${SLACK_WEBHOOK_URL}" in
+            https://*) : ;;
+            *) echo "SLACK_WEBHOOK_URL is not an https URL (unset/masked/misconfigured) — skipping (notify is best-effort)"; exit 0 ;;
+          esac
 
           python3 - <<PYEOF
           import json, os, sys, urllib.request
