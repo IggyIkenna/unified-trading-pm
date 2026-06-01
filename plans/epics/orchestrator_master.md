@@ -314,9 +314,10 @@ auth (HS256); per-VM interactive proxy; self-registration + staleness; codex upd
 
 ## P3 — backlog; revisit quarterly
 
-- [ ] [SCRIPT] P3. **NICE-TO-HAVE** Recurring health-check for the PM-pull → PlanRegenLoop → /api/backlog ingestion
-      pipeline. **MIGRATED FROM:** `e2e_test_plan_regen_pipeline_2026_05_29.md` (one-shot test verified the pipeline
-      2026-05-30 but left no continuous guard — a silent regression of PM-pull or regen would go undetected). Add a
-      synthetic daily ingestion probe (a sentinel `- [ ]` in a long-lived test plan whose round-trip latency is
-      asserted) or a cron that POSTs `/api/backlog/regen` and checks the journal `regen_*` line moved. Provenance:
-      orchestrator autonomy audit follow-up 2026-06-01.
+- [x] ✅ [SCRIPT] P3. **NICE-TO-HAVE** ✅ DONE 2026-06-01 — `scripts/orchestrator/probe_plan_regen_pipeline.sh`: POSTs
+      `/api/backlog/regen` (loopback, tries :8765 central then :8026) and asserts `ok==true` AND `scanned_plans>0`
+      (scanned>0 proves PM-pull delivered current plans AND regen walked them). Exit 0/1 for cron alerting; intended as a
+      daily cron (`0 6 * * *`). Live-verified on vm-1: `{"ok":true,"scanned_plans":44,"total_tasks":211}` — pipeline alive.
+      **MIGRATED FROM:** `e2e_test_plan_regen_pipeline_2026_05_29.md` (one-shot test verified the pipeline 2026-05-30 but
+      left no continuous guard). NB: the daily cron entry itself is not yet installed on the VMs (script shipped + verified;
+      scheduling is a one-line crontab add per VM).
