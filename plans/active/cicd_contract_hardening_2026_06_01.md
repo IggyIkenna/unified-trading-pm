@@ -343,6 +343,54 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       promoting through `main`. Note the tarball path (`create-code-tarballs.sh`, SHA-pinned) as the local-code
       alternative.
 
+### Phase 6 — staging→main automation pipeline is DEAD (discovered 2026-06-01) **P0**
+
+The gate-migration fixed the **PR→staging** half. The **staging→main** half (semver + SIT + promotion) is entirely
+non-functional — staging→main is currently happening ONLY via operator admin force-merge, skipping version bumps,
+label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be repaired for hands-off promotion.
+
+- [ ] [SCRIPT] P0. **Fix `semver-agent` trigger** — `semver-agent.yml.tmpl` fires on
+      `workflow_run: workflows: ["Quality Gates"]`, but no workflow is named that anymore (it's `quality-gates-v2`; was
+      `workspace-qg`). Last real run ~2026-03-16. Update to `workflows: ["quality-gates-v2"]` + roll out via
+      `rollout-workflow-templates.sh`. Verify it fires on a staging quality-gates-v2 success.
+- [ ] [SCRIPT] P0. **Restore the `staging_versions` baseline** semver-agent reads from `workspace-manifest.json`
+      (`m.get('staging_versions', {})`) — the key is currently ABSENT, so even with the trigger fixed semver reads an
+      empty baseline. Repopulate from current per-repo versions (or repoint semver to the live version source).
+- [ ] [SCRIPT] P0. **Fix `staging-to-main.yml` (PM)** — last run 2026-04-02 = `startup_failure` (broken since April).
+      Diagnose + fix; it is the actual staging→main promotion that admin-merge is standing in for.
+- [ ] [SCRIPT] P0. **Fix `sit-gate.yml` (zero runs) + `sit-debounce-trigger.yml` (scheduled but failing every ~2h)** —
+      the cross-repo SIT gate that should validate staging before promotion. Diagnose the scheduled failures + wire the
+      gate so staging→main waits on SIT-green.
+- [ ] [DOC] P1. **`ci-cd-flow.md` is aspirational vs reality** — it documents semver+SIT+staging-to-main as working;
+      empirically all are down. Add a "current operational status" banner until the pipeline is repaired.
+- [ ] [DESIGN] P1. **Version feedback to staging/LDR** — once semver works: bump is computed on staging →
+      `version-bump` repository_dispatch to PM (central SSOT `workspace-manifest.json:staging_versions`) → dependency
+      cascade (`update-dependency-version.yml`) updates dependents' pyproject → flows back through quickmerge→staging→main.
+      The main-side version bump (+ any [skip ci] manifest/deps automation) MUST back-merge to LDR or the standing
+      LDR→staging PR conflicts on the version line — this is the generalized form of the Phase-5 main↔LDR drift; solve
+      both with one "back-merge main→LDR" automation.
+
+#### Phase 6 — proposed architecture (operator 2026-06-01): orchestrator-driven agent escalation + loud alerting
+
+- [ ] [DESIGN] P1. **Layer the pipeline by whether it needs Claude.** (1) DETERMINISTIC (no agent): semver bump-compute
+      (label vs API diff is a script), `staging-to-main.yml`, `sit-gate.yml` — these just need repair, NOT an agent.
+      (2) JUDGMENT (agent): staging-merge conflict resolution, commit-label-mismatch remediation, SIT-failure triage —
+      these escalate to an agent. Don't put Claude where a script suffices.
+- [ ] [SCRIPT] P1. **GHA → orchestrator dispatch for the judgment cases (operator preference: setup-token auth, not
+      API credits).** When a deterministic workflow hits a judgment wall (conflict / label mismatch / SIT red), it
+      `repository_dispatch`es to the **agent-orchestrator** API (AWS VM, `agent-orchestrator.odum-research.com`), which
+      spawns a worker under the cheap+stable long-lived **setup-token** accounts (`accounts.json`) to do the work and
+      push the fix **onto LDR** (resolve-on-integration-branch rule) + ping the authoring slot. Auth: GHA→orchestrator
+      via the internal-secret; orchestrator→GitHub via the workflow-capable PAT/SSH. Rationale: avoids per-run API-credit
+      cost + an API key in GHA; reuses provisioned fleet workers.
+- [ ] [SCRIPT] P0. **Extend the existing #ci-failures Slack alerting to the SILENT workflows.** The per-repo
+      quality-gates-v2 already Slack-notifies on QG fail, but `semver-agent` / `staging-to-main` / `sit-gate` /
+      `sit-debounce-trigger` fail **silently** (that's why they rotted for months). Add a central PM `workflow_run`
+      (conclusion=failure) → #ci-failures watcher covering ALL workflows, with **failure→recovery transition** alerts
+      ("X failing" then "X recovered"). NB: GitHub **auto-merge stuck on conflict is NOT a workflow_run failure** — it's
+      a PR state — so ALSO add a scheduled poller for LDR→staging PRs sitting `CONFLICTING`/`BLOCKED` > N min → alert +
+      dispatch the resolver (the monitor-agent). Loud-by-default is the fix for the whole silent-rot class.
+
 ### Phase 4 — Concurrent-push serialization decision (audit j4)
 
 - [ ] [OPERATOR-DECISION] P2. Decide whether the current advisory `staging_status.locked` flag + GitHub's native
