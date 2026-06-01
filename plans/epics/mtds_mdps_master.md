@@ -442,13 +442,17 @@ MTDS `scripts/quality-gates.sh` is **pre-existing-red** on LDR (independent of F
 
 ## Fleet data-fetch dispatch (slot 7, 2026-06-01 — from `running_vm_fleet_status_2026_05_27.md`)
 
-- [ ] [CODE] P1. **OKX-FUTURES Tardis symbol-mapping bug (HTTP 400, ~1,100–1,350/window, independent of the API key).**
-      Tardis rejects mapped symbols like `BTC-USDT` + dated contracts ("use the okex-futures exchanges API for allowed
-      values"); valid OKX-FUTURES IDs are `BTC-USD-260626` / `BTC-USD_UM-260626`. Fix the OKX-FUTURES → Tardis symbol
-      mapping so historical OKX downloads stop returning empty. **Independent of the Tardis paid-key unblock** (which
-      stays BLOCKED-CREDENTIALS per operator — see `running_vm_fleet_status` + `fleet_audit_triad_deferred_followups`).
-      Repo: market-tick-data-service (CEX historical download) / instruments-service (venue symbol map) — diagnose which
-      side owns the OKX symbol map first.
+- [x] ✅ [CODE] P1. **DONE 2026-06-02 (slot 7) — instruments-service@`35a745ef`.** Root cause: `_TARDIS_VENUE_EXCHANGES`
+      (instruments-service `reference_data/router.py`) had **no OKX entries** → OKX-FUTURES discovery fell through to the
+      adapter default `okex` (spot) and emitted `BTC-USDT` instead of native okex-futures dated ids. Added
+      `okx-spot→okex` / `okx-swap→okex-swap` / `okx-futures→okex-futures` (matches UAC `venue_mapping.to_tardis_exchanges`)
+      + regression test; live-validated (free `/exchanges/okex-futures`, 5740 native syms). IS now emits native ids; MTDS
+      consumes unchanged via `_resolve_dated_future_symbols`. Independent of the BLOCKED Tardis paid key. **Operational
+      follow-up (next backfill window)**: re-run the OKX-FUTURES historical backfill (the 28k attempted_failed flip to
+      captured); dry-run-validate the rebuilt symbol set vs the live listing first. Original diagnosis retained below.
+  - **Original diagnosis (provenance)**: Tardis rejected `BTC-USDT` + dated contracts ("use the okex-futures exchanges
+    API for allowed values"); valid IDs `BTC-USD-260626` / `BTC-USD_UM-260626`. Repo: instruments-service (venue symbol
+    map — the owning side per IS→MTDS contract).
   - **Slot-7 FULL diagnosis + LIVE-VALIDATED fix spec 2026-06-01 — root cause is in instruments-service, NOT MTDS.**
     Traced end-to-end:
     1. **Venue→exchange map is CORRECT**: UAC `registry/venue_mapping.py` + `canonical/canonical_mappings.py` map
