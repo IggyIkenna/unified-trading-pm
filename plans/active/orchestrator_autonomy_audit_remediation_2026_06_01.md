@@ -174,7 +174,11 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       **role-aware**: a background autonomous worker
       `notify*\*`-pings     the operator and waits out the TTL (then inherits on expiry); an interactive/operator session ASKS the operator     ("are other agents finished? OK to commit this WIP?") and commits on confirmation. **Forbidden anti-patterns**:     (i) per-file foreign attribution — `in_flight_files_json`is a refinement, never a gate; an unreported dirty file     in an isolated slot worktree is still slot-owned; (ii) terminal quarantine — a dead maker's WIP must eventually be     inherited, never left dirty forever. Removes the FM8 HARD-RULE violation without wedging respawn-inherit.     Collision group:`ao_respawn_hygiene`.
       Estimate: 0.5 AI-day.
-- [ ] [CODE] P0. **FM8 addendum — interactive-editor liveness (3rd signal beyond claim-TTL + tmux).** The claim+tmux
+- [x] ✅ [CODE] P0. **FM8 addendum — interactive-editor liveness (3rd signal beyond claim-TTL + tmux).** ✅ DONE
+      2026-06-01 — agent-orchestrator@0b6b12e. `has_recent_dirty_mtime()` (default 120s) is the 3rd LIVE input, threaded
+      into `classify_maker_liveness(recent_edit=...)` + `resolve_dirty_state(recent_edit_within_seconds=...)`: LIVE if
+      (fresh claim + live tmux) OR (recent dirty-file mtime). Test: `test_resolve_protects_recent_interactive_edit` +
+      `test_has_recent_dirty_mtime_true_and_false`. The claim+tmux
       liveness test misses a LIVE interactive operator/Cursor editor: it writes no `.agent-claim` and runs under no
       `orch-slot-*` tmux session, so `classify_maker_liveness` returns `"absent" → inherit` and would STOMP active
       interactive edits. **Observed live 2026-06-01 20:25** — the Phase-4 WIP itself was being edited ~40s prior with no
