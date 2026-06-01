@@ -101,6 +101,41 @@ Read `deployment-api/deployment_api/services/data_status_service.py`. Mixed resu
 - 🟠 **Gap E (MED)** — `data_status_rollup_worker.py` may bake the wrong denominator offline; verify it shares the
   oracle.
 
+## Three-layer integrity (operator framing: IS→…→features, vs manifest, vs manifest integrity)
+
+The audit must separate three things; here is where each stands:
+
+### L1 — Manifest integrity (are all scattered data_types/schemas recorded correctly + completely IN?)
+
+- **Phantom rows**: `market-data-tick-defi` carries a cartesian `data_type × venue` grid in `VENUE-CHAIN` form, all
+  empty — quantified phantom (C1). 🔴
+- **Object-vs-row ratio (needs reconciliation)**: `lst-rates` had **34,843 objects** but its index has **16,766 rows**
+  (~2:1). Likely the bundling/`_index` factor, but **not yet reconciled per `(venue,chain,day)`** — could hide
+  un-recorded objects. 🟠 (item x follow-up)
+- **Schema spread v4–v8, no v9** recorded in-manifest (C4); `chain` null while venue embeds chain (C1/C3). 🔴
+- **Consolidation reach**: deployment-api reads the dedicated indexes (`_read_defi_merged_index`) ✅, but whether the
+  **manifest consolidator + a3** fold every dedicated index into the canonical surface is unconfirmed. 🟠
+
+### L2 — API faithfulness (does the data-status query honestly reflect the manifest?)
+
+- `coverage-summary` denominator self-referential + no `is_expected()` gate + disagrees with `manifest-status` (Gaps
+  A–C); reads dedicated buckets ✅. 🔴 — see "Data-status tab code alignment" above.
+
+### L3 — Pipeline coverage propagated IS → MTDS → MDPS → features (THE new big finding)
+
+**Raw data is 79–96% captured but does NOT reach features-service.** Read the features buckets:
+
+- `features-onchain-defi-prd`: **3 rows total** (2026-04-03 → 2026-04-05), feature_groups `lending_rates` + `lst_yields`
+  only. Essentially empty. 🔴
+- `features-delta-one-defi-prd`: **no `_index` at all** (FileNotFoundError) → `funding_rate_annualised_bps` /
+  `basis_bps` not produced for DeFi. 🔴
+- `features-volatility-defi-prd`: **no `_index`** → `realized_vol_*` absent. 🔴
+
+So even with lst*rates 92% / perp_funding 55% / dex 90%+ at the **raw** layer, the **features the strategies consume**
+(`staking_apy_bps`, `funding_rate_apy_bps`, `basis_bps`, `realized_vol*\*`) are absent/near-empty. **The strategies
+cannot run today — the gap is the MTDS→features propagation, not the raw corpus.** This is the single most important
+readiness finding and was invisible until the L3 layer was checked.
+
 ## Solana MVP integration (`solana_basis_trading_mvp_2026_06_01.md`)
 
 The concrete first-live target is the **Solana basis trade** (long SOL on Orca/Raydium + short SOL-PERP on Drift V2).

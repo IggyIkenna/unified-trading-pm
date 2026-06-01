@@ -28,7 +28,7 @@ doc:
 | Dimension                                                              | What it checks                                                                                                                                                                              | Section                                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | **Code ↔ codex correctness**                                           | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                   | [Checklist](#checklist) items (a)–(n)                                                                   |
-| **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(w) |
+| **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(y) |
 
 ### Archetypes / strategies in scope (operator's words → codebase archetype)
 
@@ -166,6 +166,22 @@ grep code truth, compare to the doc, classify each as `aligned` / `codex-stale` 
 > `Data Pipeline Correctness Is The Heartbeat` HARD RULE: every cell is either `captured` over the full required window,
 > or `empty_confirmed` with a typed reason, or a **download backlog item** — never a silent gap. No asset_group, no
 > venue, no time-range is skipped to hit a date.
+
+### Three integrity layers — audit each SEPARATELY (codified 2026-06-01)
+
+The operator's framing: coverage is not one number — it is **three distinct things** that must each be checked, end to
+end across the pipeline **instruments-service → MTDS → MDPS → features-service** for on-chain / DeFi / perp. Do not
+collapse them; a layer can be green while the one beneath it is broken.
+
+| Layer                                    | Question                                                                                                                                      | What a finding looks like                                                                                                                                                                                                                 | Items               |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| **L1 — Manifest integrity** (deepest)    | Are ALL the scattered data_types + schemas + buckets recorded **correctly and completely INTO** the manifest?                                 | An actual GCS parquet object with no manifest row (orphan); a manifest row with no object (phantom); a data_type/venue/chain/schema field mis-recorded; a dedicated bucket whose index never reaches the canonical manifest the API reads | (x) + items (r)/(s) |
+| **L2 — API faithfulness**                | Does the **data-status API query** honestly reflect the manifest — right numerator, IS∩UAC denominator, per-venue/chain breakdown?            | API coverage % ≠ a direct manifest aggregation; self-referential denominator; missing scope gate; no per-chain split                                                                                                                      | (w)                 |
+| **L3 — Pipeline coverage IS→…→features** | Is honest coverage **propagated up the chain** — IS universe → MTDS raw → MDPS processed → features-service derived — for defi/perp/on-chain? | A cell `captured` at MTDS (`lst_rates`/`perp_funding`) but the derived feature (`staking_apy_bps`/`funding_rate_apy_bps`/`basis_bps`) is absent in `features-onchain-defi-*` / `features-delta-one-*` over the same window                | (o) + (u) + (y)     |
+
+The per-strategy matrix (Step 1) + items (o)–(y) below are the concrete checks; (x)/(y) are the L1/L3 integrity checks
+added for this framing. **The result MUST report all three layers separately** — "the API says 90%" is not an answer to
+"is the manifest complete?" nor to "did it reach features?".
 
 ### Step 1 — Build the per-strategy data-dependency matrix (the expected set)
 
@@ -375,9 +391,38 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       code-alignment finding → fix in `data_status_service.py` so the tab is honest by default, then the audit just
       re-confirms. **The audit and the dashboard must compute coverage the SAME way.**
 
+- [ ] (x) **L1 — Manifest integrity: are all the scattered data_types/schemas recorded correctly + completely IN?**
+      (codified 2026-06-01). The DeFi corpus is spread across many dedicated buckets each with its own schema spread and
+      its own `_index/availability_index.parquet`; the canonical manifest the API/consolidator reads MUST faithfully
+      include them all. Check, per dedicated bucket (`lst-rates-*`, `lending-indices-*`, `oracle-prices-*`,
+      `perp-funding-*`, `dex-pools-*`, `dex-swaps-*`, `evm-defi-*`, `solana-defi-*`, `gas-fees-*`, `liquidations-*`): -
+      **No orphan objects**: every actual GCS parquet (`day=*/…parquet`) has a corresponding manifest row. Sample-count
+      objects vs manifest rows per `(venue, chain, day)`; object-count >> manifest-row-count = un-recorded data (the
+      manifest is blind to real data). 2026-06-01 reference: lst-rates had **34,843 objects** but the index had **16,766
+      rows** — confirm that ratio is the bundling factor, not un-recorded objects. - **No phantom rows**: every manifest
+      row maps to a real object (the `market-data-tick-defi` cartesian grid is the known phantom — quantify it). -
+      **Fields recorded correctly**: `data_type` / `venue` / `chain` / `schema_version` populated + canonical (composes
+      with (r)/(s) — but here the question is _manifest completeness/correctness_, not just naming). Flag rows with
+      `chain` null but venue embedding the chain (`UNISWAPV3-ETHEREUM`). - **Consolidation reaches the canonical
+      surface**: confirm the manifest consolidator (Cloud Run jobs) folds every dedicated-bucket index into whatever the
+      data-status API + a3 read — a bucket whose index never reaches the canonical manifest is invisible to every
+      downstream consumer. This is the root of the phantom/0% confusion. Output a per-bucket integrity table:
+      `bucket | objects | manifest-rows | orphans? | phantoms? | schema-spread | reaches-canonical?`.
+
+- [ ] (y) **L3 — Pipeline coverage propagates IS → MTDS → MDPS → features (defi/perp/on-chain)** (codified 2026-06-01).
+      Coverage is not done at the raw-tick layer — track it **up to features-service**, which is what strategy actually
+      consumes. For each strategy cell, confirm the derived feature exists over the same window in the features buckets:
+      `features-onchain-defi-*` (`staking_apy_bps`, `lst_native_rate`, `funding_rate_apy_bps`, `health_factor`),
+      `features-delta-one-*` (`funding_rate_annualised_bps`, `basis_bps`), `features-volatility-defi-*`
+      (`realized_vol_*`). Read each features bucket's `_index/availability_index.parquet`. A cell `captured` at MTDS
+      (`lst_rates` 92%) but the feature absent/partial at `features-onchain-defi` over that window = an **L3 propagation
+      gap** (the strategy still can't run). Report coverage **per stage** (IS-listed → MTDS-captured →
+      MDPS-processed-where-applicable → feature-emitted) so the stage that drops the cell is named. Composes with
+      `features_and_ml_master_audit_instructions.md`.
+
 ### Step 3 — Output: classify every gap (cleanup vs download), then backlog it
 
-Every RED/AMBER cell from items (o)–(w) becomes an explicit, actionable backlog line — **not** a "deferred" note. **Most
+Every RED/AMBER cell from items (o)–(y) becomes an explicit, actionable backlog line — **not** a "deferred" note. **Most
 DeFi "gaps" are data-in-wrong-form (the data already exists), NOT missing data — classify before you write "download".**
 Per `External Data Is Always Available` + `Data Pipeline Correctness Is The Heartbeat`, each cell is exactly one of:
 
@@ -423,7 +468,7 @@ plan under `parent_epic: defi_master` immediately (Capture Discoveries HARD RULE
 ## Success Criteria
 
 - All code-correctness checklist items GREEN (incl. code↔codex drift items j–n)
-- **All strategy data-coverage items (o)–(w) GREEN** for each in-scope archetype — every matrix cell `captured` over its
+- **All strategy data-coverage items (o)–(y) GREEN** for each in-scope archetype — every matrix cell `captured` over its
   required window at v9, or a verified typed `empty_confirmed`, or a tracked download-backlog line (no silent gap)
 - **Honest-coverage totality breakdown (item v) rendered in full** — both per data_type × venue (complete CeFi perp
   universe + on-chain perps + LST/lending/DEX/oracle venues) and per data_type × chain (`ChainKind`), every expected
