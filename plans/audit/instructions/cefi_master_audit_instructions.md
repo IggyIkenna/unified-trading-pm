@@ -4,7 +4,7 @@ type: audit-instructions
 epic: cefi_master
 assigned_vm: vm-cefi
 tier: L0
-last_updated: 2026-05-22
+last_updated: 2026-06-01
 ---
 
 # CeFi Master — Audit Instructions
@@ -54,6 +54,27 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
       `BLOCKED-CREDENTIALS` ping filed. No silent deferrals. Check: `human_led_audit_pool_2026_05_21.md` +
       `instruments-service` universe list
 
+### Dual-source provenance (the `source` column + SOURCE_PRIORITY)
+
+> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`). CeFi
+> cells may be populated by >1 source over time — most commonly **Tardis archive vs the per-venue live/REST path** for
+> the same `(data_type, venue)`. Design: same hive drop, disambiguated by a **row-level `source` column** + a per-source
+> manifest row, resolved downstream via UAC `SOURCE_PRIORITY`. **Current state (audit 2026-06-01): CeFi writes
+> `source=""` with no gate and no read-time reconciliation** — `SOURCE_PRIORITY` lists only `tardis` for the 9 CeFi
+> data_types. All items below are data-state verifiable, not constant-verifiable.
+
+- [ ] (i) **`SOURCE_PRIORITY` reflects CeFi reality**: where a live per-venue path exists alongside Tardis, the entry is
+      a multi-source ordered list (e.g. `["<venue>_live", "tardis"]`), not sole `tardis`.
+      `unified-api-contracts/.../canonical/crosscutting/source_priority.py:148`.
+- [ ] (j) **Writers stamp `source`**: CeFi adapter writes pass `source=` (`tardis` vs `<venue>`); `record_empty_for_shard`
+      / `record_failed_for_shard` accept + forward `source`.
+      `market-data-processing-service/.../core/canonical_writer.py`. Read ACTUAL prod CeFi rows — RED on blank `source`
+      for any cell whose `SOURCE_PRIORITY` entry has >1 source.
+- [ ] (k) **`source` is a column, not a path key**: no `source=`/`data_source=` hive segment in CeFi GCS paths — both
+      sources co-mingle on `day=…/asset_group=cefi/venue=…/data_type=…/`.
+- [ ] (l) **Read-time reconciliation wired**: 2-source fixture (Tardis + venue_live, same instrument+ts, co-mingled in one
+      folder) → consumer emits exactly ONE resolved row via `select_primary_available_source()`; no silent double-count.
+
 ### E2E Batch, Paper, and Live Verification
 
 - (e2e-batch) **Batch e2e**: For the MVP archetypes of this domain, run a dry-run batch audit using mock upstream
@@ -72,7 +93,9 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
 
 ## Success Criteria
 
-- All 8 checklist items GREEN
+- All 8 scaffold checklist items (a)–(h) GREEN
+- Dual-source provenance items (i)–(l) GREEN against actual prod data-state (zero blank `source` on any multi-source
+  CeFi cell; 2-source fixture resolves to one row, no double-count)
 - `a6_batch_live_adapter_parity.py` shows 100% parity for `asset_group=cefi` rows
 - Manifest divergence A3: zero `MISSING_EXPECTED` for cefi asset_group
 - QG exits 0 for MTDS + instruments-service

@@ -4,7 +4,7 @@ type: audit-instructions
 epic: predictions_master
 assigned_vm: vm-prediction
 tier: L0
-last_updated: 2026-05-22
+last_updated: 2026-06-01
 ---
 
 # Predictions Master — Audit Instructions
@@ -47,6 +47,24 @@ spread strategy. Key invariant: binary resolution events handled correctly; no h
 
 - [ ] (g) **Credential asks filed**: if Polymarket or Kalshi API keys not provisioned, `BLOCKED-CREDENTIALS` ping filed
       with account type, cost, and unblocks.
+
+### Data-source provenance — N/A by design (venue ≠ source)
+
+> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`). Unlike
+> tradfi/cefi/defi/sports, prediction is **multi-source-N/A by design**: Polymarket and Kalshi are separate **venues**,
+> not two sources of one shard. The `arbitrage_price_dispersion` model compares prices **across venues** at the
+> feature-calculation layer, not via per-row source resolution. So `source=""` is correct for prediction and no
+> enforcement gate is expected. These items CONFIRM the invariant holds (a regression here would be silently treating a
+> venue as a source, or vice-versa).
+
+- [ ] (h) **Venue ≠ source invariant holds**: prediction shards are keyed by `venue` (POLYMARKET / KALSHI); the
+      dispersion strategy consumes separate per-venue rows. No code path expects a source-disambiguated merge of two
+      venues into one shard. Trace: strategy-service prediction archetype → features-service spread calc.
+- [ ] (i) **Kalshi lands as a venue, not a source**: when Kalshi capture ships, it is a `venue=KALSHI` addition + a
+      `SOURCE_PRIORITY[("prediction", …)]` venue entry — NOT a second source of a Polymarket shard. Confirm the deferred
+      Kalshi item in `source_priority.py` is framed as venue, not source.
+- [ ] (j) **`source=""` is correct here**: prediction writers are NOT required to pass `source=`; the registry-driven
+      gate (see crosscutting plan) must exempt prediction because no `(prediction, data_type)` cell has >1 source.
 
 ### E2E Batch, Paper, and Live Verification
 

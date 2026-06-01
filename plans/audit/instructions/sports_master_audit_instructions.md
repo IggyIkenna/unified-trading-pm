@@ -4,7 +4,7 @@ type: audit-instructions
 epic: sports_master
 assigned_vm: vm-sports
 tier: L0
-last_updated: 2026-05-22
+last_updated: 2026-06-01
 ---
 
 # Sports Master — Audit Instructions
@@ -55,6 +55,28 @@ Key invariants: GCS paths always from `candidate_parquet_paths()`; date coverage
 - [ ] (g) **Credential asks filed**: any adapter without live credentials has a `BLOCKED-CREDENTIALS` ping with
       Sportradar/Footystats/The-Odds-API tier + cost estimate.
 
+### Dual-source provenance (the `source` column + SOURCE_PRIORITY)
+
+> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`). Sports
+> is inherently multi-source — `SOURCE_PRIORITY[("sports","FIXTURES")] = ["api_football","footystats"]`, plus multi-book
+> odds. Design: same hive drop, disambiguated by a **row-level `source` column**, resolved via UAC `SOURCE_PRIORITY`.
+>
+> **Sports-specific divergence to fix (audit 2026-06-01)**: sports currently encodes the source in the **GCS PATH**, not
+> a column — legacy `day=…/asset_group=sports/data_source=ODDS_API/` and newer
+> `day=…/pipeline_mode=batch_api_football/asset_group=sports/venue=…/` (see item (f)). This contradicts the
+> operator-confirmed column model (2026-06-01: `source` is a column, better for batch=live symmetry). Sports must migrate
+> source-as-path → source-as-column to match the other asset groups.
+
+- [ ] (h) **Source recorded per row, not per path**: sports writers pass `source=` to `record_captured`; the `source`
+      column is populated on sports parquet rows. RED if source lives only in the `data_source=`/`pipeline_mode=` path
+      segment. Read ACTUAL prod rows — note the path-vs-column inconsistency and migrate to column.
+- [ ] (i) **SOURCE_PRIORITY sports multi-entries operationalized**: the FIXTURES merge (`api_football`+`footystats`,
+      currently "deferred Phase 1B" in `source_priority.py`) has an active plan slot; multi-entry lists are not stale.
+- [ ] (j) **Read-time reconciliation wired**: NO `select_primary_available_source("sports", …)` calls exist today —
+      verify the sports consumer read path resolves source priority. 2-source fixture (same fixture from api_football +
+      footystats) → exactly one resolved row, no silent double-count, divergence surfaced via
+      `detect_dual_source_conflicts()`.
+
 ### E2E Batch, Paper, and Live Verification
 
 - (e2e-batch) **Batch e2e**: For the MVP archetypes of this domain, run a dry-run batch audit using mock upstream
@@ -73,7 +95,9 @@ Key invariants: GCS paths always from `candidate_parquet_paths()`; date coverage
 
 ## Success Criteria
 
-- All 7 checklist items GREEN
+- All 7 scaffold checklist items (a)–(g) GREEN
+- Dual-source provenance items (h)–(j) GREEN: `source` lives in a column (not only the path), zero blank on multi-source
+  cells, 2-source fixture resolves to one row with no double-count
 - `a6_batch_live_adapter_parity.py` shows parity for `asset_group=sports` rows
 - Manifest divergence A3: zero `MISSING_EXPECTED` for sports asset_group
 - QG exits 0 for features-service (sports family)

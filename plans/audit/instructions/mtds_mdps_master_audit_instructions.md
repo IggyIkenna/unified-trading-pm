@@ -4,7 +4,7 @@ type: audit-instructions
 epic: mtds_mdps_master
 assigned_vm: vm-ml
 tier: L1
-last_updated: 2026-05-28
+last_updated: 2026-06-01
 related_plans:
   - active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md # tactical fixes shipped 2026-05-28
   - active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md # architectural refactor track
@@ -86,6 +86,16 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
 - [ ] (h) **No subprocess gsutil/gcloud for per-object ops**: all per-object GCS operations use UTL library. Grep:
       `rg "subprocess.*gsutil|subprocess.*gcloud" market-tick-data-service/ --include="*.py"` — should be 0 hits
 
+- [ ] (j) **Source provenance stamped at write time — registry-driven (codified 2026-06-01)**: every MTDS
+      adapter/handler whose `(asset_group, data_type)` has >1 entry in UAC `SOURCE_PRIORITY` MUST pass `source=` (a
+      closed-set source string) to `record_captured`. Today only `category=="tradfi"` is gated; cefi/defi/sports write
+      `source=""`, and DeFi handlers route via `DefiManifestRecorder` → legacy `ManifestWriter.add()` which drops
+      `source` entirely → silent last-write-wins when two providers hit one cell. Generalise the gate to fire on any
+      multi-source cell (per `source_required(asset_group, data_type)`). Verify by reading ACTUAL prod rows per
+      multi-source cell (NOT the code constant) — RED on blank `source`. Grep callsites:
+      `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg "source="`. SSOT:
+      `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home: `manifest_master` item (i).
+
 ### Batch vs Live Parity
 
 - (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with
@@ -98,7 +108,9 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
 
 ## Success Criteria
 
-- All 8 checklist items GREEN
+- All correctness checklist items (a)–(j) GREEN
+- Multi-source cells stamp `source` at write time (item j) — zero blank `source` on any `(asset_group, data_type)` with
+  a multi-entry `SOURCE_PRIORITY`, read from actual prod rows
 - `a6_batch_live_adapter_parity.py` shows 100% parity (batch count == live count per venue per asset_group)
 - A3 manifest divergence: zero `MISSING_EXPECTED` and zero `DIVERGENT_EMPTY`
 - QG exits 0 for market-tick-data-service

@@ -68,6 +68,24 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       (`launch-manifest-consolidator-vm.sh`) does NOT exist. Grep:
       `rg "launch-manifest-consolidator-vm" --include="*.sh"` — should be 0 hits
 
+- [ ] (i) **`source` column populated + registry-driven gate across ALL asset groups (codified 2026-06-01)**: v9 added
+      the `source` column but enforcement (`MissingSourceError`) fires ONLY for `category=="tradfi"`
+      (`manifest_writer.py`). `source` is the SSOT for which provider produced a shard's rows when a `(data_type, venue,
+      time)` cell is populated by >1 source over time (operator decision 2026-06-01: `source` is a **column, not a hive
+      path key**, for batch=live symmetry). Generalise + verify:
+      - **Gate is registry-driven**: raise `MissingSourceError` when `SOURCE_PRIORITY[(asset_group, data_type)]` has >1
+        entry and `source` is blank — auto-covering cefi/defi/sports multi-source cells and auto-exempting single-source +
+        prediction (Polymarket/Kalshi are venues, not sources). NOT a hardcoded asset_group list.
+      - **Column populated in actual PROD rows** (DATA-STATE, not the constant): read the `source` distribution per
+        `(asset_group, venue, data_type)`; zero blank `source` on any multi-source cell. (manifest-v8 lesson: constant ≠
+        data — 0% of 7.4M rows were v8 despite the bump.)
+      - **Two rows per multi-source cell**: when both providers run for one cell, the manifest holds TWO rows
+        distinguished by `source`, each with its own `capture_status`. Union semantics downstream: cell is `captured` if
+        ≥1 source row is `captured`; `attempted_failed` only when all source rows failed.
+      - **Closed-set source strings** mirror `SOURCE_PRIORITY`; blank/unknown source on a multi-source cell is RED.
+      SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; consumer policy:
+      `codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item (j).
+
 ### Batch vs Live Parity
 
 - (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with
