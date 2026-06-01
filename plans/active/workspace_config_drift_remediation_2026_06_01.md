@@ -94,7 +94,7 @@ estimate_calibrated_ai_days: 1.2
       collision→signal, non-colliding-dirty→no-signal, below-threshold→no-signal, clean/up-to-date→no-signal + syntax +
       arg-validation). Updated `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7" (troubleshooting row + dedicated
       watchdog subsection). **Landed on LDR** (same staging-632-behind deviation as Items 2/3). — code
-      unified-trading-pm@0aacad7fa | bats 10/10 green | full PM QG `--no-fix` exit 0 (basedpyright ratchet held; new
+      unified-trading-pm@899e36e92 | bats 10/10 green | full PM QG `--no-fix` exit 0 (basedpyright ratchet held; new
       scripts are bash, no JSON-parsing python so no empty-fallback exclude needed).
 
 ## Discoveries (captured per HARD RULE)
@@ -114,7 +114,7 @@ estimate_calibrated_ai_days: 1.2
       the UI repo checked out, so every full-workspace slot's PM QG was blocked (foreign, pre-existing, not caused by
       this plan's work). **Fixed**: added `context/codex/` to the checker's `EXCLUDED_DIRS` (vendored codex mirrors in
       non-PM repos are never the canonical runbook; the PM `codex/` SSOT stays enforced). Re-verified 0 violations
-      scanning 10 runbooks; full PM QG `--no-fix` exit 0. — unified-trading-pm@35a16a493 | provenance: Item 5b QG run
+      scanning 10 runbooks; full PM QG `--no-fix` exit 0. — unified-trading-pm@0f36b7142 | provenance: Item 5b QG run
       2026-06-01.
 
 ## Item 5 spec — FF-pull starvation watchdog signal
