@@ -2556,3 +2556,56 @@ verify) + promote workflow items IN-PROGRESS. Concurrent status: 14 VMs running 
 cefi/pred/lst-rates/lending-indices/dex-pools, MDPS tradfi). IS Pred VM completed exit_code=0 (7269 records). DeFi gap
 corrected: all 3 datasets stop 2026-04-14 (38-day gap), corrected-range VMs relaunched. See plans:
 instruments_backfill_phase3_2026_05_22.md + mtds_backfill_phase3_2026_05_22.md.
+
+---
+
+## [2026-06-01] slot-7 DONE — issue-tracker janitor pass (PM = SSOT)
+
+**Issues ARCHIVED → `plans/archive/issues/`** (banner + folds, LDR@4b614d147 + d901c7992):
+- `bug_d_prime_drift_backfill` (superseded → defi_manifest §G), `pinned_tarball_prune` (RESOLVED;
+  defi_manifest L0 marked unblocked), `workspace_qg_ci_startup_failure` (covered by ci_canonical_v2),
+  `full_cicd_sit_target_state` (SIT Tiers A–E migrated INTO `cicd_contract_hardening`),
+  `ui_repo_branch_protection` (reconcile todo migrated to `cicd_contract_hardening`),
+  `repo_docs_codex_ssot_consolidation` (8-repo registry + rollout folded into `codex_vs_repo_docs` Appendix A),
+  `vm_trading_core_orphan_commits` (outcome a — both commits redundant; deleted remote
+  `archive/vm-trading-core-orphaned-2026-05-23`; base-library `.prettierignore-base` nice-to-have captured as P3).
+
+**Code SHIPPED (LDR):**
+- F-22 — `perp_funding_handler._make_session(headers=...)` optional param (Tardis-path TypeError) →
+  **market-tick-data-service@0716a544**. Flipped in audit03 issue.
+
+**Code READY-on-branch, BLOCKED on foreign QG (NOT landed):**
+- features-service bucket-override fix (`get_output/input_bucket` honour PROTOCOL_DATA_SINK/SOURCE_BUCKET; +3 unit
+  tests, codex+ruff clean) → **features-service@587e494e on tab/ikennaigboaka/7**. LDR is branch-protected (needs green
+  `quality-gates-v2`); that gate is pre-existing-RED on a **foreign coverage-floor** (MIN_COVERAGE=0 / per-family
+  PYTEST_UNIT_DIR; quality-gates.sh@381d0ff1, another agent's in-flight QG work). PR merges once that's green; do NOT
+  re-implement. Status in the (still-open) issue doc.
+
+**Investigations (read-only) — reported + recorded:**
+- F-14 — vol_cap_clamp is **NOT equivalent** to the codex 1h price-move abort → **P1 SAFETY GAP** todo in `strategy_master`.
+- DeFi #3 — `dex_swaps` O/H/L/C are USD-normalized pool spot prices; **no MDPS bug**; UAC contract-doc todo in `features_and_ml_master`.
+- uniswap_v3_28k — `chain` column **VERIFIED populated** ('ETHEREUM', 0 nulls) both ends of the failed range; 28,634
+  rows are stale; backfill rerun only, no code. Flipped Path-A pre-flight in the issue (stays DEFERRED per operator).
+
+**Operator decisions DISPATCHED as `- [ ]` todos in owning epics** (audit03 ledger already in issue docs by slot-1):
+- `strategy_master`: F-14, F-13/15, F-34 (SUPPORTED_ARCHETYPES). `execution_master`: F-32 (post-cutover), G12 exec-side.
+- `batch_live_symmetry_master`: BLRS D2/D3/D4. `observability_master`: G12 alerting recon-freeze publisher (P0).
+- `features_and_ml_master`: DeFi #1/#2/#3/#4. `client_isolation_and_governance_master`: F-25 full ClientConfig.
+- `codex_vs_repo_docs`: F-45 + F-06 (Elysium scrub) + gcs_hive FIX-STALE. `mtds_mdps_master`: UTL gcs-op re-export gap
+  + format drift + OKX-FUTURES Tardis symbol-mapping bug.
+
+**Still BLOCKED (operator/credentials — left intact):**
+- Tardis paid API key → BLOCKED-CREDENTIALS (running_vm_fleet + fleet_audit_triad; ping intact). OKX symbol-mapping is
+  the **independent** part and is now a P1 todo in `mtds_mdps_master`.
+- cefi/defi manifest remainders → owned by `cefi_/defi_manifest_canonicalisation` (slots 2/3, held by harsh); decisions
+  already recorded in the issue docs; not touched.
+
+**Left as-is (genuinely waiting):** `human_led_audit_pool`, `shared_stash_pile_archive_cleanup` (purge 2026-06-08),
+`alerting_fp_rate_analysis` (blocked on ML/features live), `api_host_chronic_impairment` (harsh-owned, kept open).
+
+**⚠️ WORKSPACE BLOCKER (FYI to slot-1):** PM `quickmerge` is blocked for everyone — STAGE 1.5 "Dependency Alignment (PM)"
+fails on **10 external_version_mismatch issues** (canonical manifest ahead of repos: web3 <7→<8 in UTL+instruments;
+aiohttp/anthropic/fastapi lower-bounds in alerting). All my PM-markdown landed via the **dirty-deps direct-LDR-push**
+escape hatch. Needs a dep-alignment owner to bump the repos (or correct the manifest). Foreign/out-of-scope for slot 7.
+
+Inventory regenerated + hygiene sweep GREEN (0 hard / 0 soft; 0 orphans). — slot-7 / ikenna 2026-06-01
