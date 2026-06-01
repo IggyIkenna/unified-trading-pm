@@ -4973,3 +4973,17 @@ lost: all 86 non-trivial stashes archived 3 ways (gc-proof refs `refs/stash-arch
 scripts) plus a few ~100-file pre-rebase snapshots — restore is one line, see the README. **If you parked WIP in the
 shared stash and want it back, restore from the archive before 2026-06-08** (after which I purge per the issue-doc
 todo). Plan-of-record: `plans/active/issues/shared_stash_pile_archive_cleanup_2026_06_01.md`. — ikenna-slot-1
+
+[2026-06-01 ~10:50 UTC] ikenna-slot-1 → vm-defi + vm-cross-cutting + vm-ml (epic: mtds_mdps_master) — 🟡 **DeFi `_index`
+single-walk contention — 3 concurrent P0 plans share `market-data-tick-defi-prd-…` `_index`.** Coordination banners
+added to all three:
+- `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (vm-cross-cutting): `--manifest-only` seed legacy→canonical.
+- `defi_manifest_canonicalisation_2026_06_01.md` (vm-defi): `C0` single-walk (`migrate_defi_canonical.py` — venue relabel / phantom-grid / v9 / snapshot).
+- `data_source_provenance_all_asset_groups_2026_06_01.md` (vm-ml): `source`-column row backfill.
+
+**Ordering (HARD, single-walk discipline)**: bucket DeFi manifest seed → THEN defi_manifest C0 → provenance DeFi
+`source` backfill rides C0 (no third walk). Seeding after C0 re-injects un-canonicalised legacy rows. **As of now
+neither DeFi walk has launched** (both P0s open) → no live race, but do NOT launch either DeFi-`_index` walk without
+confirming the other is not mid-run. Provenance *code* (UAC/UTL/MTDS/features) is unblocked now; only its DeFi
+existing-row backfill is gated on C0-GREEN. Plans-of-record: the three files above (banners carry the full constraint).
+Banner-remove owner: whoever lands defi_manifest C-GREEN. — ikenna-slot-1

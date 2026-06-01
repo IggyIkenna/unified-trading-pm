@@ -51,6 +51,18 @@ related:
 > **Path to single canonical SSOT**: verify canonical holds all legacy data → close the manifest gap
 > (`--manifest-only` seed) → pause the 10 legacy crons → DELETE the legacy buckets.
 
+> **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with `defi_manifest_canonicalisation_2026_06_01.md` (2026-06-01)**:
+> this plan's `--manifest-only` seed writes legacy→canonical rows into the **same `market-data-tick-defi-prd-…`
+> `_index`** that `defi_manifest_canonicalisation` rewrites (venue relabel / phantom-grid delete / v4–v8→v9 / snapshot,
+> via `migrate_defi_canonical.py`). Single-walk discipline (HARD RULE) forbids two concurrent whole-corpus walks on the
+> same `_index`. **Ordering (HARD)**: this plan's DeFi manifest seed runs **BEFORE** defi_manifest's `C0` single-walk —
+> otherwise the seed re-injects un-canonicalised legacy rows (old venue strings, v4–v8, phantom grid) *after* C0 cleans
+> them. As of 2026-06-01 **neither DeFi walk has launched** (this plan's "Manifest seed" P0 + defi_manifest's "C0 — RUN
+> ON A VM" P0 both open) — no live race yet; do NOT launch the DeFi-bucket seed without confirming defi_manifest C0 is
+> not mid-walk (and vice-versa). `data_source_provenance_all_asset_groups_2026_06_01.md` (`source`-column backfill) must
+> NOT open a third walk — its row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic
+> `mtds_mdps_master`. Banner-remove when the DeFi `_index` is canonical + seeded (defi_manifest C-GREEN).
+
 **Finding (operator-directed 2026-06-01)**: legacy flat tick-data buckets
 (`market-data-tick-<group>-central-element-323112`, plus long-form `market-data-tick-prediction-…`) are **still
 receiving live writes today** alongside their canonical env-tiered counterparts

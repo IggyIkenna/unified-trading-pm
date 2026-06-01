@@ -40,6 +40,15 @@ related_plans:
 
 # Data-source provenance enforced across all asset groups
 
+> **🟡 CROSS-PLAN COORDINATION — no third DeFi `_index` walk (2026-06-01)**: the `source`-column backfill onto existing
+> DeFi manifest rows must NOT open its own whole-corpus walk on `market-data-tick-defi-prd-…`. Two plans already
+> contend for that `_index`: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (`--manifest-only` seed)
+> then `defi_manifest_canonicalisation_2026_06_01.md` (`C0` single-walk, runs second). Single-walk discipline (HARD
+> RULE): this plan's DeFi `source` backfill **rides defi_manifest's C0 single-walk**, gated until C0 is GREEN. Code
+> changes here (UAC `source` column + UTL `record_captured` + MTDS/features writers) are unblocked now; only the
+> existing-row DeFi backfill is sequenced. Other asset_groups (tradfi/cefi/sports) are independent. Coordination owner:
+> epic `mtds_mdps_master`. Banner-remove when defi_manifest C-GREEN + this plan's DeFi backfill folded into that walk.
+
 ## Overview
 
 TradFi shipped a dual-source provenance model (`tradfi_massive_dual_source_2026_05_28.md`): a shard
