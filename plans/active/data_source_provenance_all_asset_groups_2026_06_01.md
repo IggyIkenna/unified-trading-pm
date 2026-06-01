@@ -263,9 +263,10 @@ column is RED, not exempt.
       j, write-time stamping), `manifest_master` (item i, the `source`-column schema home + registry-driven gate). The
       defi/mtds_mdps/manifest edits were layered on top of an in-flight "zero-rows = silent lie" sweep (operator-acked
       2026-06-01 as ready-to-ship → bundled).
-- [ ] [CODEX] P1. Generalise `codex/02-data/contracts-scope-and-layout.md` § "TradFi canonical schema — dual-source
-      source column" + `honest-absence-downstream-handling.md` multi-source consumer policy to all multi-source asset
-      groups (currently scoped to tradfi).
+- [x] ✅ [CODEX] P1. Generalised `codex/02-data/contracts-scope-and-layout.md` (new § "Generalised beyond TradFi —
+      `source` is universal across ALL asset groups") + `honest-absence-downstream-handling.md` (§ "Multi-source cell
+      consumer policy" banner generalised to all groups + read-path-finding note) — PM slot ref. Documents auto-stamp +
+      computed-exempt + the generic resolver/read-path status.
 - [ ] [MTDS] P1. **Prediction — stamp `source` on every cell NOW** (`polymarket_clob` / `polymarket_gamma_api` /
       `kalshi_*`): single-source today but stamp for swap-resilience (a future Polymarket data-provider change). Required
       by the universal Phase 1 gate. `market-tick-data-service/.../engine/orchestrator.py` (`record_captured_from_counts`).
