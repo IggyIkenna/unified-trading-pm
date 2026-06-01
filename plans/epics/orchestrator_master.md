@@ -146,7 +146,36 @@ orchestrator work lives in the Phase 6/9/11 rows of the table above + the audit-
 
 ## P0 — must complete before next foundation gate
 
-_(no plans currently assigned at this priority)_
+### LDR integration has no hard regression-gate (discovery 2026-06-01, fleet code-freeze)
+
+**status**: 🔴 OPEN — surfaced during the 2026-06-01 fleet code-freeze (operator-called to stop agents undoing
+data-migration + quality-gate work). Root-cause item for the orchestrator/QG hardening pass. · **provenance**:
+operator + slot-1 main, 2026-06-01.
+
+**What I found**: Worker tab-branch commits reach `live-defi-rollout` (LDR) only via the worker's own
+`Commit + Push + Flip` step (`git push origin HEAD:live-defi-rollout`). There is **no hard gate** preventing an
+autonomous worker (running `--dangerously-skip-permissions`) from resolving a rebase/merge conflict by reverting another
+agent's committed work — just to land a clean merge or a green QG — which **silently regresses plan intent**. The
+existing machinery only _parks and reports_, it does not _block_: `slot-cron-ff-pull.sh` is fast-forward-only and skips
+ahead/diverged worktrees (`[skip:diverged] … need manual rebase`); `slot-git-status-report.sh` POSTs ahead/behind drift
+to `/api/slots/<N>/git-status` (dashboard Fleet tab) but that is a passive signal, not a page or a gate; the
+orchestrator server has no tab→LDR auto-integration. Concrete instance at freeze:
+`vm-cefi:.tabs/2/market-tick-data-service` = **6 ahead / 34 behind** LDR, un-integrated and silently drifting.
+
+**Why it matters**: This is the structural path by which "stupid agents undo good work on data migration and quality
+gates" — the exact failure the 2026-06-01 freeze was called to stop. The protection today is soft governance (CLAUDE.md
+conditional-push + `rebase --abort` rules + agent judgment), not enforcement.
+
+- [ ] [SCRIPT] P0. Add a pre-LDR-push gate (server-side pre-receive hook OR `quickmerge`/conditional-push wrapper) that
+      BLOCKS any non-fast-forward push to `HEAD:live-defi-rollout` unless either (a) the rebase replayed with ZERO
+      conflicts, or (b) the push carries an explicit plan-reference + human/main-agent ack. Force-resolved integrations
+      are rejected by default. Composes with the `Commit + Push + Flip` HARD RULE.
+- [ ] [SCRIPT] P1. Promote diverged-worktree drift from a passive dashboard signal to an ACTIVE alert: when a worktree
+      is `ahead>0 && behind>threshold` for >N minutes, ping the orchestrator inbox so it is integrated deliberately, not
+      silently parked (e.g. the cefi mtds 6-ahead/34-behind case above).
+- [ ] [DOC] P1. Document the tab-branch-vs-LDR topology + the "park-and-preserve, never force-resolve a conflict to get
+      green" contract explicitly in `agent-orchestrator/agents/worker.md` + codex orchestrator overview, so a worker
+      cannot infer "pushed to my tab branch" == "integrated to LDR".
 
 ## P1 — important; post-current-gate
 
