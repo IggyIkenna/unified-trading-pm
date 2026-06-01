@@ -77,9 +77,14 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
       regression: tests/smoke/venue_credentials.spec.ts. Backend: GET /api/venue-credentials probes Secret Manager →
       Tardis api-key-info (5s timeout); returns active/expired/missing/error; mock mode returns simulated EXPIRED.
       Frontend: VenueCredentialsPanel.tsx added to VmDeployments page with 7 unit tests.
-- [ ] [AGENT][UI] P2. Show, per venue, which date ranges are fetchable on the _current_ key vs which need a renewed/paid
+- [x] ✅ [AGENT][UI] P2. Show, per venue, which date ranges are fetchable on the _current_ key vs which need a renewed/paid
       key (free = 1st-of-month + recent; paid = rest) — consumes the per-venue coverage map from
       `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §3.
+      — deployment-api@f15ecdd | deployment-ui@c610c8f | pw:L2 BLOCKED-INFRA: Playwright executable not installed in
+      slot env | regression: tests/smoke/venue_date_ranges.spec.ts. Backend: GET /api/venue-date-ranges returns
+      per-venue free_date_count + paid_date_count + sample dates; 8 unit tests green; QG ✅ 330s.
+      Frontend: VenueDateRangePanel.tsx rendered on VmDeployments page after VenueCredentialsPanel; mock-api
+      handler returns 6 CeFi venues with computed free/paid counts.
 
 ## §4 — Coverage / remaining-to-download view (P1)
 

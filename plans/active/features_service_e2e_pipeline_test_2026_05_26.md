@@ -430,10 +430,24 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
       `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per asset_group via`get_data_sink(bucket=...,
       routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest
       share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
-- [ ] [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
+- [x] ✅ [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
       `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
       whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test
-      2026-05-26.
+      2026-05-26. — features-service@830f47b4
+  - **`wedge_min_bars_to_convergence` NaN** → **CALCULATOR BUG** (fixed). `_min_bars_across_combos` returned
+    `float("nan")` instead of `None` when no poly cols present for a TF. NaN propagates through `min_horizontal` →
+    100% NaN → WriteGate rejection. Fix: `pl.lit(None, dtype=pl.Float64)` + `fill_nan(None)` on bars columns.
+    WriteGate `sparse_columns` added so high null rate (no active wedge = correct absence) doesn't reject the shard.
+  - **`tf_rr_long_*` / `tf_rr_short_*` / `tf_rr_best_long` null** → **LEGIT HONEST-ABSENCE**. 4h/1d poly/ATR
+    columns absent (upstream MDPS gap for 4h/1d delta_one). Calculator correctly emits null; `tf_rr_valid=0`
+    carries the absence signal. Fix: declared these as sparse in WriteGate so the shard (with valid=0 rows) can
+    write. No code change to the calculator.
+  - **`tf_confluence_signals` "Cannot serialize DataFrame to parquet"** → **ALREADY FIXED** by FINDING-D
+    (features-service@dde23953). Parquet round-trip serialize test passes; this sub-item was opened before FINDING-D.
+  - **BITGET-SPOT skipped (no source)** → **LEGIT HONEST-ABSENCE**. No 4h delta_one data for BITGET-SPOT (upstream
+    MDPS gap). `_load_and_join` → None → silent skip. Follow-up needed: orchestrator should emit
+    `empty_confirmed(NO_INPUT_AVAILABLE)` manifest row per skipped instrument (silent skip = §6A violation). Tracked
+    as **DEFERRED** below in Temporary states.
 - [ ] [AGENT] P2. **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
       guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed
       for this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" →
@@ -523,6 +537,12 @@ cross_instrument `close` (FINDING-F): **DECIDED 2026-05-27 → Option A (delta_o
 volatility `empty_confirmed`: re-scoped into the per-service status-calibration audit
 (`plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`) — do NOT reflexively confirm-empty; gate it
 behind genuine-absence confirmation.
+
+## Temporary states + their canonical follow-up plans
+
+| Temporary state | Follow-up plan / action |
+| --------------- | ----------------------- |
+| BITGET-SPOT instruments silently skipped (no 4h delta_one source) — no manifest row emitted | MTF orchestrator `process_instrument` must emit `empty_confirmed(NO_INPUT_AVAILABLE)` when `_load_and_join` returns None. Tracks as §6A violation. Follow-up: `features_and_ml_master` Phase 3 (honest-absence recording for mtf). |
 
 ## Notes / cross-refs
 
