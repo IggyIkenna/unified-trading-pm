@@ -49,6 +49,9 @@ Feeds sports analytics dashboards, match prediction panels, betting insight UIs,
 --providers <csv>         Comma-separated providers (default: api_football,footystats,understat,odds_api)
 --tables <csv>            Comma-separated table names (default: all)
 --bucket <name>           GCS bucket (default: features-sports-{project_id})
+                            # 🔎 SPORTS-CANON ALIGNMENT (2026-06-01): canonical bucket is features-sports-prd-{project_id}
+                            # (env-tiered). The no-env features-sports-{project_id} bucket is EMPTY and will be deleted.
+                            # Use resolve_bucket_name(kind="features-sports", asset_group="sports") at runtime.
 --secret-name <name>      Secret Manager secret name override
 --skip-fetch              Skip fetch, only run write step (batch only)
 --subscription-id <id>    PubSub subscription (live only, default: sports-odds-ready)
