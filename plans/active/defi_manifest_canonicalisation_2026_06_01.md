@@ -174,8 +174,13 @@ What to verify/wire (B0 corrected scope):
       point data-status at the dedicated indexes.
 - [ ] [DATA] P2. C6 Pyth ~5-week backfill (2026-04-15→present, Hermes API) on a VM. **GATED on C0/C-GREEN** (backfill
       into the canonical env-split/`pipeline_mode`/`asset_group=` structure, never the legacy layout).
-- [ ] [DATA] P2. C7 pre-launch reason relabel for young venues (PACIFICA/ASTER/ETHERFI/LIDO/MARINADE pre-launch) — same
-      walk as C2–C4.
+- [~] [DATA] P2. C7 reason relabel. **Chain-genesis portion: script ready + proven** —
+      `plans/audit/results/defi_chain_genesis_relabel_migration_2026_06_01.py` (snapshot-protected, idempotent,
+      `get_chain_genesis_date`-driven). Dry-run across all dedicated buckets: oracle ✅ done (C1, 728 rows); **lst-rates 75
+      rows (SOLANA pre-2020-03-16) pending** — apply kept failing on flaky LOCAL GCS DNS (lst-rates/lending-indices time
+      out); lending/perp/dex already clean on chain-genesis. **Run this on a VM in asia-northeast1** (stable in-region
+      network) to land lst-rates. **Pre-VENUE-launch portion** (PACIFICA/ASTER/ETHERFI/LIDO/MARINADE pre-launch) stays
+      blocked on A2a (`DEFI_VENUE_LAUNCH_DATES` populated) — bundle into the C2–C4 walk.
 - [ ] [DATA] P1. C8 fill manifest under-enumeration: UAC declares 90 defi venue-keys but manifest enumerated only lst
       14/22, lending 6/21, perp 5/8; genuine absentees DRIFT-SOLANA (Solana MVP), FRAX, MORPHO, FLUID. parent_epic:
       defi_master.
