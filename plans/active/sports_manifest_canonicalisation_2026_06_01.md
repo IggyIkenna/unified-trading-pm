@@ -208,8 +208,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       the no-fixture/off-season/out-of-window/uncovered-league cells the C-reasons rider must relabel to typed UAC
       reasons via the coverage oracle. (My generic tool scores CF-5 "GREEN=non-blank", but blanket SOURCE_RETURNED_ZERO
       on sports IS the mislabel — treat CF-5 RED until the oracle relabel lands.)
-- [x] ✅ [DATA] P0. **0 legacy-only cells confirmed** (legacy 32,755 · canonical 32,869 · overlap 32,755) — sports DATA
-      is complete; the walk is FORM-only (v9 + partition + source + typed reasons), no data-loss-gap copy needed.
+- [x] ✅ [DATA] P0. ~~**0 legacy-only cells confirmed**~~ **CORRECTED 2026-06-01 (sports-slot, operator "did we check
+      ALL buckets" review)**: the "0 legacy-only / verify-only" claim was **MDPS-ONLY** (`market-data-tick-sports`
+      legacy: 32,755 cells, overlap 32,755, 0 legacy-only ✓). It was **NEVER true for the instruments-store surface** —
+      the legacy no-env `instruments-store-sports-central-element-323112` (which I had NOT diffed) has **316 LEGACY-ONLY
+      cells MISSING from prd** (`2018-*, '', ODDS|PREDICTIONS` — early reference data). Deleting that legacy bucket
+      without migrating these = permanent data loss — the exact DeFi/TradFi "missed bucket with real data" trap. ⇒ sports
+      is **NOT FORM-only**; the instruments-store walk MUST diff+migrate legacy→prd (the 316 cells + any
+      sports_reference{,_v1_archive,_v2} objects not in prd) BEFORE E8. See § "FULL sports bucket inventory" below.
 - [x] ✅ [DATA] P0. Object-path scheme (sports slot reconfirm, 2026-06-01 — direct `gcloud ls` probe):
       MDPS-prd `processed/by_date/day=/data_type=/league_id=/timeframe=/` + `raw_tick_data/by_date/day=…/` (deeper hive)
       — has `day=`/`data_type=`/`league_id=`/`timeframe=` hive BUT **no `asset_group=` and no `pipeline_mode=` segment**
@@ -249,6 +255,64 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `sports_reference/{by_date,fixtures,footystats_league_ids,mappings}/` + `sports_reference_v1_archive/` + a BARE
       `day=YYYY-MM-DD/venue=…/{uuid}.parquet` tree + `instrument_availability/` + `availability_index/`. The migrator is
       layout-dispatching across ALL of these (slot-2 DeFi "audit ALL layouts" lesson) — a single-tree walk under-migrates.
+
+## FULL sports bucket inventory + decommission scope (sports-slot 2026-06-01 — operator "delete EVERY other sports bucket; did we miss any?" review)
+
+> The end-state is a SINGLE SSOT: every legacy/duplicate sports bucket DELETED. So we must enumerate EVERY sports
+> bucket + classify keep/migrate/delete BEFORE any delete (the DeFi/TradFi "missed-bucket-with-real-data" trap). `gcloud
+> storage ls | grep -i sport` (central-element-323112) returned **~35 sports buckets**, NOT the 2 surfaces the plan
+> originally scoped:
+
+| Bucket family | env variants | data state (2026-06-01 probe) | disposition |
+| --- | --- | --- | --- |
+| `market-data-tick-sports` | no-env(legacy) · prd · dev · stg · test | MDPS odds; prd 786k rows; legacy 0 legacy-only ✓ | **migrate→prd FORM; delete legacy no-env + test after** |
+| `instruments-store-sports` | no-env(legacy) · prd · dev · stg · test | reference; prd 2.68M; **legacy no-env has 316 LEGACY-ONLY cells + full sports_reference{,_v1_archive,_v2}** | **migrate legacy→prd (data-loss gate!) then delete legacy no-env + test** |
+| `features-{sports,delta-one,mtf,volatility,xinstrument}-sports` | no-env · prd · dev · stg | **ALL EMPTY (idx=0, no objects)** — confirmed, no data run | delete empty legacy + keep canonical prd as future write target (no migration) |
+| `risk-store-sports` / `risk-store-*-sports` / `positions-store-*-sports` / `pnl-store-*-sports` | various | downstream store buckets — NOT YET PROBED | **TODO: probe + classify before any sports-bucket-decommission sweep** |
+
+- [ ] [DATA] P0. **Migrate the legacy no-env `instruments-store-sports` → prd BEFORE E8** (data-loss gate): 316
+      legacy-only `(2018-*, '', ODDS|PREDICTIONS)` cells + reconcile its `sports_reference` / `sports_reference_v1_archive`
+      / `sports_reference_v2` / `day=/venue=` / `instrument_availability` trees against prd (compute legacy-only AND
+      canon-only — union, never copy-bigger-into-smaller). The migrator's `--surface instruments` MUST take a
+      `--legacy-bucket` and walk BOTH. (Mirror the MDPS prd-vs-legacy reconcile.)
+- [ ] [DATA] P1. **Probe + classify the store buckets** (`risk-store-sports*`, `positions-store-*-sports`,
+      `pnl-store-*-sports`) for data before they enter any sports-bucket-decommission sweep — empty→delete-legacy,
+      non-empty→owner + canonicalisation path. Do NOT let `bucket_name_ssot…` L6 delete a non-empty store bucket.
+- [ ] [DATA] P1. **Schema spot-check across dual-path same-data_type shards** (operator directive — pick union/best of
+      both): where the same `(date, league, data_type)` exists in two layouts — MDPS prd(`category=`) vs legacy
+      (`asset_group=`); instruments `sports_reference` vs `sports_reference_v2` vs `_v1_archive`; prd vs legacy-no-env —
+      sample-compare parquet SCHEMAS + row counts per shard; if the "winner" has fewer cols/rows, switch dedup to
+      keep-larger / column-union (CROSS-AG LESSON #5/#8). Capture the per-tree schema diff before the walk picks a winner.
+
+### KEYSTONE redesign — FIXTURES are the truth set (operator directive 2026-06-01)
+
+> Operator: "fixtures should be the truth set… sports is derived data from instruments; everything per-fixture should use
+> the API-Football fixtures ALREADY IN cloud storage as canonical, WITHOUT re-querying." This SUPERSEDES the
+> season-window approach for the no-fixture determination (season-window can't catch in-season no-match days, and fails
+> on provider-suffixed/cup leagues that don't resolve via `get_league`).
+
+- [ ] [DATA] P0. **Rebuild keystone: join the instruments-store `FIXTURES` truthset (API-Football, in GCS) for the
+      no-fixture relabel — BOTH surfaces.** For every empty `(league_id, date, per-fixture-data_type)` cell: if NO
+      fixture exists in the FIXTURES truthset for that (league, date) → `EXPECTED_NO_FIXTURE`; else (fixture existed but
+      this derived shard empty) → `SOURCE_RETURNED_ZERO` / appropriate reason. Keep season-window only for
+      `PRE_SEASON`/`POST_SEASON` framing. Read the FIXTURES parquets from `instruments-store-sports-prd` (do NOT
+      re-query API-Football). This fixes BOTH P1 refinements at once: (a) MDPS in-season no-match days, (b) the
+      provider-suffixed/cup leagues (`SCOTTISH_LEAGUE_CUP_185` etc.) that don't resolve via the registry — the truthset
+      is keyed by the SAME league_id as the manifest, so resolution is N/A.
+- [x] ✅ [DATA] P1. **"15,700 unresolved leagues" DIAGNOSED**: it is NOT 15k unique leagues — it is **ONE league**
+      (`SCOTTISH_LEAGUE_CUP_185`, API-Football league id 185) × **2,579 unique dates** × 8 per-fixture data_types
+      (FIXTURES/FIXTURE_EVENTS/FIXTURE_LINEUPS/FIXTURE_STATS/INJURIES/LEAGUES/PLAYER_STATS/STANDINGS) = 15,702 rows
+      (15,609 empty / 93 captured). It is a **CUP** that plays a handful of days/year → ~2,500 of those days are
+      genuinely no-fixture (→ `EXPECTED_NO_FIXTURE` once the FIXTURES-truthset join lands). The `_185` is the raw
+      API-Football provider id — the league_id was **never canonicalised** (CF-7 write-path gap: 278,268 manifest rows
+      carry provider-id-suffixed league_ids). Two fixes: (1) FIXTURES-truthset relabel (above) resolves the empties
+      regardless of canon; (2) **CF-7 league-id canonicalisation** todo below for the writer + migrator.
+- [ ] [DATA] P1. **CF-7 league_id canonicalisation** (writer + migrator): 278,268 instruments-store rows carry
+      provider-id-suffixed league_ids (`SCOTTISH_LEAGUE_CUP_185`, etc.) instead of canonical keys. Diagnose registry-gap
+      (add to UAC `provider_league_ids`) vs writer-not-canonicalising; normalise in the migrator before dedup +
+      fix the instruments-service writer so future rows are canonical. ALSO: `data_type=LEAGUES`/`TEAMS`/`VENUES` are
+      slow-moving REFERENCE data daily-sharded with per-day empties (operator: "leagues are fixed — why daily?") —
+      capture whether reference data_types should be snapshot-not-daily (data-model question → instruments-service).
 
 ### C — single-walk (v9 + partition + typed reasons + source path→column + canonical verify)
 
@@ -299,7 +363,10 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       locally if scope is small (P0 decides).
       **SCRIPTS READY** — `migrate_sports_canonical_v9.py` (E2) + `rebuild_sports_manifest_v9.py` (E5/E6) at market-tick-data-service@eb5eaad2.
       Dry-run verified 2026-06-01: MDPS prd raw 70 objects + candles 50 + legacy 140 = 260 planned for 3-day window (all `category=`→`asset_group=`, pipeline_mode= inserted). VM execution pending E3 drain.
-- [x] ✅ [DATA] P0. C-reasons RIDER (the keystone): relabel every blank / mislabeled empty row to the correct typed UAC
+- [ ] [DATA] P0. C-reasons RIDER (the keystone) — **PARTIAL: composite season/deprecated/free-text relabel SHIPPED
+      (instruments 368k), but NO-FIXTURE relabel via the FIXTURES truthset is still owed (operator directive) → MDPS
+      still relabels 0. Re-flip only after the truthset join (§ KEYSTONE redesign P0) lands.** Original intent:
+      relabel every blank / mislabeled empty row to the correct typed UAC
       reason via the coverage oracle (`clip_dates_to_source_coverage` / `is_in_known_gap` / season / transfer-window /
       fixture-status / league-coverage) — the table in § Sports honest-absence. Snapshot-protected, idempotent,
       oracle-driven (never re-derived per consumer).
@@ -364,7 +431,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       present). — market-tick-data-service@1036de20 | `migrate_sports_canonical_v9.py` (new) layout-aware: MDPS raw+candle, instruments-store 5 trees, CF-7 normalise, ThreadPoolExecutor + gcs_copy_object, dry-run default
 - [ ] [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
-- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 8-step classifier shipped + dry-run verified on both surfaces.
+- [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 8-step classifier shipped (instruments 368k relabels)
+      but **NO-FIXTURE via FIXTURES truthset still owed** (operator directive) → MDPS relabels 0. Re-flip after truthset join.
       — market-tick-data-service@680dff5f | dry-run: instruments 368,036 relabels (288k season + 57k deprecated + 23k free-text); MDPS 0 relabels (correct — all MDPS rows are in-season; SOURCE_RETURNED_ZERO is the accurate reason for within-season zero-odds). League_id resolution: 100% canonical (MDPS 33/33 resolved; instruments 94/96 resolved; 2 unresolved logged with tally). QG GREEN. VM run pending E3 drain + E4 VM gate per plan sequencing.
 - [x] ✅ [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` +
       `available_at` → consolidator → v9. ~~Also fix the writer to emit typed reasons going forward (CF-5 write-path) — DONE (C-writer@instruments-service@608e7ca7).~~
