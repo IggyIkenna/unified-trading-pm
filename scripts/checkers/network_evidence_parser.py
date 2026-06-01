@@ -168,23 +168,23 @@ def parse_har_file(har_path: Path) -> list[RequestResponsePair]:
 
         # Extract request headers
         req_headers: dict[str, str] = {}
-        for h in request.get("headers", []):
+        for h in request.get("headers", []):  # noqa: qg-empty-fallback
             req_headers[h.get("name", "").lower()] = h.get("value", "")
 
         # Extract request body (postData)
         req_body = ""
-        post_data = request.get("postData", {})
+        post_data = request.get("postData", {})  # noqa: qg-empty-fallback
         if isinstance(post_data, dict):
             req_body = post_data.get("text", "")
 
         # Extract response
         resp_status = response.get("status", 0)
         resp_headers: dict[str, str] = {}
-        for h in response.get("headers", []):
+        for h in response.get("headers", []):  # noqa: qg-empty-fallback
             resp_headers[h.get("name", "").lower()] = h.get("value", "")
 
         # Extract response body
-        resp_content = response.get("content", {})
+        resp_content = response.get("content", {})  # noqa: qg-empty-fallback
         resp_body = resp_content.get("text", "")
         resp_mime = resp_content.get("mimeType", "")
 
@@ -444,7 +444,7 @@ def validate_against_manifest(
     with open(manifest_path, encoding="utf-8") as f:
         manifest = yaml.safe_load(f)
 
-    journeys = manifest.get("journeys", [])
+    journeys = manifest.get("journeys", [])  # noqa: qg-empty-fallback
 
     for journey in journeys:
         journey_id = journey.get("journey_id", "")

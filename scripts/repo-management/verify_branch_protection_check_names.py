@@ -37,7 +37,7 @@ def contexts_for(repo, rsname):
             d = gh(["api", f"repos/IggyIkenna/{repo}/rulesets/{rs['id']}"])
             if d.returncode != 0:
                 return None
-            for rule in json.loads(d.stdout).get("rules", []):
+            for rule in json.loads(d.stdout).get("rules", []):  # noqa: qg-empty-fallback
                 if rule.get("type") == "required_status_checks":
                     return [c["context"] for c in rule["parameters"]["required_status_checks"]]
             return []

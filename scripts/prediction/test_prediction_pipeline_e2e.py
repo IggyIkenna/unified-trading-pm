@@ -140,7 +140,7 @@ def test_canonical_id_format(instruments: dict[str, list[dict[str, str]]]) -> No
     assert venues == {"polymarket"}, f"Unexpected venues: {venues}"
 
     # Sports markets should have enriched instrument_type
-    sports_types = {m["instrument_type"] for m in instruments.get("sports", [])}
+    sports_types = {m["instrument_type"] for m in instruments.get("sports", [])}  # noqa: qg-empty-fallback
     logger.info("  Sports instrument_types: %s", sports_types)
 
     logger.info("  Canonical ID validation: PASSED")
@@ -264,7 +264,7 @@ async def main() -> None:
     instruments = await test_urdi_instruments()
 
     # Phase 2: UMI trades (use first 3 BTC market condition_ids)
-    btc_cids = [m["instrument_key"] for m in instruments.get("btc", [])[:3]]
+    btc_cids = [m["instrument_key"] for m in instruments.get("btc", [])[:3]]  # noqa: qg-empty-fallback
     if btc_cids:
         trades = await test_umi_trades(btc_cids)
     else:

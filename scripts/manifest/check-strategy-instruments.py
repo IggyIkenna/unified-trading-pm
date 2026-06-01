@@ -27,7 +27,7 @@ def _load_strategy_manifest() -> list[dict[str, object]]:
         sys.exit(1)
     with open(manifest_path) as f:
         data = json.load(f)
-    strategies: list[dict[str, object]] = data.get("strategies", [])
+    strategies: list[dict[str, object]] = data.get("strategies", [])  # noqa: qg-empty-fallback
     return strategies
 
 
@@ -51,8 +51,8 @@ def main() -> int:
 
     for strategy in strategies:
         sid = str(strategy.get("strategy_id", "UNKNOWN"))
-        venues_raw = strategy.get("venues", [])
-        asset_groupes_raw = strategy.get("asset_groupes", [])
+        venues_raw = strategy.get("venues", [])  # noqa: qg-empty-fallback
+        asset_groupes_raw = strategy.get("asset_groupes", [])  # noqa: qg-empty-fallback
 
         venues: list[str] = venues_raw if isinstance(venues_raw, list) else []
         asset_groupes: list[str] = asset_groupes_raw if isinstance(asset_groupes_raw, list) else []

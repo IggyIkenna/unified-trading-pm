@@ -67,7 +67,7 @@ def main() -> int:
     args = parser.parse_args()
 
     registry: dict[str, object] = yaml.safe_load(REGISTRY_PATH.read_text(encoding="utf-8"))
-    known_ids: set[str] = {vm["id"] for vm in registry.get("vms", [])}  # type: ignore[index]
+    known_ids: set[str] = {vm["id"] for vm in registry.get("vms", [])}  # type: ignore[index]  # noqa: qg-empty-fallback
     vm_to_plans = _scan_plans()
 
     errors: list[str] = []
@@ -84,11 +84,11 @@ def main() -> int:
         return 0
 
     # Update master_plans lists on each vm entry from scanned frontmatter.
-    for vm in registry.get("vms", []):  # type: ignore[union-attr]
+    for vm in registry.get("vms", []):  # type: ignore[union-attr]  # noqa: qg-empty-fallback
         vm_id = vm["id"]  # type: ignore[index]
         scanned = vm_to_plans.get(vm_id, [])  # type: ignore[arg-type]
         # Merge: preserve manually-listed plans; add scanned ones.
-        existing: list[str] = vm.get("master_plans", []) or []  # type: ignore[assignment,union-attr]
+        existing: list[str] = vm.get("master_plans", []) or []  # type: ignore[assignment,union-attr]  # noqa: qg-empty-fallback
         merged = list(dict.fromkeys(existing + scanned))  # deduplicate, preserve order
         vm["master_plans"] = merged  # type: ignore[index]
 

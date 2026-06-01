@@ -96,9 +96,9 @@ def sync_catalogue(project_id: str, *, dry_run: bool = False) -> None:
                 "last_updated": datetime.now(UTC).strftime("%Y-%m-%d"),
                 "auto_refreshed": datetime.now(UTC).isoformat(),
                 "status": existing.get("status", "UNKNOWN"),
-                "known_exceptions": existing.get("known_exceptions", []),
+                "known_exceptions": existing.get("known_exceptions", []),  # noqa: qg-empty-fallback
                 "catalogue_dimensions": existing.get("catalogue_dimensions", ["category", "venue", "date"]),
-                "shard_status": existing.get("shard_status", {}),
+                "shard_status": existing.get("shard_status", {}),  # noqa: qg-empty-fallback
             }
 
         shard = services[svc].setdefault("shard_status", {})

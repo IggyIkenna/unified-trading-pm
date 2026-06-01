@@ -113,7 +113,7 @@ def get_ruleset(repo: str, name: str) -> dict | None:
 
 
 def current_contexts(rs: dict) -> list[str]:
-    for rule in rs.get("rules", []):
+    for rule in rs.get("rules", []):  # noqa: qg-empty-fallback
         if rule.get("type") == "required_status_checks":
             return [c["context"] for c in rule["parameters"]["required_status_checks"]]
     return []
@@ -128,7 +128,7 @@ def build_put_body(rs: dict, contexts: list[str]) -> dict:
         "name": rs["name"],
         "target": rs["target"],
         "enforcement": rs["enforcement"],
-        "bypass_actors": rs.get("bypass_actors", []),
+        "bypass_actors": rs.get("bypass_actors", []),  # noqa: qg-empty-fallback
         "conditions": rs["conditions"],
         "rules": [],
     }

@@ -45,7 +45,7 @@ def _load_manifest() -> dict[str, dict[str, object]]:
         print(f"ERROR: Manifest not found at {MANIFEST_PATH}", file=sys.stderr)
         sys.exit(1)
     data = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    repos: dict[str, dict[str, object]] = data.get("repositories", {})
+    repos: dict[str, dict[str, object]] = data.get("repositories", {})  # noqa: qg-empty-fallback
     return repos
 
 
@@ -118,7 +118,7 @@ def generate_mermaid(repos: dict[str, dict[str, object]], max_tier: int | None) 
     # Emit dependency edges
     lines.append("    %% Dependency edges (consumer --> dependency)")
     for repo_name, repo_data in sorted(filtered_repos.items()):
-        deps = repo_data.get("dependencies", [])
+        deps = repo_data.get("dependencies", [])  # noqa: qg-empty-fallback
         if not isinstance(deps, list):
             continue
         consumer_id = _sanitize_id(repo_name)

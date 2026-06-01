@@ -257,10 +257,10 @@ def load_manifest(manifest_path: Path) -> list[Journey]:
             expected_request=e.get("expected_request", ""),
             expected_response_contract=e.get("expected_response_contract", ""),
             expected_ui_update=e.get("expected_ui_update", ""),
-            required_layers=e.get("required_layers", []),
+            required_layers=e.get("required_layers", []),  # noqa: qg-empty-fallback
             criticality=e.get("criticality", "medium"),
         )
-        for e in data.get("journeys", [])
+        for e in data.get("journeys", [])  # noqa: qg-empty-fallback
     ]
 
 

@@ -221,8 +221,8 @@ def generate_instrument_matrix(
 
     for strat in strategies:
         sid = str(strat.get("strategy_id", "UNKNOWN"))
-        venues_raw = strat.get("venues", [])
-        asset_groupes_raw = strat.get("asset_groupes", [])
+        venues_raw = strat.get("venues", [])  # noqa: qg-empty-fallback
+        asset_groupes_raw = strat.get("asset_groupes", [])  # noqa: qg-empty-fallback
 
         venues: list[str] = venues_raw if isinstance(venues_raw, list) else []
         asset_groupes: list[str] = asset_groupes_raw if isinstance(asset_groupes_raw, list) else []

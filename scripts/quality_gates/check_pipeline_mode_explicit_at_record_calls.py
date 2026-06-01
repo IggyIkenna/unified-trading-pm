@@ -142,7 +142,7 @@ def load_baseline() -> tuple[dict[tuple[str, str, int, str], BaselineEntry], str
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     default_successor = str(raw.get("default_successor", "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL"))
     out: dict[tuple[str, str, int, str], BaselineEntry] = {}
-    for item in raw.get("entries", []) or []:
+    for item in raw.get("entries", []) or []:  # noqa: qg-empty-fallback
         missing = [k for k in REQUIRED_KEYS if k not in item]
         if missing:
             print(

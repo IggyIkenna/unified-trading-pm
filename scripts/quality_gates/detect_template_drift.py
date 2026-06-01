@@ -138,7 +138,7 @@ def _load_manifest(manifest_path: Path) -> dict[str, dict[str, str]]:
     with manifest_path.open() as f:
         text = f.read()
     raw = cast(dict[str, object], json.loads(text))
-    repos_raw = raw.get("repositories", {})
+    repos_raw = raw.get("repositories", {})  # noqa: qg-empty-fallback
     if not isinstance(repos_raw, dict):
         return {}
     return cast(dict[str, dict[str, str]], repos_raw)

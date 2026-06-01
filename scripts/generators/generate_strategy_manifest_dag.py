@@ -34,7 +34,7 @@ def main() -> int:
         return 1
 
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    strategies = manifest.get("strategies", [])
+    strategies = manifest.get("strategies", [])  # noqa: qg-empty-fallback
 
     if not strategies:
         print("WARNING: No strategies found in manifest", file=sys.stderr)
@@ -44,8 +44,8 @@ def main() -> int:
     all_asset_groupes: set[str] = set()
     all_venues: set[str] = set()
     for strat in strategies:
-        all_asset_groupes.update(strat.get("asset_groupes", []))
-        all_venues.update(strat.get("venues", []))
+        all_asset_groupes.update(strat.get("asset_groupes", []))  # noqa: qg-empty-fallback
+        all_venues.update(strat.get("venues", []))  # noqa: qg-empty-fallback
 
     lines: list[str] = []
     lines.append("graph LR")
@@ -83,7 +83,7 @@ def main() -> int:
     for strat in strategies:
         name = strat["name"]
         s_id = _sanitize_id(f"s_{name}")
-        for ac in strat.get("asset_groupes", []):
+        for ac in strat.get("asset_groupes", []):  # noqa: qg-empty-fallback
             ac_id = _sanitize_id(f"ac_{ac}")
             lines.append(f"    {ac_id} --> {s_id}")
     lines.append("")
@@ -93,7 +93,7 @@ def main() -> int:
     for strat in strategies:
         name = strat["name"]
         s_id = _sanitize_id(f"s_{name}")
-        for venue in strat.get("venues", []):
+        for venue in strat.get("venues", []):  # noqa: qg-empty-fallback
             v_id = _sanitize_id(f"v_{venue}")
             lines.append(f"    {s_id} --> {v_id}")
     lines.append("")

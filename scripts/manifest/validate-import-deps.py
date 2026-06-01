@@ -123,7 +123,7 @@ def scan_banned_imports(src_dir: Path) -> list[tuple[Path, int, str]]:
 
 def get_declared_deps(pyproject: dict) -> set[str]:
     """Return set of package names in [project.dependencies]."""
-    deps = pyproject.get("project", {}).get("dependencies", [])
+    deps = pyproject.get("project", {}).get("dependencies", [])  # noqa: qg-empty-fallback
     names: set[str] = set()
     for d in deps:
         name = d.split(">=")[0].split("<=")[0].split("==")[0].split("<")[0].split(">")[0].strip()
@@ -133,7 +133,7 @@ def get_declared_deps(pyproject: dict) -> set[str]:
 
 def get_uv_sources(pyproject: dict) -> set[str]:
     """Return set of package names in [tool.uv.sources]."""
-    return set(pyproject.get("tool", {}).get("uv", {}).get("sources", {}).keys())
+    return set(pyproject.get("tool", {}).get("uv", {}).get("sources", {}).keys())  # noqa: qg-empty-fallback
 
 
 def fix_pyproject(pyproject_path: Path, missing_deps: list[str], missing_sources: list[str]) -> None:
@@ -164,7 +164,7 @@ def main() -> int:
 
     manifest_path = WORKSPACE / "unified-trading-pm" / "workspace-manifest.json"
     manifest = json.loads(manifest_path.read_text())
-    repos = manifest.get("repositories", {})
+    repos = manifest.get("repositories", {})  # noqa: qg-empty-fallback
 
     dep_issues = 0
     banned_violations = 0

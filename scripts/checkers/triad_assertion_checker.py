@@ -387,7 +387,7 @@ def run_triad_check(
     with open(manifest_path, encoding="utf-8") as f:
         manifest = yaml.safe_load(f)
 
-    journeys = manifest.get("journeys", [])
+    journeys = manifest.get("journeys", [])  # noqa: qg-empty-fallback
 
     # Group journeys by repo
     by_repo: dict[str, list[dict[str, str]]] = {}

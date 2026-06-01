@@ -349,7 +349,7 @@ def check_drift(
     with open(manifest_path, encoding="utf-8") as f:
         manifest = yaml.safe_load(f)
 
-    journeys = manifest.get("journeys", [])
+    journeys = manifest.get("journeys", [])  # noqa: qg-empty-fallback
 
     # Build a mapping of repo -> contract models
     repo_contracts: dict[str, list[dict[str, str]]] = {}

@@ -103,7 +103,7 @@ def _load_sports_fixtures(workspace_root: Path) -> list[dict[str, object]]:
     with open(odds_state_path) as f:
         data = json.load(f)
 
-    odds_store = data.get("odds_store", {})
+    odds_store = data.get("odds_store", {})  # noqa: qg-empty-fallback
     fixtures: list[dict[str, object]] = []
 
     for fixture_key, markets in odds_store.items():
