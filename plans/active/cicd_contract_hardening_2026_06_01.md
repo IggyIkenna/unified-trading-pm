@@ -126,6 +126,32 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       repo's pyproject `path = "../<repo>"` editable deps (what `uv sync` actually resolves), manifest fallback for
       nodes lacking a pyproject. Validated via `--dry-run`: SIT=12, deployment-api=5, green repos
       (strategy/alerting) closures unchanged → regression-free for already-green repos.
+- [x] ✅ [SCRIPT] P0. **DURABLE FIX — reusable QG-v2 `clone_repo` default-branch fallback** —
+      `unified-trading-pm@3f0096405` (LDR). `.github/workflows/python-quality-gates-v2.yml`'s `clone_repo` fallback
+      chain ended at a hardcoded `git clone -b main`, so a dep repo with NO `main` branch failed with
+      `fatal: Remote branch main not found in upstream origin` (exit 128). `features-service`
+      (default=`live-defi-rollout`, no `main`) is in SIT's closure, so SIT's quality-gates-v2 died at the dep-clone step
+      before any test ran. Added a final fallback that clones the repo's DEFAULT branch (no `-b` → remote HEAD) after
+      trigger-branch + main both miss; preserves the no-silent-fail contract (genuine auth/missing-repo still exits 128).
+      Verified: SIT v2 run 26758570555 now clones + builds + installs `features-service` (failure moved downstream to a
+      real SIT-repo lint — see SIT fan-out todo). Affects EVERY repo whose closure includes a main-less dep.
+- [ ] [SCRIPT] P1. **FINDING (2026-06-01) — widespread WRONG v2 job-name on `main`.** Audit of all 17 repos' on-`main`
+      `quality-gates-v2.yml` shows 6 still carry the hand-copied `name: Quality Gates (alerting-service)`:
+      `batch-live-reconciliation-service`, `client-reporting-api`, `deployment-service`, `deployment-ui`,
+      `ibkr-gateway-infra`, `market-data-processing-service`. Their v2 runs therefore emit
+      `Quality Gates (alerting-service) / quality-gates-v2` — a context no repo-specific ruleset can correctly require.
+      NB **`deployment-service`** is pinned ruleset=v2 yet its on-`main` v2 emits the alerting-service context → its
+      `main` is latently blocked (required context never produced). Also `market-tick-data-service` + `strategy-service`
+      returned NO v2 file on `main` despite ruleset=v2 (single API read — re-verify; if true their `main` is blocked
+      too). The template (`@83f483069`) renders the correct name — rollout to each repo's `main`/`staging` is folded into
+      the per-repo migration below (right name is a prerequisite for the v2 re-pin).
+- [ ] [SCRIPT] P2. **FINDING (2026-06-01) — `load-gh-token.sh` prefers a STALE `.act-secrets` over authoritative SM.**
+      The repos-root `.act-secrets` held an EXPIRED fine-grained `GH_PAT` (was valid at the morning probe, 401 by
+      afternoon); `load-gh-token.sh` path-1 prefers `.act-secrets` and never validated freshness, so it exported the
+      dead token (gh-API 401 everywhere; git push still worked only because the remote is SSH). The fresh token is in
+      GCP SM `GH_PAT` (`gcloud secrets versions access latest --secret=GH_PAT --project=central-element-323112` → 200).
+      Fix options: (a) add a fast validity probe to `load-gh-token.sh` and fall through to SM on 401; (b) have
+      `generate-act-secrets.sh` refresh `.act-secrets` from SM on a cron / on bootstrap. — repo: unified-trading-pm.
 - [ ] [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
       currently fetches `GH_PAT` only for clone-time HTTPS; also export it as `GH_TOKEN`/`GITHUB_TOKEN` in the worker
       systemd env (or source `load-gh-token.sh` at worker start) so VM workers can edit workflows too. — repo:
@@ -166,11 +192,25 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
         `deployment-service market-tick-data-service strategy-service unified-api-contracts unified-trading-library`
         (BFS over pyprojects — the manifest deps were incomplete). Ruleset re-pointed to `…/quality-gates-v2`, v2 run
         **green**, enforcement active. (staging+LDR still to do — see handoff.)
-  - [ ] [SCRIPT] P1. **system-integration-tests** — v2 dep-install fails: `…metadata for alerting-service==0.1.0 @
-        editable+../alerting-service` (same editable-sibling-not-cloned class as deployment-api). Same fix via manifest
-        `dep_repos` / tag-pin. Then re-run → green → re-pin.
-  - [ ] [TEST] P1. **client-reporting-api** — coverage 69.0% < floor 70.0% (≈1% short). Add tests to clear the floor;
-        re-run v2 → green → re-pin ruleset.
+  - [ ] [LINT] P1. **system-integration-tests** — CORRECTED DIAGNOSIS 2026-06-01. The `metadata for alerting-service`
+        editable error was an OLD run; SIT main's `quality-gates-v2.yml` already carries the complete 12-repo closure
+        (incl `alerting-service` + `client-reporting-api`) and the correct job name. The real harness blocker was a
+        **clone failure**: `features-service` has NO `main` branch (default = `live-defi-rollout`), and the reusable
+        workflow's `clone_repo` fallback ended at hardcoded `git clone -b main` →
+        `fatal: Remote branch main not found` → exit 128. **FIXED** by the default-branch fallback in
+        `python-quality-gates-v2.yml` (`unified-trading-pm@3f0096405`) — verified: SIT v2 run 26758570555 now clones +
+        builds + installs `features-service`. **Remaining blocker = real SIT-repo lint**: `ruff` reports 64 errors in
+        `tests/smoke/*` and others — 28×RUF002 + 4×RUF003 (ambiguous unicode `×` in coverage-matrix docstrings),
+        11×UP043 (deprecated typing), 5×B905 (zip strict=), 2×C901 (complexity), plus autofixable F401/F841/I001/SIM*.
+        Next: `ruff check --fix` the autofixables, replace `×`→`x` (or per-file-ignore RUF002/003) in the docstrings,
+        `# noqa: C901` (test helpers) → green → re-pin (SIT main ruleset is already v2). Coverage floor may surface
+        after lint passes — check.
+  - [ ] [TEST] P1. **client-reporting-api** — UPDATED 2026-06-01: NOT pure-coverage. Latest v2 (run 26753231379) has a
+        **real test failure** `tests/unit/test_core_coverage.py::TestInvoiceState::test_compute_current_fees_for_all_seed_clients
+        - assert False` (8 sibling tests SKIP with "No backfilled client data present"), AND coverage 68.62% < 70%, AND
+        its on-`main` v2 carries the WRONG job name (`Quality Gates (alerting-service)` — see widespread-name finding
+        above). Fix = supply/seed the missing client fixture data so the skipped tests run (that both fixes the assert
+        and lifts coverage) + regenerate the v2 file from the template (correct name) → green → re-pin.
   - [ ] [TEST] P1. **batch-live-reconciliation-service** — coverage 78.2% < floor 80.0% (≈2% short). Add tests; re-run
         → green → re-pin. (NB: ci_canonical marks this ✅ but it's live-v1 + red — see reality-check banner there.)
   - [ ] [TEST] P2. **ibkr-gateway-infra** — (a) config bug: `MIN_COVERAGE=0 < system floor 70` in its quality-gates.sh —
