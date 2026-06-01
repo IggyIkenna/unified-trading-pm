@@ -28,7 +28,7 @@ doc:
 | Dimension                                                              | What it checks                                                                                                                                                                              | Section                                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | **Code ↔ codex correctness**                                           | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                   | [Checklist](#checklist) items (a)–(n)                                                                   |
-| **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(y) |
+| **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(z) |
 
 ### Archetypes / strategies in scope (operator's words → codebase archetype)
 
@@ -179,7 +179,7 @@ collapse them; a layer can be green while the one beneath it is broken.
 | **L2 — API faithfulness**                | Does the **data-status API query** honestly reflect the manifest — right numerator, IS∩UAC denominator, per-venue/chain breakdown?            | API coverage % ≠ a direct manifest aggregation; self-referential denominator; missing scope gate; no per-chain split                                                                                                                      | (w)                 |
 | **L3 — Pipeline coverage IS→…→features** | Is honest coverage **propagated up the chain** — IS universe → MTDS raw → MDPS processed → features-service derived — for defi/perp/on-chain? | A cell `captured` at MTDS (`lst_rates`/`perp_funding`) but the derived feature (`staking_apy_bps`/`funding_rate_apy_bps`/`basis_bps`) is absent in `features-onchain-defi-*` / `features-delta-one-*` over the same window                | (o) + (u) + (y)     |
 
-The per-strategy matrix (Step 1) + items (o)–(y) below are the concrete checks; (x)/(y) are the L1/L3 integrity checks
+The per-strategy matrix (Step 1) + items (o)–(z) below are the concrete checks; (x)/(y) are the L1/L3 integrity checks
 added for this framing. **The result MUST report all three layers separately** — "the API says 90%" is not an answer to
 "is the manifest complete?" nor to "did it reach features?".
 
@@ -426,9 +426,24 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       MDPS-processed-where-applicable → feature-emitted) so the stage that drops the cell is named. Composes with
       `features_and_ml_master_audit_instructions.md`.
 
+- [ ] (z) **`expected_unattempted` materialised + manifest-annotates-once principle (codified 2026-06-01)**: the
+      manifest MUST carry the full 4-state — `captured` / `empty_confirmed[reason]` / `attempted_failed` /
+      **`expected_unattempted`** — so a cell that IS-lists + is post-genesis/post-launch but has **no data** appears in
+      the denominator (not silently absent). Verify: (1) `expected_unattempted` is in the UAC `CaptureStatus` closed
+      set; (2) the manifest consolidator (`unified_trading_library/manifest_consolidator.py`) materialises owed cells
+      from the `expected_coverage()` oracle at consolidation (index-layer only, no placeholder parquets); (3) read the
+      actual manifest —
+      `% captured = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`, and
+      `expected_unattempted` count > 0 where data is owed (2026-06-01: it was **never materialised** — 0 source hits,
+      `expected=True` on every present row = useless). **Consumers (data-status summary + drilldown + strategy/features
+      preflight) READ this 4-state; none re-derives the expected set.** A consumer computing its own denominator (the
+      `coverage-summary` self-referential bug, the drilldown 3-state) = a review-blocking divergence. The audit confirms
+      all consumers read the same canonical manifest 4-state. SSOT:
+      `plans/active/defi_manifest_canonicalisation_2026_06_01.md`.
+
 ### Step 3 — Output: classify every gap (cleanup vs download), then backlog it
 
-Every RED/AMBER cell from items (o)–(y) becomes an explicit, actionable backlog line — **not** a "deferred" note. **Most
+Every RED/AMBER cell from items (o)–(z) becomes an explicit, actionable backlog line — **not** a "deferred" note. **Most
 DeFi "gaps" are data-in-wrong-form (the data already exists), NOT missing data — classify before you write "download".**
 Per `External Data Is Always Available` + `Data Pipeline Correctness Is The Heartbeat`, each cell is exactly one of:
 
@@ -474,7 +489,7 @@ plan under `parent_epic: defi_master` immediately (Capture Discoveries HARD RULE
 ## Success Criteria
 
 - All code-correctness checklist items GREEN (incl. code↔codex drift items j–n)
-- **All strategy data-coverage items (o)–(y) GREEN** for each in-scope archetype — every matrix cell `captured` over its
+- **All strategy data-coverage items (o)–(z) GREEN** for each in-scope archetype — every matrix cell `captured` over its
   required window at v9, or a verified typed `empty_confirmed`, or a tracked download-backlog line (no silent gap)
 - **Honest-coverage totality breakdown (item v) rendered in full** — both per data_type × venue (complete CeFi perp
   universe + on-chain perps + LST/lending/DEX/oracle venues) and per data_type × chain (`ChainKind`), every expected
