@@ -111,6 +111,26 @@ absence is by-design, not a fetch error. See `honest-absence-downstream-handling
 - **MTDS handler**: `market_tick_data_service/cli/handlers/solana_defi_handler.py` — `_backfill_drift_s3_date()` derives
   S3 URL from IS catalogue, checks `_DRIFT_S3_ARCHIVE_END`
 
+### Drift Velocity Data API as new primary historical source (2026-06-01)
+
+> **Added 2026-06-01** from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1
+> (DriftV2HistoricalIngester shipped at mtds@0f70f376). Full SSOT:
+> `codex/04-architecture/drift-v2-data-sources.md`.
+
+The S3 archive (`drift-historical-data-v2`) covers Drift V2 launch (2022-11-04) → 2025-01-08. Post-2025-01-08, the
+**Drift Velocity Data API** (`data.api.drift.trade`) is the canonical primary historical source for funding rates,
+trades, swaps, and derived AMM-level data (mark/oracle TWAP, open interest). Free tier; no auth; per-day endpoints
+paginated via `?page=N` (1-indexed).
+
+The IS adapter `instruments-service/instruments_service/reference_data/adapters/defi/drift.py` SHOULD expose a
+parallel `_DRIFT_VELOCITY_API_URL_TEMPLATE` alongside `_DRIFT_S3_ARCHIVE_URL_TEMPLATE` so MTDS handlers derive the
+Velocity API URL from IS catalogue, never hardcode (per the IS→MTDS contract). **Follow-up tracked in
+`plans/active/defi_manifest_canonicalisation_2026_06_01.md` § G**: verify whether the template was actually coded
+into the IS adapter source or only documented in the archived MVP plan; if missing, file P3 follow-up. The
+new MTDS handler is the `DriftV2HistoricalIngester` (script-mode) in
+`market_tick_data_service/scripts/backfill_drift_v2_historical.py` — flow: IS catalogue read → Velocity API GET →
+schema translation → manifest emission per shard.
+
 ## Current state + pipeline migration context
 
 > **[DELTA 2026-05-22]** **Current state:** IS→MTDS contract is codified and QG-enforced (STEP 5.70). The contract

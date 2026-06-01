@@ -322,6 +322,37 @@ These data_types are emitted by code but were absent from the 14 documented abov
 | `dex_pool_swaps`                                                                | (UAC schema only)              | —                               | —                                                                                        | UAC declares a `(defi, pool, dex_pool_swaps)` schema; code uses `dex_swaps` + `dex_pool_state` instead                                                                                                    | Schema-only                     |
 | `restaking_rewards` / `cross_chain_restaking_routes` / `restaking_operator_set` | —                              | —                               | SOLAYER/PICASSO/CAMBRIAN PROTOCOL_CAPABILITIES                                           | declared in UAC but **no MTDS collection + venues absent from `ALL_DEFI_VENUES`** (see findings D-new)                                                                                                    | Declared, not collected         |
 
+## Solana Basis MVP data types (added 2026-06-01)
+
+> Added 2026-06-01 from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1+2.
+> Canonical UAC contracts: uac@f26097f9 (7 new types) + uac@9ad04ab0 (`InstrumentType.DEX_POOL`).
+> SSOT: `codex/04-architecture/drift-v2-data-sources.md`.
+
+| data_type            | CLI / handler                                                            | Source(s)                                                                          | Key columns                                                                                                                  | Status     |
+| -------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `perp_trades`        | `backfill_drift_v2_historical.py --data-types trades` / `DriftV2HistoricalIngester` | Drift Velocity Data API `/market/{symbol}/trades/{Y}/{M}/{D}?format=csv` (CSV)     | timestamp, side, base_amount_filled, quote_amount_filled, oracle_price, market_index                                         | Production |
+| `perp_mark_oracle`   | (derived from `perp_funding` columns)                                   | Drift Velocity Data API `perp_funding` row `oraclePriceTwap` / `markPriceTwap`     | timestamp, market, oracle_price_twap, mark_price_twap                                                                        | Production |
+| `perp_open_interest` | (derived from `perp_funding` columns)                                   | Drift Velocity Data API `perp_funding` row `baseAssetAmountWithAmm`                | timestamp, market, open_interest_base (signed)                                                                               | Production |
+| `dex_pool_state`     | `backfill_solana_dex_state.py` / `OrcaWhirlpoolStateIngester` + `RaydiumClassicAmmIngester` | On-chain RPC via Alchemy archive (`getAccountInfo` at historical slot)             | timestamp, pool_address, sqrt_price_x96, liquidity, tick_current_index, fee_rate, price (Orca Whirlpool); reserveA/reserveB/fee (Raydium classic) | Production |
+| `dex_orderbook`      | `backfill_solana_dex_state.py` (Phoenix branch — **stub at archive time**) | On-chain RPC of Phoenix market account state                                       | timestamp, market_address, bid_levels, ask_levels                                                                            | Stub (Phoenix decode P3 nice-to-have, tracked in `defi_manifest_canonicalisation_2026_06_01.md` § G) |
+| `dex_quote`          | `JupiterQuoteIngester`                                                  | `https://quote-api.jup.ag/v6/quote?inputMint=...&outputMint=...&amount=...` (HTTP) | timestamp, input_mint, output_mint, input_amount, output_amount, route_json, fee_components                                  | Production |
+| `dex_trades`         | (Solana spot DEX per-swap; AMM venues)                                  | On-chain RPC `getSignaturesForAddress(<pool_pda>)` filtered to swap instructions   | timestamp, pool_address, side, amount_in, amount_out, signer                                                                 | Production (Orca/Raydium); Phoenix stub |
+
+**Instrument-type mapping**: all 7 types use `InstrumentType.DEX_POOL` (uac@9ad04ab0) for AMM-state /
+orderbook / quote rows on Solana DEX venues; `InstrumentType.PERPETUAL` for the 3 perp_* types on DRIFT.
+
+**Output paths** (per CLAUDE.md bucket-name SSOT + asset-group vocabulary):
+
+```
+gs://market-data-tick-defi-prd-${PROJECT_ID}/raw_tick_data/by_date/day={Y-M-D}/
+    pipeline_mode={batch|live}/asset_group=defi/venue={DRIFT|ORCA|RAYDIUM|PHOENIX|JUPITER}/
+    chain=SOLANA/instrument_type={perpetual|dex_pool}/data_type={...}/ticks.parquet
+```
+
+The `pipeline_mode=` partition is the canonical batch/live distinguisher; the `--live --continuous` flag on the
+backfill scripts is the concrete realization of CLAUDE.md "Live = batch (CRITICAL)" — same script, same handler,
+same partition path, same schema.
+
 ## Protocol Coverage Matrix
 
 | Protocol         | Chain(s)                           | Data Types                                                            |
