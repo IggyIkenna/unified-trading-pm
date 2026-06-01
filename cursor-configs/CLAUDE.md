@@ -143,10 +143,11 @@ Manifest v5+: 4-state `capture_status` (`captured`/`empty_confirmed`/`attempted_
 categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2) unexpected gap →
 `DependencyError(fail_fast=True)`, (3) schema-drift bug → RAISE LOUD. Never emit silent placeholders.
 
-**Current canonical manifest schema = v9, workspace-wide (all asset groups, NOT tradfi-only).** `MANIFEST_SCHEMA_VERSION`
-8→9; each asset group's `_index` migrates 8→9 (adds `source`/`asset_group`/`pipeline_mode` cols) bundled into its single
-canonicalisation walk. Trust the actual `schema_version` distribution, never the constant. SSOT: the per-asset-group
-`*_manifest_canonicalisation_2026_06_01.md` plans coordinated by `defi_manifest_canonicalisation_2026_06_01.md`.
+**Current canonical manifest schema = v9, workspace-wide (all asset groups, NOT tradfi-only).**
+`MANIFEST_SCHEMA_VERSION` 8→9; each asset group's `_index` migrates 8→9 (adds `source`/`asset_group`/`pipeline_mode`
+cols) bundled into its single canonicalisation walk. Trust the actual `schema_version` distribution, never the constant.
+SSOT: the per-asset-group `*_manifest_canonicalisation_2026_06_01.md` plans coordinated by
+`defi_manifest_canonicalisation_2026_06_01.md`.
 
 - 33-member `EmptyConfirmedReason` closed set (29 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE` +
   `LEG_ABSENT_LEFT` + `LEG_ABSENT_RIGHT`) in UAC `EMPTY_CONFIRMED_REASONS`. Blank reason →
@@ -205,6 +206,20 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 
 ### Other key rules
 
+- **Inherited-dirty-WIP resolution — liveness-gated, role-aware (HARD RULE codified 2026-06-01)**: a slot worktree
+  `.tabs/<N>/<repo>` is exclusively that slot's, so dirty content is almost always a previous session of _you_ that is
+  now gone → **inherit it** (commit as `chore(orphan-wip)` + push). The discriminator is **LIVENESS, not slot-id
+  identity**: a dead/absent/expired `.agent-claim` (or one owned by the session being respawned) → inherit; a DIFFERENT
+  live tmux session owning a fresh claim, OR a dirty file with mtime < 120 s (a live interactive operator/Cursor editor)
+  → **PROTECT, never stomp**. An agent resolving inherited WIP must first detect whether it is a background autonomous
+  worker (tmux `orch-slot-*` / `ORCHESTRATOR_*` env / claim `role`) or an interactive operator session — background:
+  `notify_*`-ping the operator + inherit once the prior maker's claim TTL expires; interactive: ASK the operator whether
+  other agents are finished, then commit. **Quarantine is never terminal** (a dead maker's WIP must eventually be
+  inherited); **never `git add -A` a wiped/mass-delete index** (FM2 guard refuses + quarantines). Slot integration base
+  is `live-defi-rollout` for EVERY repo incl. agent-orchestrator (a `main` base reads every slot as diverged —
+  2026-05-24 incident). SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Pre-spawn branch-state + liveness-gated
+  dirty resolution" + `agent-orchestrator/server/worktree_clean_check.py` +
+  `plans/active/orchestrator_autonomy_audit_remediation_2026_06_01.md`.
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in
   `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage: `clip_dates_to_source_coverage()` +
   `is_in_known_gap()`.
