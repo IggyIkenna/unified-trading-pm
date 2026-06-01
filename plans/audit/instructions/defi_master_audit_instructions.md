@@ -345,6 +345,7 @@ Result file at `plans/audit/results/defi_master_audit_YYYY_MM_DD.md` must contai
 
 ## Linked Results
 
-| Date       | Result file                                                                                                       | Status                                |
-| ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n) |
+| Date       | Result file                                                                                                       | Status                                                                                                                                                                          |
+| ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-01 | [`results/defi_master_audit_2026_06_01.md`](../results/defi_master_audit_2026_06_01.md)                           | **AMBER** — strategy data-coverage (o–v): data EXISTS 79–96% in dedicated buckets; real issues are wrong-form (phantom grid + alias dupes + v4–v8 schema). Genesis of Step 1.5. |
+| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n)                                                                                                                                            |
