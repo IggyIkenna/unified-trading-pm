@@ -27,30 +27,35 @@ PROJECT_ID="${GCP_PROJECT_ID:-central-element-323112}"
 echo "=== enable_slack_alerts.sh ==="
 echo "VM: $(hostname)"
 
-_fetch_secret() {
-  local sid="$1" val=""
-  # Try AWS SM then GCP SM — whichever this VM can reach.
-  if command -v aws >/dev/null 2>&1; then
-    val="$(aws secretsmanager get-secret-value --secret-id "$sid" --query SecretString --output text 2>/dev/null || echo "")"
-  fi
-  if [[ -z "$val" || "$val" == "None" ]] && command -v gcloud >/dev/null 2>&1; then
-    val="$(gcloud secrets versions access latest --secret="$sid" --project="$PROJECT_ID" 2>/dev/null || echo "")"
-  fi
-  [[ "$val" == "None" ]] && val=""
-  printf '%s' "$val"
-}
+# Candidate secret ids (verified live 2026-06-01): AWS SM uses the `unified-trading/`
+# prefix; GCP SM uses the bare name. Both clouds carry the dedicated
+# AGENT_ORCHESTRATOR_SLACK_WEBHOOK + the shared uts-live-alerts-slack-webhook.
+_AWS_SIDS=("unified-trading/AGENT_ORCHESTRATOR_SLACK_WEBHOOK" "unified-trading/uts-live-alerts-slack-webhook")
+_GCP_SIDS=("AGENT_ORCHESTRATOR_SLACK_WEBHOOK" "alerting-uts-live-alerts-slack-webhook")
+if [[ -n "${SLACK_WEBHOOK_SECRET_ID:-}" ]]; then
+  _AWS_SIDS=("${SLACK_WEBHOOK_SECRET_ID}" "${_AWS_SIDS[@]}")
+  _GCP_SIDS=("${SLACK_WEBHOOK_SECRET_ID}" "${_GCP_SIDS[@]}")
+fi
+
+_fetch_aws() { aws secretsmanager get-secret-value --secret-id "$1" --query SecretString --output text 2>/dev/null || true; }
+_fetch_gcp() { gcloud secrets versions access latest --secret="$1" --project="$PROJECT_ID" 2>/dev/null || true; }
 
 WEBHOOK=""
-for SID in "${SLACK_WEBHOOK_SECRET_ID:-AGENT_ORCHESTRATOR_SLACK_WEBHOOK}" alerting-slack-webhook-url; do
-  WEBHOOK="$(_fetch_secret "$SID")"
-  if [[ -n "$WEBHOOK" ]]; then
-    echo "Resolved webhook from Secret Manager secret: $SID (value redacted)"
-    break
-  fi
-done
+if command -v aws >/dev/null 2>&1; then
+  for SID in "${_AWS_SIDS[@]}"; do
+    WEBHOOK="$(_fetch_aws "$SID")"; [[ "$WEBHOOK" == "None" ]] && WEBHOOK=""
+    if [[ -n "$WEBHOOK" ]]; then echo "Resolved webhook from AWS SM: $SID (redacted)"; break; fi
+  done
+fi
+if [[ -z "$WEBHOOK" ]] && command -v gcloud >/dev/null 2>&1; then
+  for SID in "${_GCP_SIDS[@]}"; do
+    WEBHOOK="$(_fetch_gcp "$SID")"; [[ "$WEBHOOK" == "None" ]] && WEBHOOK=""
+    if [[ -n "$WEBHOOK" ]]; then echo "Resolved webhook from GCP SM: $SID (redacted)"; break; fi
+  done
+fi
 
 if [[ -z "$WEBHOOK" ]]; then
-  echo "ERROR: no Slack webhook secret found (tried AGENT_ORCHESTRATOR_SLACK_WEBHOOK + alerting-slack-webhook-url)." >&2
+  echo "ERROR: no Slack webhook secret found (AWS: ${_AWS_SIDS[*]} ; GCP: ${_GCP_SIDS[*]})." >&2
   echo "       Create one, e.g.:  printf '%s' 'https://hooks.slack.com/services/...' | gcloud secrets create AGENT_ORCHESTRATOR_SLACK_WEBHOOK --data-file=- --project=$PROJECT_ID" >&2
   exit 1
 fi
