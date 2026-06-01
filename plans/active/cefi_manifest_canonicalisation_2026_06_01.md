@@ -86,14 +86,15 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 ### P0 — audit
 
 - [x] ✅ [DATA] P0. Legacy→canonical `(date,venue,data_type)` diff (slot-3 tool, 2026-06-01): **legacy-only CELLS =
-      5,233** (NOT 838 — the headline undershot; prior-not-ceiling). Oldest examples are 2020-01 `OKX-FUTURES
-      book_snapshot_5` (legacy captured 91,602 · canonical 90,931 · overlap 86,369). These must land in canonical
-      before L6 deletes legacy. Exact per-data_type object counts resolved in the C0 walk (idempotent copy of the gap).
+      5,233** (NOT 838 — the headline undershot; prior-not-ceiling). Oldest examples are 2020-01
+      `OKX-FUTURES     book_snapshot_5` (legacy captured 91,602 · canonical 90,931 · overlap 86,369). These must land in
+      canonical before L6 deletes legacy. Exact per-data_type object counts resolved in the C0 walk (idempotent copy of
+      the gap).
 - [x] ✅ [DATA] P0. Read canonical `cefi-prd` `_index` DATA-STATE (2026-06-01 slot-3): **100% v8** (not v9), **no
-      `source` column**, **no `category`/`asset_group` column**, **blank `pipeline_mode`** → the FULL-re-canonicalisation
-      finding above. Whole corpus is in scope, not 838 cells.
-- [x] ✅ [DATA] P0. Reusable audit tool SHIPPED — `plans/audit/results/cf_manifest_audit_2026_06_01.py`
-      (PM@4be440b6a): per-CF GREEN/RED data-state for any AG `_index` (schema_version dist, `source`/`category`/
+      `source` column**, **no `category`/`asset_group` column**, **blank `pipeline_mode`** → the
+      FULL-re-canonicalisation finding above. Whole corpus is in scope, not 838 cells.
+- [x] ✅ [DATA] P0. Reusable audit tool SHIPPED — `plans/audit/results/cf_manifest_audit_2026_06_01.py` (PM@4be440b6a):
+      per-CF GREEN/RED data-state for any AG `_index` (schema_version dist, `source`/`category`/
       `asset_group`/`pipeline_mode` col presence, `error_reason` histogram CF-5, shallow object-path probe CF-2/3/9,
       legacy-only cell diff). DNS-robust (`gcloud cp` retried + time-boxed shallow probe). Run on cefi/tradfi/sports/
       prediction (results in their P0 blocks). Generalises to instruments + downstream. Feeds the audit-instruction
@@ -146,16 +147,28 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 > v9, paths = `day=/pipeline_mode=/asset_group=cefi/venue=/chain=/instrument_type=/data_type=`, source/available_at
 > semantics) is CONFIRMED CORRECT on the verify step. One pass, no confusion — once legacy is deleted it is gone.
 
-- [ ] [DATA] P0. E1 Phase-0 layout audit on `cefi-prd` + legacy `market-data-tick-cefi` (`cf_layout_audit`); confirm the
-      2 layouts (flat raw + `processed_candles/…day=/timeframe=/data_type=/venue=`).
-- [ ] [DATA] P0. E2 Build NEW `migrate_cefi_flat_to_v9_canonical.py` (no existing tool; perf-contract): read each flat
-      `by_date/{symbol}.parquet`, derive `day` (from epoch-µs `timestamp`), `venue` (from `exchange`/`symbol`),
-      `data_type` (col) PER ROW → **group-by-day and fan out** to canonical `day=/pipeline_mode=/asset_group=cefi/venue=/
-      data_type=…` objects (`gcs_copy_object` only for already-hive `processed_candles/`; flat raw needs read+regroup+write).
-      Copy the 5,233 legacy-only cells. ThreadPoolExecutor + wired knobs + `python -u` + per-object isolation + idempotent.
-- [ ] [DATA] P0. E3 Confirm cefi writer drained (mdps-backfill-cefi already self-terminated); snapshot `cefi-prd/_index`.
-- [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise →
-      full-VM run (no fire-and-forget verification).
+- [x] ✅ [DATA] P0. E1 Phase-0 layout + VOCAB audit (slot-3 2026-06-01): confirmed 2 layouts — FLAT raw
+      `raw_tick_data/by_date/{SYMBOL}.parquet` (cols `exchange, symbol, timestamp[epoch-µs], data_type, instrument_id`;
+      `instrument_id="{VENUE}:{ITYPE}:{SYMBOL}"`) + `processed_candles/by_date/day=/timeframe=/data_type=/venue=`.
+      **Canonical VOCAB read from data-state** (NOT assumed): venue is **HYPHENATED** (DERIBIT / BITFINEX-SPOT /
+      BINANCE-FUTURES / KRAKEN-FUTURES / HYPERLIQUID — NOT underscore); data*type = trades/book_snapshot_5/
+      derivative_ticker/liquidations/ohlcv*\*/futures_chain/options_chain. **CF-7 drift surfaced**: instrument_type CASE
+      drift (`PERPETUAL`/`perpetual`, `SPOT_PAIR`/`spot_pair`, `FUTURE`/`future`), blank/`UNKNOWN` venue (1453+111),
+      blank data_type (9757). — slot-3 2026-06-01.
+- [x] ✅ [DATA] P0. E2 Built NEW `migrate_cefi_flat_to_v9_canonical.py` (perf-contract): reads each flat
+      `by_date/{symbol}.parquet`, derives `(venue,itype,symbol)` from `instrument_id` + `day` per-row from epoch-µs
+      `timestamp`, **groups by (venue,itype,dtype,day) and FANS OUT** to canonical objects via the **UAC
+      `candidate_parquet_paths` SSOT** (byte-exact batch=live; itype lowercased by builder; venue hyphenated kept).
+      Parquet content stays pure market data (MECHANISM finding — v9 cols added at E5 rebuild). **CF-7 baked in**:
+      blank/`UNKNOWN` venue + blank data_type SKIPPED+logged for E6 diagnosis (never non-canonical, never silent drop).
+      Candles = path-only `gcs_copy_object` + pipeline_mode insert. Knobs: `--workers`/`--start-date`/`--end-date` +
+      `--shard-index`/`--shard-count` (symbol-list horizontal scale, cefi is largest) + `--also-legacy` (5,233-cell
+      gap-fill) + `python -u` + per-file isolation + idempotent. Fan-out + transforms unit-validated; lint+typecheck
+      clean. — market-tick-data-service@e1e2f16c, slot-3 2026-06-01.
+- [ ] [DATA] P0. E3 Confirm cefi writer drained (mdps-backfill-cefi already self-terminated); snapshot
+      `cefi-prd/_index`.
+- [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise
+      → full-VM run (no fire-and-forget verification).
 - [ ] [DATA] P0. E5 Manifest rebuild: scan canonical cefi paths → `ManifestWriter.add/record_empty` stamping
       `source=tardis` (single-source) + `pipeline_mode` + `available_at` → consolidator merge → v9.
 - [ ] [DATA] P1. E6 CF-7 relabel: `COINBASE`↔`COINBASE-SPOT`, blank venue/data_type → canonical (diagnose, don't bulk).
