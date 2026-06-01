@@ -366,8 +366,8 @@ sports_reference/
 > sibling `entity=fixture_stats/fixture_stats.parquet` partition. The pre-2024 nested-struct schema (`league = {…}`,
 > `home_team = {…}`, `kickoff_utc`, inline match-stats) was retired by the
 > [sports_fixtures_legacy_schema_migration_2026_04_28](../../plans/ai/sports_fixtures_legacy_schema_migration_2026_04_28.plan.md)
-> migration; archived legacy parquets are at `gs://instruments-store-sports-{pid}/sports_reference_v1_archive/` until
-> 2026-05-05 then deleted.
+> migration; archived legacy parquets are at `gs://instruments-store-sports-prd-{pid}/sports_reference_v1_archive/`
+> until 2026-05-05 then deleted.
 
 The denormalisation happens at feature-compute time (features-service (sports family)), not at ingestion. The raw shards
 stay normalised (single source of truth per data class); the feature pipeline owns the join + as-of discipline.

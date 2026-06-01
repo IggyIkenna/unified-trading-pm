@@ -72,10 +72,10 @@ PREDICTION
 ### Legacy (pre-Plan A — current as of 2026-05-06)
 
 ```
-instruments-store-prediction-{project}/
+instruments-store-pred-prd-{project}/
   instrument_availability/by_date/day={date}/venue=POLYMARKET/instruments.parquet
 
-market-data-tick-prediction-{project}/
+market-data-tick-pred-prd-{project}/
   raw_tick_data/by_date/day={date}/data_type=trades/venue=POLYMARKET/
     sub_category=crypto/{asset}_{timeframe}.parquet
     sub_category=macro/{index}_{timeframe}.parquet
@@ -91,11 +91,11 @@ surface as honest absence.
 ### Target (post-Plan A)
 
 ```
-instruments-store-prediction-{project}/
+instruments-store-pred-prd-{project}/
   by_date/day={date}/asset_group=prediction/
     venue=POLYMARKET/data_type=MARKET_LIFECYCLE/lifecycle.parquet     ← per-day lifecycle bundle (market_id is a row-level column)
 
-market-data-tick-prediction-{project}/
+market-data-tick-pred-prd-{project}/
   raw_tick_data/by_date/day={date}/asset_group=prediction/venue=POLYMARKET/
     data_type=prediction_canonical_question_group/
       canonical_question_group={cqg}/
@@ -201,9 +201,9 @@ EPL and Bundesliga teams already covered by `api_football/team_mappings.py`.
 ```
 instruments-service --asset-group PREDICTION
   └─ instruments-service PolymarketReferenceDataAdapter → Gamma API → InstrumentRecord[]
-       └─ Writes to: instruments-store-prediction-{project}/by_date/day={date}/
+       └─ Writes to: instruments-store-pred-prd-{project}/by_date/day={date}/
 
 market-tick-data-service --asset-group PREDICTION
   └─ UMI PolymarketAdapter → Data API + CLOB API → trade fills
-       └─ Writes to: market-data-tick-prediction-{project}/by_date/day={date}/
+       └─ Writes to: market-data-tick-pred-prd-{project}/by_date/day={date}/
 ```

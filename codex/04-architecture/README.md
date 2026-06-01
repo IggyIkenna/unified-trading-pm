@@ -243,7 +243,7 @@ upstream:
   - service: instruments-service
     required: true
     check:
-      bucket_template: "instruments-store-{category_lower}-{project_id}"
+      bucket_template: "instruments-store-{category_lower}-{env}-{project_id}"
       path_template: "instrument_availability/by_date/day={date}/instruments.parquet"
 ```
 

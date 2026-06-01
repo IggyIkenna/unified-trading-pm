@@ -101,13 +101,13 @@ bash deployment-service/scripts/vm/launch-expected-universe-enumerator-vm.sh def
 After each VM shutdown:
 
 1. **Per-VM shard exists**:
-   `gcloud storage ls gs://market-data-tick-{asset_group}-{pid}/_index/per_vm/expected-universe-enum-{asset_group}-*.parquet`
+   `gcloud storage ls gs://market-data-tick-{asset_group}-{env}-{pid}/_index/per_vm/expected-universe-enum-{asset_group}-*.parquet`
 2. **Consolidator merge**: within ~5 min, the per-VM shard rows are visible in
-   `gs://market-data-tick-{asset_group}-{pid}/_index/availability_index.parquet`.
+   `gs://market-data-tick-{asset_group}-{env}-{pid}/_index/availability_index.parquet`.
 3. **Spot-check on the canonical manifest**:
    ```python
    import pandas as pd
-   df = pd.read_parquet("gs://market-data-tick-tradfi-{pid}/_index/availability_index.parquet")
+   df = pd.read_parquet("gs://market-data-tick-tradfi-prd-{pid}/_index/availability_index.parquet")
    weekend = df[df["error_reason"] == "EXPECTED_WEEKEND"]
    assert len(weekend) > 0
    sample = weekend.iloc[0]  # e.g. venue=BARCHART day=2018-01-06 (Saturday) — correct

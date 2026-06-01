@@ -120,7 +120,7 @@ deployment-ui data-status panel and both come from FootyStats, but they are **di
   home_overall_ppg / away_overall_ppg). These are MODEL OUTPUT — likelihood scores produced by FootyStats's own
   algorithm. They look odds-like but are NOT bookmaker quotes. Normalizer:
   `unified_api_contracts/external/footystats/normalize.py:normalize_footystats_predictions`. Path:
-  `gs://instruments-store-sports-{pid}/sports_reference/by_date/day=*/entity=footystats_predictions/league={L}/footystats_predictions.parquet`.
+  `gs://instruments-store-sports-prd-{pid}/sports_reference/by_date/day=*/entity=footystats_predictions/league={L}/footystats_predictions.parquet`.
 
 - **`ODDS`** = REAL bookmaker odds aggregated by FootyStats from named books. The pre-match snapshot variant captures 68
   markets at `kickoff - 72h`. These are MARKET DATA — what bookmakers actually offered. Normalizers:
@@ -219,7 +219,7 @@ adapter _tried_ and _recorded_ the legitimate zero — that's the whole point of
     (`instruments-service/instruments_service/engine/orchestrator.py:4760-4900`). Captures opening odds across 68
     markets at fetch time. PIT semantics: `data_available_at = kickoff - 72h` (FootyStats publishes ~3 days before
     kickoff; 98% by T-24h, 100% by T-72h). Path:
-    `gs://instruments-store-sports-{pid}/sports_reference/by_date/day=*/entity=footystats_odds/league={L}/footystats_odds.parquet`.
+    `gs://instruments-store-sports-prd-{pid}/sports_reference/by_date/day=*/entity=footystats_odds/league={L}/footystats_odds.parquet`.
     Refdata-style: one snapshot per (league, date), captured once. Used by features-sports for backtest training.
   - **`odds_api` in MTDS** = live + historical intra-day market movement, bucketed at 8 horizons (T-24h, T-12h, T-6h,
     T-4h, T-2h, T-1h, T-10m, T-0). Coverage start per

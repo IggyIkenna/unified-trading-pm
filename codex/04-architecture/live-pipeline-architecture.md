@@ -31,7 +31,7 @@ See CLAUDE.md "Live = batch" and `codex/02-data/availability-manifest-and-data-s
 > **`perp_funding_rates` feature group spec (MVP)**:
 >
 > - CeFi adapter: reads MTDS
->   `gs://market-data-tick-cefi-{pid}/raw_tick_data/by_date/day=.../venue=.../symbol=.../derivative_ticker/*.parquet`;
+>   `gs://market-data-tick-cefi-prd-{pid}/raw_tick_data/by_date/day=.../venue=.../symbol=.../derivative_ticker/*.parquet`;
 >   filters to ETH-PERP; applies `annualise_funding_rate_bps(rate, venue)` (UAC `registry/perp_funding_cadence.py`).
 > - DeFi adapter: reads MTDS `gs://perp-funding-{pid}/perp_funding/hyperliquid/date=.../*.parquet`; same transformation
 >   pipeline.
