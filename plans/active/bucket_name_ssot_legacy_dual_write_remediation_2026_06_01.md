@@ -86,9 +86,12 @@ relaunch.
       `resolve_bucket_name(kind="market-data", asset_group=…)`. Rework the `is_test_run` branch (3829-3830) + `except`
       fallback (3833-3834) to canonical. Add a unit test asserting cefi→`…-cefi-prd-…`, prediction→`…-pred-prd-…` (NOT
       `…-prediction-…`). QG green.
-- [ ] [SCRIPT] P0. `market-data-processing-service` `dependency_checker.py:401` flat default →
+- [x] ✅ [SCRIPT] P0. `market-data-processing-service` `dependency_checker.py:401` flat default →
       `resolve_bucket_name(kind="market-data", asset_group=…)`; `cloud_data_provider.py:41` instruments-store default →
-      `resolve_bucket_name(kind="instruments-store", asset_group=…)`. QG green.
+      `resolve_bucket_name(kind="instruments-store", asset_group=…)`. QG green. —
+      market-data-processing-service@61900a3: \_resolve_upstream_bucket + \_get_instruments_bucket both route via
+      resolve_bucket_name(); prediction uses dedicated 'market-data-tick-prediction'/'instruments-store-prediction' kind
+      keys (short token 'pred'); tests updated + TestCanonicalBucketNameResolver added; 6 main QG gates green.
 - [x] [SCRIPT] P0. `deployment-service` launcher token fixes: `launch-prediction-pipeline-vm.sh:62,249`
       `prediction→pred`; `:58` + `setup-data-pipeline-vm.sh:228` `staging→stg`; `launch-mdps-backfill-vm.sh:158` +
       `launch-mdps-sharded-backfill.sh:244` inject canonical env-tiered `PROTOCOL_DATA_SOURCE_BUCKET_{CAT}` /
