@@ -873,11 +873,6 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
           "required": true
-        },
-        {
-          "name": "ml-service",
-          "version": ">=0.1.0,<1.0.0",
-          "required": false
         }
       ],
       "ci_status": "FAILING",
