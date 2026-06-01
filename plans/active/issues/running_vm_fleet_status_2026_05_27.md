@@ -12,6 +12,21 @@ locked_by: harsh-fleet-audit
 
 # Running VM Fleet Status — 2026-05-27 ~07:35 UTC
 
+> **🔄 STATUS 2026-06-01 (harsh) — matrix almost fully settled.** Tardis renewal: operator chose NOT to activate (won't
+> do). All "kill" VMs (8 zero-data CeFi + 4 boot-hung/crashed + prediction-2026 + us-backfill + qg-snapshot) are now
+> TERMINATED. "Keep running" set confirmed alive. **"Keep-but-fix" trio resolved/triaged:**
+>
+> - ✅ **footystats-fwd** — root cause was NOT the launcher (that was lowercased @9ded013); it was
+>   `orchestrator._get_instruments_bucket` re-uppercasing asset_group into the now-strict-lowercase `resolve_bucket_name`
+>   (regressed when Option B shipped 2026-05-30). Fixed: **instruments-service@b5ffa65** (+5 regression tests). Next
+>   hourly footystats-fwd launch should exit 0.
+> - ⚠️ **sports-scheduler** — venv/module error gone; now logs `0 upcoming fixtures within 48h` — likely genuine (verify
+>   once footystats forward data flows again), not a crash.
+> - ⚠️ **vm-zombie-watchdog** — running in `--dry-run`; no readable run.log at expected path — confirm it's actually
+>   emitting before trusting it as the fleet janitor.
+>
+> Only the 2 ⚠️ verification items remain; the kill/keep decisions are all executed.
+
 > **Decision doc.** Precise per-VM numbers from actual logs (not guesswork) so an operator can decide keep/kill.
 > **Nothing has been killed.** Logs are already backed up (see § Log Backup) so any kill is safe. Project
 > `central-element-323112`, all VMs zone `asia-northeast1-c`. **25 VMs RUNNING.**

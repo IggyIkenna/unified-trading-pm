@@ -16,6 +16,14 @@ source:
 locked_by: api_host_chronic_impairment_2026_05_29
 ---
 
+> **🔄 VERIFICATION 2026-06-01 (harsh) — KEEP OPEN; plan covered the defensive layer only.** The
+> `api_host_chronic_impairment_2026_05_29` plan (16/16) shipped the workarounds: MemoryMax=56G cgroup cap
+> (agent-orchestrator@057f860), auto-reboot Lambda + ceiling (deployment-service@c8fc73d), httpx usage-poller
+> (agent-orchestrator@ad28879), watchdog. **4 root-cause items from this issue are NOT in that plan and remain open:**
+> (1) identify + fix the memory-exploding pytest test (the actual 32–57 GB OOM source); (2) add ≥16 GB swap;
+> (3) move QG/pytest off the central host onto dedicated VMs; (4) SQLite `PRAGMA busy_timeout=30000` 2-line fix. Host
+> no longer wedges the OS, but the underlying pytest blow-up is untouched. (Ikenna-owned doc — flagging, not rewriting.)
+
 ## What I found
 
 `i-0c9b283b31d6b5ca7` (m8i.4xlarge, ap-northeast-1, public IP 13.113.200.22) hosts the central agent-orchestrator API
