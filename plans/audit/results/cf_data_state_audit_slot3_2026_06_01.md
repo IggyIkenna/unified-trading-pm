@@ -351,3 +351,67 @@ no agent "hacks fake buckets/paths/columns to fit stale docs and regresses."
       `build*_*partition_path`consumers (not just a`candidate_parquet_paths`fallback) so live     reads find migrated data. Targets: MTDS reader, MDPS cloud_data_provider, features-onchain data_loader, any direct    `build*_\_partition_path`
       caller. (manifest_reader_fallback Level-0 already probes pipeline_mode= → readers using it are safe; this closes
       base-builder callers.)
+
+## 🎬 NEXT-AGENT EXECUTION HANDOFF — non-DeFi migration + deletion (slot-3 → next, 2026-06-02)
+
+> Paste-ready dispatch. You finish the remaining PREP, then run the REAL migration + the IRREVERSIBLE delete for
+> **cefi + tradfi + prediction** (sports = its own slot via that plan's pickup prompt; defi = slot-2). FIRST read
+> `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`; read THIS whole doc (esp. "CROSS-AG EXECUTION LESSONS" #0–#11 +
+> "CANONICAL DECISIONS"); `git pull --ff-only origin live-defi-rollout`. Commit+Push+Flip each unit same-turn.
+
+### STATE — DONE + verified (do not redo)
+
+- **Migrators built + validated**: `migrate_prediction_to_pred_prd_v9.py` (dual-source A+B reconciliation + CF-7) and
+  `migrate_cefi_flat_to_v9_canonical.py` (3 layouts: day= bulk pipeline_mode-insert + v6 chain-bundle preserve + 9 flat
+  orphans fan-out; CF-7 venue/data_type; on-disk data_type merge futures_chain→options_chain). cefi **completeness
+  SAMPLE ✅** (7 days 2020→2026, src==planned==3847, bundle 30/30, 0 skips). Prediction overlap content byte-identical
+  (verified). **FOUR completeness-gate-caught bugs already fixed** (3-layout, chain-bundle, chain-instrument-type,
+  data_type-merge) — proof the gates below are mandatory, not optional.
+- **UTL**: `ManifestWriter.add()` now persists `pipeline_mode` (utl@b872bdf1, QG-green) — unblocks E5 on the
+  per-instrument path. `add()` already auto-resolves `source` from SOURCE_PRIORITY.
+- **Decisions locked** (this doc): pipeline_mode= IS canonical-in-path; data_type = on-disk form (the merge map); delete
+  END-only after sampled verify; #7 coordinator fixed (non-DeFi seed guard + filed-plan refs).
+- **Launcher wired**: `deployment-service/scripts/vm/launch-canonical-migration-vm.sh {cefi,prediction}` → the v9 tools
+  (dry-by-default + `--apply`). Re-tarball at current HEAD (`create-code-tarballs.sh`) + pin MTDS/UAC/UTL SHAs per
+  launch.
+
+### REMAINING PREP (HARD gate before any --apply)
+
+1. **BUILD tradfi migrator** (not built). Layout (audit): HYPHEN pseudo-hive
+   `day-2025-11-02/data_type-ohlcv_1m/equities/ NYSE/{id}.parquet` (`-` not `=`, bare segments) +
+   `databento-batch-registry/` tree. Reuse `migrate_tradfi_canonical.py`
+   - `_migrate_tradfi_hyphen_rewriter.py` + `_migrate_tradfi_classifier.py`; emit canonical via
+     `candidate_parquet_paths`; tradfi `source` is REQUIRED (databento/massive) per v9. Run the SAME completeness sample
+     for tradfi before apply.
+2. **BUILD E5 manifest rebuilds** (cefi/tradfi/prediction): adapt `rebuild_{cefi,prediction}_manifest.py` — (a) extend
+   the path regex for the new `pipeline_mode=` segment, (b) stamp `pipeline_mode` + `source` via
+   `record_captured_from_counts` (NOT add()-counts; add() lacks counts+pipeline together — or use the new add() kwarg +
+   record_captured_from_counts for bundles). Row key = live-writer 10-field (orchestrator.py:2937). available_at =
+   parquet col else day-EOD-UTC.
+3. **Reader/writer pipeline_mode-PRIMARY** (cross-AG, coord slot-2): base `build_*_partition_path` lacks pipeline_mode;
+   make the pipeline_mode-aware path PRIMARY in direct base-builder callers (MTDS reader, MDPS cloud_data_provider,
+   features-onchain data_loader). manifest_reader_fallback Level-0 already probes it → fallback-using readers are safe.
+4. **Codex/plans doc sweep + supersession banners** — execute the "doc-update TODOs" + "supersession mapping" in the
+   CANONICAL DECISIONS section above.
+
+### THE GATES (run IN ORDER, per AG — never skip; the sample ≠ exhaustive)
+
+G1. **Full-corpus VM dry-run** in asia-northeast1 (re-tarball+pin first):
+`launch-canonical-migration-vm.sh <ag> <start>     <end> dry`. Confirm `TOTAL planned` ≈ full-corpus source object count
+(cefi = millions across 2,613 day-dirs + bundles + 9 orphans, NOT 9). A shortfall = a missed layout → STOP + fix. This
+is the DEFINITIVE completeness gate. G2. Per-AG writer drained + snapshot `_index` →
+`_index/snapshots/pre_v9_canonical_2026_06_0X.parquet`. G3. `--apply` (additive copy only — non-destructive, safe to
+re-run; idempotent). G4. E5 manifest rebuild → v9 `_index`. G5. **CF-1…CF-12 GREEN** on real data-state:
+`cf_manifest_audit_2026_06_01.py <canonical-bucket>`. G6. **Completeness COUNT gate**: canonical distinct-cells ≥ UNION
+of every source layout's distinct cells. G7. **Strategically-sampled cross-shard verify**: sample (date × venue ×
+data_type × EACH layout); per sample confirm canonical object exists + content matches legacy + manifest row v9-correct.
+G8. **Fleet drain** (GCP+AWS, shared w/ slot-2; epic mtds_mdps_master coordinates).
+
+### THE REAL MIGRATION + DELETION (only after G1–G8 GREEN per AG)
+
+- Perf: I/O-bound (not CPU). `--workers 96`; **date-shard cefi across ~4–6 VMs** via `--start-date`/`--end-date`
+  (sub-hour); prediction 1–2 VMs; tradfi after build. Server-side `gcs_copy_object` for path-only (bulk) = no egress.
+- **DELETE = END-ONLY, NEVER inline** (lesson #11): after G5–G8 GREEN, bulk-delete legacy buckets + superseded in-bucket
+  paths (prediction `category=`, cefi `day=/asset_group=` lacking `pipeline_mode=`) → hand to `bucket_name_ssot…` L6.
+  Prediction `--drop-stale` only after Source B verified. ONE pass, no rollback.
+- DONE = every (cefi/tradfi/prediction × CF-1…CF-12) GREEN on real data-state + legacy deleted = single SSOT.
