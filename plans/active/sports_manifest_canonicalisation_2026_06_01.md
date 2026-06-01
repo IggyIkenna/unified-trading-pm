@@ -305,9 +305,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
       source walk.
-- [ ] [CODE] P1. C-writer: instruments-service sports handlers emit the typed fixture/season/transfer-window reasons at
+- [x] ✅ [CODE] P1. C-writer: instruments-service sports handlers emit the typed fixture/season/transfer-window reasons at
       write time (writer analogue of defi A1/A2b) so future writes are honest — no blank/`SOURCE_RETURNED_ZERO` for a
-      no-fixture / off-season / out-of-window / uncovered-league day.
+      no-fixture / off-season / out-of-window / uncovered-league day. — instruments-service@608e7ca7: wired
+      `is_expected_for_source` oracle into `sports_fixtures_daily_repoll.py` zero-fixture path; per-league
+      EXPECTED_PRE_SOURCE_COVERAGE_START / EXPECTED_NO_FIXTURE / SOURCE_RETURNED_ZERO emitted; 3 new unit tests; QG GREEN.
 
 ### Verify + handoff to decommission
 
@@ -346,7 +348,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `SOURCE_DOES_NOT_COVER_LEAGUE`/`FIXTURE_POSTPONED|CANCELLED`/`KNOWN_SOURCE_GAP`/`NO_MAPPING`) via the UAC coverage
       oracle (`clip_dates_to_source_coverage`/`is_in_known_gap`/`league_data`) — never re-derived per consumer.
 - [ ] [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` +
-      `available_at` → consolidator → v9. Also fix the writer to emit typed reasons going forward (CF-5 write-path).
+      `available_at` → consolidator → v9. ~~Also fix the writer to emit typed reasons going forward (CF-5 write-path) — DONE (C-writer@instruments-service@608e7ca7).~~
 - [ ] [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank
       venue.
 - [ ] [DATA] P0. E8 Verify: `cf_manifest_audit_2026_06_01.py` on both sports surfaces → CF-1…CF-12 GREEN (esp. 0 blanket
