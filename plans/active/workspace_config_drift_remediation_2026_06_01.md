@@ -102,6 +102,16 @@ estimate_calibrated_ai_days: 1.2
       `ci_status: FAILING` flip here). Investigate whether `agent-audit.yml` is broken features-service-only or
       workspace-wide, and either fix its trigger/permissions or retire it. **DEFERRED** — out of this plan's scope;
       provenance: Item 4 investigation 2026-06-01.
+- [x] ✅ [SCRIPT] P2. **Runbook Execution-Owner check fails on a vendored codex mirror** (surfaced running the Item 5b
+      merge-prerequisite QG). `scripts/quality_gates/check_runbook_execution_owner.py` walks the whole workspace for
+      `*runbook*.md` and flagged `unified-trading-system-ui/context/codex/05-infrastructure/sit-runbook.md` (no
+      frontmatter) — a **stale read-only mirror** of the compliant canonical
+      `unified-trading-pm/codex/05-infrastructure/sit-runbook.md`. The baseline was written to 0 in a workspace WITHOUT
+      the UI repo checked out, so every full-workspace slot's PM QG was blocked (foreign, pre-existing, not caused by
+      this plan's work). **Fixed**: added `context/codex/` to the checker's `EXCLUDED_DIRS` (vendored codex mirrors in
+      non-PM repos are never the canonical runbook; the PM `codex/` SSOT stays enforced). Re-verified 0 violations
+      scanning 10 runbooks; full PM QG `--no-fix` exit 0. — unified-trading-pm@35a16a493 | provenance: Item 5b QG run
+      2026-06-01.
 
 ## Item 5 spec — FF-pull starvation watchdog signal
 
