@@ -10,6 +10,21 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **🟡 FIX IMPLEMENTED, NOT-YET-LANDED 2026-06-01 (slot 7).** The recommended fix is done +
+> committed on `tab/ikennaigboaka/7` at **features-service@`587e494e`**:
+> `config.get_output_bucket` now honours `get_data_sink` (PROTOCOL_DATA_SINK_BUCKET_{AG}) first then bucket-name SSOT,
+> and `get_input_bucket` mirrors it via `get_data_source` (PROTOCOL_DATA_SOURCE_BUCKET_{AG}). `get_instruments_store_bucket`
+> deliberately stays on the SSOT (the `routing_key=asset_group` trick resolves that group's market-data source / features
+> sink — NOT the instruments-store kind — so it would return the wrong bucket). +3 unit tests in
+> `tests/unit/test_config.py` (sink override / source override / SSOT fallback) — **all pass**; ruff-clean; codex-clean.
+>
+> **BLOCKED on landing**: features-service `live-defi-rollout` is **branch-protected** (requires green `quality-gates-v2`),
+> and that gate is **pre-existing-RED on a foreign coverage-floor** (`COVERAGE FLOOR VIOLATION: MIN_COVERAGE=0 < 70`,
+> only 6 items collected — the per-family `PYTEST_UNIT_DIR="tests/"` collection issue per CLAUDE.md; `quality-gates.sh`
+> last touched today by another agent @`381d0ff1`). Direct LDR push is rejected; a PR can't auto-merge until QG is green.
+> **Next step**: once the features QG coverage-floor / PYTEST_UNIT_DIR config is fixed (another agent's in-flight QG
+> work), open a PR for `587e494e` → it merges on green. Fix is preserved on the tab branch; do NOT re-implement.
+
 ## What I found
 
 features-service delta*one has TWO bucket-resolution codepaths that DISAGREE on whether to honour the

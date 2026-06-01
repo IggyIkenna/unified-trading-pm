@@ -113,6 +113,14 @@ DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
 - [ ] [DOCS] P1. **F-13 / F-15 — reconcile codex strategy-spec → implemented mechanism (code is truth).** Route the
       actual codex doc edit to `codex_vs_repo_docs_ssot_audit_2026_06_01.md` (do not edit codex from strategy work);
       this todo tracks the strategy-side reconciliation decision. Repo: codex (via codex_vs_repo_docs owner).
+- [ ] [CODE] P1. **F-34 — add `SUPPORTED_ARCHETYPES` allowlist + typed-error guard + fix docstring.** Operator decision
+      2026-06-01: the 28 implemented archetype engines are the intended May-23 rollout subset (NOT a regression vs the
+      55-member `StrategyArchetype` enum). In `factory.py`, replace the bare `KeyError` ("every enum value must have an
+      engine") with a guard that returns a typed "archetype not in rollout" error against an explicit
+      `SUPPORTED_ARCHETYPES` allowlist; fix the stale "53"→55 docstring/count. Supersedes the per-archetype
+      `ARBITRAGE_CROSS_DOMAIN_EVENT` note in `config_grid_archetype_extend`. Repo: strategy-service. **NB**: respect the
+      active strategy-service LOGIC-FREEZE — this lives in `factory.py`/registry, not `engine/strategies/v2/`; land after
+      confirming the freeze does not cover the factory, else hold for the `🟢 STRATEGY-LOGIC UNFREEZE` ping.
 
 ### [`compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md)
 
