@@ -885,7 +885,7 @@ Code-shipped ≠ operationally-shipped. Backfills/migrations/reconcilers run to 
 manifest-verified rows + sample-inspected parquets. ADC admin perms on GCP (`central-element-323112`) + AWS
 (`427895769566`) — do NOT pause for operator approval on infra ops.
 
-Hard-stop list (human-only): wallet keys, kill-switch arming, force-push to main, version 1.0.0 graduation.
+Hard-stop list (human-only): wallet keys, force-push to main, version 1.0.0 graduation. **Kill-switch / trading-halt is direction- + scope-aware, NOT a blanket gate (codified 2026-06-02):** (a) **protective/fail-safe = always autonomous** — agents + the runtime may arm the kill-switch / `STOP_NEW_ONLY` / firm-wide halt + relaunch crashed safety/monitoring VMs (alerting/watchdog/consolidator); fail toward safety without a human. (b) **resume / un-kill / disarm = autonomous WHEN within the defined disaster-recovery + auto-recovery scope** (`auto_cooldown` breakers self-recovering on the `autonomous-recovery-matrix.md` timelines + the DR-plan runbook); **human-only ONLY when OUTSIDE that scope** — a `manual_unkill` destructive breaker (`KILL_ALL` / `CANCEL_OPEN`, operator sign-off by design) or a novel situation the DR/auto-recovery matrix doesn't cover. Within scope an agent resumes; outside scope a human does. SSOT: `codex/04-architecture/autonomous-recovery-matrix.md` § "Hard-stop scope: agent vs human".
 
 Every Tab in daily work-split MUST declare Full-Execution Criterion. SSOT: `plans/PLAN_FORMAT.md` § 8.
 
