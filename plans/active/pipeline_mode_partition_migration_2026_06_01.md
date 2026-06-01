@@ -19,6 +19,14 @@ work splits into this named successor that piggybacks on the next whole-corpus w
 
 # pipeline_mode on-disk partition migration
 
+> **🟡 DeFi: `pipeline_mode=` path partition is operator-LOCKED CANONICAL (2026-06-01) and lands WITH the DeFi C0 walk,
+> not after.** The DeFi C0 single-walk (`defi_manifest_canonicalisation_2026_06_01.md` §C) already writes
+> `…/day=/pipeline_mode={mode}/asset_group=defi/…`. **What this requires (HARD — tracked as defi C0-CN6/CN4/CN5)**: the
+> writer/readers must become pipeline_mode-AWARE together — UAC `build_defi_partition_path` makes `pipeline_mode=`
+> canonical (not just a `candidate_parquet_paths` probe), and features-onchain + MDPS readers pass `pipeline_mode` — else
+> consumers reading the base path won't find migrated DeFi data (the regression the 2026-06-01 naming audit caught).
+> SSOT: `codex/02-data/defi-canonical-naming-ssot.md`. For non-DeFi AGs this remains a column-scan interim per below.
+
 The `pipeline_mode` **column-level** implementation shipped fully in `pipeline_mode_implementation_2026_05_28` (Phases
 0–4 + 6: 43.5M rows backfilled, QG STEP 5.85 enforces enum-only writes, batch-live-reconciliation consumes
 `GROUP BY pipeline_mode`, manifest carries the column). The remaining work is promoting `pipeline_mode` from a column to

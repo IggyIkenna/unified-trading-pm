@@ -13,12 +13,29 @@
 | Axis | Canonical value(s) | Notes |
 | --- | --- | --- |
 | **Object path** | `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=defi/venue={V}/chain={C}/instrument_type={IT}/data_type={DT}/{file}` | `pipeline_mode=` IS canonical (operator 2026-06-01), inserted after `day=` — the form `candidate_parquet_paths(pipeline_mode=…)` probes first. `mode` ∈ `batch`/`live`. |
-| **data_type** (path + column + manifest + handler const + bucket-domain) | `dex_pool_state` (pools), `dex_pool_swaps` (swaps), `lst_rates`, `lending_indices`, `oracle_prices`, `perp_funding` | **Collapsed to ONE name everywhere** (operator 2026-06-01). The legacy 2-layer split (on-disk `dex_pool_state` vs manifest `dex_pools`) is RETIRED — `dex_pool_state`/`dex_pool_swaps` are canonical at every layer. (Bucket *name* stays `dex-pools`/`dex-swaps` — that's a bucket id, not the data_type.) |
+| **data_type** (path + column + manifest + handler const + bucket-domain) | `dex_pool_state` (pools), `dex_pool_swaps` (swaps), `lst_rates`, `lending_indices`, `oracle_prices`, `perp_funding` | **Collapsed to ONE name everywhere** (operator 2026-06-01). The legacy 2-layer split (on-disk `dex_pool_state` vs manifest `dex_pools`) is RETIRED — `dex_pool_state`/`dex_pool_swaps` are canonical at every layer. (Bucket *name* stays `dex-pools`/`dex-swaps` — that's a bucket id, not the data_type.) **See "dex_pool_state = EVM + Solana union" below.** |
 | **chain** | `HYPERLIQUID` (not `HYPERLIQUID_L1`), `ETHEREUM`/`ARBITRUM`/`BASE`/`OPTIMISM`/`POLYGON`/`BSC`/`AVALANCHE`/`SOLANA`/`ZKSYNC`/`SCROLL`/`LINEA` | App-chain perps: `HYPERLIQUID→HYPERLIQUID`, `PACIFICA→SOLANA`, `LIGHTER→ZKSYNC`, `ASTER→BSC`, `DRIFT→SOLANA`. UAC `ChainKind.HYPERLIQUID_L1.value` MUST resolve to wire `HYPERLIQUID`. |
 | **instrument_type** | `pool` (dex), `lending`, `lst`, `spot_asset` (oracle), **`perpetual`** (DeFi on-chain perps: Drift/GMX/HL) + Solana `solana_amm_pool`/`solana_vault`/`solana_lending` | **DeFi DOES have perps** (operator 2026-06-01): Drift/GMX/Hyperliquid are on-chain perp DEXs. `instrument_type=perpetual` is valid for `asset_group=defi`. IS `DEFI_ONCHAIN_INSTRUMENT_TYPES` MUST include `PERPETUAL`. |
 | **venue** | bare `venue={PROTOCOL}` (UAC `to_canonical_venue` → `UNISWAP_V3`, `AERODROME_V3`, `TRADER_JOE_V2`, `AAVE_V3`, `LIDO`, `GMX`, …) + separate `chain=` | NEVER the legacy combined `PROTOCOL-CHAIN` overload in the path; `chain=` is its own segment (per `build_defi_partition_path`). |
 | **bucket** | dedicated per-type `{stem}-prd-{pid}` (`dex-pools-prd-…`, `oracle-prices-prd-…`, …) | Operator 2026-05-28 directive (`solana_defi_legacy_migration`): dedicated split buckets are canonical; NO DeFi writer targets the consolidated `market-data-tick-defi-*`. |
 | **v9 metadata columns** | `schema_version=9`, `asset_group=defi`, `pipeline_mode`, `source`, `available_at` | Stamped per row at write/migration time. |
+
+## `dex_pool_state` = EVM + Solana pool-state UNION under one data_type (CHANGE — operator-noted 2026-06-01)
+
+After the collapse, **`data_type=dex_pool_state` carries BOTH EVM pools and Solana pools under a single name** — it is a
+union, not EVM-only:
+
+- **EVM** (Uniswap/Curve/Balancer/Aerodrome/…) → `instrument_type=pool`, columns `price_a`/`price_b`/`fee_rate_bps`/
+  `liquidity`/`tvl_usd`/…
+- **Solana** (Orca/Raydium/Kamino/…) → `instrument_type=solana_amm_pool` / `solana_vault`, columns
+  `sqrt_price`/`tick_spacing`/`token_a_mint`/`vault_type`/`total_shares`/…
+
+The **discriminators are `instrument_type` + `chain`** (+ the superset columns, which co-exist and are null where N/A —
+e.g. an EVM cell has `sqrt_price=null`, a Solana cell has `price_a=null`). A consumer that wants only EVM (or only
+Solana) pool state filters by `instrument_type`/`chain`, NOT by a separate data_type. **Implication for
+`solana_defi_legacy_migration`**: its `SOLANA_AMM_POOL`/`SOLANA_VAULT` instrument_types are the discriminator *within*
+`dex_pool_state` — Solana pools must NOT be re-keyed to a distinct data_type (that would re-split the SSOT). Same logic
+for `lending_indices` (EVM `lending` + Solana `solana_lending` instrument_types under one data_type).
 
 ## Per-surface alignment status (the fan-out — each is a tracked todo)
 

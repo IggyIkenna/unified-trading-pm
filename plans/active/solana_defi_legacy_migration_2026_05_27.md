@@ -17,6 +17,20 @@ source:
 
 # Solana DeFi legacy→canonical migration
 
+> **🟡 CROSS-PLAN COORDINATION — DeFi C0 single-walk + canonical-naming lock (2026-06-01)**. This plan migrates the SAME
+> dedicated DeFi buckets (`dex-pools` / `lending-indices`) for SOLANA venues (Kamino/Orca/Raydium/Solend) that the DeFi
+> C0 single-walk in `defi_manifest_canonicalisation_2026_06_01.md` §C rewrites for ALL venues. **What starts / what
+> ends (HARD)**: (1) **No concurrent whole-corpus walk on the DeFi `_index`** — this plan's Gate-2 history migration and
+> the defi C0 `--apply` are MUTUALLY EXCLUSIVE (single-walk discipline); one finishes before the other starts. (2)
+> **Canonical naming is operator-locked** — `codex/02-data/defi-canonical-naming-ssot.md`: pool data_type =
+> `dex_pool_state` (NOT `dex_pools`), swaps = `dex_pool_swaps`; path carries `pipeline_mode=`; chain `HYPERLIQUID`. (3)
+> **NEW — `dex_pool_state` is now the UNION of EVM + Solana pool state under ONE data_type** (operator 2026-06-01): EVM
+> pools (`instrument_type=pool`) and Solana pools (`instrument_type=solana_amm_pool`/`solana_vault`) co-exist under
+> `data_type=dex_pool_state`, distinguished by **`instrument_type` + `chain` + the superset columns** (EVM
+> `price_a`/`fee_rate_bps` vs Solana `sqrt_price`/`token_a_mint` co-exist, null where N/A). So this plan's Solana
+> `SOLANA_AMM_POOL`/`SOLANA_VAULT` instrument_types are the DISCRIMINATOR within `dex_pool_state`, **not a separate
+> data_type** — do NOT re-key Solana pools to a distinct data_type. Banner-remove when defi C0 is C-GREEN.
+
 > **🛑 SSOT REASSERTED 2026-05-28 (operator directive)**: **Dedicated per-data-type split buckets are canonical for
 > `lending_indices`, `lst_rates`, `dex_pools` — EVERYWHERE.** No DeFi writer for these types may target the unified
 > `market-data-tick-defi*` bucket. Any handler/script writing them to the unified bucket is a **bug** and must be fixed
@@ -361,8 +375,11 @@ source:
 
 - Flat→`-prd` env-tiered dedicated-bucket cutover (writers→flat, `resolve_bucket_name`→`-prd`) — `bucket_name_ssot`
   Phase 2.6 residual, tracked in `plans/epics/manifest_master.md`.
-- The DeFi EVM GCS re-key (venue glued→underscore, `dex_pool_state`→`dex_pools`, `category`→`asset_group`) — tracked in
-  `plans/epics/mtds_mdps_master.md` Phase 9 + `defi_coverage_capability_alignment` (archived).
+- The DeFi EVM GCS re-key (venue glued→underscore, `category`→`asset_group`) — tracked in
+  `plans/epics/mtds_mdps_master.md` Phase 9 + the DeFi C0 single-walk in `defi_manifest_canonicalisation_2026_06_01.md`.
+  **NAMING CORRECTION (operator-locked 2026-06-01)**: the canonical pool data_type is `dex_pool_state` EVERYWHERE (NOT
+  `dex_pools` — the earlier "`dex_pool_state`→`dex_pools`" re-key here was backwards and is RETIRED). SSOT:
+  `codex/02-data/defi-canonical-naming-ssot.md`.
 
 ## Dispatch-ready handoff (2026-05-28, vm-ml autonomous)
 
