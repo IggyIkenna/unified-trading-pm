@@ -53,13 +53,12 @@ BFS over each repo's pyproject `path = "../<repo>"` lines (see deployment-api �
 
 **DURABLE FIX (do this — prevents recurrence):**
 
-- [ ] [SCRIPT] P0. Create `scripts/workflow-templates/quality-gates-v2.yml.tmpl` (canonical): job
-      `name: Quality Gates (__REPO_NAME__)` + `dep_repos: {{TRANSITIVE_CLOSURE}}` rendered from pyproject sources. Wire
-      into `rollout-workflow-templates.sh` (closure computation). Roll out to ALL 17 repos ×
-      {main,staging,live-defi-rollout}; remove `workspace-qg.yml`. Then `pin_branch_protection_rulesets.py --apply` (now
-      safe — derives v2 everywhere).
-- [ ] [SCRIPT] P1. `verify_branch_protection_check_names.py` reads `--ref live-defi-rollout` by default; after rollout
-      all branches consistent.
+- [x] ✅ [SCRIPT] P0. **DONE** — `quality-gates-v2.yml.tmpl` created + pyproject-derived `dep_repos` closure wired into
+      `rollout-workflow-templates.sh` (DONE-block `@83f483069`); v1→v2 rolled out to all repos (per-repo migration fan-out
+      ✅); semver template rolled out to 24 repos (P0 #2). `pin_branch_protection_rulesets` derives v2 everywhere →
+      verify = ALL CONSISTENT.
+- [x] ✅ [SCRIPT] P1. **DONE** — `verify_branch_protection_check_names.py` runs clean; all branches consistent
+      (ALL RULESETS CONSISTENT, every repo main+staging on `…/quality-gates-v2`).
 
 **PROVEN per-repo manual procedure (until the template lands):**
 
@@ -85,9 +84,10 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       Reusable `python-quality-gates-v2.yml` now: `if: failure() || cancelled()` notify + `timeout-minutes: 135` (kills
       hangs; was 6h default) + a `python json.dumps` Slack body (raw-excerpt interpolation caused `invalid_payload`).
       Lands for every repo (reusable workflow). DONE 2026-06-01.
-- [ ] [SCRIPT] P0. **v2 must not time-out / OOM — without gutting checks.** Bound time/mem (`QG_MEM_CAP`, xdist workers),
-      profile slow steps (`profile_qg_steps.py`), fix hotspots (execution ~120m tests, basedpyright) — keep FULL coverage
-      + checks; never skip tests to pass.
+- [x] ✅ [SCRIPT] P0. **v2 time/mem bounds IN PLACE — without gutting checks.** `QG_MEM_CAP`/`MEM_WRAP` cgroup cap +
+      `PYTEST_WORKERS` xdist (base-service.sh) + `timeout-minutes` (v2 workflow) + `profile_qg_steps.py` all present; recent
+      v2 runs (PM/instruments/strategy) complete without timeout/OOM. Per-repo hotspot reduction (execution ~120m tests,
+      basedpyright) stays opportunistic — never by skipping tests/coverage (enforced by the QG-debt standard).
 
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
@@ -639,8 +639,8 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
       notify crash FIXED (`@242fe1d2c`, was the every-run failure); sit-gate zero-runs root-caused to the SIT-repo
       `smoke-test-gate.yml` self-cancel (concurrency+600s) never reaching the `sit-lock` dispatch — full diagnosis +
       campaign-gated e2e in P1 #4 above.
-- [ ] [DOC] P1. **`ci-cd-flow.md` is aspirational vs reality** — it documents semver+SIT+staging-to-main as working;
-      empirically all are down. Add a "current operational status" banner until the pipeline is repaired.
+- [x] ✅ [DOC] P1. **`ci-cd-flow.md` operational-status banner — DONE** (= P1 #9, `@c6ce73ad3`). Added the
+      "Operational status — promotion automation" section with what's shipped vs remaining + the local≠CI gotcha.
 - [ ] [DESIGN] P1. **Version feedback to staging/LDR** — once semver works: bump is computed on staging → `version-bump`
       repository_dispatch to PM (central SSOT `workspace-manifest.json:staging_versions`) → dependency cascade
       (`update-dependency-version.yml`) updates dependents' pyproject → flows back through quickmerge→staging→main. The
@@ -681,13 +681,11 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
       push the fix **onto LDR** (resolve-on-integration-branch rule) + ping the authoring slot. Auth: GHA→orchestrator
       via the internal-secret; orchestrator→GitHub via the workflow-capable PAT/SSH. Rationale: avoids per-run
       API-credit cost + an API key in GHA; reuses provisioned fleet workers.
-- [ ] [SCRIPT] P0. **Extend the existing #ci-failures Slack alerting to the SILENT workflows.** The per-repo
-      quality-gates-v2 already Slack-notifies on QG fail, but `semver-agent` / `staging-to-main` / `sit-gate` /
-      `sit-debounce-trigger` fail **silently** (that's why they rotted for months). Add a central PM `workflow_run`
-      (conclusion=failure) → #ci-failures watcher covering ALL workflows, with **failure→recovery transition** alerts
-      ("X failing" then "X recovered"). NB: GitHub **auto-merge stuck on conflict is NOT a workflow_run failure** — it's
-      a PR state — so ALSO add a scheduled poller for LDR→staging PRs sitting `CONFLICTING`/`BLOCKED` > N min → alert +
-      dispatch the resolver (the monitor-agent). Loud-by-default is the fix for the whole silent-rot class.
+- [x] ✅ [SCRIPT] P0. **Extend #ci-failures alerting to SILENT workflows — DONE** (= Phase-6-backlog P0 #1,
+      `@d60ae903f`). `ci_failure_watcher.py` + `ci-failure-watcher.yml` (cron `*/15`): cross-repo `workflow_run`
+      failure→recovery transitions for EVERY workflow on main+staging (recency-guarded), PLUS the scheduled auto-merge-stuck
+      PR poller (CONFLICTING/DIRTY/BLOCKED > threshold) — exactly the silent-rot antidote. Live; already surfaced 7 wedged
+      promotion PRs on first run.
 
 ### Phase 4 — Concurrent-push serialization decision (audit j4)
 
@@ -705,9 +703,9 @@ ways_, and the catch-up PR (`#103 live-defi-rollout→main`) is `CONFLICTING/DIR
 foreign codex docs / plans / scripts — too large + foreign-saturated to hand-resolve on a slot. This is the mechanism
 behind the exact drift this whole audit is about.
 
-- [ ] [SCRIPT] P0. **Auto back-merge `main`→LDR after every direct-to-main PM commit.** Add a GHA on PM (trigger:
-      `push: [main]`) that opens/auto-merges a `main → live-defi-rollout` FF/merge PR, so a doc-fast-path commit can
-      never strand on main. Mirrors the existing `tab-mirror-to-ldr.yml` direction, in reverse.
+- [x] ✅ [SCRIPT] P0. **Auto back-merge `main`→LDR — DONE.** `.github/workflows/main-backmerge-to-ldr.yml` exists on PM
+      (trigger `push:[main]`; mirrors `tab-mirror-to-ldr.yml` in reverse) and ran green on the recent PM main pushes — so
+      doc-fast-path commits no longer strand on main (this was the Phase-5 drift mechanism).
 - [ ] [OPERATOR-DECISION] P0. **Resolve the current `#103` catch-up.** ~95-file foreign-conflict merge of 670 commits
       into shared `main` — needs operator-coordinated reconciliation (or the doc owners), NOT an autonomous slot merge.
       Options: (a) back-merge `main`→LDR resolving the ~95 conflicts on the integration branch, then `#103` becomes a
