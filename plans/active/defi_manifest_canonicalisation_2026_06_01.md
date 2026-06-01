@@ -171,12 +171,17 @@ What to verify/wire (B0 corrected scope):
 > together (no N ad-hoc walks). Backfills (C6/D1/E1) + B0-run are blocked until C is GREEN for the affected bucket.
 
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
-      2026-06-01)**: for each dedicated DeFi bucket, rewrite object paths to the canonical layout — `category=defi`→
-      `asset_group=defi`, add the `pipeline_mode=` (`batch`/`live`) hive partition, move into the **env-split** bucket
-      (`{kind}-prd-{project}`). Script ready (`plans/audit/results/defi_object_path_canonicalisation_2026_06_01.py`,
-      server-side copies + dry-run). **Walk on a `vm-defi` in asia-northeast1** under the pre-migration drain + snapshot
-      discipline (server-side copies but ~500k objects across 6 buckets → VM for reliability/throughput). Bundle with
-      C2–C5/C7/C9 in the single walk; then delete originals after verified cutover. parent_epic: manifest_master.
+      2026-06-01)**. **SYSTEM-FIRST: the tool already exists** —
+      `market-tick-data-service/.../scripts/migrate_defi_canonical.py` (+ unit tests) already does VENUE-CHAIN→flat (C3),
+      data_type canonicalisation (C2), the `{NAME}_V{N}` venue promotion (C12), instrument_type + canonical
+      instrument_id, across the dedicated buckets; VM launcher `deployment-service/scripts/vm/launch-canonical-migration-vm.sh defi <start> <end> dry|full`.
+      **GAP to close before the full run (C9/v9)**: the tool's target path keeps `category=defi` — must extend to
+      `asset_group=defi` + add the `pipeline_mode=` partition + write to the **env-split** `{kind}-prd-{project}` bucket
+      + stamp schema v9. Then: **(1)** extend `migrate_defi_canonical.py` (+ tests) for C9/v9; **(2)** `… defi … dry` VM →
+      review the planned rewrites in the VM log; **(3)** pre-migration drain (stop GCP+AWS fleet + snapshot per the HARD
+      RULE); **(4)** `… defi … full` VM → monitor (STARTED<60s, ≥1 progress/hr, STOPPED at exit, T+10min check); **(5)**
+      verify + delete legacy originals after cutover. (`defi_object_path_canonicalisation_2026_06_01.py` is the
+      from-scratch fallback if the existing tool can't be extended.) parent_epic: manifest_master.
 - [x] ✅ [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — **APPLIED 2026-06-01** via
       `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py --apply`: 728 pre-genesis relabel →
       `EXPECTED_PRE_GENESIS_CHAIN`; Pyth 1,185 chain `''`→`SOLANA` + dropped 1,034 dup empties; 9,717→8,683 rows; PYTH
