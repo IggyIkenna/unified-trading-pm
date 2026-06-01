@@ -76,10 +76,51 @@ estimate_calibrated_ai_days: 1.2
       slot-5 PM's FF-pull cron (963 behind). Decide WITH operator: is features-service CI actually FAILING (commit the
       `workspace-manifest.json` flip + point at remediation) or stale WIP (drop the stash)? Either way a slot PM tree
       must not carry a perpetually-dirty `workspace-manifest.json`.
-- [ ] [SCRIPT] P3. **Item 5 — FF-pull starvation watchdog signal (optional).** Propose a signal: a slot N that is
-      commits-behind `origin` with a clean FF available but blocked by a dirty-file collision should ping the
-      orchestrator instead of sitting silent (root cause of slot-5 being 963 behind). Spec only under this todo;
-      implementation wires into `slot-git-status-report.sh` / `slot-cron-ff-pull.sh`.
+- [x] ✅ [SCRIPT] P3. **Item 5 — FF-pull starvation watchdog signal (spec delivered; wiring optional).** Spec below
+      (§ "Item 5 spec"). Proposes the detection rule + ping payload for the slot-5-963-behind failure mode.
+      Implementation (wiring into `slot-git-status-report.sh` / `slot-cron-ff-pull.sh`) left as an optional P3 follow-up —
+      capture as its own todo if/when prioritised.
+
+## Item 5 spec — FF-pull starvation watchdog signal
+
+**Failure mode** (Observation A): slot-5 `unified-trading-pm` sat **963 commits behind** `origin/live-defi-rollout` with
+the remote configured correctly. The FF-pull cron (`slot-cron-ff-pull.sh`) silently no-op'd every run because an
+**uncommitted foreign edit** to `workspace-manifest.json` collided with incoming commits, so every `git pull --ff-only`
+aborted. Nothing alerted — the slot just fell further behind indefinitely. The two existing crons
+(`slot-cron-ff-pull.sh`, `slot-git-status-report.sh`) both treat "couldn't FF" as a benign skip.
+
+**Detection rule** (per slot × per repo, evaluated each cron tick):
+
+```
+behind   = git rev-list --count HEAD..origin/<integration-branch>
+ff_clean = (behind > 0) AND (merge-base HEAD origin/<branch> == HEAD)   # a true fast-forward is possible
+dirty    = git status --porcelain=v1 is non-empty
+collision = ff_clean AND dirty AND (incoming changed-file set ∩ dirty file set ≠ ∅)
+STARVED  = collision AND behind >= THRESHOLD          # THRESHOLD default 25 commits OR age > 6h since last successful FF
+```
+
+`collision` (not merely `dirty`) is the precise trigger: a dirty file that does **not** intersect the incoming change
+set does not block `--ff-only`, so it is not a starvation cause and must not page. The `behind >= THRESHOLD` /
+age-gate avoids paging on normal in-flight work (a slot 1–2 commits behind mid-edit is healthy).
+
+**Signal** — emit ONE orchestrator ping per (slot, repo) while STARVED (de-duplicated; clears on next successful FF):
+
+```
+FF-PULL STARVATION — slot <N> / <repo>
+behind: <count> commits | last successful FF: <ts or 'unknown'>
+blocking dirty files (collide with incoming): <path[, path...]>
+owner hint: untracked/unowned? → likely foreign WIP — stash-by-name + FF, do NOT discard
+remediation: git stash push -- <colliding paths> && git pull --ff-only && (commit-or-restore the stash)
+```
+
+**Wiring** (optional follow-up): add the `collision` computation to `slot-git-status-report.sh` (it already walks each
+repo's ahead/behind + dirty state for the dashboard) and POST the signal to the orchestrator backend the same way the
+drift reporter posts git-status. `slot-cron-ff-pull.sh` stays the actor (it does the FF); the report cron is the
+detector/alerter. Threshold + age-gate live in env (`FF_STARVE_COMMIT_THRESHOLD`, `FF_STARVE_AGE_HOURS`).
+
+**Composes with**: the slot-host-symmetry HARD RULE (every host's slots FF-pull every 5 min) — this watchdog is the
+"why didn't it?" alarm for when that contract silently fails. Does NOT auto-resolve the collision (that needs the
+stash-by-name + adjudicate judgment from the two-teammates HARD RULE — see Item 4 for an instance).
 
 ## Codex SSOT updates
 
