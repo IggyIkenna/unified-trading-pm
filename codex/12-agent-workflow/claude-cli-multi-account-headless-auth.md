@@ -197,11 +197,11 @@ SSOT: `plans/active/cross_operator_auth_failover_2026_05_29.md`.
 
 The orchestrator rotates the account used for NEW SPAWNS when any of these fires:
 
-| Trigger               | Detection mechanism                                                                      | Orchestrator action                                                                                             |
-| --------------------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `rate_limit`          | Usage poller reports 5h_pct ≥ 95% OR weekly_pct ≥ 95% OR Sonnet limit hit              | `_pick_next_account()` selects lowest-pct available account; new spawns use new account                         |
-| `auth_failed`         | Worker spawned, did NOT send /heartbeat within 180s of `/spawn` (setup-token stale/bad) | Spawn-heartbeat watchdog marks account `auth_failed`, rotates immediately, re-spawns slot on next available acct |
-| `operator_directed`   | POST `/api/slots/{id}/rotate-account` with `reason=operator_directed`                   | Immediate rotation; current worker keeps its token until /done; next spawn uses new account                      |
+| Trigger             | Detection mechanism                                                                     | Orchestrator action                                                                                              |
+| ------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `rate_limit`        | Usage poller reports 5h_pct ≥ 95% OR weekly_pct ≥ 95% OR Sonnet limit hit               | `_pick_next_account()` selects lowest-pct available account; new spawns use new account                          |
+| `auth_failed`       | Worker spawned, did NOT send /heartbeat within 180s of `/spawn` (setup-token stale/bad) | Spawn-heartbeat watchdog marks account `auth_failed`, rotates immediately, re-spawns slot on next available acct |
+| `operator_directed` | POST `/api/slots/{id}/rotate-account` with `reason=operator_directed`                   | Immediate rotation; current worker keeps its token until /done; next spawn uses new account                      |
 
 In-memory tokens of already-running workers are NOT swapped mid-session (claude CLI doesn't re-read env mid-session).
 Rotation only affects subsequent spawns. Live workers continue on their existing token until they /done.
@@ -218,8 +218,8 @@ Every `/api/slots/{id}/spawn` call starts a background 180-second watchdog:
 5. The slot is re-spawned with the new account.
 6. A Slack alert fires with `reason: auth_failed` (see below).
 
-Implementation: `FailoverLoop`-style background thread in `server/autospawn.py` (heartbeat watchdog).
-SSOT commit: agent-orchestrator@6871070 (Phase 2 task-007).
+Implementation: `FailoverLoop`-style background thread in `server/autospawn.py` (heartbeat watchdog). SSOT commit:
+agent-orchestrator@6871070 (Phase 2 task-007).
 
 ### Slack alert schema for rotation events
 
@@ -406,8 +406,8 @@ plan.
 
 - `plans/epics/orchestrator_master.md § Auth & accounts r3` — architecture overview citing this SSOT
 - `plans/epics/orchestrator_master.md § Phase 4 r3` — the migration that implements this design
-- `plans/active/cross_operator_auth_failover_2026_05_29.md` — shared-pool design, spawn-heartbeat watchdog,
-  Slack rotation alerts (Phase 2+3 of that plan; codified here 2026-05-29)
+- `plans/active/cross_operator_auth_failover_2026_05_29.md` — shared-pool design, spawn-heartbeat watchdog, Slack
+  rotation alerts (Phase 2+3 of that plan; codified here 2026-05-29)
 - `plans/active/issues/claude_credentials_rotation_in_memory_staleness_2026_05_21.md` — root-cause doc for the
   2026-05-21 cascade that motivated this SSOT
 - `plans/active/agent_orchestrator_per_spawn_account_isolation_2026_05_20.md` — SUPERSEDED by this SSOT (long-lived

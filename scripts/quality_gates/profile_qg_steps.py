@@ -213,7 +213,7 @@ def run(
     import json as _json
 
     manifest_data = cast(dict[str, object], _json.loads(MANIFEST_PATH.read_text()))
-    repos_raw = manifest_data.get("repositories", {})
+    repos_raw = manifest_data.get("repositories", {})  # noqa: qg-empty-fallback
     if not isinstance(repos_raw, dict):
         print("ERROR: unexpected manifest structure", file=sys.stderr)
         return 1

@@ -15,27 +15,36 @@ Slash-webhook push notifications from the agent-orchestrator Cloud Run service t
 
 ---
 
-## Event types (refreshed 2026-05-28)
+## Event types (refreshed 2026-06-01)
 
-Both `server/notifications/slack.py` and `server/notifications/telegram.py` expose the same set; `slack.py` is sync
-(suppress on failure), `telegram.py` is async (suppress on failure). The three notifications that were OAuth-refresh
-specific (`notify_oauth_token_expiring`, `notify_oauth_refresh_succeeded`, `notify_oauth_refresh_failed`) were removed
-in Phase 4b-cleanup 2026-05-28 — see
+`server/notifications/slack.py` is sync (suppress on failure); `server/notifications/telegram.py` is async (suppress on
+failure). **The two modules no longer expose an identical set** — Slack carries the dashboard-centric alerts
+(`notify_unpushed_plans`, `notify_autospawn_flap`, `notify_watchdog_kill`) that Telegram omits, and Telegram carries
+`notify_orchestrator_restart_loop` + `notify_sync` that Slack omits. Current inventory: **Slack = 13 funcs, Telegram = 9
+funcs** (verified against `rg "^(async )?def notify_" server/notifications/*.py` 2026-06-01). The three OAuth-refresh
+notifications (`notify_oauth_token_expiring`, `notify_oauth_refresh_succeeded`, `notify_oauth_refresh_failed`) were
+removed in Phase 4b-cleanup 2026-05-28 — see
 [`../12-agent-workflow/orchestrator-safety-mechanisms.md`](../12-agent-workflow/orchestrator-safety-mechanisms.md) § C.
 
-| Function                           | Wired in                                                      | Trigger                                                               |
-| ---------------------------------- | ------------------------------------------------------------- | --------------------------------------------------------------------- |
-| `notify_slot_blocked`              | `server/server.py::blocked_slot`                              | POST /api/slots/{id}/blocked (operator answer needed)                 |
-| `notify_slot_stale`                | `server/health.py` working-stale path                         | HealthMonitor: working slot silent >25 min                            |
-| `notify_slot_failed`               | `server/health.py` idle-stale path                            | HealthMonitor: idle worker process dead                               |
-| `notify_spawn_failure`             | `server/server.py::spawn_slot` exception arm                  | `tmux_spawn.spawn` raised — readwrite/systemd/tmux config issue       |
-| `notify_agent_stuck_respawned`     | `server/worker_liveness.py` auto-respawn happy path           | Stuck-agent detection fired + tmux respawn succeeded                  |
-| `notify_agent_stuck_escalation`    | `server/worker_liveness.py` auto-respawn failure path         | Respawn attempted but new tmux session never registered               |
-| `notify_account_rotated`           | `server/server.py::rotate_all_slots_off_account`              | Slot respawned with a fresh sibling account (rate-limit failover)     |
-| `notify_all_accounts_exhausted`    | `server/server.py::_pick_next_account` (no healthy sibling)   | All accounts past 95% on at least one quota dimension                 |
-| `notify_setup_token_expiring`      | `server/usage_poller.py::_check_setup_token_expiry`           | Long-lived setup-token within 30-day (warn) or 7-day (crit) of expiry |
-| `notify_git_staleness_red`         | `server/health.py` git-status badge integration               | Slot's worktree red >15 min AND no auto-pull within 5 min             |
-| `notify_orchestrator_restart_loop` | Telegram-only; called from a systemd OnFailure script wrapper | systemd restarted orchestrator >N times in a short window             |
+The S (Slack) / T (Telegram) columns mark which module exports each function.
+
+| Function                           | S   | T   | Wired in                                                      | Trigger                                                               |
+| ---------------------------------- | --- | --- | ------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `notify_slot_blocked`              | ✓   |     | `server/server.py::blocked_slot`                              | POST /api/slots/{id}/blocked (operator answer needed)                 |
+| `notify_slot_stale`                | ✓   |     | `server/health.py` working-stale path                         | HealthMonitor: working slot silent >25 min                            |
+| `notify_slot_failed`               | ✓   |     | `server/health.py` idle-stale path                            | HealthMonitor: idle worker process dead                               |
+| `notify_spawn_failure`             | ✓   | ✓   | `server/server.py::spawn_slot` exception arm                  | `tmux_spawn.spawn` raised — readwrite/systemd/tmux config issue       |
+| `notify_agent_stuck_respawned`     | ✓   | ✓   | `server/worker_liveness.py` auto-respawn happy path           | Stuck-agent detection fired + tmux respawn succeeded                  |
+| `notify_agent_stuck_escalation`    | ✓   | ✓   | `server/worker_liveness.py` auto-respawn failure path         | Respawn attempted but new tmux session never registered               |
+| `notify_account_rotated`           | ✓   | ✓   | `server/server.py::rotate_all_slots_off_account`              | Slot respawned with a fresh sibling account (rate-limit failover)     |
+| `notify_all_accounts_exhausted`    | ✓   | ✓   | `server/server.py::_pick_next_account` (no healthy sibling)   | All accounts past 95% on at least one quota dimension                 |
+| `notify_setup_token_expiring`      | ✓   | ✓   | `server/usage_poller.py::_check_setup_token_expiry`           | Long-lived setup-token within 30-day (warn) or 7-day (crit) of expiry |
+| `notify_git_staleness_red`         | ✓   | ✓   | `server/health.py` git-status badge integration               | Slot's worktree red >15 min AND no auto-pull within 5 min             |
+| `notify_unpushed_plans`            | ✓   |     | `server/health.py` git-staleness path                         | Plan-flip commits sitting unpushed on a slot worktree                 |
+| `notify_autospawn_flap`            | ✓   |     | `server/autospawn.py` flap-detector                           | 3 consecutive autospawns within 10 min produced no task claim         |
+| `notify_watchdog_kill`             | ✓   |     | `server/worker_liveness_watchdog.py` kill path                | Watchdog killed a stuck/silent/context-full worker (or daily-cap hit) |
+| `notify_orchestrator_restart_loop` |     | ✓   | Telegram-only; called from a systemd OnFailure script wrapper | systemd restarted orchestrator >N times in a short window             |
+| `notify_sync`                      |     | ✓   | Telegram-only; generic sync/heartbeat broadcast               | Periodic / manual fleet sync notification                             |
 
 ### Payload shape (Block Kit)
 

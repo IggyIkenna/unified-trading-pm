@@ -373,7 +373,7 @@ Services in live mode (`SERVICE_MODE=live`) buffer data in-memory and flush to G
 # GCS compose merges up to 32 source objects into one destination
 # For >32 windows, chain compose calls (compose first 32, then compose result with next batch)
 storage_client.compose(
-    bucket="market-data-tick-defi-{project_id}",
+    bucket="market-data-tick-defi-prd-{project_id}",
     sources=["live/venue=HYPERLIQUID/instrument=BTC-USD/window=2026-03-18T00:00Z.parquet", ...],
     destination="by_date/day=2026-03-18/data_type=trades/venue=HYPERLIQUID/BTC-USD.parquet",
 )

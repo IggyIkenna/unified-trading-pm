@@ -214,7 +214,7 @@ import json, sys
 d = json.load(sys.stdin)
 summary = d.get('package_vulnerability_summary', {{}})
 vulns = summary.get('vulnerabilities', {{}})
-crits = vulns.get('CRITICAL', [])
+crits = vulns.get('CRITICAL', [])  # noqa: qg-empty-fallback
 print(len(crits))
 " 2>/dev/null || echo "0")
             if [ "$CRITICAL" != "0" ]; then

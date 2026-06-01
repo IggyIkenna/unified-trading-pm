@@ -5,7 +5,9 @@ parent_epic: deployment_and_user_management_master
 assigned_vm: vm-operator-ops
 status: done
 completed: 2026-06-01
-completed_note: "Operator-marked done 2026-06-01 (harsh). All 10 items shipped; pw:L2 ran green in §5 (deployment-ui@7bbc270, 140/140) — per-item BLOCKED-INFRA libatk notes are slot-env-only and superseded by the §5 full-suite pass."
+completed_note:
+  "Operator-marked done 2026-06-01 (harsh). All 10 items shipped; pw:L2 ran green in §5 (deployment-ui@7bbc270, 140/140)
+  — per-item BLOCKED-INFRA libatk notes are slot-env-only and superseded by the §5 full-suite pass."
 priority: P0
 created: 2026-05-27
 author: harsh (claude opus 4.7)
@@ -85,8 +87,8 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
       missing in slot env | regression: tests/smoke/venue_credentials.spec.ts. Backend: GET /api/venue-credentials
       probes Secret Manager → Tardis api-key-info (5s timeout); returns active/expired/missing/error; mock mode returns
       simulated EXPIRED. Frontend: VenueCredentialsPanel.tsx added to VmDeployments page with 7 unit tests.
-- [x] ✅ [AGENT][UI] P2. Show, per venue, which date ranges are fetchable on the _current_ key vs which need a renewed/paid
-      key (free = 1st-of-month + recent; paid = rest) — consumes the per-venue coverage map from
+- [x] ✅ [AGENT][UI] P2. Show, per venue, which date ranges are fetchable on the _current_ key vs which need a
+      renewed/paid key (free = 1st-of-month + recent; paid = rest) — consumes the per-venue coverage map from
       `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §3. — unified-trading-system-ui@929542db |
       VenueDateRangePanel.tsx: per-venue DateCountBar + free/paid counts + sample dates + KeyStatusBadge; proxy rewrites
       for /api/venue-date-ranges; mock-handler routes; 8 vitest unit tests pass; regression spec
@@ -104,9 +106,9 @@ deployment registry (`gs://deployment-scripts-{pid}/deployments/active|archive`)
       complete/empty.
 - [x] ✅ [AGENT][UI] P2. "What a relaunch will uncover" estimate: given current key status + coverage map, show how many
       (venue, date) cells would be filled by a relaunch now vs after key renewal — so launches are decided with eyes
-      open. — unified-trading-system-ui@d30648fa | VenueRelaunchEstimate.tsx: 3-cell summary banner (pending/now/after)
-      + per-row table + decision hint for expired keys; mock route added; 8 vitest unit tests pass; regression:
-      tests/e2e/venue-relaunch-estimate.spec.ts (pw:L2 BLOCKED-INFRA: libatk missing on EC2).
+      open. — unified-trading-system-ui@d30648fa | VenueRelaunchEstimate.tsx: 3-cell summary banner
+      (pending/now/after) + per-row table + decision hint for expired keys; mock route added; 8 vitest unit tests pass;
+      regression: tests/e2e/venue-relaunch-estimate.spec.ts (pw:L2 BLOCKED-INFRA: libatk missing on EC2).
 
 ## §5 — Verification
 

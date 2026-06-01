@@ -17,17 +17,18 @@ First run against the refreshed comprehensive audit instructions. Many checks GR
 
 ## Section A — Fleet topology + connectivity
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| a1 | Central API `/health` returns 200 | 🔴 **FAIL** | `curl https://api.agent-orchestrator.odum-research.com/health` times out (5s, 15s). DNS resolves to `13.113.200.22` correctly. Raw HTTP/HTTPS to `13.113.200.22` also times out. |
-| a2 | `backends.json` matches running EC2 inventory | 🟢 PASS | 10 epic VMs + 1 central + 1 local laptop = 12 entries. AWS `describe-instances` confirms all 10 epic VMs `running` with matching IPs. Central VM `i-0c9b283b31d6b5ca7` ("agent-orchestrator-vm-1") also `running`. |
-| a3 | Central → fleet proxy reachable | ⚪ N/A | Cannot test — central API unreachable. Code path verified in `server/server.py::proxy_to_vm`. |
-| a4 | `/api/fleet/summary` fan-out works | ⚪ N/A | Cannot test — central API unreachable. |
-| a5 | Auth re-termination in `proxy_to_vm` | 🟢 PASS | Verified by code inspection: `_internal_tok = auth.get_internal_service_token()` + `fwd_headers["authorization"] = f"Bearer {_internal_tok}"` (server.py:2767-2769). Operator JWT never leaves the central perimeter when proxy works. |
+| ID  | Check                                         | Result      | Notes                                                                                                                                                                                                                                  |
+| --- | --------------------------------------------- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| a1  | Central API `/health` returns 200             | 🔴 **FAIL** | `curl https://api.agent-orchestrator.odum-research.com/health` times out (5s, 15s). DNS resolves to `13.113.200.22` correctly. Raw HTTP/HTTPS to `13.113.200.22` also times out.                                                       |
+| a2  | `backends.json` matches running EC2 inventory | 🟢 PASS     | 10 epic VMs + 1 central + 1 local laptop = 12 entries. AWS `describe-instances` confirms all 10 epic VMs `running` with matching IPs. Central VM `i-0c9b283b31d6b5ca7` ("agent-orchestrator-vm-1") also `running`.                     |
+| a3  | Central → fleet proxy reachable               | ⚪ N/A      | Cannot test — central API unreachable. Code path verified in `server/server.py::proxy_to_vm`.                                                                                                                                          |
+| a4  | `/api/fleet/summary` fan-out works            | ⚪ N/A      | Cannot test — central API unreachable.                                                                                                                                                                                                 |
+| a5  | Auth re-termination in `proxy_to_vm`          | 🟢 PASS     | Verified by code inspection: `_internal_tok = auth.get_internal_service_token()` + `fwd_headers["authorization"] = f"Bearer {_internal_tok}"` (server.py:2767-2769). Operator JWT never leaves the central perimeter when proxy works. |
 
 ### Root cause of a1 failure
 
 `aws ec2 describe-instance-status --instance-ids i-0c9b283b31d6b5ca7` reports:
+
 - Instance state: `running`
 - System status: `ok`
 - **Instance status: `impaired`** ← network stack wedged
@@ -38,101 +39,101 @@ reboot via API.
 
 ## Section B — Auth model (Phase 4b-cleanup setup-tokens-only HARD RULE)
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| b1 | Every account in `accounts.json` has `oauth_token_env_file` | 🟢 PASS | All 4 accounts (sub-a-ikenna, sub-b-iggy2london, sub-c-ikenna-odum, harsh-primary) declare an env file. |
-| b2 | Every account has `setup_token_expires_at` | 🟢 PASS | sub-a/b/c expire 2027-05-21; harsh-primary 2027-05-22. None within 30 days. |
-| b3 | Env files exist in both GCS and S3 buckets | 🟢 PASS | GCS `gs://central-element-323112-orchestrator-creds/accounts/` and S3 `s3://uts-orchestrator-creds-427895769566/accounts/` both have all 4 `<id>.env` files (205-210 bytes each, dates 2026-05-22). |
-| b4 | Legacy credential-swap code paths removed | 🟢 PASS | 0 hits in `server/` for `swap_credentials_for`, `restore_credentials`, `oauth_refresh.refresh`, `GCSCredsPoller`, `.credentials.{...}.json`. |
-| b5 | `env_file` is required on every spawn | 🟢 PASS | 0 hits for `env_file: str \| None` in `tmux_spawn.py` and `usage_tracker.py`. Signatures are mandatory `env_file: str`. |
-| b6 | CredsEnvPoller alive on central VM | ⚪ N/A | Central VM unreachable; can't verify journalctl. Code path is wired in `server/server.py` lifespan. |
+| ID  | Check                                                       | Result  | Notes                                                                                                                                                                                               |
+| --- | ----------------------------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| b1  | Every account in `accounts.json` has `oauth_token_env_file` | 🟢 PASS | All 4 accounts (sub-a-ikenna, sub-b-iggy2london, sub-c-ikenna-odum, harsh-primary) declare an env file.                                                                                             |
+| b2  | Every account has `setup_token_expires_at`                  | 🟢 PASS | sub-a/b/c expire 2027-05-21; harsh-primary 2027-05-22. None within 30 days.                                                                                                                         |
+| b3  | Env files exist in both GCS and S3 buckets                  | 🟢 PASS | GCS `gs://central-element-323112-orchestrator-creds/accounts/` and S3 `s3://uts-orchestrator-creds-427895769566/accounts/` both have all 4 `<id>.env` files (205-210 bytes each, dates 2026-05-22). |
+| b4  | Legacy credential-swap code paths removed                   | 🟢 PASS | 0 hits in `server/` for `swap_credentials_for`, `restore_credentials`, `oauth_refresh.refresh`, `GCSCredsPoller`, `.credentials.{...}.json`.                                                        |
+| b5  | `env_file` is required on every spawn                       | 🟢 PASS | 0 hits for `env_file: str \| None` in `tmux_spawn.py` and `usage_tracker.py`. Signatures are mandatory `env_file: str`.                                                                             |
+| b6  | CredsEnvPoller alive on central VM                          | ⚪ N/A  | Central VM unreachable; can't verify journalctl. Code path is wired in `server/server.py` lifespan.                                                                                                 |
 
 ## Section C — Backlog auto-generation (Phase 6 HARD RULE)
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| c1 | `regen_backlog_from_plan.py` exists + parses real plans | 🟢 PASS | Module present at `server/regen_backlog_from_plan.py` (430 lines). Smoke-tested earlier this session: scans 14 plans, dedupes correctly. |
-| c2 | `PlanRegenLoop` wired in lifespan | 🟢 PASS | `server.py:211 — plan_regen = _regen_mod.PlanRegenLoop(on_regen=_on_plan_regen)`. |
-| c3 | Idempotency holds (2nd regen → 0 new) | 🟢 PASS | Verified earlier this session — second run reports `new_tasks=0, skipped_existing=95`. |
-| c4 | `/api/backlog/regen` manual endpoint exists | 🟢 PASS | `server.py:1470 — @app.post("/api/backlog/regen", dependencies=AUTHED_DEPS)`. |
-| c5 | CLAUDE.md HARD RULE present | 🟢 PASS | Found in `cursor-configs/CLAUDE.md` § "Other key rules" — "Agent-orchestrator backlog is plan-driven (HARD RULE codified 2026-05-28, Phase 6)". |
+| ID  | Check                                                   | Result  | Notes                                                                                                                                           |
+| --- | ------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| c1  | `regen_backlog_from_plan.py` exists + parses real plans | 🟢 PASS | Module present at `server/regen_backlog_from_plan.py` (430 lines). Smoke-tested earlier this session: scans 14 plans, dedupes correctly.        |
+| c2  | `PlanRegenLoop` wired in lifespan                       | 🟢 PASS | `server.py:211 — plan_regen = _regen_mod.PlanRegenLoop(on_regen=_on_plan_regen)`.                                                               |
+| c3  | Idempotency holds (2nd regen → 0 new)                   | 🟢 PASS | Verified earlier this session — second run reports `new_tasks=0, skipped_existing=95`.                                                          |
+| c4  | `/api/backlog/regen` manual endpoint exists             | 🟢 PASS | `server.py:1470 — @app.post("/api/backlog/regen", dependencies=AUTHED_DEPS)`.                                                                   |
+| c5  | CLAUDE.md HARD RULE present                             | 🟢 PASS | Found in `cursor-configs/CLAUDE.md` § "Other key rules" — "Agent-orchestrator backlog is plan-driven (HARD RULE codified 2026-05-28, Phase 6)". |
 
 ## Section D — Safety mechanisms (Phase 3)
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| d1 | `WorkerLivenessKicker` daemon | 🟢 PASS | Module present at `server/worker_liveness.py`. Started in lifespan. (Live verification N/A — central down.) |
-| d2 | Auto-respawn refuses no-env_file accounts | 🟢 PASS | Verified by code inspection: `worker_liveness.py:735-746` returns early with `WARN` log when `acc_def is None or not acc_def.oauth_token_env_file`. |
-| d3 | Pre-spawn dirty-state gate | 🟢 PASS | 4 references to `worktree_clean_check.{commit_and_push_dirty_repos\|check_slot_clean}` in `server.py`. |
-| d4 | `notify_git_staleness_red` exists | 🟢 PASS | Both `slack.py` and `telegram.py` export the function. |
+| ID  | Check                                     | Result  | Notes                                                                                                                                               |
+| --- | ----------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| d1  | `WorkerLivenessKicker` daemon             | 🟢 PASS | Module present at `server/worker_liveness.py`. Started in lifespan. (Live verification N/A — central down.)                                         |
+| d2  | Auto-respawn refuses no-env_file accounts | 🟢 PASS | Verified by code inspection: `worker_liveness.py:735-746` returns early with `WARN` log when `acc_def is None or not acc_def.oauth_token_env_file`. |
+| d3  | Pre-spawn dirty-state gate                | 🟢 PASS | 4 references to `worktree_clean_check.{commit_and_push_dirty_repos\|check_slot_clean}` in `server.py`.                                              |
+| d4  | `notify_git_staleness_red` exists         | 🟢 PASS | Both `slack.py` and `telegram.py` export the function.                                                                                              |
 
 ## Section E — Notifications
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| e1 | Notification inventory matches expected | 🟢 PASS | Slack: 10 `def notify_*` funcs; Telegram: 8 `async def notify_*` funcs. Removed funcs (`notify_oauth_refresh_succeeded/failed`, `notify_oauth_token_expiring`) ARE GONE — 0 hits. |
-| e2 | Slack webhook configured on central | ⚪ N/A | Central VM unreachable; can't ssh + grep `.env.local`. |
-| e3 | Telegram chat ID set on central | ⚪ N/A | Same — central unreachable. |
+| ID  | Check                                   | Result  | Notes                                                                                                                                                                             |
+| --- | --------------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| e1  | Notification inventory matches expected | 🟢 PASS | Slack: 10 `def notify_*` funcs; Telegram: 8 `async def notify_*` funcs. Removed funcs (`notify_oauth_refresh_succeeded/failed`, `notify_oauth_token_expiring`) ARE GONE — 0 hits. |
+| e2  | Slack webhook configured on central     | ⚪ N/A  | Central VM unreachable; can't ssh + grep `.env.local`.                                                                                                                            |
+| e3  | Telegram chat ID set on central         | ⚪ N/A  | Same — central unreachable.                                                                                                                                                       |
 
 ## Section F — State persistence (Phase 8)
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| f1 | SQLite state.db exists on central | ⚪ N/A | Central VM unreachable. |
-| f2 | Periodic snapshots fire (last_snapshot_iso < 1h) | ⚪ N/A | Central VM unreachable; can't read `/health` payload. |
-| f3 | State-snapshot AWS↔S3 gap honestly documented | 🟢 PASS | Verified in `codex/04-architecture/agent-orchestrator-overview.md` § "Secrets + buckets" — the **Known gap** callout is present and accurate. `server/gcs_sync.py` is GCS-only; AWS fleet without `ORCHESTRATOR_GCS_BUCKET` keeps state on local disk only. |
+| ID  | Check                                            | Result  | Notes                                                                                                                                                                                                                                                       |
+| --- | ------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| f1  | SQLite state.db exists on central                | ⚪ N/A  | Central VM unreachable.                                                                                                                                                                                                                                     |
+| f2  | Periodic snapshots fire (last_snapshot_iso < 1h) | ⚪ N/A  | Central VM unreachable; can't read `/health` payload.                                                                                                                                                                                                       |
+| f3  | State-snapshot AWS↔S3 gap honestly documented   | 🟢 PASS | Verified in `codex/04-architecture/agent-orchestrator-overview.md` § "Secrets + buckets" — the **Known gap** callout is present and accurate. `server/gcs_sync.py` is GCS-only; AWS fleet without `ORCHESTRATOR_GCS_BUCKET` keeps state on local disk only. |
 
 ## Section G — Dashboard
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| g1 | Firebase Hosting deploys current | 🟢 PASS (partial) | Dashboard SPA at `https://agent-orchestrator.odum-research.com` returns HTTP 200 in 0.5s. Cannot verify SHA-match without comparing to Firebase console — operator-side. |
-| g2 | Landing page hits `/api/fleet/summary` | 🟢 PASS | `dashboard/src/Landing.tsx` has the fetch call. |
-| g3 | Per-VM proxy baseUrl wired | 🟢 PASS | `dashboard/src/App.tsx::backendBaseUrl` returns `${BOOTSTRAP_URL}/api/vms/${b.id}` for non-central backends. |
-| g4 | OAuthBadge removed, only SetupTokenBadge | 🟢 PASS | 0 hits for `OAuthBadge`, `oauth_expires_at`, `oauth_expired`, `oauth_expires_in_seconds` in `dashboard/src/`. |
+| ID  | Check                                    | Result            | Notes                                                                                                                                                                    |
+| --- | ---------------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| g1  | Firebase Hosting deploys current         | 🟢 PASS (partial) | Dashboard SPA at `https://agent-orchestrator.odum-research.com` returns HTTP 200 in 0.5s. Cannot verify SHA-match without comparing to Firebase console — operator-side. |
+| g2  | Landing page hits `/api/fleet/summary`   | 🟢 PASS           | `dashboard/src/Landing.tsx` has the fetch call.                                                                                                                          |
+| g3  | Per-VM proxy baseUrl wired               | 🟢 PASS           | `dashboard/src/App.tsx::backendBaseUrl` returns `${BOOTSTRAP_URL}/api/vms/${b.id}` for non-central backends.                                                             |
+| g4  | OAuthBadge removed, only SetupTokenBadge | 🟢 PASS           | 0 hits for `OAuthBadge`, `oauth_expires_at`, `oauth_expired`, `oauth_expires_in_seconds` in `dashboard/src/`.                                                            |
 
 ## Section H — VM provisioning (Phase 9)
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| h1 | Packer template validates | ⚪ N/A | `packer` not installed on this audit host. Operator-runnable: `cd deployment-service/packer/agent-orchestrator && packer validate .`. |
-| h2 | `bootstrap_vm.sh` detects `/etc/orchestrator-ami-version` | 🟢 PASS | 8 hits for `IS_PREBAKED` + 1 for `/etc/orchestrator-ami-version`. Skip logic present for STEP 1, 2, warm-cache rsync. |
-| h3 | `launch-epic-vm-aws.sh` supports `AMI_ID` override | 🟢 PASS | 5 hits across `launch-epic-vm-aws.sh` and `lib/aws_ec2_launch_lib.sh`. Falls back to SSM-resolved Ubuntu when unset. |
-| h4 | Packer README + DNS-cutover doc link to live paths | 🟢 PASS (spot-check) | Sampled the file references in both docs; all resolve. |
+| ID  | Check                                                     | Result               | Notes                                                                                                                                 |
+| --- | --------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| h1  | Packer template validates                                 | ⚪ N/A               | `packer` not installed on this audit host. Operator-runnable: `cd deployment-service/packer/agent-orchestrator && packer validate .`. |
+| h2  | `bootstrap_vm.sh` detects `/etc/orchestrator-ami-version` | 🟢 PASS              | 8 hits for `IS_PREBAKED` + 1 for `/etc/orchestrator-ami-version`. Skip logic present for STEP 1, 2, warm-cache rsync.                 |
+| h3  | `launch-epic-vm-aws.sh` supports `AMI_ID` override        | 🟢 PASS              | 5 hits across `launch-epic-vm-aws.sh` and `lib/aws_ec2_launch_lib.sh`. Falls back to SSM-resolved Ubuntu when unset.                  |
+| h4  | Packer README + DNS-cutover doc link to live paths        | 🟢 PASS (spot-check) | Sampled the file references in both docs; all resolve.                                                                                |
 
 ## Section I — EIP + DNS (Phase 11)
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| i1 | EIP allocation script exists + parses | 🟢 PASS | `bash allocate-orchestrator-eips.sh -h` exits 0 with usage text. Script is idempotent + tagged. |
-| i2 | Fleet IPs are EIPs OR explicitly dynamic | 🟡 **operator-deferred** | `aws ec2 describe-addresses --filters tag:Project=agent-orchestrator` returns empty — no fleet EIPs allocated. Central VM EIP `13.113.200.22` exists (`agent-orchestrator-vm-eip`, allocation `eipassoc-0f3bb6623bc7fbfda`). Fleet IPs remain dynamic per Phase 11 deferred. |
-| i3 | DNS records exist OR operator-deferred | 🟡 **operator-deferred** | `dig` returns no A records for `api-<vm>.agent-orchestrator.odum-research.com` (10 VMs checked, all empty). Recipe still operator-deferred. |
+| ID  | Check                                    | Result                   | Notes                                                                                                                                                                                                                                                                        |
+| --- | ---------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| i1  | EIP allocation script exists + parses    | 🟢 PASS                  | `bash allocate-orchestrator-eips.sh -h` exits 0 with usage text. Script is idempotent + tagged.                                                                                                                                                                              |
+| i2  | Fleet IPs are EIPs OR explicitly dynamic | 🟡 **operator-deferred** | `aws ec2 describe-addresses --filters tag:Project=agent-orchestrator` returns empty — no fleet EIPs allocated. Central VM EIP `13.113.200.22` exists (`agent-orchestrator-vm-eip`, allocation `eipassoc-0f3bb6623bc7fbfda`). Fleet IPs remain dynamic per Phase 11 deferred. |
+| i3  | DNS records exist OR operator-deferred   | 🟡 **operator-deferred** | `dig` returns no A records for `api-<vm>.agent-orchestrator.odum-research.com` (10 VMs checked, all empty). Recipe still operator-deferred.                                                                                                                                  |
 
 ## Section J — Codex doc alignment
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| j1 | Connectivity model in overview matches code | 🟢 PASS | Auth re-termination + private-VPC proxy + central-VM-also-planning-role all reflected in `agent-orchestrator-overview.md` § "Connectivity model" + § "Fleet topology". |
-| j2 | No stale `OAuthBadge` / `oauth_refresh` / `GCSCredsPoller` in codex | 🟢 PASS | 6 hits surfaced; every one is in a "removed" / "historic" / "legacy" context. No claims of current behaviour. |
-| j3 | Notification inventory in slack-notifications.md matches code | 🟢 PASS | Doc table lists 11 functions; code exposes 10 (slack) + 8 (telegram with overlap). Inventory matches the documented current set. |
-| j4 | Worker-topology IP table matches `backends.json` | 🟢 PASS (sampled) | Sampled vm-defi/cefi/tradfi/sports — doc IPs match backends.json. Remaining 6 VMs not exhaustively cross-checked here. |
-| j5 (NEW) | Fleet VM port-8026 reachability claim in worker-topology doc | 🟡 **STALE** | Worker-topology.md § "Fleet dashboard entry point" says "Port 8026 is open to 0.0.0.0/0 in the security group." **Actual SG `sg-0080310387e84f613` restricts port 8026 to `172.31.0.0/16` (private VPC only)** — which is the CORRECT centralized-router behaviour. Doc claim is stale. |
+| ID       | Check                                                               | Result            | Notes                                                                                                                                                                                                                                                                                   |
+| -------- | ------------------------------------------------------------------- | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| j1       | Connectivity model in overview matches code                         | 🟢 PASS           | Auth re-termination + private-VPC proxy + central-VM-also-planning-role all reflected in `agent-orchestrator-overview.md` § "Connectivity model" + § "Fleet topology".                                                                                                                  |
+| j2       | No stale `OAuthBadge` / `oauth_refresh` / `GCSCredsPoller` in codex | 🟢 PASS           | 6 hits surfaced; every one is in a "removed" / "historic" / "legacy" context. No claims of current behaviour.                                                                                                                                                                           |
+| j3       | Notification inventory in slack-notifications.md matches code       | 🟢 PASS           | Doc table lists 11 functions; code exposes 10 (slack) + 8 (telegram with overlap). Inventory matches the documented current set.                                                                                                                                                        |
+| j4       | Worker-topology IP table matches `backends.json`                    | 🟢 PASS (sampled) | Sampled vm-defi/cefi/tradfi/sports — doc IPs match backends.json. Remaining 6 VMs not exhaustively cross-checked here.                                                                                                                                                                  |
+| j5 (NEW) | Fleet VM port-8026 reachability claim in worker-topology doc        | 🟡 **STALE**      | Worker-topology.md § "Fleet dashboard entry point" says "Port 8026 is open to 0.0.0.0/0 in the security group." **Actual SG `sg-0080310387e84f613` restricts port 8026 to `172.31.0.0/16` (private VPC only)** — which is the CORRECT centralized-router behaviour. Doc claim is stale. |
 
 ## Section K — Operational hygiene
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| k1 | `verify-slot-host-symmetry.sh` exits 0 on operator laptops | 🔴 **FAIL** (audit host) | Script reports `1 passed / 5 failed` on this audit host (harsh-claude session running). Slot-host symmetry not compliant. |
-| k2 | Plan-hygiene cron `0 5 * * *` UTC on planning VM | ⚪ N/A | Central/planning VM unreachable — can't run `crontab -l`. |
-| k3 | `uts-prod-orphan-ping-audit` Cloud Scheduler enabled | 🔴 **FAIL** | Job NOT FOUND in `central-element-323112` / any location. The CLAUDE.md HARD RULE references it as the GCP-side orphan-ping cron; the SSOT-named job is missing or never deployed. |
-| k4 | `regen_vm_registry.py --check` exits 0 | 🟢 PASS | "OK — all assigned_vm values valid (11 vm-ids)". |
+| ID  | Check                                                      | Result                   | Notes                                                                                                                                                                              |
+| --- | ---------------------------------------------------------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| k1  | `verify-slot-host-symmetry.sh` exits 0 on operator laptops | 🔴 **FAIL** (audit host) | Script reports `1 passed / 5 failed` on this audit host (harsh-claude session running). Slot-host symmetry not compliant.                                                          |
+| k2  | Plan-hygiene cron `0 5 * * *` UTC on planning VM           | ⚪ N/A                   | Central/planning VM unreachable — can't run `crontab -l`.                                                                                                                          |
+| k3  | `uts-prod-orphan-ping-audit` Cloud Scheduler enabled       | 🔴 **FAIL**              | Job NOT FOUND in `central-element-323112` / any location. The CLAUDE.md HARD RULE references it as the GCP-side orphan-ping cron; the SSOT-named job is missing or never deployed. |
+| k4  | `regen_vm_registry.py --check` exits 0                     | 🟢 PASS                  | "OK — all assigned_vm values valid (11 vm-ids)".                                                                                                                                   |
 
 ## Section L — Plan workflow + audit pool
 
-| ID | Check | Result | Notes |
-|---|---|---|---|
-| l1 | Audit pool active + showing progress | 🟡 **STALLED** | 14 rows: 2 IN-FLIGHT (#1, #2), 12 SEEDED (#3-#14). No movement since 2026-05-21 seed date — no rows transitioned to PICKED-UP / AUDIT-COMPLETE / WRAPPER-PLAN-CREATED / DONE. The dispatch flow isn't running. |
-| l2 | Workspace-qg ghost issue tracked | 🟢 PASS | `workspace_qg_ci_startup_failure_2026_05_26.md` updated today (2026-05-28) to include deployment-ui as an affected repo. GitHub Support ticket #4422570 referenced. |
+| ID  | Check                                | Result         | Notes                                                                                                                                                                                                          |
+| --- | ------------------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| l1  | Audit pool active + showing progress | 🟡 **STALLED** | 14 rows: 2 IN-FLIGHT (#1, #2), 12 SEEDED (#3-#14). No movement since 2026-05-21 seed date — no rows transitioned to PICKED-UP / AUDIT-COMPLETE / WRAPPER-PLAN-CREATED / DONE. The dispatch flow isn't running. |
+| l2  | Workspace-qg ghost issue tracked     | 🟢 PASS        | `workspace_qg_ci_startup_failure_2026_05_26.md` updated today (2026-05-28) to include deployment-ui as an affected repo. GitHub Support ticket #4422570 referenced.                                            |
 
 ---
 
@@ -169,9 +170,8 @@ reboot via API.
   dispatch, OR the operators haven't been picking rows. **Action**: pick a row + ack it on the next planning session.
 
 - **F-5 — `verify-slot-host-symmetry.sh` fails on the audit host (Harsh laptop).** 5 of 6 checks fail. Same machine
-  drives slot 2 interactive sessions. Per the local-slot=VM-slot HARD RULE, this is a violation.
-  **Action**: install the FF-pull cron + git-status reporter per
-  `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` Step 5.
+  drives slot 2 interactive sessions. Per the local-slot=VM-slot HARD RULE, this is a violation. **Action**: install the
+  FF-pull cron + git-status reporter per `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` Step 5.
 
 ### 🟡 P2 — Doc drift / minor cleanup
 
@@ -189,14 +189,14 @@ reboot via API.
 
 ## Recommendations
 
-| Owner | ETA | Action |
-|---|---|---|
-| **Operator (Ikenna)** | ASAP | F-1: AWS console — stop + start instance `i-0c9b283b31d6b5ca7` (the central API VM). The stop forces it to new underlying hardware; the start brings it back. EIP stays attached. |
-| **Operator** | After F-1 cleared | Re-run this audit end-to-end — all the ⚪ N/A live-state checks become testable. |
-| **Operator** | This week | F-3: Re-apply the Terraform for `uts-prod-orphan-ping-audit`. If the cron is deliberately decommissioned, update CLAUDE.md to remove the SSOT reference. |
-| **Operator** | Next planning session | F-4: Pick at least one audit-pool row + ack it. If the pool itself is no longer useful, mark it as archived with a successor plan. |
-| **Operator (Harsh)** | This session | F-5: Install the slot-host symmetry crons on this laptop per `harsh-laptop-migration-2026-05-20.md` Step 5. |
-| Agent | 30 min | F-6: Update `agent-orchestrator-worker-topology.md` § "Fleet dashboard entry point" — replace "Port 8026 is open to 0.0.0.0/0" with the correct VPC-only restriction + operator SSH-tunnel note. Doc-only change. |
+| Owner                 | ETA                   | Action                                                                                                                                                                                                            |
+| --------------------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Operator (Ikenna)** | ASAP                  | F-1: AWS console — stop + start instance `i-0c9b283b31d6b5ca7` (the central API VM). The stop forces it to new underlying hardware; the start brings it back. EIP stays attached.                                 |
+| **Operator**          | After F-1 cleared     | Re-run this audit end-to-end — all the ⚪ N/A live-state checks become testable.                                                                                                                                  |
+| **Operator**          | This week             | F-3: Re-apply the Terraform for `uts-prod-orphan-ping-audit`. If the cron is deliberately decommissioned, update CLAUDE.md to remove the SSOT reference.                                                          |
+| **Operator**          | Next planning session | F-4: Pick at least one audit-pool row + ack it. If the pool itself is no longer useful, mark it as archived with a successor plan.                                                                                |
+| **Operator (Harsh)**  | This session          | F-5: Install the slot-host symmetry crons on this laptop per `harsh-laptop-migration-2026-05-20.md` Step 5.                                                                                                       |
+| Agent                 | 30 min                | F-6: Update `agent-orchestrator-worker-topology.md` § "Fleet dashboard entry point" — replace "Port 8026 is open to 0.0.0.0/0" with the correct VPC-only restriction + operator SSH-tunnel note. Doc-only change. |
 
 ## Summary
 

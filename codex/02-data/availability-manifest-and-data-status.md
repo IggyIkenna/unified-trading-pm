@@ -52,26 +52,27 @@ The deployment-ui renders it as the data status page.
 ### ⚠️ DeFi has 10+ separate manifest buckets — checking only one gives the wrong picture
 
 A common misread (incident 2026-05-07 — sub-agent + main-agent both miscounted): MTDS DeFi data is **split across
-multiple GCS buckets by `(asset_group=defi, data_type)`**. Reading only the "canonical" `market-data-tick-defi-{pid}`
-bucket and concluding "Arb/Base/Polygon are at 0%" is **wrong** — those chains have data in the per-data_type buckets.
+multiple GCS buckets by `(asset_group=defi, data_type)`**. Reading only the "canonical"
+`market-data-tick-defi-prd-{pid}` bucket and concluding "Arb/Base/Polygon are at 0%" is **wrong** — those chains have
+data in the per-data_type buckets.
 
 **Bucket layout** (verified 2026-05-07 by listing every DeFi-named bucket in `gs://central-element-323112` + reading
 each `_index/availability_index.parquet`):
 
-| Bucket pattern                              | Carries data_types                                                                                                                                                                                                                                                                                                                                           | Phase | Chains observed                                                                                            |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------- |
-| `market-data-tick-defi-{pid}` (asset-group) | `dex_pool_state`, `dex_pool_swaps`, `dex_pools`, `oracle_prices`, `lending_indices`, `utilization`, `risk_params`, `vault_share_price`, `rewards`, `eigenlayer_rewards` + Phase-2 event-typed handlers (`liquidation_events`, `flash_loan_events`, `staking_yields`, `position_data`, `token_transfers`, `bridge_events`, `governance_events`, `mev_events`) | 1+2   | ETHEREUM + SOLANA                                                                                          |
-| `lending-indices-{pid}`                     | `lending_indices`                                                                                                                                                                                                                                                                                                                                            | 1     | ETHEREUM + 9 EVM chains (Optimism / Base / Arbitrum / Scroll / Avalanche / Linea / BSC / Polygon / zkSync) |
-| `dex-swaps-{pid}`                           | `dex_swaps`                                                                                                                                                                                                                                                                                                                                                  | 1     | ETHEREUM + 7 EVM chains                                                                                    |
-| `dex-pools-{pid}` (override-targeted)       | `dex_pools`                                                                                                                                                                                                                                                                                                                                                  | 1     | (per-pool granularity)                                                                                     |
-| `oracle-prices-{pid}`                       | `oracle_prices`                                                                                                                                                                                                                                                                                                                                              | 1     | ETHEREUM + Arbitrum / Base / Optimism / Polygon                                                            |
-| `gas-fees-{pid}`                            | `gas_fees`                                                                                                                                                                                                                                                                                                                                                   | 1     | ETHEREUM + 9 EVM chains                                                                                    |
-| `lst-rates-{pid}`                           | `lst_rates`                                                                                                                                                                                                                                                                                                                                                  | 1     | ETHEREUM + SOLANA                                                                                          |
-| `perp-funding-{pid}`                        | `perp_funding`                                                                                                                                                                                                                                                                                                                                               | 1     | HYPERLIQUID, ASTER (DEX perps)                                                                             |
-| `liquidations-{pid}` (override-targeted)    | `liquidations`                                                                                                                                                                                                                                                                                                                                               | 1     | EVM                                                                                                        |
-| `evm-defi-{pid}`                            | `evm_defi`, `lending_indices`                                                                                                                                                                                                                                                                                                                                | mixed | ETHEREUM + 4 EVM chains                                                                                    |
-| `solana-defi-{pid}`                         | `solana_defi`                                                                                                                                                                                                                                                                                                                                                | mixed | SOLANA                                                                                                     |
-| `instruments-store-defi-{pid}`              | (instruments metadata, multi-chain)                                                                                                                                                                                                                                                                                                                          | n/a   | 7+ chains                                                                                                  |
+| Bucket pattern                                  | Carries data_types                                                                                                                                                                                                                                                                                                                                           | Phase | Chains observed                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----- | ---------------------------------------------------------------------------------------------------------- |
+| `market-data-tick-defi-prd-{pid}` (asset-group) | `dex_pool_state`, `dex_pool_swaps`, `dex_pools`, `oracle_prices`, `lending_indices`, `utilization`, `risk_params`, `vault_share_price`, `rewards`, `eigenlayer_rewards` + Phase-2 event-typed handlers (`liquidation_events`, `flash_loan_events`, `staking_yields`, `position_data`, `token_transfers`, `bridge_events`, `governance_events`, `mev_events`) | 1+2   | ETHEREUM + SOLANA                                                                                          |
+| `lending-indices-{pid}`                         | `lending_indices`                                                                                                                                                                                                                                                                                                                                            | 1     | ETHEREUM + 9 EVM chains (Optimism / Base / Arbitrum / Scroll / Avalanche / Linea / BSC / Polygon / zkSync) |
+| `dex-swaps-{pid}`                               | `dex_swaps`                                                                                                                                                                                                                                                                                                                                                  | 1     | ETHEREUM + 7 EVM chains                                                                                    |
+| `dex-pools-{pid}` (override-targeted)           | `dex_pools`                                                                                                                                                                                                                                                                                                                                                  | 1     | (per-pool granularity)                                                                                     |
+| `oracle-prices-{pid}`                           | `oracle_prices`                                                                                                                                                                                                                                                                                                                                              | 1     | ETHEREUM + Arbitrum / Base / Optimism / Polygon                                                            |
+| `gas-fees-{pid}`                                | `gas_fees`                                                                                                                                                                                                                                                                                                                                                   | 1     | ETHEREUM + 9 EVM chains                                                                                    |
+| `lst-rates-{pid}`                               | `lst_rates`                                                                                                                                                                                                                                                                                                                                                  | 1     | ETHEREUM + SOLANA                                                                                          |
+| `perp-funding-{pid}`                            | `perp_funding`                                                                                                                                                                                                                                                                                                                                               | 1     | HYPERLIQUID, ASTER (DEX perps)                                                                             |
+| `liquidations-{pid}` (override-targeted)        | `liquidations`                                                                                                                                                                                                                                                                                                                                               | 1     | EVM                                                                                                        |
+| `evm-defi-{pid}`                                | `evm_defi`, `lending_indices`                                                                                                                                                                                                                                                                                                                                | mixed | ETHEREUM + 4 EVM chains                                                                                    |
+| `solana-defi-{pid}`                             | `solana_defi`                                                                                                                                                                                                                                                                                                                                                | mixed | SOLANA                                                                                                     |
+| `instruments-store-defi-prd-{pid}`              | (instruments metadata, multi-chain)                                                                                                                                                                                                                                                                                                                          | n/a   | 7+ chains                                                                                                  |
 
 **deployment-api routes correctly** — see `data_status_service.py`
 [`_BUCKET_CATEGORY_OVERRIDES`](../../deployment-api/deployment_api/services/data_status_service.py) (line 2802) which
@@ -88,8 +89,8 @@ every bucket — not just the canonical asset-group one.**
    Subgraph / chain-specific RPC adapters can rate-limit independently and operators can drill in via per-bucket
    coverage panels.
 2. **Phase-2 event-typed handlers + eigenlayer_rewards** (`liquidation_events`, `flash_loan_events`, etc.) — newer
-   pattern; lands in the canonical `market-data-tick-defi-{pid}` bucket (no override needed; default `_BUCKET_TEMPLATES`
-   entry picks them up).
+   pattern; lands in the canonical `market-data-tick-defi-prd-{pid}` bucket (no override needed; default
+   `_BUCKET_TEMPLATES` entry picks them up).
 
 #### Vocabulary inconsistency — RESOLVED 2026-05-16 (kebab→snake migration applied)
 
@@ -280,11 +281,11 @@ tooling but was a no-op on real data. Reference: `plans/archive/sports_gcs_parti
 
 > **Temporary states + their canonical follow-up plans** (per CLAUDE.md HARD RULE — codex audit D-3 2026-05-12):
 >
-> | Temporary state                                                                                                                                                                        | Successor plan                                                                                                         | Successor phase                                                              |
-> | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated) | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep |
-> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 7 reader-fallback deletion (~2026-06-15)                               |
-> | v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows) | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/active/tradfi_massive_dual_source_2026_05_28.md) | Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7) |
+> | Temporary state                                                                                                                                                                        | Successor plan                                                                                                         | Successor phase                                                                           |
+> | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated) | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep              |
+> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 7 reader-fallback deletion (~2026-06-15)                                            |
+> | v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows)                                                                            | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/active/tradfi_massive_dual_source_2026_05_28.md) | Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7) |
 
 The schema has evolved through six published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8
@@ -300,9 +301,9 @@ option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UT
 The `pipeline_mode` column shipped earlier as part of the `gcs_migration_bundle_pipeline_mode_2026_05_08` work and is
 preserved in v8.
 
-**Schema v9 is live as of 2026-05-30 (UTL@`c7bfa427`).** `MANIFEST_SCHEMA_VERSION = 9` in
-`manifest_writer.py`. v9 adds the `source: str` column (see [TradFi `source` column](#tradfi-source-column--v9) below).
-All prior v8 semantics are unchanged.
+**Schema v9 is live as of 2026-05-30 (UTL@`c7bfa427`).** `MANIFEST_SCHEMA_VERSION = 9` in `manifest_writer.py`. v9 adds
+the `source: str` column (see [TradFi `source` column](#tradfi-source-column--v9) below). All prior v8 semantics are
+unchanged.
 
 **Schema v8** (UTL@`547ff3c`, 2026-05-12): `MANIFEST_SCHEMA_VERSION = 8`. The `pipeline_mode=` default was removed
 (explicit-or-fail) from all 6 public `record_*` methods. The 3 v8 emission kwargs (`service_emission_state=` /
@@ -481,20 +482,21 @@ class AvailabilityRecord:
 When a TradFi `(asset_group, venue, day, data_type)` cell has multiple sources in `SOURCE_PRIORITY`, the manifest may
 have **one row per source** for the same cell key. The `capture_status` semantics are per-source:
 
-| Scenario | `source=databento` row | `source=massive` row | Downstream consumer policy |
-| --- | --- | --- | --- |
-| Databento captured, Massive not yet run | `captured` | absent (not yet dispatched) | cell is **available** — Databento row is sufficient |
-| Both captured | `captured` | `captured` | both available; `select_primary_available_source()` picks priority winner for reads; field-union for non-overlapping columns |
-| Databento empty_confirmed, Massive captured | `empty_confirmed` | `captured` | cell is **available** via Massive; Databento gap is not penalised if Massive covers it |
-| Both empty_confirmed | `empty_confirmed` | `empty_confirmed` | cell is **empty** for this (venue, day, data_type) |
-| Databento attempted_failed, Massive captured | `attempted_failed` | `captured` | cell is **available** via Massive; Databento failure is flagged in error_reason but doesn't block downstream |
+| Scenario                                     | `source=databento` row | `source=massive` row        | Downstream consumer policy                                                                                                   |
+| -------------------------------------------- | ---------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Databento captured, Massive not yet run      | `captured`             | absent (not yet dispatched) | cell is **available** — Databento row is sufficient                                                                          |
+| Both captured                                | `captured`             | `captured`                  | both available; `select_primary_available_source()` picks priority winner for reads; field-union for non-overlapping columns |
+| Databento empty_confirmed, Massive captured  | `empty_confirmed`      | `captured`                  | cell is **available** via Massive; Databento gap is not penalised if Massive covers it                                       |
+| Both empty_confirmed                         | `empty_confirmed`      | `empty_confirmed`           | cell is **empty** for this (venue, day, data_type)                                                                           |
+| Databento attempted_failed, Massive captured | `attempted_failed`     | `captured`                  | cell is **available** via Massive; Databento failure is flagged in error_reason but doesn't block downstream                 |
 
-**Key rule**: a TradFi cell is considered `captured` if **at least one source** has `capture_status=captured`. Downstream
-consumers apply union semantics. `select_primary_available_source(asset_group, data_type, available_sources)` in UAC
-`canonical.crosscutting.source_priority` returns the priority-ordered primary for a given available set.
+**Key rule**: a TradFi cell is considered `captured` if **at least one source** has `capture_status=captured`.
+Downstream consumers apply union semantics. `select_primary_available_source(asset_group, data_type, available_sources)`
+in UAC `canonical.crosscutting.source_priority` returns the priority-ordered primary for a given available set.
 
-Conflict detection: if the same `(venue, day, ticker, timestamp)` appears in both sources, `detect_dual_source_conflicts()`
-logs `DUAL_SOURCE_DUPLICATE` + writes `divergence_kind=DUAL_SOURCE_DUPLICATE` to the manifest. No silent drops.
+Conflict detection: if the same `(venue, day, ticker, timestamp)` appears in both sources,
+`detect_dual_source_conflicts()` logs `DUAL_SOURCE_DUPLICATE` + writes `divergence_kind=DUAL_SOURCE_DUPLICATE` to the
+manifest. No silent drops.
 
 SSOT: `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` § "Multi-source merge".
 
@@ -1245,7 +1247,7 @@ The **absence-of-row semantic** ("not in expected universe") is preserved either
 manifest absence now definitively means "outside expected universe" — e.g. a pre-2021-08-31 row for an Arbitrum tuple is
 present in canonical with `capture_status=empty_confirmed AND error_reason=EXPECTED_PRE_GENESIS_CHAIN`, so the rollup's
 expected denominator counts it as known-empty rather than missing. Spot-check verification 2026-05-07:
-`gs://market-data-tick-defi-{pid}/_index/availability_index.parquet` has 688,220 `EXPECTED_PRE_GENESIS_CHAIN` rows
+`gs://market-data-tick-defi-prd-{pid}/_index/availability_index.parquet` has 688,220 `EXPECTED_PRE_GENESIS_CHAIN` rows
 (sample: `chain=ARBITRUM venue=AAVE_V3-ARBITRUM day=2018-01-01`). TradFi has 35,050 `EXPECTED_WEEKEND` + 2,427
 `EXPECTED_HOLIDAY` rows (sample: `venue=BARCHART day=2018-01-06` — Saturday).
 
@@ -1513,7 +1515,7 @@ fall back to a live shard-merge when the canonical blob is older than `MANIFEST_
 **Force-merge after a rebuild:**
 
 ```bash
-python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-{ag}-{pid}
+python -m unified_trading_library.manifest_consolidator --bucket market-data-tick-{ag}-{env}-{pid}
 ```
 
 Idempotent + safe to run concurrently with the scheduled cycle.
@@ -1609,11 +1611,11 @@ SSOT: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2 +
 Every `AvailabilityRecord` now carries `source: str = ""`. For TradFi cells this is the closed-set upstream provider
 string; for all other asset groups it defaults to `""` (no enforcement).
 
-| Value | Provider | When stamped |
-|-------|----------|-------------|
-| `"databento"` | Databento | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward |
-| `"massive"` | Massive (formerly Polygon.io) | `MassiveTradfiRestConnector` writes (Phase 4) |
-| `""` | — | Non-TradFi cells; pre-v9 TradFi rows not yet backfilled |
+| Value         | Provider                      | When stamped                                                                                  |
+| ------------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
+| `"databento"` | Databento                     | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward |
+| `"massive"`   | Massive (formerly Polygon.io) | `MassiveTradfiRestConnector` writes (Phase 4)                                                 |
+| `""`          | —                             | Non-TradFi cells; pre-v9 TradFi rows not yet backfilled                                       |
 
 ### Per-source `capture_status` semantics in a dual-source cell
 
@@ -1638,8 +1640,8 @@ semantics" policy documented in `codex/02-data/honest-absence-downstream-handlin
 
 ### `MissingSourceError` gate
 
-`manifest_writer.record_captured(category="tradfi", ...)` raises `MissingSourceError` (UTL) when `source=` is omitted
-or empty. This gate (step 0b in the write path) fires before cluster-coverage validation and before the manifest row is
+`manifest_writer.record_captured(category="tradfi", ...)` raises `MissingSourceError` (UTL) when `source=` is omitted or
+empty. This gate (step 0b in the write path) fires before cluster-coverage validation and before the manifest row is
 written — no partial rows land in the catalogue. Non-TradFi callsites are unaffected.
 
 ### QG STEP 5.64
@@ -1647,5 +1649,5 @@ written — no partial rows land in the catalogue. Non-TradFi callsites are unaf
 `unified-trading-library/scripts/quality-gates.sh` runs STEP 5.64 (`check_tradfi_source_explicit_at_record_captured.py`
 from `unified-trading-pm/scripts/quality_gates/`) to statically enforce that every `record_captured(...)` callsite
 inside the UTL source tree carries a `source=` kwarg. Callsites that forward `source` via `**kwargs` carry the
-`# QG-allow: tradfi-source-not-applicable` inline marker. The baseline YAML
-(`tradfi_source_explicit_baseline.yaml`) is empty — all UTL source callsites are already clean.
+`# QG-allow: tradfi-source-not-applicable` inline marker. The baseline YAML (`tradfi_source_explicit_baseline.yaml`) is
+empty — all UTL source callsites are already clean.

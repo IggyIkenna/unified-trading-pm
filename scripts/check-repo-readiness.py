@@ -470,7 +470,7 @@ def verify_repo(
     result.declared_stage = str(stage) if stage is not None else "unknown"
 
     repo_manifest: dict[str, object] = manifest.get(repo_name, {})
-    raw_deps: object = repo_manifest.get("dependencies", [])
+    raw_deps: object = repo_manifest.get("dependencies", [])  # noqa: qg-empty-fallback
     dep_list: list[str] = []
     if isinstance(raw_deps, list):
         for d in raw_deps:

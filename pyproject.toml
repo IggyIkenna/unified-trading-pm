@@ -64,6 +64,11 @@ max-complexity = 26
 "plans/audit/results/*.py" = ["E501"]
 "scripts/plans/*.py" = ["E501"]
 "scripts/quality_gates/check_record_empty_reason_closed_set.py" = ["E501"]
+# QG-allow markers push these lines past 120 chars; the markers are required to
+# suppress STEP 5.85 (no-inline-pipeline-mode-string-literal) which legitimately
+# fires on docstring/fixture-string examples that demonstrate the violation.
+"scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py" = ["E501"]
+"scripts/quality_gates/test_check_pipeline_mode_explicit_at_record_calls.py" = ["E501"]
 "codex/14-customer-journeys/_tools/build_scope_manifest.py" = ["E501"]
 "codex/06-coding-standards/test-templates/test_event_logging.py" = ["E501"]
 

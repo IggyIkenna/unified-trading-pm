@@ -64,8 +64,9 @@ impact, no walk needed now.
       already done, UAC has 27 batch + 1 live values
 - [x] ✅ [AGENT] P0. Make the column **NOT NULL going forward** in the manifest schema (existing rows allowed NULL until
       Phase 3 backfill completes; flip post-backfill). — resolved by Phase 3 (unified-api-contracts@228270e 2026-05-28):
-      manifest_schema.py PIPELINE_MODE_COLUMN updated to "always NOT NULL"; UTL manifest_writer.py _coerce_pipeline_mode
-      docstring updated. Phase 1 "going forward" intent superseded by Phase 3 "always NOT NULL" after backfill complete.
+      manifest_schema.py PIPELINE_MODE_COLUMN updated to "always NOT NULL"; UTL manifest_writer.py
+      \_coerce_pipeline_mode docstring updated. Phase 1 "going forward" intent superseded by Phase 3 "always NOT NULL"
+      after backfill complete.
 - [x] ✅ [AGENT] P0. UAC contract test: every captured row carries a valid (non-null, in-enum) `pipeline_mode`. Test
       runs in `unified-api-contracts/tests/`. — unified-api-contracts@9be72c15
 
@@ -78,40 +79,41 @@ impact, no walk needed now.
       pipeline_mode — pass-through), strategy/execution (per service tier). Also adds
       `derive_pipeline_mode_for_row(venue, asset_group, data_type)` for backfill derivation. Both exported from UTL
       top-level. 30 unit tests (all pass). — unified-trading-library@7bd14c43
-- [x] ✅ [AGENT] P0. Every manifest writer call-site sources its pipeline_mode from the helper. Audit-driven sweep — every
-      site identified in Phase 0 (a). NO inline string literals. Confirmed: all callsites use PipelineMode.X enum
-      values or service-local helpers that return enum values. No raw string literals found in any production source dir.
-- [x] ✅ [AGENT] P0. QG step (workspace-wide grep gate, modeled after STEP 5.69 bucket-name SSOT): no manifest writer omits
-      `pipeline_mode=`; no inline string literals for pipeline_mode outside `resolve_pipeline_mode` + UAC enum. Land as
-      a new STEP 5.7x in `unified-trading-pm/scripts/quality-gates-base/*.sh`. — STEP 5.85 added in
+- [x] ✅ [AGENT] P0. Every manifest writer call-site sources its pipeline_mode from the helper. Audit-driven sweep —
+      every site identified in Phase 0 (a). NO inline string literals. Confirmed: all callsites use PipelineMode.X enum
+      values or service-local helpers that return enum values. No raw string literals found in any production source
+      dir.
+- [x] ✅ [AGENT] P0. QG step (workspace-wide grep gate, modeled after STEP 5.69 bucket-name SSOT): no manifest writer
+      omits `pipeline_mode=`; no inline string literals for pipeline_mode outside `resolve_pipeline_mode` + UAC enum.
+      Land as a new STEP 5.7x in `unified-trading-pm/scripts/quality-gates-base/*.sh`. — STEP 5.85 added in
       base-service.sh; unified-trading-pm@28698c85
 
 ## Phase 3 — Existing-row backfill (P0)
 
 - [x] ✅ [AGENT] P0. Write one-shot script `unified-trading-pm/scripts/migration/backfill_pipeline_mode.py` that mutates
-      existing manifest rows: derive `pipeline_mode` from Phase 0 (d) table on
-      `(asset_group, venue, data_type)` via `derive_pipeline_mode_for_row()`. Per CLAUDE.md "GCS object ops in
-      migration scripts", uses `StorageClient.download_bytes / upload_file` — NEVER subprocess gsutil. Idempotent
-      (skip rows where pipeline_mode already set; `--force` for operator overwrite). `--dry-run` default, `--verify`
-      mode for count-only. — unified-trading-pm@9cf186cd
-- [x] ✅ [AGENT] P0. Run backfill across ALL asset-group buckets — cefi (both env-tiered + legacy), defi, tradfi, sports,
-      prediction. Both `_index/availability_index.parquet` and per-VM shards under `_index/per_vm/`.
-      Script updated with vectorized derivation (group-by unique (venue,data_type) instead of row-by-row; 35M cefi rows
-      fill in <1s). Added --per-vm flag for `_index/per_vm/*.parquet` shards.
-      Filled 43.5M+ rows across 10 buckets + 14 per-VM shards. Exempt: defi per-VM shard
-      `mdps-backfill-defi-20260528-071130.parquet` has active VM writing pre-Phase-2 rows (live race; document exempt
-      count ≤200 rows until VM completes). — unified-trading-pm@80dcf4197
+      existing manifest rows: derive `pipeline_mode` from Phase 0 (d) table on `(asset_group, venue, data_type)` via
+      `derive_pipeline_mode_for_row()`. Per CLAUDE.md "GCS object ops in migration scripts", uses
+      `StorageClient.download_bytes / upload_file` — NEVER subprocess gsutil. Idempotent (skip rows where pipeline_mode
+      already set; `--force` for operator overwrite). `--dry-run` default, `--verify` mode for count-only. —
+      unified-trading-pm@9cf186cd
+- [x] ✅ [AGENT] P0. Run backfill across ALL asset-group buckets — cefi (both env-tiered + legacy), defi, tradfi,
+      sports, prediction. Both `_index/availability_index.parquet` and per-VM shards under `_index/per_vm/`. Script
+      updated with vectorized derivation (group-by unique (venue,data_type) instead of row-by-row; 35M cefi rows fill in
+      <1s). Added --per-vm flag for `_index/per_vm/*.parquet` shards. Filled 43.5M+ rows across 10 buckets + 14 per-VM
+      shards. Exempt: defi per-VM shard `mdps-backfill-defi-20260528-071130.parquet` has active VM writing pre-Phase-2
+      rows (live race; document exempt count ≤200 rows until VM completes). — unified-trading-pm@80dcf4197
 - [x] ✅ [AGENT] P0. Verify post-backfill:
       `SELECT count(*) FROM index WHERE pipeline_mode IS NULL     OR pipeline_mode = ''` per bucket → must equal 0 (or
-      equal a documented exempt count for pre-history rows older than written_at tracking).
-      Result (2026-05-28): cefi=0/36.2M, defi=0/1.79M main (per-VM shard has live race — exempt), tradfi=0/374k,
-      sports=0/182k, prediction=0/375k, instruments-store-{cefi,defi,tradfi,sports,prediction}=0. All main manifests
-      clean. Defi per-VM shard exempt: active VM `mdps-backfill-defi-20260528-071130` writing rows without
-      pipeline_mode (pre-Phase-2 deployment); re-run backfill once VM completes to reach absolute zero.
+      equal a documented exempt count for pre-history rows older than written_at tracking). Result (2026-05-28):
+      cefi=0/36.2M, defi=0/1.79M main (per-VM shard has live race — exempt), tradfi=0/374k, sports=0/182k,
+      prediction=0/375k, instruments-store-{cefi,defi,tradfi,sports,prediction}=0. All main manifests clean. Defi per-VM
+      shard exempt: active VM `mdps-backfill-defi-20260528-071130` writing rows without pipeline_mode (pre-Phase-2
+      deployment); re-run backfill once VM completes to reach absolute zero.
 - [x] ✅ [AGENT] P0. After verification: flip the NOT NULL constraint in UAC schema from "going forward" to "always".
       Updated manifest_schema.py PIPELINE_MODE_COLUMN docstring + section comment to "always NOT NULL (Phase 3 backfill
-      complete 2026-05-28)". Updated UTL manifest_writer.py _coerce_pipeline_mode docstring + AvailabilityRecord comment.
-      5 UAC contract tests pass; 345 UTL tests pass. — unified-api-contracts@228270e; unified-trading-library@9d974416
+      complete 2026-05-28)". Updated UTL manifest_writer.py \_coerce_pipeline_mode docstring + AvailabilityRecord
+      comment. 5 UAC contract tests pass; 345 UTL tests pass. — unified-api-contracts@228270e;
+      unified-trading-library@9d974416
 
 ## Phase 4 — Consumer migration (P1)
 
@@ -120,17 +122,19 @@ impact, no walk needed now.
       input data. Fixed stage0 \_get_sides() to use \_is_batch_mode() / \_is_live_mode() predicates; updated all 15
       tests to use real PipelineMode string values (batch_tardis, live_websocket). —
       batch-live-reconciliation-service@cf50965
-- [x] ✅ [AGENT] P1. Update `deployment-ui` data-status drilldown to surface `pipeline_mode` as a visible column / filter
-      chip in coverage views. Per CLAUDE.md UI HARD RULE: `pw:L2 ✓` + regression spec evidence required before checkbox
-      tick.
-      Code shipped — deployment-api@0ae5230 (pipeline_mode filter in /turbo), unified-trading-system-ui@ee457621
-      (10 pipeline_mode chips in DataStatusFiltersUpper, pipeline_mode wired into context + fetchData + getDataStatusTurbo call).
-      **pw:L2 ✓ — all 4 tests pass** @ unified-trading-system-ui@e1e3b9a7: fixed test selector bug (button:has-text("Clear")
-      matched "Clear Cache" header button first; changed to getByRole("button", { name: "Clear", exact: true })).
-      Regression spec: `tests/e2e/data-status-pipeline-mode-filter.spec.ts` 4/4 passed.
-- [x] ✅ [AGENT] P1. Update `instrument_catalogue_availability_matrix_2026_04_29` outputs to include `pipeline_mode` as a
-      dimension in the catalogue parquet + the published markdown matrix.
-      Added `pipeline_modes: list[str]` to `TupleEntry`; `_aggregate_tuple` collects distinct sorted pipeline_mode values from filtered manifest slice; `_build_entry` includes them; `render_markdown` adds Pipeline Modes column. Pre-Phase-2 manifests without the column yield `[]`. 3 new tests (13/13 pass). — unified-api-contracts@ab7d0121
+- [x] ✅ [AGENT] P1. Update `deployment-ui` data-status drilldown to surface `pipeline_mode` as a visible column /
+      filter chip in coverage views. Per CLAUDE.md UI HARD RULE: `pw:L2 ✓` + regression spec evidence required before
+      checkbox tick. Code shipped — deployment-api@0ae5230 (pipeline_mode filter in /turbo),
+      unified-trading-system-ui@ee457621 (10 pipeline_mode chips in DataStatusFiltersUpper, pipeline_mode wired into
+      context + fetchData + getDataStatusTurbo call). **pw:L2 ✓ — all 4 tests pass** @
+      unified-trading-system-ui@e1e3b9a7: fixed test selector bug (button:has-text("Clear") matched "Clear Cache" header
+      button first; changed to getByRole("button", { name: "Clear", exact: true })). Regression spec:
+      `tests/e2e/data-status-pipeline-mode-filter.spec.ts` 4/4 passed.
+- [x] ✅ [AGENT] P1. Update `instrument_catalogue_availability_matrix_2026_04_29` outputs to include `pipeline_mode` as
+      a dimension in the catalogue parquet + the published markdown matrix. Added `pipeline_modes: list[str]` to
+      `TupleEntry`; `_aggregate_tuple` collects distinct sorted pipeline_mode values from filtered manifest slice;
+      `_build_entry` includes them; `render_markdown` adds Pipeline Modes column. Pre-Phase-2 manifests without the
+      column yield `[]`. 3 new tests (13/13 pass). — unified-api-contracts@ab7d0121
 
 ## Phase 5 — On-disk partition (DEFERRED — named successor)
 
@@ -143,11 +147,11 @@ impact, no walk needed now.
 
 - [x] ✅ [AGENT] P2. Write `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` documenting the canonical
       `PipelineMode` enum, the derivation table, the reconciliation pattern, and the deferred-partition note. Cross-link
-      from `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/contracts-scope-and-layout.md`.
-      — unified-trading-pm@58115ffc
-- [x] ✅ [AGENT] P2. EDIT `plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I pipeline_mode
-      item marked `[x] ✅ — resolved by pipeline_mode_implementation_2026_05_28.md`. Phase 3.2-3.4 execution
-      noted as pending operator action. — unified-trading-pm@40b05ad2
+      from `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/contracts-scope-and-layout.md`. —
+      unified-trading-pm@58115ffc
+- [x] ✅ [AGENT] P2. EDIT `plans/active/cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I pipeline_mode item
+      marked `[x] ✅ — resolved by pipeline_mode_implementation_2026_05_28.md`. Phase 3.2-3.4 execution noted as pending
+      operator action. — unified-trading-pm@40b05ad2
 
 ## Out of scope (explicit)
 

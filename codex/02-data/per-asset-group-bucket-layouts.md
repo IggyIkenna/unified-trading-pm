@@ -46,13 +46,28 @@ particular does NOT follow the same layout as CEFI/TRADFI/DEFI/PREDICTION.
 
 ## Asset-group × bucket matrix
 
-| Service                       | CEFI                                  | TRADFI                                  | DEFI                                  | SPORTS                                  | PREDICTION                                  |
-| ----------------------------- | ------------------------------------- | --------------------------------------- | ------------------------------------- | --------------------------------------- | ------------------------------------------- |
-| **instruments-service write** | `instruments-store-cefi-{project_id}` | `instruments-store-tradfi-{project_id}` | `instruments-store-defi-{project_id}` | `instruments-store-sports-{project_id}` | `instruments-store-prediction-{project_id}` |
-| **MTDS raw tick write**       | `market-data-tick-cefi-{project_id}`  | `market-data-tick-tradfi-{project_id}`  | `market-data-tick-defi-{project_id}`  | `market-data-tick-sports-{project_id}`  | `market-data-tick-prediction-{project_id}`  |
-| **MDPS processed write**      | `market-data-tick-cefi-{project_id}`  | `market-data-tick-tradfi-{project_id}`  | `market-data-tick-defi-{project_id}`  | `market-data-tick-sports-{project_id}`  | `market-data-tick-prediction-{project_id}`  |
+> **Bucket names are env-tiered + resolver-owned (canonicalised 2026-05-11, `bucket_name_ssot` Phase 0e).** Every
+> canonical bucket embeds `{env}` = `${DEPLOYMENT_ENV_SHORT}` ∈ `dev`/`stg`/`prd`/`test` (workspace `prod` → `prd`).
+> **Resolve every name via**
+> `unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud="gcp", kind="tick-data" | "instruments-store", asset_group=...)`
+> — **NEVER** hardcode an inline `gs://…` bucket string (QG STEP 5.69 enforces). Code SSOT:
+> [`deployment-service/configs/cloud-providers.yaml`](../../../deployment-service/configs/cloud-providers.yaml). Notes:
+> **PREDICTION uses the short token `pred`** (not `prediction`) for both stores; AWS swaps `{project_id}` →
+> `{aws_account_id}` (GCP keeps the `-tick-` infix). **Legacy un-tiered buckets** (`market-data-tick-cefi-{project_id}`,
+> no env) are **deprecated** — env-tiered buckets were provisioned + the flat-bucket data migrated in
+> [`code_freeze_migrate_backfill_sequencing_2026_05_10.md`](../../plans/active/code_freeze_migrate_backfill_sequencing_2026_05_10.md)
+> Phase 2.6; readers fall back to the legacy name during the ≤30-day window only.
 
-Test-mode variants append `-test-`: e.g. `instruments-store-cefi-test-{project_id}`.
+The matrix below shows the canonical **template** form (`{env}` = `${DEPLOYMENT_ENV_SHORT}`, e.g. `prd` in prod):
+
+| Service                       | CEFI                                        | TRADFI                                        | DEFI                                        | SPORTS                                        | PREDICTION                                  |
+| ----------------------------- | ------------------------------------------- | --------------------------------------------- | ------------------------------------------- | --------------------------------------------- | ------------------------------------------- |
+| **instruments-service write** | `instruments-store-cefi-{env}-{project_id}` | `instruments-store-tradfi-{env}-{project_id}` | `instruments-store-defi-{env}-{project_id}` | `instruments-store-sports-{env}-{project_id}` | `instruments-store-pred-{env}-{project_id}` |
+| **MTDS raw tick write**       | `market-data-tick-cefi-{env}-{project_id}`  | `market-data-tick-tradfi-{env}-{project_id}`  | `market-data-tick-defi-{env}-{project_id}`  | `market-data-tick-sports-{env}-{project_id}`  | `market-data-tick-pred-{env}-{project_id}`  |
+| **MDPS processed write**      | `market-data-tick-cefi-{env}-{project_id}`  | `market-data-tick-tradfi-{env}-{project_id}`  | `market-data-tick-defi-{env}-{project_id}`  | `market-data-tick-sports-{env}-{project_id}`  | `market-data-tick-pred-{env}-{project_id}`  |
+
+Test-mode is just `{env}=test` (e.g. `instruments-store-cefi-test-{project_id}`) — the canonical E2E `-test-` shape, set
+via `DEPLOYMENT_ENV=test`. Concrete prod example: `market-data-tick-tradfi-prd-central-element-323112`.
 
 ---
 
@@ -111,12 +126,12 @@ MDPS `dependency_checker.py` (commits f18dd5c + 3d38aef) has two maps:
 # Default — CEFI/TRADFI/DEFI fall back to this
 UPSTREAM_DEPS: ClassVar = {
     "market-tick-data-service": {
-        "bucket_template": "market-data-tick-{category_lower}-{project_id}",
+        "bucket_template": "market-data-tick-{category_lower}-{env}-{project_id}",
         "path_template": "raw_tick_data/by_date/day={date}/",
         "required": True,
     },
     "instruments-service": {
-        "bucket_template": "instruments-store-{category_lower}-{project_id}",
+        "bucket_template": "instruments-store-{category_lower}-{env}-{project_id}",
         # NOTE: venue={venue} removed 2026-04-20 (3d38aef) — the base-class
         # _format_template_vars never supplies {venue}, so the format() raised
         # KeyError and the dep-check silently resolved to "Missing template var".
@@ -129,7 +144,7 @@ UPSTREAM_DEPS: ClassVar = {
 UPSTREAM_DEPS_BY_CATEGORY: ClassVar = {
     "SPORTS": {
         "instruments-service": {
-            "bucket_template": "instruments-store-sports-{project_id}",
+            "bucket_template": "instruments-store-sports-{env}-{project_id}",  # env-tiered; resolve via resolve_bucket_name()
             # SPORTS writes to sports_reference/, not instrument_availability/.
             # Date-level existence is sufficient for dep-check.
             "path_template": "sports_reference/by_date/day={date}/",
@@ -140,7 +155,7 @@ UPSTREAM_DEPS_BY_CATEGORY: ClassVar = {
     },
     "PREDICTION": {
         "instruments-service": {
-            "bucket_template": "instruments-store-prediction-{project_id}",
+            "bucket_template": "instruments-store-pred-{env}-{project_id}",  # PREDICTION uses 'pred'; env-tiered
             "path_template": "instrument_availability/by_date/day={date}/",
             "required": True,
         },

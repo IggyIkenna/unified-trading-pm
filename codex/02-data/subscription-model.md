@@ -147,7 +147,7 @@ features-service (delta-one family):
       required: true
       description: Needs processed candles
       check:
-        bucket_template: "market-data-tick-{category_lower}-{project_id}"
+        bucket_template: "market-data-tick-{category_lower}-{env}-{project_id}"
         path_template: "processed_candles/by_date/day={date}/"
     - service: features-service (calendar family)
       required: true

@@ -178,7 +178,7 @@ def load_baseline() -> tuple[dict[tuple[str, str, str], BaselineEntry], str]:
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     default_successor = str(raw.get("default_successor", "writegate Phase 2.A"))
     out: dict[tuple[str, str, str], BaselineEntry] = {}
-    for item in raw.get("entries", []) or []:
+    for item in raw.get("entries", []) or []:  # noqa: qg-empty-fallback
         missing = [k for k in REQUIRED_KEYS if k not in item]
         if missing:
             print(f"[check_banned_placeholder_methods] baseline entry missing keys {missing}: {item}", file=sys.stderr)

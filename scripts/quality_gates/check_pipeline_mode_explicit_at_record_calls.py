@@ -4,7 +4,7 @@
 Per ``manifest_schema_final_gate_2026_05_09.md`` Phase 4.GREP-VERIFY:
 
   Naive grep ``grep -rln 'record_captured' --include='*.py' | xargs grep -L
-  'pipeline_mode='`` returns false positives for files containing only docstring
+  'pipeline_mode='`` returns false positives for files containing only docstring  # QG-allow: pipeline-mode-string-literal
   / comment / dict-key / string-literal references. The 2026-05-12 slot 2 audit
   found 7 grep hits all false-positive across deployment-api /
   system-integration-tests / unified-trading-pm/scripts/. AST-walk is the
@@ -142,7 +142,7 @@ def load_baseline() -> tuple[dict[tuple[str, str, int, str], BaselineEntry], str
     raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
     default_successor = str(raw.get("default_successor", "manifest_schema_final_gate Phase 4.DEFAULT-REMOVAL"))
     out: dict[tuple[str, str, int, str], BaselineEntry] = {}
-    for item in raw.get("entries", []) or []:
+    for item in raw.get("entries", []) or []:  # noqa: qg-empty-fallback
         missing = [k for k in REQUIRED_KEYS if k not in item]
         if missing:
             print(

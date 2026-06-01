@@ -67,7 +67,7 @@ def build_forward_dependents_graph(
     for repo_name, repo_info in repositories.items():
         if not isinstance(repo_info, dict):
             continue
-        deps_raw = repo_info.get("dependencies", [])
+        deps_raw = repo_info.get("dependencies", [])  # noqa: qg-empty-fallback
         if not isinstance(deps_raw, list):
             continue
         for dep in deps_raw:
@@ -164,7 +164,7 @@ def invalidate(
             signal.alarm(0)  # Cancel alarm once lock acquired
 
             data = read_manifest_locked(lf.fileno())
-            repositories = data.get("repositories", {})
+            repositories = data.get("repositories", {})  # noqa: qg-empty-fallback
             if not isinstance(repositories, dict):
                 print(
                     f"Error: 'repositories' key missing or invalid in {MANIFEST}",

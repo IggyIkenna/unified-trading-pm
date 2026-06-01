@@ -35,11 +35,7 @@
         "rss_after_mb": 171.203125
       }
     ],
-    "cumulative_rss_after_each_mb": [
-      116.953125,
-      170.41015625,
-      171.203125
-    ]
+    "cumulative_rss_after_each_mb": [116.953125, 170.41015625, 171.203125]
   },
   "B": {
     "path_id": "B",
@@ -77,11 +73,7 @@
         "rss_after_mb": 180.3359375
       }
     ],
-    "cumulative_rss_after_each_mb": [
-      133.46484375,
-      179.62890625,
-      180.3359375
-    ]
+    "cumulative_rss_after_each_mb": [133.46484375, 179.62890625, 180.3359375]
   },
   "C": {
     "path_id": "C",
@@ -119,11 +111,7 @@
         "rss_after_mb": 222.8671875
       }
     ],
-    "cumulative_rss_after_each_mb": [
-      169.703125,
-      218.5390625,
-      222.8671875
-    ]
+    "cumulative_rss_after_each_mb": [169.703125, 218.5390625, 222.8671875]
   },
   "D": {
     "path_id": "D",
@@ -161,10 +149,6 @@
         "rss_after_mb": 110.734375
       }
     ],
-    "cumulative_rss_after_each_mb": [
-      78.8984375,
-      106.5703125,
-      110.734375
-    ]
+    "cumulative_rss_after_each_mb": [78.8984375, 106.5703125, 110.734375]
   }
 }

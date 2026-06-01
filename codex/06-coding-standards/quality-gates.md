@@ -799,8 +799,8 @@ Epics.
 The `validate-alignment.py` script runs as a pre-commit hook in `unified-trading-codex` and checks:
 
 1. **Banned Terms**
-   - ❌ Non-canonical bucket patterns (e.g., `gs://market-data-raw/` instead of
-     `gs://market-data-tick-{category}-{project_id}/`)
+   - ❌ Non-canonical bucket patterns (e.g., `gs://market-data-raw/` instead of the env-tiered
+     `gs://market-data-tick-{category}-{env}-{project_id}/`; resolve via `resolve_bucket_name()`, never inline)
    - ❌ `os.getenv()` in service code (use `UnifiedCloudServicesConfig`)
 
 2. **Lifecycle Event Names**

@@ -127,32 +127,31 @@ resolves the minimum window each family/feature needs and backfills exactly that
       cefi-kraken-spot-2024) via `scripts/vm/launch-mtds-cefi-backfill.sh`; all now TERMINATED (completed). — **MDPS
       (2026-05-28):** CeFi sharded MDPS VMs launched via `launch-mdps-sharded-backfill.sh cefi --year 2024 2025`:
       `mdps-cefi-2024-20260528-185647` (2024-01-01..2024-12-31) + `mdps-cefi-2025-20260528-185647`
-      (2025-01-01..2025-12-31); BOTH CRASHED 2026-05-28 before emitting manifest entries:
-        2024 VM: exit_code=137 (OOM, 80.7% RSS at death) — 0 processed_candles manifest entries.
-        2025 VM: silent crash (log frozen 19:35 UTC, no EXIT_STATUS, VM self-deleted).
-      **Re-launched 2026-05-30 (ikenna-slot-1) with e2-highmem-8 (64GB) to prevent OOM:**
-        `mdps-cefi-2024-20260530-063902` (2024-01-01..2024-12-31) RUNNING (09:33 UTC: on day=2024-01-02)
-        `mdps-cefi-2025-20260530-063902` (2025-01-01..2025-12-31) OOM'd AGAIN (EXIT_STATUS=137 at ~08:55 UTC, self-deleted).
-      **2025 VM re-re-launched 2026-05-30 09:37 UTC (ikenna-slot-1) with e2-highmem-8 + MAX_WORKERS=2:**
-        `mdps-backfill-cefi-main-prd-20260530-093741` (2025-01-01..2025-12-31) RUNNING (MACHINE_TYPE=e2-highmem-8, MAX_WORKERS=2)
-      **GCS file evidence 2026-05-30 09:40 UTC:** processed_candles/by_date/day=2024-01-01/timeframe=1m/data_type=trades
-        BINANCE-FUTURES: 31 files ✅  BYBIT: 57 files ✅  OKX-FUTURES: 32 ✅  OKX-SPOT: 72 ✅  DERIBIT: 26 ✅
-      — **DeFi gate** resolved: bucket split + DEX swaps backfill both completed
-      2026-05-27/28; DeFi features VMs launched separately (features_backfill_phase3 tasks -001/-002).
+      (2025-01-01..2025-12-31); BOTH CRASHED 2026-05-28 before emitting manifest entries: 2024 VM: exit_code=137 (OOM,
+      80.7% RSS at death) — 0 processed_candles manifest entries. 2025 VM: silent crash (log frozen 19:35 UTC, no
+      EXIT_STATUS, VM self-deleted). **Re-launched 2026-05-30 (ikenna-slot-1) with e2-highmem-8 (64GB) to prevent OOM:**
+      `mdps-cefi-2024-20260530-063902` (2024-01-01..2024-12-31) RUNNING (09:33 UTC: on day=2024-01-02)
+      `mdps-cefi-2025-20260530-063902` (2025-01-01..2025-12-31) OOM'd AGAIN (EXIT_STATUS=137 at ~08:55 UTC,
+      self-deleted). **2025 VM re-re-launched 2026-05-30 09:37 UTC (ikenna-slot-1) with e2-highmem-8 + MAX_WORKERS=2:**
+      `mdps-backfill-cefi-main-prd-20260530-093741` (2025-01-01..2025-12-31) RUNNING (MACHINE_TYPE=e2-highmem-8,
+      MAX_WORKERS=2) **GCS file evidence 2026-05-30 09:40 UTC:**
+      processed_candles/by_date/day=2024-01-01/timeframe=1m/data_type=trades BINANCE-FUTURES: 31 files ✅ BYBIT: 57
+      files ✅ OKX-FUTURES: 32 ✅ OKX-SPOT: 72 ✅ DERIBIT: 26 ✅ — **DeFi gate** resolved: bucket split + DEX swaps
+      backfill both completed 2026-05-27/28; DeFi features VMs launched separately (features_backfill_phase3 tasks
+      -001/-002).
 - [x] ✅ [VALIDATE] P0. Confirm the v8 manifest now shows `capture_status="captured"` processed_candles rows for the
       backfilled venues/days, and the files exist (blob_exists). This becomes the Phase 0 golden-window assertion
       baseline for the calculators. Sports/predictions backfill window handled separately (event/fixtures-scoped, not
-      candle-lookback) when those families enter the e2e.
-      **VERIFIED 2026-05-30 (ikenna-slot-1).** Evidence:
-        - 735 MDPS captured rows (service_name=market-data-processing-service) for BYBIT/BINANCE-FUTURES/OKX-SPOT/
-          OKX-SWAP/DERIBIT/KRAKEN-SPOT in prd manifest; all schema_version=8, capture_status=captured, available=True.
-        - GCS blob_exists confirmed: BINANCE-FUTURES + BYBIT at processed_candles/by_date/day=2022-09-01/timeframe=1m/
-          data_type=trades/venue=*/; KRAKEN-SPOT at day=2024-01-01 (from today's MDPS VM run).
-        - Golden-window 2026-05-03: BITGET-FUTURES (25 instr) + BITGET-SPOT (25 instr) + KRAKEN-SPOT (24 instr) = 49
-          captured instruments from ≥3 venues; calculators verified on >1 venue in Phase 2 (delta_one VALIDATED).
-        - Written dates: 2020-01-01..2026-01-01 (sampled historical) + today 2024-01-01/2025-01-01 from MDPS VMs.
-        - Ongoing: mdps-cefi-2024-20260530-063902 + mdps-cefi-2025-20260530-063902 still running (e2-highmem-8),
-          incrementally adding 2024-01-02..2024-12-31 + 2025-01-02..2025-12-31 full-year coverage.
+      candle-lookback) when those families enter the e2e. **VERIFIED 2026-05-30 (ikenna-slot-1).** Evidence: - 735 MDPS
+      captured rows (service_name=market-data-processing-service) for BYBIT/BINANCE-FUTURES/OKX-SPOT/
+      OKX-SWAP/DERIBIT/KRAKEN-SPOT in prd manifest; all schema_version=8, capture_status=captured, available=True. - GCS
+      blob_exists confirmed: BINANCE-FUTURES + BYBIT at processed_candles/by_date/day=2022-09-01/timeframe=1m/
+      data_type=trades/venue=\*/; KRAKEN-SPOT at day=2024-01-01 (from today's MDPS VM run). - Golden-window 2026-05-03:
+      BITGET-FUTURES (25 instr) + BITGET-SPOT (25 instr) + KRAKEN-SPOT (24 instr) = 49 captured instruments from ≥3
+      venues; calculators verified on >1 venue in Phase 2 (delta_one VALIDATED). - Written dates: 2020-01-01..2026-01-01
+      (sampled historical) + today 2024-01-01/2025-01-01 from MDPS VMs. - Ongoing: mdps-cefi-2024-20260530-063902 +
+      mdps-cefi-2025-20260530-063902 still running (e2-highmem-8), incrementally adding 2024-01-02..2024-12-31 +
+      2025-01-02..2025-12-31 full-year coverage.
 
 ### Phase 1 — Fix the WRITE P0 blocker `[P0]`
 
@@ -319,22 +318,22 @@ resolves the minimum window each family/feature needs and backfills exactly that
   - **[FINDING-F] ✅ DONE (Option A) → CONFIRMED ON REAL GCS (2026-05-29):** `Missing required columns: {close}` is
     GONE. 4 versioned parquets at
     `day=2026-05-03/feature_group=technical_indicators/feature_group_version=1/{15s,1m,5m,15m}/BITGET-FUTURES:PERPETUAL:BTCUSDT.parquet`
-    each carry `close` 100% non-null (5760/5760 @ 15s; 1440@1m; 288@5m; 96@15m). Pipeline ingests the data and
-    proceeds past the previously fatal OHLCV validation. features@44fc11d1 + b5c031ab. Validated 2026-05-29.
+    each carry `close` 100% non-null (5760/5760 @ 15s; 1440@1m; 288@5m; 96@15m). Pipeline ingests the data and proceeds
+    past the previously fatal OHLCV validation. features@44fc11d1 + b5c031ab. Validated 2026-05-29.
   - **[FINDING-G] ✅ FIXED (2026-05-29) — `ohlcv_passthrough.py` timestamp timezone mismatch.**
     `attach_ohlcv_passthrough` left-join crashed: `features.timestamp` = `datetime[ns, UTC]` vs `candles.timestamp` =
     `datetime[ns]` (tz-naive). Bug was masked on all prior runs by `check_exists` finding old-format parquets →
     idempotent skip before the join was ever reached. Surfaced with `--force`. Fix: align candle timestamp tz to
-    features via `dt.replace_time_zone(feat_tz)` before the join. — features-service@b5c031ab. QG TBD (FINDING-H
-    blocks CI run; file isolated).
+    features via `dt.replace_time_zone(feat_tz)` before the join. — features-service@b5c031ab. QG TBD (FINDING-H blocks
+    CI run; file isolated).
   - **[check_exists path mismatch] P2 NOTE:** `FeatureWriter.check_exists` probes old path format
     (`day=.../feature_group=.../timeframe=.../instr.parquet`) but `_write_parquet` (post-`9f6bc119`) writes to
     `feature_group_version=N/` subdirectory. Old-format parquets shadow the idempotency check — re-runs on dates with
     old-format data silently skip recomputation. Tracked for cleanup.
-  - **[FINDING-H] P1 BLOCKER — `cross_asset_correlation` DuplicateError on suffix `_2` join:** `_ingest_delta_one`
-    reads ALL parquets under `day={date}/` (all feature groups). After `diagonal_relaxed` concat, both
-    `macd_histogram_mom` and `macd_histogram_mom_2` coexist. `df1.join(df2, suffix="_2")` at `cross_asset_correlation.py:94`
-    renames df2's `macd_histogram_mom` → `macd_histogram_mom_2`, colliding with the existing column.
+  - **[FINDING-H] P1 BLOCKER — `cross_asset_correlation` DuplicateError on suffix `_2` join:** `_ingest_delta_one` reads
+    ALL parquets under `day={date}/` (all feature groups). After `diagonal_relaxed` concat, both `macd_histogram_mom`
+    and `macd_histogram_mom_2` coexist. `df1.join(df2, suffix="_2")` at `cross_asset_correlation.py:94` renames df2's
+    `macd_histogram_mom` → `macd_histogram_mom_2`, colliding with the existing column.
     `polars.exceptions.DuplicateError`. Pre-existing in the cross_asset_correlation calculator — fixed suffix `_2` is
     fragile when feature columns naturally carry `_2` suffixes. Cross_instrument full e2e remains BLOCKED on this
     finding until the suffix is made unique (e.g., `_right_2` or UUID-per-join).
@@ -430,40 +429,40 @@ the SSOT-aliased xinstrument/mtf) + uncaught `google.api_core.NotFound` crash; c
       `PROTOCOL_DATA_SINK_BUCKET*{AG}`the way delta_one's`FeatureWriter.\_get_sink_bucket`does. Provenance: e2e -test re-run 2026-05-26. — **FIXED** features-service@72b8a81d: added`\_resolve_sink_bucket`+`\_ensure_sink_for`(rebinds auto-created sink per asset_group via`get_data_sink(bucket=...,
       routing_key=ag)`; run_batch + run_live); manifest `catalogue_bucket` uses the same resolver so parquet + manifest
       share one bucket. basedpyright 0/0/0 on mtf subtree + ruff clean.
-- [x] ✅ [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`, `tf_rr_*`) +
-      `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no source). Diagnose
-      whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance: e2e -test
-      2026-05-26. — features-service@830f47b4
+- [x] ✅ [AGENT] P2. **multi_timeframe: WriteGate rejects >50%-NaN shards** (`wedge_min_bars_to_convergence`,
+      `tf_rr_*`) + `Cannot serialize DataFrame to parquet` (`tf_confluence_signals`) + many BITGET-SPOT skipped (no
+      source). Diagnose whether these are legit honest-absence (illiquid/short-window) or calculator bugs. Provenance:
+      e2e -test 2026-05-26. — features-service@830f47b4
   - **`wedge_min_bars_to_convergence` NaN** → **CALCULATOR BUG** (fixed). `_min_bars_across_combos` returned
-    `float("nan")` instead of `None` when no poly cols present for a TF. NaN propagates through `min_horizontal` →
-    100% NaN → WriteGate rejection. Fix: `pl.lit(None, dtype=pl.Float64)` + `fill_nan(None)` on bars columns.
-    WriteGate `sparse_columns` added so high null rate (no active wedge = correct absence) doesn't reject the shard.
-  - **`tf_rr_long_*` / `tf_rr_short_*` / `tf_rr_best_long` null** → **LEGIT HONEST-ABSENCE**. 4h/1d poly/ATR
-    columns absent (upstream MDPS gap for 4h/1d delta_one). Calculator correctly emits null; `tf_rr_valid=0`
-    carries the absence signal. Fix: declared these as sparse in WriteGate so the shard (with valid=0 rows) can
-    write. No code change to the calculator.
+    `float("nan")` instead of `None` when no poly cols present for a TF. NaN propagates through `min_horizontal` → 100%
+    NaN → WriteGate rejection. Fix: `pl.lit(None, dtype=pl.Float64)` + `fill_nan(None)` on bars columns. WriteGate
+    `sparse_columns` added so high null rate (no active wedge = correct absence) doesn't reject the shard.
+  - **`tf_rr_long_*` / `tf_rr_short_*` / `tf_rr_best_long` null** → **LEGIT HONEST-ABSENCE**. 4h/1d poly/ATR columns
+    absent (upstream MDPS gap for 4h/1d delta_one). Calculator correctly emits null; `tf_rr_valid=0` carries the absence
+    signal. Fix: declared these as sparse in WriteGate so the shard (with valid=0 rows) can write. No code change to the
+    calculator.
   - **`tf_confluence_signals` "Cannot serialize DataFrame to parquet"** → **ALREADY FIXED** by FINDING-D
     (features-service@dde23953). Parquet round-trip serialize test passes; this sub-item was opened before FINDING-D.
-  - **BITGET-SPOT skipped (no source)** → **LEGIT HONEST-ABSENCE**. No 4h delta_one data for BITGET-SPOT (upstream
-    MDPS gap). `_load_and_join` → None → silent skip. Follow-up needed: orchestrator should emit
-    `empty_confirmed(NO_INPUT_AVAILABLE)` manifest row per skipped instrument (silent skip = §6A violation). Tracked
-    as **DEFERRED** below in Temporary states.
-- [x] ✅ [AGENT] P2. **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).** Operator
-      guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future never listed
-      for this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded yet" →
-      dependency gap, a different status. (Future-without-spot is the contradiction; spot-without-future is the real
-      absence.) Folded into the per-service status-calibration audit:
+  - **BITGET-SPOT skipped (no source)** → **LEGIT HONEST-ABSENCE**. No 4h delta_one data for BITGET-SPOT (upstream MDPS
+    gap). `_load_and_join` → None → silent skip. Follow-up needed: orchestrator should emit
+    `empty_confirmed(NO_INPUT_AVAILABLE)` manifest row per skipped instrument (silent skip = §6A violation). Tracked as
+    **DEFERRED** below in Temporary states.
+- [x] ✅ [AGENT] P2. **volatility `futures_basis`: emits no manifest row on no-input (silent skip = violation).**
+      Operator guidance 2026-05-27: do NOT reflexively write `empty_confirmed`. Determine the cause first — "future
+      never listed for this underlying in this window" → `empty_confirmed` (typed reason); "future data not downloaded
+      yet" → dependency gap, a different status. (Future-without-spot is the contradiction; spot-without-future is the
+      real absence.) Folded into the per-service status-calibration audit:
       `plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`. — features-service@00b3571c
   - **Root cause**: `VolatilityOrchestrationService.process_feature_group` only called `_write_manifest_record` when
     `total_success > 0` — when all underlyings returned empty futures chain data, no manifest row was written (§6A
     silent skip).
   - **Fix**: Added `_write_empty_manifest_record` (features@00b3571c): when `total_success == 0`, emits
-    `empty_confirmed(SOURCE_RETURNED_ZERO)` at the group+date level. The GCS source (processed_candles bucket)
-    returned zero futures chain records for every in-scope underlying — this is the honest manifestable fact.
-    Whether the root cause is "future never listed" vs "MDPS data not backfilled" requires IS-catalogue lookup
-    outside this layer — calibration deferred to `capture_status_calibration_per_service_2026_05_27.md`.
-  - **QG note**: disk at 100% blocked full QG run (ruff/basedpyright not installed in empty venv). Syntax clean.
-    Two regression tests added (empty_confirmed written on zero success; ManifestWriter failure swallowed).
+    `empty_confirmed(SOURCE_RETURNED_ZERO)` at the group+date level. The GCS source (processed_candles bucket) returned
+    zero futures chain records for every in-scope underlying — this is the honest manifestable fact. Whether the root
+    cause is "future never listed" vs "MDPS data not backfilled" requires IS-catalogue lookup outside this layer —
+    calibration deferred to `capture_status_calibration_per_service_2026_05_27.md`.
+  - **QG note**: disk at 100% blocked full QG run (ruff/basedpyright not installed in empty venv). Syntax clean. Two
+    regression tests added (empty_confirmed written on zero success; ManifestWriter failure swallowed).
 
 ### TradFi scope (operator decision 2026-05-26)
 
@@ -504,10 +503,10 @@ pinpointed the real blockers.**
 - [x] ✅ [P1] **delta_one also omits 5m/15m features** — **FIXED** features@7bd77525 (timeframe loop) + @2b20c795 (1.1
       read-once + resample). delta_one -test now emits **5m (43 files) + 15m (42 files)** for 2026-05-03 alongside
       15s/1m/1h. Verified via `gcloud storage ls` 2026-05-28.
-- [x] ✅ [AGENT] P2. **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect). Provenance:
-      backfill 2026-05-27. Fix: `_write_feature_group_manifest` in `delta_one/engine/orchestrator.py` had two §6A
-      silent-skip paths — (1) `success_count == 0 → return` now emits `empty_confirmed(SOURCE_RETURNED_ZERO)`, and
-      (2) `not is_complete → return` now writes a partial manifest row + logs warning. Regression tests in
+- [x] ✅ [AGENT] P2. **delta_one 05-01/05-02: parquets written, no manifest row** (manifest↔file disconnect).
+      Provenance: backfill 2026-05-27. Fix: `_write_feature_group_manifest` in `delta_one/engine/orchestrator.py` had
+      two §6A silent-skip paths — (1) `success_count == 0 → return` now emits `empty_confirmed(SOURCE_RETURNED_ZERO)`,
+      and (2) `not is_complete → return` now writes a partial manifest row + logs warning. Regression tests in
       `tests/delta_one/unit/test_orchestrator_manifest_write.py`. Shipped features-service@8e5e5e09 → live-defi-rollout.
 
 ## Phase 6 — delta_one timeframe coverage + mtf write-bucket (2026-05-27, in progress)
@@ -553,8 +552,8 @@ behind genuine-absence confirmation.
 
 ## Temporary states + their canonical follow-up plans
 
-| Temporary state | Follow-up plan / action |
-| --------------- | ----------------------- |
+| Temporary state                                                                             | Follow-up plan / action                                                                                                                                                                                                            |
+| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | BITGET-SPOT instruments silently skipped (no 4h delta_one source) — no manifest row emitted | MTF orchestrator `process_instrument` must emit `empty_confirmed(NO_INPUT_AVAILABLE)` when `_load_and_join` returns None. Tracks as §6A violation. Follow-up: `features_and_ml_master` Phase 3 (honest-absence recording for mtf). |
 
 ## Notes / cross-refs

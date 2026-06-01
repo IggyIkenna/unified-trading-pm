@@ -5,7 +5,10 @@ parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 status: done
 completed: 2026-06-01
-completed_note: "Operator-marked done 2026-06-01 (harsh). All code/data-correctness fixes shipped. Tardis paid key is INTENTIONALLY not activated (operator choice, NOT a blocker). GCS manifest migration / 22-day-gap reconcile is DEFERRED — to be run when operator sees fit."
+completed_note:
+  "Operator-marked done 2026-06-01 (harsh). All code/data-correctness fixes shipped. Tardis paid key is INTENTIONALLY
+  not activated (operator choice, NOT a blocker). GCS manifest migration / 22-day-gap reconcile is DEFERRED — to be run
+  when operator sees fit."
 priority: P0
 created: 2026-05-27
 author: harsh (claude opus 4.7)
@@ -19,9 +22,9 @@ related:
 
 # CeFi/venue backfill coverage remediation + fleet VM fixes
 
-> **🗄️ ARCHIVED 2026-06-01 (status: done, operator-directed).** All code/data-correctness fixes shipped.
-> **Deferred work — migrated to:** `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` (Tardis paid
-> key intentionally not activated; GCS manifest migration / 22-day-gap reconcile deferred until operator sees fit).
+> **🗄️ ARCHIVED 2026-06-01 (status: done, operator-directed).** All code/data-correctness fixes shipped. **Deferred work
+> — migrated to:** `plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md` (Tardis paid key
+> intentionally not activated; GCS manifest migration / 22-day-gap reconcile deferred until operator sees fit).
 
 **Source of truth for the evidence**:
 [`issues/running_vm_fleet_status_2026_05_27.md`](issues/running_vm_fleet_status_2026_05_27.md) (25-VM audit, exact
@@ -152,10 +155,10 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
 
 ## §5 — Relaunch gate
 
-- [x] ✅ [DEFERRED — operator-when-fit, 2026-06-01] [AGENT] P1. All §1+§4 code fixes are landed
-  (mtds@91e3df03 + §4 P0/P1). Relaunching the paid historical CeFi backfill (expiry-window-aware, coverage-aware) +
-  the GCS manifest migration / 22-day-gap reconcile is **deferred until the operator sees fit** (paid Tardis tier is
-  intentionally not activated — see §4). Not a blocker; closed for the purposes of this plan.
+- [x] ✅ [DEFERRED — operator-when-fit, 2026-06-01] [AGENT] P1. All §1+§4 code fixes are landed (mtds@91e3df03 + §4
+      P0/P1). Relaunching the paid historical CeFi backfill (expiry-window-aware, coverage-aware) + the GCS manifest
+      migration / 22-day-gap reconcile is **deferred until the operator sees fit** (paid Tardis tier is intentionally
+      not activated — see §4). Not a blocker; closed for the purposes of this plan.
 
 ## §6 — Deep log-scan addendum (2026-05-27, all 25 VMs, head+mid+tail byte-range sampling)
 
@@ -309,27 +312,27 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
       without an implemented publisher. Not in `EVENT_TOPIC_REGISTRY` SSOT. Zero traffic is expected, not an incident.
       alerting-service@6ff5c36: `_SUBSCRIPTIONS_WITH_NO_PUBLISHER` + startup warning log documents the gap so future
       operators won't re-investigate the same "zero traffic" observation.
-- [x] ✅ DONE [AGENT] P2. **qg-snapshot job never ran**: no run.log ever; serial shows clean boot then only OS noise for 5+ days
-      — the QG-snapshot startup task never produced output (missing/failed-pre-logging). Diagnose or retire.
-      — deployment-service@d285493 | Root cause: Cloud Scheduler job was never created after smoke test (2026-05-14
-      comment in launch-qg-snapshot-vm.sh: "run once after first successful smoke test"). VM was sitting idle because
-      no trigger fired. Fix: added `qg_snapshot_scheduler.tf` with Cloud Scheduler job (daily 06:00 UTC →
-      Compute Engine instances.insert) + `roles/compute.instanceAdmin.v1` IAM binding for t1_batch SA.
+- [x] ✅ DONE [AGENT] P2. **qg-snapshot job never ran**: no run.log ever; serial shows clean boot then only OS noise for
+      5+ days — the QG-snapshot startup task never produced output (missing/failed-pre-logging). Diagnose or retire. —
+      deployment-service@d285493 | Root cause: Cloud Scheduler job was never created after smoke test (2026-05-14
+      comment in launch-qg-snapshot-vm.sh: "run once after first successful smoke test"). VM was sitting idle because no
+      trigger fired. Fix: added `qg_snapshot_scheduler.tf` with Cloud Scheduler job (daily 06:00 UTC → Compute Engine
+      instances.insert) + `roles/compute.instanceAdmin.v1` IAM binding for t1_batch SA.
 
 ### §6H — Cross-cutting / cosmetic
 
-- [x] ✅ DONE [AGENT] P2. **`faulthandler.dump_traceback failed: fileno`** on every VM (frequency rises with concurrency —
-      okx-2025 ~20/window, prediction-2025 69/tail) — the faulthandler can't write to its fd, so **fatal-signal stack
+- [x] ✅ DONE [AGENT] P2. **`faulthandler.dump_traceback failed: fileno`** on every VM (frequency rises with concurrency
+      — okx-2025 ~20/window, prediction-2025 69/tail) — the faulthandler can't write to its fd, so **fatal-signal stack
       traces are silently lost**, hurting future crash diagnosis. Fix the faulthandler fd setup in the VM bootstrap.
-      [cosmetic now, diagnostic-loss later]
-      — unified-trading-library@de00a08d (2026-05-26) | Already fixed: `resource_profiler._dump_traceback_all_threads`
-      now uses `tempfile.TemporaryFile` (has a real fileno) instead of `io.StringIO` (no fileno). Failure path
-      demoted to `debug` so residual failures don't flood logs. No VM bootstrap changes needed.
-- [x] ✅ [AGENT] P3. **`runtime-topology.yaml not found — using defaults`** on every VM at startup — confirm defaults are
-      intended; if so, silence the WARNING; if not, ship the file.
-      — deployment-service@54a1644 | Confirmed: `{}` defaults are functional (service runs fine without file). VMs don't
-      have PM checked out → `WORKSPACE_ROOT` not set. Downgraded `logger.warning` → `logger.debug` at
-      `config_loader.py:116`. Set `RUNTIME_TOPOLOGY_PATH` or `WORKSPACE_ROOT` to enable full topology config.
+      [cosmetic now, diagnostic-loss later] — unified-trading-library@de00a08d (2026-05-26) | Already fixed:
+      `resource_profiler._dump_traceback_all_threads` now uses `tempfile.TemporaryFile` (has a real fileno) instead of
+      `io.StringIO` (no fileno). Failure path demoted to `debug` so residual failures don't flood logs. No VM bootstrap
+      changes needed.
+- [x] ✅ [AGENT] P3. **`runtime-topology.yaml not found — using defaults`** on every VM at startup — confirm defaults
+      are intended; if so, silence the WARNING; if not, ship the file. — deployment-service@54a1644 | Confirmed: `{}`
+      defaults are functional (service runs fine without file). VMs don't have PM checked out → `WORKSPACE_ROOT` not
+      set. Downgraded `logger.warning` → `logger.debug` at `config_loader.py:116`. Set `RUNTIME_TOPOLOGY_PATH` or
+      `WORKSPACE_ROOT` to enable full topology config.
 
 ### §6I — Manifest/migration defects (2026-05-27, ikenna GCS spot-check of cefi `_index/availability_index.parquet` + raw_tick_data on disk)
 
@@ -400,12 +403,12 @@ noted inline.) Evidence: [`issues/running_vm_fleet_status_2026_05_27.md`](issues
 ## Codex SSOT updates
 
 - [x] ✅ DONE [AGENT] P2. Document the expiry-window request-filtering contract + the 401≠honest-absence rule in
-      `codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy) and the MTDS adapter docs.
-      — Added `## §7 — CeFi expiry-window contract + 401≠honest-absence` to `honest-absence-downstream-handling.md`
-      (manifest matrix, pre-request filter pseudocode, 401 rule + rationale, cross-refs). Added `## §9` to
-      `cefi-batch-live.md` (adapter-level pseudocode for expiry filter + 401 handling). — PM@4aad8e88
+      `codex/02-data/honest-absence-downstream-handling.md` (reason taxonomy) and the MTDS adapter docs. — Added
+      `## §7 — CeFi expiry-window contract + 401≠honest-absence` to `honest-absence-downstream-handling.md` (manifest
+      matrix, pre-request filter pseudocode, 401 rule + rationale, cross-refs). Added `## §9` to `cefi-batch-live.md`
+      (adapter-level pseudocode for expiry filter + 401 handling). — PM@4aad8e88
 - [x] ✅ [AGENT] P2. Document the §6A honest-absence-violation classes (in-flight drop, silent-zero, captured-0-row) as
-      anti-patterns + the required `record_empty`/`attempted_failed` call sites, in the same codex doc.
-      — Added `## §6A honest-absence violation classes` section to `codex/02-data/honest-absence-downstream-handling.md`
-      with 3-class taxonomy, per-class examples (OKX@774db33, dex-swaps@ed5fdcf, Understat@c654ccf, MDPS-2026-05-05),
+      anti-patterns + the required `record_empty`/`attempted_failed` call sites, in the same codex doc. — Added
+      `## §6A honest-absence violation classes` section to `codex/02-data/honest-absence-downstream-handling.md` with
+      3-class taxonomy, per-class examples (OKX@774db33, dex-swaps@ed5fdcf, Understat@c654ccf, MDPS-2026-05-05),
       required call-site patterns, and summary anti-pattern table. PM@e40df622

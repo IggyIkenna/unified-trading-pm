@@ -109,7 +109,7 @@ def test_plan_pipeline_mode_inserted_left_of_asset_group() -> None:
     assert "pipeline_mode=batch_tardis" in target
     assert DriftClass.PIPELINE_MODE_MISSING in drifts
     # Order: pipeline_mode= MUST appear before asset_group=
-    pipe_idx = target.index("pipeline_mode=")
+    pipe_idx = target.index("pipeline_mode=")  # QG-allow: pipeline-mode-string-literal
     ag_idx = target.index("asset_group=")
     assert pipe_idx < ag_idx
 

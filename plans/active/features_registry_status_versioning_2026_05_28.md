@@ -191,13 +191,13 @@ guard.
       round-trip via PyArrow for 3 groups, assertion that NO per-row column is added, partition dict carries
       `feature_group_version` key, sentinel surfaces in partition path. 8,407 total tests pass, basedpyright clean.
 - [x] ✅ [LIB] P2. ManifestWriter cross-repo extension to also carry `feature_group_version` — **DEFERRED** to follow-up
-      plan (touches UTL + UAC contracts; out-of-scope for this layer).
-      **ACK (2026-05-30 slot-2)**: Operator-directed DEFERRED at plan-write time. Scope confirmed: ManifestWriter
-      `record_captured()` would need a new `formula_versions: dict[str, int]` kwarg + schema-version bump in UTL;
-      `DeltaOneFeatureRecord` in UAC would need the matching field; and the features-service writer would need to pass
-      the per-column version dict from `compute_column_versions()`. The GCS hive partition key
-      (`feature_group_version=N/`) is already wired (features@0fe3160d). Manifest extension deferred to a follow-up
-      plan when UTL+UAC contract changes can be sequenced safely. No code changes in this pass.
+      plan (touches UTL + UAC contracts; out-of-scope for this layer). **ACK (2026-05-30 slot-2)**: Operator-directed
+      DEFERRED at plan-write time. Scope confirmed: ManifestWriter `record_captured()` would need a new
+      `formula_versions: dict[str, int]` kwarg + schema-version bump in UTL; `DeltaOneFeatureRecord` in UAC would need
+      the matching field; and the features-service writer would need to pass the per-column version dict from
+      `compute_column_versions()`. The GCS hive partition key (`feature_group_version=N/`) is already wired
+      (features@0fe3160d). Manifest extension deferred to a follow-up plan when UTL+UAC contract changes can be
+      sequenced safely. No code changes in this pass.
 
 ### Phase 4 — Status tracker CLI + drift detection [P1]
 
@@ -210,13 +210,12 @@ guard.
 - [x] ✅ [SCRIPT] P1. 12 pytest cases cover every CLI mode + drift baseline. 8,405 total tests pass, basedpyright clean
       — features@32c0a1ce.
 - [x] ✅ [QG] P2. **DRIFT GATE OPERATIONAL** — features@dd2ed36f shipped 2026-05-29: (a)
-      `registry.BASELINE_FORMULA_HASHES` records per-group hash for the 5 verified/tested groups;
-      (b) `check_drift()` compares + exits non-zero on mismatch (MATCH/DRIFTED/NEW outcomes; NEW =
-      informational only so the 29 listed groups don't fail the gate); (c) QG STEP 5.91 in
-      `scripts/quality-gates.sh` runs every quality-gates invocation. 3 new tests cover clean
-      baseline + forced-mismatch detection + `main()` exit code propagation. 6,952 total tests pass,
-      basedpyright clean. Today's state: `MATCH=5  DRIFTED=0  NEW=29`. Drift detection is now
-      operational, not informational — audit item (r) is GREEN.
+      `registry.BASELINE_FORMULA_HASHES` records per-group hash for the 5 verified/tested groups; (b) `check_drift()`
+      compares + exits non-zero on mismatch (MATCH/DRIFTED/NEW outcomes; NEW = informational only so the 29 listed
+      groups don't fail the gate); (c) QG STEP 5.91 in `scripts/quality-gates.sh` runs every quality-gates invocation. 3
+      new tests cover clean baseline + forced-mismatch detection + `main()` exit code propagation. 6,952 total tests
+      pass, basedpyright clean. Today's state: `MATCH=5  DRIFTED=0  NEW=29`. Drift detection is now operational, not
+      informational — audit item (r) is GREEN.
 
 ### Phase 5 — Codex alignment + consumer pin pattern [P2]
 

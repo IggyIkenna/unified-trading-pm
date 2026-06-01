@@ -167,6 +167,62 @@ Service docs (`docs/SCHEMA_VALIDATION.md`) must reference the canonical schemas 
 
 ---
 
+## S5.11 — Repo docs defer to the codex SSOT (no duplication) — HARD RULE
+
+> **Codified 2026-06-01.** Root cause of recurring stale-doc drift: the same canonical content is written **twice** —
+> once in `unified-trading-pm/codex/` (the SSOT) and once in a repo's `docs/`. The two copies drift; the repo copy goes
+> stale (e.g. the MTDS `GCS_PATHS.md` hyphen-partition + un-tiered-bucket drift, 2026-06-01). Generalises the S5.9
+> schema principle ("reference, don't redefine") to **every** doc type.
+
+**Contract.** `unified-trading-pm/codex/` is the single source of truth for all **canonical / cross-cutting** content
+(architecture invariants, data/path/schema/bucket contracts, deployment flows, manifest semantics, coding standards). A
+repo `docs/` file MUST carry **only repo-specific operational essentials** + a **link to the canonical codex SSOT** for
+everything cross-cutting. **Never copy a codex table, contract, path template, or rule into a repo doc — link it.** When
+canonical content changes, only the codex SSOT is edited; the repo link stays valid (zero repo-doc churn).
+
+**Per-doc-type split** (what links to codex vs what stays repo-local):
+
+| Repo doc                    | Link to codex SSOT (do NOT duplicate)                                                              | Keep in repo doc (repo-specific only)                            |
+| --------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `README.md`                 | —                                                                                                  | purpose, quickstart, index of links (codex + repo docs)          |
+| `docs/ARCHITECTURE.md`      | cross-cutting patterns → `codex/04-architecture/*`, `codex/03-services/*`                          | THIS repo's modules/classes/data-flows; engine/adapters/cli map  |
+| `docs/CONFIGURATION.md`     | config patterns → `codex/06-coding-standards/config-reloader-pattern.md`                           | THIS repo's config class + fields/defaults/secrets               |
+| `docs/GCS_PATHS.md`         | bucket naming + hive layout → `codex/02-data/per-asset-group-bucket-layouts.md`, `partitioning.md` | THIS repo's specific path templates + data_types                 |
+| `docs/DEPLOYMENT_GUIDE.md`  | deploy flow → `codex/08-workflows/deployment-flow.md`, `codex/05-infrastructure/*`                 | THIS repo's entrypoint, health URL, env vars, rollback specifics |
+| `docs/TESTING.md`           | testing layers → `codex/06-coding-standards/ui-testing-layers.md` + testing rules                  | THIS repo's test commands + fixtures                             |
+| `docs/SCHEMA_VALIDATION.md` | schema governance → `codex/02-data/schema-governance.md` (per S5.9)                                | which canonical schemas THIS repo uses                           |
+
+**Redirect-doc template** (still substantive — clears the S5.4 stub bar):
+
+```markdown
+# <Doc Title> — <repo>
+
+> **Canonical SSOT:** [<codex doc>](../../unified-trading-pm/codex/<path>). This file carries only <repo>-specific
+> details. The cross-cutting rules/contracts/templates live in the codex SSOT above — **do not duplicate them here**; if
+> this file disagrees with codex, codex wins.
+
+## <repo>-specific <topic>
+
+<the repo-local deltas only>
+```
+
+**Rules:**
+
+- A required doc (S5.1/S5.2/S5.3) whose content is **entirely** canonical (no repo-specific delta) collapses to the
+  redirect template pointing at its codex SSOT — it stays present (so the S5.1 audit passes) but stops duplicating.
+- A **non-required** extra doc (onboarding dumps, person-named specs, `*_FEMI.md`, `SHAHRIYAR_*`, one-off strategy
+  memos) that only duplicates codex is **deleted**; its unique repo-specific content (if any) migrates into the proper
+  required doc or codex first, then the file is removed (git history is the rollback).
+- **Stale repo doc vs codex = review-blocking.** Fix by deleting the duplicated repo content and linking codex — never
+  by re-syncing two copies.
+- Repo docs never hardcode canonical literals that have a resolver/SSOT (bucket names → `resolve_bucket_name()`, project
+  IDs → `{project_id}`, per S5.6).
+
+**Enforcement:** the consolidation rollout + per-repo registry is tracked in
+`plans/active/issues/repo_docs_codex_ssot_consolidation_2026_06_01.md`.
+
+---
+
 ## S5.10 — Enforcement
 
 Phase 0 (`phase0_standards_enforcement.plan.md`) runs the audit script on all repos and produces a baseline gap table.

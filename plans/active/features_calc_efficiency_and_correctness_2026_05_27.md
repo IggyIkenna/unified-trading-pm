@@ -85,9 +85,9 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       row/11.8KB, 4h=6 rows/12.4KB, 1h=24/14.2KB, 15s=5760/350KB; 7× amplification = 7 `load_candles_with_buffer` calls;
       consolidation candidates (24h→yearly, 4h/1h→monthly) tagged `needs-design + blocked-on-migration-window`. Below is
       the original task spec (kept for provenance):
-- [x] ✅ [AUDIT] P1. **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** — DONE (spec retained for provenance; audit shipped at PM@475d6601)
-      Operator-directed: before any layout redesign, ground in how data is _actually_ processed + saved in
-      `processed_candles/`. Deliverable is an audit doc
+- [x] ✅ [AUDIT] P1. **1.0 (spec) Storage-layout audit (read GCS first; produce findings, DECIDE NOTHING).** — DONE
+      (spec retained for provenance; audit shipped at PM@475d6601) Operator-directed: before any layout redesign, ground
+      in how data is _actually_ processed + saved in `processed_candles/`. Deliverable is an audit doc
       (`plans/active/issues/processed_candles_storage_layout_audit_2026_05_27.md`), NOT a code change. Cover:
   - **Per-timeframe object cardinality + size** across asset_groups (cefi/defi/tradfi): rows-per-file, bytes-per-file,
     objects-per-instrument-per-year. Confirm/extend the grounded numbers (24h ≈ 6.6 KB/1-row; 15s ≈ 152 KB/day).
@@ -115,17 +115,18 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       to `{4h,24h}`. Benchmark (24h/75-day lookback): **26 MB → 1.1 MB per instrument (22×)**. Methods all ≤50L (shared
       `_run_feature_group_lifecycle`), files <900, basedpyright 0, 1491 tests pass. Optimises **bytes read**, not GET
       count. (Original spec below for provenance.)
-- [x] ✅ [SPEC] P1. **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the base-TF
-      choice.** — DONE (spec retained for provenance; fix shipped at features@ac83bfad) Surfaced 2026-05-27 running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the
-      **widest buffer across all output TFs in the 15s base**, then resamples up. But momentum/RSI at **24h** needs a
-      deep lookback (tens– hundreds of bars) → loading e.g. 75 days of 15s ≈ 75 × 152 KB ≈ **11 MB/instrument**, vs
-      reading MDPS's already- materialised 24h candles directly (~75 × 6.6 KB ≈ **0.5 MB**). MDPS persists ALL 7 TFs
-      (confirmed in 1.0 audit), so the "7× fewer GETs" win holds only for shallow TFs close to the base; the
-      deep-lookback high-TF leg got **heavier in bytes + compute** (run was still loading base candles back to March
-      after >10 min). Fix direction: pick the base read per output-TF (or per TF-cluster) — read each output TF's
-      pre-materialised candles directly for high TFs (cheap small objects), reserve in-memory resample for TFs near the
-      base; OR read the lookback RANGE once per TF (overlaps 1.2). The GET-count metric alone is the wrong objective —
-      optimise **bytes read + compute**, not just request count.
+- [x] ✅ [SPEC] P1. **1.1a (spec) Read-once-from-15s-base is pathological for high output TFs — measure + fix the
+      base-TF choice.** — DONE (spec retained for provenance; fix shipped at features@ac83bfad) Surfaced 2026-05-27
+      running delta_one momentum all-TF CEFI 05-03 (567e499d). The shipped 1.1 loads the **widest buffer across all
+      output TFs in the 15s base**, then resamples up. But momentum/RSI at **24h** needs a deep lookback (tens– hundreds
+      of bars) → loading e.g. 75 days of 15s ≈ 75 × 152 KB ≈ **11 MB/instrument**, vs reading MDPS's already-
+      materialised 24h candles directly (~75 × 6.6 KB ≈ **0.5 MB**). MDPS persists ALL 7 TFs (confirmed in 1.0 audit),
+      so the "7× fewer GETs" win holds only for shallow TFs close to the base; the deep-lookback high-TF leg got
+      **heavier in bytes + compute** (run was still loading base candles back to March after >10 min). Fix direction:
+      pick the base read per output-TF (or per TF-cluster) — read each output TF's pre-materialised candles directly for
+      high TFs (cheap small objects), reserve in-memory resample for TFs near the base; OR read the lookback RANGE once
+      per TF (overlaps 1.2). The GET-count metric alone is the wrong objective — optimise **bytes read + compute**, not
+      just request count.
 - [x] ✅ [P1] **1.1 Read base candles once → resample candles in-memory to all output timeframes.** Replace the per-TF
       candle re-read in the Phase-6.A loop with: read 15s/1m for the lookback window once, OHLC-resample to
       {5m,15m,1h,4h,24h} in memory (exact aggregation), compute features per TF. Target: 7 reads → 1.
@@ -151,19 +152,19 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       object-count reduction (3.5M tiny files → ~225K consolidated). Blocked on: (i) reader-layout change in mtf +
       cross_instrument data_loader; (ii) manifest shard-granularity revision; (iii) migration of existing -test/-prd
       output. Multi-day work; named-successor for the deeper batching goal in 1.3. **Operator 2026-05-28**: needs deeper
-      investigation — dig in before scheduling a migration window.
-      **INVESTIGATION RESULT (2026-05-30 slot-2)**: Dug into all 3 blockers. Complexity summary:
-      - **(i) Reader layout (~80 lines, 6-8h, moderate)**: mtf `engine/orchestrator.py:419-438` (`_load_spec`) + cross_instrument
-        `cli/handlers/batch_handler.py:133-160` (`_load_parquets_concat` / `_ingest_delta_one`) both split GCS path to extract
-        `instrument_id` from filename — obsolete when `instrument_id` is a column. ~2 files, ~80 lines.
-      - **(ii) Manifest shard-granularity (~150 lines, 10-14h, high)**: `delta_one/engine/orchestrator.py:340-387`
-        (`_write_feature_group_manifest`) emits per-instrument rows; changing to per-(day,fg,tf) aggregates requires UTL
-        manifest schema + inference logic update + downstream consumer audit. High risk.
-      - **(iii) GCS migration (~250 lines new script, 12-16h, high)**: walk existing layout per-instrument → group by
-        (day,fg,tf) → consolidate → update manifest → audit. Must use `gcs_copy_object` (not gsutil). Test + prod buckets.
-      **VERDICT**: 28-38h total. Not schedulable as a P2 ad-hoc fix — needs a dedicated migration window + operator
-      coordination (reader layout change affects mtf + cross_instrument live path). File a successor active plan when
-      features end-to-end + correctness is GREEN per operator priority order (see 1.4 note). Investigation complete.
+      investigation — dig in before scheduling a migration window. **INVESTIGATION RESULT (2026-05-30 slot-2)**: Dug
+      into all 3 blockers. Complexity summary: - **(i) Reader layout (~80 lines, 6-8h, moderate)**: mtf
+      `engine/orchestrator.py:419-438` (`_load_spec`) + cross_instrument `cli/handlers/batch_handler.py:133-160`
+      (`_load_parquets_concat` / `_ingest_delta_one`) both split GCS path to extract `instrument_id` from filename —
+      obsolete when `instrument_id` is a column. ~2 files, ~80 lines. - **(ii) Manifest shard-granularity (~150 lines,
+      10-14h, high)**: `delta_one/engine/orchestrator.py:340-387` (`_write_feature_group_manifest`) emits per-instrument
+      rows; changing to per-(day,fg,tf) aggregates requires UTL manifest schema + inference logic update + downstream
+      consumer audit. High risk. - **(iii) GCS migration (~250 lines new script, 12-16h, high)**: walk existing layout
+      per-instrument → group by (day,fg,tf) → consolidate → update manifest → audit. Must use `gcs_copy_object` (not
+      gsutil). Test + prod buckets. **VERDICT**: 28-38h total. Not schedulable as a P2 ad-hoc fix — needs a dedicated
+      migration window + operator coordination (reader layout change affects mtf + cross_instrument live path). File a
+      successor active plan when features end-to-end + correctness is GREEN per operator priority order (see 1.4 note).
+      Investigation complete.
 - [x] ✅ [DEFERRED] P2. **1.4 Feature dependency DAG — reuse intermediates in memory.** **Deferred 2026-05-28 with named
       successor `plans/active/colocated_feature_pipeline_in_memory_handoff_TBD.md`** (operator to schedule). Honest
       scope assessment: within delta_one there are **zero inter-group computational dependencies** — every feature_group
@@ -178,9 +179,9 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       is the natural foundation when the colocated-orchestrator design lands. **Operator direction 2026-05-28**:
       priority order is (1) features-service end-to-end correct, then (2) function correctness, then (3)
       colocation/parallelism optimisations to eliminate IO waste. This is a (3) item — don't pull forward; revisit after
-      end-to-end + correctness ship.
-      **ACK (2026-05-30 slot-2)**: Operator direction confirmed. No code shipped — deferred per priority order.
-      Successor plan `colocated_feature_pipeline_in_memory_handoff_TBD.md` to be filed when (1)+(2) are GREEN. — PM@b4be0743
+      end-to-end + correctness ship. **ACK (2026-05-30 slot-2)**: Operator direction confirmed. No code shipped —
+      deferred per priority order. Successor plan `colocated_feature_pipeline_in_memory_handoff_TBD.md` to be filed when
+      (1)+(2) are GREEN. — PM@b4be0743
 - [x] ✅ [P2] **1.5 Idempotent skip (delta_one writer).** — **DONE** features@670fd76e. The orchestrator's
       `_process_instrument` already short-circuited on `force_reprocess=False` + `check_exists=True`, but
       `FeatureWriter.check_exists` was a stub returning False — making every backfill recompute+rewrite even
@@ -190,8 +191,8 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       compute+write for landed partitions.
 - [x] ✅ [DEFERRED] P3. **1.5b Column pruning at delta_one read** — operator 2026-05-28 deferred: revisit after
       end-to-end + correctness. Needs SourceSpec API redesign (`required_columns: list[str]`); named successor item.
-- [x] ✅ [NOT-APPLICABLE] P3. **1.5c Predicate pushdown at parquet read** — not applicable: per-day partition at
-      blob path; intra-day timestamp pushdown has no win for current filter patterns. Closed.
+- [x] ✅ [NOT-APPLICABLE] P3. **1.5c Predicate pushdown at parquet read** — not applicable: per-day partition at blob
+      path; intra-day timestamp pushdown has no win for current filter patterns. Closed.
 - [x] ✅ [P3] **1.6 Parallelism tune (feature-group level).** — **DONE** features@3ef4f2c8. `_process_groups` serially
       iterated feature_groups with "any failure = stop" (kept the loop deterministic but killed throughput);
       `_max_workers` config was plumbed from CLI but never applied. Switched to `asyncio.gather` bounded by
@@ -235,8 +236,8 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       refactored `base.py _add_lagged_features` 58L → 27L by extracting `_select_lag_candidates`. Result:
       `batch_handler.py` 1058 → 737L, all methods ≤48L, basedpyright 0/0/0, ruff clean. Full QG: codex-compliance 3
       violations → 1 (the remaining one is 1.7e, deferred). Runtime semantics unchanged; smoke tests pass.
-- [x] ✅ [CONFIG] P2. **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") — violates
-      workspace strict-mode rule (QG STEP 5.21).** Lines 151-155 set all 5 `reportUnknown*` to "none"
+- [x] ✅ [CONFIG] P2. **1.7e features-service `pyproject.toml` weakens basedpyright (`reportUnknown*` = "none") —
+      violates workspace strict-mode rule (QG STEP 5.21).** Lines 151-155 set all 5 `reportUnknown*` to "none"
       (`reportUnknownMemberType/VariableType/ArgumentType/ParameterType/LambdaType`). Pre-existing — landed in e8c8693d
       (2026-05-26) when consolidating basedpyright config into pyproject.toml; comment said "kept at pre-rollout
       per-repo strictness". Workspace CLAUDE.md mandates strict-mode (all = "error" or omitted). Removing the 5
@@ -246,8 +247,8 @@ Principle: minimise reads + writes; compute is cheap. Measure each change agains
       deeper investigation to pick a path (grind / selective / leave + document exception). Revisit later.
       **INVESTIGATION (2026-05-30 slot-2)**: Audited `pyproject.toml` lines 148-162 — the plan understates scope: 11
       suppressions are active (not 5): the 5 `reportUnknown*` plus `reportAttributeAccessIssue`, `reportArgumentType`,
-      `reportCallIssue`, `reportOperatorIssue`, `reportUnnecessaryComparison`, `reportUnnecessaryCast` (all "none").
-      Ran basedpyright (`mtds-venv`) against current `features_service/`: **574 errors, 1 warning** even WITH all 11
+      `reportCallIssue`, `reportOperatorIssue`, `reportUnnecessaryComparison`, `reportUnnecessaryCast` (all "none"). Ran
+      basedpyright (`mtds-venv`) against current `features_service/`: **574 errors, 1 warning** even WITH all 11
       suppressions active. Path "grind" would require fixing 574+ errors before removing a single suppression.
       "Selective" = identify which suppressions cover real issues vs. noise (needs per-error triage). "Leave + document
       exception" = add a CLAUDE.md exception note and accept the deviation. Operator direction stands: deferred, revisit

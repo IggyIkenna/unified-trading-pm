@@ -27,7 +27,7 @@ doc:
 
 | Dimension                                                              | What it checks                                                                                                                                                                              | Section                                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Code ↔ codex correctness**                                           | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                   | [Checklist](#checklist) items (a)–(n)                                                                   |
+| **Code ↔ codex correctness**                                          | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                  | [Checklist](#checklist) items (a)–(n)                                                                   |
 | **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(v) |
 
 ### Archetypes / strategies in scope (operator's words → codebase archetype)
@@ -47,24 +47,6 @@ Inverse / dated variants also exist (`carry-basis-perp-inv.md`, `carry-basis-dat
 long/stake/lend leg (on-chain); the hedge/short leg runs on CeFi perp venues. So a "DeFi" strategy's data coverage spans
 BOTH `asset_group=defi` (LST rates, lending indices, DEX, oracle) AND `asset_group=cefi` (perp funding, perp marks) —
 the coverage audit MUST cover both legs or it is incomplete.
-
-**Active MVP critical path — Solana basis trade (2026-06-01)**: the concrete first-live target is
-[`plans/active/solana_basis_trading_mvp_2026_06_01.md`](../../active/solana_basis_trading_mvp_2026_06_01.md)
-(`parent_epic: mtds_mdps_master`) — **long SOL spot on Orca (Whirlpool SOL/USDC, primary) / Raydium + short SOL-PERP on
-Drift V2 = funding carry**. It re-scopes the Solana data sources after the Bug-D Drift-backfill saga
-(`issues/bug_d_prime_drift_backfill_2026_05_31.md`). Audit implications this doc MUST honour:
-
-- **Drift V2 funding/trades come from the Velocity Data API** (`data.api.drift.trade/market/SOL-PERP/...`), free tier,
-  full history verified — NOT from Helius signature-walking (explicitly out of MVP scope). When auditing `perp_funding`
-  coverage for Solana, the source of truth is this API + the `perp-funding-*` bucket, not the `market-data-tick-defi`
-  grid.
-- **New canonical data_types the plan introduces** (audit their bucket + manifest presence once landed): `perp_trades`,
-  `perp_mark_oracle`, `perp_open_interest`, `dex_pool_state` (time-series, distinct from snapshot `dex_pools`),
-  `dex_trades`, `dex_spot_price`. The existing `solana_defi_handler.py` routes Orca→`dex_pools/orca/SOLANA/`,
-  Raydium→`dex_pools/raydium/SOLANA/` (snapshots) — the MVP needs the per-swap/time-series extension.
-- **Solana chain coverage is the live gate** — in the per-chain breakdown (item v), `SOLANA` rows for `perp_funding`
-  (Drift), `dex_pool_state`/`dex_trades` (Orca/Raydium), and `oracle_prices` (Pyth) are the cells that actually block
-  go-live; weight them accordingly.
 
 Key code surfaces:
 
@@ -218,45 +200,6 @@ reference, not a substitute for reading the source):
 > (`canonical/crosscutting/defi.py`, 22 chains). `perp_funding_cadence.py` gives per-venue funding cadence for the
 > window check.
 
-### Step 1.5 — Find the data before declaring it missing (MANDATORY — anti "0% captured" lie)
-
-> **Genesis (2026-06-01)**: a first run of this audit read only
-> `market-data-tick-defi-*/_index/availability_index.parquet` and reported **"0% captured / lst_rates absent / data
-> genuinely missing"** for every DeFi data_type. That was FALSE. The real data lives in **dedicated per-data_type
-> buckets** (`lst-rates-*` 92% captured back to 2020, `lending-indices-*` 91%, `oracle-prices-*` 79%, `perp-funding-*`
-> 55%, `dex-pools-*` 96%, `dex-swaps-*` 93%), each with its **own** `_index/availability_index.parquet`. The
-> `market-data-tick-defi` index held only a **phantom empty grid** (a cartesian `data_type × venue` cross-product in
-> legacy `VENUE-CHAIN` format with everything `empty_confirmed`). Reading one index and concluding "missing" is a
-> **grep-then-conclude** violation. **Data is almost never genuinely missing — it is in the wrong bucket, under a
-> hyphen/underscore alias, on an old schema version, or behind a phantom placeholder grid.**
-
-Before any cell can be called "missing", **exhaust where the data could be hiding**:
-
-- [ ] **Enumerate ALL candidate buckets per data_type, not just `market-data-tick-{ag}`.** DeFi data_types have
-      **dedicated buckets**: `lst-rates-*`, `lending-indices-*`, `oracle-prices-*`, `perp-funding-*`, `dex-pools-*`,
-      `dex-swaps-*` (+ `evm-defi-*`, `features-onchain-defi-*` for derived). Resolve the canonical bucket per
-      `(data_type, kind)` from `resolve_bucket_name()` / `deployment-service/configs/cloud-providers.yaml`, then list
-      **every** bucket whose name matches the data_type.
-      `gcloud storage ls | grep -iE 'lst-rates|lending-indic|perp-funding|oracle-price|dex-pool|dex-swap'`. Each has its
-      own `_index/availability_index.parquet` — read **all** of them and the `market-data-tick-*` one, then reconcile.
-- [ ] **Check object reality, not just the index.** If an index says empty but `gcloud storage ls gs://<bucket>/day=*/`
-      returns thousands of parquet files, the **index is stale/phantom** — that is a manifest-consolidation finding, not
-      an absence. Count objects (`... | grep -c '\.parquet'`) and sample recent `day=` partitions.
-- [ ] **Look under aliases + wrong forms of the same data_type.** The same logical data_type appears as: hyphen vs
-      underscore (`lending-indices` AND `lending_indices`, `dex-pools` AND `dex_pools`, `dex-swaps` AND `dex_swaps` all
-      coexist in their buckets — 2026-06-01); legacy semantic name (`staking_yields` vs canonical `lst_rates`); legacy
-      `VENUE-CHAIN`-embedded venue strings (`UNISWAPV3-ETHEREUM`) vs flat venue + `chain` column. Query
-      `df.data_type.unique()` and `df.venue.unique()` in **every** index and treat any alias/variant as the SAME data —
-      it is data-in-wrong-form to be cleaned up, NOT missing data.
-- [ ] **Two indexes disagreeing = phantom-grid finding.** When the dedicated bucket shows `captured` but
-      `market-data-tick-defi` shows `empty_confirmed` for the same `(data_type, venue, date)`, the `market-data-tick`
-      row is a phantom placeholder. Flag it for deletion/reconciliation — never let the phantom drive a "missing"
-      verdict.
-- [ ] **Classify every gap into one of: wrong-bucket / wrong-name-alias / phantom-index-grid / old-schema-version /
-      genuinely-partial-window / genuinely-missing.** Only the last is "download more"; the rest are **cleanup /
-      consolidation / migration** of data that already exists. The result MUST state which of these each gap is — a bare
-      "X% captured" with no wrong-form classification is review-blocking.
-
 ### Step 2 — Coverage checklist (compare expected set vs actual corpus)
 
 - [ ] (o) **instruments-service universe present**: every venue × symbol the matrix needs is an active
@@ -270,36 +213,26 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       `python3 plans/audit/results/a2_materialize_expected_coverage_dump.py` (writes
       `expected_coverage_dump_<date>.parquet`). This is the denominator for "what's missing".
 
-- [ ] (q) **Manifest divergence for the strategy cells = 0 — across ALL candidate buckets (per Step 1.5)**: run the
-      divergence scan and filter to the matrix cells. Run: `python3 plans/audit/results/a3_manifest_divergence.py` (and
-      the all-services variant `a3v2_manifest_divergence_all_services.py`). **`a3` reads only `market-data-tick-{ag}` —
-      for DeFi data_types that is the phantom grid; you MUST also read the dedicated-bucket indexes** (`lst-rates-*`,
-      `lending-indices-*`, `oracle-prices-*`, `perp-funding-*`, `dex-pools-*`, `dex-swaps-*`) and use the **max**
-      captured state across buckets as truth. For every `data_type` in the matrix, **zero** `MISSING_EXPECTED` and
-      **zero** `DIVERGENT_EMPTY` once the dedicated buckets are included. A cell that is `captured` in the dedicated
-      bucket but `empty_confirmed` in `market-data-tick-defi` is a **phantom-grid finding** (cleanup), not a download
-      item.
+- [ ] (q) **Manifest divergence for the strategy cells = 0**: run the divergence scan and filter to the matrix cells.
+      Run: `python3 plans/audit/results/a3_manifest_divergence.py` (and the all-services variant
+      `a3v2_manifest_divergence_all_services.py`). For every `data_type` in the matrix, **zero** `MISSING_EXPECTED` and
+      **zero** `DIVERGENT_EMPTY` for `asset_group ∈ {defi, cefi, tradfi}` rows the strategy needs. Each non-zero cell
+      becomes a download backlog item (Step 3), NOT a deferral.
 
 - [ ] (r) **Per-data_type schema-version compliance read from DATA (not the constant)**: the manifest is on **v9**
       (`MANIFEST_SCHEMA_VERSION = 9`; v9 added the tradfi `source` column). Read the actual `schema_version` column
       distribution **per data_type** for each strategy's cells — ≥95% at v9. Run / adapt
       `plans/audit/results/a4_manifest_v8_compliance.py` (rename target → v9; the script name still says v8 — that is a
       **stale-tooling finding**, fix it). **Do not trust the code constant** — incident 2026-05-20: 0% of 7.4M prod rows
-      were at v8 despite the constant being bumped. Read the dedicated buckets (Step 1.5): 2026-06-01 found a **schema
-      spread v4–v8 with ZERO v9** (`lst-rates` v6/7/8, `lending-indices` v4/6/7/8, `dex-pools` v4/5/6). Old-version rows
-      are **data-in-wrong-form → re-version migration of existing data**, NOT missing data and NOT a re-download.
+      were at v8 despite the constant being bumped. A data_type stuck at v4–v7 = a migration backlog item.
 
-- [ ] (s) **Venue + data_type names migrated to SSOT in the actual rows (data-in-wrong-form sweep)**: the manifest rows'
-      `data_type` and `venue` string values use the **canonical** names, not legacy aliases. Canonical data_types:
-      `dex_swaps` / `dex_pool_state` / `lending_indices` / `perp_funding` / `lst_rates` / `vault_share_price` /
-      `oracle_prices` (NOT `swap_events` / `pool_state` / `lending_metrics` / `funding_rates`). Query **every** index
-      (dedicated buckets + `market-data-tick`) for distinct `data_type` and `venue` values and flag each wrong-form
-      found 2026-06-01: **(1) hyphen-vs-underscore duplicates of the same data_type coexisting** (`lending-indices` +
-      `lending_indices`; `dex-pools` + `dex_pools`; `dex-swaps` + `dex_swaps`) — pick the underscore canonical, migrate
-      the hyphen rows; **(2) legacy semantic alias** (`staking_yields` rows that are really `lst_rates`); **(3) legacy
-      `VENUE-CHAIN`-embedded venue strings** (`UNISWAPV3-ETHEREUM`) that should be flat `venue` + a populated `chain`
-      column. Any alias/variant in **written rows** = an un-migrated-SSOT finding → **rename/normalise migration** (the
-      data exists; this is cleanup, not download). Per-corpus expression of code items (j)/(l)/(n) above.
+- [ ] (s) **Venue + data_type names migrated to SSOT in the actual rows**: the manifest rows' `data_type` and `venue`
+      string values use the **canonical** names, not legacy aliases. Canonical data_types: `dex_swaps` /
+      `dex_pool_state` / `lending_indices` / `perp_funding` / `lst_rates` / `vault_share_price` / `oracle_prices` (NOT
+      `swap_events` / `pool_state` / `lending_metrics` / `funding_rates`). Query the manifest for distinct `data_type`
+      and `venue` values for `asset_group=defi` and diff against the catalog + `defi_venues.py` `ALL_DEFI_VENUES`. Any
+      legacy alias still appearing in **written rows** (not just code) = an un-migrated-SSOT finding → rename/backfill
+      item. This is the per-corpus expression of code items (j)/(l)/(n) above.
 
 - [ ] (t) **Required-history window actually covered (timeframe audit)**: for each strategy's cells, read min/max
       `available_at` from the manifest and confirm the **continuous** window meets the strategy's lookback need (Step 1
@@ -337,33 +270,28 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       `is_before_source_coverage_start()` / `is_in_known_gap()`; an `empty_confirmed` on an owed-data branch is a
       silent-lie finding, not coverage. Everything else is a download/migration backlog row (Step 3).
 
-### Step 3 — Output: classify every gap (cleanup vs download), then backlog it
+### Step 3 — Output: the download backlog (what's missing, what to download)
 
-Every RED/AMBER cell from items (o)–(v) becomes an explicit, actionable backlog line — **not** a "deferred" note. **Most
-DeFi "gaps" are data-in-wrong-form (the data already exists), NOT missing data — classify before you write "download".**
-Per `External Data Is Always Available` + `Data Pipeline Correctness Is The Heartbeat`, each cell is exactly one of:
+Every RED/AMBER cell from items (o)–(u) becomes an explicit, actionable backlog line — **not** a "deferred" note. Per
+the `External Data Is Always Available` + `Data Pipeline Correctness Is The Heartbeat` HARD RULES, a missing cell is one
+of exactly:
 
-1. **Cleanup — wrong bucket / phantom index** (most common, 2026-06-01): data is `captured` in a dedicated bucket
-   (`lst-rates-*` etc.) but the `market-data-tick-defi` grid shows it empty → reconcile/delete the phantom grid + point
-   the data-status denominator at the real index.
-   `- [ ] [CLEANUP] P#. Reconcile <data_type> phantom-empty grid in market-data-tick-defi vs captured rows in <dedicated-bucket> — parent_epic: defi_master`.
-2. **Cleanup — alias / name normalisation** (item s): hyphen-vs-underscore duplicates, `staking_yields`→`lst_rates`,
-   `VENUE-CHAIN`→flat venue+chain.
-   `- [ ] [MIGRATION] P#. Normalise <alias> → <canonical> in <bucket> (data exists) — …`.
-3. **Migration — re-version** (item r): present at v4–v8, needs v9. Bundle into the single-walk migration window (no new
-   whole-corpus GCS walk without operator ack).
-4. **Download/backfill** — genuinely-partial window or venue truly never captured (only after Step 1.5 exhausted all
-   buckets/aliases): `- [ ] [DATA] P#. Backfill <data_type> <venue> <ag> over <start>..<end> via <collect-op> — …`.
-5. **`BLOCKED-CREDENTIALS`** — public/free path exhausted; file the credential ask ping. Status stays
-   `BLOCKED-CREDENTIALS`, NOT `DEFERRED`.
-6. **Genuine `empty_confirmed`** — source truly has no data over that window (verified via `is_in_known_gap()` /
-   `is_before_source_coverage_start()`) → typed reason, **excluded** from the backlog (the only legitimate "missing").
+1. **Download/backfill item** — data exists, just not captured yet →
+   `- [ ] [DATA] P#. Backfill <data_type> for <venue> <asset_group> over <start>..<end> — parent_epic: defi_master`.
+   Name the exact venue × data_type × date range and the MTDS `collect-*` operation that captures it.
+2. **`BLOCKED-CREDENTIALS`** — public/free path exhausted; file the credential ask ping (vendor + tier + what's
+   unblocked) per the workspace rule. Adapter scaffold + unit tests still ship; status stays `BLOCKED-CREDENTIALS`, NOT
+   `DEFERRED`.
+3. **Migration item** — present but wrong `schema_version` (item r) or legacy data_type/venue name (item s) → rename /
+   re-version backfill, ideally bundled into the single-walk migration window (no new whole-corpus GCS walk without
+   operator ack).
+4. **Genuine `empty_confirmed`** — source truly has no data for that cell over that window (verified via
+   `is_in_known_gap()` / source-coverage docs) → typed `EmptyConfirmedReason`, recorded, and **excluded** from the
+   download backlog (this is the only legitimate "missing").
 
 Render the result as a coverage matrix (rows = strategy × data_type × venue; columns =
-`expected / captured / v-spread / window-covered / which-bucket / verdict (one of the 6 above)`) plus the classified
-backlog list. **A bare "X% captured" with no wrong-form classification + no list of buckets searched is
-review-blocking.** Wire each backlog line into an active plan under `parent_epic: defi_master` immediately (Capture
-Discoveries HARD RULE).
+`expected / captured / v9% / window-covered / verdict`) plus the download backlog list. Wire each backlog line back into
+an active plan under `parent_epic: defi_master` immediately (Capture Discoveries As Plan Todos HARD RULE).
 
 ### E2E Batch, Paper, and Live Verification
 

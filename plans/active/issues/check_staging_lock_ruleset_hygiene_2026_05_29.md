@@ -2,22 +2,22 @@
 title: check-staging-lock rulesets in 3 repos still use v1-style required check
 created: 2026-05-29
 status: RESOLVED 2026-05-29
-author: slot-1 (ikenna)
 parent_epic: infrastructure_master
 related_plans:
   - plans/active/ci_canonical_v2_migration_2026_05_29.md
 locked_by: live-defi-rollout
+priority: P2
 ---
 
-> **RESOLVED 2026-05-29**: Option A (additive update) applied. All 3 rulesets now require BOTH
-> `check-staging-lock` AND `quality-gates-v2`:
+> **RESOLVED 2026-05-29**: Option A (additive update) applied. All 3 rulesets now require BOTH `check-staging-lock` AND
+> `quality-gates-v2`:
 >
 > - execution-service ruleset 13647462: `['check-staging-lock', 'quality-gates-v2']` ✓
 > - instruments-service ruleset 13787597: `['check-staging-lock', 'quality-gates-v2']` ✓
 > - deployment-ui ruleset 13787657: `['check-staging-lock', 'quality-gates-v2']` ✓
 >
-> Verified via `gh api repos/IggyIkenna/<repo>/rulesets/<id>` post-PUT. Workspace-canonical
-> two-pass + staging-lock model now enforced on these repos. Issue archives.
+> Verified via `gh api repos/IggyIkenna/<repo>/rulesets/<id>` post-PUT. Workspace-canonical two-pass + staging-lock
+> model now enforced on these repos. Issue archives.
 
 ## What I found
 

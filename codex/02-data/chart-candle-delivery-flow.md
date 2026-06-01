@@ -76,7 +76,7 @@ across 4 repos).
                │ GET _index/availability_index.parquet  (cached 60s)
                ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  GCS bucket: market-data-tick-tradfi-{project_id}                   │
+│  GCS bucket: market-data-tick-tradfi-prd-{project_id}                   │
 │                                                                     │
 │  _index/availability_index.parquet  (canonical, ~60s fresh)         │
 │  _index/per_vm/{instance}.parquet   (writers append here)           │
@@ -339,7 +339,7 @@ Walk the layers in order:
    If `data` is empty, check:
    - Is the symbol in `curated_symbols.py` with the right `data_type`?
    - Does the GCS shard actually exist?
-     `gcloud storage ls "gs://market-data-tick-tradfi-{project}/processed_candles/by_date/day=YYYY-MM-DD/timeframe=1m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet"`
+     `gcloud storage ls "gs://market-data-tick-tradfi-prd-{project}/processed_candles/by_date/day=YYYY-MM-DD/timeframe=1m/data_type=ohlcv_1m/venue=NASDAQ/AAPL.parquet"`
    - Did manifest pruning eat the dates? Check `read_availability_index({bucket})` — see
      `availability-manifest-and-data-status.md` for inspection commands.
 4. **Does the UI proxy forward correctly?** `curl "http://localhost:3000/api/market-data/candles?..."`. Should return
