@@ -572,7 +572,7 @@ jobs:
               print(p)
           print(f"Appended staging_commits to main_commits.history (history length: {len(history)})")
           print("staging_status.locked = false")
-          PYEOF || exit 1
+          PYEOF
           python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
             || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
 
