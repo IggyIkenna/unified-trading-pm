@@ -110,34 +110,48 @@ relaunch.
 
 ## Phase 2 — Ship + rebuild tarball (P0)
 
-- [ ] [SCRIPT] P0. `bash scripts/quality-gates.sh` exit 0 for each touched repo (MTDS, MDPS, deployment-service, UTL) +
-      cross-repo consumers. Commit + push to `live-defi-rollout`. Flip each Phase 1 checkbox same-turn.
-- [ ] [SCRIPT] P0. Rebuild VM code tarball with fixed code:
-      `bash deployment-service/scripts/vm/create-code-tarballs.sh`. Verify the new tarball resolves canonical names
-      (smoke `get_tick_data_bucket` per asset_group).
+- [x] ✅ [SCRIPT] P0. QG exit 0 + push to `live-defi-rollout` for each touched repo. —
+      market-tick-data-service@0b575651 (RC1 + handler + tests, full QG exit 0) + @6372bd5d (migration script);
+      market-data-processing-service@61900a3 (RC4); deployment-service@d667422 (launchers). Phase-1 checkboxes flipped.
+- [ ] [SCRIPT] P0. Rebuild VM code tarball **from a CLEAN `live-defi-rollout` checkout** (NOT the slot worktree — it
+      carries foreign-dirty backfill WIP; do not ship it). `bash deployment-service/scripts/vm/create-code-tarballs.sh
+      --asset-group <CEFI|DEFI|...> --include market-tick-data-service` → uploads SHA-pinned
+      `mtds-code@<sha>.tar.gz` to `gs://deployment-scripts-central-element-323112/code/`. Smoke
+      `get_tick_data_bucket` per asset_group resolves canonical. Needed before Phase 4 relaunch + the Phase 5 VM fan-out.
 
-## Phase 3 — Drain writer VMs (pre-migration drain gate — HARD RULE) (P0)
+## Phase 3 — Drain writer VMs (pre-migration drain gate — HARD RULE) (P0) — DONE
 
-- [ ] [SCRIPT] P0. Inventory all GCP **and** AWS fleet writers via `vm_zombie_watchdog.py`; confirm the legacy-writing
-      set: `mdps-backfill-cefi-main-test`, `mdps-backfill-defi`, `mdps-prediction-2025`, `sports-scheduler` + identify
-      the tradfi legacy writer (ephemeral/Cloud Run). Add `> 🟢 VM DRAINING` banner to affected active plans.
-- [ ] [SCRIPT] P0. Per-prefix graceful SIGTERM → wait for STOPPED event (STARTED-within / progress / STOPPED contract);
-      run manifest consolidator; snapshot to `_index/snapshots/pre_migration_2026_06_01.parquet` per bucket. NO
-      fire-and-forget.
+- [x] ✅ [SCRIPT] P0. Inventoried running fleet 2026-06-01: `mdps-backfill-cefi-main-test` self-terminated; no tradfi
+      writer running (cefi+tradfi legacy already static). Drained the 3 live writers
+      (`mdps-backfill-defi`, `mdps-prediction-2025`, `sports-scheduler`) via graceful `gcloud compute instances stop`
+      → TERMINATED. Only `alerting-quietness` + `vm-zombie-watchdog` left up. **All 5 legacy buckets frozen.**
+- [x] ✅ [SCRIPT] P0. Snapshotted each frozen legacy `_index/availability_index.parquet` →
+      `_index/snapshots/pre_migration_2026_06_01.parquet` (safety backup, exit 0).
 
-## Phase 4 — Relaunch clean (P0)
+## Phase 5 — Migrate legacy → canonical (P0) — DRAIN→MIGRATE→RELAUNCH (operator sequence 2026-06-01)
 
-- [ ] [SCRIPT] P0. Relaunch the drained writers from the Phase 2 tarball; T+10min verify each writes ONLY to the
-      canonical bucket (`_index` mtime advances on `-prd-`, NOT on the flat legacy name).
+- [x] ✅ [SCRIPT] P0. Date-shardable merge script `market-tick-data-service/scripts/migrate_legacy_tick_buckets_to_canonical.py`:
+      idempotent server-side `gcs_copy_object` data copy (skips objects already in canonical via `gcs_describe_object`)
+      + manifest seed via the consolidator's per-VM shard mechanism (drops legacy `_index` rows as
+      `_index/per_vm/legacy_bucket_migration_2026_06_01.parquet` → running consolidator folds + dedups on shard-key,
+      **preserving `pipeline_mode`**). `--prefix` shards the DATA copy by date; `--manifest-only`/`--no-manifest` split
+      the halves. — market-tick-data-service@6372bd5d (ruff clean; scripts/ exempt from strict pyright).
+- [ ] [SCRIPT] P0. **Sharded-VM fan-out (operator directive: parallel VMs by date, ~30 min not hours).** New launcher
+      `deployment-service/scripts/vm/launch-legacy-bucket-migration-sharded.sh`: one VM per (legacy-bucket × year);
+      each runs `migrate_legacy_tick_buckets_to_canonical.py --apply --only <group>
+      --prefix raw_tick_data/by_date/day-<year> --prefix processed_candles/...<year> --no-manifest` from the Phase-2
+      tarball; `VM_SHUTDOWN_ON_COMPLETION=true`; T+10min post-launch verify (no fire-and-forget). Server-side copy
+      (no egress) → metadata-speed.
+- [ ] [SCRIPT] P0. After all data-shard VMs complete, seed manifests once per bucket:
+      `migrate_legacy_tick_buckets_to_canonical.py --apply --manifest-only` (5 buckets) → consolidator folds them in.
+- [ ] [SCRIPT] P0. Run-to-completion verification: manifest-verified row parity + sample-inspected parquets per bucket
+      (not smoke-green).
 
-## Phase 5 — Migrate legacy → canonical (P0)
+## Phase 4 — Relaunch clean (P0) — AFTER migration (operator sequence)
 
-- [ ] [SCRIPT] P0. One-shot merge script (per CLAUDE.md GCS object ops — `gcs_copy_object` / `gcs_describe_object`,
-      NEVER gsutil per-object): copy every parquet from each legacy bucket into its canonical target; merge `_index`
-      availability manifests with dedup on the shard row-key; **preserve `pipeline_mode`** (already backfilled on legacy
-      rows). Idempotent, `--dry-run` default, `--verify` count-only.
-- [ ] [SCRIPT] P0. Run the merge for cefi, defi, tradfi, sports, prediction (main `_index` + `_index/per_vm/` shards).
-      Run-to-completion (not smoke-green): manifest-verified row parity + sample-inspected parquets.
+- [ ] [SCRIPT] P0. Relaunch the 3 drained writers (`mdps-backfill-defi`, `mdps-prediction-2025`, `sports-scheduler`)
+      from the Phase-2 tarball; T+10min verify each writes ONLY to the canonical `-prd-`/`-pred-prd-` bucket
+      (`_index` mtime advances on canonical, NOT on the flat legacy name).
 
 ## Phase 6 — Verify (P0)
 
