@@ -762,12 +762,13 @@ behind the exact drift this whole audit is about.
       set-but-empty, so a stray `/tmp/unified-trading-pm/` could spuriously match. Fix (production-correct, not
       test-gaming): when `REPO_ROOT` is set it is **authoritative** — return its manifest or `None`, no cwd-walk
       fallthrough. `TestFindManifest` (2 tests incl `test_returns_none_when_not_found`) pass; sibling test unaffected.
-- [ ] [CHORE] P3. **3 archived plans carry literal conflict-marker line(s)**
-      (`plans/archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md`,
-      `strategy_archetype_taxonomy_2026_05_12.md`, `defi_protocol_outage_detector_2026_05_20.md`). Pre-existing
-      committed content (1 marker line each — verify whether real unresolved-merge residue vs an intentional doc example
-      before editing; archived = low priority). If residue, resolve + recommit; if doc example, fence it so
-      marker-scanners don't trip.
+- [x] ✅ [CHORE] P3. **3 archived plans' conflict-marker residue RESOLVED 2026-06-01.** Confirmed REAL unresolved-merge
+      residue (not doc examples) — each was a `git merge` conflict from the wave-2 archival commit `5353e40f7`, mangled by
+      markdown blockquote prefixing (`=======`→`> ========`, `>>>>>>>`→`> > > > > > > >`) so a naive `^=======` scan
+      missed the closers. Both sides were COMPLEMENTARY (HEAD = `ARCHIVED` banner; incoming = `## Deferred work` table) →
+      kept both, stripped all `<<<<<<<<`/`========`/`>>>>>>>>` lines. `grep -E '<<<<<<<|>>>>>>>|======='` now CLEAN on all
+      three (`d5_features_missing_data_downgrade_2026_05_20.md`, `strategy_archetype_taxonomy_2026_05_12.md`,
+      `defi_protocol_outage_detector_2026_05_20.md`). — unified-trading-pm@9534ce9ae.
 
 ## Success criteria
 
