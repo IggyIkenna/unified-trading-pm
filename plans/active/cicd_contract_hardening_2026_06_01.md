@@ -623,11 +623,14 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
         (`lending_indices` in `BYPASS_TYPES` + `test_lending_indices_is_bypass` asserts gate False AND no candle adapter
         registered). **No UAC change** (already False). All 3 sources agree: lending_indices is bypass. mdps QG EXIT 0
         (`✅ ALL QUALITY GATES PASSED`, sentinel written); `test_defi_bypass_routing` 42/42.
-  - [ ] [TYPES] P2. **mdps pyright debt (from PR #85): 4 files added to the TEMPORARY PYRIGHT DEBT BYPASS exclude list**
-        (`lending_indices_adapter.py`, `bucket_assignment_adapter.py`, `fast_candle_aggregation.py`,
-        `candle_generator.py`) to land the migration — these have PRE-EXISTING basedpyright errors. Fix the type errors
-        properly and shrink the bypass list (contrast: client-reporting-api PR #9 removed a suppression — that's the
-        target direction).
+  - [x] ✅ [TYPES] P2. **mdps pyright debt SHRUNK — mdps@b2c78e1 2026-06-01.** Removed all 4 PR-#85 files from the
+        TEMPORARY PYRIGHT DEBT BYPASS exclude (17→13 debt entries), no new suppressions: `lending_indices_adapter.py`
+        = dead exclude (adapter deleted per D3, file absent on LDR) → removed; `candle_generator.py` = dead exclude
+        (file absent on LDR) → removed; `fast_candle_aggregation.py` = already type-clean → un-excluded (0 errors);
+        `bucket_assignment_adapter.py` = fixed 2 real errors PROPERLY (np.argmin Any-member `reportAny` laundered
+        through a typed intermediate + dropped an unnecessary `pd.DataFrame` cast) → un-excluded (0 errors). Target
+        direction = remove suppressions (per client-reporting-api PR #9), NOT add. mdps QG EXIT 0; project-mode
+        basedpyright on the 4 files = 0 errors; tests 42/42 + 25/25 green.
   - [x] ✅ [TEST] P2. **mdps per-shard memory gate macOS units bug FIXED — mdps@9ce5159 2026-06-01** (discovered while
         verifying the above two follow-ups to EXIT 0). `tests/perf/test_polars_instrument_day_memory.py` divided
         `resource.getrusage().ru_maxrss` by 1024 assuming Linux KB semantics, but on macOS/BSD `ru_maxrss` is **bytes**
