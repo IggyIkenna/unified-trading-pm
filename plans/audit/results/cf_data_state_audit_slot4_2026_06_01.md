@@ -169,6 +169,17 @@ Confirms the multi-layout reality — each AG bucket has ≥2 distinct layouts t
 - **(tradfi / sports / instruments)**: run `cf_layout_audit_2026_06_01.py` on each before its walk (Phase 0). Expect the
   same shape — a raw tree (flat or partial-hive) + processed_candles + possibly an older bare-segment tree.
 
+### Complete Phase-0 layout map (all 4 MTDS AGs, 2026-06-01) — each AG needs a BESPOKE migrator
+
+| AG | raw_tick_data layout (the hard tree) | processed(_candles) | notes |
+| -- | ------------------------------------ | ------------------- | ----- |
+| cefi | **FLAT** `raw_tick_data/by_date/{SYMBOL}.parquet` — NO path dims; day/venue/data_type only in parquet cols (`exchange,symbol,timestamp[epoch-µs],data_type`) | `processed_candles/by_date/day=/timeframe=/data_type=/venue=` | flat → derive dims + fan-out to day= partitions |
+| tradfi | **HYPHEN pseudo-hive** `raw_tick_data/by_date/day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/{id}.parquet` (`-` not `=`, bare `equities`/`NYSE`) + a `databento-batch-registry/` tree | same candle layout | hyphen-delim parse; sample raw file had **0 rows** (verify not-empty); cols `timestamp,symbol,ohlcv,instrument_key,underlying` |
+| sports | full hive `raw_tick_data/by_date/day=/category=/data_source=/venue=/league_id=/instrument_type=/data_type=` (parquet already has `source` + `data_source` cols) | `processed/by_date/day=/data_type=/league_id=/timeframe=` (also has `source`/`data_source` cols) | category=→asset_group=, data_source= path→source col (already in col too), keystone reason relabel |
+| prediction | legacy `raw_tick_data/by_date/day=/asset_group=/venue=/instrument_type=/data_type=` (near-canon) vs canonical pred-prd `…/category=/data_source=/venue=/…market_category=/underlying=/…` | candle layout | INVERTED legacy↔canonical; `rebuild_prediction_manifest.py` exists |
+
+**Conclusion**: per-AG bespoke migrators (matching the existing `migrate_{sports,tradfi,polymarket}_canonical.py` structure), NOT one generalized tool. cefi needs a NEW flat→hive fan-out migrator (none exists). Each converges its source layout(s) onto the single canonical `day=/pipeline_mode=/asset_group=/venue=/chain=/instrument_type=/data_type=` target + a `ManifestWriter` v9 rebuild (auto-stamps `schema_version=9` + `source`/`pipeline_mode`/`available_at`).
+
 **Design consequence**: the migrator is genuinely **layout-dispatching** — per object it must detect its source layout
 and map to the single canonical `day=/pipeline_mode=/asset_group=/venue=/chain=/instrument_type=/data_type=` target,
 deriving missing dims from parquet columns (cefi flat), reconciling inverted schemes (prediction), and deduping any
