@@ -1,7 +1,8 @@
 ---
 title: "Manifest consolidator — memory-bounded DuckDB rewrite (cefi flat OOM fix)"
 created: 2026-05-26
-status: active
+status: archived
+archived: 2026-06-01
 parent_epic: mtds_mdps_master
 assigned_vm: vm-cross-cutting
 estimate_class: infra
@@ -13,6 +14,20 @@ locked_since: 2026-05-26
 ---
 
 # Manifest consolidator — memory-bounded DuckDB rewrite
+
+> **ARCHIVED 2026-06-01.** All 5 phases complete; cron health operator-verified live 2026-05-30T04:00Z (0 signal-9/OOM
+> over 24h, per-cycle 31-45s). DuckDB merge shipped `unified-trading-library@7a72049`; codex-compliance + bandit
+> violations it introduced cleared `unified-trading-library@73209d50`. Codex SSOT
+> (`codex/05-infrastructure/manifest-consolidator-ssot.md` § "Merge engine") verified to reflect what shipped.
+>
+> ## Deferred work — migrated to:
+>
+> - **cefi expected-universe enumerator re-run** (Phase 0 finding — denominator shards `slot4-cefi-c*` under-seeded;
+>   NULL-`schema_version` fix shipped IS@9f831578, re-run pending) → **MIGRATED TO**
+>   `plans/audit/instructions/cefi_master_audit_instructions.md` § `(enumerator-reseed)`.
+> - **Continuous-verification recipe** (24h OOM/freshness watch) → promoted into
+>   `plans/audit/instructions/manifest_master_audit_instructions.md` items (h2)/(h3) as the everlasting engine-audit home.
+> - **Bench scratch dirs** (`/var/tmp/consolidator-bench/`, `/data/cefi_consolidate/`) — local-only, safe to delete.
 
 ## What this fixes
 
