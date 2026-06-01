@@ -206,10 +206,31 @@ See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) f
       `make_health_router` with a `data_freshness` callback (QG STEP 5.62 ✓) and `inputs/mark_update_sub.py` subscribes
       to live marks. Confirm the live path pre-flights mark availability/freshness before publishing Greeks (readiness
       gates on input freshness, not just process liveness).
-- [ ] (greeks-features-data) **Features-data dependency present where required**: the operator's data-dep set is
-      *features data + MDPS data*. Today greeks consumes only MDPS `mark_update`; confirm whether any Greek/IV needs a
-      features-service input (e.g. a vol surface) and, if so, that it is read as **data** (features bucket) via pre-flight
-      — never a features-service code import. (2026-06-01 gap: greeks reads no features-service data yet — see todo.)
+- [ ] (greeks-scope) **What greeks-service computes — CeFi + DeFi options (operator 2026-06-01)**: greeks-service
+      computes per-option Greeks (Δ/Γ/Θ/vega/ρ + 2nd-order vanna/volga) via `kernels/black_scholes.py`
+      (`BlackScholesKernel.compute(spot, strike, time_to_expiry, volatility, right, dividend_yield)`) for **CeFi options**
+      (Deribit primary — BTC/ETH; then Binance/OKX/Bybit options) **and DeFi options** (on-chain options protocols —
+      Lyra/Aevo/Premia/Dopex/…). Inputs per option: strike/expiry/right from the IS `InstrumentRecord` (never re-derived
+      from venue strings), spot + mark from MDPS/MTDS `mark_update`. Output: `pricing_ledger` (Greeks/IV) to GCS + live.
+      Verify BOTH `asset_group=cefi` and `asset_group=defi` option paths are exercised (currently `mark_update_handler`
+      handles the generic option path; confirm DeFi marks carry the needed fields).
+- [ ] (greeks-iv-source) **IV comes from the features-volatility SURFACE FITTER — greeks does NOT fit (operator
+      2026-06-01)**: the **vol-surface fitter lives in features-service `volatility/`** — `calculators/tradfi_vol_surface.py`
+      (`TradFiVolSurfaceCalculator`) + `vol_surface_term_structure.py` + `volatility_calculator.interpolate_iv_at_moneyness(...)`
+      — which **fits observed IVs at REAL (listed) strikes and interpolates** → ATM (50-delta) + `iv_at_{90,100,110}_moneyness`
+      + 7d/30d/90d term structure, written to `features-volatility-{ag}` GCS. greeks-service only **consumes** an IV and
+      computes the Greeks. Verify the IV-resolution contract: today `mark_update_handler` uses `msg.implied_volatility`
+      directly for CeFi (Deribit quotes IV) and the `implied_vol_from_price` solver elsewhere — but it does **NOT yet read
+      the fitted/interpolated surface**. For any (strike, expiry) without a directly-quoted IV (most DeFi options; CeFi
+      off-the-board strikes; risk-scenario Greeks), greeks MUST consume the features-volatility interpolated IV (read as
+      **data** from the features-volatility bucket via pre-flight — never a features-service code import).
+      **Gaps (2026-06-01):** (a) greeks reads NO features-volatility surface data yet (per-option IV / solver only);
+      (b) DeFi IV path unbuilt (DeFi marks may not quote IV → needs the surface or a solver + underlying spot);
+      (c) TradFi solver path needs `underlying_spot` in the schema; (d) **`second_order_greeks` is duplicated** —
+      `features_service/volatility/calculators/second_order_greeks.py` AND `greeks_service/kernels/black_scholes.py` both
+      compute vanna/volga → pick ONE SSOT (greeks-service owns Greeks; features-volatility should consume, or vice-versa);
+      (e) **`TradFiVolSurfaceCalculator` is misnamed** — its config default is `{"CEFI": ["BTC","ETH"]}`, so it actually
+      serves CeFi crypto options → rename/generalise to an asset-group-agnostic `VolSurfaceCalculator` covering cefi+defi.
 - [ ] (greeks-topology) **Deployment topology = data-pipeline layer; batch separate / live in features VM; shared**:
       verify the deployment topology DAG (`deployment-service/configs/RUNTIME_TOPOLOGY_DECISIONS.md` + topology SVG)
       places greeks in the **data-pipeline layer (not ml)**: **batch** as a **separate** scheduled job/VM; **live**
