@@ -33,17 +33,19 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 ### Sub-plan registry (what this master wraps)
 
-| Plan                                                        | Role / layer                                                          | Status                           | Parallel?                     |
-| ----------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------- | ----------------------------- |
-| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | L1 code-fix ✅ · L2 drain+cron-pause · L6 decommission                | code shipped; decommission gated | after L3 per-AG               |
-| THIS plan §A–G                                              | L1 DeFi writer code · **L3 DeFi single-walk (§C)** · L5 DeFi backfill | C open (C0 RUN-ON-VM)            | DeFi-only, serial within DeFi |
-| `data_source_provenance_all_asset_groups_2026_06_01`        | L1 write-path `source=` · rides each L3 walk                          | open (tradfi done)               | parallel per-AG (NOT tradfi)  |
-| `pipeline_mode_implementation_2026_05_28`                   | L1 `pipeline_mode` column                                             | ✅ DONE                          | —                             |
-| `pipeline_mode_partition_migration_2026_06_01`              | L3 RIDER: on-disk `pipeline_mode=` partition                          | open P2                          | **rides each AG's L3 walk**   |
-| `tradfi_massive_dual_source_2026_05_28`                     | tradfi L1 source + L3 walk (source + v8→v9)                           | mostly ✅                        | done — see CONFLICT-2         |
-| `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`    | **L4/L7 "no fallback"**: reader fail-fast default + liveness          | step-1 ✅; follow-up open        | parallel (independent)        |
-| `aws_manifest_consolidator_scope_2026_05_21`                | L4 AWS canonical consolidator                                         | P1.10 `tofu apply` open (HUMAN)  | parallel (AWS infra)          |
-| `manifest_consolidator_liveness_health_2026_06_01`          | L4 GCP consolidator liveness                                          | (not on this branch)             | parallel — CONFLICT-3         |
+| Plan                                                        | Role / layer                                                                                      | Status                           | Parallel?                     |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------- | ----------------------------- |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | L1 code-fix ✅ · L2 drain+cron-pause · L6 decommission                                            | code shipped; decommission gated | after L3 per-AG               |
+| THIS plan §A–G                                              | L1 DeFi writer code · **L3 DeFi single-walk (§C)** · L5 DeFi backfill                             | C open (C0 RUN-ON-VM)            | DeFi-only, serial within DeFi |
+| `data_source_provenance_all_asset_groups_2026_06_01`        | L1 write-path `source=` · rides each L3 walk                                                      | open (tradfi done)               | parallel per-AG (NOT tradfi)  |
+| `pipeline_mode_implementation_2026_05_28`                   | L1 `pipeline_mode` column                                                                         | ✅ DONE                          | —                             |
+| `pipeline_mode_partition_migration_2026_06_01`              | L3 RIDER: on-disk `pipeline_mode=` partition                                                      | open P2                          | **rides each AG's L3 walk**   |
+| `tradfi_massive_dual_source_2026_05_28`                     | tradfi L1 source write-path + Massive ingest (NOT the L3 walk)                                    | mostly ✅; -031 absorbed by ↓    | done — see CONFLICT-2         |
+| `tradfi_manifest_canonicalisation_2026_06_01`               | **L3 tradfi single-walk** (v9 + pipeline_mode partition + source re-consol)                       | open P0                          | parallel per-AG               |
+| `sports_manifest_canonicalisation_2026_06_01`               | **L3 sports single-walk** (v9 + partition + fixture-dependent typed reasons + source path→column) | open P0                          | parallel per-AG               |
+| `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`    | **L4/L7 "no fallback"**: reader fail-fast default + liveness                                      | step-1 ✅; follow-up open        | parallel (independent)        |
+| `aws_manifest_consolidator_scope_2026_05_21`                | L4 AWS canonical consolidator                                                                     | P1.10 `tofu apply` open (HUMAN)  | parallel (AWS infra)          |
+| `manifest_consolidator_liveness_health_2026_06_01`          | L4 GCP consolidator liveness                                                                      | (not on this branch)             | parallel — CONFLICT-3         |
 
 ### Layered order (gates top-down; asset_groups parallelise within a layer)
 
@@ -58,8 +60,12 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
   - **prediction** (2,039 legacy-only, only 783 overlap → LEAST complete) → ✅ FILED
     `prediction_manifest_canonicalisation_2026_06_01.md` (owner `vm-prediction`).
   - **cefi** (838 recent legacy-only cells) → ✅ FILED `cefi_manifest_canonicalisation_2026_06_01.md` (owner `vm-cefi`).
-  - **tradfi (4) / sports (0)** → DATA complete → verify-only (tradfi owner = `tradfi_massive_dual_source` re-walk per
-    CONFLICT-2, `vm-tradfi`; sports = `vm-sports` verify-only).
+  - **tradfi** (4 legacy-only → DATA ~complete, but canonical FORM owed: live `_index` v8 + no partition) → ✅ FILED
+    `tradfi_manifest_canonicalisation_2026_06_01.md` (owner `vm-tradfi`; absorbs `tradfi_massive` -031 re-consolidation
+    into ONE walk per CONFLICT-2).
+  - **sports** (0 legacy-only → DATA complete, but canonical FORM + fixture-dependent typed honest-absence owed) → ✅
+    FILED `sports_manifest_canonicalisation_2026_06_01.md` (owner `vm-sports`; NOT pure verify-only — v9 + partition +
+    typed reasons + source path→column).
 - **L4 CONSOLIDATOR SSOT** — `aws_manifest_consolidator_scope` P1.10 · `manifest_consolidator_liveness_health` ·
   `manifest_reader_fail_fast` follow-up (fail-fast default) · keep env-tiered crons.
 - **L5 BACKFILL/RELAUNCH** — bucket_ssot Phase 4 (writer relaunch) · this plan C6/D1/E1/G1 — gated C-GREEN.
@@ -72,11 +78,13 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 - **CONFLICT-1 — `pipeline_mode_partition_migration` must NOT open its own walks.** It adds the `pipeline_mode=` on-disk
   partition to cefi/tradfi/sports/prediction; per single-walk it BUNDLES into each AG's L3 walk. It is a RIDER, not an
   independent plan; its P2 todo is satisfied by the L3 owner. (DeFi partition already in this plan's §C target-form.)
-- **CONFLICT-2 — tradfi v9 + partition NOT actually landed.** `tradfi_massive` reports source-col + v8→v9 done, but its
-  "Manifest re-consolidation" was `BLOCKED-DEPENDENCY deferred` AND the live canonical tradfi `_index` reads **v8**. So
-  tradfi is NOT L3-green: v9 re-consolidation + the `pipeline_mode=` partition still owe a walk. Since the source walk
-  already ran, schedule v9 + partition into ONE bundled tradfi re-walk (never two). Verify with a fresh `_index`
-  `schema_version` read before declaring tradfi decommission-ready.
+- **CONFLICT-2 — tradfi v9 + partition NOT actually landed → RESOLVED 2026-06-01 by new L3 owner.** `tradfi_massive`
+  reports source-col + v8→v9 done, but its "Manifest re-consolidation" was `BLOCKED-DEPENDENCY deferred` AND the live
+  canonical tradfi `_index` reads **v8**. So tradfi is NOT L3-green: v9 re-consolidation + the `pipeline_mode=`
+  partition still owe a walk. **Owner = `tradfi_manifest_canonicalisation_2026_06_01.md`** (the v9 + partition +
+  venue/data_type verify + `available_at` bundled walk, which **absorbs `tradfi_massive` Task -031** so source
+  re-consolidation rides the SAME walk — never two). `tradfi_massive` keeps only the `source` write-path + Massive
+  ingest. Verify with a fresh `_index` `schema_version` read before declaring tradfi decommission-ready.
 - **CONFLICT-3 — duplicate consolidator-liveness ownership.** `manifest_reader_fail_fast` §Follow-up and
   `manifest_consolidator_liveness_health` both define watchdog + alerting + fail-fast-default. ONE owns the watchdog
   (recommend `manifest_consolidator_liveness_health`); `manifest_reader_fail_fast` keeps only the UTL reader-default
@@ -91,12 +99,14 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
   `aws_manifest_consolidator_scope` P1.10 · `manifest_consolidator_liveness_health` · bucket_ssot QG-guard + UTL
   dead-code · this plan §A writer fixes · `data_source_provenance` L1 threading (cefi/defi/sports/pred).
 - **Parallel-per-AG at L3** (one sub-agent per asset_group, each owns its single bundled walk): defi (this plan §C) ·
-  prediction (new plan) · cefi (new gap-fill) · tradfi (re-walk per CONFLICT-2). NEVER two walks on one `_index`.
+  prediction (new plan) · cefi (new gap-fill) · tradfi (new canonicalisation plan per CONFLICT-2) · sports (new
+  canonicalisation plan). NEVER two walks on one `_index`.
 - **L3 owners (all asset_groups now covered)**: defi=this plan §C ·
   prediction=`prediction_manifest_canonicalisation_2026_06_01` · cefi=`cefi_manifest_canonicalisation_2026_06_01` ·
-  tradfi=`tradfi_massive_dual_source` re-walk (CONFLICT-2) · sports=verify-only. **L6 decommission** (owner
-  `bucket_name_ssot_legacy_dual_write_remediation` Phase 7) deletes each legacy bucket ONLY after its AG's L3 plan
-  reports C-GREEN (legacy-only CELLS = 0 + canonical v9).
+  tradfi=`tradfi_manifest_canonicalisation_2026_06_01` (CONFLICT-2; absorbs `tradfi_massive` -031) ·
+  sports=`sports_manifest_canonicalisation_2026_06_01` (v9 + partition + fixture-dependent typed reasons). **L6
+  decommission** (owner `bucket_name_ssot_legacy_dual_write_remediation` Phase 7) deletes each legacy bucket ONLY after
+  its AG's L3 plan reports C-GREEN (legacy-only CELLS = 0 + canonical v9).
 
 > **🟡 CROSS-PLAN COORDINATION — DeFi `_index` shared with
 > `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (2026-06-01)**: the C0 single-walk on
@@ -148,6 +158,14 @@ before cutover).
 
 All of the above land in **one bundled single-walk** per bucket (C2–C5 + C7 + C9 + env-split), then the consolidated
 `_index` + data-status reflect the canonical form, then backfills run into the correct structure.
+
+> **`category=`→`asset_group=` spans all three surfaces, all five asset_groups (HARD — operator 2026-06-01)**: (1)
+> **CODE** (writers/CLI/env emit `asset_group=`, not `category=`) is **already shipped** workspace-wide via the archived
+> `venue_axis_asset_group_vocabulary_2026_04_25` plan (Waves A–E) — new writes are canonical, so the remaining work is
+> historical only; (2) **DATA** (object PATH key `category=`→`asset_group=`) + (3) **MANIFEST** (`_index` ROW
+> `category=`→`asset_group=`) are migrated by **each asset_group's L3 single-walk** — defi §C (C0 tool +C9 object-path
+> item), cefi/prediction/tradfi/sports C0 each state the path+row relabel explicitly. No asset_group leaves it implicit;
+> the relabel rides the SAME bundled walk (never a separate `category` walk).
 
 ## Architecture principle (the governing contract)
 
@@ -266,6 +284,21 @@ What to verify/wire (B0 corrected scope):
 
 > **C is the foundation gate** (see Sequencing). One bundled single-walk per bucket applies C0+C2+C3+C4+C5+C7+C9
 > together (no N ad-hoc walks). Backfills (C6/D1/E1) + B0-run are blocked until C is GREEN for the affected bucket.
+>
+> **`source` is a COLUMN, not a path key (provenance SSOT — operator 2026-06-01)**: all sources co-mingle on the SAME
+> read path, so the consumer-facing layout is identical ("data looks the same") — the `source` column exists only so WE
+> can identify where a row came from when we audit. It is additive (one extra column); resolution by `SOURCE_PRIORITY`
+> only matters when >1 source exists for a cell. This holds for every AG's walk (sports lifts source path→column; the
+> rest stamp the column directly). Applies to the rider closure below.
+>
+> **Rider closure (driving §C completes the DeFi rows of the two cross-cutting rider plans)**: the C0 single-walk
+> BUNDLES both riders for DeFi, so flipping C0 GREEN also closes them for `asset_group=defi` — no separate DeFi walk in
+> either plan: (1) **`pipeline_mode_partition_migration_2026_06_01`** DeFi row — the `pipeline_mode=` on-disk partition
+> is in the C0 target-form + C9; (2) **`data_source_provenance_all_asset_groups_2026_06_01`** DeFi rows (Phase 2
+> backfill) — the `source` column (UAC SOURCE_PRIORITY: `onchain_subgraph`/`oracle_prices`=pyth+chainlink/
+> `native_staking_rates`=solana_rpc+helius_rpc) is written by the C0 tool in the SAME pass (per the cross-plan banner
+> above — provenance must NOT open a third walk on the DeFi `_index`). When C0 is verified, flip those plans' DeFi rows
+> with `— defi via defi_manifest C0@<sha>`.
 
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
       2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
@@ -526,10 +559,12 @@ What to verify/wire (B0 corrected scope):
 ## Verification (full-execution criterion)
 
 Re-run `plans/audit/results/defi_strategy_coverage_query_2026_06_01.py` + the drilldown: every DeFi cell carries a
-canonical data_type (underscore), flat venue + populated chain, v9 schema, a typed reason; `expected_unattempted`
-materialised so `% captured = captured / (captured+empty+failed+expected_unattempted)`; coverage-summary == drilldown ==
-manifest-status denominators; features-onchain-defi populated for the in-scope window; **Solana basis MVP G1–G4
-operationally-shipped (G4 human-only)**; the next audit needs one pass.
+canonical data_type (underscore), flat venue + populated chain, v9 schema, a typed reason, **a populated `source` (HARD
+— zero blank on every external cell; the 2 multi-source cells `oracle_prices`=pyth+chainlink /
+`native_staking_rates`=solana_rpc+helius_rpc emit two rows — closes `data_source_provenance` DeFi Phase 2)**;
+`expected_unattempted` materialised so `% captured = captured / (captured+empty+failed+expected_unattempted)`;
+coverage-summary == drilldown == manifest-status denominators; features-onchain-defi populated for the in-scope window;
+**Solana basis MVP G1–G4 operationally-shipped (G4 human-only)**; the next audit needs one pass.
 
 > **🟡 DRAINED-WRITER DEPENDENCY (2026-06-01)** — the legacy-bucket SSOT remediation drained writer VMs
 > `mdps-backfill-defi` / `mdps-prediction-2025` / `sports-scheduler`. They must NOT be relaunched until the

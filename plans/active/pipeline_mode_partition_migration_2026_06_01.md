@@ -30,20 +30,30 @@ performance per the parent plan's "Out of scope" note.
 
 ## Coverage status
 
-- **DeFi bucket** — ALREADY bundled into `defi_manifest_canonicalisation_2026_06_01.md` C0 single-walk (its derivation
-  table row: `Pipeline mode | absent in path | pipeline_mode= hive partition (value batch or live)`). Tracked there; no
-  separate action in this plan.
-- **cefi / tradfi / sports / prediction / instruments buckets** — pending. Each adds the `pipeline_mode=` partition key
-  when its next whole-corpus walk runs.
+Each asset_group's `pipeline_mode=` partition is a RIDER bundled into **that AG's L3 manifest-canonicalisation walk**
+(its named C-pipeline_mode rider todo). Completing the walk closes this plan's row for that AG — there is no separate
+partition walk anywhere (single-walk discipline):
+
+| Bucket          | L3 owner plan (carries the `pipeline_mode=` rider)          | Rider todo            |
+| --------------- | ----------------------------------------------------------- | --------------------- |
+| **defi**        | `defi_manifest_canonicalisation_2026_06_01.md` §C (C0 + C9) | bundled in C0/C9      |
+| **cefi**        | `cefi_manifest_canonicalisation_2026_06_01.md`              | C-pipeline_mode RIDER |
+| **tradfi**      | `tradfi_manifest_canonicalisation_2026_06_01.md`            | C-pipeline_mode RIDER |
+| **sports**      | `sports_manifest_canonicalisation_2026_06_01.md`            | C0 (a) + C-partition  |
+| **prediction**  | `prediction_manifest_canonicalisation_2026_06_01.md`        | C-pipeline_mode RIDER |
+| **instruments** | (no canonicalisation plan yet — bundle into IS's next walk) | pending — see Phase 1 |
 
 ## Phased execution
 
 ### Phase 1 — Bundle `pipeline_mode=` into each non-DeFi bucket's next whole-corpus walk
 
-- [ ] [INFRA] P2. For each of {cefi, tradfi, sports, prediction, instruments} buckets, add `pipeline_mode=` to the
-      on-disk partition path during that bucket's next scheduled whole-corpus walk (NOT a standalone walk — single-walk
-      discipline). Verify post-walk: selective path-listing on `pipeline_mode=batch` / `pipeline_mode=live` returns the
-      expected file set; manifest row keys unchanged. Coordinate window with the bucket/manifest migration owner.
+- [ ] [INFRA] P2. **cefi / tradfi / sports / prediction** — the `pipeline_mode=` partition is the named C-pipeline_mode
+      RIDER inside each AG's L3 manifest-canonicalisation walk (table above). This plan's row for each AG is satisfied
+      when that walk completes — do NOT open a standalone partition walk (single-walk discipline). Verify post-walk:
+      selective path-listing on `pipeline_mode=batch` / `pipeline_mode=live` returns the expected file set; manifest row
+      keys unchanged.
+- [ ] [INFRA] P2. **instruments bucket** — no canonicalisation plan exists yet; bundle `pipeline_mode=` into
+      instruments-service's next scheduled whole-corpus walk. Coordinate window with the IS migration owner.
 
 ## Success criteria
 
@@ -58,5 +68,9 @@ performance per the parent plan's "Out of scope" note.
 
 ## Composes with
 
-- `defi_manifest_canonicalisation_2026_06_01.md` — DeFi bucket carries the partition inside its C0 single-walk.
-- Single-walk discipline (HARD RULE — CLAUDE.md § Manifest + honest absence). </content> </invoke>
+- `defi_manifest_canonicalisation_2026_06_01.md` (§MASTER + §C) — DeFi bucket carries the partition inside its C0
+  single-walk; the MASTER's CONFLICT-1 codifies this plan as a RIDER (never its own walk).
+- `cefi_manifest_canonicalisation_2026_06_01.md` / `tradfi_manifest_canonicalisation_2026_06_01.md` /
+  `sports_manifest_canonicalisation_2026_06_01.md` / `prediction_manifest_canonicalisation_2026_06_01.md` — each carries
+  the `pipeline_mode=` partition as a named C-pipeline_mode rider in its single-walk.
+- Single-walk discipline (HARD RULE — CLAUDE.md § Manifest + honest absence).

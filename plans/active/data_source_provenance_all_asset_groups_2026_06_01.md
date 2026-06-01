@@ -203,11 +203,12 @@ column is RED, not exempt.
       is already the declared source; expand the list only when the alternative actually lands.)
 - [ ] [TEST] P1. CeFi unit test: a cefi cell without `source=` raises; `source="tardis"` persists; a future
       `["<alt>", "tardis"]` registry expansion resolves two sources by priority.
-- [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **run now, parallel in-region VMs** (see §
-      Migration scope, two steps): (1) data-parquet column backfill — **write `backfill_cefi_source_column.py`** (copy
-      tradfi template) then fan it across many same-region VMs, sharded by `day=` (no egress, idempotent); fold into the
-      cefi-bucket migration if one is already pending, else run direct; (2) manifest re-consolidation after. Labels the
-      corpus before any Tardis swap.
+- [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **fold into
+      `cefi_manifest_canonicalisation_2026_06_01.md` C-source rider** (its single bundled walk owns the cefi `_index`;
+      do NOT open a separate cefi source walk — single-walk discipline). If that walk has not launched, run direct (see
+      § Migration scope, two steps): (1) data-parquet column backfill — **write `backfill_cefi_source_column.py`** (copy
+      tradfi template) then fan across same-region VMs, sharded by `day=` (no egress, idempotent); (2) manifest
+      re-consolidation after. Labels the corpus before any Tardis swap.
 
 ### Phase 4 — Sports writer source (P1)
 
@@ -222,8 +223,11 @@ column is RED, not exempt.
       source from the existing path segment (`data_source=ODDS_API/` legacy, `pipeline_mode=batch_api_football/` newer),
       write it into the `source` column on every row, and emit on the canonical column layout. Map each path token →
       closed-set source string. Idempotent.
-- [ ] [DATA] P1. Backfill the existing sports corpus — run now, parallel in-region VMs sharded by `day=` (see §
-      Migration scope); manifest re-consolidation after. Confirms sports source moves path→column for the whole corpus.
+- [ ] [DATA] P1. Backfill the existing sports corpus — **fold into `sports_manifest_canonicalisation_2026_06_01.md`
+      C-source rider** (its single bundled walk owns the sports `_index`; do NOT open a separate sports source walk —
+      single-walk discipline). If that walk has not launched, run direct (parallel in-region VMs sharded by `day=`, see
+      § Migration scope) + manifest re-consolidation after. Confirms sports source moves path→column for the whole
+      corpus.
 
 ### Phase 5 — Downstream reconciliation wired for all multi-source asset groups (P0 correctness)
 
@@ -274,7 +278,9 @@ column is RED, not exempt.
 - [ ] [MTDS] P1. **Prediction — stamp `source` on every cell NOW** (`polymarket_clob` / `polymarket_gamma_api` /
       `kalshi_*`): single-source today but stamp for swap-resilience (a future Polymarket data-provider change).
       Required by the universal Phase 1 gate. `market-tick-data-service/.../engine/orchestrator.py`
-      (`record_captured_from_counts`).
+      (`record_captured_from_counts`). **Historical backfill/re-consolidation folds into
+      `prediction_manifest_canonicalisation_2026_06_01.md` C-source rider** (its single bundled walk owns the prediction
+      `_index` — do NOT open a separate prediction source walk).
 - [ ] [CODEX] P2. Document the prediction invariant precisely: stamping `source` ≠ treating venues as sources —
       Polymarket/Kalshi stay separate **venues**, cross-venue dispersion is a feature-layer concern, and when Kalshi
       lands it is a venue addition; AND each venue's cell still stamps its own source. Both are true.

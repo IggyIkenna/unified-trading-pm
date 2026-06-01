@@ -22,9 +22,9 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 > **MASTER**: `defi_manifest_canonicalisation_2026_06_01.md` §MASTER (L3, prediction lane). This plan is the prediction
 > analogue of `defi_manifest`'s §C single-walk. **Single-walk discipline (HARD RULE)**: one bundled walk on the
-> prediction `_index` — bundle every transform (env-split, `asset_group=`, `pipeline_mode=` partition, v9, source-N/A,
-> typed empty-reason). Do NOT open a second walk; `pipeline_mode_partition_migration` + `data_source_provenance` ride
-> THIS walk.
+> prediction `_index` — bundle every transform (env-split, `asset_group=`, `pipeline_mode=` partition, v9, **`source`
+> stamp** = the data-source API, typed empty-reason). Do NOT open a second walk; `pipeline_mode_partition_migration` +
+> `data_source_provenance` ride THIS walk.
 
 ## Why this exists — prediction is the LEAST-complete canonical (decommission data-loss risk)
 
@@ -50,13 +50,13 @@ be fixed first if run on a VM.
 
 ## Canonical target form (prediction)
 
-| Dimension       | Legacy                                                                     | Canonical                                                                              |
-| --------------- | -------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| Bucket          | `market-data-tick-prediction-{project}` (long-form, no env)                | `market-data-tick-pred-prd-{project}` (short token `pred` + env)                       |
-| asset-group key | `category=prediction`                                                      | `asset_group=prediction`                                                               |
-| pipeline_mode   | absent in path                                                             | `pipeline_mode=` hive partition (`batch_polymarket_clob`/`batch_polymarket_gamma_api`) |
-| schema_version  | legacy spread                                                              | v9                                                                                     |
-| source          | N/A (prediction venue ≠ source; document N/A per `data_source_provenance`) | —                                                                                      |
+| Dimension       | Legacy                                                      | Canonical                                                                                                                                                                                                                                                                                                                      |
+| --------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Bucket          | `market-data-tick-prediction-{project}` (long-form, no env) | `market-data-tick-pred-prd-{project}` (short token `pred` + env)                                                                                                                                                                                                                                                               |
+| asset-group key | `category=prediction`                                       | `asset_group=prediction`                                                                                                                                                                                                                                                                                                       |
+| pipeline_mode   | absent in path                                              | `pipeline_mode=` hive partition (`batch_polymarket_clob`/`batch_polymarket_gamma_api`)                                                                                                                                                                                                                                         |
+| schema_version  | legacy spread                                               | v9                                                                                                                                                                                                                                                                                                                             |
+| source          | blank `""` today                                            | `source` COLUMN stamped = the data-source API (`polymarket_clob`/`polymarket_gamma_api`/`kalshi_*`) on every cell — HARD, swap-resilient per `data_source_provenance` Phase 6. **Venue ≠ source**: Polymarket/Kalshi stay VENUES (cross-venue dispersion is feature-layer); each venue's cell still stamps its own API source. |
 
 ## Phased execution
 
@@ -72,23 +72,33 @@ be fixed first if run on a VM.
 
 - [ ] [DATA] P0. C0 ONE bundled walk: copy legacy `raw_tick_data/` + `processed_candles/` objects → canonical `pred-prd`
       at the canonical path (env-tier + `asset_group=` + `pipeline_mode=` partition); rewrite manifest rows to v9; typed
-      empty-reasons. Server-side `gcs_copy_object` (layout-aware: prediction = `raw_tick_data/`/`processed_candles/`).
-      RUN ON A VM via `VM_TASK=canonical-migration` (gated on L0 tarball-prune fix) OR locally if object count is small
-      (P0 audit decides).
+      empty-reasons. **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index` ROWS in this
+      walk** (CODE side — writers emit `asset_group=` — already shipped via archived
+      `venue_axis_asset_group_vocabulary_2026_04_25`; this is historical data+manifest only). Server-side
+      `gcs_copy_object` (layout-aware: prediction = `raw_tick_data/`/`processed_candles/`). RUN ON A VM via
+      `VM_TASK=canonical-migration` (gated on L0 tarball-prune fix) OR locally if object count is small (P0 audit
+      decides).
 - [ ] [DATA] P0. C-pipeline_mode RIDER: the `pipeline_mode=` partition for prediction lands in THIS walk (satisfies
       `pipeline_mode_partition_migration_2026_06_01.md` for prediction — do NOT run it separately).
-- [ ] [DOCS] P1. Document prediction `source` = N/A (venue ≠ source) per `data_source_provenance` PREDICTION todo.
+- [ ] [DATA] P1. C-source RIDER: stamp `source` = the data-source API (`polymarket_clob` / `polymarket_gamma_api` /
+      `kalshi_*`) on every prediction cell in THIS walk (path/pipeline*mode → `source` column), re-consolidate into the
+      `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays distinguishable). Closes
+      `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**: Polymarket/Kalshi remain
+      VENUES (cross-venue dispersion is a feature-layer concern, not a source merge); when Kalshi lands it is a venue
+      addition AND its cells stamp `kalshi*\*` as source. Do NOT open a separate prediction source walk.
 
 ### Verify + handoff to decommission
 
 - [ ] [DATA] P0. Post-walk: re-run the `(date,venue,data_type)` comparison → **legacy-only CELLS = 0**; canonical
-      `_index` all v9; `pipeline_mode` non-null. This is the C-GREEN signal `bucket_name_ssot…` Phase 6/7 waits on for
-      the prediction legacy bucket decommission.
+      `_index` all v9; `pipeline_mode` non-null; **`source` populated on every cell (HARD — zero blank; the API source
+      per venue) — closes `data_source_provenance` Phase 6 prediction**. This is the C-GREEN signal `bucket_name_ssot…`
+      Phase 6/7 waits on for the prediction legacy bucket decommission.
 
 ## Success criteria
 
 - 0 legacy-only prediction cells (canonical holds all historical POLYMARKET data + question-groups).
-- Canonical `pred-prd` `_index` = v9 + `pipeline_mode=` partition present.
+- Canonical `pred-prd` `_index` = v9 + `pipeline_mode=` partition present + **`source` stamped on every cell (zero blank
+  — HARD; the API source per venue, swap-resilient)**.
 - `mdps-prediction-2025` relaunch unblocked (writes canonical-only).
 - Hands C-GREEN to `bucket_name_ssot…` L6 → legacy `market-data-tick-prediction-…` deletable.
 

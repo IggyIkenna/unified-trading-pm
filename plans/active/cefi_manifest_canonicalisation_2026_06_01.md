@@ -69,8 +69,11 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 - [ ] [DATA] P0. C0 ONE bundled walk: copy the 838-cell legacy DATA objects (`raw_tick_data/` + `processed_candles/`,
       layout-aware — cefi has NO `by_date/`) → canonical `cefi-prd` at canonical path (env-tier + `asset_group=` +
-      `pipeline_mode=` partition); write/relabel the matching manifest rows to v9; typed empty-reasons. Server-side
-      `gcs_copy_object`. Small scope → may run LOCALLY (P0 audit decides) — avoids the L0 VM-tarball blocker entirely.
+      `pipeline_mode=` partition); write/relabel the matching manifest rows to v9; typed empty-reasons.
+      **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index` ROWS in this walk** (CODE
+      side — writers emit `asset_group=` — already shipped via archived `venue_axis_asset_group_vocabulary_2026_04_25`;
+      this is historical data+manifest only). Server-side `gcs_copy_object`. Small scope → may run LOCALLY (P0 audit
+      decides) — avoids the L0 VM-tarball blocker entirely.
 - [ ] [DATA] P0. C-pipeline_mode RIDER: `pipeline_mode=` partition for cefi lands in THIS walk (satisfies
       `pipeline_mode_partition_migration` for cefi).
 - [ ] [DATA] P1. C-source RIDER: `data_source_provenance` cefi `source` column lands here (multi-source tardis/venue).
@@ -78,11 +81,14 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 ### Verify + handoff
 
 - [ ] [DATA] P0. Post-walk: re-run `(date,venue,data_type)` comparison → **legacy-only CELLS = 0**; canonical v9;
-      `pipeline_mode` non-null. C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission.
+      `pipeline_mode` non-null; **`source` populated on every cell (HARD — zero blank; `source="tardis"` today, ready
+      for a future Tardis swap/2nd source) — closes `data_source_provenance` cefi Phase 3**. C-GREEN signal for
+      `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission.
 
 ## Success criteria
 
-- 0 legacy-only cefi cells; canonical `cefi-prd` v9 + `pipeline_mode=` partition.
+- 0 legacy-only cefi cells; canonical `cefi-prd` v9 + `pipeline_mode=` partition + **`source` populated on every cell
+  (zero blank — HARD)**.
 - Hands C-GREEN to `bucket_name_ssot…` L6 → legacy `market-data-tick-cefi-…` deletable.
 
 ## Codex SSOTs
