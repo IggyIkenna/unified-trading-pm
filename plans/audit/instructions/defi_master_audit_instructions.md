@@ -154,6 +154,35 @@ grep code truth, compare to the doc, classify each as `aligned` / `codex-stale` 
       capability backing (e.g. RADIANT 2026-05-27) — and `defi-venue-protocol-catalogue.md` lists the same venues, with
       `EMPTY_OR_DEPRECATED_DEFI_VENUES` flagged.
 
+### Dual-source provenance (the `source` column + SOURCE_PRIORITY)
+
+> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`). **DeFi
+> is the workspace's strongest multi-source case** — the same metric routinely comes from several providers, and
+> `SOURCE_PRIORITY` already declares multi-source lists: `("defi","oracle_prices")=["pyth_hermes","chainlink"]`,
+> `("defi","native_staking_rates")=["solana_rpc","helius_rpc"]`, plus APR/rate metrics available from DefiLlama vs
+> protocol subgraph vs direct on-chain read. Design (operator-confirmed 2026-06-01): same hive drop, disambiguated by a
+> **row-level `source` column** (NOT a path key), resolved downstream via `select_primary_available_source()`.
+>
+> **Current state (audit 2026-06-01, RED): DeFi writes `source=""` with no gate and no read-time reconciliation.**
+> `DefiManifestRecorder.record_captured()` routes through the legacy `ManifestWriter.add()` path, which has no `source`
+> parameter — so two providers for the same `(protocol/feed, day)` **collapse last-write-wins, silently dropping the
+> divergent value** with no conflict surfaced. All items below are data-state verifiable, not constant-verifiable.
+
+- [ ] (n1) **DeFi writers carry `source`**: `DefiManifestRecorder.record_captured()` accepts + forwards `source` via
+      `ManifestWriter.record_captured()` (not the legacy `add()`); every DeFi handler passes `source` from the
+      `SOURCE_PRIORITY` closed set. `market-tick-data-service/.../cli/handlers/_defi_manifest.py` + every `*_handler.py`.
+      Read ACTUAL prod rows — RED on blank `source` for any cell whose `SOURCE_PRIORITY` entry has >1 source.
+- [ ] (n2) **Per-row source on multi-provider handlers**: oracle (`pyth_hermes`/`chainlink`) and native-staking
+      (`solana_rpc`/`helius_rpc`) handlers already resolve per-row `pipeline_mode` at the callsite — stamp the matching
+      `source` on each row in the same place. APR/rate handlers stamp the actual provider used (`defillama` vs
+      `onchain_subgraph` vs `solana_rpc`).
+- [ ] (n3) **`source` is a column, not a path key**: no `source=`/`data_source=` hive segment in DeFi GCS paths — all
+      providers co-mingle on the dedicated-bucket layout; disambiguate by the column.
+- [ ] (n4) **Read-time reconciliation wired**: 2-source fixture (e.g. Pyth + Chainlink for the same feed+ts, or DefiLlama
+      + on-chain APR for the same protocol+day) → consumer emits exactly ONE resolved row via
+      `select_primary_available_source()`; divergence surfaced via `detect_dual_source_conflicts()`
+      (`VALUE_DIVERGENCE`/`DUAL_SOURCE_DUPLICATE`), never silent last-write-wins. Cover features-onchain consumers.
+
 ## Strategy Data-Coverage Audit (data-availability dimension)
 
 > **This is the operator's standing question** ("fresh look at funding rate arb, staked basis carry, basis carry — audit
@@ -449,6 +478,25 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       `coverage-summary` self-referential bug, the drilldown 3-state) = a review-blocking divergence. The audit confirms
       all consumers read the same canonical manifest 4-state. SSOT:
       `plans/active/defi_manifest_canonicalisation_2026_06_01.md`.
+
+- [ ] (aa) **Fetch-failure must be `attempted_failed`, NOT `empty_confirmed` — per-adapter swallow audit (codified
+      2026-06-01, operator)**. Applies to **EVERY adapter/handler that does external I/O in instruments-service, MTDS, and
+      features-service** (RPC reads, REST/HTTP fetches, subgraph queries, vendor SDKs). The bug pattern: a fetch helper
+      does `except Exception: … return []` (or `return None` / empty DataFrame), **swallowing** the error, so the caller
+      sees "zero rows + no error" and records `record_empty(SOURCE_RETURNED_ZERO)` = `empty_confirmed` — a **silent lie**
+      that the data is genuinely empty when the fetch actually **failed** (timeout / DNS / RPC / auth). A transient
+      network failure then pollutes the manifest as honest-empty, corrupting coverage + downstream preflight.
+      - **Find every site**: `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))"
+        instruments-service/ market-tick-data-service/ features-service/ --include="*.py" -g '!*test*'` — plus read each
+        adapter's outermost fetch try/except.
+      - **For each**: confirm the failure path reaches `record_failed` (`attempted_failed`), not `record_empty`. A
+        swallow that returns empty → caller's `error` var stays None → `record_empty` is the bug. Fix = **re-raise** (or
+        return a typed failure sentinel) so the caller's existing `record_failed` fires. **Only a genuine source-zero
+        with no exception may be `empty_confirmed`.**
+      - 2026-06-01 instances found + fixed (mtds): `lst_rates_handler` Solana fetch (L697), `oracle_prices_handler` Pyth
+        L820/L948 → now re-raise. **Still open**: `lending_indices_handler` Aave RPC-fallback L989 (nested), + sweep
+        instruments-service + features-service. **Every adapter must be checked** — this is a closed per-adapter checklist,
+        not a spot-check. Composes with the `record_empty` honest-absence rules + UAC `classify_venue_error()`.
 
 ### Step 3 — Output: classify every gap (cleanup vs download), then backlog it
 

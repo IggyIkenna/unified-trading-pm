@@ -68,6 +68,48 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       (`launch-manifest-consolidator-vm.sh`) does NOT exist. Grep:
       `rg "launch-manifest-consolidator-vm" --include="*.sh"` — should be 0 hits
 
+- [ ] (h2) **Consolidator merge engine — memory-bounded (DuckDB, not pandas)**: the merge is DuckDB
+      (`manifest_consolidator.py::_duckdb_consolidate_and_write`), bounded by `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT`
+      (default `8GB`, set BELOW the 16 GiB container so an oversized rebuild raises a catchable `OutOfMemoryException`,
+      not a kernel SIGKILL). **Invariant**: the steady-state incremental path is an anti/semi-join that re-dedups only
+      contested keys (fits regardless of canonical size); the contested **window does NOT spill in DuckDB 1.5.x**, so a
+      bulk enumerator-shard rewrite landing as one huge "changed" shard needs a one-off `--force` seed on a big-RAM
+      host. Do NOT revert to a pandas concat/sort/dedup merge (OOM'd the 16 GiB job at ~75M cefi rows). Check:
+      `rg "pd.concat|drop_duplicates" unified-trading-library/unified_trading_library/manifest_consolidator.py` — the
+      hot merge path must be DuckDB SQL. SSOT: `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Merge engine".
+
+- [ ] (h3) **Per-cycle health — 24h OOM/freshness watch (re-runnable, ≤30s gcloud calls)**: 0 `signal 9` / `OOMKilled`
+      / `MemoryError` events in `cloud_run_job` logs over `--freshness=24h`; each execution completes well under the 60s
+      tick budget; canonical `_index/availability_index.parquet` mtime advances ~per minute. Full recipe (steps 1-4) in
+      `manifest_consolidator_duckdb_memory_fix_2026_05_26.md` § "Continuous-verification recipe". Per-asset-group
+      freshness is checked in each asset-group audit instruction (see the per-group "consolidation health" item there).
+
+- [ ] (h4) **Read-path fail-fast on stale-consolidated fallback**: `read_availability_index` must raise
+      `ManifestConsolidatorStaleError` (re-exported from `unified_trading_library`) instead of OOM-merging ~1700+ per-VM
+      shards when the consolidated index is stale/missing AND `MANIFEST_FAIL_ON_STALE_FALLBACK` is opted-in (closed-set
+      truthy `1`/`true`/`yes`). Default-off = unchanged fallback behavior. The cefi-heavy backfill launcher
+      (`launch-cefi-sharded-backfill.sh`) opts in, paired with the shell-level preflight (`deployment-service@7add531`).
+      Check: `rg "MANIFEST_FAIL_ON_STALE_FALLBACK|ManifestConsolidatorStaleError" unified-trading-library/` — present.
+      SSOT: `codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast on stale-fallback".
+
+- [ ] (i) **`source` column populated + registry-driven gate across ALL asset groups (codified 2026-06-01)**: v9 added
+      the `source` column but enforcement (`MissingSourceError`) fires ONLY for `category=="tradfi"`
+      (`manifest_writer.py`). `source` is the SSOT for which provider produced a shard's rows when a `(data_type, venue,
+      time)` cell is populated by >1 source over time (operator decision 2026-06-01: `source` is a **column, not a hive
+      path key**, for batch=live symmetry). Generalise + verify:
+      - **Gate is registry-driven**: raise `MissingSourceError` when `SOURCE_PRIORITY[(asset_group, data_type)]` has >1
+        entry and `source` is blank — auto-covering cefi/defi/sports multi-source cells and auto-exempting single-source +
+        prediction (Polymarket/Kalshi are venues, not sources). NOT a hardcoded asset_group list.
+      - **Column populated in actual PROD rows** (DATA-STATE, not the constant): read the `source` distribution per
+        `(asset_group, venue, data_type)`; zero blank `source` on any multi-source cell. (manifest-v8 lesson: constant ≠
+        data — 0% of 7.4M rows were v8 despite the bump.)
+      - **Two rows per multi-source cell**: when both providers run for one cell, the manifest holds TWO rows
+        distinguished by `source`, each with its own `capture_status`. Union semantics downstream: cell is `captured` if
+        ≥1 source row is `captured`; `attempted_failed` only when all source rows failed.
+      - **Closed-set source strings** mirror `SOURCE_PRIORITY`; blank/unknown source on a multi-source cell is RED.
+      SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; consumer policy:
+      `codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item (j).
+
 ### Batch vs Live Parity
 
 - (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with
@@ -129,7 +171,9 @@ Genesis: operator-raised 2026-05-27; principle + instances folded inline above (
 
 ## Success Criteria
 
-- All 8 checklist items GREEN
+- All checklist items (a)–(i) GREEN
+- `source` column populated (closed-set, zero blank) on every multi-source cell in actual prod rows; registry-driven gate
+  enforced across all asset groups (item i)
 - Per-service `capture_status` write-path calibration GREEN for every producer that has been run/matured (no reflexive
   `empty_confirmed` on owed-data branches, no silent no-row skips)
 - A3 manifest divergence: zero `DIVERGENT_EMPTY` + zero `MISSING_EXPECTED` across all asset_groups
