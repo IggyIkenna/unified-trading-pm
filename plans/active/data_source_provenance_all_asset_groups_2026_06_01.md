@@ -134,10 +134,10 @@ column is RED, not exempt.
       is already the declared source; expand the list only when the alternative actually lands.)
 - [ ] [TEST] P1. CeFi unit test: a cefi cell without `source=` raises; `source="tardis"` persists; a future
       `["<alt>", "tardis"]` registry expansion resolves two sources by priority.
-- [ ] [DATA] P2. Backfill `source="tardis"` onto the existing cefi corpus — **two steps** (see § Migration scope):
-      (1) data-parquet column backfill (walk+rewrite every cefi parquet, stamp `source=tardis`; template
-      `backfill_tradfi_source_column.py`) — **bundle into a pending cefi-bucket migration window, NOT a standalone walk**
-      (single-walk discipline); (2) manifest re-consolidation after. So the historical corpus is labelled before any
+- [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **run now, parallel in-region VMs** (see
+      § Migration scope, two steps): (1) data-parquet column backfill — fan `backfill_cefi_source_column.py` (template =
+      tradfi) across many same-region VMs, sharded by `day=` (no egress, idempotent); fold into the cefi-bucket migration
+      if one is already pending, else run direct; (2) manifest re-consolidation after. Labels the corpus before any
       Tardis swap.
 
 ### Phase 4 — Sports writer source (P1)
@@ -200,18 +200,33 @@ re-consolidation). Backfilling the existing corpus is therefore **two distinct s
    rewritten parquets. Index-level, cheap. (TradFi precedent: drain → consolidate → snapshot → backfill → re-consolidate
    → resume.)
 
-> **SINGLE-WALK DISCIPLINE (HARD RULE — review-blocking).** Step 1 is a whole-corpus walk. Per CLAUDE.md +
-> `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`, a standalone new whole-corpus walk to add the column
-> is review-blocking. The source-column add MUST be **bundled into a pending/scheduled migration window for each bucket**
-> (e.g. the defi canonicalisation migration `defi_manifest_canonicalisation_2026_06_01.md`, or a v9 schema migration) —
-> not a dedicated walk. Check the MTDS migration registry first; if a walk is already open for that bucket, fold the
-> column-add into it. **New writes going forward stamp both places at write time → no migration for new data.**
+> **EXECUTE NOW — parallel in-region VMs (operator decision 2026-06-01).** This is just read+write; on VMs in the same
+> region as the buckets there is **no egress cost**, and it fans out across many VMs, so **run it now — do not defer to a
+> future window.** Single-walk discipline still applies, but its real constraint is *"touch each object once,"* NOT
+> *"wait":*
+> - **If another whole-corpus rewrite is already pending for a bucket** (e.g. the defi canonicalisation migration
+>   `defi_manifest_canonicalisation_2026_06_01.md`, or a v9 schema migration), **fold the `source`-column add into that
+>   same pass** — the object is read+written once, with both changes.
+> - **If nothing else is pending for a bucket**, the `source`-column backfill **is** that bucket's walk — run it directly.
+>
+> Either way it runs **now**, not "someday." Check the MTDS migration registry only to decide *fold-in vs run-direct* per
+> bucket (never to defer). **New writes going forward stamp both places at write time → no migration for new data.**
+
+### Execution sequencing (per asset group, parallelised across VMs)
+
+1. **Write-path fix first (Phase 1 + 2)** — land the universal source gate + writer stamping so new writes carry
+   `source`; otherwise the backfill races fresh blank rows.
+2. **Pre-migration drain (HARD RULE)** — stop that bucket's writer VMs (GCP Cloud Run + AWS batch), consolidate the
+   manifest, snapshot `_index` to `_index/snapshots/pre_source_backfill_<date>.parquet`.
+3. **Parallel data-parquet backfill** — fan the per-asset-group `backfill_<ag>_source_column.py` (template = the tradfi
+   one) across many same-region VMs, sharded by `day=`/partition (idempotent; skip non-blank). No egress (in-region).
+4. **Manifest re-consolidation** → verify zero blank `source` (data-state read) → **resume writers**.
 
 ## Out of scope (deferred — named successors required)
 
-- A **standalone, dedicated whole-corpus walk** purely to add `source` (it must instead bundle into a scheduled
-  migration window — see § Migration scope). File a `<asset_group>_source_backfill_<date>.md` successor only to track the
-  bundling of step-1 into the chosen migration window per bucket.
+- (none for the source backfill — operator authorised running it now, parallelised; see § Migration scope.) Per-bucket
+  execution is tracked by the Phase-3/4/7 backfill todos + a `<asset_group>_source_backfill_<date>.md` runbook if a
+  bucket's fold-in/run-direct needs its own ledger.
 
 ## Codex SSOTs
 
