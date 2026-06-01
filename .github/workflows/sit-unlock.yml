@@ -49,7 +49,7 @@ jobs:
           _os.replace(tmp_path, "workspace-manifest.json")
 
           print("Staging unlocked after SIT failure. Engineers can push fixes.")
-          PYEOF || exit 1
+          PYEOF
           python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
             || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
 
