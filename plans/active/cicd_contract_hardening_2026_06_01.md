@@ -311,6 +311,26 @@ by a PR:
       authoring slot. Auth: GHA→orchestrator via `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the
       workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA
       dispatch + a worker prompt; build + e2e-test on one repo before fleet-wide.
+- [ ] [SCRIPT] P1. **Wire the ci-failure-watcher stuck-PR output INTO the orchestrator-dispatch escalation (auto-triage,
+      not just a Slack page).** Today the watcher's auto-merge-stuck poller (`ci_failure_watcher.py` → `detect_stuck_prs`)
+      only pages `#ci-failures`; a human/agent then manually triages **close-superseded vs resolve-conflict-on-LDR** — done
+      by hand 2026-06-01 for 7 wedged PRs (execution#176, mtds#65, deployment-api#9, deployment-ui#8, batch-live#5, uac#54,
+      ibkr#7 — all stale, each superseded by a newer merged promotion into the same base; closed-with-"superseded by #N"-
+      comment, branches retained). **Automate via the now-built escalation** (`agent-orchestrator/server/escalation.py` +
+      `.github/workflows/escalate-to-orchestrator.yml` + `agents/escalate.md`): (1) add a `stuck_promotion_pr` member to
+      `WALL_TYPES` (today `merge_conflict|label_mismatch|sit_failure`); (2) extend `agents/escalate.md` with the stuck-PR
+      triage rubric — **FIRST check supersession** (a newer merged PR into the same base, or head fully behind base →
+      **close with a `superseded by #N` comment**, retain branch), **ELSE resolve the conflict ON `live-defi-rollout`** per
+      the force-rule + re-enable auto-merge (never a throwaway branch); **never unilaterally close a FOREIGN slot's PR**
+      (`tab/hk/*`) → ping the authoring slot/Harsh instead; (3) have the watcher (or a thin companion) dispatch
+      `escalate-to-orchestrator.yml` once per stuck PR it surfaces (pass `repo`, `pr_number`, `wall_type=stuck_promotion_pr`,
+      `context`=mergeStateStatus+age+supersession-candidate, `authoring_slot` parsed from the `tab/<op>/<N>` head), gated to
+      auto-merge-ON / promotion-contract heads exactly like the poller, with **per-PR dedup so it dispatches once, not every
+      15-min tick**. This is the DETERMINISTIC-detect → JUDGMENT-remediate split codified in `ci-cd-flow.md` § "Pipeline
+      layering — deterministic vs judgment": the watcher detects, the setup-token worker on the AWS VM decides + acts (the
+      exact loop the operator copy-pasted by hand). Build + e2e-test on one already-superseded PR before fleet-wide. — repo:
+      agent-orchestrator (`escalation.py` + `escalate.md` + dispatch) + unified-trading-pm (`ci_failure_watcher.py` dispatch
+      hook + the companion GHA).
 - [x] ✅ [SCRIPT] P2. **enforce_admins on `staging` + instruments main — DONE 2026-06-01** (gh-API, no repo files).
       Enabled classic `enforce_admins` on `staging` for the 11 repos where it was OFF (client-reporting-api,
       deployment-api, deployment-service, ibkr-gateway-infra, instruments-service, mdps, mtds, strategy-service,
