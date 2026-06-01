@@ -727,14 +727,11 @@ behind the exact drift this whole audit is about.
 
 ### Reconciliation follow-ups (surfaced 2026-06-01 slot-1 reconciliation sweep)
 
-- [ ] [SCRIPT] P2. **PM QG test-isolation flake —
-      `test_check_no_service_deps::TestFindManifest::test_returns_none_when_not_found`.**
-      `scripts/validation/check-no-service-deps.py::find_manifest()` walks `cwd.parents` for
-      `unified-trading-pm/workspace-manifest.json`; when a stray `/tmp/unified-trading-pm/` exists (some
-      non-`refresh-manifest-dag` process leaves one — `refresh-manifest-dag.sh` itself correctly uses `mktemp -d`), the
-      test (which `chdir`s under `/private/tmp/...`) finds it and fails. Passes in a clean env. Fix: harden the test to
-      neutralise the cwd-walk (e.g. `monkeypatch` the walk root) OR have `find_manifest` ignore `/tmp`/`/private/tmp`
-      roots. Pre-existing on LDR; not blocking.
+- [x] ✅ [SCRIPT] P2. **PM QG test-isolation flake — FIXED** (`unified-trading-pm@c004b4e6a`). Root cause:
+      `find_manifest()` checked `REPO_ROOT` but **fell through to the `cwd.parents` walk** when REPO_ROOT was set-but-empty,
+      so a stray `/tmp/unified-trading-pm/` could spuriously match. Fix (production-correct, not test-gaming): when
+      `REPO_ROOT` is set it is **authoritative** — return its manifest or `None`, no cwd-walk fallthrough. `TestFindManifest`
+      (2 tests incl `test_returns_none_when_not_found`) pass; sibling test unaffected.
 - [ ] [CHORE] P3. **3 archived plans carry literal conflict-marker line(s)**
       (`plans/archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md`,
       `strategy_archetype_taxonomy_2026_05_12.md`, `defi_protocol_outage_detector_2026_05_20.md`). Pre-existing
