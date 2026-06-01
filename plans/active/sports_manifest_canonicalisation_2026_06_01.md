@@ -375,6 +375,25 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       SOURCE_RETURNED_ZERO); flip CF-coverage in `sports_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after
       GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-sports` permanently**.
 
+## Deferred work after 2026-06-01 (sports-slot pickup session)
+
+| Item | State | Evidence / next owner |
+| --- | --- | --- |
+| E1 Phase-0 layout + CF audit (both surfaces) | ✅ DONE | PM@07f7ace03 — full layout map + scope-expansions (instr-store 8 layouts / 2.68M rows / inverted AG) |
+| E2 v9 migrator (`migrate_sports_canonical_v9.py`) | ✅ BUILT + dry-run | mtds@eb5eaad2 — 260 objs/3-day window; layout-aware; gcs_copy_object; **VM `--apply` pending E3 drain** |
+| E5/E6 rebuilder + composite keystone classifier | ✅ BUILT + dry-run verified | mtds@680dff5f — instruments **368,036 relabels** sample-verified; **VM rebuild pending E3 drain** |
+| E6 write-path (typed reasons going forward) | ✅ SHIPPED | instruments-service@608e7ca7 |
+| MDPS in-season no-fixture refinement | 🔶 OPEN P1 | determine MDPS writer row-creation before CF-5 GREEN on MDPS (see C-reasons § P1) |
+| Unresolved-league residual (~15,700) | 🔶 OPEN P1 | registry-gap vs NO_MAPPING diagnosis before E8 |
+| E3 fleet drain (shared w/ slot-2) | ⛔ GATED | pre-migration drain GCP+AWS writers → consolidate → snapshot; coordinated at `epics/mtds_mdps_master` |
+| E4 VM dry → full walk (786k + 2.68M) | ⛔ GATED | VM asia-northeast1, no fire-and-forget; after E3 |
+| E7 CF-7 relabel + E8 verify + **IRREVERSIBLE legacy delete** | ⛔ GATED | only after CF-1…CF-12 GREEN on real data-state + drain + operator gate |
+
+**Net**: all CODE (migrator + rebuilder + composite keystone + writer-fix) is built, QG-green, dry-run-verified, and on
+LDR. The remaining work is OPERATIONAL (VM whole-corpus walk under the fleet drain) + 2 P1 keystone refinements — none of
+which is bypassable by an interactive slot. The IRREVERSIBLE legacy-bucket delete (E8) stays gated on CF-GREEN-on-real-
+data + the fleet drain + operator.
+
 ## Success criteria
 
 - Canonical sports `_index` = v9 + `pipeline_mode=` partition + `source` column + canonical venue/league/data_type.
