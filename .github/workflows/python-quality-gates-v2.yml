@@ -36,6 +36,11 @@ on:
 jobs:
   quality-gates-v2:
     runs-on: ubuntu-latest
+    # Backstop so a hung/runaway QG is killed cleanly (and the failure()||cancelled()
+    # notify below fires) instead of silently burning a 6h default + never alerting.
+    # 135m covers the slowest repo (execution ~120m tests) + margin; genuinely-slow
+    # repos that exceed it get a Slack alert → drives the "speed up / don't time out" fix.
+    timeout-minutes: 135
     env:
       CLOUD_MOCK_MODE: "true"
       CLOUD_PROVIDER: "local"
@@ -264,10 +269,15 @@ jobs:
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
             -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${TRIGGER_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"${EXCERPT_B64}\"}}"
 
-      - name: Notify #ci-failures on failure
-        if: failure()
+      # Fires on FAILURE *and* CANCELLED (timeout / OOM-kill / concurrency-cancel) so a job
+      # that dies before reaching here never fails silently — the #1 robustness gap. The body
+      # is built with python json.dumps so an excerpt containing "/\/newlines can't produce
+      # an `invalid_payload` (the prior raw-interpolation bug).
+      - name: Notify #ci-failures on failure or cancel
+        if: failure() || cancelled()
         env:
           SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+          JOB_STATUS: ${{ job.status }}
           REPO: ${{ github.repository }}
           SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}
           TARGET_BRANCH: ${{ github.base_ref || github.ref_name }}
@@ -285,15 +295,18 @@ jobs:
           else
             CONTEXT="push to \`${TARGET_BRANCH}\`"
           fi
-          EXCERPT=""
-          if [ -f /tmp/qg_output.log ]; then
-            EXCERPT=$(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' /tmp/qg_output.log | grep -E "FAILED|ERROR|error|assert" | tail -5 | head -c 300)
-          fi
-          TEXT=":x: *QG FAILED* | *${REPO_NAME}* | ${CONTEXT} | <${RUN_URL}|sha \`${SHORT_SHA}\`>"
-          if [ -n "${EXCERPT}" ]; then
-            BODY="{\"text\": \"${TEXT}\n\`\`\`${EXCERPT}\`\`\`\"}"
+          # cancelled() => timeout / OOM / concurrency-cancel (no QG log to excerpt).
+          if [ "${JOB_STATUS}" = "cancelled" ]; then
+            HEADER=":warning: *QG CANCELLED / TIMED-OUT* (timeout-minutes hit, OOM, or cancel)"
+            EXCERPT=""
           else
-            BODY="{\"text\": \"${TEXT}\"}"
+            HEADER=":x: *QG FAILED*"
+            EXCERPT=""
+            [ -f /tmp/qg_output.log ] && EXCERPT=$(sed 's/\x1b\[[0-9;]*[a-zA-Z]//g' /tmp/qg_output.log | grep -E "FAILED|ERROR|error|assert" | tail -5 | head -c 300)
           fi
+          TEXT="${HEADER} | *${REPO_NAME}* | ${CONTEXT} | <${RUN_URL}|sha \`${SHORT_SHA}\`>"
+          [ -n "${EXCERPT}" ] && TEXT="${TEXT}"$'\n'"\`\`\`${EXCERPT}\`\`\`"
+          # json.dumps guarantees a valid payload regardless of excerpt contents.
+          BODY=$(TEXT="${TEXT}" python3 -c 'import json,os; print(json.dumps({"text": os.environ["TEXT"]}))')
           curl -s -X POST "${SLACK_CI_WEBHOOK_URL}" -H "Content-Type: application/json" -d "${BODY}"
-          echo "Slack notification sent to #ci-failures"
+          echo "Slack notification sent to #ci-failures (status=${JOB_STATUS})"
