@@ -43,6 +43,12 @@
       "path": "../../features-service"
     },
     {
+      "path": "../../greeks-service"
+    },
+    {
+      "path": "../../fund-administration-service"
+    },
+    {
       "path": "../../ibkr-gateway-infra"
     },
     {
@@ -292,9 +298,7 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/instruments-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/market-data-processing-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/market-tick-data-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/ml-inference-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/ml-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/ml-training-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/strategy-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/system-integration-tests",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/9/trading-agent-service",
@@ -318,8 +322,6 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/instruments-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/market-data-processing-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/market-tick-data-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/ml-inference-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/ml-training-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/strategy-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/system-integration-tests",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/10/trading-agent-service",
@@ -343,8 +345,6 @@
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/instruments-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/market-data-processing-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/market-tick-data-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/ml-inference-service",
-      "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/ml-training-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/strategy-service",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/system-integration-tests",
       "/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/11/trading-agent-service",
