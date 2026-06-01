@@ -16,14 +16,26 @@ operational modes of the SAME pipeline — identical schemas, data_types, fields
 distinct field sets; `available_at` derived at read-time.
 
 Codex SSOTs: `codex/02-data/service-output-emission-semantics.md`,
-`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`
+`plans/active/writegate_honest_coverage_endtoend_2026_05_06.md`,
+`codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`
+
+`pipeline_mode` is the column that makes batch↔live reconciliation a `GROUP BY pipeline_mode` over the SAME manifest.
+Implementation shipped via `plans/active/pipeline_mode_implementation_2026_05_28.md` (Phases 0–6 complete) +
+audit/derivation sub-doc `plans/active/pipeline_mode_audit_2026_05_28.md`. The on-disk `pipeline_mode=` partition is the
+one deferred piece (Phase 5 → named successor `pipeline_mode_partition_migration_<next-window-date>.md`, lands at the
+next whole-corpus migration window). This audit is the continuous-verification surface that catches regressions of that
+work and any future asset_group that needs pipeline_mode column-fill / manifest or GCS backfill.
 
 ## Triggers
 
 - Weekly (minimum cadence)
-- After any new adapter ships (must verify both modes present)
+- After any new adapter ships (must verify both modes present **and** that the adapter sources `pipeline_mode` from the
+  UTL resolver — see checklist (g))
 - When A3 manifest divergence shows `DIVERGENT_EMPTY` (batch/live parity gap)
 - After any writegate phase change
+- **Before any whole-corpus GCS migration window** — the deferred `pipeline_mode=` on-disk partition (Phase 5 successor)
+  must be bundled into that walk per single-walk discipline; this audit flags it if still pending.
+- After any new asset_group bucket is provisioned (must verify its manifest rows carry non-null, in-enum `pipeline_mode`)
 
 ## Checklist
 
@@ -49,6 +61,29 @@ Codex SSOTs: `codex/02-data/service-output-emission-semantics.md`,
       adapter is either "paired" or "BLOCKED-CREDENTIALS"). Run:
       `python3 plans/audit/results/a6_batch_live_adapter_parity.py` — zero unclassified rows
 
+- [ ] (g) **`pipeline_mode` populated + in-enum across ALL asset_groups**: every captured manifest row carries a
+      non-null, in-`PipelineMode`-enum value. For each asset-group bucket (cefi env-tiered + legacy, defi, tradfi,
+      sports, prediction, instruments-store-\*) and its `_index/per_vm/` shards, confirm
+      `count(*) WHERE pipeline_mode IS NULL OR pipeline_mode = ''` equals 0 (or a documented exempt count for an active
+      VM writing pre-Phase-2 rows). Re-run `unified-trading-pm/scripts/migration/backfill_pipeline_mode.py --verify` per
+      bucket. Any non-zero non-exempt count → a backfill/migration is owed; file it against
+      `batch_live_symmetry_master` (NOT a silent defer).
+
+- [ ] (h) **No inline `pipeline_mode` string literals at write sites**: every writer sources its value from
+      `unified_trading_library.events.resolve_pipeline_mode(...)` or a `PipelineMode.X` enum member — no raw string
+      literals. QG STEP 5.85 enforces; confirm it is green workspace-wide and that any new writer (new adapter / new
+      service) was added to the sweep. Grep cross-check:
+      `rg -n "pipeline_mode\s*=\s*[\"']" --glob '!*.venv*' --glob '!node_modules' --glob '!tests'` — review every hit.
+
+- [ ] (i) **Reconciliation actually groups by `pipeline_mode`**: `batch-live-reconciliation-service` stage0 distinguishes
+      batch vs live row sets for the same shard via `_is_batch_mode()` / `_is_live_mode()` predicates (not an empty-column
+      no-op). Reconciliation tests fail when `pipeline_mode IS NULL` appears in input.
+
+- [ ] (j) **Deferred on-disk partition tracked, not lost**: confirm the Phase 5 successor
+      `pipeline_mode_partition_migration_<next-window-date>.md` either (i) does not yet exist because no whole-corpus
+      window has occurred, or (ii) exists and is scheduled into the upcoming window. A migration window that walked the
+      corpus WITHOUT bundling the `pipeline_mode=` partition is a finding (single-walk discipline breach).
+
 ### E2E Cross-Cutting Verification
 
 - (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest row
@@ -58,9 +93,11 @@ Codex SSOTs: `codex/02-data/service-output-emission-semantics.md`,
 
 ## Success Criteria
 
-- All 6 checklist items GREEN
+- All 10 checklist items (a)–(j) GREEN
 - `a6_batch_live_adapter_parity.py` shows 100% adapter parity (every batch adapter has a live counterpart)
 - A3 manifest divergence: zero `DIVERGENT_EMPTY` across all services
+- `count(*) WHERE pipeline_mode IS NULL OR pipeline_mode = ''` = 0 (or documented exempt) across every asset-group
+  manifest + per-VM shard; QG STEP 5.85 green; deferred `pipeline_mode=` partition tracked against its named successor
 
 ## Output Format
 
