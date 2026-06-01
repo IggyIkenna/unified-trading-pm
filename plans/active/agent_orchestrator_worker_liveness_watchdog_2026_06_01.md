@@ -103,9 +103,10 @@ Observation captured during operator's 2026-05-30/06-01 manual kill cycles. Two 
       heartbeat-silent, (f) cooldown blocks second kill within 5 min, (g) per-VM daily cap enforced, (h) Slack alert
       fires on context-full + on cap-hit. Collision group: `ao_watchdog_code`. Estimate: 0.25 AI-day.
       ✅ — agent-orchestrator@95c6976 (40 tests, all 8 spec targets covered)
-- [x] [QG] P0. `bash scripts/quality-gates.sh` exit 0 in agent-orchestrator → sentinel sha written →
+- [x] ✅ [QG] P0. `bash scripts/quality-gates.sh` exit 0 in agent-orchestrator → sentinel sha written →
       `bash scripts/quickmerge.sh "feat(watchdog): WorkerLivenessWatchdog — auto-kill stuck/silent/context-full workers" --agent`.
-      Collision group: `ao_watchdog_code`. Estimate: 0.1 AI-day. ✅ — QG passes (ruff+basedpyright+40 tests), code on live-defi-rollout@95c6976
+      Collision group: `ao_watchdog_code`. Estimate: 0.1 AI-day.
+      ✅ DONE 2026-06-01 — check.sh all gates green; layout.tsx TS fix (AccountStatus "available"→"healthy") agent-orchestrator@19b1ff7; quickmerge PR → staging.
 
 ### Phase 3 — Per-VM rollout (post-merge)
 
