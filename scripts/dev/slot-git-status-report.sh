@@ -44,6 +44,13 @@ TOKEN_FILE="${ORCH_TOKEN_FILE:-}"
 SLOTS_FILTER="${SLOTS_FILTER:-}"   # comma-separated slot ids; empty = all numeric slots under .tabs/
 QUIET=0
 
+# FF-pull starvation watchdog (Item 5b). The reporter is the detector/alerter;
+# slot-cron-ff-pull.sh stays the actor. Toggle off with FF_STARVE_WATCHDOG=0.
+FF_STARVE_WATCHDOG="${FF_STARVE_WATCHDOG:-1}"
+FF_STARVE_COMMIT_THRESHOLD="${FF_STARVE_COMMIT_THRESHOLD:-25}"
+FF_STARVE_AGE_HOURS="${FF_STARVE_AGE_HOURS:-6}"
+STARVE_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/ff-starvation-detect.sh"
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --workspace)          WORKSPACE_PATH="$2"; shift 2;;
@@ -307,6 +314,71 @@ print(json.dumps({"reported_at": reported_at, "host": host, "repos": repos}))
     rm -f /tmp/.git-status-resp.$$
 }
 
+# FF-pull starvation watchdog. For each repo under a slot, run the detector
+# (ff-starvation-detect.sh); if STARVED, POST a ONE-PER-(slot,repo) ping to the
+# slot's message inbox the same way post_snapshot posts git-status. De-duplicated
+# via a local marker dir so we ping once per starvation episode (the marker clears
+# the moment the repo is no longer starved → re-pings on a fresh episode).
+STARVE_STATE_DIR="${TABS_DIR}/.ff-starve-state"
+
+post_starve_ping() {
+    local slot_id="$1" repo_name="$2" payload="$3" token="$4"
+    # Reuse the message endpoint (from_role must be one of main/review/operator;
+    # the watchdog speaks for the orchestrator → "main"). Same curl+token shape
+    # as post_snapshot.
+    local body http_status
+    body=$(printf '%s' "${payload}" | python3 -c '
+import json, sys
+print(json.dumps({"text": sys.stdin.read(), "from_role": "main"}))
+')
+    [[ -n "${body}" ]] || return 0
+    http_status=$(curl -sS -o /dev/null -w '%{http_code}' \
+        -X POST "${ORCH_URL}/api/slots/${slot_id}/message" \
+        -H "Authorization: Bearer ${token}" \
+        -H "Content-Type: application/json" \
+        -d "${body}" 2>/dev/null || echo "000")
+    if [[ "${http_status}" == "200" ]]; then
+        log "[starve-ping] slot ${slot_id}/${repo_name} — FF-pull starvation signalled"
+        return 0
+    fi
+    log "[starve-ping-fail] slot ${slot_id}/${repo_name} — HTTP ${http_status}"
+    return 1
+}
+
+check_starvation_for_slot() {
+    local slot_id="$1" slot_dir="$2"
+    [[ "${FF_STARVE_WATCHDOG}" -eq 1 ]] || return 0
+    [[ -x "${STARVE_DETECTOR}" || -f "${STARVE_DETECTOR}" ]] || return 0
+    local token
+    token=$(resolve_token_for_slot "${slot_id}") || return 0
+    mkdir -p "${STARVE_STATE_DIR}" 2>/dev/null || true
+
+    local repo_dir repo_name marker payload
+    for repo_dir in "${slot_dir}"*/; do
+        [[ -d "${repo_dir}" ]] || continue
+        [[ -d "${repo_dir}.git" || -f "${repo_dir}.git" ]] || continue
+        repo_name=$(basename "${repo_dir}")
+        marker="${STARVE_STATE_DIR}/slot-${slot_id}__${repo_name}.starved"
+        payload=$(FF_STARVE_COMMIT_THRESHOLD="${FF_STARVE_COMMIT_THRESHOLD}" \
+                  FF_STARVE_AGE_HOURS="${FF_STARVE_AGE_HOURS}" \
+                  INTEGRATION_BRANCH="${INTEGRATION_BRANCH}" \
+                  bash "${STARVE_DETECTOR}" "${repo_dir}" --slot "${slot_id}" 2>/dev/null || echo "")
+        if [[ -n "${payload}" ]]; then
+            # STARVED. Ping once per episode (skip if already marked).
+            if [[ ! -f "${marker}" ]]; then
+                if post_starve_ping "${slot_id}" "${repo_name}" "${payload}" "${token}"; then
+                    : > "${marker}" 2>/dev/null || true
+                fi
+            else
+                log_quiet "[starve-dup] slot ${slot_id}/${repo_name} — already signalled this episode"
+            fi
+        else
+            # Not starved → clear any prior marker (next episode re-pings).
+            [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+        fi
+    done
+}
+
 # Walk each slot.
 for slot_dir in "${TABS_DIR}"/*/; do
     [[ -d "${slot_dir}" ]] || continue
@@ -321,6 +393,7 @@ for slot_dir in "${TABS_DIR}"/*/; do
         rows_tsv+="$(classify_repo "${repo_dir}")"$'\n'
     done
     post_snapshot "${slot_id_str}" "${rows_tsv}"
+    check_starvation_for_slot "${slot_id_str}" "${slot_dir}"
 done
 
 log_quiet "=== git-status sweep complete (host=${HOSTNAME_SHORT}, workspace=${WORKSPACE_PATH}) ==="

@@ -306,6 +306,7 @@ Pinned to the daily work-split plan's "Daily reset" checklist (per [`CLAUDE.md`]
 | `git rebase` produces conflicts during `--reset-slot`                                                                                                                                                                                             | The slot has commits not on `live-defi-rollout` (genuinely-divergent slot)                                                                                                                                                   | Manual resolution: enter the slot, resolve conflicts, `git rebase --continue`, push the slot branch. Then re-run `--reset-slot` if needed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `Applying autostash resulted in conflicts. Your changes are safe in the stash.` during `git pull --rebase --autostash`                                                                                                                            | A foreign agent's mid-edit working-tree content (auto-stashed by the rebase) conflicts with the new HEAD. Common when a slot has foreign-dirty files (e.g. `uv.lock`, `.pre-commit-config.yaml`) and you rebase onto remote. | **`git rebase --abort`** — keeps the autostash intact, restores pre-rebase state. Then `git stash push -- path/to/your_file` (only your files by name), retry the rebase, and `git stash pop` your stash. **NEVER `git checkout HEAD -- <conflicted_file>` followed by `git stash drop`** — that destroys the foreign agent's only copy of their WIP. Per CLAUDE.md "Two teammates" rule, the dropped-commit hash printed by `git stash drop` is reachable via `git stash store <hash>` until next GC, but treat any drop of an autostash you didn't create as a near-miss incident requiring a ping in `<side>_orchestrator/pings/slot_<N>.md`. Incident reference: slot-1 2026-05-19 strategy-service autostash drop (recovered via dangling commit e53ad7c). |
 | A concurrent agent in your shared `.tabs/<N>/` worktree moves `HEAD` / `FETCH_HEAD` / the slot branch under you; push to `live-defi-rollout` rejected; `FETCH_HEAD`-based diagnostics contradict each other (e.g. "already on LDR" when it isn't) | Shared `.git` — another interactive session OR an orchestrator-spawned worker in the same worktree runs `fetch` / `commit` / `rebase`, rewriting shared refs mid-task                                                        | Verify against `origin/live-defi-rollout` (NEVER `FETCH_HEAD`). Promote your commit via a throwaway worktree off the integration branch — see "Isolated-worktree promotion under shared-worktree ref races" below. Do NOT autostash-rebase the shared dirty tree.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| A slot worktree silently falls dozens/hundreds of commits behind `origin/live-defi-rollout` even though the FF-pull cron runs every 5 min and the remote is configured correctly | **FF-pull starvation**: an uncommitted local edit COLLIDES with an incoming changed file, so every `git pull --ff-only` aborts. Both crons treat "couldn't FF" as a benign skip, so nothing alerts and the slot keeps falling behind. (Reference: slot-5 unified-trading-pm 963 behind, 2026-06-01.) | The **FF-pull starvation watchdog** now pages on this (see "FF-pull starvation watchdog" below): a `FF-PULL STARVATION — slot N / repo` message lands in the slot inbox naming the colliding files. Remediate per the ping: `git stash push -- <colliding paths> && git pull --ff-only && (commit-or-restore the stash)`. The colliding file is usually foreign WIP — **stash-by-name, do NOT discard** (Two-teammates HARD RULE). |
 
 ### Isolated-worktree promotion under shared-worktree ref races (canonical fix, codified 2026-06-01)
 
@@ -366,6 +367,46 @@ Incident reference: slot-1 2026-06-01 data-source-provenance promotion — `FETC
 LDR" read; cherry-pick dragged the worker's in-flight "zero-rows=silent-lie" sweep into `defi`/`mtds_mdps`/`manifest`;
 resolved by keep-LDR-side on the `defi` conflict + trimming the dragged sweep from `mtds_mdps`/`manifest`, pushed clean
 as a provenance-only commit.
+
+### FF-pull starvation watchdog (codified 2026-06-01)
+
+**Failure mode.** A slot worktree sits N commits behind `origin/<integration-branch>` with the remote configured
+correctly, but `slot-cron-ff-pull.sh` silently no-ops every run because an **uncommitted local edit collides with an
+incoming changed file**, so every `git pull --ff-only` aborts. Both crons (`slot-cron-ff-pull.sh`,
+`slot-git-status-report.sh`) historically treated "couldn't FF" as a benign skip — nothing alerted, and the slot fell
+further behind indefinitely (reference incident: slot-5 `unified-trading-pm` 963 behind, 2026-06-01).
+
+**Actor vs detector.** `slot-cron-ff-pull.sh` stays the **actor** (it does the FF). `slot-git-status-report.sh` (which
+already walks each repo's ahead/behind + dirty state for the dashboard, every 5 min) is the **detector/alerter**. It
+shells out to `scripts/dev/ff-starvation-detect.sh` per repo and, on a positive detection, POSTs a `FF-PULL STARVATION`
+ping to the slot's message inbox (`/api/slots/<N>/message`, `from_role: main`) the same way it POSTs git-status. The
+watchdog does **not** auto-resolve the collision — that needs the stash-by-name + adjudicate judgment from the
+Two-teammates HARD RULE.
+
+**Detection rule** (per slot × per repo, each cron tick — see `ff-starvation-detect.sh`):
+
+```
+behind    = git rev-list --count HEAD..origin/<branch>
+ff_clean  = (behind > 0) AND (merge-base HEAD origin/<branch> == HEAD)   # a true fast-forward is possible
+dirty     = git status --porcelain is non-empty
+collision = ff_clean AND dirty AND (incoming changed-file set ∩ dirty file set ≠ ∅)
+STARVED   = collision AND (behind >= FF_STARVE_COMMIT_THRESHOLD
+                           OR oldest colliding dirty file age > FF_STARVE_AGE_HOURS)
+```
+
+`collision` (not merely `dirty`) is the precise trigger: a dirty file that does **not** intersect the incoming change
+set does not block `--ff-only`, so it is not a starvation cause and must not page. The behind/age gate avoids paging on
+normal in-flight work (a slot 1–2 commits behind mid-edit is healthy). Diverged/ahead is a different failure mode handled
+by the ff-pull cron's `[skip:diverged]`/`[skip:ahead]`.
+
+**De-duplication.** One ping per (slot, repo) starvation **episode** — a marker under `.tabs/.ff-starve-state/` is set
+on first ping and cleared the moment the repo is no longer starved, so a fresh episode re-pings.
+
+**Tunables (env):** `FF_STARVE_WATCHDOG` (default `1`; set `0` to disable), `FF_STARVE_COMMIT_THRESHOLD` (default `25`),
+`FF_STARVE_AGE_HOURS` (default `6`).
+
+**Tests:** `tests/test_ff_starvation_detect.bats` — collision→signal, non-colliding-dirty→no-signal,
+below-threshold→no-signal, clean/up-to-date→no-signal.
 
 ### Ikenna's provisioning evidence (2026-05-10/11)
 
