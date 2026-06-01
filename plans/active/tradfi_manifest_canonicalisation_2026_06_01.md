@@ -86,6 +86,12 @@ VM.
 
 ### P0 — pre-walk audit + scope
 
+> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: the headline ("4 legacy-only / DATA
+> ~complete") is a coarse prior. Read DATA-STATE. If the audit finds MORE form debt than implied (e.g. cefi turned out
+> 100% v8 / no source / no asset_group / blank pipeline_mode — a full re-canonicalisation, not the framed gap), fix ALL
+> of it in this one walk — NOT descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not
+> a design fork). SSOT: `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
+
 - [ ] [DATA] P0. Read the LIVE canonical `tradfi-prd` `_index` **actual `schema_version` distribution** (per-row, not
       the constant — manifest-v8 lesson) + confirm the 4 legacy-only cells are real (objects exist) or phantom. Record
       the row count to re-version.

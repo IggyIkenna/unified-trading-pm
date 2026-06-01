@@ -20,12 +20,25 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 # CeFi legacy gap-fill + manifest canonicalisation (L3 owner for cefi)
 
 > **MASTER**: `defi_manifest_canonicalisation_2026_06_01.md` §MASTER (L3, cefi lane). **Single-walk discipline (HARD
-> RULE)**: ONE bundled walk on the cefi `_index` — bundle the 838-cell gap-fill + `pipeline_mode=` partition + v9; do
-> NOT open a second walk. `pipeline_mode_partition_migration` + `data_source_provenance` (cefi) ride THIS walk.
+> RULE)**: ONE bundled walk on the cefi `_index` — bundle the **full v8→v9 re-version + `source` column + `asset_group`
+> column + `pipeline_mode=` partition** (see the data-state finding below) **AND** the 838-cell gap-fill; do NOT open a
+> second walk. `pipeline_mode_partition_migration` + `data_source_provenance` (cefi) ride THIS walk.
 
-## Why this exists — cefi canonical is ~complete, with a small recent gap
+> **🔴 DATA-STATE FINDING (2026-06-01, slot-4 audit) — cefi is a FULL re-canonicalisation, NOT an 838-cell gap-fill.**
+> Reading the ACTUAL canonical cefi `_index` (not the constant — the manifest-v8 lesson): **100% of rows are v8 (CF-1
+> RED, not v9)**, there is **no `source` column (CF-4 RED)**, **no `category`/`asset_group` column (CF-2 RED)**, and
+> **`pipeline_mode` is blank (CF-3 RED)**. So the headline "~complete / 838-cell gap" was a coarse PRIOR; the data-state
+> is the truth and the scope is the whole corpus. Per the **"Audit scope is a prior, not a ceiling —
+> fix-fully-autonomously"** HARD RULE (`canonical_form_cross_service_audit_checklist.md`), this is **fixed FULLY and
+> AUTONOMOUSLY in the one bundled walk** — NOT descoped to 838 cells, NOT deferred, NOT blocked-on-operator. Capture the
+> remaining schema signal (`error_reason` for CF-5, object paths for CF-2/3/9) into a **reusable audit tool**, then the
+> walk lands every CF-1…CF-12 fix.
 
-The 2026-06-01 `_index` comparison (legacy `market-data-tick-cefi-…` vs canonical `market-data-tick-cefi-prd-…`):
+## Why this exists — cefi canonical FORM is broken corpus-wide (+ a recent 838-cell data gap)
+
+The 2026-06-01 `_index` comparison (legacy `market-data-tick-cefi-…` vs canonical `market-data-tick-cefi-prd-…`) showed
+the cell-coverage gap is small (838) — but the canonical FORM is wrong across the WHOLE corpus (the finding above). Both
+are fixed in the one walk. Cell-coverage table:
 
 | metric                                         | value                                                                                                                        |
 | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
@@ -63,7 +76,13 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 - [ ] [DATA] P0. Confirm the 838 legacy-only cells' DATA objects exist in legacy + are genuinely absent from canonical
       (sample per data_type, esp. `book_snapshot_5`/`trades`). Record exact object count (likely small — recent only).
-- [ ] [DATA] P0. Read legacy `_index` `schema_version` distribution + canonical `cefi-prd` current version (target v9).
+- [x] ✅ [DATA] P0. Read canonical `cefi-prd` `_index` DATA-STATE (2026-06-01 slot-4): **100% v8** (not v9), **no
+      `source` column**, **no `category`/`asset_group` column**, **blank `pipeline_mode`** → the FULL-re-canonicalisation
+      finding above. Whole corpus is in scope, not 838 cells.
+- [ ] [DATA] P0. Capture the REMAINING schema signal into a **reusable audit tool** (so the operator can re-run it on any
+      AG `_index`): per-column presence + distribution for `schema_version` / `source` / `category` / `asset_group` /
+      `pipeline_mode`, `error_reason` histogram (CF-5), and object-path probe (CF-2/3/9). Emit per-CF GREEN/RED
+      data-state. Feeds `cefi_master_audit_instructions.md` Canonical-form section + generalises to the other AGs.
 
 ### C — single-walk (gap-fill + canonicalisation)
 
@@ -74,28 +93,32 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 > (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
 > `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
 
-- [ ] [DATA] P0. C0 ONE bundled walk: copy the 838-cell legacy DATA objects (`raw_tick_data/` + `processed_candles/`,
-      layout-aware — cefi has NO `by_date/`) → canonical `cefi-prd` at canonical path (env-tier + `asset_group=` +
-      `pipeline_mode=` partition); write/relabel the matching manifest rows to v9; typed empty-reasons.
-      **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index` ROWS in this walk** (CODE
-      side — writers emit `asset_group=` — already shipped via archived `venue_axis_asset_group_vocabulary_2026_04_25`;
-      this is historical data+manifest only). Server-side `gcs_copy_object`. Small scope → may run LOCALLY (P0 audit
-      decides) — avoids the L0 VM-tarball blocker entirely.
-- [ ] [DATA] P0. C-pipeline_mode RIDER: `pipeline_mode=` partition for cefi lands in THIS walk (satisfies
-      `pipeline_mode_partition_migration` for cefi).
-- [ ] [DATA] P1. C-source RIDER: `data_source_provenance` cefi `source` column lands here (multi-source tardis/venue).
+- [ ] [DATA] P0. C0 ONE bundled **WHOLE-CORPUS** walk (the finding makes this corpus-wide, not 838 cells): (a)
+      re-version **every** cefi row+parquet **v8→v9** (CF-1) asserting data-state, not the constant; (b) add the
+      **`source` column** = `tardis` on every row (CF-4) + (c) the **`asset_group=cefi` column/key** on rows + paths
+      (CF-2) + (d) the **`pipeline_mode=` partition** + non-blank column (CF-3); (e) typed empty-reasons (CF-5); (f) the
+      838-cell legacy→canonical gap-fill copy (`raw_tick_data/` + `processed_candles/`, layout-aware — cefi has NO
+      `by_date/`). Column adds (b–c) are a CONTENT rewrite → download+transform+upload **parallelised per the perf
+      contract** (NOT a server-side path move; NOT "run locally" — this is a VM-scale walk now, gated on L0). The
+      838-cell pure-path copies use `gcs_copy_object`. Idempotent.
+- [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
+      (satisfies `pipeline_mode_partition_migration` for cefi).
+- [ ] [DATA] P1. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`, swap-resilient) lands in THIS walk
+      (closes `data_source_provenance` cefi).
 
 ### Verify + handoff
 
-- [ ] [DATA] P0. Post-walk: re-run `(date,venue,data_type)` comparison → **legacy-only CELLS = 0**; canonical v9;
-      `pipeline_mode` non-null; **`source` populated on every cell (HARD — zero blank; `source="tardis"` today, ready
-      for a future Tardis swap/2nd source) — closes `data_source_provenance` cefi Phase 3**. C-GREEN signal for
-      `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission.
+- [ ] [DATA] P0. Post-walk: re-read the canonical `_index` DATA-STATE (re-run the reusable audit tool) → **100% of rows
+      v9** (was 100% v8); **`source` populated on every cell** (zero blank; `tardis`, swap-resilient); **`asset_group`
+      column/key present** (no `category`/blank); **`pipeline_mode` non-blank + partition present**; typed reasons;
+      **legacy-only CELLS = 0** (838-gap closed). Closes `data_source_provenance` cefi + `pipeline_mode_partition` cefi.
+      C-GREEN signal for `bucket_name_ssot…` Phase 6/7 cefi legacy bucket decommission.
 
 ## Success criteria
 
-- 0 legacy-only cefi cells; canonical `cefi-prd` v9 + `pipeline_mode=` partition + **`source` populated on every cell
-  (zero blank — HARD)**.
+- Canonical `cefi-prd` `_index` DATA-STATE: **v9 on 100% of rows** (was v8) + `asset_group` column + `pipeline_mode=`
+  partition (non-blank) + **`source` on every cell (zero blank — HARD)** + typed reasons; **0 legacy-only cells**.
+- The full-corpus form fix (not just the 838-cell gap) is landed — per the fix-fully-autonomously HARD RULE.
 - Hands C-GREEN to `bucket_name_ssot…` L6 → legacy `market-data-tick-cefi-…` deletable.
 
 ## Codex SSOTs

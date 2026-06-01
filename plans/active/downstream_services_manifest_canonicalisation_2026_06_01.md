@@ -56,6 +56,12 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 
 ### P0 — per-service canonical-form AUDIT (run the SSOT checklist; small corpus → fast)
 
+> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: "low-data / quick" is a prior, not a promise.
+> Read DATA-STATE per service and fix EVERY CF-RED the audit surfaces in the same walk (the cefi precedent: a bucket
+> framed "~complete" was actually 100% v8 / no source / no asset_group / blank pipeline_mode). NOT descoped, deferred,
+> post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
+> `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
+
 - [ ] [DATA] P0. **MDPS** — run CF-1…CF-12 (`canonical_form_cross_service_audit_checklist.md`) against
       `processed_candles/` across AGs: schema_version data-state, `asset_group=`, `pipeline_mode=` partition, `source`
       PROPAGATION (candle carries the raw cell's source), typed empty reasons, `available_at` (no read-time derivation),

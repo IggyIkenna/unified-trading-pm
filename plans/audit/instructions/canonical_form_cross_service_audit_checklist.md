@@ -11,6 +11,33 @@
 > per-service walks (`instruments`/`downstream_services`\_manifest_canonicalisation) + the riders
 > (`data_source_provenance_all_asset_groups`, `pipeline_mode_partition_migration`).
 
+## Audit scope is a PRIOR, not a ceiling — fix-fully-autonomously (HARD RULE, codified 2026-06-01)
+
+> Every canonicalisation plan's headline scope (cell counts, "legacy-only", "~complete", "verify-only") is a **prior**
+> from a coarse pre-audit — **NOT a ceiling**. The audit-first P0 reads **DATA-STATE** (never a code constant — the
+> manifest-v8 lesson). When it surfaces MORE canonical-form debt than the headline implied, that debt is **fixed FULLY
+> and AUTONOMOUSLY in the same single bundled walk**. Discovery NEVER shrinks scope; it expands the walk.
+>
+> **Reference incident (2026-06-01)**: cefi was framed "~complete, 838-cell gap-fill". The data-state audit found the
+> canonical cefi `_index` is **100% v8 (not v9)**, has **no `source` column**, **no `category`/`asset_group` column**,
+> and **blank `pipeline_mode`** — i.e. a FULL re-canonicalisation across the whole corpus, vastly bigger than 838 cells.
+> The headline was a prior; the data-state is the truth. The walk fixes all of it.
+>
+> **Banned responses to an expanded finding** (every one is review-blocking):
+> - descope to the headline number ("the plan said 838 cells, I'll just do those");
+> - defer the extra to a follow-up plan / mark it post-cutover;
+> - stamp it `BLOCKED-OPERATOR-DECISION` (a data-state gap is NOT a design fork — just fix it);
+> - "verify-only" when the verify itself proves the form is wrong.
+>
+> **Required response**: (1) capture the expanded finding as additional `- [ ]` todos in the plan (Capture Discoveries
+> As Plan Todos) + bake it into a **reusable audit tool** that reads the full schema signal (schema_version,
+> `source`/`category`/`asset_group`/`pipeline_mode` column presence, `error_reason` for CF-5, object paths for
+> CF-2/3/9); (2) bundle the fix into the SAME single-walk (no second `_index` walk); (3) acceptance = **CF-1…CF-12 GREEN
+> on the ACTUAL data-state**, whatever that turns out to require. The ONLY legitimate non-completion is the genuine
+> operator-gated closed set: `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` (a real design fork, not a data gap) /
+> `BLOCKED-UPSTREAM-OUTAGE` / `BLOCKED-PLAYWRIGHT`. Composes with CLAUDE.md "Data Pipeline Correctness Is The Heartbeat"
+> + "Plans Run To Actual Completion" + "Complete, don't defer".
+
 ## The matrix being audited — (service × asset_group) cells
 
 Every cell in this matrix has a manifest `_index` + data objects that MUST be in canonical form. The per-AG MTDS plans

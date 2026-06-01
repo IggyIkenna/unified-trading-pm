@@ -130,6 +130,12 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 ### P0 — pre-walk audit + scope
 
+> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: the headline ("0 legacy-only / DATA
+> complete / verify-only") is a coarse prior. Read DATA-STATE. If the audit finds MORE form debt than implied (e.g. cefi
+> turned out 100% v8 / no source / no asset_group / blank pipeline_mode — a full re-canonicalisation), fix ALL of it in
+> this one walk — NOT descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design
+> fork). SSOT: `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
+
 - [ ] [DATA] P0. Read the live sports `_index` **actual `schema_version` distribution** (per-row) + the current empty-
       reason histogram — quantify how many rows are blank / `SOURCE_RETURNED_ZERO` that should be a typed
       fixture/season/ transfer-window/genesis reason. Confirm the 0-legacy-only-cells finding (objects).

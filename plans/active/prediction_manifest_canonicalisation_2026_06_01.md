@@ -62,6 +62,12 @@ be fixed first if run on a VM.
 
 ### P0 — pre-walk audit + scope
 
+> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: the headline ("2,039 legacy-only") is a
+> coarse prior. Read DATA-STATE. If the audit finds MORE form debt than implied (e.g. cefi turned out 100% v8 / no
+> source / no asset_group / blank pipeline_mode — a full re-canonicalisation), fix ALL of it in this one walk — NOT
+> descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
+> `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
+
 - [ ] [DATA] P0. Confirm the 2,039 legacy-only cells' underlying DATA objects exist in legacy (not phantom manifest
       rows) and are genuinely absent from canonical — sample per data*type (`prediction_canonical_question_group`,
       `ohlcv*\*`). Record the real object count to migrate.

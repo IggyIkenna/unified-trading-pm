@@ -73,6 +73,12 @@ VM. Runs behind the pre-migration drain.
 
 ### P0 — instruments canonical-form AUDIT (run the SSOT checklist for the instruments surface)
 
+> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: there is no headline cell-count here, but the
+> same rule binds — read DATA-STATE and fix EVERY CF-RED the audit surfaces in this one walk (the cefi precedent: a
+> bucket framed "~complete" was actually 100% v8 / no source / no asset_group / blank pipeline_mode). NOT descoped,
+> deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
+> `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
+
 - [ ] [DATA] P0. Run the CF-1…CF-12 checks (per `canonical_form_cross_service_audit_checklist.md`) against each in-scope
       instruments `_index` + sample objects: read the actual `schema_version` distribution, `category=` vs
       `asset_group=` on paths + rows, `pipeline_mode=` partition presence, `source` column blank-rate, empty-reason

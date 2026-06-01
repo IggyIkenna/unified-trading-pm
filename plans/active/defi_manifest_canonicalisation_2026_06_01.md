@@ -136,6 +136,13 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 > `BLOCKED-PLAYWRIGHT`). **Combined acceptance**: every (service × AG × CF-1…CF-12) cell GREEN per the audit SSOT
 > `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` → hands C-GREEN to `bucket_name_ssot…` L6.
 > Every migration script obeys the § Migration-script performance contract (parallel/shardable/observable).
+>
+> **Scope is a PRIOR, not a ceiling (HARD — codified 2026-06-01)**: each plan's headline cell-count / "~complete" /
+> "verify-only" is a coarse pre-audit prior. The audit-first P0 reads DATA-STATE; whatever extra canonical-form debt it
+> surfaces is **fixed FULLY and AUTONOMOUSLY in the same walk** — never descoped to the headline, never deferred, never
+> `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). **Reference incident**: cefi, framed "~complete /
+> 838-cell gap", was found 100% v8 + no `source`/`asset_group` column + blank `pipeline_mode` = a full re-canonicalisation
+> — fixed in-walk, not deferred. SSOT: audit checklist § "Audit scope is a PRIOR, not a ceiling".
 
 ### Parallelisation guidance (for the dispatching agent)
 
