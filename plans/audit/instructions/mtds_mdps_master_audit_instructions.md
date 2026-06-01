@@ -277,46 +277,39 @@ findings surface.**
       `pyarrow.default_memory_pool().release_unused()` at the end so the PyArrow arena hand-off happens. Findings doc:
       `mdps_long_running_state_inventory_2026_05_28.md` § "Recommended next step".
 
-- [~] (E5) **Pure-Polars `_read_tick_data` → `_process_all_timeframes` → writer chain**:
-      **Stages 1 + 2 + 3 + 3.5 shipped ✅** — Stage 4 + 5 outstanding (3.6 + 3.8 self-block on Stage 4).
-      - Stage 1 — MDPS@591120b 2026-05-28: `_read_tick_data` returns `pl.DataFrame`; data_type filter polars-native via
-        `.filter(pl.col(...).is_in(...))`; boundary conversion to pandas at `_eager_preprocess_and_recover_metadata`
-        entry.
-      - Stage 1.3 — MDPS@ceb7a12 2026-05-28: `_iter_chain_symbol_dfs` yields `pl.DataFrame` (dropped
-        `.collect().to_pandas()`); `.to_pandas()` now in `_process_chain_bundle_streaming` at adapter boundary.
-        Test assertions updated (n_unique/[0] polars equivalents).
-      - Stage 1.4 — MDPS@c24b17c 2026-05-28: `GCSDataSource.read_tick_data` + `LiveDataSource.read_tick_data`
-        + abstract base `DataSource.read_tick_data` return `pl.DataFrame`. Pandas fallback via
-        `pl.from_pandas(pd.read_parquet(...))` keeps polars contract. test_data_source.py updated.
-      - Stage 2a — MDPS@f364539 2026-05-28: `cefi/trades_adapter._compute_grouped_stats_polars` no longer does
-        `core.to_pandas().set_index(...)` table-level roundtrip; per-column polars→numpy→pd.Series construction with
-        shared `pd.Index`.
-      - Stage 2b — MDPS@3dcc062 2026-05-28: `prediction/trades_adapter.py:184` switched from `pd.read_parquet` to
-        `pl.read_parquet` for lifecycle data load.
-      - Stage 2 audit: only 2 of 18 adapters touched (cefi/trades + prediction/trades — both done); other 16 adapters
-        use pure pandas internally with no polars round trips, so they're untouched in this stage.
-      - Stage 3a — unified-api-contracts@3814249 2026-05-28: `CandleOutput.to_polars()` added in UAC (mirrors
-        `to_dataframe()`); polars dep added; unit tests for empty + populated cases.
-      - Stage 3b — MDPS@6e61cfe 2026-05-28: all 5 `to_dataframe()` sites in live_workers + 2 in candle_generator
-        switched to `to_polars()`; `_inject_passthrough_columns` polarised (`with_columns(pl.lit(...).alias(col))`);
-        `_emit_instrument_processed_event` polarised (`get_column().is_not_null().sum()`); `pd.concat`→`pl.concat`,
-        `sort_values`→`sort`, `.empty`→`.is_empty()`. The polars→pandas boundary now sits at a single seam in
-        `candle_write_mixin._write_candles` (and at 4 streaming-write call sites for the chain-bundle path) —
-        canonical_writer.write_candle_parquet keeps pandas (plan's lower-risk hedge). 10 unit tests updated to polars
-        fixtures; 0 basedpyright regressions; 0 new test failures.
-      - Stage 3.5 — MDPS@5e50b7d 2026-05-28: `StorageDispatchWorker.write` signature flipped to `pl.DataFrame`
-        + `df.write_parquet` (polars native); `ParquetSchemaWorker.validate` accepts polars OR pandas
-        (collapses internally for UTL `ParquetSchemaEnforcer`); `OrchestrationCoordinator.process_batch`
-        boundary conversion removed since downstream workers now accept polars natively. 3.4 audit confirmed
-        `orchestration_writer.py` helpers all sit downstream of the `_write_candles` seam — no code change.
-      - Stage 3.5 cleanup — MDPS@febcb3b 2026-05-28: per workspace rule "Delete deprecated code. No parallel
-        code paths" (universal.md), removed the abandoned (B) thin-coordinator scaffold:
-        `OrchestrationCoordinator` + `CandleGeneratorWorker` + `ParquetSchemaWorker` + `StorageDispatchWorker`
-        plus their four unit-test files. None were reachable from any production entry point. The (B) scaffold
-        deliberately omitted every workspace HARD RULE the production write chain enforces (manifest emission,
-        honest absence, UAC SchemaContract, emission policy, cluster validation, chain-bundle streaming,
-        Category D, VIX gap, etc.). 1269 lines removed, 20 added. `OrchestrationWorkersMixin` (production
-        composition shim used by `CandleOrchestrationWriter`) trimmed + kept.
+- [~] (E5) **Pure-Polars `_read_tick_data` → `_process_all_timeframes` → writer chain**: **Stages 1 + 2 + 3 + 3.5
+  shipped ✅** — Stage 4 + 5 outstanding (3.6 + 3.8 self-block on Stage 4). - Stage 1 — MDPS@591120b 2026-05-28:
+  `_read_tick_data` returns `pl.DataFrame`; data_type filter polars-native via `.filter(pl.col(...).is_in(...))`;
+  boundary conversion to pandas at `_eager_preprocess_and_recover_metadata` entry. - Stage 1.3 — MDPS@ceb7a12
+  2026-05-28: `_iter_chain_symbol_dfs` yields `pl.DataFrame` (dropped `.collect().to_pandas()`); `.to_pandas()` now in
+  `_process_chain_bundle_streaming` at adapter boundary. Test assertions updated (n_unique/[0] polars equivalents). -
+  Stage 1.4 — MDPS@c24b17c 2026-05-28: `GCSDataSource.read_tick_data` + `LiveDataSource.read_tick_data` + abstract base
+  `DataSource.read_tick_data` return `pl.DataFrame`. Pandas fallback via `pl.from_pandas(pd.read_parquet(...))` keeps
+  polars contract. test_data_source.py updated. - Stage 2a — MDPS@f364539 2026-05-28:
+  `cefi/trades_adapter._compute_grouped_stats_polars` no longer does `core.to_pandas().set_index(...)` table-level
+  roundtrip; per-column polars→numpy→pd.Series construction with shared `pd.Index`. - Stage 2b — MDPS@3dcc062
+  2026-05-28: `prediction/trades_adapter.py:184` switched from `pd.read_parquet` to `pl.read_parquet` for lifecycle data
+  load. - Stage 2 audit: only 2 of 18 adapters touched (cefi/trades + prediction/trades — both done); other 16 adapters
+  use pure pandas internally with no polars round trips, so they're untouched in this stage. - Stage 3a —
+  unified-api-contracts@3814249 2026-05-28: `CandleOutput.to_polars()` added in UAC (mirrors `to_dataframe()`); polars
+  dep added; unit tests for empty + populated cases. - Stage 3b — MDPS@6e61cfe 2026-05-28: all 5 `to_dataframe()` sites
+  in live_workers + 2 in candle_generator switched to `to_polars()`; `_inject_passthrough_columns` polarised
+  (`with_columns(pl.lit(...).alias(col))`); `_emit_instrument_processed_event` polarised
+  (`get_column().is_not_null().sum()`); `pd.concat`→`pl.concat`, `sort_values`→`sort`, `.empty`→`.is_empty()`. The
+  polars→pandas boundary now sits at a single seam in `candle_write_mixin._write_candles` (and at 4 streaming-write call
+  sites for the chain-bundle path) — canonical_writer.write_candle_parquet keeps pandas (plan's lower-risk hedge). 10
+  unit tests updated to polars fixtures; 0 basedpyright regressions; 0 new test failures. - Stage 3.5 — MDPS@5e50b7d
+  2026-05-28: `StorageDispatchWorker.write` signature flipped to `pl.DataFrame` + `df.write_parquet` (polars native);
+  `ParquetSchemaWorker.validate` accepts polars OR pandas (collapses internally for UTL `ParquetSchemaEnforcer`);
+  `OrchestrationCoordinator.process_batch` boundary conversion removed since downstream workers now accept polars
+  natively. 3.4 audit confirmed `orchestration_writer.py` helpers all sit downstream of the `_write_candles` seam — no
+  code change. - Stage 3.5 cleanup — MDPS@febcb3b 2026-05-28: per workspace rule "Delete deprecated code. No parallel
+  code paths" (universal.md), removed the abandoned (B) thin-coordinator scaffold: `OrchestrationCoordinator` +
+  `CandleGeneratorWorker` + `ParquetSchemaWorker` + `StorageDispatchWorker` plus their four unit-test files. None were
+  reachable from any production entry point. The (B) scaffold deliberately omitted every workspace HARD RULE the
+  production write chain enforces (manifest emission, honest absence, UAC SchemaContract, emission policy, cluster
+  validation, chain-bundle streaming, Category D, VIX gap, etc.). 1269 lines removed, 20 added.
+  `OrchestrationWorkersMixin` (production composition shim used by `CandleOrchestrationWriter`) trimmed + kept.
 
       Stage 4 + 5 per [`plans/active/mdps_pure_polars_migration_2026_05_28.md`](../../active/mdps_pure_polars_migration_2026_05_28.md)
       finish the chain (Stage 4: aggregation calculators — `fast_candle_aggregation.py` 36 pandas-ops +

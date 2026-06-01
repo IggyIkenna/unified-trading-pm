@@ -106,12 +106,12 @@ LIBRARY_IMPORTS: list[tuple[str, str, bool]] = [
     ("unified_trading_library (UTL)", "import unified_trading_library", True),
     (
         "unified_trading_library.config_interface (UCI)",
-        "from unified_trading_library.config_interface import UnifiedCloudConfig",  # noqa: qg-deep-import
+        "from unified_trading_library.config_interface import UnifiedCloudConfig",
         True,
     ),
     (
         "unified_trading_library.events (UEI)",
-        "from unified_trading_library.events import setup_events, log_event",  # noqa: qg-deep-import
+        "from unified_trading_library.events import setup_events, log_event",
         True,
     ),
     ("unified_api_contracts (UAC)", "import unified_api_contracts", True),

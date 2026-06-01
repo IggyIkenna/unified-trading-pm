@@ -108,8 +108,8 @@ source:
       per-VM shards + consolidated. lending-indices: **2,811 SOLANA rows** (KAMINO=1,259 SOLEND=1,039 MARGINFI=513),
       `instrument_type=solana_lending`, 2022-11-01→2026-05-28, all `captured`. dex-pools: **1,555 SOLANA rows**
       (ORCA=529 RAYDIUM=528 PHOENIX=497 KAMINO=1), `solana_amm_pool`+`solana_vault`, 2022-11-01→2026-05-28, all
-      `captured`. Sample-inspect confirmed correct `instrument_id` format (`VENUE-SOLANA:SOLANA_LENDING:<market_id>`)
-      + `ts_event=midnight UTC`. Kamino vault count=1 (not 1,199 expected) — Bug-K backfill rerun pending per plan.
+      `captured`. Sample-inspect confirmed correct `instrument_id` format (`VENUE-SOLANA:SOLANA_LENDING:<market_id>`) +
+      `ts_event=midnight UTC`. Kamino vault count=1 (not 1,199 expected) — Bug-K backfill rerun pending per plan.
 - [~] [SCRIPT] P0. **Gate 4 — delete legacy**: after Gate 3 verified, delete `market-data-tick-defi-prd/lst_rates/`
   (redundant), `.../lending_indices/` + `.../dex_pools/` (migrated) via `gcs_delete_object`; remove stale manifest rows
   in `defi-prd/_index` for the top-level prefixes. NO duplicate source of truth remains. **`lst_rates/` DONE
@@ -131,18 +131,17 @@ source:
       errors, 0 wrong-bucket Solana parquets remaining. Sample-inspected `KAMINO-SOLANA:SOLANA_LENDING:...`
       instrument_id (correct type). Gate 7 ends in: **zero Solana DeFi data outside the dedicated split buckets** (SSOT
       enforced). ✓
-- [x] ✅ [CODE] P1. **Gate 5 — go-forward collectors: FULL PER-DATA-TYPE SPLIT (operator directive 2026-05-28 "the heavier
-      path (full split) pls")** — DONE 2026-05-30. MTDS@896d5c9 + UAC@f98a639. Monolithic `solana_defi_handler.py`
-      deleted; Solana DEX (orca/raydium/kamino/phoenix) → `dex_pools_handler.py`; Solana lending
-      (kamino/solend/marginfi) → `lending_indices_handler.py`; UAC `mtds_operations` updated to per-data-type ops;
-      QG exclusions removed; backfill script updated; MTDS QG: 2179 passed, 15 skipped.
-      **Supplementary commits (slot-1 2026-05-30)**: MTDS@1f5fb5a + MTDS@3ba2501 + deployment-service@839fd53.
-      `_solana_defi_fetch.py` shared async fetch module added; `lending_indices_handler.py` + `dex_pools_handler.py`
-      extended via Solana branch in `_collect_protocol_chain`; `full-defi-backfill.sh` collect-solana-defi lines replaced
-      with per-data-type equivalents; `launch-mtds-solana-defi-backfill-vm.sh` deleted. `solana_defi_handler.py` kept
-      in main worktree for Drift backfill (`setup-data-pipeline-vm.sh:1082 --solana-drift-backfill`) pending separate
-      Drift migration. Tests: 157 passed, 1 skipped.
-      **NOT modernize-in-place** — finish what `docs/DEFI_DOWNLOAD_STRATEGY.md:402` already
+- [x] ✅ [CODE] P1. **Gate 5 — go-forward collectors: FULL PER-DATA-TYPE SPLIT (operator directive 2026-05-28 "the
+      heavier path (full split) pls")** — DONE 2026-05-30. MTDS@896d5c9 + UAC@f98a639. Monolithic
+      `solana_defi_handler.py` deleted; Solana DEX (orca/raydium/kamino/phoenix) → `dex_pools_handler.py`; Solana
+      lending (kamino/solend/marginfi) → `lending_indices_handler.py`; UAC `mtds_operations` updated to per-data-type
+      ops; QG exclusions removed; backfill script updated; MTDS QG: 2179 passed, 15 skipped. **Supplementary commits
+      (slot-1 2026-05-30)**: MTDS@1f5fb5a + MTDS@3ba2501 + deployment-service@839fd53. `_solana_defi_fetch.py` shared
+      async fetch module added; `lending_indices_handler.py` + `dex_pools_handler.py` extended via Solana branch in
+      `_collect_protocol_chain`; `full-defi-backfill.sh` collect-solana-defi lines replaced with per-data-type
+      equivalents; `launch-mtds-solana-defi-backfill-vm.sh` deleted. `solana_defi_handler.py` kept in main worktree for
+      Drift backfill (`setup-data-pipeline-vm.sh:1082 --solana-drift-backfill`) pending separate Drift migration. Tests:
+      157 passed, 1 skipped. **NOT modernize-in-place** — finish what `docs/DEFI_DOWNLOAD_STRATEGY.md:402` already
       declared was the direction: _"Old monolithic handlers (`evm_defi_handler`, `solana_defi_handler`) replaced by
       per-data-type handlers"_. The doc/code drift (file still on disk, QG-excluded at `scripts/quality-gates.sh:25`)
       means the split was never completed for Solana. **This gate completes it.**
@@ -198,12 +197,12 @@ source:
       SSOT enforced everywhere. **Estimate**: ~2–3 cal AI-days (was ~1–2 for the in-place modernize; full split adds
       registry-update + Terraform + per-venue tests).
 
-- [x] ✅ [DOC] P2. **Gate 6 — close-out**: tick D2 in `defi_code_codex_drift_2026_05_27` (or archive that doc if D2 was its
-      last open item — it is not; D7/D8/D10/D13/D15 remain); update `codex/02-data/defi-data-types-catalog.md` +
-      `defi-data-pipeline.md` with the Solana instrument_types.
-      D2 partial-update: lst_rates/ confirmed deleted 2026-05-28; lending_indices/+dex_pools/ deferred to Gate-2 finish.
-      Catalog instrument-type table gained solana_lending/solana_vault/solana_amm_pool rows (UAC@7e9f4ad9+UAC@90b2bb9d).
-      Pipeline doc: collect-solana-defi deprecated; legacy-prefix note updated. — PM@(Gate-6 commit)
+- [x] ✅ [DOC] P2. **Gate 6 — close-out**: tick D2 in `defi_code_codex_drift_2026_05_27` (or archive that doc if D2 was
+      its last open item — it is not; D7/D8/D10/D13/D15 remain); update `codex/02-data/defi-data-types-catalog.md` +
+      `defi-data-pipeline.md` with the Solana instrument_types. D2 partial-update: lst_rates/ confirmed deleted
+      2026-05-28; lending_indices/+dex_pools/ deferred to Gate-2 finish. Catalog instrument-type table gained
+      solana_lending/solana_vault/solana_amm_pool rows (UAC@7e9f4ad9+UAC@90b2bb9d). Pipeline doc: collect-solana-defi
+      deprecated; legacy-prefix note updated. — PM@(Gate-6 commit)
 
 ## Backfill launch findings 2026-05-28 (slot-1 four-VM dispatch)
 
@@ -242,53 +241,52 @@ source:
       `registry/data_source_continuity.py` (likely `"SOLANA"` or the registry's Solana sentinel, NOT 99999). Fix:
       replace `--gas-fee-chains 99999` with the correct Solana chain key in `setup-data-pipeline-vm.sh`
       `solana-gas-backfill` block; OR add a numeric→str mapping in the gas-fees handler. Provenance: slot-1 2026-05-28
-      run.log `gs://deployment-scripts-central-element-323112/vm-logs/mtds-gas-fees-solana/run.log`.
-      **FIXED 2026-05-30** (MTDS@c3ae794c + deployment-service@3e83f30): handler accepts `solana` sentinel;
+      run.log `gs://deployment-scripts-central-element-323112/vm-logs/mtds-gas-fees-solana/run.log`. **FIXED
+      2026-05-30** (MTDS@c3ae794c + deployment-service@3e83f30): handler accepts `solana` sentinel;
       setup-data-pipeline-vm.sh passes `--gas-fee-chains solana`. Backfill VM `mtds-gas-fees-solana` relaunched
       2026-05-30 (slot-1) with tarball@cef599e, range 2025-01-17→2026-05-28, verified RUNNING.
-- [x] ✅ [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check — only
-      the latest date emits a real APY row.** `launch-marinade-solana-backfill-vm.sh` routes through `collect-lst-rates`
-      which uses an LST-rates handler keyed on sentinel-cluster completion at the latest date; with the latest date
-      captured, every prior date short-circuits. Net: the VM wrote jitoSOL + 12 EVM LSTs for 2026-05-27 only, NOT
-      2025-01-17 → 2026-05-26 for Marinade. Marinade mSOL APY is also emitted via
+- [x] ✅ [MTDS] P1. **Marinade backfill bypasses historical days via "all expected sentinels already captured" check —
+      only the latest date emits a real APY row.** `launch-marinade-solana-backfill-vm.sh` routes through
+      `collect-lst-rates` which uses an LST-rates handler keyed on sentinel-cluster completion at the latest date; with
+      the latest date captured, every prior date short-circuits. Net: the VM wrote jitoSOL + 12 EVM LSTs for 2026-05-27
+      only, NOT 2025-01-17 → 2026-05-26 for Marinade. Marinade mSOL APY is also emitted via
       `solana_defi_handler._collect_marinade` (handler list `["drift","kamino",...,"marinade",...]`) — re-launching the
       new `launch-mtds-solana-defi-backfill-vm.sh` with `--protocols marinade` SHOULD close this without needing to fix
       the lst-rates sentinel logic, **assuming** Marinade APY endpoint `api.marinade.finance/msol/apy/365d` is
       daily-replayable (collector currently reads "latest" only — needs a `target_date_str` parameter analog to marginfi
       TVL filter). Provenance: slot-1 2026-05-28 run.log
-      `gs://deployment-scripts-central-element-323112/vm-logs/marinade-backfill-20260528-140422/run.log`.
-      **FIXED 2026-05-30** (MTDS@c3ae794c): `_collect_marinade` now accepts `target_date_str` + routes past dates
-      through `_collect_marinade_historical` (DeFiLlama yields chart, daily APY back to 2025-02-26). Note:
+      `gs://deployment-scripts-central-element-323112/vm-logs/marinade-backfill-20260528-140422/run.log`. **FIXED
+      2026-05-30** (MTDS@c3ae794c): `_collect_marinade` now accepts `target_date_str` + routes past dates through
+      `_collect_marinade_historical` (DeFiLlama yields chart, daily APY back to 2025-02-26). Note:
       `launch-marinade-solana-backfill-vm.sh` uses `collect-lst-rates` (wrong path for this fix); re-launch done via
       direct `collect-solana-defi --protocols marinade --solana-lending-backfill` VM
       `mtds-marinade-bugm-relaunch-20260530-052448` (asia-northeast1-c), range 2025-01-17→2026-05-28, verified RUNNING.
-- [x] ✅ [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema error
-      every date.** `solana_defi_handler._collect_kamino` emits rows with `vault_address` not `pool_id` but the
+- [x] ✅ [MTDS] P1. **Kamino vault-strategies path raises `"row is missing required symbol column 'pool_id'"` schema
+      error every date.** `solana_defi_handler._collect_kamino` emits rows with `vault_address` not `pool_id` but the
       `dex_pools` SchemaContract for `defi/pool/dex_pools` requires `pool_id`. Fix: rename the column in
       `_collect_kamino` (alias `vault_address` → `pool_id` for the dex_pools contract; keep `vault_address` as a
       secondary field) OR widen the SchemaContract. Provenance: slot-1 2026-05-28 run.log
       `gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-defi-backfill/run.log` (one warning per
       processed date). Composes with Gate 1 schema-contracts work above — if a `solana_vault` instrument_type lands as
-      planned, the Kamino vault rows route there instead and this becomes moot. Capture so it doesn't slip.
-      **FIXED 2026-05-30** (MTDS@c3ae794c): `_collect_kamino` now emits `pool_id` (aliased from vault PDA `address`) +
+      planned, the Kamino vault rows route there instead and this becomes moot. Capture so it doesn't slip. **FIXED
+      2026-05-30** (MTDS@c3ae794c): `_collect_kamino` now emits `pool_id` (aliased from vault PDA `address`) +
       `vault_address` (secondary) + `token_a`/`token_b` from resolved mint symbols. Kamino backfill rerun via
       collect-solana-defi --protocols kamino (see Bug-K "Bug fixes" section above — already `[x] ✅`).
-- [x] ✅ [MTDS] P2. **Jito Stakenet API `pool_token_supply=0` returned every fetch → `"cannot compute exchange rate"` every
-      date in the new VM run.** `solana_defi_handler._collect_jito` hits
-      `kobe.mainnet.jito.network/api/v1/stake_pool_stats` and gets back a body whose `pool_token_supply` field is 0
-      (or absent), so the handler gives up and returns empty.
-      — MTDS@c3ae794c (backfill 2026-05-30). Root cause = API drift: Jito shape changed from single object to time-series
-      payload. Rewrote `_collect_jito` to consume latest entry; added `_collect_jito_historical` via DeFiLlama yields chart.
+- [x] ✅ [MTDS] P2. **Jito Stakenet API `pool_token_supply=0` returned every fetch → `"cannot compute exchange rate"`
+      every date in the new VM run.** `solana_defi_handler._collect_jito` hits
+      `kobe.mainnet.jito.network/api/v1/stake_pool_stats` and gets back a body whose `pool_token_supply` field is 0 (or
+      absent), so the handler gives up and returns empty. — MTDS@c3ae794c (backfill 2026-05-30). Root cause = API drift:
+      Jito shape changed from single object to time-series payload. Rewrote `_collect_jito` to consume latest entry;
+      added `_collect_jito_historical` via DeFiLlama yields chart.
 - [x] ✅ [MTDS] P3. **GCS object-mutation 429s on per-VM manifest shard at the start of every backfill VM** — both
       `mtds-solana-drift-backfill` and the new `mtds-solana-defi-backfill` get `429 rateLimitExceeded ... per-VM shard`
       on the first few flushes. Non-blocking (manifest writes are best-effort) but it means the first ~10-30s of
       manifest rows are missing from the per-VM shard. Fix: add an exponential backoff inside `DefiManifestRecorder`
       flush, or batch the early flushes. Already a known pattern — track here so the next manifest-consolidator pass
-      dedup-merges correctly.
-      — Covered by Bug-R (UTL@cb1f4b5f, 2026-05-29): `ManifestWriter._write_per_vm_shard` now routes uploads through
-      `_upload_with_backoff_on_429` — 3 retries at 1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/
-      `TooManyRequests`. `DefiManifestRecorder.close()` calls `self._writer.close()` which flows through this path;
-      no additional layer needed at the recorder level (backfill 2026-05-30).
+      dedup-merges correctly. — Covered by Bug-R (UTL@cb1f4b5f, 2026-05-29): `ManifestWriter._write_per_vm_shard` now
+      routes uploads through `_upload_with_backoff_on_429` — 3 retries at 1s/2s/4s base ±30% jitter on
+      `429`/`rateLimitExceeded`/ `TooManyRequests`. `DefiManifestRecorder.close()` calls `self._writer.close()` which
+      flows through this path; no additional layer needed at the recorder level (backfill 2026-05-30).
 
 ### Next slot-1 actions (sequenced)
 
@@ -331,22 +329,21 @@ source:
       shows 44,489 lending-indices rows written for 2025-01-03 across AAVE_V3/COMPOUND_V3 on multiple chains;
       AAVE_V3-OPTIMISM still 0 rows on `messari_lending` fallback — separate side-issue tracked under Bug-A relaunch
       evidence at line ~509, NOT a relaunch-IAM blocker).
-- [x] ✅ [INFRA] P3. **Reset corrupt PM worktree on vm-ml (`tab/rootm/1`)** — `git fsck` reports unreachable objects under
-      `tab/rootm/1` for unified-trading-pm
-      (`Could not read 83fac63... Failed to traverse parents of commit 09b84d21`). Tarball build still worked (only
-      PM worktree corrupted; 6 service dep repos clean). Workaround: do all PM plan-flips from the operator's laptop
-      (local cwd `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm`) instead of from
-      vm-ml SSM. Next maintenance pass: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot 1` on
-      vm-ml (operator-only since slot reset destroys local state). Surfaced 2026-05-29 during Drift+Aave OP backfill
-      launch dispatch.
-      — vm-ml slot-6: ran setup-tab-worktrees.sh --reset-slot 1 2026-05-30; fsck clean, all repos rebased LDR
+- [x] ✅ [INFRA] P3. **Reset corrupt PM worktree on vm-ml (`tab/rootm/1`)** — `git fsck` reports unreachable objects
+      under `tab/rootm/1` for unified-trading-pm
+      (`Could not read 83fac63... Failed to traverse parents of commit 09b84d21`). Tarball build still worked (only PM
+      worktree corrupted; 6 service dep repos clean). Workaround: do all PM plan-flips from the operator's laptop (local
+      cwd `/Users/ikennaigboaka/Code/unified-trading-system-repos/.tabs/1/unified-trading-pm`) instead of from vm-ml
+      SSM. Next maintenance pass: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --reset-slot 1` on vm-ml
+      (operator-only since slot reset destroys local state). Surfaced 2026-05-29 during Drift+Aave OP backfill launch
+      dispatch. — vm-ml slot-6: ran setup-tab-worktrees.sh --reset-slot 1 2026-05-30; fsck clean, all repos rebased LDR
 - [x] ✅ [INFRA] P3. Capture GCP IAM grants on `unified-trading-sa@central-element-323112` in the canonical IAM SSOT
       (likely `deployment-service/terraform/gcp/*.tf` or a setup script). Roles granted ad-hoc 2026-05-29 during vm-ml
       backfill dispatch: `roles/compute.instanceAdmin.v1` + `roles/iam.serviceAccountUser` (project-scope). Without SSOT
-      sync, a future `tofu apply` could revert them.
-      — deployment-service@dab9a60 (2026-05-30). Added `google_project_iam_member.unified_trading_compute_instance_admin`
-      + `google_project_iam_member.unified_trading_service_account_user` to `terraform/gcp/main.tf` after the existing
-      SA IAM block.
+      sync, a future `tofu apply` could revert them. — deployment-service@dab9a60 (2026-05-30). Added
+      `google_project_iam_member.unified_trading_compute_instance_admin` +
+      `google_project_iam_member.unified_trading_service_account_user` to `terraform/gcp/main.tf` after the existing SA
+      IAM block.
 
 ## Not in scope (separately tracked)
 
@@ -501,27 +498,24 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 ### Bug fixes (CODE P1 — relaunch the affected backfill after each fix ships)
 
-- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped mtds@9a840e01;
-      sig index gap FILLED (3547+876 parts, 2024-10-31→2026-05-29 continuous) 2026-05-30T09:36Z per SANITY_CHECK;
-      OOM fix shipped mtds@93acab3 (pyarrow filter pushdown). Original fix MTDS@fc7e0636.
-      **2026-05-30 sig index audit (slot-1)**: `_index/drift_v2_sig_index_parts/` has 2936 parts covering
-      2026-02-15→2026-05-28 (HEAD end); `_index/drift_v2_sig_index_parts_b/` has 876 parts covering
-      2024-10-31→2025-01-14. **GAP: 2025-01-14→2026-02-15 (13 months) not in either index set.** Backfill VM
-      ran 2026-05-29 (exit 0) but silently returned 0 rows for all dates in gap rather than "sig index missing"
-      (handler fell through to "program activity quiet" branch for dates with no index hits). Consequence: dates
-      2025-01-09→2026-02-14 wrote empty/zero records — not actually missing data. **Relaunch BLOCKED** until
-      index gap filled.
-      **2026-05-30T09:36Z UPDATE (slot-1 on tab-1)**: SANITY_CHECK PASSED — `_index/drift_v2_sig_index_parts/`
-      3547 parts + `_index/drift_v2_sig_index_parts_b/` 876 parts; total_rows=442,205,000; blocktime range
-      2024-10-31→2026-05-29 (gap NOW FILLED — Builder #1 + #2 both completed). VM launched 2026-05-30T10:06Z
-      but OOM'd at 10:07Z (handler loaded all 4423 parts into RAM simultaneously — ~35-70 GB RSS).
-      **OOM fix shipped 2026-05-30 (mtds@93acab3, slot-2)**: `_load_drift_v2_sig_index` rewritten with pyarrow
-      row-group filter pushdown — only parts overlapping the target date window are decoded. Peak RSS: ~15 MB.
-      63/63 tests green. **Operator action**: relaunch backfill VM via
-      `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28`. Root cause **CONFIRMED** by
-      slot-1 probe 2026-05-29:
-      `drift-historical-data-v2.s3.eu-west-1.amazonaws.com` has NO `market/*` prefix entries at all (verified via S3
-      ListBucket: `prefix=market` → 0 keys; the only populated prefix is
+- [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-D (Drift S3 archive cutoff)** — handler code shipped mtds@9a840e01; sig index gap
+      FILLED (3547+876 parts, 2024-10-31→2026-05-29 continuous) 2026-05-30T09:36Z per SANITY_CHECK; OOM fix shipped
+      mtds@93acab3 (pyarrow filter pushdown). Original fix MTDS@fc7e0636. **2026-05-30 sig index audit (slot-1)**:
+      `_index/drift_v2_sig_index_parts/` has 2936 parts covering 2026-02-15→2026-05-28 (HEAD end);
+      `_index/drift_v2_sig_index_parts_b/` has 876 parts covering 2024-10-31→2025-01-14. **GAP: 2025-01-14→2026-02-15
+      (13 months) not in either index set.** Backfill VM ran 2026-05-29 (exit 0) but silently returned 0 rows for all
+      dates in gap rather than "sig index missing" (handler fell through to "program activity quiet" branch for dates
+      with no index hits). Consequence: dates 2025-01-09→2026-02-14 wrote empty/zero records — not actually missing
+      data. **Relaunch BLOCKED** until index gap filled. **2026-05-30T09:36Z UPDATE (slot-1 on tab-1)**: SANITY_CHECK
+      PASSED — `_index/drift_v2_sig_index_parts/` 3547 parts + `_index/drift_v2_sig_index_parts_b/` 876 parts;
+      total_rows=442,205,000; blocktime range 2024-10-31→2026-05-29 (gap NOW FILLED — Builder #1 + #2 both completed).
+      VM launched 2026-05-30T10:06Z but OOM'd at 10:07Z (handler loaded all 4423 parts into RAM simultaneously — ~35-70
+      GB RSS). **OOM fix shipped 2026-05-30 (mtds@93acab3, slot-2)**: `_load_drift_v2_sig_index` rewritten with pyarrow
+      row-group filter pushdown — only parts overlapping the target date window are decoded. Peak RSS: ~15 MB. 63/63
+      tests green. **Operator action**: relaunch backfill VM via
+      `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28`. Root cause **CONFIRMED** by slot-1
+      probe 2026-05-29: `drift-historical-data-v2.s3.eu-west-1.amazonaws.com` has NO `market/*` prefix entries at all
+      (verified via S3 ListBucket: `prefix=market` → 0 keys; the only populated prefix is
       `program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/` with per-authority sub-paths). The legacy
       `_backfill_drift_s3_date` per-date HTTP gets at
       `market/<sym>/{fundingRateRecords,     tradeRecords}/<yyyy>/<yyyymmdd>` were always 404-ing post-V1; the
@@ -542,37 +536,37 @@ plan. Commit + push via the standard `docs(plans):` flow.
       success). **Sub-evidence**: test fixture corrected (mtds@05cc05b0) — in_range_ts was 1779200000 (May-19 actual)
       labelled as May-20 in comment; bumped to 1779260000. QG green. Re-run via
       `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28` only AFTER Bug-D-followup fix below.
-  - [x] ✅ [CODE] [AGENT-AUTO] P0. **Bug-D-followup (Helius integration emits 0 rows for active days)** — handler shipped
-        mtds@9a840e01; awaiting index build at `gs://<market-data-bucket>/_index/drift_v2_sig_index.parquet`
-        (running on vm-ml; multi-hour). Drift V2 density discovered higher than prior estimate (~1.6M sigs/day at
-        April 2026 peak); index build size + duration TBD. Shipped via Option 2 (persistent sig->blockTime index).
-        **Probe results** (slot-1
-        2026-05-29): Option 1 (Helius v0 time-range params) FAILS — `startTime/endTime/from/to/minTime/maxTime`
-        silently ignored (always return HEAD-anchored page); only `until` returns 400 "invalid query parameter".
-        Option 3 (Drift V2 S3 archive) FAILS — bucket `drift-historical-data-v2` confirmed ends 2025-01-07 via
-        ListObjectsV2 (last key `program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/market/SOL-PERP/tradeRecords/2025/20250107`;
-        any `start-after=20250108` returns 0 keys). Option 2 wins architecturally; cost amortised as one-time
-        index build per operator insight (on-chain data is append-only). **Implementation**: new script
-        `market_tick_data_service/scripts/build_drift_v2_sig_index.py` walks Helius RPC
-        `getSignaturesForAddress` HEAD→inception and persists `(signature, slot, blockTime)` tuples to
+  - [x] ✅ [CODE] [AGENT-AUTO] P0. **Bug-D-followup (Helius integration emits 0 rows for active days)** — handler
+        shipped mtds@9a840e01; awaiting index build at `gs://<market-data-bucket>/_index/drift_v2_sig_index.parquet`
+        (running on vm-ml; multi-hour). Drift V2 density discovered higher than prior estimate (~1.6M sigs/day at April
+        2026 peak); index build size + duration TBD. Shipped via Option 2 (persistent sig->blockTime index). **Probe
+        results** (slot-1 2026-05-29): Option 1 (Helius v0 time-range params) FAILS —
+        `startTime/endTime/from/to/minTime/maxTime` silently ignored (always return HEAD-anchored page); only `until`
+        returns 400 "invalid query parameter". Option 3 (Drift V2 S3 archive) FAILS — bucket `drift-historical-data-v2`
+        confirmed ends 2025-01-07 via ListObjectsV2 (last key
+        `program/dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH/market/SOL-PERP/tradeRecords/2025/20250107`; any
+        `start-after=20250108` returns 0 keys). Option 2 wins architecturally; cost amortised as one-time index build
+        per operator insight (on-chain data is append-only). **Implementation**: new script
+        `market_tick_data_service/scripts/build_drift_v2_sig_index.py` walks Helius RPC `getSignaturesForAddress`
+        HEAD→inception and persists `(signature, slot, blockTime)` tuples to
         `gs://<market-data-bucket>/_index/drift_v2_sig_index.parquet` (idempotent forward catch-up on re-run).
-        `_backfill_drift_helius_date` rewritten to (1) load+cache the index per-process via UTL
-        `download_bytes`, (2) filter by `[day_start_ts, day_end_ts]`, (3) batch-resolve in-window sigs via
-        Helius `POST /v0/transactions` (100 sigs/batch). Per-day cost: O(target_day) — 1 cache hit + N/100
-        batch calls. Tests `test_helius_no_sigs_in_window_records_empty` + `test_helius_missing_index_records_failed`
-        + `test_helius_with_in_range_sigs_writes_parquet` cover all 3 paths (in-window, out-of-window-but-index-present,
-        index-missing). QG green exit 0. **Volume side-finding (P3)**: Drift V2 program-level
-        signature density is much higher than the operator brief estimated — at peak (e.g. 2026-04-01)
-        a single day has > 1.6M signatures (observed in slot-1 build attempt walking 1275 pages all
-        oldest=2026-04-01). Full back-walk to 2024-11-01 will produce a multi-GB parquet over many hours of
-        RPC paging (initial build NOT yet uploaded to GCS — operator/cron run needed). Architecture
-        degrades gracefully: handler emits `record_failed("sig index missing — run build_drift_v2_sig_index.py")`
-        when index absent. **Operator action required before relaunching backfill VM**: run
-        `python -m market_tick_data_service.scripts.build_drift_v2_sig_index --back-to 2024-11-01`
-        (estimate: several hours; idempotent — safe to interrupt and resume; persistent across calls).
-        Once index lands at `gs://market-data-tick-defi-central-element-323112/_index/drift_v2_sig_index.parquet`,
-        relaunch via `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28`.
-        **slot-9 confirm 2026-05-29**: all 6 `TestBackfillDriftHelius` tests green; checkbox flipped.
+        `_backfill_drift_helius_date` rewritten to (1) load+cache the index per-process via UTL `download_bytes`, (2)
+        filter by `[day_start_ts, day_end_ts]`, (3) batch-resolve in-window sigs via Helius `POST /v0/transactions` (100
+        sigs/batch). Per-day cost: O(target_day) — 1 cache hit + N/100 batch calls. Tests
+        `test_helius_no_sigs_in_window_records_empty` + `test_helius_missing_index_records_failed` +
+        `test_helius_with_in_range_sigs_writes_parquet` cover all 3 paths (in-window, out-of-window-but-index-present,
+        index-missing). QG green exit 0. **Volume side-finding (P3)**: Drift V2 program-level signature density is much
+        higher than the operator brief estimated — at peak (e.g. 2026-04-01) a single day has > 1.6M signatures
+        (observed in slot-1 build attempt walking 1275 pages all oldest=2026-04-01). Full back-walk to 2024-11-01 will
+        produce a multi-GB parquet over many hours of RPC paging (initial build NOT yet uploaded to GCS — operator/cron
+        run needed). Architecture degrades gracefully: handler emits
+        `record_failed("sig index missing — run build_drift_v2_sig_index.py")` when index absent. **Operator action
+        required before relaunching backfill VM**: run
+        `python -m market_tick_data_service.scripts.build_drift_v2_sig_index --back-to 2024-11-01` (estimate: several
+        hours; idempotent — safe to interrupt and resume; persistent across calls). Once index lands at
+        `gs://market-data-tick-defi-central-element-323112/_index/drift_v2_sig_index.parquet`, relaunch via
+        `launch-mtds-solana-drift-backfill-vm.sh --start 2025-01-09 --end 2026-05-28`. **slot-9 confirm 2026-05-29**:
+        all 6 `TestBackfillDriftHelius` tests green; checkbox flipped.
 - [x] ✅ [CODE] [AGENT-AUTO] P1. **Bug-G (Solana gas chain mapping)** — fixed both sides 2026-05-29.
       `deployment-service/scripts/vm/setup-data-pipeline-vm.sh:1102` now passes `--gas-fee-chains solana` sentinel
       (deployment-service@3e83f30); `market_tick_data_service/cli/handlers/gas_fee_handler.py` accepts the sentinel and
@@ -625,14 +619,13 @@ plan. Commit + push via the standard `docs(plans):` flow.
       2026-01-15 returns 14 rows / 13 reserves with non-zero indices (USDC liquidity_rate=1.75%, WETH=0.93%,
       WBTC=0.018%). **NOT BLOCKED-CREDENTIALS** — uses the existing `alchemy-api-key` Secret Manager entry already in
       use by `aave_positions.py`. QG-green (only pre-existing foreign-file failure
-      `test_solana_defi_handler.py::TestBackfillDriftHelius` remains).
-      — + operational verify 2026-05-29T17:27Z: manifest cleaned (320 rows rewritten `empty_confirmed`→`expected_unattempted`
-      across 4 per-VM shards via `/tmp/li_clean/scripts/clean_aave_op_empty_rows.py` on agent-orch-vm-ml) +
-      tarballs rebuilt @ mtds@2e86a76 (DEFI scope, includes 119056a6 RPC fallback) +
-      retry VM `mtds-lending-indices-20260529-171631` (asia-northeast1-c) launched RUNNING T+10min verified —
-      log evidence: `aave_v3/OPTIMISM: direct-RPC fallback succeeded (14 rows)` writing to
-      `lending-indices-central-element-323112/raw_tick_data/.../venue=AAVE_V3/chain=OPTIMISM/`.
-      Bonus discovery: AAVE_V3-LINEA also had subgraph-empty; same RPC fallback now hydrates LINEA (9 rows/day).
+      `test_solana_defi_handler.py::TestBackfillDriftHelius` remains). — + operational verify 2026-05-29T17:27Z:
+      manifest cleaned (320 rows rewritten `empty_confirmed`→`expected_unattempted` across 4 per-VM shards via
+      `/tmp/li_clean/scripts/clean_aave_op_empty_rows.py` on agent-orch-vm-ml) + tarballs rebuilt @ mtds@2e86a76 (DEFI
+      scope, includes 119056a6 RPC fallback) + retry VM `mtds-lending-indices-20260529-171631` (asia-northeast1-c)
+      launched RUNNING T+10min verified — log evidence: `aave_v3/OPTIMISM: direct-RPC fallback succeeded (14 rows)`
+      writing to `lending-indices-central-element-323112/raw_tick_data/.../venue=AAVE_V3/chain=OPTIMISM/`. Bonus
+      discovery: AAVE_V3-LINEA also had subgraph-empty; same RPC fallback now hydrates LINEA (9 rows/day).
 - [x] ✅ [CODE] [AGENT-AUTO] P3. **Bug-R (GCS 429 rate-limit on per-VM manifest shard start)** — fixed 2026-05-29
       (UTL@cb1f4b5f). `_write_per_vm_shard` now routes upload through `_upload_with_backoff_on_429` — 3 retries at
       1s/2s/4s base ±30% jitter on `429`/`rateLimitExceeded`/`TooManyRequests`; non-429 errors re-raise immediately.
@@ -648,61 +641,62 @@ plan. Commit + push via the standard `docs(plans):` flow.
       2026-05-29 (both `reserveParamsHistoryItems` AND `reserves` return `[]`). Messari deployment has sparse
       post-2024-12 coverage and a broken `market{inputToken{symbol}}` join. Comment now captures the actual abandonment
       pattern + records that RPC fallback is the canonical primary path until a fresh rich deployment surfaces.
-- [x] ✅ [INFRA] P2. **Subgraph silent-data-loss probe shipped — 2026-05-30 (mtds@cef599e3 + deployment-service@8f2a83c
-      + alerting-service@b6cbb2f; TF applied deployment-service@ff0ad29 2026-05-30T09:00Z)**. Daily cron at
-      `0 */6 * * *` UTC (Cloud Run Job `uts-prod-subgraph-health-probe` + Cloud Scheduler
+- [x] ✅ [INFRA] P2. **Subgraph silent-data-loss probe shipped — 2026-05-30 (mtds@cef599e3 +
+      deployment-service@8f2a83c + alerting-service@b6cbb2f; TF applied deployment-service@ff0ad29 2026-05-30T09:00Z)**.
+      Daily cron at `0 */6 * * *` UTC (Cloud Run Job `uts-prod-subgraph-health-probe` + Cloud Scheduler
       `uts-prod-subgraph-health-probe-cron`) probes every `(protocol, chain)` in `SUBGRAPH_IDS` for HEAD_LAG (>6h stale
       block) + EMPTY_YESTERDAY (zero rows yesterday UTC) + DEPLOYMENT_CHANGED (IPFS hash differs from fingerprint stored
       at `gs://<lending-indices-bucket>/_index/subgraph_fingerprints/fingerprints.parquet`) + SCHEMA_INVALID. Alerts
-      publish to the new `defi_data_quality_alerts` Pub/Sub topic; alerting-service subscribes + routes via the
-      existing PagerDuty/Slack router. Per-cell errors are isolated (shard-level failure isolation HARD RULE) — one
-      bad probe never aborts the sweep. Protects against the silent republish pattern that hit AAVE_V3-OPTIMISM
-      2026-05-08→29. 16 unit tests cover signal detection + fingerprint round-trip + alert payload shape + per-cell
-      crash isolation. **Resources created 2026-05-30**: `google_pubsub_topic.defi_data_quality_alerts` +
-      `google_cloud_run_v2_job.subgraph_health_probe` + `google_cloud_scheduler_job.subgraph_health_probe_cron` +
-      2 IAM bindings on `t1_batch` SA. Targeted apply used vars `project_id=central-element-323112 environment=prod
-      bucket_prefix=uts`. **First execution 2026-05-30T09:20Z (job ID `uts-prod-subgraph-health-probe-g4827`) FAILED
-      exit=127** — container exited before producing logs. Likely entrypoint runtime issue (`cron_subgraph_health_probe_entrypoint.sh`
-      install/import failure) — pre-existing in mtds@cef599e3 + deployment-service@8f2a83c shipped 2026-05-29.
-      **Entrypoint + probe runtime fixes shipped 2026-05-31** (mtds@e431e483 + deployment-service@ba635bf):
-      (1) `_load_fingerprints` / `_write_fingerprints` were calling non-existent `download_blob_to_file` /
-      `upload_blob` methods on `GCSStorageClient` — fixed to use the canonical UTL protocol methods
-      `download_bytes(bucket, blob_path)` / `upload_bytes(bucket, blob_path, data, content_type=None)` (the
-      AttributeError at line 451 was the actual cause of the post-127 exit-1 runs visible 2026-05-30T15:01Z
-      onward). (2) `uts-prod-batch-sa` lacked Storage Object Admin on `gs://lending-indices-central-element-323112`;
-      ad-hoc grant applied + made durable via new TF binding `google_storage_bucket_iam_member.t1_batch_lending_indices_object_admin`.
-      (3) Entrypoint cleaned up: `python3 -u` for unbuffered stdio + 2s post-flush sleep + stderr routing for
-      diagnostics (Cloud Run gen2 + `google-cloud-cli:slim` + `command=bash, args=-c` silently drops container
-      STDOUT from Cloud Logging — confirmed against sister `orphan-ping-audit` job which also emits zero
-      entrypoint stdout). Verified: `gcloud run jobs execute uts-prod-subgraph-health-probe` exits 0 in 1m20s
-      (execution `uts-prod-subgraph-health-probe-lbxrp` 2026-05-31T10:41Z) and writes the 7.65 KB fingerprints
-      parquet to `gs://lending-indices-central-element-323112/_index/subgraph_fingerprints/fingerprints.parquet`.
+      publish to the new `defi_data_quality_alerts` Pub/Sub topic; alerting-service subscribes + routes via the existing
+      PagerDuty/Slack router. Per-cell errors are isolated (shard-level failure isolation HARD RULE) — one bad probe
+      never aborts the sweep. Protects against the silent republish pattern that hit AAVE_V3-OPTIMISM 2026-05-08→29. 16
+      unit tests cover signal detection + fingerprint round-trip + alert payload shape + per-cell crash isolation.
+      **Resources created 2026-05-30**: `google_pubsub_topic.defi_data_quality_alerts` +
+      `google_cloud_run_v2_job.subgraph_health_probe` + `google_cloud_scheduler_job.subgraph_health_probe_cron` + 2 IAM
+      bindings on `t1_batch` SA. Targeted apply used vars
+      `project_id=central-element-323112 environment=prod     bucket_prefix=uts`. **First execution 2026-05-30T09:20Z
+      (job ID `uts-prod-subgraph-health-probe-g4827`) FAILED exit=127** — container exited before producing logs. Likely
+      entrypoint runtime issue (`cron_subgraph_health_probe_entrypoint.sh` install/import failure) — pre-existing in
+      mtds@cef599e3 + deployment-service@8f2a83c shipped 2026-05-29. **Entrypoint + probe runtime fixes shipped
+      2026-05-31** (mtds@e431e483 + deployment-service@ba635bf): (1) `_load_fingerprints` / `_write_fingerprints` were
+      calling non-existent `download_blob_to_file` / `upload_blob` methods on `GCSStorageClient` — fixed to use the
+      canonical UTL protocol methods `download_bytes(bucket, blob_path)` /
+      `upload_bytes(bucket, blob_path, data, content_type=None)` (the AttributeError at line 451 was the actual cause of
+      the post-127 exit-1 runs visible 2026-05-30T15:01Z onward). (2) `uts-prod-batch-sa` lacked Storage Object Admin on
+      `gs://lending-indices-central-element-323112`; ad-hoc grant applied + made durable via new TF binding
+      `google_storage_bucket_iam_member.t1_batch_lending_indices_object_admin`. (3) Entrypoint cleaned up: `python3 -u`
+      for unbuffered stdio + 2s post-flush sleep + stderr routing for diagnostics (Cloud Run gen2 +
+      `google-cloud-cli:slim` + `command=bash, args=-c` silently drops container STDOUT from Cloud Logging — confirmed
+      against sister `orphan-ping-audit` job which also emits zero entrypoint stdout). Verified:
+      `gcloud run jobs execute uts-prod-subgraph-health-probe` exits 0 in 1m20s (execution
+      `uts-prod-subgraph-health-probe-lbxrp` 2026-05-31T10:41Z) and writes the 7.65 KB fingerprints parquet to
+      `gs://lending-indices-central-element-323112/_index/subgraph_fingerprints/fingerprints.parquet`.
 - [x] ✅ [INFRA] P2. **`vm_log_archival_scheduler.tf` SA refs unblocked workspace TF apply — 2026-05-30
       (deployment-service@40e85ef → rebased ff0ad29)**. Adjacent fix surfaced during the subgraph-probe TF apply:
       `vm_log_archival_scheduler.tf` referenced `google_service_account.unified_trading_sa` +
-      `google_service_account.t1_batch_sa` (neither declared — canonical names are `unified_trading` from
-      main.tf:1429 + `t1_batch` from t1_batch_scheduler.tf:38). Every `terraform plan/apply` against
-      `terraform/gcp/` was failing before any `-target=` resolution. Fixed in same session per Findings Triage.
+      `google_service_account.t1_batch_sa` (neither declared — canonical names are `unified_trading` from main.tf:1429 +
+      `t1_batch` from t1_batch_scheduler.tf:38). Every `terraform plan/apply` against `terraform/gcp/` was failing
+      before any `-target=` resolution. Fixed in same session per Findings Triage.
 - [x] ✅ [POLICY] P3. **AAVE_V3-OPTIMISM canonical data source = RPC fallback (decision recorded 2026-05-30)** — Aave
-      team abandoned the OP subgraph deployment (silently republished `DSfLz...` to empty v0.0.5 between 2026-05-08
-      and 2026-05-29). No rich subgraph alternative exists. Messari `3RWFx...` kept as the cascade's 2nd variant for
-      partial coverage. Native subgraph variant kept in the cascade for the day Aave revives the deployment. If a
-      new rich deployment surfaces: swap `SUBGRAPH_IDS["aave_v3"]["OPTIMISM"]` to its ID + re-backfill the affected
-      date range. Operationally: 14-row daily-resolution RPC data is sufficient for the carry archetype.
-- [x] ✅ [CODE] P3. **Multi-parquet-per-day consolidator shipped — 2026-05-30 (mtds@16785fb6)**. Sweeps a hive-partitioned
-      DeFi bucket and groups by `(day, asset_group, venue, chain, instrument_type, data_type)`; for each shard with ≥2
-      parquets picks the row-count-maximizing winner (tiebreakers: cols → newest write time) and archives losers to
-      `raw_tick_data/_archive/multi_parquet_consolidator/<original-hive-path>/<filename>`. Reads parquet METADATA only
-      (`pq.read_metadata`) — no full-row materialization. Per-shard failure isolation absorbs transient GCS errors
-      without aborting the sweep. CLI:
-      `python scripts/consolidate_multi_parquet_per_day.py --bucket <name> [--asset-group X --venue X --chain X
-      --days-from YYYY-MM-DD --days-to YYYY-MM-DD] [--apply]` — `--dry-run` is the default. Uses
-      `unified_trading_library.cloud_interface.gcs_copy_object` / `gcs_delete_object` per GCS-ops SSOT. Writes a per-run
-      audit parquet at `_index/multi_parquet_consolidator_runs/run_<ts>_<applied|dryrun>.parquet`. Unit tests
-      (`tests/unit/scripts/test_consolidate_multi_parquet_per_day.py`, 9 tests) cover row/col/timestamp winner selection
-      + archive path mapping + day-range filter + `_parse_path` hive-key extraction + dry-run no-op + per-shard failure
-      isolation. **Dry-run preview kicked off for AAVE_V3-OPTIMISM lending_indices** 2026-05-30T10:43Z (preview output
-      pending — bucket has 47,983 parquets; full sweep walks all → ~15-20min); summary will land in
+      team abandoned the OP subgraph deployment (silently republished `DSfLz...` to empty v0.0.5 between 2026-05-08 and
+      2026-05-29). No rich subgraph alternative exists. Messari `3RWFx...` kept as the cascade's 2nd variant for partial
+      coverage. Native subgraph variant kept in the cascade for the day Aave revives the deployment. If a new rich
+      deployment surfaces: swap `SUBGRAPH_IDS["aave_v3"]["OPTIMISM"]` to its ID + re-backfill the affected date range.
+      Operationally: 14-row daily-resolution RPC data is sufficient for the carry archetype.
+- [x] ✅ [CODE] P3. **Multi-parquet-per-day consolidator shipped — 2026-05-30 (mtds@16785fb6)**. Sweeps a
+      hive-partitioned DeFi bucket and groups by `(day, asset_group, venue, chain, instrument_type, data_type)`; for
+      each shard with ≥2 parquets picks the row-count-maximizing winner (tiebreakers: cols → newest write time) and
+      archives losers to `raw_tick_data/_archive/multi_parquet_consolidator/<original-hive-path>/<filename>`. Reads
+      parquet METADATA only (`pq.read_metadata`) — no full-row materialization. Per-shard failure isolation absorbs
+      transient GCS errors without aborting the sweep. CLI:
+      `python scripts/consolidate_multi_parquet_per_day.py --bucket <name> [--asset-group X --venue X --chain X     --days-from YYYY-MM-DD --days-to YYYY-MM-DD] [--apply]`
+      — `--dry-run` is the default. Uses `unified_trading_library.cloud_interface.gcs_copy_object` / `gcs_delete_object`
+      per GCS-ops SSOT. Writes a per-run audit parquet at
+      `_index/multi_parquet_consolidator_runs/run_<ts>_<applied|dryrun>.parquet`. Unit tests
+      (`tests/unit/scripts/test_consolidate_multi_parquet_per_day.py`, 9 tests) cover row/col/timestamp winner
+      selection + archive path mapping + day-range filter + `_parse_path` hive-key extraction + dry-run no-op +
+      per-shard failure isolation. **Dry-run preview kicked off for AAVE_V3-OPTIMISM lending_indices** 2026-05-30T10:43Z
+      (preview output pending — bucket has 47,983 parquets; full sweep walks all → ~15-20min); summary will land in
       `gs://lending-indices-central-element-323112/_index/multi_parquet_consolidator_runs/run_<ts>_dryrun.parquet`.
       **`--apply` pending operator review** of the dry-run output (operator instructions: "Don't run --apply yet … so
       operator can review the impact before executing"). Affects AAVE_V3-OPTIMISM dates 2025-01-01 → 2026-05-28 (~320
@@ -712,11 +706,11 @@ plan. Commit + push via the standard `docs(plans):` flow.
 
 - [x] ✅ [CODE] [AGENT-AUTO] P3. **PACIFICA** is CeFi perp (not Solana DeFi) — coverage routes via CeFi perp pipeline
       (`unified_api_contracts/registry/cefi_perp_venue_endpoints.py`). Verify PACIFICA has current MTDS coverage via the
-      CeFi path; if stale, file in CeFi backfill plan.
-      — Verified 2026-05-30: PACIFICA has full CeFi perp coverage via MTDS `perp_funding_handler.py` (line 90 in
-      DEFAULT_PROTOCOLS; `_collect_pacifica()` at line 962; `_PACIFICA_FUNDING_START_DATE = "2025-06-01"`). UAC registry
-      confirms `PACIFICA-SOLANA: ["perp_funding"]` in expected_coverage.py. `umi_tick_provider._fetch_pacifica_rest()`
-      routes via `api.pacifica.fi/api/v1` (CeFi REST), NOT Solana on-chain DEX path. No code change needed.
+      CeFi path; if stale, file in CeFi backfill plan. — Verified 2026-05-30: PACIFICA has full CeFi perp coverage via
+      MTDS `perp_funding_handler.py` (line 90 in DEFAULT_PROTOCOLS; `_collect_pacifica()` at line 962;
+      `_PACIFICA_FUNDING_START_DATE = "2025-06-01"`). UAC registry confirms `PACIFICA-SOLANA: ["perp_funding"]` in
+      expected_coverage.py. `umi_tick_provider._fetch_pacifica_rest()` routes via `api.pacifica.fi/api/v1` (CeFi REST),
+      NOT Solana on-chain DEX path. No code change needed.
 
 ### Done-when
 

@@ -578,15 +578,13 @@ blocked-after all). **Total: ~10-13 AI-days under (b+)** vs ~3 under (a). Spans 
       consolidator crons (slot-5 2026-05-23).** Follow-up to the 101554s ManifestReader staleness alarm
       (MDPS-3.3.TradFi-ConsolidatorFix in archived mdps*backfill_phase3). Four additional VM scripts using legacy (no
       env suffix) bucket names fixed: (1) `launch-prediction-pipeline-vm.sh`: compute `DEPLOYMENT_ENV_SHORT`, apply to
-      `GCS_BUCKET` + `TICK_BUCKET` (`market-data-tick-prediction-*`); (2) `post-tier3-fanout-audit.sh` line 84:
-      `market-data-tick-cefi-central-element-323112` → `${PROJECT}` variable; (3) `launch-expected-universe-v2-vm.sh`:
+      `GCS_BUCKET` + `TICK_BUCKET`
+      (`market-data-tick-prediction-*`); (2) `post-tier3-fanout-audit.sh`line 84:    `market-data-tick-cefi-central-element-323112`→`${PROJECT}` variable; (3) `launch-expected-universe-v2-vm.sh`:
       compute `DEPLOYMENT_ENV_SHORT` + `CATALOG_AG_SHORT` (prediction→pred), apply to `CATALOG_BUCKET`
       (instruments-store-*); (4) `setup-data-pipeline-vm.sh`: compute `DEPLOYMENT_ENV_SHORT` from metadata, update all
-      14 default `BUCKETS_RAW` entries to env-tiered form using `${GCP_PROJECT_ID}`. Also added 5 Cloud Run Jobs + 5
-      Cloud Scheduler crons (`_/1 \* \* \* \*`) for instruments-store legacy buckets
-      (instruments-{cefi,tradfi,defi,sports,prediction}-${project_id}) to `manifest_consolidator_scheduler.tf`; timeout
-      overrides sports→900s, cefi→600s (same rationale as env-tiered counterparts). All 10 resources applied to GCP
-      prod. deployment-service@e1a6d19.
+      14 default `BUCKETS_RAW` entries to env-tiered form using `${GCP*PROJECT_ID}`. Also added 5 Cloud Run Jobs + 5     Cloud Scheduler crons (`*/1 \* \* \* \*`) for instruments-store legacy buckets     (instruments-{cefi,tradfi,defi,sports,prediction}-${project_id}) to `manifest_consolidator_scheduler.tf`;
+      timeout overrides sports→900s, cefi→600s (same rationale as env-tiered counterparts). All 10 resources applied to
+      GCP prod. deployment-service@e1a6d19.
 
 ## Full-execution criterion (per "Plans Run To Actual Completion" HARD RULE)
 

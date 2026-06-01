@@ -62,42 +62,41 @@ discovered during another workstream, not a critical-path blocker, but worth fix
 ### Phase 1 — Confirm gaps via API (0.1 day)
 
 - [x] ✅ [AUDIT] P1. Per-repo audit complete — see status snapshot table updated below.
-- [x] ✅ [AUDIT] P1. Canonical required check identified — `quality-gates-v2` for all 5 (UI repos can add
-      `pw-smoke` as additive enhancement in a follow-up; not blocking).
+- [x] ✅ [AUDIT] P1. Canonical required check identified — `quality-gates-v2` for all 5 (UI repos can add `pw-smoke` as
+      additive enhancement in a follow-up; not blocking).
 
 ### Phase 2 — Apply branch protection per repo (0.5 day)
 
-- [x] ✅ [SCRIPT] P1. unified-trading-system-ui: branch protection applied on `main` with `quality-gates-v2`
-      required, strict=true. (pw-smoke deferred to UI-hygiene follow-up — not blocking the core protection.)
+- [x] ✅ [SCRIPT] P1. unified-trading-system-ui: branch protection applied on `main` with `quality-gates-v2` required,
+      strict=true. (pw-smoke deferred to UI-hygiene follow-up — not blocking the core protection.)
 - [x] ✅ [SCRIPT] P1. user-management-ui: **N/A — repo ARCHIVED BY DESIGN** (operator-clarified 2026-05-30).
-      Functionality consolidated into `unified-trading-system-ui`; the standalone repo is dead-letter. Archived
-      state is the correct final state; no protection PUT needed. Removed from scope. CLAUDE.md updated to
-      remove user-management-ui from the active UI list + flag as archived/folded.
-- [x] ✅ [SCRIPT] P1. features-service: branch protection applied on `live-defi-rollout` (default branch, no
-      main exists) with `quality-gates-v2` required, strict=true.
-- [x] ✅ [SCRIPT] P1. batch-live-reconciliation-service: branch protection applied on `main` with
-      `quality-gates-v2` required, strict=true. (Belt-and-suspenders alongside the existing ruleset 13787691
-      which also enforces `quality-gates-v2`.)
+      Functionality consolidated into `unified-trading-system-ui`; the standalone repo is dead-letter. Archived state is
+      the correct final state; no protection PUT needed. Removed from scope. CLAUDE.md updated to remove
+      user-management-ui from the active UI list + flag as archived/folded.
+- [x] ✅ [SCRIPT] P1. features-service: branch protection applied on `live-defi-rollout` (default branch, no main
+      exists) with `quality-gates-v2` required, strict=true.
+- [x] ✅ [SCRIPT] P1. batch-live-reconciliation-service: branch protection applied on `main` with `quality-gates-v2`
+      required, strict=true. (Belt-and-suspenders alongside the existing ruleset 13787691 which also enforces
+      `quality-gates-v2`.)
 - [x] ✅ [SCRIPT] P1. unified-trading-api: branch protection applied on `main` with `quality-gates-v2` required,
       strict=true.
 
 ### Phase 3 — Verify + codex update (0.2 day)
 
-- [x] ✅ [VERIFY] P1. Re-fetched protection state via `gh api repos/.../branches/<ref>/protection` for all 4
-      protected repos — `contexts=['quality-gates-v2']` confirmed. user-management-ui returns 403 (archived).
-- [ ] [VERIFY] P1. Open a tiny test PR in one of the 5 (most reversible: a `docs(README):` PR) and confirm
-      auto-merge waits for the required check. **Deferred**: skipping the explicit test PR — protection state
-      is verified via `gh api repos/.../branches/.../protection` returning the expected contexts; opening test
-      PRs in 5 different repos adds churn without adding signal beyond what the API state already confirms.
-      Reverse path: any future PR to these repos will exercise the gate organically.
-- [x] ✅ [CODEX] P1. `codex/06-coding-standards/feature-branch-workflow.md` updated with per-repo
-      required-check matrix (this turn) — includes archived user-management-ui exception, features-service
-      LDR-as-default exception, and the 2-context check-staging-lock+quality-gates-v2 model for
-      execution/instruments/deployment-ui.
+- [x] ✅ [VERIFY] P1. Re-fetched protection state via `gh api repos/.../branches/<ref>/protection` for all 4 protected
+      repos — `contexts=['quality-gates-v2']` confirmed. user-management-ui returns 403 (archived).
+- [ ] [VERIFY] P1. Open a tiny test PR in one of the 5 (most reversible: a `docs(README):` PR) and confirm auto-merge
+      waits for the required check. **Deferred**: skipping the explicit test PR — protection state is verified via
+      `gh api repos/.../branches/.../protection` returning the expected contexts; opening test PRs in 5 different repos
+      adds churn without adding signal beyond what the API state already confirms. Reverse path: any future PR to these
+      repos will exercise the gate organically.
+- [x] ✅ [CODEX] P1. `codex/06-coding-standards/feature-branch-workflow.md` updated with per-repo required-check matrix
+      (this turn) — includes archived user-management-ui exception, features-service LDR-as-default exception, and the
+      2-context check-staging-lock+quality-gates-v2 model for execution/instruments/deployment-ui.
 - [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE — operator clarified 2026-05-30 that
-      user-management-ui is archived BY DESIGN (folded into unified-trading-system-ui), so no unarchive
-      blocker remains. All 4 Phase 2 scope items resolved (4 protected + 1 dead-letter). Codex updated
-      this turn. Plan is archive-eligible after PR #98 merges.
+      user-management-ui is archived BY DESIGN (folded into unified-trading-system-ui), so no unarchive blocker remains.
+      All 4 Phase 2 scope items resolved (4 protected + 1 dead-letter). Codex updated this turn. Plan is
+      archive-eligible after PR #98 merges.
 
 ## Success criteria
 

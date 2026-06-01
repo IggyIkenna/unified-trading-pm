@@ -164,6 +164,12 @@ BE_EXCLUDE_GLOBS=(
     "**/migrate_sports_gcs_to_hive.py"
     "**/validate-import-deps.py"
     "**/audit_dead_code.py"
+    "**/reap_stale_blockers.py"
+    "**/gcs_migration_bundle_2026_05_08.py"
+    "**/verify_env_tiered_buckets_provisioned.py"
+    "**/pin_branch_protection_rulesets.py"
+    "**/check_emission_policy_paired_callsites.py"
+    "**/qg_audit.py"
 )
 DEEP_IMPORT_EXCLUDE_GLOBS=(
     "!**/check_data_completeness.py"

@@ -46,11 +46,22 @@ STAGING_LOCK_CONTEXT = "check-staging-lock"
 # Repos that carry the two managed rulesets. Keep in sync with
 # verify_branch_protection_check_names.py.
 REPOS = [
-    "alerting-service", "batch-live-reconciliation-service", "client-reporting-api",
-    "deployment-api", "deployment-service", "deployment-ui", "execution-service",
-    "ibkr-gateway-infra", "instruments-service", "market-data-processing-service",
-    "market-tick-data-service", "strategy-service", "system-integration-tests",
-    "trading-agent-service", "unified-api-contracts", "unified-trading-library",
+    "alerting-service",
+    "batch-live-reconciliation-service",
+    "client-reporting-api",
+    "deployment-api",
+    "deployment-service",
+    "deployment-ui",
+    "execution-service",
+    "ibkr-gateway-infra",
+    "instruments-service",
+    "market-data-processing-service",
+    "market-tick-data-service",
+    "strategy-service",
+    "system-integration-tests",
+    "trading-agent-service",
+    "unified-api-contracts",
+    "unified-trading-library",
     "unified-trading-pm",
 ]
 
@@ -80,7 +91,7 @@ def _qg_job_name_line(content: str) -> str | None:
     for line in content.splitlines():
         s = line.strip()
         if s.startswith("name: Quality Gates"):
-            return s[len("name:"):].strip()
+            return s[len("name:") :].strip()
     return None
 
 
@@ -144,8 +155,7 @@ def build_put_body(rs: dict, contexts: list[str]) -> dict:
 
 def put_ruleset(repo: str, rs: dict, contexts: list[str]) -> tuple[bool, list[str]]:
     body = build_put_body(rs, contexts)
-    p = gh(["api", "-X", "PUT", f"repos/{ORG}/{repo}/rulesets/{rs['id']}", "--input", "-"],
-           inp=json.dumps(body))
+    p = gh(["api", "-X", "PUT", f"repos/{ORG}/{repo}/rulesets/{rs['id']}", "--input", "-"], inp=json.dumps(body))
     if p.returncode != 0:
         sys.stderr.write(f"    PUT failed [{repo}/{rs['name']}]: {p.stderr.strip()[:200]}\n")
         return False, []
@@ -156,8 +166,11 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--apply", action="store_true", help="perform the PUT writes (default: dry-run)")
     ap.add_argument("--repo", help="limit to a single repo")
-    ap.add_argument("--ref", default=WORKFLOW_REF_DEFAULT,
-                    help=f"branch to read workflow files from (default: {WORKFLOW_REF_DEFAULT})")
+    ap.add_argument(
+        "--ref",
+        default=WORKFLOW_REF_DEFAULT,
+        help=f"branch to read workflow files from (default: {WORKFLOW_REF_DEFAULT})",
+    )
     args = ap.parse_args()
 
     repos = [args.repo] if args.repo else REPOS
@@ -170,8 +183,10 @@ def main() -> int:
             warnings.append(f"{repo}: no QG workflow file found on {args.ref} — SKIPPED")
             continue
         if not name_ok:
-            warnings.append(f"{repo}: workflow job name is not 'Quality Gates ({repo})' "
-                            f"→ derived context '{qg}' (workflow-name bug? fix the workflow, not the ruleset)")
+            warnings.append(
+                f"{repo}: workflow job name is not 'Quality Gates ({repo})' "
+                f"→ derived context '{qg}' (workflow-name bug? fix the workflow, not the ruleset)"
+            )
         targets = [
             ("require-quality-gates", [qg]),
             ("require-staging-lock-check", [qg, STAGING_LOCK_CONTEXT]),

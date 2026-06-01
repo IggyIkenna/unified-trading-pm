@@ -197,24 +197,23 @@ Pushes to `feat/*` / `live-defi-rollout` → **no remote CI**. Quality enforced 
 
 The workspace-canonical required status check is **`quality-gates-v2`** (NOT the legacy `quality-gates`).
 
-**Why the rename?** A 2026-05-26 bad-YAML incident in `python-quality-gates.yml` caused GitHub to cache a
-"BuildFailed" ghost workflow registration that fired startup_failure on every subsequent push across 10+ workspace
-repos. The fix (Option D, shipped 2026-05-29 via `ci_canonical_v2_migration_2026_05_29` plan) renames the entire
-caller+callee chain to new file paths (`quality-gates-v2.yml` + `python-quality-gates-v2.yml`) and a new job key
-(`quality-gates-v2`) so GitHub registers a fresh validation context that bypasses the cached ghost.
+**Why the rename?** A 2026-05-26 bad-YAML incident in `python-quality-gates.yml` caused GitHub to cache a "BuildFailed"
+ghost workflow registration that fired startup_failure on every subsequent push across 10+ workspace repos. The fix
+(Option D, shipped 2026-05-29 via `ci_canonical_v2_migration_2026_05_29` plan) renames the entire caller+callee chain to
+new file paths (`quality-gates-v2.yml` + `python-quality-gates-v2.yml`) and a new job key (`quality-gates-v2`) so GitHub
+registers a fresh validation context that bypasses the cached ghost.
 
 **Status across workspace** (per `codex/06-coding-standards/feature-branch-workflow.md` § "Per-repo required-check
 matrix"):
 
 - v2 deployed on canonical branches of all 10 ghost-affected repos + the 3 priority repos (PM, UAC, UTL)
 - Branch protection / ruleset enforcement updated to require `quality-gates-v2` across all rotated repos
-- Sentinel-write logic (commit `a8b758c58`) ensures local `quality-gates.sh` writes `.qg_last_passed_sha` on
-  clean full-pass exit, enabling quickmerge `--agent` fast-path
+- Sentinel-write logic (commit `a8b758c58`) ensures local `quality-gates.sh` writes `.qg_last_passed_sha` on clean
+  full-pass exit, enabling quickmerge `--agent` fast-path
 
-**v1 cleanup**: v1 caller workflows (`quality-gates.yml`, `workspace-qg.yml`) on the rotated repos are now
-orphaned but NOT yet deleted — held until GH Support ticket #4422570 resolves the cached ghost (after which
-the v1 callee `python-quality-gates.yml` can also be removed). Tracked in `ci_canonical_v2_migration_2026_05_29.md`
-Phase 5.
+**v1 cleanup**: v1 caller workflows (`quality-gates.yml`, `workspace-qg.yml`) on the rotated repos are now orphaned but
+NOT yet deleted — held until GH Support ticket #4422570 resolves the cached ghost (after which the v1 callee
+`python-quality-gates.yml` can also be removed). Tracked in `ci_canonical_v2_migration_2026_05_29.md` Phase 5.
 
 ---
 
@@ -260,15 +259,15 @@ The v1 `quality-gates` check context was poisoned by GitHub's server-side BuildF
 
 **Canonical workflow files** (as of 2026-05-29):
 
-| Repo type      | Caller                             | Callee                                                                                    |
-| -------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- |
-| PM             | `.github/workflows/quality-gates-v2.yml` | `.github/workflows/python-quality-gates-v2.yml` (local ref — PM calls itself)      |
-| Service repo   | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` |
+| Repo type    | Caller                                   | Callee                                                                                          |
+| ------------ | ---------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| PM           | `.github/workflows/quality-gates-v2.yml` | `.github/workflows/python-quality-gates-v2.yml` (local ref — PM calls itself)                   |
+| Service repo | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` |
 
 **Required status check across all repos**: `quality-gates-v2` (all 10 repos rotated 2026-05-29).
 
-**v1 cleanup status**: `quality-gates.yml` / `workspace-qg.yml` deleted from PM, UAC, UTL, alerting-service,
-ml-service, execution-service (2026-05-30). Keep `python-quality-gates.yml` in PM until GH ticket clears.
+**v1 cleanup status**: `quality-gates.yml` / `workspace-qg.yml` deleted from PM, UAC, UTL, alerting-service, ml-service,
+execution-service (2026-05-30). Keep `python-quality-gates.yml` in PM until GH ticket clears.
 
 **Plan reference**: `plans/active/ci_canonical_v2_migration_2026_05_29.md`
 
@@ -331,11 +330,11 @@ references in old per-repo files (`unified-cloud-interface` / `unified-config-in
 
 ### Continuous verification
 
-| Field                   | Value                                                                                                                         |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Item                    | CI workflow consistency across 21 Python repos                                                                                |
-| Cutover criterion       | All 10 repos have `quality-gates-v2.yml`; required check = `quality-gates-v2`; v1 caller deleted |
-| Continuous verification | `gh run list --repo IggyIkenna/<repo> --workflow quality-gates-v2 --limit 1` shows `completed success` |
-| Cadence                 | Weekly drift-check (one repo per day across the week)                                              |
-| Owner                   | vm-cross-cutting (ci_canonical_v2_migration plan)                                                  |
+| Field                   | Value                                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Item                    | CI workflow consistency across 21 Python repos                                                               |
+| Cutover criterion       | All 10 repos have `quality-gates-v2.yml`; required check = `quality-gates-v2`; v1 caller deleted             |
+| Continuous verification | `gh run list --repo IggyIkenna/<repo> --workflow quality-gates-v2 --limit 1` shows `completed success`       |
+| Cadence                 | Weekly drift-check (one repo per day across the week)                                                        |
+| Owner                   | vm-cross-cutting (ci_canonical_v2_migration plan)                                                            |
 | Last verified           | 2026-05-30: 6/10 green; 4 have pre-existing code quality issues (see ci_canonical_v2_migration plan Phase 4) |

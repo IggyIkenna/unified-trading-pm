@@ -102,8 +102,8 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       the Phase-4B simulation harness (not wired in `cli/main.py`), so it is NOT an active parallel path vs
       `governance_events`. No change; documented in the catalog § "Additional data types".
 - [~] [INFRA] P3. D2 — delete legacy `lst_rates/`/`lending_indices/`/`dex_pools/` prefixes in
-      `market-data-tick-defi-prd` (via `gcs_delete_object`) after dedicated buckets confirmed authoritative.
-      `lst_rates/` **DONE 2026-05-28**: 1,200 date-prefix parquets deleted; 64,373 stale manifest rows pruned.
-      `lending_indices/` + `dex_pools/`: deferred until Gate 2 Solana migration completes (canonical buckets must
-      be confirmed superset first). Solana instrument_types added to codex — PM@(Gate 6 commit). Cited:
-      UAC@7e9f4ad9 + UAC@90b2bb9d + MTDS@c38d1ca3 + MTDS@896d5c9 (Gate 5).
+  `market-data-tick-defi-prd` (via `gcs_delete_object`) after dedicated buckets confirmed authoritative. `lst_rates/`
+  **DONE 2026-05-28**: 1,200 date-prefix parquets deleted; 64,373 stale manifest rows pruned. `lending_indices/` +
+  `dex_pools/`: deferred until Gate 2 Solana migration completes (canonical buckets must be confirmed superset first).
+  Solana instrument_types added to codex — PM@(Gate 6 commit). Cited: UAC@7e9f4ad9 + UAC@90b2bb9d + MTDS@c38d1ca3 +
+  MTDS@896d5c9 (Gate 5).

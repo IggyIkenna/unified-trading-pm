@@ -157,17 +157,17 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       0 bare/malformed ids. — features-service@cedd31f5
   - [x] ✅ [UPSTREAM] P2. **Bitfinex manifest rows have empty `instrument_type`** → features can't form their canonical
         id, so they're skipped. Needs the manifest writer to populate `instrument_type` for Bitfinex. Added to issue
-        `cefi_processed_candles_manifest_file_disconnect_2026_05_25.md`.
-        **FIXED (2026-05-30 slot-2)**: UTL@a9fc5146. compose_instrument_ids now infers instrument_type from venue
-        suffix (BITFINEX-SPOT→"spot", BITFINEX-FUTURES→"perpetual") when the manifest row has an empty value.
-        Logs a WARNING when inference fires. 10 unit tests added (test_manifest_discovery.py). QG green (UTL).
+        `cefi_processed_candles_manifest_file_disconnect_2026_05_25.md`. **FIXED (2026-05-30 slot-2)**: UTL@a9fc5146.
+        compose_instrument_ids now infers instrument_type from venue suffix (BITFINEX-SPOT→"spot",
+        BITFINEX-FUTURES→"perpetual") when the manifest row has an empty value. Logs a WARNING when inference fires. 10
+        unit tests added (test_manifest_discovery.py). QG green (UTL).
 - [x] ✅ [INFRA] P1. **MTDS dual-writes legacy + canonical buckets** — legacy `market-data-tick-cefi-{pid}` still
       receives writes (2,099 per-VM shards, full history) alongside canonical `-prd`. Per bucket-SSOT migration the
       legacy bucket should be drained/cutover. Cross-side → flag Ikenna (MTDS/infra). Provenance: same investigation.
       **Flagged (2026-05-29):** scope is workspace-wide — `resolve_bucket_name` has 0 callsites; all consumers use
       legacy `cloud_constants.get_bucket_name`. Documented in
-      [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md)
-      + cross-pinged ikenna-main 2026-05-28 for scope decision. SSOT:
+      [`issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md`](./issues/cefi_bucket_ssot_drift_workspace_wide_2026_05_28.md) +
+      cross-pinged ikenna-main 2026-05-28 for scope decision. SSOT:
       `cefi_venue_backfill_coverage_remediation_2026_05_27.md` §6I.A.
 
 ### Phase 2 — volatility `[P0]`
@@ -184,9 +184,10 @@ Verified against the plans corpus + UAC + recent repo commits before scoping, to
       manifest — captured data_types: trades/ohlcv_1m/derivative_ticker/book_snapshot_5/liquidations). basedpyright 0
       errors; 683 volatility unit tests pass. (WRITE P0 `write_daily_partition` deferred per Phase 1 finding — reaching
       write means read+calc worked.) — features-service@4b7e57b1
-- [x] ✅ [IMPLEMENT] P1. **DEFERRED → DONE** — volatility `engine/orchestrator.py:263` + `core/orchestration_service.py:166`
-      migrated from `list_blobs` raw scan to `read_availability_index`-driven discovery. Both files updated: manifest
-      filtered by date/data_type=book_snapshot_5/instrument_type/capture_status=captured; canonical v5 path
+- [x] ✅ [IMPLEMENT] P1. **DEFERRED → DONE** — volatility `engine/orchestrator.py:263` +
+      `core/orchestration_service.py:166` migrated from `list_blobs` raw scan to `read_availability_index`-driven
+      discovery. Both files updated: manifest filtered by
+      date/data_type=book_snapshot_5/instrument_type/capture_status=captured; canonical v5 path
       (`asset_group=cefi/venue=VENUE/...`) constructed from manifest rows; `_extract_venue` extended to parse `venue=X`
       hive segment (canonical) in addition to legacy `VENUE:TYPE:SYMBOL` filename format. Tests in
       `test_orchestrator_gcs.py` updated + 4 new manifest-mock tests added (22 pass). — features-service@458415c6
@@ -290,7 +291,7 @@ estimated ~1,069+ base features (volatility 70 + onchain 71 + sports 928 declare
 
 - [x] ✅ [DATA-SURFACE] P2. **5 cross_instrument groups need RAW normalized book/trade schema** (book_depth_bands,
       liquidity_walls, liquidation_clusters, flow_interaction, composite_sr) — they require
-      `asks/bids/mid_price/side/quote_volume/instrument_key`, which the OHLC-resampled processed-candle
-      `DataLoader` does not emit. Same class as the volatility raw-chain surface: a raw-data read path distinct from
-      processed candles. Provenance: per-family feature-count measurement 2026-05-25.
-      — features-service@ab3375c8 | CrossInstrumentRawDataLoader + batch_handler Phase 1b + 14 unit tests
+      `asks/bids/mid_price/side/quote_volume/instrument_key`, which the OHLC-resampled processed-candle `DataLoader`
+      does not emit. Same class as the volatility raw-chain surface: a raw-data read path distinct from processed
+      candles. Provenance: per-family feature-count measurement 2026-05-25. — features-service@ab3375c8 |
+      CrossInstrumentRawDataLoader + batch_handler Phase 1b + 14 unit tests

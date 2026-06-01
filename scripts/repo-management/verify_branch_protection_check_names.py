@@ -11,15 +11,27 @@ ruleset-drift-alert workflow can gate + alert on the exit status).
 Companion: pin_branch_protection_rulesets.py applies the fix; both are SSOT-linked
 to the issue doc above.
 """
+
 import json
 import subprocess
 
 REPOS = [
-    "alerting-service", "batch-live-reconciliation-service", "client-reporting-api",
-    "deployment-api", "deployment-service", "deployment-ui", "execution-service",
-    "ibkr-gateway-infra", "instruments-service", "market-data-processing-service",
-    "market-tick-data-service", "strategy-service", "system-integration-tests",
-    "trading-agent-service", "unified-api-contracts", "unified-trading-library",
+    "alerting-service",
+    "batch-live-reconciliation-service",
+    "client-reporting-api",
+    "deployment-api",
+    "deployment-service",
+    "deployment-ui",
+    "execution-service",
+    "ibkr-gateway-infra",
+    "instruments-service",
+    "market-data-processing-service",
+    "market-tick-data-service",
+    "strategy-service",
+    "system-integration-tests",
+    "trading-agent-service",
+    "unified-api-contracts",
+    "unified-trading-library",
     "unified-trading-pm",
 ]
 
@@ -53,9 +65,7 @@ def main():
         s = contexts_for(repo, "require-staging-lock-check")
         m_ok = m is not None and len(m) == 1 and m[0].startswith(f"Quality Gates ({repo})")
         s_ok = (s is None) or (
-            len(s) == 2
-            and "check-staging-lock" in s
-            and any(c.startswith(f"Quality Gates ({repo})") for c in s)
+            len(s) == 2 and "check-staging-lock" in s and any(c.startswith(f"Quality Gates ({repo})") for c in s)
         )
         flag = "" if (m_ok and s_ok) else "  <-- CHECK"
         if flag:

@@ -26,26 +26,25 @@ Two composing decisions landed (this doc was `BLOCKED-OPERATOR-DECISION`):
 
 ### Decision 1 — Leading-bin policy = **CARRY-FROM-PRIOR-DAY** (not drop)
 
-The current `_finalize_session_grid` **drops** every bin before an instrument's first real trade of the day
-("no prior observation to carry forward"). Operator ruling: for a **continuously-traded** instrument we must instead
-**seed the finalizer with the prior day's last known price** and forward-fill the leading bins from bin 0 — so the
-first N minutes of each day are dense (carried-forward price, `volume=0`, `staleness_seconds` from the prior trade)
-rather than absent.
+The current `_finalize_session_grid` **drops** every bin before an instrument's first real trade of the day ("no prior
+observation to carry forward"). Operator ruling: for a **continuously-traded** instrument we must instead **seed the
+finalizer with the prior day's last known price** and forward-fill the leading bins from bin 0 — so the first N minutes
+of each day are dense (carried-forward price, `volume=0`, `staleness_seconds` from the prior trade) rather than absent.
 
 - **PIT-safe**: the prior day's last price is known at 00:00 — zero look-ahead, batch==live (a live trader at the open
   knows yesterday's close). Matches ta-lib/backtrader (carry prior close across the weekend gap).
-- **Cold-start degrades to drop**: an instrument's *very first* trading day (no prior observation anywhere) still drops
+- **Cold-start degrades to drop**: an instrument's _very first_ trading day (no prior observation anywhere) still drops
   pre-first-trade bins — there is genuinely nothing to carry.
 - **Cost (the real work)**: breaks single-file independence. The finalizer must receive a per-instrument
-  `last_known_price` + `last_trade_ts` seed (sourced from the prior day's last parquet / manifest). Edge cases:
-  prior day missing, instrument halted for multiple days (staleness grows — fine, recorded), DST/holiday gaps.
+  `last_known_price` + `last_trade_ts` seed (sourced from the prior day's last parquet / manifest). Edge cases: prior
+  day missing, instrument halted for multiple days (staleness grows — fine, recorded), DST/holiday gaps.
 - **`market_state==CLOSED` bins still drop** (untradeable — unchanged).
 
 ### Decision 2 — State adapters = **Option A** (`state_col` kwarg on `_finalize_session_grid`)
 
-Extend the single SSOT helper with `state_col` (+ `flow_cols`) so the 7 state-only adapters (close structurally NaN)
-use their first-observation driver column (`mark_price`, `tvl`, …) as the trigger instead of `close`. Single-helper
-SSOT, smallest adapter-side change. Composes on top of Decision 1 (state adapters get prior-day carry too, keyed on
+Extend the single SSOT helper with `state_col` (+ `flow_cols`) so the 7 state-only adapters (close structurally NaN) use
+their first-observation driver column (`mark_price`, `tvl`, …) as the trigger instead of `close`. Single-helper SSOT,
+smallest adapter-side change. Composes on top of Decision 1 (state adapters get prior-day carry too, keyed on
 `state_col`).
 
 **Sequence**: Decision 1 (leading-bin carry seed, applies to ALL adapters) → Decision 2 (Option A wires the 7 state
@@ -154,7 +153,8 @@ Tests in scope:
 
 ## Phase 1 unblock
 
-- [x] ✅ [DECISION] P0. Operator picks A / B / C → **Option A** + leading-bin policy = **carry-from-prior-day** (2026-06-01).
+- [x] ✅ [DECISION] P0. Operator picks A / B / C → **Option A** + leading-bin policy = **carry-from-prior-day**
+      (2026-06-01).
 - [ ] [SCRIPT] P0. **Decision 1 — prior-day carry seed.** Thread per-instrument `last_known_price` + `last_trade_ts`
       (from prior day's last parquet / manifest) into `_finalize_session_grid`; fill leading bins from bin 0 instead of
       dropping. Cold-start (no prior obs) still drops. Handle prior-day-missing / multi-day-halt edge cases.

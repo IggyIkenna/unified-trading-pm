@@ -185,7 +185,7 @@ def test_scan_detects_module_path_import(tmp_path: Path) -> None:
         status="removed",
     )
     src = tmp_path / "broken.py"
-    _ = src.write_text("from unified_api_contracts.canonical.domain import client\n_ = client\n")  # noqa: qg-deep-import
+    _ = src.write_text("from unified_api_contracts.canonical.domain import client\n_ = client\n")
     findings = _scan_file_for_symbols(src, [entry], src.read_text())
     assert len(findings) >= 1
 

@@ -461,28 +461,24 @@ The audit + benchmark are done. This phase ships the actual code.
 
 Gated on Stage 1 being green + benchmark-verified.
 
-- [x] ✅ [P1] **2.1 Refactor `cefi/trades_adapter.py`** — landed in
-      market-data-processing-service@f364539 ("Stage 2 — eliminate polars→pandas table roundtrip"). The
-      previous `core.to_pandas().set_index("interval_idx")` was replaced with per-column polars→numpy
-      via ``to_numpy()`` (zero-copy when dtype/layout match) + a shared ``pd.Index`` constructed once;
-      the input-side ``pl.from_pandas(tick_data[cols_needed])`` is the UAC adapter Protocol boundary
+- [x] ✅ [P1] **2.1 Refactor `cefi/trades_adapter.py`** — landed in market-data-processing-service@f364539 ("Stage 2 —
+      eliminate polars→pandas table roundtrip"). The previous `core.to_pandas().set_index("interval_idx")` was replaced
+      with per-column polars→numpy via `to_numpy()` (zero-copy when dtype/layout match) + a shared `pd.Index`
+      constructed once; the input-side `pl.from_pandas(tick_data[cols_needed])` is the UAC adapter Protocol boundary
       (kept per Stage 2 scope — adapter signatures stay pandas in this stage).
 - [x] ✅ [P1] **2.2 Audit each of the other 17 adapters** — 2026-05-29 audit ran
-      ``grep -c "pl\.from_pandas\|\.to_pandas\b"`` across every adapter file. Result table:
-      every non-trades adapter has **0** ``pl.from_pandas`` and **0** ``.to_pandas`` references.
-      Trades is the only adapter with the pattern (handled in 2.1 above). Remaining ``pd.``
-      uses in book_snapshot_adapter (29), liquidations_adapter (27), bucket_assignment_adapter (23),
-      and the smaller defi/sports/tradfi adapters (7-11 each) are all at the UAC Protocol input
-      boundary (``tick_data: pd.DataFrame`` signature + downstream-pandas helper methods) — no
-      internal round trips to remove. Closes as audited; no per-adapter PRs needed.
-- [x] ✅ [P1] **2.3 Per-adapter tests** — pinned via the existing per-adapter unit suite
-      (``test_more_defi_adapters``, ``test_defi_adapters``, ``test_fx_rate_adapter``,
-      ``test_futures_chain_adapter``, ``test_cefi_derivative_adapter``, ``test_tradfi_adapters``,
-      ``test_sports_adapters``, ``test_prediction_adapter_category_d`` + the Phase 4.H session-grid
+      `grep -c "pl\.from_pandas\|\.to_pandas\b"` across every adapter file. Result table: every non-trades adapter has
+      **0** `pl.from_pandas` and **0** `.to_pandas` references. Trades is the only adapter with the pattern (handled in
+      2.1 above). Remaining `pd.` uses in book_snapshot_adapter (29), liquidations_adapter (27),
+      bucket_assignment_adapter (23), and the smaller defi/sports/tradfi adapters (7-11 each) are all at the UAC
+      Protocol input boundary (`tick_data: pd.DataFrame` signature + downstream-pandas helper methods) — no internal
+      round trips to remove. Closes as audited; no per-adapter PRs needed.
+- [x] ✅ [P1] **2.3 Per-adapter tests** — pinned via the existing per-adapter unit suite (`test_more_defi_adapters`,
+      `test_defi_adapters`, `test_fx_rate_adapter`, `test_futures_chain_adapter`, `test_cefi_derivative_adapter`,
+      `test_tradfi_adapters`, `test_sports_adapters`, `test_prediction_adapter_category_d` + the Phase 4.H session-grid
       regression tests landed 2026-05-29). Net adapter test count: ~150 across 18 adapters.
-- [x] ✅ [P2] **2.4 Engine benchmark re-run** — same status as 4.G / 3.8 / 5.7: synthetic harness
-      doesn't measure adapter-specific work; real measurement = operator-scheduled canary VM.
-      **DEFERRED to operator-scheduled canary.**
+- [x] ✅ [P2] **2.4 Engine benchmark re-run** — same status as 4.G / 3.8 / 5.7: synthetic harness doesn't measure
+      adapter-specific work; real measurement = operator-scheduled canary VM. **DEFERRED to operator-scheduled canary.**
 
 ## Phase 3 — Stage 3 implementation (output side, smaller than originally feared)
 
@@ -520,27 +516,26 @@ Gated on Stages 1 + 2 being green + benchmark-verified. **NO adapter signature c
       `CandleOrchestrationWriter`) trimmed
   - kept; production MRO intact
     (`OrchestrationWorkersMixin → BatchOrchestrationMixin → LiveOrchestrationMixin → CandleWriteMixin → object`).
-- [x] ✅ [BLOCKED-PROTOCOL — deferred to successor plan] P1. **3.6 Remove the boundary `.to_pandas()` at the adapter call** — re-scoped
-      2026-05-29 from BLOCKED-ON-STAGE-4 to BLOCKED-PROTOCOL: the call sits at
-      ``live_workers._process_standard_timeframe:1529`` and feeds
-      ``adapter.process_to_candles(tick_data: pd.DataFrame, ...)`` which is the UAC
-      ``BaseCandleAdapter`` Protocol. Per the 2026-05-29 operator directive ("if the output is
-      pandas it is okay for now, we will do the migration later on for cross repos"), this
-      cross-repo Protocol stays pandas. Deferral finalized 2026-05-30 (slot-6): tracked in the
-      pandas-callsite tracker table (row: "All 18 adapters' process_to_candles") as "Future plan".
-      Named successor: `mdps_adapter_protocol_pandas_to_polars_<YYYY_MM_DD>.md` — file when
-      adapter migration becomes priority. No MDPS code change in this plan.
+- [x] ✅ [BLOCKED-PROTOCOL — deferred to successor plan] P1. **3.6 Remove the boundary `.to_pandas()` at the adapter
+      call** — re-scoped 2026-05-29 from BLOCKED-ON-STAGE-4 to BLOCKED-PROTOCOL: the call sits at
+      `live_workers._process_standard_timeframe:1529` and feeds
+      `adapter.process_to_candles(tick_data: pd.DataFrame, ...)` which is the UAC `BaseCandleAdapter` Protocol. Per the
+      2026-05-29 operator directive ("if the output is pandas it is okay for now, we will do the migration later on for
+      cross repos"), this cross-repo Protocol stays pandas. Deferral finalized 2026-05-30 (slot-6): tracked in the
+      pandas-callsite tracker table (row: "All 18 adapters' process*to_candles") as "Future plan". Named successor:
+      `mdps_adapter_protocol_pandas_to_polars*<YYYY_MM_DD>.md` — file when adapter migration becomes priority. No MDPS
+      code change in this plan.
 - [x] ✅ [P1] **3.7 Update writer-side unit tests** to use polars candles fixtures. — Initial pass updated 10 tests
       (test_league_passthrough, test_per_instrument_pipeline, plus tests for the four (B)-scaffold classes). The (B)
       test files were subsequently deleted with the (B) deletion at @febcb3b, so the net result is the remaining
       production-path tests (`test_league_passthrough`, `test_per_instrument_pipeline`) use polars fixtures; 1365 pass;
       3 pre-existing failures unchanged. — market-data-processing-service@6e61cfe + @5e50b7d + @febcb3b
-- [x] ✅ [P2] **3.8 Benchmark re-run** — Stage 4 has landed (4.A-4.F all ✅). Per plan note + 4.G: the synthetic
-      harness measures ENGINE CHOICE (path A wins, confirmed), NOT the actual MDPS code — Stage 4 didn't change the
-      synthetic re-implementations, so re-running would produce numbers identical to the baseline `results.md`. The
-      meaningful measurement (production memory floor improvement) requires a production canary VM. Stage 4 real-code
-      improvement will surface when the canary runs. Synthetic re-run deferred as low-value vs canary validation.
-      **DONE 2026-05-31** — stage 4 gate cleared; deferred-to-canary pattern accepted per plan's own § 4.G note.
+- [x] ✅ [P2] **3.8 Benchmark re-run** — Stage 4 has landed (4.A-4.F all ✅). Per plan note + 4.G: the synthetic harness
+      measures ENGINE CHOICE (path A wins, confirmed), NOT the actual MDPS code — Stage 4 didn't change the synthetic
+      re-implementations, so re-running would produce numbers identical to the baseline `results.md`. The meaningful
+      measurement (production memory floor improvement) requires a production canary VM. Stage 4 real-code improvement
+      will surface when the canary runs. Synthetic re-run deferred as low-value vs canary validation. **DONE
+      2026-05-31** — stage 4 gate cleared; deferred-to-canary pattern accepted per plan's own § 4.G note.
 
 ## Phase 4 — Stage 4 implementation (re-audited 2026-05-29)
 
@@ -678,121 +673,93 @@ entry-point + single pl→pd before UTL call) — never per-helper round-trips.
       (`isinstance(schema[col], pl.Datetime)` instead of `pd.api.types.is_datetime64_any_dtype`); `.iloc[N]` → `[N]`.
       Result: 1246 pass / 1 skip; basedpyright 21 errors = original baseline (no new violations introduced by the polars
       conversion). market-data-processing-service@8d36df8.
-- [x] ✅ [P3] **5.6 `mock_data_provider.py` polars-native I/O** — shipped
-      market-data-processing-service@58d51d2. Replaced the pyarrow→pandas→polars→pandas→pyarrow
-      round-trip with a single polars surface: ``pl.read_parquet`` for tick decode (zero
-      pyarrow→pandas roundtrip), ``ticks_pl[col][0]`` for first-row scalar reads,
-      ``pl.from_epoch(...)`` for timestamp coercion, ``ticks_renamed.lazy()`` direct into
-      ``create_ohlcv_candles_polars``, ``df_candles_pl.with_columns(pl.lit(...).alias(...))`` for
-      metadata injection, and ``df_candles.write_parquet(out_path, compression='snappy')`` for the
-      output. Net: removed ``import pandas as pd``, ``import pyarrow as pa``, ``import pyarrow.parquet
-      as pq``. ``_load_instruments`` return type also flipped to ``pl.DataFrame``. The "+ 55 test
-      files" framing in the original Stage 5.6 wording overstated scope — the actual ``mock_data_provider``
-      consumers are limited to the engine module + CLI handler, which auto-pick the polars return
+- [x] ✅ [P3] **5.6 `mock_data_provider.py` polars-native I/O** — shipped market-data-processing-service@58d51d2.
+      Replaced the pyarrow→pandas→polars→pandas→pyarrow round-trip with a single polars surface: `pl.read_parquet` for
+      tick decode (zero pyarrow→pandas roundtrip), `ticks_pl[col][0]` for first-row scalar reads, `pl.from_epoch(...)`
+      for timestamp coercion, `ticks_renamed.lazy()` direct into `create_ohlcv_candles_polars`,
+      `df_candles_pl.with_columns(pl.lit(...).alias(...))` for metadata injection, and
+      `df_candles.write_parquet(out_path, compression='snappy')` for the output. Net: removed `import pandas as pd`,
+      `import pyarrow as pa`, `import pyarrow.parquet     as pq`. `_load_instruments` return type also flipped to
+      `pl.DataFrame`. The "+ 55 test files" framing in the original Stage 5.6 wording overstated scope — the actual
+      `mock_data_provider` consumers are limited to the engine module + CLI handler, which auto-pick the polars return
       type without further changes. 1248 pass / 21 = baseline.
-- [x] ✅ [DEFERRED-CANARY] P2. **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB retention).
-      **DEFERRED to operator-scheduled canary** (same as 4.G). **DONE 2026-05-31** — all Stage 1-5 code landed; real
-      validation = production canary VM measuring per-day RSS floor post-migration.
+- [x] ✅ [DEFERRED-CANARY] P2. **5.7 Final benchmark re-run** — must hit Path A target (~344 MB mean peak, 318 MB
+      retention). **DEFERRED to operator-scheduled canary** (same as 4.G). **DONE 2026-05-31** — all Stage 1-5 code
+      landed; real validation = production canary VM measuring per-day RSS floor post-migration.
 
 ## Phase 6 — `_publish_emission_check` manifest-catalogue read scalability (DO NOT TOUCH YET)
 
-> **OPERATOR DIRECTIVE 2026-05-29**: "the manifest catalogue read inside
-> `_publish_emission_check` is a known issue and the correct path for that is
-> still not decided. Document that as the last phase of the plan. Manifest
-> will be done later on, don't start anything on that part — we need to
-> check how to handle that one properly."
+> **OPERATOR DIRECTIVE 2026-05-29**: "the manifest catalogue read inside `_publish_emission_check` is a known issue and
+> the correct path for that is still not decided. Document that as the last phase of the plan. Manifest will be done
+> later on, don't start anything on that part — we need to check how to handle that one properly."
 
-**Status: SCOPED, NOT STARTED. No agent may begin Phase 6 work without an
-explicit operator directive selecting an approach.**
+**Status: SCOPED, NOT STARTED. No agent may begin Phase 6 work without an explicit operator directive selecting an
+approach.**
 
 ### What was observed (2026-05-29 GCS smoke test)
 
-The Phase 5E ns-precision fix smoke test (`/tmp/smoke_test_2day.py`) on
-COINBASE-SPOT BTC-USDT trades for two days exposed a pre-existing
-scalability problem in the production write path — **not** caused by the
-Phase 5 polars refactor:
+The Phase 5E ns-precision fix smoke test (`/tmp/smoke_test_2day.py`) on COINBASE-SPOT BTC-USDT trades for two days
+exposed a pre-existing scalability problem in the production write path — **not** caused by the Phase 5 polars refactor:
 
-- `canonical_writer.write_candle_parquet` calls `_resolve_policy_output_data_type`
-  to check whether the target `(asset_group, source_data_type, mdps_dt)` is
-  policy-gated.
-- For gated combos (e.g. `ohlcv_1m:historical`, `ohlcv_1h:historical` with
-  `partial_ok` policy) it then calls `_publish_emission_check(bucket, row_key, output_data_type)`.
-- `_publish_emission_check` calls into UTL `publish_with_manifest_lookup`
-  which reads the **entire** consolidated manifest catalogue for the
-  bucket to evaluate completeness against the policy window.
+- `canonical_writer.write_candle_parquet` calls `_resolve_policy_output_data_type` to check whether the target
+  `(asset_group, source_data_type, mdps_dt)` is policy-gated.
+- For gated combos (e.g. `ohlcv_1m:historical`, `ohlcv_1h:historical` with `partial_ok` policy) it then calls
+  `_publish_emission_check(bucket, row_key, output_data_type)`.
+- `_publish_emission_check` calls into UTL `publish_with_manifest_lookup` which reads the **entire** consolidated
+  manifest catalogue for the bucket to evaluate completeness against the policy window.
 
-Measured RSS during a single-instrument single-day smoke run that
-exercised `_publish_emission_check`: **VmRSS climbed to 57 GB; VmPeak 75 GB
-within ~10 minutes** before the smoke was killed (no progress on per-shard
-manifest write). Compare with the streamlined polars-only path (skip
-canonical_writer, write parquet directly): **peak RSS 764 MB / mean
-579 MB / 21 seconds wall-clock for the same 2-day × 6-timeframe shard
-set**. So the bloat is entirely in the manifest-catalogue load, not in
-the Phase 5 polars chain.
+Measured RSS during a single-instrument single-day smoke run that exercised `_publish_emission_check`: **VmRSS climbed
+to 57 GB; VmPeak 75 GB within ~10 minutes** before the smoke was killed (no progress on per-shard manifest write).
+Compare with the streamlined polars-only path (skip canonical_writer, write parquet directly): **peak RSS 764 MB / mean
+579 MB / 21 seconds wall-clock for the same 2-day × 6-timeframe shard set**. So the bloat is entirely in the
+manifest-catalogue load, not in the Phase 5 polars chain.
 
 ### What is NOT in scope for this phase (until operator decides)
 
 - Modifying any code in `unified_trading_library.manifest_*`.
-- Modifying `canonical_writer._publish_emission_check` /
-  `_resolve_policy_output_data_type`.
-- Modifying the `partial_ok` / `must_publish` / other publish policy
-  definitions or their per-data-type registrations.
-- Modifying the consolidated manifest catalogue storage layout / hive
-  partitioning / index format.
+- Modifying `canonical_writer._publish_emission_check` / `_resolve_policy_output_data_type`.
+- Modifying the `partial_ok` / `must_publish` / other publish policy definitions or their per-data-type registrations.
+- Modifying the consolidated manifest catalogue storage layout / hive partitioning / index format.
 - Bypassing the policy gate via `strict=False` or a code path flag.
 
 ### What needs to be decided BEFORE work starts (operator-only)
 
-Closed set of options for the next session to discuss with the operator —
-do not pick autonomously:
+Closed set of options for the next session to discuss with the operator — do not pick autonomously:
 
-1. **Per-shard lazy lookup.** `publish_with_manifest_lookup` reads only
-   the rows for the requested `(date, venue, instrument_type, data_type,
-   timeframe)` from the partitioned manifest snapshot instead of the full
+1. **Per-shard lazy lookup.** `publish_with_manifest_lookup` reads only the rows for the requested
+   `(date, venue, instrument_type, data_type, timeframe)` from the partitioned manifest snapshot instead of the full
    catalogue. Requires UTL manifest reader changes (cross-repo).
-2. **In-memory cache shared across shards.** One per-process load,
-   reused for every per-shard `_publish_emission_check` call. Reduces N
-   shard writes from N × full-load to 1 × full-load. Needs a cache
-   invalidation strategy + concurrency model.
-3. **Manifest snapshot partitioning by completeness-window.** Store
-   manifest rows in hive paths keyed by the policy completeness window
-   (e.g. `_index/policy_windows/output_data_type=ohlcv_1m/historical/...`).
-   Selective reads become O(target window) instead of O(full bucket).
-4. **Off-process policy decision service.** A long-running policy
-   evaluator that holds the manifest catalogue in memory and answers
-   `should_publish_row` queries via local RPC. Removes the per-call
-   load entirely; introduces a deployment dependency.
-5. **Defer the policy gate to a post-write reconciler.** Always
-   `record_captured` at the per-shard write; a separate daily job
-   downgrades to `PUBLISHED_DEGRADED` / `attempted_failed` for shards
-   whose window fails completeness. Loses real-time gating; safer on
-   memory.
+2. **In-memory cache shared across shards.** One per-process load, reused for every per-shard `_publish_emission_check`
+   call. Reduces N shard writes from N × full-load to 1 × full-load. Needs a cache invalidation strategy + concurrency
+   model.
+3. **Manifest snapshot partitioning by completeness-window.** Store manifest rows in hive paths keyed by the policy
+   completeness window (e.g. `_index/policy_windows/output_data_type=ohlcv_1m/historical/...`). Selective reads become
+   O(target window) instead of O(full bucket).
+4. **Off-process policy decision service.** A long-running policy evaluator that holds the manifest catalogue in memory
+   and answers `should_publish_row` queries via local RPC. Removes the per-call load entirely; introduces a deployment
+   dependency.
+5. **Defer the policy gate to a post-write reconciler.** Always `record_captured` at the per-shard write; a separate
+   daily job downgrades to `PUBLISHED_DEGRADED` / `attempted_failed` for shards whose window fails completeness. Loses
+   real-time gating; safer on memory.
 
-Each option has different cross-repo blast-radius (UTL changes vs MDPS-only),
-different live-vs-batch implications, and different
-`Manifest + Honest Absence` SSOT consequences. **None can be chosen
-without operator review.**
+Each option has different cross-repo blast-radius (UTL changes vs MDPS-only), different live-vs-batch implications, and
+different `Manifest + Honest Absence` SSOT consequences. **None can be chosen without operator review.**
 
 ### What the next agent should do
 
-1. **NOT** modify `_publish_emission_check`, `publish_with_manifest_lookup`,
-   any UTL manifest reader, or the manifest catalogue storage layout.
-2. Ping the operator with the option list above + any additional context
-   discovered since this plan was written.
-3. Wait for an explicit option selection before scoping the
-   implementation work as a separate plan.
+1. **NOT** modify `_publish_emission_check`, `publish_with_manifest_lookup`, any UTL manifest reader, or the manifest
+   catalogue storage layout.
+2. Ping the operator with the option list above + any additional context discovered since this plan was written.
+3. Wait for an explicit option selection before scoping the implementation work as a separate plan.
 
 ### Cross-references
 
-- Smoke evidence: 2026-05-29 session, `/tmp/smoke_test_2day.log` (heavy
-  path killed at VmRSS 57 GB) + `/tmp/smoke_lite.log` (streamlined path
-  succeeded in 21s at peak 764 MB).
-- This phase **does not block** Phases 2 / 3.6 / 5.6 / 5.7 — those touch
-  unrelated surfaces.
-- Composes with `codex/02-data/availability-manifest-and-data-status.md`
-  (manifest SSOT) and `codex/02-data/honest-absence-downstream-handling.md`
-  (per-shard policy semantics) — any chosen option must preserve their
-  contracts.
+- Smoke evidence: 2026-05-29 session, `/tmp/smoke_test_2day.log` (heavy path killed at VmRSS 57 GB) +
+  `/tmp/smoke_lite.log` (streamlined path succeeded in 21s at peak 764 MB).
+- This phase **does not block** Phases 2 / 3.6 / 5.6 / 5.7 — those touch unrelated surfaces.
+- Composes with `codex/02-data/availability-manifest-and-data-status.md` (manifest SSOT) and
+  `codex/02-data/honest-absence-downstream-handling.md` (per-shard policy semantics) — any chosen option must preserve
+  their contracts.
 
 ## Test plan
 

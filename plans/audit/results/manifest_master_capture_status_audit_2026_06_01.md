@@ -44,41 +44,41 @@ of propagating upstream status). The dominant cross-cutting pattern across ALL f
 
 The 23 first-pass findings were each independently re-checked by a separate agent instructed to **refute** it (read the
 exact cited code + trace the call chain UP/DOWN, looking for a manifest write the first pass missed or a by-design
-rationale). Result: **18 of 23 hold (16 at severity + 2 downgraded), 5 are false-positives.** The 3 features-service
-P0s are **double-confirmed** (verifier found `cefi` is not in the CLI `_FAMILIES` tuple and `run_batch` has zero callers
-— so no dispatcher can ever write the promised `record_empty`).
+rationale). Result: **18 of 23 hold (16 at severity + 2 downgraded), 5 are false-positives.** The 3 features-service P0s
+are **double-confirmed** (verifier found `cefi` is not in the CLI `_FAMILIES` tuple and `run_batch` has zero callers —
+so no dispatcher can ever write the promised `record_empty`).
 
-| Finding | Verdict | Note |
-| --- | --- | --- |
-| features cefi perp_funding:175-196 (P0) | ✅ CONFIRMED | no dispatcher exists; empty date → no row |
-| features cefi perp_funding:160-166 (P0) | ✅ CONFIRMED | MTDS-unavailable → no `expected_unattempted` |
-| features volatility:157-165 (P0) | ✅ CONFIRMED | partial batch (total_success>0, is_complete=False) → no row |
-| features volatility:499 (P1) | ✅ CONFIRMED | spot/future conflation (P2 defensible) |
-| features onchain orchestrator:228-229 (P1) | ✅ CONFIRMED | `result=False` → no `record_empty` |
-| features onchain dependency_checker:21,210 (P2) | ✅ CONFIRMED | contract "caller emits record_empty" unfulfilled |
-| features multi_timeframe:318-335 (P2) | ✅ CONFIRMED | phantom `captured` 0-row when all instruments fail |
-| MDPS live_workers:376-391 (P1) | ✅ CONFIRMED | caller only debug-logs `success=False`; no row |
-| MDPS live_workers:410-423 (P1) | ✅ CONFIRMED | no-adapter → no row |
-| MDPS live_workers:876-879 (P1) | ✅ CONFIRMED | broad-except per-timeframe → no row |
-| MDPS batch_workers:167-189 (P1) | 🔻 RECLASSIFY→P2 | row IS written (wrong status); known DEFERRED — and **no active wave-3 plan exists** (successor missing) |
-| MDPS orchestration_service:288-299 (P2) | ❌ FALSE-POSITIVE | zero upstream files = MTDS's shard to report, not MDPS — by-design |
-| MDPS orchestration_service:625-634 (P2) | ❌ FALSE-POSITIVE | bypass types / no-adapter = intentional scope exclusion |
-| MTDS dex_swaps:491-495 (P1) | ✅ CONFIRMED | missing subgraph_id → wrong reason SOURCE_RETURNED_ZERO |
-| MTDS dex_swaps:492-495 (P1) | ✅ CONFIRMED | missing API key → empty instead of failed |
-| MTDS dex_swaps:606/633 (P1) | ❌ FALSE-POSITIVE | HTTP 404 = deprecated subgraph = genuine absence; documented rationale, row IS written |
-| MTDS perp_funding:395-420 (P1) | ✅ CONFIRMED | unknown protocol → empty instead of failed/raise |
-| MTDS backfill_runner:223-224 (P2) | ❌ FALSE-POSITIVE | live-aux gap-backfill, optional recorder; per-instrument empty is routine |
-| MTDS lst_rates:506-515 (P2) | ✅ CONFIRMED | only LIDO gets `record_failed`; ETHERFI/ETHENA no row |
-| IS orchestrator:6240-6245 (P1) | ✅ CONFIRMED | unmapped league → wrong `EXPECTED_NO_FIXTURE` |
-| IS orchestrator:7034,7228 (P1) | ✅ CONFIRMED | blank reason → **LegacyBlankErrorReasonError at runtime** (crash) |
-| IS orchestrator:6630-6637 (P1) | 🔻 RECLASSIFY→P2 | row IS written (wrong reason); in-progress-match latency |
-| IS orchestrator:2880-2883 (P2) | ✅ CONFIRMED | 50-99% completeness venues → no `attempted_failed` row |
-| IS orchestrator:4280-4289 (P2) | ❌ FALSE-POSITIVE | recovery-mode filter — early return avoids phantom rows; by-design |
+| Finding                                         | Verdict           | Note                                                                                                     |
+| ----------------------------------------------- | ----------------- | -------------------------------------------------------------------------------------------------------- |
+| features cefi perp_funding:175-196 (P0)         | ✅ CONFIRMED      | no dispatcher exists; empty date → no row                                                                |
+| features cefi perp_funding:160-166 (P0)         | ✅ CONFIRMED      | MTDS-unavailable → no `expected_unattempted`                                                             |
+| features volatility:157-165 (P0)                | ✅ CONFIRMED      | partial batch (total_success>0, is_complete=False) → no row                                              |
+| features volatility:499 (P1)                    | ✅ CONFIRMED      | spot/future conflation (P2 defensible)                                                                   |
+| features onchain orchestrator:228-229 (P1)      | ✅ CONFIRMED      | `result=False` → no `record_empty`                                                                       |
+| features onchain dependency_checker:21,210 (P2) | ✅ CONFIRMED      | contract "caller emits record_empty" unfulfilled                                                         |
+| features multi_timeframe:318-335 (P2)           | ✅ CONFIRMED      | phantom `captured` 0-row when all instruments fail                                                       |
+| MDPS live_workers:376-391 (P1)                  | ✅ CONFIRMED      | caller only debug-logs `success=False`; no row                                                           |
+| MDPS live_workers:410-423 (P1)                  | ✅ CONFIRMED      | no-adapter → no row                                                                                      |
+| MDPS live_workers:876-879 (P1)                  | ✅ CONFIRMED      | broad-except per-timeframe → no row                                                                      |
+| MDPS batch_workers:167-189 (P1)                 | 🔻 RECLASSIFY→P2  | row IS written (wrong status); known DEFERRED — and **no active wave-3 plan exists** (successor missing) |
+| MDPS orchestration_service:288-299 (P2)         | ❌ FALSE-POSITIVE | zero upstream files = MTDS's shard to report, not MDPS — by-design                                       |
+| MDPS orchestration_service:625-634 (P2)         | ❌ FALSE-POSITIVE | bypass types / no-adapter = intentional scope exclusion                                                  |
+| MTDS dex_swaps:491-495 (P1)                     | ✅ CONFIRMED      | missing subgraph_id → wrong reason SOURCE_RETURNED_ZERO                                                  |
+| MTDS dex_swaps:492-495 (P1)                     | ✅ CONFIRMED      | missing API key → empty instead of failed                                                                |
+| MTDS dex_swaps:606/633 (P1)                     | ❌ FALSE-POSITIVE | HTTP 404 = deprecated subgraph = genuine absence; documented rationale, row IS written                   |
+| MTDS perp_funding:395-420 (P1)                  | ✅ CONFIRMED      | unknown protocol → empty instead of failed/raise                                                         |
+| MTDS backfill_runner:223-224 (P2)               | ❌ FALSE-POSITIVE | live-aux gap-backfill, optional recorder; per-instrument empty is routine                                |
+| MTDS lst_rates:506-515 (P2)                     | ✅ CONFIRMED      | only LIDO gets `record_failed`; ETHERFI/ETHENA no row                                                    |
+| IS orchestrator:6240-6245 (P1)                  | ✅ CONFIRMED      | unmapped league → wrong `EXPECTED_NO_FIXTURE`                                                            |
+| IS orchestrator:7034,7228 (P1)                  | ✅ CONFIRMED      | blank reason → **LegacyBlankErrorReasonError at runtime** (crash)                                        |
+| IS orchestrator:6630-6637 (P1)                  | 🔻 RECLASSIFY→P2  | row IS written (wrong reason); in-progress-match latency                                                 |
+| IS orchestrator:2880-2883 (P2)                  | ✅ CONFIRMED      | 50-99% completeness venues → no `attempted_failed` row                                                   |
+| IS orchestrator:4280-4289 (P2)                  | ❌ FALSE-POSITIVE | recovery-mode filter — early return avoids phantom rows; by-design                                       |
 
-**Net real violations: 18** (features 7 · MDPS 4 → 3+1-downgraded · MTDS 4 · IS 4 → 3+1-downgraded). **False-positives: 5.**
-**Revised severity: P0×3 (all features), P1×9, P2×6.** The 5 false-positives were all "by-design scope boundary /
-documented-genuine-absence" paths the first pass over-flagged. The single highest-confidence real bug that is also a
-*crash* (not just a misclassification) is **IS weather blank-reason → `LegacyBlankErrorReasonError`**.
+**Net real violations: 18** (features 7 · MDPS 4 → 3+1-downgraded · MTDS 4 · IS 4 → 3+1-downgraded).
+**False-positives: 5.** **Revised severity: P0×3 (all features), P1×9, P2×6.** The 5 false-positives were all "by-design
+scope boundary / documented-genuine-absence" paths the first pass over-flagged. The single highest-confidence real bug
+that is also a _crash_ (not just a misclassification) is **IS weather blank-reason → `LegacyBlankErrorReasonError`**.
 
 ---
 

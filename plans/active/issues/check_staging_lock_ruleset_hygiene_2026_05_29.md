@@ -9,15 +9,15 @@ related_plans:
 locked_by: live-defi-rollout
 ---
 
-> **RESOLVED 2026-05-29**: Option A (additive update) applied. All 3 rulesets now require BOTH
-> `check-staging-lock` AND `quality-gates-v2`:
+> **RESOLVED 2026-05-29**: Option A (additive update) applied. All 3 rulesets now require BOTH `check-staging-lock` AND
+> `quality-gates-v2`:
 >
 > - execution-service ruleset 13647462: `['check-staging-lock', 'quality-gates-v2']` ✓
 > - instruments-service ruleset 13787597: `['check-staging-lock', 'quality-gates-v2']` ✓
 > - deployment-ui ruleset 13787657: `['check-staging-lock', 'quality-gates-v2']` ✓
 >
-> Verified via `gh api repos/IggyIkenna/<repo>/rulesets/<id>` post-PUT. Workspace-canonical
-> two-pass + staging-lock model now enforced on these repos. Issue archives.
+> Verified via `gh api repos/IggyIkenna/<repo>/rulesets/<id>` post-PUT. Workspace-canonical two-pass + staging-lock
+> model now enforced on these repos. Issue archives.
 
 ## What I found
 

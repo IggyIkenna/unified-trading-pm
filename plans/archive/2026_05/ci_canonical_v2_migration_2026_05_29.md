@@ -113,15 +113,15 @@ alone doesn't escape it.
 
 ## Status snapshot
 
-| Layer                                      | Status                | Note                                                                                  |
-| ------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------- |
-| Canonical CI codex doc                     | ✅ shipped 2026-05-29 | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model           |
-| PM `python-quality-gates.yml` real content | ✅ correct on disk    | Bad comment reverted in `7ca446080`                                                   |
-| PM main branch protection                  | ✅ rotated 2026-05-29 | Required check now `quality-gates-v2` (was `quality-gates`)                           |
-| GH Support ticket                          | 🟡 open               | #4422570 filed 2026-05-27, awaiting cache clear                                       |
-| v2 caller workflow on PM                   | ✅ shipped 2026-05-29 | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main                      |
-| v2 callee workflow on PM                   | ✅ shipped 2026-05-29 | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main               |
-| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29    | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM                 |
+| Layer                                      | Status                | Note                                                                        |
+| ------------------------------------------ | --------------------- | --------------------------------------------------------------------------- |
+| Canonical CI codex doc                     | ✅ shipped 2026-05-29 | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model |
+| PM `python-quality-gates.yml` real content | ✅ correct on disk    | Bad comment reverted in `7ca446080`                                         |
+| PM main branch protection                  | ✅ rotated 2026-05-29 | Required check now `quality-gates-v2` (was `quality-gates`)                 |
+| GH Support ticket                          | 🟡 open               | #4422570 filed 2026-05-27, awaiting cache clear                             |
+| v2 caller workflow on PM                   | ✅ shipped 2026-05-29 | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main             |
+| v2 callee workflow on PM                   | ✅ shipped 2026-05-29 | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main      |
+| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29    | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM        |
 
 ## Phased execution
 
@@ -132,11 +132,11 @@ alone doesn't escape it.
 - [x] ✅ [AUDIT] P0. Admin perms confirmed on PM/UAC/UTL — `gh api` returns `admin=True` for all three.
 - [x] ✅ [AUDIT] P0. Confirm `.qg_last_passed_sha` sentinel format expected by quickmerge —
       `bash     scripts/quickmerge.sh --help 2>&1 | head -30` should mention it. If missing in quickmerge
-      implementation, file separate fix-quickmerge issue and block this plan on it.
-      — CONFIRMED: `scripts/quickmerge.sh:819` (`_SENTINEL=".qg_last_passed_sha"`) reads the sentinel in
-        `--agent` mode; `scripts/quality-gates-base/base-service.sh:2411` writes `git rev-parse HEAD` to
-        `.qg_last_passed_sha` on a COMPLETE run (all gates on: tests+lint+codex, no --quick/--skip flags).
-        Format: full SHA, trimmed on read (`tr -d '[:space:]'`). No separate fix-quickmerge issue needed.
+      implementation, file separate fix-quickmerge issue and block this plan on it. — CONFIRMED:
+      `scripts/quickmerge.sh:819` (`_SENTINEL=".qg_last_passed_sha"`) reads the sentinel in `--agent` mode;
+      `scripts/quality-gates-base/base-service.sh:2411` writes `git rev-parse HEAD` to `.qg_last_passed_sha` on a
+      COMPLETE run (all gates on: tests+lint+codex, no --quick/--skip flags). Format: full SHA, trimmed on read
+      (`tr -d '[:space:]'`). No separate fix-quickmerge issue needed.
 
 ### Phase 1 — PM (1 day)
 
@@ -148,17 +148,18 @@ alone doesn't escape it.
   - DO NOT delete v1 files yet — leave them as ghost-targets so the cache doesn't poison v2 via shared registration
 - [x] ✅ [SCRIPT] P0.
       `bash scripts/quickmerge.sh "ci(workflows): add v2 caller+callee — escape GHA ghost cache"     --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/python-quality-gates-v2.yml'`.
-      Sentinel verified at quickmerge time → push proceeds → PR to staging → auto-merge.
-      — 2026-05-29: DONE via PR #88 (commit 84957fba6); v2 files on PM main. Checkbox re-flipped after accidental revert in 6c1e361e.
+      Sentinel verified at quickmerge time → push proceeds → PR to staging → auto-merge. — 2026-05-29: DONE via PR #88
+      (commit 84957fba6); v2 files on PM main. Checkbox re-flipped after accidental revert in 6c1e361e.
 - [x] ✅ [SCRIPT] P0. **Branch protection rotation** on PM main+staging:
   - Removed `quality-gates` from required status checks on both branches
   - Added `quality-gates-v2` as new required status check on both branches
   - 18/18 branches rotated across all 9 service repos + PM 2026-05-29
-- [x] ✅ [VERIFY] P0. PR #83 (TradFi plan) merges. Confirm via `gh pr view 83 --repo IggyIkenna/unified-trading-pm`.
-      — Merged 2026-05-29T18:11:35Z. Title: "docs(plans): TradFi dual-source (Massive + Databento) — co-mingle source column".
+- [x] ✅ [VERIFY] P0. PR #83 (TradFi plan) merges. Confirm via `gh pr view 83 --repo IggyIkenna/unified-trading-pm`. —
+      Merged 2026-05-29T18:11:35Z. Title: "docs(plans): TradFi dual-source (Massive + Databento) — co-mingle source
+      column".
 - [x] [VERIFY] P0. Subsequent PR to PM main triggers v2 check, reports success (not startup_failure). If v2 ALSO ghosts,
-      fall back to Plan-B (inline QG steps in v2 caller, no reusable).
-      — PR #93 (fix/pm-ci-self-clone) merged 2026-05-29; run 26654854795 passed ✅ (V=12/12).
+      fall back to Plan-B (inline QG steps in v2 caller, no reusable). — PR #93 (fix/pm-ci-self-clone) merged
+      2026-05-29; run 26654854795 passed ✅ (V=12/12).
 
 ### Phase 2 — UAC (0.5 day)
 
@@ -167,16 +168,17 @@ alone doesn't escape it.
   - Add `.github/workflows/quality-gates-v2.yml` to UAC. UAC's caller references PM's v2 callee at LDR ref (just like v1
     references python-quality-gates.yml at LDR)
   - Quickmerge per canonical flow
-- [x] ✅ [SCRIPT] P0. UAC main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` on both branches.
-      staging had quality-gates-v2 from 18-branch sweep 2026-05-29; main rotation applied 2026-05-29 (main had no prior required check — was missing from sweep).
-- [x] ✅ [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean.
-      PR #50 merged 2026-05-29T18:08Z. Post-merge CI failed (exchange mappings missing for 10 new ETF tickers).
-      Fixed in PR #53 (merged 2026-05-29T19:08Z); UAC CI now green on main.
+- [x] ✅ [SCRIPT] P0. UAC main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` on
+      both branches. staging had quality-gates-v2 from 18-branch sweep 2026-05-29; main rotation applied 2026-05-29
+      (main had no prior required check — was missing from sweep).
+- [x] ✅ [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean. PR #50 merged 2026-05-29T18:08Z.
+      Post-merge CI failed (exchange mappings missing for 10 new ETF tickers). Fixed in PR #53 (merged
+      2026-05-29T19:08Z); UAC CI now green on main.
 - [x] ✅ [VERIFY] P0. Next UAC PR triggers v2 cleanly.
 
-  **Verified (2026-05-29, slot-9):** PR #54 triggered `quality-gates-v2` run 26656815065 on branch
-  `tab/ikennaigboaka/9` (pull_request event). Status: `completed success` in 11m45s. No `startup_failure` — v2
-  successfully escaped the GitHub ghost cache. The check registered as a fresh context, confirming Option D works.
+  **Verified (2026-05-29, slot-9):** PR #54 triggered `quality-gates-v2` run 26656815065 on branch `tab/ikennaigboaka/9`
+  (pull_request event). Status: `completed success` in 11m45s. No `startup_failure` — v2 successfully escaped the GitHub
+  ghost cache. The check registered as a fresh context, confirming Option D works.
 
 ### Phase 3 — UTL (0.5 day)
 
@@ -184,7 +186,8 @@ alone doesn't escape it.
   - Local `quality-gates.sh` full run → sentinel
   - Add v2 caller workflow — unified-trading-library@ca5fae9d (`ci(workflows): add quality-gates-v2 caller`)
   - Quickmerge — v2 running on UTL main; run 26671218489 completed success 2026-05-30T01:51Z
-- [x] ✅ [SCRIPT] P0. UTL main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` 2026-05-29 (18-branch sweep).
+- [x] ✅ [SCRIPT] P0. UTL main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2`
+      2026-05-29 (18-branch sweep).
 - [x] ✅ [VERIFY] P0. Next UTL PR triggers v2 cleanly.
 
   **Verified (2026-05-29, slot-9):** Three UTL `quality-gates-v2` runs observed — all triggered correctly with zero
@@ -200,88 +203,76 @@ Apply the same v2 recipe to alerting-service, ml-service, features-service, batc
 execution-service, instruments-service, deployment-ui. Order by risk (lowest first):
 
 - [x] ✅ [SCRIPT] P1. alerting-service — already has `workspace-qg.yml` and `workspace-qg-v2.yml` from May-27 Option B
-      attempt. Add v3 caller pointing at v2 callee; rotate branch protection.
-      **DONE (pre-existing, verified 2026-05-30)** — `quality-gates-v2.yml` already present + merged to main
-      (alerting-service@4cb4600). Branch protection already requires `quality-gates-v2`. Last 3 runs: all
-      `completed success` (run 26671817742 + 26671814846 + 26655510120). No further action needed.
-- [x] ✅ [SCRIPT] P1. ml-service — straight v2 application
-      **DONE (pre-existing, verified 2026-05-30)** — `quality-gates-v2` run 26671238677: `completed success` on main.
-- [x] ✅ [SCRIPT] P1. features-service — no quality-gates-v2 runs found; workflow needs to be added.
-      **DONE 2026-05-30** — features-service@a3606c9d. Workflow existed but only triggered on main/staging
-      (neither branch exists — default=live-defi-rollout). Fixed to also trigger on live-defi-rollout.
-      Fixed job name from "alerting-service" → "features-service". Push triggered run 26673516272 (in_progress).
-      Branch protection on LDR already required quality-gates-v2.
-- [x] ✅ [SCRIPT] P1. batch-live-reconciliation-service — v2 workflow exists and triggering.
-      **DONE 2026-05-30** — quality-gates-v2 running (run 26671824109). Failure is pre-existing coverage gap
-      (78.2% < 80% threshold, 159 tests pass). Workflow migration complete; coverage fix is a separate issue.
-- [x] ✅ [SCRIPT] P1. execution-service — quality-gates-v2 run 26671829905: `completed success` on main.
-      **DONE (pre-existing, verified 2026-05-30)**
-- [x] ✅ [SCRIPT] P1. instruments-service — v2 workflow exists and triggering.
-      **DONE 2026-05-30** — quality-gates-v2 running (run 26671835898). Failure is pre-existing coverage gap
-      (76.8% < 77% threshold, 2973 tests pass). Workflow migration complete; coverage fix is a separate issue.
-- [x] ✅ [SCRIPT] P1. deployment-ui — v2 workflow exists and triggering.
-      **DONE 2026-05-30** — quality-gates-v2 running (run 26671220021). Failure (23s) is auth error cloning PM
-      (`Authentication failed for unified-trading-pm.git/`). This is a GH_PAT secret config issue on deployment-ui,
-      not a workflow migration issue. Workflow migration complete; GH_PAT secret setup is a separate issue.
+      attempt. Add v3 caller pointing at v2 callee; rotate branch protection. **DONE (pre-existing, verified
+      2026-05-30)** — `quality-gates-v2.yml` already present + merged to main (alerting-service@4cb4600). Branch
+      protection already requires `quality-gates-v2`. Last 3 runs: all `completed success` (run 26671817742 +
+      26671814846 + 26655510120). No further action needed.
+- [x] ✅ [SCRIPT] P1. ml-service — straight v2 application **DONE (pre-existing, verified 2026-05-30)** —
+      `quality-gates-v2` run 26671238677: `completed success` on main.
+- [x] ✅ [SCRIPT] P1. features-service — no quality-gates-v2 runs found; workflow needs to be added. **DONE 2026-05-30**
+      — features-service@a3606c9d. Workflow existed but only triggered on main/staging (neither branch exists —
+      default=live-defi-rollout). Fixed to also trigger on live-defi-rollout. Fixed job name from "alerting-service" →
+      "features-service". Push triggered run 26673516272 (in_progress). Branch protection on LDR already required
+      quality-gates-v2.
+- [x] ✅ [SCRIPT] P1. batch-live-reconciliation-service — v2 workflow exists and triggering. **DONE 2026-05-30** —
+      quality-gates-v2 running (run 26671824109). Failure is pre-existing coverage gap (78.2% < 80% threshold, 159 tests
+      pass). Workflow migration complete; coverage fix is a separate issue.
+- [x] ✅ [SCRIPT] P1. execution-service — quality-gates-v2 run 26671829905: `completed success` on main. **DONE
+      (pre-existing, verified 2026-05-30)**
+- [x] ✅ [SCRIPT] P1. instruments-service — v2 workflow exists and triggering. **DONE 2026-05-30** — quality-gates-v2
+      running (run 26671835898). Failure is pre-existing coverage gap (76.8% < 77% threshold, 2973 tests pass). Workflow
+      migration complete; coverage fix is a separate issue.
+- [x] ✅ [SCRIPT] P1. deployment-ui — v2 workflow exists and triggering. **DONE 2026-05-30** — quality-gates-v2 running
+      (run 26671220021). Failure (23s) is auth error cloning PM (`Authentication failed for unified-trading-pm.git/`).
+      This is a GH_PAT secret config issue on deployment-ui, not a workflow migration issue. Workflow migration
+      complete; GH_PAT secret setup is a separate issue.
 - [x] ✅ [VERIFY] P1. workspace-qg green across all 10 repos via
-      `gh run list --repo <each> --workflow quality-gates-v2 --limit 1` per repo.
-      **DONE 2026-05-30** — All 10 repos have quality-gates-v2 installed and triggering. Results:
-      | Repo | Status | Note |
-      |------|--------|------|
-      | unified-trading-pm | ✅ success | |
-      | unified-api-contracts | ✅ success | |
-      | unified-trading-library | ✅ success | |
-      | alerting-service | ✅ success | |
-      | ml-service | ✅ success | |
-      | execution-service | ✅ success | |
-      | features-service | ❌ failure | 7 lint errors (pre-existing; separate fix needed) |
-      | batch-live-reconciliation-service | ❌ failure | coverage 78.2% < 80% (pre-existing) |
-      | instruments-service | ❌ failure | coverage 76.8% < 77% (pre-existing) |
-      | deployment-ui | ❌ failure | GH_PAT auth for PM clone (operator secret config needed) |
-      CI migration Phase 4 complete. Failures are code quality regressions, not workflow config.
+      `gh run list --repo <each> --workflow quality-gates-v2 --limit 1` per repo. **DONE 2026-05-30** — All 10 repos
+      have quality-gates-v2 installed and triggering. Results: | Repo | Status | Note | |------|--------|------| |
+      unified-trading-pm | ✅ success | | | unified-api-contracts | ✅ success | | | unified-trading-library | ✅
+      success | | | alerting-service | ✅ success | | | ml-service | ✅ success | | | execution-service | ✅ success | |
+      | features-service | ❌ failure | 7 lint errors (pre-existing; separate fix needed) | |
+      batch-live-reconciliation-service | ❌ failure | coverage 78.2% < 80% (pre-existing) | | instruments-service | ❌
+      failure | coverage 76.8% < 77% (pre-existing) | | deployment-ui | ❌ failure | GH_PAT auth for PM clone (operator
+      secret config needed) | CI migration Phase 4 complete. Failures are code quality regressions, not workflow config.
 
 ### Phase 5 — Cleanup + codex updates (0.25 day)
 
-- [x] ✅ [SCRIPT] P1. Once all 10 repos run cleanly on v2, delete v1 caller workflow files in each repo (single quickmerge
-      per repo). Keep the v1 PM callee `python-quality-gates.yml` for now to avoid forced GitHub re-validation; remove
-      in a later cleanup once GH Support ticket clears.
-      **DONE (partial) 2026-05-30** — v1 deleted from 6/10 passing repos:
-      - unified-trading-pm: deleted `quality-gates.yml` @2d1d9808 (kept `python-quality-gates.yml` per plan)
-      - unified-api-contracts: deleted `workspace-qg.yml` @c396542
-      - unified-trading-library: deleted `workspace-qg.yml` @d46bb7bd
-      - alerting-service: deleted `workspace-qg-v2.yml` + `workspace-qg-v3.yml` @2e8a10c
-      - ml-service: deleted `workspace-qg.yml` @86bb7ae
-      - execution-service: deleted `workspace-qg.yml` @94596ddf
-      Remaining 4 repos blocked on pre-existing code quality issues:
-      - features-service: 7 lint errors; batch-live-recon: coverage 78.2%; instruments-service: coverage 76.8%; deployment-ui: GH_PAT auth
-- [x] ✅ [CODEX] P1. Update `codex/08-workflows/ci-cd-flow.md` to reference the v2 job key as the canonical required-check
-      name. Add SUPERSEDED banner to any sub-doc that names the v1 `quality-gates` context.
-      — ci-cd-flow.md § quality-gates-v2 added (task -026); deployment-flow.md required check updated to quality-gates-v2
-      with RETIRED note for v1; quickmerge-architecture.md + feature-branch-workflow.md reference local script only
-      (no GHA workflow refs — no update needed). unified-trading-pm@latest
+- [x] ✅ [SCRIPT] P1. Once all 10 repos run cleanly on v2, delete v1 caller workflow files in each repo (single
+      quickmerge per repo). Keep the v1 PM callee `python-quality-gates.yml` for now to avoid forced GitHub
+      re-validation; remove in a later cleanup once GH Support ticket clears. **DONE (partial) 2026-05-30** — v1 deleted
+      from 6/10 passing repos: - unified-trading-pm: deleted `quality-gates.yml` @2d1d9808 (kept
+      `python-quality-gates.yml` per plan) - unified-api-contracts: deleted `workspace-qg.yml` @c396542 -
+      unified-trading-library: deleted `workspace-qg.yml` @d46bb7bd - alerting-service: deleted `workspace-qg-v2.yml` +
+      `workspace-qg-v3.yml` @2e8a10c - ml-service: deleted `workspace-qg.yml` @86bb7ae - execution-service: deleted
+      `workspace-qg.yml` @94596ddf Remaining 4 repos blocked on pre-existing code quality issues: - features-service: 7
+      lint errors; batch-live-recon: coverage 78.2%; instruments-service: coverage 76.8%; deployment-ui: GH_PAT auth
+- [x] ✅ [CODEX] P1. Update `codex/08-workflows/ci-cd-flow.md` to reference the v2 job key as the canonical
+      required-check name. Add SUPERSEDED banner to any sub-doc that names the v1 `quality-gates` context. —
+      ci-cd-flow.md § quality-gates-v2 added (task -026); deployment-flow.md required check updated to quality-gates-v2
+      with RETIRED note for v1; quickmerge-architecture.md + feature-branch-workflow.md reference local script only (no
+      GHA workflow refs — no update needed). unified-trading-pm@latest
 - [x] ✅ [CODEX] P1. Update `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` with Option D results +
-      close-out: which repos shipped v2 successfully, whether v2 ghosted (Plan-B trigger), GH ticket status.
-      — unified-trading-pm@6975bd86
-- [x] ✅ [CLAUDE.md] P1. If the v2 workflow filename/job key needs to be communicated workspace-wide, add a 1-line pointer
-      under "CI Verification After Every Push" section.
-      — Added: "Required check name (all repos): quality-gates-v2 (v1 retired 2026-05-29)". unified-trading-pm@2da8eaba
+      close-out: which repos shipped v2 successfully, whether v2 ghosted (Plan-B trigger), GH ticket status. —
+      unified-trading-pm@6975bd86
+- [x] ✅ [CLAUDE.md] P1. If the v2 workflow filename/job key needs to be communicated workspace-wide, add a 1-line
+      pointer under "CI Verification After Every Push" section. — Added: "Required check name (all repos):
+      quality-gates-v2 (v1 retired 2026-05-29)". unified-trading-pm@2da8eaba
 - [x] ✅ [SCRIPT] P1. **Enable `enforce_admins` on staging + main across all 10 repos** — blocks admin bypass of branch
       protection (currently `enforce_admins: false`, meaning `IggyIkenna` can merge PRs even when `quality-gates` check
-      has not passed). Only enable AFTER all 10 repos are green and passing QG on main.
-      **DONE (partial) 2026-05-30** — Enabled for 6/10 repos currently green on quality-gates-v2:
-      unified-trading-pm ✅, unified-api-contracts ✅, unified-trading-library ✅, alerting-service ✅,
-      ml-service ✅ (no staging branch), execution-service ✅.
+      has not passed). Only enable AFTER all 10 repos are green and passing QG on main. **DONE (partial) 2026-05-30** —
+      Enabled for 6/10 repos currently green on quality-gates-v2: unified-trading-pm ✅, unified-api-contracts ✅,
+      unified-trading-library ✅, alerting-service ✅, ml-service ✅ (no staging branch), execution-service ✅.
       Remaining 4 repos NOT enabled — pre-existing QG failures block enforce_admins (would prevent all merges):
       features-service (lint), batch-live-reconciliation-service (coverage), instruments-service (coverage),
-      deployment-ui (GH_PAT). Enable on each once their QG failures are fixed.
-      **Reverting** (emergency): `gh api repos/IggyIkenna/<repo>/branches/main/protection/enforce_admins -X DELETE`.
-- [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE. **DONE 2026-05-30**
-      5-step audit result:
-      1. Deferred items scanned — see "## Deferred work" section below.
-      2. Deferred banner added.
-      3. Codex alignment: ci-cd-flow.md ✅, deployment-flow.md ✅ (required check updated), quickmerge-arch ✅ (no GHA refs), feature-branch-workflow ✅ (no GHA refs), issue doc ✅ (RESOLVED), CLAUDE.md ✅.
-      4. New workspace contract (quality-gates-v2 as required check) documented in CLAUDE.md + ci-cd-flow.md ✅.
-      5. No locked_by in frontmatter — N/A.
+      deployment-ui (GH_PAT). Enable on each once their QG failures are fixed. **Reverting** (emergency):
+      `gh api repos/IggyIkenna/<repo>/branches/main/protection/enforce_admins -X DELETE`.
+- [x] ✅ [PLAN] P1. Pre-archival 5-step audit per CLAUDE.md HARD RULE. **DONE 2026-05-30** 5-step audit result: 1.
+      Deferred items scanned — see "## Deferred work" section below. 2. Deferred banner added. 3. Codex alignment:
+      ci-cd-flow.md ✅, deployment-flow.md ✅ (required check updated), quickmerge-arch ✅ (no GHA refs),
+      feature-branch-workflow ✅ (no GHA refs), issue doc ✅ (RESOLVED), CLAUDE.md ✅. 4. New workspace contract
+      (quality-gates-v2 as required check) documented in CLAUDE.md + ci-cd-flow.md ✅. 5. No locked_by in frontmatter —
+      N/A.
 
 ## Success criteria
 
@@ -323,12 +314,12 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 
 ## Deferred work — migrated to:
 
-| Item | Destination | Status |
-|------|-------------|--------|
-| v1 cleanup for features-service, batch-live-recon, instruments-service, deployment-ui | File `cleanup_v1_quality_gates_workflows_<date>.md` once pre-existing QG failures fixed | **BLOCKED** on code quality fixes |
-| enforce_admins for same 4 repos | Same cleanup plan | **BLOCKED** on code quality fixes |
-| Remove PM `python-quality-gates.yml` (v1 callee) | `cleanup_v1_quality_gates_workflows_<date>.md` | **BLOCKED** on GH Support ticket #4422570 close |
-| Cloud Build / Artifact Registry canonical (step 7) | `cloud-build-on-main-canonical` plan (if not present, file separately) | Out of scope |
+| Item                                                                                  | Destination                                                                             | Status                                          |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| v1 cleanup for features-service, batch-live-recon, instruments-service, deployment-ui | File `cleanup_v1_quality_gates_workflows_<date>.md` once pre-existing QG failures fixed | **BLOCKED** on code quality fixes               |
+| enforce_admins for same 4 repos                                                       | Same cleanup plan                                                                       | **BLOCKED** on code quality fixes               |
+| Remove PM `python-quality-gates.yml` (v1 callee)                                      | `cleanup_v1_quality_gates_workflows_<date>.md`                                          | **BLOCKED** on GH Support ticket #4422570 close |
+| Cloud Build / Artifact Registry canonical (step 7)                                    | `cloud-build-on-main-canonical` plan (if not present, file separately)                  | Out of scope                                    |
 
 ---
 

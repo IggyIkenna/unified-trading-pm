@@ -75,74 +75,62 @@ Gate: MDPS-3.3.DeFi verification GREEN (met 2026-05-24 per slot-7).
 
 - [x] ✅ [SCRIPT] P0. **FEAT-3.4.DeFi.Onchain** — Launch features-onchain-defi compute VM. On-chain analytics: LST APR
       delta / DEX pool utilisation / oracle deviation signals. **Gate cleared 2026-05-28** (banner #2 — dex-swaps
-      backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1 — runs on prd).
-      All earlier VMs FAILED (see fix log below).
-      VM re-launched 2026-05-30 03:46: features-onchain-defi-20260530-034626 (DEFINITIVE — all 3 bugs fixed)
-      cmd: python -m features_service --feature-family onchain --operation compute --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
+      backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1 — runs on prd). All earlier VMs FAILED
+      (see fix log below). VM re-launched 2026-05-30 03:46: features-onchain-defi-20260530-034626 (DEFINITIVE — all 3
+      bugs fixed) cmd: python -m features_service --feature-family onchain --operation compute --mode batch --start-date
+      2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
 - [x] ✅ [SCRIPT] P0. **FEAT-3.4.DeFi.DeltaOne** — Launch features-delta-one-defi compute VM (reads prd
       `processed_candles`, 118 days 2026-01-25→2026-05-22 — sample-data pass per operator). **Gate cleared 2026-05-28**
-      (banner #2 — dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1).
-      All earlier VMs FAILED (see fix log below).
-      VM re-launched 2026-05-30 03:46: features-delta-one-defi-20260530-034640 (DEFINITIVE — all 3 bugs fixed)
-      cmd: python -m features_service --feature-family delta_one --operation compute --mode batch --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
-- [x] ✅ [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias.
-      **ONCHAIN GREEN 2026-05-30 06:23 UTC (slot-1). DELTA-ONE BLOCKED BLK-a5b69169 (operator decision pending).**
-      Verified on VM features-onchain-defi-20260530-052139 (exit_code=0, DEPLOYMENT_COMPLETED fa1ae58e):
-        - 13/13 manifest entries: all capture_status=captured, schema_version=8, written_at populated ✅
-        - 6 substantive groups (lending_rates, risk_params, rewards, flash_loan_availability, health_factor,
-          liquidation_events): 118/118 days GCS parquets written, 42k-390k rows/day ✅
-        - 7 batch-skip groups (macro_sentiment, lst_yields, lst_native_rates, onchain_perps,
-          perp_funding_rates, utilization, rate_impact): captured=True, 0 rows (no upstream data in
-          2026-01-25→2026-05-22 backfill window — correct behavior) ✅
-        - lending_rates 2026-01-25: 127,679 rows sampled, schema matches (timestamp, instrument_id,
-          aave_supply_apy, aave_borrow_apy, aave_utilization, rate_spread, protocol, chain, asset) ✅
-        - risk_params 2026-05-22: 42,714 rows ✅
-        - LookaheadBias: 0 violations in run.log ✅
-        - Delta-one DeFi: ALL groups fail — Bug 4 architectural (MDPS prd DEFI has dex_swaps only,
-          delta-one expects oracle_prices/trades). BLK-a5b69169 pending operator decision. ⚠️
-      **Three bugs fixed 2026-05-30 (slot-1) — all in features-service@1924f46f:**
-        Bug 1 (setup script rc=2): `INSTALL_ARGS_NODEPS` guard in setup-data-pipeline-vm.sh (deployment-service@10626fd).
-          UAC export fix also needed: `resolve_data_type_for_feature_group` (eb9c0b2).
-        Bug 2 (delta-one dep checker): `DependencyChecker._resolve_gcs_path` overridden to call
-          `resolve_bucket_name(kind="market-data")` (env-tiered `market-data-tick-defi-prd-{pid}`) instead of
-          legacy flat template `market-data-tick-{ag}-{pid}` which resolves to the pre-2026-01-24 bucket.
-        Bug 3 (onchain IS_CATALOGUE_EMPTY): `_count_is_defi_instruments` looked for flat
-          `day={date}/instruments.parquet` — IS bucket stores per-venue shards at
-          `day={date}/venue={V}/instruments.parquet`. Fixed to list+aggregate across venue shards.
-      **Status update 2026-05-30 (slot-1) — 05:01 UTC (merged):**
-        - features-onchain-defi-20260530-034626: FAILED exit_code=1 ❌ — 11/13 groups succeeded.
-          VM ran 03:46→04:46 UTC. 13 feature groups attempted. Deployment archived (DEPLOYMENT_FAILED).
-          **6 groups with FULL 118-day GCS output — all verified:**
-            lending_rates: 118/118 days ✅, 42k-127k rows/day, schema_v8 ✅, 0 LookaheadBias ✅
-            risk_params: 118/118 days ✅, 127k-389k rows/day, schema_v8 ✅, 0 LookaheadBias ✅
-            rewards: 118/118 days ✅, 46k-291k rows/day, schema_v8 ✅, 0 LookaheadBias ✅
-            flash_loan_availability: 118/118 days ✅, 42k-169k rows/day, schema_v8 ✅, 0 LookaheadBias ✅
-            health_factor: 118/118 days ✅, 42k+ rows/day, schema_v8 ✅, 0 LookaheadBias ✅
-            liquidation_events: 118/118 days ✅, 42k-89k rows/day, schema_v8 ✅, 0 LookaheadBias ✅
-          **5 groups in manifest (capture_status=captured) but no GCS data written:**
-            macro_sentiment, lst_yields (WriteGate STALE_DATA), onchain_perps, utilization (all 0 rows),
-            rate_impact (manifest written by finally-block; no parquet).
-          **2 groups FAILED — root cause diagnosed:**
-            lst_native_rates: ERROR "Unknown feature group: lst_native_rates" — not in dispatcher.
-            perp_funding_rates: missing batch-skip guard → per-day loop, 0 rows → `_log_window_outcome` False.
-          **Bugs 5+6 FIXED in features-service@b77d0199** (2026-05-30 05:00 UTC):
-            Bug 5: Add `_process_lst_native_rates` to dispatcher with batch-skip (no oracle_prices in DeFi prd).
-            Bug 6: Add batch-skip guard to `_process_perp_funding_rates` (no MTDS perp_funding shards).
-        - features-onchain-defi-20260530-050112: OOM CRASH ❌ — deleted 2026-05-30 ~05:15 UTC.
-          Died mid-lending_rates at 2026-03-21 (~05:09:41 UTC). FORCE=1 caused OOM on e2-standard-8 (32GB).
-          The 6 substantive groups from 034626 remain intact in GCS (not overwritten before crash).
-        - features-onchain-defi-20260530-051506: DELETED prematurely (05:17 UTC) — misread as OOM risk.
-          Log showed lending_rates reprocessing (not skipping) — same behavior as 034626 (which completed OK).
-          The VM was running WITHOUT FORCE (same as 034626) and was fine.
-        - features-onchain-defi-20260530-052139: COMPLETED ✅ exit_code=0 — 05:21→06:22 UTC.
-          Code: features-service@b77d0199, deployment-service@10626fd. 13/13 groups captured.
-          Deployment archived fa1ae58e-3d53-4a23-abdd-4edacb7d6517 (DEPLOYMENT_COMPLETED).
-        - features-delta-one-defi-20260530-034640: FAILED exit_code=1 ❌ — ALL 18 groups fail.
-          **Bug 4 (ARCHITECTURAL — needs operator decision)**: DeFi prd MDPS only has data_type=dex_swaps
-          / swaps_ohlcv_15s. Delta-one candle loader expects data_type=oracle_prices (POOL instruments)
-          or data_type=trades (EIGENLAYER restaking ticks). 0/8 instruments loaded for all dates.
-          **BLK-a5b69169**: Awaiting operator decision — delta-one-defi needs dex_swaps support added,
-          OR scope FEAT-3.4.DeFi-V to onchain-only for this pass.
+      (banner #2 — dex-swaps backfill COMPLETED 2026-05-27); bucket-split decision resolved (banner #1). All earlier VMs
+      FAILED (see fix log below). VM re-launched 2026-05-30 03:46: features-delta-one-defi-20260530-034640 (DEFINITIVE —
+      all 3 bugs fixed) cmd: python -m features_service --feature-family delta_one --operation compute --mode batch
+      --start-date 2026-01-25 --end-date 2026-05-22 --asset-group DEFI --feature-group ALL
+- [x] ✅ [VERIFY] P0. **FEAT-3.4.DeFi-V** — Schema check; 100-row sample; manifest v8; 0 LookaheadBias. **ONCHAIN GREEN
+      2026-05-30 06:23 UTC (slot-1). DELTA-ONE BLOCKED BLK-a5b69169 (operator decision pending).** Verified on VM
+      features-onchain-defi-20260530-052139 (exit_code=0, DEPLOYMENT_COMPLETED fa1ae58e): - 13/13 manifest entries: all
+      capture_status=captured, schema_version=8, written_at populated ✅ - 6 substantive groups (lending_rates,
+      risk_params, rewards, flash_loan_availability, health_factor, liquidation_events): 118/118 days GCS parquets
+      written, 42k-390k rows/day ✅ - 7 batch-skip groups (macro_sentiment, lst_yields, lst_native_rates, onchain_perps,
+      perp_funding_rates, utilization, rate_impact): captured=True, 0 rows (no upstream data in 2026-01-25→2026-05-22
+      backfill window — correct behavior) ✅ - lending_rates 2026-01-25: 127,679 rows sampled, schema matches
+      (timestamp, instrument_id, aave_supply_apy, aave_borrow_apy, aave_utilization, rate_spread, protocol, chain,
+      asset) ✅ - risk_params 2026-05-22: 42,714 rows ✅ - LookaheadBias: 0 violations in run.log ✅ - Delta-one DeFi:
+      ALL groups fail — Bug 4 architectural (MDPS prd DEFI has dex_swaps only, delta-one expects oracle_prices/trades).
+      BLK-a5b69169 pending operator decision. ⚠️ **Three bugs fixed 2026-05-30 (slot-1) — all in
+      features-service@1924f46f:** Bug 1 (setup script rc=2): `INSTALL_ARGS_NODEPS` guard in setup-data-pipeline-vm.sh
+      (deployment-service@10626fd). UAC export fix also needed: `resolve_data_type_for_feature_group` (eb9c0b2). Bug 2
+      (delta-one dep checker): `DependencyChecker._resolve_gcs_path` overridden to call
+      `resolve_bucket_name(kind="market-data")` (env-tiered `market-data-tick-defi-prd-{pid}`) instead of legacy flat
+      template `market-data-tick-{ag}-{pid}` which resolves to the pre-2026-01-24 bucket. Bug 3 (onchain
+      IS_CATALOGUE_EMPTY): `_count_is_defi_instruments` looked for flat `day={date}/instruments.parquet` — IS bucket
+      stores per-venue shards at `day={date}/venue={V}/instruments.parquet`. Fixed to list+aggregate across venue
+      shards. **Status update 2026-05-30 (slot-1) — 05:01 UTC (merged):** - features-onchain-defi-20260530-034626:
+      FAILED exit_code=1 ❌ — 11/13 groups succeeded. VM ran 03:46→04:46 UTC. 13 feature groups attempted. Deployment
+      archived (DEPLOYMENT_FAILED). **6 groups with FULL 118-day GCS output — all verified:** lending_rates: 118/118
+      days ✅, 42k-127k rows/day, schema_v8 ✅, 0 LookaheadBias ✅ risk_params: 118/118 days ✅, 127k-389k rows/day,
+      schema_v8 ✅, 0 LookaheadBias ✅ rewards: 118/118 days ✅, 46k-291k rows/day, schema_v8 ✅, 0 LookaheadBias ✅
+      flash_loan_availability: 118/118 days ✅, 42k-169k rows/day, schema_v8 ✅, 0 LookaheadBias ✅ health_factor:
+      118/118 days ✅, 42k+ rows/day, schema_v8 ✅, 0 LookaheadBias ✅ liquidation_events: 118/118 days ✅, 42k-89k
+      rows/day, schema_v8 ✅, 0 LookaheadBias ✅ **5 groups in manifest (capture_status=captured) but no GCS data
+      written:** macro_sentiment, lst_yields (WriteGate STALE_DATA), onchain_perps, utilization (all 0 rows),
+      rate_impact (manifest written by finally-block; no parquet). **2 groups FAILED — root cause diagnosed:**
+      lst_native_rates: ERROR "Unknown feature group: lst_native_rates" — not in dispatcher. perp_funding_rates: missing
+      batch-skip guard → per-day loop, 0 rows → `_log_window_outcome` False. **Bugs 5+6 FIXED in
+      features-service@b77d0199** (2026-05-30 05:00 UTC): Bug 5: Add `_process_lst_native_rates` to dispatcher with
+      batch-skip (no oracle_prices in DeFi prd). Bug 6: Add batch-skip guard to `_process_perp_funding_rates` (no MTDS
+      perp_funding shards). - features-onchain-defi-20260530-050112: OOM CRASH ❌ — deleted 2026-05-30 ~05:15 UTC. Died
+      mid-lending_rates at 2026-03-21 (~05:09:41 UTC). FORCE=1 caused OOM on e2-standard-8 (32GB). The 6 substantive
+      groups from 034626 remain intact in GCS (not overwritten before crash). - features-onchain-defi-20260530-051506:
+      DELETED prematurely (05:17 UTC) — misread as OOM risk. Log showed lending_rates reprocessing (not skipping) — same
+      behavior as 034626 (which completed OK). The VM was running WITHOUT FORCE (same as 034626) and was fine. -
+      features-onchain-defi-20260530-052139: COMPLETED ✅ exit_code=0 — 05:21→06:22 UTC. Code:
+      features-service@b77d0199, deployment-service@10626fd. 13/13 groups captured. Deployment archived
+      fa1ae58e-3d53-4a23-abdd-4edacb7d6517 (DEPLOYMENT_COMPLETED). - features-delta-one-defi-20260530-034640: FAILED
+      exit_code=1 ❌ — ALL 18 groups fail. **Bug 4 (ARCHITECTURAL — needs operator decision)**: DeFi prd MDPS only has
+      data_type=dex_swaps / swaps_ohlcv_15s. Delta-one candle loader expects data_type=oracle_prices (POOL instruments)
+      or data_type=trades (EIGENLAYER restaking ticks). 0/8 instruments loaded for all dates. **BLK-a5b69169**: Awaiting
+      operator decision — delta-one-defi needs dex_swaps support added, OR scope FEAT-3.4.DeFi-V to onchain-only for
+      this pass.
 - [x] ✅ [P1 — BLK-062521f7 RESOLVED] **ROOT CAUSE FIXED** — see Bug 2+3 above (features-service@1924f46f).
 
 ## Phase 3 — TradFi features compute
