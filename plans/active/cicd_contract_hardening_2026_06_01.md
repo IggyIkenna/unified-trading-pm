@@ -99,6 +99,36 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 - **Consequence to know**: making gates truly enforce EXPOSED accumulated per-repo QG debt (PM red on lint+codex;
   instruments red on coverage) → those mains are blocked-on-red. That's workstream (B).
 
+### LDR→main promotion campaign — LIVE STATUS (2026-06-01; operator: PR-gated, green-repos-first)
+
+> **Pick-up point for any agent.** Promoting `live-defi-rollout`→`main` per repo via PR (so `quality-gates-v2` gates
+> the merge). Method per repo: on the slot (tracks LDR), `git merge origin/main` (back-merge main's fresh commits into
+> LDR, resolve **take-best** — the recurring conflict is `quality-gates-v2.yml` add/add: both are functionally identical
+> v2 callers, take LDR's canonical PM-template version), push `HEAD:live-defi-rollout` → the LDR→main PR becomes
+> mergeable → `gh pr merge <n> --auto --merge`. **Merge-commit preserves main's fresh commits** (never replace). Then
+> repeat for `staging`. Do NOT bypass the v2 gate. agent-orchestrator is the exception (already on main — see below).
+
+| Repo | PR# | Status |
+| --- | --- | --- |
+| alerting-service | #20 | ✅ clean → auto-merge ON (waits v2 green) |
+| instruments-service | #392 | ✅ clean → auto-merge ON |
+| trading-agent-service | #7 | ✅ resolved (v2-wf take-best) → mergeable + auto-merge ON |
+| deployment-api | #14 | ⏳ conflict — resolve+push |
+| execution-service | #206 | ⏳ conflict — resolve+push |
+| market-tick-data-service | #112 | ⏳ conflict — resolve+push |
+| strategy-service | #64 | ⏳ conflict — resolve+push |
+| unified-api-contracts | #62 | ⏳ conflict — resolve+push |
+| unified-trading-library | #229 | ⏳ conflict — resolve+push |
+| market-data-processing-service | #87 | ⏳ conflict — resolve+push |
+| deployment-ui | #13 | ⏳ conflict — resolve+push |
+| client-reporting-api | #11 | ⏳ conflict — resolve+push |
+| batch-live-reconciliation-service | #13 | ⏳ conflict — resolve+push |
+| ibkr-gateway-infra | #13 | ⏳ conflict — resolve+push |
+| system-integration-tests | #16 | ⏳ conflict — resolve+push |
+| unified-trading-pm | #107 | 🔴 v2-RED (basedpyright over-ratchet: feature_parity_diff.py numpy/pyarrow + readiness scripts) — green first |
+| deployment-service | — | 🔴 v2-RED — green first |
+| fund-administration-service / e2e-testing / greeks-service | — | v2 just added; no runs yet (open PR after first green v2) |
+
 ### agent-orchestrator EXCEPTION — `main` is its target, NOT LDR (codified 2026-06-01, operator)
 
 **Do not treat agent-orchestrator's `main`-behind-LDR as promotion drift.** `agent-orchestrator` is operator/agent
