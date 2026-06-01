@@ -147,3 +147,30 @@ Then, per AG, ONE bundled VM walk (single-walk discipline), built by generalisin
 
 Execution: VM in asia-northeast1 (object scan is ~25 min/AG for prediction-scale, more for cefi), `--apply` gated on the
 fleet drain. DeFi is slot-2's lane (the defi v9 tool + its dedicated-bucket shape) — not in slot-4 scope.
+
+## Phase-0 LAYOUT audit results (tool `cf_layout_audit_2026_06_01.py`, 2026-06-01)
+
+Confirms the multi-layout reality — each AG bucket has ≥2 distinct layouts that the migrator MUST all handle/reconcile:
+
+- **cefi** (prd AND legacy, identical layout set):
+  - `raw_tick_data/by_date/{SYMBOL}.parquet` — **FULLY FLAT**, no hive at all. day/venue/data_type live ONLY in the
+    parquet columns (`exchange, symbol, timestamp[epoch-micros], data_type, instrument_id, funding_rate, …`). The
+    migrator must derive day (from epoch-micros `timestamp`), venue (from `exchange`/`symbol`), data_type (column) per
+    row and re-partition to canonical hive — possibly **fanning out one flat symbol-file into many day= partitions**
+    (122,179 rows × 94,048 distinct timestamps in one AVAXUSDT file). Hardest AG.
+  - `processed_candles/by_date/day=/timeframe=/data_type=/venue=` (MDPS candles) — has `day=` but no `asset_group=`/`pipeline_mode=`.
+- **prediction** — **legacy and canonical layouts are INVERTED** (needs reconciliation, not blind copy):
+  - legacy raw: `raw_tick_data/by_date/day=/asset_group=/venue=/instrument_type=/data_type=` (near-canonical — already
+    has `asset_group=`; rich parquet cols incl `asset_group, data_source, chain, underlying`).
+  - canonical pred-prd raw (from the CF audit): `…/day=/category=/data_source=/venue=/…` (has `category=` + `data_source=`
+    — LESS canonical than legacy on the AG key). So "pick the freshest schema" here = the **legacy** asset_group= layout
+    is closer to target; the migrator must converge both onto `day=/asset_group=/pipeline_mode=/…`.
+  - `processed_candles/by_date/day=/timeframe=/data_type=/venue=` (candles).
+- **(tradfi / sports / instruments)**: run `cf_layout_audit_2026_06_01.py` on each before its walk (Phase 0). Expect the
+  same shape — a raw tree (flat or partial-hive) + processed_candles + possibly an older bare-segment tree.
+
+**Design consequence**: the migrator is genuinely **layout-dispatching** — per object it must detect its source layout
+and map to the single canonical `day=/pipeline_mode=/asset_group=/venue=/chain=/instrument_type=/data_type=` target,
+deriving missing dims from parquet columns (cefi flat), reconciling inverted schemes (prediction), and deduping any
+overlap to the freshest. Then the `ManifestWriter` rebuild stamps v9 + source + pipeline_mode + available_at. This is
+why the operator gated it on "only once we're on v9, no more missing things" — the Phase-0 audit per AG is the guard.
