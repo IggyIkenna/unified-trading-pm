@@ -84,14 +84,18 @@ estimate_calibrated_ai_days: 1.2
       unblocked.
 - [x] ✅ [SCRIPT] P3. **Item 5 — FF-pull starvation watchdog signal (spec delivered).** Spec below
       (§ "Item 5 spec"). Proposes the detection rule + ping payload for the slot-5-963-behind failure mode.
-- [ ] [SCRIPT] P3. **Item 5b — implement the FF-pull starvation watchdog.** Wire the § "Item 5 spec" `collision`
+- [x] ✅ [SCRIPT] P3. **Item 5b — implement the FF-pull starvation watchdog.** Wired the § "Item 5 spec" `collision`
       detection (incoming-changed-files ∩ dirty-files ≠ ∅, gated on `behind ≥ FF_STARVE_COMMIT_THRESHOLD` or age >
       `FF_STARVE_AGE_HOURS`) into `scripts/dev/slot-git-status-report.sh` (it already walks each repo's ahead/behind +
-      dirty state) and POST the one-per-(slot,repo) ping payload to the orchestrator backend the same way the
-      git-status reporter posts. Keep `slot-cron-ff-pull.sh` as the actor; the report cron is the detector/alerter.
-      Add a unit/bats test under `tests/` (mirror `test_tab_worktrees.bats`) covering: collision-detected → signal,
-      non-colliding-dirty → no signal, below-threshold → no signal. Update `codex/05-infrastructure/per-tab-worktrees.md`
-      § "Step 7 — troubleshooting". **Script → land on LDR** (same staging-632-behind deviation as Items 2/3).
+      dirty state) which POSTs a one-per-(slot,repo) `FF-PULL STARVATION` ping to `/api/slots/<N>/message` (`from_role:
+      main`) the same way it POSTs git-status, de-duped via `.tabs/.ff-starve-state/` markers that clear on next
+      successful FF. `slot-cron-ff-pull.sh` stays the actor; the report cron is the detector/alerter. Detection logic is a
+      standalone testable `scripts/dev/ff-starvation-detect.sh`. Added `tests/test_ff_starvation_detect.bats` (10 cases:
+      collision→signal, non-colliding-dirty→no-signal, below-threshold→no-signal, clean/up-to-date→no-signal + syntax +
+      arg-validation). Updated `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7" (troubleshooting row + dedicated
+      watchdog subsection). **Landed on LDR** (same staging-632-behind deviation as Items 2/3). — code
+      unified-trading-pm@0aacad7fa | bats 10/10 green | full PM QG `--no-fix` exit 0 (basedpyright ratchet held; new
+      scripts are bash, no JSON-parsing python so no empty-fallback exclude needed).
 
 ## Discoveries (captured per HARD RULE)
 
