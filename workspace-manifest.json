@@ -1643,6 +1643,16 @@
           "name": "instruments-service",
           "version": ">=0.1.0,<1.0.0",
           "required": true
+        },
+        {
+          "name": "alerting-service",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
+        },
+        {
+          "name": "client-reporting-api",
+          "version": ">=0.1.0,<1.0.0",
+          "required": true
         }
       ],
       "completion_path": "cefi",
@@ -2017,7 +2027,7 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
-      "notes": "Canonical orchestrator — IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab→LDR→main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged — 2026-05-24 incident.",
+      "notes": "Canonical orchestrator \u2014 IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab\u2192LDR\u2192main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged \u2014 2026-05-24 incident.",
       "ci_status": null,
       "coverage_pct": null,
       "bypass_audit_path": null,
@@ -2421,7 +2431,7 @@
     }
   },
   "staging_versions": {
-    "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` — the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
+    "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "batch-live-reconciliation-service": "0.1.0",
     "deployment-api": "0.1.1",
     "deployment-service": "0.1.1",
