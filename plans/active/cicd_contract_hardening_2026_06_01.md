@@ -247,13 +247,20 @@ by a PR:
       reconciliation promote-PR, not slot-7 work.) - (PM-main detail: FF `4f57234ea` — codex empty-str `@98b12ee53` +
       basedpyright-CI ignore `@a217a031c` + drift; PR #106/#107 closed. semver-rollout surfaced no further red repos —
       all greened above.)
-- [ ] [TEST] P1. **DISCOVERY (instruments-service, surfaced 2026-06-01 by the coverage worker): `inst.symbol == symbol`
+- [x] ✅ [TEST] P1. **DISCOVERY (instruments-service, surfaced 2026-06-01 by the coverage worker): `inst.symbol == symbol`
       latent bug in ~19 more defi adapters.** `instruments_service/reference_data/adapters/defi/` has 22 files using
       `inst.symbol == symbol` in `get_instrument()`; `InstrumentRecord` has **no `symbol` attribute** → `AttributeError`
       on any non-address symbol lookup against a populated registry. 3 fixed (venus/fluid/radiant @851559f4); ~19
       remain. Dedicated per-file sweep → canonical `inst.instrument_key.endswith(f":{symbol}")` + a test each (kept
       separate to avoid pulling unrelated files into the codex changed-files scan). `parent_epic: infrastructure_master`
-      (or reassign to the instruments/defi reference-data epic at triage).
+      (or reassign to the instruments/defi reference-data epic at triage). — **DONE instruments-service@c5ea5fc9**: all
+      19 remaining adapters fixed to canonical `inst.instrument_key.endswith(f":{symbol}")` (aave_v3, balancer, benqi,
+      compound_v3, curve, ethena, etherfi, euler_v2, jito, kamino, lido, marinade, morpho, orca, raydium, spark,
+      uniswap_v2/v3/v4); added parametrized regression test
+      `tests/unit/reference_data/adapters/defi/test_defi_get_instrument_symbol_lookup.py` (symbol-suffix hit + raw-address
+      hit + miss→None no-raise, per adapter) + converted the 3 comprehensive tests that codified the bug
+      (`pytest.raises(AttributeError)` → `is None`). QG `scripts/quality-gates.sh` EXIT 0 + service `tests/unit/` 3034
+      passed @ 78.47% coverage.
 - [ ] [SCRIPT] P1. **Revive the SIT chain** — FULLY DIAGNOSED 2026-06-01 (corrects the original "workflow_run
       name-mismatch" hypothesis — that was WRONG). Actual topology + state: -
       `system-integration-tests/full-workspace-sit.yml` (cron `0 3 * * *` nightly +
