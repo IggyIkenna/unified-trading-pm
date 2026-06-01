@@ -395,7 +395,7 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       (audit k1-deploy).
 - [ ] [AGENT] P2. Tier E: game-day + synthetic smokes wired into the staging SIT schedule.
 - branch protection for the original 5 repos → `workspace_repo_branch_protection_gaps_2026_05_29.md` (DONE).
-- [ ] [SCRIPT] P2. **Reconcile/verify** (migrated from archived `ui_repo_branch_protection_2026_05_29.md`, slot 7
+- [x] ✅ [SCRIPT] P2. **Reconcile/verify — DONE 2026-06-01.** Confirmed all 4 named repos LACK the `require-quality-gates` ruleset (rqg=0). Drift EXPLAINED, not a regression: "MAIN 17/17" is the 17-repo ruleset SET; these 4 sit OUTSIDE it. verify_branch_protection_check_names.py → ALL CONSISTENT for the 17. Reconciliation: `unified-trading-system-ui` + `unified-trading-api` → covered by the 6-repo ruleset-add (verify-job-name+green-first per ml-service deadlock lesson); `features-service` → GREEN v2 but no ruleset and in NO governance list → folded into that ruleset-add scope; `user-management-ui` → ARCHIVED (folded into unified-trading-system-ui per CLAUDE.md) → EXEMPT. Owner: Ikenna.
       2026-06-01): harsh's 2026-06-01 re-check found `quality-gates-v2` enforced as a **required check** on only
       `batch-live-reconciliation-service` of the 5 formerly-unprotected repos, while this plan's sweep reports MAIN
       17/17 on v2 — drift. Confirm live state via `verify_branch_protection_check_names.py`; if
@@ -634,7 +634,7 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P1. Ruleset-set decision made: **only `agent-orchestrator` is EXEMPT**
       (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
       Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
-- [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the 6 non-exempt repos (operator-decided 2026-06-01).**
+- [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the (now 7) non-exempt repos — +`features-service` (green v2, no ruleset, surfaced by 398) (operator-decided 2026-06-01).**
       **HARD PREREQUISITE per repo (learned the hard way 2026-06-01): VERIFY the v2 workflow's job `name:` emits
       `Quality Gates (<repo>) / quality-gates-v2` AND confirm a GREEN run on the default branch BEFORE creating the
       ruleset** — else the required context is never satisfied and you DEADLOCK/freeze main. (Incident: created rulesets
