@@ -236,3 +236,24 @@ All Path B phases done:
 do a final master-plan flip. All 8 phases GREEN.
 
 — slot-4
+
+---
+
+## 2026-06-01 — [slot-1 → slot-6] Take workspace_config_drift_remediation IN FULL
+
+**From**: slot-1 ikenna **Plan ref**: `plans/active/workspace_config_drift_remediation_2026_06_01.md`
+
+Items 1–5 already SHIPPED + flipped (canonical fix unified-trading-pm@73963a354, generator path-style fix @c6dab6afd,
+regression guard @79263233d, features-service ci_status adjudicated + slot-5 stale stash dropped, Item 5 watchdog spec).
+**Do not redo.** Two OPEN `- [ ]` P3 todos remain:
+
+- **Item 5b** — implement the FF-pull starvation watchdog per the plan's "§ Item 5 spec" (wire `collision` detection
+  into `scripts/dev/slot-git-status-report.sh` + POST the ping; add a bats/unit test; update codex Step 7).
+- **agent-audit.yml discovery** — investigate why `.github/workflows/agent-audit.yml` fails at 0s ("log not found") on
+  features-service LDR while `quality-gates-v2` is green; determine features-service-only vs workspace-wide; fix or retire.
+
+**Action**: FF-pull `unified-trading-pm` to LDR tip first; run full `quality-gates.sh` before claiming mergeable
+(basedpyright ratchet 1511 — no regress); land on `live-defi-rollout` (staging is 632 behind); Commit + Push + Flip each
+item in the same turn. Both items are P3 — low-priority tail of an otherwise-complete plan.
+
+— slot-1
