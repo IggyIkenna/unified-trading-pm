@@ -56,5 +56,21 @@ pure GCS ops (e.g. the manifest-seed half of the bucket-SSOT remediation).
 
 ## Status
 
-OPEN — `58ee0a9` added the mtds pin case (necessary but insufficient while pins are pruned). Awaiting operator decision
-on prune-cron tuning vs dedicated bucket.
+**RESOLVED 2026-06-01** — the blocker was misdiagnosed as a prune cron; the real bug was a silent fallback.
+
+- **Diagnosis correction**: there is **no aggressive prune** — `code/` has no GCS lifecycle rule (only `vm-logs/` @14d)
+  and `cleanup_old_tarballs.py` is wired to **no** cron/scheduler. Empirically @sha pins **persist** (394 `code/`
+  objects incl. many `@<sha>.tar.gz`). The "pruned within seconds" symptom was either a build that aborted on a dirty
+  tree (the aggravator) or the floating-tarball race (point 1) — never a prune.
+- **Fix shipped** (deployment-service@a0fcba7, `setup-data-pipeline-vm.sh`): a **SHA-pinned pull is now authoritative**
+  — (a) pinned-but-missing tarball → hard `exit 1` (was `WARNING … skipping` → the exit-2 silent-stale hazard); (b) a
+  pinned pull verifies the **pinned** `@sha.manifest.json` (not the floating manifest a concurrent rebuild can move);
+  (c) self-verify: the pinned manifest's `commit_sha` must match the requested pin (prefix-compare), and a pin with no
+  manifest also hard-fails. Composes with the mtds pin case (`MTDS_TARBALL_SHA`, `58ee0a9`) + the `TARBALL_EXPECTED_SHA`
+  assert already present.
+- **Net**: a C0/C6/G1 VM launch now either runs the exact pinned commit or **fails loudly** — never silently runs stale
+  code. L0 unblocked for the RUN-ON-VM todos.
+
+Residual (non-blocking): `create-code-tarballs.sh` still aborts on a dirty tree under parallel-agent churn — build from
+a clean slot worktree (operator slots are kept clean). Archive this issue once a C0 dry VM run confirms the loud-fail
+path in practice.
