@@ -32,6 +32,16 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 **status**: 🟠 ACTIVE — QG sweep for execution-service (20 ruff errors) + trading-agent-service (ruff clean). Run
 `bash scripts/quality-gates.sh` exit 0 in each. PREREQ: UTL QG green. [vm: vm-trading-core]
 
+## P2 — opportunistic / post-cutover (slot 7 dispatch 2026-06-01)
+
+- [ ] [CODE] P2. **F-32 — size-based MEV auto-escalation (post-cutover).** Operator decision 2026-06-01: MEV mode is
+      **directive-driven** for May-23 (F-32 closed for the cutover). Post-cutover, add size-based auto-escalation of MEV
+      protection. Repo: execution-service. From `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`.
+- [ ] [CODE] P1. **G12 (execution-side) — emit per-incident recon-freeze signals** that the alerting-service publisher
+      (owned in `observability_master`) consumes: symbol-scoped for symbol breaks, account-wide for account-level SEV0s.
+      In-scope for May-23. Repo: execution-service. From
+      `archive/issues/recon_freeze_armed_never_published_2026_05_27.md`.
+
 ## Assigned active plans
 
 _(no other active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land

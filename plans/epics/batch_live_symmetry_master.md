@@ -50,6 +50,15 @@ _(no plans currently assigned at this priority)_
 
 ## P1 — important; post-current-gate
 
+### BLRS recon operator-decision dispatch (slot 7, 2026-06-01 — from `batch_live_reconciliation_service_audit_2026_05_27.md`)
+
+- [ ] [CODE] P1. **D2 — BLRS calls strategy-service position query API for the canonical position baseline** (not a
+      BLRS-local recomputation). Repo: batch-live-reconciliation-service.
+- [ ] [CODE] P1. **D3 — build all 3 recon green gates: drawdown + fill-rate + bps.** Only-bps recon = false-pass. All
+      three must be GREEN for a recon pass. Repo: batch-live-reconciliation-service.
+- [ ] [CODE] P1. **D4 — move BLRS recon resolution route to `/t1-recon/...`; live recon stays on
+      `strategy-service/position`.** Quick rename (slot 7 may ship if clean). Repo: batch-live-reconciliation-service.
+
 ### [`available_at_lookahead_bias_completion_2026_05_08`](../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md)
 
 **status**: ✅ ARCHIVED 2026-05-21 · **estimate**: 1.5 cal AI-days (class: design) — all phases shipped; deferred items

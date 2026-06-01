@@ -173,6 +173,23 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
 - **Everything else** (consolidation sidecar, FeatureBatchHandler base, deployment-ui drill-down, multi-task training,
   hierarchical inference, phantom audit extension): post-May-23.
 
+## DeFi data-loading dispatch (slot 7, 2026-06-01 — from `features_service_defi_data_loading_blockers_2026_05_29.md`)
+
+- [ ] [CODE] P1. **DeFi #1 — map `volume_analysis` / `vwap` / `microstructure` feature groups → `dex_pool_swaps`** via
+      UAC `resolve_data_type_for_feature_group()` so DeFi features resolve to the canonical dex_swaps data_type. Repo:
+      features-service (self-contained). Operator decision 2026-06-01.
+- [ ] [DATA] P2. **DeFi #2 — legacy bucket = read-only historical archive; NO manifest rebuild.** Operator decision
+      2026-06-01: the legacy DeFi bucket is a read-only historical archive; do NOT rebuild its manifest (that would be
+      manifest-canon work). Treat as read-only when loading historical DeFi features. Repo: features-service (policy).
+- [ ] [DOCS] P1. **DeFi #3 — UAC contract-doc: document `dex_swaps` OHLC semantics.** Slot-7 investigation 2026-06-01:
+      O/H/L/C are **USD-normalized pool spot prices** (price = `amountUSD / abs(base amount)`; for USDC/WETH this yields
+      ~1.0 = USDC-per-WETH, which is correct, not a bug). The UAC contract is currently SILENT on this. Add a docstring
+      to the `swaps_ohlcv_*` schema in
+      `unified-api-contracts/unified_api_contracts/internal/schemas/_candle_contracts.py` clarifying the three
+      aggregation methods (amountUSD/base, amount_in_usd/amount_in, token-ratio fallback). NO MDPS bug found
+      (`market_data_processing_service/app/adapters/defi/swap_adapter.py:237-316` is correct). Repo:
+      unified-api-contracts.
+
 ## Open questions
 
 ### Q1 — [ml-features-phase2a-tab, 2026-05-08 07:50 UTC] ✅ RESOLVED — operator picked (b) Defer per features-repo-consolidation absorption

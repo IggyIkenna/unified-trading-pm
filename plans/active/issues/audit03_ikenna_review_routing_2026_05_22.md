@@ -21,13 +21,19 @@ drift-backlog) until the decision lands, so we don't ship a fix that contradicts
 > `ci_canonical_v2_migration`), or codex-docs consolidation (`codex_vs_repo_docs_ssot_audit`). Codex-doc edits implied
 > below are routed to that owner — slot 7 records the todo, does not edit codex.
 >
-> - **F-22** — ship the 1-liner now: add `headers` param to MTDS `perp_funding_handler._make_session`. [slot 7 code]
+> - **F-22** — ✅ SHIPPED 2026-06-01 (slot 7): `_make_session(headers=...)` optional param added,
+>   market-tick-data-service@`0716a544` on LDR (fixes the Tardis-funding-path TypeError). [slot 7 code]
+>   - **NOTE**: MTDS QG is **pre-existing-red** independent of F-22 — `migrate_prediction_to_pred_prd_v9.py`
+>     deep-imports `gcs_copy_object`/`gcs_describe_object` (UTL does NOT re-export these top-level, only
+>     `gcs_delete_object`) + ruff-format drift in `backfill_drift_v2_historical.py` / `backfill_solana_dex_state.py` /
+>     `migrate_defi_full_v9_canonical.py`. Dispatch todo filed in `mtds_mdps_master`. Foreign (slots-2/3) → not swept by
+>     slot 7.
 > - **F-34** — 28 implemented archetypes = intended May-23 rollout subset. Add `SUPPORTED_ARCHETYPES` allowlist +
 >   typed-error guard + fix docstring (strategy-service). [slot 7 code — small]
 > - **F-13 / F-15** — reconcile codex strategy-spec → implemented mechanism (code is truth). Record codex-update todo in
 >   `strategy_master` + route doc edit to `codex_vs_repo_docs`.
 > - **F-14** — VERIFY whether `vol_cap_clamp` provides an equivalent 1h price-move abort. If yes → reconcile codex. If
->   NO → it is a **P1 safety gap** → file todo in `strategy_master` / `execution_master`. [slot 7 investigates +
+>   NO → it is a **P1 safety gap** → file todo in `strategy_master` / `execution_master`. [slot 7 investigates + >
 >   reports]
 > - **F-32** — MEV mode is **directive-driven** for May-23 → close F-32. Size-based auto-escalation = post-cutover P2
 >   todo in `execution_master`.

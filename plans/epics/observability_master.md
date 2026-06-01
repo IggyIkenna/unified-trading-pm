@@ -68,6 +68,13 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate (May-23 cutover)
 
+### Recon-freeze publisher dispatch (slot 7, 2026-06-01 — from `recon_freeze_armed_never_published_2026_05_27.md`)
+
+- [ ] [CODE] P0. **G12 — alerting-service recon-freeze publisher (IN-SCOPE for May-23).** Operator decision 2026-06-01:
+      per-incident-type granularity — **symbol-scoped** alert for symbol-level recon breaks, **account-wide** alert for
+      account-level SEV0s. The recon-freeze is armed but never published today; build the publisher path. Repo:
+      alerting-service (consumes the per-incident signals emitted execution-side — see `execution_master` G12 todo).
+
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 
 **status**: ✅ ARCHIVED 2026-05-23 — Phases 1-9 complete: AlertCode taxonomy + LIVE_ALERT_RULES + DART Active Alerts

@@ -99,6 +99,21 @@ DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
 
 ## P1 — important; post-current-gate
 
+### AUDIT-03 operator-decision dispatch (slot 7, 2026-06-01 — from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`)
+
+- [ ] [CODE] P1. **F-14 — 1h price-move abort is a SAFETY GAP (NOT equivalent to vol_cap_clamp).** Slot-7 investigation
+      (2026-06-01) confirmed: codex `codex/09-strategy/architecture-v2/archetypes/arbitrage-price-dispersion.md:129`
+      specs `max_underlying_move_pct: 3.0 # abort/skip if realized move > X% in 1h window` (a circuit-breaker that HALTS
+      trading on a sudden 1h directional move). The implemented `apply_vol_cap_clamp()`
+      (`strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/funding_rate_dispersion.py:286-333` +
+      `price_dispersion.py:420-480`) only CLAMPS leverage when realized-vol > 80% OR vol-zscore > 2.0 — it does NOT
+      abort on a 1h directional price move (different trigger, different action). Implement a separate guard in
+      strategy-service that aborts (returns 0 instructions) when |1h realized price move| > threshold. Repo:
+      strategy-service.
+- [ ] [DOCS] P1. **F-13 / F-15 — reconcile codex strategy-spec → implemented mechanism (code is truth).** Route the
+      actual codex doc edit to `codex_vs_repo_docs_ssot_audit_2026_06_01.md` (do not edit codex from strategy work);
+      this todo tracks the strategy-side reconciliation decision. Repo: codex (via codex_vs_repo_docs owner).
+
 ### [`compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md)
 
 **status**: active · **estimate**: 4.8 cal AI-days (class: design)

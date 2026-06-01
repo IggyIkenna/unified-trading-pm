@@ -177,6 +177,16 @@ unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
 
 - [ ] [DOCS] P2. **Follow-up: URDI still in instruments-service CODE** — docs URDI refs fixed, but code still uses URDI
       symbols (`URDI` is a phantom name per CLAUDE.md). Audit + rename in instruments-service.
+- [ ] [DOCS] P2. **AUDIT-03 F-45 codex update** (from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`):
+      code wins — events GCS path keys on `instance_id`; `correlation_id` is a column, NOT a path key. Update the codex
+      doc(s) that say correlation_id is a path key to match the implemented `instance_id` path semantics.
+- [ ] [DOCS] P2. **AUDIT-03 F-06 codex FIX-STALE** (from same): declare `codex/04-architecture/custody-providers.md` the
+      **entity-governance SSOT**; entities = **Odum Research UK** + **Odum Group Cayman**; **scrub all stale Elysium
+      references** (Elysium is a removed provider per CLAUDE.md).
+- [ ] [DOCS] P2. **gcs_hive partition-path doc FIX-STALE** (from
+      `archive/issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md` — operator: doc-fix only; the GCS
+      data remediation stays operator-deferred): fix the malformed hive-partition path examples in the relevant codex
+      doc to canonical `key=value` form.
 - **Parked — features-service**: another agent active; LDR branch-protected. Docs commit `b9b4103e` on
   `origin/tab/hk/10`; PR #4 bundles a foreign commit (`603c2b9c`) — do NOT merge as-is. Left for the owning agent; no
   git surgery.

@@ -20,6 +20,25 @@ status: active
 > Else **cherry-pick the `.prettierignore` QG fix only** with `(backfilled from archive/...)` provenance. Record the
 > outcome here, then **archive this issue**. Quick git task — not manifest/CI-CD work.
 
+> **RESOLVED + ARCHIVED 2026-06-01 (slot 7) — outcome (a): both commits redundant.** Walked
+> `archive/vm-trading-core-orphaned-2026-05-23` vs current LDR:
+>
+> - **`32299715` (.prettierignore QG fix)** — the core fix is **already on LDR**: `base-library.sh:131` runs prettier
+>   with `--ignore-path .gitignore --ignore-path .prettierignore` (landed via a different, simpler path). The orphaned
+>   commit additionally wires a shared `.prettierignore-base` file + conditional per-repo `.prettierignore`; that extra
+>   is a marginal nice-to-have NOT on LDR — captured as the P3 todo below rather than cherry-picked (the operator
+>   decision was "cherry-pick the .prettierignore _fix_ only if not already on LDR" — the fix IS on LDR).
+> - **`22b3f71d` (audit03 Phase 1-3 SCRIPT flips)** — stale: superseded by the current
+>   `audit03_ikenna_review_routing_2026_05_22.md` operator decision ledger (2026-06-01). Not re-applied.
+>
+> Remote archive branch `archive/vm-trading-core-orphaned-2026-05-23` **deleted** to keep the remote tidy (commits
+> remain in reflog/history if ever needed). Captured nice-to-have:
+>
+> - [ ] [SCRIPT] P3. (optional, infrastructure_master) Port the orphaned `base-library.sh` enhancement — a shared
+>       `scripts/quality-gates-base/.prettierignore-base` + conditional per-repo `--ignore-path` composition — onto the
+>       current LDR `base-library.sh` prettier auto-fix step (was `vm-trading-core@32299715`). Marginal QG-DX
+>       improvement; core `.prettierignore` support already present.
+
 ## What I found
 
 While rolling the smart-stash pm-pull-ff.sh v2 to all 11 orchestrator hosts (api-host + vm-orchestrator + 9 epic VMs),

@@ -107,6 +107,13 @@ _(no plans currently assigned at this priority — per_client_isolation archived
 
 ## P1 — important; post-current-gate (was P0)
 
+### AUDIT-03 F-25 dispatch (slot 7, 2026-06-01 — from `archive/issues/audit03_ikenna_review_routing_2026_05_22.md`)
+
+- [ ] [CODE] P1. **F-25 — build the FULL unified `ClientConfig` type in `unified_api_contracts.internal`** (NOT a
+      minimal stub). Operator decision 2026-06-01: full type, single SSOT for per-client config (KMS refs, venue creds
+      shape, isolation policy, portfolio/wallet topology). Replace ad-hoc per-service client-config shapes with this
+      type. Repo: unified-api-contracts (+ downstream consumers: strategy-service, execution-service).
+
 ### [`per_client_isolation_and_venue_fanout_topology_2026_05_20`](../archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md)
 
 **status**: ✅ ARCHIVED 2026-05-22 — Phases 0-8 DONE; E.2+E.3 deferred to epic body · **estimate**: 5 cal AI-days

@@ -102,8 +102,13 @@ fixed `swap_adapter` should write candles successfully.
 
 ## Status flip path
 
-- [ ] [AGENT] P1. Verify MTDS upstream tick parquets for UNISWAP_V3-ETHEREUM 2024-05-06 → 2026-01-17 have `chain` column
-      populated (Path A pre-flight)
+- [x] ✅ [AGENT] P1. Path A pre-flight VERIFIED 2026-06-01 (slot 7, read-only GCS sample): `chain` column is **populated
+      = 'ETHEREUM' (0 nulls)** in the processed_candles parquets at BOTH ends of the failed range — sampled
+      `day=2024-05-06` and `day=2026-01-15`, `data_type=dex_swaps/venue=UNISWAP_V3-ETHEREUM` on
+      `gs://market-data-tick-defi-central-element-323112/processed_candles/by_date/`. The 28,634 `attempted_failed` rows
+      are **stale point-in-time records** (failed during the 2026-05-23/24 fix-deploy window); the chain-propagation +
+      amount_usd fix (mdps@7f1a5b5 + @3799c8d) is live. **No code change needed** — the deferred backfill just needs a
+      reprocess rerun (rows flip to `captured`). Stays DEFERRED into the broader DeFi backfill per operator (option A).
 - [ ] [AGENT] P1. Launch MDPS reprocess VM for UNISWAP_V3-ETHEREUM swaps_ohlcv historical range
 - [ ] [AGENT] P1. Verify post-retry: `attempted_failed` count for UNISWAP_V3-ETHEREUM drops from 28,634 to 0; equivalent
       rows now `captured` (or `empty_confirmed` for legitimately empty pool-days)
