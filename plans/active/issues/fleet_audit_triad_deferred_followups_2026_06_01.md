@@ -34,6 +34,20 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       Manifest remains not-fully-trustworthy for a spend decision until phantom-sweep + re-consolidation runs. Playbook
       in `cefi_..._2026_05_27.md` §6I + `bucket_name_ssot_canonicalisation_2026_05_10`.
 
+### TradFi MDPS reprocess + codex marker drift (folded in 2026-06-01, from deleted `mdps_tradfi_backfill_log_findings`)
+- [ ] [DATA] P2. **Full tradfi processed_candles reprocess** (~712 days 2020→2026, ~2–4M objects) once backfills resume.
+      All 4 code findings already SHIPPED on LDR: Finding 1 session-grid LOCF forward-fill (mdps@b67cddd + 7cb5fab +
+      db233e2 — also fixed defi/swap_adapter), Finding 2 429-backoff (UTL `_upload_with_backoff_on_429`), Finding 3
+      UNKNOWN-partition re-normalization (canonical_writer), Finding 4 faulthandler (UTL). Reprocess is the only
+      remaining step — run with current code, part of the deferred backfill pass.
+- [ ] [DOC] P3. **B2 codex marker reconciliation (HARD-RULE SSOT — do deliberately, NOT a find-replace).** Code emits
+      carried-forward-bar markers as `staleness_seconds`>0 + `trade_count==0`; codex `honest-absence-downstream-handling.md`
+      + `live-pipeline-architecture.md` (Category D) still describe a `zero_activity=True` / `ZERO_ACTIVITY_BAR` marker.
+      Reconcile when the honest-absence SSOT is next revised — but FIRST rule on the model split: prediction Category-D
+      emits NaN OHLC bars (different marker semantics) vs tradfi/cefi session-grid forward-fill (no NaN). The marker
+      column may stay a boolean (renamed) rather than collapse to `staleness_seconds`. Verified `zero_activity` has no
+      code consumers (pure doc drift, not a live breakage).
+
 ### DeFi chain-column reprocess (folded in 2026-06-01)
 - [ ] [DATA] P2. **DeFi swaps_ohlcv `chain`-column reprocess** — 28,634 UNISWAP_V3-ETHEREUM `attempted_failed` rows +
       ~9 companion venues (UNISWAP_V2, AAVEV3-OPTIMISM, EIGENLAYER, CURVE, MAKER, FRAX, DRIFT-SOLANA, KAMINO/JITO/MARGINFI).
