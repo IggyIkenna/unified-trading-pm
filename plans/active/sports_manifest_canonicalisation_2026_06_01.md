@@ -303,7 +303,17 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       reason via the coverage oracle (`clip_dates_to_source_coverage` / `is_in_known_gap` / season / transfer-window /
       fixture-status / league-coverage) — the table in § Sports honest-absence. Snapshot-protected, idempotent,
       oracle-driven (never re-derived per consumer).
-      **SCRIPT READY** — `rebuild_sports_manifest_v9.py` with oracle relabel baked in. Dry-run result: 584,177 empties ALL classified as `keep_src_zero` (oracle says genuinely expected) for `odds_api` source — correct: coverage started for ODDS_API so all empty cells ARE genuine source returns. CF-5 audit will verify on instruments-store surface (1.9M rows with non-canonical free-text + typed reasons).
+      **SCRIPT BUILT — KEYSTONE CLASSIFIER INCOMPLETE (correctness gap, 2026-06-01 sports-slot review)**:
+      `rebuild_sports_manifest_v9.py` v1 used ONLY `is_expected_for_source`, which for `odds_api` (the MDPS source)
+      gates on coverage-start ONLY (no season/calendar/known-gap) → it relabelled **0 of 584,177** MDPS empties
+      (`keep_src_zero` for ALL). That is WRONG: a 74%-empty bookmaker-odds surface is dominated by off-season /
+      no-fixture / paused-league cells that MUST become typed reasons. The classifier MUST be a COMPOSITE applying
+      season/calendar/known-gap to ALL sources (not just footystats): `footystats_season_status_for_day(league,day)` →
+      `EXPECTED_PRE_SEASON|POST_SEASON`; off `get_league_fixture_calendar(league,day,day)` → `EXPECTED_NO_FIXTURE`;
+      `is_in_known_gap` → `EXPECTED_KNOWN_SOURCE_GAP`; PLUS the `is_expected_for_source` source-gates (transfer-window /
+      understat-whitelist / coverage-start). ALSO needs league_id CANONICALISATION before oracle calls (`2._BUNDESLIGA`
+      etc. won't match `get_league()`). Fix tracked in the C-reasons RIDER below; do NOT run the VM rebuild until the
+      composite dry-run shows a MEANINGFUL relabel histogram (not "all unchanged") + sample-verified.
 - [ ] [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
@@ -339,19 +349,21 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `instruments-store-sports-prd`) via `cf_layout_audit_2026_06_01.py` + CF data-state via `cf_manifest_audit`. Full
       layout map + scope-expansions captured in § P0 above (MDPS raw `category=` vs legacy `asset_group=` INVERTED;
       instr-store 8 layouts; 2.68M instr rows / 1.9M empties; non-canonical free-text reason; CF-7 drift). Evidence:
-      `/tmp/cf_sports_{mdps,instr,layout}.log` — PM@<flip-sha>.
+      `/tmp/cf_sports_{mdps,instr,layout}.log` — PM@07f7ace03.
 - [x] ✅ [DATA] P0. E2 Build/extend `migrate_sports_canonical.py` to v9-canonical (perf-contract):
       `category=`→`asset_group=sports`, add
       `pipeline_mode=batch_{api_football,footystats,odds_api,understat,transfermarkt,…}`; keep `source` col (already
       present). — market-tick-data-service@1036de20 | `migrate_sports_canonical_v9.py` (new) layout-aware: MDPS raw+candle, instruments-store 5 trees, CF-7 normalise, ThreadPoolExecutor + gcs_copy_object, dry-run default
 - [ ] [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
-- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): at manifest rebuild, relabel the 584,177 `SOURCE_RETURNED_ZERO`
+- [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): at manifest rebuild, relabel the 584,177 `SOURCE_RETURNED_ZERO`
       empties → typed UAC reasons
       (`EXPECTED_NO_FIXTURE`/`PRE_SEASON`/`POST_SEASON`/`PAUSED_LEAGUE`/`OUTSIDE_TRANSFER_WINDOW`/
       `SOURCE_DOES_NOT_COVER_LEAGUE`/`FIXTURE_POSTPONED|CANCELLED`/`KNOWN_SOURCE_GAP`/`NO_MAPPING`) via the UAC coverage
       oracle (`clip_dates_to_source_coverage`/`is_in_known_gap`/`league_data`) — never re-derived per consumer.
-      — market-tick-data-service@1036de20 | `rebuild_sports_manifest_v9.py` --surface {mdps,instruments} --dry-run; keystone relabel via is_expected_for_source + free-text→EXPECTED_NO_FIXTURE + retired→EXPECTED_DEPRECATED_DATA_TYPE + phantom skip
+      **SCRIPT BUILT @market-tick-data-service but CLASSIFIER INCOMPLETE — NOT a real relabel yet** (relabelled 0/584,177
+      on MDPS; needs the COMPOSITE season/calendar/known-gap classifier + league_id canon — see C-reasons RIDER note
+      above). Re-flip ONLY when the composite dry-run shows a meaningful before→after histogram on BOTH surfaces.
 - [x] ✅ [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` +
       `available_at` → consolidator → v9. ~~Also fix the writer to emit typed reasons going forward (CF-5 write-path) — DONE (C-writer@instruments-service@608e7ca7).~~
       — market-tick-data-service@1036de20 | `rebuild_sports_manifest_v9.py` re-emits captured rows via writer.add(source=, pipeline_mode=) + relabelled empties via record_empty; ManifestWriter(per_vm_shards=True).flush()
