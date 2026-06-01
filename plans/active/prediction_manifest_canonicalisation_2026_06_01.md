@@ -178,17 +178,47 @@ be fixed first if run on a VM.
       market-tick-data-service@456ae08a, slot-3 2026-06-01.
 - [ ] [DATA] P0. E3 Confirm `mdps-prediction-2025` writer drained; snapshot `pred-prd/_index` →
       `_index/snapshots/pre_v9_canonical_2026_06_01.parquet`.
-- [ ] [DATA] P0. E4 Dry-VM (`launch-canonical-migration-vm.sh` style) → review planned moves + timing → optimise workers
-      if >1h → full-VM run (no fire-and-forget: STARTED<60s + progress/hr + STOPPED; T+10min describe).
-- [ ] [DATA] P0. E5 Manifest rebuild: generalise `rebuild_prediction_manifest.py` to target `pred-prd` + scan the
-      `asset_group=` paths + stamp `source=polymarket_clob` + `pipeline_mode` + `available_at` → consolidator merge →
-      v9.
+- [ ] [DATA] P0. E4 Dry-VM run + full-VM run. **Launcher WIRED 2026-06-01** (deployment-service@f8866b6): `prediction`
+      now invokes `migrate_prediction_to_pred_prd_v9` (dry-by-default + `--apply`) — run
+      `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh prediction 2025-03-14 2026-06-01 dry` then
+      review planned moves/timing in the VM log → optimise workers if >1h → re-fire `full` (no fire-and-forget:
+      STARTED<60s + progress/hr + STOPPED; T+10min `gcloud instances describe`). **PENDING: VM launch + monitor (next
+      session — VM-only per local-DNS constraint).**
+- [ ] [DATA] P0. E5 Manifest rebuild → v9. **BUILD SPEC (refined slot-3 2026-06-01)**: generalise
+      `rebuild_prediction_manifest.py` to target `pred-prd` scanning the NEW canonical
+      `day=/pipeline_mode=/asset_group=prediction/venue=/instrument_type=/data_type=/{cid}.parquet` layout.
+      **Granularity reconciliation (the one open correctness point)**: the canonical path no longer carries
+      `underlying=`/`chain=`/ `data_source=` segments (they are PARQUET COLUMNS now, per
+      `build_prediction_partition_path`), but the proven manifest
+      `ShardKey=(date,venue,chain,instrument_type,data_type,underlying)` needs them → the rebuild MUST READ each
+      parquet's `chain`/`underlying`/`data_source` columns (the existing tool read them from the path). Stamp
+      `source = pipeline_mode.removeprefix("batch_")` (use UAC `source_string_for`/`pipeline_mode_for_source`) +
+      `pipeline_mode` (path-derivable: question_group→gamma_api else clob) + `available_at` → `ManifestWriter`
+      auto-stamps v9. Confirm row-key granularity against the EXISTING pred-prd `_index` (16,812 rows) so the rebuild
+      dedups, not double-counts. Then consolidator merge.
 - [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank/`prediction_trades` data_type → canonical.
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-pred-prd-…` → CF-1…CF-12 GREEN on
       data-state (v9, source populated, pipeline_mode, asset_group, available_at, 0 legacy-only). Flip the CF-coverage
       rows in `predictions_master_audit_instructions.md`.
 - [ ] [DATA] P0. E8 Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy `market-data-tick-prediction` + stale
       pred-prd `category=` paths (single source of truth).
+
+## Deferred work after 2026-06-01 slot-3 session
+
+| Item                                | State                                | Next action                                                                                                                                 |
+| ----------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1 layout audit                     | ✅ done                              | —                                                                                                                                           |
+| E2 path-migrator built              | ✅ done (mtds@456ae08a)              | —                                                                                                                                           |
+| E4 launcher wired                   | ✅ done (deployment-service@f8866b6) | VM dry-run + full run still PENDING (VM-only)                                                                                               |
+| E3 writer-drain + `_index` snapshot | ⏳ pending                           | confirm `mdps-prediction-2025` stopped (most self-terminated) + snapshot pred-prd `_index` before `--apply`                                 |
+| E5 manifest rebuild → v9            | ⏳ pending                           | build spec refined above — the granularity reconciliation (read parquet for chain/underlying/data_source) is the one open correctness point |
+| E6 CF-7 relabel                     | ⏳ pending                           | runs at rebuild time                                                                                                                        |
+| E7 CF verify                        | ⏳ pending                           | `cf_manifest_audit` CF-1…CF-12 GREEN on pred-prd real data-state                                                                            |
+| E8 IRREVERSIBLE delete              | ⏳ pending — GATED                   | only after E7 GREEN + fleet drain (shared w/ slot-2) → `--drop-stale` + L6                                                                  |
+
+**Pipeline proven on prediction (smallest/most-scaffolded first, per mission).** The path-migrator is
+correct-by-construction (UAC `candidate_parquet_paths` SSOT, unit-validated). Remaining = run on VM + manifest rebuild +
+verify + the gated delete.
 
 ## Success criteria
 
