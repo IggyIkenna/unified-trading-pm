@@ -725,6 +725,17 @@ phase — plans omitting this are review-blocking.
   `gh run list --branch <branch> --repo <owner>/<repo> --limit 5`.
 - **Required check name (all repos)**: `quality-gates-v2` (v1 `quality-gates`/`workspace-qg` retired 2026-05-29 — see
   `codex/08-workflows/ci-cd-flow.md` § quality-gates-v2).
+- **Branch protection = ruleset + classic, BOTH** (must agree or merges silently dead-lock); ruleset context is derived
+  from the workflow's job `name:`; `enforce_admins` only ON when v2 is green. SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "Branch-protection mechanism".
+- **Force-push vs let-CI/CD (HARD RULE)**: admin force (relax → do → RE-ENABLE, guaranteed) is for the **initial
+  clean-slate only** where the gate can't run/be-satisfied by a PR (missing/wrong-named v2 workflow; FF a default branch
+  strictly behind its integration branch; landing the fix that unblocks the branch). **Everything else goes through the
+  normal PR → quickmerge auto-merge** (a green gate merges it). NEVER leave a ruleset `enforcement=disabled` /
+  `enforce_admins` off; resolve conflicts ON `live-defi-rollout`, never a throwaway branch. SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "Force-push vs let-CI/CD".
+- **Promotion automation (staging→main: semver / SIT / staging-to-main) is under repair** (was dead, admin-bypassed) —
+  status + ordered backlog: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Phase 6 — CONSOLIDATED HAND-OFF".
 - Pushes to `live-defi-rollout` / `feat/*` → NO remote CI. Quality enforced locally via `quality-gates.sh`.
 - On CI fail: `gh run view <run-id> --log-failed`. Fix root cause. Push again.
 - CI failures are NOT issues to flag — fix in real time.

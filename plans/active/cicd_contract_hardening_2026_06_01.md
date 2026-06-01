@@ -79,6 +79,118 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 
 ---
 
+## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
+
+> **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
+> staging→main promotion automation, and **(B)** green the per-repo QG debt the broken gates were hiding. Do them in
+> the order below (loudest + cheapest first; greening can run in parallel per repo). Token + safety rules are in the
+> HANDOFF block above. Codex SSOT for the durable rules: `codex/08-workflows/ci-cd-flow.md`. **Update each todo
+> live-true as you ship; resolve conflicts ON `live-defi-rollout`, never a throwaway branch.**
+
+### State as of 2026-06-01 (DONE — do not redo)
+
+- **Gate migration COMPLETE**: main 17/17 + staging 16/16 require `Quality Gates (<repo>) / quality-gates-v2`;
+  classic-protection contexts swept to match; `enforce_admins` on 15/16 main (`instruments-service` OFF — red);
+  mtds/strategy `main` gated. `verify_branch_protection_check_names.py` → **ALL CONSISTENT**.
+- **Durable fixes shipped**: `scripts/workflow-templates/quality-gates-v2.yml.tmpl` + pyproject-derived `dep_repos`
+  closure (rollout SSOT); reusable `python-quality-gates-v2.yml` `clone_repo` default-branch fallback;
+  `load-gh-token.sh` validity probe; `semver-agent.yml.tmpl` trigger → `quality-gates-v2`.
+- **Phase-5 PM main↔LDR drift RESOLVED** (FF, 144 commits).
+- **Consequence to know**: making gates truly enforce EXPOSED accumulated per-repo QG debt (PM red on lint+codex;
+  instruments red on coverage) → those mains are blocked-on-red. That's workstream (B).
+
+### THE force-push-vs-let-CI/CD decision rule (read before touching main/staging)
+
+**Admin force (relax → do → re-enable, re-enable GUARANTEED) is authorized ONLY for the initial clean-slate landing
+where the normal flow is structurally circular** — i.e. the branch's required check *cannot run / cannot be
+satisfied* by a PR:
+
+- Adding a **missing or wrong-named** `quality-gates-v2.yml` to a protected branch whose ruleset already requires the
+  v2 context (chicken-and-egg: no PR can go green because the check the ruleset wants isn't emitted yet). Recipe:
+  `gh api -X PUT .../rulesets/<id> -f enforcement=disabled` + `DELETE .../enforce_admins` → push the workflow file →
+  re-enable both. (Used for mtds/strategy main, deployment-service.)
+- **FF-ing a default branch that is strictly behind its integration branch** to resolve drift + land workflow files
+  (e.g. the PM main FF: `merge-base --is-ancestor main LDR` true → relax → `git push origin <ldr-sha>:refs/heads/main`
+  → re-enable). Only when strictly behind (no main-only commits to lose).
+- Landing the workflow / GHA / versioning **fixes themselves** on main/staging when those branches are blocked by the
+  very breakage being fixed.
+
+**Let CI/CD handle it (normal PR → quickmerge auto-merge, NO admin) for everything else:**
+
+- Any **code / test / coverage / lint / codex** fix that *makes the gate pass* → open a PR; the green
+  `quality-gates-v2` check auto-merges it (admin-merge only if the repo additionally requires a review that no human is
+  available for, and the check is genuinely green — e.g. deployment-service).
+- Once a branch has a working, green v2 gate, **all** subsequent changes go through the normal flow. Force-push is a
+  one-time clean-slate tool, never the routine path.
+
+**Invariants (ALWAYS):**
+
+- **NEVER leave a ruleset `enforcement=disabled` or `enforce_admins` off.** Relax and re-enable in the same operation;
+  guarantee the re-enable even if the middle step fails.
+- Only **enable `enforce_admins` / re-pin a ruleset to v2 when that branch's v2 is GREEN.** Blocked-on-actionable-red is
+  the SAFE direction (protected > unprotected) and acceptable, but never go unprotected.
+- **Resolve merge conflicts ON `live-defi-rollout`** (the integration branch), never on a throwaway PR branch — else the
+  resolution strands off LDR and re-drifts (the exact bug behind Phase 5).
+
+### QG-debt green — the standard (NO gaming; surgical)
+
+- **Surgical, not repo-wide.** Fix only the files the gate flags. **Do NOT run a repo-wide `ruff format`** — it pulls
+  unrelated files into the codex/coverage *changed-files* scan scope and surfaces MORE violations (observed on PM PR
+  #106: a 22-file format churn turned a lint-only fix into a codex cascade).
+- **Real fixes only.** Write real tests for coverage floors; **NEVER** lower `fail_under` / `MIN_COVERAGE`; **NEVER**
+  `# pragma: no cover` / skip / xfail to dodge a real failure; ambiguous-unicode → replace (`×`→`x`); intentional
+  script-level nits (BLE001/C901 in CI/audit/one-time tooling) → targeted `# noqa: <code>` or a per-file-ignore, never
+  blanket suppression of production code.
+- **The v2 gate is layered** — a green needs ALL of: deps-clone → `ruff` lint → `basedpyright` typecheck →
+  `pytest`+coverage → codex `STEP 5.x` → (on staging) cloud-build dispatch. Expect to peel layers one at a time per
+  repo; verify locally with `bash scripts/quality-gates.sh` (the SSOT) before pushing.
+- A documented per-repo floor exception (`.coverage-floor-exception.md`) is **good design** — respect it as-is; fix the
+  config bug (`MIN_COVERAGE=0`) but do not raise a deliberate sub-70 floor.
+
+### Ordered unified backlog (workstream A repair + workstream B greening; same plan)
+
+- [ ] [SCRIPT] P0. **(do FIRST) Loud alerting watcher** — central PM `workflow_run` (conclusion=failure) → `#ci-failures`
+      Slack for EVERY workflow (not just per-repo QG), with **failure→recovery transition** alerts ("X failing" / "X
+      recovered"). PLUS a scheduled **auto-merge-stuck poller**: LDR→staging PRs sitting `CONFLICTING`/`BLOCKED` > N min
+      → alert (auto-merge-stuck is a PR state, NOT a `workflow_run` failure, so the watcher alone misses it). This makes
+      every later step's failures loud + is the antidote to the silent-rot that hid all of Phase 6 for months.
+- [ ] [SCRIPT] P0. **semver rollout to all 16 repos' default branches** — render the fixed `semver-agent.yml` (trigger
+      `quality-gates-v2`, from the template) onto each repo's default branch. PR-per-repo passes its own v2 (workflow-file
+      change) and auto-merges; for a repo whose main v2 is RED, do its (B) greening first (or admin per the force rule).
+      Verifies: semver fires on the next staging `quality-gates-v2` success.
+- [ ] [TEST] P0. **(B) per-repo QG-debt green** (surgical, real fixes — see standard above). Known-red today:
+      `unified-trading-pm` (lint FIXED on branch `ikenna/pm-lint-green-2026-06-01` / PR #106 — but redo SURGICALLY:
+      close #106, fix only lint-flagged files + the 3-4 codex violations [empty-string/dict fallback;
+      `scripts/migration/gcs_bucket_stats.py` hardcoded `central-element-323112` → `config.gcp_project_id`], no
+      repo-wide format); `instruments-service` (coverage 76.82% < 77% — ~a couple real tests). PLUS any repo the semver
+      rollout surfaces. Each: surgical fix → PR → green v2 → auto-merge → (if its enforce_admins was deferred, enable it).
+- [ ] [SCRIPT] P1. **Revive the SIT chain** — trace the dead **entry dispatch**: `quality-gates-v2` green on `staging`
+      should dispatch `sit-lock` → `sit-gate.yml` → full-workspace SIT → on pass dispatch `staging-validated` →
+      `staging-to-main.yml`. Zero SIT runs ⇒ the entry isn't firing (almost certainly the same "Quality Gates"
+      `workflow_run` name-mismatch class as semver). Fix the entry trigger; `staging-to-main.yml` file is already current
+      (the April `startup_failure` was an old version) and should run once it receives `staging-validated`.
+- [ ] [SCRIPT] P1. **sit-debounce Telegram empty-secret guard** — `sit-debounce-trigger.yml`'s notify step fails
+      `ValueError: unknown url type '***'` on an empty/masked Telegram secret. Guard it (skip on empty, like the Slack
+      step); a missing notify secret must never fail the workflow.
+- [ ] [SCRIPT] P1. **Restore `staging_versions` baseline** in `workspace-manifest.json` — semver-agent reads
+      `m.get('staging_versions', {})`; the key is ABSENT, so even with the trigger fixed it reads an empty baseline.
+      Repopulate from current per-repo versions (the version SSOT semver dispatches into).
+- [ ] [SCRIPT] P1. **Orchestrator-dispatch escalation (the agent hookup)** — for the JUDGMENT cases only (merge-conflict
+      resolution, commit-label-mismatch remediation, SIT-failure triage; the deterministic compute stays in the
+      workflows). GHA detects the wall → `repository_dispatch` to the agent-orchestrator API (AWS VM,
+      `agent-orchestrator.odum-research.com`) → spawns a worker under the long-lived **setup-token** accounts
+      (`accounts.json`, cheap+stable, NOT API credits) → worker resolves + pushes the fix **onto LDR** + pings the
+      authoring slot. Auth: GHA→orchestrator via `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the
+      workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA dispatch
+      + a worker prompt; build + e2e-test on one repo before fleet-wide.
+- [ ] [SCRIPT] P2. **enforce_admins on `staging`** (Phase-2 tail) + on `instruments-service` main once green; final
+      `verify_branch_protection_check_names.py` + classic-context + enforce_admins audit all-green.
+- [ ] [DOC] P1. **Codex + CLAUDE.md alignment** — keep `codex/08-workflows/ci-cd-flow.md` (the SSOT) current with the
+      v2-gate reality, the force-push rule, and the operational status of the promotion automation as each piece
+      revives; CLAUDE.md points to it (done 2026-06-01 — see Codex SSOTs).
+
+---
+
 ## Overview
 
 Named successor to the **workspace-wide branch-protection sweep** that

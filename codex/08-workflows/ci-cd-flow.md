@@ -217,6 +217,61 @@ NOT yet deleted — held until GH Support ticket #4422570 resolves the cached gh
 
 ---
 
+## Branch-protection mechanism — RULESET + classic, both (codified 2026-06-01)
+
+Every workspace repo carries **TWO** server-side protections on `main` (and usually `staging`), and BOTH must agree or
+merges silently dead-lock:
+
+1. **Ruleset** `require-quality-gates` (and `require-staging-lock-check` on staging) — the **canonical** mechanism.
+   Required context is **derived from the live workflow file** (`<job name:> / quality-gates-v2`), so a wrong job
+   `name:` = a context no run ever emits = a permanently-unsatisfiable required check. Verify with
+   `scripts/repo-management/verify_branch_protection_check_names.py`; apply with `pin_branch_protection_rulesets.py`
+   (derives from `--ref`, default `live-defi-rollout`). **`pin --apply` re-pins main AND staging from the same ref** —
+   don't run it globally unless v2 exists on staging too, or it blocks staging.
+2. **Classic branch protection** `required_status_checks` — legacy, still enforced. Historically pinned to the **bare**
+   context `quality-gates-v2` (or v1 `quality-gates`), which **no Actions run emits** (the real context has the
+   `Quality Gates (<repo>) / ` prefix) → blocks every **non-admin** merge while `enforce_admins=false` lets admins
+   bypass (masking it). Fix: `gh api -X PATCH repos/IggyIkenna/<repo>/branches/<br>/protection/required_status_checks`
+   with `checks=[{context:"Quality Gates (<repo>) / quality-gates-v2"}]`. Swept workspace-wide 2026-06-01.
+
+**`enforce_admins`** (classic) makes the required check bind admins too — so once on, you can no longer admin-bypass a
+red/blocked branch. Only enable it on a branch whose v2 is **green** (enabling on red blocks all merges). Target state
+(Phase 2): true on every protected `main`. `[skip ci]` automation reaches `main` via the staging→main PR flow, so
+enforce_admins does not strand it.
+
+## Force-push vs let-CI/CD — the decision rule (codified 2026-06-01)
+
+**Admin force (relax ruleset + `enforce_admins` → do it → RE-ENABLE, guaranteed) is for the initial clean-slate ONLY,
+where the normal flow is structurally circular** — the branch's required check cannot run / be satisfied by a PR:
+
+- adding a **missing / wrong-named** `quality-gates-v2.yml` to a branch whose ruleset already requires the v2 context;
+- **FF-ing a default branch strictly behind** its integration branch to resolve drift + land workflow files
+  (`merge-base --is-ancestor main LDR` true → relax → `git push origin <ldr-sha>:refs/heads/main` → re-enable);
+- landing the workflow / GHA / versioning **fixes themselves** when the branch is blocked by the breakage being fixed.
+
+**Otherwise, let CI/CD do it (normal PR → quickmerge auto-merge, NO admin):** any code/test/coverage/lint/codex fix
+that *makes the gate pass* goes through a PR and auto-merges green. Once a branch has a working green v2 gate, all
+changes use the normal flow. **Invariants:** never leave a ruleset `enforcement=disabled` or `enforce_admins` off;
+resolve conflicts ON `live-defi-rollout` (never a throwaway branch — that re-drifts); blocked-on-actionable-red is the
+SAFE direction (protected > unprotected).
+
+## Operational status — promotion automation (snapshot 2026-06-01; being repaired)
+
+The **PR→staging gate** (`quality-gates-v2`) is healthy + enforced workspace-wide. The **staging→main half is being
+revived** — as of 2026-06-01 it was found DEAD and bypassed via admin force-merge:
+
+- `semver-agent` — trigger fixed (`quality-gates-v2`); needs the rendered file rolled out to repo default branches +
+  the `staging_versions` baseline restored in `workspace-manifest.json`.
+- SIT chain (`sit-gate` ← `sit-lock`; `staging-to-main` ← `staging-validated`) — entry dispatch dead; being traced.
+- `sit-debounce` Telegram empty-secret guard; loud `workflow_run`-failure + auto-merge-stuck alerting (silent rot was
+  the root cause); orchestrator-dispatch escalation for judgment cases (conflict / label-mismatch / SIT-triage) via the
+  setup-token worker fleet — NOT API credits in GHA.
+
+**Live SSOT for this repair + the full ordered backlog**: `plans/active/cicd_contract_hardening_2026_06_01.md`
+§ "Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN".
+
+---
+
 ## Conditional Push Protocol (Multi-Agent Environment)
 
 With 8+ slots running in parallel, always check for incoming commits before pushing:
