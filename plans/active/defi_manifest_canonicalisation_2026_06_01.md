@@ -107,14 +107,21 @@ What to verify/wire (B0 corrected scope):
 
 - [x] ✅ [CODE] P0. A1 pre-genesis empty-reason: oracle + evm-defi handlers classify via UAC `get_chain_genesis_date()`
       → `EXPECTED_PRE_GENESIS_CHAIN`. market-tick-data-service@840d85f1.
-- [ ] [CODE] P1. A2 pre-venue-launch empty-reason → `EXPECTED_PRE_VENUE_LAUNCH`. **Scoped 2026-06-01**:
-      `perp_funding_handler` ALREADY does this for Aster (L344-353) — replicate for PACIFICA (currently
-      `SOURCE_RETURNED_ZERO` pre-2025-12). `lst_rates_handler` (L512-535) + `solana_defi_handler` (L344/1486/1876)
-      blanket-write `SOURCE_RETURNED_ZERO`. **Blocker found**: `get_venue_launch_date('defi', …)` returns None for
-      LIDO/ETHERFI/MARINADE/PACIFICA/ASTER (only ETHENA populated) → **A2a: populate `DEFI_VENUE_LAUNCH_DATES` in UAC
-      `registry/venue_launch_dates.py`** (parent_epic: manifest_master) OR wire the empty site to the token-level
-      `get_lst_token_genesis` via the handler's venue→token map (the captured path at lst_rates_handler:399-404 already
-      does this — extend it to the empty branch). Then A2b: wire the 3 handlers. Two clean units; do A2a first.
+- [~] [DATA] P1. A2 pre-venue-launch reason — manifest migration (operator: "captured in UAC if genuinely pre venue +
+      migrated in manifest"). **UAC ALREADY HAS** most launch dates in `DEFI_VENUE_LAUNCH_DATES` keyed `VENUE-CHAIN`
+      (MARINADE-SOLANA 2021-08-02, JITO-SOLANA 2022-08-16, LIDO-ETHEREUM 2020-12-19, ETHERFI/ETHENA, …) — my earlier
+      "None" was a wrong-key lookup (flat `LIDO` vs `LIDO-ETHEREUM`). **APPLIED 2026-06-01**:
+      `plans/audit/results/defi_venue_launch_relabel_migration_2026_06_01.py --apply` relabeled **1,337** lst-rates rows
+      → `EXPECTED_PRE_VENUE_LAUNCH` (ETHENA/ETHERFI/LIDO 353 each + MARINADE 278), UAC-backed + snapshotted.
+- [ ] [CODE] P1. A2a populate UAC `DEFI_VENUE_LAUNCH_DATES` for the venue-chains genuinely missing it (the migration
+      reports them): **perp** `ASTER`, `LIGHTER-ZKSYNC`, `PACIFICA-SOLANA`, `HYPERLIQUID` (clear new venues — add accurate
+      launch dates). **DEX per-chain** (`CURVE-OPTIMISM`, `PANCAKESWAPV3-BSC`, `UNISWAPV3-POLYGON`, `BALANCER-OPTIMISM`,
+      `AAVE_V3-BASE`, `SPARK-ETHEREUM`, …) — **data-quality flag**: their captured rows show a uniform first-captured
+      `2021-01-01` across ALL chains incl. Base (launched 2023), which is impossible → investigate (placeholder/wrong-date
+      captured rows) BEFORE adding launch dates. Do NOT bulk-add ambiguous dates. Then re-run the relabel. parent_epic: manifest_master.
+- [ ] [CODE] P1. A2b wire `lst_rates_handler` (L512-535) + `solana_defi_handler` empty branches to emit
+      `EXPECTED_PRE_VENUE_LAUNCH` via the `VENUE-CHAIN` launch lookup (perp_funding_handler L344-353 already does it for
+      Aster — the pattern). So future writes are correct. parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P1. A3 data_type name SSOT at write — **verify-done 2026-06-01**: every DeFi handler `_DATA_TYPE`
       constant + `data_type=` literal is underscore-canonical
       (`dex_pools`/`dex_swaps`/`lending_indices`/`lst_rates`/`oracle_prices`/ `perp_funding`/`dex_pool_state`); **zero
