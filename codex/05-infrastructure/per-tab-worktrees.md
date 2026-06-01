@@ -234,6 +234,31 @@ The slot's `.envrc` will load `PREK_CACHE_DIR` + `SLOT_NUMBER` if you have diren
 manually or set the env vars explicitly). Cursor's TypeScript server + file indexer cache per-workspace-path, so the
 first open warms the cache; subsequent opens are instant.
 
+### `.code-workspace` path-style contract (canonical vs slot copies)
+
+Two distinct consumers read the multi-root workspace file, and they need **different `folders[].path` styles** — this is
+deliberate, not drift:
+
+| Consumer                      | File                                                                          | `folders[].path` style                | Why                                                                              |
+| ----------------------------- | ----------------------------------------------------------------------------- | ------------------------------------- | -------------------------------------------------------------------------------- |
+| Main-worktree view (root)     | repos-root symlink → `.cursor/workspace-configs/` (dir symlink → the tracked canonical) | `../../<repo>` + `../../` root         | Canonical lives 2 levels deep under `unified-trading-pm/cursor-configs/`; `../../` resolves to the repos root. |
+| Slot copies (`.tabs/N/`)      | `.tabs/N/unified-trading-system-repos.code-workspace`                          | bare `<repo>` + `.` root              | Slot file is 1 level deep; bare names resolve to the slot's own `.tabs/N/<repo>`. |
+
+**Canonical SSOT** = `unified-trading-pm/cursor-configs/unified-trading-system-repos.code-workspace` (git-tracked). The
+repos-root `unified-trading-system-repos.code-workspace` is a symlink whose chain resolves to it, so committing the
+canonical durably fixes the main-worktree view.
+
+`copy_workspace_file()` (in `setup-tab-worktrees.sh`) does **not** plain-`cp` the canonical into a slot — that would
+carry the `../../<repo>` paths verbatim, which from `.tabs/N/` resolve to the **main** worktree (a silent footgun: the
+dirs exist, so no error, but the slot's SCM panel points at the main checkout). Instead it rewrites paths to bare-relative
+on copy (`../../<repo>` → `<repo>`, `../../` → `.`).
+
+A blocking QG step (`scripts/quality_gates/check_workspace_code_workspace_drift.py`, wired into `quality-gates.sh`)
+asserts the canonical `folders[]` (minus the workspace-root entry) == the active+scaffolded repo set in
+`workspace-manifest.json`, and that no listed path is a known archived/consolidated repo. This closes the drift class
+that caused VS Code's `<repo> does not appear to be a git repository` error. SSOT for the incident + remediation:
+`plans/active/workspace_config_drift_remediation_2026_06_01.md`.
+
 **Verify CWD before pasting the spawn prompt.** In a Cursor terminal of the new window:
 
 ```bash

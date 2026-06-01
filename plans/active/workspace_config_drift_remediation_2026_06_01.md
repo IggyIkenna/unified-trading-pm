@@ -62,12 +62,15 @@ estimate_calibrated_ai_days: 1.2
       not a staging PR — staging is 632 commits behind LDR, branching off it to edit this newer script is a stale-base
       revert hazard (don't-dump-others'-work HARD RULE); LDR→staging reconciliation carries it forward. Flagged to
       operator.
-- [ ] [SCRIPT] P2. **Item 3 — regression guard.** Add a check (PM `quality-gates.sh` step and/or pytest) asserting the
+- [x] ✅ [SCRIPT] P2. **Item 3 — regression guard.** Add a check (PM `quality-gates.sh` step and/or pytest) asserting the
       canonical `.code-workspace` `folders[]` (minus workspace-root) == active+scaffolded repo set in
       `workspace-manifest.json`, and that no listed path is a known archived/consolidated repo. Optionally assert
       `git.scanRepositories`/`git.ignoredRepositories` entries resolve to real repo names. Closes Finding 3 (no guard ⇒
       both drifts went silent). **Script → PR targets `staging`** (bundle with Item 2; include the Item-1 canonical fix
-      on the staging branch so the guard is green there too).
+      on the staging branch so the guard is green there too). — unified-trading-pm@79263233d |
+      `scripts/quality_gates/check_workspace_code_workspace_drift.py` (basedpyright-clean, strict) wired into
+      `quality-gates.sh` post-gates (blocking) + 9-case pytest `tests/unit/test_check_workspace_code_workspace_drift.py`.
+      Verified clean on current workspace (25 repos), negative tests exit 1. Same LDR-not-staging deviation as Item 2.
 - [ ] [PM] P2. **Item 4 — adjudicate the features-service `ci_status` edit (Observation A).** Slot-5 `stash@{0}`
       (`slot5-FOREIGN: features-service ci_status LOCAL_PASS->FAILING`) holds an uncommitted flip that was starving
       slot-5 PM's FF-pull cron (963 behind). Decide WITH operator: is features-service CI actually FAILING (commit the
@@ -80,5 +83,6 @@ estimate_calibrated_ai_days: 1.2
 
 ## Codex SSOT updates
 
-- `codex/05-infrastructure/per-tab-worktrees.md` — document the canonical-vs-slot `.code-workspace` path-style contract
-  (Item 2) + the regression guard (Item 3). Add on Item 2/3 landing.
+- [x] `codex/05-infrastructure/per-tab-worktrees.md` — documented the canonical-vs-slot `.code-workspace` path-style
+  contract (Item 2) + the regression guard (Item 3) in a new "### `.code-workspace` path-style contract" subsection.
+  Landed alongside Item 3.
