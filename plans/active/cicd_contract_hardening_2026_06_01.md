@@ -275,8 +275,14 @@ by a PR:
       authoring slot. Auth: GHA→orchestrator via `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the
       workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA
       dispatch + a worker prompt; build + e2e-test on one repo before fleet-wide.
-- [ ] [SCRIPT] P2. **enforce_admins on `staging`** (Phase-2 tail) + on `instruments-service` main once green; final
-      `verify_branch_protection_check_names.py` + classic-context + enforce_admins audit all-green.
+- [x] ✅ [SCRIPT] P2. **enforce_admins on `staging` + instruments main — DONE 2026-06-01** (gh-API, no repo files).
+      Enabled classic `enforce_admins` on `staging` for the 11 repos where it was OFF (client-reporting-api, deployment-api,
+      deployment-service, ibkr-gateway-infra, instruments-service, mdps, mtds, strategy-service, system-integration-tests,
+      trading-agent-service, unified-trading-library) + on `instruments-service` **main** (now green @`fbadf6b0a` — the UAC
+      `EXPECTED_NO_MAPPING` drift resolved via the campaign's `uac #62` merge). Ruleset-protected repos (e.g. batch-live)
+      enforce admins via `bypass_actors=[]` on staging-targeting rulesets (verified). **Final audit all-green:** every
+      classic repo `main`+`staging` enforce_admins=true; `verify_branch_protection_check_names.py` → ALL RULESETS
+      CONSISTENT. (Unblocked once the LDR→main reconciliation campaign settled to 1 open PR.)
 - [x] ✅ [DOC] P1. **Codex + CLAUDE.md alignment** — `unified-trading-pm` codex `ci-cd-flow.md` operational-status section
       brought current 2026-06-01 (watcher + notify-guard + staging_versions SHIPPED; SIT-repo side + semver rollout
       remaining; + the "local ≠ CI" prettier/typecheck gotcha codified). Keep updating as the rest
