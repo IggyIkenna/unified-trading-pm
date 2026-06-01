@@ -280,11 +280,11 @@ tooling but was a no-op on real data. Reference: `plans/archive/sports_gcs_parti
 
 > **Temporary states + their canonical follow-up plans** (per CLAUDE.md HARD RULE — codex audit D-3 2026-05-12):
 >
-> | Temporary state                                                                                                                                                                        | Successor plan                                                                                                         | Successor phase                                                              |
-> | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated) | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep |
-> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 7 reader-fallback deletion (~2026-06-15)                               |
-> | v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows) | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/active/tradfi_massive_dual_source_2026_05_28.md) | Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7) |
+> | Temporary state                                                                                                                                                                        | Successor plan                                                                                                         | Successor phase                                                                           |
+> | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+> | 3 v8 emission kwargs (`service_emission_state` / `last_emission_decision_at` / `expected_window_completeness_fraction`) still have `= None` defaults (callsites not yet sweep-updated) | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 4.DEFAULT-REMOVAL v8-kwargs follow-up — emission-policy callsite sweep              |
+> | `read_availability_index()` v7-row backfill of missing v8 columns to defaults                                                                                                          | [`plans/active/manifest_schema_final_gate_2026_05_09.md`](../../plans/active/manifest_schema_final_gate_2026_05_09.md) | Phase 7 reader-fallback deletion (~2026-06-15)                                            |
+> | v9 `source` column backfill for existing TradFi parquets (set `source='databento'` on all pre-Phase-3 rows)                                                                            | [`plans/active/tradfi_massive_dual_source_2026_05_28.md`](../../plans/active/tradfi_massive_dual_source_2026_05_28.md) | Phase 5 operator drain + `backfill_tradfi_source_column.py` run (blocked on BLK-b00254d7) |
 
 The schema has evolved through six published revisions: v4 → v5 (honest-coverage Phase A, 2026-04-19) → v6
 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` + ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8
@@ -300,9 +300,9 @@ option (a) — value range is 0-1 fraction, not 0-100 percentage; aligns with UT
 The `pipeline_mode` column shipped earlier as part of the `gcs_migration_bundle_pipeline_mode_2026_05_08` work and is
 preserved in v8.
 
-**Schema v9 is live as of 2026-05-30 (UTL@`c7bfa427`).** `MANIFEST_SCHEMA_VERSION = 9` in
-`manifest_writer.py`. v9 adds the `source: str` column (see [TradFi `source` column](#tradfi-source-column--v9) below).
-All prior v8 semantics are unchanged.
+**Schema v9 is live as of 2026-05-30 (UTL@`c7bfa427`).** `MANIFEST_SCHEMA_VERSION = 9` in `manifest_writer.py`. v9 adds
+the `source: str` column (see [TradFi `source` column](#tradfi-source-column--v9) below). All prior v8 semantics are
+unchanged.
 
 **Schema v8** (UTL@`547ff3c`, 2026-05-12): `MANIFEST_SCHEMA_VERSION = 8`. The `pipeline_mode=` default was removed
 (explicit-or-fail) from all 6 public `record_*` methods. The 3 v8 emission kwargs (`service_emission_state=` /
@@ -481,20 +481,21 @@ class AvailabilityRecord:
 When a TradFi `(asset_group, venue, day, data_type)` cell has multiple sources in `SOURCE_PRIORITY`, the manifest may
 have **one row per source** for the same cell key. The `capture_status` semantics are per-source:
 
-| Scenario | `source=databento` row | `source=massive` row | Downstream consumer policy |
-| --- | --- | --- | --- |
-| Databento captured, Massive not yet run | `captured` | absent (not yet dispatched) | cell is **available** — Databento row is sufficient |
-| Both captured | `captured` | `captured` | both available; `select_primary_available_source()` picks priority winner for reads; field-union for non-overlapping columns |
-| Databento empty_confirmed, Massive captured | `empty_confirmed` | `captured` | cell is **available** via Massive; Databento gap is not penalised if Massive covers it |
-| Both empty_confirmed | `empty_confirmed` | `empty_confirmed` | cell is **empty** for this (venue, day, data_type) |
-| Databento attempted_failed, Massive captured | `attempted_failed` | `captured` | cell is **available** via Massive; Databento failure is flagged in error_reason but doesn't block downstream |
+| Scenario                                     | `source=databento` row | `source=massive` row        | Downstream consumer policy                                                                                                   |
+| -------------------------------------------- | ---------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Databento captured, Massive not yet run      | `captured`             | absent (not yet dispatched) | cell is **available** — Databento row is sufficient                                                                          |
+| Both captured                                | `captured`             | `captured`                  | both available; `select_primary_available_source()` picks priority winner for reads; field-union for non-overlapping columns |
+| Databento empty_confirmed, Massive captured  | `empty_confirmed`      | `captured`                  | cell is **available** via Massive; Databento gap is not penalised if Massive covers it                                       |
+| Both empty_confirmed                         | `empty_confirmed`      | `empty_confirmed`           | cell is **empty** for this (venue, day, data_type)                                                                           |
+| Databento attempted_failed, Massive captured | `attempted_failed`     | `captured`                  | cell is **available** via Massive; Databento failure is flagged in error_reason but doesn't block downstream                 |
 
-**Key rule**: a TradFi cell is considered `captured` if **at least one source** has `capture_status=captured`. Downstream
-consumers apply union semantics. `select_primary_available_source(asset_group, data_type, available_sources)` in UAC
-`canonical.crosscutting.source_priority` returns the priority-ordered primary for a given available set.
+**Key rule**: a TradFi cell is considered `captured` if **at least one source** has `capture_status=captured`.
+Downstream consumers apply union semantics. `select_primary_available_source(asset_group, data_type, available_sources)`
+in UAC `canonical.crosscutting.source_priority` returns the priority-ordered primary for a given available set.
 
-Conflict detection: if the same `(venue, day, ticker, timestamp)` appears in both sources, `detect_dual_source_conflicts()`
-logs `DUAL_SOURCE_DUPLICATE` + writes `divergence_kind=DUAL_SOURCE_DUPLICATE` to the manifest. No silent drops.
+Conflict detection: if the same `(venue, day, ticker, timestamp)` appears in both sources,
+`detect_dual_source_conflicts()` logs `DUAL_SOURCE_DUPLICATE` + writes `divergence_kind=DUAL_SOURCE_DUPLICATE` to the
+manifest. No silent drops.
 
 SSOT: `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` § "Multi-source merge".
 
@@ -1394,6 +1395,16 @@ multi-process; asserts envvar setting.
 Reference incident **2026-05-04**: instruments-service chunk workers without isolation clobbered each other's manifest
 entries (commits `00f6352` + `619a32e` were the per-script fixes; Plan C codifies the workspace rule).
 
+**Read path fail-fast (consolidator liveness contract, 2026-06-01)**: the per-VM-shard merge described above is no
+longer a silent read-side default. When the consolidated `_index/availability_index.parquet` is stale/missing **while
+per-VM shards exist**, `read_availability_index()` now RAISES `ManifestConsolidatorStaleError` + emits
+`CONSOLIDATOR_STALE` instead of silently merging ~1700 per-VM shards (which OOM-SIGKILLs on cefi). The recovery merge is
+an explicit opt-IN escape-hatch via `MANIFEST_ALLOW_STALE_FALLBACK=true`. A `assert_consolidator_healthy(bucket)`
+preflight + a `ConsolidatorLivenessMonitor` watchdog (Cloud Run Job `*/2`) emit `CONSOLIDATOR_DOWN` on heartbeat
+absence. Full contract:
+[`codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health contract"](../05-infrastructure/manifest-consolidator-ssot.md)
+(plan `manifest_consolidator_liveness_health_2026_06_01`).
+
 ### 8. Temporary state must have named successor plan (workspace rule, codified 2026-05-06)
 
 When a plan ships a partial implementation that is not the final shape, the partial state MUST be documented in a
@@ -1609,11 +1620,11 @@ SSOT: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2 +
 Every `AvailabilityRecord` now carries `source: str = ""`. For TradFi cells this is the closed-set upstream provider
 string; for all other asset groups it defaults to `""` (no enforcement).
 
-| Value | Provider | When stamped |
-|-------|----------|-------------|
-| `"databento"` | Databento | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward |
-| `"massive"` | Massive (formerly Polygon.io) | `MassiveTradfiRestConnector` writes (Phase 4) |
-| `""` | — | Non-TradFi cells; pre-v9 TradFi rows not yet backfilled |
+| Value         | Provider                      | When stamped                                                                                  |
+| ------------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
+| `"databento"` | Databento                     | All pre-Phase-3 TradFi rows (stamped by Phase 5 backfill); new Databento writes going forward |
+| `"massive"`   | Massive (formerly Polygon.io) | `MassiveTradfiRestConnector` writes (Phase 4)                                                 |
+| `""`          | —                             | Non-TradFi cells; pre-v9 TradFi rows not yet backfilled                                       |
 
 ### Per-source `capture_status` semantics in a dual-source cell
 
@@ -1638,8 +1649,8 @@ semantics" policy documented in `codex/02-data/honest-absence-downstream-handlin
 
 ### `MissingSourceError` gate
 
-`manifest_writer.record_captured(category="tradfi", ...)` raises `MissingSourceError` (UTL) when `source=` is omitted
-or empty. This gate (step 0b in the write path) fires before cluster-coverage validation and before the manifest row is
+`manifest_writer.record_captured(category="tradfi", ...)` raises `MissingSourceError` (UTL) when `source=` is omitted or
+empty. This gate (step 0b in the write path) fires before cluster-coverage validation and before the manifest row is
 written — no partial rows land in the catalogue. Non-TradFi callsites are unaffected.
 
 ### QG STEP 5.64
@@ -1647,5 +1658,5 @@ written — no partial rows land in the catalogue. Non-TradFi callsites are unaf
 `unified-trading-library/scripts/quality-gates.sh` runs STEP 5.64 (`check_tradfi_source_explicit_at_record_captured.py`
 from `unified-trading-pm/scripts/quality_gates/`) to statically enforce that every `record_captured(...)` callsite
 inside the UTL source tree carries a `source=` kwarg. Callsites that forward `source` via `**kwargs` carry the
-`# QG-allow: tradfi-source-not-applicable` inline marker. The baseline YAML
-(`tradfi_source_explicit_baseline.yaml`) is empty — all UTL source callsites are already clean.
+`# QG-allow: tradfi-source-not-applicable` inline marker. The baseline YAML (`tradfi_source_explicit_baseline.yaml`) is
+empty — all UTL source callsites are already clean.
