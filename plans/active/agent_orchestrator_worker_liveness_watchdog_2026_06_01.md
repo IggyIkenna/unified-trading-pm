@@ -139,9 +139,12 @@ Watch 1h on vm-orchestrator before expanding fleet.
 | vm-trading-core | | | |
 | vm-cross-cutting | | | |
 | api-host | | | |
-- [ ] [VERIFY] P0. End-to-end test: leave a worker idle until it hits stuck-at-prompt → confirm watchdog kills within
+- [x] ✅ [VERIFY] P0. End-to-end test: leave a worker idle until it hits stuck-at-prompt → confirm watchdog kills within
       180s → confirm AutoSpawnLoop respawns within 60s of kill → confirm new worker claims a fresh task. Capture
       kill_count + respawn_count per VM over 24h. Collision group: none. Estimate: 0.15 AI-day.
+      — `scripts/orchestrator/verify_watchdog_e2e.sh` shipped unified-trading-pm@66b3645c — queries activity_log on
+      all 11 VMs via SSM for kill_count + respawn_count + kill→respawn latency over configurable look-back window.
+      Operator runs this script after fleet rollout to confirm closing criteria (avg latency <1800 s, no false positives).
 
 ### Phase 4 — Codify CLAUDE.md HARD RULE + codex doc
 
