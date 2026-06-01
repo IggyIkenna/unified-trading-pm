@@ -449,6 +449,18 @@ MTDS `scripts/quality-gates.sh` is **pre-existing-red** on LDR (independent of F
       stays BLOCKED-CREDENTIALS per operator — see `running_vm_fleet_status` + `fleet_audit_triad_deferred_followups`).
       Repo: market-tick-data-service (CEX historical download) / instruments-service (venue symbol map) — diagnose which
       side owns the OKX symbol map first.
+  - **Slot-7 diagnosis 2026-06-01 (why this is NOT a 1-liner — read before picking up)**: the 400 is on the
+    **download-request symbol**, not on parsing. The per-venue Tardis normalisers in
+    `market_interface/adapters/cefi/tardis_shared.py` (`normalise_kraken_futures_symbol` /
+    `normalise_bitfinex_futures_symbol` / `parse_deribit_*`) map **Tardis→canonical (read-side)** — there is **no
+    canonical→Tardis OKX builder**, and OKX symbols are sourced via **instrument discovery**
+    (`market_interface/adapters/tradfi/tardis_adapter.py` `fetch_exchange_instruments` + `_apply_metadata_overrides`),
+    which currently yields `BTC-USDT`-style IDs that Tardis's `okex-futures` exchange rejects. Fix = resolve OKX-FUTURES
+    download symbols to Tardis's `okex-futures` grammar (`BASE-USD-YYMMDD` linear-quarterly; `BASE-USD_UM-YYMMDD`
+    USDT-margined), most likely via an OKX branch in `_apply_metadata_overrides` or a discovery-side map. **Data-correctness
+    caveat**: enumerating which dated OKX contracts existed per historical date requires Tardis's `okex-futures` exchanges
+    API (needs the BLOCKED Tardis key to verify the per-date valid set) — do NOT guess the contract calendar and re-request
+    bad symbols. Validate the symbol set against the live exchange listing before relaunching the OKX backfill VMs.
 
 ## Code-freeze + migration window estimate
 
