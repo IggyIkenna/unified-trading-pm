@@ -411,23 +411,42 @@ What to verify/wire (B0 corrected scope):
 >
 > **C0-REDESIGN (operator 2026-06-01 — "audit it, figure out overlap/freshest schema, migrate once on v9, delete ALL old
 > buckets+paths so data-status has ONE SSOT; stop missing things"):**
-> - [ ] [CODE] P0. C0-RD1 — extend the migration to **enumerate ALL THREE layouts** per bucket (`{data_type}/{venue}/
->       {chain}/date=`, `day=/category=defi/…`, `raw_tick_data/by_date/day=/asset_group=/…`); normalise each object to a
->       canonical cell key `(venue→UAC `_V{N}`, chain, data_type, day)`. parent_epic: manifest_master.
-> - [ ] [CODE] P0. C0-RD2 — **dedup overlapping cells**: when a cell exists in >1 layout, pick the BEST representation
->       (freshest `schema_version`, then most-complete row set, then latest write ts) — never write two objects for one
->       canonical cell. Complementary cells (only in one layout) are all preserved. No data dropped, no duplicate created.
-> - [ ] [CODE] P0. C0-RD3 — transform the chosen object to **full v9**: schema_version=9 + `asset_group` COLUMN +
->       `pipeline_mode` column+partition + `source` + canonical venue + `available_at` preserve-or-derive → write ONCE
->       to env-split `{kind}-prd-{project}` canonical path. **UNIFORM SCHEMA (KEY — operator 2026-06-01)**: every output
->       object is conformed to the SINGLE UAC canonical schema for its data_type — identical column set + identical path
->       layout — REGARDLESS of which source layout the cell came from. A `dex_pools/`-sourced and a `raw_tick_data/`-
->       sourced cell come out byte-structurally identical (non-uniform output just recreates the mess in the new bucket).
->       Conformant to the § Migration-script performance contract (ThreadPool, workers, observable, idempotent).
+>
+> **DEEPER DATA-STATE AUDIT (2026-06-01, slot-2) — SSOT `plans/audit/results/defi_c0_datastate_audit_2026_06_01.md`**:
+> scope is materially deeper than "3 layouts". (a) **L1 path structure DIFFERS per bucket**: dex-pools/dex-swaps/
+> lending-indices = `{dir}/{venue}/{chain}/date=`; perp-funding = `{dir}/{venue}/date=` (no chain); **lst-rates +
+> oracle-prices = `{dir}/date=` only (no venue/chain in path)**. (b) **data_type NAME forks**: object-path
+> `dex_pool_state`→`dex_pools`, `dex_pool_swaps`→`dex_swaps` (manifest + plan C2 canonical). (c) **venue-grain
+> mismatch**: lst-rates objects store aggregate `venue=LST` but the manifest shards **per-protocol across 14 venues** →
+> migration SPLITS objects by token/protocol→venue (UAC `LST_VENUE_TO_TOKENS`). (d) per-data_type COLUMN sets diverge
+> materially; UAC `parquet_records.py` dataclasses are STALE. **Operator decisions (binding, this session)**: (1)
+> **uniform schema = SUPERSET UNION (lossless)** — union of all observed data columns + v9 metadata, reindex every
+> object, drop nothing; (2) **perp-funding = include in union + DERIVE funding_rate_long/short from raw L1 OI** via the
+> handler formula `(long_oi−short_oi)/total_oi` (perp_funding_handler.py:951-971). Investigated: perp L1 raw-OI vs L3
+> derived-funding = same data_type; OI unique to perp_funding within DeFi; GMX tvl/volume partially double-covered by
+> dex-pools `venue=GMX`.
+> - [x] ✅ [CODE] P0. C0-RD1 — **enumerate ALL THREE layouts** + per-bucket cell-key normalisation (path for
+>       dex/lending; **row-split** by token/protocol/feed/chain for lst/oracle/perp whose L1 lacks venue/chain);
+>       venue→UAC `_V{N}` via `to_canonical_venue`. **DONE — mtds@e14d656b** (ruff+basedpyright 0-err + helper
+>       unit-tests green; GCS-facing dry-run is the VM gate). parent_epic: manifest_master.
+> - [x] ✅ [CODE] P0. C0-RD2 — **dedup overlapping cells**: most-complete row set → freshest layer (L3>L2>L1) → latest
+>       write ts; never two objects per canonical cell; complementary cells preserved. **DONE — mtds@e14d656b.**
+> - [x] ✅ [CODE] P0. C0-RD3 — **SUPERSET-UNION v9 conform** (operator-chosen lossless): footer-discovered per-data_type
+>       column union (`--phase discover`) + v9 metadata (schema_version=9/asset_group/pipeline_mode/source/available_at)
+>       → reindex → identical column set across every output object regardless of source layout → write ONCE to
+>       env-split `{stem}-prd-{pid}` canonical path
+>       `raw_tick_data/by_date/day=/pipeline_mode=batch/asset_group=defi/venue=/chain=/instrument_type=/data_type=/…`;
+>       perp funding-derive; unattributable rows→`_needs_attribution/` (never guess-then-delete). Perf-contract
+>       conformant (ThreadPool/--workers/--start-end date-shard/idempotent/per-cell isolation). **DONE — mtds@e14d656b.**
+> - [ ] [DATA] P0. C0-RD3b — **VM dry-run validation per data_type** (local GCS DNS flaky — in-region VM required):
+>       `--phase all` dry per bucket → inspect output (venue,chain) distribution, `_needs_attribution/` counts (esp.
+>       oracle-prices L1 `contract`→chain + lst protocol-split), union column set, sample-conformed frames — BEFORE any
+>       `--apply`. parent_epic: manifest_master.
 > - [ ] [DATA] P0. C0-RD4 — **completeness + uniformity gate**: post-walk, assert canonical `-prd` distinct-cell count ≥
 >       union of all 3 source layouts' distinct cells (per bucket); **exactly ONE schema (column set) per data_type
 >       across ALL output objects** (no schema drift between cells of different source-layout origin); CF-1…CF-12 GREEN
->       on the rebuilt `-prd` `_index` (`audit_canonical_form.py`). Only then is C-GREEN.
+>       on the rebuilt `-prd` `_index` (`audit_canonical_form.py`); `_needs_attribution/` count 0 OR operator-acked.
+>       Only then is C-GREEN.
 > - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4 GREEN,
 >       so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
 >
