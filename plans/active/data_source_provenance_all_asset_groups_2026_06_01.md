@@ -70,10 +70,15 @@ list to maintain; the registry is the SSOT.
 | Asset group | Multi-source reality | `source` recorded | Enforced | Downstream resolves | Status |
 | ----------- | -------------------- | ----------------- | -------- | ------------------- | ------ |
 | TradFi      | databento + massive (+ yahoo/barchart VIX) | ✅ v9 column | ✅ tradfi gate | ✅ SOURCE_PRIORITY | GREEN (verify-in-prod via audit items h–o) |
-| DeFi        | **strongest**: oracle (pyth_hermes+chainlink), native_staking (solana_rpc+helius_rpc), APR/rates (DefiLlama vs subgraph vs on-chain) | ❌ writers route via `add()`, never pass source | ❌ | ❌ dead code | **RED** — last-write-wins collapses divergent values silently |
-| CeFi        | Tardis archive vs per-venue live/REST for same (data_type, venue) | ❌ source="" | ❌ | ❌ | **RED** |
-| Sports      | api_football + footystats (FIXTURES); multi-book odds | ❌ source="" | ❌ | ❌ | **RED** |
-| Prediction  | Polymarket/Kalshi are separate venues; dispersion is cross-venue at feature level | n/a (correct) | n/a | n/a | GREEN — N/A by design |
+| DeFi        | **2 multi-source cells declared**: `oracle_prices`=pyth_hermes+chainlink, `native_staking_rates`=solana_rpc+helius_rpc (source_priority.py:201,205) | ❌ writers route via `add()`, never pass source (`_defi_manifest.py:174`, docstring L144) | ❌ | ❌ dead code | **🔴 RED — the only LIVE silent-collapse today (oracle/staking last-write-wins)** |
+| CeFi        | **0 multi-source cells declared** — all `["tardis"]` (source_priority.py:152-160); Tardis-vs-venue-live is *latent*, not yet in registry | n/a (no multi-source cell) | n/a (gate correctly requires nothing) | n/a | **🟢 GREEN today / LATENT** — gap only when a 2nd cefi source lands (expand registry first) |
+| Sports      | **1 multi-source cell**: `FIXTURES`=api_football+footystats (source_priority.py:116-119; footystats deferred Phase 1B) | ❌ source in PATH not column | ❌ | ❌ | **🔴 RED** — path→column migration |
+| Prediction  | Polymarket/Kalshi are separate venues; dispersion is cross-venue at feature level | n/a (correct) | n/a | n/a | 🟢 GREEN — N/A by design |
+
+> **Audit run 2026-06-01 (code write-path).** Full result + per-item evidence:
+> [`plans/audit/results/data_source_provenance_audit_2026_06_01.md`](../audit/results/data_source_provenance_audit_2026_06_01.md).
+> Correction vs the initial sweep: **cefi is NOT a current RED** (zero multi-source cells declared — latent, P2); the one
+> LIVE silent-collapse is **defi** `oracle_prices` + `native_staking_rates` (P0).
 
 ## Phased execution
 
@@ -102,14 +107,19 @@ list to maintain; the registry is the SSOT.
 - [ ] [AUDIT] P1. Features-service DeFi onchain calculators — audit every emit that touches a DeFi data_type and confirm
       source is stamped. `features-service/.../onchain/`.
 
-### Phase 3 — CeFi writer source (P1)
+### Phase 3 — CeFi writer source (P2 — LATENT; audit 2026-06-01: cefi has 0 multi-source cells declared today)
 
-- [ ] [UAC] P1. Expand CeFi `SOURCE_PRIORITY` entries from sole `tardis` to ordered multi-source lists where a live
-      per-venue path exists (e.g. `["<venue>_live", "tardis"]` for funding/marks/ticks). `source_priority.py:148`.
-- [ ] [MTDS] P1. Thread `source=` (`tardis` vs `<venue>`) through CeFi adapter writes + extend
+> Audit 2026-06-01 downgraded cefi P1→P2: `SOURCE_PRIORITY` lists only `["tardis"]` for all 9 cefi data_types, so there
+> is **no current violation** — the registry-driven gate (Phase 1) correctly requires nothing. This phase is preparatory:
+> do it **when/if a live per-venue cefi source is actually added** alongside the Tardis archive. Expand the registry
+> first (todo 1), then stamping (todo 2) becomes required automatically via the Phase 1 gate.
+
+- [ ] [UAC] P2. Expand CeFi `SOURCE_PRIORITY` entries from sole `tardis` to ordered multi-source lists where a live
+      per-venue path exists (e.g. `["<venue>_live", "tardis"]` for funding/marks/ticks). `source_priority.py:152-160`.
+- [ ] [MTDS] P2. Thread `source=` (`tardis` vs `<venue>`) through CeFi adapter writes + extend
       `record_empty_for_shard`/`record_failed_for_shard` to accept + forward `source`.
       `market-data-processing-service/.../core/canonical_writer.py`.
-- [ ] [TEST] P1. CeFi multi-source unit test: tardis + venue_live on the same cell → two manifest rows, resolved by
+- [ ] [TEST] P2. CeFi multi-source unit test: tardis + venue_live on the same cell → two manifest rows, resolved by
       priority at read time.
 
 ### Phase 4 — Sports writer source (P1)
