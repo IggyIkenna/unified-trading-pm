@@ -396,3 +396,13 @@ operationally-shipped (G4 human-only)**; the next audit needs one pass.
 > `mdps-backfill-defi` / `mdps-prediction-2025` / `sports-scheduler`. They must NOT be relaunched until the
 > legacy→canonical migration + manifest work complete. SSOT + relaunch gate:
 > `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 4.
+
+> **🟡 CROSS-PLAN ISSUES/BLOCKERS (2026-06-01, from bucket_name_ssot_legacy_dual_write_remediation)**:
+> 1. **Tarball-prune blocker** — `C0 — RUN ON A VM` is exposed to the pinned-tarball prune race: a VM can pull stale
+>    `mtds-code.tar.gz` and run wrong code / exit-2 silently. SSOT:
+>    `plans/active/issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01.md`. Verify the VM ran the intended sha
+>    before trusting C0 output.
+> 2. **DeFi `_index` single-walk ordering (HARD)** — the bucket-SSOT remediation seeds legacy→canonical rows into the
+>    SAME `market-data-tick-defi-prd-…` `_index` this plan's C0 rewrites. The remediation seed must run BEFORE C0
+>    (so C0 canonicalises the seeded legacy rows: old venue strings / v4–v8 / phantom grid). Do NOT run C0 while the
+>    remediation DeFi seed is mid-walk, and vice-versa. `data_source_provenance_…` rides C0 (no third walk).

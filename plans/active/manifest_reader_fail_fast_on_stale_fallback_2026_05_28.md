@@ -21,9 +21,10 @@ locked_since: 2026-05-28
 >
 > **C4 (full `quality-gates.sh` exit 0) ❌ BLOCKED** — NOT by this plan. UTL's full gate is red on a pre-existing
 > repo-wide backlog (STEP 5.21 `reportUnknown*`=none → 962 type errors, ~25 foreign imports-inside-functions,
-> `legacy_reason_classifier` deep imports, `event_sink` fn-size, 80% coverage edge) that no single plan owns. Tracked in
-> **`plans/active/issues/utl_full_qg_red_backlog_2026_06_01.md`**. This plan stays active and closes when that issue
-> resolves C4. (Not archived — per "Plans Run To Actual Completion": don't archive with an unmet success criterion.)
+> `legacy_reason_classifier` deep imports, `event_sink` fn-size, 80% coverage edge). **Now owned by**
+> **`plans/active/utl_full_quality_gates_green_2026_06_01.md`** (`parent_epic: infrastructure_master`); that plan's
+> Phase 6 flips this C4 ✅. This plan stays active and closes when the UTL-QG-green plan reaches Phase 6. (Not archived
+> — per "Plans Run To Actual Completion": don't archive with an unmet success criterion.)
 
 ## What this fixes
 
@@ -167,8 +168,8 @@ shipped is retained as the read-side enforcement of that contract):
       consumed by nothing. Route it to the same alert sink as `CONSOLIDATOR_DOWN` so a crash-looping consolidator pages
       instead of silently degrading.
 - [ ] [UTL] P1. **Promote read-path fail-fast from opt-in → DEFAULT** — flip the default of
-      `MANIFEST_FAIL_ON_STALE_FALLBACK` so a stale/missing consolidated index RAISES `ManifestConsolidatorStaleError`
-      + emits a `CONSOLIDATOR_STALE` alert by default. The ~1700-shard per-VM merge stops being an automatic reader path
+      `MANIFEST_FAIL_ON_STALE_FALLBACK` so a stale/missing consolidated index RAISES `ManifestConsolidatorStaleError` +
+      emits a `CONSOLIDATOR_STALE` alert by default. The ~1700-shard per-VM merge stops being an automatic reader path
       and becomes an explicit, rate-limited recovery escape-hatch (opt-IN, the inverse of today). Audit all callers in
       the Consumer-audit table above before flipping the default (some batch/preflight callers may legitimately want the
       recovery merge — make THOSE opt-in).
@@ -185,9 +186,10 @@ shipped is retained as the read-side enforcement of that contract):
 - C2: unit test passes — 3-case truth table (env-unset / env-set-stale / env-set-fresh).
 - C3: ruff + basedpyright clean on the touched lines (no `# type: ignore`).
 - C4: `bash scripts/quality-gates.sh` in `unified-trading-library` exits 0. ❌ **BLOCKED on pre-existing UTL QG-debt
-  backlog** (this plan's own violation cleared @73209d50). See `plans/active/issues/utl_full_qg_red_backlog_2026_06_01.md`
-  — STEP 5.21 (962 type errors), foreign imports-inside-functions, deep imports, fn-size, 80% coverage edge. Plan
-  closes when that issue greens UTL.
+  backlog** (this plan's own violation cleared @73209d50). Owned by
+  `plans/active/utl_full_quality_gates_green_2026_06_01.md` (B1–B5: STEP 5.21 962 type errors, foreign
+  imports-inside-functions, deep imports, fn-size, 80% coverage edge); its Phase 6 flips this C4. Plan closes when that
+  issue greens UTL.
 - D1: launcher metadata change deployed via next cefi-heavy launch (no actual VM needed for validation — env var read at
   Python import time, surfaces in logs).
 - B1: documented in codex/02-data manifest-and-data-status SSOT.
