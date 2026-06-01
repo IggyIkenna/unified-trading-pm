@@ -13,6 +13,9 @@ last_updated: 2026-05-29
 
 features-service (8 feature families: DeFi, CeFi, TradFi, Sports, Predictions, Macro, On-Chain, Cross-Asset), ml-service
 (inference + training pipelines), IS→features contract. All feature schemas must be in UAC; no local definitions.
+**greeks-service** is also in scope as a **data-pipeline derivation peer of features-service** (computes option
+Greeks/IV from market-data marks) — it sits in the **data-pipeline layer, NOT ml** (ml is strictly downstream of it).
+See [§ Greeks-service](#greeks-service-data-pipeline-derivation--batch--live) for its dedicated checklist.
 
 ## Triggers
 
@@ -178,6 +181,45 @@ features-service (8 feature families: DeFi, CeFi, TradFi, Sports, Predictions, M
       `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))" features-service/ --include="*.py" -g '!*test*'`
       then read each adapter's outer fetch try/except. **Closed per-adapter checklist — check EVERY adapter.** Full
       spec: `defi_master_audit_instructions.md` item (u)/(aa).
+
+### Greeks-service (data-pipeline derivation — batch + live)
+
+> Codified 2026-06-01 (operator). greeks-service is a **young repo** brought to full workspace parity (workspace-manifest
+> + `.code-workspace` + canonical GHA workflow suite incl `quality-gates-v2` + semver-agent ci/cd versioning — same as
+> every other service). It is a **general data-pipeline service for all strategies and clients** (computes option
+> Greeks/IV from market marks) — **NOT** a per-strategy or per-client instance, and **NOT** ml (ml is downstream). Its
+> dependencies are **DATA, not code**: it reads **market-data-processing-service / market-tick-data marks** (and
+> **features-service data** where required) + the usual code deps **UTL + UAC only** (no `features-service`/`mdps`
+> *code* imports). Both batch and live therefore reduce to **pre-flight checks on the input data + compute**.
+
+- [ ] (greeks-deps) **Code-deps are UTL + UAC only (data-deps not code-deps)**: `greeks-service/pyproject.toml`
+      `[project.dependencies]` contains NO `features-service` / `market-data-processing-service` /
+      `market-tick-data-service` editable deps — only `unified-trading-library` + `unified-api-contracts` (+ fastapi/
+      uvicorn for the live API). Grep: `rg "features-service|market-data-processing|market-tick-data" greeks-service/pyproject.toml`
+      → 0 hits. (Verified 2026-06-01: ✅ deps = UTL/UAC/fastapi/uvicorn.)
+- [ ] (greeks-batch-preflight) **Batch = pre-flight on input data + compute**: `greeks_service/batch/backfill.py`
+      (`GreeksBackfillProcessor`) reads MDPS/MTDS `mark_update` parquets from GCS and computes per shard. It MUST do an
+      explicit **data-availability pre-flight** (manifest/object presence for the requested `asset_group`×date horizon)
+      and emit a typed failure / honest-empty when inputs are absent — NOT silently produce zero rows. (2026-06-01 gap:
+      backfill reads parquet directly with no explicit availability pre-flight — see greeks build-gap todo.)
+- [ ] (greeks-live-preflight) **Live = pre-flight on data + compute**: `greeks_service/api/main.py` exposes
+      `make_health_router` with a `data_freshness` callback (QG STEP 5.62 ✓) and `inputs/mark_update_sub.py` subscribes
+      to live marks. Confirm the live path pre-flights mark availability/freshness before publishing Greeks (readiness
+      gates on input freshness, not just process liveness).
+- [ ] (greeks-features-data) **Features-data dependency present where required**: the operator's data-dep set is
+      *features data + MDPS data*. Today greeks consumes only MDPS `mark_update`; confirm whether any Greek/IV needs a
+      features-service input (e.g. a vol surface) and, if so, that it is read as **data** (features bucket) via pre-flight
+      — never a features-service code import. (2026-06-01 gap: greeks reads no features-service data yet — see todo.)
+- [ ] (greeks-topology) **Deployment topology = data-pipeline layer; batch separate / live in features VM; shared**:
+      verify the deployment topology DAG (`deployment-service/configs/RUNTIME_TOPOLOGY_DECISIONS.md` + topology SVG)
+      places greeks in the **data-pipeline layer (not ml)**: **batch** as a **separate** scheduled job/VM; **live**
+      **co-located inside the features VM** as a **single shared service for all strategies/clients** (NO per-strategy /
+      per-client instance — Greeks generalise across the book). ml consumes greeks output downstream; greeks never
+      depends on ml.
+- [ ] (greeks-batch-live-parity) **Batch == live (same schemas/handlers)**: the batch (`GreeksBackfillProcessor` →
+      `MarkUpdateHandler` → `PricingLedgerWriter`) and live (`mark_update_sub` → `MarkUpdateHandler` → writer) paths share
+      the SAME handler + output schema (`pricing_ledger_writer`), differing only in source (GCS parquet vs live sub) — per
+      the workspace Batch=Live invariant.
 
 ### Batch vs Live Parity
 
