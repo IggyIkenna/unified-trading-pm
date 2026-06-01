@@ -173,9 +173,14 @@ be fixed first if run on a VM.
       `--workers`/`--start-date`/`--end-date` + `gcs_copy_object` server-side + `python -u` progress + per-object
       try/except + idempotent `gcs_describe_object` skip): copies legacy `raw_tick_data/` + `processed_candles/` →
       `pred-prd` at canonical `day=/pipeline_mode=/asset_group=prediction/…` via the **UAC `candidate_parquet_paths`
-      SSOT** (byte-exact batch=live; pipeline_mode LEFT of asset_group= per writer+reader+UAC). `--drop-stale` (E8)
-      deletes stale `category=` objects post-verify (IRREVERSIBLE). Path transforms unit-validated. —
-      market-tick-data-service@456ae08a, slot-3 2026-06-01.
+      SSOT** (byte-exact batch=live; pipeline_mode LEFT of asset_group= per writer+reader+UAC). **DUAL-SOURCE
+      RECONCILIATION (operator catch 2026-06-01)**: real data-state = legacy 2,822 captured cells / pred-prd **805**
+      (NOT the stale 3,086 prior in the header table) / overlap 783 → **2,039 legacy-only AND 22 CANON-only** (neither
+      bucket is a subset). Migrator canonicalises BOTH sources: Source A legacy (fresher, wins overlap, first) + Source
+      B pred-prd's own `category=` objects (preserves the 22 unique cells, dedup-to-freshest). `--drop-stale` (E8)
+      deletes `category=` originals ONLY after Source B canonicalises them → final pred-prd = UNION, fully canonical,
+      single SSOT, ZERO loss (IRREVERSIBLE). Path transforms unit-validated. — market-tick-data-service@74077c39, slot-3
+      2026-06-01.
 - [ ] [DATA] P0. E3 Confirm `mdps-prediction-2025` writer drained; snapshot `pred-prd/_index` →
       `_index/snapshots/pre_v9_canonical_2026_06_01.parquet`.
 - [ ] [DATA] P0. E4 Dry-VM run + full-VM run. **Launcher WIRED 2026-06-01** (deployment-service@f8866b6): `prediction`
