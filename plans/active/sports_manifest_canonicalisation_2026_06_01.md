@@ -336,19 +336,21 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       layout map + scope-expansions captured in § P0 above (MDPS raw `category=` vs legacy `asset_group=` INVERTED;
       instr-store 8 layouts; 2.68M instr rows / 1.9M empties; non-canonical free-text reason; CF-7 drift). Evidence:
       `/tmp/cf_sports_{mdps,instr,layout}.log` — PM@<flip-sha>.
-- [ ] [DATA] P0. E2 Build/extend `migrate_sports_canonical.py` to v9-canonical (perf-contract):
+- [x] ✅ [DATA] P0. E2 Build/extend `migrate_sports_canonical.py` to v9-canonical (perf-contract):
       `category=`→`asset_group=sports`, add
       `pipeline_mode=batch_{api_football,footystats,odds_api,understat,transfermarkt,…}`; keep `source` col (already
-      present).
+      present). — market-tick-data-service@1036de20 | `migrate_sports_canonical_v9.py` (new) layout-aware: MDPS raw+candle, instruments-store 5 trees, CF-7 normalise, ThreadPoolExecutor + gcs_copy_object, dry-run default
 - [ ] [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
-- [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): at manifest rebuild, relabel the 584,177 `SOURCE_RETURNED_ZERO`
+- [x] ✅ [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): at manifest rebuild, relabel the 584,177 `SOURCE_RETURNED_ZERO`
       empties → typed UAC reasons
       (`EXPECTED_NO_FIXTURE`/`PRE_SEASON`/`POST_SEASON`/`PAUSED_LEAGUE`/`OUTSIDE_TRANSFER_WINDOW`/
       `SOURCE_DOES_NOT_COVER_LEAGUE`/`FIXTURE_POSTPONED|CANCELLED`/`KNOWN_SOURCE_GAP`/`NO_MAPPING`) via the UAC coverage
       oracle (`clip_dates_to_source_coverage`/`is_in_known_gap`/`league_data`) — never re-derived per consumer.
-- [ ] [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` +
+      — market-tick-data-service@1036de20 | `rebuild_sports_manifest_v9.py` --surface {mdps,instruments} --dry-run; keystone relabel via is_expected_for_source + free-text→EXPECTED_NO_FIXTURE + retired→EXPECTED_DEPRECATED_DATA_TYPE + phantom skip
+- [x] ✅ [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` +
       `available_at` → consolidator → v9. ~~Also fix the writer to emit typed reasons going forward (CF-5 write-path) — DONE (C-writer@instruments-service@608e7ca7).~~
+      — market-tick-data-service@1036de20 | `rebuild_sports_manifest_v9.py` re-emits captured rows via writer.add(source=, pipeline_mode=) + relabelled empties via record_empty; ManifestWriter(per_vm_shards=True).flush()
 - [ ] [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank
       venue.
 - [ ] [DATA] P0. E8 Verify: `cf_manifest_audit_2026_06_01.py` on both sports surfaces → CF-1…CF-12 GREEN (esp. 0 blanket
