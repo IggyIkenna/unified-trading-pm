@@ -485,9 +485,12 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       tests (defi lending adapters) → 77.69% (`instruments-service@851559f4`) + reconciled main `fbadf6b0`; main v2 GREEN
       (`fbadf6b0a`); `enforce_admins` now enabled on instruments main (Phase 2 → 16/16). Also fixed a real `get_instrument`
       `AttributeError` bug + captured the 19-adapter `inst.symbol` sweep as a tracked follow-up.
-- [ ] [SCRIPT] P2. **FINDING (2026-06-01) — `load-gh-token.sh` SM fallback / .act-secrets refresh.** Complement to the
-      validity-probe fix above: have `generate-act-secrets.sh` refresh `.act-secrets` from SM on bootstrap/cron so the
-      cache rarely goes stale in the first place. — repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **`.act-secrets` proactive SM-refresh — DONE** (`unified-trading-pm@<gh-token-refresh>`).
+      `generate-act-secrets.sh` now SM-fetches `GH_PAT` (GCP SM → AWS SM, same source as `load-gh-token.sh`) to
+      populate/refresh `.act-secrets` instead of an empty manual-fill template; `--refresh` updates only the `GH_PAT`
+      line in-place (preserves other secrets); `workspace-bootstrap.sh` calls `--refresh` before sourcing
+      `load-gh-token.sh` so the cache rarely goes stale. No-op when SM unavailable (manual-fill fallback preserved). —
+      complements the runtime validity-probe (`@e93aacbc8`).
 - [ ] [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
       currently fetches `GH_PAT` only for clone-time HTTPS; also export it as `GH_TOKEN`/`GITHUB_TOKEN` in the worker
       systemd env (or source `load-gh-token.sh` at worker start) so VM workers can edit workflows too. — repo:
