@@ -99,13 +99,34 @@ estimate_calibrated_ai_days: 1.2
 
 ## Discoveries (captured per HARD RULE)
 
-- [ ] [SCRIPT] P3. **`agent-audit.yml` fails at 0s with no logs on features-service LDR** (surfaced during Item 4
-      investigation). 8+ consecutive `agent-audit.yml` runs failed instantly ("log not found" = the job never starts —
-      trigger/permission/config), while the authoritative `quality-gates-v2` was green on the same HEAD. This is
-      misleading: a `gh run list` glance reads as "CI red" when the real quality gate is green (it nearly led to a wrong
-      `ci_status: FAILING` flip here). Investigate whether `agent-audit.yml` is broken features-service-only or
-      workspace-wide, and either fix its trigger/permissions or retire it. **DEFERRED** — out of this plan's scope;
-      provenance: Item 4 investigation 2026-06-01.
+- [x] ✅ [SCRIPT] P3. **`agent-audit.yml` fails at 0s with no logs on features-service LDR** (surfaced during Item 4
+      investigation). **Root-caused + fixed.** The 0s "log not found" failures are GitHub **`startup_failure`** runs
+      ("This run likely failed because of a workflow file issue") — the workflow never starts a job, so there are no
+      logs. **Cause**: features-service ran the *legacy inline-prototype* `agent-audit.yml` whose "Self-dispatch retry on
+      failure" step had `if: failure() && fromJSON(inputs.attempt || '1') < 3` plus `inputs.attempt`/`inputs.prior_context`
+      in step `env:`. GitHub evaluates those expressions when **compiling the workflow for a push event**, where the
+      `inputs` context does not exist → compile error → a `startup_failure` run attributed to the push, even though the
+      trigger is `workflow_dispatch`-only. That's why a dispatch-only workflow showed "Triggered via push" at 0s on every
+      LDR push. **Scope = NOT workspace-wide**: legacy repos WITHOUT that self-dispatch step (e.g. strategy-service,
+      deployment-service) create zero runs; only repos with the `fromJSON(inputs.attempt` step startup-fail. The 3
+      affected repos: **features-service, market-data-processing-service, market-tick-data-service**. **Fix applied to
+      features-service**: migrated its `agent-audit.yml` to the canonical thin form (reusable `python-quality-gates-v2`
+      call, no `inputs.*` in expressions) matching execution-service/instruments-service/UAC; `dep_repos` matches its own
+      `quality-gates-v2.yml`. `agent-audit.yml` is NOT a PM-templated workflow, so per-repo edit is correct.
+      **Verified**: pushing the fix (features-service@dba0f5bf) created **zero** agent-audit runs (vs a startup_failure on
+      every prior push) → compiles clean + correctly dispatch-only. — features-service@dba0f5bf | provenance: Item 4
+      investigation 2026-06-01. **Cross-repo follow-ups tracked below.**
+- [ ] [SCRIPT] P3. **Migrate `market-data-processing-service` `agent-audit.yml` to the canonical thin form** (same
+      `startup_failure`-on-push defect as features-service — has the `fromJSON(inputs.attempt` self-dispatch step).
+      Replace `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin form (model on
+      `execution-service`/`features-service@dba0f5bf`); set `dep_repos` to match its own `quality-gates-v2.yml`. Verify a
+      push to `live-defi-rollout` produces no new agent-audit run (`gh run list --workflow agent-audit.yml --repo
+      IggyIkenna/market-data-processing-service`). Land on LDR. Provenance: agent-audit.yml discovery 2026-06-01.
+- [ ] [SCRIPT] P3. **Migrate `market-tick-data-service` `agent-audit.yml` to the canonical thin form** (same
+      `startup_failure`-on-push defect — confirmed 0s push failures + has the `fromJSON(inputs.attempt` self-dispatch
+      step). Replace `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin form;
+      set `dep_repos` to match its own `quality-gates-v2.yml`. Verify a push to `live-defi-rollout` produces no new
+      agent-audit run. Land on LDR. Provenance: agent-audit.yml discovery 2026-06-01.
 - [x] ✅ [SCRIPT] P2. **Runbook Execution-Owner check fails on a vendored codex mirror** (surfaced running the Item 5b
       merge-prerequisite QG). `scripts/quality_gates/check_runbook_execution_owner.py` walks the whole workspace for
       `*runbook*.md` and flagged `unified-trading-system-ui/context/codex/05-infrastructure/sit-runbook.md` (no
