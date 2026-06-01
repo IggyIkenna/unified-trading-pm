@@ -1,11 +1,12 @@
 ---
 scope: [engineer, admin]
 last_reviewed: 2026-06-01
+status: final
 ---
 
 # Agent Orchestrator — Worker Liveness Watchdog
 
-> **SSOT**: `agent-orchestrator/server/worker_liveness_watchdog.py` (Phase 2, pending)
+> **SSOT**: `agent-orchestrator/server/worker_liveness_watchdog.py`
 > **Plan**: `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`
 > **Related**: `codex/04-architecture/agent-orchestrator-autospawn.md` § "Failure modes"
 > **Composes with**: `WorkerLivenessKicker` (`server/worker_liveness.py`) — kicker nudges; watchdog kills
@@ -76,12 +77,12 @@ _PROMPT_NONEMPTY_RE = re.compile(r"^\s*❯\s+\S", re.MULTILINE)  # noqa: RUF001
 
 ### Tick-to-tick pane comparison (stuck-at-prompt)
 
-The watchdog maintains `_prev_pane: dict[int, str]` (slot_id → last captured pane). On each tick:
+The watchdog maintains `_prev_panes: dict[int, str]` (slot_id → last captured pane) and `_stuck_ticks: dict[int, int]`. On each tick:
 
 1. Capture current pane (`capture_pane(session, history_lines=30)`).
-2. If pane has non-empty text after `❯` AND pane == `_prev_pane[slot_id]` → increment `_frozen_ticks[slot_id]`.
-3. If `_frozen_ticks[slot_id] >= 3` AND pane does NOT match `_THINKING_RE` → kill.
-4. On any pane change (content differs from prev) → reset `_frozen_ticks[slot_id] = 0`.
+2. If pane has non-empty text after `❯` AND pane == `_prev_panes[slot_id]` → increment `_stuck_ticks[slot_id]`.
+3. If `_stuck_ticks[slot_id] >= 3` AND pane does NOT match `_ACTIVELY_THINKING_RE` → kill.
+4. On any pane change (content differs from prev) → reset `_stuck_ticks.pop(slot_id, None)`.
 
 ---
 
@@ -93,7 +94,6 @@ These prevent a misconfigured or flapping watchdog from kill-looping a slot:
 |---|---|---|
 | Per-slot kill cooldown | 5 min between kills on the same slot | Auto-reset after cooldown window |
 | Per-VM daily cap | 20 kills total across all slots before dormancy | UTC midnight reset |
-| Per-slot context-full cap | 3 context-full kills per slot per day | UTC midnight reset |
 
 On daily-cap hit: Slack alert fires + watchdog goes dormant on that VM until manual operator reset
 (forces operator to investigate root cause rather than mask it with repeated auto-recovery).
@@ -106,16 +106,16 @@ restart, which is intentional (fresh state = conservative on restart day).
 ## Kill execution
 
 ```python
-def _kill_slot(self, slot_id: int, session: str, reason: str) -> None:
+def _kill_slot(self, slot_id: int, tmux_session: str, reason: str) -> None:
     """Kill tmux session + log event. AutoSpawnLoop respawns on next tick."""
-    tmux_spawn.kill_session(session)
-    log_activity(db, "slot_watchdog_kill", slot_id=slot_id, details={"reason": reason, "session": session})
-    self._last_kill_at[slot_id] = utcnow()
-    self._kills_today += 1
-    if reason == "context_full":
-        slack_notify.notify_context_full_kill(slot_id, session)
-    if self._kills_today >= _DAILY_KILL_CAP:
-        slack_notify.notify_watchdog_daily_cap_hit(self._kills_today)
+    kill_session(tmux_session)
+    slot_row.status = "killed"  # set in DB before respawn fires
+    log_activity(db, "watchdog_slot_killed", slot_id=slot_id,
+                 details={"reason": reason, "session": tmux_session,
+                          "kills_today": self._kills_today, "cap": _DAILY_KILL_CAP})
+    # Slack alert: fires for context_full kills or on daily-cap hit
+    if reason == "context_full" or self._kills_today >= _DAILY_KILL_CAP:
+        slack_notify.notify_watchdog_kill(slot_id, reason, self._kills_today, _DAILY_KILL_CAP)
 ```
 
 No WIP commit happens at kill time — unlike `WorkerLivenessKicker`'s auto-respawn path (which runs
@@ -140,9 +140,9 @@ Fresh worker /boot → claims next queued task
 
 Expected end-to-end time from kill to fresh-worker-with-task: **60–180 s**.
 
-The watchdog does NOT touch `SlotRow.status` — that remains the AutoSpawnLoop's and worker's
-responsibility. The kill is a pure tmux operation; slot state follows naturally from the
-missing `/heartbeat` and the subsequent spawn.
+The watchdog sets `SlotRow.status = "killed"` before AutoSpawnLoop fires, so the prune-stale
+guard doesn't reclaim the task during the respawn window. Slot state then transitions to `idle`
+→ `dispatched` on the next AutoSpawnLoop + dispatch cycle.
 
 ---
 
@@ -150,9 +150,8 @@ missing `/heartbeat` and the subsequent spawn.
 
 | Event | Alert | Severity |
 |---|---|---|
-| Context-full kill fires | `notify_context_full_kill(slot_id, session)` — immediate Slack DM to operator | P0 — always operator-actionable |
-| Per-VM daily cap hit | `notify_watchdog_daily_cap_hit(total_kills)` — watchdog dormant until operator resets | P0 — runaway loop signal |
-| Per-slot context-full cap hit (3 in 1 day) | Included in next daily-cap alert | P1 |
+| Context-full kill fires | `notify_watchdog_kill(slot_id, "context_full", kills_today, cap)` — immediate Slack DM to operator | P0 — always operator-actionable |
+| Per-VM daily cap hit | `notify_watchdog_kill(slot_id, reason, kills_today, cap)` — watchdog goes dormant until UTC midnight | P0 — runaway loop signal |
 
 Slack alerts use the same channel + format as `notify_autospawn_flap` and `notify_account_rotated`.
 No new Slack infrastructure required.
@@ -166,7 +165,7 @@ No new Slack infrastructure required.
 | `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED` | `false` | Master on/off — must be `true` to enable |
 | `ORCHESTRATOR_WATCHDOG_INTERVAL_SECONDS` | `60` | Tick cadence |
 | `ORCHESTRATOR_WATCHDOG_STUCK_TICKS` | `3` | Consecutive frozen ticks before kill (3 × interval = 180s) |
-| `ORCHESTRATOR_WATCHDOG_HEARTBEAT_THRESHOLD_SECONDS` | `900` | Heartbeat-silent threshold (15 min) |
+| `ORCHESTRATOR_WATCHDOG_HEARTBEAT_TIMEOUT` | `900` | Heartbeat-silent threshold (15 min) |
 | `ORCHESTRATOR_WATCHDOG_KILL_COOLDOWN_SECONDS` | `300` | Per-slot kill cooldown (5 min) |
 | `ORCHESTRATOR_WATCHDOG_DAILY_CAP` | `20` | Per-VM kills before dormancy |
 
@@ -200,7 +199,7 @@ curl -s http://localhost:8026/api/state | jq '.watchdog_enabled'
 
 # 2. Leave a slot idle until stuck-at-prompt (or inject via tmux send-keys without C-m)
 # 3. Wait ≤ 3 ticks (180s); confirm kill event in activity log
-curl -s http://localhost:8026/api/activity?limit=5 | jq '.[] | select(.event_type=="slot_watchdog_kill")'
+curl -s http://localhost:8026/api/activity?limit=5 | jq '.[] | select(.event_type=="watchdog_slot_killed")'
 
 # 4. Confirm AutoSpawnLoop respawns within 60–120s of kill
 sleep 120 && tmux ls | grep orch-slot-<N>
