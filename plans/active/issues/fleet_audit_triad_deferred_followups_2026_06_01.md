@@ -34,6 +34,12 @@ they are not silently lost on archival (per the plan-archival HARD RULE).
       Manifest remains not-fully-trustworthy for a spend decision until phantom-sweep + re-consolidation runs. Playbook
       in `cefi_..._2026_05_27.md` §6I + `bucket_name_ssot_canonicalisation_2026_05_10`.
 
+### DeFi chain-column reprocess (folded in 2026-06-01)
+- [ ] [DATA] P2. **DeFi swaps_ohlcv `chain`-column reprocess** — 28,634 UNISWAP_V3-ETHEREUM `attempted_failed` rows +
+      ~9 companion venues (UNISWAP_V2, AAVEV3-OPTIMISM, EIGENLAYER, CURVE, MAKER, FRAX, DRIFT-SOLANA, KAMINO/JITO/MARGINFI).
+      Code fix shipped (mdps@7f1a5b5 + @3799c8d); only a retry pass is needed. Run all affected venues together as part of
+      the DeFi backfill / GCS-migration pass — NOT piecemeal. Detail: `uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md`.
+
 ### From `deployment_ui_vm_and_venue_coverage_visibility`
 - [ ] [UI] P3. **Per-item Playwright pw:L2 never ran green in the slot env** (`libatk-1.0.so.0` missing on the EC2
       worker). Specs are written; the §5 full-suite pass (deployment-ui@7bbc270, 140/140) is the standing evidence. If a

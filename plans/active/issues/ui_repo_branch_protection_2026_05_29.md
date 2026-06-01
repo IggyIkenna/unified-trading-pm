@@ -7,6 +7,14 @@ priority: P2
 status: active
 ---
 
+> **🅿️ TRACKED P2 — verified 2026-06-01 (harsh, operator: option C / leave-tracked).** Re-checked live state: all 5
+> repos now HAVE branch protection (the direct-push hole is closed), but the `quality-gates-v2` **required check** is
+> enforced on only 1 of 5 — `batch-live-reconciliation-service` (via a `require-quality-gates` ruleset). The other 4
+> have protection but no required check. The doc's classic-branch-protection command is stale — the canonical workspace
+> approach is **rulesets** (Ikenna's ci_v2 migration). Right fix = replicate the `require-quality-gates` ruleset onto the
+> 4 repos, gated on each repo's quality-gates-v2 being green first. Owner: Ikenna (CI/branch governance). Not actionable
+> by harsh-side unilaterally (requiring a red check blocks all merges).
+
 ## What I found
 
 During quality-gates-v2 migration verification, 5 repos were found with no branch protection on main or staging:
