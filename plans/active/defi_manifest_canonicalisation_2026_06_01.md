@@ -419,11 +419,15 @@ What to verify/wire (B0 corrected scope):
 >       canonical cell. Complementary cells (only in one layout) are all preserved. No data dropped, no duplicate created.
 > - [ ] [CODE] P0. C0-RD3 — transform the chosen object to **full v9**: schema_version=9 + `asset_group` COLUMN +
 >       `pipeline_mode` column+partition + `source` + canonical venue + `available_at` preserve-or-derive → write ONCE
->       to env-split `{kind}-prd-{project}` canonical path. Conformant to the § Migration-script performance contract
->       (ThreadPool, workers, observable, idempotent).
-> - [ ] [DATA] P0. C0-RD4 — **completeness gate**: post-walk, assert canonical `-prd` distinct-cell count ≥ union of all
->       3 source layouts' distinct cells (per bucket); CF-1…CF-12 GREEN on the rebuilt `-prd` `_index`
->       (`audit_canonical_form.py`). Only then is C-GREEN.
+>       to env-split `{kind}-prd-{project}` canonical path. **UNIFORM SCHEMA (KEY — operator 2026-06-01)**: every output
+>       object is conformed to the SINGLE UAC canonical schema for its data_type — identical column set + identical path
+>       layout — REGARDLESS of which source layout the cell came from. A `dex_pools/`-sourced and a `raw_tick_data/`-
+>       sourced cell come out byte-structurally identical (non-uniform output just recreates the mess in the new bucket).
+>       Conformant to the § Migration-script performance contract (ThreadPool, workers, observable, idempotent).
+> - [ ] [DATA] P0. C0-RD4 — **completeness + uniformity gate**: post-walk, assert canonical `-prd` distinct-cell count ≥
+>       union of all 3 source layouts' distinct cells (per bucket); **exactly ONE schema (column set) per data_type
+>       across ALL output objects** (no schema drift between cells of different source-layout origin); CF-1…CF-12 GREEN
+>       on the rebuilt `-prd` `_index` (`audit_canonical_form.py`). Only then is C-GREEN.
 > - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4 GREEN,
 >       so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
 >

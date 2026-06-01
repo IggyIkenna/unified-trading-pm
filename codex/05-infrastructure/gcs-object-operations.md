@@ -115,6 +115,32 @@ walk (download→transform→upload, can't use server-side copy):
 - Re-running is safe (idempotent overwrite), so it's fine to kill an under-provisioned run and relaunch sharded/higher-
   worker once a quick comparison confirms throughput scales.
 
+## Migration completeness + uniform-schema + legacy-deletion contract (HARD RULE — codified 2026-06-01)
+
+**Why migrations kept failing (operator post-mortem 2026-06-01).** The canonical TARGET layout moved several times
+(defi e.g. `{data_type}/{venue}/{chain}/date=` → `day=/category=defi/` → `raw_tick_data/by_date/day=/asset_group=/`),
+and **each move wrote a NEW layout WITHOUT deleting the old**. So a single source bucket silently accumulated 2–3
+**overlapping representations of the same cells** in different schemas + partial coverage. Migrations then (a) assumed
+one layout and **missed the other 90%**, and (b) **never deleted** the old buckets/paths → dual/triple SSOT → data-status
+can't show true missing data → "audit + migrate" again → the loop repeats. Every whole-corpus migration MUST break it:
+
+1. **Discover ALL historical layouts — never assume today's target shape.** Mandatory pre-flight: bucket-wide list of
+   distinct top-level prefixes/trees. An unrecognised tree is **review-blocking, never silently skipped**. (defi: a
+   `day=`-prefix listing that ignored `dex_pools/` + `raw_tick_data/` caught only ~10%.)
+2. **Normalize every layout to ONE canonical cell key + dedup overlaps** (freshest schema → most-complete → latest
+   write). The union migrates once; no duplicate object per canonical cell, no cell dropped.
+3. **Uniform output schema (KEY).** Every output object is conformed to the SINGLE canonical schema for its data_type
+   (UAC contract): identical column set (`schema_version=v9` + `asset_group`/`pipeline_mode`/`source`/`available_at` +
+   canonical `venue`/`chain`/`data_type` + the data_type's data columns) **and** identical path layout — regardless of
+   which source layout the cell came from. A `dex_pools/`-sourced cell and a `raw_tick_data/`-sourced cell come out
+   byte-structurally identical. Non-uniform output just recreates the mess in the new bucket.
+4. **End by DELETING all legacy buckets + paths** — but ONLY after the completeness+uniformity gate: canonical
+   distinct-cells ≥ union of every source layout's distinct cells, CF-1…CF-12 GREEN, and one schema per data_type across
+   all output objects. **A migration that leaves the old layout in place is NOT done** — it re-creates the dual-SSOT.
+   Done-definition: **exactly one canonical v9 SSOT remains**, verifiable by data-status showing a single source.
+
+SSOT for the concrete unified-migration spec: `plans/active/defi_manifest_canonicalisation_2026_06_01.md` §C0-RD1…RD5.
+
 ## Incident history
 
 **2026-06-01**: the DeFi C0 tool (`migrate_defi_full_v9_canonical.py`) walked ~40–50K objects **single-threaded**
