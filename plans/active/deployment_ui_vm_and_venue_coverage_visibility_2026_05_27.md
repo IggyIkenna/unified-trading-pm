@@ -3,7 +3,9 @@ name: deployment_ui_vm_and_venue_coverage_visibility
 title: "Deployment-UI: fix VM deployments page + history tab, add venue key-status & coverage visibility — 2026-05-27"
 parent_epic: deployment_and_user_management_master
 assigned_vm: vm-operator-ops
-status: active
+status: done
+completed: 2026-06-01
+completed_note: "Operator-marked done 2026-06-01 (harsh). All 10 items shipped; pw:L2 ran green in §5 (deployment-ui@7bbc270, 140/140) — per-item BLOCKED-INFRA libatk notes are slot-env-only and superseded by the §5 full-suite pass."
 priority: P0
 created: 2026-05-27
 author: harsh (claude opus 4.7)

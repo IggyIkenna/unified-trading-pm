@@ -3,7 +3,9 @@ name: cefi_venue_backfill_coverage_remediation
 title: "CeFi/venue backfill coverage remediation + fleet VM fixes — 2026-05-27"
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
-status: active
+status: done
+completed: 2026-06-01
+completed_note: "Operator-marked done 2026-06-01 (harsh). All code/data-correctness fixes shipped. Tardis paid key is INTENTIONALLY not activated (operator choice, NOT a blocker). GCS manifest migration / 22-day-gap reconcile is DEFERRED — to be run when operator sees fit."
 priority: P0
 created: 2026-05-27
 author: harsh (claude opus 4.7)
@@ -138,16 +140,18 @@ So we don't hammer paid endpoints while keyless, and can schedule VMs by what's 
       `mdps-backfill-tradfi-20260528-213704` (2020), `mdps-backfill-tradfi-20260528-213727` (2022-08→12),
       `mdps-backfill-tradfi-20260528-213737` (2024), `mdps-backfill-tradfi-20260528-213750` (2025). All RUNNING in
       asia-northeast1-c. ETA ~24h each. — 2026-05-28
-- [ ] [HUMAN] P0. **Renew Tardis API key** (single key `tardis-api-key` = EXPIRED, `code 11`; 3 secret names all
-      identical+expired). Blocks ALL paid historical CeFi backfill. After renewal → relaunch backfills.
+- [x] ✅ **[OPERATOR-DECISION — NOT A BLOCKER] Tardis paid API key intentionally NOT activated (2026-06-01).** The
+      single key `tardis-api-key` is expired (`code 11`), but the operator has chosen not to activate the paid tier for
+      now. The code is coverage-aware (free-only mode) so VMs do not spin on 401s. This is a deliberate
+      not-yet-activated state, **not** a `BLOCKED-CREDENTIALS` gate. Paid historical CeFi backfill is out of scope until
+      the operator activates the key.
 
 ## §5 — Relaunch gate
 
-- [~] [BLOCKED-OPERATOR-DECISION] [AGENT] P1. After §1+§4 code fixes land AND the key is renewed: relaunch CeFi
-  backfills (expiry-window-aware, coverage-aware) and verify real rows flow for a sample paid historical date per venue.
-  **BLOCKED 2026-05-28**: §1 fixes landed (mtds@91e3df03); §4 P0/P1 code fixes landed; but Tardis API key is EXPIRED
-  (`code 11`, §4 P0 `[HUMAN]` renewal not done). All paid CeFi backfill blocked until operator renews key at
-  `tardis-api-key` in GCP Secret Manager.
+- [x] ✅ [DEFERRED — operator-when-fit, 2026-06-01] [AGENT] P1. All §1+§4 code fixes are landed
+  (mtds@91e3df03 + §4 P0/P1). Relaunching the paid historical CeFi backfill (expiry-window-aware, coverage-aware) +
+  the GCS manifest migration / 22-day-gap reconcile is **deferred until the operator sees fit** (paid Tardis tier is
+  intentionally not activated — see §4). Not a blocker; closed for the purposes of this plan.
 
 ## §6 — Deep log-scan addendum (2026-05-27, all 25 VMs, head+mid+tail byte-range sampling)
 
