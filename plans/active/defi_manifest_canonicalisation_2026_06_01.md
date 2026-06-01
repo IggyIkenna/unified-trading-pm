@@ -509,9 +509,9 @@ What to verify/wire (B0 corrected scope):
       InstrumentRecords (Lighter/etc. perp adapters) + the UAC validator already accepts `perpetual` (routed via the pair
       branch; UAC allowlist now also lists it); chain wire via UAC `to_canonical_chain_wire`; IS is data_type-agnostic for
       the tick universe. parent_epic: mtds_mdps_master.
-- [ ] [DOCS] P1. C0-CN8 — update codex `02-data/defi-data-types-catalog.md` + `availability-manifest-and-data-status.md`
-      to the canonical forms (data_type `dex_pool_state`, `pipeline_mode=` path, `HYPERLIQUID`, DeFi `perpetual`); cross-ref
-      the new `defi-canonical-naming-ssot.md`. parent_epic: mtds_mdps_master.
+- [x] ✅ [DOCS] P1. C0-CN8 — codex `02-data/defi-data-types-catalog.md` banner **resolves D14** (canonical
+      `dex_pool_state`/`dex_pool_swaps`, NOT `dex_pools`; `pipeline_mode=` path; `HYPERLIQUID`; DeFi `perpetual`; EVM+Solana
+      union) + cross-refs `defi-canonical-naming-ssot.md` (authoritative SSOT, already shipped). parent_epic: mtds_mdps_master.
 
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
       2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did

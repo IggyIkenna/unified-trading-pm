@@ -25,6 +25,18 @@ last_reviewed: 2026-05-13
 > dex_pools-vs-dex_pool_state data_type, governance handler dup, live-venues-without-capability) are
 > deferred-until-pipeline-done and tracked in the findings + issue docs.
 
+> **🛑 D14 RESOLVED + CANONICAL NAMING LOCKED (operator 2026-06-01) — SSOT
+> [`defi-canonical-naming-ssot.md`](./defi-canonical-naming-ssot.md)**: the D14 `dex_pools`-vs-`dex_pool_state`
+> ambiguity is settled — **canonical data_type = `dex_pool_state` (pools) / `dex_pool_swaps` (swaps) EVERYWHERE**
+> (path + column + manifest + handler const + bucket-domain logical key). The earlier "canonical is `dex_pools`,
+> rename `dex_pool_state`→`dex_pools` pending D14" direction is **REVERSED** — `dex_pools`/`dex_swaps` are retired.
+> Other locked forms: object path carries **`pipeline_mode={mode}/`** after `day=`; Hyperliquid chain wire value =
+> **`HYPERLIQUID`**; **`instrument_type=perpetual` is VALID for DeFi** (on-chain perps Drift/GMX/HL). Note:
+> `dex_pool_state` is the **EVM + Solana union** (EVM `instrument_type=pool`; Solana `solana_amm_pool`/`solana_vault`)
+> — discriminate by instrument_type + chain, NOT a separate data_type. Shipped: migration mtds@6a8372b2; writer/reader
+> alignment uac@dad96e42 + mtds@0a3a7071 + features-service@dec1b687 + mdps@4b9e6e5. References below to `dex_pools`/
+> `dex_swaps` as the canonical data_type are SUPERSEDED by this banner.
+
 ## Overview
 
 MTDS collects DeFi market data in **~24** distinct data_types across lending, DEX, staking, restaking, bridging,
