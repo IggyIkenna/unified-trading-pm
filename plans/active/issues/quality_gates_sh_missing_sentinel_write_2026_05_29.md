@@ -2,24 +2,22 @@
 title: quality-gates.sh doesn't write .qg_last_passed_sha sentinel despite codex doc claim
 created: 2026-05-29
 status: RESOLVED 2026-05-29
-author: slot-1 (ikenna)
 parent_epic: infrastructure_master
 related_plans:
   - plans/active/ci_canonical_v2_migration_2026_05_29.md
   - codex/08-workflows/ci-cd-flow.md
 locked_by: live-defi-rollout
+priority: P2
 ---
 
 > **RESOLVED 2026-05-29**: Investigation found the sentinel-write logic WAS implemented in commit
-> `a8b758c58 fix(ci): QG sentinel + SHA check in quickmerge + remove LDR from workspace-qg triggers`
-> — but only landed on `live-defi-rollout` + `staging`, not main. Promoted to main via PR #95
-> (admin-merged 2026-05-29 20:09:40Z). The original investigation that hit "no sentinel" was
-> running on PM main HEAD `8996f5fa0` BEFORE this commit reached main.
+> `a8b758c58 fix(ci): QG sentinel + SHA check in quickmerge + remove LDR from workspace-qg triggers` — but only landed
+> on `live-defi-rollout` + `staging`, not main. Promoted to main via PR #95 (admin-merged 2026-05-29 20:09:40Z). The
+> original investigation that hit "no sentinel" was running on PM main HEAD `8996f5fa0` BEFORE this commit reached main.
 >
-> What landed (per commit message): `base-service.sh` writes `.qg_last_passed_sha` on full
-> (non-partial) QG runs with guards `RUN_TESTS=true`, `RUN_LINT=true`, `QUICK_MODE=false`,
-> `ACT_MODE=false`, `SKIP_CODEX_FLAG` unset. `quickmerge.sh` reads the sentinel in `--agent` mode.
-> `.gitignore` excludes the artifact.
+> What landed (per commit message): `base-service.sh` writes `.qg_last_passed_sha` on full (non-partial) QG runs with
+> guards `RUN_TESTS=true`, `RUN_LINT=true`, `QUICK_MODE=false`, `ACT_MODE=false`, `SKIP_CODEX_FLAG` unset.
+> `quickmerge.sh` reads the sentinel in `--agent` mode. `.gitignore` excludes the artifact.
 >
 > Issue archives. The original analysis below is preserved as the investigation record.
 

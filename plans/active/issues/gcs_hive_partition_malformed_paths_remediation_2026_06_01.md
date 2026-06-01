@@ -4,7 +4,6 @@ title: "GCS hive-partition malformed paths — TradFi day- empties + CeFi root-l
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 created: 2026-06-01
-author: harsh + claude (session 67c17024)
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
@@ -15,6 +14,7 @@ source:
   - market-tick-data-service/market_tick_data_service/scripts/_migrate_tradfi_hyphen_rewriter.py
   - market-tick-data-service/market_tick_data_service/engine/orchestrator.py
   - market-tick-data-service/market_tick_data_service/reader.py
+priority: P2
 ---
 
 # GCS hive-partition malformed paths — remediation

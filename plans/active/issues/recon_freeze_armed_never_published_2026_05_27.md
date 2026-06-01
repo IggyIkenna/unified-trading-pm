@@ -1,7 +1,6 @@
 ---
 title: RECON_FREEZE_ARMED is never published — reconciliation→order-block safety chain is dormant
 created: 2026-05-27
-author: Harsh (Claude Opus 4.7)
 source:
   - execution-service/execution_service/preflight/recon_freeze.py
   - alerting-service/alerting_service/rules/reconciliation_rules.py
@@ -10,6 +9,8 @@ source:
 locked_by: live-defi-rollout
 severity: P0-safety (live-trading critical path)
 routed_to: ikenna-main (cross-repo trading-safety decision)
+priority: P2
+status: active
 ---
 
 # RECON_FREEZE_ARMED never published — recon→order-block chain is dormant

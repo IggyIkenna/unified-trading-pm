@@ -1,7 +1,6 @@
 ---
 title: "Shared git stash pile archived + cleared — confirmation window before final purge"
 created: 2026-06-01
-author: ikenna-slot-1
 source:
   - unified-trading-pm/.git (shared common dir — stash ref visible to all slot worktrees)
 parent_epic: infrastructure_master

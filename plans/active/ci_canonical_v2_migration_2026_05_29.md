@@ -4,13 +4,10 @@ parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P0
 status: active
-type: infra
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
 created: 2026-05-29
-owner: ikenna
-asset_group: cross-cutting
 completion_gates:
   code: C5
   deployment: D3
@@ -39,6 +36,8 @@ repo_gates:
 related_plans:
   - plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md
   - plans/active/tradfi_massive_dual_source_2026_05_28.md
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # CI canonical v2 migration — ghost-workflow workaround
@@ -201,16 +200,16 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 - [ ] [SCRIPT] P1. Once all 10 repos run cleanly on v2, delete v1 caller workflow files in each repo (single quickmerge
       per repo). Keep the v1 PM callee `python-quality-gates.yml` for now to avoid forced GitHub re-validation; remove
       in a later cleanup once GH Support ticket clears.
-- [x] ✅ [CODEX] P1. `codex/08-workflows/ci-cd-flow.md` updated this turn (2026-05-29 EOD) with new section
-      "Canonical required check name (post-Option-D, 2026-05-29)" — names `quality-gates-v2` as the workspace
-      canonical, cross-references the per-repo matrix in feature-branch-workflow.md, documents v1-cleanup-pending.
+- [x] ✅ [CODEX] P1. `codex/08-workflows/ci-cd-flow.md` updated this turn (2026-05-29 EOD) with new section "Canonical
+      required check name (post-Option-D, 2026-05-29)" — names `quality-gates-v2` as the workspace canonical,
+      cross-references the per-repo matrix in feature-branch-workflow.md, documents v1-cleanup-pending.
 - [ ] [CODEX] P1. Update `plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md` with final Option D
       close-out: deferred to that issue's own archival flow (after GH Support ticket #4422570 resolves).
-- [ ] [CLAUDE.md] P1. Workspace-wide pointer to v2 canonical — **deferred**: codex § "Canonical required check
-      name" is the authoritative source; CLAUDE.md cross-reference would be 1 line and exceed the size budget
-      consideration. Nice-to-have, not blocking.
-- [ ] [PLAN] P1. Pre-archival 5-step audit — deferred. Phases 1-4 done; Phase 5 v1-delete + GH ticket
-      resolution still open. Archive when GH ticket #4422570 closes.
+- [ ] [CLAUDE.md] P1. Workspace-wide pointer to v2 canonical — **deferred**: codex § "Canonical required check name" is
+      the authoritative source; CLAUDE.md cross-reference would be 1 line and exceed the size budget consideration.
+      Nice-to-have, not blocking.
+- [ ] [PLAN] P1. Pre-archival 5-step audit — deferred. Phases 1-4 done; Phase 5 v1-delete + GH ticket resolution still
+      open. Archive when GH ticket #4422570 closes.
 
 ## Success criteria
 

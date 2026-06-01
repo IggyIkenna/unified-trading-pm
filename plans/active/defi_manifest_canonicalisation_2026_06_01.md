@@ -1,7 +1,6 @@
 ---
 title: "DeFi manifest + data-status canonicalisation (post 2026-06-01 coverage audit)"
 created: 2026-06-01
-author: ikenna
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-defi
 status: active
@@ -11,6 +10,8 @@ estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 2.4
 source:
   - plans/audit/results/defi_master_audit_2026_06_01.md (the audit that surfaced all of this)
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # DeFi Manifest + Data-Status Canonicalisation

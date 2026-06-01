@@ -1,13 +1,14 @@
 ---
 title: Running VM Fleet Status & Kill/Keep Decision Matrix
 created: 2026-05-27
-author: harsh (claude opus 4.7)
 source:
   - gcloud compute instances list (RUNNING)
   - gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log (last 400KB tails)
   - per-VM SSH (process state, CPU, local /tmp/vm-exec-*.log)
   - serial-port-output (boot-hung / network-wedged VMs)
 locked_by: harsh-fleet-audit
+priority: P2
+status: active
 ---
 
 # Running VM Fleet Status — 2026-05-27 ~07:35 UTC
@@ -17,10 +18,11 @@ locked_by: harsh-fleet-audit
 > TERMINATED. "Keep running" set confirmed alive. **"Keep-but-fix" trio resolved/triaged:**
 >
 > - ✅ **footystats-fwd** — root cause was NOT the launcher (that was lowercased @9ded013); it was
->   `orchestrator._get_instruments_bucket` re-uppercasing asset_group into the now-strict-lowercase `resolve_bucket_name`
->   (regressed when Option B shipped 2026-05-30). Fixed: **instruments-service@b5ffa65** (+5 regression tests).
->   **VERIFIED 2026-06-01**: tarball rebuilt + manual relaunch `footystats-fwd-20260601-110002` exited **rc=0**, polled
->   today→+14, discovered fixtures (1/4/5/1 on 06-12..06-15), no `Unknown asset_group` error, clean self-delete. ✅
+>   `orchestrator._get_instruments_bucket` re-uppercasing asset_group into the now-strict-lowercase
+>   `resolve_bucket_name` (regressed when Option B shipped 2026-05-30). Fixed: **instruments-service@b5ffa65** (+5
+>   regression tests). **VERIFIED 2026-06-01**: tarball rebuilt + manual relaunch `footystats-fwd-20260601-110002`
+>   exited **rc=0**, polled today→+14, discovered fixtures (1/4/5/1 on 06-12..06-15), no `Unknown asset_group` error,
+>   clean self-delete. ✅
 > - ⚠️ **sports-scheduler** — venv/module error gone; now logs `0 upcoming fixtures within 48h` — likely genuine (verify
 >   once footystats forward data flows again), not a crash.
 > - ⚠️ **vm-zombie-watchdog** — running in `--dry-run`; no readable run.log at expected path — confirm it's actually

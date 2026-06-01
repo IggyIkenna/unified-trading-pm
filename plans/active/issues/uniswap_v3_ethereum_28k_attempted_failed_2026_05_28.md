@@ -3,7 +3,6 @@ title:
   "MTDS DeFi manifest: 28,634 UNISWAP_V3-ETHEREUM swaps_ohlcv attempted_failed rows — all SCHEMA_VALIDATION_FAILED, fix
   already shipped (chain propagation + amount_usd column), needs retry pass not new code"
 created: 2026-05-28
-author: slot-1
 source:
   - gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet
   - market-data-processing-service@7f1a5b5 (2026-05-23 22:49 BST — chain propagation fix)
@@ -16,8 +15,8 @@ priority: P2
 
 > **📦 FOLDED INTO DEFERRED DEFI BACKFILL 2026-06-01 (harsh, operator: option A).** No code fix needed (mdps@7f1a5b5 +
 > @3799c8d shipped). The historical reprocess (2024-05-06 → 2026-01-17) + the ~9 companion chain-column-affected venues
-> (UNISWAP_V2, AAVEV3-OPTIMISM, EIGENLAYER, CURVE, MAKER, FRAX, DRIFT-SOLANA, KAMINO/JITO/MARGINFI) are **deferred to run
-> together as part of the broader DeFi backfill / GCS-migration work** (operator-deferred "when fit" — see
+> (UNISWAP_V2, AAVEV3-OPTIMISM, EIGENLAYER, CURVE, MAKER, FRAX, DRIFT-SOLANA, KAMINO/JITO/MARGINFI) are **deferred to
+> run together as part of the broader DeFi backfill / GCS-migration work** (operator-deferred "when fit" — see
 > `fleet_audit_triad_deferred_followups_2026_06_01.md`). Do NOT launch a piecemeal one-venue reprocess VM now — it would
 > race the migration. Reprocess all chain-column venues in one pass when backfills resume.
 

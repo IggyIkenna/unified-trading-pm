@@ -3,7 +3,6 @@ title:
   "Central orchestrator API host (i-0c9b283b31d6b5ca7) chronic StatusCheckFailed_Instance — intermittent impairment all
   day 2026-05-29; reboot is workaround"
 created: 2026-05-29
-author: slot-1 (ikenna)
 source:
   - aws ec2 describe-instance-status i-0c9b283b31d6b5ca7 (impaired since 2026-05-29T00:09:00Z initially)
   - aws cloudwatch get-metric-statistics StatusCheckFailed_Instance 2026-05-28T20:00Z → 2026-05-29T15:00Z (datapoints
@@ -14,15 +13,17 @@ source:
   - Internal SSM probe from i-007e8d99d12831578 also confirmed port 8026 unreachable on i-0c9b283b31d6b5ca7 (not just
     from operator's IP)
 locked_by: api_host_chronic_impairment_2026_05_29
+priority: P2
+status: active
 ---
 
 > **🔄 VERIFICATION 2026-06-01 (harsh) — KEEP OPEN; plan covered the defensive layer only.** The
 > `api_host_chronic_impairment_2026_05_29` plan (16/16) shipped the workarounds: MemoryMax=56G cgroup cap
 > (agent-orchestrator@057f860), auto-reboot Lambda + ceiling (deployment-service@c8fc73d), httpx usage-poller
 > (agent-orchestrator@ad28879), watchdog. **4 root-cause items from this issue are NOT in that plan and remain open:**
-> (1) identify + fix the memory-exploding pytest test (the actual 32–57 GB OOM source); (2) add ≥16 GB swap;
-> (3) move QG/pytest off the central host onto dedicated VMs; (4) SQLite `PRAGMA busy_timeout=30000` 2-line fix. Host
-> no longer wedges the OS, but the underlying pytest blow-up is untouched. (Ikenna-owned doc — flagging, not rewriting.)
+> (1) identify + fix the memory-exploding pytest test (the actual 32–57 GB OOM source); (2) add ≥16 GB swap; (3) move
+> QG/pytest off the central host onto dedicated VMs; (4) SQLite `PRAGMA busy_timeout=30000` 2-line fix. Host no longer
+> wedges the OS, but the underlying pytest blow-up is untouched. (Ikenna-owned doc — flagging, not rewriting.)
 
 ## What I found
 
@@ -115,8 +116,8 @@ Mem:           63255        2676       54209           3        7095       60578
 Swap:              0           0           0
 ```
 
-**Key observation**: Memory usage is LOW — only 2.6 GB of 63 GB used (4%). Swap is NOT configured.
-If usage climbs over 63 GB, OOM killer fires immediately (no swap buffer). This is the critical risk path.
+**Key observation**: Memory usage is LOW — only 2.6 GB of 63 GB used (4%). Swap is NOT configured. If usage climbs over
+63 GB, OOM killer fires immediately (no swap buffer). This is the critical risk path.
 
 ### `vmstat 1 5`
 
@@ -130,8 +131,8 @@ procs -----------memory---------- ---swap-- -----io---- -system-- -------cpu----
  0  0      0 55546168 3921176 3344232    0    0     0     0 3260 14655  2  0 97  0  0  0
 ```
 
-No swap activity. IO mostly idle after initial boot. CPU 95-97% idle. Context switches 13k-15k/s (moderate for
-16 vCPUs running 8 worker slots).
+No swap activity. IO mostly idle after initial boot. CPU 95-97% idle. Context switches 13k-15k/s (moderate for 16 vCPUs
+running 8 worker slots).
 
 ### `top -b -n1 -o %MEM | head -30`
 
@@ -150,8 +151,8 @@ Tasks: 293 total,   2 running, 291 sleeping,   0 stopped,   0 zombie
   46819 root      20   0 2877832  33104  18924 S   0.0   0.1   0:00.68 ssm-age+
 ```
 
-Top memory consumers: python3 orchestrator (570 MB RSS / 0.9%), each claude worker slot ~330-570 MB RSS (0.5%).
-Load average 5.72/8.07/3.84 on 16 vCPUs = 36-50% saturation. No zombie processes.
+Top memory consumers: python3 orchestrator (570 MB RSS / 0.9%), each claude worker slot ~330-570 MB RSS (0.5%). Load
+average 5.72/8.07/3.84 on 16 vCPUs = 36-50% saturation. No zombie processes.
 
 ### `journalctl -u orchestrator --since "10 min ago" | wc -l`
 
@@ -167,8 +168,8 @@ Load average 5.72/8.07/3.84 on 16 vCPUs = 36-50% saturation. No zombie processes
 7
 ```
 
-Active at snapshot time: 4 claude worker processes (slot 4) + 3 bash helper processes. VIRT shows 70.4 GB
-per claude process (maps shared node/electron libs) but RSS is only ~330-570 MB each — actual memory is fine.
+Active at snapshot time: 4 claude worker processes (slot 4) + 3 bash helper processes. VIRT shows 70.4 GB per claude
+process (maps shared node/electron libs) but RSS is only ~330-570 MB each — actual memory is fine.
 
 ### `ss -tan | wc -l`
 
@@ -207,27 +208,27 @@ Disk: 57% used (163/290 GB). 127 GB free — not at risk of filling soon.
 
 ### Phase 1 Interpretation
 
-This is a **fresh post-reboot baseline** (41 min uptime). Memory, FDs, disk, and TCP sockets are all healthy.
-The impairments occur hours into uptime, not immediately — consistent with a gradual accumulation problem.
+This is a **fresh post-reboot baseline** (41 min uptime). Memory, FDs, disk, and TCP sockets are all healthy. The
+impairments occur hours into uptime, not immediately — consistent with a gradual accumulation problem.
 
 **Revised hypothesis ranking** (post Phase 1 data):
 
-| # | Hypothesis | Assessment |
-|---|-----------|-----------|
-| 1 | Claude-spawn-based usage poller accumulating processes/RSS over hours | **STILL PRIME SUSPECT** — 4 visible claude processes even at 41 min; at 6h uptime with ~24 spawns/min that's ~86k spawns |
-| 2 | No swap — OOM kill is immediate when memory fills | **Risk amplifier** — not root cause, but means even brief spike is fatal |
-| 3 | Kernel/network-stack wedge under I/O load | Less likely given low wa% baseline, but can't rule out |
-| 4 | Disk fill | **Unlikely** — 127 GB free |
+| #   | Hypothesis                                                            | Assessment                                                                                                               |
+| --- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Claude-spawn-based usage poller accumulating processes/RSS over hours | **STILL PRIME SUSPECT** — 4 visible claude processes even at 41 min; at 6h uptime with ~24 spawns/min that's ~86k spawns |
+| 2   | No swap — OOM kill is immediate when memory fills                     | **Risk amplifier** — not root cause, but means even brief spike is fatal                                                 |
+| 3   | Kernel/network-stack wedge under I/O load                             | Less likely given low wa% baseline, but can't rule out                                                                   |
+| 4   | Disk fill                                                             | **Unlikely** — 127 GB free                                                                                               |
 
-**Recommended next steps**: Implement Phase 2 watchdog to capture state during next impairment event,
-and Phase 3 poller replacement to eliminate subprocess churn.
+**Recommended next steps**: Implement Phase 2 watchdog to capture state during next impairment event, and Phase 3 poller
+replacement to eliminate subprocess churn.
 
 ---
 
 ## Phase 2 Evidence — EC2 Console Output Forensics
 
-**Captured**: 2026-05-29T15:31Z by slot-10 (agent)
-**Command**: `aws ec2 get-console-output --instance-id i-0c9b283b31d6b5ca7 --latest --region ap-northeast-1`
+**Captured**: 2026-05-29T15:31Z by slot-10 (agent) **Command**:
+`aws ec2 get-console-output --instance-id i-0c9b283b31d6b5ca7 --latest --region ap-northeast-1`
 
 ### Key findings
 
@@ -237,9 +238,9 @@ and Phase 3 poller replacement to eliminate subprocess churn.
 - **No hardware faults**: RAS collector initialized normally (`RAS: Correctable Errors collector initialized`), no MCE
   (Machine Check Exceptions), no NVMe errors, no ECC corrections.
 - **Clean systemd boot**: `orchestrator.service` and `nginx.service` both reached `[OK]` state.
-- **SSM Agent auth error at boot** (`14:50:00Z`): "no valid credentials could be retrieved for ec2 identity" —
-  expected, because the IAM instance profile was not yet attached at boot time. SSM Agent registered successfully
-  at `15:15:15Z` once the IAM profile propagated.
+- **SSM Agent auth error at boot** (`14:50:00Z`): "no valid credentials could be retrieved for ec2 identity" — expected,
+  because the IAM instance profile was not yet attached at boot time. SSM Agent registered successfully at `15:15:15Z`
+  once the IAM profile propagated.
 - **Instance IP**: `172.31.5.118` (private), consistent with `ikenna-vm` backend record.
 
 ### Console output excerpt (boot through full startup)
@@ -258,15 +259,15 @@ and Phase 3 poller replacement to eliminate subprocess churn.
 
 ### Interpretation
 
-The console output covers the last reboot (14:49Z) through 15:31Z with no anomalies. **No kernel-level root cause
-is evident.** The `StatusCheckFailed_Instance` failures are NOT caused by OOM-killer, kernel panic, or hardware
-errors. This confirms a **userspace soft-hang**: the process table / FD / memory pressure accumulates until the
-kernel network stack becomes unresponsive to EC2 ARP/ICMP health checks — but the kernel itself never panics or
-invokes the OOM-killer. The damage threshold is below the kernel-kill threshold.
+The console output covers the last reboot (14:49Z) through 15:31Z with no anomalies. **No kernel-level root cause is
+evident.** The `StatusCheckFailed_Instance` failures are NOT caused by OOM-killer, kernel panic, or hardware errors.
+This confirms a **userspace soft-hang**: the process table / FD / memory pressure accumulates until the kernel network
+stack becomes unresponsive to EC2 ARP/ICMP health checks — but the kernel itself never panics or invokes the OOM-killer.
+The damage threshold is below the kernel-kill threshold.
 
-This is the expected pattern for Hypothesis #1 (claude-spawn-based usage poller churn): gradual accumulation over
-hours, not an acute event that leaves a kernel breadcrumb. Console output will never catch it — only the Phase 2
-watchdog (capturing `pgrep`, `free`, FD counts every 60s) will show the accumulation curve in real time.
+This is the expected pattern for Hypothesis #1 (claude-spawn-based usage poller churn): gradual accumulation over hours,
+not an acute event that leaves a kernel breadcrumb. Console output will never catch it — only the Phase 2 watchdog
+(capturing `pgrep`, `free`, FD counts every 60s) will show the accumulation curve in real time.
 
 **Combined Phase 1 + Phase 2 conclusion**: Both independent forensic sources point to the same root cause. Phase 3
 (replace claude-spawn poller with direct Anthropic API call) is the correct fix.
@@ -275,19 +276,19 @@ watchdog (capturing `pgrep`, `free`, FD counts every 60s) will show the accumula
 
 ## Phase 1 Amendment — Kernel Journal OOM Evidence (CRITICAL: root cause correction)
 
-**Captured**: 2026-05-29T15:32Z by slot-5 (agent) — reading systemd journal directly on-host
-**Source**: `journalctl --since "today" 2>/dev/null | grep -E "oom|OOM|Killed process|memory peak"`
+**Captured**: 2026-05-29T15:32Z by slot-5 (agent) — reading systemd journal directly on-host **Source**:
+`journalctl --since "today" 2>/dev/null | grep -E "oom|OOM|Killed process|memory peak"`
 
 ### OOM killer events confirmed in kernel journal
 
 All four StatusCheckFailed_Instance impairment windows correspond to OOM-killer events in the kernel journal:
 
-| Time (UTC) | Trigger | Killed process | anon-RSS | cgroup |
-|------------|---------|----------------|----------|--------|
-| 03:27:12 | cron | pytest (PID 595124) | **32.3 GB** | orchestrator.service |
-| 03:38:00 | apport | pytest (PID 595782) | **57.6 GB** | orchestrator.service |
-| 09:14:00 | python | python (PID 129050) | **36.1 GB** | orchestrator.service |
-| 12:19:09 | git | pytest (PID 130766) | **38.6 GB** | orchestrator.service |
+| Time (UTC) | Trigger | Killed process      | anon-RSS    | cgroup               |
+| ---------- | ------- | ------------------- | ----------- | -------------------- |
+| 03:27:12   | cron    | pytest (PID 595124) | **32.3 GB** | orchestrator.service |
+| 03:38:00   | apport  | pytest (PID 595782) | **57.6 GB** | orchestrator.service |
+| 09:14:00   | python  | python (PID 129050) | **36.1 GB** | orchestrator.service |
+| 12:19:09   | git     | pytest (PID 130766) | **38.6 GB** | orchestrator.service |
 
 Raw kernel messages (examples):
 
@@ -328,32 +329,35 @@ Peak during poll cycle: ~1.4 GB additional RSS for 52 seconds. This is **not** t
 
 ### Actual root cause: quality-gate pytest on worker slots consuming 32-57 GB
 
-Worker slots (tmux sessions, children of orchestrator cgroup) run quality-gate scripts that invoke `pytest`. Some
-test suite (likely loading large financial data fixtures or accumulating data in memory during a long test run)
-grows to 32-57 GB RSS before the OOM killer fires.
+Worker slots (tmux sessions, children of orchestrator cgroup) run quality-gate scripts that invoke `pytest`. Some test
+suite (likely loading large financial data fixtures or accumulating data in memory during a long test run) grows to
+32-57 GB RSS before the OOM killer fires.
 
 The causal chain:
+
 1. Worker agent runs `bash scripts/quality-gates.sh` → pytest invoked
 2. pytest loads large test data / has a memory leak in a test fixture
 3. pytest RSS reaches 32-57 GB → OS OOM threshold
 4. OOM killer fires; during page-table teardown of 57 GB process, kernel stalls briefly
 5. EC2 hypervisor ARP/ICMP health check times out → `StatusCheckFailed_Instance`
 6. `orchestrator.service: Failed with result 'oom-kill'` (collateral — pytest was in the cgroup)
-7. systemd restarts orchestrator → usage poller runs 4 claude spawns → 1.4 GB spike → second OOM minutes later (03:27 → 03:38)
+7. systemd restarts orchestrator → usage poller runs 4 claude spawns → 1.4 GB spike → second OOM minutes later (03:27 →
+   03:38)
 
 ### Phase 3 recommendation: AMEND
 
-Phase 3 (replace usage poller) is **still worth doing** (reduces subprocess count, cleaner code), but it will NOT
-fix the impairment. The OOM root cause is pytest test memory usage, not the usage poller.
+Phase 3 (replace usage poller) is **still worth doing** (reduces subprocess count, cleaner code), but it will NOT fix
+the impairment. The OOM root cause is pytest test memory usage, not the usage poller.
 
 **Required fixes**:
+
 1. **Phase 5 (MemoryMax)** — priority must be elevated from P1 to P0. Setting `MemoryMax=56G` on orchestrator.service
    caps the entire cgroup (all worker slots + pytest included) at 56 GB. OOM kills the service cleanly rather than
    wedging the OS network stack. This alone prevents StatusCheckFailed_Instance.
-2. **Identify the memory-exploding pytest tests** — find which test file loads 32-57 GB and fix the fixture or mock
-   the large data dependency. Check test files loading parquet/GCS data without streaming.
-3. **Add swap (at minimum 16 GB)** — gives the OOM killer a buffer before firing. A 57 GB pytest run on a 63 GB
-   machine with 0 swap has no margin. Even 16 GB swap buys time for the watchdog to detect and `systemctl stop`.
+2. **Identify the memory-exploding pytest tests** — find which test file loads 32-57 GB and fix the fixture or mock the
+   large data dependency. Check test files loading parquet/GCS data without streaming.
+3. **Add swap (at minimum 16 GB)** — gives the OOM killer a buffer before firing. A 57 GB pytest run on a 63 GB machine
+   with 0 swap has no margin. Even 16 GB swap buys time for the watchdog to detect and `systemctl stop`.
 4. **Worker slots should run QG on dedicated VMs** — the central orchestrator host is not designed to absorb 60 GB
    pytest runs alongside the dispatch service. Worker slots for code-heavy repos should run on vm-cross-cutting or
    vm-cefi, not the central API host.
@@ -362,7 +366,7 @@ fix the impairment. The OOM root cause is pytest test memory usage, not the usag
 
 ## Phase 2 Supplement — SQLite Lock Contention as Secondary Failure Indicator
 
-**Captured**: 2026-05-29T15:40Z by slot-5 (agent) — `journalctl --boot -2` analysis  
+**Captured**: 2026-05-29T15:40Z by slot-5 (agent) — `journalctl --boot -2` analysis
 **Context**: Boot -2 ran 08:48Z-13:07Z and had OOM events at 09:14Z and 12:19Z (see Phase 1 Amendment above).
 
 ### Boot History (complete)
@@ -378,8 +382,8 @@ IDX  FIRST ENTRY              LAST ENTRY               Duration
 
 ### SQLite DB Lock (boot -2, 12:55Z-13:07Z)
 
-After the 12:19Z OOM event (pytest), the boot -2 boot continued running. At 12:55Z (journal time,
-actual error ~12:46-47Z) a secondary failure appeared:
+After the 12:19Z OOM event (pytest), the boot -2 boot continued running. At 12:55Z (journal time, actual error
+~12:46-47Z) a secondary failure appeared:
 
 ```
 python3[243726]: ERROR: TmuxPruner tick failed (continuing)
@@ -388,15 +392,16 @@ python3[243726]: ERROR: TmuxPruner tick failed (continuing)
   → sqlite3.OperationalError: database is locked
 ```
 
-Repeated 3 times with growing gaps (12:55Z → 12:59Z → 13:07Z journal time). The python3 log messages
-show a ~9-minute buffer delay (python3 logged at 12:46Z, journald received at 12:55Z) — consistent
-with the python3 event loop being blocked/hung for 9 minutes.
+Repeated 3 times with growing gaps (12:55Z → 12:59Z → 13:07Z journal time). The python3 log messages show a ~9-minute
+buffer delay (python3 logged at 12:46Z, journald received at 12:55Z) — consistent with the python3 event loop being
+blocked/hung for 9 minutes.
 
 **Preceding entry (12:44Z)**: `CredsEnvPoller: download failed ... TimeoutExpired(['aws', 's3', 'cp', ...], 60)`
 
 ### Interpretation
 
 The SQLite "database is locked" errors are a **secondary consequence** of the OOM event at 12:19Z:
+
 - After the 12:19Z OOM kill, systemd restarted orchestrator
 - During restart, some transaction was left in an inconsistent state (RESERVED lock not released)
 - OR a long-running async task (CredsEnvPoller S3 download, 60s timeout) was mid-transaction
@@ -404,24 +409,24 @@ The SQLite "database is locked" errors are a **secondary consequence** of the OO
 - The Python asyncio event loop backs up; journald buffer fills (9-minute delay)
 - Last journal entry at 13:07:46Z → boot ended
 
-**Root note**: `server/db.py` does NOT set `PRAGMA busy_timeout`. Default SQLite busy timeout is 5s.
-After an OOM-induced restart with a stuck lock, 5s is insufficient. **Adding `PRAGMA busy_timeout=30000`
-is a 2-line fix that prevents cascading DB failures after a partial restart**.
+**Root note**: `server/db.py` does NOT set `PRAGMA busy_timeout`. Default SQLite busy timeout is 5s. After an
+OOM-induced restart with a stuck lock, 5s is insufficient. **Adding `PRAGMA busy_timeout=30000` is a 2-line fix that
+prevents cascading DB failures after a partial restart**.
 
 ### EC2 Console Output (confirmed by slot-10 + slot-5)
 
-Both slots verified: no OOM-killer entries in EC2 console output (console only shows current healthy
-boot). Journal is the authoritative source for OOM evidence (see Phase 1 Amendment above).
+Both slots verified: no OOM-killer entries in EC2 console output (console only shows current healthy boot). Journal is
+the authoritative source for OOM evidence (see Phase 1 Amendment above).
 
-**Watchdog installation status**: `NoNewPrivs=1` prevents `sudo` in Claude Code workers. Operator
-must run: `bash scripts/install-orch-watchdog.sh --operator ubuntu --start` directly on the host.
+**Watchdog installation status**: `NoNewPrivs=1` prevents `sudo` in Claude Code workers. Operator must run:
+`bash scripts/install-orch-watchdog.sh --operator ubuntu --start` directly on the host.
 
 ---
 
 ## Phase 2 Watchdog — Healthy-Window Manual Snapshot
 
-**Captured**: 2026-05-29T15:40:43Z by slot-5 — uptime 50 min post-reboot, status `ok`
-**Note**: Timer not yet installed (requires operator sudo). Manual run via modified LOG_DIR=/tmp/orch-watchdog.
+**Captured**: 2026-05-29T15:40:43Z by slot-5 — uptime 50 min post-reboot, status `ok` **Note**: Timer not yet installed
+(requires operator sudo). Manual run via modified LOG_DIR=/tmp/orch-watchdog.
 
 ```
 === free -m ===
@@ -457,16 +462,16 @@ Swap:              0           0           0
 ```
 
 **Key observation**: At 50 min into the current healthy boot, total RSS = ~2.8 GB (orchestrator 582 MB + 4 claude
-workers ~375 MB each = ~2.1 GB). All metrics healthy. Memory growth of ~40 MB/slot over 50 min extrapolates to
-only ~288 MB/slot over 6 hours — not the OOM driver. Root cause remains the pytest fixture (Phase 1 Amendment).
+workers ~375 MB each = ~2.1 GB). All metrics healthy. Memory growth of ~40 MB/slot over 50 min extrapolates to only ~288
+MB/slot over 6 hours — not the OOM driver. Root cause remains the pytest fixture (Phase 1 Amendment).
 
 ---
 
 ## Phase 3 Evidence Appendix — Usage Poller Code Audit (2026-05-29T15:35Z)
 
-**Captured by**: slot-9 (task api_host_chronic_impairment-006)
-**Note**: Slot-5's OOM evidence above corrects the primary root cause. Phase 3 replacement is still
-worthwhile (cleaner code, eliminates pexpect PTY overhead), but will not alone fix impairments.
+**Captured by**: slot-9 (task api_host_chronic_impairment-006) **Note**: Slot-5's OOM evidence above corrects the
+primary root cause. Phase 3 replacement is still worthwhile (cleaner code, eliminates pexpect PTY overhead), but will
+not alone fix impairments.
 
 ### Files audited
 
@@ -478,22 +483,20 @@ worthwhile (cleaner code, eliminates pexpect PTY overhead), but will not alone f
 
 **1. Class + interval**
 
-`UsagePoller` (daemon thread, serialized via `_USAGE_REFRESH_LOCK`). Interval
-controlled by `ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES` env var; default **30 minutes**.
-NOT set in `.env.local` on this host → default 30 min applies. Startup settle delay:
-min(interval_seconds, 30) = **30 seconds**.
+`UsagePoller` (daemon thread, serialized via `_USAGE_REFRESH_LOCK`). Interval controlled by
+`ORCHESTRATOR_USAGE_POLL_INTERVAL_MINUTES` env var; default **30 minutes**. NOT set in `.env.local` on this host →
+default 30 min applies. Startup settle delay: min(interval_seconds, 30) = **30 seconds**.
 
 **2. Spawn mechanism**
 
-`fetch_usage_via_claude()` calls `pexpect.spawn("bash", ["-c", f"source {env_file}; exec claude"])`.
-Key points:
+`fetch_usage_via_claude()` calls `pexpect.spawn("bash", ["-c", f"source {env_file}; exec claude"])`. Key points:
+
 - New PTY session (`setsid` implicit via pexpect) — child gets its own process group.
-- 4 accounts, sequential (one at a time, serialized). Three have `oauth_token_env_file`; `ikenna-backup`
-  is skipped (no env file). Per-spawn wall time: ~13 s. Full tick: ~39–52 s.
-- Actual confirmed from journal at 15:20:13Z startup: 4 probes ran at 15:20:13, 15:20:27,
-  15:20:40, 15:20:53 — gaps of 13–14s (intra-cycle sequential spacing).
-  The "every ~10s" in the issue doc referred to this intra-cycle spacing, NOT a standalone
-  short poll interval. Full tick rate: 4 spawns per 30 min = **0.13 spawns/min**.
+- 4 accounts, sequential (one at a time, serialized). Three have `oauth_token_env_file`; `ikenna-backup` is skipped (no
+  env file). Per-spawn wall time: ~13 s. Full tick: ~39–52 s.
+- Actual confirmed from journal at 15:20:13Z startup: 4 probes ran at 15:20:13, 15:20:27, 15:20:40, 15:20:53 — gaps of
+  13–14s (intra-cycle sequential spacing). The "every ~10s" in the issue doc referred to this intra-cycle spacing, NOT a
+  standalone short poll interval. Full tick rate: 4 spawns per 30 min = **0.13 spawns/min**.
 
 **3. Reaping lifecycle**
 
@@ -508,42 +511,42 @@ finally:
                                   # + os.waitpid() on direct child
 ```
 
-The `finally` block ALWAYS runs (even on exception). The `contextlib.suppress(Exception)` on
-each step is defensive — failures are silenced. `close(force=True)` calls `os.waitpid()` on
-the **direct** child (claude) but NOT on grandchildren.
+The `finally` block ALWAYS runs (even on exception). The `contextlib.suppress(Exception)` on each step is defensive —
+failures are silenced. `close(force=True)` calls `os.waitpid()` on the **direct** child (claude) but NOT on
+grandchildren.
 
 **4. Orphan risk vector — node.js grandchildren**
 
-`exec claude` replaces bash with the Claude CLI (Python). The CLI spawns node.js for its TUI.
-When `child.kill(15)` sends SIGTERM to claude:
+`exec claude` replaces bash with the Claude CLI (Python). The CLI spawns node.js for its TUI. When `child.kill(15)`
+sends SIGTERM to claude:
 
 - Claude (Python) exits promptly → repaped by pexpect's `os.waitpid()` → no zombie.
-- Node.js grandchild: receives SIGHUP when PTY master closes (pexpect's `close(force=True)`).
-  If node.js handles or ignores SIGHUP, it becomes an orphan reparented to PID 1.
+- Node.js grandchild: receives SIGHUP when PTY master closes (pexpect's `close(force=True)`). If node.js handles or
+  ignores SIGHUP, it becomes an orphan reparented to PID 1.
 - `close(force=True)` does NOT wait for node.js — only for claude (the direct child).
 
-**Risk assessment**: At 0.13 spawns/min (4 per 30-min cycle), any node.js orphan accumulates
-at most 0.13/min. Over 6 h uptime = ~48 potential orphans. Each node.js process is ~80–120 MB
-RSS. 48 × 100 MB = ~4.8 GB potential leak — secondary contributor, not the primary cause per
-OOM evidence above (which shows pytest consuming 32-57 GB as the primary driver).
+**Risk assessment**: At 0.13 spawns/min (4 per 30-min cycle), any node.js orphan accumulates at most 0.13/min. Over 6 h
+uptime = ~48 potential orphans. Each node.js process is ~80–120 MB RSS. 48 × 100 MB = ~4.8 GB potential leak — secondary
+contributor, not the primary cause per OOM evidence above (which shows pytest consuming 32-57 GB as the primary driver).
 
 **5. "render_floor" is NOT an orphan source**
 
-`render_floor` in the log message corresponds to `render_seconds=3.0` — the minimum drain time
-after sending `/usage\r` before the code starts scanning for "Resets" markers. It is NOT a hard
-timeout that cuts off cleanup. The `finally` block always runs regardless of `render_seconds`.
+`render_floor` in the log message corresponds to `render_seconds=3.0` — the minimum drain time after sending `/usage\r`
+before the code starts scanning for "Resets" markers. It is NOT a hard timeout that cuts off cleanup. The `finally`
+block always runs regardless of `render_seconds`.
 
 **6. No evidence of premature SIGKILL**
 
-pexpect's `close(force=True)` sends SIGKILL only if the child is still running after a timeout
-(default 5s). Given each probe exits in ~13s and SIGTERM is sent at the end, the child is
-almost certainly already dead by `close(force=True)`. No SIGKILL evidence in logs.
+pexpect's `close(force=True)` sends SIGKILL only if the child is still running after a timeout (default 5s). Given each
+probe exits in ~13s and SIGTERM is sent at the end, the child is almost certainly already dead by `close(force=True)`.
+No SIGKILL evidence in logs.
 
 ### Conclusion for Phase 3
 
-Replacing `fetch_usage_via_claude` with a direct HTTP call eliminates all pexpect PTY spawns.
-The replacement (task api_host_chronic_impairment-007) should:
+Replacing `fetch_usage_via_claude` with a direct HTTP call eliminates all pexpect PTY spawns. The replacement (task
+api_host_chronic_impairment-007) should:
+
 - Use `httpx` (already in requirements) to call the Anthropic usage/limits API directly.
 - Verify the same fields (`weekly_pct`, `session_pct`) are recoverable from the API response.
-- Add a test that no `pexpect` / subprocess is invoked during a poll cycle.
-Primary fix remains Phase 5 (MemoryMax) per OOM evidence.
+- Add a test that no `pexpect` / subprocess is invoked during a poll cycle. Primary fix remains Phase 5 (MemoryMax) per
+  OOM evidence.

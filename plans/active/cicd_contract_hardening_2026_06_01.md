@@ -4,13 +4,10 @@ parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P1
 status: active
-type: infra
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 created: 2026-06-01
-owner: ikenna
-asset_group: cross-cutting
 locked_by: live-defi-rollout
 related_plans:
   - plans/active/issues/full_cicd_sit_target_state_2026_05_24.md

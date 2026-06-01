@@ -124,7 +124,7 @@ discovered during another workstream, not a critical-path blocker, but worth fix
 
 - Auditing OTHER workspace repos beyond the 5 named here — separate workspace-wide branch-protection-hygiene sweep can
   ratchet this later. **NAMED SUCCESSOR FILED 2026-06-01:**
-  [`cicd_contract_hardening_2026_06_01.md`](../cicd_contract_hardening_2026_06_01.md) Phase 1 — sourced from the CI/CD
+  [`cicd_contract_hardening_2026_06_01.md`](./cicd_contract_hardening_2026_06_01.md) Phase 1 — sourced from the CI/CD
   audit `plans/audit/results/infrastructure_master_audit_2026_06_01.md` (walked all 23 active repos; found 6 more repos
   missing the `main` gate, 4 still on v1 `staging`, and 13 missing `enforce_admins`).
 - Adding rulesets to the 5 (some already have rulesets; the gap is specifically branch-protection-side).

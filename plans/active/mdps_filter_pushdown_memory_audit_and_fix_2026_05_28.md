@@ -6,7 +6,6 @@ assigned_vm: vm-ml
 status: active
 priority: P1
 created: 2026-05-28
-author: harsh (claude opus 4.7)
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
