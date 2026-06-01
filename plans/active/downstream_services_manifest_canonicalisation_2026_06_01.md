@@ -56,30 +56,31 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 
 ### P0 — per-service canonical-form AUDIT (run the SSOT checklist; small corpus → fast)
 
-> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: "low-data / quick" is a prior, not a promise.
-> Read DATA-STATE per service and fix EVERY CF-RED the audit surfaces in the same walk (the cefi precedent: a bucket
-> framed "~complete" was actually 100% v8 / no source / no asset_group / blank pipeline_mode). NOT descoped, deferred,
-> post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
+> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: "low-data / quick" is a prior, not a
+> promise. Read DATA-STATE per service and fix EVERY CF-RED the audit surfaces in the same walk (the cefi precedent: a
+> bucket framed "~complete" was actually 100% v8 / no source / no asset_group / blank pipeline_mode). NOT descoped,
+> deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). SSOT:
 > `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
 - [x] ✅ [DATA] P0. **MDPS** — data-state (slot-3, 2026-06-01): MDPS candles share the **same AG MTDS `_index`** as raw
       ticks (the `processed_candles/` prefix lives in `market-data-tick-{ag}-prd`; the AG `_index` carries `ohlcv_*` /
-      `odds_horizon_bucket*` candle data_types alongside raw). The cefi/sports audits already cover them: **same systemic
-      debt** (100% v8, no source col, blank pipeline_mode, no available_at, flat paths). So MDPS is **NOT a separate
-      walk** — it rides each AG's MTDS single-walk (single-walk discipline; CF-4 source PROPAGATION from the raw cell
-      lands there). Feeds `mtds_mdps_master_audit_instructions.md` Canonical-form section.
-- [x] ✅ [DATA] P0. **features** — data-state: for the non-defi AGs (cefi/tradfi/sports/prediction) the `features-*-{ag}`
-      buckets have **NO `_index/availability_index.parquet`** (surveyed `features-delta-one/mtf/volatility/calendar` ×
-      cefi/tradfi — all absent; only `features-onchain-defi-prd` has one = slot-2/defi). So **no features data has run**
-      for my AGs → CF audit is vacuously N/A on data-state; the lever is the **WRITER fix (CF-5 typed reasons + CF-11
-      no-swallow + CF-4 exempt-computed + stamp v9/asset_group/pipeline_mode COLUMNS)** so the first volume lands
-      canonical. CF-6 `expected_unattempted` propagates from upstream. Feeds `features_and_ml_master_audit_instructions.md`.
+      `odds_horizon_bucket*` candle data_types alongside raw). The cefi/sports audits already cover them: **same
+      systemic debt** (100% v8, no source col, blank pipeline_mode, no available_at, flat paths). So MDPS is **NOT a
+      separate walk** — it rides each AG's MTDS single-walk (single-walk discipline; CF-4 source PROPAGATION from the
+      raw cell lands there). Feeds `mtds_mdps_master_audit_instructions.md` Canonical-form section.
+- [x] ✅ [DATA] P0. **features** — data-state: for the non-defi AGs (cefi/tradfi/sports/prediction) the
+      `features-*-{ag}` buckets have **NO `_index/availability_index.parquet`** (surveyed
+      `features-delta-one/mtf/volatility/calendar` × cefi/tradfi — all absent; only `features-onchain-defi-prd` has one
+      = slot-2/defi). So **no features data has run** for my AGs → CF audit is vacuously N/A on data-state; the lever is
+      the **WRITER fix (CF-5 typed reasons + CF-11 no-swallow + CF-4 exempt-computed + stamp
+      v9/asset_group/pipeline_mode COLUMNS)** so the first volume lands canonical. CF-6 `expected_unattempted`
+      propagates from upstream. Feeds `features_and_ml_master_audit_instructions.md`.
 - [x] ✅ [DATA] P0. **strategy** — data-state: `strategy-store-{ag}-prod` buckets exist but carry **no materialized
-      `_index`** (no strategy output run for my AGs). CF audit vacuously N/A; writer-fix lever (v9 + asset_group +
-      typed reasons COLUMNS; CF-4 exempt). Feeds `strategy_master_audit_instructions.md`.
+      `_index`** (no strategy output run for my AGs). CF audit vacuously N/A; writer-fix lever (v9 + asset_group + typed
+      reasons COLUMNS; CF-4 exempt). Feeds `strategy_master_audit_instructions.md`.
 - [x] ✅ [DATA] P0. **execution** — data-state: `execution-store-{ag}-prod/prd` buckets exist but **no `_index`**
-      (surveyed cefi/tradfi/pred — none). CF audit vacuously N/A; writer-fix lever (ledger rows v9 + asset_group +
-      typed reasons; CF-4 exempt). Feeds `execution_master_audit_instructions.md`.
+      (surveyed cefi/tradfi/pred — none). CF audit vacuously N/A; writer-fix lever (ledger rows v9 + asset_group + typed
+      reasons; CF-4 exempt). Feeds `execution_master_audit_instructions.md`.
 - [x] ✅ [DATA] P0. **Net downstream finding (low-data confirmed)**: only MDPS has data (rides the AG MTDS walk — no
       separate walk); features/strategy/execution for cefi/tradfi/sports/prediction have NOT run → no `_index` to
       migrate. The downstream walk (§C) is therefore **WRITER-FIX-FIRST**: ship the canonical-write fixes so the first
@@ -92,9 +93,9 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
 > `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
 > moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
-> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. (Corpus is
-> small here, but the contract still applies.) SSOT: `codex/05-infrastructure/gcs-object-operations.md` §
-> "Migration-script performance contract".
+> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. (Corpus is small
+> here, but the contract still applies.) SSOT: `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script
+> performance contract".
 
 - [ ] [DATA] P1. **MDPS** C-walk: bundle any `processed_candles/` debt into the SAME AG tick-bucket walk (no second walk
       on an AG `_index` — single-walk discipline); ensure CF-4 source PROPAGATION + CF-1/2/3/5/8 land there.

@@ -57,9 +57,9 @@ related:
 > `market-data-tick-defi-prd-…` `_index`** that `defi_manifest_canonicalisation` rewrites (venue relabel / phantom-grid
 > delete / v4–v8→v9 / snapshot, via `migrate_defi_canonical.py`). Single-walk discipline (HARD RULE) forbids two
 > concurrent whole-corpus walks on the same `_index`. **Ordering (HARD)**: this plan's DeFi manifest seed runs
-> **BEFORE** defi_manifest's `C0` single-walk — otherwise the seed re-injects un-canonicalised legacy rows (old venue
-> strings, v4–v8, phantom grid) _after_ C0 cleans them. As of 2026-06-01 **neither DeFi walk has launched** (this plan's
-> "Manifest seed" P0 + defi_manifest's "C0 — RUN ON A VM" P0 both open) — no live race yet; do NOT launch the
+> **BEFORE** defi*manifest's `C0` single-walk — otherwise the seed re-injects un-canonicalised legacy rows (old venue
+> strings, v4–v8, phantom grid) \_after* C0 cleans them. As of 2026-06-01 **neither DeFi walk has launched** (this
+> plan's "Manifest seed" P0 + defi_manifest's "C0 — RUN ON A VM" P0 both open) — no live race yet; do NOT launch the
 > DeFi-bucket seed without confirming defi_manifest C0 is not mid-walk (and vice-versa).
 > `data_source_provenance_all_asset_groups_2026_06_01.md` (`source`-column backfill) must NOT open a third walk — its
 > row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic `mtds_mdps_master`. Banner-remove when the
@@ -217,7 +217,7 @@ relaunch.
 - [ ] [SCRIPT] P1. `unified-trading-library` `cloud_interface/constants.py` legacy `get_bucket_name` → delete or
       redirect to `resolve_bucket_name` (kill the latent flat-`market_data` foot-gun). Confirm zero top-level importers
       first.
-- [ ] [SCRIPT] P0. QG STEP guardrail (model on STEP 5.69 bucket-name SSOT): grep-gate that no `market-data-tick-` /
+- [x] [SCRIPT] P0. QG STEP guardrail (model on STEP 5.69 bucket-name SSOT): grep-gate that no `market-data-tick-` /
       `instruments-store-` name is built by string-concat outside `resolve_bucket_name` in production source (exclude
       migration/audit scripts + tests). Land in `unified-trading-pm/scripts/quality-gates-base/*.sh`.
 

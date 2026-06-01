@@ -2319,6 +2319,37 @@ else
     log_success "STEP 5.91: skipped (checker absent or REPO_ROOT not set)"
 fi
 
+# ── STEP 5.92: bucket-name string-concat guardrail ────────────────────────────
+#
+# No production source may build a `market-data-tick-*` or `instruments-store-*`
+# bucket name by string concatenation (f-string or `+`).  Every bucket lookup
+# MUST go through resolve_bucket_name(...) from unified_trading_library.
+#
+# Baseline ratchet: fails only when a repo's live count EXCEEDS its known
+# baseline (a NEW occurrence landed).  A count BELOW baseline produces a warning.
+#
+# SSOT: plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md
+# Script: scripts/quality_gates/check_bucket_name_string_concat.py
+_BNC_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_bucket_name_string_concat.py"
+if [ -f "$_BNC_CHECKER" ] && [ -n "${REPO_ROOT:-}" ] && [ -n "${PROJECT_ROOT:-}" ]; then
+    _BNC_REPO=$(basename "$PROJECT_ROOT")
+    if $PYTHON_CMD "$_BNC_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_BNC_REPO" >/tmp/bucket_name_concat_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/bucket_name_concat_qg.log 2>/dev/null; then
+            log_warn "STEP 5.92: bucket-name string-concat count BELOW baseline — run --update-baseline to ratchet down"
+            cat /tmp/bucket_name_concat_qg.log
+        else
+            log_success "STEP 5.92: No new bucket-name string-concat occurrences (bucket-name SSOT)"
+        fi
+    else
+        log_fail "STEP 5.92: NEW bucket-name string-concat occurrence(s) above baseline — route through resolve_bucket_name(...):"
+        cat /tmp/bucket_name_concat_qg.log
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.92: skipped (checker not yet provisioned or REPO_ROOT/PROJECT_ROOT not set)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)

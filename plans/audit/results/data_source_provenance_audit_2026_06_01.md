@@ -21,7 +21,7 @@ carry more than one source over time via a row-level `source` column + per-sourc
 UAC `SOURCE_PRIORITY`.
 
 This is a **code write-path audit** — valid regardless of backfill state (per `manifest_master` § "Per-Service
-capture_status Write-Path Calibration": a writer that never passes `source` _necessarily_ produces a blank column, so a
+capture*status Write-Path Calibration": a writer that never passes `source` \_necessarily* produces a blank column, so a
 code RED is a data RED; the prod-row read only confirms it). Verified against current `live-defi-rollout` code:
 `unified-api-contracts/.../canonical/crosscutting/source_priority.py`, `unified-trading-library/.../manifest_writer.py`,
 `market-tick-data-service/.../cli/handlers/_defi_manifest.py`. Data-state reads (actual prod manifest `source`

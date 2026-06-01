@@ -1531,8 +1531,8 @@ Idempotent + safe to run concurrently with the scheduled cycle.
 
 ### Read path fail-fast on stale-fallback (2026-05-28 opt-in) — SUPERSEDED 2026-06-01
 
-> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK` opt-in
-> described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
+> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK`
+> opt-in described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
 > `ManifestConsolidatorStaleError` by default; the escape hatch is now `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverted
 > from the original opt-in). See "Read path fail-fast (consolidator liveness contract, 2026-06-01)" above for the
 > current SSOT.

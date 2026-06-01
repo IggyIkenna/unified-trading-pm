@@ -107,14 +107,14 @@ VM.
 - [x] ✅ [DATA] P0. LIVE canonical `tradfi-prd` `_index` DATA-STATE (slot-3 tool, 2026-06-01 — confirms CONFLICT-2):
       **100% v8** (0/144,062 rows v9 — the constant lied, the data is v8); `asset_group` col present (CF-2 rows GREEN);
       **`pipeline_mode` blank (0/144,062 — CF-3 RED)**; **no `source` column (CF-4 RED)**; CF-5 typed GREEN
-      (`EXPECTED_WEEKEND` 35,050 / `EXPECTED_HOLIDAY` 2,427 / `EXPECTED_OUT_OF_COVERAGE_WINDOW` 8 / `SOURCE_RETURNED_ZERO`
-      5). capture_status: captured 100,536 / empty 37,490 / attempted_failed 6,036.
+      (`EXPECTED_WEEKEND` 35,050 / `EXPECTED_HOLIDAY` 2,427 / `EXPECTED_OUT_OF_COVERAGE_WINDOW` 8 /
+      `SOURCE_RETURNED_ZERO` 5). capture_status: captured 100,536 / empty 37,490 / attempted_failed 6,036.
 - [x] ✅ [DATA] P0. Legacy-only diff: **71 legacy-only cells** (NOT 4 — headline undershot; NYSE `tbbo` 2023-05 spread;
       legacy 12,948 · canonical 17,941 · overlap 12,877). All 71 copied + re-versioned in the C0 walk.
-- [x] ✅ [DATA] P0. **`available_at` FINDING — there is NO `available_at` column in the canonical tradfi `_index`** (only
-      `written_at`), contradicting the plan's "tradfi_massive shipped per-row available_at" assumption (CF-8 RED). The C0
-      walk MUST add a per-row `available_at` (preserve from parquet where present; backfill missing from day EOD UTC —
-      never migration-time). Captured as expanded scope (prior-not-ceiling).
+- [x] ✅ [DATA] P0. **`available_at` FINDING — there is NO `available_at` column in the canonical tradfi `_index`**
+      (only `written_at`), contradicting the plan's "tradfi_massive shipped per-row available_at" assumption (CF-8 RED).
+      The C0 walk MUST add a per-row `available_at` (preserve from parquet where present; backfill missing from day EOD
+      UTC — never migration-time). Captured as expanded scope (prior-not-ceiling).
 - [ ] [DATA] P1. Verify the corpus venue / data_type strings are underscore-canonical: data-state shows venues
       `BARCHART/CBOE/CME/FX/ICE/NASDAQ/NYSE/YAHOO_FINANCE` (canonical) BUT also `UNKNOWN` + blank `''` (drift to
       diagnose); data_types `ohlcv_15m/ohlcv_1m/ohlcv_24h/options_chain/tbbo/trades` + blank `''`. Relabel/diagnose the
@@ -125,7 +125,8 @@ VM.
 - [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
       top-level trees + nested layouts in the tradfi source + canonical buckets before the walk; classify duplicate
       (keep freshest schema) vs complementary (migrate all → canonical v9). Cover every in-scope layout or the walk is
-      incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
+      incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded
+      recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -162,8 +163,8 @@ VM.
 ## Execution checklist (grounded — next session, finish in full)
 
 > CF debt is in the `_index` MANIFEST + object PATHS, NOT the raw tick parquets. See
-> `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + layout map. tradfi raw =
-> HYPHEN pseudo-hive (`day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/`) — parse `-`-delim, not `=`.
+> `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + layout map. tradfi raw = HYPHEN
+> pseudo-hive (`day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/`) — parse `-`-delim, not `=`.
 >
 > ⚠️ **IRREVERSIBLE — E7 DELETES legacy `market-data-tick-tradfi` permanently.** Do not run E2–E7 until the canonical
 > target (v9 data-state, `day=/pipeline_mode=/asset_group=tradfi/…`, source re-consolidated, available_at added) is
@@ -172,17 +173,20 @@ VM.
 - [ ] [DATA] P0. E1 Phase-0 layout audit on `tradfi-prd` + legacy (`cf_layout_audit`); confirm hyphen raw + candle +
       `databento-batch-registry/` trees; verify the 0-row raw sample isn't systemic-empty.
 - [ ] [DATA] P0. E2 Build/extend `migrate_tradfi_canonical.py` to the v9-canonical target (perf-contract): parse the
-      hyphen pseudo-hive → canonical `day=/pipeline_mode=batch_{databento,massive,yahoo,barchart}/asset_group=tradfi/
-      venue=/…/data_type=`; copy the 71 legacy-only cells (NYSE tbbo 2023-05 …).
-- [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive -029).
+      hyphen pseudo-hive → canonical
+      `day=/pipeline_mode=batch_{databento,massive,yahoo,barchart}/asset_group=tradfi/     venue=/…/data_type=`; copy
+      the 71 legacy-only cells (NYSE tbbo 2023-05 …).
+- [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive
+      -029).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
-- [ ] [DATA] P0. E5 Manifest rebuild: scan canonical paths → `ManifestWriter` stamping `source` (per UAC SOURCE_PRIORITY /
-      BARCHART·YAHOO_FINANCE·DATABENTO·MASSIVE venue→source) + `pipeline_mode` + `available_at` → consolidator → v9. This
-      executes `tradfi_massive` Task -031 (source re-consolidation) — cross-link + flip there.
+- [ ] [DATA] P0. E5 Manifest rebuild: scan canonical paths → `ManifestWriter` stamping `source` (per UAC SOURCE_PRIORITY
+      / BARCHART·YAHOO_FINANCE·DATABENTO·MASSIVE venue→source) + `pipeline_mode` + `available_at` → consolidator → v9.
+      This executes `tradfi_massive` Task -031 (source re-consolidation) — cross-link + flip there.
 - [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical (diagnose, don't bulk-rename).
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
-      data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in `tradfi_master_audit_instructions.md`.
-      ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-tradfi` permanently**.
+      data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in
+      `tradfi_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy
+      `market-data-tick-tradfi` permanently**.
 
 ## Success criteria
 

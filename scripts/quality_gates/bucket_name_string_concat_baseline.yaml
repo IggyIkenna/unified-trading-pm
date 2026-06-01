@@ -1,0 +1,13 @@
+# Baseline for QG STEP 5.92 — bucket-name string-concat guardrail.
+# SSOT: bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md Phase 1
+# Seeded 2026-06-01 (slot 2). Ratchet DOWN after migrating occurrences to resolve_bucket_name().
+note: "Seeded 2026-06-01 — bucket_name_ssot_legacy_dual_write_remediation Phase 1."
+repos:
+  deployment-api:
+    count: 1
+  deployment-service:
+    count: 1
+  execution-service:
+    count: 15
+  unified-trading-library:
+    count: 1

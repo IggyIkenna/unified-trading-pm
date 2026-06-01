@@ -446,14 +446,16 @@ What to verify/wire (B0 corrected scope):
 >       perp funding-derive; unattributable rows→`_needs_attribution/` (never guess-then-delete). Perf-contract
 >       conformant (ThreadPool/--workers/--start-end date-shard/idempotent/per-cell isolation). **DONE —
 >       mtds@e14d656b.**
-> - [x] ✅ [DATA] P0. C0-RD3b — **VM dry-run validation — GREEN** (in-region VM `canonical-migration-defi-20260601-214111`,
->       2022-01 L1-heavy slice, pinned mtds@e14d656b). **0 errors, 0 UNRECOGNISED trees, `_needs_attribution=0` across
->       ALL 6 buckets** (lst token→venue split, oracle CHAINLINK+chain attribution, perp GMX→ARBITRUM default-chain all
->       resolved every row). Authoritative superset unions: dex_pools 53 cols (EVM + Solana-AMM coexist), lending_indices
->       43, dex_swaps 31, perp_funding 20, lst_rates 17, oracle_prices 17. Path convention confirmed
+> - [x] ✅ [DATA] P0. C0-RD3b — **VM dry-run validation — GREEN** (in-region VM
+>       `canonical-migration-defi-20260601-214111`, 2022-01 L1-heavy slice, pinned mtds@e14d656b). **0 errors, 0
+>       UNRECOGNISED trees, `_needs_attribution=0` across ALL 6 buckets** (lst token→venue split, oracle CHAINLINK+chain
+>       attribution, perp GMX→ARBITRUM default-chain all resolved every row). Authoritative superset unions: dex_pools
+>       53 cols (EVM + Solana-AMM coexist), lending_indices 43, dex_swaps 31, perp_funding 20, lst_rates 17,
+>       oracle_prices 17. Path convention confirmed
 >       (`…/venue=BALANCER/chain=ARBITRUM/instrument_type=pool/data_type=dex_pools/balancer_ARBITRUM_2022-01-03.parquet`).
 >       Dedup collapses multi-write-ts duplicates (dex-pools 2573→899 cells, lst 279→31). Walkthrough in operator chat.
->       Follow-up mtds@e46b5f6b adds per-phase timing + obj/s + LOUD error-exit for the apply run. parent_epic: manifest_master.
+>       Follow-up mtds@e46b5f6b adds per-phase timing + obj/s + LOUD error-exit for the apply run. parent_epic:
+>       manifest_master.
 > - [ ] [DATA] P0. C0-RD4 — **completeness + uniformity gate**: post-walk, assert canonical `-prd` distinct-cell count ≥
 >       union of all 3 source layouts' distinct cells (per bucket); **exactly ONE schema (column set) per data_type
 >       across ALL output objects** (no schema drift between cells of different source-layout origin); CF-1…CF-12 GREEN

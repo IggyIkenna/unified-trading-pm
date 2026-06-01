@@ -21,7 +21,7 @@ priority: P2
 > - **#3** — `dex_swaps` OHLC semantics: **investigate** the MDPS writer; report whether O/H/L/C are spot price or a
 >   normalized metric. File a UAC contract-doc todo OR an MDPS-bug todo per the finding. No blind edit. [slot 7 reports]
 > - **#4** — drop duplicate columns `swap_count` (==`trade_count`) + `volume_quote_usd` (==`volume`) from
->   `DEX_SWAPS_SCHEMA` as a UAC cleanup — only if it does not collide with `defi_manifest_canonicalisation`. [slot 7
+>   `DEX_SWAPS_SCHEMA` as a UAC cleanup — only if it does not collide with `defi_manifest_canonicalisation`. [slot 7 >
 >   code]
 
 ## What I found

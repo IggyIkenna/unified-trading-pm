@@ -146,16 +146,16 @@ version into every dependent repo's pyproject, and those updates flow back throu
 `quickmerge → staging → main` path.
 
 **The closure rule (applies to version bumps AND the PM doc-fast-path):** any commit that lands **directly on `main`**
-MUST be back-merged to `live-defi-rollout`, or the standing LDR→staging PR conflicts on the changed line (classically the
-version line — the generalized form of the Phase-5 main↔LDR drift). Two sources of main-only commits:
+MUST be back-merged to `live-defi-rollout`, or the standing LDR→staging PR conflicts on the changed line (classically
+the version line — the generalized form of the Phase-5 main↔LDR drift). Two sources of main-only commits:
 
 - **semver bump on `main`** — the main-side version write (+ any `[skip ci]` manifest/deps automation).
 - **PM doc-fast-path** — PM plans/docs/cursor-rules (`*.md` / `*.mdc`) PR **directly to `main`**, bypassing LDR→staging.
 
 Both are reconciled by **`.github/workflows/main-backmerge-to-ldr.yml`** (PM, trigger `push:[main]`; mirrors
-`tab-mirror-to-ldr.yml` in reverse) — it auto-advances a `main → live-defi-rollout` back-merge so main-only commits never
-strand. **Never leave a main-only commit unmirrored** — an unmirrored main commit is the exact mechanism behind the
-Phase-5 PM main↔LDR ~95-file drift.
+`tab-mirror-to-ldr.yml` in reverse) — it auto-advances a `main → live-defi-rollout` back-merge so main-only commits
+never strand. **Never leave a main-only commit unmirrored** — an unmirrored main commit is the exact mechanism behind
+the Phase-5 PM main↔LDR ~95-file drift.
 
 ---
 

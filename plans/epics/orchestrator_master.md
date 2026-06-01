@@ -175,24 +175,25 @@ conditional-push + `rebase --abort` rules + agent judgment), not enforcement.
 - [x] ✅ [SCRIPT] P1. ✅ DONE 2026-06-01 (live). `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` now SET fleet-wide: enabled on both
       running orchestrator VMs (`agent-orchestrator-vm-1` i-0c9b283b31d6b5ca7 + `agent-orch-vm-orchestrator-20260522`
       i-007e8d99d12831578) via systemd drop-in `slack-alerts.conf` (webhook fetched from GCP SM
-      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` — the AWS instance role is denied SM read, GCP gcloud auth is the working path),
-      orchestrator restarted, `slack_env_set=1` + test message delivered (`webhook_post=ok`) on both. The clean-but-diverged
-      page is already wired (`worker_liveness` L355 fires on `ahead>0||diverged` independent of dirty — verified). Tooling
-      for new/re-bootstrapped VMs: `bootstrap_vm.sh` 5.5b-quater (agent-orchestrator@a07a8bb/@34333b0) + drop-in
-      `scripts/orchestrator/enable_slack_alerts.sh` (PM@424b8db98/@a0fe469d6). (Live fleet is 2 VMs, not 11 — consolidated.)
-- [x] ✅ [DOC] P1. ✅ DONE 2026-06-01 — agent-orchestrator@f31f8ff (worker.md fresh-pull 1b: tab-branch-vs-integration-branch
-      topology + "park-and-preserve, never force-resolve" contract + per-repo base) + PM@74a557f1f (codex
-      `per-tab-worktrees.md` "Pre-spawn branch-state + liveness-gated dirty resolution" section). A worker can no longer
-      infer "pushed to my tab branch" == "integrated to LDR".
+      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` — the AWS instance role is denied SM read, GCP gcloud auth is the working
+      path), orchestrator restarted, `slack_env_set=1` + test message delivered (`webhook_post=ok`) on both. The
+      clean-but-diverged page is already wired (`worker_liveness` L355 fires on `ahead>0||diverged` independent of dirty
+      — verified). Tooling for new/re-bootstrapped VMs: `bootstrap_vm.sh` 5.5b-quater
+      (agent-orchestrator@a07a8bb/@34333b0) + drop-in `scripts/orchestrator/enable_slack_alerts.sh`
+      (PM@424b8db98/@a0fe469d6). (Live fleet is 2 VMs, not 11 — consolidated.)
+- [x] ✅ [DOC] P1. ✅ DONE 2026-06-01 — agent-orchestrator@f31f8ff (worker.md fresh-pull 1b:
+      tab-branch-vs-integration-branch topology + "park-and-preserve, never force-resolve" contract + per-repo base) +
+      PM@74a557f1f (codex `per-tab-worktrees.md` "Pre-spawn branch-state + liveness-gated dirty resolution" section). A
+      worker can no longer infer "pushed to my tab branch" == "integrated to LDR".
 
 ### VM `.git` file-ownership rot (root-owned objects) — fleet-wide (discovery 2026-06-01)
 
 **status**: ✅ RESOLVED 2026-06-01 — durable fix shipped: `fleet-git-health-guard.sh` (chown + fsck + alert) on a 30-min
 root cron on both live VMs (auto-heals root-owned objects + detects corruption). Root-cause investigation confirmed the
-tarball excludes `.git` and no standing root op creates them (all git runs as ubuntu). On install the guard caught + healed
-real object corruption on vm-2 (`unified-trading-api` + `instruments-service`). Earlier MITIGATED note (fleet-wide chown,
-121–133 → 0) stands; the guard makes it self-healing. · **provenance**: slot-1 main during code-freeze cleanup + the
-2026-06-01 agent-orchestrator campaign.
+tarball excludes `.git` and no standing root op creates them (all git runs as ubuntu). On install the guard caught +
+healed real object corruption on vm-2 (`unified-trading-api` + `instruments-service`). Earlier MITIGATED note
+(fleet-wide chown, 121–133 → 0) stands; the guard makes it self-healing. · **provenance**: slot-1 main during
+code-freeze cleanup + the 2026-06-01 agent-orchestrator campaign.
 
 **What I found**: Every orchestrator VM had ~121–133 root-owned files under `~/unified-trading-system-repos/**/.git/`
 (objects). `bootstrap_vm.sh` chowns after its initial clones (lines 291/316), so provisioning is NOT the origin — a
@@ -211,19 +212,19 @@ correctness the freeze protects.
 - [x] ✅ [INFRA] P0. ✅ INVESTIGATED + durable fix shipped 2026-06-01. **The tarball is NOT the origin** —
       `create-code-tarballs.sh` line 212 `--exclude='.git'`, so the redeploy/extract path carries no `.git` objects.
       Audited the live fleet (both VMs via SSM): orchestrator.service runs as `User=ubuntu`; both git crons
-      (slot-cron-ff-pull, slot-git-status-report) run as ubuntu; `pm-pull.service` runs as `User=root` BUT wraps every git
-      call in `sudo -u ubuntu git` (verified); `bootstrap_vm.sh` chowns after its clones. **No standing root operation
-      creates root-owned `.git`** — the original 121–133 root-owned objects were episodic (ad-hoc root git ops / early
-      pre-chown bootstrap / now-retired VMs). Durable fix = the fleet git-health guard on a timer (INFRA P1 below), now
-      deployed. Residual hardening if ever needed: ensure ad-hoc root SSM ops that touch repos `chown` after (the guard
-      auto-heals regardless).
-- [x] ✅ [INFRA] P1. ✅ DONE 2026-06-01 — `agent-orchestrator/scripts/fleet-git-health-guard.sh` (@c5d7cc7: chown -R to slot
-      user + `git fsck --connectivity-only` per repo + orchestrator-inbox Slack alert) DEPLOYED + installed as a 30-min
-      root cron on both live VMs. **Caught + healed real corruption on its first run:** vm-2 had broken/missing git objects
-      in `unified-trading-api` + `instruments-service` (the same rot class as the vm-ml incident) — healed via
-      `git fetch --refetch` → both `fsck OK`. Composes with the `worker_liveness.py` git-staleness alert. NB follow-up: the
-      guard's Slack alert needs the webhook in the cron env (currently logs to `/var/log/fleet-git-health-guard.log`; the
-      chown+fsck heal works regardless) — see Findings.
+      (slot-cron-ff-pull, slot-git-status-report) run as ubuntu; `pm-pull.service` runs as `User=root` BUT wraps every
+      git call in `sudo -u ubuntu git` (verified); `bootstrap_vm.sh` chowns after its clones. **No standing root
+      operation creates root-owned `.git`** — the original 121–133 root-owned objects were episodic (ad-hoc root git ops
+      / early pre-chown bootstrap / now-retired VMs). Durable fix = the fleet git-health guard on a timer (INFRA P1
+      below), now deployed. Residual hardening if ever needed: ensure ad-hoc root SSM ops that touch repos `chown` after
+      (the guard auto-heals regardless).
+- [x] ✅ [INFRA] P1. ✅ DONE 2026-06-01 — `agent-orchestrator/scripts/fleet-git-health-guard.sh` (@c5d7cc7: chown -R to
+      slot user + `git fsck --connectivity-only` per repo + orchestrator-inbox Slack alert) DEPLOYED + installed as a
+      30-min root cron on both live VMs. **Caught + healed real corruption on its first run:** vm-2 had broken/missing
+      git objects in `unified-trading-api` + `instruments-service` (the same rot class as the vm-ml incident) — healed
+      via `git fetch --refetch` → both `fsck OK`. Composes with the `worker_liveness.py` git-staleness alert. NB
+      follow-up: the guard's Slack alert needs the webhook in the cron env (currently logs to
+      `/var/log/fleet-git-health-guard.log`; the chown+fsck heal works regardless) — see Findings.
 - [ ] [SCRIPT] P2. **Follow-up (2026-06-01 campaign): fleet-git-health-guard cron lacks the Slack webhook env** → it
       logs problems to `/var/log/fleet-git-health-guard.log` but the `notify` POST no-ops (no
       `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the root cron). Make the guard self-fetch the webhook from SM (gcloud as the
@@ -231,11 +232,12 @@ correctness the freeze protects.
       pages, not just logs.
 - [ ] [INFRA] P1. **Follow-up (2026-06-01 campaign): agent-orchestrator main-checkout deploy-currency drifts.** vm-2
       (`agent-orch-vm-orchestrator-20260522`) was **14 commits behind** LDR (HEAD 3635d04) — running stale orchestrator
-      code (missing the @7950ab0 branch-state fix) — while vm-1 was current. FF-pulled + restarted vm-2 to @34333b0 in the
-      campaign, but there is no reliable standing mechanism that keeps the **main** `~/unified-trading-system-repos/agent-orchestrator`
-      checkout (the one systemd runs) current on every VM (pm-pull covers unified-trading-pm; slot-cron covers `.tabs/*`
-      worktrees, not the main checkout). Add an agent-orchestrator self-pull (timer/systemd) + `verify_fleet_autonomy_health.sh`
-      gate on it, so a VM can't silently run weeks-old server code.
+      code (missing the @7950ab0 branch-state fix) — while vm-1 was current. FF-pulled + restarted vm-2 to @34333b0 in
+      the campaign, but there is no reliable standing mechanism that keeps the **main**
+      `~/unified-trading-system-repos/agent-orchestrator` checkout (the one systemd runs) current on every VM (pm-pull
+      covers unified-trading-pm; slot-cron covers `.tabs/*` worktrees, not the main checkout). Add an agent-orchestrator
+      self-pull (timer/systemd) + `verify_fleet_autonomy_health.sh` gate on it, so a VM can't silently run weeks-old
+      server code.
 
 ## P1 — important; post-current-gate
 
@@ -316,8 +318,8 @@ auth (HS256); per-VM interactive proxy; self-registration + staleness; codex upd
 
 - [x] ✅ [SCRIPT] P3. **NICE-TO-HAVE** ✅ DONE 2026-06-01 — `scripts/orchestrator/probe_plan_regen_pipeline.sh`: POSTs
       `/api/backlog/regen` (loopback, tries :8765 central then :8026) and asserts `ok==true` AND `scanned_plans>0`
-      (scanned>0 proves PM-pull delivered current plans AND regen walked them). Exit 0/1 for cron alerting; intended as a
-      daily cron (`0 6 * * *`). Live-verified on vm-1: `{"ok":true,"scanned_plans":44,"total_tasks":211}` — pipeline alive.
-      **MIGRATED FROM:** `e2e_test_plan_regen_pipeline_2026_05_29.md` (one-shot test verified the pipeline 2026-05-30 but
-      left no continuous guard). NB: the daily cron entry itself is not yet installed on the VMs (script shipped + verified;
-      scheduling is a one-line crontab add per VM).
+      (scanned>0 proves PM-pull delivered current plans AND regen walked them). Exit 0/1 for cron alerting; intended as
+      a daily cron (`0 6 * * *`). Live-verified on vm-1: `{"ok":true,"scanned_plans":44,"total_tasks":211}` — pipeline
+      alive. **MIGRATED FROM:** `e2e_test_plan_regen_pipeline_2026_05_29.md` (one-shot test verified the pipeline
+      2026-05-30 but left no continuous guard). NB: the daily cron entry itself is not yet installed on the VMs (script
+      shipped + verified; scheduling is a one-line crontab add per VM).

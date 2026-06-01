@@ -154,14 +154,17 @@ Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab
 **Captured discoveries (codex-vs-plans target-state audit,
 `plans/audit/results/codex_vs_plans_target_state_deviations_2026_06_01.md` §0):**
 
-- [x] ✅ [CODE] P2. DONE (agent-orchestrator@7bfdd44 — base=`live-defi-rollout` for ALL repos incl AO, matching base_branch_for_repo): Fix stale boot-prompt string in `agent-orchestrator/server/worker_liveness.py:85`
+- [x] ✅ [CODE] P2. DONE (agent-orchestrator@7bfdd44 — base=`live-defi-rollout` for ALL repos incl AO, matching
+      base_branch_for_repo): Fix stale boot-prompt string in `agent-orchestrator/server/worker_liveness.py:85`
       (`_FRESH_PULL_BOOT_BLOCK`): it instructs recovered agent-orchestrator workers to `git fetch/ff` against `main`
       (`"base = main for agent-orchestrator, live-defi-rollout for every other repo"`), contradicting
       `base_branch_for_repo()` (LDR) + per-tab-worktrees FM6. A recovered AO worker would FF to `origin/main` and read
       as diverged. → make the boot prompt use `live-defi-rollout` for all repos (drop the agent-orchestrator
       special-case).
-- [x] ✅ [OPERATOR-DECIDED 2026-06-01] P2. APPROVED — agent-orchestrator deploys from BOTH `live-defi-rollout` (rapid dev) AND `main`; deployment-service CLAUDE.md AO-exception to be updated (LDR now allowed — follow-up). Original eval: Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01):
-      allow deploying the dashboard SPA from `live-defi-rollout` (not only `main`) so server + UI iterate on one branch
+- [x] ✅ [OPERATOR-DECIDED 2026-06-01] P2. APPROVED — agent-orchestrator deploys from BOTH `live-defi-rollout` (rapid
+      dev) AND `main`; deployment-service CLAUDE.md AO-exception to be updated (LDR now allowed — follow-up). Original
+      eval: Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01): allow
+      deploying the dashboard SPA from `live-defi-rollout` (not only `main`) so server + UI iterate on one branch
       without the FF-to-`main` hop. Scope the CI-gate + Firebase-Hosting target implications.
 
 ### THE force-push-vs-let-CI/CD decision rule (read before touching main/staging)
@@ -291,9 +294,9 @@ by a PR:
       Committed `--no-verify` (multi-line, minimal 18-line diff) — the prettier-collapsed form is local-prek-only and
       NOT a CI gate (quality-gates.sh runs prettier only in FIX_MODE, skipped under CI `--no-fix`), so the form is
       QG-irrelevant; avoided forcing a 621-line churn into the active campaign.
-- [x] ✅ [SCRIPT] P1. **Orchestrator-dispatch escalation (the agent hookup)** — for the JUDGMENT cases only (merge-conflict
-      resolution, commit-label-mismatch remediation, SIT-failure triage; the deterministic compute stays in the
-      workflows). GHA detects the wall → `repository_dispatch` to the agent-orchestrator API (AWS VM,
+- [x] ✅ [SCRIPT] P1. **Orchestrator-dispatch escalation (the agent hookup)** — for the JUDGMENT cases only
+      (merge-conflict resolution, commit-label-mismatch remediation, SIT-failure triage; the deterministic compute stays
+      in the workflows). GHA detects the wall → `repository_dispatch` to the agent-orchestrator API (AWS VM,
       `agent-orchestrator.odum-research.com`) → spawns a worker under the long-lived **setup-token** accounts
       (`accounts.json`, cheap+stable, NOT API credits) → worker resolves + pushes the fix **onto LDR** + pings the
       authoring slot. Auth: GHA→orchestrator via `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the
@@ -431,8 +434,8 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 > - **Safety**: every ruleset verified `active`; `enforce_admins` toggles during admin-merges were all re-enabled.
 >
 > **Remaining (tracked below):** instruments-service main coverage (0.18% short); enforce_admins on `staging` (optional
-> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1 workflow
-> FILE deletion (separate held plan).
+> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1
+> workflow FILE deletion (separate held plan).
 
 > **🔑 PREREQUISITE (discovered 2026-06-01 — RESOLVED via provisioning, not a missing credential).** The migrations edit
 > `.github/workflows/*.yml`, which the gh **keyring login token (`gho_…`) cannot do** (no `workflow` scope). But the
@@ -531,10 +534,10 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       line in-place (preserves other secrets); `workspace-bootstrap.sh` calls `--refresh` before sourcing
       `load-gh-token.sh` so the cache rarely goes stale. No-op when SM unavailable (manual-fill fallback preserved). —
       complements the runtime validity-probe (`@e93aacbc8`).
-- [x] ✅ [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
-      currently fetches `GH_PAT` only for clone-time HTTPS; also export it as `GH_TOKEN`/`GITHUB_TOKEN` in the worker
-      systemd env (or source `load-gh-token.sh` at worker start) so VM workers can edit workflows too. — repo:
-      agent-orchestrator
+- [x] ✅ [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** —
+      `agent-orchestrator/scripts/bootstrap_vm.sh` currently fetches `GH_PAT` only for clone-time HTTPS; also export it
+      as `GH_TOKEN`/`GITHUB_TOKEN` in the worker systemd env (or source `load-gh-token.sh` at worker start) so VM
+      workers can edit workflows too. — repo: agent-orchestrator
 - [x] ✅ [SCRIPT] P1. **trading-agent-service MAIN — MIGRATED 2026-06-01** (first real v1→v2 migration, via the
       workflow-capable `GH_PAT` from `.act-secrets`). Fixed the job-name bug (`Quality Gates (alerting-service)` →
       `(trading-agent-service)`, commit `a8895d19a` to main); main's ruleset was requiring v1 `quality-gates` which no
@@ -676,11 +679,12 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       `deployment-service/cloudbuild.yaml` `images:` push list already includes `…/${_SERVICE_NAME}:${COMMIT_SHA}` (+
       `:latest`) AND `…/sports-scheduler:${COMMIT_SHA}` — GCP already pushes the immutable `COMMIT_SHA` provenance tag,
       matching AWS's `:$VERSION`+`:latest`. No change needed.
-- [x] ✅ [DOC] P2. **Branch-triggered build recipe — DOCUMENTED 2026-06-01.** Added `### Branch-triggered build — hotfix
-      image off an arbitrary branch (no main promotion)` to `codex/08-workflows/ci-cd-flow.md` (under "Full CI/CD Flow"):
-      Cloud Build trigger path (`setup-cloud-build-triggers.sh` + manual `gcloud builds submit … _SERVICE_NAME/COMMIT_SHA`,
-      immutable `:${COMMIT_SHA}` tag) and the SHA-pinned `create-code-tarballs.sh` local-code alternative, with the
-      "never leave a branch-built image as steady state" caveat. — unified-trading-pm@bd4b3a7d7.
+- [x] ✅ [DOC] P2. **Branch-triggered build recipe — DOCUMENTED 2026-06-01.** Added
+      `### Branch-triggered build — hotfix     image off an arbitrary branch (no main promotion)` to
+      `codex/08-workflows/ci-cd-flow.md` (under "Full CI/CD Flow"): Cloud Build trigger path
+      (`setup-cloud-build-triggers.sh` + manual `gcloud builds submit … _SERVICE_NAME/COMMIT_SHA`, immutable
+      `:${COMMIT_SHA}` tag) and the SHA-pinned `create-code-tarballs.sh` local-code alternative, with the "never leave a
+      branch-built image as steady state" caveat. — unified-trading-pm@bd4b3a7d7.
 
 ### Phase 6 — staging→main automation pipeline is DEAD (discovered 2026-06-01) **P0**
 
@@ -701,13 +705,13 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
       campaign-gated e2e in P1 #4 above.
 - [x] ✅ [DOC] P1. **`ci-cd-flow.md` operational-status banner — DONE** (= P1 #9, `@c6ce73ad3`). Added the "Operational
       status — promotion automation" section with what's shipped vs remaining + the local≠CI gotcha.
-- [x] ✅ [DESIGN] P1. **Version feedback to staging/LDR — DOCUMENTED 2026-06-01.** Added `### Version feedback to
-      staging/LDR + the main→LDR back-merge requirement` to `codex/08-workflows/ci-cd-flow.md` (under "Version Bump
-      Flow"): bump computed on staging → `version-bump` `repository_dispatch` to PM (`staging_versions` SSOT) → cascade
-      via `update-dependency-version.yml` → flows back through quickmerge→staging→main; the closure rule that BOTH the
-      main-side semver bump AND the PM doc-fast-path produce main-only commits the `main-backmerge-to-ldr.yml` GHA must
-      mirror, else the LDR→staging PR conflicts on the version line (the generalized Phase-5 drift). Co-documented with
-      714. — unified-trading-pm@bd4b3a7d7.
+- [x] ✅ [DESIGN] P1. **Version feedback to staging/LDR — DOCUMENTED 2026-06-01.** Added
+      `### Version feedback to     staging/LDR + the main→LDR back-merge requirement` to
+      `codex/08-workflows/ci-cd-flow.md` (under "Version Bump Flow"): bump computed on staging → `version-bump`
+      `repository_dispatch` to PM (`staging_versions` SSOT) → cascade via `update-dependency-version.yml` → flows back
+      through quickmerge→staging→main; the closure rule that BOTH the main-side semver bump AND the PM doc-fast-path
+      produce main-only commits the `main-backmerge-to-ldr.yml` GHA must mirror, else the LDR→staging PR conflicts on
+      the version line (the generalized Phase-5 drift). Co-documented with 714. — unified-trading-pm@bd4b3a7d7.
 
 #### Phase 6 — CORRECTED EXECUTION MAP (2026-06-01, after diagnosis)
 
@@ -731,15 +735,16 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
 
 #### Phase 6 — proposed architecture (operator 2026-06-01): orchestrator-driven agent escalation + loud alerting
 
-- [x] ✅ [DESIGN] P1. **Layer the pipeline by whether it needs Claude — DOCUMENTED 2026-06-01.** Added `### Pipeline
-      layering — deterministic vs judgment (what needs Claude)` to `codex/08-workflows/ci-cd-flow.md` (under "Operational
-      status — promotion automation"): DETERMINISTIC (no agent — semver bump-compute, `staging-to-main.yml`,
-      `sit-gate.yml` = repair, not escalate) vs JUDGMENT (agent — staging-merge-conflict resolution,
-      commit-label↔API-diff mismatch, SIT-failure triage → `repository_dispatch` to agent-orchestrator → setup-token
-      worker resolves onto LDR + pings the slot). The design articulation is the deliverable; the SCRIPT implementation
-      stays tracked separately (Phase-6 orchestrator-dispatch escalation todo). — unified-trading-pm@bd4b3a7d7.
-- [x] ✅ [SCRIPT] P1. **GHA → orchestrator dispatch for the judgment cases (operator preference: setup-token auth, not API
-      credits).** When a deterministic workflow hits a judgment wall (conflict / label mismatch / SIT red), it
+- [x] ✅ [DESIGN] P1. **Layer the pipeline by whether it needs Claude — DOCUMENTED 2026-06-01.** Added
+      `### Pipeline     layering — deterministic vs judgment (what needs Claude)` to `codex/08-workflows/ci-cd-flow.md`
+      (under "Operational status — promotion automation"): DETERMINISTIC (no agent — semver bump-compute,
+      `staging-to-main.yml`, `sit-gate.yml` = repair, not escalate) vs JUDGMENT (agent — staging-merge-conflict
+      resolution, commit-label↔API-diff mismatch, SIT-failure triage → `repository_dispatch` to agent-orchestrator →
+      setup-token worker resolves onto LDR + pings the slot). The design articulation is the deliverable; the SCRIPT
+      implementation stays tracked separately (Phase-6 orchestrator-dispatch escalation todo). —
+      unified-trading-pm@bd4b3a7d7.
+- [x] ✅ [SCRIPT] P1. **GHA → orchestrator dispatch for the judgment cases (operator preference: setup-token auth, not
+      API credits).** When a deterministic workflow hits a judgment wall (conflict / label mismatch / SIT red), it
       `repository_dispatch`es to the **agent-orchestrator** API (AWS VM, `agent-orchestrator.odum-research.com`), which
       spawns a worker under the cheap+stable long-lived **setup-token** accounts (`accounts.json`) to do the work and
       push the fix **onto LDR** (resolve-on-integration-branch rule) + ping the authoring slot. Auth: GHA→orchestrator
@@ -776,11 +781,12 @@ behind the exact drift this whole audit is about.
       (b)-style controlled sync via the operator-authorized admin FF — see P0 #3(B) PM-main). So the PM main↔LDR
       catch-up no longer requires the ~95-file hand-resolution; the auto back-merge GHA (above) keeps main↔LDR from
       re-diverging. No manual 95-file merge needed.
-- [x] ✅ [DOC] P1. **PM doc-fast-path back-merge — DOCUMENTED 2026-06-01.** Captured in the new `### Version feedback to
-      staging/LDR + the main→LDR back-merge requirement` subsection of `codex/08-workflows/ci-cd-flow.md`: "PM
-      doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by `.github/workflows/main-backmerge-to-ldr.yml`);
-      never leave a main-only commit unmirrored" — listed as one of the two main-only-commit sources reconciled by the
-      back-merge GHA. Co-documented with 644. — unified-trading-pm@bd4b3a7d7.
+- [x] ✅ [DOC] P1. **PM doc-fast-path back-merge — DOCUMENTED 2026-06-01.** Captured in the new
+      `### Version feedback to     staging/LDR + the main→LDR back-merge requirement` subsection of
+      `codex/08-workflows/ci-cd-flow.md`: "PM doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by
+      `.github/workflows/main-backmerge-to-ldr.yml`); never leave a main-only commit unmirrored" — listed as one of the
+      two main-only-commit sources reconciled by the back-merge GHA. Co-documented with 644. —
+      unified-trading-pm@bd4b3a7d7.
 
 ### Reconciliation follow-ups (surfaced 2026-06-01 slot-1 reconciliation sweep)
 
@@ -790,11 +796,11 @@ behind the exact drift this whole audit is about.
       test-gaming): when `REPO_ROOT` is set it is **authoritative** — return its manifest or `None`, no cwd-walk
       fallthrough. `TestFindManifest` (2 tests incl `test_returns_none_when_not_found`) pass; sibling test unaffected.
 - [x] ✅ [CHORE] P3. **3 archived plans' conflict-marker residue RESOLVED 2026-06-01.** Confirmed REAL unresolved-merge
-      residue (not doc examples) — each was a `git merge` conflict from the wave-2 archival commit `5353e40f7`, mangled by
-      markdown blockquote prefixing (`=======`→`> ========`, `>>>>>>>`→`> > > > > > > >`) so a naive `^=======` scan
-      missed the closers. Both sides were COMPLEMENTARY (HEAD = `ARCHIVED` banner; incoming = `## Deferred work` table) →
-      kept both, stripped all `<<<<<<<<`/`========`/`>>>>>>>>` lines. `grep -E '<<<<<<<|>>>>>>>|======='` now CLEAN on all
-      three (`d5_features_missing_data_downgrade_2026_05_20.md`, `strategy_archetype_taxonomy_2026_05_12.md`,
+      residue (not doc examples) — each was a `git merge` conflict from the wave-2 archival commit `5353e40f7`, mangled
+      by markdown blockquote prefixing (`=======`→`> ========`, `>>>>>>>`→`> > > > > > > >`) so a naive `^=======` scan
+      missed the closers. Both sides were COMPLEMENTARY (HEAD = `ARCHIVED` banner; incoming = `## Deferred work` table)
+      → kept both, stripped all `<<<<<<<<`/`========`/`>>>>>>>>` lines. `grep -E '<<<<<<<|>>>>>>>|======='` now CLEAN on
+      all three (`d5_features_missing_data_downgrade_2026_05_20.md`, `strategy_archetype_taxonomy_2026_05_12.md`,
       `defi_protocol_outage_detector_2026_05_20.md`). — unified-trading-pm@9ea02c953.
 
 ## Success criteria
