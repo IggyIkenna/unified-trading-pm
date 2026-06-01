@@ -40,6 +40,16 @@ related_plans:
 
 # Data-source provenance enforced across all asset groups
 
+> **🟡 SEQUENCING DEPENDENCY — `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` is RUNNING (2026-06-01).**
+> That plan drained the tick-data writers and is migrating legacy→canonical tick buckets via **server-side copy**
+> (`migrate_legacy_tick_buckets_to_canonical.py` — moves objects, does NOT add columns). It touches the **same tick-data
+> objects** + owns the drain/relaunch cadence. **Do NOT launch the `source`-column backfill now — it would race the
+> in-flight copy** (and it needs the Phase 1/2 write-path fix first anyway). Sequence: (1) let the remediation finish;
+> (2) **bundle this plan's source-stamping write-path fix (Phase 1+2) into the remediation's code-fix → tarball →
+> relaunch** so relaunched writers stamp `source`; (3) run the source-column **data backfill after, on the CANONICAL
+> buckets** (the server-side copy doesn't add `source`, so backfill is still required — not redundant). Net: each object
+> is content-rewritten once. See § Migration scope.
+
 ## Overview
 
 TradFi shipped a dual-source provenance model (`tradfi_massive_dual_source_2026_05_28.md`): a shard
@@ -72,6 +82,17 @@ Generalize the existing TradFi gate (`manifest_writer.py` `if category == "tradf
 decide *whether* to stamp. Cardinality (>1) governs resolution only. No asset_group is exempt; no hardcoded list; the
 registry is the SSOT for the allowed source strings (it already enumerates the current source for every cell, e.g.
 `("cefi", …)=["tardis"]`, `("prediction", "trades")=["polymarket_clob"]`).
+
+## Scope boundary — what stamps `source` (so "all asset groups in full" is unambiguous)
+
+- **IN SCOPE — every ingested raw market-data cell** that has a `SOURCE_PRIORITY` entry: all five asset groups, every
+  venue × data_type. These carry an external vendor/source and MUST stamp it (write-path + backfill).
+- **MDPS processed candles inherit/propagate the upstream source.** A candle is derived from a raw cell with a known
+  `source`; the candle pipeline must carry that `source` through so a tardis-derived vs venue-derived candle stays
+  distinguishable (Phase 4-MDPS todo). Same swap-resilience rationale.
+- **EXEMPT (computed, no external vendor)** — features-service outputs, `strategy_output`, `execution_record`, `pnl`, and
+  any data_type with **no** `SOURCE_PRIORITY` entry. The gate does not fire for these; their lineage is the upstream
+  cell, not a vendor. (If such a cell unexpectedly has a `SOURCE_PRIORITY` entry, that's a registry bug to fix.)
 
 ## Audit findings (2026-06-01 crosscutting sweep — the exposed gaps)
 
@@ -120,6 +141,12 @@ column is RED, not exempt.
       `source` (`pyth_hermes`/`chainlink`, `solana_rpc`/`helius_rpc`) on each row in the same place.
 - [ ] [AUDIT] P1. Features-service DeFi onchain calculators — audit every emit that touches a DeFi data_type and confirm
       source is stamped. `features-service/.../onchain/`.
+- [ ] [SCRIPT] P1. Write `backfill_defi_source_column.py` (copy tradfi template) — stamps the known historical source
+      **per data_type** (most defi → `onchain_subgraph`; `oracle_prices` → resolve pyth vs chainlink from the existing
+      `pipeline_mode`/path; `native_staking_rates` → solana_rpc vs helius_rpc). Idempotent.
+- [ ] [DATA] P1. Backfill the existing DeFi corpus — run now, parallel in-region VMs sharded by `day=` (see § Migration
+      scope); fold into the defi canonicalisation migration (`defi_manifest_canonicalisation_2026_06_01.md`) if open, else
+      run direct; manifest re-consolidation after.
 
 ### Phase 3 — CeFi writer source (P1 — stamp `source=tardis` NOW for swap-resilience)
 
@@ -135,8 +162,8 @@ column is RED, not exempt.
 - [ ] [TEST] P1. CeFi unit test: a cefi cell without `source=` raises; `source="tardis"` persists; a future
       `["<alt>", "tardis"]` registry expansion resolves two sources by priority.
 - [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **run now, parallel in-region VMs** (see
-      § Migration scope, two steps): (1) data-parquet column backfill — fan `backfill_cefi_source_column.py` (template =
-      tradfi) across many same-region VMs, sharded by `day=` (no egress, idempotent); fold into the cefi-bucket migration
+      § Migration scope, two steps): (1) data-parquet column backfill — **write `backfill_cefi_source_column.py`** (copy
+      tradfi template) then fan it across many same-region VMs, sharded by `day=` (no egress, idempotent); fold into the cefi-bucket migration
       if one is already pending, else run direct; (2) manifest re-consolidation after. Labels the corpus before any
       Tardis swap.
 
@@ -145,6 +172,12 @@ column is RED, not exempt.
 - [ ] [MTDS] P1. Thread `source=` through Sports adapter writes (api_football / footystats / odds_api / understat).
       `market-tick-data-service/.../market_interface/adapters/sports/`.
 - [ ] [TEST] P1. Sports multi-source unit test (same fixture from api_football + footystats → two rows, primary resolved).
+- [ ] [SCRIPT] P1. Write `backfill_sports_source_column.py` (copy tradfi template) — **path→column migration**: read the
+      source from the existing path segment (`data_source=ODDS_API/` legacy, `pipeline_mode=batch_api_football/` newer),
+      write it into the `source` column on every row, and emit on the canonical column layout. Map each path token →
+      closed-set source string. Idempotent.
+- [ ] [DATA] P1. Backfill the existing sports corpus — run now, parallel in-region VMs sharded by `day=` (see § Migration
+      scope); manifest re-consolidation after. Confirms sports source moves path→column for the whole corpus.
 
 ### Phase 5 — Downstream reconciliation wired for all multi-source asset groups (P0 correctness)
 
@@ -153,6 +186,10 @@ column is RED, not exempt.
       resolved row via `select_primary_available_source()`. No silent double-count. Cover features-service consumers.
 - [ ] [UAC] P1. Confirm `detect_dual_source_conflicts()` is invoked at consolidation/audit time for every multi-source
       asset group; `DUAL_SOURCE_DUPLICATE`/`VALUE_DIVERGENCE`/`COVERAGE_DIVERGENCE` surfaced, never swallowed.
+- [ ] [TEST] P1. **`available_at` parity across sources (batch = live)**: rows from any source for a cell are timestamped
+      with the live-mode `available_at` of the `SOURCE_PRIORITY` top entry — NOT each vendor's slower archive time. A
+      2-source fixture asserts identical `available_at` derivation per cell, so swapping/adding a source never shifts the
+      lookahead. (Covers the tradfi audit item (n) generalised to all asset groups.)
 
 ### Phase 6 — QG + audit instructions + codex (P1)
 
@@ -200,17 +237,22 @@ re-consolidation). Backfilling the existing corpus is therefore **two distinct s
    rewritten parquets. Index-level, cheap. (TradFi precedent: drain → consolidate → snapshot → backfill → re-consolidate
    → resume.)
 
-> **EXECUTE NOW — parallel in-region VMs (operator decision 2026-06-01).** This is just read+write; on VMs in the same
-> region as the buckets there is **no egress cost**, and it fans out across many VMs, so **run it now — do not defer to a
-> future window.** Single-walk discipline still applies, but its real constraint is *"touch each object once,"* NOT
-> *"wait":*
-> - **If another whole-corpus rewrite is already pending for a bucket** (e.g. the defi canonicalisation migration
+> **EXECUTE — parallel in-region VMs (operator decision 2026-06-01), but SEQUENCE behind the running tick-bucket
+> remediation.** This is just read+write; on VMs in the same region there is **no egress cost** and it fans across many
+> VMs, so it is **fast — do not defer to a future window.** Single-walk discipline's real constraint is *"touch each
+> object once,"* NOT *"wait."* Decide per bucket:
+> - **A tick-bucket migration is RUNNING right now** — `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`
+>   (legacy→canonical **server-side copy**, writers already drained). Its copy does NOT add `source`. **Do not run a
+>   concurrent `source` walk on those objects** (race). Sequence behind it: run the `source` backfill on the **canonical**
+>   buckets **after** the copy completes. The copy is metadata-cheap (server-side), so the only content rewrite is this
+>   backfill → still "touch once" for the expensive op.
+> - **If a CONTENT-rewriting whole-corpus pass is pending** for a bucket (e.g. the defi canonicalisation migration
 >   `defi_manifest_canonicalisation_2026_06_01.md`, or a v9 schema migration), **fold the `source`-column add into that
->   same pass** — the object is read+written once, with both changes.
-> - **If nothing else is pending for a bucket**, the `source`-column backfill **is** that bucket's walk — run it directly.
+>   pass** — read+written once with both changes.
+> - **If nothing is pending/running** for a bucket, the `source` backfill **is** that bucket's walk — run it directly.
 >
-> Either way it runs **now**, not "someday." Check the MTDS migration registry only to decide *fold-in vs run-direct* per
-> bucket (never to defer). **New writes going forward stamp both places at write time → no migration for new data.**
+> Check the MTDS migration registry to pick run-direct / fold-in / sequence-behind per bucket (never to defer). **New
+> writes stamp both places at write time → no migration for new data.**
 
 ### Execution sequencing (per asset group, parallelised across VMs)
 
@@ -227,6 +269,24 @@ re-consolidation). Backfilling the existing corpus is therefore **two distinct s
 - (none for the source backfill — operator authorised running it now, parallelised; see § Migration scope.) Per-bucket
   execution is tracked by the Phase-3/4/7 backfill todos + a `<asset_group>_source_backfill_<date>.md` runbook if a
   bucket's fold-in/run-direct needs its own ledger.
+
+## Completion criteria — "closed in full" across all asset groups
+
+This plan is closeable only when ALL of the following are GREEN (no asset_group, no step skipped):
+
+- [ ] **Write-path** — universal gate live (`source` blank OR not-in-`SOURCE_PRIORITY` → raise) for every asset group;
+      every MTDS/MDPS writer (cefi/defi/sports/prediction/tradfi) stamps `source`; QG STEP 5.64 generalised + green.
+- [ ] **Data parquets** — `source` column populated on every ingested cell across all five asset groups, read from
+      ACTUAL prod rows (data-state, not the constant): **zero blank `source`**. Sports migrated path→column. MDPS candles
+      carry the inherited upstream source.
+- [ ] **Manifest** — re-consolidated; manifest `source` populated for every cell; multi-source cells = two rows.
+- [ ] **Downstream** — consumer read path resolves source priority for every multi-source asset group (one row per
+      instrument+ts, no double-count); `detect_dual_source_conflicts()` surfaces divergence; `available_at` parity holds.
+- [ ] **Sequencing honoured** — source backfill ran behind / folded into the running tick-bucket remediation, on
+      canonical buckets, no race.
+- [ ] **Codex + audit instructions** updated to the universal rule; audit result archived when every todo above is `[x]`.
+
+Scope exemptions (by design, not gaps): features-service / strategy / execution outputs (computed — no vendor source).
 
 ## Codex SSOTs
 
