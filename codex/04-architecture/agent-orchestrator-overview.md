@@ -348,58 +348,58 @@ Cross-side coordination:
 
 ## Auto-spawn lifecycle (AutoSpawnLoop — shipped 2026-05-30)
 
-`server/autospawn.py` — `AutoSpawnLoop` — periodic background thread (default 60 s tick) that wakes a worker on
-idle slots so the fleet self-heals without operator intervention.
+`server/autospawn.py` — `AutoSpawnLoop` — periodic background thread (default 60 s tick) that wakes a worker on idle
+slots so the fleet self-heals without operator intervention.
 
 ### Trigger contract (all 5 must be true to spawn)
 
-| # | Gate | Implementation |
-|---|------|---------------|
-| 1 | **Queue not empty** | `SELECT task_id FROM tasks WHERE status='queued' AND dispatched_to IS NULL LIMIT 1` → non-empty |
-| 2 | **No active worker** | `tmux has-session orch-slot-N` returns false |
-| 3 | **Account headroom** | At least one usable account: `five_hour_pct < 50` AND `weekly_pct < 80`. Null pct treated as 0 (fresh account assumed healthy) |
-| 4 | **Slot configured** | `slots` table has `worktree` + `branch` + `operator` set |
-| 5 | **Not in cooldown** | Last autospawn attempt for this slot was > 5 min ago (`ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`, default 300) |
+| #   | Gate                 | Implementation                                                                                                                 |
+| --- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | **Queue not empty**  | `SELECT task_id FROM tasks WHERE status='queued' AND dispatched_to IS NULL LIMIT 1` → non-empty                                |
+| 2   | **No active worker** | `tmux has-session orch-slot-N` returns false                                                                                   |
+| 3   | **Account headroom** | At least one usable account: `five_hour_pct < 50` AND `weekly_pct < 80`. Null pct treated as 0 (fresh account assumed healthy) |
+| 4   | **Slot configured**  | `slots` table has `worktree` + `branch` + `operator` set                                                                       |
+| 5   | **Not in cooldown**  | Last autospawn attempt for this slot was > 5 min ago (`ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`, default 300)                  |
 
 ### Account-pick rotation
 
 `_pick_headroom_account()` — scans `accounts.json`, filters by `account_is_usable()` + headroom gates, sorts by
-`(five_hour_pct ASC, weekly_pct ASC)`. First account in the sorted list wins. Spreads load across the rotation
-pool; skips any account that is rate-limited or beyond the ceiling thresholds.
+`(five_hour_pct ASC, weekly_pct ASC)`. First account in the sorted list wins. Spreads load across the rotation pool;
+skips any account that is rate-limited or beyond the ceiling thresholds.
 
 ### Spawn execution
 
 `_do_spawn()` calls `prompts.render("worker", ...)` to get the boot prompt (same template as the manual
-`/api/slots/<id>/spawn` endpoint), then `tmux_spawn.spawn()` — same in-process path used by the manual API. The
-spawned worker's first `/heartbeat` or `/boot` call updates the `SlotRow`.
+`/api/slots/<id>/spawn` endpoint), then `tmux_spawn.spawn()` — same in-process path used by the manual API. The spawned
+worker's first `/heartbeat` or `/boot` call updates the `SlotRow`.
 
 ### Anti-flap / Slack alert
 
 After 3 consecutive successful spawns on the same slot within 10 min (`DEFAULT_FLAP_THRESHOLD=3`,
-`DEFAULT_FLAP_WINDOW_SECONDS=600`) without a task claim — `notify_autospawn_flap()` fires a Slack alert and the
-slot enters a 1-hour backoff (`_flap_backoff_until[slot_id]`). A mixed success/failure sequence resets the streak.
+`DEFAULT_FLAP_WINDOW_SECONDS=600`) without a task claim — `notify_autospawn_flap()` fires a Slack alert and the slot
+enters a 1-hour backoff (`_flap_backoff_until[slot_id]`). A mixed success/failure sequence resets the streak.
 
 ### Failure modes and logging
 
-| Failure | How handled |
-|---------|------------|
-| Boot-prompt render failed | `_do_spawn()` returns `(False, error_str)`; logged as `autospawn_failed` activity event |
+| Failure                   | How handled                                                                              |
+| ------------------------- | ---------------------------------------------------------------------------------------- |
+| Boot-prompt render failed | `_do_spawn()` returns `(False, error_str)`; logged as `autospawn_failed` activity event  |
 | Spawn HTTP 4xx (via tmux) | `tmux_spawn.spawn()` raises; caught → `spawn_failures` counter incremented, cooldown set |
-| tmux create failed | Same as above |
-| All accounts at ceiling | Gate 3 blocks; tick skips with `no_account_headroom` reason |
-| Slot not configured | Gate 4 blocks; tick skips with `slot_not_configured` reason |
+| tmux create failed        | Same as above                                                                            |
+| All accounts at ceiling   | Gate 3 blocks; tick skips with `no_account_headroom` reason                              |
+| Slot not configured       | Gate 4 blocks; tick skips with `slot_not_configured` reason                              |
 
 Every spawn attempt logs to `log_activity` with `autospawn_succeeded` or `autospawn_failed` event type.
 
 ### Environment variables
 
-| Variable | Default | Purpose |
-|----------|---------|---------|
-| `ORCHESTRATOR_AUTOSPAWN_ENABLED` | `false` | Master on/off switch |
-| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS` | `60` | Tick cadence |
-| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS` | `300` | Per-slot retry gap |
-| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_CEILING` | `50` | Max 5h usage % before skipping |
-| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_CEILING` | `80` | Max weekly usage % before skipping |
+| Variable                                   | Default | Purpose                            |
+| ------------------------------------------ | ------- | ---------------------------------- |
+| `ORCHESTRATOR_AUTOSPAWN_ENABLED`           | `false` | Master on/off switch               |
+| `ORCHESTRATOR_AUTOSPAWN_INTERVAL_SECONDS`  | `60`    | Tick cadence                       |
+| `ORCHESTRATOR_AUTOSPAWN_COOLDOWN_SECONDS`  | `300`   | Per-slot retry gap                 |
+| `ORCHESTRATOR_AUTOSPAWN_FIVE_HOUR_CEILING` | `50`    | Max 5h usage % before skipping     |
+| `ORCHESTRATOR_AUTOSPAWN_WEEKLY_CEILING`    | `80`    | Max weekly usage % before skipping |
 
 Enable via systemd drop-in: `Environment=ORCHESTRATOR_AUTOSPAWN_ENABLED=true` in
 `/etc/systemd/system/orchestrator.service.d/autospawn.conf` — one VM at a time. Rollout script:
@@ -409,18 +409,18 @@ SSOT: `server/autospawn.py` + `plans/active/autospawn_idle_vms_2026_05_30.md`.
 
 ## Host-offline failover lifecycle (FailoverLoop — design 2026-05-30)
 
-Addresses the case where a host (e.g. harsh-pc) goes offline and its soft-pinned tasks would otherwise sit
-indefinitely. The `FailoverLoop` runs in `server/failover.py` on vm-orchestrator only (single decision source;
-per-VM enables would race).
+Addresses the case where a host (e.g. harsh-pc) goes offline and its soft-pinned tasks would otherwise sit indefinitely.
+The `FailoverLoop` runs in `server/failover.py` on vm-orchestrator only (single decision source; per-VM enables would
+race).
 
 ### Trigger contract
 
-| Gate | Condition |
-|------|-----------|
-| Host offline | `last_heartbeat_age > 600s` (10 min) for the source host — conservative threshold for laptop sleep / brief network gaps |
-| Task soft-pinned | `target_slot IS NULL` OR `target_slot.failover_allowed = true` |
-| Task not dispatched | `dispatched_to IS NULL` AND `status = 'queued'` |
-| Fleet VM available | At least one fleet VM passes affinity-match AND account-headroom check (re-uses AutoSpawnLoop § 3 contract) |
+| Gate                | Condition                                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Host offline        | `last_heartbeat_age > 600s` (10 min) for the source host — conservative threshold for laptop sleep / brief network gaps |
+| Task soft-pinned    | `target_slot IS NULL` OR `target_slot.failover_allowed = true`                                                          |
+| Task not dispatched | `dispatched_to IS NULL` AND `status = 'queued'`                                                                         |
+| Fleet VM available  | At least one fleet VM passes affinity-match AND account-headroom check (re-uses AutoSpawnLoop § 3 contract)             |
 
 ### Affinity-matching algorithm
 
@@ -457,14 +457,14 @@ When the offline host's heartbeat returns:
 
 ### Env vars
 
-| Variable | Default | Effect |
-|----------|---------|--------|
-| `ORCHESTRATOR_FAILOVER_ENABLED` | `false` | Must be `true` to arm FailoverLoop |
-| `ORCHESTRATOR_FAILOVER_INTERVAL_SECONDS` | `60` | Tick interval |
-| `ORCHESTRATOR_FAILOVER_HEARTBEAT_THRESHOLD_SECONDS` | `600` | Offline threshold (10 min) |
+| Variable                                            | Default | Effect                             |
+| --------------------------------------------------- | ------- | ---------------------------------- |
+| `ORCHESTRATOR_FAILOVER_ENABLED`                     | `false` | Must be `true` to arm FailoverLoop |
+| `ORCHESTRATOR_FAILOVER_INTERVAL_SECONDS`            | `60`    | Tick interval                      |
+| `ORCHESTRATOR_FAILOVER_HEARTBEAT_THRESHOLD_SECONDS` | `600`   | Offline threshold (10 min)         |
 
-Enable via drop-in: `/etc/systemd/system/orchestrator.service.d/failover.conf` on vm-orchestrator only.
-Rollout script: `unified-trading-pm/scripts/orchestrator/enable_failover.sh` (Phase 4).
+Enable via drop-in: `/etc/systemd/system/orchestrator.service.d/failover.conf` on vm-orchestrator only. Rollout script:
+`unified-trading-pm/scripts/orchestrator/enable_failover.sh` (Phase 4).
 
 ### Anti-patterns
 

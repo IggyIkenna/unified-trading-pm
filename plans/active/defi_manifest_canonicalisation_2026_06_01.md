@@ -473,6 +473,40 @@ What to verify/wire (B0 corrected scope):
       Solana-archetype-specific operational gate, not a master-plan blocker). The agent **never** ticks G4 — the
       operator does after the live run completes. parent_epic: mtds_mdps_master.
 
+### G5–G8 — post-MVP feature follow-ups (migrated 2026-06-01 from archived MVP plan body)
+
+> **MIGRATED FROM** `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` § "Phase 2 deferred / P1 follow-ups".
+> These were orphaned in the archive body — not picked up by the inventory regenerator, not in canon §G's G1–G4
+> operational chain. Restored to active inventory here so backlog-derivation crons + done-vs-left dashboards pick
+> them up. None are MVP-blockers (G1–G4 are sufficient to ship the basis trade); these are post-MVP feature
+> additions and depth-of-data improvements.
+
+- [ ] [CODE] P1. G5 **Phoenix radix-slab decode (top-of-book bid + ask + size).** The market account is 1.7MB; the
+      top-of-book decode is ~50-100 LOC of binary parsing against Phoenix's documented slab layout. Full L2 (deeper
+      levels) is harder + can ship later. Current state: `PhoenixOrderbookIngester` (mtds@d3d26f56) fetches the market
+      account successfully (proves the RPC path) but routes via `record_failed(reason="SOURCE_HANDLER_TODO_PHOENIX_DECODE")`.
+      Acceptance: top-of-book parsed; `best_bid_price + best_ask_price + their sizes + spread_bps + mid_price` populated;
+      `record_captured` instead of `record_failed`; 5+ unit tests cover the binary decode against known slab states.
+      parent_epic: mtds_mdps_master. Not GATED on G1–G4 (independent feature add).
+- [ ] [CODE] P2. G6 **Jupiter historical reconstruction.** `JupiterQuoteIngester` (mtds@d3d26f56) is forward-only —
+      Jupiter doesn't expose historical quote endpoints. For the 2024-06-01 → today backtest window, reconstruct
+      historical Jupiter routes by simulating Jupiter's routing algorithm against the underlying Orca/Raydium pool
+      states at the same timestamps. Acceptance: per (timestamp, size-bucket) row matching forward-collected quote
+      structure within ±5%; backtest harness can read Jupiter quotes for any day in window. parent_epic: mtds_mdps_master.
+      GATED on G1 (need Orca + Raydium pool states backfilled).
+- [ ] [CODE] P2. G7 **Orca tick-array decode** (concentrated-liquidity depth visualisation). Current MVP uses
+      `sqrt_price` + `liquidity` scalars (sufficient for next-tick slippage approximation). Full tick-array decode
+      enables tick-distribution depth maps + better mid-size-fill simulation. ~150-200 LOC binary parsing of the 3
+      nearest tick arrays around `tick_current_index`. Acceptance: per-snapshot tick array state captured alongside
+      pool state; downstream consumers can compute fill slippage at arbitrary sizes. parent_epic: mtds_mdps_master.
+      Not GATED on G1–G4 (independent depth improvement).
+- [ ] [CODE] P2. G8 **Raydium second WSOL/USDC pool** — extend `RaydiumClassicAmmIngester` defaults if a meaningful
+      TVL pool materialises. The plan-time secondary Raydium pool dropped to $4.6K TVL by 2026-06-01 (below noise
+      threshold); current default ingestion is just the top $8.8M pool. The constant scaffold is forward-compat —
+      adding a pool requires only updating `_RAYDIUM_POOLS` dict. Acceptance: if a second SOL/USDC Raydium pool
+      reaches > $1M TVL, add it; ingest from the canonical date; backtest harness reads both. parent_epic:
+      mtds_mdps_master. Trigger: TVL probe shows > $1M.
+
 ### G — non-conflict notes (from conflict scan 2026-06-01)
 
 - `solana_defi_legacy_migration_2026_05_27.md` (active): canonical Solana types per that plan are

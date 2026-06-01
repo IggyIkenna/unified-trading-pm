@@ -28,11 +28,14 @@ source:
 
 | Item | Migrated to | Status note |
 | --- | --- | --- |
-| Phase 2 Phoenix orderbook decode (currently stub) | `defi_manifest_canonicalisation_2026_06_01.md` § G follow-up table (P3 nice-to-have once paid Phoenix decode bandwidth available) | nice-to-have; not MVP-blocking; the JupiterQuoteIngester + Orca + Raydium ingesters cover the price-dispersion-arb need |
+| Phase 2 Phoenix orderbook decode (currently stub) | `defi_manifest_canonicalisation_2026_06_01.md` § **G5** (P1; full inline body migrated 2026-06-01) | post-MVP feature add; ships top-of-book first |
 | Full 2024-06-01 → 2026-06-01 backfill (G1) | `defi_manifest_canonicalisation_2026_06_01.md` § G1 | BLOCKED-OPERATOR (long wall-clock; 36GB; operator-launched on vm-defi) |
 | Live-mode snapshotters launch (G2) | `defi_manifest_canonicalisation_2026_06_01.md` § G2 | BLOCKED-OPERATOR (long-lived VMs; operator-launched) |
 | 24h paper trade run (G3) | `defi_manifest_canonicalisation_2026_06_01.md` § G3 | BLOCKED-OPERATOR (long wall-clock; operator-launched) |
 | Promote to live wallet (G4) | `defi_manifest_canonicalisation_2026_06_01.md` § G4 | HUMAN-ONLY per CLAUDE.md hard-stop list |
+| Jupiter historical reconstruction (P2) | `defi_manifest_canonicalisation_2026_06_01.md` § **G6** (migrated 2026-06-01) | post-MVP; replay from Orca/Raydium states; GATED on G1 |
+| Orca tick-array decode (P2) | `defi_manifest_canonicalisation_2026_06_01.md` § **G7** (migrated 2026-06-01) | post-MVP depth improvement; not GATED on G1-G4 |
+| Raydium second WSOL/USDC pool (P2) | `defi_manifest_canonicalisation_2026_06_01.md` § **G8** (migrated 2026-06-01) | trigger: TVL > $1M (currently $4.6K, below noise) |
 
 ## Codex SSOT alignment check (per CLAUDE.md plan-archival HARD RULE, 2026-05-22)
 
@@ -40,7 +43,7 @@ source:
 | --- | --- | --- |
 | `codex/04-architecture/drift-v2-data-sources.md` — NEW | Did not exist | **CREATED 2026-06-01** in same archival commit |
 | `codex/02-data/canonical-data-types.md` — add 7 new types | Sibling doc (`defi-data-types-catalog.md`) is the actual canonical location | **UPDATED 2026-06-01** `defi-data-types-catalog.md` to document PERP_TRADES / PERP_MARK_ORACLE / PERP_OPEN_INTEREST / DEX_POOL_STATE / DEX_ORDERBOOK / DEX_QUOTE / DEX_TRADES + InstrumentType.DEX_POOL |
-| `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — add `_DRIFT_VELOCITY_API_URL_TEMPLATE` | Doc references `_DRIFT_S3_ARCHIVE_URL_TEMPLATE` only | **UPDATED 2026-06-01** with note that Velocity Data API is the new primary historical source + cross-link to new `drift-v2-data-sources.md`. **P3 follow-up filed** in canon plan G section: verify whether `_DRIFT_VELOCITY_API_URL_TEMPLATE` was actually coded into `instruments-service/instruments_service/reference_data/adapters/defi/drift.py` source or only documented in this plan |
+| `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — add `_DRIFT_VELOCITY_API_URL_TEMPLATE` | Doc references `_DRIFT_S3_ARCHIVE_URL_TEMPLATE` only | **UPDATED 2026-06-01** with note that Velocity Data API is the new primary historical source + cross-link to new `drift-v2-data-sources.md`. **✅ FOLLOW-UP RESOLVED 2026-06-01 (mtds@081ff1cf)**: the Velocity API base URL is in UAC's `SOLANA_DEFI_PROTOCOLS["drift"]["api_url"]` (venue-wide, one host serves all markets) accessed via `get_solana_protocol_url("drift", "api_url")`. Both IS adapter (`drift.py:32`) and MTDS `DriftV2HistoricalIngester` (`drift_v2_historical_handler.py:76`) use this canonical helper — no hardcoded URLs. The per-day URL path is constructed inline in MTDS handler because the path is data-type-specific and per-instrument (MTDS-domain). |
 | Supersede `plans/active/issues/bug_d_prime_drift_backfill_2026_05_31.md` | Active issue doc | **SUPERSEDED banner added 2026-06-01** — Helius sig-walking path is OBSOLETE; Drift V2 historical now flows via Velocity Data API |
 | `codex/04-architecture/solana-defi-coverage.md` (existing) | Mentions Drift S3 archive only | **UPDATED 2026-06-01** with Velocity Data API note + cross-link |
 | `codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md` | venue_universe lacks Drift/Orca/Raydium/Phoenix | **UPDATED 2026-06-01** added Solana basis section (Drift perp + Orca spot) |
@@ -204,23 +207,89 @@ For Raydium classic AMM, simpler decode (just reserveA, reserveB, fee).
 
 ## Implementation phases
 
-### Phase 1 — Drift V2 historical ingester (~1 day)
+### Phase 1 — Drift V2 historical ingester (~1 day) — ✅ SHIPPED 2026-06-01
 
-- New `DriftV2HistoricalIngester` class in MTDS handlers
-- CLI:
-  `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --market SOL-PERP --start 2025-01-08 --end 2026-06-01 --data-types funding,trades`
-- Pagination + retry on transient errors (the JSON-decode-error pattern won't reappear because we're not walking
-  individual sigs; we're paginating per-day endpoints)
-- Output: `perp_funding/drift/...parquet` (existing path) + new `perp_trades/drift/...parquet`
-- Unit tests + integration tests (mocked Drift API responses)
+**Status (2026-06-01)**: ✅ SHIPPED — uac@f26097f9, mtds@0f70f376. Local validation: SOL-PERP for 2025-08-01 captured
+24 funding rows + 29164 trade rows; for 2024-06-15 (deep history) 24 funding + 4583 trades; for 2026-05-30
+(post-coverage — free-tier API lags ~2 months) 0 / 0 rows confirming the `record_empty(SOURCE_RETURNED_ZERO)` path.
+12/12 unit tests pass (pagination via `meta.nextPage`, retry on `JSONDecodeError` + 5xx, schema canonicalisation,
+manifest emission routing). QG green both repos (UAC + MTDS exit 0). Adjacent fix: PM intra-active link
+`workspace_repo_branch_protection_gaps_2026_05_29.md` repaired (pm@ea8ee08a1).
 
-### Phase 2 — Orca Whirlpool state ingester (~1.5 days)
+- ✅ New `DriftV2HistoricalIngester` class — `market_tick_data_service/cli/handlers/drift_v2_historical_handler.py`
+  (467 LOC)
+- ✅ CLI:
+  `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets SOL-PERP,BTC-PERP,ETH-PERP --start 2024-06-01 --end 2026-06-01 --data-types funding,trades`
+  (208 LOC)
+- ✅ Pagination + retry on transient errors (`json.JSONDecodeError`, `aiohttp.ClientError`, 429 / 5xx) — exp backoff
+  with jitter, 6 retries, 1s..30s cap
+- ✅ Output: `raw_tick_data/by_date/day={D}/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type={perp_funding|perp_trades}/{market}.parquet` via canonical `write_defi_rows`
+- ✅ Unit tests (12 passing) — `tests/unit/test_drift_v2_historical_handler.py` (404 LOC); integration test gating
+  deferred to Phase 4 paper-trade (no API auth required → no `requires_credentials` mark needed; can re-add later)
 
-- New `OrcaWhirlpoolStateIngester` class
-- Use existing `AlchemyBaseClient` + `BlockResolver` (same pattern as Aave V3 OP RPC fallback)
-- Whirlpool account decoding (use `orca-sdk` or hand-decode via known layout)
-- 1440 samples/day per pool × ~13 SOL pools = ~18K rows/day (trivial)
-- Output: new `dex_pool_state/orca/SOLANA/...parquet`
+**Coverage finding (2026-06-01 probe)**: Drift's free Velocity Data API historical coverage ends ~2026-04-01 (dates
+after return `meta.totalRecords=0`). Live mode (`solana_defi_handler._collect_drift`) covers the live window via
+`/stats/markets` endpoint, so this is NOT a blocker for the MVP archetype — backtest window 2024-06-01 → 2026-04-01
+is the working historical horizon. Captured as a NICE-TO-HAVE: probe whether a paid Drift API tier exists that
+extends the historical horizon to T-0.
+
+### Phase 2 — Solana spot DEX state ingesters (4 venues) — ✅ SHIPPED 2026-06-01
+
+**Status (2026-06-01)**: ✅ SHIPPED — uac@9ad04ab0, mtds@d3d26f56. Local validation against live Solana mainnet:
+Orca SOL/USDC Whirlpool $80.9724; Raydium WSOL/USDC pool#1 $80.9511; cross-venue gap **0.026%** (way under the 5%
+tolerance); Jupiter 1000 USDC → 12.3354 SOL @ $81.07 implied with 0.033% price impact; Phoenix STUB fetched the
+1,723,488-byte market account (radix-slab decode is a P1 follow-up). 43/43 unit tests pass.
+
+Adapter scope shipped:
+
+- ✅ `OrcaWhirlpoolStateIngester` — `cli/handlers/orca_whirlpool_state_handler.py` (300 LOC). Whirlpool account decode
+  hand-rolled per the Orca Rust struct (`whirlpools_config(32) | bump(1) | tick_spacing(u16) | seed(2) | fee_rate(u16)
+  | protocol_fee_rate(u16) | liquidity(u128) | sqrt_price(u128) | tick_current_index(i32) | ...`). Spot price derived
+  from sqrt_price Q64.64 with the SOL(9)/USDC(6) decimal adjustment.
+- ✅ `RaydiumClassicAmmIngester` — `cli/handlers/raydium_classic_amm_handler.py` (333 LOC). V4
+  `LIQUIDITY_STATE_LAYOUT_V4` decode at canonical offsets (baseDecimal@32, fees@144/152, baseVault@336,
+  quoteVault@368, baseMint@400, quoteMint@432). Vault reserves read via separate `getAccountInfo` calls against
+  baseVault + quoteVault SPL token accounts (amount @ offset 64). Inline base58 encoder (no new workspace dep).
+- ✅ `PhoenixOrderbookIngester` — `cli/handlers/phoenix_orderbook_handler.py` (177 LOC). STUB. Fetches the market
+  account (proves the RPC path works); routes via `record_failed` with `PhoenixDecodeTodoError` tagged
+  `SOURCE_HANDLER_TODO_PHOENIX_DECODE`. Radix-slab decode for top-of-book bid+ask is a P1 follow-up — see
+  Phase 2 deferred-work section below.
+- ✅ `JupiterQuoteIngester` — `cli/handlers/jupiter_quote_handler.py` (370 LOC). Forward-only sampler against
+  `lite-api.jup.ag/swap/v1/quote` (free tier; the legacy `quote-api.jup.ag/v6` URL went DNS-NXDOMAIN in 2026 and
+  was replaced). Past days route via `record_empty(SOURCE_RETURNED_ZERO)` — reconstruction from underlying
+  Orca/Raydium pool states is post-MVP.
+- ✅ Shared async Solana RPC helpers — `cli/handlers/_solana_rpc_async.py` (~230 LOC): `solana_get_slot`,
+  `solana_get_block_time`, `solana_get_account_info_at_slot(account, slot=…)`, `solana_slot_at_timestamp`. Same
+  Alchemy archive RPC path used by `solana_lst_archival` / `lst_rates_handler` Tier 1.
+- ✅ CLI: `python -m market_tick_data_service.scripts.backfill_solana_dex_state --venues orca,raydium,phoenix,jupiter
+  --start 2024-06-01 --end 2026-06-01 --samples-per-day 1440 --data-types pool_state,orderbook,quote` (270 LOC).
+- ✅ Unit tests: 13/13 Orca + 13/13 Raydium + 7/7 Phoenix + 10/10 Jupiter = **43/43 pass**.
+
+**UAC side**: Added `InstrumentType.DEX_POOL` enum member + folder mapping (`dex_pools`) + `_DEFI_TYPES` registration.
+Required because Phase 1 declared the contracts with `instrument_type="dex_pool"` (`DEFI_DEX_POOL_DEX_ORDERBOOK` /
+`DEFI_DEX_POOL_DEX_QUOTE` / `DEFI_DEX_POOL_DEX_TRADES`) but the enum had no matching member. Verified: 22/22
+`test_registry_completeness.py` pass; UAC QG green in 228s.
+
+**Output paths** (verified by `write_defi_rows` partition-path builder):
+
+- `gs://<defi-bucket>/raw_tick_data/by_date/day={D}/asset_group=defi/venue=ORCA/chain=SOLANA/instrument_type=pool/data_type=dex_pool_state/Whirlpool_SOL_USDC.parquet`
+- `gs://<defi-bucket>/raw_tick_data/by_date/day={D}/asset_group=defi/venue=RAYDIUM/chain=SOLANA/instrument_type=pool/data_type=dex_pool_state/WSOL_USDC_p1.parquet`
+- `gs://<defi-bucket>/raw_tick_data/by_date/day={D}/asset_group=defi/venue=PHOENIX/chain=SOLANA/instrument_type=dex_pool/data_type=dex_orderbook/SOL_USDC.parquet` (none written until P1 decode lands)
+- `gs://<defi-bucket>/raw_tick_data/by_date/day={D}/asset_group=defi/venue=JUPITER/chain=SOLANA/instrument_type=dex_pool/data_type=dex_quote/SOL_USDC_quotes.parquet`
+
+**Phase 2 deferred / P1 follow-ups (operator-acked scope removal NOT applicable — these are post-MVP-feature, not
+operationally-shipped data-pipeline gaps)**:
+
+- [ ] [P1][PHOENIX-DECODE] Implement Phoenix market-account radix-slab decode (top-of-book bid + ask + size). The
+      market account is 1.7MB — top-of-book is ~50-100 LOC of binary parsing; full L2 is harder. Plan: ship top-of-book
+      first, then add deeper levels if backtest needs them.
+- [ ] [P2][JUPITER-RECONSTRUCTION] Reconstruct historical Jupiter routes from Orca/Raydium pool states at the same
+      timestamp via Jupiter's routing algorithm — fills the 2024-06-01 → today gap for backtest replay.
+- [ ] [P2][ORCA-TICK-ARRAY] Decode Orca tick-array state for concentrated-liquidity depth visualisation (current MVP
+      uses TVL/sqrtPrice/liquidity scalars; tick arrays give the depth distribution around the active tier).
+- [ ] [P2][RAYDIUM-SECOND-POOL] Add a second Raydium WSOL/USDC pool if a meaningful TVL pool materialises — the plan
+      mentioned a $5.4M pool but the Raydium v3 API probe 2026-06-01 shows only the top $8.8M pool is material; the
+      next Standard SOL/USDC pool is just $4.6K TVL.
 
 ### Phase 3 — Backtest harness integration (~1 day) — ✅ SHIPPED 2026-06-01
 
@@ -350,8 +419,8 @@ valid promote target per CLAUDE.md is `paper_1d → live_early`; `live_full` is 
 
 | Phase | Done-when                                                                                                                                                                                     |
 | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1     | `perp_funding/drift/SOL-PERP/day=*/...parquet` exists for every day 2024-06-01 → 2026-06-01; `perp_trades/drift/SOL-PERP/day=*/...parquet` exists for every day with > 0 rows for active days |
-| 2     | `dex_pool_state/orca/SOLANA/Whirlpool_SOL_USDC/day=*/...parquet` exists with 1440 rows/day; sample-check derived price matches known SOL/USDC price within 1%                                 |
+| 1     | ✅ Ingester + CLI + tests shipped (uac@f26097f9, mtds@0f70f376). Local validation green: 24 funding + 29164 trades for 2025-08-01; 24 funding + 4583 trades for 2024-06-15. Full backfill 2024-06-01 → 2026-04-01 (free-tier API coverage end) is a separate operator-launched VM job — out of scope for this Phase-1 dispatch per the plan's "DO NOT auto-trigger a full backfill" guard. |
+| 2     | ✅ 4 ingesters shipped (uac@9ad04ab0, mtds@d3d26f56): Orca + Raydium + Jupiter LIVE; Phoenix STUB (P1 follow-up). Local validation green — Orca $80.97 vs Raydium $80.95 (gap 0.026%); Jupiter implied $81.07; all decodes verified against api-v3.raydium.io vault addresses. 43/43 unit tests pass. Full 2024-06-01 → 2026-06-01 backfill is a separate operator-launched VM job. |
 | 3     | Backtest run for 2025-08-01 → 2025-08-31 produces non-fictional PnL series; matching engine documents top fills, slippage costs                                                               |
 | 4     | Paper trade 24h on SOL basis; flat PnL after fees ≈ funding earnings - slippage; promote to live wallet after operator ack                                                                    |
 

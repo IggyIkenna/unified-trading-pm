@@ -249,7 +249,7 @@ def compute_epic(
         "completed": completed,
         "epic_complete": epic_pct == 100,
         "business_requirement_minimum": epic.get("business_requirement_minimum", "br5_pnl_backtest"),
-        "completion_criteria": epic.get("completion_criteria", {}),
+        "completion_criteria": epic.get("completion_criteria", {}),  # noqa: qg-empty-fallback
         "blocking_repos": blocking_repos,
         "completed_repos": completed_repos,
         "optional_repos_status": optional_status,

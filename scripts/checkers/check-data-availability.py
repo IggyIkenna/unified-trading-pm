@@ -132,17 +132,17 @@ def _find_venues(repo_path: Path) -> list[str]:
 def _get_data_source_repos(manifest: dict[str, object]) -> list[str]:
     """Extract repo names that have data_source in capabilities_needed."""
     repos: list[str] = []
-    repositories = manifest.get("repositories", {})
+    repositories = manifest.get("repositories", {})  # noqa: qg-empty-fallback
     if not isinstance(repositories, dict):
         return repos
 
     for repo_name, repo_cfg in repositories.items():
         if not isinstance(repo_cfg, dict):
             continue
-        service_decl = repo_cfg.get("service_declaration", {})
+        service_decl = repo_cfg.get("service_declaration", {})  # noqa: qg-empty-fallback
         if not isinstance(service_decl, dict):
             continue
-        capabilities = service_decl.get("capabilities_needed", [])
+        capabilities = service_decl.get("capabilities_needed", [])  # noqa: qg-empty-fallback
         if not isinstance(capabilities, list):
             continue
         if "data_source" in capabilities:
@@ -248,7 +248,7 @@ def main(argv: list[str] | None = None) -> int:
 
             print(f"  {repo:<45s} {cassettes:>9d} {fixtures:>9d} {venue_count:>7d}  {status}")
 
-            venues_list = r.get("venues", [])
+            venues_list = r.get("venues", [])  # noqa: qg-empty-fallback
             if isinstance(venues_list, list) and venues_list:
                 print(f"    venues: {', '.join(str(v) for v in venues_list)}")
 

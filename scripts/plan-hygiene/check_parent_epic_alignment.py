@@ -112,9 +112,7 @@ def _parse_frontmatter(text: str) -> dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
-def _score_plan_against_surface(
-    body: str, surface: dict[str, dict[str, list[str]]]
-) -> list[tuple[str, int]]:
+def _score_plan_against_surface(body: str, surface: dict[str, dict[str, list[str]]]) -> list[tuple[str, int]]:
     """Return list of (epic_slug, score) sorted descending by score."""
     body_lower = body.lower()
     scores: list[tuple[str, int]] = []
@@ -138,8 +136,7 @@ def main(argv: list[str] | None = None) -> int:
 
     if not KEYWORD_SURFACE_PATH.exists():
         print(
-            f"ERROR: keyword surface not found at {KEYWORD_SURFACE_PATH}\n"
-            "Run Phase 1.1 to create it first.",
+            f"ERROR: keyword surface not found at {KEYWORD_SURFACE_PATH}\nRun Phase 1.1 to create it first.",
             file=sys.stderr,
         )
         return 1

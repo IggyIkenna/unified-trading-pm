@@ -69,6 +69,7 @@ def _load_backlog_yaml(path: Path) -> list[dict]:
     """
     try:
         import yaml  # type: ignore[import-untyped]  # noqa: imports-inside-functions
+
         with path.open(encoding="utf-8") as f:
             data = yaml.safe_load(f)
         return data.get("tasks", []) if isinstance(data, dict) else []  # noqa: qg-empty-fallback
@@ -82,6 +83,7 @@ def _load_backlog_yaml(path: Path) -> list[dict]:
         if str(srv) not in sys.path:
             sys.path.insert(0, str(srv))
         from server.backlog import load_backlog  # type: ignore[import-not-found]  # noqa: imports-inside-functions
+
         tasks = load_backlog(path)
         return [t.model_dump() for t in tasks]
     except Exception:
@@ -126,6 +128,7 @@ def _slack_post(text: str, blocks: list[dict] | None = None) -> None:
         return
     try:
         import urllib.request  # noqa: imports-inside-functions
+
         payload: dict = {"text": text}
         if blocks:
             payload["blocks"] = blocks
@@ -143,8 +146,7 @@ def _slack_post(text: str, blocks: list[dict] | None = None) -> None:
 def _alert_deadlock(task_id: str, blocker_id: str, stale_days: int) -> None:
     ts = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     _slack_post(
-        f":rotating_light: DEADLOCK in backlog: `{task_id}` ← `{blocker_id}` "
-        f"(both queued >{stale_days}d) [{ts}]",
+        f":rotating_light: DEADLOCK in backlog: `{task_id}` ← `{blocker_id}` (both queued >{stale_days}d) [{ts}]",
         blocks=[
             {
                 "type": "header",
@@ -276,11 +278,7 @@ def run(
             if bid not in task_map and bid not in statuses:
                 # ORPHAN: blocker not in backlog at all
                 category = "ORPHAN"
-                msg = (
-                    f"{category}  {tid!r:50s} ← {bid!r:50s}  "
-                    f"stale={stale_for_days}d  "
-                    f"(blocker missing from backlog)"
-                )
+                msg = f"{category}  {tid!r:50s} ← {bid!r:50s}  stale={stale_for_days}d  (blocker missing from backlog)"
                 findings.append(
                     {
                         "category": category,

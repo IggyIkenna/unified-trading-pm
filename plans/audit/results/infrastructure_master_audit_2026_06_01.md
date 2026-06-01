@@ -14,6 +14,30 @@ First run of the **CI/CD pipeline contract** section added to the `infrastructur
 2026-06-01. This pass audits **only checklist groups h–l** (the CI/CD contract); the pre-existing VM/GCS/bucket items
 (a–g) were not re-run this session.
 
+## ⚠️ CORRECTION (2026-06-01, same day) — i1–i4 used the wrong mechanism
+
+The branch-protection findings below (i1/i2/i4: "16/23 main, 4 on v1 staging, enforce_admins 6/23") were derived from
+**classic** branch protection (`/branches/.../protection`). **That is the wrong lens.** The workspace's canonical QG
+gate is **rulesets** (`require-quality-gates`), verified by `scripts/repo-management/verify_branch_protection_check_names.py`
+(exit 0 = consistent). Re-audited via the canonical verifier:
+
+- **Rulesets are internally CONSISTENT** (each repo requires exactly the check its workflow emits — no name drift).
+- **9/17 repos require `quality-gates-v2`**: alerting, deployment-service, execution, instruments, market-tick-data,
+  strategy, UAC, UTL, PM.
+- **8/17 still require v1 `quality-gates`**: batch-live-reconciliation, client-reporting-api, deployment-api,
+  deployment-ui, ibkr-gateway-infra, market-data-processing, system-integration-tests, trading-agent-service.
+- **Real blocker = pre-existing QG-RED, not config.** A repo shows v1 iff its default-branch workflow is still
+  `workspace-qg.yml`; flipping it to v2 requires the repo's v2 QG to be **green** first (else the required check blocks
+  ALL its merges). 2026-06-01 CI status: `batch-live`, `client-reporting-api`, `ibkr-gateway-infra`, `deployment-api`,
+  `system-integration-tests` **fail v2**; `deployment-ui`, `market-data-processing` **fail v1**. Only repos with a green
+  v2 run are safely migratable. **This is the deferred `ci_canonical_v2_migration` Phase-4 reason** — it is per-repo
+  CODE remediation, not a branch-protection sweep.
+- **Mark drift flagged**: `ci_canonical_v2_migration_2026_05_29.md` marks `batch-live` + `deployment-ui` ✅ "v2 done",
+  but live rulesets show both on v1 (the v2 workflow exists but is red / ruleset not re-pinned). Do not treat as done.
+
+The classic-protection table below is retained for history but is **superseded** by the ruleset ground truth above.
+Tracking: `cicd_contract_hardening_2026_06_01.md` Phase 1 (re-scoped to rulesets) + `ci_canonical_v2_migration`.
+
 ## Transparency — where I sampled vs walked exhaustively
 
 - **Walked exhaustively**: branch protection across **all 23 active repos** (`workspace-manifest.json`

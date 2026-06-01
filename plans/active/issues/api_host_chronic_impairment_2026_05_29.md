@@ -366,8 +366,8 @@ the impairment. The OOM root cause is pytest test memory usage, not the usage po
 
 ## Phase 2 Supplement — SQLite Lock Contention as Secondary Failure Indicator
 
-**Captured**: 2026-05-29T15:40Z by slot-5 (agent) — `journalctl --boot -2` analysis
-**Context**: Boot -2 ran 08:48Z-13:07Z and had OOM events at 09:14Z and 12:19Z (see Phase 1 Amendment above).
+**Captured**: 2026-05-29T15:40Z by slot-5 (agent) — `journalctl --boot -2` analysis **Context**: Boot -2 ran
+08:48Z-13:07Z and had OOM events at 09:14Z and 12:19Z (see Phase 1 Amendment above).
 
 ### Boot History (complete)
 

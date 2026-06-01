@@ -109,9 +109,7 @@ WHITELIST_MARKER: Final[str] = "QG-allow: tradfi-source-not-applicable"
 REQUIRED_KEYS: Final[tuple[str, ...]] = ("repo", "file", "line", "method", "status", "successor")
 
 #: Allowed ``status:`` values per baseline entry.
-VALID_STATUS: Final[frozenset[str]] = frozenset(
-    {"pending_phase3_sweep", "pending_massive_mtds_phase4"}
-)
+VALID_STATUS: Final[frozenset[str]] = frozenset({"pending_phase3_sweep", "pending_massive_mtds_phase4"})
 
 
 @dataclass(frozen=True)
@@ -294,9 +292,7 @@ def _resolve_scopes(workspace_root: Path, scope: str | None, source_dir: str | N
 
 
 def main(argv: Iterable[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(
-        description="Explicit source= kwarg at every record_captured() call detector."
-    )
+    parser = argparse.ArgumentParser(description="Explicit source= kwarg at every record_captured() call detector.")
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--scope", default=None, help="Single repo dir name to scope to (per-repo QG mode).")
     parser.add_argument("--source-dir", default=None, help="Package sub-dir within the scoped repo.")
@@ -341,7 +337,7 @@ def main(argv: Iterable[str] | None = None) -> int:
         print(
             f"[ERROR] {f.repo}/{f.file}:{f.line}  {f.method}(...)  — missing explicit source= kwarg.\n"
             f"         {f.snippet}\n"
-            f"         Pass source=<source_string> (e.g. source=\"databento\" / source=\"massive\") per UAC "
+            f'         Pass source=<source_string> (e.g. source="databento" / source="massive") per UAC '
             f"SOURCE_PRIORITY. For non-TradFi adapters: pass source=None. If genuinely N/A, add inline marker "
             f"'# {WHITELIST_MARKER}' OR add a baseline entry under tradfi_source_explicit_baseline.yaml.\n"
             f"         Default successor for clearing baselined occurrences: {default_successor}.",

@@ -109,6 +109,16 @@ So the existing rewriter is insufficient for both patterns as-is.
       `DATABENTO_FUTURES_DOWNLOAD.md`, `DATABENTO_OPTIONS_DOWNLOAD.md`, `DEFI_DOWNLOAD_STRATEGY.md`) —
       market-tick-data-service@e906bb0. **Remaining P2**: full bare-segment restructuring (`equities/`→
       `instrument_type=equity/` etc.) of the 9 secondary docs; SSOT `GCS_PATHS.md` is already fully canonical.
+- [x] ✅ [DOCS] P0. **Fix stale bucket naming (env-tier drift).** The docs hardcoded the legacy un-tiered
+      `market-data-tick-{ag}-{project_id}` form; canonical (bucket_name_ssot Phase 0e) is env-tiered
+      `market-data-tick-{ag}-{env}-{project_id}` (prod→`prd`; PREDICTION→`pred`), resolved via `resolve_bucket_name()`.
+      Fixed the codex SSOT `codex/02-data/per-asset-group-bucket-layouts.md` (matrix + resolver-authority note),
+      `GCS_PATHS.md` (env-tiered table + codex pointer), + env-tiered every bucket ref across 8 MTDS docs + 11 codex
+      docs (`prediction-schema-paths`, `availability-manifest-and-data-status`, `chart-candle-delivery-flow`,
+      `partitioning`, `subscription-model`, `expected-absence-backfill-runbook`, `quality-gates`, 3× sports docs,
+      `live-pipeline-architecture`, `sports-integration-plan`, `04-architecture/README`) —
+      market-tick-data-service@9acbee1 + this commit. Only intentional legacy-example lines (deprecation notes +
+      phase-2-6 cutover-runbook "from" state) retain the no-env form.
 - [ ] [SCRIPT] P1. **TradFi Pattern-1 cleanup** — operator chose "leave GCS, fix docs/code". When greenlit: bulk-delete
       the ~110k 0-row objects under the 12 `day-*` hyphen prefixes (they are not manifest-tracked; a real Massive
       backfill writes canonical paths). Pre-delete guard: assert each object is 0-row before deletion; abort the prefix

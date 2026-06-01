@@ -56,20 +56,21 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
 
 ### Dual-source provenance (the `source` column + SOURCE_PRIORITY)
 
-> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`). CeFi
-> cells may be populated by >1 source over time — most commonly **Tardis archive vs the per-venue live/REST path** for
-> the same `(data_type, venue)`. Design: same hive drop, disambiguated by a **row-level `source` column** + a per-source
-> manifest row, resolved downstream via UAC `SOURCE_PRIORITY`. **Current state (audit 2026-06-01): CeFi writes
-> `source=""` with no gate and no read-time reconciliation** — `SOURCE_PRIORITY` lists only `tardis` for the 9 CeFi
-> data_types. All items below are data-state verifiable, not constant-verifiable.
+> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`).
+> **Provenance is UNIVERSAL: every CeFi cell stamps its `source` NOW, even though CeFi has only one source today
+> (`tardis`).** Operator 2026-06-01: "I may find an alternative for Tardis, so it's the same issue." If you only stamp
+> once a 2nd source appears, the existing Tardis corpus is unlabelled and indistinguishable after the swap. Design: same
+> hive drop, disambiguated by a **row-level `source` column** + a per-source manifest row, resolved downstream via UAC
+> `SOURCE_PRIORITY` when >1. **Current state (audit 2026-06-01): CeFi writes `source=""` → RED.** Data-state verifiable,
+> not constant-verifiable.
 
-- [ ] (i) **`SOURCE_PRIORITY` reflects CeFi reality**: where a live per-venue path exists alongside Tardis, the entry is
-      a multi-source ordered list (e.g. `["<venue>_live", "tardis"]`), not sole `tardis`.
-      `unified-api-contracts/.../canonical/crosscutting/source_priority.py:148`.
-- [ ] (j) **Writers stamp `source`**: CeFi adapter writes pass `source=` (`tardis` vs `<venue>`); `record_empty_for_shard`
-      / `record_failed_for_shard` accept + forward `source`.
-      `market-data-processing-service/.../core/canonical_writer.py`. Read ACTUAL prod CeFi rows — RED on blank `source`
-      for any cell whose `SOURCE_PRIORITY` entry has >1 source.
+- [ ] (i) **Writers stamp `source="tardis"` on EVERY CeFi cell now**: CeFi adapter writes pass `source=`;
+      `record_empty_for_shard` / `record_failed_for_shard` accept + forward `source`.
+      `market-data-processing-service/.../core/canonical_writer.py`. Read ACTUAL prod CeFi rows — **RED on any blank
+      `source`** (not just multi-source cells). No `SOURCE_PRIORITY` change needed yet (`tardis` already declared).
+- [ ] (j) **Expand `SOURCE_PRIORITY` only when an alternative lands**: when a live per-venue path or a Tardis replacement
+      is actually added, append it to the entry (e.g. `["<venue>_live", "tardis"]`) — at which point resolution (item l)
+      engages. `unified-api-contracts/.../canonical/crosscutting/source_priority.py:152-160`.
 - [ ] (k) **`source` is a column, not a path key**: no `source=`/`data_source=` hive segment in CeFi GCS paths — both
       sources co-mingle on `day=…/asset_group=cefi/venue=…/data_type=…/`.
 - [ ] (l) **Read-time reconciliation wired**: 2-source fixture (Tardis + venue_live, same instrument+ts, co-mingled in one

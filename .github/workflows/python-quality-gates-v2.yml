@@ -174,16 +174,24 @@ jobs:
               git clone -b "$tag" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
               echo "WARN: Tag clone failed for $name@$tag — falling back to branch clone"
             fi
-            # Fallback: clone at triggering branch or main. NOT silent — clone
-            # failures must be visible (debugged 2026-05-17 trading-agent-service
-            # workspace-qg silent fail issue: '|| true' swallowed real auth/branch
-            # errors, surfaced downstream as confusing 'Distribution not found' at
-            # uv sync). If both branch + main fail, exit non-zero so the workflow
-            # surfaces the real clone error.
+            # Fallback: clone at triggering branch, then main, then the repo's
+            # DEFAULT branch. NOT silent — clone failures must be visible (debugged
+            # 2026-05-17 trading-agent-service workspace-qg silent fail: '|| true'
+            # swallowed real auth/branch errors, surfaced downstream as confusing
+            # 'Distribution not found' at uv sync). The default-branch fallback
+            # (no -b → remote HEAD) is required for consolidated dep repos that have
+            # NO main branch (e.g. features-service default=live-defi-rollout) —
+            # without it the hardcoded `-b main` failed with
+            # `fatal: Remote branch main not found in upstream origin` → exit 128,
+            # which was blocking system-integration-tests' quality-gates-v2 on main
+            # (2026-06-01). If even the default-branch clone fails (genuine
+            # auth/missing-repo), exit non-zero so the workflow surfaces it.
             echo "Cloning $name at branch $BRANCH (fallback)"
             git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
-            echo "WARN: Branch '$BRANCH' clone failed for $name — falling back to main"
-            git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}"
+            echo "WARN: Branch '$BRANCH' clone failed for $name — trying main"
+            git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+            echo "WARN: 'main' clone failed for $name (repo may have no main branch) — falling back to its default branch"
+            git clone "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}"
           }
           # Clone PM (base-service.sh lives here) — skip if running in PM itself
           # (checkout already placed the repo at ../unified-trading-pm, so a second

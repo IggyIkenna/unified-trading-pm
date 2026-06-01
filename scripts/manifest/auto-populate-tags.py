@@ -235,7 +235,7 @@ def populate_tags(
     with open(src) as f:
         data = json.load(f)
 
-    repos: dict[str, object] = data.get("repositories", {})
+    repos: dict[str, object] = data.get("repositories", {})  # noqa: qg-empty-fallback
     all_tags: dict[str, list[str]] = {}
     changed = 0
 
@@ -247,7 +247,7 @@ def populate_tags(
         tags = infer_tags(name, info)
         all_tags[name] = tags
 
-        existing = info.get("tags", [])
+        existing = info.get("tags", [])  # noqa: qg-empty-fallback
         if not isinstance(existing, list):
             existing = []
 

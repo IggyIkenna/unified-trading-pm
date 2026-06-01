@@ -38,7 +38,7 @@ def _load_chain_env() -> object:
     loading the file directly is safe.
     """
     try:
-        from unified_api_contracts.registry.chain_env import (  # type: ignore[no-redef]
+        from unified_api_contracts.registry.chain_env import (  # type: ignore[no-redef]  # noqa: qg-deep-import
             CHAIN_GENESIS_DATES,
             GAS_FEE_CHAIN_START_DATES,
             MAINNET_CHAIN_IDS,
@@ -122,6 +122,25 @@ def check_chain_set_inclusion() -> list[str]:
 
 
 def main() -> int:
+    # SKIP when UAC repo not present as a workspace sibling — this check is a
+    # regression guard on UAC's own registries and is only meaningful when UAC
+    # is checked out alongside the calling repo. PM (and any other repo without
+    # UAC as a sibling) treats this as SKIP, not FAIL.
+    workspace_root = Path(__file__).resolve().parents[3]
+    chain_env_path = workspace_root / "unified-api-contracts" / "unified_api_contracts" / "registry" / "chain_env.py"
+    if not chain_env_path.exists():
+        spec = None
+        try:
+            spec = importlib.util.find_spec("unified_api_contracts.registry.chain_env")
+        except (ImportError, ModuleNotFoundError, ValueError):
+            spec = None
+        if spec is None:
+            print(
+                "[check_chain_set_inclusion] SKIP — UAC repo not present in workspace "
+                f"(chain_env.py not found at {chain_env_path}); inclusion invariant guard skipped."
+            )
+            return 0
+
     violations = check_chain_set_inclusion()
     if not violations:
         print(

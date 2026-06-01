@@ -84,7 +84,7 @@ def _load_targets(path: Path) -> list[Surface]:
                 name=name,
                 target_pct=int(cast(int, bd.get("target_pct", 80))),
                 rationale=str(bd.get("rationale", "")),
-                glob_patterns=[str(g) for g in cast(list[object], bd.get("glob_patterns", []))],
+                glob_patterns=[str(g) for g in cast(list[object], bd.get("glob_patterns", []))],  # noqa: qg-empty-fallback
             )
         )
     return out

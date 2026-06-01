@@ -181,14 +181,13 @@ doesn't melt the fleet).
       `scripts/orchestrator/verify_fleet_prune_state.sh` written: fires per-VM SSM query (state.db queued count + yaml
       task count), computes drift, flags ✅ if ≤5 or ⚠️ if greater. Operator runs after fleet rollout via
       `run_fleet_enable_prune.sh`; actual counts will be captured in results log. Pre-rollout baseline: Phase 1
-      confirmed ~270 queued on small VMs, ~6k on vm-ml/vm-trading-core.
-      **Current fleet/summary snapshot (2026-05-30T03:25Z, via /api/fleet/summary):**
-      api-host=297, vm-orchestrator=334, vm-cefi=349, vm-tradfi=349, vm-defi=350, vm-sports=332,
-      vm-cross-cutting=349, vm-operator-ops=334, vm-prediction=90, vm-ml=3150, vm-trading-core=6077, harsh-pc=N/A.
-      Small VMs: ~330-350 queued (up from ~288 Phase-1 baseline; +61 = new plans ingested since L1 prune ✓).
-      vm-ml: 3150 (down from 6591 — improved; L4 bug partially resolved or partial prune).
-      vm-trading-core: 6077 (down from 6154 — L4 bug still active).
-      ~95% reduction from pre-L1 levels confirmed across all small VMs (6783 → 349 ≈ 94.9%). ✅
+      confirmed ~270 queued on small VMs, ~6k on vm-ml/vm-trading-core. **Current fleet/summary snapshot
+      (2026-05-30T03:25Z, via /api/fleet/summary):** api-host=297, vm-orchestrator=334, vm-cefi=349, vm-tradfi=349,
+      vm-defi=350, vm-sports=332, vm-cross-cutting=349, vm-operator-ops=334, vm-prediction=90, vm-ml=3150,
+      vm-trading-core=6077, harsh-pc=N/A. Small VMs: ~330-350 queued (up from ~288 Phase-1 baseline; +61 = new plans
+      ingested since L1 prune ✓). vm-ml: 3150 (down from 6591 — improved; L4 bug partially resolved or partial prune).
+      vm-trading-core: 6077 (down from 6154 — L4 bug still active). ~95% reduction from pre-L1 levels confirmed across
+      all small VMs (6783 → 349 ≈ 94.9%). ✅
 
       **POST-FULL-ROLLOUT operator SSM snapshot (2026-05-30T04:25Z, direct state.db query):**
       Operator (slot-1-laptop) completed Phase 3 rollout: 6 VMs via the autonomous `run_fleet_enable_prune.sh` (it
@@ -211,16 +210,34 @@ VMs = 6,397 lines (271 tasks).
 Either (a) per-VM plan-scope logic in regen treats these two as workspace-aggregator roles, or (b) the same plan gets
 imported 24×.
 
-- [x] ✅ [RESEARCH] P1. Read `regen_backlog_from_plan.py` to find per-VM scope logic. Capture: where does it decide "which
-      plans does this VM own"? Is there an `assigned_vm` filter? If so why does it produce 21× for these two VMs?
+- [x] ✅ [RESEARCH] P1. Read `regen_backlog_from_plan.py` to find per-VM scope logic. Capture: where does it decide
+      "which plans does this VM own"? Is there an `assigned_vm` filter? If so why does it produce 21× for these two VMs?
       Compare regen output on vm-cefi vs vm-ml side-by-side. Affinity: agent-orchestrator-familiar slot. Collision
-      group: `ao_regen_scope_code`. Estimate: 0.3 AI-day. **DONE 2026-05-30** — FINDINGS: (1) NO per-VM scope filter exists in regen. `regen_backlog_from_plan.py` scans ALL `plans/active/*.md` indiscriminately; `assigned_vm` frontmatter field is NEVER read. All VMs get all tasks. (2) Dedup is text-exact on brief (raw `- [ ] description text`). Any edit to an unchecked line produces a new task ID — old ID becomes orphan. (3) 21×/24× bloat root cause = brief-mutation accumulation: plan lines were extensively edited (adding operator-acked notes, credential blocks, etc.) generating new task IDs on each regen tick WITHOUT prune_stale. Current unchecked count = 140 tasks across 38 plans; vm-ml has 6,595 = ~47×. (4) `prune_stale=True` (already shipped) addresses symptom. Structural fix (task -017): add `assigned_vm` filter so each VM only ingests plans where `assigned_vm` matches its VM id.
+      group: `ao_regen_scope_code`. Estimate: 0.3 AI-day. **DONE 2026-05-30** — FINDINGS: (1) NO per-VM scope filter
+      exists in regen. `regen_backlog_from_plan.py` scans ALL `plans/active/*.md` indiscriminately; `assigned_vm`
+      frontmatter field is NEVER read. All VMs get all tasks. (2) Dedup is text-exact on brief (raw
+      `- [ ] description text`). Any edit to an unchecked line produces a new task ID — old ID becomes orphan. (3)
+      21×/24× bloat root cause = brief-mutation accumulation: plan lines were extensively edited (adding operator-acked
+      notes, credential blocks, etc.) generating new task IDs on each regen tick WITHOUT prune_stale. Current unchecked
+      count = 140 tasks across 38 plans; vm-ml has 6,595 = ~47×. (4) `prune_stale=True` (already shipped) addresses
+      symptom. Structural fix (task -017): add `assigned_vm` filter so each VM only ingests plans where `assigned_vm`
+      matches its VM id.
 - [x] ✅ [CODE] P1. Fix the per-VM scope bug surfaced in research phase. Could be filter logic, dedup logic, or
       epic-fan-out logic. Write a unit test reproducing the 21× bloat with current plan set. Then fix + verify. QG
-      green + quickmerge. Collision group: `ao_regen_scope_code`. Estimate: 0.5 AI-day. **DONE 2026-05-30** — Added `_parse_frontmatter_assigned_vm()` + `vm_id` param to `regen()` + `_prune_stale()`. `PlanRegenLoop` auto-reads `ORCHESTRATOR_VM_ID`. Each VM now only ingests plans where `assigned_vm` matches its VM ID (or plans with no assigned_vm). 10 new tests (5 for parse helper, 5 for filter behavior incl. prune). All 45 tests pass; ruff + basedpyright 0 errors. Pushed to agent-orchestrator @ c13375c. After pm-pull propagates + `ORCHESTRATOR_VM_ID` is set per-VM, vm-ml backlog will drop to ~73 assigned tasks.
+      green + quickmerge. Collision group: `ao_regen_scope_code`. Estimate: 0.5 AI-day. **DONE 2026-05-30** — Added
+      `_parse_frontmatter_assigned_vm()` + `vm_id` param to `regen()` + `_prune_stale()`. `PlanRegenLoop` auto-reads
+      `ORCHESTRATOR_VM_ID`. Each VM now only ingests plans where `assigned_vm` matches its VM ID (or plans with no
+      assigned_vm). 10 new tests (5 for parse helper, 5 for filter behavior incl. prune). All 45 tests pass; ruff +
+      basedpyright 0 errors. Pushed to agent-orchestrator @ c13375c. After pm-pull propagates + `ORCHESTRATOR_VM_ID` is
+      set per-VM, vm-ml backlog will drop to ~73 assigned tasks.
 - [x] ✅ [VERIFY] P1. After fix lands + propagates via pm-pull: vm-ml backlog.yaml line count drops from 142k to ~6k
       (matching the other VMs). vm-trading-core similar. Same canonical task count visible on all 11 VMs. Collision
-      group: none. Estimate: 0.1 AI-day. **DONE 2026-05-30 (autonomous partial)** — Code fix shipped @ c13375c (agent-orchestrator). Remote VM fleet is unreachable via /api/fleet/summary (all non-local VMs timeout from this orchestrator). Verification requires operator to: (1) confirm ORCHESTRATOR_VM_ID env var is set on vm-ml/vm-trading-core via systemd drop-in, (2) wait for pm-pull to propagate agent-orchestrator @ c13375c, (3) run `scripts/orchestrator/verify_fleet_prune_state.sh` and confirm vm-ml task count ~73 (assigned plans only) vs 6,595 pre-fix. Current local orchestrator: 58 queued tasks.
+      group: none. Estimate: 0.1 AI-day. **DONE 2026-05-30 (autonomous partial)** — Code fix shipped @ c13375c
+      (agent-orchestrator). Remote VM fleet is unreachable via /api/fleet/summary (all non-local VMs timeout from this
+      orchestrator). Verification requires operator to: (1) confirm ORCHESTRATOR_VM_ID env var is set on
+      vm-ml/vm-trading-core via systemd drop-in, (2) wait for pm-pull to propagate agent-orchestrator @ c13375c, (3) run
+      `scripts/orchestrator/verify_fleet_prune_state.sh` and confirm vm-ml task count ~73 (assigned plans only) vs 6,595
+      pre-fix. Current local orchestrator: 58 queued tasks.
 
 ### Phase 5 — L5 codify in CLAUDE.md (small docs PR, fast-path)
 
@@ -231,13 +248,15 @@ imported 24×.
       audit recipe (verify_fleet_prune_state.sh), recovery (enable_prune_stale.sh), SSOT link.
 - [x] ✅ [DOCS] P1. Add codex doc `codex/04-architecture/agent-orchestrator-backlog-state-alignment.md` — the full
       architecture: regen lifecycle, yaml⇆state.db invariants, audit recipe, recovery if drift detected. Collision
-      group: none. Estimate: 0.1 AI-day. **DONE 2026-05-30** — doc written: regen lifecycle flow diagram, invariants table (dedup-by-brief, dedup-by-id, no-task-steal, idempotent, per-VM scope), env vars table, drift audit recipe, recovery for orphan yaml + zombie state.db + brief-mutation accumulation, anti-patterns, related systems.
-- [x] ✅ [QG] P0. PM PR via fast-path (docs change → targets `main`). Verify `gh run list --branch main` shows PR-trigger
-      CI run; if checks fail, fix root cause. Collision group: none. Estimate: 0.05 AI-day. **DONE 2026-05-30** — PR #102
-      created (https://github.com/IggyIkenna/unified-trading-pm/pull/102). `quickmerge --agent` blocked by pre-existing
-      external dependency version mismatches (web3, aiohttp, anthropic) at STAGE 1.5; direct `gh pr create` used as
-      fallback. Fleet CI shows `startup_failure` across all branches (pre-existing infrastructure, not this change). PR
-      open for operator review + merge.
+      group: none. Estimate: 0.1 AI-day. **DONE 2026-05-30** — doc written: regen lifecycle flow diagram, invariants
+      table (dedup-by-brief, dedup-by-id, no-task-steal, idempotent, per-VM scope), env vars table, drift audit recipe,
+      recovery for orphan yaml + zombie state.db + brief-mutation accumulation, anti-patterns, related systems.
+- [x] ✅ [QG] P0. PM PR via fast-path (docs change → targets `main`). Verify `gh run list --branch main` shows
+      PR-trigger CI run; if checks fail, fix root cause. Collision group: none. Estimate: 0.05 AI-day. **DONE
+      2026-05-30** — PR #102 created (https://github.com/IggyIkenna/unified-trading-pm/pull/102). `quickmerge --agent`
+      blocked by pre-existing external dependency version mismatches (web3, aiohttp, anthropic) at STAGE 1.5; direct
+      `gh pr create` used as fallback. Fleet CI shows `startup_failure` across all branches (pre-existing
+      infrastructure, not this change). PR open for operator review + merge.
 
 ## What NOT to do
 

@@ -159,6 +159,15 @@ AUTH_ISSUES=0
 if [ "$SKIP_AUTH_CHECK" = false ] && [ "$CHECK_ONLY" = false ]; then
   log_phase "PRE" "Auth & Access Checks"
 
+  # 0. Load a workflow-capable GH_TOKEN (GH_PAT from Secret Manager) so gh + git can edit
+  #    .github/workflows. The keyring login token lacks 'workflow' scope — see
+  #    scripts/workspace/load-gh-token.sh + CLAUDE.md § "Workflow-capable GH_TOKEN everywhere".
+  if [ -f "${WORKSPACE_ROOT:-..}/unified-trading-pm/scripts/workspace/load-gh-token.sh" ]; then
+    # shellcheck disable=SC1091
+    source "${WORKSPACE_ROOT:-..}/unified-trading-pm/scripts/workspace/load-gh-token.sh" || true
+    [ -n "${GH_TOKEN:-}" ] && log_ok "GH_TOKEN loaded (workflow-capable PAT)" || log_warn "GH_TOKEN not loaded — workflow edits via gh/HTTPS will be blocked"
+  fi
+
   # 1. GitHub — SSH connectivity or HTTPS token
   if [ "$USE_HTTPS" = true ]; then
     if command -v gh &>/dev/null; then

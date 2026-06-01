@@ -381,29 +381,29 @@ Weekly check for unintended `reset --hard` or `reset to origin/main`. Alerts via
 
 ## Per-repo required-check matrix (post-v2 migration, 2026-05-29)
 
-Workspace-canonical required check is **`quality-gates-v2`** (post-Option-D escape of the GitHub ghost cache).
-Per-repo deviations documented here so future agents know what's expected without spelunking through `gh api`.
+Workspace-canonical required check is **`quality-gates-v2`** (post-Option-D escape of the GitHub ghost cache). Per-repo
+deviations documented here so future agents know what's expected without spelunking through `gh api`.
 
-| Repo | Default branch | Branch protection (required) | Ruleset (required) | Notes |
-|---|---|---|---|---|
-| unified-trading-pm | main | `quality-gates-v2` | `quality-gates-v2` (13647441) | Hosts python-quality-gates-v2 callee |
-| unified-api-contracts | main | `quality-gates-v2` | `quality-gates-v2` (13787580) | |
-| unified-trading-library | main | `quality-gates-v2` | `quality-gates-v2` (13787584) | |
-| alerting-service | main | `quality-gates-v2` | `quality-gates-v2` (13787630) | |
-| ml-service | main | none | none | No required checks today; future hardening |
-| features-service | **live-defi-rollout** | `quality-gates-v2` (on LDR) | none | **Special: no `main` branch exists** |
-| batch-live-reconciliation-service | main | `quality-gates-v2` | `quality-gates-v2` (13787691) | Belt-and-suspenders — both layers |
-| execution-service | main | none (branch prot empty) | `check-staging-lock` + `quality-gates-v2` | Ruleset 13647462 (2-context Option A) |
-| instruments-service | main | none | `check-staging-lock` + `quality-gates-v2` | Ruleset 13787597 |
-| deployment-ui | main | none | `check-staging-lock` + `quality-gates-v2` | Ruleset 13787657. **UI** — pw-smoke is additive enhancement, not enforced yet |
-| unified-trading-system-ui | main | `quality-gates-v2` | unknown (not surveyed) | **UI** — pw-smoke additive enhancement |
-| user-management-ui | main | **N/A — repo ARCHIVED** | **N/A — repo ARCHIVED** | Archived = stronger than protection (no pushes possible) |
-| unified-trading-api | main | `quality-gates-v2` | unknown (not surveyed) | |
-| (deployment-service, deployment-api, system-integration-tests, market-tick-data-service, client-reporting-api, trading-agent-service, greeks-service, fund-administration-service) | main | (not surveyed) | (not surveyed) | Workspace-wide hygiene sweep follow-up |
+| Repo                                                                                                                                                                               | Default branch        | Branch protection (required) | Ruleset (required)                        | Notes                                                                         |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------- | ---------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------- |
+| unified-trading-pm                                                                                                                                                                 | main                  | `quality-gates-v2`           | `quality-gates-v2` (13647441)             | Hosts python-quality-gates-v2 callee                                          |
+| unified-api-contracts                                                                                                                                                              | main                  | `quality-gates-v2`           | `quality-gates-v2` (13787580)             |                                                                               |
+| unified-trading-library                                                                                                                                                            | main                  | `quality-gates-v2`           | `quality-gates-v2` (13787584)             |                                                                               |
+| alerting-service                                                                                                                                                                   | main                  | `quality-gates-v2`           | `quality-gates-v2` (13787630)             |                                                                               |
+| ml-service                                                                                                                                                                         | main                  | none                         | none                                      | No required checks today; future hardening                                    |
+| features-service                                                                                                                                                                   | **live-defi-rollout** | `quality-gates-v2` (on LDR)  | none                                      | **Special: no `main` branch exists**                                          |
+| batch-live-reconciliation-service                                                                                                                                                  | main                  | `quality-gates-v2`           | `quality-gates-v2` (13787691)             | Belt-and-suspenders — both layers                                             |
+| execution-service                                                                                                                                                                  | main                  | none (branch prot empty)     | `check-staging-lock` + `quality-gates-v2` | Ruleset 13647462 (2-context Option A)                                         |
+| instruments-service                                                                                                                                                                | main                  | none                         | `check-staging-lock` + `quality-gates-v2` | Ruleset 13787597                                                              |
+| deployment-ui                                                                                                                                                                      | main                  | none                         | `check-staging-lock` + `quality-gates-v2` | Ruleset 13787657. **UI** — pw-smoke is additive enhancement, not enforced yet |
+| unified-trading-system-ui                                                                                                                                                          | main                  | `quality-gates-v2`           | unknown (not surveyed)                    | **UI** — pw-smoke additive enhancement                                        |
+| user-management-ui                                                                                                                                                                 | main                  | **N/A — repo ARCHIVED**      | **N/A — repo ARCHIVED**                   | Archived = stronger than protection (no pushes possible)                      |
+| unified-trading-api                                                                                                                                                                | main                  | `quality-gates-v2`           | unknown (not surveyed)                    |                                                                               |
+| (deployment-service, deployment-api, system-integration-tests, market-tick-data-service, client-reporting-api, trading-agent-service, greeks-service, fund-administration-service) | main                  | (not surveyed)               | (not surveyed)                            | Workspace-wide hygiene sweep follow-up                                        |
 
 **Why two layers?** GitHub provides two independent enforcement systems — **branch protection** (legacy, repo-level
-default-branch config) and **rulesets** (newer, multi-branch + multi-condition). Some workspace repos use one,
-some both. The 2-context rulesets on execution/instruments/deployment-ui require BOTH `check-staging-lock` AND
+default-branch config) and **rulesets** (newer, multi-branch + multi-condition). Some workspace repos use one, some
+both. The 2-context rulesets on execution/instruments/deployment-ui require BOTH `check-staging-lock` AND
 `quality-gates-v2` for merge — canonical workspace pattern is to use both layers where both configured.
 
 **Provenance**: matrix populated 2026-05-29 during ci_canonical_v2_migration Phase 4 +

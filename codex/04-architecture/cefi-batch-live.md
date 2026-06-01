@@ -136,8 +136,9 @@ The UTC-alignment rule (§10.1 of `batch-live-architecture.md`) applies: MTDS ne
 
 ## §9 — CeFi adapter: expiry-window contract + 401≠honest-absence (2026-05-27)
 
-> Full codex SSOT: [`../02-data/honest-absence-downstream-handling.md §7`](../02-data/honest-absence-downstream-handling.md).
-> Summary here for CeFi adapter authors.
+> Full codex SSOT:
+> [`../02-data/honest-absence-downstream-handling.md §7`](../02-data/honest-absence-downstream-handling.md). Summary
+> here for CeFi adapter authors.
 
 ### Expiry-window pre-request filter (MANDATORY)
 
@@ -155,9 +156,9 @@ if instr.available_to_datetime and date > instr.available_to_datetime.date():
     continue
 ```
 
-**Why**: Tardis code 140 (`"Data available only up to <date>"`) is a predictable 400 for out-of-window requests —
-~1,250 per OKX VM per backfill window. These are NOT adapter errors; they are the wrong `(instrument, date)` pairs.
-Record `expected_unattempted` before the call, not `attempted_failed` after.
+**Why**: Tardis code 140 (`"Data available only up to <date>"`) is a predictable 400 for out-of-window requests — ~1,250
+per OKX VM per backfill window. These are NOT adapter errors; they are the wrong `(instrument, date)` pairs. Record
+`expected_unattempted` before the call, not `attempted_failed` after.
 
 ### 401 — blocked credentials, NOT honest absence
 

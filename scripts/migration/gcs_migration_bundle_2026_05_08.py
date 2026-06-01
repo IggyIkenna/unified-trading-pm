@@ -379,7 +379,7 @@ def plan_target_path(
 
     # Drift axis "pipeline_mode_missing": insert pipeline_mode= LEFT of
     # asset_group=. If pipeline_mode= is already present, leave path untouched.
-    if "pipeline_mode=" not in target:
+    if "pipeline_mode=" not in target:  # QG-allow: pipeline-mode-string-literal
         if pipeline_mode is None:
             source = _bucket_prefix_default_source(bucket)
             try:

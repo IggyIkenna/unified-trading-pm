@@ -98,7 +98,7 @@ def _enumerate_buckets(
     """Walk the yaml SSOT and yield every (kind, asset_group, env) bucket name."""
     out: list[BucketSpec] = []
     env_short = _ENV_SHORT[env]
-    storage = cast(dict[str, object], yaml_data.get(cloud, {})).get("storage", {})
+    storage = cast(dict[str, object], yaml_data.get(cloud, {})).get("storage", {})  # noqa: qg-empty-fallback
     if not isinstance(storage, dict):
         return out
     typed_storage = cast(dict[str, object], storage)
@@ -153,7 +153,7 @@ def _check_aws_buckets_bulk(specs: list[BucketSpec]) -> dict[str, bool]:
 
         s3 = boto3.client("s3")
         response = s3.list_buckets()
-        existing = {b["Name"] for b in response.get("Buckets", [])}
+        existing = {b["Name"] for b in response.get("Buckets", [])}  # noqa: qg-empty-fallback
         return {spec.name: spec.name in existing for spec in specs}
     except Exception:
         # Fall back to subprocess per-bucket

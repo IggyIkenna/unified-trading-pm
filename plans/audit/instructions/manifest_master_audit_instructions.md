@@ -15,8 +15,8 @@ Manifest **v9** schema (`MANIFEST_SCHEMA_VERSION = 9` — v9 added the tradfi `s
 (`captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`), honest absence (the `EmptyConfirmedReason`
 closed set in UAC — **32 members** as of 2026-06-01: 28 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE` +
 `LEG_ABSENT_LEFT` + `LEG_ABSENT_RIGHT`; always read the enum, never trust this count), cluster validation at
-`record_captured()`,
-`available_at` semantics, single-walk discipline, and the manifest consolidator (Cloud Run + Cloud Scheduler).
+`record_captured()`, `available_at` semantics, single-walk discipline, and the manifest consolidator (Cloud Run + Cloud
+Scheduler).
 
 Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
 `codex/02-data/honest-absence-downstream-handling.md`, `codex/05-infrastructure/manifest-consolidator-ssot.md`
@@ -28,10 +28,10 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
 - When A3 manifest divergence scan shows RED (any `DIVERGENT_EMPTY` or `MISSING_EXPECTED`)
 - After any new `EmptyConfirmedReason` is added to UAC
 - After manifest consolidator infrastructure changes (Cloud Run revision, Cloud Scheduler config)
-- **Per-service `capture_status` write-path calibration (run as each producer service matures / BEFORE it backfills
-  at scale)** — see the dedicated section below. Re-run on any producer when its emission paths change. Auditing the
-  _code_ before the corpus fills means the backfill writes correct statuses; auditing after means reconciling a
-  manifest with baked-in wrong statuses.
+- **Per-service `capture_status` write-path calibration (run as each producer service matures / BEFORE it backfills at
+  scale)** — see the dedicated section below. Re-run on any producer when its emission paths change. Auditing the _code_
+  before the corpus fills means the backfill writes correct statuses; auditing after means reconciling a manifest with
+  baked-in wrong statuses.
 
 ## Checklist
 
@@ -68,45 +68,25 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       (`launch-manifest-consolidator-vm.sh`) does NOT exist. Grep:
       `rg "launch-manifest-consolidator-vm" --include="*.sh"` — should be 0 hits
 
-- [ ] (h2) **Consolidator merge engine — memory-bounded (DuckDB, not pandas)**: the merge is DuckDB
-      (`manifest_consolidator.py::_duckdb_consolidate_and_write`), bounded by `CONSOLIDATOR_DUCKDB_MEMORY_LIMIT`
-      (default `8GB`, set BELOW the 16 GiB container so an oversized rebuild raises a catchable `OutOfMemoryException`,
-      not a kernel SIGKILL). **Invariant**: the steady-state incremental path is an anti/semi-join that re-dedups only
-      contested keys (fits regardless of canonical size); the contested **window does NOT spill in DuckDB 1.5.x**, so a
-      bulk enumerator-shard rewrite landing as one huge "changed" shard needs a one-off `--force` seed on a big-RAM
-      host. Do NOT revert to a pandas concat/sort/dedup merge (OOM'd the 16 GiB job at ~75M cefi rows). Check:
-      `rg "pd.concat|drop_duplicates" unified-trading-library/unified_trading_library/manifest_consolidator.py` — the
-      hot merge path must be DuckDB SQL. SSOT: `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Merge engine".
-
-- [ ] (h3) **Per-cycle health — 24h OOM/freshness watch (re-runnable, ≤30s gcloud calls)**: 0 `signal 9` / `OOMKilled`
-      / `MemoryError` events in `cloud_run_job` logs over `--freshness=24h`; each execution completes well under the 60s
-      tick budget; canonical `_index/availability_index.parquet` mtime advances ~per minute. Full recipe (steps 1-4) in
-      `manifest_consolidator_duckdb_memory_fix_2026_05_26.md` § "Continuous-verification recipe". Per-asset-group
-      freshness is checked in each asset-group audit instruction (see the per-group "consolidation health" item there).
-
-- [ ] (h4) **Read-path fail-fast on stale-consolidated fallback**: `read_availability_index` must raise
-      `ManifestConsolidatorStaleError` (re-exported from `unified_trading_library`) instead of OOM-merging ~1700+ per-VM
-      shards when the consolidated index is stale/missing AND `MANIFEST_FAIL_ON_STALE_FALLBACK` is opted-in (closed-set
-      truthy `1`/`true`/`yes`). Default-off = unchanged fallback behavior. The cefi-heavy backfill launcher
-      (`launch-cefi-sharded-backfill.sh`) opts in, paired with the shell-level preflight (`deployment-service@7add531`).
-      Check: `rg "MANIFEST_FAIL_ON_STALE_FALLBACK|ManifestConsolidatorStaleError" unified-trading-library/` — present.
-      SSOT: `codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast on stale-fallback".
-
-- [ ] (i) **`source` column populated + registry-driven gate across ALL asset groups (codified 2026-06-01)**: v9 added
-      the `source` column but enforcement (`MissingSourceError`) fires ONLY for `category=="tradfi"`
-      (`manifest_writer.py`). `source` is the SSOT for which provider produced a shard's rows when a `(data_type, venue,
-      time)` cell is populated by >1 source over time (operator decision 2026-06-01: `source` is a **column, not a hive
-      path key**, for batch=live symmetry). Generalise + verify:
-      - **Gate is registry-driven**: raise `MissingSourceError` when `SOURCE_PRIORITY[(asset_group, data_type)]` has >1
-        entry and `source` is blank — auto-covering cefi/defi/sports multi-source cells and auto-exempting single-source +
-        prediction (Polymarket/Kalshi are venues, not sources). NOT a hardcoded asset_group list.
+- [ ] (i) **`source` column populated on EVERY cell — UNIVERSAL gate, all asset groups (codified 2026-06-01, operator)**:
+      v9 added the `source` column but enforcement (`MissingSourceError`) fires ONLY for `category=="tradfi"`
+      (`manifest_writer.py`). `source` is the SSOT for which provider produced a shard's rows. **Provenance is universal:
+      every captured cell stamps its source NOW, even single-source ones** — operator 2026-06-01: "I may find an
+      alternative for Tardis, so it's the same issue." Stamping only at multi-source onset leaves the existing
+      single-source corpus unlabelled and unresolvable after a swap. `source` is a **column, not a hive path key** (for
+      batch=live symmetry). Generalise + verify:
+      - **Gate is universal, not cardinality-gated**: raise `MissingSourceError` when `source` is **blank OR not a member
+        of** `SOURCE_PRIORITY[(asset_group, data_type)]`, for **every** cell, all asset groups (cefi `tardis`, prediction
+        `polymarket_clob`, etc. included). `SOURCE_PRIORITY` validates the allowed string + drives resolution when >1; it
+        does NOT decide whether to stamp. A cell with no `SOURCE_PRIORITY` entry = a registry gap to fix, not a pass.
+        NOT a hardcoded asset_group list.
       - **Column populated in actual PROD rows** (DATA-STATE, not the constant): read the `source` distribution per
-        `(asset_group, venue, data_type)`; zero blank `source` on any multi-source cell. (manifest-v8 lesson: constant ≠
-        data — 0% of 7.4M rows were v8 despite the bump.)
-      - **Two rows per multi-source cell**: when both providers run for one cell, the manifest holds TWO rows
-        distinguished by `source`, each with its own `capture_status`. Union semantics downstream: cell is `captured` if
-        ≥1 source row is `captured`; `attempted_failed` only when all source rows failed.
-      - **Closed-set source strings** mirror `SOURCE_PRIORITY`; blank/unknown source on a multi-source cell is RED.
+        `(asset_group, venue, data_type)`; **zero blank `source` on ANY cell**. (manifest-v8 lesson: constant ≠ data —
+        0% of 7.4M rows were v8 despite the bump.)
+      - **Two rows per multi-source cell**: when >1 source runs for one cell, the manifest holds TWO rows distinguished by
+        `source`, each with its own `capture_status`. Union semantics downstream: cell is `captured` if ≥1 source row is
+        `captured`; `attempted_failed` only when all source rows failed.
+      - **Closed-set source strings** mirror `SOURCE_PRIORITY`; any blank/unknown source on any cell is RED.
       SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; consumer policy:
       `codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item (j).
 
@@ -122,35 +102,35 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
 
 ### Per-Service `capture_status` Write-Path Calibration (run per-service, as each matures)
 
-**Purpose**: this is a CODE write-path audit, not a manifest data-search — so it is valid regardless of how much data
-is backfilled. Run it per producer service so the code writes the rule-correct status BEFORE that service backfills at
+**Purpose**: this is a CODE write-path audit, not a manifest data-search — so it is valid regardless of how much data is
+backfilled. Run it per producer service so the code writes the rule-correct status BEFORE that service backfills at
 scale (a status-writing bug, left unfixed, bakes wrong statuses across millions of rows; fixing the code first makes the
 ongoing/remaining backfill correct as it fills). Re-runnable any time a service's emission paths change.
 
-**Producer services in scope** (audit each as it is run / matures):
-instruments-service · market-tick-data-service (MTDS) · market-data-processing-service (MDPS) ·
-features-service (delta_one / volatility / cross_instrument / multi_timeframe / onchain / calendar / sports) · any other
-service that calls `record_captured` / `record_empty` / `record_failed` / `record_empty_for_shard`.
+**Producer services in scope** (audit each as it is run / matures): instruments-service · market-tick-data-service
+(MTDS) · market-data-processing-service (MDPS) · features-service (delta_one / volatility / cross_instrument /
+multi_timeframe / onchain / calendar / sports) · any other service that calls `record_captured` / `record_empty` /
+`record_failed` / `record_empty_for_shard`.
 
 > Maturity note (2026-06-01): the 3 upstream data services (IS / MTDS / MDPS) are mostly calibrated — **re-check** them.
 > Downstream + less-exercised services are audited **as they are run**, before each backfills at scale.
 
 **The decision rule (encode per write-path):**
 
-| Real situation                                                              | Correct status                                   | Notes                                                                 |
-| --------------------------------------------------------------------------- | ------------------------------------------------ | --------------------------------------------------------------------- |
-| Data genuinely absent (holiday, no source coverage, contract not listed)    | `empty_confirmed` + typed `EmptyConfirmedReason` | **LAST resort** — only after all other possibilities ruled out        |
-| Upstream produced nothing but SHOULD have (not downloaded yet, dep not ready) | NOT `empty_confirmed` → dependency-gate skip / `expected_unattempted` | data is **owed**: retry / backfill, never confirm-empty |
-| Attempted and errored (fetch / backfill error)                              | `attempted_failed` (+ `stack_trace`)             | transient/real failure, not an absence                                |
-| Wrote rows                                                                  | `captured`                                       | normal                                                                |
+| Real situation                                                                | Correct status                                                        | Notes                                                          |
+| ----------------------------------------------------------------------------- | --------------------------------------------------------------------- | -------------------------------------------------------------- |
+| Data genuinely absent (holiday, no source coverage, contract not listed)      | `empty_confirmed` + typed `EmptyConfirmedReason`                      | **LAST resort** — only after all other possibilities ruled out |
+| Upstream produced nothing but SHOULD have (not downloaded yet, dep not ready) | NOT `empty_confirmed` → dependency-gate skip / `expected_unattempted` | data is **owed**: retry / backfill, never confirm-empty        |
+| Attempted and errored (fetch / backfill error)                                | `attempted_failed` (+ `stack_trace`)                                  | transient/real failure, not an absence                         |
+| Wrote rows                                                                    | `captured`                                                            | normal                                                         |
 
 **Per-service procedure:**
 
-- [ ] **Enumerate every emission path** in the service — every `record_captured` / `record_empty` /
-      `record_failed` / `record_empty_for_shard` call AND every code path that returns without writing any manifest row.
-      Grep: `rg "record_(captured|empty|failed|empty_for_shard)" <service>/ --include="*.py"`.
-- [ ] **Anti-pattern 1 — reflexive `empty_confirmed`**: for each `record_empty` callsite, confirm the code has *ruled
-      out* "data owed" first (dependency present? source actually returned zero vs not-yet-downloaded?). A
+- [ ] **Enumerate every emission path** in the service — every `record_captured` / `record_empty` / `record_failed` /
+      `record_empty_for_shard` call AND every code path that returns without writing any manifest row. Grep:
+      `rg "record_(captured|empty|failed|empty_for_shard)" <service>/ --include="*.py"`.
+- [ ] **Anti-pattern 1 — reflexive `empty_confirmed`**: for each `record_empty` callsite, confirm the code has _ruled
+      out_ "data owed" first (dependency present? source actually returned zero vs not-yet-downloaded?). A
       `record_empty` reached on a missing-upstream / not-backfilled branch is a **silent correctness lie** → must be a
       dependency-gap skip / `attempted_failed` instead.
 - [ ] **Anti-pattern 2 — silent no-row skip**: any in-scope shard that can `return` / `continue` without writing a
@@ -166,8 +146,8 @@ service that calls `record_captured` / `record_empty` / `record_failed` / `recor
 
 Known live instances (genesis of this audit, 2026-05-27): delta_one 4h/24h missing-1h-dependency (now correctly
 fast-fails — textbook "data owed" ≠ empty); volatility `futures_basis` silent-skip when future leg absent (features now
-emits `empty_confirmed(SOURCE_RETURNED_ZERO)` on no-input — verify the listed-vs-not-downloaded distinction).
-Genesis: operator-raised 2026-05-27; principle + instances folded inline above (this section is the everlasting home).
+emits `empty_confirmed(SOURCE_RETURNED_ZERO)` on no-input — verify the listed-vs-not-downloaded distinction). Genesis:
+operator-raised 2026-05-27; principle + instances folded inline above (this section is the everlasting home).
 
 ## Success Criteria
 
@@ -185,6 +165,6 @@ Result file at `plans/audit/results/manifest_master_audit_YYYY_MM_DD.md`. Same s
 
 ## Linked Results
 
-| Date       | Result file                                                                                     | Status                                                       |
-| ---------- | ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| 2026-06-01 | [manifest_master_capture_status_audit_2026_06_01.md](../results/manifest_master_capture_status_audit_2026_06_01.md) | per-service write-path: 23 violations (P0:3 P1:13 P2:7) — fixes pending |
+| Date       | Result file                                                                                                         | Status                                                                                                                         |
+| ---------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| 2026-06-01 | [manifest_master_capture_status_audit_2026_06_01.md](../results/manifest_master_capture_status_audit_2026_06_01.md) | per-service write-path: 23 raw → **18 confirmed** (adversarially verified; 5 false-positives) — P0:3 P1:9 P2:6 — fixes pending |

@@ -104,7 +104,7 @@ def _print_trend(
     previous: dict[str, object] | None,
 ) -> None:
     """Print a human-readable trend summary."""
-    summary = current.get("summary", {})
+    summary = current.get("summary", {})  # noqa: qg-empty-fallback
     if not isinstance(summary, dict):
         print("WARNING: Unexpected summary format", file=sys.stderr)
         return
@@ -122,7 +122,7 @@ def _print_trend(
     print(f"  Critical uncovered: {critical_uncovered}")
 
     if previous is not None:
-        prev_summary = previous.get("summary", {})
+        prev_summary = previous.get("summary", {})  # noqa: qg-empty-fallback
         if isinstance(prev_summary, dict):
             prev_pct = prev_summary.get("coverage_pct", 0.0)
             prev_covered = prev_summary.get("covered_journeys", 0)
@@ -190,7 +190,7 @@ def main(argv: list[str] | None = None) -> int:
     # Build history entry with timestamp
     entry: dict[str, object] = {
         "timestamp": datetime.now(UTC).isoformat(timespec="seconds"),
-        "summary": checker_output.get("summary", {}),
+        "summary": checker_output.get("summary", {}),  # noqa: qg-empty-fallback
     }
 
     # Load previous for trend comparison

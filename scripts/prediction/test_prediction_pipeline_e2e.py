@@ -140,7 +140,7 @@ def test_canonical_id_format(instruments: dict[str, list[dict[str, str]]]) -> No
     assert venues == {"polymarket"}, f"Unexpected venues: {venues}"
 
     # Sports markets should have enriched instrument_type
-    sports_types = {m["instrument_type"] for m in instruments.get("sports", [])}
+    sports_types = {m["instrument_type"] for m in instruments.get("sports", [])}  # noqa: qg-empty-fallback
     logger.info("  Sports instrument_types: %s", sports_types)
 
     logger.info("  Canonical ID validation: PASSED")
@@ -153,7 +153,7 @@ def test_mappings() -> None:
     logger.info("PHASE 4: Mapping Validation")
     logger.info("=" * 60)
 
-    from unified_api_contracts.external.polymarket import (
+    from unified_api_contracts.external.polymarket import (  # noqa: qg-deep-import
         POLYMARKET_SERIES_TO_LEAGUE,
         POLYMARKET_TEAM_TO_CANONICAL,
         POLYMARKET_TIMEFRAMES,
@@ -195,7 +195,7 @@ def test_data_types() -> None:
     logger.info("PHASE 5: Data Type + Registry Validation")
     logger.info("=" * 60)
 
-    from unified_api_contracts.registry.market_data_categories import (
+    from unified_api_contracts.registry.market_data_categories import (  # noqa: qg-deep-import
         DATA_TYPES_BY_ASSET_GROUP,
         VENUES_BY_ASSET_GROUP,
     )
@@ -264,7 +264,7 @@ async def main() -> None:
     instruments = await test_urdi_instruments()
 
     # Phase 2: UMI trades (use first 3 BTC market condition_ids)
-    btc_cids = [m["instrument_key"] for m in instruments.get("btc", [])[:3]]
+    btc_cids = [m["instrument_key"] for m in instruments.get("btc", [])[:3]]  # noqa: qg-empty-fallback
     if btc_cids:
         trades = await test_umi_trades(btc_cids)
     else:

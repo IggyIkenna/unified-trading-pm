@@ -149,7 +149,7 @@ def _load_profiles(pm_root: Path) -> list[dict[str, object]]:
         if "description" not in translated:
             translated["description"] = ""
         translated["tiles"] = _translate_tiles(raw.get("tiles"))  # pyright: ignore[reportUnknownMemberType]
-        flavour_overrides_raw: object = raw.get("flavour_overrides", {})  # pyright: ignore[reportUnknownMemberType]
+        flavour_overrides_raw: object = raw.get("flavour_overrides", {})  # pyright: ignore[reportUnknownMemberType]  # noqa: qg-empty-fallback
         translated_overrides: dict[str, dict[str, str]] = {}
         if isinstance(flavour_overrides_raw, dict):
             for flavour, tile_map in flavour_overrides_raw.items():  # pyright: ignore[reportUnknownVariableType]

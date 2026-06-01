@@ -270,6 +270,34 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   Hand-edits are still legitimate for _tuning_ derived tasks (priority, repos, target_slot, est_hours, collision_group)
   once they've been auto-created. SSOT: `agent-orchestrator/server/regen_backlog_from_plan.py` +
   `unified-trading-pm/plans/PLAN_FORMAT.md`.
+- **Fanning out work = writing tracked plan todos. The plan todo IS the dispatch (HARD RULE codified 2026-06-01)**:
+  whenever you decide a unit of work should be done by a slot/worker — "a slot should do X", "this needs a dedicated
+  per-repo pass", "fan this out", "assign to slot N", "out of scope for me, hand off" — the decision is **not real
+  until it is a `- [ ]` todo in a PM active plan** using the canonical format (`- [ ] [CATEGORY] P<0-3>. Description`)
+  with the **target repo named** and **enough self-contained context that a cold sub-agent can act** (it starts fresh +
+  reads `SUB_AGENT_MANDATORY_RULES.md`). That plan todo is the ONLY sanctioned dispatch path: `PlanRegenLoop` derives the
+  orchestrator backlog from it (per the rule above) and a slot picks it up. **Banned (review-blocking):** punting work in
+  chat / a summary only ("X is blocked, needs a slot"), verbally assigning a slot without a plan todo, or marking an
+  audit/diagnosis "done" when its follow-ups are only described, not tracked. **Grep-to-verify before ending any session
+  that identified fan-out work**: `rg "<the work>" plans/active/` — no `- [ ]` match → STOP, write the todo first. A
+  diagnosis that names N repos needing fixes MUST leave N tracked todos behind. Reference incident (2026-06-01): a
+  7-repo QG-green remediation surfaced mid-session; per this rule each repo became a tracked todo in
+  `cicd_contract_hardening_2026_06_01.md` rather than a verbal "fan it out". Composes with: _Capture Discoveries As Plan
+  Todos Immediately_, _Agent-orchestrator backlog is plan-driven_, and _Sub-Agents need full rules_ (the todo carries
+  the context the cold worker needs). SSOT: `plans/PLAN_FORMAT.md` + `codex/12-agent-workflow/`.
+- **Workflow-capable GH_TOKEN everywhere — no permission-based work-stoppage (HARD RULE codified 2026-06-01)**: every
+  execution context — **each slot, the operator/Harsh main worktree, AND every orchestrator VM worker** — MUST have a
+  `GH_TOKEN` that can edit `.github/workflows` (i.e. `GH_PAT` from Secret Manager, which carries fine-grained
+  **"Workflows: read/write"**). The gh CLI **keyring login token (`gho_…`) lacks the `workflow` scope** (`repo, read:org,
+  gist, admin:public_key` only), so any `gh`-API / HTTPS push that creates or updates a workflow file is silently
+  refused — which stalled a CI v1→v2 migration mid-flight (2026-06-01). **Canonical load:**
+  `source unified-trading-pm/scripts/workspace/load-gh-token.sh` (fetches `GH_PAT` from GCP SM → AWS SM, exports
+  `GH_TOKEN`+`GITHUB_TOKEN`; env beats the keyring for gh + git). It is sourced by `workspace-bootstrap.sh` (local
+  hosts) and MUST be exported into orchestrator VM worker envs by `agent-orchestrator/scripts/bootstrap_vm.sh`.
+  `verify-slot-host-symmetry.sh` now probes workflow-capability (non-mutating PUT → 409/422 = OK, 403 = blocked) and
+  FAILS a host that lacks it. **Note:** git push **over SSH** (a user key) is exempt from the workflow-scope
+  restriction, so ssh-protocol slots can already push workflow files via `git`; this rule closes the `gh`-API / HTTPS
+  path that is restricted. SSOT: `scripts/workspace/load-gh-token.sh` + `codex/12-agent-workflow/`.
 - **Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. (HARD RULE codified
   2026-05-30)**: `regen_backlog_from_plan.py` is the single source of truth for backlog state. `backlog.yaml` and
   `state.db` MUST reflect only tasks whose `- [ ]` checkbox is open in an active plan.
@@ -327,6 +355,20 @@ in-flight work. **Do not touch files outside your clear context.**
   reference: slot-1 2026-05-19 strategy-service autostash drop (recovered via dangling commit, logged in
   `ikenna_orchestrator/pings/slot_1.md`). Full SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 —
   troubleshooting".
+- **Concurrent agent in your shared `.tabs/<N>/` worktree (refs move under you) → isolated-worktree promotion, NOT
+  `FETCH_HEAD`.** When another session OR an orchestrator-spawned worker shares your slot's `.git`, it rewrites
+  `HEAD` / `FETCH_HEAD` / the slot branch mid-task: your push to `live-defi-rollout` is rejected and `FETCH_HEAD`-based
+  diagnostics LIE (you may wrongly conclude "my work is already on LDR" — the moving `FETCH_HEAD` briefly pointed at the
+  worker's local tip that contained your own commit). (1) Verify ONLY against the stable remote-tracking ref:
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>` —
+  never `FETCH_HEAD`. (2) Do NOT autostash-rebase the shared dirty tree (same foreign-WIP foot-gun as above). (3) Promote
+  YOUR work via a throwaway worktree off the integration branch — never touches the shared `.tabs/<N>/` tree, so the
+  concurrent worker is undisturbed: `git worktree add --detach /tmp/promote-$$ origin/live-defi-rollout` → cherry-pick
+  your commit → on conflict KEEP LDR's side for the other agent's hunks + trim any of their snapshot that auto-merged in
+  but isn't on LDR (`git checkout origin/live-defi-rollout -- <file>` then re-add only your hunk) → gate on
+  `git diff --cached origin/live-defi-rollout` showing YOURS-ONLY lines → push → `git worktree remove --force`. Full
+  SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Isolated-worktree promotion under shared-worktree ref races".
+  Incident: slot-1 2026-06-01 data-source-provenance promotion.
 
 ### Clear context = implement, don't ask
 

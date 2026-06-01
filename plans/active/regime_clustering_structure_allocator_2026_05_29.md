@@ -317,13 +317,13 @@ Five-step pipeline, mapped onto what already exists vs what is new:
 
 ## Success criteria (B3 KPIs)
 
-| KPI                               | Target                                                             |
-| --------------------------------- | ------------------------------------------------------------------ |
+| KPI                                | Target                                                             |
+| ---------------------------------- | ------------------------------------------------------------------ |
 | Backtest↔paper P&L tracking error | within declared bps band (B4)                                      |
-| Per-regime structure OOS edge     | Deflated Sharpe > 0 / PBO below threshold                          |
-| OOD coverage                      | 100% of no-confident-regime live states route to abstain/min-size  |
-| Risk-gate veto                    | 100% of limit-breaching structures vetoed regardless of conviction |
-| Look-ahead                        | 0 violations (PIT gate + fit-in-fold)                              |
+| Per-regime structure OOS edge      | Deflated Sharpe > 0 / PBO below threshold                          |
+| OOD coverage                       | 100% of no-confident-regime live states route to abstain/min-size  |
+| Risk-gate veto                     | 100% of limit-breaching structures vetoed regardless of conviction |
+| Look-ahead                         | 0 violations (PIT gate + fit-in-fold)                              |
 
 ## Decision matrix (policy / construction / risk) — maps the external "three-tier" design
 

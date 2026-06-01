@@ -90,9 +90,9 @@ These must complete before Layer 1 repos can be reliably type-checked.
       unified-api-contracts@8550fcf | QG exit 0 | fixed RUF022+C416×4+E501+F601×11 (16 errors) —
       unified-api-contracts@897ba58 | QG exit 0 | +70 orphan allowlist entries (Phase-4 recording-templates/stubs) —
       unified-api-contracts@e62df97 | QG re-green | RUF022 regression: sort **all** in risk.py + risk/**init**.py; regen
-      archetype_capability_manifest.json —
-      unified-api-contracts@f015c96 | QG re-green | 40 basedpyright errors: reportPrivateUsage (3×), reportUnusedImport (5×),
-      reportConstantRedefinition, reportDeprecated (2×), type narrowing in from_firestore_dict; ruff clean
+      archetype_capability_manifest.json — unified-api-contracts@f015c96 | QG re-green | 40 basedpyright errors:
+      reportPrivateUsage (3×), reportUnusedImport (5×), reportConstantRedefinition, reportDeprecated (2×), type
+      narrowing in from_firestore_dict; ruff clean
 
 - [x] ✅ [AGENT] P0. **UTL QG green** — `cd unified-trading-library && bash scripts/quality-gates.sh` exits 0. —
       unified-trading-library@4b69f0fa | ruff ✓ clean (prior partial) — unified-trading-library@2b1de30f | QG exit 0

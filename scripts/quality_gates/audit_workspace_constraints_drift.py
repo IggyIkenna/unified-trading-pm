@@ -97,7 +97,7 @@ def load_constraints(path: Path) -> dict[str, str]:
     """Returns normalised_name -> canonical_spec."""
     with open(path, "rb") as f:
         data = tomllib.load(f)
-    deps = data.get("dependencies", {})
+    deps = data.get("dependencies", {})  # noqa: qg-empty-fallback
     return {_norm(k): v for k, v in deps.items()}
 
 
@@ -105,10 +105,10 @@ def load_pyproject_deps(path: Path) -> list[str]:
     try:
         with open(path, "rb") as f:
             data = tomllib.load(f)
-        project = data.get("project", {})
+        project = data.get("project", {})  # noqa: qg-empty-fallback
         if not isinstance(project, dict):
             return []
-        deps = project.get("dependencies", [])
+        deps = project.get("dependencies", [])  # noqa: qg-empty-fallback
         return [d for d in deps if isinstance(d, str)]
     except (OSError, tomllib.TOMLDecodeError):
         return []

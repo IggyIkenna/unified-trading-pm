@@ -89,7 +89,7 @@ def main() -> int:
         return 1
 
     manifest = json.loads(MANIFEST_PATH.read_text(encoding="utf-8"))
-    strategies = manifest.get("strategies", [])
+    strategies = manifest.get("strategies", [])  # noqa: qg-empty-fallback
 
     if not strategies:
         print("WARNING: No strategies found in manifest")

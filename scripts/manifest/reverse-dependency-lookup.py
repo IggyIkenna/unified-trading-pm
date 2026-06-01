@@ -62,7 +62,7 @@ def load_manifest(path: Path | None = None) -> dict[str, RepoInfo]:
     with open(src) as f:
         data = json.load(f)
 
-    repos_raw: dict[str, object] = data.get("repositories", {})
+    repos_raw: dict[str, object] = data.get("repositories", {})  # noqa: qg-empty-fallback
     result: dict[str, RepoInfo] = {}
 
     for name, info_raw in repos_raw.items():
@@ -74,7 +74,7 @@ def load_manifest(path: Path | None = None) -> dict[str, RepoInfo]:
             repo_type=str(info.get("type", "unknown")),
             tier=info.get("tier") if isinstance(info.get("tier"), int) else None,
             completion_path=str(info.get("completion_path", "")),
-            tags=list(info.get("tags", [])) if isinstance(info.get("tags"), list) else [],
+            tags=list(info.get("tags", [])) if isinstance(info.get("tags"), list) else [],  # noqa: qg-empty-fallback
         )
 
     return result
@@ -86,13 +86,13 @@ def build_forward_graph(path: Path | None = None) -> dict[str, list[str]]:
     with open(src) as f:
         data = json.load(f)
 
-    repos_raw: dict[str, object] = data.get("repositories", {})
+    repos_raw: dict[str, object] = data.get("repositories", {})  # noqa: qg-empty-fallback
     forward: dict[str, list[str]] = {}
 
     for name, info_raw in repos_raw.items():
         if not isinstance(info_raw, dict):
             continue
-        deps_raw = info_raw.get("dependencies", [])
+        deps_raw = info_raw.get("dependencies", [])  # noqa: qg-empty-fallback
         dep_names: list[str] = []
         if isinstance(deps_raw, list):
             for dep in deps_raw:

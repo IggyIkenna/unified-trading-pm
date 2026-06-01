@@ -280,6 +280,67 @@ Pinned to the daily work-split plan's "Daily reset" checklist (per [`CLAUDE.md`]
 | Branch `tab/<op>/<N>` already exists with diverged history                                                             | Slot was previously used + branched off an older `live-defi-rollout`                                                                                                                                                         | `setup-tab-worktrees.sh --reset-slot <N>` rebases onto current origin/live-defi-rollout (assuming clean state).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `git rebase` produces conflicts during `--reset-slot`                                                                  | The slot has commits not on `live-defi-rollout` (genuinely-divergent slot)                                                                                                                                                   | Manual resolution: enter the slot, resolve conflicts, `git rebase --continue`, push the slot branch. Then re-run `--reset-slot` if needed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `Applying autostash resulted in conflicts. Your changes are safe in the stash.` during `git pull --rebase --autostash` | A foreign agent's mid-edit working-tree content (auto-stashed by the rebase) conflicts with the new HEAD. Common when a slot has foreign-dirty files (e.g. `uv.lock`, `.pre-commit-config.yaml`) and you rebase onto remote. | **`git rebase --abort`** — keeps the autostash intact, restores pre-rebase state. Then `git stash push -- path/to/your_file` (only your files by name), retry the rebase, and `git stash pop` your stash. **NEVER `git checkout HEAD -- <conflicted_file>` followed by `git stash drop`** — that destroys the foreign agent's only copy of their WIP. Per CLAUDE.md "Two teammates" rule, the dropped-commit hash printed by `git stash drop` is reachable via `git stash store <hash>` until next GC, but treat any drop of an autostash you didn't create as a near-miss incident requiring a ping in `<side>_orchestrator/pings/slot_<N>.md`. Incident reference: slot-1 2026-05-19 strategy-service autostash drop (recovered via dangling commit e53ad7c). |
+| A concurrent agent in your shared `.tabs/<N>/` worktree moves `HEAD` / `FETCH_HEAD` / the slot branch under you; push to `live-defi-rollout` rejected; `FETCH_HEAD`-based diagnostics contradict each other (e.g. "already on LDR" when it isn't) | Shared `.git` — another interactive session OR an orchestrator-spawned worker in the same worktree runs `fetch` / `commit` / `rebase`, rewriting shared refs mid-task | Verify against `origin/live-defi-rollout` (NEVER `FETCH_HEAD`). Promote your commit via a throwaway worktree off the integration branch — see "Isolated-worktree promotion under shared-worktree ref races" below. Do NOT autostash-rebase the shared dirty tree. |
+
+### Isolated-worktree promotion under shared-worktree ref races (canonical fix, codified 2026-06-01)
+
+**Symptom.** A concurrent agent shares your slot's `.git` — another interactive session, or an orchestrator-spawned
+worker operating in the same `.tabs/<N>/<repo>/` worktree. It commits / rebases / fetches, so `HEAD`, the slot branch,
+and **especially `FETCH_HEAD`** move under you mid-task. Your `git push origin HEAD:live-defi-rollout` is rejected as
+non-fast-forward, and any diagnostic that reads `FETCH_HEAD` gives contradictory answers — you can even conclude "my work
+is already on LDR" when it is **not** (the moving `FETCH_HEAD` momentarily pointed at the worker's local tip, which
+contained your own commit as an ancestor, so the file content matched byte-for-byte).
+
+**Two hard don'ts** (both are variants of the foreign-WIP-destruction foot-gun):
+
+1. **Never trust `FETCH_HEAD` when the worktree is shared.** `FETCH_HEAD` is rewritten by _any_ agent's `git fetch` in the
+   shared `.git`. Verify only against the stable remote-tracking ref:
+   `git merge-base --is-ancestor <sha> origin/live-defi-rollout` and `git cat-file -e origin/live-defi-rollout:<path>`.
+2. **Never autostash-rebase the shared dirty tree** to "integrate" the remote (see the autostash row above) — it stashes
+   the concurrent agent's WIP and can drop it.
+
+**Canonical fix — promote YOUR work via a throwaway worktree off the integration branch.** This never touches the shared
+`.tabs/<N>/` tree, so the concurrent worker is undisturbed:
+
+```bash
+# Your work is already committed on the slot branch; MINE=<your commit sha>.
+git -C <repo> fetch origin live-defi-rollout
+git -C <repo> worktree add --detach /tmp/promote-$$ origin/live-defi-rollout
+git -C /tmp/promote-$$ cherry-pick "$MINE"
+
+# On conflict: KEEP LDR's side for hunks that are the OTHER agent's content (their uncommitted work your
+# commit happened to snapshot) — they commit it themselves. Keep-ours strip of one conflicted file:
+#   awk 'BEGIN{keep=1} /^<<<<<<< /{keep=1;next} /^=======$/{keep=0;next} /^>>>>>>> /{keep=1;next} {if(keep)print}' \
+#       FILE > FILE.tmp && mv FILE.tmp FILE        # NOTE: BEGIN{keep=1} is mandatory, else pre-conflict text is dropped
+#   (restore a botched resolution with: git checkout -m -- FILE)
+
+# Trim any other-agent content that AUTO-merged in cleanly but is NOT on LDR (reset that file to LDR, re-add only
+# your hunk):
+#   git -C /tmp/promote-$$ checkout origin/live-defi-rollout -- <file>   # then re-insert just your section
+
+# PRE-PUSH GATE — the changeset must be YOURS-ONLY:
+git -C /tmp/promote-$$ add -A
+git -C /tmp/promote-$$ diff --cached origin/live-defi-rollout --stat                 # only your files
+git -C /tmp/promote-$$ diff --cached origin/live-defi-rollout | grep '^[-+]' | grep -v '^[-+][-+]'
+#   ^ every +/- line must be yours; a foreign +/- means you still need to trim.
+
+git -C /tmp/promote-$$ commit --no-verify -m "docs(...): ... (yours-only, no other-agent content)"
+git -C /tmp/promote-$$ fetch origin live-defi-rollout && git -C /tmp/promote-$$ rebase FETCH_HEAD   # FETCH_HEAD safe here: isolated worktree
+git -C /tmp/promote-$$ push origin HEAD:live-defi-rollout
+git -C <repo> worktree remove /tmp/promote-$$ --force
+```
+
+**The principle.** Get YOUR work onto LDR without (a) clobbering the concurrent agent's _committed_ work (keep LDR's side
+on conflicts) or (b) imposing their _uncommitted_ snapshot that your commit incidentally captured (trim it; they push
+their own). The pre-push gate — `git diff --cached origin/live-defi-rollout` showing only your lines — is the contract;
+if a `+`/`-` isn't yours, trim it before pushing. If your work was bundled with a concurrent worker's sweep and the
+operator pre-acked shipping it ("worst case commit some of it"), keeping it is allowed — but the default is trim, to
+avoid a future merge clash when they push their own copy.
+
+Incident reference: slot-1 2026-06-01 data-source-provenance promotion — `FETCH_HEAD` race led to a false "already on
+LDR" read; cherry-pick dragged the worker's in-flight "zero-rows=silent-lie" sweep into `defi`/`mtds_mdps`/`manifest`;
+resolved by keep-LDR-side on the `defi` conflict + trimming the dragged sweep from `mtds_mdps`/`manifest`, pushed clean
+as a provenance-only commit.
 
 ### Ikenna's provisioning evidence (2026-05-10/11)
 

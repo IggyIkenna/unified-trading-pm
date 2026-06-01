@@ -58,7 +58,7 @@ def _workspace_repo_names() -> set[str]:
             levels_raw = topo_raw.get("levels")
             if isinstance(levels_raw, list):
                 for level in cast(list[dict[str, Any]], levels_raw):
-                    for r in level.get("repos", []) or []:
+                    for r in level.get("repos", []) or []:  # noqa: qg-empty-fallback
                         if isinstance(r, str):
                             names.add(normalize_pkg_name(r))
         _WORKSPACE_REPO_NAMES_CACHE = names

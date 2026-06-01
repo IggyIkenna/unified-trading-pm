@@ -143,8 +143,8 @@ Each adapter writes to one or more `entity=` partitions under `sports_reference/
 | **betfair (T1)**              | `entity=betfair_odds`                                                                                                          | `entity=fixtures/fixtures.parquet`                   |
 
 **Test-mode variants** write to the same entity paths inside the `-test-` suffixed bucket
-(`instruments-store-sports-{project_id}-test`). The factory pre-flight reads whichever bucket `IS_TEST_RUN` resolves to
-— it does not duplicate data between prod and test.
+(`instruments-store-sports-prd-{project_id}-test`). The factory pre-flight reads whichever bucket `IS_TEST_RUN` resolves
+to — it does not duplicate data between prod and test.
 
 ---
 

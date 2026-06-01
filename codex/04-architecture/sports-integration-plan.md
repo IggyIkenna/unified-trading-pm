@@ -543,8 +543,8 @@ gs://ml-models/SPORTS/
 - **No separate sports service repos** — sports logic lives as `asset_group=SPORTS` branches within existing services.
 
 **Infra (Layer 2):** GCS buckets use existing naming conventions with SPORTS category (e.g.,
-`instruments-store-sports-{project_id}`, `market-data-sports-{project_id}`), PubSub topics/subscriptions (reuse existing
-topic patterns with `asset_group=SPORTS` attribute), Secret Manager for sports API keys. See
+`instruments-store-sports-prd-{project_id}`, `market-data-sports-{project_id}`), PubSub topics/subscriptions (reuse
+existing topic patterns with `asset_group=SPORTS` attribute), Secret Manager for sports API keys. See
 `deployment-service/scripts/verify_infra.py` sports checks.
 
 ### Phase 3 (original): ML (Q3 2026)

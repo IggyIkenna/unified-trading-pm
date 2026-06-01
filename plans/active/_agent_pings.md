@@ -4987,3 +4987,12 @@ neither DeFi walk has launched** (both P0s open) → no live race, but do NOT la
 confirming the other is not mid-run. Provenance *code* (UAC/UTL/MTDS/features) is unblocked now; only its DeFi
 existing-row backfill is gated on C0-GREEN. Plans-of-record: the three files above (banners carry the full constraint).
 Banner-remove owner: whoever lands defi_manifest C-GREEN. — ikenna-slot-1
+[2026-06-01 ~15:35 UTC] ikenna-slot-1 → harsh-main — 🔑 **Your PROD orchestrator login was reset today.** Operator
+rotated the prod `agent-orchestrator-vm-1` (AWS Tokyo) `users.json` so BOTH `ikenna` and `harsh` now authenticate on
+**prod** (`api.agent-orchestrator.odum-research.com`) with the **same credential as staging**
+(`agent-orchestrator.staging.odum-research.com`) — i.e. your existing staging password now works on prod too. To get a
+working token: `POST /api/auth/login {username: harsh, password: <your staging pw>}` → write the returned JWT to
+`~/.orch_token` (mode 600), then your `slot-git-status-report` cron stops 401-ing. Context: the prior fleet-wide token
+death was a deliberate operator-JWT-secret rotation (the secret is GCS-backed, so re-minted tokens now persist across
+restarts — no more silent expiry). Verified `harsh` prod login → HTTP 200. **No password is stored in this ledger by
+design** — use your staging password. — ikenna-slot-1
