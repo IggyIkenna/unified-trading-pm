@@ -206,11 +206,107 @@ For Raydium classic AMM, simpler decode (just reserveA, reserveB, fee).
 > the full 2024-06-01 → 2026-06-01 backfill VM run. The `--source auto` flag on the CLI tries GCS first + falls back to
 > the fixture seamlessly.
 
-### Phase 4 — Live mode + paper trade (~1 day)
+### Phase 4 — Live mode + paper trade (~1 day) — ✅ SHIPPED 2026-06-01
 
-- Extend live handler for both Drift (already exists, just confirm contract) + Orca (new)
-- Run paper trade for 24h on SOL basis
-- Promote to live wallet on operator ack
+- [x] ✅ Live-mode handler for Drift V2 (SOL-PERP funding) — mtds@1d35c7f2 added `--live` + `--continuous`
+      + `--interval-seconds` to `backfill_drift_v2_historical.py`. Per the "Live = batch (CRITICAL)" hard rule
+      it reuses the Phase 1 `DriftV2HistoricalIngester` + same GCS partition path
+      (`perp_funding/drift/SOL-PERP/day=<TODAY>/...parquet`) + same `funding_rate`/`oracle_price_twap`/`mark_price_twap`
+      schema the Phase 3 `SolanaBasisGcsLoader` expects. The legacy `solana_defi_handler._collect_drift` live path
+      (writes `/stats/markets` snapshot with `funding_rate_24h/7d/30d`) is SUPERSEDED for SOL_BASIS — kept in place
+      for other Solana DeFi protocols (Marinade/Jito LST etc.). Symptom of regression: SolanaBasisGcsLoader logs
+      `no perp_funding rows` because the schema column was the snapshot's `funding_rate_24h` not the historical
+      `funding_rate`.
+- [x] ✅ Live-mode handler for Orca + Raydium (DEX pool state) — mtds@1d35c7f2 added the same `--live`/`--continuous`
+      flag set to `backfill_solana_dex_state.py`. Reuses Phase 2 `OrcaWhirlpoolStateIngester` +
+      `RaydiumClassicAmmIngester` writing to `dex_pool_state/{orca,raydium}/SOLANA/<pool_label>/day=<TODAY>/...parquet`
+      — same schema (`sqrt_price_x96`, `liquidity`, `price`, `tick_current_index`, etc.) the loader expects.
+- [x] ✅ Unit tests — mtds@1d35c7f2 (`tests/unit/scripts/test_backfill_solana_live_cli.py`, 10 tests, all green):
+      `--continuous` without `--live` → exit 2; historical without `--start/--end` → exit 2; `--live` one-shot
+      targets today's UTC date; `--live --continuous` loops + sleeps + cancellable; invalid `--interval-seconds`
+      rejected. basedpyright clean on touched files.
+- [x] ✅ `run-paper.sh` SOL_BASIS discoverability — e2e-testing@06e8269 added SOL_BASIS recipe to the script
+      header. No flow change needed: `colocated_engine.py STRATEGY_CATEGORIES` already maps `SOL_BASIS → DEFI`
+      so the existing `--strategy SOL_BASIS` arg flows through to the engine.
+- [x] ✅ Phase 4 operational handoff documented in plan (this section + the dedicated "Phase 4 operational handoff"
+      section below).
+- [ ] **Operator-launched 24h paper trade** — BLOCKED-OPERATOR (long wall-clock; recipe in handoff section).
+- [ ] **Promote to live wallet on operator ack** — BLOCKED-OPERATOR (wallet keys + kill-switch arming are on the
+      CLAUDE.md hard-stop list; human-only).
+
+## Phase 4 operational handoff (operator-launched)
+
+The actual long-running operations (live data smoke ≥5 min, 24h paper trade, live-wallet promotion) are NOT in scope
+for an agent dispatch. They run on the operator's host or a fleet VM with the operator's credentials.
+
+### 1. Start live data flow (one of: operator laptop OR fleet VM)
+
+```bash
+# Terminal A: live Drift funding (hourly)
+cd market-tick-data-service && .venv/bin/python -m \
+    market_tick_data_service.scripts.backfill_drift_v2_historical \
+    --markets SOL-PERP --live --continuous \
+    --interval-seconds 3600 --data-types funding
+
+# Terminal B: live Orca + Raydium pool state (1-min)
+cd market-tick-data-service && .venv/bin/python -m \
+    market_tick_data_service.scripts.backfill_solana_dex_state \
+    --venues orca,raydium --live --continuous \
+    --interval-seconds 60 --samples-per-day 60 \
+    --data-types pool_state
+```
+
+### 2. Verify live data after T+5 min
+
+```bash
+TODAY=$(date -u +%Y-%m-%d)
+gsutil ls "gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=${TODAY}/asset_group=defi/venue=ORCA/chain=SOLANA/instrument_type=pool/data_type=dex_pool_state/" 2>&1 | head
+gsutil ls "gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=${TODAY}/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/" 2>&1 | head
+```
+
+Expected: ≥1 parquet under each `day=<TODAY>` prefix from the last 5 minutes. Drift funding is hourly so after
+≥1 h of live-mode runtime; Orca/Raydium are 1-min sampled so after ≥1 min of live-mode runtime.
+
+### 3. Launch the 24h paper trade
+
+```bash
+cd e2e-testing
+bash scripts/defi/run-paper.sh \
+    --strategy SOL_BASIS \
+    --tick-interval 3600 \
+    --continuous \
+    --execution-provider solana-devnet \
+    --initial-capital-usd 100000
+```
+
+This invokes `colocated_engine.py --strategy SOL_BASIS --mode paper --continuous --tick-interval 3600
+--execution-provider solana-devnet`. The engine reads parquets via `SolanaBasisGcsLoader` (Phase 3), generates
+SHORT-perp/LONG-spot instructions when funding > entry threshold, simulates fills on Solana devnet (signed, not
+broadcast), and writes PnL + trade log locally + to GCS sinks.
+
+### 4. After 24 h — review PnL + decide promotion
+
+Verify PnL via the engine's log + Firestore `MinimalCandidateManifest` (per CLAUDE.md Promote Workflow Path).
+Decision gate is operator-subjective: if PnL is positive after fees ≈ realised funding earnings − slippage, and the
+fill simulation is honest, the operator may promote.
+
+### 5. Promote to live wallet — HUMAN-ONLY
+
+Per CLAUDE.md `## Plans Run To Actual Completion` hard-stop list, **wallet keys + kill-switch arming are human-only**.
+The agent never runs `run-live.sh`. The operator runs:
+
+```bash
+cd e2e-testing
+bash scripts/defi/run-live.sh \
+    --strategy SOL_BASIS \
+    --tick-interval 3600 \
+    --continuous \
+    --execution-provider <copper|ceffu|cloud_kms_encrypted> \
+    --capital <amount> \
+    --wallet <KMS_KEY_ALIAS>
+```
+
+valid promote target per CLAUDE.md is `paper_1d → live_early`; `live_full` is post-cutover.
 
 ## Success criteria
 
