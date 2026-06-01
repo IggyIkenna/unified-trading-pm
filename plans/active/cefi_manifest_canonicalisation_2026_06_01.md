@@ -67,6 +67,13 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 ### C — single-walk (gap-fill + canonicalisation)
 
+> **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
+> parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
+> `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
+> moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
+> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
+> `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
+
 - [ ] [DATA] P0. C0 ONE bundled walk: copy the 838-cell legacy DATA objects (`raw_tick_data/` + `processed_candles/`,
       layout-aware — cefi has NO `by_date/`) → canonical `cefi-prd` at canonical path (env-tier + `asset_group=` +
       `pipeline_mode=` partition); write/relabel the matching manifest rows to v9; typed empty-reasons.

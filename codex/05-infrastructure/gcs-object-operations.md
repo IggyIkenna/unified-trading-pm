@@ -72,7 +72,37 @@ client.bucket(b).copy_blob(...)
 subprocess.run(["gcloud", "storage", "objects", "describe", uri], ...)
 ```
 
+## Migration-script performance contract (HARD RULE — codified 2026-06-01)
+
+**Every whole-corpus GCS migration / backfill / reconciler script MUST be parallel + observable + shardable from day
+one.** This is the cross-service SSOT for the contract (the per-AG + per-service canonicalisation plans —
+`{defi,cefi,tradfi,sports,prediction}_manifest_canonicalisation_2026_06_01.md` + `instruments_…` + `downstream_services_…`
+— all reference it). A script that walks a bucket MUST satisfy all six:
+
+1. **Parallelise the object walk** with `ThreadPoolExecutor(max_workers=workers)` — GCS read/write **release the GIL**,
+   so I/O-bound walks overlap for 5–10× (dominant cost is GCS round-trips, not CPU). A bare `for obj in objs:` loop over
+   a remote bucket is **review-blocking**. (CPU-bound *serialize* is GIL-capped → escalate to `ProcessPoolExecutor` only
+   if profiling shows serialize-bound; threads first for pure I/O.)
+2. **Wire the knobs — no dead args.** `--workers` actually sizes the pool; `--start-date`/`--end-date` actually filter
+   the walk → the job is **date-shardable across many VMs** (the real horizontal-scale lever). A parsed-but-unused arg
+   is a latent perf/scope bug.
+3. **Path-only move ⇒ `gcs_copy_object` (server-side, ~250×); content/column transform ⇒ download+transform+upload
+   (unavoidable) but parallelised.** Never download+reupload when only the path changes. Idempotent: re-running on
+   already-canonical objects is a no-op (skip).
+4. **Observability**: log a progress counter every N objects (≈1000) AND run under `python -u` / `PYTHONUNBUFFERED=1` —
+   block-buffered stdout hides all progress until exit and is indistinguishable from a hang.
+5. **Per-object failure isolation** — `try/except … continue` per object (log + skip), never `raise` inside the walk
+   (composes with shard-level failure isolation). The run completes; the verify step catches any gaps.
+6. **Tune for the bottleneck**: I/O-bound → more workers + GCS client connection-pool headroom (gcsfs/aiohttp default
+   ~100 conns covers workers ≤ ~64); CPU/bandwidth-bound → bigger VM or shard across VMs by date. GCS has **no
+   client-side warm cache** — concurrency (in-flight requests), not "warming", is the throughput lever.
+
 ## Incident history
+
+**2026-06-01**: the DeFi C0 tool (`migrate_defi_full_v9_canonical.py`) walked ~40–50K objects **single-threaded**
+(~26% CPU of an 8-vCPU VM, projected **hours**), with `--workers`/`--start-date`/`--end-date` parsed but **never wired**
+(dead args). Fixed at mtds@92b8d25b (ThreadPoolExecutor + wired date-shard knobs). Codified the six-point contract
+above; all per-AG + per-service canonicalisation walks inherit it.
 
 **2026-05-19**: Phase 3 GCS migration fleet relaunched after discovering 140-hour ETA caused by 5 subprocess spawns per
 parquet (`gcloud storage cp` + 2× `gcloud storage objects describe` + `gcloud storage rm`). Switching to UTL

@@ -82,6 +82,13 @@ VM. Runs behind the pre-migration drain.
 
 ### C — single-walk (bundled CF-1…CF-12) per in-scope instruments bucket
 
+> **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
+> parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
+> `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
+> moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
+> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
+> `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
+
 - [ ] [DATA] P0. C0 ONE bundled walk per non-sports instruments bucket: `category=`→`asset_group=` (paths + rows,
       CF-2) + `pipeline_mode=` partition (CF-3, RIDER — satisfies `pipeline_mode_partition_migration` instruments row) +
       v9 re-version (CF-1, data-state asserted) + env-split (CF-9) + canonical names (CF-7) + `available_at` preserve

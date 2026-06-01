@@ -104,6 +104,39 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 - **CONFLICT-4 — `data_source_provenance` must SKIP tradfi.** tradfi's `source` column already shipped via
   `tradfi_massive`; provenance must not re-walk tradfi. Scope it to cefi/defi/sports/prediction.
 
+### Agent assignment (2026-06-01 — two-slot split; the SUM completes EVERYTHING, no defers, no fallbacks)
+
+> **Slot 2 = the DeFi lane (this plan).** Owns `defi_manifest_canonicalisation_2026_06_01.md` end-to-end: the MASTER
+> coordinator role + §A (defi writers) + §B (defi consolidation/data-status) + **§C the DeFi single-walk** (C0–C12) +
+> §D (defi features) + §E (cefi-perp hedge leg the defi hybrid needs) + §F (defi docs) + §G (Solana basis MVP). The
+> defi C0 walk carries the defi riders (source col + pipeline_mode partition + v9 + category→asset_group) per § Rider
+> closure.
+>
+> **Slot 4 = everything else (the other four asset_groups + the per-service surfaces + their riders).** Owns, to
+> C-GREEN:
+>
+> 1. `cefi_manifest_canonicalisation_2026_06_01.md` — cefi single-walk (838-cell gap-fill + v9 + partition + source).
+> 2. `tradfi_manifest_canonicalisation_2026_06_01.md` — tradfi single-walk (v9 + partition + source re-consol; absorbs
+>    `tradfi_massive` -031).
+> 3. `sports_manifest_canonicalisation_2026_06_01.md` — sports single-walk (v9 + partition + fixture/season/
+>    transfer-window/genesis typed reasons + source path→column; both sports surfaces).
+> 4. `prediction_manifest_canonicalisation_2026_06_01.md` — prediction single-walk (legacy→canonical copy + v9 +
+>    partition + source = API).
+> 5. `instruments_manifest_canonicalisation_2026_06_01.md` — the I/O input surface (non-sports instruments-store +
+>    cross-AG reference indices), audit-first.
+> 6. `downstream_services_manifest_canonicalisation_2026_06_01.md` — MDPS/features/strategy/execution canonical FORM,
+>    audit-first, low-data.
+>
+> Each slot-4 plan's single bundled walk INCLUDES its rider work — so completing them also closes
+> `data_source_provenance_all_asset_groups_2026_06_01` (cefi/sports/prediction source; tradfi skipped per CONFLICT-4) +
+> `pipeline_mode_partition_migration_2026_06_01` (cefi/tradfi/sports/prediction/instruments) for those AGs. **No
+> second walk on any `_index`** (single-walk discipline). **NO DEFERS, NO FALLBACKS** (CLAUDE.md "Data Pipeline
+> Correctness Is The Heartbeat" + "Plans Run To Actual Completion"): the only legitimate non-completion is the closed
+> operator-gated set (`BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-OUTAGE` /
+> `BLOCKED-PLAYWRIGHT`). **Combined acceptance**: every (service × AG × CF-1…CF-12) cell GREEN per the audit SSOT
+> `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` → hands C-GREEN to `bucket_name_ssot…` L6.
+> Every migration script obeys the § Migration-script performance contract (parallel/shardable/observable).
+
 ### Parallelisation guidance (for the dispatching agent)
 
 - **Strictly serial-gating**: L0 → (L1,L2) → L3-per-AG → L5-per-AG → L6. L6 (delete) waits for ALL AGs L3-green.

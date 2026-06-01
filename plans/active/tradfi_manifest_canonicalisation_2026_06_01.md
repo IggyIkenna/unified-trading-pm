@@ -96,6 +96,13 @@ VM.
 
 ### C — single-walk (v9 + partition + canonical verify + source re-consolidate)
 
+> **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
+> parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
+> `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
+> moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
+> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
+> `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
+
 - [ ] [DATA] P0. C0 ONE bundled walk on the tradfi `_index` + objects: (a) `pipeline_mode=` hive partition added to
       object paths (`pipeline_mode_partition_migration` RIDER — satisfied here, do NOT run separately); (b) re-version
       manifest rows to **v9** (data-state — assert the rewritten rows actually carry 9, not just the constant); (c)

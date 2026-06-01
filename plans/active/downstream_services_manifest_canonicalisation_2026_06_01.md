@@ -70,6 +70,14 @@ anytime (read-only); the migration walk per bucket follows its input going C-GRE
 
 ### C — single-walk per service bucket (only where P0 surfaces debt; bundle CF items)
 
+> **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: any walk script MUST be
+> parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
+> `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
+> moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
+> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. (Corpus is
+> small here, but the contract still applies.) SSOT: `codex/05-infrastructure/gcs-object-operations.md` §
+> "Migration-script performance contract".
+
 - [ ] [DATA] P1. **MDPS** C-walk: bundle any `processed_candles/` debt into the SAME AG tick-bucket walk (no second walk
       on an AG `_index` — single-walk discipline); ensure CF-4 source PROPAGATION + CF-1/2/3/5/8 land there.
 - [ ] [DATA] P1. **features** C-walk: ONE bundled walk per `features-*-{ag}` index for any P0 debt (v9 +

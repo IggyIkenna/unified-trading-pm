@@ -140,6 +140,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 ### C — single-walk (v9 + partition + typed reasons + source path→column + canonical verify)
 
+> **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
+> parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
+> `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
+> moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
+> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
+> `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
+
 - [ ] [DATA] P0. C0 ONE bundled, layout-aware walk on the sports `_index` + objects: (a) `pipeline_mode=` hive partition
       on ALL paths (RIDER — `pipeline_mode_partition_migration`, satisfied here); (b) re-version manifest rows to **v9**
       (data-state asserted); (c) **`category=`→`asset_group=` across BOTH object PATHS and manifest `_index` ROWS** +

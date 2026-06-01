@@ -70,6 +70,13 @@ be fixed first if run on a VM.
 
 ### C — single-walk migration (legacy `prediction` → canonical `pred-prd`)
 
+> **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
+> parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
+> `--workers`/`--start-date`/`--end-date` (date-shardable across VMs — no dead args) + `gcs_copy_object` for path-only
+> moves (server-side ~250×) / download+transform+upload only for content changes + unbuffered progress logging
+> (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
+> `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
+
 - [ ] [DATA] P0. C0 ONE bundled walk: copy legacy `raw_tick_data/` + `processed_candles/` objects → canonical `pred-prd`
       at the canonical path (env-tier + `asset_group=` + `pipeline_mode=` partition); rewrite manifest rows to v9; typed
       empty-reasons. **`category=`→`asset_group=` lands on BOTH the object PATHS and the manifest `_index` ROWS in this
