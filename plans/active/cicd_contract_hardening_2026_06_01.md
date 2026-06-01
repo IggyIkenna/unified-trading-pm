@@ -587,15 +587,21 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
       (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
       Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
 - [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the 6 non-exempt repos (operator-decided 2026-06-01).**
-      Per-repo readiness audited 2026-06-01 (the gate's required context must be emitted + ideally green before/at enforce,
-      else blocks merges): **READY (v2 workflow present)** — `ml-service` (v2 **green** → add now), `greeks-service`
-      (v2 present, no run yet), `unified-trading-api` (v2 present, no run yet): create the ruleset targeting main+staging
-      with `bypass_actors:[]` + required context `Quality Gates (<repo>) / quality-gates-v2` (template from any of the 17;
-      or add to `pin_branch_protection_rulesets.REPOS` + `--apply`). **NEEDS WORKFLOW FIRST** — `fund-administration-service`
-      + `e2e-testing` (NO v2 workflow on default branch → roll out `quality-gates-v2.yml` first, green it, then add ruleset);
-      `unified-trading-system-ui` (TS/Vite — NOT python-v2: give it a ruleset on its **own** UI gate context
-      `Quality Gates (unified-trading-system-ui) / quality-gates`, like `deployment-ui`, NOT the python v2). Record the
-      single `agent-orchestrator` exemption + this 6-repo addition in `feature-branch-workflow.md`. — repo: unified-trading-pm (rulesets) + per-repo workflow rollout.
+      **HARD PREREQUISITE per repo (learned the hard way 2026-06-01): VERIFY the v2 workflow's job `name:` emits
+      `Quality Gates (<repo>) / quality-gates-v2` AND confirm a GREEN run on the default branch BEFORE creating the
+      ruleset** — else the required context is never satisfied and you DEADLOCK/freeze main. (Incident: created rulesets
+      for ml/greeks/uta on `17134935/37/38`, immediately discovered **`ml-service` carries the `alerting-service`
+      copy-paste job-name bug** → its ruleset was unsatisfiable → reverted all three.) Correct per-repo plan:
+      - `ml-service`: **fix the job-name first** (`Quality Gates (alerting-service)` → `(ml-service)` in its
+        `quality-gates-v2.yml`, relax→push→re-run→re-pin per the force rule), THEN add ruleset. (Its earlier "green" run
+        emitted the alerting-service context.)
+      - `greeks-service`, `unified-trading-api`: job-name correct; trigger a v2 run, confirm GREEN, THEN add ruleset
+        (template: alerting-service `require-quality-gates`, target `~DEFAULT_BRANCH`, `bypass_actors:[]`, context
+        `Quality Gates (<repo>) / quality-gates-v2`).
+      - `fund-administration-service`, `e2e-testing`: NO v2 workflow → roll out `quality-gates-v2.yml`, green it, THEN add.
+      - `unified-trading-system-ui`: TS/Vite — ruleset on its OWN UI gate context (`…/quality-gates`, like deployment-ui),
+        not python-v2.
+      Record the single `agent-orchestrator` exemption + the 6 additions in `feature-branch-workflow.md`. — repo: unified-trading-pm (rulesets) + per-repo workflow.
 
 **Do not duplicate**: the v1→v2 migration itself is owned by `ci_canonical_v2_migration_2026_05_29.md` (which has
 mark-drift — `batch-live` + `deployment-ui` marked ✅ but live-v1). This plan only adds the ruleset-mechanism framing +
