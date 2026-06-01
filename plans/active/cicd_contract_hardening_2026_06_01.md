@@ -79,23 +79,15 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 
 ---
 
-## CI-robustness gaps + promotion-convergence (operator 2026-06-01)
+## CI-robustness (operator 2026-06-01)
 
-- [ ] [SCRIPT] P0. **Every v2 failure must Slack-alert — INCLUDING timeout/crash/cancel.** Today the `#ci-failures`
-      Slack notify fires from inside `quality-gates.sh` (so a job that TIMES OUT, OOM-crashes, or is cancelled before the
-      script's notify step fails SILENTLY — no alert). Add a workflow-level notify in `python-quality-gates-v2.yml` with
-      `if: failure() || cancelled()` (+ a job `timeout-minutes`) that posts repo/PR/sha/conclusion to `#ci-failures`
-      regardless of how the job ended. Acceptance: a deliberately-timed-out run posts a Slack alert.
-- [ ] [SCRIPT] P0. **v2 runs must not time-out / crash — without gutting coverage or bloating memory.** Several v2 runs
-      are slow/heavy (execution 40-45min tests, big basedpyright). Bound them: set a sane `timeout-minutes`; cap memory
-      (QG_MEM_CAP / xdist workers) so they don't OOM; keep full coverage + checks (do NOT skip tests to pass). Profile
-      the slow steps (`profile_qg_steps.py`) and fix the hotspots rather than removing checks. Acceptance: v2 completes
-      under the timeout on the heaviest repo with full checks + no OOM.
-- [ ] [PROCESS] P0. **Promotion convergence — freeze LDR + promote in dependency order (don't whack-a-mole).** Opening
-      all LDR→main PRs while LDR keeps churning means each concurrent LDR push re-merges the PR and re-introduces
-      merge-only issues (e.g. mtds#112 I001 recurred on a fresh sha). Fix: a brief LDR-write freeze (pause crons +
-      coordinate agents) + promote in dep order via `quickmerge` (QG-pre-promote + dep-checker), one wave with a green
-      settle between waves. Ad-hoc simultaneous PRs do NOT converge against a moving LDR.
+- [x] ✅ [SCRIPT] P0. **v2 alerts on failure OR cancel (timeout/OOM/cancel) — no more silent failures / `invalid_payload`.**
+      Reusable `python-quality-gates-v2.yml` now: `if: failure() || cancelled()` notify + `timeout-minutes: 135` (kills
+      hangs; was 6h default) + a `python json.dumps` Slack body (raw-excerpt interpolation caused `invalid_payload`).
+      Lands for every repo (reusable workflow). DONE 2026-06-01.
+- [ ] [SCRIPT] P0. **v2 must not time-out / OOM — without gutting checks.** Bound time/mem (`QG_MEM_CAP`, xdist workers),
+      profile slow steps (`profile_qg_steps.py`), fix hotspots (execution ~120m tests, basedpyright) — keep FULL coverage
+      + checks; never skip tests to pass.
 
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
@@ -117,57 +109,29 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 - **Consequence to know**: making gates truly enforce EXPOSED accumulated per-repo QG debt (PM red on lint+codex;
   instruments red on coverage) → those mains are blocked-on-red. That's workstream (B).
 
-### LDR→main promotion campaign — LIVE STATUS (2026-06-01; operator: PR-gated, green-repos-first)
+### LDR→main promotion — PROCEDURE + status (operator 2026-06-01)
 
-> **Pick-up point for any agent.** Promoting `live-defi-rollout`→`main` per repo via PR (so `quality-gates-v2` gates
-> the merge). Method per repo: on the slot (tracks LDR), `git merge origin/main` (back-merge main's fresh commits into
-> LDR, resolve **take-best** — the recurring conflict is `quality-gates-v2.yml` add/add: both are functionally identical
-> v2 callers, take LDR's canonical PM-template version), push `HEAD:live-defi-rollout` → the LDR→main PR becomes
-> mergeable → `gh pr merge <n> --auto --merge`. **Merge-commit preserves main's fresh commits** (never replace). Then
-> repeat for `staging`. Do NOT bypass the v2 gate. agent-orchestrator is the exception (already on main — see below).
->
-> **GAP found (operator 2026-06-01): run QG on the MERGED state before pushing — local QG on the slot is NOT enough.**
-> The local `quality-gates.sh` runs on the slot (pre-merge LDR), which is clean; but the `git merge origin/main` can
-> introduce issues the merge alone creates (e.g. interleaved main+LDR import blocks → ruff **I001** unsorted, which hit
-> mtds#112 — same ruff 0.15.0, NOT a tooling gap). CI lints the PR *merge*; local QG didn't. So after each back-merge,
-> run `.venv/bin/ruff check . && bash scripts/quality-gates.sh` on the merged tree (or `ruff check --fix`) BEFORE pushing.
-> This is exactly what **`quickmerge` does (runs QG pre-promote) + its dep-checker forces dependency order** — using
-> quickmerge for promotion would have caught both the merge-introduced lint AND the cross-repo clone skew.
+> **Procedure — follow this; do NOT fan out all repos at once (that whack-a-moles against a moving LDR).** Promote
+> `live-defi-rollout`→`main` **in dependency order (UAC → UTL → services → apps)** during a brief **LDR-write freeze**
+> (pause crons), **driven by `quickmerge`**: its dep-checker refuses to promote a repo until its deps are clean-vs-remote
+> (enforces order + kills the cross-repo clone skew that made the first storm flaky), and it runs QG **pre-promote**
+> (catches merge-only issues like the mtds `I001`). Per repo: back-merge `origin/main`→LDR, resolve **take-best**
+> (recurring conflict = `quality-gates-v2.yml` add/add → take LDR's PM-template version; LDR is the newer canonical
+> line), **run `ruff check . && quality-gates.sh` on the MERGED tree before pushing** (the pre-merge slot QG misses
+> merge-only issues), then PR + `--auto --merge` (merge-commit preserves main's fresh commits; never bypass v2).
+> **Parallel flow:** PM is already done — pick any repo whose upstream deps are promoted+green and promote it; multiple
+> agents work different repos, gated only by the dep graph + a green settle between waves.
 
-| Repo | PR# | Status |
-| --- | --- | --- |
-| alerting-service | #20 | ✅ clean → auto-merge ON (waits v2 green) |
-| instruments-service | #392 | ✅ clean → auto-merge ON |
-| trading-agent-service | #7 | ✅ resolved (v2-wf take-best) → mergeable + auto-merge ON |
-| deployment-api | #14 | ✅ resolved (v2-wf take-LDR) → auto-merge ON |
-| execution-service | #206 | ✅ resolved (cloudbuild/qg.sh take-LDR 7200>3600) → auto-merge ON |
-| market-tick-data-service | #112 | ✅ resolved (clean back-merge) → auto-merge ON |
-| strategy-service | #64 | ✅ resolved (clean back-merge) → auto-merge ON |
-| unified-api-contracts | #62 | ✅ resolved (take-LDR underscore-canonical venue test; main glued superseded) → auto-merge ON |
-| unified-trading-library | #229 | ✅ resolved (take-LDR core: source-provenance gate on LDR; main older CI-only) → auto-merge ON |
-| market-data-processing-service | #87 | ✅ resolved (take-main tests: lending_indices adapter-backed not bypass; v2 verifies) → auto-merge ON |
-| deployment-ui | #13 | ✅ resolved (workflow take-LDR) → auto-merge ON |
-| client-reporting-api | #11 | ✅ resolved (take-LDR strict basedpyright = workspace std) → auto-merge ON |
-| batch-live-reconciliation-service | #13 | ✅ resolved (workflow take-LDR) → auto-merge ON |
-| ibkr-gateway-infra | #13 | ✅ resolved (workflow take-LDR) → auto-merge ON |
-| system-integration-tests | #16 | ✅ resolved (take-LDR behaviour-identical scorecard refactor) → auto-merge ON |
+| Repo(s) | Status |
+| --- | --- |
+| unified-trading-pm | ✅ MAIN GREEN (harsh fix a217a031c + FF) — done |
+| instruments #392 · uac #62 · client-reporting #11 · ibkr #13 | ✅ MERGED to main |
+| trading-agent #7 · deployment-api #14 · execution #206 · mtds #112 · strategy #64 · utl #229 · mdps #87 · deployment-ui #13 · batch-live #13 · SIT #16 · alerting #20 | ⏳ conflict resolved take-best; PRs open, gated on v2 — re-promote in the frozen dep-ordered window |
+| deployment-service | 🔴 v2-RED — green first |
+| fund-administration · e2e-testing · greeks-service | v2 just added; open PR after first green v2 |
 
-> **LESSON — promote in DEPENDENCY ORDER (use quickmerge's dep-checker) to avoid cross-repo merge-storm skew
-> (operator 2026-06-01).** Opening all 15 LDR→main PRs simultaneously caused transient v2 failures: each PR's v2 clones
-> its sibling dep repos, and during the storm those siblings were mid-merge (e.g. instruments cloned UAC-`main` BEFORE
-> UAC#62's `EXPECTED_NO_MAPPING` enum landed → `AttributeError`, a phantom failure that clears on re-run). The
-> structural fix is **`quickmerge`'s dependency checker, which refuses to promote a repo until its downstream deps are
-> clean vs remote** — forcing promotion in dependency order (UAC → UTL → services → apps), so by the time a dependent's
-> CI clones its deps they are already promoted + green. **Future LDR→main promotions: order by dep graph (or drive via
-> quickmerge), one wave at a time with a green settle between waves — do NOT fan out all repos at once.**
-
-> **All 15 green-repo promotion PRs resolved + auto-merge ON (2026-06-01)** — each merges to `main` when its PR's
-> `quality-gates-v2` passes. Method: back-merge `origin/main`→LDR (take-best; LDR is the newer canonical line; recurring
-> conflict was the functionally-identical `quality-gates-v2.yml` add/add → took LDR's PM-template version). If a PR's v2
-> goes RED on the merge it stays gated (un-merged) → that repo joins the QG-debt set; do NOT bypass the gate.
-| unified-trading-pm | #107 | ✅ GREEN — harsh-side fixed basedpyright over-ratchet (a217a031c, 3 CI-tooling scripts → [tool.basedpyright] ignore) + FF'd main 4f57234ea; #107 closed (direct FF). PM main green. |
-| deployment-service | — | 🔴 v2-RED — green first |
-| fund-administration-service / e2e-testing / greeks-service | — | v2 just added; no runs yet (open PR after first green v2) |
+> **5 non-ruff failures = genuine per-repo debt (fix regardless of promotion order):** execution
+> (`test_analog_execution_gate` kelly `0.5 vs 1.0` + grid_utils import-skip), trading-agent, deployment-api, utl, SIT.
 
 ### agent-orchestrator EXCEPTION — `main` is its target, NOT LDR (codified 2026-06-01, operator)
 
