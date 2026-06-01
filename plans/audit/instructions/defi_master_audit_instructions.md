@@ -426,6 +426,15 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       MDPS-processed-where-applicable → feature-emitted) so the stage that drops the cell is named. Composes with
       `features_and_ml_master_audit_instructions.md`.
 
+- [ ] (z0) **Migrate-to-canonical BEFORE backfill (HARD sequencing, operator 2026-06-01)**: a bucket must be in
+      **canonical form** — env-split (`{kind}-{env}-{project}`), `asset_group=` (not `category=`),
+      `pipeline_mode={mode}` hive partition present, schema v9, underscore data_type names, flat venue + populated
+      chain, typed empty reasons — **before** any backfill writes into it. Backfilling into the legacy layout
+      manufactures more non-canonical data ("this is why we keep having mess"). The audit MUST flag any backfill/run
+      proposed against a non-canonical bucket as review-blocking. Check the actual object paths (`gcloud storage ls`)
+      for `category=`/missing-`pipeline_mode=`/ no-env-suffix, and the index for v<9 / hyphen-names / blank-chain. SSOT:
+      `plans/active/defi_manifest_canonicalisation_2026_06_01.md` § "Sequencing" + "Canonical target form".
+
 - [ ] (z) **`expected_unattempted` materialised + manifest-annotates-once principle (codified 2026-06-01)**: the
       manifest MUST carry the full 4-state — `captured` / `empty_confirmed[reason]` / `attempted_failed` /
       **`expected_unattempted`** — so a cell that IS-lists + is post-genesis/post-launch but has **no data** appears in

@@ -25,6 +25,35 @@ source:
 > audit is one pass. Single-walk discipline applies — the multi-bucket sweep MUST be one bundled walk, not N ad-hoc
 > walks.
 
+## Sequencing — canonical migration is a GATE before ANY backfill (HARD RULE, operator 2026-06-01)
+
+> Operator: "pipeline mode needs to be in legacy which needs to be migrated — this is why we keep having mess before
+> more backfills. Everything must be fully migrated into the right form (env splits etc) so that manifest AND data AND
+> data-status are all in their right format."
+
+**No backfill, no B0-run, no `expected_unattempted` generation until the in-scope buckets are in canonical form.**
+Backfilling into the legacy layout (no `pipeline_mode`, `category=` not `asset_group=`, no env split, v4–v8, hyphen/
+VENUE-CHAIN names) just manufactures more non-canonical data to re-migrate. So **C (migration) is a foundation gate**;
+C6 (Pyth backfill) / D1 (features backfill) / E1 (cefi fetch) / B0 (run the chain) are **review-blocked until C is GREEN
+for the affected bucket.** Composes with single-walk discipline + the pre-migration-drain HARD RULE (stop VMs + snapshot
+before cutover).
+
+### Canonical target form — what "right format" means (every in-scope object + manifest row)
+
+| Dimension        | Legacy (now)                            | Canonical (target)                                                                            |
+| ---------------- | --------------------------------------- | --------------------------------------------------------------------------------------------- | --------------------- |
+| Bucket env split | `oracle-prices-{project}` (no env)      | `oracle-prices-{env}-{project}` (`-prd`/`-test`) — or fold into `market-data-tick-defi-{env}` |
+| Asset-group key  | `category=defi`                         | `asset_group=defi`                                                                            |
+| Pipeline mode    | absent in path                          | `pipeline_mode={batch                                                                         | live}` hive partition |
+| Schema version   | v4–v8 spread                            | v9                                                                                            |
+| data_type name   | hyphen / `staking_yields`               | underscore canonical (`lst_rates`, `dex_pools`, …)                                            |
+| Venue / chain    | `UNISWAPV3-ETHEREUM`, blank chain       | flat `venue` + populated `chain`                                                              |
+| Empty reason     | blank / `SOURCE_RETURNED_ZERO` mislabel | typed (`EXPECTED_PRE_GENESIS_CHAIN`, …)                                                       |
+| 4th state        | absent                                  | `expected_unattempted` materialised by the run (B0)                                           |
+
+All of the above land in **one bundled single-walk** per bucket (C2–C5 + C7 + C9 + env-split), then the consolidated
+`_index` + data-status reflect the canonical form, then backfills run into the correct structure.
+
 ## Architecture principle (the governing contract)
 
 **Annotate honestly ONCE at write/consolidation-time (manifest, via the `expected_coverage()` oracle); READ everywhere
@@ -96,7 +125,8 @@ What to verify/wire (B0 corrected scope):
 - [ ] [DATA] P0. B0 (CORRECTED — do NOT build a consolidator step) RUN the existing expected_unattempted chain for DeFi:
       confirm the DeFi MTDS batch orchestrator goes through the instruments-service pre-flight that calls
       `record_expected_unattempted` (wire the DeFi handlers onto it if not), then run a prod DeFi MTDS batch so the owed
-      rows generate; validate the denominator. Closes deferred
+      rows generate; validate the denominator. **GATED on C-GREEN** — the owed rows must land in the canonical structure
+      (env-split/`pipeline_mode`/`asset_group=`), so migrate first. Closes deferred
       `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. parent_epic: manifest_master.
 - [ ] [CODE] P1. B1 `coverage-summary` (`data_status_service._build_coverage_for_cat`): drop the `len(index)`
       self-referential denominator; read the 4-state (or expected-dates oracle) + `is_expected()` gate; align with
@@ -112,6 +142,14 @@ What to verify/wire (B0 corrected scope):
 
 ## C. Data / manifest migration (single-walk, bundled) — fix existing rows
 
+> **C is the foundation gate** (see Sequencing). One bundled single-walk per bucket applies C0+C2+C3+C4+C5+C7+C9
+> together (no N ad-hoc walks). Backfills (C6/D1/E1) + B0-run are blocked until C is GREEN for the affected bucket.
+
+- [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration)**: for each dedicated DeFi bucket,
+      rewrite object paths to the canonical layout — `category=defi`→`asset_group=defi`, add the
+      `pipeline_mode={batch|live}` hive partition, and move into the **env-split** bucket (`{kind}-prd-{project}`, or
+      fold into `market-data-tick-defi-prd`). This is the keystone the operator flagged: without it, every backfill
+      re-creates the mess. Bundle with C2–C5/C7/C9 in the single walk. parent_epic: manifest_master.
 - [x] ✅ [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — **APPLIED 2026-06-01** via
       `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py --apply`: 728 pre-genesis relabel →
       `EXPECTED_PRE_GENESIS_CHAIN`; Pyth 1,185 chain `''`→`SOLANA` + dropped 1,034 dup empties; 9,717→8,683 rows; PYTH
@@ -126,7 +164,8 @@ What to verify/wire (B0 corrected scope):
       manifest_master.
 - [ ] [DATA] P1. C5 phantom-grid delete: remove the cartesian `data_type × venue` empty grid in `market-data-tick-defi`;
       point data-status at the dedicated indexes.
-- [ ] [DATA] P2. C6 Pyth ~5-week backfill (2026-04-15→present, Hermes API) on a VM after C1.
+- [ ] [DATA] P2. C6 Pyth ~5-week backfill (2026-04-15→present, Hermes API) on a VM. **GATED on C0/C-GREEN** (backfill
+      into the canonical env-split/`pipeline_mode`/`asset_group=` structure, never the legacy layout).
 - [ ] [DATA] P2. C7 pre-launch reason relabel for young venues (PACIFICA/ASTER/ETHERFI/LIDO/MARINADE pre-launch) — same
       walk as C2–C4.
 - [ ] [DATA] P1. C8 fill manifest under-enumeration: UAC declares 90 defi venue-keys but manifest enumerated only lst
@@ -143,7 +182,8 @@ What to verify/wire (B0 corrected scope):
 
 - [ ] [DATA] P0. D1 features-onchain-defi is near-empty (3 rows); features-delta-one-defi + features-volatility-defi
       have NO index → derived features (staking*apy_bps/funding_rate_apy_bps/basis_bps/realized_vol*\*) absent. Run the
-      features backfill for the in-scope DeFi instruments over the captured window. parent_epic: features_and_ml_master.
+      features backfill for the in-scope DeFi instruments over the captured window. **GATED on C-GREEN** (features must
+      read canonical raw, else they inherit the mess). parent_epic: features_and_ml_master.
 
 ## E. CeFi perp leg (hybrid hedge) — fix-fetch
 
