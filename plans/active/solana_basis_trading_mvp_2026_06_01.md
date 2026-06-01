@@ -178,8 +178,8 @@ For Raydium classic AMM, simpler decode (just reserveA, reserveB, fee).
 
 ## Risks + open questions
 
-- **Drift API rate limits**: free tier limits unknown. Need to probe during Phase 1. If 429s appear, add backoff or contact Drift for paid tier (cheap relative to data-engineering time).
-- **Drift API paid tier cost**: `/amm/bidAskPrice` is paid. If we need higher-fidelity top-of-book later (post-MVP), pricing TBD. Operator credential ask if needed.
+- **Drift API rate limits**: free tier limits unknown. Need to probe during Phase 1. If 429s appear, add backoff or shard calls across multiple IPs.
+- **Drift AMM endpoints (`/amm/bidAskPrice` etc.)**: appear in OpenAPI spec but return 403 (`x-amzn-errortype: ForbiddenException`, `x-cache: Error from cloudfront`) — same response as any undefined path. Pricing investigation 2026-06-01 found NO public paid tier. Interpretation: AMM endpoints are NOT deployed on the public gateway. Derive equivalents from `perp_funding` row columns (`oraclePriceTwap`, `markPriceTwap`, `baseAssetAmountWithAmm`) for MVP.
 - **Pagination limit on `/trades`**: CSV came back at 5000 rows — likely the page size. Per-day total could be 50K-200K (need ~10-40 paginated calls). Need to verify max pages and pagination cursor shape.
 - **Drift API uptime**: this is our single point of failure for the perp leg. SLA unknown. Mitigation: cache aggressively; for live mode, fall back to DLOB API live data if Velocity API is down.
 - **Orca SDK in Python**: account decoding may need bindings; alternative is hand-decoding the Whirlpool account layout (well-documented, 50-100 LOC of binary parsing).
@@ -189,7 +189,6 @@ For Raydium classic AMM, simpler decode (just reserveA, reserveB, fee).
 - Full Drift V2 `orderRecords` ingestion (matching engine higher fidelity than top-of-book)
 - Drift V2 `liquidationRecords` (post-MVP risk model input)
 - Cross-perp-venue arbitrage (multi-CLOB; MVP is Drift-only)
-- Multi-spot-DEX routing (Raydium + Phoenix + Jupiter aggregator)
 - Helius integration for any Drift V2 data type
 - The sig-index walker work (kept as cold infrastructure)
 
@@ -200,8 +199,41 @@ For Raydium classic AMM, simpler decode (just reserveA, reserveB, fee).
 - `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — note that Drift IS adapter already exposes `_DRIFT_S3_ARCHIVE_URL_TEMPLATE`; add a parallel `_DRIFT_VELOCITY_API_URL_TEMPLATE` for the new ingester
 - Update or supersede `plans/active/issues/bug_d_prime_drift_backfill_2026_05_31.md` (it documented the broken path; this plan replaces it)
 
-## Operator decisions needed before Phase 1
+## Operator decisions — RESOLVED 2026-06-01
 
-1. **Paid tier ask?** Should we provision the Drift Velocity Data API paid tier now for AMM endpoints (`bidAskPrice`, `oraclePrice`, `openInterest` at sampled cadence)? Cost TBD; if cheap, do it upfront. If not, MVP can derive enough from the funding-rate row's `oraclePriceTwap` + `markPriceTwap` columns.
-2. **Confirm spot DEX scope**: Orca SOL/USDC + Raydium SOL/USDC, or also Phoenix (orderbook) + Jupiter (aggregator) for MVP? Phoenix is the only CLOB on Solana with non-trivial SOL/USDC liquidity but TVL is much smaller than the top Orca/Raydium pools.
-3. **Backtest start date**: how far back? 2024-06-01 covers 2 years of history; 2025-01-08 covers the post-S3-shutdown gap that was Bug-D's target. Suggest 2024-06-01 (longer backtest = better signal).
+1. **Drift API paid tier?** — **N/A** (no public paid tier exists). Pricing-investigation 2026-06-01 found the 403 on AMM endpoints is AWS API Gateway's "no matching route" response (`x-amzn-errortype: ForbiddenException`, `x-cache: Error from cloudfront`) — same response as `/pricing`, `/docs`, `/auth` and other undefined paths. AMM endpoints appear in OpenAPI spec but are NOT live on the public gateway. Free-tier endpoints (per-day funding/trades) suffice; AMM data is derivable from `perp_funding` row columns (`oraclePriceTwap`, `markPriceTwap`, `baseAssetAmountWithAmm`).
+
+2. **Spot DEX scope — ALL FOUR** (operator ack 2026-06-01): **Orca + Raydium + Phoenix + Jupiter**. Phase 2 extends from 2 ingesters to 4. See "Updated spot DEX scope (Phase 2 expansion)" section below.
+
+3. **Backtest start date — 2024-06-01** (operator ack 2026-06-01) — 2-year window. Drift Velocity API funding coverage verified back to this date in probe.
+
+## Updated spot DEX scope (Phase 2 expansion)
+
+| Venue | Pool | Type | TVL (2026-06-01) | Ingestion path |
+|---|---|---|---|---|
+| **Orca DEX** | SOL/USDC Whirlpool | Concentrated-liquidity AMM | $28.4M | On-chain RPC of Whirlpool account state (tick liquidity array + sqrtPrice + liquidity + feeRate) at block heights via Alchemy archive |
+| **Raydium AMM** | WSOL/USDC pool #1 (top TVL) + pool #2 | Classic constant-product AMM | $14.2M combined | On-chain RPC of pool account state (reserveA, reserveB, fee) at block heights via Alchemy archive |
+| **Phoenix** | SOL/USDC orderbook | CLOB | ~$1-5M | On-chain RPC of Phoenix market account state (bid/ask levels per slot) at block heights via Alchemy archive |
+| **Jupiter** | (aggregator) | Routing over the above | n/a (routes through underlying venues) | `https://quote-api.jup.ag/v6/quote?inputMint=...&outputMint=...&amount=...` periodic quote sampling; for backtest replay, reconstruct from underlying venue states |
+
+**Updated Phase 2 estimate**: ~2.5 calibrated AI-days (4 ingesters, all on same Alchemy archive RPC pattern + Jupiter HTTP API). Total MVP estimate: ~5.5 calibrated AI-days (vs prior 4.5).
+
+### Updated Phase 2 — ingesters
+
+- `OrcaWhirlpoolStateIngester` — Whirlpool account decode, 1440 samples/day (1-min cadence) per pool
+- `RaydiumClassicAmmIngester` — Pool reserve account decode, 1440 samples/day per pool
+- `PhoenixOrderbookIngester` — Phoenix market account decode (asks + bids levels), 1440 samples/day per market; bonus: per-orderbook-event ingestion via Phoenix's event emitter
+- `JupiterQuoteIngester` — sampled quote requests (e.g., quotes for 100/1K/10K USDC → SOL hourly) for routing-cost analysis + backtest comparison
+
+Output paths (all under `gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/...`):
+- `dex_pool_state/orca/SOLANA/Whirlpool_SOL_USDC/day=*/...parquet`
+- `dex_pool_state/raydium/SOLANA/WSOL_USDC_<pool_id>/day=*/...parquet`
+- `dex_orderbook/phoenix/SOLANA/SOL_USDC/day=*/...parquet`
+- `dex_quote/jupiter/SOLANA/SOL_to_USDC_<size>/day=*/...parquet`
+
+## Updated backtest range
+
+- **2024-06-01 → 2026-06-01** (2-year window, operator ack 2026-06-01)
+- Drift funding coverage verified back to 2024-06-01 in probe (sample: `fundingRate=0.003295083` for early 2024-06)
+- Spot DEX state: on-chain via Alchemy archive RPC — Solana archive depth sufficient
+- Per-day storage estimate across all data types: ~50MB/day × 730 days ≈ ~36GB total backfill payload
