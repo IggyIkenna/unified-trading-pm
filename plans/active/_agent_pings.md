@@ -4959,3 +4959,9 @@ larger machine types, OR (b) operator explicit delegation to ikenna-slot-1.
 3. Re-launch both VMs with `--year 2024` and `--year 2025` with larger machine type.
 
 — ikenna-slot-1 / 2026-05-30
+
+[2026-06-01 11:55 UTC] harsh-main — 🍴 Harsh AFK (lunch). Starting the per-service `capture_status` write-path audit
+(IS / MTDS / MDPS / features-service) per the new section in
+`plans/audit/instructions/manifest_master_audit_instructions.md` ("Per-Service capture_status Write-Path Calibration").
+Read-only — no code changes; findings land in `plans/audit/results/manifest_master_capture_status_audit_2026_06_01.md`.
+FYI in case you touch those producer repos' emission paths. No action needed; will sync on return.
