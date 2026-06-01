@@ -51,13 +51,17 @@ estimate_calibrated_ai_days: 1.2
       first. Commit from a worktree that can FF (NOT the 894-behind root); `docs`/`chore` prefix. The root symlink chain
       makes this fix the main-worktree view durably. — unified-trading-pm@73963a354 | verified folders[]==25
       active+scaffolded repos, 0 drift | committed from slot-1 (root worktree was 894 behind, unpushable).
-- [ ] [SCRIPT] P2. **Item 2 — fix `setup-tab-worktrees.sh:copy_workspace_file` path style.** Plain `cp` of the canonical
-      (which uses `../../<repo>` paths, correct for its 2-levels-deep home) into a slot dir `.tabs/N/` makes
+- [x] ✅ [SCRIPT] P2. **Item 2 — fix `setup-tab-worktrees.sh:copy_workspace_file` path style.** Plain `cp` of the
+      canonical (which uses `../../<repo>` paths, correct for its 2-levels-deep home) into a slot dir `.tabs/N/` makes
       `../../<repo>` resolve to the **main** worktree, not the slot's → slots silently edit the wrong checkout. Existing
       deployed tab files use **bare relative** paths, so land on relative: strip `../../` from `path` values on copy
       (portable sed) + keep the workspace-root folder as `.`. Document which file is canonical for which consumer (root
       symlink → tracked canonical with `../../`; slot copies → bare relative). **Script → PR targets `staging`** per
-      PM/Codex fast-path.
+      PM/Codex fast-path. — unified-trading-pm@c6dab6afd | transform verified: 26 folders → `.` + 25 bare-relative
+      repos, 0 residual `../../`, valid JSON, matches deployed tab-file style. **Fast-path deviation**: landed on LDR
+      not a staging PR — staging is 632 commits behind LDR, branching off it to edit this newer script is a stale-base
+      revert hazard (don't-dump-others'-work HARD RULE); LDR→staging reconciliation carries it forward. Flagged to
+      operator.
 - [ ] [SCRIPT] P2. **Item 3 — regression guard.** Add a check (PM `quality-gates.sh` step and/or pytest) asserting the
       canonical `.code-workspace` `folders[]` (minus workspace-root) == active+scaffolded repo set in
       `workspace-manifest.json`, and that no listed path is a known archived/consolidated repo. Optionally assert
