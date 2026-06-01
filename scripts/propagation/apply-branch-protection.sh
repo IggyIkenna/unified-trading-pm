@@ -7,7 +7,7 @@
 #
 # What it enforces per branch:
 #   - required_status_checks: strict, contexts=[quality-gates]
-#   - required_pull_request_reviews: 1 approving review, stale dismissal on
+#   - required_pull_request_reviews: 0 approving reviews (autonomous CI: green gate = the review), stale dismissal on
 #   - required_conversation_resolution: true
 #   - allow_force_pushes / allow_deletions: false
 #   - enforce_admins: false  ← admin bypass escape hatch (see policy doc)

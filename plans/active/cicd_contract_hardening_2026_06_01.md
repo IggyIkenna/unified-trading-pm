@@ -786,6 +786,21 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
 - [x] ✅ [VERIFY] P1. **enforce_admins on all protected `main` — 16/16 DONE.** instruments-service main enabled after it
       greened (`fbadf6b0a`); the temporary exemption is closed. `verify_branch_protection_check_names.py` → ALL
       CONSISTENT.
+- [x] ✅ [OPERATOR-DECISION→APPLIED 2026-06-02] P1. **Zero human-approvals fleet-wide — the green v2 gate IS the review
+      (autonomous CI/CD).** Operator 2026-06-02: requiring 1 human approval on top of `quality-gates-v2` is overkill for
+      autonomous operation — it blocks agent PRs from auto-merging (the exact block that wedged execution #207: green gate +
+      `MERGEABLE` but `BLOCKED` on a never-coming approval). **Applied:** set `required_approving_review_count: 0` on
+      `main` + `staging` for all 18 review-gated repos (gh-API PATCH), keeping the `require-quality-gates` ruleset +
+      `enforce_admins=true` intact → a green v2 auto-merges, nobody (incl. admins) merges past a red gate. Verified:
+      reviews=0 + enforce_admins true + ruleset active spot-checked; `verify_branch_protection_check_names.py` → ALL
+      CONSISTENT. **Codified (no regression on re-provision):** `ops/branch-protection-template.json` (1→0),
+      `scripts/repo-management/admin-force-sync-all-to-main.sh` (`// 1`→`// 0`), `scripts/propagation/apply-branch-protection.sh`
+      comment; policy doc in `codex/06-coding-standards/feature-branch-workflow.md` § "Zero human-approvals". — repo:
+      unified-trading-pm (gh-API + SSOT scripts).
+- [ ] [SCRIPT] P3. **Add a `required_approving_review_count > 0` flag to `verify_branch_protection_check_names.py`** (or a
+      companion) so a repo that drifts back to requiring human review surfaces in the consistency audit — completes the
+      zero-approvals codification above (today enforced by the template/force-sync defaults but not actively audited). —
+      repo: unified-trading-pm.
 
 ### Phase 3 — Image-build provenance + branch-triggered builds (audit k2/k3)
 

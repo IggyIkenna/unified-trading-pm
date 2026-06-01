@@ -411,7 +411,7 @@ _restore_protection() {
           if .required_pull_request_reviews then {
             dismiss_stale_reviews: (.required_pull_request_reviews.dismiss_stale_reviews // false),
             require_code_owner_reviews: (.required_pull_request_reviews.require_code_owner_reviews // false),
-            required_approving_review_count: (.required_pull_request_reviews.required_approving_review_count // 1)
+            required_approving_review_count: (.required_pull_request_reviews.required_approving_review_count // 0)
           } else null end
         ),
         restrictions: (

@@ -345,6 +345,23 @@ The 4 ⏳ rows are HARD-GATED on a green default-branch run first (never create 
 check would be unsatisfiable and freeze the branch). Tracked per-repo in
 `plans/active/cicd_contract_hardening_2026_06_01.md` § Phase 1.
 
+### Zero human-approvals — the green gate IS the review (autonomous CI/CD, codified 2026-06-02)
+
+**`required_approving_review_count = 0` on `main` + `staging`, fleet-wide.** For autonomous operation a green
+`quality-gates-v2` required check is the merge criterion — a mandatory human approval on top blocks agent-opened PRs from
+auto-merging (a green-gated PR sits `BLOCKED` waiting on an approval that never comes, since an author can't approve their
+own PR and `enforce_admins` binds admins to the review). So the human-approval layer is removed; **everything else stays**:
+
+- the `require-quality-gates` ruleset (v2 context, `bypass_actors: []`) — REQUIRED; **no one (incl. admins) merges past a
+  red gate**;
+- `enforce_admins: true` — the gate binds everyone;
+- "require a PR before merging" stays (`count = 0` still requires a PR — just no approval), so the PR + gate flow is intact.
+
+Net: a green `quality-gates-v2` → the PR auto-merges, hands-off. SSOTs updated so it does not regress on re-provisioning:
+`ops/branch-protection-template.json` (`required_approving_review_count: 0`), `scripts/repo-management/admin-force-sync-all-to-main.sh`
+(`// 0` default). Operator decision 2026-06-02. Re-introduce human review only as a deliberate per-repo policy, never the
+default. Tracked: `plans/active/cicd_contract_hardening_2026_06_01.md`.
+
 ---
 
 ## Quick Reference

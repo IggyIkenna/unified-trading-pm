@@ -10,7 +10,7 @@
   "enforce_admins": false,
 
   "required_pull_request_reviews": {
-    "required_approving_review_count": 1,
+    "required_approving_review_count": 0,
     "dismiss_stale_reviews": true,
     "require_code_owner_reviews": false,
     "require_last_push_approval": false
@@ -28,7 +28,7 @@
 
   "_comment_enforce_admins_false": "enforce_admins=false is the admin-bypass escape hatch. IggyIkenna (org admin) can merge past a failing 'quality-gates' check by using --admin-override-coverage in quickmerge + admin-merge on GitHub. Non-admins see a hard block because they can't bypass branch protection.",
 
-  "_comment_1_approver": "1 approving review is the minimum to prevent direct-push. Raise to 2 when the team grows past 3 reviewers.",
+  "_comment_0_approver": "0 required human approvals (codified 2026-06-02): for AUTONOMOUS CI/CD, a green required status check (quality-gates-v2) IS the review. A mandatory human approval blocks agent-opened PRs from auto-merging, defeating the gate. enforce_admins=true (in the ruleset model) keeps the GATE binding everyone — no one merges past a red gate. The PR-before-merge requirement stays (count=0 still requires a PR, just no approval). Re-introduce human review only as a deliberate per-repo policy, never as the default.",
 
   "_comment_force_push_disabled": "Force-pushes would let anyone rewrite history past the quality-gates check. Disabled for all protected branches."
 }
