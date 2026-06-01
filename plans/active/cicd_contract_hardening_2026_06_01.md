@@ -893,6 +893,20 @@ behind the exact drift this whole audit is about.
 
 ### Reconciliation follow-ups (surfaced 2026-06-01 slot-1 reconciliation sweep)
 
+- [ ] [CI] P3. **Confirm execution-service benchmarks.yml fix lands on main + runs green.** Fixed on LDR
+      (`execution-service@79d9f30`): dropped the half-built GitHub-App-token / WIF migration that used the `secrets`
+      context inside `if:` (GitHub forbids it → the workflow failed schema validation = **0-job startup_failure on every
+      push, every branch** — so the perf suite never ran AND startup_failure runs polluted LDR/tab/staging history despite
+      `on:push:[main]`); now clones the **full 16-repo uv-workspace editable closure** via the existing `GH_PAT` secret +
+      env-gated `GCP_SA_KEY` (no App/WIF needed). **Verified green** via `workflow_dispatch` on LDR (all steps incl "Run
+      benchmarks"). Promotion to **main** via PR **#207** (auto-merge ON, gated on `quality-gates-v2`). Verify: #207 merges
+      → next main push touching `execution_services/**|benchmarks/**|pyproject.toml` runs benchmarks GREEN (not
+      startup_failure). **staging**: benchmarks only triggers `on:push:[main]` so it never fires on staging — staging just
+      needs the clean file to stop its own startup_failure pollution; let it inherit via the normal main→staging sync (a
+      direct staging PR would risk a `check-staging-lock`-stuck PR — the exact wedged-PR class we just cleared). **Caveat:**
+      activating latency-assertion benchmarks on main CI may produce occasional flaky reds on shared runners → watcher
+      transition-alerts; tune `benchmarks/` tolerances if noisy. Pattern is isolated to this one workflow (fleet grep
+      clean). repo: execution-service.
 - [x] ✅ [SCRIPT] P2. **PM QG test-isolation flake — FIXED** (`unified-trading-pm@c004b4e6a`). Root cause:
       `find_manifest()` checked `REPO_ROOT` but **fell through to the `cwd.parents` walk** when REPO_ROOT was
       set-but-empty, so a stray `/tmp/unified-trading-pm/` could spuriously match. Fix (production-correct, not
