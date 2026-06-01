@@ -307,6 +307,21 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       **DRY-RUN results (2026-06-01)**:
       MDPS (584,177 empties): 0 relabels — CORRECT: MDPS only stores in-season date rows; ALL dates are in-season; season gate returns None for all 58,596 unique (league,date) pairs; stays SOURCE_RETURNED_ZERO (genuinely no-odds-returned within-season).
       Instruments (1,909,553 empties): 288,434 SRZ→EXPECTED_{PRE,POST}_SEASON (step5) + 56,624 SRZ→EXPECTED_DEPRECATED_DATA_TYPE (step1) + 22,978 free-text→EXPECTED_NO_FIXTURE (step2) + existing 13,176 EXPECTED_PRE_SOURCE_COVERAGE_START preserved = 368,036 total relabels (15.4% of SRZ). Unresolved leagues: SCOTTISH_LEAGUE_CUP_185 (15,609) + 86 misc singleton leagues = ~15,700 rows stay SOURCE_RETURNED_ZERO with logged tally.
+- [ ] [DATA] P1. **MDPS in-season no-fixture refinement (open before E8 CF-5 verify — sports-slot 2026-06-01)**: the
+      season oracle is season-WINDOW granularity, so it marks every in-season day as a fixture day → it CANNOT catch
+      in-season days with no actual match (most leagues play 1–2 days/week), which should be `EXPECTED_NO_FIXTURE`, not
+      `SOURCE_RETURNED_ZERO`. The 584,177 MDPS empties all kept SRZ on that basis. **Resolve before declaring CF-5 GREEN
+      on MDPS**: (a) read the MDPS odds writer's row-creation logic — does it attempt EVERY in-season day or only actual
+      fixture days? If only fixture days → SRZ is genuinely correct (an attempted fixture the bookmaker didn't price) →
+      CF-5 GREEN, document + close. (b) If it attempts every in-season day → join the instruments-store FIXTURES
+      truthset (actual per-day fixtures) to relabel the genuine no-match in-season days → `EXPECTED_NO_FIXTURE` (the
+      keystone bites on MDPS too). Either outcome is fine but MUST be DETERMINED + documented — an undiagnosed 584k SRZ
+      block is exactly the "blanket reason" the keystone exists to eliminate.
+- [ ] [DATA] P1. **Unresolved-league residual (CF-7 / NO_MAPPING — before E8)**: ~15,700 instruments-store rows
+      (`SCOTTISH_LEAGUE_CUP_185` 15,609 + 86 singleton leagues) failed `get_league()` resolution → stayed SRZ with a
+      logged tally. Diagnose: are these canonical leagues missing from the UAC `provider_league_ids` registry (→ add
+      mapping so the oracle classifies them) OR provider-league-id artifacts (→ `EXPECTED_NO_MAPPING`)? Resolve so 0
+      empties stay SRZ purely because the league didn't resolve.
 - [ ] [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
