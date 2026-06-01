@@ -136,6 +136,42 @@ So even with lst*rates 92% / perp_funding 55% / dex 90%+ at the **raw** layer, t
 cannot run today — the gap is the MTDS→features propagation, not the raw corpus.** This is the single most important
 readiness finding and was invisible until the L3 layer was checked.
 
+## Diagnostic — why the low per-venue numbers (operator questions, 2026-06-01)
+
+Read `capture_status` + `error_reason` + captured-date-range per venue. **The low %s are dominated by THREE non-download
+causes, not pending backfills:**
+
+1. **Un-gated denominator** — coverage counted from 2020-01-01 even for venues that launched in 2022/2024. Gate by
+   `venue_launch_date` → most jump to ~100%.
+2. **Reason mislabeling** — pre-launch/pre-genesis dates recorded as `SOURCE_RETURNED_ZERO` or **blank** instead of
+   `EXPECTED_PRE_VENUE_LAUNCH` / `EXPECTED_PRE_GENESIS_CHAIN` (blank reason also violates
+   `LegacyBlankErrorReasonError`).
+3. **Chain-labeling duplication** — same data enumerated twice (captured under blank chain + phantom-empty under the
+   real chain).
+
+| Venue / cell                | Raw %    | Real diagnosis                                                                                                                                                                    | Action                                                                                    |
+| --------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **DRIFT** perp_funding      | absent   | NOT a new data_type — same `perp_funding`, DRIFT venue/SOLANA chain, never enumerated                                                                                             | **Already covered** by `solana_basis_trading_mvp` Phase 1 (Velocity API backfill) ✅      |
+| **LIGHTER** perp_funding    | 0%       | 599 rows ALL `SOURCE_RETURNED_ZERO` across full post-launch life (2024-09→2026-05) — genuine zero from the source                                                                 | **Real fix**: Lighter funding adapter/endpoint returns nothing — verify endpoint (zkSync) |
+| **PACIFICA** perp_funding   | 28%      | captured 2025-12→now (~100% of real life); pre-Dec-2025 = `SOURCE_RETURNED_ZERO` (pre-launch, young venue)                                                                        | reason-relabel `EXPECTED_PRE_VENUE_LAUNCH`; no backfill                                   |
+| **ASTER** perp_funding      | 44%      | captured since 2024-09 (~100% of real life); pre-launch rows carry **blank reason**                                                                                               | fix blank reason → `EXPECTED_PRE_VENUE_LAUNCH`; no backfill                               |
+| **LIDO** lst_rates          | 85%      | captured 2020-12→now (~100%); 353 pre-Dec-2020 = pre-launch `SOURCE_RETURNED_ZERO`                                                                                                | denominator-gate + relabel; no backfill                                                   |
+| **ETHERFI** lst_rates       | 70%      | captured 2024-01→now (~100%); pre-2024 = didn't exist                                                                                                                             | denominator-gate + relabel; no backfill                                                   |
+| **MARINADE** lst_rates      | 61%      | captured 2022-01→now; pre-genesis block mislabeled                                                                                                                                | denominator-gate + relabel; no backfill                                                   |
+| **PYTH** oracle (SOLANA 0%) | 48% / 0% | **double-enumerated**: real data captured under chain=`''` (1,185 rows), phantom-empty under chain=`SOLANA` (1,296: 962 `SOURCE_RETURNED_ZERO` + 334 `EXPECTED_KNOWN_SOURCE_GAP`) | reconcile chain label (`''`→`SOLANA`); the captured data already exists                   |
+| **CHAINLINK** oracle        | 90%      | 6,507 captured; 728 empty (453 **blank reason** + 275 `SOURCE_RETURNED_ZERO` pre-genesis) + 1 `attempted_failed` (RPC "Block with id")                                            | fix blank reasons + 1 RPC retry; rest honest pre-genesis                                  |
+
+**So to get to 100%**: it's mostly (a) **gate the denominator by venue-launch/chain-genesis** (item p), (b) **relabel
+pre-launch reasons** (fixes the blank-reason `LegacyBlankErrorReasonError` violations too), (c) **reconcile the Pyth
+blank-vs-SOLANA chain duplication**. The only genuine data work is **LIGHTER** (adapter returns zero post-launch) +
+**DRIFT** (already in the Solana plan) + a handful of `attempted_failed` RPC retries.
+
+**Why it took many passes** (operator Q): both causes, and the difficulty IS the finding — (1) **data not in canonical
+placing** (scattered dedicated buckets w/ inconsistent env-suffixes, hyphen/underscore + VENUE-CHAIN + blank-chain
+dupes, and a phantom grid in `market-data-tick-defi` that actively returns "empty" to the first reader); (2) **manifest
+fragmentation** (per-data_type indexes, no single canonical surface; schema spread v4–v8; mislabeled reasons). The
+hard-to-find-ness is itself the L1/L2 bug to fix.
+
 ## Solana MVP integration (`solana_basis_trading_mvp_2026_06_01.md`)
 
 The concrete first-live target is the **Solana basis trade** (long SOL on Orca/Raydium + short SOL-PERP on Drift V2).
@@ -183,8 +219,18 @@ Coverage cells that actually gate go-live (audit these specifically):
 - [ ] [DATA] P1. Extend `solana_defi_handler.py` for Orca/Raydium `dex_pool_state` time-series (Solana MVP).
       parent_epic: mtds_mdps_master (Solana)
 - [ ] [DATA] P0. Backfill the UAC-expected venues the manifest never enumerated (true-coverage gap, after naming
-      reconciliation): `DRIFT-SOLANA` (Solana MVP), `FRAX` (lst), `MORPHO` + `FLUID` (lending). parent_epic: defi_master
-      (Q2)
+      reconciliation): `DRIFT-SOLANA` (Solana MVP — already planned), `FRAX` (lst), `MORPHO` + `FLUID` (lending).
+      parent_epic: defi_master (Q2)
+- [ ] [DATA] P1. **LIGHTER** perp_funding returns `SOURCE_RETURNED_ZERO` across its whole post-launch life (2024-09→now)
+      — verify the Lighter (zkSync) funding endpoint/adapter; real source/adapter fix, not pre-launch. parent_epic:
+      defi_master
+- [ ] [MIGRATION] P1. **Reason relabeling** — pre-launch/pre-genesis rows recorded as `SOURCE_RETURNED_ZERO` or
+      **blank** (LIDO/ETHERFI/MARINADE/PACIFICA/ASTER pre-launch; CHAINLINK 453 blank) → `EXPECTED_PRE_VENUE_LAUNCH` /
+      `EXPECTED_PRE_GENESIS_CHAIN`; clears `LegacyBlankErrorReasonError` violations + lifts venue %s without backfill.
+      parent_epic: defi_master
+- [ ] [CLEANUP] P1. **Pyth chain-label duplication** — oracle_prices Pyth captured under chain=`''` (1,185) but
+      phantom-empty under chain=`SOLANA` (1,296). Reconcile (`''`→`SOLANA`); fixes "Solana oracle 0%" without backfill.
+      parent_epic: defi_master
 - [ ] [CODE] P0. Fix `data_status_service._build_coverage_for_cat` (`/api/coverage-summary`) denominator: replace
       `len(index)` self-reference with the expected-dates oracle (`_mtds_expected_dates_cached`) + apply `is_expected()`
       scope gate, so the tab matches `manifest-status` and the audit. parent_epic: deployment_and_user_management_master
