@@ -145,13 +145,30 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       returned NO v2 file on `main` despite ruleset=v2 (single API read — re-verify; if true their `main` is blocked
       too). The template (`@83f483069`) renders the correct name — rollout to each repo's `main`/`staging` is folded into
       the per-repo migration below (right name is a prerequisite for the v2 re-pin).
-- [ ] [SCRIPT] P2. **FINDING (2026-06-01) — `load-gh-token.sh` prefers a STALE `.act-secrets` over authoritative SM.**
-      The repos-root `.act-secrets` held an EXPIRED fine-grained `GH_PAT` (was valid at the morning probe, 401 by
-      afternoon); `load-gh-token.sh` path-1 prefers `.act-secrets` and never validated freshness, so it exported the
-      dead token (gh-API 401 everywhere; git push still worked only because the remote is SSH). The fresh token is in
-      GCP SM `GH_PAT` (`gcloud secrets versions access latest --secret=GH_PAT --project=central-element-323112` → 200).
-      Fix options: (a) add a fast validity probe to `load-gh-token.sh` and fall through to SM on 401; (b) have
-      `generate-act-secrets.sh` refresh `.act-secrets` from SM on a cron / on bootstrap. — repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **FINDING+FIX (2026-06-01) — `load-gh-token.sh` blindly trusted a STALE `.act-secrets`.**
+      `unified-trading-pm@e93aacbc8` (LDR). The repos-root `.act-secrets` `GH_PAT` had expired/rotated (gh-API 401
+      everywhere mid-task; git push still worked only because the remote is SSH); `load-gh-token.sh` path-1 preferred
+      `.act-secrets` with no freshness check. Fixed via a cheap `/rate_limit` validity probe on the cached-token path
+      (200=valid vs 401=dead; `--max-time 6`; skipped when curl absent) that clears a dead token so the Secret Manager
+      fallback (authoritative) takes over. (NB also discovered the workspace fine-grained `GH_PAT` covers contents +
+      rulesets + rate_limit but NOT the Actions or GraphQL APIs — so `gh run`/`gh pr create` need the keyring token;
+      only `.github/workflows` content-PUTs need the PAT. SSH push is exempt from workflow-scope either way.)
+- [ ] [SCRIPT] P0. **FINDING (2026-06-01) — SYSTEMIC: classic branch-protection requires an unsatisfiable bare
+      `quality-gates-v2` context on ~every repo.** Workspace repos carry BOTH a ruleset AND classic branch protection.
+      The ruleset uses the correct `Quality Gates (<repo>) / quality-gates-v2` context, but classic protection
+      (`branches/main/protection/required_status_checks`) requires the **bare `quality-gates-v2`** — a context NO run
+      emits (the Actions check is `<job name:> / quality-gates-v2`). Audited 2026-06-01: 14/16 repos have this wrong
+      bare context (all except `system-integration-tests` [fixed below] + `deployment-ui` [no classic protection]).
+      Because `enforce_admins=false`, admins bypass it (that's how deployment-api/trading-agent were merged), but it
+      **blocks every non-admin merge to main workspace-wide** and was the cause of SIT PR #14 showing `BLOCKED` despite
+      a green ruleset check. Fix per repo: `gh api -X PATCH repos/IggyIkenna/<repo>/branches/main/protection/required_status_checks`
+      with `checks=[{context: "Quality Gates (<repo>) / quality-gates-v2"}]` (done for SIT). Durable option for operator:
+      a `pin_branch_protection_*` companion that mirrors the ruleset context into classic protection, OR retire classic
+      protection in favour of rulesets (the plan's canonical mechanism). Being fixed per-repo as each migration PR merges.
+- [ ] [SCRIPT] P2. **FINDING (2026-06-01) — `load-gh-token.sh` SM fallback / .act-secrets refresh.** Complement to the
+      validity-probe fix above: have `generate-act-secrets.sh` refresh `.act-secrets` from SM on bootstrap/cron so the
+      cache rarely goes stale in the first place. — repo: unified-trading-pm.
+- [ ] [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
 - [ ] [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
       currently fetches `GH_PAT` only for clone-time HTTPS; also export it as `GH_TOKEN`/`GITHUB_TOKEN` in the worker
       systemd env (or source `load-gh-token.sh` at worker start) so VM workers can edit workflows too. — repo:
@@ -192,19 +209,15 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
         `deployment-service market-tick-data-service strategy-service unified-api-contracts unified-trading-library`
         (BFS over pyprojects — the manifest deps were incomplete). Ruleset re-pointed to `…/quality-gates-v2`, v2 run
         **green**, enforcement active. (staging+LDR still to do — see handoff.)
-  - [ ] [LINT] P1. **system-integration-tests** — CORRECTED DIAGNOSIS 2026-06-01. The `metadata for alerting-service`
-        editable error was an OLD run; SIT main's `quality-gates-v2.yml` already carries the complete 12-repo closure
-        (incl `alerting-service` + `client-reporting-api`) and the correct job name. The real harness blocker was a
-        **clone failure**: `features-service` has NO `main` branch (default = `live-defi-rollout`), and the reusable
-        workflow's `clone_repo` fallback ended at hardcoded `git clone -b main` →
-        `fatal: Remote branch main not found` → exit 128. **FIXED** by the default-branch fallback in
-        `python-quality-gates-v2.yml` (`unified-trading-pm@3f0096405`) — verified: SIT v2 run 26758570555 now clones +
-        builds + installs `features-service`. **Remaining blocker = real SIT-repo lint**: `ruff` reports 64 errors in
-        `tests/smoke/*` and others — 28×RUF002 + 4×RUF003 (ambiguous unicode `×` in coverage-matrix docstrings),
-        11×UP043 (deprecated typing), 5×B905 (zip strict=), 2×C901 (complexity), plus autofixable F401/F841/I001/SIM*.
-        Next: `ruff check --fix` the autofixables, replace `×`→`x` (or per-file-ignore RUF002/003) in the docstrings,
-        `# noqa: C901` (test helpers) → green → re-pin (SIT main ruleset is already v2). Coverage floor may surface
-        after lint passes — check.
+  - [x] ✅ [LINT] P0. **system-integration-tests — MIGRATED + GREEN + MERGED 2026-06-01 (PR #14).** Two real blockers,
+        both fixed: (1) harness — `features-service` has NO `main` branch → reusable-workflow clone died at hardcoded
+        `-b main` (exit 128); fixed by the default-branch `clone_repo` fallback (`unified-trading-pm@3f0096405`).
+        (2) real SIT-repo lint — 64 ruff errors; fixed PROPERLY (no floor/rule lowering): ruff safe + behaviour-preserving
+        fixes (`zip(strict=False)`, `contextlib.suppress`, ternary, unused removal), ambiguous-unicode `×`→`x` / en-dash
+        →`-` in docstrings+comments (RUF002/003; none in code), SIM102 combine, SIM117 single-with, RUF012 ClassVar.
+        PR #14 `quality-gates-v2` ran the FULL harness (clone+install+lint+typecheck+tests+coverage) → **success**; merged
+        to main. ALSO fixed SIT's classic-protection required context (`quality-gates-v2` bare → full) so the PR was
+        mergeable — see the systemic classic-protection finding above. SIT main ruleset already v2 → fully migrated.
   - [ ] [TEST] P1. **client-reporting-api** — UPDATED 2026-06-01: NOT pure-coverage. Latest v2 (run 26753231379) has a
         **real test failure** `tests/unit/test_core_coverage.py::TestInvoiceState::test_compute_current_fees_for_all_seed_clients
         - assert False` (8 sibling tests SKIP with "No backfilled client data present"), AND coverage 68.62% < 70%, AND
