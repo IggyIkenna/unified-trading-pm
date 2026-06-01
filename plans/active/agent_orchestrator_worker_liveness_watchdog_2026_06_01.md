@@ -97,11 +97,12 @@ Observation captured during operator's 2026-05-30/06-01 manual kill cycles. Two 
       `_is_context_full(pane: str) -> bool`, `_is_actively_thinking(pane: str) -> bool` (allow-list for
       `Crunched|Cogitated|Worked|Baked for \d+m \d+s`). Tested via fixture-pane strings. Collision group:
       `ao_watchdog_code`. Estimate: 0.15 AI-day. ✅ — agent-orchestrator@97cda3f
-- [ ] [TEST] P0. 20+ unit tests: (a) stuck-at-prompt detection with 3-tick threshold, (b) actively-thinking pane is
+- [x] ✅ [TEST] P0. 20+ unit tests: (a) stuck-at-prompt detection with 3-tick threshold, (b) actively-thinking pane is
       NOT killed even with stuck-looking text, (c) context-full pane IS killed immediately, (d) heartbeat-silent
       detection via mocked slot.last_heartbeat_at + tmux_has_session, (e) blocked-status slot is NOT killed even when
       heartbeat-silent, (f) cooldown blocks second kill within 5 min, (g) per-VM daily cap enforced, (h) Slack alert
       fires on context-full + on cap-hit. Collision group: `ao_watchdog_code`. Estimate: 0.25 AI-day.
+      ✅ — agent-orchestrator@95c6976 (40 tests, all 8 spec targets covered)
 - [ ] [QG] P0. `bash scripts/quality-gates.sh` exit 0 in agent-orchestrator → sentinel sha written →
       `bash scripts/quickmerge.sh "feat(watchdog): WorkerLivenessWatchdog — auto-kill stuck/silent/context-full workers" --agent`.
       Collision group: `ao_watchdog_code`. Estimate: 0.1 AI-day.
