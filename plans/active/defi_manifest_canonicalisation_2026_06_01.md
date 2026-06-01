@@ -117,9 +117,12 @@ Design decisions (encode):
 
 ## C. Data / manifest migration (single-walk, bundled) — fix existing rows
 
-- [⏳] [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — script ready
-  `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py` (dry-run: 728 pre-genesis relabel + Pyth 1,185 chain
-  `''`→`SOLANA` + drop 1,034 dup empties); snapshots before write.
+- [x] ✅ [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — **APPLIED 2026-06-01** via
+      `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py --apply`: 728 pre-genesis relabel →
+      `EXPECTED_PRE_GENESIS_CHAIN`; Pyth 1,185 chain `''`→`SOLANA` + dropped 1,034 dup empties; 9,717→8,683 rows; PYTH
+      now all `chain=SOLANA` (1,447 = 1,185 captured + 262 owed). Original snapshotted →
+      `_index/snapshots/pre_relabel_2026_06_01.parquet`. Fixes the consolidated index; durable until a full consolidator
+      rebuild (which needs the source rows fixed too — the bundled C2–C7 walk). Writer A1 makes future writes correct.
 - [ ] [DATA] P1. C2 data_type alias dedup across buckets: `lending-indices`→`lending_indices`, `dex-pools`→`dex_pools`,
       `dex-swaps`→`dex_swaps`, `staking_yields`→`lst_rates` (rename rows; data exists). ONE walk.
 - [ ] [DATA] P1. C3 VENUE-CHAIN→flat: legacy `UNISWAPV3-ETHEREUM` venue strings → flat `venue` + populated `chain`. Same
