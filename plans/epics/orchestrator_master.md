@@ -156,11 +156,13 @@ operator + slot-1 main, 2026-06-01.
 `Commit + Push + Flip` step (`git push origin HEAD:live-defi-rollout`). There is **no hard gate** preventing an
 autonomous worker (running `--dangerously-skip-permissions`) from resolving a rebase/merge conflict by reverting another
 agent's committed work — just to land a clean merge or a green QG — which **silently regresses plan intent**. The
-existing machinery only _parks and reports_, it does not _block_: `slot-cron-ff-pull.sh` is fast-forward-only and skips
-ahead/diverged worktrees (`[skip:diverged] … need manual rebase`); `slot-git-status-report.sh` POSTs ahead/behind drift
-to `/api/slots/<N>/git-status` (dashboard Fleet tab) but that is a passive signal, not a page or a gate; the
-orchestrator server has no tab→LDR auto-integration. Concrete instance at freeze:
-`vm-cefi:.tabs/2/market-tick-data-service` = **6 ahead / 34 behind** LDR, un-integrated and silently drifting.
+existing machinery _parks, reports, and (after 15 min) pages + nudges_ — but it does **not block**:
+`slot-cron-ff-pull.sh` is fast-forward-only and skips ahead/diverged worktrees (`[skip:diverged] … need manual rebase`);
+`slot-git-status-report.sh` POSTs ahead/behind drift to `/api/slots/<N>/git-status`; and `worker_liveness.py` (line
+~343) already flags `ahead>0 || diverged` for >15 min (`any_red_15m`), fires `notify_git_staleness_red`, and nudges the
+worker to commit. So detection + alert + nudge EXIST. What does NOT exist is a hard gate: nothing stops an autonomous
+worker from force-resolving a conflict (alert ≠ prevention), and the server has no tab→LDR auto-integration. Concrete
+instance at freeze: `vm-cefi:.tabs/2/market-tick-data-service` = **6 ahead / 34 behind** LDR, un-integrated.
 
 **Why it matters**: This is the structural path by which "stupid agents undo good work on data migration and quality
 gates" — the exact failure the 2026-06-01 freeze was called to stop. The protection today is soft governance (CLAUDE.md
@@ -170,9 +172,11 @@ conditional-push + `rebase --abort` rules + agent judgment), not enforcement.
       BLOCKS any non-fast-forward push to `HEAD:live-defi-rollout` unless either (a) the rebase replayed with ZERO
       conflicts, or (b) the push carries an explicit plan-reference + human/main-agent ack. Force-resolved integrations
       are rejected by default. Composes with the `Commit + Push + Flip` HARD RULE.
-- [ ] [SCRIPT] P1. Promote diverged-worktree drift from a passive dashboard signal to an ACTIVE alert: when a worktree
-      is `ahead>0 && behind>threshold` for >N minutes, ping the orchestrator inbox so it is integrated deliberately, not
-      silently parked (e.g. the cefi mtds 6-ahead/34-behind case above).
+- [ ] [SCRIPT] P1. Alerting mostly EXISTS — `worker_liveness.py` already flags `ahead>0 || diverged` for >15 min
+      (`any_red_15m`), fires `notify_git_staleness_red`, and nudges the worker. BUT it reaches **Telegram only**:
+      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is UNSET fleet-wide (verified vm-orchestrator 2026-06-01) so the Slack path in
+      `notifications/slack.py` is silently suppressed. Action: set the Slack webhook on the fleet if a Slack surface is
+      wanted, and confirm the threshold pages on a still-CLEAN-but-diverged worktree (not only dirty).
 - [ ] [DOC] P1. Document the tab-branch-vs-LDR topology + the "park-and-preserve, never force-resolve a conflict to get
       green" contract explicitly in `agent-orchestrator/agents/worker.md` + codex orchestrator overview, so a worker
       cannot infer "pushed to my tab branch" == "integrated to LDR".
