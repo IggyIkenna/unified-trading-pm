@@ -41,7 +41,13 @@ from typing import cast
 import yaml
 
 REQUIRED_FIELDS = ("owner", "cadence", "verifier", "last_executed")
-EXCLUDED_DIRS = ("plans/archive/", ".venv", ".venv-workspace", "build/", "dist/", "node_modules/")
+# `context/codex/` = vendored codex MIRRORS that non-PM repos sync for their
+# in-repo AI context (e.g. unified-trading-system-ui/context/codex/...). The
+# canonical codex SSOT — and therefore the only authoritative runbooks — lives in
+# `unified-trading-pm/codex/`, which IS enforced here. Excluding the read-only
+# mirrors prevents a stale copy (e.g. a pre-frontmatter sit-runbook.md) from
+# failing the gate in full-workspace checkouts while the canonical is compliant.
+EXCLUDED_DIRS = ("plans/archive/", ".venv", ".venv-workspace", "build/", "dist/", "node_modules/", "context/codex/")
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "runbook_execution_owner_baseline.yaml"
 
 
