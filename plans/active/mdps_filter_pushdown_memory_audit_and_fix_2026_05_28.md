@@ -10,6 +10,8 @@ author: harsh (claude opus 4.7)
 estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
+locked_by: live-defi-rollout
+locked_since: 2026-05-28
 related:
   - features_calc_efficiency_and_correctness_2026_05_27.md # the 4h/24h unblock waiting on MDPS sample data
   - features_service_e2e_pipeline_test_2026_05_26.md # the original 4h/24h non-landing trail
@@ -165,12 +167,12 @@ returns audibly if the fix is incomplete — not silently absorbed by capacity.
   `process_handler.py:_process_candles_for_one_date` and/or at the per-instrument boundary in
   `live_workers._process_instrument_file`) needs to be re-opened — this plan's audit was wrong to skip it. See
   "Re-opened Phase 2.2" below.
-- [x] ✅ [VERIFY] P1. **3.3 The actual unblock — 16-day narrow scope** 2026-04-15 → 04-30. **PASSED.**
-      VM `mdps-backfill-cefi-20260529-090755` auto-deleted (exit 0). GCS
-      `market-data-tick-cefi-test-central-element-323112/processed_candles/by_date/` has all 16 days
-      (2026-04-15 → 2026-04-30) × 28 parquet files each (4 instruments × 7 timeframes). No OOM / no
-      MEMORY_BACKPRESSURE events. MDPS tarball `@db233e266a4f` (Stage 1-4 pure-polars + `_cleanup_after_day`
-      wired) on `e2-standard-8` (32 GB), `MAX_WORKERS=2`.
+- [x] ✅ [VERIFY] P1. **3.3 The actual unblock — 16-day narrow scope** 2026-04-15 → 04-30. **PASSED.** VM
+      `mdps-backfill-cefi-20260529-090755` auto-deleted (exit 0). GCS
+      `market-data-tick-cefi-test-central-element-323112/processed_candles/by_date/` has all 16 days (2026-04-15 →
+      2026-04-30) × 28 parquet files each (4 instruments × 7 timeframes). No OOM / no MEMORY_BACKPRESSURE events. MDPS
+      tarball `@db233e266a4f` (Stage 1-4 pure-polars + `_cleanup_after_day` wired) on `e2-standard-8` (32 GB),
+      `MAX_WORKERS=2`.
 
 ## Re-opened Phase 2.2 (NEW — added 2026-05-28 mid-Phase-3)
 
@@ -336,9 +338,11 @@ Per operator 2026-05-28 EOD, the sequence is:
       tarball `@db233e266a4f` (Stage 1-4 pure-polars + `_cleanup_after_day` wired). Scope: BINANCE-FUTURES + BYBIT ×
       BTCUSDT + ETHUSDT × trades × 2026-04-15→2026-04-30, `MAX_WORKERS=2`, output →
       `market-data-tick-cefi-test-central-element-323112`. VM auto-deletes on completion.
-- [x] ✅ [AGENT] P1. **3.X-4** Create the long-running multi-shard architectural audit plan (separate file). Don't try to
-      land architecture here — that's a multi-week refactor, not a "smallest viable fix".
-      — unified-trading-pm@(see commit) | plan: plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md | 7 phases covering execution model, data engine, CLI granularity, observability, codex updates; codex audit of 4 operator findings included.
+- [x] ✅ [AGENT] P1. **3.X-4** Create the long-running multi-shard architectural audit plan (separate file). Don't try
+      to land architecture here — that's a multi-week refactor, not a "smallest viable fix". — unified-trading-pm@(see
+      commit) | plan: plans/active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md | 7 phases covering
+      execution model, data engine, CLI granularity, observability, codex updates; codex audit of 4 operator findings
+      included.
 
 ## Phase 4 — Codex SSOT updates (HARD RULE)
 
@@ -347,14 +351,14 @@ Per operator 2026-05-28 EOD, the sequence is:
       write) MUST apply scope filters at the LIST stage, not the WRITE stage. Reference this plan + the 2026-05-28
       incident. (If no codex doc fits, write a stub.) — Doc already landed at PM commit `d52b0eb6`:
       `codex/06-coding-standards/read-time-filter-pushdown.md`. Covers: rule, anti-pattern, correct pattern,
-      verification recipe, reference implementation (MDPS `e47205d`), incidents, cross-service generalization.
-      Checkbox flip 2026-05-30.
+      verification recipe, reference implementation (MDPS `e47205d`), incidents, cross-service generalization. Checkbox
+      flip 2026-05-30.
 - [x] ✅ [AGENT] P2. **4.2 ~~Remove the now-stale workspace mitigations~~ Re-scope the TradFi mitigation in the sharded
       launcher.** Updated header comment + `_machine_type_for` inline comment in
-      `deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh` to attribute the TradFi `e2-highmem-8 +
-      max-workers=2` mitigation to the BUNDLE-READER issue (not filter-pushdown), name the unblock (bundle-reader
-      streaming refactor tracked in `mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`), and leave
-      mitigation code untouched. Shipped deployment-service@c566e3e → live-defi-rollout. 2026-05-30.
+      `deployment-service/scripts/vm/launch-mdps-sharded-backfill.sh` to attribute the TradFi
+      `e2-highmem-8 +     max-workers=2` mitigation to the BUNDLE-READER issue (not filter-pushdown), name the unblock
+      (bundle-reader streaming refactor tracked in `mdps_long_running_multi_shard_architecture_audit_2026_05_28.md`),
+      and leave mitigation code untouched. Shipped deployment-service@c566e3e → live-defi-rollout. 2026-05-30.
 
 ## DO NOT (anti-patterns the next agent should avoid)
 
