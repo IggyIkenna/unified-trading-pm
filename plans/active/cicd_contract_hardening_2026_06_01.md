@@ -107,6 +107,14 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 > v2 callers, take LDR's canonical PM-template version), push `HEAD:live-defi-rollout` → the LDR→main PR becomes
 > mergeable → `gh pr merge <n> --auto --merge`. **Merge-commit preserves main's fresh commits** (never replace). Then
 > repeat for `staging`. Do NOT bypass the v2 gate. agent-orchestrator is the exception (already on main — see below).
+>
+> **GAP found (operator 2026-06-01): run QG on the MERGED state before pushing — local QG on the slot is NOT enough.**
+> The local `quality-gates.sh` runs on the slot (pre-merge LDR), which is clean; but the `git merge origin/main` can
+> introduce issues the merge alone creates (e.g. interleaved main+LDR import blocks → ruff **I001** unsorted, which hit
+> mtds#112 — same ruff 0.15.0, NOT a tooling gap). CI lints the PR *merge*; local QG didn't. So after each back-merge,
+> run `.venv/bin/ruff check . && bash scripts/quality-gates.sh` on the merged tree (or `ruff check --fix`) BEFORE pushing.
+> This is exactly what **`quickmerge` does (runs QG pre-promote) + its dep-checker forces dependency order** — using
+> quickmerge for promotion would have caught both the merge-introduced lint AND the cross-repo clone skew.
 
 | Repo | PR# | Status |
 | --- | --- | --- |
