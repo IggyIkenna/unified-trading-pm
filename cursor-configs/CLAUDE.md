@@ -266,6 +266,21 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   Hand-edits are still legitimate for _tuning_ derived tasks (priority, repos, target_slot, est_hours, collision_group)
   once they've been auto-created. SSOT: `agent-orchestrator/server/regen_backlog_from_plan.py` +
   `unified-trading-pm/plans/PLAN_FORMAT.md`.
+- **Fanning out work = writing tracked plan todos. The plan todo IS the dispatch (HARD RULE codified 2026-06-01)**:
+  whenever you decide a unit of work should be done by a slot/worker — "a slot should do X", "this needs a dedicated
+  per-repo pass", "fan this out", "assign to slot N", "out of scope for me, hand off" — the decision is **not real
+  until it is a `- [ ]` todo in a PM active plan** using the canonical format (`- [ ] [CATEGORY] P<0-3>. Description`)
+  with the **target repo named** and **enough self-contained context that a cold sub-agent can act** (it starts fresh +
+  reads `SUB_AGENT_MANDATORY_RULES.md`). That plan todo is the ONLY sanctioned dispatch path: `PlanRegenLoop` derives the
+  orchestrator backlog from it (per the rule above) and a slot picks it up. **Banned (review-blocking):** punting work in
+  chat / a summary only ("X is blocked, needs a slot"), verbally assigning a slot without a plan todo, or marking an
+  audit/diagnosis "done" when its follow-ups are only described, not tracked. **Grep-to-verify before ending any session
+  that identified fan-out work**: `rg "<the work>" plans/active/` — no `- [ ]` match → STOP, write the todo first. A
+  diagnosis that names N repos needing fixes MUST leave N tracked todos behind. Reference incident (2026-06-01): a
+  7-repo QG-green remediation surfaced mid-session; per this rule each repo became a tracked todo in
+  `cicd_contract_hardening_2026_06_01.md` rather than a verbal "fan it out". Composes with: _Capture Discoveries As Plan
+  Todos Immediately_, _Agent-orchestrator backlog is plan-driven_, and _Sub-Agents need full rules_ (the todo carries
+  the context the cold worker needs). SSOT: `plans/PLAN_FORMAT.md` + `codex/12-agent-workflow/`.
 - **Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. (HARD RULE codified
   2026-05-30)**: `regen_backlog_from_plan.py` is the single source of truth for backlog state. `backlog.yaml` and
   `state.db` MUST reflect only tasks whose `- [ ]` checkbox is open in an active plan.

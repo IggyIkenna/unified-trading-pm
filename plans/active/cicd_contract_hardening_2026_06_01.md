@@ -69,6 +69,26 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
       on the default branch + re-pin ruleset (`pin_branch_protection_rulesets.py --apply --repo <r>`). Order by readiness:
       first any repo whose v2 run is already green (re-pin only), then the QG-red repos after their QG is fixed. **Do NOT
       flip the ruleset on a red repo.** Owns: the 8 v1 repos above. Tracked jointly with `ci_canonical_v2_migration`.
+
+  **Per-repo fan-out todos (fresh `quality-gates-v2` diagnoses, 2026-06-01 — each dispatchable to a slot):**
+  - [ ] [SCRIPT] P1. **deployment-api** — v2 dep-install fails: `Failed to generate package metadata for
+        deployment-service==0.1.1 @ editable+../deployment-service`. CI doesn't clone the editable sibling. Fix:
+        add `deployment-service` to deployment-api's `dependencies` in `workspace-manifest.json` (so v2 `dep_repos`
+        clones it) OR pin the dep to a published tag instead of `editable+../`. Then re-run v2 → green → re-pin ruleset.
+  - [ ] [SCRIPT] P1. **system-integration-tests** — v2 dep-install fails: `…metadata for alerting-service==0.1.0 @
+        editable+../alerting-service` (same editable-sibling-not-cloned class as deployment-api). Same fix via manifest
+        `dep_repos` / tag-pin. Then re-run → green → re-pin.
+  - [ ] [TEST] P1. **client-reporting-api** — coverage 69.0% < floor 70.0% (≈1% short). Add tests to clear the floor;
+        re-run v2 → green → re-pin ruleset.
+  - [ ] [TEST] P1. **batch-live-reconciliation-service** — coverage 78.2% < floor 80.0% (≈2% short). Add tests; re-run
+        → green → re-pin. (NB: ci_canonical marks this ✅ but it's live-v1 + red — see reality-check banner there.)
+  - [ ] [TEST] P2. **ibkr-gateway-infra** — (a) config bug: `MIN_COVERAGE=0 < system floor 70` in its quality-gates.sh —
+        raise `MIN_COVERAGE` to ≥70; (b) actual coverage 46% < 51% — substantial test-writing. Larger effort; fix config
+        first, then tests; re-run → green → re-pin.
+  - [ ] [SCRIPT] P2. **deployment-ui** — still on v1 (`workspace-qg`), red. Diagnose its v1 failure, roll out
+        `quality-gates-v2.yml`, get green, re-pin ruleset. (UI repo — also needs `pw:L2` per the playwright gate.)
+  - [ ] [SCRIPT] P2. **market-data-processing-service** — still on v1, red. Diagnose v1 failure, roll out v2, green,
+        re-pin.
 - [ ] [VERIFY] P0. Re-run `verify_branch_protection_check_names.py` → every repo's required context is `…/quality-gates-v2`;
       0 on v1. Mark each repo's todo done ONLY when its verifier line is live-v2.
 - [ ] [OPERATOR-DECISION] P1. Repos NOT in the 17-repo ruleset set (`fund-administration-service`, `greeks-service`,
