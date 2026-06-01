@@ -169,8 +169,21 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       `cefi-prd/_index`.
 - [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise
       → full-VM run (no fire-and-forget verification).
-- [ ] [DATA] P0. E5 Manifest rebuild: scan canonical cefi paths → `ManifestWriter.add/record_empty` stamping
-      `source=tardis` (single-source) + `pipeline_mode` + `available_at` → consolidator merge → v9.
+- [ ] [DATA] P0. E5 Manifest rebuild → v9. **BUILD SPEC (refined slot-3 2026-06-01 — ADAPT the existing tool, don't
+      rebuild):** `market_tick_data_service/scripts/rebuild_cefi_manifest.py` ALREADY encodes the correct per-instrument
+      row key (the LIVE writer key =
+      `date,venue,chain,data_type,league_id,instrument_type,underlying,quote_asset,     margin_type,instrument_id`;
+      orchestrator.py:2937/2957) + tolerates `raw_tick_data/by_date/`+`asset_group=`. Two changes only: (1) its `_PAT_*`
+      regexes + `prefix_templates` do NOT account for the NEW `pipeline_mode=` segment between `day=` and `asset_group=`
+      → list per `raw_tick_data/by_date/day={d}/` and extend `parse_hive_path` to capture an optional
+      `pipeline_mode=(?P<pipeline_mode>[^/]+)/`; (2) stamp v9 cols: pass `source` (cefi single-source `tardis`;
+      HYPERLIQUID→`hyperliquid_rest`) + `pipeline_mode` to the writer. **OPEN INTERNALS Q (resolve first):** confirm
+      `ManifestWriter.add()` PERSISTS `pipeline_mode` (the live cefi `add()` at orchestrator.py:2957 does NOT pass it →
+      that's why CF-3 is blank); the manifest row schema HAS `pipeline_mode`/`source`/`available_at` cols
+      (manifest_writer.py:1129/1138/74) + `_coerce_pipeline_mode`. If `add()` drops pipeline_mode (→ \*\*kwargs), use
+      `record_captured`/`record_captured_from_counts` (which take `pipeline_mode=` explicitly) instead. `available_at`:
+      prefer the parquet's column; else day-EOD-UTC (never migration-time). Then consolidator merge → v9 `_index`. Same
+      adaptation applies to `rebuild_prediction_manifest.py` for prediction E5.
 - [ ] [DATA] P1. E6 CF-7 relabel: `COINBASE`↔`COINBASE-SPOT`, blank venue/data_type → canonical (diagnose, don't bulk).
       Investigate the 50% `attempted_failed` rows (1.33M) — flag to cefi AG owner (separate from canonicalisation).
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-cefi-prd-…` → CF-1…CF-12 GREEN on
