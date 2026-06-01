@@ -14,6 +14,17 @@ locked_since: 2026-05-28
 
 # UTL read_availability_index — opt-in fail-fast on stale-consolidated fallback
 
+> **STATUS 2026-06-01 — feature SHIPPED, plan stays ACTIVE on one blocked criterion.** All 8 implementation steps are
+> done and verified: `ManifestConsolidatorStaleError` + `MANIFEST_FAIL_ON_STALE_FALLBACK` shipped
+> `unified-trading-library@cb1f4b5f` (the empty-string codex-compliance violation it introduced is now suppressed
+> `@73209d50`), 3-case unit test green, launcher opt-in landed, codex SSOT updated. **C2/C3/D1/B1 ✅.**
+>
+> **C4 (full `quality-gates.sh` exit 0) ❌ BLOCKED** — NOT by this plan. UTL's full gate is red on a pre-existing
+> repo-wide backlog (STEP 5.21 `reportUnknown*`=none → 962 type errors, ~25 foreign imports-inside-functions,
+> `legacy_reason_classifier` deep imports, `event_sink` fn-size, 80% coverage edge) that no single plan owns. Tracked in
+> **`plans/active/issues/utl_full_qg_red_backlog_2026_06_01.md`**. This plan stays active and closes when that issue
+> resolves C4. (Not archived — per "Plans Run To Actual Completion": don't archive with an unmet success criterion.)
+
 ## What this fixes
 
 `read_availability_index` in `unified-trading-library/unified_trading_library/manifest_writer.py` has a slow-path
@@ -129,7 +140,10 @@ The cefi-heavy backfill launcher is the first opt-in caller (paired with the she
 
 - C2: unit test passes — 3-case truth table (env-unset / env-set-stale / env-set-fresh).
 - C3: ruff + basedpyright clean on the touched lines (no `# type: ignore`).
-- C4: `bash scripts/quality-gates.sh` in `unified-trading-library` exits 0.
+- C4: `bash scripts/quality-gates.sh` in `unified-trading-library` exits 0. ❌ **BLOCKED on pre-existing UTL QG-debt
+  backlog** (this plan's own violation cleared @73209d50). See `plans/active/issues/utl_full_qg_red_backlog_2026_06_01.md`
+  — STEP 5.21 (962 type errors), foreign imports-inside-functions, deep imports, fn-size, 80% coverage edge. Plan
+  closes when that issue greens UTL.
 - D1: launcher metadata change deployed via next cefi-heavy launch (no actual VM needed for validation — env var read at
   Python import time, surfaces in logs).
 - B1: documented in codex/02-data manifest-and-data-status SSOT.
