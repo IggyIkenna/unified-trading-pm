@@ -393,6 +393,40 @@ What to verify/wire (B0 corrected scope):
 > above — provenance must NOT open a third walk on the DeFi `_index`). When C0 is verified, flip those plans' DeFi rows
 > with `— defi via defi_manifest C0@<sha>`.
 
+> **🛑 CRITICAL DISCOVERY 2026-06-01 (data-state audit) — C0's premise below is WRONG; tool needs a redesign before
+> rerun.** The C0 note says "current dedicated-bucket objects are in the flat `day=/category=defi/…` form." The audit
+> (`audit_canonical_form.py` + recursive ls) proves each source DeFi bucket holds **THREE overlapping layouts**, and the
+> flat form is the minority. For dex-pools (191,456 parquet):
+> - `dex_pools/{venue}/{chain}/date=…` (lowercase venue, `date=` not `day=`, no asset_group) — **166,257 (87%)**, oldest,
+>   worst schema, FULL history.
+> - `day=/category=defi/venue=…` (flat) — 19,257 (10%), middle.
+> - `raw_tick_data/by_date/day=/asset_group=defi/venue={CANONICAL}/…/data_type=dex_pool_state/` — ~5,900 (3%), **best
+>   schema** (canonical `_V{N}` venue + asset_group) but missing `pipeline_mode=` partition + **partial coverage**.
+>
+> All 6 buckets share the 2-tree shape (`{data_type}/…` + `raw_tick_data/…`). The trees hold the **SAME venues**
+> (`curve`/`CURVE`, `aerodrome_v3`/`AERODROME_V3`, …) → **overlapping/duplicate data in different schemas + different
+> coverage**, NOT complementary venues. The shipped `migrate_defi_full_v9_canonical.py` only parses the flat `day=`
+> form (and my day-prefix listing missed `raw_tick_data/` + `dex_pools/` entirely) → it migrated ~10% and skipped ~90%.
+> **The 2026-06-01 sharded run was STOPPED for this reason; nothing was deleted.**
+>
+> **C0-REDESIGN (operator 2026-06-01 — "audit it, figure out overlap/freshest schema, migrate once on v9, delete ALL old
+> buckets+paths so data-status has ONE SSOT; stop missing things"):**
+> - [ ] [CODE] P0. C0-RD1 — extend the migration to **enumerate ALL THREE layouts** per bucket (`{data_type}/{venue}/
+>       {chain}/date=`, `day=/category=defi/…`, `raw_tick_data/by_date/day=/asset_group=/…`); normalise each object to a
+>       canonical cell key `(venue→UAC `_V{N}`, chain, data_type, day)`. parent_epic: manifest_master.
+> - [ ] [CODE] P0. C0-RD2 — **dedup overlapping cells**: when a cell exists in >1 layout, pick the BEST representation
+>       (freshest `schema_version`, then most-complete row set, then latest write ts) — never write two objects for one
+>       canonical cell. Complementary cells (only in one layout) are all preserved. No data dropped, no duplicate created.
+> - [ ] [CODE] P0. C0-RD3 — transform the chosen object to **full v9**: schema_version=9 + `asset_group` COLUMN +
+>       `pipeline_mode` column+partition + `source` + canonical venue + `available_at` preserve-or-derive → write ONCE
+>       to env-split `{kind}-prd-{project}` canonical path. Conformant to the § Migration-script performance contract
+>       (ThreadPool, workers, observable, idempotent).
+> - [ ] [DATA] P0. C0-RD4 — **completeness gate**: post-walk, assert canonical `-prd` distinct-cell count ≥ union of all
+>       3 source layouts' distinct cells (per bucket); CF-1…CF-12 GREEN on the rebuilt `-prd` `_index`
+>       (`audit_canonical_form.py`). Only then is C-GREEN.
+> - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4 GREEN,
+>       so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
+>
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
       2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
       VENUE-CHAIN→flat (C3), data*type canonicalisation (C2), `{NAME}_V{N}` promotion, instrument_type + canonical
