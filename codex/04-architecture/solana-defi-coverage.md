@@ -122,6 +122,24 @@ documented in UAC `SOLANA_DEFI_PROTOCOLS["drift"]["s3_historical_url"]` but has 
 Pre-launch manifest rows (2018-01-01 start date) were incorrectly `expected_unattempted`; slot 3 reclassified them to
 `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH` on 2026-05-13 via `defi_legacy_blank_reclassification_2026_05_13.md`.
 
+### DRIFT-SOLANA capture path resolved (2026-06-01 — Velocity Data API)
+
+> Added 2026-06-01 from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1
+> (DriftV2HistoricalIngester shipped at mtds@0f70f376). Full SSOT:
+> `codex/04-architecture/drift-v2-data-sources.md`.
+
+The MTDS consumer gap is closed via the **Drift Velocity Data API** (`data.api.drift.trade`), not the S3 archive.
+Per-day historical endpoints (free tier, no auth): `/market/{symbol}/fundingRates/{Y}/{M}/{D}` (JSON) +
+`/market/{symbol}/trades/{Y}/{M}/{D}?format=csv` (CSV). Coverage verified back to 2024-06-01.
+The S3 archive (now legacy) ended 2025-01-08; Velocity API covers from then on AND historically. Live-mode handler
+unified via `--live --continuous` flag on `backfill_drift_v2_historical.py` (the canonical realization of CLAUDE.md
+"Live = batch (CRITICAL)" hard rule). Output bucket: `market-data-tick-defi-prd-${PID}` with `pipeline_mode=` +
+`asset_group=defi` canonical layout.
+
+The Bug-D-prime saga (Helius sig-walker path, 28GB sig-index parquet) is SUPERSEDED by this design;
+`plans/active/issues/bug_d_prime_drift_backfill_2026_05_31.md` banner-marked SUPERSEDED 2026-06-01. Sig-index
+infrastructure REMAINS in the MTDS repo as cold infrastructure (not on any critical path).
+
 ### Floor dates
 
 All Solana perp DEX venues use the conservative floor date in `_solana_utils.SOLANA_PROTOCOL_DEPLOY_DATES`. Manifest

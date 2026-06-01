@@ -170,11 +170,13 @@ What to verify/wire (B0 corrected scope):
 > **C is the foundation gate** (see Sequencing). One bundled single-walk per bucket applies C0+C2+C3+C4+C5+C7+C9
 > together (no N ad-hoc walks). Backfills (C6/D1/E1) + B0-run are blocked until C is GREEN for the affected bucket.
 
-- [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration)**: for each dedicated DeFi bucket,
-      rewrite object paths to the canonical layout — `category=defi`→`asset_group=defi`, add the
-      `pipeline_mode={batch|live}` hive partition, and move into the **env-split** bucket (`{kind}-prd-{project}`, or
-      fold into `market-data-tick-defi-prd`). This is the keystone the operator flagged: without it, every backfill
-      re-creates the mess. Bundle with C2–C5/C7/C9 in the single walk. parent_epic: manifest_master.
+- [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
+      2026-06-01)**: for each dedicated DeFi bucket, rewrite object paths to the canonical layout — `category=defi`→
+      `asset_group=defi`, add the `pipeline_mode=` (`batch`/`live`) hive partition, move into the **env-split** bucket
+      (`{kind}-prd-{project}`). Script ready (`plans/audit/results/defi_object_path_canonicalisation_2026_06_01.py`,
+      server-side copies + dry-run). **Walk on a `vm-defi` in asia-northeast1** under the pre-migration drain + snapshot
+      discipline (server-side copies but ~500k objects across 6 buckets → VM for reliability/throughput). Bundle with
+      C2–C5/C7/C9 in the single walk; then delete originals after verified cutover. parent_epic: manifest_master.
 - [x] ✅ [DATA] P0. C1 oracle-prices index relabel + Pyth dedup — **APPLIED 2026-06-01** via
       `plans/audit/results/defi_oracle_relabel_migration_2026_06_01.py --apply`: 728 pre-genesis relabel →
       `EXPECTED_PRE_GENESIS_CHAIN`; Pyth 1,185 chain `''`→`SOLANA` + dropped 1,034 dup empties; 9,717→8,683 rows; PYTH
@@ -207,6 +209,16 @@ What to verify/wire (B0 corrected scope):
       `…/day=/pipeline_mode={mode}/asset_group={ag}/…`). The manifest ROWS carry pipeline_mode (handlers pass it); the
       object PATHS don't. Normalise the dedicated DeFi bucket paths in the same single-walk as C2–C4. parent_epic:
       manifest_master.
+- [x] ✅ [DATA] P0. C10 **bad start dates — phantom captured-pre-genesis fix APPLIED 2026-06-01**
+      (`plans/audit/results/defi_phantom_captured_pre_genesis_fix_2026_06_01.py --apply`): **8,477** index rows falsely
+      marked `captured` for a (chain, date) before the chain's UAC genesis (no backing objects — verified) →
+      `empty_confirmed/EXPECTED_PRE_GENESIS_CHAIN`. dex-pools 8,410 (BASE 4,750 / ARBITRUM 1,452 / OPTIMISM 1,396 /
+      ZKSYNC 812), dex-swaps 61, oracle 6. Snapshotted. Removes the false-captured coverage inflation. parent_epic: manifest_master.
+- [ ] [DATA] P0. C11 **deeper phantom audit — are the REST of the dex `captured` rows object-backed?** The uniform
+      first-captured `2021-01-01` across all chains (the genesis ones now fixed) is a red flag that the dex backfill
+      enumerated `captured` without object-backing. Walk dex-pools/dex-swaps `captured` rows vs actual GCS objects;
+      any captured row with no object → relabel honest (`MISSING_EXPECTED`/`attempted_failed`/`empty_confirmed`). Likely a
+      VM job (object listing at scale). parent_epic: manifest_master.
 
 ## D. Features propagation (L3) — coverage must reach features-service
 
@@ -232,9 +244,97 @@ What to verify/wire (B0 corrected scope):
 - [ ] [DOCS] P2. F4 CLAUDE.md "Manifest + honest absence" note: `expected_unattempted` is materialised at consolidation
       from the oracle; consumers read, never re-derive.
 
+## G. Solana basis MVP — operationalisation (migrated from archived `solana_basis_trading_mvp_2026_06_01.md`)
+
+> **Migrated 2026-06-01** from `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` (Phases 1–4 code SHIPPED;
+> these 4 follow-ups are the operationally-shipped half per CLAUDE.md "Plans Run To Actual Completion"). The Solana
+> MVP plan documented: Drift V2 historical ingester + 4 Solana spot DEX ingesters (Orca/Raydium/Phoenix-stub/Jupiter)
+> + 7 canonical UAC data types (PERP_TRADES, PERP_MARK_ORACLE, PERP_OPEN_INTEREST, DEX_POOL_STATE, DEX_ORDERBOOK,
+> DEX_QUOTE, DEX_TRADES) + `InstrumentType.DEX_POOL` + `SolanaBasisGcsLoader` wiring into the existing
+> `CARRY_BASIS_PERP@raydium-drift-sol-1h-sol-v5-prod` archetype + `--live --continuous` flag (the concrete
+> realization of CLAUDE.md "Live = batch" hard rule).
+>
+> All four operator-launched follow-ups (G1–G4) must land in **canonical structure**
+> (env-split bucket + `pipeline_mode=` partition + `asset_group=defi`) — so they are **GATED on C-GREEN for the
+> dedicated DeFi buckets that hold the Solana writes** (`market-data-tick-defi-prd-…` for perp_funding/perp_trades +
+> dedicated `dex-pools-prd-…` / new `dex-pool-state-prd-…` / `dex-orderbook-prd-…` / `dex-quote-prd-…` if those
+> are split per A1 SSOT). If the dedicated bucket for a Solana data_type doesn't exist yet, that's a **bucket
+> provisioning** prerequisite (file under C0 / `cloud-providers.yaml`) — not a license to write to the legacy
+> `market-data-tick-defi-${PID}` (no env, no pipeline_mode) path.
+
+| Dep | Item | Owner | Verification |
+| --- | --- | --- | --- |
+| (a) before (b) → (c) → (d) | sequential | operator | each gated on prior step's manifest-verified evidence |
+
+- [ ] [DATA] P0. G1 Launch the full 2024-06-01 → 2026-06-01 backfill VM (Drift V2 historical + Solana spot DEX state).
+      Operator-launched from laptop OR `vm-defi`. Recipe: the four CLI scripts in
+      `market_tick_data_service/scripts/backfill_drift_v2_historical.py` (perp_funding + perp_trades) +
+      `backfill_solana_dex_state.py` (Orca Whirlpool + Raydium classic AMM) for each day in window; estimated
+      ~36GB total payload across the 730-day window. **GATED on C-GREEN for the dedicated DeFi buckets** that hold
+      these writes (env-split + `pipeline_mode=batch` + `asset_group=defi`). Verification (per CLAUDE.md "Plans Run
+      To Actual Completion"): `gsutil ls gs://market-data-tick-defi-prd-${PID}/raw_tick_data/by_date/day=*/pipeline_mode=batch/asset_group=defi/venue=DRIFT/chain=SOLANA/instrument_type=perpetual/data_type=perp_funding/`
+      returns a parquet per day in window; sample-inspect 3 random parquets (early/mid/late window) for non-empty
+      `funding_rate`, `oracle_price_twap`, `mark_price_twap` columns; manifest-verified row count > 0 per
+      day-shard; equivalent checks for `perp_trades` (active days only; allow `empty_confirmed[SOURCE_RETURNED_ZERO]`
+      on quiet days) + `dex_pool_state` for Orca + Raydium. **No silent gaps**: any day with 0 rows MUST carry a
+      typed `empty_confirmed` reason (not `attempted_failed`). parent_epic: mtds_mdps_master. **Operator-launched
+      (long wall-clock; not a dispatch).**
+- [ ] [DATA] P0. G2 Launch live-mode snapshotters via `--live --continuous` (mtds@1d35c7f2 unified live/batch path).
+      Terminal A: `python -m market_tick_data_service.scripts.backfill_drift_v2_historical --markets SOL-PERP --live
+      --continuous --interval-seconds 3600 --data-types funding` (hourly). Terminal B:
+      `python -m market_tick_data_service.scripts.backfill_solana_dex_state --venues orca,raydium --live --continuous
+      --interval-seconds 60 --samples-per-day 60 --data-types pool_state` (1-min). These run as long-lived VMs on
+      `vm-defi` (lifecycle_class=LONG_LIVED_LIVE per CLAUDE.md vm naming SSOT). **GATED on G1** (need backfilled
+      history to be loadable as warmup) + **C-GREEN** (writes target canonical structure). Verification (per
+      CLAUDE.md "Plans Run To Actual Completion"): T+5min check post-launch — both VMs RUNNING in
+      `gcloud compute instances describe`; ≥1 parquet under `day=<TODAY>/pipeline_mode=live/asset_group=defi/…`
+      within the first interval (1 min for DEX, 1 h for Drift funding); manifest `capture_status=captured` rows
+      generated. Symptom of regression: `SolanaBasisGcsLoader` logs `no perp_funding rows for live`. Depends on
+      G1 (backfill warmup) before paper trade can run a meaningful history. parent_epic: mtds_mdps_master.
+      **Operator-launched.**
+- [ ] [PLAY] P0. G3 Run 24h paper trade via `e2e-testing/scripts/defi/run-paper.sh --strategy SOL_BASIS`. Recipe:
+      ```bash
+      cd e2e-testing && bash scripts/defi/run-paper.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \
+          --execution-provider solana-devnet --initial-capital-usd 100000
+      ```
+      Engine flows `--strategy SOL_BASIS` → `colocated_engine.py` → `SolanaBasisGcsLoader` → fill-sim on devnet
+      (signed, not broadcast). **GATED on G2** (live data must be flowing so the engine reads a non-stale tape).
+      Verification (per CLAUDE.md "Plans Run To Actual Completion" + Promote Workflow Path SSOT): 24h wall-clock
+      session writes a non-empty trade log + PnL series; Firestore `MinimalCandidateManifest` populated; Sharpe
+      ratio + realised funding earnings − slippage computed; sample-inspect 3 trades for honest fill simulation
+      (no NaN/inf, no fictional fills against zero-liquidity ticks); manifest path
+      `gs://market-data-tick-defi-prd-${PID}/paper_trade/…` (or whichever sink the engine writes to) has the
+      session's full output. **DART `ManualTradeGateDialog` enforces first-3-days hand-confirmation per CLAUDE.md
+      Promote Workflow Path.** parent_epic: mtds_mdps_master. **Operator-launched (long wall-clock; not a dispatch).**
+- [ ] [HUMAN] P0. G4 Promote to live wallet — **HUMAN-ONLY per CLAUDE.md hard-stop list** (`## Plans Run To Actual
+      Completion`: wallet keys + kill-switch arming are human-only; agent never runs `run-live.sh`). Valid promote
+      target per CLAUDE.md Promote Workflow Path is `paper_1d → live_early`; `live_full` is post-cutover. Operator
+      runs:
+      ```bash
+      cd e2e-testing && bash scripts/defi/run-live.sh --strategy SOL_BASIS --tick-interval 3600 --continuous \
+          --execution-provider <copper|ceffu|cloud_kms_encrypted> --capital <amount> --wallet <KMS_KEY_ALIAS>
+      ```
+      **GATED on G3** (Sharpe-positive ack required) + **C-GREEN** + **G2 live data flowing**. Verification: real
+      wallet ≥7-day session per CLAUDE.md Master Plan (live DeFi 2026-05-23 gate already shipped — this is a
+      Solana-archetype-specific operational gate, not a master-plan blocker). The agent **never** ticks G4 — the
+      operator does after the live run completes. parent_epic: mtds_mdps_master.
+
+### G — non-conflict notes (from conflict scan 2026-06-01)
+
+- `solana_defi_legacy_migration_2026_05_27.md` (active): canonical Solana types per that plan are
+  `dex_pools`+`SOLANA_AMM_POOL` (Kamino vault METADATA snapshot) vs the MVP's `DEX_POOL_STATE` (Orca/Raydium AMM
+  STATE time-series for fill-sim) — **complementary, not conflicting** (different shard grain, different consumers,
+  different UAC contracts). Both flow through the same dedicated-bucket SSOT (`get_write_bucket_name`); the new
+  `DEX_POOL_STATE` writes target their own dedicated bucket once provisioned (C0 prerequisite).
+- `plans/active/issues/bug_d_prime_drift_backfill_2026_05_31.md`: SUPERSEDED 2026-06-01 (the Helius sig-walking path
+  that issue documents is OBSOLETE — Drift V2 historical now flows via `data.api.drift.trade` Velocity Data API per
+  the archived MVP plan + new codex `codex/04-architecture/drift-v2-data-sources.md`). Issue doc gets a SUPERSEDED
+  banner in the same archival commit.
+
 ## Verification (full-execution criterion)
 
 Re-run `plans/audit/results/defi_strategy_coverage_query_2026_06_01.py` + the drilldown: every DeFi cell carries a
 canonical data_type (underscore), flat venue + populated chain, v9 schema, a typed reason; `expected_unattempted`
 materialised so `% captured = captured / (captured+empty+failed+expected_unattempted)`; coverage-summary == drilldown ==
-manifest-status denominators; features-onchain-defi populated for the in-scope window; the next audit needs one pass.
+manifest-status denominators; features-onchain-defi populated for the in-scope window; **Solana basis MVP G1–G4
+operationally-shipped (G4 human-only)**; the next audit needs one pass.

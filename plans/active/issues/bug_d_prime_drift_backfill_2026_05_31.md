@@ -1,18 +1,37 @@
 ---
-title: "Bug-D-prime — Drift backfill VM silent data loss + bucket-name SSOT drift for sig index"
+title: "Bug-D-prime — Drift backfill VM silent data loss + bucket-name SSOT drift for sig index [SUPERSEDED 2026-06-01]"
 created: 2026-05-31
+superseded: 2026-06-01
 source:
   - "vm-log: gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log"
   - "mtds@7e09b2ab (fix)"
   - "deployment-service@29f4bc4 (paired fix)"
 parent_epic: mtds_mdps_master
-locked_by: live-defi-rollout
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 priority: P2
-status: active
+status: superseded
 ---
+
+> **SUPERSEDED 2026-06-01.** The entire Helius sig-walking path this issue documents (sig-index VM loop,
+> 28GB parquet, bucket-name SSOT drift between flat and `-prd` env-suffixed buckets, Bug 1/2/3 cascade) is
+> **OBSOLETE for Drift V2 historical**. Per `plans/archive/solana_basis_trading_mvp_2026_06_01.plan.md` Phase 1,
+> Drift V2 historical now flows via the **Drift Velocity Data API** (`data.api.drift.trade`, free tier, no auth) —
+> the `DriftV2HistoricalIngester` shipped at mtds@0f70f376 + the `--live --continuous` flag at mtds@1d35c7f2.
+>
+> The sig-index infrastructure (`build_drift_v2_sig_index.py` + the 6293-part parquet on
+> `gs://market-data-tick-defi-central-element-323112/_index/drift_v2_sig_index_parts/`) is COLD INFRASTRUCTURE —
+> kept in the repo for potential future use (e.g., independent backfill of `tradeRecords` outside Velocity API
+> rate limits) but NOT on any critical path. The `mtds-solana-drift-backfill` VM workflow is OBSOLETE; do NOT
+> relaunch it.
+>
+> Full design: `codex/04-architecture/drift-v2-data-sources.md` (NEW 2026-06-01).
+> Operational follow-ups: `plans/active/defi_manifest_canonicalisation_2026_06_01.md` § G (Solana basis MVP
+> operationalisation — G1 backfill VM, G2 live snapshotters, G3 paper trade, G4 live wallet promotion).
+>
+> No further work needed on this issue doc; it stays archived-in-place as historical record of the Bug-D saga
+> (8 bug iterations 2026-05-29 → 2026-06-01) that motivated the design-before-code Velocity Data API discovery.
 
 # Bug-D-prime — Drift backfill VM silent data loss + bucket-name SSOT drift
 

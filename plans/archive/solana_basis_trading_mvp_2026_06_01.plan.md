@@ -1,11 +1,10 @@
 ---
-title: "Solana basis trading MVP — data source redesign (post Bug-D saga)"
+title: "Solana basis trading MVP — data source redesign (post Bug-D saga) [ARCHIVED 2026-06-01]"
 created: 2026-06-01
+archived: 2026-06-01
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-defi
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
-status: active
+status: archived
 model_tier: opus-required
 thinking_tier: max
 priority: P0
@@ -17,6 +16,45 @@ source:
   - data.api.drift.trade/openapi.json (verified 2026-06-01 — full Velocity Data API spec)
   - DefiLlama yields-API probe 2026-06-01 (verified Orca SOL/USDC $28M TVL is most liquid)
 ---
+
+> **ARCHIVED 2026-06-01 — partial-completion archive.** Phases 1–4 CODE SHIPPED (Drift V2 historical ingester +
+> 4 Solana spot DEX ingesters + 7 canonical UAC data types + `SolanaBasisGcsLoader` archetype wiring +
+> `--live --continuous` flag unifying live/batch). The operationally-shipped half (the four operator-launched
+> follow-ups: full 2024-06-01 → 2026-06-01 backfill VM, live snapshotters, 24h paper trade, live-wallet promotion)
+> is migrated to `plans/active/defi_manifest_canonicalisation_2026_06_01.md` § "G. Solana basis MVP —
+> operationalisation". G4 (live wallet promotion) is HUMAN-ONLY per CLAUDE.md hard-stop list.
+
+## Deferred work — migrated to:
+
+| Item | Migrated to | Status note |
+| --- | --- | --- |
+| Phase 2 Phoenix orderbook decode (currently stub) | `defi_manifest_canonicalisation_2026_06_01.md` § G follow-up table (P3 nice-to-have once paid Phoenix decode bandwidth available) | nice-to-have; not MVP-blocking; the JupiterQuoteIngester + Orca + Raydium ingesters cover the price-dispersion-arb need |
+| Full 2024-06-01 → 2026-06-01 backfill (G1) | `defi_manifest_canonicalisation_2026_06_01.md` § G1 | BLOCKED-OPERATOR (long wall-clock; 36GB; operator-launched on vm-defi) |
+| Live-mode snapshotters launch (G2) | `defi_manifest_canonicalisation_2026_06_01.md` § G2 | BLOCKED-OPERATOR (long-lived VMs; operator-launched) |
+| 24h paper trade run (G3) | `defi_manifest_canonicalisation_2026_06_01.md` § G3 | BLOCKED-OPERATOR (long wall-clock; operator-launched) |
+| Promote to live wallet (G4) | `defi_manifest_canonicalisation_2026_06_01.md` § G4 | HUMAN-ONLY per CLAUDE.md hard-stop list |
+
+## Codex SSOT alignment check (per CLAUDE.md plan-archival HARD RULE, 2026-05-22)
+
+| Promised codex doc | Status @ archive | Action taken |
+| --- | --- | --- |
+| `codex/04-architecture/drift-v2-data-sources.md` — NEW | Did not exist | **CREATED 2026-06-01** in same archival commit |
+| `codex/02-data/canonical-data-types.md` — add 7 new types | Sibling doc (`defi-data-types-catalog.md`) is the actual canonical location | **UPDATED 2026-06-01** `defi-data-types-catalog.md` to document PERP_TRADES / PERP_MARK_ORACLE / PERP_OPEN_INTEREST / DEX_POOL_STATE / DEX_ORDERBOOK / DEX_QUOTE / DEX_TRADES + InstrumentType.DEX_POOL |
+| `codex/04-architecture/instruments-service-as-ssot-for-mtds.md` — add `_DRIFT_VELOCITY_API_URL_TEMPLATE` | Doc references `_DRIFT_S3_ARCHIVE_URL_TEMPLATE` only | **UPDATED 2026-06-01** with note that Velocity Data API is the new primary historical source + cross-link to new `drift-v2-data-sources.md`. **P3 follow-up filed** in canon plan G section: verify whether `_DRIFT_VELOCITY_API_URL_TEMPLATE` was actually coded into `instruments-service/instruments_service/reference_data/adapters/defi/drift.py` source or only documented in this plan |
+| Supersede `plans/active/issues/bug_d_prime_drift_backfill_2026_05_31.md` | Active issue doc | **SUPERSEDED banner added 2026-06-01** — Helius sig-walking path is OBSOLETE; Drift V2 historical now flows via Velocity Data API |
+| `codex/04-architecture/solana-defi-coverage.md` (existing) | Mentions Drift S3 archive only | **UPDATED 2026-06-01** with Velocity Data API note + cross-link |
+| `codex/09-strategy/architecture-v2/archetypes/carry-basis-perp.md` | venue_universe lacks Drift/Orca/Raydium/Phoenix | **UPDATED 2026-06-01** added Solana basis section (Drift perp + Orca spot) |
+
+## CLAUDE.md update — new canonical workspace contracts from this MVP
+
+- **Drift Velocity Data API (`data.api.drift.trade`) is canonical** for Drift V2 historical perp data (post-2025-01-08
+  via free tier, full historical via free tier verified back to 2024-06-01). The S3 archive (`drift-historical-data-v2`)
+  remains the prior secondary path but is NOT preferred (ended 2025-01-08). AMM endpoints (`/amm/*`) return 403 — they
+  are NOT deployed on the public gateway, not a paid tier. Drive AMM data from `perp_funding` row columns. **Added
+  2026-06-01** to CLAUDE.md § "DeFi Execution Architecture" (or as a successor — see notes below).
+- **`--live --continuous` is the canonical realization of "Live = batch (CRITICAL)"** for MTDS backfill scripts —
+  the same script + same handler + same GCS partition path serves both modes; only the date filter and loop semantics
+  differ. **Added 2026-06-01** to CLAUDE.md § "Live = batch (CRITICAL)" as the cited reference implementation.
 
 # Solana Basis Trading MVP — Data Source Redesign
 
