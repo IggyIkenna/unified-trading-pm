@@ -30,8 +30,11 @@
 - Service accounts: scheduler invoker = `t1_batch_sa`; container runtime = `unified_trading_sa` (storage.objectAdmin on
   the per-bucket prefix).
 - Idempotent: skips when `_index/availability_index.parquet` already up-to-date.
-- Tolerates one missed cycle — `read_availability_index` reader falls back to per-VM-shard merge when canonical blob is
-  older than `MANIFEST_CONSOLIDATED_STALENESS_SEC` (default 120s).
+- Stale canonical (blob older than `MANIFEST_CONSOLIDATED_STALENESS_SEC`, default 120s) while per-VM shards exist now
+  **loud-fails by DEFAULT** (`read_availability_index` raises `ManifestConsolidatorStaleError` + emits
+  `CONSOLIDATOR_STALE`); the per-VM-shard recovery merge is an opt-IN escape-hatch via
+  `MANIFEST_ALLOW_STALE_FALLBACK=true`. See § "Liveness + health contract" below (2026-06-01 — supersedes the prior
+  silent-fallback-by-default behaviour).
 
 ### AWS
 
