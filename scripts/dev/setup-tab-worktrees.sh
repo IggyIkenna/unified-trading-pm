@@ -50,6 +50,17 @@ TABS_DIR="${WORKSPACE_ROOT}/.tabs"
 MANIFEST="${PM_DIR}/workspace-manifest.json"
 INTEGRATION_BRANCH="live-defi-rollout"
 
+# FM6 (orchestrator_autonomy_audit_remediation): per-repo integration base. Reads
+# workspace-manifest.json repositories.<repo>.integration_branch, defaulting to
+# ${INTEGRATION_BRANCH} (live-defi-rollout). agent-orchestrator carries
+# integration_branch=main (it CI-promotes tab→main, not LDR). Mirrors the
+# orchestrator-runtime rule in agent-orchestrator worktree_clean_check.base_branch_for_repo.
+base_branch_for_repo() {
+    local repo="$1" base=""
+    base="$(python3 -c "import json; m=json.load(open('${MANIFEST}')); print(m.get('repositories',{}).get('${repo}',{}).get('integration_branch','') or '')" 2>/dev/null || true)"
+    if [[ -n "${base}" ]]; then echo "${base}"; else echo "${INTEGRATION_BRANCH}"; fi
+}
+
 # --- Arg parsing -----------------------------------------------------------
 OPERATOR="${USER:-unknown}"
 # Slots 1..MAIN_SLOT_MAX are main agents; the rest are workers. Branch prefix is
@@ -200,17 +211,18 @@ ensure_repo_worktree() {
     fi
     # Refresh remote-tracking refs for both the slot branch + the integration
     # branch before deciding (operator/host may not have fetched in a while).
+    local base; base="$(base_branch_for_repo "${repo}")"
     git -C "${sibling}" fetch --quiet origin \
         "+${branch}:refs/remotes/origin/${branch}" 2>/dev/null || true
-    git -C "${sibling}" fetch --quiet origin "${INTEGRATION_BRANCH}" 2>/dev/null || true
+    git -C "${sibling}" fetch --quiet origin "${base}" 2>/dev/null || true
     if git -C "${sibling}" show-ref --verify --quiet "refs/remotes/origin/${branch}"; then
         git -C "${sibling}" worktree add --track -b "${branch}" \
             "${slot_repo_dir}" "origin/${branch}" >/dev/null
         log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, tracking origin)"
     else
         git -C "${sibling}" worktree add "${slot_repo_dir}" -b "${branch}" \
-            "origin/${INTEGRATION_BRANCH}" >/dev/null
-        log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, new from ${INTEGRATION_BRANCH})"
+            "origin/${base}" >/dev/null
+        log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, new from ${base})"
     fi
 }
 
@@ -303,15 +315,16 @@ rebase_slot() {
         local rd="${sd}/${repo}"
         [[ -d "${rd}/.git" || -f "${rd}/.git" ]] || continue
         branch="$(slot_branch "${slot}")"
-        if ! git -C "${rd}" fetch --quiet origin "${INTEGRATION_BRANCH}" 2>/dev/null; then
+        local base; base="$(base_branch_for_repo "${repo}")"
+        if ! git -C "${rd}" fetch --quiet origin "${base}" 2>/dev/null; then
             err "${repo}: fetch failed"; ok=0; continue
         fi
-        if ! git -C "${rd}" rebase --quiet "origin/${INTEGRATION_BRANCH}" 2>/dev/null; then
-            err "${repo}: rebase onto origin/${INTEGRATION_BRANCH} failed; manual resolution required."
+        if ! git -C "${rd}" rebase --quiet "origin/${base}" 2>/dev/null; then
+            err "${repo}: rebase onto origin/${base} failed; manual resolution required."
             git -C "${rd}" rebase --abort 2>/dev/null || true
             ok=0; continue
         fi
-        log "  REBASED ${repo} on origin/${INTEGRATION_BRANCH}"
+        log "  REBASED ${repo} on origin/${base}"
     done < <(active_repos)
     return $(( ! ok ))
 }
