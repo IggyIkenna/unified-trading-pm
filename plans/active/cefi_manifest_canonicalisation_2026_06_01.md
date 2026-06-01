@@ -147,24 +147,24 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 > v9, paths = `day=/pipeline_mode=/asset_group=cefi/venue=/chain=/instrument_type=/data_type=`, source/available_at
 > semantics) is CONFIRMED CORRECT on the verify step. One pass, no confusion — once legacy is deleted it is gone.
 
-- [x] ✅ [DATA] P0. E1 Phase-0 layout + VOCAB audit (slot-3 2026-06-01): confirmed 2 layouts — FLAT raw
-      `raw_tick_data/by_date/{SYMBOL}.parquet` (cols `exchange, symbol, timestamp[epoch-µs], data_type, instrument_id`;
-      `instrument_id="{VENUE}:{ITYPE}:{SYMBOL}"`) + `processed_candles/by_date/day=/timeframe=/data_type=/venue=`.
-      **Canonical VOCAB read from data-state** (NOT assumed): venue is **HYPHENATED** (DERIBIT / BITFINEX-SPOT /
-      BINANCE-FUTURES / KRAKEN-FUTURES / HYPERLIQUID — NOT underscore); data*type = trades/book_snapshot_5/
-      derivative_ticker/liquidations/ohlcv*\*/futures_chain/options_chain. **CF-7 drift surfaced**: instrument_type CASE
-      drift (`PERPETUAL`/`perpetual`, `SPOT_PAIR`/`spot_pair`, `FUTURE`/`future`), blank/`UNKNOWN` venue (1453+111),
-      blank data_type (9757). — slot-3 2026-06-01.
-- [x] ✅ [DATA] P0. E2 Built NEW `migrate_cefi_flat_to_v9_canonical.py` (perf-contract): reads each flat
-      `by_date/{symbol}.parquet`, derives `(venue,itype,symbol)` from `instrument_id` + `day` per-row from epoch-µs
-      `timestamp`, **groups by (venue,itype,dtype,day) and FANS OUT** to canonical objects via the **UAC
-      `candidate_parquet_paths` SSOT** (byte-exact batch=live; itype lowercased by builder; venue hyphenated kept).
-      Parquet content stays pure market data (MECHANISM finding — v9 cols added at E5 rebuild). **CF-7 baked in**:
-      blank/`UNKNOWN` venue + blank data_type SKIPPED+logged for E6 diagnosis (never non-canonical, never silent drop).
-      Candles = path-only `gcs_copy_object` + pipeline_mode insert. Knobs: `--workers`/`--start-date`/`--end-date` +
-      `--shard-index`/`--shard-count` (symbol-list horizontal scale, cefi is largest) + `--also-legacy` (5,233-cell
-      gap-fill) + `python -u` + per-file isolation + idempotent. Fan-out + transforms unit-validated; lint+typecheck
-      clean. — market-tick-data-service@e1e2f16c, slot-3 2026-06-01.
+- [x] ✅ [DATA] P0. E1 **EXHAUSTIVE** layout + VOCAB audit (slot-3 2026-06-01, operator "3 versions like defi" check).
+      ⚠️ **CORRECTION — the earlier shallow probe was WRONG ("FULLY FLAT").** A multi-level count found cefi raw is
+      **THREE layouts**: (L-bulk) `raw_tick_data/by_date/day=/asset_group=cefi/venue=/instrument_type=/data_type=/` =
+      the DOMINANT layout, **2,613 day-dirs**, near-canonical (instrument_type already lowercase) but MISSING
+      `pipeline_mode=`; (L-canon) some days already `day=/pipeline_mode=batch_tardis/asset_group=cefi/`; (L-flat) **only
+      9 orphan** root `{SYMBOL}.parquet` (2026-05-04 backfill bug). Same 3 layouts in legacy + prd. **Canonical VOCAB
+      (data-state, not assumed)**: venue HYPHENATED (DERIBIT/BITFINEX-SPOT/BINANCE-FUTURES/HYPERLIQUID);
+      `instrument_id="{VENUE}:{ITYPE}:{SYMBOL}"`. **CF-7 drift**: instrument_type CASE in \_index column,
+      blank/`UNKNOWN` venue (1453+111), blank data_type (9757), COINBASE vs COINBASE-SPOT. — slot-3 2026-06-01.
+- [x] ✅ [DATA] P0. E2 Built + FIXED `migrate_cefi_flat_to_v9_canonical.py` (3-layout-aware, perf-contract). **The first
+      build handled ONLY the 9 L-flat orphans → would have MISSED the 2,613 L-bulk day-dirs (the exact "we keep missing
+      things" trap the operator flagged). FIXED** to cover all three: L-bulk/L-canon = path-only `gcs_copy_object`
+      inserting `pipeline_mode=` after `day=` (server-side ~250x; L-canon dest==src → no-op); L-flat =
+      read+regroup-by-day+ fan-out. All via the UAC `candidate_parquet_paths` SSOT (byte-exact batch=live; pipeline_mode
+      from venue, HYPERLIQUID→ hyperliquid_rest else tardis). Parquet content untouched (v9 cols at E5 rebuild). CF-7
+      blank/`UNKNOWN` venue + blank data_type skip+logged for E6. Candles = pipeline_mode insert. Knobs
+      `--workers`/`--start-date`/`--end-date`/`--also-legacy` + `python -u` + per-object isolation + idempotent. All 3
+      layout transforms unit-validated; lint+typecheck clean. — market-tick-data-service@844124f7, slot-3 2026-06-01.
 - [ ] [DATA] P0. E3 Confirm cefi writer drained (mdps-backfill-cefi already self-terminated); snapshot
       `cefi-prd/_index`.
 - [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise

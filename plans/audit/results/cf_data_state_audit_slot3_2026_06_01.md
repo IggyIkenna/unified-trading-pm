@@ -225,6 +225,18 @@ why the operator gated it on "only once we're on v9, no more missing things" —
 > These are the concrete mistakes/findings surfaced executing the prediction migrator first (the proving ground). cefi /
 > tradfi / sports / instruments inherit ALL of them. Each is a "we keep missing things" trap.
 
+0. **EXHAUSTIVE layout enumeration is MANDATORY — the shallow first-leaf probe LIES (operator "3 versions like defi"
+   check, 2026-06-01).** `cf_layout_audit`'s shallow descent reported cefi raw as "FULLY FLAT" because it hit the 9
+   orphan root files first; the REAL state is **2,613 `day=` dirs + 9 flat orphans + some already-`pipeline_mode=`
+   canonical = THREE layouts**. The first cefi migrator handled ONLY the 9 orphans → it would have **silently lost 2,613
+   day-partitions** on legacy delete. Before any migrator runs, for EACH bucket: (a) list top-level prefixes, (b) for
+   the raw tree **COUNT children by kind** — `gcloud storage ls .../by_date/` then count `*.parquet` (flat) vs `day=`
+   dirs vs other; a mix = ≥2 layouts; (c) descend one `day=` to read the sub-layout (`asset_group=`? `category=`?
+   `pipeline_mode=`? bare?); (d) sample MULTIPLE days, not one. A migrator MUST handle every layout found (defi had 3,
+   cefi has 3, prediction legacy has 2 sub-layouts under `day=`). The dry-run's `TOTAL planned` count MUST be
+   sanity-checked against the full corpus object count — if it's way under, a layout was missed. **Never trust a single
+   shallow probe before an irreversible delete.**
+
 1. **Canonical path order is UNANIMOUS + load-bearing — use the UAC builder, never hand-roll.** The shared
    `market-data-tick-{ag}-{pid}` canonical layout is
    `raw_tick_data/by_date/day={D}/pipeline_mode={MODE}/asset_group={ag}/ venue={V}/[chain={C}/]instrument_type={IT}/data_type={DT}/{file}`
