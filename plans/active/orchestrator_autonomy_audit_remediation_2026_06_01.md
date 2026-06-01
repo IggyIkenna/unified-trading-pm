@@ -203,7 +203,12 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       auto-commit/push the deletion — quarantine + alert. Hard guardrail in `commit_and_push_dirty_repos`: refuse to
       commit when the staged set is pure deletions of >20 tracked files absent an explicit operator override, so a
       corrupt index can never be pushed as orphan-wip. Collision group: `ao_respawn_hygiene`. Estimate: 0.3 AI-day.
-- [ ] [CODE] P1. **FM1/FM5/FM6/FM7 — structural pre-spawn branch-state gate.** Add
+- [x] ✅ [CODE] P1. **FM1/FM5/FM6/FM7 — structural pre-spawn branch-state gate.** ✅ DONE 2026-06-01 —
+      agent-orchestrator@977e2e1. `check_slot_branch_state()` asserts per repo HEAD==`tab/<op>/<N>` (FM7 STOP on
+      detached/wrong-branch), repairs stale upstream→`origin/<base>` (FM1), per-repo base via `base_branch_for_repo`
+      (FM6), FF when behind (FM4), quarantine on divergence (FM5). Wired into all THREE spawn paths (server.py spawn_slot
+      →409, autospawn._do_spawn [was un-gated], worker_liveness `_maybe_auto_respawn_stuck_slot` + `_do_auth_fail_respawn`
+      via `_branch_state_ok`). 8 tests. Add
       `worktree_clean_check.check_slot_branch_state(slot_id, slot_dir, operator)` parallel to `check_slot_clean`. Per
       repo assert: (a) `@{u}` == the repo's correct base, repairing a stale `origin/tab/<op>/N` with
       `git branch -u     origin/<base>` (FM1); (b) `HEAD` == `tab/<op>/<N>` — STOP on detached / base / other branch
@@ -220,7 +225,10 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       fresh-pull (1b) resolve base per-repo; GENERATE `cron-branch-overrides.txt` from the manifest (it is currently
       EMPTY, so the per-repo hook in `slot-cron-ff-pull.sh` does nothing today). Collision group:
       `ao_branch_state_gate`. Estimate: 0.3 AI-day.
-- [ ] [CODE] P1. **FM4/FM5 — recovery boot prompts must inline the fresh-pull block.**
+- [x] ✅ [CODE] P1. **FM4/FM5 — recovery boot prompts must inline the fresh-pull block.** ✅ DONE 2026-06-01 —
+      agent-orchestrator@977e2e1. `_FRESH_PULL_BOOT_BLOCK` (ff-only when behind + divergence-STOP, per-repo base) inlined
+      into `_build_recovery_boot_prompt` AND the auth-fail respawn prompt. Test:
+      `test_recovery_boot_prompt_inlines_fresh_pull_block`.
       `worker_liveness.py::_build_recovery_boot_prompt` (~1109) + the auth-fail respawn prompt (~701) currently only say
       "Read worker.md then /boot" — they do NOT inline the FF / divergence-STOP block the autospawn path gets via the
       rendered template, so a recovered session is weaker than a cold autospawn. Inline the full `worker.md` step-1b
