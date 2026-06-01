@@ -25,6 +25,15 @@
 
 set -uo pipefail   # NOT set -e: we want to keep walking even if one repo errors.
 
+# Default HOME when invoked outside a login shell (some cron / SSM RunShellScript
+# contexts don't export it) so the ${HOME}-based workspace + token-file lookups
+# below don't trip `set -u` with "HOME: unbound variable".
+if [[ -z "${HOME:-}" ]]; then
+    HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6)"
+    HOME="${HOME:-/home/$(id -un 2>/dev/null || echo ubuntu)}"
+    export HOME
+fi
+
 INTEGRATION_BRANCH="${INTEGRATION_BRANCH:-live-defi-rollout}"
 ORCH_URL="${ORCH_URL:-https://api.agent-orchestrator.odum-research.com}"
 WORKSPACE_PATH="${WORKSPACE_PATH:-}"
