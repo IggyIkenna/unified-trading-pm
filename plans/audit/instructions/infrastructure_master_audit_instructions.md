@@ -4,7 +4,7 @@ type: audit-instructions
 epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 tier: L4
-last_updated: 2026-05-22
+last_updated: 2026-06-01
 ---
 
 # Infrastructure Master — Audit Instructions
@@ -15,8 +15,25 @@ VM lifecycle management (`lifecycle_class`, zombie watchdog, zone policy), tarba
 worktrees, GCS object operations (UTL library only, no subprocess), bucket SSOT (`resolve_bucket_name()`), cloud
 bootstrap. Hard rules: asia-northeast1-c default zone; no cross-region fallback; no subprocess gsutil/gcloud.
 
+**CI/CD pipeline contract (added 2026-06-01).** This epic also owns the **end-to-end code-promotion pipeline** — the
+single contract that every host (VM orchestrator, VM worker, operator/Harsh laptop) follows to move code to a remote
+branch and ultimately to a deployed image. The contract: **quickmerge is the only sanctioned merge path** → it is
+**gated on a full quality-gates run** (the `.qg_last_passed_sha` sentinel) → it **never force-pushes** → it opens an
+**auto-PR to `staging`** with auto-merge on green → **SIT runs at staging** (per-repo CI + the full-workspace cross-repo
+SIT) → promotion **cascades to `main`** via semver-agent → `main` **triggers image builds for GCP (cloudbuild) + AWS
+(buildspec) + Cloud Run deploy**. Branch-triggered builds are supported for hotfix / fast-dev image cycles, and the
+**tarball path** (`create-code-tarballs.sh`) is the local-code alternative — SHA-pinned + manifest-stamped so it is
+**tagged as such**. Dirty trees are reconciled (slot crons) and QG-green-everywhere is the standing precursor. Before
+this section existed, these checks were scattered across `orchestrator_master` (quickmerge symmetric model, dirty-tree
+crons), `deployment_and_user_management_master` (deploy/promote API), and `observability_master` (LDR-CI-red
+monitoring), and **no single audit verified the contract end-to-end** — exactly the blind spot that let `staging` drift
+~1 month undetected (see `plans/active/issues/full_cicd_sit_target_state_2026_05_24.md`).
+
 Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infrastructure/per-tab-worktrees.md`,
-`codex/05-infrastructure/gcs-object-operations.md`, `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`
+`codex/05-infrastructure/gcs-object-operations.md`, `plans/active/bucket_name_ssot_canonicalisation_2026_05_10.md`,
+`codex/08-workflows/ci-cd-flow.md` (engineer SSOT), `codex/08-workflows/deployment-flow.md` (operator SSOT),
+`codex/05-infrastructure/deployment-and-qg-strategy.md` (tarball-vs-image + 4-tier QG enforcement),
+`codex/06-coding-standards/quality-gates.md` (two-pass model + sentinel)
 
 ## Triggers
 
@@ -25,6 +42,13 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
 - After any new prefix added to `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`
 - When bucket name SSOT plan advances a phase
 - After operator laptop onboarding or cron re-setup
+- **After any change to `scripts/quickmerge.sh`, `scripts/quality-gates*.sh`, `scripts/quality-gates-base/`, or any
+  `scripts/workflow-templates/*` template** (the CI/CD machinery)
+- **After a new repo is added to the active workspace** (must inherit branch protection + the canonical workflow)
+- **After the `quality-gates-v2` required-check name changes** (or any future v3 migration)
+- **When the CI/CD target-state plan (`full_cicd_sit_target_state_2026_05_24.md`) advances a tier (A–E)**
+- **After any change to `deployment-service/cloudbuild.yaml`, `buildspec.aws.yaml`, or
+  `scripts/vm/create-code-tarballs.sh`** (the build + tarball machinery)
 
 ## Checklist
 
@@ -53,6 +77,102 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
       `central-element-323112` / `asia-northeast1`. Check:
       `gcloud scheduler jobs describe uts-prod-orphan-ping-audit --location=asia-northeast1`
 
+### CI/CD Pipeline Contract (added 2026-06-01)
+
+> The promotion contract: **quickmerge-only → QG-sentinel-gated → no force-push → auto-PR-to-staging → SIT-at-staging →
+> cascade-to-main → image-builds (GCP + AWS + Cloud Run)**, with branch-triggered builds + the tarball local-code path
+> as tagged alternatives, dirty-tree reconciliation, and QG-green-everywhere as the standing precursor. Every item is
+> grep/`gh`/`gcloud`-verifiable. Most checks are read-only; the live-fleet checks (h6, k1) need a logged-in host.
+
+**Promotion path is quickmerge-only + sentinel-gated + never force-pushes**
+
+- [ ] (h1) **quickmerge is QG-sentinel-gated.** `scripts/quickmerge.sh` reads `.qg_last_passed_sha` and refuses to
+      proceed on mismatch/absence. Grep: `rg -n "qg_last_passed_sha" scripts/quickmerge.sh` — ≥1 hit in the Pass-2
+      verification block.
+- [ ] (h2) **Only a FULL QG run writes the sentinel.** The sentinel is written in `quality-gates-base/base-service.sh`
+      only on clean exit with no skip flags. Grep:
+      `rg -n "qg_last_passed_sha" scripts/quality-gates-base/base-service.sh` — the
+      `git rev-parse HEAD > .../.qg_last_passed_sha` line must be guarded by "no skip flags / full run". Confirm
+      `--skip-tests|--skip-typecheck|--skip-codex|--quick` do NOT reach the write.
+- [ ] (h3) **quickmerge never force-pushes.** Grep:
+      `rg -n "push .*--force|--force-with-lease|push -f\b" scripts/quickmerge.sh` — expect **0** real hits (comment
+      keywords like `enforce-*` are fine). Cross-check `codex/08-workflows/ci-cd-flow.md` § "Conditional Push Protocol"
+      still bans force-push to LDR.
+- [ ] (h4) **Human commits auto-PR to `staging` with auto-merge.** Grep:
+      `rg -n "gh pr (create|merge).*(staging|--auto)" scripts/quickmerge.sh` — PR base is `staging` for human commits,
+      `main` only for `[skip ci]` automation, and `gh pr merge --auto --squash` is enabled.
+- [ ] (h5) **`--dep-branch` is human-only / agents route through staging.** Grep:
+      `rg -n "dep-branch cannot be used|--dep-branch" scripts/quickmerge.sh` — the staging-first model rejects
+      `--dep-branch` for the agent path.
+- [ ] (h6) **Slot-host symmetry: every host runs the same quickmerge contract.** `verify-slot-host-symmetry.sh` exits 0
+      on each operator/worker host (FF-pull + git-status crons installed + recent). Run:
+      `bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh`. (Shares check k1 of `orchestrator_master`.)
+
+**Branch protection enforces the gate everywhere (QG-green-everywhere precursor)**
+
+- [ ] (i1) **`main` requires `quality-gates-v2` on every active repo.** For each active repo in
+      `workspace-manifest.json` (`repositories[*].status == active`):
+      `gh api repos/IggyIkenna/<repo>/branches/main/protection` → `required_status_checks.contexts` contains
+      `quality-gates-v2`. 0 repos may be `none`. (2026-06-01 baseline: 16/23 green; **7 missing** — see result file.)
+- [ ] (i2) **`staging` requires `quality-gates-v2` (not retired v1) on every active repo.** Same call for `staging`.
+      **No repo may still pin `quality-gates` / `workspace-qg` (v1) as the required check** — v1 is retired
+      (`ci_canonical_v2_migration_2026_05_29.md`). (2026-06-01 baseline: 4 repos still on **v1**, several `none`.)
+- [ ] (i3) **Force-push disabled + linear history on `main`/`staging`.** `gh api .../branches/{main,staging}/protection`
+      → `allow_force_pushes.enabled == false` for every protected repo.
+- [ ] (i4) **`enforce_admins` enabled on `main`/`staging`** so the gate cannot be admin-bypassed. Same call →
+      `enforce_admins.enabled == true`. (2026-06-01 baseline: true on only 6/23 — admin bypass is widely possible.)
+- [ ] (i5) **LDR is unprotected-by-design but MONITORED.** LDR has no branch protection (rapid direct-push by design,
+      per `ci-cd-flow.md`), so its CI-red must be a watched signal, not silently accumulated. Verify the Tier-A
+      LDR-CI-red ping exists (cross-ref `full_cicd_sit_target_state_2026_05_24.md` Tier A `[AGENT] P0` item).
+
+**SIT at staging + concurrent-push serialization**
+
+- [ ] (j1) **Per-repo CI runs on push/PR to staging+main.** `scripts/workflow-templates/workspace-qg.yml.tmpl` triggers
+      include `push:[main,staging]` + `pull_request:[main,staging]`. Grep the template.
+- [ ] (j2) **Full-workspace cross-repo SIT exists + is scheduled.** `system-integration-tests` repo has
+      `scripts/run_cross_repo_invariants.sh` + `.github/workflows/full-workspace-sit.yml` (clones the manifest
+      `topologicalOrder.levels` set; nightly + `workflow_dispatch` + `repository_dispatch[full-workspace-sit]`). Confirm
+      it FAILS on skip (the guarded cross-repo tests must run for real, not skip when siblings present).
+- [ ] (j3) **Promotion is gated on SIT.** A repo cannot promote to `staging`/`main` while the full-workspace SIT is RED
+      for its layer (Tier B/C of the CI/CD target-state plan). Document current automation state (manual vs bot).
+- [ ] (j4) **Concurrent pushes are serialized, not raced.** quickmerge honors the `staging_status.locked` flag in
+      `workspace-manifest.json` and otherwise relies on GitHub's native auto-merge queue. Grep:
+      `rg -n "staging_status|locked|auto-merge queue" scripts/quickmerge.sh`. **Known gap to document if unchanged:**
+      there is no hard cross-slot serialization (flock/queue) beyond the advisory lock + GitHub queue — if a tighter
+      guarantee is wanted, file it as a gap.
+
+**`main` triggers builds; branch-triggered + tarball alternatives exist and are tagged**
+
+- [ ] (k1) **`main` triggers GCP + AWS image builds.** `deployment-service/cloudbuild.yaml` (GCP Artifact Registry,
+      `asia-northeast1-docker.pkg.dev`) + `buildspec.aws.yaml` (ECR) both build, run QG inside the image
+      (`quality-gates.sh --no-fix --quick`), and push. Cloud Build triggers configured via
+      `scripts/setup-cloud-build-triggers.sh`. Confirm trigger inventory:
+      `gcloud builds triggers list --region=<region>` (read-only).
+- [ ] (k2) **Immutable-tag provenance parity (GCP vs AWS).** `buildspec.aws.yaml` tags `:$VERSION` + `:latest`.
+      `cloudbuild.yaml` must also push an immutable tag (`:$VERSION` or `:$SHORT_SHA`), not `:latest`-only — otherwise
+      GCP rollbacks/audit lose provenance. Grep:
+      `rg -n ":latest|SHORT_SHA|_VERSION|TAG_NAME" deployment-service/cloudbuild.yaml`. (2026-06-01 baseline: GCP pushes
+      `:latest`-only — provenance asymmetry, AMBER.)
+- [ ] (k3) **Branch-triggered builds are supported for hotfix / fast-dev cycles.** Cloud Build supports manual /
+      branch-scoped triggers (`cloudbuild.yaml` "Manual trigger" header; `setup-cloud-build-triggers.sh`). Confirm a
+      documented way to build an image off an arbitrary branch without going through `main`.
+- [ ] (k4) **Tarball path is the local-code alternative AND tagged-as-such.** `create-code-tarballs.sh` writes both a
+      mutable `{repo}-code.tar.gz` and a **SHA-pinned `{repo}-code@{sha}.tar.gz` + `{repo}-code@{sha}.manifest.json`**
+      sibling manifest. Grep:
+      `rg -n "@\{?sha|manifest.json|allow-dirty-tarball" deployment-service/scripts/vm/create-code-tarballs.sh`.
+- [ ] (k5) **Tarball path blocks dirty trees by default.** `create-code-tarballs.sh` refuses a dirty tree unless
+      `--allow-dirty-tarball` (audit-logged, emergency-only). Grep:
+      `rg -n "allow-dirty-tarball|dirty" deployment-service/scripts/vm/create-code-tarballs.sh`.
+
+**Dirty-tree reconciliation across hosts**
+
+- [ ] (l1) **FF-pull + git-status crons exist and are cross-platform.** `scripts/dev/slot-cron-ff-pull.sh` (FF-only,
+      skips dirty/ahead/diverged) + `scripts/dev/slot-git-status-report.sh` (POSTs drift to orchestrator). Both present
+      and referenced by `verify-slot-host-symmetry.sh`.
+- [ ] (l2) **No 9-hour-old uncommitted WIP on any slot.** Spot-check the orchestrator Fleet tab / git-status reports: no
+      slot worktree dirty for >1 working session (the Commit+Push+Flip HARD RULE applies to interactive operator slots
+      too). Operator-judgment check.
+
 ### E2E Cross-Cutting Verification
 
 - (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest row
@@ -62,10 +182,20 @@ Codex SSOTs: `codex/05-infrastructure/vm-tarball-deployment.md`, `codex/05-infra
 
 ## Success Criteria
 
-- All 7 checklist items GREEN
+- All 7 VM/GCS checklist items (a–g) GREEN
 - No zombie VMs (zombie watchdog returns empty list)
 - verify-slot-host-symmetry.sh exits 0
 - QG exits 0 for deployment-service
+
+**CI/CD pipeline contract GREEN (h–l):**
+
+- quickmerge is sentinel-gated, never force-pushes, and auto-PRs to staging (h1–h5)
+- **Every active repo** has `quality-gates-v2` required on BOTH `main` and `staging`, force-push disabled, and
+  `enforce_admins` on — 0 repos on retired v1, 0 repos `none` (i1–i4)
+- Full-workspace cross-repo SIT runs (not skips) and gates promotion (j2–j3)
+- Both GCP and AWS builds push an immutable version/sha tag + run QG-in-image (k1–k2)
+- Tarball path is SHA-pinned + manifest-stamped and blocks dirty trees by default (k4–k5)
+- Dirty-tree FF-pull + git-status crons live on every slot host; no stale-WIP slots (l1–l2)
 
 ## Output Format
 
@@ -73,6 +203,6 @@ Result file at `plans/audit/results/infrastructure_master_audit_YYYY_MM_DD.md`. 
 
 ## Linked Results
 
-| Date                      | Result file | Status |
-| ------------------------- | ----------- | ------ |
-| (populated as audits run) |             |        |
+| Date       | Result file                                                                                       | Status                                                              |
+| ---------- | ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| 2026-06-01 | [infrastructure_master_audit_2026_06_01.md](../results/infrastructure_master_audit_2026_06_01.md) | First CI/CD-contract run — RED on branch-protection consistency (i) |
