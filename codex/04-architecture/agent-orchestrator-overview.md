@@ -35,7 +35,7 @@ resource limits, root-cause history) → `codex/05-infrastructure/agent-orchestr
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                                                                                                                                                                                                                       |
 | Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                                                                                                                                                                                                                                  |
-| Auth     | ES256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`). Internal proxy token: ES256 asymmetric (central holds private key in GCP SM; workers verify with public key from GCS `internal-public.pem`). HS256 dual-accept retained during 48h soak. Operator dashboard login JWT: HS256 (`ORCHESTRATOR_JWT_SECRET`, central-only). |
+| Auth     | ES256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`). Internal proxy token: ES256 asymmetric, **HS256 retired 2026-06-01** (all 11 VMs sign ES256; private key distributed to every VM via the restricted creds bucket — central-only abandoned). Operator dashboard login JWT: HS256 (`ORCHESTRATOR_JWT_SECRET`, central-only — unaffected). |
 | Workers  | 11 EC2 VMs (10 epic + 1 api-host, AWS ap-northeast-1), 8 slots each on epic VMs = 80 worker slots; 1 central API/planning VM (`13.113.200.22`, 2 planning slots). Total: 82 slots.                                                                                                                                                                |
 | State    | SQLite (runtime) + `data/state/state.json` snapshot. See § "State persistence" below for cloud-backup specifics.                                                                                                                                                                                                                                  |
 | Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                                                                                                                                                                                                                     |
@@ -125,9 +125,11 @@ launch, trading permissive auth for faster iteration. Strict auth flip recipe (w
 - Provision the ES256 asymmetric key pair for internal proxy tokens (shipped 2026-06-01 via
   `orchestrator_asymmetric_auth`): private key stored in GCP Secret Manager; public key published to GCS
   `gs://central-element-323112-orchestrator-creds/orchestrator/internal-public.pem`. Workers set
-  `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=gs://…/internal-public.pem` in `.env.local`; the central VM sets
-  `ORCHESTRATOR_INTERNAL_ALG=ES256` + holds the private key via SM. HS256 dual-accept (`decode_token` tries both) runs
-  for 48h soak before the HS256 path is removed.
+  `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=gs://…/internal-public.pem` in `.env.local`. **Every** orchestrator VM also sets
+  `ORCHESTRATOR_INTERNAL_ALG=ES256` + `ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS=gs://…/internal-private.pem` (all VMs sign,
+  so all hold the private key — central-only abandoned 2026-06-01). **HS256 was RETIRED 2026-06-01** (agent-orchestrator
+  @f44b948) once all 11 VMs verified ES256-signing — `decode_token` is ES256-only. (The 48h soak was superseded: the
+  real gate is "all-ES256," reached minutes after the last signer flips given the 5-min internal-token TTL.)
 - Replace `validate_credentials` with argon2-hashed user list (schema from `scripts/manage_users.py`)
 - Flip `auth.ALLOW_ANONYMOUS=False`
 - Smoke test: 3-curl sequence (valid creds → 200, wrong password → 401, anonymous → 401)
@@ -324,11 +326,16 @@ unified-trading-system (one API fronts the UI; services isolated behind it). The
 - **Auth (asymmetric model, codified 2026-06-01)**: the central API uses two independent secrets/keys:
   - `ORCHESTRATOR_JWT_SECRET` — operator dashboard login JWT only. **Central-only** (never wired into worker
     `.env.local`). HS256. Validates the Bearer token on every authed request that enters at the public edge.
-  - **ES256 asymmetric key pair** (`ORCHESTRATOR_INTERNAL_ALG=ES256`, shipped 2026-06-01) — central↔worker proxy auth.
-    Central holds the private key (GCP Secret Manager). Workers set
-    `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=gs://central-element-323112-orchestrator-creds/orchestrator/internal-public.pem`
-    in `.env.local`; the public key is fetched at startup. During the 48h soak, `decode_token()` tries ES256 first then
-    HS256 (`ORCHESTRATOR_INTERNAL_SECRET` legacy value) so workers migrated out-of-order still validate.
+  - **ES256 asymmetric key pair** (`ORCHESTRATOR_INTERNAL_ALG=ES256`) — central↔worker proxy auth. **HS256 RETIRED
+    2026-06-01** (agent-orchestrator@f44b948): `decode_token()` accepts ES256-only and `_issue_internal_token()` signs
+    ES256-only (raises without a private key — no HS256 fallback). Verified across all 11 orchestrator VMs (each
+    `INTERNAL_ALG=ES256`, private key resolvable, orchestrator active). **Key distribution changed (central-only
+    abandoned, operator decision 2026-06-01):** because every orchestrator VM proxies to its own slots and therefore
+    signs, the private key is distributed to ALL VMs via the restricted creds bucket
+    (`ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS=gs://central-element-323112-orchestrator-creds/orchestrator/internal-private.pem`)
+    + public key via `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=.../internal-public.pem`. NB: the raw `ORCHESTRATOR_INTERNAL_SECRET`
+    object is RETAINED (NOT deleted) — it is the pre-shared key for `verify_internal_secret()` → `POST /api/escalate`
+    (GHA→orchestrator dispatch); only the HS256 *JWT* accept/sign paths were retired.
   - **Flow**: operator hits central with their JWT. The central validates against `ORCHESTRATOR_JWT_SECRET` at the
     perimeter, terminates that token, then mints a fresh short-lived (5 min, role=worker, machine=central-proxy) JWT
     signed with the ES256 private key and forwards THAT in the upstream `Authorization` header. Workers validate against

@@ -4,7 +4,7 @@ title: "orchestrator RS256/ES256 asymmetric auth — central signs, workers veri
 parent_epic: plans/epics/orchestrator_master.md
 assigned_vm: vm-orchestrator
 priority: P2
-status: active
+status: archived
 model_tier: opus-required
 thinking_tier: max
 estimate_class: design
@@ -12,14 +12,17 @@ estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.8
 created: 2026-06-01
 last_updated: 2026-06-01
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
+archived: 2026-06-01
 codex_ssots:
   - codex/04-architecture/agent-orchestrator-overview.md
   - codex/12-agent-workflow/orchestrator-multi-vm-topology.md
 migrated_from:
   "orchestrator_master P2 deferred backlog (multi_backend_fleet_connectivity_2026_05_22) — operator go-ahead 2026-06-01"
 ---
+
+## ✅ ARCHIVED 2026-06-01 — ES256 fleet-wide + HS256 retired
+
+Internal central↔worker auth is ES256-only on all 11 orchestrator VMs (agent-orchestrator@f44b948); private key distributed via the restricted creds bucket (central-only abandoned, operator decision); the `internal-secret` object is RETAINED for /api/escalate. Codex `agent-orchestrator-overview.md` updated. **Deferred work:** none. Unlocked for archival. 0 open todos.
 
 ## Why this exists
 
@@ -75,28 +78,21 @@ the PUBLIC key (verify, cannot mint). The operator-JWT secret (`ORCHESTRATOR_JWT
       still dual-accept HS256). NB: the localhost `/git-status` 401s seen during rollout are a PRE-EXISTING local-cron
       auth issue, unrelated to this migration (separate finding).
 
-### Phase 4 — Retire HS256 (PENDING — 48h soak)
+### Phase 4 — Retire HS256 — ✅ DONE 2026-06-01
 
-- [ ] [CODE] P2. After ≥48h of all-ES256 traffic with zero HS256-fallback hits (log-confirmed), drop the HS256 accept
-      path + ~~delete the shared `internal-secret` object~~ **RETAIN the object** (see re-scope below). Update codex.
-      Collision group: `ao_asym_auth_code`. Est 0.2 AI-day. **Soak started 2026-06-01 ~14:00Z.**
-
-  **🟢 STAGED 2026-06-01 — ready to merge on/after 2026-06-03 (DO NOT merge before the gate):**
-  - **Code change is written + green** on branch `staged/hs256-retire-2026-06-03` (agent-orchestrator@3257199):
-    `decode_token` drops the legacy HS256 internal-token accept path; `_issue_internal_token` drops the HS256 signing
-    fallback (raises without an ES256/RS256 private key); 2 tests updated (HS256 signing now raises; legacy HS256 token now
-    rejected). Verified: ruff + basedpyright + full pytest (344 passed).
-  - **⚠️ RE-SCOPE — do NOT delete the `internal-secret` object.** The raw `_internal_secret` is now also the pre-shared key
-    for `verify_internal_secret()` → `POST /api/escalate` (the GHA→orchestrator dispatch added in
-    `cicd_contract_hardening_2026_06_01` P1 #7, agent-orchestrator@93b46c6). Deleting it would break escalation auth. Only
-    the HS256 *JWT accept/sign* paths are retired; the object stays.
-  - **MERGE GATE (run 2026-06-03 ~14:00Z+):** (1) confirm zero HS256-fallback hits in the soak window —
-    `journalctl -u orchestrator --since '2026-06-01 14:00' | grep -c 'internal HS256 secret'` should be 0 on every VM
-    (the debug line was removed in the staged change; check the pre-staging logs); (2) confirm every VM has an ES256/RS256
-    private key configured (`ORCHESTRATOR_INTERNAL_PRIVATE_KEY[_FILE|_GCS]` + `INTERNAL_ALG=ES256`); (3) then
-    `git merge --ff-only` / cherry-pick `staged/hs256-retire-2026-06-03` onto LDR + `ao-self-pull` deploys it; (4) update
-    the codex asymmetric-auth section. If ANY VM still lacks the private key, do NOT merge (would break its internal-token
-    signing).
+- [x] ✅ [CODE] P2. ✅ DONE 2026-06-01 (retired live, no 2-day wait needed). The real gate was "all-ES256," not elapsed
+      time (5-min internal-token TTL). On checking the live fleet we found ES256 signing was complete on only 1 of 11 VMs
+      (`agent-orchestrator-vm-1`); the other 10 (`…-20260522` batch) lacked the private key + `INTERNAL_ALG`. **Completed
+      the ES256 rollout to all 11** (operator decision: distribute the private key to every VM via the restricted creds
+      bucket `ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS` + `INTERNAL_ALG=ES256` — central-only abandoned), started the 9
+      stopped VMs to apply, verified **11/11 sign ES256** (`GCS priv-key READ ok` + active), then **retired HS256**
+      (cherry-picked `staged/hs256-retire-2026-06-03` → LDR @f44b948; `decode_token` ES256-only, `_issue_internal_token`
+      raises without a private key) and deployed to all 11 (HEAD=f44b948, hs256_refs=0, active — verified 11/11). Codex
+      updated (`agent-orchestrator-overview.md` × 3 spots). **RETAINED the `internal-secret` object** (it's the
+      `verify_internal_secret()` pre-shared key for `POST /api/escalate`) — only the HS256 *JWT* accept/sign paths
+      retired. The 9 non-running VMs re-stopped (paused state restored; ES256 config + retired code persist on EBS; both
+      ao-self-pull + git-health-guard crons installed so they're current on next restart). Collision group:
+      `ao_asym_auth_code`.
 
 ## Closing condition
 
