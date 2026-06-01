@@ -143,6 +143,11 @@ Manifest v5+: 4-state `capture_status` (`captured`/`empty_confirmed`/`attempted_
 categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2) unexpected gap →
 `DependencyError(fail_fast=True)`, (3) schema-drift bug → RAISE LOUD. Never emit silent placeholders.
 
+**Current canonical manifest schema = v9, workspace-wide (all asset groups, NOT tradfi-only).** `MANIFEST_SCHEMA_VERSION`
+8→9; each asset group's `_index` migrates 8→9 (adds `source`/`asset_group`/`pipeline_mode` cols) bundled into its single
+canonicalisation walk. Trust the actual `schema_version` distribution, never the constant. SSOT: the per-asset-group
+`*_manifest_canonicalisation_2026_06_01.md` plans coordinated by `defi_manifest_canonicalisation_2026_06_01.md`.
+
 - 33-member `EmptyConfirmedReason` closed set (29 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE` +
   `LEG_ABSENT_LEFT` + `LEG_ABSENT_RIGHT`) in UAC `EMPTY_CONFIRMED_REASONS`. Blank reason →
   `LegacyBlankErrorReasonError`. Enum:
