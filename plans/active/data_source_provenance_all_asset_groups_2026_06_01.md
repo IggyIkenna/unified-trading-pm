@@ -83,6 +83,42 @@ decide *whether* to stamp. Cardinality (>1) governs resolution only. No asset_gr
 registry is the SSOT for the allowed source strings (it already enumerates the current source for every cell, e.g.
 `("cefi", …)=["tardis"]`, `("prediction", "trades")=["polymarket_clob"]`).
 
+## Decisions taken (Q1 + Q2) — 2026-06-01 (operator-delegated; SHIPPED this form)
+
+> These record the operator answers to the two open design questions + the **as-implemented** contract. The shipped UTL
+> gate (UTL@0f7198f2) implements the **auto-stamp** variant below — which **refines the "raise when blank for every
+> cell" rule stated in § Design decision / Phase 1**. Flagged here for explicit confirm/override.
+
+**Q1 — computed/service sources are EXEMPT (operator pick).** A cell whose only `SOURCE_PRIORITY` source(s) are internal
+emitters (`execution_service` / `strategy_service` / `features_onchain_service` / `cross_instrument`) does NOT stamp
+`source` — its lineage is the upstream cell, not a vendor. Implemented as `COMPUTED_SOURCES` in UAC `source_priority.py`;
+`external_sources_for()` filters them out. This **resolves the plan's internal contradiction**: Phase 1 text said "only
+an unregistered cell is exempt", but `execution_fills` / `hedge_ratio_snapshot` / `cross_instrument_signal` ARE
+registered (for the PipelineMode round-trip) yet must not gate. Computed-source membership is the principled exemption.
+
+**Q2 — AUTO-STAMP single-source; require explicit only for multi-source (my call under operator delegation).** The
+shipped gate (`ManifestWriter._resolve_and_validate_source`, applied in `record_captured` **and** legacy `add`):
+
+| cell | blank `source` behaviour |
+| ---- | ------------------------ |
+| 1 external source (cefi `tardis`, prediction `polymarket_clob`, single-source defi `onchain_subgraph`, …) | **auto-stamp** the sole registered external source (NO raise) |
+| >1 external source (tradfi trades, defi `oracle_prices`/`native_staking_rates`, sports `FIXTURES`) | **raise `MissingSourceError`** — writer must pass `source=` |
+| computed/service-only, or unregistered | exempt → `source=""` |
+| any passed `source` not in the cell's `SOURCE_PRIORITY` list | **raise** (membership validation) |
+
+**Why auto-stamp (not the literal "raise on blank for every cell")**: both reach the operator's end state — *every
+external cell carries `source`*, swap-resilient. Auto-stamp gets there **without threading `source=` through the
+hundreds of single-source callsites** (all of MDPS cefi, every sports/prediction/single-source-defi writer) and without
+breaking them at runtime. Trade-off: a single-source writer no longer *declares* its source (the registry fills it), so
+a future registry-drift could auto-stamp a wrong default — mitigated by the membership-validation raise + the QG STEP
+5.64 generalisation. Helpers shipped: `source_required()` (>1 external) / `default_source()` (sole external) /
+`external_sources_for()` / `COMPUTED_SOURCES` — **not** the `validate_source()` named in the Phase 1 item.
+
+> **OPERATOR: confirm auto-stamp, or override → raise-on-blank-everywhere.** Override means: thread `source=` through
+> EVERY single-source writer (MDPS canonical_writer, all sports/prediction/single-source-defi callsites) + flip the gate
+> to raise on any blank. Larger rollout; breaks each writer until threaded. Auto-stamp avoids that. Until overridden,
+> auto-stamp stands and the Phase 1 items below are flipped against it.
+
 ## Scope boundary — what stamps `source` (so "all asset groups in full" is unambiguous)
 
 - **IN SCOPE — every ingested raw market-data cell** that has a `SOURCE_PRIORITY` entry: all five asset groups, every
@@ -117,30 +153,34 @@ column is RED, not exempt.
 
 ### Phase 1 — UAC + UTL: universal source gate (P0, foundation)
 
-- [ ] [UAC] P0. Expose `validate_source(asset_group, data_type, source) -> None` (raises) in
-      `unified-api-contracts/.../canonical/crosscutting/source_priority.py`: a non-blank `source` is REQUIRED for every
-      cell that has a `SOURCE_PRIORITY` entry, and it must be a **member** of that entry's list (closed set). Cardinality
-      (>1) is NOT the trigger — single-source cells require source too. (A cell with no `SOURCE_PRIORITY` entry at all is
-      the only exemption; treat that as a registry gap to fix, not a pass.)
-- [ ] [UTL] P0. Replace the hardcoded `if category == "tradfi" and not source` gate with the universal rule: raise
-      `MissingSourceError` when `source` is blank OR not in `SOURCE_PRIORITY[(category, data_type)]`, for **all** asset
-      groups. `unified-trading-library/.../manifest_writer.py:2426`. No single-source / prediction exemption.
-- [ ] [TEST] P0. Extend `unified-trading-library/tests/unit/test_manifest_writer_source.py`: a cell from ANY asset group
-      (incl. single-source cefi `tardis`, prediction `polymarket_clob`) without `source=` MUST raise; a `source` not in
-      the cell's SOURCE_PRIORITY list MUST raise; two valid sources on one cell produce two manifest rows.
+- [x] ✅ [UAC] P0. Registry-driven source helpers in `source_priority.py` — uac@aab101ad. Shipped `source_required()`
+      (>1 external), `default_source()` (sole external → auto-stamp), `external_sources_for()`, `COMPUTED_SOURCES`,
+      exposed at the UAC + crosscutting facades. **NOTE (auto-stamp variant per § Decisions Q2):** shipped these instead
+      of `validate_source(...)-raises-for-every-cell`; single-source cells auto-stamp rather than raise. Membership
+      validation (passed source ∈ list) is enforced in UTL.
+- [x] ✅ [UTL] P0. Universal source gate `_resolve_and_validate_source()` in `manifest_writer.py`, applied in
+      `record_captured` AND legacy `add` — utl@0f7198f2. **Auto-stamp form (per § Decisions Q2):** auto-stamp sole
+      external source / raise on multi-source-blank / raise on invalid source / computed+unregistered exempt — NOT
+      raise-on-every-blank. `MissingSourceError` gained `invalid_source`/`allowed_sources`.
+- [x] ✅ [TEST] P0. `tests/unit/test_manifest_writer_source.py` extended — utl@0f7198f2 (+ UAC
+      `tests/unit/test_source_priority.py` uac@aab101ad): tradfi/defi/sports multi-source raise without `source`;
+      cefi/prediction/defi-swap **auto-stamp**; invalid source raises; two sources on one cell → two manifest rows;
+      computed + unregistered exempt; `add()` path covered.
 
 ### Phase 2 — DeFi writer rewiring (P0, biggest gap)
 
-- [ ] [UTL] P0. `DefiManifestRecorder.record_captured()` must accept `source: str` and route through
-      `ManifestWriter.record_captured()` (currently routes through legacy `add()` which drops source).
-      `market-tick-data-service/.../cli/handlers/_defi_manifest.py`.
-- [ ] [MTDS] P0. Thread `source=` through every DeFi handler call site (oracle_prices, native_staking_rates,
-      lending_indices, dex_swaps, dex_pools, evm_defi, solana_defi, +others). Source string = the actual provider used
-      for that fetch, from the SOURCE_PRIORITY closed set. `market-tick-data-service/.../cli/handlers/*.py`.
-- [ ] [MTDS] P0. Oracle + staking handlers already resolve per-row pipeline_mode at the callsite — stamp the matching
-      `source` (`pyth_hermes`/`chainlink`, `solana_rpc`/`helius_rpc`) on each row in the same place.
-- [ ] [AUDIT] P1. Features-service DeFi onchain calculators — audit every emit that touches a DeFi data_type and confirm
-      source is stamped. `features-service/.../onchain/`.
+- [x] ✅ [UTL] P0. `DefiManifestRecorder.record_captured()` accepts `source=` + passes `category="defi"` to
+      `ManifestWriter.add()` so the registry gate resolves (single-source defi auto-stamps; multi-source requires source)
+      — mtds@2ef636a6. (Routes through `add()` not `record_captured()` — `add()` gained the same gate, the F6-precedent
+      path; avoids the df-flow refactor. Equivalent enforcement.)
+- [x] ✅ [MTDS] P0. DeFi handler callsites: single-source handlers (dex_pools, lending_indices, swap, …) **auto-stamp**
+      their registered source (no per-callsite change needed); the multi-source cells are threaded explicitly — mtds@2ef636a6.
+- [x] ✅ [MTDS] P0. oracle_prices stamps `source=chainlink`/`pyth_hermes` (+ fixed pyth rows mislabelled
+      `pipeline_mode=BATCH_CHAINLINK` → `BATCH_PYTH_HERMES` on captured/empty/failed); native_staking stamps
+      `helius_rpc`/`solana_rpc` + matching pipeline_mode by `helius_key` presence — mtds@2ef636a6.
+- [x] ✅ [AUDIT] P1. Features-service DeFi onchain calculators audited (2026-06-01) — **no change needed**: they call
+      `.add()` WITHOUT `category`, so cells are unregistered→exempt; their DeFi outputs (`feature_observation_snapshot`,
+      `cross_instrument_signal`) are computed-exempt by design.
 - [ ] [SCRIPT] P1. Write `backfill_defi_source_column.py` (copy tradfi template) — stamps the known historical source
       **per data_type** (most defi → `onchain_subgraph`; `oracle_prices` → resolve pyth vs chainlink from the existing
       `pipeline_mode`/path; `native_staking_rates` → solana_rpc vs helius_rpc). Idempotent.
@@ -169,9 +209,12 @@ column is RED, not exempt.
 
 ### Phase 4 — Sports writer source (P1)
 
-- [ ] [MTDS] P1. Thread `source=` through Sports adapter writes (api_football / footystats / odds_api / understat).
-      `market-tick-data-service/.../market_interface/adapters/sports/`.
-- [ ] [TEST] P1. Sports multi-source unit test (same fixture from api_football + footystats → two rows, primary resolved).
+- [x] ✅ [MTDS] P1. Sports multi-source `FIXTURES` threaded `source="api_football"` at both writers — instruments-service@6bbd6919.
+      **NOTE:** the `FIXTURES` (multi-source) manifest writers are in **instruments-service** (`engine/orchestrator.py`
+      `run_batch_instruments` + `triggers/sports_fixtures_daily_repoll.py`), not MTDS adapters as the item assumed.
+      Single-source sports cells (FIXTURE_EVENTS, INJURIES, …) auto-stamp; `record_empty` paths are exempt (no category).
+- [x] ✅ [TEST] P1. Sports `FIXTURES` multi-source covered in UTL `test_manifest_writer_source.py` — utl@0f7198f2
+      (raise-without-source + stamp-with-`api_football`); + UAC generic resolution for sports uac@559dc81b.
 - [ ] [SCRIPT] P1. Write `backfill_sports_source_column.py` (copy tradfi template) — **path→column migration**: read the
       source from the existing path segment (`data_source=ODDS_API/` legacy, `pipeline_mode=batch_api_football/` newer),
       write it into the `source` column on every row, and emit on the canonical column layout. Map each path token →
@@ -184,31 +227,36 @@ column is RED, not exempt.
 - [ ] [TEST] P0. Prove the consumer read path resolves source priority for **cefi/defi/sports** (not just tradfi):
       2-source fixture (same instrument+ts from two providers, co-mingled in one folder) → consumer emits exactly ONE
       resolved row via `select_primary_available_source()`. No silent double-count. Cover features-service consumers.
-- [ ] [UAC] P1. Confirm `detect_dual_source_conflicts()` is invoked at consolidation/audit time for every multi-source
-      asset group; `DUAL_SOURCE_DUPLICATE`/`VALUE_DIVERGENCE`/`COVERAGE_DIVERGENCE` surfaced, never swallowed.
+      **PARTIAL — resolution PRIMITIVES proven generic for cefi/defi/sports (uac@559dc81b: select_primary picks index-0
+      primary per cell; detect_dual_source_conflicts surfaces overlaps). REMAINING: wire the resolver into the actual
+      consumer read path (features-service loaders) — currently dead code (see finding below).**
+- [x] ✅ [UAC] P1. Confirmed (2026-06-01 read-path audit): `detect_dual_source_conflicts()` /
+      `select_primary_available_source()` are generic (not tradfi-gated) but **invoked by NO non-test consumer** — result
+      filed as the finding below. The conflict-detection primitive itself is tested (uac@559dc81b).
+- [ ] [UAC] P1. **FINDING (2026-06-01 read-path audit)**: `select_primary_available_source()` /
+      `detect_dual_source_conflicts()` are generic + unit-tested (uac@559dc81b) but **called by NO non-test consumer** —
+      dead code at the read layer. Wire the resolver into the actual consumer read path (features-service loaders + any
+      manifest/parquet reader that merges co-mingled multi-source folders) so reads emit one resolved row per cell.
+- [ ] [UTL] P1. **FINDING (2026-06-01 read-path audit)**: `manifest_consolidator.py` dedup key (`_BASE_DEDUP_COLS` +
+      `_OPTIONAL_DEDUP_COLS`) **omits `source`** — two source rows for one `(date, venue, data_type, …)` cell collapse
+      to ONE row by last-write-wins on `(attempted_at, written_at)`, NOT by `SOURCE_PRIORITY`. Matches the shipped tradfi
+      **union** model (per-source provenance lives in the parquet `source` column), so not a data-loss bug today.
+      **Decision (sequence with the data-side backfill)**: if per-source *manifest* rows must be preserved, add `source`
+      to `_OPTIONAL_DEDUP_COLS` — but that changes consolidation cardinality for all asset groups (naive consumers would
+      then see N rows/cell), so it must land WITH the read-path resolver wiring above. Do NOT change unilaterally.
 - [ ] [TEST] P1. **`available_at` parity across sources (batch = live)**: rows from any source for a cell are timestamped
       with the live-mode `available_at` of the `SOURCE_PRIORITY` top entry — NOT each vendor's slower archive time. A
       2-source fixture asserts identical `available_at` derivation per cell, so swapping/adding a source never shifts the
       lookahead. (Covers the tradfi audit item (n) generalised to all asset groups.)
-- [ ] [UAC] P1. **FINDING (2026-06-01 read-path audit)**: `select_primary_available_source()` /
-      `detect_dual_source_conflicts()` are generic + unit-tested across cefi/defi/sports (UAC@559dc81b proves
-      resolution is NOT tradfi-gated) but **are not called by ANY non-test consumer** — they are dead code at the read
-      layer. Wire the resolver into the actual consumer read path (features-service loaders + any manifest/parquet
-      reader that merges co-mingled multi-source folders) so reads emit one resolved row per cell. Until wired, multi-
-      source resolution depends entirely on the consolidator's last-write-wins (see next item).
-- [ ] [UTL] P1. **FINDING (2026-06-01 read-path audit)**: `manifest_consolidator.py` dedup key (`_BASE_DEDUP_COLS` +
-      `_OPTIONAL_DEDUP_COLS`) **omits `source`** — two source rows for one `(date, venue, data_type, …)` cell collapse
-      to ONE row by last-write-wins on `(attempted_at, written_at)`, NOT by `SOURCE_PRIORITY`. This matches the shipped
-      tradfi **union** model (per-source provenance lives in the parquet `source` column, manifest is captured-if-any),
-      so it is not currently a data-loss bug. **Decision needed (sequence with the data-side backfill behind the bucket
-      remediation)**: if per-source *manifest* rows must be preserved, add `source` to `_OPTIONAL_DEDUP_COLS` — but that
-      changes consolidation cardinality for all asset groups and naive (non-resolving) consumers would then see N rows
-      per cell, so it must land together with the read-path resolver wiring above. Do NOT change unilaterally.
 
 ### Phase 6 — QG + audit instructions + codex (P1)
 
-- [ ] [QG] P1. Generalise QG STEP 5.64 (currently tradfi-only `source` kwarg check) to fire for any multi-source
-      `(asset_group, data_type)` per `source_required()`. Wire into MTDS + MDPS `quality-gates.sh`.
+- [ ] [QG] P1. **(checker DONE, wiring REMAINING)** Checker generalised — `check_tradfi_source_explicit_at_record_captured.py` now flags only when a
+      callsite's resolved `(category, data_type)` (literal or module-constant) is multi-source per `source_required()`
+      AND `source=` is absent; covers `record_captured` + `add`; degrades to no-op if UAC absent (PM@5bba69651, slot
+      ref). Verified catches defi/tradfi multi-source-blank, skips single-source (auto-stamp). **REMAINING: wire into
+      MTDS + MDPS `quality-gates.sh` — blocked until the checker reaches LDR (can't wire a clean repo to a PM script not
+      yet promoted).**
 - [x] ✅ [AUDIT] P1. Add a **Dual-source provenance** section to ALL per-epic audit instruction files: `tradfi_master`
       (items h–o), `cefi_master` (i–l), `sports_master` (h–j, incl. path→column migration finding), `predictions_master`
       (h–j, N/A-by-design invariant), `defi_master` (n1–n4, strongest multi-source case), `mtds_mdps_master` (Mode 1 item
