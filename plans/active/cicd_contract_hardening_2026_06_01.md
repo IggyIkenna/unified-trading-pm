@@ -97,6 +97,26 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       serialization (flock / queue). Today there is no hard serialization beyond the advisory lock. Record the decision
       in `codex/08-workflows/ci-cd-flow.md`; if "add hard serialization", spawn a follow-up implementation todo.
 
+### Phase 5 — PM main↔LDR back-merge drift (discovered 2026-06-01 attempting the LDR→main catch-up) **P0**
+
+Root cause discovered while attempting to promote PM `main` (which was 666 commits behind `live-defi-rollout`): the
+PM **doc-fast-path lands commits directly on `main`** (e.g. `a104761b6` "HARD RULE sweep…", `1632fee75` "playwright UI
+gate + standards…") but **nothing back-merges those main-only commits into LDR**. Result: `main` and LDR diverge
+*both ways*, and the catch-up PR (`#103 live-defi-rollout→main`) is `CONFLICTING/DIRTY` with **~95 conflicting files**
+across foreign codex docs / plans / scripts — too large + foreign-saturated to hand-resolve on a slot. This is the
+mechanism behind the exact drift this whole audit is about.
+
+- [ ] [SCRIPT] P0. **Auto back-merge `main`→LDR after every direct-to-main PM commit.** Add a GHA on PM (trigger:
+      `push: [main]`) that opens/auto-merges a `main → live-defi-rollout` FF/merge PR, so a doc-fast-path commit can
+      never strand on main. Mirrors the existing `tab-mirror-to-ldr.yml` direction, in reverse.
+- [ ] [OPERATOR-DECISION] P0. **Resolve the current `#103` catch-up.** ~95-file foreign-conflict merge of 670 commits
+      into shared `main` — needs operator-coordinated reconciliation (or the doc owners), NOT an autonomous slot merge.
+      Options: (a) back-merge `main`→LDR resolving the ~95 conflicts on the integration branch, then `#103` becomes a
+      clean FF; (b) reset main to LDR via `run-version-alignment.sh` + a controlled sync (NB: `admin-force-sync-all-to-main.sh`
+      can revert semver bumps — human-only). Surface to operator; do not auto-merge.
+- [ ] [DOC] P1. Document in `ci-cd-flow.md`: "PM doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by the
+      Phase-5 GHA); never leave a main-only commit unmirrored."
+
 ## Success criteria
 
 | Phase   | Gate                                                                                                                |
@@ -105,6 +125,7 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
 | Phase 2 | Audit i4 re-run: `enforce_admins` true on every protected repo (or documented exemption)                            |
 | Phase 3 | GCP cloudbuild pushes an immutable tag; branch-build recipe documented in codex                                     |
 | Phase 4 | Concurrent-push guarantee decided + recorded in `ci-cd-flow.md`                                                     |
+| Phase 5 | `main`→LDR back-merge automated; `#103` catch-up resolved by operator; no main-only unmirrored commits              |
 
 ## Codex SSOTs
 
