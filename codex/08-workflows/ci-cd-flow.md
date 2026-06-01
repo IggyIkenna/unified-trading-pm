@@ -258,14 +258,28 @@ SAFE direction (protected > unprotected).
 ## Operational status — promotion automation (snapshot 2026-06-01; being repaired)
 
 The **PR→staging gate** (`quality-gates-v2`) is healthy + enforced workspace-wide. The **staging→main half is being
-revived** — as of 2026-06-01 it was found DEAD and bypassed via admin force-merge:
+revived** — as of 2026-06-01 it was found DEAD and bypassed via admin force-merge. Progress (2026-06-01 evening):
 
-- `semver-agent` — trigger fixed (`quality-gates-v2`); needs the rendered file rolled out to repo default branches +
-  the `staging_versions` baseline restored in `workspace-manifest.json`.
-- SIT chain (`sit-gate` ← `sit-lock`; `staging-to-main` ← `staging-validated`) — entry dispatch dead; being traced.
-- `sit-debounce` Telegram empty-secret guard; loud `workflow_run`-failure + auto-merge-stuck alerting (silent rot was
-  the root cause); orchestrator-dispatch escalation for judgment cases (conflict / label-mismatch / SIT-triage) via the
-  setup-token worker fleet — NOT API credits in GHA.
+- **Loud alerting — SHIPPED** (`scripts/repo-management/ci_failure_watcher.py` + `.github/workflows/ci-failure-watcher.yml`,
+  cron `*/15`): cross-repo `workflow_run` failure→recovery transitions (stateless, recency-guarded) + auto-merge-stuck PR
+  poller → Slack `#ci-failures` via `notify-slack.yml`. This is the antidote to the silent rot that hid the breakage.
+- **`sit-debounce` notify guard — SHIPPED**: `notify-slack.yml` now skips (exit 0) on any non-`https://` webhook —
+  notifications are best-effort, never fail the caller (was raising uncaught `ValueError: unknown url type` on a
+  masked/misconfigured `SLACK_WEBHOOK_URL` inherited via `secrets: inherit`).
+- **`staging_versions` baseline — RESTORED** in `workspace-manifest.json` (was reset to `{}`; semver reads it as the
+  bump baseline). Repopulated from the per-repo `versions` SSOT.
+- `semver-agent` — trigger fixed (`quality-gates-v2`); still needs the rendered file rolled out to repo default branches
+  (held until the LDR→main reconciliation campaign settles, to avoid add/add `*.yml` conflicts).
+- SIT chain (`sit-gate` ← `sit-lock`; `staging-to-main` ← `staging-validated`) — PM-side mapped: `sit-debounce-trigger`
+  (cron `*/2`) dispatches `staging-changed` to the `system-integration-tests` repo; the dead link is on the SIT-repo
+  side (zero `sit-gate` runs ⇒ `sit-lock`/`staging-validated` never re-dispatched). Cross-repo trace remaining.
+- orchestrator-dispatch escalation for judgment cases (conflict / label-mismatch / SIT-triage) via the setup-token
+  worker fleet — NOT API credits in GHA — remaining.
+
+**Gotcha (local ≠ CI, codified 2026-06-01):** `quality-gates.sh` runs prettier + numpy/pandas/UTL-resolved typecheck
+locally that the CI clone does NOT reproduce — prettier only runs in `FIX_MODE` (skipped under CI's `--no-fix`), and CI
+clones a thin `dep_repos` set so cross-repo imports (numpy, `unified_trading_library`) go unresolved → a local green can
+hide a CI-red basedpyright/test. Always read the CI log on a campaign-PR red; don't infer from a local pass.
 
 **Live SSOT for this repair + the full ordered backlog**: `plans/active/cicd_contract_hardening_2026_06_01.md`
 § "Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN".
