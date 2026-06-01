@@ -628,6 +628,13 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
         `candle_generator.py`) to land the migration — these have PRE-EXISTING basedpyright errors. Fix the type errors
         properly and shrink the bypass list (contrast: client-reporting-api PR #9 removed a suppression — that's the
         target direction).
+  - [x] ✅ [TEST] P2. **mdps per-shard memory gate macOS units bug FIXED — mdps@9ce5159 2026-06-01** (discovered while
+        verifying the above two follow-ups to EXIT 0). `tests/perf/test_polars_instrument_day_memory.py` divided
+        `resource.getrusage().ru_maxrss` by 1024 assuming Linux KB semantics, but on macOS/BSD `ru_maxrss` is **bytes**
+        → the `[6.X] PER-SHARD MEMORY REGRESSION GATE` over-counted RSS growth 1024× (~74 MB read as ~75,000 "MB") and
+        `scripts/quality-gates.sh` exited 1 on EVERY macOS slot (incl. operator interactive sessions) while Linux CI
+        passed. Fix = platform-aware `_maxrss_mb()` helper; the 2 GB bar is unchanged (Linux behaviour identical), only
+        the macOS measurement corrected. perf test 3/3 green on darwin; full mdps QG now EXIT 0.
 
 - [x] ✅ [VERIFY] P0. `verify_branch_protection_check_names.py` 2026-06-01: **ALL RULESETS CONSISTENT; every active repo
       requires `…/quality-gates-v2` on main + staging; 0 on v1; 0 none** (deployment-ui on its UI gate; PM no staging).
