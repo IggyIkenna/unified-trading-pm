@@ -282,6 +282,18 @@ What to verify/wire (B0 corrected scope):
 
 ## C. Data / manifest migration (single-walk, bundled) — fix existing rows
 
+> **THE WHOLE POINT — fix the PAST, not just future writes (operator 2026-06-01, re-affirmed)**: the root of our
+> recurring problems has been fixing the *code* (so future writes are correct) while leaving the *past* data + past
+> manifests in legacy form — which forces fallbacks, dual-write, and a split SSOT. This plan exists to END that. §C is
+> NOT manifest-only and NOT future-only. The C0 single-walk (`migrate_defi_full_v9_canonical.py`) **reads every past
+> parquet object** and rewrites BOTH its **columns** (`schema_version→9`, `venue`→canonical `_V{N}`, `source` populated,
+> `pipeline_mode` column, `available_at` preserve-or-backfill) AND its **path** (`category=defi`→`asset_group=defi` +
+> `pipeline_mode=` partition + env-split `-prd` bucket). C0e then **rebuilds the past manifest** (consolidator) FROM the
+> rewritten data — so data + manifest + data-status are all in line. C0f + L6 **delete the legacy originals** (kills the
+> dual SSOT), and the reader is fail-fast-by-default with **no legacy fallback** (`manifest_reader_fail_fast`). A change
+> that only corrects new writes while leaving historical objects/manifests legacy is **review-blocking** — it
+> re-creates the exact fallback/dual-SSOT problem this plan deletes.
+>
 > **C is the foundation gate** (see Sequencing). One bundled single-walk per bucket applies C0+C2+C3+C4+C5+C7+C9
 > together (no N ad-hoc walks). Backfills (C6/D1/E1) + B0-run are blocked until C is GREEN for the affected bucket.
 >
