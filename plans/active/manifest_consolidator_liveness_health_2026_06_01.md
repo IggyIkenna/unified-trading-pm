@@ -75,8 +75,12 @@ Models to reuse: `monitors/freshness_monitor.py::FreshnessMonitor.check_and_emit
       alert sink as the existing `DATA_FRESHNESS_ALERT_ROUTED` path so a crash-looping consolidator pages.
 - [x] ✅ [TEST] P1. UTL@3732ffaa — 141 tests green (13 (re-)written). Unit tests: heartbeat-fresh → healthy; heartbeat-stale → `CONSOLIDATOR_DOWN` + `assert_*` raises;
       recovery emits recovery; fail-fast default raises while opt-out merges; empty-bucket path unaffected.
-- [ ] [INFRA] P2. **Deploy the watchdog**: Cloud Run Job + Cloud Scheduler (`*/2 * * * *`) per env, terraform in
-      `deployment-service/terraform/gcp/`. Mirror the consolidator scheduler TF. (Runs-to-completion gate.)
+- [x] ✅ [INFRA] P2. deployment-service@eb75df0 — **Deploy the watchdog**: Cloud Run Job
+      `uts-prod-consolidator-liveness-watchdog` + Cloud Scheduler `*/2 * * * *` (ENABLED) shipped via
+      `terraform/gcp/consolidator_liveness_scheduler.tf` (single job over all manifest buckets). UTL base
+      (586e41e8) + MTDS image (17a90302) rebuilt @ UTL 3732ffaa so the module is in `:latest`; targeted
+      `terraform apply` = 2 added / 0 changed / 0 destroyed. **Verified live 2026-06-01**: manual execution
+      `...-qgd8z` succeeded (succeededCount=1, `Container called exit(0)` — module loads, all heartbeats fresh).
 - [x] ✅ [DOC] P2. codex@(this PR) — **Codex SSOT**: new "Liveness + health contract" section in
       `codex/05-infrastructure/manifest-consolidator-ssot.md` (heartbeat-every-cycle + watchdog + loud-fail-default +
       preflight gate) + cross-link from `codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast".
@@ -90,7 +94,8 @@ Models to reuse: `monitors/freshness_monitor.py::FreshnessMonitor.check_and_emit
       sink.
 - C4: `bash scripts/quality-gates.sh` in `unified-trading-library` exits 0 for the touched files (composes with the
       pre-existing UTL QG-debt tracked in `issues/utl_full_qg_red_backlog_2026_06_01.md`).
-- C5 (runs-to-completion): watchdog Cloud Run Job deployed + Scheduler enabled + one live cycle observed.
+- C5 (runs-to-completion): watchdog Cloud Run Job deployed + Scheduler enabled + one live cycle observed. ✅
+  `uts-prod-consolidator-liveness-watchdog` + `-cron` (ENABLED, `*/2`); manual exec exit(0) 2026-06-01.
 
 ## Risks + mitigations
 
