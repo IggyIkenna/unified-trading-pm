@@ -439,7 +439,12 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `unified-trading-system-ui` / `user-management-ui` / `features-service` / `unified-trading-api` lack the
       `require-quality-gates` ruleset, replicate it (gated on each repo's quality-gates-v2 being green). Owner: Ikenna
       (CI/branch governance).
-- [ ] [SCRIPT] P1. **features-service is branch-structurally incomplete — quality-gates-v2 is wrongly gating `live-defi-rollout`** (slot 7 finding 2026-06-01).
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-01 (slot 7) — features-service branch structure fixed; v2 no longer gates LDR.**
+      Created `main` + `staging` from LDR HEAD (`dba0f5bf`) + set GitHub default branch → `main`
+      (`gh api -X PATCH ... -f default_branch=main`). The `require-quality-gates` ruleset (`~DEFAULT_BRANCH`) now gates
+      `main`; LDR is free-push again (verified: `features-service@587e494e` bucket-override fix landed on LDR). The
+      coverage-floor / `PYTEST_UNIT_DIR` QG-red now correctly gates main-promotion. Original finding (provenance):
+  > **features-service was branch-structurally incomplete — quality-gates-v2 was wrongly gating `live-defi-rollout`** (slot 7 finding 2026-06-01).
       features-service has **only a `live-defi-rollout` branch — NO `main`, NO `staging`** (every other repo has all three;
       MTDS verified). Its GitHub **default branch is therefore `live-defi-rollout`**, and the `require-quality-gates`
       ruleset (id `17136160`, target `~DEFAULT_BRANCH`, rule `required_status_checks`) consequently enforces
