@@ -281,6 +281,19 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   `cicd_contract_hardening_2026_06_01.md` rather than a verbal "fan it out". Composes with: _Capture Discoveries As Plan
   Todos Immediately_, _Agent-orchestrator backlog is plan-driven_, and _Sub-Agents need full rules_ (the todo carries
   the context the cold worker needs). SSOT: `plans/PLAN_FORMAT.md` + `codex/12-agent-workflow/`.
+- **Workflow-capable GH_TOKEN everywhere — no permission-based work-stoppage (HARD RULE codified 2026-06-01)**: every
+  execution context — **each slot, the operator/Harsh main worktree, AND every orchestrator VM worker** — MUST have a
+  `GH_TOKEN` that can edit `.github/workflows` (i.e. `GH_PAT` from Secret Manager, which carries fine-grained
+  **"Workflows: read/write"**). The gh CLI **keyring login token (`gho_…`) lacks the `workflow` scope** (`repo, read:org,
+  gist, admin:public_key` only), so any `gh`-API / HTTPS push that creates or updates a workflow file is silently
+  refused — which stalled a CI v1→v2 migration mid-flight (2026-06-01). **Canonical load:**
+  `source unified-trading-pm/scripts/workspace/load-gh-token.sh` (fetches `GH_PAT` from GCP SM → AWS SM, exports
+  `GH_TOKEN`+`GITHUB_TOKEN`; env beats the keyring for gh + git). It is sourced by `workspace-bootstrap.sh` (local
+  hosts) and MUST be exported into orchestrator VM worker envs by `agent-orchestrator/scripts/bootstrap_vm.sh`.
+  `verify-slot-host-symmetry.sh` now probes workflow-capability (non-mutating PUT → 409/422 = OK, 403 = blocked) and
+  FAILS a host that lacks it. **Note:** git push **over SSH** (a user key) is exempt from the workflow-scope
+  restriction, so ssh-protocol slots can already push workflow files via `git`; this rule closes the `gh`-API / HTTPS
+  path that is restricted. SSOT: `scripts/workspace/load-gh-token.sh` + `codex/12-agent-workflow/`.
 - **Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. (HARD RULE codified
   2026-05-30)**: `regen_backlog_from_plan.py` is the single source of truth for backlog state. `backlog.yaml` and
   `state.db` MUST reflect only tasks whose `- [ ]` checkbox is open in an active plan.
