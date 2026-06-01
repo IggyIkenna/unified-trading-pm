@@ -488,22 +488,27 @@ What to verify/wire (B0 corrected scope):
 
 - [x] ✅ [CODE] P0. C0-CN1 — migration writes canonical (`dex_pool_state`/`dex_pool_swaps`, `pipeline_mode=` path,
       `HYPERLIQUID`, `perpetual`). mtds@6a8372b2 + codex `defi-canonical-naming-ssot.md`. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. C0-CN2 — **MTDS handlers**: `dex_pools_handler._DATA_TYPE`→`dex_pool_state`,
-      `dex_swaps_handler._DATA_TYPE`→`dex_pool_swaps`; emit the `pipeline_mode=` path partition on write (live = batch).
-      Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. C0-CN3 — **manifest consolidator + `_PATH_DATA_TYPE`/bucket-domain maps**: drop the on-disk→logical
-      `dex_pool_state→dex_pools` remap (now identity — `dex_pool_state` is the manifest data_type too). Repos:
-      market-tick-data-service + features-service `onchain/app/core/mtds_output_config.py`. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. C0-CN4 — **features-onchain readers pipeline_mode-aware**: pass `pipeline_mode` to
-      `candidate_parquet_paths(...)` (or update the canonical reader) so calculators find `…/pipeline_mode=…/…`;
-      `_PATH_DATA_TYPE` becomes identity. Repo: features-service. parent_epic: features_and_ml_master.
-- [ ] [CODE] P0. C0-CN5 — **MDPS reader pipeline_mode-aware** + data_type `dex_pool_state`. Repo:
-      market-data-processing-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. C0-CN6 — **UAC**: make `pipeline_mode=` canonical in `build_defi_partition_path` (not just a probe in
-      `candidate_parquet_paths`); set `ChainKind.HYPERLIQUID_L1.value='HYPERLIQUID'` (or add wire alias). Repo:
-      unified-api-contracts. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. C0-CN7 — **instruments-service**: add `PERPETUAL` to `DEFI_ONCHAIN_INSTRUMENT_TYPES` (DeFi has
-      on-chain perps — Drift/GMX/HL). Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. C0-CN2 — **MTDS handlers**: `dex_pools_handler._DATA_TYPE`→`dex_pool_state`,
+      `dex_swaps_handler._DATA_TYPE`→`dex_pool_swaps` (both path + manifest), `pipeline_mode=` threaded into
+      `write_defi_rows`/`build_defi_partition_path` (live=batch). **mtds@0a3a7071, QG green.** parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. C0-CN3 — **on-disk↔logical data_type remap dropped (now identity)**: mtds `defi_catalog_reader`
+      `_ITYPE_TO_DATA_TYPE[POOL]`→`dex_pool_state` (mtds@0a3a7071); features `mtds_output_config._PATH_DATA_TYPE` identity
+      + `_MTDS_OUTPUT_BUCKET_DOMAINS` rekeyed to `dex_pool_state`/`dex_pool_swaps` (features-service@dec1b687). No live
+      consolidator remap existed. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. C0-CN4 — **features-onchain reader pipeline_mode-aware**: `mtds_canonical_reader`
+      `read_canonical_defi_parquets` probes `pipeline_mode=batch`→bare→`pipeline_mode=live`→legacy via UAC
+      `build_defi_partition_path(pipeline_mode=)`; `_PATH_DATA_TYPE` identity. **features-service@dec1b687, QG green.**
+      parent_epic: features_and_ml_master.
+- [x] ✅ [CODE] P0. C0-CN5 — **MDPS reader pipeline_mode-aware + canonical data_type**: `orchestration_scanner`
+      `_blob_matches_data_type_partition` accepts `dex_pool_state`/`dex_pool_swaps` (+ legacy) under `pipeline_mode={batch|live}`
+      (day-prefix listing captures the segment). **mdps@4b9e6e5, QG green.** parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. C0-CN6 — **UAC**: `build_defi_partition_path(pipeline_mode=)` canonical (candidate_parquet_paths
+      delegates); `to_canonical_chain_wire`+`CHAIN_WIRE_VALUE_OVERRIDES` resolve HL→`HYPERLIQUID` (non-breaking alias);
+      `DEFI_ONCHAIN_INSTRUMENT_TYPES`+=`PERPETUAL`. **uac@dad96e42, QG green.** parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. C0-CN7 — **instruments-service: VERIFIED no change needed** — IS already produces DeFi `perpetual`
+      InstrumentRecords (Lighter/etc. perp adapters) + the UAC validator already accepts `perpetual` (routed via the pair
+      branch; UAC allowlist now also lists it); chain wire via UAC `to_canonical_chain_wire`; IS is data_type-agnostic for
+      the tick universe. parent_epic: mtds_mdps_master.
 - [ ] [DOCS] P1. C0-CN8 — update codex `02-data/defi-data-types-catalog.md` + `availability-manifest-and-data-status.md`
       to the canonical forms (data_type `dex_pool_state`, `pipeline_mode=` path, `HYPERLIQUID`, DeFi `perpetual`); cross-ref
       the new `defi-canonical-naming-ssot.md`. parent_epic: mtds_mdps_master.
