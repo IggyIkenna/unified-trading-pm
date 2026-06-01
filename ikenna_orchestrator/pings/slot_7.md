@@ -2659,3 +2659,27 @@ again**. The coverage-floor / per-family `PYTEST_UNIT_DIR` QG-red now correctly 
 Remaining un-shipped (all tracked todos, none mine to force): deployment-log-churn (untouched, own [INFRA] todos),
 OKX symbol-mapping (P1 todo — needs blocked Tardis key to validate), DeFi #1/#4 (todos in features_and_ml_master).
 — slot-7 / ikenna 2026-06-01
+
+---
+
+## [2026-06-02] slot-7 — OKX symbol-mapping SHIPPED + archivability re-check
+
+**OKX-FUTURES Tardis symbol bug FIXED → instruments-service@`35a745ef`** (LDR). Root cause: `_TARDIS_VENUE_EXCHANGES`
+(IS `reference_data/router.py`) had no OKX entries → OKX-FUTURES discovery fell through to the `okex` (spot) default →
+emitted `BTC-USDT` instead of native `okex-futures` dated ids (`BTC-USD-260626`/`_UM`) → Tardis HTTP 400. Added
+`okx-spot→okex` / `okx-swap→okex-swap` / `okx-futures→okex-futures` (matches UAC `venue_mapping.to_tardis_exchanges`) +
+regression test; live-validated vs the FREE `/exchanges/okex-futures` endpoint (5740 native syms). IS emits native ids;
+MTDS consumes unchanged. Independent of the BLOCKED Tardis paid key. Flipped in `mtds_mdps_master` + running_vm_fleet.
+Operational follow-up (tracked): re-run OKX-FUTURES backfill next window (28k attempted_failed → captured), dry-run vs
+live listing first.
+
+**Also shipped this cycle**: LogUploader churn fix (utl@`2bfb6a16` + deploy@`130c85c`); DeFi #4 → defi_manifest C0-RD6;
+features bucket-override (`587e494e`) + features-service branch-structure fix (main/staging created, default→main).
+
+**Archivability re-check (no further archives warranted)**: OKX fix did NOT fully clear any remaining issue —
+`running_vm_fleet_status` + `fleet_audit_triad` keep Tardis-key items `BLOCKED-CREDENTIALS`; `deployment…log_churn` keeps
+tarball-cleanup-scheduling + lifecycle + bucket-audit open; `defi_code_codex_drift` (5 todos) / `gcs_hive` (3 incl
+operator-deferred GCS data) / `batch_live…audit` (G1-G12) / `features_defi` (Issue-4 + CeFi) / `uniswap` (deferred
+backfill) all retain real residuals; `cefi_processed_candles` is **operator: no slot-7 archive** (harsh-held
+cefi_manifest_canon). Remaining as-is: alerting_fp_rate / api_host / human_led_audit_pool / shared_stash /
+mdps_state_adapter. **Session total: 10 issues archived; everything on LDR.** — slot-7 / ikenna 2026-06-02
