@@ -372,22 +372,22 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
 
 #### Phase 6 — CORRECTED EXECUTION MAP (2026-06-01, after diagnosis)
 
-- **semver template trigger FIXED** (, LDR ) but the **rendered  on EVERY
-  repo's default branch still has the stale  trigger** — so a **16-repo rollout to default branches**
-  is required before semver actually fires. (PR-per-repo passes quality-gates-v2 since it's a workflow-file change;
-  instruments-service main is RED so its PR needs the coverage fix or admin.)
-- **PM workflow FILES are already current on ** (notify-slack/persist-cicd-event/staging-to-main/sit-gate shas
-  identical main==LDR). So a **PM main FF is the Phase-5 plan/script drift resolution (141 commits, clean, strictly
+- **semver template trigger FIXED** (`quality-gates-v2`, LDR `3d13e6b71`) but the **rendered `semver-agent.yml` on
+  EVERY repo's default branch still has the stale `["Quality Gates"]` trigger** — so a **16-repo rollout to default
+  branches** is required before semver actually fires. (PR-per-repo passes `quality-gates-v2` since it's a workflow-file
+  change; `instruments-service` main is RED so its PR needs the coverage fix or admin.)
+- **PM workflow FILES are already current on `main`** (`notify-slack`/`persist-cicd-event`/`staging-to-main`/`sit-gate`
+  shas identical main==LDR). So a **PM main FF is the Phase-5 plan/script drift resolution (141 commits, clean, strictly
   behind) — NOT the workflow-fix landing.** Worth doing for drift, but separate from the orchestration repair.
-- ** is probably fine now** (current file; the April  was an old version) — it
-  just never triggers because nothing dispatches . **The dead link is the SIT entry dispatch.**
-- **SIT chain is -driven**:  ← ;  ← . Zero
-  SIT runs ⇒ the ENTRY (what dispatches  after staging quality-gates-v2) is broken — almost certainly the
-  same "Quality Gates" workflow_run name-mismatch class. Trace + fix the entry trigger so the chain re-animates.
-- ** telegram step** fails on an empty/masked Telegram secret () —
+- **`staging-to-main.yml` is probably fine now** (current file; the April `startup_failure` was an old version) — it
+  just never triggers because nothing dispatches `staging-validated`. **The dead link is the SIT entry dispatch.**
+- **SIT chain is `repository_dispatch`-driven**: `sit-gate` ← `sit-lock`; `staging-to-main` ← `staging-validated`. Zero
+  SIT runs ⇒ the ENTRY (what dispatches `sit-lock` after staging `quality-gates-v2`) is broken — almost certainly the
+  same "Quality Gates" `workflow_run` name-mismatch class. Trace + fix the entry trigger so the chain re-animates.
+- **`sit-debounce` telegram step** fails on an empty/masked Telegram secret (`ValueError: unknown url type '***'`) —
   guard it (skip on empty) like the Slack step; a missing notify secret must not fail the workflow.
-- **Net remaining (ordered)**: (1) semver 16-repo rollout; (2) trace+fix the SIT-entry dispatch (); (3)
-  sit-debounce telegram guard; (4) restore  baseline; (5) PM-main FF for Phase-5 drift; (6) loud
+- **Net remaining (ordered)**: (1) semver 16-repo rollout; (2) trace+fix the SIT-entry dispatch (`sit-lock`); (3)
+  `sit-debounce` telegram guard; (4) restore `staging_versions` baseline; (5) PM-main FF for Phase-5 drift; (6) loud
   alerting watcher; (7) orchestrator-dispatch escalation. Each verifiable independently.
 
 #### Phase 6 — proposed architecture (operator 2026-06-01): orchestrator-driven agent escalation + loud alerting
