@@ -178,10 +178,14 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       but was never promoted to `main` (main is 76 / 27 commits behind LDR) or `staging`. Fix: promote the v2 workflow
       file to `main` (+ `staging`) — minimal targeted PR adding the workflow, or a full LDR→main promotion — then get the
       v2 run green on main (these are large repos; greening may need real work) → classic-protection context fix → done.
-- [ ] [SCRIPT] P1. **deployment-service `main` v2 — name + dep_repos fix in PR (in flight 2026-06-01).**
-      `deployment-service/pull/11`: main's v2 emitted the wrong `alerting-service` context AND dep_repos was missing
-      `deployment-api`/`strategy-service`/`market-tick-data-service` (CI: `Distribution not found at
-      editable+../deployment-api`). PR sets the correct name + full closure; merge + classic-context fix once v2 green.
+- [x] ✅ [SCRIPT] P1. **deployment-service `main` v2 — FIXED + GREEN + MERGED 2026-06-01 (PR #11).** main's v2 emitted
+      the wrong `alerting-service` context AND dep_repos was missing `deployment-api`/`strategy-service`/`market-tick-data-service`
+      (CI: `Distribution not found at editable+../deployment-api`). PR set the correct name + full transitive closure;
+      v2 ran **green**; classic-protection context corrected to `…/quality-gates-v2`. (Admin-merged — this repo's ruleset
+      additionally requires a PR review; review requirement preserved for future PRs. Consistent with how
+      deployment-api/trading-agent were admin-merged.) main ruleset + classic both v2. **Final 2026-06-01 MAIN audit:
+      all 13 v2-bearing repos now carry the correct `Quality Gates (<repo>)` job name on main; only mtds + strategy lack
+      a main v2 workflow (tracked P0 above).**
 - [ ] [SCRIPT] P2. **FINDING (2026-06-01) — `load-gh-token.sh` SM fallback / .act-secrets refresh.** Complement to the
       validity-probe fix above: have `generate-act-secrets.sh` refresh `.act-secrets` from SM on bootstrap/cron so the
       cache rarely goes stale in the first place. — repo: unified-trading-pm.
