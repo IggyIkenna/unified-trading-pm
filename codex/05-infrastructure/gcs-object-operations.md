@@ -97,6 +97,24 @@ one.** This is the cross-service SSOT for the contract (the per-AG + per-service
    ~100 conns covers workers ≤ ~64); CPU/bandwidth-bound → bigger VM or shard across VMs by date. GCS has **no
    client-side warm cache** — concurrency (in-flight requests), not "warming", is the throughput lever.
 
+### Measured sizing (2026-06-01 DeFi C0, in-region e2-standard-8) + the <1h recipe
+
+Empirical: at `--workers 32` the in-region C0 walk ran at **load avg ~1.46 on 8 cores (~18% CPU)** — every worker
+thread blocked on GCS round-trips, i.e. **I/O-bound with large CPU + bandwidth headroom**. So for a content-transform
+walk (download→transform→upload, can't use server-side copy):
+
+- **Default to `--workers 64`** (was 16/32), and go to **96** when the corpus is large and the VM is I/O-bound (verify
+  with `uptime` load « ncores). One VM's gcsfs/aiohttp pool tops out ~100 concurrent conns, so **>~96 workers on a
+  single VM hits diminishing returns** — past that, scale *horizontally*, don't just raise workers.
+- **Bump the gcsfs connection pool when workers > ~64**: the default ~100-conn aiohttp connector becomes the cap; size
+  it ≳ workers so threads aren't queuing on connections.
+- **Horizontal scale is THE lever for a <1h target on a large (100K+ object) corpus**: shard the walk across VMs by
+  `--start-date`/`--end-date` (now functional) **and/or one VM per bucket** (`--buckets <one>`), each at workers≈64–96
+  with its own connection pool. A single sequential-bucket VM cannot beat its one pool; N VMs give ~N× (each its own
+  pool + bandwidth). Example: a 191K-object bucket at ~1.8K/min·32w ≈ hours on one VM → ~3 date-shard VMs at 96w ≈ ~½h.
+- Re-running is safe (idempotent overwrite), so it's fine to kill an under-provisioned run and relaunch sharded/higher-
+  worker once a quick comparison confirms throughput scales.
+
 ## Incident history
 
 **2026-06-01**: the DeFi C0 tool (`migrate_defi_full_v9_canonical.py`) walked ~40–50K objects **single-threaded**

@@ -269,6 +269,53 @@ by a PR:
 
 ---
 
+### Parallel execution split + cross-agent campaign status (2026-06-01 evening)
+
+> **Two efforts run concurrently — do not double-work.** (1) Another agent owns the **fleet-wide LDR→main
+> reconciliation-sync campaign** (auto-merge promotion PRs opened ~18:01). (2) This slot (1/ikenna) + slots 5/6/7 own the
+> **per-repo QG-debt greening** that the campaign correctly gates red. Greening a repo's `live-defi-rollout` to green is
+> the ONLY action needed — the campaign's auto-merge promotes it to main automatically. **Slots must NOT touch protected
+> `main`** (the campaign owns promotion; manual main mutation = collision).
+
+**Cross-agent campaign status (from the campaign agent's 2026-06-01 evening report — verify before relying):**
+
+- **MERGED to main already:** instruments-service #392, unified-api-contracts #62, client-reporting-api #11,
+  ibkr-gateway-infra #13 (4 green repos auto-completed).
+- **Auto-merging as each v2 finishes:** ~11 green-repo PRs (auto-merge ON; the gate only lets green through).
+- **GREEN (this slot, corrects the campaign's stale "PM gated" note):** **`unified-trading-pm` main is GREEN** —
+  FF-advanced to `4f57234ea` after fixing the basedpyright over-ratchet (`@a217a031c`) + codex (`@98b12ee53`); PR #107
+  closed. The campaign should **drop PM from its gated set**.
+- **Conflict-resolution method (campaign, take-best, documented per-repo):** recurring `quality-gates-v2.yml` add/add →
+  LDR canonical PM-template version; UTL core → LDR (`_resolve_and_validate_source` provenance gate, verified intact);
+  client-reporting → LDR (strict basedpyright); mdps tests → main (adapter-backed lending_indices); mtds/strategy clean.
+- **staging** back-merge-take-best is the **next phase** (deferred until the main PRs settle) — same pattern.
+
+**Slot greening split (each = separate repo, zero shared files, fully parallel):**
+
+| Slot | Repo | Known v2 failure (2026-06-01) | Gates campaign PR |
+| ---- | ---- | ----------------------------- | ----------------- |
+| **5** | `execution-service` | `grid_utils` import error → tests SKIPPED → coverage; diagnose locally via `quality-gates.sh` | #206 |
+| **6** | `strategy-service` | **Lint** — 2 ruff errors around `compute_tracking_error_bps` / `TrackingErrorBreachedError` (`__all__`/unused-import) | #64 |
+| **7** | `market-tick-data-service` | **Lint** — 1 ruff error | #112 |
+
+**Standing rules for every greening slot (5/6/7) — HARD:**
+
+1. **Regularly FF-pull from `live-defi-rollout`** before starting and every ~30 min while working (`git fetch origin
+   live-defi-rollout && git merge --ff-only origin/live-defi-rollout`) — the campaign + other slots move LDR constantly;
+   stale worktrees cause merge pain. The 5-min `slot-cron-ff-pull.sh` should already be running on the host.
+2. **Real fixes only** — fix the files the gate flags; NEVER lower `fail_under`/`MIN_COVERAGE`, NEVER
+   `# pragma: no cover`/skip/xfail to dodge, no repo-wide `ruff format` (pulls unrelated files into the codex scan).
+3. **Verify with the SSOT gate** — `bash scripts/quality-gates.sh` EXIT 0 in that repo before pushing (NB: the local gate
+   can mask CI-only failures from unresolved cross-repo deps — see the PM basedpyright + instruments UAC-drift incidents
+   this session; if local is green but the campaign PR's v2 is red, read the CI log, do not assume).
+4. **Commit + push to `live-defi-rollout`** (conditional push: `git fetch` first; 0 incoming → push; else rebase
+   `--autostash` then push). `--no-verify` authorized only when prek auto-restore is observed AND the gate is
+   independently green. **Do NOT open/merge main PRs** — the campaign auto-promotes once LDR is green.
+5. **Do NOT edit plan files** (slot 1 owns the flips) and **do NOT touch other repos** — report your repo's pushed SHA +
+   `quality-gates.sh` EXIT 0 back to slot 1.
+
+---
+
 ## Overview
 
 Named successor to the **workspace-wide branch-protection sweep** that
