@@ -31,9 +31,17 @@ related:
 
 # Legacy non-canonical tick-bucket dual-write remediation
 
-> **🟢 VM RUNNING — 2026-06-01**: 20 sharded `canonical-migration-legacy-*` VMs migrating legacy→canonical tick data
-> (asia-northeast1-c, self-deleting). 3 writer VMs (`mdps-backfill-defi`, `mdps-prediction-2025`, `sports-scheduler`)
-> DRAINED/stopped pending Phase-4 relaunch. Banner removed by launcher at migration completion.
+> **🟡 MIGRATION ATTEMPT-1 FAILED + BLOCKED (tarball infra) — 2026-06-01**: 20 sharded `canonical-migration-legacy-*`
+> VMs launched, ALL failed exit-2 (migration script absent from the pulled `mtds-code.tar.gz`). Root cause: (1) the
+> floating mtds tarball was overwritten by a parallel-agent rebuild mid-launch; (2) `setup-data-pipeline-vm.sh` had no
+> mtds SHA-pin path (added @deployment-service 58ee0a9); (3) **SHA-pinned `mtds-code@<sha>.tar.gz` does NOT persist** —
+> an aggressive prune cron deletes unreferenced pinned tarballs within seconds of upload, so the pin can't be used
+> either. All 20 VMs deleted; **no data harm** (script never ran). 3 writer VMs still DRAINED. See Phase 5 blocker todo.
+>
+> **Key mitigating finding**: a live micro-run (tradfi day-2025-11-02) returned `skipped=3 copied=0` → the tick DATA was
+> **dual-written to both legacy AND canonical**. So canonical already holds the data; the real gap is the MANIFEST
+> (`_index` rows), which can be closed by the `--manifest-only` seed once data completeness is verified — a path that
+> does NOT need the VM/tarball fleet.
 
 **Finding (operator-directed 2026-06-01)**: legacy flat tick-data buckets
 (`market-data-tick-<group>-central-element-323112`, plus long-form `market-data-tick-prediction-…`) are **still
@@ -140,16 +148,24 @@ relaunch.
       `_index/per_vm/legacy_bucket_migration_2026_06_01.parquet` → running consolidator folds + dedups on shard-key,
       **preserving `pipeline_mode`**). `--prefix` shards the DATA copy by date; `--manifest-only`/`--no-manifest` split
       the halves. — market-tick-data-service@6372bd5d (ruff clean; scripts/ exempt from strict pyright).
-- [ ] [SCRIPT] P0. **Sharded-VM fan-out (operator directive: parallel VMs by date, ~30 min not hours).** New launcher
-      `deployment-service/scripts/vm/launch-legacy-bucket-migration-sharded.sh`: one VM per (legacy-bucket × year);
-      each runs `migrate_legacy_tick_buckets_to_canonical.py --apply --only <group>
-      --prefix raw_tick_data/by_date/day-<year> --prefix processed_candles/...<year> --no-manifest` from the Phase-2
-      tarball; `VM_SHUTDOWN_ON_COMPLETION=true`; T+10min post-launch verify (no fire-and-forget). Server-side copy
-      (no egress) → metadata-speed.
-- [ ] [SCRIPT] P0. After all data-shard VMs complete, seed manifests once per bucket:
-      `migrate_legacy_tick_buckets_to_canonical.py --apply --manifest-only` (5 buckets) → consolidator folds them in.
-- [ ] [SCRIPT] P0. Run-to-completion verification: manifest-verified row parity + sample-inspected parquets per bucket
-      (not smoke-green).
+- [x] ✅ [SCRIPT] P0. **Sharded-VM launcher built** (operator directive: parallel VMs by date). 20-shard launcher
+      `deployment-service/scripts/vm/launch-legacy-bucket-migration-sharded.sh` (5 buckets × {y2026,y2025,y2024,misc}),
+      `VM_TASK=canonical-migration` + `VM_SHUTDOWN_ON_COMPLETION=true`. Script validated by a live local micro-run. —
+      deployment-service@db3c33b (+@58ee0a9 SHA-pins).
+- [ ] [BLOCKED-INFRA] P0. **Migration data-copy fan-out BLOCKED by tarball infrastructure.** Attempt-1 (20 VMs) all
+      failed exit-2: pulled `mtds-code.tar.gz` lacked the migration script (floating tarball overwritten by a
+      parallel-agent rebuild). Added mtds SHA-pin path (58ee0a9) but **pinned `mtds-code@<sha>.tar.gz` is pruned within
+      seconds of upload** by a cleanup cron, so the pin can't be relied on. **Unblock options (operator decision):**
+      (a) find + tune the pinned-tarball prune cron to retain referenced pins (SSOT: VM-tarball-deployment +
+      create-code-tarballs); (b) build the migration tarball into a DEDICATED bucket the prune cron doesn't touch;
+      (c) skip the VM fleet — run the lower-risk local manifest path below since data is dual-written.
+- [ ] [SCRIPT] P0. **Verify data completeness** (replaces the assumption): sample N legacy data objects per bucket,
+      confirm each exists in canonical (the dual-write hypothesis). If 100% present → the data copy is unnecessary; if
+      gaps → gap-fill only the missing prefixes.
+- [ ] [SCRIPT] P0. **Manifest seed (no tarball needed)**: once data completeness is verified, run
+      `migrate_legacy_tick_buckets_to_canonical.py --apply --manifest-only` locally for the 5 buckets → drops legacy
+      `_index` rows as a per-VM shard in canonical; the running consolidator folds + dedups them in, preserving
+      `pipeline_mode`. Then verify canonical row parity (legacy ∪ canonical).
 
 ## Phase 4 — Relaunch clean (P0) — AFTER migration (operator sequence)
 
