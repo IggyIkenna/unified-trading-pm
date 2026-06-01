@@ -15,6 +15,31 @@ cross-cutting architecture decision, or a codex-intent ruling that Ikenna owns (
 cross-repo spec authority). They are deliberately kept OUT of the remediation plans (carry-safety, cron-provisioning,
 drift-backlog) until the decision lands, so we don't ship a fix that contradicts the intended design.
 
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** Rulings below are FINAL. Execution assigned to
+> **slot 7** (`tab/ikennaigboaka/7`) as issue-janitor + quick-fix; PM active plans/epics are SSOT. Slot 7 must NOT
+> duplicate manifest-canonicalisation (slots 2/3), CI/CD-hardening (`cicd_contract_hardening` /
+> `ci_canonical_v2_migration`), or codex-docs consolidation (`codex_vs_repo_docs_ssot_audit`). Codex-doc edits implied
+> below are routed to that owner — slot 7 records the todo, does not edit codex.
+>
+> - **F-22** — ship the 1-liner now: add `headers` param to MTDS `perp_funding_handler._make_session`. [slot 7 code]
+> - **F-34** — 28 implemented archetypes = intended May-23 rollout subset. Add `SUPPORTED_ARCHETYPES` allowlist +
+>   typed-error guard + fix docstring (strategy-service). [slot 7 code — small]
+> - **F-13 / F-15** — reconcile codex strategy-spec → implemented mechanism (code is truth). Record codex-update todo in
+>   `strategy_master` + route doc edit to `codex_vs_repo_docs`.
+> - **F-14** — VERIFY whether `vol_cap_clamp` provides an equivalent 1h price-move abort. If yes → reconcile codex. If
+>   NO → it is a **P1 safety gap** → file todo in `strategy_master` / `execution_master`. [slot 7 investigates +
+>   reports]
+> - **F-32** — MEV mode is **directive-driven** for May-23 → close F-32. Size-based auto-escalation = post-cutover P2
+>   todo in `execution_master`.
+> - **F-45** — **code wins**: keep `instance_id` in the events path; `correlation_id` is a column, not a path key. Route
+>   codex-update todo to `codex_vs_repo_docs`.
+> - **F-06** — declare `codex/04-architecture/custody-providers.md` the entity-governance SSOT; entities = **Odum
+>   Research UK + Odum Group Cayman**; scrub stale **Elysium** refs (removed provider) — file as FIX-STALE todo in
+>   `codex_vs_repo_docs`.
+> - **F-25** — build the **FULL unified `ClientConfig`** type in `unified_api_contracts.internal` (not a minimal stub).
+>   Record as todo in `client_isolation_and_governance_master`; slot 7 implements only if cleanly QG-green, else leaves
+>   the todo for the epic VM.
+
 > Cross-side ping: on next push, add a one-line entry to `plans/active/_agent_pings.md` pointing here. (Held back per
 > "local commit only" instruction 2026-05-22.)
 

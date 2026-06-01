@@ -13,6 +13,12 @@ status: active
 
 # Running VM Fleet Status — 2026-05-27 ~07:35 UTC
 
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** Confirms + scopes for **slot 7**: **Tardis
+> paid key stays NOT activated** (operator won't) → all Tardis-dependent CeFi-history items remain `BLOCKED-CREDENTIALS`
+> with their ping intact — slot 7 does NOT unblock them. The **OKX symbol-mapping fix is independent of the key** → slot
+> 7 ships it. Remaining venv fixes (sports-scheduler `instruments_service`, vm-zombie-watchdog
+> `unified_trading_library`) are quick + actionable.
+
 > **🔄 STATUS 2026-06-01 (harsh) — matrix almost fully settled.** Tardis renewal: operator chose NOT to activate (won't
 > do). All "kill" VMs (8 zero-data CeFi + 4 boot-hung/crashed + prediction-2026 + us-backfill + qg-snapshot) are now
 > TERMINATED. "Keep running" set confirmed alive. **"Keep-but-fix" trio resolved/triaged:**

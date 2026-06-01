@@ -15,6 +15,17 @@ status: active
 
 # RECON_FREEZE_ARMED never published — recon→order-block chain is dormant
 
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** FINAL ruling on the routed G12 decision:
+>
+> - **In-scope for May-23** — the recon-freeze publisher lands pre-cutover. The 7 immediate-SEV0 conditions are NOT
+>   covered by the `position_drift_monitor` kill-switch, so deferring would ship cutover with a live-safety gap.
+> - **Per-incident-type granularity** — symbol-scoped freeze for symbol-level breaks; **account-wide** for the
+>   account-level SEV0s (e.g. `UNKNOWN_NET_EXPOSURE`, `ACCOUNT_LEVEL_AGGREGATE`).
+> - **Execution**: record as a P0 todo in `observability_master` + `execution_master`. Slot 7 wires the alerting-service
+>   publisher (`evaluate_recon_age()==CRITICAL` || `evaluate_immediate_sev0()==True` → publish `RECON_FREEZE_ARMED` /
+>   `RECON_FREEZE_LIFTED` + synthetic test) only if it can land it cleanly + QG-green; otherwise the todo carries to the
+>   owning epic VM. Not manifest/CI-CD work — safe for slot 7.
+
 > Surfaced during the BLRS audit (G12). Not BLRS-owned — this is an alerting-service ↔ execution-service gap.
 
 ## What I found

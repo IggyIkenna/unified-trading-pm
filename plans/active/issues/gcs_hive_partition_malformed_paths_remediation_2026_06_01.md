@@ -24,6 +24,12 @@ priority: P2
 > (root cause) ships immediately; the two GCS data remediations below are documented executable-ready and await a
 > go-ahead. No whole-corpus walk — both remediations are targeted prefix scans (NOT a single-walk-discipline breach).
 
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** Ownership split for **slot 7**: the doc-drift
+> fix (`GCS_PATHS.md` hyphen → canonical `key=value`, secondary docs) is a **FIX-STALE literal edit owned by
+> `codex_vs_repo_docs_ssot_audit`** — slot 7 records it as a todo there and does NOT edit the doc itself (avoids
+> double-done with the codex-docs consolidation lane). The two GCS **data** remediations stay operator-deferred per the
+> scope note above. Net: **slot 7 takes no action on this issue beyond routing the doc-fix todo.**
+
 ## What I found
 
 A read-only audit of all five `market-data-tick-{asset_group}-central-element-323112` buckets surfaced **two distinct

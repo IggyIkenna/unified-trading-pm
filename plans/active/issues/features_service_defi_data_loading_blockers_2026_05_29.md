@@ -10,6 +10,20 @@ locked_by: live-defi-rollout
 priority: P2
 ---
 
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** FINAL rulings on the 4 routed DeFi calls.
+> Execution: **slot 7**, recorded into `features_and_ml_master` (SSOT). **No legacy-bucket manifest rebuild** — that
+> would be manifest-canonicalisation work owned by slots 2/3.
+>
+> - **#1** — map `volume_analysis` / `vwap` / `microstructure` → **`dex_pool_swaps`** via UAC
+>   `resolve_data_type_for_feature_group()` (not a hardcoded override). features-service, self-contained. [slot 7 code]
+> - **#2** — legacy bucket = **read-only-historical-archive**. Do NOT rebuild its manifest, do NOT load from it via
+>   features-service. [policy only — record, no code]
+> - **#3** — `dex_swaps` OHLC semantics: **investigate** the MDPS writer; report whether O/H/L/C are spot price or a
+>   normalized metric. File a UAC contract-doc todo OR an MDPS-bug todo per the finding. No blind edit. [slot 7 reports]
+> - **#4** — drop duplicate columns `swap_count` (==`trade_count`) + `volume_quote_usd` (==`volume`) from
+>   `DEX_SWAPS_SCHEMA` as a UAC cleanup — only if it does not collide with `defi_manifest_canonicalisation`. [slot 7
+>   code]
+
 ## What I found
 
 While trying to run a smoke test of features-service `delta_one` against real DeFi data (operator-directed 2026-05-29

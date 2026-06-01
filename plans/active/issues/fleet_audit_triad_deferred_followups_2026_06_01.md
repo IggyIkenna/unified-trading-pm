@@ -12,6 +12,11 @@ status: active
 
 # Deferred follow-ups — fleet-audit triad
 
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** These stay **deferred** as written. The
+> Tardis-paid-key item is explicitly **NOT activated** (operator won't — see `running_vm_fleet_status_2026_05_27.md`);
+> the GCS-migration items remain operator-deferred (no whole-corpus walk). **Slot 7 does not action any item here** — it
+> is a "let it be" tail. No manifest-canonicalisation / GCS-migration work by slot 7.
+
 The three 2026-05-27 fleet-audit plans were operator-marked **done** and archived on 2026-06-01. Their code shipped;
 these are the consciously-deferred tails ("let it be" — not to be actioned until the operator chooses). Captured here so
 they are not silently lost on archival (per the plan-archival HARD RULE).

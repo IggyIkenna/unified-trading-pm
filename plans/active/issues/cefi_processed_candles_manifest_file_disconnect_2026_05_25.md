@@ -1,7 +1,7 @@
 ---
 title:
-  "CeFi processed_candles: manifest ↔ file disconnect (manifest claims captured for venues with no files; corpus
-  written without/with-stale manifest emission)"
+  "CeFi processed_candles: manifest ↔ file disconnect (manifest claims captured for venues with no files; corpus written
+  without/with-stale manifest emission)"
 created: 2026-05-25
 source:
   - plans/active/features_input_manifest_migration_2026_05_25.md
@@ -13,6 +13,13 @@ priority: P2
 
 > **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this end-to-end. **Do NOT
 > auto-assign / auto-fix / push to LDR.** See `plans/active/_agent_pings.md`.
+
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** This is **manifest-canonicalisation work** —
+> SSOT is `cefi_manifest_canonicalisation_2026_06_01.md` and it is **actively held by harsh** (banner above). **Slot 7
+> takes NO action here** — no investigation, no implementation, no archive-flip — to avoid colliding with the in-flight
+> harsh work. The intended direction (when harsh resumes): investigate MTDS pre-marking of `captured`, then reconcile
+> `captured` → `attempted_failed` / `expected_unattempted` for unwritten shards (honest-absence). Recorded for SSOT
+> continuity only.
 
 ## What I found
 

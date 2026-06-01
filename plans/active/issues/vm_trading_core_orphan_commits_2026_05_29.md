@@ -14,6 +14,12 @@ priority: P2
 status: active
 ---
 
+> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** FINAL. Assigned to **slot 7**: walk
+> `archive/vm-trading-core-orphaned-2026-05-23` against current `live-defi-rollout`. If **both** commits already landed
+> on LDR (the `.prettierignore` QG fix + the audit03 SCRIPT flips) → **delete the archive branch**, nothing to merge.
+> Else **cherry-pick the `.prettierignore` QG fix only** with `(backfilled from archive/...)` provenance. Record the
+> outcome here, then **archive this issue**. Quick git task — not manifest/CI-CD work.
+
 ## What I found
 
 While rolling the smart-stash pm-pull-ff.sh v2 to all 11 orchestrator hosts (api-host + vm-orchestrator + 9 epic VMs),
