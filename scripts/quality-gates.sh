@@ -205,7 +205,19 @@ LIFECYCLE_EXCLUDE_GLOBS=(
 
 # Exclude diagram generator from basedpyright/codex checks (uses stdlib only,
 # no project deps — type-checking it would require installing graphviz stubs)
-PYRIGHT_EXCLUDE_GLOBS=("!**/generate-cicd-diagram.py")
+# Same rationale for the numpy/pandas dev/migration/audit tooling below: those heavy deps
+# are NOT in PM's pyproject (PM is a docs/scripts repo), so CI cannot resolve them →
+# unresolved-import + cascading unknown-type errors that pushed CI to 1575 > ratchet 1511,
+# while a local run (where numpy/pandas happen to be importable) stays under it. These are
+# one-time-migration / dev-diff / audit scripts, not production code — excluded per the
+# QG-debt standard's "CI/one-time tooling → targeted per-file exclude" (matches the diagram case).
+PYRIGHT_EXCLUDE_GLOBS=(
+    "!**/generate-cicd-diagram.py"
+    "!**/feature_parity_diff.py"
+    "!**/audit_source_column_distribution.py"
+    "!**/migrate_player_mappings_to_canonical.py"
+    "!**/backfill_pipeline_mode.py"
+)
 EMPTY_STR_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
 EMPTY_DICT_LIST_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py" "!**/invalidate-ci-status.py")
 IMPORT_INSIDE_EXCLUDE_GLOBS+=("!**/generate-cicd-diagram.py")
