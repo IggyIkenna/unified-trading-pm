@@ -55,6 +55,52 @@ data_source:
 - **(C6) `oracle_prices` 79%** — partial window; verify the 21% empties against `is_before_source_coverage_start()`
   before treating any as download (some are pre-genesis-chain, honest).
 
+## Per-venue / per-chain breakdown (the aggregate hides real gaps)
+
+Operator Q1 ("isn't it per venue/chain?"): yes — and the cut reveals holes the data_type headline buried.
+
+| data_type         | venue cut                                                                                     | chain cut                                                                                      |
+| ----------------- | --------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `lst_rates`       | ANKR/RP/COINBASE/SWELL/STADER/MAKER 100%; **LIDO 85%, ETHENA 71%, ETHERFI 70%, MARINADE 61%** | ETHEREUM 93%, **SOLANA 70%**                                                                   |
+| `lending_indices` | COMPOUND_V3/KAMINO/SOLEND/MARGINFI 100%; **AAVE_V3 84%, SPARK 88%**                           | SOLANA 100%, ARBITRUM/BASE 97%, ETHEREUM 90%, **OPTIMISM 67%**                                 |
+| `oracle_prices`   | CHAINLINK 90%; **PYTH 48%**                                                                   | ETHEREUM/POLYGON 100%, ARBITRUM/OPTIMISM 90%, BASE 71%, **SOLANA 0% (1,296 rows, 0 captured)** |
+| `perp_funding`    | GMX 100%, HYPERLIQUID 93%; **ASTER 44%, PACIFICA 28%, LIGHTER 0%**                            | BSC 100%, **SOLANA 28%, ZKSYNC 0%, DRIFT absent**                                              |
+| `dex_pools`       | 90–100% across venues                                                                         | ARB/ETH 98%, BASE/POLYGON/AVAX 96–97%, OPTIMISM 91%, **BSC 74%**                               |
+| `dex_swaps`       | 85–96% across venues                                                                          | ETH/ARB 97%, BASE/POLYGON/AVAX 94–96%, OPTIMISM 81%, **BSC 45%**                               |
+
+## Denominator finding (operator Q2: IS + UAC grounding) — the % is NOT yet IS/UAC-grounded
+
+The `92%/91%/…` above is `captured / manifest-self-enumerated rows` — a **self-referential** denominator. It is NOT
+`captured / (IS active instruments ∩ UAC EXPECTED_COVERAGE gated by launch+genesis+source-coverage-start)`.
+
+- UAC `EXPECTED_COVERAGE_BY_ASSET_GROUP` declares **90 defi venue-keys**; the manifest enumerated only `lst_rates`
+  **14/22**, `lending_indices` **6/21**, `perp_funding` **5/8** of the expected keys → **manifest under-enumeration**.
+- Part of that gap is the `VENUE-CHAIN`-vs-flat naming split (UAC `MARINADE-SOLANA` vs manifest `MARINADE`+chain) —
+  reconcile per C2/C3 first. But **genuine absentees remain: `DRIFT-SOLANA` (the Solana-MVP blocker), `FRAX`, `MORPHO`,
+  `FLUID`.**
+- So "true coverage" is **lower** than the enumerated % once the IS∩UAC denominator is used. The audit must report BOTH
+  numbers; I have only the enumerated one so far.
+
+## Data-status tab code alignment (operator: "the dashboard should produce these honest numbers by default")
+
+Read `deployment-api/deployment_api/services/data_status_service.py`. Mixed result:
+
+- ✅ **Good** — `coverage-summary` already reads the **dedicated per-data_type buckets** (`_read_defi_merged_index`
+  ~L2931 + `_filter_to_canonical_defi_venues`), so the live tab does **not** hit my phantom-grid trap (it shows real
+  numbers, not 0%). And `manifest-status` (`_mtds_expected_dates_cached` ~L1130) uses the **correct expected-dates
+  denominator** (clips by chain genesis + venue launch + source-coverage-start).
+- 🔴 **Gap A (CRITICAL)** — `coverage-summary` (`_build_coverage_for_cat` ~L3454) uses `len(index)` as **both**
+  numerator and denominator (self-referential — the exact mistake I made). Should call the expected-dates oracle like
+  `manifest-status` does.
+- 🔴 **Gap B (HIGH)** — `is_expected()` scope gate is applied only in the per-row `_classify_datum_scope`, **not** in
+  the coverage-summary denominator → out-of-scope cells inflate totals.
+- 🔴 **Gap C (HIGH)** — the two endpoints (`coverage-summary` vs `manifest-status`) use **different denominators** →
+  contradictory %s for the same (service, asset_group).
+- 🟠 **Gap D (MED)** — no **per-chain** breakdown in the display (per-venue-string only; DeFi venues are
+  PROTOCOL-CHAIN).
+- 🟠 **Gap E (MED)** — `data_status_rollup_worker.py` may bake the wrong denominator offline; verify it shares the
+  oracle.
+
 ## Solana MVP integration (`solana_basis_trading_mvp_2026_06_01.md`)
 
 The concrete first-live target is the **Solana basis trade** (long SOL on Orca/Raydium + short SOL-PERP on Drift V2).
@@ -70,18 +116,19 @@ Coverage cells that actually gate go-live (audit these specifically):
 > The Bug-D Helius signature-walking infra (28GB, 6293 parts) is **out of MVP scope** per the plan — do not let it
 > reappear as a "missing data" finding.
 
-## Per-item verdict (o–v) — corrected
+## Per-item verdict (o–w) — corrected
 
-| Item                             | Verdict         | Evidence                                                                                                          |
-| -------------------------------- | --------------- | ----------------------------------------------------------------------------------------------------------------- |
-| (o) IS universe present          | 🟠 NOT VERIFIED | dedicated buckets enumerate real venues (LIDO/AAVE_V3/CHAINLINK/GMX…); IS↔manifest reconciliation still owed.     |
-| (p) Expected-coverage dump       | 🟠 STALE        | a2 dump 12 days old, END_DATE hardcoded 2026-05-20 — re-run to today.                                             |
-| (q) Divergence = 0 (all buckets) | 🟠 AMBER        | Across dedicated buckets, 79–96% captured. Phantom grid (C1) inflates `market-data-tick-defi` divergence falsely. |
-| (r) v9 per-data_type from data   | 🔴 RED          | v4–v8 spread, 0% v9 (C4) — migration of existing data.                                                            |
-| (s) SSOT names in rows           | 🔴 RED          | hyphen/underscore dupes (C2), `staking_yields` alias (C3), `VENUE-CHAIN` strings (C1).                            |
-| (t) Required-history window      | 🟠 AMBER        | lst_rates/lending/dex have multi-year history; oracle 79% + perp_funding 55% partial; verify interior gaps.       |
-| (u) features emit over window    | 🟠 NOT VERIFIED | features-onchain-defi-\* bucket exists; per-feature backfill not yet checked.                                     |
-| (v) Honest totality breakdown    | ✅ PRODUCED     | per data_type × venue/chain in the report (now must be re-run against dedicated buckets).                         |
+| Item                                   | Verdict         | Evidence                                                                                                                                    |
+| -------------------------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| (o) IS universe present                | 🟠 NOT VERIFIED | dedicated buckets enumerate real venues (LIDO/AAVE_V3/CHAINLINK/GMX…); IS↔manifest reconciliation still owed.                               |
+| (p) Expected-coverage dump             | 🟠 STALE        | a2 dump 12 days old, END_DATE hardcoded 2026-05-20 — re-run to today.                                                                       |
+| (q) Divergence = 0 (all buckets)       | 🟠 AMBER        | Across dedicated buckets, 79–96% captured. Phantom grid (C1) inflates `market-data-tick-defi` divergence falsely.                           |
+| (r) v9 per-data_type from data         | 🔴 RED          | v4–v8 spread, 0% v9 (C4) — migration of existing data.                                                                                      |
+| (s) SSOT names in rows                 | 🔴 RED          | hyphen/underscore dupes (C2), `staking_yields` alias (C3), `VENUE-CHAIN` strings (C1).                                                      |
+| (t) Required-history window            | 🟠 AMBER        | lst_rates/lending/dex have multi-year history; oracle 79% + perp_funding 55% partial; verify interior gaps.                                 |
+| (u) features emit over window          | 🟠 NOT VERIFIED | features-onchain-defi-\* bucket exists; per-feature backfill not yet checked.                                                               |
+| (v) Honest totality breakdown          | 🟠 PARTIAL      | per data_type × venue/chain produced (above); but on **enumerated** denominator only — true-coverage (IS∩UAC) owed.                         |
+| (w) Data-status code honest by default | 🔴 RED          | coverage-summary denom self-referential + no `is_expected()` gate + endpoints disagree + no per-chain (Gaps A–E); dedicated-bucket read ✅. |
 
 ## Backlog (classified — mostly cleanup, not download)
 
@@ -100,8 +147,21 @@ Coverage cells that actually gate go-live (audit these specifically):
       path). parent_epic: mtds_mdps_master → solana_basis_trading_mvp_2026_06_01.md (C5/Solana)
 - [ ] [DATA] P1. Extend `solana_defi_handler.py` for Orca/Raydium `dex_pool_state` time-series (Solana MVP).
       parent_epic: mtds_mdps_master (Solana)
-- [ ] [SCRIPT] P2. Re-run the coverage query against the dedicated buckets (the committed query reads market-data-tick
-      only); rename a4_manifest_v8→v9; make a2/a3 END_DATE dynamic-today. parent_epic: manifest_master
+- [ ] [DATA] P0. Backfill the UAC-expected venues the manifest never enumerated (true-coverage gap, after naming
+      reconciliation): `DRIFT-SOLANA` (Solana MVP), `FRAX` (lst), `MORPHO` + `FLUID` (lending). parent_epic: defi_master
+      (Q2)
+- [ ] [CODE] P0. Fix `data_status_service._build_coverage_for_cat` (`/api/coverage-summary`) denominator: replace
+      `len(index)` self-reference with the expected-dates oracle (`_mtds_expected_dates_cached`) + apply `is_expected()`
+      scope gate, so the tab matches `manifest-status` and the audit. parent_epic: deployment_and_user_management_master
+      (Gap A/B/C)
+- [ ] [CODE] P1. Add per-chain breakdown to the data-status coverage view (DeFi PROTOCOL-CHAIN split). parent_epic:
+      deployment_and_user_management_master (Gap D)
+- [ ] [CODE] P1. Verify `data_status_rollup_worker.py` uses the expected-dates denominator (not manifest row count) so
+      the offline rollup is honest. parent_epic: observability_master (Gap E)
+- [ ] [AUDIT] P1. Re-compute coverage with the IS∩UAC denominator (true-coverage), per venue × chain, reporting BOTH
+      enumerated-coverage and true-coverage (the committed numbers are enumerated-only). parent_epic: defi_master (Q2/v)
+- [ ] [SCRIPT] P2. Re-run the coverage query against the dedicated buckets (done — query now reads them); rename
+      a4_manifest_v8→v9; make a2/a3 END_DATE dynamic-today. parent_epic: manifest_master
 
 ## Transparency (where this sampled vs walked)
 

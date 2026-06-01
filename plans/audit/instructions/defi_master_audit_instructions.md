@@ -28,7 +28,7 @@ doc:
 | Dimension                                                              | What it checks                                                                                                                                                                              | Section                                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | **Code ↔ codex correctness**                                           | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                   | [Checklist](#checklist) items (a)–(n)                                                                   |
-| **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(v) |
+| **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(w) |
 
 ### Archetypes / strategies in scope (operator's words → codebase archetype)
 
@@ -259,16 +259,28 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
 
 ### Step 2 — Coverage checklist (compare expected set vs actual corpus)
 
-- [ ] (o) **instruments-service universe present**: every venue × symbol the matrix needs is an active
-      `InstrumentRecord` in instruments-service (IS is SSOT for the universe; MTDS derives URLs from it — never
-      hardcoded). For each strategy, confirm the LST tokens, perp contracts, dated-future contracts, and DEX pools it
-      trades are listed (not phantom / not deprecated). Gap here = MTDS will never attempt the cell → silent
-      `MISSING_EXPECTED` downstream.
+- [ ] (o) **instruments-service universe present + IS-grounded denominator**: every venue × symbol the matrix needs is
+      an active `InstrumentRecord` in instruments-service (IS is SSOT for the universe; MTDS derives URLs from it —
+      never hardcoded). For each strategy, confirm the LST tokens, perp contracts, dated-future contracts, and DEX pools
+      it trades are listed (not phantom / not deprecated). Gap here = MTDS will never attempt the cell → silent
+      `MISSING_EXPECTED` downstream. **The IS active-instrument set per (data_type, venue, chain) is the denominator
+      base for coverage % — NOT the count of rows the manifest happened to enumerate.**
 
-- [ ] (p) **Expected-coverage dump regenerated**: materialise the expected `(asset_group, venue, data_type, date)` cell
-      set for the in-scope archetypes. Run / adapt:
-      `python3 plans/audit/results/a2_materialize_expected_coverage_dump.py` (writes
-      `expected_coverage_dump_<date>.parquet`). This is the denominator for "what's missing".
+- [ ] (p) **Expected-coverage denominator = IS ∩ UAC, NOT manifest self-enumeration (CRITICAL — codified 2026-06-01)**:
+      a captured % is meaningless unless its denominator is the **possible-availability** set. Build it from two SSOTs,
+      not from the manifest's own row count: **(1) instruments-service** active `InstrumentRecord`s (the universe that
+      should exist), gated by **(2) UAC** `EXPECTED_COVERAGE_BY_ASSET_GROUP` + `is_expected()` + `venue_launch_dates` +
+      `ChainKind` genesis + `get_source_coverage_start_for_data_type()` (the windows where data is _possible_).
+      Materialise it: `python3 plans/audit/results/a2_materialize_expected_coverage_dump.py` (the `expected_coverage()`
+      oracle already composes UAC scope + launch + genesis + source-coverage-start). Then report **TWO numbers per
+      (data_type, venue, chain)**, never just one: - **enumerated-coverage** = `captured / rows-the-manifest-enumerated`
+      (what a naive bucket read gives — e.g. `lst_rates` 92%). High here only means "of what was attempted". -
+      **true-coverage** = `captured / (IS ∩ UAC-expected cells)`. The gap between the two is **manifest
+      under-enumeration** — venues/chains UAC says are expected but the manifest never created a row for. 2026-06-01:
+      manifest enumerated only `lst_rates` 14/22, `lending_indices` 6/21, `perp_funding` 5/8 of the UAC-expected venue
+      keys (some of that gap is the `VENUE-CHAIN`-vs-flat naming split — reconcile that first per Step 1.5 — but genuine
+      absentees remained: `DRIFT-SOLANA`, `FRAX`, `MORPHO`, `FLUID`). **A coverage % quoted without its IS∩UAC
+      denominator + the under-enumeration list is review-blocking.**
 
 - [ ] (q) **Manifest divergence for the strategy cells = 0 — across ALL candidate buckets (per Step 1.5)**: run the
       divergence scan and filter to the matrix cells. Run: `python3 plans/audit/results/a3_manifest_divergence.py` (and
@@ -335,11 +347,37 @@ Before any cell can be called "missing", **exhaust where the data could be hidin
       honest-green only when its verdict is `captured` over the required window (item t) at v9 (item r) with canonical
       names (item s). `empty_confirmed` is green **only** when the typed reason is verified against
       `is_before_source_coverage_start()` / `is_in_known_gap()`; an `empty_confirmed` on an owed-data branch is a
-      silent-lie finding, not coverage. Everything else is a download/migration backlog row (Step 3).
+      silent-lie finding, not coverage. Everything else is a download/migration backlog row (Step 3). **Both breakdowns
+      are PER-VENUE AND PER-CHAIN — never a single data_type roll-up.** The per-venue/chain cut is where the real gaps
+      hide (2026-06-01: aggregate `lst_rates` 92% hid `MARINADE` 61% / `ETHERFI` 70% / Solana 70%; aggregate
+      `oracle_prices` 79% hid `PYTH` 48% and **Solana 0% captured**; aggregate `perp_funding` 55% hid `LIGHTER` 0% /
+      `PACIFICA` 28% / **`DRIFT` absent**). Each cell's % MUST carry its **IS∩UAC denominator** (item p) — both
+      enumerated-coverage and true-coverage — so an under-enumerated venue/chain reads as a gap, not a green.
+
+- [ ] (w) **The data-status tab (deployment-ui/API) must produce these honest numbers BY DEFAULT — verify code alignment
+      (codified 2026-06-01)**: the dashboard, not just the audit, must use the right numerator/denominator/ breakdown.
+      The audit MUST read the data-status code and confirm it matches items (p)/(v). Code surfaces:
+      `deployment-api/deployment_api/services/data_status_service.py` (`_build_coverage_for_cat` ~L3454,
+      `_get_coverage_summary_sync` ~L3498, `_read_defi_merged_index` ~L2931, `_mtds_honest_coverage_for_venue` ~L1414,
+      `_mtds_expected_dates_cached` ~L1130) + route `deployment-api/.../routes/data_status.py` (`/api/coverage-summary`,
+      `/api/manifest-status`) + the deployment-ui data-status view + the rollup worker
+      `deployment-api/.../scripts/data_status_rollup_worker.py`. Verify each: - **Denominator = IS ∩ UAC expected, NOT
+      manifest row count.** `manifest-status` (`_mtds_expected_dates_cached`) does this correctly (clips by
+      `chain_genesis` + `venue_launch` + `source_coverage_start`). **`coverage-summary` (`_build_coverage_for_cat`) does
+      NOT — it uses `len(index)` as both numerator and denominator (self-referential, 2026-06-01 finding).** Both
+      endpoints must share the expected-dates oracle so they never contradict. - **`is_expected()` scope gate applied to
+      the denominator** (drop out-of-scope `(venue, data_type)` before counting) — currently only used in the per-row
+      `_classify_datum_scope`, not in the coverage-summary total. - **Reads the dedicated per-data_type buckets** (not
+      just `market-data-tick-defi` phantom grid). `coverage-summary` already does via `_read_defi_merged_index` +
+      `_filter_to_canonical_defi_venues` ✅ — confirm it stays that way and that the rollup worker does too. -
+      **Per-venue AND per-chain breakdown surfaced** (DeFi venues are PROTOCOL-CHAIN; split them). Currently
+      per-venue-string only — per-chain is computed for expected-dates but not displayed. Any divergence = a
+      code-alignment finding → fix in `data_status_service.py` so the tab is honest by default, then the audit just
+      re-confirms. **The audit and the dashboard must compute coverage the SAME way.**
 
 ### Step 3 — Output: classify every gap (cleanup vs download), then backlog it
 
-Every RED/AMBER cell from items (o)–(v) becomes an explicit, actionable backlog line — **not** a "deferred" note. **Most
+Every RED/AMBER cell from items (o)–(w) becomes an explicit, actionable backlog line — **not** a "deferred" note. **Most
 DeFi "gaps" are data-in-wrong-form (the data already exists), NOT missing data — classify before you write "download".**
 Per `External Data Is Always Available` + `Data Pipeline Correctness Is The Heartbeat`, each cell is exactly one of:
 
@@ -359,11 +397,12 @@ Per `External Data Is Always Available` + `Data Pipeline Correctness Is The Hear
 6. **Genuine `empty_confirmed`** — source truly has no data over that window (verified via `is_in_known_gap()` /
    `is_before_source_coverage_start()`) → typed reason, **excluded** from the backlog (the only legitimate "missing").
 
-Render the result as a coverage matrix (rows = strategy × data_type × venue; columns =
-`expected / captured / v-spread / window-covered / which-bucket / verdict (one of the 6 above)`) plus the classified
-backlog list. **A bare "X% captured" with no wrong-form classification + no list of buckets searched is
-review-blocking.** Wire each backlog line into an active plan under `parent_epic: defi_master` immediately (Capture
-Discoveries HARD RULE).
+Render the result as a coverage matrix (rows = strategy × data_type × **venue × chain**; columns =
+`enumerated-cov / true-cov (IS∩UAC denom) / captured / v-spread / window-covered / which-bucket / verdict (one of the 6 above)`)
+plus the classified backlog list. **A bare "X% captured" with no IS∩UAC denominator, no per-venue/chain split, no
+wrong-form classification, and no list of buckets searched is review-blocking.** Wire each backlog line into an active
+plan under `parent_epic: defi_master` immediately (Capture Discoveries HARD RULE). Item (w) code-alignment gaps →
+`deployment_and_user_management_master` / `observability_master` backlog.
 
 ### E2E Batch, Paper, and Live Verification
 
@@ -384,7 +423,7 @@ Discoveries HARD RULE).
 ## Success Criteria
 
 - All code-correctness checklist items GREEN (incl. code↔codex drift items j–n)
-- **All strategy data-coverage items (o)–(v) GREEN** for each in-scope archetype — every matrix cell `captured` over its
+- **All strategy data-coverage items (o)–(w) GREEN** for each in-scope archetype — every matrix cell `captured` over its
   required window at v9, or a verified typed `empty_confirmed`, or a tracked download-backlog line (no silent gap)
 - **Honest-coverage totality breakdown (item v) rendered in full** — both per data_type × venue (complete CeFi perp
   universe + on-chain perps + LST/lending/DEX/oracle venues) and per data_type × chain (`ChainKind`), every expected
