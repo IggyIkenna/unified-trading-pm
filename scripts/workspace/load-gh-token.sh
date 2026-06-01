@@ -40,6 +40,26 @@ _uts_load_gh_token() {
     [ -n "${_pat}" ] && { echo "[load-gh-token] GH_TOKEN from ${_cand}" >&2; break; }
   done
 
+  # 1b) VALIDATE the cached token (codified 2026-06-01): a `.act-secrets` GH_PAT can
+  #     EXPIRE / be rotated, and the old design used it blindly — exporting a dead token
+  #     so every gh-API/HTTPS call 401s mid-task while `git push` still works (SSH remote),
+  #     making the breakage silent + confusing. One cheap probe to /rate_limit (free, works
+  #     for any valid token incl fine-grained; never counts against quota) discriminates
+  #     200=valid vs 401=dead. On a dead cached token, clear it so path 2 (Secret Manager,
+  #     authoritative) takes over. --max-time bounds shell-init latency; skip the probe only
+  #     if curl is absent (offline) — then we trust the cache as before.
+  if [ -n "${_pat}" ] && command -v curl >/dev/null 2>&1; then
+    local _probe
+    _probe="$(curl -s -o /dev/null -w '%{http_code}' --max-time 6 \
+      -H "Authorization: token ${_pat}" -H "Accept: application/vnd.github+json" \
+      "https://api.github.com/rate_limit" 2>/dev/null)"
+    if [ "${_probe}" != "200" ]; then
+      echo "WARN [load-gh-token] cached .act-secrets GH_PAT failed validity probe (HTTP ${_probe}) —" >&2
+      echo "     it is likely expired/rotated; falling through to Secret Manager." >&2
+      _pat=""
+    fi
+  fi
+
   # 2) FALLBACK: Secret Manager — GCP (asia/central project), then AWS (fleet).
   if [ -z "${_pat}" ] && command -v gcloud >/dev/null 2>&1; then
     _pat="$(gcloud secrets versions access latest --secret=GH_PAT \
