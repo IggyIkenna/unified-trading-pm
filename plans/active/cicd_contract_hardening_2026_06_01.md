@@ -567,6 +567,19 @@ behind the exact drift this whole audit is about.
 - [ ] [DOC] P1. Document in `ci-cd-flow.md`: "PM doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by the
       Phase-5 GHA); never leave a main-only commit unmirrored."
 
+### Reconciliation follow-ups (surfaced 2026-06-01 slot-1 reconciliation sweep)
+
+- [ ] [SCRIPT] P2. **PM QG test-isolation flake — `test_check_no_service_deps::TestFindManifest::test_returns_none_when_not_found`.**
+      `scripts/validation/check-no-service-deps.py::find_manifest()` walks `cwd.parents` for
+      `unified-trading-pm/workspace-manifest.json`; when a stray `/tmp/unified-trading-pm/` exists (some non-`refresh-manifest-dag`
+      process leaves one — `refresh-manifest-dag.sh` itself correctly uses `mktemp -d`), the test (which `chdir`s under
+      `/private/tmp/...`) finds it and fails. Passes in a clean env. Fix: harden the test to neutralise the cwd-walk (e.g.
+      `monkeypatch` the walk root) OR have `find_manifest` ignore `/tmp`/`/private/tmp` roots. Pre-existing on LDR; not blocking.
+- [ ] [CHORE] P3. **3 archived plans carry literal conflict-marker line(s)** (`plans/archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md`,
+      `strategy_archetype_taxonomy_2026_05_12.md`, `defi_protocol_outage_detector_2026_05_20.md`). Pre-existing committed content
+      (1 marker line each — verify whether real unresolved-merge residue vs an intentional doc example before editing; archived =
+      low priority). If residue, resolve + recommit; if doc example, fence it so marker-scanners don't trip.
+
 ## Success criteria
 
 | Phase   | Gate                                                                                                                |
