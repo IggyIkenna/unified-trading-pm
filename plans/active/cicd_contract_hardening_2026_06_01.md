@@ -33,7 +33,7 @@ token does NOT (can't edit `.github/workflows`). Verify a host with `verify-slot
 | Repo | main ruleset | main v2 run | enforce | remaining |
 | ---- | ------------ | ----------- | ------- | --------- |
 | trading-agent-service | **v2** ✅ | **green** ✅ | active | staging+LDR roll v2 + re-pin |
-| deployment-api | **v2** ✅ | closure-fix in flight (verify) | active | confirm green; staging+LDR |
+| deployment-api | **v2** ✅ | **green** ✅ (closure=5) | active | MIGRATED (main); staging+LDR |
 | system-integration-tests | **v2** ✅ | **RED** (deeper harness issue) | active | diagnose next failure; staging+LDR |
 | deployment-ui | v1 | n/a (no v2 wf) | — | roll out v2 + closure dep_repos + diagnose v1; UI repo needs `pw:L2` |
 | market-data-processing-service | v1 | n/a (no v2 wf) | — | roll out v2 + closure + diagnose v1 |
@@ -149,10 +149,11 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
       flip the ruleset on a red repo.** Owns: the 8 v1 repos above. Tracked jointly with `ci_canonical_v2_migration`.
 
   **Per-repo fan-out todos (fresh `quality-gates-v2` diagnoses, 2026-06-01 — each dispatchable to a slot):**
-  - [ ] [SCRIPT] P1. **deployment-api** — v2 dep-install fails: `Failed to generate package metadata for
-        deployment-service==0.1.1 @ editable+../deployment-service`. CI doesn't clone the editable sibling. Fix:
-        add `deployment-service` to deployment-api's `dependencies` in `workspace-manifest.json` (so v2 `dep_repos`
-        clones it) OR pin the dep to a published tag instead of `editable+../`. Then re-run v2 → green → re-pin ruleset.
+  - [x] ✅ [SCRIPT] P1. **deployment-api MAIN — MIGRATED 2026-06-01.** Root cause was incomplete `dep_repos` (CI didn't
+        clone editable siblings). Fixed via job-name correction + `dep_repos` = full **transitive editable closure (5):**
+        `deployment-service market-tick-data-service strategy-service unified-api-contracts unified-trading-library`
+        (BFS over pyprojects — the manifest deps were incomplete). Ruleset re-pointed to `…/quality-gates-v2`, v2 run
+        **green**, enforcement active. (staging+LDR still to do — see handoff.)
   - [ ] [SCRIPT] P1. **system-integration-tests** — v2 dep-install fails: `…metadata for alerting-service==0.1.0 @
         editable+../alerting-service` (same editable-sibling-not-cloned class as deployment-api). Same fix via manifest
         `dep_repos` / tag-pin. Then re-run → green → re-pin.
