@@ -6,7 +6,9 @@ source:
   - plans/active/manifest_reader_fail_fast_on_stale_fallback_2026_05_28.md (C4 unmet — root cause)
   - plans/active/manifest_consolidator_duckdb_memory_fix_2026_05_26.md (Phase 1 shipped without full QG)
   - unified-trading-library@73209d50 (in-scope violations cleared)
-locked_by: live-defi-rollout
+status: archived
+archived: 2026-06-01
+acked_into: plans/active/utl_full_quality_gates_green_2026_06_01.md
 ---
 
 # unified-trading-library full `quality-gates.sh` is RED on a pre-existing backlog
