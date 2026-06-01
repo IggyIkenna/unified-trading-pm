@@ -25,9 +25,12 @@ def find_manifest() -> Path | None:
     """Locate workspace-manifest.json (REPO_ROOT/unified-trading-pm or walk up from cwd)."""
     repo_root = os.environ.get("REPO_ROOT")
     if repo_root:
+        # REPO_ROOT is authoritative when set: return its manifest or None — do NOT fall
+        # through to the cwd-parent walk, which can spuriously match a stray
+        # /tmp/unified-trading-pm/ left by another process (flake fix — the test sets
+        # REPO_ROOT to an empty tmp dir + chdirs under /private/tmp and expects None).
         p = Path(repo_root) / "unified-trading-pm" / "workspace-manifest.json"
-        if p.exists():
-            return p
+        return p if p.exists() else None
     cwd = Path.cwd()
     for d in [cwd, *cwd.parents]:
         manifest = d / "unified-trading-pm" / "workspace-manifest.json"
