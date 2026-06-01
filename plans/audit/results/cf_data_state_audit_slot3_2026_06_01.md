@@ -303,3 +303,51 @@ why the operator gated it on "only once we're on v9, no more missing things" —
     (date-range × venue × data_type × EACH layout × AG); per sample confirm canonical object exists + content matches
     legacy + manifest row v9-correct; (f) ONLY THEN bulk-delete legacy buckets + superseded in-bucket paths (prediction
     `category=`, cefi `day=/asset_group=` lacking `pipeline_mode=`) at once; (g) fleet-drain (w/ slot-2) precedes it.
+
+## CANONICAL DECISIONS (operator-ratified 2026-06-01) + doc/plan supersession sweep
+
+These are the ratified canonical conventions for the whole tick corpus. **Every plan + codex doc must reflect them; any
+doc describing an older form must be UPDATED or banner-SUPERSEDED pointing to the superseding plan + why.** Recorded so
+no agent "hacks fake buckets/paths/columns to fit stale docs and regresses."
+
+### Ratified canonical form
+
+1. **PATH**
+   `raw_tick_data/by_date/day={D}/pipeline_mode={MODE}/asset_group={ag}/venue={V}/[chain={C}/]instrument_type={IT}/data_type={DT}/{file}`.
+   `pipeline_mode=` is **canonical IN the path** (operator decision 2026-06-01: "stick to pipeline*mode since it's
+   canonical and fix the readers/writers" — lead the convention, do not retreat). **Known gap to close (cross-AG):** the
+   BASE
+   `build*{defi,cefi,tradfi,prediction}\_partition_path`does NOT include`pipeline_mode=`— only`candidate_parquet_paths(...,
+   pipeline_mode=…)[0]`prepends it (slot-2 primary-source finding). So readers/writers that call the BASE builder directly would miss pipeline_mode= data → they MUST be migrated to the pipeline_mode-aware path as PRIMARY (this is`pipeline_mode_partition_migration`/`pipeline_mode_implementation`intent). Migrators already emit it via`candidate_parquet_paths[0]`
+   — correct.
+2. **COLUMNS (v9)** schema_version=9 + asset_group + pipeline_mode + source + available_at. `ManifestWriter.add()` now
+   persists `pipeline_mode` (utl@b872bdf1; was dropped → CF-3 blank); `record_captured*` already did.
+3. **data_type = ON-DISK form, not the logical/manifest key** (the `dex_pool_state` / `_resolve_partition_data_type`
+   lesson): dex_pools→`dex_pool_state`, dex_swaps→`dex_pool_swaps`, rate_indices→`lending_indices`,
+   futures_chain→`options_chain` (data_type only; instrument_type kept). Migrators MUST mirror the live writer's merge.
+4. **BUCKETS** `market-data-tick-{ag}-prd` via `resolve_bucket_name` (pred short token). **venue** = data-state form
+   (cefi HYPHENATED BINANCE-FUTURES/COINBASE-SPOT; COINBASE→COINBASE-SPOT). **DELETE at END only, after sampled verify**
+   (lesson #11).
+
+### Supersession mapping (mark these in the named files)
+
+| Superseded plan/section                                                | Superseded BY                                     | Why                                                        |
+| ---------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------- |
+| `tradfi_massive_dual_source` — source re-consolidation task            | `tradfi_manifest_canonicalisation` C-source rider | source col rides the L3 single-walk; no separate walk      |
+| `data_source_provenance_all_asset_groups` — per-AG source-col backfill | each AG's L3 `*_manifest_canonicalisation` rider  | rides the single walk (HARD RULE); never a standalone walk |
+| `pipeline_mode_partition_migration` — per-AG partition write           | each AG's L3 walk (emits `pipeline_mode=`)        | partition lands in the L3 walk                             |
+| `bucket_name_ssot…` Phase-5 `--manifest-only` seed (NON-DeFi)          | each AG's L3 `_index` rebuild                     | guarded out 2026-06-01; L3 owns the rebuild                |
+
+### Codex/plan doc-update TODOs (tracked dispatch — an agent must action these before independent execution)
+
+- [ ] [DOCS] P1. Codex sweep: grep `codex/02-data` + `codex/04-architecture` + repo `docs/GCS_PATHS.md` for any path
+      example WITHOUT `pipeline_mode=` shown as canonical, OR `category=` as canonical, OR data_type=dex_pools/dex_swaps
+      as the on-disk form → update to the ratified form above OR add `SUPERSEDED → <canonicalisation plan>` banner. (The
+      2026-06-01 codex-alignment audit found docs MOSTLY aligned; this closes the residuals + the
+      pipeline_mode-base-builder gap.)
+- [ ] [DOCS] P1. Banner the four superseded plan sections in the table above with `SUPERSEDED BY <plan> — <why>`.
+- [ ] [CODE] P0. pipeline*mode reader/writer alignment (cross-AG, coordinate w/ slot-2): make the pipeline_mode-aware
+      path the PRIMARY in
+      `build*_*partition_path`consumers (not just a`candidate_parquet_paths`fallback) so live     reads find migrated data. Targets: MTDS reader, MDPS cloud_data_provider, features-onchain data_loader, any direct    `build*_\_partition_path`
+      caller. (manifest_reader_fallback Level-0 already probes pipeline_mode= → readers using it are safe; this closes
+      base-builder callers.)
