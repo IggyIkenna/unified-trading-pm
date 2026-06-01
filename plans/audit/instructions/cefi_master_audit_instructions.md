@@ -91,6 +91,20 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
   the exact `pytest` fixtures or `CLOUD_MOCK_MODE=true` invocation in `## Output Format` so any slot can run the
   downstream-only audit independently.
 
+- [ ] (consolidation-health) **Per-group manifest consolidation health**: cefi's consolidated
+      `gs://market-data-tick-cefi-prd-<pid>/_index/availability_index.parquet` is fresh (mtime advances ~per
+      consolidator cycle) and its per-VM shards consolidate without OOM. cefi is the largest asset_group and was the
+      genesis of the DuckDB memory-bound rewrite. Cross-ref the engine + 24h OOM/freshness recipe in
+      `manifest_master_audit_instructions.md` (h2/h3) + `manifest_consolidator_duckdb_memory_fix_2026_05_26.md`. Check:
+      `gcloud storage objects describe gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet --format='value(updated)'`
+      within minutes of now.
+- [ ] (enumerator-reseed) **One-time — MIGRATED FROM `manifest_consolidator_duckdb_memory_fix_2026_05_26.md`**: re-run
+      the cefi expected-universe enumerator
+      (`instruments-service/scripts/enumerate_expected_universe.py --asset-group cefi`) so the `slot4-cefi-c*`
+      denominator shards carry the full v8+ schema. The NULL-`schema_version` enumerator fix shipped (IS@9f831578); the
+      re-run itself is still pending — without it the expected-universe (coverage denominator) for cefi is under-seeded
+      relative to the captured numerator.
+
 ## Success Criteria
 
 - All 8 scaffold checklist items (a)–(h) GREEN

@@ -119,6 +119,13 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
   the exact `pytest` fixtures or `CLOUD_MOCK_MODE=true` invocation in `## Output Format` so any slot can run the
   downstream-only audit independently.
 
+- [ ] (consolidation-health) **Per-group manifest consolidation health**: this asset_group's consolidated
+      `_index/availability_index.parquet` (resolve the bucket via `resolve_bucket_name(...)` — never hardcode `gs://`)
+      is fresh (mtime advances ~per consolidator cycle) and its per-VM shards consolidate without OOM. Cross-ref the
+      shared engine + 24h OOM/freshness recipe in `manifest_master_audit_instructions.md` (h2/h3) +
+      `manifest_consolidator_duckdb_memory_fix_2026_05_26.md` (the DuckDB memory-bound merge is UTL Tier-0, shared by
+      every asset_group).
+
 ## Success Criteria
 
 - All scaffold checklist items (a)–(g) GREEN (adapters scaffold present even if credentials are BLOCKED-CREDENTIALS)
