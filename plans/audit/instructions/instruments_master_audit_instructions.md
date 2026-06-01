@@ -50,6 +50,16 @@ Codex SSOT: `codex/04-architecture/instruments-service-as-ssot-for-mtds.md`
 - [ ] (g) **No URDI references**: `URDI` (phantom name) does not appear anywhere in the codebase. Grep:
       `rg "URDI" --include="*.py"` — should be 0 hits
 
+- [ ] (h) **Fetch-failure → `attempted_failed`, never `empty_confirmed` — PER-ADAPTER swallow audit (codified
+      2026-06-01)**: every instruments-service reference-data adapter doing external I/O (vendor REST/SDK, RPC,
+      subgraph) must route a fetch error to `record_failed` (`attempted_failed`), NOT swallow it (`except: … return
+      []/None`) into a `record_empty` (`empty_confirmed`) — a swallowed timeout/auth/RPC error mislabeled as honest-empty
+      pollutes the IS manifest, which then propagates wrong `expected_unattempted`/skip decisions downstream (MTDS reads
+      the IS manifest). Grep:
+      `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))" instruments-service/ --include="*.py" -g '!*test*'`
+      then read each adapter's outer fetch try/except. **Closed per-adapter checklist — check EVERY adapter.** Full spec:
+      `defi_master_audit_instructions.md` item (aa).
+
 ### Batch vs Live Parity
 
 - (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with
