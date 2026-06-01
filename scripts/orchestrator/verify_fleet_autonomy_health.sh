@@ -51,10 +51,13 @@ ts()  { date -u '+%Y-%m-%dT%H:%M:%SZ'; }
 read -r -d '' REMOTE_PROBE <<PROBE || true
 set +e
 cd $AO_PATH 2>/dev/null || { echo "RESULT behind=NA flags=0/4 ver=NA note=AO_MISSING"; exit 0; }
-git fetch origin live-defi-rollout -q 2>/dev/null
-HEADSHA=\$(git rev-parse --short HEAD 2>/dev/null)
-REMOTESHA=\$(git rev-parse --short origin/live-defi-rollout 2>/dev/null)
-BEHIND=\$(git rev-list --count HEAD..origin/live-defi-rollout 2>/dev/null)
+# SSM runs as root but the repo is owned by ubuntu (orchestrator's user) → run
+# git as ubuntu so it shares ubuntu's git identity + avoids dubious-ownership.
+GIT="sudo -u ubuntu git -C $AO_PATH"
+\$GIT fetch origin live-defi-rollout -q 2>/dev/null
+HEADSHA=\$(\$GIT rev-parse --short HEAD 2>/dev/null)
+REMOTESHA=\$(\$GIT rev-parse --short origin/live-defi-rollout 2>/dev/null)
+BEHIND=\$(\$GIT rev-list --count HEAD..origin/live-defi-rollout 2>/dev/null)
 PID=\$(systemctl show orchestrator --property=MainPID --value 2>/dev/null)
 NFLAGS=\$(tr '\0' '\n' < /proc/\$PID/environ 2>/dev/null | grep -cE '^ORCHESTRATOR_(AUTOSPAWN_ENABLED|WORKER_WATCHDOG_ENABLED|REGEN_PRUNE_STALE|VM_ID)=')
 MISSING=\$(for f in AUTOSPAWN_ENABLED WORKER_WATCHDOG_ENABLED REGEN_PRUNE_STALE VM_ID; do tr '\0' '\n' < /proc/\$PID/environ 2>/dev/null | grep -q "^ORCHESTRATOR_\$f=" || echo -n "\$f "; done)
@@ -66,7 +69,7 @@ log "=== verify_fleet_autonomy_health.sh ==="
 log "Started: $(ts) | region: $REGION | health-port: $HEALTH_PORT"
 log ""
 
-declare -A CMD_IDS
+CMD_IDS=()
 for i in "${!INSTANCE_IDS[@]}"; do
   INSTANCE_ID="${INSTANCE_IDS[$i]}"
   CMD_ID=$(aws ssm send-command \
@@ -96,15 +99,15 @@ for i in "${!INSTANCE_IDS[@]}"; do
   fi
   OUT=$(aws ssm get-command-invocation --command-id "$CMD_ID" --instance-id "$INSTANCE_ID" \
         --region "$REGION" --query "StandardOutputContent" --output text 2>/dev/null) || OUT="(no output)"
-  LINE=$(echo "$OUT" | grep '^RESULT' | head -1)
+  LINE=$(echo "$OUT" | grep '^RESULT' | head -1 || true)
   [[ -z "$LINE" ]] && LINE="$OUT"
-  BEHIND=$(echo "$LINE" | grep -oE 'behind=[^ ]+' | cut -d= -f2)
-  FLAGS=$(echo "$LINE"  | grep -oE 'flags=[^ ]+'  | cut -d= -f2)
-  VER=$(echo "$LINE"    | grep -oE 'ver=[^ ]+'    | cut -d= -f2)
+  BEHIND=$(echo "$LINE" | grep -oE 'behind=[^ ]+' | cut -d= -f2 || true)
+  FLAGS=$(echo "$LINE"  | grep -oE 'flags=[^ ]+'  | cut -d= -f2 || true)
+  VER=$(echo "$LINE"    | grep -oE 'ver=[^ ]+'    | cut -d= -f2 || true)
   if [[ "$BEHIND" == "0" && "$FLAGS" == "4/4" && -n "$VER" && "$VER" != "NA" ]]; then
     printf -v ROW "%-18s  ✅     behind=0 flags=4/4 ver=%s" "$VM_NAME" "$VER"; OK=$((OK+1))
   else
-    MISS=$(echo "$LINE" | grep -oE 'missing=\[[^]]*\]')
+    MISS=$(echo "$LINE" | grep -oE 'missing=\[[^]]*\]' || true)
     printf -v ROW "%-18s  ⚠️     behind=%s flags=%s ver=%s %s" "$VM_NAME" "${BEHIND:-?}" "${FLAGS:-?}" "${VER:-?}" "${MISS:-}"; WARN=$((WARN+1))
   fi
   log "$ROW"
