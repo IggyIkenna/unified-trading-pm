@@ -224,18 +224,17 @@ correctness the freeze protects.
       `git fetch --refetch` → both `fsck OK`. Composes with the `worker_liveness.py` git-staleness alert. NB follow-up: the
       guard's Slack alert needs the webhook in the cron env (currently logs to `/var/log/fleet-git-health-guard.log`; the
       chown+fsck heal works regardless) — see Findings.
-- [ ] [SCRIPT] P2. **Follow-up (2026-06-01 campaign): fleet-git-health-guard cron lacks the Slack webhook env** → it
-      logs problems to `/var/log/fleet-git-health-guard.log` but the `notify` POST no-ops (no
-      `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the root cron). Make the guard self-fetch the webhook from SM (gcloud as the
-      slot user) when the env is unset, OR prefix the cron line with it. So corruption like the vm-2 find (healed) also
-      pages, not just logs.
-- [ ] [INFRA] P1. **Follow-up (2026-06-01 campaign): agent-orchestrator main-checkout deploy-currency drifts.** vm-2
-      (`agent-orch-vm-orchestrator-20260522`) was **14 commits behind** LDR (HEAD 3635d04) — running stale orchestrator
-      code (missing the @7950ab0 branch-state fix) — while vm-1 was current. FF-pulled + restarted vm-2 to @34333b0 in the
-      campaign, but there is no reliable standing mechanism that keeps the **main** `~/unified-trading-system-repos/agent-orchestrator`
-      checkout (the one systemd runs) current on every VM (pm-pull covers unified-trading-pm; slot-cron covers `.tabs/*`
-      worktrees, not the main checkout). Add an agent-orchestrator self-pull (timer/systemd) + `verify_fleet_autonomy_health.sh`
-      gate on it, so a VM can't silently run weeks-old server code.
+- [x] ✅ [SCRIPT] P2. ✅ DONE 2026-06-01 — agent-orchestrator@589b711. `fleet-git-health-guard.sh` gained
+      `_resolve_webhook()`: when `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is unset (the root-cron case) it self-fetches from
+      Secret Manager (gcloud as the slot user → AGENT_ORCHESTRATOR_SLACK_WEBHOOK / alerting-uts-live-alerts-slack-webhook;
+      AWS SM fallback). Verified live on both VMs from the root path: `webhook self-resolve len=81 OK`. So corruption like
+      the vm-2 find now PAGES, not just logs.
+- [x] ✅ [INFRA] P1. ✅ DONE 2026-06-01 — agent-orchestrator@589b711. `scripts/ao-self-pull.sh` FF-pulls the
+      orchestrator's actual `WorkingDirectory` checkout from origin/live-defi-rollout (git as slot user, ff-only, never
+      forces) and restarts orchestrator on HEAD change; installed as a 15-min root cron on both live VMs (verified
+      `ao-self-pull cron installed=1`, AO HEAD=589b711 on both). Closes the deploy-currency gap (vm-2 had been 14 behind
+      running stale server code). NB: a `verify_fleet_autonomy_health.sh` gate citing the AO main-checkout behind-count is
+      a nice incremental add (the existing script already reports per-VM behind-count vs LDR HEAD).
 
 ## P1 — important; post-current-gate
 
