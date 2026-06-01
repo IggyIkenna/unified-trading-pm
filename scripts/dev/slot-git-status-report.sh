@@ -29,7 +29,10 @@ set -uo pipefail   # NOT set -e: we want to keep walking even if one repo errors
 # contexts don't export it) so the ${HOME}-based workspace + token-file lookups
 # below don't trip `set -u` with "HOME: unbound variable".
 if [[ -z "${HOME:-}" ]]; then
-    HOME="$(getent passwd "$(id -un)" 2>/dev/null | cut -d: -f6)"
+    # `cd ~` expands via the passwd DB (getpwuid), independent of $HOME, and is a
+    # bash builtin — portable across Linux (VMs) AND macOS (operator laptops),
+    # unlike `getent` which doesn't exist on macOS. Subshell keeps cwd unchanged.
+    HOME="$(cd ~ 2>/dev/null && pwd)" || HOME=""
     HOME="${HOME:-/home/$(id -un 2>/dev/null || echo ubuntu)}"
     export HOME
 fi
