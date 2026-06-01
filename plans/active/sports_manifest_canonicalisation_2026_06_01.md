@@ -299,7 +299,21 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       winner. — market-tick-data-service@50a43aa7 | \_sample_schema() downloads+inspects parquet for \_SCHEMA_SAMPLE_N
       overlap shards per tree; logs per-shard verdict (PRD_LOSES_COLS_OR_ROWS / PRD_RICHER / schemas_match + row
       counts); per-tree entity-set verdict (SAME_ENTITIES / COMPLEMENTARY_ENTITIES) for the 3 sports_reference versions.
-      Full results available on VM dry-run (GCS inaccessible locally).
+      **ACTUAL SCHEMA SPOT-CHECK RUN (sports-slot, real GCS data 2026-06-01)** on `entity=fixtures` 2018-01-02:
+      `v1_archive` fixtures (41 cols: home_xg/away_xg + shots/corners/fouls/possession/passes + home_team/away_team +
+      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native `af_*_id`, score breakdowns
+      extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**
+      (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of (`v2 fixtures` ∪ `v2 fixture_stats` (xG +
+      shots/corners/possession) ∪ current `understat_xg` (58 cols incl. team-detail + xG)); only 3 differ and they are
+      naming variants (`home_team`→`home_team_name`, `away_team`→`*_name`, `league`→`league_name`). **VERDICT: v1_archive
+      is COLUMN-superseded by the current split (understat_xg + v2 fixtures + v2 fixture_stats); v2 fixtures + understat_xg
+      + fixture_stats are COMPLEMENTARY → keep all. No column-level data loss from treating v1_archive as superseded.**
+- [ ] [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠ row-superseded.
+      Before DROPPING `sports_reference_v1_archive`, verify its `(date, league, fixture_id)` ROW set ⊆ the current split's
+      rows (the v1_archive date-range/leagues are all present in `v2 fixtures`/`understat_xg`/`fixture_stats`). If
+      v1_archive has older history or leagues the current split lacks → migrate those rows first (the reconcile's
+      legacy-only computation must run at ROW granularity, not just entity/column). This is the row-level analogue of the
+      column check above; do NOT drop v1_archive on column-coverage alone.
 
 ### KEYSTONE redesign — FIXTURES are the truth set (operator directive 2026-06-01)
 
