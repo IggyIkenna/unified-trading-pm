@@ -201,7 +201,16 @@ be fixed first if run on a VM.
       `pipeline_mode` (path-derivable: question_group→gamma_api else clob) + `available_at` → `ManifestWriter`
       auto-stamps v9. Confirm row-key granularity against the EXISTING pred-prd `_index` (16,812 rows) so the rebuild
       dedups, not double-counts. Then consolidator merge.
-- [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank/`prediction_trades` data_type → canonical.
+- [ ] [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
+      path transforms BEFORE dedup: `venue UNKNOWN/blank → POLYMARKET` (prediction is single-venue today; Kalshi lands
+      born-canonical), `data_type prediction_trades → trades` (verified the same markets). Grounded by the
+      operator-requested overlap verification (2026-06-01): clean `(POLYMARKET,trades)` overlap is **byte-identical**
+      between legacy + canon (401 common dates; sampled days had identical condition*id sets + identical per-object row
+      counts) → legacy-wins + relabel loses nothing; canon's apparent 22 'canon-only' cells are venue=UNKNOWN/blank
+      DRIFT (not unique data — canon has NO ohlcv*\*/question_group that legacy has). **Residual (object-level,
+      small):** blank `data_type` (17 rows, both buckets) is skip+logged by the migrator → diagnose at rebuild from the
+      parquet's own `data_type` column; confirm the ~21 UNKNOWN-venue cells are object-backed (relabel) vs phantom
+      (honest drop).
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-pred-prd-…` → CF-1…CF-12 GREEN on
       data-state (v9, source populated, pipeline_mode, asset_group, available_at, 0 legacy-only). Flip the CF-coverage
       rows in `predictions_master_audit_instructions.md`.
