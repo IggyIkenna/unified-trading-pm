@@ -1722,7 +1722,6 @@
       "required_api_services": [
         "unified-trading-api",
         "deployment-api",
-        "auth-api",
         "client-reporting-api"
       ],
       "required_uis": [
@@ -1730,8 +1729,6 @@
         "deployment-ui"
       ],
       "not_required": [
-        "unified-sports-execution-interface",
-        "unified-defi-execution-interface (optional DeFi)",
         "Legacy split UIs, standalone APIs, npm UI-kit/workspace repos, experimental services, and scratch data trees \u2014 archived under workspace-root archive/ only (see archive/README.md). Not part of the active 1 UI + consolidated API surface."
       ]
     },
@@ -1756,7 +1753,6 @@
       ],
       "additional_services": [
         "features-service",
-        "sports-odds-data-service",
         "instruments-service (sports reference data module, merged from sports-reference-data-service)",
         "market-data-processing-service (sports odds processing module, merged from sports-odds-processing-service)",
         "strategy-service (sports strategy module, merged from sports-strategy-service)",
