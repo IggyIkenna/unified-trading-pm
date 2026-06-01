@@ -14,11 +14,26 @@ Run:  .venv-workspace/bin/python <this>            # dry-run all buckets
 from __future__ import annotations
 
 import sys
+import time
 
 import gcsfs
 import pandas as pd
 
 from unified_api_contracts.registry.chain_env import get_chain_genesis_date
+
+
+def _read_retry(fs: gcsfs.GCSFileSystem, path: str, tries: int = 6):
+    """Retry reads — gcsfs's first GCS requests after init hit a cold DNS/connection
+    that times out, then warms up; retry absorbs that warmup artifact."""
+    last: Exception | None = None
+    for attempt in range(tries):
+        try:
+            return pd.read_parquet(fs.open(path))
+        except Exception as exc:  # noqa: BLE001 — transient warmup; retry
+            last = exc
+            time.sleep(1.5 * (attempt + 1))
+    raise last  # type: ignore[misc]
+
 
 PROJECT_ID = "central-element-323112"
 # oracle-prices excluded — already migrated by C1.
@@ -39,9 +54,9 @@ def main() -> int:
     for name, bucket in BUCKETS.items():
         index = f"{bucket}/_index/availability_index.parquet"
         try:
-            df = pd.read_parquet(fs.open(index))
+            df = _read_retry(fs, index)
         except Exception as exc:  # noqa: BLE001 — diagnostic skip
-            print(f"{name}: SKIP ({type(exc).__name__})")
+            print(f"{name}: SKIP after retries ({type(exc).__name__})")
             continue
         df = df[[c for c in df.columns if not c.startswith("__")]].copy()
         if "chain" not in df.columns or "capture_status" not in df.columns:
