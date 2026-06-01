@@ -275,9 +275,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       / `sports_reference_v2` / `day=/venue=` / `instrument_availability` trees against prd (compute legacy-only AND
       canon-only — union, never copy-bigger-into-smaller). The migrator's `--surface instruments` MUST take a
       `--legacy-bucket` and walk BOTH. (Mirror the MDPS prd-vs-legacy reconcile.)
-- [ ] [DATA] P1. **Probe + classify the store buckets** (`risk-store-sports*`, `positions-store-*-sports`,
-      `pnl-store-*-sports`) for data before they enter any sports-bucket-decommission sweep — empty→delete-legacy,
-      non-empty→owner + canonicalisation path. Do NOT let `bucket_name_ssot…` L6 delete a non-empty store bucket.
+- [x] ✅ [DATA] P1. **Store buckets probed — ALL 7 EMPTY → delete-safe** (sports-slot 2026-06-01):
+      `risk-store-sports{,-test}` + `risk-store-{,-test}-sports` + `positions-store-{,-test}-sports` +
+      `pnl-store-test-…-sports` all have 0 objects. Neither naming convention is in `cloud-providers.yaml` (canonical
+      would be `risk-store-sports-${ENV}-…` per the defi pattern) → both are legacy/non-canonical → safe for the L6/L7
+      decommission sweep, no data-loss risk. **Cross-plan + Codex sports-alignment audit also done** (18 sports-touching
+      files): 14 already correct on the post-migration future; 4 stale/confused fixed — `per-asset-group-bucket-layouts.md`
+      + `sports-gcs-path-ssot.md` + `epics/sports_master.md` (PM@e71f4ded9), `e2e/011_features_sports_service.md`
+      (PM@49f701ec1). The legacy-bucket-delete end-state is consistently reflected across plans/codex.
 - [ ] [DATA] P1. **Schema spot-check across dual-path same-data_type shards** (operator directive — pick union/best of
       both): where the same `(date, league, data_type)` exists in two layouts — MDPS prd(`category=`) vs legacy
       (`asset_group=`); instruments `sports_reference` vs `sports_reference_v2` vs `_v1_archive`; prd vs legacy-no-env —
