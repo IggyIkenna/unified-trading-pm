@@ -57,9 +57,9 @@ related:
 > `market-data-tick-defi-prd-…` `_index`** that `defi_manifest_canonicalisation` rewrites (venue relabel / phantom-grid
 > delete / v4–v8→v9 / snapshot, via `migrate_defi_canonical.py`). Single-walk discipline (HARD RULE) forbids two
 > concurrent whole-corpus walks on the same `_index`. **Ordering (HARD)**: this plan's DeFi manifest seed runs
-> **BEFORE** defi_manifest's `C0` single-walk — otherwise the seed re-injects un-canonicalised legacy rows (old venue
-> strings, v4–v8, phantom grid) _after_ C0 cleans them. As of 2026-06-01 **neither DeFi walk has launched** (this plan's
-> "Manifest seed" P0 + defi_manifest's "C0 — RUN ON A VM" P0 both open) — no live race yet; do NOT launch the
+> **BEFORE** defi*manifest's `C0` single-walk — otherwise the seed re-injects un-canonicalised legacy rows (old venue
+> strings, v4–v8, phantom grid) \_after* C0 cleans them. As of 2026-06-01 **neither DeFi walk has launched** (this
+> plan's "Manifest seed" P0 + defi_manifest's "C0 — RUN ON A VM" P0 both open) — no live race yet; do NOT launch the
 > DeFi-bucket seed without confirming defi_manifest C0 is not mid-walk (and vice-versa).
 > `data_source_provenance_all_asset_groups_2026_06_01.md` (`source`-column backfill) must NOT open a third walk — its
 > row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic `mtds_mdps_master`. Banner-remove when the
@@ -107,12 +107,23 @@ until C is GREEN"). ONE bundled single-walk per bucket → canonical target form
   venue-chain→flat · `C4` v4–v8→v9 · `C5` phantom-grid delete · `C8` under-enumeration (90 venue-keys) · `C9` legacy
   object paths · `C11` post-launch phantom audit · then `B0` run `expected_unattempted` chain (gated C-GREEN). Riders on
   the SAME walk: `data_source_provenance` source-col + `pipeline_mode`.
-- **prediction** (2,039 legacy-only, only 783 overlap → canonical LEAST complete): ⚠️ **NO PLAN — file
-  `prediction_manifest_canonicalisation_2026_06_0X.md`** (analogous C single-walk: migrate POLYMARKET ohlcv\_\* +
-  `prediction_canonical_question_group` history → canonical, v→v9, `pipeline_mode`).
-- **cefi** (838 recent legacy-only cells): ⚠️ **no owner — file `cefi_legacy_gap_fill` or add a C-task to a cefi plan**
-  (gap-fill BINANCE/UPBIT/COINBASE book/trades 2026-03→05 into canonical).
-- **tradfi (4) / sports (0)**: canonical DATA complete → verify-only; no migration needed before decommission.
+- **prediction** (2,039 legacy-only + 22 canon-only → canonical LEAST complete): ✅ **FILED + BUILT (slot-3
+  2026-06-01)** — `prediction_manifest_canonicalisation_2026_06_01.md`; migrator `migrate_prediction_to_pred_prd_v9.py`
+  (dual-source reconciliation + CF-7 baked) @mtds. Owns the prediction `_index` rebuild — see "do NOT seed non-DeFi
+  here" below.
+- **cefi** (data-state: FULL re-canon, not 838): ✅ **FILED + BUILT (slot-3 2026-06-01)** —
+  `cefi_manifest_canonicalisation_2026_06_01.md`; migrator `migrate_cefi_flat_to_v9_canonical.py` (3-layout: bulk day=
+  pipeline_mode insert + L-canon no-op + 9 flat orphans fan-out) @mtds. Owns the cefi `_index` rebuild.
+- **tradfi (71 legacy-only) / sports (0)**: `tradfi_manifest_canonicalisation` / `sports_manifest_canonicalisation`
+  FILED (sports has a slot pickup prompt). All four non-DeFi L3 plans own their own `_index` rebuild.
+
+> **🔴 NON-DEFI SEED GUARD (slot-3 2026-06-01) — do NOT run this plan's `--manifest-only` Phase-5 seed for
+> cefi/tradfi/sports/prediction.** Those four L3 canonicalisation plans REBUILD the canonical `_index` from canonical
+> object paths via the v9 `ManifestWriter` (single-walk discipline). A `--manifest-only` seed into the SAME `_index`
+> would be a SECOND whole-corpus write that re-injects un-canonicalised legacy v8 rows (wrong layout/columns) and races
+> the L3 rebuild — review-blocking. The DeFi ordering rule above is the DeFi analogue; for non-DeFi the rule is
+> stronger: the seed is REDUNDANT (the L3 rebuild produces the v9 `_index`) → skip it entirely. This plan's role for
+> non-DeFi = the L6 decommission gate ONLY (delete legacy after each L3 reports C-GREEN), NOT a manifest seed.
 
 **L4 — CONSOLIDATOR SSOT (go-forward manifest).**
 
