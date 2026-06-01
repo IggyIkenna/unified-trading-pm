@@ -174,13 +174,27 @@ by a PR:
       `quality-gates-v2`, from the template) onto each repo's default branch. PR-per-repo passes its own v2
       (workflow-file change) and auto-merges; for a repo whose main v2 is RED, do its (B) greening first (or admin per
       the force rule). Verifies: semver fires on the next staging `quality-gates-v2` success.
-- [ ] [TEST] P0. **(B) per-repo QG-debt green** (surgical, real fixes — see standard above). Known-red today:
-      `unified-trading-pm` (lint FIXED on branch `ikenna/pm-lint-green-2026-06-01` / PR #106 — but redo SURGICALLY:
-      close #106, fix only lint-flagged files + the 3-4 codex violations [empty-string/dict fallback;
-      `scripts/migration/gcs_bucket_stats.py` hardcoded `central-element-323112` → `config.gcp_project_id`], no
-      repo-wide format); `instruments-service` (coverage 76.82% < 77% — ~a couple real tests). PLUS any repo the semver
-      rollout surfaces. Each: surgical fix → PR → green v2 → auto-merge → (if its enforce_admins was deferred, enable
-      it).
+- [ ] [TEST] P0. **(B) per-repo QG-debt green** (surgical, real fixes — see standard above). Status 2026-06-01:
+      - ✅ **`instruments-service`** — `instruments-service@851559f4` (LDR). Coverage **76.82% → 77.69%** via 13 real
+        unit tests for the venus/fluid/radiant curated-EVM-lending adapters (offline, credential-free; mirrors the
+        `aave_v3` test pattern). `bash scripts/quality-gates.sh` → EXIT 0. Also fixed a **real latent bug** in those 3
+        adapters' `get_instrument()` (matched non-existent `inst.symbol` → `AttributeError`; corrected to canonical
+        `inst.instrument_key.endswith(f":{symbol}")`). **main green pending** — get LDR→main (drift; see enforce_admins
+        item) then enable `enforce_admins`.
+      - 🔄 **`unified-trading-pm`** — empty-string-fallback codex violation cleared `unified-trading-pm@98b12ee53` (LDR)
+        (the violation was self-introduced by the watcher's `.get(k, "")` report builders → `.get(k) or ""`). Lint was
+        already clean on LDR (the 7 main lint errors were main↔LDR **drift**, already fixed on LDR — NOT new debt). PM
+        main is RED purely because main is strictly behind LDR by 14 commits (0 divergence). **main green pending** —
+        promote LDR→main (PR-auto-merge preferred; FF per the force rule is the proven fallback). **TODO: close stale
+        PR #106** (`ikenna/pm-lint-green-2026-06-01`) — its 22-file format churn is superseded by the surgical LDR fixes.
+      - PLUS any repo the semver rollout surfaces. Each: surgical fix → PR → green v2 → auto-merge → enable enforce_admins.
+- [ ] [TEST] P1. **DISCOVERY (instruments-service, surfaced 2026-06-01 by the coverage worker): `inst.symbol == symbol`
+      latent bug in ~19 more defi adapters.** `instruments_service/reference_data/adapters/defi/` has 22 files using
+      `inst.symbol == symbol` in `get_instrument()`; `InstrumentRecord` has **no `symbol` attribute** → `AttributeError`
+      on any non-address symbol lookup against a populated registry. 3 fixed (venus/fluid/radiant @851559f4); ~19 remain.
+      Dedicated per-file sweep → canonical `inst.instrument_key.endswith(f":{symbol}")` + a test each (kept separate to
+      avoid pulling unrelated files into the codex changed-files scan). `parent_epic: infrastructure_master` (or reassign
+      to the instruments/defi reference-data epic at triage).
 - [ ] [SCRIPT] P1. **Revive the SIT chain** — trace the dead **entry dispatch**: `quality-gates-v2` green on `staging`
       should dispatch `sit-lock` → `sit-gate.yml` → full-workspace SIT → on pass dispatch `staging-validated` →
       `staging-to-main.yml`. Zero SIT runs ⇒ the entry isn't firing (almost certainly the same "Quality Gates"
