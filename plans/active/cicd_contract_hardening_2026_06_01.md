@@ -670,6 +670,14 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
         `scripts/quality-gates.sh` exited 1 on EVERY macOS slot (incl. operator interactive sessions) while Linux CI
         passed. Fix = platform-aware `_maxrss_mb()` helper; the 2 GB bar is unchanged (Linux behaviour identical), only
         the macOS measurement corrected. perf test 3/3 green on darwin; full mdps QG now EXIT 0.
+  - [x] ✅ [TYPES] P2. **mdps pre-existing `resolve_bucket_name` arg-type debt CLEARED — mdps@ea497a0 2026-06-01** (the
+        "out-of-scope note" from the [TYPES] shrink above, fixed on operator request). `cloud_data_provider.py` +
+        `dependency_checker.py` passed plain `str` to `resolve_bucket_name(cloud=, asset_group=)` (needs `Cloud` /
+        `AssetGroup` Literals) → 5 `reportArgumentType` errors that were the visible MDPS typecheck warning each run.
+        Fix = new `app/core/bucket_arg_typing.py` with fail-loud `as_cloud()`/`as_asset_group()` validators narrowing
+        `str`→Literal via a typed membership guard (no cast, no `# pyright: ignore` — opposite of the
+        `cast(object,…)+ignore` debt in deployment-api). Project-mode basedpyright now **0 errors** (was 5); the
+        typecheck warning line is gone; 104 unit tests green; mdps QG EXIT 0.
 
 - [x] ✅ [VERIFY] P0. `verify_branch_protection_check_names.py` 2026-06-01: **ALL RULESETS CONSISTENT; every active repo
       requires `…/quality-gates-v2` on main + staging; 0 on v1; 0 none** (deployment-ui on its UI gate; PM no staging).
