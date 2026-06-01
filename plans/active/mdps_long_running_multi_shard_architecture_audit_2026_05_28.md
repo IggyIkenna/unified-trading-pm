@@ -6,7 +6,6 @@ assigned_vm: vm-ml
 status: active
 priority: P1
 created: 2026-05-28
-author: harsh (claude opus 4.7) — slot main, captured operator direction
 estimate_class: research
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4.8

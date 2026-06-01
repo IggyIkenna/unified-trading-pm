@@ -1,13 +1,14 @@
 ---
 title: Running VM Fleet Status & Kill/Keep Decision Matrix
 created: 2026-05-27
-author: harsh (claude opus 4.7)
 source:
   - gcloud compute instances list (RUNNING)
   - gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log (last 400KB tails)
   - per-VM SSH (process state, CPU, local /tmp/vm-exec-*.log)
   - serial-port-output (boot-hung / network-wedged VMs)
 locked_by: harsh-fleet-audit
+priority: P2
+status: active
 ---
 
 # Running VM Fleet Status — 2026-05-27 ~07:35 UTC

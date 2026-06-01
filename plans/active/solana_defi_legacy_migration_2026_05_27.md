@@ -1,7 +1,6 @@
 ---
 title: "Solana DeFi legacy→canonical migration (Kamino/Solend lending + Kamino/Orca/Raydium pools)"
 created: 2026-05-27
-author: ikenna
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-ml
 locked_by: live-defi-rollout

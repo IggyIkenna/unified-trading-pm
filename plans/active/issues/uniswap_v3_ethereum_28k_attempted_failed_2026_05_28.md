@@ -3,7 +3,6 @@ title:
   "MTDS DeFi manifest: 28,634 UNISWAP_V3-ETHEREUM swaps_ohlcv attempted_failed rows — all SCHEMA_VALIDATION_FAILED, fix
   already shipped (chain propagation + amount_usd column), needs retry pass not new code"
 created: 2026-05-28
-author: slot-1
 source:
   - gs://market-data-tick-defi-central-element-323112/_index/availability_index.parquet
   - market-data-processing-service@7f1a5b5 (2026-05-23 22:49 BST — chain propagation fix)

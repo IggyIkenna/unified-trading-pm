@@ -4,7 +4,6 @@ title: "MDPS state adapter leading-NaN bins + NaN volume — multi-adapter audit
 parent_epic: mtds_mdps_master
 assigned_vm: vm-ml
 created: 2026-05-29
-author: harsh + claude (session dab322c6)
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.2
@@ -18,6 +17,9 @@ source:
   - market-data-processing-service/market_data_processing_service/app/adapters/defi/market_state_adapter.py
   - market-data-processing-service/market_data_processing_service/app/adapters/cefi/book_snapshot_adapter.py
   - market-data-processing-service/market_data_processing_service/app/adapters/tradfi/tbbo_adapter.py
+priority: P2
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 ## ✅ Operator decisions (2026-06-01) — UNBLOCKED

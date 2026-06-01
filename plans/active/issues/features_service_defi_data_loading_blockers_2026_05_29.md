@@ -1,13 +1,13 @@
 ---
 title: features-service DeFi end-to-end test blocked on multiple data layer issues
 created: 2026-05-29
-author: harsh (claude opus 4.7)
 status: open
 source:
   - features-service@9f6bc119
   - market-data-tick-defi-central-element-323112 (legacy)
   - market-data-tick-defi-prd-central-element-323112 (prd)
 locked_by: live-defi-rollout
+priority: P2
 ---
 
 ## What I found

@@ -6,7 +6,6 @@ parent: pipeline_mode_implementation_2026_05_28
 priority: P2
 status: active
 created: 2026-05-28
-author: slot-10
 estimate_class: research
 estimate_baseline_ai_days: 0
 estimate_calibrated_ai_days: 0

@@ -1,7 +1,6 @@
 ---
 title: vm-trading-core 2-commit local-only divergence — preserved on archive branch for review
 created: 2026-05-29
-author: ikenna (slot-1-laptop / Opus 4.7)
 source:
   - plans/active/api_host_chronic_impairment_2026_05_29.md (fleet host symmetry sweep)
   - plans/active/plan_hygiene_silent_failure_capture_2026_05_29.md (autonomous-loop unblock)
@@ -11,6 +10,8 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
 locked_by: live-defi-rollout
 locked_since: 2026-05-29
+priority: P2
+status: active
 ---
 
 ## What I found

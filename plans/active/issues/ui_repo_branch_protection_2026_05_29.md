@@ -5,6 +5,8 @@ source:
   - "ci_canonical_v2_migration_2026_05_29.md Phase 5 verification"
 priority: P2
 status: active
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 > **🅿️ TRACKED P2 — verified 2026-06-01 (harsh, operator: option C / leave-tracked).** Re-checked live state: all 5

@@ -1,7 +1,6 @@
 ---
 title: "DeFi pipeline — code↔codex drift (audit 2026-05-27)"
 created: 2026-05-27
-author: harsh
 source:
   - codex/02-data/defi-data-pipeline.md
   - codex/02-data/data-lineage-MTDS-features-ml.md

@@ -4,7 +4,6 @@ parent_epic: tradfi_master
 assigned_vm: vm-tradfi
 priority: P1
 status: active
-type: infra
 estimate_class: infra
 estimate_baseline_ai_days: 9
 estimate_calibrated_ai_days: 7

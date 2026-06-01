@@ -1,7 +1,6 @@
 ---
 title: "Bug-D-prime — Drift backfill VM silent data loss + bucket-name SSOT drift for sig index"
 created: 2026-05-31
-author: slot1-ikenna
 source:
   - "vm-log: gs://deployment-scripts-central-element-323112/vm-logs/mtds-solana-drift-backfill/run.log"
   - "mtds@7e09b2ab (fix)"
@@ -11,6 +10,8 @@ locked_by: live-defi-rollout
 estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.2
+priority: P2
+status: active
 ---
 
 # Bug-D-prime — Drift backfill VM silent data loss + bucket-name SSOT drift

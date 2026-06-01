@@ -2,12 +2,12 @@
 title: quality-gates.sh doesn't write .qg_last_passed_sha sentinel despite codex doc claim
 created: 2026-05-29
 status: RESOLVED 2026-05-29
-author: slot-1 (ikenna)
 parent_epic: infrastructure_master
 related_plans:
   - plans/active/ci_canonical_v2_migration_2026_05_29.md
   - codex/08-workflows/ci-cd-flow.md
 locked_by: live-defi-rollout
+priority: P2
 ---
 
 > **RESOLVED 2026-05-29**: Investigation found the sentinel-write logic WAS implemented in commit

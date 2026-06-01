@@ -3,7 +3,6 @@ title:
   "Central orchestrator API host (i-0c9b283b31d6b5ca7) chronic StatusCheckFailed_Instance — intermittent impairment all
   day 2026-05-29; reboot is workaround"
 created: 2026-05-29
-author: slot-1 (ikenna)
 source:
   - aws ec2 describe-instance-status i-0c9b283b31d6b5ca7 (impaired since 2026-05-29T00:09:00Z initially)
   - aws cloudwatch get-metric-statistics StatusCheckFailed_Instance 2026-05-28T20:00Z → 2026-05-29T15:00Z (datapoints
@@ -14,6 +13,8 @@ source:
   - Internal SSM probe from i-007e8d99d12831578 also confirmed port 8026 unreachable on i-0c9b283b31d6b5ca7 (not just
     from operator's IP)
 locked_by: api_host_chronic_impairment_2026_05_29
+priority: P2
+status: active
 ---
 
 > **🔄 VERIFICATION 2026-06-01 (harsh) — KEEP OPEN; plan covered the defensive layer only.** The
@@ -365,8 +366,8 @@ the impairment. The OOM root cause is pytest test memory usage, not the usage po
 
 ## Phase 2 Supplement — SQLite Lock Contention as Secondary Failure Indicator
 
-**Captured**: 2026-05-29T15:40Z by slot-5 (agent) — `journalctl --boot -2` analysis  
-**Context**: Boot -2 ran 08:48Z-13:07Z and had OOM events at 09:14Z and 12:19Z (see Phase 1 Amendment above).
+**Captured**: 2026-05-29T15:40Z by slot-5 (agent) — `journalctl --boot -2` analysis **Context**: Boot -2 ran
+08:48Z-13:07Z and had OOM events at 09:14Z and 12:19Z (see Phase 1 Amendment above).
 
 ### Boot History (complete)
 

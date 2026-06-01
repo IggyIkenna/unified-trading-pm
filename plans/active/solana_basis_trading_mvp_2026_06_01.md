@@ -1,7 +1,6 @@
 ---
 title: "Solana basis trading MVP — data source redesign (post Bug-D saga)"
 created: 2026-06-01
-author: ikenna
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-defi
 locked_by: live-defi-rollout

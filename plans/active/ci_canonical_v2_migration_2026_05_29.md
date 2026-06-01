@@ -4,13 +4,10 @@ parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P0
 status: active
-type: infra
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
 created: 2026-05-29
-owner: ikenna
-asset_group: cross-cutting
 completion_gates:
   code: C5
   deployment: D3
@@ -39,6 +36,8 @@ repo_gates:
 related_plans:
   - plans/active/issues/workspace_qg_ci_startup_failure_2026_05_26.md
   - plans/active/tradfi_massive_dual_source_2026_05_28.md
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # CI canonical v2 migration — ghost-workflow workaround

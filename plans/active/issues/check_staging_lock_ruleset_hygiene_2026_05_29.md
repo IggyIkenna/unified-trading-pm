@@ -2,11 +2,11 @@
 title: check-staging-lock rulesets in 3 repos still use v1-style required check
 created: 2026-05-29
 status: RESOLVED 2026-05-29
-author: slot-1 (ikenna)
 parent_epic: infrastructure_master
 related_plans:
   - plans/active/ci_canonical_v2_migration_2026_05_29.md
 locked_by: live-defi-rollout
+priority: P2
 ---
 
 > **RESOLVED 2026-05-29**: Option A (additive update) applied. All 3 rulesets now require BOTH `check-staging-lock` AND

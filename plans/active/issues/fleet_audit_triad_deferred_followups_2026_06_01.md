@@ -1,12 +1,13 @@
 ---
 title: "Deferred follow-ups from the 2026-05-27 fleet-audit triad (archived)"
 created: 2026-06-01
-author: harsh
 source:
   - ../canonical_vm_log_archival_2026_05_27.md
   - ../cefi_venue_backfill_coverage_remediation_2026_05_27.md
   - ../deployment_ui_vm_and_venue_coverage_visibility_2026_05_27.md
 locked_by: harsh-fleet-audit
+priority: P2
+status: active
 ---
 
 # Deferred follow-ups — fleet-audit triad
