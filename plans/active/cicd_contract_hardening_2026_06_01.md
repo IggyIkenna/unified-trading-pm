@@ -268,14 +268,25 @@ by a PR:
       Dedicated per-file sweep → canonical `inst.instrument_key.endswith(f":{symbol}")` + a test each (kept separate to
       avoid pulling unrelated files into the codex changed-files scan). `parent_epic: infrastructure_master` (or reassign
       to the instruments/defi reference-data epic at triage).
-- [ ] [SCRIPT] P1. **Revive the SIT chain** — trace the dead **entry dispatch**: `quality-gates-v2` green on `staging`
-      should dispatch `sit-lock` → `sit-gate.yml` → full-workspace SIT → on pass dispatch `staging-validated` →
-      `staging-to-main.yml`. Zero SIT runs ⇒ the entry isn't firing (almost certainly the same "Quality Gates"
-      `workflow_run` name-mismatch class as semver). Fix the entry trigger; `staging-to-main.yml` file is already
-      current (the April `startup_failure` was an old version) and should run once it receives `staging-validated`.
-- [ ] [SCRIPT] P1. **sit-debounce Telegram empty-secret guard** — `sit-debounce-trigger.yml`'s notify step fails
-      `ValueError: unknown url type '***'` on an empty/masked Telegram secret. Guard it (skip on empty, like the Slack
-      step); a missing notify secret must never fail the workflow.
+- [ ] [SCRIPT] P1. **Revive the SIT chain** — PARTIALLY DIAGNOSED 2026-06-01. Mapped chain: `sit-debounce-trigger.yml`
+      (cron `*/2` + `repository_dispatch:staging-changed`) → on trigger dispatches `staging-changed` to **the
+      `system-integration-tests` repo** (not PM `sit-gate`) → SIT runs there → should dispatch `staging-validated` →
+      PM `staging-to-main.yml`. PM `sit-gate.yml` consumes `sit-lock` (zero runs). **Finding:** the entry WAS firing on
+      cron but the *run* showed `failure` purely because the notify job crashed (see next item — now FIXED), which may
+      have masked/short-circuited downstream. **Remaining (cross-repo, hand to a SIT-repo slot):** confirm
+      `system-integration-tests` actually receives `staging-changed` and re-dispatches into the gate (sit-gate `sit-lock`
+      / `staging-validated`); the zero `sit-gate` runs point at the SIT-repo side, not PM. `staging-to-main.yml` is
+      current and fires once it receives `staging-validated`. Re-evaluate after P1 #5's notify fix reaches main via the
+      promotion campaign (the `*/2` cron runs from the default branch).
+- [x] ✅ [SCRIPT] P1. **sit-debounce notify empty/invalid-secret guard** — `unified-trading-pm@242fe1d2c` (LDR). Root
+      cause: `notify-slack.yml` (the reusable the "Telegram — SIT Debounce Triggered" job actually calls) built
+      `urllib.request.Request(webhook)` OUTSIDE its try and only guarded the EMPTY case → a misconfigured/masked
+      `SLACK_WEBHOOK_URL` inherited via `secrets: inherit` raised uncaught `ValueError: unknown url type: '***'` →
+      failed the whole sit-debounce run. Fix: skip (exit 0) on any non-`https://` webhook — notifications are best-effort
+      and must never fail the caller. Benefits **every** notify-slack caller (incl. the ci-failure watcher). Reaches main
+      (where the `*/2` cron runs) via the promotion campaign. **Side-note for operator:** the `SLACK_WEBHOOK_URL` repo
+      secret value itself appears misconfigured (non-https) — fix it if you want sit-debounce notifications to actually
+      send; the guard only stops it from failing the workflow.
 - [ ] [SCRIPT] P1. **Restore `staging_versions` baseline** in `workspace-manifest.json` — semver-agent reads
       `m.get('staging_versions', {})`; the key is ABSENT, so even with the trigger fixed it reads an empty baseline.
       Repopulate from current per-repo versions (the version SSOT semver dispatches into).
