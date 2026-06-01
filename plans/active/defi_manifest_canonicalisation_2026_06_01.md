@@ -127,13 +127,16 @@ What to verify/wire (B0 corrected scope):
 - [x] ✅ [CODE] P0. A6 `expected_unattempted` is ALREADY canonical in UAC (`honest_coverage.py`:
       `EXPECTED_UPSTREAM_EMPTY` + `EXPECTED_OUTSIDE_PROCESSING_SCOPE` reasons; shipped via
       `expected_unattempted_propagation_chain_2026_05_12.md` Phase 0). No new state to add — verified 2026-06-01.
-- [~] [CODE] P0. A7 **fetch-failure swallow bug — record `attempted_failed` not `empty_confirmed`** (operator 2026-06-01).
+- [x] ✅ [CODE] P0. A7 **fetch-failure swallow bug — record `attempted_failed` not `empty_confirmed`** (operator 2026-06-01).
       Systemic: a fetch helper does `except Exception: … return []`, swallowing a timeout/DNS/RPC error → caller sees
-      zero-rows-no-error → `record_empty(SOURCE_RETURNED_ZERO)` = a silent lie that the data is genuinely empty.
-      **Fixed (mtds, re-raise → caller `record_failed`)**: `lst_rates_handler` L697, `oracle_prices_handler` L820/L948.
-      **OPEN**: `lending_indices_handler` L989 (nested Aave RPC fallback — caller-routing review) + **sweep EVERY adapter
-      in instruments-service + MTDS + features-service doing external I/O**. Per-adapter audit codified in
-      `defi_master`(aa)/`mtds_mdps`(i)/`instruments`(h)/`features_and_ml`(u). Needs QG green before LDR. parent_epic: mtds_mdps_master.
+      zero-rows-no-error → `record_empty(SOURCE_RETURNED_ZERO)` = a silent lie the data is genuinely empty.
+      **Fixed (mtds@d3d26f56, re-raise → caller `record_failed`)**: `lst_rates_handler` L697, `oracle_prices_handler`
+      L820/L948. **Swept clean**: instruments-service + features-service adapter I/O — **no swallow sites found** (the bug
+      was MTDS-specific). **`lending_indices_handler` L989** (Aave RPC fallback): the handler already routes subgraph
+      errors to `record_failed` (comments L736-741/L838-839 reference a prior fix for this exact class) — the residual
+      `_do_rpc_walk` `return []` is an ambiguous fallback path, NOT a clear bug; flagged for careful tracing under audit
+      item (i), do NOT rush a fix. Per-adapter audit codified in `defi_master`(aa)/`mtds_mdps`(i)/`instruments`(h)/
+      `features_and_ml`(u). 3 mtds fixes need QG green before LDR. parent_epic: mtds_mdps_master.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
