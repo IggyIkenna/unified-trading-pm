@@ -22,6 +22,58 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Sports manifest + data canonicalisation (L3 owner for sports)
 
+> ## 🎬 SLOT PICKUP PROMPT (clean handoff — paste verbatim into a fresh sports slot, 2026-06-01)
+>
+> You are the **sports** slot for the non-DeFi data+manifest canonicalisation. Your lane is **sports ONLY** — prediction
+> is slot-3's proving ground (done/in-flight), cefi/tradfi are other slots, defi is slot-2. Do not touch them.
+>
+> **FIRST**: read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` and follow ALL rules.
+> `git pull --ff-only origin live-defi-rollout` before starting. You are a slot on `tab/<operator>/<N>` —
+> Commit+Push+Flip every shippable unit in the same turn.
+>
+> **READ FIRST (in order):**
+>
+> 1. `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` — THE SSOT. Read the **"CROSS-AG EXECUTION LESSONS"**
+>    section in full (10 traps the prediction build surfaced — they ALL apply to sports): UAC `candidate_parquet_paths`
+>    is the path SSOT (`day=/pipeline_mode=/asset_group=/…`, pipeline_mode LEFT of asset_group=, byte-exact batch=live);
+>    multi-source completeness (compute legacy-only AND canon-only, never copy-bigger-into-smaller); headline counts are
+>    priors—read data-state; normalise CF-7 BEFORE computing overlap/dedup; sample overlap CONTENT not just cell keys;
+>    "unique" cells are often drift—diagnose; `row_count` NaN ≠ phantom; reconcile manifest GRANULARITY (read parquet
+>    columns the canonical path dropped); `source` authoritative from parquet/path; only the DELETE is
+>    irreversible+gated.
+> 2. `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` — CF-1…CF-12 acceptance + "Audit scope
+>    is a PRIOR, not a ceiling".
+> 3. `codex/05-infrastructure/gcs-object-operations.md` § Migration-script performance contract (ThreadPoolExecutor
+>    walk, wired `--workers`/`--start-date`/`--end-date`, `gcs_copy_object` for path-only moves, `python -u`, per-object
+>    try/except continue, idempotent).
+> 4. **THIS plan** (`sports_manifest_canonicalisation_2026_06_01.md`) — P0 audits flipped; the **E1–E8 execution
+>    checklist** is your work list. Also `sports_master_audit_instructions.md` (CF-coverage rows to flip GREEN) +
+>    `epics/sports_master.md`.
+> 5. Reference migrator to extend: `market-tick-data-service/.../scripts/migrate_sports_canonical.py` (extend to FULL
+>    v9)
+>    - `migrate_sports_hive_key.py`. Reuse the prediction migrator (`migrate_prediction_to_pred_prd_v9.py`) as the
+>      pattern for UAC-SSOT paths + dual-source reconciliation + CF-7 normalisation baked into the transform.
+>
+> **MISSION — execute `sports_manifest_canonicalisation` to CF-1…CF-12 GREEN on REAL data-state, then hand C-GREEN to
+> `bucket_name_ssot…` L6 for the legacy delete.** Sports specifics:
+>
+> - **KEYSTONE (CF-5)**: 584,177 empties are blanket-mislabeled `SOURCE_RETURNED_ZERO` on a schedule-driven AG → relabel
+>   to typed fixture/season/transfer-window/genesis reasons via the UAC coverage oracle
+>   (`clip_dates_to_source_coverage()` / `is_in_known_gap()` / `unified_api_contracts.sports.candidate_parquet_paths`).
+> - **CF-2**: `category=`→`asset_group=sports` on BOTH paths and the rebuilt `_index` (stamp asset_group as a COLUMN,
+>   not just the path — the CF-2 gotcha).
+> - **CF-4**: lift `data_source=` (in path) → `source` COLUMN.
+> - **CF-1/3/8**: v9 + `pipeline_mode=` partition + `available_at` via the `ManifestWriter` rebuild.
+> - **CF-7**: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank venue — normalise IN
+>   the migrator before dedup.
+> - Sports object layout: `processed/by_date/day=/data_type=/league_id=/timeframe=` (+ `instruments-store-sports-prd`).
+>
+> **GATES**: VM-only whole-corpus walks (asia-northeast1, no fire-and-forget: STARTED<60s + progress/hr + STOPPED +
+> T+10min describe); per-AG writer drain before `--apply`; Phase-0 layout audit is MANDATORY+blocking before the walk;
+> additive `--apply` copy is safe to run, only the legacy DELETE (E8) is IRREVERSIBLE + gated on CF-GREEN-on-real-data +
+> the fleet drain (shared w/ slot-2). Capture every new finding as a plan todo + as a cross-AG lesson in the SSOT doc.
+> **DONE** = every (sports × CF-1…CF-12) GREEN on real data-state + handed to L6 + legacy bucket deleted (single SSOT).
+
 > **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
 > `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** and glued
 > venues — a FULL re-canonicalisation, not the headline cell-count (same shape as the cefi reference incident). **CF-2
@@ -142,14 +194,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 ### P0 — pre-walk audit + scope
 
-> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: the headline ("0 legacy-only / DATA
-> complete / verify-only") is a coarse prior. Read DATA-STATE. If the audit finds MORE form debt than implied (e.g. cefi
-> turned out 100% v8 / no source / no asset_group / blank pipeline_mode — a full re-canonicalisation), fix ALL of it in
-> this one walk — NOT descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design
+> **Scope is a prior, not a ceiling — fix-fully-autonomously (HARD RULE)**: the headline ("0 legacy-only / DATA complete
+> / verify-only") is a coarse prior. Read DATA-STATE. If the audit finds MORE form debt than implied (e.g. cefi turned
+> out 100% v8 / no source / no asset_group / blank pipeline_mode — a full re-canonicalisation), fix ALL of it in this
+> one walk — NOT descoped, deferred, post-cutover, or `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design
 > fork). SSOT: `canonical_form_cross_service_audit_checklist.md` § "Audit scope is a PRIOR, not a ceiling".
 
-- [x] ✅ [DATA] P0. Live sports `_index` DATA-STATE (slot-3 tool, 2026-06-01): **100% v8** (0/786,408 v9 — CF-1 RED);
-      no `category`/`asset_group` col (CF-2 rows vacuous); **`pipeline_mode` blank 0/786,408 (CF-3 RED)**; **no `source`
+- [x] ✅ [DATA] P0. Live sports `_index` DATA-STATE (slot-3 tool, 2026-06-01): **100% v8** (0/786,408 v9 — CF-1 RED); no
+      `category`/`asset_group` col (CF-2 rows vacuous); **`pipeline_mode` blank 0/786,408 (CF-3 RED)**; **no `source`
       column (CF-4 RED)**; **no `available_at` column (CF-8 RED — only `written_at`)**. capture_status: empty_confirmed
       **584,177** / captured 202,067 / attempted_failed 164. **KEYSTONE FINDING — CF-5 RED-by-mislabel: ALL 584,177
       empties are labeled `SOURCE_RETURNED_ZERO`** (a single blanket reason on a schedule-driven AG) — these are exactly
@@ -158,10 +210,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       on sports IS the mislabel — treat CF-5 RED until the oracle relabel lands.)
 - [x] ✅ [DATA] P0. **0 legacy-only cells confirmed** (legacy 32,755 · canonical 32,869 · overlap 32,755) — sports DATA
       is complete; the walk is FORM-only (v9 + partition + source + typed reasons), no data-loss-gap copy needed.
-- [ ] [DATA] P0. Object-path scheme (slot-3 probe): `processed/by_date/day=YYYY-MM-DD/data_type=…/league_id=…/
-      timeframe=…` — has `day=`/`data_type=`/`league_id=`/`timeframe=` hive BUT **no `asset_group=` and no
-      `pipeline_mode=` segment** (CF-2 paths + CF-3 partition RED). The C0 walk adds `asset_group=sports` +
-      `pipeline_mode=` to all object paths; lift `data_source=` (where present) → `source` column.
+- [ ] [DATA] P0. Object-path scheme (slot-3 probe):
+      `processed/by_date/day=YYYY-MM-DD/data_type=…/league_id=…/     timeframe=…` — has
+      `day=`/`data_type=`/`league_id=`/`timeframe=` hive BUT **no `asset_group=` and no `pipeline_mode=` segment** (CF-2
+      paths + CF-3 partition RED). The C0 walk adds `asset_group=sports` + `pipeline_mode=` to all object paths; lift
+      `data_source=` (where present) → `source` column.
 - [ ] [DATA] P1. Verify venue/league/data_type strings are canonical: data-state shows data_type CASE DRIFT —
       `ODDS`/`ODDS_MOVEMENT`/`ODDS_SNAPSHOT` (upper) coexist with `odds_horizon_bucket*` (lower) + `trades`/
       `ARBITRAGE_OPPORTUNITY`; venue set looks canonical (bookmaker names) but blank `''` present. Diagnose/relabel the
@@ -172,8 +225,8 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 - [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
       top-level trees + nested layouts across BOTH sports surfaces (`processed/by_date/…`, `sports_reference/by_date/…`,
       any `day=/category=` / `data_source=` variants) before the walk; classify duplicate (keep freshest) vs
-      complementary (migrate all → canonical v9). Cover every in-scope layout or the walk is incomplete (review-blocking).
-      SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
+      complementary (migrate all → canonical v9). Cover every in-scope layout or the walk is incomplete
+      (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -214,26 +267,32 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 > CF debt is in the `_index` MANIFEST + object PATHS, NOT the raw tick parquets. See
 > `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + layout map. sports raw = full hive
-> `day=/category=/data_source=/venue=/league_id=/instrument_type=/data_type=` (parquet already has `source`+`data_source`
-> cols). **Keystone**: 584,177 empties are blanket `SOURCE_RETURNED_ZERO` — relabel to typed fixture/season reasons.
+> `day=/category=/data_source=/venue=/league_id=/instrument_type=/data_type=` (parquet already has
+> `source`+`data_source` cols). **Keystone**: 584,177 empties are blanket `SOURCE_RETURNED_ZERO` — relabel to typed
+> fixture/season reasons.
 >
 > ⚠️ **IRREVERSIBLE — E8 DELETES legacy `market-data-tick-sports` permanently.** Do not run E2–E8 until the canonical
-> target (v9, `day=/pipeline_mode=/asset_group=sports/…`, source col, typed reasons) is CONFIRMED CORRECT at verify.
-> One pass, no confusion — once legacy is deleted it is gone.
+> target (v9, `day=/pipeline_mode=/asset_group=sports/…`, source col, typed reasons) is CONFIRMED CORRECT at verify. One
+> pass, no confusion — once legacy is deleted it is gone.
 
-- [ ] [DATA] P0. E1 Phase-0 layout audit on both sports surfaces (`market-data-tick-sports-prd` + `instruments-store-sports-prd`)
-      via `cf_layout_audit`; confirm `processed/` + `raw_tick_data/` (category=/data_source=) + `sports_reference/`.
-- [ ] [DATA] P0. E2 Build/extend `migrate_sports_canonical.py` to v9-canonical (perf-contract): `category=`→`asset_group=sports`,
-      add `pipeline_mode=batch_{api_football,footystats,odds_api,understat,transfermarkt,…}`; keep `source` col (already present).
+- [ ] [DATA] P0. E1 Phase-0 layout audit on both sports surfaces (`market-data-tick-sports-prd` +
+      `instruments-store-sports-prd`) via `cf_layout_audit`; confirm `processed/` + `raw_tick_data/`
+      (category=/data_source=) + `sports_reference/`.
+- [ ] [DATA] P0. E2 Build/extend `migrate_sports_canonical.py` to v9-canonical (perf-contract):
+      `category=`→`asset_group=sports`, add
+      `pipeline_mode=batch_{api_football,footystats,odds_api,understat,transfermarkt,…}`; keep `source` col (already
+      present).
 - [ ] [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
 - [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): at manifest rebuild, relabel the 584,177 `SOURCE_RETURNED_ZERO`
-      empties → typed UAC reasons (`EXPECTED_NO_FIXTURE`/`PRE_SEASON`/`POST_SEASON`/`PAUSED_LEAGUE`/`OUTSIDE_TRANSFER_WINDOW`/
+      empties → typed UAC reasons
+      (`EXPECTED_NO_FIXTURE`/`PRE_SEASON`/`POST_SEASON`/`PAUSED_LEAGUE`/`OUTSIDE_TRANSFER_WINDOW`/
       `SOURCE_DOES_NOT_COVER_LEAGUE`/`FIXTURE_POSTPONED|CANCELLED`/`KNOWN_SOURCE_GAP`/`NO_MAPPING`) via the UAC coverage
       oracle (`clip_dates_to_source_coverage`/`is_in_known_gap`/`league_data`) — never re-derived per consumer.
-- [ ] [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` + `available_at`
-      → consolidator → v9. Also fix the writer to emit typed reasons going forward (CF-5 write-path).
-- [ ] [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank venue.
+- [ ] [DATA] P0. E6 Manifest rebuild: `ManifestWriter` stamping `source` (path→col lift) + `pipeline_mode` +
+      `available_at` → consolidator → v9. Also fix the writer to emit typed reasons going forward (CF-5 write-path).
+- [ ] [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank
+      venue.
 - [ ] [DATA] P0. E8 Verify: `cf_manifest_audit_2026_06_01.py` on both sports surfaces → CF-1…CF-12 GREEN (esp. 0 blanket
       SOURCE_RETURNED_ZERO); flip CF-coverage in `sports_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after
       GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-sports` permanently**.
