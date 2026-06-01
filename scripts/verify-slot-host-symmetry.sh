@@ -113,7 +113,14 @@ fi
 
 # 6. Workspace .tabs/ exists with ≥1 slot worktree
 if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
-    slot_count=$(find "${WORKSPACE_ROOT}/.tabs" -maxdepth 1 -mindepth 1 -type d -regex '.*/[0-9]+' 2>/dev/null | wc -l | tr -d ' ')
+    # Portable numeric-dir count. BSD find (macOS) -regex uses basic regex where `+`
+    # is literal, so '.*/[0-9]+' matched nothing → false "no slot dirs" on the operator
+    # laptop. Count via a shell glob + bash numeric test instead (works on macOS + Linux).
+    slot_count=0
+    for _d in "${WORKSPACE_ROOT}"/.tabs/*/; do
+        _b="$(basename "${_d}")"
+        [[ "${_b}" =~ ^[0-9]+$ ]] && slot_count=$((slot_count + 1))
+    done
     if [[ ${slot_count} -ge 1 ]]; then
         ok "${slot_count} slot worktree(s) under .tabs/"
     else
