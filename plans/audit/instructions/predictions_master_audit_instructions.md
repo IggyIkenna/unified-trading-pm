@@ -48,23 +48,24 @@ spread strategy. Key invariant: binary resolution events handled correctly; no h
 - [ ] (g) **Credential asks filed**: if Polymarket or Kalshi API keys not provisioned, `BLOCKED-CREDENTIALS` ping filed
       with account type, cost, and unblocks.
 
-### Data-source provenance — N/A by design (venue ≠ source)
+### Data-source provenance — stamp source NOW; venue ≠ source still holds
 
-> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`). Unlike
-> tradfi/cefi/defi/sports, prediction is **multi-source-N/A by design**: Polymarket and Kalshi are separate **venues**,
-> not two sources of one shard. The `arbitrage_price_dispersion` model compares prices **across venues** at the
-> feature-calculation layer, not via per-row source resolution. So `source=""` is correct for prediction and no
-> enforcement gate is expected. These items CONFIRM the invariant holds (a regression here would be silently treating a
-> venue as a source, or vice-versa).
+> Codified 2026-06-01 (crosscutting plan: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`).
+> **TWO distinct facts, both true:** (1) **provenance is universal** — every prediction cell stamps its `source`
+> (`polymarket_clob` / `polymarket_gamma_api` / `kalshi_*`) NOW, even though each venue has one source today, for
+> swap-resilience (a future Polymarket data-provider change is "the same issue"); a blank `source` is RED. (2) **venue ≠
+> source** — Polymarket and Kalshi are separate **venues**, NOT two sources of one shard; the `arbitrage_price_dispersion`
+> model compares across venues at the feature layer, never via per-row source merge. Stamping each venue-cell's own
+> `source` (fact 1) does NOT collapse venues into sources (fact 2).
 
-- [ ] (h) **Venue ≠ source invariant holds**: prediction shards are keyed by `venue` (POLYMARKET / KALSHI); the
-      dispersion strategy consumes separate per-venue rows. No code path expects a source-disambiguated merge of two
-      venues into one shard. Trace: strategy-service prediction archetype → features-service spread calc.
-- [ ] (i) **Kalshi lands as a venue, not a source**: when Kalshi capture ships, it is a `venue=KALSHI` addition + a
-      `SOURCE_PRIORITY[("prediction", …)]` venue entry — NOT a second source of a Polymarket shard. Confirm the deferred
-      Kalshi item in `source_priority.py` is framed as venue, not source.
-- [ ] (j) **`source=""` is correct here**: prediction writers are NOT required to pass `source=`; the registry-driven
-      gate (see crosscutting plan) must exempt prediction because no `(prediction, data_type)` cell has >1 source.
+- [ ] (h) **Writers stamp `source` on every prediction cell now**: pass `source=` (the venue's data source string from
+      `SOURCE_PRIORITY`) at every prediction write. Read ACTUAL prod rows — RED on any blank `source`.
+      `market-tick-data-service/.../engine/orchestrator.py` (`record_captured_from_counts`).
+- [ ] (i) **Venue ≠ source invariant holds**: prediction shards are keyed by `venue` (POLYMARKET / KALSHI); the
+      dispersion strategy consumes separate per-venue rows. No code path merges two venues into one shard via source
+      resolution. Trace: strategy-service prediction archetype → features-service spread calc.
+- [ ] (j) **Kalshi lands as a venue, not a source**: when Kalshi capture ships, it is a `venue=KALSHI` addition (with its
+      own `source` stamped) — NOT a second source of a Polymarket shard.
 
 ### E2E Batch, Paper, and Live Verification
 

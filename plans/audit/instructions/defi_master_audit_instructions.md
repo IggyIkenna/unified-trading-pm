@@ -144,16 +144,19 @@ grep code truth, compare to the doc, classify each as `aligned` / `codex-stale` 
 > `("defi","native_staking_rates")=["solana_rpc","helius_rpc"]`, plus APR/rate metrics available from DefiLlama vs
 > protocol subgraph vs direct on-chain read. Design (operator-confirmed 2026-06-01): same hive drop, disambiguated by a
 > **row-level `source` column** (NOT a path key), resolved downstream via `select_primary_available_source()`.
+> **Provenance is UNIVERSAL** (operator 2026-06-01): every DeFi cell stamps its `source` (`onchain_subgraph` etc.) — not
+> just the 2 multi-source cells — for swap-resilience. The multi-source cells (`oracle_prices`, `native_staking_rates`)
+> *additionally* need resolution.
 >
 > **Current state (audit 2026-06-01, RED): DeFi writes `source=""` with no gate and no read-time reconciliation.**
 > `DefiManifestRecorder.record_captured()` routes through the legacy `ManifestWriter.add()` path, which has no `source`
-> parameter — so two providers for the same `(protocol/feed, day)` **collapse last-write-wins, silently dropping the
-> divergent value** with no conflict surfaced. All items below are data-state verifiable, not constant-verifiable.
+> parameter — so the column is blank everywhere, and the two multi-source providers for one `(protocol/feed, day)`
+> **collapse last-write-wins**, silently dropping the divergent value. All items below are data-state verifiable.
 
-- [ ] (n1) **DeFi writers carry `source`**: `DefiManifestRecorder.record_captured()` accepts + forwards `source` via
-      `ManifestWriter.record_captured()` (not the legacy `add()`); every DeFi handler passes `source` from the
-      `SOURCE_PRIORITY` closed set. `market-tick-data-service/.../cli/handlers/_defi_manifest.py` + every `*_handler.py`.
-      Read ACTUAL prod rows — RED on blank `source` for any cell whose `SOURCE_PRIORITY` entry has >1 source.
+- [ ] (n1) **DeFi writers carry `source` on EVERY cell**: `DefiManifestRecorder.record_captured()` accepts + forwards
+      `source` via `ManifestWriter.record_captured()` (not the legacy `add()`); every DeFi handler passes `source` from
+      the `SOURCE_PRIORITY` closed set. `market-tick-data-service/.../cli/handlers/_defi_manifest.py` + every
+      `*_handler.py`. Read ACTUAL prod rows — **RED on any blank `source`** (all defi cells, not only multi-source ones).
 - [ ] (n2) **Per-row source on multi-provider handlers**: oracle (`pyth_hermes`/`chainlink`) and native-staking
       (`solana_rpc`/`helius_rpc`) handlers already resolve per-row `pipeline_mode` at the callsite — stamp the matching
       `source` on each row in the same place. APR/rate handlers stamp the actual provider used (`defillama` vs

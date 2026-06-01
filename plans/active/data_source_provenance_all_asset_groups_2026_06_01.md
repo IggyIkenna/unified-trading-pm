@@ -56,43 +56,57 @@ read-time reconciliation — so two sources for one cell silently collapse (last
 
 ## Design decision (SSOT for this plan)
 
-The enforcement gate must be **driven by `SOURCE_PRIORITY`, not by a hardcoded asset_group list**. Generalize the
-existing TradFi gate (`manifest_writer.py` `if category == "tradfi" and not source`) to:
+**Source is stamped on EVERY cell, ALL asset groups — even when only one source is currently declared.** (Operator
+2026-06-01: "I don't care if there are two data sources yet — I may find an alternative for Tardis, so it's the same
+issue.") The source a cell uses can change over time — a Tardis replacement, a second vendor added, a provider swapped.
+If you only start stamping `source` at the moment a 2nd source appears, the entire pre-existing single-source corpus is
+left unlabelled and cannot be distinguished from the new source after the swap. So stamping is **universal**, not gated
+on cardinality.
 
-> **Raise `MissingSourceError` when `SOURCE_PRIORITY[(asset_group, data_type)]` has >1 entry and `source` is blank.**
+Generalize the existing TradFi gate (`manifest_writer.py` `if category == "tradfi" and not source`) to:
 
-This auto-covers tradfi + the multi-source cells of cefi/defi/sports, and auto-exempts single-source cells and
-prediction (Polymarket/Kalshi are separate **venues**, not sources — multi-source is N/A there by design). No asset_group
-list to maintain; the registry is the SSOT.
+> **Raise `MissingSourceError` when `source` is blank OR not a member of `SOURCE_PRIORITY[(asset_group, data_type)]`, for
+> every captured cell.**
+
+`SOURCE_PRIORITY` validates *which* source is allowed (closed set) and drives *resolution* when >1 exists — it does NOT
+decide *whether* to stamp. Cardinality (>1) governs resolution only. No asset_group is exempt; no hardcoded list; the
+registry is the SSOT for the allowed source strings (it already enumerates the current source for every cell, e.g.
+`("cefi", …)=["tardis"]`, `("prediction", "trades")=["polymarket_clob"]`).
 
 ## Audit findings (2026-06-01 crosscutting sweep — the exposed gaps)
 
-| Asset group | Multi-source reality | `source` recorded | Enforced | Downstream resolves | Status |
-| ----------- | -------------------- | ----------------- | -------- | ------------------- | ------ |
-| TradFi      | databento + massive (+ yahoo/barchart VIX) | ✅ v9 column | ✅ tradfi gate | ✅ SOURCE_PRIORITY | GREEN (verify-in-prod via audit items h–o) |
-| DeFi        | **2 multi-source cells declared**: `oracle_prices`=pyth_hermes+chainlink, `native_staking_rates`=solana_rpc+helius_rpc (source_priority.py:201,205) | ❌ writers route via `add()`, never pass source (`_defi_manifest.py:174`, docstring L144) | ❌ | ❌ dead code | **🔴 RED — the only LIVE silent-collapse today (oracle/staking last-write-wins)** |
-| CeFi        | **0 multi-source cells declared** — all `["tardis"]` (source_priority.py:152-160); Tardis-vs-venue-live is *latent*, not yet in registry | n/a (no multi-source cell) | n/a (gate correctly requires nothing) | n/a | **🟢 GREEN today / LATENT** — gap only when a 2nd cefi source lands (expand registry first) |
-| Sports      | **1 multi-source cell**: `FIXTURES`=api_football+footystats (source_priority.py:116-119; footystats deferred Phase 1B) | ❌ source in PATH not column | ❌ | ❌ | **🔴 RED** — path→column migration |
-| Prediction  | Polymarket/Kalshi are separate venues; dispersion is cross-venue at feature level | n/a (correct) | n/a | n/a | 🟢 GREEN — N/A by design |
+Verdict basis: **every cell must stamp `source` now** (swap-resilience) — so a single-source cell with a blank `source`
+column is RED, not exempt.
+
+| Asset group | Current source(s) | `source` stamped today | Status |
+| ----------- | ----------------- | ---------------------- | ------ |
+| TradFi      | databento (+massive / yahoo / barchart) | ✅ v9 column + gate (`manifest_writer.py:2430`) | 🟡 code GREEN; **backfill now RUNNABLE** — `MASSIVE_API_KEY` provided (use S3 flat-files for bulk history; stamp `source=databento` on legacy rows) |
+| DeFi        | `onchain_subgraph`/`onchain_rpc` (most), `oracle_prices`=pyth+chainlink, `native_staking_rates`=solana_rpc+helius_rpc | ❌ writers route via `add()`, never pass source (`_defi_manifest.py:174`, docstring L144) | **🔴 RED** — no cell stamps source; the 2 multi-source cells additionally collapse last-write-wins **today** |
+| CeFi        | `tardis` (single, but **operator may swap for an alternative** → stamp now) | ❌ source `""` | **🔴 RED** — stamp `source=tardis` on every cefi cell NOW so a future Tardis-swap/2nd-source is distinguishable |
+| Sports      | `api_football`/`footystats`/`odds_api`/… (`FIXTURES` already 2-source) | ❌ source in PATH not column | **🔴 RED** — path→column migration + stamp every cell |
+| Prediction  | `polymarket_clob`/`polymarket_gamma_api`/… (single per venue) | ❌ source `""` | **🔴 RED** — stamp source now (swap-resilience). *Venue ≠ source still holds*: cross-venue dispersion (Polymarket vs Kalshi) stays a feature-layer concern, NOT a source merge |
 
 > **Audit run 2026-06-01 (code write-path).** Full result + per-item evidence:
 > [`plans/audit/results/data_source_provenance_audit_2026_06_01.md`](../audit/results/data_source_provenance_audit_2026_06_01.md).
-> Correction vs the initial sweep: **cefi is NOT a current RED** (zero multi-source cells declared — latent, P2); the one
-> LIVE silent-collapse is **defi** `oracle_prices` + `native_staking_rates` (P0).
+> Correction (operator 2026-06-01): **provenance is universal** — every cell stamps `source` now, even single-source,
+> because any source may later be swapped/supplemented. So **all five asset groups are RED/owed** for stamping (defi is
+> additionally the one LIVE multi-source collapse). TradFi backfill is **unblocked** (`MASSIVE_API_KEY` provided).
 
 ## Phased execution
 
-### Phase 1 — UAC + UTL: registry-driven source gate (P0, foundation)
+### Phase 1 — UAC + UTL: universal source gate (P0, foundation)
 
-- [ ] [UAC] P0. Generalise the source-enforcement rule to be SOURCE_PRIORITY-driven: expose a helper
-      `source_required(asset_group, data_type) -> bool` returning True when `SOURCE_PRIORITY[(asset_group, data_type)]`
-      has >1 entry. `unified-api-contracts/.../canonical/crosscutting/source_priority.py`.
-- [ ] [UTL] P0. Replace the hardcoded `if category == "tradfi" and not source` gate with
-      `if source_required(category, data_type) and not source: raise MissingSourceError(...)`.
-      `unified-trading-library/.../manifest_writer.py:2426`. Keep single-source + prediction cells exempt.
-- [ ] [TEST] P0. Extend `unified-trading-library/tests/unit/test_manifest_writer_source.py`: multi-source cefi/defi/sports
-      cells without `source=` MUST raise; single-source + prediction cells MUST NOT raise; both sources on one cell
-      produce two manifest rows.
+- [ ] [UAC] P0. Expose `validate_source(asset_group, data_type, source) -> None` (raises) in
+      `unified-api-contracts/.../canonical/crosscutting/source_priority.py`: a non-blank `source` is REQUIRED for every
+      cell that has a `SOURCE_PRIORITY` entry, and it must be a **member** of that entry's list (closed set). Cardinality
+      (>1) is NOT the trigger — single-source cells require source too. (A cell with no `SOURCE_PRIORITY` entry at all is
+      the only exemption; treat that as a registry gap to fix, not a pass.)
+- [ ] [UTL] P0. Replace the hardcoded `if category == "tradfi" and not source` gate with the universal rule: raise
+      `MissingSourceError` when `source` is blank OR not in `SOURCE_PRIORITY[(category, data_type)]`, for **all** asset
+      groups. `unified-trading-library/.../manifest_writer.py:2426`. No single-source / prediction exemption.
+- [ ] [TEST] P0. Extend `unified-trading-library/tests/unit/test_manifest_writer_source.py`: a cell from ANY asset group
+      (incl. single-source cefi `tardis`, prediction `polymarket_clob`) without `source=` MUST raise; a `source` not in
+      the cell's SOURCE_PRIORITY list MUST raise; two valid sources on one cell produce two manifest rows.
 
 ### Phase 2 — DeFi writer rewiring (P0, biggest gap)
 
@@ -107,20 +121,21 @@ list to maintain; the registry is the SSOT.
 - [ ] [AUDIT] P1. Features-service DeFi onchain calculators — audit every emit that touches a DeFi data_type and confirm
       source is stamped. `features-service/.../onchain/`.
 
-### Phase 3 — CeFi writer source (P2 — LATENT; audit 2026-06-01: cefi has 0 multi-source cells declared today)
+### Phase 3 — CeFi writer source (P1 — stamp `source=tardis` NOW for swap-resilience)
 
-> Audit 2026-06-01 downgraded cefi P1→P2: `SOURCE_PRIORITY` lists only `["tardis"]` for all 9 cefi data_types, so there
-> is **no current violation** — the registry-driven gate (Phase 1) correctly requires nothing. This phase is preparatory:
-> do it **when/if a live per-venue cefi source is actually added** alongside the Tardis archive. Expand the registry
-> first (todo 1), then stamping (todo 2) becomes required automatically via the Phase 1 gate.
+> Operator 2026-06-01: "I may find an alternative for Tardis, so it's the same issue." cefi has one source today
+> (`tardis`) but it MUST be stamped on every cefi cell **now** — so that when Tardis is replaced or a 2nd source is
+> added, the existing corpus is already labelled `source=tardis` and downstream can distinguish/resolve. This is NOT
+> latent; a blank `source` on cefi today is a real gap (the universal Phase 1 gate requires it).
 
-- [ ] [UAC] P2. Expand CeFi `SOURCE_PRIORITY` entries from sole `tardis` to ordered multi-source lists where a live
-      per-venue path exists (e.g. `["<venue>_live", "tardis"]` for funding/marks/ticks). `source_priority.py:152-160`.
-- [ ] [MTDS] P2. Thread `source=` (`tardis` vs `<venue>`) through CeFi adapter writes + extend
+- [ ] [MTDS] P1. Thread `source="tardis"` through every CeFi adapter write + extend
       `record_empty_for_shard`/`record_failed_for_shard` to accept + forward `source`.
-      `market-data-processing-service/.../core/canonical_writer.py`.
-- [ ] [TEST] P2. CeFi multi-source unit test: tardis + venue_live on the same cell → two manifest rows, resolved by
-      priority at read time.
+      `market-data-processing-service/.../core/canonical_writer.py`. (No `SOURCE_PRIORITY` change needed yet — `tardis`
+      is already the declared source; expand the list only when the alternative actually lands.)
+- [ ] [TEST] P1. CeFi unit test: a cefi cell without `source=` raises; `source="tardis"` persists; a future
+      `["<alt>", "tardis"]` registry expansion resolves two sources by priority.
+- [ ] [DATA] P2. Backfill `source="tardis"` onto existing cefi manifest rows (single-walk; named successor if a 2nd
+      source has already begun writing). So the historical corpus is provenance-labelled before any Tardis swap.
 
 ### Phase 4 — Sports writer source (P1)
 
@@ -149,14 +164,22 @@ list to maintain; the registry is the SSOT.
 - [ ] [CODEX] P1. Generalise `codex/02-data/contracts-scope-and-layout.md` § "TradFi canonical schema — dual-source
       source column" + `honest-absence-downstream-handling.md` multi-source consumer policy to all multi-source asset
       groups (currently scoped to tradfi).
-- [ ] [PREDICTION] P2. Document in codex that prediction is multi-source-N/A by design (venue ≠ source); when Kalshi
-      lands it is a **venue addition**, not a second source of a Polymarket shard. (From prediction audit — not a gap.)
+- [ ] [MTDS] P1. **Prediction — stamp `source` on every cell NOW** (`polymarket_clob` / `polymarket_gamma_api` /
+      `kalshi_*`): single-source today but stamp for swap-resilience (a future Polymarket data-provider change). Required
+      by the universal Phase 1 gate. `market-tick-data-service/.../engine/orchestrator.py` (`record_captured_from_counts`).
+- [ ] [CODEX] P2. Document the prediction invariant precisely: stamping `source` ≠ treating venues as sources —
+      Polymarket/Kalshi stay separate **venues**, cross-venue dispersion is a feature-layer concern, and when Kalshi lands
+      it is a venue addition; AND each venue's cell still stamps its own source. Both are true.
 
 ### Phase 7 — Prod data-state verification (P1, post-enforcement)
 
+- [ ] [DATA] P1. **TradFi backfill UNBLOCKED** (`MASSIVE_API_KEY` provided by operator 2026-06-01) — run the dual-source
+      backfill per `tradfi_massive_dual_source_2026_05_28.md` Phase 5: stamp `source=databento` on legacy tradfi rows +
+      ingest MASSIVE via **S3 flat-files** for bulk history (flat-files are independent of the REST tier — the bulk path;
+      REST for incremental/live). Unblock the dual-source plan's deferred table accordingly.
 - [ ] [AUDIT] P1. After enforcement lands, read ACTUAL `source` column distribution per (asset_group, venue, data_type)
-      in prod manifests/parquets — confirm zero blank source on multi-source cells. Data-state, NOT constant (manifest-v8
-      lesson: constant said 8 while 0% of rows were v8). Report per-cell source histogram.
+      in prod manifests/parquets — confirm **zero blank source on EVERY cell, all asset groups** (not just multi-source).
+      Data-state, NOT constant (manifest-v8 lesson: constant said 8 while 0% of rows were v8). Report per-cell histogram.
 
 ## Out of scope (deferred — named successors required)
 

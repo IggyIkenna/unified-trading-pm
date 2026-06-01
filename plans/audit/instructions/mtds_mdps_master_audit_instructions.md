@@ -86,14 +86,14 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
 - [ ] (h) **No subprocess gsutil/gcloud for per-object ops**: all per-object GCS operations use UTL library. Grep:
       `rg "subprocess.*gsutil|subprocess.*gcloud" market-tick-data-service/ --include="*.py"` — should be 0 hits
 
-- [ ] (j) **Source provenance stamped at write time — registry-driven (codified 2026-06-01)**: every MTDS
-      adapter/handler whose `(asset_group, data_type)` has >1 entry in UAC `SOURCE_PRIORITY` MUST pass `source=` (a
-      closed-set source string) to `record_captured`. Today only `category=="tradfi"` is gated; cefi/defi/sports write
-      `source=""`, and DeFi handlers route via `DefiManifestRecorder` → legacy `ManifestWriter.add()` which drops
-      `source` entirely → silent last-write-wins when two providers hit one cell. Generalise the gate to fire on any
-      multi-source cell (per `source_required(asset_group, data_type)`). Verify by reading ACTUAL prod rows per
-      multi-source cell (NOT the code constant) — RED on blank `source`. Grep callsites:
-      `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg "source="`. SSOT:
+- [ ] (j) **Source provenance stamped at write time — UNIVERSAL (codified 2026-06-01, operator)**: **every** MTDS
+      adapter/handler MUST pass a non-blank `source=` (a closed-set string from `SOURCE_PRIORITY`) to `record_captured` —
+      on every cell, all asset groups, **even single-source ones** (operator: "I may find an alternative for Tardis, so
+      it's the same issue" — stamp now so a future source swap is distinguishable). NOT gated on cardinality. Today only
+      `category=="tradfi"` is gated; cefi (`tardis`)/defi/sports/prediction write `source=""`, and DeFi handlers route via
+      `DefiManifestRecorder` → legacy `ManifestWriter.add()` which drops `source` entirely (defi multi-source cells
+      additionally collapse last-write-wins). Verify by reading ACTUAL prod rows — **RED on any blank `source`**. Grep
+      callsites: `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg "source="`. SSOT:
       `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home: `manifest_master` item (i).
 
 ### Batch vs Live Parity
