@@ -162,6 +162,12 @@ if [ "$SKIP_AUTH_CHECK" = false ] && [ "$CHECK_ONLY" = false ]; then
   # 0. Load a workflow-capable GH_TOKEN (GH_PAT from Secret Manager) so gh + git can edit
   #    .github/workflows. The keyring login token lacks 'workflow' scope — see
   #    scripts/workspace/load-gh-token.sh + CLAUDE.md § "Workflow-capable GH_TOKEN everywhere".
+  # 0a. Proactively refresh the .act-secrets GH_PAT cache from Secret Manager so it rarely
+  #     goes stale (P2 493) — complements load-gh-token.sh's runtime validity-probe. No-op if
+  #     SM is unavailable (leaves any existing file untouched).
+  if [ -f "${WORKSPACE_ROOT:-..}/unified-trading-pm/scripts/workspace/generate-act-secrets.sh" ]; then
+    bash "${WORKSPACE_ROOT:-..}/unified-trading-pm/scripts/workspace/generate-act-secrets.sh" --refresh >/dev/null 2>&1 || true
+  fi
   if [ -f "${WORKSPACE_ROOT:-..}/unified-trading-pm/scripts/workspace/load-gh-token.sh" ]; then
     # shellcheck disable=SC1091
     source "${WORKSPACE_ROOT:-..}/unified-trading-pm/scripts/workspace/load-gh-token.sh" || true
