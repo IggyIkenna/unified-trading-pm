@@ -461,6 +461,17 @@ What to verify/wire (B0 corrected scope):
 >       Only then is C-GREEN.
 > - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4
 >       GREEN, so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
+> - [ ] [CODE] P1. C0-RD6 — **exclude the exact-alias columns from the `dex_swaps` superset union** (DeFi #4, from
+>       archived `features_service_defi_data_loading_blockers`). Slot-7 DeFi #3 investigation confirmed `swap_count` ==
+>       `trade_count` and `volume_quote_usd` == `volume` (intentional aliases populated in
+>       `market_data_processing_service/app/adapters/defi/swap_adapter.py:159-160`). Dropping them is **lossless-in-
+>       information** (no data lost — the values survive in `trade_count`/`volume`), so it is compatible with the
+>       operator "lossless superset-union, drop nothing-of-value" rule. **Fold into the C0-RD3 union for `dex_swaps`
+>       BEFORE C0-RD4 apply** (so the single canonical write omits the 2 dup cols — currently `dex_swaps` union = 31 cols
+>       → 29); if C0-RD4 has already applied, this becomes a scheduled post-C0 next-migration-window column cleanup (no
+>       extra whole-corpus walk per single-walk discipline). Paired non-manifest edits: drop the 2 columns from UAC
+>       `DEX_SWAPS_SCHEMA` + stop emitting them in `swap_adapter.py`. parent_epic: manifest_master. Repos:
+>       unified-api-contracts + market-data-processing-service.
 
 ### C0-CN — Canonical-naming reconciliation (operator-locked 2026-06-01) — SSOT `codex/02-data/defi-canonical-naming-ssot.md`
 
