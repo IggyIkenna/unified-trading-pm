@@ -134,8 +134,11 @@ column is RED, not exempt.
       is already the declared source; expand the list only when the alternative actually lands.)
 - [ ] [TEST] P1. CeFi unit test: a cefi cell without `source=` raises; `source="tardis"` persists; a future
       `["<alt>", "tardis"]` registry expansion resolves two sources by priority.
-- [ ] [DATA] P2. Backfill `source="tardis"` onto existing cefi manifest rows (single-walk; named successor if a 2nd
-      source has already begun writing). So the historical corpus is provenance-labelled before any Tardis swap.
+- [ ] [DATA] P2. Backfill `source="tardis"` onto the existing cefi corpus — **two steps** (see § Migration scope):
+      (1) data-parquet column backfill (walk+rewrite every cefi parquet, stamp `source=tardis`; template
+      `backfill_tradfi_source_column.py`) — **bundle into a pending cefi-bucket migration window, NOT a standalone walk**
+      (single-walk discipline); (2) manifest re-consolidation after. So the historical corpus is labelled before any
+      Tardis swap.
 
 ### Phase 4 — Sports writer source (P1)
 
@@ -181,11 +184,34 @@ column is RED, not exempt.
       in prod manifests/parquets — confirm **zero blank source on EVERY cell, all asset groups** (not just multi-source).
       Data-state, NOT constant (manifest-v8 lesson: constant said 8 while 0% of rows were v8). Report per-cell histogram.
 
+## Migration scope — `source` lives in TWO places (do not conflate)
+
+`source` is recorded **both** as a per-row column inside the GCS **data parquets** AND as a field on the **manifest**
+row (confirmed: UTL writegate v9 adds the column; `backfill_tradfi_source_column.py` "single-walk pass over every TradFi
+parquet … stamps `source` on every row … rewrites the file in-place"; manifest `source` is populated by
+re-consolidation). Backfilling the existing corpus is therefore **two distinct steps, per asset group**:
+
+1. **Data-parquet column backfill (the data itself)** — walk every parquet under that asset group's canonical prefix,
+   stamp the known historical `source` on every row, rewrite in place. Template:
+   `market-tick-data-service/.../scripts/backfill_tradfi_source_column.py` (one per asset group: cefi→`tardis`,
+   defi→`onchain_subgraph`/per-handler, sports→its source, prediction→`polymarket_clob`). Idempotent (skip files already
+   carrying a non-blank `source`).
+2. **Manifest re-consolidation** — runs **after** step 1; the consolidator re-derives the manifest `source` from the
+   rewritten parquets. Index-level, cheap. (TradFi precedent: drain → consolidate → snapshot → backfill → re-consolidate
+   → resume.)
+
+> **SINGLE-WALK DISCIPLINE (HARD RULE — review-blocking).** Step 1 is a whole-corpus walk. Per CLAUDE.md +
+> `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`, a standalone new whole-corpus walk to add the column
+> is review-blocking. The source-column add MUST be **bundled into a pending/scheduled migration window for each bucket**
+> (e.g. the defi canonicalisation migration `defi_manifest_canonicalisation_2026_06_01.md`, or a v9 schema migration) —
+> not a dedicated walk. Check the MTDS migration registry first; if a walk is already open for that bucket, fold the
+> column-add into it. **New writes going forward stamp both places at write time → no migration for new data.**
+
 ## Out of scope (deferred — named successors required)
 
-- Backfilling historical cefi/defi/sports parquets with retroactive `source` stamps (analogous to the TradFi
-  `backfill_tradfi_source_column.py` Phase 5). File a `<asset_group>_source_backfill_<date>.md` successor if/when a
-  multi-source second provider actually starts writing a previously single-source cell.
+- A **standalone, dedicated whole-corpus walk** purely to add `source` (it must instead bundle into a scheduled
+  migration window — see § Migration scope). File a `<asset_group>_source_backfill_<date>.md` successor only to track the
+  bundling of step-1 into the chosen migration window per bucket.
 
 ## Codex SSOTs
 
