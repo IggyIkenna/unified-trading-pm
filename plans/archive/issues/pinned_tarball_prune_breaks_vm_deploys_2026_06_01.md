@@ -11,6 +11,12 @@ locked_by: live-defi-rollout
 
 # Pinned VM tarballs are pruned → VM-tarball code deploys are unreliable
 
+> **ARCHIVED 2026-06-01 (slot 7).** RESOLVED — loud-fail SHA-pin path shipped (deployment-service@a0fcba7 +
+> `MTDS_TARBALL_SHA` case @58ee0a9). Misdiagnosed as a prune cron; real bug was a silent fallback now fixed. Residual
+> (non-blocking) `create-code-tarballs.sh` dirty-tree abort is captured as a verify-on-C0 follow-up in
+> `plans/active/defi_manifest_canonicalisation_2026_06_01.md` § G (RUN-ON-VM loud-fail confirmation). No further work on
+> this issue doc.
+
 ## What I found
 
 While running the legacy→canonical tick-bucket migration via the VM fleet (`VM_TASK=canonical-migration`), **all 20 VMs

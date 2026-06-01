@@ -104,8 +104,9 @@ UI-specific — audit only the data/path/contract docs, leave genuine UI docs): 
 ## Phases
 
 - **Phase 0 — already shipped (2026-06-01)**: S5.11 contract codified; read-only audit registry for 8 core repos +
-  FIX-STALE pass-1 (~340 literal fixes across 9 repos on `live-defi-rollout`). Evidence + 8-repo registry:
-  [`issues/repo_docs_codex_ssot_consolidation_2026_06_01.md`](issues/repo_docs_codex_ssot_consolidation_2026_06_01.md).
+  FIX-STALE pass-1 (~340 literal fixes across 9 repos on `live-defi-rollout`). Evidence + 8-repo registry + per-repo
+  rollout list folded into **Appendix A** below (migrated 2026-06-01 from the now-archived
+  `issues/repo_docs_codex_ssot_consolidation_2026_06_01.md`).
 - [ ] [DOCS] P0. **Phase 1 — audit-complete the remaining 12 repos** (read-only): agent-orchestrator, deployment-api,
       client-reporting-api, alerting-service, trading-agent-service, ibkr-gateway-infra,
       batch-live-reconciliation-service, system-integration-tests, deployment-ui, user-management-ui,
@@ -134,3 +135,98 @@ UI-specific — audit only the data/path/contract docs, leave genuine UI docs): 
 - No git surgery on shared/foreign branches (no cherry-pick/rebase-of-others/force-push/revert). If a repo's LDR is
   branch-protected or another agent is active, land via a clean PR or defer + flag — never untangle by hand.
 - `unified-trading-pm/plans/*`, repo `issues/*`, `*_LOG-REVIEW.md`, vendored `context/*` mirrors: not rewritten.
+
+---
+
+## Appendix A — pass-1 evidence + 8-repo audit registry (migrated 2026-06-01 from archived issue)
+
+> Folded here so PM stays SSOT after `issues/repo_docs_codex_ssot_consolidation_2026_06_01.md` was archived. The Phase
+> 1–5 todos above are the live work breakdown; the per-repo rollout list below is the per-repo target inventory that
+> feeds them. **Caveat**: audit agents proposed codex SSOT targets by grep — **verify each target exists before
+> redirecting** (some proposed paths e.g. `codex/05-infrastructure/gcs-lifecycle-policies.md`,
+> `codex/04-architecture/concurrency.md`, `codex/02-data/bucket-naming-and-config.md` may need creating/remapping).
+
+### Per-repo rollout (20 repos with docs/, ~520 docs) — ordered by codex-duplication likelihood
+
+- [x] ✅ **market-tick-data-service** (31) — `GCS_PATHS.md` env-tiered + hive-canonical + codex pointer (mtds@9acbee1);
+      remaining: DEPLOYMENT_GUIDE_FEMI/SHAHRIYAR delete-redirect (P1 below).
+- [ ] [DOCS] P1. **market-tick-data-service finish**: `DEPLOYMENT_GUIDE_FEMI.md` (person-named onboarding dup) +
+      `SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md` (infra-spec dup) → migrate unique delta, replace with redirect to
+      `codex/05-infrastructure` + `codex/08-workflows`, delete the dumps. Slim `DEPENDENCIES.md` / `ARCHITECTURE.md`.
+- [ ] [DOCS] P0. **deployment-service** (79) — deploy-flow/infra/bucket/VM-tarball docs vs `codex/05-infrastructure`,
+      `codex/08-workflows`. Highest duplication surface.
+- [ ] [DOCS] P0. **unified-api-contracts** (36) — schema/contract docs vs `codex/02-data`.
+- [ ] [DOCS] P0. **market-data-processing-service** (22) — path/manifest/candle docs vs `codex/02-data`.
+- [ ] [DOCS] P0. **execution-service** (20) — execution-arch/venue docs vs `codex/04-architecture`, `codex/02-venues`.
+- [ ] [DOCS] P0. **instruments-service** (19) — IS→MTDS contract/path docs vs `codex/04-architecture`, `codex/02-data`.
+- [ ] [DOCS] P1. **strategy-service** (15) — archetype/promote docs vs `codex/09-strategy`, `codex/04-architecture`.
+- [ ] [DOCS] P1. **unified-trading-library** (15) — events/cloud/bucket docs.
+- [ ] [DOCS] P1. **e2e-testing** (21) — defi/sports/prediction runbooks vs `codex/08-workflows`, `codex/15-runbooks`.
+- [ ] [DOCS] P1. **agent-orchestrator** (10) — vs `codex/12-agent-workflow`, `codex/04-architecture`.
+- [ ] [DOCS] P2. **deployment-api** (8) / **client-reporting-api** (8) / **alerting-service** (8).
+- [ ] [DOCS] P2. **trading-agent-service** (7) / **ibkr-gateway-infra** (4) / **batch-live-reconciliation-service** (1)
+      / **system-integration-tests** (1).
+- [ ] [DOCS] P2. **deployment-ui** (3) / **user-management-ui**.
+- [ ] [DOCS] P3. **unified-trading-system-ui** (152) — audit only data/path/contract docs; leave genuine UI docs.
+
+### FIX-STALE pass-1 — landed 2026-06-01 (operator chose FIX-STALE-only; DELETEs/REDIRECTs held), ~340 fixes on LDR
+
+deployment-service@`9627260`; instruments-service@`8bea654`+`9ecc4b2`; execution-service@`4b0ea42f`;
+market-data-processing-service@`89161dc`; strategy-service@`80d298fe`; e2e-testing@`0de5471`;
+unified-trading-library@`168e649`+`c88278b`; market-tick-data-service@`d97ca3c`.
+
+- [ ] [DOCS] P2. **Follow-up: URDI still in instruments-service CODE** — docs URDI refs fixed, but code still uses URDI
+      symbols (`URDI` is a phantom name per CLAUDE.md). Audit + rename in instruments-service.
+- **Parked — features-service**: another agent active; LDR branch-protected. Docs commit `b9b4103e` on
+  `origin/tab/hk/10`; PR #4 bundles a foreign commit (`603c2b9c`) — do NOT merge as-is. Left for the owning agent; no
+  git surgery.
+
+### 8-repo read-only audit registry (DELETE / FIX-STALE / REDIRECT / KEEP)
+
+**deployment-service (~52)** — DELETE: MASTER_ML_IMPLEMENTATION_PLAN, ML_IMPLEMENTATION, MASTER_IMPLEMENTATION_INDEX,
+GCS_LIFECYCLE_AGGRESSIVE_STRATEGY, GCS_LIFECYCLE_COST_OPTIMIZATION, BIGQUERY_INTEGRATION_GUIDE,
+MAX_WORKERS_UNIFIED_IMPLEMENTATION_PLAN, IMPLEMENTATION_MAX_WORKERS, RESOURCE_MONITORING_AND_RIGHTSIZING, SPECS,
+UI_TYPESCRIPT_TYPES, specs/PLANS_ALIGNMENT, specs/README, archive/\*. FIX-STALE: TESTING, setup, INFRASTRUCTURE,
+local-dev/local-run-guide, INDEX, README. REDIRECT: COST, HARDENING, MIGRATION, CLOUD_AGNOSTIC_MIGRATION, RUNBOOKS,
+GCS_PATHS, SCHEMA_VALIDATION, GCS_AND_SCHEMA, CACHE_AND_STATE, LIVE_MODE, CLOUD_BUILD_SUCCESS_CHECKLIST,
+GITHUB_TOKEN_CLOUD_BUILD, STANDARDIZED_EVENT_LOGGING, COMPREHENSIVE_SERVICE_AUDIT_FRAMEWORK, E2E_SPECS, UI_SPEC. KEEP:
+SHARDING_AND_DATA_ALIGNMENT, VM_HEALTH_AND_GCSFUSE_OPTIMIZATION, hybrid-live-seam, dev-environment, CONFIGURATION,
+ARCHITECTURE, DEPLOYMENT_GUIDE, cli, service-bundling-review, resource-profiles/\*.
+
+**unified-api-contracts (36)** — FIX-STALE: SCHEMA_GOVERNANCE (deleted `canonical/normalize/`+`schemas/`), MOCKS_AND_VCR
+(old cassette path), SCHEMA_CHANGELOG (deleted flat modules). DELETE: ICLOUD_REPO_MIGRATION_PROMPT,
+SCHEMA_NORMALIZATION_GAPS_AUDIT, UAC_FULL_GAP_ANALYSIS_AND_BATCH_LIVE_SYMMETRY, VIX_LIVE_RESEARCH. REDIRECT:
+PACKAGE_LAYOUT_AND_SCOPE, BATCH_LIVE_SYMMETRY, canonical-instrument-ids. KEEP: README, ARCHITECTURE, SCHEMA_AUDIT_MATRIX
+(generated), TESTING, archive/\*.
+
+**market-data-processing-service (22)** — FIX-STALE: DEPLOYMENT_GUIDE_FEMI (un-tiered + hyphen partitions), GCS_PATHS
+(un-tiered), DEPENDENCIES (`{category}` vocab + un-tiered). DELETE: REFACTORING_STANDARDS_COMPLIANCE,
+specs/PLANS_ALIGNMENT, DEPLOYMENT_GUIDE (stub), TESTING (stub). REDIRECT: SCHEMA_VALIDATION_AND_TIMEFRAME_SUFFIXING_E2E,
+UNIFIED_SCHEMA_AND_CLIENT_USAGE_GUIDE, TIMEFRAME_AGGREGATION_SPECIFICATION.
+
+**execution-service (20)** — DELETE: UNIFIED_BATCH_LIVE_ARCHITECTURE (deleted codex file),
+CLEAN_ALGORITHM_INTERFACE_DESIGN, DEFI_INTEGRATION_TODO. FIX-STALE: ARCHITECTURE (split execution-store-\* bucket
+literals), README (py3.11 vs 3.13), BACKTEST_DEPLOYMENT (SHAHRIYAR spec). REDIRECT: GCS_PATHS, ROUTING_MATRIX,
+CONFIGURATION, ERROR_HANDLING, DEPLOYMENT_GUIDE. KEEP: TESTING, SCHEMA_VALIDATION, BACKTEST_QUICKSTART, DEPENDENCIES,
+TROUBLESHOOTING, TRADE_ANALYTICS_INTEGRATION, VISUALIZER_QUICKSTART, specs/\*.
+
+**instruments-service (19)** — FIX-STALE: instrument-catalogue (un-tiered + URDI + `category=`), README (URDI ×9).
+DELETE: specs/CLOUD_OPERATIONS, specs/COMMAND_FLOW_ANALYSIS, specs/COMMAND_FLOW_DIAGRAM (dead
+`unified-trading-services`), specs/CORPORATE_ACTIONS, specs/SETUP_GUIDE, specs/TEST_ALIGNMENT. REDIRECT:
+specs/MVP_INSTRUMENTS, specs/SECRETS_SETUP, specs/INSTRUMENT_SPECIFICATION. KEEP:
+{CEFI,DEFI,TRADFI,SPORTS}\_INSTRUMENTS, POLYMARKET_PREDICTION, ARCHITECTURE.
+
+**unified-trading-library (15)** — FIX-STALE: CLOUD_API_PATTERNS (`client.bucket()` anti-pattern), README
+(`setup_cloud_logging` + pip). REDIRECT: ERROR_HANDLING, ARCHITECTURE, PATTERNS, ID_NAMING_CONVENTIONS, DEPENDENCIES,
+CONFIGURATION, DEV_SETUP, data-sink-validation. DELETE: specs/README (stub). KEEP: TESTING, CLOUD_BUILD_TRIGGER_SETUP,
+UTL_ADOPTION_MATRIX, README, specs/PLANS_ALIGNMENT.
+
+**strategy-service (15)** — FIX-STALE/REDIRECT: STRATEGY_MODES (retired `basis-strategy-v1` + dead links), CLI_REFERENCE
+(`batch only` violates batch=live). DELETE: BACKTEST_ENGINE (dup). REDIRECT: BACKTESTS, ARCHITECTURE, GCS_PATHS. KEEP:
+archetype_registry_discovery, DEPLOYMENT_GUIDE, CONFIGURATION, CONFIG_SCHEMA, SCHEMA_VALIDATION, DEPENDENCIES, TESTING,
+ERROR_HANDLING, specs/\*, README.
+
+**e2e-testing (21)** — DELETE: defi/UI_DEMO_WALKTHROUGH (Elysium/removed-provider creds). FIX-STALE: VM_BACKFILL_GUIDE
+(missing lifecycle_class + gsutil), sports/ROADMAP (past trial dates → migrate to epic). REDIRECT:
+defi/PAPER_LIVE_CONVERGENCE, E2E_PIPELINE_GUIDE, architecture. KEEP: sports/LIVE_ODDS_PROVIDERS, \*/progress, \*/issues,
+coverage-matrix, \*/per-strategy-acceptance, \*/smoke-test-baseline.

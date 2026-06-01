@@ -17,6 +17,11 @@ source:
 
 # Repo docs → codex SSOT consolidation
 
+> **ARCHIVED 2026-06-01 (slot 7).** Plan-of-record is `plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md`. The
+> 8-repo audit registry + per-repo rollout list + FIX-STALE pass-1 evidence + follow-ups (URDI-in-code, features-service
+> parked PR) were **folded into that plan's Appendix A**, and its Phase 0 pointer now references the appendix. Closed to
+> stop dual-tracking; this file remains as historical evidence only.
+
 > **📋 PLAN-OF-RECORD MOVED (2026-06-01)**: the canonical plan for this work is now
 > [`../codex_vs_repo_docs_ssot_audit_2026_06_01.md`](../codex_vs_repo_docs_ssot_audit_2026_06_01.md) (opus-1m, all
 > active repos, full methodology). **This file is retained as the pass-1 evidence appendix** — the FIX-STALE pass-1

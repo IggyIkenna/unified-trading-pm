@@ -17,6 +17,12 @@ locked_since: 2026-05-21
 > the 4 repos, gated on each repo's quality-gates-v2 being green first. Owner: Ikenna (CI/branch governance). Not
 > actionable by harsh-side unilaterally (requiring a red check blocks all merges).
 
+> **ARCHIVED 2026-06-01 (slot 7).** COVERED by `plans/active/cicd_contract_hardening_2026_06_01.md` (+
+> `workspace_repo_branch_protection_gaps_2026_05_29.md`). The direct-push hole is closed on all 5 repos. The residual
+> harsh-flagged drift (require-`quality-gates-v2` ruleset enforced on only 1 of 5; reconcile vs this plan's "MAIN 17/17"
+> sweep) was **migrated to cicd_contract_hardening as a `[SCRIPT] P2` reconcile/verify todo**, owner Ikenna. Honors the
+> harsh "leave-tracked / option C" decision — tracking continues in the active plan, not as a standalone issue doc.
+
 ## What I found
 
 During quality-gates-v2 migration verification, 5 repos were found with no branch protection on main or staging:

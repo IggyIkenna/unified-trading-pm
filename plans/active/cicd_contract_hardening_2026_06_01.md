@@ -380,13 +380,28 @@ groups h–l of the `infrastructure_master` audit instruction). That run walked 
 repos** and found the QG gate is **not** enforced everywhere — the precursor that must be GREEN before the rest of the
 CI/CD target state (`full_cicd_sit_target_state_2026_05_24.md` Tiers A–E) is trustworthy.
 
-**Already tracked elsewhere — do NOT duplicate here** (cross-referenced for completeness):
+**SIT Tiers A–E — migrated here 2026-06-01 (slot 7)** from the now-archived `full_cicd_sit_target_state_2026_05_24.md`
+(`plans/archive/issues/`). This plan is their canonical home; the issue doc is closed to stop dual-tracking. The
+embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays owned by
+`defi_manifest_canonicalisation_2026_06_01.md` (already tracked there).
 
-- LDR-CI-red monitoring (audit i5) → `full_cicd_sit_target_state_2026_05_24.md` Tier A `[AGENT] P0`
-- full-workspace cross-repo SIT (audit j2) → `full_cicd...` Tier B (built `system-integration-tests@f881579`)
-- auto LDR→staging promotion bot (audit j3) → `full_cicd...` Tier C `[AGENT] P1`
-- per-service Cloud Run deploy-config (audit k1-deploy) → `full_cicd...` Tier D `[AGENT] P1`
-- branch protection for the original 5 repos → `workspace_repo_branch_protection_gaps_2026_05_29.md` (DONE)
+- [ ] [AGENT] P0. Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks) — per-repo CI on LDR green +
+      a real signal (audit i5).
+- [~] Tier B: full-workspace cross-repo SIT job **BUILT** (`system-integration-tests@f881579`: nightly 03:00 UTC +
+  `workflow_dispatch` + `repository_dispatch[full-workspace-sit]`). Remaining: confirm the workflow on a live trigger;
+  wire the Tier-C promotion-gate to read its result (audit j2).
+- [ ] [AGENT] P1. Tier C: auto LDR→staging promotion bot (dep-order, gated on Tier A green + Tier B green) (audit j3).
+- [ ] [AGENT] P1. Tier D: per-service Cloud Run deploy-config audit + add Cloud Run deploy for HTTP-served services
+      (audit k1-deploy).
+- [ ] [AGENT] P2. Tier E: game-day + synthetic smokes wired into the staging SIT schedule.
+- branch protection for the original 5 repos → `workspace_repo_branch_protection_gaps_2026_05_29.md` (DONE).
+- [ ] [SCRIPT] P2. **Reconcile/verify** (migrated from archived `ui_repo_branch_protection_2026_05_29.md`, slot 7
+      2026-06-01): harsh's 2026-06-01 re-check found `quality-gates-v2` enforced as a **required check** on only
+      `batch-live-reconciliation-service` of the 5 formerly-unprotected repos, while this plan's sweep reports MAIN
+      17/17 on v2 — drift. Confirm live state via `verify_branch_protection_check_names.py`; if
+      `unified-trading-system-ui` / `user-management-ui` / `features-service` / `unified-trading-api` lack the
+      `require-quality-gates` ruleset, replicate it (gated on each repo's quality-gates-v2 being green). Owner: Ikenna
+      (CI/branch governance).
 
 ## Why it matters
 

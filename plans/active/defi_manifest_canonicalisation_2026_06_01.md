@@ -52,8 +52,13 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 ### Layered order (gates top-down; asset_groups parallelise within a layer)
 
-- **L0 INFRA UNBLOCK** — `issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01` (pinned-tarball prune). BLOCKS every
-  `RUN ON A VM` todo (this plan C0/C6/G1; bucket_ssot Phase 2/4). **First.**
+- **L0 INFRA UNBLOCK** — ✅ RESOLVED 2026-06-01 (slot 7). Loud-fail SHA-pin path shipped (deployment-service@a0fcba7 +
+  `MTDS_TARBALL_SHA` @58ee0a9): a `RUN ON A VM` launch now runs the exact pinned commit or fails loudly (never silent
+  stale). Issue archived → `plans/archive/issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01.md`. RUN-ON-VM todos
+  (C0/C6/G1; bucket_ssot Phase 2/4) unblocked.
+  - [ ] [VERIFY] P2. On first `C0 — RUN ON A VM`, confirm the loud-fail path in practice (VM ran the intended sha; a
+        deliberately-wrong pin hard-fails exit 1). Residual: `create-code-tarballs.sh` still aborts on a dirty tree —
+        build from a clean slot worktree.
 - **L1 CODE SSOT (write path)** — bucket_ssot Phase 1 ✅ + QG grep-guard + UTL dead-code · this plan §A (A2a/A2b/A4/A5)
   · `data_source_provenance` §Phased `source=` threading · `pipeline_mode_implementation` ✅.
 - **L2 STOP LEGACY-SIDE** — bucket_ssot Phase 3 drain ✅ · Phase 7 pause 10 `*-legacy-cron` + TF removal.
@@ -107,10 +112,9 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 ### Agent assignment (2026-06-01 — two-slot split; the SUM completes EVERYTHING, no defers, no fallbacks)
 
 > **Slot 2 = the DeFi lane (this plan).** Owns `defi_manifest_canonicalisation_2026_06_01.md` end-to-end: the MASTER
-> coordinator role + §A (defi writers) + §B (defi consolidation/data-status) + **§C the DeFi single-walk** (C0–C12) +
-> §D (defi features) + §E (cefi-perp hedge leg the defi hybrid needs) + §F (defi docs) + §G (Solana basis MVP). The
-> defi C0 walk carries the defi riders (source col + pipeline_mode partition + v9 + category→asset_group) per § Rider
-> closure.
+> coordinator role + §A (defi writers) + §B (defi consolidation/data-status) + **§C the DeFi single-walk** (C0–C12) + §D
+> (defi features) + §E (cefi-perp hedge leg the defi hybrid needs) + §F (defi docs) + §G (Solana basis MVP). The defi C0
+> walk carries the defi riders (source col + pipeline_mode partition + v9 + category→asset_group) per § Rider closure.
 >
 > **Slot 3 = everything else (the other four asset_groups + the per-service surfaces + their riders).** Owns, to
 > C-GREEN:
@@ -129,11 +133,11 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 >
 > Each slot-3 plan's single bundled walk INCLUDES its rider work — so completing them also closes
 > `data_source_provenance_all_asset_groups_2026_06_01` (cefi/sports/prediction source; tradfi skipped per CONFLICT-4) +
-> `pipeline_mode_partition_migration_2026_06_01` (cefi/tradfi/sports/prediction/instruments) for those AGs. **No
-> second walk on any `_index`** (single-walk discipline). **NO DEFERS, NO FALLBACKS** (CLAUDE.md "Data Pipeline
-> Correctness Is The Heartbeat" + "Plans Run To Actual Completion"): the only legitimate non-completion is the closed
-> operator-gated set (`BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-OUTAGE` /
-> `BLOCKED-PLAYWRIGHT`). **Combined acceptance**: every (service × AG × CF-1…CF-12) cell GREEN per the audit SSOT
+> `pipeline_mode_partition_migration_2026_06_01` (cefi/tradfi/sports/prediction/instruments) for those AGs. **No second
+> walk on any `_index`** (single-walk discipline). **NO DEFERS, NO FALLBACKS** (CLAUDE.md "Data Pipeline Correctness Is
+> The Heartbeat" + "Plans Run To Actual Completion"): the only legitimate non-completion is the closed operator-gated
+> set (`BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` / `BLOCKED-UPSTREAM-OUTAGE` / `BLOCKED-PLAYWRIGHT`).
+> **Combined acceptance**: every (service × AG × CF-1…CF-12) cell GREEN per the audit SSOT
 > `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` → hands C-GREEN to `bucket_name_ssot…` L6.
 > Every migration script obeys the § Migration-script performance contract (parallel/shardable/observable).
 >
@@ -141,8 +145,8 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 > "verify-only" is a coarse pre-audit prior. The audit-first P0 reads DATA-STATE; whatever extra canonical-form debt it
 > surfaces is **fixed FULLY and AUTONOMOUSLY in the same walk** — never descoped to the headline, never deferred, never
 > `BLOCKED-OPERATOR-DECISION` (a data-state gap is not a design fork). **Reference incident**: cefi, framed "~complete /
-> 838-cell gap", was found 100% v8 + no `source`/`asset_group` column + blank `pipeline_mode` = a full re-canonicalisation
-> — fixed in-walk, not deferred. SSOT: audit checklist § "Audit scope is a PRIOR, not a ceiling".
+> 838-cell gap", was found 100% v8 + no `source`/`asset_group` column + blank `pipeline_mode` = a full
+> re-canonicalisation — fixed in-walk, not deferred. SSOT: audit checklist § "Audit scope is a PRIOR, not a ceiling".
 
 ### Parallelisation guidance (for the dispatching agent)
 
@@ -356,10 +360,11 @@ What to verify/wire (B0 corrected scope):
 > an 8-vCPU VM, projected **hours**), and `--workers`/`--start-date`/`--end-date` were parsed but **never used** (dead
 > args). Fixed at mtds@92b8d25b. Every migration/backfill/reconciler script that walks a bucket MUST satisfy:
 >
-> 1. **Parallelise the object walk** with `ThreadPoolExecutor(max_workers=workers)` — GCS read/write **release the GIL**,
->    so I/O-bound walks overlap and get 5–10× (the dominant cost is GCS round-trips, not CPU). A bare `for obj in objs:`
->    loop over a remote bucket is **review-blocking**. (CPU-bound *serialize* is GIL-capped; if profiling shows
->    serialize-bound, escalate to `ProcessPoolExecutor`/multiprocessing — but threads first for pure I/O.)
+> 1. **Parallelise the object walk** with `ThreadPoolExecutor(max_workers=workers)` — GCS read/write **release the
+>    GIL**, so I/O-bound walks overlap and get 5–10× (the dominant cost is GCS round-trips, not CPU). A bare
+>    `for obj in objs:` loop over a remote bucket is **review-blocking**. (CPU-bound _serialize_ is GIL-capped; if
+>    profiling shows serialize-bound, escalate to `ProcessPoolExecutor`/multiprocessing — but threads first for pure
+>    I/O.)
 > 2. **Wire the knobs — no dead args.** `--workers` actually sizes the pool; `--start-date`/`--end-date` actually filter
 >    the walk (this also makes the job **date-shardable across many VMs** — the real horizontal scale lever; see
 >    `launch-legacy-bucket-migration-sharded.sh`). A parsed-but-unused arg is a latent perf/scope bug.
@@ -375,8 +380,8 @@ What to verify/wire (B0 corrected scope):
 >    ~100 conns covers workers≤~64); CPU/bandwidth-bound → bigger VM (more vCPU + egress) or shard across VMs by date.
 >    GCS has **no client-side warm cache** — concurrency (in-flight requests), not "warming", is the throughput lever.
 >
-> SSOT for GCS object ops + this contract: `codex/05-infrastructure/gcs-object-operations.md` (add a
-> "migration-script performance contract" section there when this plan archives).
+> SSOT for GCS object ops + this contract: `codex/05-infrastructure/gcs-object-operations.md` (add a "migration-script
+> performance contract" section there when this plan archives).
 >
 > **`source` is a COLUMN, not a path key (provenance SSOT — operator 2026-06-01)**: all sources co-mingle on the SAME
 > read path, so the consumer-facing layout is identical ("data looks the same") — the `source` column exists only so WE
@@ -397,17 +402,18 @@ What to verify/wire (B0 corrected scope):
 > rerun.** The C0 note says "current dedicated-bucket objects are in the flat `day=/category=defi/…` form." The audit
 > (`audit_canonical_form.py` + recursive ls) proves each source DeFi bucket holds **THREE overlapping layouts**, and the
 > flat form is the minority. For dex-pools (191,456 parquet):
-> - `dex_pools/{venue}/{chain}/date=…` (lowercase venue, `date=` not `day=`, no asset_group) — **166,257 (87%)**, oldest,
->   worst schema, FULL history.
+>
+> - `dex_pools/{venue}/{chain}/date=…` (lowercase venue, `date=` not `day=`, no asset_group) — **166,257 (87%)**,
+>   oldest, worst schema, FULL history.
 > - `day=/category=defi/venue=…` (flat) — 19,257 (10%), middle.
 > - `raw_tick_data/by_date/day=/asset_group=defi/venue={CANONICAL}/…/data_type=dex_pool_state/` — ~5,900 (3%), **best
 >   schema** (canonical `_V{N}` venue + asset_group) but missing `pipeline_mode=` partition + **partial coverage**.
 >
 > All 6 buckets share the 2-tree shape (`{data_type}/…` + `raw_tick_data/…`). The trees hold the **SAME venues**
 > (`curve`/`CURVE`, `aerodrome_v3`/`AERODROME_V3`, …) → **overlapping/duplicate data in different schemas + different
-> coverage**, NOT complementary venues. The shipped `migrate_defi_full_v9_canonical.py` only parses the flat `day=`
-> form (and my day-prefix listing missed `raw_tick_data/` + `dex_pools/` entirely) → it migrated ~10% and skipped ~90%.
-> **The 2026-06-01 sharded run was STOPPED for this reason; nothing was deleted.**
+> coverage**, NOT complementary venues. The shipped `migrate_defi_full_v9_canonical.py` only parses the flat `day=` form
+> (and my day-prefix listing missed `raw_tick_data/` + `dex_pools/` entirely) → it migrated ~10% and skipped ~90%. **The
+> 2026-06-01 sharded run was STOPPED for this reason; nothing was deleted.**
 >
 > **C0-REDESIGN (operator 2026-06-01 — "audit it, figure out overlap/freshest schema, migrate once on v9, delete ALL old
 > buckets+paths so data-status has ONE SSOT; stop missing things"):**
@@ -425,6 +431,7 @@ What to verify/wire (B0 corrected scope):
 > handler formula `(long_oi−short_oi)/total_oi` (perp_funding_handler.py:951-971). Investigated: perp L1 raw-OI vs L3
 > derived-funding = same data_type; OI unique to perp_funding within DeFi; GMX tvl/volume partially double-covered by
 > dex-pools `venue=GMX`.
+>
 > - [x] ✅ [CODE] P0. C0-RD1 — **enumerate ALL THREE layouts** + per-bucket cell-key normalisation (path for
 >       dex/lending; **row-split** by token/protocol/feed/chain for lst/oracle/perp whose L1 lacks venue/chain);
 >       venue→UAC `_V{N}` via `to_canonical_venue`. **DONE — mtds@e14d656b** (ruff+basedpyright 0-err + helper
@@ -437,7 +444,8 @@ What to verify/wire (B0 corrected scope):
 >       env-split `{stem}-prd-{pid}` canonical path
 >       `raw_tick_data/by_date/day=/pipeline_mode=batch/asset_group=defi/venue=/chain=/instrument_type=/data_type=/…`;
 >       perp funding-derive; unattributable rows→`_needs_attribution/` (never guess-then-delete). Perf-contract
->       conformant (ThreadPool/--workers/--start-end date-shard/idempotent/per-cell isolation). **DONE — mtds@e14d656b.**
+>       conformant (ThreadPool/--workers/--start-end date-shard/idempotent/per-cell isolation). **DONE —
+>       mtds@e14d656b.**
 > - [ ] [DATA] P0. C0-RD3b — **VM dry-run validation per data_type** (local GCS DNS flaky — in-region VM required):
 >       `--phase all` dry per bucket → inspect output (venue,chain) distribution, `_needs_attribution/` counts (esp.
 >       oracle-prices L1 `contract`→chain + lst protocol-split), union column set, sample-conformed frames — BEFORE any
@@ -447,9 +455,9 @@ What to verify/wire (B0 corrected scope):
 >       across ALL output objects** (no schema drift between cells of different source-layout origin); CF-1…CF-12 GREEN
 >       on the rebuilt `-prd` `_index` (`audit_canonical_form.py`); `_needs_attribution/` count 0 OR operator-acked.
 >       Only then is C-GREEN.
-> - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4 GREEN,
->       so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
->
+> - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4
+>       GREEN, so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
+
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
       2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
       VENUE-CHAIN→flat (C3), data*type canonicalisation (C2), `{NAME}_V{N}` promotion, instrument_type + canonical

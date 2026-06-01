@@ -9,6 +9,12 @@ priority: P2
 status: active
 ---
 
+> **ARCHIVED 2026-06-01 (slot 7).** COVERED by `plans/active/cicd_contract_hardening_2026_06_01.md`. The open SIT Tiers
+> A–E todos were **migrated into that plan** (its "SIT Tiers A–E — migrated here" section) so they keep being tracked;
+> the embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding is owned by
+> `defi_manifest_canonicalisation_2026_06_01.md`. Branch protection for the original 5 repos is DONE
+> (`workspace_repo_branch_protection_gaps_2026_05_29.md`). Closed to stop dual-tracking.
+
 ## What I found (the structural gap)
 
 The 2026-05-24 staging audit exposed that our CI/CD + SIT is **not actually continuous**. Staging drifted ~1 month
