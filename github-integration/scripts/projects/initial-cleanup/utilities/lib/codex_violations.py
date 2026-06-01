@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
 
@@ -628,7 +628,7 @@ See codex: `{gap.codex_reference}`
 - gap-type: {gap.gap_type}
 - category: {gap.category}
 - auto-fixable: {gap.auto_fixable}
-- detected: {datetime.now(timezone.utc).isoformat()}
+- detected: {datetime.now(UTC).isoformat()}
 """
     labels = ["issue", gap.priority]
     category_label_map = {

@@ -1,3 +1,7 @@
+---
+last_reviewed: 2026-05-29
+---
+
 # GCP Pub/Sub Topic Inventory
 
 > **Executed**: 2026-05-26 by slot-7 (vm-cross-cutting) **Plan item**: `infrastructure_master` P2 — GCP Pub/Sub topic

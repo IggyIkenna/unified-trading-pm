@@ -95,7 +95,7 @@ def load_service_registry() -> list[JsonDict]:
         log_error(f"Service registry not found: {SERVICE_REGISTRY}")
         sys.exit(1)
 
-    with open(SERVICE_REGISTRY, "r") as f:
+    with open(SERVICE_REGISTRY) as f:
         data: JsonDict = cast(JsonDict, yaml.safe_load(f) or {})
 
     raw_services: object = data.get("services") or []

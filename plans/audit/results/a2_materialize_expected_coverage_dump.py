@@ -35,9 +35,9 @@ WORKSPACE_ROOT = Path(__file__).resolve().parents[4]
 UAC_ROOT = WORKSPACE_ROOT / "unified-api-contracts"
 sys.path.insert(0, str(UAC_ROOT))
 
-import pyarrow as pa  # noqa: E402
-import pyarrow.parquet as pq  # noqa: E402
-from unified_api_contracts.registry.expected_coverage import (  # noqa: E402
+import pyarrow as pa
+import pyarrow.parquet as pq
+from unified_api_contracts.registry.expected_coverage import (
     EXPECTED_COVERAGE_BY_ASSET_GROUP,
     expected_coverage,
 )
