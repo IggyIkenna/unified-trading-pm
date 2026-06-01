@@ -283,6 +283,11 @@ column is RED, not exempt.
 - [ ] [AUDIT] P1. After enforcement lands, read ACTUAL `source` column distribution per (asset_group, venue, data_type)
       in prod manifests/parquets — confirm **zero blank source on EVERY cell, all asset groups** (not just multi-source).
       Data-state, NOT constant (manifest-v8 lesson: constant said 8 while 0% of rows were v8). Report per-cell histogram.
+      **TOOL BUILT (read-only)**: `scripts/quality_gates/audit_source_column_distribution.py --manifest-path <gs-uri> [--strict]`
+      — per-cell `source` histogram, classifies GREEN/RED(external-blank)/EXEMPT(computed/unregistered) via
+      `external_sources_for()`; `--strict` exits 1 on any external-vendor blank. PM slot ref. **PROD RUN still
+      sequenced** AFTER the bucket remediation + enforcement deploy + backfill (running pre-backfill correctly reports
+      ~100% blank = the baseline). Re-run post-backfill to confirm zero-blank.
 
 ## Migration scope — `source` lives in TWO places (do not conflate)
 
