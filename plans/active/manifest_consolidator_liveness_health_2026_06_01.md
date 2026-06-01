@@ -54,46 +54,53 @@ Models to reuse: `monitors/freshness_monitor.py::FreshnessMonitor.check_and_emit
 
 ## Implementation steps
 
-- [x] ✅ [UTL] P1. UTL@3732ffaa — **Add event types** `CONSOLIDATOR_DOWN` (critical — heartbeat absent > N cycles) + `CONSOLIDATOR_STALE`
-      (warn — a reader hit a stale/missing consolidated index) to `events/event_types.py` + re-export from
-      `events/__init__.py`. Mirror the `DATA_STALE` / `FEED_UNHEALTHY` severity convention.
+- [x] ✅ [UTL] P1. UTL@3732ffaa — **Add event types** `CONSOLIDATOR_DOWN` (critical — heartbeat absent > N cycles) +
+      `CONSOLIDATOR_STALE` (warn — a reader hit a stale/missing consolidated index) to `events/event_types.py` +
+      re-export from `events/__init__.py`. Mirror the `DATA_STALE` / `FEED_UNHEALTHY` severity convention.
 - [x] ✅ [UTL] P1. UTL@3732ffaa — **`assert_consolidator_healthy(bucket)` preflight helper** in `manifest_writer.py` (or
-      `monitors/consolidator_liveness.py`): reads the consolidator heartbeat age (canonical mtime + `consolidator_run_at`
-      marker, max-of), and raises `ManifestConsolidatorStaleError` + emits `CONSOLIDATOR_STALE` when age exceeds the
-      staleness budget. Shared SSOT — the shell preflight (`deployment-service@7add531`) becomes a thin wrapper.
-- [x] ✅ [UTL] P1. UTL@3732ffaa (guarded: only-when-other-VM-shards-exist + MANIFEST_ALLOW_STALE_FALLBACK opt-out + emit-not-silent; legacy opt-in retained) — **Promote read-path fail-fast opt-in → DEFAULT**: flip `_resolve_fail_on_stale_fallback` so a
-      stale/missing consolidated index (when per-VM shards DO exist) RAISES `ManifestConsolidatorStaleError` + emits
-      `CONSOLIDATOR_STALE` by **default**. The ~1700-shard per-VM merge becomes an explicit, opt-IN recovery escape-hatch
-      via `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverse of today). The genuinely-empty-bucket `_empty` path is
-      unchanged. **Audit all 9 callers** in the read-fail-fast plan's Consumer-audit table before flipping; any caller
-      that legitimately needs the recovery merge (e.g. a deliberate one-off reconcile) sets the opt-out.
-- [x] ✅ [UTL] P1. UTL@3732ffaa — **Consolidator liveness watchdog** `monitors/consolidator_liveness.py::ConsolidatorLivenessMonitor`
-      (modelled on `FreshnessMonitor`): per manifest bucket, reads last heartbeat age; emits `CONSOLIDATOR_DOWN`
-      (critical) when a bucket misses > N cycles (default N=5 at `*/1`), recovery event when it returns. CLI entrypoint
+      `monitors/consolidator_liveness.py`): reads the consolidator heartbeat age (canonical mtime +
+      `consolidator_run_at` marker, max-of), and raises `ManifestConsolidatorStaleError` + emits `CONSOLIDATOR_STALE`
+      when age exceeds the staleness budget. Shared SSOT — the shell preflight (`deployment-service@7add531`) becomes a
+      thin wrapper.
+- [x] ✅ [UTL] P1. UTL@3732ffaa (guarded: only-when-other-VM-shards-exist + MANIFEST_ALLOW_STALE_FALLBACK opt-out +
+      emit-not-silent; legacy opt-in retained) — **Promote read-path fail-fast opt-in → DEFAULT**: flip
+      `_resolve_fail_on_stale_fallback` so a stale/missing consolidated index (when per-VM shards DO exist) RAISES
+      `ManifestConsolidatorStaleError` + emits `CONSOLIDATOR_STALE` by **default**. The ~1700-shard per-VM merge becomes
+      an explicit, opt-IN recovery escape-hatch via `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverse of today). The
+      genuinely-empty-bucket `_empty` path is unchanged. **Audit all 9 callers** in the read-fail-fast plan's
+      Consumer-audit table before flipping; any caller that legitimately needs the recovery merge (e.g. a deliberate
+      one-off reconcile) sets the opt-out.
+- [x] ✅ [UTL] P1. UTL@3732ffaa — **Consolidator liveness watchdog**
+      `monitors/consolidator_liveness.py::ConsolidatorLivenessMonitor` (modelled on `FreshnessMonitor`): per manifest
+      bucket, reads last heartbeat age; emits `CONSOLIDATOR_DOWN` (critical) when a bucket misses > N cycles (default
+      N=5 at `*/1`), recovery event when it returns. CLI entrypoint
       `python -m unified_trading_library.monitors.consolidator_liveness --buckets ...` for a Cloud Run Job.
-- [x] ✅ [UTL] P1. UTL@3732ffaa (severity=ERROR) — **Wire `MANIFEST_CONSOLIDATION_FAILED` to alerting**: route it (and `CONSOLIDATOR_DOWN`) to the same
-      alert sink as the existing `DATA_FRESHNESS_ALERT_ROUTED` path so a crash-looping consolidator pages.
-- [x] ✅ [TEST] P1. UTL@3732ffaa — 141 tests green (13 (re-)written). Unit tests: heartbeat-fresh → healthy; heartbeat-stale → `CONSOLIDATOR_DOWN` + `assert_*` raises;
-      recovery emits recovery; fail-fast default raises while opt-out merges; empty-bucket path unaffected.
+- [x] ✅ [UTL] P1. UTL@3732ffaa (severity=ERROR) — **Wire `MANIFEST_CONSOLIDATION_FAILED` to alerting**: route it (and
+      `CONSOLIDATOR_DOWN`) to the same alert sink as the existing `DATA_FRESHNESS_ALERT_ROUTED` path so a crash-looping
+      consolidator pages.
+- [x] ✅ [TEST] P1. UTL@3732ffaa — 141 tests green (13 (re-)written). Unit tests: heartbeat-fresh → healthy;
+      heartbeat-stale → `CONSOLIDATOR_DOWN` + `assert_*` raises; recovery emits recovery; fail-fast default raises while
+      opt-out merges; empty-bucket path unaffected.
 - [x] ✅ [INFRA] P2. deployment-service@eb75df0 — **Deploy the watchdog**: Cloud Run Job
       `uts-prod-consolidator-liveness-watchdog` + Cloud Scheduler `*/2 * * * *` (ENABLED) shipped via
-      `terraform/gcp/consolidator_liveness_scheduler.tf` (single job over all manifest buckets). UTL base
-      (586e41e8) + MTDS image (17a90302) rebuilt @ UTL 3732ffaa so the module is in `:latest`; targeted
-      `terraform apply` = 2 added / 0 changed / 0 destroyed. **Verified live 2026-06-01**: manual execution
-      `...-qgd8z` succeeded (succeededCount=1, `Container called exit(0)` — module loads, all heartbeats fresh).
-- [x] ✅ [DOC] P2. codex@(this PR) — **Codex SSOT**: new "Liveness + health contract" section in
+      `terraform/gcp/consolidator_liveness_scheduler.tf` (single job over all manifest buckets). UTL base (586e41e8) +
+      MTDS image (17a90302) rebuilt @ UTL 3732ffaa so the module is in `:latest`; targeted `terraform apply` = 2 added /
+      0 changed / 0 destroyed. **Verified live 2026-06-01**: manual execution `...-qgd8z` succeeded (succeededCount=1,
+      `Container called exit(0)` — module loads, all heartbeats fresh).
+- [x] ✅ [DOC] P2. codex@8ef8f7be8 — **Codex SSOT**: new "Liveness + health contract" section in
       `codex/05-infrastructure/manifest-consolidator-ssot.md` (heartbeat-every-cycle + watchdog + loud-fail-default +
-      preflight gate) + cross-link from `codex/02-data/availability-manifest-and-data-status.md` § "Read path fail-fast".
+      preflight gate) + cross-link from `codex/02-data/availability-manifest-and-data-status.md` § "Read path
+      fail-fast".
 
 ## Success criteria
 
 - C1: `CONSOLIDATOR_DOWN` + `CONSOLIDATOR_STALE` in UAC/UTL event registry; `assert_consolidator_healthy` exported.
 - C2: read path raises (not silent-merges) by default on stale-with-shards; opt-out restores recovery merge; empty path
-      unchanged. Unit tests green.
+  unchanged. Unit tests green.
 - C3: watchdog emits `CONSOLIDATOR_DOWN` on simulated heartbeat gap; `MANIFEST_CONSOLIDATION_FAILED` reaches the alert
-      sink.
+  sink.
 - C4: `bash scripts/quality-gates.sh` in `unified-trading-library` exits 0 for the touched files (composes with the
-      pre-existing UTL QG-debt tracked in `issues/utl_full_qg_red_backlog_2026_06_01.md`).
+  pre-existing UTL QG-debt tracked in `issues/utl_full_qg_red_backlog_2026_06_01.md`).
 - C5 (runs-to-completion): watchdog Cloud Run Job deployed + Scheduler enabled + one live cycle observed. ✅
   `uts-prod-consolidator-liveness-watchdog` + `-cron` (ENABLED, `*/2`); manual exec exit(0) 2026-06-01.
 
