@@ -37,48 +37,40 @@ else. Never re-derive the expected set in a consumer.**
   Operator filter-chips narrow at request time (never expand). The drilldown `_aggregate_counts` is generic → one fix
   serves IS/MTDS/MDPS/features.
 - **Strategy/features preflight = read the SAME 4-state.** No re-deriving genesis/launch/IS rules per consumer.
-- Confirmed 2026-06-01: `expected_unattempted` is **never materialised** (0 source hits; oracle bucket has only the 3
-  attempted states; `expected=True` on every present row → useless for "what's missing"). Three consumers re-derive the
-  expected set three different ways and disagree. Root fix = materialise-once, read-everywhere.
+- **CORRECTION 2026-06-01 (system-first save)**: `expected_unattempted` is **already canonical + the propagation chain
+  is already shipped** — archived plan `expected_unattempted_propagation_chain_2026_05_12.md` (Phase 0 UAC reasons
+  `EXPECTED_UPSTREAM_EMPTY`/`EXPECTED_OUTSIDE_PROCESSING_SCOPE` ✅; Phase 1 MTDS instruments-service pre-flight →
+  `record_expected_unattempted` ✅; Phase 2 MDPS ✅). It is **writer/orchestrator-driven** (MTDS pre-flight reads the IS
+  manifest and records owed cells on skip), **NOT** consolidator-driven. The DeFi manifest shows **0**
+  expected_unattempted rows for ONE reason (deferred Phase 6,
+  `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`): **no prod MTDS batch has RUN on the
+  post-Phase-1+2 code yet** (defi 1.6M rows, 0 owed). So the fix is **run the existing chain + validate**, NOT build a
+  parallel consolidator mechanism. (The earlier "never materialised / 0 source hits" reading was wrong — the handlers
+  don't reference it because the pre-flight lives in the batch orchestrator, not per-handler.)
 
-## `expected_unattempted` materialisation — where it hooks into consolidation (B0 design)
+## `expected_unattempted` — the mechanism exists; RUN it for DeFi (corrected B0)
 
-SSOT: `unified_trading_library/unified_trading_library/manifest_consolidator.py`. Current `consolidate(bucket)` (L181):
-(1) seed legacy → (2) list+read every `_index/per_vm/*.parquet` → (3) dedup-union merge (`_duckdb_consolidate_and_write`
-L1022) → (4) write `_index/availability_index.parquet` (`_write_consolidated` L1159). It only merges what was
-**written** — it never enumerates the expected set. **Insert a new step 3.5 between merge and write:**
+**Do NOT build a consolidator step (rejected — would duplicate the shipped chain).** The propagation chain already
+exists (`expected_unattempted_propagation_chain_2026_05_12.md`, archived, Phases 0–2 shipped): the MTDS batch
+orchestrator does an instruments-service **pre-flight** — it reads the IS manifest, and for every instrument the IS
+lists that the batch will NOT attempt (outside scope / upstream empty), it calls `record_expected_unattempted(...)` with
+reason `EXPECTED_OUTSIDE_PROCESSING_SCOPE` / `EXPECTED_UPSTREAM_EMPTY`. MDPS + features propagate it downstream. The
+owed rows are written by the **writer**, at shard grain, gated by the **IS manifest** (which already encodes "this
+instrument should exist") — exactly the operator's intent (`we have the instrument + it's post-genesis, but no data`).
 
-```
-3.5  materialise_expected_unattempted(merged_df, bucket):
-       asset_group   = asset_group_for_bucket(bucket)            # cloud-providers.yaml / resolve
-       expected_cells = expected_coverage_cells(asset_group)     # the oracle, NOT the manifest:
-           for (venue, data_type) in EXPECTED_COVERAGE_BY_ASSET_GROUP[asset_group]:
-             for chain in chains_for(venue):                      # ChainKind / venue chains
-               for date in business_dates(start, today):
-                 r = expected_coverage(asset_group, venue, data_type, date)   # registry/expected_coverage.py
-                 if r.state == SHOULD_HAVE_DATA:                  # already excludes pre-genesis/pre-launch/pre-coverage
-                   yield (venue, chain, data_type, date)
-       present = set(merged_df[venue, chain, data_type, date])    # any capture_status
-       owed    = expected_cells - present
-       emit one row per `owed` cell: capture_status='expected_unattempted', expected=True,
-              error_reason=None, row_count=0, available=False   # NO placeholder parquet object (index-layer only)
-       return concat(merged_df, owed_rows)
-```
+**Why DeFi shows 0**: no prod MTDS batch has run on the post-Phase-1+2 code for the DeFi buckets since 2026-05-19. So
+the remaining work is to **RUN the existing chain for the DeFi handlers + validate** (the deferred Phase 6), NOT
+re-implement.
 
-Design decisions (encode):
+What to verify/wire (B0 corrected scope):
 
-- **Grain = `(asset_group, venue, chain, data_type, date)`** — NOT per-instrument (matches the a2 `expected_coverage`
-  dump grain; avoids index explosion). Per-instrument owed-ness stays a drilldown leaf concern.
-- **The oracle already gates** pre-genesis / pre-venue-launch / pre-source-coverage (`expected_coverage()` returns
-  `SHOULD_HAVE_DATA` only when genuinely owed) — so `expected_unattempted` means exactly "we have the instrument, it's
-  post-genesis/launch, we simply have no data." That is the operator's denominator:
-  `% captured = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`.
-- **Index-layer only** — no fake/placeholder parquet objects (workspace bans empty parquets to mask phantoms). The owed
-  rows live only in the consolidated `_index/availability_index.parquet`.
-- **Idempotent + cheap** — recomputed each consolidation from the oracle; `owed` shrinks as data lands. Cache the
-  expected-cell set per (asset_group, today) to bound cost.
-- **`expected_unattempted` is canonical** — add to the UAC `CaptureStatus` closed set (A6) so writers/consumers share
-  it.
+- Confirm the DeFi MTDS batch orchestrator path (oracle / perp / lst / lending / dex handlers) goes through the same
+  instruments-service pre-flight that records `expected_unattempted` (Phase 1 wired CeFi/TradFi; confirm DeFi handlers
+  are on that path — they may need wiring since DeFi uses dedicated buckets + a different orchestration).
+- Run a DeFi MTDS dry-run on a sample date → confirm `expected_unattempted` rows generate with correct reasons.
+- Then the denominator is honest automatically: `% = captured / (captured + empty + failed + expected_unattempted)` —
+  consumers just read it (B1/B2/B3).
+- Composes with `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md` (the deferred validation).
 
 ## Status legend: ✅ shipped · ⏳ ready/in-flight · ☐ todo · canonical todos below feed the orchestrator backlog
 
@@ -95,14 +87,17 @@ Design decisions (encode):
       `chain` for a chain-scoped data_type.
 - [ ] [CODE] P1. A5 LIGHTER perp_funding adapter fix: `SOURCE_RETURNED_ZERO` across full post-launch life (zkSync
       endpoint returns nothing) — verify endpoint/auth.
-- [ ] [CODE] P0. A6 add `expected_unattempted` to the UAC `CaptureStatus` closed set + `EMPTY_CONFIRMED`-adjacent docs;
-      the keystone canonical state. parent_epic: manifest_master.
+- [x] ✅ [CODE] P0. A6 `expected_unattempted` is ALREADY canonical in UAC (`honest_coverage.py`:
+      `EXPECTED_UPSTREAM_EMPTY` + `EXPECTED_OUTSIDE_PROCESSING_SCOPE` reasons; shipped via
+      `expected_unattempted_propagation_chain_2026_05_12.md` Phase 0). No new state to add — verified 2026-06-01.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
-- [ ] [CODE] P0. B0 materialise `expected_unattempted` in `manifest_consolidator.consolidate()` per the design above
-      (new step 3.5; oracle-driven; index-layer only). Then B1/B2/B3 collapse to "read the 4-state". parent_epic:
-      manifest_master.
+- [ ] [DATA] P0. B0 (CORRECTED — do NOT build a consolidator step) RUN the existing expected_unattempted chain for DeFi:
+      confirm the DeFi MTDS batch orchestrator goes through the instruments-service pre-flight that calls
+      `record_expected_unattempted` (wire the DeFi handlers onto it if not), then run a prod DeFi MTDS batch so the owed
+      rows generate; validate the denominator. Closes deferred
+      `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. parent_epic: manifest_master.
 - [ ] [CODE] P1. B1 `coverage-summary` (`data_status_service._build_coverage_for_cat`): drop the `len(index)`
       self-referential denominator; read the 4-state (or expected-dates oracle) + `is_expected()` gate; align with
       `manifest-status`.
@@ -137,6 +132,12 @@ Design decisions (encode):
 - [ ] [DATA] P1. C8 fill manifest under-enumeration: UAC declares 90 defi venue-keys but manifest enumerated only lst
       14/22, lending 6/21, perp 5/8; genuine absentees DRIFT-SOLANA (Solana MVP), FRAX, MORPHO, FLUID. parent_epic:
       defi_master.
+- [ ] [DATA] P1. C9 legacy DeFi bucket object paths are pre-canonical —
+      `day=/category=defi/venue=/chain=/instrument_type=/data_type=/file.parquet`: **`category=` not `asset_group=`**
+      AND **no `pipeline_mode=` partition** (canonical raw_tick_data layout is
+      `…/day=/pipeline_mode={mode}/asset_group={ag}/…`). The manifest ROWS carry pipeline_mode (handlers pass it); the
+      object PATHS don't. Normalise the dedicated DeFi bucket paths in the same single-walk as C2–C4. parent_epic:
+      manifest_master.
 
 ## D. Features propagation (L3) — coverage must reach features-service
 
