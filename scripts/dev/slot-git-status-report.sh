@@ -190,7 +190,12 @@ classify_repo() {
         ahead=$(git rev-list --count "${remote_ref}..HEAD" 2>/dev/null || echo 0)
         behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
     else
-        # Try to infer integration branch when default doesn't exist on this repo (e.g. agent-orchestrator → main).
+        # Last-resort fallback ONLY when this repo has no live-defi-rollout ref at all
+        # (e.g. a main-only repo). NB: agent-orchestrator is NOT such a repo — it
+        # integrates via live-defi-rollout like every repo (server ships from LDR;
+        # main is only the dashboard-SPA deploy + CI gate), so this branch never fires
+        # for it. (Corrected 2026-06-01 — the old "agent-orchestrator → main" belief
+        # was the cause of false-diverged slot reports; cron override removed 2026-05-24.)
         if git rev-parse --verify --quiet "origin/main" >/dev/null 2>&1; then
             int_branch="main"
             remote_ref="origin/main"

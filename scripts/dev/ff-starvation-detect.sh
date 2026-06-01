@@ -92,8 +92,12 @@ fi
 
 REPO_NAME="$(basename "$(pwd)")"
 
-# Resolve the integration branch ref; fall back to origin/main (parity with the
-# reporter + ff-pull cron, e.g. agent-orchestrator tracks main).
+# Resolve the integration branch ref; fall back to origin/main ONLY as a last
+# resort for a repo with no live-defi-rollout ref (a genuinely main-only repo).
+# NB: agent-orchestrator is NOT such a repo — it integrates via live-defi-rollout
+# (server ships from LDR; main is dashboard-SPA + CI only), so this fallback never
+# fires for it. (Corrected 2026-06-01; cron override removed 2026-05-24 after a
+# `main` base caused false-diverged slot reports.)
 remote_ref="origin/${INTEGRATION_BRANCH}"
 if ! git rev-parse --verify --quiet "${remote_ref}" >/dev/null 2>&1; then
     if git rev-parse --verify --quiet "origin/main" >/dev/null 2>&1; then
