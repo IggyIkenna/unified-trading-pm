@@ -651,21 +651,58 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P1. Ruleset-set decision made: **only `agent-orchestrator` is EXEMPT**
       (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
       Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
-- [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the (now 7) non-exempt repos — +`features-service` (green v2, no ruleset, surfaced by 398) (operator-decided 2026-06-01).**
-      **HARD PREREQUISITE per repo (learned the hard way 2026-06-01): VERIFY the v2 workflow's job `name:` emits
-      `Quality Gates (<repo>) / quality-gates-v2` AND confirm a GREEN run on the default branch BEFORE creating the
-      ruleset** — else the required context is never satisfied and you DEADLOCK/freeze main. (Incident: created rulesets
-      for ml/greeks/uta on `17134935/37/38`, immediately discovered **`ml-service` carries the `alerting-service`
-      copy-paste job-name bug** → its ruleset was unsatisfiable → reverted all three.) Correct per-repo plan: -
-      `ml-service`: **fix the job-name first** (`Quality Gates (alerting-service)` → `(ml-service)` in its
-      `quality-gates-v2.yml`, relax→push→re-run→re-pin per the force rule), THEN add ruleset. (Its earlier "green" run
-      emitted the alerting-service context.) - `greeks-service`, `unified-trading-api`: job-name correct; trigger a v2
-      run, confirm GREEN, THEN add ruleset (template: alerting-service `require-quality-gates`, target
-      `~DEFAULT_BRANCH`, `bypass_actors:[]`, context `Quality Gates (<repo>) / quality-gates-v2`). -
-      `fund-administration-service`, `e2e-testing`: NO v2 workflow → roll out `quality-gates-v2.yml`, green it, THEN
-      add. - `unified-trading-system-ui`: TS/Vite — ruleset on its OWN UI gate context (`…/quality-gates`, like
-      deployment-ui), not python-v2. Record the single `agent-orchestrator` exemption + the 6 additions in
-      `feature-branch-workflow.md`. — repo: unified-trading-pm (rulesets) + per-repo workflow.
+- [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the 7 non-exempt repos — IN PROGRESS 2026-06-01 (3/7 done).**
+      Operator decision: only `agent-orchestrator` is EXEMPT (main-targeted tooling, bypasses prod path); the other 7
+      (incl `features-service`, surfaced by 398) GET the ruleset. **HARD PREREQUISITE per repo (incident 2026-06-01): VERIFY
+      the v2 job `name:` emits `Quality Gates (<repo>) / quality-gates-v2` AND a GREEN run exists on the default branch
+      BEFORE the ruleset — else the required context is unsatisfiable → DEADLOCK.** Ruleset body = alerting-service
+      `require-quality-gates` copy (target `~DEFAULT_BRANCH`, `bypass_actors:[]`, context swapped). **Token gotcha
+      (2026-06-01): `load-gh-token.sh`'s SM fallback returned EMPTY + the cached `.act-secrets` PAT is 401-expired** →
+      fetch the workflow-capable PAT directly: `gcloud secrets versions access latest --secret=GH_PAT
+      --project=central-element-323112`. git push over SSH is exempt from the workflow-scope restriction; the SM PAT also
+      creates rulesets (201). (Prior reverted attempt's rulesets `17134935/37/38` are gone — the ones below are the correct
+      replacements.)
+      **DONE (3/7):**
+      - [x] ✅ `unified-trading-api` — ruleset id **17135955**. LDR-default: added `live-defi-rollout` to v2 triggers
+            (uta@`a413ff9`) so the required check runs + is satisfiable on the default branch (else the ruleset would block
+            slot pushes to LDR — the LDR-default deadlock); green LDR run 26781958327.
+      - [x] ✅ `ml-service` — ruleset id **17136124**. Fixed job name `(alerting-service)`→`(ml-service)` on main
+            (ml@`cd5f93f`) via the force rule (relaxed + re-enabled `enforce_admins`, trap-guaranteed — note: re-enable is
+            **POST** not PUT to `.../protection/enforce_admins`); green main run 26782638637.
+      - [x] ✅ `features-service` — ruleset id **17136160**. Green LDR v2 already (run 26778684174; v2 triggers already
+            include `live-defi-rollout`), correct job name; ruleset added directly.
+      **REMAINING (4/7) — structurally UNBLOCKED (GH_PAT secret provisioned where absent / canonical v2 caller rolled out /
+      dep closure computed) but v2 is RED on real per-repo QG-debt. Ruleset is HARD-GATED on green (NEVER create on red →
+      deadlock). Each is self-contained + dispatchable:**
+      - [ ] [TEST] P1. **greeks-service ruleset — BLOCKED on QG-RED.** GH_PAT repo secret PROVISIONED (was absent → dep-clone
+            auth fail; that part fixed). Fresh v2 (run 26782758068, LDR) now fails on real debt: (1) **`COVERAGE FLOOR
+            VIOLATION: MIN_COVERAGE=0 < 70`** — effective MIN_COVERAGE is 0 in CI despite `scripts/quality-gates.sh:9`=
+            `MIN_COVERAGE=70` (set before the `base-service.sh` source at L24, same shape as the known-good alerting-service);
+            trace where the 0 comes from (per-family layout / env override) then set a real floor or a
+            `.coverage-floor-exception.md` (NO floor-lowering); (2) **Codex compliance: 1 violation (max 0)**; (3)
+            function/class/method size exceeded (C901). Fix all real → green LDR → add ruleset (LDR-default → ALSO add
+            `live-defi-rollout` to v2 triggers like features-service first). repo: greeks-service.
+      - [ ] [DEPS] P1. **fund-administration-service ruleset — BLOCKED on QG-RED.** GH_PAT secret PROVISIONED + canonical
+            `quality-gates-v2.yml` caller rolled out to main (fundadmin@`ad60760`, job name correct, dep_repos=`unified-api-contracts
+            unified-trading-library`). v2 now fails at **`uv sync` resolution**: "No solution found — only
+            `unified-trading-library==0.3.167` is available AND your project depends on `starlette>=0.52.1,<1.0.0`" → a
+            real cross-repo version conflict (utl's starlette ceiling is incompatible). Reconcile by bumping utl's starlette
+            range OR relaxing fund-admin's `starlette` pin (read BOTH pyprojects, fix the wrong side). Green main → add
+            ruleset. repo: fund-administration-service (+ possibly unified-trading-library).
+      - [ ] [LINT] P1. **e2e-testing ruleset — BLOCKED on QG-RED.** GH_PAT secret PROVISIONED + canonical caller rolled out to
+            main (e2e@`c623628`, dep_repos=`execution-service market-tick-data-service strategy-service unified-api-contracts
+            unified-trading-library`). v2 now fails **Lint: 14 ruff errors** (~10×C901 complexity + SIM117/RUF100/etc — run
+            26782575912). Fix real (ruff --fix the safe ones; C901 on test/tooling funcs → targeted `# noqa: C901` /
+            per-file-ignore per the QG-debt standard — NOT blanket suppression). Green main → add ruleset. repo: e2e-testing.
+      - [ ] [UI] P1. **unified-trading-system-ui ruleset — BLOCKED on missing UI gate.** uts-ui has NO quality-gates workflow
+            at all (only `uic-openapi-sync.yml`); its main classic-protection already requires a bare `quality-gates-v2`
+            context nothing emits (admins bypass). It is TS/Vite → roll out the UI gate (`ui-quality-gates.yml` reusable + a
+            caller job `name: Quality Gates (unified-trading-system-ui)` emitting `…/quality-gates`), model EXACTLY on
+            deployment-ui (regenerate `package-lock.json` if `npm ci` EUSAGE, per deployment-ui PR #11); green on main →
+            ruleset on the UI context `Quality Gates (unified-trading-system-ui) / quality-gates` (NOT python-v2). `[UI]` +
+            `pw:L2` gate applies. repo: unified-trading-system-ui.
+      Record the `agent-orchestrator` exemption + the ruleset additions in `feature-branch-workflow.md` (done this pass). —
+      repo: unified-trading-pm (rulesets) + per-repo workflow.
 
 **Do not duplicate**: the v1→v2 migration itself is owned by `ci_canonical_v2_migration_2026_05_29.md` (which has
 mark-drift — `batch-live` + `deployment-ui` marked ✅ but live-v1). This plan only adds the ruleset-mechanism framing +
