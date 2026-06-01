@@ -597,19 +597,21 @@ jobs:
         # bump_type is computed from the old stable version vs new promoted version (not always patch).
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          # Exported into the env so the python heredoc below can read os.environ["OWNER"/"TOKEN"];
+          # plain shell vars are NOT inherited by the heredoc → previously KeyError: 'OWNER' on
+          # every promotion (cicd P1 #257 — surfaced by the GH013-fix e2e).
+          OWNER: ${{ github.repository_owner }}
+          TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
 
-          OWNER="${{ github.repository_owner }}"
-          TOKEN="${{ secrets.GH_PAT }}"
-
-          if [ -z "$TOKEN" ]; then
+          if [ -z "${TOKEN:-}" ]; then
             echo "GH_PAT not set — skipping cascade dispatch."
             exit 0
           fi
 
-          if [ -z "${PROMOTED_JSON:-}" ]; then
-            echo "PROMOTED_JSON not set (nothing was promoted or no staging_versions existed). Skipping cascade."
+          if [ -z "${PROMOTED_JSON:-}" ] || [ "${PROMOTED_JSON}" = "{}" ]; then
+            echo "PROMOTED_JSON empty (nothing was promoted or no staging_versions existed). Skipping cascade."
             exit 0
           fi
 
