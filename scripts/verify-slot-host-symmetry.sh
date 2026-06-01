@@ -113,7 +113,14 @@ fi
 
 # 6. Workspace .tabs/ exists with ≥1 slot worktree
 if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
-    slot_count=$(find "${WORKSPACE_ROOT}/.tabs" -maxdepth 1 -mindepth 1 -type d -regex '.*/[0-9]+' 2>/dev/null | wc -l | tr -d ' ')
+    # Portable numeric-dir count. BSD find (macOS) -regex uses basic regex where `+`
+    # is literal, so '.*/[0-9]+' matched nothing → false "no slot dirs" on the operator
+    # laptop. Count via a shell glob + bash numeric test instead (works on macOS + Linux).
+    slot_count=0
+    for _d in "${WORKSPACE_ROOT}"/.tabs/*/; do
+        _b="$(basename "${_d}")"
+        [[ "${_b}" =~ ^[0-9]+$ ]] && slot_count=$((slot_count + 1))
+    done
     if [[ ${slot_count} -ge 1 ]]; then
         ok "${slot_count} slot worktree(s) under .tabs/"
     else
@@ -156,6 +163,30 @@ if [[ -r "${TOKEN_FILE}" ]]; then
         bad "backend HTTP ${code} @ ${ORCH_URL}/api/mode"
     fi
     rm -f /tmp/.symcheck.$$
+fi
+
+section "workflow-capable GH_TOKEN (no permission-based work-stoppage)"
+# Every slot host must have a GH_TOKEN that can edit .github/workflows (GH_PAT with
+# Workflows:write). The keyring gho_ login token lacks 'workflow' scope and silently blocks
+# CI workflow migrations. SSOT: scripts/workspace/load-gh-token.sh.
+_ghtok="${GH_TOKEN:-}"
+if [[ -z "${_ghtok}" ]] && [[ -f "${WORKSPACE_ROOT}/unified-trading-pm/scripts/workspace/load-gh-token.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/workspace/load-gh-token.sh" >/dev/null 2>&1 || true
+    _ghtok="${GH_TOKEN:-}"
+fi
+if [[ -z "${_ghtok}" ]]; then
+    bad "no GH_TOKEN — gh/HTTPS workflow edits will be refused (run: source scripts/workspace/load-gh-token.sh)"
+else
+    _code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
+        -H "Authorization: token ${_ghtok}" -H "Accept: application/vnd.github+json" \
+        "https://api.github.com/repos/IggyIkenna/unified-trading-pm/contents/.github/workflows/quality-gates-v2.yml" \
+        -d '{"message":"symcheck probe","content":"eA==","sha":"0000000000000000000000000000000000000000","branch":"live-defi-rollout"}' 2>/dev/null || echo "000")
+    case "${_code}" in
+        409|422) ok "GH_TOKEN is workflow-capable (Workflows:write)" ;;
+        403)     bad "GH_TOKEN lacks Workflows:write (HTTP 403) — workflow migrations will block" ;;
+        *)       bad "GH_TOKEN workflow-capability probe inconclusive (HTTP ${_code})" ;;
+    esac
 fi
 
 section "result: ${pass} passed / ${fail} failed"

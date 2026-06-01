@@ -89,6 +89,12 @@ _resolve_workspace_root() {
 
 # Call from EXIT trap on failure (exit code != 0)
 _qg_update_ci_status_failing() {
+    # ci_status is owned by ONE place — CI dispatch (authoritative) + the dedicated
+    # manifest-state job. Per-QG-run local writes churned the shared tracked
+    # workspace-manifest.json on every agent's QG, leaving every slot worktree dirty
+    # → FF-pull skip → branch drift. Local writes are gated off by default; only the
+    # dedicated job sets MANIFEST_STATE_WRITER=1. See codex/06-coding-standards/quality-gates.md.
+    [[ "${MANIFEST_STATE_WRITER:-0}" == "1" ]] || return 0
     local _ws; _ws="$(_resolve_workspace_root)"
     local _manifest="${_ws}/unified-trading-pm/workspace-manifest.json"
     local _name; _name="$(_resolve_repo_name)"
@@ -98,6 +104,9 @@ _qg_update_ci_status_failing() {
 # Call at end of successful QG run
 _qg_update_ci_status_pass() {
     [[ "${GITHUB_ACTIONS:-}" == "true" ]] && return 0  # GHA handles via dispatch
+    # Gated off for per-QG-run agents (see _qg_update_ci_status_failing). Only the
+    # dedicated manifest-state job (MANIFEST_STATE_WRITER=1) writes the shared json.
+    [[ "${MANIFEST_STATE_WRITER:-0}" == "1" ]] || return 0
     local _ws; _ws="$(_resolve_workspace_root)"
     local _manifest="${_ws}/unified-trading-pm/workspace-manifest.json"
     local _name; _name="$(_resolve_repo_name)"

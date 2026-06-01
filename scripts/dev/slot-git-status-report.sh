@@ -297,7 +297,10 @@ print(json.dumps({"reported_at": reported_at, "host": host, "repos": repos}))
     if [[ "${http_status}" == "200" ]]; then
         local repo_count
         repo_count=$(printf '%s\n' "${payload}" | python3 -c 'import json,sys; print(len(json.load(sys.stdin).get("repos",[])))' 2>/dev/null || echo "?")
-        log_quiet "[ok] slot ${slot_id} — ${repo_count} repos reported (host=${HOSTNAME_SHORT})"
+        # Always log the success heartbeat (symmetric with [fail] below). The cron runs
+        # --quiet, and verify-slot-host-symmetry.sh greps the log for [ok] — using
+        # log_quiet here suppressed it under --quiet → the symmetry check could never pass.
+        log "[ok] slot ${slot_id} — ${repo_count} repos reported (host=${HOSTNAME_SHORT})"
     else
         log "[fail] slot ${slot_id} — HTTP ${http_status}; body: $(head -c 200 /tmp/.git-status-resp.$$ 2>/dev/null || echo '')"
     fi

@@ -1447,11 +1447,16 @@ fi
 #   * ServiceBootstrap(...)     (services — UTL handles lifecycle internally)
 #   * ad-hoc log_event _RUN_STARTED + _RUN_(COMPLETED|FAILED) pair (legacy)
 # The UTL helper definition itself + repos that define setup_events are skipped.
+_LIFECYCLE_EXTRA_GLOBS=()
+for g in ${LIFECYCLE_EXCLUDE_GLOBS[@]+"${LIFECYCLE_EXCLUDE_GLOBS[@]}"}; do
+    _LIFECYCLE_EXTRA_GLOBS+=(--glob "$g")
+done
 _LIFECYCLE_FILES=$(rg -l 'setup_events\(' --type py \
     --glob '!.venv*' \
     --glob '!**/tests/**' \
     --glob '!**/run_lifecycle.py' \
     --glob '!**/events/__init__.py' \
+    ${_LIFECYCLE_EXTRA_GLOBS[@]+"${_LIFECYCLE_EXTRA_GLOBS[@]}"} \
     "$SOURCE_DIR/" 2>/dev/null || :)
 _LIFECYCLE_VIOLATIONS=""
 for _f in $_LIFECYCLE_FILES; do
@@ -2376,7 +2381,7 @@ if ! _qg_update_ci_status_pass; then
     log_fail "Failed to update ci_status (LOCAL_PASS) in workspace-manifest.json"
     exit 1
 fi
-if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
+if [[ "${GITHUB_ACTIONS:-}" != "true" && "${MANIFEST_STATE_WRITER:-0}" == "1" ]]; then
     _MANIFEST="${REPO_ROOT}/unified-trading-pm/workspace-manifest.json"
     if [[ -f "$_MANIFEST" ]] && command -v python3 &>/dev/null; then
         _DAG_SCRIPT="${REPO_ROOT}/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"

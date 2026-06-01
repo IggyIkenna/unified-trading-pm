@@ -456,7 +456,7 @@ if ! _qg_update_ci_status_pass; then
     log_fail "Failed to update ci_status (LOCAL_PASS) in workspace-manifest.json"
     exit 1
 fi
-if [[ "${GITHUB_ACTIONS:-}" != "true" ]] && [[ -n "${WORKSPACE_ROOT:-}" ]]; then
+if [[ "${GITHUB_ACTIONS:-}" != "true" ]] && [[ -n "${WORKSPACE_ROOT:-}" ]] && [[ "${MANIFEST_STATE_WRITER:-0}" == "1" ]]; then
     _MANIFEST="${WORKSPACE_ROOT}/unified-trading-pm/workspace-manifest.json"
     if [[ -f "$_MANIFEST" ]] && command -v python3 &>/dev/null; then
         _DAG_SCRIPT="${WORKSPACE_ROOT}/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"

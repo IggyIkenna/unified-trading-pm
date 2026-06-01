@@ -156,6 +156,26 @@ unfixable), Phase 3 (tests + typecheck + codex — run exactly once). **For pre-
 runs quality gates); run `quality-gates.sh` directly only for local iteration or CI. If quality gates fail, fix the root
 cause — never bypass.
 
+## Generated manifest artifacts are NOT a per-QG side-effect (`MANIFEST_STATE_WRITER`)
+
+`quality-gates.sh` must **not** mutate the shared tracked files `workspace-manifest.json` (its `ci_status` field) or
+regenerate `WORKSPACE_MANIFEST_DAG.svg` / `DATA_FLOW_DAG.svg` as a side-effect of a normal agent run. Doing so left every
+slot worktree perpetually dirty (these files were touched in 50/50 recent commits), which made the FF-pull cron skip the
+slot (`[skip:dirty]`), the branch fall behind LDR, direct-to-LDR pushes stop fast-forwarding, and work strand on tab
+branches (the 2026-06-01 "70-ahead/68-behind" drift incident).
+
+Contract:
+- The ci_status writers in `scripts/quality-gates-base/_ci-status-updater.sh` and the DAG-regen blocks in `base-*.sh`
+  are gated behind `MANIFEST_STATE_WRITER` (default `0` → no-op). Per-QG-run agents never write these files.
+- **`ci_status`** is owned by **CI dispatch** (authoritative). Local QG decides pass/fail via the `.qg_last_passed_sha`
+  sentinel, not the json value; quickmerge gates on the sentinel + the `!= NO_QG` check, not the LOCAL_PASS/FAILING value.
+- **The DAG SVGs** are regenerated in exactly two controlled places: `quickmerge.sh` at promotion time, and the dedicated
+  `scripts/manifest/refresh-manifest-dag.sh` cron (runs with `MANIFEST_STATE_WRITER=1`, commits to LDR from an isolated
+  worktree). Only one host runs the cron.
+
+If you genuinely need a one-off regeneration locally, run `MANIFEST_STATE_WRITER=1 bash scripts/quality-gates.sh` or the
+dedicated job directly — but never commit the churn from a slot worktree.
+
 ## Two-Pass Workflow Model
 
 The recommended workflow separates a **full validation pass** from a **lightweight pre-PR pass**:
@@ -799,8 +819,8 @@ Epics.
 The `validate-alignment.py` script runs as a pre-commit hook in `unified-trading-codex` and checks:
 
 1. **Banned Terms**
-   - ❌ Non-canonical bucket patterns (e.g., `gs://market-data-raw/` instead of
-     `gs://market-data-tick-{category}-{project_id}/`)
+   - ❌ Non-canonical bucket patterns (e.g., `gs://market-data-raw/` instead of the env-tiered
+     `gs://market-data-tick-{category}-{env}-{project_id}/`; resolve via `resolve_bucket_name()`, never inline)
    - ❌ `os.getenv()` in service code (use `UnifiedCloudServicesConfig`)
 
 2. **Lifecycle Event Names**
