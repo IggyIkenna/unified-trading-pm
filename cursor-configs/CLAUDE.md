@@ -97,6 +97,14 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - `--dep-branch` is human-only.
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
+- **agent-orchestrator EXCEPTION (codified 2026-06-01)**: `agent-orchestrator` is the ONE repo whose integration
+  target is **`main`, NOT `live-defi-rollout`**. It is operator/agent tooling — NOT production trading code — so it
+  **bypasses the production code-hardening path** (`live-defi-rollout` → `staging` → `main`). The slot model still
+  applies: commit to the slot branch `tab/<operator>/<N>` to isolate per-agent commits, then **fast-forward the slot
+  branch to `main`** (its slot branch tracks `origin/main`; every OTHER repo's slot branch tracks
+  `origin/live-defi-rollout`). Do NOT route agent-orchestrator changes through LDR/staging or treat its `main`-behind-LDR
+  as drift to "promote" — `main` is its canonical. (Its work may also appear on LDR via the `tab-mirror` GHA; that is
+  harmless mirroring, not the target.) SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
 
 ### Imports + types
 
@@ -726,8 +734,8 @@ phase — plans omitting this are review-blocking.
 - **Required check name (all repos)**: `quality-gates-v2` (v1 `quality-gates`/`workspace-qg` retired 2026-05-29 — see
   `codex/08-workflows/ci-cd-flow.md` § quality-gates-v2).
 - **Branch protection = ruleset + classic, BOTH** (must agree or merges silently dead-lock); ruleset context is derived
-  from the workflow's job `name:`; `enforce_admins` only ON when v2 is green. SSOT:
-  `codex/08-workflows/ci-cd-flow.md` § "Branch-protection mechanism".
+  from the workflow's job `name:`; `enforce_admins` only ON when v2 is green. SSOT: `codex/08-workflows/ci-cd-flow.md` §
+  "Branch-protection mechanism".
 - **Force-push vs let-CI/CD (HARD RULE)**: admin force (relax → do → RE-ENABLE, guaranteed) is for the **initial
   clean-slate only** where the gate can't run/be-satisfied by a PR (missing/wrong-named v2 workflow; FF a default branch
   strictly behind its integration branch; landing the fix that unblocks the branch). **Everything else goes through the

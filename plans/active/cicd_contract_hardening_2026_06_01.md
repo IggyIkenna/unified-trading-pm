@@ -82,10 +82,10 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
-> staging→main promotion automation, and **(B)** green the per-repo QG debt the broken gates were hiding. Do them in
-> the order below (loudest + cheapest first; greening can run in parallel per repo). Token + safety rules are in the
-> HANDOFF block above. Codex SSOT for the durable rules: `codex/08-workflows/ci-cd-flow.md`. **Update each todo
-> live-true as you ship; resolve conflicts ON `live-defi-rollout`, never a throwaway branch.**
+> staging→main promotion automation, and **(B)** green the per-repo QG debt the broken gates were hiding. Do them in the
+> order below (loudest + cheapest first; greening can run in parallel per repo). Token + safety rules are in the HANDOFF
+> block above. Codex SSOT for the durable rules: `codex/08-workflows/ci-cd-flow.md`. **Update each todo live-true as you
+> ship; resolve conflicts ON `live-defi-rollout`, never a throwaway branch.**
 
 ### State as of 2026-06-01 (DONE — do not redo)
 
@@ -99,27 +99,38 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 - **Consequence to know**: making gates truly enforce EXPOSED accumulated per-repo QG debt (PM red on lint+codex;
   instruments red on coverage) → those mains are blocked-on-red. That's workstream (B).
 
+### agent-orchestrator EXCEPTION — `main` is its target, NOT LDR (codified 2026-06-01, operator)
+
+**Do not treat agent-orchestrator's `main`-behind-LDR as promotion drift.** `agent-orchestrator` is operator/agent
+tooling, NOT production trading code, so it **bypasses the `live-defi-rollout` → `staging` → `main` production-hardening
+path**. Its **integration target is `main`**: commit to the slot branch `tab/<operator>/<N>` (to isolate per-agent
+commits), then **fast-forward the slot branch to `main`**. Its slot branch tracks `origin/main`; EVERY other repo's slot
+branch tracks `origin/live-defi-rollout`. Its work may also appear on LDR (via the `tab-mirror` GHA) — harmless
+mirroring, not the target. So in the workspace main↔LDR survey, agent-orchestrator is the **one repo where main being
+"behind LDR" is by design** — sync the slot work INTO `main` (not LDR→main promotion). Full rule: CLAUDE.md § "Git
+discipline". SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
+
 ### THE force-push-vs-let-CI/CD decision rule (read before touching main/staging)
 
 **Admin force (relax → do → re-enable, re-enable GUARANTEED) is authorized ONLY for the initial clean-slate landing
-where the normal flow is structurally circular** — i.e. the branch's required check *cannot run / cannot be
-satisfied* by a PR:
+where the normal flow is structurally circular** — i.e. the branch's required check _cannot run / cannot be satisfied_
+by a PR:
 
-- Adding a **missing or wrong-named** `quality-gates-v2.yml` to a protected branch whose ruleset already requires the
-  v2 context (chicken-and-egg: no PR can go green because the check the ruleset wants isn't emitted yet). Recipe:
+- Adding a **missing or wrong-named** `quality-gates-v2.yml` to a protected branch whose ruleset already requires the v2
+  context (chicken-and-egg: no PR can go green because the check the ruleset wants isn't emitted yet). Recipe:
   `gh api -X PUT .../rulesets/<id> -f enforcement=disabled` + `DELETE .../enforce_admins` → push the workflow file →
   re-enable both. (Used for mtds/strategy main, deployment-service.)
 - **FF-ing a default branch that is strictly behind its integration branch** to resolve drift + land workflow files
-  (e.g. the PM main FF: `merge-base --is-ancestor main LDR` true → relax → `git push origin <ldr-sha>:refs/heads/main`
-  → re-enable). Only when strictly behind (no main-only commits to lose).
+  (e.g. the PM main FF: `merge-base --is-ancestor main LDR` true → relax → `git push origin <ldr-sha>:refs/heads/main` →
+  re-enable). Only when strictly behind (no main-only commits to lose).
 - Landing the workflow / GHA / versioning **fixes themselves** on main/staging when those branches are blocked by the
   very breakage being fixed.
 
 **Let CI/CD handle it (normal PR → quickmerge auto-merge, NO admin) for everything else:**
 
-- Any **code / test / coverage / lint / codex** fix that *makes the gate pass* → open a PR; the green
-  `quality-gates-v2` check auto-merges it (admin-merge only if the repo additionally requires a review that no human is
-  available for, and the check is genuinely green — e.g. deployment-service).
+- Any **code / test / coverage / lint / codex** fix that _makes the gate pass_ → open a PR; the green `quality-gates-v2`
+  check auto-merges it (admin-merge only if the repo additionally requires a review that no human is available for, and
+  the check is genuinely green — e.g. deployment-service).
 - Once a branch has a working, green v2 gate, **all** subsequent changes go through the normal flow. Force-push is a
   one-time clean-slate tool, never the routine path.
 
@@ -135,7 +146,7 @@ satisfied* by a PR:
 ### QG-debt green — the standard (NO gaming; surgical)
 
 - **Surgical, not repo-wide.** Fix only the files the gate flags. **Do NOT run a repo-wide `ruff format`** — it pulls
-  unrelated files into the codex/coverage *changed-files* scan scope and surfaces MORE violations (observed on PM PR
+  unrelated files into the codex/coverage _changed-files_ scan scope and surfaces MORE violations (observed on PM PR
   #106: a 22-file format churn turned a lint-only fix into a codex cascade).
 - **Real fixes only.** Write real tests for coverage floors; **NEVER** lower `fail_under` / `MIN_COVERAGE`; **NEVER**
   `# pragma: no cover` / skip / xfail to dodge a real failure; ambiguous-unicode → replace (`×`→`x`); intentional
@@ -151,28 +162,30 @@ satisfied* by a PR:
 
 - [x] ✅ [SCRIPT] P0. **(do FIRST) Loud alerting watcher** — `unified-trading-pm@d60ae903f` (LDR). Built
       `scripts/repo-management/ci_failure_watcher.py` + `.github/workflows/ci-failure-watcher.yml` (cron `*/15`). Pages
-      `#ci-failures` Slack via `notify-slack.yml` + `SLACK_CI_WEBHOOK_URL` (NOT legacy Telegram). Covers EVERY workflow on
-      main+staging across the canonical 17-repo fleet (reuses `pin_branch_protection_rulesets.REPOS`), with
+      `#ci-failures` Slack via `notify-slack.yml` + `SLACK_CI_WEBHOOK_URL` (NOT legacy Telegram). Covers EVERY workflow
+      on main+staging across the canonical 17-repo fleet (reuses `pin_branch_protection_rulesets.REPOS`), with
       **failure→recovery transition** alerts (stateless — derives flips from GitHub run history; `--fresh-hours` recency
-      guard so ancient dead workflows never re-page) PLUS the scheduled **auto-merge-stuck poller** (scoped to auto-merge-ON
-      or LDR→staging promotion PRs sitting `CONFLICTING`/`DIRTY`/`BLOCKED` > `--stuck-minutes`). Validated against the live
-      fleet (exit 0, GITHUB_OUTPUT emission, deterministic `--now`): surfaced 6 fresh PM/SIT/mdps flips + 7 genuinely-stuck
-      promotion PRs. NOTE: `schedule:` only fires from main → goes live once promoted; `workflow_dispatch` works meanwhile.
+      guard so ancient dead workflows never re-page) PLUS the scheduled **auto-merge-stuck poller** (scoped to
+      auto-merge-ON or LDR→staging promotion PRs sitting `CONFLICTING`/`DIRTY`/`BLOCKED` > `--stuck-minutes`). Validated
+      against the live fleet (exit 0, GITHUB_OUTPUT emission, deterministic `--now`): surfaced 6 fresh PM/SIT/mdps
+      flips + 7 genuinely-stuck promotion PRs. NOTE: `schedule:` only fires from main → goes live once promoted;
+      `workflow_dispatch` works meanwhile.
 - [ ] [SCRIPT] P0. **semver rollout to all 16 repos' default branches** — render the fixed `semver-agent.yml` (trigger
-      `quality-gates-v2`, from the template) onto each repo's default branch. PR-per-repo passes its own v2 (workflow-file
-      change) and auto-merges; for a repo whose main v2 is RED, do its (B) greening first (or admin per the force rule).
-      Verifies: semver fires on the next staging `quality-gates-v2` success.
+      `quality-gates-v2`, from the template) onto each repo's default branch. PR-per-repo passes its own v2
+      (workflow-file change) and auto-merges; for a repo whose main v2 is RED, do its (B) greening first (or admin per
+      the force rule). Verifies: semver fires on the next staging `quality-gates-v2` success.
 - [ ] [TEST] P0. **(B) per-repo QG-debt green** (surgical, real fixes — see standard above). Known-red today:
       `unified-trading-pm` (lint FIXED on branch `ikenna/pm-lint-green-2026-06-01` / PR #106 — but redo SURGICALLY:
       close #106, fix only lint-flagged files + the 3-4 codex violations [empty-string/dict fallback;
       `scripts/migration/gcs_bucket_stats.py` hardcoded `central-element-323112` → `config.gcp_project_id`], no
       repo-wide format); `instruments-service` (coverage 76.82% < 77% — ~a couple real tests). PLUS any repo the semver
-      rollout surfaces. Each: surgical fix → PR → green v2 → auto-merge → (if its enforce_admins was deferred, enable it).
+      rollout surfaces. Each: surgical fix → PR → green v2 → auto-merge → (if its enforce_admins was deferred, enable
+      it).
 - [ ] [SCRIPT] P1. **Revive the SIT chain** — trace the dead **entry dispatch**: `quality-gates-v2` green on `staging`
       should dispatch `sit-lock` → `sit-gate.yml` → full-workspace SIT → on pass dispatch `staging-validated` →
       `staging-to-main.yml`. Zero SIT runs ⇒ the entry isn't firing (almost certainly the same "Quality Gates"
-      `workflow_run` name-mismatch class as semver). Fix the entry trigger; `staging-to-main.yml` file is already current
-      (the April `startup_failure` was an old version) and should run once it receives `staging-validated`.
+      `workflow_run` name-mismatch class as semver). Fix the entry trigger; `staging-to-main.yml` file is already
+      current (the April `startup_failure` was an old version) and should run once it receives `staging-validated`.
 - [ ] [SCRIPT] P1. **sit-debounce Telegram empty-secret guard** — `sit-debounce-trigger.yml`'s notify step fails
       `ValueError: unknown url type '***'` on an empty/masked Telegram secret. Guard it (skip on empty, like the Slack
       step); a missing notify secret must never fail the workflow.
@@ -185,8 +198,8 @@ satisfied* by a PR:
       `agent-orchestrator.odum-research.com`) → spawns a worker under the long-lived **setup-token** accounts
       (`accounts.json`, cheap+stable, NOT API credits) → worker resolves + pushes the fix **onto LDR** + pings the
       authoring slot. Auth: GHA→orchestrator via `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the
-      workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA dispatch
-      + a worker prompt; build + e2e-test on one repo before fleet-wide.
+      workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA
+      dispatch + a worker prompt; build + e2e-test on one repo before fleet-wide.
 - [ ] [SCRIPT] P2. **enforce_admins on `staging`** (Phase-2 tail) + on `instruments-service` main once green; final
       `verify_branch_protection_check_names.py` + classic-context + enforce_admins audit all-green.
 - [ ] [DOC] P1. **Codex + CLAUDE.md alignment** — keep `codex/08-workflows/ci-cd-flow.md` (the SSOT) current with the
@@ -573,16 +586,20 @@ behind the exact drift this whole audit is about.
 
 ### Reconciliation follow-ups (surfaced 2026-06-01 slot-1 reconciliation sweep)
 
-- [ ] [SCRIPT] P2. **PM QG test-isolation flake — `test_check_no_service_deps::TestFindManifest::test_returns_none_when_not_found`.**
+- [ ] [SCRIPT] P2. **PM QG test-isolation flake —
+      `test_check_no_service_deps::TestFindManifest::test_returns_none_when_not_found`.**
       `scripts/validation/check-no-service-deps.py::find_manifest()` walks `cwd.parents` for
-      `unified-trading-pm/workspace-manifest.json`; when a stray `/tmp/unified-trading-pm/` exists (some non-`refresh-manifest-dag`
-      process leaves one — `refresh-manifest-dag.sh` itself correctly uses `mktemp -d`), the test (which `chdir`s under
-      `/private/tmp/...`) finds it and fails. Passes in a clean env. Fix: harden the test to neutralise the cwd-walk (e.g.
-      `monkeypatch` the walk root) OR have `find_manifest` ignore `/tmp`/`/private/tmp` roots. Pre-existing on LDR; not blocking.
-- [ ] [CHORE] P3. **3 archived plans carry literal conflict-marker line(s)** (`plans/archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md`,
-      `strategy_archetype_taxonomy_2026_05_12.md`, `defi_protocol_outage_detector_2026_05_20.md`). Pre-existing committed content
-      (1 marker line each — verify whether real unresolved-merge residue vs an intentional doc example before editing; archived =
-      low priority). If residue, resolve + recommit; if doc example, fence it so marker-scanners don't trip.
+      `unified-trading-pm/workspace-manifest.json`; when a stray `/tmp/unified-trading-pm/` exists (some
+      non-`refresh-manifest-dag` process leaves one — `refresh-manifest-dag.sh` itself correctly uses `mktemp -d`), the
+      test (which `chdir`s under `/private/tmp/...`) finds it and fails. Passes in a clean env. Fix: harden the test to
+      neutralise the cwd-walk (e.g. `monkeypatch` the walk root) OR have `find_manifest` ignore `/tmp`/`/private/tmp`
+      roots. Pre-existing on LDR; not blocking.
+- [ ] [CHORE] P3. **3 archived plans carry literal conflict-marker line(s)**
+      (`plans/archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md`,
+      `strategy_archetype_taxonomy_2026_05_12.md`, `defi_protocol_outage_detector_2026_05_20.md`). Pre-existing
+      committed content (1 marker line each — verify whether real unresolved-merge residue vs an intentional doc example
+      before editing; archived = low priority). If residue, resolve + recommit; if doc example, fence it so
+      marker-scanners don't trip.
 
 ## Success criteria
 
