@@ -126,8 +126,14 @@ ff_one() {
     fi
 
     # Step 2: fetch only if not pre-fetched (silent; skip on offline / no-such-ref).
+    # `--tags --force` self-heals stale local release tags (e.g. a lightweight
+    # v1.0.0 that diverged from semver-agent's canonical remote annotated tag),
+    # which would otherwise surface as `(would clobber existing tag)` on a manual
+    # `git pull`. Remote is canonical for release tags; forcing local→remote is
+    # safe and we never push tags the other way. SSOT:
+    # codex/05-infrastructure/per-tab-worktrees.md § "Step 7 — troubleshooting".
     if [[ "${do_fetch}" -eq 1 ]]; then
-        if ! git fetch --quiet origin "${int_branch}" 2>/dev/null; then
+        if ! git fetch --quiet --tags --force origin "${int_branch}" 2>/dev/null; then
             log "[skip:fetch-fail] ${repo_name} (${branch}) — fetch failed (offline? missing branch?)"
             popd >/dev/null
             return 0
@@ -219,7 +225,11 @@ prefetch_main_clones() {
         local repo_name int_branch
         repo_name=$(basename "${d}")
         int_branch="$(branch_for_repo "${repo_name}")"
-        if git -C "${d}" fetch --quiet origin "${int_branch}" 2>/dev/null; then
+        # `--tags --force` heals stale local release tags fleet-wide: linked tab
+        # worktrees share .git/refs with this main clone, so one forced tag sync
+        # here fixes the `(would clobber existing tag)` pull failure for every
+        # slot at once (semver-agent's remote tags are canonical).
+        if git -C "${d}" fetch --quiet --tags --force origin "${int_branch}" 2>/dev/null; then
             fetched=$((fetched + 1))
         else
             log "[prefetch-fail] ${repo_name} — fetch origin/${int_branch} failed"
