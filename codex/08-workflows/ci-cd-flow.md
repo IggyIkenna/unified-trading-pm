@@ -137,6 +137,26 @@ Semver is managed entirely by the semver-agent GitHub Action — never bump manu
 `gh workflow run request-major-bump.yml --repo IggyIkenna/<repo> -f proposed_version="1.0.0"` → comment `/approve`. Full
 SSOT: `codex/08-workflows/version-graduation.md`.
 
+### Version feedback to staging/LDR + the main→LDR back-merge requirement (codified 2026-06-01)
+
+The semver bump is **computed on `staging`** (semver-agent reads the commit labels + the `staging_versions` baseline),
+then fed back to the workspace as a `version-bump` `repository_dispatch` to **unified-trading-pm**, whose
+`workspace-manifest.json:staging_versions` is the central SSOT. PM's `update-dependency-version.yml` cascades the new
+version into every dependent repo's pyproject, and those updates flow back through the normal
+`quickmerge → staging → main` path.
+
+**The closure rule (applies to version bumps AND the PM doc-fast-path):** any commit that lands **directly on `main`**
+MUST be back-merged to `live-defi-rollout`, or the standing LDR→staging PR conflicts on the changed line (classically the
+version line — the generalized form of the Phase-5 main↔LDR drift). Two sources of main-only commits:
+
+- **semver bump on `main`** — the main-side version write (+ any `[skip ci]` manifest/deps automation).
+- **PM doc-fast-path** — PM plans/docs/cursor-rules (`*.md` / `*.mdc`) PR **directly to `main`**, bypassing LDR→staging.
+
+Both are reconciled by **`.github/workflows/main-backmerge-to-ldr.yml`** (PM, trigger `push:[main]`; mirrors
+`tab-mirror-to-ldr.yml` in reverse) — it auto-advances a `main → live-defi-rollout` back-merge so main-only commits never
+strand. **Never leave a main-only commit unmirrored** — an unmirrored main commit is the exact mechanism behind the
+Phase-5 PM main↔LDR ~95-file drift.
+
 ---
 
 ## Full CI/CD Flow (LDR → Cloud Build)
@@ -157,6 +177,22 @@ the staging PR boundary.
 
 **workspace-qg triggers**: `push: [main, staging]` + `pull_request: [main, staging]`. LDR is explicitly excluded — local
 QG + sentinel is the only gate on LDR (by design).
+
+### Branch-triggered build — hotfix image off an arbitrary branch (no main promotion, codified 2026-06-01)
+
+For a hotfix / fast-dev cycle you can build + push an image **without** promoting through `main`:
+
+- **Cloud Build trigger path** — `deployment-service/scripts/setup-cloud-build-triggers.sh` registers per-service
+  triggers; point one at the hotfix branch, or run the build manually against the checked-out branch:
+  `gcloud builds submit --config deployment-service/cloudbuild.yaml --substitutions=_SERVICE_NAME=<svc>,COMMIT_SHA=<sha>`.
+  The image is tagged `…/<service>:${COMMIT_SHA}` (immutable provenance) + `:latest`; the `COMMIT_SHA` tag lets you
+  deploy the exact branch build without it ever touching `main`.
+- **Local-code path (no registry build)** — `bash deployment-service/scripts/vm/create-code-tarballs.sh` produces a
+  **SHA-pinned** code tarball straight from the working tree; a VM launcher pulls that tarball instead of an image. Use
+  this when you need to run uncommitted/branch code on a VM faster than a Cloud Build round-trip.
+
+Both are escape hatches for iteration speed; the canonical production path stays LDR → staging → main → Cloud Build.
+**Never leave a branch-built image deployed as the steady state** — promote the fix through `main` once verified.
 
 ---
 
@@ -285,6 +321,20 @@ hide a CI-red basedpyright/test. Always read the CI log on a campaign-PR red; do
 
 **Live SSOT for this repair + the full ordered backlog**: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Phase
 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN".
+
+### Pipeline layering — deterministic vs judgment (what needs Claude, codified 2026-06-01)
+
+Layer the promotion pipeline by **whether a step needs an agent** — don't put Claude where a script suffices:
+
+- **DETERMINISTIC (no agent — repair, don't escalate):** semver bump-compute (commit-label vs API-diff is a pure
+  script), `staging-to-main.yml`, `sit-gate.yml`. When these break, the fix is a workflow / script repair — never an
+  agent hand-off.
+- **JUDGMENT (escalate to an agent):** staging-merge-conflict resolution, commit-label↔API-diff mismatch remediation,
+  SIT-failure triage. These hit a wall a script can't resolve → `repository_dispatch` to the **agent-orchestrator** API
+  (`agent-orchestrator.odum-research.com`), which spawns a worker under the long-lived **setup-token** accounts (cheap +
+  stable, NOT per-run API credits / no API key in GHA) that resolves + pushes the fix **onto `live-defi-rollout`**
+  (resolve-on-integration-branch rule) and pings the authoring slot. Auth: GHA→orchestrator via
+  `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the workflow-capable PAT/SSH; worker→Claude via setup-token.
 
 ---
 
