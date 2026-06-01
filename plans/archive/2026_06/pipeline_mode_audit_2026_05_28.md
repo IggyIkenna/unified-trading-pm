@@ -17,6 +17,14 @@ locked_since: 2026-05-28
 
 # pipeline_mode Implementation Audit
 
+> **✅ COMPLETE — ARCHIVED 2026-06-01.** Audit delivered the derivation table that drove
+> `pipeline_mode_implementation_2026_05_28` (shipped: column-fill + 43.5M-row backfill + reconciliation consumer + QG
+> STEP 5.85). This is the audit half of the audit→implementation pair; both close together.
+>
+> ## Deferred work — migrated to:
+>
+> - None. (The on-disk partition deferral lives on the implementation plan, not this audit.)
+
 Comprehensive audit of `pipeline_mode` usage workspace-wide, supporting the implementation in
 `pipeline_mode_implementation_2026_05_28.md`.
 

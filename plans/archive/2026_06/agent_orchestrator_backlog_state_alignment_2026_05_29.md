@@ -21,6 +21,16 @@ related_plans:
   - plans/active/cross_operator_auth_failover_2026_05_29.md
 ---
 
+> **✅ COMPLETE — ARCHIVED 2026-06-01.** All 15 todos done; zombie prune + `--prune-stale` + per-VM `assigned_vm` scope
+> filter rolled to all 11 VMs (`ORCHESTRATOR_REGEN_PRUNE_STALE=true` default). Continuous verification: every regen tick
+> emits `regen_pruned_yaml=N regen_pruned_db=M`; `scripts/orchestrator/verify_fleet_prune_state.sh` for spot-checks.
+> Codified as HARD RULE in deployment-service CLAUDE.md (§ "Orchestrator regen is authoritative") + codex
+> `agent-orchestrator-backlog-state-alignment.md`.
+>
+> ## Deferred work — migrated to:
+>
+> - None — fleet-wide rollout complete; no deferred items.
+
 ## Why this exists
 
 A 2026-05-29 sweep (operator + slot-1 main) discovered the agent-orchestrator backlog counters reported by every fleet

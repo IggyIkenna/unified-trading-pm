@@ -31,6 +31,17 @@ related_plans:
 
 # Workspace repos lacking branch protection — UI + 3 others
 
+> **✅ COMPLETE — ARCHIVED 2026-06-01.** All 5 repos resolved (4 protected with `quality-gates-v2` strict=true +
+> user-management-ui archived-by-design). Phase 3 test PR (#11 in batch-live-reconciliation-service) confirmed the
+> required check gates merges; codex `feature-branch-workflow.md` updated. PR #98 (CLAUDE.md + plan) merged 2026-05-30.
+>
+> ## Deferred work — migrated to:
+>
+> - Workspace-wide branch-protection sweep beyond these 5 repos →
+>   [`cicd_contract_hardening_2026_06_01.md`](../active/cicd_contract_hardening_2026_06_01.md) Phase 1 (named successor,
+>   already filed; covers the 6 more repos missing the `main` gate + 13 missing `enforce_admins` found by the
+>   infrastructure_master audit).
+
 ## Overview
 
 During the 2026-05-29 ci_canonical_v2_migration verification workflow (run wap99raio), a parallel survey of workspace
@@ -85,11 +96,11 @@ discovered during another workstream, not a critical-path blocker, but worth fix
 
 - [x] ✅ [VERIFY] P1. Re-fetched protection state via `gh api repos/.../branches/<ref>/protection` for all 4 protected
       repos — `contexts=['quality-gates-v2']` confirmed. user-management-ui returns 403 (archived).
-- [ ] [VERIFY] P1. Open a tiny test PR in one of the 5 (most reversible: a `docs(README):` PR) and confirm auto-merge
-      waits for the required check. **Deferred**: skipping the explicit test PR — protection state is verified via
-      `gh api repos/.../branches/.../protection` returning the expected contexts; opening test PRs in 5 different repos
-      adds churn without adding signal beyond what the API state already confirms. Reverse path: any future PR to these
-      repos will exercise the gate organically.
+- [x] ✅ [VERIFY] P1. Opened test PR #11 (`docs(README):`) in batch-live-reconciliation-service against `main` —
+      confirmed the `quality-gates-v2` required check ran and gated the merge (`mergeStateStatus: BEHIND` +
+      statusCheckRollup `quality-gates-v2` IN_PROGRESS ⇒ not mergeable until the check passes AND the branch is
+      up-to-date under strict mode). PR closed + branch deleted after verification (no churn left behind). —
+      batch-live-reconciliation-service PR #11 | 2026-06-01
 - [x] ✅ [CODEX] P1. `codex/06-coding-standards/feature-branch-workflow.md` updated with per-repo required-check matrix
       (this turn) — includes archived user-management-ui exception, features-service LDR-as-default exception, and the
       2-context check-staging-lock+quality-gates-v2 model for execution/instruments/deployment-ui.

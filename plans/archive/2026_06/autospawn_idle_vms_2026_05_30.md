@@ -21,6 +21,16 @@ related_plans:
   - plans/active/api_host_chronic_impairment_2026_05_29.md
 ---
 
+> **✅ COMPLETE — ARCHIVED 2026-06-01.** All 14 todos done; `AutoSpawnLoop` rolled fleet-wide to all 11 VMs
+> (`ORCHESTRATOR_AUTOSPAWN_ENABLED=true` drop-in), verified operationally (4→17 working slots in <2 min). Continuous
+> verification is built-in: 60 s tick + flap-detection Slack alert + `/api/fleet/summary`. Codified as HARD RULE in
+> deployment-service CLAUDE.md (§ "Orchestrator autospawn: workers self-heal") + codex
+> `agent-orchestrator-autospawn.md`.
+>
+> ## Deferred work — migrated to:
+>
+> - None — fleet-wide rollout complete; no deferred items.
+
 ## Why this exists
 
 Operator sweep on 2026-05-29/30 discovered the agent-orchestrator fleet was operating with **only 1 active worker

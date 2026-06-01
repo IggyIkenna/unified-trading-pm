@@ -26,6 +26,20 @@ related:
 
 # pipeline_mode — implement properly
 
+> **✅ COMPLETE (column-level) — ARCHIVED 2026-06-01.** Phases 0–4 + 6 shipped: `PipelineMode` enum, all-writer
+> column-fill, 43.5M-row backfill (0 NULL across cefi/defi/tradfi/sports/prediction + instruments stores), QG STEP 5.85
+> enum-only enforcement, batch-live-reconciliation `GROUP BY pipeline_mode`, manifest column, codex
+> `pipeline-mode-and-batch-live-reconciliation.md`. Continuous verification owned by
+> `batch_live_symmetry_master_audit_instructions.md` (weekly + on-new-adapter; per-bucket `IS NULL` check).
+>
+> ## Deferred work — migrated to:
+>
+> - **Phase 5 — on-disk `pipeline_mode=` hive partition** (single-walk-discipline deferral: partition-key change is
+>   review-blocking outside a whole-corpus walk) →
+>   [`pipeline_mode_partition_migration_2026_06_01.md`](../active/pipeline_mode_partition_migration_2026_06_01.md)
+>   (named successor, created 2026-06-01). The DeFi bucket's partition already rides
+>   `defi_manifest_canonicalisation_2026_06_01.md` C0 single-walk; the successor homes the remaining asset-group buckets.
+
 **Operator decision 2026-05-28**: IMPLEMENT (vs REMOVE). Restores the original design intent — batch ↔ live
 reconciliation as `GROUP BY pipeline_mode` over the same manifest.
 

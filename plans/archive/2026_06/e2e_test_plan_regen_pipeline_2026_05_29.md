@@ -20,6 +20,14 @@ estimate_calibration_note: |
 
 # [TEST] E2E plan-regen pipeline verification
 
+> **✅ COMPLETE — ARCHIVED 2026-06-01.** One-shot test served its purpose: PM-pull → PlanRegenLoop → /api/backlog
+> pipeline confirmed working (task dispatched to slot-3 2026-05-30). P3 test-only; never dispatched to real workers.
+>
+> ## Deferred work — migrated to:
+>
+> - **Recurring pipeline health-check** (this was a one-shot test, no continuous guard against PM-pull/regen regression)
+>   → `plans/epics/orchestrator_master.md` § P3 backlog (NICE-TO-HAVE todo, filed 2026-06-01).
+
 This plan was created by task `plan_hygiene_silent_failure_capture-020` to verify the Phase 6 PM-pull + regen pipeline
 end-to-end. The plan is pushed to LDR and the ingestion latency is measured.
 
