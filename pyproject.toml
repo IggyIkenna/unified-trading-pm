@@ -153,6 +153,12 @@ ignore = [
     "scripts/validation/sync_strategy_manifest_class_exists.py",
     "scripts/validation/validate-strategy-manifest.py",
     "scripts/workspace/cleanup-empty-dirs.py",
+    # CI tooling added 2026-06-01 — sibling-script / numpy-pandas imports basedpyright cannot
+    # resolve in CI (same class as the entries above); excluded to keep the strict-mode noise
+    # from breaching the 1511 ratchet without raising the ceiling. See cicd_contract_hardening P0 #3(B).
+    "scripts/quality_gates/audit_source_column_distribution.py",
+    "scripts/plans/audit_model_tier.py",
+    "scripts/repo-management/ci_failure_watcher.py",
 ]
 
 # Cross-repo import resolution (ported from deleted pyrightconfig.json extraPaths).
