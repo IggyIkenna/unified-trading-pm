@@ -232,9 +232,9 @@ jobs:
         run: |
           echo "Skipping: changed_plans='${{ steps.changed-plans.outputs.changed_plans }}' ANTHROPIC_API_KEY_set=$([ -n "$ANTHROPIC_API_KEY" ] && echo yes || echo no)"
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Rules Alignment Agent
+    name: Slack — Rules Alignment Agent
     needs: [align-rules]
     if: always()
     uses: ./.github/workflows/notify-slack.yml
@@ -247,7 +247,7 @@ jobs:
     secrets: inherit
 
   notify-violations:
-    name: Telegram — Major Bump Policy Violations
+    name: Slack — Major Bump Policy Violations
     needs: [align-rules]
     if: always() && needs.align-rules.outputs.violations_found == 'true'
     uses: ./.github/workflows/notify-slack.yml

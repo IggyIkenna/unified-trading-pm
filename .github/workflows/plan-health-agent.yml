@@ -136,9 +136,9 @@ jobs:
         if: env.ANTHROPIC_API_KEY == ''
         run: echo "ANTHROPIC_API_KEY not set — skipping plan health agent"
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Plan Health Agent
+    name: Slack — Plan Health Agent
     needs: [plan-health]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

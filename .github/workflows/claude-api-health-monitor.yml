@@ -86,9 +86,9 @@ jobs:
           echo "should_alert=$SHOULD_ALERT" >> "$GITHUB_OUTPUT" 2>/dev/null || true
           echo "prev_state=$PREV_STATE" >> "$GITHUB_OUTPUT" 2>/dev/null || true
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Claude API Health
+    name: Slack — Claude API Health
     needs: [health-check]
     if: always() && needs.health-check.outputs.should_alert == 'true'
     uses: ./.github/workflows/notify-slack.yml

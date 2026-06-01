@@ -65,9 +65,9 @@ jobs:
             && echo "✓ staging-validated dispatched" \
             || echo "⚠ dispatch failed (non-fatal — human can manually re-trigger staging-to-main)"
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Conflict Resolution Merged
+    name: Slack — Conflict Resolution Merged
     needs: [retry-promotion]
     if: always() && needs.retry-promotion.result == 'success'
     uses: ./.github/workflows/notify-slack.yml

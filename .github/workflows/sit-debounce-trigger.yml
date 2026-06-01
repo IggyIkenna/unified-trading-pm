@@ -218,9 +218,9 @@ jobs:
 
           echo "SIT dispatch complete"
 
-  # ── TELEGRAM NOTIFY — SIT triggered (reusable workflow) ──────────────────
+  # ── SLACK NOTIFY — SIT triggered (reusable workflow) ──────────────────
   notify-sit-triggered:
-    name: Telegram — SIT Debounce Triggered
+    name: Slack — SIT Debounce Triggered
     needs: [check-and-trigger]
     if: always() && needs.check-and-trigger.result == 'success'
     uses: ./.github/workflows/notify-slack.yml

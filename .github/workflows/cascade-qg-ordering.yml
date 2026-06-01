@@ -354,7 +354,7 @@ jobs:
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify-success:
-    name: Telegram — Cascade QG Success
+    name: Slack — Cascade QG Success
     needs: [cascade]
     if: needs.cascade.result == 'success' && needs.cascade.outputs.total_affected != '0'
     uses: ./.github/workflows/notify-slack.yml
@@ -371,7 +371,7 @@ jobs:
     secrets: inherit
 
   notify-failure:
-    name: Telegram — Cascade QG Failure
+    name: Slack — Cascade QG Failure
     needs: [cascade]
     if: always() && needs.cascade.result == 'failure'
     uses: ./.github/workflows/notify-slack.yml
@@ -388,7 +388,7 @@ jobs:
     secrets: inherit
 
   notify-no-affected:
-    name: Telegram — No Affected Repos
+    name: Slack — No Affected Repos
     needs: [cascade]
     if: needs.cascade.result == 'success' && needs.cascade.outputs.total_affected == '0'
     uses: ./.github/workflows/notify-slack.yml

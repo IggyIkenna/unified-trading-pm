@@ -762,7 +762,7 @@ jobs:
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify-tier-check:
-    name: Telegram — Tier Check Warning
+    name: Slack — Tier Check Warning
     needs: [route-build]
     if: always() && needs.route-build.outputs.tier_check_passed == 'false'
     uses: ./.github/workflows/notify-slack.yml
@@ -777,7 +777,7 @@ jobs:
     secrets: inherit
 
   notify-health-check-failed:
-    name: Telegram — Health Check FAILED
+    name: Slack — Health Check FAILED
     needs: [route-build]
     if: always() && needs.route-build.outputs.health_check_passed == 'false'
     uses: ./.github/workflows/notify-slack.yml
@@ -794,7 +794,7 @@ jobs:
     secrets: inherit
 
   notify-smoke-test-failed:
-    name: Telegram — Smoke Test FAILED
+    name: Slack — Smoke Test FAILED
     needs: [route-build]
     if: always() && needs.route-build.outputs.smoke_test_passed == 'false'
     uses: ./.github/workflows/notify-slack.yml
@@ -810,7 +810,7 @@ jobs:
     secrets: inherit
 
   notify-emergency-resume:
-    name: Telegram — Emergency Order Flow Resume
+    name: Slack — Emergency Order Flow Resume
     needs: [route-build]
     if: |
       always() &&
@@ -829,7 +829,7 @@ jobs:
     secrets: inherit
 
   notify-regional-fallback:
-    name: Telegram — Regional Fallback Used
+    name: Slack — Regional Fallback Used
     needs: [route-build]
     if: |
       always() &&
@@ -847,7 +847,7 @@ jobs:
     secrets: inherit
 
   notify-build-failed:
-    name: Telegram — Build FAILED
+    name: Slack — Build FAILED
     needs: [route-build]
     if: |
       always() &&
@@ -866,7 +866,7 @@ jobs:
     secrets: inherit
 
   notify-build-poll-exhausted:
-    name: Telegram — Build Poll Exhausted
+    name: Slack — Build Poll Exhausted
     needs: [route-build]
     if: |
       always() &&
@@ -884,7 +884,7 @@ jobs:
     secrets: inherit
 
   notify-build-not-configured:
-    name: Telegram — Build Trigger Not Configured
+    name: Slack — Build Trigger Not Configured
     needs: [route-build]
     if: |
       always() &&

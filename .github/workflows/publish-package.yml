@@ -159,9 +159,9 @@ jobs:
             git push origin main
           fi
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Publish Package
+    name: Slack — Publish Package
     needs: [publish]
     if: always()
     uses: ./.github/workflows/notify-slack.yml

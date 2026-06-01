@@ -132,9 +132,9 @@ jobs:
               labels: ['cassette-drift', 'automated'],
             });
 
-  # ── TELEGRAM NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
-    name: Telegram — Cassette Drift Check
+    name: Slack — Cassette Drift Check
     needs: [detect-cassette-drift]
     if: always()
     uses: ./.github/workflows/notify-slack.yml
