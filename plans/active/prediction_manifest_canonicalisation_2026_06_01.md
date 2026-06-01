@@ -211,6 +211,15 @@ be fixed first if run on a VM.
       small):** blank `data_type` (17 rows, both buckets) is skip+logged by the migrator → diagnose at rebuild from the
       parquet's own `data_type` column; confirm the ~21 UNKNOWN-venue cells are object-backed (relabel) vs phantom
       (honest drop).
+- [ ] [DATA] P0. E6b CODEX-ALIGNMENT VERIFY-ITEM (operator final-gate 2026-06-01): a codex-alignment audit confirmed
+      paths/columns/buckets/vocab are ALIGNED across codex + IS/MTDS/MDPS (all use UAC builders + `resolve_bucket_name`;
+      no inline divergence) — see `cf_data_state_audit_slot3_2026_06_01.md`. **ONE prediction nuance to confirm before
+      apply**: `codex/02-data/prediction-schema-paths.md` describes a `canonical_question_group={cqg}/` PATH SEGMENT for
+      `data_type=prediction_canonical_question_group` (post-Plan-A target). The migrator's `candidate_parquet_paths`
+      builds `.../data_type={DT}/{filename}.parquet` (cqg-as-filename, NO segment). For the 289 legacy question_group
+      cells: list an ACTUAL legacy question_group object, confirm whether the canonical layout uses the SEGMENT vs the
+      filename, and confirm the canonical READER resolves whichever my migrator produces. If the segment is required,
+      extend the migrator's prediction path build for that data_type. (raw_tick/trades/ohlcv = unaffected.)
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-pred-prd-…` → CF-1…CF-12 GREEN on
       data-state (v9, source populated, pipeline_mode, asset_group, available_at, 0 legacy-only). Flip the CF-coverage
       rows in `predictions_master_audit_instructions.md`.
