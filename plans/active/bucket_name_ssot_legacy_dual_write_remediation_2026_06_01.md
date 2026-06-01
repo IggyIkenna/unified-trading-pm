@@ -63,6 +63,51 @@ related:
 > NOT open a third walk — its row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic
 > `mtds_mdps_master`. Banner-remove when the DeFi `_index` is canonical + seeded (defi_manifest C-GREEN).
 
+## Cross-plan ordering → single canonical SSOT (no fallback, no dual) — operator-requested 2026-06-01
+
+**Invariant**: legacy buckets are deleted ONLY after canonical provably holds ALL data + an authoritative v9 manifest.
+One single-walk per `_index` (HARD RULE). Layers gate top-down; asset_groups parallelise within a layer.
+
+**L0 — INFRA UNBLOCK (gates every VM step below).** `issues/pinned_tarball_prune_breaks_vm_deploys_2026_06_01.md` —
+fix pinned-tarball persistence (prune-cron tune OR dedicated bucket). Until fixed, any VM migration/backfill can silently
+run stale code. BLOCKS L3 + L5.
+
+**L1 — CODE SSOT (write path)** — *mostly DONE*. This plan Phase 1 (resolver fix MTDS @0b575651 / MDPS @61900a3 /
+deploy @d667422,58ee0a9) ✅ + QG grep-guard (no string-concat bucket names) + UTL dead-code removal + workspace QG green
+(`utl_full_quality_gates_green_2026_06_01`). ⇒ every writer resolves canonical-only.
+
+**L2 — STOP LEGACY-SIDE ACTIVITY** — writers drained ✅; pause the 10 `*-legacy-cron` consolidators + remove from
+Terraform (coord: `manifest_consolidator_liveness_health` watchdog + `aws_manifest_consolidator_scope` for AWS). ⇒ legacy
+fully frozen.
+
+**L3 — HISTORICAL DATA+MANIFEST CANONICALISATION (per asset_group, ONE bundled single-walk).** Migrates legacy-only DATA
+→ canonical + rewrites manifest to v9 (venue relabel, granularity) + rides `data_source_provenance` (source col) +
+`pipeline_mode_implementation` (done). Owners:
+- defi (16,206 legacy-only cells): `defi_manifest_canonicalisation_2026_06_01.md` C — GATES defi backfill.
+- prediction (2,039 legacy-only, only 783 overlap → canonical largely INCOMPLETE): **NO PLAN YET — must create
+  `prediction_manifest_canonicalisation_*` (analogous to defi).**
+- cefi (838 legacy-only recent cells): explicit gap-fill into canonical — **assign owner (this plan or a cefi analogue).**
+- tradfi (4) / sports (0): data complete → manifest v4–v8→v9 canonicalisation only.
+
+**L4 — CONSOLIDATOR SSOT (go-forward manifest)** — keep the 10 env-tiered consolidator crons (self-maintain canonical
+`_index`); `manifest_consolidator_liveness_health` (GCP fresh) + `aws_manifest_consolidator_scope` (AWS S3 live). ⇒
+canonical `_index` authoritative + v9.
+
+**L5 — BACKFILL/WRITER RELAUNCH (go-forward data)** — after L0 + L3-green for the asset_group: relaunch the 3 drained
+writers on fixed code → canonical-only (Phase 4 here). Other launchers already fixed.
+
+**L6 — DECOMMISSION → SINGLE SSOT (Phase 7 here)** — verify 0 legacy-only cells + canonical `_index` v9 authoritative +
+0 legacy writes for soak → delete legacy flat/tier-first/long-form buckets (tick + instruments-store legacy, GCP+AWS).
+
+**L7 — GUARDRAILS** — QG grep-guard (L1) + `batch_live_symmetry` audit recurring check (added) + codex bucket-naming SSOT
+doc ("writer uses resolve_bucket_name, never string-concat").
+
+**Newly-exposed gaps to file**: (1) prediction has no canonicalisation plan but is the LEAST-complete canonical; (2) cefi
+838-cell gap-fill needs an owner; (3) the per-asset_group data layouts differ (defi=`dex_pools/lending_indices/lst_rates`,
+sports=`processed/`, cefi `raw_tick_data` has no `by_date/`) — any data-copy must be layout-aware.
+
+---
+
 **Finding (operator-directed 2026-06-01)**: legacy flat tick-data buckets
 (`market-data-tick-<group>-central-element-323112`, plus long-form `market-data-tick-prediction-…`) are **still
 receiving live writes today** alongside their canonical env-tiered counterparts
