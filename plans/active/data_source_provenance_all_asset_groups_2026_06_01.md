@@ -165,3 +165,8 @@ list to maintain; the registry is the SSOT.
 Crosscutting data-source provenance audit run 2026-06-01 (slot 1, operator-directed). Four parallel read-only audits
 (cefi/defi/sports/prediction) + the prior tradfi exploration. Operator directive: provenance must be auditable across
 **all** asset groups, gaps exposed, PM active todos created.
+
+> **🟡 DRAINED-WRITER DEPENDENCY (2026-06-01)** — the legacy-bucket SSOT remediation drained writer VMs
+> `mdps-backfill-defi` / `mdps-prediction-2025` / `sports-scheduler`. They must NOT be relaunched until the
+> legacy→canonical migration + manifest work complete. SSOT + relaunch gate:
+> `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 4.

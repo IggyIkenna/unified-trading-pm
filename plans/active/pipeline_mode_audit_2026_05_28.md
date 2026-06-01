@@ -201,3 +201,8 @@ With this audit complete, proceed to:
 2. Phase 2 — Create UTL helper and sweep all writers
 3. Phase 3 — Backfill script implementation
 4. Phase 4 — Consumer updates once values exist
+
+> **🟡 DRAINED-WRITER DEPENDENCY (2026-06-01)** — the legacy-bucket SSOT remediation drained writer VMs
+> `mdps-backfill-defi` / `mdps-prediction-2025` / `sports-scheduler`. They must NOT be relaunched until the
+> legacy→canonical migration + manifest work complete. SSOT + relaunch gate:
+> `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 4.

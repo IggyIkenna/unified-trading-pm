@@ -366,3 +366,8 @@ canonical data_type (underscore), flat venue + populated chain, v9 schema, a typ
 materialised so `% captured = captured / (captured+empty+failed+expected_unattempted)`; coverage-summary == drilldown ==
 manifest-status denominators; features-onchain-defi populated for the in-scope window; **Solana basis MVP G1–G4
 operationally-shipped (G4 human-only)**; the next audit needs one pass.
+
+> **🟡 DRAINED-WRITER DEPENDENCY (2026-06-01)** — the legacy-bucket SSOT remediation drained writer VMs
+> `mdps-backfill-defi` / `mdps-prediction-2025` / `sports-scheduler`. They must NOT be relaunched until the
+> legacy→canonical migration + manifest work complete. SSOT + relaunch gate:
+> `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 4.

@@ -90,3 +90,8 @@ because EventBridge Scheduler does not support Batch as a direct target in ap-no
 - `codex/05-infrastructure/manifest-consolidator-ssot.md` — canonical operational invariants (AWS port must match).
 - `deployment-service/terraform/modules/container-job/aws/` + `scheduler/aws/` — existing modules being wired.
 - `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` — GCP reference implementation.
+
+> **🟡 DRAINED-WRITER DEPENDENCY (2026-06-01)** — the legacy-bucket SSOT remediation drained writer VMs
+> `mdps-backfill-defi` / `mdps-prediction-2025` / `sports-scheduler`. They must NOT be relaunched until the
+> legacy→canonical migration + manifest work complete. SSOT + relaunch gate:
+> `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 4.

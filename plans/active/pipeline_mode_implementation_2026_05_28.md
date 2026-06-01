@@ -165,3 +165,8 @@ impact, no walk needed now.
 - QG STEP 5.7x asserts no missing pipeline_mode at write sites — green workspace-wide.
 - Codex doc landed + cross-linked.
 - §6I item 3 in `cefi_venue_backfill_coverage_remediation_2026_05_27.md` ticked.
+
+> **🟡 DRAINED-WRITER DEPENDENCY (2026-06-01)** — the legacy-bucket SSOT remediation drained writer VMs
+> `mdps-backfill-defi` / `mdps-prediction-2025` / `sports-scheduler`. They must NOT be relaunched until the
+> legacy→canonical migration + manifest work complete. SSOT + relaunch gate:
+> `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 4.
