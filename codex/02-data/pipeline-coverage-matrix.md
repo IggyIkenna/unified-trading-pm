@@ -67,21 +67,20 @@ parquets are backfilled with their defaults; **no migration needed for reads**.
 | Source returned 200 + zero rows | `record_empty(row_key=…, attempted_at=…)`                                   | legitimate gap (paused league, post-genesis)         |
 | Adapter raised                  | `record_failed(row_key=…, error=classify_venue_error(exc), attempted_at=…)` | error_reason classified; auto-retried by next VM run |
 
-### Manifest schema (v8 — current in code; data migration in progress)
+### Manifest schema (v9 — current in code; data migration in progress)
 
-> **[DELTA 2026-05-22]** **Current state:** `MANIFEST_SCHEMA_VERSION = 8` in `manifest_writer.py` (code constant shipped
-> 2026-05-08), but data-side migration is in progress — production manifest parquets contain a mix of v4–v7 rows with 0%
-> at v8 as of 2026-05-20 mega-audit. **Planned delta:** `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`
-> Phase 2.2 single-walk bundled migration rewrites all manifest rows to v8. **Target architecture:** 100% of production
-> rows at v8 with all four new v8 columns populated.
+> **[DELTA 2026-06-01]** **Current state:** `MANIFEST_SCHEMA_VERSION = 9` in `manifest_writer.py` (code constant rolled
+> 2026-05-30). Data-side migration is in progress as per-AG L3 walk riders; target is 100% of production rows at v9.
+> **Target architecture:** 100% of production rows at v9 with all new v9 columns populated.
 
-`MANIFEST_SCHEMA_VERSION = 8` in
+`MANIFEST_SCHEMA_VERSION = 9` in
 [`manifest_writer.py`](../../../unified-trading-library/unified_trading_library/manifest_writer.py). Evolution: v4 → v5
 (honest-coverage Phase A, 2026-04-19) → v6 (quote_margin_combo plan, 2026-04-23) → v7 (sports `fixture_id` +
 ML/strategy/execution `job_id`, UTL@`ed658e9b`) → v8 (`pipeline_mode` + `service_emission_state` +
 `last_emission_decision_at` + `expected_window_completeness_fraction` (renamed from `_pct` per UAC@`76f950a`
-2026-05-11); code constant shipped, data migration via `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`).
-See [`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) for the full SSOT — this is a
+2026-05-11)) → v9 (`source` universal provider tag, UTL@`c7bfa427` 2026-05-30; data migration via per-AG L3 walk riders
+per `plans/active/pipeline_mode_partition_migration_2026_06_01.md`). See
+[`availability-manifest-and-data-status.md`](availability-manifest-and-data-status.md) for the full SSOT — this is a
 brief recap.
 
 `AvailabilityRecord` columns (defaults `""` unless noted):

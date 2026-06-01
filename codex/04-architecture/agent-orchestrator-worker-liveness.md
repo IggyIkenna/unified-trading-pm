@@ -159,14 +159,14 @@ infrastructure required.
 
 ## Environment variables
 
-| Variable                                      | Default | Purpose                                                    |
-| --------------------------------------------- | ------- | ---------------------------------------------------------- |
-| `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED`        | `false` | Master on/off — must be `true` to enable                   |
-| `ORCHESTRATOR_WATCHDOG_INTERVAL_SECONDS`      | `60`    | Tick cadence                                               |
-| `ORCHESTRATOR_WATCHDOG_STUCK_TICKS`           | `3`     | Consecutive frozen ticks before kill (3 × interval = 180s) |
-| `ORCHESTRATOR_WATCHDOG_HEARTBEAT_TIMEOUT`     | `900`   | Heartbeat-silent threshold (15 min)                        |
-| `ORCHESTRATOR_WATCHDOG_KILL_COOLDOWN_SECONDS` | `300`   | Per-slot kill cooldown (5 min)                             |
-| `ORCHESTRATOR_WATCHDOG_DAILY_CAP`             | `20`    | Per-VM kills before dormancy                               |
+| Variable                                      | Code default | Notes / Purpose                                                                                                                                                                                                                                                                                              |
+| --------------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED`        | `false`      | **Systemd-deployed default: `true` on 10/11 fleet VMs** (drop-in at `/etc/systemd/system/orchestrator.service.d/watchdog.conf`). **Known gap**: `vm-ml` has a broken SSM path — the drop-in has not yet been applied there. Track: `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`. |
+| `ORCHESTRATOR_WATCHDOG_INTERVAL_SECONDS`      | `60`         | Tick cadence                                                                                                                                                                                                                                                                                                 |
+| `ORCHESTRATOR_WATCHDOG_STUCK_TICKS`           | `3`          | Consecutive frozen ticks before kill (3 × interval = 180s)                                                                                                                                                                                                                                                   |
+| `ORCHESTRATOR_WATCHDOG_HEARTBEAT_TIMEOUT`     | `900`        | Heartbeat-silent threshold (15 min)                                                                                                                                                                                                                                                                          |
+| `ORCHESTRATOR_WATCHDOG_KILL_COOLDOWN_SECONDS` | `300`        | Per-slot kill cooldown (5 min)                                                                                                                                                                                                                                                                               |
+| `ORCHESTRATOR_WATCHDOG_DAILY_CAP`             | `20`         | Per-VM kills before dormancy                                                                                                                                                                                                                                                                                 |
 
 ---
 

@@ -695,6 +695,20 @@ Two cleanup modes:
 active path until SHA-versioned naming (see § "Tarball naming + manifest" above) is adopted. Dry-run smoke confirmed 0
 deletions on the live bucket. Shipped: deployment-service@3c42df5.
 
+> **WARNING — SHA-pin fan-out race (2026-06-01 incident)**: if you upload `<repo>@<sha>.tar.gz` files and then
+> immediately launch a large fan-out (e.g. 20 shards), `cleanup_old_tarballs.py` can prune the just-uploaded SHA-pinned
+> tarball **within seconds** of the upload (before any VM has fetched it). The 2026-06-01 20-shard launch resulted in
+> all 20 VMs failing with exit code 2 (tarball not found at boot) because the SHA-pinned file was pruned between upload
+> and first VM fetch.
+>
+> **Mitigations before relying on SHA-pins for fan-out**:
+>
+> 1. Use a **no-prune bucket** (a separate GCS bucket or prefix that `cleanup_old_tarballs.py` is not pointed at) for
+>    SHA-versioned fan-out tarballs.
+> 2. Tune `--keep-n` to a value ≥ the number of concurrent VMs that need to fetch the tarball before the next prune
+>    cycle.
+> 3. Verify the tarball is present before firing launchers: `gsutil stat gs://.../code/<repo>@<sha>.tar.gz`.
+
 ### `validate_vm_prefix_mapping.py` — prod audit: `VM_PREFIX_TO_BUCKET` vs live GCS buckets
 
 ```bash

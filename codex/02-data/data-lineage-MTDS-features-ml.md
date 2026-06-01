@@ -38,8 +38,7 @@ canonical feature paths; ml-inference writes canonical prediction paths) without
   bucket-name SSOT registration). For ML predictions: paths live UNDER the consumer's bucket, not their own kind. Never
   inline `gs://uts-models-{cloud}/...` or `s3://artifacts/...` (QG STEP 5.69 enforces).
 - **Hive partitioning** — `key=value`, not `key-value`. See `partitioning.md`.
-- **Manifest shard dims (v8 — column shape ratified 2026-05-09; `MANIFEST_SCHEMA_VERSION` constant transitionally pinned
-  at `7` until Phase 4.DEFAULT-REMOVAL — see SSOT)** —
+- **Manifest shard dims (v9 — column shape current as of 2026-05-30; `MANIFEST_SCHEMA_VERSION = 9` — see SSOT)** —
   `venue, chain, data_type, instrument_type, league_id, timeframe, feature_group, model_family, training_period, strategy_id, client_id, instruction_type, fixture_id, job_id`.
   v5 added `capture_status / error_reason / attempted_at` (honest-coverage). v6 added
   `quote_asset / margin_type / combo_type / leg_weights` (DERIBIT inverse-vs-linear + multi-leg). v7 added `fixture_id`
@@ -123,9 +122,9 @@ Bucket: `features-{feature_group}-{category}-central-element-323112`
 | features-cross-instrument | `cross_asset_correlation`, `regime_detection`             | **delta_one output bucket** (same layout; calculators need `instrument_id` injected from filename) | CeFi, TradFi          |
 | features-commodity        | `commodity_basis`, `backwardation`                        | TradFi commodity futures                                                                           | TradFi only           |
 
-### Features input discovery — manifest-driven (v8), NOT path-probe
+### Features input discovery — manifest-driven (v9), NOT path-probe
 
-**Codified 2026-05-25** — features input discovery reads the MDPS `processed_candles` v8 availability manifest, NOT
+**Codified 2026-05-25** — features input discovery reads the MDPS `processed_candles` v9 availability manifest, NOT
 lexicographic GCS path probing. This applies to `features-delta-one`, `features-volatility`,
 `features-cross-instrument`, and `features-multi-timeframe`.
 
@@ -163,7 +162,7 @@ Canonical output path (features-delta-one, batch mode): `batch/date={date}/{feat
 
 Cross-instrument output path: `{run_tag}/date={date}/{feature_group}/features.parquet`
 
-**Manifest emission contract (proven 2026-05-26 e2e Phase 2):** every successful write co-emits a v8 manifest row to the
+**Manifest emission contract (proven 2026-05-26 e2e Phase 2):** every successful write co-emits a v9 manifest row to the
 same output bucket's `_index/availability_index.parquet`. The manifest row carries:
 
 - `capture_status="captured"` (or `"empty_confirmed"` if write-gate rejected)

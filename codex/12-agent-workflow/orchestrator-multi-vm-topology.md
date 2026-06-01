@@ -79,30 +79,29 @@ The browser never reaches an epic VM directly — every `/api/...` call from the
 `<central>/api/vms/<id>` (or stays at the central origin for fleet-wide endpoints), so per-VM control travels through
 the central API's proxy. Code: `dashboard/src/App.tsx::backendBaseUrl` + `server/server.py::proxy_to_vm`.
 
-### Auth: two-secret model (codified 2026-05-29)
+### Auth: asymmetric ES256 model (codified 2026-06-01, shipped `orchestrator_asymmetric_auth`)
 
-The auth boundary above runs on **two independent HS256 secrets** — codifying the "operator JWT never reaches workers"
-invariant the topology depends on:
+The auth boundary above runs on **two independent keys** — codifying the "operator JWT never reaches workers" invariant
+the topology depends on:
 
-- **`ORCHESTRATOR_JWT_SECRET`** — operator dashboard login JWT only. **Lives on the central VM only.** Validates the
-  Bearer token on every authed request that enters at the public edge. Workers don't have it (their `_jwt_secret` module
-  global resolves to an ephemeral per-process random, so operator JWTs can never validate on a worker by construction).
-- **`ORCHESTRATOR_INTERNAL_SECRET`** — central↔worker proxy auth. **Fleet-shared** via
-  `gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret`. Every worker's `.env.local` wires
-  `ORCHESTRATOR_INTERNAL_SECRET_GCS=gs://…/internal-secret` (loaded at startup via the GCS Storage client; works because
-  workers have `GOOGLE_APPLICATION_CREDENTIALS` from bootstrap). The central VM holds the literal value directly
-  (`ORCHESTRATOR_INTERNAL_SECRET=<literal>`) because its AWS-side ADC has no GCP project context for the SDK's project
-  auto-detection — equivalent to the GCS-shared value, rotate together with the GCS object.
+- **`ORCHESTRATOR_JWT_SECRET`** — operator dashboard login JWT only (HS256). **Lives on the central VM only.** Validates
+  the Bearer token on every authed request that enters at the public edge. Workers don't have it.
+- **ES256 asymmetric key pair** — central↔worker proxy auth. `ORCHESTRATOR_INTERNAL_ALG=ES256`. Central holds the
+  private key (GCP Secret Manager). Workers set
+  `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=gs://central-element-323112-orchestrator-creds/orchestrator/internal-public.pem`
+  in `.env.local`; the public key is fetched at startup via the GCS Storage client (works because workers have
+  `GOOGLE_APPLICATION_CREDENTIALS` from bootstrap).
 - **Flow per request**: operator → central with Bearer<operator-JWT>. Central validates against
-  `ORCHESTRATOR_JWT_SECRET`, terminates that token, mints a fresh 5-min JWT signed with `ORCHESTRATOR_INTERNAL_SECRET`
-  (claims: `role=worker, machine=central-proxy, sub=orchestrator`), forwards THAT in the upstream Authorization. Worker
-  validates against its copy of the internal secret. The operator's token never leaves the central VM.
-- **Symmetric `decode_token`**: both sides try the operator key first, then the internal key. So the central can accept
-  its own internal-token loopback if a route ever proxies back to itself; workers reject operator JWTs by construction.
+  `ORCHESTRATOR_JWT_SECRET`, terminates that token, mints a fresh 5-min ES256 JWT (claims:
+  `role=worker, machine=central-proxy, sub=orchestrator`), forwards THAT in the upstream Authorization. Worker validates
+  against the public key. The operator's token never leaves the central VM.
+- **Dual-accept during 48h soak**: `decode_token()` tries ES256 first, then falls back to HS256
+  (`ORCHESTRATOR_INTERNAL_SECRET` legacy value) so workers migrated out-of-order still validate. Remove HS256 path after
+  soak period ends.
 
-Failure mode if the secrets get out of sync: workers 401 on every authed proxy call (`/api/vms/<id>/api/state`,
+Failure mode if keys get out of sync: workers 401 on every authed proxy call (`/api/vms/<id>/api/state`,
 `/api/backends`, etc.) and the dashboard bounces back to the login screen. Diagnosis: SSH to a worker + check the
-journal for `"Loaded internal central↔worker secret from GCS."` startup line. Absence → `.env.local` missing the GCS
+journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the GCS
 URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
 
 ## Per-VM agent shape (epic VMs)
@@ -201,8 +200,10 @@ process so SQLite + in-process state stay in sync after the YAML write).
   flipping to `- [x]` simply removes the todo from regen's view, leaving the existing BacklogTask intact.
 
 **Background poll**: `PlanRegenLoop` daemon thread in the same module. Fires once 60s after server startup, then every
-`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` (default 21600 = 6h, 0 disables). After each tick, a callback refreshes
-`_state["backlog"]` and re-syncs SQLite via `bootstrap.sync_backlog_to_db`.
+`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` (default **1800 = 30 min**, 0 disables; changed from 6h 2026-06-01 via
+`plan_hygiene_silent_failure_capture` Phase 6). A complementary `pm-pull.timer` systemd unit FF-pulls
+`unified-trading-pm` from LDR every 5 min, so the effective push-to-pickup latency is ≤35 min (was "≤6h"). After each
+tick, a callback refreshes `_state["backlog"]` and re-syncs SQLite via `bootstrap.sync_backlog_to_db`.
 
 **Manual trigger**: `POST /api/backlog/regen` (authed) for operator-initiated immediate refresh.
 
@@ -348,8 +349,8 @@ Audit row → planning VM (Ikenna or Harsh) → active plan edit/create
             → frontmatter parent_epic: <slug>
             → commit + push to LDR
             → registry regen + populator regen
-            → target VM's PlanRegenLoop tick (≤6h; or operator POST
-              /api/backlog/regen for immediate)
+            → target VM's PlanRegenLoop tick (≤35 min: pm-pull 5-min + regen 30-min;
+              or operator POST /api/backlog/regen for immediate)
             → regen_backlog_from_plan.regen() appends new `- [ ]` items as
               BacklogTask rows + content-dedupes already-derived ones
             → on_regen callback re-syncs SQLite + _state["backlog"]

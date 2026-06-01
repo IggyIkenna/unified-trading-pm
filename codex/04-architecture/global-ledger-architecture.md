@@ -11,9 +11,13 @@ scope: [engineer, admin]
 
 > **[DELTA 2026-05-23]** **UAC schema Phase 2 DONE** — `LedgerRow` + 4 SSOT ledger aliases + 5 StrEnum enums shipped at
 > `unified-api-contracts@008e59ce`. `parent_event_id` linkage + `accrual_period` conventions codified in class
-> docstring. Cross-client HARD RULE enforced by `@model_validator`. Five-service audit complete (2026-05-23); gap
-> analysis in `plans/audit/results/global_ledger_audit_*_2026_05_23.md`. Migration sub-plan forthcoming (Phase 5-6 of
-> discovery). **Discovery plan:** `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md`.
+> docstring. Cross-client HARD RULE enforced by **structural single-`client_id` field** (schema default makes
+> same-client intent the only representable intent) + **`TransferCoordinator.execute()` runtime gate** at
+> `execution-service/transfer_coordinator.py:241` (raises `CrossClientTransferForbiddenError`). Note: enforcement is NOT
+> via `@model_validator` — see `codex/04-architecture/client-funds-isolation.md` for the authoritative enforcement
+> table. Five-service audit complete (2026-05-23); gap analysis in
+> `plans/audit/results/global_ledger_audit_*_2026_05_23.md`. Migration sub-plan forthcoming (Phase 5-6 of discovery).
+> **Discovery plan:** `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md`.
 
 ## Overview
 
@@ -155,10 +159,10 @@ sub-plan.
 | **Per-snapshot delta (chosen)** | `(rate_t - rate_{t-1}) / rate_{t-1}` annualised        | Reflects latest rate; consistent cadence with MTDS tick frequency; smooth LST curve makes per-snapshot noise negligible |
 | Daily-checkpoint delta          | `(eod_rate_t - eod_rate_{t-1}) / eod_rate_{t-1}` × 365 | Adds 12–24h latency; requires MTDS to distinguish "end-of-day" snapshot — not available in IS `lst_rates` schema        |
 
-| Owner-repo option         | Pros                                                                                                    | Recommendation                                                                                                                 |
-| ------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| Owner-repo option         | Pros                                                                                                   | Recommendation                                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
 | **MTDS-derived (chosen)** | Consistent with `dividend_yield` architecture; IS stays pure reference data; no IS↔MTDS contract drift | ✓                                                                                                                              |
-| IS-write-time             | Closer to source; no MTDS state                                                                         | Violates IS reference-only contract (`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`); blurs contract boundary |
+| IS-write-time             | Closer to source; no MTDS state                                                                        | Violates IS reference-only contract (`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`); blurs contract boundary |
 
 ### Formula (operator-ACK pending 2026-05-24)
 

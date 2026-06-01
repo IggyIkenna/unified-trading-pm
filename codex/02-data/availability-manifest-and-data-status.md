@@ -388,13 +388,14 @@ class AvailabilityRecord:
     pipeline_mode: str | None = None  # "batch_databento" | "batch_tardis" | … | "live_websocket" | None (pre-migration)
 
     # ─────────────────────────────────────────────────────────────────────
-    # v9 — TradFi data-source tag (tradfi_massive_dual_source_2026_05_28.md Phase 3, 2026-05-30)
+    # v9 — universal data-source tag (uac@aab101ad / utl@0f7198f2, 2026-05-30)
     # Identifies which upstream provider produced the rows in this shard.
-    # REQUIRED for TradFi cells (category=="tradfi") — MissingSourceError
-    # raised when omitted. Non-TradFi cells default to "".
+    # REQUIRED for all external-vendor cells — MissingSourceError raised when
+    # omitted on any cell where SOURCE_PRIORITY is registry-driven (single-source
+    # cells auto-stamped; multi-source cells must be explicit).
     # Closed-set values mirror UAC SOURCE_PRIORITY source strings.
     # ─────────────────────────────────────────────────────────────────────
-    source: str = ""                  # "databento" | "massive" | "" (non-TradFi / pre-v9 legacy)
+    source: str = ""                  # "databento" | "massive" | "yahoo" | "barchart" | "tardis" | "" (pre-v9 legacy)
 
     # ─────────────────────────────────────────────────────────────────────
     # v8 — emission tracking (manifest_schema_final_gate_2026_05_09)
@@ -407,16 +408,15 @@ class AvailabilityRecord:
     expected_window_completeness_fraction: float | None = None  # 0.0-1.0 fraction of expected per-row window populated (renamed from _pct at UAC@76f950a 2026-05-11)
 
     # ─────────────────────────────────────────────────────────────────────
-    # v9 — source column (tradfi_massive_dual_source Phase 3, 2026-05-28)
+    # v9 — universal source column (uac@aab101ad / utl@0f7198f2, 2026-05-30)
     # Identifies which upstream data source produced the rows in the parquet.
-    # Required (non-empty) for TradFi rows; empty "" for all other asset_groups.
+    # Required (non-empty) for all asset groups where SOURCE_PRIORITY is
+    # registry-driven; UTL raises MissingSourceError on single-source blank.
     # Closed-set values mirror UAC `SOURCE_PRIORITY` source strings:
-    # "databento", "massive", "yahoo", "barchart", etc.
-    # UTL raises MissingSourceError when category=="tradfi" and source=="".
-    # Backfill: existing TradFi parquets get source='databento' via Phase 5
-    # backfill_tradfi_source_column.py (pending operator drain — BLK-b00254d7).
+    # "databento", "massive", "yahoo", "barchart", "tardis", etc.
+    # Backfill: existing pre-v9 rows get source stamped via per-AG L3 walk.
     # ─────────────────────────────────────────────────────────────────────
-    source: str = ""  # "databento" | "massive" | "yahoo" | "barchart" | "" (non-TradFi rows)
+    source: str = ""  # "databento" | "massive" | "yahoo" | "barchart" | "tardis" | "" (pre-v9 legacy)
 ```
 
 ### Column Rules
@@ -428,18 +428,17 @@ class AvailabilityRecord:
   `manifest_writer._coerce_row_key` + `.add()` via UAC `LEGACY_DEFI_VENUE_ALIASES`; the 2026-05-07 manifest migration
   rewrote 411,620 historical rows in place
   (`market_tick_data_service/scripts/migrate_mtds_defi_legacy_venue_underscore.py`). Read-time fallback removed in
-  deployment-api 2026-05-07 (commit 64d2be9). Intentional canonical underscores like `TRADER_JOEV2` survive per UAC
-  `ALL_DEFI_VENUES`.
+  deployment-api 2026-05-07 (commit 64d2be9). Canonical underscore forms per UAC `ALL_DEFI_VENUES` (e.g.
+  `TRADER_JOE_V2`, `VELODROME_V2`) are preserved — only the legacy run-together forms are aliased.
 - **`venue` for SPORTS (MTDS)** = individual bookmaker (PINNACLE, BETFAIR_EX, DRAFTKINGS), not "ODDS_API".
 - **No `data_source` column for non-TradFi rows.** Track what the data IS (transfers, injuries, odds), not where it came
   from (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
-- **`source` field (v9, TradFi only).** TradFi is the exception — a single `(asset_group=tradfi, venue, day, data_type)`
-  cell can be populated by multiple data sources (Databento, Massive, Yahoo, Barchart). The `source` column tags which
-  source produced each manifest row, enabling `GROUP BY source` reconciliation. Closed-set values mirror UAC
-  `SOURCE_PRIORITY` source strings (`"databento"`, `"massive"`, `"yahoo"`, `"barchart"`). Empty `""` for all other
-  asset_groups. Required non-empty for TradFi writes (UTL raises `MissingSourceError` on omission). Backfill of existing
-  rows (`source='databento'`) is pending operator drain + `backfill_tradfi_source_column.py` run (Phase 5 of
-  `tradfi_massive_dual_source_2026_05_28.md`, blocked on MASSIVE_API_KEY BLK-b00254d7).
+- **`source` field (v9, universal).** Every external-vendor cell across all 5 asset groups now carries `source`. The
+  column tags which upstream provider produced the manifest row, enabling `GROUP BY source` reconciliation for
+  multi-source cells (e.g. TradFi Databento + Massive) and registry-driven auto-stamp for single-source cells.
+  Closed-set values mirror UAC `SOURCE_PRIORITY` source strings (`"databento"`, `"massive"`, `"yahoo"`, `"barchart"`,
+  `"tardis"`, etc.). UTL raises `MissingSourceError` on single-source blank (`uac@aab101ad` / `utl@0f7198f2`
+  2026-05-30). Cross-reference: `contracts-scope-and-layout.md` § "Generalised beyond TradFi".
 - **`capture_status` is canonical** for shard state — closed 4-state set: `captured` (real data on disk),
   `empty_confirmed` (source returned 200 + zero rows OR known expected gap; counts in denominator only),
   `attempted_failed` (exception during fetch; classified via `error_reason`), `expected_unattempted` (downstream service
@@ -1432,8 +1431,8 @@ Currently-tracked temporary states relevant to the manifest:
 | ETHEREUM    | 16             | AAVE_V3, UNISWAP_V3, UNISWAP_V4, CURVE, BALANCER, COMPOUND_V3, MORPHO, LIDO, ETHERFI, ...      |
 | BASE        | 8              | AAVE_V3, UNISWAP_V3, BALANCER, AERODROME_V3, COMPOUND_V3, MORPHO, PANCAKESWAP_V3, SUSHISWAP_V3 |
 | ARBITRUM    | 7              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CAMELOT_V3, SUSHISWAP, GMX                         |
-| AVALANCHE   | 6              | AAVE_V3, BALANCER, CURVE, SUSHISWAP_V3, TRADER_JOEV2, GMX                                      |
-| OPTIMISM    | 6              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CURVE, VELODROMEV2                                 |
+| AVALANCHE   | 6              | AAVE_V3, BALANCER, CURVE, SUSHISWAP_V3, TRADER_JOE_V2, GMX                                     |
+| OPTIMISM    | 6              | AAVE_V3, UNISWAP_V3, BALANCER, COMPOUND_V3, CURVE, VELODROME_V2                                |
 | SOLANA      | 6              | DRIFT, KAMINO, RAYDIUM, ORCA, MARINADE, JITO                                                   |
 | POLYGON     | 3              | AAVE_V3, UNISWAP_V3, BALANCER                                                                  |
 | BSC         | 2              | AAVE_V3, PANCAKESWAP_V3                                                                        |
@@ -1530,7 +1529,13 @@ python -m unified_trading_library.manifest_consolidator --bucket market-data-tic
 
 Idempotent + safe to run concurrently with the scheduled cycle.
 
-### Read path fail-fast on stale-fallback (2026-05-28 opt-in)
+### Read path fail-fast on stale-fallback (2026-05-28 opt-in) — SUPERSEDED 2026-06-01
+
+> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK` opt-in
+> described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
+> `ManifestConsolidatorStaleError` by default; the escape hatch is now `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverted
+> from the original opt-in). See "Read path fail-fast (consolidator liveness contract, 2026-06-01)" above for the
+> current SSOT.
 
 The reader's slow-path fallback (`_read_and_merge_per_vm_shards`) loads every per-VM shard in the bucket when the
 consolidated `availability_index.parquet` is stale or missing. On large buckets (cefi: 1700+ shards) this is ~12 GB
@@ -1612,14 +1617,16 @@ SSOT: `plans/active/cross_asset_group_catalogue_audit_2026_05_10.md` Phase 2 +
 
 ---
 
-## TradFi `source` column — v9 {#tradfi-source-column--v9}
+## Universal `source` column — v9 {#universal-source-column--v9}
 
-**Plan**: `tradfi_massive_dual_source_2026_05_28.md` Phase 3 (task -017). **Live**: UTL@`c7bfa427` (2026-05-30).
+**Initial plan**: `tradfi_massive_dual_source_2026_05_28.md` Phase 3 (task -017). **Generalised**: `uac@aab101ad` /
+`utl@0f7198f2` (2026-05-30) — `source` now covers every external-vendor cell across all 5 asset groups.
 
 ### Manifest row `source` field
 
-Every `AvailabilityRecord` now carries `source: str = ""`. For TradFi cells this is the closed-set upstream provider
-string; for all other asset groups it defaults to `""` (no enforcement).
+Every `AvailabilityRecord` now carries `source: str = ""`. For all asset groups where SOURCE_PRIORITY is
+registry-driven, the field is auto-stamped or required non-empty (single-source cells auto-stamp; multi-source cells
+must be explicit); `MissingSourceError` on blank. Pre-v9 legacy rows default to `""`.
 
 | Value         | Provider                      | When stamped                                                                                  |
 | ------------- | ----------------------------- | --------------------------------------------------------------------------------------------- |
@@ -1650,9 +1657,10 @@ semantics" policy documented in `codex/02-data/honest-absence-downstream-handlin
 
 ### `MissingSourceError` gate
 
-`manifest_writer.record_captured(category="tradfi", ...)` raises `MissingSourceError` (UTL) when `source=` is omitted or
-empty. This gate (step 0b in the write path) fires before cluster-coverage validation and before the manifest row is
-written — no partial rows land in the catalogue. Non-TradFi callsites are unaffected.
+`manifest_writer.record_captured(...)` raises `MissingSourceError` (UTL) when `source=` is omitted or empty on cells
+where SOURCE_PRIORITY is registry-driven. This gate fires before cluster-coverage validation and before the manifest row
+is written — no partial rows land in the catalogue. Universal across all asset groups as of `uac@aab101ad` /
+`utl@0f7198f2` (2026-05-30).
 
 ### QG STEP 5.64
 

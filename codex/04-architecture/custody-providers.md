@@ -310,6 +310,14 @@ HTTP timeouts: 30s for signing/transfers, 10s for balance queries and wallet lis
 > real implementation drops in as a tightly-scoped diff. Real REST endpoints + sandbox URL + sub-account model are
 > pending operator confirmation per the open questions below — **all such "pending" / "TBD" markers in §2.4 sub-sections
 > are deferred-after-cutover (June-1+), not May-23 blockers.**
+>
+> **[STATUS UPDATE 2026-06-01]** The June-1 target window has now arrived. The CEFFU API spec
+> (`<TBD-OPERATOR-PROVIDES-API-SPEC>` markers throughout this section), REST endpoints, sandbox URL, and sub-account
+> model details remain **pending operator input** as of this date. The `<TBD>` markers below are **blocking the
+> implementation gate** — no production CEFFU calls can be made until these are populated. Master plan Group F Item 19
+> ("Copper + CEFFU treasury wired") remains BLOCKED-OPERATOR-DECISION. Operator action required: provide API spec,
+> sandbox credentials, and endpoint catalogue to unblock `CeffuCustodyProvider` implementation from stub → real. Do NOT
+> invent endpoints — this note records the revised status accurately.
 
 CEFFU (formerly Binance Custody) is the **institutional custody provider for Binance perp / spot exposure** in the
 6-venue perp universe (Bybit / Deribit / Binance / OKX / Hyperliquid / Aster). The same pluggable `CustodyProvider`

@@ -264,6 +264,34 @@ NEVER skip a verify; NEVER proceed to the next wave with an unresolved failure (
 
 ---
 
+## Resolver domain-string contract (HARD RULE, codified 2026-06-01)
+
+`resolve_bucket_name(domain, ...)` performs an exact lookup against the `_DOMAIN_TO_YAML_KIND` mapping in UTL
+`cloud_interface/bucket_naming.py`. The `domain` argument **must** match the key in that dict verbatim.
+
+**Valid examples**: `"market_data"`, `"instruments"`, `"features_delta_one"`.
+
+**Invalid examples that silently fall through to the legacy flat name**:
+
+- `"market-data-tick-cefi"` (hyphen-separated, asset-group suffix) — no match → falls back to the pre-env-tiered flat
+  bucket name, bypassing the resolver entirely.
+- Any free-form string not present as a key in `_DOMAIN_TO_YAML_KIND`.
+
+**Why it matters**: a writer that bypasses the resolver via a malformed domain string will write to the _legacy flat_
+bucket even after the env-tiered cutover, creating dual-write divergence that is invisible to QG STEP 5.69 (which only
+checks inline `gs://` strings, not malformed domain arguments).
+
+**2026-06-01 incident**: `market-tick-data-service` was passing `f"market-data-tick-{asset_group}"` as the domain
+argument. The resolver found no match and silently returned the flat name; writers continued populating the old bucket
+post-cutover. Fix: market-tick-data-service@0b575651 — changed callers to pass `"market_data"` (the canonical key).
+
+**Rule**: when adding a new call to `resolve_bucket_name`, verify the domain string against `_DOMAIN_TO_YAML_KIND`
+before merging.
+`grep "_DOMAIN_TO_YAML_KIND" unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py` is the
+source of truth.
+
+---
+
 ## References
 
 - Master plan:

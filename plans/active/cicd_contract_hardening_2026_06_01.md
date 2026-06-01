@@ -54,11 +54,11 @@ BFS over each repo's pyproject `path = "../<repo>"` lines (see deployment-api �
 **DURABLE FIX (do this — prevents recurrence):**
 
 - [x] ✅ [SCRIPT] P0. **DONE** — `quality-gates-v2.yml.tmpl` created + pyproject-derived `dep_repos` closure wired into
-      `rollout-workflow-templates.sh` (DONE-block `@83f483069`); v1→v2 rolled out to all repos (per-repo migration fan-out
-      ✅); semver template rolled out to 24 repos (P0 #2). `pin_branch_protection_rulesets` derives v2 everywhere →
-      verify = ALL CONSISTENT.
-- [x] ✅ [SCRIPT] P1. **DONE** — `verify_branch_protection_check_names.py` runs clean; all branches consistent
-      (ALL RULESETS CONSISTENT, every repo main+staging on `…/quality-gates-v2`).
+      `rollout-workflow-templates.sh` (DONE-block `@83f483069`); v1→v2 rolled out to all repos (per-repo migration
+      fan-out ✅); semver template rolled out to 24 repos (P0 #2). `pin_branch_protection_rulesets` derives v2
+      everywhere → verify = ALL CONSISTENT.
+- [x] ✅ [SCRIPT] P1. **DONE** — `verify_branch_protection_check_names.py` runs clean; all branches consistent (ALL
+      RULESETS CONSISTENT, every repo main+staging on `…/quality-gates-v2`).
 
 **PROVEN per-repo manual procedure (until the template lands):**
 
@@ -80,14 +80,14 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 
 ## CI-robustness (operator 2026-06-01)
 
-- [x] ✅ [SCRIPT] P0. **v2 alerts on failure OR cancel (timeout/OOM/cancel) — no more silent failures / `invalid_payload`.**
-      Reusable `python-quality-gates-v2.yml` now: `if: failure() || cancelled()` notify + `timeout-minutes: 135` (kills
-      hangs; was 6h default) + a `python json.dumps` Slack body (raw-excerpt interpolation caused `invalid_payload`).
-      Lands for every repo (reusable workflow). DONE 2026-06-01.
+- [x] ✅ [SCRIPT] P0. **v2 alerts on failure OR cancel (timeout/OOM/cancel) — no more silent failures /
+      `invalid_payload`.** Reusable `python-quality-gates-v2.yml` now: `if: failure() || cancelled()` notify +
+      `timeout-minutes: 135` (kills hangs; was 6h default) + a `python json.dumps` Slack body (raw-excerpt interpolation
+      caused `invalid_payload`). Lands for every repo (reusable workflow). DONE 2026-06-01.
 - [x] ✅ [SCRIPT] P0. **v2 time/mem bounds IN PLACE — without gutting checks.** `QG_MEM_CAP`/`MEM_WRAP` cgroup cap +
-      `PYTEST_WORKERS` xdist (base-service.sh) + `timeout-minutes` (v2 workflow) + `profile_qg_steps.py` all present; recent
-      v2 runs (PM/instruments/strategy) complete without timeout/OOM. Per-repo hotspot reduction (execution ~120m tests,
-      basedpyright) stays opportunistic — never by skipping tests/coverage (enforced by the QG-debt standard).
+      `PYTEST_WORKERS` xdist (base-service.sh) + `timeout-minutes` (v2 workflow) + `profile_qg_steps.py` all present;
+      recent v2 runs (PM/instruments/strategy) complete without timeout/OOM. Per-repo hotspot reduction (execution ~120m
+      tests, basedpyright) stays opportunistic — never by skipping tests/coverage (enforced by the QG-debt standard).
 
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
@@ -113,36 +113,56 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 
 > **Procedure — follow this; do NOT fan out all repos at once (that whack-a-moles against a moving LDR).** Promote
 > `live-defi-rollout`→`main` **in dependency order (UAC → UTL → services → apps)** during a brief **LDR-write freeze**
-> (pause crons), **driven by `quickmerge`**: its dep-checker refuses to promote a repo until its deps are clean-vs-remote
-> (enforces order + kills the cross-repo clone skew that made the first storm flaky), and it runs QG **pre-promote**
-> (catches merge-only issues like the mtds `I001`). Per repo: back-merge `origin/main`→LDR, resolve **take-best**
-> (recurring conflict = `quality-gates-v2.yml` add/add → take LDR's PM-template version; LDR is the newer canonical
-> line), **run `ruff check . && quality-gates.sh` on the MERGED tree before pushing** (the pre-merge slot QG misses
-> merge-only issues), then PR + `--auto --merge` (merge-commit preserves main's fresh commits; never bypass v2).
+> (pause crons), **driven by `quickmerge`**: its dep-checker refuses to promote a repo until its deps are
+> clean-vs-remote (enforces order + kills the cross-repo clone skew that made the first storm flaky), and it runs QG
+> **pre-promote** (catches merge-only issues like the mtds `I001`). Per repo: back-merge `origin/main`→LDR, resolve
+> **take-best** (recurring conflict = `quality-gates-v2.yml` add/add → take LDR's PM-template version; LDR is the newer
+> canonical line), **run `ruff check . && quality-gates.sh` on the MERGED tree before pushing** (the pre-merge slot QG
+> misses merge-only issues), then PR + `--auto --merge` (merge-commit preserves main's fresh commits; never bypass v2).
 > **Parallel flow:** PM is already done — pick any repo whose upstream deps are promoted+green and promote it; multiple
 > agents work different repos, gated only by the dep graph + a green settle between waves.
 
-| Repo(s) | Status |
-| --- | --- |
-| unified-trading-pm | ✅ MAIN GREEN (harsh fix a217a031c + FF) — done |
-| instruments #392 · uac #62 · client-reporting #11 · ibkr #13 | ✅ MERGED to main |
+| Repo(s)                                                                                                                                                               | Status                                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| unified-trading-pm                                                                                                                                                    | ✅ MAIN GREEN (harsh fix a217a031c + FF) — done                                                                                                                  |
+| instruments #392 · uac #62 · client-reporting #11 · ibkr #13                                                                                                          | ✅ MERGED to main                                                                                                                                                |
 | trading-agent #7 · deployment-api #14 · execution #206 · mtds #112 · strategy #64 · utl #229 · mdps #87 · deployment-ui #13 · batch-live #13 · SIT #16 · alerting #20 | ⏳ resolutions already on LDR (take-best back-merges); ad-hoc PRs CLOSED 2026-06-01 (whack-a-mole vs churning LDR) — re-promote in the frozen dep-ordered window |
-| deployment-service | 🔴 v2-RED — green first |
-| fund-administration · e2e-testing · greeks-service | v2 just added; open PR after first green v2 |
+| deployment-service                                                                                                                                                    | 🔴 v2-RED — green first                                                                                                                                          |
+| fund-administration · e2e-testing · greeks-service                                                                                                                    | v2 just added; open PR after first green v2                                                                                                                      |
 
 > **5 non-ruff failures = genuine per-repo debt (fix regardless of promotion order):** execution
 > (`test_analog_execution_gate` kelly `0.5 vs 1.0` + grid_utils import-skip), trading-agent, deployment-api, utl, SIT.
 
-### agent-orchestrator EXCEPTION — `main` is its target, NOT LDR (codified 2026-06-01, operator)
+### agent-orchestrator — two-axis branch model: integrate via LDR, deploy SPA from `main` (reconciled 2026-06-01, operator)
 
-**Do not treat agent-orchestrator's `main`-behind-LDR as promotion drift.** `agent-orchestrator` is operator/agent
-tooling, NOT production trading code, so it **bypasses the `live-defi-rollout` → `staging` → `main` production-hardening
-path**. Its **integration target is `main`**: commit to the slot branch `tab/<operator>/<N>` (to isolate per-agent
-commits), then **fast-forward the slot branch to `main`**. Its slot branch tracks `origin/main`; EVERY other repo's slot
-branch tracks `origin/live-defi-rollout`. Its work may also appear on LDR (via the `tab-mirror` GHA) — harmless
-mirroring, not the target. So in the workspace main↔LDR survey, agent-orchestrator is the **one repo where main being
-"behind LDR" is by design** — sync the slot work INTO `main` (not LDR→main promotion). Full rule: CLAUDE.md § "Git
-discipline". SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
+> **Corrects the earlier "main is its integration target, NOT LDR" framing** (which contradicted the code). The
+> authoritative function `base_branch_for_repo()` (`agent-orchestrator/server/worktree_clean_check.py:741-746`) returns
+> `live-defi-rollout` for **every** repo **including agent-orchestrator**; a `main` base reads every slot as diverged
+> (incident — the `main` override was removed from `scripts/dev/cron-branch-overrides.txt` 2026-05-24). Two distinct
+> axes, not one exemption:
+
+- **Integration / rebase / server-deploy axis = `live-defi-rollout`.** Slot worktrees track `origin/live-defi-rollout`
+  like every other repo; commit to the slot branch `tab/<operator>/<N>`, push to LDR. The orchestrator **server** ships
+  from LDR (systemd pull). FF-pull + divergence checks (FM4/FM5/FM6) use LDR as base.
+- **Dashboard-SPA-deploy + CI-gate axis = `main`.** `main` carries only the Firebase-Hosting dashboard-SPA build + the
+  CI required check. So `main` legitimately lags LDR on server code — that is the two-axis design, **not** promotion
+  drift. Do not "sync slot work into main" for server code.
+
+Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Branch-state gate
+(`check_slot_branch_state`) — FM6" + `codex/04-architecture/agent-orchestrator-overview.md`.
+
+**Captured discoveries (codex-vs-plans target-state audit,
+`plans/audit/results/codex_vs_plans_target_state_deviations_2026_06_01.md` §0):**
+
+- [ ] [CODE] P2. Fix stale boot-prompt string in `agent-orchestrator/server/worker_liveness.py:85`
+      (`_FRESH_PULL_BOOT_BLOCK`): it instructs recovered agent-orchestrator workers to `git fetch/ff` against `main`
+      (`"base = main for agent-orchestrator, live-defi-rollout for every other repo"`), contradicting
+      `base_branch_for_repo()` (LDR) + per-tab-worktrees FM6. A recovered AO worker would FF to `origin/main` and read
+      as diverged. → make the boot prompt use `live-defi-rollout` for all repos (drop the agent-orchestrator
+      special-case).
+- [ ] [DESIGN] P2. Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01):
+      allow deploying the dashboard SPA from `live-defi-rollout` (not only `main`) so server + UI iterate on one branch
+      without the FF-to-`main` hop. Scope the CI-gate + Firebase-Hosting target implications.
 
 ### THE force-push-vs-let-CI/CD decision rule (read before touching main/staging)
 
@@ -209,66 +229,68 @@ by a PR:
       `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` and committed+pushed to each repo's
       `live-defi-rollout` (23 pushed this pass: alerting `5969240`, batch-live `3c43571`, client-reporting `6e463ad`,
       deployment-api `c8f7994`, deployment-service `1def93f`, execution `b4d9b4c01`, features `f7ee20c1`, fund-admin
-      `a9ea9ab`, greeks `97401de`, ibkr `8fc9918`, instruments `5b6b2445`, mdps `cb1de50`, mtds `546537ee`, ml `47fcb01`,
-      strategy `a7f81933`, SIT `19facf9`, trading-agent `1b95f93`, uac `6b98c9d9`, utl `009f76e3`, uta `df373c1`, ui
-      `5f07060f`, deployment-ui `44cc5d5`, e2e `cd9f084`; agent-orchestrator already current). Verified: strategy LDR
-      `semver-agent.yml` now triggers on `quality-gates-v2`/`staging`. Each repo's reconciliation auto-merge carries it to
-      main; semver fires on the next staging `quality-gates-v2` success (needs the `staging_versions` baseline restored —
-      P1 #6, done).
+      `a9ea9ab`, greeks `97401de`, ibkr `8fc9918`, instruments `5b6b2445`, mdps `cb1de50`, mtds `546537ee`, ml
+      `47fcb01`, strategy `a7f81933`, SIT `19facf9`, trading-agent `1b95f93`, uac `6b98c9d9`, utl `009f76e3`, uta
+      `df373c1`, ui `5f07060f`, deployment-ui `44cc5d5`, e2e `cd9f084`; agent-orchestrator already current). Verified:
+      strategy LDR `semver-agent.yml` now triggers on `quality-gates-v2`/`staging`. Each repo's reconciliation
+      auto-merge carries it to main; semver fires on the next staging `quality-gates-v2` success (needs the
+      `staging_versions` baseline restored — P1 #6, done).
 - [x] ✅ [TEST] P0. **(B) per-repo QG-debt green — COMPLETE for all known-red repos** (surgical real fixes, no gaming).
-      Audited 2026-06-01: every repo that was v2-RED is now GREEN on `main`+`staging` with `enforce_admins` on:
-      - ✅ **`instruments-service`** — `@851559f4` LDR, 76.82%→77.69% (13 real defi-adapter tests) + real `get_instrument`
-        `AttributeError` fix; reconciled to main `fbadf6b0`, main v2 GREEN (`fbadf6b0a`), enforce_admins on.
-      - ✅ **`unified-trading-pm` main** — FF `4f57234ea` (codex empty-str + basedpyright-CI ignore + drift); v2 green.
-      - ✅ **`strategy-service` (slot 6)** — v2 green (`75d88719f`); main+staging green.
-      - ✅ **`execution-service` (slot 5)** — main push v2 GREEN (`42d6b1723`) + staging green; enforce_admins on. (The
-        one failing run is the stale CLOSED reconciliation PR #206, not the gate.)
-      - ✅ **`market-tick-data-service` (slot 7)** — main push v2 GREEN (`fd2621a71`) + staging green; enforce_admins on.
-        (Failing LDR runs `97b854f59…` are the stale CLOSED reconciliation promote-PR, not slot-7 work.)
-      - (PM-main detail: FF `4f57234ea` — codex empty-str `@98b12ee53` + basedpyright-CI ignore `@a217a031c` + drift;
-        PR #106/#107 closed. semver-rollout surfaced no further red repos — all greened above.)
+      Audited 2026-06-01: every repo that was v2-RED is now GREEN on `main`+`staging` with `enforce_admins` on: - ✅
+      **`instruments-service`** — `@851559f4` LDR, 76.82%→77.69% (13 real defi-adapter tests) + real `get_instrument`
+      `AttributeError` fix; reconciled to main `fbadf6b0`, main v2 GREEN (`fbadf6b0a`), enforce_admins on. - ✅
+      **`unified-trading-pm` main** — FF `4f57234ea` (codex empty-str + basedpyright-CI ignore + drift); v2 green. - ✅
+      **`strategy-service` (slot 6)** — v2 green (`75d88719f`); main+staging green. - ✅ **`execution-service`
+      (slot 5)** — main push v2 GREEN (`42d6b1723`) + staging green; enforce_admins on. (The one failing run is the
+      stale CLOSED reconciliation PR #206, not the gate.) - ✅ **`market-tick-data-service` (slot 7)** — main push v2
+      GREEN (`fd2621a71`) + staging green; enforce_admins on. (Failing LDR runs `97b854f59…` are the stale CLOSED
+      reconciliation promote-PR, not slot-7 work.) - (PM-main detail: FF `4f57234ea` — codex empty-str `@98b12ee53` +
+      basedpyright-CI ignore `@a217a031c` + drift; PR #106/#107 closed. semver-rollout surfaced no further red repos —
+      all greened above.)
 - [ ] [TEST] P1. **DISCOVERY (instruments-service, surfaced 2026-06-01 by the coverage worker): `inst.symbol == symbol`
       latent bug in ~19 more defi adapters.** `instruments_service/reference_data/adapters/defi/` has 22 files using
       `inst.symbol == symbol` in `get_instrument()`; `InstrumentRecord` has **no `symbol` attribute** → `AttributeError`
-      on any non-address symbol lookup against a populated registry. 3 fixed (venus/fluid/radiant @851559f4); ~19 remain.
-      Dedicated per-file sweep → canonical `inst.instrument_key.endswith(f":{symbol}")` + a test each (kept separate to
-      avoid pulling unrelated files into the codex changed-files scan). `parent_epic: infrastructure_master` (or reassign
-      to the instruments/defi reference-data epic at triage).
+      on any non-address symbol lookup against a populated registry. 3 fixed (venus/fluid/radiant @851559f4); ~19
+      remain. Dedicated per-file sweep → canonical `inst.instrument_key.endswith(f":{symbol}")` + a test each (kept
+      separate to avoid pulling unrelated files into the codex changed-files scan). `parent_epic: infrastructure_master`
+      (or reassign to the instruments/defi reference-data epic at triage).
 - [ ] [SCRIPT] P1. **Revive the SIT chain** — FULLY DIAGNOSED 2026-06-01 (corrects the original "workflow_run
-      name-mismatch" hypothesis — that was WRONG). Actual topology + state:
-      - `system-integration-tests/full-workspace-sit.yml` (cron `0 3 * * *` nightly + `repository_dispatch:full-workspace-sit`)
-        **runs nightly and SUCCEEDS** — the SIT itself is healthy, NOT dead.
-      - `system-integration-tests/smoke-test-gate.yml` is the staging→main gate: `on: push:[staging]` + `workflow_dispatch`;
-        it dispatches `sit-lock` (line ~240) and, on pass, `staging-validated` (line ~499) to PM. **It is `completed/cancelled`
-        on its runs** (SIT Setup cancelled → all downstream skipped → neither dispatch fires → PM `sit-gate` zero runs →
-        `staging-to-main` never triggered). Cause is its `concurrency: {group: sit-staging, cancel-in-progress: true}` +
-        a 600s quiet-period wait. SIT-repo `staging` is pushed RARELY (today's campaign `merge main into staging`, prior
-        was March), so "continuous activity" is NOT why; the single 2026-06-01 16:13 run cancelled for a not-yet-pinned
-        reason (likely a same-group collision during the campaign's active staging back-merge phase).
-      - PM `sit-debounce-trigger.yml` dispatches `staging-changed` to the SIT repo, but **NO SIT-repo workflow listens for
-        `staging-changed`** → that dispatch is ORPHANED. Naively adding a `repository_dispatch:[staging-changed]` listener
-        to `smoke-test-gate` is UNSAFE as-is: the body keys off `github.sha`/`github.ref_name`, which under
-        `repository_dispatch` resolve to the **default branch, not staging** → it would gate the wrong commit. A correct
-        wiring must pass the staging SHA in `client_payload` and check it out.
+      name-mismatch" hypothesis — that was WRONG). Actual topology + state: -
+      `system-integration-tests/full-workspace-sit.yml` (cron `0 3 * * *` nightly +
+      `repository_dispatch:full-workspace-sit`) **runs nightly and SUCCEEDS** — the SIT itself is healthy, NOT dead. -
+      `system-integration-tests/smoke-test-gate.yml` is the staging→main gate: `on: push:[staging]` +
+      `workflow_dispatch`; it dispatches `sit-lock` (line ~240) and, on pass, `staging-validated` (line ~499) to PM.
+      **It is `completed/cancelled` on its runs** (SIT Setup cancelled → all downstream skipped → neither dispatch fires
+      → PM `sit-gate` zero runs → `staging-to-main` never triggered). Cause is its
+      `concurrency: {group: sit-staging, cancel-in-progress: true}` + a 600s quiet-period wait. SIT-repo `staging` is
+      pushed RARELY (today's campaign `merge main into staging`, prior was March), so "continuous activity" is NOT why;
+      the single 2026-06-01 16:13 run cancelled for a not-yet-pinned reason (likely a same-group collision during the
+      campaign's active staging back-merge phase). - PM `sit-debounce-trigger.yml` dispatches `staging-changed` to the
+      SIT repo, but **NO SIT-repo workflow listens for `staging-changed`** → that dispatch is ORPHANED. Naively adding a
+      `repository_dispatch:[staging-changed]` listener to `smoke-test-gate` is UNSAFE as-is: the body keys off
+      `github.sha`/`github.ref_name`, which under `repository_dispatch` resolve to the **default branch, not staging** →
+      it would gate the wrong commit. A correct wiring must pass the staging SHA in `client_payload` and check it out.
       **Remaining (campaign-gated):** the campaign is ACTIVELY churning SIT `staging` (its back-merge phase) → cannot
       cleanly verify the gate end-to-end until that settles. Then: (a) pin the 16:13 cancel cause; (b) either tune the
-      600s/concurrency debounce or wire the orphaned `staging-changed` dispatch properly (payload SHA + checkout); (c) e2e
-      verify push-SIT-staging → gate completes → `sit-lock`→PM `sit-gate` locks → `staging-validated`→`staging-to-main`
-      promotes. P1 #5's notify fix (shipped) removes the run-failure noise that previously masked this.
+      600s/concurrency debounce or wire the orphaned `staging-changed` dispatch properly (payload SHA + checkout); (c)
+      e2e verify push-SIT-staging → gate completes → `sit-lock`→PM `sit-gate` locks →
+      `staging-validated`→`staging-to-main` promotes. P1 #5's notify fix (shipped) removes the run-failure noise that
+      previously masked this.
 - [x] ✅ [SCRIPT] P1. **sit-debounce notify empty/invalid-secret guard** — `unified-trading-pm@242fe1d2c` (LDR). Root
       cause: `notify-slack.yml` (the reusable the "Telegram — SIT Debounce Triggered" job actually calls) built
       `urllib.request.Request(webhook)` OUTSIDE its try and only guarded the EMPTY case → a misconfigured/masked
       `SLACK_WEBHOOK_URL` inherited via `secrets: inherit` raised uncaught `ValueError: unknown url type: '***'` →
-      failed the whole sit-debounce run. Fix: skip (exit 0) on any non-`https://` webhook — notifications are best-effort
-      and must never fail the caller. Benefits **every** notify-slack caller (incl. the ci-failure watcher). Reaches main
-      (where the `*/2` cron runs) via the promotion campaign. **Side-note for operator:** the `SLACK_WEBHOOK_URL` repo
-      secret value itself appears misconfigured (non-https) — fix it if you want sit-debounce notifications to actually
-      send; the guard only stops it from failing the workflow.
-- [x] ✅ [SCRIPT] P1. **Restore `staging_versions` baseline** in `workspace-manifest.json` — `unified-trading-pm@141ce58a7`
-      (LDR). Was reset to `{}` (present-but-empty) so semver-agent's `m.get('staging_versions', {})` baseline was empty.
-      Repopulated from the per-repo `versions` SSOT (15 repos). Committed `--no-verify` (multi-line, minimal 18-line diff)
-      — the prettier-collapsed form is local-prek-only and NOT a CI gate (quality-gates.sh runs prettier only in FIX_MODE,
-      skipped under CI `--no-fix`), so the form is QG-irrelevant; avoided forcing a 621-line churn into the active campaign.
+      failed the whole sit-debounce run. Fix: skip (exit 0) on any non-`https://` webhook — notifications are
+      best-effort and must never fail the caller. Benefits **every** notify-slack caller (incl. the ci-failure watcher).
+      Reaches main (where the `*/2` cron runs) via the promotion campaign. **Side-note for operator:** the
+      `SLACK_WEBHOOK_URL` repo secret value itself appears misconfigured (non-https) — fix it if you want sit-debounce
+      notifications to actually send; the guard only stops it from failing the workflow.
+- [x] ✅ [SCRIPT] P1. **Restore `staging_versions` baseline** in `workspace-manifest.json` —
+      `unified-trading-pm@141ce58a7` (LDR). Was reset to `{}` (present-but-empty) so semver-agent's
+      `m.get('staging_versions', {})` baseline was empty. Repopulated from the per-repo `versions` SSOT (15 repos).
+      Committed `--no-verify` (multi-line, minimal 18-line diff) — the prettier-collapsed form is local-prek-only and
+      NOT a CI gate (quality-gates.sh runs prettier only in FIX_MODE, skipped under CI `--no-fix`), so the form is
+      QG-irrelevant; avoided forcing a 621-line churn into the active campaign.
 - [ ] [SCRIPT] P1. **Orchestrator-dispatch escalation (the agent hookup)** — for the JUDGMENT cases only (merge-conflict
       resolution, commit-label-mismatch remediation, SIT-failure triage; the deterministic compute stays in the
       workflows). GHA detects the wall → `repository_dispatch` to the agent-orchestrator API (AWS VM,
@@ -278,29 +300,30 @@ by a PR:
       workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA
       dispatch + a worker prompt; build + e2e-test on one repo before fleet-wide.
 - [x] ✅ [SCRIPT] P2. **enforce_admins on `staging` + instruments main — DONE 2026-06-01** (gh-API, no repo files).
-      Enabled classic `enforce_admins` on `staging` for the 11 repos where it was OFF (client-reporting-api, deployment-api,
-      deployment-service, ibkr-gateway-infra, instruments-service, mdps, mtds, strategy-service, system-integration-tests,
-      trading-agent-service, unified-trading-library) + on `instruments-service` **main** (now green @`fbadf6b0a` — the UAC
-      `EXPECTED_NO_MAPPING` drift resolved via the campaign's `uac #62` merge). Ruleset-protected repos (e.g. batch-live)
-      enforce admins via `bypass_actors=[]` on staging-targeting rulesets (verified). **Final audit all-green:** every
-      classic repo `main`+`staging` enforce_admins=true; `verify_branch_protection_check_names.py` → ALL RULESETS
-      CONSISTENT. (Unblocked once the LDR→main reconciliation campaign settled to 1 open PR.)
-- [x] ✅ [DOC] P1. **Codex + CLAUDE.md alignment** — `unified-trading-pm` codex `ci-cd-flow.md` operational-status section
-      brought current 2026-06-01 (watcher + notify-guard + staging_versions SHIPPED; SIT-repo side + semver rollout
-      remaining; + the "local ≠ CI" prettier/typecheck gotcha codified). Keep updating as the rest
-      revives — the original tracking note: keep `codex/08-workflows/ci-cd-flow.md` (the SSOT) current with the
-      v2-gate reality, the force-push rule, and the operational status of the promotion automation as each piece
-      revives; CLAUDE.md points to it (done 2026-06-01 — see Codex SSOTs).
+      Enabled classic `enforce_admins` on `staging` for the 11 repos where it was OFF (client-reporting-api,
+      deployment-api, deployment-service, ibkr-gateway-infra, instruments-service, mdps, mtds, strategy-service,
+      system-integration-tests, trading-agent-service, unified-trading-library) + on `instruments-service` **main** (now
+      green @`fbadf6b0a` — the UAC `EXPECTED_NO_MAPPING` drift resolved via the campaign's `uac #62` merge).
+      Ruleset-protected repos (e.g. batch-live) enforce admins via `bypass_actors=[]` on staging-targeting rulesets
+      (verified). **Final audit all-green:** every classic repo `main`+`staging` enforce_admins=true;
+      `verify_branch_protection_check_names.py` → ALL RULESETS CONSISTENT. (Unblocked once the LDR→main reconciliation
+      campaign settled to 1 open PR.)
+- [x] ✅ [DOC] P1. **Codex + CLAUDE.md alignment** — `unified-trading-pm` codex `ci-cd-flow.md` operational-status
+      section brought current 2026-06-01 (watcher + notify-guard + staging_versions SHIPPED; SIT-repo side + semver
+      rollout remaining; + the "local ≠ CI" prettier/typecheck gotcha codified). Keep updating as the rest revives — the
+      original tracking note: keep `codex/08-workflows/ci-cd-flow.md` (the SSOT) current with the v2-gate reality, the
+      force-push rule, and the operational status of the promotion automation as each piece revives; CLAUDE.md points to
+      it (done 2026-06-01 — see Codex SSOTs).
 
 ---
 
 ### Parallel execution split + cross-agent campaign status (2026-06-01 evening)
 
 > **Two efforts run concurrently — do not double-work.** (1) Another agent owns the **fleet-wide LDR→main
-> reconciliation-sync campaign** (auto-merge promotion PRs opened ~18:01). (2) This slot (1/ikenna) + slots 5/6/7 own the
-> **per-repo QG-debt greening** that the campaign correctly gates red. Greening a repo's `live-defi-rollout` to green is
-> the ONLY action needed — the campaign's auto-merge promotes it to main automatically. **Slots must NOT touch protected
-> `main`** (the campaign owns promotion; manual main mutation = collision).
+> reconciliation-sync campaign** (auto-merge promotion PRs opened ~18:01). (2) This slot (1/ikenna) + slots 5/6/7 own
+> the **per-repo QG-debt greening** that the campaign correctly gates red. Greening a repo's `live-defi-rollout` to
+> green is the ONLY action needed — the campaign's auto-merge promotes it to main automatically. **Slots must NOT touch
+> protected `main`** (the campaign owns promotion; manual main mutation = collision).
 
 **Cross-agent campaign status (from the campaign agent's 2026-06-01 evening report — verify before relying):**
 
@@ -317,22 +340,23 @@ by a PR:
 
 **Slot greening split (each = separate repo, zero shared files, fully parallel):**
 
-| Slot | Repo | Known v2 failure (2026-06-01) | Gates campaign PR |
-| ---- | ---- | ----------------------------- | ----------------- |
-| **5** | `execution-service` | `grid_utils` import error → tests SKIPPED → coverage; diagnose locally via `quality-gates.sh` | #206 |
-| **6** | `strategy-service` | **Lint** — 2 ruff errors around `compute_tracking_error_bps` / `TrackingErrorBreachedError` (`__all__`/unused-import) | #64 |
-| **7** | `market-tick-data-service` | **Lint** — 1 ruff error | #112 |
+| Slot  | Repo                       | Known v2 failure (2026-06-01)                                                                                         | Gates campaign PR |
+| ----- | -------------------------- | --------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| **5** | `execution-service`        | `grid_utils` import error → tests SKIPPED → coverage; diagnose locally via `quality-gates.sh`                         | #206              |
+| **6** | `strategy-service`         | **Lint** — 2 ruff errors around `compute_tracking_error_bps` / `TrackingErrorBreachedError` (`__all__`/unused-import) | #64               |
+| **7** | `market-tick-data-service` | **Lint** — 1 ruff error                                                                                               | #112              |
 
 **Standing rules for every greening slot (5/6/7) — HARD:**
 
-1. **Regularly FF-pull from `live-defi-rollout`** before starting and every ~30 min while working (`git fetch origin
-   live-defi-rollout && git merge --ff-only origin/live-defi-rollout`) — the campaign + other slots move LDR constantly;
-   stale worktrees cause merge pain. The 5-min `slot-cron-ff-pull.sh` should already be running on the host.
+1. **Regularly FF-pull from `live-defi-rollout`** before starting and every ~30 min while working
+   (`git fetch origin live-defi-rollout && git merge --ff-only origin/live-defi-rollout`) — the campaign + other slots
+   move LDR constantly; stale worktrees cause merge pain. The 5-min `slot-cron-ff-pull.sh` should already be running on
+   the host.
 2. **Real fixes only** — fix the files the gate flags; NEVER lower `fail_under`/`MIN_COVERAGE`, NEVER
    `# pragma: no cover`/skip/xfail to dodge, no repo-wide `ruff format` (pulls unrelated files into the codex scan).
-3. **Verify with the SSOT gate** — `bash scripts/quality-gates.sh` EXIT 0 in that repo before pushing (NB: the local gate
-   can mask CI-only failures from unresolved cross-repo deps — see the PM basedpyright + instruments UAC-drift incidents
-   this session; if local is green but the campaign PR's v2 is red, read the CI log, do not assume).
+3. **Verify with the SSOT gate** — `bash scripts/quality-gates.sh` EXIT 0 in that repo before pushing (NB: the local
+   gate can mask CI-only failures from unresolved cross-repo deps — see the PM basedpyright + instruments UAC-drift
+   incidents this session; if local is green but the campaign PR's v2 is red, read the CI log, do not assume).
 4. **Commit + push to `live-defi-rollout`** (conditional push: `git fetch` first; 0 incoming → push; else rebase
    `--autostash` then push). `--no-verify` authorized only when prek auto-restore is observed AND the gate is
    independently green. **Do NOT open/merge main PRs** — the campaign auto-promotes once LDR is green.
@@ -392,8 +416,8 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 > - **Safety**: every ruleset verified `active`; `enforce_admins` toggles during admin-merges were all re-enabled.
 >
 > **Remaining (tracked below):** instruments-service main coverage (0.18% short); enforce_admins on `staging` (optional
-> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1
-> workflow FILE deletion (separate held plan).
+> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1 workflow
+> FILE deletion (separate held plan).
 
 > **🔑 PREREQUISITE (discovered 2026-06-01 — RESOLVED via provisioning, not a missing credential).** The migrations edit
 > `.github/workflows/*.yml`, which the gh **keyring login token (`gho_…`) cannot do** (no `workflow` scope). But the
@@ -427,11 +451,12 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       trigger-branch + main both miss; preserves the no-silent-fail contract (genuine auth/missing-repo still exits
       128). Verified: SIT v2 run 26758570555 now clones + builds + installs `features-service` (failure moved downstream
       to a real SIT-repo lint — see SIT fan-out todo). Affects EVERY repo whose closure includes a main-less dep.
-- [x] ✅ [SCRIPT] P1. **FINDING (2026-06-01) — widespread WRONG v2 job-name on `main` — FIXED.** All 6 repos that carried
-      the hand-copied `name: Quality Gates (alerting-service)` (batch-live, client-reporting-api, deployment-service,
-      deployment-ui, ibkr-gateway-infra, mdps) had the correct `name:` set during their per-repo main migrations (✅ fan-out
-      below). mtds + strategy `main` got their v2 workflow promoted (no longer absent). Final MAIN audit: all v2-bearing
-      repos carry the correct `Quality Gates (<repo>)` job name; `verify_branch_protection_check_names.py` → ALL CONSISTENT.
+- [x] ✅ [SCRIPT] P1. **FINDING (2026-06-01) — widespread WRONG v2 job-name on `main` — FIXED.** All 6 repos that
+      carried the hand-copied `name: Quality Gates (alerting-service)` (batch-live, client-reporting-api,
+      deployment-service, deployment-ui, ibkr-gateway-infra, mdps) had the correct `name:` set during their per-repo
+      main migrations (✅ fan-out below). mtds + strategy `main` got their v2 workflow promoted (no longer absent).
+      Final MAIN audit: all v2-bearing repos carry the correct `Quality Gates (<repo>)` job name;
+      `verify_branch_protection_check_names.py` → ALL CONSISTENT.
 - [x] ✅ [SCRIPT] P2. **FINDING+FIX (2026-06-01) — `load-gh-token.sh` blindly trusted a STALE `.act-secrets`.**
       `unified-trading-pm@e93aacbc8` (LDR). The repos-root `.act-secrets` `GH_PAT` had expired/rotated (gh-API 401
       everywhere mid-task; git push still worked only because the remote is SSH); `load-gh-token.sh` path-1 preferred
@@ -481,10 +506,10 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       deployment-api/trading-agent were admin-merged.) main ruleset + classic both v2. **Final 2026-06-01 MAIN audit:
       all 13 v2-bearing repos now carry the correct `Quality Gates (<repo>)` job name on main; only mtds + strategy lack
       a main v2 workflow (tracked P0 above).**
-- [x] ✅ [TEST] P1. **instruments-service `main` v2 RED (coverage 76.82<77) — RESOLVED 2026-06-01.** Worker added 13 real
-      tests (defi lending adapters) → 77.69% (`instruments-service@851559f4`) + reconciled main `fbadf6b0`; main v2 GREEN
-      (`fbadf6b0a`); `enforce_admins` now enabled on instruments main (Phase 2 → 16/16). Also fixed a real `get_instrument`
-      `AttributeError` bug + captured the 19-adapter `inst.symbol` sweep as a tracked follow-up.
+- [x] ✅ [TEST] P1. **instruments-service `main` v2 RED (coverage 76.82<77) — RESOLVED 2026-06-01.** Worker added 13
+      real tests (defi lending adapters) → 77.69% (`instruments-service@851559f4`) + reconciled main `fbadf6b0`; main v2
+      GREEN (`fbadf6b0a`); `enforce_admins` now enabled on instruments main (Phase 2 → 16/16). Also fixed a real
+      `get_instrument` `AttributeError` bug + captured the 19-adapter `inst.symbol` sweep as a tracked follow-up.
 - [x] ✅ [SCRIPT] P2. **`.act-secrets` proactive SM-refresh — DONE** (`unified-trading-pm@<gh-token-refresh>`).
       `generate-act-secrets.sh` now SM-fetches `GH_PAT` (GCP SM → AWS SM, same source as `load-gh-token.sh`) to
       populate/refresh `.act-secrets` instead of an empty manual-fill template; `--refresh` updates only the `GH_PAT`
@@ -503,9 +528,10 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       `verify_branch_protection_check_names.py` confirms main=v2 + CONSISTENT. main is now unblocked + on v2.
 - [x] ✅ [SCRIPT] P1. **trading-agent-service STAGING + LDR migration — DONE (verified 2026-06-01).** Both staging + LDR
       now carry `quality-gates-v2.yml` (+ `semver-agent.yml`) with `workspace-qg.yml` removed; staging v2 latest run
-      `126a15d21` = **success**; the required-check context is `Quality Gates (trading-agent-service) / quality-gates-v2`
-      and `verify_branch_protection_check_names.py` reports trading-agent CONSISTENT on main+staging. (The campaign +
-      prior per-repo migration closed this out; the original finding was stale.)
+      `126a15d21` = **success**; the required-check context is
+      `Quality Gates (trading-agent-service) / quality-gates-v2` and `verify_branch_protection_check_names.py` reports
+      trading-agent CONSISTENT on main+staging. (The campaign + prior per-repo migration closed this out; the original
+      finding was stale.)
 
 ### Phase 1 — Workspace-wide branch-protection + required-check enforcement (audit i1/i2)
 
@@ -523,9 +549,9 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 
 - [x] ✅ [BLOCKED-QG-RED→DONE] P0. Per-repo v1→v2 migration of the 8 v1 repos — **COMPLETE on main** (see the ✅ fan-out
       below: deployment-api, system-integration-tests, client-reporting-api, batch-live-reconciliation-service,
-      ibkr-gateway-infra, deployment-ui, market-data-processing-service, trading-agent-service main all migrated + green +
-      merged 2026-06-01, each with real QG-debt fixes, no floor-lowering). Only tail: **trading-agent-service staging+LDR**
-      (tracked separately just below).
+      ibkr-gateway-infra, deployment-ui, market-data-processing-service, trading-agent-service main all migrated +
+      green + merged 2026-06-01, each with real QG-debt fixes, no floor-lowering). Only tail: **trading-agent-service
+      staging+LDR** (tracked separately just below).
 
   **Per-repo fan-out todos (fresh `quality-gates-v2` diagnoses, 2026-06-01 — each dispatchable to a slot):**
   - [x] ✅ [SCRIPT] P1. **deployment-api MAIN — MIGRATED 2026-06-01.** Root cause was incomplete `dep_repos` (CI didn't
@@ -572,10 +598,10 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
         `alerting-service` name; corrected stale test fixtures (`schema_version` 8→9 to match MANIFEST_SCHEMA_VERSION=9;
         candle BASE_TS to midnight so 1440 bars not 1439); 6 real `config_reloaders` tests → coverage 69.84%→70.11%.
         Ruleset + classic re-pinned to v2. **FOLLOW-UPS (capture, do not lose):**
-  - [ ] [DATA] P1. **mdps↔UAC divergence (from PR #85): `NEEDS_CANDLE_PROCESSING["lending_indices"]` is False in UAC
-        but MDPS registers `DefiLendingIndicesAdapter` in the CandleAdapterRegistry.** The PR's test now asserts the
-        true MDPS-side invariant (adapter registered) but the UAC↔MDPS contract divergence is UNRESOLVED — reconcile:
-        either UAC should be True or MDPS should not register a candle adapter for lending_indices (lending indices are
+  - [ ] [DATA] P1. **mdps↔UAC divergence (from PR #85): `NEEDS_CANDLE_PROCESSING["lending_indices"]` is False in UAC but
+        MDPS registers `DefiLendingIndicesAdapter` in the CandleAdapterRegistry.** The PR's test now asserts the true
+        MDPS-side invariant (adapter registered) but the UAC↔MDPS contract divergence is UNRESOLVED — reconcile: either
+        UAC should be True or MDPS should not register a candle adapter for lending_indices (lending indices are
         rate/index values, not OHLCV — likely UAC's False is correct and the MDPS candle-registry entry is the bug).
         Data-pipeline HARD RULE / cross-repo. Diagnose both sides before changing either.
   - [ ] [TYPES] P2. **mdps pyright debt (from PR #85): 4 files added to the TEMPORARY PYRIGHT DEBT BYPASS exclude list**
@@ -594,17 +620,16 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
       `Quality Gates (<repo>) / quality-gates-v2` AND confirm a GREEN run on the default branch BEFORE creating the
       ruleset** — else the required context is never satisfied and you DEADLOCK/freeze main. (Incident: created rulesets
       for ml/greeks/uta on `17134935/37/38`, immediately discovered **`ml-service` carries the `alerting-service`
-      copy-paste job-name bug** → its ruleset was unsatisfiable → reverted all three.) Correct per-repo plan:
-      - `ml-service`: **fix the job-name first** (`Quality Gates (alerting-service)` → `(ml-service)` in its
-        `quality-gates-v2.yml`, relax→push→re-run→re-pin per the force rule), THEN add ruleset. (Its earlier "green" run
-        emitted the alerting-service context.)
-      - `greeks-service`, `unified-trading-api`: job-name correct; trigger a v2 run, confirm GREEN, THEN add ruleset
-        (template: alerting-service `require-quality-gates`, target `~DEFAULT_BRANCH`, `bypass_actors:[]`, context
-        `Quality Gates (<repo>) / quality-gates-v2`).
-      - `fund-administration-service`, `e2e-testing`: NO v2 workflow → roll out `quality-gates-v2.yml`, green it, THEN add.
-      - `unified-trading-system-ui`: TS/Vite — ruleset on its OWN UI gate context (`…/quality-gates`, like deployment-ui),
-        not python-v2.
-      Record the single `agent-orchestrator` exemption + the 6 additions in `feature-branch-workflow.md`. — repo: unified-trading-pm (rulesets) + per-repo workflow.
+      copy-paste job-name bug** → its ruleset was unsatisfiable → reverted all three.) Correct per-repo plan: -
+      `ml-service`: **fix the job-name first** (`Quality Gates (alerting-service)` → `(ml-service)` in its
+      `quality-gates-v2.yml`, relax→push→re-run→re-pin per the force rule), THEN add ruleset. (Its earlier "green" run
+      emitted the alerting-service context.) - `greeks-service`, `unified-trading-api`: job-name correct; trigger a v2
+      run, confirm GREEN, THEN add ruleset (template: alerting-service `require-quality-gates`, target
+      `~DEFAULT_BRANCH`, `bypass_actors:[]`, context `Quality Gates (<repo>) / quality-gates-v2`). -
+      `fund-administration-service`, `e2e-testing`: NO v2 workflow → roll out `quality-gates-v2.yml`, green it, THEN
+      add. - `unified-trading-system-ui`: TS/Vite — ruleset on its OWN UI gate context (`…/quality-gates`, like
+      deployment-ui), not python-v2. Record the single `agent-orchestrator` exemption + the 6 additions in
+      `feature-branch-workflow.md`. — repo: unified-trading-pm (rulesets) + per-repo workflow.
 
 **Do not duplicate**: the v1→v2 migration itself is owned by `ci_canonical_v2_migration_2026_05_29.md` (which has
 mark-drift — `batch-live` + `deployment-ui` marked ✅ but live-v1). This plan only adds the ruleset-mechanism framing +
@@ -623,7 +648,8 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
 - [x] ✅ [SCRIPT] P2. **enforce_admins on `staging`** — DONE 2026-06-01 (= Phase-6-backlog P2 #8). Enabled on the 11
       classic-protected staging branches that were OFF; ruleset-protected repos enforce via `bypass_actors=[]`.
 - [x] ✅ [VERIFY] P1. **enforce_admins on all protected `main` — 16/16 DONE.** instruments-service main enabled after it
-      greened (`fbadf6b0a`); the temporary exemption is closed. `verify_branch_protection_check_names.py` → ALL CONSISTENT.
+      greened (`fbadf6b0a`); the temporary exemption is closed. `verify_branch_protection_check_names.py` → ALL
+      CONSISTENT.
 
 ### Phase 3 — Image-build provenance + branch-triggered builds (audit k2/k3)
 
@@ -647,14 +673,14 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
 - [x] ✅ [SCRIPT] P0. **Restore the `staging_versions` baseline** — DONE (= P1 #6, `unified-trading-pm@141ce58a7`).
       Repopulated from per-repo `versions` (15 repos).
 - [x] ✅ [SCRIPT] P0. **`staging-to-main.yml` (PM)** — DIAGNOSED current: the April `startup_failure` was an old file
-      version; the current `staging-to-main.yml` fires on `repository_dispatch:[staging-validated]` and is ready (see SIT
-      chain item — it runs once it receives `staging-validated` from the SIT-repo gate).
+      version; the current `staging-to-main.yml` fires on `repository_dispatch:[staging-validated]` and is ready (see
+      SIT chain item — it runs once it receives `staging-validated` from the SIT-repo gate).
 - [x] ✅ [SCRIPT] P0. **`sit-gate.yml` + `sit-debounce-trigger.yml`** — DONE/diagnosed (= P1 #4 + P1 #5). sit-debounce
       notify crash FIXED (`@242fe1d2c`, was the every-run failure); sit-gate zero-runs root-caused to the SIT-repo
       `smoke-test-gate.yml` self-cancel (concurrency+600s) never reaching the `sit-lock` dispatch — full diagnosis +
       campaign-gated e2e in P1 #4 above.
-- [x] ✅ [DOC] P1. **`ci-cd-flow.md` operational-status banner — DONE** (= P1 #9, `@c6ce73ad3`). Added the
-      "Operational status — promotion automation" section with what's shipped vs remaining + the local≠CI gotcha.
+- [x] ✅ [DOC] P1. **`ci-cd-flow.md` operational-status banner — DONE** (= P1 #9, `@c6ce73ad3`). Added the "Operational
+      status — promotion automation" section with what's shipped vs remaining + the local≠CI gotcha.
 - [ ] [DESIGN] P1. **Version feedback to staging/LDR** — once semver works: bump is computed on staging → `version-bump`
       repository_dispatch to PM (central SSOT `workspace-manifest.json:staging_versions`) → dependency cascade
       (`update-dependency-version.yml`) updates dependents' pyproject → flows back through quickmerge→staging→main. The
@@ -697,16 +723,17 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
       API-credit cost + an API key in GHA; reuses provisioned fleet workers.
 - [x] ✅ [SCRIPT] P0. **Extend #ci-failures alerting to SILENT workflows — DONE** (= Phase-6-backlog P0 #1,
       `@d60ae903f`). `ci_failure_watcher.py` + `ci-failure-watcher.yml` (cron `*/15`): cross-repo `workflow_run`
-      failure→recovery transitions for EVERY workflow on main+staging (recency-guarded), PLUS the scheduled auto-merge-stuck
-      PR poller (CONFLICTING/DIRTY/BLOCKED > threshold) — exactly the silent-rot antidote. Live; already surfaced 7 wedged
-      promotion PRs on first run.
+      failure→recovery transitions for EVERY workflow on main+staging (recency-guarded), PLUS the scheduled
+      auto-merge-stuck PR poller (CONFLICTING/DIRTY/BLOCKED > threshold) — exactly the silent-rot antidote. Live;
+      already surfaced 7 wedged promotion PRs on first run.
 
 ### Phase 4 — Concurrent-push serialization decision (audit j4)
 
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P2. **Decision: the advisory `staging_status.locked` flag + GitHub's
-      native auto-merge queue is SUFFICIENT** — no hard flock/queue serialization. Observed collisions are handled by the
-      conditional-push + rebase discipline (and, under shared-worktree ref-races, the isolated-worktree promotion). To
-      record in `codex/08-workflows/ci-cd-flow.md` (concurrent-push section). Revisit only if real contention surfaces.
+      native auto-merge queue is SUFFICIENT** — no hard flock/queue serialization. Observed collisions are handled by
+      the conditional-push + rebase discipline (and, under shared-worktree ref-races, the isolated-worktree promotion).
+      To record in `codex/08-workflows/ci-cd-flow.md` (concurrent-push section). Revisit only if real contention
+      surfaces.
 
 ### Phase 5 — PM main↔LDR back-merge drift (discovered 2026-06-01 attempting the LDR→main catch-up) **P0**
 
@@ -718,23 +745,23 @@ foreign codex docs / plans / scripts — too large + foreign-saturated to hand-r
 behind the exact drift this whole audit is about.
 
 - [x] ✅ [SCRIPT] P0. **Auto back-merge `main`→LDR — DONE.** `.github/workflows/main-backmerge-to-ldr.yml` exists on PM
-      (trigger `push:[main]`; mirrors `tab-mirror-to-ldr.yml` in reverse) and ran green on the recent PM main pushes — so
-      doc-fast-path commits no longer strand on main (this was the Phase-5 drift mechanism).
+      (trigger `push:[main]`; mirrors `tab-mirror-to-ldr.yml` in reverse) and ran green on the recent PM main pushes —
+      so doc-fast-path commits no longer strand on main (this was the Phase-5 drift mechanism).
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P0. **`#103` catch-up — RESOLVED.** Verified `gh pr view 103` =
-      **`MERGED`**, and PM `main` was independently FF-advanced to the verified-green LDR SHA `4f57234ea` (option (b)-style
-      controlled sync via the operator-authorized admin FF — see P0 #3(B) PM-main). So the PM main↔LDR catch-up no longer
-      requires the ~95-file hand-resolution; the auto back-merge GHA (above) keeps main↔LDR from re-diverging. No manual
-      95-file merge needed.
+      **`MERGED`**, and PM `main` was independently FF-advanced to the verified-green LDR SHA `4f57234ea` (option
+      (b)-style controlled sync via the operator-authorized admin FF — see P0 #3(B) PM-main). So the PM main↔LDR
+      catch-up no longer requires the ~95-file hand-resolution; the auto back-merge GHA (above) keeps main↔LDR from
+      re-diverging. No manual 95-file merge needed.
 - [ ] [DOC] P1. Document in `ci-cd-flow.md`: "PM doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by the
       Phase-5 GHA); never leave a main-only commit unmirrored."
 
 ### Reconciliation follow-ups (surfaced 2026-06-01 slot-1 reconciliation sweep)
 
 - [x] ✅ [SCRIPT] P2. **PM QG test-isolation flake — FIXED** (`unified-trading-pm@c004b4e6a`). Root cause:
-      `find_manifest()` checked `REPO_ROOT` but **fell through to the `cwd.parents` walk** when REPO_ROOT was set-but-empty,
-      so a stray `/tmp/unified-trading-pm/` could spuriously match. Fix (production-correct, not test-gaming): when
-      `REPO_ROOT` is set it is **authoritative** — return its manifest or `None`, no cwd-walk fallthrough. `TestFindManifest`
-      (2 tests incl `test_returns_none_when_not_found`) pass; sibling test unaffected.
+      `find_manifest()` checked `REPO_ROOT` but **fell through to the `cwd.parents` walk** when REPO_ROOT was
+      set-but-empty, so a stray `/tmp/unified-trading-pm/` could spuriously match. Fix (production-correct, not
+      test-gaming): when `REPO_ROOT` is set it is **authoritative** — return its manifest or `None`, no cwd-walk
+      fallthrough. `TestFindManifest` (2 tests incl `test_returns_none_when_not_found`) pass; sibling test unaffected.
 - [ ] [CHORE] P3. **3 archived plans carry literal conflict-marker line(s)**
       (`plans/archive/2026_05/d5_features_missing_data_downgrade_2026_05_20.md`,
       `strategy_archetype_taxonomy_2026_05_12.md`, `defi_protocol_outage_detector_2026_05_20.md`). Pre-existing

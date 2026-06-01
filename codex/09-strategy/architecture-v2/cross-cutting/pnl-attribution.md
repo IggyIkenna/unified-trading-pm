@@ -552,6 +552,15 @@ class PnLFactor(StrEnum):
     REBATE                      = "REBATE"
     FX                          = "FX"
     RESIDUAL                    = "RESIDUAL"
+    # ⚠ proposed — pending UAC PR (global_ledger_pnl_attribution_migration Phase 8)
+    # These names appear in the Ledger→Attribution mapping table below; they will be
+    # formally added to the UAC enum when Phase 8 of global_ledger_pnl_attribution_migration
+    # lands. Until then code MUST map them to the nearest existing factor per the table in
+    # § "Plan-vs-codex factor name mapping".
+    CARRY_FUNDING               = "CARRY_FUNDING"    # perp funding accrual (PassiveLedger FUNDING_ACCRUAL); maps to FUNDING until Phase 8
+    CARRY_DIVIDEND              = "CARRY_DIVIDEND"   # cash/stock dividend (PassiveLedger DIVIDEND); maps to CARRY until Phase 8
+    REALIZED_PNL                = "REALIZED_PNL"     # terminal cash flow at close/settlement (maps to SETTLEMENT for sports/prediction; DELTA at position close)
+    LOSS_LIQUIDATION            = "LOSS_LIQUIDATION" # liquidation penalty/haircut (maps to LIQUIDATION until Phase 8)
 
 @dataclass(frozen=True)
 class PnLAttributionRow:
@@ -614,6 +623,10 @@ matrix.
 | `REBALANCE`                                                          | NOT a factor. Each rebalance fill decomposes into `DELTA` + `SLIPPAGE` + `FEES` per existing canonical set. `REBALANCE` belongs in `PnLMetadata.fill_reason` (fill metadata), not the attribution axis.                                                                                                                                                                          |
 | `HWM_CRYSTALLIZATION`                                                | NOT in `PnLAttributionRow`. Performance-fee crystallization is recognised via a separate `FeeRecognitionRow` table emitted by `wallet_treasury_client_flow_2026_05_10` Phase 5.G's `PerformanceFeeCrystallizedEvent`. `FeeRecognitionRow` joins into the NAV waterfall but does NOT participate in factor × layer decomposition (it's a fee accounting event, not a P&L driver). |
 | `STRATEGY_ALPHA + EXECUTION_ALPHA + SLIPPAGE + FEES + ...` flat enum | Hard Rule #4 violation. Two axes (factor, layer) — not one flat union.                                                                                                                                                                                                                                                                                                           |
+| `PNL_FACTOR_STAKING_YIELD`                                           | `CARRY_BASE` (wrapped non-rebasing LST) or `CARRY_BASE_REBASING` (rebasing LST). See § Reward P&L Factors for lifecycle.                                                                                                                                                                                                                                                         |
+| `PNL_FACTOR_RESTAKING_REWARD`                                        | `CARRY_AVS_CONTINUOUS`. See § Reward P&L Factors for lifecycle.                                                                                                                                                                                                                                                                                                                  |
+| `PNL_FACTOR_SEASONAL_REWARD`                                         | `CARRY_ISSUER_SEASONAL`. See § Reward P&L Factors for lifecycle.                                                                                                                                                                                                                                                                                                                 |
+| `PNL_FACTOR_REWARD_UNREALISED`                                       | `CARRY_*` unrealised slice (mark-to-market estimate of accrued but unclaimed rewards). See § Reward P&L Factors for lifecycle.                                                                                                                                                                                                                                                   |
 
 ## Share Class P&L
 
@@ -688,27 +701,36 @@ consumer needs the full share-class spec before that section is written into a l
 
 ## Reward P&L Factors
 
+> **Vocabulary consolidation note (2026-06-01):** The `PNL_FACTOR_*` names below are a **pre-codex parallel naming
+> system** that duplicates concepts already covered by the canonical `PnLFactor` enum. The canonical vocabulary is the
+> `PnLFactor` enum (`CARRY_BASE`, `CARRY_AVS_CONTINUOUS`, `CARRY_ISSUER_SEASONAL`, `REWARD_REALISATION_SLIPPAGE`). Use
+> the canonical names in all code; the `PNL_FACTOR_*` aliases are retained here for backward-reference only. Formal
+> migration to the canonical names is tracked in `global_ledger_pnl_attribution_migration` **Phase 8** — that is also
+> the trigger for the UAC enum PR that will formally add `CARRY_FUNDING`, `CARRY_DIVIDEND`, `REALIZED_PNL`, and
+> `LOSS_LIQUIDATION` to `PnLFactor` (see enum block above).
+
 Four additional attribution factors for DeFi staking reward streams. These extend the canonical factor hierarchy for
 strategies that involve liquid staking tokens (weETH, wstETH) and their associated reward protocols.
 
-| Factor                         | What It Captures                                         | Settlement Type   |
-| ------------------------------ | -------------------------------------------------------- | ----------------- |
-| `PNL_FACTOR_STAKING_YIELD`     | Base staking APY contribution (weETH/wstETH rate growth) | `LST_YIELD`       |
-| `PNL_FACTOR_RESTAKING_REWARD`  | EIGEN restaking rewards (weekly from EigenLayer)         | `SEASONAL_WEEKLY` |
-| `PNL_FACTOR_SEASONAL_REWARD`   | ETHFI quarterly airdrops (from EtherFi protocol)         | `SEASONAL_WEEKLY` |
-| `PNL_FACTOR_REWARD_UNREALISED` | Accrued but unclaimed rewards (mark-to-market estimate)  | `MARK_TO_MARKET`  |
+| Factor (pre-codex `PNL_FACTOR_*` alias) | Canonical `PnLFactor` mapping        | What It Captures                                         | Settlement Type   |
+| --------------------------------------- | ------------------------------------ | -------------------------------------------------------- | ----------------- |
+| `PNL_FACTOR_STAKING_YIELD`              | `CARRY_BASE` / `CARRY_BASE_REBASING` | Base staking APY contribution (weETH/wstETH rate growth) | `LST_YIELD`       |
+| `PNL_FACTOR_RESTAKING_REWARD`           | `CARRY_AVS_CONTINUOUS`               | EIGEN restaking rewards (weekly from EigenLayer)         | `SEASONAL_WEEKLY` |
+| `PNL_FACTOR_SEASONAL_REWARD`            | `CARRY_ISSUER_SEASONAL`              | ETHFI quarterly airdrops (from EtherFi protocol)         | `SEASONAL_WEEKLY` |
+| `PNL_FACTOR_REWARD_UNREALISED`          | `CARRY_*` (unrealised slice)         | Accrued but unclaimed rewards (mark-to-market estimate)  | `MARK_TO_MARKET`  |
 
 **Lifecycle:**
 
-1. Rewards accrue in the protocol. Tracked as `PNL_FACTOR_REWARD_UNREALISED` (unrealized, estimated from expected
-   distribution schedule).
+1. Rewards accrue in the protocol. Tracked as `PNL_FACTOR_REWARD_UNREALISED` (→ canonical: `CARRY_*` unrealised slice,
+   estimated from expected distribution schedule).
 2. On-chain claim transaction converts unrealized to realized. `PNL_FACTOR_REWARD_UNREALISED` decreases,
-   `PNL_FACTOR_RESTAKING_REWARD` or `PNL_FACTOR_SEASONAL_REWARD` increases by the claimed amount.
+   `PNL_FACTOR_RESTAKING_REWARD` (→ `CARRY_AVS_CONTINUOUS`) or `PNL_FACTOR_SEASONAL_REWARD` (→ `CARRY_ISSUER_SEASONAL`)
+   increases by the claimed amount.
 3. If reward tokens are sold (via `SELL_REWARD` operation), the realized proceeds replace the token-denominated value
    with a USD-denominated value in the factor.
 
 These factors are only active for strategies that use EtherFi or Lido staking. For Lido (`staking_protocol="LIDO"`),
-only `PNL_FACTOR_STAKING_YIELD` applies -- there are no separate reward tokens.
+only `PNL_FACTOR_STAKING_YIELD` (→ `CARRY_BASE` or `CARRY_BASE_REBASING`) applies — there are no separate reward tokens.
 
 ## SSOT References
 
@@ -780,9 +802,11 @@ PricingLedger (EventType.MARK_UPDATE, written by MTDS)
   └── MARK_UPDATE rows     → unrealized P&L MTM: PositionLedger ⨝ PricingLedger
 ```
 
-**Implementation status (2026-05-23 audit findings):**
+**Implementation status (last updated 2026-06-01):**
 
-- `unrealized_pnl` in strategy-service always returns 0 — MarkPrice not bridged to PnL engine.
-- `fees` not deducted from realized P&L computation.
-- PassiveLedger synthesiser not yet implemented — carry factors computed ad-hoc per archetype.
+- ~~`unrealized_pnl` in strategy-service always returns 0 — MarkPrice not bridged to PnL engine.~~ **SHIPPED
+  2026-05-30** — `_session_pnl_realized` and `_session_pnl_unrealized` are now wired into `BaseArchetypeEngineV2` at
+  strategy-service@`8deaf28`. MarkPrice is bridged to the PnL engine.
+- `fees` not deducted from realized P&L computation. _(still open)_
+- PassiveLedger synthesiser not yet implemented — carry factors computed ad-hoc per archetype. _(still open)_
 - Migration to join-from-ledger model tracked in `plans/active/global_ledger_pnl_attribution_discovery_2026_05_21.md`.

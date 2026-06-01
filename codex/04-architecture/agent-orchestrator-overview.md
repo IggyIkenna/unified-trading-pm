@@ -31,15 +31,15 @@ resource limits, root-cause history) → `codex/05-infrastructure/agent-orchestr
 
 ## Tech stack
 
-| Layer    | Technology                                                                                                                  |
-| -------- | --------------------------------------------------------------------------------------------------------------------------- |
-| Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                 |
-| Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                            |
-| Auth     | HS256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`)                                                    |
-| Workers  | 10 epic EC2 VMs (AWS ap-northeast-1), 8 slots each = 80 worker slots; 1 central API VM (`13.113.200.22`, 2 planning slots). |
-| State    | SQLite (runtime) + `data/state/state.json` snapshot. See § "State persistence" below for cloud-backup specifics.            |
-| Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                               |
-| QG       | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                              |
+| Layer    | Technology                                                                                                                                                                                                                                                                                                                                        |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                                                                                                                                                                                                                       |
+| Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                                                                                                                                                                                                                                  |
+| Auth     | ES256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`). Internal proxy token: ES256 asymmetric (central holds private key in GCP SM; workers verify with public key from GCS `internal-public.pem`). HS256 dual-accept retained during 48h soak. Operator dashboard login JWT: HS256 (`ORCHESTRATOR_JWT_SECRET`, central-only). |
+| Workers  | 11 EC2 VMs (10 epic + 1 api-host, AWS ap-northeast-1), 8 slots each on epic VMs = 80 worker slots; 1 central API/planning VM (`13.113.200.22`, 2 planning slots). Total: 82 slots.                                                                                                                                                                |
+| State    | SQLite (runtime) + `data/state/state.json` snapshot. See § "State persistence" below for cloud-backup specifics.                                                                                                                                                                                                                                  |
+| Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                                                                                                                                                                                                                     |
+| QG       | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                                                                                                                                                                                                                                    |
 
 ---
 
@@ -121,8 +121,13 @@ creds env files are operator-managed manually.
 launch, trading permissive auth for faster iteration. Strict auth flip recipe (whenever the project is ready):
 
 - Provision `ORCHESTRATOR_JWT_SECRET` (HS256 32-byte random) on the central VM only (operator JWT — never wire to
-  workers). Provision `ORCHESTRATOR_INTERNAL_SECRET` (separate HS256 random, fleet-shared via
-  `gs://…/orchestrator/internal-secret`) on every VM — central + every worker. See the two-secret model below.
+  workers).
+- Provision the ES256 asymmetric key pair for internal proxy tokens (shipped 2026-06-01 via
+  `orchestrator_asymmetric_auth`): private key stored in GCP Secret Manager; public key published to GCS
+  `gs://central-element-323112-orchestrator-creds/orchestrator/internal-public.pem`. Workers set
+  `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=gs://…/internal-public.pem` in `.env.local`; the central VM sets
+  `ORCHESTRATOR_INTERNAL_ALG=ES256` + holds the private key via SM. HS256 dual-accept (`decode_token` tries both) runs
+  for 48h soak before the HS256 path is removed.
 - Replace `validate_credentials` with argon2-hashed user list (schema from `scripts/manage_users.py`)
 - Flip `auth.ALLOW_ANONYMOUS=False`
 - Smoke test: 3-curl sequence (valid creds → 200, wrong password → 401, anonymous → 401)
@@ -235,8 +240,10 @@ operator coordination surface.
 ## Backlog auto-generation from plans (Phase 6 — shipped 2026-05-28)
 
 `data/config/backlog.yaml` is **derived from `plans/active/*.md` `- [ ]` checkboxes**, not hand-edited. Source module:
-`server/regen_backlog_from_plan.py`. Background `PlanRegenLoop` fires 60s after server boot, then every 6h
-(`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS`, 0 disables). Manual immediate trigger: `POST /api/backlog/regen`.
+`server/regen_backlog_from_plan.py`. Background `PlanRegenLoop` fires 60s after server boot, then every 30 min
+(`ORCHESTRATOR_PLAN_REGEN_INTERVAL_SECONDS` default 1800, 0 disables). A complementary `pm-pull.timer` systemd unit
+FF-pulls `unified-trading-pm` from LDR every 5 min, so the effective push-to-pickup latency is ≤35 min. Manual immediate
+trigger: `POST /api/backlog/regen`.
 
 Idempotency is content-based (dedup by `BacklogTask.brief == raw todo line`); editing a todo's wording creates a new
 task, flipping to `- [x]` simply stops the regen from seeing it (existing BacklogTask state in SQLite is preserved via
@@ -281,11 +288,11 @@ Five mitigations added to close gaps in the multi-agent loop. All live on the Ik
 Plan + per-phase commits: `plans/active/agent_reliability_mitigations_2026_05_20.md`. Detailed § "Reliability layer" in
 the operator runbook: `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`.
 
-## Fleet topology (refreshed 2026-05-28)
+## Fleet topology (refreshed 2026-06-01)
 
-Current state: **1 central API VM + 10 epic VMs, all on AWS EC2 `ap-northeast-1`**, all running orchestrator v0.6.0+.
-The GCP fleet that was commissioned 2026-05-21 was decommissioned during the 2026-05-22→23 AWS migration; no GCP VMs are
-running today.
+Current state: **1 central API/planning VM + 10 epic VMs + 1 api-host VM = 11 VMs total, all on AWS EC2
+`ap-northeast-1`**, all running orchestrator v0.6.0+. The GCP fleet that was commissioned 2026-05-21 was decommissioned
+during the 2026-05-22→23 AWS migration; no GCP VMs are running today.
 
 Current per-VM addresses + slot counts: see
 [`../05-infrastructure/agent-orchestrator-worker-topology.md`](../05-infrastructure/agent-orchestrator-worker-topology.md)
@@ -293,7 +300,8 @@ Current per-VM addresses + slot counts: see
 these numbers should live (avoid duplicating here so the two don't drift). Live runtime backends + account mapping live
 in `agent-orchestrator/data/config/backends.json`.
 
-Total worker capacity: 2 (central / planning slots) + 80 (10 × 8) = **82 slots**. Registry SSOT:
+Total worker capacity: 2 (central / planning slots) + 80 (10 epic VMs × 8) = **82 slots**. (The api-host VM serves the
+central API/routing role; its slots are the 2 planning slots counted above.) Registry SSOT:
 `unified-trading-pm/orchestrator_vm_registry.yaml`.
 
 **Cloud-agnostic posture**: AWS is the current and only running cloud. The bootstrap (`bootstrap_vm.sh`), launchers
@@ -313,23 +321,20 @@ unified-trading-system (one API fronts the UI; services isolated behind it). The
 - **Per-VM control**: `<central>/api/vms/<id>/<path>` → forwarded to that VM's `private_url` over the VPC (spawn / kill
   / pause / message / state / logs). The dashboard sets `baseUrl = <central>/api/vms/<id>` so existing `/api/*` calls
   route through unchanged.
-- **Auth (two-secret model, codified 2026-05-29)**: the central API holds two independent HS256 secrets:
+- **Auth (asymmetric model, codified 2026-06-01)**: the central API uses two independent secrets/keys:
   - `ORCHESTRATOR_JWT_SECRET` — operator dashboard login JWT only. **Central-only** (never wired into worker
-    `.env.local`). Validates the Bearer token on every authed request that enters at the public edge.
-  - `ORCHESTRATOR_INTERNAL_SECRET` — central↔worker proxy auth. **Fleet-shared** via
-    `gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret` (workers wire
-    `ORCHESTRATOR_INTERNAL_SECRET_GCS=gs://…/internal-secret` in `.env.local`; the central holds the literal value
-    because its AWS host has no GCP project context for ADC project auto-detection).
+    `.env.local`). HS256. Validates the Bearer token on every authed request that enters at the public edge.
+  - **ES256 asymmetric key pair** (`ORCHESTRATOR_INTERNAL_ALG=ES256`, shipped 2026-06-01) — central↔worker proxy auth.
+    Central holds the private key (GCP Secret Manager). Workers set
+    `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=gs://central-element-323112-orchestrator-creds/orchestrator/internal-public.pem`
+    in `.env.local`; the public key is fetched at startup. During the 48h soak, `decode_token()` tries ES256 first then
+    HS256 (`ORCHESTRATOR_INTERNAL_SECRET` legacy value) so workers migrated out-of-order still validate.
   - **Flow**: operator hits central with their JWT. The central validates against `ORCHESTRATOR_JWT_SECRET` at the
     perimeter, terminates that token, then mints a fresh short-lived (5 min, role=worker, machine=central-proxy) JWT
-    signed with `ORCHESTRATOR_INTERNAL_SECRET` and forwards THAT in the upstream `Authorization` header. Workers
-    validate against their copy of the internal secret only — they never see the operator secret.
-    (`server/server.py::proxy_to_vm`; `auth.get_internal_service_token()`.)
-  - `decode_token()` on either side tries both keys in turn, so a VM that holds both (the central) accepts both flows
-    while workers reject operator JWTs by construction (the operator key on a worker is an ephemeral random — operator
-    JWTs won't validate).
+    signed with the ES256 private key and forwards THAT in the upstream `Authorization` header. Workers validate against
+    their copy of the public key only — they never see the operator secret. (`server/server.py::proxy_to_vm`;
+    `auth.get_internal_service_token()`.)
   - Operator-credential exposure is bounded to the central VM. An upstream VM compromise can't impersonate the operator.
-  - `JWT_ALGORITHM` env-driven (HS256 now; RS256/ES256 seam for later).
 - **Routing**: `ORCHESTRATOR_USE_PRIVATE_URLS=true` on the central API makes the proxy target each backend's
   `private_url` (`172.31.x.x`, all VMs in `vpc-6ee70e08`/`subnet-fc09eca6`, ap-northeast-1).
 - **Registry**: `data/config/backends.json` (static, with `url` + `private_url`) merged with `fleet_registry.json`
@@ -406,6 +411,50 @@ Enable via systemd drop-in: `Environment=ORCHESTRATOR_AUTOSPAWN_ENABLED=true` in
 `unified-trading-pm/scripts/orchestrator/enable_autospawn.sh`.
 
 SSOT: `server/autospawn.py` + `plans/active/autospawn_idle_vms_2026_05_30.md`.
+
+### AutoSpawnLoop — extended failure modes
+
+The table above lists 5 failure modes. A 6th is handled by the watchdog layer (see § below):
+
+| Failure                                  | How handled                                                                                                            |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| tmux alive but stuck/silent/context-full | **Handled by WorkerLivenessWatchdog** — watchdog kills tmux; AutoSpawnLoop respawns on next tick (60–180 s round trip) |
+
+## Worker liveness watchdog (WorkerLivenessWatchdog — shipped 2026-06-01)
+
+`server/worker_liveness_watchdog.py` — daemon thread (60s tick) that **kills** tmux sessions invisible to
+`AutoSpawnLoop` (which only checks `tmux has-session`). After kill, AutoSpawnLoop respawns within 60s.
+
+### Three trigger contracts
+
+| Pattern              | Signal                                                                                      | Threshold              |
+| -------------------- | ------------------------------------------------------------------------------------------- | ---------------------- |
+| **Stuck-at-prompt**  | Pane has non-empty text after `❯` AND pane content unchanged across 3 consecutive ticks     | **180s** (3 × 60s)     |
+| **Heartbeat-silent** | `slot.last_heartbeat_at` older than threshold AND tmux alive AND `slot.status != 'blocked'` | **>900s** (15 min)     |
+| **Context-full**     | Pane matches `/clear to save .{1,10}k tokens/i`                                             | **Immediate** (1 tick) |
+
+### Anti-thrash gates
+
+- Per-slot 5-min kill cooldown.
+- Per-VM daily cap of 20 kills → Slack alert + watchdog dormancy until operator reset.
+
+### Debounce vs WorkerLivenessKicker
+
+`WorkerLivenessKicker` (`server/worker_liveness.py`) **nudges** via keystroke injection first; the watchdog **kills**
+directly on independent thresholds. The two compose: kicker for shallow freezes; watchdog for deeper stuck/silent/full
+patterns. If `WorkerLivenessKicker` kicked within the debounce window, the watchdog skips that slot.
+
+### Environment variables
+
+| Variable                               | Code default | Systemd-deployed default        |
+| -------------------------------------- | ------------ | ------------------------------- |
+| `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED` | `false`      | `true` on 10/11 VMs (see below) |
+
+**Known gap**: `vm-ml` has a broken SSM path — watchdog not yet installed there. All other 10 VMs have the systemd
+drop-in enabled. Track: `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`.
+
+SSOT: `codex/04-architecture/agent-orchestrator-worker-liveness.md` (full trigger contracts, anti-thrash, kill
+execution, interaction with AutoSpawnLoop).
 
 ## Host-offline failover lifecycle (FailoverLoop — design 2026-05-30)
 

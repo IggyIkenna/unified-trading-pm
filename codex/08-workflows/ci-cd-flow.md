@@ -206,8 +206,9 @@ registers a fresh validation context that bypasses the cached ghost.
 **Status across workspace** (per `codex/06-coding-standards/feature-branch-workflow.md` § "Per-repo required-check
 matrix"):
 
-- v2 deployed on canonical branches of all 10 ghost-affected repos + the 3 priority repos (PM, UAC, UTL)
-- Branch protection / ruleset enforcement updated to require `quality-gates-v2` across all rotated repos
+- v2 deployed on canonical branches of all **17** workspace repos (includes the 10 ghost-affected + 3 priority: PM, UAC,
+  UTL + remaining service repos)
+- Branch protection / ruleset enforcement updated to require `quality-gates-v2` across all 17 repos
 - Sentinel-write logic (commit `a8b758c58`) ensures local `quality-gates.sh` writes `.qg_last_passed_sha` on clean
   full-pass exit, enabling quickmerge `--agent` fast-path
 
@@ -249,27 +250,28 @@ where the normal flow is structurally circular** — the branch's required check
   (`merge-base --is-ancestor main LDR` true → relax → `git push origin <ldr-sha>:refs/heads/main` → re-enable);
 - landing the workflow / GHA / versioning **fixes themselves** when the branch is blocked by the breakage being fixed.
 
-**Otherwise, let CI/CD do it (normal PR → quickmerge auto-merge, NO admin):** any code/test/coverage/lint/codex fix
-that *makes the gate pass* goes through a PR and auto-merges green. Once a branch has a working green v2 gate, all
-changes use the normal flow. **Invariants:** never leave a ruleset `enforcement=disabled` or `enforce_admins` off;
-resolve conflicts ON `live-defi-rollout` (never a throwaway branch — that re-drifts); blocked-on-actionable-red is the
-SAFE direction (protected > unprotected).
+**Otherwise, let CI/CD do it (normal PR → quickmerge auto-merge, NO admin):** any code/test/coverage/lint/codex fix that
+_makes the gate pass_ goes through a PR and auto-merges green. Once a branch has a working green v2 gate, all changes
+use the normal flow. **Invariants:** never leave a ruleset `enforcement=disabled` or `enforce_admins` off; resolve
+conflicts ON `live-defi-rollout` (never a throwaway branch — that re-drifts); blocked-on-actionable-red is the SAFE
+direction (protected > unprotected).
 
 ## Operational status — promotion automation (snapshot 2026-06-01; being repaired)
 
 The **PR→staging gate** (`quality-gates-v2`) is healthy + enforced workspace-wide. The **staging→main half is being
 revived** — as of 2026-06-01 it was found DEAD and bypassed via admin force-merge. Progress (2026-06-01 evening):
 
-- **Loud alerting — SHIPPED** (`scripts/repo-management/ci_failure_watcher.py` + `.github/workflows/ci-failure-watcher.yml`,
-  cron `*/15`): cross-repo `workflow_run` failure→recovery transitions (stateless, recency-guarded) + auto-merge-stuck PR
-  poller → Slack `#ci-failures` via `notify-slack.yml`. This is the antidote to the silent rot that hid the breakage.
+- **Loud alerting — SHIPPED** (`scripts/repo-management/ci_failure_watcher.py` +
+  `.github/workflows/ci-failure-watcher.yml`, cron `*/15`): cross-repo `workflow_run` failure→recovery transitions
+  (stateless, recency-guarded) + auto-merge-stuck PR poller → Slack `#ci-failures` via `notify-slack.yml`. This is the
+  antidote to the silent rot that hid the breakage.
 - **`sit-debounce` notify guard — SHIPPED**: `notify-slack.yml` now skips (exit 0) on any non-`https://` webhook —
   notifications are best-effort, never fail the caller (was raising uncaught `ValueError: unknown url type` on a
   masked/misconfigured `SLACK_WEBHOOK_URL` inherited via `secrets: inherit`).
 - **`staging_versions` baseline — RESTORED** in `workspace-manifest.json` (was reset to `{}`; semver reads it as the
   bump baseline). Repopulated from the per-repo `versions` SSOT.
-- `semver-agent` — trigger fixed (`quality-gates-v2`); still needs the rendered file rolled out to repo default branches
-  (held until the LDR→main reconciliation campaign settles, to avoid add/add `*.yml` conflicts).
+- `semver-agent` — **SHIPPED 2026-06-01**: trigger `quality-gates-v2`; covers **24 repos**; callee contract requires
+  `timeout-minutes: 135` + `if: failure()||cancelled()` cleanup step. Rolled out to all repo default branches.
 - SIT chain (`sit-gate` ← `sit-lock`; `staging-to-main` ← `staging-validated`) — PM-side mapped: `sit-debounce-trigger`
   (cron `*/2`) dispatches `staging-changed` to the `system-integration-tests` repo; the dead link is on the SIT-repo
   side (zero `sit-gate` runs ⇒ `sit-lock`/`staging-validated` never re-dispatched). Cross-repo trace remaining.
@@ -281,8 +283,8 @@ locally that the CI clone does NOT reproduce — prettier only runs in `FIX_MODE
 clones a thin `dep_repos` set so cross-repo imports (numpy, `unified_trading_library`) go unresolved → a local green can
 hide a CI-red basedpyright/test. Always read the CI log on a campaign-PR red; don't infer from a local pass.
 
-**Live SSOT for this repair + the full ordered backlog**: `plans/active/cicd_contract_hardening_2026_06_01.md`
-§ "Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN".
+**Live SSOT for this repair + the full ordered backlog**: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Phase
+6 — CONSOLIDATED HAND-OFF EXECUTION PLAN".
 
 ---
 
@@ -302,6 +304,29 @@ git push origin HEAD:<branch>
 
 **Never** `git push --force` or `--force-with-lease` to LDR. Always rebase. Rebase conflicts mean another slot edited
 the same file — resolve with their changes in mind (likely their work should be preserved).
+
+---
+
+## Workflow-file editing — GH_TOKEN scope (HARD RULE, codified 2026-06-01)
+
+Any edit to a `.github/workflows/*.yml` file **requires a GH_TOKEN with `Workflows: write` scope**. The default keyring
+token (standard `gh auth login` session) does NOT carry this scope and will return a
+`403 Resource not accessible by integration` error when trying to push or create a PR that modifies workflow files.
+
+**Required before touching any workflow file:**
+
+```bash
+source unified-trading-pm/scripts/workspace/load-gh-token.sh
+```
+
+This script fetches the Workflows-write-capable token from Secret Manager (SM secret `GH_PAT`) and exports it as
+`GH_TOKEN` + `GITHUB_TOKEN`. All subsequent `gh` + `git push` calls in the same shell session use it.
+
+**Verification**: `verify-slot-host-symmetry.sh` checks that a valid `GH_TOKEN` with Workflows scope is present on the
+host. A missing / insufficient token shows as a failure in the symmetry check output.
+
+**Scope**: applies to any PR or direct push that adds, modifies, or renames a file under `.github/workflows/` in any
+workspace repo. PRs that touch only non-workflow files do not require the elevated token.
 
 ---
 
@@ -333,7 +358,7 @@ The v1 `quality-gates` check context was poisoned by GitHub's server-side BuildF
 | PM           | `.github/workflows/quality-gates-v2.yml` | `.github/workflows/python-quality-gates-v2.yml` (local ref — PM calls itself)                   |
 | Service repo | `.github/workflows/quality-gates-v2.yml` | `IggyIkenna/unified-trading-pm/.github/workflows/python-quality-gates-v2.yml@live-defi-rollout` |
 
-**Required status check across all repos**: `quality-gates-v2` (all 10 repos rotated 2026-05-29).
+**Required status check across all repos**: `quality-gates-v2` (all 17 repos on v2 as of 2026-06-01).
 
 **v1 cleanup status**: `quality-gates.yml` / `workspace-qg.yml` deleted from PM, UAC, UTL, alerting-service, ml-service,
 execution-service (2026-05-30). Keep `python-quality-gates.yml` in PM until GH ticket clears.
@@ -344,8 +369,10 @@ execution-service (2026-05-30). Keep `python-quality-gates.yml` in PM until GH t
 
 ## Workspace-qg unified trigger surface (codified 2026-05-16 — Phase B rollout complete)
 
-**SSOT template**: `unified-trading-pm/scripts/workflow-templates/workspace-qg.yml.tmpl`. All 21 Python service repos
-now use this canonical template; per-repo `quality-gates.yml` files have been retired.
+**SSOT template**: `unified-trading-pm/scripts/workflow-templates/quality-gates-v2.yml.tmpl` (renamed from
+`workspace-qg.yml.tmpl`; the v1 `python-quality-gates.yml` is kept only as a ghost-target until GH Support ticket
+#4422570 clears). All **17** Python service repos now use this canonical template (main + staging branches all on
+`quality-gates-v2`); per-repo `quality-gates.yml` files have been retired.
 
 ### Pre-cutover trigger surface (until 2026-05-23)
 
@@ -379,31 +406,34 @@ on:
 ```
 
 Then run `bash unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh` to propagate the change to
-all 21 repos. Estimated time: ~5 min.
+all 17 repos. Estimated time: ~5 min.
 
 ### Roll-forward future workflow changes
 
-1. Edit the template in `unified-trading-pm/scripts/workflow-templates/workspace-qg.yml.tmpl`.
-2. Run `rollout-workflow-templates.sh --template workspace-qg.yml.tmpl` (rendered to every Python repo).
+1. Edit the template in `unified-trading-pm/scripts/workflow-templates/quality-gates-v2.yml.tmpl`.
+2. Run `rollout-workflow-templates.sh --template quality-gates-v2.yml.tmpl` (rendered to every Python repo).
 3. Each repo's owner commits + pushes the auto-rendered `workspace-qg.yml`. Auto-FF mirror lands on LDR.
 4. Per-repo first run on the change surfaces any pre-existing QG failures (per Findings Triage HARD RULE, "pre-existing
    is NOT a triage criterion — fix now if you can").
 
 ### dep_repos auto-rendering
 
-`{{DEP_REPOS}}` is substituted at rollout time from `workspace-manifest.json` (canonical). Hand-crafted phantom-dep
-references in old per-repo files (`unified-cloud-interface` / `unified-config-interface` / `unified-internal-contracts`
+`{{DEP_REPOS}}` is resolved at rollout time via **BFS-transitive closure over `pyproject.toml` `path="../<repo>"`
+editable dependencies** — i.e. the set of repos that appear as `path =` deps, transitively. This means the rendered
+`dep_repos` list reflects what the repo _actually_ depends on at the code level. `workspace-manifest.json` is consulted
+only as a **fallback** when the BFS graph is incomplete or a repo is not yet declared as an editable dep.
 
-- duplicate `unified-trading-library`) were silently corrected by the Phase B migration; future drift is prevented by
-  the manifest-as-SSOT contract.
+Hand-crafted phantom-dep references in old per-repo files (`unified-cloud-interface` / `unified-config-interface` /
+`unified-internal-contracts` — duplicate `unified-trading-library`) were silently corrected by the Phase B migration;
+future drift is prevented by the pyproject-BFS contract.
 
 ### Continuous verification
 
-| Field                   | Value                                                                                                        |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------ |
-| Item                    | CI workflow consistency across 21 Python repos                                                               |
-| Cutover criterion       | All 10 repos have `quality-gates-v2.yml`; required check = `quality-gates-v2`; v1 caller deleted             |
-| Continuous verification | `gh run list --repo IggyIkenna/<repo> --workflow quality-gates-v2 --limit 1` shows `completed success`       |
-| Cadence                 | Weekly drift-check (one repo per day across the week)                                                        |
-| Owner                   | vm-cross-cutting (ci_canonical_v2_migration plan)                                                            |
-| Last verified           | 2026-05-30: 6/10 green; 4 have pre-existing code quality issues (see ci_canonical_v2_migration plan Phase 4) |
+| Field                   | Value                                                                                                  |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ |
+| Item                    | CI workflow consistency across 17 Python repos (main + staging, all on `quality-gates-v2`)             |
+| Cutover criterion       | All 17 repos have `quality-gates-v2.yml`; required check = `quality-gates-v2`; v1 callers deleted      |
+| Continuous verification | `gh run list --repo IggyIkenna/<repo> --workflow quality-gates-v2 --limit 1` shows `completed success` |
+| Cadence                 | Weekly drift-check (one repo per day across the week)                                                  |
+| Owner                   | vm-cross-cutting (ci_canonical_v2_migration plan)                                                      |
+| Last verified           | 2026-06-01: all 17 repos on v2; semver-agent SHIPPED (24 repos, trigger `quality-gates-v2`)            |

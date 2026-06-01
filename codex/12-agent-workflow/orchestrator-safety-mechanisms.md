@@ -84,22 +84,27 @@ deterministic and simple. Refining to `min(healthy, key=lambda a: a.weekly_pct)`
 
 ## C) Telegram / Slack alerts (workspace-wide alert framework)
 
-Current inventory (verified 2026-05-28; both `server/notifications/slack.py` and `server/notifications/telegram.py`
-expose this set):
+Current inventory (verified 2026-06-01; both `server/notifications/slack.py` and `server/notifications/telegram.py`
+expose this set). **Authoritative SSOT**: `codex/05-infrastructure/agent-orchestrator-slack-notifications.md` (event
+table, payload shape, retry logic, secret inventory) — cross-link here to prevent the two from drifting.
 
-| Event                              | When                                                              | Severity  |
-| ---------------------------------- | ----------------------------------------------------------------- | --------- |
-| `notify_slot_blocked`              | Slot calls `/blocked` (operator answer needed)                    | warn      |
-| `notify_slot_stale`                | HealthMonitor sees working slot silent >25 min                    | warn      |
-| `notify_slot_failed`               | HealthMonitor sees idle slot dead                                 | crit      |
-| `notify_spawn_failure`             | `tmux_spawn.spawn` raised inside the spawn endpoint               | crit      |
-| `notify_agent_stuck_respawned`     | Auto-respawn fired per § A                                        | warn      |
-| `notify_agent_stuck_escalation`    | Respawn failed; operator needs to intervene                       | crit      |
-| `notify_account_rotated`           | Active account swapped per § B (slot respawned with new env file) | info      |
-| `notify_all_accounts_exhausted`    | Failover ran out of healthy accounts                              | crit      |
-| `notify_setup_token_expiring`      | Token within 30-day (warn) or 7-day (crit) window of expiry       | warn/crit |
-| `notify_git_staleness_red`         | Slot git_status red >15 min AND no auto-pull within 5 min         | warn      |
-| `notify_orchestrator_restart_loop` | systemd OnFailure fires >N restarts in window (Telegram only)     | crit      |
+| Event                              | When                                                                      | Severity  |
+| ---------------------------------- | ------------------------------------------------------------------------- | --------- |
+| `notify_slot_blocked`              | Slot calls `/blocked` (operator answer needed)                            | warn      |
+| `notify_slot_stale`                | HealthMonitor sees working slot silent >25 min                            | warn      |
+| `notify_slot_failed`               | HealthMonitor sees idle slot dead                                         | crit      |
+| `notify_spawn_failure`             | `tmux_spawn.spawn` raised inside the spawn endpoint                       | crit      |
+| `notify_agent_stuck_respawned`     | Auto-respawn fired per § A                                                | warn      |
+| `notify_agent_stuck_escalation`    | Respawn failed; operator needs to intervene                               | crit      |
+| `notify_account_rotated`           | Active account swapped per § B (slot respawned with new env file)         | info      |
+| `notify_all_accounts_exhausted`    | Failover ran out of healthy accounts                                      | crit      |
+| `notify_setup_token_expiring`      | Token within 30-day (warn) or 7-day (crit) window of expiry               | warn/crit |
+| `notify_git_staleness_red`         | Slot git_status red >15 min AND no auto-pull within 5 min                 | warn      |
+| `notify_orchestrator_restart_loop` | systemd OnFailure fires >N restarts in window (Telegram only)             | crit      |
+| `notify_unpushed_plans`            | Plan-hygiene cron detects unpushed plan-flip commits on a slot's worktree | warn      |
+| `notify_autospawn_flap`            | AutoSpawnLoop detects ≥3 consecutive spawns on same slot within 10 min    | warn      |
+| `notify_watchdog_kill`             | WorkerLivenessWatchdog kills a slot (context-full or daily-cap hit)       | P0        |
+| `notify_sync`                      | State/snapshot sync event (GCS or S3 upload outcome)                      | info      |
 
 All channels: same group chat (`-5288420200`) for now. Per-VM channels deferred.
 
@@ -126,35 +131,30 @@ Dashboard's git status badge already shows red/yellow/green per slot. New: orche
 per slot every 60s. If `git_status` is RED AND last-pull was >15 min ago AND no manual fix has happened → fire
 `notify_git_staleness_red` once per slot-30min.
 
-## E) Fresh-spawn dirty-commit (overrides CLAUDE.md foreign-files rule for this case)
+## E) Fresh-spawn dirty-state resolution (liveness-gated, shipped `orchestrator_autonomy_audit_remediation` Phase 4)
 
-**Problem**: when a slot's worker dies mid-work and respawns, the worktree has uncommitted changes from the predecessor
-agent. The new agent reads CLAUDE.md "Never touch files outside your clear context" and refuses to commit them. Result:
-perpetually dirty worktrees that block further work + contain potentially valuable WIP.
+**Problem**: when a slot's worker dies mid-work and respawns, the worktree may have uncommitted changes from the
+predecessor agent.
 
-**Fix**: at the START of every fresh spawn, the spawn endpoint:
+**Shipped model**: at the START of every fresh spawn, all three spawn paths (manual `/api/slots/<N>/spawn`, autospawn,
+failover) call the liveness-gated `resolve_dirty_state` coordinator + `check_slot_branch_state` (9-FM coverage). The
+coordinator determines predecessor liveness **before** touching any files. Three outcomes:
 
-1. Walks each repo worktree in `.tabs/<N>/<repo>/`
-2. For any dirty repo:
-   - Stages everything: `git add -A`
-   - Commits with `chore(orphan-wip): inherited WIP from predecessor on slot <N> at <ts>` + the predecessor's last-known
-     `agent_id` if available
-   - Pushes to the slot's branch: `git push origin tab/<operator>/<N>`
-3. Logs an activity event `slot_orphan_wip_committed` with the SHA + repo list
-4. Tells the new claude session via boot prompt: "Predecessor WIP committed to your branch at SHA `<X>`. Review for
-   relevance to your next task; if useful, reference; if not, ignore (it's preserved in git history)."
+| Predecessor state                        | Resolution                                                                                                                                                                                                    |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dead predecessor**                     | **Inherit**: stage + commit with `chore(orphan-wip): inherited WIP from predecessor on slot <N> at <ts>`, push to slot branch, log `slot_orphan_wip_committed` event. New worker's boot prompt notes the SHA. |
+| **Live peer (active slot)**              | **Protect**: do NOT touch the dirty files; spawn blocked (HTTP 409) until the active peer completes or is killed. Preserves foreign-WIP HARD RULE.                                                            |
+| **Wiped index (no predecessor context)** | **Quarantine**: move dirty files to `_wip_quarantine/<ts>/` on the worktree, log `slot_wip_quarantined` event, unblock spawn. Operator recovers from quarantine dir.                                          |
 
-This makes the foreign-files rule consistent: it remains true for ACTIVE-WORK files in OTHER slots, but a respawned slot
-owns its predecessor's WIP and ships it cleanly.
+The old unconditional `git add -A` path is removed — it was unsafe for the live-peer case.
 
-**Compose with**: existing `worktree_clean_check.py` pre-spawn gate. Today it REFUSES spawn on dirty state OR stashes
-(with `dirty_state_resolution: stash`). New default mode: `commit_and_push` (the behavior above), with stash + refuse
-remaining as overrides.
+**Compose with**: `worktree_clean_check.py` pre-spawn gate (produces the liveness signal that drives the three-way
+branch above); `codex/05-infrastructure/per-tab-worktrees.md` § "Fresh-spawn dirty-state" (canonical detail on the
+coordinator contract).
 
-**Rationale**: the foreign-files HARD RULE in CLAUDE.md is about preventing one slot from accidentally clobbering
-another slot's in-flight work. The respawn case is different: the predecessor agent IS gone (process-dead), nobody else
-is editing those files, and the WIP belongs to that slot's branch by definition. Committing it cleanly preserves it +
-unblocks the new agent on the same slot. The override is scoped to one spawn endpoint, not workspace-wide.
+**Rationale**: the foreign-files HARD RULE in CLAUDE.md governs ACTIVE-WORK files in OTHER slots. The dead-predecessor
+case is different: the predecessor is gone, WIP belongs to that slot's branch by definition. The live-peer gate
+preserves the invariant for concurrent active slots.
 
 ## Composes with
 

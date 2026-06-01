@@ -23,8 +23,11 @@
   Phase D (14 Group B buckets) authored in TF at `deployment-service@e8e72e7`, pending `tofu apply`:
   - 5 `uts-prod-manifest-consolidator-instruments-{cefi,defi,tradfi,sports,prediction}` (env-tiered)
   - 5 `uts-prod-manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}` (env-tiered)
-  - 10 `*-legacy` (flat no-env variants for MDPS/IS scripts still using non-env-tiered names)
-- ONE Cloud Scheduler cron per job → 20 crons, all `*/1 * * * * (UTC)`, all ENABLED.
+  - 10 `*-legacy` (flat no-env variants for MDPS/IS scripts still using non-env-tiered names) **[PENDING
+    DECOMMISSION]**: these 10 legacy flat crons are active but targeted for pause + Terraform removal once per-AG L3
+    single-walk reaches C-GREEN for every asset_group. Do NOT delete ahead of that gate — they are the fallback read
+    path for any service still referencing flat bucket names.
+- ONE Cloud Scheduler cron per job → 20 crons, all `*/1 * * * * (UTC)`, all ENABLED (10 env-tiered + 10 legacy flat).
 - Image: `market-tick-data-service:latest` (UTL installed as dep).
 - Entrypoint: `python -m unified_trading_library.manifest_consolidator --bucket {X} --once`.
 - Service accounts: scheduler invoker = `t1_batch_sa`; container runtime = `unified_trading_sa` (storage.objectAdmin on
@@ -242,7 +245,8 @@ item) + the engine invariant in `manifest_master_audit_instructions.md` (h2/h3/h
 ## Verification recipe
 
 ```bash
-# 1. List active consolidator Cloud Run jobs (expect 10 currently, target 5 post-consolidation).
+# 1. List active consolidator Cloud Run jobs (expect 20 currently: 10 env-tiered + 10 legacy flat;
+#    target 10 env-tiered only after legacy flat crons are decommissioned post-L3 C-GREEN).
 gcloud run jobs list --region asia-northeast1 --filter="name~consolidator" --format="value(name)"
 
 # 2. Confirm all crons enabled.

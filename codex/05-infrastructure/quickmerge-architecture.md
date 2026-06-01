@@ -41,6 +41,31 @@ bash scripts/quickmerge.sh "feat: description" --dep-branch "my-feature"
 - Branch builds: `ENVIRONMENT=development` → uses `GCP_PROJECT_ID_DEV`
 - Main builds: `ENVIRONMENT=production` → uses `GCP_PROJECT_ID`
 
+## Sentinel integration
+
+The two-pass model uses a `.qg_last_passed_sha` sentinel file to prevent redundant QG re-runs in `--agent` mode.
+
+**Written by**: `unified-trading-pm/scripts/quality-gates-base/base-service.sh` — on a **full** QG pass (all steps, no
+skip flags), the script writes the current `git rev-parse HEAD` to `.qg_last_passed_sha` on clean exit (commit
+`a8b758c58`).
+
+**Read by**: `quickmerge.sh` at line 819 in `--agent` mode — it compares the sentinel SHA against the current HEAD:
+
+- **SHA match** → Pass 1 is guaranteed for the current HEAD; all Pass 2 QG re-runs are skipped (sentinel IS the
+  guarantee).
+- **SHA mismatch / sentinel absent** → `EXIT 1: "Run quality-gates.sh on current HEAD first"`.
+
+**Partial runs do NOT write the sentinel** and therefore cannot unblock `--agent`:
+
+- `--skip-tests`
+- `--skip-codex`
+- `--quick`
+
+If quickmerge blocks with a SHA mismatch after you believe QG passed, check which flags were used: any partial-run flag
+means the sentinel was not written. Run the full `bash scripts/quality-gates.sh` (no flags) to generate the sentinel.
+
+See also: `codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model".
+
 ## Why Not Standalone Quality Gates
 
 Running `bash scripts/quality-gates.sh` directly skips dependency validation, environment detection, and PR creation.

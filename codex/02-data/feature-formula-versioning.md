@@ -137,6 +137,41 @@ comments, docstrings, blank lines stripped) and prints the baseline. A future ph
 This catches the most common Phase 3+ regression: edit the math, forget to bump, GCS silently gets
 v1-tagged-but-v2-formula rows. The drift gate makes that operationally impossible to merge.
 
+## Additional FeatureSpec fields (shipped Phase 1, 2026-05-28)
+
+Two fields added to `FeatureSpec` in `features_registry_status_versioning_2026_05_28.md` Phase 1:
+
+### `custom_or_third_party`
+
+```python
+custom_or_third_party: Literal["custom", "ta_lib", "pandas_std", "numpy_std"]
+```
+
+Classifies the implementation origin of the formula:
+
+| Value          | Meaning                                                                                     |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| `"custom"`     | Formula written in-house; drift detection via `formula_hash` is mandatory                   |
+| `"ta_lib"`     | Delegates to TA-Lib C extension; version-pinned via `requirements.txt`; drift = lib version |
+| `"pandas_std"` | Uses a standard Pandas method (e.g. `.rolling().mean()`); drift = Pandas version            |
+| `"numpy_std"`  | Uses a standard NumPy function; drift = NumPy version                                       |
+
+This field drives the `features-status --check-drift` gate: only `"custom"` specs are hashed against their method
+source; the other three categories use the library version as the drift signal instead.
+
+### `formula_hash`
+
+```python
+formula_hash: str  # SHA-256 hex of the canonicalised _calculate_features source, or "" if not yet baselined
+```
+
+Populated by `features-status --baseline` on first run (or on a version bump). On every subsequent run (and in
+`quality-gates.sh`), the live method is re-hashed; a mismatch without a `formula_version` bump fails the gate. Applies
+only to `custom_or_third_party="custom"` specs — all other specs leave this field empty `""`.
+
+The hash is stored on the `FeatureSpec` in the registry (not on disk / in the manifest) so it travels with the version
+pin: bumping `formula_version` resets the expected hash in the same commit.
+
 ## Status field
 
 Every `FeatureSpec` declares a
@@ -183,7 +218,8 @@ are explicitly rejected unless the config opts in with `accept_any: true` (for a
 
 Shipped in `plans/active/features_registry_status_versioning_2026_05_28.md` across 5 phases:
 
-- Phase 1: FeatureSpec schema extension (status/priority/formula_version/implementation)
+- Phase 1: FeatureSpec schema extension
+  (status/priority/formula_version/implementation/custom_or_third_party/formula_hash)
 - Phase 2: 47 → 1,382 specs (catalogued 29 missing groups)
 - Phase 3: per-group version stamped into parquet (sidecar + file-level metadata)
 - Phase 4: features-status CLI + drift baseline

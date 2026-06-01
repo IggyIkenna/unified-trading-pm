@@ -4,7 +4,8 @@ archetype: CARRY_STAKED_BASIS
 family: CARRY_AND_YIELD
 status: code-shipped
 venue_universe:
-  [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE, DRIFT, DERIBIT, BYBIT, OKX, HYPERLIQUID, UNISWAP_V3, JUPITER]
+  [LIDO, ROCKET_POOL, ETHERFI, JITO, MARINADE, DRIFT, DERIBIT, BYBIT, OKX, UNISWAP_V3, JUPITER]
+  # HYPERLIQUID removed 2026-06-01: accepted=False (USDC-only, no ETH-LST margin support) — see eligibility matrix body.
 topology_requirements:
   isolation:
     execution-service: isolated

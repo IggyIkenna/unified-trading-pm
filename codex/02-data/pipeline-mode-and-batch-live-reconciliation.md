@@ -5,8 +5,8 @@ last_reviewed: 2026-05-28
 
 # `pipeline_mode` Column — Batch/Live Reconciliation
 
-> **STATUS** — Documents the `pipeline_mode` manifest column (distinct from the on-disk hive partition, which is Phase 5
-> DEFERRED per CLAUDE.md Single-walk discipline). Implementation plan:
+> **STATUS** — Documents the `pipeline_mode` manifest column. On-disk partition is IN PROGRESS as a named rider per AG
+> L3 walk (see § "On-disk partition" below). Implementation plan:
 > [`plans/active/pipeline_mode_implementation_2026_05_28.md`](../../plans/active/pipeline_mode_implementation_2026_05_28.md).
 
 ## What `pipeline_mode` is
@@ -114,10 +114,22 @@ As of 2026-05-28, `pipeline_mode` allows NULL in the schema — ~38M legacy rows
 have NULL. The NOT NULL constraint will be enforced after the backfill verifies clean
 (`SELECT count(*) WHERE pipeline_mode IS NULL = 0` per bucket).
 
-## On-disk partition (DEFERRED)
+## On-disk partition (IN PROGRESS as named rider per AG L3 walk)
 
-Adding `pipeline_mode=` as a hive partition key on disk is **Phase 5 — DEFERRED** per CLAUDE.md Single-walk discipline.
-Reads filter via column-scan (low cardinality, ~10 values) until the whole-corpus migration window is scheduled.
+Adding `pipeline_mode=` as a hive partition key on disk is **IN PROGRESS** — re-scoped from "Phase 5 DEFERRED" to a
+named **rider** inside each asset-group's L3 single-walk per
+`plans/active/pipeline_mode_partition_migration_2026_06_01.md`. Reads continue to filter via column-scan (low
+cardinality, ~10 values) until each per-bucket rider completes.
+
+**Per-bucket rider coverage** (as of 2026-06-01):
+
+| Bucket / asset-group      | Rider status                   | Notes                                      |
+| ------------------------- | ------------------------------ | ------------------------------------------ |
+| `market-data-tick-cefi`   | In L3 walk plan                | Rider confirmed in AG cefi L3 walk scope   |
+| `market-data-tick-defi`   | In L3 walk plan                | Rider confirmed in AG defi L3 walk scope   |
+| `market-data-tick-tradfi` | In L3 walk plan                | Rider confirmed in AG tradfi L3 walk scope |
+| `market-data-tick-sports` | In L3 walk plan                | Rider confirmed in AG sports L3 walk scope |
+| `instruments-store-*`     | **Pending** — not yet in scope | instruments bucket rider not yet scheduled |
 
 See: [`pipeline-mode-partition.md`](pipeline-mode-partition.md) for the Phase 3 migration history (2026-05-19
 hive-partition walk).

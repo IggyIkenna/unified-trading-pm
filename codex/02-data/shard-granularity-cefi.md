@@ -14,15 +14,15 @@ last_reviewed: 2026-05-17
 > ML+strategy+execution job_id / TradFi EVENT_CONTRACT).
 
 **Status:** v6 columns (`quote_asset` / `margin_type` / `combo_type` / `leg_weights`) active as of 2026-04-23 (manifest
-schema v6 shipped). Current overall schema is **v8** (`MANIFEST_SCHEMA_VERSION = 8` in UTL `manifest_writer.py`) — v7
+schema v6 shipped). Current overall schema is **v9** (`MANIFEST_SCHEMA_VERSION = 9` in UTL `manifest_writer.py`) — v7
 added `fixture_id` (sports per-fixture) + `job_id` (ML / strategy / execution experiment-keyed services); v8 added
-`pipeline_mode` + `service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`; the v6
-CeFi columns described in this doc are unchanged under v7/v8.
+`pipeline_mode` + `service_emission_state` + `last_emission_decision_at` + `expected_window_completeness_pct`; v9 added
+`source` (universal provider tag, 2026-05-30); the v6 CeFi columns described in this doc are unchanged under v7/v8/v9.
 
-> **[DELTA 2026-05-22]** **Current state:** `MANIFEST_SCHEMA_VERSION = 8` is the code constant (shipped 2026-05-08), but
-> data-side migration is in progress — production parquets contain a mix of v4–v7 rows with 0% at v8 as of 2026-05-20
-> mega-audit. **Planned delta:** `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md` Phase 2.2 single-walk
-> migration will rewrite all manifest rows to v8 shape. **Target architecture:** 100% of production rows at v8.
+> **[DELTA 2026-06-01]** **Current state:** `MANIFEST_SCHEMA_VERSION = 9` (code constant rolled 2026-05-30). Data-side
+> migration target is 100% of production rows at v9. The Phase 2.2 single-walk migration
+> (`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`) is in progress as a per-AG L3 walk rider. **Target
+> architecture:** 100% of production rows at v9.
 
 Cluster validation as 4th write-gate pillar in progress (writegate Phase 1A + 2.B). **SSOT:**
 [availability-manifest-and-data-status.md](./availability-manifest-and-data-status.md) for the canonical schema-version

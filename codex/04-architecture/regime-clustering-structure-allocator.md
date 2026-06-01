@@ -26,7 +26,7 @@ features-service          ml-service / strategy-service      strategy-service / 
 
 ### Step 2 — Cluster historical states / assign live vector
 
-- **Who**: unsupervised clustering (GMM or k-means) trained inside each walk-forward fold.
+- **Who**: unsupervised clustering (GMM (soft) or HDBSCAN) trained inside each walk-forward fold.
 - **Batch**: fit clusters on train split → save artifact to GCS.
 - **Live**: load artifact → assign incoming vector → emit `ClusterAssignmentPayload`.
 - **Abstain guard**: when membership entropy exceeds threshold (OOD state) → `regime_abstain=True` → minimum size or
@@ -143,20 +143,20 @@ intentionally blind to conviction.
 
 ## Service ownership
 
-| Component                         | Service                                               | Module                                                                                        |
-| --------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| Feature vectors + PnL sub-vectors | `features-service`                                    | `feature_writer.py`, `strategy_pnl_archetype/rolling_compute.py`                              |
-| Clustering fit + assignment       | `features-service` (fit); `strategy-service` (assign) | `cross_instrument/regime_calculator.py`                                                       |
-| Abstain guard                     | `strategy-service`                                    | `discrete_structure_allocator.py` `RiskGates`                                                 |
-| Structure solve                   | `strategy-service`                                    | `discrete_structure_allocator.py`                                                             |
-| Greek computation                 | `greeks-service`                                      | `kernels/black_scholes.py` `BlackScholesKernel`                                               |
-| Slippage model                    | `strategy-service`                                    | `options_slippage.py` `OptionsSlippageModel`                                                  |
-| Portfolio gate                    | `strategy-service`                                    | `portfolio_risk_gate.py` `PortfolioRiskGate`                                                  |
-| Analog execution gate (kNN)       | `strategy-service`                                    | `analog_gate.py` `KnnAnalogGate` — cluster-filtered; slippage/win-rate veto; soft-Kelly scale |
-| Gate pipeline                     | `strategy-service`                                    | `structure_pipeline.py` `StructurePipeline` — enforced Phase 3→4b→5 ordering                  |
-| Timeframe fusion                  | `strategy-service`                                    | `timeframe_fusion.py` `fuse_cluster_assignments()`                                            |
-| Cluster greek targets             | `strategy-service`                                    | `cluster_greek_targets.py` `fit_cluster_greek_targets()`                                      |
-| Listed chain                      | `market-tick-data-service`                            | `adapters/deribit.py` + `adapters/tardis.py`                                                  |
+| Component                         | Service                           | Module                                                                                                                  |
+| --------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Feature vectors + PnL sub-vectors | `features-service`                | `feature_writer.py`, `strategy_pnl_archetype/rolling_compute.py`                                                        |
+| Clustering fit + assignment       | `features-service` (fit + assign) | `cross_instrument/regime_calculator.py` (features-service@`68817bfb` ships `assign_clusters()` + `compute_proximity()`) |
+| Abstain guard                     | `strategy-service`                | `discrete_structure_allocator.py` `RiskGates`                                                                           |
+| Structure solve                   | `strategy-service`                | `discrete_structure_allocator.py`                                                                                       |
+| Greek computation                 | `greeks-service`                  | `kernels/black_scholes.py` `BlackScholesKernel`                                                                         |
+| Slippage model                    | `strategy-service`                | `options_slippage.py` `OptionsSlippageModel`                                                                            |
+| Portfolio gate                    | `strategy-service`                | `portfolio_risk_gate.py` `PortfolioRiskGate`                                                                            |
+| Analog execution gate (kNN)       | `strategy-service`                | `analog_gate.py` `KnnAnalogGate` — cluster-filtered; slippage/win-rate veto; soft-Kelly scale                           |
+| Gate pipeline                     | `strategy-service`                | `structure_pipeline.py` `StructurePipeline` — enforced Phase 3→4b→5 ordering                                            |
+| Timeframe fusion                  | `strategy-service`                | `timeframe_fusion.py` `fuse_cluster_assignments()`                                                                      |
+| Cluster greek targets             | `strategy-service`                | `cluster_greek_targets.py` `fit_cluster_greek_targets()`                                                                |
+| Listed chain                      | `market-tick-data-service`        | `adapters/deribit.py` + `adapters/tardis.py`                                                                            |
 
 ---
 
@@ -181,4 +181,4 @@ strategy-service — never inside ml-service.
 | Deflated Sharpe                           | `walk_forward_kpi.py` `WalkForwardReport`            | OOS Sharpe with multiple-testing correction  |
 | PBO (Probability of Backtest Overfitting) | computed per cluster                                 | Rejects in-sample-only artefacts             |
 | OOD abstain coverage                      | `walk_forward_kpi.py` `RegimeOosReport`              | 100% of OOD ticks must route to abstain      |
-| Backtest↔paper tracking error            | `tracking_error_kpi.py` `BacktestPaperParityChecker` | Proves continuous→discrete bridge is real    |
+| Backtest↔paper tracking error             | `tracking_error_kpi.py` `BacktestPaperParityChecker` | Proves continuous→discrete bridge is real    |
