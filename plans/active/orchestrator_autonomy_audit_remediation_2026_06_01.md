@@ -107,6 +107,17 @@ LDR" and "loop actually runs 24/7".
   stdout/stderr, despite EC2 status checks ok/running. Almost certainly disk-full (vm-ml's historical 142k-line backlog
   bloat) or a wedged SSM agent — unrecoverable via SSM since SSM itself can't execute. **Needs SSH/operator** to clear
   disk + restart the agent. vm-ml's autonomy flags + currency are therefore unverified.
+- 🔴 **F3 — this plan's "main for agent-orchestrator" base assumption was WRONG (corrected 2026-06-01).** The FM6 +
+  branch-state design (c) + closing + TEST (h) all specified `main` as agent-orchestrator's integration base. That is
+  incorrect: **agent-orchestrator slot worktrees integrate via `live-defi-rollout`** (server code ships from LDR via
+  systemd restart; tab→LDR→main promotion is the same flow as every repo; `main` is only the dashboard-SPA deploy branch
+  + CI gate). Verified ground truth: `unified-trading-pm/scripts/dev/cron-branch-overrides.txt` shows the
+  `agent-orchestrator main` override was REMOVED 2026-05-24 because "keeping this line caused every agent-orchestrator
+  slot to appear as diverged." **Impact had it shipped uncorrected:** `base=main` would have QUARANTINED every
+  agent-orchestrator slot on respawn (HEAD vs origin/main = diverged → should_stop). **Fix:** `base_branch_for_repo`
+  returns `live-defi-rollout` for ALL repos (agent-orchestrator@7950ab0); worker.md + manifest `integration_branch`
+  corrected to LDR. The per-repo mechanism stays for genuine future divergence. The original spec sentences in the items
+  below are left in place for provenance but are SUPERSEDED by this finding.
 - [x] ✅ [DOCS] P2. ~~Bump the central `/health` version string~~ — **REVISED**: manual version bumps are forbidden
       (workspace rule "NEVER bump manually — semver-agent handles all"). The `feat(gcs_sync)` commit @57dc8c2 will
       auto-bump 0.6.0 → 0.7.0 via semver-agent on its next run, and `/health` reflects it after deploy. The canonical
@@ -218,7 +229,17 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       `worker_liveness.py::_do_auth_fail_respawn` (~711) + `_maybe_auto_respawn_stuck_slot` (~1033), and
       `autospawn.py::_do_spawn` (~224 — currently NO pre-spawn gate at all). Collision group: `ao_branch_state_gate`.
       Estimate: 0.6 AI-day.
-- [ ] [CODE] P1. **FM6 support — machine-readable per-repo base.** Add an `integration_branch` field to each repo block
+- [x] ✅ [CODE] P1. **FM6 support — machine-readable per-repo base.** ✅ DONE 2026-06-01 — PM@cc2356a9c +
+      correction agent-orchestrator@7950ab0. Added `integration_branch` to the agent-orchestrator manifest block + a
+      `base_branch_for_repo()` helper in `setup-tab-worktrees.sh` (reads the manifest, default `live-defi-rollout`) used
+      in worktree-add + slot-master-rebase; `worker.md` fresh-pull resolves base per-repo. ⚠️ **CORRECTION (this plan's
+      original "main for agent-orchestrator" was WRONG):** agent-orchestrator slot worktrees integrate via
+      **`live-defi-rollout`**, NOT main — slot worktrees track origin/LDR (server code ships from LDR), so a `main` base
+      reads every slot as diverged. This is verified ground truth: `cron-branch-overrides.txt` REMOVED the
+      `agent-orchestrator main` row 2026-05-24 for exactly this. The shipped gate/worker.md/manifest were corrected to
+      LDR-for-all-repos @7950ab0. `cron-branch-overrides.txt` already supports per-repo via its OVERRIDES_FILE mechanism
+      (no agent-orchestrator row needed — LDR is the default). See **Finding F3** below. Add an `integration_branch` field
+      to each repo block
       in `workspace-manifest.json` (`main` for agent-orchestrator; `live-defi-rollout` everywhere else incl.
       trading-agent-service, which CI-promotes LDR→main). Replace the single `INTEGRATION_BRANCH` constant in
       `scripts/dev/setup-tab-worktrees.sh:51` with a `base_branch_for_repo()` helper reading it; make `worker.md`
@@ -247,16 +268,20 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       Belt-and-suspenders: `git rm     --cached` + `.gitignore` `playwright-report/` in deployment-ui +
       user-management-ui (keep `unified-trading-pm/presentations/tests/playwright-report` intentionally tracked →
       allowlist-restore still needed there). Collision group: `ao_respawn_hygiene`. Estimate: 0.25 AI-day.
-- [ ] [TEST] P0. Unit tests for all the above: (a) same-slot claim → inherit; (b) mismatched-slot/operator claim →
-      quarantine, no commit/push; (c) no-claim → inherit; (d) FM2 `D `+`??` signature → reset --mixed → clean, no
-      commit; (e) FM2 true file-loss → quarantine, no push; (f) pure-deletion >20 files → refuse; (g) branch-state gate:
-      stale upstream repaired, detached/base/wrong-branch → STOP, divergence → quarantine, behind+clean → FF; (h)
-      per-repo base resolves `main` for agent-orchestrator; (i) slot-tagged stash never pops a foreign tag; (j)
-      generated-artifact allowlist-restore leaves human-dirty files intact. Collision group: `ao_respawn_hygiene`.
-      Estimate: 0.4 AI-day.
-- [ ] [QG] P0. `bash scripts/quality-gates.sh` exit 0 in agent-orchestrator → sentinel sha →
-      `bash scripts/quickmerge.sh     "feat(respawn-hygiene): claim-gated dirty resolution + wiped-index guard + pre-spawn branch-state gate" --agent`.
-      Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
+- [x] ✅ [TEST] P0. ✅ DONE 2026-06-01 — agent-orchestrator (tests/test_dirty_state_resolution.py +
+      test_worker_liveness.py). 26 tests covering the full matrix: (a/c) dead/absent-predecessor inherit; (b) live-peer
+      protect; (d) FM2 `D`+`??` → reset --mixed → clean; (e) true file-loss / (f) pure-deletion >20 → quarantine, no
+      push; (g) branch-state stale-upstream-repair / detached / wrong-branch → STOP, diverged → quarantine, behind → FF;
+      (h) per-repo base resolves **`live-defi-rollout`** for agent-orchestrator (corrected from the spec's wrong "main"
+      — see Finding F3); (i) slot-tagged stash never pops a foreign tag; (j) generated-artifact restore leaves human-dirty
+      intact. + FM8-addendum mtime-recency + FM4/5 recovery-prompt fresh-pull-inlining tests. Collision group:
+      `ao_respawn_hygiene`. Estimate: 0.4 AI-day.
+- [x] ✅ [QG] P0. ✅ DONE 2026-06-01. agent-orchestrator gate green: `ruff check server/ scripts/` + `ruff format --check`
+      clean, `basedpyright server/` 0 errors, full pytest **344 passed, 1 skipped, 0 failed** (incl. the 3 stale
+      worker_liveness kicker tests + 2 stale slack tests, all fixed). Shipped directly to `live-defi-rollout` per the
+      campaign flow (the LDR→main promotion is owned by the reconciliation campaign; quickmerge-to-main not run by this
+      slot). Commits: @1f9af64 (FM2/3/8/8b) · @0b6b12e (FM8-addendum) · @977e2e1 (FM1/5/6/7+FM4/5) · @f31f8ff (worker.md)
+      · @7950ab0 (main→LDR correction). Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
 - [ ] [DOCS] P1. Codex `codex/05-infrastructure/per-tab-worktrees.md` — document the pre-spawn branch-state gate +
       **liveness-gated** dirty resolution (slot-isolation invariant: dirty == a prior-you that's gone → inherit; only a
       provably-LIVE peer is protected; quarantine is never terminal) + slot-tagged-stash discipline + the 9-FM coverage
