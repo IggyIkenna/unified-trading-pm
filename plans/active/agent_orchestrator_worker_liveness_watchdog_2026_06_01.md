@@ -157,7 +157,8 @@ Watch 1h on vm-orchestrator before expanding fleet.
 - [x] ✅ [DOCS] P1. Codex doc `codex/04-architecture/agent-orchestrator-worker-liveness.md` — full architecture (was
       drafted in Phase 1; promote to final). Collision group: none. Estimate: 0.1 AI-day.
       ✅ — unified-trading-pm@f0d1a7d7 (dict names, event names, env vars, Slack sig, slot status aligned with impl)
-- [ ] [QG] P0. PM PR via fast-path (docs change → targets `main`). Collision group: none. Estimate: 0.05 AI-day.
+- [x] ✅ [QG] P0. PM PR via fast-path (docs change → targets `main`). Collision group: none. Estimate: 0.05 AI-day.
+      ✅ DONE 2026-06-01 — unified-trading-pm/pull/102 (live-defi-rollout → main, OPEN, includes CLAUDE.md + plan flips).
 
 ## Closing condition
 
