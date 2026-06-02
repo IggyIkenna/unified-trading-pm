@@ -261,7 +261,7 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       Readiness/Dead-Man crons fully clear once service mains carry greened code. repos: all service repos + PM
       (promotion driver).
 
-- [ ] [SCRIPT] P2. **Add push-author attribution to CI alerts (operator 2026-06-02).** Every #ci-failures alert
+- [x] ✅ [SCRIPT] P2. **Add push-author attribution to CI alerts (operator 2026-06-02).** Every #ci-failures alert
       (ci_failure_watcher.py transition alerts + ci-status-update + the QG-fail notify) should surface WHO pushed + a
       role tag. Source: commit author/committer via `gh api repos/<r>/commits/<sha> -q .commit.author` (or
       `github.event.head_commit.author`/`github.event.pusher` in-workflow). Role classification: **human** = author name
@@ -272,7 +272,9 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       orchestrator workers set a distinguishable git identity per VM/run (e.g. `orch-worker-<vm>` or include run-id) so
       agent pushes are attributable beyond just 'agent'. Historical: author IS in git history
       (`git log --format='%an <%ae>'`) — already queryable. repo: unified-trading-pm (ci_failure_watcher.py +
-      ci-status-update.yml + notify-slack callers) + agent-orchestrator (worker git identity).
+      ci-status-update.yml + notify-slack callers) + agent-orchestrator (worker git identity). —
+      unified-trading-pm@c0eb1f36f; `_classify_commit_data` pure fn + 12 unit tests; both integration points wired;
+      ruff/basedpyright/yaml-valid/433 unit tests green 2026-06-02.
 
 ### Promotion BLOCKER (2026-06-02) — UAC main-PR v2 red on venue_data_types.yaml canonicalization
 
@@ -308,7 +310,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       entirely. Converts dep-order from manual discipline → enforced gate. repo: unified-trading-pm (quickmerge.sh + the
       ci_status state machine).
 
-- [ ] [SCRIPT] P2. **Finish Telegram-retire in the TEMPLATE SSOT (else rollout re-introduces it).** The 2026-06-02 operator-decided Telegram→Slack#ci-failures migration is DONE for `.github/workflows/` (10 workflows, grep-clean, dd4732880) — but `scripts/workflow-templates/` (the rollout SSOT via rollout-workflow-templates.sh), `scripts/propagation/templates/`, `scripts/templates/`, and helper scripts (`telegram-helpers.sh`, `send-telegram-rate-limited.sh`, `dispatch-helpers.sh`, `claude-helpers.sh`) still reference Telegram. **Because workflow-templates is the SSOT, the next `rollout-workflow-templates.sh` would re-introduce Telegram into every repo's workflows** — so migrate the templates + helpers to the Slack #ci-failures path (SLACK_CI_WEBHOOK_URL) too, then grep-verify 0 functional Telegram refs workspace-wide. repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **Finish Telegram-retire in the TEMPLATE SSOT (else rollout re-introduces it).** The 2026-06-02
+      operator-decided Telegram→Slack#ci-failures migration is DONE for `.github/workflows/` (10 workflows, grep-clean,
+      dd4732880) — but `scripts/workflow-templates/` (the rollout SSOT via rollout-workflow-templates.sh),
+      `scripts/propagation/templates/`, `scripts/templates/`, and helper scripts (`telegram-helpers.sh`,
+      `send-telegram-rate-limited.sh`, `dispatch-helpers.sh`, `claude-helpers.sh`) still reference Telegram. **Because
+      workflow-templates is the SSOT, the next `rollout-workflow-templates.sh` would re-introduce Telegram into every
+      repo's workflows** — so migrate the templates + helpers to the Slack #ci-failures path (SLACK_CI_WEBHOOK_URL) too,
+      then grep-verify 0 functional Telegram refs workspace-wide. repo: unified-trading-pm.
 
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
