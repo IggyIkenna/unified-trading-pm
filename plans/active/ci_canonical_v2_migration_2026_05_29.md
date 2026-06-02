@@ -45,8 +45,9 @@ locked_since: 2026-05-21
 > **✅ COMPLETE (2026-06-02, via `scripts/repo-management/verify_branch_protection_check_names.py`)** — **17/17 repos
 > now require `…/quality-gates-v2`; `ALL RULESETS CONSISTENT: True`.** The last holdout `deployment-ui` was finished
 > this turn (decoupled v2 callee + operator-directed FF/force promotion of main+staging to LDR + ruleset cutover; see
-> Phase 4.5). Remaining open items are all Phase 5 cleanup gated on GH Support #4422570 (v1-file deletion) + the
-> deployment-ui `workspace-qg.yml`/backup-ref cleanup.
+> Phase 4.5). deployment-ui's stale v1 ghost chain (`workspace-qg.yml` + `ui-quality-gates.yml`) was also deleted from
+> all branches 2026-06-02. Remaining open items: Phase 5 PM v1-file deletion (gated on GH Support #4422570) + deleting
+> the two deployment-ui `backup/*-pre-ff-20260602` refs once the promotion is confirmed settled.
 >
 > _History (2026-06-01 → 2026-06-02)_: the 2026-06-01 "8 repos still on v1" reality-check went stale fast — by
 > 2026-06-02 16/17 already required `…/quality-gates-v2`. The previously-flagged holdouts (`batch-live-reconciliation`,
@@ -281,11 +282,14 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 - [ ] [CLAUDE-MD] P1. Workspace-wide pointer to v2 canonical — **deferred**: codex § "Canonical required check name" is
       the authoritative source; CLAUDE.md cross-reference would be 1 line and exceed the size budget consideration.
       Nice-to-have, not blocking.
-- [ ] [SCRIPT] P2. deployment-ui post-cutover tidy (2026-06-02 follow-up): (a) delete the stale `workspace-qg.yml`
-      caller on LDR (now a non-required failing `…/quality-gates` check — repo's CLAUDE.md already calls it "retired
-      2026-05-29"; deployment-ui's workspace-qg ghost is a DIFFERENT chain from PM's python-quality-gates ghost, so it
-      is NOT gated on GH #4422570); (b) delete backup refs `backup/main-pre-ff-20260602` +
-      `backup/staging-pre-ff-20260602` once the FF/force promotion is confirmed settled. Target repo: `deployment-ui`.
+- [x] ✅ [SCRIPT] P2. deployment-ui post-cutover tidy — **(a) DONE 2026-06-02**: deleted the stale v1 ghost chain
+      `workspace-qg.yml` + its now-orphaned callee `ui-quality-gates.yml` (deployment-ui@45627fe; stale comment ref
+      fixed @ebb68d3) and FF-propagated the deletion to `main` + `staging` (relax→FF `0d2479c→ebb68d3`→re-enable;
+      rulesets back `active` on `…/quality-gates-v2`, classic-main restored). Verified: `workspace-qg` GONE from
+      main/staging/LDR; the `main` push now runs ONLY `quality-gates-v2`; `ALL RULESETS CONSISTENT: True` = 17/17. (This
+      chain is independent of PM's python-quality-gates ghost / GH #4422570.) **(b) STILL OPEN**: delete backup refs
+      `backup/main-pre-ff-20260602` + `backup/staging-pre-ff-20260602` once the operator confirms the FF/force promotion
+      has settled. Target repo: `deployment-ui`.
 - [ ] [PLAN] P1. Pre-archival 5-step audit — deferred. Phases 1-4 + 4.5 done (deployment-ui canonical, 17/17); Phase 5
       v1-delete + GH ticket resolution still open. Archive when GH ticket #4422570 closes.
 
