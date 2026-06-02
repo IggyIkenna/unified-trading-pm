@@ -308,6 +308,8 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       entirely. Converts dep-order from manual discipline → enforced gate. repo: unified-trading-pm (quickmerge.sh + the
       ci_status state machine).
 
+- [ ] [SCRIPT] P2. **Finish Telegram-retire in the TEMPLATE SSOT (else rollout re-introduces it).** The 2026-06-02 operator-decided Telegram→Slack#ci-failures migration is DONE for `.github/workflows/` (10 workflows, grep-clean, dd4732880) — but `scripts/workflow-templates/` (the rollout SSOT via rollout-workflow-templates.sh), `scripts/propagation/templates/`, `scripts/templates/`, and helper scripts (`telegram-helpers.sh`, `send-telegram-rate-limited.sh`, `dispatch-helpers.sh`, `claude-helpers.sh`) still reference Telegram. **Because workflow-templates is the SSOT, the next `rollout-workflow-templates.sh` would re-introduce Telegram into every repo's workflows** — so migrate the templates + helpers to the Slack #ci-failures path (SLACK_CI_WEBHOOK_URL) too, then grep-verify 0 functional Telegram refs workspace-wide. repo: unified-trading-pm.
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
