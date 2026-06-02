@@ -573,13 +573,15 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       LA_LIGA_2 needs the canonical-Segunda-key confirmation). — uac@dc76f1a6 |
       SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP via Step 3a (num>=100 rule); LA_LIGA_2/BUNDESLIGA_2/LIGUE_1 unchanged
       (already canonical at step 2); 13 tests green.
-- [ ] [DATA] P1. **LA_LIGA_2 → SEGUNDA_DIVISION RESOLVED (registry investigation 2026-06-02)**: `LA_LIGA_2` (3,465 rows)
-      IS Segunda División; the **canonical registered key is `SEGUNDA_DIVISION`** (has the `LeagueDefinition` in
+- [x] ✅ [DATA] P1. **LA_LIGA_2 → SEGUNDA_DIVISION RESOLVED (registry investigation 2026-06-02)**: `LA_LIGA_2` (3,465
+      rows) IS Segunda División; the **canonical registered key is `SEGUNDA_DIVISION`** (has the `LeagueDefinition` in
       `league_data.py` + provider maps understat `f5e5596b0efdef8e` / footystats `ES2` / season `15066` + team-count
       seed 22). `LA_LIGA_2` is an INCONSISTENT alias in some `provider_league_ids.py` reverse maps with NO
       `LeagueDefinition` (`get_league("LA_LIGA_2")`→None). FIX (UAC): add explicit alias `LA_LIGA_2`→`SEGUNDA_DIVISION`
-      in `canonicalize_league_id` + correct the reverse maps emitting `LA_LIGA_2` to emit `SEGUNDA_DIVISION` (born-canon).
-      `FRANCE_NATIONAL_1` (2 rows): `FRANCE_NATIONAL` unregistered → registry-gap, negligible.
+      in `canonicalize_league_id` + correct the reverse maps emitting `LA_LIGA_2` to emit `SEGUNDA_DIVISION`
+      (born-canon). `FRANCE_NATIONAL_1` (2 rows): `FRANCE_NATIONAL` unregistered → registry-gap, negligible. —
+      unified-api-contracts@40c92900 | \_LEAGUE_ALIASES map + 15 FOOTYSTATS_HISTORICAL_SEASON_IDS entries corrected +
+      tests updated; QG green
 
 > ## OPERATOR DIRECTIVE 2026-06-02 (round 2) — PERFECT, PRE-MIGRATION, NO DEFERRALS
 >
@@ -695,22 +697,23 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > parallel** across every touched repo (each sub-agent ran its repo's `quality-gates.sh` → exit 0, only unrelated
 > pre-existing failures). **Pre-dry-run code is COMPLETE.** Shipped this cycle:
 >
-> | Area | Repos@sha |
-> | --- | --- |
-> | Keystone composite classifier + FIXTURES-truthset + CF-11 match-day→attempted_failed + re-emit attempted_failed | mtds@680dff5f, 699c58e9, 8ffb2acd |
-> | CF-11 write-path (IS partial-fail-mask bug FIXED + MTDS ingest discovery-mask FIXED) | is@ceab7720, mtds@c96245b7 |
-> | Legacy-instruments reconcile migrator + schema spot-check | mtds@50a43aa7 |
-> | CF-7 league canon (UAC fn + 3-digit season-rule) + wired migrator/rebuilder/IS-writer | uac@409753bd+dc76f1a6, mtds@df391e7c, is@db187587 |
-> | Cross-AG bucket canonicalisation: UAC `bucket_name` facade → `-prd-`; UTL maps/preflight + sports_fixtures keystone reader → `resolve_bucket_name`; e2e scripts | uac@dc76f1a6, utl@b3b70c13+fd91ee74, e2e@b418afc |
-> | Pre-flight dead-bucket fixes (IS/features/strategy passed explicit project_id → legacy) → `resolve_bucket_name` | is@fd7b72a7, features@e0ddde68, strategy@ecc7cc0f |
-> | features-service silent-empty → `DependencyError` (batch=live symmetry) | features@e0ddde68 |
-> | `category=` ban in deployment-api data-status + QG ratchet | deployment-api@41fa120 |
+> | Area                                                                                                                                                            | Repos@sha                                         |
+> | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+> | Keystone composite classifier + FIXTURES-truthset + CF-11 match-day→attempted_failed + re-emit attempted_failed                                                 | mtds@680dff5f, 699c58e9, 8ffb2acd                 |
+> | CF-11 write-path (IS partial-fail-mask bug FIXED + MTDS ingest discovery-mask FIXED)                                                                            | is@ceab7720, mtds@c96245b7                        |
+> | Legacy-instruments reconcile migrator + schema spot-check                                                                                                       | mtds@50a43aa7                                     |
+> | CF-7 league canon (UAC fn + 3-digit season-rule) + wired migrator/rebuilder/IS-writer                                                                           | uac@409753bd+dc76f1a6, mtds@df391e7c, is@db187587 |
+> | Cross-AG bucket canonicalisation: UAC `bucket_name` facade → `-prd-`; UTL maps/preflight + sports_fixtures keystone reader → `resolve_bucket_name`; e2e scripts | uac@dc76f1a6, utl@b3b70c13+fd91ee74, e2e@b418afc  |
+> | Pre-flight dead-bucket fixes (IS/features/strategy passed explicit project_id → legacy) → `resolve_bucket_name`                                                 | is@fd7b72a7, features@e0ddde68, strategy@ecc7cc0f |
+> | features-service silent-empty → `DependencyError` (batch=live symmetry)                                                                                         | features@e0ddde68                                 |
+> | `category=` ban in deployment-api data-status + QG ratchet                                                                                                      | deployment-api@41fa120                            |
 >
-> **Correctly NOT done pre-dry-run (sequencing, not skipped)**: (a) `category=` READER fan-outs / migration-script legacy
-> reads in MTDS/IS/features — the migration MUST read `category=` paths to move that data; removing pre-migration breaks
-> the walk → POST-migration cleanup. (b) v9 schema-column checks at preflight — would fail on v8 data NOW → POST-walk
-> regression guard. (c) `LA_LIGA_2` Segunda-vs-season disambiguation — operator/registry decision (3,465 rows). (d) IS
-> orchestrator `category=` kwargs — per-site UTL-contract check (P1). All tracked above; none block the dry-run.
+> **Correctly NOT done pre-dry-run (sequencing, not skipped)**: (a) `category=` READER fan-outs / migration-script
+> legacy reads in MTDS/IS/features — the migration MUST read `category=` paths to move that data; removing pre-migration
+> breaks the walk → POST-migration cleanup. (b) v9 schema-column checks at preflight — would fail on v8 data NOW →
+> POST-walk regression guard. (c) `LA_LIGA_2` Segunda-vs-season disambiguation — operator/registry decision (3,465
+> rows). (d) IS orchestrator `category=` kwargs — per-site UTL-contract check (P1). All tracked above; none block the
+> dry-run.
 
 ### Verify + handoff to decommission
 
