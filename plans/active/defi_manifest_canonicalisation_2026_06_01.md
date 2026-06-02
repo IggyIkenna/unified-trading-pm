@@ -309,7 +309,10 @@ What to verify/wire (B0 corrected scope):
       caller sees zero-rows-no-error → `record_empty(SOURCE_RETURNED_ZERO)` = a silent lie the data is genuinely empty.
       **Fixed (mtds@d3d26f56, re-raise → caller `record_failed`)**: `lst_rates_handler` L697, `oracle_prices_handler`
       L820/L948. **Swept clean**: instruments-service + features-service adapter I/O — **no swallow sites found** (the
-      bug was MTDS-specific). **`lending_indices_handler` L989** (Aave RPC fallback): the handler already routes
+      bug was MTDS-specific). **⚠️ CORRECTION 2026-06-02 (slot-2): the IS "swept clean" claim was INCOMPLETE** — A7 swept
+      the `except → return []` shape, but a SECOND shape (`HTTP-200 {"errors":[...]}` / missing-`data` → `return []`
+      "treating as empty") survives in IS DeFi subgraph adapters (aave_v3/spark/morpho/uniswap_v3) — see **A8** (reopens
+      this). **`lending_indices_handler` L989** (Aave RPC fallback): the handler already routes
       subgraph errors to `record_failed` (comments L736-741/L838-839 reference a prior fix for this exact class) — the
       residual `_do_rpc_walk` `return []` is an ambiguous fallback path, NOT a clear bug; flagged for careful tracing
       under audit item (i), do NOT rush a fix. Per-adapter audit codified in
@@ -665,6 +668,18 @@ What to verify/wire (B0 corrected scope):
       have NO index → derived features (staking*apy_bps/funding_rate_apy_bps/basis_bps/realized_vol*\*) absent. Run the
       features backfill for the in-scope DeFi instruments over the captured window. **GATED on C-GREEN** (features must
       read canonical raw, else they inherit the mess). parent_epic: features_and_ml_master.
+- [ ] [DATA] P1. D2 **MDPS swaps_ohlcv reprocess for the stale chain-column `attempted_failed` rows** (MIGRATED FROM
+      archived `issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md`, slot-2 2026-06-02). 28,634
+      `UNISWAP_V3-ETHEREUM` `swaps_ohlcv_*` rows on the **consolidated `market-data-tick-defi` `_index`**
+      (`processed_candles` layer) are `attempted_failed`/`SCHEMA_VALIDATION_FAILED` — **stale point-in-time records** from
+      the 2026-05-23/24 chain-propagation fix-deploy window (root cause = blank `chain`; the canonical migration removes
+      it source-side). Code fix already live (`mdps@7f1a5b5`+`3799c8d`); slot-7 pre-flight verified live candles now
+      carry `chain`. **No code change** — needs an MDPS reprocess rerun once our C0 canonicalises the source (rows flip
+      `captured`). Companion chain-column venues to reprocess in the SAME pass (do NOT race the migration with a
+      one-venue VM): UNISWAP_V2-ETHEREUM 3,444 · AAVEV3-OPTIMISM 2,820 · EIGENLAYER 1,311 · CURVE-ETHEREUM 1,281 · MAKER
+      1,113 · FRAX 1,032 · DRIFT-SOLANA 200 · KAMINO/JITO/MARGINFI ~75. **GATED on C-GREEN.** Verify post-retry:
+      `attempted_failed` for these venues → 0 (now `captured` or legit `empty_confirmed`). Repos:
+      market-data-processing-service. parent_epic: mtds_mdps_master.
 
 ## E. CeFi perp leg (hybrid hedge) — fix-fetch
 

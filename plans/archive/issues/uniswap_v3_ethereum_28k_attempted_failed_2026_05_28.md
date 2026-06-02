@@ -9,9 +9,18 @@ source:
   - market-data-processing-service@3799c8d (2026-05-24 16:45 BST — amount_usd column support)
 locked_by: live-defi-rollout
 parent_epic: plans/epics/infrastructure_master.md
-status: OPEN — needs retry pass (no new code required)
+status: ARCHIVED 2026-06-02 — acked + migrated (no new code; stale rows pending reprocess)
 priority: P2
 ---
+
+> **📦 ARCHIVED 2026-06-02 (slot-2, operator-directed).** Confirmed **stale information, not a code bug**: the
+> chain-propagation fix (`mdps@7f1a5b5`+`3799c8d`) is live and slot-7 pre-flight verified the live candles now carry
+> `chain` — the 28,634 rows are point-in-time records from the 2026-05-23/24 fix-deploy window. The DeFi C0 canonical
+> migration removes the root cause (blank `chain`) **source-side**; these rows live on the consolidated
+> `market-data-tick-defi` `processed_candles` layer (NOT a C0 source bucket), so C0 does not clear them directly — they
+> flip `captured` on an **MDPS reprocess rerun**. **Open reprocess work MIGRATED TO**
+> `plans/active/defi_manifest_canonicalisation_2026_06_01.md` §D2 (gated C-GREEN, companion venues bundled). Nothing
+> further owed here.
 
 > **📦 FOLDED INTO DEFERRED DEFI BACKFILL 2026-06-01 (harsh, operator: option A).** No code fix needed (mdps@7f1a5b5 +
 > @3799c8d shipped). The historical reprocess (2024-05-06 → 2026-01-17) + the ~9 companion chain-column-affected venues

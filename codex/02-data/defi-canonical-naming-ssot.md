@@ -42,12 +42,17 @@ for `lending_indices` (EVM `lending` + Solana `solana_lending` instrument_types 
 | Surface | Repo | Needs | Status |
 | --- | --- | --- | --- |
 | C0 migration `migrate_defi_full_v9_canonical.py` | market-tick-data-service | writes all canonical forms | ✅ mtds@6a8372b2 |
-| DeFi handlers `_DATA_TYPE` consts | market-tick-data-service | `dex_pools_handler`→`dex_pool_state`, `dex_swaps_handler`→`dex_pool_swaps`; write `pipeline_mode=` partition | ☐ TODO |
-| Manifest consolidator + `_PATH_DATA_TYPE`/bucket-domain map | market-tick-data-service / features | drop on-disk→logical `dex_pool_state→dex_pools` remap (now identity) | ☐ TODO |
-| features-onchain reader + calculators | features-service | pipeline_mode-aware reads (pass `pipeline_mode` to `candidate_parquet_paths`); `_PATH_DATA_TYPE` identity | ☐ TODO |
-| MDPS reader | market-data-processing-service | pipeline_mode-aware reads; data_type `dex_pool_state` | ☐ TODO |
-| UAC `build_defi_partition_path` + `ChainKind` | unified-api-contracts | make `pipeline_mode=` canonical in the builder (not just a probe); `ChainKind.HYPERLIQUID_L1.value='HYPERLIQUID'` (or alias) | ☐ TODO |
-| IS `DEFI_ONCHAIN_INSTRUMENT_TYPES` | instruments-service | include `PERPETUAL` for DeFi on-chain perps | ☐ TODO |
+| DeFi handlers `_DATA_TYPE` consts | market-tick-data-service | `dex_pools_handler`→`dex_pool_state`, `dex_swaps_handler`→`dex_pool_swaps`; write `pipeline_mode=` partition | ✅ mtds@0a3a7071 (C0-CN2) |
+| Manifest consolidator + `_PATH_DATA_TYPE`/bucket-domain map | market-tick-data-service / features | drop on-disk→logical `dex_pool_state→dex_pools` remap (now identity) | ✅ mtds@0a3a7071 + features@dec1b687 (C0-CN3) |
+| features-onchain reader + calculators | features-service | pipeline_mode-aware reads (pass `pipeline_mode` to `candidate_parquet_paths`); `_PATH_DATA_TYPE` identity | ✅ features@dec1b687 (C0-CN4) |
+| MDPS reader | market-data-processing-service | pipeline_mode-aware reads; data_type `dex_pool_state` | ✅ mdps@4b9e6e5 (C0-CN5) |
+| UAC `build_defi_partition_path` + `ChainKind` | unified-api-contracts | make `pipeline_mode=` canonical in the builder (not just a probe); `ChainKind.HYPERLIQUID_L1.value='HYPERLIQUID'` (or alias) | ✅ uac@dad96e42 (C0-CN6) |
+| IS `DEFI_ONCHAIN_INSTRUMENT_TYPES` | instruments-service | include `PERPETUAL` for DeFi on-chain perps | ✅ verified, IS already produces `perpetual` (C0-CN7) |
+
+> **Status updated 2026-06-02 (slot-2):** all per-surface alignment rows above are SHIPPED on LDR (C0-CN1–8 in
+> `defi_manifest_canonicalisation_2026_06_01.md`). The table previously read ☐ TODO — that was stale relative to the
+> shipped code. Remaining DeFi-lane work is the OPERATIONAL half (re-dry → apply → RD4 → RD5) + the attribution
+> registries (oracle `contract→chain`, lst tokens), tracked in the plan's §C0-RD.
 
 ## Sequencing (HARD — prevents the regression the audit caught)
 
