@@ -1083,25 +1083,29 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 **A′. Session findings while shipping A (2026-06-02, slot-1 ikenna) — captured per HARD RULE:**
 
-- [ ] [SCRIPT] P1. **PM two-pass sentinel writes to the WRONG path → quickmerge `--agent` sees it "missing".**
-      `base-service.sh:2564` writes `.qg_last_passed_sha` to `${REPO_ROOT}`, but for the PM repo (no `pyproject.toml`)
-      `qg-common.sh` resolves `REPO_ROOT` to the **workspace parent** (`.tabs/N/`), not the PM repo root — while the PM
-      stub's `REPO_ROOT="$(git rev-parse --show-toplevel)"` override (line 254) runs AFTER `base-service.sh` is sourced
-      (line 251), too late for the sentinel write. quickmerge reads `.qg_last_passed_sha` from CWD (PM root) → always
-      "missing" for PM → blocks the agent fast-path. Worked around this session by `cp ../.qg_last_passed_sha .`. Fix:
-      make the sentinel write resolve the PM repo root (e.g. honour the stub's `REPO_ROOT` or `git rev-parse
-      --show-toplevel`). repo: unified-trading-pm (`scripts/quality-gates-base/{base-service.sh,qg-common.sh}`).
+- [x] ✅ [SCRIPT] P1. **PM two-pass sentinel writes to the WRONG path → quickmerge `--agent` sees it "missing".**
+      `base-service.sh` wrote `.qg_last_passed_sha` to `${REPO_ROOT}` (= `PROJECT_ROOT/..` = the **workspace parent**),
+      not the repo root where quickmerge reads it (CWD) → the agent fast-path always saw it "missing" and hard-refused,
+      **fleet-wide** (every repo sources this central `base-service.sh`). **DONE 2026-06-02 (STEP 0a) —
+      `unified-trading-pm@47a597ac4` → LDR-direct** (gate machinery; operator-authorized direct push). Now writes to
+      `${PROJECT_ROOT}` (the repo root, matching the content sentinel) + verified: sentinel lands at the PM repo root ==
+      HEAD on a full green run AND on a green-skip (sentinel-HIT keeps `RUN_TESTS=true`). Two-pass restored fleet-wide.
 - [ ] [SCRIPT] P1. **LDR PM gate was RED — direct evidence for item D (Tier A).** While shipping A, `quality-gates.sh
       --no-fix` on LDR HEAD failed: (1) `scripts/cicd/tier_c_promotion_gate.py` (STAGE-1.8, `157df99ff`) had
       unbaselined `.get(...,"")/{}/[]` manifest-parse defaults; (2) `.code-workspace` listed `status=future` repos
       (greeks-service, fund-administration-service); (3) `tests/unit/test_staging_to_main_dep_order_gate.py` import-sort.
-      All three fixed + committed on the slot branch `origin/tab/ikennaigboaka/1@2a5f89522` — **but NOT yet on LDR**
-      (the slot→LDR promotion is entangled with the staging-1196-behind backlog below). **These enablers must land on
-      LDR** to green it (and they'll be needed on `main` once STAGE-1.8 drains there). repo: unified-trading-pm.
+      All three fixed (`2a5f89522`). **UPDATE 2026-06-02:** tier_c baseline + folders[] removal reached LDR; a
+      concurrent agent then flipped greeks/fund-admin `future→scaffolded` (`b03611fb5`) — so the correct end-state is
+      now folders[] *includes* them (scaffolded). That `.code-workspace`↔manifest consistency is **owned by the live
+      concurrent agent** (active <5 min ago) — I did NOT edit `.code-workspace` (collision). LDR is transiently
+      drift-RED until they reconcile; the STEP-0b drain PR (#113) holds on auto-merge until then. repo:
+      unified-trading-pm.
 - [ ] [SCRIPT] P2. **`staging` is ~1196 commits / ~1 month behind LDR; no open staging PR; staging-first path unused
-      for PM.** Recent PM CI fixes (#108/#109/#110, #111) all went **direct PR→main** (the default branch where the
-      crons run), NOT via staging. Confirms the backlog-drain (Phase 6) has not run for PM. The generated-file churn
-      below is why a PM `quickmerge` re-dirties the tree every run. repo: unified-trading-pm. (Composes with item H.)
+      for PM.** Recent PM CI fixes (#108/#109/#110, #111, #112) all went **direct PR→main** (the default branch where
+      the crons run), NOT via staging. The generated-file churn below is why a PM `quickmerge` re-dirties the tree every
+      run. **STEP 0b IN MOTION 2026-06-02:** manual LDR→staging drain PR **#113** created with auto-merge → promotes
+      once v2-green (pending the concurrent agent's `.code-workspace` reconcile) → pm-staging-to-main-bypass then carries
+      it to main + the Tier-C dep-order gate cron goes live + the backlog drains. repo: unified-trading-pm. (Item H.)
 - [ ] [SCRIPT] P2. **quickmerge regenerates + stages DRIFTED generated files every PM run** (`derived-dependency-
       manifest.json`, `docs/repo-management/CI-CD-PIPELINE.{svg,html}`) and the prek `end-of-file-fixer` then fails on
       the regenerated SVG → commit aborts; `.qg_content_sentinel` (a gate artifact) was also staged. This is the
