@@ -1138,6 +1138,19 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 - [ ] [SCRIPT] P1. **Wire the stuck-PR watcher → fire `escalate-to-orchestrator`** (supersession-close OR resolve)
       instead of only paging. repo: unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py`).
+      **UNBLOCKED 2026-06-02 — B2 (`escalate-to-orchestrator.yml`) now exists on main, so the dispatch target is live.**
+      Implementation (ready for a worker): add `escalate_stuck_prs(stuck, *, dry_run)` to `ci_failure_watcher.py` that,
+      for each stuck PR whose `state ∈ {CONFLICTING, DIRTY}` (merge_conflict walls — NOT `BLOCKED`, which is a
+      gate/review wall, not a conflict), fires `gh api repos/IggyIkenna/unified-trading-pm/dispatches` with
+      `event_type=escalate-to-orchestrator` + a JSON `client_payload` `{repo, pr_number, wall_type:"merge_conflict",
+      context:"<head→base stuck <state> for <age>m">, authoring_slot:"ci"}` (build the body with a dict + `gh api
+      --input -`, NOT `-f` nested-field encoding). **Idempotency (critical — cron is */15m, must not re-fire):** gate on
+      a PR label `escalation-dispatched` — skip PRs that already carry it; add it after a successful dispatch
+      (`gh pr edit <n> --repo … --add-label escalation-dispatched`, create-if-missing). Gate the whole behaviour behind
+      a `--escalate` flag (default OFF) that only `ci-failure-watcher.yml` passes, so `--now`/test runs never dispatch.
+      Ship with a hermetic unit test mirroring `tests/unit/test_tier_c_promotion_gate.py` (import the function, feed
+      fake stuck dicts, assert dispatch-vs-skip on state + label). The escalate worker (orchestrator `escalate` agent)
+      then resolves on `live-defi-rollout`; supersession-close stays a human/worker judgment within that agent.
 - **Canonical note (operator 2026-06-02):** _disabling auto-merge on a stuck `DIRTY` PR is **pointless**_ — a
   conflicting PR cannot auto-merge anyway, and once resolved the REQUIRED `quality-gates-v2` check is the gate, not the
   toggle. The lever is **auto-triage** (close-superseded / resolve), never the auto-merge toggle. (See the
