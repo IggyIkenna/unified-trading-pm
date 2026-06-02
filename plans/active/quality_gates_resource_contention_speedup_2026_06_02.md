@@ -43,7 +43,7 @@ todos:
     status: todo
   - id: qg-governor
     content: |
-      - [ ] [SCRIPT] P0. Cross-slot concurrency governor — a host-level `flock`/token-bucket wrapper so at most K QG runs execute concurrently across ALL slots (default K = `max(1, floor(physical_cores/4))`, env-overridable `QG_HOST_CONCURRENCY`). Wire it into `quality-gates-base/base-service.sh` so every repo's `quality-gates.sh` acquires a host token before the heavy (pytest/basedpyright) phases. Converts 8× simultaneous thrash into orderly queueing → p95 wall-clock drops with NO added parallelism. This is the core fix. `nice -n10` + `ionice -c2 -n7` the QG process tree.
+      - [x] ✅ [SCRIPT] P0. Cross-slot concurrency governor — a host-level `flock`/token-bucket wrapper so at most K QG runs execute concurrently across ALL slots (default K = `max(1, floor(physical_cores/4))`, env-overridable `QG_HOST_CONCURRENCY`). Wire it into `quality-gates-base/base-service.sh` so every repo's `quality-gates.sh` acquires a host token before the heavy (pytest/basedpyright) phases. Converts 8× simultaneous thrash into orderly queueing → p95 wall-clock drops with NO added parallelism. This is the core fix. `nice -n10` + `ionice -c2 -n7` the QG process tree.
     status: todo
   - id: qg-slot-aware-workers
     content: |
@@ -63,7 +63,7 @@ todos:
     status: todo
   - id: qg-coverage-off-hotpath
     content: |
-      - [ ] [SCRIPT] P1. Move `--cov` off the hot path — coverage instrumentation touches every executed line (large CPU/RAM cost). Make it opt-in: iterative/`--quick` runs skip coverage; coverage + the coverage floor are enforced ONLY on the gate-to-main (quickmerge Pass 1) full run. No change to the merge-gate coverage requirement — only to when it is paid.
+      - [x] ✅ [SCRIPT] P1. Move `--cov` off the hot path — coverage instrumentation touches every executed line (large CPU/RAM cost). Make it opt-in: iterative/`--quick` runs skip coverage; coverage + the coverage floor are enforced ONLY on the gate-to-main (quickmerge Pass 1) full run. No change to the merge-gate coverage requirement — only to when it is paid.
     status: todo
   - id: qg-shared-caches
     content: |
@@ -75,7 +75,7 @@ todos:
     status: todo
   - id: qg-codex-ssot-update
     content: |
-      - [ ] [AGENT] P1. Update `codex/06-coding-standards/quality-gates.md` with a new "Resource governance under multi-slot load" section: the governor, slot-aware worker formula, sentinel cache semantics, coverage-on-gate-only rule, and the explicit anti-pattern ("`-n auto` per slot on a shared host is oversubscription, not speedup"). Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE.
+      - [x] ✅ [AGENT] P1. Update `codex/06-coding-standards/quality-gates.md` with a new "Resource governance under multi-slot load" section: the governor, slot-aware worker formula, sentinel cache semantics, coverage-on-gate-only rule, and the explicit anti-pattern ("`-n auto` per slot on a shared host is oversubscription, not speedup"). Per CLAUDE.md Post-Plan-Phase Codex Audit HARD RULE.
     status: todo
 isProject: false
 ---
