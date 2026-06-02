@@ -305,9 +305,18 @@ verified complete**.
 
 ## unified-trading-pm — codex / doc-drift
 
-- [ ] [DOC] P2. PM: flip the D14 checkbox in `defi_code_codex_drift` + audit-result doc, update
-      `codex/.../defi-data-types-catalog.md` body + `defi-canonical-naming-ssot.md` fan-out rows (code shipped
-      MTDS@0a3a7071). Source: defi_code_codex_drift D14.
+- `BLOCKED-DISCIPLINE` [DOC] P2. PM: flip the D14 checkbox in `defi_code_codex_drift` + audit-result doc, update
+  `defi-data-types-catalog.md` body + `defi-canonical-naming-ssot.md` fan-out rows. **RECLASSIFIED 2026-06-02 (slot 7):
+  owned by the concurrent DeFi-venue / `defi_manifest_canonicalisation_2026_06_01` workstream, NOT this sweep.** The
+  driving commit MTDS@`0a3a7071` is a **`semver-rollout[bot]` DeFi-canonicalisation commit** (collapsed
+  `dex_pools`→`dex_pool_state` / `dex_swaps`→`dex_pool_swaps` + `pipeline_mode=` write partition) against the
+  **operator-locked** SSOT `defi-canonical-naming-ssot.md` (locked 2026-06-01). Two reasons to leave it to that worker:
+  (1) the source-doc D14 (2026-05-27) is **stale** — it claims canonical is `dex_pools` and the flip is deferred, but
+  the operator-locked SSOT chose `dex_pool_state`/`dex_pool_swaps` and 0a3a7071 shipped that; the catalog/fan-out edits
+  must reflect the locked names, which the canonicalisation worker owns. (2) `defi-canonical-naming-ssot.md` +
+  `defi-data-types-catalog.md` are in that worker's active codex territory (coordination boundary: do not touch
+  semver-rollout/DeFi-venue files). De-dup to `defi_manifest_canonicalisation_2026_06_01.md` §C0-RD. Source:
+  defi_code_codex_drift D14.
 - [x] ✅ [DOC] P2. PM: fix stale repo names in `codex/04-architecture/data-flow-map.md`
       (`trading-analytics-api`→`unified-trading-api`, `trading-analytics-ui`→`unified-trading-system-ui`). —
       unified-trading-pm@(this commit) (8 occurrences renamed; `{TRADING_ANALYTICS_GCS_BUCKET}` env var left intact).
