@@ -176,8 +176,15 @@ the storage bloat.
       `# noqa: qg-deep-import`, matching `cleanup_old_tarballs.py`). Same read-only/failure-isolated behavior; tests
       updated to mock the UTL client. **QG now GREEN** (155s, codex 7<8, STEP 5.10 clean, 3/3 lister tests pass).
       deployment-service@`80de01c`.
-- [ ] [INFRA] P3. Add a `owner/cadence/verifier/last_executed` runbook block for the tarball-cleanup + vm-log-archival
-      jobs + a cloud-build trigger so `deployment-service:latest` refreshes automatically. Repo: deployment-service.
+- [x] ✅ [INFRA] P3. **DONE 2026-06-02 (slot 1)** Runbooks + auto-refresh trigger. `runbooks/tarball_cleanup_maintenance.md`
+      updated (last_executed=2026-06-02 verified, cron ENABLED, fixed stale dry-run path) +
+      `runbooks/vm_log_archival_maintenance.md` created — both carry the 4 mandatory fields
+      (owner/cadence/verifier/last_executed). Cloud Build trigger `deployment-service-jobs-image-build` created
+      (`iggyikenna-github` connection, push `^main$`, `includedFiles` scoped to Dockerfile/cloudbuild-config/`scripts/vm/**`/
+      pyproject/uv.lock) → `deployment-service:latest` auto-rebuilds on main. deployment-service@`0916b35`.
+      **Residual (P3, non-blocking):** the trigger is imperative (the live trigger fleet isn't in `terraform/gcp`); codify
+      it in TF once the cloud-build connection-name drift (`ln` vs `iggyikenna-github`) is reconciled. Also note a fresh
+      image push still needs `gcloud run jobs update --image …:latest` to re-resolve the digest on each job.
 
 ## Verification
 
