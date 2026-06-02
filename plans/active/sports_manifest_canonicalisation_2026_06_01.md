@@ -605,7 +605,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       transparently fans out to legacy category= paths for on-disk GCS reads (correct — no data loss). OTHER repos
       (MTDS, instruments-service, features-service) still have category= usages — captured as todos below; NOT touched
       (separate agent context). UI repos clean (no category= as asset-group key).
-- [ ] [CODE] P1. **MTDS: ban `category=` in production source — replace with `asset_group=`**: grep-report 2026-06-02
+- [x] ✅ [CODE] P1. **MTDS: ban `category=` in production source — replace with `asset_group=`**: grep-report 2026-06-02
       found `category=` in MTDS scripts (not production service source — most are in migration/reconcile scripts reading
       legacy paths, which is correct). Production source to audit:
       `market_tick_data_service/engine/orchestrator.py:1791` passes `category=cat` to `get_expected_bookmakers()` —
@@ -615,7 +615,10 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       intentional (reading legacy paths) and should stay as-is OR add comment
       `# QG-allow: reading legacy category= paths`. `smoke_matrix.py:206` probes both `asset_group=` and `category=` —
       leave as-is (dual-probe is correct for transition). Repo: `market-tick-data-service`. QG that repo after any
-      source change.
+      source change. — DIAGNOSIS (2026-06-02): `orchestrator.py:1791` `category=cat` is a `BookmakerCategory` function
+      param (not a GCS path key) — LEFT AS-IS. Migration scripts confirmed transition-necessary legacy reads → added
+      `# QG-allow: reading legacy category= paths` comments to all 4 scripts. `smoke_matrix.py:206` dual-probe is
+      correct. QG exit 0. — market-tick-data-service@0e9ad63f
 - [x] ✅ [CODE] P1. **instruments-service: ban `category=` in production source — replace with `asset_group=`**:
       grep-report 2026-06-02 found `category=` in IS orchestrator at multiple sites (e.g. lines 2304, 2402, 3194, 3208,
       4041, 4109, etc. in `instruments_service/engine/orchestrator.py`) — these pass `category="sports"` /
@@ -697,11 +700,15 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `assert_consolidator_healthy(bucket)` for the sports instruments-store bucket at live startup (mirrors pattern in
       other live families). Repo: `features-service`. File: `features_service/sports/live/runner.py` or the UTL
       `build_asset_scoped_runner` factory hook.
-- [x] ✅ [CODE] P2. **IS + MTDS sports — add v9 schema column checks to upstream preflight** (IS portion DONE):
-      `sports_dependency.py` now has `check_sports_manifest_v9_columns(manifest_df)` — gated guard: enforces only when
-      `SPORTS_V9_ENFORCED=true` (new `InstrumentsServiceConfig` field) OR when manifest `schema_version==9`; pre-cutover
-      (v8 data, flag off) → WARNING+pass. 5 unit tests covering both modes. MTDS `SportsCatalogReader` portion remains
-      open — track in MTDS QG pass. — instruments-service@8958a2ae | QG: 3041 passed / 2 pre-existing failures / exit 0
+- [x] ✅ [CODE] P2. **IS + MTDS sports — add v9 schema column checks to upstream preflight** — BOTH DONE 2026-06-02: IS:
+      `sports_dependency.py` has `check_sports_manifest_v9_columns(manifest_df)` (SPORTS_V9_ENFORCED field in
+      `InstrumentsServiceConfig`). MTDS: `_check_sports_v9_columns()` helper + `SPORTS_V9_ENFORCED` field in
+      `MarketTickDataServiceConfig`; called from `process_ticks()` after the try/except block (so RuntimeError
+      propagates in enforcement mode). Auto-detect uses `_SPORTS_V9_NEW_COLS` (asset_group/source/available_at, NOT
+      pipeline_mode which was already in v8) to avoid false-positives on pre-migration fixtures. 5 unit tests
+      (non-enforced warn+pass, enforced-via-flag raises, enforced-via-autodetect raises, all-cols-present silent,
+      empty-index noop). QG exit 0 (all 2434 tests pass). — instruments-service@8958a2ae |
+      market-tick-data-service@40c1be5a
 
 ### PRE-DRY-RUN CODE MILESTONE (sports-slot 2026-06-02) — all doable-before-dry-run code SHIPPED + QG-swept
 
