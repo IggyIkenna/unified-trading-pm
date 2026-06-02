@@ -70,11 +70,11 @@ Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. 
       | orchestrator slot: + `agents/worker.md` + `agents/RULES.md` | AO repo (git) | n/a | **injected** into the boot prompt (not auto-loaded) |
 
 - [x] ✅ [SCRIPT] P2. **Phase-1 finding RESOLVED** (operator-directed 2026-06-02): the 5 workspace-root
-      `.claude/rules/*.md` were real, untracked, root-ONLY files carrying ~12 rules **missing** from CLAUDE.md (verified by
-      grep) — so they never reached repo-level agents. **Folded** their unique+current rules into a new
-      `cursor-configs/CLAUDE.md` § "Cross-Cutting Rules" (propagates everywhere via the symlinked SSOT); dropped the stale
-      bits (python-backend.md's dead `unified_normalised_contracts`/`unified-market-interface` names). Repointed the
-      `architectural_ratchets.yaml` UI-18 `rule_doc` off the deleted path. The 5 files are **tombstoned** (`rm` in
+      `.claude/rules/*.md` were real, untracked, root-ONLY files carrying ~12 rules **missing** from CLAUDE.md (verified
+      by grep) — so they never reached repo-level agents. **Folded** their unique+current rules into a new
+      `cursor-configs/CLAUDE.md` § "Cross-Cutting Rules" (propagates everywhere via the symlinked SSOT); dropped the
+      stale bits (python-backend.md's dead `unified_normalised_contracts`/`unified-market-interface` names). Repointed
+      the `architectural_ratchets.yaml` UI-18 `rule_doc` off the deleted path. The 5 files are **tombstoned** (`rm` in
       `.claude/` is agent-blocked) — operator runs the disk `rm` (+ `rules-old/`). Net context DROPS (≈235 both-loaded
       lines → ~54 in the one SSOT + 5 tombstone lines). Also removed tracked `.bak`/`.bak2` script cruft. — PM@6e7a6e01d
 - [x] [DOC] P0. ✅ DONE 2026-06-02 — `.claude/rules/CLAUDE.md` was an ABSOLUTE symlink → the stale `/home/hk` checkout's
@@ -86,11 +86,11 @@ Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. 
 
 - [x] ✅ [DOC] P0. Header self-description fixed + the highest-value section (Git-discipline merge-flow) reconciled to
       staging-first. File **1180 → 897** (relocate-to-codex) **→ 956** (folding the 5 root per-domain rule files' unique
-      rules in — Phase-1-finding); net *agent-loaded* context still dropped since those ~235 L of root files no longer
-      load. **The numeric ≤400 target is intentionally NOT pursued** — operator: "400 isn't a hard limit", file budget is
-      400–600 with detail in codex. De-bloat *intent* met; the 400 floor is not the bar. Optional further reduction toward
-      ~600 is the P2 below. — PM@6e7a6e01d
-- [ ] [DOC] P2. _(optional)_ Further trim toward ~600 L: relocate the still-verbose section *bodies* (External-Data
+      rules in — Phase-1-finding); net _agent-loaded_ context still dropped since those ~235 L of root files no longer
+      load. **The numeric ≤400 target is intentionally NOT pursued** — operator: "400 isn't a hard limit", file budget
+      is 400–600 with detail in codex. De-bloat _intent_ met; the 400 floor is not the bar. Optional further reduction
+      toward ~600 is the P2 below. — PM@6e7a6e01d
+- [ ] [DOC] P2. _(optional)_ Further trim toward ~600 L: relocate the still-verbose section _bodies_ (External-Data
       coverage matrix, Plan-archival 5-step, Citadel-Grade 9-point, per-client isolation) to their codex SSOTs, leaving
       the 1-line directive + pointer. Do NOT delete a rule — relocate + point. Not blocking; the file is correct at 956.
 - [x] ✅ [DOC] P1. Dead-pointer / stale-fact check folded into the Phase-3 sweep: grep-verified named scripts/paths;
@@ -99,50 +99,56 @@ Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. 
 ### Phase 3 — Contradiction sweep [P0]
 
 - [x] ✅ [DOC] P0. Contradiction sweep complete (2 read-only sub-agents + fixes). **(e) merge flow** — FIXED at 3 SSOTs:
-      `cursor-configs/CLAUDE.md` Git-discipline → staging-first (PM@6da4f1175); local `.claude/rules/workspace-workflow.md`
-      (three-tier "staging=breaking" + sync-to-main → staging-first + LDR dual-path) + `.claude/rules/universal.md`
-      ("--to-staging for breaking" → no-op) fixed in place (local files). **(a) AO branch** — already de-staled to
-      TRANSITIONAL (PM@b811b4232). **(b) bucket/v9 names, (c) removed DeFi venues, (d) `category=` residue** — swept,
-      **all clean** (no stale hits; venues correctly listed as removed, asset_group= canonical, no pre-v9 names). —
-      PM@6da4f1175 + local rules-feed edits
+      `cursor-configs/CLAUDE.md` Git-discipline → staging-first (PM@6da4f1175); local
+      `.claude/rules/workspace-workflow.md` (three-tier "staging=breaking" + sync-to-main → staging-first + LDR
+      dual-path) + `.claude/rules/universal.md` ("--to-staging for breaking" → no-op) fixed in place (local files).
+      **(a) AO branch** — already de-staled to TRANSITIONAL (PM@b811b4232). **(b) bucket/v9 names, (c) removed DeFi
+      venues, (d) `category=` residue** — swept, **all clean** (no stale hits; venues correctly listed as removed,
+      asset_group= canonical, no pre-v9 names). — PM@6da4f1175 + local rules-feed edits
 
 ### Phase 4 — `SUB_AGENT_MANDATORY_RULES.md` drift check [P1]
 
 - [x] ✅ [SCRIPT] P1. **NO-OP** — verified all 21 repo `.claude/SUB_AGENT_MANDATORY_RULES.md` are **symlinks** →
       `../../unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (0 real copies). Drift is structurally
-      impossible; no rollout needed. (Symlink coverage extended this session: added AO + ml-service + unified-trading-system-ui.)
+      impossible; no rollout needed. (Symlink coverage extended this session: added AO + ml-service +
+      unified-trading-system-ui.)
 
 ### Phase 5 — User-level memory prune [P1] _(local-only; not git-tracked)_
 
 - [x] ✅ [DOC] P1. Memory prune done (local). Walked 42 files; **de-indexed 3 rot entries** from `MEMORY.md`:
       `project_sports_vms_in_flight` (2026-05-01 VM-status snapshot), `reference_defi_coverage_baseline_2026_05_07`
       (RETRACTED scare note), `reference_phantom_recon_baselines` (month-old actioned dry-run snapshot). Fixed a stale
-      `v5`→`v9` manifest reference in `reference_handoff_docs`. Kept all durable `user`/`feedback`/project-context facts.
-      **Caveat**: the actual file `rm` is **harness-blocked** (the memory store is a protected dir) — the 3 files are
-      de-indexed (gone from the in-context index) but linger on disk until the operator runs the one-liner (handed off in
-      chat). Effective: 42 → 39.
+      `v5`→`v9` manifest reference in `reference_handoff_docs`. Kept all durable `user`/`feedback`/project-context
+      facts. **Caveat**: the actual file `rm` is **harness-blocked** (the memory store is a protected dir) — the 3 files
+      are de-indexed (gone from the in-context index) but linger on disk until the operator runs the one-liner (handed
+      off in chat). Effective: 42 → 39.
 
 ### Phase 6 — `cursor-rules/*.mdc` relevance pass [P2]
 
 - [x] ✅ [DOC] P2. `.mdc` staleness pass (sub-agent audit of all >100-L .mdc). Fixed 2 stale UI-architecture files:
       `cursor-rules/ui/component-patterns.mdc` ("14 satellite UIs" / "11 UIs" → the 2 current UIs post-consolidation) +
-      `cursor-rules/ui/cross-surface-navigation.mdc` (SUPERSEDED banner — the per-port surface table predates the 2026-05
-      consolidation into the unified Next.js app; principle holds, ports stale; full route-map rewrite tracked below). All
-      other large .mdc (dimensional-grid-spec, ui-quality-gates, repo-readiness, local-dev) verified current. — PM@a6c011132
+      `cursor-rules/ui/cross-surface-navigation.mdc` (SUPERSEDED banner — the per-port surface table predates the
+      2026-05 consolidation into the unified Next.js app; principle holds, ports stale; full route-map rewrite tracked
+      below). All other large .mdc (dimensional-grid-spec, ui-quality-gates, repo-readiness, local-dev) verified
+      current. — PM@a6c011132
 - [ ] [DOC] P2. _(follow-up, UI-slot)_ Rewrite `cursor-rules/ui/cross-surface-navigation.mdc` entity-routing table
-      against the live unified Next.js route groups + `scripts/dev/ui-api-mapping.json` (the current banner flags it stale
-      but doesn't supply the new map — needs UI-domain knowledge).
+      against the live unified Next.js route groups + `scripts/dev/ui-api-mapping.json` (the current banner flags it
+      stale but doesn't supply the new map — needs UI-domain knowledge).
 
 ## Full-execution criterion (PLAN_FORMAT §8)
 
-- ✅ `cursor-configs/CLAUDE.md` header self-description accurate + within the de-bloat intent (1180 → 956 L after folding; the ≤400
-  numeric target was de-scoped per operator "400 isn't a hard limit" + the 400–600 budget — further trim is the optional
-  P2 above).
-- ✅ Exactly **one** CLAUDE.md source of truth (root absolute-symlink → stale `/home/hk` resolved to a relative symlink → PM SSOT).
-- ✅ Contradiction sweep returns **zero** invalidated facts (merge-flow fixed at 3 SSOTs; venues/v9-names/`category=`/AO-branch all clean).
+- ✅ `cursor-configs/CLAUDE.md` header self-description accurate + within the de-bloat intent (1180 → 956 L after
+  folding; the ≤400 numeric target was de-scoped per operator "400 isn't a hard limit" + the 400–600 budget — further
+  trim is the optional P2 above).
+- ✅ Exactly **one** CLAUDE.md source of truth (root absolute-symlink → stale `/home/hk` resolved to a relative symlink
+  → PM SSOT).
+- ✅ Contradiction sweep returns **zero** invalidated facts (merge-flow fixed at 3 SSOTs;
+  venues/v9-names/`category=`/AO-branch all clean).
 - ✅ 21 `SUB_AGENT_MANDATORY_RULES.md` copies are symlinks to SSOT (drift impossible — verified).
-- 🟡 Memory folder pruned + `MEMORY.md` reconciled (42 → 39 effective; 3 files de-indexed, on-disk `rm` handed to operator — harness-blocked).
-- ✅ All repo-tracked edits committed + pushed to `live-defi-rollout` (PM + AO + ml-service + UI); local rules-feed + memory edits are local-only by design.
+- 🟡 Memory folder pruned + `MEMORY.md` reconciled (42 → 39 effective; 3 files de-indexed, on-disk `rm` handed to
+  operator — harness-blocked).
+- ✅ All repo-tracked edits committed + pushed to `live-defi-rollout` (PM + AO + ml-service + UI); local rules-feed +
+  memory edits are local-only by design.
 
 ## Continuous verification
 
