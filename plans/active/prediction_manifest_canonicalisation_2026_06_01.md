@@ -189,20 +189,22 @@ be fixed first if run on a VM.
       review planned moves/timing in the VM log → optimise workers if >1h → re-fire `full` (no fire-and-forget:
       STARTED<60s + progress/hr + STOPPED; T+10min `gcloud instances describe`). **PENDING: VM launch + monitor (next
       session — VM-only per local-DNS constraint).**
-> **⚠️ GRANULARITY = THE OPEN CORRECTNESS POINT (slot-3 2026-06-02 — a draft rebuild was REVERTED for getting this
-> wrong; do NOT ship until resolved).** A sub-agent draft collapsed the manifest row key to `(date,venue,instrument_type,
-> data_type)` — dropping the `{cid}` condition-id (the canonical object filename) AND `underlying` → a **massive
-> undercount** (one row per venue+dtype instead of per-market) → would FAIL the G6 completeness gate. The post-migration
-> path is `…/data_type={DT}/{cid}.parquet` (one object per condition_id; `underlying`/`chain`/`data_source` are now
-> parquet COLUMNS, not path dims). **Before building, RESOLVE the canonical shard atom** by reading the REAL canon
-> `pred-prd/_index/availability_index.parquet` (≈16,812 rows) granularity AND the LIVE prediction writer's atom
-> (orchestrator.py:~1388 — the live writer records prediction via **`canonical_question_group` cluster bundling**
-> `record_captured_from_counts`, NOT per-cid `add()`). The rebuild MUST MATCH the live-writer atom (batch=live) — almost
-> certainly per-`canonical_question_group` (read from the parquet column), NOT the naive `(date,venue,itype,dtype)`
-> collapse and NOT necessarily per-cid. Verify on a VM where the `_index` parquet reads cleanly (local gcsfs/cp was
-> flaky 2026-06-02). The post-migration REGEX (optional `pipeline_mode=` + `asset_group=prediction/venue=/instrument_type=/
-> data_type=/{cid}.parquet`) from the reverted draft IS correct + reusable; only the row-key/granularity + column-read is
-> the open work.
+> **✅ GRANULARITY RESOLVED (slot-3 2026-06-02 — the atom is the live-writer atom, batch=live SSOT).** A sub-agent draft
+> was REVERTED for collapsing the row key to `(date,venue,instrument_type,data_type)` (dropped `{cid}` + `underlying` →
+> massive undercount → G6 FAIL). The CORRECT canonical shard atom = the LIVE prediction writer's atom (orchestrator.py
+> ~1370-1420 + CLAUDE.md per-AG shard-key matrix): **`(asset_group, venue, data_type=prediction_canonical_question_group,
+> canonical_question_group, day)`** — ONE bundled manifest row per `canonical_question_group` per day, emitted via
+> **`record_captured_from_counts`** (NOT per-cid `add()`), with `observed_clusters = {market_id(conditionId): row_count}`,
+> `expected_root_clusters` (UAC group-expected clusters or = observed when unknown), `available_at_envelope =
+> max(available_at)`, `pipeline_mode` (path-or-derive), `row_key = {asset_group, venue, data_type, canonical_question_group,
+> processing_date, pipeline_mode}`. The raw canonical OBJECTS stay per-cid (`…/data_type={DT}/{cid}.parquet`);
+> `canonical_question_group`/`market_id`/`available_at` are PARQUET COLUMNS → the rebuild MUST READ them per object (set by
+> the Polymarket/Kalshi adapter via UAC `classify_polymarket_to_canonical_group`). **VM cross-check** (confirmation, not a
+> blocker): on the migration VM where the `_index` parquet reads cleanly (local gcsfs/cp flaky 2026-06-02), confirm the
+> rebuilt row count ≈ the live canon `_index` (~16,812 rows) granularity. **BUILD = mirror the live writer's
+> `record_captured_from_counts` call exactly** (find it in the prediction finalize loop ~orchestrator.py:1450+). The
+> post-migration REGEX (optional `pipeline_mode=` + `asset_group=prediction/venue=/instrument_type=/data_type=/{cid}.parquet`)
+> from the reverted draft IS correct + reusable; the row-key/cluster-bundling + column-read is the build.
 
 - [ ] [DATA] P0. E5 Manifest rebuild → v9. **REFERENCE: cefi E5 DONE (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional
       `pipeline_mode=` regex segment, DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
