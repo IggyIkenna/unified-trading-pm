@@ -141,9 +141,9 @@
   <circle cx="1562" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="1506" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1582" y="723" width="167" height="38" class="svc" />
-  <rect x="1582" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1582" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="1665" y="741" text-anchor="middle" class="label">trading-agent-service</text>
-  <circle cx="1739" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1739" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="1665" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L5: Client-facing APIs and operational services. (risk/position/pnl absorbed into strategy-service at level 4 per strategy_repo_consolidation_2026_05_19.) (2 repos) -->
   <rect x="40" y="795" width="2320" height="107" class="level-bg" />
