@@ -37,6 +37,22 @@ larger context"; worse on Sonnet slots). This plan makes the context-feed **lean
 | `cursor-rules/ui/component-patterns.mdc`                                             | 273 lines / 10 KB                                          | largest `.mdc`; audit relevance.                                                                                                   |
 | User memory folder `~/.claude/projects/-active-unified-trading-system-repos/memory/` | **42 files / 188 KB**, `MEMORY.md` index 41 lines / 9.2 KB | prune stale + status memories.                                                                                                     |
 
+## Boot-feed inventory (verified 2026-06-02)
+
+Two distinct audiences — **do not conflate them**:
+
+- **Us (local interactive sessions):** auto-load ~107 KB — `CLAUDE.md` SSOT (84 KB, dominant, 86%) + 5
+  `.claude/rules/*.md` (14 KB) + `MEMORY.md` auto-memory (9 KB, **operator-local** — lives in
+  `~/.claude/projects/.../memory`, our machine). No `@import`, no user-global `~/.claude/CLAUDE.md`.
+- **Worker VMs (orchestrator-spawned executors):** **NO `MEMORY.md`** (it's on our machine, not the VMs). Boot ≈ 138 KB
+  = CLAUDE.md + `.claude/rules/*` + injected `worker.md`/`RULES.md`, which also **restate** CLAUDE.md rules — tracked as
+  **G8** in
+  [agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md](agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md).
+  Workers are executors and don't need our full operator context.
+
+Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. Memory hygiene (Phase 5) is a
+**local/us-only** concern, irrelevant to workers.
+
 ## Phases
 
 ### Phase 1 — Map the actual context-feed graph (audit-first, no edits) [P0]
@@ -45,9 +61,10 @@ larger context"; worse on Sonnet slots). This plan makes the context-feed **lean
       bootstrap. Resolve the two-path question (`/active/...` vs `/home/hk/...` checkouts) and whether `.claude/rules/*`
       are symlinks to PM `cursor-configs/` (`setup-workspace-config-symlink.sh`) or independent copies. Output a
       one-screen table: file → source-of-truth → is-symlink → is-fed-to-agents.
-- [ ] [DOC] P0. Diff `cursor-configs/CLAUDE.md` vs `.claude/rules/CLAUDE.md`. Decide SSOT. If the root copy is a rotted
-      duplicate, the fix is a symlink (or deletion + regen via the symlink script), **not** hand-editing both —
-      eliminate the second source of truth entirely. No parallel copies (universal rule).
+- [x] [DOC] P0. ✅ DONE 2026-06-02 — `.claude/rules/CLAUDE.md` was an ABSOLUTE symlink → the stale `/home/hk` checkout's
+      cursor-configs/CLAUDE.md (737 L, missing AO-exception/v9/QG-sweep rules); the git SSOT is `/active`'s (1179 L).
+      Repointed to a RELATIVE symlink → `../../unified-trading-pm/cursor-configs/CLAUDE.md` (local SSOT) so agents read
+      the current rules on next boot. Second source of truth eliminated.
 
 ### Phase 2 — Trim `cursor-configs/CLAUDE.md` to budget [P0]
 

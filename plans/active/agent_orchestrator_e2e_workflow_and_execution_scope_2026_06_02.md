@@ -175,6 +175,34 @@ flow" + `quickmerge --agent`, but they carry the **same staging-vs-LDR drift as 
       so no command edits are needed, only the target-branch + `--to-staging` corrections. Cross-link G3 (do not
       duplicate the rules-file fix that lives in the context-hygiene plan).
 
+### G8 — worker boot-context de-bloat (executor-minimal context) [P0] _(Harsh 2026-06-02; verified)_
+
+Distinct from G7 (which fixes the **merge-flow** wording in the prompts): this is the **context bloat / duplication**.
+Verified worker boot context (orchestrator-spawned, before any work) ≈ **138 KB**: auto-loaded `CLAUDE.md` SSOT (84 KB,
+via each repo's `.claude/CLAUDE.md → cursor-configs/CLAUDE.md`) + `.claude/rules/*.md` (14 KB) + the injected
+`agents/worker.md` (24 KB) + `agents/RULES.md` it is told to read (16 KB). **Workers do NOT get `MEMORY.md`** — the
+auto-memory folder is operator-local (our machine), not on the VMs; workers are **executors** and don't need our full
+operator context (governance / planning / master-plan / model-tier rules).
+
+- **Duplication:** `worker.md` + `RULES.md` **restate** workspace CLAUDE.md rules (quickmerge ×8, basedpyright ×4,
+  conventional-commits ×3) — workers get them twice (auto-loaded CLAUDE.md + re-stated in the prompt). RULES.md calls
+  itself "the slim replacement for AGENT_ONBOARDING.md + CLAUDE.md" but CLAUDE.md still auto-loads via the repo
+  `.claude/CLAUDE.md` symlink → it doesn't replace, it doubles.
+- **Competing rules SSOTs:** `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (180 L; CLAUDE.md says "paste via
+  inject-mandatory-rules.sh") vs `agents/RULES.md` (355 L; what the spawn actually uses) — two drifting docs.
+- **Stale paths:** `worker.md:114` `WORKSPACE_ROOT:-/home/ubuntu/...`; `RULES.md:224` `cat /home/hk/...SUB_AGENT...`.
+- **Possible CLAUDE.md double-load:** reachable via `<repo>/.claude/CLAUDE.md` AND workspace `.claude/rules/CLAUDE.md`.
+
+- [ ] [DESIGN] P0. Define the **minimal worker (executor) context**: workers need repo conventions + execution rules,
+      NOT the full operator CLAUDE.md (governance/planning/master-plan) or MEMORY.md. Decide whether workers auto-load a
+      lean worker-rule-set instead of the 84 KB operator CLAUDE.md, and make `worker.md`/`RULES.md` **point to** it
+      rather than restating rules. Pick ONE canonical agent-rules doc (RULES.md vs SUB_AGENT_MANDATORY_RULES.md) + merge
+      the other; fix CLAUDE.md's stale "inject via inject-mandatory-rules.sh" line. (Cross-link G7 — merge-flow done
+      there; this kills the bloat.)
+- [ ] [SCRIPT] P1. Fix stale paths: `worker.md:114` /home/ubuntu → `$WORKSPACE_ROOT`; `RULES.md:224` /home/hk →
+      relative/`$WORKSPACE_ROOT`.
+- [ ] [SCRIPT] P1. Confirm + fix CLAUDE.md double-load (repo `.claude/CLAUDE.md` + workspace `.claude/rules/CLAUDE.md`).
+
 ## Related open work (NOT absorbed here)
 
 The archived `orchestrator_autonomy_audit_remediation_2026_06_01` left **F1/F2/FM3** open (running VM behind LDR HEAD;
