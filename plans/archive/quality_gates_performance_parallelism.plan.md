@@ -1,6 +1,17 @@
 # 07: Quality Gates Performance
 
-**Status**: ⬜ Not Started **Priority**: P2 (Faster feedback loops) **Estimated Time**: 2-3 hours **Expected Benefit**:
+> **🛑 SUPERSEDED 2026-06-02 →
+> [`plans/active/quality_gates_resource_contention_speedup_2026_06_02.md`](../active/quality_gates_resource_contention_speedup_2026_06_02.md).**
+> This plan was an orphan in `plans/cicd/` (no `parent_epic:` / `assigned_vm:` / estimate frontmatter → invisible to the
+> active inventory + orchestrator backlog), referenced dead `Documents/repos` paths + a ChatGPT convo, and its entire
+> thesis was **add more per-run parallelism** (`pytest -n auto` everywhere, parallelize ruff). On a host running 8 slots
+> × 2 sides of parallel agents, every slot already fires `-n auto` and they **contend** for the same CPU/RAM — more
+> per-run parallelism makes aggregate oversubscription/thrash _worse_, not better. The successor plan reframes the goal
+> as reducing/queueing aggregate resource consumption (cross-slot governor, slot-aware worker caps, do-less-work
+> incremental gates, warm processes, persistent caches). Salvageable levers (slow-test marks, uv cache, selective
+> testing) are carried forward there. Do NOT execute this file.
+
+**Status**: ⬜ Superseded **Priority**: P2 (Faster feedback loops) **Estimated Time**: 2-3 hours **Expected Benefit**:
 5-10 min/run, 30+ min/day saved
 
 ---
