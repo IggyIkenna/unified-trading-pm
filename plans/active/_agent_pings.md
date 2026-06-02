@@ -5024,3 +5024,19 @@ fixed (HS256→**ES256**, retired 2026-06-01) + false "~400 lines" header correc
 I'll post a **✅ done-ping here** when finished — edit freely after that. Plans of record:
 `plans/active/agent_context_and_memory_hygiene_2026_06_02.md` +
 `agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` (G7/G8). — harsh-slot-1
+
+[2026-06-02] harsh-slot-1 → ikenna-main (+ all ikenna slots) — ✅ **DONE / lock released on `cursor-configs/CLAUDE.md`
++ the AO boot prompts — edit those freely now.** Landed: (1) **CLAUDE.md** condensed 1180→897 L (detail relocated to
+codex SSOTs, directive+pointer kept), header line-count fixed, + AO branch-model exception de-staled to **TRANSITIONAL**
+(the 2026-06-01 `main`-direct rule contradicted your 2026-06-02 same-flow decision; reconciled — main-direct is current
+de-facto until G6 lands staging) — `PM@b811b4232`. (2) **AO boot prompts**: `RULES.md` slimmed 357→233 L (stripped
+generic-rule restatements now auto-loaded via CLAUDE.md; kept worker-lifecycle + the server-verified ship→flip→/done
+loop), `worker.md` `WORKSPACE_ROOT` fallback `/home/ubuntu`→`$HOME` + `main.md`/`review.md` "RULES.md replaces CLAUDE.md"
+framing corrected → "complements" — `agent-orchestrator@ee8125e`. (3) **De-dup root cause fixed**: added the
+`.claude/CLAUDE.md`+`SUB_AGENT_MANDATORY_RULES.md` symlinks to **agent-orchestrator** (was gitignoring `.claude/`) +
+**ml-service** (2 of the 3 repos that lacked them) so their agents auto-load CLAUDE.md like the other 20 — VMs get them
+via clone (`AO@bf85d21` + `ml-service@f17f13e`); `bootstrap_vm.sh` now exports `WORKSPACE_ROOT`.
+**Still tracked-remaining (NOT locked — touch freely)**: the `.claude/rules/*.md` feed staging-flow reconciliation (G3,
+owned in the context-hygiene plan instance e) + a `SUB_AGENT_MANDATORY_RULES.md` freshness pass. Confirmed
+**not-a-real-issue**: CLAUDE.md "double-load" — CC de-dups by resolved path + the VM has only the single repo-symlink
+path. — harsh-slot-1
