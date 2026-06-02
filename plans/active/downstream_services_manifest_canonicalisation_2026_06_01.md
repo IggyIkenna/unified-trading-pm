@@ -147,15 +147,33 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       `instruments-store-{ag}-prd` via `resolve_bucket_name`; `record_*` calls carry explicit pipeline_mode
       (BATCH_INSTRUMENTS_SERVICE etc.); only ops/migration scripts reference legacy bucket names (intentional). One minor
       ambiguity flagged (a `reconcile_*` one-shot script's prediction `kind` resolution) — not a live read path.
-- [ ] [CODE] P0. **deployment-api — DATA-STATUS resolution (operator-named hotspot)**: audit every bucket-name / menu /
-      data_type / manifest-read convention the data-status endpoints use for cefi/tradfi/prediction. These tend to
-      enumerate MANY bucket-name variants — ensure ALL resolve to the canonical env-tiered name via `resolve_bucket_name`
-      (drop legacy no-env + wrong-token `prediction`), read the v9 `_index` (pipeline_mode/source/asset_group columns),
-      use `asset_group=` + on-disk `data_type`. A stale variant = a dead read post-delete (data-status shows blank/error).
-      Grep deployment-api for hardcoded `market-data-tick-`/`gs://`/`category=`/menu+data_type maps. Align QG tests.
-- [ ] [CODE] P0. **deployment-ui — DATA-STATUS surface**: the UI's bucket/menu/data_type/manifest conventions must match
-      the canonical API; remove any client-side legacy bucket-name/menu/data_type assumptions for cefi/tradfi/prediction.
-      Playwright gate per UI HARD RULE (`pw:L2 ✓` + regression spec) when ticked.
+- [x] ✅ [CODE] P0. **deployment-api — DATA-STATUS — VERIFIED CANONICAL for cefi/tradfi/prediction (slot-3 agent B,
+      2026-06-02), no migration blocker.** `DataStatusService._build_manifest_category` → `_read_defi_merged_index` →
+      `resolve_bucket_name` (prediction via `PREDICTION_KIND_MAP`→`pred` token; cefi/tradfi via `kind`+`asset_group`);
+      drilldown `build_bucket_name` + `BUCKET_MAPPING` (batch_config_utils) all use `resolve_bucket_name`; index read =
+      `read_availability_index(_index/availability_index.parquet)` which backfills v1-v8 + PRESERVES v9 cols; `pipeline_mode`
+      filter is column-presence-guarded; `asset_group=` canonical with `category=` fan-out tolerance (storage_facade). NO
+      dead-bucket read for our 3 AGs post-delete. **4 flags surfaced (none block G1 — tracked below).**
+- [ ] [CODE] P1. **FLAG 1 (data-status display, operator decision): TradFi multi-source double-count.** With v9
+      Databento+Massive dual-source, the manifest can carry two rows per (venue,data_type,date); `_mtds_honest_coverage_for_venue`
+      counts distinct dates WITHOUT `select_primary_available_source` dedup → possible inflated `found_dates`. Decide union
+      (any source captured = green) vs per-source-cell semantics; apply the UAC source-priority dedup in the aggregator if
+      union. NOT a migration regression — a display-correctness item. Cross-ref `tradfi_massive_dual_source`.
+- [ ] [CODE] P1. **FLAG 3 (bucket-SSOT violation, deployment-api): `commentary/pipeline_uat.py:167/181/195/211`** hardcodes
+      no-env legacy `instruments-store-{pid}` / `features-store-{pid}` / `ml-store-{pid}` / `execution-store-{pid}` (NOT in
+      cloud-providers.yaml, bypass `resolve_bucket_name`). Commentary/UAT path (errors swallowed) so low data-status impact,
+      but a real dead-bucket-association risk post env-tiered delete → route through `resolve_bucket_name`. Targeted fix.
+- [ ] [CODE] P2. **FLAG 4 (display): TRADFI honest-coverage denominator** `MTDS_CATEGORY_META["TRADFI"].venue_accessor =
+      all_databento_venues` (6 venues) omits Massive-only venues → misleading coverage for Massive venues. Operator/VenueMapping
+      decision (add Massive venues to the accessor). Display correctness, not a migration blocker.
+- [ ] [CODE] P2. **FLAG 2 (DEFI scope → slot-2 / bucket_name_ssot): `_BUCKET_CATEGORY_OVERRIDES`** (data_status_service.py:2902)
+      hardcodes 6 DeFi sub-buckets (`gas-fees`/`oracle-prices`/`perp-funding`/`lending-indices`/`lst-rates`/`liquidations`)
+      bypassing `resolve_bucket_name` + absent from yaml → post-delete silent-empty (swallowed except). DEFI=slot-2; flag to
+      slot-2 + `bucket_name_ssot…` L6. Out of slot-3 AG scope.
+- [x] ✅ [CODE] P0. **deployment-ui — DATA-STATUS — VERIFIED CANONICAL (slot-3 agent B, 2026-06-02), no change needed.**
+      The UI builds NO bucket names + makes NO GCS calls — it is a pure consumer of deployment-api responses, passing
+      `asset_group` query params (CEFI/TRADFI/PREDICTION; never `category=`; has a backward-compat `categories`→`asset_groups`
+      shim). No client-side legacy bucket/menu/data_type assumptions. No UI behavior changed → playwright gate N/A.
 - [ ] [CODE] P0. **QG-test alignment (cross-repo)**: for each repo above, the tests that feed `quality-gates.sh` MUST
       assert the CANONICAL form (canonical bucket via resolver, pipeline_mode= path, v9 manifest, asset_group=, on-disk
       data_type) so QG **fails on any reversion** to a dead bucket / old convention — this is the regression net the
