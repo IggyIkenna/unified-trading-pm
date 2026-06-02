@@ -3,9 +3,8 @@
 > **Lean index** of workspace rules. Each rule has a 1-line essence + a pointer to its full SSOT. When a rule applies,
 > **read the SSOT pointer** — don't act from memory.
 >
-> Condensing 2026-06-02 (in progress): grew to ~1180 lines / 84KB; shrinking back toward ~600 by relocating detail to
-> codex SSOTs and keeping the sharp directive + 1-line pointer here. These rules are NOT waste — they encode behaviours
-> agents were missing; condense, don't drop.
+> Condensed 2026-06-02: 1180 → ~900 lines by relocating detail to codex SSOTs and keeping the sharp directive + 1-line
+> pointer here. These rules are NOT waste — they encode behaviours agents were missing; condense, don't drop.
 >
 > **Size budget**: keep lean (~400–600 lines — not a hard floor). When a section outgrows its essence, push the detail
 > to its codex SSOT + leave the directive + pointer here. Hard cap 1500/90KB (review-blocking).
@@ -103,14 +102,15 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 — troubleshooting".
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
-- **agent-orchestrator EXCEPTION (codified 2026-06-01)**: `agent-orchestrator` is the ONE repo whose integration target
-  is **`main`, NOT `live-defi-rollout`**. It is operator/agent tooling — NOT production trading code — so it **bypasses
-  the production code-hardening path** (`live-defi-rollout` → `staging` → `main`). The slot model still applies: commit
-  to the slot branch `tab/<operator>/<N>` to isolate per-agent commits, then **fast-forward the slot branch to `main`**
-  (its slot branch tracks `origin/main`; every OTHER repo's slot branch tracks `origin/live-defi-rollout`). Do NOT route
-  agent-orchestrator changes through LDR/staging or treat its `main`-behind-LDR as drift to "promote" — `main` is its
-  canonical. (Its work may also appear on LDR via the `tab-mirror` GHA; that is harmless mirroring, not the target.)
-  SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
+- **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01
+  `main`-direct exception)**: the target is for `agent-orchestrator` to follow the **same** `tab/<op>/<N>` → LDR →
+  `staging` → SIT → `main` flow as every other repo. **Today it is mid-migration**: AO has no `staging` branch and no
+  `quickmerge.sh` yet (tracked in `plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G6),
+  so the **current** de-facto ship path is still commit on the slot branch `tab/<operator>/<N>` →
+  **fast-forward to `main`** (its slot branch tracks `origin/main`; every OTHER repo's tracks `origin/live-defi-rollout`).
+  `main` remains AO's canonical (do NOT treat `main`-behind-LDR as drift; LDR `tab-mirror` GHA appearance is harmless).
+  Once G6 lands the `staging` branch + quickmerge, switch to the standard staging-first path. SSOT:
+  `codex/04-architecture/agent-orchestrator-overview.md` + the G6 plan above.
 
 ### Imports + types
 
