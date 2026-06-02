@@ -170,7 +170,7 @@ fi
 
 # ── GREEN SENTINEL + GOVERNOR (mirror of base-service.sh) ──
 _QG_SENTINEL_HIT=false
-_QG_SENTINEL_FILE="${REPO_ROOT}/.qg_content_sentinel"
+_QG_SENTINEL_FILE="${PROJECT_ROOT}/.qg_content_sentinel"
 _QG_CONTENT_HASH=""
 if [ "${QG_SENTINEL_DISABLE:-false}" != "true" ]; then
     _QG_CONTENT_HASH="$(_qg_content_hash)"
@@ -977,6 +977,6 @@ echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
 # Green content sentinel (qg-repo-green-sentinel): record on a full green so an
 # unchanged tree skips the heavy phases next run. See base-service.sh for rationale.
 if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ]; then
-    echo "$_QG_CONTENT_HASH" > "${REPO_ROOT}/.qg_content_sentinel" 2>/dev/null \
+    echo "$_QG_CONTENT_HASH" > "${PROJECT_ROOT}/.qg_content_sentinel" 2>/dev/null \
         && echo "Green sentinel written: .qg_content_sentinel (unchanged tree → fast green next run)" || true
 fi

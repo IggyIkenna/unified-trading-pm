@@ -289,7 +289,7 @@ fi
 
 # ── GREEN SENTINEL: skip heavy phases when content is byte-identical to last full green ──
 _QG_SENTINEL_HIT=false
-_QG_SENTINEL_FILE="${REPO_ROOT}/.qg_content_sentinel"
+_QG_SENTINEL_FILE="${PROJECT_ROOT}/.qg_content_sentinel"   # per-repo (REPO_ROOT is the workspace root)
 _QG_CONTENT_HASH=""
 if [ "${QG_SENTINEL_DISABLE:-false}" != "true" ]; then
     _QG_CONTENT_HASH="$(_qg_content_hash)"
@@ -2568,7 +2568,7 @@ if [[ "${RUN_TESTS}" == "true" ]] && \
     # unchanged tree skips the heavy phases next run. Only here — a COMPLETE green run
     # (this block) — so the sentinel always represents a coverage-inclusive pass.
     if [ "${#_QG_CONTENT_HASH}" -eq 64 ]; then
-        echo "$_QG_CONTENT_HASH" > "${REPO_ROOT}/.qg_content_sentinel" 2>/dev/null \
+        echo "$_QG_CONTENT_HASH" > "${PROJECT_ROOT}/.qg_content_sentinel" 2>/dev/null \
             && echo "Green sentinel written: .qg_content_sentinel (unchanged tree → fast green next run)" || true
     fi
 else
