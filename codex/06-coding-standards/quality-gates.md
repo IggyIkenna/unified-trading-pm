@@ -2823,5 +2823,31 @@ code-freeze. Aggregate cross-slot contention is measured separately by `scripts/
 
 The binding constraint is **peak RSS**, not cores. Measured ceiling (local, full gates): **unified-trading-library
 5.27 GB**, then execution/features ~1.9 GB — so a *single* heavy gate overshoots the current `m7i.xlarge` 2 GB/slot budget
-by up to 2.6×. The right-sizing decision pairs machine-type **with** slots-per-VM under the governor (a bigger box OR
-fewer slots) — never "add RAM to 8 uncapped runs". Floor = `peak-per-run-RSS × peak-concurrent-QG-under-the-governor`.
+by up to 2.6×. **Decision (operator 2026-06-02): keep QG LOCAL on 16 GB workers, no fleet change** — the governor caps
+K=`floor(vCPU/4)`=1 on a 4-vCPU worker so the single-run peak (~5.3 GB) fits 16 GB; sizing rule
+`per-VM RAM ≥ peak-per-run-RSS × K`. Central self-hosted-runner QG (Option B) was **rejected** — it breaks the local
+pass/fail feedback loop. ADR: `adr-qg-offload-self-hosted-runners-2026-06-02.md`.
+
+### Both base files are governed
+
+The governance (governor + thread caps + ruff cache + green sentinel + coverage-off-hot-path) is wired into **both**
+`base-service.sh` (17 service repos) **and** `base-library.sh` (UAC + unified-trading-library — the 5.27 GB ceiling, so
+it matters most there). `base-ui.sh` (TS repos) is out of scope (no pytest fan-out).
+
+### Do-less-work levers — decisions (2026-06-02)
+
+- **Green sentinel (`qg-repo-green-sentinel`) — SHIPPED, default ON.** Skips TESTS + TYPE CHECK when the working tree is
+  **byte-identical** (conservative content hash: HEAD + working diff + untracked-minus-artifacts + gate scripts + tool
+  versions) to the last FULL green run; light codex/production checks still run. **Safe by construction:** no sentinel /
+  malformed hash / any content change → normal full run; only an exact 64-char match skips. `.qg_content_sentinel` is
+  separate from quickmerge's `.qg_last_passed_sha`. Escape: `QG_SENTINEL_DISABLE=true`.
+- **Selective testing (`qg-selective-tests`) — AUDITED, NOT enabled (operator 2026-06-02).** Evaluated `pytest-testmon` /
+  import-graph changed-files→affected-tests mapping. **Decision: keep running the FULL test suite** — not ready to bypass
+  any test; a missed-test false-negative is strictly worse than slowness, and the green sentinel + governor already
+  remove most of the cost without ever skipping a test on changed content. Revisit only behind `QG_SELECTIVE=true`
+  default-off once proven sound.
+- **basedpyright scope (`qg-basedpyright-scope`) — AUDITED, no scoping (data-driven).** Measured basedpyright at
+  **~5.4 s / 9.6 CPU-s** (NOT the "biggest CPU spike" the original plan assumed) — scoping to changed packages saves
+  ~nothing while risking missed cross-file type errors. **Keep full-tree analysis.** Cache already shared
+  (`$TMPDIR/basedpyright-cache/$SERVICE_NAME`). The real basedpyright lever is *strictness* (warn-only by default unless
+  `BASEDPYRIGHT_MAX_ERRORS` is set) — a separate policy decision, not a speed one.

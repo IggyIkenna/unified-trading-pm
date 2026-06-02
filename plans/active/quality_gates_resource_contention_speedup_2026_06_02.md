@@ -51,15 +51,15 @@ todos:
     status: todo
   - id: qg-repo-green-sentinel
     content: |
-      - [ ] [SCRIPT] P1. Per-repo green-sentinel cache — extend the existing `.qg_last_passed_sha` into a content-hash sentinel so an unchanged repo (tree hash unchanged since last green) skips the heavy phases entirely and exits 0 fast. MUST be sound: hash includes source + tests + pyproject + lockfile + tool-config + QG-script versions; any mismatch → full run. Keyed per-repo so the first slot to green a repo lets siblings short-circuit.
+      - [x] ✅ [SCRIPT] P1. Per-repo green-sentinel cache — extend the existing `.qg_last_passed_sha` into a content-hash sentinel so an unchanged repo (tree hash unchanged since last green) skips the heavy phases entirely and exits 0 fast. MUST be sound: hash includes source + tests + pyproject + lockfile + tool-config + QG-script versions; any mismatch → full run. Keyed per-repo so the first slot to green a repo lets siblings short-circuit.
     status: todo
   - id: qg-selective-tests
     content: |
-      - [ ] [SCRIPT] P1. Import-graph selective testing — replace the archived plan's brittle `sed` path-mangling with a real changed-files→affected-tests map (evaluate `pytest-testmon` vs a lightweight import-graph walk). Iterative dev runs execute only tests transitively touching changed files; full suite still runs at the gate-to-main pass. Gate behind `QG_SELECTIVE=true` (default off until proven sound — a missed-test false-negative is worse than slowness).
+      - [x] ✅ [SCRIPT] P1. Import-graph selective testing — replace the archived plan's brittle `sed` path-mangling with a real changed-files→affected-tests map (evaluate `pytest-testmon` vs a lightweight import-graph walk). Iterative dev runs execute only tests transitively touching changed files; full suite still runs at the gate-to-main pass. Gate behind `QG_SELECTIVE=true` (default off until proven sound — a missed-test false-negative is worse than slowness).
     status: todo
   - id: qg-basedpyright-scope
     content: |
-      - [ ] [SCRIPT] P1. Scope + warm basedpyright — run it on the changed package(s), not the whole `src/`, for iterative runs (full-tree only at gate-to-main). Evaluate basedpyright watch/daemon mode to avoid the cold whole-tree analyze (the single biggest CPU spike per run). Persist + share the basedpyright cache dir across worktrees so the first slot warms it for all.
+      - [x] ✅ [SCRIPT] P1. Scope + warm basedpyright — run it on the changed package(s), not the whole `src/`, for iterative runs (full-tree only at gate-to-main). Evaluate basedpyright watch/daemon mode to avoid the cold whole-tree analyze (the single biggest CPU spike per run). Persist + share the basedpyright cache dir across worktrees so the first slot warms it for all.
     status: todo
   - id: qg-coverage-off-hotpath
     content: |

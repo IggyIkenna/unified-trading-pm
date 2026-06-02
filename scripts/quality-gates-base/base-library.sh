@@ -40,6 +40,30 @@ set -e
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
 
+# ── QG RESOURCE GOVERNANCE (mirror of base-service.sh) ────────────────────────
+# Plan: quality_gates_resource_contention_speedup_2026_06_02. base-library.sh covers
+# UAC + unified-trading-library (the 5.27 GB peak-RSS ceiling) — so the governor +
+# thread caps matter MOST here. SSOT: codex/06-coding-standards/quality-gates.md
+# § "Resource governance under multi-slot load".
+source "${BASH_SOURCE[0]%/*}/qg-host-governor.sh"
+export OMP_NUM_THREADS="${QG_THREAD_CAP:-2}" OPENBLAS_NUM_THREADS="${QG_THREAD_CAP:-2}" \
+       MKL_NUM_THREADS="${QG_THREAD_CAP:-2}" NUMEXPR_NUM_THREADS="${QG_THREAD_CAP:-2}"
+export RUFF_CACHE_DIR="${RUFF_CACHE_DIR:-${TMPDIR:-/tmp}/qg-ruff-cache}"
+# Green sentinel content hash (see base-service.sh for the full rationale).
+_qg_content_hash() {
+    {
+        git rev-parse HEAD 2>/dev/null || echo no-head
+        git diff HEAD 2>/dev/null
+        git ls-files --others --exclude-standard 2>/dev/null \
+            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
+            | sort | while IFS= read -r _f; do [ -f "$_f" ] && sha256sum "$_f" 2>/dev/null; done
+        sha256sum "${BASH_SOURCE[0]}" "${BASH_SOURCE[0]%/*}/qg-host-governor.sh" 2>/dev/null
+        "${RUFF_CMD:-ruff}" --version 2>/dev/null
+        "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
+        "${PYTHON_CMD:-python3}" --version 2>/dev/null
+    } | sha256sum | awk '{print $1}'
+}
+
 # ── TRAP: set ci_status=FAILING on non-zero script exit ──────────────────────
 _qg_exit_handler() { local rc=$?; [ "$rc" -ne 0 ] && _qg_update_ci_status_failing 2>/dev/null || true; }
 trap '_qg_exit_handler' EXIT
@@ -144,8 +168,22 @@ if [ "$RUN_LINT" = true ]; then
     _lint_out=$(run_timeout 30 $RUFF_CMD check $SOURCE_DIRS 2>&1) || { echo "$_lint_out"; log_fail "Lint FAILED"; exit 1; }
 fi
 
+# ── GREEN SENTINEL + GOVERNOR (mirror of base-service.sh) ──
+_QG_SENTINEL_HIT=false
+_QG_SENTINEL_FILE="${REPO_ROOT}/.qg_content_sentinel"
+_QG_CONTENT_HASH=""
+if [ "${QG_SENTINEL_DISABLE:-false}" != "true" ]; then
+    _QG_CONTENT_HASH="$(_qg_content_hash)"
+    if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ -f "$_QG_SENTINEL_FILE" ] \
+       && [ "$(cat "$_QG_SENTINEL_FILE" 2>/dev/null)" = "$_QG_CONTENT_HASH" ]; then
+        _QG_SENTINEL_HIT=true
+        log_success "Green sentinel HIT — tree byte-identical to last full green; skipping TESTS + TYPE CHECK"
+    fi
+fi
+[ "$_QG_SENTINEL_HIT" = true ] || qg_governor_acquire
+
 # ── [3] TESTS (pytest — unit always, integration when tests/integration/ exists) ──
-if [ "$RUN_TESTS" = true ]; then
+if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_section "[3/6] TESTS"
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
@@ -153,7 +191,9 @@ if [ "$RUN_TESTS" = true ]; then
     # 25% of logical CPUs, minimum 1. Works on Linux, macOS (Intel + Apple Silicon), ARM.
     # PYTEST_WORKERS env var overrides when set (e.g. CI throttling or debugging).
     _DEFAULT_WORKERS=$($PYTHON_CMD -c "import multiprocessing; print(max(1, multiprocessing.cpu_count()//4))" 2>/dev/null || echo 1)
-    PARGS="-n ${PYTEST_WORKERS:-$_DEFAULT_WORKERS} --timeout=60 -q -r a --tb=short --no-header"
+    # Memory-frugal default (was $_DEFAULT_WORKERS = cpu_count//4 → oversubscription on
+    # a shared host; UTL peaks 5.27 GB). Per-repo opt-in: export PYTEST_WORKERS=N.
+    PARGS="-n ${PYTEST_WORKERS:-1} --timeout=60 -q -r a --tb=short --no-header"
 
     # Per-repo test root override. Default: tests/unit/. Set PYTEST_UNIT_DIR before sourcing this
     # script to add per-family unit test dirs (e.g. PYTEST_UNIT_DIR="tests/unit/ tests/events/unit/").
@@ -225,7 +265,7 @@ fi
 
 # ── [4] TYPE CHECK (basedpyright, 120s, zombie cleanup) ──────────────────────
 log_section "[4/6] TYPE CHECK"
-if [ "$SKIP_TYPECHECK" != "true" ]; then
+if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
     cleanup_zombie_pyright() {
         _killed=0
         while read -r pid etime _; do
@@ -281,6 +321,9 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     log_success "Type check PASSED (0 errors, 0 warnings)"
 fi
 [ "$SKIP_TYPECHECK" = "true" ] && echo -e "${YELLOW}⚠️  Type check SKIPPED (--skip-typecheck flag)${NC}"
+
+# ── HOST CONCURRENCY GOVERNOR: release after the heavy phases (no-op on sentinel hit) ──
+[ "${_QG_SENTINEL_HIT:-false}" = true ] || qg_governor_release
 
 # ── [5] CODEX COMPLIANCE (library variant) ────────────────────────────────────
 # Same checks as service variant with library-specific exceptions noted inline.
@@ -931,3 +974,9 @@ QG_END=$(date +%s); DUR=$((QG_END - QG_START))
 [ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
+# Green content sentinel (qg-repo-green-sentinel): record on a full green so an
+# unchanged tree skips the heavy phases next run. See base-service.sh for rationale.
+if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ]; then
+    echo "$_QG_CONTENT_HASH" > "${REPO_ROOT}/.qg_content_sentinel" 2>/dev/null \
+        && echo "Green sentinel written: .qg_content_sentinel (unchanged tree → fast green next run)" || true
+fi
