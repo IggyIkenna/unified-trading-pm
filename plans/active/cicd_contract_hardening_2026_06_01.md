@@ -186,6 +186,28 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `workspace-manifest.json`. Break the cycle (extract shared types to UAC, or invert one edge). repos:
       deployment-api + deployment-service + unified-trading-pm (manifest).
 
+### Promotion mechanism finding + PM→main DONE (2026-06-02 slot 1)
+
+- [x] ✅ [SCRIPT] P0. **PM→main surgical promotion DONE — PM#108 MERGED (43e..→main 06:39Z).** Brought 2 LDR fixes to PM
+      main WITHOUT the full 326/52 reconciliation: `base-service.sh` `${PROJECT_ROOT}` coverage-floor fix +
+      `ci-status-update.yml` transition-gate. Effect: green-spam STOPS (ci-status-update runs from main; only
+      regression→FAILING / recovery→GREEN now) + service-MAIN v2 coverage-floor reads the real floor. Method: throwaway
+      worktree off origin/main + `git checkout origin/LDR -- <2 files>` + PR→main auto-merge.
+- [x] ✅ [SCRIPT] P1. **Classic bare-context drift FIXED on PM main** — classic `required_status_checks` required bare
+      `quality-gates-v2` (unsatisfiable; ruleset had the full `Quality Gates (unified-trading-pm) / quality-gates-v2`) →
+      PR#108 was MERGEABLE but BLOCKED. Re-pointed classic→full via
+      `gh api -X PATCH .../branches/main/protection/required_status_checks`. THIS drift likely persists on OTHER repos'
+      main — fix per-repo before any auto-merge promotion.
+- [ ] [SCRIPT] P1. **Fleet service-repo LDR→main promotion is a COORDINATED CAMPAIGN, not a PR sweep (finding
+      2026-06-02).** Direct LDR→main `--auto --merge` PRs DON'T WORK for service repos: `quality-gates-v2` triggers on
+      push/staging, NOT on PR-to-main, so the required check never runs → PR permanently BLOCKED = stuck PR (UAC#64 hit
+      this, closed). Correct paths: (a) admin-merge the green-LDR per repo (`gh pr merge --merge --admin`;
+      enforce_admins already false on most) dep-ordered UAC→UTL→instruments→L4→…; OR (b) the staging→SIT→main automation
+      (quickmerge LDR→staging → SIT gate → staging-to-main). Per repo also: re-point classic bare-context→full +
+      conventional PR title (`pr-validation` rejects `promote:`). ~13 repos diverged main↔LDR by 1-3 main-only commits
+      (mostly [skip ci] bumps; small reconciles; alerting=9 outlier). Nightly Readiness/Dead-Man crons fully clear once
+      service mains carry greened code. repos: all service repos + PM (promotion driver).
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
