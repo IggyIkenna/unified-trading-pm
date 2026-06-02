@@ -68,10 +68,14 @@ causes are real: serializer drift AND stale-lock commit-discipline gaps.
 
 - [x] [INFRA] P2. Install-pin uv==0.10.8 in `setup.sh` (both already-installed + install branches) — PM ✅
 - [x] [INFRA] P2. Install-pin uv==0.10.8 in UTL `Dockerfile:59` ✅
-- [ ] [INFRA] P2. **Single-SoT follow-up**: add `UV_PINNED` to `resolve-canonical-versions.py` output + a sourced
-      constant so setup.sh / Dockerfile / QG read one value instead of 3 hardcodes. **DEFERRED** until the 3 sites are
-      pinned and proven.
-- [ ] [INFRA] P3. Locate + pin CI uv install (confirm base-image path or add `astral-sh/setup-uv@v5 version: 0.10.8`)
+- [ ] [INFRA] P2. **Single-SoT follow-up (ONLY remaining item)**: the 4 pin sites (setup.sh, base-service.sh +
+      base-library.sh, python-quality-gates-v2.yml, UTL Dockerfile) now all hardcode `0.10.8` + cite this plan, but they
+      span PM bash + CI yaml + a _separate-repo_ Dockerfile — there is no shared sourcing surface, so true single-source
+      needs a **drift-guard**, not a sourced constant. Concrete approach: a PM `quality_gates/` check that greps all 4
+      sites (incl. `../unified-trading-library/Dockerfile`) and fails if their pinned uv versions disagree. **DEFERRED**
+      — deliberate follow-up; the 4 sites are consistent today so there is no active drift.
+- [x] [INFRA] P3. Locate + pin CI uv install — pinned `uv==0.10.8` in `.github/workflows/python-quality-gates-v2.yml`
+      (the reusable CI callee) ✅
 
 ### Phase 2 — Verifier (QG read-only, warn-first)
 
@@ -80,19 +84,18 @@ causes are real: serializer drift AND stale-lock commit-discipline gaps.
 
 ### Phase 3 — Re-lock-all sweep (make every committed lock canonical for 0.10.8)
 
-- [ ] [INFRA] P2. With pinned uv, run `uv lock` in every Python repo; commit only repos that actually change (fixes
-      deployment-api stale lock + yanked polars). Verify `uv lock --check` exits 0 workspace-wide.
+- [x] [INFRA] P2. Re-lock-all: 14 stale repos re-locked + committed (0 resolved-version moves, requires-dist sync only);
+      all 23 Python repos now pass `uv lock --check` ✅
 
 ### Phase 4 — Ratchet verifier to blocking
 
-- [ ] [INFRA] P2. After Phase 3 green workspace-wide, change Phase-2 warn → `exit 1` (blocking gate). Add a one-line
-      `uv --version == 0.10.8` assertion next to it so a mis-provisioned slot fails fast. **Blocked on Phase 3.**
+- [x] [INFRA] P2. Ratchet verifier to blocking in `base-service.sh` + `base-library.sh` — `uv lock --check` BLOCKING
+      when on pinned uv 0.10.8, warn otherwise (no false serializer-drift blocks) ✅
 
 ### Phase 5 — Codex SSOT update
 
-- [ ] [INFRA] P3. Update `cursor-rules/dependencies/uv-lock-file.mdc` +
-      `codex/06-coding-standards/dependency-management.md`: document the 3-role split (quickmerge=writer, QG=read-only
-      verifier, pinned uv=determinism).
+- [x] [INFRA] P3. Codex update — `.cursor/rules/dependencies/uv-lock-file.mdc` +
+      `codex/06-coding-standards/dependency-management.md` document the 3-role split ✅
 
 ## Success criteria
 

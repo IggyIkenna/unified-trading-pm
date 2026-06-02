@@ -40,6 +40,12 @@ Then **commit `uv.lock`** with your changes. Quickmerge runs quality gates and `
 
 - NEVER add `uv.lock` to `.gitignore` — it must be committed
 - NEVER commit dependency changes without running quickmerge or `uv lock` first
+- NEVER make quality gates mutate `uv.lock` (no `uv lock` in a QG bootstrap) — QG is a **read-only verifier**
+  (`uv lock --check`). Mutating it dirties trees + jams the FF-pull cron. Only `quickmerge` writes the lock.
+- NEVER install uv unpinned at a lock-generation site — pin `uv==0.10.8` (setup.sh, QG base bootstraps, CI workflow,
+  UTL Dockerfile). An unpinned uv reformats the lock (`revision` bump) even with identical deps. SSOT for the pin +
+  the three-role model (writer=quickmerge / verifier=QG read-only / determinism=pinned uv):
+  `plans/active/uv_lockfile_determinism_2026_06_02.md`.
 
 For UV command reference, see `uv-package-manager.mdc`.
 
