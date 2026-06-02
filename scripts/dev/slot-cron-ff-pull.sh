@@ -141,6 +141,50 @@ ff_one() {
             fi
         fi
     fi
+    # Auto-flush agent ping ledgers: they accumulate append-only cross-agent content that
+    # legitimately blocks FF (can't discard — real data, unlike the regen artifacts above).
+    # When the ONLY remaining dirt is ping-ledger files, commit + push them so the tree goes
+    # clean and FF proceeds. This is the per-host safety net for "Commit + Push + Flip" (pings
+    # should be flushed by whoever appends; this catches the cases where they weren't, which
+    # is what stranded the top-level PM clone 1164 commits behind — cicd hardening 2026-06-02).
+    #   - Scoped to unified-trading-pm AND only when the clone is directly on the integration
+    #     branch (branch == int_branch). On a slot's tab/<op>/<N> branch we must NOT push
+    #     HEAD:int_branch (would leak tab commits into LDR) — slot pings flush via the normal
+    #     tab→LDR promote, so there we fall through to [skip:dirty] as before.
+    #   - Commits ONLY the ping-ledger paths; rebase-retry handles a concurrent push race; a
+    #     rebase conflict aborts cleanly (no mid-rebase, no data loss) and retries next cycle.
+    if [[ "${repo_name}" == "unified-trading-pm" && "${branch}" == "${int_branch}" \
+          && "${DRY_RUN}" -eq 0 && -n "$(git status --porcelain 2>/dev/null)" ]]; then
+        local _ping_paths _f _is_ping _p _nonping _dirty _pushed _try
+        _ping_paths=(ikenna_orchestrator/_agent_pings.md harsh_orchestrator/_agent_pings.md plans/active/_agent_pings.md)
+        _dirty=$(git status --porcelain 2>/dev/null | awk '{print $2}')
+        _nonping=""
+        while IFS= read -r _f; do
+            [[ -z "${_f}" ]] && continue
+            _is_ping=0
+            for _p in "${_ping_paths[@]}"; do [[ "${_f}" == "${_p}" ]] && _is_ping=1; done
+            [[ "${_is_ping}" -eq 0 ]] && _nonping="${_nonping} ${_f}"
+        done <<< "${_dirty}"
+        if [[ -z "${_nonping// }" ]]; then
+            for _p in "${_ping_paths[@]}"; do git add "${_p}" 2>/dev/null || true; done
+            if git commit -q -m "chore(pings): auto-flush agent ping ledgers [skip ci]" 2>/dev/null; then
+                _pushed=0
+                for _try in 1 2; do
+                    if git pull --rebase --quiet origin "${int_branch}" 2>/dev/null; then
+                        if git push --quiet origin "HEAD:${int_branch}" 2>/dev/null; then _pushed=1; break; fi
+                    else
+                        git rebase --abort 2>/dev/null || true  # ping append conflict → never leave mid-rebase
+                        break
+                    fi
+                done
+                if [[ "${_pushed}" -eq 1 ]]; then
+                    log "[ping-flush] ${repo_name} — committed+pushed agent ping ledgers (tree clean, FF can proceed)"
+                else
+                    log "[ping-flush:deferred] ${repo_name} — ping ledgers committed locally (ahead); push race/conflict, retry next cycle"
+                fi
+            fi
+        fi
+    fi
     if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
         log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes"
         popd >/dev/null
