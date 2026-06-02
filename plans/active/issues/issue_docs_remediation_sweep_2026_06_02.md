@@ -248,6 +248,40 @@ verified complete**.
       in `honest-absence-downstream-handling.md` (after the MDPS workstream lands). Source:
       mdps_state_adapter_leading_nan.
 
+## E2E pipeline manifest + data-status wiring (operator request 2026-06-02: "UAC/IS/MTDS/MDPS/features/strategy/execution all hooked up for E2E; data manifest + data status; deployment UI/API understand + show them")
+
+> Scope chosen by operator = **verify + document** (no new UI feature this pass). Verified state: all 6 producing
+> services emit manifest rows (UAC schema-only); deployment-api `/api/data-status/*` reads each service's bucket;
+> manifest v9 schema can represent every hop. Three gaps named below. Coordinate with the in-flight
+> `downstream_services_manifest_canonicalisation_2026_06_01.md` (deployment-api/UI preflight "agent B" + slot-2 DeFi).
+
+- [x] ✅ [DOC] P1. Write the E2E manifest-wiring codex doc mapping all 7 services + the 3 layers + named gaps. —
+      unified-trading-pm@`a28e2b1b4` (`codex/04-architecture/e2e-pipeline-manifest-wiring.md`).
+- [x] ✅ [TEST] P1. Add a SIT introspection test asserting the IS→MTDS→MDPS→features→strategy readiness chain is
+      connected + manifest schema carries every stage-key column + surfaces the missing execution hop as an `xfail`. —
+      system-integration-tests@`29e0a75` (`tests/unit/test_pipeline_manifest_wiring.py`; 6 passed + 1 xfail[G-EXEC]).
+      Verified: ruff + ruff-format + basedpyright + import-patterns (0 violations) + pytest green on the file; repo-wide
+      SIT QG carries a PRE-EXISTING non-fatal coverage-floor ❌ (`MIN_COVERAGE=2<70`, no exception file on origin) — not
+      caused by this additive test; LDR has no remote CI.
+- [ ] [CODE] P2. unified-trading-library: wire GAP **G-EXEC** — add an `execution-service` entry to
+      `PIPELINE_DEPENDENCIES` (`dependency_check.py`) with `UpstreamDependency("strategy_orders", "strategy-service")`
+      (the dataset already exists in `PATH_REGISTRY`). FIRST confirm strategy-service actually writes a
+      `strategy_orders` manifest (vs. live event-bus-only) — read both sides per Findings Triage before mutating the
+      core SSOT. When wired, the `test_execution_service_declares_strategy_upstream` xfail flips to xpass → remove the
+      marker. Source: e2e-pipeline-manifest-wiring (G-EXEC).
+- [ ] [CODE] [UI] P2. deployment-ui: fix GAP **G-UI** — `DataStatusTab.tsx` `DATA_PIPELINE_SERVICES` hardcodes stale
+      `features-cefi/defi/tradfi/prediction-service` names + omits strategy-service, diverging from the backend
+      `SERVICE_TO_KIND` consolidated families (`features-delta-one/volatility/onchain/sports-service`). Make the list
+      UAC/discovery-driven (or align to the backend kinds) + surface strategy-service in the pipeline view. Playwright
+      gate applies (`pw:L2 ✓` + regression spec). Source: e2e-pipeline-manifest-wiring (G-UI).
+- [ ] [CODE] P3. deployment-api + deployment-ui: GAP **G-TRACE** — add a cross-service E2E trace
+      (`/api/data-status/pipeline-trace?instrument&date`) threading one instrument/date through all stages with per-hop
+      `capture_status`, + a UI view. Larger feature; coordinate with the in-flight data-status canonicalisation slot.
+      Source: e2e-pipeline-manifest-wiring (G-TRACE).
+- [ ] [CODE] P3. execution-service: reconcile `service_name` drift — `results/save_operations.py` writes
+      `"execution-service"` but `cli/backtest.py` writes `"execution-services"` (plural); one producer must use one
+      canonical `service_name`. Source: e2e-pipeline-manifest-wiring (smaller findings).
+
 ## Operator-gated infra (NOT credentials — ADC admin perms exist; runs after code lands)
 
 - [ ] [INFRA] P1. `tofu apply` the `tarball_cleanup_scheduler` (after TF authored above). Source:
