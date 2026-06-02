@@ -137,8 +137,11 @@ the storage bloat.
       re-stamped `available_at`, round-trip-normalised dtypes); `_write_fixtures_per_league` skips the gated re-write when
       unchanged — opt-in (`bucket=` + `skip_if_unchanged=True`), only the daily re-poll opts in (batch/recovery paths
       untouched). Safety bias: any doubt → write (never skips a real change); skipping also preserves the earliest/correct
-      `available_at`. +7 unit tests. instruments-service@`016cc248`. (QG: 3048 pass incl. the 7 new; 2 PRE-EXISTING foreign
-      failures unrelated — venus-lending + CanonicalLeagueIdCF7 — confirmed persist with my edits stashed.) **(2) ✅ DONE 2026-06-02 (slot 1) — instruments-store bucket settings codified +
+      `available_at`. +7 unit tests. instruments-service@`016cc248`. (Also FIXED the 2 pre-existing foreign QG failures
+      that this surfaced — both stale test assertions vs canonical behavior: venus available_from 2020-09-22→2020-10-08
+      (UAC PROTOCOL_LAUNCH_DATES SSOT) + canonicalize_league_id passthrough example EPL_99999→EPL_88 (5-digit now strips
+      via UAC Step 3a; 1-2 digit passthrough intact). instruments-service@`aeebb8cb`; **instruments-service QG now fully
+      GREEN**.) **(2) ✅ DONE 2026-06-02 (slot 1) — instruments-store bucket settings codified +
       applied:** `terraform/gcp/main.tf` now sets `soft_delete_policy{retention_duration_seconds=0}` + a noncurrent
       Delete lifecycle (`days_since_noncurrent_time=30, num_newer_versions=3`) on all 5 instruments-store buckets
       (cefi/tradfi/defi/sports/prediction); `terraform import`'d sports+prediction (were live but untracked in
