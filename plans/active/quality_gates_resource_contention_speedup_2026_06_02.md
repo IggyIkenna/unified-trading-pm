@@ -29,6 +29,14 @@ todos:
     content: |
       - [ ] [SCRIPT] P0. Build an AGGREGATE-load benchmark harness (`unified-trading-pm/scripts/dev/benchmark-qg-under-load.sh`) that fires K slots' `quality-gates.sh` concurrently and measures host CPU-steal, swap-in/out, load-average, and p50/p95 per-run wall-clock. The existing archived benchmark timed ONE repo sequentially and is structurally blind to the contention problem this plan exists to fix. Output a CSV + a one-line verdict (oversubscribed Y/N at K∈{1,2,4,8}).
     status: todo
+  - id: qg-perrepo-baseline
+    content: |
+      - [ ] [SCRIPT] P0. Per-repo QG resource baseline + 2× deviation guard (Harsh 2026-06-02). Measure a single `quality-gates.sh` run per repo — wall-clock, peak RSS, CPU-seconds — BOTH locally and on an AWS worker VM (`m7i.xlarge`). Commit the result as a baseline file (`unified-trading-pm/scripts/dev/qg_resource_baseline.json`, keyed per-repo × {local,vm}). Wire a guard into `quality-gates-base/base-service.sh` that WARNs (not fails) when a run exceeds 2× its baseline wall-clock or peak RSS — so resource regressions during code-freeze are detected early. Distinct from `qg-bench-aggregate`: that measures cross-slot contention; this measures per-repo cost + drift, and feeds the VM-sizing decision below.
+    status: todo
+  - id: qg-vm-rightsizing
+    content: |
+      - [ ] [INFRA] P1. Worker-VM right-sizing audit — DATA-DRIVEN off the per-repo baseline, not a guess (Harsh 2026-06-02). Current fleet = AWS `m7i.xlarge` (4 vCPU / 16 GB) × 8 slots/VM (~2 GB/slot) — already OOM-prone under parallel QG. Compute the floor = (peak per-run RSS × peak-concurrent-QG-under-the-governor) and compare to Harsh's hypothesis (~64 GB / 8 vCPU). Decide machine type AND slots-per-VM together (a bigger box OR fewer slots — the governor caps concurrency either way; do not just throw RAM at 8 uncapped runs). If a change is warranted, update `deployment-service/scripts/vm/launch-epic-vm-aws.sh` + `orchestrator_vm_registry.yaml`. NOTE: fleet is currently consolidated to 2 running VMs — this is a scale-back-up decision.
+    status: todo
   - id: qg-governor
     content: |
       - [ ] [SCRIPT] P0. Cross-slot concurrency governor — a host-level `flock`/token-bucket wrapper so at most K QG runs execute concurrently across ALL slots (default K = `max(1, floor(physical_cores/4))`, env-overridable `QG_HOST_CONCURRENCY`). Wire it into `quality-gates-base/base-service.sh` so every repo's `quality-gates.sh` acquires a host token before the heavy (pytest/basedpyright) phases. Converts 8× simultaneous thrash into orderly queueing → p95 wall-clock drops with NO added parallelism. This is the core fix. `nice -n10` + `ionice -c2 -n7` the QG process tree.
@@ -98,6 +106,7 @@ run. This plan never weakens the merge gate — it only changes _when_ and _how 
 
 ```
 Phase 0 (measure)         qg-bench-aggregate ── proves oversubscription, sets K
+                          qg-perrepo-baseline ─ per-repo cost (local+VM) → 2× drift guard + VM-sizing input
         │
 Phase 1 (stop the bleed)  qg-governor  ║  qg-slot-aware-workers   [PARALLEL, both P0]
         │                  └── re-run qg-bench-aggregate → p95 must drop at K∈{4,8}
@@ -134,6 +143,8 @@ materially better.
 - **Merge-gate unchanged:** gate-to-main full run still executes the complete suite + coverage + the coverage floor; no
   merge-gate weakening — verified by diffing the gate-to-main path before/after.
 - **Codex SSOT updated** with the resource-governance section + anti-pattern (Phase 4).
+- **Per-repo baseline committed** (`qg_resource_baseline.json`, local + VM) with a 2× deviation guard wired in;
+  **worker-VM right-sizing** decided data-driven off it (vs the current `m7i.xlarge` 4 vCPU/16 GB × 8 slots).
 - **Final phase:** `bash scripts/quality-gates.sh` green on `unified-trading-pm` + a representative service repo
   (`instruments-service`) using the new base, under concurrent load.
 
