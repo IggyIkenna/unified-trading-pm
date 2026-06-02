@@ -1,5 +1,6 @@
 name: SIT Starvation Detector
-# Runs every 15 minutes — alerts if SIT lock is stale for >1 hour
+# Runs every 15 minutes — alerts if SIT lock is stale for >25 minutes
+# (a SIT run is ~15 min; a lock older than ~25 min is dangling, not in-progress).
 
 on:
   schedule:
@@ -48,15 +49,16 @@ jobs:
               print("Alert already sent — no duplicate")
               sys.exit(0)
 
-          locked_at_str = staging.get('locked_at', '')
-          if not locked_at_str:
-              print("No locked_at timestamp")
+          # sit-gate.yml writes staging_status.locked_since (NOT locked_at) — read that field.
+          locked_since_str = staging.get('locked_since', '')
+          if not locked_since_str:
+              print("No locked_since timestamp")
               sys.exit(0)
 
-          locked_at = datetime.fromisoformat(locked_at_str.replace('Z', '+00:00'))
-          age = datetime.now(timezone.utc) - locked_at
+          locked_since = datetime.fromisoformat(locked_since_str.replace('Z', '+00:00'))
+          age = datetime.now(timezone.utc) - locked_since
 
-          if age > timedelta(hours=1):
+          if age > timedelta(minutes=25):
               print(f"STALE LOCK: locked for {age} — sending alert")
               # Mark alert as sent
               m['staging_status']['locked_alert_sent'] = True
@@ -64,7 +66,7 @@ jobs:
                   json.dump(m, f, indent=2)
               sys.exit(2)  # exit 2 = send alert
           else:
-              print(f"Lock age {age} < 1h — OK")
+              print(f"Lock age {age} < 25m — OK")
               sys.exit(0)
           PYEOF
 
@@ -90,8 +92,8 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        "SIT lock stale — staging has been locked for >1hr. Check SIT status or force-unlock: gh workflow run
-        sit-unlock.yml"
+        "SIT lock stale — staging has been locked for >25min (a SIT run is ~15min, so this lock is dangling and is
+        blocking fleet merges). Check SIT status or force-unlock: gh workflow run sit-unlock.yml"
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
