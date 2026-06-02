@@ -221,6 +221,24 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       (`git log --format='%an <%ae>'`) — already queryable. repo: unified-trading-pm (ci_failure_watcher.py +
       ci-status-update.yml + notify-slack callers) + agent-orchestrator (worker git identity).
 
+### Promotion BLOCKER (2026-06-02) — UAC main-PR v2 red on venue_data_types.yaml canonicalization
+
+> Wave-by-wave promotion started (UTL#230 MERGED to main). BUT UAC#65 (L1) v2 FAILS → gates everything downstream.
+
+- [ ] [DATA] P0. **UAC main-PR v2 RED: `test_data_type_canonicalization.py[unified-trading-pm]` — PM
+      `venue_data_types.yaml` has legacy data-type aliases + data types NOT registered in UAC
+      `DATA_TYPES_BY_ASSET_GROUP`** (run 26803567561; 2 failed/8419 passed). UAC v2 clones PM + validates its
+      venue_data_types.yaml; UAC LDR passed but the main-PR context fails (clones PM@main legacy yaml). Pre-existing
+      canonicalization gap owned by `defi_manifest_canonicalisation_2026_06_01.md`. Fix: canonicalize PM
+      `venue_data_types.yaml` — rename legacy aliases to canonical data_type names + register any missing types in UAC.
+      This GATES the whole fleet main-promotion (UAC is L1). repos: unified-trading-pm (venue_data_types.yaml) +
+      unified-api-contracts (DATA_TYPES_BY_ASSET_GROUP if a type is genuinely new).
+- [ ] [INFRA] P0. **UTL main is RED (downstream of above) — dep-order race.** UTL#230 merged to main importing
+      `EmptyFromLiveInstrumentError` from UAC, but UAC main lacks it (UAC#65 unmerged). Clears when UAC#65 lands + UTL
+      main v2 re-runs. LESSON: strict dep-order — fully merge+green layer N (UAC) before opening N+1 (UTL); don't
+      auto-merge a whole layer at once. Mitigation if UAC fix is slow: re-run UTL main v2 after UAC merges. repo:
+      unified-trading-library (re-trigger) — root cause is the UAC blocker above.
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
