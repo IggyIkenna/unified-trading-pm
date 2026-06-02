@@ -50,7 +50,12 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       `build_tradfi_partition_path`. 18 write-path test assertions updated; ruff + per-file basedpyright clean (+0 new
       errors); 134 tests green (2 pre-existing env-tier **bucket-naming** failures remain, foreign — owned by
       `bucket_name_ssot…`, NOT introduced here). batch=live: backfill resumes on the canonical path after the legacy delete.
-- [ ] [CODE] P0. **READER side — slot-2 coordination (MDPS + features-onchain).** Status verified 2026-06-02: MTDS
+- [x] ✅ [CODE] P0. **READER side — AUDITED (slot-3 agent A, 2026-06-02): MDPS / MTDS-read / instruments = CANONICAL, no
+      change** (MDPS day-level prefix scans are pipeline_mode-agnostic → survive the delete; MTDS reader.py pm-aware;
+      instruments resolver-based). The ONLY reader regression = features `perp_funding_rates.py` (tracked in the per-surface
+      matrix below). So PREP3 reader-side is GREEN except that one features-service fix. (Original slot-2-coordination note
+      below retained for context.)
+- [ ] [CODE] P1. **READER side context (superseded by the audit above)**: MTDS
       `reader.py` is ALREADY pipeline_mode-aware (Level-1 `pipeline_mode={mode}/` probe → Level-2 no-pm fallback);
       `manifest_reader_fallback` Level-0 probes `pipeline_mode=`; MDPS `cloud_data_provider.py` only resolves buckets (no
       raw-tick partition-path building); slot-2 already shipped pipeline_mode-aware MDPS+features reads for **DeFi**
@@ -105,19 +110,34 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 **Per-surface preflight matrix** (each = a tracked P0 todo; GREEN = canonical + QG/tests aligned + no dead-bucket ref):
 
-- [ ] [CODE] P0. **market-tick-data-service** — WRITER pipeline_mode=PRIMARY ✅ DONE (mtds@f50116ca, PREP3). REMAINING:
-      audit MTDS READ paths (reader.py callers, handlers, scripts) for any direct legacy-bucket / `category=` / no-`pipeline_mode=` /
-      old-`data_type` reference for cefi/tradfi/prediction; confirm reads go through the pipeline_mode-aware reader /
-      `candidate_parquet_paths` / `manifest_reader_fallback`. Grep: `rg "market-data-tick-(cefi|tradfi|prediction)-" --type py` (no `-prd`/no-`resolve_bucket_name`), `rg "category=" `, `rg "build_(cefi|tradfi)_partition_path"` direct callers. Fix + ensure unit tests assert canonical (so QG regresses on reverting).
-- [ ] [CODE] P0. **market-data-processing-service (MDPS)** — candle reader/writer for cefi/tradfi/prediction:
-      pipeline_mode-aware read PRIMARY (slot-2 did defi; do non-defi), `resolve_bucket_name` (no legacy/no-env), on-disk
-      data_type resolution, v9 manifest read. Align tests feeding QG. (Cross-ref PREP3 reader-side todo above.)
-- [ ] [CODE] P0. **features-service (onchain/delta-one/volatility/calendar/cross-instrument/commodity)** — input readers
-      for cefi/tradfi/prediction resolve canonical buckets + pipeline_mode= paths + v9 manifest; writer emits canonical
-      (born-canonical, since little features data has run). Align QG tests.
-- [ ] [CODE] P0. **instruments-service** — reference/universe read+write for cefi/tradfi/prediction on canonical buckets
-      (`instruments-store-{ag}-prd`); no legacy no-env bucket refs; v9 manifest write (pipeline_mode/source/asset_group
-      cols, the CF-2 stamp-as-COLUMN fix). Align QG tests.
+- [x] ✅ [CODE] P0. **market-tick-data-service** — WRITER pipeline_mode=PRIMARY DONE (mtds@f50116ca). READ side VERIFIED
+      CANONICAL (slot-3 agent A, 2026-06-02): `reader.py` is pipeline_mode-aware (Level-1 probe → fallback); orchestrator
+      write path injects pm; legacy hardcoded-bucket refs are in ops/migration scripts only (intentional `--bucket`
+      defaults, not live read paths). No live read regression for cefi/tradfi/prediction.
+- [x] ✅ [CODE] P0. **market-data-processing-service (MDPS)** — VERIFIED CANONICAL (slot-3 agent A, 2026-06-02), no change
+      needed. The raw-tick reads (`orchestration_scheduling._list_instrument_files`, `data_source.GCSDataSource`) scan at
+      the **DAY-level prefix** `raw_tick_data/by_date/day={date}/` and filter per-blob — **pipeline_mode-agnostic by
+      construction**, so they pick up migrated `day=/pipeline_mode=/asset_group=cefi/…` objects automatically after the
+      legacy delete. Bucket resolution via `resolve_bucket_name` (prediction = `pred` token); `category=` occurrences are
+      internal enum/param names, not hive-key strings. (One pre-existing NOTE flagged: the gap-gate `resolve_pipeline_mode_from_source(None)`
+      always yields BATCH_DATABENTO for cefi/tradfi expected_unattempted sentinels — pre-existing, not a migration regression.)
+- [ ] [CODE] P0. **features-service** — audit (slot-3 agent A, 2026-06-02): MOST read paths are CANONICAL (delta_one/
+      volatility/cross_instrument use `resolve_bucket_name` + processed_candles manifest discovery; onchain=slot-2). **ONE
+      ACTIVE REGRESSION RISK found — `features_service/cefi/calculators/perp_funding_rates.py:43-46` `_MTDS_PATH_TEMPLATE`**:
+      `raw_tick_data/by_date/day={date}/asset_group=cefi/venue={venue}/data_type=derivative_ticker/derivative_ticker.parquet`
+      is MULTIPLY non-canonical — (1) NO `pipeline_mode=` (→ 404s silently to an empty DataFrame after the legacy-path
+      delete, zeroing cefi perp-funding-APY features), (2) lowercase `venue={venue}` ("binance") vs canonical UPPERCASE
+      hyphenated (BINANCE-FUTURES), (3) NO `instrument_type=` segment. **FIX (diagnose-both-sides, do NOT guess):** build
+      the read path via `candidate_parquet_paths("cefi","derivative_ticker", date, pipeline_mode=derive_pipeline_mode_for_row(
+      venue,"cefi","derivative_ticker").value, venue=<canonical>, instrument_type=<canonical>, file_name=…)` (returns the
+      pm-aware path + legacy fallback) — but FIRST confirm the ACTUAL canonical cefi `derivative_ticker` object path on
+      disk (venue casing + instrument_type) by sampling a real object, since the current template predates canonicalisation.
+      Add a unit test asserting the pm-aware path so QG regresses on reversion. (Big finding — cefi data correctness; in
+      features-service adjacent MVP code, tracked here not guess-fixed.) All other features read paths: CANONICAL, no change.
+- [x] ✅ [CODE] P0. **instruments-service** — VERIFIED CANONICAL (slot-3 agent A, 2026-06-02): reads/writes resolve
+      `instruments-store-{ag}-prd` via `resolve_bucket_name`; `record_*` calls carry explicit pipeline_mode
+      (BATCH_INSTRUMENTS_SERVICE etc.); only ops/migration scripts reference legacy bucket names (intentional). One minor
+      ambiguity flagged (a `reconcile_*` one-shot script's prediction `kind` resolution) — not a live read path.
 - [ ] [CODE] P0. **deployment-api — DATA-STATUS resolution (operator-named hotspot)**: audit every bucket-name / menu /
       data_type / manifest-read convention the data-status endpoints use for cefi/tradfi/prediction. These tend to
       enumerate MANY bucket-name variants — ensure ALL resolve to the canonical env-tiered name via `resolve_bucket_name`
