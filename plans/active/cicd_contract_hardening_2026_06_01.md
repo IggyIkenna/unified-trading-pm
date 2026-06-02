@@ -308,12 +308,12 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       used raw `gh pr` calls that bypass this gate entirely. These two are staging→main-side hardening, not LDR→staging.
       ci_status state machine). **FOLLOW-UP BELOW.**
 
-- [x] ✅ [SCRIPT] P2. **FOLLOW-UP: Main-tier dep-order gate (staging→main).** — unified-trading-pm@157df99ff.
-      STAGE 1.8 added to staging-to-main.yml: blocks staging→main promotion when any dep D has ci_status not in
-      {MAIN_GREEN, SIT_VALIDATED}. MAIN_GREEN added as new ci_status state (9th state in lifecycle) — emitted by
+- [x] ✅ [SCRIPT] P2. **FOLLOW-UP: Main-tier dep-order gate (staging→main).** — unified-trading-pm@157df99ff. STAGE 1.8
+      added to staging-to-main.yml: blocks staging→main promotion when any dep D has ci_status not in {MAIN_GREEN,
+      SIT_VALIDATED}. MAIN_GREEN added as new ci_status state (9th state in lifecycle) — emitted by
       python-quality-gates-v2.yml when QG passes on main branch. ci-status-update.yml VALID_STATUSES updated.
-      Safe-defaults (manifest/repo/dep missing, ci_status unset) always PASS (consistent with STAGE 1.7 + readiness
-      gate patterns). Gate error = warning-only, does NOT block. 18 hermetic unit tests in
+      Safe-defaults (manifest/repo/dep missing, ci_status unset) always PASS (consistent with STAGE 1.7 + readiness gate
+      patterns). Gate error = warning-only, does NOT block. 18 hermetic unit tests in
       tests/unit/test_staging_to_main_dep_order_gate.py (8 PASS + 6 BLOCK + 4 lifecycle constants). QG green.
 
 - [ ] [SCRIPT] P2. **Finish Telegram-retire in the TEMPLATE SSOT (else rollout re-introduces it).** The 2026-06-02
@@ -870,10 +870,14 @@ by a PR:
       wrapped the push in a 5-attempt `git pull --rebase --autostash origin main && git     push` loop in
       `sit-unlock.yml` + `sit-gate.yml` + `staging-to-main.yml`. **Also:** manually cleared the dangling lock left by
       the test via the contents API (`unified-trading-pm@fc2fc771b` on main — `staging_status.locked=false`, matching
-      sit-unlock's exact `json.dump(indent=2)` serialization). YAML-validated all 3. **OPERATOR/ADMIN STEP REQUIRED:**
-      `repository_dispatch` runs these PM workflows from the DEFAULT branch (`main`), so the fix is INERT until promoted
-      to PM `main` — the LDR commit f65057afb must reach main (admin FF/promotion of these workflow files; PM `main`
-      runs `enforce_admins=false` so the bot/admin path can land it, but force-touching main is a human step).
+      sit-unlock's exact `json.dump(indent=2)` serialization). YAML-validated all 3. **MAIN PROMOTION DONE 2026-06-02
+      (slot 2, operator-approved):** the fix is now LIVE on PM `main` via **PR #110** (scoped 3-file
+      `promote/sit-chain-rebase-fix`→main, MERGED @14:44:41Z). Landed PROPERLY THROUGH THE GATE — NO bypass/relax: a
+      `pull_request: synchronize` produced a legitimate green
+      `Quality Gates (unified-trading-pm) /     quality-gates-v2` check (run 26827337979) that satisfied the ruleset →
+      auto-merge fired. Verified all 3 workflows on `main` carry the rebase-retry loop; `main-backmerge-to-ldr` mirrored
+      the merge back to LDR @14:44:49Z. The staging-locked-forever deadlock is now closed in production
+      (repository_dispatch runs the fixed workflows from main).
 - [x] ✅ [INFRA] P2. DONE 2026-06-02 (unified-trading-pm@7c3d8ff73, LDR/main/staging): **Retire Telegram notifications
       entirely (migrate to Slack) — operator decision.** Audit 2026-06-01: Migrated the 4 inline-Telegram senders to
       best-effort Slack #ci-failures (request-major-bump, request-major-bump-reusable, major-bump-issue-handler,
