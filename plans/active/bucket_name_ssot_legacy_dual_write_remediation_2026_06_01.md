@@ -340,6 +340,15 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       the instruments-store legacy buckets per the adjacent drift), GCP + AWS. Canonical `-prd-`/`-pred-prd-` becomes
       the sole SSOT. Record in `_index/snapshots/decommission_2026_06_0X.md`. **Do NOT delete an AG's legacy bucket
       while its L3 plan is open** — prediction/cefi hold legacy-only history.
+- [ ] [SCRIPT] P0. **Version-aware + orphan-aware delete (slot/Harsh bucket-state verification 2026-06-02).** Two gaps
+      the per-bucket delete must handle, surfaced by reading live bucket state: (1) the canonical `-prd` buckets were
+      pre-seeded by a PARTIAL env-split copy in legacy FORM (live-object: defi ~43% / cefi ~65% / tradfi ~93% of legacy;
+      cefi also ~17 days stale) — after each L3 form-walk writes canonical `pipeline_mode=` paths, the pre-existing
+      legacy-FORM objects inside `-prd` are ORPHANS and must be swept (owned in each AG's L3 verify step), else the
+      consolidator rebuild double-counts; (2) the legacy buckets carry large NONCURRENT/soft-deleted version history
+      (cefi 3.81M, tradfi 3.52M, defi 1.15M noncurrent via Cloud Monitoring `storage/v2/total_count`) — the decommission
+      must purge object VERSIONS (not just live objects), and the "canonical ≥ legacy" verify gate must compare
+      Monitoring `type=live-object` counts, never a naive recursive `ls` (which counts versions + soft-deleted).
 
 ## Phase 8 — Governance + codex (P1)
 

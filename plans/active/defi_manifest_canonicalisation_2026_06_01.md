@@ -25,10 +25,10 @@ source:
 
 ## MASTER — cross-plan execution order → single canonical SSOT (no fallback, no dual)
 
-> **✅ CROSS-AG DEAD-BUCKET REGRESSION FINDING — RESOLVED 2026-06-02 (was: escalated from the sports lane — affected EVERY AG before its
-> legacy delete)**: two shared surfaces still resolve the NO-ENV (legacy) bucket form, which BREAKS once any AG's legacy
-> bucket is deleted: (1) **UAC `gcs_paths.bucket_name(asset_group, …)` returns the NO-ENV form** (e.g.
-> `market-data-tick-sports-{PID}` / `instruments-store-{ag}-{PID}`), pinned by
+> **✅ CROSS-AG DEAD-BUCKET REGRESSION FINDING — RESOLVED 2026-06-02 (was: escalated from the sports lane — affected
+> EVERY AG before its legacy delete)**: two shared surfaces still resolve the NO-ENV (legacy) bucket form, which BREAKS
+> once any AG's legacy bucket is deleted: (1) **UAC `gcs_paths.bucket_name(asset_group, …)` returns the NO-ENV form**
+> (e.g. `market-data-tick-sports-{PID}` / `instruments-store-{ag}-{PID}`), pinned by
 > `unified-api-contracts/tests/unit/test_gcs_paths_facade.py` — it CONTRADICTS the UTL SSOT `resolve_bucket_name` which
 > returns `-prd-`; the UI mirrors it (`unified-trading-system-ui/context/api-contracts/…/sports/mapping_resolver.py`).
 > (2) **UTL `instrument_lifecycle_loader.py` `_BUCKETS` / `_INSTRUMENTS_STORE_BUCKETS`** hardcode the no-env template
@@ -40,7 +40,15 @@ source:
 > owner (NOT a per-AG-lane unilateral change — it would desync the other lanes). SSOT for the sports slice:
 > `sports_manifest_canonicalisation_2026_06_01.md` § "Dead-bucket regression gate".
 >
-> **✅ RESOLVED 2026-06-02 (dedicated cross-AG session)**: both shared surfaces are now canonical — (1) UAC `gcs_paths.bucket_name(...)` defaults `env="prd"` (env-tiered `-prd-`, no longer no-env); (2) UTL `instrument_lifecycle_loader` routes through `resolve_bucket_name` (UTL@fd91ee74 Task 3, `_BUCKETS`/`_INSTRUMENTS_STORE_BUCKETS` hardcodes removed). The remaining cross-AG no-env / explicit-`project_id` readers were swept the same session: UTL `instruments_catalog_reader`@4c1c9a68, instruments-service `catalogue_builder`@f693e34e (also removed a dead `try/except ImportError` inline no-env fallback), deployment-service `manifest_reader` + `sports_trigger_scheduler`@9886911. **QG ratchet STEP 5.93** `check_no_explicit_project_id_bucket.py` (PM@60a27debe) regression-guards the whole class. (IS `sports_dependency` + features `gcs_paths` were already canonical via the sports lane.)
+> **✅ RESOLVED 2026-06-02 (dedicated cross-AG session)**: both shared surfaces are now canonical — (1) UAC
+> `gcs_paths.bucket_name(...)` defaults `env="prd"` (env-tiered `-prd-`, no longer no-env); (2) UTL
+> `instrument_lifecycle_loader` routes through `resolve_bucket_name` (UTL@fd91ee74 Task 3,
+> `_BUCKETS`/`_INSTRUMENTS_STORE_BUCKETS` hardcodes removed). The remaining cross-AG no-env / explicit-`project_id`
+> readers were swept the same session: UTL `instruments_catalog_reader`@4c1c9a68, instruments-service
+> `catalogue_builder`@f693e34e (also removed a dead `try/except ImportError` inline no-env fallback), deployment-service
+> `manifest_reader` + `sports_trigger_scheduler`@9886911. **QG ratchet STEP 5.93**
+> `check_no_explicit_project_id_bucket.py` (PM@60a27debe) regression-guards the whole class. (IS `sports_dependency` +
+> features `gcs_paths` were already canonical via the sports lane.)
 
 **Goal (operator)**: full canonical DATA + MANIFEST — historically AND for all backfill + crons + code — one SSOT, no
 legacy, no fallback read path, no dual-write. **Invariant**: a legacy bucket is deleted ONLY after canonical provably
@@ -491,7 +499,7 @@ What to verify/wire (B0 corrected scope):
           found 2026-06-02): `internal/domain/market_data_processing/candle_schema.py` `DataType` enum has BOTH a legacy
           `DEX_POOLS = "dex_pools"` / `DEX_SWAPS = "dex_swaps"` (candle-input) AND a DISTINCT Phase-2
           `DEX_POOL_STATE = "dex_pool_state"` (spot-DEX time-series state, comment: "distinct from the existing
-          DEX_POOLS _snapshot_ type"). The operator-locked canonical pool name `dex_pool_state` **collides** with the
+          DEX*POOLS \_snapshot* type"). The operator-locked canonical pool name `dex_pool_state` **collides** with the
           Phase-2 member's value → a StrEnum alias if DEX_POOLS is renamed to it. **Slot-2 left DEX_POOLS/DEX_SWAPS on
           the legacy values** (they are not consumed by member-name anywhere; functional collapse is enforced on
           market_data_categories/expected_coverage/defi_venue_capabilities). RECONCILE: decide whether the legacy
@@ -690,6 +698,16 @@ What to verify/wire (B0 corrected scope):
 >       Only then is C-GREEN.
 > - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4
 >       GREEN, so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
+> - [ ] [DATA] P0. C0-RD5b — **orphan sweep of the pre-existing legacy-FORM objects ALREADY in `-prd`** (slot/Harsh
+>       bucket-state verification 2026-06-02). The `-prd` buckets were pre-seeded by an earlier env-split copy and hold
+>       legacy-FORM objects (`day=/asset_group=defi/…`, NO `pipeline_mode=`; sample parquet cols lack
+>       `schema_version`/`source`/`pipeline_mode`/`asset_group`). The C0 walk writes NEW canonical paths
+>       (`day=/pipeline_mode=/asset_group=defi/…`), so those pre-existing `-prd` objects become ORPHANS → the C0e
+>       consolidator rebuild would double-count or a non-`pipeline_mode`-aware reader reads stale. So C0-RD4/RD5 MUST
+>       also delete the legacy-FORM objects sitting in `-prd` (not just the legacy SOURCE buckets). Measured 2026-06-02
+>       (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-defi-prd` 365,792 (~43% of legacy
+>       855,497) + still carries legacy flat `dex_pools/{kamino,orca,raydium}/` trees (3-layout NOT consolidated);
+>       `dex-pools-prd` 185,079 (~97%), `dex-swaps-prd` 68,764 (~99%) — all legacy-FORM. parent_epic: manifest_master.
 > - [ ] [CODE] P1. C0-RD6 — **exclude the exact-alias columns from the `dex_swaps` superset union** (DeFi #4, from
 >       archived `features_service_defi_data_loading_blockers`). Slot-7 DeFi #3 investigation confirmed `swap_count` ==
 >       `trade_count` and `volume_quote_usd` == `volume` (intentional aliases populated in
@@ -761,6 +779,15 @@ What to verify/wire (B0 corrected scope):
       `migrate*\*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the     flat objects to FULL canonical: `category=defi`→`asset_group=defi`+`pipeline_mode={MODE}`partition +     schema_version=9 +`source`column (UAC SOURCE_PRIORITY) + canonical`\_V{N}` venue (UAC SSOT, complete incl     TraderJoe/Velodrome post-C12-UAC) + **`available_at`preserve-or-backfill** (preserve where present; backfill only     missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split`{kind}-prd-{project}`
       bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f VM-cutover sub-todos
       below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
+  - [ ] [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets do NOT exist yet** (slot/Harsh bucket-state
+        verification 2026-06-02): `oracle-prices-prd`, `lst-rates-prd`, `lending-indices-prd`, `perp-funding-prd`,
+        `gas-fees-prd` (also confirm `evm-defi`/`solana-defi`/`liquidations` `-prd`). The logical mapping already exists
+        — `deployment-service/configs/cloud-providers.yaml` resolves these to `{stem}-prd-{pid}` (dedicated per-type,
+        settled 2026-06-02 — NOT folded into `market-data-tick-defi-prd`) — but the physical buckets are unprovisioned,
+        so `migrate_defi_full_v9_canonical` would fail-write the oracle/lst/lending/perp/gas data_types. HARD
+        prerequisite for the C0d apply for those types (NOT for dex_pools/dex_swaps, whose `-prd` buckets exist).
+        Provision via Terraform before C0d. (NOT launched — documented per operator "no new buckets/VMs for now".)
+        parent_epic: manifest_master.
   - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802;
         dry=default/full=--apply; `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day
         slice (rolls into C0b dry VM).
