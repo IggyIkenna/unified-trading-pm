@@ -709,8 +709,15 @@ phase — plans omitting this are review-blocking.
   normal PR → quickmerge auto-merge** (a green gate merges it). NEVER leave a ruleset `enforcement=disabled` /
   `enforce_admins` off; resolve conflicts ON `live-defi-rollout`, never a throwaway branch. SSOT:
   `codex/08-workflows/ci-cd-flow.md` § "Force-push vs let-CI/CD".
-- **Promotion automation (staging→main: semver / SIT / staging-to-main) is under repair** (was dead, admin-bypassed) —
-  status + ordered backlog: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Phase 6 — CONSOLIDATED HAND-OFF".
+- **Promotion automation (staging→main: semver / SIT / staging-to-main) REPAIRED 2026-06-02** — semver-agent now watches
+  `quality-gates-v2` (was watching a dead `Quality Gates` check; cicd #504), so the LDR→staging→SIT→main→image pipeline
+  flows again. **Ship every unit via `quickmerge --agent --files '<paths>'`** (Pass 1 local `quality-gates.sh` writes
+  the sentinel → Pass 2 quickmerge commits + opens the staging PR + auto-merges). **Do NOT
+  `git push HEAD:live-defi-rollout` directly** — quickmerge **early-exits "nothing to commit" on a clean tree**, so
+  direct-pushed commits never open a staging PR and silently pile up on LDR behind main (slot-7 2026-06-02: PM was level
+  but mtds +131 / deployment +92 / alerting +22 behind main from direct LDR pushes). Existing committed-LDR backlog
+  drains via the staging→main automation or a per-repo staging PR — NOT a retroactive quickmerge. Residual hardening +
+  backlog-drain status: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Phase 6 — CONSOLIDATED HAND-OFF".
 - Pushes to `live-defi-rollout` / `feat/*` → NO remote CI. Quality enforced locally via `quality-gates.sh`.
 - On CI fail: `gh run view <run-id> --log-failed`. Fix root cause. Push again.
 - CI failures are NOT issues to flag — fix in real time.
