@@ -440,6 +440,25 @@ What to verify/wire (B0 corrected scope):
   - [ ] [CODE] P2. **A11f — residual `category=` writers** (legacy hive key vs canonical `asset_group=`): mtds
         `market_interface/__init__.py` + live manifest recorder `category=` alias. Readers already probe canonical→legacy
         (transitional OK); migrate writers so post-cutover writes are canonical-only. Repo: market-tick-data-service.
+- [ ] [CODE] P0. A12 **UPSTREAM-DATA PREFLIGHT CHECKS — every consuming service, every in-scope (DeFi) cell** (operator
+      2026-06-02). Audit + ensure each consuming service runs an upstream-data **preflight** before processing, that:
+      (1) **reads via the post-migration canonical SSOT** — `resolve_bucket_name()` buckets + canonical
+      path/`pipeline_mode=`/`data_type` + canonical column schemas (no dead-bucket/legacy-path/legacy-data_type
+      assumptions — composes with A11); (2) **gates on data-quality** — 0-volume / NaN-price / all-null / row-count-0 /
+      schema-missing-column → when the upstream cell is **genuinely missing + EXPECTED**, take the honest-absence path
+      (`record_zero_rows(was_expected=…)` / `record_empty(reason=…)` per A10b, NOT fabricated placeholders); (3)
+      **manifest marks incomplete-expected** — every owed-but-absent cell is `expected_unattempted` / `empty_confirmed`
+      / `attempted_failed` (A8/A9/A10 + B0), so "incomplete-but-expected" is visible, never silently complete. (4)
+      **LIVE = BATCH check symmetry, DIVERGENT actions** (live=batch principle): identical preflight check LOGIC in both
+      modes; only the POST-check ACTION differs — **live** → emit alert + trip circuit-breaker + halt/skip-trade (bad
+      data is capital risk; never trade on it), **batch** → fill-what-you-can + log + continue (best-effort backfill, no
+      halt). Verify the action divergence is wired (live circuit-breaker/alerting on failed preflight) and that the
+      CHECK itself is shared code (no live-only/batch-only check drift). **Scope: DeFi** across mtds (handlers/readers) ·
+      mdps (scanner/adapters) · features-onchain (readers/calculators) · strategy (data preflight before signal) ·
+      execution (mark/price preflight before order). **Audit-first** (read DATA-STATE + code; surface where checks are
+      missing/legacy-bucket-bound/live-batch-asymmetric), then fix per service with a guard test. Sub-items per service
+      to be filed from the audit. **GATED-COMPOSES**: depends on A11 (canonical buckets) + A8/A9/A10 (honest-absence
+      routing) being landed so the preflight reads the right place + marks the right state. parent_epic: mtds_mdps_master.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
