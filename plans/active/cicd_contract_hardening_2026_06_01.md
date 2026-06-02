@@ -1119,9 +1119,18 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 - [ ] [SCRIPT] P1. **Retire the in-GHA Claude-API path in `conflict-resolution-agent.yml`** — drop
       `ANTHROPIC_API_KEY_CICD` + the `npm i @anthropic-ai/claude-code` run. repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. **Build `escalate-to-orchestrator.yml`** — the missing PM→orchestrator GHA dispatch (POST conflict
+- [x] ✅ [SCRIPT] P1. **Build `escalate-to-orchestrator.yml`** — the missing PM→orchestrator GHA dispatch (POST conflict
       context to the orchestrator spawn API). **MERGES the open "escalate-overstated" P2 item above** (`escalation.py` +
       `escalate.md` exist on LDR; only the GHA trigger is absent). repos: unified-trading-pm + agent-orchestrator.
+      **DONE 2026-06-02 — PR #112 → main** (`unified-trading-pm@2a6c7b1ba`). New reusable workflow POSTs the wall
+      (`merge_conflict | label_mismatch | sit_failure`) to `POST /api/escalate` with `X-Orchestrator-Secret`; callable
+      via `workflow_call` / `workflow_dispatch` / `repository_dispatch(escalate-to-orchestrator)`. 503=retryable
+      soft-warn; 401/400/timeout hard-fail; Slack notify on dispatch/failure. **B3 (orchestrator-side worker, § G9) is
+      ALREADY SATISFIED** by the existing `escalate` agent: `server/escalation.py` `escalate(wall_type="merge_conflict")`
+      spawns a setup-token (Max-plan, $0-API) worker on a free slot via `agents/escalate.md`, which resolves on
+      `live-defi-rollout` + pings the authoring slot. Requires one ops step: set the **`ORCHESTRATOR_INTERNAL_SECRET`**
+      GitHub secret in unified-trading-pm (+ optional `ORCHESTRATOR_URL` var; default
+      `https://agent-orchestrator.odum-research.com`).
 - [ ] [SCRIPT] P1. **Allow auto-merge for orchestrator-resolved PRs** — remove the "will NOT auto-merge" guard; the
       REQUIRED `quality-gates-v2` check (not a toggle) remains the gate. repo: unified-trading-pm.
 
