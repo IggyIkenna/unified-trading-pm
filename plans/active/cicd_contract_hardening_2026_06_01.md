@@ -129,6 +129,39 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 > orchestrator FLEET (these todos auto-derive into the backlog via `PlanRegenLoop`) and/or run local waves of ≤3-4. Do
 > the L2 UTL fix before fanning out L4+ (foundation-completion-gate).
 
+### Wave-1 greening DONE (2026-06-02) + accommodations to clean (operator: fleet-green first, dedicated cleanup pass after)
+
+**SYSTEMIC WIN:** `base-service.sh` coverage-floor-guard read PM's own `MIN_COVERAGE=0` instead of the calling repo's
+stub → spurious `MIN_COVERAGE=0 < 70` failures fleet-wide. Fixed (`${PROJECT_ROOT}/scripts/quality-gates.sh`) — PM LDR
+`@9146d1ab3`; **confirmed** on batch-live re-run (`✓ MIN_COVERAGE=80 >= 70`). Collapses the coverage-floor cluster.
+
+Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin `@d740e24` (relaxed its stale
+`starlette<1.0.0` ceiling; UTL untouched — correct side) · uts-ui `@69430c5c` (pnpm UI gate added, ctx
+`Quality Gates (unified-trading-system-ui) / quality-gates`; `EXPECTED_BASE_VERSION 2.0` legit) · features `@8aedf8c5`.
+
+- [ ] [TEST] P2. **Wave-1 accommodation cleanup pass (operator-acked: AFTER fleet green).** Revisit gate-loosenings the
+      wave-1 agents added under macOS-import-overhead pressure — verify each is legitimate or revert to canonical
+      (no-dodge): (a) **features-service** `PYTEST_UNIT_DIR` narrowed `"tests/"`→unit-dirs-only (drops 36/475 per-family
+      integration/smoke/e2e/perf test files) — confirm those 36 are infra-gated (belong out of the unit gate) and not
+      dodged failures; reconcile vs CLAUDE.md's `PYTEST_UNIT_DIR="tests/"` guidance; `MANIFEST_ALIGNMENT_SKIP=true`
+      (ml_service lazy import in regime_clustering.py) — canonical fix = add ml-service to manifest or drop the lazy
+      import, not skip; `PYTEST_WORKERS 2→0`. (b) **MAX_DURATION default bumps** (e2e=900, greeks=600 [ran 141s!],
+      uts-ui=1800, features=1200) + `vitest testTimeout=30000` — low severity (CI is fast → limit rarely trips) but ship
+      to CI; restore tight committed defaults + handle macOS-local slowness via env override, not a committed default.
+      (c) **e2e-testing** 18 transitive-CVE `--ignore-vuln` — documented-no-fix, acceptable but centralize + revisit
+      when upstreams patch. repos: features-service, e2e-testing, greeks-service, unified-trading-system-ui.
+- [ ] [INFRA] P1. **macOS ~430s cold protobuf/UAC import overhead per pytest process — workspace-level fix (operator:
+      worth a real fix).** Root cause (features agent 2026-06-02): each pytest/xdist process cold-imports
+      `google.cloud.compute_v1…     transports.rest` (~22s) +
+      `unified_api_contracts.canonical.crosscutting.incident.action` (~26s) + hundreds of protobuf-descriptor-heavy
+      modules (~430s total) on macOS; manifests as the frozen-importlib pytest HANG at `yaml/composer.py → _find_spec`
+      on UAC-heavy repos (fund-admin) AND forces every QG to bump MAX_DURATION. CI (Ubuntu, cached) is unaffected. Scope
+      a real fix: lazy/deferred protobuf imports in UAC + UTL hot paths (import google.cloud only when used), protobuf
+      C++ descriptor backend, or a shared warm-import/session-cached fixture; goal = local QG usable on macOS again
+      without per-repo timeout bumps. Until fixed, **CI is the authoritative verifier for UAC-heavy repos on macOS
+      slots.** parent_epic candidate: infrastructure_master. repos: unified-api-contracts + unified-trading-library
+      (import hot paths) + PM quality-gates-base.
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
@@ -359,8 +392,11 @@ by a PR:
       (`pbms_aggregator._VenueData` → `.VenueData`); `pytest tests/ -m code_test --collect-only` now exits 0
       (**4235/4722 collected, 487 deselected**, only harmless `full_e2e` unknown-mark warnings). **REMAINING:** full
       symbol-drift sweep across the rest of `tests/`, `deployment_test` re-green, and one run-to-completion — kept open.
-- [x] ✅ [SCRIPT] P1. DONE 2026-06-02 (operator: repoint to unified_api_contracts.internal) — system-integration-tests@80aacfa (LDR/main/staging): repointed the adoption check to unified-api-contracts + check_uac_adoption.py (scans unified_api_contracts/internal/; same --orphans-only/--workspace interface). Original: **SIT runs a UIC-adoption check against `unified-internal-contracts`
-      (smoke-test-gate.yml:304-339) — PREMISE CORRECTED 2026-06-02 (slot 1): the repo is NOT deleted.**
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-02 (operator: repoint to unified_api_contracts.internal) —
+      system-integration-tests@80aacfa (LDR/main/staging): repointed the adoption check to unified-api-contracts +
+      check_uac_adoption.py (scans unified_api_contracts/internal/; same --orphans-only/--workspace interface).
+      Original: **SIT runs a UIC-adoption check against `unified-internal-contracts` (smoke-test-gate.yml:304-339) —
+      PREMISE CORRECTED 2026-06-02 (slot 1): the repo is NOT deleted.**
       `gh api repos/IggyIkenna/unified-internal-contracts` → exists, `archived=false`, `default=main`,
       `pushed_at=2026-03-26`. So the `git clone` at L307 SUCCEEDS and the gate step is **NOT broken** (the original
       "clone would fail on a real run" claim is wrong). BUT it's a partially-retired state: the repo is **absent from
@@ -372,24 +408,33 @@ by a PR:
       array (#290 folds in), + add the repo to manifest `removedEntries`; (b) KEEP → leave the check, just clean the
       stale clone array (#290) + add the repo back to the manifest. **Do NOT rip out a working gate step on the false
       'deleted' premise.** repo: system-integration-tests (+ execution-service if RETIRE).
-- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (system-integration-tests@80aacfa): **SIT `deployment_test` service list is hardcoded + stale (smoke-test-gate.yml ~L291).** 17 explicit Replaced the hardcoded array (cloned 10 dead/consolidated repos) with a manifest-derived set (type∈{service,batch-service,api-service} AND status==active) → auto-tracks canonical repos. (Folded into the UAC-adoption step rewrite.)
-      services (lists `strategy-service` twice; predates several current repos) vs 24 `type==service` repos / 39 total
-      in `workspace-manifest.json`. Derive the v1-service set from the manifest (`type==service` +
-      `staging_versions>=0.1.0`) instead of a hardcoded array, so new repos are covered automatically. repo:
-      system-integration-tests. **Worse than 'missing':** the hardcoded list CLONES 10 dead/nonexistent repos — 6
-      `consolidated-into-features-service` (features-delta-one/volatility/cross-instrument/onchain/sports/calendar), 2
-      `consolidated-into-ml-service` (ml-inference/ml-training), +
-      `market-data-api`/`unified-sports-execution-interface` (not in manifest). Derive from manifest `type∈{service,…}`
-      AND `status==active` (NOT the hardcoded array, NOT all `type==service` which still includes the 8 consolidated
-      tombstones). **CLARIFIED 2026-06-02 (slot 1): this "service list" is the `SERVICES=(…)` array at
-      smoke-test-gate.yml:313-321 that clones repos to populate `workspace/` for the UIC-adoption check — it is INSIDE
-      the UIC step, not a separate `deployment_test` list (the `deployment_test` pytest step at L447 takes no service
-      array).** The dead-repo clones are **non-fatal today** (`|| echo "WARN: … skipping"` at L327), so this is
-      cleanliness, not a gate-break. **Coupled to [[#289]] UIC decision:** if UIC is RETIRED, this array is removed with
-      the step; if KEPT, derive it from manifest `status==active`. Gated on the #289 operator architecture call.
-- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (unified-trading-pm@fd616af4c + cfd60b6ea): **Workspace-manifest hygiene — 14 retired repos linger as tombstones in the `repositories` map Active surface is now canonical-only: 14 tombstones relocated to `removedEntries` (provenance kept), `topologicalOrder` + `completion_paths` reconciled to parents (features-service/ml-service), ml-service added to topo L4, user-management-ui versions/staging_versions leak removed, 4 dead phantom refs scrubbed from completion_paths. Validator green. Relocation makes the `status==active` consumer-guard moot for current tombstones (no dead repos left in `repositories`); the guard remains optional future-proofing for the archive→relocate transition window.
-      (surfaced 2026-06-01).** They're gone locally + `archived=true` on GitHub, but never pruned from
-      `workspace-manifest.json`: 8 `consolidated-into-features-service`
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (system-integration-tests@80aacfa): **SIT `deployment_test` service list is
+      hardcoded + stale (smoke-test-gate.yml ~L291).** 17 explicit Replaced the hardcoded array (cloned 10
+      dead/consolidated repos) with a manifest-derived set (type∈{service,batch-service,api-service} AND status==active)
+      → auto-tracks canonical repos. (Folded into the UAC-adoption step rewrite.) services (lists `strategy-service`
+      twice; predates several current repos) vs 24 `type==service` repos / 39 total in `workspace-manifest.json`. Derive
+      the v1-service set from the manifest (`type==service` + `staging_versions>=0.1.0`) instead of a hardcoded array,
+      so new repos are covered automatically. repo: system-integration-tests. **Worse than 'missing':** the hardcoded
+      list CLONES 10 dead/nonexistent repos — 6 `consolidated-into-features-service`
+      (features-delta-one/volatility/cross-instrument/onchain/sports/calendar), 2 `consolidated-into-ml-service`
+      (ml-inference/ml-training), + `market-data-api`/`unified-sports-execution-interface` (not in manifest). Derive
+      from manifest `type∈{service,…}` AND `status==active` (NOT the hardcoded array, NOT all `type==service` which
+      still includes the 8 consolidated tombstones). **CLARIFIED 2026-06-02 (slot 1): this "service list" is the
+      `SERVICES=(…)` array at smoke-test-gate.yml:313-321 that clones repos to populate `workspace/` for the
+      UIC-adoption check — it is INSIDE the UIC step, not a separate `deployment_test` list (the `deployment_test`
+      pytest step at L447 takes no service array).** The dead-repo clones are **non-fatal today**
+      (`|| echo "WARN: … skipping"` at L327), so this is cleanliness, not a gate-break. **Coupled to [[#289]] UIC
+      decision:** if UIC is RETIRED, this array is removed with the step; if KEPT, derive it from manifest
+      `status==active`. Gated on the #289 operator architecture call.
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (unified-trading-pm@fd616af4c + cfd60b6ea): **Workspace-manifest hygiene — 14
+      retired repos linger as tombstones in the `repositories` map Active surface is now canonical-only: 14 tombstones
+      relocated to `removedEntries` (provenance kept), `topologicalOrder` + `completion_paths` reconciled to parents
+      (features-service/ml-service), ml-service added to topo L4, user-management-ui versions/staging_versions leak
+      removed, 4 dead phantom refs scrubbed from completion_paths. Validator green. Relocation makes the
+      `status==active` consumer-guard moot for current tombstones (no dead repos left in `repositories`); the guard
+      remains optional future-proofing for the archive→relocate transition window. (surfaced 2026-06-01).** They're gone
+      locally + `archived=true` on GitHub, but never pruned from `workspace-manifest.json`: 8
+      `consolidated-into-features-service`
       (features-calendar/commodity/cross-instrument/delta-one/multi-timeframe/onchain/sports/volatility), 2
       `consolidated-into-ml-service` (ml-inference/ml-training), 4 `archived` (pnl-attribution /
       position-balance-monitor / risk-and-exposure / user-management-ui). Live set is **23 active + 2 scaffolded**,
@@ -479,35 +524,53 @@ by a PR:
       sonnet-driven exhaustion fires the `weekly` alert. The sonnet entry stays as pure future-proofing (auto-fires only
       if Anthropic adds a sonnet header / a build renders the bar). No native 'daily' window exists.
 
-- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (unified-trading-pm@66c28f116, LDR+main+staging): **notify-slack `secrets: inherit` callers don't deliver (stale SLACK_WEBHOOK_URL).** Two webhook Fixed in ONE file — notify-slack.yml resolves the webhook as `SLACK_CI_WEBHOOK_URL || SLACK_WEBHOOK_URL`, so every `secrets: inherit` caller delivers via the valid #ci-failures webhook automatically (no per-caller edits, no operator secret op). VERIFIED: triggered sit-debounce (an inherit-caller) → notify step `Slack OK (HTTP 200)`.
-      secrets exist: SLACK_CI_WEBHOOK_URL (valid #ci-failures, 2026-05-29) + SLACK_WEBHOOK_URL (stale/non-https,
-      2026-05-23). ci-failure-watcher + claude-api-monitor explicitly pass SLACK_CI_WEBHOOK_URL → deliver; the ~28 other
-      callers (sit-debounce, staging-to-main, sit-gate, …) use `secrets: inherit` → inherit the stale SLACK_WEBHOOK_URL
-      → guard skips → build messages but never reach Slack (failures still surface via the watcher's workflow_run
-      detection). **Single fix (operator):** set the SLACK_WEBHOOK_URL repo-secret VALUE = the valid #ci-failures
-      webhook (= SLACK_CI_WEBHOOK_URL) → every inherit caller delivers (I can't read/copy a secret value). Alt (agent,
-      ~28 files): switch each caller to pass SLACK_CI_WEBHOOK_URL explicitly.
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (unified-trading-pm@66c28f116, LDR+main+staging): **notify-slack
+      `secrets: inherit` callers don't deliver (stale SLACK_WEBHOOK_URL).** Two webhook Fixed in ONE file —
+      notify-slack.yml resolves the webhook as `SLACK_CI_WEBHOOK_URL || SLACK_WEBHOOK_URL`, so every `secrets: inherit`
+      caller delivers via the valid #ci-failures webhook automatically (no per-caller edits, no operator secret op).
+      VERIFIED: triggered sit-debounce (an inherit-caller) → notify step `Slack OK (HTTP 200)`. secrets exist:
+      SLACK_CI_WEBHOOK_URL (valid #ci-failures, 2026-05-29) + SLACK_WEBHOOK_URL (stale/non-https, 2026-05-23).
+      ci-failure-watcher + claude-api-monitor explicitly pass SLACK_CI_WEBHOOK_URL → deliver; the ~28 other callers
+      (sit-debounce, staging-to-main, sit-gate, …) use `secrets: inherit` → inherit the stale SLACK_WEBHOOK_URL → guard
+      skips → build messages but never reach Slack (failures still surface via the watcher's workflow_run detection).
+      **Single fix (operator):** set the SLACK_WEBHOOK_URL repo-secret VALUE = the valid #ci-failures webhook (=
+      SLACK_CI_WEBHOOK_URL) → every inherit caller delivers (I can't read/copy a secret value). Alt (agent, ~28 files):
+      switch each caller to pass SLACK_CI_WEBHOOK_URL explicitly.
 
-- [x] ✅ [DESIGN] P2. DESIGN DONE 2026-06-02 (build pending — SIT QG can be light/different per operator): **SIT has NO dependency-chain / breaking-change scoping — runs the full marked suite against ALL **Target design (operator-agreed):** scope each SIT run to the changed-repo set ∪ their transitive dependents (from `configs/runtime-topology.yaml` + manifest `dependencies`), with: (a) universal-dep repos (`unified-api-contracts`, likely `unified-trading-library`) → a change there triggers the BROAD/full suite; (b) `unified-trading-pm` docs-bypass (PR→QG→main, no SIT); (c) repo-set filter `status==active`; (d) `>=0.1.0` floor now (>=1.0 post-cutover). Build = a PM dep-graph helper + smoke-test-gate scoping logic; its QG is SIT-light (the SIT repo's own gate, not a heavy service QG).
-      `v0.1+` repos every time (setup filter `v1_repos = staging_versions>=0.1.0`).** `staging_status.pending_repos` is
-      tracked but unused for test-scoping; `configs/runtime-topology.yaml` + per-repo `dependencies` in
-      `workspace-manifest.json` EXIST but the gate ignores them. Make SIT dependency-aware: from the pending (changed)
-      repos, compute their transitive dependents via runtime-topology/manifest deps and run only the affected
-      integration tests (full-suite only on a topology/contract change). Cuts runtime + makes the gate a real targeted
-      integration check. repo: system-integration-tests (+ PM dep-graph helper). **Operator design (2026-06-01):** (a)
-      universal-dep repos — `unified-api-contracts` (and likely `unified-trading-library`) are deps of ~everything → a
-      change there triggers the BROAD/full SIT; (b) `unified-trading-pm` is a docs/devops repo → special bypass
-      (PR→QG→straight to staging+main, no SIT); (c) scope = changed-repo set ∪ their transitive dependents (from
-      `configs/runtime-topology.yaml` + manifest `dependencies`); (d) the repo-set filter MUST be `status==active`
-      (today's `staging_versions>=0.1.0` would pick up archived/consolidated tombstones — see manifest-hygiene todo);
-      (e) the `>=1.0.0` version floor is post-cutover — `>=0.1.0` is fine during the testing phase.
-- [x] ✅ [SCRIPT] P1. DONE 2026-06-02: **semver-agent `workflow_run` watches the DEAD v1 name `"Quality Gates"` in ~6 repos → won't Fixed `workflow_run.workflows: ["Quality Gates"]` → `["quality-gates-v2"]` (matches the v2 workflow's `name:`) on all 8 affected repos' main (alerting-service, batch-live-reconciliation-service, deployment-service, e2e-testing, market-tick-data-service, system-integration-tests, strategy-service, execution-service) — 7 via relax→push→re-enable (tracked re-enable-all trap; all protection verified restored: enforce_admins=true + ruleset active), e2e-testing free-push. LDR was already correct on 7/8 (main lagged because the LDR→main promotion that carries it was dead — #257); patched mtds LDR. Template SSOT was already correct. features-service was already done.
-      auto-fire (caught by SIT `test_workflow_run_references_exist`).** Origin-verified: `alerting-service` +
-      `system-integration-tests` semver-agent.yml have `workflows: ["Quality Gates"]`; `features-service` is correctly
-      `["quality-gates-v2"]`. Others flagged: batch-live-reconciliation-service, deployment-service, e2e-testing,
-      market-tick-data-service. The v1→v2 semver rollout missed these → no auto semver bump on v2 completion. Fix via
-      the semver-agent **workflow-template SSOT** (`scripts/workflow-templates/`) + `rollout-workflow-templates.sh` to
-      the un-migrated repos (NOT per-repo edits); verify each origin default-branch shows `quality-gates-v2`.
+- [x] ✅ [DESIGN] P2. DESIGN DONE 2026-06-02 (build pending — SIT QG can be light/different per operator): **SIT has NO
+      dependency-chain / breaking-change scoping — runs the full marked suite against ALL **Target design
+      (operator-agreed):** scope each SIT run to the changed-repo set ∪ their transitive dependents (from
+      `configs/runtime-topology.yaml` + manifest `dependencies`), with: (a) universal-dep repos
+      (`unified-api-contracts`, likely `unified-trading-library`) → a change there triggers the BROAD/full suite; (b)
+      `unified-trading-pm` docs-bypass (PR→QG→main, no SIT); (c) repo-set filter `status==active`; (d) `>=0.1.0` floor
+      now (>=1.0 post-cutover). Build = a PM dep-graph helper + smoke-test-gate scoping logic; its QG is SIT-light (the
+      SIT repo's own gate, not a heavy service QG). `v0.1+` repos every time (setup filter
+      `v1_repos = staging_versions>=0.1.0`).** `staging_status.pending_repos` is tracked but unused for test-scoping;
+      `configs/runtime-topology.yaml` + per-repo `dependencies` in `workspace-manifest.json` EXIST but the gate ignores
+      them. Make SIT dependency-aware: from the pending (changed) repos, compute their transitive dependents via
+      runtime-topology/manifest deps and run only the affected integration tests (full-suite only on a topology/contract
+      change). Cuts runtime + makes the gate a real targeted integration check. repo: system-integration-tests (+ PM
+      dep-graph helper). **Operator design (2026-06-01):** (a) universal-dep repos — `unified-api-contracts` (and likely
+      `unified-trading-library`) are deps of ~everything → a change there triggers the BROAD/full SIT; (b)
+      `unified-trading-pm` is a docs/devops repo → special bypass (PR→QG→straight to staging+main, no SIT); (c) scope =
+      changed-repo set ∪ their transitive dependents (from `configs/runtime-topology.yaml` + manifest `dependencies`);
+      (d) the repo-set filter MUST be `status==active` (today's `staging_versions>=0.1.0` would pick up
+      archived/consolidated tombstones — see manifest-hygiene todo); (e) the `>=1.0.0` version floor is post-cutover —
+      `>=0.1.0` is fine during the testing phase.
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-02: **semver-agent `workflow_run` watches the DEAD v1 name `"Quality Gates"` in ~6
+      repos → won't Fixed `workflow_run.workflows: ["Quality Gates"]` → `["quality-gates-v2"]` (matches the v2
+      workflow's `name:`) on all 8 affected repos' main (alerting-service, batch-live-reconciliation-service,
+      deployment-service, e2e-testing, market-tick-data-service, system-integration-tests, strategy-service,
+      execution-service) — 7 via relax→push→re-enable (tracked re-enable-all trap; all protection verified restored:
+      enforce_admins=true + ruleset active), e2e-testing free-push. LDR was already correct on 7/8 (main lagged because
+      the LDR→main promotion that carries it was dead — #257); patched mtds LDR. Template SSOT was already correct.
+      features-service was already done. auto-fire (caught by SIT `test_workflow_run_references_exist`).**
+      Origin-verified: `alerting-service` + `system-integration-tests` semver-agent.yml have
+      `workflows: ["Quality Gates"]`; `features-service` is correctly `["quality-gates-v2"]`. Others flagged:
+      batch-live-reconciliation-service, deployment-service, e2e-testing, market-tick-data-service. The v1→v2 semver
+      rollout missed these → no auto semver bump on v2 completion. Fix via the semver-agent **workflow-template SSOT**
+      (`scripts/workflow-templates/`) + `rollout-workflow-templates.sh` to the un-migrated repos (NOT per-repo edits);
+      verify each origin default-branch shows `quality-gates-v2`.
 
 - [x] ✅ [INFRA] P1. DONE 2026-06-01 (chain now e2e-GREEN; reconciled — real blocker was classic enforce_admins, NOT a
       missing ruleset bypass): **SIT-chain automation cannot push `[skip ci]` commits to protected `main` (GH013)** —
@@ -548,11 +611,16 @@ by a PR:
     `remote: Bypassed rule violations for refs/heads/main`. **Note:** PM `main` now intentionally runs
     `enforce_admins=false` — do NOT "restore" it to true (strands the chain). All other protected branches (PM staging,
     SIT main/staging) remain `enforce_admins=true`; PM ruleset `require-quality-gates` stays `active`.
-- [x] ✅ [INFRA] P2. DONE 2026-06-02 (unified-trading-pm@7c3d8ff73, LDR/main/staging): **Retire Telegram notifications entirely (migrate to Slack) — operator decision.** Audit 2026-06-01: Migrated the 4 inline-Telegram senders to best-effort Slack #ci-failures (request-major-bump, request-major-bump-reusable, major-bump-issue-handler, fix-approval-timeout) + deleted dead notify-telegram.yml (0 callers). Bonus: removed the exit-1-on-missing-TELEGRAM in the 2 request-major-bump senders (they failed the run when the telegram secret was absent) → now best-effort. Telegram fully retired from notification paths.
-      `notify-telegram.yml` reusable has **0 callers** (dead); 46 job labels across 30 PM workflows said `Telegram —`
-      but `uses: notify-slack.yml` → relabeled to `Slack —` (cosmetic, shipped
-      `unified-trading-pm@8f5ffae2e`/`c8135c79d`/`f4f8d18b6` to LDR/main/staging). **Remaining = behavioural, needs
-      operator ack:** 4 workflows still **inline-send to Telegram** via `TELEGRAM_BOT_TOKEN_*`
+- [x] ✅ [INFRA] P2. DONE 2026-06-02 (unified-trading-pm@7c3d8ff73, LDR/main/staging): **Retire Telegram notifications
+      entirely (migrate to Slack) — operator decision.** Audit 2026-06-01: Migrated the 4 inline-Telegram senders to
+      best-effort Slack #ci-failures (request-major-bump, request-major-bump-reusable, major-bump-issue-handler,
+      fix-approval-timeout) + deleted dead notify-telegram.yml (0 callers). Bonus: removed the
+      exit-1-on-missing-TELEGRAM in the 2 request-major-bump senders (they failed the run when the telegram secret was
+      absent) → now best-effort. Telegram fully retired from notification paths. `notify-telegram.yml` reusable has **0
+      callers** (dead); 46 job labels across 30 PM workflows said `Telegram —` but `uses: notify-slack.yml` → relabeled
+      to `Slack —` (cosmetic, shipped `unified-trading-pm@8f5ffae2e`/`c8135c79d`/`f4f8d18b6` to LDR/main/staging).
+      **Remaining = behavioural, needs operator ack:** 4 workflows still **inline-send to Telegram** via
+      `TELEGRAM_BOT_TOKEN_*`
       (`major-bump-approval`/`major-bump-issue-handler`/`request-major-bump`(-reusable)/`fix-approval-timeout`). Decide:
       migrate those alerts to `notify-slack.yml` (so major-bump + fix-approval escalations go to Slack `#ci-failures`
       like everything else) and delete the dead `notify-telegram.yml`. Changes WHERE those alerts land → operator
