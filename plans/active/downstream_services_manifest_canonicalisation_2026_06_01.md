@@ -251,11 +251,20 @@ upstream data, run a PRE-FLIGHT DATA CHECK that:
 
 These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are live-safety big findings):
 
-- [ ] [CODE] P0. **CRIT-2 (execution-service, BIG/live-safety — operator-flagged 2026-06-02): wire `assert_market_data_fresh()`
-      into the ORDER path.** `validation/freshness_gate.py` exists + raises `DataStalenessError` but has ZERO call sites in
-      the order path (only `validation/__init__` + `api/main.py` health callback) → stale mark prices can size orders with
-      no block. Call it in `algorithms/atomic_bundle_executor.py`/`engine/handlers/base_handler.py` before submit; catch →
-      kill-switch. + NaN guard on `benchmark_price` in `instruction_validator.py`. Unit test the staleness block.
+- [x] ✅ [CODE] P0. **CRIT-2 (execution-service, BIG/live-safety) — DONE for the router order path (execution-service@3181f26b8, 2026-06-02).**
+      New `assert_instruction_market_data_fresh(instruction, *, live_mode)` in `validation/freshness_gate.py` wired into
+      `InstructionRouter.route_instruction` BEFORE handler dispatch (+ `kill_switch.is_active()` fast-reject): NaN/Inf
+      `benchmark_price` → reject (both modes); stale (`age=now-signal_ts` ≥ venue `MARKET_TICK_FRESHNESS` SLA) → arm
+      `DATA_STALENESS` kill switch + raise in LIVE, log+degrade in BATCH (live=batch detection, mode-aware action). NaN guard
+      also in `BaseHandler._validate_common`. 12 freshness-gate unit tests (NaN both modes, stale-live arms kill switch,
+      stale-batch degrades, fresh passes, no-contract skip). **Used `instruction.timestamp` as the benchmark-price-age proxy**
+      (the model has no separate market-data ts; timestamp = mid-price-at-signal time). `live_mode` read from router config.
+- [ ] [CODE] P0. **CRIT-2 follow-up — wire the same gate into the two NON-router live submit surfaces (execution-service):**
+      (1) `cli/handlers/live_execution_handler.py` (CeFi colocated live engine — `_route_instruction`→`get_order_adapter`→
+      `adapter.execute_instruction`/`place_order` at ~line 473/516, bypasses `InstructionRouter`); (2) `api/manual_instruction_api.py:461`
+      (`_manual_handler.execute(instruction)` direct). Both must call `assert_instruction_market_data_fresh(..., live_mode=True)` +
+      `kill_switch.is_active()` fast-reject before submit. (live_execution_handler uses a different `Instruction` type → map its
+      venue/benchmark/timestamp fields first.) Provenance: slot-3 2026-06-02 CRIT-2 coverage audit.
 - [ ] [CODE] P0. **CRIT-3 (execution-service): add upstream data-quality pre-flight to `engine/preflight.py`** —
       `run_preflight_checks()` covers SM/keys/risk/positions but NOT upstream features/strategy manifest health. Add
       `assert_consolidator_healthy(bucket)` (+ capture_status check) so exec won't accept orders on `attempted_failed`/
