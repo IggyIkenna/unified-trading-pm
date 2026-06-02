@@ -91,12 +91,11 @@ confirmed). 6h is far too much latency: plans are authored continuously, so back
 
 ### G3 — merge-flow doc drift [P0] _(fix lives in the context-hygiene plan)_
 
-- [ ] [DOC] P0. The live staging-first quickmerge flow contradicts the rules fed to agents
-      (`.claude/rules/workspace-workflow.md` "staging = breaking changes"; `cursor-configs/CLAUDE.md` "quickmerge for
-      promotion-to-main" / "DO NOT quickmerge dirty deps → push LDR"). Reconcile to the live model + the LDR dual-path.
-      Tracked as instance (e) in
-      [agent_context_and_memory_hygiene_2026_06_02.md](agent_context_and_memory_hygiene_2026_06_02.md) Phase 3 — fix
-      there, do not duplicate.
+- [x] ✅ [DOC] P0. **DONE via context-hygiene Phase 3** (as planned — "fix there, do not duplicate"): merge-flow
+      reconciled to staging-first at 3 SSOTs — `cursor-configs/CLAUDE.md` Git-discipline (PM@6da4f1175), and the local
+      `.claude/rules/workspace-workflow.md` + `universal.md` ("staging=breaking" + "--to-staging for breaking" →
+      staging-first + LDR dual-path). The `workspace-workflow.md`/`universal.md` files were subsequently folded into
+      CLAUDE.md + tombstoned (PM@6e7a6e01d).
 
 ### G4 — prove the loop end-to-end [P1]
 
@@ -229,10 +228,9 @@ flow" + `quickmerge --agent`, but they carry the **same staging-vs-LDR drift as 
 - [ ] [DOC] P1. Clarify the **operator-tooling exception** (`worker.md:228`): agent-orchestrator's own gate is
       `scripts/check.sh` (correct, verified) — but once G6 lands its `staging` flow, document whether agents working
       _inside_ agent-orchestrator ship via `check.sh` + reviewed direct push or via the new staging PR path.
-- [ ] [DOC] P1. Note that "v2" = the CI required-check rename (`…/quality-gates-v2`, migration COMPLETE 2026-06-02,
-      17/17 repos); the LOCAL two-pass commands (`scripts/quality-gates.sh` → `quickmerge.sh --agent`) are unchanged —
-      so no command edits are needed, only the target-branch + `--to-staging` corrections. Cross-link G3 (do not
-      duplicate the rules-file fix that lives in the context-hygiene plan).
+- [x] ✅ [DOC] P1. Verified: "v2" = the CI required-check rename (`…/quality-gates-v2`, 17/17 repos); LOCAL two-pass
+      commands (`scripts/quality-gates.sh` → `quickmerge.sh --agent`) are unchanged — so no command edits were needed,
+      only the target-branch + `--to-staging` corrections, which G7 + the context-hygiene Phase-3 merge-flow fix landed.
 
 ### G8 — worker boot-context de-bloat (executor-minimal context) [P0] _(Harsh 2026-06-02; verified)_
 
@@ -283,14 +281,13 @@ operator context (governance / planning / master-plan / model-tier rules).
 
 ### G8 residual discoveries (surfaced during the de-bloat pass 2026-06-02)
 
-- [ ] [DOC] P2. `agent-orchestrator/agents/main.md:36` has a stale dated section
-      `## Tomorrow-morning specifics (cutover     day, 2026-05-19)` — cutover was 2026-05-19; either generalise it to a
-      "cold-start / no-work_split morning" runbook or delete if superseded. Diagnose whether the cutover-day branch is
-      still reachable before editing.
-- [ ] [DOC] P2. `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` freshness pass — verify it doesn't carry the same stale
-      facts CLAUDE.md just shed (auth HS256→ES256, AO branch model, quickmerge staging-first); it's the
-      paste-into-`Task()` ruleset, distinct from RULES.md (worker-lifecycle), so the two stay separate — just keep both
-      current.
+- [x] ✅ [DOC] P2. `agents/main.md` cutover section generalised — retitled `## Tomorrow-morning specifics (cutover day,
+      2026-05-19)` → `## Cold-start morning (no work_split authored yet)` + de-dated the work_split reference (the content
+      was a useful cold-start runbook, not conditionally-reachable code). — agent-orchestrator@c605f95
+- [x] ✅ [DOC] P2. `SUB_AGENT_MANDATORY_RULES.md` freshness pass — **verified clean** (180 L): grep found NO stale
+      facts (no HS256, no `main`-direct/AO-branch claim, no "staging=breaking"/"promotion-to-main", no v5/v8 manifest, no
+      removed venues, no `category=`). Its `git push origin live-defi-rollout` guidance is correct per the LDR CI-axis
+      model (not stale). No edit needed; stays distinct from RULES.md (worker-lifecycle) by design.
 - [ ] [INFRA] P2. **IAM gap**: the `harsh-worker` AWS IAM user (`arn:aws:iam::427895769566:user/harsh-worker`) lacks
       `ssm:SendCommand`, so a Harsh slot can't inspect/operate the fleet VMs via SSM (the fleet is SSM-access, not open
       SSH). If Harsh slots are expected to do fleet ops, grant the SSM action; else document that fleet ops route
