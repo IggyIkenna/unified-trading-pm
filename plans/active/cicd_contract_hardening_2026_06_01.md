@@ -162,6 +162,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       slots.** parent_epic candidate: infrastructure_master. repos: unified-api-contracts + unified-trading-library
       (import hot paths) + PM quality-gates-base.
 
+- [ ] [TEST] P2. **mtds coverage floor is a documented 28% exception (ISS-031) now ENFORCED by the base-service.sh
+      systemic fix.** `market-tick-data-service/scripts/quality-gates.sh:12` =
+      `MIN_COVERAGE=28  # Post-reorganisation + type-fix refactoring dropped coverage. ISS-031: restore after test migration.`
+      Previously the `_REPO_QG_SCRIPT` bug masked it (read PM's 0); now CI reads the real 28% floor. Two follow-ups: (a)
+      a malformed `MIN_COVERAGE=28#comment` (no space) tripped `coverage-floor-guard.sh` integer-expression — FIXED
+      2026-06-02 (space added, mtds green); (b) ISS-031 — restore mtds coverage toward the 70% system floor after the
+      test migration completes (28% is a low documented exception). repo: market-tick-data-service.
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
