@@ -107,6 +107,10 @@ qg_governor_release() {
 _qg_governor_status() {
     local k dir; k="$(_qg_governor_k)"; dir="$(_qg_governor_dir)"
     echo "qg-host-governor: K=${k}  dir=${dir}  flock=$(command -v flock >/dev/null 2>&1 && echo yes || echo MISSING)"
+    # bash <4.1 lacks `exec {tfd}>` used by the token probe below — report inactive rather
+    # than emit bogus held-counts (the probe's exec fails → every slot mis-counts as held).
+    { [[ "${BASH_VERSINFO[0]:-0}" -gt 4 ]] || { [[ "${BASH_VERSINFO[0]:-0}" -eq 4 ]] && [[ "${BASH_VERSINFO[1]:-0}" -ge 1 ]]; }; } \
+        || { echo "  (bash ${BASH_VERSION} <4.1 — governor inactive; token accounting unavailable)"; return 0; }
     if [[ -d "$dir" ]]; then
         local held=0 i
         for (( i=1; i<=k; i++ )); do

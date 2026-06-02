@@ -254,6 +254,23 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
     "!**/invalidate-ci-status.py"
     "!**/gcs_bucket_stats.py"
 )
+# Newly-landed checker/automation scripts (2026-06): benign manifest/frontmatter-dict
+# defaults (same category as above — e.g. tier_c_promotion_gate.py explicitly fail-opens
+# on absent manifest signals with isinstance guards), NOT the os.getenv empty-fallback
+# anti-pattern. They landed without being added to the exclude lists.
+EMPTY_STR_EXCLUDE_GLOBS+=(
+    "!**/check_parent_epic_alignment.py"
+    "!**/reap_stale_blockers.py"
+    "!**/tier_c_promotion_gate.py"
+)
+EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
+    "!**/check_parent_epic_alignment.py"
+    "!**/check_tradfi_source_explicit_at_record_captured.py"
+    "!**/pin_branch_protection_rulesets.py"
+    "!**/reap_stale_blockers.py"
+    "!**/tier_c_promotion_gate.py"
+    "!**/verify_branch_protection_check_names.py"
+)
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
 # ── Pre-commit gate: validate workspace-manifest.json (add-manifest-json-validation) ──
