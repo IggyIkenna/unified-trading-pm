@@ -1,6 +1,6 @@
-# ADR: Offload the heavy QG + SIT to a self-hosted runner pool (Option B)
+# ADR: Where the heavy QG runs — keep it local on governed 16 GB workers (Option A)
 
-- **Status:** Accepted (design) — 2026-06-02
+- **Status:** Accepted — 2026-06-02 (operator decision: Option A + governor; **supersedes the initial Option-B lean**)
 - **Plan:** `plans/active/quality_gates_resource_contention_speedup_2026_06_02.md` (todo `qg-offload-full-run`)
 - **Decision owner:** Harsh; **implementation:** follow-up todos in `plans/epics/infrastructure_master.md`
 - **Composes with:** the host concurrency governor (`qg-host-governor.sh`) + `qg-perrepo-baseline` (sizing input).
@@ -21,16 +21,39 @@ Cost is not a constraint (AWS credits); architectural correctness is.
 
 ## Decision
 
-**Adopt Option B: a dedicated self-hosted GitHub Actions runner pool for the heavy QG + SIT.** Workers stay small and
-run only a fast local pre-check; the authoritative heavy gate runs centrally on sized-for-it runners.
+**Keep the full `quality-gates.sh` LOCAL on each worker VM (current 16 GB `m7i.xlarge`), made viable by the host
+concurrency governor — no fleet right-sizing needed.** The agent runs the gate before pushing, gets an immediate local
+pass/fail, and fixes before it ever pushes — preserving the tight feedback loop. The OOM that made 16 GB look too small
+was the **ungoverned multi-concurrent** case; the governor caps concurrent heavy-phases to **K = `floor(vCPU/4)` = 1**
+on a 4-vCPU worker, so only ONE QG runs at a time and the single-run peak (~5.3 GB, the unified-trading-library ceiling)
+fits 16 GB with headroom. Sizing rule going forward: `per-VM RAM ≥ peak-per-run-RSS × K` (16 GB ≥ 5.3 × 1 ✓).
 
-Rejected alternatives:
+**Rejected — Option B (central self-hosted runner pool):** it **breaks the local feedback loop**, which is the decisive
+cost. Workers push constantly → which SHA does the central gate test? And on failure the verdict must be routed
+**asynchronously back to the originating agent** ("your commit failed") and tracked — fragile and hard to reconcile with
+the per-agent ship loop. The OOM that motivated B is already solved by the governor, so B's main benefit evaporates
+while its coordination cost remains. (Keep B on the shelf only if worker-local QG ever proves insufficient at scale.)
 
-- **Option A (vertically scale every worker VM to 128–256 GB):** workers are idle 95% of the time → big boxes sit mostly
-  idle; couples QG capacity to slot count (every new slot grows every VM). Keep as the fallback if self-hosted runners
-  are ever disallowed.
-- **Option C (bespoke QG-as-a-service + RPC):** reinvents what self-hosted runners give for free; redundant with the CI
-  gate that already exists on staging. Not recommended.
+**Rejected — Option A-vertical (grow every worker to 128–256 GB) / Option C (bespoke QG-as-a-service + RPC):** the
+governor removes the need to grow the boxes; C reinvents CI and adds async failure-routing — the same loop problem as B.
+
+> Note: the governor (`qg-host-governor.sh`) must be present on every worker VM for this to hold — it ships in the
+> shared `base-service.sh` (sourced live), so every repo's `quality-gates.sh` already acquires a token. `QG_THREAD_CAP`
+>
+> - the OMP/BLAS caps keep a single run from fanning out across the 4 vCPUs.
+
+## Implementation (Option A — already shipped, no new infra)
+
+Nothing to provision. The enabling mechanism — the host concurrency governor + thread caps — already ships in the shared
+`base-service.sh` (sourced live by every repo's `quality-gates.sh`), so every worker VM already governs its QG.
+`qg-vm-rightsizing` resolves to **no machine-type change**: keep `m7i.xlarge` (16 GB), rely on K=1 per worker. Revisit
+only if `peak-per-run-RSS × K` ever exceeds 16 GB (e.g. if a worker's vCPU count rises so K>1, or a repo's peak grows).
+
+---
+
+## Appendix — rejected Option B design (reference only; NOT the chosen path)
+
+> Retained for completeness in case worker-local QG ever proves insufficient. The decision above is **Option A**.
 
 ## Design
 
