@@ -117,28 +117,45 @@ verified complete**.
       **SMOKE-TEST RESULTS 2026-06-02 (slot 7 — real network probes; keys from SM
       `thegraph-api-key`/`helius-api-key`):**
 
-- [ ] [CODE] P2. UAC D10 VENUS — **GREEN** (The Graph decentralized net, entity `markets`, all returned live data): BSC
-      isolated `H2a3D64RV4NNxyJqx9jVFQRBpQRzD6zNZjLDotgdCrTC`, BSC core `7h65Zf3pXXPmf8g8yZjjj2bqYiypVxems5d8riLK1DyR`,
-      ETHEREUM `Htf6Hh1qgkvxQxqbcv4Jp5AatsaiY5dNLVcySkpCaxQ8`. Wire to
-      `_SUBGRAPH_IDS`+`_ProtocolCapability`+`defi_venues.py` live (identical mechanism to aave_v3). Source:
-      defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC D10 BENQI — **GREEN** (The Graph, AVALANCHE, entity `markets`):
-      `HcTvZi3fwucvRJvVmtFzNDTnomvMBk64xCLNQQg6GPAV` (NOT `EcNHwEG…` — that one has active indexing errors). Wire same
-      as Venus. Source: defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC D10 RADIANT — **GREEN** (The Graph, entity `assets`): ARBITRUM
-      `E1UTUGaNbTb4XbEYoupJZ5hU62hW9CnadKTXLRSP2hM`, ETHEREUM `683Qhh8TEta6qS5gdTpXCs84xnrp77fPWGQyBmRe6qgo` (Radiant
-      TVL down ~98% post-2024-hack but subgraphs index current blocks). Wire same as Venus. Source:
-      defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC D10 EULER_V2 — **GREEN data, source = Goldsky NOT The Graph** (no allocations on decentralized
-      net): ETH
-      `https://api.goldsky.com/api/public/project_cm4iagnemt1wp01xn4gh1agft/subgraphs/euler-v2-mainnet/latest/gn`, ARB
-      `…/euler-v2-arbitrum/latest/gn`, entity `eulerVaults`. Wiring needs Goldsky-endpoint support (the subgraph
-      client/`_SUBGRAPH_IDS` assume the Graph gateway URL shape) — small client extension, then register live. Source:
-      defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC D10 SOLAYER — **GREEN via Helius RPC** (sSOL mint `sSo14endRuUbvQaJS3dq36Q829a3A6BEfoeeRGJywEh`
-      supply ~104k; restaking program `sSo1iU21jBrU9VaJ8PJib1MtorefUV4fzC9GURa2KNn` executable). Wiring needs the
-      Solana/Helius adapter path (not a subgraph entry); `app.solayer.org` REST is down (500) — use Helius
-      `getTokenSupply`/`getAccountInfo`. Register live once wired. Source: defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 VENUS — **BUILT + live** (Compound-`markets`; BSC isolated+core + ETH). Adapter:
+      `lending_indices` live+history. — unified-api-contracts@`cd65ff76` + market-tick-data-service@`d98f5726` (gas
+      stripped to per-chain @`12a4318e`). Source: defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 BENQI — **BUILT + live** (Compound-`markets`, AVALANCHE; `lending_indices`). —
+      unified-api-contracts@`cd65ff76` + market-tick-data-service@`d98f5726`. Source: defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 RADIANT — **BUILT + live** (Messari-`Market`, ARB+ETH; full `lending_indices` +
+      `liquidations` + `risk_params`, live+batch). — unified-api-contracts@`cd65ff76` +
+      market-tick-data-service@`d98f5726`. (See gap #1/#2 below re liquidations/risk_params path reconciliation.)
+      Source: defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 EULER_V2 — **BUILT + live** (Goldsky `eulerVaults`+`vaultStatuses`, ETH+ARB; full set, live
+      500/batch 650). Added `_SUBGRAPH_ENDPOINT_OVERRIDES` Goldsky routing. — unified-api-contracts@`cd65ff76` +
+      market-tick-data-service@`d98f5726`. Source: defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC D10 SOLAYER — **BLOCKED-DATA-LAYOUT** (not credentials; Helius key works). sSOL is a custom Solayer
+      LRT, NOT a standard SPL stake-pool — mint owner is the plain Token program, the vault account holding the sSOL→SOL
+      exchange rate / APY has a non-standard byte layout the existing Solana LST handler can't decode (offsets 258/266
+      don't apply); `app.solayer.org/api`=500, `metadata.solayer.org` Cloudflare-walled, Sanctum returns
+      UNSUPPORTED_LST. Need Solayer's vault IDL / verified account offsets to compute `lst_rates` (supply reader alone
+      is insufficient). Register live once the rate field is field-verified. Source: defi_code_codex_drift D10.
+
+> **E2E HOOKUP STATUS 2026-06-02 (slot 7 — operator: hook UAC/IS/MTDS/MDPS/features/strategy/execution + data-status
+> UI/API).** Traced the 4 built venues through the whole pipeline. **AUTO-WIRED from UAC (no work):**
+> instruments-service (`_SUBGRAPH_VENUE_PREFIX_TO_PROTOCOL` + dedicated venus/benqi/radiant/euler_v2 adapter classes),
+> MTDS `lending_indices` (evm_defi_handler), features-service (manifest-driven venue-wildcard read), execution-service
+> (no DeFi allowlist — data-only), **deployment-api/data-status UI** (reads `ALL_DEFI_VENUES` +
+> `DEFI_VENUE_DATA_TYPE_CAPABILITIES` from UAC → the 4 venues auto-appear as expected-coverage cells + render in the
+> DEFI panel, all `live` phase). The data-status surface already understands + shows them. **GAPS (tracked below).**
+
+- [ ] [CODE] P1. MTDS reconcile `liquidations` path for radiant/euler — `liquidations_handler.py:196`
+      `_DEFAULT_PROTOCOLS` excludes them while `evm_defi_handler` emits liquidations; confirm ONE canonical emit path so
+      data-status doesn't show phantom-missing liquidation cells (UAC declares `liquidation_events` for
+      RADIANT-ARB/BSC + EULER). Repo: market-tick-data-service. Source: e2e trace 2026-06-02.
+- [ ] [CODE] P1. MTDS verify `risk_params` emit for radiant/euler matches the declared
+      `DEFI_VENUE_DATA_TYPE_CAPABILITIES` (evm_defi_handler `_EVM_DEFI_DATA_TYPE` is `lending_indices`-only; if
+      risk_params isn't actually written, either add the emit OR drop risk_params from the cap to stay
+      honest-coverage-coherent). Repo: market-tick-data-service. Source: e2e trace 2026-06-02.
+- [ ] [CODE] P1. strategy-service `engine/strategies/v2/target_universe/catalog.py:1006` `_RECURSIVE_STAKED_LEND` — add
+      venus/benqi/radiant/euler_v2 as carry_staked_basis lending-leg options (+ specs in
+      `_build_carry_recursive_staked`) so they're usable as a lending leg, not just data-available. Repo:
+      strategy-service. Source: e2e trace 2026-06-02.
 - [x] ✅ [CODE] P2. UAC D10 PICASSO — **EXCLUDED** (operator decision 2026-06-02: where missing, exclude). Removed
       `_ProtocolCapability` + `SOLANA_PROTOCOL_CHAINS` + `_defi_chain_data` entries. — unified-api-contracts@`fa9238fb`.
       Source: defi_code_codex_drift D10.
