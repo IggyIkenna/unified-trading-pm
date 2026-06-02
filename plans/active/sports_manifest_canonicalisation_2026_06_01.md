@@ -535,34 +535,29 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > sports buckets (`market-data-tick-sports`, `instruments-store-sports`, `features-*-sports`) or stale manifest/path
 > conventions will BREAK. This gate is BEFORE the dry-run/delete: the code must already speak ONLY canonical.
 
-- [ ] [CODE] P0. **Read/write path canonicalisation sweep (sports — all repos)**: confirm EVERY sports bucket lookup
-      routes through `resolve_bucket_name(…, asset_group="sports", env=…)` → `-prd-` canonical. **REAL DEAD-BUCKET
-      EXPOSURE FOUND (sports-slot grep 2026-06-02 — these read the NO-ENV legacy buckets E8 DELETES → BREAK on delete)**:
-      - **UTL `unified_trading_library/sports_fixtures.py:9`** reads the FIXTURES truthset from
-        `gs://instruments-store-sports-{pid}/…` (NO ENV) — **the keystone truthset depends on this**; legacy delete
-        breaks the no-fixture relabel. → env-tiered.
-      - **UTL `instruments_preflight/__init__.py:23`** `bucket="instruments-store-sports-{pid}"` (no env).
-      - **UTL `instrument_lifecycle_loader.py:46,54`** `"sports":"instruments-store-sports-{pid}"` (no env) (+ `:47`
-        prediction no-env — slot-3 lane, flag don't fix).
-      - **UAC FACADE ROOT — `sports.gcs_paths.bucket_name(...)` returns the NO-ENV form**
-        (`market-data-tick-sports-{PID}` / `instruments-store-sports-{PID}`), pinned by
-        `unified-api-contracts/tests/unit/test_gcs_paths_facade.py:30,49,50,72`. CROSS-AG inconsistency (UTL
-        `resolve_bucket_name` SSOT → `-prd-`; UAC `bucket_name` facade → no-env) affecting prediction/defi/cefi/tradfi →
-        **coordinate at `defi_manifest…` §MASTER; do NOT unilaterally change the cross-AG facade from the sports lane** —
-        fix sports READERS to use `resolve_bucket_name` instead of the facade.
-      - **e2e sports scripts hardcode no-env**: `e2e-testing/scripts/sports/run_weekly_pipeline.py:43` +
-        `audit_production_vs_e2e.py:36`. → canonical.
-      Fix the sports-scoped readers/scripts/tests; flag the cross-AG UAC facade for coordination.
+- [x] ✅ [CODE] P0. **Read/write path canonicalisation sweep (sports — all repos)**: confirm EVERY sports bucket lookup
+      routes through `resolve_bucket_name(…, asset_group="sports", env=…)` → `-prd-` canonical. —
+      unified-trading-library@b3b70c13 + e2e-testing@b418afc | sports_fixtures.py keystone truthset reader +
+      instruments_preflight/**init**.py docstring + e2e scripts → canonical resolve_bucket_name / prd hardcode.
+      Regression gate: tests/unit/test_sports_fixtures_bucket.py asserts -prd- form, no-env form fails QG. **CROSS-AG
+      items NOT touched (need coordination):** - **UTL `instrument_lifecycle_loader.py:46,54`**
+      `"sports":"instruments-store-sports-{pid}"` (shared cross-AG map cefi/defi/tradfi/sports/prediction — do NOT fix
+      from sports lane, workspace-wide coordination gate). - **UAC FACADE ROOT — `sports.gcs_paths.bucket_name(...)`
+      returns the NO-ENV form** (`market-data-tick-sports-{PID}` / `instruments-store-sports-{PID}`), pinned by
+      `unified-api-contracts/tests/unit/test_gcs_paths_facade.py:30,49,50,72`. CROSS-AG (UTL `resolve_bucket_name` SSOT
+      → `-prd-`; UAC `bucket_name` facade → no-env) — coordinate at `defi_manifest…` §MASTER; sports READERS already
+      fixed to use `resolve_bucket_name` instead of the facade.
 - [ ] [CODE] P0. **deployment-api + UI data-status canonical resolution (sports)**: the data-status surface resolves
-      MANY bucket names / menu conventions / data_type conventions / manifest-reading conventions per asset_group — audit
-      `deployment-api/deployment_api/services/data_status*.py` (+ the `data_status_mock.py` SPORTS map) + the
+      MANY bucket names / menu conventions / data_type conventions / manifest-reading conventions per asset_group —
+      audit `deployment-api/deployment_api/services/data_status*.py` (+ the `data_status_mock.py` SPORTS map) + the
       deployment-ui/unified-trading-system-ui data-status views for any sports bucket/path/data_type/manifest convention
       that resolves a to-be-deleted legacy bucket or a stale (v8/`category=`/no-`pipeline_mode=`) layout. Point them ALL
-      at the canonical `-prd-` v9 form. UI changes need the playwright gate (`pw:L2 ✓` + regression spec) per PLAN_FORMAT §9.
+      at the canonical `-prd-` v9 form. UI changes need the playwright gate (`pw:L2 ✓` + regression spec) per
+      PLAN_FORMAT §9.
 - [ ] [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)**: every sports test (unit + integration) that
       references a bucket/path/manifest convention must use the canonical `-prd-` v9 form, so QG REGRESSION-CATCHES any
-      future dead-bucket association. Grep sports tests for legacy bucket/path literals; update to canonical. (This is the
-      mechanism that makes the regression gate self-enforcing — a reverting change fails QG.)
+      future dead-bucket association. Grep sports tests for legacy bucket/path literals; update to canonical. (This is
+      the mechanism that makes the regression gate self-enforcing — a reverting change fails QG.)
 - [ ] [DATA] P1. **278k provider-season-suffixed league_ids rewrite table** (dry-run-informed): `canonicalize_league_id`
       conservatively leaves `SCOTTISH_LEAGUE_CUP_185` etc. unchanged (185 = AF SEASON id, not the league id 182). After
       the dry-run enumerates the actual `{LEAGUE}_{seasonid}` set, build a direct rewrite table (strip the season suffix
