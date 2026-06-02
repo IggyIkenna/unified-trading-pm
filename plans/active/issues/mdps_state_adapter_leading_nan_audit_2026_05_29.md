@@ -222,5 +222,6 @@ Tests in scope:
         would NOT re-run the leading-NaN cells. Densify needs a **force-reprocess of already-`captured` cells**
         (`VM_FORCE=true` equivalent), scoped to the asset_groups/date-windows consumed by backtest/features.
       - Fold into the next MDPS historical reprocess window per single-walk discipline (no standalone whole-corpus walk).
-      **ACTION:** Phase-11 owner (slot-1 main coordination) should add this force-reprocess pass to the Phase 11
-      operational-backfill scope; tracked here until cross-linked there.
+      **ACTION:** ✅ cross-linked into `plans/epics/mtds_mdps_master.md` § "Phase 11 add-on (2026-06-02) — MDPS
+      leading-NaN historical densify reprocess" (2026-06-02). Phase-11 owner (slot-1 main coordination) pulls the
+      `VM_FORCE=true` reprocess into the operational-backfill scope when the window opens.

@@ -271,6 +271,20 @@ operator-acked
 (CRITICAL)`); cross-mode reconciler exit 0                                                                 | | **14. Strategy + execution deployment topology cleanup**                                                                                | `strategy_execution_contract_remediation_2026_05_20.md`(existing) +`strategy_repo_consolidation_2026_05_19.md`residuals + execution-service deployment topology plans                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Slot 5 (writegate + strategy is already there) + slot 8 (defi_catalogue close → defi_execution wiring)                                                            | Phase 13 GREEN                        | Strategy + execution deployment topology validated end-to-end with the new bucket layout + manifest v8 + live adapters. Ready-state for paper-trade → live-trade promotion per`promote_workflow_post_cutover_ui_pipeline_2026_05_10.md`
 |
 
+> **Phase 11 add-on (2026-06-02) — MDPS leading-NaN historical densify reprocess.** The MDPS leading-NaN workstream
+> (`plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, shipped 2026-06-02:
+> market-data-processing-service@5a5e989/4fd962d/23d7add/56202b0) made every candle adapter emit dense, no-leading-NaN,
+> no-NaN-OHLC candles **go-forward**. Historical parquets written before the fix still carry the legacy leading-NaN /
+> NaN-OHLC shape. Remediation = **force-reprocess of already-`captured` cells** — re-run the MDPS adapters over
+> historical raw ticks so the written candles densify. **This is NOT covered by the Phase 11 MISSING_EXPECTED backfill**:
+> `mtds_backfill_phase3` runs `VM_FORCE=false` + `ManifestFreshnessCache`, which **skips already-captured cells**, so the
+> leading-NaN cells are walked right past. It is **NOT** a manifest-consolidator task (the consolidator only merges
+> manifest shards into `_index`) and **NOT** a GCS-object-migration walk (`gcs_migration_bundle_pipeline_mode` cannot
+> re-derive dense candles — that needs the raw ticks + new finalizer). **Scope it as a `VM_FORCE=true` reprocess of the
+> asset_groups/date-windows that backtest + features-onchain actually read**, folded into the next MDPS historical
+> reprocess window (no standalone whole-corpus walk, per single-walk discipline). Tracked as the `[DATA] P1` item in the
+> issue doc; Phase-11 owner pulls it into the operational-backfill scope.
+
 ## Phase 1 — bucket-name symmetry (AWS ↔ GCP)
 
 **Current asymmetry** (illustrated for MTDS DeFi):
