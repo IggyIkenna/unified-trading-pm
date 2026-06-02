@@ -632,7 +632,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       UTL contract upgrade. Filed as UTL-contract todo below. `base_adapter.py:185` is `ErrorCategory` enum (different
       axis — not an asset-group column). `sports_fixtures_daily_repoll.py:43` is a docstring. No IS renames needed; UTL
       must rename its `category` param to `asset_group` — see UTL-contract upgrade todo. — instruments-service@8958a2ae
-- [ ] [CODE] P1. **UTL contract upgrade: rename `record_captured(category=…)` param to `asset_group=` — HARD ATOMIC
+- [x] ✅ [CODE] P1. **UTL contract upgrade: rename `record_captured(category=…)` param to `asset_group=` — HARD ATOMIC
       CUT, ZERO ALIAS (operator directive 2026-06-02, dispatched to a dedicated session)**:
       `unified_trading_library/manifest_writer.py:2629` declares `category: str`; internally maps to `asset_group`
       (1800/2451/2794). Operator: do it NOW workspace-wide, **no lingering deprecated alias** — the shipped end-state has
@@ -642,7 +642,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       execution, alerting, deployment-api, e2e, migration scripts) `category=`→`asset_group=`; (3) UTL commit that
       REMOVES `category` — lands in the SAME sweep so zero alias ships. NEW QG ratchet fails on any `category=` at a
       ManifestWriter call site. Leave unrelated `ErrorCategory`/`market_category`/`BookmakerCategory`. Provenance:
-      instruments-service@8958a2ae diagnosis. NOT deferred — in-flight in the dedicated session.
+      instruments-service@8958a2ae diagnosis. ✅ DONE 2026-06-02 (dedicated session) — shipped workspace-wide, ZERO alias. UTL@9db7fd69 (rename + tests, no `category` kwarg in any ManifestWriter signature). Callers `asset_group=`: instruments-service@3ade065b (20 sites incl orchestrator x17 + repoll + 2 scripts), MTDS@d0dad2da (3), MDPS@b67afaa (2), execution-service@0eb6b945a (2), strategy-service@882da071 (1). 91 sites total (28 callers + 63 UTL tests). features/alerting/deployment-api/e2e: **0** ManifestWriter `category=` callsites per workspace-wide AST audit — no change needed (the repo list was speculative). QG ratchet **STEP 5.92** `check_no_category_kwarg_at_manifest_write.py` (PM@60a27debe) bans any regression; the existing tradfi-source ratchet was updated to read `asset_group=` (else the rename would silently disable it). Event-payload observability dict keys kept as `category` for dashboard stability (write *param* only).
 - [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads**: `mtds_canonical_reader.py`
       explicitly builds `category=defi/` twin paths for backward compatibility — this is intentional (reads legacy
       on-disk data). Post sports/defi migration when `category=` paths are decommissioned, remove the twin.

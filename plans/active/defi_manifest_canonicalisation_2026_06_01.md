@@ -25,7 +25,7 @@ source:
 
 ## MASTER — cross-plan execution order → single canonical SSOT (no fallback, no dual)
 
-> **🔎 CROSS-AG DEAD-BUCKET REGRESSION FINDING (escalated from the sports lane 2026-06-02 — affects EVERY AG before its
+> **✅ CROSS-AG DEAD-BUCKET REGRESSION FINDING — RESOLVED 2026-06-02 (was: escalated from the sports lane — affected EVERY AG before its
 > legacy delete)**: two shared surfaces still resolve the NO-ENV (legacy) bucket form, which BREAKS once any AG's legacy
 > bucket is deleted: (1) **UAC `gcs_paths.bucket_name(asset_group, …)` returns the NO-ENV form** (e.g.
 > `market-data-tick-sports-{PID}` / `instruments-store-{ag}-{PID}`), pinned by
@@ -39,6 +39,8 @@ source:
 > dead-bucket sweep (in its `*_manifest_canonicalisation` plan) depends on this. Owner: master coordinator / UAC+UTL
 > owner (NOT a per-AG-lane unilateral change — it would desync the other lanes). SSOT for the sports slice:
 > `sports_manifest_canonicalisation_2026_06_01.md` § "Dead-bucket regression gate".
+>
+> **✅ RESOLVED 2026-06-02 (dedicated cross-AG session)**: both shared surfaces are now canonical — (1) UAC `gcs_paths.bucket_name(...)` defaults `env="prd"` (env-tiered `-prd-`, no longer no-env); (2) UTL `instrument_lifecycle_loader` routes through `resolve_bucket_name` (UTL@fd91ee74 Task 3, `_BUCKETS`/`_INSTRUMENTS_STORE_BUCKETS` hardcodes removed). The remaining cross-AG no-env / explicit-`project_id` readers were swept the same session: UTL `instruments_catalog_reader`@4c1c9a68, instruments-service `catalogue_builder`@f693e34e (also removed a dead `try/except ImportError` inline no-env fallback), deployment-service `manifest_reader` + `sports_trigger_scheduler`@9886911. **QG ratchet STEP 5.93** `check_no_explicit_project_id_bucket.py` (PM@60a27debe) regression-guards the whole class. (IS `sports_dependency` + features `gcs_paths` were already canonical via the sports lane.)
 
 
 **Goal (operator)**: full canonical DATA + MANIFEST — historically AND for all backfill + crons + code — one SSOT, no
