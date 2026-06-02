@@ -137,12 +137,15 @@ verified complete**.
 
 ## features-service
 
-- [ ] [CODE] P1. features-service: in `delta_one/app/core/data_loader.py`, filter processed-candle manifest reads by
-      `service_name="market-data-processing-service"` to eliminate the MTDS raw-tick `captured` false-positive. Source:
-      cefi_processed_candles_manifest_file_disconnect.
-- [ ] [CODE] P3. features-service: delete the dead `DEFI_DATA_TYPE_OVERRIDES` dict in
-      `delta_one/engine/orchestrator.py:103-120` (UAC `resolve_data_type_for_feature_group()` is the real router).
-      Source: features_service_defi.
+- [ ] [CODE] P1. features-service: processed-candle manifest read false-positive —
+      `data_loader.get_available_instruments` ALREADY passes `service_name="features-service"` to UTL
+      `get_captured_instruments`. Before changing to `"market-data-processing-service"`, DIAGNOSE the UTL helper's
+      `service_name` filter semantics (does it filter manifest rows by the `service_name` column, or is it just the
+      caller identity?) — read both sides per Findings Triage. The right fix depends on that; do not flip the literal
+      blind. Source: cefi_processed_candles_manifest_file_disconnect.
+- [x] ✅ [CODE] P3. features-service: delete the dead `DEFI_DATA_TYPE_OVERRIDES` dict in
+      `delta_one/engine/orchestrator.py` (UAC `resolve_data_type_for_feature_group()` is the real router; dict had zero
+      refs). — features-service@`9f843dd4`. Source: features_service_defi.
 
 ## market-tick-data-service
 
