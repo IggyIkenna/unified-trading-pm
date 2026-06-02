@@ -266,12 +266,19 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
       also in `BaseHandler._validate_common`. 12 freshness-gate unit tests (NaN both modes, stale-live arms kill switch,
       stale-batch degrades, fresh passes, no-contract skip). **Used `instruction.timestamp` as the benchmark-price-age proxy**
       (the model has no separate market-data ts; timestamp = mid-price-at-signal time). `live_mode` read from router config.
-- [ ] [CODE] P0. **CRIT-2 follow-up — wire the same gate into the two NON-router live submit surfaces (execution-service):**
-      (1) `cli/handlers/live_execution_handler.py` (CeFi colocated live engine — `_route_instruction`→`get_order_adapter`→
-      `adapter.execute_instruction`/`place_order` at ~line 473/516, bypasses `InstructionRouter`); (2) `api/manual_instruction_api.py:461`
-      (`_manual_handler.execute(instruction)` direct). Both must call `assert_instruction_market_data_fresh(..., live_mode=True)` +
-      `kill_switch.is_active()` fast-reject before submit. (live_execution_handler uses a different `Instruction` type → map its
-      venue/benchmark/timestamp fields first.) Provenance: slot-3 2026-06-02 CRIT-2 coverage audit.
+- [x] ✅ [CODE] P0. **CRIT-2 follow-up — DONE (execution-service@12561a9ee, 2026-06-02).** Extracted
+      `assert_market_data_fresh_for_submit(*, instruction_id, operation, venue, benchmark_price, signal_timestamp, live_mode)`
+      in `validation/freshness_gate.py` (the field-level primitive); `assert_instruction_market_data_fresh` now delegates to
+      it so all THREE submit surfaces share ONE gate. Wired the two non-router paths: (1)
+      `cli/handlers/live_execution_handler._execute_instructions` — `kill_switch.is_active()` fast-reject + gate
+      (`benchmark_price=None` — the colocated `Instruction` carries none; `signal_timestamp=start_time`; `live_mode=True`);
+      raised `DataStalenessError`(RuntimeError)/`BenchmarkPriceInvalidError`(ValueError) are caught by the loop's existing
+      except handlers → skip that instruction, armed kill switch halts the rest. (2) `api/manual_instruction_api._execute_via_orchestrator`
+      — NaN/Inf guard on the operator `price` (`signal_timestamp=None` — manual op has no signal ts; `kill_switch` already
+      enforced at the endpoint via `_check_service_state`). 5 new primitive tests + existing router tests still green (via
+      delegation). My files: basedpyright 0 + ruff clean + 17 freshness tests green. **Repo QG red ONLY on PRE-EXISTING
+      FOREIGN violations on LDR (hardcoded project IDs in providers/* + defi_lateral_loader; domain-client import in
+      backtest/engine/setup.py) — flagged per Findings-Triage, not slot-3's.**
 - [x] ✅ [CODE] P0. **CRIT-3 (execution-service) — DONE (execution-service@225797127, 2026-06-02).** `run_preflight_checks()`
       now runs `_check_upstream_consolidator_health(upstream_buckets)` → `assert_consolidator_healthy(bucket)` (UTL shared
       gate, via `asyncio.to_thread` for the blocking GCS stat) so a stale/dead upstream `_index` fails preflight before a
@@ -319,7 +326,7 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
 | Item | Status | Repo / file | Next action |
 | --- | --- | --- | --- |
 | Item 1 prediction E5 captured-atom rebuild | ✅ shipped | mtds@d1f1317d | E5 empty/failed-row re-emit (CF-11) still open — see prediction plan |
-| CRIT-2 router order-path freshness+NaN gate | ✅ shipped | execution-service@3181f26b8 | wire the 2 NON-router live submit paths (live_execution_handler CeFi + manual_instruction_api) — tracked above |
+| CRIT-2 router order-path freshness+NaN gate | ✅ shipped | execution-service@3181f26b8 | NON-router paths now ALSO gated — execution-service@12561a9ee (shared `assert_market_data_fresh_for_submit` primitive) |
 | CRIT-3 upstream consolidator preflight | ✅ shipped | execution-service@225797127 | per-cell `capture_status` refinement (P1) — tracked above |
 | CRIT-1 MDPS live=batch dep check | ✅ shipped | mdps@9102321 | — |
 | Item 4 features perp_funding canonical read | ✅ shipped | features-service@cf47eca9 | — |
