@@ -237,6 +237,18 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       fetch paths in MTDS handlers + instruments-service for `except … record_empty` / bare `return []` swallows; gate the
       empty-vs-failed decision on instrument-in-universe + UAC coverage bounds. Cross-ref the sports CF-11 model
       (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
+      **DIAGNOSIS (slot-3 2026-06-02, grep-then-READ — MTDS side VERIFIED COMPLIANT, no swallow):** the MTDS write-path
+      already implements the sports CF-11 model for cefi/tradfi/prediction. (a) Adapters (tardis/ccxt/databento/massive/
+      polymarket) classify via `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED` + **re-raise** on a genuine API error
+      (do NOT swallow into `record_empty`/`return []`). (b) `engine/orchestrator.py` finalize gates the empty-vs-failed
+      decision on a recorded fetch-failure at BOTH levels: tier-2 venue-level (`orchestrator.py:3818` —
+      `if effective_failure is not None: record_failed(classify_venue_error(code_token)) else: record_empty(SOURCE_RETURNED_ZERO)`,
+      with `failed_per_dt_by_venue` precedence for the bundled-Databento partial-success case) and tier-3 per-instrument
+      (`orchestrator.py:3766` — `if tier3_classified_error is not None: record_failed else record_empty(SOURCE_RETURNED_ZERO)`).
+      So a swallowed fetch-failure cannot land as a frozen `SOURCE_RETURNED_ZERO` from the MTDS path. **RESIDUAL (still
+      `- [ ]`):** the **instruments-service** fetch paths were NOT exhaustively read this session — focused verify needed
+      that IS reference-data fetch errors likewise `record_failed` (not `record_empty`/`return []`). Reclassify this todo as
+      "verify IS write-path CF-11 (MTDS already compliant)" — the heavy lift the todo assumed is largely absent.
 
 ## Success criteria
 

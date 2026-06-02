@@ -259,6 +259,11 @@ VM.
       the tradfi databento/massive fetch paths for `except … record_empty` / bare `return []` swallows; gate empty-vs-failed
       on trading-calendar + ticker-in-universe + UAC coverage. Cross-ref the sports CF-11 model
       (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
+      **DIAGNOSIS (slot-3 2026-06-02): MTDS side VERIFIED COMPLIANT** — same finding as the cefi CF-11 todo (the MTDS
+      orchestrator finalize is shared across AGs): tradfi databento/massive adapters classify+emit+re-raise (no swallow),
+      and `orchestrator.py:3818`/`:3766` gate `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded
+      fetch-failure (incl. `failed_per_dt_by_venue` for bundled-Databento partial-success). RESIDUAL = focused
+      instruments-service write-path verify. See cefi plan § CF-11 for the full diagnosis.
 
 ## Success criteria
 

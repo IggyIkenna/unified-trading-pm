@@ -366,6 +366,11 @@ verify + the gated delete.
       Polymarket CLOB/Gamma fetch paths for `except … record_empty` / bare `return []` swallows; gate empty-vs-failed on
       market-exists + active-window + UAC coverage. Cross-ref the sports CF-11 model
       (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
+      **DIAGNOSIS (slot-3 2026-06-02): MTDS side VERIFIED COMPLIANT** — same finding as the cefi CF-11 todo (shared MTDS
+      orchestrator finalize): the polymarket adapter classifies+emits+re-raises on a genuine API error (no swallow), and
+      `orchestrator.py:3818`/`:3766` gate `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded
+      fetch-failure. (Distinct from the now-fixed None-classifier divergence above, which was about UNCLASSIFIABLE markets,
+      not fetch errors.) RESIDUAL = focused instruments-service write-path verify. See cefi plan § CF-11 for the full diagnosis.
 
 ## Success criteria
 
