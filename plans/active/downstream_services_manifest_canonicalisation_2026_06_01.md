@@ -297,10 +297,47 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
       computing on it. Gated by `skip_preflight`/`skip_dependency_check` + `fail_on_missing_deps`. 3 unit tests.
 - [ ] [CODE] P2. **GAP-4 (all consumers): ASSERT v9 schema columns on manifest read.** `read_availability_index` backfills
       missing v9 cols as NULL on a v8 manifest → consumers silently read NULL `asset_group`/`pipeline_mode`/`source`. Add a
-      `schema_version`/`asset_group`-present assertion (or `assert_consolidator_healthy`) in `manifest_window_guard`,
-      `manifest_allocation_guard`, MDPS `dependency_checker` so a non-v9 upstream is caught loud, not silently consumed.
+      `schema_version`/`asset_group`-present assertion (or `assert_consolidator_healthy`) in `manifest_window_guard`
+      (features-service@`features_service/common/manifest_window_guard.py:85` — after `read_availability_index`),
+      `manifest_allocation_guard` (strategy-service@`strategy_service/manifest_allocation_guard.py`), MDPS `dependency_checker`
+      so a non-v9 upstream is caught loud, not silently consumed. **⚠️ DESIGN NUANCE (slot-3 2026-06-02 — why deferred, not
+      shipped half-baked):** the prod corpus is **100% v8 TODAY** (pre-migration), so a hard `schema_version==9` assert would
+      break EVERY consumer immediately, and an unconditional warn would fire on 100% of reads (pure noise). Ship it as a
+      **loud WARN that fires only on MIXED-version drift** (some rows v9, some not, within one read) OR an
+      `asset_group`-column-absent-on-a-supposedly-migrated-bucket signal — the real post-migration regression — NOT a blanket
+      "not v9" warn. Becomes a hard assert only AFTER each AG's G3 migration flips its corpus to v9. P2 + warn-only → low value
+      pre-migration; real value is the post-migration regression catch. (slot-3 2026-06-02: deferred under context budget with
+      this design spec so the next agent ships the non-noisy form.)
 - [ ] [CODE] P2. **GAP-7 (MDPS, vocab): rename `dependency_checker` `category` params → `asset_group`** (+ docstrings) at
       next substantive touch. Functional-correct today (resolves via `resolve_bucket_name(asset_group=…)`); naming only.
+      (slot-3 2026-06-02: deliberately NOT done this session — a pervasive cosmetic rename across `check_upstream_data_granular`/
+      `_resolve_upstream_bucket`/`_get_upstream_deps_for_category` + all callers risks collision with the parallel
+      `category=`-ban work + adds churn for zero functional gain; do it when `dependency_checker.py` is substantively touched.)
+
+## Deferred work after 2026-06-02 slot-3 session (code-only, pre-migration, NO migration run)
+
+| Item | Status | Repo / file | Next action |
+| --- | --- | --- | --- |
+| Item 1 prediction E5 captured-atom rebuild | ✅ shipped | mtds@d1f1317d | E5 empty/failed-row re-emit (CF-11) still open — see prediction plan |
+| CRIT-2 router order-path freshness+NaN gate | ✅ shipped | execution-service@3181f26b8 | wire the 2 NON-router live submit paths (live_execution_handler CeFi + manual_instruction_api) — tracked above |
+| CRIT-3 upstream consolidator preflight | ✅ shipped | execution-service@225797127 | per-cell `capture_status` refinement (P1) — tracked above |
+| CRIT-1 MDPS live=batch dep check | ✅ shipped | mdps@9102321 | — |
+| Item 4 features perp_funding canonical read | ✅ shipped | features-service@cf47eca9 | — |
+| GAP-6 features delta_one live-startup gate | ✅ shipped | features-service@dbf12aff | — |
+| GAP-5 strategy live-startup gate | ✅ shipped | strategy-service@d837ca1b | — |
+| Item 3 Directive-D `category=` count-layer ban | ✅ done by other agent | deployment-api@41fa120 | slot-3 verified storage_facade/rebuild fan-out correctly retained (sequencing) |
+| GAP-4 v9-schema warn at consumer guards | ⏳ DEFERRED (design-spec'd) | features/strategy/MDPS guards | ship the MIXED-version-drift warn (NOT blanket "not v9" — noise pre-migration); see GAP-4 nuance above |
+| GAP-7 MDPS `category`→`asset_group` param rename | ⏳ DEFERRED (P2 cosmetic) | MDPS `dependency_checker.py` | rename at next substantive touch |
+| Item 5 FLAG-1 tradfi multi-source double-count | ⏳ DEFERRED (P1, operator-decision) | deployment-api `_mtds_honest_coverage_for_venue` | apply `select_primary_available_source` union dedup; operator: union vs per-source |
+| Item 5 FLAG-3 pipeline_uat hardcoded buckets | ⏳ DEFERRED (P1) | deployment-api `commentary/pipeline_uat.py:167/181/195/211` | route through `resolve_bucket_name` (note: lines carry `# CORRECT-LOCAL` — confirm intent first) |
+| Item 5 FLAG-4 tradfi denominator (Massive venues) | ⏳ DEFERRED (P2, operator/VenueMapping decision) | deployment-api `MTDS_CATEGORY_META["TRADFI"].venue_accessor` | add Massive venues to accessor |
+| Batch=live None-classifier divergence (prediction) | ⏳ DEFERRED (P1) | mtds polymarket_adapter | reconcile live `None→"OTHER"` vs rebuild `None→attempted_failed` — see prediction plan |
+
+> **Session note (slot-3 2026-06-02):** 8 substantive code commits shipped across 5 repos (all CRITs + P0/P1 items),
+> each per-file lint+typecheck+targeted-test green; full `quality-gates.sh --no-fix` sweep run on all 5 touched repos as
+> the batch closeout (operator-requested deferral of the slow sweep to end). Deferred items above are tracked `- [ ]`
+> todos (P2/cosmetic/operator-decision/deployment-api-overlap), deferred under context budget rather than shipped
+> half-baked. NO migration run, NO `--apply`, NO delete — code-only, post-migration-aligned per the governing principle.
 
 ## Per-service scope + what each owns / inherits (no overlap)
 
