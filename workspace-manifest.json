@@ -1086,7 +1086,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FAILING",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
