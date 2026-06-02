@@ -535,14 +535,24 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > sports buckets (`market-data-tick-sports`, `instruments-store-sports`, `features-*-sports`) or stale manifest/path
 > conventions will BREAK. This gate is BEFORE the dry-run/delete: the code must already speak ONLY canonical.
 
-- [ ] [CODE] P0. **Read/write path canonicalisation sweep (sports — all repos)**: grep every read+write GCS path for
-      sports for inline/legacy bucket names + stale conventions (`market-data-tick-sports`/`instruments-store-sports`/
-      `features-*-sports` WITHOUT `-${env}-`; inline `gs://…sports…` f-strings; hardcoded `category=sports` paths;
-      manifest reads off a legacy `_index`). Confirm EVERY sports bucket lookup routes through
-      `resolve_bucket_name(cloud=…, kind=…, asset_group="sports", env=…)` → the `-prd-` env-tiered canonical form (QG
-      STEP 5.69 already bans inline `gs://`; this verifies sports specifically + the resolver returns canonical). Fix any
-      dead-bucket association. Repos: market-tick-data-service, instruments-service, features-service, mtds/mdps,
-      strategy/execution sports paths, alerting-service.
+- [ ] [CODE] P0. **Read/write path canonicalisation sweep (sports — all repos)**: confirm EVERY sports bucket lookup
+      routes through `resolve_bucket_name(…, asset_group="sports", env=…)` → `-prd-` canonical. **REAL DEAD-BUCKET
+      EXPOSURE FOUND (sports-slot grep 2026-06-02 — these read the NO-ENV legacy buckets E8 DELETES → BREAK on delete)**:
+      - **UTL `unified_trading_library/sports_fixtures.py:9`** reads the FIXTURES truthset from
+        `gs://instruments-store-sports-{pid}/…` (NO ENV) — **the keystone truthset depends on this**; legacy delete
+        breaks the no-fixture relabel. → env-tiered.
+      - **UTL `instruments_preflight/__init__.py:23`** `bucket="instruments-store-sports-{pid}"` (no env).
+      - **UTL `instrument_lifecycle_loader.py:46,54`** `"sports":"instruments-store-sports-{pid}"` (no env) (+ `:47`
+        prediction no-env — slot-3 lane, flag don't fix).
+      - **UAC FACADE ROOT — `sports.gcs_paths.bucket_name(...)` returns the NO-ENV form**
+        (`market-data-tick-sports-{PID}` / `instruments-store-sports-{PID}`), pinned by
+        `unified-api-contracts/tests/unit/test_gcs_paths_facade.py:30,49,50,72`. CROSS-AG inconsistency (UTL
+        `resolve_bucket_name` SSOT → `-prd-`; UAC `bucket_name` facade → no-env) affecting prediction/defi/cefi/tradfi →
+        **coordinate at `defi_manifest…` §MASTER; do NOT unilaterally change the cross-AG facade from the sports lane** —
+        fix sports READERS to use `resolve_bucket_name` instead of the facade.
+      - **e2e sports scripts hardcode no-env**: `e2e-testing/scripts/sports/run_weekly_pipeline.py:43` +
+        `audit_production_vs_e2e.py:36`. → canonical.
+      Fix the sports-scoped readers/scripts/tests; flag the cross-AG UAC facade for coordination.
 - [ ] [CODE] P0. **deployment-api + UI data-status canonical resolution (sports)**: the data-status surface resolves
       MANY bucket names / menu conventions / data_type conventions / manifest-reading conventions per asset_group — audit
       `deployment-api/deployment_api/services/data_status*.py` (+ the `data_status_mock.py` SPORTS map) + the
