@@ -86,7 +86,8 @@ verified complete**.
       session-grid contract) + @180f54b (env-tier bucket test fix). **Full MDPS quality-gates.sh exits 0.**
 - [x] ✅ [VERIFY] P0. MDPS: NaN WARN diagnostic in `fast_candle_aggregation.py:304-325` — **KEPT as a permanent
       regression guard** (all 7 adapters now dense → dormant in steady state; catches future regressions). Source:
-      mdps_state_adapter_leading_nan. **Full MDPS `quality-gates.sh` exits 0** (after the [BUG] env-tier test fix below).
+      mdps_state_adapter_leading_nan. **Full MDPS `quality-gates.sh` exits 0** (after the [BUG] env-tier test fix
+      below).
 - [x] ✅ [BUG] P0. **RESOLVED — MDPS foreign QG-red (stale flat bucket-name test assertions).**
       `tests/unit/test_dependency_checker_sports_prediction.py` (9 exact-string cases:
       `TestOutputBucketsSportsPrediction` + `TestPerCategoryUpstreamRouting`) asserted the **legacy flat** bucket names
@@ -94,8 +95,8 @@ verified complete**.
       canonical name (`market-data-tick-sports-prd-test-project`) via UTL `resolve_bucket_name` since
       `market-data-processing-service@61900a3`. **Operator confirmed env-tiered IS canonical (2026-06-02)** → migrated
       the 9 stale assertions to substring/shape checks matching the file's own `TestCanonicalBucketNameResolver` style
-      (robust to the env-tier token, not blind-pinned to `prd`). — market-data-processing-service@180f54b |
-      **full `quality-gates.sh` exit 0 (sentinel `.qg_last_passed_sha` written)**. Source: mdps_state_adapter_leading_nan
+      (robust to the env-tier token, not blind-pinned to `prd`). — market-data-processing-service@180f54b | **full
+      `quality-gates.sh` exit 0 (sentinel `.qg_last_passed_sha` written)**. Source: mdps_state_adapter_leading_nan
       (incidental finding).
 
 ## batch-live-reconciliation-service
@@ -307,9 +308,10 @@ verified complete**.
 - [ ] [DOC] P2. PM: flip the D14 checkbox in `defi_code_codex_drift` + audit-result doc, update
       `codex/.../defi-data-types-catalog.md` body + `defi-canonical-naming-ssot.md` fan-out rows (code shipped
       MTDS@0a3a7071). Source: defi_code_codex_drift D14.
-- [ ] [DOC] P2. PM: fix stale repo names in `codex/04-architecture/data-flow-map.md`
-      (`trading-analytics-api`→`unified-trading-api`, `trading-analytics-ui`→`unified-trading-system-ui`). Source:
-      batch_live_reconciliation_service_audit §7.
+- [x] ✅ [DOC] P2. PM: fix stale repo names in `codex/04-architecture/data-flow-map.md`
+      (`trading-analytics-api`→`unified-trading-api`, `trading-analytics-ui`→`unified-trading-system-ui`). —
+      unified-trading-pm@(this commit) (8 occurrences renamed; `{TRADING_ANALYTICS_GCS_BUCKET}` env var left intact).
+      Source: batch_live_reconciliation_service_audit §7.
 - [ ] [DOC] P3. PM: add a "NOT YET DEPLOYED — tofu apply pending" warning to
       `codex/05-infrastructure/vm-log-archival.md` (cron authored but not applied). Source: fleet_audit_triad.
 - [ ] [DOC] P3. PM: B2 codex marker reconciliation — replace `zero_activity=True` / `ZERO_ACTIVITY_BAR` with

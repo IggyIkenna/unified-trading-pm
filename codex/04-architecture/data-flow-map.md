@@ -168,9 +168,9 @@ batch-live-reconciliation-service
   writes -> recon-{P}/recon/agent_report_{date}.md
   writes -> recon-{P}/recon/index.json
 
-trading-analytics-api
+unified-trading-api
   reads  <- recon-{P}/recon/** (all recon reports)
-  serves -> trading-analytics-ui (/recon/*)
+  serves -> unified-trading-system-ui (/recon/*)
 ```
 
 ---
@@ -178,12 +178,12 @@ trading-analytics-api
 ## 9. Settlement & Fee Schedule Pipeline
 
 ```
-trading-analytics-api (self-contained read/write)
+unified-trading-api (self-contained read/write)
   reads/writes -> {TRADING_ANALYTICS_GCS_BUCKET}/settlements/records.ndjson
   reads/writes -> {TRADING_ANALYTICS_GCS_BUCKET}/fee-schedules/entries.ndjson
   reads/writes -> {TRADING_ANALYTICS_GCS_BUCKET}/fee-schedules/prime_brokers.ndjson
   reads/writes -> {TRADING_ANALYTICS_GCS_BUCKET}/fee-schedules/client_pb_links.ndjson
-  serves -> trading-analytics-ui (/settlements/*, /prime-brokers/*, /clients/*/fee-schedule)
+  serves -> unified-trading-system-ui (/settlements/*, /prime-brokers/*, /clients/*/fee-schedule)
   serves -> settlement-ui (/settlements/*)
 ```
 
@@ -285,8 +285,8 @@ config-api (self-contained)
 | instruments-service               | `instruments-store-*-{P}/`     | execution-results-api | execution-analytics-ui            |
 | market-tick-data-service          | `market-data-tick-*-{P}/`      | execution-results-api | execution-analytics-ui            |
 | pnl-attribution-service           | `pnl-{P}/pnl/`                 | client-reporting-api  | client-reporting-ui               |
-| batch-live-reconciliation-service | `recon-{P}/recon/`             | trading-analytics-api | trading-analytics-ui              |
-| trading-analytics-api             | `{BUCKET}/settlements/`        | trading-analytics-api | settlement-ui                     |
+| batch-live-reconciliation-service | `recon-{P}/recon/`             | unified-trading-api   | unified-trading-system-ui         |
+| unified-trading-api               | `{BUCKET}/settlements/`        | unified-trading-api   | settlement-ui                     |
 | deployment-api                    | `{STATE_BUCKET}/deployments/`  | deployment-api        | deployment-ui                     |
 | All services (UEI)                | `{P}-events/events/`           | batch-audit-api       | batch-audit-ui, logs-dashboard-ui |
 | alerting-service                  | `alerting/history/`            | batch-audit-api       | logs-dashboard-ui                 |
@@ -330,7 +330,7 @@ execution-service ──────────> execution-store-{P}/ ───
                                    │
                                    ├──> pnl-attribution-service ──> pnl-{P}/ ──> client-reporting-api ──> client-reporting-ui
                                    │
-                                   ├──> batch-live-reconciliation-service ──> recon-{P}/ ──> trading-analytics-api ──> trading-analytics-ui
+                                   ├──> batch-live-reconciliation-service ──> recon-{P}/ ──> unified-trading-api ──> unified-trading-system-ui
                                    │
                                    └──> position-balance-monitor-service ──> positions-{P}/ (orphan)
 
@@ -340,7 +340,7 @@ All services ──> {P}-events/ ──> batch-audit-api ──> batch-audit-ui 
 alerting-service ──> alerting/history/ ──> batch-audit-api ──> logs-dashboard-ui (AlertsView)
 
 deployment-api <──> {STATE_BUCKET} (self-contained) ──> deployment-ui
-trading-analytics-api <──> {TRADING_ANALYTICS_GCS_BUCKET} (self-contained) ──> trading-analytics-ui / settlement-ui
+unified-trading-api <──> {TRADING_ANALYTICS_GCS_BUCKET} (self-contained) ──> unified-trading-system-ui / settlement-ui
 config-api <──> (in-memory) ──> onboarding-ui
 ```
 
