@@ -267,6 +267,19 @@ operator context (governance / planning / master-plan / model-tier rules).
       path, and the VM has only the single repo-symlink path. The real dup was content (RULES.md restating CLAUDE.md),
       fixed by the slim. — analysis, no code change needed.
 
+### G8 residual discoveries (surfaced during the de-bloat pass 2026-06-02)
+
+- [ ] [DOC] P2. `agent-orchestrator/agents/main.md:36` has a stale dated section `## Tomorrow-morning specifics (cutover
+      day, 2026-05-19)` — cutover was 2026-05-19; either generalise it to a "cold-start / no-work_split morning" runbook
+      or delete if superseded. Diagnose whether the cutover-day branch is still reachable before editing.
+- [ ] [DOC] P2. `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` freshness pass — verify it doesn't carry the same stale
+      facts CLAUDE.md just shed (auth HS256→ES256, AO branch model, quickmerge staging-first); it's the paste-into-`Task()`
+      ruleset, distinct from RULES.md (worker-lifecycle), so the two stay separate — just keep both current.
+- [ ] [INFRA] P2. **IAM gap**: the `harsh-worker` AWS IAM user (`arn:aws:iam::427895769566:user/harsh-worker`) lacks
+      `ssm:SendCommand`, so a Harsh slot can't inspect/operate the fleet VMs via SSM (the fleet is SSM-access, not open
+      SSH). If Harsh slots are expected to do fleet ops, grant the SSM action; else document that fleet ops route through
+      the central VM / operator session only. Surfaced when verifying the AO `.claude/` symlink on `vm-orchestrator`.
+
 ## Related open work (NOT absorbed here)
 
 The archived `orchestrator_autonomy_audit_remediation_2026_06_01` left **F1/F2/FM3** open (running VM behind LDR HEAD;
