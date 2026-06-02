@@ -299,6 +299,21 @@ VM.
       `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded fetch-failure (incl.
       `failed_per_dt_by_venue` for bundled-Databento partial-success). RESIDUAL = focused instruments-service write-path
       verify. See cefi plan § CF-11 for the full diagnosis.
+- [ ] [CODE] P1. **IS-side CF-11 verify (slot/Harsh 2026-06-02, read-only) — partial result + 1 concrete zero-signal
+      gap.** Read the IS tradfi universe-discovery adapter
+      `instruments-service/.../reference_data/adapters/tradfi/     databento.py`: `_fetch_symbols` handles a
+      `BentoError` (L820) by `classify_venue_error("DATABENTO",…)` + emit `ADAPTER_FETCH_FAILED` + **`return []`**, and
+      `get_instruments` (L537-547) does `results.extend(batch)` with NO raise/record — the classify+emit-event+return-[]
+      shape (consistent with the shard-isolation "no raise in per-venue loops" rule). **CONCRETE GAP**: the SECOND site
+      `databento.py:826` (`data.to_df()` parse failure) does `logger.warning` + `return []` with **NO
+      `ADAPTER_FETCH_FAILED` event + NO classify** → on a transient parse failure those symbols vanish from the
+      discovered universe with ZERO failure signal (silent universe truncation = A8-class false-complete coverage). Fix
+      = mirror the L820 branch (classify + emit `ADAPTER_FETCH_FAILED`) on the parse-failure branch. **OPEN QUESTION
+      (needs the IS catalogue/manifest-layer read — deeper context, owner call):** whether the IS layer converts an
+      emitted `ADAPTER_FETCH_FAILED` + empty return into an `attempted_failed` manifest row (then L820 is compliant) or
+      the empty universe silently shrinks the expected set (then L820 is also a gap) — so L820 compliance is
+      UNCONFIRMED, only L826 (no event at all) is a confirmed gap. Repo: instruments-service. parent_epic:
+      mtds_mdps_master.
 
 ## Success criteria
 

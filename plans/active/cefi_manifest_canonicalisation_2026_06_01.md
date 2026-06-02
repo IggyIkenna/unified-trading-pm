@@ -261,6 +261,17 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       **instruments-service** fetch paths were NOT exhaustively read this session — focused verify needed that IS
       reference-data fetch errors likewise `record_failed` (not `record_empty`/`return []`). Reclassify this todo as
       "verify IS write-path CF-11 (MTDS already compliant)" — the heavy lift the todo assumed is largely absent.
+- [ ] [CODE] P1. **IS-side CF-11 verify (slot/Harsh 2026-06-02, read-only) — cefi IS adapters use the
+      classify+emit-event+return-[] shape.** Read the cefi IS reference-data adapters
+      (`instruments-service/.../reference_data/adapters/cefi/`): `aster.py` / `hyperliquid.py` /
+      `deribit_combo_adapter.py` / `tardis.py` handle transient API errors via `classify_venue_error(...)` + emit
+      `ADAPTER_FETCH_FAILED`, then `return []` (consistent with the shard-isolation "no raise in per-venue loops" rule;
+      tardis has multiple return-[] sites — L764/872/918/959/968). No ZERO-signal swallow found in the cefi IS adapters
+      (unlike tradfi `databento.py:826` — see tradfi plan § CF-11). **OPEN QUESTION (needs the IS
+      catalogue/manifest-layer read — deeper context):** whether the IS layer records `attempted_failed` from the
+      emitted `ADAPTER_FETCH_FAILED` when an adapter returns [] — if it does NOT, the return-[] universe shrink is
+      itself the gap. So cefi IS-side compliance is UNCONFIRMED (the classify+event pattern is right; the event→manifest
+      wiring is unverified). Repo: instruments-service. parent_epic: mtds_mdps_master.
 
 ## Success criteria
 
