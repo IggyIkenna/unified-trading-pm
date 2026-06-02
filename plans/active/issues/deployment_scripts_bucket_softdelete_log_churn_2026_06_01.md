@@ -182,9 +182,14 @@ the storage bloat.
       (owner/cadence/verifier/last_executed). Cloud Build trigger `deployment-service-jobs-image-build` created
       (`iggyikenna-github` connection, push `^main$`, `includedFiles` scoped to Dockerfile/cloudbuild-config/`scripts/vm/**`/
       pyproject/uv.lock) → `deployment-service:latest` auto-rebuilds on main. deployment-service@`0916b35`.
-      **Residual (P3, non-blocking):** the trigger is imperative (the live trigger fleet isn't in `terraform/gcp`); codify
-      it in TF once the cloud-build connection-name drift (`ln` vs `iggyikenna-github`) is reconciled. Also note a fresh
-      image push still needs `gcloud run jobs update --image …:latest` to re-resolve the digest on each job.
+      **Residuals RESOLVED 2026-06-02 (slot 1):** (a) trigger codified in TF — standalone
+      `google_cloudbuild_trigger.deployment_service_jobs_image` in `terraform/cloud-build/gcp/main.tf` pinning the live
+      `iggyikenna-github` connection (NOT the module's stale `ln` default); `terraform import`'d → plan shows no changes.
+      (b) digest auto-resolve — the jobs-image cloudbuild now has an explicit push step + a `redeploy-jobs` step that
+      `gcloud run jobs update`s both maintenance jobs to the fresh `:latest` after each push (Cloud Build SA granted
+      `roles/run.developer` + `iam.serviceAccountUser` on `unified-trading-sa`); verified end-to-end (build `1c684ffc`
+      re-resolved both jobs). deployment-service@`c1c56cd`. **Pre-existing note (not introduced here):** the 13 module-based
+      service triggers in that state still default to the dead `ln` connection — a separate foreign drift, left untouched.
 
 ## Verification
 
