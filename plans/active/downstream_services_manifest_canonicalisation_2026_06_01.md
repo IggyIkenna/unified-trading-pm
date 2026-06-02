@@ -184,6 +184,66 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > canonical + QG-green FIRST so the migration runs against a codebase that already expects the canonical form and can't
 > silently regress to dead buckets when L6/E7 deletes legacy. Cross-link: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (L6 owns the bucket-name SSOT + the actual delete).
 
+## PRE-MIGRATION PERFECTION — expanded scope (operator 2026-06-02): do ALL of these BEFORE any migration run
+
+> Operator: "do them all pre-migration, I want it perfect." Two NEW directives below + every tracked non-blocker
+> (prediction E5 build, features perp_funding rewrite, the 4 deployment-api flags) is now **pre-migration REQUIRED**, not
+> deferred. None are post-cutover.
+
+### D. `category=` is BANNED everywhere — v9 `asset_group=` canonical ONLY (operator 2026-06-02)
+
+> Operator: "category shouldn't be allowed anywhere even as a fallback in data-status — it will confuse counts; we want
+> v9 post-migration canonical only." Post-migration every object is `asset_group=`; a lingering `category=` fallback
+> double-counts / confuses the data-status denominators.
+
+- [ ] [CODE] P0. **Remove the `category=` fallback from data-status + readers** for cefi/tradfi/prediction — the dual
+      `(?:category|asset_group)=` fan-out (`deployment-api/utils/storage_facade.py` `_HIVE_VOCAB_RE`), the cefi/tradfi/pred
+      `category=` prefix templates in the rebuilds, and any `category=` tolerance in list/read/count paths → **`asset_group=`
+      ONLY**. **⚠️ SEQUENCING (correctness — do NOT rip out before the data is migrated):** the cutover is **per-AG, AFTER
+      that AG's G3 `--apply`** makes everything available at `asset_group=`/`pipeline_mode=`. **PREDICTION currently writes
+      `category=prediction`** (verified 2026-06-02: pred-prd path is `day=/category=prediction/data_source=…`) → removing
+      its `category=` fallback BEFORE the prediction migrator runs would BLIND prediction data-status. cefi/tradfi bulk are
+      already `asset_group=` so their fallback is near-dead today. **Plan**: land the `asset_group=`-only code gated/sequenced
+      so each AG flips to canonical-only at its G3; the legacy `category=` objects are gone at L6/E7 delete. Add a QG/test
+      assertion that data-status counts use `asset_group=` only (no `category=` double-count). Cross-ref the migrators
+      (which already emit `asset_group=`) + `bucket_name_ssot…` L6.
+
+### E. Upstream pre-flight DATA checks in every service — post-migration SSOT + v9 schema + honest-absence + live/batch symmetry (operator 2026-06-02)
+
+> Operator: "scan all the services for the asset groups in this slot and check we ALWAYS have upstream-data pre-flight
+> checks in code using the NEW post-migrated SSOT bucket formats + v9 schemas (column checks where relevant), and
+> 0-volume / NaN-price (and equivalent) where data is genuinely missing upstream and expected. Manifest + that we KNOW
+> when data is incomplete-expected and that's marked. Live AND batch symmetry for the checks — just slightly different
+> post-check: live = alerting / circuit-breakers / actions (bad data is DANGER live); batch = just fills what it can."
+
+Each consumer service (MTDS→MDPS→features→strategy→execution) for **cefi/tradfi/prediction** MUST, before consuming
+upstream data, run a PRE-FLIGHT DATA CHECK that:
+
+1. **Resolves the POST-migration canonical SSOT** — `resolve_bucket_name` env-tiered bucket, `pipeline_mode=`/`asset_group=`
+   path, v9 `_index` (NO `category=`).
+2. **Validates the v9 SCHEMA + columns** it depends on (the specific columns each consumer reads — present + typed).
+3. **Detects genuinely-missing-upstream + EXPECTED** — 0-rows / 0-volume / NaN-price / all-null-key-column (per data_type
+   the right "empty" signal) and distinguishes it from a fetch failure (CF-11 3-way: `attempted_failed` vs typed
+   `empty_confirmed` vs `SOURCE_RETURNED_ZERO`).
+4. **Reads the MANIFEST to know incomplete-expected** — uses the `_index` capture_status (captured / empty_confirmed[reason]
+   / attempted_failed / expected_unattempted) so the consumer KNOWS a cell is incomplete-but-expected and marks/propagates
+   it (CF-6 `expected_unattempted` propagation) rather than silently treating absence as zero.
+5. **Live = batch SYMMETRY for the CHECK, different ACTION**: identical detection logic in both modes (the SAME pre-flight
+   function); the ACTION differs — **live**: raise/alert/circuit-breaker (bad/missing data is dangerous to trade on) per
+   the alerting + autonomous-recovery matrix; **batch**: degrade gracefully, fill what's available, mark the gap honest
+   (no halt). The check itself must NOT diverge live-vs-batch (banned: live-only data_types / read-time available_at).
+
+- [ ] [AUDIT] P0. **Scan ALL slot-3 services for upstream pre-flight data checks** (cefi/tradfi/prediction): MTDS
+      (adapter/handler upstream = instruments universe + venue reachability), MDPS (upstream = MTDS raw ticks), features
+      (upstream = MDPS candles), strategy (upstream = features), execution (upstream = strategy signals + marks). For each
+      consumer: does a pre-flight check exist? Does it use the post-migration canonical bucket/path/v9-schema? Does it
+      detect 0-vol/NaN/empty + read the manifest capture_status for incomplete-expected? Is the check live=batch-symmetric
+      with mode-appropriate action? Produce a per-service GREEN/GAP matrix.
+- [ ] [CODE] P0. **Implement/fix the gaps** the audit finds — add the missing pre-flight checks (canonical SSOT + v9
+      schema + honest-absence detection + manifest read + live/batch-symmetric with mode-appropriate action). Born-canonical
+      for services with no data yet (features/strategy/execution). Align QG tests so a regression (dead bucket / missing
+      check / category= / silent zero) fails QG.
+
 ## Per-service scope + what each owns / inherits (no overlap)
 
 | Service       | Surface                                                  | CF items it OWNS (live check)                                       | Notes                                                                                                                                                                          |
