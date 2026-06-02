@@ -297,18 +297,23 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       (UTL); don't auto-merge a whole layer at once. Mitigation if UAC fix is slow: re-run UTL main v2 after UAC merges.
       repo: unified-trading-library (re-trigger) — root cause is the UAC blocker above.
 
-- [ ] [SCRIPT] P1. **Enforce dep-PROMOTION-ORDER in quickmerge (operator insight 2026-06-02) — would have prevented the
-      UTL-before-UAC main race.** quickmerge STAGE 1 checks dep CONSISTENCY (local dep == origin/LDR) + STAGE 1.5 checks
-      version alignment, but NOT dep TIER-READINESS. Add: before promoting repo X to tier T, for each `dep D` in
-      `manifest[X].dependencies` assert `D.ci_status >= T` (D STAGING_GREEN before X→staging; D on-main before X→main) —
-      BLOCK + name the dep to promote first. All inputs already exist: deps (manifest), ci_status (manifest, written by
-      ci-status-update on every QG), and staging/main are green-by-construction (v2-gated auto-merge) so ci_status is a
-      trustworthy 'promoted+passed' signal. **What's left to wire:** (1) add an explicit main-tier ci_status state
-      (MAIN_GREEN / SIT_VALIDATED-on-main) or check 'dep main == promoted SHA' — today ci_status tops out at
-      STAGING_GREEN; (2) ROUTE LDR→main promotion THROUGH quickmerge (or a promote.sh calling the same gate) — the
-      2026-06-02 race happened because main-promotion used raw `gh pr` calls that bypass quickmerge's dep checks
-      entirely. Converts dep-order from manual discipline → enforced gate. repo: unified-trading-pm (quickmerge.sh + the
-      ci_status state machine).
+- [x] ✅ [SCRIPT] P1. **Enforce dep-PROMOTION-ORDER in quickmerge (operator insight 2026-06-02) — would have prevented the
+      UTL-before-UAC main race.** — unified-trading-pm@a14e648ae. STAGE 1.7 added to quickmerge.sh: blocks
+      LDR→staging promote when any dep D has ci_status below STAGING_GREEN (accepted: STAGING_GREEN, SIT_VALIDATED;
+      blocked: FEATURE_GREEN, LOCAL_PASS, NOT_CONFIGURED, FAILING). Human-only escape: --skip-dep-tier-gate (agent
+      guard mirrors --dep-branch). 14 bats tests in tests/test_quickmerge_dep_tier_gate.bats (block/pass/no-deps/
+      missing-manifest/multi-dep/agent-guard). QG green. **Follow-up (separate item):** (1) main-tier ci_status state
+      (MAIN_GREEN) for dep-on-main check; (2) route LDR→main promotion through quickmerge/promote.sh — 2026-06-02 race
+      used raw `gh pr` calls that bypass this gate entirely. These two are staging→main-side hardening, not LDR→staging.
+      ci_status state machine). **FOLLOW-UP BELOW.**
+
+- [ ] [SCRIPT] P2. **FOLLOW-UP: Main-tier dep-order gate (staging→main).** The STAGE 1.7 gate covers the
+      LDR→staging promote path. The complementary gate for staging→main belongs in
+      `.github/workflows/staging-to-main.yml` (or a `promote.sh` that wraps `gh pr merge`). Gate rule: before
+      promoting staging→main for repo X, assert every dep D has `ci_status ∈ {SIT_VALIDATED}` OR dep D's main SHA ==
+      staging-promoted SHA. Also needs a new `MAIN_GREEN` ci_status state in `ci-status-update.yml` (today tops out at
+      STAGING_GREEN). This is the second half of the UTL-before-UAC mitigation.
+      repo: unified-trading-pm (staging-to-main.yml + ci_status state machine).
 
 - [ ] [SCRIPT] P2. **Finish Telegram-retire in the TEMPLATE SSOT (else rollout re-introduces it).** The 2026-06-02
       operator-decided Telegram→Slack#ci-failures migration is DONE for `.github/workflows/` (10 workflows, grep-clean,
