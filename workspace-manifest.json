@@ -1166,7 +1166,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
