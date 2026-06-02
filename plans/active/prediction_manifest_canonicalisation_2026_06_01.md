@@ -205,6 +205,27 @@ be fixed first if run on a VM.
 > `record_captured_from_counts` call exactly** (find it in the prediction finalize loop ~orchestrator.py:1450+). The
 > post-migration REGEX (optional `pipeline_mode=` + `asset_group=prediction/venue=/instrument_type=/data_type=/{cid}.parquet`)
 > from the reverted draft IS correct + reusable; the row-key/cluster-bundling + column-read is the build.
+>
+> **VERBATIM BUILD SPEC — mirror this exact live-writer call (orchestrator.py:~3068, prediction emit loop):**
+> ```python
+> writer.record_captured_from_counts(
+>     row_key={"date": str(processing_date), "venue": pred_venue,
+>              "data_type": "prediction_canonical_question_group",
+>              "instrument_type": "prediction", "instrument_id": cqg_str},   # cqg = canonical_question_group
+>     total_rows=total_rows,                       # sum of market_counts.values()
+>     expected_root_clusters=expected_clusters,    # _load_expected_clusters_for_cqg(cqg, date, fallback=dict.fromkeys(market_counts,1))
+>     observed_clusters=market_counts,             # {market_id(conditionId): row_count}
+>     available_at_envelope=envelope,              # max(available_at) per cqg (rebuild: read from parquet, NO live-latency add)
+>     pipeline_mode=PipelineMode.BATCH_POLYMARKET_CLOB,  # or derive_pipeline_mode_for_row(venue,"prediction",dt)
+> )
+> ```
+> **Rebuild from objects**: scan canonical per-cid objects → for each, read parquet COLUMNS
+> `canonical_question_group`, `market_id`(/`condition_id`), `available_at` + num_rows (pyarrow column projection +
+> metadata) → group by `(date, venue, canonical_question_group)` building `observed_clusters={market_id: rows}` +
+> `envelope=max(available_at)` → one `record_captured_from_counts` per group. Missing-envelope (no parseable
+> available_at) → `record_failed` (mirror the live writer's NaT guard). expected_root_clusters: reuse
+> `_load_expected_clusters_for_cqg` if importable, else `dict.fromkeys(market_counts, 1)`. This is per-AG-canonical +
+> batch=live identical → G6 completeness checkable against the live `_index`.
 
 - [ ] [DATA] P0. E5 Manifest rebuild → v9. **REFERENCE: cefi E5 DONE (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional
       `pipeline_mode=` regex segment, DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
