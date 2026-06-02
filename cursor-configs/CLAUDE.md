@@ -91,10 +91,15 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 
 ### Git discipline
 
-- `bash scripts/quickmerge.sh "msg" --agent` not `git push` for promotion-to-main. Always `--agent` in Claude Code.
-- Dirty deps → commit + push directly to `live-defi-rollout`. DO NOT quickmerge when dep repos dirty.
-- Two-pass: Pass 1 = `bash scripts/quality-gates.sh`. Pass 2 = `quickmerge --agent` (lint/format/typecheck/codex, no
-  tests).
+- **Staging-first (live model 2026-06-02)**: `bash scripts/quickmerge.sh "msg" --agent --files '<paths>'` to ship a
+  finished unit — quickmerge routes ALL commits → `staging` → SIT → `main`; `--to-staging` is a **no-op**. Never raw
+  `git push` for CODE (quickmerge early-exits "nothing to commit" on a clean tree → direct LDR pushes silently pile up
+  behind main). Always `--agent` in Claude Code.
+- **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit *promotes* via
+  quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
+  (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
+- Two-pass: Pass 1 = `bash scripts/quality-gates.sh` (writes `.qg_last_passed_sha` sentinel). Pass 2 = `quickmerge
+  --agent` (verifies sentinel == HEAD, skips redundant QG, opens the auto-merging `staging` PR).
 - `--dep-branch` is human-only.
 - **`git pull` rejected with `(would clobber existing tag)`** (stale local release tag vs semver-agent's canonical
   remote tag, e.g. `v1.0.0`/`v1.2.0`): fix with `git fetch origin --tags --force` (local-only; remote is canonical for
