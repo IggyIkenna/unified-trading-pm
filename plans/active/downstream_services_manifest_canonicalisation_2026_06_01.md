@@ -32,6 +32,107 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > those should be fairly quick — but still should be audited and in plans." So this plan is **audit-first**: read each
 > service's actual `_index` state (small corpus → fast), then bundle any debt into ONE single-walk per bucket.
 
+## 🎯 NEXT-AGENT CODE-CANONICALISATION CONSOLIDATION BACKLOG (slot-3 AGs: cefi / tradfi / prediction)
+
+> **Operator directive 2026-06-02**: "I want all the code to be at its canonical point so that the migration is aligned
+> … a change I'm not going to have to revert, a manifest change I'm not going to have to change again, a migration change
+> I'm not going to have to change again." This section is the **single hand-over surface** for the remaining CODE work so
+> the next agent can drive every read/write/status/rebuild path to the v9 post-migration canonical form BEFORE the
+> migration RUN — so the migration + delete (operational session) needs ZERO further code edits. Each item names the
+> target repo + file + exact change + home plan; a cold sub-agent should read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
+> first. **defi = slot-2's lane** (referenced, never edited here); **sports = its own slot**.
+>
+> **Done this programme (do NOT redo — verify on origin/live-defi-rollout):** Item-3 CRIT-2 non-router freshness gate
+> (execution-service@12561a9ee) · Item-4 Polymarket None→attempted_failed batch=live (mtds@5744ba61) · CRIT-1 MDPS
+> live=batch (mdps@9102321) · CRIT-2 router gate (exec@3181f26b8) · CRIT-3 upstream preflight (exec@225797127) · features
+> perp_funding canonical read (features@cf47eca9+cefd5b54) · GAP-5/6 live-startup gates (strategy@d837ca1b /
+> features@dbf12aff) · prediction E5 captured-atom rebuild (mtds@d1f1317d) · Directive-D category= count-ban
+> (deployment-api@41fa120) · PREP3 writer pipeline_mode=PRIMARY (mtds@f50116ca) · all 3 migrators + 3 E5 rebuild scripts
+> EXIST. CF-11 write-path **MTDS side = VERIFIED COMPLIANT** (orchestrator.py:3818 tier-2 + :3766 tier-3 gate
+> record_failed-vs-empty on a recorded fetch-failure; adapters classify+emit+re-raise — no swallow).
+
+### TIER 1 — CODE-to-canonical, P0/P1 (MUST be canonical + QG-green BEFORE the migration RUN)
+
+- [ ] [CODE] P0. **CF-11 write-path — instruments-service residual** (MTDS already compliant). Verify the IS reference-data
+      fetch paths for cefi/tradfi/prediction `record_failed` (→ `attempted_failed`, via `classify_venue_error()`/
+      `ADAPTER_FETCH_FAILED`) on a genuine API error (timeout/5xx/429/auth) for an in-universe instrument within coverage —
+      NOT `record_empty`/`return []`. Grep `instruments-service` reference adapters for `except … record_empty` / bare
+      `return []` swallows; gate empty-vs-failed on instrument-in-universe + UAC coverage bounds. Repo: **instruments-service**.
+      Home: each AG plan § CF-11 (full diagnosis in cefi plan).
+- [ ] [CODE] P0. **E5 manifest-rebuild logic — CF-11 3-way decision tree** (`rebuild_{cefi,tradfi,prediction}_manifest.py`,
+      mtds `scripts/`). Captured-atom rebuilds DONE; STILL OPEN — make the LOGIC canonical now so the migration-RUN session
+      needs no script edits: (a) **within-bounds empty → `attempted_failed`** (not `SOURCE_RETURNED_ZERO`) — gate on
+      in-universe (cefi venue+symbol / tradfi databento-universe×trading-calendar / prediction Polymarket market×active-window)
+      + within coverage window + not a known gap; (b) **re-emit the EXISTING `_index` `empty_confirmed`/`attempted_failed`
+      rows as v9** — a pure object-scan loses cells with NO backing object, so read the prior `_index` via
+      `read_availability_index` (UTL) + re-emit typed (status PRESERVED, never relabel a failure to empty); (c) **prediction:
+      audit the 41 existing `SOURCE_RETURNED_ZERO`** (genuine vs masked fetch-failure) + preserve the 2,280
+      `EXPECTED_PRE_VENUE_LAUNCH` (pre-launch check via UAC `venue_launch_dates`). Unit-test the 3-way tree per script.
+      Repo: **market-tick-data-service**. Home: each AG plan § CF-11 + E5.
+- [ ] [CODE] P1. **Kalshi None-classifier divergence** — same fix as Polymarket@5744ba61. Kalshi adapter must emit `None`
+      (not `"OTHER"`) for a sub-threshold classification so the shared orchestrator finalize routes it to
+      `attempted_failed[ClassifierConfidenceLow]` (venue parity + batch=live); update `test_kalshi_adapter_lifecycle_gating.py`
+      to assert `None` not `"OTHER"`. Repo: **market-tick-data-service**. Home: prediction plan § CF-11. (Low live urgency —
+      Polymarket-only corpus today — but required before Kalshi goes live.)
+- [ ] [CODE] P1. **Downstream writer-fixes (MDPS / features / strategy / execution)** — emit typed `EmptyConfirmedReason` +
+      `attempted_failed`-not-swallow (CF-11) so the FIRST volume each writes is born-canonical (these AGs have no `_index`
+      yet → writer-fix-first, not migrate-a-nonexistent-corpus). Repos: **market-data-processing-service / features-service /
+      strategy-service / execution-service**. Home: this plan § C (line ~454) + Phase-C.
+
+### TIER 2 — data-status / deployment-api code (so post-delete reads/counts don't regress)
+
+- [ ] [CODE] P1. **FLAG-1 (deployment-api, OPERATOR-DECISION)** — tradfi v9 Databento+Massive dual-source can double-count
+      `found_dates` in `_mtds_honest_coverage_for_venue` (no `select_primary_available_source` dedup). **Operator must pick**
+      union (any source captured = green) vs per-source-cell semantics; then apply the UAC `source_priority` dedup if union.
+      Repo: **deployment-api**. Home: this plan FLAG-1.
+- [ ] [CODE] P1. **FLAG-3 (deployment-api, AMBIGUOUS — diagnose before fix)** — `commentary/pipeline_uat.py:167/181/195/211`
+      hardcode no-env `instruments-store-{pid}` / `features-store-{pid}` / `ml-store-{pid}` / `execution-store-{pid}`. These
+      lines carry deliberate `# CORRECT-LOCAL` markers that CONFLICT with routing through `resolve_bucket_name`. **Reconcile
+      with the bucket-name-SSOT owner**: do these `*-store` buckets get env-tiered/deleted (→ FLAG-3 real, route through
+      resolver) or stay no-env (→ CORRECT-LOCAL right, close FLAG-3)? Another agent is active in deployment-api — coordinate,
+      don't blind-edit. Repo: **deployment-api**. Home: this plan FLAG-3.
+- [ ] [CODE] P2. **FLAG-4 (deployment-api, OPERATOR/VenueMapping decision)** — `MTDS_CATEGORY_META["TRADFI"].venue_accessor`
+      = `all_databento_venues` (6) omits Massive-only venues → misleading TRADFI honest-coverage denominator. Add Massive
+      venues to the accessor (operator/VenueMapping call). Repo: **deployment-api**. Home: this plan FLAG-4.
+
+### TIER 3 — guards + vocab + tests + docs (canonical safety-net)
+
+- [ ] [CODE] P2. **GAP-4 — v9-schema MIXED-version-drift warn** at `manifest_window_guard` (features) / `manifest_allocation_guard`
+      (strategy) / MDPS `dependency_checker`. Ship the loud-warn that fires ONLY on mixed-version drift within one read (some
+      rows v9, some not) OR `asset_group`-column-absent-on-a-migrated-bucket — NOT a blanket "not v9" warn (corpus is 100%
+      v8 today → that would be pure noise). Becomes a hard assert post-each-AG-G3. Repos: **features-service / strategy-service /
+      market-data-processing-service**. Home: this plan GAP-4 (full design spec there).
+- [ ] [CODE] P2. **GAP-7 — MDPS `dependency_checker` `category`→`asset_group` param rename** (+ docstrings) at next
+      substantive touch (functional-correct today). Repo: **market-data-processing-service**. Home: this plan GAP-7.
+- [ ] [CODE] P0. **QG-test alignment (read/status, cross-repo)** — extend the QG-fed tests so they assert the CANONICAL form
+      (resolver bucket, `pipeline_mode=` path, v9 `_index` columns, `asset_group=`, on-disk data_type) on READ + STATUS paths
+      (writer 18 assertions + item-3/4 tests done) → QG FAILS on reversion to a dead bucket / `category=` / old schema. Repos:
+      **mtds / MDPS / features / instruments / deployment-api**. Home: this plan "QG-test alignment".
+- [ ] [DOCS] P1. **Doc sweep + supersession banners** — grep `codex/02-data` + `codex/04-architecture` + repo `docs/GCS_PATHS.md`
+      for any path example WITHOUT `pipeline_mode=` shown as canonical / `category=` as canonical / non-on-disk `data_type` →
+      update or add `SUPERSEDED → <plan>` banner; banner the 4 superseded plan sections (cf_data_state "Supersession mapping"):
+      `tradfi_massive_dual_source` source-task, `data_source_provenance_all_asset_groups`, `pipeline_mode_partition_migration`,
+      `bucket_name_ssot…` Phase-5 `--manifest-only` seed. Home: cf_data_state audit "Codex/plan doc-update TODOs".
+
+### TIER 4 — OPERATIONAL MIGRATION RUN (NOT code; the next operational session, AFTER Tiers 1-3 are canonical + QG-green)
+
+> These are the migration EXECUTION steps (read-only G1 dry-run is safe; G2+ irreversible). Per the per-AG plans + the
+> cf_data_state "GATES G1–G8" + "NEXT-AGENT EXECUTION HANDOFF". They consume the EXISTING migrators + E5 scripts (Tier-1
+> makes the E5 LOGIC canonical first). Do NOT run them in a code-only session.
+
+- [ ] [DATA] P0. Per-AG (cefi/tradfi/prediction): Phase-0 layout audit → re-tarball+pin SHAs → **G1 full-corpus dry-run**
+      (`launch-canonical-migration-vm.sh <ag> <start> <end> dry`; confirm `TOTAL planned` ≈ full-corpus object count) →
+      writer drain + `_index` snapshot → `--apply` additive copy → **E5 rebuild RUN** → CF-1…CF-12 verify → completeness
+      COUNT gate → strategically-sampled cross-shard verify → fleet drain → **DELETE legacy (END-only, irreversible)**.
+      Home: each AG plan §C/§E + `cf_data_state_audit_slot3_2026_06_01.md` GATES G1–G8. (E6 CF-7 relabel + E7 verify + E8
+      delete ride here.)
+- [ ] [DATA] P1. Downstream service C-walks (MDPS rides the AG tick walk; features/strategy/execution = writer-fix-first,
+      re-audit when input C-GREEN + first batch runs). Home: this plan § C.
+
+### Sequencing (HARD): Tier-1 + Tier-3-QG-tests GREEN → Tier-2/Tier-3 → THEN Tier-4 migration RUN.
+
+---
+
 ## PREP3 — reader/writer `pipeline_mode`-PRIMARY (cross-AG; 🟢 WRITER DONE / 🟡 reader slot-2 coordination)
 
 > **Why this gates the legacy delete + backfill resume (operator 2026-06-02)**: the v9 migration ADDS the
@@ -55,7 +156,10 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       instruments resolver-based). The ONLY reader regression = features `perp_funding_rates.py` (tracked in the per-surface
       matrix below). So PREP3 reader-side is GREEN except that one features-service fix. (Original slot-2-coordination note
       below retained for context.)
-- [ ] [CODE] P1. **READER side context (superseded by the audit above)**: MTDS
+- [x] ✅ [CODE] P1. **READER side — SUPERSEDED/GREEN (slot-3 2026-06-02)**: covered by the PREP3 reader audit above (MTDS
+      reader.py pm-aware; MDPS day-prefix scans pm-agnostic; instruments resolver-based) — the only reader regression was
+      features `perp_funding_rates.py`, shipped at features@cf47eca9. No open reader work for cefi/tradfi/prediction. (Original
+      context retained below.) MTDS
       `reader.py` is ALREADY pipeline_mode-aware (Level-1 `pipeline_mode={mode}/` probe → Level-2 no-pm fallback);
       `manifest_reader_fallback` Level-0 probes `pipeline_mode=`; MDPS `cloud_data_provider.py` only resolves buckets (no
       raw-tick partition-path building); slot-2 already shipped pipeline_mode-aware MDPS+features reads for **DeFi**
@@ -128,7 +232,11 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       `derivative_ticker.parquet` filename, missing pipeline_mode); the broken `contains("ETH-PERP")` symbol filter is
       removed (path scopes to the one instrument). Regression-guard test asserts the canonical 4-axis path. 8 cefi unit tests
       green. (Original audit row retained below for context.)
-- [ ] [CODE] P0. **features-service** — audit (slot-3 agent A, 2026-06-02): MOST read paths are CANONICAL (delta_one/
+- [x] ✅ [CODE] P0. **features-service read paths — RESOLVED (slot-3 2026-06-02)**: the one active regression risk
+      (`perp_funding_rates.py` non-canonical `_MTDS_PATH_TEMPLATE`) shipped at features@cf47eca9 (✅ row above); all other
+      features read paths verified canonical. This audit row is the original finding, retained for context — superseded by
+      the ✅ fix. (Original audit text below.)
+      features-service — audit (slot-3 agent A, 2026-06-02): MOST read paths are CANONICAL (delta_one/
       volatility/cross_instrument use `resolve_bucket_name` + processed_candles manifest discovery; onchain=slot-2). **ONE
       ACTIVE REGRESSION RISK found — `features_service/cefi/calculators/perp_funding_rates.py:43-46` `_MTDS_PATH_TEMPLATE`**:
       `raw_tick_data/by_date/day={date}/asset_group=cefi/venue={venue}/data_type=derivative_ticker/derivative_ticker.parquet`
