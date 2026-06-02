@@ -63,8 +63,9 @@ verified complete**.
 
 - [ ] [CODE] P0. MDPS: add `state_col: str | None` + `flow_cols` kwargs to `base_adapter._finalize_session_grid` (per
       issue-doc §Scope items 1–3). Source: mdps_state_adapter_leading_nan.
-- [ ] [CODE] P0. MDPS: add prior-day carry-seed logic to `_finalize_session_grid` (Decision 1 — seed leading bins from
-      last-known price/ts instead of dropping). Source: mdps_state_adapter_leading_nan.
+- [x] ✅ [CODE] P0. MDPS: add prior-day carry-seed logic to `_finalize_session_grid` (Decision 1 — seed leading bins from
+      last-known price/ts instead of dropping). Source: mdps_state_adapter_leading_nan. — market-data-processing-service@5a5e989 |
+      seed_price/seed_ts kwargs + carry-from-bin-0 + cold-start-drop + CLOSED-drop preserved | tests/unit/test_finalize_session_grid_seed.py (6 cases) | QG exit 0. (Seed *threading* through batch+live call path tracked in issue-doc Decision-1 todo.)
 - [ ] [CODE] P0. MDPS: wire the 7 state adapters to call `_finalize_session_grid(output, state_col=…)` —
       cefi/derivative, cefi/futures_chain, cefi/options_chain, defi/liquidity, defi/market_state, cefi/book_snapshot,
       tradfi/tbbo. Source: mdps_state_adapter_leading_nan.
