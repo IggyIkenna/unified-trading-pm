@@ -201,9 +201,9 @@
   <text x="95" y="1176" text-anchor="middle" class="level-label">L8</text>
   <text x="150" y="1176" class="desc">IaC + post-deploy validation (last). (3 repos)</text>
   <rect x="70" y="1199" width="130" height="38" class="test" />
-  <rect x="70" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="1199" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="135" y="1217" text-anchor="middle" class="label">e2e-testing</text>
-  <circle cx="190" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="190" cy="1207" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="135" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="210" y="1199" width="146" height="38" class="infra" />
   <rect x="210" y="1199" width="4" height="38" fill="#84cc16" rx="2" />
