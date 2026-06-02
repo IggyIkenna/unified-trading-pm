@@ -187,8 +187,10 @@ verified complete**.
 - [x] ✅ [CODE] P1. MTDS: remove banned `bloxroute` relay URLs (`cli/handlers/mev_events_handler.py`) + delete the
       tracked `mev_events_handler.py.bak`. — market-tick-data-service@`d3e02228` (ruff+basedpyright clean). Source:
       defi_code_codex_drift D7.
-- [ ] [SCRIPT] P2. MTDS: add a QG lint guard that fails on malformed `by_date/` paths not matching
-      `^raw_tick_data/by_date/day=\d{4}-\d{2}-\d{2}/`. Source: gcs_hive_partition.
+- [x] ✅ [SCRIPT] P2. MTDS: add a QG lint guard that fails on malformed `by_date/` paths not matching
+      `^raw_tick_data/by_date/day=\d{4}-\d{2}-\d{2}/`. — unified-trading-pm@`5d6d398e4` (guard
+      `scripts/qg/no_malformed_by_date_paths.sh`) + market-tick-data-service@`b92d6c55` (wired STEP 5.86). Guard exits 0
+      clean / exits 1 on hyphen-form `day-` violation. Source: gcs_hive_partition.
 - `BLOCKED-DISCIPLINE` [CODE] P2. MTDS: extend `scripts/sweep_phantom_manifest_rows.py` for the raw-trade
   `captured`-with-no-processed-candle phantom class — RECLASSIFIED 2026-06-02: pruning those rows is a whole-corpus GCS
   walk that MUST bundle into the cefi C0 canon walk (single-walk discipline), NOT a standalone sweep. The read-side
@@ -215,12 +217,19 @@ verified complete**.
 
 ## deployment-service
 
-- [ ] [INFRA] P1. deployment-service: schedule `scripts/vm/cleanup_old_tarballs.py` (currently 0 schedule refs) via a
+- [x] ✅ [INFRA] P1. deployment-service: schedule `scripts/vm/cleanup_old_tarballs.py` (currently 0 schedule refs) via a
       Cloud Run Job + Cloud Scheduler `--keep 5`, `terraform/gcp/tarball_cleanup_scheduler.tf` following the
-      `manifest_consolidator_scheduler.tf` pattern; add an `owner/cadence/verifier/last_executed` runbook block. Source:
-      deployment_scripts_bucket.
-- [ ] [DOC] P2. deployment-service: fix cosmetic ASCII-art bucket labels in `docs/DEPLOYMENT_GUIDE.md` +
-      `DEPLOYMENT_GUIDE_FEMI.md` (~L391-393) to env-tiered names. Source: gcs_hive_partition.
+      `manifest_consolidator_scheduler.tf` pattern; add an `owner/cadence/verifier/last_executed` runbook block. —
+      deployment-service@`840c9a5` (single Cloud Run Job `${env_prefix}-tarball-cleanup`, daily `0 2 * * *` UTC, runbook
+      `runbooks/tarball_cleanup_maintenance.md` with all 4 fields). TF authored only — `tofu apply` is the separate
+      operator-gated item below. ⚠️ deployment-service QG has 2 PRE-EXISTING test timeouts
+      (`test_data_status_queries.py`/`test_missing_data_per_service.py` sqlalchemy-import) + coverage 69.53%<70% on
+      files not touched by this change (a `.tf`+`.md` add cannot affect Python coverage) — flagged for the test owner.
+      Source: deployment_scripts_bucket.
+- [x] ✅ [DOC] P2. deployment-service: fix cosmetic ASCII-art bucket labels in `docs/DEPLOYMENT_GUIDE.md` +
+      `DEPLOYMENT_GUIDE_FEMI.md` (~L391-393) to env-tiered names. — STALE PREMISE / not actionable:
+      `DEPLOYMENT_GUIDE.md` is only 58 lines (no L391-393, no ASCII bucket diagram) and `DEPLOYMENT_GUIDE_FEMI.md` does
+      not exist in the repo. Nothing to fix; source-doc claim predates a doc rewrite. Source: gcs_hive_partition.
 
 ## unified-trading-pm — codex / doc-drift
 
