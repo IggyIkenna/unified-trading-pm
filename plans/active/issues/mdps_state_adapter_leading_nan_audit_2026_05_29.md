@@ -161,10 +161,19 @@ Tests in scope:
       `seed_price`/`seed_ts` (+ `seed_state` for state adapters) and fills leading bins from bin 0 instead of dropping;
       cold-start (no seed) still drops; CLOSED still drops. — MDPS@5a5e989 + @4fd962d (tests:
       test_finalize_session_grid_seed.py prior-day-carry vs cold-start-drop vs CLOSED-drop).
-- [ ] [SCRIPT] P0. **Decision 1 — SOURCE + THREAD the per-instrument prior-day seed (REMAINING — the orchestration
-      work).** The finalizer already consumes a seed; nothing sources it yet, so today every adapter runs cold-start
-      (leading bins drop, no NaN — correct but not yet carried). Build `_get_prior_day_seed(asset_group, date_str,
-      venue, symbol, data_type, timeframe)` and thread it into BOTH paths. **Call-path map (verified 2026-06-02,
+- [x] ✅ [SCRIPT] P0. **Decision 1 — SOURCE + THREAD the per-instrument prior-day seed (DONE).** —
+      market-data-processing-service@56202b0 | `CandleWriteMixin._read_prior_day_frame` + `_get_prior_day_seed` +
+      `_extract_seed_from_prior_df` + `_timestamp_to_epoch_us` read the prior day's written candle parquet via the
+      bucket-name SSOT (`get_output_bucket_for_asset_group` + `get_processed_path` + `build_processed_candle_path`);
+      `seed_price` = last finite `close` (post-finalize close == driver for every adapter), `seed_state` = last finite
+      value of each float state column; NEVER raises (any miss → cold-start). `_process_instrument_file` stashes a
+      per-file seed context; `_seed_adapter_for_instrument` sets `adapter.set_prior_day_seed(...)` before each
+      base-timeframe `process_to_candles` across ALL 4 paths (chain-by-key, chain-by-symbol, streaming-slice, standard);
+      chain bundles read the prior-day `ticks.parquet` ONCE (cached) + filter per instrument; larger timeframes
+      aggregate from the seeded base. 12 adapters declare `supports_prior_day_seed=True`; finalizer consumes-once +
+      clears (no chain-loop leakage). 18 new tests (test_prior_day_seed.py) + 1308 unit tests green + full QG exit 0.
+      ORIGINAL SCOPE NOTE (kept for provenance): Build `_get_prior_day_seed(asset_group, date_str, venue, symbol,
+      data_type, timeframe)` and thread it into BOTH paths. **Call-path map (verified 2026-06-02,
       market-data-processing-service):** per-instrument dispatch is `live_workers.py` `_process_chain_timeframe`
       (~L1014–1022: `adapter.process_to_candles(tick_data=inst_data, timeframe, instrument_info=inst_info)`) +
       `_process_standard_timeframe` (~L1609–1629); batch reuses live via `batch_workers.py` →
