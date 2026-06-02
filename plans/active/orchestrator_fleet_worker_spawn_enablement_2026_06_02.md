@@ -95,8 +95,13 @@ The branch operator must come from the host/slot, not the Claude account (which 
 Blast radius: this gate runs on every spawn fleet-wide → land behind `scripts/check.sh` + a unit test that asserts a
 worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). Owner: agent-orchestrator (sole-owned).
 
-- [ ] [SCRIPT] P0. Implement F1 operator decoupling in `autospawn.py` + `server.py` spawn endpoint + populate
-      `slot.operator` on bootstrap; add the cross-operator spawn unit test; `scripts/check.sh` green; push to LDR.
+- [x] ✅ [SCRIPT] P0. **DONE — agent-orchestrator@cfece08.** Added `config.host_operator()` (resolution:
+      `ORCHESTRATOR_OPERATOR` > `ORCHESTRATOR_VM_ID` > `slot.operator` > OS-user > `account.operator`); wired into
+      `autospawn.py:210` + `server.py` spawn endpoint (`spawn_operator`). 7 unit tests (`tests/test_host_operator.py`);
+      ruff + basedpyright `server/` 0/0 green (tsc N/A — server-only change). **Validated live**: with the fix the
+      resolver returns `hk` (the host) not `harsh` (the account), and slot 21's FM7 `wrong_branch` count dropped **25/25
+      → 0/25** — RC1 fixed. Note: `slot.operator` bootstrap-population was NOT needed (the `VM_ID`/OS-user fallback
+      covers a `None` slot.operator), so it's dropped from scope rather than deferred.
 
 ### F2 — per-VM config: fix `ORCHESTRATOR_VM_ID` [P0]
 
