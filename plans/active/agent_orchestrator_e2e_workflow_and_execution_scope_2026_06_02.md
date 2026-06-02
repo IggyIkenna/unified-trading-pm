@@ -174,11 +174,17 @@ the idempotent one-time move in `bootstrap_vm.sh` when re-bootstrapped. e2e_demo
 missing is the **`staging` branch itself** + the v1-ghost cleanup. Its local gate is **`scripts/check.sh`** (no
 `scripts/quickmerge.sh`/`quality-gates.sh` — it is not a uv service repo).
 
-**Access + safety reality (verified 2026-06-02):** the working session has **push-only** rights on
-`IggyIkenna/agent-orchestrator` (`admin=false`), `main` has **no branch protection** (404), and **rulesets are
-unavailable** on the repo's plan (403 "upgrade to Pro"). Also: creating `staging` or pushing to `main` fires the deploy
-path (`dispatch-cloud-build` on staging; main→`cloud-build-router`) which **restarts the fleet backends** — explicitly
-out of bounds until the operator green-lights a deploy (2026-06-02 directive: "don't restart the running backends").
+**Access + safety reality (verified 2026-06-02, corrected):** with `GH_PAT` the session IS repo **admin** (owner
+`IggyIkenna`) — the earlier "push-only/not-admin" note was a wrong-token error (keyring `gho_` is push-only, `GH_PAT` is
+admin). The real branch-protection blocker is a **GitHub billing/feature gate**, not access: branch-protection +
+rulesets return `403 "Upgrade to GitHub Pro or make this repository public"` for **agent-orchestrator specifically**.
+Every sibling repo (unified-trading-pm, execution-service, deployment-ui, alerting-service…) HAS active rulesets —
+grandfathered from the v2-migration tooling during a paid-plan window that **deliberately skipped agent-orchestrator**
+(the codified `main`-direct operator-tooling exception). It never got a ruleset and the feature is now gated for
+creating one. The v2 **workflow already runs** on agent-orchestrator main/staging — only the _required-check
+enforcement_ is missing. Also: creating `staging` or pushing to `main` fires the deploy path (`dispatch-cloud-build` on
+staging; main→`cloud-build-router`) which **restarts the fleet backends** — out of bounds until the operator
+green-lights a deploy (2026-06-02 directive: "don't restart the running backends").
 
 - [x] ✅ [INFRA] P0. Deleted the stale v1 ghost workflows on LDR (`quality-gates.yml`, `workspace-qg.yml`).
       `workspace-     qg.yml` had still been triggering on every `live-defi-rollout` push (wasted runs); neither carries
@@ -186,10 +192,12 @@ out of bounds until the operator green-lights a deploy (2026-06-02 directive: "d
 - [ ] [INFRA] P0. **BLOCKED-OPERATOR** — remove the v1 ghosts from `main` too + create the `staging` branch +
       `staging-to-main` SIT gate. Both actions trigger CICD → a fleet backend **restart**, so they wait for the operator
       to green-light a deploy. (LDR-side deletion above promotes to main on that same deploy.)
-- [ ] [INFRA] P0. **BLOCKED-ADMIN** — pin branch protection to require
-      `Quality Gates (agent-orchestrator) /     quality-gates-v2`. The session is push-only (not admin) and the repo
-      plan has no rulesets, so **Ikenna (repo admin)** must set classic branch protection (there is none today). Until
-      then nothing is enforced — merges aren't gated.
+- [ ] [INFRA] P0. **BLOCKED-BILLING** — pin branch protection to require
+      `Quality Gates (agent-orchestrator) /     quality-gates-v2`. Not an access problem (session is admin via
+      `GH_PAT`); GitHub **feature-gates** rulesets + branch-protection for this repo (`403 upgrade-to-Pro`), the only
+      repo of the set so gated. Resolve by ONE of: (a) upgrade the GitHub plan (Pro/Team) so a ruleset can be created
+      here, (b) make the repo public (rulesets free for public), or (c) accept "v2 runs but isn't a hard-required gate"
+      (operator tooling). Operator/billing decision.
 - [x] ✅ [INFRA] P0. merge→CICD restart path confirmed wired: `quality-gates-v2.yml` `dispatch-cloud-build` (staging) +
       main→`cloud-build-router`→`uts-prod`. **Now safe w.r.t. state** since G5 moved the DB off the repo checkout — a
       deploy/restart no longer risks state. Actual enablement = the operator's deploy green-light (above).
