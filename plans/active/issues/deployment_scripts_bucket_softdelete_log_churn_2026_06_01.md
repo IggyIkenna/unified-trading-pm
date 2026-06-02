@@ -201,21 +201,18 @@ the storage bloat.
       end-to-end (build `1c684ffc` re-resolved both jobs). deployment-service@`c1c56cd`. **Pre-existing note (not
       introduced here):** the 13 module-based service triggers in that state still default to the dead `ln` connection —
       a separate foreign drift, left untouched.
-- [ ] [INFRA] P3. **(extracted from the (2) "Remaining" residual, slot-3 2026-06-02; corrected 2026-06-02 per
-      operator)** Codify the 2 out-of-band buckets into workspace TF. **Live protection already stands** (verified
-      slot-3 2026-06-02), so this is durability-only — **no data deletion in scope.** **BLOCKER:** needs a TF-capable
-      host — slot-3 has neither `terraform` nor `tofu`; route to a TF-capable slot (slot-1 did the earlier imports). -
-      **`client-reporting-data-central-element-323112`** — live: `ASIA-NORTHEAST1`, `soft_delete=604800` (7d, intact —
-      keep unless operator says otherwise; appropriate for client financial data) + the noncurrent lifecycle slot-1
-      applied (`daysSinceNoncurrentTime=90, numNewerVersions=5`). Action: add a central-project-guarded
-      `google_storage_bucket` to `deployment-service/terraform/gcp/main.tf` matching live exactly + TF 1.5 `import {}`
-      block; `terraform plan` must show no changes. - **`instruments-store-sports-prd-central-element-323112`** — **this
-      is the NEW CANONICAL sports instruments bucket** (env-suffixed naming `instruments-store-<ag>-<env>-<pid>` is the
-      new convention; the old no-env `instruments-store-sports-<pid>` in `main.tf` is the LEGACY bucket, with data
-      migration old→new in place — per operator 2026-06-02). **NOT a duplicate; do NOT delete.** TF simply lags the
-      migration. Action: codify the new env-suffixed bucket in TF (match live: soft_delete=0 + the standard noncurrent
-      lifecycle) via `import {}` block, same as the other instruments-store buckets. (Corrects an earlier slot-3
-      mischaracterization of this bucket as a "stale duplicate.") Repo: deployment-service/terraform.
+- [x] ✅ [INFRA] P3. **DONE 2026-06-02 (slot-3) — both out-of-band buckets codified in `terraform/state/prod`.**
+      (Blocker resolved by installing terraform 1.9.8 locally.) Added central-project-guarded `google_storage_bucket`
+      resources to `deployment-service/terraform/gcp/main.tf` matching live exactly, `terraform import`'d both into
+      `terraform/state/prod`, and applied — **plan: 0 add, 2 change (labels-only), 0 destroy**; live settings verified
+      unchanged post-apply. **`client-reporting-data`**: `soft_delete=604800` (7d KEPT) + noncurrent lifecycle
+      (`daysSinceNoncurrentTime=90, numNewerVersions=5`). **`instruments-store-sports-prd`** (NEW canonical sports
+      bucket — NOT a duplicate): `soft_delete=0`, no lifecycle, matched live. **deployment-service@`b012ea5`** → staging
+      PR [#15](https://github.com/IggyIkenna/deployment-service/pull/15) (auto-merge enabled; QG green 70s). Future
+      prod-state applies now preserve both buckets' settings. (Note: `instruments-store-sports-prd` codified at its
+      current live shape — versioning off / no lifecycle; if the new canonical bucket should later match the other 5
+      instruments-store buckets' versioning+noncurrent-lifecycle, that's a separate migration-config decision, not this
+      durability codification.)
 
 ## Verification
 
