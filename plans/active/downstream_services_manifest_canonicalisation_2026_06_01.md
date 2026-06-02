@@ -81,10 +81,16 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 ### TIER 2 — data-status / deployment-api code (so post-delete reads/counts don't regress)
 
-- [ ] [CODE] P1. **FLAG-1 (deployment-api, OPERATOR-DECISION)** — tradfi v9 Databento+Massive dual-source can double-count
-      `found_dates` in `_mtds_honest_coverage_for_venue` (no `select_primary_available_source` dedup). **Operator must pick**
-      union (any source captured = green) vs per-source-cell semantics; then apply the UAC `source_priority` dedup if union.
-      Repo: **deployment-api**. Home: this plan FLAG-1.
+- [ ] [CODE] P1. **FLAG-1 (deployment-api) — DECIDED (operator 2026-06-02): UNION + manifest-derived per-source breakdown.**
+      Headline coverage = **union** (a `(venue, data_type, date)` cell is green if ≥1 source `captured`) → dedupe the
+      multi-source rows in `_mtds_honest_coverage_for_venue` via `select_primary_available_source` (UAC `source_priority`)
+      so two source-rows can't inflate `found_dates`. **Per-source breakdown** (databento vs massive) is surfaced in the
+      data-status drilldown derived from the **`_index` `source` COLUMN** that `read_availability_index` already loads —
+      i.e. a `groupby("source")` on the in-memory manifest rows, NOT a per-parquet column scan (the v9 manifest denormalises
+      `source` to the row level, so the breakdown is effectively free; the parquet-data-column path is slow and MUST be
+      avoided). Implementation: (1) union-dedupe in the aggregator for the denominator; (2) add a per-source sub-aggregate
+      from the same `_index` rows for the drilldown. Add a QG test asserting union (2 source rows on one date → 1 found-date)
+      + the per-source split. Repo: **deployment-api**. Home: this plan FLAG-1. (No longer operator-blocked.)
 - [ ] [CODE] P1. **FLAG-3 (deployment-api, AMBIGUOUS — diagnose before fix)** — `commentary/pipeline_uat.py:167/181/195/211`
       hardcode no-env `instruments-store-{pid}` / `features-store-{pid}` / `ml-store-{pid}` / `execution-store-{pid}`. These
       lines carry deliberate `# CORRECT-LOCAL` markers that CONFLICT with routing through `resolve_bucket_name`. **Reconcile
@@ -269,11 +275,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       `read_availability_index(_index/availability_index.parquet)` which backfills v1-v8 + PRESERVES v9 cols; `pipeline_mode`
       filter is column-presence-guarded; `asset_group=` canonical with `category=` fan-out tolerance (storage_facade). NO
       dead-bucket read for our 3 AGs post-delete. **4 flags surfaced (none block G1 — tracked below).**
-- [ ] [CODE] P1. **FLAG 1 (data-status display, operator decision): TradFi multi-source double-count.** With v9
-      Databento+Massive dual-source, the manifest can carry two rows per (venue,data_type,date); `_mtds_honest_coverage_for_venue`
-      counts distinct dates WITHOUT `select_primary_available_source` dedup → possible inflated `found_dates`. Decide union
-      (any source captured = green) vs per-source-cell semantics; apply the UAC source-priority dedup in the aggregator if
-      union. NOT a migration regression — a display-correctness item. Cross-ref `tradfi_massive_dual_source`.
+- [ ] [CODE] P1. **FLAG 1 (data-status): TradFi multi-source double-count — DECIDED (operator 2026-06-02): UNION + manifest
+      per-source breakdown.** With v9 Databento+Massive dual-source the manifest carries two rows per (venue,data_type,date);
+      `_mtds_honest_coverage_for_venue` counts distinct dates WITHOUT `select_primary_available_source` dedup → inflated
+      `found_dates`. **Resolution:** (1) headline coverage = union — dedupe via `select_primary_available_source` (UAC
+      `source_priority`) so a cell is green if ≥1 source captured; (2) per-source breakdown (databento vs massive) in the
+      drilldown derived from the `_index` `source` COLUMN already loaded by `read_availability_index` (`groupby("source")` on
+      the in-memory rows — NOT a per-parquet scan; the v9 manifest denormalises `source` to the row level so this is free).
+      QG test: 2 source-rows on one date → 1 found-date (union) + the per-source split. NOT a migration regression —
+      display-correctness. Cross-ref `tradfi_massive_dual_source`. (No longer operator-blocked.)
 - [ ] [CODE] P1. **FLAG 3 (bucket-SSOT violation, deployment-api): `commentary/pipeline_uat.py:167/181/195/211`** hardcodes
       no-env legacy `instruments-store-{pid}` / `features-store-{pid}` / `ml-store-{pid}` / `execution-store-{pid}` (NOT in
       cloud-providers.yaml, bypass `resolve_bucket_name`). Commentary/UAT path (errors swallowed) so low data-status impact,
