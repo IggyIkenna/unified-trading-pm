@@ -273,17 +273,17 @@ verified complete**.
       write_alert_history; called from \_run_batch_replay; run-level aggregate row keyed alert_code="\*" since per-code
       FP tracking isn't instrumented yet — deeper per-code split is the BLOCKED-OPERATOR-DECISION ml-baseline item
       below). Source: alerting_fp_rate.
-- `BLOCKED-DISCIPLINE` [CODE] P1. alerting-service: publish `RECON_FREEZE_ARMED` — **RECLASSIFIED 2026-06-02 (slot 7):**
-  the issue-doc framing ("add `alert_code: AlertCode.RECON_FREEZE_ARMED`") is WRONG. Confirmed `RECON_FREEZE_ARMED` is
-  **NOT** an `AlertCode` member (`python -c "from unified_api_contracts import AlertCode; AlertCode.RECON_FREEZE_ARMED"`
-  → AttributeError; RECON-family members that exist: RECON_DEGRADED / RECON_DEGRADED_CLOSE /
-  BATCH_VS_LIVE_RECON_DRIFTED). `RECON_FREEZE_ARMED` is a **PubSub event** on topic `reconciliation-freeze` consumed by
-  execution-service `preflight/recon_freeze.py` `ReconFreezeChecker.arm()` — the codex SSOT
-  `reconciliation-age-tracking.md` marks the alerting-side publisher **"NOT WIRED"**. The real work = build the
-  cross-service recon-freeze **publisher** (per-incident granularity: symbol-scoped vs account-wide SEV0), which is
-  **already tracked as a dedicated P0 in `plans/epics/observability_master.md` § "Recon-freeze publisher dispatch (slot
-  7)"** (derived from archived `recon_freeze_armed_never_published_2026_05_27.md`). De-duplicated to that canonical
-  home; NOT a one-line code add in this sweep. Source: batch_live_reconciliation_service_audit G12.
+- [x] ✅ [CODE] P1. alerting-service: publish `RECON_FREEZE_ARMED` — **BUILT (alerting-side publisher).** The issue-doc
+      framing ("add `alert_code: AlertCode.RECON_FREEZE_ARMED`") was WRONG — `RECON_FREEZE_ARMED` is NOT an `AlertCode`
+      member, it's a **coordination/PubSub event** on `reconciliation-freeze` consumed by execution-service
+      `preflight/recon_freeze.py` `ReconFreezeChecker.arm()`. Shipped the real publisher (observability_master G12 P0):
+      — alerting-service@`a04bbf2` (QG exit 0) — `recon_freeze_publisher.py` (`publish_recon_freeze_armed`/`lifted` via
+      `publish_coordination_event`; symbol-scoped vs account-wide per operator 2026-06-01) +
+      `recon_freeze_event_handler.py` (wires the previously-orphan `evaluate_recon_age`/`evaluate_immediate_sev0` →
+      route CRITICAL → arm freeze) + `evaluate_immediate_sev0` account_id/client_id propagation + synthetic test.
+      **Execution-side subscriber + per-incident emit remain `execution_master` G12 P1** (consume the event → `arm()`) —
+      the full chain isn't live until that lands. Source: batch_live_reconciliation_service_audit G12 /
+      observability_master G12.
 - `BLOCKED-OPERATOR-DECISION` [DATA] P3. alerting-service: ML threshold baseline for the 5 `ml_*` codes (ML inference
   not yet live) + `tick_staleness_seconds` per-venue baseline (needs live MTDS feeds). Source: alerting_fp_rate.
 

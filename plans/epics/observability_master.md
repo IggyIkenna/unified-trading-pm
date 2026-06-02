@@ -70,10 +70,17 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ### Recon-freeze publisher dispatch (slot 7, 2026-06-01 — from `recon_freeze_armed_never_published_2026_05_27.md`)
 
-- [ ] [CODE] P0. **G12 — alerting-service recon-freeze publisher (IN-SCOPE for May-23).** Operator decision 2026-06-01:
-      per-incident-type granularity — **symbol-scoped** alert for symbol-level recon breaks, **account-wide** alert for
-      account-level SEV0s. The recon-freeze is armed but never published today; build the publisher path. Repo:
-      alerting-service (consumes the per-incident signals emitted execution-side — see `execution_master` G12 todo).
+- [x] ✅ [CODE] P0. **G12 — alerting-service recon-freeze publisher (IN-SCOPE for May-23).** Operator decision
+      2026-06-01: per-incident-type granularity — **symbol-scoped** for symbol-level recon breaks, **account-wide** for
+      account-level SEV0s. — alerting-service@`a04bbf2` (QG exit 0, 780+ tests). `recon_freeze_publisher.py`
+      (`publish_recon_freeze_armed`/`lifted` via `publish_coordination_event`; `arm_recon_freeze_for_alerts()` —
+      CRITICAL recon-age + 3 symbol-scoped SEV0s → symbol freeze; the 4 account-level SEV0s (UNKNOWN_NET_EXPOSURE /
+      MATERIAL_BALANCE_MOVEMENT_UNEXPLAINED / MARGIN_COLLATERAL_SAFETY_UNCERTAIN / KILL_SWITCH_CANNOT_CONFIRM_CANCEL) →
+      account-wide `instrument="*"` + account_id/client_id) +
+      `recon_freeze_event_handler.handle_reconciliation_age_payload` (wires the previously-orphan
+      `evaluate_recon_age`/`evaluate_immediate_sev0` → route CRITICAL to PD+Telegram → arm freeze) + synthetic test.
+      **Execution-side subscriber + per-incident emit remain `execution_master` G12 P1** (consume `RECON_FREEZE_ARMED` →
+      `ReconFreezeChecker.arm()`). Repo: alerting-service.
 
 ### [`alerting_service_live_rules_2026_05_07`](../archive/2026_05/alerting_service_live_rules_2026_05_07.md)
 
