@@ -121,6 +121,13 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       legacy delete. Bucket resolution via `resolve_bucket_name` (prediction = `pred` token); `category=` occurrences are
       internal enum/param names, not hive-key strings. (One pre-existing NOTE flagged: the gap-gate `resolve_pipeline_mode_from_source(None)`
       always yields BATCH_DATABENTO for cefi/tradfi expected_unattempted sentinels — pre-existing, not a migration regression.)
+- [x] ✅ [CODE] P0. **features-service `perp_funding_rates.py` — DONE (features-service@cf47eca9, 2026-06-02).** Rewrote the
+      read path to resolve the canonical per-instrument shard via UAC `candidate_parquet_paths` (pipeline_mode-aware first,
+      legacy fallback): `venue=BINANCE-FUTURES` / `instrument_type=perpetual` / `ETHUSDT.parquet` (UAC `SYMBOL_MAPPINGS`
+      SSOT, not GCS-sampled — DNS-flaky host). Fixes all 4 broken axes (lowercase venue, missing instrument_type, single
+      `derivative_ticker.parquet` filename, missing pipeline_mode); the broken `contains("ETH-PERP")` symbol filter is
+      removed (path scopes to the one instrument). Regression-guard test asserts the canonical 4-axis path. 8 cefi unit tests
+      green. (Original audit row retained below for context.)
 - [ ] [CODE] P0. **features-service** — audit (slot-3 agent A, 2026-06-02): MOST read paths are CANONICAL (delta_one/
       volatility/cross_instrument use `resolve_bucket_name` + processed_candles manifest discovery; onchain=slot-2). **ONE
       ACTIVE REGRESSION RISK found — `features_service/cefi/calculators/perp_funding_rates.py:43-46` `_MTDS_PATH_TEMPLATE`**:
