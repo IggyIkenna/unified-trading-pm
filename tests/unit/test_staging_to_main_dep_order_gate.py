@@ -12,7 +12,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 # ── Inline the STAGE 1.8 gate logic (must mirror staging-to-main.yml) ────────
 
 ON_MAIN_STATUSES = {"MAIN_GREEN", "SIT_VALIDATED"}
@@ -54,9 +53,7 @@ def _make_manifest(dep_name: str, dep_status: str) -> dict[str, Any]:
     """Single-dep manifest: my-service depends on dep_name at dep_status."""
     return {
         "repositories": {
-            "my-service": {
-                "dependencies": [{"name": dep_name, "version": ">=0.1.0", "required": True}]
-            },
+            "my-service": {"dependencies": [{"name": dep_name, "version": ">=0.1.0", "required": True}]},
             dep_name: {"ci_status": dep_status},
         }
     }

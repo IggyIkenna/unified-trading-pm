@@ -60,6 +60,9 @@ EMPTY_STR_EXCLUDE_GLOBS=(
     "!**/invalidate-ci-status.py"
     "!**/gcs_bucket_stats.py"
     "!**/check_workspace_code_workspace_drift.py"
+    # STAGE 1.8 dep-order gate: parses workspace-manifest.json dicts with safe
+    # .get("name","") defaults — same manifest-parse pattern as the entries above.
+    "!**/tier_c_promotion_gate.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
@@ -110,6 +113,9 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/check_architectural_ratchets.py"
     "!**/gcs_migration_bundle_2026_05_08.py"
     "!**/check_workspace_code_workspace_drift.py"
+    # STAGE 1.8 dep-order gate: .get("repositories",{}) / .get("dependencies",[])
+    # are safe manifest-parse defaults — same pattern as the entries above.
+    "!**/tier_c_promotion_gate.py"
 )
 GCP_PROJECT_ID_EXCLUDE_GLOBS=(
     "!**/rollout-quality-gates-ci-workflows.py"
