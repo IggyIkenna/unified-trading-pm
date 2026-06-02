@@ -682,6 +682,29 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       gate — the walk itself writes v9; the check catches regressions. Repos: `instruments-service` +
       `market-tick-data-service`.
 
+### PRE-DRY-RUN CODE MILESTONE (sports-slot 2026-06-02) — all doable-before-dry-run code SHIPPED + QG-swept
+
+> Operator directive "do all the code to the dry-run, then QG sweep (time-consuming)". The QG sweep ran **per-repo in
+> parallel** across every touched repo (each sub-agent ran its repo's `quality-gates.sh` → exit 0, only unrelated
+> pre-existing failures). **Pre-dry-run code is COMPLETE.** Shipped this cycle:
+>
+> | Area | Repos@sha |
+> | --- | --- |
+> | Keystone composite classifier + FIXTURES-truthset + CF-11 match-day→attempted_failed + re-emit attempted_failed | mtds@680dff5f, 699c58e9, 8ffb2acd |
+> | CF-11 write-path (IS partial-fail-mask bug FIXED + MTDS ingest discovery-mask FIXED) | is@ceab7720, mtds@c96245b7 |
+> | Legacy-instruments reconcile migrator + schema spot-check | mtds@50a43aa7 |
+> | CF-7 league canon (UAC fn + 3-digit season-rule) + wired migrator/rebuilder/IS-writer | uac@409753bd+dc76f1a6, mtds@df391e7c, is@db187587 |
+> | Cross-AG bucket canonicalisation: UAC `bucket_name` facade → `-prd-`; UTL maps/preflight + sports_fixtures keystone reader → `resolve_bucket_name`; e2e scripts | uac@dc76f1a6, utl@b3b70c13+fd91ee74, e2e@b418afc |
+> | Pre-flight dead-bucket fixes (IS/features/strategy passed explicit project_id → legacy) → `resolve_bucket_name` | is@fd7b72a7, features@e0ddde68, strategy@ecc7cc0f |
+> | features-service silent-empty → `DependencyError` (batch=live symmetry) | features@e0ddde68 |
+> | `category=` ban in deployment-api data-status + QG ratchet | deployment-api@41fa120 |
+>
+> **Correctly NOT done pre-dry-run (sequencing, not skipped)**: (a) `category=` READER fan-outs / migration-script legacy
+> reads in MTDS/IS/features — the migration MUST read `category=` paths to move that data; removing pre-migration breaks
+> the walk → POST-migration cleanup. (b) v9 schema-column checks at preflight — would fail on v8 data NOW → POST-walk
+> regression guard. (c) `LA_LIGA_2` Segunda-vs-season disambiguation — operator/registry decision (3,465 rows). (d) IS
+> orchestrator `category=` kwargs — per-site UTL-contract check (P1). All tracked above; none block the dry-run.
+
 ### Verify + handoff to decommission
 
 - [ ] [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
