@@ -132,8 +132,12 @@ the fallback). A 3rd packer bug was fixed to get here: `--global` insteadOf went
 - [x] ✅ [SCRIPT] P3. **vm-disk-guard cron installed on all 9 stopped epic VMs** — started all 9, installed the root cron
       (every 6h) + test-ran the guard (freed space on most: cefi 82→75%, trading-core 89→71%, sports/tradfi 57→48%),
       then re-stopped. The cron now persists in each VM's EBS crontab, so all 11 fleet VMs (2 running + 9 stopped) carry
-      it. NB: operator-ops (92%) + defi (85%) stay high after the cache vacuum — that residual is the structural
-      repos+venvs footprint (e.g. ml-service ~2.6G) on the 30G root, NOT regenerable cache; if it keeps biting, grow
-      those VMs' root volume (the cache-guard can't reclaim live repo/venv data).
+      it. **Root cause of the high usage (corrected after a real `du`):** NOT the repo footprint — it was **`/tmp` (9G
+      on vm-orchestrator) full of 3-4-day-old throwaway test/QG/repro venvs (`vm-venv`, `vm-repro-venv*`, `test_venv*` @
+      ~1.7G each) + stale QG logs/parquets**. The cache-only guard couldn't reclaim it (it skipped /tmp). Enhanced the
+      guard (agent-orchestrator `2c7ec6b`, LDR+main) to age-gate-vacuum stale `/tmp` (older than TMP_AGE_DAYS=2, excluding
+      live systemd-private + X11/ICE sockets) → vm-orchestrator dropped **84%→52%** (/tmp 9.0G→83M). The legit baseline
+      (~11G: 8 slot worktrees + venvs in /home) is correct and stays. The 9 stopped VMs reclaim their stale /tmp on next
+      boot (updated script via clone + already-installed cron).
 
 This issue doc is fully resolved (F1/F2/FM3 + disk-guard all closed) — ready to archive into the orchestrator epic.
