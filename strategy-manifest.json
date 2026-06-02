@@ -19,7 +19,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_momentum.yaml",
-      "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.continuous.MLDirectionalContinuousEngine",
       "factory_function": "create_btc_momentum_strategy",
       "maturity": {
         "code": {
@@ -70,7 +70,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_momentum.yaml",
-      "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.continuous.MLDirectionalContinuousEngine",
       "factory_function": "create_eth_momentum_strategy",
       "maturity": {
         "code": {
@@ -121,7 +121,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_momentum.yaml",
-      "class_path": "strategy_service.engine.strategies.cefi_momentum.CeFiMomentumStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.continuous.MLDirectionalContinuousEngine",
       "factory_function": "create_sol_momentum_strategy",
       "maturity": {
         "code": {
@@ -172,7 +172,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_momentum.yaml",
-      "class_path": "strategy_service.engine.strategies.tradfi_momentum.TradFiMomentumStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.continuous.MLDirectionalContinuousEngine",
       "factory_function": "create_spy_momentum_strategy",
       "maturity": {
         "code": {
@@ -223,7 +223,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.defi_lending.AAVELendingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.rotation_lending.YieldRotationLendingEngine",
       "factory_function": "create_aave_lending_strategy",
       "maturity": {
         "code": {
@@ -274,7 +274,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.defi_basis.BasisTradeStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.basis_perp.CarryBasisPerpEngine",
       "factory_function": "create_basis_trade_strategy",
       "maturity": {
         "code": {
@@ -325,7 +325,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.defi_staked_basis.StakedBasisStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.staked_basis.CarryStakedBasisEngine",
       "factory_function": "create_staked_basis_strategy",
       "maturity": {
         "code": {
@@ -380,7 +380,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.defi_recursive_basis.RecursiveStakedBasisStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.recursive_staked.CarryRecursiveStakedEngine",
       "factory_function": "create_recursive_staked_basis_strategy",
       "maturity": {
         "code": {
@@ -431,7 +431,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_arbitrage.yaml",
-      "class_path": "strategy_service.engine.strategies.sports.arbitrage.ArbitrageStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.arbitrage_structural.price_dispersion.ArbitragePriceDispersionEngine",
       "factory_function": "create_arbitrage_strategy",
       "maturity": {
         "code": {
@@ -482,7 +482,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_value_betting.yaml",
-      "class_path": "strategy_service.engine.strategies.sports.value_betting.ValueBettingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.event_settled.MLDirectionalEventSettledEngine",
       "factory_function": "create_value_betting_strategy",
       "maturity": {
         "code": {
@@ -533,7 +533,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_value_betting.yaml",
-      "class_path": "strategy_service.engine.strategies.sports.kelly.KellyCriterionStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.event_settled.MLDirectionalEventSettledEngine",
       "factory_function": "create_kelly_criterion_strategy",
       "maturity": {
         "code": {
@@ -584,7 +584,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_value_betting.yaml",
-      "class_path": "strategy_service.engine.strategies.sports.ml_sports_strategy.MLSportsStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.event_settled.MLDirectionalEventSettledEngine",
       "factory_function": "create_ml_sports_strategy",
       "maturity": {
         "code": {
@@ -635,7 +635,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_arbitrage.yaml",
-      "class_path": "strategy_service.engine.strategies.sports.market_making.SportsMarketMakingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.market_making.event_settled.MarketMakingEventSettledEngine",
       "factory_function": "create_market_making_strategy",
       "maturity": {
         "code": {
@@ -686,7 +686,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/stat_arb_btc_eth.yaml",
-      "class_path": "strategy_service.engine.strategies.stat_arb.stat_arb_strategy.StatArbStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.stat_arb_pairs.pairs_fixed.StatArbPairsFixedEngine",
       "factory_function": "create_stat_arb_btc_eth_strategy",
       "maturity": {
         "code": {
@@ -737,7 +737,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/rel_vol_btc_eth.yaml",
-      "class_path": "strategy_service.engine.strategies.rel_vol.rel_vol_strategy.RelVolStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.stat_arb_pairs.pairs_fixed.StatArbPairsFixedEngine",
       "factory_function": "create_rel_vol_btc_eth_strategy",
       "maturity": {
         "code": {
@@ -788,7 +788,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/cross_exchange_btc.yaml",
-      "class_path": "strategy_service.engine.strategies.cross_exchange.cross_exchange_strategy.CrossExchangeStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.rules_directional.continuous.RulesDirectionalContinuousEngine",
       "factory_function": "create_cross_exchange_btc_strategy",
       "maturity": {
         "code": {
@@ -839,7 +839,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/prediction_arb_btc.yaml",
-      "class_path": "strategy_service.engine.strategies.prediction_arb.prediction_arb_strategy.PredictionArbStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.arbitrage_structural.price_dispersion.ArbitragePriceDispersionEngine",
       "factory_function": "create_prediction_arb_btc_strategy",
       "maturity": {
         "code": {
@@ -890,7 +890,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/vol_surface_btc.yaml",
-      "class_path": "strategy_service.engine.strategies.volatility.vol_surface_strategy.VolSurfaceStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.vol_trading.options.VolTradingOptionsEngine",
       "factory_function": "create_vol_surface_btc_strategy",
       "maturity": {
         "code": {
@@ -941,7 +941,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/mean_reversion_spy.yaml",
-      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.rules_directional.continuous.RulesDirectionalContinuousEngine",
       "factory_function": "create_spy_mean_reversion",
       "maturity": {
         "code": {
@@ -992,7 +992,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/mean_reversion_btc.yaml",
-      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.rules_directional.continuous.RulesDirectionalContinuousEngine",
       "factory_function": "create_btc_mean_reversion",
       "maturity": {
         "code": {
@@ -1043,7 +1043,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/mean_reversion_eth.yaml",
-      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.rules_directional.continuous.RulesDirectionalContinuousEngine",
       "factory_function": "create_eth_mean_reversion",
       "maturity": {
         "code": {
@@ -1094,7 +1094,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/mean_reversion_sol.yaml",
-      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.rules_directional.continuous.RulesDirectionalContinuousEngine",
       "factory_function": "create_sol_mean_reversion",
       "maturity": {
         "code": {
@@ -1145,7 +1145,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/mean_reversion_fx.yaml",
-      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.rules_directional.continuous.RulesDirectionalContinuousEngine",
       "factory_function": "create_fx_mean_reversion",
       "maturity": {
         "code": {
@@ -1196,7 +1196,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/mean_reversion_oil.yaml",
-      "class_path": "strategy_service.engine.strategies.mean_reversion.mean_reversion_strategy.MeanReversionStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.rules_directional.continuous.RulesDirectionalContinuousEngine",
       "factory_function": "create_oil_mean_reversion",
       "maturity": {
         "code": {
@@ -1247,7 +1247,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/tradfi_ml_spy.yaml",
-      "class_path": "strategy_service.engine.strategies.tradfi_ml_directional.TradFiMLSwingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.continuous.MLDirectionalContinuousEngine",
       "factory_function": "create_spy_ml_strategy",
       "maturity": {
         "code": {
@@ -1298,7 +1298,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/tradfi_ml_fx.yaml",
-      "class_path": "strategy_service.engine.strategies.tradfi_ml_directional.TradFiMLSwingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.continuous.MLDirectionalContinuousEngine",
       "factory_function": "create_fx_ml_strategy",
       "maturity": {
         "code": {
@@ -1349,7 +1349,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/tradfi_ml_oil.yaml",
-      "class_path": "strategy_service.engine.strategies.tradfi_ml_directional.TradFiMLSwingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.continuous.MLDirectionalContinuousEngine",
       "factory_function": "create_oil_ml_strategy",
       "maturity": {
         "code": {
@@ -1400,7 +1400,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/options_ml_strike_btc_deribit.yaml",
-      "class_path": "strategy_service.engine.strategies.options_ml.options_ml_strategy.OptionsMLStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.vol_trading.options.VolTradingOptionsEngine",
       "factory_function": "create_btc_strike_ml_strategy",
       "maturity": {
         "code": {
@@ -1451,7 +1451,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/options_ml_delta_spy_cboe.yaml",
-      "class_path": "strategy_service.engine.strategies.options_ml.options_ml_strategy.OptionsMLStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.vol_trading.options.VolTradingOptionsEngine",
       "factory_function": "create_spy_delta_ml_strategy",
       "maturity": {
         "code": {
@@ -1502,7 +1502,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/options_ml_vol_eth_deribit.yaml",
-      "class_path": "strategy_service.engine.strategies.options_ml.options_ml_strategy.OptionsMLStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.vol_trading.options.VolTradingOptionsEngine",
       "factory_function": "create_eth_vol_ml_strategy",
       "maturity": {
         "code": {
@@ -1553,7 +1553,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/options_ml_delta_btc_deribit.yaml",
-      "class_path": "strategy_service.engine.strategies.options_ml.options_ml_strategy.OptionsMLStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.vol_trading.options.VolTradingOptionsEngine",
       "factory_function": "create_btc_delta_ml_strategy",
       "maturity": {
         "code": {
@@ -1604,7 +1604,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_halftime_ml.yaml",
-      "class_path": "strategy_service.engine.strategies.sports.halftime_ml.HalftimeMLStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.event_settled.MLDirectionalEventSettledEngine",
       "factory_function": "create_halftime_ml_strategy",
       "maturity": {
         "code": {
@@ -1655,7 +1655,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.btc_basis.BtcBasisTradeStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.basis_perp.CarryBasisPerpEngine",
       "factory_function": "create_btc_basis_strategy",
       "maturity": {
         "code": {
@@ -1706,7 +1706,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.btc_lending.BtcLendingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.rotation_lending.YieldRotationLendingEngine",
       "factory_function": "create_btc_lending_strategy",
       "maturity": {
         "code": {
@@ -1757,7 +1757,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.sol_staked_basis.SolStakedBasisStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.staked_basis.CarryStakedBasisEngine",
       "factory_function": "create_sol_staked_basis_strategy",
       "maturity": {
         "code": {
@@ -1808,7 +1808,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.sol_basis.SolBasisTradeStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.basis_perp.CarryBasisPerpEngine",
       "factory_function": "create_sol_basis_strategy",
       "maturity": {
         "code": {
@@ -1859,7 +1859,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.sol_lending.KaminoLendingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.rotation_lending.YieldRotationLendingEngine",
       "factory_function": "create_kamino_lending_strategy",
       "maturity": {
         "code": {
@@ -1910,7 +1910,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.sol_concentrated_lp.SolConcentratedLPStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.market_making.continuous.MarketMakingContinuousEngine",
       "factory_function": "create_sol_concentrated_lp_strategy",
       "maturity": {
         "code": {
@@ -1961,7 +1961,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.defi_amm_lp.AmmLPStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.market_making.continuous.MarketMakingContinuousEngine",
       "factory_function": "create_amm_lp_strategy",
       "maturity": {
         "code": {
@@ -2012,7 +2012,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.active_defi_mm.ActiveDeFiMMStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.market_making.continuous.MarketMakingContinuousEngine",
       "factory_function": "create_active_lp_eth_usdc_strategy",
       "maturity": {
         "code": {
@@ -2063,7 +2063,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.enhanced_basis.EnhancedBasisTradeStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.basis_perp.CarryBasisPerpEngine",
       "factory_function": "create_basis_trade_multi_venue_strategy",
       "maturity": {
         "code": {
@@ -2114,7 +2114,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.defi_ethena_benchmark.EthenaBenchmarkStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.staking_simple.YieldStakingSimpleEngine",
       "factory_function": "create_ethena_benchmark_strategy",
       "maturity": {
         "code": {
@@ -2165,7 +2165,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.l2_basis.L2BasisTradeStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.basis_perp.CarryBasisPerpEngine",
       "factory_function": "create_l2_basis_strategy",
       "maturity": {
         "code": {
@@ -2216,7 +2216,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.lending_protocol_arb.LendingProtocolArbStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.arbitrage_structural.price_dispersion.ArbitragePriceDispersionEngine",
       "factory_function": "create_lending_arb_eth_strategy",
       "maturity": {
         "code": {
@@ -2267,7 +2267,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.multichain_lending.MultiChainLendingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.carry_and_yield.rotation_lending.YieldRotationLendingEngine",
       "factory_function": "create_multichain_lending_strategy",
       "maturity": {
         "code": {
@@ -2318,7 +2318,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.cross_chain_sor.CrossChainSORStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.arbitrage_structural.price_dispersion.ArbitragePriceDispersionEngine",
       "factory_function": "create_cross_chain_sor_strategy",
       "maturity": {
         "code": {
@@ -2369,7 +2369,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.cross_chain_yield_arb.CrossChainYieldArbStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.arbitrage_structural.price_dispersion.ArbitragePriceDispersionEngine",
       "factory_function": "create_cross_chain_yield_arb_strategy",
       "maturity": {
         "code": {
@@ -2420,7 +2420,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.omnichain_transfer.OmnichainTransferStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.arbitrage_structural.price_dispersion.ArbitragePriceDispersionEngine",
       "factory_function": "create_omnichain_transfer_strategy",
       "maturity": {
         "code": {
@@ -2471,7 +2471,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.liquidation_capture.LiquidationCaptureStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.arbitrage_structural.liquidation_capture.LiquidationCaptureEngine",
       "factory_function": "create_liquidation_capture_eth_strategy",
       "maturity": {
         "code": {
@@ -2522,7 +2522,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.cefi_market_making.CeFiMarketMakingStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.market_making.continuous.MarketMakingContinuousEngine",
       "factory_function": "create_btc_market_making_strategy",
       "maturity": {
         "code": {
@@ -2573,7 +2573,7 @@
         "ml_required": true
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.cefi_ml_directional.CeFiMLDirectionalStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.ml_directional.continuous.MLDirectionalContinuousEngine",
       "factory_function": "create_btc_ml_directional_strategy",
       "maturity": {
         "code": {
@@ -2624,7 +2624,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.options_market_making.options_mm_strategy.OptionsMMStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.market_making.continuous.MarketMakingContinuousEngine",
       "factory_function": "create_btc_options_mm_strategy",
       "maturity": {
         "code": {
@@ -2675,7 +2675,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.commodity_regime.CommodityRegimeStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.rules_directional.continuous.RulesDirectionalContinuousEngine",
       "factory_function": "create_commodity_regime_oil_strategy",
       "maturity": {
         "code": {
@@ -2726,7 +2726,7 @@
         "ml_required": false
       },
       "config_file": "strategy-service/strategy_service/configs/defaults/default_basis_trade.yaml",
-      "class_path": "strategy_service.engine.strategies.event_driven_macro.EventDrivenMacroStrategy",
+      "class_path": "strategy_service.engine.strategies.v2.event_driven.event_driven.EventDrivenEngine",
       "factory_function": "create_event_macro_crypto_strategy",
       "maturity": {
         "code": {
