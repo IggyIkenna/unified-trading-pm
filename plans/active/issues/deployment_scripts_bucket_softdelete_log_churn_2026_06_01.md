@@ -68,10 +68,12 @@ the storage bloat.
       Job (or fold into an existing maintenance cron) running `--keep 5`. (**Docstring fix DONE** deployment-service@`130c85c`
       — `@sha` naming IS adopted, cleanup IS needed; only the TF scheduling remains.) Terraform SSOT:
       deployment-service/terraform/gcp/. Add a `owner/cadence/verifier/last_executed` runbook block. QG deployment-service.
-- [ ] [TEST] P2. **(discovered 2026-06-01, slot 7)** deployment-service QG has a pre-existing foreign date-window flake:
-      `tests/unit/test_sports_tier3_fixture_diagnostic.py::TestFixtureCalendarDiagnostic::test_fixture_within_window_returned`
-      fails (current date moved outside a hardcoded fixture window). Unrelated to VM-infra. Fix the test to use a
-      relative/frozen window. Repo: deployment-service.
+- [x] ✅ [TEST] P2. **(fixed 2026-06-02, slot 1)** deployment-service date-window flake fixed —
+      `test_fixture_within_window_returned` built kickoff via `now.replace(hour=(now.hour+2)%24)`, which wraps to the
+      early morning of the SAME day at ≥22:00 UTC → lands in the past, outside the 48h window. Now uses
+      `now + timedelta(hours=2)` (time-of-day independent) + dropped a duplicate `get_storage_client` patch.
+      **deployment-service@`79a40f6`** | QG-green (212s, 4/4 in file pass). (Was R3 in `issue_docs_remediation_sweep_2026_06_02.md`,
+      left for pickup "if their fix does not land" — it had not landed; 0 incoming on the file.)
 - [ ] [INFRA] P2. Add prefix-scoped lifecycle rules to `gs://deployment-scripts-<pid>` (zero rules today). Delete
       `vm-logs/` live objects > 14 d and `log-archive/` > 90 d (currently indefinite). Verify the daily
       `vm_log_archival_cron` snapshots `run.log` → `log-archive/rolling/` before the vm-logs deletion window. Set via
