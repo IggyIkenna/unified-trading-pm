@@ -54,14 +54,16 @@ locked_since: 2026-05-21
 > `ui-quality-gates.yml` (job id `quality-gates`) as the v1 `workspace-qg.yml` caller. Both callers therefore emit the
 > _identical_ check-run name `Quality Gates (deployment-ui) / quality-gates`, so (a) the v2 caller never acquired a
 > distinct `…/quality-gates-v2` suffix, and (b) the still-triggered v1 `workspace-qg.yml` (LDR push →
-> `startup_failure`/`failure`) collides on that name. **Fix**: give the v2 caller its OWN callee
-> `ui-quality-gates-v2.yml` (job `quality-gates-v2`) — mirroring the python repos' separate-v2-callee pattern — confirm
-> a green `…/quality-gates-v2` run, then rotate ruleset `13787657`. **NOT done this turn**: deployment-ui CI is actively
-> being iterated by `semver-rollout[bot]` (commit @a8d6ee5 2026-06-02 04:51 + a `workflow_dispatch` v2 run in-progress)
-> — barging in would collide with in-flight work; and per the CLAUDE.md UI playwright HARD RULE this repo needs
-> `pw:L2 ✓` from a UI-capable slot (the v2 QG run executes the playwright smoke, so a green v2 run is the natural pw
-> evidence). Tracked below as the single open migration item. Cross-ref:
-> `plans/audit/results/infrastructure_master_audit_2026_06_01.md` + `cicd_contract_hardening_2026_06_01.md` Phase 1.
+> `startup_failure`/`failure`) collides on that name. **Fix (BUILT + VERIFIED on LDR 2026-06-02)**: gave the v2 caller
+> its OWN callee `ui-quality-gates-v2.yml` (job `quality-gates-v2`) — deployment-ui@0d2479c; the v2 caller now emits a
+> GREEN `Quality Gates (deployment-ui) / quality-gates-v2` (`workflow_dispatch` run 26799741962, incl. the playwright
+> smoke = `pw:L2 ✓`). **Remaining = the ruleset cutover, which is BLOCKED-UPSTREAM**: deployment-ui `main` is 23 commits
+> behind LDR / `staging` 217 behind, with the broken LDR→staging→main promotion automation
+> (`cicd_contract_hardening_2026_06_01.md` Phase 6) the gate — the new callee can't reach main/staging, and rotating
+> rulesets `13787657` (main) / `13788744` (staging) before the files land would dead-lock the repo. Full cutover recipe
+>
+> - the no-dead-lock ordering are in Phase 4.5 below. Cross-ref:
+>   `plans/audit/results/infrastructure_master_audit_2026_06_01.md` + `cicd_contract_hardening_2026_06_01.md` Phase 1+6.
 
 ## Overview
 
@@ -229,34 +231,46 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 - [~] 🟡 [SCRIPT] P1. deployment-ui — v2 caller `quality-gates-v2.yml` created (PR #9 MERGED 18:44:16Z) and IS the
   enforced required check, BUT not yet canonical: its required context is still
   `Quality Gates (deployment-ui) /     quality-gates`, NOT `…/quality-gates-v2`. **Root cause** (2026-06-02): the v2
-  caller reuses the same callee `ui-quality-gates.yml` (job `quality-gates`) as the v1 `workspace-qg.yml`, so both emit
-  the identical check name → no distinct v2 suffix + v1 ghost collision. **Remaining work** tracked below in Phase 4.5.
-  **BLOCKED** this turn: deployment-ui CI is actively iterated by `semver-rollout[bot]` (commit @a8d6ee5 2026-06-02
-  04:51 + in-progress `workflow_dispatch`) → no-barge per multi-agent rule; and `[UI]` repo needs `pw:L2 ✓` from a
-  UI-capable slot.
+  caller reused the same callee `ui-quality-gates.yml` (job `quality-gates`) as the v1 `workspace-qg.yml`, so both
+  emitted the identical check name → no distinct v2 suffix + v1 ghost collision. **Decoupling fix BUILT + VERIFIED on
+  LDR** (deployment-ui@0d2479c; green `…/quality-gates-v2` run 26799741962 incl. pw smoke). **Remaining = ruleset
+  cutover, BLOCKED-UPSTREAM** on the LDR→staging→main promotion-automation repair
+  (`cicd_contract_hardening_2026_06_01.md` Phase 6; main 23 / staging 217 commits behind LDR). Recipe in Phase 4.5.
 - [x] ✅ [VERIFY] P1. PM workflow_dispatch on `quality-gates-v2.yml` ran for 1m15s (run id 26654010496), NOT 0s
       startup_failure. **Option D verified: v2 chain escapes the GitHub ghost cache.** Subsequent runs on PM main are
       now `success` (e.g. 26654998707). Workspace-qg health restored across all 10 repos.
 
 ### Phase 4.5 — deployment-ui canonical-suffix completion (the one open repo) (0.25 day) [UI]
 
-> **Owner: a UI-capable slot, AFTER `semver-rollout[bot]` settles on deployment-ui (no in-flight CI run).** Verify quiet
-> first: `gh run list --repo IggyIkenna/deployment-ui --limit 5` shows no in-progress workspace-qg/quality-gates-v2 run
-> and HEAD == origin. Do NOT start while a rollout run is active.
+> **Status 2026-06-02**: the v2 fix is BUILT + VERIFIED on `live-defi-rollout` (deployment-ui@0d2479c; green
+> `…/quality-gates-v2` run 26799741962, incl. playwright smoke). Only the ruleset cutover remains, and it is
+> **BLOCKED-UPSTREAM on the LDR→staging→main promotion-automation repair** (main 23 / staging 217 commits behind LDR).
+> Owner of the cutover: whoever lands `cicd_contract_hardening_2026_06_01.md` Phase 6 (promotion automation), then a
+> UI-capable slot runs the rotation recipe below.
 
-- [ ] [SCRIPT] P1. Create `.github/workflows/ui-quality-gates-v2.yml` = copy of `ui-quality-gates.yml` with its job id
-      renamed `quality-gates:` → `quality-gates-v2:` (mirrors the python repos' separate-v2-callee pattern). Repoint
-      `quality-gates-v2.yml` `uses:` → `./.github/workflows/ui-quality-gates-v2.yml`. Leave v1 `ui-quality-gates.yml` +
-      `workspace-qg.yml` untouched (their `…/quality-gates` check is no longer required after the rotation below) — v1
-      deletion stays in Phase 5 pending the GH ticket.
-- [ ] [VERIFY] P1. Confirm the v2 caller now emits a GREEN `Quality Gates (deployment-ui) / quality-gates-v2` check on a
-      `main`/`staging` push or PR. **This v2 QG run executes the playwright smoke**, so a green run IS the `pw:L2 ✓`
-      evidence — cite the run id + the smoke spec under `tests/smoke/` as the regression guard per the UI playwright
-      HARD RULE.
-- [ ] [SCRIPT] P1. Rotate ruleset `13787657` (`require-quality-gates`) on deployment-ui main: change required context
-      `Quality Gates (deployment-ui) / quality-gates` → `Quality Gates (deployment-ui) / quality-gates-v2`. Re-run
-      `verify_branch_protection_check_names.py` → expect deployment-ui main now `…/quality-gates-v2` and
-      `ALL RULESETS     CONSISTENT: True` with 17/17 on v2.
+- [x] ✅ [SCRIPT] P1. Create `.github/workflows/ui-quality-gates-v2.yml` = copy of `ui-quality-gates.yml` with its job
+      id renamed `quality-gates:` → `quality-gates-v2:` (mirrors the python repos' separate-v2-callee pattern). Repoint
+      `quality-gates-v2.yml` `uses:` → `./.github/workflows/ui-quality-gates-v2.yml`. — DONE: deployment-ui@0d2479c on
+      `live-defi-rollout` (2026-06-02). v1 `workspace-qg.yml` left in place for now (its `…/quality-gates` check goes
+      non-required after the rotation; deletion bundled into the cutover below).
+- [x] ✅ [VERIFY] P1. Confirm the v2 caller now emits a GREEN `Quality Gates (deployment-ui) / quality-gates-v2` check.
+      — DONE: `workflow_dispatch` run **26799741962** on `live-defi-rollout` → job
+      `Quality Gates (deployment-ui) /     quality-gates-v2` → **success** (2026-06-02). That run executes the UI
+      quality-gates incl. the playwright smoke → satisfies `pw:L2 ✓`. Evidence:
+      `deployment-ui@0d2479c | pw:L2 ✓ (run 26799741962) | regression: tests/smoke/`.
+- [ ] [SCRIPT] P1. **BLOCKED-UPSTREAM — gated on the LDR→staging→main promotion-automation repair**
+      (`cicd_contract_hardening_2026_06_01.md` § "Phase 6 — CONSOLIDATED HAND-OFF"). **The cutover cannot land safely
+      until promotion flows**, because on 2026-06-02 deployment-ui `main` is **23 commits behind LDR** and `staging` is
+      **217 behind** with the new v2 callee on NEITHER — and the rename is coupled (main currently passes the OLD
+      `…/quality-gates` check green via the shared callee, so rotating the ruleset first dead-locks main, and landing
+      the files first breaks the old required name). Cutover recipe once promotion is healthy (sanctioned
+      relax→land→re-enable per deployment-ui CLAUDE.md "wrong-named v2 workflow" carve-out): (1) promote the v2-callee
+      files (and delete the stale `workspace-qg.yml` ghost) to `staging` then `main`; (2) rotate ruleset **`13787657`**
+      (main) required context `…/quality-gates` → `…/quality-gates-v2`; (3) rotate ruleset **`13788744`** (staging) the
+      same, **keeping** `check-staging-lock`; (4) re-run `verify_branch_protection_check_names.py` → expect
+      deployment-ui main+staging on `…/quality-gates-v2` and `ALL RULESETS CONSISTENT: True` = **17/17**. Do NOT rotate
+      the rulesets before the files are on the branches (dead-locks the repo). Do NOT force-land 23 commits of foreign
+      LDR work to main as a side effect — that is the promotion repair's job, not this flip's.
 
 ### Phase 5 — Cleanup + codex updates (0.25 day)
 
