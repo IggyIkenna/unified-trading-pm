@@ -119,6 +119,28 @@ ff_one() {
     fi
 
     # Step 1: dirty-tree check (any unstaged or staged change).
+    # First auto-discard the closed set of locally-regenerated / CI-authoritative artifacts
+    # so they never block the FF-pull (mirrors the VM's pm-pull-ff.sh; was local-vs-VM asymmetry
+    # that stranded laptop slots dirty — cicd #482-adjacent). These files are disposable locally:
+    #   - WORKSPACE_MANIFEST_DAG.svg / DATA_FLOW_DAG.svg : pure generated (refresh-manifest-dag.sh) → always safe.
+    #   - workspace-manifest.json : discard ONLY when the diff is ci_status-only (CI-authoritative —
+    #     flips FAILING/LOCAL_PASS/STAGING_GREEN); ANY other manifest edit is real WIP → preserved.
+    # For non-PM repos these files are absent → the checks are no-ops.
+    if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+        for _regen in WORKSPACE_MANIFEST_DAG.svg DATA_FLOW_DAG.svg; do
+            if ! git diff --quiet -- "${_regen}" 2>/dev/null; then
+                git checkout -q -- "${_regen}" 2>/dev/null || true
+            fi
+        done
+        if ! git diff --quiet -- workspace-manifest.json 2>/dev/null; then
+            _nonstatus=$(git diff -- workspace-manifest.json 2>/dev/null \
+                | grep -E '^[+-]' | grep -vE '^[+-]{3}' | grep -vE '"ci_status":' || true)
+            if [[ -z "${_nonstatus}" ]]; then
+                git checkout -q -- workspace-manifest.json 2>/dev/null || true
+                log "[auto-clean] ${repo_name} — discarded ci_status-only manifest churn (CI-authoritative)"
+            fi
+        fi
+    fi
     if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
         log "[skip:dirty] ${repo_name} (${branch}) — uncommitted changes"
         popd >/dev/null
