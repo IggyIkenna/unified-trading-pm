@@ -100,11 +100,35 @@ verified complete**.
 - [x] ✅ [DOC] P2. UAC: add OHLC-semantics docstring to the `swaps_ohlcv_*` schema in
       `internal/schemas/_candle_contracts.py` — O/H/L/C = USD-normalized pool spot price (`amountUSD/|base_amount|`),
       ≈1.0 for USDC/WETH, 3 fallback methods. — unified-api-contracts@`455ddf9a`. Source: features_service_defi #3.
-- [ ] [CODE] P2. UAC venue-registry coherence (`registry/.../defi_venues.py` + `_defi.py`) — **BLOCKED-OPERATOR-DECISION
-      per option**: (a) D15 HYPERLIQUID/ASTER `pipeline`→`live` (handler actively collects — code-reality-aligned, will
-      implement unless vetoed); (b) D10 EULER_V2/VENUS/BENQI/RADIANT `live` with no `PROTOCOL_CAPABILITIES` → downgrade
-      to `pipeline` (conservative) OR add caps; (c) D8 Starknet `infura_compatible` template rename vs document; (d)
-      SOLAYER/PICASSO/CAMBRIAN register in `ALL_DEFI_VENUES` or drop caps. Source: defi_code_codex_drift.
+
+### UAC DeFi venue-registry coherence (defi_code_codex_drift D8/D10/D15)
+
+> **OPERATOR DECISION 2026-06-02 (Ikenna):** ADD the venues — but each capability declaration must be **gated on a
+> per-venue data-source smoke test** first: confirm we can actually pull the venue's data from a source we have (The
+> Graph / Graph Studio subgraph, Alchemy, Helius, public RPC/endpoint, or other relevant). Only flip a venue to `live`
+> AFTER a probe returns real data. Tooling: `market-tick-data-service/scripts/subgraph_health_probe.py` (EVM subgraphs;
+> network confirmed reachable, Graph key in Secret Manager) + a Helius/RPC probe for Solana. Add subgraph IDs to UAC
+> `_SUBGRAPH_IDS` + `_ProtocolCapability` + register in `defi_venues.py` only on a green probe.
+
+- [ ] [CODE] P2. UAC D15: HYPERLIQUID/ASTER `pipeline`→`live` — handler already actively collects
+      (`perp_funding_handler.py`), so data source is proven; but first CONFIRM the axis classification (audit noted they
+      may be CeFi-axis perp venues on their own L1/BSC, candidates for removal from the DeFi registry rather than
+      flip-to-live). Resolve classification → flip-to-live OR move to CeFi registry. Source: defi_code_codex_drift D15.
+- [ ] [CODE] P2. UAC D10 EULER_V2 (ARBITRUM + ETHEREUM): find Graph subgraph ID →
+      `subgraph_health_probe.py --protocols euler_v2` → if green, add `_SUBGRAPH_IDS`+`_ProtocolCapability`+register
+      live. Source: defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC D10 VENUS (BSC + ETHEREUM): find Graph subgraph ID → probe → add+register live if green. Source:
+      defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC D10 BENQI (AVALANCHE): find Graph subgraph ID (or Avalanche RPC via Alchemy) → probe → add+register
+      live if green. Source: defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC D10 RADIANT (ETHEREUM/ARBITRUM): find Graph subgraph ID → probe → add+register live if green.
+      Source: defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC SOLANA SOLAYER/PICASSO/CAMBRIAN: confirm Helius/RPC or native-API data source per venue → smoke
+      test → register live in `ALL_DEFI_VENUES`+caps if green; else hold that venue with the data-source gap named.
+      Source: defi_code_codex_drift D10.
+- [ ] [CODE] P3. UAC D8 Starknet `infura_compatible` template: keep + add a clarifying note (Infura is a removed
+      _provider name_ but the public Starknet endpoint shape is retained); rename the key away from `infura_` to avoid
+      the banned-name confusion. Source: defi_code_codex_drift D8.
 - `BLOCKED-DISCIPLINE` [CODE] P2. UAC: drop duplicate cols `swap_count`/`volume_quote_usd` from `_DEX_EXT` — MUST bundle
   into the C0 migration walk (single-walk discipline), NOT standalone. Source: features_service_defi #4.
 - `BLOCKED-DISCIPLINE` [CODE] P1. UAC: `FEATURE_GROUP_DATA_TYPE_OVERRIDES["defi"]` → `dex_pool_swaps` — coordinate with
