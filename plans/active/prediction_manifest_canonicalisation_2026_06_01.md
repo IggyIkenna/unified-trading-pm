@@ -226,6 +226,26 @@ be fixed first if run on a VM.
 > available_at) → `record_failed` (mirror the live writer's NaT guard). expected_root_clusters: reuse
 > `_load_expected_clusters_for_cqg` if importable, else `dict.fromkeys(market_counts, 1)`. This is per-AG-canonical +
 > batch=live identical → G6 completeness checkable against the live `_index`.
+>
+> **⚠️ CORRECTION (slot-3 2026-06-02 — disk-verified a real pred-prd object; a 2nd build draft was REVERTED for this).**
+> The raw canonical prediction parquet does **NOT carry `canonical_question_group`, `market_id`, or `available_at`
+> columns** — those are WRITE-TIME-COMPUTED MANIFEST values, NOT persisted in the tick parquet (and the path-only
+> migrator does not add columns). A real object's columns are: `side, asset, conditionId, size, price, timestamp, title,
+> slug, eventSlug, outcome, outcomeIndex, transactionHash, condition_id, data_type, instrument_type, underlying,
+> market_category, market_type, resolution_period, data_source, venue, chain, ts_event, symbol`. So a rebuild that reads
+> a `canonical_question_group` column gets `""` for EVERY row (→ catastrophic collapse to one `(venue,"")` bundle) and a
+> `available_at` column that's absent (→ EVERY cell routed to `record_failed`). **The E5 rebuild MUST RE-COMPUTE the
+> atom** (mirrors the live writer's in-memory computation → batch=live):
+> - read columns `[title, slug, eventSlug, outcome, conditionId|condition_id, ts_event, timestamp]` + num_rows;
+> - `cqg = classify_polymarket_to_canonical_group(title=, slug=, event_slug=eventSlug, outcome=outcome, condition_id=conditionId)`
+>   (UAC `unified_api_contracts.canonical.domain.predictions.classifiers`, sig verified 2026-06-02). **`None` → route that
+>   cid to `record_failed`/`attempted_failed[reason=ClassifierConfidenceLow]`** (per the classifier contract), NOT into a
+>   bundle;
+> - `market_id = conditionId` (the `condition_id`/`conditionId` column); `available_at_envelope = max(ts_event)` (derive
+>   from ts_event/timestamp — the rebuild's batch envelope, no live-latency add);
+> - then group by `(date, venue, cqg)` → `observed_clusters={conditionId: rows}` → the verbatim `record_captured_from_counts`
+>   call above. This is the genuinely-correct build; it needs the UAC Polymarket classifier (re-classification per object,
+>   heavier but correct). Kalshi: the equivalent `classify_kalshi_to_canonical_group`.
 
 - [ ] [DATA] P0. E5 Manifest rebuild → v9. **REFERENCE: cefi E5 DONE (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional
       `pipeline_mode=` regex segment, DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
