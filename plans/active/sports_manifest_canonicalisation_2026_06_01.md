@@ -573,6 +573,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       LA_LIGA_2 needs the canonical-Segunda-key confirmation). — uac@dc76f1a6 |
       SCOTTISH_LEAGUE_CUP_185→SCOTTISH_LEAGUE_CUP via Step 3a (num>=100 rule); LA_LIGA_2/BUNDESLIGA_2/LIGUE_1 unchanged
       (already canonical at step 2); 13 tests green.
+- [ ] [DATA] P1. **LA_LIGA_2 → SEGUNDA_DIVISION RESOLVED (registry investigation 2026-06-02)**: `LA_LIGA_2` (3,465 rows)
+      IS Segunda División; the **canonical registered key is `SEGUNDA_DIVISION`** (has the `LeagueDefinition` in
+      `league_data.py` + provider maps understat `f5e5596b0efdef8e` / footystats `ES2` / season `15066` + team-count
+      seed 22). `LA_LIGA_2` is an INCONSISTENT alias in some `provider_league_ids.py` reverse maps with NO
+      `LeagueDefinition` (`get_league("LA_LIGA_2")`→None). FIX (UAC): add explicit alias `LA_LIGA_2`→`SEGUNDA_DIVISION`
+      in `canonicalize_league_id` + correct the reverse maps emitting `LA_LIGA_2` to emit `SEGUNDA_DIVISION` (born-canon).
+      `FRANCE_NATIONAL_1` (2 rows): `FRANCE_NATIONAL` unregistered → registry-gap, negligible.
 
 > ## OPERATOR DIRECTIVE 2026-06-02 (round 2) — PERFECT, PRE-MIGRATION, NO DEFERRALS
 >
