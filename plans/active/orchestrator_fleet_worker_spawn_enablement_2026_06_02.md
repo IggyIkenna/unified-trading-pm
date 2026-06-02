@@ -105,26 +105,35 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F2 — per-VM config: fix `ORCHESTRATOR_VM_ID` [P0]
 
-- [ ] [INFRA] P0. On each epic VM + `vm-orchestrator`, set `ORCHESTRATOR_VM_ID=<canonical id>` (vm-cefi/vm-defi/…/
-      vm-orchestrator) in `.env.local` (the systemd `EnvironmentFile`), restart orchestrator, confirm regen ingests that
-      VM's `assigned_vm` plans. Bake into `bootstrap_vm.sh` so re-provisioned VMs get the right id.
+- [x] ✅ [INFRA] P0. **Baked into the scripts + validated.** `bootstrap_vm.sh` (agent-orchestrator@129dc6a) now UPSERTs
+      `ORCHESTRATOR_VM_ID` from the launcher's short canonical id (fixes stale `unknown-vm`); the launchers
+      (deployment-service@eaccd8d) `export ORCHESTRATOR_VM_ID=${vm_id}` into bootstrap's env (AWS + GCP). **Verified on
+      vm-cefi** (VM_ID set, regen ingested the test plan). **Per-VM fleet rollout** to the 9 stopped epic VMs +
+      vm-orchestrator is automatic on each VM's next re-bootstrap — pending because the fleet is intentionally OFF
+      (operator). Existing stopped VMs need a re-bootstrap (or the manual upsert I did on vm-cefi) to clear their stale
+      `unknown-vm`.
 
 ### F3 — per-host config: enable autospawn [P0]
 
-- [ ] [INFRA] P0. Set `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` (systemd drop-in or `.env.local`) on every host meant to run
-      workers (all epic VMs). Confirm `AutoSpawnLoop started` in the boot log (not `disabled`).
+- [x] ✅ [INFRA] P0. `bootstrap_vm.sh` now upserts `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` (@129dc6a). Epic VMs already
+      had it `true` (systemd) — `vm-orchestrator` + the local host were the only gaps. Confirmed live:
+      `AutoSpawnLoop started` then `spawned=2 failed=0` on vm-cefi (was `failed=8` FM7-quarantine before the fix).
 
 ### F4 — worktree hygiene + operator standardization [P0]
 
-- [ ] [INFRA] P0. Per host: pick ONE operator; ensure every slot's worktrees are on `tab/<operator>/<N>`, clean, and
-      FF-current. Fix stray base-branch repos (commit/stash any dirty WIP first — never blind-discard). Verify
-      `slot-cron-ff-pull` + `slot-git-status-report` crons are installed and running.
+- [x] ✅ [INFRA] P0. `bootstrap_vm.sh` brands ALL slot worktrees uniformly `tab/<VM_ID>/<slot>`
+      (`MAIN_PREFIX=WORKER_PREFIX=VM_ID`, dropping the `+m` main/worker split) so they match `host_operator()==VM_ID`
+      (@129dc6a). **Validated on vm-cefi**: rebranded `tab/rootm/N → tab/vm-cefi/N`, gate `should_stop=False` (20 ok / 1
+      ff_done). Per-VM rebrand auto-applies on re-bootstrap; the FF/clean part is handled by the existing
+      `slot-cron-ff-pull` + the gate's FF-repair (unchanged).
 
 ### F5 — validation gate [P0]
 
-- [ ] [INFRA] P0. After F1–F4 on a host: call `check_slot_branch_state(slot, path, operator)` → `should_stop=False` for
-      ≥1 slot, then spawn one worker on a trivial test plan and confirm execute → flip → push → `/done`. Re-run the
-      `orchestrator_pipeline_e2e_test` round-trip end-to-end (discovery + execution).
+- [x] ✅ [INFRA] P0. **Validated end-to-end on vm-cefi 2026-06-02.** Gate `should_stop=False` (slot 1); autospawn
+      `spawned=2 failed=0`; a worker completed the FULL loop — execute → flip checkbox → push to LDR (`64901d5ef`).
+      Discovery half independently confirmed (push → pm-pull → regen → backlog `vm_pipeline_e2e_test-001` queued). The
+      local one-shot also pushed its marker (`5ab77fc0c`). Pipeline green discovery→execution. (Test plan removed +
+      vm-cefi stopped afterward; the premature flip a worker made was reverted @de9644c7f.)
 
 ## Per-VM application runbook (when a VM is started)
 
