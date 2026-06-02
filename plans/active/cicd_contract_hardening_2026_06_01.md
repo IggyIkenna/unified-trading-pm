@@ -548,7 +548,7 @@ by a PR:
     `remote: Bypassed rule violations for refs/heads/main`. **Note:** PM `main` now intentionally runs
     `enforce_admins=false` — do NOT "restore" it to true (strands the chain). All other protected branches (PM staging,
     SIT main/staging) remain `enforce_admins=true`; PM ruleset `require-quality-gates` stays `active`.
-- [ ] [INFRA] P2. **Retire Telegram notifications entirely (migrate to Slack) — operator decision.** Audit 2026-06-01:
+- [x] ✅ [INFRA] P2. DONE 2026-06-02 (unified-trading-pm@7c3d8ff73, LDR/main/staging): **Retire Telegram notifications entirely (migrate to Slack) — operator decision.** Audit 2026-06-01: Migrated the 4 inline-Telegram senders to best-effort Slack #ci-failures (request-major-bump, request-major-bump-reusable, major-bump-issue-handler, fix-approval-timeout) + deleted dead notify-telegram.yml (0 callers). Bonus: removed the exit-1-on-missing-TELEGRAM in the 2 request-major-bump senders (they failed the run when the telegram secret was absent) → now best-effort. Telegram fully retired from notification paths.
       `notify-telegram.yml` reusable has **0 callers** (dead); 46 job labels across 30 PM workflows said `Telegram —`
       but `uses: notify-slack.yml` → relabeled to `Slack —` (cosmetic, shipped
       `unified-trading-pm@8f5ffae2e`/`c8135c79d`/`f4f8d18b6` to LDR/main/staging). **Remaining = behavioural, needs
