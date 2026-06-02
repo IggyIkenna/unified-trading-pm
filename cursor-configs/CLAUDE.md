@@ -212,20 +212,12 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 
 ### Other key rules
 
-- **Inherited-dirty-WIP resolution — liveness-gated, role-aware (HARD RULE codified 2026-06-01)**: a slot worktree
-  `.tabs/<N>/<repo>` is exclusively that slot's, so dirty content is almost always a previous session of _you_ that is
-  now gone → **inherit it** (commit as `chore(orphan-wip)` + push). The discriminator is **LIVENESS, not slot-id
-  identity**: a dead/absent/expired `.agent-claim` (or one owned by the session being respawned) → inherit; a DIFFERENT
-  live tmux session owning a fresh claim, OR a dirty file with mtime < 120 s (a live interactive operator/Cursor editor)
-  → **PROTECT, never stomp**. An agent resolving inherited WIP must first detect whether it is a background autonomous
-  worker (tmux `orch-slot-*` / `ORCHESTRATOR_*` env / claim `role`) or an interactive operator session — background:
-  `notify_*`-ping the operator + inherit once the prior maker's claim TTL expires; interactive: ASK the operator whether
-  other agents are finished, then commit. **Quarantine is never terminal** (a dead maker's WIP must eventually be
-  inherited); **never `git add -A` a wiped/mass-delete index** (FM2 guard refuses + quarantines). Slot integration base
-  is `live-defi-rollout` for EVERY repo incl. agent-orchestrator (a `main` base reads every slot as diverged —
-  2026-05-24 incident). SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Pre-spawn branch-state + liveness-gated
-  dirty resolution" + `agent-orchestrator/server/worktree_clean_check.py` +
-  `plans/active/orchestrator_autonomy_audit_remediation_2026_06_01.md`.
+- **Inherited-dirty-WIP — liveness-gated, role-aware (HARD RULE)**: a slot worktree is exclusively that slot's → dirty
+  content is usually a dead prior session of you → **inherit** (`chore(orphan-wip)` + push). Discriminator is **LIVENESS
+  not identity**: dead/expired `.agent-claim` → inherit; a DIFFERENT live session's fresh claim OR a file with mtime
+  <120 s (live editor) → **PROTECT, never stomp**. Background worker → `notify_*` + inherit on TTL expiry; interactive →
+  ASK first. Never `git add -A` a wiped/mass-delete index (FM2 guard). Slot base is `live-defi-rollout` for every repo.
+  SSOT: `codex/05-infrastructure/per-tab-worktrees.md` + `agent-orchestrator/server/worktree_clean_check.py`.
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in
   `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage: `clip_dates_to_source_coverage()` +
   `is_in_known_gap()`.
@@ -235,28 +227,20 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms.
-- **Manifest consolidator runtime**: GCP: Cloud Run Jobs + Cloud Scheduler (20 Phase A jobs — 10 env-tiered + 10 legacy
-  flat, all `*/1 * * * *`; Phase D 14 Group B jobs TF authored pending `tofu apply`). AWS: Batch Fargate + EventBridge
-  Rules (10 Phase C + 16 Phase D Group B both LIVE 2026-06-01 — 26 rules ENABLED, 26 Batch job defs). Terraform:
-  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` (GCP) +
-  `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf` (AWS). Legacy GCE VM launcher DELETED 2026-05-20
-  (was `launch-manifest-consolidator-vm.sh`). DO NOT relaunch the VM. **Liveness contract (2026-06-01, live)**: the read
-  path loud-fails by DEFAULT on a stale/missing consolidated index when per-VM shards exist
-  (`ManifestConsolidatorStaleError`; `MANIFEST_ALLOW_STALE_FALLBACK=true` opts back into the recovery merge); a
-  `ConsolidatorLivenessMonitor` watchdog (Cloud Run Job `uts-prod-consolidator-liveness-watchdog`, Scheduler `*/2`)
-  emits `CONSOLIDATOR_DOWN` on heartbeat absence; `assert_consolidator_healthy(bucket)` is the shared preflight gate.
-  SSOT: `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health contract".
+- **Manifest consolidator runtime**: Cloud Run Jobs + Scheduler (GCP) / Batch Fargate + EventBridge (AWS) — NOT a VM
+  (legacy GCE launcher DELETED 2026-05-20; do not relaunch). TF:
+  `deployment-service/terraform/{gcp,aws}/manifest_consolidator_scheduler.tf`. **Liveness (live)**: read path loud-fails
+  by DEFAULT on a stale/missing index when per-VM shards exist (`ManifestConsolidatorStaleError`;
+  `MANIFEST_ALLOW_STALE_FALLBACK=true` to opt into recovery merge); watchdog emits `CONSOLIDATOR_DOWN`;
+  `assert_consolidator_healthy(bucket)` is the shared preflight gate. SSOT:
+  `codex/05-infrastructure/manifest-consolidator-ssot.md`.
 - **VM tarball**: `bash deployment-service/scripts/vm/create-code-tarballs.sh`. SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md`.
-- **VM launchers**: every `gcloud compute instances create` in `deployment-service/scripts/vm/`. VM naming: first
-  segment must be in `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`. **lifecycle_class required (Phase A.2)**: every
-  non-`None` entry MUST be
-  `VmPrefixSpec(bucket=..., lifecycle_class=LifecycleClass.<EPHEMERAL_BATCH|EPHEMERAL_EXPERIMENT|SCHEDULED_RECURRING|LONG_LIVED_LIVE>)`.
-  **Experiment VM name suffix**: `EPHEMERAL_EXPERIMENT` VMs include the run_id: `{prefix}{run_id}-{ts}` (e.g.
-  `exp-ml-{uuidv7}-{yyyymmdd}`). Reserved experiment prefixes: `exp-ml-`, `exp-strategy-`, `exp-execution-`. **Zone**:
-  default `asia-northeast1-c`. STOCKOUT fallback = `asia-northeast1-b` or `asia-northeast1-a` (same region). NEVER fall
-  back to another region (e.g. `us-central1`) — all GCS data is in asia-northeast1; cross-region egress adds cost and
-  latency and is caught during T+10min zone audit.
+- **VM launchers**: all `gcloud compute instances create` live in `deployment-service/scripts/vm/`; VM name's first
+  segment must be in `VM_PREFIX_TO_BUCKET` (`vm_zombie_watchdog.py`) with a `lifecycle_class`
+  (`EPHEMERAL_BATCH|EPHEMERAL_EXPERIMENT|SCHEDULED_RECURRING|LONG_LIVED_LIVE`); experiment VMs embed the run_id
+  (`exp-{ml,strategy,execution}-{uuidv7}-{ts}`). **Zone** default `asia-northeast1-c`; stockout falls back within-region
+  only (`-b`/`-a`), NEVER another region (all GCS data is in asia-northeast1).
 - **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify
   at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".
@@ -277,61 +261,25 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   JWT never reaches a worker. Regression symptom: login 200 but `/api/backends` 401s. SSOT:
   `codex/04-architecture/agent-orchestrator-overview.md` §Auth + §"Auth — long-lived setup-tokens";
   `codex/12-agent-workflow/orchestrator-multi-vm-topology.md`.
-- **Agent-orchestrator auth — setup-tokens only (HARD RULE codified 2026-05-28, Phase 4b-cleanup)**: every account in
-  `agent-orchestrator/data/config/accounts.json` MUST authenticate via its own `oauth_token_env_file`
-  (`~/.claude-accounts/<id>.env`) containing a long-lived setup-token minted via `claude setup-token`. **Never copy
-  `~/.claude/.credentials.json` between machines**. The legacy `.credentials.<id>.json` swap path + the
-  `swap_claude_account.sh` flow are removed; the runtime refuses to spawn a worker / agent / `/usage` probe for an
-  account with no env file. To onboard a new account: (1) run `claude setup-token` on a browser machine, (2) write
-  `CLAUDE_CODE_OAUTH_TOKEN=…` + `unset ANTHROPIC_API_KEY` to `~/.claude-accounts/<id>.env` (mode 600), (3) push to the
-  creds bucket (`gs://central-element-323112-orchestrator-creds/accounts/` and
-  `s3://uts-orchestrator-creds-427895769566/accounts/`), (4) add `oauth_token_env_file` + `setup_token_expires_at` to
-  `accounts.json`. SSOT: `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
-- **Agent-orchestrator backlog is plan-driven (HARD RULE codified 2026-05-28, Phase 6)**: tasks in
-  `agent-orchestrator/data/config/backlog.yaml` are auto-derived from `- [ ]` checkboxes in `plans/active/*.md` by
-  `server/regen_backlog_from_plan.py`. **Do not hand-edit `backlog.yaml` to add new tasks** — write the todo in the
-  relevant active plan file using the canonical format (`- [ ] [CATEGORY] P<0-3>. Description`) and let the next
-  `PlanRegenLoop` tick (≤6h, or POST `/api/backlog/regen` for immediate) pull it into the backlog. Idempotency is
-  content-based (dedup by raw todo line), so flipping or editing a todo in the plan won't reset the backlog state.
-  Hand-edits are still legitimate for _tuning_ derived tasks (priority, repos, target_slot, est_hours, collision_group)
-  once they've been auto-created. SSOT: `agent-orchestrator/server/regen_backlog_from_plan.py` +
-  `unified-trading-pm/plans/PLAN_FORMAT.md`.
-- **Fanning out work = writing tracked plan todos. The plan todo IS the dispatch (HARD RULE codified 2026-06-01)**:
-  whenever you decide a unit of work should be done by a slot/worker — "a slot should do X", "this needs a dedicated
-  per-repo pass", "fan this out", "assign to slot N", "out of scope for me, hand off" — the decision is **not real until
-  it is a `- [ ]` todo in a PM active plan** using the canonical format (`- [ ] [CATEGORY] P<0-3>. Description`) with
-  the **target repo named** and **enough self-contained context that a cold sub-agent can act** (it starts fresh + reads
-  `SUB_AGENT_MANDATORY_RULES.md`). That plan todo is the ONLY sanctioned dispatch path: `PlanRegenLoop` derives the
-  orchestrator backlog from it (per the rule above) and a slot picks it up. **Banned (review-blocking):** punting work
-  in chat / a summary only ("X is blocked, needs a slot"), verbally assigning a slot without a plan todo, or marking an
-  audit/diagnosis "done" when its follow-ups are only described, not tracked. **Grep-to-verify before ending any session
-  that identified fan-out work**: `rg "<the work>" plans/active/` — no `- [ ]` match → STOP, write the todo first. A
-  diagnosis that names N repos needing fixes MUST leave N tracked todos behind. Reference incident (2026-06-01): a
-  7-repo QG-green remediation surfaced mid-session; per this rule each repo became a tracked todo in
-  `cicd_contract_hardening_2026_06_01.md` rather than a verbal "fan it out". Composes with: _Capture Discoveries As Plan
-  Todos Immediately_, _Agent-orchestrator backlog is plan-driven_, and _Sub-Agents need full rules_ (the todo carries
-  the context the cold worker needs). SSOT: `plans/PLAN_FORMAT.md` + `codex/12-agent-workflow/`.
-- **Workflow-capable GH_TOKEN everywhere — no permission-based work-stoppage (HARD RULE codified 2026-06-01)**: every
-  execution context — **each slot, the operator/Harsh main worktree, AND every orchestrator VM worker** — MUST have a
-  `GH_TOKEN` that can edit `.github/workflows` (i.e. `GH_PAT` from Secret Manager, which carries fine-grained
-  **"Workflows: read/write"**). The gh CLI **keyring login token (`gho_…`) lacks the `workflow` scope**
-  (`repo, read:org, gist, admin:public_key` only), so any `gh`-API / HTTPS push that creates or updates a workflow file
-  is silently refused — which stalled a CI v1→v2 migration mid-flight (2026-06-01). **Canonical load:**
-  `source unified-trading-pm/scripts/workspace/load-gh-token.sh` (fetches `GH_PAT` from GCP SM → AWS SM, exports
-  `GH_TOKEN`+`GITHUB_TOKEN`; env beats the keyring for gh + git). It is sourced by `workspace-bootstrap.sh` (local
-  hosts) and MUST be exported into orchestrator VM worker envs by `agent-orchestrator/scripts/bootstrap_vm.sh`.
-  `verify-slot-host-symmetry.sh` now probes workflow-capability (non-mutating PUT → 409/422 = OK, 403 = blocked) and
-  FAILS a host that lacks it. **Note:** git push **over SSH** (a user key) is exempt from the workflow-scope
-  restriction, so ssh-protocol slots can already push workflow files via `git`; this rule closes the `gh`-API / HTTPS
-  path that is restricted. SSOT: `scripts/workspace/load-gh-token.sh` + `codex/12-agent-workflow/`.
-- **Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. (HARD RULE codified
-  2026-05-30)**: `regen_backlog_from_plan.py` is the single source of truth for backlog state. `backlog.yaml` and
-  `state.db` MUST reflect only tasks whose `- [ ]` checkbox is open in an active plan.
-  `ORCHESTRATOR_REGEN_PRUNE_STALE=true` is the default on every fleet VM (enabled via
-  `/etc/systemd/system/orchestrator.service.d/prune-stale.conf`). If you observe `state.db` queued-row count drifting
-  more than ±5 from `backlog.yaml` task count on any VM, run `scripts/orchestrator/verify_fleet_prune_state.sh` to audit
-  and `scripts/orchestrator/enable_prune_stale.sh` to re-enable pruning. SSOT:
-  `plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md`.
+- **Agent-orchestrator accounts auth via setup-tokens only**: each account in `accounts.json` uses its own
+  `oauth_token_env_file` (`~/.claude-accounts/<id>.env`, a `claude setup-token`); **never copy
+  `~/.claude/.credentials.json`** (the legacy `.credentials.<id>.json` / `swap_claude_account.sh` path is removed).
+  SSOT: `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+- **Orchestrator backlog is plan-driven + regen-authoritative (HARD RULE)**: backlog tasks auto-derive from `- [ ]`
+  checkboxes in `plans/active/*.md` via `server/regen_backlog_from_plan.py` — **never hand-add to `backlog.yaml`**
+  (write the todo in the plan; next `PlanRegenLoop` tick / `POST /api/backlog/regen` pulls it; hand-edits only TUNE
+  derived tasks). `yaml`+`state.db` reflect ONLY open plan checkboxes (`ORCHESTRATOR_REGEN_PRUNE_STALE=true` default —
+  no zombies; ±5 drift → `verify_fleet_prune_state.sh`). SSOT: `server/regen_backlog_from_plan.py` +
+  `agent_orchestrator_backlog_state_alignment_2026_05_29.md`.
+- **Fanning out work = a tracked plan todo — the todo IS the dispatch (HARD RULE)**: any "a slot should do X / fan out /
+  hand off / out of scope for me" is NOT real until it's a `- [ ] [CATEGORY] P<n>. …` todo in a PM active plan with the
+  **target repo named** + cold-start context (worker reads `SUB_AGENT_MANDATORY_RULES.md`). Banned: verbal/chat
+  dispatch, or marking an audit "done" with follow-ups only described. **Grep `plans/active/` to verify** before ending
+  a session that found fan-out work.
+- **Workflow-capable `GH_TOKEN` everywhere** (each slot + operator + every VM worker):
+  `source scripts/workspace/load-gh-token.sh` (GH*PAT from SM, carries Workflows:write). The keyring
+  `gho*`token lacks the`workflow`scope → silently refuses workflow-file pushes via`gh`-API/HTTPS (SSH `git`push is exempt);`verify-slot-host-symmetry.sh`
+  probes + fails a host lacking it.
 - **Orchestrator runtime self-heals (defaults ON, fleet-wide)**: **AutoSpawn** wakes an idle slot when queue>0 + no
   active worker + headroom>50% (`ORCHESTRATOR_AUTOSPAWN_ENABLED`; manual `/api/slots/<id>/spawn` only for cold-start);
   **host-offline FAILOVER** (vm-orchestrator ONLY — multi-VM races) reroutes soft-pinned tasks when a host is silent
