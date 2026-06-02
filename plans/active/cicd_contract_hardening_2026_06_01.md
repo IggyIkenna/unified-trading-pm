@@ -1034,7 +1034,15 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 - [~] Tier B: full-workspace cross-repo SIT job **BUILT** (`system-integration-tests@f881579`: nightly 03:00 UTC +
   `workflow_dispatch` + `repository_dispatch[full-workspace-sit]`). Remaining: confirm the workflow on a live trigger;
   wire the Tier-C promotion-gate to read its result (audit j2).
-- [ ] [AGENT] P1. Tier C: auto LDR→staging promotion bot (dep-order, gated on Tier A green + Tier B green) (audit j3).
+- [x] ✅ [AGENT] P1. Tier C: auto LDR→staging promotion bot (dep-order, gated on Tier A green + Tier B green) (audit j3).
+      **DONE 2026-06-02** — `unified-trading-pm@cce12ed96`: `.github/workflows/ldr-to-staging-promote.yml` (per-repo
+      topo-order promoter; opens LDR→staging PR with v2-gated auto-merge; conflict→conflict-resolution-agent; 6h
+      schedule + dispatch + repo-dispatch; `dry_run`/`only_repo` inputs) + `scripts/cicd/tier_c_promotion_gate.py`
+      (standalone fully-typed fail-open gate: Tier A LDR-not-red + dep-order ≥STAGING_GREEN — the LDR→staging mirror of
+      quickmerge STAGE 1.7 / staging-to-main STAGE 1.8) + `tests/unit/test_tier_c_promotion_gate.py` (22 tests, SSOT
+      import). Verified ruff/basedpyright-0/22-pass/yaml-valid. Activates on `main` (schedule reads default branch); Tier
+      B reads the SIT result (soft-gate, fail-open until Tier B confirmed live). Drains the staging-behind-LDR drift this
+      plan tracks.
 - [ ] [AGENT] P1. Tier D: per-service Cloud Run deploy-config audit + add Cloud Run deploy for HTTP-served services
       (audit k1-deploy).
 - [ ] [AGENT] P2. Tier E: game-day + synthetic smokes wired into the staging SIT schedule.
