@@ -87,6 +87,22 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 5. **Manifest read** — v9 columns (`schema_version`/`asset_group`/`pipeline_mode`/`source`/`available_at`); never assume
    the constant; tolerate v8 during transition but write/expect v9.
 
+**FOOTPRINT SCOPE (slot-3 grep audit 2026-06-02 — targets the work, prevents over-scoping):**
+
+- **Legacy no-env bucket string refs (`market-data-tick-{cefi,tradfi,prediction}-` without `-prd/-stg/-dev`): ZERO
+  across ALL six repos.** The bucket-name SSOT work already canonicalised these → the preflight is NOT a bucket-name
+  string sweep; it's a **read/write-path + manifest-read + data-status-resolution** verify.
+- **inline `gs://market-data-tick`**: MTDS 70 / MDPS 19 / instruments 10 / features 5 / deployment-api 0 / UI 0 — mostly
+  migration scripts + docstrings + tests; triage the live read/write ones (not a blanket fix).
+- **`category=`**: MTDS 154 / MDPS 73 / features 1109 / instruments 49 / deployment-api 57 / UI 2 — **counts OVERSTATE**:
+  most are (a) the legacy-TOLERATED `(?:category|asset_group)=` regex alternation in migration/rebuild tools (correct —
+  keep), (b) the `AssetGroup.category` Python attribute / `category` field names (NOT the hive vocab), (c) docstrings.
+  Triage to find the few LIVE write/read/status paths still emitting `category=` for our AGs; do NOT mass-rename.
+- **Net**: the real preflight risk is concentrated in (1) pipeline_mode-PRIMARY read/write (PREP3 — writer ✅; reader
+  residual MDPS/features) and (2) **deployment-api/UI data-status** bucket+manifest+menu+data_type resolution (operator's
+  named hotspot — needs the v9 `_index` read + canonical resolver + on-disk data_type). Scope the per-surface todos to
+  those, with the grep commands as the triage entrypoint — NOT a mass `category=`/`gs://` rewrite.
+
 **Per-surface preflight matrix** (each = a tracked P0 todo; GREEN = canonical + QG/tests aligned + no dead-bucket ref):
 
 - [ ] [CODE] P0. **market-tick-data-service** — WRITER pipeline_mode=PRIMARY ✅ DONE (mtds@f50116ca, PREP3). REMAINING:
