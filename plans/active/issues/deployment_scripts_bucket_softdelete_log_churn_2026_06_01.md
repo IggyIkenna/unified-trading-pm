@@ -132,7 +132,22 @@ the storage bloat.
       _writer_ (a fixtures/odds re-write loop) so it stops churning — clearing soft-delete stopped the retention bloat
       but not the redundant writes. Repo: instruments-service. (2) Codify the gcloud-applied lifecycle/soft-delete
       settings (sports clear; defi 7d; client 90d/keep-5) into the owning repo's bucket terraform so they survive a
-      bucket re-apply and apply in every env. Repo: deployment-service/terraform (or instruments-service bucket TF).
+      bucket re-apply and apply in every env. Repo: deployment-service/terraform (or instruments-service bucket TF). (3)
+      **Codify the `deployment-scripts` bucket lifecycle into terraform** (the 30d-cap rules applied 2026-06-02 are
+      imperative-only). **BLOCKER / design note (slot-3 2026-06-02):** the `deployment-scripts-<pid>` bucket is **not in
+      TF at all** + is a **singleton** (one physical bucket in the central project) while `terraform/gcp` applies
+      per-env (dev/staging/prod state prefixes), so a naïve `google_storage_bucket` resource would (a) try to _create_
+      an existing bucket → 409 on the next apply, and (b) be claimed by 3 separate state files. Recipe for a
+      **TF-capable host** (this slot has neither `terraform` nor `tofu`): add
+      `resource "google_storage_bucket" "deployment_scripts"` to `terraform/gcp/main.tf` matching live settings
+      (location `ASIA-NORTHEAST1`, STANDARD, **UBLA off** / fine-grained ACLs, no versioning, `force_destroy=false`,
+      `soft_delete_policy { retention_duration_seconds = 0 }`, the three `lifecycle_rule` blocks = 14d `vm-logs/`, 15d
+      `vm-heartbeat/`, 30d
+      `logs/`+`recon-logs/`+`audit-results/`+`migration-bundle/staging/`+`log-archive/`+`deployments/archive/`)
+      **guarded to the central project only** (e.g. `count = var.project_id == "central-element-323112" ? 1 : 0`) + a TF
+      1.5 `import {}` block (`id =     "deployment-scripts-central-element-323112"`) so the prod-state apply _adopts_
+      rather than creates; then `terraform plan` against `prefix=terraform/state/prod` MUST show **no changes** before
+      commit. Until then the live lifecycle is safe (no TF resource exists that could overwrite it).
 - [ ] [INFRA] P3. **(discovered 2026-06-02, slot 1)** Declare `jinja2`, `flask`, `functions-framework` in
       deployment-service `pyproject.toml [project.dependencies]` (they're imported by the backends chain but undeclared
       — currently installed explicitly in the Dockerfile `maintenance-jobs` stage as a workaround). Also add a
