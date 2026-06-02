@@ -68,9 +68,9 @@ verified complete**.
       `state_col=None` | tests/unit/test_state_adapter_density.py (5 cases) | lint+typecheck+codex green (only
       pre-existing foreign `test_dependency_checker_sports_prediction` bucket-tier drift red — see finding below).
 - [x] ✅ [CODE] P0. MDPS: add prior-day carry-seed logic to `_finalize_session_grid` (Decision 1 — seed leading bins
-      from last-known price/ts instead of dropping). Source: mdps_state_adapter_leading_nan. —
+      from last-known price/ts instead of dropping). Source: mdps*state_adapter_leading_nan. —
       market-data-processing-service@5a5e989 | seed_price/seed_ts kwargs + carry-from-bin-0 + cold-start-drop +
-      CLOSED-drop preserved | tests/unit/test_finalize_session_grid_seed.py (6 cases) | QG exit 0. (Seed _threading_
+      CLOSED-drop preserved | tests/unit/test_finalize_session_grid_seed.py (6 cases) | QG exit 0. (Seed \_threading*
       through batch+live call path tracked in issue-doc Decision-1 todo.)
 - [x] ✅ [CODE] P0. MDPS: wire the 7 state adapters to call `_finalize_session_grid(output, state_col=…)` —
       cefi/derivative, cefi/futures_chain, cefi/options_chain, defi/liquidity, defi/market_state, cefi/book_snapshot,
@@ -102,17 +102,27 @@ verified complete**.
 
 ## batch-live-reconciliation-service
 
-- [ ] [CODE] P1. BLRS: register the resolution router in `api/main.py` AND rename prefix `/reconciliation` → `/t1-recon`
-      (R1 + D4) — resolution endpoints are currently unreachable at runtime. Source:
+- [x] ✅ [CODE] P1. BLRS: register the resolution router in `api/main.py` AND rename prefix `/reconciliation` →
+      `/t1-recon` (R1 + D4) — resolution endpoints are currently unreachable at runtime. —
+      batch-live-reconciliation-service@`f0c074a` (resolution_api.router wired into create_app; prefix → /t1-recon; QG
+      exit 0). Source: batch_live_reconciliation_service_audit.
+- [x] ✅ [CODE] P1. BLRS: add `drawdown_pct` + `fill_rate_min` orchestrator green gates alongside the existing
+      `bps_delta_max` (D3 — operator ruled "build all three"). — batch-live-reconciliation-service@`43e88ea`
+      (ExecutionThresholds.drawdown_pct_max/fill_rate_min; orchestrator gates all three vs most-conservative archetype
+      bound; stage3 emits real fill_rate + peak-to-trough drawdown_pct). Source:
       batch_live_reconciliation_service_audit.
-- [ ] [CODE] P1. BLRS: add `drawdown_pct` + `fill_rate_min` orchestrator green gates alongside the existing
-      `bps_delta_max` (D3 — operator ruled "build all three"). Source: batch_live_reconciliation_service_audit.
-- [ ] [CODE] P2. BLRS: wire `stage2_strategy_recon` to the strategy-service/position query API as the canonical position
-      baseline (D2) instead of raw GCS event archives. Source: batch_live_reconciliation_service_audit.
-- [ ] [CODE] P2. BLRS: implement `soak_mode` in `ReconConfig` (+ alerting-service CRITICAL-suppression counterpart)
-      (G4). Source: batch_live_reconciliation_service_audit.
-- [ ] [CODE] P2. BLRS: build `analysis/threshold_distribution.py` (bps gate analyzer over past `summary_*.json`) (G5).
-      Source: batch_live_reconciliation_service_audit.
+- [x] ✅ [CODE] P2. BLRS: wire `stage2_strategy_recon` to the strategy-service/position query API as the canonical
+      position baseline (D2) instead of raw GCS event archives. — batch-live-reconciliation-service@`43e88ea` (stage2
+      baseline = strategy-service GET /api/v1/accounts/{id}/pnl-series via requests; GCS event archive fallback when URL
+      unset/404/ empty; baseline_source metric). Source: batch_live_reconciliation_service_audit.
+- [x] ✅ [CODE] P2. BLRS: implement `soak_mode` in `ReconConfig` (+ alerting-service CRITICAL-suppression counterpart)
+      (G4). — batch-live-reconciliation-service@`43e88ea` (ReconConfig.soak_mode downgrades recon-drift routing →
+      ALERT_SUPPRESSED so alerting suppresses CRITICAL escalation in a soak window). Source:
+      batch_live_reconciliation_service_audit.
+- [x] ✅ [CODE] P2. BLRS: build `analysis/threshold_distribution.py` (bps gate analyzer over past `summary_*.json`)
+      (G5). — batch-live-reconciliation-service@`cce28d1` (analyze*threshold_distribution() over
+      t1-recon/recon/summary*{date} .json; per-metric count/mean/p50/p90/p95/max + pass/fail vs EXECUTION_THRESHOLDS;
+      typed, no Any). Source: batch_live_reconciliation_service_audit.
 
 ## unified-api-contracts
 
