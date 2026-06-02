@@ -25,6 +25,22 @@ source:
 
 ## MASTER — cross-plan execution order → single canonical SSOT (no fallback, no dual)
 
+> **🔎 CROSS-AG DEAD-BUCKET REGRESSION FINDING (escalated from the sports lane 2026-06-02 — affects EVERY AG before its
+> legacy delete)**: two shared surfaces still resolve the NO-ENV (legacy) bucket form, which BREAKS once any AG's legacy
+> bucket is deleted: (1) **UAC `gcs_paths.bucket_name(asset_group, …)` returns the NO-ENV form** (e.g.
+> `market-data-tick-sports-{PID}` / `instruments-store-{ag}-{PID}`), pinned by
+> `unified-api-contracts/tests/unit/test_gcs_paths_facade.py` — it CONTRADICTS the UTL SSOT `resolve_bucket_name` which
+> returns `-prd-`; the UI mirrors it (`unified-trading-system-ui/context/api-contracts/…/sports/mapping_resolver.py`).
+> (2) **UTL `instrument_lifecycle_loader.py` `_BUCKETS` / `_INSTRUMENTS_STORE_BUCKETS`** hardcode the no-env template for
+> ALL AGs (cefi/defi/tradfi/sports/prediction). Sports-lane already fixed its OWN readers (`sports_fixtures.py` keystone
+> truthset reader → `resolve_bucket_name`, e2e scripts → `-prd-`; UTL@b3b70c13 + e2e@b418afc). **These two SHARED
+> surfaces must be canonicalised once, cross-AG, BEFORE the first legacy delete** — either route them through
+> `resolve_bucket_name` or make the facade env-tiered, + update the pinning tests so QG regression-catches. Each AG's
+> dead-bucket sweep (in its `*_manifest_canonicalisation` plan) depends on this. Owner: master coordinator / UAC+UTL
+> owner (NOT a per-AG-lane unilateral change — it would desync the other lanes). SSOT for the sports slice:
+> `sports_manifest_canonicalisation_2026_06_01.md` § "Dead-bucket regression gate".
+
+
 **Goal (operator)**: full canonical DATA + MANIFEST — historically AND for all backfill + crons + code — one SSOT, no
 legacy, no fallback read path, no dual-write. **Invariant**: a legacy bucket is deleted ONLY after canonical provably
 holds ALL its data + an authoritative **v9** manifest. **One single-walk per `_index`** (HARD RULE) — every per-bucket
