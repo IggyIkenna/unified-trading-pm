@@ -283,9 +283,14 @@ verified complete**.
 
 ## unified-trading-api
 
-- [ ] [CODE] P2. unified-trading-api: `services/pbm_performance.py:46` → call strategy-service/position pnl route
+- [x] ✅ [CODE] P2. unified-trading-api: `services/pbm_performance.py:46` → call strategy-service/position pnl route
       instead of the dead `http://position-balance-monitor:8080`; clean stale `workspace-manifest.json:1570` PBMS
-      stanza. Source: batch_live_reconciliation_service_audit §9.2.
+      stanza. — unified-trading-api@`77bbae1` (PR #3, quality-gates-v2 ✓; `_get_pbm_client()` resolves
+      `LIVE_SERVICE_STRATEGY_URL` config-bootstrap slot + builds real client targeting
+      `/api/v1/accounts/{id}/pnl-series` — the HTTP client already built that route, it was just never wired; dead
+      position-balance-monitor host retired from docstrings. **workspace-manifest.json does NOT exist in this repo**
+      (verified ls/grep/find) → PBMS-stanza cleanup is N/A here, explaining the earlier pass's "couldn't locate it").
+      Source: batch_live_reconciliation_service_audit §9.2.
 
 ## deployment-service
 
