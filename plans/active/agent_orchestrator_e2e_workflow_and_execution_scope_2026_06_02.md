@@ -251,14 +251,21 @@ operator context (governance / planning / master-plan / model-tier rules).
       pattern; AO agents auto-load CLAUDE.md instead of relying on RULES.md restating it. VMs get them via clone/worktree
       (PM is a sibling; `setup-tab-worktrees.sh` checks them out as tracked files — no bootstrap edit needed). —
       agent-orchestrator@bf85d21 + ml-service@f17f13e
-- [ ] [DESIGN] P0. **Slim `RULES.md` to worker-lifecycle-only** (option a, Harsh 2026-06-02): now that AO auto-loads
-      CLAUDE.md, RULES.md's restated workspace rules (quickmerge/basedpyright/conventional-commits) are pure dup — strip
-      them, keep worker-lifecycle (spawn/claim/commit-push-flip/heartbeat) + point to the auto-loaded CLAUDE.md. Pick ONE
-      canonical agent-rules doc (RULES.md vs SUB_AGENT_MANDATORY_RULES.md) + merge the other; fix CLAUDE.md's stale
-      "inject via inject-mandatory-rules.sh" line. (Cross-link G7.)
-- [ ] [SCRIPT] P1. Fix stale paths: `worker.md:114` /home/ubuntu → `$WORKSPACE_ROOT`; `RULES.md:224` /home/hk →
-      relative/`$WORKSPACE_ROOT`.
-- [ ] [SCRIPT] P1. Confirm + fix CLAUDE.md double-load (repo `.claude/CLAUDE.md` + workspace `.claude/rules/CLAUDE.md`).
+- [x] ✅ [DESIGN] P0. **Slimmed `RULES.md` to worker-lifecycle-only** (option a): 357 → 233 L — stripped the
+      generic-rule restatements (the 8 code rules / QG entrypoint / git discipline / findings-triage, all now auto-loaded
+      via the `.claude/CLAUDE.md` symlink); kept worker-lifecycle-unique content (worktree scope, the server-verified
+      ship→flip→`/done` loop incl. M3 cross-repo verification, sub-agent spawning, the backlog/HTTP API surface); §6 now
+      points to the CLAUDE.md sections instead of duplicating. **RULES.md vs SUB_AGENT_MANDATORY_RULES.md stay separate**
+      (justified: RULES.md = worker-lifecycle boot prompt; SUB_AGENT = the paste-into-`Task()` sub-agent ruleset — distinct
+      audiences, not a dup). Also de-staled the CLAUDE.md AO branch-model exception (transitional, cross-links G6). —
+      agent-orchestrator@41cb2a5 + unified-trading-pm@b811b4232
+- [x] ✅ [SCRIPT] P1. Fixed stale paths: `worker.md:114` boot loop `WORKSPACE_ROOT` fallback `/home/ubuntu` → `$HOME`
+      (workers run as the operator → correct base on any VM); `RULES.md` `cat /home/hk/…` → relative sibling path (prior
+      session). Also exported `WORKSPACE_ROOT` in `bootstrap_vm.sh` (.env.local → systemd → tmux workers + operator
+      .bashrc/.profile, mirroring GH_TOKEN) so the fallback is a safety net not the primary. — agent-orchestrator@41cb2a5
+- [x] ✅ [SCRIPT] P1. CLAUDE.md double-load — **RESOLVED as not-a-real-issue** (see finding above): CC de-dups by resolved
+      path, and the VM has only the single repo-symlink path. The real dup was content (RULES.md restating CLAUDE.md),
+      fixed by the slim. — analysis, no code change needed.
 
 ## Related open work (NOT absorbed here)
 
