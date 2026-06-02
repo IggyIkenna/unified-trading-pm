@@ -1140,8 +1140,14 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 **C. Close the auto-remediation loop:**
 
-- [ ] [SCRIPT] P1. **Wire the stuck-PR watcher → fire `escalate-to-orchestrator`** (supersession-close OR resolve)
+- [x] ✅ [SCRIPT] P1. **Wire the stuck-PR watcher → fire `escalate-to-orchestrator`** (supersession-close OR resolve)
       instead of only paging. repo: unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py`).
+      **DONE 2026-06-02 — `unified-trading-pm@40d019f86`** (on LDR, riding the #113 drain → v2-gated to staging/main).
+      `escalate_stuck_prs()` fires `escalate-to-orchestrator` (repository_dispatch, `wall_type=merge_conflict`) for
+      promotion PRs stuck `CONFLICTING`/`DIRTY`; `BLOCKED` is paged not escalated; idempotent per PR label
+      `escalation-dispatched` (no */15m re-dispatch); gated behind `--escalate` (cron passes it). Pure selector
+      `conflict_prs_to_escalate()` has a hermetic 5-case unit test (`tests/unit/test_ci_failure_watcher_escalate.py`).
+      Ruff + basedpyright clean, test green. (Resolution is the lever, not the auto-merge toggle — operator note above.)
       **UNBLOCKED 2026-06-02 — B2 (`escalate-to-orchestrator.yml`) now exists on main, so the dispatch target is live.**
       Implementation (ready for a worker): add `escalate_stuck_prs(stuck, *, dry_run)` to `ci_failure_watcher.py` that,
       for each stuck PR whose `state ∈ {CONFLICTING, DIRTY}` (merge_conflict walls — NOT `BLOCKED`, which is a
