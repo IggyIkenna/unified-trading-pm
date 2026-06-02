@@ -2729,3 +2729,51 @@ print(f"Processing {count} records")  # ❌ — use logger.info
 2. Each approved STEP added to `base-service.sh` as WARN with ratchet date
 3. Rollout via `rollout-quality-gates-unified.py` to all 15 service repos
 4. STEP transitions to ERROR on ratchet date after teams have remediated
+
+---
+
+## QG-sweep batching + shared-host concurrency (codified 2026-06-02)
+
+`quality-gates.sh` is expensive (~100–500s/run; worse under host contention). When shipping MANY related code items —
+especially across multiple repos and/or via parallel code-only sub-agents — do **not** run a full QG before every
+small edit. Batch the GATE, not the commits.
+
+### The technique (batch the gate, keep per-unit commits)
+
+1. **Make ALL the code edits for the batch first.** Code-only sub-agents are told to edit + verify with `basedpyright`
+   on the touched files only (fast, no fan-out) and report diffs — **NOT** run full `quality-gates.sh`, **NOT** commit.
+   This parallelizes safely (basedpyright is light; it does not spawn the pytest-xdist worker fan-out that saturates RAM).
+2. **Run `quality-gates.sh` ONCE per repo over the whole batch.** One green sweep validates every edit in that repo at
+   once, instead of N sequential full gates.
+3. **THEN make per-shippable-unit commits + plan-flips from that green tree.** Commit + Push + Flip stays fully intact —
+   the COMMITS are still one-per-item (each with its own `docs(plans):` flip), only the GATE RUNS are batched. A single
+   green sentinel covers the tree; you cut N commits from it.
+
+This preserves the merge-prerequisite contract (the touched code IS gated green before it lands) and the
+false-progress-prevention of per-item flips, while removing the repeated multi-minute QG cost.
+
+### Shared-host QG concurrency (HARD)
+
+The dev host is **shared across every slot** (slot 1 in `.tabs/1`, slot 2 in `.tabs/2`, … are separate process trees on
+the SAME machine). Two consequences:
+
+- **Run ≤1–2 full QGs at once.** `quality-gates.sh`'s own "keep parallel QGs to 1–2 slots max" warning is **host-wide,
+  not per-slot**. Exceeding it (e.g. 2 background QG agents + your own runs → ~30 concurrent pytest/basedpyright procs)
+  makes the gates OOM-kill each other — symptom: exit **144** mid-`TESTS`, no `ALL QUALITY GATES PASSED`, no sentinel.
+  Full QGs serialize; code-only `basedpyright`-only agents parallelize.
+- **Never bulk-kill `pytest` / `quality-gates.sh` / `basedpyright` processes** (by pattern, or by PPID=1 "orphan"
+  sweep). They may belong to **another slot's** session — killing them is the process-space form of "don't touch
+  outside your clear context" (incident 2026-06-02: a PPID/pattern reap killed slot-1's pytest under a `claude` process
+  in `.tabs/1`). To stop only YOUR background work, `TaskStop` your tracked task-ids — never a blanket `pkill`.
+
+### Sanctioned timeout overrides (host contention only)
+
+When a QG fails ONLY on a timing META-gate — all substantive gates green — these are the sanctioned overrides:
+
+- `IGNORE_TIMEOUT=true bash scripts/quality-gates.sh` — skips the `<MAX_DURATION>s` (default 300) wall-clock gate.
+  `MAX_DURATION` is also env-overridable (docs note "set to 600 for PM/codex").
+- `PYRIGHT_TIMEOUT=<n>` — raises basedpyright's inner `run_timeout` (default 120s) when type-check is slow under load.
+
+These are legitimate because the timing gate is a performance budget, not a quality check — on a quiet host the same QG
+completes well under it (e.g. an MTDS run that took 425s under contention runs ~99s solo). The gate still runs every
+substantive STEP and writes the sentinel on a true pass. Do NOT use them to mask an actual gate failure.

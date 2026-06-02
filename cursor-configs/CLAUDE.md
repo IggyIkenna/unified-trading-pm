@@ -952,6 +952,23 @@ workspace-wide QG-green sweep as a prerequisite for any ikenna-side migration wo
 `BLOCKED-OPERATOR-DECISION` with explicit articulation. Composes with `Plans Run To Actual Completion` +
 `Data Pipeline Correctness Is The Heartbeat`.
 
+**Batch the GATE, not the commits — QG-sweep technique (codified 2026-06-02)**: `quality-gates.sh` is expensive
+(~100–500s/run, worse under host contention), so when shipping MANY related code items (esp. across repos and/or via
+parallel code-only sub-agents) do NOT run a full QG before every small edit. Instead: (1) make ALL the code edits for
+the batch (code-only agents verify with `basedpyright` on touched files, NOT full QG); (2) run `quality-gates.sh` ONCE
+per repo over the whole batch — a single green sweep validates all of that repo's edits; (3) THEN make
+**per-shippable-unit commits + plan-flips** from that green tree (Commit + Push + Flip stays fully intact — only the
+GATE RUNS are batched, never the commits). **Shared-host QG concurrency (HARD)**: the dev host is shared across ALL
+slots — `quality-gates.sh`'s "keep parallel QGs to 1–2" warning is HOST-WIDE, not per-slot. Run **≤1–2 full QGs at
+once** (full QGs serialize; code-only `basedpyright`-only agents parallelize safely); exceeding it OOM-kills gates
+(exit 144 mid-TESTS). **NEVER bulk-kill `pytest`/`quality-gates.sh`/`basedpyright` processes** (by pattern or PPID=1) —
+they may belong to another slot's session (the process-space form of "don't touch outside your context"); stop only
+your own tracked background tasks. When only the `<300s` (or inner `run_timeout`) META-gate trips under contention —
+all substantive gates green — `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are the sanctioned overrides (the gate
+prints "ALL QUALITY GATES PASSED" + writes the sentinel). Full SSOT: `codex/06-coding-standards/quality-gates.md` §
+"QG-sweep batching + shared-host concurrency". Composes with `Commit + Push + Flip` + `Quality Gates Are A Merge
+Prerequisite`.
+
 **Every Active Ping Must Reference A Plan Item (HARD RULE — codified 2026-05-20 round 5; cadence tightened round 6)**:
 no orphan pings in `plans/active/_agent_pings.md` / `ikenna_orchestrator/_agent_pings.md` /
 `harsh_orchestrator/_agent_pings.md`. Every active entry MUST cite a plan-of-record (`plans/active/<slug>.md`,
