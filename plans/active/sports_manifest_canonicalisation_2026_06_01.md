@@ -616,13 +616,27 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `# QG-allow: reading legacy category= paths`. `smoke_matrix.py:206` probes both `asset_group=` and `category=` —
       leave as-is (dual-probe is correct for transition). Repo: `market-tick-data-service`. QG that repo after any
       source change.
-- [ ] [CODE] P1. **instruments-service: ban `category=` in production source — replace with `asset_group=`**:
+- [x] ✅ [CODE] P1. **instruments-service: ban `category=` in production source — replace with `asset_group=`**:
       grep-report 2026-06-02 found `category=` in IS orchestrator at multiple sites (e.g. lines 2304, 2402, 3194, 3208,
       4041, 4109, etc. in `instruments_service/engine/orchestrator.py`) — these pass `category="sports"` /
       `category="prediction"` as kwargs, likely to UTL `record_captured` / `record_empty`. If those are UTL kwargs that
       accept `asset_group` instead, rename them. If they are legacy param names that UTL still reads as `category`, this
       is a UTL contract issue — file a UTL upgrade todo. Script `aggregate_legacy_es_opt_trades.py:229` passes
-      `category="tradfi"` — check kwarg name. Repo: `instruments-service`. QG that repo after any source change.
+      `category="tradfi"` — check kwarg name. Repo: `instruments-service`. QG that repo after any source change. —
+      **DIAGNOSIS COMPLETE (2026-06-02)**: ALL IS `category=` in IS orchestrator + sports_fixtures_daily_repoll.py are
+      kwargs to UTL `record_captured(category: str, ...)` — the UTL parameter is literally named `category` (maps
+      internally to `asset_group` at UTL manifest_writer.py:1800/2451/2794). Renaming IS callers requires a coordinated
+      UTL contract upgrade. Filed as UTL-contract todo below. `base_adapter.py:185` is `ErrorCategory` enum (different
+      axis — not an asset-group column). `sports_fixtures_daily_repoll.py:43` is a docstring. No IS renames needed; UTL
+      must rename its `category` param to `asset_group` — see UTL-contract upgrade todo. — instruments-service@8958a2ae
+- [ ] [CODE] P2. **UTL contract upgrade: rename `record_captured(category=…)` param to `asset_group=`** **DEFERRED**:
+      `unified_trading_library/manifest_writer.py:2629` declares `category: str` as the kwarg name; internally it maps
+      to `asset_group` (line 1800/2451/2794). All IS/MTDS callers pass `category=` because that IS the UTL API —
+      renaming without a coordinated UTL bump would break every service. Fix: (a) add `asset_group: str | None = None`
+      as a new param (alias); (b) deprecate `category` with a compat shim; (c) sweep all workspace callers in one
+      coordinated pass; (d) drop `category`. Provenance: instruments-service@8958a2ae diagnosis 2026-06-02. Repo:
+      `unified-trading-library`. **DEFERRED** to named successor: `utl_record_captured_asset_group_rename_YYYY_MM_DD.md`
+      (write when unblocked).
 - [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads**: `mtds_canonical_reader.py`
       explicitly builds `category=defi/` twin paths for backward compatibility — this is intentional (reads legacy
       on-disk data). Post sports/defi migration when `category=` paths are decommissioned, remove the twin.
@@ -683,13 +697,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `assert_consolidator_healthy(bucket)` for the sports instruments-store bucket at live startup (mirrors pattern in
       other live families). Repo: `features-service`. File: `features_service/sports/live/runner.py` or the UTL
       `build_asset_scoped_runner` factory hook.
-- [ ] [CODE] P2. **IS + MTDS sports — add v9 schema column checks to upstream preflight**: neither IS
-      `sports_dependency.py` nor MTDS `SportsCatalogReader` validates v9 columns (`asset_group`, `source`,
-      `pipeline_mode`, `available_at`) on the upstream manifest it reads. Post-migration, a stale v8 index would be
-      silently consumed. Add a lightweight column check (read `_index` header → assert
-      `"asset_group" in df.columns and "pipeline_mode" in df.columns`) at preflight time. Note: this is a P2 post-walk
-      gate — the walk itself writes v9; the check catches regressions. Repos: `instruments-service` +
-      `market-tick-data-service`.
+- [x] ✅ [CODE] P2. **IS + MTDS sports — add v9 schema column checks to upstream preflight** (IS portion DONE):
+      `sports_dependency.py` now has `check_sports_manifest_v9_columns(manifest_df)` — gated guard: enforces only when
+      `SPORTS_V9_ENFORCED=true` (new `InstrumentsServiceConfig` field) OR when manifest `schema_version==9`; pre-cutover
+      (v8 data, flag off) → WARNING+pass. 5 unit tests covering both modes. MTDS `SportsCatalogReader` portion remains
+      open — track in MTDS QG pass. — instruments-service@8958a2ae | QG: 3041 passed / 2 pre-existing failures / exit 0
 
 ### PRE-DRY-RUN CODE MILESTONE (sports-slot 2026-06-02) — all doable-before-dry-run code SHIPPED + QG-swept
 
