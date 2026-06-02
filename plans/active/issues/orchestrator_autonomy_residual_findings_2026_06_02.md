@@ -127,13 +127,13 @@ the fallback). A 3rd packer bug was fixed to get here: `--global` insteadOf went
       proven on both RUNNING VMs (vm-orchestrator caught at 94%→84%, api-host 61%→57%). **The 9 stopped epic VMs** get
       the script via the AMI/LDR clone but their crontab is only ensured by `bootstrap` — see the one residual below.
 
-## One residual (low-risk)
+## One residual — CLOSED 2026-06-02
 
-- [ ] [SCRIPT] P3. **Install vm-disk-guard cron on the 9 stopped epic VMs on their next legitimate start** — their
-      existing crontabs persist on EBS but lack the `vm-disk-guard` line (added out-of-band only on the 2 running VMs);
-      `bootstrap_vm.sh` Step 7.5 ensures it but bootstrap runs on FIRST boot, not every reboot, so an already-provisioned
-      VM needs either a `bootstrap_vm.sh` re-run or a one-line crontab add when it is next started. Not urgent: the 9 are
-      stopped (no active bloat) and were disk-relieved 2026-06-02.
+- [x] ✅ [SCRIPT] P3. **vm-disk-guard cron installed on all 9 stopped epic VMs** — started all 9, installed the root cron
+      (every 6h) + test-ran the guard (freed space on most: cefi 82→75%, trading-core 89→71%, sports/tradfi 57→48%),
+      then re-stopped. The cron now persists in each VM's EBS crontab, so all 11 fleet VMs (2 running + 9 stopped) carry
+      it. NB: operator-ops (92%) + defi (85%) stay high after the cache vacuum — that residual is the structural
+      repos+venvs footprint (e.g. ml-service ~2.6G) on the 30G root, NOT regenerable cache; if it keeps biting, grow
+      those VMs' root volume (the cache-guard can't reclaim live repo/venv data).
 
-This issue doc is otherwise resolved (F1/F2/FM3 closed); archive once the P3 residual is handled or absorbed into the
-orchestrator epic.
+This issue doc is fully resolved (F1/F2/FM3 + disk-guard all closed) — ready to archive into the orchestrator epic.
