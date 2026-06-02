@@ -355,6 +355,30 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
 > todos (P2/cosmetic/operator-decision/deployment-api-overlap), deferred under context budget rather than shipped
 > half-baked. NO migration run, NO `--apply`, NO delete — code-only, post-migration-aligned per the governing principle.
 
+## Deferred work after 2026-06-02 slot-3 session B (code-only; NO migration run)
+
+> Second slot-3 session (2026-06-02). Shipped: item 4 (batch=live None-classifier, mtds@5744ba61) + item 3 (CRIT-2
+> non-router gate, execution-service@12561a9ee), each per-shippable-unit committed + plan-flipped same-turn. Item 1
+> CF-11 write-path DIAGNOSED (MTDS verified-compliant; IS residual) + annotated in all 3 AG plans. Kalshi None-classifier
+> follow-up captured (prediction plan). The remaining items below are tracked `- [ ]` todos — NOT shipped this session
+> (context budget; several are P2 / operator-decision / migration-time, none on the live critical path).
+
+| Item | Status | Repo / next action |
+| --- | --- | --- |
+| Item 4 batch=live None-classifier (Polymarket) | ✅ shipped | mtds@5744ba61 — flipped |
+| Item 3 CRIT-2 non-router freshness gate | ✅ shipped | execution-service@12561a9ee — flipped (repo QG red ONLY on pre-existing FOREIGN violations) |
+| Item 1 CF-11 write-path | 🔎 DIAGNOSED (MTDS compliant) | RESIDUAL: focused instruments-service write-path verify (record_failed not record_empty on IS fetch error). MTDS = no work. Annotated in cefi/tradfi/prediction § CF-11 |
+| Kalshi None-classifier divergence | ⏳ tracked `- [ ]` | mtds Kalshi adapter — same fix as Polymarket (emit None not "OTHER"); prediction plan. Low live urgency (Polymarket-only corpus today) |
+| Item 2 E5 rebuild CF-11 (within-bounds→failed + existing-row re-emit + 41 SRZ audit) | ⏳ tracked `- [ ]` | rebuild_{cefi,tradfi,prediction}_manifest.py — MIGRATION-TIME (not live); read prior `_index` via `read_availability_index` + re-emit typed rows; pre-launch check via venue_launch_dates |
+| Item 5 FLAG-1 tradfi multi-source double-count | ⏳ tracked (P1, operator-decision) | deployment-api — union vs per-source semantics; operator decides |
+| Item 5 FLAG-3 pipeline_uat hardcoded buckets | ⏳ tracked (P1, AMBIGUOUS) | deployment-api commentary/pipeline_uat.py:167/181/195/211 — lines carry `# CORRECT-LOCAL` markers that CONFLICT with the FLAG-3 ask; needs reconciliation with the bucket-name-SSOT owner (do these store buckets get env-tiered/deleted? if not, CORRECT-LOCAL is right). Another agent active in deployment-api. NOT a blind fix |
+| Item 5 FLAG-4 tradfi denominator (Massive venues) | ⏳ tracked (P2, operator/VenueMapping decision) | deployment-api MTDS_CATEGORY_META["TRADFI"].venue_accessor |
+| Item 6 GAP-4 v9-schema mixed-version-drift warn | ⏳ tracked (P2, design-spec'd) | features/strategy/MDPS guards — ship MIXED-version warn (NOT blanket "not v9"; corpus 100% v8 today) |
+| Item 7 GAP-7 MDPS category→asset_group rename | ⏳ tracked (P2 cosmetic) | MDPS dependency_checker.py — at next substantive touch |
+| Item 8 QG-test alignment (read/status) | 🟡 partial | writer-path 18 assertions done (prior session) + my new item-3/4 tests assert canonical/correct behavior; read/status-test extension remains |
+| Item 9 doc sweep + supersession banners | ⏳ tracked `- [ ]` | cf_data_state "Codex/plan doc-update TODOs" + supersession mapping |
+| Item 10 G1 read-only dry-run per AG | ⏳ NOT RUN | gated on ALL coding complete (governing principle) + re-tarball/pin SHAs + VM launch (operational). Items 1-IS/2/5-9 still open → dry-run deferred to the operational session |
+
 ## Per-service scope + what each owns / inherits (no overlap)
 
 | Service       | Surface                                                  | CF items it OWNS (live check)                                       | Notes                                                                                                                                                                          |
