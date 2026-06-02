@@ -374,7 +374,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",

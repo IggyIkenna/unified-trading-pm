@@ -101,9 +101,9 @@
   <circle cx="192" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="136" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="212" y="723" width="139" height="38" class="svc" />
-  <rect x="212" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="212" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="281" y="741" text-anchor="middle" class="label">execution-service</text>
-  <circle cx="341" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="341" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="281" y="753" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="361" y="723" width="132" height="38" class="svc" />
   <rect x="361" y="723" width="4" height="38" fill="#84cc16" rx="2" />
