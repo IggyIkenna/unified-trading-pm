@@ -59,3 +59,23 @@ Honest-absence + canonical-bucket + attribution code, all QG-green + plan-flippe
 - **local gcsfs DNS flaky** — heavy GCS (dry/apply) runs on the in-region VM; `gcloud`/`gsutil` work locally.
 - **Cross-plan**: `bucket_name_ssot` DeFi raw seed marked DO-NOT-RUN (unsafe) → C0 not blocked by it; its DELETE (Phase 7) AFTER your RD4-GREEN. solana_defi Gate-2 ⊥ C0 on the DeFi `_index`.
 - **Rebuild tarball after ANY mtds/uac/utl commit** + verify the `@sha` pin before launch.
+
+---
+
+## Slot-2 session scoreboard 2026-06-02 (Half-3 deferred-work handoff) — plan: `plans/active/defi_manifest_canonicalisation_2026_06_01.md`
+
+**SHIPPED + QG-green + flipped (LDR):** A11c expanded from "2 files" into a confirmed cross-repo data-correctness gap and (operator-approved) the FULL canonical denominator collapse landed:
+- `uac@a967121a` — `dex_pool_state`/`dex_pool_swaps` across all UAC coverage/capability DENOMINATOR registries (market_data_categories, expected_coverage._DEFI, defi_venue_capabilities, capability_declarations/_defi, source_priority, availability_semantics, required_inputs, defi_prediction_instrument_seeds, venue_constants/mapping) + 6 tests + data_type_capability note. Fixes `expected_coverage()` returning NOT_IN_SCOPE for migrated pool/swap cells (the reader/denominator-first gate before C0 apply).
+- `mdps@56503c2` — swap candle adapter re-registered under canonical `dex_pool_swaps` (orchestrator selects by exact data_type) + adapter-registry tests.
+- `deployment-api@14dfe2e` — data-status maps canonical (TESTS green; repo QG blocked ONLY by PRE-EXISTING acknowledged schema-provenance debt across many local DTOs — unrelated, flagged below).
+- `mtds@b986a3e1` — 5 DeFi DEX adapters' SUPPORTED_DATA_TYPES/_default_data_types/branch-dispatch + orchestrator `_TICK_REQUIRED_COLUMNS` + live `curve_defi_ws` connector + canonicalization test, all canonical (MTDS QG green).
+- `mtds@20e5bd2d` — moved a pre-existing `# noqa: qg-deep-import` to the from-line in `polymarket_adapter.py` (unblocked mtds QG; unrelated to A11c).
+- PM `venue_data_types.yaml` (PM+mtds copies) canonical.
+
+**DECOUPLED + tracked (before-apply follow-ups, both have findings in the plan):**
+- **C0-RD6** — the candle-output `_DEX_EXT` is SHARED by `swaps_ohlcv` AND `state_ohlcv`, so the dup-alias-column drop needs a schema SPLIT (not a flat drop). Provisional adapter drop was reverted. Owed: split `_DEX_EXT` + migration-union exclusion.
+- **A11c-candle-enum** — UAC `candle_schema.DataType` has a DISTINCT Phase-2 `DEX_POOL_STATE="dex_pool_state"` that COLLIDES with the operator-locked canonical pool name; the candle_schema enum + schema-contract registry (contracts.py/_defi_v2_contracts.py) were LEFT legacy to avoid a StrEnum alias collision. **Needs operator decision: merge snapshot↔timeseries, or distinct token.**
+
+**Cross-repo pre-existing QG-red flagged (Harsh-side workspace-QG-green, NOT mine):** deployment-api schema-provenance debt (local response DTOs in deploy_missing.py/shard_detail.py/recursive_borrow.py etc.; "acknowledged" since 2b4fed7).
+
+**NOT STARTED (all tracked `- [ ]` in the plan):** A10d, A10c, A11d, A11e, A11f, mtds_mdps_master unblock (Phase 1); tarball rebuild + busy-week DRY RUN + needs_attribution diagnostic + lst-close + re-dry (Phase 2 — INDEPENDENT of A11c, migration tool already canonical); A12 preflight audit + B0/A2/A4/A5/D/E/F/G (Phase 3). **The DRY RUN needs a clean slot worktree for the tarball + active T+10min→STOPPED babysitting — best run in a fresh-context session (no fire-and-forget).**
