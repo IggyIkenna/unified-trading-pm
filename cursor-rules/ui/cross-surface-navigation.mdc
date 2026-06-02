@@ -10,9 +10,17 @@ tags:
 
 # Cross-Surface Navigation Protocol
 
+> **⚠️ PARTIALLY SUPERSEDED (2026-06-02)**: the entity-routing table below maps to the **pre-consolidation** multi-UI
+> architecture (separate surfaces on ports :5175/:5177/:5179/:5180/:5182/:5183). Those surfaces were **consolidated into
+> `unified-trading-system-ui`** (single Next.js app; route groups, not separate ports) in 2026-05. The *principle*
+> (entity names are clickable portals, context preserved via URL params, link-don't-duplicate) still holds; the
+> **target ports/surfaces are stale**. Resolve the live route map against
+> `unified-trading-pm/scripts/dev/ui-api-mapping.json` + the Next.js `app/` route groups. Full rewrite tracked in the
+> context-hygiene plan (Phase 6).
+
 RULE: Users never hit dead ends. Every entity name is a clickable portal to its canonical surface. Cross-links preserve filter context via URL params. No surface should duplicate a view — link to the owner instead.
 
-WHY: With 7 surfaces on different ports, users previously typed port numbers manually. Cross-linking turns isolated tools into one coherent platform.
+WHY: cross-linking turns the platform's surfaces into one coherent experience (originally separate port-isolated UIs, now route groups within the unified Next.js app).
 
 ## Entity Routing Map
 
