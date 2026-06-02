@@ -247,7 +247,20 @@ be fixed first if run on a VM.
 >   call above. This is the genuinely-correct build; it needs the UAC Polymarket classifier (re-classification per object,
 >   heavier but correct). Kalshi: the equivalent `classify_kalshi_to_canonical_group`.
 
-- [ ] [DATA] P0. E5 Manifest rebuild → v9. **REFERENCE: cefi E5 DONE (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional
+- [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **CAPTURED-ATOM REBUILD DONE (mtds@d1f1317d, 2026-06-02).**
+      `rebuild_prediction_manifest.py` REWRITTEN to the CORRECTION spec: scans the post-migration canonical layout at
+      DAY-level prefix (optional `pipeline_mode=` segment parsed), and for each per-cid object RE-COMPUTES the
+      `canonical_question_group` via UAC `classify_polymarket_to_canonical_group(title,slug,event_slug=eventSlug,
+      outcome,condition_id=conditionId)` (the raw parquet has NO cqg/market_id/available_at columns — verified), groups by
+      `(date,venue,cqg)` with `observed_clusters={conditionId:rows}` + `available_at_envelope=max(ts_event)`, and emits one
+      `record_captured_from_counts` per bundle — the EXACT live-writer atom (orchestrator.py:3071), batch=live. None-classifier
+      → `record_failed[ClassifierConfidenceLow]`; 0-row + missing-envelope → `record_failed` (CF-11 universal 0-row guard).
+      Perf-contract: `ThreadPoolExecutor`(--workers) + `--start-date`/`--end-date` date-shard + per-object isolation +
+      `python -u`. 14 unit tests (parse/atom/bundle/emit). **STILL OPEN (the CF-11 sub-todos below):** re-emit of the
+      EXISTING `_index`'s `empty_confirmed`/`attempted_failed` rows that have NO backing object (a pure object-scan loses
+      them) + within-bounds-empty classification + the IS/MTDS write-path audit — at parity with cefi E5's deferred CF-11
+      enhancements. Build-spec reference retained below.
+- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): **REFERENCE: cefi E5 DONE (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional
       `pipeline_mode=` regex segment, DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
       `derive_pipeline_mode_for_row`). Prediction differs: its CANONICAL_PATH_RE must be **REWRITTEN** to the
       post-migrator form (verified 2026-06-02 via `candidate_parquet_paths`):
@@ -298,7 +311,7 @@ be fixed first if run on a VM.
 | E2 path-migrator built              | ✅ done (mtds@456ae08a)              | —                                                                                                                                           |
 | E4 launcher wired                   | ✅ done (deployment-service@f8866b6) | VM dry-run + full run still PENDING (VM-only)                                                                                               |
 | E3 writer-drain + `_index` snapshot | ⏳ pending                           | confirm `mdps-prediction-2025` stopped (most self-terminated) + snapshot pred-prd `_index` before `--apply`                                 |
-| E5 manifest rebuild → v9            | ⏳ pending                           | build spec refined above — the granularity reconciliation (read parquet for chain/underlying/data_source) is the one open correctness point |
+| E5 manifest rebuild → v9            | ✅ captured-atom DONE (mtds@d1f1317d) | object-scan re-computes cqg atom + record_captured_from_counts (batch=live). OPEN: existing-`_index` empty/failed re-emit (CF-11) + within-bounds classification |
 | E6 CF-7 relabel                     | ⏳ pending                           | runs at rebuild time                                                                                                                        |
 | E7 CF verify                        | ⏳ pending                           | `cf_manifest_audit` CF-1…CF-12 GREEN on pred-prd real data-state                                                                            |
 | E8 IRREVERSIBLE delete              | ⏳ pending — GATED                   | only after E7 GREEN + fleet drain (shared w/ slot-2) → `--drop-stale` + L6                                                                  |
@@ -330,6 +343,15 @@ verify + the gated delete.
       source-zero vs masked fetch failure. Preserve the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
 - [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
       failure to `empty_confirmed`; they stay flagged for backfill.
+- [ ] [CODE] P1. **Batch=live classifier-None divergence (DISCOVERY slot-3 2026-06-02, mtds)**: the LIVE Polymarket
+      adapter maps a `None` classifier result → `canonical_question_group="OTHER"` (polymarket_adapter.py:735) → the live
+      writer BUNDLES it as a captured `OTHER` cqg row; the E5 REBUILD (per the operator-corrected spec + the classifier's
+      own contract docstring) routes `None` → `attempted_failed[ClassifierConfidenceLow]`, NOT a bundle. That is a
+      batch≠live asymmetry on unclassifiable markets. Reconcile by deciding the canonical behaviour (preferred: the live
+      adapter should ALSO route `None`→`attempted_failed[ClassifierConfidenceLow]` rather than masking it as a captured
+      `OTHER` cell — the classifier docstring says callers route to attempted_failed) and aligning both paths. Until
+      reconciled, the rebuild follows the classifier contract (more honest). Target: `polymarket_adapter.py` +
+      orchestrator finalize loop.
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS prediction Polymarket adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for a live market/condition within its active window, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the prediction
