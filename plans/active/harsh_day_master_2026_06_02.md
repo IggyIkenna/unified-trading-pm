@@ -66,7 +66,7 @@ CLAUDE.md 1179L/84KB (3× over its own budget), `.claude/rules/CLAUDE.md` 737L/4
 files/188KB. Phase 3 now also carries the **merge-flow doc drift** (C3) as instance (e). **Full-execution criterion:**
 see owning plan.
 
-- [ ] [DOC] P0. Execute Phases 1–3 of the owning plan (map feed graph → trim CLAUDE.md → contradiction sweep incl. C3).
+- [x] ✅ [DOC] P0. Execute Phases 1–3 of the owning plan (map feed graph → trim CLAUDE.md → contradiction sweep incl. C3). — unified-trading-pm@c0b3d7bf4
 - [ ] [DOC] P1. Execute Phases 4–6 (SUB_AGENT drift, memory prune, .mdc relevance).
 
 ## B — v9 manifest verification + downstream readiness _(Harsh ask #2 + chat 20)_
