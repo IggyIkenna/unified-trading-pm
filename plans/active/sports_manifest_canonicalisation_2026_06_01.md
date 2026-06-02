@@ -560,10 +560,45 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       references a bucket/path/manifest convention must use the canonical `-prd-` v9 form, so QG REGRESSION-CATCHES any
       future dead-bucket association. Grep sports tests for legacy bucket/path literals; update to canonical. (This is
       the mechanism that makes the regression gate self-enforcing — a reverting change fails QG.)
-- [ ] [DATA] P1. **278k provider-season-suffixed league_ids rewrite table** (dry-run-informed): `canonicalize_league_id`
-      conservatively leaves `SCOTTISH_LEAGUE_CUP_185` etc. unchanged (185 = AF SEASON id, not the league id 182). After
-      the dry-run enumerates the actual `{LEAGUE}_{seasonid}` set, build a direct rewrite table (strip the season suffix
-      when the base resolves + the suffix is a known AF season id for that league) → canonical. Not guessed pre-dry-run.
+- [ ] [DATA] P0. **League rewrite table — ENUMERATED ON REAL DATA (sports-slot 2026-06-02; no dry-run needed — read the
+      prod `_index` + UAC registry directly)**. The "278k suffixed rows" is **mostly LEGIT tier leagues** (`LIGUE_1`,
+      `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full form resolves
+      → correct, leave). Of 52 suffixed unique league_ids, the actual rewrite need is TINY:
+      - **SAFE (3-digit season-id suffix, base resolves)**: `SCOTTISH_LEAGUE_CUP_185`→`SCOTTISH_LEAGUE_CUP` (15,702 rows).
+        Rule = strip trailing `_<digits>` iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit
+        tier). → **extend `canonicalize_league_id` with this rule** (safe; handles all 3-digit-suffix registered leagues).
+      - **AMBIGUOUS — operator/registry decision**: `LA_LIGA_2` (3,465 rows) is likely **Segunda División** (real tier-2,
+        AF id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.
+        `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key.
+      - **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,
+        `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP_*` …) — negligible volume; add to UAC `provider_league_ids` OR
+        leave (47 rows). Not a migration blocker.
+      Net: CF-7 league-canon is essentially DONE; only the SCOTTISH_LEAGUE_CUP_185 3-digit rule + the LA_LIGA_2 tier
+      disambiguation remain (both doable pre-migration; LA_LIGA_2 needs the canonical-Segunda-key confirmation).
+
+> ## OPERATOR DIRECTIVE 2026-06-02 (round 2) — PERFECT, PRE-MIGRATION, NO DEFERRALS
+>
+> "Do them ALL pre-migration, I want it perfect." Scope additions (all P0, all before the migration runs):
+
+- [ ] [CODE] P0. **Cross-AG bucket canonicalisation — DO IT NOW (not defer to master)**: make UAC
+      `gcs_paths.bucket_name(asset_group,…)` return the **canonical env-tiered `-prd-`** form (route through / match
+      `resolve_bucket_name`) for ALL AGs; fix UTL `instrument_lifecycle_loader._BUCKETS`/`_INSTRUMENTS_STORE_BUCKETS` +
+      `instruments_preflight/__init__.py:23` to call `resolve_bucket_name` (NOT hardcode — operator pointed at the
+      hardcoded line); update the pinning tests (`test_gcs_paths_facade.py` etc.) to assert canonical. Touches all lanes
+      — coordinate via the master callout but EXECUTE (operator is the cross-lane authority). QG all affected repos.
+- [ ] [CODE] P0. **Ban `category=` EVERYWHERE — v9 canonical only, no fallback**: grep all sports-touching code (esp.
+      deployment-api data-status, MTDS, instruments-service, features, UI menu/data_type/manifest-read conventions) for
+      `category=` / `category` as a path key, hive segment, column read, OR data-status fallback. Replace with
+      `asset_group=`. `category` must NOT be accepted even as a fallback in data-status (it confuses counts). Add a QG
+      ratchet that fails on any new `category=` in sports paths. v9 post-migration canonical ONLY.
+- [ ] [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)**: scan every sports
+      service (instruments-service, MTDS, features-service, strategy-service, execution-service) — verify each has
+      UPSTREAM pre-flight data checks in code that (a) read upstream via the **post-migration SSOT bucket format +
+      v9 schema** (correct columns checked where relevant), (b) detect **genuinely-missing-but-expected** upstream data
+      (0 volume / NaN price / empty shard) and (c) **mark the manifest `incomplete`/`expected_unattempted`/typed-empty**
+      so we KNOW when data is incomplete-expected. **Batch=live symmetry**: identical CHECK logic; the ONLY difference is
+      the post-check ACTION — **live → alerting circuit-breaker / halt (bad data is dangerous)**; **batch → fill what it
+      can + mark honest absence**. Capture per-service gaps as todos + fix where in this slot's repos.
 
 ### Verify + handoff to decommission
 
