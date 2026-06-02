@@ -297,23 +297,22 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       (UTL); don't auto-merge a whole layer at once. Mitigation if UAC fix is slow: re-run UTL main v2 after UAC merges.
       repo: unified-trading-library (re-trigger) — root cause is the UAC blocker above.
 
-- [x] ✅ [SCRIPT] P1. **Enforce dep-PROMOTION-ORDER in quickmerge (operator insight 2026-06-02) — would have prevented the
-      UTL-before-UAC main race.** — unified-trading-pm@a14e648ae. STAGE 1.7 added to quickmerge.sh: blocks
+- [x] ✅ [SCRIPT] P1. **Enforce dep-PROMOTION-ORDER in quickmerge (operator insight 2026-06-02) — would have prevented
+      the UTL-before-UAC main race.** — unified-trading-pm@a14e648ae. STAGE 1.7 added to quickmerge.sh: blocks
       LDR→staging promote when any dep D has ci_status below STAGING_GREEN (accepted: STAGING_GREEN, SIT_VALIDATED;
-      blocked: FEATURE_GREEN, LOCAL_PASS, NOT_CONFIGURED, FAILING). Human-only escape: --skip-dep-tier-gate (agent
-      guard mirrors --dep-branch). 14 bats tests in tests/test_quickmerge_dep_tier_gate.bats (block/pass/no-deps/
+      blocked: FEATURE_GREEN, LOCAL_PASS, NOT_CONFIGURED, FAILING). Human-only escape: --skip-dep-tier-gate (agent guard
+      mirrors --dep-branch). 14 bats tests in tests/test_quickmerge_dep_tier_gate.bats (block/pass/no-deps/
       missing-manifest/multi-dep/agent-guard). QG green. **Follow-up (separate item):** (1) main-tier ci_status state
       (MAIN_GREEN) for dep-on-main check; (2) route LDR→main promotion through quickmerge/promote.sh — 2026-06-02 race
       used raw `gh pr` calls that bypass this gate entirely. These two are staging→main-side hardening, not LDR→staging.
       ci_status state machine). **FOLLOW-UP BELOW.**
 
-- [ ] [SCRIPT] P2. **FOLLOW-UP: Main-tier dep-order gate (staging→main).** The STAGE 1.7 gate covers the
-      LDR→staging promote path. The complementary gate for staging→main belongs in
-      `.github/workflows/staging-to-main.yml` (or a `promote.sh` that wraps `gh pr merge`). Gate rule: before
-      promoting staging→main for repo X, assert every dep D has `ci_status ∈ {SIT_VALIDATED}` OR dep D's main SHA ==
-      staging-promoted SHA. Also needs a new `MAIN_GREEN` ci_status state in `ci-status-update.yml` (today tops out at
-      STAGING_GREEN). This is the second half of the UTL-before-UAC mitigation.
-      repo: unified-trading-pm (staging-to-main.yml + ci_status state machine).
+- [ ] [SCRIPT] P2. **FOLLOW-UP: Main-tier dep-order gate (staging→main).** The STAGE 1.7 gate covers the LDR→staging
+      promote path. The complementary gate for staging→main belongs in `.github/workflows/staging-to-main.yml` (or a
+      `promote.sh` that wraps `gh pr merge`). Gate rule: before promoting staging→main for repo X, assert every dep D
+      has `ci_status ∈ {SIT_VALIDATED}` OR dep D's main SHA == staging-promoted SHA. Also needs a new `MAIN_GREEN`
+      ci_status state in `ci-status-update.yml` (today tops out at STAGING_GREEN). This is the second half of the
+      UTL-before-UAC mitigation. repo: unified-trading-pm (staging-to-main.yml + ci_status state machine).
 
 - [ ] [SCRIPT] P2. **Finish Telegram-retire in the TEMPLATE SSOT (else rollout re-introduces it).** The 2026-06-02
       operator-decided Telegram→Slack#ci-failures migration is DONE for `.github/workflows/` (10 workflows, grep-clean,
@@ -1298,17 +1297,21 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P1. Ruleset-set decision made: **only `agent-orchestrator` is EXEMPT**
       (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
       Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
-- [ ] [SCRIPT] P1. **[RE-AUDIT 2026-06-02: 2/7 CLEANLY DONE (unified-trading-api id17135955 + ml-service id17136124,
-      both green on default branch); features-service has ruleset id17136160 but main gate RED; greeks-service +
-      fund-administration-service now GREEN → READY-TO-ADD; e2e-testing BLOCKED on ruff UP041; uts-ui NEEDS-UI-GATE (no
-      QG workflow, only ci.yml)] Add `require-quality-gates` ruleset to the 7 non-exempt repos — IN PROGRESS 2026-06-01
-      (3/7 done).** Operator decision: only `agent-orchestrator` is EXEMPT (main-targeted tooling, bypasses prod path);
-      the other 7 (incl `features-service`, surfaced by 398) GET the ruleset. **HARD PREREQUISITE per repo (incident
-      2026-06-01): VERIFY the v2 job `name:` emits `Quality Gates (<repo>) / quality-gates-v2` AND a GREEN run exists on
-      the default branch BEFORE the ruleset — else the required context is unsatisfiable → DEADLOCK.** Ruleset body =
-      alerting-service `require-quality-gates` copy (target `~DEFAULT_BRANCH`, `bypass_actors:[]`, context swapped).
-      **Token gotcha (2026-06-01): `load-gh-token.sh`'s SM fallback returned EMPTY + the cached `.act-secrets` PAT is
-      401-expired** → fetch the workflow-capable PAT directly:
+- [ ] [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2: 3/7 CLEANLY DONE — unified-trading-api id17135955, ml-service
+      id17136124, **fund-administration-service id17169244 ADDED this session** (main green @1c2c94f8, ~DEFAULT_BRANCH,
+      bypass_actors:[]). features-service has ruleset id17136160 but main gate RED. **greeks-service ALREADY has
+      `require-quality-gates-main` gating `refs/heads/main`, BUT its DEFAULT branch is `live-defi-rollout` and v2 only
+      triggers main/staging → greeks' integration branch is UNGATED** = branch-governance call (make greeks main-default
+      per the features-service precedent, OR add LDR to v2 triggers + an LDR ruleset; Owner: Ikenna — did NOT
+      restructure unilaterally). e2e-testing red is promotion-lag (QG-scope ruff already green on LDR @eabdf05). uts-ui
+      NEEDS-UI-GATE (no QG workflow, only ci.yml)] Add `require-quality-gates` ruleset to the 7 non-exempt repos — IN
+      PROGRESS 2026-06-01 (3/7 done).** Operator decision: only `agent-orchestrator` is EXEMPT (main-targeted tooling,
+      bypasses prod path); the other 7 (incl `features-service`, surfaced by 398) GET the ruleset. **HARD PREREQUISITE
+      per repo (incident 2026-06-01): VERIFY the v2 job `name:` emits `Quality Gates (<repo>) / quality-gates-v2` AND a
+      GREEN run exists on the default branch BEFORE the ruleset — else the required context is unsatisfiable →
+      DEADLOCK.** Ruleset body = alerting-service `require-quality-gates` copy (target `~DEFAULT_BRANCH`,
+      `bypass_actors:[]`, context swapped). **Token gotcha (2026-06-01): `load-gh-token.sh`'s SM fallback returned
+      EMPTY + the cached `.act-secrets` PAT is 401-expired** → fetch the workflow-capable PAT directly:
       `gcloud secrets versions access latest --secret=GH_PAT     --project=central-element-323112`. git push over SSH is
       exempt from the workflow-scope restriction; the SM PAT also creates rulesets (201). (Prior reverted attempt's
       rulesets `17134935/37/38` are gone — the ones below are the correct replacements.) **DONE (3/7):** - [x] ✅
