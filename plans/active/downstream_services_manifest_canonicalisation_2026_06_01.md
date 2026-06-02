@@ -134,6 +134,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       disk (venue casing + instrument_type) by sampling a real object, since the current template predates canonicalisation.
       Add a unit test asserting the pm-aware path so QG regresses on reversion. (Big finding — cefi data correctness; in
       features-service adjacent MVP code, tracked here not guess-fixed.) All other features read paths: CANONICAL, no change.
+      **DISK-VERIFIED REFINEMENT (slot-3 2026-06-02)**: a real cefi derivative_ticker object is
+      `…/day=2026-01-15/asset_group=cefi/venue=BITFINEX-FUTURES/instrument_type=perpetual/data_type=derivative_ticker/{instrument_id}.parquet`
+      → the template is wrong on **4 axes** (lowercase `venue=binance` vs UPPERCASE-hyphenated `BINANCE-FUTURES`; missing
+      `instrument_type=perpetual`; filename `derivative_ticker.parquet` vs per-instrument `{instrument_id}.parquet`; missing
+      `pipeline_mode=`). It therefore **never matched the canonical layout = already returns empty TODAY** → this is a
+      **pre-existing features-service MVP bug, NOT a migration regression** (the legacy delete cannot regress a read that's
+      already empty). **De-risked for the migration: NOT a G1 blocker.** Reclassify as a features-service correctness fix:
+      rewrite to resolve the real ETH-PERP binance derivative_ticker via `candidate_parquet_paths`/the MTDS reader with the
+      canonical venue (BINANCE-FUTURES) + instrument_type=perpetual + per-instrument id + pipeline_mode. Owner: features epic.
 - [x] ✅ [CODE] P0. **instruments-service** — VERIFIED CANONICAL (slot-3 agent A, 2026-06-02): reads/writes resolve
       `instruments-store-{ag}-prd` via `resolve_bucket_name`; `record_*` calls carry explicit pipeline_mode
       (BATCH_INSTRUMENTS_SERVICE etc.); only ops/migration scripts reference legacy bucket names (intentional). One minor
