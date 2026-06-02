@@ -42,15 +42,25 @@ locked_since: 2026-05-21
 
 # CI canonical v2 migration — ghost-workflow workaround
 
-> **⚠️ REALITY CHECK (2026-06-01, via `verify_branch_protection_check_names.py`)** — this migration is **NOT complete**;
-> the "fully retired across N repos" framing is mark-drift. Live ruleset ground truth: **9/17 repos require
-> `quality-gates-v2`; 8 still require v1 `quality-gates`** (`batch-live-reconciliation`, `client-reporting-api`,
-> `deployment-api`, `deployment-ui`, `ibkr-gateway-infra`, `market-data-processing`, `system-integration-tests`,
-> `trading-agent-service`). The Phase-1 ✅ marks for **`batch-live-reconciliation-service` + `deployment-ui`** are
-> mark-drift: a v2 workflow file was created, but the ruleset still requires v1 AND the v2 QG is RED, so the migration
-> did not land. **Root blocker = per-repo pre-existing QG-RED** (enabling the v2 required check on a red repo blocks all
-> its merges) — this is real code remediation, repo-by-repo, not a config flip. Re-verify with the ruleset verifier and
-> only mark a repo done when its live required context is `…/quality-gates-v2`. Cross-ref:
+> **✅ STATUS UPDATE (2026-06-02, via `scripts/repo-management/verify_branch_protection_check_names.py`)** — the
+> 2026-06-01 "8 repos still on v1" reality-check is now itself stale. Live ruleset ground truth: **16/17 repos require
+> `…/quality-gates-v2`** (all consistent, `ALL RULESETS CONSISTENT: True`). The previously-flagged holdouts
+> (`batch-live-reconciliation`, `client-reporting-api`, `deployment-api`, `ibkr-gateway-infra`,
+> `market-data-processing`, `system-integration-tests`, `trading-agent-service`) have all rotated to v2 since.
+>
+> **The lone remaining repo is `deployment-ui`**, whose required context is still
+> `Quality Gates (deployment-ui) / quality-gates` (not the canonical `…/quality-gates-v2`). **Root cause** (diagnosed
+> 2026-06-02): deployment-ui is a TS/Vite repo whose v2 caller `quality-gates-v2.yml` reuses the SAME callee
+> `ui-quality-gates.yml` (job id `quality-gates`) as the v1 `workspace-qg.yml` caller. Both callers therefore emit the
+> _identical_ check-run name `Quality Gates (deployment-ui) / quality-gates`, so (a) the v2 caller never acquired a
+> distinct `…/quality-gates-v2` suffix, and (b) the still-triggered v1 `workspace-qg.yml` (LDR push →
+> `startup_failure`/`failure`) collides on that name. **Fix**: give the v2 caller its OWN callee
+> `ui-quality-gates-v2.yml` (job `quality-gates-v2`) — mirroring the python repos' separate-v2-callee pattern — confirm
+> a green `…/quality-gates-v2` run, then rotate ruleset `13787657`. **NOT done this turn**: deployment-ui CI is actively
+> being iterated by `semver-rollout[bot]` (commit @a8d6ee5 2026-06-02 04:51 + a `workflow_dispatch` v2 run in-progress)
+> — barging in would collide with in-flight work; and per the CLAUDE.md UI playwright HARD RULE this repo needs
+> `pw:L2 ✓` from a UI-capable slot (the v2 QG run executes the playwright smoke, so a green v2 run is the natural pw
+> evidence). Tracked below as the single open migration item. Cross-ref:
 > `plans/audit/results/infrastructure_master_audit_2026_06_01.md` + `cicd_contract_hardening_2026_06_01.md` Phase 1.
 
 ## Overview
@@ -103,15 +113,16 @@ alone doesn't escape it.
 
 ## Status snapshot
 
-| Layer                                      | Status                | Note                                                                        |
-| ------------------------------------------ | --------------------- | --------------------------------------------------------------------------- |
-| Canonical CI codex doc                     | ✅ shipped 2026-05-29 | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model |
-| PM `python-quality-gates.yml` real content | ✅ correct on disk    | Bad comment reverted in `7ca446080`                                         |
-| PM main branch protection                  | ✅ rotated 2026-05-29 | Required check now `quality-gates-v2` (was `quality-gates`)                 |
-| GH Support ticket                          | 🟡 open               | #4422570 filed 2026-05-27, awaiting cache clear                             |
-| v2 caller workflow on PM                   | ✅ shipped 2026-05-29 | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main             |
-| v2 callee workflow on PM                   | ✅ shipped 2026-05-29 | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main      |
-| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29    | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM        |
+| Layer                                      | Status                      | Note                                                                                                                   |
+| ------------------------------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Canonical CI codex doc                     | ✅ shipped 2026-05-29       | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model                                            |
+| PM `python-quality-gates.yml` real content | ✅ correct on disk          | Bad comment reverted in `7ca446080`                                                                                    |
+| PM main branch protection                  | ✅ rotated 2026-05-29       | Required check now `quality-gates-v2` (was `quality-gates`)                                                            |
+| GH Support ticket                          | 🟡 open                     | #4422570 filed 2026-05-27, awaiting cache clear                                                                        |
+| v2 caller workflow on PM                   | ✅ shipped 2026-05-29       | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main                                                        |
+| v2 callee workflow on PM                   | ✅ shipped 2026-05-29       | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main                                                 |
+| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29          | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM                                                   |
+| Workspace-wide canonical-check state       | ✅ 16/17 on v2 (2026-06-02) | Verifier `ALL RULESETS CONSISTENT: True`; only `deployment-ui` still `…/quality-gates` (suffix collision — see banner) |
 
 ## Phased execution
 
@@ -130,15 +141,19 @@ alone doesn't escape it.
 
 ### Phase 1 — PM (1 day)
 
-- [ ] [SCRIPT] P0. **Step 0.5 — Resolve pre-existing PM dep-alignment failure** (Phase 0 side-finding). Run
+- [x] ✅ [SCRIPT] P0. **Step 0.5 — Resolve pre-existing PM dep-alignment failure** (Phase 0 side-finding). Run
       `python scripts/manifest/generate-derived-manifest.py` + `check-dependency-alignment.py --json`. If internal-only
       drift: `fix-internal-dependency-alignment.py --apply`. If external drift:
       `fix_external_dependency_alignment.py --apply`. Verify Stage 1.5 of quickmerge passes before proceeding to Step 1.
       Commit the manifest fixes as a SEPARATE quickmerge / admin-merge before the v2 workflow files (clean separation of
-      concerns).
+      concerns). — RESOLVED by outcome: PM `main` `quality-gates-v2` is GREEN (run on 2026-06-02 03:48, `main push` →
+      success), and QG Stage 1.5 = dep-alignment, so a green main QG proves dep-alignment passes. (backfilled
+      2026-06-02)
 
-- [ ] [SCRIPT] P0. Run `bash scripts/quality-gates.sh` IN FULL (no skip flags) in PM at current HEAD. Verify exit 0 +
-      `.qg_last_passed_sha` file written + SHA matches `git rev-parse HEAD`.
+- [x] ✅ [SCRIPT] P0. Run `bash scripts/quality-gates.sh` IN FULL (no skip flags) in PM at current HEAD. Verify exit 0 +
+      `.qg_last_passed_sha` file written + SHA matches `git rev-parse HEAD`. — Done by outcome: PM v2 files merged to
+      `main` and `quality-gates-v2` reports `success` on main pushes; sentinel-gated quickmerge landed them. (backfilled
+      2026-06-02)
 - [x] ✅ [SCRIPT] P0. Stage current working-tree changes (none expected post-slot-reset). Create v2 workflow files:
   - `.github/workflows/quality-gates-v2.yml` — caller, triggers push+PR on [main, staging], concurrency group
     `quality-gates-v2-${{ github.ref }}`, job key `quality-gates-v2`, calls v2 callee, `dispatch-cloud-build` job needs
@@ -146,42 +161,52 @@ alone doesn't escape it.
   - `.github/workflows/python-quality-gates-v2.yml` — reusable callee, job key `quality-gates-v2`, includes
     `SLACK_CI_WEBHOOK_URL` secret + failure notification step — unified-trading-pm@a9d340df
   - DO NOT delete v1 files yet — leave them as ghost-targets so the cache doesn't poison v2 via shared registration
-- [ ] [SCRIPT] P0.
+- [x] ✅ [SCRIPT] P0.
       `bash scripts/quickmerge.sh "ci(workflows): add v2 caller+callee — escape GHA ghost cache"     --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/python-quality-gates-v2.yml'`.
-      Sentinel verified at quickmerge time → push proceeds → PR to staging → auto-merge.
+      Sentinel verified at quickmerge time → push proceeds → PR to staging → auto-merge. — v2 caller+callee are live on
+      PM `main` (live ruleset requires `…/quality-gates-v2`; `main push` runs report `success`). (backfilled 2026-06-02)
 - [x] ✅ [SCRIPT] P0. **Branch protection rotation** on PM main+staging via
       `gh api PUT repos/IggyIkenna/unified-trading-pm/branches/{main,staging}/protection`:
   - Removed `quality-gates` from required status checks on both branches
   - Added `quality-gates-v2` as new required status check on both branches
   - All other settings preserved (dismiss_stale=true, required_approving_review_count=1, enforce_admins=false,
     restrictions=null) — 18/18 branches rotated 2026-05-29
-- [ ] [VERIFY] P0. PR #83 (TradFi plan) merges. Confirm via `gh pr view 83 --repo IggyIkenna/unified-trading-pm`.
+- [x] ✅ [VERIFY] P0. PR #83 (TradFi plan) merges. Confirm via `gh pr view 83 --repo IggyIkenna/unified-trading-pm`. —
+      MERGED 2026-05-29 18:11:35Z (verified `gh pr view 83` → state MERGED). (backfilled 2026-06-02)
 - [x] [VERIFY] P0. Subsequent PR to PM main triggers v2 check, reports success (not startup_failure). If v2 ALSO ghosts,
       fall back to Plan-B (inline QG steps in v2 caller, no reusable). — PR #93 (fix/pm-ci-self-clone) merged
       2026-05-29; run 26654854795 passed ✅ (V=12/12).
 
 ### Phase 2 — UAC (0.5 day)
 
-- [ ] [SCRIPT] P0. Same recipe as Phase 1 in UAC:
+- [x] ✅ [SCRIPT] P0. Same recipe as Phase 1 in UAC:
   - Local `quality-gates.sh` full run → sentinel
   - Add `.github/workflows/quality-gates-v2.yml` to UAC. UAC's caller references PM's v2 callee at LDR ref (just like v1
     references python-quality-gates.yml at LDR)
   - Quickmerge per canonical flow
+  - Done by outcome: UAC `main` requires `…/quality-gates-v2` (live ruleset) and `main push` run 2026-06-01 18:18 →
+    `success`; staging-v2 PR also green. (backfilled 2026-06-02)
 - [x] ✅ [SCRIPT] P0. UAC main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2` on
       both branches. staging had quality-gates-v2 from 18-branch sweep 2026-05-29; main rotation applied 2026-05-29
       (main had no prior required check — was missing from sweep).
-- [ ] [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean.
-- [ ] [VERIFY] P0. Next UAC PR triggers v2 cleanly.
+- [x] ✅ [VERIFY] P0. PR #50 (TradFi universe expansion) merges. Confirm clean. — MERGED 2026-05-29 18:08:21Z (verified
+      `gh pr view 50` → state MERGED). (backfilled 2026-06-02)
+- [x] ✅ [VERIFY] P0. Next UAC PR triggers v2 cleanly. — UAC `live-defi-rollout` PR run 2026-06-01 18:13 →
+      `quality-gates-v2` success (no startup_failure). (backfilled 2026-06-02)
 
 ### Phase 3 — UTL (0.5 day)
 
-- [ ] [SCRIPT] P0. Same recipe as Phase 1+2 in unified-trading-library:
+- [x] ✅ [SCRIPT] P0. Same recipe as Phase 1+2 in unified-trading-library:
   - Local `quality-gates.sh` full run → sentinel
   - Add v2 caller workflow
   - Quickmerge
+  - Done by outcome: UTL requires `…/quality-gates-v2` (live ruleset); v2 green on `staging push` 2026-06-01 15:47 +
+    `workflow_dispatch` 2026-06-02 04:45. (backfilled 2026-06-02)
 - [x] ✅ [SCRIPT] P0. UTL main+staging branch protection rotation: dropped `quality-gates` → added `quality-gates-v2`
       2026-05-29 (18-branch sweep).
-- [ ] [VERIFY] P0. Next UTL PR triggers v2 cleanly.
+- [x] ✅ [VERIFY] P0. Next UTL PR triggers v2 cleanly. — `quality-gates-v2` registers + runs (green `workflow_dispatch`
+      2026-06-02 04:45; green `staging push` 2026-06-01 15:47); no startup_failure on the v2 chain. (backfilled
+      2026-06-02)
 
 ### Phase 4 — Rollout to remaining 7 ghost-affected repos (1.5 days)
 
@@ -201,16 +226,45 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       enforces `check-staging-lock` (not `quality-gates`) — hygiene follow-up tracked in
       `plans/active/issues/check_staging_lock_ruleset_hygiene_2026_05_29.md`.
 - [x] ✅ [SCRIPT] P1. instruments-service — cherry-picked v2 from LDR. PR #388 MERGED 18:42:37Z. Same hygiene follow-up.
-- [x] ✅ [SCRIPT] P1. deployment-ui — v2 created from scratch. PR #9 MERGED 18:44:16Z. Same hygiene follow-up.
+- [~] 🟡 [SCRIPT] P1. deployment-ui — v2 caller `quality-gates-v2.yml` created (PR #9 MERGED 18:44:16Z) and IS the
+  enforced required check, BUT not yet canonical: its required context is still
+  `Quality Gates (deployment-ui) /     quality-gates`, NOT `…/quality-gates-v2`. **Root cause** (2026-06-02): the v2
+  caller reuses the same callee `ui-quality-gates.yml` (job `quality-gates`) as the v1 `workspace-qg.yml`, so both emit
+  the identical check name → no distinct v2 suffix + v1 ghost collision. **Remaining work** tracked below in Phase 4.5.
+  **BLOCKED** this turn: deployment-ui CI is actively iterated by `semver-rollout[bot]` (commit @a8d6ee5 2026-06-02
+  04:51 + in-progress `workflow_dispatch`) → no-barge per multi-agent rule; and `[UI]` repo needs `pw:L2 ✓` from a
+  UI-capable slot.
 - [x] ✅ [VERIFY] P1. PM workflow_dispatch on `quality-gates-v2.yml` ran for 1m15s (run id 26654010496), NOT 0s
       startup_failure. **Option D verified: v2 chain escapes the GitHub ghost cache.** Subsequent runs on PM main are
       now `success` (e.g. 26654998707). Workspace-qg health restored across all 10 repos.
 
+### Phase 4.5 — deployment-ui canonical-suffix completion (the one open repo) (0.25 day) [UI]
+
+> **Owner: a UI-capable slot, AFTER `semver-rollout[bot]` settles on deployment-ui (no in-flight CI run).** Verify quiet
+> first: `gh run list --repo IggyIkenna/deployment-ui --limit 5` shows no in-progress workspace-qg/quality-gates-v2 run
+> and HEAD == origin. Do NOT start while a rollout run is active.
+
+- [ ] [SCRIPT] P1. Create `.github/workflows/ui-quality-gates-v2.yml` = copy of `ui-quality-gates.yml` with its job id
+      renamed `quality-gates:` → `quality-gates-v2:` (mirrors the python repos' separate-v2-callee pattern). Repoint
+      `quality-gates-v2.yml` `uses:` → `./.github/workflows/ui-quality-gates-v2.yml`. Leave v1 `ui-quality-gates.yml` +
+      `workspace-qg.yml` untouched (their `…/quality-gates` check is no longer required after the rotation below) — v1
+      deletion stays in Phase 5 pending the GH ticket.
+- [ ] [VERIFY] P1. Confirm the v2 caller now emits a GREEN `Quality Gates (deployment-ui) / quality-gates-v2` check on a
+      `main`/`staging` push or PR. **This v2 QG run executes the playwright smoke**, so a green run IS the `pw:L2 ✓`
+      evidence — cite the run id + the smoke spec under `tests/smoke/` as the regression guard per the UI playwright
+      HARD RULE.
+- [ ] [SCRIPT] P1. Rotate ruleset `13787657` (`require-quality-gates`) on deployment-ui main: change required context
+      `Quality Gates (deployment-ui) / quality-gates` → `Quality Gates (deployment-ui) / quality-gates-v2`. Re-run
+      `verify_branch_protection_check_names.py` → expect deployment-ui main now `…/quality-gates-v2` and
+      `ALL RULESETS     CONSISTENT: True` with 17/17 on v2.
+
 ### Phase 5 — Cleanup + codex updates (0.25 day)
 
-- [ ] [SCRIPT] P1. Once all 10 repos run cleanly on v2, delete v1 caller workflow files in each repo (single quickmerge
-      per repo). Keep the v1 PM callee `python-quality-gates.yml` for now to avoid forced GitHub re-validation; remove
-      in a later cleanup once GH Support ticket clears.
+- [ ] [SCRIPT] P1. **BLOCKED-UPSTREAM (GH Support #4422570 open).** Once all repos run cleanly on v2, delete v1 caller
+      workflow files in each repo (single quickmerge per repo). Keep the v1 PM callee `python-quality-gates.yml` for now
+      to avoid forced GitHub re-validation; remove in a later cleanup once GH Support ticket clears. Named successor:
+      `cleanup_v1_quality_gates_workflows_<TBD>.md` (per § Out of scope). Holds until the ghost cache is confirmed
+      cleared — premature v1 deletion risks re-poisoning the v2 registration.
 - [x] ✅ [CODEX] P1. `codex/08-workflows/ci-cd-flow.md` updated this turn (2026-05-29 EOD) with new section "Canonical
       required check name (post-Option-D, 2026-05-29)" — names `quality-gates-v2` as the workspace canonical,
       cross-references the per-repo matrix in feature-branch-workflow.md, documents v1-cleanup-pending.
