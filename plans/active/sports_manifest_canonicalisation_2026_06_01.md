@@ -547,34 +547,30 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `unified-api-contracts/tests/unit/test_gcs_paths_facade.py:30,49,50,72`. CROSS-AG (UTL `resolve_bucket_name` SSOT
       → `-prd-`; UAC `bucket_name` facade → no-env) — coordinate at `defi_manifest…` §MASTER; sports READERS already
       fixed to use `resolve_bucket_name` instead of the facade.
-- [x] ✅ [CODE] P0. **deployment-api data-status = ALREADY CANONICAL (sports slot verified 2026-06-02)**: the data-status
-      bucket resolution `build_bucket_name()` (`data_status_drilldown.py:103-115`) + `batch_config_utils.py` route through
-      `resolve_bucket_name(cloud="gcp", kind=…, asset_group=…)` → canonical env-tiered `-prd-` (via `SERVICE_TO_KIND` +
-      cloud-providers.yaml). `data_status_hierarchical.py:364` calls the same `build_bucket_name`. The `data_status_mock.py`
-      SPORTS entry (`features-sports-service`) is a service→AG map, NOT a bucket → no dead-bucket exposure. **No fix
-      needed in deployment-api.** ONE UI mirror — `unified-trading-system-ui/context/api-contracts/canonical-schemas/
-      domain/sports/mapping_resolver.py:40` ("Resolve the instruments-store-sports bucket name") — mirrors the UAC
-      gcs_paths facade → **rides the cross-AG UAC `bucket_name` facade fix** (coordinate at `defi_manifest…` §MASTER; not
-      a unilateral sports-lane change). UI data-status views read the (canonical) deployment-api → no separate UI fix.
+- [x] ✅ [CODE] P0. **deployment-api data-status = ALREADY CANONICAL (sports slot verified 2026-06-02)**: the
+      data-status bucket resolution `build_bucket_name()` (`data_status_drilldown.py:103-115`) + `batch_config_utils.py`
+      route through `resolve_bucket_name(cloud="gcp", kind=…, asset_group=…)` → canonical env-tiered `-prd-` (via
+      `SERVICE_TO_KIND` + cloud-providers.yaml). `data_status_hierarchical.py:364` calls the same `build_bucket_name`.
+      The `data_status_mock.py` SPORTS entry (`features-sports-service`) is a service→AG map, NOT a bucket → no
+      dead-bucket exposure. **No fix needed in deployment-api.** ONE UI mirror —
+      `unified-trading-system-ui/context/api-contracts/canonical-schemas/     domain/sports/mapping_resolver.py:40`
+      ("Resolve the instruments-store-sports bucket name") — mirrors the UAC gcs_paths facade → **rides the cross-AG UAC
+      `bucket_name` facade fix** (coordinate at `defi_manifest…` §MASTER; not a unilateral sports-lane change). UI
+      data-status views read the (canonical) deployment-api → no separate UI fix.
 - [ ] [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)**: every sports test (unit + integration) that
       references a bucket/path/manifest convention must use the canonical `-prd-` v9 form, so QG REGRESSION-CATCHES any
       future dead-bucket association. Grep sports tests for legacy bucket/path literals; update to canonical. (This is
       the mechanism that makes the regression gate self-enforcing — a reverting change fails QG.)
 - [ ] [DATA] P0. **League rewrite table — ENUMERATED ON REAL DATA (sports-slot 2026-06-02; no dry-run needed — read the
       prod `_index` + UAC registry directly)**. The "278k suffixed rows" is **mostly LEGIT tier leagues** (`LIGUE_1`,
-      `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full form resolves
-      → correct, leave). Of 52 suffixed unique league_ids, the actual rewrite need is TINY:
-      - **SAFE (3-digit season-id suffix, base resolves)**: `SCOTTISH_LEAGUE_CUP_185`→`SCOTTISH_LEAGUE_CUP` (15,702 rows).
-        Rule = strip trailing `_<digits>` iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit
-        tier). → **extend `canonicalize_league_id` with this rule** (safe; handles all 3-digit-suffix registered leagues).
-      - **AMBIGUOUS — operator/registry decision**: `LA_LIGA_2` (3,465 rows) is likely **Segunda División** (real tier-2,
-        AF id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.
-        `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key.
-      - **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,
-        `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP_*` …) — negligible volume; add to UAC `provider_league_ids` OR
-        leave (47 rows). Not a migration blocker.
-      Net: CF-7 league-canon is essentially DONE; only the SCOTTISH_LEAGUE_CUP_185 3-digit rule + the LA_LIGA_2 tier
-      disambiguation remain (both doable pre-migration; LA_LIGA_2 needs the canonical-Segunda-key confirmation).
+      `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full form
+      resolves → correct, leave). Of 52 suffixed unique league*ids, the actual rewrite need is TINY: - **SAFE (3-digit
+      season-id suffix, base resolves)**: `SCOTTISH_LEAGUE_CUP_185`→`SCOTTISH_LEAGUE_CUP` (15,702 rows). Rule = strip
+      trailing
+      `*<digits>`iff base resolves AND digits ≥ 100 (3-digit AF/season id, never a 1–2-digit       tier). → **extend`canonicalize*league_id`with this rule** (safe; handles all 3-digit-suffix registered leagues).     - **AMBIGUOUS — operator/registry decision**:`LA_LIGA_2`(3,465 rows) is likely **Segunda División** (real tier-2,       AF id 141), NOT a La-Liga season suffix → must map to the canonical Segunda key, NOT strip to LA_LIGA.      `FRANCE_NATIONAL_1` (2 rows) same shape. Do NOT auto-rewrite these — verify the canonical tier key.     - **REGISTRY-GAP (base doesn't resolve)**: 41 obscure leagues, **47 rows total** (`CONGO_DR_LIGUE_1`,       `BRAZIL_CARIOCA_1`, `DENMARK_DENMARK_SERIES_GROUP*\*`…) — negligible volume; add to UAC`provider_league_ids`
+      OR leave (47 rows). Not a migration blocker. Net: CF-7 league-canon is essentially DONE; only the
+      SCOTTISH_LEAGUE_CUP_185 3-digit rule + the LA_LIGA_2 tier disambiguation remain (both doable pre-migration;
+      LA_LIGA_2 needs the canonical-Segunda-key confirmation).
 
 > ## OPERATOR DIRECTIVE 2026-06-02 (round 2) — PERFECT, PRE-MIGRATION, NO DEFERRALS
 >
@@ -591,14 +587,58 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `category=` / `category` as a path key, hive segment, column read, OR data-status fallback. Replace with
       `asset_group=`. `category` must NOT be accepted even as a fallback in data-status (it confuses counts). Add a QG
       ratchet that fails on any new `category=` in sports paths. v9 post-migration canonical ONLY.
-- [ ] [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)**: scan every sports
-      service (instruments-service, MTDS, features-service, strategy-service, execution-service) — verify each has
-      UPSTREAM pre-flight data checks in code that (a) read upstream via the **post-migration SSOT bucket format +
-      v9 schema** (correct columns checked where relevant), (b) detect **genuinely-missing-but-expected** upstream data
-      (0 volume / NaN price / empty shard) and (c) **mark the manifest `incomplete`/`expected_unattempted`/typed-empty**
-      so we KNOW when data is incomplete-expected. **Batch=live symmetry**: identical CHECK logic; the ONLY difference is
-      the post-check ACTION — **live → alerting circuit-breaker / halt (bad data is dangerous)**; **batch → fill what it
-      can + mark honest absence**. Capture per-service gaps as todos + fix where in this slot's repos.
+- [x] ✅ [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)** — AUDIT
+      COMPLETE 2026-06-02. Per-service table below; gaps captured as P1/P2 todos beneath. Every service either VERIFIED
+      GREEN or has a tracked gap-todo. Evidence: this slot, reading code in-repo (grep-then-read across 5 services).
+
+  **Per-service audit table (2026-06-02)**
+
+  | Service                         | SSOT bucket (-prd-)?                                                                                                                                                                                                                                                                                                                                       | v9 cols checked?                                                                                | 0vol/NaN/empty-shard detect?                                                                                                                                                                | manifest marks incomplete-expected?                                                                                                                                                            | batch=live symmetric?                                                                                                                                                                            | live circuit-breaker?                                                                                                                                                                   |
+  | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+  | instruments-service             | ❌ GAP — `sports_dependency.py:66` calls `get_write_bucket_name("instruments","SPORTS",project)` with explicit project_id → skips yaml SSOT → returns legacy `instruments-store-sports-{pid}` (no -prd-); IS orchestrator itself writes to `-prd-` via `resolve_bucket_name`                                                                               | ❌ NO — blob existence only, no column/schema checks                                            | ✅ YES — raises `DependencyError` on missing api-football fixtures blob                                                                                                                     | ✅ YES — `record_failed` on partial/full fetch fail (CF-11 fix @ceab7720); `record_empty(EXPECTED_*)` via oracle (@608e7ca7)                                                                   | ✅ YES — same `sports_dependency.check_api_football_dependency()` + `classify_venue_error()` path in both modes                                                                                  | ❌ NO live circuit-breaker beyond DependencyError (post-May-23 scope per preflight.py comment)                                                                                          |
+  | market-tick-data-service (MTDS) | ✅ OK — `get_bucket_name("instruments","sports")` with no explicit project_id → yaml SSOT → `-prd-` form; catalog reader correct                                                                                                                                                                                                                           | ❌ NO — no v9 column checks on sports manifest reads at preflight                               | ✅ YES — `failed_shards` dict + sentinel pass → `record_failed`; `OddsApiAdapter` CF-11 fix (@c96245b7) re-raises on API errors                                                             | ✅ YES — sentinel pass emits typed honest absence; fixture-existence gated                                                                                                                     | ✅ PARTIAL — detection logic same; action diverges (live → ADAPTER_FETCH_FAILED + `record_failed`; batch → same). No separate live-only code path                                                | ❌ NO explicit sports live circuit-breaker; relies on `failed_shards` sentinel only                                                                                                     |
+  | features-service                | ❌ GAP — `gcs_paths.resolve_instruments_bucket()` calls `get_bucket_name("instruments","sports",project_id=_project_id())` with explicit project_id → skips yaml SSOT → returns `instruments-store-sports-{pid}` (legacy no-env); `resolve_tick_data_bucket()` uses unmapped domain `"market-data-tick-sports"` → also falls through to legacy no-env form | ❌ NO — no v9 column checks; reads parquet and returns empty DataFrame silently on missing blob | ❌ PARTIAL — `gcs_reader.read_reference_entity()` returns `pd.DataFrame()` silently on missing blob; logs WARNING but does NOT raise `DependencyError` or emit `record_empty/record_failed` | ❌ NO — features-service sports does NOT write manifest rows (no `ManifestWriter` usage in `features_service/sports/`); upstream emptiness is silently propagated as an empty output DataFrame | ❌ PARTIAL — `gcs_reader.py` behaviour is batch-only; live runner is `AssetScopedFeaturesRunner` (UTL); no sports-specific NaN/0-volume detection or degraded-propagation in sports compute path | ❌ NO live circuit-breaker wired for sports                                                                                                                                             |
+  | strategy-service                | ❌ GAP — `DependencyChecker.UPSTREAM_DEPS` bucket_template `"instruments-store-{asset_group_lower}-{project_id}"` with explicit project_id in `BaseDependencyChecker` → legacy no-env form for sports; NOT via `resolve_bucket_name`                                                                                                                       | ❌ NO — existence-only check via `BaseDependencyChecker`; no v9 column/schema validation        | ✅ YES — raises `DependencyError` + emits `emit_preflight_skip` when required deps missing                                                                                                  | ✅ PARTIAL — `DependencyError` raised stops the run (doesn't emit manifest rows; strategy-service is not a manifest writer for sports)                                                         | ✅ YES — same `_check_dependencies()` called in both batch and live path                                                                                                                         | ✅ YES — `VenueCircuitBreaker` in `preflight.py` (trip after 3 failures / 5-min window / 15-min cooldown; logs `VENUE_CIRCUIT_TRIPPED`). Post-May-23 PubSub alerting hook noted in code |
+  | execution-service               | N/A — no sports source code in `execution_service/` source; sports execution only in `tests/sports_execution/` test fixtures                                                                                                                                                                                                                               | N/A                                                                                             | N/A                                                                                                                                                                                         | N/A                                                                                                                                                                                            | N/A                                                                                                                                                                                              | N/A — sports P&L execution is via CeFi perp; no sports-upstream data preflight in service                                                                                               |
+
+- [ ] [CODE] P1. **IS `sports_dependency.py` — fix bucket to canonical -prd- form**: `_resolve_sports_bucket()` at
+      `instruments_service/reference_data/sports_dependency.py:66` passes explicit `project_id` to
+      `get_write_bucket_name` → skips yaml SSOT → returns legacy `instruments-store-sports-{pid}`. After the migration,
+      IS orchestrator writes to `-prd-` but this preflight reads from the wrong (deleted) bucket. Fix: replace with
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` (same call as the orchestrator
+      at line 7365). Repo: `instruments-service`. QG that repo.
+- [ ] [CODE] P1. **features-service sports `gcs_paths.py` — fix both bucket resolvers to canonical form**:
+      `resolve_instruments_bucket()` passes `project_id=_project_id()` → skips yaml SSOT → returns
+      `instruments-store-sports-{pid}` (legacy). `resolve_tick_data_bucket()` uses unmapped domain
+      `"market-data-tick-sports"` → legacy. Fix both: (a) `resolve_instruments_bucket()` → call
+      `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` (no explicit project_id); (b)
+      `resolve_tick_data_bucket()` → call `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="sports")`
+      (the yaml-mapped domain). File: `features-service/features_service/sports/data/gcs_paths.py`. QG features-service.
+- [ ] [CODE] P1. **strategy-service `DependencyChecker` — fix bucket_template to canonical form for sports**:
+      `UPSTREAM_DEPS["instruments-service"]["bucket_template"]` = `"instruments-store-{asset_group_lower}-{project_id}"`
+      with explicit project_id substitution → legacy no-env. Fix: remove explicit project_id from template + route
+      through `resolve_bucket_name` inside `BaseDependencyChecker.check_dependencies` (or override in the
+      sports-specific check path). Also affects `features-delta-one-service` template. Repo: `strategy-service` (+ UTL
+      `BaseDependencyChecker` if template substitution is there). QG strategy-service.
+- [ ] [CODE] P2. **features-service sports — add `DependencyError` raise on missing fixtures blob**:
+      `gcs_reader.read_reference_entity()` at `features_service/sports/data/gcs_reader.py:170-178` returns
+      `pd.DataFrame()` silently when the upstream instruments-store blob is missing. For the `"fixtures"` entity
+      specifically (not slow-moving fallback entities), a missing blob for a requested date WITHIN UAC coverage bounds
+      indicates a real upstream gap — should raise `DependencyError` (or at minimum emit a structured preflight-skip
+      event) rather than silently returning empty. Batch=live symmetry: the live path should additionally trigger the
+      sports circuit-breaker. Repo: `features-service`.
+- [ ] [CODE] P2. **features-service sports — wire `assert_consolidator_healthy` for live mode**: live
+      `AssetScopedFeaturesRunner` starts without asserting the sports manifest consolidator is alive. Wire
+      `assert_consolidator_healthy(bucket)` for the sports instruments-store bucket at live startup (mirrors pattern in
+      other live families). Repo: `features-service`. File: `features_service/sports/live/runner.py` or the UTL
+      `build_asset_scoped_runner` factory hook.
+- [ ] [CODE] P2. **IS + MTDS sports — add v9 schema column checks to upstream preflight**: neither IS
+      `sports_dependency.py` nor MTDS `SportsCatalogReader` validates v9 columns (`asset_group`, `source`,
+      `pipeline_mode`, `available_at`) on the upstream manifest it reads. Post-migration, a stale v8 index would be
+      silently consumed. Add a lightweight column check (read `_index` header → assert
+      `"asset_group" in df.columns and "pipeline_mode" in df.columns`) at preflight time. Note: this is a P2 post-walk
+      gate — the walk itself writes v9; the check catches regressions. Repos: `instruments-service` +
+      `market-tick-data-service`.
 
 ### Verify + handoff to decommission
 
