@@ -443,8 +443,35 @@ What to verify/wire (B0 corrected scope):
         + `_defi_v2_contracts.py` (schema-registry keys). Cross-repo consumers of these registries (MTDS orchestrator, MDPS
         scanner, deployment-api data_status, features data_loader) inherit the key. **This is the "reader/denominator fixes
         land FIRST" gate (naming-SSOT Sequencing #1) — it must land BEFORE the C0 `--apply` or migrated data is NOT_IN_SCOPE
-        in data-status.** Decision recorded with operator 2026-06-02 (see A11c-EXPANDED sub-todo below). Repo:
+        in data-status.** Decision recorded with operator 2026-06-02 (full canonical rename, lands before apply). Repo:
         unified-api-contracts (+ coupled cross-repo consumer verification).
+    - [~] [CODE] P1. **A11c-UAC — UAC registries + tests + venue_data_types.yaml canonicalised** (slot-2 2026-06-02):
+          word-boundary rename `dex_pools`→`dex_pool_state`, `dex_swaps`→`dex_pool_swaps` across all 14 UAC source files
+          above + `data_type_capability.py` note reconciled + 6 UAC tests updated (`test_data_type_canonicalization`
+          `_BANNED_ALIASES`: `dex_pools`/`dex_swaps` now THEMSELVES banned legacy aliases) + both `venue_data_types.yaml`
+          (PM-configs + mtds-configs). Bucket NAMES (`dex-pools`/`dex-swaps` hyphen) + enum MEMBER names (`DEX_POOLS`)
+          preserved — only the data_type STRING value collapsed. Pending UAC QG-green + commit.
+    - [ ] [CODE] P1. **A11c-MDPS — candle-adapter re-registration is a REAL BREAK** (slot-2 audit 2026-06-02): the
+          orchestrator selects the candle adapter by the exact UAC data_type, now `dex_pool_swaps`, but
+          `app/adapters/defi/swap_adapter.py` registers `@CandleAdapterRegistry.register(DEFI, "dex_swaps")` → "No adapter
+          for defi/dex_pool_swaps" (the adapter docstring warns of this exact failure). Re-register under `dex_pool_swaps`
+          + update `app/core/canonical_writer.py` legacy keys (`"dex_swaps":"swaps_ohlcv"`, `("defi","dex_swaps"):"swap"`)
+          to canonical. `orchestration_scanner.py` `_CANONICAL_LEGACY` map already accepts both (transition-aware — no
+          change). Repo: market-data-processing-service. parent_epic: mtds_mdps_master.
+    - [ ] [CODE] P1. **A11c-deployment-api — data-status canonical** (slot-2 audit 2026-06-02): `_BUCKET_DOMAIN_TO_DATA_TYPE`
+          (`services/data_status_service.py` `"dex-swaps":"dex_swaps"`/`"dex-pools":"dex_pools"`) + `services/shard_detail.py`
+          grouped-bundle set + `services/data_query_service.py` `"DEFI":["dex_swaps",…]` default → canonical
+          `dex_pool_swaps`/`dex_pool_state` (the expected denominator via `get_expected_data_types_for_venue` is now
+          canonical, so these must match). Repo: deployment-api. parent_epic: mtds_mdps_master.
+    - [ ] [CODE] P1. **A11c-MTDS — orchestrator + live connector canonical** (slot-2 audit 2026-06-02):
+          `engine/orchestrator.py` per-data_type config (`"dex_pools"`/`"dex_swaps"` sort-key map L621-622) + live
+          `live/connectors/curve_defi_ws.py` `_data_type == "dex_pools"`/`"dex_swaps"` dispatch (live=batch — handler now
+          sets canonical `_DATA_TYPE`) → canonical. Do NOT touch the historical migration/backfill SCRIPTS that
+          intentionally map legacy→canonical (`migrate_legacy_solana_*`, `canonicalize_defi_manifest_data_types_*`,
+          `gate3_solana_manifest_reconcile`). Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+    - [ ] [CODE] P2. **A11c-features — verify-only** (slot-2 audit 2026-06-02): features-onchain hits are comments/docstrings
+          + `feature_definitions.yaml` post-C0-CN4; confirm no functional `data_type=="dex_pools"` literal break, update
+          docstrings/yaml for accuracy. Repo: features-service. parent_epic: features_and_ml_master.
   - [ ] [CODE] P1. **A11d — MTDS `data_manifest_handler.py` OPERATIONS metadata legacy data_types** (`bucket_type:
         dex-pools`/`dex-swaps`/`lending-indices`) — reconcile with the canonical `dex_pool_state`/`dex_pool_swaps`
         handler `_DATA_TYPE` consts (C0-CN2). Repo: market-tick-data-service.
