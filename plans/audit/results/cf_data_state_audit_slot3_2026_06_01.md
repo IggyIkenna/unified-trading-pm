@@ -304,6 +304,24 @@ why the operator gated it on "only once we're on v9, no more missing things" —
     legacy + manifest row v9-correct; (f) ONLY THEN bulk-delete legacy buckets + superseded in-bucket paths (prediction
     `category=`, cefi `day=/asset_group=` lacking `pipeline_mode=`) at once; (g) fleet-drain (w/ slot-2) precedes it.
 
+12. **0-ROW OBJECT CONTAMINATION is per-AG — audit EACH, never assume tradfi-only (operator cross-check 2026-06-02).**
+    A clean pipeline records empties manifest-only (`record_empty`, NO object), so a 0-row PARQUET OBJECT on disk = a
+    bad-write bug, and a path-only migrator would COPY it into canonical → phantom canonical cell (false-complete at the
+    G6 count). Row-count (footer) audit of all three slot-3 AGs (2026-06-02): **tradfi = CONTAMINATED** (the ~110k
+    hyphen `day-` Massive dry-run placeholders, uniform 3070/4251-byte header-only → migrator 0-row guard + E7 delete);
+    **cefi = CLEAN** (day= smallest objects are real low-volume cells, e.g. 3-row 6.3KB liquidations — no header-only
+    cluster; only the 9 root files are malformed, and they are REAL data fanned out by the L-flat branch which already
+    `df.empty`-skips); **prediction = CLEAN** (smallest ~16KB real Polymarket trades, no 0-row signature). **The
+    UNIVERSAL guard is the E5 rebuild**: any object that reads 0 rows → `record_empty`/`attempted_failed`, NEVER
+    `record_captured` (UTL 4-pillar rejects row_count=0 anyway) — bake this into all three rebuilds so a stray 0-row
+    object anywhere can never become a captured cell. A migrator-level footer guard is added ONLY where contamination is
+    known (tradfi hyphen) — NOT on the cefi/prediction bulk path-copy (would kill the server-side-copy perf for no
+    benefit on an audited-clean corpus; the E5 + G6 + G7 gates are the backstop). **GOTCHA caught here: the prediction
+    canonical bucket is `market-data-tick-pred-prd-…` (`pred` short-token), NOT `…-prediction-prd-…`.** A first probe
+    used the wrong name → returned empty → would have FALSELY scored "prediction clean" without inspecting any object.
+    Always resolve the bucket via `resolve_bucket_name`/the `pred` token + confirm the probe actually hit objects before
+    concluding clean (a near-miss of the exact "we keep missing things" failure).
+
 ## CANONICAL DECISIONS (operator-ratified 2026-06-01) + doc/plan supersession sweep
 
 These are the ratified canonical conventions for the whole tick corpus. **Every plan + codex doc must reflect them; any
