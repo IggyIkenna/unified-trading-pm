@@ -170,6 +170,22 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       2026-06-02 (space added, mtds green); (b) ISS-031 — restore mtds coverage toward the 70% system floor after the
       test migration completes (28% is a low documented exception). repo: market-tick-data-service.
 
+### SIT integration `code_test` upstream failures (surfaced 2026-06-02 by SIT modernization; gate staging→main)
+
+> SIT v2 QG is GREEN; these are in the SIT _integration_ `code_test` suite (the staging→main gate content), NOT the v2
+> QG. All 3 are UPSTREAM (not SIT's to fix). They must be green for a trustworthy staging→main SIT promotion.
+
+- [ ] [TEST] P1. **UAC `unified_api_contracts.internal.__all__` missing 342 public classes** (12
+      `test_uic_completeness.py` failures). `unified_api_contracts/internal/__init__.py` `__all__` is incomplete vs the
+      actual public classes. Add the missing exports (canonical re-export surface). repo: unified-api-contracts.
+- [ ] [SCRIPT] P1. **PM `strategy-manifest.json` stale class paths** (2 `test_strategy_readiness.py` failures). e.g.
+      `strategy_service.engine.strategies.cefi_momentum` moved to `v2/`; update the manifest's class paths to the
+      current strategy-service v2 layout. repo: unified-trading-pm.
+- [ ] [DESIGN] P1. **deployment-api ↔ deployment-service circular dependency** (1
+      `test_cascade_flow.py::test_dependency_graph_is_acyclic` failure). Real cycle in both `pyproject.toml` deps +
+      `workspace-manifest.json`. Break the cycle (extract shared types to UAC, or invert one edge). repos:
+      deployment-api + deployment-service + unified-trading-pm (manifest).
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
