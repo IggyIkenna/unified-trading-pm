@@ -45,7 +45,7 @@ columns for the whole chain: `service_name`, `data_type`, `instrument_type`, `fe
 `strategy_id`, `client_id`, `instruction_type`, plus `job_id`, `pipeline_mode`, `source`. No schema gap blocks E2E
 representation.
 
-### Layer 2 — readiness dependency graph (cross-service preflight) ⚠️ ONE MISSING HOP
+### Layer 2 — readiness dependency graph (cross-service preflight) ✅ CHAIN COMPLETE (G-EXEC wired 2026-06-02)
 
 `unified_trading_library/dependency_check.py` `PIPELINE_DEPENDENCIES` is the SSOT for "what each service reads
 upstream"; `check_upstream_ready()` consumes it to gate processing. Current edges:
@@ -58,15 +58,18 @@ upstream"; `check_upstream_ready()` consumes it to gate processing. Current edge
 | features-delta-one-service     | `processed_candles`                       | market-data-processing-service | yes      |
 | features-volatility-service    | `processed_candles`                       | market-data-processing-service | yes      |
 | strategy-service               | `onchain_features` / `delta_one_features` | features-\*-service            | yes / no |
+| execution-service              | `strategy_instructions`                   | strategy-service               | yes      |
 
-**GAP G-EXEC — execution-service has no `PIPELINE_DEPENDENCIES` entry.** It is the only pipeline producer with no
-declared upstream, even though (a) it emits its own manifest rows, and (b) the natural upstream dataset already exists
-in `PATH_REGISTRY`: `strategy_orders` (and `strategy_instructions`). So the readiness chain is wired
-`IS→MTDS→MDPS→features→strategy` but **stops at strategy** — there is no machine-checkable "strategy output is ready
-before execution consumes it" edge. Whether execution _should_ gate on a `strategy_orders` manifest (batch) vs. consume
-strategy signals over the event bus (live) is the open design question; adding the edge is additive and low-risk (the
-dict entry only takes effect where a caller invokes `check_upstream_ready`). Tracked as a follow-up todo — do not
-silently mutate this core SSOT without confirming strategy actually writes a `strategy_orders` manifest.
+**G-EXEC — RESOLVED 2026-06-02** (`unified-trading-library` `dependency_check.py`). execution-service now declares
+`UpstreamDependency("strategy_instructions", "strategy-service")`, completing the
+`IS→MTDS→MDPS→features→strategy→execution` chain. Rationale (read both sides before mutating the core SSOT): execution's
+batch loader reads instructions (`execution_service.strategy_instructions.loader.load_instructions`), and both
+`strategy_orders`/`strategy_instructions` resolve to the `strategy-store-{project_id}` bucket that strategy-service
+writes (`engine/core/cloud_strategy_storage.py`, `service_name="strategy-service"`). `check_upstream_ready` filters the
+strategy-store manifest by **date + service_name only** (not data_type), so the edge resolves correctly. The edit is
+**purely declarative** — execution-service has no runtime consumer of `PIPELINE_DEPENDENCIES` today, so adding the edge
+completes the graph + the machine check without changing runtime behavior. (Live mode consumes strategy signals over the
+event bus; a future batch-execution preflight can now call `check_all_upstream("execution-service", ...)`.)
 
 ### Layer 3 — data-status surface (deployment-api / deployment-ui) ⚠️ PER-SERVICE ONLY + UI DRIFT
 
@@ -105,6 +108,6 @@ that migration scope.
 `system-integration-tests/tests/unit/test_pipeline_manifest_wiring.py` asserts: (1) every `PIPELINE_DEPENDENCIES`
 upstream `dataset` resolves to a real `PATH_REGISTRY` key (no runtime `KeyError`); (2) every upstream `service_name` is
 a recognized producer; (3) the readiness chain is transitively reachable from `instruments-service` through
-`strategy-service`; (4) `AvailabilityRecord` carries every stage-key column; (5) **G-EXEC** — the strategy→execution
-edge — as an `xfail` that names this doc, so it passes today but flips to `xpass` (prompting removal) the moment the
-edge is wired.
+`strategy-service`; (4) `AvailabilityRecord` carries every stage-key column; (5) the strategy→execution edge
+(`strategy_instructions` ← `strategy-service`) is declared, completing the chain (formerly G-EXEC, wired 2026-06-02).
+All 7 assertions pass.

@@ -263,12 +263,14 @@ verified complete**.
       Verified: ruff + ruff-format + basedpyright + import-patterns (0 violations) + pytest green on the file; repo-wide
       SIT QG carries a PRE-EXISTING non-fatal coverage-floor ❌ (`MIN_COVERAGE=2<70`, no exception file on origin) — not
       caused by this additive test; LDR has no remote CI.
-- [ ] [CODE] P2. unified-trading-library: wire GAP **G-EXEC** — add an `execution-service` entry to
-      `PIPELINE_DEPENDENCIES` (`dependency_check.py`) with `UpstreamDependency("strategy_orders", "strategy-service")`
-      (the dataset already exists in `PATH_REGISTRY`). FIRST confirm strategy-service actually writes a
-      `strategy_orders` manifest (vs. live event-bus-only) — read both sides per Findings Triage before mutating the
-      core SSOT. When wired, the `test_execution_service_declares_strategy_upstream` xfail flips to xpass → remove the
-      marker. Source: e2e-pipeline-manifest-wiring (G-EXEC).
+- [x] ✅ [CODE] P2. unified-trading-library: wire GAP **G-EXEC** — added `execution-service` →
+      `UpstreamDependency("strategy_instructions", "strategy-service")` to `PIPELINE_DEPENDENCIES`
+      (`dependency_check.py`). Diagnosed (read both sides): execution's batch loader reads `strategy_instructions`; both
+      `strategy_orders`/`strategy_instructions` resolve to the `strategy-store` bucket that strategy-service writes
+      (`service_name="strategy-service"`); `check_upstream_ready` filters by date+service_name only. Declarative — no
+      runtime consumer of `PIPELINE_DEPENDENCIES` in execution today, so additive + safe. —
+      unified-trading-library@`87f36546` + system-integration-tests@`8cbeb83` (xfail dropped → 7/7 pass) + codex@(this
+      commit). ruff+basedpyright clean; 33 dependency_checker tests pass. Source: e2e-pipeline-manifest-wiring (G-EXEC).
 - [ ] [CODE] [UI] P2. deployment-ui: fix GAP **G-UI** — `DataStatusTab.tsx` `DATA_PIPELINE_SERVICES` hardcodes stale
       `features-cefi/defi/tradfi/prediction-service` names + omits strategy-service, diverging from the backend
       `SERVICE_TO_KIND` consolidated families (`features-delta-one/volatility/onchain/sports-service`). Make the list
