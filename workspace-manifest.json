@@ -161,7 +161,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
