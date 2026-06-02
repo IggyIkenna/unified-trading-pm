@@ -1419,3 +1419,49 @@ active," which is the correct operational state.
 - `codex/04-architecture/cefi-batch-live.md` §9 (adapter-level expiry-window + 401 contract)
 - `market-tick-data-service@91e3df03` — window filter implementation
 - `instruments-service@ffb8192` — Kraken underscore-symbol expiry parser
+
+---
+
+## Per-adapter density contract: dense + LOCF + no leading NaN + carry-from-prior-day
+
+> Codified 2026-06-02 from `plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md` (operator decisions
+> 2026-06-01). Full contract + per-adapter table: `codex/06-coding-standards/adapter-finalization-contract.md`.
+
+**Within-series density is a separate axis from shard-level honest absence.** Shard-level honest absence answers "did
+this (venue × data_type × day) shard get captured at all?" (`captured` / `empty_confirmed` / `attempted_failed` /
+`expected_unattempted`). The **density contract** governs what a *captured* shard's per-bar series looks like: it must
+be dense, LOCF-filled, and free of NaN in the required columns.
+
+### The rule
+
+Every MDPS candle adapter routes its full-day grid through `BaseCandleAdapter._finalize_session_grid(...)` before
+returning. For a *captured* shard:
+
+- **No leading NaN.** Pre-first-observation bins are either **dropped** (cold-start — no prior observation to carry) or
+  **carried from the prior day's last-known value** (`seed_price`/`seed_ts`/`seed_state`, PIT-safe — yesterday's close
+  is known at 00:00, so batch==live with zero look-ahead).
+- **No NaN OHLC.** State-only streams (derivative ticker, options/futures chains, liquidity/lending snapshots,
+  book/quote) drive `o=h=l=c` from their state column (`state_col=mark_price`/`mid_price`/…) or from a populated
+  `close` price proxy. OHLCV is non-nullable for every asset group except `prediction`/`sports`.
+- **No NaN volume.** Trade-derived flow columns are zero-filled on snapshot bars (`flow_cols`); adapters that repurpose
+  `volume` to carry a **real** value (liquidity TVL, market_state total-supply) stay **close-driven** so the value is
+  preserved, never zeroed.
+- **Open no-trade bars are forward-filled** `o=h=l=c=prev_close`, `volume=0`, with `staleness_seconds` recording how
+  stale the carried price is — exactly what a live trader observes. `market_state==CLOSED` bars drop (untradeable).
+
+### Honest-absence interaction
+
+A *captured* shard whose price driver is entirely absent (e.g. a derivative tick carrying funding but no mark price)
+collapses to the **zero-row honest-absence output** rather than fabricating NaN-OHLC bars — i.e. the density contract
+**defers to honest absence** when there is no price to anchor a candle. This is the per-bar expression of the same
+"never emit silent placeholders" principle: no price → no candle → `record_empty_for_shard`, not a NaN row.
+
+### Downstream consumer policy
+
+- Consumers MAY trust that a *captured* candle parquet has no NaN in `open`/`high`/`low`/`close`/`volume` (CeFi / DeFi /
+  TradFi). A NaN there is an **adapter density bug**, not honest absence — surface it (the
+  `fast_candle_aggregation.py` input-NaN WARN is the in-pipeline guard) rather than masking it.
+- `staleness_seconds` is the signal for down-weighting/excluding stale carried bars — consumers gate on it instead of
+  re-deriving "is this bar real?" from NaN patterns.
+- Reprocessing existing parquets to densify them rides the deferred GCS backfill pass — never a standalone whole-corpus
+  walk (single-walk discipline).

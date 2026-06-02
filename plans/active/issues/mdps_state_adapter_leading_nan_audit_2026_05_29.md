@@ -169,5 +169,7 @@ Tests in scope:
       MDPS@4fd962d (finalizer-level: test_finalize_session_grid_seed.py + test_state_adapter_density.py) + @23d7add
       (per-adapter test files). 1252 MDPS unit tests green.
 - [ ] [VERIFY] P0. Remove aggregator WARN log + re-run full MDPS test suite.
-- [ ] [DOCS] P1. Codex SSOT updates per above (+ document the carry-from-prior-day leading-bin contract).
+- [x] ✅ [DOCS] P1. Codex SSOT updates per above (+ document the carry-from-prior-day leading-bin contract). —
+      `codex/06-coding-standards/adapter-finalization-contract.md` (new) + `codex/02-data/honest-absence-downstream-handling.md`
+      § "Per-adapter density contract: dense + LOCF + no leading NaN + carry-from-prior-day".
 - [ ] [DATA] P1. Reprocess to densify existing data — rides the deferred backfill pass (not a standalone walk).
