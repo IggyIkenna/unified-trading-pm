@@ -89,9 +89,14 @@ verified complete**.
 
 ## unified-api-contracts
 
-- [ ] [CODE] P1. UAC: fix registry key drift in `registry/market_data_categories.py` — `"dex_pools"` →
-      `"dex_pool_state"` (+ `"dex_pool_swaps"`); check L45/L145/L300/L1003. Handler already writes `dex_pool_state`.
-      Source: defi_code_codex_drift D14.
+- `BLOCKED-DISCIPLINE` [CODE] P1. UAC: registry key drift in `registry/market_data_categories.py` — `"dex_pools"`/
+  `"dex_swaps"` → `"dex_pool_state"`/`"dex_pool_swaps"`. RECLASSIFIED 2026-06-02 (was "risk LOW" in the audit — WRONG):
+  a consumer audit found the legacy keys are STILL live across MTDS source (`engine/orchestrator.py:621`,
+  `cli/handlers/schema_validation.py`, `market_interface/adapters/defi/uniswap_v3_adapter.py`, `solana_defi_handler.py`,
+  migration scripts). Renaming the registry keys standalone would break
+  `needs_candle_processing`/timeframe/schema-validation lookups mid-migration. The rename is the coordinated
+  registry-alignment scope of `defi_manifest_canonicalisation_2026_06_01.md` §C0-RD (operator-locked SSOT
+  `defi-canonical-naming-ssot.md`). Do NOT do standalone. Source: defi_code_codex_drift D14.
 - [ ] [DOC] P2. UAC: add OHLC-semantics docstring to the `swaps_ohlcv_*` schema in
       `internal/schemas/_candle_contracts.py` — O/H/L/C = USD-normalized pool spot price (`amountUSD/|base_amount|`),
       ≈1.0 for USDC/WETH, 3 fallback methods. Source: features_service_defi #3.
