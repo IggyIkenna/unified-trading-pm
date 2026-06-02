@@ -26,13 +26,8 @@ jobs:
         id: scan
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          TELEGRAM_BOT_TOKEN_PROD: ${{ secrets.TELEGRAM_BOT_TOKEN_PROD }}
-          TELEGRAM_BOT_TOKEN_STAGING: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
-          TELEGRAM_BOT_TOKEN_DEV: ${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID_PROD: ${{ vars.TELEGRAM_CHAT_ID_PROD || vars.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_STAGING: ${{ vars.TELEGRAM_CHAT_ID_STAGING || vars.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_DEV: ${{ vars.TELEGRAM_CHAT_ID_DEV || vars.TELEGRAM_CHAT_ID }}
+          # Retired Telegram → Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
         run: |
           set -euo pipefail
@@ -44,13 +39,14 @@ jobs:
           WARNED_4H=0
           CRITICAL_24H=0
 
-          # ── Helper: send Telegram message ──
+          # ── Helper: send Slack message (best-effort; retired Telegram, cicd #551) ──
+          # Keeps the send_telegram() name so call sites are unchanged; posts to Slack #ci-failures.
           send_telegram() {
             local MSG="$1"
             local SEVERITY="$2"
 
-            if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
-              echo "Telegram not configured — skipping notification" >&2
+            if [ -z "${SLACK_WEBHOOK_URL:-}" ] || [ "${SLACK_WEBHOOK_URL#https://}" = "${SLACK_WEBHOOK_URL}" ]; then
+              echo "Slack webhook not configured/https — skipping notification" >&2
               return 0
             fi
 
@@ -61,18 +57,16 @@ jobs:
               *)        EMOJI="ℹ️" ;;
             esac
 
-            local TEXT="${EMOJI} <b>${SEVERITY}</b> — Fix Approval Timeout%0A%0A${MSG}"
+            local TEXT="${EMOJI} ${SEVERITY} — Fix Approval Timeout"$'\n\n'"${MSG}"
 
-            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
-              "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-              -d chat_id="${TELEGRAM_CHAT_ID}" \
-              -d text="${TEXT}" \
-              -d parse_mode="HTML" || echo "000")
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "${SLACK_WEBHOOK_URL}" \
+              -H 'Content-Type: application/json' \
+              --data "$(jq -n --arg t "$TEXT" '{text:$t}')" || echo "000")
 
             if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
-              echo "  Telegram sent (HTTP $HTTP_CODE)"
+              echo "  Slack sent (HTTP $HTTP_CODE)"
             else
-              echo "  Telegram send failed (HTTP $HTTP_CODE)" >&2
+              echo "  Slack send failed (HTTP $HTTP_CODE)" >&2
             fi
           }
 
