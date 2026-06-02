@@ -331,7 +331,7 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
 | Item 5 FLAG-1 tradfi multi-source double-count | ⏳ DEFERRED (P1, operator-decision) | deployment-api `_mtds_honest_coverage_for_venue` | apply `select_primary_available_source` union dedup; operator: union vs per-source |
 | Item 5 FLAG-3 pipeline_uat hardcoded buckets | ⏳ DEFERRED (P1) | deployment-api `commentary/pipeline_uat.py:167/181/195/211` | route through `resolve_bucket_name` (note: lines carry `# CORRECT-LOCAL` — confirm intent first) |
 | Item 5 FLAG-4 tradfi denominator (Massive venues) | ⏳ DEFERRED (P2, operator/VenueMapping decision) | deployment-api `MTDS_CATEGORY_META["TRADFI"].venue_accessor` | add Massive venues to accessor |
-| Batch=live None-classifier divergence (prediction) | ⏳ DEFERRED (P1) | mtds polymarket_adapter | reconcile live `None→"OTHER"` vs rebuild `None→attempted_failed` — see prediction plan |
+| Batch=live None-classifier divergence (prediction) | ✅ shipped | mtds@5744ba61 | live Polymarket adapter + orchestrator finalize now route None→attempted_failed[ClassifierConfidenceLow] (batch=live). Kalshi same-fix follow-up tracked in prediction plan |
 
 > **QG-sweep result (slot-3 2026-06-02, `--no-fix` × 5 touched repos):** execution-service ✅, strategy-service ✅,
 > features-service ✅ (one MY import-patterns violation — deep UTL import — fixed in features-service@cefd5b54). **mtds +

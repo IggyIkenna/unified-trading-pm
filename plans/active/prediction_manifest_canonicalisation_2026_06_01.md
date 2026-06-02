@@ -343,15 +343,23 @@ verify + the gated delete.
       source-zero vs masked fetch failure. Preserve the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
 - [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
       failure to `empty_confirmed`; they stay flagged for backfill.
-- [ ] [CODE] P1. **Batch=live classifier-None divergence (DISCOVERY slot-3 2026-06-02, mtds)**: the LIVE Polymarket
-      adapter maps a `None` classifier result → `canonical_question_group="OTHER"` (polymarket_adapter.py:735) → the live
-      writer BUNDLES it as a captured `OTHER` cqg row; the E5 REBUILD (per the operator-corrected spec + the classifier's
-      own contract docstring) routes `None` → `attempted_failed[ClassifierConfidenceLow]`, NOT a bundle. That is a
-      batch≠live asymmetry on unclassifiable markets. Reconcile by deciding the canonical behaviour (preferred: the live
-      adapter should ALSO route `None`→`attempted_failed[ClassifierConfidenceLow]` rather than masking it as a captured
-      `OTHER` cell — the classifier docstring says callers route to attempted_failed) and aligning both paths. Until
-      reconciled, the rebuild follows the classifier contract (more honest). Target: `polymarket_adapter.py` +
-      orchestrator finalize loop.
+- [x] ✅ [CODE] P1. **Batch=live classifier-None divergence — DONE (mtds@5744ba61, 2026-06-02).** The live Polymarket
+      adapter now emits `None` (NaN), NOT `"OTHER"`, for a sub-threshold classifier result (polymarket_adapter.py ~735);
+      the orchestrator `write_chunk` splits null cqg rows BEFORE the captured groupby (`_prediction_unclassified` keyed by
+      market_id) and the finalize loop emits one `record_failed(error="ClassifierConfidenceLow")` per market —
+      byte-identical to `rebuild_prediction_manifest.emit_manifest_rows`. The REAL `CanonicalQuestionGroup.OTHER` group
+      (value `"OTHER"`) stays a CAPTURED bundle, distinct from the `None` sentinel (they were indistinguishable before).
+      3 regression tests in `test_polymarket_bundling_finalize.py` + updated `test_polymarket_adapter_lifecycle_gating`
+      (now asserts sub-threshold → `None`, NOT `"OTHER"`). mtds QG green.
+- [ ] [CODE] P1. **Kalshi classifier-None divergence (DISCOVERY slot-3 2026-06-02, mtds — follow-up to the Polymarket
+      fix above)**: the Kalshi adapter still maps an unclassified result → `canonical_question_group="OTHER"`
+      (`test_kalshi_adapter_lifecycle_gating.py:246` asserts it). The orchestrator finalize (shared across all prediction
+      venues) treats a non-null `"OTHER"` as a REAL captured group, so Kalshi unclassified markets are bundled CAPTURED
+      while Polymarket now routes them to `attempted_failed` — a venue-inconsistency + batch≠live for Kalshi. Fix the
+      Kalshi adapter the same way (emit `None` for sub-threshold so the shared orchestrator routes it to
+      `attempted_failed[ClassifierConfidenceLow]`); update the Kalshi lifecycle-gating test to assert `None` not `"OTHER"`.
+      Target: `market-tick-data-service` Kalshi prediction adapter + `test_kalshi_adapter_lifecycle_gating.py`. Low live
+      urgency today (prediction live corpus is Polymarket CLOB), but required for venue parity before Kalshi goes live.
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS prediction Polymarket adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for a live market/condition within its active window, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the prediction
