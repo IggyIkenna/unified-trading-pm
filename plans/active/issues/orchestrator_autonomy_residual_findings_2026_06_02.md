@@ -77,3 +77,42 @@ HARD RULE gap. Confirmed still open 2026-06-02: `deployment-ui/.gitignore` has n
 
 This issue doc archives once all three are resolved (per issue-doc-lifecycle: surfaces UNACKED work; closes when acked
 into shipped code / owning repo).
+
+## Resolution (2026-06-02, operator-driven fleet refresh)
+
+**F1 — RESOLVED.** Root cause was NOT a missing ao-self-pull cron — vm-orchestrator HAD the `*/15` ao-self-pull root
+cron all along. It was **skipping every run**: `data/state/fleet_registry.json` was not in `.gitignore` (only the
+`state.db*`/`state.json` files were), so `git status` was never clean and `ao-self-pull.sh`'s dirty-guard
+(`skip on any porcelain output`) bailed before the FF. Fixed by ignoring the whole `data/state/` runtime dir wholesale
+(agent-orchestrator `b055f1a`; nothing under it is tracked). Both RUNNING VMs FF'd to current HEAD, **clean**,
+ao-self-pull verified functional ("already current"): vm-orchestrator (i-007e8d99…) + api-host/agent-orchestrator-vm-1
+(i-0c9b283b…).
+
+**F2 — RESOLVED.** vm-ml's SSM came back Online after a stop/start (it was a stopped/wedged instance, not a
+running-but-broken one). All 9 stopped epic VMs were started, FF'd to current HEAD (behind=0, dirty=0), ao-self-pull
+cron confirmed present, and **re-stopped** (fleet stays consolidated to 2 running). Disk pressure relieved on the tight
+ones (operator-ops 100%→93%, defi 98%→86%, prediction 97%→80% via `.npm`/`.cache`/journal clear); the stale
+non-canonical `server/orchestrator.db` on operator-ops (a second un-ignored runtime DB, the lone dirty file there) was
+moved aside.
+
+**FM3 — partially obsoleted + remaining half NAMED.** `user-management-ui` is ARCHIVED (folded into
+`unified-trading-system-ui` 2026-05) so only **deployment-ui** remains: still has a tracked `playwright-report` artifact
+and no `playwright-report/` `.gitignore` line. See open todo below.
+
+**Also done this session (related):** agent-orchestrator `main` FF'd to `7f0bdbf` (== LDR; main is agent-orchestrator's
+canonical branch per the repo exception) — operator-authorized override of the HS256-retirement soak gate. Fresh
+**AMI built from main** after fixing two pre-existing bugs in the (previously never-successfully-run) packer build path:
+(1) warm-cache cloned PRIVATE repos over unauth'd https → inject `gh_pat` as a git `insteadOf` cred, scrubbed in cleanup
+(deployment-service `b5e4f01`); (2) `uv` installed under `/home/ubuntu/.local/bin` (HOME preserved by `sudo -E`) but the
+symlink logic only checked `/root/*` → `uv: command not found` → resolve wherever it landed (deployment-service
+`823ec84`).
+
+## Remaining open todos
+
+- [ ] [SCRIPT] P2. **deployment-ui FM3** — `git rm --cached` the tracked `playwright-report` artifact + add
+      `playwright-report/` to `deployment-ui/.gitignore` (the agent-orchestrator-side FM3 shipped @1f9af64; this is the
+      last foreign-repo half; `user-management-ui` is archived so N/A). Owner: deployment-ui.
+- [ ] [INFRA] P2. **Epic-VM disk-bloat guard** — `.npm` (~1.4G) + `.cache` (~1.3G) + journal growth push several epic
+      VMs to 95-100% full (operator-ops hit 100%, blocking git/ao-self-pull). Add a periodic cache-vacuum (or grow the
+      30G root volume) so a stopped VM doesn't boot into a wedged-disk state. Relates to the original F2 disk-bloat
+      observation.
