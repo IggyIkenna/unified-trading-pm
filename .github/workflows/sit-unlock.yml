@@ -163,7 +163,13 @@ jobs:
     if: always()
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: "SIT Failed — staging unlocked. Staging is open for fixes."
+      # Message MUST reflect whether the unlock PUSH actually landed. If unlock-staging failed
+      # (e.g. the 5× rebase-retry loop exhausted on a non-FF race), the lock is STILL set and the
+      # fleet is blocked — a "staging unlocked" message would be a dangerous lie. (incident 2026-06-02)
+      message:
+        ${{ needs.unlock-staging.result == 'success' && 'SIT Failed — staging unlocked. Staging is open for fixes.' ||
+        '❌ AUTO-UNLOCK FAILED — staging dangling-locked, fleet merges blocked. Manual fix — rerun gh workflow run
+        sit-unlock.yml (or clear staging_status.locked in workspace-manifest.json).' }}
       severity: "CRITICAL"
       conclusion: ${{ needs.unlock-staging.result }}
       workflow_name: ${{ github.workflow }}
