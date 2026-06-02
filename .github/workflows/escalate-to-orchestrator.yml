@@ -1,0 +1,232 @@
+name: Escalate to Orchestrator
+
+# Hands a deterministic-CI/CD JUDGMENT wall (merge conflict / label mismatch / SIT failure) to the
+# agent-orchestrator, which spawns a worker on a free slot under a long-lived **setup-token** Max-plan
+# account ($0 API credits — NOT ANTHROPIC_API_KEY_CICD). The worker resolves the wall on
+# `live-defi-rollout`, pushes the fix, pings the authoring slot, then exits.
+#
+# This is the PM→orchestrator GHA dispatch that was the ONLY missing piece of the conflict-resolution
+# pivot: the orchestrator side already exists — `POST /api/escalate` (server/server.py),
+# server/escalation.py, agents/escalate.md (handles merge_conflict | label_mismatch | sit_failure).
+# It supersedes the in-GHA `ANTHROPIC_API_KEY_CICD` path in conflict-resolution-agent.yml.
+#
+# Callable three ways:
+#   1. workflow_call    — another PM workflow (conflict-resolution-agent.yml, ci-status-update.yml,
+#                         the stuck-PR watcher) invokes it as a reusable job.
+#   2. workflow_dispatch — an operator triggers it manually from the Actions tab.
+#   3. repository_dispatch (type: escalate-to-orchestrator) — a remote `curl` / cross-repo dispatch
+#                         supplies the same fields via client_payload.
+#
+# SSOT: plans/active/cicd_contract_hardening_2026_06_01.md § B (items B1/B2) +
+#       agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md § G9.
+
+on:
+  workflow_call:
+    inputs:
+      repo:
+        description: "Target repo the wall is in (e.g. market-tick-data-service)"
+        required: true
+        type: string
+      pr_number:
+        description: "PR number the wall blocks (0 if not PR-scoped)"
+        required: true
+        type: number
+      wall_type:
+        description: "merge_conflict | label_mismatch | sit_failure"
+        required: true
+        type: string
+      context:
+        description: "Free-text context (conflict files / label-vs-API diff / failing SIT log tail)"
+        required: true
+        type: string
+      authoring_slot:
+        description: "Slot/operator that authored the PR (pinged once the wall is handled)"
+        required: false
+        type: string
+        default: "ci"
+      model:
+        description: "sonnet | opus (worker model tier)"
+        required: false
+        type: string
+        default: "sonnet"
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Target repo the wall is in"
+        required: true
+        type: string
+      pr_number:
+        description: "PR number (0 if not PR-scoped)"
+        required: true
+        type: number
+      wall_type:
+        description: "merge_conflict | label_mismatch | sit_failure"
+        required: true
+        type: choice
+        options: [merge_conflict, label_mismatch, sit_failure]
+      context:
+        description: "Free-text context for the worker"
+        required: true
+        type: string
+      authoring_slot:
+        description: "Authoring slot/operator"
+        required: false
+        type: string
+        default: "ci"
+      model:
+        description: "Worker model tier"
+        required: false
+        type: string
+        default: "sonnet"
+  repository_dispatch:
+    types: [escalate-to-orchestrator]
+
+permissions:
+  contents: read
+
+# Never cancel an in-flight dispatch; serialise per repo+PR so a re-fire doesn't double-spawn.
+concurrency:
+  group:
+    escalate-${{ inputs.repo || github.event.client_payload.repo }}-${{ inputs.pr_number ||
+    github.event.client_payload.pr_number }}
+  cancel-in-progress: false
+
+jobs:
+  escalate:
+    name: Dispatch judgment wall to orchestrator
+    runs-on: ubuntu-latest
+    outputs:
+      dispatched: ${{ steps.post.outputs.dispatched }}
+      escalation_id: ${{ steps.post.outputs.escalation_id }}
+    steps:
+      - name: Resolve inputs (workflow_call / dispatch / repository_dispatch)
+        id: inputs
+        env:
+          # workflow_call + workflow_dispatch populate inputs.*; repository_dispatch populates
+          # event.client_payload.*. `||` picks whichever trigger fired.
+          IN_REPO: ${{ inputs.repo || github.event.client_payload.repo }}
+          IN_PR: ${{ inputs.pr_number || github.event.client_payload.pr_number }}
+          IN_WALL: ${{ inputs.wall_type || github.event.client_payload.wall_type }}
+          IN_CONTEXT: ${{ inputs.context || github.event.client_payload.context }}
+          IN_SLOT: ${{ inputs.authoring_slot || github.event.client_payload.authoring_slot || 'ci' }}
+          IN_MODEL: ${{ inputs.model || github.event.client_payload.model || 'sonnet' }}
+        run: |
+          set -euo pipefail
+          : "${IN_REPO:?repo is required}"
+          : "${IN_WALL:?wall_type is required}"
+          : "${IN_CONTEXT:?context is required}"
+
+          # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
+          case "$IN_WALL" in
+            merge_conflict | label_mismatch | sit_failure) ;;
+            *)
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure)"
+              exit 1
+              ;;
+          esac
+
+          {
+            echo "repo=$IN_REPO"
+            echo "pr_number=${IN_PR:-0}"
+            echo "wall_type=$IN_WALL"
+            echo "authoring_slot=$IN_SLOT"
+            echo "model=$IN_MODEL"
+          } >> "$GITHUB_OUTPUT"
+
+          # context can be multi-line — pass via a heredoc-delimited output.
+          {
+            echo "context<<ESC_CTX_EOF"
+            echo "$IN_CONTEXT"
+            echo "ESC_CTX_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: POST /api/escalate
+        id: post
+        env:
+          ORCH_SECRET: ${{ secrets.ORCHESTRATOR_INTERNAL_SECRET }}
+          ORCH_URL: ${{ vars.ORCHESTRATOR_URL || 'https://agent-orchestrator.odum-research.com' }}
+          REPO: ${{ steps.inputs.outputs.repo }}
+          PR_NUMBER: ${{ steps.inputs.outputs.pr_number }}
+          WALL_TYPE: ${{ steps.inputs.outputs.wall_type }}
+          AUTHORING_SLOT: ${{ steps.inputs.outputs.authoring_slot }}
+          MODEL: ${{ steps.inputs.outputs.model }}
+          CONTEXT: ${{ steps.inputs.outputs.context }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ORCH_SECRET:-}" ]; then
+            echo "::error::ORCHESTRATOR_INTERNAL_SECRET secret not set — cannot authenticate to the orchestrator"
+            exit 1
+          fi
+
+          # Build the body with jq so multi-line context is JSON-escaped safely.
+          BODY=$(jq -n \
+            --arg repo "$REPO" \
+            --argjson pr "${PR_NUMBER:-0}" \
+            --arg wall "$WALL_TYPE" \
+            --arg ctx "$CONTEXT" \
+            --arg slot "$AUTHORING_SLOT" \
+            --arg model "$MODEL" \
+            '{repo: $repo, pr_number: $pr, wall_type: $wall, context: $ctx, authoring_slot: $slot, model: $model}')
+
+          echo "Dispatching ${WALL_TYPE} for ${REPO}#${PR_NUMBER} to ${ORCH_URL}/api/escalate"
+
+          RESP=$(mktemp)
+          HTTP=$(curl -sS -o "$RESP" -w "%{http_code}" --max-time 30 \
+            -X POST "${ORCH_URL}/api/escalate" \
+            -H "Content-Type: application/json" \
+            -H "X-Orchestrator-Secret: ${ORCH_SECRET}" \
+            -d "$BODY" || echo "000")
+
+          echo "HTTP ${HTTP}"
+          cat "$RESP" || true
+          echo ""
+
+          case "$HTTP" in
+            200)
+              ESC_ID=$(jq -r '.escalation_id // ""' "$RESP" 2>/dev/null || echo "")
+              SLOT_ID=$(jq -r '.slot_id // ""' "$RESP" 2>/dev/null || echo "")
+              echo "✅ Escalation dispatched (escalation_id=${ESC_ID}, slot=${SLOT_ID})."
+              echo "dispatched=true" >> "$GITHUB_OUTPUT"
+              echo "escalation_id=${ESC_ID}" >> "$GITHUB_OUTPUT"
+              ;;
+            503)
+              # No free slot / no headroom setup-token account — transient capacity, retryable.
+              # Soft-fail so a re-fire (or the next cron tick) retries rather than marking a hard error.
+              echo "::warning::Orchestrator has no free slot / headroom account right now (503) — escalation NOT dispatched. Retryable."
+              echo "dispatched=false" >> "$GITHUB_OUTPUT"
+              ;;
+            401)
+              echo "::error::Orchestrator rejected the shared secret (401) — check ORCHESTRATOR_INTERNAL_SECRET."
+              exit 1
+              ;;
+            400)
+              echo "::error::Orchestrator rejected the request (400) — likely a bad wall_type. Body above."
+              exit 1
+              ;;
+            000)
+              echo "::error::Could not reach the orchestrator at ${ORCH_URL} (timeout / DNS / TLS)."
+              exit 1
+              ;;
+            *)
+              echo "::error::Unexpected HTTP ${HTTP} from /api/escalate. Body above."
+              exit 1
+              ;;
+          esac
+
+  # ── SLACK NOTIFY ──────────────────────────────────────────────────────────
+  notify:
+    name: Slack — Escalation Dispatch
+    needs: [escalate]
+    if: always()
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        ${{ needs.escalate.outputs.dispatched == 'true' && format('Escalation dispatched to orchestrator
+        (escalation_id={0}) — a Max-plan worker is resolving the wall on live-defi-rollout.',
+        needs.escalate.outputs.escalation_id) || '⚠️ Escalation NOT dispatched (no orchestrator capacity or a failure) —
+        the CI/CD wall is still open. Check the run log.' }}
+      severity: ${{ needs.escalate.result == 'success' && 'INFO' || 'WARNING' }}
+      conclusion: ${{ needs.escalate.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
