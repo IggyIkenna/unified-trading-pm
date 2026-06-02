@@ -392,37 +392,47 @@ if [ "$NO_PR" != "true" ] && [ -z "$(git status --porcelain)" ] && git diff orig
 fi
 
 # ============================================================================
-# STAGE 0.4: REMOTE-PULL GATE — quickmerge must run from a pulled-current branch
-# Refuses to proceed if the local branch is behind its own origin/<branch> and
-# cannot fast-forward (diverged). The simple behind case is auto-ff-pulled. This
-# prevents merging/PRing from a stale local state — the slot-divergence foot-gun
-# (local commits + branch never pulled from remote → diverged).
+# STAGE 0.4: NOT-BEHIND GATE — quickmerge must not run from a STALE base
+# The ONLY requirement is: local must NOT be BEHIND origin/<branch> (no unpulled
+# remote commits). Having local commits / uncommitted changes that DEVIATE from
+# origin is expected and fine — that's the work you're merging. So if behind, we
+# pull the latest FIRST: fast-forward when possible, otherwise rebase your local
+# commits on top of the latest. Block only if that rebase genuinely conflicts.
 # Emergency override only: QUICKMERGE_ALLOW_BEHIND=1
 # ============================================================================
 echo "=========================================="
-echo "STAGE 0.4: Remote-Pull Gate"
+echo "STAGE 0.4: Not-Behind Gate (pull latest first)"
 echo "=========================================="
 _QM_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
 if [ -z "$_QM_BRANCH" ]; then
-  echo "[$REPO_NAME] detached HEAD — skipping remote-pull gate"
+  echo "[$REPO_NAME] detached HEAD — skipping not-behind gate"
 else
   git fetch origin "$_QM_BRANCH" --quiet 2>/dev/null || true
   if ! git rev-parse "origin/$_QM_BRANCH" >/dev/null 2>&1; then
-    echo "[$REPO_NAME] no origin/$_QM_BRANCH yet — skipping remote-pull gate"
+    echo "[$REPO_NAME] no origin/$_QM_BRANCH yet — skipping not-behind gate"
   else
     _QM_BEHIND=$(git rev-list "HEAD..origin/$_QM_BRANCH" --count 2>/dev/null || echo 0)
+    _QM_AHEAD=$(git rev-list "origin/$_QM_BRANCH..HEAD" --count 2>/dev/null || echo 0)
     if [ "${_QM_BEHIND:-0}" = "0" ]; then
-      echo "[$REPO_NAME] ✅ current with origin/$_QM_BRANCH"
-    elif git pull --ff-only origin "$_QM_BRANCH" --quiet 2>/dev/null; then
-      echo "[$REPO_NAME] ✅ fast-forwarded $_QM_BEHIND commit(s) from origin/$_QM_BRANCH — now current"
-    elif [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
-      echo "[$REPO_NAME] ⚠️  $_QM_BEHIND behind + diverged from origin/$_QM_BRANCH — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+      echo "[$REPO_NAME] ✅ not behind origin/$_QM_BRANCH (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
     else
-      echo "[$REPO_NAME] ❌ BLOCKED: local is $_QM_BEHIND commit(s) behind origin/$_QM_BRANCH and diverged (non-FF)."
-      echo "   quickmerge must run from a pulled-current branch (prevents stale-state merges)."
-      echo "   Reconcile first:  git pull --rebase origin $_QM_BRANCH   (resolve conflicts), then re-run."
-      echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
-      exit 1
+      echo "[$REPO_NAME] behind origin/$_QM_BRANCH by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
+      if git pull --ff-only origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+        echo "[$REPO_NAME] ✅ fast-forwarded to latest — now current"
+      elif git pull --rebase --autostash origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+        echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
+      else
+        git rebase --abort 2>/dev/null || true   # clean up any half-done rebase
+        if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+          echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (rebase conflicts) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+        else
+          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind origin/$_QM_BRANCH and auto-rebase hit conflicts."
+          echo "   Pull the latest first (resolving conflicts), then re-run:"
+          echo "     git pull --rebase origin $_QM_BRANCH"
+          echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
+          exit 1
+        fi
+      fi
     fi
   fi
 fi
