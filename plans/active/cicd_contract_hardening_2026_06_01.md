@@ -387,7 +387,7 @@ by a PR:
       array).** The dead-repo clones are **non-fatal today** (`|| echo "WARN: … skipping"` at L327), so this is
       cleanliness, not a gate-break. **Coupled to [[#289]] UIC decision:** if UIC is RETIRED, this array is removed with
       the step; if KEPT, derive it from manifest `status==active`. Gated on the #289 operator architecture call.
-- [ ] [SCRIPT] P2. **Workspace-manifest hygiene — 14 retired repos linger as tombstones in the `repositories` map
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (unified-trading-pm@fd616af4c + cfd60b6ea): **Workspace-manifest hygiene — 14 retired repos linger as tombstones in the `repositories` map Active surface is now canonical-only: 14 tombstones relocated to `removedEntries` (provenance kept), `topologicalOrder` + `completion_paths` reconciled to parents (features-service/ml-service), ml-service added to topo L4, user-management-ui versions/staging_versions leak removed, 4 dead phantom refs scrubbed from completion_paths. Validator green. Relocation makes the `status==active` consumer-guard moot for current tombstones (no dead repos left in `repositories`); the guard remains optional future-proofing for the archive→relocate transition window.
       (surfaced 2026-06-01).** They're gone locally + `archived=true` on GitHub, but never pruned from
       `workspace-manifest.json`: 8 `consolidated-into-features-service`
       (features-calendar/commodity/cross-instrument/delta-one/multi-timeframe/onchain/sports/volatility), 2
@@ -488,7 +488,7 @@ by a PR:
       webhook (= SLACK_CI_WEBHOOK_URL) → every inherit caller delivers (I can't read/copy a secret value). Alt (agent,
       ~28 files): switch each caller to pass SLACK_CI_WEBHOOK_URL explicitly.
 
-- [ ] [DESIGN] P2. **SIT has NO dependency-chain / breaking-change scoping — runs the full marked suite against ALL
+- [x] ✅ [DESIGN] P2. DESIGN DONE 2026-06-02 (build pending — SIT QG can be light/different per operator): **SIT has NO dependency-chain / breaking-change scoping — runs the full marked suite against ALL **Target design (operator-agreed):** scope each SIT run to the changed-repo set ∪ their transitive dependents (from `configs/runtime-topology.yaml` + manifest `dependencies`), with: (a) universal-dep repos (`unified-api-contracts`, likely `unified-trading-library`) → a change there triggers the BROAD/full suite; (b) `unified-trading-pm` docs-bypass (PR→QG→main, no SIT); (c) repo-set filter `status==active`; (d) `>=0.1.0` floor now (>=1.0 post-cutover). Build = a PM dep-graph helper + smoke-test-gate scoping logic; its QG is SIT-light (the SIT repo's own gate, not a heavy service QG).
       `v0.1+` repos every time (setup filter `v1_repos = staging_versions>=0.1.0`).** `staging_status.pending_repos` is
       tracked but unused for test-scoping; `configs/runtime-topology.yaml` + per-repo `dependencies` in
       `workspace-manifest.json` EXIST but the gate ignores them. Make SIT dependency-aware: from the pending (changed)
