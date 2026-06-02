@@ -61,6 +61,66 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       delete. If any direct base-builder read remains, switch it to the pipeline_mode-aware path (same fix as the writer).
       This is the only PREP3 residual before the per-AG G3 `--apply`→delete; the writer side + MTDS reader are done.
 
+## PRE-DRY-RUN CODE-CANONICALISATION PREFLIGHT — no dead-bucket association; QG must catch regression (operator 2026-06-02, HARD GATE before ANY migration dry-run)
+
+> **Operator 2026-06-02**: "before any dry runs of the built migration scripts we need to finish the coding exercises…
+> have we refactored read+write cloud-storage paths across the board to match the new canonical for the asset groups we
+> cover, in the tests that feed quality gates — essential to avoid regression. Even though we haven't started the
+> migrations (they'll be quick), the code itself must not regress by association with DEAD buckets. That also goes for
+> **data-status in the deployment API and UI**, which tend to resolve many bucket names, menu conventions, data_type
+> conventions, and manifest-reading conventions."
+>
+> **Premise**: the migration is additive + fast, but the moment legacy buckets/paths are DELETED (L6/E7), any code still
+> pointed at a legacy bucket name, a `category=` path, a no-`pipeline_mode=` read, an old on-disk `data_type`, or a v8
+> manifest-read assumption **regresses to a dead reference**. This gate canonicalises the CODE (read + write + status +
+> tests) FIRST, so QG is a live safety-net that fails on any dead-bucket/old-convention drift — BEFORE we dry-run.
+> Scope = the slot-3 AGs **cefi / tradfi / prediction** (defi = slot-2; sports = sports slot — coordinate, don't edit).
+> **No migration dry-run (G1) proceeds for an AG until its row in the matrix below is GREEN** (QG-enforced).
+
+**Convention SSOTs to align every surface to** (the 5 axes the operator named):
+1. **Bucket name** — env-tiered canonical via `resolve_bucket_name(cloud=, kind=, asset_group=, env=)`; NEVER inline
+   `gs://` / legacy no-env `market-data-tick-{ag}-{pid}` / wrong-token (`prediction` vs canonical `pred`). QG STEP 5.69.
+2. **Path / pipeline_mode** — `raw_tick_data/by_date/day=/pipeline_mode=/asset_group=/…` PRIMARY for read+write (PREP3).
+3. **`data_type` on-disk form** — the live-writer merge map (e.g. tradfi/cefi `futures_chain`→`options_chain` on disk);
+   readers/status must resolve the on-disk form, not the logical key.
+4. **`asset_group=`** (not `category=`) hive vocab on every read/write/status path.
+5. **Manifest read** — v9 columns (`schema_version`/`asset_group`/`pipeline_mode`/`source`/`available_at`); never assume
+   the constant; tolerate v8 during transition but write/expect v9.
+
+**Per-surface preflight matrix** (each = a tracked P0 todo; GREEN = canonical + QG/tests aligned + no dead-bucket ref):
+
+- [ ] [CODE] P0. **market-tick-data-service** — WRITER pipeline_mode=PRIMARY ✅ DONE (mtds@f50116ca, PREP3). REMAINING:
+      audit MTDS READ paths (reader.py callers, handlers, scripts) for any direct legacy-bucket / `category=` / no-`pipeline_mode=` /
+      old-`data_type` reference for cefi/tradfi/prediction; confirm reads go through the pipeline_mode-aware reader /
+      `candidate_parquet_paths` / `manifest_reader_fallback`. Grep: `rg "market-data-tick-(cefi|tradfi|prediction)-" --type py` (no `-prd`/no-`resolve_bucket_name`), `rg "category=" `, `rg "build_(cefi|tradfi)_partition_path"` direct callers. Fix + ensure unit tests assert canonical (so QG regresses on reverting).
+- [ ] [CODE] P0. **market-data-processing-service (MDPS)** — candle reader/writer for cefi/tradfi/prediction:
+      pipeline_mode-aware read PRIMARY (slot-2 did defi; do non-defi), `resolve_bucket_name` (no legacy/no-env), on-disk
+      data_type resolution, v9 manifest read. Align tests feeding QG. (Cross-ref PREP3 reader-side todo above.)
+- [ ] [CODE] P0. **features-service (onchain/delta-one/volatility/calendar/cross-instrument/commodity)** — input readers
+      for cefi/tradfi/prediction resolve canonical buckets + pipeline_mode= paths + v9 manifest; writer emits canonical
+      (born-canonical, since little features data has run). Align QG tests.
+- [ ] [CODE] P0. **instruments-service** — reference/universe read+write for cefi/tradfi/prediction on canonical buckets
+      (`instruments-store-{ag}-prd`); no legacy no-env bucket refs; v9 manifest write (pipeline_mode/source/asset_group
+      cols, the CF-2 stamp-as-COLUMN fix). Align QG tests.
+- [ ] [CODE] P0. **deployment-api — DATA-STATUS resolution (operator-named hotspot)**: audit every bucket-name / menu /
+      data_type / manifest-read convention the data-status endpoints use for cefi/tradfi/prediction. These tend to
+      enumerate MANY bucket-name variants — ensure ALL resolve to the canonical env-tiered name via `resolve_bucket_name`
+      (drop legacy no-env + wrong-token `prediction`), read the v9 `_index` (pipeline_mode/source/asset_group columns),
+      use `asset_group=` + on-disk `data_type`. A stale variant = a dead read post-delete (data-status shows blank/error).
+      Grep deployment-api for hardcoded `market-data-tick-`/`gs://`/`category=`/menu+data_type maps. Align QG tests.
+- [ ] [CODE] P0. **deployment-ui — DATA-STATUS surface**: the UI's bucket/menu/data_type/manifest conventions must match
+      the canonical API; remove any client-side legacy bucket-name/menu/data_type assumptions for cefi/tradfi/prediction.
+      Playwright gate per UI HARD RULE (`pw:L2 ✓` + regression spec) when ticked.
+- [ ] [CODE] P0. **QG-test alignment (cross-repo)**: for each repo above, the tests that feed `quality-gates.sh` MUST
+      assert the CANONICAL form (canonical bucket via resolver, pipeline_mode= path, v9 manifest, asset_group=, on-disk
+      data_type) so QG **fails on any reversion** to a dead bucket / old convention — this is the regression net the
+      operator requires. (PREP3 already updated 18 MTDS write-path assertions; extend the same to read/status tests.)
+
+> **Sequencing**: this preflight is a HARD GATE before the per-AG **G1 dry-run** (the migration gates live in
+> `cf_data_state_audit_slot3_2026_06_01.md` § GATES). Rationale: dry-run is read-only + safe, but we want the code
+> canonical + QG-green FIRST so the migration runs against a codebase that already expects the canonical form and can't
+> silently regress to dead buckets when L6/E7 deletes legacy. Cross-link: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (L6 owns the bucket-name SSOT + the actual delete).
+
 ## Per-service scope + what each owns / inherits (no overlap)
 
 | Service       | Surface                                                  | CF items it OWNS (live check)                                       | Notes                                                                                                                                                                          |
