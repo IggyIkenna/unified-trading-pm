@@ -70,11 +70,18 @@ verified complete**.
 - [x] ✅ [CODE] P0. MDPS: add prior-day carry-seed logic to `_finalize_session_grid` (Decision 1 — seed leading bins from
       last-known price/ts instead of dropping). Source: mdps_state_adapter_leading_nan. — market-data-processing-service@5a5e989 |
       seed_price/seed_ts kwargs + carry-from-bin-0 + cold-start-drop + CLOSED-drop preserved | tests/unit/test_finalize_session_grid_seed.py (6 cases) | QG exit 0. (Seed *threading* through batch+live call path tracked in issue-doc Decision-1 todo.)
-- [ ] [CODE] P0. MDPS: wire the 7 state adapters to call `_finalize_session_grid(output, state_col=…)` —
+- [x] ✅ [CODE] P0. MDPS: wire the 7 state adapters to call `_finalize_session_grid(output, state_col=…)` —
       cefi/derivative, cefi/futures_chain, cefi/options_chain, defi/liquidity, defi/market_state, cefi/book_snapshot,
-      tradfi/tbbo. Source: mdps_state_adapter_leading_nan.
-- [ ] [TEST] P0. MDPS: add leading-gap + prior-day-carry + cold-start-drop + density tests
-      (`tests/unit/test_state_adapter_density.py` + extend per-adapter tests). Source: mdps_state_adapter_leading_nan.
+      tradfi/tbbo. Source: mdps_state_adapter_leading_nan. — market-data-processing-service@23d7add |
+      derivative/options/book/tbbo → `state_col=mark_price`/`mid_price` (close structurally NaN; OHLC driven from driver,
+      volume zero-filled; book/tbbo pre-LOCF the quote mid); futures → `state_col=close` (=last_price);
+      liquidity/market_state → close-driven finalize (close already = mid/liquidity, volume carries real TVL/supply so
+      NO state_col — its flow zero-fill would null TVL). No-price-driver input → honest absence. basedpyright clean.
+- [x] ✅ [TEST] P0. MDPS: add leading-gap + prior-day-carry + cold-start-drop + density tests
+      (`tests/unit/test_state_adapter_density.py` + extend per-adapter tests). Source: mdps_state_adapter_leading_nan. —
+      market-data-processing-service@4fd962d (test_state_adapter_density.py 5 cases + test_finalize_session_grid_seed.py
+      6 cases) + @23d7add (derivative/futures/tbbo/more_defi/writer_schema per-adapter tests updated to the dense
+      session-grid contract). 1252 MDPS unit tests green (foreign bucket-tier file excluded — see [BUG] below).
 - [ ] [VERIFY] P0. MDPS: remove the NaN WARN diagnostic in `fast_candle_aggregation.py:304-318` ONLY after all 7
       adapters fixed + full MDPS suite green. Source: mdps_state_adapter_leading_nan.
 - [ ] [BUG] P0. **MDPS pre-existing foreign QG-red (found 2026-06-02 during leading-NaN work, NOT mine to fix —

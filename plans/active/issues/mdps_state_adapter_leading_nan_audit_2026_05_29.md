@@ -160,10 +160,14 @@ Tests in scope:
 - [ ] [SCRIPT] P0. **Decision 1 — prior-day carry seed.** Thread per-instrument `last_known_price` + `last_trade_ts`
       (from prior day's last parquet / manifest) into `_finalize_session_grid`; fill leading bins from bin 0 instead of
       dropping. Cold-start (no prior obs) still drops. Handle prior-day-missing / multi-day-halt edge cases.
-- [ ] [SCRIPT] P0. **Decision 2 — Option A.** Add `state_col: str | None = None` (+ `flow_cols`) to
-      `_finalize_session_grid`; first-obs mask uses `~isnan(<state_col>)` when provided.
-- [ ] [SCRIPT] P0. Update 7 state adapters to call `_finalize_session_grid(output, state_col=<canonical>)`.
-- [ ] [TEST] P0. Add leading-gap (prior-day-carry + cold-start-drop) + LOCF-density tests for each updated adapter.
+- [x] ✅ [SCRIPT] P0. **Decision 2 — Option A.** Add `state_col: str | None = None` (+ `flow_cols`, `seed_state`) to
+      `_finalize_session_grid`; first-obs mask uses `~isnan(<state_col>)` when provided. — MDPS@4fd962d.
+- [x] ✅ [SCRIPT] P0. Update 7 state adapters to call `_finalize_session_grid(output, state_col=<canonical>)`
+      (liquidity/market_state use close-driven finalize — close already = price driver + volume carries real TVL/supply).
+      — MDPS@23d7add.
+- [x] ✅ [TEST] P0. Add leading-gap (prior-day-carry + cold-start-drop) + LOCF-density tests for each updated adapter. —
+      MDPS@4fd962d (finalizer-level: test_finalize_session_grid_seed.py + test_state_adapter_density.py) + @23d7add
+      (per-adapter test files). 1252 MDPS unit tests green.
 - [ ] [VERIFY] P0. Remove aggregator WARN log + re-run full MDPS test suite.
 - [ ] [DOCS] P1. Codex SSOT updates per above (+ document the carry-from-prior-day leading-bin contract).
 - [ ] [DATA] P1. Reprocess to densify existing data — rides the deferred backfill pass (not a standalone walk).
