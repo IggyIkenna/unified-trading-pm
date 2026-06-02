@@ -332,31 +332,14 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   more than ±5 from `backlog.yaml` task count on any VM, run `scripts/orchestrator/verify_fleet_prune_state.sh` to audit
   and `scripts/orchestrator/enable_prune_stale.sh` to re-enable pruning. SSOT:
   `plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md`.
-- **Orchestrator autospawn: workers self-heal (HARD RULE codified 2026-05-30)**: `ORCHESTRATOR_AUTOSPAWN_ENABLED=true`
-  is the default on every fleet VM (enabled via `/etc/systemd/system/orchestrator.service.d/autospawn.conf`). The
-  `AutoSpawnLoop` in `server/autospawn.py` wakes a slot automatically when queue > 0 AND no active worker AND account
-  headroom > 50%. Manual SSM spawn (`/api/slots/<id>/spawn`) is only needed for cold-start of a new VM that has never
-  had a drop-in written. If a VM stays idle > 15 min with queued tasks, check that the drop-in exists and
-  `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` is in the unit env. SSOT: `plans/active/autospawn_idle_vms_2026_05_30.md`.
-- **Orchestrator host-offline failover (HARD RULE codified 2026-05-30)**: Soft-pinned tasks fall over to fleet VMs
-  automatically when a host's heartbeat is silent > 10 min. Hard pins (`failover_allowed: false` in plan task YAML) stay
-  — honoured regardless of host state. `ORCHESTRATOR_FAILOVER_ENABLED=true` on **vm-orchestrator only** (single source
-  of failover decisions — enabling on multiple VMs causes race conditions). Enabled via
-  `/etc/systemd/system/orchestrator.service.d/failover.conf`. Re-routing is logged as `failover_rerouted` activity
-  events + rolls back automatically (`failover_rolled_back`) when the host returns with unclaimed tasks. Script:
-  `scripts/orchestrator/enable_failover.sh`. SSOT: `plans/active/harsh_pc_dispatch_failover_2026_05_30.md`.
-- **Orchestrator worker liveness: WorkerLivenessWatchdog auto-kills stuck/silent/context-full workers (HARD RULE
-  codified 2026-06-01)**: `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true` is the default on every fleet VM (enabled via
-  `/etc/systemd/system/orchestrator.service.d/watchdog.conf`). The `WorkerLivenessWatchdog` in
-  `server/worker_liveness_watchdog.py` detects three failure modes every 60 s: (1) **stuck-at-prompt** — pane shows
-  non-empty buffered input with no delta for ≥3 consecutive ticks; (2) **heartbeat-silent** — no `/progress` ping in
-  > 900 s AND tmux alive AND slot not blocked; (3) **context-full** — pane matches `/clear to save Xk tokens` (immediate
-  > kill). After a kill, `AutoSpawnLoop` respawns a fresh session within 60 s. **Operator must not manually kill tmux
-  > sessions to restore velocity** — the watchdog handles it. Anti-thrash: per-slot 5-min kill cooldown + per-VM 20
-  > kills/day cap (Slack alert fires + watchdog goes dormant on cap). Never kill a `blocked` slot. Never kill during
-  > `Crunched for / Cogitated for / Worked for / Baked for` pane state (active extended-thinking). Rollout script:
-  > `scripts/orchestrator/enable_worker_watchdog.sh`. SSOT:
-  > `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`.
+- **Orchestrator runtime self-heals (defaults ON, fleet-wide)**: **AutoSpawn** wakes an idle slot when queue>0 + no
+  active worker + headroom>50% (`ORCHESTRATOR_AUTOSPAWN_ENABLED`; manual `/api/slots/<id>/spawn` only for cold-start);
+  **host-offline FAILOVER** (vm-orchestrator ONLY — multi-VM races) reroutes soft-pinned tasks when a host is silent
+  > 10 min, hard pins (`failover_allowed: false`) stay, auto-rolls-back on return (`ORCHESTRATOR_FAILOVER_ENABLED`);
+  > **WorkerLivenessWatchdog** kills stuck-at-prompt / heartbeat-silent(>900 s) / context-full workers every 60 s then
+  > AutoSpawn respawns (`ORCHESTRATOR_WORKER_WATCHDOG_ENABLED`; per-slot 5-min cooldown + 20 kills/day/VM cap; never
+  > kills a `blocked` or extended-thinking slot) — **operator must NOT manually kill tmux to restore velocity**. SSOT:
+  > `codex/04-architecture/agent-orchestrator-overview.md` §Auto-spawn / §Watchdog / §Failover.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
