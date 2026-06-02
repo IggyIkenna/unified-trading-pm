@@ -315,6 +315,35 @@ What to verify/wire (B0 corrected scope):
       under audit item (i), do NOT rush a fix. Per-adapter audit codified in
       `defi_master`(aa)/`mtds_mdps`(i)/`instruments`(h)/ `features_and_ml`(u). 3 mtds fixes need QG green before LDR.
       parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. A8 **REOPENS A7's "instruments-service swept clean" claim — a SECOND swallow shape exists in IS DeFi
+      subgraph adapters** (slot-2 audit 2026-06-02, answering operator "is an API issue → attempted_failed not
+      empty_confirmed?"). A7 swept the `except Exception: … return []` shape and found IS clean — but it MISSED the
+      `HTTP-200 + {"errors":[...]}` / missing-`data`-field → `return []` "treating as empty" shape. CONFIRMED in
+      `instruments-service/instruments_service/reference_data/adapters/defi/aave_v3.py:144-152` +
+      `spark.py:166-173` (both in the `get_instruments` discovery path; comment literally says "rate-limit / transient
+      indexing issues … treating as empty"). On a transient subgraph error these return an EMPTY instrument universe with
+      NO exception → those instrument-days silently drop out of the expected universe entirely (never `attempted_failed`,
+      never even `expected_unattempted` — worse than `empty_confirmed`). FIX: on a 200-with-`errors` body raise (→ caller
+      records the discovery failure) instead of `return []`. **Audit ALL ~53 DeFi adapters under
+      `reference_data/adapters/defi/` for the same shape** (the `return []`-on-soft-error pattern is workspace-wide; only
+      aave_v3/spark carry the explicit "treating as empty" comment but the others need verifying). Repo:
+      instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. A9 **MTDS `dex_swaps_handler` balancer branch is inconsistent with the cascade's own honest-failure
+      handling** (slot-2 audit 2026-06-02). The univ3/messari cascade correctly RAISES `RuntimeError` when all schemas
+      return GraphQL errors (`dex_swaps_handler.py:700-708`, "records ADAPTER_FETCH_FAILED rather than
+      SOURCE_RETURNED_ZERO") — but the single-query **balancer** branch (`dex_swaps_handler.py:658`,
+      `return … if data else pd.DataFrame()`) returns an empty frame on a 200-with-`errors` response → downstream
+      `record_empty(SOURCE_RETURNED_ZERO)` (a false complete-empty). FIX: balancer branch raises on a GraphQL-`errors`
+      response like the cascade does. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. A10 **wire the `EmptyFromLiveInstrumentError` backstop — it is DEFINED but never RAISED** (slot-2 audit
+      2026-06-02). The operator-directed (2026-05-07) safety net — `record_empty(SOURCE_RETURNED_ZERO)` must cross-check
+      the IS catalog and reject (force `attempted_failed`) when the instrument was ALIVE on that day — exists only as a
+      class in `unified-api-contracts/.../honest_coverage.py:979` + `__all__` export; grep finds ZERO raise sites in the
+      write path. UTL `record_empty` (`manifest_writer.py:1958`) only guards blank/unknown reason
+      (`LegacyBlankErrorReasonError`), NOT live-instrument emptiness. Without this backstop, correctness depends entirely
+      on each adapter raising — so the A8/A9 swallow gaps go uncaught. FIX: invoke the catalog cross-check in
+      `record_empty` (or a shared pre-write gate) so a SOURCE_RETURNED_ZERO for a catalog-alive instrument raises.
+      Repos: unified-trading-library + unified-api-contracts. parent_epic: mtds_mdps_master.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
