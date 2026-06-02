@@ -6,8 +6,6 @@ name: workspace_config_drift_remediation
 created: 2026-06-01
 parent_epic: epics/infrastructure_master.md
 assigned_vm: vm-cross-cutting
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
 status: active
 priority: P2
 model_tier: sonnet-doable

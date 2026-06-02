@@ -17,13 +17,15 @@ estimate_calibration_note: |
   workspace (check_todo_format pattern; git-status reporter; backlog DB cron).
   Net-new surface is small (one keyword-surface YAML + one extension to the
   git-status reporter + one reaper cron). No new infra.
-locked_by: live-defi-rollout
-locked_since: 2026-05-29
 related:
   - scripts/plan-hygiene/check_todo_format.sh # the #1 silent-failure capture, shipped 2026-05-29 — pattern to mirror for #2
   - scripts/dev/slot-git-status-report.sh
   - agent-orchestrator/server/regen_backlog_from_plan.py
 ---
+
+## Deferred work — migrated to:
+
+- pm-pull install/audit on the 9 stopped epic VMs → **`orchestrator_fleet_worker_spawn_enablement_2026_06_02.md` § F6** (per-VM rollout; `run_fleet_install_pm_pull.sh` runs when each VM starts). Archived 2026-06-02 — 22/22 done.
 
 # Plan-hygiene cron — silent-failure capture (3 remaining gaps)
 
