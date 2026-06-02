@@ -117,12 +117,15 @@ verified complete**.
 
 ## market-tick-data-service
 
-- [ ] [CODE] P1. MTDS: remove banned `bloxroute` relay URLs (`cli/handlers/mev_events_handler.py:42-43`) + delete
-      `mev_events_handler.py.bak`. Source: defi_code_codex_drift D7.
+- [x] ✅ [CODE] P1. MTDS: remove banned `bloxroute` relay URLs (`cli/handlers/mev_events_handler.py`) + delete the
+      tracked `mev_events_handler.py.bak`. — market-tick-data-service@`d3e02228` (ruff+basedpyright clean). Source:
+      defi_code_codex_drift D7.
 - [ ] [SCRIPT] P2. MTDS: add a QG lint guard that fails on malformed `by_date/` paths not matching
       `^raw_tick_data/by_date/day=\d{4}-\d{2}-\d{2}/`. Source: gcs_hive_partition.
-- [ ] [CODE] P2. MTDS: extend `scripts/sweep_phantom_manifest_rows.py` to cover the raw-trade `captured`-with-no-
-      processed-candle phantom class (KRAKEN/BITFINEX); dry-run first. Source: cefi_processed_candles.
+- `BLOCKED-DISCIPLINE` [CODE] P2. MTDS: extend `scripts/sweep_phantom_manifest_rows.py` for the raw-trade
+  `captured`-with-no-processed-candle phantom class — RECLASSIFIED 2026-06-02: pruning those rows is a whole-corpus GCS
+  walk that MUST bundle into the cefi C0 canon walk (single-walk discipline), NOT a standalone sweep. The read-side
+  false-positive is instead killed by the features-service `service_name` filter below. Source: cefi_processed_candles.
 
 ## alerting-service
 
