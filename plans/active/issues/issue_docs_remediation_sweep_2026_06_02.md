@@ -114,18 +114,37 @@ verified complete**.
       (`perp_funding_handler.py`), so data source is proven; but first CONFIRM the axis classification (audit noted they
       may be CeFi-axis perp venues on their own L1/BSC, candidates for removal from the DeFi registry rather than
       flip-to-live). Resolve classification → flip-to-live OR move to CeFi registry. Source: defi_code_codex_drift D15.
-- [ ] [CODE] P2. UAC D10 EULER_V2 (ARBITRUM + ETHEREUM): find Graph subgraph ID →
-      `subgraph_health_probe.py --protocols euler_v2` → if green, add `_SUBGRAPH_IDS`+`_ProtocolCapability`+register
-      live. Source: defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC D10 VENUS (BSC + ETHEREUM): find Graph subgraph ID → probe → add+register live if green. Source:
+      **SMOKE-TEST RESULTS 2026-06-02 (slot 7 — real network probes; keys from SM
+      `thegraph-api-key`/`helius-api-key`):**
+
+- [ ] [CODE] P2. UAC D10 VENUS — **GREEN** (The Graph decentralized net, entity `markets`, all returned live data): BSC
+      isolated `H2a3D64RV4NNxyJqx9jVFQRBpQRzD6zNZjLDotgdCrTC`, BSC core `7h65Zf3pXXPmf8g8yZjjj2bqYiypVxems5d8riLK1DyR`,
+      ETHEREUM `Htf6Hh1qgkvxQxqbcv4Jp5AatsaiY5dNLVcySkpCaxQ8`. Wire to
+      `_SUBGRAPH_IDS`+`_ProtocolCapability`+`defi_venues.py` live (identical mechanism to aave_v3). Source:
       defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC D10 BENQI (AVALANCHE): find Graph subgraph ID (or Avalanche RPC via Alchemy) → probe → add+register
-      live if green. Source: defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC D10 RADIANT (ETHEREUM/ARBITRUM): find Graph subgraph ID → probe → add+register live if green.
-      Source: defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC SOLANA SOLAYER/PICASSO/CAMBRIAN: confirm Helius/RPC or native-API data source per venue → smoke
-      test → register live in `ALL_DEFI_VENUES`+caps if green; else hold that venue with the data-source gap named.
-      Source: defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC D10 BENQI — **GREEN** (The Graph, AVALANCHE, entity `markets`):
+      `HcTvZi3fwucvRJvVmtFzNDTnomvMBk64xCLNQQg6GPAV` (NOT `EcNHwEG…` — that one has active indexing errors). Wire same
+      as Venus. Source: defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC D10 RADIANT — **GREEN** (The Graph, entity `assets`): ARBITRUM
+      `E1UTUGaNbTb4XbEYoupJZ5hU62hW9CnadKTXLRSP2hM`, ETHEREUM `683Qhh8TEta6qS5gdTpXCs84xnrp77fPWGQyBmRe6qgo` (Radiant
+      TVL down ~98% post-2024-hack but subgraphs index current blocks). Wire same as Venus. Source:
+      defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC D10 EULER_V2 — **GREEN data, source = Goldsky NOT The Graph** (no allocations on decentralized
+      net): ETH
+      `https://api.goldsky.com/api/public/project_cm4iagnemt1wp01xn4gh1agft/subgraphs/euler-v2-mainnet/latest/gn`, ARB
+      `…/euler-v2-arbitrum/latest/gn`, entity `eulerVaults`. Wiring needs Goldsky-endpoint support (the subgraph
+      client/`_SUBGRAPH_IDS` assume the Graph gateway URL shape) — small client extension, then register live. Source:
+      defi_code_codex_drift D10.
+- [ ] [CODE] P2. UAC D10 SOLAYER — **GREEN via Helius RPC** (sSOL mint `sSo14endRuUbvQaJS3dq36Q829a3A6BEfoeeRGJywEh`
+      supply ~104k; restaking program `sSo1iU21jBrU9VaJ8PJib1MtorefUV4fzC9GURa2KNn` executable). Wiring needs the
+      Solana/Helius adapter path (not a subgraph entry); `app.solayer.org` REST is down (500) — use Helius
+      `getTokenSupply`/`getAccountInfo`. Register live once wired. Source: defi_code_codex_drift D10.
+- `BLOCKED-OPERATOR-DECISION` [CODE] P2. UAC D10 PICASSO — **NEEDS-DIFFERENT-SOURCE**: IBC bridge/restaking program
+  alive but ~3 tx/month; no public yield/rate API found via Helius/native. Operator: drop from DeFi venue scope OR
+  provide a Picasso restaking-vault API/IDL. Source: defi_code_codex_drift D10.
+- `BLOCKED-OPERATOR-DECISION` [CODE] P2. UAC D10 CAMBRIAN — **RED, misclassified**: Cambrian is a developer SDK for
+  building NCNs on Jito Restaking, NOT a DeFi venue (no TVL/pools/rates/mainnet program to query). Recommend REMOVE from
+  the venue registry (or replace with the specific NCN intended). Source: defi_code_codex_drift D10.
 - [ ] [CODE] P3. UAC D8 Starknet `infura_compatible` template: keep + add a clarifying note (Infura is a removed
       _provider name_ but the public Starknet endpoint shape is retained); rename the key away from `infura_` to avoid
       the banned-name confusion. Source: defi_code_codex_drift D8.
