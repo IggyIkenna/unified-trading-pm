@@ -83,22 +83,20 @@ verified complete**.
       (`tests/unit/test_state_adapter_density.py` + extend per-adapter tests). Source: mdps_state_adapter_leading_nan. —
       market-data-processing-service@4fd962d (test_state_adapter_density.py 5 cases + test_finalize_session_grid_seed.py
       6 cases) + @23d7add (derivative/futures/tbbo/more_defi/writer_schema per-adapter tests updated to the dense
-      session-grid contract). 1252 MDPS unit tests green (foreign bucket-tier file excluded — see [BUG] below).
+      session-grid contract) + @180f54b (env-tier bucket test fix). **Full MDPS quality-gates.sh exits 0.**
 - [x] ✅ [VERIFY] P0. MDPS: NaN WARN diagnostic in `fast_candle_aggregation.py:304-325` — **KEPT as a permanent
       regression guard** (all 7 adapters now dense → dormant in steady state; catches future regressions). Source:
-      mdps_state_adapter_leading_nan. MDPS unit suite green (1252) except the foreign bucket-tier file ([BUG] below);
-      full QG exit-0 blocked solely by that foreign drift.
-- [ ] [BUG] P0. **MDPS pre-existing foreign QG-red (found 2026-06-02 during leading-NaN work, NOT mine to fix —
-      bucket-tier data-correctness).** `tests/unit/test_dependency_checker_sports_prediction.py` (9 cases:
-      `TestOutputBucketsSportsPrediction` + `TestPerCategoryUpstreamRouting`) assert the **legacy flat** bucket names
-      (`market-data-tick-sports-test-project`) but `DependencyChecker.get_output_bucket` now returns the **env-tiered**
+      mdps_state_adapter_leading_nan. **Full MDPS `quality-gates.sh` exits 0** (after the [BUG] env-tier test fix below).
+- [x] ✅ [BUG] P0. **RESOLVED — MDPS foreign QG-red (stale flat bucket-name test assertions).**
+      `tests/unit/test_dependency_checker_sports_prediction.py` (9 exact-string cases:
+      `TestOutputBucketsSportsPrediction` + `TestPerCategoryUpstreamRouting`) asserted the **legacy flat** bucket names
+      but `get_output_bucket` / `_get_upstream_deps_for_category` / `OUTPUT_BUCKETS` now resolve the **env-tiered**
       canonical name (`market-data-tick-sports-prd-test-project`) via UTL `resolve_bucket_name` since
-      `market-data-processing-service@61900a3` ("resolve canonical env-tiered tick + instruments buckets"). Confirmed
-      pre-existing: fails at HEAD with my finalizer change stashed. **Owner = bucket-name-SSOT / env-tier workstream**
-      (`bucket_name_ssot_canonicalisation_2026_05_10` / `defi_manifest_canonicalisation_2026_06_01`). Decision needed:
-      is `prd` the correct env tier for a test run, or should the test export an env override? Do NOT blind-update the
-      expected strings — wrong tier = wrong bucket = data-correctness bug. This currently blocks `quality-gates.sh` exit
-      0 for the whole MDPS repo. Source: mdps_state_adapter_leading_nan (incidental finding).
+      `market-data-processing-service@61900a3`. **Operator confirmed env-tiered IS canonical (2026-06-02)** → migrated
+      the 9 stale assertions to substring/shape checks matching the file's own `TestCanonicalBucketNameResolver` style
+      (robust to the env-tier token, not blind-pinned to `prd`). — market-data-processing-service@180f54b |
+      **full `quality-gates.sh` exit 0 (sentinel `.qg_last_passed_sha` written)**. Source: mdps_state_adapter_leading_nan
+      (incidental finding).
 
 ## batch-live-reconciliation-service
 
