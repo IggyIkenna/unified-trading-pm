@@ -109,6 +109,18 @@ causes are real: serializer drift AND stale-lock commit-discipline gaps.
       (don't-touch-foreign + diagnose-before-fix). Fix = refactor the `.get(..,"")` defaults or
       `# noqa: qg-empty-fallback`.
 
+## Governor fix unmasked workspace-wide pre-existing QG debt (2026-06-03)
+
+- [ ] [INFRA] P1. **The bash-3.2 governor crash had been MASKING pre-existing local-QG debt across every repo** — all
+      macOS `quality-gates.sh` runs died at stage [2] (governor), so no repo's stage-5+ failures (codex, cloudbuild
+      schema, size/import baselines) were visible locally. The governor fix (now on LDR) makes local QG run fully and
+      **surfaces each repo's accumulated debt**. Observed: PM (3 issues — cleared), UTL (within baseline — passes),
+      trading-agent-service (STEP 5.17 cloudbuild.yaml schema + 1 codex violation — **fails**). The 14 lock-repo
+      re-locks are committed on their tab branches but **cannot be cleanly promoted until each repo's unmasked
+      pre-existing debt is cleared** — a workspace-wide per-repo cleanup (repo-owner / dedicated sweep), NOT this plan.
+      No urgency: their local QG is blocked on multiple pre-existing items regardless of the lock commit. Promoted this
+      cycle: PM + UTL (green). DEFERRED — needs a dedicated debt-sweep plan per repo.
+
 ## Success criteria
 
 - Running `quality-gates.sh` locally never leaves `uv.lock` dirty (Phase 2).
