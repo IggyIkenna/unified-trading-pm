@@ -589,11 +589,38 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       \_resolve_instruments_store_bucket() -> resolve_bucket_name(). instruments_preflight docstring updated.
       Pre-existing QG failures in test_cassette_orphan_checker.py (5 tests, not caused by this change — unrelated
       cassette scanner).
-- [ ] [CODE] P0. **Ban `category=` EVERYWHERE — v9 canonical only, no fallback**: grep all sports-touching code (esp.
-      deployment-api data-status, MTDS, instruments-service, features, UI menu/data_type/manifest-read conventions) for
-      `category=` / `category` as a path key, hive segment, column read, OR data-status fallback. Replace with
-      `asset_group=`. `category` must NOT be accepted even as a fallback in data-status (it confuses counts). Add a QG
-      ratchet that fails on any new `category=` in sports paths. v9 post-migration canonical ONLY.
+- [x] ✅ [CODE] P0. **Ban `category=` EVERYWHERE — v9 canonical only, no fallback** — deployment-api@41fa120 | QG 3847
+      passed (1 pre-existing fail unrelated). Fixed: trading_axis.py (removed category fallback from mapping reads),
+      shard_management.py (3 sites), data_status_drilldown.py (GCS path building now asset_group=), mock_data.py
+      (asset_group key). Added test_no_category_asset_group_fallback.py QG ratchet. storage_facade.list_objects
+      transparently fans out to legacy category= paths for on-disk GCS reads (correct — no data loss). OTHER repos
+      (MTDS, instruments-service, features-service) still have category= usages — captured as todos below; NOT touched
+      (separate agent context). UI repos clean (no category= as asset-group key).
+- [ ] [CODE] P1. **MTDS: ban `category=` in production source — replace with `asset_group=`**: grep-report 2026-06-02
+      found `category=` in MTDS scripts (not production service source — most are in migration/reconcile scripts reading
+      legacy paths, which is correct). Production source to audit:
+      `market_tick_data_service/engine/orchestrator.py:1791` passes `category=cat` to `get_expected_bookmakers()` —
+      check if this kwarg name is a column key or just a function parameter; if column key, rename. Migration scripts
+      (`restructure_tradfi_files.py`, `rebuild_mtds_manifest.py`, `migrate_to_per_instrument.py`,
+      `migrate_cefi_instrument_types.py`) use `category=` to build legacy GCS paths for migration — these are
+      intentional (reading legacy paths) and should stay as-is OR add comment
+      `# QG-allow: reading legacy category= paths`. `smoke_matrix.py:206` probes both `asset_group=` and `category=` —
+      leave as-is (dual-probe is correct for transition). Repo: `market-tick-data-service`. QG that repo after any
+      source change.
+- [ ] [CODE] P1. **instruments-service: ban `category=` in production source — replace with `asset_group=`**:
+      grep-report 2026-06-02 found `category=` in IS orchestrator at multiple sites (e.g. lines 2304, 2402, 3194, 3208,
+      4041, 4109, etc. in `instruments_service/engine/orchestrator.py`) — these pass `category="sports"` /
+      `category="prediction"` as kwargs, likely to UTL `record_captured` / `record_empty`. If those are UTL kwargs that
+      accept `asset_group` instead, rename them. If they are legacy param names that UTL still reads as `category`, this
+      is a UTL contract issue — file a UTL upgrade todo. Script `aggregate_legacy_es_opt_trades.py:229` passes
+      `category="tradfi"` — check kwarg name. Repo: `instruments-service`. QG that repo after any source change.
+- [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads**: `mtds_canonical_reader.py`
+      explicitly builds `category=defi/` twin paths for backward compatibility — this is intentional (reads legacy
+      on-disk data). Post sports/defi migration when `category=` paths are decommissioned, remove the twin.
+      `eigen_rewards_calculator.py:54` hardcodes `category=defi/` path — after migration, should use
+      `asset_group=defi/`. `ErrorCategory.*` usages are unrelated error classification enum, leave alone. Repo:
+      `features-service`. **DEFERRED** until the relevant asset_group bucket migration walk completes (cannot remove
+      `category=` reading until the data is migrated). Capture as post-migration cleanup.
 - [x] ✅ [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)** — AUDIT
       COMPLETE 2026-06-02. Per-service table below; gaps captured as P1/P2 todos beneath. Every service either VERIFIED
       GREEN or has a tracked gap-todo. Evidence: this slot, reading code in-repo (grep-then-read across 5 services).
