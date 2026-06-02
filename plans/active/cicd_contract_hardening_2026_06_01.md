@@ -852,6 +852,25 @@ by a PR:
     `remote: Bypassed rule violations for refs/heads/main`. **Note:** PM `main` now intentionally runs
     `enforce_admins=false` — do NOT "restore" it to true (strands the chain). All other protected branches (PM staging,
     SIT main/staging) remain `enforce_admins=true`; PM ruleset `require-quality-gates` stays `active`.
+- [x] ✅ [SCRIPT] P0. DONE 2026-06-02 (slot 2; `unified-trading-pm@f65057afb` LDR — **needs main promotion, see below**):
+      **The `sit-unlock`/`sit-gate`/`staging-to-main` manifest push to main is non-fast-forward-racy → a failed SIT run
+      leaves staging LOCKED FOREVER.** Completes the "same gap likely on `sit-gate.yml` … verify after the bypass lands"
+      note in the GH013 item above. **VERIFIED by a live full-mode e2e (slot 2):** `workflow_dispatch sit_mode=full` on
+      SIT `smoke-test-gate.yml` → run **26823855948**: SIT Setup ✓ → `code-tests` step 2 `Lock staging (dispatch
+      sit-lock)` ✓ → PM `sit-gate.yml` run **26823891837** = **SUCCESS** (first-ever sit-gate run; verified pending repos,
+      locked staging, recorded SHAs, committed manifest, dispatched `staging-locked`). The chain WIRING is fully alive.
+      But `code-tests` then failed at `Install dependencies` (rotted SIT deps — the open `[TEST] P1` below), correctly
+      dispatched `sit-failed` → PM `sit-unlock.yml` run **26823905875** = **FAILURE**: step `Commit manifest update` did
+      the unlock locally (commit c9a0477b6) but the bare `git push` was **rejected non-fast-forward** because sit-gate's
+      lock commit had landed on main first → the unlock never reached main → staging stayed `locked:true`. **Root cause:**
+      all three workflows do a bare `git push` of a `[skip ci]` manifest commit with no rebase, so concurrent lock/unlock
+      manifest writes collide. **Fix:** wrapped the push in a 5-attempt `git pull --rebase --autostash origin main && git
+      push` loop in `sit-unlock.yml` + `sit-gate.yml` + `staging-to-main.yml`. **Also:** manually cleared the dangling
+      lock left by the test via the contents API (`unified-trading-pm@fc2fc771b` on main — `staging_status.locked=false`,
+      matching sit-unlock's exact `json.dump(indent=2)` serialization). YAML-validated all 3. **OPERATOR/ADMIN STEP
+      REQUIRED:** `repository_dispatch` runs these PM workflows from the DEFAULT branch (`main`), so the fix is INERT
+      until promoted to PM `main` — the LDR commit f65057afb must reach main (admin FF/promotion of these workflow files;
+      PM `main` runs `enforce_admins=false` so the bot/admin path can land it, but force-touching main is a human step).
 - [x] ✅ [INFRA] P2. DONE 2026-06-02 (unified-trading-pm@7c3d8ff73, LDR/main/staging): **Retire Telegram notifications
       entirely (migrate to Slack) — operator decision.** Audit 2026-06-01: Migrated the 4 inline-Telegram senders to
       best-effort Slack #ci-failures (request-major-bump, request-major-bump-reusable, major-bump-issue-handler,
@@ -1473,6 +1492,17 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
       failure→recovery transitions for EVERY workflow on main+staging (recency-guarded), PLUS the scheduled
       auto-merge-stuck PR poller (CONFLICTING/DIRTY/BLOCKED > threshold) — exactly the silent-rot antidote. Live;
       already surfaced 7 wedged promotion PRs on first run.
+- [ ] [SCRIPT] P2. **Close 3 stale legacy `chore/sync-to-staging-*` PRs (assessed by slot 2 2026-06-02 — RECOMMEND
+      CLOSE-SUPERSEDED, operator/PR-owner to action; do NOT close a foreign PR unilaterally).**
+      `deployment-service#5` (`chore/sync-to-staging-1773735450`→staging), `deployment-api#6`
+      (`chore/sync-to-staging-1773735450`→staging), `system-integration-tests#9` (`chore/sync-to-staging-1773735501`→
+      staging). All created **2026-03-17** (~2.5 mo stale), all `mergeable=CONFLICTING / mergeStateStatus=DIRTY`. Their
+      only ahead-of-staging commits are March-16/17 **"chore: admin force sync"** snapshots from the retired
+      `admin-force-sync-all-to-main.sh` mechanism — superseded by the entire intervening staging history (each is
+      `diverged`, behind 2-3). They carry NO current work; resurrecting them would replay a March snapshot over current
+      staging. **Recommended action: close all 3 as superseded** (not merge — they cannot merge and have no value;
+      not conflict-resolve — nothing worth recovering). repo: deployment-service / deployment-api /
+      system-integration-tests.
 
 ### Phase 4 — Concurrent-push serialization decision (audit j4)
 
