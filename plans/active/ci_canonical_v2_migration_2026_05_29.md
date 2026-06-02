@@ -42,27 +42,26 @@ locked_since: 2026-05-21
 
 # CI canonical v2 migration — ghost-workflow workaround
 
-> **✅ STATUS UPDATE (2026-06-02, via `scripts/repo-management/verify_branch_protection_check_names.py`)** — the
-> 2026-06-01 "8 repos still on v1" reality-check is now itself stale. Live ruleset ground truth: **16/17 repos require
-> `…/quality-gates-v2`** (all consistent, `ALL RULESETS CONSISTENT: True`). The previously-flagged holdouts
-> (`batch-live-reconciliation`, `client-reporting-api`, `deployment-api`, `ibkr-gateway-infra`,
-> `market-data-processing`, `system-integration-tests`, `trading-agent-service`) have all rotated to v2 since.
+> **✅ COMPLETE (2026-06-02, via `scripts/repo-management/verify_branch_protection_check_names.py`)** — **17/17 repos
+> now require `…/quality-gates-v2`; `ALL RULESETS CONSISTENT: True`.** The last holdout `deployment-ui` was finished
+> this turn (decoupled v2 callee + operator-directed FF/force promotion of main+staging to LDR + ruleset cutover; see
+> Phase 4.5). Remaining open items are all Phase 5 cleanup gated on GH Support #4422570 (v1-file deletion) + the
+> deployment-ui `workspace-qg.yml`/backup-ref cleanup.
 >
-> **The lone remaining repo is `deployment-ui`**, whose required context is still
-> `Quality Gates (deployment-ui) / quality-gates` (not the canonical `…/quality-gates-v2`). **Root cause** (diagnosed
-> 2026-06-02): deployment-ui is a TS/Vite repo whose v2 caller `quality-gates-v2.yml` reuses the SAME callee
-> `ui-quality-gates.yml` (job id `quality-gates`) as the v1 `workspace-qg.yml` caller. Both callers therefore emit the
-> _identical_ check-run name `Quality Gates (deployment-ui) / quality-gates`, so (a) the v2 caller never acquired a
-> distinct `…/quality-gates-v2` suffix, and (b) the still-triggered v1 `workspace-qg.yml` (LDR push →
-> `startup_failure`/`failure`) collides on that name. **Fix (BUILT + VERIFIED on LDR 2026-06-02)**: gave the v2 caller
-> its OWN callee `ui-quality-gates-v2.yml` (job `quality-gates-v2`) — deployment-ui@0d2479c; the v2 caller now emits a
-> GREEN `Quality Gates (deployment-ui) / quality-gates-v2` (`workflow_dispatch` run 26799741962, incl. the playwright
-> smoke = `pw:L2 ✓`). **Remaining = the ruleset cutover, which is BLOCKED-UPSTREAM**: deployment-ui `main` is 23 commits
-> behind LDR / `staging` 217 behind, with the broken LDR→staging→main promotion automation
-> (`cicd_contract_hardening_2026_06_01.md` Phase 6) the gate — the new callee can't reach main/staging, and rotating
-> rulesets `13787657` (main) / `13788744` (staging) before the files land would dead-lock the repo. Full cutover recipe
+> _History (2026-06-01 → 2026-06-02)_: the 2026-06-01 "8 repos still on v1" reality-check went stale fast — by
+> 2026-06-02 16/17 already required `…/quality-gates-v2`. The previously-flagged holdouts (`batch-live-reconciliation`,
+> `client-reporting-api`, `deployment-api`, `ibkr-gateway-infra`, `market-data-processing`, `system-integration-tests`,
+> `trading-agent-service`) have all rotated to v2 since.
 >
-> - the no-dead-lock ordering are in Phase 4.5 below. Cross-ref:
+> **`deployment-ui` — FINISHED 2026-06-02.** Root cause was that its TS/Vite v2 caller `quality-gates-v2.yml` reused the
+> SAME callee `ui-quality-gates.yml` (job `quality-gates`) as the v1 `workspace-qg.yml`, so both emitted the identical
+> `…/quality-gates` check (no distinct v2 suffix + v1 ghost collision). Fix: gave the v2 caller its own callee
+> `ui-quality-gates-v2.yml` (job `quality-gates-v2`) — deployment-ui@0d2479c — then, on operator directive, FF'd `main`
+>
+> - force-promoted `staging` up to LDR (they were 23 / 217 commits behind; promotion automation was stalled) and rotated
+>   rulesets `13787657` (main) + `13788744` (staging) to require `…/quality-gates-v2`. Verified: `main` push run
+>   26800322667 → `Quality Gates (deployment-ui) / quality-gates-v2` **success**; classic-main protection restored. The
+>   normal LDR→staging→main flow now resumes. Details + reversibility in Phase 4.5. Cross-ref:
 >   `plans/audit/results/infrastructure_master_audit_2026_06_01.md` + `cicd_contract_hardening_2026_06_01.md` Phase 1+6.
 
 ## Overview
@@ -115,16 +114,16 @@ alone doesn't escape it.
 
 ## Status snapshot
 
-| Layer                                      | Status                      | Note                                                                                                                   |
-| ------------------------------------------ | --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Canonical CI codex doc                     | ✅ shipped 2026-05-29       | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model                                            |
-| PM `python-quality-gates.yml` real content | ✅ correct on disk          | Bad comment reverted in `7ca446080`                                                                                    |
-| PM main branch protection                  | ✅ rotated 2026-05-29       | Required check now `quality-gates-v2` (was `quality-gates`)                                                            |
-| GH Support ticket                          | 🟡 open                     | #4422570 filed 2026-05-27, awaiting cache clear                                                                        |
-| v2 caller workflow on PM                   | ✅ shipped 2026-05-29       | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main                                                        |
-| v2 callee workflow on PM                   | ✅ shipped 2026-05-29       | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main                                                 |
-| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29          | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM                                                   |
-| Workspace-wide canonical-check state       | ✅ 16/17 on v2 (2026-06-02) | Verifier `ALL RULESETS CONSISTENT: True`; only `deployment-ui` still `…/quality-gates` (suffix collision — see banner) |
+| Layer                                      | Status                      | Note                                                                                                                                      |
+| ------------------------------------------ | --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Canonical CI codex doc                     | ✅ shipped 2026-05-29       | `codex/08-workflows/ci-cd-flow.md` § three-tier + two-pass + sentinel model                                                               |
+| PM `python-quality-gates.yml` real content | ✅ correct on disk          | Bad comment reverted in `7ca446080`                                                                                                       |
+| PM main branch protection                  | ✅ rotated 2026-05-29       | Required check now `quality-gates-v2` (was `quality-gates`)                                                                               |
+| GH Support ticket                          | 🟡 open                     | #4422570 filed 2026-05-27, awaiting cache clear                                                                                           |
+| v2 caller workflow on PM                   | ✅ shipped 2026-05-29       | `quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main                                                                           |
+| v2 callee workflow on PM                   | ✅ shipped 2026-05-29       | `python-quality-gates-v2.yml` on LDR @a9d340df; not yet merged to main                                                                    |
+| Required-check rotation (all 18 branches)  | ✅ done 2026-05-29          | `quality-gates` → `quality-gates-v2` across all 9 service repos + PM                                                                      |
+| Workspace-wide canonical-check state       | ✅ 17/17 on v2 (2026-06-02) | Verifier `ALL RULESETS CONSISTENT: True`; `deployment-ui` finished — decoupled v2 callee + operator FF/force promotion + ruleset rotation |
 
 ## Phased execution
 
@@ -228,25 +227,20 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       enforces `check-staging-lock` (not `quality-gates`) — hygiene follow-up tracked in
       `plans/active/issues/check_staging_lock_ruleset_hygiene_2026_05_29.md`.
 - [x] ✅ [SCRIPT] P1. instruments-service — cherry-picked v2 from LDR. PR #388 MERGED 18:42:37Z. Same hygiene follow-up.
-- [~] 🟡 [SCRIPT] P1. deployment-ui — v2 caller `quality-gates-v2.yml` created (PR #9 MERGED 18:44:16Z) and IS the
-  enforced required check, BUT not yet canonical: its required context is still
-  `Quality Gates (deployment-ui) /     quality-gates`, NOT `…/quality-gates-v2`. **Root cause** (2026-06-02): the v2
-  caller reused the same callee `ui-quality-gates.yml` (job `quality-gates`) as the v1 `workspace-qg.yml`, so both
-  emitted the identical check name → no distinct v2 suffix + v1 ghost collision. **Decoupling fix BUILT + VERIFIED on
-  LDR** (deployment-ui@0d2479c; green `…/quality-gates-v2` run 26799741962 incl. pw smoke). **Remaining = ruleset
-  cutover, BLOCKED-UPSTREAM** on the LDR→staging→main promotion-automation repair
-  (`cicd_contract_hardening_2026_06_01.md` Phase 6; main 23 / staging 217 commits behind LDR). Recipe in Phase 4.5.
+- [x] ✅ [SCRIPT] P1. deployment-ui — **canonical on `…/quality-gates-v2` (2026-06-02)**. Decoupled v2 callee
+      `ui-quality-gates-v2.yml` (job `quality-gates-v2`) @0d2479c + operator-directed FF/force promotion of main+staging
+      to LDR + rotation of rulesets `13787657`/`13788744`. Verified: `main` push run 26800322667 →
+      `Quality Gates (deployment-ui) / quality-gates-v2` success; `ALL RULESETS CONSISTENT: True` = 17/17. Full detail
+      in Phase 4.5.
 - [x] ✅ [VERIFY] P1. PM workflow_dispatch on `quality-gates-v2.yml` ran for 1m15s (run id 26654010496), NOT 0s
       startup_failure. **Option D verified: v2 chain escapes the GitHub ghost cache.** Subsequent runs on PM main are
       now `success` (e.g. 26654998707). Workspace-qg health restored across all 10 repos.
 
 ### Phase 4.5 — deployment-ui canonical-suffix completion (the one open repo) (0.25 day) [UI]
 
-> **Status 2026-06-02**: the v2 fix is BUILT + VERIFIED on `live-defi-rollout` (deployment-ui@0d2479c; green
-> `…/quality-gates-v2` run 26799741962, incl. playwright smoke). Only the ruleset cutover remains, and it is
-> **BLOCKED-UPSTREAM on the LDR→staging→main promotion-automation repair** (main 23 / staging 217 commits behind LDR).
-> Owner of the cutover: whoever lands `cicd_contract_hardening_2026_06_01.md` Phase 6 (promotion automation), then a
-> UI-capable slot runs the rotation recipe below.
+> **✅ COMPLETE 2026-06-02.** Decoupled v2 callee built + verified, then (operator-directed) main+staging
+> FF/force-promoted to LDR and both rulesets rotated to `…/quality-gates-v2`. deployment-ui is canonical (17/17). Items
+> below are ✅; the only residue is the Phase 5 `workspace-qg.yml`/backup-ref cleanup.
 
 - [x] ✅ [SCRIPT] P1. Create `.github/workflows/ui-quality-gates-v2.yml` = copy of `ui-quality-gates.yml` with its job
       id renamed `quality-gates:` → `quality-gates-v2:` (mirrors the python repos' separate-v2-callee pattern). Repoint
@@ -258,19 +252,19 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
       `Quality Gates (deployment-ui) /     quality-gates-v2` → **success** (2026-06-02). That run executes the UI
       quality-gates incl. the playwright smoke → satisfies `pw:L2 ✓`. Evidence:
       `deployment-ui@0d2479c | pw:L2 ✓ (run 26799741962) | regression: tests/smoke/`.
-- [ ] [SCRIPT] P1. **BLOCKED-UPSTREAM — gated on the LDR→staging→main promotion-automation repair**
-      (`cicd_contract_hardening_2026_06_01.md` § "Phase 6 — CONSOLIDATED HAND-OFF"). **The cutover cannot land safely
-      until promotion flows**, because on 2026-06-02 deployment-ui `main` is **23 commits behind LDR** and `staging` is
-      **217 behind** with the new v2 callee on NEITHER — and the rename is coupled (main currently passes the OLD
-      `…/quality-gates` check green via the shared callee, so rotating the ruleset first dead-locks main, and landing
-      the files first breaks the old required name). Cutover recipe once promotion is healthy (sanctioned
-      relax→land→re-enable per deployment-ui CLAUDE.md "wrong-named v2 workflow" carve-out): (1) promote the v2-callee
-      files (and delete the stale `workspace-qg.yml` ghost) to `staging` then `main`; (2) rotate ruleset **`13787657`**
-      (main) required context `…/quality-gates` → `…/quality-gates-v2`; (3) rotate ruleset **`13788744`** (staging) the
-      same, **keeping** `check-staging-lock`; (4) re-run `verify_branch_protection_check_names.py` → expect
-      deployment-ui main+staging on `…/quality-gates-v2` and `ALL RULESETS CONSISTENT: True` = **17/17**. Do NOT rotate
-      the rulesets before the files are on the branches (dead-locks the repo). Do NOT force-land 23 commits of foreign
-      LDR work to main as a side effect — that is the promotion repair's job, not this flip's.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-02 — operator-directed FF/force promotion + ruleset cutover.** Operator directed
+      bringing `main`+`staging` up to LDR so the normal CI/CD flow resumes (explicitly authorizing the force-push to
+      main — a human-only hard-stop item). Executed reversibly: (0) pushed backup refs
+      `backup/{main,staging}-pre-ff-20260602` + saved full ruleset/classic bodies; (1) relaxed classic-main
+      (enforce_admins off + PR-reviews removed) + disabled rulesets `13787657`/`13788744`; (2) **FF `main`**
+      `f7715ec→0d2479c` (clean, 0 discarded) + **force `staging`** `bf50cdd→0d2479c` (discarded 2 stale promotion/merge
+      artifacts — backed up, no original work lost); (3) rotated ruleset `13787657` (main) + `13788744` (staging, kept
+      `check-staging-lock`) required context `…/quality-gates` → `…/quality-gates-v2` + re-enabled both `active`; (4)
+      restored classic-main (`enforce_admins: True`, PR-reviews, force-pushes off). **Verified**:
+      `verify_branch_protection_check_names.py` → deployment-ui main+staging on `…/quality-gates-v2`,
+      `ALL RULESETS CONSISTENT: True` = **17/17**; a `main` push run **26800322667** → job
+      `Quality Gates (deployment-ui) / quality-gates-v2` → **success** (normal flow confirmed). Follow-up (Phase 5):
+      delete the stale `workspace-qg.yml` ghost (now a non-required failing check) + the backup refs once settled.
 
 ### Phase 5 — Cleanup + codex updates (0.25 day)
 
@@ -287,8 +281,13 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 - [ ] [CLAUDE-MD] P1. Workspace-wide pointer to v2 canonical — **deferred**: codex § "Canonical required check name" is
       the authoritative source; CLAUDE.md cross-reference would be 1 line and exceed the size budget consideration.
       Nice-to-have, not blocking.
-- [ ] [PLAN] P1. Pre-archival 5-step audit — deferred. Phases 1-4 done; Phase 5 v1-delete + GH ticket resolution still
-      open. Archive when GH ticket #4422570 closes.
+- [ ] [SCRIPT] P2. deployment-ui post-cutover tidy (2026-06-02 follow-up): (a) delete the stale `workspace-qg.yml`
+      caller on LDR (now a non-required failing `…/quality-gates` check — repo's CLAUDE.md already calls it "retired
+      2026-05-29"; deployment-ui's workspace-qg ghost is a DIFFERENT chain from PM's python-quality-gates ghost, so it
+      is NOT gated on GH #4422570); (b) delete backup refs `backup/main-pre-ff-20260602` +
+      `backup/staging-pre-ff-20260602` once the FF/force promotion is confirmed settled. Target repo: `deployment-ui`.
+- [ ] [PLAN] P1. Pre-archival 5-step audit — deferred. Phases 1-4 + 4.5 done (deployment-ui canonical, 17/17); Phase 5
+      v1-delete + GH ticket resolution still open. Archive when GH ticket #4422570 closes.
 
 ## Success criteria
 
