@@ -56,9 +56,9 @@
   <text x="95" y="224" text-anchor="middle" class="level-label">L0</text>
   <text x="150" y="224" class="desc">Project management — manifest, templates, scripts, cursor rules. (1 repos)</text>
   <rect x="70" y="247" width="146" height="38" class="devops" />
-  <rect x="70" y="247" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="247" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="143" y="265" text-anchor="middle" class="label">unified-trading-pm</text>
-  <circle cx="206" cy="255" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="206" cy="255" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="143" y="277" text-anchor="middle" class="ver">1.2.0</text>
   <!-- L1: Foundation contracts (Tier 0) — present clone set. (1 repos) -->
   <rect x="40" y="319" width="2320" height="107" class="level-bg" />
@@ -66,9 +66,9 @@
   <text x="95" y="343" text-anchor="middle" class="level-label">L1</text>
   <text x="150" y="343" class="desc">Foundation contracts (Tier 0) — present clone set. (1 repos)</text>
   <rect x="70" y="366" width="167" height="38" class="lib" />
-  <rect x="70" y="366" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="366" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="153" y="384" text-anchor="middle" class="label">unified-api-contracts</text>
-  <circle cx="227" cy="374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="227" cy="374" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="153" y="396" text-anchor="middle" class="ver">0.1.20</text>
   <!-- L2: Trading library (Tier 1) — depends on UAC. (1 repos) -->
   <rect x="40" y="438" width="2320" height="107" class="level-bg" />
@@ -76,9 +76,9 @@
   <text x="95" y="462" text-anchor="middle" class="level-label">L2</text>
   <text x="150" y="462" class="desc">Trading library (Tier 1) — depends on UAC. (1 repos)</text>
   <rect x="70" y="485" width="181" height="38" class="lib" />
-  <rect x="70" y="485" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="70" y="485" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="160" y="503" text-anchor="middle" class="label">unified-trading-library</text>
-  <circle cx="241" cy="493" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="241" cy="493" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="160" y="515" text-anchor="middle" class="ver">0.3.167</text>
   <!-- L3: Instrument registry — depends on UAC + UTL. (1 repos) -->
   <rect x="40" y="557" width="2320" height="107" class="level-bg" />
@@ -86,9 +86,9 @@
   <text x="95" y="581" text-anchor="middle" class="level-label">L3</text>
   <text x="150" y="581" class="desc">Instrument registry — depends on UAC + UTL. (1 repos)</text>
   <rect x="70" y="604" width="153" height="38" class="svc" />
-  <rect x="70" y="604" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="604" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="146" y="622" text-anchor="middle" class="label">instruments-service</text>
-  <circle cx="213" cy="612" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="213" cy="612" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="146" y="634" text-anchor="middle" class="ver">0.1.22</text>
   <!-- L4: Core services (batch + live) — parallel within tier. (10 repos) -->
   <rect x="40" y="676" width="2320" height="107" class="level-bg" />
@@ -96,53 +96,54 @@
   <text x="95" y="700" text-anchor="middle" class="level-label">L4</text>
   <text x="150" y="700" class="desc">Core services (batch + live) — parallel within tier. (10 repos)</text>
   <rect x="70" y="723" width="132" height="38" class="svc" />
-  <rect x="70" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="136" y="741" text-anchor="middle" class="label">alerting-service</text>
-  <circle cx="192" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="192" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="136" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="212" y="723" width="139" height="38" class="svc" />
-  <rect x="212" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="212" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="281" y="741" text-anchor="middle" class="label">execution-service</text>
-  <circle cx="341" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="341" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="281" y="753" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="361" y="723" width="132" height="38" class="svc" />
-  <rect x="361" y="723" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="361" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="427" y="741" text-anchor="middle" class="label">features-service</text>
-  <circle cx="483" cy="731" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="483" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="427" y="753" text-anchor="middle" class="ver">0.0.1</text>
   <rect x="503" y="723" width="209" height="38" class="svc" />
-  <rect x="503" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="503" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="607" y="741" text-anchor="middle" class="label">fund-administration-service</text>
-  <circle cx="702" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="702" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="607" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="722" y="723" width="130" height="38" class="svc" />
+  <rect x="722" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="787" y="741" text-anchor="middle" class="label">greeks-service</text>
-  <circle cx="842" cy="731" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="842" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="787" y="753" text-anchor="middle" class="ver">0.0.1</text>
   <rect x="862" y="723" width="230" height="38" class="svc" />
-  <rect x="862" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="862" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="977" y="741" text-anchor="middle" class="label">market-data-processing-service</text>
-  <circle cx="1082" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1082" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="977" y="753" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1102" y="723" width="188" height="38" class="svc" />
-  <rect x="1102" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1102" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="1196" y="741" text-anchor="middle" class="label">market-tick-data-service</text>
-  <circle cx="1280" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1280" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="1196" y="753" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="1300" y="723" width="130" height="38" class="svc" />
-  <rect x="1300" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1300" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="1365" y="741" text-anchor="middle" class="label">ml-service</text>
-  <circle cx="1420" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1420" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="1365" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1440" y="723" width="132" height="38" class="svc" />
-  <rect x="1440" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1440" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="1506" y="741" text-anchor="middle" class="label">strategy-service</text>
-  <circle cx="1562" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1562" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="1506" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1582" y="723" width="167" height="38" class="svc" />
-  <rect x="1582" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1582" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="1665" y="741" text-anchor="middle" class="label">trading-agent-service</text>
-  <circle cx="1739" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1739" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="1665" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L5: Client-facing APIs and operational services. (risk/position/pnl absorbed into strategy-service at level 4 per strategy_repo_consolidation_2026_05_19.) (2 repos) -->
   <rect x="40" y="795" width="2320" height="107" class="level-bg" />
@@ -150,14 +151,14 @@
   <text x="95" y="819" text-anchor="middle" class="level-label">L5</text>
   <text x="150" y="819" class="desc">Client-facing APIs and operational services. (risk/position/pnl absorbed into strategy-service at level 4 per strategy_repo_consolidation_2026_05_19.) (2 repos)</text>
   <rect x="70" y="842" width="160" height="38" class="api" />
-  <rect x="70" y="842" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="842" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="150" y="860" text-anchor="middle" class="label">client-reporting-api</text>
-  <circle cx="220" cy="850" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="220" cy="850" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="150" y="872" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="240" y="842" width="153" height="38" class="infra" />
-  <rect x="240" y="842" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="240" y="842" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="316" y="860" text-anchor="middle" class="label">unified-trading-api</text>
-  <circle cx="383" cy="850" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="383" cy="850" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="316" y="872" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L6: Deployment + batch reconciliation (orchestration). (3 repos) -->
   <rect x="40" y="914" width="2320" height="107" class="level-bg" />
@@ -165,19 +166,19 @@
   <text x="95" y="938" text-anchor="middle" class="level-label">L6</text>
   <text x="150" y="938" class="desc">Deployment + batch reconciliation (orchestration). (3 repos)</text>
   <rect x="70" y="961" width="251" height="38" class="infra" />
-  <rect x="70" y="961" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="961" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="195" y="979" text-anchor="middle" class="label">batch-live-reconciliation-service</text>
-  <circle cx="311" cy="969" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="311" cy="969" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="195" y="991" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="331" y="961" width="130" height="38" class="api" />
-  <rect x="331" y="961" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="331" y="961" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="396" y="979" text-anchor="middle" class="label">deployment-api</text>
-  <circle cx="451" cy="969" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="451" cy="969" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="396" y="991" text-anchor="middle" class="ver">0.1.1</text>
   <rect x="471" y="961" width="146" height="38" class="infra" />
-  <rect x="471" y="961" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="471" y="961" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="544" y="979" text-anchor="middle" class="label">deployment-service</text>
-  <circle cx="607" cy="969" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="607" cy="969" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="544" y="991" text-anchor="middle" class="ver">0.1.1</text>
   <!-- L7: UI applications (TypeScript). user-management-ui archived 2026-04-20 (folded into unified-trading-system-ui /ops/admin/*). (2 repos) -->
   <rect x="40" y="1033" width="2320" height="107" class="level-bg" />
@@ -185,14 +186,14 @@
   <text x="95" y="1057" text-anchor="middle" class="level-label">L7</text>
   <text x="150" y="1057" class="desc">UI applications (TypeScript). user-management-ui archived 2026-04-20 (folded into unified-trading-system-ui /ops/admin/*). (2 repos)</text>
   <rect x="70" y="1080" width="130" height="38" class="ui-box" />
-  <rect x="70" y="1080" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="1080" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="135" y="1098" text-anchor="middle" class="label">deployment-ui</text>
-  <circle cx="190" cy="1088" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="190" cy="1088" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="135" y="1110" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="210" y="1080" width="195" height="38" class="ui-box" />
-  <rect x="210" y="1080" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="210" y="1080" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="307" y="1098" text-anchor="middle" class="label">unified-trading-system-ui</text>
-  <circle cx="395" cy="1088" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="395" cy="1088" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="307" y="1110" text-anchor="middle" class="ver">0.1.0</text>
   <!-- L8: IaC + post-deploy validation (last). (3 repos) -->
   <rect x="40" y="1152" width="2320" height="107" class="level-bg" />
@@ -200,19 +201,19 @@
   <text x="95" y="1176" text-anchor="middle" class="level-label">L8</text>
   <text x="150" y="1176" class="desc">IaC + post-deploy validation (last). (3 repos)</text>
   <rect x="70" y="1199" width="130" height="38" class="test" />
-  <rect x="70" y="1199" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="1199" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="135" y="1217" text-anchor="middle" class="label">e2e-testing</text>
-  <circle cx="190" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="190" cy="1207" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="135" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="210" y="1199" width="146" height="38" class="infra" />
-  <rect x="210" y="1199" width="4" height="38" fill="#ef4444" rx="2" />
+  <rect x="210" y="1199" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="283" y="1217" text-anchor="middle" class="label">ibkr-gateway-infra</text>
-  <circle cx="346" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="346" cy="1207" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="283" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="366" y="1199" width="188" height="38" class="test" />
-  <rect x="366" y="1199" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="366" y="1199" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="460" y="1217" text-anchor="middle" class="label">system-integration-tests</text>
-  <circle cx="544" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="544" cy="1207" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="460" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="40" y="1291" width="2320" height="90" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="8" />
   <text x="60" y="1316" class="section">Versioning + Summary</text>

@@ -105,7 +105,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 87,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -161,7 +161,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -218,7 +218,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 18,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -273,7 +273,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/).",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -326,7 +326,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Full extraction from unified-trading-deployment-v3 completed 2026-03-02. All Python modules, configs (81 YAML), terraform (193 files), tests (48 files), scripts, docs extracted. deployment-api/configs/ is a symlink to deployment-service/configs/.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "github_url": "https://github.com/IggyIkenna/deployment-service",
       "coverage_pct": 81,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -374,7 +374,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -426,7 +426,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -496,7 +496,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 84,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -545,7 +545,7 @@
           "required": true
         }
       ],
-      "ci_status": "NEW_REPO",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -595,7 +595,7 @@
       "status": "active",
       "completion_path": "tradfi",
       "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -637,7 +637,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -694,7 +694,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -748,7 +748,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -799,7 +799,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -865,7 +865,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -955,7 +955,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 \u2014 coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1005,7 +1005,7 @@
         }
       ],
       "github_url": "https://github.com/IggyIkenna/trading-agent-service",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 50,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1048,7 +1048,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1093,7 +1093,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1124,7 +1124,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1161,7 +1161,7 @@
           "required": true
         }
       ],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
@@ -1192,7 +1192,7 @@
       "version": "0.1.0",
       "version_source": "package.json",
       "dependencies": [],
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1217,7 +1217,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1257,7 +1257,7 @@
       ],
       "completion_path": "infrastructure",
       "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 \u2014 absorbed into strategy-service dep.",
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,
       "testing_level": "e2e",
@@ -1779,7 +1779,8 @@
     "locked": false,
     "locked_since": null,
     "locked_reason": null,
-    "lock_version": null
+    "lock_version": null,
+    "pending_repos": []
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion."
