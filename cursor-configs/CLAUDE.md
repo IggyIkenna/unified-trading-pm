@@ -146,41 +146,24 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 ### Manifest + honest absence
 
 Manifest v5+: 4-state `capture_status` (`captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`). Three
-categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2) unexpected gap →
-`DependencyError(fail_fast=True)`, (3) schema-drift bug → RAISE LOUD. Never emit silent placeholders.
+"missing" categories: expected → `record_empty(reason=<typed>)`; unexpected → `DependencyError(fail_fast=True)`;
+schema-drift → RAISE LOUD. Never emit silent placeholders. **Canonical schema = v9 workspace-wide** (`_index` 8→9 adds
+`source`/`asset_group`/`pipeline_mode`, bundled into each AG's single canonicalisation walk — coordinated by the
+`*_manifest_canonicalisation_2026_06_01.md` plans); **trust the actual `schema_version` distribution, never the
+constant**.
 
-**Current canonical manifest schema = v9, workspace-wide (all asset groups, NOT tradfi-only).**
-`MANIFEST_SCHEMA_VERSION` 8→9; each asset group's `_index` migrates 8→9 (adds `source`/`asset_group`/`pipeline_mode`
-cols) bundled into its single canonicalisation walk. Trust the actual `schema_version` distribution, never the constant.
-SSOT: the per-asset-group `*_manifest_canonicalisation_2026_06_01.md` plans coordinated by
-`defi_manifest_canonicalisation_2026_06_01.md`.
-
-- 33-member `EmptyConfirmedReason` closed set (29 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE` +
-  `LEG_ABSENT_LEFT` + `LEG_ABSENT_RIGHT`) in UAC `EMPTY_CONFIRMED_REASONS`. Blank reason →
-  `LegacyBlankErrorReasonError`. Enum:
-  `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. Per-reason consumer policy table:
-  `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
-- Cluster validation MANDATORY at `record_captured()` for bundled data_types. UTL raises `MissingClusterValidationError`
-  if kwargs absent.
-- **TradFi `source` column (v9 schema)**: `record_captured(source=...)` REQUIRED for all TradFi writes. UTL raises
-  `MissingSourceError` when `asset_group="tradfi"` and `source` omitted. Closed set: `"databento"` / `"massive"`. QG
-  STEP 5.64 enforces; use `# QG-allow: tradfi-source-not-applicable` for kwargs-forwarding patterns.
-  MANIFEST_SCHEMA_VERSION bumped 8→9. Multi-source union semantics: if ≥1 source is `captured`, downstream treats the
-  cell as `captured`. Source priority: `select_primary_available_source()` in
-  `unified_api_contracts.canonical.crosscutting.source_priority`. SSOT:
-  `codex/02-data/honest-absence-downstream-handling.md` § "Multi-source cell consumer policy". Landed:
-  `tradfi_massive_dual_source_2026_05_28.md` Phase 3.
-- `available_at` is per-row write-time. UTL `record_captured` asserts presence internally.
-- Service-output emission: every publish path through `_resolve_policy_output_data_type` + `_publish_emission_check`.
-  SSOT: `codex/02-data/service-output-emission-semantics.md`.
-- **Single-walk discipline (HARD RULE — post Phase 2.2)**: The Phase 2.2 GCS bundled migration walks every parquet ONCE.
-  Any post-Phase-2 plan proposing another whole-corpus GCS walk is **review-blocking**. New schema columns,
-  partition-key changes, or filename renames MUST bundle into the Phase 2 walk or wait for a scheduled next-migration
-  window. SSOT: `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
+- `EmptyConfirmedReason` is a closed set (UAC `EMPTY_CONFIRMED_REASONS`); blank reason → `LegacyBlankErrorReasonError`.
+- Cluster validation MANDATORY at `record_captured()` for bundled data_types (else `MissingClusterValidationError`).
+- **TradFi `source=` REQUIRED** (`record_captured(source=...)`; closed set `databento`/`massive`; else
+  `MissingSourceError`; QG STEP 5.64). Multi-source union: ≥1 `captured` → cell `captured`; priority via
+  `select_primary_available_source()`.
+- `available_at` is per-row write-time (UTL asserts). Service-output emission via `_resolve_policy_output_data_type` +
+  `_publish_emission_check`.
+- **Single-walk discipline (HARD RULE)**: the Phase 2.2 migration walks every parquet ONCE — any new whole-corpus GCS
+  walk is review-blocking; bundle schema/partition/rename changes into it.
 
 SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/honest-absence-downstream-handling.md`
-(§ "Reason taxonomy" — 31-reason table; § "Per-service consumer-class audit" — per-service skip/alert rules; §
-"Per-reason-group → consumer policy" — per-reason ML/execution/rolling-window lookup).
+(reason taxonomy + per-service / per-reason consumer policy).
 
 ### Shard-granularity SSOT (CRITICAL)
 
