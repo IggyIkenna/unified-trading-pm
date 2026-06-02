@@ -128,76 +128,95 @@ the storage bloat.
       `daysSinceNoncurrentTime=90` AND `numNewerVersions=5` — keeps recent client history); `instruments-store-defi` (96
       GiB) given `daysSinceNoncurrentTime=7` (reference data). Applied via gcloud (immediate); evidence CSV:
       `/tmp/gcs_bucket_bloat_audit_20260602.csv`.
-- [ ] [INFRA] P2. **(follow-ups from the bloat remediation)** **(1) ✅ DONE 2026-06-02 (slot 1) — sports writer
-      characterized:** the churn writer is the daily fixtures re-poll `instruments_service/triggers/sports_fixtures_daily_repoll.py`
-      → `_write_fixtures_per_league` (per-league GCS sink), which overwrites each day's fixtures parquet on every poll.
-      This is *expected* (fixtures/odds update daily) — not a writer bug; the bloat was soft-delete *retention* of those
+- [x] ✅ [INFRA] P2. **(follow-ups from the bloat remediation — all 3 sub-parts done; box flipped slot-3 2026-06-02; one
+      residual extracted to its own P3 todo below)** **(1) ✅ DONE 2026-06-02 (slot 1) — sports writer characterized:**
+      the churn writer is the daily fixtures re-poll `instruments_service/triggers/sports_fixtures_daily_repoll.py` →
+      `_write_fixtures_per_league` (per-league GCS sink), which overwrites each day's fixtures parquet on every poll.
+      This is _expected_ (fixtures/odds update daily) — not a writer bug; the bloat was soft-delete _retention_ of those
       overwrites, fixed at the bucket level (see (2)). **Write-skip optimization SHIPPED 2026-06-02 (slot 1, operator
       requested):** added `_per_league_fixtures_data_unchanged` (reads on-disk parquet, compares DATA excluding the
-      re-stamped `available_at`, round-trip-normalised dtypes); `_write_fixtures_per_league` skips the gated re-write when
-      unchanged — opt-in (`bucket=` + `skip_if_unchanged=True`), only the daily re-poll opts in (batch/recovery paths
-      untouched). Safety bias: any doubt → write (never skips a real change); skipping also preserves the earliest/correct
-      `available_at`. +7 unit tests. instruments-service@`016cc248`. (Also FIXED the 2 pre-existing foreign QG failures
-      that this surfaced — both stale test assertions vs canonical behavior: venus available_from 2020-09-22→2020-10-08
-      (UAC PROTOCOL_LAUNCH_DATES SSOT) + canonicalize_league_id passthrough example EPL_99999→EPL_88 (5-digit now strips
-      via UAC Step 3a; 1-2 digit passthrough intact). instruments-service@`aeebb8cb`; **instruments-service QG now fully
-      GREEN**.) **(2) ✅ DONE 2026-06-02 (slot 1) — instruments-store bucket settings codified +
-      applied:** `terraform/gcp/main.tf` now sets `soft_delete_policy{retention_duration_seconds=0}` + a noncurrent
-      Delete lifecycle (`days_since_noncurrent_time=30, num_newer_versions=3`) on all 5 instruments-store buckets
+      re-stamped `available_at`, round-trip-normalised dtypes); `_write_fixtures_per_league` skips the gated re-write
+      when unchanged — opt-in (`bucket=` + `skip_if_unchanged=True`), only the daily re-poll opts in (batch/recovery
+      paths untouched). Safety bias: any doubt → write (never skips a real change); skipping also preserves the
+      earliest/correct `available_at`. +7 unit tests. instruments-service@`016cc248`. (Also FIXED the 2 pre-existing
+      foreign QG failures that this surfaced — both stale test assertions vs canonical behavior: venus available*from
+      2020-09-22→2020-10-08 (UAC PROTOCOL_LAUNCH_DATES SSOT) + canonicalize_league_id passthrough example
+      EPL_99999→EPL_88 (5-digit now strips via UAC Step 3a; 1-2 digit passthrough intact).
+      instruments-service@`aeebb8cb`; **instruments-service QG now fully GREEN**.) **(2) ✅ DONE 2026-06-02 (slot 1) —
+      instruments-store bucket settings codified + applied:** `terraform/gcp/main.tf` now sets
+      `soft_delete_policy{retention_duration_seconds=0}` + a noncurrent Delete lifecycle
+      (`days_since_noncurrent_time=30, num_newer_versions=3`) on all 5 instruments-store buckets
       (cefi/tradfi/defi/sports/prediction); `terraform import`'d sports+prediction (were live but untracked in
       `terraform/state/prod`) + applied in-place; all 5 verified `soft_delete=0` live. deployment-service@`be6df48`.
-      **Remaining:** `instruments-store-sports-prd` + `client-reporting-data` are NOT in workspace TF (created
-      out-of-band) — their gcloud settings stand; codify in their owning repo/state once located. (3)
-      **Codify the `deployment-scripts` bucket lifecycle into terraform** (the 30d-cap rules applied 2026-06-02 are
-      imperative-only). **BLOCKER / design note (slot-3 2026-06-02):** the `deployment-scripts-<pid>` bucket is **not in
-      TF at all** + is a **singleton** (one physical bucket in the central project) while `terraform/gcp` applies
-      per-env (dev/staging/prod state prefixes), so a naïve `google_storage_bucket` resource would (a) try to _create_
-      an existing bucket → 409 on the next apply, and (b) be claimed by 3 separate state files. Recipe for a
-      **TF-capable host** (this slot has neither `terraform` nor `tofu`): add
-      `resource "google_storage_bucket" "deployment_scripts"` to `terraform/gcp/main.tf` matching live settings
-      (location `ASIA-NORTHEAST1`, STANDARD, **UBLA off** / fine-grained ACLs, no versioning, `force_destroy=false`,
-      `soft_delete_policy { retention_duration_seconds = 0 }`, the three `lifecycle_rule` blocks = 14d `vm-logs/`, 15d
-      `vm-heartbeat/`, 30d
+      **Remaining → extracted + investigated as the dedicated P3 todo below (slot-3 2026-06-02):**
+      `instruments-store-sports-prd` + `client-reporting-data` are NOT in workspace TF (created out-of-band) — their
+      gcloud settings stand (live protection in place); codify (or delete) per the P3 todo. (3) **Codify the
+      `deployment-scripts` bucket lifecycle into terraform** (the 30d-cap rules applied 2026-06-02 are imperative-only).
+      **BLOCKER / design note (slot-3 2026-06-02):** the `deployment-scripts-<pid>` bucket is **not in TF at all** + is
+      a **singleton** (one physical bucket in the central project) while `terraform/gcp` applies per-env
+      (dev/staging/prod state prefixes), so a naïve `google_storage_bucket` resource would (a) try to \_create* an
+      existing bucket → 409 on the next apply, and (b) be claimed by 3 separate state files. Recipe for a **TF-capable
+      host** (this slot has neither `terraform` nor `tofu`): add `resource "google_storage_bucket" "deployment_scripts"`
+      to `terraform/gcp/main.tf` matching live settings (location `ASIA-NORTHEAST1`, STANDARD, **UBLA off** /
+      fine-grained ACLs, no versioning, `force_destroy=false`, `soft_delete_policy { retention_duration_seconds = 0 }`,
+      the three `lifecycle_rule` blocks = 14d `vm-logs/`, 15d `vm-heartbeat/`, 30d
       `logs/`+`recon-logs/`+`audit-results/`+`migration-bundle/staging/`+`log-archive/`+`deployments/archive/`)
       **guarded to the central project only** (e.g. `count = var.project_id == "central-element-323112" ? 1 : 0`) + a TF
       1.5 `import {}` block (`id =     "deployment-scripts-central-element-323112"`) so the prod-state apply _adopts_
       rather than creates; then `terraform plan` against `prefix=terraform/state/prod` MUST show **no changes** before
-      commit. Until then the live lifecycle is safe (no TF resource exists that could overwrite it).
-      **✅ DONE 2026-06-02 (slot 1 — had terraform):** added the central-project-guarded
-      `google_storage_bucket.deployment_scripts` (count) to `terraform/gcp/main.tf` matching live exactly
-      (UBLA off, no versioning, soft_delete=0, the 3 prefix Delete rules); `terraform import`'d into
-      `terraform/state/prod` + applied (labels-only diff; lifecycle + soft-delete confirmed unchanged: 3 rules,
-      soft_delete=0). deployment-service@`75012d3`. Future prod-state applies now preserve the lifecycle.
+      commit. Until then the live lifecycle is safe (no TF resource exists that could overwrite it). **✅ DONE
+      2026-06-02 (slot 1 — had terraform):** added the central-project-guarded
+      `google_storage_bucket.deployment_scripts` (count) to `terraform/gcp/main.tf` matching live exactly (UBLA off, no
+      versioning, soft_delete=0, the 3 prefix Delete rules); `terraform import`'d into `terraform/state/prod` + applied
+      (labels-only diff; lifecycle + soft-delete confirmed unchanged: 3 rules, soft_delete=0).
+      deployment-service@`75012d3`. Future prod-state applies now preserve the lifecycle.
 - [x] ✅ [INFRA] P3. **DONE 2026-06-02 (slot 1)** Declared `jinja2` in deployment-service `pyproject.toml` (`flask` +
       `functions-framework` were already declared) AND regenerated `uv.lock` — which also finished the `deployment-api`
       circular-dep removal's lockfile cleanup (`63bd807` changed pyproject but never re-locked, leaving 6 stale
-      deployment-api transitive refs: `yfinance`/`websocket-client`/`ujson`/`u-msgpack-python`/`zope-interface`). Result:
-      jinja2 present, 0 stale refs, `uv lock --check` passes (220 packages, was out-of-sync before).
-      deployment-service@`479a3e2`. (The Dockerfile `maintenance-jobs` explicit install of all 3 stays — required because
-      the api stage installs deployment_service with `--no-deps`.)
-- [x] ✅ [INFRA] P2. **DONE 2026-06-02 (slot 1)** deployment-service QG was **pre-existing RED** (codex 9>8) on a foreign
-      cloud-SDK import: `deployment_service/vm/gcp_instance_lister.py` did `from google.cloud import compute_v1` directly
-      (STEP 5.10). **Fixed by routing through UTL** — `get_compute_engine_client().aggregated_list_instances()` (the
-      `compute_v1` call lives properly inside `unified_trading_library.cloud_interface/providers/gcp_compute.py`; note
-      `unified-cloud-interface` was merged INTO UTL, so the canonical path is `unified_trading_library.cloud_interface`;
-      `get_compute_engine_client` isn't re-exported at UTL top level so the deep import carries the sanctioned
-      `# noqa: qg-deep-import`, matching `cleanup_old_tarballs.py`). Same read-only/failure-isolated behavior; tests
-      updated to mock the UTL client. **QG now GREEN** (155s, codex 7<8, STEP 5.10 clean, 3/3 lister tests pass).
-      deployment-service@`80de01c`.
-- [x] ✅ [INFRA] P3. **DONE 2026-06-02 (slot 1)** Runbooks + auto-refresh trigger. `runbooks/tarball_cleanup_maintenance.md`
-      updated (last_executed=2026-06-02 verified, cron ENABLED, fixed stale dry-run path) +
-      `runbooks/vm_log_archival_maintenance.md` created — both carry the 4 mandatory fields
+      deployment-api transitive refs: `yfinance`/`websocket-client`/`ujson`/`u-msgpack-python`/`zope-interface`).
+      Result: jinja2 present, 0 stale refs, `uv lock --check` passes (220 packages, was out-of-sync before).
+      deployment-service@`479a3e2`. (The Dockerfile `maintenance-jobs` explicit install of all 3 stays — required
+      because the api stage installs deployment_service with `--no-deps`.)
+- [x] ✅ [INFRA] P2. **DONE 2026-06-02 (slot 1)** deployment-service QG was **pre-existing RED** (codex 9>8) on a
+      foreign cloud-SDK import: `deployment_service/vm/gcp_instance_lister.py` did `from google.cloud import compute_v1`
+      directly (STEP 5.10). **Fixed by routing through UTL** — `get_compute_engine_client().aggregated_list_instances()`
+      (the `compute_v1` call lives properly inside `unified_trading_library.cloud_interface/providers/gcp_compute.py`;
+      note `unified-cloud-interface` was merged INTO UTL, so the canonical path is
+      `unified_trading_library.cloud_interface`; `get_compute_engine_client` isn't re-exported at UTL top level so the
+      deep import carries the sanctioned `# noqa: qg-deep-import`, matching `cleanup_old_tarballs.py`). Same
+      read-only/failure-isolated behavior; tests updated to mock the UTL client. **QG now GREEN** (155s, codex 7<8, STEP
+      5.10 clean, 3/3 lister tests pass). deployment-service@`80de01c`.
+- [x] ✅ [INFRA] P3. **DONE 2026-06-02 (slot 1)** Runbooks + auto-refresh trigger.
+      `runbooks/tarball_cleanup_maintenance.md` updated (last_executed=2026-06-02 verified, cron ENABLED, fixed stale
+      dry-run path) + `runbooks/vm_log_archival_maintenance.md` created — both carry the 4 mandatory fields
       (owner/cadence/verifier/last_executed). Cloud Build trigger `deployment-service-jobs-image-build` created
-      (`iggyikenna-github` connection, push `^main$`, `includedFiles` scoped to Dockerfile/cloudbuild-config/`scripts/vm/**`/
-      pyproject/uv.lock) → `deployment-service:latest` auto-rebuilds on main. deployment-service@`0916b35`.
-      **Residuals RESOLVED 2026-06-02 (slot 1):** (a) trigger codified in TF — standalone
-      `google_cloudbuild_trigger.deployment_service_jobs_image` in `terraform/cloud-build/gcp/main.tf` pinning the live
-      `iggyikenna-github` connection (NOT the module's stale `ln` default); `terraform import`'d → plan shows no changes.
-      (b) digest auto-resolve — the jobs-image cloudbuild now has an explicit push step + a `redeploy-jobs` step that
-      `gcloud run jobs update`s both maintenance jobs to the fresh `:latest` after each push (Cloud Build SA granted
-      `roles/run.developer` + `iam.serviceAccountUser` on `unified-trading-sa`); verified end-to-end (build `1c684ffc`
-      re-resolved both jobs). deployment-service@`c1c56cd`. **Pre-existing note (not introduced here):** the 13 module-based
-      service triggers in that state still default to the dead `ln` connection — a separate foreign drift, left untouched.
+      (`iggyikenna-github` connection, push `^main$`, `includedFiles` scoped to
+      Dockerfile/cloudbuild-config/`scripts/vm/**`/ pyproject/uv.lock) → `deployment-service:latest` auto-rebuilds on
+      main. deployment-service@`0916b35`. **Residuals RESOLVED 2026-06-02 (slot 1):** (a) trigger codified in TF —
+      standalone `google_cloudbuild_trigger.deployment_service_jobs_image` in `terraform/cloud-build/gcp/main.tf`
+      pinning the live `iggyikenna-github` connection (NOT the module's stale `ln` default); `terraform import`'d → plan
+      shows no changes. (b) digest auto-resolve — the jobs-image cloudbuild now has an explicit push step + a
+      `redeploy-jobs` step that `gcloud run jobs update`s both maintenance jobs to the fresh `:latest` after each push
+      (Cloud Build SA granted `roles/run.developer` + `iam.serviceAccountUser` on `unified-trading-sa`); verified
+      end-to-end (build `1c684ffc` re-resolved both jobs). deployment-service@`c1c56cd`. **Pre-existing note (not
+      introduced here):** the 13 module-based service triggers in that state still default to the dead `ln` connection —
+      a separate foreign drift, left untouched.
+- [ ] [INFRA] P3. **(extracted from the (2) "Remaining" residual + investigated, slot-3 2026-06-02)** Codify (or delete)
+      the 2 out-of-band buckets not in workspace TF. **Live protection already stands** (verified slot-3 2026-06-02), so
+      this is durability-only. **BLOCKER:** needs a TF-capable host — slot-3 has neither `terraform` nor `tofu`; route
+      to a TF-capable slot (slot-1 did the earlier imports). - **`client-reporting-data-central-element-323112`** —
+      live: `ASIA-NORTHEAST1`, **soft_delete=604800 (7d, NOT cleared — likely intentional for client financial data;
+      confirm with operator)**, + the noncurrent lifecycle slot-1 applied
+      (`daysSinceNoncurrentTime=90, numNewerVersions=5`). Action: add a central-project-guarded `google_storage_bucket`
+      to `deployment-service/terraform/gcp/main.tf` matching live exactly (incl. the 7d soft-delete unless operator says
+      clear it) + TF 1.5 `import {}` block; `terraform plan` must show no changes. -
+      **`instruments-store-sports-prd-central-element-323112`** — **INVESTIGATE BEFORE CODIFYING: this is a suspected
+      STALE DUPLICATE.** It's a structural clone of the canonical `instruments-store-sports-central-element-323112`
+      (identical prefixes `_audits/_catalogue/_index/sports_reference/sports_reference_v1_archive/…`, newest objects
+      2026-05-06, soft_delete already 0) and the non-standard `-prd-` infix doesn't match the workspace naming
+      convention (`instruments-store-<ag>-<project_id>`). Likely an orphan from an env-naming mistake. **Decide DELETE
+      (after snapshot) vs codify with the operator** — do NOT blindly add it to TF. No code references the `-prd-`
+      naming (grep clean). Repo: deployment-service/terraform.
 
 ## Verification
 
