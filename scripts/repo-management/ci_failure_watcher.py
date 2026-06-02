@@ -40,6 +40,81 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pin_branch_protection_rulesets import ORG, REPOS
 
+# ── Push-author attribution ────────────────────────────────────────────────────
+# Operator-approved 2026-06-02 (cicd_contract_hardening_2026_06_01.md line ~264).
+#
+# Classification rule (pure function over author/committer/message — testable without network):
+#   automation  = committer is "github-actions[bot]" or "GitHub"
+#   background-agent = commit message contains "Co-Authored-By: Claude"
+#   human       = author name in {iggyikenna, cosmictrader} (case-insensitive)
+#   unknown     = anything else
+#
+# The gh-api call is cached per sha so each sha is looked up at most once per run.
+# Safe default: ("unknown", "unknown") on any error — NEVER raises, NEVER fails the watcher.
+
+_HUMAN_NAMES = {"iggyikenna", "cosmictrader"}
+_AUTOMATION_COMMITTERS = {"github-actions[bot]", "github"}
+
+_commit_cache: dict[str, tuple[str, str]] = {}
+
+
+def _classify_commit_data(author: str, committer: str, message: str) -> tuple[str, str]:
+    """Classify a commit's pusher from raw git metadata.
+
+    Pure function — testable without network calls.
+
+    Returns:
+        (name, role) where role is one of: "human", "background-agent", "automation", "unknown"
+    """
+    committer_lc = committer.strip().lower()
+    author_lc = author.strip().lower()
+
+    if committer_lc in _AUTOMATION_COMMITTERS:
+        return (author.strip() or committer.strip(), "automation")
+
+    if "co-authored-by: claude" in message.lower():
+        return (author.strip() or "agent", "background-agent")
+
+    if author_lc in _HUMAN_NAMES:
+        return (author.strip(), "human")
+
+    return (author.strip() or "unknown", "unknown")
+
+
+def classify_pusher(repo: str, sha: str) -> tuple[str, str]:
+    """Look up commit metadata from GitHub and classify the pusher.
+
+    Returns:
+        (name, role) — safe default ("unknown", "unknown") on any gh/network error.
+
+    Caches results per sha so multiple alert lines for the same commit share one API call.
+    """
+    if not sha:
+        return ("unknown", "unknown")
+    cache_key = f"{repo}:{sha}"
+    if cache_key in _commit_cache:
+        return _commit_cache[cache_key]
+
+    result = gh_json(
+        [
+            "api",
+            f"repos/{ORG}/{repo}/commits/{sha}",
+            "--jq",
+            "{author:.commit.author.name,committer:.commit.committer.name,message:.commit.message}",
+        ]
+    )
+    if not isinstance(result, dict):
+        _commit_cache[cache_key] = ("unknown", "unknown")
+        return ("unknown", "unknown")
+
+    author = result.get("author") or ""
+    committer = result.get("committer") or ""
+    message = result.get("message") or ""
+    classified = _classify_commit_data(author, committer, message)
+    _commit_cache[cache_key] = classified
+    return classified
+
+
 # Branches where remote CI actually runs. live-defi-rollout has NO remote CI
 # (CLAUDE.md § "CI Verification After Every Push") so watching it is pointless.
 WATCHED_BRANCHES = ["main", "staging"]
@@ -99,7 +174,7 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
             "--limit",
             str(limit),
             "--json",
-            "workflowName,conclusion,status,createdAt,url,databaseId,event",
+            "workflowName,conclusion,status,createdAt,url,databaseId,event,headSha",
         ]
     )
     if not isinstance(runs, list):
@@ -122,6 +197,8 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
         prev_failed = bool(prev) and prev.get("conclusion") in _FAIL_CONCLUSIONS
 
         if latest_failed and not prev_failed:
+            sha = latest.get("headSha") or ""
+            pusher_name, pusher_role = classify_pusher(repo, sha)
             transitions.append(
                 {
                     "kind": "failing",
@@ -130,9 +207,13 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "workflow": workflow_name,
                     "conclusion": latest.get("conclusion"),
                     "url": latest.get("url") or "",
+                    "pusher_name": pusher_name,
+                    "pusher_role": pusher_role,
                 }
             )
         elif not latest_failed and latest.get("conclusion") == "success" and prev_failed:
+            sha = latest.get("headSha") or ""
+            pusher_name, pusher_role = classify_pusher(repo, sha)
             transitions.append(
                 {
                     "kind": "recovered",
@@ -141,6 +222,8 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "workflow": workflow_name,
                     "conclusion": "success",
                     "url": latest.get("url") or "",
+                    "pusher_name": pusher_name,
+                    "pusher_role": pusher_role,
                 }
             )
     return transitions
@@ -205,11 +288,15 @@ def build_report(transitions: list[dict], stuck: list[dict]) -> tuple[bool, str,
     if failing:
         lines.append(f":x: *{len(failing)} workflow(s) STARTED FAILING:*")
         for t in failing:
-            lines.append(f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} ({t['conclusion']}) <{t['url']}|run>")
+            pusher = f"👤 pushed by {t['pusher_name']} [{t['pusher_role']}]"
+            lines.append(
+                f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} ({t['conclusion']}) <{t['url']}|run>  {pusher}"
+            )
     if recovered:
         lines.append(f":white_check_mark: *{len(recovered)} workflow(s) RECOVERED:*")
         for t in recovered:
-            lines.append(f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} <{t['url']}|run>")
+            pusher = f"👤 pushed by {t['pusher_name']} [{t['pusher_role']}]"
+            lines.append(f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} <{t['url']}|run>  {pusher}")
     if stuck:
         lines.append(f":hourglass_flowing_sand: *{len(stuck)} promotion PR(s) STUCK (auto-merge wedged):*")
         for s in stuck:
