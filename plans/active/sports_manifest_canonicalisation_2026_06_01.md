@@ -357,10 +357,19 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `< len(fixture_ids)`, total 0 rows) fell through to `empty_confirmed(EXPECTED_NO_FIXTURE)` instead of
       `record_failed` → masked a real gap as confirmed-empty (frozen, never backfilled). Fixed: any `_fail_count > 0` +
       zero rows → `record_failed`. 3 unit tests (all-fail / partial-fail / all-succeed). QG GREEN.
-- [ ] [CODE] P0. **Write-path CF-11 — MTDS sports-ingest portion** (separate from the IS fix above): audit the MTDS
+- [x] ✅ [CODE] P0. **Write-path CF-11 — MTDS sports-ingest portion** (separate from the IS fix above): audit the MTDS
       sports MDPS odds-ingest handlers for the same masked-failure pattern — on an odds-API error for a (bookmaker,
       league, fixture-day) cell, `record_failed` not `record_empty`; gate empty-vs-failed on fixture-existence + UAC
-      coverage. Mirror the IS orchestrator fix (instruments-service@ceab7720). Repo: `market-tick-data-service`.
+      coverage. Mirror the IS orchestrator fix (instruments-service@ceab7720). Repo: `market-tick-data-service`. FIXED:
+      `OddsApiAdapter._discover_fixtures()` was swallowing `aiohttp.ClientResponseError` / `ClientError` and returning
+      `[]` on any error — only HTTP 422 (legitimate "no historical data") now returns `[]`; all other errors re-raise so
+      the exception propagates through `download_batch()` → `_process_sports_venue_with_leagues()` →
+      `failed_shards[venue]` → manifest sentinel pass → `record_failed(attempted_failed)` instead of `record_empty`.
+      Already-correct paths: orchestrator sentinel pass (lines 3353-3466) already routes `failed_shards` to
+      `record_failed`; per-timestamp `aiohttp.ClientResponseError` `continue` is partial-day (acceptable — only full
+      discovery failure was masked). 5 unit tests (422→empty, 5xx raise, 401 raise, ClientError raise, 200 OK
+      no-regression). QG GREEN. — market-tick-data-service@c96245b7 | CF-11 MTDS odds_api \_discover_fixtures re-raises
+      on API errors (not just 422)
 
 ### KEYSTONE redesign — FIXTURES are the truth set (operator directive 2026-06-01)
 
@@ -409,7 +418,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       ODDS, XG, PLAYER_STATS, per-fixture entity walks) now born-canonical. 8 unit tests in `TestCanonicalLeagueIdCF7`
       (provider-suffixed strip, unresolved passthrough, numeric pass1→pass2, idempotent, whitespace). QG green. —
       instruments-service@db187587 | canonicalize_league_id wired into \_canonical_league_id choke-point (Pass 2 after
-      numeric resolution). **MTDS migrator still open — tracked separately.**
+      numeric resolution). **MTDS migrator + rebuilder DONE** — market-tick-data-service@df391e7c: wired
+      `canonicalize_league_id` into `_canon_mdps_raw_prd()` in `migrate_sports_canonical_v9.py` (applied to
+      `league_id_raw` BEFORE dedup so canonical ids land in migrated GCS paths) + `_canonicalize_row_key_league_id()`
+      helper in `rebuild_sports_manifest_v9.py` (applied in all 3 write loops: empty_confirmed, captured,
+      attempted_failed; truthset lookup still uses RAW league_id per comment at step 6.5 — correctly catches
+      SCOTTISH_LEAGUE_CUP_185). Conservative passthrough preserved: unresolved season-suffix ids (e.g.
+      SCOTTISH_LEAGUE_CUP_185) unchanged. 7 + 9 unit tests. QG GREEN.
 
 ### C — single-walk (v9 + partition + typed reasons + source path→column + canonical verify)
 
