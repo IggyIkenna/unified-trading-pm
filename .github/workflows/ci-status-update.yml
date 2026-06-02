@@ -32,6 +32,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       skip: ${{ steps.update.outputs.skip }}
+      notify_worthy: ${{ steps.update.outputs.notify_worthy }}
+      prev_status: ${{ steps.update.outputs.prev_status }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -80,6 +82,7 @@ jobs:
               print(f"Repo {repo} not in manifest — skipping.")
               exit(0)
 
+          prev = repos[repo].get("ci_status", "NONE")
           repos[repo]["ci_status"] = status
           # Remove deprecated quality_gate_status from all repos (ci_status is SSOT)
           for r in repos.values():
@@ -87,7 +90,19 @@ jobs:
 
           with open(manifest_path, "w") as f:
               json.dump(manifest, f, indent=2)
-          print(f"Updated {repo} ci_status={status}")
+          print(f"Updated {repo} ci_status: {prev} -> {status}")
+
+          # Transition-gate the Slack notify: only alert on a state CHANGE that matters —
+          # a regression TO FAILING, or a recovery FROM FAILING. Steady-state (prev==status)
+          # and green<->green tier moves (FEATURE_GREEN<->STAGING_GREEN) are NOT alerted —
+          # those were spam ("telling us things are fine"). The manifest write + persist
+          # (dashboard data) still ALWAYS run; only the #ci-failures Slack ping is gated.
+          notify_worthy = (status == "FAILING") or (prev == "FAILING" and status != "FAILING")
+          gh_out = os.environ.get("GITHUB_OUTPUT")
+          if gh_out:
+              with open(gh_out, "a") as out:
+                  out.write(f"notify_worthy={'true' if notify_worthy else 'false'}\n")
+                  out.write(f"prev_status={prev}\n")
           PYEOF
 
           python3 scripts/manifest/generate_workspace_dag.py
@@ -110,7 +125,11 @@ jobs:
     name: Build notification message
     runs-on: ubuntu-latest
     needs: [update-ci-status]
-    if: always() && needs.update-ci-status.outputs.skip != 'true'
+    # Only build/notify on a meaningful TRANSITION (regression to FAILING, or recovery
+    # from FAILING). Steady-green + green<->green tier moves are suppressed (anti-spam).
+    if:
+      always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
+      'true'
     outputs:
       message: ${{ steps.build.outputs.message }}
     steps:
@@ -118,10 +137,15 @@ jobs:
         env:
           REPO: ${{ github.event.client_payload.repo }}
           STATUS: ${{ github.event.client_payload.status }}
+          PREV: ${{ needs.update-ci-status.outputs.prev_status }}
           EXCERPT_B64: ${{ github.event.client_payload.failure_excerpt_b64 }}
         run: |
           set -euo pipefail
-          MSG="CI status update: *${REPO}* is now *${STATUS}*"
+          if [ "${STATUS}" = "FAILING" ]; then
+            MSG="🔴 CI REGRESSION: *${REPO}* is now *FAILING* (was ${PREV})"
+          else
+            MSG="🟢 CI RECOVERED: *${REPO}* ${PREV} → *${STATUS}*"
+          fi
           # Decode the QG failure excerpt (last 30 lines of QG output) into a code block.
           # Senders only populate failure_excerpt_b64 when STATUS=FAILING; double-check here.
           if [ -n "${EXCERPT_B64:-}" ] && [ "${STATUS}" = "FAILING" ]; then
@@ -140,7 +164,10 @@ jobs:
   notify:
     name: Slack — CI Status Update
     needs: [update-ci-status, build-message]
-    if: always() && needs.update-ci-status.outputs.skip != 'true'
+    # Transition-gated (anti-spam): only ping Slack on regression-to-FAILING or recovery-from-FAILING.
+    if:
+      always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
+      'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: ${{ needs.build-message.outputs.message }}
