@@ -63,11 +63,37 @@ the storage bloat.
       the full tail on exit; +5 unit tests bound upload cadence/volume. **unified-trading-library@`2bfb6a16`** (uploader
       + tests) + **deployment-service@`130c85c`** (heartbeat_cli upload-interval default 30→120). Both QG-green for the
       touched files (deployment-service has 1 pre-existing foreign failure — see flake note below).
-- [ ] [INFRA] P1. Schedule `cleanup_old_tarballs.py` (deployment-service/scripts/vm/) — currently never run (0 cron/TF/
-      cloud-build references); 366 live `@sha` tarballs accumulate unbounded. Wire a daily Cloud Scheduler + Cloud Run
-      Job (or fold into an existing maintenance cron) running `--keep 5`. (**Docstring fix DONE** deployment-service@`130c85c`
-      — `@sha` naming IS adopted, cleanup IS needed; only the TF scheduling remains.) Terraform SSOT:
-      deployment-service/terraform/gcp/. Add a `owner/cadence/verifier/last_executed` runbook block. QG deployment-service.
+- [ ] [INFRA] P1. Schedule `cleanup_old_tarballs.py` (deployment-service/scripts/vm/) — 366 live `@sha` tarballs
+      accumulate unbounded. **STATUS 2026-06-02 (slot 1): TF applied to prod but jobs DO NOT RUN — `BLOCKED` on the
+      image fix below.** `tarball_cleanup_scheduler.tf` (deployment-service@`840c9a5`, slot 7) authored the job+cron; I
+      `terraform apply -target`'d it against the real prod state (`terraform/state/prod`, NOT `shared-infrastructure` —
+      see landmine note) → `uts-prod-tarball-cleanup` Cloud Run Job + `uts-prod-tarball-cleanup-cron` created. **A
+      one-shot `gcloud run jobs execute` FAILED with container exit(2)** — the job's image is
+      `unified-trading-system/market-tick-data-service:latest`, whose Dockerfile is `COPY . .` (MTDS source only;
+      `deployment_service` is not a dep), so the `python deployment-service/scripts/vm/cleanup_old_tarballs.py` file path
+      does not exist in the image. **Cron PAUSED** (`gcloud scheduler jobs pause uts-prod-tarball-cleanup-cron`) to stop
+      daily exit-2 failures until the image is fixed. Add an `owner/cadence/verifier/last_executed` runbook block once
+      it actually runs. QG deployment-service.
+- [ ] [INFRA] P0. **(discovered 2026-06-02, slot 1)** Build + publish a `deployment-service` container image and point
+      the deployment-service-script Cloud Run Jobs at it. ROOT CAUSE of the two broken jobs above: there is **no
+      `deployment-service` image in Artifact Registry** (only `unified-trading-system/<service>:latest` per-service
+      images + `unified-trading-library/unified-trading-library:latest`). `tarball_cleanup_scheduler.tf` and
+      `vm_log_archival_scheduler.tf` both reference images that cannot run their commands — tarball uses the MTDS image
+      (no deployment-service source); `vm_log_archival_scheduler.tf` references
+      `unified-trading-library/deployment-service:latest` which **does not exist at all** (its job creation errored
+      `Image ... not found` so the job + its cron were never created). Fix: (a) `deployment-service/Dockerfile` exists —
+      build + push `…/unified-trading-system/deployment-service:latest` (add a cloud-build trigger like the other
+      services), (b) repoint both TF files' `image =` to it, (c) re-`terraform apply -target`, (d) un-pause
+      `uts-prod-tarball-cleanup-cron`, (e) verify both jobs with a one-shot `gcloud run jobs execute … --wait` exit 0.
+      Alternative if a deployment-service image is unwanted: move `cleanup_old_tarballs.py` + `vm_log_archival_cron.py`
+      into UTL and invoke as `python -m unified_trading_library…` (the pattern `consolidator_liveness` uses on the MTDS
+      image). Repos: deployment-service (TF + Dockerfile/cloud-build). Terraform state: `terraform/state/prod`.
+- [ ] [INFRA] P2. **(discovered 2026-06-02, slot 1)** Fix `bootstrap_gcp.sh` stale backend prefix — it inits with
+      `-backend-config="prefix=shared-infrastructure"`, but that state is **EMPTY (0 resources)** while the live prod
+      resources (198) are under `prefix=terraform/state/prod`. Anyone running `bootstrap_gcp.sh` against prod would try
+      to recreate every resource (SAs, schedulers) → 409 conflicts + a bogus parallel state. Align the script (and the
+      misleading `main.tf` backend comment, which says `terraform/state/<env>`) to the actual prod prefix. Repo:
+      deployment-service.
 - [x] ✅ [TEST] P2. **(fixed 2026-06-02, slot 1)** deployment-service date-window flake fixed —
       `test_fixture_within_window_returned` built kickoff via `now.replace(hour=(now.hour+2)%24)`, which wraps to the
       early morning of the SAME day at ≥22:00 UTC → lands in the past, outside the 48h window. Now uses
@@ -75,14 +101,25 @@ the storage bloat.
       **deployment-service@`79a40f6`** | QG-green (212s, 4/4 in file pass). (Was R3 in `issue_docs_remediation_sweep_2026_06_02.md`,
       left for pickup "if their fix does not land" — it had not landed; 0 incoming on the file.)
 - [ ] [INFRA] P2. Add prefix-scoped lifecycle rules to `gs://deployment-scripts-<pid>` (zero rules today). Delete
-      `vm-logs/` live objects > 14 d and `log-archive/` > 90 d (currently indefinite). Verify the daily
-      `vm_log_archival_cron` snapshots `run.log` → `log-archive/rolling/` before the vm-logs deletion window. Set via
-      `--lifecycle-file` or terraform. This is the correct per-folder retention mechanism (soft-delete is bucket-wide).
-- [ ] [INFRA] P2. Audit soft-delete + versioning policy across ALL project buckets using the new
-      `unified-trading-pm/scripts/migration/gcs_bucket_stats.py` `bloat_pct` column. The 2026-05-20 snapshot shows other
-      high-bloat buckets (client-reporting-data 99.9%, central-element-323112-data-status-rollups 100%,
-      instruments-store-\* 90%+) — confirm each is intentional noncurrent-versioning vs. another accidental churn ×
-      retention leak.
+      `vm-logs/` live objects > 14 d and `log-archive/` > 90 d (currently indefinite). **STATUS 2026-06-02 (slot 1):
+      `BLOCKED` on the P0 image fix — `vm-logs/`>14d deletion is only safe once `vm_log_archival_cron` actually runs
+      (snapshot-before-delete), and that job can't be created/run until the deployment-service image exists. Do NOT add
+      the vm-logs deletion rule until archival is live + verified.** Set via `--lifecycle-file` or terraform.
+- [x] ✅ [INFRA] P2. **(audit RAN 2026-06-02, slot 1)** Cross-bucket soft-delete + versioning audit complete —
+      `gcs_bucket_stats.py --out /tmp/gcs_bucket_bloat_audit_20260602.csv` walked 295 buckets (95 non-empty, 120.4 TiB).
+      **Findings:** `deployment-scripts` 58,511 GiB @ 99.9% is **all soft-deleted** (58.4 TiB; the known churn, still
+      present, ages out ~2026-06-08 — fix stopped *new* growth). TF-state buckets (`uts-terraform-state` 96%,
+      `terraform-state` 31.5%) + `strategy-store-*` (100% but ≪1 GiB) are intentional versioning — no action. Three real
+      secondary offenders (~1.2 TiB) → tracked in the new P1 below.
+- [ ] [INFRA] P1. **(discovered 2026-06-02, slot 1 — from the cross-bucket audit)** Triage + fix the secondary bloat
+      buckets (~1.2 TiB). Two leak classes: **(a) soft-delete churn** — `instruments-store-sports` (296 GiB) +
+      `instruments-store-sports-prd` (300 GiB) are ~96% **soft-deleted** (same pattern as deployment-scripts: a writer
+      overwrites objects with soft-delete on). Find the writer (likely a fixtures/odds re-write loop), then
+      `--clear-soft-delete` if nothing needs 7-day retention. **(b) noncurrent versioning** — `client-reporting-data`
+      (471 GiB, 100% noncurrent) + `instruments-store-defi` (96 GiB noncurrent): versioning on, old versions accumulate
+      unbounded; add a `num_newer_versions`/`noncurrent_time_before` lifecycle rule if unintentional. Evidence:
+      `/tmp/gcs_bucket_bloat_audit_20260602.csv`. Repos: instruments-service (writers) + deployment-service/terraform
+      (lifecycle). Per *Data Pipeline Correctness Is The Heartbeat* — every accidental leak fixed in full.
 
 ## Verification
 
