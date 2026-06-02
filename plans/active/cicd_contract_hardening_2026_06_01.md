@@ -372,7 +372,7 @@ by a PR:
       array (#290 folds in), + add the repo to manifest `removedEntries`; (b) KEEP → leave the check, just clean the
       stale clone array (#290) + add the repo back to the manifest. **Do NOT rip out a working gate step on the false
       'deleted' premise.** repo: system-integration-tests (+ execution-service if RETIRE).
-- [ ] [SCRIPT] P2. **SIT `deployment_test` service list is hardcoded + stale (smoke-test-gate.yml ~L291).** 17 explicit
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (system-integration-tests@80aacfa): **SIT `deployment_test` service list is hardcoded + stale (smoke-test-gate.yml ~L291).** 17 explicit Replaced the hardcoded array (cloned 10 dead/consolidated repos) with a manifest-derived set (type∈{service,batch-service,api-service} AND status==active) → auto-tracks canonical repos. (Folded into the UAC-adoption step rewrite.)
       services (lists `strategy-service` twice; predates several current repos) vs 24 `type==service` repos / 39 total
       in `workspace-manifest.json`. Derive the v1-service set from the manifest (`type==service` +
       `staging_versions>=0.1.0`) instead of a hardcoded array, so new repos are covered automatically. repo:
