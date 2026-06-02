@@ -113,12 +113,27 @@ deployment-service/scripts/vm/launch-epic-vm-aws.sh --vm-id <id>` (the launcher'
 the fallback). A 3rd packer bug was fixed to get here: `--global` insteadOf went to /root/.gitconfig but warm-cache's
 `sudo -E` git reads /home/ubuntu/.gitconfig → switched to `--system` /etc/gitconfig (deployment-service `5186179`).
 
-## Remaining open todos
+## Remaining open todos — ALL CLOSED 2026-06-02
 
-- [ ] [SCRIPT] P2. **deployment-ui FM3** — `git rm --cached` the tracked `playwright-report` artifact + add
-      `playwright-report/` to `deployment-ui/.gitignore` (the agent-orchestrator-side FM3 shipped @1f9af64; this is the
-      last foreign-repo half; `user-management-ui` is archived so N/A). Owner: deployment-ui.
-- [ ] [INFRA] P2. **Epic-VM disk-bloat guard** — `.npm` (~1.4G) + `.cache` (~1.3G) + journal growth push several epic
-      VMs to 95-100% full (operator-ops hit 100%, blocking git/ao-self-pull). Add a periodic cache-vacuum (or grow the
-      30G root volume) so a stopped VM doesn't boot into a wedged-disk state. Relates to the original F2 disk-bloat
-      observation.
+- [x] ✅ [SCRIPT] P2. **deployment-ui FM3** — DONE (deployment-ui `8f1fe86`): `git rm --cached playwright-report/index.html`
+      + `playwright-report/` added to the repo-specific-exceptions section of `deployment-ui/.gitignore` (survives the
+      central-template sync). `unified-trading-system-ui` (which now holds the user-management/auth functionality folded
+      in from the archived `user-management-ui`) already ignored it + tracked 0 such files — no work needed there.
+      Non-behavioral repo-hygiene change; no UI surface touched (playwright gate N/A).
+- [x] ✅ [INFRA] P2. **Epic-VM disk-bloat guard** — DONE (agent-orchestrator `5508efa`, on LDR + main):
+      `scripts/vm-disk-guard.sh` vacuums regenerable caches (npm `_cacache`, uv/pip wheels) + the journal when root
+      usage ≥ THRESHOLD (default 80%); touches nothing under repos/data/state; always exits 0. `bootstrap_vm.sh` Step
+      7.5 idempotently ensures the root cron (every 6h) so AMI-launched + re-provisioned VMs inherit it. Installed +
+      proven on both RUNNING VMs (vm-orchestrator caught at 94%→84%, api-host 61%→57%). **The 9 stopped epic VMs** get
+      the script via the AMI/LDR clone but their crontab is only ensured by `bootstrap` — see the one residual below.
+
+## One residual (low-risk)
+
+- [ ] [SCRIPT] P3. **Install vm-disk-guard cron on the 9 stopped epic VMs on their next legitimate start** — their
+      existing crontabs persist on EBS but lack the `vm-disk-guard` line (added out-of-band only on the 2 running VMs);
+      `bootstrap_vm.sh` Step 7.5 ensures it but bootstrap runs on FIRST boot, not every reboot, so an already-provisioned
+      VM needs either a `bootstrap_vm.sh` re-run or a one-line crontab add when it is next started. Not urgent: the 9 are
+      stopped (no active bloat) and were disk-relieved 2026-06-02.
+
+This issue doc is otherwise resolved (F1/F2/FM3 closed); archive once the P3 residual is handled or absorbed into the
+orchestrator epic.
