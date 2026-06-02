@@ -38,6 +38,12 @@ main ───────────────► always stable; triggers ve
 
 ## Two-Pass Workflow Model (the unit of work)
 
+> **Order is non-negotiable: quality gates BEFORE quickmerge.** Never invoke `quickmerge` until
+> `bash scripts/quality-gates.sh` has exited 0 on the **current HEAD**. Pass 1 (the full gate) is what runs the tests
+> and writes the `.qg_last_passed_sha` sentinel; Pass 2 (`quickmerge --agent`) refuses to proceed without a matching
+> sentinel and skips test re-runs on the strength of it. Run quickmerge first (or after only a partial Pass 1) and
+> either it hard-refuses or — worse, if you reach for skip flags — the change ships with tests never having run.
+
 Every shippable unit goes through exactly two passes:
 
 ```

@@ -97,11 +97,15 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   finished unit — quickmerge routes ALL commits → `staging` → SIT → `main`; `--to-staging` is a **no-op**. Never raw
   `git push` for CODE (quickmerge early-exits "nothing to commit" on a clean tree → direct LDR pushes silently pile up
   behind main). Always `--agent` in Claude Code.
-- **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit *promotes* via
+- **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit _promotes_ via
   quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
   (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
-- Two-pass: Pass 1 = `bash scripts/quality-gates.sh` (writes `.qg_last_passed_sha` sentinel). Pass 2 = `quickmerge
-  --agent` (verifies sentinel == HEAD, skips redundant QG, opens the auto-merging `staging` PR).
+- **Quality gates BEFORE quickmerge — non-negotiable order (HARD RULE)**: never invoke `quickmerge` until
+  `bash scripts/quality-gates.sh` has exited 0 on the current HEAD. Pass 1 = `bash scripts/quality-gates.sh` (full gate
+  incl. tests; writes the `.qg_last_passed_sha` sentinel). Pass 2 = `quickmerge --agent` (verifies sentinel == HEAD,
+  skips redundant QG, opens the auto-merging `staging` PR) — it hard-refuses if the sentinel is missing/stale, so
+  skipping Pass 1 means the change never ran tests. SSOT: `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model
+  (the unit of work)".
 - `--dep-branch` is human-only.
 - **`git pull` rejected with `(would clobber existing tag)`** (stale local release tag vs semver-agent's canonical
   remote tag, e.g. `v1.0.0`/`v1.2.0`): fix with `git fetch origin --tags --force` (local-only; remote is canonical for
@@ -109,14 +113,14 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 — troubleshooting".
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
-- **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01
-  `main`-direct exception)**: the target is for `agent-orchestrator` to follow the **same** `tab/<op>/<N>` → LDR →
-  `staging` → SIT → `main` flow as every other repo. **Today it is mid-migration**: AO has no `staging` branch and no
-  `quickmerge.sh` yet (tracked in `plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G6),
-  so the **current** de-facto ship path is still commit on the slot branch `tab/<operator>/<N>` →
-  **fast-forward to `main`** (its slot branch tracks `origin/main`; every OTHER repo's tracks `origin/live-defi-rollout`).
-  `main` remains AO's canonical (do NOT treat `main`-behind-LDR as drift; LDR `tab-mirror` GHA appearance is harmless).
-  Once G6 lands the `staging` branch + quickmerge, switch to the standard staging-first path. SSOT:
+- **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01 `main`-direct
+  exception)**: the target is for `agent-orchestrator` to follow the **same** `tab/<op>/<N>` → LDR → `staging` → SIT →
+  `main` flow as every other repo. **Today it is mid-migration**: AO has no `staging` branch and no `quickmerge.sh` yet
+  (tracked in `plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G6), so the **current**
+  de-facto ship path is still commit on the slot branch `tab/<operator>/<N>` → **fast-forward to `main`** (its slot
+  branch tracks `origin/main`; every OTHER repo's tracks `origin/live-defi-rollout`). `main` remains AO's canonical (do
+  NOT treat `main`-behind-LDR as drift; LDR `tab-mirror` GHA appearance is harmless). Once G6 lands the `staging`
+  branch + quickmerge, switch to the standard staging-first path. SSOT:
   `codex/04-architecture/agent-orchestrator-overview.md` + the G6 plan above.
 
 ### Imports + types
