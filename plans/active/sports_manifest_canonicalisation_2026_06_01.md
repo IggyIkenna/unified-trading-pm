@@ -351,12 +351,16 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `orchestrator.py`) + MTDS sports handlers for `except … record_empty` / bare `return []` swallows; trace each to
       its `record_*` call; gate the empty-vs-failed decision on fixture-existence + UAC bounds (the writer analogue of
       the rebuild fix above). The 2026-06-01 writer fix (instruments-service@608e7ca7) handled the typed-EMPTY path;
-      this verifies the FAILED path is not masked as empty. — instruments-service@ceab7720 | IS portion: trigger path
-      (sports_fixtures_daily_repoll.py) already correct from 608e7ca7; orchestrator.py batch path had CF-11 bug in
-      per-fixture entity zero-rows branch — partial failure (\_fail_count > 0 but < len(fixture_ids)) fell through to
-      empty_confirmed instead of record_failed. Fixed: any \_fail_count > 0 + zero rows → record_failed. 3 unit tests
-      (all-fail/partial-fail/all-succeed). QG GREEN. MTDS sports ingest handlers need a separate audit pass (out of IS
-      scope; MTDS portion of this todo still open).
+      this verifies the FAILED path is not masked as empty. **IS PORTION DONE** — instruments-service@ceab7720 | trigger
+      path (sports_fixtures_daily_repoll.py) already correct from 608e7ca7; **orchestrator.py batch path had a REAL CF-11
+      BUG** in the per-fixture entity zero-rows branch — a PARTIAL failure (`_fail_count > 0` but `< len(fixture_ids)`,
+      total 0 rows) fell through to `empty_confirmed(EXPECTED_NO_FIXTURE)` instead of `record_failed` → masked a real
+      gap as confirmed-empty (frozen, never backfilled). Fixed: any `_fail_count > 0` + zero rows → `record_failed`. 3
+      unit tests (all-fail / partial-fail / all-succeed). QG GREEN.
+- [ ] [CODE] P0. **Write-path CF-11 — MTDS sports-ingest portion** (separate from the IS fix above): audit the MTDS
+      sports MDPS odds-ingest handlers for the same masked-failure pattern — on an odds-API error for a (bookmaker,
+      league, fixture-day) cell, `record_failed` not `record_empty`; gate empty-vs-failed on fixture-existence + UAC
+      coverage. Mirror the IS orchestrator fix (instruments-service@ceab7720). Repo: `market-tick-data-service`.
 
 ### KEYSTONE redesign — FIXTURES are the truth set (operator directive 2026-06-01)
 
