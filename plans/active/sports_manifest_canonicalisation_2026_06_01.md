@@ -296,24 +296,25 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       (`asset_group=`); instruments `sports_reference` vs `sports_reference_v2` vs `_v1_archive`; prd vs legacy-no-env —
       sample-compare parquet SCHEMAS + row counts per shard; if the "winner" has fewer cols/rows, switch dedup to
       keep-larger / column-union (CROSS-AG LESSON #5/#8). Capture the per-tree schema diff before the walk picks a
-      winner. — market-tick-data-service@50a43aa7 | \_sample_schema() downloads+inspects parquet for \_SCHEMA_SAMPLE_N
+      winner. — market-tick-data-service@50a43aa7 | \_sample*schema() downloads+inspects parquet for \_SCHEMA_SAMPLE_N
       overlap shards per tree; logs per-shard verdict (PRD_LOSES_COLS_OR_ROWS / PRD_RICHER / schemas_match + row
       counts); per-tree entity-set verdict (SAME_ENTITIES / COMPLEMENTARY_ENTITIES) for the 3 sports_reference versions.
       **ACTUAL SCHEMA SPOT-CHECK RUN (sports-slot, real GCS data 2026-06-01)** on `entity=fixtures` 2018-01-02:
       `v1_archive` fixtures (41 cols: home_xg/away_xg + shots/corners/fouls/possession/passes + home_team/away_team +
-      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native `af_*_id`, score breakdowns
-      extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**
-      (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of (`v2 fixtures` ∪ `v2 fixture_stats` (xG +
-      shots/corners/possession) ∪ current `understat_xg` (58 cols incl. team-detail + xG)); only 3 differ and they are
-      naming variants (`home_team`→`home_team_name`, `away_team`→`*_name`, `league`→`league_name`). **VERDICT: v1_archive
-      is COLUMN-superseded by the current split (understat_xg + v2 fixtures + v2 fixture_stats); v2 fixtures + understat_xg
-      + fixture_stats are COMPLEMENTARY → keep all. No column-level data loss from treating v1_archive as superseded.**
-- [ ] [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠ row-superseded.
-      Before DROPPING `sports_reference_v1_archive`, verify its `(date, league, fixture_id)` ROW set ⊆ the current split's
-      rows (the v1_archive date-range/leagues are all present in `v2 fixtures`/`understat_xg`/`fixture_stats`). If
-      v1_archive has older history or leagues the current split lacks → migrate those rows first (the reconcile's
-      legacy-only computation must run at ROW granularity, not just entity/column). This is the row-level analogue of the
-      column check above; do NOT drop v1_archive on column-coverage alone.
+      league/source/status/match_week) vs `v2` fixtures (32 cols: AF-native
+      `af*_\_id`, score breakdowns     extratime/halftime/penalty, status_long/short, venue_id/city/name, round, timestamp) = **NEITHER is a superset**     (alarm) — BUT v1_archive's 41 cols ARE fully covered by the UNION of (`v2
+      fixtures`∪`v2
+      fixture_stats`(xG +     shots/corners/possession) ∪ current`understat_xg` (58 cols incl. team-detail + xG)); only 3 differ and they are     naming variants (`home_team`→`home_team_name`, `away_team`→`_\_name`, `league`→`league_name`).
+      **VERDICT: v1_archive is COLUMN-superseded by the current split (understat_xg + v2 fixtures + v2 fixture_stats);
+      v2 fixtures + understat_xg + fixture_stats are COMPLEMENTARY → keep all. No column-level data loss from treating
+      v1_archive as superseded.**
+- [ ] [DATA] P0. **v1_archive ROW-coverage gate (before E8 — sports-slot 2026-06-01)**: column-superseded ≠
+      row-superseded. Before DROPPING `sports_reference_v1_archive`, verify its `(date, league, fixture_id)` ROW set ⊆
+      the current split's rows (the v1_archive date-range/leagues are all present in
+      `v2 fixtures`/`understat_xg`/`fixture_stats`). If v1_archive has older history or leagues the current split lacks
+      → migrate those rows first (the reconcile's legacy-only computation must run at ROW granularity, not just
+      entity/column). This is the row-level analogue of the column check above; do NOT drop v1_archive on
+      column-coverage alone.
 
 ### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
 
@@ -323,26 +324,34 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > shard is empty** is almost certainly a masked fetch failure → `attempted_failed` (retry/backfill), NOT a false
 > `empty_confirmed` that claims "we know there's nothing" and freezes the gap forever.
 
-- [ ] [DATA] P0. **Rebuild classifier: add match-day-empty → `attempted_failed`** (`rebuild_sports_manifest_v9.py`).
+- [x] ✅ [DATA] P0. **Rebuild classifier: add match-day-empty → `attempted_failed`** (`rebuild_sports_manifest_v9.py`).
       Currently STEP 8 (line ~475) sends a match-day empty (`(league,date)` IN fixtures truthset) on a per-fixture
-      derived data_type to `keep_src_zero` → `SOURCE_RETURNED_ZERO` `empty_confirmed`. FIX: if fixture EXISTS + data_type
-      is **guaranteed-when-fixture-exists** (FIXTURES / FIXTURE_STATS / FIXTURE_EVENTS / STANDINGS — NOT INJURIES /
-      cards / PLAYER_VALUES which can legitimately be zero) + within UAC source-coverage bounds + not a known-gap →
-      classify as **`attempted_failed`** (`record_failed`) so it backfills, NOT `empty_confirmed`. Conservative
-      per-data_type guarantee set (a wrongly-upgraded INJURIES-empty is a false failure; a wrongly-kept FIXTURE_STATS
-      match-day empty is silent incompleteness — the operator's stated priority is the latter is worse).
-- [ ] [DATA] P0. **Rebuild: re-emit existing `attempted_failed` rows v9** (status preserved). The rebuild currently
+      derived data_type to `keep_src_zero` → `SOURCE_RETURNED_ZERO` `empty_confirmed`. FIX: if fixture EXISTS +
+      data_type is **guaranteed-when-fixture-exists** (FIXTURES / FIXTURE_STATS / FIXTURE_EVENTS / STANDINGS — NOT
+      INJURIES / cards / PLAYER_VALUES which can legitimately be zero) + within UAC source-coverage bounds + not a
+      known-gap → classify as **`attempted_failed`** (`record_failed`) so it backfills, NOT `empty_confirmed`.
+      Conservative per-data_type guarantee set (a wrongly-upgraded INJURIES-empty is a false failure; a wrongly-kept
+      FIXTURE_STATS match-day empty is silent incompleteness — the operator's stated priority is the latter is worse). —
+      market-tick-data-service@8ffb2acd | step 6.7 added to \_classify_empty_row; \_FIXTURE_GUARANTEED_DATA_TYPES
+      (FIXTURES/FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/STANDINGS/ODDS/ODDS_SNAPSHOT/ODDS_MOVEMENT); conservative
+      exclusions: INJURIES/PLAYER_STATS/XG/trades/etc stay SOURCE_RETURNED_ZERO; write loop calls record_failed with
+      error=CF11_MATCH_DAY_EMPTY_GUARANTEED_TYPE; dry-run histogram reports mark_attempted_failed count separately. QG
+      GREEN. VM dry-run needed for real counts (VM-pending — no GCS access locally).
+- [x] ✅ [DATA] P0. **Rebuild: re-emit existing `attempted_failed` rows v9** (status preserved). The rebuild currently
       only re-emits empty_confirmed + captured (line ~679); the `other` (attempted_failed: 164 MDPS + 178,025
-      instruments) rows are left v8. Re-emit them via the writer with `attempted_failed` status preserved so they're v9 +
-      still flagged for backfill (NEVER silently relabel a failure to empty).
+      instruments) rows are left v8. Re-emit them via the writer with `attempted_failed` status preserved so they're
+      v9 + still flagged for backfill (NEVER silently relabel a failure to empty). — market-tick-data-service@8ffb2acd |
+      other_df loop added after captured_df loop; iterates other_mask rows filtered to attempted_failed; calls
+      record_failed(error=existing_error_reason or UNKNOWN_FETCH_FAILURE_PRESERVED_FROM_V8); dry-run reports
+      reemit_attempted_failed count. QG GREEN. VM dry-run needed for real counts (VM-pending).
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS sports adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for a `(league,date)` where a fixture exists / instrument valid / within UAC coverage
       bounds, the handler MUST `record_failed` (→ `attempted_failed`) via `classify_venue_error()`, NOT `record_empty`.
       Grep the sports fetch paths in instruments-service (`sports_fixtures_daily_repoll.py` + the per-entity handlers in
       `orchestrator.py`) + MTDS sports handlers for `except … record_empty` / bare `return []` swallows; trace each to
       its `record_*` call; gate the empty-vs-failed decision on fixture-existence + UAC bounds (the writer analogue of
-      the rebuild fix above). The 2026-06-01 writer fix (instruments-service@608e7ca7) handled the typed-EMPTY path; this
-      verifies the FAILED path is not masked as empty.
+      the rebuild fix above). The 2026-06-01 writer fix (instruments-service@608e7ca7) handled the typed-EMPTY path;
+      this verifies the FAILED path is not masked as empty.
 
 ### KEYSTONE redesign — FIXTURES are the truth set (operator directive 2026-06-01)
 
