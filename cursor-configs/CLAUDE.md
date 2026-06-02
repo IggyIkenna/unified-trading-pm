@@ -334,6 +334,60 @@ says "AWAITING USER DIRECTION."
 
 ---
 
+## Cross-Cutting Rules (docs · code-quality · agent-behavior · Python · UI · PM)
+
+Folded 2026-06-02 from the per-domain `.claude/rules/*.md` files (since deleted — they were workspace-root-only +
+untracked, so these rules never reached repo-level agents; now they propagate via this one SSOT).
+
+### Docs + code quality
+
+- **No summary docs.** Never create `*_SUMMARY.md`/`*_STATUS.md`/`READY_TO_*`/`COMPLETION_*`/`FINAL_*`. Docs only if
+  explicitly requested or they're specs (architecture/API/schema). Finish a task → respond with text, not a recap file.
+- **Prettier before commit** on `.md`/`.json`/`.yaml`/`.ts`/`.tsx`/`.css`: `npx prettier --write <file>`.
+- **Delete deprecated code.** No parallel old+new paths; no backward-compat shims / re-export stubs / `_old.py` /
+  `# deprecated` (only exception: `__init__.py` public-API re-exports). Find consumers with `rg`, update all, delete old.
+- **Never revert local changes** — no `git reset --hard`/`git clean -fd`/`git restore`/`git checkout` that discards
+  uncommitted work; `git stash push -u -m` before a branch switch (on feature branches, local dep changes ARE the feature).
+- **Runtime verification** — never claim "done" without running the code, waiting 8-10s, reading the terminal, grepping
+  for errors. "Compiles" ≠ "works".
+
+### Agent behavior
+
+- **Context7 for external libs** — append "use context7" for React/Next/Tailwind/library/API questions.
+- **Parallel agents** max 10 (different repos always safe; same file never). **Sub-agents** are ~10× cheaper + preserve
+  context — use for multi-repo / 3+ steps / >100K-token reads; they return ONLY final results (≤400 tokens) + don't
+  inherit rules (paste `SUB_AGENT_MANDATORY_RULES.md`).
+- **Rule-amnesia stop** — halt the session if an agent uses `os.getenv()` / `pip install` / direct `git push` /
+  `setup_cloud_logging` / suggests skipping tests.
+
+### Python service/library specifics
+
+- **No pickle** (joblib/JSON/Parquet instead); no bare `except:`; no creds in repo. **`setup.sh`** mandatory + idempotent
+  per repo. **File limits**: 900 lines max (warn 700) / function 200 / method 50 / class 900 / complexity 10 / imports
+  30 / params 5 / coverage ≥70%.
+- **engine/adapters/cli**: `engine/` has ZERO imports from `adapters/`; adapters <100 lines. **Singleton adapter**
+  (`_ADAPTER_CACHE`, one per venue). **Concurrency**: I/O-bound MAX_WORKERS=16, CPU-bound 1-3; RAM 85%→reduce 50%,
+  90%→emergency shutdown. **aiohttp** not `requests` in async code.
+- **ConfigStore** from `unified_trading_services` for hot-reload runtime config. **IBKR** only via `ibkr-gateway-infra`
+  (mock at the `ib_insync` object level — no HTTP VCR).
+
+### UI (TypeScript) specifics
+
+- **No Python tools in UI repos** — tsc/ESLint/Vitest/Playwright, never uv/basedpyright/pytest/ruff. **TS strict**:
+  `tsc --noEmit`, no `any`, no `@ts-ignore`, zero ESLint warnings.
+- **Vitest `pool: "forks"`** (not threads — prevents zombie node procs); `CI=true npm test -- --run`. **Build smoke**:
+  `NEXT_PUBLIC_MOCK_API=true pnpm build`. **UI is its own repo** — React/TS never inside a Python service repo. (Composes
+  with the playwright gate above.)
+
+### PM repo (`unified-trading-pm`, Level 0)
+
+- SSOT template host (`setup.sh`/`quality-gates.sh`/`quickmerge.sh`/`version-bump.yml` copied to all repos) +
+  `workspace-manifest.json` registry. NOT a Python package. `workspace-manifest.json` change → regen DAG SVG
+  (`scripts/manifest/generate_workspace_dag.py`). Never push PM unless dependency-alignment passes
+  (`check-dependency-alignment.py --json` → `"aligned": true`).
+
+---
+
 ## Service Infrastructure Requirements (QG-Enforced as ERRORS)
 
 - **STEP 5.61** `ServiceBootstrap(...)` must appear in service source — handles STARTED/STOPPED/FAILED.

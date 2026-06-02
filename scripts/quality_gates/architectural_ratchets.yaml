@@ -29,4 +29,4 @@ ratchets:
     target_glob: "{alerting-service,batch-live-reconciliation-service,client-reporting-api,deployment-api,deployment-service,execution-service,features-service,instruments-service,market-data-processing-service,market-tick-data-service,ml-inference-service,ml-training-service,pnl-attribution-service,position-balance-monitor-service,risk-and-exposure-service,strategy-service,trading-agent-service,unified-trading-api,unified-trading-library}/package.json"
     banned_pattern: '"(react|next|vite|webpack)"\s*:'
     owner: per-service-team
-    rule_doc: ".claude/rules/python-backend.md (UI must be its own repo)"
+    rule_doc: "cursor-configs/CLAUDE.md § Cross-Cutting Rules › UI (TypeScript) specifics — 'UI is its own repo'"
