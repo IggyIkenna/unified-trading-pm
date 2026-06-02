@@ -238,15 +238,24 @@ operator context (governance / planning / master-plan / model-tier rules).
   `.claude/CLAUDE.md` symlink → it doesn't replace, it doubles.
 - **Competing rules SSOTs:** `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (180 L; CLAUDE.md says "paste via
   inject-mandatory-rules.sh") vs `agents/RULES.md` (355 L; what the spawn actually uses) — two drifting docs.
-- **Stale paths:** `worker.md:114` `WORKSPACE_ROOT:-/home/ubuntu/...`; `RULES.md:224` `cat /home/hk/...SUB_AGENT...`.
-- **Possible CLAUDE.md double-load:** reachable via `<repo>/.claude/CLAUDE.md` AND workspace `.claude/rules/CLAUDE.md`.
+- **Stale paths:** `worker.md:114` `WORKSPACE_ROOT:-/home/ubuntu/...`; `RULES.md` `cat /home/hk/...SUB_AGENT...`.
+- **CLAUDE.md double-load — RESOLVED (not a real bloat source):** Claude Code de-duplicates auto-loaded context by
+  **resolved path**, so the same physical `cursor-configs/CLAUDE.md` reached via two symlinks (`<repo>/.claude/CLAUDE.md`
+  + workspace `.claude/rules/CLAUDE.md`) loads ONCE. On the **VM** (where workers run) only the repo symlink path exists
+  — there is no workspace `.claude/rules` there — so a single load regardless. The real duplication is **content**:
+  `RULES.md`/`worker.md` restating CLAUDE.md's rules as different prose (a true second copy) → fixed by slimming, below.
 
-- [ ] [DESIGN] P0. Define the **minimal worker (executor) context**: workers need repo conventions + execution rules,
-      NOT the full operator CLAUDE.md (governance/planning/master-plan) or MEMORY.md. Decide whether workers auto-load a
-      lean worker-rule-set instead of the 84 KB operator CLAUDE.md, and make `worker.md`/`RULES.md` **point to** it
-      rather than restating rules. Pick ONE canonical agent-rules doc (RULES.md vs SUB_AGENT_MANDATORY_RULES.md) + merge
-      the other; fix CLAUDE.md's stale "inject via inject-mandatory-rules.sh" line. (Cross-link G7 — merge-flow done
-      there; this kills the bloat.)
+- [x] ✅ [SCRIPT] P0. Added `.claude/CLAUDE.md` + `.claude/SUB_AGENT_MANDATORY_RULES.md` symlinks (→
+      `../../unified-trading-pm/cursor-configs/...`) to the 2-of-3 repos that lacked them: **agent-orchestrator** (`.claude/`
+      was gitignored wholesale → un-ignored the 2 SSOT symlinks) + **ml-service**. Now all 22 service repos match the
+      pattern; AO agents auto-load CLAUDE.md instead of relying on RULES.md restating it. VMs get them via clone/worktree
+      (PM is a sibling; `setup-tab-worktrees.sh` checks them out as tracked files — no bootstrap edit needed). —
+      agent-orchestrator@bf85d21 + ml-service@f17f13e
+- [ ] [DESIGN] P0. **Slim `RULES.md` to worker-lifecycle-only** (option a, Harsh 2026-06-02): now that AO auto-loads
+      CLAUDE.md, RULES.md's restated workspace rules (quickmerge/basedpyright/conventional-commits) are pure dup — strip
+      them, keep worker-lifecycle (spawn/claim/commit-push-flip/heartbeat) + point to the auto-loaded CLAUDE.md. Pick ONE
+      canonical agent-rules doc (RULES.md vs SUB_AGENT_MANDATORY_RULES.md) + merge the other; fix CLAUDE.md's stale
+      "inject via inject-mandatory-rules.sh" line. (Cross-link G7.)
 - [ ] [SCRIPT] P1. Fix stale paths: `worker.md:114` /home/ubuntu → `$WORKSPACE_ROOT`; `RULES.md:224` /home/hk →
       relative/`$WORKSPACE_ROOT`.
 - [ ] [SCRIPT] P1. Confirm + fix CLAUDE.md double-load (repo `.claude/CLAUDE.md` + workspace `.claude/rules/CLAUDE.md`).
