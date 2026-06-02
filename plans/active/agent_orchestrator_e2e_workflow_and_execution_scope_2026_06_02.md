@@ -86,9 +86,24 @@ confirmed). 6h is far too much latency: plans are authored continuously, so back
 
 ### G4 — prove the loop end-to-end [P1]
 
-- [ ] [TEST] P1. Run `agent-orchestrator/scripts/e2e_demo.py` + `scripts/dev.sh --mock` locally; confirm the full
-      spawn→work→report→snapshot→resume cycle passes and the dashboard renders. Capture pass/fail + any gap. (Ikenna:
-      orchestrator is ready to test; real backlog only after CI + data plans land — mock proves the flow now.)
+- [x] ✅ [TEST] P1. Ran both locally (slot-2, mock mode, 2026-06-02). **Both PASS** after fixing 3 harness/script bugs
+      found in the process. — agent-orchestrator@ae798f7
+  - **e2e_demo.py → EXIT 0, "ALL CHECKS PASSED"**: full lifecycle verified — boot→B-001 dispatch, gating (slot 3 idle),
+    progress, blocked→escalate→answer→deliver, done+verify, condition-set unblocks B-002/B-003, auto-dispatch, and the
+    critical **stop+resume** (both in-progress tasks preserved across SIGTERM+restart) + shutdown snapshot + activity
+    log intact.
+  - **dev.sh --mock → ready in 9s**, backend `/api/healthz` 200, dashboard 200 (`<title>Orchestrator</title>` +
+    `<div id="root">`, vite entry compiles). Dashboard renders.
+  - **Gaps found + fixed (the orchestrator itself was correct — these were stale script paths):**
+    1. `e2e_demo.py` started the server in live mode → read the real 86-task `backlog.yaml` instead of the demo
+       `backlog.mock.yaml` (B-001..B-003 absent) → first assertion failed. Fixed: force `ORCHESTRATOR_MODE=mock` in the
+       server subprocess (self-contained).
+    2. `e2e_demo.py` checked `REPO_ROOT/state.json` + cleaned `REPO_ROOT/state.db` — stale paths predating the
+       `data/state/` + `.mock.` layout (the snapshot really lands at `data/state/state.mock.json`). Fixed to
+       config-accurate paths.
+    3. `dev.sh` readiness probe hit bare `/healthz` (404 — server registers `/api/healthz`, prefixed to dodge Knative's
+       reservation) → dev.sh **always** timed out at 30s and tore down a healthy stack. Fixed the probe + the summary
+       echo.
 
 ### G5 — backend statelessness for CICD-restart-via-GHA [P0] _(operator-raised 2026-06-02)_
 
