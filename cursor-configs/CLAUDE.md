@@ -286,40 +286,25 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 
 ### Two teammates × multiple parallel agents (CRITICAL)
 
-Harsh AND Ikenna both run parallel agents. Untracked files / dirty mid-edit / recent remote commits = someone else's
-in-flight work. **Do not touch files outside your clear context.**
+**Per-tab worktrees now isolate every worker** (`.tabs/<N>/<repo>` on `tab/<op>/<N>`), and execution runs on the
+**orchestrator VMs** — Ikenna + Harsh author/audit plans locally, the orchestrator assigns them to VM workers, and all
+code / quality-gates / quickmerge happen there. That isolation has **largely solved** the old shared-tree collision
+class: you rarely share a tree with another live agent. The file-ownership discipline + the rare edge-case recoveries
+still apply — full step-by-step recipes live in `codex/05-infrastructure/per-tab-worktrees.md` (§ "Step 7 —
+troubleshooting", § "Isolated-worktree promotion under shared-worktree ref races", § "Foot-gun mitigations vs. shared-tree
+model"). The invariants that must stay in-head:
 
-- Never `git checkout origin/<branch> -- .` (dumps remote work) or `git checkout -- <file>` on foreign-owned dirty files
-  (UNRECOVERABLE).
-- Right recovery: (a) scope tool to YOUR files; (b) stash foreign files before tool runs; (c) accept you can't auto-fix
-  foreign code.
-- **Untracked file in a dep repo = NOT YOURS.**
-- QG fails on file you don't own → tell the user.
-- **Autostash conflict during rebase → `git rebase --abort`, do not patch around.** If `git pull --rebase --autostash`
-  (or `git rebase --autostash`) reports `Applying autostash resulted in conflicts. Your changes are safe in the stash.`,
-  the autostash holds **foreign-dirty** content that conflicted with the rebased HEAD. Safe recovery:
-  `git rebase --abort` returns the repo to its pre-rebase state with the autostash intact. Then explicitly stash only
-  YOUR files by name (`git stash push -- path/to/your_file`), redo the rebase, and pop your stash back. **NEVER
-  `git checkout HEAD -- <conflicted_file>` to clear markers and then `git stash drop`** — that destroys the foreign
-  agent's only copy of their WIP. The dropped-commit hash printed by `git stash drop` is reachable via
-  `git stash store <hash>` until next GC, but treat that as a near-miss incident, not a routine path. Incident
-  reference: slot-1 2026-05-19 strategy-service autostash drop (recovered via dangling commit, logged in
-  `ikenna_orchestrator/pings/slot_1.md`). Full SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 —
-  troubleshooting".
-- **Concurrent agent in your shared `.tabs/<N>/` worktree (refs move under you) → isolated-worktree promotion, NOT
-  `FETCH_HEAD`.** When another session OR an orchestrator-spawned worker shares your slot's `.git`, it rewrites `HEAD` /
-  `FETCH_HEAD` / the slot branch mid-task: your push to `live-defi-rollout` is rejected and `FETCH_HEAD`-based
-  diagnostics LIE (you may wrongly conclude "my work is already on LDR" — the moving `FETCH_HEAD` briefly pointed at the
-  worker's local tip that contained your own commit). (1) Verify ONLY against the stable remote-tracking ref:
-  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>` —
-  never `FETCH_HEAD`. (2) Do NOT autostash-rebase the shared dirty tree (same foreign-WIP foot-gun as above). (3)
-  Promote YOUR work via a throwaway worktree off the integration branch — never touches the shared `.tabs/<N>/` tree, so
-  the concurrent worker is undisturbed: `git worktree add --detach /tmp/promote-$$ origin/live-defi-rollout` →
-  cherry-pick your commit → on conflict KEEP LDR's side for the other agent's hunks + trim any of their snapshot that
-  auto-merged in but isn't on LDR (`git checkout origin/live-defi-rollout -- <file>` then re-add only your hunk) → gate
-  on `git diff --cached origin/live-defi-rollout` showing YOURS-ONLY lines → push → `git worktree remove --force`. Full
-  SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Isolated-worktree promotion under shared-worktree ref races".
-  Incident: slot-1 2026-06-01 data-source-provenance promotion.
+- **Don't edit unfamiliar files.** Untracked / mid-edit-dirty / recently-pushed = someone else's in-flight work.
+  **Untracked file in a dep repo = NOT YOURS.** QG fails on a file you don't own → tell the user.
+- **Never** `git checkout origin/<branch> -- .` (dumps remote work) or `git checkout -- <file>` / `git checkout HEAD --
+<file>` on a dirty file you don't own — UNRECOVERABLE.
+- **Verify your work against the stable remote ref, never `FETCH_HEAD`** (it lies under a concurrent session):
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>`.
+- **Autostash conflict on rebase** (`Applying autostash resulted in conflicts`) → `git rebase --abort` (state safe,
+  autostash intact), stash only YOUR files by name, redo — **NEVER** `git checkout HEAD -- <file>` then `git stash drop`
+  (destroys the foreign agent's only WIP copy). § "Step 7" above.
+- **Rare — a concurrent session shares your slot's `.git`** → promote your commit via a throwaway worktree off the
+  integration branch, never touching the shared tree. § "Isolated-worktree promotion" above.
 
 ### Clear context = implement, don't ask
 
