@@ -3,7 +3,6 @@ title:
   Human-work backlog 2026-05-20 — Ikenna + Harsh interactive task split with data_pipeline_master_coordination
   supervision
 status: active
-execution_scope: local-only
 created: 2026-05-20
 updated: 2026-05-20 # split principles + Phase 7/14 sub-splits + supervision-checkpoint wiring
 co-operators: [harsh]

@@ -7,7 +7,6 @@ parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P1
 status: active
-execution_scope: local-only
 created: 2026-05-29
 last_updated: 2026-05-29
 estimate_class: refactor

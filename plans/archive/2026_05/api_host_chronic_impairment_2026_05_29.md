@@ -5,7 +5,6 @@ parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
 status: active
-execution_scope: local-only
 created: 2026-05-29
 last_updated: 2026-05-29
 estimate_class: infra
@@ -16,7 +15,6 @@ estimate_calibration_note: |
   diagnostics) + small targeted code/config changes (resource limits, watchdog
   auto-reboot, monitoring) + replacing the chatty Anthropic-CLI usage poller
   with a cheaper API call. No new product features.
-locked_by: live-defi-rollout
 locked_since: 2026-05-29
 related:
   - issues/api_host_chronic_impairment_2026_05_29.md
