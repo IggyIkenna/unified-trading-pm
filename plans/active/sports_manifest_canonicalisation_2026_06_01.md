@@ -352,11 +352,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       its `record_*` call; gate the empty-vs-failed decision on fixture-existence + UAC bounds (the writer analogue of
       the rebuild fix above). The 2026-06-01 writer fix (instruments-service@608e7ca7) handled the typed-EMPTY path;
       this verifies the FAILED path is not masked as empty. **IS PORTION DONE** — instruments-service@ceab7720 | trigger
-      path (sports_fixtures_daily_repoll.py) already correct from 608e7ca7; **orchestrator.py batch path had a REAL CF-11
-      BUG** in the per-fixture entity zero-rows branch — a PARTIAL failure (`_fail_count > 0` but `< len(fixture_ids)`,
-      total 0 rows) fell through to `empty_confirmed(EXPECTED_NO_FIXTURE)` instead of `record_failed` → masked a real
-      gap as confirmed-empty (frozen, never backfilled). Fixed: any `_fail_count > 0` + zero rows → `record_failed`. 3
-      unit tests (all-fail / partial-fail / all-succeed). QG GREEN.
+      path (sports_fixtures_daily_repoll.py) already correct from 608e7ca7; **orchestrator.py batch path had a REAL
+      CF-11 BUG** in the per-fixture entity zero-rows branch — a PARTIAL failure (`_fail_count > 0` but
+      `< len(fixture_ids)`, total 0 rows) fell through to `empty_confirmed(EXPECTED_NO_FIXTURE)` instead of
+      `record_failed` → masked a real gap as confirmed-empty (frozen, never backfilled). Fixed: any `_fail_count > 0` +
+      zero rows → `record_failed`. 3 unit tests (all-fail / partial-fail / all-succeed). QG GREEN.
 - [ ] [CODE] P0. **Write-path CF-11 — MTDS sports-ingest portion** (separate from the IS fix above): audit the MTDS
       sports MDPS odds-ingest handlers for the same masked-failure pattern — on an odds-API error for a (bookmaker,
       league, fixture-day) cell, `record_failed` not `record_empty`; gate empty-vs-failed on fixture-existence + UAC
@@ -394,12 +394,22 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       API-Football provider id — the league_id was **never canonicalised** (CF-7 write-path gap: 278,268 manifest rows
       carry provider-id-suffixed league_ids). Two fixes: (1) FIXTURES-truthset relabel (above) resolves the empties
       regardless of canon; (2) **CF-7 league-id canonicalisation** todo below for the writer + migrator.
-- [ ] [DATA] P1. **CF-7 league_id canonicalisation** (writer + migrator): 278,268 instruments-store rows carry
-      provider-id-suffixed league_ids (`SCOTTISH_LEAGUE_CUP_185`, etc.) instead of canonical keys. Diagnose registry-gap
-      (add to UAC `provider_league_ids`) vs writer-not-canonicalising; normalise in the migrator before dedup + fix the
-      instruments-service writer so future rows are canonical. ALSO: `data_type=LEAGUES`/`TEAMS`/`VENUES` are
-      slow-moving REFERENCE data daily-sharded with per-day empties (operator: "leagues are fixed — why daily?") —
-      capture whether reference data_types should be snapshot-not-daily (data-model question → instruments-service).
+- [x] ✅ [DATA] P1. **CF-7 league_id canonicalisation — UAC SSOT done** (unified-api-contracts@409753bd):
+      `canonicalize_league_id(raw: str) -> str` added to `provider_league_ids.py`, exported from
+      `canonical/domain/sports/__init__.py` + `sports.py` facade. Provider-id-verified suffix strip: strips `_<digits>`
+      only when the digit matches a registered provider id (api_football / footystats / understat / transfermarkt /
+      soccer_football_info) for the base canonical key. **Registry-gap finding**: `SCOTTISH_LEAGUE_CUP_185` is NOT
+      auto-stripped — 185 is a historical AF season id, NOT the canonical `api_football_id=182`; function returns
+      unchanged conservatively. IS writer + MTDS migrator must use a **direct rewrite table** for these 278,268 rows.
+      Import path: `from unified_api_contracts.sports import canonicalize_league_id`. 8 unit tests pass (QG green,
+      basedpyright 0 errors). **Consumers (IS writer + MTDS migrator) wire next — tracked below.**
+- [ ] [DATA] P1. **CF-7 league_id canonicalisation — IS writer + MTDS migrator**: wire `canonicalize_league_id` in
+      instruments-service writer (so future rows are canonical) + use in the MTDS migrator walk before dedup. For the
+      278,268 `SCOTTISH_LEAGUE_CUP_185` rows and other registry-gap cases, add a direct rewrite table
+      (`LEAGUE_ID_REWRITE_TABLE: dict[str, str]`) in UAC `provider_league_ids.py` mapping historical suffixed names to
+      canonical keys (e.g. `"SCOTTISH_LEAGUE_CUP_185" → "SCOTTISH_LEAGUE_CUP"`). ALSO:
+      `data_type=LEAGUES`/`TEAMS`/`VENUES` are slow-moving REFERENCE data daily-sharded with per-day empties — capture
+      whether reference data_types should be snapshot-not-daily (data-model question → instruments-service).
 
 ### C — single-walk (v9 + partition + typed reasons + source path→column + canonical verify)
 
