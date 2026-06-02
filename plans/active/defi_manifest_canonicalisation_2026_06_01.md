@@ -338,13 +338,14 @@ What to verify/wire (B0 corrected scope):
       `reference_data/adapters/defi/` for the same shape** (the `return []`-on-soft-error pattern is workspace-wide; only
       aave_v3/spark carry the explicit "treating as empty" comment but the others need verifying). Repo:
       instruments-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. A9 **MTDS `dex_swaps_handler` balancer branch is inconsistent with the cascade's own honest-failure
-      handling** (slot-2 audit 2026-06-02). The univ3/messari cascade correctly RAISES `RuntimeError` when all schemas
+- [x] ✅ [CODE] P1. A9 **MTDS `dex_swaps_handler` balancer branch made consistent with the cascade's honest-failure
+      handling — SHIPPED mtds@45dced01.** The univ3/messari cascade already RAISES `RuntimeError` when all schemas
       return GraphQL errors (`dex_swaps_handler.py:700-708`, "records ADAPTER_FETCH_FAILED rather than
-      SOURCE_RETURNED_ZERO") — but the single-query **balancer** branch (`dex_swaps_handler.py:658`,
-      `return … if data else pd.DataFrame()`) returns an empty frame on a 200-with-`errors` response → downstream
-      `record_empty(SOURCE_RETURNED_ZERO)` (a false complete-empty). FIX: balancer branch raises on a GraphQL-`errors`
-      response like the cascade does. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+      SOURCE_RETURNED_ZERO") — the single-query **balancer** branch (`dex_swaps_handler.py:658`) returned an empty frame
+      on a `None` (200-with-`errors`) response → downstream `record_empty(SOURCE_RETURNED_ZERO)` (false complete-empty).
+      Now raises on `data is None`, matching the cascade. MTDS QG green (sentinel 8ffb2acd). (Same commit set unblocked a
+      pre-existing foreign import-pattern violation in `migrate_tradfi_to_v9_canonical.py` → facade import,
+      mtds@89aff1b1.) Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
 - [ ] [CODE] P1. A10 **wire the `EmptyFromLiveInstrumentError` backstop — it is DEFINED but never RAISED** (slot-2 audit
       2026-06-02). The operator-directed (2026-05-07) safety net — `record_empty(SOURCE_RETURNED_ZERO)` must cross-check
       the IS catalog and reject (force `attempted_failed`) when the instrument was ALIVE on that day — exists only as a
