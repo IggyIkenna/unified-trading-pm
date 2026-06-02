@@ -2778,3 +2778,50 @@ When a QG fails ONLY on a timing META-gate — all substantive gates green — t
 These are legitimate because the timing gate is a performance budget, not a quality check — on a quiet host the same QG
 completes well under it (e.g. an MTDS run that took 425s under contention runs ~99s solo). The gate still runs every
 substantive STEP and writes the sentinel on a true pass. Do NOT use them to mask an actual gate failure.
+
+## Resource governance under multi-slot load (codified 2026-06-02)
+
+> Plan: `plans/active/quality_gates_resource_contention_speedup_2026_06_02.md`. The shared-host concurrency rule above is
+> the **manual** discipline ("humans/agents keep full QGs to 1–2"); the mechanisms below **automate** it inside
+> `quality-gates-base/base-service.sh` so it holds even when N slots gate unattended.
+
+**The anti-pattern (measured, not theoretical):** `pytest -n auto` per slot, or **uncapped native BLAS/OMP thread pools**
+per slot, on a shared host is **oversubscription, not speedup**. Measured 2026-06-02 on the 24-core dev box: ml-service's
+gate spawned **100+ threads / ~13 effective cores** from numpy/sklearn/lightgbm/xgboost (the `pytest -n` default was
+already `1` — the fan-out was native thread pools, NOT xdist). When several slots do this at once the box swaps and every
+run slows. Adding parallelism makes the aggregate worse.
+
+### The four levers (all in `base-service.sh`, sourced live by every repo's `quality-gates.sh`)
+
+1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens
+   (K = `max(1, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`). `qg_governor_acquire` is called before the
+   heavy phases (`[3] TESTS`) and `qg_governor_release` after `[4] TYPE CHECK`; at most K QG heavy-phases run concurrently
+   **across all slots**, the rest queue. The held process is `nice -n10` + `ionice -c2 -n7` so it never starves
+   interactive work. `flock` auto-frees on process death (no stuck tokens). No-op when `QG_GOVERNOR_DISABLE=true` or
+   `flock(1)` is absent. Introspect: `bash qg-host-governor.sh --status`. This converts N-way thrash into orderly
+   queueing → aggregate p95 drops with **no added parallelism**.
+2. **Thread-pool caps.** `base-service.sh` exports `OMP_NUM_THREADS` / `OPENBLAS_NUM_THREADS` / `MKL_NUM_THREADS` /
+   `NUMEXPR_NUM_THREADS` = `${QG_THREAD_CAP:-2}` — caps the native fan-out above. Capping `pytest -n` alone is
+   insufficient when the parallelism is BLAS/OMP, not xdist. Per-repo override: `export QG_THREAD_CAP=N` before
+   `source base-service.sh`.
+3. **Coverage off the hot path.** `--cov` (per-line instrumentation) is a large CPU/RAM cost. Iterative/`--quick` runs
+   skip it; the coverage floor is still **enforced on the full gate run** (quickmerge Pass 1). The merge-gate coverage
+   requirement is unchanged — only *when* it is paid.
+4. **Shared caches.** `RUFF_CACHE_DIR` (and the basedpyright cache, already keyed per-service in `$TMPDIR`) are repointed
+   to host-shared dirs so the first slot to run warms them for all — the default in-worktree `.ruff_cache`/`.pytest_cache`
+   defeats cross-slot reuse.
+
+### Per-repo resource baseline + 2× drift guard
+
+`scripts/dev/measure-qg-baseline.sh --env local|vm [--jobs N]` records per-repo wall/RSS/CPU to
+`scripts/dev/qg_resource_baseline.json` (keyed repo × {local,vm}; RSS + CPU are parallelism-invariant so `--jobs>1` stays
+accurate, only wall can inflate — validated on this box at j=4 with <3% deviation). `base-service.sh` then WARNs (never
+fails) when a run's wall-clock exceeds **2× its committed baseline** — an early resource-regression signal during
+code-freeze. Aggregate cross-slot contention is measured separately by `scripts/dev/benchmark-qg-under-load.sh`.
+
+### VM-sizing (data-driven, not a guess)
+
+The binding constraint is **peak RSS**, not cores. Measured ceiling (local, full gates): **unified-trading-library
+5.27 GB**, then execution/features ~1.9 GB — so a *single* heavy gate overshoots the current `m7i.xlarge` 2 GB/slot budget
+by up to 2.6×. The right-sizing decision pairs machine-type **with** slots-per-VM under the governor (a bigger box OR
+fewer slots) — never "add RAM to 8 uncapped runs". Floor = `peak-per-run-RSS × peak-concurrent-QG-under-the-governor`.

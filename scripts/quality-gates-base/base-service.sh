@@ -57,6 +57,22 @@ set -e
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
 
+# ── QG RESOURCE GOVERNANCE ────────────────────────────────────────────────────
+# Plan: quality_gates_resource_contention_speedup_2026_06_02.
+# (1) Host concurrency governor — token bucket so at most K QG heavy-phases run
+#     concurrently across ALL slots. Sourced here so qg_governor_acquire/release
+#     bracket the heavy phases below.
+source "${BASH_SOURCE[0]%/*}/qg-host-governor.sh"
+# (2) Thread-pool caps — stop one repo's native BLAS/OMP pools (numpy/sklearn/
+#     lightgbm/xgboost) from fanning out across every core under multi-slot load
+#     (measured: ml-service spawned 100+ threads). With the governor's K-cap this
+#     keeps the box from oversubscribing. Per-repo override: export QG_THREAD_CAP.
+export OMP_NUM_THREADS="${QG_THREAD_CAP:-2}" OPENBLAS_NUM_THREADS="${QG_THREAD_CAP:-2}" \
+       MKL_NUM_THREADS="${QG_THREAD_CAP:-2}" NUMEXPR_NUM_THREADS="${QG_THREAD_CAP:-2}"
+# (3) Shared ruff cache across worktrees/slots — the default .ruff_cache lives in
+#     each worktree and defeats cross-slot reuse; repoint to a host-shared dir.
+export RUFF_CACHE_DIR="${RUFF_CACHE_DIR:-${TMPDIR:-/tmp}/qg-ruff-cache}"
+
 # ╔══ MEMORY GOVERNANCE [OOM MITIGATION — added 2026-05-15] ═══════════════════╗
 # Cap heavy subprocesses (pytest, basedpyright) at QG_MEM_CAP. Prevents one
 # runaway process from OOM-killing the whole machine.
@@ -246,6 +262,12 @@ if [ "$RUN_LINT" = true ]; then
     _lint_out=$(run_timeout 30 $RUFF_CMD check $SOURCE_DIRS 2>&1) || { echo "$_lint_out"; log_fail "Lint FAILED"; exit 1; }
 fi
 
+# ── HOST CONCURRENCY GOVERNOR: acquire before the heavy phases (TESTS + TYPECHECK) ──
+# Blocks until <=K QG heavy-phases run host-wide (K=floor(cores/4)); released after
+# TYPE CHECK. The OS auto-frees the flock on any early exit between here and release.
+# No-op when QG_GOVERNOR_DISABLE=true or flock(1) is absent.
+qg_governor_acquire
+
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
 if [ "$RUN_TESTS" = true ]; then
     log_section "[3/6] TESTS"
@@ -262,7 +284,14 @@ if [ "$RUN_TESTS" = true ]; then
     check_emulator_reachability
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
-    COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+    # Coverage off the hot path (qg-coverage-off-hotpath): per-line instrumentation
+    # is a large CPU/RAM cost. Iterative/--quick runs skip it; the coverage floor is
+    # still ENFORCED on the full gate run (quickmerge Pass 1) — merge gate unchanged.
+    if [ "$QUICK_MODE" = true ]; then
+        COV=""
+    else
+        COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+    fi
     # ╔══ [OOM MITIGATION — added 2026-05-15] ═════════════════════════════════╗
     # OLD (pre-2026-05-15): xdist used 25% of logical CPUs by default. With 8
     # slots × ~4 workers × 2-4GB each peak the 93GB dev box hit OOM.
@@ -504,6 +533,10 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     fi
 fi
 [ "$SKIP_TYPECHECK" = "true" ] && echo -e "${YELLOW}⚠️  Type check SKIPPED (--skip-typecheck flag)${NC}"
+
+# ── HOST CONCURRENCY GOVERNOR: release the token — heavy phases (TESTS + TYPECHECK)
+# are done; the lighter codex/validator phases run ungoverned. (OS auto-frees on exit.)
+qg_governor_release
 
 # ── [5] CODEX COMPLIANCE ──────────────────────────────────────────────────────
 # All checks are blocking unless excluded via QUALITY_GATE_BYPASS_AUDIT.md.
@@ -2430,6 +2463,20 @@ fi
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-300}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
+
+# ── 2× RESOURCE-DRIFT GUARD (qg-perrepo-baseline) ─────────────────────────────
+# WARN (never fail) when this run's wall-clock exceeds 2× the committed per-repo
+# baseline — an early signal of a resource regression during code-freeze. Keyed by
+# repo folder name in qg_resource_baseline.json (local side). Fully defensive.
+_QG_BASELINE="${REPO_ROOT}/unified-trading-pm/scripts/dev/qg_resource_baseline.json"
+if [ -f "$_QG_BASELINE" ] && command -v python3 >/dev/null 2>&1; then
+    _qg_repo_key="$(basename "$PROJECT_ROOT")"
+    _base_wall="$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get(sys.argv[2],{}).get('local',{}).get('wall_s',0))" "$_QG_BASELINE" "$_qg_repo_key" 2>/dev/null || echo 0)"
+    if awk "BEGIN{exit !(${_base_wall:-0}>0 && ${DUR:-0} > 2*${_base_wall:-0})}" 2>/dev/null; then
+        log_warn "Resource drift: wall ${DUR}s > 2× baseline ${_base_wall}s for ${_qg_repo_key} (qg_resource_baseline.json) — investigate before merge"
+    fi
+fi
+
 if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
     log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"
     exit 1
