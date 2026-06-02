@@ -203,17 +203,17 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > v9 post-migration canonical only." Post-migration every object is `asset_group=`; a lingering `category=` fallback
 > double-counts / confuses the data-status denominators.
 
-- [ ] [CODE] P0. **Remove the `category=` fallback from data-status + readers** for cefi/tradfi/prediction — the dual
-      `(?:category|asset_group)=` fan-out (`deployment-api/utils/storage_facade.py` `_HIVE_VOCAB_RE`), the cefi/tradfi/pred
-      `category=` prefix templates in the rebuilds, and any `category=` tolerance in list/read/count paths → **`asset_group=`
-      ONLY**. **⚠️ SEQUENCING (correctness — do NOT rip out before the data is migrated):** the cutover is **per-AG, AFTER
-      that AG's G3 `--apply`** makes everything available at `asset_group=`/`pipeline_mode=`. **PREDICTION currently writes
-      `category=prediction`** (verified 2026-06-02: pred-prd path is `day=/category=prediction/data_source=…`) → removing
-      its `category=` fallback BEFORE the prediction migrator runs would BLIND prediction data-status. cefi/tradfi bulk are
-      already `asset_group=` so their fallback is near-dead today. **Plan**: land the `asset_group=`-only code gated/sequenced
-      so each AG flips to canonical-only at its G3; the legacy `category=` objects are gone at L6/E7 delete. Add a QG/test
-      assertion that data-status counts use `asset_group=` only (no `category=` double-count). Cross-ref the migrators
-      (which already emit `asset_group=`) + `bucket_name_ssot…` L6.
+- [x] ✅ [CODE] P0. **`category=` banned at the COUNT/logical layer — DONE (deployment-api@41fa120 by harsh-side agent,
+      verified slot-3 2026-06-02).** `trading_axis.py` / `shard_management.py` / `data_status_drilldown.py` / `mock_data.py`
+      drop the `category=` fallback in the asset-group/count paths; `test_no_category_asset_group_fallback.py` QG ratchet
+      added. **storage_facade.py `_HIVE_VOCAB_RE` fan-out is CORRECTLY RETAINED** (slot-3 verified) — per this todo's own
+      ⚠️ SEQUENCING caveat, the on-disk objects are still `category=` until each AG's G3 migration runs (PREDICTION still
+      writes `category=prediction` today), so removing the on-disk-read fan-out NOW would BLIND unmigrated-AG data-status.
+      The ban belongs at the count/denominator layer (done) NOT the on-disk-read layer (kept until L6/E7 delete). **mtds
+      rebuild `(?:category|asset_group)=` regex alternations are CORRECTLY KEPT** (audit FOOTPRINT-SCOPE: "legacy-TOLERATED
+      … in migration/rebuild tools (correct — keep)"). So slot-3 scope (storage_facade + rebuilds) = verified-no-change;
+      the count-layer ban shipped via @41fa120. Residual: the per-AG on-disk fan-out removal happens at each AG's G3/L6
+      (owned by `bucket_name_ssot…` L6), not pre-migration.
 
 ### E. Upstream pre-flight DATA checks in every service — post-migration SSOT + v9 schema + honest-absence + live/batch symmetry (operator 2026-06-02)
 
