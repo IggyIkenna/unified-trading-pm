@@ -596,6 +596,14 @@ What to verify/wire (B0 corrected scope):
 >       (`…/venue=BALANCER/chain=ARBITRUM/instrument_type=pool/data_type=dex_pools/balancer_ARBITRUM_2022-01-03.parquet`).
 >       Dedup collapses multi-write-ts duplicates (dex-pools 2573→899 cells, lst 279→31). Walkthrough in operator chat.
 >       Follow-up mtds@e46b5f6b adds per-phase timing + obj/s + LOUD error-exit for the apply run. parent_epic: manifest_master.
+> - [x] ✅ [CODE] P0. C0-RD3c — **oracle attribution + needs_attribution diagnostic — SHIPPED mtds@90aac6e1** (slot-2
+>       2026-06-02). The full-range dry surfaced held rows the 2022-01 slice (RD3b) didn't: ~5,187 oracle (pre-chain
+>       Chainlink) + ~917 lst. Migration tool now inverts `oracle_prices_handler._CHAINLINK_FEEDS_BY_CHAIN`+`_PYTH_FEEDS`
+>       → `contract→chain` and fills blank-chain oracle rows from the row `contract` (deterministic; addresses are
+>       chain-unique) + a dry-run DIAGNOSTIC enumerating distinct unattributable `(contract,feed)`/`(token,protocol)`
+>       so the residual lst-token registry (UAC `LST_VENUE_TO_TOKENS`) is closed from REAL data, not guessed.
+>       `_needs_attribution` stays HELD-never-guessed. **Next: busy-week re-dry → read the diagnostic → add the
+>       enumerated lst tokens → re-dry to needs_attr≈0 (or operator-ack) → THEN C0-RD4.** parent_epic: mtds_mdps_master.
 > - [ ] [DATA] P0. C0-RD4 — **completeness + uniformity gate**: post-walk, assert canonical `-prd` distinct-cell count ≥
 >       union of all 3 source layouts' distinct cells (per bucket); **exactly ONE schema (column set) per data_type
 >       across ALL output objects** (no schema drift between cells of different source-layout origin); CF-1…CF-12 GREEN
