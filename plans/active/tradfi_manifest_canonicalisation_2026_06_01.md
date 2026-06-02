@@ -225,6 +225,12 @@ VM.
 > TRADING day for an in-universe ticker within UAC coverage being mislabeled `SOURCE_RETURNED_ZERO` (only 5 such today —
 > verify each) instead of `attempted_failed`. The expected-attempt set = TRADFI_TICKER_UNIVERSE / databento universe ×
 > trading-calendar (weekday, non-holiday) × UAC SOURCE_PRIORITY data_type registration × coverage window.
+>
+> **The manifest must EXPLAIN every zero (3-way decision tree — the E5 rebuild contract):** (1) attempt errored on a
+> trading-day in-universe cell → `attempted_failed`; (2) a UAC guard explains the zero → typed `empty_confirmed`
+> (`EXPECTED_WEEKEND` / `EXPECTED_HOLIDAY` / `EXPECTED_OUT_OF_COVERAGE_WINDOW` / pre-listing "not started yet"); (3) only
+> if a trading session was open + fetch succeeded + genuinely nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank
+> `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as complete.
 
 - [ ] [DATA] P0. **E5 rebuild classifier: within-bounds trading-day empty → `attempted_failed`.** For every empty cell:
       if it is a trading day (NOT weekend/holiday) + ticker in universe + data_type guaranteed-when-listed (trades / tbbo

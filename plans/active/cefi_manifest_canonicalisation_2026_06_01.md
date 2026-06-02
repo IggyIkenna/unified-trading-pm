@@ -207,6 +207,11 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 > expected-attempt set — instrument in the IS CeFi universe, data_type registered in UAC SOURCE_PRIORITY, date within the
 > venue/instrument coverage window — is a masked fetch failure → `attempted_failed` (retry/backfill), NOT a false
 > `empty_confirmed`/`SOURCE_RETURNED_ZERO` that freezes the gap forever.
+>
+> **The manifest must EXPLAIN every zero (3-way decision tree — the E5 rebuild contract):** (1) attempt errored on a
+> warranted cell → `attempted_failed`; (2) a UAC guard explains the zero → typed `empty_confirmed`
+> (`EXPECTED_OUT_OF_COVERAGE_WINDOW` / pre-listing / delisted); (3) only if market open + fetch succeeded + genuinely
+> nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as complete.
 
 - [ ] [DATA] P0. **Rebuild classifier (`rebuild_cefi_manifest.py` / E5): within-bounds empty → `attempted_failed`.** For
       every empty cell: instrument in the IS CeFi universe + data_type guaranteed-when-listed (trades/ohlcv on an active

@@ -252,6 +252,12 @@ verify + the gated delete.
 > market's active window) being mislabeled `SOURCE_RETURNED_ZERO` (41 such today — verify each) instead of
 > `attempted_failed`. Expected-attempt set = Polymarket market/condition universe × market-active window × UAC
 > SOURCE_PRIORITY data_type registration.
+>
+> **The manifest must EXPLAIN every zero (3-way decision tree — the E5 rebuild contract):** (1) attempt errored on a
+> live-market in-window cell → `attempted_failed`; (2) a UAC guard explains the zero → typed `empty_confirmed`
+> (`EXPECTED_PRE_VENUE_LAUNCH` "not started yet" / post-resolution / out-of-coverage); (3) only if the market was live +
+> fetch succeeded + genuinely no trades/prices → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we
+> don't know why" masquerading as complete.
 
 - [ ] [DATA] P0. **E5 rebuild classifier (`rebuild_prediction_manifest.py`): within-bounds empty → `attempted_failed`.**
       For every empty cell: if the market/condition exists + is within its active window + data_type
