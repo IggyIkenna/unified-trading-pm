@@ -445,33 +445,45 @@ What to verify/wire (B0 corrected scope):
         land FIRST" gate (naming-SSOT Sequencing #1) — it must land BEFORE the C0 `--apply` or migrated data is NOT_IN_SCOPE
         in data-status.** Decision recorded with operator 2026-06-02 (full canonical rename, lands before apply). Repo:
         unified-api-contracts (+ coupled cross-repo consumer verification).
-    - [~] [CODE] P1. **A11c-UAC — UAC registries + tests + venue_data_types.yaml canonicalised** (slot-2 2026-06-02):
+    - [x] ✅ [CODE] P1. **A11c-UAC — UAC registries + tests + venue_data_types.yaml canonicalised** — uac@a967121a + PM-configs@ad30e9fd1 (slot-2 2026-06-02, UAC QG green):
           word-boundary rename `dex_pools`→`dex_pool_state`, `dex_swaps`→`dex_pool_swaps` across all 14 UAC source files
           above + `data_type_capability.py` note reconciled + 6 UAC tests updated (`test_data_type_canonicalization`
           `_BANNED_ALIASES`: `dex_pools`/`dex_swaps` now THEMSELVES banned legacy aliases) + both `venue_data_types.yaml`
           (PM-configs + mtds-configs). Bucket NAMES (`dex-pools`/`dex-swaps` hyphen) + enum MEMBER names (`DEX_POOLS`)
           preserved — only the data_type STRING value collapsed. Pending UAC QG-green + commit.
-    - [ ] [CODE] P1. **A11c-MDPS — candle-adapter re-registration is a REAL BREAK** (slot-2 audit 2026-06-02): the
+    - [x] ✅ [CODE] P1. **A11c-MDPS — candle-adapter re-registered dex_pool_swaps** — mdps@56503c2 (MDPS QG green). the
           orchestrator selects the candle adapter by the exact UAC data_type, now `dex_pool_swaps`, but
           `app/adapters/defi/swap_adapter.py` registers `@CandleAdapterRegistry.register(DEFI, "dex_swaps")` → "No adapter
           for defi/dex_pool_swaps" (the adapter docstring warns of this exact failure). Re-register under `dex_pool_swaps`
           + update `app/core/canonical_writer.py` legacy keys (`"dex_swaps":"swaps_ohlcv"`, `("defi","dex_swaps"):"swap"`)
           to canonical. `orchestration_scanner.py` `_CANONICAL_LEGACY` map already accepts both (transition-aware — no
           change). Repo: market-data-processing-service. parent_epic: mtds_mdps_master.
-    - [ ] [CODE] P1. **A11c-deployment-api — data-status canonical** (slot-2 audit 2026-06-02): `_BUCKET_DOMAIN_TO_DATA_TYPE`
+    - [x] ✅ [CODE] P1. **A11c-deployment-api — data-status canonical** — deployment-api@14dfe2e (TESTS green; repo QG blocked ONLY by PRE-EXISTING acknowledged schema-provenance debt across many local DTOs — UNRELATED, flagged for workspace-QG-green sweep). `_BUCKET_DOMAIN_TO_DATA_TYPE`
           (`services/data_status_service.py` `"dex-swaps":"dex_swaps"`/`"dex-pools":"dex_pools"`) + `services/shard_detail.py`
           grouped-bundle set + `services/data_query_service.py` `"DEFI":["dex_swaps",…]` default → canonical
           `dex_pool_swaps`/`dex_pool_state` (the expected denominator via `get_expected_data_types_for_venue` is now
           canonical, so these must match). Repo: deployment-api. parent_epic: mtds_mdps_master.
-    - [ ] [CODE] P1. **A11c-MTDS — orchestrator + live connector canonical** (slot-2 audit 2026-06-02):
+    - [x] ✅ [CODE] P1. **A11c-MTDS — adapters + orchestrator + live connector canonical** — mtds@b986a3e1 (MTDS QG green; ALSO flipped 5 DeFi DEX adapters' SUPPORTED_DATA_TYPES/_default_data_types/branch-dispatch, forced canonical by the UAC denominator flip) (slot-2 2026-06-02):
           `engine/orchestrator.py` per-data_type config (`"dex_pools"`/`"dex_swaps"` sort-key map L621-622) + live
           `live/connectors/curve_defi_ws.py` `_data_type == "dex_pools"`/`"dex_swaps"` dispatch (live=batch — handler now
           sets canonical `_DATA_TYPE`) → canonical. Do NOT touch the historical migration/backfill SCRIPTS that
           intentionally map legacy→canonical (`migrate_legacy_solana_*`, `canonicalize_defi_manifest_data_types_*`,
           `gate3_solana_manifest_reconcile`). Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-    - [ ] [CODE] P2. **A11c-features — verify-only** (slot-2 audit 2026-06-02): features-onchain hits are comments/docstrings
+    - [x] ✅ [CODE] P2. **A11c-features — verify-only: NO functional break** (Explore sub-agent confirmed features-onchain already canonical-aware post-C0-CN4; hits are comments/docstrings/yaml) (slot-2 2026-06-02). features-onchain hits are comments/docstrings
           + `feature_definitions.yaml` post-C0-CN4; confirm no functional `data_type=="dex_pools"` literal break, update
           docstrings/yaml for accuracy. Repo: features-service. parent_epic: features_and_ml_master.
+    - [ ] [CODE] P2. **A11c-candle-enum — UAC `candle_schema.DataType` snapshot-vs-timeseries naming COLLISION** (slot-2
+          found 2026-06-02): `internal/domain/market_data_processing/candle_schema.py` `DataType` enum has BOTH a legacy
+          `DEX_POOLS = "dex_pools"` / `DEX_SWAPS = "dex_swaps"` (candle-input) AND a DISTINCT Phase-2
+          `DEX_POOL_STATE = "dex_pool_state"` (spot-DEX time-series state, comment: "distinct from the existing DEX_POOLS
+          *snapshot* type"). The operator-locked canonical pool name `dex_pool_state` **collides** with the Phase-2
+          member's value → a StrEnum alias if DEX_POOLS is renamed to it. **Slot-2 left DEX_POOLS/DEX_SWAPS on the legacy
+          values** (they are not consumed by member-name anywhere; functional collapse is enforced on
+          market_data_categories/expected_coverage/defi_venue_capabilities). RECONCILE: decide whether the legacy
+          `dex_pools` snapshot type and the Phase-2 `dex_pool_state` time-series type are the SAME (merge — remove DEX_POOLS,
+          point all to DEX_POOL_STATE) or genuinely DIFFERENT shapes (then the operator's canonical-pool name needs a
+          distinct token from the Phase-2 type — **operator decision**). Also check `DEX_POOL_SWAPS` does not exist yet
+          (only DEX_POOL_STATE/DEX_ORDERBOOK/DEX_QUOTE/DEX_TRADES). Repo: unified-api-contracts. parent_epic: mtds_mdps_master.
   - [ ] [CODE] P1. **A11d — MTDS `data_manifest_handler.py` OPERATIONS metadata legacy data_types** (`bucket_type:
         dex-pools`/`dex-swaps`/`lending-indices`) — reconcile with the canonical `dex_pool_state`/`dex_pool_swaps`
         handler `_DATA_TYPE` consts (C0-CN2). Repo: market-tick-data-service.
@@ -667,6 +679,17 @@ What to verify/wire (B0 corrected scope):
 >       extra whole-corpus walk per single-walk discipline). Paired non-manifest edits: drop the 2 columns from UAC
 >       `DEX_SWAPS_SCHEMA` + stop emitting them in `swap_adapter.py`. parent_epic: manifest_master. Repos:
 >       unified-api-contracts + market-data-processing-service.
+>       **⚠️ BLOCKER FOUND 2026-06-02 (slot-2) — needs a schema SPLIT, not a flat drop**: the candle-output
+>       `DEX_SWAPS_SCHEMA` is `_candle_contracts.py` `_DEX_EXT = [swap_count, volume_quote_usd]`, but `_DEX_EXT` is
+>       **SHARED** — it is applied to BOTH `swaps_ohlcv_{tf}` (dex_pool_swaps) AND `state_ohlcv_{tf}` (dex_pool_state)
+>       via `extra_cols=_DEX_EXT` (L375/L390/L401). The docstring says `dex_pool_state → OHLCV(mid) + swap_count` (state
+>       legitimately keeps `swap_count`), so a flat drop of both cols from `_DEX_EXT` would over-reach and strip
+>       `swap_count` from `dex_pool_state` too. C0-RD6 therefore requires SPLITTING `_DEX_EXT` into a swaps-ext (drop both
+>       dup aliases) vs state-ext (keep `swap_count` only — note state never had `volume_quote_usd` per the docstring, so
+>       there is also a pre-existing state/`_DEX_EXT` inconsistency to fix). The swap_adapter `swap_count=`/`volume_quote_usd=`
+>       emission was provisionally added then **reverted** by slot-2 (kept ONLY the A11c `dex_pool_swaps` re-registration)
+>       so C0-RD6 can land as its own careful unit. Also still owed: the RAW migration superset-union exclusion (31→29) in
+>       `migrate_defi_full_v9_canonical.py` `_VENUE_SCHEMA["dex_pool_swaps"]` before apply. DECOUPLED from the A11c landing.
 
 ### C0-CN — Canonical-naming reconciliation (operator-locked 2026-06-01) — SSOT `codex/02-data/defi-canonical-naming-ssot.md`
 
