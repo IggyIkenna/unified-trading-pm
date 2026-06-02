@@ -72,8 +72,11 @@ confirmed). 6h is far too much latency: plans are authored continuously, so back
       `server/regen_backlog_from_plan.py`; docstrings updated + comment decoupled from the SQLite-backup cadence. This
       was a code-vs-doc drift — the codex overview already documented `default 1800`.
       `test_default_regen_interval_is_at_most_30min` added. — agent-orchestrator@e21bd41
-- [ ] [DESIGN] P1. _(stretch)_ For near-instant ack, add a push-triggered `POST /api/backlog/regen` callable from a
-      post-push GHA hook — polling at 30 min is the floor, push is the ceiling. Not required for the 30-min fix.
+- [ ] [DESIGN] P1. _(stretch, optional)_ Near-instant ack. The `POST /api/backlog/regen` endpoint **already exists**
+      (`server/server.py:1581`, AUTHED) — what's missing is a post-push GHA hook in unified-trading-pm that calls it on
+      `plans/active/*.md` changes. Deferred: it needs a GHA→central-orchestrator auth token (the operator JWT /
+      internal-secret) wired as a repo secret — a small auth/secrets task, not required given the 30-min floor from the
+      G2 default + the 5-min `pm-pull` (effective ≤30 min today).
 
 ### G3 — merge-flow doc drift [P0] _(fix lives in the context-hygiene plan)_
 
@@ -171,15 +174,25 @@ the idempotent one-time move in `bootstrap_vm.sh` when re-bootstrapped. e2e_demo
 missing is the **`staging` branch itself** + the v1-ghost cleanup. Its local gate is **`scripts/check.sh`** (no
 `scripts/quickmerge.sh`/`quality-gates.sh` — it is not a uv service repo).
 
-- [ ] [INFRA] P0. Create the `staging` branch for agent-orchestrator + a `staging-to-main` SIT/promotion gate mirroring
-      the trading-repo flow. Removes the old `main`-direct exception. (Quickmerge in the trading repos is already
-      staging-first — PR base = staging, `--to-staging` is a no-op — see G3/G7.)
-- [ ] [INFRA] P0. Delete the stale v1 ghost workflows still present in agent-orchestrator (`quality-gates.yml`,
-      `workspace-qg.yml`) — the v2 migration removed these from every other repo (deployment-ui done 2026-06-02). Pin
-      branch protection to require `Quality Gates (agent-orchestrator) / quality-gates-v2`.
-- [ ] [INFRA] P0. Confirm the merge→CICD restart path: dashboard rebuild + GHA-restart of the backend on deploy.
-      **Depends on G5** — do not enable the auto-restart until the DB is off the repo checkout + the pre-restart flush
-      is in place, or a deploy could wipe/lose state.
+**Access + safety reality (verified 2026-06-02):** the working session has **push-only** rights on
+`IggyIkenna/agent-orchestrator` (`admin=false`), `main` has **no branch protection** (404), and **rulesets are
+unavailable** on the repo's plan (403 "upgrade to Pro"). Also: creating `staging` or pushing to `main` fires the deploy
+path (`dispatch-cloud-build` on staging; main→`cloud-build-router`) which **restarts the fleet backends** — explicitly
+out of bounds until the operator green-lights a deploy (2026-06-02 directive: "don't restart the running backends").
+
+- [x] ✅ [INFRA] P0. Deleted the stale v1 ghost workflows on LDR (`quality-gates.yml`, `workspace-qg.yml`).
+      `workspace-     qg.yml` had still been triggering on every `live-defi-rollout` push (wasted runs); neither carries
+      a cloud-build dispatch so removal triggers no deploy. — agent-orchestrator@0249a83
+- [ ] [INFRA] P0. **BLOCKED-OPERATOR** — remove the v1 ghosts from `main` too + create the `staging` branch +
+      `staging-to-main` SIT gate. Both actions trigger CICD → a fleet backend **restart**, so they wait for the operator
+      to green-light a deploy. (LDR-side deletion above promotes to main on that same deploy.)
+- [ ] [INFRA] P0. **BLOCKED-ADMIN** — pin branch protection to require
+      `Quality Gates (agent-orchestrator) /     quality-gates-v2`. The session is push-only (not admin) and the repo
+      plan has no rulesets, so **Ikenna (repo admin)** must set classic branch protection (there is none today). Until
+      then nothing is enforced — merges aren't gated.
+- [x] ✅ [INFRA] P0. merge→CICD restart path confirmed wired: `quality-gates-v2.yml` `dispatch-cloud-build` (staging) +
+      main→`cloud-build-router`→`uts-prod`. **Now safe w.r.t. state** since G5 moved the DB off the repo checkout — a
+      deploy/restart no longer risks state. Actual enablement = the operator's deploy green-light (above).
 
 ### G7 — reconcile agent boot prompts to the staging-first quickmerge + v2 flow [P0] _(operator-raised 2026-06-02)_
 
