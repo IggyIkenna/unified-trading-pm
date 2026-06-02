@@ -1222,7 +1222,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "LOCAL_PASS",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,

@@ -186,9 +186,9 @@
   <text x="95" y="1057" text-anchor="middle" class="level-label">L7</text>
   <text x="150" y="1057" class="desc">UI applications (TypeScript). user-management-ui archived 2026-04-20 (folded into unified-trading-system-ui /ops/admin/*). (2 repos)</text>
   <rect x="70" y="1080" width="130" height="38" class="ui-box" />
-  <rect x="70" y="1080" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="1080" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="135" y="1098" text-anchor="middle" class="label">deployment-ui</text>
-  <circle cx="190" cy="1088" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="190" cy="1088" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="135" y="1110" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="210" y="1080" width="195" height="38" class="ui-box" />
   <rect x="210" y="1080" width="4" height="38" fill="#ef4444" rx="2" />
