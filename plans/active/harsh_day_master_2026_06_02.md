@@ -16,7 +16,7 @@ related_plans:
   - plans/active/quality_gates_resource_contention_speedup_2026_06_02.md
   - plans/active/cicd_contract_hardening_2026_06_01.md
   - plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md
-  - plans/active/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
+  - plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
   - plans/epics/orchestrator_master.md
   - plans/active/defi_manifest_canonicalisation_2026_06_01.md
   - plans/active/instruments_manifest_canonicalisation_2026_06_01.md
@@ -54,8 +54,8 @@ confirms the exact blocker before concluding "gated."
 | E   | QG resource/speedup + worker-VM right-sizing | `quality_gates_resource_contention_speedup_2026_06_02.md`      | 0/12         | governor + slot-aware pytest + per-repo baseline → VM-size    | ✅ yes           |
 | F   | CI/CD hardening                              | `cicd_contract_hardening_2026_06_01.md`                        | 78/18        | clear LDR v2 RED gates as encountered                         | ✅ opportunistic |
 
-¹ orchestrator code shipped (4 plans, 51✓/0○) but **F1/F2/FM3 residuals open** — see
-`issues/orchestrator_autonomy_residual_findings_2026_06_02.md`.
+¹ orchestrator code shipped (4 plans, 51✓/0○); **F1/F2/FM3 residuals RESOLVED + archived 2026-06-02** — see
+`archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md`.
 
 ---
 

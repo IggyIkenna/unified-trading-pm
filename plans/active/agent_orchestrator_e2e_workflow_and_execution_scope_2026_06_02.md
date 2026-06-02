@@ -16,7 +16,7 @@ related_plans:
   - plans/active/quality_gates_resource_contention_speedup_2026_06_02.md
   - plans/active/cicd_contract_hardening_2026_06_01.md
   - plans/epics/orchestrator_master.md
-  - plans/active/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
+  - plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
 ---
 
 # Agent-orchestrator e2e workflow + execution-scope field
