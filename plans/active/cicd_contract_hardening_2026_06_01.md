@@ -308,12 +308,13 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       used raw `gh pr` calls that bypass this gate entirely. These two are staging→main-side hardening, not LDR→staging.
       ci_status state machine). **FOLLOW-UP BELOW.**
 
-- [ ] [SCRIPT] P2. **FOLLOW-UP: Main-tier dep-order gate (staging→main).** The STAGE 1.7 gate covers the LDR→staging
-      promote path. The complementary gate for staging→main belongs in `.github/workflows/staging-to-main.yml` (or a
-      `promote.sh` that wraps `gh pr merge`). Gate rule: before promoting staging→main for repo X, assert every dep D
-      has `ci_status ∈ {SIT_VALIDATED}` OR dep D's main SHA == staging-promoted SHA. Also needs a new `MAIN_GREEN`
-      ci_status state in `ci-status-update.yml` (today tops out at STAGING_GREEN). This is the second half of the
-      UTL-before-UAC mitigation. repo: unified-trading-pm (staging-to-main.yml + ci_status state machine).
+- [x] ✅ [SCRIPT] P2. **FOLLOW-UP: Main-tier dep-order gate (staging→main).** — unified-trading-pm@157df99ff.
+      STAGE 1.8 added to staging-to-main.yml: blocks staging→main promotion when any dep D has ci_status not in
+      {MAIN_GREEN, SIT_VALIDATED}. MAIN_GREEN added as new ci_status state (9th state in lifecycle) — emitted by
+      python-quality-gates-v2.yml when QG passes on main branch. ci-status-update.yml VALID_STATUSES updated.
+      Safe-defaults (manifest/repo/dep missing, ci_status unset) always PASS (consistent with STAGE 1.7 + readiness
+      gate patterns). Gate error = warning-only, does NOT block. 18 hermetic unit tests in
+      tests/unit/test_staging_to_main_dep_order_gate.py (8 PASS + 6 BLOCK + 4 lifecycle constants). QG green.
 
 - [ ] [SCRIPT] P2. **Finish Telegram-retire in the TEMPLATE SSOT (else rollout re-introduces it).** The 2026-06-02
       operator-decided Telegram→Slack#ci-failures migration is DONE for `.github/workflows/` (10 workflows, grep-clean,
