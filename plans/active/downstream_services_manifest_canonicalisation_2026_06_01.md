@@ -288,8 +288,10 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
       existed; only the live call-site flag was wrong. Test asserts the live cycle does not skip the dep check.
 - [ ] [CODE] P1. **GAP-5 (strategy-service): startup upstream-features dep check** in `StrategyLiveHandler.run()`
       (service_entry.py) before the live trade loop — currently only the per-cycle allocation guard runs (after start).
-- [ ] [CODE] P1. **GAP-6 (features-service): startup MDPS-candle manifest freshness check** in delta_one `live_handler.py`
-      before PubSub subscribe (per-compute `manifest_window_guard` runs, but no startup gate).
+- [x] ✅ [CODE] P1. **GAP-6 (features-service) — DONE (features-service@dbf12aff, 2026-06-02).** delta_one
+      `LiveHandler.run()` asserts the upstream MDPS candle consolidator healthy (`assert_consolidator_healthy` on
+      `market-data-tick-{ag}-prd`) BEFORE PubSub subscribe — live fails-to-start on a stale candle index rather than
+      computing on it. Gated by `skip_preflight`/`skip_dependency_check` + `fail_on_missing_deps`. 3 unit tests.
 - [ ] [CODE] P2. **GAP-4 (all consumers): ASSERT v9 schema columns on manifest read.** `read_availability_index` backfills
       missing v9 cols as NULL on a v8 manifest → consumers silently read NULL `asset_group`/`pipeline_mode`/`source`. Add a
       `schema_version`/`asset_group`-present assertion (or `assert_consolidator_healthy`) in `manifest_window_guard`,
