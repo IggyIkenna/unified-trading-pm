@@ -96,8 +96,11 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
     if [ -f "$WORKSPACE_VENV/bin/activate" ]; then
         source "$WORKSPACE_VENV/bin/activate"
     else
-        command -v uv &>/dev/null || pip install uv --quiet
-        uv lock 2>/dev/null || :
+        command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+        # Read-only freshness check — do NOT mutate uv.lock here (mutating it dirtied trees
+        # and jammed the FF-pull cron). Warn-only for now; ratchets to blocking after the
+        # re-lock-all sweep. SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
+        uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml — run 'uv lock' && commit (warn-only)"
         [ ! -d ".venv" ] && uv venv .venv
         [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
         for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
