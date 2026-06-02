@@ -34,6 +34,12 @@ on:
     secrets:
       SLACK_WEBHOOK_URL:
         required: false
+      # Dedicated #ci-failures webhook. Preferred over SLACK_WEBHOOK_URL so callers that use
+      # `secrets: inherit` deliver via the valid webhook (the bare SLACK_WEBHOOK_URL repo secret
+      # is stale/non-https). Available to inherit-callers automatically; declared here so explicit
+      # callers can pass it too.
+      SLACK_CI_WEBHOOK_URL:
+        required: false
 
 permissions: {}
 
@@ -48,7 +54,8 @@ jobs:
     steps:
       - name: Post to Slack
         env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          # Prefer the dedicated valid #ci-failures webhook; fall back to the generic one.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
           INPUT_MESSAGE: ${{ inputs.message }}
           INPUT_SEVERITY: ${{ inputs.severity }}
           INPUT_WORKFLOW_NAME: ${{ inputs.workflow_name }}
