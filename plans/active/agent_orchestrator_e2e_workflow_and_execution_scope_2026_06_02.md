@@ -52,15 +52,15 @@ staging is the **promotion step when a unit is done**; merge-to-`main` is the CI
 
 ### G1 — execution-scope plan-routing field [P0] _(the field Harsh asked for)_
 
-- [ ] [DESIGN] P0. Add `execution_scope: orchestrator-agent | local-only` to PLAN_FORMAT.md frontmatter schema (two
-      values only — `hybrid` dropped per operator 2026-06-02). Default when ABSENT = `orchestrator-agent`
-      (backward-compatible — no backfill of the ~200 existing plans needed). `local-only` = orchestrator skips ingestion
-      entirely (work done + verified locally by an operator).
-- [ ] [SCRIPT] P0. Wire the field into `agent-orchestrator/server/regen_backlog_from_plan.py` — at the per-VM filter,
-      skip any plan with `execution_scope: local-only`. Add a unit test (`test_execution_scope_skip`).
-- [ ] [DOC] P1. Stamp the local-only coordination/design plans (`harsh_day_master`, `agent_context_and_memory_hygiene`,
-      this plan) with `execution_scope: local-only` (done at authoring — confirm the ingester honours it once G1 ships).
-      Document the field in the orchestrator overview codex doc.
+- [x] ✅ [DESIGN] P0. Added `execution_scope: orchestrator-agent | local-only` to PLAN_FORMAT.md frontmatter schema (two
+      values only — no `hybrid`). Absent ⇒ `orchestrator-agent` (backward-compatible, no backfill). — unified-trading-pm
+      (PLAN_FORMAT.md § YAML Frontmatter Schema)
+- [x] ✅ [SCRIPT] P0. Wired into `agent-orchestrator/server/regen_backlog_from_plan.py`
+      (`_parse_frontmatter_execution_scope` → unconditional skip on `local-only`, before the per-VM filter). 4 unit
+      tests (parse default/local-only/no-frontmatter + `test_regen_skips_local_only_plans`); pytest 60 passed, check.sh
+      green. — agent-orchestrator@e21bd41
+- [x] ✅ [DOC] P1. The 3 local-only plans are stamped (verified); field documented in
+      `codex/04-architecture/agent-orchestrator-overview.md` § "Backlog auto-generation". — unified-trading-pm
 
 ### G2 — discovery latency [P0] _(Harsh-owned)_
 
@@ -68,10 +68,10 @@ staging is the **promotion step when a unit is done**; merge-to-`main` is the CI
 `server/regen_backlog_from_plan.py:602` — the long default IS what runs unless the env overrides it (no prod override
 confirmed). 6h is far too much latency: plans are authored continuously, so backlog discovery lags up to 6h.
 
-- [ ] [SCRIPT] P0. Lower `DEFAULT_PLAN_REGEN_INTERVAL_SECONDS` to **≤ 1800 (30 min)** in
-      `server/regen_backlog_from_plan.py` (operator cap: 30 min max). Update the docstring at line 29 + the comment at
-      line 602 (currently "same cadence as SQLite backup" — decouple from the snapshot cadence). Add/adjust the unit
-      test asserting the new default.
+- [x] ✅ [SCRIPT] P0. Lowered `DEFAULT_PLAN_REGEN_INTERVAL_SECONDS` 21600(6h) → **1800 (30 min)** in
+      `server/regen_backlog_from_plan.py`; docstrings updated + comment decoupled from the SQLite-backup cadence. This
+      was a code-vs-doc drift — the codex overview already documented `default 1800`.
+      `test_default_regen_interval_is_at_most_30min` added. — agent-orchestrator@e21bd41
 - [ ] [DESIGN] P1. _(stretch)_ For near-instant ack, add a push-triggered `POST /api/backlog/regen` callable from a
       post-push GHA hook — polling at 30 min is the floor, push is the ceiling. Not required for the 30-min fix.
 
