@@ -155,11 +155,24 @@ the storage bloat.
       1.5 `import {}` block (`id =     "deployment-scripts-central-element-323112"`) so the prod-state apply _adopts_
       rather than creates; then `terraform plan` against `prefix=terraform/state/prod` MUST show **no changes** before
       commit. Until then the live lifecycle is safe (no TF resource exists that could overwrite it).
-- [ ] [INFRA] P3. **(discovered 2026-06-02, slot 1)** Declare `jinja2`, `flask`, `functions-framework` in
-      deployment-service `pyproject.toml [project.dependencies]` (they're imported by the backends chain but undeclared
-      — currently installed explicitly in the Dockerfile `maintenance-jobs` stage as a workaround). Also add a
-      `owner/cadence/verifier/last_executed` runbook block for the tarball-cleanup + vm-log-archival jobs, and a
-      cloud-build trigger so `deployment-service:latest` refreshes automatically. Repo: deployment-service.
+      **✅ DONE 2026-06-02 (slot 1 — had terraform):** added the central-project-guarded
+      `google_storage_bucket.deployment_scripts` (count) to `terraform/gcp/main.tf` matching live exactly
+      (UBLA off, no versioning, soft_delete=0, the 3 prefix Delete rules); `terraform import`'d into
+      `terraform/state/prod` + applied (labels-only diff; lifecycle + soft-delete confirmed unchanged: 3 rules,
+      soft_delete=0). deployment-service@`75012d3`. Future prod-state applies now preserve the lifecycle.
+- [ ] [INFRA] P3. **(updated 2026-06-02, slot 1)** Declare `jinja2` in deployment-service
+      `pyproject.toml [project.dependencies]` (`flask` + `functions-framework` are ALREADY declared; only `jinja2` —
+      imported by `backends/services/vm_config.py` — is missing; the Dockerfile `maintenance-jobs` stage installs all 3
+      explicitly so the jobs work regardless). **BLOCKED 2026-06-02 (slot 1):** adding `jinja2` forces a `uv lock` regen,
+      and the committed `uv.lock` is **STALE** — the `deployment-api` circular-dep removal (deployment-service@`63bd807`)
+      changed `pyproject.toml` but did NOT regenerate `uv.lock`, so the lock still carries deployment-api's transitive
+      deps (`yfinance`/`websocket-client`/`ujson`/`u-msgpack-python`/`zope-interface` — 6 stale refs). A clean `uv lock`
+      removes ~1393 lines (the deployment-api closure) — that's the deps-refactor's lockfile cleanup, not this plan's, and
+      bundling risks colliding. **→ split out:** (a) whoever owns the `63bd807` refactor runs `uv lock` to finish it (the
+      jinja2 add rides along), OR a standalone "regen deployment-service uv.lock post deployment-api removal + add jinja2"
+      task. Also note `uv lock --check` is likely RED on LDR until that regen lands. (2) Add a
+      `owner/cadence/verifier/last_executed` runbook block for the tarball-cleanup + vm-log-archival jobs + a cloud-build
+      trigger so `deployment-service:latest` refreshes automatically. Repo: deployment-service.
 
 ## Verification
 
