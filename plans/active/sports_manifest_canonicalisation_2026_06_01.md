@@ -403,13 +403,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       unchanged conservatively. IS writer + MTDS migrator must use a **direct rewrite table** for these 278,268 rows.
       Import path: `from unified_api_contracts.sports import canonicalize_league_id`. 8 unit tests pass (QG green,
       basedpyright 0 errors). **Consumers (IS writer + MTDS migrator) wire next — tracked below.**
-- [ ] [DATA] P1. **CF-7 league_id canonicalisation — IS writer + MTDS migrator**: wire `canonicalize_league_id` in
-      instruments-service writer (so future rows are canonical) + use in the MTDS migrator walk before dedup. For the
-      278,268 `SCOTTISH_LEAGUE_CUP_185` rows and other registry-gap cases, add a direct rewrite table
-      (`LEAGUE_ID_REWRITE_TABLE: dict[str, str]`) in UAC `provider_league_ids.py` mapping historical suffixed names to
-      canonical keys (e.g. `"SCOTTISH_LEAGUE_CUP_185" → "SCOTTISH_LEAGUE_CUP"`). ALSO:
-      `data_type=LEAGUES`/`TEAMS`/`VENUES` are slow-moving REFERENCE data daily-sharded with per-day empties — capture
-      whether reference data_types should be snapshot-not-daily (data-model question → instruments-service).
+- [x] ✅ [DATA] P1. **CF-7 league_id canonicalisation — IS writer (done)**: wired `canonicalize_league_id` into
+      `_canonical_league_id()` choke-point in `instruments_service/engine/orchestrator.py` as a second pass after the
+      numeric api_football id lookup. All 28+ per-league write sites (FIXTURES, FIXTURE_STATS, STANDINGS, INJURIES,
+      ODDS, XG, PLAYER_STATS, per-fixture entity walks) now born-canonical. 8 unit tests in `TestCanonicalLeagueIdCF7`
+      (provider-suffixed strip, unresolved passthrough, numeric pass1→pass2, idempotent, whitespace). QG green. —
+      instruments-service@db187587 | canonicalize_league_id wired into \_canonical_league_id choke-point (Pass 2 after
+      numeric resolution). **MTDS migrator still open — tracked separately.**
 
 ### C — single-walk (v9 + partition + typed reasons + source path→column + canonical verify)
 
