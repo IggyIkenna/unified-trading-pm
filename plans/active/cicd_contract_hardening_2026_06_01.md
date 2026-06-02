@@ -154,14 +154,17 @@ Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab
 **Captured discoveries (codex-vs-plans target-state audit,
 `plans/audit/results/codex_vs_plans_target_state_deviations_2026_06_01.md` §0):**
 
-- [x] ✅ [CODE] P2. DONE (agent-orchestrator@7bfdd44 — base=`live-defi-rollout` for ALL repos incl AO, matching base_branch_for_repo): Fix stale boot-prompt string in `agent-orchestrator/server/worker_liveness.py:85`
+- [x] ✅ [CODE] P2. DONE (agent-orchestrator@7bfdd44 — base=`live-defi-rollout` for ALL repos incl AO, matching
+      base_branch_for_repo): Fix stale boot-prompt string in `agent-orchestrator/server/worker_liveness.py:85`
       (`_FRESH_PULL_BOOT_BLOCK`): it instructs recovered agent-orchestrator workers to `git fetch/ff` against `main`
       (`"base = main for agent-orchestrator, live-defi-rollout for every other repo"`), contradicting
       `base_branch_for_repo()` (LDR) + per-tab-worktrees FM6. A recovered AO worker would FF to `origin/main` and read
       as diverged. → make the boot prompt use `live-defi-rollout` for all repos (drop the agent-orchestrator
       special-case).
-- [x] ✅ [OPERATOR-DECIDED 2026-06-01] P2. APPROVED — agent-orchestrator deploys from BOTH `live-defi-rollout` (rapid dev) AND `main`; deployment-service CLAUDE.md AO-exception to be updated (LDR now allowed — follow-up). Original eval: Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01):
-      allow deploying the dashboard SPA from `live-defi-rollout` (not only `main`) so server + UI iterate on one branch
+- [x] ✅ [OPERATOR-DECIDED 2026-06-01] P2. APPROVED — agent-orchestrator deploys from BOTH `live-defi-rollout` (rapid
+      dev) AND `main`; deployment-service CLAUDE.md AO-exception to be updated (LDR now allowed — follow-up). Original
+      eval: Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01): allow
+      deploying the dashboard SPA from `live-defi-rollout` (not only `main`) so server + UI iterate on one branch
       without the FF-to-`main` hop. Scope the CI-gate + Firebase-Hosting target implications.
 
 ### THE force-push-vs-let-CI/CD decision rule (read before touching main/staging)
@@ -247,65 +250,282 @@ by a PR:
       reconciliation promote-PR, not slot-7 work.) - (PM-main detail: FF `4f57234ea` — codex empty-str `@98b12ee53` +
       basedpyright-CI ignore `@a217a031c` + drift; PR #106/#107 closed. semver-rollout surfaced no further red repos —
       all greened above.)
-- [x] ✅ [TEST] P1. **DISCOVERY (instruments-service, surfaced 2026-06-01 by the coverage worker): `inst.symbol == symbol`
-      latent bug in ~19 more defi adapters.** `instruments_service/reference_data/adapters/defi/` has 22 files using
-      `inst.symbol == symbol` in `get_instrument()`; `InstrumentRecord` has **no `symbol` attribute** → `AttributeError`
-      on any non-address symbol lookup against a populated registry. 3 fixed (venus/fluid/radiant @851559f4); ~19
-      remain. Dedicated per-file sweep → canonical `inst.instrument_key.endswith(f":{symbol}")` + a test each (kept
-      separate to avoid pulling unrelated files into the codex changed-files scan). `parent_epic: infrastructure_master`
-      (or reassign to the instruments/defi reference-data epic at triage). — **DONE instruments-service@c5ea5fc9**: all
-      19 remaining adapters fixed to canonical `inst.instrument_key.endswith(f":{symbol}")` (aave_v3, balancer, benqi,
-      compound_v3, curve, ethena, etherfi, euler_v2, jito, kamino, lido, marinade, morpho, orca, raydium, spark,
-      uniswap_v2/v3/v4); added parametrized regression test
-      `tests/unit/reference_data/adapters/defi/test_defi_get_instrument_symbol_lookup.py` (symbol-suffix hit + raw-address
-      hit + miss→None no-raise, per adapter) + converted the 3 comprehensive tests that codified the bug
+- [x] ✅ [TEST] P1. **DISCOVERY (instruments-service, surfaced 2026-06-01 by the coverage worker):
+      `inst.symbol == symbol` latent bug in ~19 more defi adapters.**
+      `instruments_service/reference_data/adapters/defi/` has 22 files using `inst.symbol == symbol` in
+      `get_instrument()`; `InstrumentRecord` has **no `symbol` attribute** → `AttributeError` on any non-address symbol
+      lookup against a populated registry. 3 fixed (venus/fluid/radiant @851559f4); ~19 remain. Dedicated per-file sweep
+      → canonical `inst.instrument_key.endswith(f":{symbol}")` + a test each (kept separate to avoid pulling unrelated
+      files into the codex changed-files scan). `parent_epic: infrastructure_master` (or reassign to the
+      instruments/defi reference-data epic at triage). — **DONE instruments-service@c5ea5fc9**: all 19 remaining
+      adapters fixed to canonical `inst.instrument_key.endswith(f":{symbol}")` (aave_v3, balancer, benqi, compound_v3,
+      curve, ethena, etherfi, euler_v2, jito, kamino, lido, marinade, morpho, orca, raydium, spark, uniswap_v2/v3/v4);
+      added parametrized regression test
+      `tests/unit/reference_data/adapters/defi/test_defi_get_instrument_symbol_lookup.py` (symbol-suffix hit +
+      raw-address hit + miss→None no-raise, per adapter) + converted the 3 comprehensive tests that codified the bug
       (`pytest.raises(AttributeError)` → `is None`). QG `scripts/quality-gates.sh` EXIT 0 + service `tests/unit/` 3034
       passed @ 78.47% coverage.
-- [x] ✅ [SCRIPT] P1. DONE 2026-06-01 (smoke-test-gate revived + e2e-proven; see EVIDENCE below): **Revive the SIT chain** — FULLY DIAGNOSED 2026-06-01 (corrects the original "workflow_run
-  - **EVIDENCE (257 core — smoke-test-gate.yml):** `system-integration-tests@f9780eb` (LDR) + cherry-picked to `staging@d73b9c8` + `main@364f2c6` (admin clean-slate; main is the default branch `repository_dispatch` uses; protection relax→do→re-enable, all rulesets+enforce_admins restored). Fix: `on: push:[staging]` → `repository_dispatch:[staging-changed]` (PM's previously-ORPHANED dispatch now wired) + removed the in-job `sleep 600` (it self-cancelled via `concurrency: cancel-in-progress: true` — pinned: run 26767051198 cancelled 16:18:40, ~5m into the sleep) + `cancel-in-progress: false` + `ref: staging` on all SIT checkouts + resolve real staging SHA in the staging-validated payload + `sit_mode` honoured from `client_payload`. **e2e (run 26783339558):** repository_dispatch `staging-changed` (sit_mode=abbreviated) → gate TRIGGERED on main + SIT Setup ran to **completion** + run concluded **success** (vs every prior run cancelled/failure since inception) + correct early-exit (PM main `staging_versions` empty = settled). `staging-validated`→`staging-to-main` consumer fired (runs 26783500482, 26783815843 — first since 2026-04-02).
-  - **BONUS FIX (surfaced by the e2e):** 4 PM SIT-chain workflows crashed with `SyntaxError` on a broken heredoc terminator `python3 - <<PYEOF … PYEOF || exit 1` (trailing text → terminator not recognised → Python swallowed it + the following `python3 -c` validation). Fixed to bare `PYEOF` (set -euo pipefail preserves the exit-on-fail intent; the swallowed manifest-corruption guard now runs) in `staging-to-main.yml`/`sit-gate.yml`/`sit-unlock.yml`/`hotfix-mode.yml` → `unified-trading-pm@56c06c09d` (LDR) + `staging@e81a8f9e6` + `main@a85deda1d`. **e2e (run 26783815843):** staging-to-main now flows through ALL promote logic — idempotency, readiness gate, SHA-verify, merge staging→main, record progress, **STEP 9 promote+clear-lock = success** (was SyntaxError-failure). No harmful state left (push failed harmlessly; manifest unchanged, staging unlocked).
-      name-mismatch" hypothesis — that was WRONG). Actual topology + state: -
-      `system-integration-tests/full-workspace-sit.yml` (cron `0 3 * * *` nightly +
-      `repository_dispatch:full-workspace-sit`) **runs nightly and SUCCEEDS** — the SIT itself is healthy, NOT dead. -
-      `system-integration-tests/smoke-test-gate.yml` is the staging→main gate: `on: push:[staging]` +
-      `workflow_dispatch`; it dispatches `sit-lock` (line ~240) and, on pass, `staging-validated` (line ~499) to PM.
-      **It is `completed/cancelled` on its runs** (SIT Setup cancelled → all downstream skipped → neither dispatch fires
-      → PM `sit-gate` zero runs → `staging-to-main` never triggered). Cause is its
-      `concurrency: {group: sit-staging, cancel-in-progress: true}` + a 600s quiet-period wait. SIT-repo `staging` is
-      pushed RARELY (today's campaign `merge main into staging`, prior was March), so "continuous activity" is NOT why;
-      the single 2026-06-01 16:13 run cancelled for a not-yet-pinned reason (likely a same-group collision during the
-      campaign's active staging back-merge phase). - PM `sit-debounce-trigger.yml` dispatches `staging-changed` to the
-      SIT repo, but **NO SIT-repo workflow listens for `staging-changed`** → that dispatch is ORPHANED. Naively adding a
-      `repository_dispatch:[staging-changed]` listener to `smoke-test-gate` is UNSAFE as-is: the body keys off
-      `github.sha`/`github.ref_name`, which under `repository_dispatch` resolve to the **default branch, not staging** →
-      it would gate the wrong commit. A correct wiring must pass the staging SHA in `client_payload` and check it out.
-      **Remaining (campaign-gated):** the campaign is ACTIVELY churning SIT `staging` (its back-merge phase) → cannot
-      cleanly verify the gate end-to-end until that settles. Then: (a) pin the 16:13 cancel cause; (b) either tune the
-      600s/concurrency debounce or wire the orphaned `staging-changed` dispatch properly (payload SHA + checkout); (c)
-      e2e verify push-SIT-staging → gate completes → `sit-lock`→PM `sit-gate` locks →
-      `staging-validated`→`staging-to-main` promotes. P1 #5's notify fix (shipped) removes the run-failure noise that
-      previously masked this.
-- [ ] [TEST] P1. **SIT suite content is STALE — a real gate run FAILS today (surfaced by #257 dry-exercise 2026-06-01).** The chain WIRING is revived + green, but the integration TESTS rotted over ~4 months while the gate was dead. Local run (`.venv`, CLOUD_MOCK_MODE): `abbreviated_sit` 22/23 pass; **`code_test` COLLECTION ERROR** — `tests/integration/test_cross_venue_aggregation_e2e.py:40` imports `strategy_service…cross_venue_aggregator._VenueData`, renamed to `VenueData` → `pytest tests/ -m code_test` errors at collection → the `code-tests` job fails outright. **Implication: turning the gate ON for real promotions now BLOCKS staging→main (red), it does not usefully gate.** Modernize: sweep SIT `tests/` for symbol-drift vs current service code (grep imports of renamed/moved symbols), re-green `code_test` + `deployment_test`, run the suite to completion once. repo: system-integration-tests.
-- [ ] [TEST] P1. **SIT `code_test` clones the DELETED `unified-internal-contracts` repo + runs `check_uic_adoption.py` (smoke-test-gate.yml:304-339).** UIC was folded into `unified_api_contracts.internal` (the standalone repo no longer exists in the workspace; UAC has `unified_api_contracts/internal/`). The clone step would fail on a real run. Replace the UIC-adoption check with a UAC.internal-based equivalent (or remove it). repo: system-integration-tests.
-- [ ] [SCRIPT] P2. **SIT `deployment_test` service list is hardcoded + stale (smoke-test-gate.yml ~L291).** 17 explicit services (lists `strategy-service` twice; predates several current repos) vs 24 `type==service` repos / 39 total in `workspace-manifest.json`. Derive the v1-service set from the manifest (`type==service` + `staging_versions>=0.1.0`) instead of a hardcoded array, so new repos are covered automatically. repo: system-integration-tests. **Worse than 'missing':** the hardcoded list CLONES 10 dead/nonexistent repos — 6 `consolidated-into-features-service` (features-delta-one/volatility/cross-instrument/onchain/sports/calendar), 2 `consolidated-into-ml-service` (ml-inference/ml-training), + `market-data-api`/`unified-sports-execution-interface` (not in manifest). Derive from manifest `type∈{service,…}` AND `status==active` (NOT the hardcoded array, NOT all `type==service` which still includes the 8 consolidated tombstones).
-- [ ] [SCRIPT] P2. **Workspace-manifest hygiene — 14 retired repos linger as tombstones in the `repositories` map (surfaced 2026-06-01).** They're gone locally + `archived=true` on GitHub, but never pruned from `workspace-manifest.json`: 8 `consolidated-into-features-service` (features-calendar/commodity/cross-instrument/delta-one/multi-timeframe/onchain/sports/volatility), 2 `consolidated-into-ml-service` (ml-inference/ml-training), 4 `archived` (pnl-attribution / position-balance-monitor / risk-and-exposure / user-management-ui). Live set is **23 active + 2 scaffolded**, not 39. **Bug:** `user-management-ui` (archived) still has `versions` + `staging_versions` entries → it leaks into the SIT `staging_versions>=0.1.0` filter (gate would test an archived repo) + semver. **Also:** `sit-gate.yml` dispatches `staging-locked`/`staging-unlocked` to ALL `repositories.keys()` → fires at the 4 archived repos every run (fails, swallowed). Fix (governance call — delete vs relocate): move tombstones to a separate `retired_repositories` section (preserve `consolidated-into`/`archived` provenance) OUT of the active `repositories` map, and make every repo-iterating consumer (SIT filter, sit-gate dispatch, semver, version-cascade) skip `status!=active`. Remove `user-management-ui` from `versions`/`staging_versions` now (clean, archived). repo: unified-trading-pm (manifest + the iterating workflows). **Operator-ack before pruning** (provenance/tooling deps). **PARTIAL DONE 2026-06-02:** the actual functional bug — `user-management-ui` (archived) in `versions`+`staging_versions` — removed (`unified-trading-pm@ef09d0de6`; validator green). **REMAINING = semantic governance edit (NOT a blind delete), tracked here.** Full audit: the 14 tombstones also live in `topologicalOrder.levels[].repos` (10 of them) + `completion_paths.{cefi,defi,sports}.{required_services,not_required,additional_services,reuses_from_cefi}` — and NEITHER parent (`features-service`/`ml-service`) is present in those completion-path lists, so a blind delete DROPS real completion requirements. Correct reconciliation: (a) `topologicalOrder` — drop the 10 consolidated children (features-service already present; their separate build is gone); (b) `completion_paths.*.required_services` — REPLACE each consolidated child with its parent (`features-*`→`features-service`, `ml-*`→`ml-service`), dedup; (c) `completion_paths.cefi.not_required[features-sports-service]` — DROP (the granular 'sports-features not required for cefi' no longer maps, since sports-features are bundled into the now-required features-service) — **product call**; (d) move the 14 `repositories` entries → `removedEntries` (the manifest's existing retirement dict) preserving `consolidated-into`/`archived` provenance. **NEW finding (separate, pre-existing):** `ml-service` is MISSING from `topologicalOrder` entirely — verify it builds in the right tier + add it. Use `ensure_ascii=True, indent=2` when writing the manifest (round-trips byte-for-byte; `ensure_ascii=False` reflows every `\u2014` → 80 spurious lines — incident 2026-06-02). Scripts are SAFE (none hardcode the tombstone names; `run-version-alignment.sh` iterates `repositories` but archived dirs are gone-locally so it skips). **Needs operator/owner confirm on (c) + the ml-service-topo gap before applying.**
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-01 (smoke-test-gate revived + e2e-proven; see EVIDENCE below): **Revive the SIT
+      chain** — FULLY DIAGNOSED 2026-06-01 (corrects the original "workflow_run
+  - **EVIDENCE (257 core — smoke-test-gate.yml):** `system-integration-tests@f9780eb` (LDR) + cherry-picked to
+    `staging@d73b9c8` + `main@364f2c6` (admin clean-slate; main is the default branch `repository_dispatch` uses;
+    protection relax→do→re-enable, all rulesets+enforce_admins restored). Fix: `on: push:[staging]` →
+    `repository_dispatch:[staging-changed]` (PM's previously-ORPHANED dispatch now wired) + removed the in-job
+    `sleep 600` (it self-cancelled via `concurrency: cancel-in-progress: true` — pinned: run 26767051198 cancelled
+    16:18:40, ~5m into the sleep) + `cancel-in-progress: false` + `ref: staging` on all SIT checkouts + resolve real
+    staging SHA in the staging-validated payload + `sit_mode` honoured from `client_payload`. **e2e (run 26783339558):**
+    repository_dispatch `staging-changed` (sit_mode=abbreviated) → gate TRIGGERED on main + SIT Setup ran to
+    **completion** + run concluded **success** (vs every prior run cancelled/failure since inception) + correct
+    early-exit (PM main `staging_versions` empty = settled). `staging-validated`→`staging-to-main` consumer fired (runs
+    26783500482, 26783815843 — first since 2026-04-02).
+  - **BONUS FIX (surfaced by the e2e):** 4 PM SIT-chain workflows crashed with `SyntaxError` on a broken heredoc
+    terminator `python3 - <<PYEOF … PYEOF || exit 1` (trailing text → terminator not recognised → Python swallowed it +
+    the following `python3 -c` validation). Fixed to bare `PYEOF` (set -euo pipefail preserves the exit-on-fail intent;
+    the swallowed manifest-corruption guard now runs) in
+    `staging-to-main.yml`/`sit-gate.yml`/`sit-unlock.yml`/`hotfix-mode.yml` → `unified-trading-pm@56c06c09d` (LDR) +
+    `staging@e81a8f9e6` + `main@a85deda1d`. **e2e (run 26783815843):** staging-to-main now flows through ALL promote
+    logic — idempotency, readiness gate, SHA-verify, merge staging→main, record progress, **STEP 9 promote+clear-lock =
+    success** (was SyntaxError-failure). No harmful state left (push failed harmlessly; manifest unchanged, staging
+    unlocked). name-mismatch" hypothesis — that was WRONG). Actual topology + state: -
+    `system-integration-tests/full-workspace-sit.yml` (cron `0 3 * * *` nightly +
+    `repository_dispatch:full-workspace-sit`) **runs nightly and SUCCEEDS** — the SIT itself is healthy, NOT dead. -
+    `system-integration-tests/smoke-test-gate.yml` is the staging→main gate: `on: push:[staging]` + `workflow_dispatch`;
+    it dispatches `sit-lock` (line ~240) and, on pass, `staging-validated` (line ~499) to PM. **It is
+    `completed/cancelled` on its runs** (SIT Setup cancelled → all downstream skipped → neither dispatch fires → PM
+    `sit-gate` zero runs → `staging-to-main` never triggered). Cause is its
+    `concurrency: {group: sit-staging, cancel-in-progress: true}` + a 600s quiet-period wait. SIT-repo `staging` is
+    pushed RARELY (today's campaign `merge main into staging`, prior was March), so "continuous activity" is NOT why;
+    the single 2026-06-01 16:13 run cancelled for a not-yet-pinned reason (likely a same-group collision during the
+    campaign's active staging back-merge phase). - PM `sit-debounce-trigger.yml` dispatches `staging-changed` to the SIT
+    repo, but **NO SIT-repo workflow listens for `staging-changed`** → that dispatch is ORPHANED. Naively adding a
+    `repository_dispatch:[staging-changed]` listener to `smoke-test-gate` is UNSAFE as-is: the body keys off
+    `github.sha`/`github.ref_name`, which under `repository_dispatch` resolve to the **default branch, not staging** →
+    it would gate the wrong commit. A correct wiring must pass the staging SHA in `client_payload` and check it out.
+    **Remaining (campaign-gated):** the campaign is ACTIVELY churning SIT `staging` (its back-merge phase) → cannot
+    cleanly verify the gate end-to-end until that settles. Then: (a) pin the 16:13 cancel cause; (b) either tune the
+    600s/concurrency debounce or wire the orphaned `staging-changed` dispatch properly (payload SHA + checkout); (c) e2e
+    verify push-SIT-staging → gate completes → `sit-lock`→PM `sit-gate` locks → `staging-validated`→`staging-to-main`
+    promotes. P1 #5's notify fix (shipped) removes the run-failure noise that previously masked this.
+- [ ] [TEST] P1. **SIT suite content is STALE — a real gate run FAILS today (surfaced by #257 dry-exercise
+      2026-06-01).** The chain WIRING is revived + green, but the integration TESTS rotted over ~4 months while the gate
+      was dead. Local run (`.venv`, CLOUD_MOCK_MODE): `abbreviated_sit` 22/23 pass; **`code_test` COLLECTION ERROR** —
+      `tests/integration/test_cross_venue_aggregation_e2e.py:40` imports
+      `strategy_service…cross_venue_aggregator._VenueData`, renamed to `VenueData` → `pytest tests/ -m code_test` errors
+      at collection → the `code-tests` job fails outright. **Implication: turning the gate ON for real promotions now
+      BLOCKS staging→main (red), it does not usefully gate.** Modernize: sweep SIT `tests/` for symbol-drift vs current
+      service code (grep imports of renamed/moved symbols), re-green `code_test` + `deployment_test`, run the suite to
+      completion once. repo: system-integration-tests. **PARTIAL DONE 2026-06-02 (slot 1):** the `code_test`
+      COLLECTION-ERROR blocker is FIXED — `system-integration-tests@e1e2ea4` repointed the alias
+      (`pbms_aggregator._VenueData` → `.VenueData`); `pytest tests/ -m code_test --collect-only` now exits 0
+      (**4235/4722 collected, 487 deselected**, only harmless `full_e2e` unknown-mark warnings). **REMAINING:** full
+      symbol-drift sweep across the rest of `tests/`, `deployment_test` re-green, and one run-to-completion — kept open.
+- [ ] [BLOCKED-OPERATOR-DECISION] P1. **SIT runs a UIC-adoption check against `unified-internal-contracts`
+      (smoke-test-gate.yml:304-339) — PREMISE CORRECTED 2026-06-02 (slot 1): the repo is NOT deleted.**
+      `gh api repos/IggyIkenna/unified-internal-contracts` → exists, `archived=false`, `default=main`,
+      `pushed_at=2026-03-26`. So the `git clone` at L307 SUCCEEDS and the gate step is **NOT broken** (the original
+      "clone would fail on a real run" claim is wrong). BUT it's a partially-retired state: the repo is **absent from
+      `workspace-manifest.json`** (neither `repositories` nor `removedEntries`), yet **execution-service still imports
+      `unified_internal_contracts`** (`execution_service/models/output_schemas.py`). So UIC is half-migrated, not
+      folded-and-gone. **Real question (architecture call, operator):** is `unified-internal-contracts` being retired in
+      favour of `unified_api_contracts.internal`, or kept? — (a) RETIRE → migrate execution-service's
+      `output_schemas.py` import to `unified_api_contracts.internal`, then remove this SIT step + the SERVICES clone
+      array (#290 folds in), + add the repo to manifest `removedEntries`; (b) KEEP → leave the check, just clean the
+      stale clone array (#290) + add the repo back to the manifest. **Do NOT rip out a working gate step on the false
+      'deleted' premise.** repo: system-integration-tests (+ execution-service if RETIRE).
+- [ ] [SCRIPT] P2. **SIT `deployment_test` service list is hardcoded + stale (smoke-test-gate.yml ~L291).** 17 explicit
+      services (lists `strategy-service` twice; predates several current repos) vs 24 `type==service` repos / 39 total
+      in `workspace-manifest.json`. Derive the v1-service set from the manifest (`type==service` +
+      `staging_versions>=0.1.0`) instead of a hardcoded array, so new repos are covered automatically. repo:
+      system-integration-tests. **Worse than 'missing':** the hardcoded list CLONES 10 dead/nonexistent repos — 6
+      `consolidated-into-features-service` (features-delta-one/volatility/cross-instrument/onchain/sports/calendar), 2
+      `consolidated-into-ml-service` (ml-inference/ml-training), +
+      `market-data-api`/`unified-sports-execution-interface` (not in manifest). Derive from manifest `type∈{service,…}`
+      AND `status==active` (NOT the hardcoded array, NOT all `type==service` which still includes the 8 consolidated
+      tombstones). **CLARIFIED 2026-06-02 (slot 1): this "service list" is the `SERVICES=(…)` array at
+      smoke-test-gate.yml:313-321 that clones repos to populate `workspace/` for the UIC-adoption check — it is INSIDE
+      the UIC step, not a separate `deployment_test` list (the `deployment_test` pytest step at L447 takes no service
+      array).** The dead-repo clones are **non-fatal today** (`|| echo "WARN: … skipping"` at L327), so this is
+      cleanliness, not a gate-break. **Coupled to [[#289]] UIC decision:** if UIC is RETIRED, this array is removed with
+      the step; if KEPT, derive it from manifest `status==active`. Gated on the #289 operator architecture call.
+- [ ] [SCRIPT] P2. **Workspace-manifest hygiene — 14 retired repos linger as tombstones in the `repositories` map
+      (surfaced 2026-06-01).** They're gone locally + `archived=true` on GitHub, but never pruned from
+      `workspace-manifest.json`: 8 `consolidated-into-features-service`
+      (features-calendar/commodity/cross-instrument/delta-one/multi-timeframe/onchain/sports/volatility), 2
+      `consolidated-into-ml-service` (ml-inference/ml-training), 4 `archived` (pnl-attribution /
+      position-balance-monitor / risk-and-exposure / user-management-ui). Live set is **23 active + 2 scaffolded**,
+      not 39. **Bug:** `user-management-ui` (archived) still has `versions` + `staging_versions` entries → it leaks into
+      the SIT `staging_versions>=0.1.0` filter (gate would test an archived repo) + semver. **Also:** `sit-gate.yml`
+      dispatches `staging-locked`/`staging-unlocked` to ALL `repositories.keys()` → fires at the 4 archived repos every
+      run (fails, swallowed). Fix (governance call — delete vs relocate): move tombstones to a separate
+      `retired_repositories` section (preserve `consolidated-into`/`archived` provenance) OUT of the active
+      `repositories` map, and make every repo-iterating consumer (SIT filter, sit-gate dispatch, semver,
+      version-cascade) skip `status!=active`. Remove `user-management-ui` from `versions`/`staging_versions` now (clean,
+      archived). repo: unified-trading-pm (manifest + the iterating workflows). **Operator-ack before pruning**
+      (provenance/tooling deps). **PARTIAL DONE 2026-06-02:** the actual functional bug — `user-management-ui`
+      (archived) in `versions`+`staging_versions` — removed (`unified-trading-pm@ef09d0de6`; validator green).
+      **REMAINING = semantic governance edit (NOT a blind delete), tracked here.** Full audit: the 14 tombstones also
+      live in `topologicalOrder.levels[].repos` (10 of them) +
+      `completion_paths.{cefi,defi,sports}.{required_services,not_required,additional_services,reuses_from_cefi}` — and
+      NEITHER parent (`features-service`/`ml-service`) is present in those completion-path lists, so a blind delete
+      DROPS real completion requirements. Correct reconciliation: (a) `topologicalOrder` — drop the 10 consolidated
+      children (features-service already present; their separate build is gone); (b)
+      `completion_paths.*.required_services` — REPLACE each consolidated child with its parent
+      (`features-*`→`features-service`, `ml-*`→`ml-service`), dedup; (c)
+      `completion_paths.cefi.not_required[features-sports-service]` — DROP (the granular 'sports-features not required
+      for cefi' no longer maps, since sports-features are bundled into the now-required features-service) — **product
+      call**; (d) move the 14 `repositories` entries → `removedEntries` (the manifest's existing retirement dict)
+      preserving `consolidated-into`/`archived` provenance. **NEW finding (separate, pre-existing):** `ml-service` is
+      MISSING from `topologicalOrder` entirely — verify it builds in the right tier + add it. Use
+      `ensure_ascii=True, indent=2` when writing the manifest (round-trips byte-for-byte; `ensure_ascii=False` reflows
+      every `\u2014` → 80 spurious lines — incident 2026-06-02). Scripts are SAFE (none hardcode the tombstone names;
+      `run-version-alignment.sh` iterates `repositories` but archived dirs are gone-locally so it skips). **Needs
+      operator/owner confirm on (c) + the ml-service-topo gap before applying.**
 
-- [x] ✅ [SCRIPT] P2. RESOLVED 2026-06-02: **`claude-api-health-monitor` is permanently false-`degraded` → CRITICAL alert every 15 min (diagnosed 2026-06-02).** Two issues, one MINE-fixed: (1) its Slack notify job was failing on the non-https `SLACK_WEBHOOK_URL` — FIXED by the notify-slack best-effort guard now on main (`b06f5a876`); `sit-debounce-trigger` had the identical failure + RECOVERED (run 22:46 ✓). (2) **The run-conclusion `failure` is BY DESIGN** (line 76: `health_state=='healthy' ? success : failure`): the ping `claude --print 'ping…OK'` returns no `ok` → `New state: degraded (error_class=unknown)` on EVERY run (6h+ streak, fresh run 26788136150 confirms). error_class=`unknown` (not auth_error) ⇒ the CI runner can't authenticate the `claude` CLI — almost certainly `ANTHROPIC_API_KEY_SYSHEALTH` (fallback `ANTHROPIC_API_KEY`) is unset/invalid in the `unified-trading-pm` repo secrets → a missing credential masquerades as an API outage. **Operator fix:** set a valid `ANTHROPIC_API_KEY_SYSHEALTH` secret on unified-trading-pm. **Workflow hardening (do alongside):** the ping should treat 'no credential configured' as NEUTRAL/skip (not `degraded`) so a missing key never fires a false CRITICAL — gate on `[ -n "$ANTHROPIC_API_KEY" ]` before pinging, else `health_state=unconfigured` + success. Not caused by #257; surfaced by the ci-failure-watcher alert. **FIX APPLIED:** set `ANTHROPIC_API_KEY_SYSHEALTH` repo secret on unified-trading-pm from `.act-secrets` (the stale 2026-03-06 `ANTHROPIC_API_KEY` fallback was expired → false degraded). Monitor re-triggered → expect healthy. **Hardening REJECTED by operator (correct):** do NOT skip-on-no-credential — a missing/invalid API key IS critical (api-key-based agentic work can't run; only login-session-token work survives), so degraded→CRITICAL on no-key is the DESIRED signal. Keep it. **NEW finding (separate, operator):** the `sit-debounce` Slack test (run 26788416571) showed notify-slack SKIPPED with `SLACK_WEBHOOK_URL is not an https URL` — so notify-slack callers using `secrets: inherit` aren't delivering, yet the ci-failure-watcher DOES post to #ci-failures. Discrepancy to check: verify the `SLACK_WEBHOOK_URL` repo secret value is a valid `https://hooks.slack.com/…` URL (the guard correctly skips a masked/non-https value); if the watcher uses a different webhook path, align them. **CORRECTION — true root cause found:** the key is VALID (auth OK) but the Anthropic account is **OUT OF CREDITS** — direct `POST /v1/messages` returns `HTTP 400: "Your credit balance is too low to access the Anthropic API"`. So api-key-based access is genuinely DOWN → monitor correctly reports `degraded` → CRITICAL (operator confirmed this is the DESIRED alert: api-key agentic work can't run; only login-session-token work survives). **OPERATOR ACTION (real fix):** top up Anthropic credits on the account behind `ANTHROPIC_API_KEY_SYSHEALTH`/`ANTHROPIC_API_KEY` (or point SYSHEALTH at a funded account). **Improvement (aligned, NOT silencing):** add an `error_class=no_credits` branch (match `credit balance|400`) + echo the captured `$ERR` so the alert says WHY (currently 'unknown', not actionable). **Separate:** `SLACK_WEBHOOK_URL` is non-https from notify-slack's view → the monitor's OWN notify skips (the ci-failure-watcher still catches the failure + alerts, which is how you saw it) — verify the webhook secret. **MONITOR IMPROVED + ALERT DELIVERING (2026-06-02):** classify-why shipped (LDR 01ab3e30d + main/staging) — on ping failure a direct API probe sets error_class in {billing_credits, auth_error (both CRITICAL), rate_limited, service_down, cli_runtime (API key valid+funded but CLI ping fails = the 'runs valid but fails' SEPARATE issue), unknown} with the real message in the Slack alert. Delivery fixed (5aa4213ab): notify was secrets:inherit → stale non-https SLACK_WEBHOOK_URL (skipped); switched to dedicated valid SLACK_CI_WEBHOOK_URL (watcher pattern). VERIFIED: dispatched run → Slack OK (HTTP 200) → #ci-failures shows 'Claude API degraded — billing_credits: Your credit balance is too low… Plans & Billing'. Operator: top up Anthropic credits to clear it (alert is correctly firing).
+- [x] ✅ [SCRIPT] P2. RESOLVED 2026-06-02: **`claude-api-health-monitor` is permanently false-`degraded` → CRITICAL
+      alert every 15 min (diagnosed 2026-06-02).** Two issues, one MINE-fixed: (1) its Slack notify job was failing on
+      the non-https `SLACK_WEBHOOK_URL` — FIXED by the notify-slack best-effort guard now on main (`b06f5a876`);
+      `sit-debounce-trigger` had the identical failure + RECOVERED (run 22:46 ✓). (2) **The run-conclusion `failure` is
+      BY DESIGN** (line 76: `health_state=='healthy' ? success : failure`): the ping `claude --print 'ping…OK'` returns
+      no `ok` → `New state: degraded (error_class=unknown)` on EVERY run (6h+ streak, fresh run 26788136150 confirms).
+      error_class=`unknown` (not auth_error) ⇒ the CI runner can't authenticate the `claude` CLI — almost certainly
+      `ANTHROPIC_API_KEY_SYSHEALTH` (fallback `ANTHROPIC_API_KEY`) is unset/invalid in the `unified-trading-pm` repo
+      secrets → a missing credential masquerades as an API outage. **Operator fix:** set a valid
+      `ANTHROPIC_API_KEY_SYSHEALTH` secret on unified-trading-pm. **Workflow hardening (do alongside):** the ping should
+      treat 'no credential configured' as NEUTRAL/skip (not `degraded`) so a missing key never fires a false CRITICAL —
+      gate on `[ -n "$ANTHROPIC_API_KEY" ]` before pinging, else `health_state=unconfigured` + success. Not caused by
+      #257; surfaced by the ci-failure-watcher alert. **FIX APPLIED:** set `ANTHROPIC_API_KEY_SYSHEALTH` repo secret on
+      unified-trading-pm from `.act-secrets` (the stale 2026-03-06 `ANTHROPIC_API_KEY` fallback was expired → false
+      degraded). Monitor re-triggered → expect healthy. **Hardening REJECTED by operator (correct):** do NOT
+      skip-on-no-credential — a missing/invalid API key IS critical (api-key-based agentic work can't run; only
+      login-session-token work survives), so degraded→CRITICAL on no-key is the DESIRED signal. Keep it. **NEW finding
+      (separate, operator):** the `sit-debounce` Slack test (run 26788416571) showed notify-slack SKIPPED with
+      `SLACK_WEBHOOK_URL is not an https URL` — so notify-slack callers using `secrets: inherit` aren't delivering, yet
+      the ci-failure-watcher DOES post to #ci-failures. Discrepancy to check: verify the `SLACK_WEBHOOK_URL` repo secret
+      value is a valid `https://hooks.slack.com/…` URL (the guard correctly skips a masked/non-https value); if the
+      watcher uses a different webhook path, align them. **CORRECTION — true root cause found:** the key is VALID (auth
+      OK) but the Anthropic account is **OUT OF CREDITS** — direct `POST /v1/messages` returns
+      `HTTP 400: "Your credit balance is too low to access the Anthropic API"`. So api-key-based access is genuinely
+      DOWN → monitor correctly reports `degraded` → CRITICAL (operator confirmed this is the DESIRED alert: api-key
+      agentic work can't run; only login-session-token work survives). **OPERATOR ACTION (real fix):** top up Anthropic
+      credits on the account behind `ANTHROPIC_API_KEY_SYSHEALTH`/`ANTHROPIC_API_KEY` (or point SYSHEALTH at a funded
+      account). **Improvement (aligned, NOT silencing):** add an `error_class=no_credits` branch (match
+      `credit balance|400`) + echo the captured `$ERR` so the alert says WHY (currently 'unknown', not actionable).
+      **Separate:** `SLACK_WEBHOOK_URL` is non-https from notify-slack's view → the monitor's OWN notify skips (the
+      ci-failure-watcher still catches the failure + alerts, which is how you saw it) — verify the webhook secret.
+      **MONITOR IMPROVED + ALERT DELIVERING (2026-06-02):** classify-why shipped (LDR 01ab3e30d + main/staging) — on
+      ping failure a direct API probe sets error_class in {billing_credits, auth_error (both CRITICAL), rate_limited,
+      service_down, cli_runtime (API key valid+funded but CLI ping fails = the 'runs valid but fails' SEPARATE issue),
+      unknown} with the real message in the Slack alert. Delivery fixed (5aa4213ab): notify was secrets:inherit → stale
+      non-https SLACK_WEBHOOK_URL (skipped); switched to dedicated valid SLACK_CI_WEBHOOK_URL (watcher pattern).
+      VERIFIED: dispatched run → Slack OK (HTTP 200) → #ci-failures shows 'Claude API degraded — billing_credits: Your
+      credit balance is too low… Plans & Billing'. Operator: top up Anthropic credits to clear it (alert is correctly
+      firing).
 
-- [x] ✅ [SCRIPT] P2. **Orchestrator 4-account health alerting — SHIPPED (agent-orchestrator@478b3ff, LDR) 2026-06-02.** Operator ask (companion to the Claude-API billing monitor): page Slack when ANY of the 4 accounts (sub-a/b/c + harsh-primary) is (a) unauthenticated — no/invalid/expired OAuth token (no-token in env file OR 401/403 from the usage probe), or (b) ≥90% on any rate-limit window (5h session / 7d weekly / weekly-sonnet). Hooked the existing `UsagePoller` (already fetches per-account utilization via `usage_tracker.fetch_usage_via_api`) + `notifications/slack.py` (added `notify_account_auth_failed` + `notify_account_usage_high`). State-transition dedup (`_ACCOUNT_AUTH_ALERTED`/`_ACCOUNT_USAGE_ALERTED`) — alert once on ENTER, clear on recover, re-alert on re-cross (no per-tick spam). Transient network/timeout does NOT auth-alert (only 401/403/no-token). **Note:** Anthropic exposes 5h + 7d windows (no native 'daily'). **Runtime-verify on next orchestrator deploy** (server ships from LDR via systemd restart); delivers only if `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is set on the VM (same path as the existing setup-token-expiry alerts). **Window coverage clarified (AO@11c2212):** ACTIVE caps = **5h + 7d-weekly (all models)** — both from the fast API headers, the caps that actually gate capacity. `weekly-sonnet` is wired but BEST-EFFORT/usually-inert: the API has no sonnet-only header (`weekly_sonnet_pct=None`) and the headless pexpect `/usage` TUI doesn't render the Sonnet bar — and `None` means UNREAD, not 0%, so it's never treated as 0. Not a blind spot: the 7d weekly window is *all-models*, so it already INCLUDES sonnet usage → sonnet-driven exhaustion fires the `weekly` alert. The sonnet entry stays as pure future-proofing (auto-fires only if Anthropic adds a sonnet header / a build renders the bar). No native 'daily' window exists.
+- [x] ✅ [SCRIPT] P2. **Orchestrator 4-account health alerting — SHIPPED (agent-orchestrator@478b3ff, LDR) 2026-06-02.**
+      Operator ask (companion to the Claude-API billing monitor): page Slack when ANY of the 4 accounts (sub-a/b/c +
+      harsh-primary) is (a) unauthenticated — no/invalid/expired OAuth token (no-token in env file OR 401/403 from the
+      usage probe), or (b) ≥90% on any rate-limit window (5h session / 7d weekly / weekly-sonnet). Hooked the existing
+      `UsagePoller` (already fetches per-account utilization via `usage_tracker.fetch_usage_via_api`) +
+      `notifications/slack.py` (added `notify_account_auth_failed` + `notify_account_usage_high`). State-transition
+      dedup (`_ACCOUNT_AUTH_ALERTED`/`_ACCOUNT_USAGE_ALERTED`) — alert once on ENTER, clear on recover, re-alert on
+      re-cross (no per-tick spam). Transient network/timeout does NOT auth-alert (only 401/403/no-token). **Note:**
+      Anthropic exposes 5h + 7d windows (no native 'daily'). **Runtime-verify on next orchestrator deploy** (server
+      ships from LDR via systemd restart); delivers only if `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` is set on the VM (same
+      path as the existing setup-token-expiry alerts). **Window coverage clarified (AO@11c2212):** ACTIVE caps = **5h +
+      7d-weekly (all models)** — both from the fast API headers, the caps that actually gate capacity. `weekly-sonnet`
+      is wired but BEST-EFFORT/usually-inert: the API has no sonnet-only header (`weekly_sonnet_pct=None`) and the
+      headless pexpect `/usage` TUI doesn't render the Sonnet bar — and `None` means UNREAD, not 0%, so it's never
+      treated as 0. Not a blind spot: the 7d weekly window is _all-models_, so it already INCLUDES sonnet usage →
+      sonnet-driven exhaustion fires the `weekly` alert. The sonnet entry stays as pure future-proofing (auto-fires only
+      if Anthropic adds a sonnet header / a build renders the bar). No native 'daily' window exists.
 
-- [ ] [SCRIPT] P2. **notify-slack `secrets: inherit` callers don't deliver (stale SLACK_WEBHOOK_URL).** Two webhook secrets exist: SLACK_CI_WEBHOOK_URL (valid #ci-failures, 2026-05-29) + SLACK_WEBHOOK_URL (stale/non-https, 2026-05-23). ci-failure-watcher + claude-api-monitor explicitly pass SLACK_CI_WEBHOOK_URL → deliver; the ~28 other callers (sit-debounce, staging-to-main, sit-gate, …) use `secrets: inherit` → inherit the stale SLACK_WEBHOOK_URL → guard skips → build messages but never reach Slack (failures still surface via the watcher's workflow_run detection). **Single fix (operator):** set the SLACK_WEBHOOK_URL repo-secret VALUE = the valid #ci-failures webhook (= SLACK_CI_WEBHOOK_URL) → every inherit caller delivers (I can't read/copy a secret value). Alt (agent, ~28 files): switch each caller to pass SLACK_CI_WEBHOOK_URL explicitly.
+- [ ] [SCRIPT] P2. **notify-slack `secrets: inherit` callers don't deliver (stale SLACK_WEBHOOK_URL).** Two webhook
+      secrets exist: SLACK_CI_WEBHOOK_URL (valid #ci-failures, 2026-05-29) + SLACK_WEBHOOK_URL (stale/non-https,
+      2026-05-23). ci-failure-watcher + claude-api-monitor explicitly pass SLACK_CI_WEBHOOK_URL → deliver; the ~28 other
+      callers (sit-debounce, staging-to-main, sit-gate, …) use `secrets: inherit` → inherit the stale SLACK_WEBHOOK_URL
+      → guard skips → build messages but never reach Slack (failures still surface via the watcher's workflow_run
+      detection). **Single fix (operator):** set the SLACK_WEBHOOK_URL repo-secret VALUE = the valid #ci-failures
+      webhook (= SLACK_CI_WEBHOOK_URL) → every inherit caller delivers (I can't read/copy a secret value). Alt (agent,
+      ~28 files): switch each caller to pass SLACK_CI_WEBHOOK_URL explicitly.
 
-- [ ] [DESIGN] P2. **SIT has NO dependency-chain / breaking-change scoping — runs the full marked suite against ALL `v0.1+` repos every time (setup filter `v1_repos = staging_versions>=0.1.0`).** `staging_status.pending_repos` is tracked but unused for test-scoping; `configs/runtime-topology.yaml` + per-repo `dependencies` in `workspace-manifest.json` EXIST but the gate ignores them. Make SIT dependency-aware: from the pending (changed) repos, compute their transitive dependents via runtime-topology/manifest deps and run only the affected integration tests (full-suite only on a topology/contract change). Cuts runtime + makes the gate a real targeted integration check. repo: system-integration-tests (+ PM dep-graph helper). **Operator design (2026-06-01):** (a) universal-dep repos — `unified-api-contracts` (and likely `unified-trading-library`) are deps of ~everything → a change there triggers the BROAD/full SIT; (b) `unified-trading-pm` is a docs/devops repo → special bypass (PR→QG→straight to staging+main, no SIT); (c) scope = changed-repo set ∪ their transitive dependents (from `configs/runtime-topology.yaml` + manifest `dependencies`); (d) the repo-set filter MUST be `status==active` (today's `staging_versions>=0.1.0` would pick up archived/consolidated tombstones — see manifest-hygiene todo); (e) the `>=1.0.0` version floor is post-cutover — `>=0.1.0` is fine during the testing phase.
-- [ ] [SCRIPT] P1. **semver-agent `workflow_run` watches the DEAD v1 name `"Quality Gates"` in ~6 repos → won't auto-fire (caught by SIT `test_workflow_run_references_exist`).** Origin-verified: `alerting-service` + `system-integration-tests` semver-agent.yml have `workflows: ["Quality Gates"]`; `features-service` is correctly `["quality-gates-v2"]`. Others flagged: batch-live-reconciliation-service, deployment-service, e2e-testing, market-tick-data-service. The v1→v2 semver rollout missed these → no auto semver bump on v2 completion. Fix via the semver-agent **workflow-template SSOT** (`scripts/workflow-templates/`) + `rollout-workflow-templates.sh` to the un-migrated repos (NOT per-repo edits); verify each origin default-branch shows `quality-gates-v2`.
+- [ ] [DESIGN] P2. **SIT has NO dependency-chain / breaking-change scoping — runs the full marked suite against ALL
+      `v0.1+` repos every time (setup filter `v1_repos = staging_versions>=0.1.0`).** `staging_status.pending_repos` is
+      tracked but unused for test-scoping; `configs/runtime-topology.yaml` + per-repo `dependencies` in
+      `workspace-manifest.json` EXIST but the gate ignores them. Make SIT dependency-aware: from the pending (changed)
+      repos, compute their transitive dependents via runtime-topology/manifest deps and run only the affected
+      integration tests (full-suite only on a topology/contract change). Cuts runtime + makes the gate a real targeted
+      integration check. repo: system-integration-tests (+ PM dep-graph helper). **Operator design (2026-06-01):** (a)
+      universal-dep repos — `unified-api-contracts` (and likely `unified-trading-library`) are deps of ~everything → a
+      change there triggers the BROAD/full SIT; (b) `unified-trading-pm` is a docs/devops repo → special bypass
+      (PR→QG→straight to staging+main, no SIT); (c) scope = changed-repo set ∪ their transitive dependents (from
+      `configs/runtime-topology.yaml` + manifest `dependencies`); (d) the repo-set filter MUST be `status==active`
+      (today's `staging_versions>=0.1.0` would pick up archived/consolidated tombstones — see manifest-hygiene todo);
+      (e) the `>=1.0.0` version floor is post-cutover — `>=0.1.0` is fine during the testing phase.
+- [ ] [SCRIPT] P1. **semver-agent `workflow_run` watches the DEAD v1 name `"Quality Gates"` in ~6 repos → won't
+      auto-fire (caught by SIT `test_workflow_run_references_exist`).** Origin-verified: `alerting-service` +
+      `system-integration-tests` semver-agent.yml have `workflows: ["Quality Gates"]`; `features-service` is correctly
+      `["quality-gates-v2"]`. Others flagged: batch-live-reconciliation-service, deployment-service, e2e-testing,
+      market-tick-data-service. The v1→v2 semver rollout missed these → no auto semver bump on v2 completion. Fix via
+      the semver-agent **workflow-template SSOT** (`scripts/workflow-templates/`) + `rollout-workflow-templates.sh` to
+      the un-migrated repos (NOT per-repo edits); verify each origin default-branch shows `quality-gates-v2`.
 
-- [x] ✅ [INFRA] P1. DONE 2026-06-01 (chain now e2e-GREEN; reconciled — real blocker was classic enforce_admins, NOT a missing ruleset bypass): **SIT-chain automation cannot push `[skip ci]` commits to protected `main` (GH013)** — surfaced by #257 e2e (run 26783815843). `staging-to-main.yml` STEP 10 "Commit manifest update" does a plain `git push` of a `chore(manifest): … [skip ci]` commit straight to PM `main`; the `require-quality-gates` ruleset (13647441) requires the `Quality Gates (unified-trading-pm) / quality-gates-v2` status, which a `[skip ci]` commit never produces → ruleset rejects the push (`GH013: Repository rule violations`). The push authenticates as `IggyIkenna` (admin, and the ruleset has `RepositoryRole 5` admin `bypass_mode: always`) yet is still blocked — so the admin-role bypass is NOT taking effect for the PAT/bot push. This is **pre-existing**, blocks **every real promotion** (each pushes the promoted manifest to main), and affects **all** automation that writes `[skip ci]` manifest/version commits to protected main (semver cascade, version-bump, sit-gate/sit-unlock lock writes). RECOMMENDED: add the automation identity (`github-actions[bot]` integration actor, or the GH_PAT app) to the `require-quality-gates` ruleset `bypass_actors` (bypass_mode: always) on PM (+ every repo whose automation pushes `[skip ci]` to main) — the GH-native way to let bookkeeping bots bypass the human-oriented required-check without disabling protection. **Operator decision needed** (protection-posture change; do NOT widen main-protection bypass unilaterally). Same gap likely on `sit-gate.yml` (locks staging by pushing to PM main) — verify after the bypass lands.
-  - **RECONCILIATION:** my earlier "add the automation identity to ruleset `bypass_actors`" recommendation was based on a wrong assumption. The full GH013 error names the **classic** checks (`Required status check "quality-gates-v2" is expected` + `Changes must be made through a pull request` — bare context = classic, not the ruleset's `Quality Gates (unified-trading-pm) / …`), and my heredoc-fix push proved an admin push lands with only `enforce_admins` disabled. So the ruleset **already** admin-bypasses the automation (RepositoryRole 5, `bypass_mode: always`); the blocker was **classic `enforce_admins=true`**, which classic cannot grant per-actor bypass for. **Fix applied:** `enforce_admins=false` on PM `main` (`gh api -X DELETE …/branches/main/protection/enforce_admins`). Classic `required_status_checks`+`required_pull_request_reviews` + the ruleset still fully gate **non-admins**; only repo admins (incl the automation's admin PAT) bypass — the deliberate design exception for orchestration repos that direct-push `[skip ci]` bookkeeping commits. Documented in `codex/08-workflows/ci-cd-flow.md` § Branch-protection (corrected the false "[skip ci] reaches main via PR flow" claim) + § Operational-status (SIT chain REVIVED).
-  - **2 more chain bugs surfaced + fixed by the e2e (all on PM LDR/main/staging):** (a) `staging-to-main` STEP 11 cascade `KeyError: 'OWNER'` — `OWNER`/`TOKEN` were plain shell vars not exported to the python heredoc → declared in the step `env:` + guard the empty-`{}` promotion (`unified-trading-pm@eee6ce5c2`/`90714b625`/`9dcbde597`). (b) `notify-slack.yml` non-https guard (P1 #5) was on LDR but not main → backported so the notify job skips a misconfigured webhook instead of failing the run (`b06f5a876`/`af2497fd6`).
-  - **PROOF — whole `staging-to-main` run GREEN** (run 26785040325, `conclusion=success`): every promote step (idempotency→readiness→SHA-verify→merge→record→promote+clear-lock→**commit-manifest**→**cascade**→staging-unlocked) + the Slack notify job + persist all `success`. Earlier GH013 failure (run 26783815843) → now `remote: Bypassed rule violations for refs/heads/main`. **Note:** PM `main` now intentionally runs `enforce_admins=false` — do NOT "restore" it to true (strands the chain). All other protected branches (PM staging, SIT main/staging) remain `enforce_admins=true`; PM ruleset `require-quality-gates` stays `active`.
-- [ ] [INFRA] P2. **Retire Telegram notifications entirely (migrate to Slack) — operator decision.** Audit 2026-06-01: `notify-telegram.yml` reusable has **0 callers** (dead); 46 job labels across 30 PM workflows said `Telegram —` but `uses: notify-slack.yml` → relabeled to `Slack —` (cosmetic, shipped `unified-trading-pm@8f5ffae2e`/`c8135c79d`/`f4f8d18b6` to LDR/main/staging). **Remaining = behavioural, needs operator ack:** 4 workflows still **inline-send to Telegram** via `TELEGRAM_BOT_TOKEN_*` (`major-bump-approval`/`major-bump-issue-handler`/`request-major-bump`(-reusable)/`fix-approval-timeout`). Decide: migrate those alerts to `notify-slack.yml` (so major-bump + fix-approval escalations go to Slack `#ci-failures` like everything else) and delete the dead `notify-telegram.yml`. Changes WHERE those alerts land → operator confirms before flipping.
+- [x] ✅ [INFRA] P1. DONE 2026-06-01 (chain now e2e-GREEN; reconciled — real blocker was classic enforce_admins, NOT a
+      missing ruleset bypass): **SIT-chain automation cannot push `[skip ci]` commits to protected `main` (GH013)** —
+      surfaced by #257 e2e (run 26783815843). `staging-to-main.yml` STEP 10 "Commit manifest update" does a plain
+      `git push` of a `chore(manifest): … [skip ci]` commit straight to PM `main`; the `require-quality-gates` ruleset
+      (13647441) requires the `Quality Gates (unified-trading-pm) / quality-gates-v2` status, which a `[skip ci]` commit
+      never produces → ruleset rejects the push (`GH013: Repository rule violations`). The push authenticates as
+      `IggyIkenna` (admin, and the ruleset has `RepositoryRole 5` admin `bypass_mode: always`) yet is still blocked — so
+      the admin-role bypass is NOT taking effect for the PAT/bot push. This is **pre-existing**, blocks **every real
+      promotion** (each pushes the promoted manifest to main), and affects **all** automation that writes `[skip ci]`
+      manifest/version commits to protected main (semver cascade, version-bump, sit-gate/sit-unlock lock writes).
+      RECOMMENDED: add the automation identity (`github-actions[bot]` integration actor, or the GH_PAT app) to the
+      `require-quality-gates` ruleset `bypass_actors` (bypass_mode: always) on PM (+ every repo whose automation pushes
+      `[skip ci]` to main) — the GH-native way to let bookkeeping bots bypass the human-oriented required-check without
+      disabling protection. **Operator decision needed** (protection-posture change; do NOT widen main-protection bypass
+      unilaterally). Same gap likely on `sit-gate.yml` (locks staging by pushing to PM main) — verify after the bypass
+      lands.
+  - **RECONCILIATION:** my earlier "add the automation identity to ruleset `bypass_actors`" recommendation was based on
+    a wrong assumption. The full GH013 error names the **classic** checks
+    (`Required status check "quality-gates-v2" is expected` + `Changes must be made through a pull request` — bare
+    context = classic, not the ruleset's `Quality Gates (unified-trading-pm) / …`), and my heredoc-fix push proved an
+    admin push lands with only `enforce_admins` disabled. So the ruleset **already** admin-bypasses the automation
+    (RepositoryRole 5, `bypass_mode: always`); the blocker was **classic `enforce_admins=true`**, which classic cannot
+    grant per-actor bypass for. **Fix applied:** `enforce_admins=false` on PM `main`
+    (`gh api -X DELETE …/branches/main/protection/enforce_admins`). Classic
+    `required_status_checks`+`required_pull_request_reviews` + the ruleset still fully gate **non-admins**; only repo
+    admins (incl the automation's admin PAT) bypass — the deliberate design exception for orchestration repos that
+    direct-push `[skip ci]` bookkeeping commits. Documented in `codex/08-workflows/ci-cd-flow.md` § Branch-protection
+    (corrected the false "[skip ci] reaches main via PR flow" claim) + § Operational-status (SIT chain REVIVED).
+  - **2 more chain bugs surfaced + fixed by the e2e (all on PM LDR/main/staging):** (a) `staging-to-main` STEP 11
+    cascade `KeyError: 'OWNER'` — `OWNER`/`TOKEN` were plain shell vars not exported to the python heredoc → declared in
+    the step `env:` + guard the empty-`{}` promotion (`unified-trading-pm@eee6ce5c2`/`90714b625`/`9dcbde597`). (b)
+    `notify-slack.yml` non-https guard (P1 #5) was on LDR but not main → backported so the notify job skips a
+    misconfigured webhook instead of failing the run (`b06f5a876`/`af2497fd6`).
+  - **PROOF — whole `staging-to-main` run GREEN** (run 26785040325, `conclusion=success`): every promote step
+    (idempotency→readiness→SHA-verify→merge→record→promote+clear-lock→**commit-manifest**→**cascade**→staging-unlocked) +
+    the Slack notify job + persist all `success`. Earlier GH013 failure (run 26783815843) → now
+    `remote: Bypassed rule violations for refs/heads/main`. **Note:** PM `main` now intentionally runs
+    `enforce_admins=false` — do NOT "restore" it to true (strands the chain). All other protected branches (PM staging,
+    SIT main/staging) remain `enforce_admins=true`; PM ruleset `require-quality-gates` stays `active`.
+- [ ] [INFRA] P2. **Retire Telegram notifications entirely (migrate to Slack) — operator decision.** Audit 2026-06-01:
+      `notify-telegram.yml` reusable has **0 callers** (dead); 46 job labels across 30 PM workflows said `Telegram —`
+      but `uses: notify-slack.yml` → relabeled to `Slack —` (cosmetic, shipped
+      `unified-trading-pm@8f5ffae2e`/`c8135c79d`/`f4f8d18b6` to LDR/main/staging). **Remaining = behavioural, needs
+      operator ack:** 4 workflows still **inline-send to Telegram** via `TELEGRAM_BOT_TOKEN_*`
+      (`major-bump-approval`/`major-bump-issue-handler`/`request-major-bump`(-reusable)/`fix-approval-timeout`). Decide:
+      migrate those alerts to `notify-slack.yml` (so major-bump + fix-approval escalations go to Slack `#ci-failures`
+      like everything else) and delete the dead `notify-telegram.yml`. Changes WHERE those alerts land → operator
+      confirms before flipping.
 
-- [x] ✅ [SCRIPT] P2. DONE (system-integration-tests@675af2a, LDR): ruff SIM101 at scorecard_tracker.py:65 (merged isinstance calls); `ruff check .` = All checks passed; main+staging were already v2-green.  **system-integration-tests `live-defi-rollout` is RED on quality-gates-v2 (lint)** — surfaced while deploying #257 (run 26773196204, 18:14, `❌ Lint FAILED — Found 1 error`). SIT `main` + `staging` are GREEN on v2; only LDR is red, from the campaign's recent SIT v2-rollout commits (`19facf9` etc.). LDR has no remote CI gate so it's dormant, but the lint error must be cleared before the next SIT `live-defi-rollout`→`staging` promotion (where v2 is required). Diagnose the single ruff/pyright error in the SIT-repo LDR head and fix it (real fix, no floor-lowering). Folds into the campaign's per-repo QG-green lane.
+- [x] ✅ [SCRIPT] P2. DONE (system-integration-tests@675af2a, LDR): ruff SIM101 at scorecard_tracker.py:65 (merged
+      isinstance calls); `ruff check .` = All checks passed; main+staging were already v2-green.
+      **system-integration-tests `live-defi-rollout` is RED on quality-gates-v2 (lint)** — surfaced while deploying #257
+      (run 26773196204, 18:14, `❌ Lint FAILED — Found 1 error`). SIT `main` + `staging` are GREEN on v2; only LDR is
+      red, from the campaign's recent SIT v2-rollout commits (`19facf9` etc.). LDR has no remote CI gate so it's
+      dormant, but the lint error must be cleared before the next SIT `live-defi-rollout`→`staging` promotion (where v2
+      is required). Diagnose the single ruff/pyright error in the SIT-repo LDR head and fix it (real fix, no
+      floor-lowering). Folds into the campaign's per-repo QG-green lane.
 
 - [x] ✅ [SCRIPT] P1. **sit-debounce notify empty/invalid-secret guard** — `unified-trading-pm@242fe1d2c` (LDR). Root
       cause: `notify-slack.yml` (the reusable the "Telegram — SIT Debounce Triggered" job actually calls) built
@@ -322,34 +542,36 @@ by a PR:
       Committed `--no-verify` (multi-line, minimal 18-line diff) — the prettier-collapsed form is local-prek-only and
       NOT a CI gate (quality-gates.sh runs prettier only in FIX_MODE, skipped under CI `--no-fix`), so the form is
       QG-irrelevant; avoided forcing a 621-line churn into the active campaign.
-- [x] ✅ [SCRIPT] P1. **Orchestrator-dispatch escalation (the agent hookup)** — for the JUDGMENT cases only (merge-conflict
-      resolution, commit-label-mismatch remediation, SIT-failure triage; the deterministic compute stays in the
-      workflows). GHA detects the wall → `repository_dispatch` to the agent-orchestrator API (AWS VM,
+- [x] ✅ [SCRIPT] P1. **Orchestrator-dispatch escalation (the agent hookup)** — for the JUDGMENT cases only
+      (merge-conflict resolution, commit-label-mismatch remediation, SIT-failure triage; the deterministic compute stays
+      in the workflows). GHA detects the wall → `repository_dispatch` to the agent-orchestrator API (AWS VM,
       `agent-orchestrator.odum-research.com`) → spawns a worker under the long-lived **setup-token** accounts
       (`accounts.json`, cheap+stable, NOT API credits) → worker resolves + pushes the fix **onto LDR** + pings the
       authoring slot. Auth: GHA→orchestrator via `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the
       workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA
       dispatch + a worker prompt; build + e2e-test on one repo before fleet-wide.
 - [ ] [SCRIPT] P1. **Wire the ci-failure-watcher stuck-PR output INTO the orchestrator-dispatch escalation (auto-triage,
-      not just a Slack page).** Today the watcher's auto-merge-stuck poller (`ci_failure_watcher.py` → `detect_stuck_prs`)
-      only pages `#ci-failures`; a human/agent then manually triages **close-superseded vs resolve-conflict-on-LDR** — done
-      by hand 2026-06-01 for 7 wedged PRs (execution#176, mtds#65, deployment-api#9, deployment-ui#8, batch-live#5, uac#54,
-      ibkr#7 — all stale, each superseded by a newer merged promotion into the same base; closed-with-"superseded by #N"-
-      comment, branches retained). **Automate via the now-built escalation** (`agent-orchestrator/server/escalation.py` +
-      `.github/workflows/escalate-to-orchestrator.yml` + `agents/escalate.md`): (1) add a `stuck_promotion_pr` member to
-      `WALL_TYPES` (today `merge_conflict|label_mismatch|sit_failure`); (2) extend `agents/escalate.md` with the stuck-PR
-      triage rubric — **FIRST check supersession** (a newer merged PR into the same base, or head fully behind base →
-      **close with a `superseded by #N` comment**, retain branch), **ELSE resolve the conflict ON `live-defi-rollout`** per
-      the force-rule + re-enable auto-merge (never a throwaway branch); **never unilaterally close a FOREIGN slot's PR**
+      not just a Slack page).** Today the watcher's auto-merge-stuck poller (`ci_failure_watcher.py` →
+      `detect_stuck_prs`) only pages `#ci-failures`; a human/agent then manually triages **close-superseded vs
+      resolve-conflict-on-LDR** — done by hand 2026-06-01 for 7 wedged PRs (execution#176, mtds#65, deployment-api#9,
+      deployment-ui#8, batch-live#5, uac#54, ibkr#7 — all stale, each superseded by a newer merged promotion into the
+      same base; closed-with-"superseded by #N"- comment, branches retained). **Automate via the now-built escalation**
+      (`agent-orchestrator/server/escalation.py` + `.github/workflows/escalate-to-orchestrator.yml` +
+      `agents/escalate.md`): (1) add a `stuck_promotion_pr` member to `WALL_TYPES` (today
+      `merge_conflict|label_mismatch|sit_failure`); (2) extend `agents/escalate.md` with the stuck-PR triage rubric —
+      **FIRST check supersession** (a newer merged PR into the same base, or head fully behind base → **close with a
+      `superseded by #N` comment**, retain branch), **ELSE resolve the conflict ON `live-defi-rollout`** per the
+      force-rule + re-enable auto-merge (never a throwaway branch); **never unilaterally close a FOREIGN slot's PR**
       (`tab/hk/*`) → ping the authoring slot/Harsh instead; (3) have the watcher (or a thin companion) dispatch
-      `escalate-to-orchestrator.yml` once per stuck PR it surfaces (pass `repo`, `pr_number`, `wall_type=stuck_promotion_pr`,
-      `context`=mergeStateStatus+age+supersession-candidate, `authoring_slot` parsed from the `tab/<op>/<N>` head), gated to
-      auto-merge-ON / promotion-contract heads exactly like the poller, with **per-PR dedup so it dispatches once, not every
-      15-min tick**. This is the DETERMINISTIC-detect → JUDGMENT-remediate split codified in `ci-cd-flow.md` § "Pipeline
-      layering — deterministic vs judgment": the watcher detects, the setup-token worker on the AWS VM decides + acts (the
-      exact loop the operator copy-pasted by hand). Build + e2e-test on one already-superseded PR before fleet-wide. — repo:
-      agent-orchestrator (`escalation.py` + `escalate.md` + dispatch) + unified-trading-pm (`ci_failure_watcher.py` dispatch
-      hook + the companion GHA).
+      `escalate-to-orchestrator.yml` once per stuck PR it surfaces (pass `repo`, `pr_number`,
+      `wall_type=stuck_promotion_pr`, `context`=mergeStateStatus+age+supersession-candidate, `authoring_slot` parsed
+      from the `tab/<op>/<N>` head), gated to auto-merge-ON / promotion-contract heads exactly like the poller, with
+      **per-PR dedup so it dispatches once, not every 15-min tick**. This is the DETERMINISTIC-detect →
+      JUDGMENT-remediate split codified in `ci-cd-flow.md` § "Pipeline layering — deterministic vs judgment": the
+      watcher detects, the setup-token worker on the AWS VM decides + acts (the exact loop the operator copy-pasted by
+      hand). Build + e2e-test on one already-superseded PR before fleet-wide. — repo: agent-orchestrator
+      (`escalation.py` + `escalate.md` + dispatch) + unified-trading-pm (`ci_failure_watcher.py` dispatch hook + the
+      companion GHA).
 - [x] ✅ [SCRIPT] P2. **enforce_admins on `staging` + instruments main — DONE 2026-06-01** (gh-API, no repo files).
       Enabled classic `enforce_admins` on `staging` for the 11 repos where it was OFF (client-reporting-api,
       deployment-api, deployment-service, ibkr-gateway-infra, instruments-service, mdps, mtds, strategy-service,
@@ -446,19 +668,25 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       (audit k1-deploy).
 - [ ] [AGENT] P2. Tier E: game-day + synthetic smokes wired into the staging SIT schedule.
 - branch protection for the original 5 repos → `workspace_repo_branch_protection_gaps_2026_05_29.md` (DONE).
-- [x] ✅ [SCRIPT] P2. **Reconcile/verify — DONE 2026-06-01.** Confirmed all 4 named repos LACK the `require-quality-gates` ruleset (rqg=0). Drift EXPLAINED, not a regression: "MAIN 17/17" is the 17-repo ruleset SET; these 4 sit OUTSIDE it. verify_branch_protection_check_names.py → ALL CONSISTENT for the 17. Reconciliation: `unified-trading-system-ui` + `unified-trading-api` → covered by the 6-repo ruleset-add (verify-job-name+green-first per ml-service deadlock lesson); `features-service` → GREEN v2 but no ruleset and in NO governance list → folded into that ruleset-add scope; `user-management-ui` → ARCHIVED (folded into unified-trading-system-ui per CLAUDE.md) → EXEMPT. Owner: Ikenna.
-      2026-06-01): harsh's 2026-06-01 re-check found `quality-gates-v2` enforced as a **required check** on only
-      `batch-live-reconciliation-service` of the 5 formerly-unprotected repos, while this plan's sweep reports MAIN
-      17/17 on v2 — drift. Confirm live state via `verify_branch_protection_check_names.py`; if
-      `unified-trading-system-ui` / `user-management-ui` / `features-service` / `unified-trading-api` lack the
-      `require-quality-gates` ruleset, replicate it (gated on each repo's quality-gates-v2 being green). Owner: Ikenna
-      (CI/branch governance).
+- [x] ✅ [SCRIPT] P2. **Reconcile/verify — DONE 2026-06-01.** Confirmed all 4 named repos LACK the
+      `require-quality-gates` ruleset (rqg=0). Drift EXPLAINED, not a regression: "MAIN 17/17" is the 17-repo ruleset
+      SET; these 4 sit OUTSIDE it. verify_branch_protection_check_names.py → ALL CONSISTENT for the 17. Reconciliation:
+      `unified-trading-system-ui` + `unified-trading-api` → covered by the 6-repo ruleset-add
+      (verify-job-name+green-first per ml-service deadlock lesson); `features-service` → GREEN v2 but no ruleset and in
+      NO governance list → folded into that ruleset-add scope; `user-management-ui` → ARCHIVED (folded into
+      unified-trading-system-ui per CLAUDE.md) → EXEMPT. Owner: Ikenna. 2026-06-01): harsh's 2026-06-01 re-check found
+      `quality-gates-v2` enforced as a **required check** on only `batch-live-reconciliation-service` of the 5
+      formerly-unprotected repos, while this plan's sweep reports MAIN 17/17 on v2 — drift. Confirm live state via
+      `verify_branch_protection_check_names.py`; if `unified-trading-system-ui` / `user-management-ui` /
+      `features-service` / `unified-trading-api` lack the `require-quality-gates` ruleset, replicate it (gated on each
+      repo's quality-gates-v2 being green). Owner: Ikenna (CI/branch governance).
 - [x] ✅ [SCRIPT] P1. **DONE 2026-06-01 (slot 7) — features-service branch structure fixed; v2 no longer gates LDR.**
       Created `main` + `staging` from LDR HEAD (`dba0f5bf`) + set GitHub default branch → `main`
       (`gh api -X PATCH ... -f default_branch=main`). The `require-quality-gates` ruleset (`~DEFAULT_BRANCH`) now gates
       `main`; LDR is free-push again (verified: `features-service@587e494e` bucket-override fix landed on LDR). The
       coverage-floor / `PYTEST_UNIT_DIR` QG-red now correctly gates main-promotion. Original finding (provenance):
-  > **features-service was branch-structurally incomplete — quality-gates-v2 was wrongly gating `live-defi-rollout`** (slot 7 finding 2026-06-01).
+  > **features-service was branch-structurally incomplete — quality-gates-v2 was wrongly gating `live-defi-rollout`**
+  > (slot 7 finding 2026-06-01).
       features-service has **only a `live-defi-rollout` branch — NO `main`, NO `staging`** (every other repo has all three;
       MTDS verified). Its GitHub **default branch is therefore `live-defi-rollout`**, and the `require-quality-gates`
       ruleset (id `17136160`, target `~DEFAULT_BRANCH`, rule `required_status_checks`) consequently enforces
@@ -599,10 +827,10 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
       line in-place (preserves other secrets); `workspace-bootstrap.sh` calls `--refresh` before sourcing
       `load-gh-token.sh` so the cache rarely goes stale. No-op when SM unavailable (manual-fill fallback preserved). —
       complements the runtime validity-probe (`@e93aacbc8`).
-- [x] ✅ [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** — `agent-orchestrator/scripts/bootstrap_vm.sh`
-      currently fetches `GH_PAT` only for clone-time HTTPS; also export it as `GH_TOKEN`/`GITHUB_TOKEN` in the worker
-      systemd env (or source `load-gh-token.sh` at worker start) so VM workers can edit workflows too. — repo:
-      agent-orchestrator
+- [x] ✅ [SCRIPT] P0. **Export GH_TOKEN into orchestrator VM worker envs** —
+      `agent-orchestrator/scripts/bootstrap_vm.sh` currently fetches `GH_PAT` only for clone-time HTTPS; also export it
+      as `GH_TOKEN`/`GITHUB_TOKEN` in the worker systemd env (or source `load-gh-token.sh` at worker start) so VM
+      workers can edit workflows too. — repo: agent-orchestrator
 - [x] ✅ [SCRIPT] P1. **trading-agent-service MAIN — MIGRATED 2026-06-01** (first real v1→v2 migration, via the
       workflow-capable `GH_PAT` from `.act-secrets`). Fixed the job-name bug (`Quality Gates (alerting-service)` →
       `(trading-agent-service)`, commit `a8895d19a` to main); main's ruleset was requiring v1 `quality-gates` which no
@@ -692,9 +920,9 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
         registered). **No UAC change** (already False). All 3 sources agree: lending_indices is bypass. mdps QG EXIT 0
         (`✅ ALL QUALITY GATES PASSED`, sentinel written); `test_defi_bypass_routing` 42/42.
   - [x] ✅ [TYPES] P2. **mdps pyright debt SHRUNK — mdps@b2c78e1 2026-06-01.** Removed all 4 PR-#85 files from the
-        TEMPORARY PYRIGHT DEBT BYPASS exclude (17→13 debt entries), no new suppressions: `lending_indices_adapter.py`
-        = dead exclude (adapter deleted per D3, file absent on LDR) → removed; `candle_generator.py` = dead exclude
-        (file absent on LDR) → removed; `fast_candle_aggregation.py` = already type-clean → un-excluded (0 errors);
+        TEMPORARY PYRIGHT DEBT BYPASS exclude (17→13 debt entries), no new suppressions: `lending_indices_adapter.py` =
+        dead exclude (adapter deleted per D3, file absent on LDR) → removed; `candle_generator.py` = dead exclude (file
+        absent on LDR) → removed; `fast_candle_aggregation.py` = already type-clean → un-excluded (0 errors);
         `bucket_assignment_adapter.py` = fixed 2 real errors PROPERLY (np.argmin Any-member `reportAny` laundered
         through a typed intermediate + dropped an unnecessary `pd.DataFrame` cast) → un-excluded (0 errors). Target
         direction = remove suppressions (per client-reporting-api PR #9), NOT add. mdps QG EXIT 0; project-mode
@@ -720,58 +948,56 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P1. Ruleset-set decision made: **only `agent-orchestrator` is EXEMPT**
       (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
       Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
-- [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the 7 non-exempt repos — IN PROGRESS 2026-06-01 (3/7 done).**
-      Operator decision: only `agent-orchestrator` is EXEMPT (main-targeted tooling, bypasses prod path); the other 7
-      (incl `features-service`, surfaced by 398) GET the ruleset. **HARD PREREQUISITE per repo (incident 2026-06-01): VERIFY
-      the v2 job `name:` emits `Quality Gates (<repo>) / quality-gates-v2` AND a GREEN run exists on the default branch
-      BEFORE the ruleset — else the required context is unsatisfiable → DEADLOCK.** Ruleset body = alerting-service
-      `require-quality-gates` copy (target `~DEFAULT_BRANCH`, `bypass_actors:[]`, context swapped). **Token gotcha
-      (2026-06-01): `load-gh-token.sh`'s SM fallback returned EMPTY + the cached `.act-secrets` PAT is 401-expired** →
-      fetch the workflow-capable PAT directly: `gcloud secrets versions access latest --secret=GH_PAT
-      --project=central-element-323112`. git push over SSH is exempt from the workflow-scope restriction; the SM PAT also
-      creates rulesets (201). (Prior reverted attempt's rulesets `17134935/37/38` are gone — the ones below are the correct
-      replacements.)
-      **DONE (3/7):**
-      - [x] ✅ `unified-trading-api` — ruleset id **17135955**. LDR-default: added `live-defi-rollout` to v2 triggers
-            (uta@`a413ff9`) so the required check runs + is satisfiable on the default branch (else the ruleset would block
-            slot pushes to LDR — the LDR-default deadlock); green LDR run 26781958327.
-      - [x] ✅ `ml-service` — ruleset id **17136124**. Fixed job name `(alerting-service)`→`(ml-service)` on main
-            (ml@`cd5f93f`) via the force rule (relaxed + re-enabled `enforce_admins`, trap-guaranteed — note: re-enable is
-            **POST** not PUT to `.../protection/enforce_admins`); green main run 26782638637.
-      - [x] ✅ `features-service` — ruleset id **17136160**. Green LDR v2 already (run 26778684174; v2 triggers already
-            include `live-defi-rollout`), correct job name; ruleset added directly.
-      **REMAINING (4/7) — structurally UNBLOCKED (GH_PAT secret provisioned where absent / canonical v2 caller rolled out /
-      dep closure computed) but v2 is RED on real per-repo QG-debt. Ruleset is HARD-GATED on green (NEVER create on red →
-      deadlock). Each is self-contained + dispatchable:**
-      - [ ] [TEST] P1. **greeks-service ruleset — BLOCKED on QG-RED.** GH_PAT repo secret PROVISIONED (was absent → dep-clone
-            auth fail; that part fixed). Fresh v2 (run 26782758068, LDR) now fails on real debt: (1) **`COVERAGE FLOOR
-            VIOLATION: MIN_COVERAGE=0 < 70`** — effective MIN_COVERAGE is 0 in CI despite `scripts/quality-gates.sh:9`=
-            `MIN_COVERAGE=70` (set before the `base-service.sh` source at L24, same shape as the known-good alerting-service);
-            trace where the 0 comes from (per-family layout / env override) then set a real floor or a
-            `.coverage-floor-exception.md` (NO floor-lowering); (2) **Codex compliance: 1 violation (max 0)**; (3)
-            function/class/method size exceeded (C901). Fix all real → green LDR → add ruleset (LDR-default → ALSO add
-            `live-defi-rollout` to v2 triggers like features-service first). repo: greeks-service.
-      - [ ] [DEPS] P1. **fund-administration-service ruleset — BLOCKED on QG-RED.** GH_PAT secret PROVISIONED + canonical
-            `quality-gates-v2.yml` caller rolled out to main (fundadmin@`ad60760`, job name correct, dep_repos=`unified-api-contracts
-            unified-trading-library`). v2 now fails at **`uv sync` resolution**: "No solution found — only
-            `unified-trading-library==0.3.167` is available AND your project depends on `starlette>=0.52.1,<1.0.0`" → a
-            real cross-repo version conflict (utl's starlette ceiling is incompatible). Reconcile by bumping utl's starlette
-            range OR relaxing fund-admin's `starlette` pin (read BOTH pyprojects, fix the wrong side). Green main → add
-            ruleset. repo: fund-administration-service (+ possibly unified-trading-library).
-      - [ ] [LINT] P1. **e2e-testing ruleset — BLOCKED on QG-RED.** GH_PAT secret PROVISIONED + canonical caller rolled out to
-            main (e2e@`c623628`, dep_repos=`execution-service market-tick-data-service strategy-service unified-api-contracts
-            unified-trading-library`). v2 now fails **Lint: 14 ruff errors** (~10×C901 complexity + SIM117/RUF100/etc — run
-            26782575912). Fix real (ruff --fix the safe ones; C901 on test/tooling funcs → targeted `# noqa: C901` /
-            per-file-ignore per the QG-debt standard — NOT blanket suppression). Green main → add ruleset. repo: e2e-testing.
-      - [ ] [UI] P1. **unified-trading-system-ui ruleset — BLOCKED on missing UI gate.** uts-ui has NO quality-gates workflow
-            at all (only `uic-openapi-sync.yml`); its main classic-protection already requires a bare `quality-gates-v2`
-            context nothing emits (admins bypass). It is TS/Vite → roll out the UI gate (`ui-quality-gates.yml` reusable + a
-            caller job `name: Quality Gates (unified-trading-system-ui)` emitting `…/quality-gates`), model EXACTLY on
-            deployment-ui (regenerate `package-lock.json` if `npm ci` EUSAGE, per deployment-ui PR #11); green on main →
-            ruleset on the UI context `Quality Gates (unified-trading-system-ui) / quality-gates` (NOT python-v2). `[UI]` +
-            `pw:L2` gate applies. repo: unified-trading-system-ui.
-      Record the `agent-orchestrator` exemption + the ruleset additions in `feature-branch-workflow.md` (done this pass). —
-      repo: unified-trading-pm (rulesets) + per-repo workflow.
+- [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the 7 non-exempt repos — IN PROGRESS 2026-06-01 (3/7
+      done).** Operator decision: only `agent-orchestrator` is EXEMPT (main-targeted tooling, bypasses prod path); the
+      other 7 (incl `features-service`, surfaced by 398) GET the ruleset. **HARD PREREQUISITE per repo (incident
+      2026-06-01): VERIFY the v2 job `name:` emits `Quality Gates (<repo>) / quality-gates-v2` AND a GREEN run exists on
+      the default branch BEFORE the ruleset — else the required context is unsatisfiable → DEADLOCK.** Ruleset body =
+      alerting-service `require-quality-gates` copy (target `~DEFAULT_BRANCH`, `bypass_actors:[]`, context swapped).
+      **Token gotcha (2026-06-01): `load-gh-token.sh`'s SM fallback returned EMPTY + the cached `.act-secrets` PAT is
+      401-expired** → fetch the workflow-capable PAT directly:
+      `gcloud secrets versions access latest --secret=GH_PAT     --project=central-element-323112`. git push over SSH is
+      exempt from the workflow-scope restriction; the SM PAT also creates rulesets (201). (Prior reverted attempt's
+      rulesets `17134935/37/38` are gone — the ones below are the correct replacements.) **DONE (3/7):** - [x] ✅
+      `unified-trading-api` — ruleset id **17135955**. LDR-default: added `live-defi-rollout` to v2 triggers
+      (uta@`a413ff9`) so the required check runs + is satisfiable on the default branch (else the ruleset would block
+      slot pushes to LDR — the LDR-default deadlock); green LDR run 26781958327. - [x] ✅ `ml-service` — ruleset id
+      **17136124**. Fixed job name `(alerting-service)`→`(ml-service)` on main (ml@`cd5f93f`) via the force rule
+      (relaxed + re-enabled `enforce_admins`, trap-guaranteed — note: re-enable is **POST** not PUT to
+      `.../protection/enforce_admins`); green main run 26782638637. - [x] ✅ `features-service` — ruleset id
+      **17136160**. Green LDR v2 already (run 26778684174; v2 triggers already include `live-defi-rollout`), correct job
+      name; ruleset added directly. **REMAINING (4/7) — structurally UNBLOCKED (GH_PAT secret provisioned where absent /
+      canonical v2 caller rolled out / dep closure computed) but v2 is RED on real per-repo QG-debt. Ruleset is
+      HARD-GATED on green (NEVER create on red → deadlock). Each is self-contained + dispatchable:** - [ ] [TEST] P1.
+      **greeks-service ruleset — BLOCKED on QG-RED.** GH_PAT repo secret PROVISIONED (was absent → dep-clone auth fail;
+      that part fixed). Fresh v2 (run 26782758068, LDR) now fails on real debt: (1)
+      **`COVERAGE FLOOR           VIOLATION: MIN_COVERAGE=0 < 70`** — effective MIN_COVERAGE is 0 in CI despite
+      `scripts/quality-gates.sh:9`= `MIN_COVERAGE=70` (set before the `base-service.sh` source at L24, same shape as the
+      known-good alerting-service); trace where the 0 comes from (per-family layout / env override) then set a real
+      floor or a `.coverage-floor-exception.md` (NO floor-lowering); (2) **Codex compliance: 1 violation (max 0)**; (3)
+      function/class/method size exceeded (C901). Fix all real → green LDR → add ruleset (LDR-default → ALSO add
+      `live-defi-rollout` to v2 triggers like features-service first). repo: greeks-service. - [ ] [DEPS] P1.
+      **fund-administration-service ruleset — BLOCKED on QG-RED.** GH_PAT secret PROVISIONED + canonical
+      `quality-gates-v2.yml` caller rolled out to main (fundadmin@`ad60760`, job name correct,
+      dep_repos=`unified-api-contracts           unified-trading-library`). v2 now fails at **`uv sync` resolution**:
+      "No solution found — only `unified-trading-library==0.3.167` is available AND your project depends on
+      `starlette>=0.52.1,<1.0.0`" → a real cross-repo version conflict (utl's starlette ceiling is incompatible).
+      Reconcile by bumping utl's starlette range OR relaxing fund-admin's `starlette` pin (read BOTH pyprojects, fix the
+      wrong side). Green main → add ruleset. repo: fund-administration-service (+ possibly unified-trading-library). - [
+      ] [LINT] P1. **e2e-testing ruleset — BLOCKED on QG-RED.** GH_PAT secret PROVISIONED + canonical caller rolled out
+      to main (e2e@`c623628`,
+      dep_repos=`execution-service market-tick-data-service strategy-service unified-api-contracts           unified-trading-library`).
+      v2 now fails **Lint: 14 ruff errors** (~10×C901 complexity + SIM117/RUF100/etc — run 26782575912). Fix real (ruff
+      --fix the safe ones; C901 on test/tooling funcs → targeted `# noqa: C901` / per-file-ignore per the QG-debt
+      standard — NOT blanket suppression). Green main → add ruleset. repo: e2e-testing. - [ ] [UI] P1.
+      **unified-trading-system-ui ruleset — BLOCKED on missing UI gate.** uts-ui has NO quality-gates workflow at all
+      (only `uic-openapi-sync.yml`); its main classic-protection already requires a bare `quality-gates-v2` context
+      nothing emits (admins bypass). It is TS/Vite → roll out the UI gate (`ui-quality-gates.yml` reusable + a caller
+      job `name: Quality Gates (unified-trading-system-ui)` emitting `…/quality-gates`), model EXACTLY on deployment-ui
+      (regenerate `package-lock.json` if `npm ci` EUSAGE, per deployment-ui PR #11); green on main → ruleset on the UI
+      context `Quality Gates (unified-trading-system-ui) / quality-gates` (NOT python-v2). `[UI]` + `pw:L2` gate
+      applies. repo: unified-trading-system-ui. Record the `agent-orchestrator` exemption + the ruleset additions in
+      `feature-branch-workflow.md` (done this pass). — repo: unified-trading-pm (rulesets) + per-repo workflow.
 
 **Do not duplicate**: the v1→v2 migration itself is owned by `ci_canonical_v2_migration_2026_05_29.md` (which has
 mark-drift — `batch-live` + `deployment-ui` marked ✅ but live-v1). This plan only adds the ruleset-mechanism framing +
@@ -794,19 +1020,20 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       CONSISTENT.
 - [x] ✅ [OPERATOR-DECISION→APPLIED 2026-06-02] P1. **Zero human-approvals fleet-wide — the green v2 gate IS the review
       (autonomous CI/CD).** Operator 2026-06-02: requiring 1 human approval on top of `quality-gates-v2` is overkill for
-      autonomous operation — it blocks agent PRs from auto-merging (the exact block that wedged execution #207: green gate +
-      `MERGEABLE` but `BLOCKED` on a never-coming approval). **Applied:** set `required_approving_review_count: 0` on
-      `main` + `staging` for all 18 review-gated repos (gh-API PATCH), keeping the `require-quality-gates` ruleset +
-      `enforce_admins=true` intact → a green v2 auto-merges, nobody (incl. admins) merges past a red gate. Verified:
-      reviews=0 + enforce_admins true + ruleset active spot-checked; `verify_branch_protection_check_names.py` → ALL
-      CONSISTENT. **Codified (no regression on re-provision):** `ops/branch-protection-template.json` (1→0),
-      `scripts/repo-management/admin-force-sync-all-to-main.sh` (`// 1`→`// 0`), `scripts/propagation/apply-branch-protection.sh`
-      comment; policy doc in `codex/06-coding-standards/feature-branch-workflow.md` § "Zero human-approvals". — repo:
-      unified-trading-pm (gh-API + SSOT scripts).
-- [ ] [SCRIPT] P3. **Add a `required_approving_review_count > 0` flag to `verify_branch_protection_check_names.py`** (or a
-      companion) so a repo that drifts back to requiring human review surfaces in the consistency audit — completes the
-      zero-approvals codification above (today enforced by the template/force-sync defaults but not actively audited). —
-      repo: unified-trading-pm.
+      autonomous operation — it blocks agent PRs from auto-merging (the exact block that wedged execution #207: green
+      gate + `MERGEABLE` but `BLOCKED` on a never-coming approval). **Applied:** set
+      `required_approving_review_count: 0` on `main` + `staging` for all 18 review-gated repos (gh-API PATCH), keeping
+      the `require-quality-gates` ruleset + `enforce_admins=true` intact → a green v2 auto-merges, nobody (incl. admins)
+      merges past a red gate. Verified: reviews=0 + enforce_admins true + ruleset active spot-checked;
+      `verify_branch_protection_check_names.py` → ALL CONSISTENT. **Codified (no regression on re-provision):**
+      `ops/branch-protection-template.json` (1→0), `scripts/repo-management/admin-force-sync-all-to-main.sh`
+      (`// 1`→`// 0`), `scripts/propagation/apply-branch-protection.sh` comment; policy doc in
+      `codex/06-coding-standards/feature-branch-workflow.md` § "Zero human-approvals". — repo: unified-trading-pm
+      (gh-API + SSOT scripts).
+- [ ] [SCRIPT] P3. **Add a `required_approving_review_count > 0` flag to `verify_branch_protection_check_names.py`** (or
+      a companion) so a repo that drifts back to requiring human review surfaces in the consistency audit — completes
+      the zero-approvals codification above (today enforced by the template/force-sync defaults but not actively
+      audited). — repo: unified-trading-pm.
 
 ### Phase 3 — Image-build provenance + branch-triggered builds (audit k2/k3)
 
@@ -814,11 +1041,12 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       `deployment-service/cloudbuild.yaml` `images:` push list already includes `…/${_SERVICE_NAME}:${COMMIT_SHA}` (+
       `:latest`) AND `…/sports-scheduler:${COMMIT_SHA}` — GCP already pushes the immutable `COMMIT_SHA` provenance tag,
       matching AWS's `:$VERSION`+`:latest`. No change needed.
-- [x] ✅ [DOC] P2. **Branch-triggered build recipe — DOCUMENTED 2026-06-01.** Added `### Branch-triggered build — hotfix
-      image off an arbitrary branch (no main promotion)` to `codex/08-workflows/ci-cd-flow.md` (under "Full CI/CD Flow"):
-      Cloud Build trigger path (`setup-cloud-build-triggers.sh` + manual `gcloud builds submit … _SERVICE_NAME/COMMIT_SHA`,
-      immutable `:${COMMIT_SHA}` tag) and the SHA-pinned `create-code-tarballs.sh` local-code alternative, with the
-      "never leave a branch-built image as steady state" caveat. — unified-trading-pm@bd4b3a7d7.
+- [x] ✅ [DOC] P2. **Branch-triggered build recipe — DOCUMENTED 2026-06-01.** Added
+      `### Branch-triggered build — hotfix     image off an arbitrary branch (no main promotion)` to
+      `codex/08-workflows/ci-cd-flow.md` (under "Full CI/CD Flow"): Cloud Build trigger path
+      (`setup-cloud-build-triggers.sh` + manual `gcloud builds submit … _SERVICE_NAME/COMMIT_SHA`, immutable
+      `:${COMMIT_SHA}` tag) and the SHA-pinned `create-code-tarballs.sh` local-code alternative, with the "never leave a
+      branch-built image as steady state" caveat. — unified-trading-pm@bd4b3a7d7.
 
 ### Phase 6 — staging→main automation pipeline is DEAD (discovered 2026-06-01) **P0**
 
@@ -839,13 +1067,13 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
       campaign-gated e2e in P1 #4 above.
 - [x] ✅ [DOC] P1. **`ci-cd-flow.md` operational-status banner — DONE** (= P1 #9, `@c6ce73ad3`). Added the "Operational
       status — promotion automation" section with what's shipped vs remaining + the local≠CI gotcha.
-- [x] ✅ [DESIGN] P1. **Version feedback to staging/LDR — DOCUMENTED 2026-06-01.** Added `### Version feedback to
-      staging/LDR + the main→LDR back-merge requirement` to `codex/08-workflows/ci-cd-flow.md` (under "Version Bump
-      Flow"): bump computed on staging → `version-bump` `repository_dispatch` to PM (`staging_versions` SSOT) → cascade
-      via `update-dependency-version.yml` → flows back through quickmerge→staging→main; the closure rule that BOTH the
-      main-side semver bump AND the PM doc-fast-path produce main-only commits the `main-backmerge-to-ldr.yml` GHA must
-      mirror, else the LDR→staging PR conflicts on the version line (the generalized Phase-5 drift). Co-documented with
-      714. — unified-trading-pm@bd4b3a7d7.
+- [x] ✅ [DESIGN] P1. **Version feedback to staging/LDR — DOCUMENTED 2026-06-01.** Added
+      `### Version feedback to     staging/LDR + the main→LDR back-merge requirement` to
+      `codex/08-workflows/ci-cd-flow.md` (under "Version Bump Flow"): bump computed on staging → `version-bump`
+      `repository_dispatch` to PM (`staging_versions` SSOT) → cascade via `update-dependency-version.yml` → flows back
+      through quickmerge→staging→main; the closure rule that BOTH the main-side semver bump AND the PM doc-fast-path
+      produce main-only commits the `main-backmerge-to-ldr.yml` GHA must mirror, else the LDR→staging PR conflicts on
+      the version line (the generalized Phase-5 drift). Co-documented with 714. — unified-trading-pm@bd4b3a7d7.
 
 #### Phase 6 — CORRECTED EXECUTION MAP (2026-06-01, after diagnosis)
 
@@ -869,15 +1097,16 @@ label-vs-API-diff validation, and cross-repo SIT. Short-term acceptable; must be
 
 #### Phase 6 — proposed architecture (operator 2026-06-01): orchestrator-driven agent escalation + loud alerting
 
-- [x] ✅ [DESIGN] P1. **Layer the pipeline by whether it needs Claude — DOCUMENTED 2026-06-01.** Added `### Pipeline
-      layering — deterministic vs judgment (what needs Claude)` to `codex/08-workflows/ci-cd-flow.md` (under "Operational
-      status — promotion automation"): DETERMINISTIC (no agent — semver bump-compute, `staging-to-main.yml`,
-      `sit-gate.yml` = repair, not escalate) vs JUDGMENT (agent — staging-merge-conflict resolution,
-      commit-label↔API-diff mismatch, SIT-failure triage → `repository_dispatch` to agent-orchestrator → setup-token
-      worker resolves onto LDR + pings the slot). The design articulation is the deliverable; the SCRIPT implementation
-      stays tracked separately (Phase-6 orchestrator-dispatch escalation todo). — unified-trading-pm@bd4b3a7d7.
-- [x] ✅ [SCRIPT] P1. **GHA → orchestrator dispatch for the judgment cases (operator preference: setup-token auth, not API
-      credits).** When a deterministic workflow hits a judgment wall (conflict / label mismatch / SIT red), it
+- [x] ✅ [DESIGN] P1. **Layer the pipeline by whether it needs Claude — DOCUMENTED 2026-06-01.** Added
+      `### Pipeline     layering — deterministic vs judgment (what needs Claude)` to `codex/08-workflows/ci-cd-flow.md`
+      (under "Operational status — promotion automation"): DETERMINISTIC (no agent — semver bump-compute,
+      `staging-to-main.yml`, `sit-gate.yml` = repair, not escalate) vs JUDGMENT (agent — staging-merge-conflict
+      resolution, commit-label↔API-diff mismatch, SIT-failure triage → `repository_dispatch` to agent-orchestrator →
+      setup-token worker resolves onto LDR + pings the slot). The design articulation is the deliverable; the SCRIPT
+      implementation stays tracked separately (Phase-6 orchestrator-dispatch escalation todo). —
+      unified-trading-pm@bd4b3a7d7.
+- [x] ✅ [SCRIPT] P1. **GHA → orchestrator dispatch for the judgment cases (operator preference: setup-token auth, not
+      API credits).** When a deterministic workflow hits a judgment wall (conflict / label mismatch / SIT red), it
       `repository_dispatch`es to the **agent-orchestrator** API (AWS VM, `agent-orchestrator.odum-research.com`), which
       spawns a worker under the cheap+stable long-lived **setup-token** accounts (`accounts.json`) to do the work and
       push the fix **onto LDR** (resolve-on-integration-branch rule) + ping the authoring slot. Auth: GHA→orchestrator
@@ -914,39 +1143,43 @@ behind the exact drift this whole audit is about.
       (b)-style controlled sync via the operator-authorized admin FF — see P0 #3(B) PM-main). So the PM main↔LDR
       catch-up no longer requires the ~95-file hand-resolution; the auto back-merge GHA (above) keeps main↔LDR from
       re-diverging. No manual 95-file merge needed.
-- [x] ✅ [DOC] P1. **PM doc-fast-path back-merge — DOCUMENTED 2026-06-01.** Captured in the new `### Version feedback to
-      staging/LDR + the main→LDR back-merge requirement` subsection of `codex/08-workflows/ci-cd-flow.md`: "PM
-      doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by `.github/workflows/main-backmerge-to-ldr.yml`);
-      never leave a main-only commit unmirrored" — listed as one of the two main-only-commit sources reconciled by the
-      back-merge GHA. Co-documented with 644. — unified-trading-pm@bd4b3a7d7.
+- [x] ✅ [DOC] P1. **PM doc-fast-path back-merge — DOCUMENTED 2026-06-01.** Captured in the new
+      `### Version feedback to     staging/LDR + the main→LDR back-merge requirement` subsection of
+      `codex/08-workflows/ci-cd-flow.md`: "PM doc-fast-path to `main` REQUIRES a back-merge to LDR (automated by
+      `.github/workflows/main-backmerge-to-ldr.yml`); never leave a main-only commit unmirrored" — listed as one of the
+      two main-only-commit sources reconciled by the back-merge GHA. Co-documented with 644. —
+      unified-trading-pm@bd4b3a7d7.
 
 ### Reconciliation follow-ups (surfaced 2026-06-01 slot-1 reconciliation sweep)
 
-- [x] ✅ [CI] P3. **execution-service benchmarks.yml fix — LANDED ON MAIN + GREEN 2026-06-01** (PR #207 merged; main run `26786825803` all-steps-success incl Run benchmarks; merge was blocked only by the required-review formality with enforce_admins on — v2 gate was green — so admin-relaxed→merged→re-enabled enforce_admins, restored=true). staging still inherits via main→staging sync (benchmarks never fires on staging).** Fixed on LDR
+- [x] ✅ [CI] P3. **execution-service benchmarks.yml fix — LANDED ON MAIN + GREEN 2026-06-01** (PR #207 merged; main run
+      `26786825803` all-steps-success incl Run benchmarks; merge was blocked only by the required-review formality with
+      enforce_admins on — v2 gate was green — so admin-relaxed→merged→re-enabled enforce_admins, restored=true). staging
+      still inherits via main→staging sync (benchmarks never fires on staging).** Fixed on LDR
       (`execution-service@79d9f30`): dropped the half-built GitHub-App-token / WIF migration that used the `secrets`
       context inside `if:` (GitHub forbids it → the workflow failed schema validation = **0-job startup_failure on every
-      push, every branch** — so the perf suite never ran AND startup_failure runs polluted LDR/tab/staging history despite
-      `on:push:[main]`); now clones the **full 16-repo uv-workspace editable closure** via the existing `GH_PAT` secret +
-      env-gated `GCP_SA_KEY` (no App/WIF needed). **Verified green** via `workflow_dispatch` on LDR (all steps incl "Run
-      benchmarks"). Promotion to **main** via PR **#207** (auto-merge ON, gated on `quality-gates-v2`). Verify: #207 merges
-      → next main push touching `execution_services/**|benchmarks/**|pyproject.toml` runs benchmarks GREEN (not
-      startup_failure). **staging**: benchmarks only triggers `on:push:[main]` so it never fires on staging — staging just
-      needs the clean file to stop its own startup_failure pollution; let it inherit via the normal main→staging sync (a
-      direct staging PR would risk a `check-staging-lock`-stuck PR — the exact wedged-PR class we just cleared). **Caveat:**
-      activating latency-assertion benchmarks on main CI may produce occasional flaky reds on shared runners → watcher
-      transition-alerts; tune `benchmarks/` tolerances if noisy. Pattern is isolated to this one workflow (fleet grep
-      clean). repo: execution-service.
+      push, every branch** — so the perf suite never ran AND startup_failure runs polluted LDR/tab/staging history
+      despite `on:push:[main]`); now clones the **full 16-repo uv-workspace editable closure** via the existing `GH_PAT`
+      secret + env-gated `GCP_SA_KEY` (no App/WIF needed). **Verified green** via `workflow_dispatch` on LDR (all steps
+      incl "Run benchmarks"). Promotion to **main** via PR **#207** (auto-merge ON, gated on `quality-gates-v2`).
+      Verify: #207 merges → next main push touching `execution_services/**|benchmarks/**|pyproject.toml` runs benchmarks
+      GREEN (not startup_failure). **staging**: benchmarks only triggers `on:push:[main]` so it never fires on staging —
+      staging just needs the clean file to stop its own startup_failure pollution; let it inherit via the normal
+      main→staging sync (a direct staging PR would risk a `check-staging-lock`-stuck PR — the exact wedged-PR class we
+      just cleared). **Caveat:\*\* activating latency-assertion benchmarks on main CI may produce occasional flaky reds
+      on shared runners → watcher transition-alerts; tune `benchmarks/` tolerances if noisy. Pattern is isolated to this
+      one workflow (fleet grep clean). repo: execution-service.
 - [x] ✅ [SCRIPT] P2. **PM QG test-isolation flake — FIXED** (`unified-trading-pm@c004b4e6a`). Root cause:
       `find_manifest()` checked `REPO_ROOT` but **fell through to the `cwd.parents` walk** when REPO_ROOT was
       set-but-empty, so a stray `/tmp/unified-trading-pm/` could spuriously match. Fix (production-correct, not
       test-gaming): when `REPO_ROOT` is set it is **authoritative** — return its manifest or `None`, no cwd-walk
       fallthrough. `TestFindManifest` (2 tests incl `test_returns_none_when_not_found`) pass; sibling test unaffected.
 - [x] ✅ [CHORE] P3. **3 archived plans' conflict-marker residue RESOLVED 2026-06-01.** Confirmed REAL unresolved-merge
-      residue (not doc examples) — each was a `git merge` conflict from the wave-2 archival commit `5353e40f7`, mangled by
-      markdown blockquote prefixing (`=======`→`> ========`, `>>>>>>>`→`> > > > > > > >`) so a naive `^=======` scan
-      missed the closers. Both sides were COMPLEMENTARY (HEAD = `ARCHIVED` banner; incoming = `## Deferred work` table) →
-      kept both, stripped all `<<<<<<<<`/`========`/`>>>>>>>>` lines. `grep -E '<<<<<<<|>>>>>>>|======='` now CLEAN on all
-      three (`d5_features_missing_data_downgrade_2026_05_20.md`, `strategy_archetype_taxonomy_2026_05_12.md`,
+      residue (not doc examples) — each was a `git merge` conflict from the wave-2 archival commit `5353e40f7`, mangled
+      by markdown blockquote prefixing (`=======`→`> ========`, `>>>>>>>`→`> > > > > > > >`) so a naive `^=======` scan
+      missed the closers. Both sides were COMPLEMENTARY (HEAD = `ARCHIVED` banner; incoming = `## Deferred work` table)
+      → kept both, stripped all `<<<<<<<<`/`========`/`>>>>>>>>` lines. `grep -E '<<<<<<<|>>>>>>>|======='` now CLEAN on
+      all three (`d5_features_missing_data_downgrade_2026_05_20.md`, `strategy_archetype_taxonomy_2026_05_12.md`,
       `defi_protocol_outage_detector_2026_05_20.md`). — unified-trading-pm@9ea02c953.
 
 ## Success criteria
