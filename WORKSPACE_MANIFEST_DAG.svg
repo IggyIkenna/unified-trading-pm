@@ -151,9 +151,9 @@
   <circle cx="2235" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="2140" y="753" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="70" y="771" width="209" height="38" class="svc" />
-  <rect x="70" y="771" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="771" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="174" y="789" text-anchor="middle" class="label">fund-administration-service</text>
-  <circle cx="269" cy="779" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="269" cy="779" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="174" y="801" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="289" y="771" width="130" height="38" class="svc" />
   <text x="354" y="789" text-anchor="middle" class="label">greeks-service</text>
