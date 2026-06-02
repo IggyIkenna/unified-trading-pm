@@ -1,0 +1,240 @@
+{
+  "alerting-service": {
+    "local": {
+      "cpu_s": 276.9,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T10:43:41Z",
+      "peak_rss_mb": 629,
+      "quick": false,
+      "wall_s": 318.9
+    }
+  },
+  "batch-live-reconciliation-service": {
+    "local": {
+      "cpu_s": 280.4,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T10:43:41Z",
+      "peak_rss_mb": 601,
+      "quick": false,
+      "wall_s": 266.2
+    }
+  },
+  "client-reporting-api": {
+    "local": {
+      "cpu_s": 304.3,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T10:43:41Z",
+      "peak_rss_mb": 724,
+      "quick": false,
+      "wall_s": 280.6
+    }
+  },
+  "deployment-api": {
+    "local": {
+      "cpu_s": 483.4,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 1368,
+      "quick": false,
+      "wall_s": 401.0
+    }
+  },
+  "deployment-service": {
+    "local": {
+      "cpu_s": 306.9,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T10:43:41Z",
+      "peak_rss_mb": 1047,
+      "quick": false,
+      "wall_s": 287.6
+    }
+  },
+  "deployment-ui": {
+    "local": {
+      "cpu_s": 10.1,
+      "exit_code": 1,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 541,
+      "quick": false,
+      "wall_s": 8.9
+    }
+  },
+  "e2e-testing": {
+    "local": {
+      "cpu_s": 243.4,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 298,
+      "quick": false,
+      "wall_s": 257.1
+    }
+  },
+  "execution-service": {
+    "local": {
+      "cpu_s": 673.6,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 1885,
+      "quick": false,
+      "wall_s": 603.5
+    }
+  },
+  "features-service": {
+    "local": {
+      "cpu_s": 510.0,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 1853,
+      "quick": false,
+      "wall_s": 606.4
+    }
+  },
+  "ibkr-gateway-infra": {
+    "local": {
+      "cpu_s": 239.0,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 319,
+      "quick": false,
+      "wall_s": 244.4
+    }
+  },
+  "instruments-service": {
+    "local": {
+      "cpu_s": 77.6,
+      "exit_code": 1,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 719,
+      "quick": false,
+      "wall_s": 58.4
+    }
+  },
+  "market-data-processing-service": {
+    "local": {
+      "cpu_s": 343.8,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 794,
+      "quick": false,
+      "wall_s": 314.2
+    }
+  },
+  "market-tick-data-service": {
+    "local": {
+      "cpu_s": 349.1,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 1045,
+      "quick": false,
+      "wall_s": 334.4
+    }
+  },
+  "ml-service": {
+    "local": {
+      "cpu_s": 10775.4,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 1065,
+      "quick": false,
+      "wall_s": 810.1
+    }
+  },
+  "strategy-service": {
+    "local": {
+      "cpu_s": 463.6,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 1306,
+      "quick": false,
+      "wall_s": 514.2
+    }
+  },
+  "system-integration-tests": {
+    "local": {
+      "cpu_s": 396.8,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 887,
+      "quick": false,
+      "wall_s": 499.8
+    }
+  },
+  "trading-agent-service": {
+    "local": {
+      "cpu_s": 372.5,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 621,
+      "quick": false,
+      "wall_s": 447.2
+    }
+  },
+  "unified-api-contracts": {
+    "local": {
+      "cpu_s": 228.2,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 1176,
+      "quick": false,
+      "wall_s": 217.4
+    }
+  },
+  "unified-trading-api": {
+    "local": {
+      "cpu_s": 366.7,
+      "exit_code": 0,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 709,
+      "quick": false,
+      "wall_s": 310.0
+    }
+  },
+  "unified-trading-library": {
+    "local": {
+      "cpu_s": 169.7,
+      "exit_code": 1,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 5146,
+      "quick": false,
+      "wall_s": 97.0
+    }
+  },
+  "unified-trading-pm": {
+    "local": {
+      "cpu_s": 253.0,
+      "exit_code": 1,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 879,
+      "quick": false,
+      "wall_s": 253.8
+    }
+  },
+  "unified-trading-system-ui": {
+    "local": {
+      "cpu_s": 1.6,
+      "exit_code": 1,
+      "measured_at_utc": "2026-06-02T11:11:47Z",
+      "measured_concurrency": 4,
+      "peak_rss_mb": 155,
+      "quick": false,
+      "wall_s": 5.0
+    }
+  }
+}
