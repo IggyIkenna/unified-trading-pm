@@ -547,13 +547,15 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `unified-api-contracts/tests/unit/test_gcs_paths_facade.py:30,49,50,72`. CROSS-AG (UTL `resolve_bucket_name` SSOT
       → `-prd-`; UAC `bucket_name` facade → no-env) — coordinate at `defi_manifest…` §MASTER; sports READERS already
       fixed to use `resolve_bucket_name` instead of the facade.
-- [ ] [CODE] P0. **deployment-api + UI data-status canonical resolution (sports)**: the data-status surface resolves
-      MANY bucket names / menu conventions / data_type conventions / manifest-reading conventions per asset_group —
-      audit `deployment-api/deployment_api/services/data_status*.py` (+ the `data_status_mock.py` SPORTS map) + the
-      deployment-ui/unified-trading-system-ui data-status views for any sports bucket/path/data_type/manifest convention
-      that resolves a to-be-deleted legacy bucket or a stale (v8/`category=`/no-`pipeline_mode=`) layout. Point them ALL
-      at the canonical `-prd-` v9 form. UI changes need the playwright gate (`pw:L2 ✓` + regression spec) per
-      PLAN_FORMAT §9.
+- [x] ✅ [CODE] P0. **deployment-api data-status = ALREADY CANONICAL (sports slot verified 2026-06-02)**: the data-status
+      bucket resolution `build_bucket_name()` (`data_status_drilldown.py:103-115`) + `batch_config_utils.py` route through
+      `resolve_bucket_name(cloud="gcp", kind=…, asset_group=…)` → canonical env-tiered `-prd-` (via `SERVICE_TO_KIND` +
+      cloud-providers.yaml). `data_status_hierarchical.py:364` calls the same `build_bucket_name`. The `data_status_mock.py`
+      SPORTS entry (`features-sports-service`) is a service→AG map, NOT a bucket → no dead-bucket exposure. **No fix
+      needed in deployment-api.** ONE UI mirror — `unified-trading-system-ui/context/api-contracts/canonical-schemas/
+      domain/sports/mapping_resolver.py:40` ("Resolve the instruments-store-sports bucket name") — mirrors the UAC
+      gcs_paths facade → **rides the cross-AG UAC `bucket_name` facade fix** (coordinate at `defi_manifest…` §MASTER; not
+      a unilateral sports-lane change). UI data-status views read the (canonical) deployment-api → no separate UI fix.
 - [ ] [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)**: every sports test (unit + integration) that
       references a bucket/path/manifest convention must use the canonical `-prd-` v9 form, so QG REGRESSION-CATCHES any
       future dead-bucket association. Grep sports tests for legacy bucket/path literals; update to canonical. (This is
