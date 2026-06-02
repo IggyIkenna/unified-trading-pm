@@ -754,111 +754,38 @@ Every Tab in daily work-split MUST declare Full-Execution Criterion. SSOT: `plan
 
 ## Data Pipeline Correctness Is The Heartbeat — No Exceptions, No Cutbacks (HARD RULE — codified 2026-05-20)
 
-> Operator directive 2026-05-20: the data pipeline is the heartbeat of everything (paper-trade, strategy, execution).
-> When a data audit surfaces issues, **every issue is fixed in full** — every missing venue × data_type × time range
-> backfilled, every silent empty diagnosed, every schema-version row migrated, every batch adapter paired with a live
-> equivalent. **No deferrals to hit a calendar deadline. No asset_group skipped.**
+> Operator 2026-05-20: the data pipeline is the heartbeat — when an audit surfaces issues, **every** issue is fixed in
+> full (every venue × data_type × time-range backfilled, every silent-empty diagnosed, every schema row migrated, every
+> batch adapter paired with live). **No deferrals for a deadline. No asset_group skipped.**
 
-**The only legitimate deferral path** (closed set, agent never decides autonomously — operator-only):
+**Only legitimate deferral** (operator-only — agent never decides): `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION`
+/ `BLOCKED-UPSTREAM-OUTAGE`. **Banned**: "skip for the deadline" · "post-cutover" · "most cells captured, rest later" ·
+"the constant says v8 so good enough" (read the actual `schema_version` distribution — incident: 0% of 7.4M rows at v8
+despite the bump) · "do A5/A6 later". **Consequences**: layer-N+1 work FREEZES while a data audit is RED for affected
+asset_groups (foundation-completion-gate); slot-1 reassigns slots to data-fix until GREEN; reviewer rejects layer-N+1
+plans with open audit P0s; every audit must state where it sampled vs walked + remaining gaps. Composes with
+Foundation-Completion-Gate / External-Data / Plans-Run-To-Completion / Manifest-Honest-Absence. Full SSOT:
+`codex/02-data/data-pipeline-correctness-hard-rule.md`; migration sequencing (Phase ordering HARD, slot-1 owns
+broadcast/ACK): `plans/epics/mtds_mdps_master.md`.
 
-- `BLOCKED-CREDENTIALS` — credential ask filed + operator-acked (per `External Data Is Always Available`).
-- `BLOCKED-OPERATOR-DECISION` — operator explicitly articulates why a specific (venue, data_type, time-range) is removed
-  from scope. Agent surfaces the gap + proposes options; operator decides scope.
-- `BLOCKED-UPSTREAM-OUTAGE` — third-party degraded; ping logged; auto-resumes on health check.
+**Quality Gates Are A Merge Prerequisite (HARD RULE)**: no code merges to `live-defi-rollout` without
+`bash scripts/quality-gates.sh` exit 0 for the touched repo + cross-repo consumers; reviewers reject PRs lacking a
+QG-green evidence line. Exemption only via operator `BLOCKED-OPERATOR-DECISION`.
 
-**Banned reasoning patterns** (review-blocking):
+**Batch the GATE, not the commits — QG-sweep (2026-06-02)**: for a batch of related edits, make ALL edits (code-only
+agents verify with `basedpyright` on touched files), run `quality-gates.sh` ONCE per repo over the batch, THEN make
+per-shippable-unit commits + flips from that green tree (Commit+Push+Flip intact — only GATE RUNS batch). **Shared-host
+(HARD)**: ≤1–2 full QGs at once host-wide (they serialize; exceeding OOM-kills, exit 144); **NEVER bulk-kill `pytest` /
+`quality-gates.sh` / `basedpyright`** (may be another slot's). When only the `<300s` META-gate trips (substantive gates
+green): `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are sanctioned. SSOT: `codex/06-coding-standards/quality-gates.md`
+§ "QG-sweep batching".
 
-- "We'll skip this for the deadline" — deadline ≠ license to ship broken data.
-- "This asset_group is post-cutover" — every asset_group is in scope unless operator explicitly removes it.
-- "Most cells captured, backfill the rest later" — every cell is in scope unless operator explicitly removes it.
-- "The constant says v8, that's good enough" — code-constant ≠ data-state. Read the actual `schema_version` column
-  distribution per bucket (incident 2026-05-20: 0% of 7.4M prod rows at v8 despite constant bump).
-- "We'll do A5 / A6 later" — when a data audit names sub-audits (dependency-fail propagation, batch-live parity), those
-  are part of the same gate, not optional extensions.
-
-**Operational consequences**:
-
-1. **Layer-N+1 work freezes when a data audit is RED for affected asset_groups** (foundation-completion-gate expansion —
-   see `codex/11-project-management/foundation-completion-gate-discipline.md`).
-2. **Slot reassignment is mandatory**: slot 1 main reassigns slots from layer-N+1 to data-fix work until the audit is
-   GREEN. Slots that "double down on bad code" (build paper-trade / strategy / execution on top of unaudited data) are
-   blocked, not deprioritised.
-3. **Plan reviewer rejects** any plan proposing layer-N+1 changes while the relevant data audit has open P0 items
-   without an operator-acked `BLOCKED-*` status.
-4. **Every data audit MUST surface** (a) where it sampled vs walked exhaustively, (b) what coverage gaps remain. Audits
-   without this transparency section are review-blocked.
-
-**Composes with**: `Foundation-Completion-Gate Discipline` (data-correctness expansion of that gate);
-`External Data Is Always Available` (per-data-source case — credentials unblock, not scope removal);
-`Plans Run To Actual Completion` (operationally-shipped = every cell, not "most cells"); `Manifest + Honest Absence`
-(per-cell expression — every cell either `captured` or `empty_confirmed[reason=<typed>]` with operator-acked reason).
-
-**Reference incident (2026-05-20)**: Mega-audit Phase A surfaced 765 `DIVERGENT_EMPTY` + 236,892 `MISSING_EXPECTED`
-cells across MTDS buckets + **0% of 7.4M prod manifest rows at v8** + 1.3M NULL-schema-version rows. Operator codifying
-this rule: "I'm tired of doing this same thing a million times. We're on version eight for a reason. It's because you
-keep being sloppy and keep missing out stuff."
-
-**Full SSOT**: `codex/02-data/data-pipeline-correctness-hard-rule.md`.
-
-**Operator-handoff entry point for migration coordination**: `plans/epics/mtds_mdps_master.md` — sequences (Phase -2)
-strategy/ml/features repo consolidation finish → (Phase -1) workspace-wide QG green → (Phases 0-10) data-pipeline
-migration as previously sequenced → (Phases 11-14) backfill-to-100% + live-data + batch-live-symmetry +
-strategy/execution deployment-topology cleanup. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD (do
-not reorder). Per-phase plan-of-record + owner slot + verification criterion in the coordinator plan.
-
-**Quality Gates Are A Merge Prerequisite (HARD RULE — codified 2026-05-20 round 5)**: no code change merges to
-`live-defi-rollout` (any service repo) without `bash scripts/quality-gates.sh` exit 0 for the touched repo + any
-cross-repo consumers. Plan reviewers reject PRs that lack a QG-green evidence line. Harsh-side slots own the
-workspace-wide QG-green sweep as a prerequisite for any ikenna-side migration work. Operator-tunable exemption only via
-`BLOCKED-OPERATOR-DECISION` with explicit articulation. Composes with `Plans Run To Actual Completion` +
-`Data Pipeline Correctness Is The Heartbeat`.
-
-**Batch the GATE, not the commits — QG-sweep technique (codified 2026-06-02)**: `quality-gates.sh` is expensive
-(~100–500s/run, worse under host contention), so when shipping MANY related code items (esp. across repos and/or via
-parallel code-only sub-agents) do NOT run a full QG before every small edit. Instead: (1) make ALL the code edits for
-the batch (code-only agents verify with `basedpyright` on touched files, NOT full QG); (2) run `quality-gates.sh` ONCE
-per repo over the whole batch — a single green sweep validates all of that repo's edits; (3) THEN make
-**per-shippable-unit commits + plan-flips** from that green tree (Commit + Push + Flip stays fully intact — only the
-GATE RUNS are batched, never the commits). **Shared-host QG concurrency (HARD)**: the dev host is shared across ALL
-slots — `quality-gates.sh`'s "keep parallel QGs to 1–2" warning is HOST-WIDE, not per-slot. Run **≤1–2 full QGs at
-once** (full QGs serialize; code-only `basedpyright`-only agents parallelize safely); exceeding it OOM-kills gates (exit
-144 mid-TESTS). **NEVER bulk-kill `pytest`/`quality-gates.sh`/`basedpyright` processes** (by pattern or PPID=1) — they
-may belong to another slot's session (the process-space form of "don't touch outside your context"); stop only your own
-tracked background tasks. When only the `<300s` (or inner `run_timeout`) META-gate trips under contention — all
-substantive gates green — `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are the sanctioned overrides (the gate prints
-"ALL QUALITY GATES PASSED" + writes the sentinel). Full SSOT: `codex/06-coding-standards/quality-gates.md` § "QG-sweep
-batching + shared-host concurrency". Composes with `Commit + Push + Flip` + `Quality Gates Are A Merge Prerequisite`.
-
-**Every Active Ping Must Reference A Plan Item (HARD RULE — codified 2026-05-20 round 5; cadence tightened round 6)**:
-no orphan pings in `plans/active/_agent_pings.md` / `ikenna_orchestrator/_agent_pings.md` /
-`harsh_orchestrator/_agent_pings.md`. Every active entry MUST cite a plan-of-record (`plans/active/<slug>.md`,
-`plans/epics/<slug>.md`, `plans/audit/<slug>.md`, or `plans/active/issues/<slug>.md`). Bare slug links to date-suffixed
-plan files (`<slug>_YYYY_MM_DD.md`) inside the same ping-ledger directory also count.
-
-**If an agent's ping references nothing**, the agent MUST EITHER (a) file a new plan / extend an existing one before
-posting (preferred), OR (b) remove the ping. **Forcing agents to make plans or issues around their pings is the point**
-— pings without plan-state get lost; plans persist + propagate via the inventory regenerator.
-
-**Cadence**: every 4 hours (6×/day), NOT weekly. Cron stack:
-
-- **Local** (Ikenna's machine, `crontab -e`):
-  ```
-  0 */4 * * * cd ${WORKSPACE_ROOT}/unified-trading-pm && bash scripts/agents/audit_ping_orphans.sh >> /tmp/orphan_pings_audit.log 2>&1
-  ```
-- **GCP Cloud Run Job + Cloud Scheduler** (`central-element-323112` / `asia-northeast1`, offset by 2h so passes don't
-  collide): `15 2,6,10,14,18,22 * * *` UTC. Job name `uts-prod-orphan-ping-audit` clones unified-trading-pm @
-  live-defi-rollout, runs the audit script, commits + pushes orphan notifications back to LDR. Image:
-  `gcr.io/google.com/cloudsdktool/google-cloud-cli:slim`. GH PAT sourced from Secret Manager `GH_PAT`. Terraform SSOT:
-  `deployment-service/terraform/gcp/orphan_ping_audit_scheduler.tf`. Entrypoint:
-  `scripts/agents/cron_orphan_ping_audit_entrypoint.sh`. (AWS-VM path NOT used — agent-orchestrator's prod backend is
-  Cloud Run; reusing the existing GCP cron stack avoids a new infra surface.)
-
-When orphans are detected: the script appends a `## [orphan-ping-cron]` notification to BOTH orchestrator inboxes
-(`ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`) listing every orphan + remediation steps.
-Slot-1 main + harsh main are responsible for clearing the notification within one cron cycle (4h).
-
-**Audit script SSOT**: `unified-trading-pm/scripts/agents/audit_ping_orphans.sh`. Composes with
-`Capture Discoveries As Plan Todos Immediately` (every discovery is already a plan todo — pings just point at the todo).
+**Every active ping references a plan item (HARD RULE)**: no orphan pings in the `_agent_pings.md` ledgers — every entry
+cites a plan-of-record (`plans/active|epics|audit|active/issues/<slug>.md`, incl date-suffixed). References nothing →
+file/extend a plan first or remove the ping. A 4-hourly cron (`scripts/agents/audit_ping_orphans.sh` local + GCP
+`uts-prod-orphan-ping-audit`) appends `## [orphan-ping-cron]` notices to both orchestrator inboxes; slot-1 + harsh-main
+clear them within a cycle. SSOT: `scripts/agents/audit_ping_orphans.sh` +
+`deployment-service/terraform/gcp/orphan_ping_audit_scheduler.tf`.
 
 ---
 
