@@ -408,22 +408,19 @@ What to verify/wire (B0 corrected scope):
         asset_group="defi")` → env-tiered `-prd` canonical; resolutions verified end-to-end; MTDS QG green
         (IGNORE_TIMEOUT — only the <300s meta-gate tripped on the contended host; all substantive gates passed).
         Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P0. **A11b — deployment-service data-status hardcodes legacy bucket templates** (the code comments
-        already admit "pre-canonical, awaiting `resolve_bucket_name()` sweep"): `cli/utils/manifest_reader.py` L41-65
-        `BUCKET_TEMPLATES` + L79-95 `_EXTRA_BUCKETS` (hardcoded `dex-pools-{pid}`/`lending-indices-{pid}`/… missing
-        `-prd`), `catalog.py` L152-159 `SERVICE_GCS_CONFIGS` `market-data-tick-{ag}-{pid}`, `data_status_checkers.py`
-        L624 `f"market-data-tick-{cat}-{pid}"`. Route all through `resolve_bucket_name()`. Repo: deployment-service.
-        **STATUS 2026-06-02: edits DONE + verified (manifest_reader/catalog/data_status_checkers now resolve via
-        `resolve_bucket_name(kind=…, asset_group=…)` → env-tiered `-prd` canonical; behavior-preserving; STEP 5.31 /
-        5.69 / 5.12b / type 1297/1297 / lint / tests all GREEN). NOT committed — deployment-service QG is blocked by a
-        PRE-EXISTING `STEP 5.90` failure in `api/routes/state.py` (untouched by A11b — `state.py` doesn't import the
-        canonical coverage helper `compute_coverage_for_bucket`/`compute_honest_coverage`). A11b edits sit in the slot-2
-        worktree pending that pre-existing blocker.**
-  - [ ] [CODE] P0. **A11b-blocker — deployment-service `api/routes/state.py` fails STEP 5.90** (pre-existing, NOT
-        A11b): the `/data-status`-class route in `state.py` must import + use `compute_coverage_for_bucket` or
-        `compute_honest_coverage` (UAC). Blocks ANY deployment-service LDR commit (QG-green prerequisite). Verify whether
-        it's a recently-tightened gate vs baselined; fix the route to use the canonical helper (small wire) OR confirm
-        waiver. Unblocks A11b commit. Repo: deployment-service. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P0. **A11b — deployment-service data-status now resolves buckets via `resolve_bucket_name()` —
+        SHIPPED deployment-service@2e91ab2.** `manifest_reader.py` (BUCKET_TEMPLATES + _EXTRA_BUCKETS → canonical kinds),
+        `catalog.py` (SERVICE_GCS_CONFIGS), `data_status_checkers.py` (L624) all route through
+        `resolve_bucket_name(kind=…, asset_group=…)` → env-tiered `-prd` canonical (survives legacy-bucket deletion);
+        behavior-preserving + verified equivalent. + cloud-providers.yaml 6 DeFi kinds. deployment-service QG green
+        (sentinel 4cbb2e27). Repo: deployment-service. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P0. **A11b-blocker — `state.py` STEP 5.90 FIXED (deployment-service@2e91ab2).** Was a genuine
+        pre-existing contract violation (the `/data-status` route delegated to `DataCatalog` which computes
+        file-existence completion, NOT canonical honest-coverage — the banned inline pattern). `get_data_status` now
+        ADDITIVELY attaches `coverage` (canonical 5-field `compute_honest_coverage`) + `coverage_counts`, resolving each
+        AG's bucket via `resolve_bucket_name` + summing `CaptureStatusCounts` from `compute_coverage_for_bucket` (UI keys
+        preserved; catalog file-existence metric untouched). STEP 5.90 ✅. Repo: deployment-service. parent_epic:
+        mtds_mdps_master.
   - [ ] [CODE] P1. **A11c — UAC `registry/market_data_categories.py` DeFi data_type list legacy vs canonical**: L144-177
         lists `dex_pools`/`dex_swaps` (legacy logical) while the v9 on-disk + manifest canonical is
         `dex_pool_state`/`dex_pool_swaps` (operator-locked `defi-canonical-naming-ssot.md`). VERIFY whether this list is
