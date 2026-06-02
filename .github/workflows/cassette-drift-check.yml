@@ -9,8 +9,7 @@ name: Cassette Drift Check
 #   BINANCE_API_KEY_DRIFT     — read-only key for Binance re-record
 #   COINBASE_API_KEY_DRIFT    — read-only key for Coinbase re-record
 #   DERIBIT_CLIENT_ID_DRIFT   — read-only credential for Deribit re-record
-#   TELEGRAM_BOT_TOKEN        — alert notification
-#   TELEGRAM_CHAT_ID          — target chat
+#   SLACK_CI_WEBHOOK_URL      — alert notification → #ci-failures
 
 on:
   schedule:

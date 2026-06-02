@@ -75,13 +75,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           GH_ORG: IggyIkenna
-          TELEGRAM_BOT_TOKEN_PROD: ${{ secrets.TELEGRAM_BOT_TOKEN_PROD }}
-          TELEGRAM_BOT_TOKEN_STAGING: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
-          TELEGRAM_BOT_TOKEN_DEV: ${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID_PROD: ${{ vars.TELEGRAM_CHAT_ID_PROD || vars.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_STAGING: ${{ vars.TELEGRAM_CHAT_ID_STAGING || vars.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_DEV: ${{ vars.TELEGRAM_CHAT_ID_DEV || vars.TELEGRAM_CHAT_ID }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           CALLING_WORKFLOW: conflict-resolution-agent
         run: |
@@ -108,18 +102,12 @@ jobs:
           echo "  Target:        $TARGET_BRANCH"
           echo "  Original PR:   $ORIGINAL_PR_URL"
 
-      # NOTE: "agent working" Telegram notification moved to notify-working job (reusable workflow)
+      # NOTE: "agent working" notification moved to notify-working job (reusable workflow → Slack #ci-failures)
 
       - name: Classify Claude API error on failure
         if: failure()
         env:
-          TELEGRAM_BOT_TOKEN_PROD: ${{ secrets.TELEGRAM_BOT_TOKEN_PROD }}
-          TELEGRAM_BOT_TOKEN_STAGING: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
-          TELEGRAM_BOT_TOKEN_DEV: ${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID_PROD: ${{ vars.TELEGRAM_CHAT_ID_PROD || vars.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_STAGING: ${{ vars.TELEGRAM_CHAT_ID_STAGING || vars.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_DEV: ${{ vars.TELEGRAM_CHAT_ID_DEV || vars.TELEGRAM_CHAT_ID }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           CLAUDE_TIMEOUT_FIRED: "true"
           REPO_NAME: ${{ steps.inputs.outputs.repo_name }}

@@ -4,7 +4,7 @@ name: request-major-bump (reusable)
 # Per-repo callers forward workflow_dispatch inputs here via workflow_call.
 #
 # Human-initiated request for a MAJOR version bump (including 0.x.x -> 1.0.0).
-# This workflow ONLY creates a GitHub Issue + sends Telegram alert.
+# This workflow ONLY creates a GitHub Issue + sends Slack #ci-failures alert.
 # The actual version bump happens when a human comments /approve on the issue
 # (handled by major-bump-issue-handler.yml).
 #
@@ -29,10 +29,8 @@ on:
     secrets:
       GH_PAT:
         required: true
-      TELEGRAM_BOT_TOKEN:
-        required: true
-      TELEGRAM_CHAT_ID:
-        required: true
+      SLACK_CI_WEBHOOK_URL:
+        required: false
 
 permissions:
   contents: read
