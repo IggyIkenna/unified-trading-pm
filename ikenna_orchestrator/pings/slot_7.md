@@ -2562,19 +2562,21 @@ instruments_backfill_phase3_2026_05_22.md + mtds_backfill_phase3_2026_05_22.md.
 ## [2026-06-01] slot-7 DONE — issue-tracker janitor pass (PM = SSOT)
 
 **Issues ARCHIVED → `plans/archive/issues/`** (banner + folds, LDR@4b614d147 + d901c7992):
-- `bug_d_prime_drift_backfill` (superseded → defi_manifest §G), `pinned_tarball_prune` (RESOLVED;
-  defi_manifest L0 marked unblocked), `workspace_qg_ci_startup_failure` (covered by ci_canonical_v2),
-  `full_cicd_sit_target_state` (SIT Tiers A–E migrated INTO `cicd_contract_hardening`),
-  `ui_repo_branch_protection` (reconcile todo migrated to `cicd_contract_hardening`),
-  `repo_docs_codex_ssot_consolidation` (8-repo registry + rollout folded into `codex_vs_repo_docs` Appendix A),
-  `vm_trading_core_orphan_commits` (outcome a — both commits redundant; deleted remote
+
+- `bug_d_prime_drift_backfill` (superseded → defi_manifest §G), `pinned_tarball_prune` (RESOLVED; defi_manifest L0
+  marked unblocked), `workspace_qg_ci_startup_failure` (covered by ci_canonical_v2), `full_cicd_sit_target_state` (SIT
+  Tiers A–E migrated INTO `cicd_contract_hardening`), `ui_repo_branch_protection` (reconcile todo migrated to
+  `cicd_contract_hardening`), `repo_docs_codex_ssot_consolidation` (8-repo registry + rollout folded into
+  `codex_vs_repo_docs` Appendix A), `vm_trading_core_orphan_commits` (outcome a — both commits redundant; deleted remote
   `archive/vm-trading-core-orphaned-2026-05-23`; base-library `.prettierignore-base` nice-to-have captured as P3).
 
 **Code SHIPPED (LDR):**
+
 - F-22 — `perp_funding_handler._make_session(headers=...)` optional param (Tardis-path TypeError) →
   **market-tick-data-service@0716a544**. Flipped in audit03 issue.
 
 **Code READY-on-branch, BLOCKED on foreign QG (NOT landed):**
+
 - features-service bucket-override fix (`get_output/input_bucket` honour PROTOCOL_DATA_SINK/SOURCE_BUCKET; +3 unit
   tests, codex+ruff clean) → **features-service@587e494e on tab/ikennaigboaka/7**. LDR is branch-protected (needs green
   `quality-gates-v2`); that gate is pre-existing-RED on a **foreign coverage-floor** (MIN_COVERAGE=0 / per-family
@@ -2582,19 +2584,24 @@ instruments_backfill_phase3_2026_05_22.md + mtds_backfill_phase3_2026_05_22.md.
   re-implement. Status in the (still-open) issue doc.
 
 **Investigations (read-only) — reported + recorded:**
-- F-14 — vol_cap_clamp is **NOT equivalent** to the codex 1h price-move abort → **P1 SAFETY GAP** todo in `strategy_master`.
-- DeFi #3 — `dex_swaps` O/H/L/C are USD-normalized pool spot prices; **no MDPS bug**; UAC contract-doc todo in `features_and_ml_master`.
+
+- F-14 — vol_cap_clamp is **NOT equivalent** to the codex 1h price-move abort → **P1 SAFETY GAP** todo in
+  `strategy_master`.
+- DeFi #3 — `dex_swaps` O/H/L/C are USD-normalized pool spot prices; **no MDPS bug**; UAC contract-doc todo in
+  `features_and_ml_master`.
 - uniswap_v3_28k — `chain` column **VERIFIED populated** ('ETHEREUM', 0 nulls) both ends of the failed range; 28,634
   rows are stale; backfill rerun only, no code. Flipped Path-A pre-flight in the issue (stays DEFERRED per operator).
 
 **Operator decisions DISPATCHED as `- [ ]` todos in owning epics** (audit03 ledger already in issue docs by slot-1):
+
 - `strategy_master`: F-14, F-13/15, F-34 (SUPPORTED_ARCHETYPES). `execution_master`: F-32 (post-cutover), G12 exec-side.
 - `batch_live_symmetry_master`: BLRS D2/D3/D4. `observability_master`: G12 alerting recon-freeze publisher (P0).
 - `features_and_ml_master`: DeFi #1/#2/#3/#4. `client_isolation_and_governance_master`: F-25 full ClientConfig.
 - `codex_vs_repo_docs`: F-45 + F-06 (Elysium scrub) + gcs_hive FIX-STALE. `mtds_mdps_master`: UTL gcs-op re-export gap
-  + format drift + OKX-FUTURES Tardis symbol-mapping bug.
+  - format drift + OKX-FUTURES Tardis symbol-mapping bug.
 
 **Still BLOCKED (operator/credentials — left intact):**
+
 - Tardis paid API key → BLOCKED-CREDENTIALS (running_vm_fleet + fleet_audit_triad; ping intact). OKX symbol-mapping is
   the **independent** part and is now a P1 todo in `mtds_mdps_master`.
 - cefi/defi manifest remainders → owned by `cefi_/defi_manifest_canonicalisation` (slots 2/3, held by harsh); decisions
@@ -2603,10 +2610,11 @@ instruments_backfill_phase3_2026_05_22.md + mtds_backfill_phase3_2026_05_22.md.
 **Left as-is (genuinely waiting):** `human_led_audit_pool`, `shared_stash_pile_archive_cleanup` (purge 2026-06-08),
 `alerting_fp_rate_analysis` (blocked on ML/features live), `api_host_chronic_impairment` (harsh-owned, kept open).
 
-**⚠️ WORKSPACE BLOCKER (FYI to slot-1):** PM `quickmerge` is blocked for everyone — STAGE 1.5 "Dependency Alignment (PM)"
-fails on **10 external_version_mismatch issues** (canonical manifest ahead of repos: web3 <7→<8 in UTL+instruments;
-aiohttp/anthropic/fastapi lower-bounds in alerting). All my PM-markdown landed via the **dirty-deps direct-LDR-push**
-escape hatch. Needs a dep-alignment owner to bump the repos (or correct the manifest). Foreign/out-of-scope for slot 7.
+**⚠️ WORKSPACE BLOCKER (FYI to slot-1):** PM `quickmerge` is blocked for everyone — STAGE 1.5 "Dependency Alignment
+(PM)" fails on **10 external_version_mismatch issues** (canonical manifest ahead of repos: web3 <7→<8 in
+UTL+instruments; aiohttp/anthropic/fastapi lower-bounds in alerting). All my PM-markdown landed via the **dirty-deps
+direct-LDR-push** escape hatch. Needs a dep-alignment owner to bump the repos (or correct the manifest).
+Foreign/out-of-scope for slot 7.
 
 Inventory regenerated + hygiene sweep GREEN (0 hard / 0 soft; 0 orphans). — slot-7 / ikenna 2026-06-01
 
@@ -2616,24 +2624,27 @@ Inventory regenerated + hygiene sweep GREEN (0 hard / 0 soft; 0 orphans). — sl
 
 **Dependency-alignment is now GREEN (`check-dependency-alignment.py` → `aligned: true`, 0 issues)** — PM quickmerge
 STAGE 1.5 is unblocked. Root causes + fixes:
-- **Stale committed `derived-dependency-manifest.json`** (2500-line drift) caused web3 UTL/instruments
-  false-positive mismatches — regenerated.
+
+- **Stale committed `derived-dependency-manifest.json`** (2500-line drift) caused web3 UTL/instruments false-positive
+  mismatches — regenerated.
 - **`workspace-constraints.toml` web3 was the stale SSOT outlier** (`>=6.0.0,<7.0.0`) vs the committed canonical +
   features/deployment + installed web3 6.20.x → set to `>=6.20.0,<8.0.0` (PM@`09969498d`).
 - **Genuine repo-behind external bumps** (surgical, pushed to LDR): alerting-service@`ae0136b`
-  (aiohttp/anthropic/fastapi/pytest), execution-service@`87a56c79d` + strategy-service@`8322bc13` (python-multipart).
-  ⚠️ alerting installed anthropic = 0.84 < new spec 0.87 → alerting's next QG will upgrade it (SSOT-driven; owner
-  validates API). canonical-manifest python-multipart also corrected to `>=0.0.27`.
+  (aiohttp/anthropic/fastapi/pytest), execution-service@`87a56c79d` + strategy-service@`8322bc13` (python-multipart). ⚠️
+  alerting installed anthropic = 0.84 < new spec 0.87 → alerting's next QG will upgrade it (SSOT-driven; owner validates
+  API). canonical-manifest python-multipart also corrected to `>=0.0.27`.
 - **Internal-dep drift**: added alerting-service + client-reporting-api to `system-integration-tests` deps in
   `workspace-manifest.json` (SIT depends on all repos; manifest was missing them). NB the documented
   `fix-internal-dependency-alignment.py --apply` is **LOSSY** (strips comments / reorders TOML) — reverted its SIT
   rewrite and did the manifest-side fix by hand instead.
 - **features↔ml-service tier violation** (the last of 11): `regime_clustering.py:178` imports
   `ml_service.training.backtest_v2.walk_forward` across a higher tier. features pyproject already omits ml-service, so
-  the stale (optional) `ml-service` entry was removed from the manifest to align manifest↔pyproject. The lazy import is a
-  latent leak → P1 cleanup todo filed in `features_and_ml_master` (move walk_forward to a lower tier). (PM@`0973b2097`)
+  the stale (optional) `ml-service` entry was removed from the manifest to align manifest↔pyproject. The lazy import is
+  a latent leak → P1 cleanup todo filed in `features_and_ml_master` (move walk_forward to a lower tier).
+  (PM@`0973b2097`)
 
 **2 more issues ARCHIVED** (issue-doc-lifecycle — all findings dispatched, no dual-track) — PM@`cf11d3dcc`:
+
 - `audit03_ikenna_review_routing` (all 9 F-items shipped/dispatched to strategy/execution/codex/client-isolation epics).
 - `recon_freeze_armed_never_published` (G12 dispatched to observability_master P0 + execution_master P1).
 
@@ -2645,20 +2656,20 @@ items beyond DeFi #1–4). — slot-7 / ikenna 2026-06-01
 
 ## [2026-06-01 final] slot-7 — features-service branch misconfig FIXED → everything on LDR
 
-Operator-flagged: quality-gates-v2 was gating features-service **LDR** (contradicts the model — v2 gates main/staging only).
-**Root cause**: features-service had **only `live-defi-rollout`** (no `main`, no `staging`), so its GitHub default branch
-was LDR and the `require-quality-gates` ruleset (target `~DEFAULT_BRANCH`) landed on LDR. **Fixed** (operator-approved):
-created `main`+`staging` from LDR HEAD (`dba0f5bf`) + set default → `main`. Ruleset now gates `main`; **LDR is free-push
-again**. The coverage-floor / per-family `PYTEST_UNIT_DIR` QG-red now correctly gates main-promotion (tracked in
-`cicd_contract_hardening`), not LDR.
+Operator-flagged: quality-gates-v2 was gating features-service **LDR** (contradicts the model — v2 gates main/staging
+only). **Root cause**: features-service had **only `live-defi-rollout`** (no `main`, no `staging`), so its GitHub
+default branch was LDR and the `require-quality-gates` ruleset (target `~DEFAULT_BRANCH`) landed on LDR. **Fixed**
+(operator-approved): created `main`+`staging` from LDR HEAD (`dba0f5bf`) + set default → `main`. Ruleset now gates
+`main`; **LDR is free-push again**. The coverage-floor / per-family `PYTEST_UNIT_DIR` QG-red now correctly gates
+main-promotion (tracked in `cicd_contract_hardening`), not LDR.
 
 → **features-service bucket-override fix LANDED on LDR** (`587e494e`); issue
 `features_service_failed_manifest_bucket_override` ARCHIVED. **10 issues now archived this cycle.**
 
 **EVERYTHING IS ON LDR** — PM, MTDS, alerting, execution, strategy, features-service all ahead-of-LDR=0, clean.
-Remaining un-shipped (all tracked todos, none mine to force): deployment-log-churn (untouched, own [INFRA] todos),
-OKX symbol-mapping (P1 todo — needs blocked Tardis key to validate), DeFi #1/#4 (todos in features_and_ml_master).
-— slot-7 / ikenna 2026-06-01
+Remaining un-shipped (all tracked todos, none mine to force): deployment-log-churn (untouched, own [INFRA] todos), OKX
+symbol-mapping (P1 todo — needs blocked Tardis key to validate), DeFi #1/#4 (todos in features_and_ml_master). — slot-7
+/ ikenna 2026-06-01
 
 ---
 
@@ -2677,9 +2688,30 @@ live listing first.
 features bucket-override (`587e494e`) + features-service branch-structure fix (main/staging created, default→main).
 
 **Archivability re-check (no further archives warranted)**: OKX fix did NOT fully clear any remaining issue —
-`running_vm_fleet_status` + `fleet_audit_triad` keep Tardis-key items `BLOCKED-CREDENTIALS`; `deployment…log_churn` keeps
-tarball-cleanup-scheduling + lifecycle + bucket-audit open; `defi_code_codex_drift` (5 todos) / `gcs_hive` (3 incl
+`running_vm_fleet_status` + `fleet_audit_triad` keep Tardis-key items `BLOCKED-CREDENTIALS`; `deployment…log_churn`
+keeps tarball-cleanup-scheduling + lifecycle + bucket-audit open; `defi_code_codex_drift` (5 todos) / `gcs_hive` (3 incl
 operator-deferred GCS data) / `batch_live…audit` (G1-G12) / `features_defi` (Issue-4 + CeFi) / `uniswap` (deferred
 backfill) all retain real residuals; `cefi_processed_candles` is **operator: no slot-7 archive** (harsh-held
 cefi_manifest_canon). Remaining as-is: alerting_fp_rate / api_host / human_led_audit_pool / shared_stash /
 mdps_state_adapter. **Session total: 10 issues archived; everything on LDR.** — slot-7 / ikenna 2026-06-02
+
+[2026-06-02 slot-7] issue_docs_remediation_sweep_2026_06_02 — code-fixable backlog SWEEP COMPLETE. All on LDR. Plan:
+plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md (every item flipped or reclassified with tracked
+successor).
+
+- BLRS 1-5: batch-live-reconciliation-service@f0c074a (router+/t1-recon), @43e88ea (drawdown/fill_rate green gates +
+  stage2 strategy-pnl baseline + soak_mode), @cce28d1 (threshold analyzer). QG exit 0.
+- alerting 6,7: alerting-service@9279d82 (RISK_RULE_BLOCKED/MONITOR_FIRED) + @e2163a5 (GCS quietness report). QG exit 0.
+- unified-trading-api 9: @77bbae1 (PR #3, quality-gates-v2 ✓ — this repo's LDR is ruleset-protected; merged via PR not
+  direct push). workspace-manifest.json absent in repo → that subtask N/A.
+- features 10: features-service@3e97475c (RE-SCOPED — service_name is UTL telemetry-only, NOT a row filter; real fix =
+  data_type-scoped discovery) + @97d14277 (audited # noqa: gs-uri unblocking a PRE-EXISTING foreign STEP-5.69 from
+  sports e0ddde68 — FLAG to sports/features track). QG exit 0.
+- PM docs 11 (data-flow-map renames), 12 (vm-log-archival NOT-DEPLOYED banner), 13 (B2 marker reconciliation — ruled
+  model-split; banners in honest-absence + live-pipeline; 3 sibling docs carry legacy token as residual), 15 (already
+  shipped pm@5c7aedc23, flipped). PM@dd0e5164c tip.
+- RECLASSIFIED (not silently dropped): item 8 RECON_FREEZE_ARMED → BLOCKED-DISCIPLINE = observability_master G12 P0
+  publisher (it's a PubSub event, NOT an AlertCode — confirmed absent). item 14 D14 codex flip → BLOCKED-DISCIPLINE =
+  DeFi-venue/defi_manifest_canonicalisation worker territory (MTDS@0a3a7071 is a semver-rollout locked-SSOT commit).
+- Untouched per task scope: MDPS [BUG] bucket-tier (resolved elsewhere @180f54b) + all
+  BLOCKED-DISCIPLINE/BLOCKED-OPERATOR-DECISION lines + operator-gated tofu-apply infra items.
