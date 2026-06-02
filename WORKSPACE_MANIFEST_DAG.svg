@@ -66,9 +66,9 @@
   <text x="95" y="343" text-anchor="middle" class="level-label">L1</text>
   <text x="150" y="343" class="desc">Foundation contracts (Tier 0) — present clone set. (1 repos)</text>
   <rect x="70" y="366" width="167" height="38" class="lib" />
-  <rect x="70" y="366" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="70" y="366" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="153" y="384" text-anchor="middle" class="label">unified-api-contracts</text>
-  <circle cx="227" cy="374" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="227" cy="374" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="153" y="396" text-anchor="middle" class="ver">0.1.20</text>
   <!-- L2: Trading library (Tier 1) — depends on UAC. (1 repos) -->
   <rect x="40" y="438" width="2320" height="107" class="level-bg" />
