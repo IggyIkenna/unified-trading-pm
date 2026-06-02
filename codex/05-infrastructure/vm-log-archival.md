@@ -14,6 +14,15 @@ execution:
 
 **Author**: slot-2 agent (2026-05-30) **Related plan**: `plans/active/canonical_vm_log_archival_2026_05_27.md`
 
+> **⚠️ NOT YET DEPLOYED — `tofu apply` pending (as of 2026-06-02).** The **daily rolling log-archive** + **rolling
+> serial-capture** schedulers (`deployment-service/terraform/gcp/vm_log_archival_scheduler.tf` +
+> `vm_serial_capture_scheduler.tf`) are **TF-authored but not applied** — the scheduled `log-archive/rolling/` and
+> `log-archive/serial-rolling/` paths below are not being populated by a live cron yet. On-demand pre-kill snapshots
+> (`snapshot_*/`) and the live `vm-logs/` stream are live; only the _scheduled rolling_ archives await the apply.
+> Tracked as an operator-gated infra item in `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md` §
+> "Operator-gated infra" + `fleet_audit_triad_deferred_followups_2026_06_01.md`. Remove this banner once `tofu apply`
+> lands the two schedulers.
+
 ---
 
 ## Two Canonical Paths
@@ -178,7 +187,7 @@ Cloud Logging (automatic), VM workloads → `vm-logs/` + `log-archive/` (this do
 | Item                    | Status                       | Notes                                                                                                                                                                                       |
 | ----------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Cloud Logging retention | ❓ Confirm current retention | GCP default is 30 days. For compliance/forensics, operator should confirm whether 30-day is sufficient or a custom `_Default` bucket retention + BigQuery export sink should be configured. |
-| Mass retrofit           | ⏸ Pending operator confirm  | No divergent services found — no mass retrofit needed as of 2026-05-30.                                                                                                                     |
+| Mass retrofit           | ⏸ Pending operator confirm   | No divergent services found — no mass retrofit needed as of 2026-05-30.                                                                                                                     |
 
 ---
 

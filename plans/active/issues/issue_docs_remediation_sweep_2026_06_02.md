@@ -312,8 +312,10 @@ verified complete**.
       (`trading-analytics-api`→`unified-trading-api`, `trading-analytics-ui`→`unified-trading-system-ui`). —
       unified-trading-pm@(this commit) (8 occurrences renamed; `{TRADING_ANALYTICS_GCS_BUCKET}` env var left intact).
       Source: batch_live_reconciliation_service_audit §7.
-- [ ] [DOC] P3. PM: add a "NOT YET DEPLOYED — tofu apply pending" warning to
-      `codex/05-infrastructure/vm-log-archival.md` (cron authored but not applied). Source: fleet_audit_triad.
+- [x] ✅ [DOC] P3. PM: add a "NOT YET DEPLOYED — tofu apply pending" warning to
+      `codex/05-infrastructure/vm-log-archival.md` (cron authored but not applied). — unified-trading-pm@(this commit)
+      (banner under the title: rolling log-archive + serial-capture schedulers TF-authored, not applied; snapshot +
+      vm-logs stream are live). Source: fleet_audit_triad.
 - [ ] [DOC] P3. PM: B2 codex marker reconciliation — replace `zero_activity=True` / `ZERO_ACTIVITY_BAR` with
       `staleness_seconds>0 + trade_count==0` in `honest-absence-downstream-handling.md` +
       `live-pipeline-architecture.md` (no code consumers — pure doc drift). Source: fleet_audit_triad.
