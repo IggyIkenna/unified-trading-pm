@@ -105,18 +105,25 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 > (10:55Z); features-service main red was a stale pre-promotion run (now green @11:29Z). **GENUINE new reds (NOT
 > promotion-lag), filed as todos:**
 
-- [ ] [TEST] P1. **deployment-service LDR + staging v2 RED — orphaned cross-repo test import after the circular-dep
-      cut.** `tests/mocks.py:10` hard-imports `from deployment_api.utils.path_combinatorics import CombinatoricEntry`,
-      but the deployment-api↔deployment-service circular-dep removal dropped `deployment-api` from deployment-service's
+- [x] ✅ [TEST] P1. **[RESOLVED 2026-06-02 by a concurrent agent — deployment-service@f30f529 "declare deployment-api
+      editable path dep"; LDR v2 success @f30f5290 (11:46Z). Manifest stays acyclic (deployment-api absent from manifest
+      deps); pyproject re-adds it editable for the 14 test files importing deployment_api.routes/utils/main. staging
+      clears via promotion. I diagnosed identically but did not push a competing fix.] deployment-service LDR + staging
+      v2 RED — orphaned cross-repo test import after the circular-dep cut.** `tests/mocks.py:10` hard-imports
+      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the
+      deployment-api↔deployment-service circular-dep removal dropped `deployment-api` from deployment-service's
       pyproject **on LDR** (main still declares it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the
       STALE side; LDR @2ab4cce5 = RED, run 26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is
       already guarded (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard
       top-level import. Fix on LDR (the correct post-cut side): make the import resilient OR relocate
       `CombinatoricEntry` to a shared contract — do NOT re-add deployment-api as a dep (re-creates the just-removed
       cycle). repo: deployment-service.
-- [ ] [LINT] P2. **e2e-testing main v2 RED — 14 ruff `UP041` errors (aliased-exception replacements).** main-only (no
-      LDR remote CI; run 26796774457 @b526b5eb). Surgical `ruff check --fix` of the flagged files (UP041 is safe
-      autofix), then promote. Blocks the e2e-testing `require-quality-gates` ruleset-add (Phase 1). repo: e2e-testing.
+- [x] ✅ [LINT] P2. **[PROMOTION-LAG, not fresh debt — re-audit 2026-06-02: the 14 QG-scope ruff errors are ALREADY
+      FIXED on LDR @eabdf05 "fix(lint): green all 14 ruff errors in QG scope (tests/ lint pass)"; e2e LDR is 10 commits
+      ahead of main. main red (run 26796774457 @b526b5eb) clears via the LDR→main promotion campaign (P1 below), NOT a
+      separate fix. NB `ruff check .` from repo root shows 108 full-repo errors, but those are `scripts/` noise OUTSIDE
+      the QG lint scope.] e2e-testing main v2 RED — 14 ruff `UP041` errors (aliased-exception replacements).** main-only
+      (no LDR remote CI; run 26796774457 @b526b5eb). Folded into the LDR→main promotion campaign. repo: e2e-testing.
 - [ ] [SCRIPT] P2. **Orchestrator-dispatch escalation marked ✅ DONE is OVERSTATED — PM `escalate-to-orchestrator.yml`
       does NOT exist.** Re-audit 2026-06-02: `agent-orchestrator/server/escalation.py` + `agents/escalate.md` exist on
       LDR, but the PM-side GHA trigger workflow (`.github/workflows/escalate-to-orchestrator.yml`) the "✅ built +
