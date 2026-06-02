@@ -57,7 +57,10 @@ jobs:
 
       - name: Install uv
         shell: bash
-        run: pip install uv
+        # Pinned for uv.lock determinism — an unpinned uv reformats the lock (revision bump)
+        # even with identical deps, so CI's `uv lock --check` would false-fail.
+        # SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
+        run: pip install "uv==0.10.8"
 
       - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache

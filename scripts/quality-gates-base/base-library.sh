@@ -97,10 +97,16 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
         source "$WORKSPACE_VENV/bin/activate"
     else
         command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
-        # Read-only freshness check — do NOT mutate uv.lock here (mutating it dirtied trees
-        # and jammed the FF-pull cron). Warn-only for now; ratchets to blocking after the
-        # re-lock-all sweep. SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
-        uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml — run 'uv lock' && commit (warn-only)"
+        # Read-only freshness gate — do NOT mutate uv.lock here (mutating it dirtied trees +
+        # jammed the FF-pull cron). BLOCKING only on the pinned uv (else a different uv's
+        # serializer reformatting false-fails); warn otherwise. SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
+        _uvver=$(uv --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+        if [ "$_uvver" = "0.10.8" ]; then
+            uv lock --check 2>/dev/null || { echo "❌ uv.lock out of sync with pyproject.toml — run 'uv lock' && commit"; exit 1; }
+        else
+            echo "⚠️  uv $_uvver != pinned 0.10.8 — run setup.sh to pin; skipping blocking uv.lock check (warn only)"
+            uv lock --check 2>/dev/null || echo "⚠️  uv.lock may be out of sync — re-check on pinned uv 0.10.8"
+        fi
         [ ! -d ".venv" ] && uv venv .venv
         [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
         for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
