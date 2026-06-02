@@ -632,14 +632,17 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       UTL contract upgrade. Filed as UTL-contract todo below. `base_adapter.py:185` is `ErrorCategory` enum (different
       axis — not an asset-group column). `sports_fixtures_daily_repoll.py:43` is a docstring. No IS renames needed; UTL
       must rename its `category` param to `asset_group` — see UTL-contract upgrade todo. — instruments-service@8958a2ae
-- [ ] [CODE] P2. **UTL contract upgrade: rename `record_captured(category=…)` param to `asset_group=`** **DEFERRED**:
-      `unified_trading_library/manifest_writer.py:2629` declares `category: str` as the kwarg name; internally it maps
-      to `asset_group` (line 1800/2451/2794). All IS/MTDS callers pass `category=` because that IS the UTL API —
-      renaming without a coordinated UTL bump would break every service. Fix: (a) add `asset_group: str | None = None`
-      as a new param (alias); (b) deprecate `category` with a compat shim; (c) sweep all workspace callers in one
-      coordinated pass; (d) drop `category`. Provenance: instruments-service@8958a2ae diagnosis 2026-06-02. Repo:
-      `unified-trading-library`. **DEFERRED** to named successor: `utl_record_captured_asset_group_rename_YYYY_MM_DD.md`
-      (write when unblocked).
+- [ ] [CODE] P1. **UTL contract upgrade: rename `record_captured(category=…)` param to `asset_group=` — HARD ATOMIC
+      CUT, ZERO ALIAS (operator directive 2026-06-02, dispatched to a dedicated session)**:
+      `unified_trading_library/manifest_writer.py:2629` declares `category: str`; internally maps to `asset_group`
+      (1800/2451/2794). Operator: do it NOW workspace-wide, **no lingering deprecated alias** — the shipped end-state has
+      NO `category` kwarg in any ManifestWriter signature; a missed caller must FAIL LOUD (TypeError), never silently
+      forward. Approach = ONE coordinated sweep: (1) UTL adds `asset_group=` + transiently accepts both; (2) update EVERY
+      caller across ALL repos (instruments-service ~18 sites + sports_fixtures_daily_repoll, MTDS, features, strategy,
+      execution, alerting, deployment-api, e2e, migration scripts) `category=`→`asset_group=`; (3) UTL commit that
+      REMOVES `category` — lands in the SAME sweep so zero alias ships. NEW QG ratchet fails on any `category=` at a
+      ManifestWriter call site. Leave unrelated `ErrorCategory`/`market_category`/`BookmakerCategory`. Provenance:
+      instruments-service@8958a2ae diagnosis. NOT deferred — in-flight in the dedicated session.
 - [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads**: `mtds_canonical_reader.py`
       explicitly builds `category=defi/` twin paths for backward compatibility — this is intentional (reads legacy
       on-disk data). Post sports/defi migration when `category=` paths are decommissioned, remove the twin.
