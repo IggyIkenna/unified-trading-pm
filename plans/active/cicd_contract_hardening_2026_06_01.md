@@ -208,6 +208,19 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       (mostly [skip ci] bumps; small reconciles; alerting=9 outlier). Nightly Readiness/Dead-Man crons fully clear once
       service mains carry greened code. repos: all service repos + PM (promotion driver).
 
+- [ ] [SCRIPT] P2. **Add push-author attribution to CI alerts (operator 2026-06-02).** Every #ci-failures alert
+      (ci_failure_watcher.py transition alerts + ci-status-update + the QG-fail notify) should surface WHO pushed + a
+      role tag. Source: commit author/committer via `gh api repos/<r>/commits/<sha> -q .commit.author` (or
+      `github.event.head_commit.author`/`github.event.pusher` in-workflow). Role classification: **human** = author name
+      in {IggyIkenna, CosmicTrader}; **background-agent** = commit body contains `Co-Authored-By: Claude` (the workspace
+      agent-commit convention) — covers VM orchestrator/worker/reviewer pushes (they all carry the Claude trailer);
+      **automation** = committer `github-actions[bot]`/`GitHub` (merges, semver, [skip ci]). Render
+      `👤 pushed by: <name> [human|agent|automation]` in the Slack body. Gap to close for crisp VM-attribution: have
+      orchestrator workers set a distinguishable git identity per VM/run (e.g. `orch-worker-<vm>` or include run-id) so
+      agent pushes are attributable beyond just 'agent'. Historical: author IS in git history
+      (`git log --format='%an <%ae>'`) — already queryable. repo: unified-trading-pm (ci_failure_watcher.py +
+      ci-status-update.yml + notify-slack callers) + agent-orchestrator (worker git identity).
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
