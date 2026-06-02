@@ -97,9 +97,9 @@ verified complete**.
   `needs_candle_processing`/timeframe/schema-validation lookups mid-migration. The rename is the coordinated
   registry-alignment scope of `defi_manifest_canonicalisation_2026_06_01.md` §C0-RD (operator-locked SSOT
   `defi-canonical-naming-ssot.md`). Do NOT do standalone. Source: defi_code_codex_drift D14.
-- [ ] [DOC] P2. UAC: add OHLC-semantics docstring to the `swaps_ohlcv_*` schema in
+- [x] ✅ [DOC] P2. UAC: add OHLC-semantics docstring to the `swaps_ohlcv_*` schema in
       `internal/schemas/_candle_contracts.py` — O/H/L/C = USD-normalized pool spot price (`amountUSD/|base_amount|`),
-      ≈1.0 for USDC/WETH, 3 fallback methods. Source: features_service_defi #3.
+      ≈1.0 for USDC/WETH, 3 fallback methods. — unified-api-contracts@`455ddf9a`. Source: features_service_defi #3.
 - [ ] [CODE] P2. UAC venue-registry coherence (`registry/.../defi_venues.py` + `_defi.py`) — **BLOCKED-OPERATOR-DECISION
       per option**: (a) D15 HYPERLIQUID/ASTER `pipeline`→`live` (handler actively collects — code-reality-aligned, will
       implement unless vetoed); (b) D10 EULER_V2/VENUS/BENQI/RADIANT `live` with no `PROTOCOL_CAPABILITIES` → downgrade
