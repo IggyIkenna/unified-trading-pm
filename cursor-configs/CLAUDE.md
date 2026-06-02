@@ -755,43 +755,17 @@ frontmatter: `title`/`created`/`author`/`source[]`/`locked_by`. Body: `## What I
 
 ## External Data Is Always Available — Never Silently Defer Adapters (HARD RULE codified 2026-05-14)
 
-**Premise**: for every asset_group and every MVP archetype, **data exists**. If the public/free path is exhausted, the
-unblock is a credential / subscription / account-provisioning ask to the operator — NOT a license to defer or descope
-the adapter. Applies workspace-wide; primary targets are `instruments-service` and `market-tick-data-service` (MTDS)
-adapters/handlers/clients, but the rule generalises (DeFi protocol-rate readers, sports/prediction feed adapters, tradfi
-vendor SDKs, on-chain RPC providers).
+**Premise**: for every asset_group × MVP archetype, **data exists** — if the public/free path is exhausted, the unblock
+is a credential/subscription **ask to the operator, NOT** a license to defer/descope (paid tiers exist: Helius/Alchemy,
+Glassnode/Kaiko, Tardis, Databento, Sportradar/The-Odds-API…). Banned: "no public API / free tier exhausted / no test
+data / subscription required / can't repro in sandbox" used to drop scope.
 
-**Banned reasoning patterns** (every one of these is a violation if it leads to scope removal):
-
-- "No public API for X" → there's a paid tier (Helius for Solana, Alchemy paid for high-rate,
-  Glassnode/Kaiko/IntoTheBlock for on-chain analytics, Tardis for historical CEX ticks, Databento/Polygon.io for tradfi,
-  Sportradar/Footystats/The-Odds-API for sports).
-- "Free tier exhausted" → upgrade the tier; this is a sub-1-hour operator credential swap, not a multi-week scope cut.
-- "No test data" → mock the API contract from public docs + integration-test against the live endpoint once credentials
-  land.
-- "Subscription required" → that's the unblock, not the blocker. Ping operator.
-- "Couldn't reproduce in sandbox" → ship the adapter, gate the integration test behind a `requires_credentials` mark.
-
-**Required action when an agent hits this wall**:
-
-1. **Build the adapter scaffold anyway.** Schema + UAC contract + auth shape + retry/backoff/rate-limit semantics +
-   error classification (`classify_venue_error()`) + manifest emission per writegate Phase 6.x. Unit tests against mocks
-   (per docs). Integration tests marked `@pytest.mark.requires_credentials` + skipped by default.
-2. **File a `pings/slot_<N>.md` operator-credential request** with exact shape:
-   ```
-   CREDENTIAL APPROVAL REQUEST — <adapter_name>
-   Vendor: <name + tier + cost estimate>
-   What I need: <API key | OAuth flow | account email + signup | hardware-2FA setup>
-   Account to use: <existing operator email | new account needed>
-   Unblocks: <list of asset_group × archetype combos + which May-23 gate>
-   Without it: integration tests skip; unit + scaffold ship + adapter is dormant
-   ```
-3. **Adapter stays ON the live list.** Status = `BLOCKED-CREDENTIALS`, NOT `DEFERRED` and NOT `POST-CUTOVER`. Plan-flip
-   is `- [ ] [BLOCKED-CREDENTIALS — pinging operator]` not a checkbox flip.
-4. **Cross-link in master plan.** Add row to `master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator"
-   so it's visible in the daily inventory regenerator. (Section auto-created if absent.)
-5. **Never move the adapter to a post-cutover plan without explicit operator [ack]** on the slot ping. Silent deferral =
-   blocked PR.
+**Required when you hit the wall**: (1) build the adapter scaffold anyway (schema + UAC contract + auth/retry +
+`classify_venue_error()` + manifest emission; unit tests on mocks; integration tests
+`@pytest.mark.requires_credentials`, skipped by default); (2) file a `CREDENTIAL APPROVAL REQUEST` in
+`pings/slot_<N>.md` (vendor+tier+cost / what's needed / account / what it unblocks); (3) status =
+**`BLOCKED-CREDENTIALS`** (NOT `DEFERRED`/`POST-CUTOVER`); (4) cross-link the master plan's "Credential asks awaiting
+operator"; (5) never move to post-cutover without operator `[ack]`.
 
 **Status taxonomy** (closed set; replaces ad-hoc "deferred" language):
 
@@ -812,20 +786,10 @@ vendor SDKs, on-chain RPC providers).
 
 Sports + Prediction tracks have parallel coverage targets independent of the DeFi archetypes.
 
-**Enforcement**:
-
-- Plan reviewer rejects any plan that contains "DEFERRED — no data" / "no API access" / "post-cutover — credentials"
-  without an operator [ack] ping link.
-- Inventory regenerator surfaces `BLOCKED-CREDENTIALS` count as a master plan column.
-- PM `quality-gates.sh` runs `scripts/quality_gates/check_credential_ask_orphans.py` — baselined ratchet that fails on
-  any `BLOCKED-CREDENTIALS` plan line lacking a ping reference (±5-line context: `*orchestrator/pings/slot_N.md` path,
-  `CREDENTIAL APPROVAL REQUEST`, `[ack]`, named SM secret, or `CONFIRMED-STATUS`). Re-baseline only with
-  `--baseline-write` after intentional debt.
-
-Composes with: Findings Triage (this rule is the per-data-source case of "fix now if you have context"); Capture
-Discoveries As Plan Todos (the ping IS the discovery capture); Commit + Push + Flip (the `BLOCKED-CREDENTIALS` status is
-the plan-flip equivalent); Plans Run To Actual Completion (the adapter doesn't run to completion without credentials →
-credentials are the operationally-shipped definition).
+**Enforcement**: PM `quality-gates.sh` runs `scripts/quality_gates/check_credential_ask_orphans.py` (baselined ratchet —
+fails on a `BLOCKED-CREDENTIALS` plan line with no ping reference). Full rule + credential-request template +
+composes-with (Findings-Triage / Capture-Discoveries / Commit+Push+Flip / Plans-Run-To-Completion):
+`codex/02-data/external-data-always-available-rule.md`.
 
 ---
 
