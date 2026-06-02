@@ -284,8 +284,13 @@ verified complete**.
       **Execution-side subscriber + per-incident emit remain `execution_master` G12 P1** (consume the event → `arm()`) —
       the full chain isn't live until that lands. Source: batch_live_reconciliation_service_audit G12 /
       observability_master G12.
-- `BLOCKED-OPERATOR-DECISION` [DATA] P3. alerting-service: ML threshold baseline for the 5 `ml_*` codes (ML inference
-  not yet live) + `tick_staleness_seconds` per-venue baseline (needs live MTDS feeds). Source: alerting_fp_rate.
+- `NEEDS-LIVE` [DATA] P3. alerting-service: ML threshold baseline for the 5 `ml_*` codes (ML inference not yet live) +
+  `tick_staleness_seconds` per-venue baseline (needs live MTDS feeds). **RECLASSIFIED 2026-06-02: this is NEEDS-LIVE,
+  NOT an operator decision** — the thresholds can't be empirically baselined until `ml-inference-service` + live feeds
+  run; sensible defaults hold meanwhile; auto-resumes (no approval needed). Migrated to `observability_master` § P3
+  (named successor). **Source doc `alerting_fp_rate_analysis` ARCHIVED 2026-06-02** → `plans/archive/issues/` (its other
+  two action items shipped: GCS FP-log path alerting@`e2163a5`, risk-rule AlertCode alerting@`9279d82`). Source:
+  alerting_fp_rate.
 
 ## unified-trading-api
 

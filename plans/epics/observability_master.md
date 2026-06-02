@@ -174,6 +174,21 @@ _(no plans currently assigned at this priority. Post-cutover audits will spawn P
 > **MIGRATED FROM:** `independent_fallback_twilio_voice_2026_05_23.md` (archived 2026-05-25) — code shipped;
 > operator-action items below.
 
+> **MIGRATED FROM:** `alerting_fp_rate_analysis_2026_05_23.md` (archived 2026-06-02) — Phase-7 quietness baseline
+> confirmed 21 codes 0-FP; the 8 uncovered thresholds (5 ML codes + leverage/concentration/drawdown risk rules +
+> per-venue `tick_staleness`) are `NEEDS-LIVE`, not an operator decision: they cannot be empirically baselined until
+> `ml-inference-service` + live MTDS/MDPS feeds are running. Defaults stand in UAC `thresholds.py` until then. (The
+> doc's other two action items already shipped: GCS structured FP-log path → alerting-service@`e2163a5`
+> `write_quietness_report`; risk-rule AlertCode mapping → alerting-service@`9279d82`.)
+
+- [ ] [DATA] `NEEDS-LIVE` P3. **Re-baseline the 8 uncovered alert thresholds once ML inference + live feeds are up.**
+      Run a 48h targeted quietness baseline against live `ml-inference-service` emission + live MTDS/MDPS feeds; record
+      results in UAC `ALERT_THRESHOLDS[*].quietness_baseline_date` for the 5 ML codes (`ML_SIGNAL_STALENESS`,
+      `ML_MODEL_DRIFT_DETECTED`, `ML_PNL_DEVIATION`, `ML_INFERENCE_LATENCY_BREACH`, `ML_MODEL_VERSION_MISMATCH`), the
+      leverage/concentration/drawdown risk rules, and per-venue `tick_staleness`; tune off the empirical FP rate. Auto-
+      resumes when those subsystems go live (no operator decision needed — defaults hold meanwhile). Repo:
+      alerting-service + UAC. **MIGRATED FROM:** `alerting_fp_rate_analysis_2026_05_23.md` § "Operator action required".
+
 - [ ] [OPERATOR] P3. **Twilio account creation** — create dedicated Twilio account; obtain voice-capable phone number
       (UK +44 or similar). Cost: ~$1/number + $0.013/min voice. Per SSOT:
       `codex/04-architecture/recovery-defence-in-depth-layers.md` § Layer 3. **MIGRATED FROM:**
