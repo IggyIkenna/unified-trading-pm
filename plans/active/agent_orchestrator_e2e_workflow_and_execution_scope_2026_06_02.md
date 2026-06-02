@@ -140,16 +140,28 @@ can never touch it — this is what makes the "update code → restart backend" 
 Operator steer 2026-06-02: keep **local SQLite as the live source of truth** (long-running VMs) + add a **pre-restart
 flush** so no data is lost on deploy/restart, rather than going full GCS-restore-on-boot.
 
-- [ ] [SCRIPT] P0. Move the live DB off the repo checkout: set `ORCHESTRATOR_DB_PATH` to a persistent path
-      (`/var/lib/orchestrator/state.db`) in `bootstrap_vm.sh` + the systemd unit (`ReadWritePaths` + a one-time migrate
-      of the existing DB). A code redeploy then cannot wipe state.
-- [ ] [SCRIPT] P0. Harden the pre-restart flush: add an explicit `flush+snapshot` step the deploy/restart path calls
-      BEFORE sending SIGTERM (e.g. `POST /api/admin/snapshot` or a systemd `ExecStop=` pre-hook), and raise
-      `TimeoutStopSec` enough for the snapshot to finish. Goal: zero data loss on a planned restart even if the GCS
-      upload is slow.
-- [ ] [DESIGN] P1. OOM/hard-kill RPO: tighten the periodic `SnapshotLoop` interval (or WAL-checkpoint cadence) so an
-      unplanned kill loses at most a bounded window. Confirm `_state` + loop state fully rehydrate from SQLite on boot
-      (already true by trace — add a restart test that asserts it).
+- [x] ✅ [SCRIPT] P0. DB + state.json moved off the repo checkout to **`/var/lib/orchestrator/`** via
+      `ORCHESTRATOR_DB_PATH` + `ORCHESTRATOR_STATE_JSON` in the systemd unit (+ `ReadWritePaths=/var/lib/orchestrator`
+      under `ProtectSystem=strict`); `bootstrap_vm.sh` creates+chowns the dir and does an **idempotent one-time move**
+      of any existing in-repo `data/state/state.db` (+wal/shm/json). A redeploy can no longer wipe state. —
+      agent-orchestrator@ff4fc23
+- [x] ✅ [SCRIPT] P0. Pre-restart flush hardened: `TimeoutStopSec` **30 → 90** so the lifespan shutdown snapshot (which
+      IS the pre-restart flush — `snapshot_session(reason="shutdown")`) completes even on a slow GCS/S3 upload. No
+      `ExecStop` curl hook added — it would need the `/api/snapshot` auth token, and it's redundant now that the DB is
+      persistent (a truncated snapshot only stales the DR archive, never live state). — agent-orchestrator@ff4fc23
+- [x] ✅ [DESIGN] P1. OOM/hard-kill RPO: the periodic snapshot is already `ORCHESTRATOR_SNAPSHOT_INTERVAL_SECONDS=1800`
+      (30 min) in the unit — that bounds the **DR-archive** staleness; the **live** RPO is now ~0 because the WAL DB
+      sits on the persistent path and survives the kill. `_state` + loop-state rehydration from SQLite on boot is
+      **proven by e2e_demo step 12** (stop+resume returns both in-progress tasks). No interval change needed.
+- **Downstream-consumer fixes found during G5 (SSOT consistency for the moved path):**
+  - `restore_from_gcs.sh` — defaulted to `${REPO_ROOT}/data/state.db` (wrong: missed the `/state/` subdir) and read a
+    typo'd `ORCHESTRATOR_STATE_JSON_PATH` env var (never took effect). Now defaults to `/var/lib/orchestrator/` and
+    reads the correct `ORCHESTRATOR_STATE_JSON`.
+  - `gcs_sync.commit_state_to_git` — would have poisoned its `git add` with the out-of-repo state.json path; now skips
+    any path outside `repo_root` (state.json is covered by the DB + GCS/S3 snapshot).
+
+**Scope = code only (operator decision 2026-06-02).** Applies on the next bootstrap/deploy; the 2 live VMs migrate via
+the idempotent one-time move in `bootstrap_vm.sh` when re-bootstrapped. e2e_demo regression green; check.sh green.
 
 ### G6 — staging branch + CICD for agent-orchestrator [P0] _(operator decision 2026-06-02)_
 
