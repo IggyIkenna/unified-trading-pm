@@ -642,13 +642,15 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` (same call as the orchestrator
       at line 7365). Repo: `instruments-service`. QG that repo. — instruments-service@fd7b72a7 | resolve_bucket_name
       SSOT route + tests updated; QG 3047/3047 new tests pass (2 pre-existing fails unrelated)
-- [ ] [CODE] P1. **features-service sports `gcs_paths.py` — fix both bucket resolvers to canonical form**:
+- [x] ✅ [CODE] P1. **features-service sports `gcs_paths.py` — fix both bucket resolvers to canonical form**:
       `resolve_instruments_bucket()` passes `project_id=_project_id()` → skips yaml SSOT → returns
       `instruments-store-sports-{pid}` (legacy). `resolve_tick_data_bucket()` uses unmapped domain
       `"market-data-tick-sports"` → legacy. Fix both: (a) `resolve_instruments_bucket()` → call
       `resolve_bucket_name(cloud="gcp", kind="instruments-store", asset_group="sports")` (no explicit project_id); (b)
       `resolve_tick_data_bucket()` → call `resolve_bucket_name(cloud="gcp", kind="market-data", asset_group="sports")`
       (the yaml-mapped domain). File: `features-service/features_service/sports/data/gcs_paths.py`. QG features-service.
+      — features-service@e0ddde68 | both resolvers now call resolve_bucket() from features_service.common; 4 unit tests
+      verify env-tiered (-prd-/-test-) form; QG ALL GATES PASSED
 - [x] ✅ [CODE] P1. **strategy-service `DependencyChecker` — fix bucket_template to canonical form for sports**:
       `UPSTREAM_DEPS["instruments-service"]["bucket_template"]` = `"instruments-store-{asset_group_lower}-{project_id}"`
       with explicit project_id substitution → legacy no-env. Fix: remove explicit project_id from template + route
@@ -657,13 +659,16 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `BaseDependencyChecker` if template substitution is there). QG strategy-service. — strategy-service@ecc7cc0f | all
       3 upstream deps (ml-predictions-store, features-delta-one, instruments-store) now routed via resolve_bucket_name;
       affects all AGs (expected); QG exit 0
-- [ ] [CODE] P2. **features-service sports — add `DependencyError` raise on missing fixtures blob**:
+- [x] ✅ [CODE] P2. **features-service sports — add `DependencyError` raise on missing fixtures blob**:
       `gcs_reader.read_reference_entity()` at `features_service/sports/data/gcs_reader.py:170-178` returns
       `pd.DataFrame()` silently when the upstream instruments-store blob is missing. For the `"fixtures"` entity
       specifically (not slow-moving fallback entities), a missing blob for a requested date WITHIN UAC coverage bounds
       indicates a real upstream gap — should raise `DependencyError` (or at minimum emit a structured preflight-skip
       event) rather than silently returning empty. Batch=live symmetry: the live path should additionally trigger the
-      sports circuit-breaker. Repo: `features-service`.
+      sports circuit-breaker. Repo: `features-service`. — features-service@e0ddde68 | DependencyError raised for
+      fixtures date>=2018-01-01 (api_football coverage start); re-raised before generic except-Exception; 4 unit tests:
+      within-coverage raises, pre-coverage returns empty, non-required entity returns empty, blob-present returns data;
+      QG ALL GATES PASSED
 - [ ] [CODE] P2. **features-service sports — wire `assert_consolidator_healthy` for live mode**: live
       `AssetScopedFeaturesRunner` starts without asserting the sports manifest consolidator is alive. Wire
       `assert_consolidator_healthy(bucket)` for the sports instruments-store bucket at live startup (mirrors pattern in
