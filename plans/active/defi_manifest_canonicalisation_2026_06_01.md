@@ -362,11 +362,12 @@ What to verify/wire (B0 corrected scope):
         next to `EmptyFromLiveInstrumentError`; CONSERVATIVE (fires only on positive catalog confirmation; unknown
         `available_from` → False). Facade-exported (`from unified_api_contracts import was_instrument_alive`) + 5 unit
         tests. UAC QG green. Repo: unified-api-contracts. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P1. **A10b — UTL `ManifestWriter.record_zero_rows(*, row_key, reason, was_expected, instrument_id="",
-        source_evidence="", pipeline_mode, ...)`** routing helper: `was_expected` → `record_failed(
-        EmptyFromLiveInstrumentError(...))`; else → `record_empty(reason)`. Caller computes `was_expected` from the
-        per-AG oracle (fixtures / `was_instrument_alive`). This is the single sanctioned zero-rows write path. Repo:
-        unified-trading-library. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P1. **A10b — UTL `ManifestWriter.record_zero_rows(...)` routing helper SHIPPED utl@44d762d9** (+ UAC
+        facade-export `EmptyFromLiveInstrumentError` uac@daf1888c). `was_expected` → `record_failed(
+        EmptyFromLiveInstrumentError(...))` (attempted_failed); else → `record_empty(reason)`. Caller computes
+        `was_expected` from the per-AG oracle (sports fixtures / `was_instrument_alive`). Single sanctioned zero-rows
+        write path; +2 routing tests; UAC+UTL QG green. Repos: unified-trading-library + unified-api-contracts.
+        parent_epic: mtds_mdps_master.
   - [ ] [CODE] P1. **A10c — QG enforcement step** (MTDS/IS/MDPS/features quality-gates, STEP 5.70 family): fail any
         `record_empty(...SOURCE_RETURNED_ZERO...)` callsite NOT routed through `record_zero_rows` (baselined ratchet +
         `# QG-allow:` waiver for audited exceptions). Makes the backstop un-bypassable. Repo: per-service
@@ -377,6 +378,41 @@ What to verify/wire (B0 corrected scope):
         and for DeFi the venue-launch gate (A1/A2, shipped) already covers most of it; A10d closes the residual.
         Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
       Repos: unified-api-contracts + unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against
+      legacy/dead buckets BEFORE the migrations run** (operator 2026-06-02: "refactor read/write cloud-storage paths
+      across the board to match canonical so QG-fed tests don't regress by association with dead buckets; same for
+      data-status in deployment API + UI which resolve many bucket-name / menu / data_type / manifest conventions").
+      Slot-2 two-front audit 2026-06-02 found the C0-CN sweep aligned the DeFi raw read/write path but NOT the
+      **manifest-handler / data-status / deployment-API+UI** surfaces, which hardcode legacy bucket names + data_types.
+      Each sub-item names repo + file:line; VERIFY-then-fix (some are intentional logical-name distinctions — confirm
+      against `codex/02-data/per-asset-group-bucket-layouts.md` + `resolve_bucket_name()` before editing). Tag `[DATA]`
+      surfaces that need a test added so the regression can't reappear. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P0. **A11a — MTDS `data_manifest_handler.py` hardcodes bucket f-strings** (not `resolve_bucket_name`):
+        `_scan_eigenlayer` L211 `f"market-data-tick-defi-{pid}"`, `_scan_gas_fees` L232 `f"gas-fees-{pid}"`,
+        `_scan_protocol_chain_bucket` L315 / `_scan_flat_date_bucket` L379 / `_scan_protocol_only_bucket` L432
+        `f"{bucket_key}-{pid}"` (legacy non-`-prd` dedicated buckets). These LIST dead buckets post-migration → silent
+        empty coverage. Route through `resolve_bucket_name()` (env-tiered `-prd`). Repo: market-tick-data-service.
+  - [ ] [CODE] P0. **A11b — deployment-service data-status hardcodes legacy bucket templates** (the code comments
+        already admit "pre-canonical, awaiting `resolve_bucket_name()` sweep"): `cli/utils/manifest_reader.py` L41-65
+        `BUCKET_TEMPLATES` + L79-95 `_EXTRA_BUCKETS` (hardcoded `dex-pools-{pid}`/`lending-indices-{pid}`/… missing
+        `-prd`), `catalog.py` L152-159 `SERVICE_GCS_CONFIGS` `market-data-tick-{ag}-{pid}`, `data_status_checkers.py`
+        L624 `f"market-data-tick-{cat}-{pid}"`. Route all through `resolve_bucket_name()`. Repo: deployment-service.
+  - [ ] [CODE] P1. **A11c — UAC `registry/market_data_categories.py` DeFi data_type list legacy vs canonical**: L144-177
+        lists `dex_pools`/`dex_swaps` (legacy logical) while the v9 on-disk + manifest canonical is
+        `dex_pool_state`/`dex_pool_swaps` (operator-locked `defi-canonical-naming-ssot.md`). VERIFY whether this list is
+        a logical menu (intentional) or a physical-key source consumed by data-status; if the latter, align to canonical
+        + reconcile `registry/data_type_capability.py` L336-345 "aspirational/deferred" note. Repo: unified-api-contracts.
+  - [ ] [CODE] P1. **A11d — MTDS `data_manifest_handler.py` OPERATIONS metadata legacy data_types** (`bucket_type:
+        dex-pools`/`dex-swaps`/`lending-indices`) — reconcile with the canonical `dex_pool_state`/`dex_pool_swaps`
+        handler `_DATA_TYPE` consts (C0-CN2). Repo: market-tick-data-service.
+  - [ ] [DATA] P1. **A11e — TESTS encoding legacy buckets/data_types (silent-regression maskers)**: e.g.
+        mtds `tests/unit/test_smoke_matrix.py` (`market-data-tick-{category}-{pid}` mock), `test_defi_manifest_recorder.py`
+        (`data_type="dex_pools"` asserts), `test_curve_defi_ws_connector.py` (`dex_pools`); deployment-ui
+        `tests/unit/components/DataStatusTab.phase8h.test.ts` (`honest["dex_pools"]`). Update to assert CANONICAL forms +
+        add a guard test so the legacy form can't silently pass. Repos: market-tick-data-service + deployment-ui.
+  - [ ] [CODE] P2. **A11f — residual `category=` writers** (legacy hive key vs canonical `asset_group=`): mtds
+        `market_interface/__init__.py` + live manifest recorder `category=` alias. Readers already probe canonical→legacy
+        (transitional OK); migrate writers so post-cutover writes are canonical-only. Repo: market-tick-data-service.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
