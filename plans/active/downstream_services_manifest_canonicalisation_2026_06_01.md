@@ -286,8 +286,11 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
       `expected_unattempted` on a gap, then degrades — does NOT halt the cycle). The orchestration-side
       machinery (`_check_dependencies`/`_record_expected_unattempted_on_skip`/UPSTREAM_LIVE_GAP gate) already
       existed; only the live call-site flag was wrong. Test asserts the live cycle does not skip the dep check.
-- [ ] [CODE] P1. **GAP-5 (strategy-service): startup upstream-features dep check** in `StrategyLiveHandler.run()`
-      (service_entry.py) before the live trade loop — currently only the per-cycle allocation guard runs (after start).
+- [x] ✅ [CODE] P1. **GAP-5 (strategy-service) — DONE (strategy-service@d837ca1b, 2026-06-02).** `StrategyLiveHandler.run()`
+      asserts the upstream market-data consolidator healthy (`assert_consolidator_healthy` on `market-data-tick-{ag}-prd`)
+      BEFORE the live trade loop / dispatch — refuses to start streaming signals off a stale upstream index (the per-cycle
+      allocation guard only runs after start). Gated by `--skip-dependency-check`. 3 unit tests (healthy proceeds, stale
+      raises pre-dispatch, skip bypasses).
 - [x] ✅ [CODE] P1. **GAP-6 (features-service) — DONE (features-service@dbf12aff, 2026-06-02).** delta_one
       `LiveHandler.run()` asserts the upstream MDPS candle consolidator healthy (`assert_consolidator_healthy` on
       `market-data-tick-{ag}-prd`) BEFORE PubSub subscribe — live fails-to-start on a stale candle index rather than
