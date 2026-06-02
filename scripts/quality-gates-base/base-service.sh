@@ -1684,6 +1684,61 @@ else
     log_success "STEP 5.69: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# STEP 5.92 — Ban legacy `category=` kwarg at ManifestWriter writes (v9 canonical)
+#
+# The UTL ManifestWriter asset-group write param was renamed `category` →
+# `asset_group` (2026-06-02; sports_/defi_manifest_canonicalisation cross-AG
+# dead-bucket root). v9 post-migration canonical vocabulary is `asset_group`
+# everywhere — never `category`, not even as a fallback (operator 2026-06-02).
+# AST-walk, zero-tolerance (the workspace-wide rename removed every occurrence).
+# (5.71-5.91 are in use elsewhere in this file — these two ratchets take 5.92/5.93.)
+_NOCAT_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_category_kwarg_at_manifest_write.py"
+if [ -f "$_NOCAT_CHECKER" ]; then
+    _NC_REPO=$(basename "$PROJECT_ROOT")
+    _NC_WS="$REPO_ROOT"
+    _NC_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _NC_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_NOCAT_CHECKER" \
+            --workspace-root "$_NC_WS" --scope "$_NC_REPO" "${_NC_SRC_ARG[@]}" >/tmp/no_category_kwarg_qg.log 2>&1; then
+        log_success "STEP 5.92: No legacy category= kwarg at ManifestWriter writes (asset_group= is v9 canonical)"
+    else
+        log_fail "STEP 5.92: Legacy category= kwarg(s) at ManifestWriter writes — rename to asset_group= (UTL contract, v9 canonical):"
+        cat /tmp/no_category_kwarg_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_category_kwarg_at_manifest_write.py --workspace-root $_NC_WS --scope $_NC_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.92: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
+# STEP 5.93 — Ban explicit project_id= on asset-group bucket builders (no-env bypass)
+#
+# Passing project_id to get_bucket_name()/get_write_bucket_name() bypasses the
+# cloud-providers.yaml SSOT and returns the legacy no-env bucket shape (e.g.
+# instruments-store-sports-{pid}), which is DELETED at each asset_group's
+# legacy-bucket decommission. Canonical: drop project_id (delegates to the yaml
+# SSOT → env-tiered -prd-) or use resolve_bucket_name(...). AST-walk, scoped to
+# string-literal asset-group domains; scripts/tests/migration trees + the
+# bucket-naming SSOT modules are exempt. Zero-tolerance.
+_NOPID_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_explicit_project_id_bucket.py"
+if [ -f "$_NOPID_CHECKER" ]; then
+    _NP_REPO=$(basename "$PROJECT_ROOT")
+    _NP_WS="$REPO_ROOT"
+    _NP_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _NP_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_NOPID_CHECKER" \
+            --workspace-root "$_NP_WS" --scope "$_NP_REPO" "${_NP_SRC_ARG[@]}" >/tmp/no_explicit_project_id_bucket_qg.log 2>&1; then
+        log_success "STEP 5.93: No explicit project_id on asset-group bucket builders (delegates to yaml SSOT → -prd- canonical)"
+    else
+        log_fail "STEP 5.93: Explicit project_id on asset-group bucket builder(s) → legacy no-env bucket. Drop project_id or use resolve_bucket_name(...):"
+        cat /tmp/no_explicit_project_id_bucket_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_explicit_project_id_bucket.py --workspace-root $_NP_WS --scope $_NP_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.93: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # STEP 5.70 — Explicit pipeline_mode= kwarg at every ManifestWriter.record_* call
 #
 # (5.6x is exhausted — 5.65/5.67/5.69 in use, 5.66/5.68 reserved above — so this
