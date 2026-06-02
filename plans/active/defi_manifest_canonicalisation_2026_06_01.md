@@ -352,9 +352,29 @@ What to verify/wire (B0 corrected scope):
       class in `unified-api-contracts/.../honest_coverage.py:979` + `__all__` export; grep finds ZERO raise sites in the
       write path. UTL `record_empty` (`manifest_writer.py:1958`) only guards blank/unknown reason
       (`LegacyBlankErrorReasonError`), NOT live-instrument emptiness. Without this backstop, correctness depends entirely
-      on each adapter raising — so the A8/A9 swallow gaps go uncaught. FIX: invoke the catalog cross-check in
-      `record_empty` (or a shared pre-write gate) so a SOURCE_RETURNED_ZERO for a catalog-alive instrument raises.
-      Repos: unified-trading-library + unified-api-contracts. parent_epic: mtds_mdps_master.
+      on each adapter raising — so the A8/A9 swallow gaps go uncaught. **DESIGN (operator-refined 2026-06-02): abstract
+      into a UTL helper + ENFORCE with a quality gate** — the "expected universe" oracle is per-asset-group (sports =
+      fixtures exist for the day; cefi/defi/tradfi/prediction = instrument listed-and-not-delisted), but the *routing*
+      (zero-rows + was-expected → `attempted_failed` via `EmptyFromLiveInstrumentError`, else
+      `empty_confirmed[reason]`) is generic and belongs in UTL so callers can't get it wrong. Sub-items:
+  - [ ] [CODE] P1. **A10a — UAC `was_instrument_alive(available_from, available_to, status, day) -> bool`** pure
+        lifecycle primitive (on `InstrumentRecord` fields) next to `EmptyFromLiveInstrumentError`. + unit test. Repo:
+        unified-api-contracts. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. **A10b — UTL `ManifestWriter.record_zero_rows(*, row_key, reason, was_expected, instrument_id="",
+        source_evidence="", pipeline_mode, ...)`** routing helper: `was_expected` → `record_failed(
+        EmptyFromLiveInstrumentError(...))`; else → `record_empty(reason)`. Caller computes `was_expected` from the
+        per-AG oracle (fixtures / `was_instrument_alive`). This is the single sanctioned zero-rows write path. Repo:
+        unified-trading-library. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. **A10c — QG enforcement step** (MTDS/IS/MDPS/features quality-gates, STEP 5.70 family): fail any
+        `record_empty(...SOURCE_RETURNED_ZERO...)` callsite NOT routed through `record_zero_rows` (baselined ratchet +
+        `# QG-allow:` waiver for audited exceptions). Makes the backstop un-bypassable. Repo: per-service
+        `quality-gates.sh` + a shared check script. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. **A10d — migrate the DeFi `SOURCE_RETURNED_ZERO` callsites** (dex_pools/dex_swaps/lst/lending/perp
+        handlers) to `record_zero_rows` with the `was_instrument_alive` oracle. NOTE: DeFi records at (venue,chain)
+        shard granularity, so the oracle is "was ANY in-universe instrument for this venue/chain alive on this day" —
+        and for DeFi the venue-launch gate (A1/A2, shipped) already covers most of it; A10d closes the residual.
+        Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+      Repos: unified-api-contracts + unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
