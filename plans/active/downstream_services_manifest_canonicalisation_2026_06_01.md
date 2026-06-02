@@ -265,10 +265,13 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
       (`_manual_handler.execute(instruction)` direct). Both must call `assert_instruction_market_data_fresh(..., live_mode=True)` +
       `kill_switch.is_active()` fast-reject before submit. (live_execution_handler uses a different `Instruction` type → map its
       venue/benchmark/timestamp fields first.) Provenance: slot-3 2026-06-02 CRIT-2 coverage audit.
-- [ ] [CODE] P0. **CRIT-3 (execution-service): add upstream data-quality pre-flight to `engine/preflight.py`** —
-      `run_preflight_checks()` covers SM/keys/risk/positions but NOT upstream features/strategy manifest health. Add
-      `assert_consolidator_healthy(bucket)` (+ capture_status check) so exec won't accept orders on `attempted_failed`/
-      `expected_unattempted` upstream. Unit test.
+- [x] ✅ [CODE] P0. **CRIT-3 (execution-service) — DONE (execution-service@225797127, 2026-06-02).** `run_preflight_checks()`
+      now runs `_check_upstream_consolidator_health(upstream_buckets)` → `assert_consolidator_healthy(bucket)` (UTL shared
+      gate, via `asyncio.to_thread` for the blocking GCS stat) so a stale/dead upstream `_index` fails preflight before a
+      live session accepts orders. New `skip_upstream_data` / `upstream_buckets` params (default = configured
+      `market_data_source_bucket`). 3 tests (stale→PREFLIGHT_FAILED, healthy×N passes, skip disables) + autouse no-op fixture.
+      **Refinement OPEN (P1):** the deeper per-cell `capture_status` check (reject on `attempted_failed`/`expected_unattempted`
+      for the specific cells a session reads) — consolidator-health is the liveness half; per-cell coverage is the next layer.
 - [ ] [CODE] P0. **CRIT-1 (MDPS live=batch symmetry): remove `skip_dependency_check=True`** at
       `cli/handlers/live_mode_handler.py:227` — live silently skips the full MTDS manifest dep check, so a zero-MTDS-coverage
       date produces zero candles with NO `record_failed(UPSTREAM_LIVE_GAP)`. Run `_check_dependencies(fail_on_missing=False)`
