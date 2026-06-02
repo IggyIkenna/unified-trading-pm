@@ -42,6 +42,9 @@
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
 #   --skip-codex       Skip codex compliance check (Stage 3 §5). Human-only escape hatch; never use with --agent.
 #   --skip-preflight   Skip pre-flight audit (Stage 2). Human-only escape hatch; never use with --agent.
+#   --skip-dep-tier-gate Skip dep-tier-readiness check (Stage 1.7). HUMAN-ONLY — agents must NOT use this.
+#                      Use only when manually force-promoting out-of-order (e.g. hotfix on L0 lib while L1 is
+#                      below staging). Prints a loud warning. Never combine with --agent.
 #   --user-approved    Deprecated — Stage 0.3 is advisory-only; no gate to bypass.
 #                      Version bumps are GHA-only (semver-agent.yml). Kept for backwards compat.
 #
@@ -53,6 +56,8 @@
 # Pipeline:
 #   1. Dependency validation (workspace-manifest.json)
 #   1.5. PM: dependency alignment check; ALL: staging lock check
+#   1.6. Dependency version gate (deps semver-behind staging)
+#   1.7. Dependency tier-readiness gate (deps ci_status must be STAGING_GREEN+ for LDR→staging promote)
 #   2. Pre-flight audit (skippable with --skip-preflight for multi-agent use)
 #   3. Local quality gates (two-phase: auto-fix → verify)
 #   4. Act simulation (default; skip with --quick)
@@ -97,6 +102,7 @@ QUICK=false
 NO_PR=false
 SKIP_CODEX=""
 SKIP_PREFLIGHT=false
+SKIP_DEP_TIER_GATE=false
 USER_APPROVED=false
 AGENT_MODE=false
 
@@ -147,6 +153,10 @@ while [[ $# -gt 0 ]]; do
       SKIP_PREFLIGHT=true
       shift
       ;;
+    --skip-dep-tier-gate)
+      SKIP_DEP_TIER_GATE=true
+      shift
+      ;;
     --user-approved)
       USER_APPROVED=true
       shift
@@ -180,6 +190,16 @@ if [ "$AGENT_MODE" = true ] && [ -n "$DEP_BRANCH" ]; then
   echo "❌ --dep-branch is not allowed in --agent mode."
   echo "   Agents use active_feature_branch from workspace-manifest.json automatically."
   echo "   Remove --dep-branch from your quickmerge call."
+  exit 1
+fi
+
+# --skip-dep-tier-gate is HUMAN-ONLY. Mirrors the --dep-branch guard: agents must never
+# bypass the dep-tier readiness check (it exists precisely to catch agent promotion races).
+if [ "$AGENT_MODE" = true ] && [ "$SKIP_DEP_TIER_GATE" = "true" ]; then
+  echo "❌ --skip-dep-tier-gate is not allowed in --agent mode."
+  echo "   This flag bypasses the dep-tier-readiness gate that prevents dep-order races."
+  echo "   Agents must promote deps to staging before promoting consumers."
+  echo "   Remove --skip-dep-tier-gate from your quickmerge call."
   exit 1
 fi
 
@@ -790,6 +810,102 @@ for dep in deps:
       echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
       exit 1
     fi
+    echo ""
+  fi
+fi
+
+# ============================================================================
+# STAGE 1.7: DEPENDENCY TIER-READINESS GATE
+# Prevents dep-order races (e.g. UTL-before-UAC main race 2026-06-02).
+# Rule: when promoting THIS repo from LDR→staging, every dep D must ALREADY be at
+# or above the staging tier — i.e. D.ci_status ∈ {STAGING_GREEN, SIT_VALIDATED}.
+# ci_status is written by ci-status-update.yml on every QG pass on the staging
+# branch, so it is a trustworthy "promoted+passed staging" signal.
+#
+# ci_status lifecycle for reference:
+#   NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN → STAGING_PENDING
+#   → STAGING_GREEN → SIT_VALIDATED
+#   Any state → FAILING on QG failure.
+#
+# Below-staging statuses (BLOCK): FEATURE_GREEN, LOCAL_PASS, NOT_CONFIGURED, FAILING
+# At-or-above staging (PASS):     STAGING_GREEN, SIT_VALIDATED
+# Exempt from check:              no dependencies, manifest not found, dep not in manifest
+#
+# Human-only escape: --skip-dep-tier-gate (agents MUST NOT use; see flag guard above).
+# ============================================================================
+if [ "$TO_STAGING" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ]; then
+  if [ "$SKIP_DEP_TIER_GATE" = "true" ]; then
+    echo "=========================================="
+    echo "STAGE 1.7: Dependency Tier-Readiness Gate"
+    echo "=========================================="
+    echo "⚠️  [$REPO_NAME] --skip-dep-tier-gate: BYPASSING dep tier-readiness check (HUMAN-ONLY override)."
+    echo "   This skips the guard that prevents dep-order races (e.g. UTL-before-UAC)."
+    echo "   Ensure deps are promoted to staging manually before this repo's CI completes."
+    echo ""
+  else
+    _DEP_TIER_BLOCKED=$(python3 -c "
+import json, sys
+
+manifest_path = '${MANIFEST_PATH}'
+repo_name = '${REPO_NAME}'
+
+# Statuses that mean dep IS at-or-above staging tier (PASS)
+AT_OR_ABOVE_STAGING = {'STAGING_GREEN', 'SIT_VALIDATED'}
+
+try:
+    with open(manifest_path) as f:
+        m = json.load(f)
+except Exception:
+    sys.exit(0)
+
+repos = m.get('repositories', {})
+repo_info = repos.get(repo_name, {})
+deps = repo_info.get('dependencies', [])
+
+blocked = []
+for dep in deps:
+    dep_name = dep.get('name', dep) if isinstance(dep, dict) else str(dep)
+    if not dep_name or dep_name not in repos:
+        continue
+    dep_status = repos[dep_name].get('ci_status') or 'NOT_CONFIGURED'
+    if dep_status not in AT_OR_ABOVE_STAGING:
+        blocked.append(f'{dep_name}:{dep_status}')
+
+if blocked:
+    print(' '.join(blocked))
+" 2>/dev/null || echo "")
+
+    if [ -n "$_DEP_TIER_BLOCKED" ]; then
+      echo "=========================================="
+      echo "STAGE 1.7: Dependency Tier-Readiness Gate"
+      echo "=========================================="
+      echo ""
+      echo "═══════════════════════════════════════════════════════"
+      echo "❌ DEP-ORDER: cannot promote $REPO_NAME to staging —"
+      echo "   one or more dependencies are NOT yet on staging."
+      echo "═══════════════════════════════════════════════════════"
+      echo ""
+      for _blocked_entry in $_DEP_TIER_BLOCKED; do
+        _bname="${_blocked_entry%%:*}"
+        _bstatus="${_blocked_entry##*:}"
+        echo "   ❌ DEP-ORDER: $_bname is $_bstatus (not yet on staging)."
+        echo "      Promote $_bname to staging before promoting $REPO_NAME."
+        echo "        cd \$WORKSPACE_ROOT/$_bname && bash scripts/quickmerge.sh \"chore: promote\" --agent --files '...'"
+        echo ""
+      done
+      echo "   ci_status lifecycle: NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN"
+      echo "                        → STAGING_GREEN → SIT_VALIDATED"
+      echo "   Required for LDR→staging: STAGING_GREEN or SIT_VALIDATED"
+      echo ""
+      echo "   Human-only escape (incidents / hotfixes ONLY):"
+      echo "     bash scripts/quickmerge.sh \"$COMMIT_MSG\" --skip-dep-tier-gate ..."
+      echo "═══════════════════════════════════════════════════════"
+      exit 1
+    fi
+    echo "=========================================="
+    echo "STAGE 1.7: Dependency Tier-Readiness Gate"
+    echo "=========================================="
+    echo "[$REPO_NAME] ✅ All deps at STAGING_GREEN or above — dep-order safe"
     echo ""
   fi
 fi
