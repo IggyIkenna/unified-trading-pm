@@ -9,10 +9,33 @@ source:
   - alerting-service/alerting_service/rules/risk_threshold_rules.py
 parent_epic: observability_master
 priority: P2
-status: active
+status: ARCHIVED 2026-06-02
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
+
+> **✅ ARCHIVED 2026-06-02 (slot 7).** Phase-7 quietness baseline confirmed 21 alert codes at 0-FP (no tuning). Of the
+> doc's four "Operator action required" items, **two shipped** during the issue-docs sweep and **two are `NEEDS-LIVE`**
+> (not an operator decision):
+>
+> - ✅ **P1 — GCS quietness-baseline output path**: structured per-run FP log now written to
+>   `events/alerting-service/{date}/quietness-{run_id}/report.jsonl` — alerting-service@`e2163a5`
+>   (`AlertStorageStore.write_quietness_report`).
+> - ✅ **P2 — risk-rule AlertCode mapping**: leverage/concentration risk rules now stamp
+>   `RISK_RULE_BLOCKED`/`RISK_RULE_MONITOR_FIRED` — alerting-service@`9279d82`.
+> - 🔵 **NEEDS-LIVE (P0 ML baseline + P2 tick_staleness per-venue baseline)**: the 5 ML codes + leverage/concentration/
+>   drawdown risk rules + per-venue `tick_staleness` cannot be empirically baselined until `ml-inference-service` + live
+>   MTDS/MDPS feeds run. Sensible defaults hold in UAC `thresholds.py` meanwhile; this auto-resumes when those
+>   subsystems are live — no operator decision required.
+>
+> ## Deferred work — migrated to:
+>
+> - **`plans/epics/observability_master.md`** § "P3 — backlog" — the `NEEDS-LIVE` re-baseline of the 8 uncovered
+>   thresholds (5 ML codes + 3 risk rules + per-venue tick_staleness) once ML inference + live feeds are up.
+>
+> **Codex alignment (archival HARD-RULE step 3):** this doc's `source:` lists only code files (UAC
+> `thresholds.py`/`codes.py`, alerting `config.py`/`defi_rules.py`/`risk_threshold_rules.py`) — no codex SSOT docs to
+> reconcile; the inline threshold tables match the UAC `ALERT_THRESHOLDS` registry as shipped.
 
 ## Data inspected
 
