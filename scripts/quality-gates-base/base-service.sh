@@ -2570,8 +2570,14 @@ if [[ "${RUN_TESTS}" == "true" ]] && \
    [[ "${QUICK_MODE}" == "false" ]] && \
    [[ "${ACT_MODE}" == "false" ]] && \
    [[ -z "${SKIP_CODEX_FLAG:-}" ]]; then
-    git rev-parse HEAD > "${REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
-        echo "Sentinel written: .qg_last_passed_sha=$(cat "${REPO_ROOT}/.qg_last_passed_sha")" || \
+    # Write to PROJECT_ROOT (the gated repo's root — same dir the content sentinel below
+    # uses), NOT REPO_ROOT: qg-common.sh resolves REPO_ROOT to PROJECT_ROOT/.. (the WORKSPACE
+    # parent), so writing there put .qg_last_passed_sha one level above the repo where
+    # `quickmerge --agent` reads it (CWD = repo root) → the agent fast-path always saw it
+    # "missing" and hard-refused, fleet-wide. This block also runs on a green-skip
+    # (sentinel-HIT keeps RUN_TESTS=true), so the SHA sentinel is refreshed on fast-green too.
+    git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
+        echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" || \
         echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
     # Green content sentinel (qg-repo-green-sentinel): record the content hash so an
     # unchanged tree skips the heavy phases next run. Only here — a COMPLETE green run
