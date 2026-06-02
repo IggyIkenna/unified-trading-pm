@@ -160,19 +160,22 @@ the storage bloat.
       (UBLA off, no versioning, soft_delete=0, the 3 prefix Delete rules); `terraform import`'d into
       `terraform/state/prod` + applied (labels-only diff; lifecycle + soft-delete confirmed unchanged: 3 rules,
       soft_delete=0). deployment-service@`75012d3`. Future prod-state applies now preserve the lifecycle.
-- [ ] [INFRA] P3. **(updated 2026-06-02, slot 1)** Declare `jinja2` in deployment-service
-      `pyproject.toml [project.dependencies]` (`flask` + `functions-framework` are ALREADY declared; only `jinja2` —
-      imported by `backends/services/vm_config.py` — is missing; the Dockerfile `maintenance-jobs` stage installs all 3
-      explicitly so the jobs work regardless). **BLOCKED 2026-06-02 (slot 1):** adding `jinja2` forces a `uv lock` regen,
-      and the committed `uv.lock` is **STALE** — the `deployment-api` circular-dep removal (deployment-service@`63bd807`)
-      changed `pyproject.toml` but did NOT regenerate `uv.lock`, so the lock still carries deployment-api's transitive
-      deps (`yfinance`/`websocket-client`/`ujson`/`u-msgpack-python`/`zope-interface` — 6 stale refs). A clean `uv lock`
-      removes ~1393 lines (the deployment-api closure) — that's the deps-refactor's lockfile cleanup, not this plan's, and
-      bundling risks colliding. **→ split out:** (a) whoever owns the `63bd807` refactor runs `uv lock` to finish it (the
-      jinja2 add rides along), OR a standalone "regen deployment-service uv.lock post deployment-api removal + add jinja2"
-      task. Also note `uv lock --check` is likely RED on LDR until that regen lands. (2) Add a
-      `owner/cadence/verifier/last_executed` runbook block for the tarball-cleanup + vm-log-archival jobs + a cloud-build
-      trigger so `deployment-service:latest` refreshes automatically. Repo: deployment-service.
+- [x] ✅ [INFRA] P3. **DONE 2026-06-02 (slot 1)** Declared `jinja2` in deployment-service `pyproject.toml` (`flask` +
+      `functions-framework` were already declared) AND regenerated `uv.lock` — which also finished the `deployment-api`
+      circular-dep removal's lockfile cleanup (`63bd807` changed pyproject but never re-locked, leaving 6 stale
+      deployment-api transitive refs: `yfinance`/`websocket-client`/`ujson`/`u-msgpack-python`/`zope-interface`). Result:
+      jinja2 present, 0 stale refs, `uv lock --check` passes (220 packages, was out-of-sync before).
+      deployment-service@`479a3e2`. (The Dockerfile `maintenance-jobs` explicit install of all 3 stays — required because
+      the api stage installs deployment_service with `--no-deps`.)
+- [ ] [INFRA] P2. **(discovered 2026-06-02, slot 1 — surfaced by the jinja2 QG run)** deployment-service QG is
+      **pre-existing RED** on a foreign codex violation: `deployment_service/vm/gcp_instance_lister.py` does
+      `from google.cloud import compute_v1` directly (STEP 5.10 — route cloud SDKs through `unified_cloud_interface`),
+      pushing codex compliance to **9 > 8** baseline. NOT introduced by the bloat work (persists on a clean tree). Fix:
+      wrap GCE instance-listing behind UCI (or, if UCI genuinely doesn't expose it, re-baseline the codex max to 9 with a
+      `QUALITY_GATE_BYPASS_AUDIT.md` justification). Repo: deployment-service. Until then `quality-gates.sh` exits non-zero
+      for the whole repo regardless of unrelated changes.
+- [ ] [INFRA] P3. Add a `owner/cadence/verifier/last_executed` runbook block for the tarball-cleanup + vm-log-archival
+      jobs + a cloud-build trigger so `deployment-service:latest` refreshes automatically. Repo: deployment-service.
 
 ## Verification
 
