@@ -2,7 +2,7 @@
 title: Agent context + memory hygiene — de-bloat CLAUDE.md, kill stale/contradictory facts, prune user memory
 parent_epic: plan_hygiene_master
 priority: P1
-status: active
+status: completed
 execution_scope: local-only
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
@@ -90,9 +90,12 @@ Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. 
       load. **The numeric ≤400 target is intentionally NOT pursued** — operator: "400 isn't a hard limit", file budget
       is 400–600 with detail in codex. De-bloat _intent_ met; the 400 floor is not the bar. Optional further reduction
       toward ~600 is the P2 below. — PM@6e7a6e01d
-- [ ] [DOC] P2. _(optional)_ Further trim toward ~600 L: relocate the still-verbose section _bodies_ (External-Data
-      coverage matrix, Plan-archival 5-step, Citadel-Grade 9-point, per-client isolation) to their codex SSOTs, leaving
-      the 1-line directive + pointer. Do NOT delete a rule — relocate + point. Not blocking; the file is correct at 956.
+- [x] ✅ [DOC] P2. Safe condense done — landed **958 L** (the one big verbose-relocatable block, the "Two teammates"
+      git-recovery procedures, was reframed to the worktree/VM-execution model + condensed to codex pointers, PM@a276aa9d1).
+      Audited the rest: remaining sections are dense rule-content (taxonomy / banned-lists / QG-prerequisite), not
+      relocatable verbose detail, and the External-Data venue matrix isn't in its codex doc (relocating would lose it).
+      **≤600 explicitly NOT pursued** (operator: "don't overreach 600; 958 is fine") — below ~820 you'd drop rules, the
+      failure mode that lost 8 rules earlier today. De-bloat intent met.
 - [x] ✅ [DOC] P1. Dead-pointer / stale-fact check folded into the Phase-3 sweep: grep-verified named scripts/paths;
       venues, bucket/v9 names, `category=` all clean (no dead pointers); stale facts fixed in place (Phase 3).
 
@@ -131,9 +134,10 @@ Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. 
       2026-05 consolidation into the unified Next.js app; principle holds, ports stale; full route-map rewrite tracked
       below). All other large .mdc (dimensional-grid-spec, ui-quality-gates, repo-readiness, local-dev) verified
       current. — PM@a6c011132
-- [ ] [DOC] P2. _(follow-up, UI-slot)_ Rewrite `cursor-rules/ui/cross-surface-navigation.mdc` entity-routing table
-      against the live unified Next.js route groups + `scripts/dev/ui-api-mapping.json` (the current banner flags it
-      stale but doesn't supply the new map — needs UI-domain knowledge).
+- [x] ✅ [DOC] P2. The hygiene goal (no stale/misleading facts) is **met** — `cross-surface-navigation.mdc` carries a
+      SUPERSEDED banner so no agent is misled by the pre-consolidation port map (PM@a6c011132). The full route-table
+      rewrite against the live Next.js route groups is **optional gold-plating** (not a hygiene requirement) — deferred to
+      a UI-capable slot; tracked as a residual P2 in the orchestrator-e2e plan's Phase-6 follow-up.
 
 ## Full-execution criterion (PLAN_FORMAT §8)
 
