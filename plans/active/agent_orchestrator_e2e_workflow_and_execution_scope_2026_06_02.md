@@ -160,14 +160,13 @@ The boot prompts every spawned agent reads (`agent-orchestrator/agents/*.md`) al
 flow" + `quickmerge --agent`, but they carry the **same staging-vs-LDR drift as G3** (verified against
 `scripts/quickmerge.sh`, which is staging-first: all human commits → PR base `staging`; `--to-staging` is a no-op):
 
-- [ ] [DOC] P0. `agents/worker.md:217` — "auto-merge to the target branch (live-defi-rollout; staging where the
-      fast-path applies)" is wrong: quickmerge PR base is **`staging` for every human commit**. Fix to state the two
-      axes clearly: raw `tab/<op>/<N>` → push **LDR** = continuous-integration (no PR, no remote CI);
-      `quickmerge --agent` = the promotion step that opens a **PR to `staging`** → SIT → main.
-- [ ] [DOC] P0. `agents/worker.md:218` — "Use `--to-staging` only if the task brief says so" is wrong: `--to-staging` is
-      a **no-op** (everything already routes to staging). Remove the conditional.
-- [ ] [DOC] P1. `agents/RULES.md:52-67` ship-cadence block — same reconciliation; keep the `.qg_last_passed_sha`
-      sentinel two-pass (correct) but fix any "quickmerge → LDR" implication.
+- [x] ✅ [DOC] P0. `agents/worker.md:217` — fixed: quickmerge PR base is **`staging` for every human commit** (was
+      "auto-merge to live-defi-rollout; staging where the fast-path applies"). Now states staging-first → SIT → main +
+      names the `…/quality-gates-v2` check. — agent-orchestrator@33b1057
+- [x] ✅ [DOC] P0. `agents/worker.md:218` — fixed: `--to-staging` documented as a **no-op** (was "use only if the task
+      brief says so"). — agent-orchestrator@33b1057
+- [x] ✅ [DOC] P1. `agents/RULES.md:52-67` ship-cadence block — fixed: Pass-2 comment now names the `staging` base +
+      `--to-staging` no-op + v2 required check; sentinel two-pass kept. — agent-orchestrator@33b1057
 - [ ] [DOC] P1. Clarify the **operator-tooling exception** (`worker.md:228`): agent-orchestrator's own gate is
       `scripts/check.sh` (correct, verified) — but once G6 lands its `staging` flow, document whether agents working
       _inside_ agent-orchestrator ship via `check.sh` + reviewed direct push or via the new staging PR path.
