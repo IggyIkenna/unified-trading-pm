@@ -35,7 +35,7 @@ todos:
     status: todo
   - id: qg-cw-memory-agent
     content: |
-      - [ ] [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics) on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU), so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json` (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh` (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for `qg-perrepo-baseline`'s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run" section.
+      - [x] ✅ [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics) on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU), so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json` (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh` (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for `qg-perrepo-baseline`'s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run" section.
     status: todo
   - id: qg-vm-rightsizing
     content: |
@@ -47,7 +47,7 @@ todos:
     status: todo
   - id: qg-slot-aware-workers
     content: |
-      - [ ] [SCRIPT] P0. Replace `pytest -n auto` (grabs ALL cores per slot → N-slot oversubscription) with a slot-aware cap: `-n $(QG_PYTEST_WORKERS or min(4, floor(free_cores / active_slots)))`. `active_slots` read from the orchestrator/registry or a host token count. Default conservatively; never let one slot's pytest claim the whole box. Document the formula in `codex/06-coding-standards/quality-gates.md`.
+      - [x] ✅ [SCRIPT] P0. Replace `pytest -n auto` (grabs ALL cores per slot → N-slot oversubscription) with a slot-aware cap: `-n $(QG_PYTEST_WORKERS or min(4, floor(free_cores / active_slots)))`. `active_slots` read from the orchestrator/registry or a host token count. Default conservatively; never let one slot's pytest claim the whole box. Document the formula in `codex/06-coding-standards/quality-gates.md`.
     status: todo
   - id: qg-repo-green-sentinel
     content: |
@@ -67,7 +67,7 @@ todos:
     status: todo
   - id: qg-shared-caches
     content: |
-      - [ ] [SCRIPT] P2. Persistent shared caches across worktrees/slots — ruff cache (`~/.cache/ruff`), pytest cache, basedpyright cache, and uv cache keyed + shared so the first slot warms them for all. Verify cache locations are NOT per-worktree (the default `.ruff_cache`/`.pytest_cache` inside each worktree defeats sharing) — repoint to a host-shared dir via env.
+      - [x] ✅ [SCRIPT] P2. Persistent shared caches across worktrees/slots — ruff cache (`~/.cache/ruff`), pytest cache, basedpyright cache, and uv cache keyed + shared so the first slot warms them for all. Verify cache locations are NOT per-worktree (the default `.ruff_cache`/`.pytest_cache` inside each worktree defeats sharing) — repoint to a host-shared dir via env.
     status: todo
   - id: qg-offload-full-run
     content: |
