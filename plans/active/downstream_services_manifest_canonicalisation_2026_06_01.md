@@ -233,16 +233,47 @@ upstream data, run a PRE-FLIGHT DATA CHECK that:
    the alerting + autonomous-recovery matrix; **batch**: degrade gracefully, fill what's available, mark the gap honest
    (no halt). The check itself must NOT diverge live-vs-batch (banned: live-only data_types / read-time available_at).
 
-- [ ] [AUDIT] P0. **Scan ALL slot-3 services for upstream pre-flight data checks** (cefi/tradfi/prediction): MTDS
-      (adapter/handler upstream = instruments universe + venue reachability), MDPS (upstream = MTDS raw ticks), features
-      (upstream = MDPS candles), strategy (upstream = features), execution (upstream = strategy signals + marks). For each
-      consumer: does a pre-flight check exist? Does it use the post-migration canonical bucket/path/v9-schema? Does it
-      detect 0-vol/NaN/empty + read the manifest capture_status for incomplete-expected? Is the check live=batch-symmetric
-      with mode-appropriate action? Produce a per-service GREEN/GAP matrix.
-- [ ] [CODE] P0. **Implement/fix the gaps** the audit finds — add the missing pre-flight checks (canonical SSOT + v9
-      schema + honest-absence detection + manifest read + live/batch-symmetric with mode-appropriate action). Born-canonical
-      for services with no data yet (features/strategy/execution). Align QG tests so a regression (dead bucket / missing
-      check / category= / silent zero) fails QG.
+- [x] ✅ [AUDIT] P0. **Scanned ALL slot-3 services for upstream pre-flight data checks (slot-3 agent E, 2026-06-02).**
+      Matrix (C1 bucket / C2 v9-schema-assert / C3 missing-detect / C4 manifest-status / C5 live=batch):
+
+      | Service | C1 | C2 | C3 | C4 | C5 |
+      |---|---|---|---|---|---|
+      | instruments-service | GREEN | GAP(writes-only) | GREEN | GREEN | GREEN |
+      | MTDS | GREEN | GAP | GREEN | GREEN | GREEN |
+      | MDPS | GREEN | GAP | GREEN | GREEN(batch)/**CRIT(live)** | **CRIT** |
+      | features-service | GREEN | GAP | GREEN | GREEN | PARTIAL(live startup) |
+      | strategy-service | GREEN | GAP | GREEN | GREEN(alloc)/GAP(live startup) | GAP |
+      | execution-service | N/A | N/A | **CRIT(freshness unwired)** | **CRIT(no upstream manifest preflight)** | N/A(live-only) |
+
+      **Bucket resolution (C1) GREEN everywhere** (all via `resolve_bucket_name`; `category=` only as legacy param-names /
+      hive-agnostic read scans, NOT path construction). **Missing-detection (C3) + batch manifest-read (C4) GREEN.** Gaps
+      are concentrated in (a) v9-schema-column ASSERTION on read (C2) and (b) LIVE-mode pre-flight symmetry (C5).
+
+These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are live-safety big findings):
+
+- [ ] [CODE] P0. **CRIT-2 (execution-service, BIG/live-safety — operator-flagged 2026-06-02): wire `assert_market_data_fresh()`
+      into the ORDER path.** `validation/freshness_gate.py` exists + raises `DataStalenessError` but has ZERO call sites in
+      the order path (only `validation/__init__` + `api/main.py` health callback) → stale mark prices can size orders with
+      no block. Call it in `algorithms/atomic_bundle_executor.py`/`engine/handlers/base_handler.py` before submit; catch →
+      kill-switch. + NaN guard on `benchmark_price` in `instruction_validator.py`. Unit test the staleness block.
+- [ ] [CODE] P0. **CRIT-3 (execution-service): add upstream data-quality pre-flight to `engine/preflight.py`** —
+      `run_preflight_checks()` covers SM/keys/risk/positions but NOT upstream features/strategy manifest health. Add
+      `assert_consolidator_healthy(bucket)` (+ capture_status check) so exec won't accept orders on `attempted_failed`/
+      `expected_unattempted` upstream. Unit test.
+- [ ] [CODE] P0. **CRIT-1 (MDPS live=batch symmetry): remove `skip_dependency_check=True`** at
+      `cli/handlers/live_mode_handler.py:227` — live silently skips the full MTDS manifest dep check, so a zero-MTDS-coverage
+      date produces zero candles with NO `record_failed(UPSTREAM_LIVE_GAP)`. Run `_check_dependencies(fail_on_missing=False)`
+      in live too (SAME detection as batch) → emit `expected_unattempted` + degrade (don't halt). Unit test live-gap path.
+- [ ] [CODE] P1. **GAP-5 (strategy-service): startup upstream-features dep check** in `StrategyLiveHandler.run()`
+      (service_entry.py) before the live trade loop — currently only the per-cycle allocation guard runs (after start).
+- [ ] [CODE] P1. **GAP-6 (features-service): startup MDPS-candle manifest freshness check** in delta_one `live_handler.py`
+      before PubSub subscribe (per-compute `manifest_window_guard` runs, but no startup gate).
+- [ ] [CODE] P2. **GAP-4 (all consumers): ASSERT v9 schema columns on manifest read.** `read_availability_index` backfills
+      missing v9 cols as NULL on a v8 manifest → consumers silently read NULL `asset_group`/`pipeline_mode`/`source`. Add a
+      `schema_version`/`asset_group`-present assertion (or `assert_consolidator_healthy`) in `manifest_window_guard`,
+      `manifest_allocation_guard`, MDPS `dependency_checker` so a non-v9 upstream is caught loud, not silently consumed.
+- [ ] [CODE] P2. **GAP-7 (MDPS, vocab): rename `dependency_checker` `category` params → `asset_group`** (+ docstrings) at
+      next substantive touch. Functional-correct today (resolves via `resolve_bucket_name(asset_group=…)`); naming only.
 
 ## Per-service scope + what each owns / inherits (no overlap)
 
