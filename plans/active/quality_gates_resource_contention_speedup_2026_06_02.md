@@ -33,6 +33,10 @@ todos:
     content: |
       - [ ] [SCRIPT] P0. Per-repo QG resource baseline + 2× deviation guard (Harsh 2026-06-02). Measure a single `quality-gates.sh` run per repo — wall-clock, peak RSS, CPU-seconds — BOTH locally and on an AWS worker VM (`m7i.xlarge`). Commit the result as a baseline file (`unified-trading-pm/scripts/dev/qg_resource_baseline.json`, keyed per-repo × {local,vm}). Wire a guard into `quality-gates-base/base-service.sh` that WARNs (not fails) when a run exceeds 2× its baseline wall-clock or peak RSS — so resource regressions during code-freeze are detected early. Distinct from `qg-bench-aggregate`: that measures cross-slot contention; this measures per-repo cost + drift, and feeds the VM-sizing decision below.
     status: todo
+  - id: qg-cw-memory-agent
+    content: |
+      - [ ] [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics) on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU), so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json` (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh` (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for `qg-perrepo-baseline`'s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run" section.
+    status: todo
   - id: qg-vm-rightsizing
     content: |
       - [ ] [INFRA] P1. Worker-VM right-sizing audit — DATA-DRIVEN off the per-repo baseline, not a guess (Harsh 2026-06-02). Current fleet = AWS `m7i.xlarge` (4 vCPU / 16 GB) × 8 slots/VM (~2 GB/slot) — already OOM-prone under parallel QG. Compute the floor = (peak per-run RSS × peak-concurrent-QG-under-the-governor) and compare to Harsh's hypothesis (~64 GB / 8 vCPU). Decide machine type AND slots-per-VM together (a bigger box OR fewer slots — the governor caps concurrency either way; do not just throw RAM at 8 uncapped runs). If a change is warranted, update `deployment-service/scripts/vm/launch-epic-vm-aws.sh` + `orchestrator_vm_registry.yaml`. NOTE: fleet is currently consolidated to 2 running VMs — this is a scale-back-up decision.
@@ -67,7 +71,7 @@ todos:
     status: todo
   - id: qg-offload-full-run
     content: |
-      - [ ] [DESIGN] P2. Offload the heavy full run off the contended dev host — design (not yet implement) routing the gate-to-main full suite + coverage to a dedicated CI/VM so the dev host only ever runs the light iterative gate. Decide the trigger boundary (quickmerge already two-passes via `.qg_last_passed_sha`). Output a short ADR; implementation is a follow-up todo gated on this design.
+      - [ ] [DESIGN] P2. Offload the heavy full run off the contended dev host — design (not yet implement) routing the gate-to-main full suite + coverage to a dedicated CI/VM so the dev host only ever runs the light iterative gate. **This is the concrete shape of Option B** in the "Where QG + SIT actually run — three architecture options" section above: a self-hosted GitHub Actions runner pool (`runs-on: [self-hosted, qg]`) replacing the undersized `ubuntu-latest` (7 GB) runner, sized off `qg-perrepo-baseline`. The ADR must (a) pick A/B/C, (b) spec the runner pool + provisioning (`bootstrap_runner.sh`), (c) define the worker fast-pre-check, and (d) resolve the two-pass/sentinel change (authoritative gate moves local-sentinel → CI check). Decide the trigger boundary (quickmerge already two-passes via `.qg_last_passed_sha`). Implementation is a follow-up todo gated on this ADR.
     status: todo
   - id: qg-codex-ssot-update
     content: |
@@ -102,11 +106,82 @@ typecheck) MUST be conservative: any hash/scope ambiguity falls back to the full
 runs the complete suite + coverage. A false-negative (a skipped failing test that merges) is strictly worse than a slow
 run. This plan never weakens the merge gate — it only changes _when_ and _how contended_ the work is paid.
 
+## Where QG + SIT actually run — three architecture options (A / B / C)
+
+> Operator framing (Harsh 2026-06-02): soon **every worker agent runs `quality-gates.sh` + `quickmerge` locally after
+> completing a plan** (the staging-first flow). That is memory-heavy and the current worker VMs are too small. Cost is
+> NOT a constraint (free AWS credits) — pick the architecturally correct option, then size it generously.
+
+**Live findings (measured 2026-06-02, feed the decision):**
+
+- **Worker/epic VMs** = AWS `m7i.xlarge` (**4 vCPU / 16 GB / 30 GB gp3**), **8 slots each** (~2 GB/slot). 9 stopped +
+  `vm-orchestrator` running. `api-host` is the outlier `m8i.4xlarge` (16 vCPU / 64 GB / 300 GB); `vm-ml` disk is 60 GB.
+- **Workers are CPU-idle while coding** — `vm-orchestrator` CPU avg **1.7%** / peak **6.6%** over 24h (api-host avg 1.0%
+  / peak 9.9%). The bottleneck is **bursty RAM during QG**, not steady-state CPU or disk.
+- **No CloudWatch memory agent** → zero RAM visibility under load. Installing it is the cheap prerequisite to any
+  data-driven sizing (see `qg-perrepo-baseline` + `qg-vm-rightsizing`).
+- **Heavy QG memory observed = 32–57 GB** (the `api_host_chronic_impairment_2026_05_29` pytest OOM on the 64 GB box) —
+  so a single heavy run can need ~57 GB; 16 GB workers OOM on it, which is _why_ CLAUDE.md caps concurrent QG to "1–2
+  host-wide".
+- **The "central QG" already half-exists but is undersized:** `python-quality-gates-v2.yml` runs on GitHub
+  `ubuntu-latest` (**2 vCPU / 7 GB**) and there are **0 self-hosted runners** — a 32–57 GB QG cannot pass there either.
+
+### Option A — vertically scale every worker VM
+
+Each slot keeps running full QG locally (two-pass `.qg_last_passed_sha` sentinel intact). Bump `m7i.xlarge` (16 GB) →
+`m7i.4xlarge` (64 GB) or `m7i.8xlarge` (128 GB); disk 30 → 100 GB.
+
+- **Pros:** zero architecture change; self-contained (no network dependency for the gate); simplest to ship.
+- **Cons:** workers are CPU-idle 95% of the time → big boxes sit mostly idle (wasteful even with free credits); 8
+  concurrent heavy QGs still contend — true 8-way concurrency needs ~128–256 GB **per worker VM**. Couples QG capacity
+  to slot count: every new slot grows every VM.
+- **Owner todo:** `qg-vm-rightsizing` (data-driven off `qg-perrepo-baseline`) — decide machine type **and** slots-per-VM
+  together; the governor caps concurrency regardless, so this is "fewer slots OR bigger box", not "throw RAM at 8
+  uncapped runs".
+
+### Option B — dedicated self-hosted runner pool for QG + SIT ⭐ recommended
+
+1–3 big VMs (`m7i.8xlarge` **128 GB** or `m7i.16xlarge` **256 GB**, 100–200 GB disk) registered as **self-hosted GitHub
+Actions runners** with a `qg` label. One-line cutover: `runs-on: ubuntu-latest` → `runs-on: [self-hosted, qg]` in
+`python-quality-gates-v2.yml`. The heavy gate **+ SIT** run there — which is _already_ the flow (quickmerge → PR →
+staging CI). Workers stay small (16 GB) and run only a **fast local pre-check** (ruff + basedpyright on _changed files_,
+seconds, low RAM) for quick feedback, then push; the authoritative heavy gate runs centrally.
+
+- **Pros:** concentrates the 32–57 GB burst in one sized-for-it place; parallelism via N runners; **decouples QG
+  capacity from worker count**; SIT has a natural home; plugs into the existing CI seam (no bespoke RPC); fixes the
+  undersized-`ubuntu-latest` problem at the same time.
+- **Cons:** requires the design change below (authoritative gate moves from the local sentinel to the CI check);
+  self-hosted runner provisioning + security (a `bootstrap_runner.sh`, runner registration token, ephemeral/auto-scaled
+  vs always-on); queueing when more jobs than runners.
+- **Owner todo:** `qg-offload-full-run` (currently DESIGN/ADR-only) — **this option is its concrete shape**; the ADR
+  should choose B and spec the runner pool + the worker fast-pre-check + the sentinel/two-pass change.
+
+### Option C — bespoke QG-as-a-service VM (workers RPC to it)
+
+Workers finish, push their SHA, then call a custom QG service that checks out the SHA, runs `quality-gates.sh`, and
+returns pass/fail; quickmerge consumes that verdict.
+
+- **Pros:** keeps the gate authoritative-per-SHA without GitHub Actions.
+- **Cons:** reinvents what self-hosted runners give for free; new custom service + auth + queue to build and operate;
+  **redundant with the CI gate that already exists** on staging. Not recommended — only revisit if a hard requirement
+  rules out GitHub Actions self-hosted runners.
+
+### Recommendation + decision gate
+
+**Option B** is the architecturally correct target (matches the staging-first flow; workers stay small; QG capacity
+scales independently). **But the exact sizing — and whether a smaller Option A also suffices — is a DATA decision**, not
+a guess: it is gated on `qg-perrepo-baseline` (peak RSS + wall-clock per repo, local **and** on `m7i.xlarge`) and the CW
+memory agent landing first. Sequence: (1) install CW memory agent + run `qg-perrepo-baseline` → real peak-RSS numbers;
+(2) `qg-offload-full-run` ADR picks B and sizes the runner pool off those numbers; (3) `qg-vm-rightsizing` sets the
+(now-smaller) worker baseline. Do not provision big iron before step 1 — the 32–57 GB figure is a worst-case tail, not a
+measured per-repo median.
+
 ## Phased execution DAG
 
 ```
-Phase 0 (measure)         qg-bench-aggregate ── proves oversubscription, sets K
-                          qg-perrepo-baseline ─ per-repo cost (local+VM) → 2× drift guard + VM-sizing input
+Phase 0 (measure)         qg-cw-memory-agent ── RAM/swap visibility (prereq; fleet has none today)
+                          qg-bench-aggregate ── proves oversubscription, sets K
+                          qg-perrepo-baseline ─ per-repo cost (local+VM) → 2× drift guard + A/B/C VM-sizing input
         │
 Phase 1 (stop the bleed)  qg-governor  ║  qg-slot-aware-workers   [PARALLEL, both P0]
         │                  └── re-run qg-bench-aggregate → p95 must drop at K∈{4,8}
