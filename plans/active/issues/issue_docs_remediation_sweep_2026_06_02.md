@@ -52,11 +52,12 @@ verified complete**.
 
 ## agent-orchestrator (integration base = `main`)
 
-- [ ] [CODE] P1. agent-orchestrator: add `PRAGMA busy_timeout=30000` in `server/db.py` `_on_connect()` — prevents
-      DB-locked cascades after an OOM-induced restart. Source: api_host_chronic_impairment.
-- [ ] [INFRA] P2. agent-orchestrator: provision a 16 GiB swapfile in `scripts/bootstrap_vm.sh` (or new
-      `scripts/orchestrator/add_swap.sh`) — belt-and-braces against the 32–57 GiB pytest OOM on the API host. Source:
+- [x] ✅ [CODE] P1. agent-orchestrator: add `PRAGMA busy_timeout=30000` in `server/db.py` `_on_connect()` — prevents
+      DB-locked cascades after an OOM-induced restart. — agent-orchestrator@`1fe3386`. Source:
       api_host_chronic_impairment.
+- [x] ✅ [INFRA] P2. agent-orchestrator: provision a 16 GiB swapfile (new `scripts/orchestrator/ensure_swap.sh`,
+      idempotent + `vm.swappiness=10`) wired as STEP 2.5 in `scripts/bootstrap_vm.sh` — belt-and-braces against the
+      32–57 GiB pytest OOM on the API host. — agent-orchestrator@`1fe3386`. Source: api_host_chronic_impairment.
 
 ## market-data-processing-service — MDPS leading-NaN workstream (operator chose Option A + carry-from-prior-day)
 
