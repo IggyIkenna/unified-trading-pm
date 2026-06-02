@@ -3,8 +3,10 @@
 > **Lean index** of workspace rules. Each rule has a 1-line essence + a pointer to its full SSOT. When a rule applies,
 > **read the SSOT pointer** — don't act from memory.
 >
-> Condensed 2026-06-02: 1180 → ~900 lines by relocating detail to codex SSOTs and keeping the sharp directive + 1-line
-> pointer here. These rules are NOT waste — they encode behaviours agents were missing; condense, don't drop.
+> Reworked 2026-06-02: 1180 → ~900 by relocating detail to codex SSOTs, then → ~955 by **folding in** the 5 former
+> per-domain `.claude/rules/*.md` files (their unique rules were missing here + never reached repo-level agents). Net
+> agent-loaded context dropped (those root files no longer load). Keep the sharp directive + 1-line pointer; these rules
+> are NOT waste — they encode behaviours agents were missing; condense, don't drop.
 >
 > **Size budget**: keep lean (~400–600 lines — not a hard floor). When a section outgrows its essence, push the detail
 > to its codex SSOT + leave the directive + pointer here. Hard cap 1500/90KB (review-blocking).
@@ -336,8 +338,8 @@ says "AWAITING USER DIRECTION."
 
 ## Cross-Cutting Rules (docs · code-quality · agent-behavior · Python · UI · PM)
 
-Folded 2026-06-02 from the per-domain `.claude/rules/*.md` files (since deleted — they were workspace-root-only +
-untracked, so these rules never reached repo-level agents; now they propagate via this one SSOT).
+Folded 2026-06-02 from the per-domain `.claude/rules/*.md` files (now tombstoned, operator removes from disk — they were
+workspace-root-only + untracked, so these rules never reached repo-level agents; now they propagate via this one SSOT).
 
 ### Docs + code quality
 
@@ -355,8 +357,8 @@ untracked, so these rules never reached repo-level agents; now they propagate vi
 
 - **Context7 for external libs** — append "use context7" for React/Next/Tailwind/library/API questions.
 - **Parallel agents** max 10 (different repos always safe; same file never). **Sub-agents** are ~10× cheaper + preserve
-  context — use for multi-repo / 3+ steps / >100K-token reads; they return ONLY final results (≤400 tokens) + don't
-  inherit rules (paste `SUB_AGENT_MANDATORY_RULES.md`).
+  context — use for multi-repo / 3+ steps / >100K-token reads; they return ONLY final results (≤400 tokens). (They start
+  fresh + don't inherit rules — see § "Sub-Agents & Autonomous Agents" for the mandatory `SUB_AGENT_MANDATORY_RULES.md` paste.)
 - **Rule-amnesia stop** — halt the session if an agent uses `os.getenv()` / `pip install` / direct `git push` /
   `setup_cloud_logging` / suggests skipping tests.
 

@@ -69,11 +69,14 @@ Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. 
       | `MEMORY.md` + `memory/*.md` | operator-local memory store | n/a | recall-surfaced — **operator-LOCAL only, NOT on worker VMs** |
       | orchestrator slot: + `agents/worker.md` + `agents/RULES.md` | AO repo (git) | n/a | **injected** into the boot prompt (not auto-loaded) |
 
-- [ ] [SCRIPT] P2. **Phase-1 finding**: the 5 workspace-root `.claude/rules/*.md` are real un-tracked local files with no
-      PM SSOT → they drift silently + never reach VMs (I fixed their stale merge-flow in place this session, but the
-      structural gap remains). Decide their canonical home: either git-track them in PM + symlink via
-      `setup-workspace-config-symlink.sh` (like the CLAUDE.md feed), or fold their content into `cursor-configs/CLAUDE.md`
-      + delete the standalone files. Until then they're operator-local only.
+- [x] ✅ [SCRIPT] P2. **Phase-1 finding RESOLVED** (operator-directed 2026-06-02): the 5 workspace-root
+      `.claude/rules/*.md` were real, untracked, root-ONLY files carrying ~12 rules **missing** from CLAUDE.md (verified by
+      grep) — so they never reached repo-level agents. **Folded** their unique+current rules into a new
+      `cursor-configs/CLAUDE.md` § "Cross-Cutting Rules" (propagates everywhere via the symlinked SSOT); dropped the stale
+      bits (python-backend.md's dead `unified_normalised_contracts`/`unified-market-interface` names). Repointed the
+      `architectural_ratchets.yaml` UI-18 `rule_doc` off the deleted path. The 5 files are **tombstoned** (`rm` in
+      `.claude/` is agent-blocked) — operator runs the disk `rm` (+ `rules-old/`). Net context DROPS (≈235 both-loaded
+      lines → ~54 in the one SSOT + 5 tombstone lines). Also removed tracked `.bak`/`.bak2` script cruft. — PM@6e7a6e01d
 - [x] [DOC] P0. ✅ DONE 2026-06-02 — `.claude/rules/CLAUDE.md` was an ABSOLUTE symlink → the stale `/home/hk` checkout's
       cursor-configs/CLAUDE.md (737 L, missing AO-exception/v9/QG-sweep rules); the git SSOT is `/active`'s (1179 L).
       Repointed to a RELATIVE symlink → `../../unified-trading-pm/cursor-configs/CLAUDE.md` (local SSOT) so agents read
@@ -81,16 +84,15 @@ Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. 
 
 ### Phase 2 — Trim `cursor-configs/CLAUDE.md` to budget [P0]
 
-- [x] ✅ [DOC] P0. Header self-description fixed ("Condensed 2026-06-02: 1180 → ~900") + the highest-value section
-      (Git-discipline merge-flow) reconciled to staging-first. File **1180 → 897 L** (−24%). **The numeric ≤400 target is
-      intentionally NOT pursued** — operator: "400 isn't a hard limit", and the file's own budget is 400–600 with detail
-      relocated to codex. So the de-bloat *intent* (kill the bloat, keep directives + pointers) is met; the arbitrary 400
-      floor is not the bar. Further reduction toward ~600 is the optional P2 below. — PM (header @8101b6b30-lineage + this
-      session's edits)
+- [x] ✅ [DOC] P0. Header self-description fixed + the highest-value section (Git-discipline merge-flow) reconciled to
+      staging-first. File **1180 → 897** (relocate-to-codex) **→ 956** (folding the 5 root per-domain rule files' unique
+      rules in — Phase-1-finding); net *agent-loaded* context still dropped since those ~235 L of root files no longer
+      load. **The numeric ≤400 target is intentionally NOT pursued** — operator: "400 isn't a hard limit", file budget is
+      400–600 with detail in codex. De-bloat *intent* met; the 400 floor is not the bar. Optional further reduction toward
+      ~600 is the P2 below. — PM@6e7a6e01d
 - [ ] [DOC] P2. _(optional)_ Further trim toward ~600 L: relocate the still-verbose section *bodies* (External-Data
       coverage matrix, Plan-archival 5-step, Citadel-Grade 9-point, per-client isolation) to their codex SSOTs, leaving
-      the 1-line directive + pointer. Do NOT delete a rule — relocate + point. Not blocking; the file is correct + within
-      the de-bloat intent at 897.
+      the 1-line directive + pointer. Do NOT delete a rule — relocate + point. Not blocking; the file is correct at 956.
 - [x] ✅ [DOC] P1. Dead-pointer / stale-fact check folded into the Phase-3 sweep: grep-verified named scripts/paths;
       venues, bucket/v9 names, `category=` all clean (no dead pointers); stale facts fixed in place (Phase 3).
 
@@ -133,7 +135,7 @@ Biggest single win = trim the 84 KB `CLAUDE.md` (Phase 2) — it hits everyone. 
 
 ## Full-execution criterion (PLAN_FORMAT §8)
 
-- ✅ `cursor-configs/CLAUDE.md` header self-description accurate + within the de-bloat intent (1180 → 897 L; the ≤400
+- ✅ `cursor-configs/CLAUDE.md` header self-description accurate + within the de-bloat intent (1180 → 956 L after folding; the ≤400
   numeric target was de-scoped per operator "400 isn't a hard limit" + the 400–600 budget — further trim is the optional
   P2 above).
 - ✅ Exactly **one** CLAUDE.md source of truth (root absolute-symlink → stale `/home/hk` resolved to a relative symlink → PM SSOT).
