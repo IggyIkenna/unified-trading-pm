@@ -231,12 +231,18 @@ verified complete**.
 
 ## features-service
 
-- [ ] [CODE] P1. features-service: processed-candle manifest read false-positive —
-      `data_loader.get_available_instruments` ALREADY passes `service_name="features-service"` to UTL
-      `get_captured_instruments`. Before changing to `"market-data-processing-service"`, DIAGNOSE the UTL helper's
-      `service_name` filter semantics (does it filter manifest rows by the `service_name` column, or is it just the
-      caller identity?) — read both sides per Findings Triage. The right fix depends on that; do not flip the literal
-      blind. Source: cefi_processed_candles_manifest_file_disconnect.
+- [x] ✅ [CODE] P1. features-service: processed-candle manifest read false-positive — RE-SCOPED + fixed correctly. —
+      features-service@`3e97475c` (QG exit 0). **Diagnosis (read both sides):** the issue-doc's proposed
+      `service_name="market-data-processing-service"` flip is WRONG — UTL `get_captured_instruments`
+      (`feature_service_base/manifest_discovery.py`) uses `service_name` ONLY at L136 `classify_and_emit_error(...)`
+      (telemetry); the row mask (L105-111) filters `capture_status`/`date`/`data_type` and NEVER `service_name`. The
+      real false-positive: both callers passed `data_type=None` → an instrument with ANY captured data_type was reported
+      "available" even with no consumed processed-candle row. **Fix:** delta_one scopes discovery to UAC
+      `resolve_data_type_for_feature_group(...)` over DEFAULT_FEATURE_GROUPS; volatility scopes to
+      `(futures_chain, options_chain)`. No UTL change needed (helper already exposes the `data_type` filter). Also
+      unblocked a PRE-EXISTING foreign STEP-5.69 QG-red — features-service@`97d14277` added an audited `# noqa: gs-uri`
+      to `sports/data/gcs_reader.py:205` (error-message URI from e0ddde68, sports workstream — flagged to that track).
+      Source: cefi_processed_candles_manifest_file_disconnect.
 - [x] ✅ [CODE] P3. features-service: delete the dead `DEFI_DATA_TYPE_OVERRIDES` dict in
       `delta_one/engine/orchestrator.py` (UAC `resolve_data_type_for_feature_group()` is the real router; dict had zero
       refs). — features-service@`9f843dd4`. Source: features_service_defi.
