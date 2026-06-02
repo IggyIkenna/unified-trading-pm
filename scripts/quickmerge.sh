@@ -392,6 +392,42 @@ if [ "$NO_PR" != "true" ] && [ -z "$(git status --porcelain)" ] && git diff orig
 fi
 
 # ============================================================================
+# STAGE 0.4: REMOTE-PULL GATE — quickmerge must run from a pulled-current branch
+# Refuses to proceed if the local branch is behind its own origin/<branch> and
+# cannot fast-forward (diverged). The simple behind case is auto-ff-pulled. This
+# prevents merging/PRing from a stale local state — the slot-divergence foot-gun
+# (local commits + branch never pulled from remote → diverged).
+# Emergency override only: QUICKMERGE_ALLOW_BEHIND=1
+# ============================================================================
+echo "=========================================="
+echo "STAGE 0.4: Remote-Pull Gate"
+echo "=========================================="
+_QM_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+if [ -z "$_QM_BRANCH" ]; then
+  echo "[$REPO_NAME] detached HEAD — skipping remote-pull gate"
+else
+  git fetch origin "$_QM_BRANCH" --quiet 2>/dev/null || true
+  if ! git rev-parse "origin/$_QM_BRANCH" >/dev/null 2>&1; then
+    echo "[$REPO_NAME] no origin/$_QM_BRANCH yet — skipping remote-pull gate"
+  else
+    _QM_BEHIND=$(git rev-list "HEAD..origin/$_QM_BRANCH" --count 2>/dev/null || echo 0)
+    if [ "${_QM_BEHIND:-0}" = "0" ]; then
+      echo "[$REPO_NAME] ✅ current with origin/$_QM_BRANCH"
+    elif git pull --ff-only origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+      echo "[$REPO_NAME] ✅ fast-forwarded $_QM_BEHIND commit(s) from origin/$_QM_BRANCH — now current"
+    elif [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+      echo "[$REPO_NAME] ⚠️  $_QM_BEHIND behind + diverged from origin/$_QM_BRANCH — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+    else
+      echo "[$REPO_NAME] ❌ BLOCKED: local is $_QM_BEHIND commit(s) behind origin/$_QM_BRANCH and diverged (non-FF)."
+      echo "   quickmerge must run from a pulled-current branch (prevents stale-state merges)."
+      echo "   Reconcile first:  git pull --rebase origin $_QM_BRANCH   (resolve conflicts), then re-run."
+      echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
+      exit 1
+    fi
+  fi
+fi
+
+# ============================================================================
 # --- Stage 0.3: Major bump advisory (informational only — no blocking) ---
 # Version bumps are GHA-only. semver-agent.yml is the sole authority for
 # classifying PATCH/MINOR/MAJOR after QG passes on staging.
