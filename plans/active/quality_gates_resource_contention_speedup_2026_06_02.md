@@ -235,3 +235,68 @@ materially better.
 
 **Handoff exception(s):** `qg-offload-full-run` is DESIGN-only in this plan (outputs an ADR); its implementation is a
 named follow-up todo to be filed in [`infrastructure_master`](../epics/infrastructure_master.md) once the ADR lands.
+
+---
+
+## Progress log — 2026-06-02 (Harsh session, local dev host: 24 cores / 93 GB)
+
+> Built + measured locally; commits land on `live-defi-rollout` directly. Checkboxes above stay `- [ ]` because each is
+> multi-part — the BUILD portion is done, the full run / VM side / base-service wiring is noted per item below.
+
+### Phase 0 — tooling built + run
+
+- **`qg-bench-aggregate`** — `scripts/dev/benchmark-qg-under-load.sh` BUILT (shellcheck-clean, `--no-fix` read-only,
+  `--jobs`/`--k` configurable, CSV + oversubscription verdict). Smoke caught + fixed 2 real bugs (`set -e` aborting on a
+  RED gate; CWD bug measuring the wrong repo via `git rev-parse`). **Pending:** the K∈{4,8} storm on the shared host
+  (deferred to a coordinated window — it deliberately induces the thrash this plan fixes).
+- **`qg-perrepo-baseline`** — `scripts/dev/measure-qg-baseline.sh` BUILT (+ `--jobs` wave-scheduler, JSON writes
+  serialized; records `measured_concurrency`). **Local baseline RUN across all 22 repos** → `scripts/dev/qg_resource_baseline.json`.
+  j=4 isolation validated (deployment-api 401s@j4 vs 413s serial = −2.9%, no inflation). **Pending:** VM-side baseline
+  (blocked on `qg-cw-memory-agent` — VMs publish zero memory metrics) + the 2× drift guard wiring into `base-service.sh`.
+
+#### Baseline results (local, full gates, `--no-fix`) — peak RSS is the binding constraint
+
+| Repo | Peak RSS | Wall | ~Cores | Exit |
+|---|---|---|---|---|
+| unified-trading-library | **5.27 GB** | 92s | 1.7 | ❌ stale venv (duckdb) — FIXED via `uv sync` |
+| execution-service | 1.89 GB | 604s | 1.1 | ✅ |
+| features-service | 1.85 GB | 606s | 0.8 | ✅ |
+| deployment-api | 1.37 GB | 401s | 1.2 | ✅ |
+| strategy-service | 1.31 GB | 514s | 0.9 | ✅ |
+| unified-api-contracts | 1.18 GB | 217s | 1.0 | ✅ |
+| ml-service | 1.07 GB | 382s (isolated) | ~3 | ✅ |
+| (others 0.3–1.05 GB) | … | … | ~1 | mostly ✅ |
+
+- **VM-sizing headline (`qg-vm-rightsizing`):** binding ceiling = **unified-trading-library 5.27 GB** — a single gate
+  overshoots the current `m7i.xlarge` 2 GB/slot budget by **2.6×**. Decision must pair machine-type with slots-per-VM
+  under the governor; do NOT just add RAM to 8 uncapped runs.
+
+### RED-repo diagnoses (isolated, measured — not guessed)
+
+- **instruments-service** — 2 real test failures (from coverage-padding commit `851559f`): (1) Venus
+  `available_from_datetime` — **test wrong** (asserts `2020-09-22`; `get_protocol_floor_date` returns the registered
+  `2020-10-08`). (2) `_canonical_league_id("EPL_99999")` → `"EPL"` not `"EPL_99999"` — **deliberate Step-3a heuristic**
+  (3+-digit suffix always stripped) vs the coverage-padding test + an internally-inconsistent docstring → **CF-7
+  domain call for Ikenna**, not a unilateral fix.
+- **ml-service** — the "13× CPU" from the j=4 run was a **measurement artifact** (did NOT reproduce). Isolated truth:
+  **382s / ~3 cores / 1.1 GB**, dominated by **STEP 5.91 entity-registry check = 220s (58%)**; basedpyright is only ~10
+  CPU-s. Also: its **own unit tests aren't collected** (gate runs 6 PM integration tests). `PYTEST_WORKERS=2` override +
+  uncapped OMP/BLAS is a latent multi-slot risk, not the dominant isolated cost.
+- **unified-trading-library** — stale venv (`duckdb` declared in pyproject but not installed) → 8 consolidator tests
+  fail (4075 pass). **Fixed** via `uv sync` (duckdb 1.5.3). 5.27 GB RSS is real (4075-test suite + consolidator fixtures).
+- **UAC** — gate re-run **GREEN** (215s); not failing.
+
+### Phase 1 — started
+
+- **`qg-governor`** — `scripts/quality-gates-base/qg-host-governor.sh` BUILT + functionally verified (K=2, three
+  `sleep 3` → 7s; token bucket serializes). flock token bucket, K=`floor(cores/4)`, `nice`+`ionice`, sourceable +
+  wrapper + `--status`. **Pending:** wiring `qg_governor_acquire/release` into `base-service.sh` around the heavy phases.
+- **`qg-slot-aware-workers`** — reshaped by the data: `pytest` already defaults to `-n 1` (not `-n auto`), so the real
+  remaining need is **OMP/BLAS env caps** (`OMP_NUM_THREADS`/`OPENBLAS_NUM_THREADS`/`MKL_NUM_THREADS`) for ML repos +
+  revisiting ml-service's `PYTEST_WORKERS=2` override. Not yet implemented.
+
+### Side-effects this session
+
+- Aligned all 22 root repos to `origin/live-defi-rollout` (stashed `uv.lock` regen drift as `qg-uvlock-drift-autoalign`).
+- Marked `fund-administration-service` + `greeks-service` `status: future` in `workspace-manifest.json` (absent from this
+  CosmicTrader workspace, owned by Ikenna side; operator-directed) so the disk-presence alignment gate stops blocking.
