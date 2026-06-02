@@ -316,7 +316,7 @@ DEFI:
     YIELD_BEARING: lst
 
   venues:
-    # DEX protocols - dex_swaps + dex_pools (folder: pool)
+    # DEX protocols - dex_pool_swaps + dex_pool_state (folder: pool)
     UNISWAP_V2-ETHEREUM:
       domain: defi
       book_type: AMM
@@ -325,8 +325,8 @@ DEFI:
       instrument_types: [POOL]
       folders: [pool]
       data_types:
-        - dex_swaps
-        - dex_pools # Hourly pool snapshots via pairHourDatas (V2 subgraph supports hourly)
+        - dex_pool_swaps
+        - dex_pool_state # Hourly pool snapshots via pairHourDatas (V2 subgraph supports hourly)
       start_date: "2020-05-18" # Uniswap V2 launch
 
     UNISWAP_V3-ETHEREUM:
@@ -337,8 +337,8 @@ DEFI:
       instrument_types: [POOL]
       folders: [pool]
       data_types:
-        - dex_swaps
-        - dex_pools # Hourly pool snapshots via poolHourDatas (V3 supports hourly)
+        - dex_pool_swaps
+        - dex_pool_state # Hourly pool snapshots via poolHourDatas (V3 supports hourly)
       start_date: "2021-05-05" # Uniswap V3 launch
 
     UNISWAP_V4-ETHEREUM:
@@ -349,8 +349,8 @@ DEFI:
       instrument_types: [POOL]
       folders: [pool]
       data_types:
-        - dex_swaps
-        - dex_pools # Hourly pool snapshots via poolHourDatas (V4 subgraph supports hourly)
+        - dex_pool_swaps
+        - dex_pool_state # Hourly pool snapshots via poolHourDatas (V4 subgraph supports hourly)
       start_date: "2025-02-07" # 14-day buffer after first swap (Jan 24). Was 2024-11-01.
 
     # Lending protocols (folder: pool)
