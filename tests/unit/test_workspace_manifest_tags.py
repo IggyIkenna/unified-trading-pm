@@ -138,8 +138,15 @@ class TestTagCoverage:
     """Repos should have tags from multiple categories for comprehensive tagging."""
 
     def test_repo_count_matches_expectations(self, repositories: dict[str, dict[str, object]]) -> None:
-        """Manifest should have a substantial number of repos."""
-        assert len(repositories) >= 30, f"Expected at least 30 repos, found {len(repositories)}"
+        """Manifest should have a substantial number of repos.
+
+        Floor is 20, not 30: the active surface was reconciled to 25 (23 active + 2
+        scaffolded) by the 2026-06-02 canonicalisation (manifest commit fd616af4c),
+        which relocated 14 consolidated/archived tombstone repos (features-* /ml-*
+        children, user-management-ui, etc.) into ``removedEntries``. The threshold is
+        a sanity floor for "substantial number of repos", not an exact count.
+        """
+        assert len(repositories) >= 20, f"Expected at least 20 repos, found {len(repositories)}"
 
     def test_ui_repos_have_meaningful_tags(self, repositories: dict[str, dict[str, object]]) -> None:
         """Repos of type 'ui' should have at least one domain or capability tag."""
