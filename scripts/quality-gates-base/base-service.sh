@@ -72,6 +72,31 @@ export OMP_NUM_THREADS="${QG_THREAD_CAP:-2}" OPENBLAS_NUM_THREADS="${QG_THREAD_C
 # (3) Shared ruff cache across worktrees/slots — the default .ruff_cache lives in
 #     each worktree and defeats cross-slot reuse; repoint to a host-shared dir.
 export RUFF_CACHE_DIR="${RUFF_CACHE_DIR:-${TMPDIR:-/tmp}/qg-ruff-cache}"
+# (4) Green sentinel (qg-repo-green-sentinel): a CONSERVATIVE content hash of the
+#     working tree + gate-script + tool versions. When it is byte-identical to the
+#     last FULL green run, the heavy phases (TESTS + TYPE CHECK) are skipped — that
+#     content was already fully verified, incl. coverage. ANY change → different hash
+#     → full run. Light phases (codex/production) still run so external-state drift is
+#     caught. Robust: a malformed/empty hash NEVER triggers a skip. Escape:
+#     QG_SENTINEL_DISABLE=true.  Separate file (.qg_content_sentinel) so quickmerge's
+#     .qg_last_passed_sha (git HEAD) is untouched.
+_qg_content_hash() {
+    {
+        git rev-parse HEAD 2>/dev/null || echo no-head
+        git diff HEAD 2>/dev/null                                       # uncommitted tracked changes
+        # untracked files — but EXCLUDE QG artifacts that change every run (else the
+        # hash self-references and the sentinel can never hit).
+        git ls-files --others --exclude-standard 2>/dev/null \
+            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
+            | sort | while IFS= read -r _f; do
+                [ -f "$_f" ] && sha256sum "$_f" 2>/dev/null
+            done
+        sha256sum "${BASH_SOURCE[0]}" "${BASH_SOURCE[0]%/*}/qg-host-governor.sh" 2>/dev/null  # gate logic
+        "${RUFF_CMD:-ruff}" --version 2>/dev/null
+        "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
+        "${PYTHON_CMD:-python3}" --version 2>/dev/null                   # tool versions
+    } | sha256sum | awk '{print $1}'
+}
 
 # ╔══ MEMORY GOVERNANCE [OOM MITIGATION — added 2026-05-15] ═══════════════════╗
 # Cap heavy subprocesses (pytest, basedpyright) at QG_MEM_CAP. Prevents one
@@ -262,14 +287,30 @@ if [ "$RUN_LINT" = true ]; then
     _lint_out=$(run_timeout 30 $RUFF_CMD check $SOURCE_DIRS 2>&1) || { echo "$_lint_out"; log_fail "Lint FAILED"; exit 1; }
 fi
 
+# ── GREEN SENTINEL: skip heavy phases when content is byte-identical to last full green ──
+_QG_SENTINEL_HIT=false
+_QG_SENTINEL_FILE="${REPO_ROOT}/.qg_content_sentinel"
+_QG_CONTENT_HASH=""
+if [ "${QG_SENTINEL_DISABLE:-false}" != "true" ]; then
+    _QG_CONTENT_HASH="$(_qg_content_hash)"
+    # Only a well-formed 64-char hash that EXACTLY matches the stored sentinel triggers
+    # a skip — a malformed/empty hash can never accidentally match.
+    if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ -f "$_QG_SENTINEL_FILE" ] \
+       && [ "$(cat "$_QG_SENTINEL_FILE" 2>/dev/null)" = "$_QG_CONTENT_HASH" ]; then
+        _QG_SENTINEL_HIT=true
+        log_success "Green sentinel HIT — working tree byte-identical to last full green; skipping TESTS + TYPE CHECK (light checks still run)"
+    fi
+fi
+
 # ── HOST CONCURRENCY GOVERNOR: acquire before the heavy phases (TESTS + TYPECHECK) ──
 # Blocks until <=K QG heavy-phases run host-wide (K=floor(cores/4)); released after
 # TYPE CHECK. The OS auto-frees the flock on any early exit between here and release.
-# No-op when QG_GOVERNOR_DISABLE=true or flock(1) is absent.
-qg_governor_acquire
+# No-op when QG_GOVERNOR_DISABLE=true or flock(1) is absent. Skipped on a sentinel hit
+# (no heavy phase to govern).
+[ "$_QG_SENTINEL_HIT" = true ] || qg_governor_acquire
 
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
-if [ "$RUN_TESTS" = true ]; then
+if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_section "[3/6] TESTS"
     # Coverage floor governance (add-coverage-floor-governance)
     # Use PROJECT_ROOT (set by qg-common.sh from the caller stub's location) so we read
@@ -444,7 +485,7 @@ fi
 
 # ── [4] TYPE CHECK (basedpyright, 120s, zombie cleanup) ──────────────────────
 log_section "[4/6] TYPE CHECK"
-if [ "$SKIP_TYPECHECK" != "true" ]; then
+if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
     cleanup_zombie_pyright() {
         # || : on every line + after done: CI uses set -eo pipefail; grep exits 1 when no processes
         # found, which would kill the script before basedpyright even starts without these guards.
@@ -536,7 +577,8 @@ fi
 
 # ── HOST CONCURRENCY GOVERNOR: release the token — heavy phases (TESTS + TYPECHECK)
 # are done; the lighter codex/validator phases run ungoverned. (OS auto-frees on exit.)
-qg_governor_release
+# No-op when a sentinel hit meant we never acquired.
+[ "${_QG_SENTINEL_HIT:-false}" = true ] || qg_governor_release
 
 # ── [5] CODEX COMPLIANCE ──────────────────────────────────────────────────────
 # All checks are blocking unless excluded via QUALITY_GATE_BYPASS_AUDIT.md.
@@ -2522,6 +2564,13 @@ if [[ "${RUN_TESTS}" == "true" ]] && \
     git rev-parse HEAD > "${REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
         echo "Sentinel written: .qg_last_passed_sha=$(cat "${REPO_ROOT}/.qg_last_passed_sha")" || \
         echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+    # Green content sentinel (qg-repo-green-sentinel): record the content hash so an
+    # unchanged tree skips the heavy phases next run. Only here — a COMPLETE green run
+    # (this block) — so the sentinel always represents a coverage-inclusive pass.
+    if [ "${#_QG_CONTENT_HASH}" -eq 64 ]; then
+        echo "$_QG_CONTENT_HASH" > "${REPO_ROOT}/.qg_content_sentinel" 2>/dev/null \
+            && echo "Green sentinel written: .qg_content_sentinel (unchanged tree → fast green next run)" || true
+    fi
 else
     echo "Sentinel NOT written — partial run detected (skip flags active). Run full quality-gates.sh to enable quickmerge --agent fast-path."
 fi
