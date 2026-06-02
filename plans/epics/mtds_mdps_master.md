@@ -276,14 +276,23 @@ operator-acked
 > market-data-processing-service@5a5e989/4fd962d/23d7add/56202b0) made every candle adapter emit dense, no-leading-NaN,
 > no-NaN-OHLC candles **go-forward**. Historical parquets written before the fix still carry the legacy leading-NaN /
 > NaN-OHLC shape. Remediation = **force-reprocess of already-`captured` cells** — re-run the MDPS adapters over
-> historical raw ticks so the written candles densify. **This is NOT covered by the Phase 11 MISSING_EXPECTED backfill**:
-> `mtds_backfill_phase3` runs `VM_FORCE=false` + `ManifestFreshnessCache`, which **skips already-captured cells**, so the
-> leading-NaN cells are walked right past. It is **NOT** a manifest-consolidator task (the consolidator only merges
-> manifest shards into `_index`) and **NOT** a GCS-object-migration walk (`gcs_migration_bundle_pipeline_mode` cannot
-> re-derive dense candles — that needs the raw ticks + new finalizer). **Scope it as a `VM_FORCE=true` reprocess of the
-> asset_groups/date-windows that backtest + features-onchain actually read**, folded into the next MDPS historical
-> reprocess window (no standalone whole-corpus walk, per single-walk discipline). Tracked as the `[DATA] P1` item in the
-> issue doc; Phase-11 owner pulls it into the operational-backfill scope.
+> historical raw ticks so the written candles densify. **This is NOT covered by the Phase 11 MISSING_EXPECTED
+> backfill**: `mtds_backfill_phase3` runs `VM_FORCE=false` + `ManifestFreshnessCache`, which **skips already-captured
+> cells**, so the leading-NaN cells are walked right past. It is **NOT** a manifest-consolidator task (the consolidator
+> only merges manifest shards into `_index`) and **NOT** a GCS-object-migration walk
+> (`gcs_migration_bundle_pipeline_mode` cannot re-derive dense candles — that needs the raw ticks + new finalizer).
+> **Scope it as a `VM_FORCE=true` reprocess of the asset_groups/date-windows that backtest + features-onchain actually
+> read**, folded into the next MDPS historical reprocess window (no standalone whole-corpus walk, per single-walk
+> discipline). Tracked as the `[DATA] P1` item in the issue doc; Phase-11 owner pulls it into the operational-backfill
+> scope. **Force-launch prerequisite SHIPPED 2026-06-02 — `deployment-service@709f845`.** The operational path to
+> deliver `--force` to an MDPS candle VM was MISSING (the `mdps-backfill` VM_TASK ran `VM_BACKFILL_CMD` verbatim,
+> ignoring the `VM_FORCE` bridge; the launcher dropped `--force`). `launch-mdps-backfill-vm.sh` now accepts `--force` /
+> `FORCE=true` and threads it into the `process` CLI (`_write_candles(force=True)`). **Scope clarified (operator
+> 2026-06-02): REAL data, not mock** — `pipeline_mode` has no `mock` value; mock is a credential-free test runtime,
+> never a candle partition. **Launch handed to slot-1-main** (operator decision 2026-06-02): pull `--force` reprocess
+> into the next window; **DeFi gates on the active `_index` single-walk contention (`defi_manifest` C0-GREEN)**;
+> non-DeFi first. Invoke: `bash launch-mdps-backfill-vm.sh --force <ag> <start> <end> full`. (`[DATA] P1` stays OPEN —
+> reprocess not yet run.)
 
 ## Phase 1 — bucket-name symmetry (AWS ↔ GCP)
 
@@ -457,13 +466,14 @@ MTDS `scripts/quality-gates.sh` is **pre-existing-red** on LDR (independent of F
 ## Fleet data-fetch dispatch (slot 7, 2026-06-01 — from `running_vm_fleet_status_2026_05_27.md`)
 
 - [x] ✅ [CODE] P1. **DONE 2026-06-02 (slot 7) — instruments-service@`35a745ef`.** Root cause: `_TARDIS_VENUE_EXCHANGES`
-      (instruments-service `reference_data/router.py`) had **no OKX entries** → OKX-FUTURES discovery fell through to the
-      adapter default `okex` (spot) and emitted `BTC-USDT` instead of native okex-futures dated ids. Added
-      `okx-spot→okex` / `okx-swap→okex-swap` / `okx-futures→okex-futures` (matches UAC `venue_mapping.to_tardis_exchanges`)
-      + regression test; live-validated (free `/exchanges/okex-futures`, 5740 native syms). IS now emits native ids; MTDS
-      consumes unchanged via `_resolve_dated_future_symbols`. Independent of the BLOCKED Tardis paid key. **Operational
-      follow-up (next backfill window)**: re-run the OKX-FUTURES historical backfill (the 28k attempted_failed flip to
-      captured); dry-run-validate the rebuilt symbol set vs the live listing first. Original diagnosis retained below.
+      (instruments-service `reference_data/router.py`) had **no OKX entries** → OKX-FUTURES discovery fell through to
+      the adapter default `okex` (spot) and emitted `BTC-USDT` instead of native okex-futures dated ids. Added
+      `okx-spot→okex` / `okx-swap→okex-swap` / `okx-futures→okex-futures` (matches UAC
+      `venue_mapping.to_tardis_exchanges`) + regression test; live-validated (free `/exchanges/okex-futures`, 5740
+      native syms). IS now emits native ids; MTDS consumes unchanged via `_resolve_dated_future_symbols`. Independent of
+      the BLOCKED Tardis paid key. **Operational follow-up (next backfill window)**: re-run the OKX-FUTURES historical
+      backfill (the 28k attempted_failed flip to captured); dry-run-validate the rebuilt symbol set vs the live listing
+      first. Original diagnosis retained below.
   - **Original diagnosis (provenance)**: Tardis rejected `BTC-USDT` + dated contracts ("use the okex-futures exchanges
     API for allowed values"); valid IDs `BTC-USD-260626` / `BTC-USD_UM-260626`. Repo: instruments-service (venue symbol
     map — the owning side per IS→MTDS contract).
@@ -474,21 +484,22 @@ MTDS `scripts/quality-gates.sh` is **pre-existing-red** on LDR (independent of F
        `okex-futures` fixed-expiry — instruments-service `engine/orchestrator.py` knows this).
     2. **The `/exchanges/okex-futures` metadata endpoint is FREE (no paid key)** + authoritative — **probed live
        2026-06-01**: 5,740 `availableSymbols` with native ids `BTC-USD-260626` / `BTC-USDT-260626` / `BTC-USD_UM-260626`
-       (USDT-margined = `_UM`, `YYMMDD` expiry), each carrying `availableSince`/`availableTo`. instruments-service already
-       uses this pattern: `reference_data/adapters/cefi/tardis.py::_fetch_exchange_instruments` (`/exchanges/{exchange}`).
+       (USDT-margined = `_UM`, `YYMMDD` expiry), each carrying `availableSince`/`availableTo`. instruments-service
+       already uses this pattern: `reference_data/adapters/cefi/tardis.py::_fetch_exchange_instruments`
+       (`/exchanges/{exchange}`).
     3. **The bug**: MTDS futures download takes its symbol list from **instruments-service's per-date parquet** via
        `market_interface/adapters/tradfi/tardis_adapter.py::_resolve_dated_future_symbols` (IS→MTDS contract — MTDS must
-       NOT hardcode the universe). For OKX-FUTURES, IS is emitting canonical `BTC-USDT`-style symbols (looks sourced from
-       `okex` spot), NOT the `okex-futures` native dated ids → Tardis 400.
-    4. **Fix (owner = instruments-service, the universe SSOT)**: make OKX-FUTURES discovery pull from the **`okex-futures`**
-       exchange's `availableSymbols[].id` (native dated ids) filtered by `availableSince`/`availableTo` — the same
-       `_fetch_exchange_instruments` path it already uses for other venues; confirm it keys on `okex-futures` (not `okex`/
-       `okex-swap`) for the FUTURE instrument_type. **No MTDS change** needed if IS emits native ids (MTDS passes
-       `_resolve_dated_future_symbols` output straight to the okex-futures CSV URL). **Data-correctness gate**: dry-run
-       validate the rebuilt OKX-FUTURES symbol set against the live free `/exchanges/okex-futures` listing BEFORE relaunch
-       — never re-request unverified symbols. **Independent of the BLOCKED Tardis paid key** (metadata endpoint is free;
-       only the historical CSV *download* needs the key). Repo: **instruments-service** (OKX discovery) + verify MTDS
-       consumes unchanged.
+       NOT hardcode the universe). For OKX-FUTURES, IS is emitting canonical `BTC-USDT`-style symbols (looks sourced
+       from `okex` spot), NOT the `okex-futures` native dated ids → Tardis 400.
+    4. **Fix (owner = instruments-service, the universe SSOT)**: make OKX-FUTURES discovery pull from the
+       **`okex-futures`** exchange's `availableSymbols[].id` (native dated ids) filtered by
+       `availableSince`/`availableTo` — the same `_fetch_exchange_instruments` path it already uses for other venues;
+       confirm it keys on `okex-futures` (not `okex`/ `okex-swap`) for the FUTURE instrument_type. **No MTDS change**
+       needed if IS emits native ids (MTDS passes `_resolve_dated_future_symbols` output straight to the okex-futures
+       CSV URL). **Data-correctness gate**: dry-run validate the rebuilt OKX-FUTURES symbol set against the live free
+       `/exchanges/okex-futures` listing BEFORE relaunch — never re-request unverified symbols. **Independent of the
+       BLOCKED Tardis paid key** (metadata endpoint is free; only the historical CSV _download_ needs the key). Repo:
+       **instruments-service** (OKX discovery) + verify MTDS consumes unchanged.
 
 ## Code-freeze + migration window estimate
 

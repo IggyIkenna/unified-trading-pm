@@ -172,56 +172,83 @@ Tests in scope:
       chain bundles read the prior-day `ticks.parquet` ONCE (cached) + filter per instrument; larger timeframes
       aggregate from the seeded base. 12 adapters declare `supports_prior_day_seed=True`; finalizer consumes-once +
       clears (no chain-loop leakage). 18 new tests (test_prior_day_seed.py) + 1308 unit tests green + full QG exit 0.
-      ORIGINAL SCOPE NOTE (kept for provenance): Build `_get_prior_day_seed(asset_group, date_str, venue, symbol,
-      data_type, timeframe)` and thread it into BOTH paths. **Call-path map (verified 2026-06-02,
-      market-data-processing-service):** per-instrument dispatch is `live_workers.py` `_process_chain_timeframe`
-      (~L1014–1022: `adapter.process_to_candles(tick_data=inst_data, timeframe, instrument_info=inst_info)`) +
-      `_process_standard_timeframe` (~L1609–1629); batch reuses live via `batch_workers.py` →
-      `_process_instrument_file` (`date_str` available ~L275) → `_process_all_timeframes` → the same two methods (NOTE:
+      ORIGINAL SCOPE NOTE (kept for provenance): Build
+      `_get_prior_day_seed(asset_group, date_str, venue, symbol,     data_type, timeframe)` and thread it into BOTH
+      paths. **Call-path map (verified 2026-06-02, market-data-processing-service):** per-instrument dispatch is
+      `live_workers.py` `_process_chain_timeframe` (~L1014–1022:
+      `adapter.process_to_candles(tick_data=inst_data, timeframe, instrument_info=inst_info)`) +
+      `_process_standard_timeframe` (~L1609–1629); batch reuses live via `batch_workers.py` → `_process_instrument_file`
+      (`date_str` available ~L275) → `_process_all_timeframes` → the same two methods (NOTE:
       `_process_standard_timeframe` does NOT currently receive `date_str` — thread it down). Seed source is **genuinely
       absent** (no prior-day candle reader, no warm last-price cache): build a reader that resolves the prior-day candle
-      parquet via `resolve_bucket_name(...)` (bucket-name SSOT — NO inline gs://) + `get_processed_path(asset_group,
-      prior_date, timeframe, data_type, venue=...)` + a UTL `cloud_interface` object read, takes the LAST row's
-      price(s) + ts, returns `None` on missing/empty (cold-start). For state adapters return the full last-row values as
-      `seed_state` (mark_price/index/funding/OI, tvl/reserves, mid/spread/depth) so secondary columns carry too —
-      else leading carried bins NaN those columns. Add `prior_day_seed` to the abstract `process_to_candles` + forward
-      it from all 9 finalizer-routed adapters. Edge cases: prior-day missing → drop; multi-day halt → staleness grows
-      (fine, recorded); DST/holiday gaps. Tests: mock the prior-day parquet read (live + batch parity). Then flip the
-      issue-doc-level Decision-1 carry todo. SSOT for the contract: `codex/06-coding-standards/adapter-finalization-contract.md`.
+      parquet via `resolve_bucket_name(...)` (bucket-name SSOT — NO inline gs://) +
+      `get_processed_path(asset_group,     prior_date, timeframe, data_type, venue=...)` + a UTL `cloud_interface`
+      object read, takes the LAST row's price(s) + ts, returns `None` on missing/empty (cold-start). For state adapters
+      return the full last-row values as `seed_state` (mark_price/index/funding/OI, tvl/reserves, mid/spread/depth) so
+      secondary columns carry too — else leading carried bins NaN those columns. Add `prior_day_seed` to the abstract
+      `process_to_candles` + forward it from all 9 finalizer-routed adapters. Edge cases: prior-day missing → drop;
+      multi-day halt → staleness grows (fine, recorded); DST/holiday gaps. Tests: mock the prior-day parquet read
+      (live + batch parity). Then flip the issue-doc-level Decision-1 carry todo. SSOT for the contract:
+      `codex/06-coding-standards/adapter-finalization-contract.md`.
 - [x] ✅ [SCRIPT] P0. **Decision 2 — Option A.** Add `state_col: str | None = None` (+ `flow_cols`, `seed_state`) to
       `_finalize_session_grid`; first-obs mask uses `~isnan(<state_col>)` when provided. — MDPS@4fd962d.
 - [x] ✅ [SCRIPT] P0. Update 7 state adapters to call `_finalize_session_grid(output, state_col=<canonical>)`
-      (liquidity/market_state use close-driven finalize — close already = price driver + volume carries real TVL/supply).
-      — MDPS@23d7add.
+      (liquidity/market_state use close-driven finalize — close already = price driver + volume carries real
+      TVL/supply). — MDPS@23d7add.
 - [x] ✅ [TEST] P0. Add leading-gap (prior-day-carry + cold-start-drop) + LOCF-density tests for each updated adapter. —
       MDPS@4fd962d (finalizer-level: test_finalize_session_grid_seed.py + test_state_adapter_density.py) + @23d7add
       (per-adapter test files). 1252 MDPS unit tests green.
 - [x] ✅ [VERIFY] P0. **KEEP the aggregator NaN-input WARN as a permanent regression guard** (per §Scope item 6's "or
       keep as guard" — all 7 state adapters now emit dense LOCF candles so it is dormant in steady state but catches any
       future adapter that regresses to the pre-LOCF leading-NaN shape). `fast_candle_aggregation.py:304-325` retained
-      deliberately. MDPS unit suite green (1252 passed) EXCEPT the pre-existing **foreign** `test_dependency_checker_sports_prediction`
-      bucket-tier drift (env-tier `-prd-` from market-data-processing-service@61900a3 — NOT this workstream; tracked as
-      the `[BUG]` row in `issue_docs_remediation_sweep_2026_06_02.md`). Full `quality-gates.sh` exit-0 is blocked solely
-      by that foreign file.
+      deliberately. MDPS unit suite green (1252 passed) EXCEPT the pre-existing **foreign**
+      `test_dependency_checker_sports_prediction` bucket-tier drift (env-tier `-prd-` from
+      market-data-processing-service@61900a3 — NOT this workstream; tracked as the `[BUG]` row in
+      `issue_docs_remediation_sweep_2026_06_02.md`). Full `quality-gates.sh` exit-0 is blocked solely by that foreign
+      file.
 - [x] ✅ [DOCS] P1. Codex SSOT updates per above (+ document the carry-from-prior-day leading-bin contract). —
-      `codex/06-coding-standards/adapter-finalization-contract.md` (new) + `codex/02-data/honest-absence-downstream-handling.md`
-      § "Per-adapter density contract: dense + LOCF + no leading NaN + carry-from-prior-day".
+      `codex/06-coding-standards/adapter-finalization-contract.md` (new) +
+      `codex/02-data/honest-absence-downstream-handling.md` § "Per-adapter density contract: dense + LOCF + no leading
+      NaN + carry-from-prior-day".
 - [ ] [DATA] P1. **Densify already-CAPTURED historical candle cells** — re-run the MDPS adapters (now dense per the
       finalization contract) over historical raw ticks so pre-fix parquets lose their leading-NaN / NaN-OHLC shape.
       Go-forward writes are ALREADY dense (shipped @56202b0); this is purely historical remediation, and only matters
-      for date windows that backtests / features-onchain actually read.
-      **Home + scope (verified 2026-06-02):**
-      - NOT a manifest-consolidator task — the consolidator only merges per-VM manifest shards into the `_index`; it
-        never reads or rewrites candle-parquet CONTENT (`codex/05-infrastructure/manifest-consolidator-ssot.md`).
-      - NOT a GCS-object-migration walk — `gcs_migration_bundle_pipeline_mode_2026_05_08.md` rewrites/relocates objects
-        and can add columns from existing data, but CANNOT re-derive dense candles (that needs the raw ticks + the new
-        finalizer). So it cannot ride the single-walk GCS migration.
-      - It is an OPERATIONAL candle reprocess → home = `plans/epics/mtds_mdps_master.md` **Phase 11** (backfill-to-100%
-        operational data). **DISTINCT from Phase 11's MISSING_EXPECTED fill**: `mtds_backfill_phase3_2026_05_22.md` runs
-        `VM_FORCE=false` + `ManifestFreshnessCache`, which **skips already-captured cells** — so the existing backfill
-        would NOT re-run the leading-NaN cells. Densify needs a **force-reprocess of already-`captured` cells**
-        (`VM_FORCE=true` equivalent), scoped to the asset_groups/date-windows consumed by backtest/features.
-      - Fold into the next MDPS historical reprocess window per single-walk discipline (no standalone whole-corpus walk).
-      **ACTION:** ✅ cross-linked into `plans/epics/mtds_mdps_master.md` § "Phase 11 add-on (2026-06-02) — MDPS
-      leading-NaN historical densify reprocess" (2026-06-02). Phase-11 owner (slot-1 main coordination) pulls the
-      `VM_FORCE=true` reprocess into the operational-backfill scope when the window opens.
+      for date windows that backtests / features-onchain actually read. **Home + scope (verified 2026-06-02):** - NOT a
+      manifest-consolidator task — the consolidator only merges per-VM manifest shards into the `_index`; it never reads
+      or rewrites candle-parquet CONTENT (`codex/05-infrastructure/manifest-consolidator-ssot.md`). - NOT a
+      GCS-object-migration walk — `gcs_migration_bundle_pipeline_mode_2026_05_08.md` rewrites/relocates objects and can
+      add columns from existing data, but CANNOT re-derive dense candles (that needs the raw ticks + the new finalizer).
+      So it cannot ride the single-walk GCS migration. - It is an OPERATIONAL candle reprocess → home =
+      `plans/epics/mtds_mdps_master.md` **Phase 11** (backfill-to-100% operational data). **DISTINCT from Phase 11's
+      MISSING_EXPECTED fill**: `mtds_backfill_phase3_2026_05_22.md` runs `VM_FORCE=false` + `ManifestFreshnessCache`,
+      which **skips already-captured cells** — so the existing backfill would NOT re-run the leading-NaN cells. Densify
+      needs a **force-reprocess of already-`captured` cells** (`VM_FORCE=true` equivalent), scoped to the
+      asset*groups/date-windows consumed by backtest/features. - Fold into the next MDPS historical reprocess window per
+      single-walk discipline (no standalone whole-corpus walk). **ACTION:** ✅ cross-linked into
+      `plans/epics/mtds_mdps_master.md` § "Phase 11 add-on (2026-06-02) — MDPS leading-NaN historical densify reprocess"
+      (2026-06-02). Phase-11 owner (slot-1 main coordination) pulls the `VM_FORCE=true` reprocess into the
+      operational-backfill scope when the window opens. **PREREQUISITE SHIPPED (2026-06-02) — force-launch path was
+      MISSING, now wired:** the operational path to deliver `--force` to an MDPS candle-processing VM did NOT exist.
+      `launch-mdps-backfill-vm.sh` dropped `--force` into POSITIONAL (silently ignored) AND the `mdps-backfill` VM_TASK
+      branch in `setup-data-pipeline-vm.sh` (~L1033) runs `VM_BACKFILL_CMD` **verbatim** — it does NOT honour the
+      `VM_FORCE`→`--force` metadata bridge that the `download`/`instruments` BASE_CLI branches use (~L1070/L1113). Wired
+      `--force` / `FORCE=true` env into the launcher so it threads `--force` into the `process` CLI →
+      `_write_candles(force=True)` (skips the `blob_exists` short-circuit / SKIP-on-fresh). —
+      **deployment-service@709f845** (QG exit 0; stub-gcloud dry-launch verified `--force` lands in `VM_BACKFILL_CMD` +
+      `VM_FORCE=true` metadata). Invoke:
+      `bash launch-mdps-backfill-vm.sh --force <cefi|tradfi|defi|...> <start> <end> full`. **SCOPE = REAL data, NOT mock
+      (operator Q 2026-06-02):** densify rewrites REAL production candle parquets under `processed_candles/`,
+      re-aggregated from REAL raw ticks — NOT mock/synthetic. `pipeline_mode` in the buckets is a **batch-vs-live source
+      discriminator** (`PipelineMode` StrEnum =
+      `batch*\*`/`live_websocket`); there is **no     `mock`PipelineMode value**. The separate`MOCK` mode (`unified_api_contracts.internal.modes`,     `CLOUD_MOCK_MODE=true`) is credential-free TEST-ISOLATION runtime (all-fake, simulates live schema) — never a     production candle partition; synthetic/benchmark data lives in `gs://{pid}-synthetic-input`via the distinct    `synthetic-benchmark`VM path. So the densify does NOT come under any mock bucket/partition.     **LAUNCH HANDED TO slot-1-main (operator decision 2026-06-02):** prerequisite-only this session — no reprocess VMs     launched. slot-1-main (Phase-11 owner) pulls the`--force`reprocess into the next coordinated MDPS window. **DeFi     MUST gate** on the active`market-data-tick-defi-prd-…` `\_index` single-walk contention (`defi_manifest`C0-GREEN     per the 2026-06-01`\_agent_pings.md`
+      banner); **non-DeFi (cefi/tradfi)** can proceed first. Date window = backtest/features-onchain read-range (pin
+      with strategy owner; paper reads TODAY → recent read window unless an older backtest range is confirmed).
+- [ ] [SCRIPT] P3. **deployment-service** — **DEFERRED / NICE-TO-HAVE (discovered 2026-06-02):** the deployment-api
+      `backfill_launch.py` `_build_argv` "universal launcher contract" passes `["bash", launcher, "--force"]` with **no
+      positional args**, but `launch-mdps-backfill-vm.sh` reads `asset_group`/`start`/`end`/`mode` from POSITIONAL (not
+      env), so the `MDPS_BACKFILL` route path fails the launcher's usage check. The route also sets `VM_FORCE=true` env,
+      which the `mdps-backfill` VM_TASK branch ignores (runs `VM_BACKFILL_CMD` verbatim). Direct CLI launch
+      (`bash launch-mdps-backfill-vm.sh --force <ag> <start> <end> full`) works after deployment-service@709f845; this
+      todo tracks closing the route-side positional-arg threading (the `_build_argv` "v1 inline successor plan" noted in
+      that file's docstring) so the deployment-UI/API MDPS-reprocess button also works. Provenance: surfaced while
+      wiring the `[DATA] P1` force prerequisite.
