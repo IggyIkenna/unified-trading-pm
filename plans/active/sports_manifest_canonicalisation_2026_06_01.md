@@ -525,6 +525,39 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       EXPECTED_PRE_SOURCE_COVERAGE_START / EXPECTED_NO_FIXTURE / SOURCE_RETURNED_ZERO emitted; 3 new unit tests; QG
       GREEN.
 
+### Dead-bucket regression gate — refactor read/write paths to canonical BEFORE the delete (operator directive 2026-06-02)
+
+> Operator: "have we refactored read AND write cloud-storage paths across the board to match the new canonical form for
+> the asset groups we cover — in the CODE + the tests that feed quality gates — to avoid regression? Even though the
+> migrations haven't run, the code itself must not regress by association with DEAD buckets once they're deleted. Same
+> for data-status in the deployment API + UI, which resolve many bucket names / menu conventions / data_type conventions
+> / manifest-reading conventions." The legacy buckets get DELETED at E8 → any code/test/UI still resolving the no-env
+> sports buckets (`market-data-tick-sports`, `instruments-store-sports`, `features-*-sports`) or stale manifest/path
+> conventions will BREAK. This gate is BEFORE the dry-run/delete: the code must already speak ONLY canonical.
+
+- [ ] [CODE] P0. **Read/write path canonicalisation sweep (sports — all repos)**: grep every read+write GCS path for
+      sports for inline/legacy bucket names + stale conventions (`market-data-tick-sports`/`instruments-store-sports`/
+      `features-*-sports` WITHOUT `-${env}-`; inline `gs://…sports…` f-strings; hardcoded `category=sports` paths;
+      manifest reads off a legacy `_index`). Confirm EVERY sports bucket lookup routes through
+      `resolve_bucket_name(cloud=…, kind=…, asset_group="sports", env=…)` → the `-prd-` env-tiered canonical form (QG
+      STEP 5.69 already bans inline `gs://`; this verifies sports specifically + the resolver returns canonical). Fix any
+      dead-bucket association. Repos: market-tick-data-service, instruments-service, features-service, mtds/mdps,
+      strategy/execution sports paths, alerting-service.
+- [ ] [CODE] P0. **deployment-api + UI data-status canonical resolution (sports)**: the data-status surface resolves
+      MANY bucket names / menu conventions / data_type conventions / manifest-reading conventions per asset_group — audit
+      `deployment-api/deployment_api/services/data_status*.py` (+ the `data_status_mock.py` SPORTS map) + the
+      deployment-ui/unified-trading-system-ui data-status views for any sports bucket/path/data_type/manifest convention
+      that resolves a to-be-deleted legacy bucket or a stale (v8/`category=`/no-`pipeline_mode=`) layout. Point them ALL
+      at the canonical `-prd-` v9 form. UI changes need the playwright gate (`pw:L2 ✓` + regression spec) per PLAN_FORMAT §9.
+- [ ] [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)**: every sports test (unit + integration) that
+      references a bucket/path/manifest convention must use the canonical `-prd-` v9 form, so QG REGRESSION-CATCHES any
+      future dead-bucket association. Grep sports tests for legacy bucket/path literals; update to canonical. (This is the
+      mechanism that makes the regression gate self-enforcing — a reverting change fails QG.)
+- [ ] [DATA] P1. **278k provider-season-suffixed league_ids rewrite table** (dry-run-informed): `canonicalize_league_id`
+      conservatively leaves `SCOTTISH_LEAGUE_CUP_185` etc. unchanged (185 = AF SEASON id, not the league id 182). After
+      the dry-run enumerates the actual `{LEAGUE}_{seasonid}` set, build a direct rewrite table (strip the season suffix
+      when the base resolves + the suffix is a known AF season id for that league) → canonical. Not guessed pre-dry-run.
+
 ### Verify + handoff to decommission
 
 - [ ] [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
