@@ -2715,3 +2715,17 @@ successor).
   DeFi-venue/defi_manifest_canonicalisation worker territory (MTDS@0a3a7071 is a semver-rollout locked-SSOT commit).
 - Untouched per task scope: MDPS [BUG] bucket-tier (resolved elsewhere @180f54b) + all
   BLOCKED-DISCIPLINE/BLOCKED-OPERATOR-DECISION lines + operator-gated tofu-apply infra items.
+
+[2026-06-02 slot-7 ADDENDUM] Operator follow-up — both "flagged" items now PROPERLY fixed (not band-aid/defer):
+
+1. features gcs_reader STEP-5.69: REPLACED the # noqa with the canonical QG remedy — new common.resolve_bucket_uri
+   wrapper + gcs_paths.resolve_instruments_bucket_uri(path) (mirror resolve_bucket/resolve_instruments_bucket, same
+   yaml-SSOT kind/asset_group); error-message URI now composed via bucket-name SSOT. features-service@87063e4c, QG
+   exit 0.
+2. G12 recon-freeze PUBLISHER BUILT (observability_master G12 P0, flipped): alerting-service@a04bbf2 —
+   recon_freeze_publisher.py (publish_recon_freeze_armed/lifted via publish_coordination_event; symbol-scoped vs
+   account-wide per operator 2026-06-01) + recon_freeze_event_handler.handle_reconciliation_age_payload (wires the
+   previously-orphan evaluate_recon_age/evaluate_immediate_sev0 → route CRITICAL → arm freeze) + evaluate_immediate_sev0
+   account_id/client_id propagation + synthetic test. QG exit 0 (780+ tests). **Execution-side subscriber + per-incident
+   emit remain execution_master G12 P1** (consume RECON_FREEZE_ARMED → ReconFreezeChecker.arm() — the full chain is not
+   LIVE until that lands; flagged to the execution epic VM).
