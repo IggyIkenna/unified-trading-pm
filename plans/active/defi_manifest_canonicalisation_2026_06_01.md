@@ -318,9 +318,16 @@ What to verify/wire (B0 corrected scope):
       under audit item (i), do NOT rush a fix. Per-adapter audit codified in
       `defi_master`(aa)/`mtds_mdps`(i)/`instruments`(h)/ `features_and_ml`(u). 3 mtds fixes need QG green before LDR.
       parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. A8 **REOPENS A7's "instruments-service swept clean" claim — a SECOND swallow shape exists in IS DeFi
+- [~] [CODE] P1. A8 **REOPENS A7's "instruments-service swept clean" claim — a SECOND swallow shape exists in IS DeFi
       subgraph adapters** (slot-2 audit 2026-06-02, answering operator "is an API issue → attempted_failed not
-      empty_confirmed?"). A7 swept the `except Exception: … return []` shape and found IS clean — but it MISSED the
+      empty_confirmed?"). **✅ SHIPPED for the 3 single-query subgraph adapters — IS@17309f05** (new shared
+      `defi_utils.assert_subgraph_payload()` raises ConnectionError on 200-with-`errors`/missing-`data` →
+      `aave_v3`+`spark`+`morpho` wired; 4 enshrined-the-bug unit tests updated to assert the raise; IS QG green). **A8b
+      REMAINS**: `uniswap_v3` is a multi-fallback CASCADE (Messari→Algebra→SushiSwap) — needs cascade-aware "raise only
+      if ALL fallbacks errored" (like A9), NOT a naive per-fallback raise (would kill cascade resilience) — + ~9
+      REST/Solana adapters (drift/flash_trade/jupiter/lifinity/mango/meteora/phoenix/pyth/zeta) need per-endpoint
+      judgment (missing-key=error vs legit-empty-list). Repo: instruments-service. parent_epic: mtds_mdps_master.
+      A7 swept the `except Exception: … return []` shape and found IS clean — but it MISSED the
       `HTTP-200 + {"errors":[...]}` / missing-`data`-field → `return []` "treating as empty" shape. CONFIRMED in
       `instruments-service/instruments_service/reference_data/adapters/defi/aave_v3.py:144-152` +
       `spark.py:166-173` (both in the `get_instruments` discovery path; comment literally says "rate-limit / transient
