@@ -116,8 +116,9 @@
   <circle cx="702" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="607" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="722" y="723" width="130" height="38" class="svc" />
+  <rect x="722" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="787" y="741" text-anchor="middle" class="label">greeks-service</text>
-  <circle cx="842" cy="731" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
+  <circle cx="842" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="787" y="753" text-anchor="middle" class="ver">0.0.1</text>
   <rect x="862" y="723" width="230" height="38" class="svc" />
   <rect x="862" y="723" width="4" height="38" fill="#84cc16" rx="2" />
