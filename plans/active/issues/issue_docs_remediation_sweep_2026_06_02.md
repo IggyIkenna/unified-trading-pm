@@ -258,14 +258,27 @@ verified complete**.
 
 ## alerting-service
 
-- [ ] [CODE] P2. alerting-service: wire `AlertCode.RISK_RULE_BLOCKED` / `RISK_RULE_MONITOR_FIRED` into
-      `rules/risk_threshold_rules.py` output (CRITICAL→BLOCKED, WARNING→MONITOR_FIRED). Source: alerting_fp_rate.
-- [ ] [CODE] P2. alerting-service: add structured GCS quietness-report emission
+- [x] ✅ [CODE] P2. alerting-service: wire `AlertCode.RISK_RULE_BLOCKED` / `RISK_RULE_MONITOR_FIRED` into
+      `rules/risk_threshold_rules.py` output (CRITICAL→BLOCKED, WARNING→MONITOR_FIRED). — alerting-service@`9279d82`
+      (evaluate_risk_thresholds stamps alert_code on every emitted alert; both codes carry UAC routing per
+      test_alert_code_parity; QG exit 0). Source: alerting_fp_rate.
+- [x] ✅ [CODE] P2. alerting-service: add structured GCS quietness-report emission
       (`events/alerting-service/{date}/quietness-{run_id}/report.jsonl`: alert_code/fires/suppressed/fp_count/
-      fp_rate/threshold). Source: alerting_fp_rate.
-- [ ] [CODE] P1. alerting-service: publish `RECON_FREEZE_ARMED` from `rules/reconciliation_rules.py` on CRITICAL/SEV0 so
-      execution-service arms the order block (G12; mirrors observability_master:73). Source:
-      batch_live_reconciliation_service_audit.
+      fp_rate/threshold). — alerting-service@`e2163a5` (AlertStorageStore.write_quietness_report mirrors
+      write_alert_history; called from \_run_batch_replay; run-level aggregate row keyed alert_code="\*" since per-code
+      FP tracking isn't instrumented yet — deeper per-code split is the BLOCKED-OPERATOR-DECISION ml-baseline item
+      below). Source: alerting_fp_rate.
+- `BLOCKED-DISCIPLINE` [CODE] P1. alerting-service: publish `RECON_FREEZE_ARMED` — **RECLASSIFIED 2026-06-02 (slot 7):**
+  the issue-doc framing ("add `alert_code: AlertCode.RECON_FREEZE_ARMED`") is WRONG. Confirmed `RECON_FREEZE_ARMED` is
+  **NOT** an `AlertCode` member (`python -c "from unified_api_contracts import AlertCode; AlertCode.RECON_FREEZE_ARMED"`
+  → AttributeError; RECON-family members that exist: RECON_DEGRADED / RECON_DEGRADED_CLOSE /
+  BATCH_VS_LIVE_RECON_DRIFTED). `RECON_FREEZE_ARMED` is a **PubSub event** on topic `reconciliation-freeze` consumed by
+  execution-service `preflight/recon_freeze.py` `ReconFreezeChecker.arm()` — the codex SSOT
+  `reconciliation-age-tracking.md` marks the alerting-side publisher **"NOT WIRED"**. The real work = build the
+  cross-service recon-freeze **publisher** (per-incident granularity: symbol-scoped vs account-wide SEV0), which is
+  **already tracked as a dedicated P0 in `plans/epics/observability_master.md` § "Recon-freeze publisher dispatch (slot
+  7)"** (derived from archived `recon_freeze_armed_never_published_2026_05_27.md`). De-duplicated to that canonical
+  home; NOT a one-line code add in this sweep. Source: batch_live_reconciliation_service_audit G12.
 - `BLOCKED-OPERATOR-DECISION` [DATA] P3. alerting-service: ML threshold baseline for the 5 `ml_*` codes (ML inference
   not yet live) + `tick_staleness_seconds` per-venue baseline (needs live MTDS feeds). Source: alerting_fp_rate.
 
