@@ -150,16 +150,16 @@ the storage bloat.
       `terraform/state/prod`) + applied in-place; all 5 verified `soft_delete=0` live. deployment-service@`be6df48`.
       **Remaining → extracted + investigated as the dedicated P3 todo below (slot-3 2026-06-02):**
       `instruments-store-sports-prd` + `client-reporting-data` are NOT in workspace TF (created out-of-band) — their
-      gcloud settings stand (live protection in place); codify (or delete) per the P3 todo. (3) **Codify the
-      `deployment-scripts` bucket lifecycle into terraform** (the 30d-cap rules applied 2026-06-02 are imperative-only).
-      **BLOCKER / design note (slot-3 2026-06-02):** the `deployment-scripts-<pid>` bucket is **not in TF at all** + is
-      a **singleton** (one physical bucket in the central project) while `terraform/gcp` applies per-env
-      (dev/staging/prod state prefixes), so a naïve `google_storage_bucket` resource would (a) try to \_create* an
-      existing bucket → 409 on the next apply, and (b) be claimed by 3 separate state files. Recipe for a **TF-capable
-      host** (this slot has neither `terraform` nor `tofu`): add `resource "google_storage_bucket" "deployment_scripts"`
-      to `terraform/gcp/main.tf` matching live settings (location `ASIA-NORTHEAST1`, STANDARD, **UBLA off** /
-      fine-grained ACLs, no versioning, `force_destroy=false`, `soft_delete_policy { retention_duration_seconds = 0 }`,
-      the three `lifecycle_rule` blocks = 14d `vm-logs/`, 15d `vm-heartbeat/`, 30d
+      gcloud settings stand (live protection in place); codify per the P3 todo. (3) **Codify the `deployment-scripts`
+      bucket lifecycle into terraform** (the 30d-cap rules applied 2026-06-02 are imperative-only). **BLOCKER / design
+      note (slot-3 2026-06-02):** the `deployment-scripts-<pid>` bucket is **not in TF at all** + is a **singleton**
+      (one physical bucket in the central project) while `terraform/gcp` applies per-env (dev/staging/prod state
+      prefixes), so a naïve `google_storage_bucket` resource would (a) try to \_create* an existing bucket → 409 on the
+      next apply, and (b) be claimed by 3 separate state files. Recipe for a **TF-capable host** (this slot has neither
+      `terraform` nor `tofu`): add `resource "google_storage_bucket" "deployment_scripts"` to `terraform/gcp/main.tf`
+      matching live settings (location `ASIA-NORTHEAST1`, STANDARD, **UBLA off** / fine-grained ACLs, no versioning,
+      `force_destroy=false`, `soft_delete_policy { retention_duration_seconds = 0 }`, the three `lifecycle_rule` blocks
+      = 14d `vm-logs/`, 15d `vm-heartbeat/`, 30d
       `logs/`+`recon-logs/`+`audit-results/`+`migration-bundle/staging/`+`log-archive/`+`deployments/archive/`)
       **guarded to the central project only** (e.g. `count = var.project_id == "central-element-323112" ? 1 : 0`) + a TF
       1.5 `import {}` block (`id =     "deployment-scripts-central-element-323112"`) so the prod-state apply _adopts_
@@ -201,22 +201,21 @@ the storage bloat.
       end-to-end (build `1c684ffc` re-resolved both jobs). deployment-service@`c1c56cd`. **Pre-existing note (not
       introduced here):** the 13 module-based service triggers in that state still default to the dead `ln` connection —
       a separate foreign drift, left untouched.
-- [ ] [INFRA] P3. **(extracted from the (2) "Remaining" residual + investigated, slot-3 2026-06-02)** Codify (or delete)
-      the 2 out-of-band buckets not in workspace TF. **Live protection already stands** (verified slot-3 2026-06-02), so
-      this is durability-only. **BLOCKER:** needs a TF-capable host — slot-3 has neither `terraform` nor `tofu`; route
-      to a TF-capable slot (slot-1 did the earlier imports). - **`client-reporting-data-central-element-323112`** —
-      live: `ASIA-NORTHEAST1`, **soft_delete=604800 (7d, NOT cleared — likely intentional for client financial data;
-      confirm with operator)**, + the noncurrent lifecycle slot-1 applied
-      (`daysSinceNoncurrentTime=90, numNewerVersions=5`). Action: add a central-project-guarded `google_storage_bucket`
-      to `deployment-service/terraform/gcp/main.tf` matching live exactly (incl. the 7d soft-delete unless operator says
-      clear it) + TF 1.5 `import {}` block; `terraform plan` must show no changes. -
-      **`instruments-store-sports-prd-central-element-323112`** — **INVESTIGATE BEFORE CODIFYING: this is a suspected
-      STALE DUPLICATE.** It's a structural clone of the canonical `instruments-store-sports-central-element-323112`
-      (identical prefixes `_audits/_catalogue/_index/sports_reference/sports_reference_v1_archive/…`, newest objects
-      2026-05-06, soft_delete already 0) and the non-standard `-prd-` infix doesn't match the workspace naming
-      convention (`instruments-store-<ag>-<project_id>`). Likely an orphan from an env-naming mistake. **Decide DELETE
-      (after snapshot) vs codify with the operator** — do NOT blindly add it to TF. No code references the `-prd-`
-      naming (grep clean). Repo: deployment-service/terraform.
+- [ ] [INFRA] P3. **(extracted from the (2) "Remaining" residual, slot-3 2026-06-02; corrected 2026-06-02 per
+      operator)** Codify the 2 out-of-band buckets into workspace TF. **Live protection already stands** (verified
+      slot-3 2026-06-02), so this is durability-only — **no data deletion in scope.** **BLOCKER:** needs a TF-capable
+      host — slot-3 has neither `terraform` nor `tofu`; route to a TF-capable slot (slot-1 did the earlier imports). -
+      **`client-reporting-data-central-element-323112`** — live: `ASIA-NORTHEAST1`, `soft_delete=604800` (7d, intact —
+      keep unless operator says otherwise; appropriate for client financial data) + the noncurrent lifecycle slot-1
+      applied (`daysSinceNoncurrentTime=90, numNewerVersions=5`). Action: add a central-project-guarded
+      `google_storage_bucket` to `deployment-service/terraform/gcp/main.tf` matching live exactly + TF 1.5 `import {}`
+      block; `terraform plan` must show no changes. - **`instruments-store-sports-prd-central-element-323112`** — **this
+      is the NEW CANONICAL sports instruments bucket** (env-suffixed naming `instruments-store-<ag>-<env>-<pid>` is the
+      new convention; the old no-env `instruments-store-sports-<pid>` in `main.tf` is the LEGACY bucket, with data
+      migration old→new in place — per operator 2026-06-02). **NOT a duplicate; do NOT delete.** TF simply lags the
+      migration. Action: codify the new env-suffixed bucket in TF (match live: soft_delete=0 + the standard noncurrent
+      lifecycle) via `import {}` block, same as the other instruments-store buckets. (Corrects an earlier slot-3
+      mischaracterization of this bucket as a "stale duplicate.") Repo: deployment-service/terraform.
 
 ## Verification
 
