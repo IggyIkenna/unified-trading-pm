@@ -34,7 +34,7 @@ leg, no leverage, no directional view. Just held-to-earn-yield.
 
 2. HOLD: LST balance grows via rebase (stETH) or exchange rate increase (rETH, JitoSOL, mSOL)
 
-   For restaking-eligible LSTs (weETH, pufETH, ankrETH, ETHx; jitoSOL, mSOL when held in Solayer/etc.) the realised
+   For restaking-eligible LSTs (weETH, pufETH, ankrETH, ETHx; jitoSOL, mSOL when held in Jito Restaking/etc.) the realised
    yield comes from THREE on-chain-discoverable layers (see
    [restaking-reward-economics.md](../cross-cutting/restaking-reward-economics.md)):
      - CARRY_BASE              — exchange_rate appreciation (continuous, in target denomination)

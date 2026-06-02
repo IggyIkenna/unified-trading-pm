@@ -151,13 +151,11 @@ rows before the floor date are `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`.
 | Venue                | UAC Key                                              | Program ID (best-guess)                         | Deploy Date | Adapter                           | Status                                           |
 | -------------------- | ---------------------------------------------------- | ----------------------------------------------- | ----------- | --------------------------------- | ------------------------------------------------ |
 | JITORESTAKING-SOLANA | `CANONICAL_VENUE_TO_ADAPTER["JITORESTAKING-SOLANA"]` | Jito Vault Program (multiple VRT mints)         | 2024-08-01  | `adapters/defi/jito_restaking.py` | ✅ shipped (Plan A)                              |
-| SOLAYER-SOLANA       | `SOLANA_DEFI_PROTOCOLS["solayer"]`                   | `SolayerEndoAVSSo11111111111111111111111111112` | 2024-04-01  | `adapters/defi/solayer.py`        | ✅ shipped (Plan E)                              |
-| PICASSO-SOLANA       | `SOLANA_DEFI_PROTOCOLS["picasso"]`                   | `5nMau41MBCMmPfQHs9FMgzMgCJVA1VdJBV9kLnzBNNDn`  | 2023-05-01  | `adapters/defi/picasso.py`        | ✅ shipped (Plan E) ⚠️ addr pending verification |
-| CAMBRIAN-SOLANA      | `SOLANA_DEFI_PROTOCOLS["cambrian"]`                  | `CAMBr1ANreStakingVau1tProgramSo1ana...`        | 2024-06-01  | `adapters/defi/cambrian.py`       | ✅ shipped (Plan E) ⚠️ addr pending verification |
 
-> **Note on program IDs**: Picasso and Cambrian program IDs are best-guess placeholders as of 2026-05-13. Update from
-> official docs when published. Tests assert structural invariants, not specific addresses — no test changes needed when
-> addresses are updated.
+> Solayer/Picasso/Cambrian removed 2026-06-02 — no usable/decodable data source (operator decision). The Plan-E
+> SOLAYER/PICASSO/CAMBRIAN-SOLANA venues, UAC capabilities, and IS adapters were fully wiped. sSOL is a custom LRT vault
+> with no decodable exchange-rate layout / no IDL; Picasso/Cambrian program IDs were never field-verified (best-guess
+> placeholders). SSOT: `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 ## Restaking layer
 
@@ -176,7 +174,7 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 | ------------------------------ | ------------------------------------------------------------- | ---------------------------------- |
 | `restaking_rewards`            | Per-epoch/operator reward accrual rate (APY + absolute)       | REST API / RPC (future MTDS scope) |
 | `restaking_operator_set`       | Active operators/NCNs securing a vault                        | On-chain account reads             |
-| `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (Picasso ICS) | API / SDK                          |
+| `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (no live venue)| API / SDK                          |
 | `lst_rates`                    | Exchange rate (underlying SOL per receipt token)              | Stake pool state accounts          |
 
 ### Jito Restaking (already shipped — Plan A)
@@ -185,25 +183,15 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 (launched 2024-08-01). Instruments: JTORK-EZSOL (Renzo), JTORK-FRAGSOL (Fragmetric), JTORK-KYSOL (Kyros). Uses
 `venue="JITORESTAKING-SOLANA"` (distinct from `jito.py` which covers the Jito LST JitoSOL at `venue="JITO-SOLANA"`).
 
-### Solayer (Plan E)
+### Solayer / Picasso / Cambrian — REMOVED 2026-06-02
 
-`solayer.py` covers Solayer's endogenous AVS restaking. Primary instrument: sSOL (Solayer Staked SOL). Two vault routes:
-SOL collateral + JitoSOL collateral (triple-layer: base staking
-
-- Jito MEV + Solayer AVS). `venue="SOLAYER-SOLANA"`.
-
-### Picasso (Plan E)
-
-`picasso.py` covers Picasso Network cross-chain restaking. Primary instrument: pSOL (Picasso cross-chain restaked SOL).
-Users secure ICS (Inter-Chain Security) cross-chain services. `venue="PICASSO-SOLANA"`. Program ID requires verification
-from official docs (placeholder used).
-
-### Cambrian (Plan E)
-
-`cambrian.py` covers Cambrian Network foundational AVS restaking primitives. Instruments: cSOL
-
-- cSOL-JITOSOL. `venue="CAMBRIAN-SOLANA"`. Vault addresses require verification from official Cambrian program registry
-  (placeholders used; tests are address-agnostic).
+The Plan-E Solayer, Picasso, and Cambrian restaking venues were **fully removed 2026-06-02 (operator decision)** — no
+usable/decodable data source. Solayer's sSOL is a custom LRT vault with no decodable exchange-rate layout / no IDL, so it
+could not be field-verified; Picasso (~3 tx/month, no public yield/rate API) and Cambrian (a developer SDK for building
+NCNs on Jito Restaking, not a DeFi venue) had only best-guess placeholder program IDs that were never verified. The
+venues, UAC `PROTOCOL_CAPABILITIES`/`_STATIC_VENUE_CHAINS` entries, IS `solayer.py`/`picasso.py`/`cambrian.py` adapters,
+and all tests were wiped. "Rather have no implementation than a partial one." SSOT:
+`plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 ### carry_staked_basis cross-reference
 

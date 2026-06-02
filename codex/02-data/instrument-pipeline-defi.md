@@ -19,7 +19,7 @@ instruments-service
     │  Provides: InstrumentRecord objects with canonical instrument_key
     │  Adapters (under reference_data/adapters/defi/ as of 2026-05-14 — refreshed per Phase 2J audit):
     │    Lending: aave_v3, benqi, compound_v3, euler_v2, fluid, kamino, morpho, radiant, spark, venus
-    │    DEX: balancer, curve, drift, lifinity, lighter, mango, meteora, orca, pacifica, phoenix, picasso,
+    │    DEX: balancer, curve, drift, lifinity, lighter, mango, meteora, orca, pacifica, phoenix,
     │         raydium, uniswap_v2, uniswap_v3, uniswap_v4, zeta
     │    DEX agg: jupiter
     │    LST: etherfi, ethfi, jito, lido, marinade, rocket_pool, sanctum, solblaze
@@ -27,9 +27,10 @@ instruments-service
     │         solblaze.py: bSOL (pre-existing; MTDS handler wired 2026-05-14 @0636dd4)
     │    Vault: beefy, convex, idle, pendle, yearn
     │    Restaking + LRT: eigenlayer, jito_restaking, karak, kelpdao, puffer, renzo, symbiotic
-    │    Other: benqi, cambrian, ethena, flash_trade, pyth, solayer
+    │    Other: benqi, ethena, flash_trade, pyth
+    │    (solayer/picasso/cambrian removed 2026-06-02 — no usable/decodable data source, operator decision)
     │    Native staking: solana_native_staking (instruments-service@9d7cfc7, 2026-05-14)
-    │    (52 DeFi adapters total; excludes _solana_utils.py, _lst_utils.py, extended.py base helpers)
+    │    (49 DeFi adapters total; excludes _solana_utils.py, _lst_utils.py, extended.py base helpers)
     │  CeFi adapters (under reference_data/adapters/cefi/): binance, hyperliquid, et al. — NOT DeFi.
     ▼
 market-tick-data-service (MTDS)
