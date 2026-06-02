@@ -359,7 +359,7 @@ by a PR:
       (`pbms_aggregator._VenueData` → `.VenueData`); `pytest tests/ -m code_test --collect-only` now exits 0
       (**4235/4722 collected, 487 deselected**, only harmless `full_e2e` unknown-mark warnings). **REMAINING:** full
       symbol-drift sweep across the rest of `tests/`, `deployment_test` re-green, and one run-to-completion — kept open.
-- [ ] [BLOCKED-OPERATOR-DECISION] P1. **SIT runs a UIC-adoption check against `unified-internal-contracts`
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-02 (operator: repoint to unified_api_contracts.internal) — system-integration-tests@80aacfa (LDR/main/staging): repointed the adoption check to unified-api-contracts + check_uac_adoption.py (scans unified_api_contracts/internal/; same --orphans-only/--workspace interface). Original: **SIT runs a UIC-adoption check against `unified-internal-contracts`
       (smoke-test-gate.yml:304-339) — PREMISE CORRECTED 2026-06-02 (slot 1): the repo is NOT deleted.**
       `gh api repos/IggyIkenna/unified-internal-contracts` → exists, `archived=false`, `default=main`,
       `pushed_at=2026-03-26`. So the `git clone` at L307 SUCCEEDS and the gate step is **NOT broken** (the original
