@@ -100,28 +100,81 @@ new code. That requires the backend + frontend to be **stateless** (restart-safe
 | **Frontend** `dashboard/` | ✅ yes               | Vite/React static build; reads all state from the API at runtime. Rebuild + redeploy is safe.                                           |
 | **Backend** `server/`     | ❌ **NOT stateless** | Authoritative state = local SQLite `data/state/state.db` **inside the repo dir** (`config.db_path()`, override `ORCHESTRATOR_DB_PATH`). |
 
-Backend lifecycle (verified): `lifespan` startup calls `initialise()` reading the **local** DB + starts `SnapshotLoop`
-(periodic GCS/S3 push); graceful shutdown takes a final `snapshot_session(reason="shutdown")`. **There is NO
-auto-restore from GCS/S3 on boot** — `scripts/restore_from_gcs.sh` is manual-only. So a GHA "fresh checkout + restart"
-loses state unless the state dir survives the restart. Hard-kill/OOM also skips the shutdown snapshot (the
-api_host_chronic_impairment note shows OOM restarts happen) → you fall back to the last periodic snapshot.
+Backend lifecycle (verified 2026-06-02 by code trace):
 
-- [ ] [DESIGN] P0. Pick the durability model and document it: **(a)** persistent volume — point `ORCHESTRATOR_DB_PATH`
-      at a mounted disk that survives GHA restarts (durable, not "stateless" but restart-safe); **or (b)** auto-restore
-      on boot — `lifespan` pulls the latest GCS/S3 snapshot when the local DB is absent/older (true stateless compute,
-      externalized state). (b) is the genuine "stateless backend".
-- [ ] [SCRIPT] P0. Implement the chosen model. If (b): add boot-restore to `lifespan` before `initialise()` + tighten
-      the periodic snapshot interval so the RPO on a hard-kill is bounded; add a test that a fresh DB dir boots from a
-      seeded snapshot.
-- [ ] [DESIGN] P1. Audit remaining in-process state (`_state` dict, the loop threads) for anything not reconstructable
-      from the DB on restart — confirm all server-lifetime state rehydrates from SQLite.
+- **Source of truth = the local SQLite DB.** `lifespan` startup → `initialise()` (`server/bootstrap.py:177`) opens the
+  **local** DB + syncs backlog/accounts YAML into it; starts `SnapshotLoop` (periodic GCS/S3 push). **No auto-restore
+  from GCS/S3 on boot** — `scripts/restore_from_gcs.sh` is manual-only. GCS/S3 = disaster-recovery archive, not the live
+  store.
+- **In-flight writes are durable.** Every tx is `BEGIN IMMEDIATE` + WAL (`server/db.py:18,30`); `/done` commits inside
+  `session_scope()` before responding → a crash mid-`/done` keeps the committed row. Only the in-memory `_state` dict +
+  loop-thread state is lost on crash, and it all rehydrates from SQLite/YAML on boot.
+- **Pre-restart flush exists but is not crash-proof.** Graceful shutdown calls `snapshot_session(reason="shutdown")`
+  (`server/server.py:286`); systemd `orchestrator.service` sends SIGTERM with `TimeoutStopSec=30`. A slow GCS upload can
+  exceed 30s → SIGKILL truncates it; an OOM (`MemoryMax=56G`) skips it entirely → fall back to the last periodic
+  snapshot.
 
-### G6 — staging branch + main-triggered CICD for agent-orchestrator [P0] _(operator decision 2026-06-02)_
+**VM-volume correction (the operator's question):** these are **long-running VMs**, so a normal `systemctl restart`
+keeps `data/state/state.db` (the repo checkout persists — no data loss on restart). The real exposure is a
+**code-redeploy that re-checks-out / cleans the repo dir**, or a fresh VM: `state.db` lives **inside the repo checkout**
+(`STATE_DIR = REPO_ROOT/data/state`, `server/config.py:46`; `bootstrap_vm.sh` never sets `ORCHESTRATOR_DB_PATH`; the
+systemd unit's `WorkingDirectory` + `ReadWritePaths` point inside the repo). The correction: **relocate the DB outside
+the repo checkout** (`ORCHESTRATOR_DB_PATH=/var/lib/orchestrator/state.db` on a persistent path) so a GHA code redeploy
+can never touch it — this is what makes the "update code → restart backend" CICD model (G6) safe on a long-running VM.
 
-- [ ] [INFRA] P0. Create the `staging` branch for agent-orchestrator and wire `quickmerge.sh` (PR base = staging) + a
-      `staging-to-main` SIT gate, mirroring the trading-repo flow. Removes the old `main`-direct exception.
-- [ ] [INFRA] P0. Add the merge-to-`main` CICD trigger: rebuild dashboard, update Firestore (if used by the deploy),
-      GHA-restart the backends. **Depends on G5** — do not flip on the auto-restart until the backend is restart-safe.
+Operator steer 2026-06-02: keep **local SQLite as the live source of truth** (long-running VMs) + add a **pre-restart
+flush** so no data is lost on deploy/restart, rather than going full GCS-restore-on-boot.
+
+- [ ] [SCRIPT] P0. Move the live DB off the repo checkout: set `ORCHESTRATOR_DB_PATH` to a persistent path
+      (`/var/lib/orchestrator/state.db`) in `bootstrap_vm.sh` + the systemd unit (`ReadWritePaths` + a one-time migrate
+      of the existing DB). A code redeploy then cannot wipe state.
+- [ ] [SCRIPT] P0. Harden the pre-restart flush: add an explicit `flush+snapshot` step the deploy/restart path calls
+      BEFORE sending SIGTERM (e.g. `POST /api/admin/snapshot` or a systemd `ExecStop=` pre-hook), and raise
+      `TimeoutStopSec` enough for the snapshot to finish. Goal: zero data loss on a planned restart even if the GCS
+      upload is slow.
+- [ ] [DESIGN] P1. OOM/hard-kill RPO: tighten the periodic `SnapshotLoop` interval (or WAL-checkpoint cadence) so an
+      unplanned kill loses at most a bounded window. Confirm `_state` + loop state fully rehydrate from SQLite on boot
+      (already true by trace — add a restart test that asserts it).
+
+### G6 — staging branch + CICD for agent-orchestrator [P0] _(operator decision 2026-06-02)_
+
+**Verified 2026-06-02:** agent-orchestrator already has `quality-gates-v2.yml` (canonical; triggers push/PR to
+`[main, staging]`, calls PM's reusable `python-quality-gates-v2.yml`) **and** a `dispatch-cloud-build` job that fires
+`qg-passed` → PM `cloud-build-router.yml` on **staging** push. So the CI + cloud-build trigger already exist — what's
+missing is the **`staging` branch itself** + the v1-ghost cleanup. Its local gate is **`scripts/check.sh`** (no
+`scripts/quickmerge.sh`/`quality-gates.sh` — it is not a uv service repo).
+
+- [ ] [INFRA] P0. Create the `staging` branch for agent-orchestrator + a `staging-to-main` SIT/promotion gate mirroring
+      the trading-repo flow. Removes the old `main`-direct exception. (Quickmerge in the trading repos is already
+      staging-first — PR base = staging, `--to-staging` is a no-op — see G3/G7.)
+- [ ] [INFRA] P0. Delete the stale v1 ghost workflows still present in agent-orchestrator (`quality-gates.yml`,
+      `workspace-qg.yml`) — the v2 migration removed these from every other repo (deployment-ui done 2026-06-02). Pin
+      branch protection to require `Quality Gates (agent-orchestrator) / quality-gates-v2`.
+- [ ] [INFRA] P0. Confirm the merge→CICD restart path: dashboard rebuild + GHA-restart of the backend on deploy.
+      **Depends on G5** — do not enable the auto-restart until the DB is off the repo checkout + the pre-restart flush
+      is in place, or a deploy could wipe/lose state.
+
+### G7 — reconcile agent boot prompts to the staging-first quickmerge + v2 flow [P0] _(operator-raised 2026-06-02)_
+
+The boot prompts every spawned agent reads (`agent-orchestrator/agents/*.md`) already reference a "v2 quality-gate
+flow" + `quickmerge --agent`, but they carry the **same staging-vs-LDR drift as G3** (verified against
+`scripts/quickmerge.sh`, which is staging-first: all human commits → PR base `staging`; `--to-staging` is a no-op):
+
+- [ ] [DOC] P0. `agents/worker.md:217` — "auto-merge to the target branch (live-defi-rollout; staging where the
+      fast-path applies)" is wrong: quickmerge PR base is **`staging` for every human commit**. Fix to state the two
+      axes clearly: raw `tab/<op>/<N>` → push **LDR** = continuous-integration (no PR, no remote CI);
+      `quickmerge --agent` = the promotion step that opens a **PR to `staging`** → SIT → main.
+- [ ] [DOC] P0. `agents/worker.md:218` — "Use `--to-staging` only if the task brief says so" is wrong: `--to-staging` is
+      a **no-op** (everything already routes to staging). Remove the conditional.
+- [ ] [DOC] P1. `agents/RULES.md:52-67` ship-cadence block — same reconciliation; keep the `.qg_last_passed_sha`
+      sentinel two-pass (correct) but fix any "quickmerge → LDR" implication.
+- [ ] [DOC] P1. Clarify the **operator-tooling exception** (`worker.md:228`): agent-orchestrator's own gate is
+      `scripts/check.sh` (correct, verified) — but once G6 lands its `staging` flow, document whether agents working
+      _inside_ agent-orchestrator ship via `check.sh` + reviewed direct push or via the new staging PR path.
+- [ ] [DOC] P1. Note that "v2" = the CI required-check rename (`…/quality-gates-v2`, migration COMPLETE 2026-06-02,
+      17/17 repos); the LOCAL two-pass commands (`scripts/quality-gates.sh` → `quickmerge.sh --agent`) are unchanged —
+      so no command edits are needed, only the target-branch + `--to-staging` corrections. Cross-link G3 (do not
+      duplicate the rules-file fix that lives in the context-hygiene plan).
 
 ## Related open work (NOT absorbed here)
 
@@ -136,7 +189,10 @@ vm-ml SSM-degraded/now-stopped; foreign-repo playwright-report still tracked). T
 - `execution_scope` (two values: `orchestrator-agent | local-only`) is in PLAN_FORMAT.md, honoured by
   `regen_backlog_from_plan.py` (test proves a `local-only` plan is skipped), and the 3 local-only docs are stamped.
 - G2: `DEFAULT_PLAN_REGEN_INTERVAL_SECONDS` lowered to ≤ 1800 (30 min) with the test updated.
-- G5: backend durability model chosen + implemented; a fresh state dir restart preserves state (test proves it).
-- G6: `staging` branch exists, quickmerge→staging→SIT→main wired, and the main→CICD trigger is live (gated on G5).
+- G5: DB relocated off the repo checkout (`ORCHESTRATOR_DB_PATH` persistent) + pre-restart flush hardened; a restart
+  loses zero state (test proves it) and local SQLite stays the live source of truth.
+- G6: `staging` branch exists, v1 ghost workflows deleted, branch protection requires `…/quality-gates-v2`, and the
+  merge→CICD restart path is confirmed safe (gated on G5).
+- G7: boot prompts corrected — quickmerge target is `staging` (not LDR), `--to-staging` documented as a no-op.
 - `e2e_demo.py` passes locally with the result captured.
 - G3 reconciliation is closed in the context-hygiene plan (cross-checked, not duplicated).
