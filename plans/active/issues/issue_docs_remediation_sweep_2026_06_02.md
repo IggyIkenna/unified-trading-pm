@@ -319,9 +319,12 @@ verified complete**.
 - [ ] [DOC] P3. PM: B2 codex marker reconciliation — replace `zero_activity=True` / `ZERO_ACTIVITY_BAR` with
       `staleness_seconds>0 + trade_count==0` in `honest-absence-downstream-handling.md` +
       `live-pipeline-architecture.md` (no code consumers — pure doc drift). Source: fleet_audit_triad.
-- [ ] [DOC] P1. PM: write `codex/06-coding-standards/adapter-finalization-contract.md` + a per-adapter density section
-      in `honest-absence-downstream-handling.md` (after the MDPS workstream lands). Source:
-      mdps_state_adapter_leading_nan.
+- [x] ✅ [DOC] P1. PM: write `codex/06-coding-standards/adapter-finalization-contract.md` + a per-adapter density
+      section in `honest-absence-downstream-handling.md` (after the MDPS workstream lands). —
+      unified-trading-pm@`5c7aedc23` (already landed by the MDPS leading-NaN workstream: full finalization contract doc
+      (84L, close-driven vs state_col modes + per-adapter table) + "Per-adapter density contract" section
+      §honest-absence L1425; verified as-shipped against base_adapter.\_finalize_session_grid signature 2026-06-02).
+      Source: mdps_state_adapter_leading_nan.
 
 ## E2E pipeline manifest + data-status wiring (operator request 2026-06-02: "UAC/IS/MTDS/MDPS/features/strategy/execution all hooked up for E2E; data manifest + data status; deployment UI/API understand + show them")
 
