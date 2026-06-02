@@ -867,12 +867,99 @@
       "external_count": 47
     },
     "fund-administration-service": {
-      "skipped": true,
-      "reason": "not a directory"
+      "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-trading-library": "unified-trading-library>=0.1.0,<2.0.0"
+      },
+      "external_deps": {
+        "aiohttp": [
+          "aiohttp>=3.13.4,<4.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "httpx": [
+          "httpx>=0.28.1,<1.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.3,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist<4.0.0,": [
+          "pytest-xdist<4.0.0,>=3.6.0"
+        ],
+        "python-multipart": [
+          "python-multipart>=0.0.27,<1.0.0"
+        ],
+        "requests": [
+          "requests>=2.33.0,<3.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "starlette": [
+          "starlette>=1.0.1,<2.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
+      },
+      "internal_count": 2,
+      "external_count": 22
     },
     "greeks-service": {
-      "skipped": true,
-      "reason": "not a directory"
+      "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
+      },
+      "external_deps": {
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
+      },
+      "internal_count": 2,
+      "external_count": 3
     },
     "market-data-processing-service": {
       "internal_deps": {
@@ -1870,7 +1957,6 @@
     },
     "deployment-service": {
       "internal_deps": {
-        "deployment-api": "deployment-api>=0.1.0,<1.0.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -1903,7 +1989,7 @@
           "google-cloud-run<1.0.0,>=0.15.0"
         ],
         "jinja2": [
-          "jinja2>=3.1.0,<4.0.0"
+          "jinja2>=3.0.0,<4.0.0"
         ],
         "pip-audit": [
           "pip-audit>=2.7.0,<3.0.0"
@@ -1954,7 +2040,7 @@
           "web3>=6.20.0,<8.0.0"
         ]
       },
-      "internal_count": 3,
+      "internal_count": 2,
       "external_count": 26
     },
     "deployment-ui": {
