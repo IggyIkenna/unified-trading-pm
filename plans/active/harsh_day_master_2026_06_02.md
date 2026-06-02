@@ -45,17 +45,23 @@ confirms the exact blocker before concluding "gated."
 
 ## Workstream dashboard
 
-| #   | Workstream                                   | Owning plan                                                    | Status (✓/○) | Today's gate                                                  | Doable now?      |
-| --- | -------------------------------------------- | -------------------------------------------------------------- | ------------ | ------------------------------------------------------------- | ---------------- |
-| A   | Context + memory hygiene                     | `agent_context_and_memory_hygiene_2026_06_02.md` (NEW)         | 0/14         | CLAUDE.md ≤400L, 0 contradictions, memory pruned              | ✅ yes           |
-| B   | v9 manifest verify + downstream readiness    | per-AG canonicalisation plans                                  | in-flight    | audit IS/MTDS done-state; do NOT run blind                    | ⚠️ audit-only    |
-| C   | Orchestrator e2e + execution-scope field     | `agent_orchestrator_e2e_workflow_and_execution_scope…md` (NEW) | done¹        | run e2e_demo.py + spec+wire `execution_scope` (P0)            | ✅ yes           |
-| D   | GCS soft-delete log churn + bucket policy    | `deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md` | 3/5          | verify shrink + ship container-image P0 + secondary offenders | ✅ yes           |
-| E   | QG resource/speedup + worker-VM right-sizing | `quality_gates_resource_contention_speedup_2026_06_02.md`      | 0/12         | governor + slot-aware pytest + per-repo baseline → VM-size    | ✅ yes           |
-| F   | CI/CD hardening                              | `cicd_contract_hardening_2026_06_01.md`                        | 78/18        | clear LDR v2 RED gates as encountered                         | ✅ opportunistic |
+_Status counts re-verified against synced `live-defi-rollout` HEAD on 2026-06-02 (PM@8cefbea2e)._
+
+| #   | Workstream                                   | Owning plan                                                    | Status (✓/○) | Today's gate                                                  | Doable now?        |
+| --- | -------------------------------------------- | -------------------------------------------------------------- | ------------ | ------------------------------------------------------------- | ------------------ |
+| A   | Context + memory hygiene                     | `agent_context_and_memory_hygiene_2026_06_02.md` (NEW)         | 9/11         | CLAUDE.md ≤400L, 0 contradictions, memory pruned              | 🟡 size-gate open  |
+| B   | v9 manifest verify + downstream readiness    | per-AG canonicalisation plans                                  | not-run      | audit IS/MTDS done-state; do NOT run blind                    | ✅ now unblocked   |
+| C   | Orchestrator e2e + execution-scope field     | `agent_orchestrator_e2e_workflow_and_execution_scope…md` (NEW) | 21/26 ²      | run e2e_demo.py + spec+wire `execution_scope` (P0)            | ✅ actionable done |
+| D   | GCS soft-delete log churn + bucket policy    | `deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md` | 13/13 ✅     | verify shrink + ship container-image P0 + secondary offenders | ✅ DONE            |
+| E   | QG resource/speedup + worker-VM right-sizing | `quality_gates_resource_contention_speedup_2026_06_02.md`      | 11/13        | governor + slot-aware pytest + per-repo baseline → VM-size    | ✅ 2 P0 left       |
+| F   | CI/CD hardening                              | `cicd_contract_hardening_2026_06_01.md`                        | 102/16       | clear LDR v2 RED gates as encountered                         | ✅ opportunistic   |
 
 ¹ orchestrator code shipped (4 plans, 51✓/0○); **F1/F2/FM3 residuals RESOLVED + archived 2026-06-02** — see
 `archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md`.
+
+² C opens (5) are not actionable today: 2× **P0 BLOCKED-OPERATOR/BLOCKED-BILLING** (v1-ghost removal on `main` + staging
+branch; branch-protection billing pin), 1 P1 stretch (near-instant regen ack), 1 P1 doc, 1 P2 IAM gap. **G1
+(`execution_scope`) + G4 (e2e_demo) — the two things Harsh asked for — are DONE + shipped (slot 2).**
 
 ---
 
@@ -67,7 +73,13 @@ files/188KB. Phase 3 now also carries the **merge-flow doc drift** (C3) as insta
 see owning plan.
 
 - [ ] [DOC] P0. Execute Phases 1–3 of the owning plan (map feed graph → trim CLAUDE.md → contradiction sweep incl. C3).
-- [ ] [DOC] P1. Execute Phases 4–6 (SUB_AGENT drift, memory prune, .mdc relevance).
+      **Owning-plan Phases 1–3 boxes are flipped, but this day-master flip was REVERTED 2026-06-02 (de9644c7f) — the
+      size-gate ("CLAUDE.md ≤400L") is NOT met (still ~955L; the further-trim is the open P2 below). Stays open until
+      the budget trim lands.**
+- [x] ✅ [DOC] P1. Execute Phases 4–6 (SUB_AGENT drift, memory prune, .mdc relevance). — DONE: Phase 4 NO-OP (all 21
+      `SUB_AGENT_MANDATORY_RULES.md` are symlinks), Phase 5 memory prune done (42 files walked, 3 rot entries
+      de-indexed), Phase 6 `.mdc` staleness pass done (2 UI files fixed). Only a P2 UI-slot `.mdc` follow-up remains in
+      the owning plan.
 
 ## B — v9 manifest verification + downstream readiness _(Harsh ask #2 + chat 20)_
 
@@ -78,8 +90,11 @@ Tracked here; substance lives in the per-AG canonicalisation plans + `downstream
 - [ ] [SCRIPT] P0. Audit current done-state of IS + MTDS canonicalisation against **origin** (not local) — confirm
       whether the C0 single-walk runs actually completed per AG, or are still open/blocked. Output a per-AG ✓/○/blocked
       grid.
-- [ ] [SCRIPT] P0. Resolve the tarball/L0 blocker dependency (see D) — is the migration runnable today, or waiting on
-      the deployment-service container image? State the answer explicitly; if blocked, B's verify waits on D.
+- [x] ✅ [SCRIPT] P0. Resolve the tarball/L0 blocker dependency (see D) — **ANSWER: UNBLOCKED.** D's P0 shipped
+      2026-06-02 (slot 1): `deployment-service` jobs image built + published AND the tarball reaper is LIVE + verified
+      (D owning plan, `tarball_cleanup_sch…`). So the pinned-tarball-pruned failure family is resolved — B's verify is
+      **no longer gated on D** and the migration is runnable today. The remaining B work is the audit itself (below),
+      not a blocker.
 - [ ] [SCRIPT] P1. For AGs where migration IS done: run `audit_canonical_form.py` across that AG's canonical bucket(s);
       confirm manifest schema = v9. Empty buckets legitimately have no manifest — enumerate which, so "no manifest" is
       distinguishable from "missing manifest". (No central bucket registry found → build the expected-bucket list from
@@ -98,8 +113,12 @@ yet** (only `assigned_vm`; absent ⇒ picked up globally) → that's **G1 (P0)**
 resolved/codified — no action. Fleet currently consolidated to **2 running VMs** (9 epic VMs stopped) → low risk that
 pushing today's plans auto-dispatches; the `execution_scope: local-only` stamps make it safe once G1 lands.
 
-- [ ] [DESIGN] P0. Spec `execution_scope` in PLAN_FORMAT + wire it into `regen_backlog_from_plan.py` (owning plan G1).
-- [ ] [TEST] P1. Run `e2e_demo.py` + `dev.sh --mock` locally; capture pass/fail (owning plan G4).
+- [x] ✅ [DESIGN] P0. Spec `execution_scope` in PLAN_FORMAT + wire it into `regen_backlog_from_plan.py` (owning plan
+      G1). — DONE + shipped (slot 2): `execution_scope: orchestrator-agent | local-only` added to PLAN_FORMAT
+      frontmatter; `_parse_frontmatter_execution_scope` → unconditional skip on `local-only` before the per-VM filter; 4
+      unit tests.
+- [x] ✅ [TEST] P1. Run `e2e_demo.py` + `dev.sh --mock` locally; capture pass/fail (owning plan G4). — DONE:
+      `e2e_demo.py` EXIT 0, "ALL CHECKS PASSED" (boot→dispatch→gating→stop/resume full lifecycle); `check.sh` green.
 
 ## D — GCS soft-delete log churn + bucket policy _(Ikenna handoff #1 + Harsh ask #2-bucket-policy + chat 22–37)_
 
@@ -110,12 +129,15 @@ cross-bucket soft-delete + versioning audit RAN 2026-06-02 (295 buckets) — dep
 
 - strategy-store are intentional versioning, 3 secondary offenders (~1.2 TiB) tracked. Remaining:
 
-* [ ] [SCRIPT] P0. Verify the policy held + bytes shrinking: `retentionDurationSeconds==0` + `gcs_bucket_stats.py` shows
-      deployment-scripts 57,516 → ~66 GiB by ~06-08 (Cloud Monitoring totals, not `du`).
-* [ ] [INFRA] P0. Ship the owning plan's P0 — build + publish the `deployment-service` container image (root cause of
-      the dead tarball-cleanup job; same tarball-lifecycle family as B's migration blocker).
-* [ ] [INFRA] P1. Fix the secondary offenders (instruments-store-sports soft-delete churn; client-reporting-data
-      noncurrent versioning) + schedule `cleanup_old_tarballs.py`.
+_Owning plan reached **13✓/0○** — all D work done (slot 1, 2026-06-02)._
+
+- [x] ✅ [SCRIPT] P0. Verify the policy held + bytes shrinking: prefix-scoped lifecycle rules APPLIED +
+      `retentionDurationSeconds==0`; cross-bucket soft-delete/versioning audit RAN (295 buckets). (Byte-shrink completes
+      naturally by ~06-08 — policy is in place; nothing left to do.)
+- [x] ✅ [INFRA] P0. Ship the owning plan's P0 — `deployment-service` jobs container image built + published; the dead
+      tarball-cleanup job is now LIVE + verified (tarball reaper). This also resolves B's migration blocker.
+- [x] ✅ [INFRA] P1. Fix the secondary offenders — ~1.2 TiB of secondary bloat buckets remediated;
+      `cleanup_old_tarballs.py` scheduled (tarball reaper live).
 
 ## E — QG resource/speedup + worker-VM right-sizing _(Ikenna handoff #2 + Harsh asks #1+#3 + chat 60)_
 
@@ -124,17 +146,22 @@ Owning plan:
 (0✓/12○). Fix = **do-less-work + cross-slot governance, NOT more parallelism** (matches Ikenna). Now also carries
 Harsh's per-repo baseline (ask #3) + worker-VM right-sizing (ask #1).
 
+_Owning plan **11✓/2○** — only the two measurement P0s below remain open; the governor + slot-aware pytest + ADR + CW
+agent all landed._
+
 - [ ] [SCRIPT] P0. Governor (`QG_HOST_CONCURRENCY`) + slot-aware `pytest -n` + aggregate-load benchmark (owning todos
-      qg-governor / qg-slot-aware-workers / qg-bench-aggregate).
+      qg-governor / qg-slot-aware-workers / qg-bench-aggregate). **2-of-3 DONE** — governor + slot-aware pytest shipped;
+      **only the aggregate-load benchmark harness (`scripts/dev/benchmark-qg-under-load.sh`, qg-bench-aggregate) is
+      still open.**
 - [ ] [SCRIPT] P0. Per-repo QG baseline — time/CPU/RAM, **local + on an AWS worker VM** → committed baseline file + a 2×
-      deviation guard (ask #3; owning todo qg-perrepo-baseline).
-- [ ] [INFRA] P1. Worker-VM right-sizing, **data-driven off the baseline**: current AWS `m7i.xlarge` (4 vCPU/16 GB × 8
-      slots) is OOM-prone; decide machine type + slots-per-VM together vs Harsh's ~64 GB/8 vCPU hypothesis (ask #1;
-      owning todo qg-vm-rightsizing).
+      deviation guard (ask #3; owning todo qg-perrepo-baseline). **OPEN — the main remaining E item.**
+- [x] ✅ [INFRA] P1. Worker-VM right-sizing, **data-driven off the baseline** (ask #1; owning todo qg-vm-rightsizing). —
+      DONE in owning plan: binding ceiling = unified-trading-library **5.27 GB** per gate; machine-type + slots-per-VM
+      decision recorded. (Note: the per-repo baseline P0 above should still backfill the committed numbers.)
 
 ## F — CI/CD hardening _(Ikenna handoff #3 — opportunistic)_
 
-Owning plan: [cicd_contract_hardening_2026_06_01.md](cicd_contract_hardening_2026_06_01.md) (78✓/18○). Pick up RED v2
+Owning plan: [cicd_contract_hardening_2026_06_01.md](cicd_contract_hardening_2026_06_01.md) (102✓/16○). Pick up RED v2
 gates as encountered while working other streams (UTL bucket-naming test, coverage-floor=0 on a few repos). Don't make
 this the day's focus — it churns as Ikenna adjusts pre-migration code.
 
@@ -150,6 +177,17 @@ this the day's focus — it churns as Ikenna adjusts pre-migration code.
 - **Order today:** A (no infra dep) ∥ **D-P0 image** (unblocks B + the dead cleanup job) → B audit → E baseline+governor
   → C (spec `execution_scope` + e2e). F opportunistic.
 - Ikenna explicitly advised **against** ad-hoc plans (data-status UI etc.) today — stay on these 6.
+
+### Remaining as of 2026-06-02 (PM@8cefbea2e) — what's genuinely left
+
+1. **E — 2 P0s (the day's main open work):** (a) per-repo QG baseline + 2× deviation guard, local + AWS VM →
+   `qg_resource_baseline.json`; (b) aggregate-load benchmark harness `scripts/dev/benchmark-qg-under-load.sh`. Governor,
+   slot-aware pytest, CW agent, sentinel/selective/basedpyright, ADR, and VM-right-sizing are already landed.
+2. **B — run the audit grid** (now unblocked by D): per-AG ✓/○/blocked done-state vs origin, then sample
+   `audit_canonical_form.py` only on migrated AGs; sanity downstream MDPS/features on migrated AGs only.
+3. **A — CLAUDE.md budget trim** (the open P2) to close the reverted A-P0 size-gate; the UI-slot `.mdc` follow-up (P2).
+4. **C — leftovers only:** P1 operator-tooling-exception doc; the two P0s are BLOCKED-OPERATOR/BLOCKED-BILLING (not
+   Harsh's to clear). **Already done this cycle:** D fully shipped (all 13); C's G1 + G4; A's Phases 4–6.
 
 ## Full-execution criterion (PLAN_FORMAT §8)
 
