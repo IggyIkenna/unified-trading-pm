@@ -65,6 +65,12 @@ _qg_governor_deprioritise() {
 qg_governor_acquire() {
     [[ "${QG_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
     command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — running ungoverned" >&2; return 0; }
+    # bash <4.1 lacks the `exec {fd}>` auto-fd syntax used below (macOS ships bash 3.2). Without
+    # this guard that `exec` is parsed as a command, terminates quality-gates.sh BEFORE [3] TESTS,
+    # and the .qg_last_passed_sha sentinel is never written → quickmerge can't promote from a Mac.
+    # Degrade to ungoverned, same as a missing flock.
+    { [[ "${BASH_VERSINFO[0]:-0}" -gt 4 ]] || { [[ "${BASH_VERSINFO[0]:-0}" -eq 4 ]] && [[ "${BASH_VERSINFO[1]:-0}" -ge 1 ]]; }; } \
+        || { echo "[qg-governor] bash ${BASH_VERSION} <4.1 lacks {fd}> — running ungoverned" >&2; return 0; }
     [[ -n "${_QG_GOV_FD:-}" ]] && return 0   # already holding a token (idempotent)
 
     local k dir fd
