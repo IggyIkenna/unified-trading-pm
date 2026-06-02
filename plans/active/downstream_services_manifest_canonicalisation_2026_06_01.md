@@ -333,6 +333,15 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
 | Item 5 FLAG-4 tradfi denominator (Massive venues) | ⏳ DEFERRED (P2, operator/VenueMapping decision) | deployment-api `MTDS_CATEGORY_META["TRADFI"].venue_accessor` | add Massive venues to accessor |
 | Batch=live None-classifier divergence (prediction) | ⏳ DEFERRED (P1) | mtds polymarket_adapter | reconcile live `None→"OTHER"` vs rebuild `None→attempted_failed` — see prediction plan |
 
+> **QG-sweep result (slot-3 2026-06-02, `--no-fix` × 5 touched repos):** execution-service ✅, strategy-service ✅,
+> features-service ✅ (one MY import-patterns violation — deep UTL import — fixed in features-service@cefd5b54). **mtds +
+> MDPS exit-1 are FOREIGN failures, NOT slot-3's changes:** mtds = 2 sports tests
+> (`test_{migrate,rebuild}_sports_*::*_unresolved_season_suffix_unchanged`, last touched sports@df391e7c); MDPS = 9
+> `test_dependency_checker_sports_prediction.py` routing/output-bucket tests (last touched mdps@61900a3 bucket-resolution
+> change). Neither file is in any slot-3 commit (slot-3 mtds = `rebuild_prediction_manifest.py`; slot-3 MDPS =
+> `live_mode_handler.py`). **Flagged to sports slot / MDPS-bucket-resolution owner** — slot-3 does not fix foreign-owned
+> failing tests (Findings-Triage: foreign → annotate, don't stomp). slot-3's own changed-file tests all GREEN.
+>
 > **Session note (slot-3 2026-06-02):** 8 substantive code commits shipped across 5 repos (all CRITs + P0/P1 items),
 > each per-file lint+typecheck+targeted-test green; full `quality-gates.sh --no-fix` sweep run on all 5 touched repos as
 > the batch closeout (operator-requested deferral of the slow sweep to end). Deferred items above are tracked `- [ ]`
