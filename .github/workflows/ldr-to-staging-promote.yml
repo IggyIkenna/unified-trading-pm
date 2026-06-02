@@ -1,0 +1,233 @@
+name: ldr-to-staging-promote
+
+# TIER C — auto LDR→staging promotion bot (cicd_contract_hardening_2026_06_01 § SIT Tiers A–E, audit j3).
+#
+# WHY: commits land on `live-defi-rollout` (the gateless integration trunk) continuously, but nothing
+# advances `staging` from LDR — quickmerge only opens a staging PR for the NEW unit it commits and
+# early-exits "nothing to commit" on a clean tree, so already-committed LDR backlog never drains.
+# Result: the recurring multi-hundred-commit "staging behind LDR" drift. This bot closes that gap:
+# it opens a LDR→staging PR per repo with drift and enables v2-gated auto-merge, so the backlog
+# drains continuously and safely.
+#
+# GATES (all fail-OPEN on missing signal — block only on an explicit negative):
+#   Tier A (per-repo, scripts/cicd/tier_c_promotion_gate.py): repo's LDR CI not red (ci_status != FAILING).
+#   Dep-order (per-repo, same script): every tracked dep already on staging (ci_status ≥ STAGING_GREEN) —
+#     the LDR→staging mirror of quickmerge STAGE 1.7 / staging-to-main STAGE 1.8.
+#   Tier B (workflow-level): the full-workspace SIT (system-integration-tests) is not in an explicit
+#     failure state. Unknown/absent → pass (safe-default).
+#
+# SAFETY: never force-pushes; opens a PR and enables auto-merge → the repo's quality-gates-v2 required
+# check is what actually merges it. A merge conflict dispatches the conflict-resolution-agent (same as
+# staging-to-main). `dry_run` input lists what WOULD promote without opening PRs.
+#
+# Triggers: every 6h (drain cadence) + manual dispatch + repository_dispatch from a Tier-A/B green signal.
+
+on:
+  schedule:
+    - cron: "17 */6 * * *" # every 6 hours, off the top-of-hour to avoid cron congestion
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List repos that WOULD promote (gate decisions) without opening PRs"
+        type: boolean
+        required: false
+        default: false
+      only_repo:
+        description: "Limit to a single repo (leave empty for the full fleet sweep)"
+        required: false
+        default: ""
+  repository_dispatch:
+    types: [ldr-to-staging, tier-ab-green]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ldr-to-staging-promote
+  cancel-in-progress: false
+
+jobs:
+  promote-ldr-to-staging:
+    runs-on: ubuntu-latest
+    outputs:
+      promoted: ${{ steps.promote.outputs.promoted }}
+      blocked: ${{ steps.promote.outputs.blocked }}
+      conflicted: ${{ steps.promote.outputs.conflicted }}
+      promoted_count: ${{ steps.promote.outputs.promoted_count }}
+      blocked_count: ${{ steps.promote.outputs.blocked_count }}
+      conflicted_count: ${{ steps.promote.outputs.conflicted_count }}
+    steps:
+      - name: Checkout PM
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      # ── Tier B gate: full-workspace SIT not in explicit failure ───────────
+      - name: Tier B gate — full-workspace SIT not red
+        id: tier_b
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          # Read the most recent COMPLETED full-workspace SIT run. Fail-open: any error,
+          # unknown workflow, or no completed run → pass with a note (never block on absent signal).
+          SIT_CONCL=""
+          for WF in full-workspace-sit.yml workspace-sit.yml sit.yml; do
+            SIT_CONCL=$(gh run list --repo "$OWNER/system-integration-tests" --workflow "$WF" \
+              --status completed --limit 1 --json conclusion --jq '.[0].conclusion' 2>/dev/null || true)
+            [ -n "$SIT_CONCL" ] && [ "$SIT_CONCL" != "null" ] && { echo "SIT workflow: $WF"; break; }
+          done
+          if [ "$SIT_CONCL" = "failure" ]; then
+            echo "❌ Tier B BLOCK: latest full-workspace SIT conclusion = failure. Fix SIT before LDR→staging promotion."
+            echo "tier_b_pass=false" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+          echo "✅ Tier B pass (SIT conclusion='${SIT_CONCL:-unknown}'; unknown/success → safe-default pass)"
+          echo "tier_b_pass=true" >> "$GITHUB_OUTPUT"
+
+      - name: Promote LDR → staging (dep-order + Tier-A gated, per repo, topo order)
+        id: promote
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          ONLY_REPO: ${{ inputs.only_repo || '' }}
+        run: |
+          set -euo pipefail
+          MANIFEST="workspace-manifest.json"
+
+          # Topological order (T0 first) — promote deps before dependents.
+          REPOS=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          repos = {k for k in m.get("repositories", {}) if not k.startswith("_")}
+          topo = m.get("topologicalOrder", {}).get("levels", [])
+          emitted = set()
+          for level in topo:
+              for repo in level.get("repos", []):
+                  if repo in repos and repo not in emitted:
+                      print(repo)
+                      emitted.add(repo)
+          # Any repo missing from topo levels still gets a chance (appended last).
+          for repo in sorted(repos - emitted):
+              print(repo)
+          PYEOF
+          )
+
+          PROMOTED=""; BLOCKED=""; CONFLICTED=""
+          PROMOTED_COUNT=0; BLOCKED_COUNT=0; CONFLICTED_COUNT=0
+
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            if [ -n "$ONLY_REPO" ] && [ "$REPO" != "$ONLY_REPO" ]; then
+              continue
+            fi
+
+            # Skip repos without a staging branch (e.g. agent-orchestrator on the main-direct path).
+            if ! gh api "repos/$OWNER/$REPO/branches/staging" --jq '.name' >/dev/null 2>&1; then
+              echo "SKIP $REPO: no staging branch"
+              continue
+            fi
+
+            # Is live-defi-rollout ahead of staging? (commits on LDR not yet on staging)
+            AHEAD=$(gh api "repos/$OWNER/$REPO/compare/staging...live-defi-rollout" --jq '.ahead_by' 2>/dev/null || echo "0")
+            if [ "$AHEAD" = "0" ] || [ -z "$AHEAD" ]; then
+              echo "SKIP $REPO: staging already current with LDR (ahead_by=0)"
+              continue
+            fi
+
+            # ── Per-repo gate (Tier A + dep-order) ──
+            if GATE_OUT=$(python3 scripts/cicd/tier_c_promotion_gate.py "$REPO" --manifest "$MANIFEST"); then
+              echo "GATE PASS  $REPO (+$AHEAD): $GATE_OUT"
+            else
+              echo "GATE BLOCK $REPO (+$AHEAD): $GATE_OUT"
+              BLOCKED="$BLOCKED $REPO"; BLOCKED_COUNT=$((BLOCKED_COUNT + 1))
+              continue
+            fi
+
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  DRY-RUN: would open LDR→staging PR for $REPO (+$AHEAD commits)"
+              PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              continue
+            fi
+
+            # Open (or reuse) the LDR→staging PR and enable v2-gated auto-merge.
+            BODY="Tier C auto-promotion: draining live-defi-rollout → staging (+${AHEAD} commits). Dep-order + Tier-A gated. Merges when quality-gates-v2 passes on the merge result. SSOT: ldr-to-staging-promote.yml."
+            PR_URL=$(gh pr create --repo "$OWNER/$REPO" \
+              --title "chore(promote): LDR → staging (Tier C auto-drain)" \
+              --body "$BODY" --base staging --head live-defi-rollout 2>/dev/null || true)
+
+            if [ -n "$PR_URL" ]; then
+              echo "  PR: $PR_URL"
+              gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null \
+                || echo "  WARN: auto-merge unavailable for $REPO — merge manually: $PR_URL"
+              PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              continue
+            fi
+
+            # No PR created → either one already exists or a conflict. Inspect mergeable_state.
+            PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base staging --head live-defi-rollout \
+              --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+            if [ -n "$PR_NUM" ] && [ "$PR_NUM" != "null" ]; then
+              MSTATE=""
+              for _i in 1 2 3; do
+                MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+                [ -n "$MSTATE" ] && [ "$MSTATE" != "null" ] && break
+                sleep 5
+              done
+              if [ "$MSTATE" = "dirty" ]; then
+                CONFLICT_URL="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
+                echo "  CONFLICT on PR #$PR_NUM ($CONFLICT_URL) — dispatching conflict-resolution-agent"
+                curl -s -X POST \
+                  "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+                  -H "Authorization: Bearer $GH_TOKEN" \
+                  -H "Content-Type: application/json" \
+                  -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"live-defi-rollout\",\"target_branch\":\"staging\",\"original_pr_url\":\"${CONFLICT_URL}\"}}" \
+                  && echo "    dispatched" || echo "    WARN: dispatch failed"
+                CONFLICTED="$CONFLICTED $REPO"; CONFLICTED_COUNT=$((CONFLICTED_COUNT + 1))
+              else
+                echo "  $REPO: existing PR #$PR_NUM mergeable_state=$MSTATE (auto-merge already pending)"
+                PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+              fi
+            else
+              echo "  WARN $REPO: PR creation failed and no open PR found"
+            fi
+          done <<< "$REPOS"
+
+          {
+            echo "promoted=$PROMOTED"
+            echo "blocked=$BLOCKED"
+            echo "conflicted=$CONFLICTED"
+            echo "promoted_count=$PROMOTED_COUNT"
+            echo "blocked_count=$BLOCKED_COUNT"
+            echo "conflicted_count=$CONFLICTED_COUNT"
+          } >> "$GITHUB_OUTPUT"
+
+          echo ""
+          echo "=== Tier C Promotion Summary ==="
+          echo "Promoted ($PROMOTED_COUNT):$PROMOTED"
+          echo "Dep-order/Tier-A blocked ($BLOCKED_COUNT):$BLOCKED"
+          echo "Conflicted ($CONFLICTED_COUNT):$CONFLICTED"
+
+  notify:
+    name: Slack — Tier C LDR→staging promotion
+    needs: [promote-ldr-to-staging]
+    if:
+      always() && needs.promote-ldr-to-staging.outputs.conflicted_count != '0' &&
+      needs.promote-ldr-to-staging.outputs.conflicted_count != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Tier C LDR→staging: ${{ needs.promote-ldr-to-staging.outputs.promoted_count }} promoted, ${{
+        needs.promote-ldr-to-staging.outputs.blocked_count }} dep-order-blocked, ${{
+        needs.promote-ldr-to-staging.outputs.conflicted_count }} CONFLICTED (conflict-resolution-agent dispatched): ${{
+        needs.promote-ldr-to-staging.outputs.conflicted }}"
+      severity: "WARNING"
+      conclusion: ${{ needs.promote-ldr-to-staging.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
