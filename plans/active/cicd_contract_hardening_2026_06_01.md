@@ -306,6 +306,30 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 > block above. Codex SSOT for the durable rules: `codex/08-workflows/ci-cd-flow.md`. **Update each todo live-true as you
 > ship; resolve conflicts ON `live-defi-rollout`, never a throwaway branch.**
 
+### 🔴 BIG FINDING 2026-06-02 — fleet-wide PyJWT advisory will RED most mains' pip-audit (time-triggered)
+
+> **Surfaced during the 2026-06-02 fleet LDR→main promotion.** A new PyJWT advisory cluster
+> (`PYSEC-2026-175 / 177 / 178 / 179`, fixed in **pyjwt 2.13.0**) was published mid-promotion (between e2e-testing's
+> PR-head run at 12:13 — `pip-audit clean` — and its post-merge main run at 12:15 — `pip-audit vulnerabilities found`).
+> `pip-audit` failures count as a codex/compliance violation → the QG hard-fails. **~17 of 20 fleet repos pin
+> `pyjwt 2.11.0 / 2.12.0 / 2.12.1`** (transitive, via the auth chain; constraint is `>=2.12.0,<3.0.0` so 2.13.0 is
+> already permitted) and will fail pip-audit on their NEXT v2 run; only `greeks-service` + `deployment-api` already
+> resolve `pyjwt 2.13.0` (and passed). **The mains promoted before 12:13 are GREEN now** (locked pre-advisory; their last
+> run passed) — they only go red on the next CI run, so this is a fleet remediation, not a per-repo promotion defect.
+> **e2e-testing main is the one left RED** by this (promoted at the publication moment). Real fix only — do NOT
+> `# noqa` / skip pip-audit.
+
+- [ ] [DEP] P0. **Fleet-wide `pyjwt` → 2.13.0 bump (security; fixes pip-audit PYSEC-2026-175/177/178/179).** Repos:
+      every repo whose `uv.lock` pins pyjwt < 2.13.0 (unified-trading-library, instruments-service, alerting-service,
+      execution-service, features-service, fund-administration-service, market-data-processing-service,
+      market-tick-data-service, ml-service, strategy-service, trading-agent-service, client-reporting-api,
+      unified-trading-api, batch-live-reconciliation-service, deployment-service, e2e-testing, ibkr-gateway-infra).
+      Per repo (in the workspace layout so sibling editable paths resolve — NOT a /tmp worktree):
+      `uv lock --upgrade-package pyjwt` → confirm lock resolves `pyjwt 2.13.0` → `bash scripts/quality-gates.sh` green →
+      quickmerge / LDR→main PR. The constraint already permits 2.13.0, so it's a lock-only change (no pyproject edit).
+      greeks-service + deployment-api already at 2.13.0 (no-op). **e2e-testing main is currently RED on exactly this** —
+      its promotion (e2e-testing#3) merged but post-merge main v2 failed pip-audit; this bump greens it.
+
 ### State as of 2026-06-01 (DONE — do not redo)
 
 - **Gate migration COMPLETE**: main 17/17 + staging 16/16 require `Quality Gates (<repo>) / quality-gates-v2`;
@@ -336,8 +360,8 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 | unified-trading-pm                                                                                                                                                    | ✅ MAIN GREEN (harsh fix a217a031c + FF) — done                                                                                                                  |
 | instruments #392 · uac #62 · client-reporting #11 · ibkr #13                                                                                                          | ✅ MERGED to main                                                                                                                                                |
 | trading-agent #7 · deployment-api #14 · execution #206 · mtds #112 · strategy #64 · utl #229 · mdps #87 · deployment-ui #13 · batch-live #13 · SIT #16 · alerting #20 | ⏳ resolutions already on LDR (take-best back-merges); ad-hoc PRs CLOSED 2026-06-01 (whack-a-mole vs churning LDR) — re-promote in the frozen dep-ordered window |
-| deployment-service                                                                                                                                                    | ✅ MERGED to main GREEN 2026-06-02 (fixed: declared `deployment-api` editable dep — was cloned by v2 dep_repos but never installed → `ModuleNotFoundError`)        |
-| fund-administration · e2e-testing · greeks-service                                                                                                                    | ✅ MERGED to main GREEN 2026-06-02 (greeks: created `main` from green LDR + added v2 ruleset on `refs/heads/main`; e2e: added v2 ruleset on main)                  |
+| deployment-service                                                                                                                                                    | ✅ MERGED to main GREEN 2026-06-02 (fixed: declared `deployment-api` editable dep — was cloned by v2 dep_repos but never installed → `ModuleNotFoundError`)      |
+| fund-administration · e2e-testing · greeks-service                                                                                                                    | ✅ MERGED to main GREEN 2026-06-02 (greeks: created `main` from green LDR + added v2 ruleset on `refs/heads/main`; e2e: added v2 ruleset on main)                |
 
 > **5 non-ruff failures = genuine per-repo debt (fix regardless of promotion order):** execution
 > (`test_analog_execution_gate` kelly `0.5 vs 1.0` + grid_utils import-skip), trading-agent, deployment-api, utl, SIT.
@@ -347,7 +371,8 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 > Recurring resolutions applied: `quality-gates-v2.yml` add/add → take LDR (fund-admin, ml, e2e); `workspace-qg.yml`
 > modify/delete → take main's deletion (deployment-service, unified-trading-system-ui); classic `strict:true` →
 > `strict:false` to clear `BEHIND` blocks (unified-trading-api, batch-live, deployment-api/service, ui, ibkr); repo
-> `allow_auto_merge` enabled where off (features, ml, unified-trading-api, fund-admin, deployment-api/service, ui, ibkr).
+> `allow_auto_merge` enabled where off (features, ml, unified-trading-api, fund-admin, deployment-api/service, ui,
+> ibkr).
 
 - [ ] [CI] P1. **unified-trading-system-ui: migrate to canonical `ui-quality-gates-v2.yml` so LDR→main can promote.**
       Repo: `unified-trading-system-ui`. BLOCKED from the 2026-06-02 fleet promotion (only repo not landed). Two
