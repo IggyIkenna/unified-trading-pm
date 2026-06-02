@@ -206,4 +206,21 @@ Tests in scope:
 - [x] ✅ [DOCS] P1. Codex SSOT updates per above (+ document the carry-from-prior-day leading-bin contract). —
       `codex/06-coding-standards/adapter-finalization-contract.md` (new) + `codex/02-data/honest-absence-downstream-handling.md`
       § "Per-adapter density contract: dense + LOCF + no leading NaN + carry-from-prior-day".
-- [ ] [DATA] P1. Reprocess to densify existing data — rides the deferred backfill pass (not a standalone walk).
+- [ ] [DATA] P1. **Densify already-CAPTURED historical candle cells** — re-run the MDPS adapters (now dense per the
+      finalization contract) over historical raw ticks so pre-fix parquets lose their leading-NaN / NaN-OHLC shape.
+      Go-forward writes are ALREADY dense (shipped @56202b0); this is purely historical remediation, and only matters
+      for date windows that backtests / features-onchain actually read.
+      **Home + scope (verified 2026-06-02):**
+      - NOT a manifest-consolidator task — the consolidator only merges per-VM manifest shards into the `_index`; it
+        never reads or rewrites candle-parquet CONTENT (`codex/05-infrastructure/manifest-consolidator-ssot.md`).
+      - NOT a GCS-object-migration walk — `gcs_migration_bundle_pipeline_mode_2026_05_08.md` rewrites/relocates objects
+        and can add columns from existing data, but CANNOT re-derive dense candles (that needs the raw ticks + the new
+        finalizer). So it cannot ride the single-walk GCS migration.
+      - It is an OPERATIONAL candle reprocess → home = `plans/epics/mtds_mdps_master.md` **Phase 11** (backfill-to-100%
+        operational data). **DISTINCT from Phase 11's MISSING_EXPECTED fill**: `mtds_backfill_phase3_2026_05_22.md` runs
+        `VM_FORCE=false` + `ManifestFreshnessCache`, which **skips already-captured cells** — so the existing backfill
+        would NOT re-run the leading-NaN cells. Densify needs a **force-reprocess of already-`captured` cells**
+        (`VM_FORCE=true` equivalent), scoped to the asset_groups/date-windows consumed by backtest/features.
+      - Fold into the next MDPS historical reprocess window per single-walk discipline (no standalone whole-corpus walk).
+      **ACTION:** Phase-11 owner (slot-1 main coordination) should add this force-reprocess pass to the Phase 11
+      operational-backfill scope; tracked here until cross-linked there.
