@@ -501,7 +501,7 @@ by a PR:
       `configs/runtime-topology.yaml` + manifest `dependencies`); (d) the repo-set filter MUST be `status==active`
       (today's `staging_versions>=0.1.0` would pick up archived/consolidated tombstones — see manifest-hygiene todo);
       (e) the `>=1.0.0` version floor is post-cutover — `>=0.1.0` is fine during the testing phase.
-- [ ] [SCRIPT] P1. **semver-agent `workflow_run` watches the DEAD v1 name `"Quality Gates"` in ~6 repos → won't
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-02: **semver-agent `workflow_run` watches the DEAD v1 name `"Quality Gates"` in ~6 repos → won't Fixed `workflow_run.workflows: ["Quality Gates"]` → `["quality-gates-v2"]` (matches the v2 workflow's `name:`) on all 8 affected repos' main (alerting-service, batch-live-reconciliation-service, deployment-service, e2e-testing, market-tick-data-service, system-integration-tests, strategy-service, execution-service) — 7 via relax→push→re-enable (tracked re-enable-all trap; all protection verified restored: enforce_admins=true + ruleset active), e2e-testing free-push. LDR was already correct on 7/8 (main lagged because the LDR→main promotion that carries it was dead — #257); patched mtds LDR. Template SSOT was already correct. features-service was already done.
       auto-fire (caught by SIT `test_workflow_run_references_exist`).** Origin-verified: `alerting-service` +
       `system-integration-tests` semver-agent.yml have `workflows: ["Quality Gates"]`; `features-service` is correctly
       `["quality-gates-v2"]`. Others flagged: batch-live-reconciliation-service, deployment-service, e2e-testing,
