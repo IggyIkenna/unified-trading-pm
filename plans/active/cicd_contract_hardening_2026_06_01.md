@@ -97,32 +97,64 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 > per-repo QG debt + dispatchable. (The ruleset repos greeks/fund-admin/e2e-testing/uts-ui + features-service are
 > tracked above / in Phase 1; these 7 are NEW.) Dep-order promotion is blocked until each is green.
 
-- [ ] [TEST] P1. **unified-trading-library (L2) LDR v2 RED — pytest bucket-naming failure (run 26792007721).**
+> **🔁 RE-AUDIT 2026-06-02 (slot 2 / hkm) — the 7 "genuinely-red LDR" items below are ALL STALE-NOW-GREEN.** Live v2
+> sweep + `verify_branch_protection_check_names.py`: all 17 ruleset repos CONSISTENT on `…/quality-gates-v2`
+> (main+staging); the 7 LDR reds + both P0 foundation blockers (UAC `venue_data_types`, UTL
+> `EmptyFromLiveInstrumentError`) are RESOLVED (flipped below). **The remaining "reds" are LDR→main PROMOTION-LAG, not
+> debt** — fund-administration-service main self-cleared (@3f698e1a, 11:19Z) once UTL main's starlette bump promoted
+> (10:55Z); features-service main red was a stale pre-promotion run (now green @11:29Z). **GENUINE new reds (NOT
+> promotion-lag), filed as todos:**
+
+- [ ] [TEST] P1. **deployment-service LDR + staging v2 RED — orphaned cross-repo test import after the circular-dep
+      cut.** `tests/mocks.py:10` hard-imports `from deployment_api.utils.path_combinatorics import CombinatoricEntry`,
+      but the deployment-api↔deployment-service circular-dep removal dropped `deployment-api` from deployment-service's
+      pyproject **on LDR** (main still declares it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the
+      STALE side; LDR @2ab4cce5 = RED, run 26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is
+      already guarded (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard
+      top-level import. Fix on LDR (the correct post-cut side): make the import resilient OR relocate
+      `CombinatoricEntry` to a shared contract — do NOT re-add deployment-api as a dep (re-creates the just-removed
+      cycle). repo: deployment-service.
+- [ ] [LINT] P2. **e2e-testing main v2 RED — 14 ruff `UP041` errors (aliased-exception replacements).** main-only (no
+      LDR remote CI; run 26796774457 @b526b5eb). Surgical `ruff check --fix` of the flagged files (UP041 is safe
+      autofix), then promote. Blocks the e2e-testing `require-quality-gates` ruleset-add (Phase 1). repo: e2e-testing.
+- [ ] [SCRIPT] P2. **Orchestrator-dispatch escalation marked ✅ DONE is OVERSTATED — PM `escalate-to-orchestrator.yml`
+      does NOT exist.** Re-audit 2026-06-02: `agent-orchestrator/server/escalation.py` + `agents/escalate.md` exist on
+      LDR, but the PM-side GHA trigger workflow (`.github/workflows/escalate-to-orchestrator.yml`) the "✅ built +
+      e2e-tested" claim depends on is absent from `origin/main` → the GHA→orchestrator dispatch is NOT wired end-to-end.
+      Build the missing GHA (composes with the open `stuck_promotion_pr` wiring todo). repos: unified-trading-pm +
+      agent-orchestrator.
+
+- [x] ✅ [TEST] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02 slot-2: LDR v2 run 26814711557 @4c1c9a68 success]
+      unified-trading-library (L2) LDR v2 RED — pytest bucket-naming failure (run 26792007721).**
       `AssertionError: assert 'instruments-…-test-project' == 'instruments-…shard-my-project'` (+ same for
       `ml-models-…`): the test expects project-suffix `…-my-project` but CI resolves `…-test-project`. Either a test
       hardcoding the project name vs an env-derived `GCP_PROJECT_ID`, or a real `bucket_naming` regression on LDR
       (main+staging GREEN, so it is an LDR-only commit). **FOUNDATION — L2 blocks dep-order promotion downstream; green
       this FIRST.** Diagnose via `bash scripts/quality-gates.sh`. repo: unified-trading-library.
-- [ ] [TEST] P1. **batch-live-reconciliation-service (L6) LDR v2 RED —
-      `❌ COVERAGE FLOOR VIOLATION: MIN_COVERAGE=0 < 70` (run 26792013931).** Same class as greeks: effective
-      `MIN_COVERAGE=0` in CI with no honored `.coverage-floor-exception.md` → floor-guard trips. Real fix: trace the 0,
-      write tests to a genuine ≥70 floor OR add a documented exception (NO floor-lowering). repo:
-      batch-live-reconciliation-service.
-- [ ] [TEST] P1. **deployment-api (L6) LDR v2 RED — `❌ COVERAGE FLOOR VIOLATION: MIN_COVERAGE=0 < 70` (run
-      26792015310).** Same MIN_COVERAGE=0 floor-guard class. Real fix per the QG-debt standard. repo: deployment-api.
-- [ ] [TEST] P1. **market-tick-data-service (L4) LDR v2 RED (run 26792011482) — coverage-floor-exception HONORED
-      (warning `MIN_COVERAGE=0`), fails at a LATER step.** main+staging GREEN → LDR-only regression. Targeted log-read
-      to pin the failing gate step (tests / typecheck / codex). repo: market-tick-data-service.
-- [ ] [TEST] P1. **trading-agent-service (L4) LDR v2 RED (run 26792012741) — coverage-exception honored, fails later (as
-      mtds).** main+staging GREEN. Pin the post-coverage failing step. repo: trading-agent-service.
-- [ ] [SCRIPT] P1. **deployment-ui (L7) LDR v2 RED — `error: No pyproject.toml found` (run 26792016429).** deployment-ui
-      is TS/Vite; its LDR still carries the PYTHON `quality-gates-v2.yml` caller, which `uv`-installs against a missing
-      pyproject. Its `main` was already migrated to the UI gate (`ui-quality-gates.yml` emitting
-      `Quality Gates (deployment-ui) / quality-gates`, PR #11). Fix: promote the main UI-gate caller onto LDR (replace
-      the python-v2 caller). `[UI]` + `pw:L2` applies. repo: deployment-ui.
-- [ ] [TEST] P1. **system-integration-tests (L8) LDR v2 RED — see SIT-suite todos (#288 partial: collection blocker
-      fixed `@e1e2ea4`; remaining symbol-drift + `deployment_test` re-green + run-to-completion).** repo:
-      system-integration-tests.
+- [x] ✅ [TEST] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02: LDR v2 run 26799188812 @477c2d88 success]
+      batch-live-reconciliation-service (L6) LDR v2 RED — `❌ COVERAGE FLOOR VIOLATION: MIN_COVERAGE=0 < 70` (run
+      26792013931).** Same class as greeks: effective `MIN_COVERAGE=0` in CI with no honored
+      `.coverage-floor-exception.md` → floor-guard trips. Real fix: trace the 0, write tests to a genuine ≥70 floor OR
+      add a documented exception (NO floor-lowering). repo: batch-live-reconciliation-service.
+- [x] ✅ [TEST] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02: LDR v2 run 26799149348 @12b19648 success] deployment-api
+      (L6) LDR v2 RED — `❌ COVERAGE FLOOR VIOLATION: MIN_COVERAGE=0 < 70` (run 26792015310).** Same MIN_COVERAGE=0
+      floor-guard class. Real fix per the QG-debt standard. repo: deployment-api.
+- [x] ✅ [TEST] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02: LDR v2 run 26799604837 @2fe1f556 success]
+      market-tick-data-service (L4) LDR v2 RED (run 26792011482) — coverage-floor-exception HONORED (warning
+      `MIN_COVERAGE=0`), fails at a LATER step.** main+staging GREEN → LDR-only regression. Targeted log-read to pin the
+      failing gate step (tests / typecheck / codex). repo: market-tick-data-service.
+- [x] ✅ [TEST] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02: LDR v2 run 26799247625 @6363e835 success]
+      trading-agent-service (L4) LDR v2 RED (run 26792012741) — coverage-exception honored, fails later (as mtds).**
+      main+staging GREEN. Pin the post-coverage failing step. repo: trading-agent-service.
+- [x] ✅ [SCRIPT] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02: LDR v2 run 26799741962 @0d2479ca success] deployment-ui
+      (L7) LDR v2 RED — `error: No pyproject.toml found` (run 26792016429).** deployment-ui is TS/Vite; its LDR still
+      carries the PYTHON `quality-gates-v2.yml` caller, which `uv`-installs against a missing pyproject. Its `main` was
+      already migrated to the UI gate (`ui-quality-gates.yml` emitting `Quality Gates (deployment-ui) / quality-gates`,
+      PR #11). Fix: promote the main UI-gate caller onto LDR (replace the python-v2 caller). `[UI]` + `pw:L2` applies.
+      repo: deployment-ui.
+- [x] ✅ [TEST] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02: LDR v2 run 26813326499 @b6afe142 success]
+      system-integration-tests (L8) LDR v2 RED — see SIT-suite todos (#288 partial: collection blocker fixed `@e1e2ea4`;
+      remaining symbol-drift + `deployment_test` re-green + run-to-completion).** repo: system-integration-tests.
 
 > **Laptop-concurrency note (slot 1, 2026-06-02):** greening on one host is rate-limited — 5 concurrent full-QG agents
 > already starved basedpyright into a 124-timeout on an unrelated repo (alerting). Dispatch the next wave to the
@@ -175,13 +207,17 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 > SIT v2 QG is GREEN; these are in the SIT _integration_ `code_test` suite (the staging→main gate content), NOT the v2
 > QG. All 3 are UPSTREAM (not SIT's to fix). They must be green for a trustworthy staging→main SIT promotion.
 
-- [ ] [TEST] P1. **UAC `unified_api_contracts.internal.__all__` missing 342 public classes** (12
+- [ ] [TEST] P1. **[RE-AUDIT 2026-06-02: shrank 342→7 — only `BookType, FeeResult, GitHubWorkflowEvent,
+      InternalEndpointSpec, MatchResult, MatchingFeeType, OrderRecord` (matching_engine + cicd domains) still missing
+      from `__all__`] UAC `unified_api_contracts.internal.__all__` missing 342 public classes** (12
       `test_uic_completeness.py` failures). `unified_api_contracts/internal/__init__.py` `__all__` is incomplete vs the
       actual public classes. Add the missing exports (canonical re-export surface). repo: unified-api-contracts.
-- [ ] [SCRIPT] P1. **PM `strategy-manifest.json` stale class paths** (2 `test_strategy_readiness.py` failures). e.g.
-      `strategy_service.engine.strategies.cefi_momentum` moved to `v2/`; update the manifest's class paths to the
-      current strategy-service v2 layout. repo: unified-trading-pm.
-- [ ] [DESIGN] P1. **deployment-api ↔ deployment-service circular dependency** (1
+- [x] ✅ [SCRIPT] P1. **[RESOLVED — re-audit 2026-06-02: all 54 entries on `v2.` paths, every module file exists on LDR;
+      test_strategy_readiness would pass] PM `strategy-manifest.json` stale class paths** (2
+      `test_strategy_readiness.py` failures). e.g. `strategy_service.engine.strategies.cefi_momentum` moved to `v2/`;
+      update the manifest's class paths to the current strategy-service v2 layout. repo: unified-trading-pm.
+- [x] ✅ [DESIGN] P1. **[RESOLVED — re-audit 2026-06-02: no cycle in workspace-manifest.json or either pyproject; Kahn's
+      algo clean over all 25 repos] deployment-api ↔ deployment-service circular dependency** (1
       `test_cascade_flow.py::test_dependency_graph_is_acyclic` failure). Real cycle in both `pyproject.toml` deps +
       `workspace-manifest.json`. Break the cycle (extract shared types to UAC, or invert one edge). repos:
       deployment-api + deployment-service + unified-trading-pm (manifest).
@@ -225,19 +261,22 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 
 > Wave-by-wave promotion started (UTL#230 MERGED to main). BUT UAC#65 (L1) v2 FAILS → gates everything downstream.
 
-- [ ] [DATA] P0. **UAC main-PR v2 RED: `test_data_type_canonicalization.py[unified-trading-pm]` — PM
-      `venue_data_types.yaml` has legacy data-type aliases + data types NOT registered in UAC
-      `DATA_TYPES_BY_ASSET_GROUP`** (run 26803567561; 2 failed/8419 passed). UAC v2 clones PM + validates its
-      venue_data_types.yaml; UAC LDR passed but the main-PR context fails (clones PM@main legacy yaml). Pre-existing
-      canonicalization gap owned by `defi_manifest_canonicalisation_2026_06_01.md`. Fix: canonicalize PM
-      `venue_data_types.yaml` — rename legacy aliases to canonical data_type names + register any missing types in UAC.
-      This GATES the whole fleet main-promotion (UAC is L1). repos: unified-trading-pm (venue_data_types.yaml) +
-      unified-api-contracts (DATA_TYPES_BY_ASSET_GROUP if a type is genuinely new).
-- [ ] [INFRA] P0. **UTL main is RED (downstream of above) — dep-order race.** UTL#230 merged to main importing
-      `EmptyFromLiveInstrumentError` from UAC, but UAC main lacks it (UAC#65 unmerged). Clears when UAC#65 lands + UTL
-      main v2 re-runs. LESSON: strict dep-order — fully merge+green layer N (UAC) before opening N+1 (UTL); don't
-      auto-merge a whole layer at once. Mitigation if UAC fix is slow: re-run UTL main v2 after UAC merges. repo:
-      unified-trading-library (re-trigger) — root cause is the UAC blocker above.
+- [x] ✅ [DATA] P0. **[RESOLVED — re-audit 2026-06-02: UAC main GREEN @0827e136 (PR#65 merged 09:07Z);
+      dex_pool_state/dex_pool_swaps/lending_indices registered in DATA_TYPES_BY_ASSET_GROUP[defi], legacy aliases gone]
+      UAC main-PR v2 RED: `test_data_type_canonicalization.py[unified-trading-pm]` — PM `venue_data_types.yaml` has
+      legacy data-type aliases + data types NOT registered in UAC `DATA_TYPES_BY_ASSET_GROUP`** (run 26803567561; 2
+      failed/8419 passed). UAC v2 clones PM + validates its venue_data_types.yaml; UAC LDR passed but the main-PR
+      context fails (clones PM@main legacy yaml). Pre-existing canonicalization gap owned by
+      `defi_manifest_canonicalisation_2026_06_01.md`. Fix: canonicalize PM `venue_data_types.yaml` — rename legacy
+      aliases to canonical data_type names + register any missing types in UAC. This GATES the whole fleet
+      main-promotion (UAC is L1). repos: unified-trading-pm (venue_data_types.yaml) + unified-api-contracts
+      (DATA_TYPES_BY_ASSET_GROUP if a type is genuinely new).
+- [x] ✅ [INFRA] P0. **[RESOLVED — re-audit 2026-06-02: `EmptyFromLiveInstrumentError` exported in UAC main; UTL main
+      GREEN @dbb296a2 (PR#232 merged 10:55Z)] UTL main is RED (downstream of above) — dep-order race.** UTL#230 merged
+      to main importing `EmptyFromLiveInstrumentError` from UAC, but UAC main lacks it (UAC#65 unmerged). Clears when
+      UAC#65 lands + UTL main v2 re-runs. LESSON: strict dep-order — fully merge+green layer N (UAC) before opening N+1
+      (UTL); don't auto-merge a whole layer at once. Mitigation if UAC fix is slow: re-run UTL main v2 after UAC merges.
+      repo: unified-trading-library (re-trigger) — root cause is the UAC blocker above.
 
 - [ ] [SCRIPT] P1. **Enforce dep-PROMOTION-ORDER in quickmerge (operator insight 2026-06-02) — would have prevented the
       UTL-before-UAC main race.** quickmerge STAGE 1 checks dep CONSISTENCY (local dep == origin/LDR) + STAGE 1.5 checks
@@ -960,8 +999,8 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 > - **Safety**: every ruleset verified `active`; `enforce_admins` toggles during admin-merges were all re-enabled.
 >
 > **Remaining (tracked below):** instruments-service main coverage (0.18% short); enforce_admins on `staging` (optional
-> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1 workflow
-> FILE deletion (separate held plan).
+> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1
+> workflow FILE deletion (separate held plan).
 
 > **🔑 PREREQUISITE (discovered 2026-06-01 — RESOLVED via provisioning, not a missing credential).** The migrations edit
 > `.github/workflows/*.yml`, which the gh **keyring login token (`gho_…`) cannot do** (no `workflow` scope). But the
@@ -1181,9 +1220,12 @@ merges, so each is gated on its v2 QG going green first (real code/test/lint/cod
 - [x] ✅ [OPERATOR-DECISION→RESOLVED 2026-06-01] P1. Ruleset-set decision made: **only `agent-orchestrator` is EXEMPT**
       (main-targeted tooling, bypasses prod path per CLAUDE.md); the other 6 GET the `require-quality-gates` ruleset.
       Spawned the execution as a tracked todo below (v2-readiness varies → can't blanket-add safely in one pass).
-- [ ] [SCRIPT] P1. **Add `require-quality-gates` ruleset to the 7 non-exempt repos — IN PROGRESS 2026-06-01 (3/7
-      done).** Operator decision: only `agent-orchestrator` is EXEMPT (main-targeted tooling, bypasses prod path); the
-      other 7 (incl `features-service`, surfaced by 398) GET the ruleset. **HARD PREREQUISITE per repo (incident
+- [ ] [SCRIPT] P1. **[RE-AUDIT 2026-06-02: 2/7 CLEANLY DONE (unified-trading-api id17135955 + ml-service id17136124,
+      both green on default branch); features-service has ruleset id17136160 but main gate RED; greeks-service +
+      fund-administration-service now GREEN → READY-TO-ADD; e2e-testing BLOCKED on ruff UP041; uts-ui NEEDS-UI-GATE (no
+      QG workflow, only ci.yml)] Add `require-quality-gates` ruleset to the 7 non-exempt repos — IN PROGRESS 2026-06-01
+      (3/7 done).** Operator decision: only `agent-orchestrator` is EXEMPT (main-targeted tooling, bypasses prod path);
+      the other 7 (incl `features-service`, surfaced by 398) GET the ruleset. **HARD PREREQUISITE per repo (incident
       2026-06-01): VERIFY the v2 job `name:` emits `Quality Gates (<repo>) / quality-gates-v2` AND a GREEN run exists on
       the default branch BEFORE the ruleset — else the required context is unsatisfiable → DEADLOCK.** Ruleset body =
       alerting-service `require-quality-gates` copy (target `~DEFAULT_BRANCH`, `bypass_actors:[]`, context swapped).
