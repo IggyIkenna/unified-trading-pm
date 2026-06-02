@@ -356,6 +356,9 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   uncommitted work; `git stash push -u -m` before a branch switch (on feature branches, local dep changes ARE the feature).
 - **Runtime verification** — never claim "done" without running the code, waiting 8-10s, reading the terminal, grepping
   for errors. "Compiles" ≠ "works".
+- **Plans live only under `unified-trading-pm/`** (`plans/active/` working · `plans/ai/` ephemeral · `plans/epics/` ·
+  `plans/archive/`) — never in the workspace root, codex root, or a service's `docs/`.
+- **Rollout tracking** — "plan complete" = ALL in-scope repos updated, OR scope explicitly limited with a pending list.
 
 ### Agent behavior
 
@@ -376,6 +379,14 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   90%→emergency shutdown. **aiohttp** not `requests` in async code.
 - **ConfigStore** from `unified_trading_services` for hot-reload runtime config. **IBKR** only via `ibkr-gateway-infra`
   (mock at the `ib_insync` object level — no HTTP VCR).
+- **UTC datetimes always** — `datetime.now(timezone.utc)`; never `datetime.now()` / `datetime.utcnow()` / `datetime.today()`.
+- **Cloud-agnostic I/O** — all storage/secrets via `get_storage_client()` / `get_secret_client()` (unified-cloud-interface);
+  never `from google.cloud import *` or `import boto3` directly. Project-id env = `GCP_PROJECT_ID` (never
+  `GOOGLE_CLOUD_PROJECT` / `GCP_PROJECT`); API keys from Secret Manager, never `os.environ`.
+- **Event metadata** (`setup_events`/`log_event`, 11 lifecycle events) — `correlation_id` on coordination events,
+  `duration_ms` on COMPLETED, `stack_trace` on FAILED, `client_order_id` on execution events.
+- **Dep tiers** — T0 (no unified deps) → T1 (T0 only) → T2 (T0+T1); no circular imports. **CI test-in-image** — quality
+  gates run INSIDE the Docker image; never git-clone source in Cloud Build.
 
 ### UI (TypeScript) specifics
 
