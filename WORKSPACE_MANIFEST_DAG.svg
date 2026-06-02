@@ -135,9 +135,9 @@
   <circle cx="1420" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
   <text x="1365" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1440" y="723" width="132" height="38" class="svc" />
-  <rect x="1440" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1440" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="1506" y="741" text-anchor="middle" class="label">strategy-service</text>
-  <circle cx="1562" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1562" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="1506" y="753" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="1582" y="723" width="167" height="38" class="svc" />
   <rect x="1582" y="723" width="4" height="38" fill="#facc15" rx="2" />
