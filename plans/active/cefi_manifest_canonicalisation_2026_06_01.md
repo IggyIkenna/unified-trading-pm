@@ -169,8 +169,17 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       `cefi-prd/_index`.
 - [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise
       → full-VM run (no fire-and-forget verification).
-- [ ] [DATA] P0. E5 Manifest rebuild → v9. **BUILD SPEC (refined slot-3 2026-06-01 — ADAPT the existing tool, don't
-      rebuild):** `market_tick_data_service/scripts/rebuild_cefi_manifest.py` ALREADY encodes the correct per-instrument
+- [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE (mtds@2c3a479b, 2026-06-02)** via the RECOMMENDED fork (A):
+      `rebuild_cefi_manifest.py` now (1) parses an OPTIONAL `pipeline_mode=(?P<pipeline_mode>[^/]+)/` segment in all 3
+      `_PAT_*` matchers (between `day=` and `asset_group=`); (2) lists at DAY level (`raw_tick_data/by_date/day={d}/`) so
+      migrated `pipeline_mode=` objects are enumerated (an `…/asset_group=cefi/` list prefix MISSES them); (3) targets the
+      canonical `-prd` bucket; (4) stamps `pipeline_mode` on `add()` — from the path segment when present else
+      `derive_pipeline_mode_for_row(venue,"cefi",dt)` (== the migrator + live writer); `source` left "" → add()
+      auto-resolves (cefi single-source tardis). 11 parser tests green (3 new pipeline_mode cases). add()'s pipeline_mode
+      kwarg landed utl@b872bdf1 (fork A). **REMAINING enhancements (gate G4, tracked via CF-11 todos above + Verify
+      below):** `available_at` parquet-col-else-day-EOD; 0-row→empty backstop; legacy-`_index` re-emit of
+      `attempted_failed`/typed-`empty_confirmed` rows (CF-11). Original build-spec retained below for reference.
+- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): `rebuild_cefi_manifest.py` encodes the per-instrument
       row key (the LIVE writer key =
       `date,venue,chain,data_type,league_id,instrument_type,underlying,quote_asset,     margin_type,instrument_id`;
       orchestrator.py:2937/2957) + tolerates `raw_tick_data/by_date/`+`asset_group=`. Two changes only: (1) its `_PAT_*`

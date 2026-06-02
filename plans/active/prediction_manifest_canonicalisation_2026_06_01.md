@@ -189,7 +189,13 @@ be fixed first if run on a VM.
       review planned moves/timing in the VM log → optimise workers if >1h → re-fire `full` (no fire-and-forget:
       STARTED<60s + progress/hr + STOPPED; T+10min `gcloud instances describe`). **PENDING: VM launch + monitor (next
       session — VM-only per local-DNS constraint).**
-- [ ] [DATA] P0. E5 Manifest rebuild → v9. **BUILD SPEC (refined slot-3 2026-06-01)**: generalise
+- [ ] [DATA] P0. E5 Manifest rebuild → v9. **REFERENCE: cefi E5 is DONE (mtds@2c3a479b)** — copy its pattern (optional
+      `pipeline_mode=` regex segment, DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
+      `derive_pipeline_mode_for_row`). Prediction differs: its CANONICAL_PATH_RE must be **REWRITTEN** to the
+      post-migrator form (verified 2026-06-02 via `candidate_parquet_paths`):
+      `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=prediction/venue={V}/instrument_type={IT}/data_type={DT}/{cid}.parquet`
+      — the CURRENT regex matches the PRE-migration `category=/data_source=/market_category=/…` form (which the migrator
+      DROPS) so it would scan ZERO post-apply shards. **BUILD SPEC (refined slot-3 2026-06-01)**: generalise
       `rebuild_prediction_manifest.py` to target `pred-prd` scanning the NEW canonical
       `day=/pipeline_mode=/asset_group=prediction/venue=/instrument_type=/data_type=/{cid}.parquet` layout.
       **Granularity reconciliation (the one open correctness point)**: the canonical path no longer carries

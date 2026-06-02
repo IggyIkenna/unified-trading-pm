@@ -198,9 +198,15 @@ VM.
       legacy-only cells ride `--also-legacy`. DRY-BY-DEFAULT + `--apply`. Source/v9 columns added by E5 rebuild (next).
 - [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive -029).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
-- [ ] [DATA] P0. E5 Manifest rebuild: scan canonical paths → `ManifestWriter` stamping `source` (per UAC SOURCE_PRIORITY /
-      BARCHART·YAHOO_FINANCE·DATABENTO·MASSIVE venue→source) + `pipeline_mode` + `available_at` → consolidator → v9. This
-      executes `tradfi_massive` Task -031 (source re-consolidation) — cross-link + flip there.
+- [ ] [DATA] P0. E5 Manifest rebuild → v9 — **NEW tool `rebuild_tradfi_manifest.py` (does not exist yet)**. REFERENCE:
+      cefi E5 DONE (mtds@2c3a479b) — copy its structure (optional `pipeline_mode=` regex segment, DAY-level list prefix,
+      canonical `-prd` bucket, stamp `pipeline_mode` via path-or-`derive_pipeline_mode_for_row(venue,"tradfi",dt)`). The
+      post-migrator tradfi canonical form (the L-hive shape + inserted pipeline_mode) is
+      `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/[underlying={U}/]{file}`
+      (chain bundles keep `underlying=`). Stamp `source` via `source_string_for(pipeline_mode)` (databento/massive/yahoo/
+      barchart/eia — REQUIRED for tradfi v9 per `MissingSourceError`) + `available_at` (parquet col else day-EOD-UTC). NO
+      hyphen-tree rows (those are 0-row placeholders excluded by the migrator + deleted at E7). Executes `tradfi_massive`
+      Task -031 (source re-consolidation) — cross-link + flip there.
 - [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical (diagnose, don't bulk-rename).
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
       data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in `tradfi_master_audit_instructions.md`.
