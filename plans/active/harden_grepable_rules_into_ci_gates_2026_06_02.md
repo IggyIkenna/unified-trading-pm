@@ -18,9 +18,17 @@ related_plans:
 
 # Harden grep-able CLAUDE.md rules into CI gates
 
-> **`execution_scope: local-only`** — a teammate (Harsh or Ikenna) runs this deliberately + tests it; it is **not**
-> auto-dispatched to orchestrator workers (it edits the QG/ruff TEMPLATE that rolls out to all 22 repos — sensitive,
-> needs a human to verify the gate + grep fire correctly before rollout).
+> **`execution_scope: local-only`** — because of the hard operator-approval gate mid-flow (Phase 2), this plan does NOT
+> auto-dispatch end-to-end. **Staged flow:**
+>
+> 1. **Audit (local / agent, no changes)** — count existing violations per rule across all 22 repos.
+> 2. **Present numbers → operator** — blast-radius table.
+> 3. **Operator approves** which rules to gate + the baseline-vs-fix approach (`[ack]`).
+> 4. **Agent rolls out** (Phase 3 becomes orchestrator-agent-dispatchable on `[ack]`) — integrate into the ruff/QG
+>    TEMPLATE, test that each gate fires, baseline + roll out to all repos.
+>
+> Gating before knowing the blast radius is the anti-pattern this avoids — a gate that breaks N call sites needs a
+> decision (ratchet-baseline vs fix-campaign) the operator makes from real numbers.
 
 ## Why
 
@@ -58,52 +66,61 @@ durable form. The principle: _anything grep-able or count-able should be a gate,
 
 ## Phases
 
-### Phase 1 — UTC datetimes via ruff `flake8-datetimez` (no custom code)
+### Phase 1 — AUDIT (report-only, NO config changes) → present numbers to operator
 
-- [ ] [INFRA] P2. Add `DTZ` to `[tool.ruff.lint] select` in the **ruff config TEMPLATE** (codex/06-coding-standards
-      SSOT + the `pyproject.toml` template — **NEVER** edit per-repo copies; SSOT-first then rollout). Relevant codes:
-      `DTZ005` (naive `datetime.now()`), `DTZ003` (`utcnow()`), `DTZ001/002/006/007/011/012` as appropriate. Pin the
-      exact code set in the plan when landed.
-- [ ] [TEST] P2. Prove it FIRES: temp file with `datetime.now()` → ruff reports `DTZ005`; `datetime.now(timezone.utc)` →
-      clean. Capture the before/after ruff output in this plan.
-- [ ] [INFRA] P2. Count existing violations workspace-wide; if many, **baseline-ratchet** them (so green repos don't
-      break on rollout); if few, fix in-place. Decide + record the count + decision here.
+> Measure the blast radius for each of the 3 rules across all 22 repos, **without** changing any gate yet. Output a
+> table the operator can act on. This phase is safe for an agent to run (read-only).
 
-### Phase 2 — cloud-SDK direct-import ban via ruff `flake8-tidy-imports` banned-api (`TID251`, no custom code)
+- [ ] [SCRIPT] P2. **UTC count**: run ruff with `--select DTZ` in **preview/report mode** (no config change — e.g.
+      `ruff check --select DTZ --statistics <repo>/<src>` per repo). Tabulate violations per repo + per code
+      (DTZ005/003/…). Record the total + worst repos in this plan.
+- [ ] [SCRIPT] P2. **cloud-SDK count**: grep each repo for `from google.cloud` / `import boto3` (excluding
+      unified-cloud-interface's own internals + `.venv`/tests). Tabulate per repo; note which are legit (the interface
+      repo) vs violations.
+- [ ] [SCRIPT] P2. **fallback-import count**: AST/grep each repo for
+      `try: … import … except (ImportError|     ModuleNotFoundError)`. Tabulate per repo.
+- [ ] [DOC] P2. **Present to operator**: one table — rule × total-violations × worst-repos × recommended approach
+      (ratchet-baseline if many / fix-in-place if few). This is the decision input for Phase 2.
 
-- [ ] [INFRA] P2. Add `[tool.ruff.lint.flake8-tidy-imports.banned-api]` to the template banning `google.cloud` + `boto3`
-      with the message "use `get_storage_client()` / `get_secret_client()` from unified-cloud-interface". **Exempt
-      unified-cloud-interface's own internals** (it legitimately imports the SDKs) — per-package `per-file-ignores` or a
-      path exclusion.
-- [ ] [TEST] P2. Prove it FIRES: `from google.cloud import storage` → `TID251`; `import boto3` → `TID251`; sanctioned
-      `get_storage_client()` → clean; unified-cloud-interface internals → still clean (exemption works). Capture output.
+### Phase 2 — OPERATOR APPROVAL GATE `BLOCKED-OPERATOR-DECISION`
 
-### Phase 3 — `try/except ImportError` fallback check (custom QG script)
+- [ ] [DOC] P2. **BLOCKED-OPERATOR-DECISION** — operator reviews the Phase-1 numbers and approves, per rule: (a) gate it
+      now or defer; (b) ratchet-baseline existing violations vs run a fix-campaign first. Record the `[ack]` + the
+      per-rule decision here. **Phase 3 does not start until this is acked.**
 
-- [ ] [SCRIPT] P2. Write `scripts/quality_gates/check_no_fallback_imports.py` — AST-walk for
-      `try: import X … except (ImportError|ModuleNotFoundError):`. Mirror the existing `check_*.py` structure +
-      baseline-ratchet (`*_baseline.yaml`) for pre-existing hits. (No clean ruff rule exists — it's control-flow.)
-- [ ] [TEST] P2. `tests/.../test_check_no_fallback_imports.py` — positive (a try/except-ImportError block → flagged),
-      negative (plain top-level import → clean), + baseline-respected. Run via the repo's own QG, not standalone pytest.
-- [ ] [SCRIPT] P2. Wire the check into `quality-gates-base` as a numbered STEP; record the STEP number.
+### Phase 3 — INTEGRATE + TEST + ROLLOUT _(agent-executable AFTER the Phase-2 `[ack]`)_
 
-### Phase 4 — rollout + close the loop in CLAUDE.md
+> On operator `[ack]`, these todos become orchestrator-agent-dispatchable (the human gate has passed). Edit the TEMPLATE
+> only — never per-repo copies — then roll out.
 
-- [ ] [SCRIPT] P2. Roll out the ruff-config + QG-step changes to all repos via `rollout-quality-gates-unified.py`
-      (template → all repos; NEVER hand-edit per-repo copies). Verify on ≥1 sample repo that `quality-gates.sh` actually
-      runs the 3 new gates (not just that the config landed).
-- [ ] [DOC] P2. Update `cursor-configs/CLAUDE.md` so the 3 rules cite their enforcement (like the other gated rules do —
-      "QG STEP X / ruff DTZ enforces"): the UTC + cloud-SDK lines in § "Cross-Cutting Rules › Python service/library
-      specifics", and a one-line note that fallback-imports are now gated.
+- [ ] [INFRA] P2. **UTC** — add the approved `DTZ` codes to `[tool.ruff.lint] select` in the ruff-config TEMPLATE
+      (codex/06-coding-standards SSOT + `pyproject.toml` template). Pin the exact code set.
+- [ ] [INFRA] P2. **cloud-SDK** — add `[tool.ruff.lint.flake8-tidy-imports.banned-api]` (`TID251`) banning
+      `google.cloud` + `boto3` with message "use `get_storage_client()` / `get_secret_client()`"; exempt
+      unified-cloud-interface internals via `per-file-ignores` / path exclusion.
+- [ ] [SCRIPT] P2. **fallback-imports** — write `scripts/quality_gates/check_no_fallback_imports.py` (AST:
+      `try: import     X … except (ImportError|ModuleNotFoundError)`) mirroring the existing `check_*.py` +
+      `*_baseline.yaml` ratchet; wire into `quality-gates-base` as a numbered STEP (record it).
+- [ ] [TEST] P2. **Prove each gate FIRES + PASSES** (the point of this plan): `datetime.now()`→DTZ005 /
+      `now(timezone.utc)`→clean; `from google.cloud import storage`→TID251 / `get_storage_client()`→clean /
+      interface-internals→clean; try/except-ImportError→flagged / plain import→clean / baseline-respected. **Paste the
+      captured output** into this plan. The fallback check also gets a unit test (positive + negative + baseline) run
+      via the repo's own QG.
+- [ ] [SCRIPT] P2. **Baseline + roll out** to all repos via `rollout-quality-gates-unified.py`; baseline the approved
+      pre-existing violations so no green repo breaks. Verify on ≥1 sample repo that `quality-gates.sh` actually RUNS
+      the 3 new gates (not just that the config landed).
+- [ ] [DOC] P2. Update `cursor-configs/CLAUDE.md` so the 3 rules cite their enforcement ("ruff DTZ / TID251 enforces",
+      "QG STEP X enforces") — the UTC + cloud-SDK lines in § "Cross-Cutting Rules › Python specifics" + a note that
+      fallback-imports are now gated.
 
 ## Success criteria (PLAN_FORMAT §8) — testing is the point of this plan
 
-- Each of the 3 gates **proven to FIRE on a known violation AND PASS on clean code**, with the captured output pasted
-  into the relevant phase (not just "added to config").
+- Phase 1 produced a real per-rule violation table; operator `[ack]` recorded in Phase 2 before any gate landed.
+- Each of the 3 gates **proven to FIRE on a known violation AND PASS on clean code**, captured output pasted in Phase 3.
 - The custom `check_no_fallback_imports.py` has unit tests (positive + negative + baseline) that pass in QG.
-- Rolled out to all repos via the template mechanism; pre-existing violations **baselined** so no green repo's QG breaks
-  (ratchet, not big-bang fix).
-- CLAUDE.md updated so the 3 rules show as gate-enforced — converting "agent must remember" → "CI fails the PR".
+- Rolled out via the template mechanism; approved pre-existing violations baselined (ratchet, not big-bang) so no green
+  repo's QG breaks.
+- CLAUDE.md updated so the 3 rules show as gate-enforced — "agent must remember" → "CI fails the PR".
 
 ## Continuous verification
 
