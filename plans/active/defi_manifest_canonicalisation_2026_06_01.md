@@ -427,6 +427,24 @@ What to verify/wire (B0 corrected scope):
         `dex_pool_state`/`dex_pool_swaps` (operator-locked `defi-canonical-naming-ssot.md`). VERIFY whether this list is
         a logical menu (intentional) or a physical-key source consumed by data-status; if the latter, align to canonical
         + reconcile `registry/data_type_capability.py` L336-345 "aspirational/deferred" note. Repo: unified-api-contracts.
+        **⚠️ VERIFIED-CONSUMED + SCOPE EXPANDED 2026-06-02 (slot-2 grep-then-read): A11c is NOT a logical menu — it is a
+        physical expected-key consumed by the data-status DENOMINATOR**, and the legacy `dex_pools`/`dex_swaps` data_type
+        string is used as a physical key across a COUPLED SET of UAC registries far beyond A11c's 2 named files, ALL of
+        which the C0-CN sweep (CN1–CN8) left on the legacy name even though CN2 already moved the **manifest** data_type to
+        canonical `dex_pool_state`/`dex_pool_swaps`. Confirmed break: `registry/expected_coverage.py` `expected_coverage()`
+        does a literal `data_type not in in_scope_types` match (`_DEFI[venue]=["dex_pools","dex_swaps"]`) → a canonical
+        `dex_pool_state` cell returns `NOT_IN_SCOPE` (canonical pool/swap rows fall OUT of the DeFi coverage denominator).
+        Coupled UAC surfaces still on legacy name: `expected_coverage.py` (`_DEFI_DEX_PAIRS`), `defi_venue_capabilities.py`
+        (35 per-(venue,data_type) start-date keys), `capability_declarations/_defi.py` (protocol `data_types`),
+        `market_data_categories.py` (BASE_GRANULARITY/NEEDS_CANDLE_PROCESSING/DATA_TYPES_BY_ASSET_GROUP/_PER_INSTRUMENT_SHARD
+        /FEATURE_GROUP_DATA_TYPE_OVERRIDES), `source_priority.py`, `availability_semantics.py`,
+        `canonical/domain/features/required_inputs.py`, `defi_prediction_instrument_seeds.py`, `venue_constants.py`
+        (`DEX_POOL`), `internal/domain/.../candle_schema.py` (`DEX_POOLS`/`DEX_SWAPS` enum), `internal/schemas/contracts.py`
+        + `_defi_v2_contracts.py` (schema-registry keys). Cross-repo consumers of these registries (MTDS orchestrator, MDPS
+        scanner, deployment-api data_status, features data_loader) inherit the key. **This is the "reader/denominator fixes
+        land FIRST" gate (naming-SSOT Sequencing #1) — it must land BEFORE the C0 `--apply` or migrated data is NOT_IN_SCOPE
+        in data-status.** Decision recorded with operator 2026-06-02 (see A11c-EXPANDED sub-todo below). Repo:
+        unified-api-contracts (+ coupled cross-repo consumer verification).
   - [ ] [CODE] P1. **A11d — MTDS `data_manifest_handler.py` OPERATIONS metadata legacy data_types** (`bucket_type:
         dex-pools`/`dex-swaps`/`lending-indices`) — reconcile with the canonical `dex_pool_state`/`dex_pool_swaps`
         handler `_DATA_TYPE` consts (C0-CN2). Repo: market-tick-data-service.
