@@ -10,6 +10,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
 status: active
+execution_scope: local-only
 locked_by: live-defi-rollout
 model_tier: opus-required
 execution_model: opus-1m

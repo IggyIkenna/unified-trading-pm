@@ -9,6 +9,7 @@ assigned_vm: vm-cross-cutting
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
 status: active
+execution_scope: local-only
 priority: P2
 model_tier: sonnet-doable
 thinking_tier: medium

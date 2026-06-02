@@ -24,6 +24,7 @@ estimate_calibration_note: |
 parent_epic: orchestrator_master
 priority: P0
 status: active
+execution_scope: local-only
 model_tier: opus-required
 thinking_tier: max
 ---

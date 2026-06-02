@@ -6,6 +6,7 @@ parent_epic: plans/epics/infrastructure_master.md
 assigned_vm: vm-cross-cutting
 priority: P1
 status: active
+execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 4.8

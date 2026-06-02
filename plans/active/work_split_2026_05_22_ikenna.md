@@ -17,6 +17,7 @@ related_plans:
 parent_epic: orchestrator_master
 priority: P0
 status: active
+execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
