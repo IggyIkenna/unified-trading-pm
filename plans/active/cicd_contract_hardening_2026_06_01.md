@@ -336,11 +336,31 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 | unified-trading-pm                                                                                                                                                    | ✅ MAIN GREEN (harsh fix a217a031c + FF) — done                                                                                                                  |
 | instruments #392 · uac #62 · client-reporting #11 · ibkr #13                                                                                                          | ✅ MERGED to main                                                                                                                                                |
 | trading-agent #7 · deployment-api #14 · execution #206 · mtds #112 · strategy #64 · utl #229 · mdps #87 · deployment-ui #13 · batch-live #13 · SIT #16 · alerting #20 | ⏳ resolutions already on LDR (take-best back-merges); ad-hoc PRs CLOSED 2026-06-01 (whack-a-mole vs churning LDR) — re-promote in the frozen dep-ordered window |
-| deployment-service                                                                                                                                                    | 🔴 v2-RED — green first                                                                                                                                          |
-| fund-administration · e2e-testing · greeks-service                                                                                                                    | v2 just added; open PR after first green v2                                                                                                                      |
+| deployment-service                                                                                                                                                    | ✅ MERGED to main GREEN 2026-06-02 (fixed: declared `deployment-api` editable dep — was cloned by v2 dep_repos but never installed → `ModuleNotFoundError`)        |
+| fund-administration · e2e-testing · greeks-service                                                                                                                    | ✅ MERGED to main GREEN 2026-06-02 (greeks: created `main` from green LDR + added v2 ruleset on `refs/heads/main`; e2e: added v2 ruleset on main)                  |
 
 > **5 non-ruff failures = genuine per-repo debt (fix regardless of promotion order):** execution
 > (`test_analog_execution_gate` kelly `0.5 vs 1.0` + grid_utils import-skip), trading-agent, deployment-api, utl, SIT.
+
+> **2026-06-02 fleet LDR→main promotion (operator-approved, wave-by-wave, direct-PR path):** L1–L6 + L7-deployment-ui +
+> L8 promoted to main GREEN via per-repo `chore/fix:` LDR→main PRs with `--auto --merge` (v2 gate auto-merges on green).
+> Recurring resolutions applied: `quality-gates-v2.yml` add/add → take LDR (fund-admin, ml, e2e); `workspace-qg.yml`
+> modify/delete → take main's deletion (deployment-service, unified-trading-system-ui); classic `strict:true` →
+> `strict:false` to clear `BEHIND` blocks (unified-trading-api, batch-live, deployment-api/service, ui, ibkr); repo
+> `allow_auto_merge` enabled where off (features, ml, unified-trading-api, fund-admin, deployment-api/service, ui, ibkr).
+
+- [ ] [CI] P1. **unified-trading-system-ui: migrate to canonical `ui-quality-gates-v2.yml` so LDR→main can promote.**
+      Repo: `unified-trading-system-ui`. BLOCKED from the 2026-06-02 fleet promotion (only repo not landed). Two
+      pre-existing UI-CI-workflow issues: (1) its `quality-gates-v2.yml` still calls the stale local
+      `ui-quality-gates.yml` which emits check context `Quality Gates (unified-trading-system-ui) / quality-gates` while
+      branch protection requires `… / quality-gates-v2` → the required context is never emitted (permanent BLOCK); (2)
+      that stale `ui-quality-gates.yml` hard-fails at "Fetch GH_PAT from Secret Manager"
+      (`gcloud secrets versions access GH_PAT` → `PERMISSION_DENIED`; `github-deploy@central-element-323112` lacks
+      `secretmanager.versions.access`). Fix = apply the deployment-ui PR #11/#14 pattern: swap to
+      `ui-quality-gates-v2.yml` (drops the GH_PAT-fetch hard-fail + emits the `quality-gates-v2` context), align the
+      caller's job `name:`, then open the LDR→main PR (`--auto --merge`). LDR content is already greened + back-merged
+      (retired v1 `workspace-qg.yml` dropped) — only the CI-gate workflow blocks. Closed PR for reference:
+      unified-trading-system-ui#17.
 
 ### agent-orchestrator — two-axis branch model: integrate via LDR, deploy SPA from `main` (reconciled 2026-06-01, operator)
 
