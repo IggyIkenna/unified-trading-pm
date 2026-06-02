@@ -717,9 +717,14 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
 fi
 
 # ============================================================================
-# STAGE 1.6: DEPENDENCY VERSION DRIFT CHECK (staging canary)
-# Compares local PM manifest against remote PM manifest (one fetch, not 70).
-# If your dependencies have been bumped on staging, warns you to pull latest.
+# STAGE 1.6: DEPENDENCY VERSION GATE (semver behind staging_versions)
+# Layer-2 of the branch-and-version reference model
+# (codex/08-workflows/branch-and-version-reference-model.md): a dependency is
+# "safe to depend on" only once promoted LDR→staging→main (SIT + semver). If any
+# of THIS repo's pinned dep versions is semver-BEHIND staging_versions (read from
+# origin/main), auto-pull the PM manifest and re-check; BLOCK if still behind.
+# Being version-AHEAD of staging is fine (a local deviation, not a stale base).
+# Emergency override only: QUICKMERGE_ALLOW_BEHIND=1
 # ============================================================================
 if [ -f "$MANIFEST_PATH" ]; then
   PM_DIR="$WORKSPACE_ROOT/unified-trading-pm"
@@ -730,52 +735,62 @@ if [ -f "$MANIFEST_PATH" ]; then
     REMOTE_MANIFEST=$(cd "$PM_DIR" && git show origin/main:workspace-manifest.json 2>/dev/null || :)
   fi
 
-  if [ -n "$REMOTE_MANIFEST" ]; then
-    DEP_DRIFT=$(python3 -c "
-import json, sys
-
-local_manifest = json.load(open('${MANIFEST_PATH}'))
-remote_manifest = json.loads('''${REMOTE_MANIFEST}''') if '''${REMOTE_MANIFEST}''' else {}
-
+  # Echoes one line per dep whose LOCAL pinned version is semver-< staging/main.
+  # Re-runnable (reads the live MANIFEST_PATH), so we can re-check after a PM pull.
+  _dep_versions_behind() {
+    [ -n "$REMOTE_MANIFEST" ] || return 0
+    python3 -c "
+import json
+def pv(v):
+    try:
+        p = [int(x) for x in str(v).split('.')[:3]]
+        return tuple(p + [0] * (3 - len(p)))
+    except Exception:
+        return None
+lm = json.load(open('${MANIFEST_PATH}'))
+rm = json.loads('''${REMOTE_MANIFEST}''') if '''${REMOTE_MANIFEST}''' else {}
 repo = '${REPO_NAME}'
-repos_data = local_manifest.get('repositories', {})
-repo_deps = [d.get('name', d) if isinstance(d, dict) else d for d in repos_data.get(repo, {}).get('dependencies', [])]
+deps = [d.get('name', d) if isinstance(d, dict) else d for d in lm.get('repositories', {}).get(repo, {}).get('dependencies', [])]
+lv = lm.get('versions', {}); rstag = rm.get('staging_versions', {}); rmain = rm.get('versions', {})
+for dep in deps:
+    l = lv.get(dep, ''); r = rstag.get(dep, '') or rmain.get(dep, '')
+    if not l or not r or str(r).startswith('_'):
+        continue
+    pl, pr = pv(l), pv(r)
+    if pl is None or pr is None:
+        continue
+    if pl < pr:
+        print(f'  {dep}: local={l} < staging/main={r}')
+" 2>/dev/null || :
+  }
 
-local_versions = local_manifest.get('versions', {})
-remote_versions = remote_manifest.get('versions', {})
-remote_staging = remote_manifest.get('staging_versions', {})
-
-drifted = []
-for dep in repo_deps:
-    local_v = local_versions.get(dep, '')
-    # Check both remote main versions and staging_versions
-    remote_main_v = remote_versions.get(dep, '')
-    remote_stag_v = remote_staging.get(dep, '')
-    if remote_stag_v and not remote_stag_v.startswith('_') and remote_stag_v != local_v:
-        drifted.append(f'  {dep}: local={local_v} staging={remote_stag_v}')
-    elif remote_main_v and remote_main_v != local_v:
-        drifted.append(f'  {dep}: local={local_v} main={remote_main_v}')
-
-if drifted:
-    for d in drifted:
-        print(d)
-" 2>/dev/null || :)
-
-    if [ -n "$DEP_DRIFT" ]; then
-      echo "=========================================="
-      echo "STAGE 1.6: Dependency Version Drift"
-      echo "=========================================="
-      echo ""
-      echo "[$REPO_NAME] Dependencies bumped on remote that your local doesn't have:"
-      echo "$DEP_DRIFT"
-      echo ""
-      echo "Someone (or a workflow) upgraded your dependencies on staging/main."
-      echo "Consider pulling latest: cd <dep> && git pull origin staging"
-      echo "Or sync PM manifest: cd unified-trading-pm && git pull origin main"
-      echo ""
-      echo "Continuing (warning only — QG catches constraint mismatches)."
-      echo ""
+  DEP_BEHIND="$(_dep_versions_behind)"
+  if [ -n "$DEP_BEHIND" ]; then
+    echo "=========================================="
+    echo "STAGE 1.6: Dependency Version Gate"
+    echo "=========================================="
+    echo "[$REPO_NAME] pinned dependency version(s) BEHIND staging/main (un-integration-tested base):"
+    echo "$DEP_BEHIND"
+    echo "[$REPO_NAME] auto-pulling PM manifest (origin/main) to pick up promoted versions..."
+    if (cd "$PM_DIR" && git pull --ff-only origin main --quiet 2>/dev/null); then
+      DEP_BEHIND="$(_dep_versions_behind)"
     fi
+    if [ -z "$DEP_BEHIND" ]; then
+      echo "[$REPO_NAME] ✅ resolved after PM pull — dep versions now current with staging/main"
+    elif [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+      echo "[$REPO_NAME] ⚠️  still behind after pull — QUICKMERGE_ALLOW_BEHIND=1, continuing:"
+      echo "$DEP_BEHIND"
+    else
+      echo "[$REPO_NAME] ❌ BLOCKED: dependency version(s) still behind staging/main after PM pull:"
+      echo "$DEP_BEHIND"
+      echo "   Your deps must not be behind their staging-promoted (SIT-tested) versions."
+      echo "   Sync PM + re-align, then re-run:"
+      echo "     cd unified-trading-pm && git pull origin main"
+      echo "     python scripts/manifest/fix_external_dependency_alignment.py --apply   # if pyproject pins drifted"
+      echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
+      exit 1
+    fi
+    echo ""
   fi
 fi
 
