@@ -272,10 +272,13 @@ These 7 fixes (all pre-migration-required per operator "perfect"; CRITICALs are 
       `market_data_source_bucket`). 3 tests (stale→PREFLIGHT_FAILED, healthy×N passes, skip disables) + autouse no-op fixture.
       **Refinement OPEN (P1):** the deeper per-cell `capture_status` check (reject on `attempted_failed`/`expected_unattempted`
       for the specific cells a session reads) — consolidator-health is the liveness half; per-cell coverage is the next layer.
-- [ ] [CODE] P0. **CRIT-1 (MDPS live=batch symmetry): remove `skip_dependency_check=True`** at
-      `cli/handlers/live_mode_handler.py:227` — live silently skips the full MTDS manifest dep check, so a zero-MTDS-coverage
-      date produces zero candles with NO `record_failed(UPSTREAM_LIVE_GAP)`. Run `_check_dependencies(fail_on_missing=False)`
-      in live too (SAME detection as batch) → emit `expected_unattempted` + degrade (don't halt). Unit test live-gap path.
+- [x] ✅ [CODE] P0. **CRIT-1 (MDPS live=batch symmetry) — DONE (market-data-processing-service@9102321, 2026-06-02).**
+      `live_mode_handler._process_cycle` no longer passes `skip_dependency_check=True`; it now calls
+      `process_category(skip_dependency_check=False, fail_on_missing_deps=False)` → live runs the SAME
+      `_check_dependencies` as batch (the existing `_record_expected_unattempted_on_skip` path emits
+      `expected_unattempted` on a gap, then degrades — does NOT halt the cycle). The orchestration-side
+      machinery (`_check_dependencies`/`_record_expected_unattempted_on_skip`/UPSTREAM_LIVE_GAP gate) already
+      existed; only the live call-site flag was wrong. Test asserts the live cycle does not skip the dep check.
 - [ ] [CODE] P1. **GAP-5 (strategy-service): startup upstream-features dep check** in `StrategyLiveHandler.run()`
       (service_entry.py) before the live trade loop — currently only the per-cycle allocation guard runs (after start).
 - [ ] [CODE] P1. **GAP-6 (features-service): startup MDPS-candle manifest freshness check** in delta_one `live_handler.py`
