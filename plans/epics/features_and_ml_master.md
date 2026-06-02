@@ -177,14 +177,15 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
 
 - [ ] [CODE] P1. **regime_clustering imports ml-service across a tier boundary (TIER_VIOLATION).**
       `features-service/features_service/cross_instrument/app/calculators/regime_clustering.py:178` does
-      `from ml_service.training.backtest_v2.walk_forward import ...` (function-local, `# noqa: imports-inside-functions`).
-      ml-service is a higher tier than features-service, so a feature calculator depending on ML *training/backtest* code
-      is backwards. `fix-internal-dependency-alignment.py` reports `TIER_VIOLATION` (can't add to pyproject). features
-      pyproject already omits ml-service, so the (optional) `ml-service` entry was **removed from
-      `workspace-manifest.json` features deps** (slot 7 2026-06-01) to align manifest↔pyproject + unblock the PM
-      dependency-alignment gate — but the lazy import remains a latent runtime ImportError (if features runs without
-      ml-service installed) + an architectural leak. Fix: move `walk_forward` (or the shared regime/backtest helper) to a
-      lower tier (UTL/UAC), or remove the regime_clustering→ml dependency. Repos: features-service (+ ml-service).
+      `from ml_service.training.backtest_v2.walk_forward import ...` (function-local,
+      `# noqa: imports-inside-functions`). ml-service is a higher tier than features-service, so a feature calculator
+      depending on ML _training/backtest_ code is backwards. `fix-internal-dependency-alignment.py` reports
+      `TIER_VIOLATION` (can't add to pyproject). features pyproject already omits ml-service, so the (optional)
+      `ml-service` entry was **removed from `workspace-manifest.json` features deps** (slot 7 2026-06-01) to align
+      manifest↔pyproject + unblock the PM dependency-alignment gate — but the lazy import remains a latent runtime
+      ImportError (if features runs without ml-service installed) + an architectural leak. Fix: move `walk_forward` (or
+      the shared regime/backtest helper) to a lower tier (UTL/UAC), or remove the regime_clustering→ml dependency.
+      Repos: features-service (+ ml-service).
 
 ## DeFi data-loading dispatch (slot 7, 2026-06-01 — from `features_service_defi_data_loading_blockers_2026_05_29.md`)
 
@@ -196,9 +197,9 @@ migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progr
       2026-06-01: the legacy DeFi bucket is a read-only historical archive; do NOT rebuild its manifest (that would be
       manifest-canon work). Treat as read-only when loading historical DeFi features. Repo: features-service (policy).
 - **DeFi #4 — drop duplicate columns `swap_count` / `volume_quote_usd` from `DEX_SWAPS_SCHEMA`** → **MOVED to
-      `defi_manifest_canonicalisation_2026_06_01.md` § C0-RD6** (it's a `dex_swaps` superset-union refinement on existing
-      parquet → must fold into the single-walk, not a separate schema change). Slot-7 DeFi #3 confirmed they are exact
-      aliases (`swap_count == trade_count`, `volume_quote_usd == volume`). Tracked there to avoid dual-tracking.
+  `defi_manifest_canonicalisation_2026_06_01.md` § C0-RD6** (it's a `dex_swaps` superset-union refinement on existing
+  parquet → must fold into the single-walk, not a separate schema change). Slot-7 DeFi #3 confirmed they are exact
+  aliases (`swap_count == trade_count`, `volume_quote_usd == volume`). Tracked there to avoid dual-tracking.
 - [ ] [DOCS] P1. **DeFi #3 — UAC contract-doc: document `dex_swaps` OHLC semantics.** Slot-7 investigation 2026-06-01:
       O/H/L/C are **USD-normalized pool spot prices** (price = `amountUSD / abs(base amount)`; for USDC/WETH this yields
       ~1.0 = USDC-per-WETH, which is correct, not a bug). The UAC contract is currently SILENT on this. Add a docstring

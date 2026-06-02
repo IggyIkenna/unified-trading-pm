@@ -63,12 +63,12 @@ related:
 > DeFi-bucket seed without confirming defi_manifest C0 is not mid-walk (and vice-versa).
 > `data_source_provenance_all_asset_groups_2026_06_01.md` (`source`-column backfill) must NOT open a third walk — its
 > row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic `mtds_mdps_master`. Banner-remove when the
-> DeFi `_index` is canonical + seeded (defi_manifest C-GREEN).
-> **CANONICAL NAMING (operator-locked 2026-06-01) — `codex/02-data/defi-canonical-naming-ssot.md`**: the DeFi seed +
-> the L6 **legacy DELETE this plan owns (Phase 7)** MUST use the canonical forms (pool data_type `dex_pool_state`/
-> `dex_pool_swaps` — NOT `dex_pools`; `pipeline_mode=` path; chain `HYPERLIQUID`). **What ends (HARD)**: the DeFi
-> legacy-bucket DELETE runs **ONLY AFTER** defi_manifest C0 RD4 is GREEN per bucket (canonical proven complete +
-> consumers re-pointed) — never before. Delete-before-C-GREEN = data loss.
+> DeFi `_index` is canonical + seeded (defi_manifest C-GREEN). **CANONICAL NAMING (operator-locked 2026-06-01) —
+> `codex/02-data/defi-canonical-naming-ssot.md`**: the DeFi seed + the L6 **legacy DELETE this plan owns (Phase 7)**
+> MUST use the canonical forms (pool data_type `dex_pool_state`/ `dex_pool_swaps` — NOT `dex_pools`; `pipeline_mode=`
+> path; chain `HYPERLIQUID`). **What ends (HARD)**: the DeFi legacy-bucket DELETE runs **ONLY AFTER** defi_manifest C0
+> RD4 is GREEN per bucket (canonical proven complete + consumers re-pointed) — never before. Delete-before-C-GREEN =
+> data loss.
 
 ## Cross-plan ordering → single canonical SSOT (no fallback, no dual) — operator-requested 2026-06-01
 

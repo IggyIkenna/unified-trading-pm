@@ -171,16 +171,16 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       → full-VM run (no fire-and-forget verification).
 - [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE (mtds@2c3a479b, 2026-06-02)** via the RECOMMENDED fork (A):
       `rebuild_cefi_manifest.py` now (1) parses an OPTIONAL `pipeline_mode=(?P<pipeline_mode>[^/]+)/` segment in all 3
-      `_PAT_*` matchers (between `day=` and `asset_group=`); (2) lists at DAY level (`raw_tick_data/by_date/day={d}/`) so
-      migrated `pipeline_mode=` objects are enumerated (an `…/asset_group=cefi/` list prefix MISSES them); (3) targets the
-      canonical `-prd` bucket; (4) stamps `pipeline_mode` on `add()` — from the path segment when present else
-      `derive_pipeline_mode_for_row(venue,"cefi",dt)` (== the migrator + live writer); `source` left "" → add()
-      auto-resolves (cefi single-source tardis). 11 parser tests green (3 new pipeline_mode cases). add()'s pipeline_mode
-      kwarg landed utl@b872bdf1 (fork A). **REMAINING enhancements (gate G4, tracked via CF-11 todos above + Verify
-      below):** `available_at` parquet-col-else-day-EOD; 0-row→empty backstop; legacy-`_index` re-emit of
+      `_PAT_*` matchers (between `day=` and `asset_group=`); (2) lists at DAY level (`raw_tick_data/by_date/day={d}/`)
+      so migrated `pipeline_mode=` objects are enumerated (an `…/asset_group=cefi/` list prefix MISSES them); (3)
+      targets the canonical `-prd` bucket; (4) stamps `pipeline_mode` on `add()` — from the path segment when present
+      else `derive_pipeline_mode_for_row(venue,"cefi",dt)` (== the migrator + live writer); `source` left "" → add()
+      auto-resolves (cefi single-source tardis). 11 parser tests green (3 new pipeline_mode cases). add()'s
+      pipeline_mode kwarg landed utl@b872bdf1 (fork A). **REMAINING enhancements (gate G4, tracked via CF-11 todos
+      above + Verify below):** `available_at` parquet-col-else-day-EOD; 0-row→empty backstop; legacy-`_index` re-emit of
       `attempted_failed`/typed-`empty_confirmed` rows (CF-11). Original build-spec retained below for reference.
-- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): `rebuild_cefi_manifest.py` encodes the per-instrument
-      row key (the LIVE writer key =
+- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): `rebuild_cefi_manifest.py` encodes the
+      per-instrument row key (the LIVE writer key =
       `date,venue,chain,data_type,league_id,instrument_type,underlying,quote_asset,     margin_type,instrument_id`;
       orchestrator.py:2937/2957) + tolerates `raw_tick_data/by_date/`+`asset_group=`. Two changes only: (1) its `_PAT_*`
       regexes + `prefix_templates` do NOT account for the NEW `pipeline_mode=` segment between `day=` and `asset_group=`
@@ -211,16 +211,17 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 ### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
 
 > Operator: "when there is an API issue somewhere in IS or MTDS, is it correctly doing `attempted_failed` where the
-> attempt makes sense by instrument / UAC bounds — RATHER THAN `empty_confirmed` which would not be complete?" CeFi twist:
-> cefi is single-source (`tardis`). A Tardis fetch error for a `(venue, instrument, data_type, date)` cell INSIDE the
-> expected-attempt set — instrument in the IS CeFi universe, data_type registered in UAC SOURCE_PRIORITY, date within the
-> venue/instrument coverage window — is a masked fetch failure → `attempted_failed` (retry/backfill), NOT a false
-> `empty_confirmed`/`SOURCE_RETURNED_ZERO` that freezes the gap forever.
+> attempt makes sense by instrument / UAC bounds — RATHER THAN `empty_confirmed` which would not be complete?" CeFi
+> twist: cefi is single-source (`tardis`). A Tardis fetch error for a `(venue, instrument, data_type, date)` cell INSIDE
+> the expected-attempt set — instrument in the IS CeFi universe, data_type registered in UAC SOURCE_PRIORITY, date
+> within the venue/instrument coverage window — is a masked fetch failure → `attempted_failed` (retry/backfill), NOT a
+> false `empty_confirmed`/`SOURCE_RETURNED_ZERO` that freezes the gap forever.
 >
 > **The manifest must EXPLAIN every zero (3-way decision tree — the E5 rebuild contract):** (1) attempt errored on a
 > warranted cell → `attempted_failed`; (2) a UAC guard explains the zero → typed `empty_confirmed`
 > (`EXPECTED_OUT_OF_COVERAGE_WINDOW` / pre-listing / delisted); (3) only if market open + fetch succeeded + genuinely
-> nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as complete.
+> nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as
+> complete.
 
 - [ ] [DATA] P0. **Rebuild classifier (`rebuild_cefi_manifest.py` / E5): within-bounds empty → `attempted_failed`.** For
       every empty cell: instrument in the IS CeFi universe + data_type guaranteed-when-listed (trades/ohlcv on an active
@@ -234,20 +235,21 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS cefi/tardis adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for an in-universe instrument within coverage bounds, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the cefi/tardis
-      fetch paths in MTDS handlers + instruments-service for `except … record_empty` / bare `return []` swallows; gate the
-      empty-vs-failed decision on instrument-in-universe + UAC coverage bounds. Cross-ref the sports CF-11 model
-      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
-      **DIAGNOSIS (slot-3 2026-06-02, grep-then-READ — MTDS side VERIFIED COMPLIANT, no swallow):** the MTDS write-path
-      already implements the sports CF-11 model for cefi/tradfi/prediction. (a) Adapters (tardis/ccxt/databento/massive/
-      polymarket) classify via `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED` + **re-raise** on a genuine API error
-      (do NOT swallow into `record_empty`/`return []`). (b) `engine/orchestrator.py` finalize gates the empty-vs-failed
-      decision on a recorded fetch-failure at BOTH levels: tier-2 venue-level (`orchestrator.py:3818` —
+      fetch paths in MTDS handlers + instruments-service for `except … record_empty` / bare `return []` swallows; gate
+      the empty-vs-failed decision on instrument-in-universe + UAC coverage bounds. Cross-ref the sports CF-11 model
+      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11). **DIAGNOSIS (slot-3 2026-06-02, grep-then-READ — MTDS
+      side VERIFIED COMPLIANT, no swallow):** the MTDS write-path already implements the sports CF-11 model for
+      cefi/tradfi/prediction. (a) Adapters (tardis/ccxt/databento/massive/ polymarket) classify via
+      `classify_venue_error()` + emit `ADAPTER_FETCH_FAILED` + **re-raise** on a genuine API error (do NOT swallow into
+      `record_empty`/`return []`). (b) `engine/orchestrator.py` finalize gates the empty-vs-failed decision on a
+      recorded fetch-failure at BOTH levels: tier-2 venue-level (`orchestrator.py:3818` —
       `if effective_failure is not None: record_failed(classify_venue_error(code_token)) else: record_empty(SOURCE_RETURNED_ZERO)`,
       with `failed_per_dt_by_venue` precedence for the bundled-Databento partial-success case) and tier-3 per-instrument
-      (`orchestrator.py:3766` — `if tier3_classified_error is not None: record_failed else record_empty(SOURCE_RETURNED_ZERO)`).
-      So a swallowed fetch-failure cannot land as a frozen `SOURCE_RETURNED_ZERO` from the MTDS path. **RESIDUAL (still
-      `- [ ]`):** the **instruments-service** fetch paths were NOT exhaustively read this session — focused verify needed
-      that IS reference-data fetch errors likewise `record_failed` (not `record_empty`/`return []`). Reclassify this todo as
+      (`orchestrator.py:3766` —
+      `if tier3_classified_error is not None: record_failed else record_empty(SOURCE_RETURNED_ZERO)`). So a swallowed
+      fetch-failure cannot land as a frozen `SOURCE_RETURNED_ZERO` from the MTDS path. **RESIDUAL (still `- [ ]`):** the
+      **instruments-service** fetch paths were NOT exhaustively read this session — focused verify needed that IS
+      reference-data fetch errors likewise `record_failed` (not `record_empty`/`return []`). Reclassify this todo as
       "verify IS write-path CF-11 (MTDS already compliant)" — the heavy lift the todo assumed is largely absent.
 
 ## Success criteria

@@ -189,80 +189,89 @@ be fixed first if run on a VM.
       review planned moves/timing in the VM log → optimise workers if >1h → re-fire `full` (no fire-and-forget:
       STARTED<60s + progress/hr + STOPPED; T+10min `gcloud instances describe`). **PENDING: VM launch + monitor (next
       session — VM-only per local-DNS constraint).**
-> **✅ GRANULARITY RESOLVED (slot-3 2026-06-02 — the atom is the live-writer atom, batch=live SSOT).** A sub-agent draft
-> was REVERTED for collapsing the row key to `(date,venue,instrument_type,data_type)` (dropped `{cid}` + `underlying` →
-> massive undercount → G6 FAIL). The CORRECT canonical shard atom = the LIVE prediction writer's atom (orchestrator.py
-> ~1370-1420 + CLAUDE.md per-AG shard-key matrix): **`(asset_group, venue, data_type=prediction_canonical_question_group,
-> canonical_question_group, day)`** — ONE bundled manifest row per `canonical_question_group` per day, emitted via
-> **`record_captured_from_counts`** (NOT per-cid `add()`), with `observed_clusters = {market_id(conditionId): row_count}`,
-> `expected_root_clusters` (UAC group-expected clusters or = observed when unknown), `available_at_envelope =
-> max(available_at)`, `pipeline_mode` (path-or-derive), `row_key = {asset_group, venue, data_type, canonical_question_group,
-> processing_date, pipeline_mode}`. The raw canonical OBJECTS stay per-cid (`…/data_type={DT}/{cid}.parquet`);
-> `canonical_question_group`/`market_id`/`available_at` are PARQUET COLUMNS → the rebuild MUST READ them per object (set by
-> the Polymarket/Kalshi adapter via UAC `classify_polymarket_to_canonical_group`). **VM cross-check** (confirmation, not a
-> blocker): on the migration VM where the `_index` parquet reads cleanly (local gcsfs/cp flaky 2026-06-02), confirm the
-> rebuilt row count ≈ the live canon `_index` (~16,812 rows) granularity. **BUILD = mirror the live writer's
-> `record_captured_from_counts` call exactly** (find it in the prediction finalize loop ~orchestrator.py:1450+). The
-> post-migration REGEX (optional `pipeline_mode=` + `asset_group=prediction/venue=/instrument_type=/data_type=/{cid}.parquet`)
-> from the reverted draft IS correct + reusable; the row-key/cluster-bundling + column-read is the build.
->
-> **VERBATIM BUILD SPEC — mirror this exact live-writer call (orchestrator.py:~3068, prediction emit loop):**
-> ```python
-> writer.record_captured_from_counts(
->     row_key={"date": str(processing_date), "venue": pred_venue,
->              "data_type": "prediction_canonical_question_group",
->              "instrument_type": "prediction", "instrument_id": cqg_str},   # cqg = canonical_question_group
->     total_rows=total_rows,                       # sum of market_counts.values()
->     expected_root_clusters=expected_clusters,    # _load_expected_clusters_for_cqg(cqg, date, fallback=dict.fromkeys(market_counts,1))
->     observed_clusters=market_counts,             # {market_id(conditionId): row_count}
->     available_at_envelope=envelope,              # max(available_at) per cqg (rebuild: read from parquet, NO live-latency add)
->     pipeline_mode=PipelineMode.BATCH_POLYMARKET_CLOB,  # or derive_pipeline_mode_for_row(venue,"prediction",dt)
-> )
-> ```
-> **Rebuild from objects**: scan canonical per-cid objects → for each, read parquet COLUMNS
-> `canonical_question_group`, `market_id`(/`condition_id`), `available_at` + num_rows (pyarrow column projection +
-> metadata) → group by `(date, venue, canonical_question_group)` building `observed_clusters={market_id: rows}` +
-> `envelope=max(available_at)` → one `record_captured_from_counts` per group. Missing-envelope (no parseable
-> available_at) → `record_failed` (mirror the live writer's NaT guard). expected_root_clusters: reuse
-> `_load_expected_clusters_for_cqg` if importable, else `dict.fromkeys(market_counts, 1)`. This is per-AG-canonical +
-> batch=live identical → G6 completeness checkable against the live `_index`.
->
-> **⚠️ CORRECTION (slot-3 2026-06-02 — disk-verified a real pred-prd object; a 2nd build draft was REVERTED for this).**
-> The raw canonical prediction parquet does **NOT carry `canonical_question_group`, `market_id`, or `available_at`
-> columns** — those are WRITE-TIME-COMPUTED MANIFEST values, NOT persisted in the tick parquet (and the path-only
-> migrator does not add columns). A real object's columns are: `side, asset, conditionId, size, price, timestamp, title,
-> slug, eventSlug, outcome, outcomeIndex, transactionHash, condition_id, data_type, instrument_type, underlying,
-> market_category, market_type, resolution_period, data_source, venue, chain, ts_event, symbol`. So a rebuild that reads
-> a `canonical_question_group` column gets `""` for EVERY row (→ catastrophic collapse to one `(venue,"")` bundle) and a
-> `available_at` column that's absent (→ EVERY cell routed to `record_failed`). **The E5 rebuild MUST RE-COMPUTE the
-> atom** (mirrors the live writer's in-memory computation → batch=live):
-> - read columns `[title, slug, eventSlug, outcome, conditionId|condition_id, ts_event, timestamp]` + num_rows;
-> - `cqg = classify_polymarket_to_canonical_group(title=, slug=, event_slug=eventSlug, outcome=outcome, condition_id=conditionId)`
->   (UAC `unified_api_contracts.canonical.domain.predictions.classifiers`, sig verified 2026-06-02). **`None` → route that
->   cid to `record_failed`/`attempted_failed[reason=ClassifierConfidenceLow]`** (per the classifier contract), NOT into a
->   bundle;
-> - `market_id = conditionId` (the `condition_id`/`conditionId` column); `available_at_envelope = max(ts_event)` (derive
->   from ts_event/timestamp — the rebuild's batch envelope, no live-latency add);
-> - then group by `(date, venue, cqg)` → `observed_clusters={conditionId: rows}` → the verbatim `record_captured_from_counts`
->   call above. This is the genuinely-correct build; it needs the UAC Polymarket classifier (re-classification per object,
->   heavier but correct). Kalshi: the equivalent `classify_kalshi_to_canonical_group`.
+
+  > **✅ GRANULARITY RESOLVED (slot-3 2026-06-02 — the atom is the live-writer atom, batch=live SSOT).** A sub-agent
+  > draft was REVERTED for collapsing the row key to `(date,venue,instrument_type,data_type)` (dropped `{cid}` +
+  > `underlying` → massive undercount → G6 FAIL). The CORRECT canonical shard atom = the LIVE prediction writer's atom
+  > (orchestrator.py ~1370-1420 + CLAUDE.md per-AG shard-key matrix):
+  > **`(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, day)`** — ONE
+  > bundled manifest row per `canonical_question_group` per day, emitted via **`record_captured_from_counts`** (NOT
+  > per-cid `add()`), with `observed_clusters = {market_id(conditionId): row_count}`, `expected_root_clusters` (UAC
+  > group-expected clusters or = observed when unknown), `available_at_envelope = max(available_at)`, `pipeline_mode`
+  > (path-or-derive),
+  > `row_key = {asset_group, venue, data_type, canonical_question_group, processing_date, pipeline_mode}`. The raw
+  > canonical OBJECTS stay per-cid (`…/data_type={DT}/{cid}.parquet`);
+  > `canonical_question_group`/`market_id`/`available_at` are PARQUET COLUMNS → the rebuild MUST READ them per object
+  > (set by the Polymarket/Kalshi adapter via UAC `classify_polymarket_to_canonical_group`). **VM cross-check**
+  > (confirmation, not a blocker): on the migration VM where the `_index` parquet reads cleanly (local gcsfs/cp flaky
+  > 2026-06-02), confirm the rebuilt row count ≈ the live canon `_index` (~16,812 rows) granularity. **BUILD = mirror
+  > the live writer's `record_captured_from_counts` call exactly** (find it in the prediction finalize loop
+  > ~orchestrator.py:1450+). The post-migration REGEX (optional `pipeline_mode=` +
+  > `asset_group=prediction/venue=/instrument_type=/data_type=/{cid}.parquet`) from the reverted draft IS correct +
+  > reusable; the row-key/cluster-bundling + column-read is the build.
+  >
+  > **VERBATIM BUILD SPEC — mirror this exact live-writer call (orchestrator.py:~3068, prediction emit loop):**
+  >
+  > ```python
+  > writer.record_captured_from_counts(
+  >     row_key={"date": str(processing_date), "venue": pred_venue,
+  >              "data_type": "prediction_canonical_question_group",
+  >              "instrument_type": "prediction", "instrument_id": cqg_str},   # cqg = canonical_question_group
+  >     total_rows=total_rows,                       # sum of market_counts.values()
+  >     expected_root_clusters=expected_clusters,    # _load_expected_clusters_for_cqg(cqg, date, fallback=dict.fromkeys(market_counts,1))
+  >     observed_clusters=market_counts,             # {market_id(conditionId): row_count}
+  >     available_at_envelope=envelope,              # max(available_at) per cqg (rebuild: read from parquet, NO live-latency add)
+  >     pipeline_mode=PipelineMode.BATCH_POLYMARKET_CLOB,  # or derive_pipeline_mode_for_row(venue,"prediction",dt)
+  > )
+  > ```
+  >
+  > **Rebuild from objects**: scan canonical per-cid objects → for each, read parquet COLUMNS
+  > `canonical_question_group`, `market_id`(/`condition_id`), `available_at` + num_rows (pyarrow column projection +
+  > metadata) → group by `(date, venue, canonical_question_group)` building `observed_clusters={market_id: rows}` +
+  > `envelope=max(available_at)` → one `record_captured_from_counts` per group. Missing-envelope (no parseable
+  > available_at) → `record_failed` (mirror the live writer's NaT guard). expected_root_clusters: reuse
+  > `_load_expected_clusters_for_cqg` if importable, else `dict.fromkeys(market_counts, 1)`. This is per-AG-canonical +
+  > batch=live identical → G6 completeness checkable against the live `_index`.
+  >
+  > **⚠️ CORRECTION (slot-3 2026-06-02 — disk-verified a real pred-prd object; a 2nd build draft was REVERTED for
+  > this).** The raw canonical prediction parquet does **NOT carry `canonical_question_group`, `market_id`, or
+  > `available_at` columns** — those are WRITE-TIME-COMPUTED MANIFEST values, NOT persisted in the tick parquet (and the
+  > path-only migrator does not add columns). A real object's columns are:
+  > `side, asset, conditionId, size, price, timestamp, title, slug, eventSlug, outcome, outcomeIndex, transactionHash, condition_id, data_type, instrument_type, underlying, market_category, market_type, resolution_period, data_source, venue, chain, ts_event, symbol`.
+  > So a rebuild that reads a `canonical_question_group` column gets `""` for EVERY row (→ catastrophic collapse to one
+  > `(venue,"")` bundle) and a `available_at` column that's absent (→ EVERY cell routed to `record_failed`). **The E5
+  > rebuild MUST RE-COMPUTE the atom** (mirrors the live writer's in-memory computation → batch=live):
+  >
+  > - read columns `[title, slug, eventSlug, outcome, conditionId|condition_id, ts_event, timestamp]` + num_rows;
+  > - `cqg = classify_polymarket_to_canonical_group(title=, slug=, event_slug=eventSlug, outcome=outcome, condition_id=conditionId)`
+  >   (UAC `unified_api_contracts.canonical.domain.predictions.classifiers`, sig verified 2026-06-02). **`None` → route
+  >   that cid to `record_failed`/`attempted_failed[reason=ClassifierConfidenceLow]`** (per the classifier contract),
+  >   NOT into a bundle;
+  > - `market_id = conditionId` (the `condition_id`/`conditionId` column); `available_at_envelope = max(ts_event)`
+  >   (derive from ts_event/timestamp — the rebuild's batch envelope, no live-latency add);
+  > - then group by `(date, venue, cqg)` → `observed_clusters={conditionId: rows}` → the verbatim
+  >   `record_captured_from_counts` call above. This is the genuinely-correct build; it needs the UAC Polymarket
+  >   classifier (re-classification per object, heavier but correct). Kalshi: the equivalent
+  >   `classify_kalshi_to_canonical_group`.
 
 - [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **CAPTURED-ATOM REBUILD DONE (mtds@d1f1317d, 2026-06-02).**
       `rebuild_prediction_manifest.py` REWRITTEN to the CORRECTION spec: scans the post-migration canonical layout at
       DAY-level prefix (optional `pipeline_mode=` segment parsed), and for each per-cid object RE-COMPUTES the
-      `canonical_question_group` via UAC `classify_polymarket_to_canonical_group(title,slug,event_slug=eventSlug,
-      outcome,condition_id=conditionId)` (the raw parquet has NO cqg/market_id/available_at columns — verified), groups by
-      `(date,venue,cqg)` with `observed_clusters={conditionId:rows}` + `available_at_envelope=max(ts_event)`, and emits one
-      `record_captured_from_counts` per bundle — the EXACT live-writer atom (orchestrator.py:3071), batch=live. None-classifier
-      → `record_failed[ClassifierConfidenceLow]`; 0-row + missing-envelope → `record_failed` (CF-11 universal 0-row guard).
-      Perf-contract: `ThreadPoolExecutor`(--workers) + `--start-date`/`--end-date` date-shard + per-object isolation +
-      `python -u`. 14 unit tests (parse/atom/bundle/emit). **STILL OPEN (the CF-11 sub-todos below):** re-emit of the
-      EXISTING `_index`'s `empty_confirmed`/`attempted_failed` rows that have NO backing object (a pure object-scan loses
-      them) + within-bounds-empty classification + the IS/MTDS write-path audit — at parity with cefi E5's deferred CF-11
-      enhancements. Build-spec reference retained below.
-- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): **REFERENCE: cefi E5 DONE (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional
-      `pipeline_mode=` regex segment, DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
-      `derive_pipeline_mode_for_row`). Prediction differs: its CANONICAL_PATH_RE must be **REWRITTEN** to the
+      `canonical_question_group` via UAC
+      `classify_polymarket_to_canonical_group(title,slug,event_slug=eventSlug,     outcome,condition_id=conditionId)`
+      (the raw parquet has NO cqg/market_id/available_at columns — verified), groups by `(date,venue,cqg)` with
+      `observed_clusters={conditionId:rows}` + `available_at_envelope=max(ts_event)`, and emits one
+      `record_captured_from_counts` per bundle — the EXACT live-writer atom (orchestrator.py:3071), batch=live.
+      None-classifier → `record_failed[ClassifierConfidenceLow]`; 0-row + missing-envelope → `record_failed` (CF-11
+      universal 0-row guard). Perf-contract: `ThreadPoolExecutor`(--workers) + `--start-date`/`--end-date` date-shard +
+      per-object isolation + `python -u`. 14 unit tests (parse/atom/bundle/emit). **STILL OPEN (the CF-11 sub-todos
+      below):** re-emit of the EXISTING `_index`'s `empty_confirmed`/`attempted_failed` rows that have NO backing object
+      (a pure object-scan loses them) + within-bounds-empty classification + the IS/MTDS write-path audit — at parity
+      with cefi E5's deferred CF-11 enhancements. Build-spec reference retained below.
+- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): **REFERENCE: cefi E5 DONE
+      (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional `pipeline_mode=` regex segment,
+      DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
+      `derive_pipeline_mode_for_row`). Prediction differs: its CANONICAL*PATH_RE must be **REWRITTEN** to the
       post-migrator form (verified 2026-06-02 via `candidate_parquet_paths`):
       `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=prediction/venue={V}/instrument_type={IT}/data_type={DT}/{cid}.parquet`
       — the CURRENT regex matches the PRE-migration `category=/data_source=/market_category=/…` form (which the migrator
@@ -273,11 +282,9 @@ be fixed first if run on a VM.
       `underlying=`/`chain=`/ `data_source=` segments (they are PARQUET COLUMNS now, per
       `build_prediction_partition_path`), but the proven manifest
       `ShardKey=(date,venue,chain,instrument_type,data_type,underlying)` needs them → the rebuild MUST READ each
-      parquet's `chain`/`underlying`/`data_source` columns (the existing tool read them from the path). Stamp
-      `source = pipeline_mode.removeprefix("batch_")` (use UAC `source_string_for`/`pipeline_mode_for_source`) +
-      `pipeline_mode` (path-derivable: question_group→gamma_api else clob) + `available_at` → `ManifestWriter`
-      auto-stamps v9. Confirm row-key granularity against the EXISTING pred-prd `_index` (16,812 rows) so the rebuild
-      dedups, not double-counts. Then consolidator merge.
+      parquet's `chain`/`underlying`/`data_source` columns (the existing tool read them from the path). Stamp `source =
+      pipeline_mode.removeprefix("batch*")`(use UAC`source_string_for`/`pipeline_mode_for_source`) +     `pipeline_mode`(path-derivable: question_group→gamma_api else clob) +`available_at`→`ManifestWriter`    auto-stamps v9. Confirm row-key granularity against the EXISTING pred-prd`\_index`
+      (16,812 rows) so the rebuild dedups, not double-counts. Then consolidator merge.
 - [ ] [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
       path transforms BEFORE dedup: `venue UNKNOWN/blank → POLYMARKET` (prediction is single-venue today; Kalshi lands
       born-canonical), `data_type prediction_trades → trades` (verified the same markets). Grounded by the
@@ -305,16 +312,16 @@ be fixed first if run on a VM.
 
 ## Deferred work after 2026-06-01 slot-3 session
 
-| Item                                | State                                | Next action                                                                                                                                 |
-| ----------------------------------- | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| E1 layout audit                     | ✅ done                              | —                                                                                                                                           |
-| E2 path-migrator built              | ✅ done (mtds@456ae08a)              | —                                                                                                                                           |
-| E4 launcher wired                   | ✅ done (deployment-service@f8866b6) | VM dry-run + full run still PENDING (VM-only)                                                                                               |
-| E3 writer-drain + `_index` snapshot | ⏳ pending                           | confirm `mdps-prediction-2025` stopped (most self-terminated) + snapshot pred-prd `_index` before `--apply`                                 |
+| Item                                | State                                 | Next action                                                                                                                                                      |
+| ----------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1 layout audit                     | ✅ done                               | —                                                                                                                                                                |
+| E2 path-migrator built              | ✅ done (mtds@456ae08a)               | —                                                                                                                                                                |
+| E4 launcher wired                   | ✅ done (deployment-service@f8866b6)  | VM dry-run + full run still PENDING (VM-only)                                                                                                                    |
+| E3 writer-drain + `_index` snapshot | ⏳ pending                            | confirm `mdps-prediction-2025` stopped (most self-terminated) + snapshot pred-prd `_index` before `--apply`                                                      |
 | E5 manifest rebuild → v9            | ✅ captured-atom DONE (mtds@d1f1317d) | object-scan re-computes cqg atom + record_captured_from_counts (batch=live). OPEN: existing-`_index` empty/failed re-emit (CF-11) + within-bounds classification |
-| E6 CF-7 relabel                     | ⏳ pending                           | runs at rebuild time                                                                                                                        |
-| E7 CF verify                        | ⏳ pending                           | `cf_manifest_audit` CF-1…CF-12 GREEN on pred-prd real data-state                                                                            |
-| E8 IRREVERSIBLE delete              | ⏳ pending — GATED                   | only after E7 GREEN + fleet drain (shared w/ slot-2) → `--drop-stale` + L6                                                                  |
+| E6 CF-7 relabel                     | ⏳ pending                            | runs at rebuild time                                                                                                                                             |
+| E7 CF verify                        | ⏳ pending                            | `cf_manifest_audit` CF-1…CF-12 GREEN on pred-prd real data-state                                                                                                 |
+| E8 IRREVERSIBLE delete              | ⏳ pending — GATED                    | only after E7 GREEN + fleet drain (shared w/ slot-2) → `--drop-stale` + L6                                                                                       |
 
 **Pipeline proven on prediction (smallest/most-scaffolded first, per mission).** The path-migrator is
 correct-by-construction (UAC `candidate_parquet_paths` SSOT, unit-validated). Remaining = run on VM + manifest rebuild +
@@ -323,10 +330,10 @@ verify + the gated delete.
 ### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
 
 > Operator: "when there is an API issue somewhere in IS or MTDS, is it correctly doing `attempted_failed` where the
-> attempt makes sense by instrument / UAC bounds — RATHER THAN `empty_confirmed` which would not be complete?" Prediction
-> twist: legitimate typed empties exist for `EXPECTED_PRE_VENUE_LAUNCH` (2,280 — market not yet listed) which stay
-> `empty_confirmed`. The risk is a Polymarket CLOB/Gamma API error for an EXISTING market (condition_id live, within the
-> market's active window) being mislabeled `SOURCE_RETURNED_ZERO` (41 such today — verify each) instead of
+> attempt makes sense by instrument / UAC bounds — RATHER THAN `empty_confirmed` which would not be complete?"
+> Prediction twist: legitimate typed empties exist for `EXPECTED_PRE_VENUE_LAUNCH` (2,280 — market not yet listed) which
+> stay `empty_confirmed`. The risk is a Polymarket CLOB/Gamma API error for an EXISTING market (condition_id live,
+> within the market's active window) being mislabeled `SOURCE_RETURNED_ZERO` (41 such today — verify each) instead of
 > `attempted_failed`. Expected-attempt set = Polymarket market/condition universe × market-active window × UAC
 > SOURCE_PRIORITY data_type registration.
 >
@@ -341,36 +348,37 @@ verify + the gated delete.
       guaranteed-when-listed (trades / prices on a live market) + not pre-launch → `attempted_failed` (`record_failed`),
       NOT `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 41 existing `SOURCE_RETURNED_ZERO` rows — genuine
       source-zero vs masked fetch failure. Preserve the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
-- [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
-      failure to `empty_confirmed`; they stay flagged for backfill.
+- [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel
+      a failure to `empty_confirmed`; they stay flagged for backfill.
 - [x] ✅ [CODE] P1. **Batch=live classifier-None divergence — DONE (mtds@5744ba61, 2026-06-02).** The live Polymarket
       adapter now emits `None` (NaN), NOT `"OTHER"`, for a sub-threshold classifier result (polymarket_adapter.py ~735);
-      the orchestrator `write_chunk` splits null cqg rows BEFORE the captured groupby (`_prediction_unclassified` keyed by
-      market_id) and the finalize loop emits one `record_failed(error="ClassifierConfidenceLow")` per market —
+      the orchestrator `write_chunk` splits null cqg rows BEFORE the captured groupby (`_prediction_unclassified` keyed
+      by market_id) and the finalize loop emits one `record_failed(error="ClassifierConfidenceLow")` per market —
       byte-identical to `rebuild_prediction_manifest.emit_manifest_rows`. The REAL `CanonicalQuestionGroup.OTHER` group
       (value `"OTHER"`) stays a CAPTURED bundle, distinct from the `None` sentinel (they were indistinguishable before).
       3 regression tests in `test_polymarket_bundling_finalize.py` + updated `test_polymarket_adapter_lifecycle_gating`
       (now asserts sub-threshold → `None`, NOT `"OTHER"`). mtds QG green.
 - [ ] [CODE] P1. **Kalshi classifier-None divergence (DISCOVERY slot-3 2026-06-02, mtds — follow-up to the Polymarket
       fix above)**: the Kalshi adapter still maps an unclassified result → `canonical_question_group="OTHER"`
-      (`test_kalshi_adapter_lifecycle_gating.py:246` asserts it). The orchestrator finalize (shared across all prediction
-      venues) treats a non-null `"OTHER"` as a REAL captured group, so Kalshi unclassified markets are bundled CAPTURED
-      while Polymarket now routes them to `attempted_failed` — a venue-inconsistency + batch≠live for Kalshi. Fix the
-      Kalshi adapter the same way (emit `None` for sub-threshold so the shared orchestrator routes it to
-      `attempted_failed[ClassifierConfidenceLow]`); update the Kalshi lifecycle-gating test to assert `None` not `"OTHER"`.
-      Target: `market-tick-data-service` Kalshi prediction adapter + `test_kalshi_adapter_lifecycle_gating.py`. Low live
-      urgency today (prediction live corpus is Polymarket CLOB), but required for venue parity before Kalshi goes live.
+      (`test_kalshi_adapter_lifecycle_gating.py:246` asserts it). The orchestrator finalize (shared across all
+      prediction venues) treats a non-null `"OTHER"` as a REAL captured group, so Kalshi unclassified markets are
+      bundled CAPTURED while Polymarket now routes them to `attempted_failed` — a venue-inconsistency + batch≠live for
+      Kalshi. Fix the Kalshi adapter the same way (emit `None` for sub-threshold so the shared orchestrator routes it to
+      `attempted_failed[ClassifierConfidenceLow]`); update the Kalshi lifecycle-gating test to assert `None` not
+      `"OTHER"`. Target: `market-tick-data-service` Kalshi prediction adapter +
+      `test_kalshi_adapter_lifecycle_gating.py`. Low live urgency today (prediction live corpus is Polymarket CLOB), but
+      required for venue parity before Kalshi goes live.
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS prediction Polymarket adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for a live market/condition within its active window, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the prediction
       Polymarket CLOB/Gamma fetch paths for `except … record_empty` / bare `return []` swallows; gate empty-vs-failed on
       market-exists + active-window + UAC coverage. Cross-ref the sports CF-11 model
-      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
-      **DIAGNOSIS (slot-3 2026-06-02): MTDS side VERIFIED COMPLIANT** — same finding as the cefi CF-11 todo (shared MTDS
-      orchestrator finalize): the polymarket adapter classifies+emits+re-raises on a genuine API error (no swallow), and
-      `orchestrator.py:3818`/`:3766` gate `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded
-      fetch-failure. (Distinct from the now-fixed None-classifier divergence above, which was about UNCLASSIFIABLE markets,
-      not fetch errors.) RESIDUAL = focused instruments-service write-path verify. See cefi plan § CF-11 for the full diagnosis.
+      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11). **DIAGNOSIS (slot-3 2026-06-02): MTDS side VERIFIED
+      COMPLIANT** — same finding as the cefi CF-11 todo (shared MTDS orchestrator finalize): the polymarket adapter
+      classifies+emits+re-raises on a genuine API error (no swallow), and `orchestrator.py:3818`/`:3766` gate
+      `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded fetch-failure. (Distinct from the now-fixed
+      None-classifier divergence above, which was about UNCLASSIFIABLE markets, not fetch errors.) RESIDUAL = focused
+      instruments-service write-path verify. See cefi plan § CF-11 for the full diagnosis.
 
 ## Success criteria
 

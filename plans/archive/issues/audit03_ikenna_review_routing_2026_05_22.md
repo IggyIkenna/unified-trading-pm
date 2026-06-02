@@ -10,8 +10,8 @@ source:
 
 # AUDIT-03 — findings routed to Ikenna
 
-> **ARCHIVED 2026-06-01 (slot 7).** All 9 routed findings are decided + dispatched (issue-doc-lifecycle: acked → archive,
-> no dual-track): F-22 ✅ shipped (mtds@`0716a544`); F-14 (1h price-move abort = P1 safety gap) + F-13/F-15 →
+> **ARCHIVED 2026-06-01 (slot 7).** All 9 routed findings are decided + dispatched (issue-doc-lifecycle: acked →
+> archive, no dual-track): F-22 ✅ shipped (mtds@`0716a544`); F-14 (1h price-move abort = P1 safety gap) + F-13/F-15 →
 > `strategy_master`; F-34 (SUPPORTED_ARCHETYPES) → `strategy_master`; F-32 (MEV size-escalation post-cutover) →
 > `execution_master`; F-45 + F-06 (Elysium scrub) → `codex_vs_repo_docs_ssot_audit`; F-25 (full ClientConfig) →
 > `client_isolation_and_governance_master`. Operator decision ledger preserved below for provenance.
@@ -39,7 +39,7 @@ drift-backlog) until the decision lands, so we don't ship a fix that contradicts
 > - **F-13 / F-15** — reconcile codex strategy-spec → implemented mechanism (code is truth). Record codex-update todo in
 >   `strategy_master` + route doc edit to `codex_vs_repo_docs`.
 > - **F-14** — VERIFY whether `vol_cap_clamp` provides an equivalent 1h price-move abort. If yes → reconcile codex. If
->   NO → it is a **P1 safety gap** → file todo in `strategy_master` / `execution_master`. [slot 7 investigates + >
+>   NO → it is a **P1 safety gap** → file todo in `strategy_master` / `execution_master`. [slot 7 investigates + > >
 >   reports]
 > - **F-32** — MEV mode is **directive-driven** for May-23 → close F-32. Size-based auto-escalation = post-cutover P2
 >   todo in `execution_master`.

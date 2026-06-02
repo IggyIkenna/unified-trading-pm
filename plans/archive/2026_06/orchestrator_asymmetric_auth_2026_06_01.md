@@ -22,7 +22,10 @@ migrated_from:
 
 ## ✅ ARCHIVED 2026-06-01 — ES256 fleet-wide + HS256 retired
 
-Internal central↔worker auth is ES256-only on all 11 orchestrator VMs (agent-orchestrator@f44b948); private key distributed via the restricted creds bucket (central-only abandoned, operator decision); the `internal-secret` object is RETAINED for /api/escalate. Codex `agent-orchestrator-overview.md` updated. **Deferred work:** none. Unlocked for archival. 0 open todos.
+Internal central↔worker auth is ES256-only on all 11 orchestrator VMs (agent-orchestrator@f44b948); private key
+distributed via the restricted creds bucket (central-only abandoned, operator decision); the `internal-secret` object is
+RETAINED for /api/escalate. Codex `agent-orchestrator-overview.md` updated. **Deferred work:** none. Unlocked for
+archival. 0 open todos.
 
 ## Why this exists
 
@@ -81,18 +84,18 @@ the PUBLIC key (verify, cannot mint). The operator-JWT secret (`ORCHESTRATOR_JWT
 ### Phase 4 — Retire HS256 — ✅ DONE 2026-06-01
 
 - [x] ✅ [CODE] P2. ✅ DONE 2026-06-01 (retired live, no 2-day wait needed). The real gate was "all-ES256," not elapsed
-      time (5-min internal-token TTL). On checking the live fleet we found ES256 signing was complete on only 1 of 11 VMs
-      (`agent-orchestrator-vm-1`); the other 10 (`…-20260522` batch) lacked the private key + `INTERNAL_ALG`. **Completed
-      the ES256 rollout to all 11** (operator decision: distribute the private key to every VM via the restricted creds
-      bucket `ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS` + `INTERNAL_ALG=ES256` — central-only abandoned), started the 9
-      stopped VMs to apply, verified **11/11 sign ES256** (`GCS priv-key READ ok` + active), then **retired HS256**
-      (cherry-picked `staged/hs256-retire-2026-06-03` → LDR @f44b948; `decode_token` ES256-only, `_issue_internal_token`
-      raises without a private key) and deployed to all 11 (HEAD=f44b948, hs256_refs=0, active — verified 11/11). Codex
-      updated (`agent-orchestrator-overview.md` × 3 spots). **RETAINED the `internal-secret` object** (it's the
-      `verify_internal_secret()` pre-shared key for `POST /api/escalate`) — only the HS256 *JWT* accept/sign paths
-      retired. The 9 non-running VMs re-stopped (paused state restored; ES256 config + retired code persist on EBS; both
-      ao-self-pull + git-health-guard crons installed so they're current on next restart). Collision group:
-      `ao_asym_auth_code`.
+      time (5-min internal-token TTL). On checking the live fleet we found ES256 signing was complete on only 1 of 11
+      VMs (`agent-orchestrator-vm-1`); the other 10 (`…-20260522` batch) lacked the private key + `INTERNAL_ALG`.
+      **Completed the ES256 rollout to all 11** (operator decision: distribute the private key to every VM via the
+      restricted creds bucket `ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS` + `INTERNAL_ALG=ES256` — central-only abandoned),
+      started the 9 stopped VMs to apply, verified **11/11 sign ES256** (`GCS priv-key READ ok` + active), then
+      **retired HS256** (cherry-picked `staged/hs256-retire-2026-06-03` → LDR @f44b948; `decode_token` ES256-only,
+      `_issue_internal_token` raises without a private key) and deployed to all 11 (HEAD=f44b948, hs256_refs=0, active —
+      verified 11/11). Codex updated (`agent-orchestrator-overview.md` × 3 spots). **RETAINED the `internal-secret`
+      object** (it's the `verify_internal_secret()` pre-shared key for `POST /api/escalate`) — only the HS256 _JWT_
+      accept/sign paths retired. The 9 non-running VMs re-stopped (paused state restored; ES256 config + retired code
+      persist on EBS; both ao-self-pull + git-health-guard crons installed so they're current on next restart).
+      Collision group: `ao_asym_auth_code`.
 
 ## Closing condition
 

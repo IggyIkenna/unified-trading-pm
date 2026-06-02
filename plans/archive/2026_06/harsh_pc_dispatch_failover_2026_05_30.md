@@ -20,7 +20,9 @@ related_plans:
 
 ## ✅ ARCHIVED 2026-06-01
 
-Harsh-PC dispatch failover shipped + deployed. 0 open todos. Fleet-verified live (both AWS orchestrator VMs @589b711). **Deferred work:** none. **Codex aligned** (agent-orchestrator-overview / -autospawn / -worker-liveness — all current 2026-06-01). Unlocked for archival.
+Harsh-PC dispatch failover shipped + deployed. 0 open todos. Fleet-verified live (both AWS orchestrator VMs @589b711).
+**Deferred work:** none. **Codex aligned** (agent-orchestrator-overview / -autospawn / -worker-liveness — all current
+2026-06-01). Unlocked for archival.
 
 ## Why this exists
 

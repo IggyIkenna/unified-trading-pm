@@ -101,8 +101,8 @@ the topology depends on:
 
 Failure mode if keys get out of sync: workers 401 on every authed proxy call (`/api/vms/<id>/api/state`,
 `/api/backends`, etc.) and the dashboard bounces back to the login screen. Diagnosis: SSH to a worker + check the
-journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the GCS
-URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
+journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the
+GCS URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
 
 ## Per-VM agent shape (epic VMs)
 

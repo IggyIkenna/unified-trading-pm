@@ -107,14 +107,14 @@ VM.
 - [x] ✅ [DATA] P0. LIVE canonical `tradfi-prd` `_index` DATA-STATE (slot-3 tool, 2026-06-01 — confirms CONFLICT-2):
       **100% v8** (0/144,062 rows v9 — the constant lied, the data is v8); `asset_group` col present (CF-2 rows GREEN);
       **`pipeline_mode` blank (0/144,062 — CF-3 RED)**; **no `source` column (CF-4 RED)**; CF-5 typed GREEN
-      (`EXPECTED_WEEKEND` 35,050 / `EXPECTED_HOLIDAY` 2,427 / `EXPECTED_OUT_OF_COVERAGE_WINDOW` 8 / `SOURCE_RETURNED_ZERO`
-      5). capture_status: captured 100,536 / empty 37,490 / attempted_failed 6,036.
+      (`EXPECTED_WEEKEND` 35,050 / `EXPECTED_HOLIDAY` 2,427 / `EXPECTED_OUT_OF_COVERAGE_WINDOW` 8 /
+      `SOURCE_RETURNED_ZERO` 5). capture_status: captured 100,536 / empty 37,490 / attempted_failed 6,036.
 - [x] ✅ [DATA] P0. Legacy-only diff: **71 legacy-only cells** (NOT 4 — headline undershot; NYSE `tbbo` 2023-05 spread;
       legacy 12,948 · canonical 17,941 · overlap 12,877). All 71 copied + re-versioned in the C0 walk.
-- [x] ✅ [DATA] P0. **`available_at` FINDING — there is NO `available_at` column in the canonical tradfi `_index`** (only
-      `written_at`), contradicting the plan's "tradfi_massive shipped per-row available_at" assumption (CF-8 RED). The C0
-      walk MUST add a per-row `available_at` (preserve from parquet where present; backfill missing from day EOD UTC —
-      never migration-time). Captured as expanded scope (prior-not-ceiling).
+- [x] ✅ [DATA] P0. **`available_at` FINDING — there is NO `available_at` column in the canonical tradfi `_index`**
+      (only `written_at`), contradicting the plan's "tradfi_massive shipped per-row available_at" assumption (CF-8 RED).
+      The C0 walk MUST add a per-row `available_at` (preserve from parquet where present; backfill missing from day EOD
+      UTC — never migration-time). Captured as expanded scope (prior-not-ceiling).
 - [ ] [DATA] P1. Verify the corpus venue / data_type strings are underscore-canonical: data-state shows venues
       `BARCHART/CBOE/CME/FX/ICE/NASDAQ/NYSE/YAHOO_FINANCE` (canonical) BUT also `UNKNOWN` + blank `''` (drift to
       diagnose); data_types `ohlcv_15m/ohlcv_1m/ohlcv_24h/options_chain/tbbo/trades` + blank `''`. Relabel/diagnose the
@@ -125,7 +125,8 @@ VM.
 - [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
       top-level trees + nested layouts in the tradfi source + canonical buckets before the walk; classify duplicate
       (keep freshest schema) vs complementary (migrate all → canonical v9). Cover every in-scope layout or the walk is
-      incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
+      incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded
+      recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -162,8 +163,8 @@ VM.
 ## Execution checklist (grounded — next session, finish in full)
 
 > CF debt is in the `_index` MANIFEST + object PATHS, NOT the raw tick parquets. See
-> `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + layout map. tradfi raw =
-> HYPHEN pseudo-hive (`day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/`) — parse `-`-delim, not `=`.
+> `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § MECHANISM + layout map. tradfi raw = HYPHEN
+> pseudo-hive (`day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/`) — parse `-`-delim, not `=`.
 >
 > ⚠️ **IRREVERSIBLE — E7 DELETES legacy `market-data-tick-tradfi` permanently.** Do not run E2–E7 until the canonical
 > target (v9 data-state, `day=/pipeline_mode=/asset_group=tradfi/…`, source re-consolidated, available_at added) is
@@ -177,18 +178,37 @@ VM.
 > **E1 RESULTS — tradfi raw layout reality (slot-3 2026-06-02, exhaustive `ls`, lesson #0)**. Bucket
 > `market-data-tick-tradfi-prd-central-element-323112/raw_tick_data/by_date/`:
 >
-> - **L-hive (DOMINANT, 1,996 `day=` dirs, 2020+)**: `day={D}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/[underlying={U}/]{file}`.
->   Near-canonical — has `asset_group=`, MISSING only `pipeline_mode=`. Bundled types (`combo`/`futures_chain`/`options_chain`)
->   carry an `underlying=` bundle segment (like cefi chain bundles). venue set observed = CME (futures/options/combo).
->   **Fix = path-only `pipeline_mode=` insert after `day=` (server-side `gcs_copy_object`), preserve `underlying=` bundle, CF-7 relabel in place** — identical to the cefi L-bulk branch.
+> - **L-hive (DOMINANT, 1,996 `day=` dirs, 2020+)**:
+>   `day={D}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/[underlying={U}/]{file}`. Near-canonical —
+>   has `asset_group=`, MISSING only `pipeline_mode=`. Bundled types (`combo`/`futures_chain`/`options_chain`) carry an
+>   `underlying=` bundle segment (like cefi chain bundles). venue set observed = CME (futures/options/combo). **Fix =
+>   path-only `pipeline_mode=` insert after `day=` (server-side `gcs_copy_object`), preserve `underlying=` bundle, CF-7
+>   relabel in place** — identical to the cefi L-bulk branch.
 > - **L-hyphen (12 `day-` dirs ONLY, recent databento batches Nov-2025…Feb-2026)** — TWO sub-shapes:
->   - ohlcv_1m: `day-{D}/data_type-ohlcv_1m/{itype_bare∈equities|etf|futures_chain}/{VENUE∈NYSE|NASDAQ|CME}/{instrument_id}.parquet`
->   - trades|tbbo: `day-{D}/data_type-{trades|tbbo}/{VENUE}/{file}` — **NO instrument_type segment** (derive itype from the `{VENUE}:{ITYPE}:{SYMBOL}` instrument-id filename).
->   Bare itype `equities`→canonical `equity`; `etf`→`etf`; `futures_chain`→`futures_chain`. **Fix = parse hyphen pseudo-hive → build canonical path manually + server-side copy** (content already classified).
->   Placeholder files `…:MARKET_CLOSED:PLACEHOLDER.parquet` = empty-day markers → do NOT migrate as data.
-> - **⚠️ CORRECTION (slot-3 2026-06-02, operator cross-check vs `gcs_hive_partition_malformed_paths_remediation`): the ENTIRE hyphen tree is 0-ROW PLACEHOLDERS, NOT real data.** Row-count inspection of the hyphen parquets (ohlcv_1m equities AAPL = 0 rows / futures_chain AUD = 0 rows / trades CME-option = 0 rows; uniform 3070/4251-byte header-only) confirms these are the issue-doc **Pattern 1** Massive **dry-run placeholders** (written 2026-02-09; `MASSIVE_API_KEY` created 2026-05-29 — 3.5 months later; **0 BATCH_MASSIVE rows in the manifest** — never a real ingest). An earlier path-only `ls` enumeration mis-read them as "complementary equities/etf real data" — a row-count check disproved it. **So**: the migrator does NOT migrate the hyphen tree (a 0-row guard skips every placeholder — banned to migrate empties that look populated); the hyphen prefixes are **DELETED at E7** (this IS the issue-doc Pattern-1 cleanup, now owned here). The 12 hyphen dates' REAL data is the `day=` hive (CME databento, verified 224/66-row files) — handled by L-hive. **NYSE/NASDAQ equities/etf were NEVER genuinely ingested** (0-row dry run only) → a REAL tradfi coverage gap (backfill todo below), NOT data to migrate.
+>   - ohlcv_1m:
+>     `day-{D}/data_type-ohlcv_1m/{itype_bare∈equities|etf|futures_chain}/{VENUE∈NYSE|NASDAQ|CME}/{instrument_id}.parquet`
+>   - trades|tbbo: `day-{D}/data_type-{trades|tbbo}/{VENUE}/{file}` — **NO instrument_type segment** (derive itype from
+>     the `{VENUE}:{ITYPE}:{SYMBOL}` instrument-id filename). Bare itype `equities`→canonical `equity`; `etf`→`etf`;
+>     `futures_chain`→`futures_chain`. **Fix = parse hyphen pseudo-hive → build canonical path manually + server-side
+>     copy** (content already classified). Placeholder files `…:MARKET_CLOSED:PLACEHOLDER.parquet` = empty-day markers →
+>     do NOT migrate as data.
+> - **⚠️ CORRECTION (slot-3 2026-06-02, operator cross-check vs `gcs_hive_partition_malformed_paths_remediation`): the
+>   ENTIRE hyphen tree is 0-ROW PLACEHOLDERS, NOT real data.** Row-count inspection of the hyphen parquets (ohlcv_1m
+>   equities AAPL = 0 rows / futures_chain AUD = 0 rows / trades CME-option = 0 rows; uniform 3070/4251-byte
+>   header-only) confirms these are the issue-doc **Pattern 1** Massive **dry-run placeholders** (written 2026-02-09;
+>   `MASSIVE_API_KEY` created 2026-05-29 — 3.5 months later; **0 BATCH_MASSIVE rows in the manifest** — never a real
+>   ingest). An earlier path-only `ls` enumeration mis-read them as "complementary equities/etf real data" — a row-count
+>   check disproved it. **So**: the migrator does NOT migrate the hyphen tree (a 0-row guard skips every placeholder —
+>   banned to migrate empties that look populated); the hyphen prefixes are **DELETED at E7** (this IS the issue-doc
+>   Pattern-1 cleanup, now owned here). The 12 hyphen dates' REAL data is the `day=` hive (CME databento, verified
+>   224/66-row files) — handled by L-hive. **NYSE/NASDAQ equities/etf were NEVER genuinely ingested** (0-row dry run
+>   only) → a REAL tradfi coverage gap (backfill todo below), NOT data to migrate.
 > - **`databento-batch-registry/`** = job-dedup registry (not market data) → NOT migrated, NOT deleted by E7.
-> - pipeline_mode per object = `derive_pipeline_mode_for_row(venue, "tradfi", data_type)` (UTL `pipeline_mode_resolver`) — venue-override (BARCHART→batch_barchart / YAHOO→batch_yahoo / EIA→batch_eia) else SOURCE_PRIORITY-primary (CME/NYSE/NASDAQ ohlcv_1m/trades/tbbo → `batch_databento`). **Identical derivation to the live writer `resolve_pipeline_mode` → batch=live correct.** `source` (E5) = `source_string_for(pipeline_mode)`.
+> - pipeline_mode per object = `derive_pipeline_mode_for_row(venue, "tradfi", data_type)` (UTL `pipeline_mode_resolver`)
+>   — venue-override (BARCHART→batch_barchart / YAHOO→batch_yahoo / EIA→batch_eia) else SOURCE_PRIORITY-primary
+>   (CME/NYSE/NASDAQ ohlcv_1m/trades/tbbo → `batch_databento`). **Identical derivation to the live writer
+>   `resolve_pipeline_mode` → batch=live correct.** `source` (E5) = `source_string_for(pipeline_mode)`.
+
 - [x] ✅ [DATA] P0. E2 BUILT `migrate_tradfi_to_v9_canonical.py` (NEW v9 path canonicaliser — NOT the old
       content-reclassification `migrate_tradfi_canonical.py`) — mtds@ae9e1b31 + launcher deployment-service@4cbb2e2.
       Handles all 3 layouts (E1 RESULTS): L-hive `pipeline_mode=` insert (preserve `underlying=` bundle), L-hyphen 2
@@ -196,32 +216,37 @@ VM.
       types built manually (UAC builder rejects futures_chain/options_chain); pipeline_mode via
       `derive_pipeline_mode_for_row` (batch=live identical). 12 unit tests green (ruff+basedpyright clean). The 71
       legacy-only cells ride `--also-legacy`. DRY-BY-DEFAULT + `--apply`. Source/v9 columns added by E5 rebuild (next).
-- [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive -029).
+- [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive
+      -029).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
 - [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE: NEW `rebuild_tradfi_manifest.py` (mtds@e6250b99, 2026-06-02, 20
-      tests)**. Scans canonical `day=/pipeline_mode=/asset_group=tradfi/venue=/instrument_type=/data_type=/[underlying=/]{file}`
-      (per-instrument → instrument_id=stem; chain bundle → underlying=; optional pipeline_mode= segment + legacy tolerance);
-      day-level list; `-prd` bucket; stamps `pipeline_mode` (path-or-`derive_pipeline_mode_for_row`) + `source` (REQUIRED,
-      `source_string_for(pm)`); SKIPS the `day-` hyphen 0-row placeholder tree (E7 deletes those). Modeled on the cefi E5.
-      **REMAINING (gate G4, tracked via CF-11 todos + Verify): `available_at` (parquet-col-else-day-EOD) + legacy-`_index`
-      re-emit of `attempted_failed`/typed-`empty_confirmed` rows (CF-11) + the 5 `SOURCE_RETURNED_ZERO` audit.** Executes
-      `tradfi_massive` Task -031 (source re-consolidation). Original recipe retained below for reference.
-- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): NEW `rebuild_tradfi_manifest.py`. REFERENCE:
-      cefi E5 DONE (mtds@2c3a479b) — copy its structure (optional `pipeline_mode=` regex segment, DAY-level list prefix,
-      canonical `-prd` bucket, stamp `pipeline_mode` via path-or-`derive_pipeline_mode_for_row(venue,"tradfi",dt)`). The
-      post-migrator tradfi canonical form (the L-hive shape + inserted pipeline_mode) is
+      tests)**. Scans canonical
+      `day=/pipeline_mode=/asset_group=tradfi/venue=/instrument_type=/data_type=/[underlying=/]{file}` (per-instrument →
+      instrument_id=stem; chain bundle → underlying=; optional pipeline_mode= segment + legacy tolerance); day-level
+      list; `-prd` bucket; stamps `pipeline_mode` (path-or-`derive_pipeline_mode_for_row`) + `source` (REQUIRED,
+      `source_string_for(pm)`); SKIPS the `day-` hyphen 0-row placeholder tree (E7 deletes those). Modeled on the cefi
+      E5. **REMAINING (gate G4, tracked via CF-11 todos + Verify): `available_at` (parquet-col-else-day-EOD) +
+      legacy-`_index` re-emit of `attempted_failed`/typed-`empty_confirmed` rows (CF-11) + the 5 `SOURCE_RETURNED_ZERO`
+      audit.** Executes `tradfi_massive` Task -031 (source re-consolidation). Original recipe retained below for
+      reference.
+- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): NEW `rebuild_tradfi_manifest.py`.
+      REFERENCE: cefi E5 DONE (mtds@2c3a479b) — copy its structure (optional `pipeline_mode=` regex segment, DAY-level
+      list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via
+      path-or-`derive_pipeline_mode_for_row(venue,"tradfi",dt)`). The post-migrator tradfi canonical form (the L-hive
+      shape + inserted pipeline_mode) is
       `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/[underlying={U}/]{file}`
-      (chain bundles keep `underlying=`). Stamp `source` via `source_string_for(pipeline_mode)` (databento/massive/yahoo/
-      barchart/eia — REQUIRED for tradfi v9 per `MissingSourceError`) + `available_at` (parquet col else day-EOD-UTC). NO
-      hyphen-tree rows (those are 0-row placeholders excluded by the migrator + deleted at E7). Executes `tradfi_massive`
-      Task -031 (source re-consolidation) — cross-link + flip there.
+      (chain bundles keep `underlying=`). Stamp `source` via `source_string_for(pipeline_mode)`
+      (databento/massive/yahoo/ barchart/eia — REQUIRED for tradfi v9 per `MissingSourceError`) + `available_at`
+      (parquet col else day-EOD-UTC). NO hyphen-tree rows (those are 0-row placeholders excluded by the migrator +
+      deleted at E7). Executes `tradfi_massive` Task -031 (source re-consolidation) — cross-link + flip there.
 - [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical (diagnose, don't bulk-rename).
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
-      data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in `tradfi_master_audit_instructions.md`.
-      ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-tradfi` permanently** +
-      **bulk-delete the 12 `day-*` hyphen 0-row-placeholder prefixes** in `tradfi-prd` (~110k objects — the issue-doc
-      **Pattern-1 cleanup, now executed here**; pre-delete guard: re-assert 0-row per object before deleting, abort the
-      prefix on any non-empty object). This SUPERSEDES the `gcs_hive_partition_malformed_paths_remediation` Pattern-1 todo.
+      data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in
+      `tradfi_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy
+      `market-data-tick-tradfi` permanently** + **bulk-delete the 12 `day-*` hyphen 0-row-placeholder prefixes** in
+      `tradfi-prd` (~110k objects — the issue-doc **Pattern-1 cleanup, now executed here**; pre-delete guard: re-assert
+      0-row per object before deleting, abort the prefix on any non-empty object). This SUPERSEDES the
+      `gcs_hive_partition_malformed_paths_remediation` Pattern-1 todo.
 - [ ] [DATA] P1. **COVERAGE GAP (surfaced by the 0-row-placeholder finding, 2026-06-02)**: tradfi **equities/ETF
       (NYSE/NASDAQ)** were NEVER genuinely ingested — only the 0-row Massive dry-run placeholders exist; the real `day=`
       hive corpus is **CME databento only**. This is a real gap (Data-Pipeline-Correctness HARD RULE — every cell in
@@ -242,28 +267,28 @@ VM.
 >
 > **The manifest must EXPLAIN every zero (3-way decision tree — the E5 rebuild contract):** (1) attempt errored on a
 > trading-day in-universe cell → `attempted_failed`; (2) a UAC guard explains the zero → typed `empty_confirmed`
-> (`EXPECTED_WEEKEND` / `EXPECTED_HOLIDAY` / `EXPECTED_OUT_OF_COVERAGE_WINDOW` / pre-listing "not started yet"); (3) only
-> if a trading session was open + fetch succeeded + genuinely nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank
+> (`EXPECTED_WEEKEND` / `EXPECTED_HOLIDAY` / `EXPECTED_OUT_OF_COVERAGE_WINDOW` / pre-listing "not started yet"); (3)
+> only if a trading session was open + fetch succeeded + genuinely nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank
 > `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as complete.
 
 - [ ] [DATA] P0. **E5 rebuild classifier: within-bounds trading-day empty → `attempted_failed`.** For every empty cell:
-      if it is a trading day (NOT weekend/holiday) + ticker in universe + data_type guaranteed-when-listed (trades / tbbo
-      / ohlcv on an active venue+ticker) + within coverage window → `attempted_failed` (`record_failed`), NOT
+      if it is a trading day (NOT weekend/holiday) + ticker in universe + data_type guaranteed-when-listed (trades /
+      tbbo / ohlcv on an active venue+ticker) + within coverage window → `attempted_failed` (`record_failed`), NOT
       `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 5 existing `SOURCE_RETURNED_ZERO` rows specifically — confirm
       genuine source-zero vs masked fetch failure. Preserve the legit weekend/holiday/out-of-coverage typed empties.
 - [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows (6,036) v9, status PRESERVED** — never silently
       relabel a failure to `empty_confirmed`; they stay flagged for backfill.
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS tradfi databento/massive adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for an in-universe ticker on a trading day within coverage bounds, the handler MUST
-      `record_failed` (→ `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep
-      the tradfi databento/massive fetch paths for `except … record_empty` / bare `return []` swallows; gate empty-vs-failed
-      on trading-calendar + ticker-in-universe + UAC coverage. Cross-ref the sports CF-11 model
-      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11).
-      **DIAGNOSIS (slot-3 2026-06-02): MTDS side VERIFIED COMPLIANT** — same finding as the cefi CF-11 todo (the MTDS
-      orchestrator finalize is shared across AGs): tradfi databento/massive adapters classify+emit+re-raise (no swallow),
-      and `orchestrator.py:3818`/`:3766` gate `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded
-      fetch-failure (incl. `failed_per_dt_by_venue` for bundled-Databento partial-success). RESIDUAL = focused
-      instruments-service write-path verify. See cefi plan § CF-11 for the full diagnosis.
+      `record_failed` (→ `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`.
+      Grep the tradfi databento/massive fetch paths for `except … record_empty` / bare `return []` swallows; gate
+      empty-vs-failed on trading-calendar + ticker-in-universe + UAC coverage. Cross-ref the sports CF-11 model
+      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11). **DIAGNOSIS (slot-3 2026-06-02): MTDS side VERIFIED
+      COMPLIANT** — same finding as the cefi CF-11 todo (the MTDS orchestrator finalize is shared across AGs): tradfi
+      databento/massive adapters classify+emit+re-raise (no swallow), and `orchestrator.py:3818`/`:3766` gate
+      `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded fetch-failure (incl.
+      `failed_per_dt_by_venue` for bundled-Databento partial-success). RESIDUAL = focused instruments-service write-path
+      verify. See cefi plan § CF-11 for the full diagnosis.
 
 ## Success criteria
 

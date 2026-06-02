@@ -76,12 +76,12 @@ subprocess.run(["gcloud", "storage", "objects", "describe", uri], ...)
 
 **Every whole-corpus GCS migration / backfill / reconciler script MUST be parallel + observable + shardable from day
 one.** This is the cross-service SSOT for the contract (the per-AG + per-service canonicalisation plans —
-`{defi,cefi,tradfi,sports,prediction}_manifest_canonicalisation_2026_06_01.md` + `instruments_…` + `downstream_services_…`
-— all reference it). A script that walks a bucket MUST satisfy all six:
+`{defi,cefi,tradfi,sports,prediction}_manifest_canonicalisation_2026_06_01.md` + `instruments_…` +
+`downstream_services_…` — all reference it). A script that walks a bucket MUST satisfy all six:
 
 1. **Parallelise the object walk** with `ThreadPoolExecutor(max_workers=workers)` — GCS read/write **release the GIL**,
    so I/O-bound walks overlap for 5–10× (dominant cost is GCS round-trips, not CPU). A bare `for obj in objs:` loop over
-   a remote bucket is **review-blocking**. (CPU-bound *serialize* is GIL-capped → escalate to `ProcessPoolExecutor` only
+   a remote bucket is **review-blocking**. (CPU-bound _serialize_ is GIL-capped → escalate to `ProcessPoolExecutor` only
    if profiling shows serialize-bound; threads first for pure I/O.)
 2. **Wire the knobs — no dead args.** `--workers` actually sizes the pool; `--start-date`/`--end-date` actually filter
    the walk → the job is **date-shardable across many VMs** (the real horizontal-scale lever). A parsed-but-unused arg
@@ -99,13 +99,13 @@ one.** This is the cross-service SSOT for the contract (the per-AG + per-service
 
 ### Measured sizing (2026-06-01 DeFi C0, in-region e2-standard-8) + the <1h recipe
 
-Empirical: at `--workers 32` the in-region C0 walk ran at **load avg ~1.46 on 8 cores (~18% CPU)** — every worker
-thread blocked on GCS round-trips, i.e. **I/O-bound with large CPU + bandwidth headroom**. So for a content-transform
-walk (download→transform→upload, can't use server-side copy):
+Empirical: at `--workers 32` the in-region C0 walk ran at **load avg ~1.46 on 8 cores (~18% CPU)** — every worker thread
+blocked on GCS round-trips, i.e. **I/O-bound with large CPU + bandwidth headroom**. So for a content-transform walk
+(download→transform→upload, can't use server-side copy):
 
 - **Default to `--workers 64`** (was 16/32), and go to **96** when the corpus is large and the VM is I/O-bound (verify
   with `uptime` load « ncores). One VM's gcsfs/aiohttp pool tops out ~100 concurrent conns, so **>~96 workers on a
-  single VM hits diminishing returns** — past that, scale *horizontally*, don't just raise workers.
+  single VM hits diminishing returns** — past that, scale _horizontally_, don't just raise workers.
 - **Bump the gcsfs connection pool when workers > ~64**: the default ~100-conn aiohttp connector becomes the cap; size
   it ≳ workers so threads aren't queuing on connections.
 - **Horizontal scale is THE lever for a <1h target on a large (100K+ object) corpus**: shard the walk across VMs by
@@ -117,12 +117,13 @@ walk (download→transform→upload, can't use server-side copy):
 
 ## Migration completeness + uniform-schema + legacy-deletion contract (HARD RULE — codified 2026-06-01)
 
-**Why migrations kept failing (operator post-mortem 2026-06-01).** The canonical TARGET layout moved several times
-(defi e.g. `{data_type}/{venue}/{chain}/date=` → `day=/category=defi/` → `raw_tick_data/by_date/day=/asset_group=/`),
-and **each move wrote a NEW layout WITHOUT deleting the old**. So a single source bucket silently accumulated 2–3
+**Why migrations kept failing (operator post-mortem 2026-06-01).** The canonical TARGET layout moved several times (defi
+e.g. `{data_type}/{venue}/{chain}/date=` → `day=/category=defi/` → `raw_tick_data/by_date/day=/asset_group=/`), and
+**each move wrote a NEW layout WITHOUT deleting the old**. So a single source bucket silently accumulated 2–3
 **overlapping representations of the same cells** in different schemas + partial coverage. Migrations then (a) assumed
-one layout and **missed the other 90%**, and (b) **never deleted** the old buckets/paths → dual/triple SSOT → data-status
-can't show true missing data → "audit + migrate" again → the loop repeats. Every whole-corpus migration MUST break it:
+one layout and **missed the other 90%**, and (b) **never deleted** the old buckets/paths → dual/triple SSOT →
+data-status can't show true missing data → "audit + migrate" again → the loop repeats. Every whole-corpus migration MUST
+break it:
 
 1. **Discover ALL historical layouts — never assume today's target shape.** Mandatory pre-flight: bucket-wide list of
    distinct top-level prefixes/trees. An unrecognised tree is **review-blocking, never silently skipped**. (defi: a
@@ -143,10 +144,10 @@ SSOT for the concrete unified-migration spec: `plans/active/defi_manifest_canoni
 
 ## Incident history
 
-**2026-06-01**: the DeFi C0 tool (`migrate_defi_full_v9_canonical.py`) walked ~40–50K objects **single-threaded**
-(~26% CPU of an 8-vCPU VM, projected **hours**), with `--workers`/`--start-date`/`--end-date` parsed but **never wired**
-(dead args). Fixed at mtds@92b8d25b (ThreadPoolExecutor + wired date-shard knobs). Codified the six-point contract
-above; all per-AG + per-service canonicalisation walks inherit it.
+**2026-06-01**: the DeFi C0 tool (`migrate_defi_full_v9_canonical.py`) walked ~40–50K objects **single-threaded** (~26%
+CPU of an 8-vCPU VM, projected **hours**), with `--workers`/`--start-date`/`--end-date` parsed but **never wired** (dead
+args). Fixed at mtds@92b8d25b (ThreadPoolExecutor + wired date-shard knobs). Codified the six-point contract above; all
+per-AG + per-service canonicalisation walks inherit it.
 
 **2026-05-19**: Phase 3 GCS migration fleet relaunched after discovering 140-hour ETA caused by 5 subprocess spawns per
 parquet (`gcloud storage cp` + 2× `gcloud storage objects describe` + `gcloud storage rm`). Switching to UTL

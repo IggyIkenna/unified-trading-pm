@@ -250,7 +250,8 @@ regression guard @79263233d, features-service ci_status adjudicated + slot-5 sta
 - **Item 5b** — implement the FF-pull starvation watchdog per the plan's "§ Item 5 spec" (wire `collision` detection
   into `scripts/dev/slot-git-status-report.sh` + POST the ping; add a bats/unit test; update codex Step 7).
 - **agent-audit.yml discovery** — investigate why `.github/workflows/agent-audit.yml` fails at 0s ("log not found") on
-  features-service LDR while `quality-gates-v2` is green; determine features-service-only vs workspace-wide; fix or retire.
+  features-service LDR while `quality-gates-v2` is green; determine features-service-only vs workspace-wide; fix or
+  retire.
 
 **Action**: FF-pull `unified-trading-pm` to LDR tip first; run full `quality-gates.sh` before claiming mergeable
 (basedpyright ratchet 1511 — no regress); land on `live-defi-rollout` (staging is 632 behind); Commit + Push + Flip each

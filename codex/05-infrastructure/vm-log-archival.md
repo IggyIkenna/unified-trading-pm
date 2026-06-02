@@ -187,7 +187,7 @@ Cloud Logging (automatic), VM workloads → `vm-logs/` + `log-archive/` (this do
 | Item                    | Status                       | Notes                                                                                                                                                                                       |
 | ----------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Cloud Logging retention | ❓ Confirm current retention | GCP default is 30 days. For compliance/forensics, operator should confirm whether 30-day is sufficient or a custom `_Default` bucket retention + BigQuery export sink should be configured. |
-| Mass retrofit           | ⏸ Pending operator confirm   | No divergent services found — no mass retrofit needed as of 2026-05-30.                                                                                                                     |
+| Mass retrofit           | ⏸ Pending operator confirm  | No divergent services found — no mass retrofit needed as of 2026-05-30.                                                                                                                     |
 
 ---
 

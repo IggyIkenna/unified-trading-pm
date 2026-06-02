@@ -1,8 +1,8 @@
 # Adapter Finalization Contract — every MDPS candle adapter routes through `_finalize_session_grid`
 
-> **SSOT.** Codified 2026-06-02 from `plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`
-> (operator decisions 2026-06-01). Owns the rule: **every** `market-data-processing-service` candle adapter MUST hand
-> its full-day grid to `BaseCandleAdapter._finalize_session_grid(...)` before returning, so the emitted series is dense,
+> **SSOT.** Codified 2026-06-02 from `plans/active/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md` (operator
+> decisions 2026-06-01). Owns the rule: **every** `market-data-processing-service` candle adapter MUST hand its full-day
+> grid to `BaseCandleAdapter._finalize_session_grid(...)` before returning, so the emitted series is dense,
 > point-in-time-safe, and free of the banned NaN-OHLC / NaN-volume / leading-NaN shapes.
 
 ## Why this exists
@@ -12,8 +12,8 @@ resolves the no-trade-bar NaN ↔ non-nullable-OHLC schema collision. Adapters t
 and return it directly leak three defect shapes downstream (features-service / strategy-service trip on them, or carry
 NaN-masking shims that hide the bug):
 
-1. **Leading NaN** — bins before the instrument's first observation of the day (`apply_locf_fill` cannot fill a run
-   that precedes the first value).
+1. **Leading NaN** — bins before the instrument's first observation of the day (`apply_locf_fill` cannot fill a run that
+   precedes the first value).
 2. **NaN OHLC** — state-only streams (derivative ticker, liquidity/lending snapshots, book/quote) have no trades, so
    `close` is structurally NaN; the `processed_candles` schema marks OHLCV **non-nullable** (only `prediction`/`sports`
    use the nullable-OHLCV variant). A NaN-OHLC write is the banned 1440-NaN-bar incident shape (MDPS 2026-05-05).
@@ -41,18 +41,18 @@ secondary column's prior-day value into the leading bins under prior-day carry (
 
 ## Per-adapter density contract (the 7 state adapters)
 
-| Adapter | data_type | Finalize call | Rationale |
-| --- | --- | --- | --- |
-| `cefi/derivative_adapter` | `derivative_ticker` | `state_col="mark_price"` | close structurally NaN; mark price is the candle price; volume→0 |
-| `cefi/futures_chain_adapter` | `futures_chain` | `state_col="close"` | close already = `last_price`; volume (NaN) → 0 |
-| `cefi/options_chain_adapter` | `options_chain` | `state_col="mark_price"` | close structurally NaN; mark price drives OHLC; volume→0 |
-| `cefi/book_snapshot_adapter` | `book_snapshot_5` | `state_col="mid_price"` (+ pre-LOCF the quote mid/spread/depth) | close structurally NaN; book mid drives OHLC; volume→0 |
-| `tradfi/tbbo_adapter` | `tbbo` | `state_col="mid_price"` (+ pre-LOCF the quote mid/spread; `MarketStateDetector` → CLOSED bins drop) | close structurally NaN; quote mid drives OHLC; volume→0 |
-| `defi/liquidity_adapter` | `liquidity` | close-driven (NO `state_col`) | close already = `mid_price`; `volume` carries **real TVL** — a `state_col` flow zero-fill would wrongly null TVL |
-| `defi/market_state_adapter` | `market_state` | close-driven (NO `state_col`) | close already = available-liquidity; `volume` carries **real total-supply** — must not be zeroed |
+| Adapter                      | data_type           | Finalize call                                                                                       | Rationale                                                                                                        |
+| ---------------------------- | ------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `cefi/derivative_adapter`    | `derivative_ticker` | `state_col="mark_price"`                                                                            | close structurally NaN; mark price is the candle price; volume→0                                                 |
+| `cefi/futures_chain_adapter` | `futures_chain`     | `state_col="close"`                                                                                 | close already = `last_price`; volume (NaN) → 0                                                                   |
+| `cefi/options_chain_adapter` | `options_chain`     | `state_col="mark_price"`                                                                            | close structurally NaN; mark price drives OHLC; volume→0                                                         |
+| `cefi/book_snapshot_adapter` | `book_snapshot_5`   | `state_col="mid_price"` (+ pre-LOCF the quote mid/spread/depth)                                     | close structurally NaN; book mid drives OHLC; volume→0                                                           |
+| `tradfi/tbbo_adapter`        | `tbbo`              | `state_col="mid_price"` (+ pre-LOCF the quote mid/spread; `MarketStateDetector` → CLOSED bins drop) | close structurally NaN; quote mid drives OHLC; volume→0                                                          |
+| `defi/liquidity_adapter`     | `liquidity`         | close-driven (NO `state_col`)                                                                       | close already = `mid_price`; `volume` carries **real TVL** — a `state_col` flow zero-fill would wrongly null TVL |
+| `defi/market_state_adapter`  | `market_state`      | close-driven (NO `state_col`)                                                                       | close already = available-liquidity; `volume` carries **real total-supply** — must not be zeroed                 |
 
-**The liquidity/market_state caveat is load-bearing**: when a snapshot adapter repurposes `volume` to carry a real
-value (TVL, supply), it MUST stay close-driven. Adding `state_col` would zero-fill `volume` and destroy that data. Pick
+**The liquidity/market_state caveat is load-bearing**: when a snapshot adapter repurposes `volume` to carry a real value
+(TVL, supply), it MUST stay close-driven. Adding `state_col` would zero-fill `volume` and destroy that data. Pick
 `state_col` only when `volume`/the flow columns are genuinely trade-derived (and therefore legitimately 0 on a snapshot
 bar).
 

@@ -5292,12 +5292,12 @@ two cicd items but did NOT flip that plan (slot-1 owns it). Please flip when you
 - **P1 #7 / Phase-6 #659 — Orchestrator-dispatch escalation**: SHIPPED `agent-orchestrator@93b46c6` (LDR).
   `POST /api/escalate` (auth via raw `ORCHESTRATOR_INTERNAL_SECRET` → `auth.verify_internal_secret`; picks a free slot +
   headroom setup-token account; spawns `agents/escalate.md` judgment worker via `autospawn.do_spawn`) +
-  `.github/workflows/escalate-to-orchestrator.yml` (reusable `workflow_call`, jq-escaped body, curls the endpoint) +
-  17 unit tests (auth verifier, slot/account selection, error→HTTP 400/401/503, template render, endpoint). ruff +
+  `.github/workflows/escalate-to-orchestrator.yml` (reusable `workflow_call`, jq-escaped body, curls the endpoint) + 17
+  unit tests (auth verifier, slot/account selection, error→HTTP 400/401/503, template render, endpoint). ruff +
   basedpyright clean. NB: live e2e on one repo still wants a real dispatch once the secret is set on a caller workflow —
   flagged as the operator/integration step.
-- **P0 #477 — Export GH_TOKEN into VM worker envs**: SHIPPED `agent-orchestrator@6ee5aea` (LDR). `bootstrap_vm.sh` 5.5b-ter
-  writes `GH_TOKEN`+`GITHUB_TOKEN` (from the fetched GH_PAT) to `.env.local` (systemd EnvironmentFile → worker env) +
-  operator `.bashrc`/`.profile`; idempotent; value never logged.
+- **P0 #477 — Export GH_TOKEN into VM worker envs**: SHIPPED `agent-orchestrator@6ee5aea` (LDR). `bootstrap_vm.sh`
+  5.5b-ter writes `GH_TOKEN`+`GITHUB_TOKEN` (from the fetched GH_PAT) to `.env.local` (systemd EnvironmentFile → worker
+  env) + operator `.bashrc`/`.profile`; idempotent; value never logged.
 
 — slot-1/ikenna (this interactive slot, agent-orchestrator campaign)

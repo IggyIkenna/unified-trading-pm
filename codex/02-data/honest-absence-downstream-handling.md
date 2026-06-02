@@ -1441,8 +1441,8 @@ active," which is the correct operational state.
 > 2026-06-01). Full contract + per-adapter table: `codex/06-coding-standards/adapter-finalization-contract.md`.
 
 **Within-series density is a separate axis from shard-level honest absence.** Shard-level honest absence answers "did
-this (venue × data_type × day) shard get captured at all?" (`captured` / `empty_confirmed` / `attempted_failed` /
-`expected_unattempted`). The **density contract** governs what a _captured_ shard's per-bar series looks like: it must
+this (venue × data*type × day) shard get captured at all?" (`captured` / `empty_confirmed` / `attempted_failed` /
+`expected_unattempted`). The **density contract** governs what a \_captured* shard's per-bar series looks like: it must
 be dense, LOCF-filled, and free of NaN in the required columns.
 
 ### The rule

@@ -24,27 +24,23 @@ related_plans:
 
 ## ✅ ARCHIVED 2026-06-01 — all phases complete
 
-All Phase 1–4 todos shipped + flipped (0 open); fleet-verified live (both AWS
-orchestrator VMs @589b711: branch-state/respawn fixes, Slack alerts on, S3
-snapshots landing, git-health-guard + ao-self-pull crons installed). Code SHAs:
-agent-orchestrator @1f9af64 · @0b6b12e · @977e2e1 · @7950ab0 · @589b711.
+All Phase 1–4 todos shipped + flipped (0 open); fleet-verified live (both AWS orchestrator VMs @589b711:
+branch-state/respawn fixes, Slack alerts on, S3 snapshots landing, git-health-guard + ao-self-pull crons installed).
+Code SHAs: agent-orchestrator @1f9af64 · @0b6b12e · @977e2e1 · @7950ab0 · @589b711.
 
 **Deferred work — migrated to:**
 
-- FM3 belt-and-suspenders (`git rm --cached` + `.gitignore playwright-report/` in
-  **deployment-ui** + **user-management-ui**) — foreign repos, out of
-  agent-orchestrator scope; for those repos' owners. The agent-orchestrator-side
-  FM3 (`restore_generated_artifacts`) shipped @1f9af64.
-- HS256 retirement is tracked in its own active plan
-  `orchestrator_asymmetric_auth_2026_06_01.md` (P2, time-gated to ~2026-06-03 soak)
-  — NOT part of this plan.
-- Two epic follow-ups captured + DONE in `plans/epics/orchestrator_master.md`
-  (guard-cron webhook self-fetch P2; AO main-checkout self-pull P1) @589b711.
+- FM3 belt-and-suspenders (`git rm --cached` + `.gitignore playwright-report/` in **deployment-ui** +
+  **user-management-ui**) — foreign repos, out of agent-orchestrator scope; for those repos' owners. The
+  agent-orchestrator-side FM3 (`restore_generated_artifacts`) shipped @1f9af64.
+- HS256 retirement is tracked in its own active plan `orchestrator_asymmetric_auth_2026_06_01.md` (P2, time-gated to
+  ~2026-06-03 soak) — NOT part of this plan.
+- Two epic follow-ups captured + DONE in `plans/epics/orchestrator_master.md` (guard-cron webhook self-fetch P2; AO
+  main-checkout self-pull P1) @589b711.
 
-**Codex alignment (verified 2026-06-01):** `agent-orchestrator-overview.md` (S3
-gap callout flipped), `agent-orchestrator-slack-notifications.md` (inventory
-refreshed), `per-tab-worktrees.md` (new Phase-4 gate section) — all current.
-CLAUDE.md gained the liveness-gated inherited-dirty-WIP rule (@3f2d5e3f6).
+**Codex alignment (verified 2026-06-01):** `agent-orchestrator-overview.md` (S3 gap callout flipped),
+`agent-orchestrator-slack-notifications.md` (inventory refreshed), `per-tab-worktrees.md` (new Phase-4 gate section) —
+all current. CLAUDE.md gained the liveness-gated inherited-dirty-WIP rule (@3f2d5e3f6).
 
 ## Why this exists
 
@@ -83,11 +79,11 @@ reboot still wipes dispatch/backlog state).
       backup tick alongside GCS. + `boto3` dep + 8 `@mock_aws` tests (all pass). ruff + basedpyright 0 errors. NB: 6
       unrelated pre-existing test failures (slack/worker_liveness modules) + a `pexpect` venv gap observed in this
       worktree — neither touches `gcs_sync.py`; flagged for the env/test-health owner, not this commit.
-- [x] ✅ [SCRIPT] P1. ✅ DONE 2026-06-01 (verified live). `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566` set
-  via `s3-snapshot.conf` systemd drop-in on **both** live orchestrator VMs (the fleet consolidated to 2 — not 11);
-  confirmed end-to-end: fresh snapshot objects landing every ~10–20 min in
-  `s3://uts-orchestrator-state-427895769566/snapshots/` (verified 2026-06-01 ~20:55Z, both VMs writing). Bucket
-  ap-northeast-1, versioning on; `enable_s3_snapshot.sh` is the drop-in. AWS disaster-recovery loop CLOSED.
+- [x] ✅ [SCRIPT] P1. ✅ DONE 2026-06-01 (verified live). `ORCHESTRATOR_S3_BUCKET=uts-orchestrator-state-427895769566`
+      set via `s3-snapshot.conf` systemd drop-in on **both** live orchestrator VMs (the fleet consolidated to 2 — not
+      11); confirmed end-to-end: fresh snapshot objects landing every ~10–20 min in
+      `s3://uts-orchestrator-state-427895769566/snapshots/` (verified 2026-06-01 ~20:55Z, both VMs writing). Bucket
+      ap-northeast-1, versioning on; `enable_s3_snapshot.sh` is the drop-in. AWS disaster-recovery loop CLOSED.
 - [x] ✅ [DOCS] P2. Update the `codex/04-architecture/agent-orchestrator-overview.md` "Known gap" callout — flip it from
       "deferred future work" to "shipped — AWS↔S3 snapshot live" with the bucket name + env var. Collision group: none.
       Estimate: 0.05 AI-day. ✅ DONE 2026-06-01 — overview "Secrets + buckets" state-snapshot row + the callout now read
@@ -130,13 +126,13 @@ LDR" and "loop actually runs 24/7".
   branch-state design (c) + closing + TEST (h) all specified `main` as agent-orchestrator's integration base. That is
   incorrect: **agent-orchestrator slot worktrees integrate via `live-defi-rollout`** (server code ships from LDR via
   systemd restart; tab→LDR→main promotion is the same flow as every repo; `main` is only the dashboard-SPA deploy branch
-  + CI gate). Verified ground truth: `unified-trading-pm/scripts/dev/cron-branch-overrides.txt` shows the
-  `agent-orchestrator main` override was REMOVED 2026-05-24 because "keeping this line caused every agent-orchestrator
-  slot to appear as diverged." **Impact had it shipped uncorrected:** `base=main` would have QUARANTINED every
-  agent-orchestrator slot on respawn (HEAD vs origin/main = diverged → should_stop). **Fix:** `base_branch_for_repo`
-  returns `live-defi-rollout` for ALL repos (agent-orchestrator@7950ab0); worker.md + manifest `integration_branch`
-  corrected to LDR. The per-repo mechanism stays for genuine future divergence. The original spec sentences in the items
-  below are left in place for provenance but are SUPERSEDED by this finding.
+  - CI gate). Verified ground truth: `unified-trading-pm/scripts/dev/cron-branch-overrides.txt` shows the
+    `agent-orchestrator main` override was REMOVED 2026-05-24 because "keeping this line caused every agent-orchestrator
+    slot to appear as diverged." **Impact had it shipped uncorrected:** `base=main` would have QUARANTINED every
+    agent-orchestrator slot on respawn (HEAD vs origin/main = diverged → should_stop). **Fix:** `base_branch_for_repo`
+    returns `live-defi-rollout` for ALL repos (agent-orchestrator@7950ab0); worker.md + manifest `integration_branch`
+    corrected to LDR. The per-repo mechanism stays for genuine future divergence. The original spec sentences in the
+    items below are left in place for provenance but are SUPERSEDED by this finding.
 - [x] ✅ [DOCS] P2. ~~Bump the central `/health` version string~~ — **REVISED**: manual version bumps are forbidden
       (workspace rule "NEVER bump manually — semver-agent handles all"). The `feat(gcs_sync)` commit @57dc8c2 will
       auto-bump 0.6.0 → 0.7.0 via semver-agent on its next run, and `/health` reflects it after deploy. The canonical
@@ -204,14 +200,14 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       2026-06-01 — agent-orchestrator@0b6b12e. `has_recent_dirty_mtime()` (default 120s) is the 3rd LIVE input, threaded
       into `classify_maker_liveness(recent_edit=...)` + `resolve_dirty_state(recent_edit_within_seconds=...)`: LIVE if
       (fresh claim + live tmux) OR (recent dirty-file mtime). Test: `test_resolve_protects_recent_interactive_edit` +
-      `test_has_recent_dirty_mtime_true_and_false`. The claim+tmux
-      liveness test misses a LIVE interactive operator/Cursor editor: it writes no `.agent-claim` and runs under no
-      `orch-slot-*` tmux session, so `classify_maker_liveness` returns `"absent" → inherit` and would STOMP active
-      interactive edits. **Observed live 2026-06-01 20:25** — the Phase-4 WIP itself was being edited ~40s prior with no
-      claim and no orch-slot tmux present; the claim-only classifier would have mis-read it as a dead/absent maker. Add
-      **working-tree mtime-recency** as a third LIVE input: if any dirty file in the slot was modified within the last N
-      seconds (e.g. 120s) treat the maker as LIVE regardless of claim/tmux. Combine: LIVE if (fresh claim + live tmux)
-      OR (recent dirty-file mtime). Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
+      `test_has_recent_dirty_mtime_true_and_false`. The claim+tmux liveness test misses a LIVE interactive
+      operator/Cursor editor: it writes no `.agent-claim` and runs under no `orch-slot-*` tmux session, so
+      `classify_maker_liveness` returns `"absent" → inherit` and would STOMP active interactive edits. **Observed live
+      2026-06-01 20:25** — the Phase-4 WIP itself was being edited ~40s prior with no claim and no orch-slot tmux
+      present; the claim-only classifier would have mis-read it as a dead/absent maker. Add **working-tree
+      mtime-recency** as a third LIVE input: if any dirty file in the slot was modified within the last N seconds (e.g.
+      120s) treat the maker as LIVE regardless of claim/tmux. Combine: LIVE if (fresh claim + live tmux) OR (recent
+      dirty-file mtime). Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
 - [x] ✅ [CODE] P0. **FM8b — slot-tagged stashes (shared stash stack).** ✅ DONE 2026-06-01 —
       agent-orchestrator@1f9af64. `stash_dirty_repos(slot_id=...)` tags `slot-<N>-orphan-<ts>` (via `slot_stash_tag()`)
       and `find_slot_stash_ref(repo, slot_id)` only ever matches THIS slot's tag on the shared stash stack — never
@@ -232,9 +228,9 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
 - [x] ✅ [CODE] P1. **FM1/FM5/FM6/FM7 — structural pre-spawn branch-state gate.** ✅ DONE 2026-06-01 —
       agent-orchestrator@977e2e1. `check_slot_branch_state()` asserts per repo HEAD==`tab/<op>/<N>` (FM7 STOP on
       detached/wrong-branch), repairs stale upstream→`origin/<base>` (FM1), per-repo base via `base_branch_for_repo`
-      (FM6), FF when behind (FM4), quarantine on divergence (FM5). Wired into all THREE spawn paths (server.py spawn_slot
-      →409, autospawn._do_spawn [was un-gated], worker_liveness `_maybe_auto_respawn_stuck_slot` + `_do_auth_fail_respawn`
-      via `_branch_state_ok`). 8 tests. Add
+      (FM6), FF when behind (FM4), quarantine on divergence (FM5). Wired into all THREE spawn paths (server.py
+      spawn_slot →409, autospawn.\_do_spawn [was un-gated], worker_liveness `_maybe_auto_respawn_stuck_slot` +
+      `_do_auth_fail_respawn` via `_branch_state_ok`). 8 tests. Add
       `worktree_clean_check.check_slot_branch_state(slot_id, slot_dir, operator)` parallel to `check_slot_clean`. Per
       repo assert: (a) `@{u}` == the repo's correct base, repairing a stale `origin/tab/<op>/N` with
       `git branch -u     origin/<base>` (FM1); (b) `HEAD` == `tab/<op>/<N>` — STOP on detached / base / other branch
@@ -244,8 +240,8 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       `worker_liveness.py::_do_auth_fail_respawn` (~711) + `_maybe_auto_respawn_stuck_slot` (~1033), and
       `autospawn.py::_do_spawn` (~224 — currently NO pre-spawn gate at all). Collision group: `ao_branch_state_gate`.
       Estimate: 0.6 AI-day.
-- [x] ✅ [CODE] P1. **FM6 support — machine-readable per-repo base.** ✅ DONE 2026-06-01 — PM@cc2356a9c +
-      correction agent-orchestrator@7950ab0. Added `integration_branch` to the agent-orchestrator manifest block + a
+- [x] ✅ [CODE] P1. **FM6 support — machine-readable per-repo base.** ✅ DONE 2026-06-01 — PM@cc2356a9c + correction
+      agent-orchestrator@7950ab0. Added `integration_branch` to the agent-orchestrator manifest block + a
       `base_branch_for_repo()` helper in `setup-tab-worktrees.sh` (reads the manifest, default `live-defi-rollout`) used
       in worktree-add + slot-master-rebase; `worker.md` fresh-pull resolves base per-repo. ⚠️ **CORRECTION (this plan's
       original "main for agent-orchestrator" was WRONG):** agent-orchestrator slot worktrees integrate via
@@ -253,23 +249,21 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       reads every slot as diverged. This is verified ground truth: `cron-branch-overrides.txt` REMOVED the
       `agent-orchestrator main` row 2026-05-24 for exactly this. The shipped gate/worker.md/manifest were corrected to
       LDR-for-all-repos @7950ab0. `cron-branch-overrides.txt` already supports per-repo via its OVERRIDES_FILE mechanism
-      (no agent-orchestrator row needed — LDR is the default). See **Finding F3** below. Add an `integration_branch` field
-      to each repo block
-      in `workspace-manifest.json` (`main` for agent-orchestrator; `live-defi-rollout` everywhere else incl.
-      trading-agent-service, which CI-promotes LDR→main). Replace the single `INTEGRATION_BRANCH` constant in
-      `scripts/dev/setup-tab-worktrees.sh:51` with a `base_branch_for_repo()` helper reading it; make `worker.md`
-      fresh-pull (1b) resolve base per-repo; GENERATE `cron-branch-overrides.txt` from the manifest (it is currently
-      EMPTY, so the per-repo hook in `slot-cron-ff-pull.sh` does nothing today). Collision group:
+      (no agent-orchestrator row needed — LDR is the default). See **Finding F3** below. Add an `integration_branch`
+      field to each repo block in `workspace-manifest.json` (`main` for agent-orchestrator; `live-defi-rollout`
+      everywhere else incl. trading-agent-service, which CI-promotes LDR→main). Replace the single `INTEGRATION_BRANCH`
+      constant in `scripts/dev/setup-tab-worktrees.sh:51` with a `base_branch_for_repo()` helper reading it; make
+      `worker.md` fresh-pull (1b) resolve base per-repo; GENERATE `cron-branch-overrides.txt` from the manifest (it is
+      currently EMPTY, so the per-repo hook in `slot-cron-ff-pull.sh` does nothing today). Collision group:
       `ao_branch_state_gate`. Estimate: 0.3 AI-day.
 - [x] ✅ [CODE] P1. **FM4/FM5 — recovery boot prompts must inline the fresh-pull block.** ✅ DONE 2026-06-01 —
-      agent-orchestrator@977e2e1. `_FRESH_PULL_BOOT_BLOCK` (ff-only when behind + divergence-STOP, per-repo base) inlined
-      into `_build_recovery_boot_prompt` AND the auth-fail respawn prompt. Test:
-      `test_recovery_boot_prompt_inlines_fresh_pull_block`.
-      `worker_liveness.py::_build_recovery_boot_prompt` (~1109) + the auth-fail respawn prompt (~701) currently only say
-      "Read worker.md then /boot" — they do NOT inline the FF / divergence-STOP block the autospawn path gets via the
-      rendered template, so a recovered session is weaker than a cold autospawn. Inline the full `worker.md` step-1b
-      fresh-pull-with-divergence-STOP block (or render the worker template). Collision group: `ao_branch_state_gate`.
-      Estimate: 0.15 AI-day.
+      agent-orchestrator@977e2e1. `_FRESH_PULL_BOOT_BLOCK` (ff-only when behind + divergence-STOP, per-repo base)
+      inlined into `_build_recovery_boot_prompt` AND the auth-fail respawn prompt. Test:
+      `test_recovery_boot_prompt_inlines_fresh_pull_block`. `worker_liveness.py::_build_recovery_boot_prompt` (~1109) +
+      the auth-fail respawn prompt (~701) currently only say "Read worker.md then /boot" — they do NOT inline the FF /
+      divergence-STOP block the autospawn path gets via the rendered template, so a recovered session is weaker than a
+      cold autospawn. Inline the full `worker.md` step-1b fresh-pull-with-divergence-STOP block (or render the worker
+      template). Collision group: `ao_branch_state_gate`. Estimate: 0.15 AI-day.
 - [x] ✅ [CODE] P2. **FM3 — discard regenerated tracked artifacts (the slot-3 cleanup trigger).** ✅ DONE (orchestrator
       side) 2026-06-01 — agent-orchestrator@1f9af64. `restore_generated_artifacts()` runs
       `git restore --staged --worktree     -- <allowlist>` (playwright-report/blob-report/test-results), NEVER
@@ -288,30 +282,29 @@ even inline. Verdict: only FM9 (autostash-rebase) is fully handled; two auto-res
       protect; (d) FM2 `D`+`??` → reset --mixed → clean; (e) true file-loss / (f) pure-deletion >20 → quarantine, no
       push; (g) branch-state stale-upstream-repair / detached / wrong-branch → STOP, diverged → quarantine, behind → FF;
       (h) per-repo base resolves **`live-defi-rollout`** for agent-orchestrator (corrected from the spec's wrong "main"
-      — see Finding F3); (i) slot-tagged stash never pops a foreign tag; (j) generated-artifact restore leaves human-dirty
-      intact. + FM8-addendum mtime-recency + FM4/5 recovery-prompt fresh-pull-inlining tests. Collision group:
-      `ao_respawn_hygiene`. Estimate: 0.4 AI-day.
-- [x] ✅ [QG] P0. ✅ DONE 2026-06-01. agent-orchestrator gate green: `ruff check server/ scripts/` + `ruff format --check`
-      clean, `basedpyright server/` 0 errors, full pytest **344 passed, 1 skipped, 0 failed** (incl. the 3 stale
-      worker_liveness kicker tests + 2 stale slack tests, all fixed). Shipped directly to `live-defi-rollout` per the
-      campaign flow (the LDR→main promotion is owned by the reconciliation campaign; quickmerge-to-main not run by this
-      slot). Commits: @1f9af64 (FM2/3/8/8b) · @0b6b12e (FM8-addendum) · @977e2e1 (FM1/5/6/7+FM4/5) · @f31f8ff (worker.md)
-      · @7950ab0 (main→LDR correction). Collision group: `ao_respawn_hygiene`. Estimate: 0.1 AI-day.
-- [x] ✅ [DOCS] P1. ✅ DONE 2026-06-01 — PM@74a557f1f (codex) + @3f2d5e3f6 (CLAUDE.md). Added the "Pre-spawn branch-state
-      + liveness-gated dirty resolution (Phase 4)" section to `codex/05-infrastructure/per-tab-worktrees.md` (FM2/FM3/FM8/
-      FM8b coordinator + FM1/5/6/7 gate + FM6 LDR-not-main correction + FM4/5 prompt inlining) and the canonical
-      liveness-gated/role-aware inherited-dirty-WIP rule to `cursor-configs/CLAUDE.md` § Other key rules (edited while
-      clean — the earlier foreign-dirty window had passed). Cross-linked this plan + worktree_clean_check.py. Codex
-      `codex/05-infrastructure/per-tab-worktrees.md` — document the pre-spawn branch-state gate +
-      **liveness-gated** dirty resolution (slot-isolation invariant: dirty == a prior-you that's gone → inherit; only a
-      provably-LIVE peer is protected; quarantine is never terminal) + slot-tagged-stash discipline + the 9-FM coverage
-      table above. Add a `cursor-configs/CLAUDE.md` rule (canonical — do NOT edit per-repo copies) under
-      `### Other key     rules`: **an agent resolving inherited dirty WIP must first detect whether it is a background
-      autonomous worker (tmux `orch-slot-*` session / `ORCHESTRATOR_*` env / claim `role`) or an interactive operator
-      session — background: `notify_*`-ping the operator + inherit once the prior maker's claim TTL expires;
-      interactive: ASK the operator whether other agents are finished, then commit. Never stomp a provably-live peer;
-      never leave a dead maker's slot infinitely dirty.** Cross-link this plan. ⚠️ `cursor-configs/CLAUDE.md` was
-      actively foreign-dirty at 2026-06-01 19:40 (another agent mid-edit) — make this CLAUDE.md edit only when that
+      — see Finding F3); (i) slot-tagged stash never pops a foreign tag; (j) generated-artifact restore leaves
+      human-dirty intact. + FM8-addendum mtime-recency + FM4/5 recovery-prompt fresh-pull-inlining tests. Collision
+      group: `ao_respawn_hygiene`. Estimate: 0.4 AI-day.
+- [x] ✅ [QG] P0. ✅ DONE 2026-06-01. agent-orchestrator gate green: `ruff check server/ scripts/` +
+      `ruff format --check` clean, `basedpyright server/` 0 errors, full pytest **344 passed, 1 skipped, 0 failed**
+      (incl. the 3 stale worker_liveness kicker tests + 2 stale slack tests, all fixed). Shipped directly to
+      `live-defi-rollout` per the campaign flow (the LDR→main promotion is owned by the reconciliation campaign;
+      quickmerge-to-main not run by this slot). Commits: @1f9af64 (FM2/3/8/8b) · @0b6b12e (FM8-addendum) · @977e2e1
+      (FM1/5/6/7+FM4/5) · @f31f8ff (worker.md) · @7950ab0 (main→LDR correction). Collision group: `ao_respawn_hygiene`.
+      Estimate: 0.1 AI-day.
+- [x] ✅ [DOCS] P1. ✅ DONE 2026-06-01 — PM@74a557f1f (codex) + @3f2d5e3f6 (CLAUDE.md). Added the "Pre-spawn
+      branch-state + liveness-gated dirty resolution (Phase 4)" section to
+      `codex/05-infrastructure/per-tab-worktrees.md` (FM2/FM3/FM8/ FM8b coordinator + FM1/5/6/7 gate + FM6 LDR-not-main
+      correction + FM4/5 prompt inlining) and the canonical liveness-gated/role-aware inherited-dirty-WIP rule to
+      `cursor-configs/CLAUDE.md` § Other key rules (edited while clean — the earlier foreign-dirty window had passed).
+      Cross-linked this plan + worktree*clean_check.py. Codex `codex/05-infrastructure/per-tab-worktrees.md` — document
+      the pre-spawn branch-state gate + **liveness-gated** dirty resolution (slot-isolation invariant: dirty == a
+      prior-you that's gone → inherit; only a provably-LIVE peer is protected; quarantine is never terminal) +
+      slot-tagged-stash discipline + the 9-FM coverage table above. Add a `cursor-configs/CLAUDE.md` rule (canonical —
+      do NOT edit per-repo copies) under `### Other key     rules`: \**an agent resolving inherited dirty WIP must first
+      detect whether it is a background autonomous worker (tmux
+      `orch-slot-*`session /`ORCHESTRATOR*_`env / claim`role`) or an interactive operator     session — background: `notify\__`-ping the operator + inherit once the prior maker's claim TTL expires;     interactive: ASK the operator whether other agents are finished, then commit. Never stomp a provably-live peer;     never leave a dead maker's slot infinitely dirty.** Cross-link this plan. ⚠️ `cursor-configs/CLAUDE.md`
+      was actively foreign-dirty at 2026-06-01 19:40 (another agent mid-edit) — make this CLAUDE.md edit only when that
       worktree is clean, to avoid the very FM8 collision this plan fixes. Collision group: none. Estimate: 0.2 AI-day.
 
 ## Closing condition

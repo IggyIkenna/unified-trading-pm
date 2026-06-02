@@ -2735,14 +2735,15 @@ print(f"Processing {count} records")  # ❌ — use logger.info
 ## QG-sweep batching + shared-host concurrency (codified 2026-06-02)
 
 `quality-gates.sh` is expensive (~100–500s/run; worse under host contention). When shipping MANY related code items —
-especially across multiple repos and/or via parallel code-only sub-agents — do **not** run a full QG before every
-small edit. Batch the GATE, not the commits.
+especially across multiple repos and/or via parallel code-only sub-agents — do **not** run a full QG before every small
+edit. Batch the GATE, not the commits.
 
 ### The technique (batch the gate, keep per-unit commits)
 
 1. **Make ALL the code edits for the batch first.** Code-only sub-agents are told to edit + verify with `basedpyright`
    on the touched files only (fast, no fan-out) and report diffs — **NOT** run full `quality-gates.sh`, **NOT** commit.
-   This parallelizes safely (basedpyright is light; it does not spawn the pytest-xdist worker fan-out that saturates RAM).
+   This parallelizes safely (basedpyright is light; it does not spawn the pytest-xdist worker fan-out that saturates
+   RAM).
 2. **Run `quality-gates.sh` ONCE per repo over the whole batch.** One green sweep validates every edit in that repo at
    once, instead of N sequential full gates.
 3. **THEN make per-shippable-unit commits + plan-flips from that green tree.** Commit + Push + Flip stays fully intact —
@@ -2762,9 +2763,9 @@ the SAME machine). Two consequences:
   makes the gates OOM-kill each other — symptom: exit **144** mid-`TESTS`, no `ALL QUALITY GATES PASSED`, no sentinel.
   Full QGs serialize; code-only `basedpyright`-only agents parallelize.
 - **Never bulk-kill `pytest` / `quality-gates.sh` / `basedpyright` processes** (by pattern, or by PPID=1 "orphan"
-  sweep). They may belong to **another slot's** session — killing them is the process-space form of "don't touch
-  outside your clear context" (incident 2026-06-02: a PPID/pattern reap killed slot-1's pytest under a `claude` process
-  in `.tabs/1`). To stop only YOUR background work, `TaskStop` your tracked task-ids — never a blanket `pkill`.
+  sweep). They may belong to **another slot's** session — killing them is the process-space form of "don't touch outside
+  your clear context" (incident 2026-06-02: a PPID/pattern reap killed slot-1's pytest under a `claude` process in
+  `.tabs/1`). To stop only YOUR background work, `TaskStop` your tracked task-ids — never a blanket `pkill`.
 
 ### Sanctioned timeout overrides (host contention only)
 

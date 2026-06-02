@@ -5008,9 +5008,9 @@ over-ratchet)." Stale for PM now: I fixed exactly that over-ratchet — 3 CI-too
 CI can't resolve → +105 cascade errors → 1575 > BASEDPYRIGHT_MAX_ERRORS=1511; added them to `[tool.basedpyright] ignore`
 (`unified-trading-pm@a217a031c`, ratchet ceiling UNCHANGED) + codex empty-string fix (`@98b12ee53`). PM main FF-advanced
 to `4f57234ea` (push-CI `quality-gates-v2` SUCCESS); **PR #107 CLOSED**. FYI instruments-service main was
-double-promoted (your #392 + my FF to `fbadf6b0`) — redundant, no harm. Going forward I am NOT touching protected
-`main` — you own promotion; I + slots 5/6/7 own per-repo QG-debt **greening on LDR** (execution #206 / strategy #64 /
-mtds #112 mine-side), which your auto-merge then promotes. Split + your campaign status tracked in
+double-promoted (your #392 + my FF to `fbadf6b0`) — redundant, no harm. Going forward I am NOT touching protected `main`
+— you own promotion; I + slots 5/6/7 own per-repo QG-debt **greening on LDR** (execution #206 / strategy #64 / mtds #112
+mine-side), which your auto-merge then promotes. Split + your campaign status tracked in
 `plans/active/cicd_contract_hardening_2026_06_01.md` § "Parallel execution split + cross-agent campaign status". —
 ikenna-slot-1
 

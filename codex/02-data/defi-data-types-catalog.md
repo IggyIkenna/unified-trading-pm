@@ -28,12 +28,12 @@ last_reviewed: 2026-05-13
 > **🛑 D14 RESOLVED + CANONICAL NAMING LOCKED (operator 2026-06-01) — SSOT
 > [`defi-canonical-naming-ssot.md`](./defi-canonical-naming-ssot.md)**: the D14 `dex_pools`-vs-`dex_pool_state`
 > ambiguity is settled — **canonical data_type = `dex_pool_state` (pools) / `dex_pool_swaps` (swaps) EVERYWHERE**
-> (path + column + manifest + handler const + bucket-domain logical key). The earlier "canonical is `dex_pools`,
-> rename `dex_pool_state`→`dex_pools` pending D14" direction is **REVERSED** — `dex_pools`/`dex_swaps` are retired.
-> Other locked forms: object path carries **`pipeline_mode={mode}/`** after `day=`; Hyperliquid chain wire value =
+> (path + column + manifest + handler const + bucket-domain logical key). The earlier "canonical is `dex_pools`, rename
+> `dex_pool_state`→`dex_pools` pending D14" direction is **REVERSED** — `dex_pools`/`dex_swaps` are retired. Other
+> locked forms: object path carries **`pipeline_mode={mode}/`** after `day=`; Hyperliquid chain wire value =
 > **`HYPERLIQUID`**; **`instrument_type=perpetual` is VALID for DeFi** (on-chain perps Drift/GMX/HL). Note:
-> `dex_pool_state` is the **EVM + Solana union** (EVM `instrument_type=pool`; Solana `solana_amm_pool`/`solana_vault`)
-> — discriminate by instrument_type + chain, NOT a separate data_type. Shipped: migration mtds@6a8372b2; writer/reader
+> `dex_pool_state` is the **EVM + Solana union** (EVM `instrument_type=pool`; Solana `solana_amm_pool`/`solana_vault`) —
+> discriminate by instrument_type + chain, NOT a separate data_type. Shipped: migration mtds@6a8372b2; writer/reader
 > alignment uac@dad96e42 + mtds@0a3a7071 + features-service@dec1b687 + mdps@4b9e6e5. References below to `dex_pools`/
 > `dex_swaps` as the canonical data_type are SUPERSEDED by this banner.
 
@@ -332,7 +332,7 @@ These data_types are emitted by code but were absent from the 14 documented abov
 | `protocol_outages`                                                              | `detect-protocol-outages`      | `ProtocolOutageDetectorHandler` | The Graph (Aave V2 reserve-freeze, Compound V2 pause)                                    | ProtocolPauseWindow objects                                                                                                                                                                               | Production                      |
 | `governance_proposals`                                                          | (NOT registered in CLI)        | `GovernanceProposalsHandler`    | on-chain + Snapshot                                                                      | UAC `GovernanceProposal`; **scaffold for Phase-4B sim harness — not wired in `cli/main.py`** (cf. `governance_events`, which IS the active handler)                                                       | Scaffold (unregistered)         |
 | `dex_pool_swaps`                                                                | (UAC schema only)              | —                               | —                                                                                        | UAC declares a `(defi, pool, dex_pool_swaps)` schema; code uses `dex_swaps` + `dex_pool_state` instead                                                                                                    | Schema-only                     |
-| `restaking_rewards` / `cross_chain_restaking_routes` / `restaking_operator_set` | —                              | —                               | (none — SOLAYER/PICASSO/CAMBRIAN removed 2026-06-02)                                     | Solayer/Picasso/Cambrian removed 2026-06-02 — no usable/decodable data source (operator decision). Venues + UAC capabilities + IS adapters wiped.                                                          | Removed                         |
+| `restaking_rewards` / `cross_chain_restaking_routes` / `restaking_operator_set` | —                              | —                               | (none — SOLAYER/PICASSO/CAMBRIAN removed 2026-06-02)                                     | Solayer/Picasso/Cambrian removed 2026-06-02 — no usable/decodable data source (operator decision). Venues + UAC capabilities + IS adapters wiped.                                                         | Removed                         |
 
 ## Solana Basis MVP data types (added 2026-06-01)
 

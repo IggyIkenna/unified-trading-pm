@@ -13,12 +13,12 @@ status: active
 
 # Running VM Fleet Status — 2026-05-27 ~07:35 UTC
 
-> **✅ OKX symbol-mapping FIXED 2026-06-02 (slot 7) — instruments-service@`35a745ef`.** The HTTP-400 OKX-FUTURES bug
-> (§ B below) is resolved: `_TARDIS_VENUE_EXCHANGES` (IS `reference_data/router.py`) had no OKX entries → discovery used
+> **✅ OKX symbol-mapping FIXED 2026-06-02 (slot 7) — instruments-service@`35a745ef`.** The HTTP-400 OKX-FUTURES bug (§
+> B below) is resolved: `_TARDIS_VENUE_EXCHANGES` (IS `reference_data/router.py`) had no OKX entries → discovery used
 > the `okex` (spot) default → `BTC-USDT`; added `okx-futures→okex-futures` (+ swap/spot), live-validated vs the free
 > `/exchanges/okex-futures` endpoint. Operational follow-up tracked in `mtds_mdps_master` (re-run OKX backfill next
-> window). **Tardis-paid-key-dependent CeFi-history items REMAIN `BLOCKED-CREDENTIALS`** (operator won't activate) — this
-> issue stays open for those; do NOT archive until the Tardis-blocked items are resolved/operator-acked.
+> window). **Tardis-paid-key-dependent CeFi-history items REMAIN `BLOCKED-CREDENTIALS`** (operator won't activate) —
+> this issue stays open for those; do NOT archive until the Tardis-blocked items are resolved/operator-acked.
 
 > **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** Confirms + scopes for **slot 7**: **Tardis
 > paid key stays NOT activated** (operator won't) → all Tardis-dependent CeFi-history items remain `BLOCKED-CREDENTIALS`
