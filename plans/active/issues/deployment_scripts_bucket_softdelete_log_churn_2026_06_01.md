@@ -167,13 +167,15 @@ the storage bloat.
       jinja2 present, 0 stale refs, `uv lock --check` passes (220 packages, was out-of-sync before).
       deployment-service@`479a3e2`. (The Dockerfile `maintenance-jobs` explicit install of all 3 stays — required because
       the api stage installs deployment_service with `--no-deps`.)
-- [ ] [INFRA] P2. **(discovered 2026-06-02, slot 1 — surfaced by the jinja2 QG run)** deployment-service QG is
-      **pre-existing RED** on a foreign codex violation: `deployment_service/vm/gcp_instance_lister.py` does
-      `from google.cloud import compute_v1` directly (STEP 5.10 — route cloud SDKs through `unified_cloud_interface`),
-      pushing codex compliance to **9 > 8** baseline. NOT introduced by the bloat work (persists on a clean tree). Fix:
-      wrap GCE instance-listing behind UCI (or, if UCI genuinely doesn't expose it, re-baseline the codex max to 9 with a
-      `QUALITY_GATE_BYPASS_AUDIT.md` justification). Repo: deployment-service. Until then `quality-gates.sh` exits non-zero
-      for the whole repo regardless of unrelated changes.
+- [x] ✅ [INFRA] P2. **DONE 2026-06-02 (slot 1)** deployment-service QG was **pre-existing RED** (codex 9>8) on a foreign
+      cloud-SDK import: `deployment_service/vm/gcp_instance_lister.py` did `from google.cloud import compute_v1` directly
+      (STEP 5.10). **Fixed by routing through UTL** — `get_compute_engine_client().aggregated_list_instances()` (the
+      `compute_v1` call lives properly inside `unified_trading_library.cloud_interface/providers/gcp_compute.py`; note
+      `unified-cloud-interface` was merged INTO UTL, so the canonical path is `unified_trading_library.cloud_interface`;
+      `get_compute_engine_client` isn't re-exported at UTL top level so the deep import carries the sanctioned
+      `# noqa: qg-deep-import`, matching `cleanup_old_tarballs.py`). Same read-only/failure-isolated behavior; tests
+      updated to mock the UTL client. **QG now GREEN** (155s, codex 7<8, STEP 5.10 clean, 3/3 lister tests pass).
+      deployment-service@`80de01c`.
 - [ ] [INFRA] P3. Add a `owner/cadence/verifier/last_executed` runbook block for the tarball-cleanup + vm-log-archival
       jobs + a cloud-build trigger so `deployment-service:latest` refreshes automatically. Repo: deployment-service.
 

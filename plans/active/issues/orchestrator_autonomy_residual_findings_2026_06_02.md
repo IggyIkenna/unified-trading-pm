@@ -140,4 +140,12 @@ the fallback). A 3rd packer bug was fixed to get here: `--global` insteadOf went
       (~11G: 8 slot worktrees + venvs in /home) is correct and stays. The 9 stopped VMs reclaim their stale /tmp on next
       boot (updated script via clone + already-installed cron).
 
+**Better fix — /tmp is now a capped tmpfs (the real answer to "why does /tmp persist at all"):** /tmp's contract is
+transient/safe-to-wipe, so it is now RAM-backed (`tmpfs /tmp ... size=2G,mode=1777`) — auto-clears on reboot and the 2G
+cap makes a runaway test/repro venv fail fast instead of wedging the 30G root. Safe on the 16G+ fleet VMs (tmpfs uses RAM
+only as files exist). Baked into `bootstrap_vm.sh` Step 7.6 (agent-orchestrator `70b916e`, LDR+main); **active on both
+running VMs** (vm-orchestrator + api-host, verified healthy :8026=200 / central :8765=200 after the live remount); fstab
+written on all 9 stopped VMs (activates on their next start). All 9 also brought to freshest code (`70b916e`) + both
+disk-guard crons (6h + @reboot). The `vm-disk-guard` /tmp branch is now belt-and-suspenders behind the tmpfs.
+
 This issue doc is fully resolved (F1/F2/FM3 + disk-guard all closed) — ready to archive into the orchestrator epic.
