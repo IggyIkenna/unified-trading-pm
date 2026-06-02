@@ -186,7 +186,7 @@ VM.
 >   - trades|tbbo: `day-{D}/data_type-{trades|tbbo}/{VENUE}/{file}` — **NO instrument_type segment** (derive itype from the `{VENUE}:{ITYPE}:{SYMBOL}` instrument-id filename).
 >   Bare itype `equities`→canonical `equity`; `etf`→`etf`; `futures_chain`→`futures_chain`. **Fix = parse hyphen pseudo-hive → build canonical path manually + server-side copy** (content already classified).
 >   Placeholder files `…:MARKET_CLOSED:PLACEHOLDER.parquet` = empty-day markers → do NOT migrate as data.
-> - **⚠️ OVERLAP/DEDUP HAZARD (lesson #2/#5/#6)**: the 12 hyphen dates **ALSO exist as `day=` hive** (verified 2025-11-02, 2026-01-01, 2026-02-01 in BOTH). On those dates: equals-hive has ONLY `venue=CME` (futures_chain/options_chain/combo); hyphen has `venue=CME futures_chain` (OVERLAP) **PLUS** `NYSE/NASDAQ equities/etf` (COMPLEMENTARY — equities/etf exist ONLY in hyphen). So the migrator MUST: (1) migrate the complementary equities/etf from hyphen (would be lost otherwise); (2) for the CME-futures_chain overlap, **sample object content per lesson #5 before choosing a winner** — default winner = L-hive (the established classified canonical structure) via cell-level skip-if-equals-hive-already-has-(date,venue,itype,data_type); only fall to hyphen where hive lacks the cell. Dedup at the CELL key, not the object path (file granularity differs).
+> - **⚠️ CORRECTION (slot-3 2026-06-02, operator cross-check vs `gcs_hive_partition_malformed_paths_remediation`): the ENTIRE hyphen tree is 0-ROW PLACEHOLDERS, NOT real data.** Row-count inspection of the hyphen parquets (ohlcv_1m equities AAPL = 0 rows / futures_chain AUD = 0 rows / trades CME-option = 0 rows; uniform 3070/4251-byte header-only) confirms these are the issue-doc **Pattern 1** Massive **dry-run placeholders** (written 2026-02-09; `MASSIVE_API_KEY` created 2026-05-29 — 3.5 months later; **0 BATCH_MASSIVE rows in the manifest** — never a real ingest). An earlier path-only `ls` enumeration mis-read them as "complementary equities/etf real data" — a row-count check disproved it. **So**: the migrator does NOT migrate the hyphen tree (a 0-row guard skips every placeholder — banned to migrate empties that look populated); the hyphen prefixes are **DELETED at E7** (this IS the issue-doc Pattern-1 cleanup, now owned here). The 12 hyphen dates' REAL data is the `day=` hive (CME databento, verified 224/66-row files) — handled by L-hive. **NYSE/NASDAQ equities/etf were NEVER genuinely ingested** (0-row dry run only) → a REAL tradfi coverage gap (backfill todo below), NOT data to migrate.
 > - **`databento-batch-registry/`** = job-dedup registry (not market data) → NOT migrated, NOT deleted by E7.
 > - pipeline_mode per object = `derive_pipeline_mode_for_row(venue, "tradfi", data_type)` (UTL `pipeline_mode_resolver`) — venue-override (BARCHART→batch_barchart / YAHOO→batch_yahoo / EIA→batch_eia) else SOURCE_PRIORITY-primary (CME/NYSE/NASDAQ ohlcv_1m/trades/tbbo → `batch_databento`). **Identical derivation to the live writer `resolve_pipeline_mode` → batch=live correct.** `source` (E5) = `source_string_for(pipeline_mode)`.
 - [x] ✅ [DATA] P0. E2 BUILT `migrate_tradfi_to_v9_canonical.py` (NEW v9 path canonicaliser — NOT the old
@@ -204,7 +204,17 @@ VM.
 - [ ] [DATA] P1. E6 CF-7 relabel: `UNKNOWN`/blank venue + blank data_type → canonical (diagnose, don't bulk-rename).
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-tradfi-prd-…` → CF-1…CF-12 GREEN
       data-state (esp. v9 confirmed on real rows — CONFLICT-2); flip CF-coverage in `tradfi_master_audit_instructions.md`.
-      ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-tradfi` permanently**.
+      ⚠️ IRREVERSIBLE — only after GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-tradfi` permanently** +
+      **bulk-delete the 12 `day-*` hyphen 0-row-placeholder prefixes** in `tradfi-prd` (~110k objects — the issue-doc
+      **Pattern-1 cleanup, now executed here**; pre-delete guard: re-assert 0-row per object before deleting, abort the
+      prefix on any non-empty object). This SUPERSEDES the `gcs_hive_partition_malformed_paths_remediation` Pattern-1 todo.
+- [ ] [DATA] P1. **COVERAGE GAP (surfaced by the 0-row-placeholder finding, 2026-06-02)**: tradfi **equities/ETF
+      (NYSE/NASDAQ)** were NEVER genuinely ingested — only the 0-row Massive dry-run placeholders exist; the real `day=`
+      hive corpus is **CME databento only**. This is a real gap (Data-Pipeline-Correctness HARD RULE — every cell in
+      scope; data exists via databento/massive paid tiers). Backfill equities/ETF ohlcv/trades/tbbo via the
+      databento/massive ingest path (NOT a canonicalisation blocker — the migrator + E5 ship on the CME-real corpus;
+      track the equities/etf backfill as its own ingest item under `tradfi_massive_dual_source` / tradfi epic). Until
+      backfilled, the manifest must show these cells as MISSING/`attempted_unattempted`, never empty_confirmed (CF-11).
 
 ### CF-11 completeness — fetch-failure must be `attempted_failed`, NOT `empty_confirmed` (operator directive 2026-06-02)
 
