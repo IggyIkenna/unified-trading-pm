@@ -241,15 +241,25 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       PR#108 was MERGEABLE but BLOCKED. Re-pointed classic→full via
       `gh api -X PATCH .../branches/main/protection/required_status_checks`. THIS drift likely persists on OTHER repos'
       main — fix per-repo before any auto-merge promotion.
-- [ ] [SCRIPT] P1. **Fleet service-repo LDR→main promotion is a COORDINATED CAMPAIGN, not a PR sweep (finding
-      2026-06-02).** Direct LDR→main `--auto --merge` PRs DON'T WORK for service repos: `quality-gates-v2` triggers on
-      push/staging, NOT on PR-to-main, so the required check never runs → PR permanently BLOCKED = stuck PR (UAC#64 hit
-      this, closed). Correct paths: (a) admin-merge the green-LDR per repo (`gh pr merge --merge --admin`;
-      enforce_admins already false on most) dep-ordered UAC→UTL→instruments→L4→…; OR (b) the staging→SIT→main automation
-      (quickmerge LDR→staging → SIT gate → staging-to-main). Per repo also: re-point classic bare-context→full +
-      conventional PR title (`pr-validation` rejects `promote:`). ~13 repos diverged main↔LDR by 1-3 main-only commits
-      (mostly [skip ci] bumps; small reconciles; alerting=9 outlier). Nightly Readiness/Dead-Man crons fully clear once
-      service mains carry greened code. repos: all service repos + PM (promotion driver).
+- [ ] [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2 — SERVICE-REPO PROMOTION EFFECTIVELY COMPLETE. Authoritative
+      `gh compare main...live-defi-rollout`:
+      UAC/instruments/execution/strategy/mtds/deployment-service/deployment-api/SIT are all `ahead=0 behind=1-4` → main
+      is CURRENT-or-AHEAD of LDR (green LDR code already on main; the 1-4 main-only commits are [skip ci]/reconcile).
+      `unified-trading-library` has NO remote `live-defi-rollout` branch (ships `feat/*`→main). GENUINE RESIDUALS ONLY:
+      (1) `unified-trading-pm` diverged `ahead=50/behind=26` — doc-drift, reconcile via the `main-backmerge-to-ldr`
+      GHA + controlled FF, NOT a code promotion; (2) `unified-trading-system-ui` 10-behind-LDR but BLOCKED on
+      NEEDS-UI-GATE (no QG workflow yet); (3) `unified-trading-api` diverged 2/2, LDR-default (main not primary). The
+      plan's main "reds" were STALE CI runs, not missing code. NB raw `git rev-list` gap counts are UNRELIABLE here
+      (stale local origin refs) — use `gh api compare`.] Fleet service-repo LDR→main promotion is a COORDINATED
+      CAMPAIGN, not a PR sweep (finding 2026-06-02).** Direct LDR→main `--auto --merge` PRs DON'T WORK for service
+      repos: `quality-gates-v2` triggers on push/staging, NOT on PR-to-main, so the required check never runs → PR
+      permanently BLOCKED = stuck PR (UAC#64 hit this, closed). Correct paths: (a) admin-merge the green-LDR per repo
+      (`gh pr merge --merge --admin`; enforce_admins already false on most) dep-ordered UAC→UTL→instruments→L4→…; OR (b)
+      the staging→SIT→main automation (quickmerge LDR→staging → SIT gate → staging-to-main). Per repo also: re-point
+      classic bare-context→full + conventional PR title (`pr-validation` rejects `promote:`). ~13 repos diverged
+      main↔LDR by 1-3 main-only commits (mostly [skip ci] bumps; small reconciles; alerting=9 outlier). Nightly
+      Readiness/Dead-Man crons fully clear once service mains carry greened code. repos: all service repos + PM
+      (promotion driver).
 
 - [ ] [SCRIPT] P2. **Add push-author attribution to CI alerts (operator 2026-06-02).** Every #ci-failures alert
       (ci_failure_watcher.py transition alerts + ci-status-update + the QG-fail notify) should surface WHO pushed + a
@@ -314,17 +324,17 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 > `pip-audit` failures count as a codex/compliance violation → the QG hard-fails. **~17 of 20 fleet repos pin
 > `pyjwt 2.11.0 / 2.12.0 / 2.12.1`** (transitive, via the auth chain; constraint is `>=2.12.0,<3.0.0` so 2.13.0 is
 > already permitted) and will fail pip-audit on their NEXT v2 run; only `greeks-service` + `deployment-api` already
-> resolve `pyjwt 2.13.0` (and passed). **The mains promoted before 12:13 are GREEN now** (locked pre-advisory; their last
-> run passed) — they only go red on the next CI run, so this is a fleet remediation, not a per-repo promotion defect.
-> **e2e-testing main is the one left RED** by this (promoted at the publication moment). Real fix only — do NOT
+> resolve `pyjwt 2.13.0` (and passed). **The mains promoted before 12:13 are GREEN now** (locked pre-advisory; their
+> last run passed) — they only go red on the next CI run, so this is a fleet remediation, not a per-repo promotion
+> defect. **e2e-testing main is the one left RED** by this (promoted at the publication moment). Real fix only — do NOT
 > `# noqa` / skip pip-audit.
 
 - [ ] [DEP] P0. **Fleet-wide `pyjwt` → 2.13.0 bump (security; fixes pip-audit PYSEC-2026-175/177/178/179).** Repos:
       every repo whose `uv.lock` pins pyjwt < 2.13.0 (unified-trading-library, instruments-service, alerting-service,
       execution-service, features-service, fund-administration-service, market-data-processing-service,
       market-tick-data-service, ml-service, strategy-service, trading-agent-service, client-reporting-api,
-      unified-trading-api, batch-live-reconciliation-service, deployment-service, e2e-testing, ibkr-gateway-infra).
-      Per repo (in the workspace layout so sibling editable paths resolve — NOT a /tmp worktree):
+      unified-trading-api, batch-live-reconciliation-service, deployment-service, e2e-testing, ibkr-gateway-infra). Per
+      repo (in the workspace layout so sibling editable paths resolve — NOT a /tmp worktree):
       `uv lock --upgrade-package pyjwt` → confirm lock resolves `pyjwt 2.13.0` → `bash scripts/quality-gates.sh` green →
       quickmerge / LDR→main PR. The constraint already permits 2.13.0, so it's a lock-only change (no pyproject edit).
       greeks-service + deployment-api already at 2.13.0 (no-op). **e2e-testing main is currently RED on exactly this** —
