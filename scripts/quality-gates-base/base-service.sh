@@ -250,7 +250,11 @@ fi
 if [ "$RUN_TESTS" = true ]; then
     log_section "[3/6] TESTS"
     # Coverage floor governance (add-coverage-floor-governance)
-    _REPO_QG_SCRIPT="$(dirname "${BASH_SOURCE[0]:-scripts/quality-gates-base/base-service.sh}")/../../scripts/quality-gates.sh"
+    # Use PROJECT_ROOT (set by qg-common.sh from the caller stub's location) so we read
+    # the CALLING repo's quality-gates.sh, not base-service.sh's own parent directory.
+    # Bug fix: the old dirname/${BASH_SOURCE[0]}/../../ path resolved to unified-trading-pm's
+    # own scripts/quality-gates.sh (MIN_COVERAGE=0) instead of the service repo's stub.
+    _REPO_QG_SCRIPT="${PROJECT_ROOT}/scripts/quality-gates.sh"
     if [ -f "$_REPO_QG_SCRIPT" ] && [ -f "pyproject.toml" ]; then
         bash "$(cd "$(git rev-parse --show-toplevel)/../unified-trading-pm" 2>/dev/null && pwd)/scripts/coverage-floor-guard.sh" \
             "$_REPO_QG_SCRIPT" "pyproject.toml" 2>&1 || true
