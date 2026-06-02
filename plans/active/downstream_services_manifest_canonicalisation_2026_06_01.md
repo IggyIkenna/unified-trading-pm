@@ -91,12 +91,17 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       avoided). Implementation: (1) union-dedupe in the aggregator for the denominator; (2) add a per-source sub-aggregate
       from the same `_index` rows for the drilldown. Add a QG test asserting union (2 source rows on one date → 1 found-date)
       + the per-source split. Repo: **deployment-api**. Home: this plan FLAG-1. (No longer operator-blocked.)
-- [ ] [CODE] P1. **FLAG-3 (deployment-api, AMBIGUOUS — diagnose before fix)** — `commentary/pipeline_uat.py:167/181/195/211`
-      hardcode no-env `instruments-store-{pid}` / `features-store-{pid}` / `ml-store-{pid}` / `execution-store-{pid}`. These
-      lines carry deliberate `# CORRECT-LOCAL` markers that CONFLICT with routing through `resolve_bucket_name`. **Reconcile
-      with the bucket-name-SSOT owner**: do these `*-store` buckets get env-tiered/deleted (→ FLAG-3 real, route through
-      resolver) or stay no-env (→ CORRECT-LOCAL right, close FLAG-3)? Another agent is active in deployment-api — coordinate,
-      don't blind-edit. Repo: **deployment-api**. Home: this plan FLAG-3.
+- [ ] [CODE] P1. **FLAG-3 (deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets, `-prd` initial.**
+      The `instruments-store` / `features-store` / `ml-store` / `execution-store` (+ `ml-configs-store`, `deployment_api_config.py:547`)
+      buckets get **env-tiered** (split env-wise: prd/stg/dev), with `-prd` as the initial migration tier. So the `# CORRECT-LOCAL`
+      markers are NO LONGER correct — route every ref through `resolve_bucket_name(kind=…, env=…)` so reads resolve to the
+      env-tiered canonical name (`-prd` now; the no-env bucket becomes legacy → deleted post-cutover). Work: (1) **bucket-SSOT
+      owner** registers the env-tiered `*-store` bucket names (prd/stg/dev) in `deployment-service/configs/cloud-providers.yaml`
+      (coordinate via `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`); (2) **deployment-api** replaces the
+      hardcoded f-strings at `commentary/pipeline_uat.py:167/181/195/211` + `deployment_api_config.py:547` with
+      `resolve_bucket_name(...)` and removes the `# CORRECT-LOCAL` markers; (3) the prd-store data migrates to the `-prd`
+      bucket as part of the initial migration. Coordinate with the active deployment-api agent. Repo: **deployment-api** (+
+      deployment-service cloud-providers.yaml). Home: this plan FLAG-3 + `bucket_name_ssot…`. (No longer operator-blocked.)
 - [ ] [CODE] P2. **FLAG-4 (deployment-api, OPERATOR/VenueMapping decision)** — `MTDS_CATEGORY_META["TRADFI"].venue_accessor`
       = `all_databento_venues` (6) omits Massive-only venues → misleading TRADFI honest-coverage denominator. Add Massive
       venues to the accessor (operator/VenueMapping call). Repo: **deployment-api**. Home: this plan FLAG-4.
@@ -284,10 +289,13 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       the in-memory rows — NOT a per-parquet scan; the v9 manifest denormalises `source` to the row level so this is free).
       QG test: 2 source-rows on one date → 1 found-date (union) + the per-source split. NOT a migration regression —
       display-correctness. Cross-ref `tradfi_massive_dual_source`. (No longer operator-blocked.)
-- [ ] [CODE] P1. **FLAG 3 (bucket-SSOT violation, deployment-api): `commentary/pipeline_uat.py:167/181/195/211`** hardcodes
-      no-env legacy `instruments-store-{pid}` / `features-store-{pid}` / `ml-store-{pid}` / `execution-store-{pid}` (NOT in
-      cloud-providers.yaml, bypass `resolve_bucket_name`). Commentary/UAT path (errors swallowed) so low data-status impact,
-      but a real dead-bucket-association risk post env-tiered delete → route through `resolve_bucket_name`. Targeted fix.
+- [ ] [CODE] P1. **FLAG 3 (bucket-SSOT, deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets,
+      `-prd` initial.** `commentary/pipeline_uat.py:167/181/195/211` (+ `deployment_api_config.py:547` `ml-configs-store`)
+      hardcode no-env `instruments-store`/`features-store`/`ml-store`/`execution-store` (NOT in cloud-providers.yaml). These
+      buckets ARE in scope for env-tiering → `# CORRECT-LOCAL` markers come off; route through `resolve_bucket_name(kind=…,
+      env=…)` (resolves to `-prd` initially). Prereq: bucket-SSOT owner registers the env-tiered `*-store` names (prd/stg/dev)
+      in cloud-providers.yaml (`bucket_name_ssot…`). prd-store data migrates to `-prd` in the initial migration; no-env
+      buckets become legacy → deleted post-cutover. Coordinate with the active deployment-api agent.
 - [ ] [CODE] P2. **FLAG 4 (display): TRADFI honest-coverage denominator** `MTDS_CATEGORY_META["TRADFI"].venue_accessor =
       all_databento_venues` (6 venues) omits Massive-only venues → misleading coverage for Massive venues. Operator/VenueMapping
       decision (add Massive venues to the accessor). Display correctness, not a migration blocker.
