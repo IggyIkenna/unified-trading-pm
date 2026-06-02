@@ -126,9 +126,9 @@
   <circle cx="1082" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="977" y="753" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="1102" y="723" width="188" height="38" class="svc" />
-  <rect x="1102" y="723" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="1102" y="723" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="1196" y="741" text-anchor="middle" class="label">market-tick-data-service</text>
-  <circle cx="1280" cy="731" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="1280" cy="731" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="1196" y="753" text-anchor="middle" class="ver">0.3.1</text>
   <rect x="1300" y="723" width="130" height="38" class="svc" />
   <rect x="1300" y="723" width="4" height="38" fill="#84cc16" rx="2" />
