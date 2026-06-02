@@ -135,6 +135,15 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
       local one-shot also pushed its marker (`5ab77fc0c`). Pipeline green discovery→execution. (Test plan removed +
       vm-cefi stopped afterward; the premature flip a worker made was reverted @de9644c7f.)
 
+### F6 — pm-pull install on VMs [P1] _(MIGRATED FROM `plan_hygiene_silent_failure_capture_2026_05_29`)_
+
+- [ ] [SCRIPT] P1. **MIGRATED FROM:** `plan_hygiene_silent_failure_capture` (its deferred "audit + install pm-pull on the
+      other 9 epic VMs"). `bootstrap_vm.sh` does **not** install pm-pull — fresh/replacement VMs rely on the separate
+      `scripts/orchestrator/run_fleet_install_pm_pull.sh` post-launch step, so a freshly-bootstrapped VM doesn't
+      auto-pull PM (regen then reads a stale clone). Bake the `pm-pull` timer+service install into `bootstrap_vm.sh` so a
+      fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic VMs when they start
+      (currently off). Composes with F2–F4 (same per-VM rollout).
+
 ## Per-VM application runbook (when a VM is started)
 
 1. `ORCHESTRATOR_VM_ID=<canonical>` + `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` in `.env.local`; `systemctl restart`.
