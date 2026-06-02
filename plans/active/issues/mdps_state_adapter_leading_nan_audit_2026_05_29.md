@@ -157,9 +157,28 @@ Tests in scope:
 
 - [x] ✅ [DECISION] P0. Operator picks A / B / C → **Option A** + leading-bin policy = **carry-from-prior-day**
       (2026-06-01).
-- [ ] [SCRIPT] P0. **Decision 1 — prior-day carry seed.** Thread per-instrument `last_known_price` + `last_trade_ts`
-      (from prior day's last parquet / manifest) into `_finalize_session_grid`; fill leading bins from bin 0 instead of
-      dropping. Cold-start (no prior obs) still drops. Handle prior-day-missing / multi-day-halt edge cases.
+- [x] ✅ [SCRIPT] P0. **Decision 1 — finalizer carry-seed support.** `_finalize_session_grid` now accepts
+      `seed_price`/`seed_ts` (+ `seed_state` for state adapters) and fills leading bins from bin 0 instead of dropping;
+      cold-start (no seed) still drops; CLOSED still drops. — MDPS@5a5e989 + @4fd962d (tests:
+      test_finalize_session_grid_seed.py prior-day-carry vs cold-start-drop vs CLOSED-drop).
+- [ ] [SCRIPT] P0. **Decision 1 — SOURCE + THREAD the per-instrument prior-day seed (REMAINING — the orchestration
+      work).** The finalizer already consumes a seed; nothing sources it yet, so today every adapter runs cold-start
+      (leading bins drop, no NaN — correct but not yet carried). Build `_get_prior_day_seed(asset_group, date_str,
+      venue, symbol, data_type, timeframe)` and thread it into BOTH paths. **Call-path map (verified 2026-06-02,
+      market-data-processing-service):** per-instrument dispatch is `live_workers.py` `_process_chain_timeframe`
+      (~L1014–1022: `adapter.process_to_candles(tick_data=inst_data, timeframe, instrument_info=inst_info)`) +
+      `_process_standard_timeframe` (~L1609–1629); batch reuses live via `batch_workers.py` →
+      `_process_instrument_file` (`date_str` available ~L275) → `_process_all_timeframes` → the same two methods (NOTE:
+      `_process_standard_timeframe` does NOT currently receive `date_str` — thread it down). Seed source is **genuinely
+      absent** (no prior-day candle reader, no warm last-price cache): build a reader that resolves the prior-day candle
+      parquet via `resolve_bucket_name(...)` (bucket-name SSOT — NO inline gs://) + `get_processed_path(asset_group,
+      prior_date, timeframe, data_type, venue=...)` + a UTL `cloud_interface` object read, takes the LAST row's
+      price(s) + ts, returns `None` on missing/empty (cold-start). For state adapters return the full last-row values as
+      `seed_state` (mark_price/index/funding/OI, tvl/reserves, mid/spread/depth) so secondary columns carry too —
+      else leading carried bins NaN those columns. Add `prior_day_seed` to the abstract `process_to_candles` + forward
+      it from all 9 finalizer-routed adapters. Edge cases: prior-day missing → drop; multi-day halt → staleness grows
+      (fine, recorded); DST/holiday gaps. Tests: mock the prior-day parquet read (live + batch parity). Then flip the
+      issue-doc-level Decision-1 carry todo. SSOT for the contract: `codex/06-coding-standards/adapter-finalization-contract.md`.
 - [x] ✅ [SCRIPT] P0. **Decision 2 — Option A.** Add `state_col: str | None = None` (+ `flow_cols`, `seed_state`) to
       `_finalize_session_grid`; first-obs mask uses `~isnan(<state_col>)` when provided. — MDPS@4fd962d.
 - [x] ✅ [SCRIPT] P0. Update 7 state adapters to call `_finalize_session_grid(output, state_col=<canonical>)`
@@ -168,7 +187,13 @@ Tests in scope:
 - [x] ✅ [TEST] P0. Add leading-gap (prior-day-carry + cold-start-drop) + LOCF-density tests for each updated adapter. —
       MDPS@4fd962d (finalizer-level: test_finalize_session_grid_seed.py + test_state_adapter_density.py) + @23d7add
       (per-adapter test files). 1252 MDPS unit tests green.
-- [ ] [VERIFY] P0. Remove aggregator WARN log + re-run full MDPS test suite.
+- [x] ✅ [VERIFY] P0. **KEEP the aggregator NaN-input WARN as a permanent regression guard** (per §Scope item 6's "or
+      keep as guard" — all 7 state adapters now emit dense LOCF candles so it is dormant in steady state but catches any
+      future adapter that regresses to the pre-LOCF leading-NaN shape). `fast_candle_aggregation.py:304-325` retained
+      deliberately. MDPS unit suite green (1252 passed) EXCEPT the pre-existing **foreign** `test_dependency_checker_sports_prediction`
+      bucket-tier drift (env-tier `-prd-` from market-data-processing-service@61900a3 — NOT this workstream; tracked as
+      the `[BUG]` row in `issue_docs_remediation_sweep_2026_06_02.md`). Full `quality-gates.sh` exit-0 is blocked solely
+      by that foreign file.
 - [x] ✅ [DOCS] P1. Codex SSOT updates per above (+ document the carry-from-prior-day leading-bin contract). —
       `codex/06-coding-standards/adapter-finalization-contract.md` (new) + `codex/02-data/honest-absence-downstream-handling.md`
       § "Per-adapter density contract: dense + LOCF + no leading NaN + carry-from-prior-day".

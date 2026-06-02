@@ -82,8 +82,10 @@ verified complete**.
       market-data-processing-service@4fd962d (test_state_adapter_density.py 5 cases + test_finalize_session_grid_seed.py
       6 cases) + @23d7add (derivative/futures/tbbo/more_defi/writer_schema per-adapter tests updated to the dense
       session-grid contract). 1252 MDPS unit tests green (foreign bucket-tier file excluded — see [BUG] below).
-- [ ] [VERIFY] P0. MDPS: remove the NaN WARN diagnostic in `fast_candle_aggregation.py:304-318` ONLY after all 7
-      adapters fixed + full MDPS suite green. Source: mdps_state_adapter_leading_nan.
+- [x] ✅ [VERIFY] P0. MDPS: NaN WARN diagnostic in `fast_candle_aggregation.py:304-325` — **KEPT as a permanent
+      regression guard** (all 7 adapters now dense → dormant in steady state; catches future regressions). Source:
+      mdps_state_adapter_leading_nan. MDPS unit suite green (1252) except the foreign bucket-tier file ([BUG] below);
+      full QG exit-0 blocked solely by that foreign drift.
 - [ ] [BUG] P0. **MDPS pre-existing foreign QG-red (found 2026-06-02 during leading-NaN work, NOT mine to fix —
       bucket-tier data-correctness).** `tests/unit/test_dependency_checker_sports_prediction.py` (9 cases:
       `TestOutputBucketsSportsPrediction` + `TestPerCategoryUpstreamRouting`) assert the **legacy flat** bucket names
