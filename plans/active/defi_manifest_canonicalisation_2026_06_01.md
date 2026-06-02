@@ -357,9 +357,11 @@ What to verify/wire (B0 corrected scope):
       fixtures exist for the day; cefi/defi/tradfi/prediction = instrument listed-and-not-delisted), but the *routing*
       (zero-rows + was-expected → `attempted_failed` via `EmptyFromLiveInstrumentError`, else
       `empty_confirmed[reason]`) is generic and belongs in UTL so callers can't get it wrong. Sub-items:
-  - [ ] [CODE] P1. **A10a — UAC `was_instrument_alive(available_from, available_to, status, day) -> bool`** pure
-        lifecycle primitive (on `InstrumentRecord` fields) next to `EmptyFromLiveInstrumentError`. + unit test. Repo:
-        unified-api-contracts. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P1. **A10a — UAC `was_instrument_alive(available_from, available_to, day) -> bool` SHIPPED uac@10e69f08.**
+        Pure lifecycle primitive (on `InstrumentRecord.available_from_datetime`/`available_to_datetime` + shard `day`)
+        next to `EmptyFromLiveInstrumentError`; CONSERVATIVE (fires only on positive catalog confirmation; unknown
+        `available_from` → False). Facade-exported (`from unified_api_contracts import was_instrument_alive`) + 5 unit
+        tests. UAC QG green. Repo: unified-api-contracts. parent_epic: mtds_mdps_master.
   - [ ] [CODE] P1. **A10b — UTL `ManifestWriter.record_zero_rows(*, row_key, reason, was_expected, instrument_id="",
         source_evidence="", pipeline_mode, ...)`** routing helper: `was_expected` → `record_failed(
         EmptyFromLiveInstrumentError(...))`; else → `record_empty(reason)`. Caller computes `was_expected` from the
