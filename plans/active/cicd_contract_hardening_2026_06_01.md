@@ -479,7 +479,7 @@ by a PR:
       sonnet-driven exhaustion fires the `weekly` alert. The sonnet entry stays as pure future-proofing (auto-fires only
       if Anthropic adds a sonnet header / a build renders the bar). No native 'daily' window exists.
 
-- [ ] [SCRIPT] P2. **notify-slack `secrets: inherit` callers don't deliver (stale SLACK_WEBHOOK_URL).** Two webhook
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-02 (unified-trading-pm@66c28f116, LDR+main+staging): **notify-slack `secrets: inherit` callers don't deliver (stale SLACK_WEBHOOK_URL).** Two webhook Fixed in ONE file — notify-slack.yml resolves the webhook as `SLACK_CI_WEBHOOK_URL || SLACK_WEBHOOK_URL`, so every `secrets: inherit` caller delivers via the valid #ci-failures webhook automatically (no per-caller edits, no operator secret op). VERIFIED: triggered sit-debounce (an inherit-caller) → notify step `Slack OK (HTTP 200)`.
       secrets exist: SLACK_CI_WEBHOOK_URL (valid #ci-failures, 2026-05-29) + SLACK_WEBHOOK_URL (stale/non-https,
       2026-05-23). ci-failure-watcher + claude-api-monitor explicitly pass SLACK_CI_WEBHOOK_URL → deliver; the ~28 other
       callers (sit-debounce, staging-to-main, sit-gate, …) use `secrets: inherit` → inherit the stale SLACK_WEBHOOK_URL
