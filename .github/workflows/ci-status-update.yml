@@ -7,12 +7,15 @@ name: ci-status-update
 #
 # Trigger: repository_dispatch event_type=ci-status-update
 # Payload: { repo, status, branch, sha }
-#   status: FEATURE_GREEN | STAGING_GREEN | FAILING
+#   status: FEATURE_GREEN | STAGING_GREEN | MAIN_GREEN | FAILING
 #   branch: the branch that triggered the QG run (used to determine status)
 #
-# ci_status lifecycle (8 states):
+# ci_status lifecycle (9 states):
 #   NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN → STAGING_PENDING → STAGING_GREEN → SIT_VALIDATED
+#   SIT_VALIDATED → MAIN_GREEN  (written by python-quality-gates-v2.yml when QG passes on main)
 #   Any state can regress to FAILING on QG failure.
+# MAIN_GREEN is the dep-on-main gate signal used by staging-to-main.yml STAGE 1.8:
+#   before promoting repo X to main, every dep D must have ci_status=MAIN_GREEN (or SIT_VALIDATED).
 # See rollout plan § ci_status Lifecycle State Machine for full spec.
 
 on:
@@ -56,7 +59,7 @@ jobs:
             exit 0
           fi
 
-          VALID_STATUSES="FEATURE_GREEN STAGING_GREEN FAILING LOCAL_PASS SIT_VALIDATED"
+          VALID_STATUSES="FEATURE_GREEN STAGING_GREEN MAIN_GREEN FAILING LOCAL_PASS SIT_VALIDATED"
           if ! echo "$VALID_STATUSES" | tr ' ' '\n' | grep -qx "$STATUS"; then
             echo "Invalid status '$STATUS'. Must be one of: $VALID_STATUSES. Skipping."
             echo "skip=true" >> "$GITHUB_OUTPUT"
