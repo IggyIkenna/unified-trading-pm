@@ -344,14 +344,19 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       other_df loop added after captured_df loop; iterates other_mask rows filtered to attempted_failed; calls
       record_failed(error=existing_error_reason or UNKNOWN_FETCH_FAILURE_PRESERVED_FROM_V8); dry-run reports
       reemit_attempted_failed count. QG GREEN. VM dry-run needed for real counts (VM-pending).
-- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS sports adapters)**: on a genuine API error
+- [x] ✅ [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS sports adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for a `(league,date)` where a fixture exists / instrument valid / within UAC coverage
       bounds, the handler MUST `record_failed` (→ `attempted_failed`) via `classify_venue_error()`, NOT `record_empty`.
       Grep the sports fetch paths in instruments-service (`sports_fixtures_daily_repoll.py` + the per-entity handlers in
       `orchestrator.py`) + MTDS sports handlers for `except … record_empty` / bare `return []` swallows; trace each to
       its `record_*` call; gate the empty-vs-failed decision on fixture-existence + UAC bounds (the writer analogue of
       the rebuild fix above). The 2026-06-01 writer fix (instruments-service@608e7ca7) handled the typed-EMPTY path;
-      this verifies the FAILED path is not masked as empty.
+      this verifies the FAILED path is not masked as empty. — instruments-service@ceab7720 | IS portion: trigger path
+      (sports_fixtures_daily_repoll.py) already correct from 608e7ca7; orchestrator.py batch path had CF-11 bug in
+      per-fixture entity zero-rows branch — partial failure (\_fail_count > 0 but < len(fixture_ids)) fell through to
+      empty_confirmed instead of record_failed. Fixed: any \_fail_count > 0 + zero rows → record_failed. 3 unit tests
+      (all-fail/partial-fail/all-succeed). QG GREEN. MTDS sports ingest handlers need a separate audit pass (out of IS
+      scope; MTDS portion of this todo still open).
 
 ### KEYSTONE redesign — FIXTURES are the truth set (operator directive 2026-06-01)
 
