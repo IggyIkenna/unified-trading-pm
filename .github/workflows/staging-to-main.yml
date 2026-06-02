@@ -588,7 +588,22 @@ jobs:
 
           git add workspace-manifest.json
           git commit -m "chore(manifest): promote staging_versions → versions, clear staging lock [skip ci]"
-          git push
+
+          # Retry-with-rebase: a concurrent sit-gate/sit-unlock manifest commit can land on main
+          # between our checkout and push. A bare `git push` then fails non-fast-forward and the
+          # promotion's manifest update (versions + lock clear) never lands. Rebase + retry.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed manifest update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push manifest update after 5 attempts."
+              exit 1
+            fi
+          done
 
       - name: Dispatch dependency-update cascade for promoted repos
         # Fires dependency-update events to all direct downstream dependents of each promoted repo.

@@ -65,7 +65,23 @@ jobs:
 
           git add workspace-manifest.json
           git commit -m "chore(manifest): SIT unlock — staging_status.locked=false (SIT failed) [skip ci]"
-          git push
+
+          # Retry-with-rebase: sit-gate/staging-to-main may push a concurrent manifest commit to
+          # main between our checkout and push (lock/unlock race). A bare `git push` then fails
+          # non-fast-forward and the unlock never lands → staging stays locked forever after a
+          # failed SIT run. Rebase our [skip ci] commit onto the latest main and retry.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed manifest update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push manifest update after 5 attempts."
+              exit 1
+            fi
+          done
 
       - name: Open SIT-failure GH Issue (add-sit-rollback)
         env:
