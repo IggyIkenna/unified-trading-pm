@@ -48,6 +48,17 @@ supersedes the prior `main`-direct exception).** Today the repo has `origin/live
 server-deploy axis) → quickmerge→`staging` → SIT → `main` path. **LDR** is the continuous-integration axis; quickmerge→
 staging is the **promotion step when a unit is done**; merge-to-`main` is the CICD trigger (see G6).
 
+## Status snapshot (2026-06-02)
+
+| Bucket                                                              | Gaps                                                                                        | Notes                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ **Done + shipped** (slot 2)                                      | **G1**, **G2** (30-min interval), **G4**, **G5**, **G6** v1-ghost-cleanup-on-LDR, **G7 P0** | All flipped with SHA evidence; e2e_demo + check.sh green                                                                                                                                                                                                                                                                                                                          |
+| 🔴 **Deferred — GitHub billing**                                    | **G6** branch-protection (require `…/quality-gates-v2`)                                     | Not an access issue (session is admin via `GH_PAT`); GitHub feature-gates rulesets/branch-protection for this private repo (`403 upgrade-to-Pro`). Unblocks when the billing/credit-card issue clears — then create the ruleset like the sibling repos.                                                                                                                           |
+| 🟡 **Deferred — operator deploy green-light**                       | **G6** create `staging` + remove v1 ghosts from `main` + SIT gate                           | Both fire CICD → a fleet **backend restart**, out of bounds until the operator green-lights a deploy. G5 already made a deploy state-safe.                                                                                                                                                                                                                                        |
+| ➡️ **Owned by another plan**                                        | worker-VM / QG **resourcing + sizing**                                                      | The "do workers need more RAM / dedicated QG+SIT runner" question is tracked in [`quality_gates_resource_contention_speedup_2026_06_02.md`](quality_gates_resource_contention_speedup_2026_06_02.md) — 3 options (A scale-workers / B self-hosted runner pool / C bespoke RPC) documented there, data-gated on `qg-perrepo-baseline` + `qg-cw-memory-agent`. Not duplicated here. |
+| 👤 **Owned by other agent** (boot-prompt / CLAUDE.md context-bloat) | **G3**, **G7 P1**, **G8** (+ residuals)                                                     | Left open intentionally — another agent is doing the boot-prompt + CLAUDE.md de-bloat and will flip these + push when done. Do not touch from this side.                                                                                                                                                                                                                          |
+| ⚪ **Optional, not required**                                       | **G2** push-trigger stretch                                                                 | `POST /api/backlog/regen` endpoint already exists; only an optional GHA hook remains. 30-min floor makes it unnecessary.                                                                                                                                                                                                                                                          |
+
 ## Gaps to close
 
 ### G1 — execution-scope plan-routing field [P0] _(the field Harsh asked for)_
@@ -240,45 +251,51 @@ operator context (governance / planning / master-plan / model-tier rules).
   inject-mandatory-rules.sh") vs `agents/RULES.md` (355 L; what the spawn actually uses) — two drifting docs.
 - **Stale paths:** `worker.md:114` `WORKSPACE_ROOT:-/home/ubuntu/...`; `RULES.md` `cat /home/hk/...SUB_AGENT...`.
 - **CLAUDE.md double-load — RESOLVED (not a real bloat source):** Claude Code de-duplicates auto-loaded context by
-  **resolved path**, so the same physical `cursor-configs/CLAUDE.md` reached via two symlinks (`<repo>/.claude/CLAUDE.md`
-  + workspace `.claude/rules/CLAUDE.md`) loads ONCE. On the **VM** (where workers run) only the repo symlink path exists
-  — there is no workspace `.claude/rules` there — so a single load regardless. The real duplication is **content**:
-  `RULES.md`/`worker.md` restating CLAUDE.md's rules as different prose (a true second copy) → fixed by slimming, below.
+  **resolved path**, so the same physical `cursor-configs/CLAUDE.md` reached via two symlinks
+  (`<repo>/.claude/CLAUDE.md`
+  - workspace `.claude/rules/CLAUDE.md`) loads ONCE. On the **VM** (where workers run) only the repo symlink path exists
+    — there is no workspace `.claude/rules` there — so a single load regardless. The real duplication is **content**:
+    `RULES.md`/`worker.md` restating CLAUDE.md's rules as different prose (a true second copy) → fixed by slimming,
+    below.
 
 - [x] ✅ [SCRIPT] P0. Added `.claude/CLAUDE.md` + `.claude/SUB_AGENT_MANDATORY_RULES.md` symlinks (→
-      `../../unified-trading-pm/cursor-configs/...`) to the 2-of-3 repos that lacked them: **agent-orchestrator** (`.claude/`
-      was gitignored wholesale → un-ignored the 2 SSOT symlinks) + **ml-service**. Now all 22 service repos match the
-      pattern; AO agents auto-load CLAUDE.md instead of relying on RULES.md restating it. VMs get them via clone/worktree
-      (PM is a sibling; `setup-tab-worktrees.sh` checks them out as tracked files — no bootstrap edit needed). —
-      agent-orchestrator@bf85d21 + ml-service@f17f13e
+      `../../unified-trading-pm/cursor-configs/...`) to the 2-of-3 repos that lacked them: **agent-orchestrator**
+      (`.claude/` was gitignored wholesale → un-ignored the 2 SSOT symlinks) + **ml-service**. Now all 22 service repos
+      match the pattern; AO agents auto-load CLAUDE.md instead of relying on RULES.md restating it. VMs get them via
+      clone/worktree (PM is a sibling; `setup-tab-worktrees.sh` checks them out as tracked files — no bootstrap edit
+      needed). — agent-orchestrator@bf85d21 + ml-service@f17f13e
 - [x] ✅ [DESIGN] P0. **Slimmed `RULES.md` to worker-lifecycle-only** (option a): 357 → 233 L — stripped the
-      generic-rule restatements (the 8 code rules / QG entrypoint / git discipline / findings-triage, all now auto-loaded
-      via the `.claude/CLAUDE.md` symlink); kept worker-lifecycle-unique content (worktree scope, the server-verified
-      ship→flip→`/done` loop incl. M3 cross-repo verification, sub-agent spawning, the backlog/HTTP API surface); §6 now
-      points to the CLAUDE.md sections instead of duplicating. **RULES.md vs SUB_AGENT_MANDATORY_RULES.md stay separate**
-      (justified: RULES.md = worker-lifecycle boot prompt; SUB_AGENT = the paste-into-`Task()` sub-agent ruleset — distinct
-      audiences, not a dup). Also de-staled the CLAUDE.md AO branch-model exception (transitional, cross-links G6). —
-      agent-orchestrator@41cb2a5 + unified-trading-pm@b811b4232
+      generic-rule restatements (the 8 code rules / QG entrypoint / git discipline / findings-triage, all now
+      auto-loaded via the `.claude/CLAUDE.md` symlink); kept worker-lifecycle-unique content (worktree scope, the
+      server-verified ship→flip→`/done` loop incl. M3 cross-repo verification, sub-agent spawning, the backlog/HTTP API
+      surface); §6 now points to the CLAUDE.md sections instead of duplicating. **RULES.md vs
+      SUB_AGENT_MANDATORY_RULES.md stay separate** (justified: RULES.md = worker-lifecycle boot prompt; SUB_AGENT = the
+      paste-into-`Task()` sub-agent ruleset — distinct audiences, not a dup). Also de-staled the CLAUDE.md AO
+      branch-model exception (transitional, cross-links G6). — agent-orchestrator@41cb2a5 + unified-trading-pm@b811b4232
 - [x] ✅ [SCRIPT] P1. Fixed stale paths: `worker.md:114` boot loop `WORKSPACE_ROOT` fallback `/home/ubuntu` → `$HOME`
       (workers run as the operator → correct base on any VM); `RULES.md` `cat /home/hk/…` → relative sibling path (prior
       session). Also exported `WORKSPACE_ROOT` in `bootstrap_vm.sh` (.env.local → systemd → tmux workers + operator
-      .bashrc/.profile, mirroring GH_TOKEN) so the fallback is a safety net not the primary. — agent-orchestrator@41cb2a5
-- [x] ✅ [SCRIPT] P1. CLAUDE.md double-load — **RESOLVED as not-a-real-issue** (see finding above): CC de-dups by resolved
-      path, and the VM has only the single repo-symlink path. The real dup was content (RULES.md restating CLAUDE.md),
-      fixed by the slim. — analysis, no code change needed.
+      .bashrc/.profile, mirroring GH_TOKEN) so the fallback is a safety net not the primary. —
+      agent-orchestrator@41cb2a5
+- [x] ✅ [SCRIPT] P1. CLAUDE.md double-load — **RESOLVED as not-a-real-issue** (see finding above): CC de-dups by
+      resolved path, and the VM has only the single repo-symlink path. The real dup was content (RULES.md restating
+      CLAUDE.md), fixed by the slim. — analysis, no code change needed.
 
 ### G8 residual discoveries (surfaced during the de-bloat pass 2026-06-02)
 
-- [ ] [DOC] P2. `agent-orchestrator/agents/main.md:36` has a stale dated section `## Tomorrow-morning specifics (cutover
-      day, 2026-05-19)` — cutover was 2026-05-19; either generalise it to a "cold-start / no-work_split morning" runbook
-      or delete if superseded. Diagnose whether the cutover-day branch is still reachable before editing.
+- [ ] [DOC] P2. `agent-orchestrator/agents/main.md:36` has a stale dated section
+      `## Tomorrow-morning specifics (cutover     day, 2026-05-19)` — cutover was 2026-05-19; either generalise it to a
+      "cold-start / no-work_split morning" runbook or delete if superseded. Diagnose whether the cutover-day branch is
+      still reachable before editing.
 - [ ] [DOC] P2. `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` freshness pass — verify it doesn't carry the same stale
-      facts CLAUDE.md just shed (auth HS256→ES256, AO branch model, quickmerge staging-first); it's the paste-into-`Task()`
-      ruleset, distinct from RULES.md (worker-lifecycle), so the two stay separate — just keep both current.
+      facts CLAUDE.md just shed (auth HS256→ES256, AO branch model, quickmerge staging-first); it's the
+      paste-into-`Task()` ruleset, distinct from RULES.md (worker-lifecycle), so the two stay separate — just keep both
+      current.
 - [ ] [INFRA] P2. **IAM gap**: the `harsh-worker` AWS IAM user (`arn:aws:iam::427895769566:user/harsh-worker`) lacks
       `ssm:SendCommand`, so a Harsh slot can't inspect/operate the fleet VMs via SSM (the fleet is SSM-access, not open
-      SSH). If Harsh slots are expected to do fleet ops, grant the SSM action; else document that fleet ops route through
-      the central VM / operator session only. Surfaced when verifying the AO `.claude/` symlink on `vm-orchestrator`.
+      SSH). If Harsh slots are expected to do fleet ops, grant the SSM action; else document that fleet ops route
+      through the central VM / operator session only. Surfaced when verifying the AO `.claude/` symlink on
+      `vm-orchestrator`.
 
 ## Related open work (NOT absorbed here)
 
