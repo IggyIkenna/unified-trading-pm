@@ -3,10 +3,12 @@
 > **Lean index** of workspace rules. Each rule has a 1-line essence + a pointer to its full SSOT. When a rule applies,
 > **read the SSOT pointer** — don't act from memory.
 >
-> Trim 2026-05-14: was ~999 lines / ~58KB; now ~400 lines. Per context-fill optimization plan.
+> Condensing 2026-06-02 (in progress): grew to ~1180 lines / 84KB; shrinking back toward ~600 by relocating detail to
+> codex SSOTs and keeping the sharp directive + 1-line pointer here. These rules are NOT waste — they encode behaviours
+> agents were missing; condense, don't drop.
 >
-> **Size budget**: target ≤400 lines / 25KB. Hard cap 1500 / 90KB (review-blocking past that). When budget breached,
-> push to codex SSOT + leave 1-line pointer here.
+> **Size budget**: keep lean (~400–600 lines — not a hard floor). When a section outgrows its essence, push the detail
+> to its codex SSOT + leave the directive + pointer here. Hard cap 1500/90KB (review-blocking).
 
 ---
 
@@ -268,21 +270,13 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   `gcs_delete_object` / `gcs_describe_object` — never subprocess `gcloud`/`gsutil` for per-object ops. 250× faster (REST
   API ~100ms vs CLI ~500ms; GIL released → true thread parallelism at workers=32). SSOT:
   `codex/05-infrastructure/gcs-object-operations.md`.
-- **Agent-orchestrator two-secret auth model (HARD RULE codified 2026-05-29)**: the orchestrator runs on TWO
-  cryptographically distinct HS256 secrets — never collapse them into one shared key. (1) `ORCHESTRATOR_JWT_SECRET` —
-  operator dashboard login JWT, **central VM only**, never wired into worker `.env.local`. (2)
-  `ORCHESTRATOR_INTERNAL_SECRET` — central↔worker proxy auth, fleet-shared via
-  `gs://central-element-323112-orchestrator-creds/orchestrator/internal-secret` (workers wire
-  `ORCHESTRATOR_INTERNAL_SECRET_GCS=gs://…/internal-secret`; central holds the literal value because its AWS-host ADC
-  has no GCP project context). The central terminates the operator JWT at the perimeter then mints a fresh 5-min
-  internal-secret-signed token (`auth.get_internal_service_token`) for the upstream Authorization. Operator JWT never
-  reaches a worker. Symptom of regression: dashboard log-in succeeds (200 on `/api/auth/login`) but every
-  `/api/backends` + `/api/vms/<id>/*` returns 401, bouncing the operator back to the login screen. Diagnosis: SSH a
-  worker + check journal for `"Loaded internal central↔worker secret from GCS."` startup line; absence ⇒ `.env.local`
-  missing the GCS URI or `GOOGLE_APPLICATION_CREDENTIALS` unset. Rotation: overwrite the GCS object + restart each
-  orchestrator (`reload_secret()` hot-swap fires on next config-poller tick and clears the cached internal token).
-  SSOTs: `codex/04-architecture/agent-orchestrator-overview.md` § "Auth (two-secret model)" +
-  `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` § "Auth: two-secret model".
+- **Agent-orchestrator auth (HARD RULE; updated 2026-06-01)**: two distinct keys, never collapsed. Operator dashboard
+  login JWT = HS256 `ORCHESTRATOR_JWT_SECRET` (central VM only, never on a worker). Internal central↔worker proxy token
+  = **ES256 asymmetric** (**HS256 RETIRED 2026-06-01**; all VMs sign ES256, private key via the restricted creds
+  bucket). Central terminates the operator JWT at the perimeter + mints a short-lived internal token upstream; operator
+  JWT never reaches a worker. Regression symptom: login 200 but `/api/backends` 401s. SSOT:
+  `codex/04-architecture/agent-orchestrator-overview.md` §Auth + §"Auth — long-lived setup-tokens";
+  `codex/12-agent-workflow/orchestrator-multi-vm-topology.md`.
 - **Agent-orchestrator auth — setup-tokens only (HARD RULE codified 2026-05-28, Phase 4b-cleanup)**: every account in
   `agent-orchestrator/data/config/accounts.json` MUST authenticate via its own `oauth_token_env_file`
   (`~/.claude-accounts/<id>.env`) containing a long-lived setup-token minted via `claude setup-token`. **Never copy
@@ -885,7 +879,15 @@ Code-shipped ≠ operationally-shipped. Backfills/migrations/reconcilers run to 
 manifest-verified rows + sample-inspected parquets. ADC admin perms on GCP (`central-element-323112`) + AWS
 (`427895769566`) — do NOT pause for operator approval on infra ops.
 
-Hard-stop list (human-only): wallet keys, force-push to main, version 1.0.0 graduation. **Kill-switch / trading-halt is direction- + scope-aware, NOT a blanket gate (codified 2026-06-02):** (a) **protective/fail-safe = always autonomous** — agents + the runtime may arm the kill-switch / `STOP_NEW_ONLY` / firm-wide halt + relaunch crashed safety/monitoring VMs (alerting/watchdog/consolidator); fail toward safety without a human. (b) **resume / un-kill / disarm = autonomous WHEN within the defined disaster-recovery + auto-recovery scope** (`auto_cooldown` breakers self-recovering on the `autonomous-recovery-matrix.md` timelines + the DR-plan runbook); **human-only ONLY when OUTSIDE that scope** — a `manual_unkill` destructive breaker (`KILL_ALL` / `CANCEL_OPEN`, operator sign-off by design) or a novel situation the DR/auto-recovery matrix doesn't cover. Within scope an agent resumes; outside scope a human does. SSOT: `codex/04-architecture/autonomous-recovery-matrix.md` § "Hard-stop scope: agent vs human".
+Hard-stop list (human-only): wallet keys, force-push to main, version 1.0.0 graduation. **Kill-switch / trading-halt is
+direction- + scope-aware, NOT a blanket gate (codified 2026-06-02):** (a) **protective/fail-safe = always autonomous** —
+agents + the runtime may arm the kill-switch / `STOP_NEW_ONLY` / firm-wide halt + relaunch crashed safety/monitoring VMs
+(alerting/watchdog/consolidator); fail toward safety without a human. (b) **resume / un-kill / disarm = autonomous WHEN
+within the defined disaster-recovery + auto-recovery scope** (`auto_cooldown` breakers self-recovering on the
+`autonomous-recovery-matrix.md` timelines + the DR-plan runbook); **human-only ONLY when OUTSIDE that scope** — a
+`manual_unkill` destructive breaker (`KILL_ALL` / `CANCEL_OPEN`, operator sign-off by design) or a novel situation the
+DR/auto-recovery matrix doesn't cover. Within scope an agent resumes; outside scope a human does. SSOT:
+`codex/04-architecture/autonomous-recovery-matrix.md` § "Hard-stop scope: agent vs human".
 
 Every Tab in daily work-split MUST declare Full-Execution Criterion. SSOT: `plans/PLAN_FORMAT.md` § 8.
 
@@ -960,14 +962,13 @@ per repo over the whole batch — a single green sweep validates all of that rep
 **per-shippable-unit commits + plan-flips** from that green tree (Commit + Push + Flip stays fully intact — only the
 GATE RUNS are batched, never the commits). **Shared-host QG concurrency (HARD)**: the dev host is shared across ALL
 slots — `quality-gates.sh`'s "keep parallel QGs to 1–2" warning is HOST-WIDE, not per-slot. Run **≤1–2 full QGs at
-once** (full QGs serialize; code-only `basedpyright`-only agents parallelize safely); exceeding it OOM-kills gates
-(exit 144 mid-TESTS). **NEVER bulk-kill `pytest`/`quality-gates.sh`/`basedpyright` processes** (by pattern or PPID=1) —
-they may belong to another slot's session (the process-space form of "don't touch outside your context"); stop only
-your own tracked background tasks. When only the `<300s` (or inner `run_timeout`) META-gate trips under contention —
-all substantive gates green — `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are the sanctioned overrides (the gate
-prints "ALL QUALITY GATES PASSED" + writes the sentinel). Full SSOT: `codex/06-coding-standards/quality-gates.md` §
-"QG-sweep batching + shared-host concurrency". Composes with `Commit + Push + Flip` + `Quality Gates Are A Merge
-Prerequisite`.
+once** (full QGs serialize; code-only `basedpyright`-only agents parallelize safely); exceeding it OOM-kills gates (exit
+144 mid-TESTS). **NEVER bulk-kill `pytest`/`quality-gates.sh`/`basedpyright` processes** (by pattern or PPID=1) — they
+may belong to another slot's session (the process-space form of "don't touch outside your context"); stop only your own
+tracked background tasks. When only the `<300s` (or inner `run_timeout`) META-gate trips under contention — all
+substantive gates green — `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are the sanctioned overrides (the gate prints
+"ALL QUALITY GATES PASSED" + writes the sentinel). Full SSOT: `codex/06-coding-standards/quality-gates.md` § "QG-sweep
+batching + shared-host concurrency". Composes with `Commit + Push + Flip` + `Quality Gates Are A Merge Prerequisite`.
 
 **Every Active Ping Must Reference A Plan Item (HARD RULE — codified 2026-05-20 round 5; cadence tightened round 6)**:
 no orphan pings in `plans/active/_agent_pings.md` / `ikenna_orchestrator/_agent_pings.md` /
