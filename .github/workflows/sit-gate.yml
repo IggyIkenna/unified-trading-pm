@@ -127,7 +127,22 @@ jobs:
 
           git add workspace-manifest.json
           git commit -m "chore(manifest): SIT lock — staging_status.locked=true, commit SHAs recorded [skip ci]"
-          git push
+
+          # Retry-with-rebase: a concurrent sit-unlock/staging-to-main manifest commit can land on
+          # main between our checkout and push. A bare `git push` then fails non-fast-forward and
+          # the lock never records → the SIT promotion gate silently no-ops. Rebase + retry.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed manifest update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push manifest update after 5 attempts."
+              exit 1
+            fi
+          done
 
       - name: Dispatch staging-locked to all repos (re-runs Staging Lock Check on open PRs)
         env:
