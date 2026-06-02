@@ -210,9 +210,9 @@
   <circle cx="346" cy="1207" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
   <text x="283" y="1229" text-anchor="middle" class="ver">0.1.0</text>
   <rect x="366" y="1199" width="188" height="38" class="test" />
-  <rect x="366" y="1199" width="4" height="38" fill="#facc15" rx="2" />
+  <rect x="366" y="1199" width="4" height="38" fill="#84cc16" rx="2" />
   <text x="460" y="1217" text-anchor="middle" class="label">system-integration-tests</text>
-  <circle cx="544" cy="1207" r="6" fill="#facc15" stroke="#fff" stroke-width="1" />
+  <circle cx="544" cy="1207" r="6" fill="#84cc16" stroke="#fff" stroke-width="1" />
   <text x="460" y="1229" text-anchor="middle" class="ver">0.2.0</text>
   <rect x="40" y="1291" width="2320" height="90" fill="#ffffff" stroke="#e2e8f0" stroke-width="1" rx="8" />
   <text x="60" y="1316" class="section">Versioning + Summary</text>
