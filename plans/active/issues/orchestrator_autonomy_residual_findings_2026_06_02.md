@@ -107,6 +107,12 @@ canonical branch per the repo exception) — operator-authorized override of the
 symlink logic only checked `/root/*` → `uv: command not found` → resolve wherever it landed (deployment-service
 `823ec84`).
 
+**AMI produced:** `ami-008943905b499a3f4` (ap-northeast-1, `agent-orchestrator-20260602-055620`, Branch tag
+`live-defi-rollout` == main == `7f0bdbf`, State=available). Consume via `AMI_ID=ami-008943905b499a3f4 bash
+deployment-service/scripts/vm/launch-epic-vm-aws.sh --vm-id <id>` (the launcher's AMI_ID is optional; cold-bootstrap is
+the fallback). A 3rd packer bug was fixed to get here: `--global` insteadOf went to /root/.gitconfig but warm-cache's
+`sudo -E` git reads /home/ubuntu/.gitconfig → switched to `--system` /etc/gitconfig (deployment-service `5186179`).
+
 ## Remaining open todos
 
 - [ ] [SCRIPT] P2. **deployment-ui FM3** — `git rm --cached` the tracked `playwright-report` artifact + add
