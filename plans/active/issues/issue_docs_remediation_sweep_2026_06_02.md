@@ -139,12 +139,28 @@ verified complete**.
       supply ~104k; restaking program `sSo1iU21jBrU9VaJ8PJib1MtorefUV4fzC9GURa2KNn` executable). Wiring needs the
       Solana/Helius adapter path (not a subgraph entry); `app.solayer.org` REST is down (500) — use Helius
       `getTokenSupply`/`getAccountInfo`. Register live once wired. Source: defi_code_codex_drift D10.
-- `BLOCKED-OPERATOR-DECISION` [CODE] P2. UAC D10 PICASSO — **NEEDS-DIFFERENT-SOURCE**: IBC bridge/restaking program
-  alive but ~3 tx/month; no public yield/rate API found via Helius/native. Operator: drop from DeFi venue scope OR
-  provide a Picasso restaking-vault API/IDL. Source: defi_code_codex_drift D10.
-- `BLOCKED-OPERATOR-DECISION` [CODE] P2. UAC D10 CAMBRIAN — **RED, misclassified**: Cambrian is a developer SDK for
-  building NCNs on Jito Restaking, NOT a DeFi venue (no TVL/pools/rates/mainnet program to query). Recommend REMOVE from
-  the venue registry (or replace with the specific NCN intended). Source: defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 PICASSO — **EXCLUDED** (operator decision 2026-06-02: where missing, exclude). Removed
+      `_ProtocolCapability` + `SOLANA_PROTOCOL_CHAINS` + `_defi_chain_data` entries. — unified-api-contracts@`fa9238fb`.
+      Source: defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 CAMBRIAN — **EXCLUDED** (operator decision 2026-06-02). Removed same 3 registry entries (was
+      a dev SDK, not a DeFi venue). — unified-api-contracts@`fa9238fb`. Source: defi_code_codex_drift D10.
+- [ ] [CHORE] P3. UAC: delete orphaned `external/picasso/` + `external/cambrian/` Pydantic schema dirs (now unused after
+      the registry exclusion) + their facade exports. Follow-up to fa9238fb. Source: defi_code_codex_drift D10.
+
+> **GREEN-VENUE ADAPTER-BUILD spec (operator 2026-06-02: include greens + build adapters, BATCH=LIVE).** Each green
+> venue's `_ProtocolCapability` must declare the **canonical post-migration data types** (per the manifest-canon SSOT
+> `defi-canonical-naming-ssot.md` + `defi_manifest_canonicalisation_2026_06_01.md` §C0): lending venues →
+> `lending_indices` (+ `liquidations`/`risk_params`/`gas_fees` where the subgraph supports it) — NOT legacy names. The
+> adapter is the per-protocol pattern in MTDS `cli/handlers/evm_defi_handler.py`: add (a) a live current-state GraphQL
+> query AND (b) a history query (batch=live symmetry — same schema/data_type both modes), (c)
+> `_EVM_DEFI_INSTRUMENT_TYPES` + `_row_symbol_for_evm_defi` mapping, (d) `_SUBGRAPH_IDS` entry, (e) `_DEFAULT_CHAINS`,
+> then register live in `defi_venues.py`. **Per-venue you MUST first introspect the subgraph's market/asset entity** for
+> the exact rate/index field names (Venus/BenQi are Compound-`markets` schema; Radiant is Aave-`assets`; Euler is
+> Goldsky `eulerVaults`) so the field→`lending_indices`-column mapping is correct — declaring `live` without a working,
+> field-mapped adapter just recreates the D10 incoherence. Solayer is a Solana RESTAKING venue →
+> `restaking_rewards`/`lst_rates` via a Helius RPC adapter path (not subgraph). These 5 builds are high-stakes
+> data-pipeline work (the "heartbeat") — do each as its own verified, QG-green shippable unit, NOT a bulk rush.
+
 - [ ] [CODE] P3. UAC D8 Starknet `infura_compatible` template: keep + add a clarifying note (Infura is a removed
       _provider name_ but the public Starknet endpoint shape is retained); rename the key away from `infura_` to avoid
       the banned-name confusion. Source: defi_code_codex_drift D8.
