@@ -422,7 +422,7 @@ What to verify/wire (B0 corrected scope):
         AG's bucket via `resolve_bucket_name` + summing `CaptureStatusCounts` from `compute_coverage_for_bucket` (UI keys
         preserved; catalog file-existence metric untouched). STEP 5.90 ✅. Repo: deployment-service. parent_epic:
         mtds_mdps_master.
-  - [ ] [CODE] P1. **A11c — UAC `registry/market_data_categories.py` DeFi data_type list legacy vs canonical**: L144-177
+  - [x] ✅ [CODE] P1. **A11c — DONE (slot-2 2026-06-02): full canonical denominator collapse across UAC + cross-repo cascade** — uac@a967121a + mdps@56503c2 + deployment-api@14dfe2e + mtds@b986a3e1 (all QG-green except deployment-api's pre-existing acknowledged provenance debt). Residual follow-ups DECOUPLED + tracked below: A11c-candle-enum (Phase-2 collision) + C0-RD6 (`_DEX_EXT` split). **A11c — UAC `registry/market_data_categories.py` DeFi data_type list legacy vs canonical**: L144-177
         lists `dex_pools`/`dex_swaps` (legacy logical) while the v9 on-disk + manifest canonical is
         `dex_pool_state`/`dex_pool_swaps` (operator-locked `defi-canonical-naming-ssot.md`). VERIFY whether this list is
         a logical menu (intentional) or a physical-key source consumed by data-status; if the latter, align to canonical
