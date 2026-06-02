@@ -32,6 +32,35 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > those should be fairly quick — but still should be audited and in plans." So this plan is **audit-first**: read each
 > service's actual `_index` state (small corpus → fast), then bundle any debt into ONE single-walk per bucket.
 
+## PREP3 — reader/writer `pipeline_mode`-PRIMARY (cross-AG; 🟢 WRITER DONE / 🟡 reader slot-2 coordination)
+
+> **Why this gates the legacy delete + backfill resume (operator 2026-06-02)**: the v9 migration ADDS the
+> `pipeline_mode=` path segment and the legacy (no-`pipeline_mode=`) paths are then DELETED. So every WRITER must emit
+> `pipeline_mode=` as the PRIMARY segment (else post-delete backfill/live writes land on the deleted shape → re-drift),
+> and every READER must probe the `pipeline_mode=` path PRIMARY (else post-delete reads miss the data). The base
+> `build_*_partition_path` builders intentionally omit `pipeline_mode=` (only `candidate_parquet_paths(..., pipeline_mode=…)[0]`
+> prepends it) — so DIRECT base-builder callers had to be migrated.
+
+- [x] ✅ [CODE] P0. **WRITER side — DONE for cefi/tradfi/prediction (mtds@f50116ca, 2026-06-02).** All THREE MTDS
+      write-path builders now emit `pipeline_mode=` PRIMARY (inserted after `day=`, before `asset_group=`), derived via
+      `derive_pipeline_mode_for_row(venue, asset_group, data_type)` — the SAME helper the v9 migrators + E5 rebuilds use,
+      so **object-path pipeline_mode == manifest pipeline_mode** (path==manifest invariant): (1)
+      `engine/orchestrator.py:_build_partition_path_for_asset_group` (PartitionedTickWriter route — cefi/tradfi/prediction
+      inline); (2) `adapters/cefi/tardis_shared.py` (tardis cefi builder); (3) `adapters/tradfi/tradfi_shared.py`
+      `build_tradfi_partition_path`. 18 write-path test assertions updated; ruff + per-file basedpyright clean (+0 new
+      errors); 134 tests green (2 pre-existing env-tier **bucket-naming** failures remain, foreign — owned by
+      `bucket_name_ssot…`, NOT introduced here). batch=live: backfill resumes on the canonical path after the legacy delete.
+- [ ] [CODE] P0. **READER side — slot-2 coordination (MDPS + features-onchain).** Status verified 2026-06-02: MTDS
+      `reader.py` is ALREADY pipeline_mode-aware (Level-1 `pipeline_mode={mode}/` probe → Level-2 no-pm fallback);
+      `manifest_reader_fallback` Level-0 probes `pipeline_mode=`; MDPS `cloud_data_provider.py` only resolves buckets (no
+      raw-tick partition-path building); slot-2 already shipped pipeline_mode-aware MDPS+features reads for **DeFi**
+      (mdps@4b9e6e5 + features@dec1b687). **TODO (slot-2 + slot-3 coordinate):** confirm the MDPS candle-builder raw-tick
+      read + features-onchain `data_loader` read resolve the `pipeline_mode=` path PRIMARY for the **non-defi** AGs too
+      (cefi/tradfi/prediction) — i.e. they read via the pipeline_mode-aware MTDS reader / `candidate_parquet_paths` /
+      `manifest_reader_fallback`, NOT a direct `build_*_partition_path` that would miss migrated data after the legacy
+      delete. If any direct base-builder read remains, switch it to the pipeline_mode-aware path (same fix as the writer).
+      This is the only PREP3 residual before the per-AG G3 `--apply`→delete; the writer side + MTDS reader are done.
+
 ## Per-service scope + what each owns / inherits (no overlap)
 
 | Service       | Surface                                                  | CF items it OWNS (live check)                                       | Notes                                                                                                                                                                          |
