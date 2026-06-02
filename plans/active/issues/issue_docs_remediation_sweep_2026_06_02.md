@@ -61,8 +61,12 @@ verified complete**.
 
 ## market-data-processing-service — MDPS leading-NaN workstream (operator chose Option A + carry-from-prior-day)
 
-- [ ] [CODE] P0. MDPS: add `state_col: str | None` + `flow_cols` kwargs to `base_adapter._finalize_session_grid` (per
-      issue-doc §Scope items 1–3). Source: mdps_state_adapter_leading_nan.
+- [x] ✅ [CODE] P0. MDPS: add `state_col: str | None` + `flow_cols` kwargs to `base_adapter._finalize_session_grid` (per
+      issue-doc §Scope items 1–3). Source: mdps_state_adapter_leading_nan. — market-data-processing-service@4fd962d |
+      `state_col` drives first-obs trigger + OHLC from the state column; `flow_cols` (default `DEFAULT_STATE_FLOW_COLS`)
+      zero-filled; `seed_state` carries secondary-column prior-day values into leading bins; backward-compatible when
+      `state_col=None` | tests/unit/test_state_adapter_density.py (5 cases) | lint+typecheck+codex green (only
+      pre-existing foreign `test_dependency_checker_sports_prediction` bucket-tier drift red — see finding below).
 - [x] ✅ [CODE] P0. MDPS: add prior-day carry-seed logic to `_finalize_session_grid` (Decision 1 — seed leading bins from
       last-known price/ts instead of dropping). Source: mdps_state_adapter_leading_nan. — market-data-processing-service@5a5e989 |
       seed_price/seed_ts kwargs + carry-from-bin-0 + cold-start-drop + CLOSED-drop preserved | tests/unit/test_finalize_session_grid_seed.py (6 cases) | QG exit 0. (Seed *threading* through batch+live call path tracked in issue-doc Decision-1 todo.)
@@ -73,6 +77,17 @@ verified complete**.
       (`tests/unit/test_state_adapter_density.py` + extend per-adapter tests). Source: mdps_state_adapter_leading_nan.
 - [ ] [VERIFY] P0. MDPS: remove the NaN WARN diagnostic in `fast_candle_aggregation.py:304-318` ONLY after all 7
       adapters fixed + full MDPS suite green. Source: mdps_state_adapter_leading_nan.
+- [ ] [BUG] P0. **MDPS pre-existing foreign QG-red (found 2026-06-02 during leading-NaN work, NOT mine to fix —
+      bucket-tier data-correctness).** `tests/unit/test_dependency_checker_sports_prediction.py` (9 cases:
+      `TestOutputBucketsSportsPrediction` + `TestPerCategoryUpstreamRouting`) assert the **legacy flat** bucket names
+      (`market-data-tick-sports-test-project`) but `DependencyChecker.get_output_bucket` now returns the **env-tiered**
+      canonical name (`market-data-tick-sports-prd-test-project`) via UTL `resolve_bucket_name` since
+      `market-data-processing-service@61900a3` ("resolve canonical env-tiered tick + instruments buckets"). Confirmed
+      pre-existing: fails at HEAD with my finalizer change stashed. **Owner = bucket-name-SSOT / env-tier workstream**
+      (`bucket_name_ssot_canonicalisation_2026_05_10` / `defi_manifest_canonicalisation_2026_06_01`). Decision needed:
+      is `prd` the correct env tier for a test run, or should the test export an env override? Do NOT blind-update the
+      expected strings — wrong tier = wrong bucket = data-correctness bug. This currently blocks `quality-gates.sh`
+      exit 0 for the whole MDPS repo. Source: mdps_state_adapter_leading_nan (incidental finding).
 
 ## batch-live-reconciliation-service
 
