@@ -198,7 +198,15 @@ VM.
       legacy-only cells ride `--also-legacy`. DRY-BY-DEFAULT + `--apply`. Source/v9 columns added by E5 rebuild (next).
 - [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive -029).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
-- [ ] [DATA] P0. E5 Manifest rebuild → v9 — **NEW tool `rebuild_tradfi_manifest.py` (does not exist yet)**. REFERENCE:
+- [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE: NEW `rebuild_tradfi_manifest.py` (mtds@e6250b99, 2026-06-02, 20
+      tests)**. Scans canonical `day=/pipeline_mode=/asset_group=tradfi/venue=/instrument_type=/data_type=/[underlying=/]{file}`
+      (per-instrument → instrument_id=stem; chain bundle → underlying=; optional pipeline_mode= segment + legacy tolerance);
+      day-level list; `-prd` bucket; stamps `pipeline_mode` (path-or-`derive_pipeline_mode_for_row`) + `source` (REQUIRED,
+      `source_string_for(pm)`); SKIPS the `day-` hyphen 0-row placeholder tree (E7 deletes those). Modeled on the cefi E5.
+      **REMAINING (gate G4, tracked via CF-11 todos + Verify): `available_at` (parquet-col-else-day-EOD) + legacy-`_index`
+      re-emit of `attempted_failed`/typed-`empty_confirmed` rows (CF-11) + the 5 `SOURCE_RETURNED_ZERO` audit.** Executes
+      `tradfi_massive` Task -031 (source re-consolidation). Original recipe retained below for reference.
+- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): NEW `rebuild_tradfi_manifest.py`. REFERENCE:
       cefi E5 DONE (mtds@2c3a479b) — copy its structure (optional `pipeline_mode=` regex segment, DAY-level list prefix,
       canonical `-prd` bucket, stamp `pipeline_mode` via path-or-`derive_pipeline_mode_for_row(venue,"tradfi",dt)`). The
       post-migrator tradfi canonical form (the L-hive shape + inserted pipeline_mode) is
