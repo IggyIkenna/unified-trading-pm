@@ -111,14 +111,13 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       deps); pyproject re-adds it editable for the 14 test files importing deployment_api.routes/utils/main. staging
       clears via promotion. I diagnosed identically but did not push a competing fix.] deployment-service LDR + staging
       v2 RED — orphaned cross-repo test import after the circular-dep cut.** `tests/mocks.py:10` hard-imports
-      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the
-      deployment-api↔deployment-service circular-dep removal dropped `deployment-api` from deployment-service's
-      pyproject **on LDR** (main still declares it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the
-      STALE side; LDR @2ab4cce5 = RED, run 26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is
-      already guarded (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard
-      top-level import. Fix on LDR (the correct post-cut side): make the import resilient OR relocate
-      `CombinatoricEntry` to a shared contract — do NOT re-add deployment-api as a dep (re-creates the just-removed
-      cycle). repo: deployment-service.
+      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the deployment-api↔deployment-service
+      circular-dep removal dropped `deployment-api` from deployment-service's pyproject **on LDR** (main still declares
+      it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the STALE side; LDR @2ab4cce5 = RED, run
+      26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is already guarded
+      (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard top-level import. Fix
+      on LDR (the correct post-cut side): make the import resilient OR relocate `CombinatoricEntry` to a shared contract
+      — do NOT re-add deployment-api as a dep (re-creates the just-removed cycle). repo: deployment-service.
 - [x] ✅ [LINT] P2. **[PROMOTION-LAG, not fresh debt — re-audit 2026-06-02: the 14 QG-scope ruff errors are ALREADY
       FIXED on LDR @eabdf05 "fix(lint): green all 14 ruff errors in QG scope (tests/ lint pass)"; e2e LDR is 10 commits
       ahead of main. main red (run 26796774457 @b526b5eb) clears via the LDR→main promotion campaign (P1 below), NOT a
@@ -130,7 +129,8 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       LDR, but the PM-side GHA trigger workflow (`.github/workflows/escalate-to-orchestrator.yml`) the "✅ built +
       e2e-tested" claim depends on is absent from `origin/main` → the GHA→orchestrator dispatch is NOT wired end-to-end.
       Build the missing GHA (composes with the open `stuck_promotion_pr` wiring todo). repos: unified-trading-pm +
-      agent-orchestrator.
+      agent-orchestrator. **→ consolidated into § "CI/CD Observability + Reconciliation Hardening" B
+      (conflict-resolution → orchestrator on Max-plan accounts); track + tick THERE, not here.**
 
 - [x] ✅ [TEST] P1. **[STALE-NOW-GREEN — re-audit 2026-06-02 slot-2: LDR v2 run 26814711557 @4c1c9a68 success]
       unified-trading-library (L2) LDR v2 RED — pytest bucket-naming failure (run 26792007721).**
@@ -1035,7 +1035,8 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 `defi_manifest_canonicalisation_2026_06_01.md` (already tracked there).
 
 - [ ] [AGENT] P0. Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks) — per-repo CI on LDR green +
-      a real signal (audit i5).
+      a real signal (audit i5). **→ consolidated into § "CI/CD Observability + Reconciliation Hardening" D; track
+      there.**
 - [~] Tier B: full-workspace cross-repo SIT job **BUILT** (`system-integration-tests@f881579`: nightly 03:00 UTC +
   `workflow_dispatch` + `repository_dispatch[full-workspace-sit]`). Remaining: confirm the workflow on a live trigger;
   wire the Tier-C promotion-gate to read its result (audit j2).
@@ -1051,6 +1052,88 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 - [ ] [AGENT] P1. Tier D: per-service Cloud Run deploy-config audit + add Cloud Run deploy for HTTP-served services
       (audit k1-deploy).
 - [ ] [AGENT] P2. Tier E: game-day + synthetic smokes wired into the staging SIT schedule.
+
+### CI/CD Observability + Reconciliation Hardening — consolidated 2026-06-02 (operator-session SSOT)
+
+> **Single source of truth** for the flow-observability + reconciliation model (operator review 2026-06-02). Folds the
+> scattered alerting / SIT / drift / escalation todos into one ordered block; where an item SUPERSEDES/MERGES an older
+> todo it says so, and the old line is annotated `→ consolidated here` (no dual-tracking). **Layer model:** (1)
+> staging-PR QG → (2) SIT on staging → (3) staging→main + main QG → (4) "not-flowing" backstop (stuck PRs + branch
+> drift), with **Tier A (LDR-green) ABOVE all** (the model's first signal — LDR has no remote CI today). Provenance:
+> 2026-06-02 dangling-lock incident that paged 18× but never told us the lock was stuck.
+
+**A. Broken-now alert bugs (silent failures — do first, tiny):**
+
+- [ ] [SCRIPT] P0. **`sit-starvation-detector` reads `locked_at` but `sit-gate` writes `locked_since` → DEAD watchdog**
+      (the dangling-lock check always skips → never pages). Fix the field name. repo: unified-trading-pm
+      (`.github/workflows/sit-starvation-detector.yml`). This is why the 2026-06-02 dangling lock went unalerted.
+- [ ] [SCRIPT] P0. **`sit-unlock` Slack message is hardcoded "staging unlocked" even when the unlock PUSH fails** → tie
+      the message to `unlock-staging.result` ("❌ AUTO-UNLOCK FAILED — staging dangling-locked, fleet merges blocked").
+      repo: unified-trading-pm (`sit-unlock.yml`).
+- [ ] [SCRIPT] P1. **`sit-unlock` push lacks the 5× rebase-retry loop** `staging-to-main.yml` already has → add it (the
+      non-FF race is what left the lock dangling). repo: unified-trading-pm (`sit-unlock.yml`).
+
+**B. Conflict resolution → VM orchestrator on Max-plan accounts ($0 API), CAN auto-merge (operator 2026-06-02):**
+
+> Today `conflict-resolution-agent.yml` runs in-GHA on `ANTHROPIC_API_KEY_CICD` (paid API) + "will NOT auto-merge". The
+> **4 Claude Max accounts** (setup-token, authed ~1yr) on the VM orchestrator should do this instead — they're already
+> paid. This block owns the **GHA wiring**; the orchestrator-side worker lives in
+> [`agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md`](agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md)
+> § G9 (cross-linked).
+
+- [ ] [SCRIPT] P1. **Retire the in-GHA Claude-API path in `conflict-resolution-agent.yml`** — drop
+      `ANTHROPIC_API_KEY_CICD` + the `npm i @anthropic-ai/claude-code` run. repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **Build `escalate-to-orchestrator.yml`** — the missing PM→orchestrator GHA dispatch (POST conflict
+      context to the orchestrator spawn API). **MERGES the open "escalate-overstated" P2 item above** (`escalation.py` +
+      `escalate.md` exist on LDR; only the GHA trigger is absent). repos: unified-trading-pm + agent-orchestrator.
+- [ ] [SCRIPT] P1. **Allow auto-merge for orchestrator-resolved PRs** — remove the "will NOT auto-merge" guard; the
+      REQUIRED `quality-gates-v2` check (not a toggle) remains the gate. repo: unified-trading-pm.
+
+**C. Close the auto-remediation loop:**
+
+- [ ] [SCRIPT] P1. **Wire the stuck-PR watcher → fire `escalate-to-orchestrator`** (supersession-close OR resolve)
+      instead of only paging. repo: unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py`).
+- **Canonical note (operator 2026-06-02):** _disabling auto-merge on a stuck `DIRTY` PR is **pointless**_ — a
+  conflicting PR cannot auto-merge anyway, and once resolved the REQUIRED `quality-gates-v2` check is the gate, not the
+  toggle. The lever is **auto-triage** (close-superseded / resolve), never the auto-merge toggle. (See the
+  deployment-service #15 finding: a 756-commit `tab/hkm/3→staging` wholesale PR — close + re-land per-unit, do not touch
+  its toggle.)
+
+**D. Missing top layer — Tier A (above staging):**
+
+- [ ] [AGENT] P0. **Tier A — LDR-CI-red monitoring** — the model's FIRST signal (LDR has no remote CI today → red hides
+      until a main PR). **This consolidates the open Tier A todo above** (`audit i5`); track it here. repo:
+      unified-trading-pm + per-repo signal.
+
+**E. Alert-coverage gaps:**
+
+- [ ] [SCRIPT] P2. **PR-resolved bookend alert** — when a FAILING PR merges/closes, emit "resolved / no longer relevant"
+      so the open FAILING alert is closed. repo: unified-trading-pm (`ci-status-update.yml` / `ci_failure_watcher.py`).
+- [ ] [SCRIPT] P2. **Explicit SIT-pass alert** (today SIT-green is only implied via promotion). repos:
+      system-integration-tests + unified-trading-pm.
+- [ ] [SCRIPT] P2. **main-branch QG context/severity** — a `main` QG fail = CRITICAL, distinct from a staging-PR fail
+      (today the alert has no branch context). repo: unified-trading-pm (`ci-status-update.yml`).
+
+**F. Drift / reconciliation gaps:**
+
+- [ ] [SCRIPT] P2. **behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR is
+      watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **staging→LDR backmerge** — only `main-backmerge-to-ldr.yml` exists; staging-only commits can strand.
+      repo: unified-trading-pm.
+
+**G. The better way — collapse the point-checks:**
+
+- [ ] [SCRIPT] P2. **Unified flow-health reporter** — one cron computing, per repo,
+      `{ldr_green, ahead/behind ×3 (main/staging/LDR), oldest stuck-PR age, staging lock-state}` → a single transition
+      alert (`🔴 flow-blocked` / `🟢 flow-recovered`) mirroring `ci-status-update`'s anti-spam gate. **SUPERSEDES E +
+      F** once built (they fold into it). repo: unified-trading-pm.
+
+**H. Root cause of the slot-dirty-pull churn (bit this session repeatedly):**
+
+- [ ] [SCRIPT] P2. **Untrack generated `*_DAG.svg` + move mutable `ci_status` to a sidecar file** — today both live in
+      tracked `workspace-manifest.json`, so every pull is dirty → blocks FF-sync + spawns the prettier-reflow churn.
+      repo: unified-trading-pm. operator-decision (structural).
+
 - branch protection for the original 5 repos → `workspace_repo_branch_protection_gaps_2026_05_29.md` (DONE).
 - [x] ✅ [SCRIPT] P2. **Reconcile/verify — DONE 2026-06-01.** Confirmed all 4 named repos LACK the
       `require-quality-gates` ruleset (rqg=0). Drift EXPLAINED, not a regression: "MAIN 17/17" is the 17-repo ruleset
@@ -1111,8 +1194,8 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 > - **Safety**: every ruleset verified `active`; `enforce_admins` toggles during admin-merges were all re-enabled.
 >
 > **Remaining (tracked below):** instruments-service main coverage (0.18% short); enforce_admins on `staging` (optional
-> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1
-> workflow FILE deletion (separate held plan).
+> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1 workflow
+> FILE deletion (separate held plan).
 
 > **🔑 PREREQUISITE (discovered 2026-06-01 — RESOLVED via provisioning, not a missing credential).** The migrations edit
 > `.github/workflows/*.yml`, which the gh **keyring login token (`gho_…`) cannot do** (no `workflow` scope). But the

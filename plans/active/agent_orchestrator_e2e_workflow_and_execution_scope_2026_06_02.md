@@ -281,11 +281,12 @@ operator context (governance / planning / master-plan / model-tier rules).
 
 ### G8 residual discoveries (surfaced during the de-bloat pass 2026-06-02)
 
-- [x] ✅ [DOC] P2. `agents/main.md` cutover section generalised — retitled `## Tomorrow-morning specifics (cutover day,
-      2026-05-19)` → `## Cold-start morning (no work_split authored yet)` + de-dated the work_split reference (the content
-      was a useful cold-start runbook, not conditionally-reachable code). — agent-orchestrator@c605f95
-- [x] ✅ [DOC] P2. `SUB_AGENT_MANDATORY_RULES.md` freshness pass — **verified clean** (180 L): grep found NO stale
-      facts (no HS256, no `main`-direct/AO-branch claim, no "staging=breaking"/"promotion-to-main", no v5/v8 manifest, no
+- [x] ✅ [DOC] P2. `agents/main.md` cutover section generalised — retitled
+      `## Tomorrow-morning specifics (cutover day,     2026-05-19)` →
+      `## Cold-start morning (no work_split authored yet)` + de-dated the work_split reference (the content was a useful
+      cold-start runbook, not conditionally-reachable code). — agent-orchestrator@c605f95
+- [x] ✅ [DOC] P2. `SUB_AGENT_MANDATORY_RULES.md` freshness pass — **verified clean** (180 L): grep found NO stale facts
+      (no HS256, no `main`-direct/AO-branch claim, no "staging=breaking"/"promotion-to-main", no v5/v8 manifest, no
       removed venues, no `category=`). Its `git push origin live-defi-rollout` guidance is correct per the LDR CI-axis
       model (not stale). No edit needed; stays distinct from RULES.md (worker-lifecycle) by design.
 - [ ] [INFRA] P2. **IAM gap**: the `harsh-worker` AWS IAM user (`arn:aws:iam::427895769566:user/harsh-worker`) lacks
@@ -293,6 +294,27 @@ operator context (governance / planning / master-plan / model-tier rules).
       SSH). If Harsh slots are expected to do fleet ops, grant the SSM action; else document that fleet ops route
       through the central VM / operator session only. Surfaced when verifying the AO `.claude/` symlink on
       `vm-orchestrator`.
+
+### G9 — conflict-resolution + stuck-PR remediation runs on the orchestrator (Max-plan accounts, $0 API) [P1] _(operator 2026-06-02)_
+
+Today merge-conflict / stuck-PR remediation runs **in a GHA runner on `ANTHROPIC_API_KEY_CICD` (paid API)** via
+`conflict-resolution-agent.yml`, and it only **proposes** a resolution PR ("will NOT auto-merge"). It should instead be
+**dispatched to this orchestrator**, which spawns a Claude Code worker on one of the **4 Claude Max accounts**
+(setup-token auth, ~1yr) — **$0 marginal API cost** — and that worker, being a full agent, **resolves → runs Pass-1 QG →
+enables auto-merge on `quality-gates-v2` green** (the required check stays the gate). This is the orchestrator-side half
+of cicd plan §"CI/CD Observability + Reconciliation Hardening" B/C
+([`cicd_contract_hardening_2026_06_01.md`](cicd_contract_hardening_2026_06_01.md)); the GHA-trigger half
+(`escalate-to-orchestrator.yml`, retiring the API path, auto-merge guard) is owned there. No dual-tracking: **GHA wiring
+= cicd plan; worker + account model = here.**
+
+- [ ] [AGENT] P1. **Conflict-resolver worker template** — a spawn profile/agent prompt the orchestrator dispatches on a
+      Max-plan account for `merge-conflict-detected` / `stuck_promotion_pr` events: clone target repo at the PR head,
+      resolve the conflict, run `quality-gates.sh` (Pass 1, `--no-fix`), and on green enable v2-gated auto-merge (or
+      close-superseded when the PR's content is already on the target). reads `SUB_AGENT_MANDATORY_RULES.md`. repo:
+      agent-orchestrator (`agents/conflict-resolver.md` + dispatch route in `server/`; reuses `escalation.py`).
+- [ ] [AGENT] P1. **Orchestrator spawn route accepts the escalate payload** (repo, source/target branch, PR url, plan
+      refs) from PM `escalate-to-orchestrator.yml` and enqueues the conflict-resolver worker on a free Max-plan account
+      (account-rotation + rate-limit aware, per the existing 4-account health model). repo: agent-orchestrator.
 
 ## Related open work (NOT absorbed here)
 

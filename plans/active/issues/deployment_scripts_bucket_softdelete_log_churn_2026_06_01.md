@@ -13,6 +13,14 @@ source:
 locked_by: live-defi-rollout
 ---
 
+> **🟡 PROCESS NOTE (Ikenna 2026-06-02) — `deployment-service #15` is the wrong delivery vehicle for this work.** PR #15
+> (`tab/hkm/3 → staging`) is **756 commits ahead / 2 behind** staging — a slot-branch wholesale-merge, not the focused
+> terraform-codify change its title describes. It's been `DIRTY`/stuck for 4h+. A `tab/*` slot branch must NOT PR to
+> staging; its work reaches integration via `tab-mirror → LDR` then LDR→staging per-unit. **Recommended: close #15 and
+> re-land the bucket-codify change as a small per-unit quickmerge.** Note: **disabling auto-merge on #15 is pointless**
+> — it's `DIRTY` so it can't merge anyway, and the required `quality-gates-v2` check (not the toggle) is the gate. The
+> underlying bucket work below is still valid; only the PR shape is wrong. Pinged harsh in `_agent_pings.md`.
+
 ## What I found
 
 `gs://deployment-scripts-central-element-323112` was **57.5 TiB on 2026-06-01**, up from 207 GiB on 2026-05-20. **99.9%

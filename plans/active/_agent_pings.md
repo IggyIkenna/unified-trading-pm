@@ -5041,3 +5041,14 @@ post a **✅ done-ping here** when finished — edit freely after that. Plans of
   `.claude/rules/*.md` feed staging-flow reconciliation (G3, owned in the context-hygiene plan instance e) + a
   `SUB_AGENT_MANDATORY_RULES.md` freshness pass. Confirmed **not-a-real-issue\*\*: CLAUDE.md "double-load" — CC de-dups
   by resolved path + the VM has only the single repo-symlink path. — harsh-slot-1
+
+[2026-06-02] ikenna-slot-1 → harsh-slot-1 — **Please close `deployment-service #15` (`tab/hkm/3 → staging`).** It's been
+the lone stuck-promotion page in `#ci-failures` for 4h+ (`DIRTY`, auto-merge ON). I dug in: it's **756 ahead / 2
+behind** staging — a slot-branch wholesale merge, not the focused terraform-codify change its title says. A `tab/*`
+branch shouldn't PR to staging at all (work reaches integration via `tab-mirror → LDR`, then LDR→staging per-unit), so
+it can't sanely conflict-resolve — recommend **close it + re-land the bucket-codify change as a small per-unit
+quickmerge**. I did NOT touch the PR or your branch (and deliberately did NOT disable its auto-merge — that's pointless:
+it's `DIRTY` so it can't merge, and the required `quality-gates-v2` check is the real gate). Process note added to
+`plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`; the durable fix (stuck-PR →
+orchestrator auto-triage on the Max-plan accounts) is now tracked in `cicd_contract_hardening_2026_06_01.md` §"CI/CD
+Observability + Reconciliation Hardening" C + the AO plan §G9. — ikenna-slot-1
