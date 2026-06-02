@@ -97,6 +97,18 @@ causes are real: serializer drift AND stale-lock commit-discipline gaps.
 - [x] [INFRA] P3. Codex update — `.cursor/rules/dependencies/uv-lock-file.mdc` +
       `codex/06-coding-standards/dependency-management.md` document the 3-role split ✅
 
+## Discovered during promotion (2026-06-02)
+
+- [x] [INFRA] P1. **QG host governor crashed `quality-gates.sh` on macOS** — `qg_governor_acquire` used bash≥4.1
+      `exec {fd}>` syntax; macOS bash 3.2 parses it as a command and TERMINATES the gate before [3] TESTS, so no
+      `.qg_last_passed_sha` sentinel → quickmerge can't promote from any Mac slot (operator's + Harsh's). FIXED: degrade
+      to ungoverned on bash <4.1 (same as missing flock). `qg-host-governor.sh` — PM@5004dee84 ✅
+- [ ] [INFRA] P1. **PM QG red on 2 PRE-EXISTING codex empty-fallback violations** (`.get("x","")` / `.get("x",{}|[])` in
+      PM `scripts/` Python — NOT from this plan's commits, which touch zero `.py`). Blocks PM promotion at [5/6] CODEX.
+      **Belongs to the PM-gate owner / the session that introduced them** — surfaced to operator; not fixed here
+      (don't-touch-foreign + diagnose-before-fix). Fix = refactor the `.get(..,"")` defaults or
+      `# noqa: qg-empty-fallback`.
+
 ## Success criteria
 
 - Running `quality-gates.sh` locally never leaves `uv.lock` dirty (Phase 2).
