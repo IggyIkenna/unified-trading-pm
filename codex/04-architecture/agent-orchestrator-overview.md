@@ -31,15 +31,15 @@ resource limits, root-cause history) → `codex/05-infrastructure/agent-orchestr
 
 ## Tech stack
 
-| Layer    | Technology                                                                                                                                                                                                                                                                                                                                        |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                                                                                                                                                                                                                       |
-| Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                                                                                                                                                                                                                                  |
+| Layer    | Technology                                                                                                                                                                                                                                                                                                                                                        |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Backend  | FastAPI (Python 3.13), uvicorn, SQLAlchemy + SQLite (`data/state/state.db`)                                                                                                                                                                                                                                                                                       |
+| Frontend | React + TypeScript + Vite (dashboard served by Firebase Hosting)                                                                                                                                                                                                                                                                                                  |
 | Auth     | ES256 JWT (`PyJWT`); argon2 password hashing (`scripts/manage_users.py`). Internal proxy token: ES256 asymmetric, **HS256 retired 2026-06-01** (all 11 VMs sign ES256; private key distributed to every VM via the restricted creds bucket — central-only abandoned). Operator dashboard login JWT: HS256 (`ORCHESTRATOR_JWT_SECRET`, central-only — unaffected). |
-| Workers  | 11 EC2 VMs (10 epic + 1 api-host, AWS ap-northeast-1), 8 slots each on epic VMs = 80 worker slots; 1 central API/planning VM (`13.113.200.22`, 2 planning slots). Total: 82 slots.                                                                                                                                                                |
-| State    | SQLite (runtime) + `data/state/state.json` snapshot. See § "State persistence" below for cloud-backup specifics.                                                                                                                                                                                                                                  |
-| Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                                                                                                                                                                                                                     |
-| QG       | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                                                                                                                                                                                                                                    |
+| Workers  | 11 EC2 VMs (10 epic + 1 api-host, AWS ap-northeast-1), 8 slots each on epic VMs = 80 worker slots; 1 central API/planning VM (`13.113.200.22`, 2 planning slots). Total: 82 slots.                                                                                                                                                                                |
+| State    | SQLite (runtime) + `data/state/state.json` snapshot. See § "State persistence" below for cloud-backup specifics.                                                                                                                                                                                                                                                  |
+| Deps     | `uv` + `uv.lock` (Python); `npm` + `package.json` (dashboard)                                                                                                                                                                                                                                                                                                     |
+| QG       | `bash scripts/check.sh` — ruff + basedpyright + prettier + tsc                                                                                                                                                                                                                                                                                                    |
 
 ---
 
@@ -252,6 +252,13 @@ task, flipping to `- [x]` simply stops the regen from seeing it (existing Backlo
 `dispatched_to`, `done_sha`, etc.). Hand-tuning derived tasks' `priority` / `repos` / `target_slot` / `collision_group`
 post-regen is supported; the dedup key is the brief, not the tuning fields.
 
+**`execution_scope` frontmatter (codified 2026-06-02)** gates ingestion at the plan level. A plan with
+`execution_scope: local-only` is skipped entirely by `regen_backlog_from_plan.py` (regardless of `assigned_vm`) — use it
+for coordination / design / operator-driven plans whose work is done + verified locally, not dispatched to a worker. The
+field is optional; absent ⇒ `orchestrator-agent` (ingested as normal, so no backfill of existing plans). It is a closed
+set of two — there is no `hybrid`. Enforced by `_parse_frontmatter_execution_scope`. SSOT: `plans/PLAN_FORMAT.md` §
+"YAML Frontmatter Schema".
+
 CLAUDE.md HARD RULE "Agent-orchestrator backlog is plan-driven" (added 2026-05-28) is the workspace contract. SSOTs:
 [`../12-agent-workflow/orchestrator-multi-vm-topology.md`](../12-agent-workflow/orchestrator-multi-vm-topology.md) §
 "Backlog auto-generation per VM"; `server/regen_backlog_from_plan.py` + `tests/test_regen_backlog_from_plan.py` (29-test
@@ -333,9 +340,10 @@ unified-trading-system (one API fronts the UI; services isolated behind it). The
     abandoned, operator decision 2026-06-01):** because every orchestrator VM proxies to its own slots and therefore
     signs, the private key is distributed to ALL VMs via the restricted creds bucket
     (`ORCHESTRATOR_INTERNAL_PRIVATE_KEY_GCS=gs://central-element-323112-orchestrator-creds/orchestrator/internal-private.pem`)
-    + public key via `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=.../internal-public.pem`. NB: the raw `ORCHESTRATOR_INTERNAL_SECRET`
-    object is RETAINED (NOT deleted) — it is the pre-shared key for `verify_internal_secret()` → `POST /api/escalate`
-    (GHA→orchestrator dispatch); only the HS256 *JWT* accept/sign paths were retired.
+    - public key via `ORCHESTRATOR_INTERNAL_PUBLIC_KEY_GCS=.../internal-public.pem`. NB: the raw
+      `ORCHESTRATOR_INTERNAL_SECRET` object is RETAINED (NOT deleted) — it is the pre-shared key for
+      `verify_internal_secret()` → `POST /api/escalate` (GHA→orchestrator dispatch); only the HS256 _JWT_ accept/sign
+      paths were retired.
   - **Flow**: operator hits central with their JWT. The central validates against `ORCHESTRATOR_JWT_SECRET` at the
     perimeter, terminates that token, then mints a fresh short-lived (5 min, role=worker, machine=central-proxy) JWT
     signed with the ES256 private key and forwards THAT in the upstream `Authorization` header. Workers validate against
