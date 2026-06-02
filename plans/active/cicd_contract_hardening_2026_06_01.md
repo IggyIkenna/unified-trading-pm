@@ -89,6 +89,46 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       recent v2 runs (PM/instruments/strategy) complete without timeout/OOM. Per-repo hotspot reduction (execution ~120m
       tests, basedpyright) stays opportunistic — never by skipping tests/coverage (enforced by the QG-debt standard).
 
+## Fleet LDR re-audit 2026-06-02 (slot 1) — genuinely-red repos on current `live-defi-rollout`
+
+> **Correction to the "9 stale-closed-PR LDR reds" framing.** Slot 1 dispatched FRESH `workflow_dispatch` v2 runs on
+> current LDR HEAD for the suspected-stale repos. Result: **execution-service + market-data-processing-service = GREEN**
+> (those WERE stale), but **7 are genuinely RED on current LDR** — fresh-run-confirmed, not artifacts. Each is a real
+> per-repo QG debt + dispatchable. (The ruleset repos greeks/fund-admin/e2e-testing/uts-ui + features-service are
+> tracked above / in Phase 1; these 7 are NEW.) Dep-order promotion is blocked until each is green.
+
+- [ ] [TEST] P1. **unified-trading-library (L2) LDR v2 RED — pytest bucket-naming failure (run 26792007721).**
+      `AssertionError: assert 'instruments-…-test-project' == 'instruments-…shard-my-project'` (+ same for
+      `ml-models-…`): the test expects project-suffix `…-my-project` but CI resolves `…-test-project`. Either a test
+      hardcoding the project name vs an env-derived `GCP_PROJECT_ID`, or a real `bucket_naming` regression on LDR
+      (main+staging GREEN, so it is an LDR-only commit). **FOUNDATION — L2 blocks dep-order promotion downstream; green
+      this FIRST.** Diagnose via `bash scripts/quality-gates.sh`. repo: unified-trading-library.
+- [ ] [TEST] P1. **batch-live-reconciliation-service (L6) LDR v2 RED —
+      `❌ COVERAGE FLOOR VIOLATION: MIN_COVERAGE=0 < 70` (run 26792013931).** Same class as greeks: effective
+      `MIN_COVERAGE=0` in CI with no honored `.coverage-floor-exception.md` → floor-guard trips. Real fix: trace the 0,
+      write tests to a genuine ≥70 floor OR add a documented exception (NO floor-lowering). repo:
+      batch-live-reconciliation-service.
+- [ ] [TEST] P1. **deployment-api (L6) LDR v2 RED — `❌ COVERAGE FLOOR VIOLATION: MIN_COVERAGE=0 < 70` (run
+      26792015310).** Same MIN_COVERAGE=0 floor-guard class. Real fix per the QG-debt standard. repo: deployment-api.
+- [ ] [TEST] P1. **market-tick-data-service (L4) LDR v2 RED (run 26792011482) — coverage-floor-exception HONORED
+      (warning `MIN_COVERAGE=0`), fails at a LATER step.** main+staging GREEN → LDR-only regression. Targeted log-read
+      to pin the failing gate step (tests / typecheck / codex). repo: market-tick-data-service.
+- [ ] [TEST] P1. **trading-agent-service (L4) LDR v2 RED (run 26792012741) — coverage-exception honored, fails later (as
+      mtds).** main+staging GREEN. Pin the post-coverage failing step. repo: trading-agent-service.
+- [ ] [SCRIPT] P1. **deployment-ui (L7) LDR v2 RED — `error: No pyproject.toml found` (run 26792016429).** deployment-ui
+      is TS/Vite; its LDR still carries the PYTHON `quality-gates-v2.yml` caller, which `uv`-installs against a missing
+      pyproject. Its `main` was already migrated to the UI gate (`ui-quality-gates.yml` emitting
+      `Quality Gates (deployment-ui) / quality-gates`, PR #11). Fix: promote the main UI-gate caller onto LDR (replace
+      the python-v2 caller). `[UI]` + `pw:L2` applies. repo: deployment-ui.
+- [ ] [TEST] P1. **system-integration-tests (L8) LDR v2 RED — see SIT-suite todos (#288 partial: collection blocker
+      fixed `@e1e2ea4`; remaining symbol-drift + `deployment_test` re-green + run-to-completion).** repo:
+      system-integration-tests.
+
+> **Laptop-concurrency note (slot 1, 2026-06-02):** greening on one host is rate-limited — 5 concurrent full-QG agents
+> already starved basedpyright into a 124-timeout on an unrelated repo (alerting). Dispatch the next wave to the
+> orchestrator FLEET (these todos auto-derive into the backlog via `PlanRegenLoop`) and/or run local waves of ≤3-4. Do
+> the L2 UTL fix before fanning out L4+ (foundation-completion-gate).
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
