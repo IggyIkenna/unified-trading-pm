@@ -330,9 +330,16 @@ verified complete**.
       `codex/05-infrastructure/vm-log-archival.md` (cron authored but not applied). — unified-trading-pm@(this commit)
       (banner under the title: rolling log-archive + serial-capture schedulers TF-authored, not applied; snapshot +
       vm-logs stream are live). Source: fleet_audit_triad.
-- [ ] [DOC] P3. PM: B2 codex marker reconciliation — replace `zero_activity=True` / `ZERO_ACTIVITY_BAR` with
+- [x] ✅ [DOC] P3. PM: B2 codex marker reconciliation — replace `zero_activity=True` / `ZERO_ACTIVITY_BAR` with
       `staleness_seconds>0 + trade_count==0` in `honest-absence-downstream-handling.md` +
-      `live-pipeline-architecture.md` (no code consumers — pure doc drift). Source: fleet_audit_triad.
+      `live-pipeline-architecture.md` (no code consumers — pure doc drift). — unified-trading-pm@(this commit) (done
+      DELIBERATELY per B2's HARD-RULE note: ruled on the model split FIRST — cefi/tradfi/defi = dense forward-fill,
+      marker `staleness_seconds>0 + trade_count==0`; prediction Category-D = NaN-OHLC nullable variant. Added marker-
+      reconciliation banners to the §"Zero-activity-bar shape" case-D section (honest-absence) + the 4-category live-gap
+      table (live-pipeline), noting the `zero_activity=True` column was never built — carry-forward shipped via
+      `_finalize_session_grid`; legacy `ZERO_ACTIVITY_BAR` label retained for continuity. **Residual:** 3 sibling docs
+      still carry the legacy token (`00-SSOT-INDEX.md`, `batch-live-architecture.md`, `alerting-batch-live.md`) — minor
+      doc-drift follow-up outside this item's named 2-file scope.) Source: fleet_audit_triad.
 - [x] ✅ [DOC] P1. PM: write `codex/06-coding-standards/adapter-finalization-contract.md` + a per-adapter density
       section in `honest-absence-downstream-handling.md` (after the MDPS workstream lands). —
       unified-trading-pm@`5c7aedc23` (already landed by the MDPS leading-NaN workstream: full finalization contract doc

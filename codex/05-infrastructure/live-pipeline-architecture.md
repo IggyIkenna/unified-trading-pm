@@ -206,13 +206,20 @@ diverges live from batch (batch uses cascade) and produces silent OHLCV drift ac
 Mirrors CLAUDE.md "Four-category empty-output decision" with a WS-specific Cat (B') replacement for the batch
 upstream-bias category. Five emission decisions, every per-event tree resolves to one:
 
-| Category | Trigger                                                                   | Action                                                                                           |
-| -------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| **A**    | WS connected, ticks present                                               | FRESH emit, `emission_outcome=PUBLISHED_OK`, `data_freshness=FRESH`                              |
-| **D**    | WS connected, no ticks, catalog says alive AND venue calendar says open   | Zero-activity bar (O=H=L=C=prior_LTP, vol=0), `data_freshness=ZERO_ACTIVITY_BAR`, `PUBLISHED_OK` |
-| **A'**   | WS connected, no ticks, catalog says delisted/pre-listing OR venue closed | No emission; manifest `record_empty(reason=EXPECTED_*)` per writegate taxonomy                   |
-| **B'/C** | WS disconnected mid-window OR malformed ticks filtered                    | STALE emit (carry-forward LTP), `data_freshness=STALE`, `emission_outcome=PUBLISHED_DEGRADED`    |
-| **E**    | WS dead > `ws_dead_max_windows` (default 4) consecutive windows           | Stop emitting; alerting-service tier-1 fires CRITICAL                                            |
+| Category | Trigger                                                                   | Action                                                                                                                                                          |
+| -------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **A**    | WS connected, ticks present                                               | FRESH emit, `emission_outcome=PUBLISHED_OK`, `data_freshness=FRESH`                                                                                             |
+| **D**    | WS connected, no ticks, catalog says alive AND venue calendar says open   | Carried bar (O=H=L=C=prior_LTP, vol=0); shipped marker `staleness_seconds>0 + trade_count==0` (legacy label `data_freshness=ZERO_ACTIVITY_BAR`), `PUBLISHED_OK` |
+| **A'**   | WS connected, no ticks, catalog says delisted/pre-listing OR venue closed | No emission; manifest `record_empty(reason=EXPECTED_*)` per writegate taxonomy                                                                                  |
+| **B'/C** | WS disconnected mid-window OR malformed ticks filtered                    | STALE emit (carry-forward LTP), `data_freshness=STALE`, `emission_outcome=PUBLISHED_DEGRADED`                                                                   |
+| **E**    | WS dead > `ws_dead_max_windows` (default 4) consecutive windows           | Stop emitting; alerting-service tier-1 fires CRITICAL                                                                                                           |
+
+> **Marker reconciliation (B2, 2026-06-02):** the category-D carried bar's **as-shipped** identifying signal is
+> `staleness_seconds > 0` AND `trade_count == 0` (dense forward-fill via MDPS `_finalize_session_grid`, 2026-06-02), NOT
+> a standalone `zero_activity` flag (no code consumers). The `data_freshness=ZERO_ACTIVITY_BAR` label is the original
+> design name retained for continuity. Prediction Category-D instead emits NaN-OHLC (nullable-OHLCV) bars. SSOT:
+> `codex/02-data/honest-absence-downstream-handling.md` § "Zero-activity-bar shape" banner +
+> `codex/06-coding-standards/adapter-finalization-contract.md`.
 
 The catalog-aware `InstrumentCatalogGate` Protocol distinguishes A / D / A'. The aggregator NEVER emits a
 `CandleComputedEvent` for Cat (A') — manifest's `record_empty` carries the absence signal; downstream consumers read the

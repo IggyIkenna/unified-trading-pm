@@ -989,10 +989,23 @@ on `capture_status`:
 
 ## Zero-activity-bar shape (case-D design — implementation deferred post-cutover)
 
-> **Status**: audit complete (2026-05-11, `wave3x_residual_ssots_2026_05_08.md` Track D); **implementation deferred
-> post-2026-05-23 cutover** — requires a NEW UTL `zero_activity_bars` primitive + `instrument_catalog` threaded at
-> adapter construction (writegate Phase 3.D.5 Wave 2/3, "pending"). This section is the design stub so consumers know
-> what shape to expect when case-D ships. Reference audit: `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`.
+> **⚠️ MARKER RECONCILIATION (B2, 2026-06-02 — `fleet_audit_triad_deferred_followups_2026_06_01.md`).** The
+> `zero_activity=True` boolean column described throughout this section was the original case-D _design_ marker; it has
+> **no code consumers** and was **never implemented as a column**. The carry-forward / no-trade-bar behaviour shipped
+> instead via `BaseCandleAdapter._finalize_session_grid(...)` (MDPS leading-NaN workstream, 2026-06-02), and the
+> **as-shipped marker is `staleness_seconds > 0` AND `trade_count == 0`** (the forward-filled bar carries the last
+> traded price with a non-zero `staleness_seconds`), NOT a `zero_activity` flag. **Model split (operator-ruled):**
+> tradfi / cefi / defi session-grid candles are **dense forward-filled, never NaN** → identify a carried bar by
+> `staleness_seconds>0 + trade_count==0`; **prediction** Category-D uses the **nullable-OHLCV** variant and emits
+> NaN-OHLC bars (a distinct marker — nullable OHLC is allowed only for `prediction`/`sports`). Wherever a row below says
+> `zero_activity=True`, read it as "the shipped `staleness_seconds>0 + trade_count==0` carried bar" (cefi/tradfi/defi)
+> or the NaN-OHLC bar (prediction). Canonical contract: `codex/06-coding-standards/adapter-finalization-contract.md` + §
+> "Per-adapter density contract" below.
+
+> **Status**: audit complete (2026-05-11, `wave3x_residual_ssots_2026_05_08.md` Track D); the **dense forward-fill
+> carry-forward shipped 2026-06-02** via `_finalize_session_grid` (see banner above + § "Per-adapter density contract").
+> The originally-scoped separate `zero_activity_bars` UTL primitive was **not** built — the finalizer subsumes it.
+> Reference audit: `plans/archive/issues/wave3x_track_d_findings_2026_05_11.md`.
 
 Case-D fires when: source returned 0 rows AND `instrument_catalog` says the instrument is alive on that date AND the
 date falls within the venue's published trading hours. The adapter writes **carry-forward bars** (not NaN-fill) and
@@ -1429,20 +1442,20 @@ active," which is the correct operational state.
 
 **Within-series density is a separate axis from shard-level honest absence.** Shard-level honest absence answers "did
 this (venue × data_type × day) shard get captured at all?" (`captured` / `empty_confirmed` / `attempted_failed` /
-`expected_unattempted`). The **density contract** governs what a *captured* shard's per-bar series looks like: it must
+`expected_unattempted`). The **density contract** governs what a _captured_ shard's per-bar series looks like: it must
 be dense, LOCF-filled, and free of NaN in the required columns.
 
 ### The rule
 
 Every MDPS candle adapter routes its full-day grid through `BaseCandleAdapter._finalize_session_grid(...)` before
-returning. For a *captured* shard:
+returning. For a _captured_ shard:
 
 - **No leading NaN.** Pre-first-observation bins are either **dropped** (cold-start — no prior observation to carry) or
   **carried from the prior day's last-known value** (`seed_price`/`seed_ts`/`seed_state`, PIT-safe — yesterday's close
   is known at 00:00, so batch==live with zero look-ahead).
 - **No NaN OHLC.** State-only streams (derivative ticker, options/futures chains, liquidity/lending snapshots,
-  book/quote) drive `o=h=l=c` from their state column (`state_col=mark_price`/`mid_price`/…) or from a populated
-  `close` price proxy. OHLCV is non-nullable for every asset group except `prediction`/`sports`.
+  book/quote) drive `o=h=l=c` from their state column (`state_col=mark_price`/`mid_price`/…) or from a populated `close`
+  price proxy. OHLCV is non-nullable for every asset group except `prediction`/`sports`.
 - **No NaN volume.** Trade-derived flow columns are zero-filled on snapshot bars (`flow_cols`); adapters that repurpose
   `volume` to carry a **real** value (liquidity TVL, market_state total-supply) stay **close-driven** so the value is
   preserved, never zeroed.
@@ -1451,16 +1464,16 @@ returning. For a *captured* shard:
 
 ### Honest-absence interaction
 
-A *captured* shard whose price driver is entirely absent (e.g. a derivative tick carrying funding but no mark price)
+A _captured_ shard whose price driver is entirely absent (e.g. a derivative tick carrying funding but no mark price)
 collapses to the **zero-row honest-absence output** rather than fabricating NaN-OHLC bars — i.e. the density contract
 **defers to honest absence** when there is no price to anchor a candle. This is the per-bar expression of the same
 "never emit silent placeholders" principle: no price → no candle → `record_empty_for_shard`, not a NaN row.
 
 ### Downstream consumer policy
 
-- Consumers MAY trust that a *captured* candle parquet has no NaN in `open`/`high`/`low`/`close`/`volume` (CeFi / DeFi /
-  TradFi). A NaN there is an **adapter density bug**, not honest absence — surface it (the
-  `fast_candle_aggregation.py` input-NaN WARN is the in-pipeline guard) rather than masking it.
+- Consumers MAY trust that a _captured_ candle parquet has no NaN in `open`/`high`/`low`/`close`/`volume` (CeFi / DeFi /
+  TradFi). A NaN there is an **adapter density bug**, not honest absence — surface it (the `fast_candle_aggregation.py`
+  input-NaN WARN is the in-pipeline guard) rather than masking it.
 - `staleness_seconds` is the signal for down-weighting/excluding stale carried bars — consumers gate on it instead of
   re-deriving "is this bar real?" from NaN patterns.
 - Reprocessing existing parquets to densify them rides the deferred GCS backfill pass — never a standalone whole-corpus
