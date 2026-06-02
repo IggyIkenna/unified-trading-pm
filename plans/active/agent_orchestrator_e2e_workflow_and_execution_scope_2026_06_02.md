@@ -300,10 +300,12 @@ operator context (governance / planning / master-plan / model-tier rules).
 ## Related open work (NOT absorbed here)
 
 The archived `orchestrator_autonomy_audit_remediation_2026_06_01` left **F1/F2/FM3** open (running VM behind LDR HEAD;
-vm-ml SSM-degraded/now-stopped; foreign-repo playwright-report still tracked). These are tracked in
-[issues/orchestrator_autonomy_residual_findings_2026_06_02.md](issues/orchestrator_autonomy_residual_findings_2026_06_02.md)
-— owned there, referenced here so the e2e picture is complete. Fleet is currently consolidated to **2 running VMs**
-(vm-orchestrator + api-host); 9 epic VMs stopped.
+vm-ml SSM-degraded/now-stopped; foreign-repo playwright-report still tracked). **All three RESOLVED + the residual issue
+doc ARCHIVED 2026-06-02** (F1 = `data/state/` gitignore fix unwedged ao-self-pull; F2 = vm-ml SSM recovered on
+stop/start; FM3 = deployment-ui playwright-report `git rm --cached` + gitignored @`8f1fe86`; plus the epic-VM disk-bloat
+guard + capped-tmpfs `/tmp`):
+[archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md](../archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md).
+Fleet is currently consolidated to **2 running VMs** (vm-orchestrator + api-host); 9 epic VMs stopped.
 
 ## Full-execution criterion (PLAN_FORMAT §8)
 
