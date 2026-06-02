@@ -67,14 +67,16 @@ verified complete**.
       zero-filled; `seed_state` carries secondary-column prior-day values into leading bins; backward-compatible when
       `state_col=None` | tests/unit/test_state_adapter_density.py (5 cases) | lint+typecheck+codex green (only
       pre-existing foreign `test_dependency_checker_sports_prediction` bucket-tier drift red — see finding below).
-- [x] ✅ [CODE] P0. MDPS: add prior-day carry-seed logic to `_finalize_session_grid` (Decision 1 — seed leading bins from
-      last-known price/ts instead of dropping). Source: mdps_state_adapter_leading_nan. — market-data-processing-service@5a5e989 |
-      seed_price/seed_ts kwargs + carry-from-bin-0 + cold-start-drop + CLOSED-drop preserved | tests/unit/test_finalize_session_grid_seed.py (6 cases) | QG exit 0. (Seed *threading* through batch+live call path tracked in issue-doc Decision-1 todo.)
+- [x] ✅ [CODE] P0. MDPS: add prior-day carry-seed logic to `_finalize_session_grid` (Decision 1 — seed leading bins
+      from last-known price/ts instead of dropping). Source: mdps_state_adapter_leading_nan. —
+      market-data-processing-service@5a5e989 | seed_price/seed_ts kwargs + carry-from-bin-0 + cold-start-drop +
+      CLOSED-drop preserved | tests/unit/test_finalize_session_grid_seed.py (6 cases) | QG exit 0. (Seed _threading_
+      through batch+live call path tracked in issue-doc Decision-1 todo.)
 - [x] ✅ [CODE] P0. MDPS: wire the 7 state adapters to call `_finalize_session_grid(output, state_col=…)` —
       cefi/derivative, cefi/futures_chain, cefi/options_chain, defi/liquidity, defi/market_state, cefi/book_snapshot,
       tradfi/tbbo. Source: mdps_state_adapter_leading_nan. — market-data-processing-service@23d7add |
-      derivative/options/book/tbbo → `state_col=mark_price`/`mid_price` (close structurally NaN; OHLC driven from driver,
-      volume zero-filled; book/tbbo pre-LOCF the quote mid); futures → `state_col=close` (=last_price);
+      derivative/options/book/tbbo → `state_col=mark_price`/`mid_price` (close structurally NaN; OHLC driven from
+      driver, volume zero-filled; book/tbbo pre-LOCF the quote mid); futures → `state_col=close` (=last_price);
       liquidity/market_state → close-driven finalize (close already = mid/liquidity, volume carries real TVL/supply so
       NO state_col — its flow zero-fill would null TVL). No-price-driver input → honest absence. basedpyright clean.
 - [x] ✅ [TEST] P0. MDPS: add leading-gap + prior-day-carry + cold-start-drop + density tests
@@ -95,8 +97,8 @@ verified complete**.
       pre-existing: fails at HEAD with my finalizer change stashed. **Owner = bucket-name-SSOT / env-tier workstream**
       (`bucket_name_ssot_canonicalisation_2026_05_10` / `defi_manifest_canonicalisation_2026_06_01`). Decision needed:
       is `prd` the correct env tier for a test run, or should the test export an env override? Do NOT blind-update the
-      expected strings — wrong tier = wrong bucket = data-correctness bug. This currently blocks `quality-gates.sh`
-      exit 0 for the whole MDPS repo. Source: mdps_state_adapter_leading_nan (incidental finding).
+      expected strings — wrong tier = wrong bucket = data-correctness bug. This currently blocks `quality-gates.sh` exit
+      0 for the whole MDPS repo. Source: mdps_state_adapter_leading_nan (incidental finding).
 
 ## batch-live-reconciliation-service
 
@@ -154,12 +156,15 @@ verified complete**.
 - [x] ✅ [CODE] P2. UAC D10 EULER_V2 — **BUILT + live** (Goldsky `eulerVaults`+`vaultStatuses`, ETH+ARB; full set, live
       500/batch 650). Added `_SUBGRAPH_ENDPOINT_OVERRIDES` Goldsky routing. — unified-api-contracts@`cd65ff76` +
       market-tick-data-service@`d98f5726`. Source: defi_code_codex_drift D10.
-- [ ] [CODE] P2. UAC D10 SOLAYER — **BLOCKED-DATA-LAYOUT** (not credentials; Helius key works). sSOL is a custom Solayer
-      LRT, NOT a standard SPL stake-pool — mint owner is the plain Token program, the vault account holding the sSOL→SOL
-      exchange rate / APY has a non-standard byte layout the existing Solana LST handler can't decode (offsets 258/266
-      don't apply); `app.solayer.org/api`=500, `metadata.solayer.org` Cloudflare-walled, Sanctum returns
-      UNSUPPORTED_LST. Need Solayer's vault IDL / verified account offsets to compute `lst_rates` (supply reader alone
-      is insufficient). Register live once the rate field is field-verified. Source: defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 SOLAYER — **KILLED / fully removed** (operator decision 2026-06-02: "rather have no
+      implementation than a partial one"). sSOL is a custom Solayer LRT (not a standard SPL stake-pool); its
+      exchange-rate/APY vault account layout could not be field-verified (no public IDL; `app.solayer.org/api`=500;
+      Sanctum UNSUPPORTED_LST) — a guessed offset would have recreated the D10 incoherence. Wiped from UAC
+      (`_ProtocolCapability` + `_STATIC_VENUE_CHAINS` + `_defi_chain_data` + `external/solayer/` dir + facade + VCR +
+      cassette-allowlist + defillama mocks), instruments-service (`adapters/defi/solayer.py` + tests + factory), and
+      strategy-service (reward-attribution docstring) + 6 codex docs. — unified-api-contracts@`4abec5c6` +
+      instruments-service@`84b2a2d8` + strategy-service@`1be0632a` + PM codex updates. Not a credentials block. Source:
+      defi_code_codex_drift D10.
 
 > **E2E HOOKUP STATUS 2026-06-02 (slot 7 — operator: hook UAC/IS/MTDS/MDPS/features/strategy/execution + data-status
 > UI/API).** Traced the 4 built venues through the whole pipeline. **AUTO-WIRED from UAC (no work):**
@@ -181,13 +186,16 @@ verified complete**.
       venus/benqi/radiant/euler_v2 as carry_staked_basis lending-leg options (+ specs in
       `_build_carry_recursive_staked`) so they're usable as a lending leg, not just data-available. Repo:
       strategy-service. Source: e2e trace 2026-06-02.
-- [x] ✅ [CODE] P2. UAC D10 PICASSO — **EXCLUDED** (operator decision 2026-06-02: where missing, exclude). Removed
-      `_ProtocolCapability` + `SOLANA_PROTOCOL_CHAINS` + `_defi_chain_data` entries. — unified-api-contracts@`fa9238fb`.
-      Source: defi_code_codex_drift D10.
-- [x] ✅ [CODE] P2. UAC D10 CAMBRIAN — **EXCLUDED** (operator decision 2026-06-02). Removed same 3 registry entries (was
-      a dev SDK, not a DeFi venue). — unified-api-contracts@`fa9238fb`. Source: defi_code_codex_drift D10.
-- [ ] [CHORE] P3. UAC: delete orphaned `external/picasso/` + `external/cambrian/` Pydantic schema dirs (now unused after
-      the registry exclusion) + their facade exports. Follow-up to fa9238fb. Source: defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 PICASSO — **EXCLUDED + fully wiped** (operator 2026-06-02). Registry entries removed
+      @`fa9238fb`; then orphan `external/picasso/` dir + facade + instruments-service `adapters/defi/picasso.py` + test
+      removed in the Solayer-kill pass — unified-api-contracts@`4abec5c6` + instruments-service@`84b2a2d8`. Source:
+      defi_code_codex_drift D10.
+- [x] ✅ [CODE] P2. UAC D10 CAMBRIAN — **EXCLUDED + fully wiped** (operator 2026-06-02). Registry @`fa9238fb`; orphan
+      `external/cambrian/` + IS `adapters/defi/cambrian.py` + test removed — unified-api-contracts@`4abec5c6` +
+      instruments-service@`84b2a2d8`. Source: defi_code_codex_drift D10.
+- [x] ✅ [CHORE] P3. UAC: orphaned `external/picasso/` + `external/cambrian/` Pydantic schema dirs + facade exports
+      deleted (folded into the Solayer-kill pass). — unified-api-contracts@`4abec5c6`. Source: defi_code_codex_drift
+      D10.
 
 > **GREEN-VENUE ADAPTER-BUILD spec (operator 2026-06-02: include greens + build adapters, BATCH=LIVE).** Each green
 > venue's `_ProtocolCapability` must declare the **canonical post-migration data types** (per the manifest-canon SSOT
