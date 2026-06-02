@@ -132,8 +132,13 @@ the storage bloat.
       characterized:** the churn writer is the daily fixtures re-poll `instruments_service/triggers/sports_fixtures_daily_repoll.py`
       → `_write_fixtures_per_league` (per-league GCS sink), which overwrites each day's fixtures parquet on every poll.
       This is *expected* (fixtures/odds update daily) — not a writer bug; the bloat was soft-delete *retention* of those
-      overwrites, now fixed at the bucket level (see (2)). No writer code change needed (a skip-if-unchanged guard would
-      only trim write-ops, not storage). **(2) ✅ DONE 2026-06-02 (slot 1) — instruments-store bucket settings codified +
+      overwrites, fixed at the bucket level (see (2)). **Write-skip optimization SHIPPED 2026-06-02 (slot 1, operator
+      requested):** added `_per_league_fixtures_data_unchanged` (reads on-disk parquet, compares DATA excluding the
+      re-stamped `available_at`, round-trip-normalised dtypes); `_write_fixtures_per_league` skips the gated re-write when
+      unchanged — opt-in (`bucket=` + `skip_if_unchanged=True`), only the daily re-poll opts in (batch/recovery paths
+      untouched). Safety bias: any doubt → write (never skips a real change); skipping also preserves the earliest/correct
+      `available_at`. +7 unit tests. instruments-service@`016cc248`. (QG: 3048 pass incl. the 7 new; 2 PRE-EXISTING foreign
+      failures unrelated — venus-lending + CanonicalLeagueIdCF7 — confirmed persist with my edits stashed.) **(2) ✅ DONE 2026-06-02 (slot 1) — instruments-store bucket settings codified +
       applied:** `terraform/gcp/main.tf` now sets `soft_delete_policy{retention_duration_seconds=0}` + a noncurrent
       Delete lifecycle (`days_since_noncurrent_time=30, num_newer_versions=3`) on all 5 instruments-store buckets
       (cefi/tradfi/defi/sports/prediction); `terraform import`'d sports+prediction (were live but untracked in
