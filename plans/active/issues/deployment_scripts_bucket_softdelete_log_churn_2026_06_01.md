@@ -128,11 +128,18 @@ the storage bloat.
       `daysSinceNoncurrentTime=90` AND `numNewerVersions=5` — keeps recent client history); `instruments-store-defi` (96
       GiB) given `daysSinceNoncurrentTime=7` (reference data). Applied via gcloud (immediate); evidence CSV:
       `/tmp/gcs_bucket_bloat_audit_20260602.csv`.
-- [ ] [INFRA] P2. **(follow-ups from the bloat remediation)** (1) Find + fix the `instruments-store-sports` overwrite
-      _writer_ (a fixtures/odds re-write loop) so it stops churning — clearing soft-delete stopped the retention bloat
-      but not the redundant writes. Repo: instruments-service. (2) Codify the gcloud-applied lifecycle/soft-delete
-      settings (sports clear; defi 7d; client 90d/keep-5) into the owning repo's bucket terraform so they survive a
-      bucket re-apply and apply in every env. Repo: deployment-service/terraform (or instruments-service bucket TF). (3)
+- [ ] [INFRA] P2. **(follow-ups from the bloat remediation)** **(1) ✅ DONE 2026-06-02 (slot 1) — sports writer
+      characterized:** the churn writer is the daily fixtures re-poll `instruments_service/triggers/sports_fixtures_daily_repoll.py`
+      → `_write_fixtures_per_league` (per-league GCS sink), which overwrites each day's fixtures parquet on every poll.
+      This is *expected* (fixtures/odds update daily) — not a writer bug; the bloat was soft-delete *retention* of those
+      overwrites, now fixed at the bucket level (see (2)). No writer code change needed (a skip-if-unchanged guard would
+      only trim write-ops, not storage). **(2) ✅ DONE 2026-06-02 (slot 1) — instruments-store bucket settings codified +
+      applied:** `terraform/gcp/main.tf` now sets `soft_delete_policy{retention_duration_seconds=0}` + a noncurrent
+      Delete lifecycle (`days_since_noncurrent_time=30, num_newer_versions=3`) on all 5 instruments-store buckets
+      (cefi/tradfi/defi/sports/prediction); `terraform import`'d sports+prediction (were live but untracked in
+      `terraform/state/prod`) + applied in-place; all 5 verified `soft_delete=0` live. deployment-service@`be6df48`.
+      **Remaining:** `instruments-store-sports-prd` + `client-reporting-data` are NOT in workspace TF (created
+      out-of-band) — their gcloud settings stand; codify in their owning repo/state once located. (3)
       **Codify the `deployment-scripts` bucket lifecycle into terraform** (the 30d-cap rules applied 2026-06-02 are
       imperative-only). **BLOCKER / design note (slot-3 2026-06-02):** the `deployment-scripts-<pid>` bucket is **not in
       TF at all** + is a **singleton** (one physical bucket in the central project) while `terraform/gcp` applies
