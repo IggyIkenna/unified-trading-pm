@@ -101,11 +101,20 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
   (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
 - **Quality gates BEFORE quickmerge — non-negotiable order (HARD RULE)**: never invoke `quickmerge` until
-  `bash scripts/quality-gates.sh` has exited 0 on the current HEAD. Pass 1 = `bash scripts/quality-gates.sh` (full gate
-  incl. tests; writes the `.qg_last_passed_sha` sentinel). Pass 2 = `quickmerge --agent` (verifies sentinel == HEAD,
-  skips redundant QG, opens the auto-merging `staging` PR) — it hard-refuses if the sentinel is missing/stale, so
-  skipping Pass 1 means the change never ran tests. SSOT: `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model
-  (the unit of work)".
+  `bash scripts/quality-gates.sh` has exited 0 on the current HEAD (the sentinel `.qg_last_passed_sha` is written on any
+  COMPLETE green run — fix-mode OR `--no-fix`; it is NOT gated on fix-mode). **Pass-1 MODE is a deliberate choice —
+  AUTO-FIX (`ruff format`/`--fix`) rewrites the WHOLE worktree, not just your files (HARD RULE, two cases):**
+  1. **Committing only your OWN named files** (the normal `quickmerge --agent --files '<paths>'` ship): format your
+     files first (`ruff format <paths>`), then run **`bash scripts/quality-gates.sh --no-fix`** — full gate, writes the
+     sentinel, **NO tree reformat**. Ship mode here would reformat unrelated/foreign files → re-dirties the slot, breaks
+     FF-sync, risks leaking foreign formatting into your commit.
+  2. **You knowingly intend a tree-wide reformat and will own everything AUTO-FIX touches** (a deliberate format pass /
+     solo worktree): ship mode `bash scripts/quality-gates.sh` (autofix ON) is correct — that is its purpose.
+
+  Pass 2 = `quickmerge --agent` (verifies sentinel == HEAD, skips redundant QG, opens the auto-merging `staging` PR) —
+  it hard-refuses if the sentinel is missing/stale, so skipping Pass 1 means the change never ran tests. SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model (the unit of work)".
+
 - `--dep-branch` is human-only.
 - **`git pull` rejected with `(would clobber existing tag)`** (stale local release tag vs semver-agent's canonical
   remote tag, e.g. `v1.0.0`/`v1.2.0`): fix with `git fetch origin --tags --force` (local-only; remote is canonical for
@@ -291,13 +300,13 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 code / quality-gates / quickmerge happen there. That isolation has **largely solved** the old shared-tree collision
 class: you rarely share a tree with another live agent. The file-ownership discipline + the rare edge-case recoveries
 still apply — full step-by-step recipes live in `codex/05-infrastructure/per-tab-worktrees.md` (§ "Step 7 —
-troubleshooting", § "Isolated-worktree promotion under shared-worktree ref races", § "Foot-gun mitigations vs. shared-tree
-model"). The invariants that must stay in-head:
+troubleshooting", § "Isolated-worktree promotion under shared-worktree ref races", § "Foot-gun mitigations vs.
+shared-tree model"). The invariants that must stay in-head:
 
 - **Don't edit unfamiliar files.** Untracked / mid-edit-dirty / recently-pushed = someone else's in-flight work.
   **Untracked file in a dep repo = NOT YOURS.** QG fails on a file you don't own → tell the user.
-- **Never** `git checkout origin/<branch> -- .` (dumps remote work) or `git checkout -- <file>` / `git checkout HEAD --
-<file>` on a dirty file you don't own — UNRECOVERABLE.
+- **Never** `git checkout origin/<branch> -- .` (dumps remote work) or `git checkout -- <file>` /
+  `git checkout HEAD -- <file>` on a dirty file you don't own — UNRECOVERABLE.
 - **Verify your work against the stable remote ref, never `FETCH_HEAD`** (it lies under a concurrent session):
   `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>`.
 - **Autostash conflict on rebase** (`Applying autostash resulted in conflicts`) → `git rebase --abort` (state safe,
@@ -336,9 +345,11 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   explicitly requested or they're specs (architecture/API/schema). Finish a task → respond with text, not a recap file.
 - **Prettier before commit** on `.md`/`.json`/`.yaml`/`.ts`/`.tsx`/`.css`: `npx prettier --write <file>`.
 - **Delete deprecated code.** No parallel old+new paths; no backward-compat shims / re-export stubs / `_old.py` /
-  `# deprecated` (only exception: `__init__.py` public-API re-exports). Find consumers with `rg`, update all, delete old.
+  `# deprecated` (only exception: `__init__.py` public-API re-exports). Find consumers with `rg`, update all, delete
+  old.
 - **Never revert local changes** — no `git reset --hard`/`git clean -fd`/`git restore`/`git checkout` that discards
-  uncommitted work; `git stash push -u -m` before a branch switch (on feature branches, local dep changes ARE the feature).
+  uncommitted work; `git stash push -u -m` before a branch switch (on feature branches, local dep changes ARE the
+  feature).
 - **Runtime verification** — never claim "done" without running the code, waiting 8-10s, reading the terminal, grepping
   for errors. "Compiles" ≠ "works".
 - **Plans live only under `unified-trading-pm/`** (`plans/active/` working · `plans/ai/` ephemeral · `plans/epics/` ·
@@ -350,24 +361,26 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
 - **Context7 for external libs** — append "use context7" for React/Next/Tailwind/library/API questions.
 - **Parallel agents** max 10 (different repos always safe; same file never). **Sub-agents** are ~10× cheaper + preserve
   context — use for multi-repo / 3+ steps / >100K-token reads; they return ONLY final results (≤400 tokens). (They start
-  fresh + don't inherit rules — see § "Sub-Agents & Autonomous Agents" for the mandatory `SUB_AGENT_MANDATORY_RULES.md` paste.)
+  fresh + don't inherit rules — see § "Sub-Agents & Autonomous Agents" for the mandatory `SUB_AGENT_MANDATORY_RULES.md`
+  paste.)
 - **Rule-amnesia stop** — halt the session if an agent uses `os.getenv()` / `pip install` / direct `git push` /
   `setup_cloud_logging` / suggests skipping tests.
 
 ### Python service/library specifics
 
-- **No pickle** (joblib/JSON/Parquet instead); no bare `except:`; no creds in repo. **`setup.sh`** mandatory + idempotent
-  per repo. **File limits**: 900 lines max (warn 700) / function 200 / method 50 / class 900 / complexity 10 / imports
-  30 / params 5 / coverage ≥70%.
+- **No pickle** (joblib/JSON/Parquet instead); no bare `except:`; no creds in repo. **`setup.sh`** mandatory +
+  idempotent per repo. **File limits**: 900 lines max (warn 700) / function 200 / method 50 / class 900 / complexity 10
+  / imports 30 / params 5 / coverage ≥70%.
 - **engine/adapters/cli**: `engine/` has ZERO imports from `adapters/`; adapters <100 lines. **Singleton adapter**
   (`_ADAPTER_CACHE`, one per venue). **Concurrency**: I/O-bound MAX_WORKERS=16, CPU-bound 1-3; RAM 85%→reduce 50%,
   90%→emergency shutdown. **aiohttp** not `requests` in async code.
 - **ConfigStore** from `unified_trading_services` for hot-reload runtime config. **IBKR** only via `ibkr-gateway-infra`
   (mock at the `ib_insync` object level — no HTTP VCR).
-- **UTC datetimes always** — `datetime.now(timezone.utc)`; never `datetime.now()` / `datetime.utcnow()` / `datetime.today()`.
-- **Cloud-agnostic I/O** — all storage/secrets via `get_storage_client()` / `get_secret_client()` (unified-cloud-interface);
-  never `from google.cloud import *` or `import boto3` directly. Project-id env = `GCP_PROJECT_ID` (never
-  `GOOGLE_CLOUD_PROJECT` / `GCP_PROJECT`); API keys from Secret Manager, never `os.environ`.
+- **UTC datetimes always** — `datetime.now(timezone.utc)`; never `datetime.now()` / `datetime.utcnow()` /
+  `datetime.today()`.
+- **Cloud-agnostic I/O** — all storage/secrets via `get_storage_client()` / `get_secret_client()`
+  (unified-cloud-interface); never `from google.cloud import *` or `import boto3` directly. Project-id env =
+  `GCP_PROJECT_ID` (never `GOOGLE_CLOUD_PROJECT` / `GCP_PROJECT`); API keys from Secret Manager, never `os.environ`.
 - **Event metadata** (`setup_events`/`log_event`, 11 lifecycle events) — `correlation_id` on coordination events,
   `duration_ms` on COMPLETED, `stack_trace` on FAILED, `client_order_id` on execution events.
 - **Dep tiers** — T0 (no unified deps) → T1 (T0 only) → T2 (T0+T1); no circular imports. **CI test-in-image** — quality
@@ -378,8 +391,8 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
 - **No Python tools in UI repos** — tsc/ESLint/Vitest/Playwright, never uv/basedpyright/pytest/ruff. **TS strict**:
   `tsc --noEmit`, no `any`, no `@ts-ignore`, zero ESLint warnings.
 - **Vitest `pool: "forks"`** (not threads — prevents zombie node procs); `CI=true npm test -- --run`. **Build smoke**:
-  `NEXT_PUBLIC_MOCK_API=true pnpm build`. **UI is its own repo** — React/TS never inside a Python service repo. (Composes
-  with the playwright gate above.)
+  `NEXT_PUBLIC_MOCK_API=true pnpm build`. **UI is its own repo** — React/TS never inside a Python service repo.
+  (Composes with the playwright gate above.)
 
 ### PM repo (`unified-trading-pm`, Level 0)
 

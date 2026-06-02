@@ -66,6 +66,23 @@ Pass 2 — Quickmerge (--agent fast-path)
   • --to-staging routes to staging instead of main (for breaking changes)
 ```
 
+**Pass 1 fix-mode — choose by WHAT you will commit (HARD RULE; AUTO-FIX rewrites the WHOLE worktree, not just your
+files).** The sentinel is written on any COMPLETE green run — fix-mode OR `--no-fix` (the write is gated on
+`RUN_TESTS && RUN_LINT && !QUICK && !ACT && !SKIP_CODEX`, NOT on fix-mode), so both modes satisfy Pass 1:
+
+1. **Committing only your OWN named files** (the normal `quickmerge --agent --files '<paths>'` ship):
+   `ruff format <your-paths>` first, then run **`bash scripts/quality-gates.sh --no-fix`**. Full gate, writes the
+   sentinel, **does NOT reformat the tree**. Running ship mode here makes AUTO-FIX (`ruff format` + `ruff check --fix`)
+   rewrite unrelated / foreign files in the worktree → re-dirties the slot (breaks the FF-sync the per-tab-worktree
+   model depends on) and risks vacuuming foreign formatting into your commit. (Incident 2026-05-15: a ship-mode run for
+   a _diagnostic_ reformatted 350 unrelated files; 2026-06-02: a ship-mode Pass-1 over 3 files re-dirtied 14 unrelated
+   files.)
+2. **You knowingly intend a tree-wide reformat and will own everything AUTO-FIX touches** (a deliberate format pass, or
+   a solo worktree where re-dirtying is fine): plain **`bash scripts/quality-gates.sh`** (autofix ON) is correct — that
+   is its purpose.
+
+Either way the run must be FULL (no `--skip-*`/`--quick`) or no sentinel is written and quickmerge refuses.
+
 **Why the sentinel?** Eliminates the staleness gap where an agent calls quickmerge after incremental edits without
 re-running Pass 1. The SHA check is the enforcement mechanism — no partial run can fake a full pass. Pass 2 no longer
 re-runs lint/typecheck/codex: the sentinel guarantees they passed.
