@@ -516,11 +516,19 @@ verify + the gated delete.
       `instrument_id=0x…`), so for each, load lifecycle bounds (fixed reader above) for its date and if
       `start_date ≤ day < end_date_iso` (live + in-window) → `record_failed` (attempted_failed); else preserve typed
       empty. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [DATA] P1. **instruments-service: populate MARKET_LIFECYCLE SSOT for prediction** (slot-5 discovery 2026-06-03;
-      DIAGNOSED slot-5 2026-06-03 — the write path EXISTS, the 0-objects cause is real-data/operational, VM-verify). The
-      canonical `market_lifecycle/by_canonical_group/group=*/day=*/market_lifecycle.parquet` (market_id →
-      created/settlement) is unpopulated (0 objects); the MTDS reader bridges via `instrument_availability` for now
-      (item above). **DIAGNOSIS (not a missing write path — grep-then-read):** the writer is wired —
+- [x] ✅ [CODE] P1. **MARKET_LIFECYCLE SSOT writer VERIFIED-CORRECT + tested (instruments-service@e3360f05, slot-6
+      2026-06-03); residual = a BACKFILL, not a code gap.** The writer already exists + is correct:
+      `orchestrator._write_market_lifecycle` (called from `save_instrument_data_to_gcs`) emits
+      `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet` with
+      `market_id`/`market_created_at`/`settlement_time` — the exact path+columns the MTDS reader
+      `_load_market_lifecycle_for_date` expects (round-trip verified). +8 contract tests pinning it. The 0-GCS-objects
+      is because **IS hasn't been re-run on prediction since the code landed** → a backfill (operator/infra: re-run IS
+      `--asset-group prediction` for the range), NOT a code fix. Until backfilled, the MTDS reader uses the
+      `instrument_availability` bridge (slot-5 fix mtds@62b7ff74). ORIGINAL: (slot-5 discovery 2026-06-03; DIAGNOSED
+      slot-5 2026-06-03 — the write path EXISTS, the 0-objects cause is real-data/operational, VM-verify). The canonical
+      `market_lifecycle/by_canonical_group/group=*/day=*/market_lifecycle.parquet` (market_id → created/settlement) is
+      unpopulated (0 objects); the MTDS reader bridges via `instrument_availability` for now (item above). **DIAGNOSIS
+      (not a missing write path — grep-then-read):** the writer is wired —
       `orchestrator.py:2418 _write_market_lifecycle(...)` is called per-canonical-group inside the prediction branch;
       `_build_market_lifecycle_df` (orchestrator.py:3324) builds from `venue_df` which is
       `InstrumentRecord.model_dump()` (orchestrator.py:2238) → it HAS

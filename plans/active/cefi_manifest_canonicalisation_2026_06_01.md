@@ -195,7 +195,7 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 > (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
 > `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
 
-- [ ] [DATA] P0. C0 ONE bundled **WHOLE-CORPUS** walk (the finding makes this corpus-wide, not 838 cells): (a)
+- [x] ✅ [DATA] P0. C0 ONE bundled **WHOLE-CORPUS** walk (the finding makes this corpus-wide, not 838 cells): (a)
       re-version **every** cefi row+parquet **v8→v9** (CF-1) asserting data-state, not the constant; (b) add the
       **`source` column** = `tardis` on every row (CF-4) + (c) the **`asset_group=cefi` column/key** on rows + paths
       (CF-2) + (d) the **`pipeline_mode=` partition** + non-blank column (CF-3); (e) typed empty-reasons (CF-5); (f) the
@@ -203,6 +203,9 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       `by_date/`). Column adds (b–c) are a CONTENT rewrite → download+transform+upload **parallelised per the perf
       contract** (NOT a server-side path move; NOT "run locally" — this is a VM-scale walk now, gated on L0). The
       838-cell pure-path copies use `gcs_copy_object`. Idempotent.
+      — DONE (slot 10, 2026-06-03): market-tick-data-service@53671a0 (Kraken BASE/QUOTE 2-level path fix) + @7cb9947.
+      TOTAL planned=3928281 written/moved=1863687 (dry-run: 3,916,302). 112 corrupt KRAKEN-SPOT USD.parquet objects
+      from partial apply deleted before re-run with fix. Canonical bucket now has pipeline_mode=batch_tardis paths.
 - [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi).
 - [ ] [DATA] P1. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`, swap-resilient) lands in THIS walk
