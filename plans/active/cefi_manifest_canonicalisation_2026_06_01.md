@@ -45,6 +45,36 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > remaining schema signal (`error_reason` for CF-5, object paths for CF-2/3/9) into a **reusable audit tool**, then the
 > walk lands every CF-1…CF-12 fix.
 
+## Slot-3 CeFi master orchestrator — owned + attached plans/issues
+
+> **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot. **Slot 3 = CeFi end-to-end** across every
+> service — instruments-service → MTDS → MDPS → features → downstream → bucket/data/manifest/UI. **THIS plan is the CeFi
+> master orchestrator**: every cefi-related plan + issue cross-references here; orphaned cefi issues attach here.
+> Sibling AG masters: **defi → slot 2**, **sports → slot 4**, **prediction → slot 5**
+> (`prediction_manifest_canonicalisation_2026_06_01.md`), **tradfi → slot 6**
+> (`tradfi_manifest_canonicalisation_2026_06_01.md`). Cross-cutting service plans keep their own `assigned_vm` (vm-ml /
+> vm-cross-cutting) as PRIMARY owner — slot-3 tracks + drives only their **cefi slice**, not the whole plan.
+
+**Absorbed (cefi-primary — slot-3 owns outright):**
+
+- `issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md` — **ABSORBED 2026-06-03** (harsh out for the
+  day; was harsh-held). The manifest↔file disconnect (MTDS marks `processed_candles` `captured` for KRAKEN/BITFINEX with
+  no file; ~42% phantom on the test date) IS the CF-11 honest-absence reconciliation this plan owns — folded as the
+  CF-11 "MTDS processed_candles phantom-`captured` reconcile" todo below. Issue doc archives when that todo is GREEN.
+
+**Cross-referenced cefi slices (primary owner keeps the plan; slot-3 drives the cefi portion):**
+
+| Plan / issue                                                                                                                    | Primary VM         | CeFi slice                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`                                                                  | vm-cross-cutting   | L3 cefi ordering + L6 legacy `market-data-tick-cefi` delete (this plan's E8 hand-off) |
+| `data_source_provenance_all_asset_groups_2026_06_01.md`                                                                         | vm-ml              | cefi `source=tardis` column (this plan's C-source RIDER)                              |
+| `pipeline_mode_partition_migration_2026_06_01.md`                                                                               | vm-cross-cutting   | cefi `pipeline_mode=` partition (this plan's C-pipeline_mode RIDER)                   |
+| `data_pipeline_acquisition_remediation_2026_06_03.md`                                                                           | orchestrator-agent | cefi audit-finding phase                                                              |
+| `issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`                                                           | vm-ml              | cefi 9 root-level real-data files (SUPERSEDED by E2 migrator)                         |
+| `features_input_manifest_migration` / `features_service_e2e_pipeline_test` / `features_calc_efficiency_and_correctness`         | vm-ml              | cefi processed_candles read-path + e2e + calc correctness                             |
+| `mdps_filter_pushdown_memory_audit_and_fix` / `mdps_pure_polars_migration` / `mdps_long_running_multi_shard_architecture_audit` | vm-ml              | cefi MDPS processing slice                                                            |
+| `issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`                                                                     | vm-ml              | cefi state adapters (derivative / futures / options / book_snapshot)                  |
+
 ## Why this exists — cefi canonical FORM is broken corpus-wide (+ a recent 838-cell data gap)
 
 The 2026-06-01 `_index` comparison (legacy `market-data-tick-cefi-…` vs canonical `market-data-tick-cefi-prd-…`) showed
@@ -242,6 +272,19 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 - [ ] [DATA] P0. **Rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
       failure to `empty_confirmed`. (The existing 1.33M `attempted_failed` rows — E6 below — must survive as v9
       `attempted_failed`, still flagged for backfill, not collapsed to empty.)
+- [ ] [DATA] P0. **Absorbed from `cefi_processed_candles_manifest_file_disconnect` (harsh, 2026-06-03): MTDS
+      processed_candles phantom-`captured` reconcile.** MTDS marks `processed_candles/` cells `captured` (with row
+      counts) for KRAKEN/BITFINEX/late-April venues where **no processed-candle file exists** (~42% phantom on the
+      2026-05-02 test date; late-April dates fully phantom; verified by direct GCS object-listing 2026-05-26). MDPS
+      writer already VERIFIED correct (`io/writer.py:write_candles` co-emits parquet + manifest row, returns None on
+      empty) — the phantom source is **MTDS** (all phantom rows `service_name="market-tick-data-service"`). Root-cause
+      the MTDS pre-marking (hypotheses: (a) MTDS raw rows + MDPS processed rows share ONE `_index` with conflicting
+      `captured` semantics — raw-captured ≠ processed-available, so a processed-candle consumer over-trusts MTDS raw
+      rows; (b) backfill in-progress + MTDS marks `captured` ahead of MDPS). Then reconcile phantom `captured` →
+      `attempted_failed`/`expected_unattempted` (honest-absence) IN the E5 rebuild, OR complete the cefi
+      processed-candles backfill + re-emit from corpus. Quantify exhaustively first:
+      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. Repo: MTDS (+
+      IS verify). On GREEN, archive the absorbed issue doc.
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS cefi/tardis adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for an in-universe instrument within coverage bounds, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the cefi/tardis

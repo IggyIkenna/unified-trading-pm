@@ -1,25 +1,23 @@
 ---
 title:
-  "CeFi processed_candles: manifest ↔ file disconnect (manifest claims captured for venues with no files; corpus
-  written without/with-stale manifest emission)"
+  "CeFi processed_candles: manifest ↔ file disconnect (manifest claims captured for venues with no files; corpus written
+  without/with-stale manifest emission)"
 created: 2026-05-25
 source:
   - plans/active/features_input_manifest_migration_2026_05_25.md
   - features-service@2965bbda (manifest-driven read migration that surfaced this)
 locked_by: live-defi-rollout
-status: OPEN — incomplete audit (background agent stalled); needs MTDS/MDPS owner (Ikenna)
+status:
+  ABSORBED into cefi_manifest_canonicalisation_2026_06_01.md (slot-3, 2026-06-03) — archives when the master's CF-11
+  "MTDS processed_candles phantom-captured reconcile" todo is GREEN
 priority: P2
 ---
 
-> **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this end-to-end. **Do NOT
-> auto-assign / auto-fix / push to LDR.** See `plans/active/_agent_pings.md`.
-
-> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** This is **manifest-canonicalisation work** —
-> SSOT is `cefi_manifest_canonicalisation_2026_06_01.md` and it is **actively held by harsh** (banner above). **Slot 7
-> takes NO action here** — no investigation, no implementation, no archive-flip — to avoid colliding with the in-flight
-> harsh work. The intended direction (when harsh resumes): investigate MTDS pre-marking of `captured`, then reconcile
-> `captured` → `attempted_failed` / `expected_unattempted` for unwritten shards (honest-absence). Recorded for SSOT
-> continuity only.
+> **🟩 ABSORBED INTO THE CEFI MASTER — slot-3, 2026-06-03.** Operator moved CeFi end-to-end to slot 3 (harsh out for the
+> day). SSOT for this work is now `cefi_manifest_canonicalisation_2026_06_01.md` (the CeFi master orchestrator), tracked
+> as the **"MTDS processed_candles phantom-`captured` reconcile"** todo in its CF-11 section. The earlier ROLLOUT-AGENT
+> HOLD is **LIFTED** (no longer harsh-held). This doc archives when that todo is GREEN. The diagnosis below is retained
+> for context and carried into the master todo. (Harsh: ack on return — see `plans/active/_agent_pings.md`.)
 
 ## What I found
 
