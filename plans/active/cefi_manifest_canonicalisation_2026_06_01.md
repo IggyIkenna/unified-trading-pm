@@ -230,13 +230,19 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       concluded "no `pipeline_mode=` sibling / migrator no-ops L-bulk". The FULL listing shows the `pipeline_mode=`
       siblings DO exist (482/day). slot-10's `C2 = day=/asset_group=cefi/` count is exactly these **post-migration
       orphans**, not a pre-migration gap. No migrator fix is needed.
-- [ ] [DATA] P0. **E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk.** (a) delete the OLD
-      `day=/asset_group=cefi/…` (no-`pipeline_mode=`) orphan objects corpus-wide (~474/day × ~2,613 days) now their
-      `pipeline_mode=` forms exist — this IS the E7 orphan-sweep below (count via Monitoring live-object, NOT naive
-      recursive `ls`; purge noncurrent versions at E8); (b) `--also-legacy` 5,233-cell legacy→canonical gap-fill (owed);
-      (c) 9 L-flat orphans → fan-out (owed). Re-verify with a `--apply --also-legacy` slice expecting `moved>0` ONLY on
-      the legacy/L-flat gap (the `-prd` canonical walk stays `moved=0` = done). The migration is FAR more complete than
-      the dry-run's "3.46M objects" headline (that counted already-migrated + orphans). Repo: market-tick-data-service.
+- [ ] [DATA] P0. **E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk.** (slot-3 verify 2026-06-03: the
+      `pipeline_mode=` migration is COMPLETE corpus-wide — sampled days 2020→2026 ALL have both forms; the **9 L-flat
+      orphans are ALSO migrated** (e.g. `SOL-ETH.parquet` →
+      `day=2024-11-07/pipeline_mode=batch_tardis/…/SOL-ETH.parquet` exists; the 9 root files remain only as orphans). So
+      the ONLY additive work left is the legacy gap-fill.) (a) **🛑 IRREVERSIBLE — delete the OLD
+      `day=/asset_group=cefi/…` (no-`pipeline_mode=`) orphan objects corpus-wide (~474/day × ~2,613 days ≈ 1.2M) + the 9
+      root L-flat orphans** now their `pipeline_mode=` forms exist. PRE-DELETE GUARANTEE (mandatory): first run
+      `migrate_cefi_flat_to_v9_canonical --apply` over the FULL range once (idempotent — copies any orphan still lacking
+      a sibling, skips the rest) so EVERY orphan provably has a migrated dest; THEN delete (count via Monitoring
+      live-object, NOT naive recursive `ls`; per-object isolation; idempotent). This IS the E7 orphan-sweep. (b)
+      `--also-legacy` 5,233-cell legacy→canonical gap-fill (additive; VM-scale — the 1.9M legacy listing stalled an
+      e2-standard-4, so shard/bigger-mem). **Deliberate execution (irreversible deletes + VM-scale) — not to be
+      rushed.** Repo: market-tick-data-service.
 - [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE (mtds@2c3a479b, 2026-06-02)** via the RECOMMENDED fork (A):
       `rebuild_cefi_manifest.py` now (1) parses an OPTIONAL `pipeline_mode=(?P<pipeline_mode>[^/]+)/` segment in all 3
       `_PAT_*` matchers (between `day=` and `asset_group=`); (2) lists at DAY level (`raw_tick_data/by_date/day={d}/`)
