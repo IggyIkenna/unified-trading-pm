@@ -430,9 +430,42 @@ verify + the gated delete.
       None-classifier divergence above, which was about UNCLASSIFIABLE markets, not fetch errors.) RESIDUAL = focused
       instruments-service write-path verify. See cefi plan § CF-11 for the full diagnosis.
 
+## Deployment-API/UI prediction v9 data-status alignment (CODE — E2E readiness; slot-5 audit 2026-06-03)
+
+> **Why (operator 2026-06-03):** "code e2e ready" = the deployment-api data-status summary + the deployment-ui drilldown
+> must render the prediction v9 canonical form (the manifest-only `prediction_canonical_question_group` bundle atom +
+> `pipeline_mode`/`source`/`schema_version`/`available_at`) BEFORE the migration runs, so post-migration backfills,
+> code, and the data-status display all agree. Findings from a read-only deployment-api/ui audit (slot-5 2026-06-03).
+> The manifest atom is the MANIFEST-ONLY bundle (per E5/E6b): one row per
+> `(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, day, pipeline_mode)`
+> with `observed_clusters={conditionId: rows}`; raw objects stay per-cid `data_type=trades/{conditionId}.parquet`.
+
+- [ ] [CODE] P0. **deployment-api `_prediction_venue_detail` reads the bundled atom, not `underlying`** — repo
+      `deployment-api`, `deployment_api/services/shard_detail.py:1364-1372` groups by the `underlying` column and emits
+      it AS `canonical_question_group`. Post-v9 the manifest carries an explicit `canonical_question_group` column on
+      the bundled `data_type=prediction_canonical_question_group` rows + per-market `observed_clusters` JSON. Fix: read
+      `canonical_question_group` from the bundled row + expand `observed_clusters` (`{conditionId: rows}`) for the
+      per-market drilldown leaf; stop assuming `underlying==cqg`. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. **deployment-api turbo data-status aggregation handles the prediction bundled data_type** — repo
+      `deployment-api`, `deployment_api/services/data_status_service.py:2022` (+ `data_status_hierarchical.py:369`):
+      aggregation assumes flat per-venue rows; add the `prediction_canonical_question_group` bundled-row path so the
+      summary counts per-`(venue, canonical_question_group, day)` (not per-flat-venue) and rolls up `observed_clusters`.
+      parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. **deployment-api surfaces `source` (+ `pipeline_mode`) for prediction** — repo `deployment-api`,
+      `deployment_api/routes/data_status.py` prediction handlers accept `pipeline_mode` but never surface the v9
+      row-level `source` (polymarket*clob/gamma_api/kalshi*\*) as a column/filter. Add `source` to the prediction
+      data-status response + filter, mirroring the cross-AG source-provenance display. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. **deployment-ui prediction breakdown renders the cqg bundle, not flat venues** — repo `deployment-ui`,
+      `src/lib/data-status-helpers.ts:24` hardwires prediction to a `venues` breakdown; post-v9 the shard axis is
+      `(venue, canonical_question_group, day)` with per-market clusters. Add a prediction breakdown branch
+      (`breakdown_axis` → canonical_question_group → market_id cluster drilldown). `[UI]` — needs `pw:L2 ✓` + regression
+      spec per the playwright gate. parent_epic: mtds_mdps_master.
+
 ## Success criteria
 
 - 0 legacy-only prediction cells (canonical holds all historical POLYMARKET data + question-groups).
+- **Deployment-api/UI render the prediction v9 bundled atom + `source`/`pipeline_mode` (data-status summary + drilldown
+  agree with the canonical manifest) — the 4 CODE items above GREEN.**
 - Canonical `pred-prd` `_index` = v9 + `pipeline_mode=` partition present + **`source` stamped on every cell (zero blank
   — HARD; the API source per venue, swap-resilient)**.
 - `mdps-prediction-2025` relaunch unblocked (writes canonical-only).
