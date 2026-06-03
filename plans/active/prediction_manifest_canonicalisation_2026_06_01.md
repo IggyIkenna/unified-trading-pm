@@ -225,6 +225,23 @@ be fixed first if run on a VM.
       reviews this dry plan (no fire-and-forget: STARTED<60s + progress/hr + STOPPED; T+10min
       `gcloud instances describe`). Dry run took ~3 min (1.9M plan @ workers=64) so the full copy (server-side
       `gcs_copy_object`) is well within budget — no worker re-tune needed.
+- [ ] [CODE] P0. **BATCH≠LIVE for processed_candles `pipeline_mode=` — GAP found in the pre-full-run readiness audit
+      (slot-5 2026-06-03; CROSS-AG, blocks the candle portion of the full run).** The migrator inserts a
+      `pipeline_mode=` segment into candle paths (`migrate_prediction_to_pred_prd_v9.py:176-188`
+      `_insert_pipeline_mode_for_candle`, "no UAC candle builder"; dry run wrote
+      `processed_candles/by_date/day=/pipeline_mode=batch_polymarket_clob/     timeframe=/data_type=/…` — 582,730 candle
+      objects), but the LIVE MDPS candle writer (`market-data-processing-service config.py:46 get_processed_path`)
+      returns `processed_candles/by_date/day={d}/timeframe={tf}/data_type={dt}` with **NO `pipeline_mode=` segment**. So
+      post-migration the migrated candles sit at a `pipeline_mode=` path that a relaunched `mdps-prediction-2025` would
+      NOT write to → two candle forms in the bucket + a batch≠live drift (the raw_tick writer is fine —
+      `orchestrator.py:994` DOES insert `pipeline_mode=` for raw, the path==manifest invariant; only the CANDLE path
+      lacks it). **Reconcile BEFORE the full run touches candles:** either (a) wire `pipeline_mode=` into
+      `get_processed_path` (+ the candle manifest), making MDPS candles batch=live with the migrator (preferred —
+      matches the raw-writer precedent + the `pipeline_mode_partition_migration` intent), OR (b) if the canonical candle
+      form should NOT carry `pipeline_mode=`, drop the migrator's `_insert_pipeline_mode_for_candle` so it copies
+      candles path-only. Also confirm the candle READER (features-service / MDPS scan) dual-probes both forms during the
+      window. Repos: market-data-processing-service (+ migrate_prediction_to_pred_prd_v9 if option b). parent_epic:
+      mtds_mdps_master.
 
   > **✅ GRANULARITY RESOLVED (slot-3 2026-06-02 — the atom is the live-writer atom, batch=live SSOT).** A sub-agent
   > draft was REVERTED for collapsing the row key to `(date,venue,instrument_type,data_type)` (dropped `{cid}` +
