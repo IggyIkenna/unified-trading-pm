@@ -41,7 +41,8 @@ the actual instruments `_index` state before migrating — manifest-v8 lesson).
 ## Scope boundary — no overlap with the per-AG walks
 
 - **`instruments-store-sports`** canonical FORM rides the SPORTS walk: `sports_manifest_canonicalisation_2026_06_01.md`
-  already claims the sports reference surface + owns the sports-specific CF-5 typed-reason relabel (fixture/season/
+  (the **slot-4 sports-vertical MASTER orchestrator** — owns ALL sports across IS/MTDS/MDPS/features/execution) already
+  claims the sports reference surface + owns the sports-specific CF-5 typed-reason relabel (fixture/season/
   transfer-window/genesis via the sports coverage oracle). This plan does NOT re-walk the sports instruments bucket — it
   provides the cross-service CF audit coverage and owns the **non-sports** AG instruments-store buckets
   (`instruments-store-{cefi,defi,tradfi,prediction}`) + the cross-AG instrument-record/universe indices.

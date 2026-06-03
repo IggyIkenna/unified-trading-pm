@@ -134,29 +134,49 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 - **CONFLICT-4 — `data_source_provenance` must SKIP tradfi.** tradfi's `source` column already shipped via
   `tradfi_massive`; provenance must not re-walk tradfi. Scope it to cefi/defi/sports/prediction.
 
-### Agent assignment (2026-06-01 — two-slot split; the SUM completes EVERYTHING, no defers, no fallbacks)
+### Agent assignment (2026-06-01; **three-slot split — sports peeled to its own lane 2026-06-03, operator**; the SUM completes EVERYTHING, no defers, no fallbacks)
 
+> **Reassignment 2026-06-03 (operator) — clean asset-group split, sports = a FULL vertical:** sports is the heaviest
+> non-defi lane, so it gets a **dedicated slot 4** that owns **everything sports across every service** — IS
+> (instruments-store-sports reference) + MTDS (market-data-tick-sports) + MDPS + features + execution + the deployment
+> UI/menu/bucket/data/manifest surfaces — not just the MTDS walk. `sports_manifest_canonicalisation_2026_06_01.md` is
+> the **MASTER orchestrator plan for the whole sports vertical** (the sports analogue of this defi plan): every other
+> sports plan/issue + every orphaned sports cross-reference attaches to it. Slot 3 keeps the three lighter AGs (cefi /
+> tradfi / prediction) + the **non-sports** parts of the two per-service surfaces (instruments, downstream). This
+> matches the already-adopted framing in `downstream_services_manifest_canonicalisation_2026_06_01.md` (§ "slot-3 AGs:
+> cefi / tradfi / prediction; sports = its own slot").
+>
 > **Slot 2 = the DeFi lane (this plan).** Owns `defi_manifest_canonicalisation_2026_06_01.md` end-to-end: the MASTER
 > coordinator role + §A (defi writers) + §B (defi consolidation/data-status) + **§C the DeFi single-walk** (C0–C12) + §D
 > (defi features) + §E (cefi-perp hedge leg the defi hybrid needs) + §F (defi docs) + §G (Solana basis MVP). The defi C0
 > walk carries the defi riders (source col + pipeline_mode partition + v9 + category→asset_group) per § Rider closure.
 >
-> **Slot 3 = everything else (the other four asset_groups + the per-service surfaces + their riders).** Owns, to
+> **Slot 3 = cefi + tradfi + prediction + the two per-service surfaces (NOT sports — that is slot 4).** Owns, to
 > C-GREEN:
 >
 > 1. `cefi_manifest_canonicalisation_2026_06_01.md` — cefi single-walk (838-cell gap-fill + v9 + partition + source).
 > 2. `tradfi_manifest_canonicalisation_2026_06_01.md` — tradfi single-walk (v9 + partition + source re-consol; absorbs
 >    `tradfi_massive` -031).
-> 3. `sports_manifest_canonicalisation_2026_06_01.md` — sports single-walk (v9 + partition + fixture/season/
->    transfer-window/genesis typed reasons + source path→column; both sports surfaces).
-> 4. `prediction_manifest_canonicalisation_2026_06_01.md` — prediction single-walk (legacy→canonical copy + v9 +
+> 3. `prediction_manifest_canonicalisation_2026_06_01.md` — prediction single-walk (legacy→canonical copy + v9 +
 >    partition + source = API).
-> 5. `instruments_manifest_canonicalisation_2026_06_01.md` — the I/O input surface (non-sports instruments-store +
->    cross-AG reference indices), audit-first.
-> 6. `downstream_services_manifest_canonicalisation_2026_06_01.md` — MDPS/features/strategy/execution canonical FORM,
->    audit-first, low-data.
+> 4. `instruments_manifest_canonicalisation_2026_06_01.md` — the I/O input surface, **non-sports only**
+>    (`instruments-store-{cefi,defi,tradfi,prediction}` + cross-AG reference/instrument-record/universe indices),
+>    audit-first. **The sports instruments-store rides slot 4, not here.**
+> 5. `downstream_services_manifest_canonicalisation_2026_06_01.md` — MDPS/features/strategy/execution canonical FORM for
+>    **cefi / tradfi / prediction**, audit-first, low-data. **Sports rows/tests across MDPS/features/execution ride
+>    slot 4.**
 >
-> Each slot-3 plan's single bundled walk INCLUDES its rider work — so completing them also closes
+> **Slot 4 = the ENTIRE sports vertical (dedicated — a full asset-group lane across every service).** Owns
+> `sports_manifest_canonicalisation_2026_06_01.md` as the **sports MASTER orchestrator plan**, and through it everything
+> sports across all services: **both sports surfaces** — `market-data-tick-sports` (MTDS) **and**
+> `instruments-store-sports` (IS reference, 2.68M rows + the 316-cell legacy→prd data-loss-gated migration) — plus the
+> sports rows/tests in MDPS / features / execution, the sports deployment-UI/menu/bucket surfaces, the sports
+> single-walk (v9 + partition + fixture/season/transfer-window/genesis typed reasons + source path→column), and its
+> riders. **Every other sports plan/issue + every orphaned sports cross-reference is cross-linked INTO the sports master
+> plan** (`sports_retired_data_types_code_cleanup`, `epics/sports_master`, and the sports slices of the phase-3 backfill
+> / provenance / bucket-SSOT plans). Slot 4 does NOT edit slot-3's non-sports surfaces — ping instead.
+>
+> Each slot-3 / slot-4 plan's single bundled walk INCLUDES its rider work — so completing them also closes
 > `data_source_provenance_all_asset_groups_2026_06_01` (cefi/sports/prediction source; tradfi skipped per CONFLICT-4) +
 > `pipeline_mode_partition_migration_2026_06_01` (cefi/tradfi/sports/prediction/instruments) for those AGs. **No second
 > walk on any `_index`** (single-walk discipline). **NO DEFERS, NO FALLBACKS** (CLAUDE.md "Data Pipeline Correctness Is
