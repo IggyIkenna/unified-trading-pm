@@ -481,8 +481,9 @@ Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab
       reusable v2 workflow skip/tolerate repos with no `scripts/quality-gates.sh`. Belongs to the two-axis CI-gate axis
       above. **NOTE (2026-06-03):** AO `main` was inadvertently FF-advanced to the LDR tip (`b8ef156`→`7979d3e`, 6
       server-code commits) by an operator-approved push made on the outdated "AO→main" premise; per the two-axis rule
-      `main` is supposed to LAG LDR on server code. No harm (work was already on LDR; SPA build ignores server code); the
-      lag self-re-establishes on the next LDR-only server commit. Not reverting (force-push to `main` is human-only).
+      `main` is supposed to LAG LDR on server code. No harm (work was already on LDR; SPA build ignores server code);
+      the lag self-re-establishes on the next LDR-only server commit. Not reverting (force-push to `main` is
+      human-only).
 
 ### THE force-push-vs-let-CI/CD decision rule (read before touching main/staging)
 
@@ -710,16 +711,19 @@ by a PR:
       `run-version-alignment.sh` iterates `repositories` but archived dirs are gone-locally so it skips). **Needs
       operator/owner confirm on (c) + the ml-service-topo gap before applying.**
 
-- [ ] [BLOCKED-OPERATOR-DECISION] [DESIGN] P2. **Structural fix for chronic manifest/DAG worktree-dirty churn (root
-      cause, not band-aid).** **Context:** `WORKSPACE_MANIFEST_DAG.svg` + `DATA_FLOW_DAG.svg` are tracked GENERATED
-      artifacts, and `ci_status` (mutable CI state, flips FAILING/LOCAL_PASS/STAGING_GREEN) lives INSIDE the tracked
-      `workspace-manifest.json`. Any touch → worktree dirty → FF-pull skips → drift → manual commit+push. Mitigated four
-      ways already: the `MANIFEST_STATE_WRITER=1` gate (ba12a99c8), the VM's `pm-pull-ff.sh` auto-drop, the local
-      `slot-cron-ff-pull.sh` regen auto-discard (2026-06-02, `unified-trading-pm@9ed004d5f` — SVGs unconditionally +
-      ci_status-only manifest churn), and the `_agent_pings.md` **auto-flush** (2026-06-02,
-      `unified-trading-pm@85c8f9eed` — commit+push the append-only ledgers, which can't be discarded; this was the
-      residual blocker that stranded the top-level PM clone 1164 behind). Those make slots SELF-HEAL but the churn still
-      exists. Full write-up + one-time top-level-clone sync:
+- [x] ✅ [DESIGN] P2. **RESOLVED 2026-06-03 — (a) shipped, (b) closed WON'T-DO (premise obsolete).** Structural fix for
+      chronic manifest/DAG worktree-dirty churn (root cause, not band-aid). (a) untracking the DAG SVGs SHIPPED + the
+      single-writer machinery retired (see the (a) bullet + the supersession todo below). (b) the `ci_status` gitignored
+      sidecar is **closed won't-do** (operator 2026-06-03 after investigation — see the (b) bullet). The live churn is
+      eliminated; the residual self-heal layers stay as harmless no-ops. **Context:** `WORKSPACE_MANIFEST_DAG.svg` +
+      `DATA_FLOW_DAG.svg` are tracked GENERATED artifacts, and `ci_status` (mutable CI state, flips
+      FAILING/LOCAL_PASS/STAGING_GREEN) lives INSIDE the tracked `workspace-manifest.json`. Any touch → worktree dirty →
+      FF-pull skips → drift → manual commit+push. Mitigated four ways already: the `MANIFEST_STATE_WRITER=1` gate
+      (ba12a99c8), the VM's `pm-pull-ff.sh` auto-drop, the local `slot-cron-ff-pull.sh` regen auto-discard (2026-06-02,
+      `unified-trading-pm@9ed004d5f` — SVGs unconditionally + ci_status-only manifest churn), and the `_agent_pings.md`
+      **auto-flush** (2026-06-02, `unified-trading-pm@85c8f9eed` — commit+push the append-only ledgers, which can't be
+      discarded; this was the residual blocker that stranded the top-level PM clone 1164 behind). Those make slots
+      SELF-HEAL but the churn still exists. Full write-up + one-time top-level-clone sync:
       `plans/active/issues/local_slot_cron_ff_pull_hardening_2026_06_02.md`. **Operator decision — eliminate at source
       (pick one or both):**
   - **(a) Untrack the generated DAG SVGs** — `git rm --cached` + `.gitignore`
@@ -729,15 +733,26 @@ by a PR:
     2026-06-03**: both DAG SVGs `git rm --cached` + gitignored (alongside the CI-CD-PIPELINE.svg/html +
     derived-dependency-manifest.json batch); verified both generators are already deterministic (two regens
     byte-identical, so no generator fix needed — the churn was purely ci_status-driven, which untracking removes). The
-    "regenerate in CI" half is unnecessary — nothing reads the committed SVG; generators run locally/on-demand. **Only
-    (b) remains BLOCKED-OPERATOR-DECISION.** Gotcha also codified into CLAUDE.md + SUB_AGENT_MANDATORY_RULES (generated
-    artifacts gitignored + deterministic generators).
+    "regenerate in CI" half is unnecessary — nothing reads the committed SVG; generators run locally/on-demand. Gotcha
+    also codified into CLAUDE.md + SUB_AGENT_MANDATORY_RULES (generated artifacts gitignored + deterministic
+    generators).
   - **(b) Move `ci_status` out of `workspace-manifest.json`** into a gitignored sidecar (`workspace-ci-status.json`) or
     a small state store; tooling reads it from there. Removes the other half (mutable CI state stops living in a
     version-controlled file). **Blast radius: ~24 files** read `ci_status` from the manifest (scripts + workflows) → a
-    scoped migration, not a quick edit. Needs operator sign-off on the sidecar contract + the 24-consumer sweep. Without
-    (a)/(b) the self-heal layers hold (no more manual commit+push), so this is cleanup-not-blocker. Surfaced 2026-06-02
-    from the recurring laptop-slot dirty-pull toil.
+    scoped migration, not a quick edit. — **❌ CLOSED WON'T-DO 2026-06-03 (operator, after slot-4 investigation):** the
+    "gitignored sidecar" is **infeasible** and the premise is **obsolete**. (1) `ci_status` is a **durable 9-state
+    cross-run promotion machine** (`FAILING→LOCAL_PASS→FEATURE_GREEN→STAGING_GREEN→SIT_VALIDATED→MAIN_GREEN`): CI writes
+    it AND **commits it** (`.github/workflows/ci-status-update.yml` → `git commit workspace-manifest.json [skip ci]`),
+    and the promotion gates **read it across later runs** (`scripts/cicd/tier_c_promotion_gate.py` checks each repo's +
+    each dep's `ci_status`; `sit-gate.yml` same). A **gitignored** sidecar is never committed → the next workflow's
+    fresh checkout sees nothing → **tier-c / sit-gate / staging-to-main promotions all break**. (Only an external
+    durable store — GCS/GH-deployments/DB — would keep durability, a separate architectural change, not a sidecar.) (2)
+    The local churn this targeted is **already gated off**: `_qg_update_ci_status_pass` / `_failing` (in
+    `scripts/quality-gates-base/_ci-status-updater.sh`) return early on `GITHUB_ACTIONS=true` **and** when
+    `MANIFEST_STATE_WRITER != 1`, so per-agent local QG runs do **not** write `ci_status` — confirmed empirically (no
+    local QG run dirtied `workspace-manifest.json` this session; only the now-fixed DAG SVGs / derived-manifest did). So
+    the live churn was the DAG-SVG half (option a, shipped); the `ci_status` half needs no migration. Surfaced
+    2026-06-02 from the recurring laptop-slot dirty-pull toil; closed 2026-06-03.
 
 - [x] ✅ [SCRIPT] P2. RESOLVED 2026-06-02: **`_agent_pings.md` auto-flush in `slot-cron-ff-pull.sh`** — the append-only
       ledgers can't be discarded (real cross-agent data) so they legitimately blocked FF on every host (stranded
