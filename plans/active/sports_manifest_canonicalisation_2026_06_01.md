@@ -905,6 +905,32 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       pipeline SOURCE, no upstream manifest to gate.) Add a path-shape + source= test. **The IS reads must also probe
       the `pipeline_mode=` sports_reference path — verify under the read-path P0 above (IS is both writer and reader of
       its reference surface).**
+- [ ] [CODE] P0. **CRITICAL — the `pipeline_mode` value for instruments-store `sports_reference` is DERIVED 3 DIFFERENT
+      WAYS that DISAGREE (path ≠ manifest ≠ reader); needs ONE shared UAC SSOT.** Repos: `unified-api-contracts` (new
+      SSOT) + `market-tick-data-service` (migration) + `instruments-service` (writer) + `features-service` (reader).
+      DISCOVERED 2026-06-03. The entity folders on disk are **data-type-named** (`entity=fixtures`, `fixture_events`,
+      `teams`, `xg`…), NOT provider-named. The three derivations:
+  - **Migration object-path** `migrate_sports_canonical_v9.py::_canon_instr_reference` maps `entity` through an
+    `entity_to_source` dict that ONLY contains provider names (`api_football`/`footystats`/…) → data-type entities miss
+    → **falls back to `batch_instruments_service`**. WRONG.
+  - **Migration manifest-rebuild** `rebuild_sports_manifest_v9.py` (:740/:865) stamps
+    `pipeline_mode_for_source(_source_from_row(row))` → source-derived → **`batch_api_football`** for fixtures. So the
+    migration's OWN object-path ≠ its OWN manifest (path≠manifest violation IN the migration).
+  - **IS writer** `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` (orchestrator.py:158) →
+    `FIXTURES/FIXTURE_EVENTS/TEAMS → BATCH_API_FOOTBALL`, `XG → BATCH_UNDERSTAT`, `PLAYER_VALUES → BATCH_TRANSFERMARKT`
+    … (manifest = `batch_api_football`).
+  - **features reader** (`gcs_reader.py` `_SPORTS_REF_PIPELINE_MODE`, fd1a2b17) uses a FIXED `batch_instruments_service`
+    → matches the BUGGY migration object-path, NOT the manifest/writer → would MISS the correctly-migrated data.
+    **CANONICAL DECISION (slot-4, justified by the manifest-rebuild + IS-writer agreement + the "path==manifest"
+    invariant): `pipeline_mode` is SOURCE-derived per data_type/entity** (`fixtures→batch_api_football`,
+    `xg→batch_understat`, …), NOT the generic `batch_instruments_service`. **Fix (coordinated, ONE SSOT)**: (1) UAC —
+    add `pipeline_mode_for_sports_entity(entity)` / `…_data_type(data_type)` = the SSOT (lift
+    `_SPORTS_DATA_TYPE_TO_PIPELINE_MODE` into UAC). (2) migration `_canon_instr_reference` → use it
+    (entity→data_type→pipeline_mode), so object-path == manifest. (3) IS writer object-path → use it (== its manifest
+    row). (4) features reader → probe with the per-entity value from it (replace the fixed `batch_instruments_service`).
+    Re-run the instruments dry-run to confirm the NEW path shape. **This is the keystone of "everything the same in
+    reality" for the instruments surface — until it's fixed, the migration mislocates every instruments object's
+    pipeline_mode and the reader can't find the correctly-stamped ones.**
 - [ ] [DATA/CODE] P1. **Schema/column PARITY pass — verify the v9 manifest column set + dtypes are IDENTICAL across
       writer ⇄ migration ⇄ reader** (operator: "same columns, no schema types, everything the same"). Writers now stamp
       `source`+`pipeline_mode` (P0.3) and MTDS `_check_sports_v9_columns` enforces the new-col set at preflight, but no
