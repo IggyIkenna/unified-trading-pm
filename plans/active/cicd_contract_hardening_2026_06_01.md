@@ -567,8 +567,12 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       unified-trading-pm — all v2-green on main, ci_status falsely FAILING from Agent-Audit flips) → MAIN_GREEN,
       un-jamming the dep-order cascade. The "FAILING" repos were drift, NOT genuine reds (corrected an earlier
       mis-diagnosis). The Agent-Audit credit-outage flips were the systemic source; Guard 3 is the standing cure.
-- [ ] [SCRIPT] P1. **GAP: FEATURE_GREEN→STAGING_GREEN does not auto-advance after a staging auto-merge** (the recurring
-      cascade jam). When a LDR→staging PR auto-merges, the merge push to `staging` is made by GITHUB_TOKEN, which (by
+- [x] ✅ [SCRIPT] P1. **GAP CLOSED: FEATURE_GREEN→STAGING_GREEN now auto-advances (Guard 3, option-c)** — slot-1
+      2026-06-03 (PM@abe2ec3ae). Guard 3 (`ci-status-reconciler.yml`) deterministically advances a FEATURE_GREEN repo →
+      STAGING_GREEN iff staging-v2 is green AND `compare staging...live-defi-rollout ahead_by==0` (staging current with
+      LDR = merged) — truthful + non-over-promoting (merged+green guard). Closes the GITHUB_TOKEN-merge-no-v2-trigger
+      jam without ~14 manual fires; runs every 30 min. Live once #120 lands on main. (original gap analysis:) the recurring
+      cascade jam. When a LDR→staging PR auto-merges, the merge push to `staging` is made by GITHUB_TOKEN, which (by
       design) does NOT trigger workflows → the `push:[staging]` `quality-gates-v2` never runs → its
       `ci-status-update STAGING_GREEN` never fires → the repo stays `FEATURE_GREEN` after merging, dep-blocking its
       dependents (observed 2026-06-03: UAC + ibkr merged to staging but stuck at FEATURE; UAC unblocked by a MANUAL
