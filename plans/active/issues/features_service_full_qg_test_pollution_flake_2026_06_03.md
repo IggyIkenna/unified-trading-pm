@@ -75,3 +75,22 @@ on Linux) — do NOT block it on this; (b) treat the isolation remediation as a 
 tests, find+fix the cross_instrument MagicMock-`get_settings` buffer-write, then verify across several full-suite runs
 (non-determinism → one green run is not proof). Owner: features-service (vm-ml). Partly composes with
 `quality_gates_resource_contention_speedup_2026_06_02.md`.
+
+## ITERATION 1 — VECTOR-1 SHIPPED (slot-3, 2026-06-03, owner taken)
+
+- **Vector-1 fix shipped: `features-service@d39d154f`** — autouse `_WRITE_BUFFER` + `_LIVE_WRITERS` reset between every
+  test in `tests/conftest.py`. **Verified locally:** the `atexit … MagicMock get_settings().base_timeframe` fingerprint
+  is GONE (cross_instrument: 605 passed, no leak line; previously always present); `tests/` collects 16,542 cleanly;
+  lookback 20/20. ruff + basedpyright clean. Shipped under the same operator exemption (test-only).
+- **NOT yet confirmed to fully green the suite.** Whether the downstream calendar `record_empty` / sports-integration
+  `DependencyError` failures were buffer-mediated (now fixed) or a SEPARATE mock-GCS vector is **unconfirmed** — needs a
+  full-suite green.
+- **Local macOS QG is NOT a viable verification env (3rd data point):** the iteration-1 full run failed at
+  `[4/6] TYPE CHECK exit=124` (basedpyright >300s timeout) and its test phase mis-scoped to 6 PM tests (rootdir resolved
+  to `unified-trading-pm`) — never ran the 16k features suite. Combined with the earlier 20-min flake, this confirms
+  **verification must happen on Linux CI** (`quality-gates-v2` at the staging PR), where the suite runs to completion
+  and the start method is `fork`.
+- **Next (iteration 2+, against Linux CI signal):** watch `quality-gates-v2` for features-service after d39d154f
+  promotes. If still red on the calendar/sports vector → add **mock-GCS-store reset** isolation + hunt the specific
+  cross_instrument test that buffers the MagicMock row, and re-verify on Linux. The macOS type-check timeout itself is
+  the `qg-xdist-start-method` / basedpyright-scope lever in `quality_gates_resource_contention_speedup_2026_06_02.md`.
