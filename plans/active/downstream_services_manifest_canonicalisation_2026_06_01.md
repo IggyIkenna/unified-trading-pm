@@ -134,6 +134,11 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       NOT a blanket "not v9" warn (corpus is 100% v8 today → that would be pure noise). Becomes a hard assert
       post-each-AG-G3. Repos: **features-service / strategy-service / market-data-processing-service**. Home: this plan
       GAP-4 (full design spec there).
+  - **features + MDPS portions DONE (slot-6 2026-06-03):** `_warn_on_v9_schema_drift` shipped in features
+    `manifest_window_guard` (features@5a5246e6, after `read_availability_index`) and MDPS `dependency_checker`
+    (mdps@266479c, after the manifest read) — fires ONLY on mixed `schema_version` in one read OR v9-rows-without-
+    `asset_group`-column; silent on the uniform-v8 corpus; 4+3 unit tests; both QG green. **Checkbox stays OPEN for the
+    strategy `manifest_allocation_guard` portion** (strategy-service, other slot). Becomes a hard assert post-G3.
 - [ ] [CODE] P2. **GAP-7 — MDPS `dependency_checker` `category`→`asset_group` param rename** (+ docstrings) at next
       substantive touch (functional-correct today). Repo: **market-data-processing-service**. Home: this plan GAP-7.
 - [ ] [CODE] P0. **QG-test alignment (read/status, cross-repo)** — extend the QG-fed tests so they assert the CANONICAL
