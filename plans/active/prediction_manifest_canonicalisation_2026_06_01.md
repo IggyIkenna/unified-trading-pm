@@ -358,8 +358,17 @@ verify + the gated delete.
       (value `"OTHER"`) stays a CAPTURED bundle, distinct from the `None` sentinel (they were indistinguishable before).
       3 regression tests in `test_polymarket_bundling_finalize.py` + updated `test_polymarket_adapter_lifecycle_gating`
       (now asserts sub-threshold → `None`, NOT `"OTHER"`). mtds QG green.
-- [ ] [CODE] P1. **Kalshi classifier-None divergence (DISCOVERY slot-3 2026-06-02, mtds — follow-up to the Polymarket
-      fix above)**: the Kalshi adapter still maps an unclassified result → `canonical_question_group="OTHER"`
+- [x] ✅ [CODE] P1. **Kalshi classifier-None divergence — DONE (mtds@584871e9, slot-6 2026-06-03).** The Kalshi adapter
+      (`kalshi_adapter.py`) now stamps `None` (NaN) for a sub-threshold `classify_kalshi_to_canonical_group` result
+      instead of collapsing to `CanonicalQuestionGroup.OTHER`; the venue-agnostic orchestrator finalize (the shared
+      `_prediction_unclassified` split shipped with the Polymarket fix mtds@5744ba61) routes it to
+      `record_failed[ClassifierConfidenceLow]` — byte-identical to the batch `rebuild_prediction_manifest`. Real
+      `CanonicalQuestionGroup.OTHER` stays a captured bundle. Removed the now-unused enum import;
+      `test_kalshi_adapter_lifecycle_gating.py::test_unclassified_canonical_group_is_none_not_other` flipped to assert
+      `isna().all()` + `"OTHER" not in …` (9/9 green); mtds `quality-gates.sh --no-fix` exit 0, sentinel==HEAD. On
+      LDR via the tab→LDR mirror; staging-promotion gated on the workspace dep-tier drain (UTL+UAC LDR-ahead-of-staging).
+      Original finding below for reference. ~~the Kalshi adapter still maps an unclassified result →
+      `canonical_question_group="OTHER"`~~
       (`test_kalshi_adapter_lifecycle_gating.py:246` asserts it). The orchestrator finalize (shared across all
       prediction venues) treats a non-null `"OTHER"` as a REAL captured group, so Kalshi unclassified markets are
       bundled CAPTURED while Polymarket now routes them to `attempted_failed` — a venue-inconsistency + batch≠live for
