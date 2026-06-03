@@ -62,7 +62,12 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
 
 1. **Pass 1 — full quality gate writes the sentinel.** `cd <repo> && bash scripts/quality-gates.sh` MUST exit 0 on your
    current HEAD. On exit 0 it writes `.qg_last_passed_sha` (== HEAD). Skipping Pass 1 means the change never ran tests,
-   and Pass 2 hard-refuses on the missing/stale sentinel.
+   and Pass 2 hard-refuses on the missing/stale sentinel. **The commit is the per-repo quality boundary** (HARD RULE,
+   2026-06-03): this QG-green prereq binds EVERY code commit toward the integration branch — the direct Commit+Push+Flip
+   path too, not only the quickmerge ship. The `prek` pre-commit hook (ruff/format/gitleaks/conventional-commit) is the
+   LIGHT gate; full `quality-gates.sh` is the commit-prereq. Gate ONCE over a batch (QG-sweep batching) →
+   per-shippable-unit commits from that green tree — per-batch, not per-commit. Pure doc / plan-flip / markdown commits
+   (e.g. `docs(plans):` flips) take the prek hook only — full QG is a source gate.
 2. **Pass 2 — `quickmerge` commits + opens the auto-merging staging PR.**
    ```bash
    bash scripts/quickmerge.sh "feat: ..." --agent --files '<path1> <path2>'
