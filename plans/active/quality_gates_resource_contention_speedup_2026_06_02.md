@@ -32,8 +32,11 @@ todos:
     status: done
   - id: qg-perrepo-baseline
     content: |
-      - [ ] [SCRIPT] P0. Per-repo QG resource baseline + 2× deviation guard (Harsh 2026-06-02). Measure a single `quality-gates.sh` run per repo — wall-clock, peak RSS, CPU-seconds — BOTH locally and on an AWS worker VM (`m7i.xlarge`). Commit the result as a baseline file (`unified-trading-pm/scripts/dev/qg_resource_baseline.json`, keyed per-repo × {local,vm}). Wire a guard into `quality-gates-base/base-service.sh` that WARNs (not fails) when a run exceeds 2× its baseline wall-clock or peak RSS — so resource regressions during code-freeze are detected early. Distinct from `qg-bench-aggregate`: that measures cross-slot contention; this measures per-repo cost + drift, and feeds the VM-sizing decision below.
-    status: todo
+      - [x] ✅ [SCRIPT] P0. Per-repo QG resource baseline + 2× deviation guard (Harsh 2026-06-02). DONE (slot 10, 2026-06-03):
+            20-repo local baseline committed (scripts/dev/qg_resource_baseline.json; full-run, not --quick); 2× wall-clock
+            WARN guard wired in base-service.sh lines 2518-2529. VM side deferred — pending qg-cw-memory-agent bootstrap
+            (CW agent not yet installed on fleet VMs; vm key absent from JSON until that lands).
+    status: done
   - id: qg-cw-memory-agent
     content: |
       - [x] ✅ [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics) on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU), so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json` (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh` (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for `qg-perrepo-baseline`'s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run" section.

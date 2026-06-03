@@ -165,8 +165,10 @@ agent all landed._
       qg-governor / qg-slot-aware-workers / qg-bench-aggregate). **3-of-3 DONE** — qg-bench-aggregate shipped:
       benchmark ran K=1,2,4; K=1 p95=30.5s → K=2=30.7s (1.01×) → K=4=53.1s (1.74×); swap_in=0 steal=0 at all K.
       vmstat header-repeat bug fixed. CSV evidence committed (qg-bench-under-load-20260603T134208Z.csv).
-- [ ] [SCRIPT] P0. Per-repo QG baseline — time/CPU/RAM, **local + on an AWS worker VM** → committed baseline file + a 2×
-      deviation guard (ask #3; owning todo qg-perrepo-baseline). **OPEN — the main remaining E item.**
+- [x] ✅ [SCRIPT] P0. Per-repo QG baseline — time/CPU/RAM, **local + on an AWS worker VM** → committed baseline file + a 2×
+      deviation guard (ask #3; owning todo qg-perrepo-baseline). DONE: 20-repo local baseline in
+      scripts/dev/qg_resource_baseline.json; 2× WARN guard in base-service.sh:2518-2529. VM side deferred pending
+      qg-cw-memory-agent fleet bootstrap.
 - [x] ✅ [INFRA] P1. Worker-VM right-sizing, **data-driven off the baseline** (ask #1; owning todo qg-vm-rightsizing). —
       DONE in owning plan: binding ceiling = unified-trading-library **5.27 GB** per gate; machine-type + slots-per-VM
       decision recorded. (Note: the per-repo baseline P0 above should still backfill the committed numbers.)
