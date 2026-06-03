@@ -583,6 +583,18 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `FEATURE_GREEN→STAGING_GREEN` when `staging ⊇ LDR` (merged) AND staging-v2 green (needs a branch-ancestry check).
       Interim (manual): fire `ci-status-update STAGING_GREEN` for each repo confirmed merged-to-staging + v2-green.
       repo: unified-trading-pm. **This is the main remaining systemic blocker to a hands-off cascade.**
+- [ ] [INFRA] P0. **🔴 NEW DOMINANT BLOCKER — fresh aiohttp CVE fails pip-audit FLEET-WIDE → gates EVERY repo's v2
+      (and PM #120).** Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run: `aiohttp 3.13.5: CVE-2026-34993 +
+      CVE-2026-47265` (newly-published 2026 advisories). pip-audit is a **BLOCKING** gate (`base-service.sh:907`), so
+      every fresh `quality-gates-v2` run now fails on it → **nothing promotes LDR→staging→main** until resolved, and
+      **#120 (the Guard-3 serialization + FEATURE→STAGING auto-advance enhancements) can't reach main** → the cascade
+      self-sustaining-ness is gated on this. **DECISION (operator/security — not a unilateral agent call):** (a)
+      **PREFERRED if a patched aiohttp exists** — bump aiohttp to the fixed release (workspace-constraints.toml +
+      per-repo uv.lock re-lock, fleet-wide) — this is the proper security fix, not masking; OR (b) **if no fix yet /
+      accepted** — add `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` to the curated list at
+      `scripts/quality-gates-base/base-service.sh:916` (the established pattern — 4 CVEs already curated there) + the
+      base-library/base-ui mirrors, with a tracking note. This is the #1 thing to clear to let the (already-built)
+      cascade machinery finish. repo: unified-trading-pm (template) + fleet re-lock. **BLOCKED-OPERATOR-DECISION.**
 - [ ] [INFRA] P1. **Genuine v2-red repos surfaced by the cascade (NOT drift — need real per-repo fixes; the substance
       of their own plans).** Distinct from the false-FAILING drift Guard 3 clears: (a) **execution-service** staging v2
       fails with `ImportError: cannot import name …` (a stale cross-symbol import on staging — likely resolves when the
