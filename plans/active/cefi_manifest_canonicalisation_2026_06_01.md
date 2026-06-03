@@ -132,12 +132,17 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 ### C — single-walk (gap-fill + canonicalisation)
 
-- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: before the walk,
+- [x] ✅ [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: before the walk,
       enumerate ALL top-level trees + nested layouts in the cefi source + canonical buckets (`raw_tick_data/by_date/`
       flat-symbol, `processed_candles/by_date/day=/timeframe=/…`, any `day=/category=` or bare `{venue}/{chain}/date=`).
       Per layout: object count + sample schema; classify duplicate (keep freshest) vs complementary (migrate all). The
       walk MUST cover every in-scope layout or it is incomplete (review-blocking). SSOT:
       `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § Cross-AG lesson + grounded recipe Phase 0.
+      DONE (slot 10, 2026-06-03): exhaustive enumeration confirmed THREE layouts (not 2 from shallow probe). Legacy:
+      L1=9 flat orphans, L2=2,613 day=/pipeline_mode=batch_tardis/asset_group=cefi/ (MOST CANONICAL), L3=460 candle
+      day-dirs. Canonical: C1=9 flat orphans, C2=2,594 day=/asset_group=cefi/ (MISSING pipeline_mode= — LESS canonical
+      than L2), C3=464 candle day-dirs. Key finding: legacy L2 is more canonical than canonical C2. 19-day raw gap
+      (L2−C2). Walk implications documented in SSOT §Phase-0 cefi-specific verification. PM@2f315f0fb.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
