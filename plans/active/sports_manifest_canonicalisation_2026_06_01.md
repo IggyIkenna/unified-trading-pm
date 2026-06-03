@@ -819,38 +819,49 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 **P0 — hard breaks (new writes diverge from migrated data, or land in dead buckets):**
 
-- [ ] [CODE] P0. **MTDS sports raw-tick write path MISSING `pipeline_mode=`** — repo: `market-tick-data-service`,
-      `market_tick_data_service/engine/orchestrator.py:2740-2758` (the inline sports odds path builder). It writes
-      `day={D}/asset_group=sports/data_source={SRC}/venue=…` with NO `pipeline_mode=` segment, while the non-sports
-      builder `_build_partition_path_for_asset_group` (orchestrator.py:980-994) inserts `pipeline_mode={pm}/` via
-      `derive_pipeline_mode_for_row(venue, ag, data_type)`. Post-migration, migrated data lives at
-      `pipeline_mode=batch_odds_api/asset_group=sports/…` but new live writes land at `asset_group=sports/…` → divergent
-      paths. **Fix**: insert `pipeline_mode={derive_pipeline_mode_for_row(...)}/` after `day={D}/` in BOTH the
+- [x] ✅ [CODE] P0. **DONE mtds@4fbc0730 — sports raw-tick write path now carries `pipeline_mode=` (verified vs
+      migration `_canon_mdps_raw_prd` SSOT + path-shape/source= tests; on LDR).** Original gap: MISSING `pipeline_mode=`
+      — repo: `market-tick-data-service`, `market_tick_data_service/engine/orchestrator.py:2740-2758` (the inline sports
+      odds path builder). It writes `day={D}/asset_group=sports/data_source={SRC}/venue=…` with NO `pipeline_mode=`
+      segment, while the non-sports builder `_build_partition_path_for_asset_group` (orchestrator.py:980-994) inserts
+      `pipeline_mode={pm}/` via `derive_pipeline_mode_for_row(venue, ag, data_type)`. Post-migration, migrated data
+      lives at `pipeline_mode=batch_odds_api/asset_group=sports/…` but new live writes land at `asset_group=sports/…` →
+      divergent paths. **Fix**: insert `pipeline_mode={derive_pipeline_mode_for_row(...)}/` after `day={D}/` in BOTH the
       per-fixture and league-aggregate branches; add a path-shape unit test asserting the segment is present.
-- [ ] [CODE] P0. **MDPS processed-candle write path MISSING `pipeline_mode=`/`asset_group=` hive keys** — repo:
-      `market-data-processing-service`, `…/config.py:131` (`get_processed_path`) + `…/output_path_helpers.py:53-75`
-      (`build_processed_candle_path`). The blob key is `processed_candles/by_date/day=/timeframe=/data_type=/venue=/…` —
-      no `pipeline_mode=batch_*/` (the `partition_path` passed to UTL validation has `asset_group=` but the actual GCS
-      blob key does not). Post-migration v9 readers won't find new sports processed candles. **Fix**: embed
-      `pipeline_mode={pm}/asset_group=sports/` in the processed blob prefix (align with the migration target +
-      `candidate_parquet_paths`); path-shape test.
-- [ ] [CODE] P0. **MTDS + MDPS captured manifest rows OMIT `source=`** — repos: `market-tick-data-service`
-      (`engine/orchestrator.py:3084-3121`, `record_captured_from_counts`/`add()` for sports) +
-      `market-data-processing-service` (`…/canonical_writer.py:1426`, `record_captured`). v9 requires `source` on every
-      captured cell (operator 2026-06-01, crosscutting — cefi/defi/sports are RED per CLAUDE.md). Without it sports rows
-      lack the column the v9 walk adds → `MissingSourceError` / null-source breaks `select_primary_available_source`.
-      **Fix**: pass `source=get_primary_source("sports", data_type)` (e.g. `odds_api`) to
-      `record_captured`/`add`/`record_empty` for sports shards in both services. (Composes with
+- [x] ✅ [CODE] P0. **DONE mdps@3dd3f15 — sports processed writer (`scripts/reprocess_sports_odds.py`, the actual sports
+      candle writer) now embeds `pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/` (verified vs
+      migration `_canon_mdps_candle` SSOT + path-shape test; on tab).** Original gap: MISSING
+      `pipeline_mode=`/`asset_group=` hive keys — repo: `market-data-processing-service`, `…/config.py:131`
+      (`get_processed_path`) + `…/output_path_helpers.py:53-75` (`build_processed_candle_path`). The blob key is
+      `processed_candles/by_date/day=/timeframe=/data_type=/venue=/…` — no `pipeline_mode=batch_*/` (the
+      `partition_path` passed to UTL validation has `asset_group=` but the actual GCS blob key does not). Post-migration
+      v9 readers won't find new sports processed candles. **Fix**: embed `pipeline_mode={pm}/asset_group=sports/` in the
+      processed blob prefix (align with the migration target + `candidate_parquet_paths`); path-shape test.
+- [x] ✅ [CODE] P0. **DONE mtds@4fbc0730 + mdps@3dd3f15 — sports captured rows now stamp `source=` (MTDS: `odds_api` via
+      source-map; MDPS: `mdps_odds_horizon_bucket` via `_resolve_primary_source_for_candle`, None-fallback for unwired
+      AGs preserves cefi/defi/tradfi behaviour). Tests assert source= on captured rows.** Original gap: OMIT `source=` —
+      repos: `market-tick-data-service` (`engine/orchestrator.py:3084-3121`, `record_captured_from_counts`/`add()` for
+      sports) + `market-data-processing-service` (`…/canonical_writer.py:1426`, `record_captured`). v9 requires `source`
+      on every captured cell (operator 2026-06-01, crosscutting — cefi/defi/sports are RED per CLAUDE.md). Without it
+      sports rows lack the column the v9 walk adds → `MissingSourceError` / null-source breaks
+      `select_primary_available_source`. **Fix**: pass `source=get_primary_source("sports", data_type)` (e.g.
+      `odds_api`) to `record_captured`/`add`/`record_empty` for sports shards in both services. (Composes with
       `data_source_provenance_all_asset_groups_2026_06_01.md` §Phase 1 — this is the sports write-path slice that plan
       left RED.)
-- [ ] [CODE] P0. **features-service sports OUTPUT bucket f-string drops env-tier** — repo: `features-service`,
-      `features_service/sports/cli/handlers/batch_handler.py:722` + `…/cli/handlers/live_handler.py:108` +
-      `…/app/pubsub/subscriber.py:65`: `bucket or f"features-sports-{project_id}"` produces
-      `features-sports-central-element-323112` but the canonical bucket is `features-sports-prd-central-element-323112`
-      (`cloud-providers.yaml`). Post-migration the non-env-tiered bucket does not exist → **all sports feature writes
-      hard-fail**. **Fix**: replace all 3 with `resolve_bucket(kind="features-sports", asset_group="sports")` (the
-      migration script `features_sports_reconcile_available_at.py:261` already uses the correct form).
-- [ ] [CODE] P0. **strategy-service `VenueBalanceTracker` hardcodes legacy no-env buckets** — repo: `strategy-service`,
+- [x] ✅ [CODE] P0. **DONE features-service@78a9a26f — all 3 sports output call sites now use
+      `resolve_bucket(kind="features-sports", asset_group="sports")` (env-tiered `-prd-` form) + 3 tests. (Also
+      unblocked 2 foreign QG gates: a 51L method from 933b8747 + a uv.lock desync.)** Original gap: bucket f-string
+      drops env-tier — repo: `features-service`, `features_service/sports/cli/handlers/batch_handler.py:722` +
+      `…/cli/handlers/live_handler.py:108` + `…/app/pubsub/subscriber.py:65`:
+      `bucket or f"features-sports-{project_id}"` produces `features-sports-central-element-323112` but the canonical
+      bucket is `features-sports-prd-central-element-323112` (`cloud-providers.yaml`). Post-migration the non-env-tiered
+      bucket does not exist → **all sports feature writes hard-fail**. **Fix**: replace all 3 with
+      `resolve_bucket(kind="features-sports", asset_group="sports")` (the migration script
+      `features_sports_reconcile_available_at.py:261` already uses the correct form).
+- [x] ✅ [CODE] P0. **DONE strategy-service@7025bedc + deployment-service@5ad0951 — `VenueBalanceTracker` now resolves
+      via `resolve_bucket_name` (allocation → flat `strategy-store`, shared by all non-prediction AGs; positions → new
+      `position-store-sports` kind registered in cloud-providers.yaml GCP+AWS) + regression test.** Original gap:
+      hardcoded legacy no-env buckets — repo: `strategy-service`,
       `strategy_service/position/core/venue_balance_tracker.py:57-58`: `f"strategy-store-sports-{project_id}"` +
       `f"position-store-sports-{project_id}"`. Used by `load_allocation()` (:414), `save_eod_snapshot()` (:478),
       `load_snapshot()` (:508) → **404 post-migration**. **Fix**: resolve via
