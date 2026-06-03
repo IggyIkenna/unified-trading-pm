@@ -7,19 +7,28 @@ source:
   - plans/active/features_input_manifest_migration_2026_05_25.md
   - features-service@2965bbda (manifest-driven read migration that surfaced this)
 locked_by: live-defi-rollout
-status: OPEN — incomplete audit (background agent stalled); needs MTDS/MDPS owner (Ikenna)
+status:
+  ABSORBED into cefi_manifest_canonicalisation_2026_06_01.md (slot-3, 2026-06-03) — archives when the master's CF-11
+  "MTDS processed_candles phantom-captured reconcile" todo is GREEN
 priority: P2
 ---
 
-> **🛑 ROLLOUT-AGENT HOLD (2026-05-26):** harsh-side (operator-directed) is actively working this end-to-end. **Do NOT
-> auto-assign / auto-fix / push to LDR.** See `plans/active/_agent_pings.md`.
-
-> **🟦 OPERATOR DECISION LEDGER — 2026-06-01 (Ikenna, recorded slot-1).** This is **manifest-canonicalisation work** —
-> SSOT is `cefi_manifest_canonicalisation_2026_06_01.md` and it is **actively held by harsh** (banner above). **Slot 7
-> takes NO action here** — no investigation, no implementation, no archive-flip — to avoid colliding with the in-flight
-> harsh work. The intended direction (when harsh resumes): investigate MTDS pre-marking of `captured`, then reconcile
-> `captured` → `attempted_failed` / `expected_unattempted` for unwritten shards (honest-absence). Recorded for SSOT
-> continuity only.
+> **🟩 ABSORBED INTO THE CEFI MASTER — slot-3, 2026-06-03.** Operator moved CeFi end-to-end to slot 3 (harsh out for the
+> day). SSOT for this work is now `cefi_manifest_canonicalisation_2026_06_01.md` (the CeFi master orchestrator) §CF-11.
+> The earlier ROLLOUT-AGENT HOLD is **LIFTED** (no longer harsh-held). Harsh: ack on return — see
+> `plans/active/_agent_pings.md`.
+>
+> **🔬 ROOT CAUSE CORRECTED — direct `_index` query (slot-3 2026-06-03).** The "manifest claims `captured` for
+> processed*candles with no file" framing below is a **category error, not manifest corruption.** The cefi `_index`
+> (2,640,864 rows) **already disambiguates surfaces via `data_type`**: RAW tick (`trades` 1.19M etc., `service_name=`
+> market-tick-data-service) vs CANDLE (`ohlcv_1m/5m/…`, only **8,715 rows**, mostly market-data-processing-service). The
+> observations below cross-checked `processed_candles/` FILES against **`trades`-captured** rows — but a `trades`
+> `captured` row (MTDS) correctly means the **RAW** file exists (verified: day=2026-05-02 BITFINEX/BITGET/KRAKEN raw
+> `trades` present; those venues have NO `ohlcv` rows). So MTDS writes no phantom candle rows; the
+> `reconcile→attempted_failed` fix would wrongly demote correct raw rows. **Real residuals** (now tracked as 3 sub-todos
+> in the master §CF-11): (1) read-side contract — candle consumers must key off
+> `ohlcv*\*`, not `trades`/`processed_candles/`path (features-service); (2) real partial cefi candle backfill (MDPS); (3) verify MDPS`ohlcv`
+> row-vs-file faithfulness. This doc archives when those are GREEN. Diagnosis below retained for context.
 
 ## What I found
 

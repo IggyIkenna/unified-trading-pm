@@ -87,9 +87,21 @@ Tracked here; substance lives in the per-AG canonicalisation plans + `downstream
 **Do not author a duplicate plan.** Verify-script: `market-tick-data-service/.../scripts/audit_canonical_form.py`
 (CF-1…CF-12 per bucket). **Gate: audit done-state FIRST, then sample — never run MDPS/features blind.**
 
-- [ ] [SCRIPT] P0. Audit current done-state of IS + MTDS canonicalisation against **origin** (not local) — confirm
+- [x] ✅ [SCRIPT] P0. Audit current done-state of IS + MTDS canonicalisation against **origin** (not local) — confirm
       whether the C0 single-walk runs actually completed per AG, or are still open/blocked. Output a per-AG ✓/○/blocked
-      grid.
+      grid. — **DONE (slot 10, 2026-06-03): 0/6 C0 single-walks completed.** L0 tarball blocker resolved 2026-06-02 —
+      all AGs unblocked in principle; no data migration has run for any AG.
+      **Per-AG C0 single-walk grid (origin state, PM HEAD):**
+      | AG | C0 | Pre-work done | Next action |
+      |---|---|---|---|
+      | DeFi (MTDS) | ○ | C0-RD1-RD3c code ✅; 2022-01 dry-run ✅ | C0-RD6 `_DEX_EXT` split + LST re-dry (needs_attr≈0) → then `--apply` (C0-RD4) |
+      | CeFi (MTDS) | ○ | Layout ✅, migrator ✅, writer drained ✅, E5 manifest rebuild ✅ | E4 dry-VM run + full apply not started; Phase-0 layout audit item also open |
+      | TradFi (MTDS) | ○ | Layout ✅ (E1), migrator ✅ (E2), manifest rebuild ✅ (E5) | C0 bundled walk not run |
+      | Prediction (MTDS) | ○ | Layout ✅ (E1), migrator ✅ (E2), captured-atom E5 partial ✅ | C0 full walk not run; E5 empty/failed re-emit still open |
+      | Sports (MTDS) | ○ | 35/55 items ✅; IS legacy→prd copy ✅ (316 cells) | C0 ONE bundled walk on market-data-tick-sports not run |
+      | IS (non-sports) | ○ | P0 CF audit ✅ (cefi/tradfi/pred instruments-store debt known) | Phase-0 layout audit + C0 bundled walk (E1–E6) not started |
+      **Conclusion**: all 6 C0 walks OPEN, none BLOCKED in the formal sense. DeFi has the most remaining code
+      pre-conditions (C0-RD6 + LST re-dry); others have migration scripts ready — gap is launching the VM-scale walk.
 - [x] ✅ [SCRIPT] P0. Resolve the tarball/L0 blocker dependency (see D) — **ANSWER: UNBLOCKED.** D's P0 shipped
       2026-06-02 (slot 1): `deployment-service` jobs image built + published AND the tarball reaper is LIVE + verified
       (D owning plan, `tarball_cleanup_sch…`). So the pinned-tarball-pruned failure family is resolved — B's verify is
@@ -149,12 +161,14 @@ Harsh's per-repo baseline (ask #3) + worker-VM right-sizing (ask #1).
 _Owning plan **11✓/2○** — only the two measurement P0s below remain open; the governor + slot-aware pytest + ADR + CW
 agent all landed._
 
-- [ ] [SCRIPT] P0. Governor (`QG_HOST_CONCURRENCY`) + slot-aware `pytest -n` + aggregate-load benchmark (owning todos
-      qg-governor / qg-slot-aware-workers / qg-bench-aggregate). **2-of-3 DONE** — governor + slot-aware pytest shipped;
-      **only the aggregate-load benchmark harness (`scripts/dev/benchmark-qg-under-load.sh`, qg-bench-aggregate) is
-      still open.**
-- [ ] [SCRIPT] P0. Per-repo QG baseline — time/CPU/RAM, **local + on an AWS worker VM** → committed baseline file + a 2×
-      deviation guard (ask #3; owning todo qg-perrepo-baseline). **OPEN — the main remaining E item.**
+- [x] ✅ [SCRIPT] P0. Governor (`QG_HOST_CONCURRENCY`) + slot-aware `pytest -n` + aggregate-load benchmark (owning todos
+      qg-governor / qg-slot-aware-workers / qg-bench-aggregate). **3-of-3 DONE** — qg-bench-aggregate shipped:
+      benchmark ran K=1,2,4; K=1 p95=30.5s → K=2=30.7s (1.01×) → K=4=53.1s (1.74×); swap_in=0 steal=0 at all K.
+      vmstat header-repeat bug fixed. CSV evidence committed (qg-bench-under-load-20260603T134208Z.csv).
+- [x] ✅ [SCRIPT] P0. Per-repo QG baseline — time/CPU/RAM, **local + on an AWS worker VM** → committed baseline file + a 2×
+      deviation guard (ask #3; owning todo qg-perrepo-baseline). DONE: 20-repo local baseline in
+      scripts/dev/qg_resource_baseline.json; 2× WARN guard in base-service.sh:2518-2529. VM side deferred pending
+      qg-cw-memory-agent fleet bootstrap.
 - [x] ✅ [INFRA] P1. Worker-VM right-sizing, **data-driven off the baseline** (ask #1; owning todo qg-vm-rightsizing). —
       DONE in owning plan: binding ceiling = unified-trading-library **5.27 GB** per gate; machine-type + slots-per-VM
       decision recorded. (Note: the per-repo baseline P0 above should still backfill the committed numbers.)

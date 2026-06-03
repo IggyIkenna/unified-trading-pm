@@ -9,6 +9,9 @@ source:
 locked_by: harsh-fleet-audit
 priority: P2
 status: active
+parent_epic: orchestrator_master
+estimate_calibrated_ai_days: 0.2
+estimate_class: infra
 ---
 
 # Running VM Fleet Status — 2026-05-27 ~07:35 UTC

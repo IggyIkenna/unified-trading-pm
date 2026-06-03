@@ -1,0 +1,148 @@
+name: deterministic-promotion-conflict-resolve
+
+# GUARD / DETERMINISTIC RESOLVER (cicd_contract_hardening_2026_06_01 § "Deterministic take-LDR
+# promotion-conflict resolver"). Operator principle 2026-06-03: minimise agent dependency —
+# resolve the COMMON-CASE promotion conflict deterministically (no LLM, no API credits); escalate
+# to the orchestrator-VM conflict-resolution-agent ONLY for genuine semantic divergence.
+#
+# WHY: a LDR→staging promotion PR conflicts when `staging` carries stale/superseded content (it is
+# strictly behind LDR — the integration truth). That is NOT an ambiguous merge: the resolution is
+# take-LDR. We resolve it by merging the TARGET into LDR with `-X ours` (take-LDR), pushing LDR (the
+# UNPROTECTED integration branch — no protected-branch push, no special perms) so the LDR→target PR
+# becomes a clean fast-forward. The promoter then auto-merges it on quality-gates-v2.
+#
+# SAFETY: take-LDR is applied ONLY when (1) source == live-defi-rollout (so the push target is the
+# unprotected LDR), AND (2) the target branch carries ZERO unique NON-MERGE commits vs LDR (i.e. it
+# is pure stale + merge-nodes — `git log --no-merges LDR..target` is empty). If the target has unique
+# non-merge content, take-LDR could drop a genuine change → ESCALATE to the conflict-resolution-agent
+# (VM worker) instead. Never force-pushes. Conditional push (re-checks LDR is an ancestor + nothing
+# raced) before pushing.
+#
+# Trigger: repository_dispatch promotion-conflict (the promoter dispatches THIS instead of
+# merge-conflict-detected) + manual workflow_dispatch. SSOT: PM-only (operates on any fleet repo via clone).
+
+on:
+  repository_dispatch:
+    types: [promotion-conflict]
+  workflow_dispatch:
+    inputs:
+      repo_name:
+        description: "Repository name (e.g. unified-api-contracts)"
+        required: true
+      source_branch:
+        description: "Source branch of the blocked promotion PR (e.g. live-defi-rollout)"
+        required: true
+        default: "live-defi-rollout"
+      target_branch:
+        description: "Target branch (e.g. staging)"
+        required: true
+        default: "staging"
+      original_pr_url:
+        description: "URL of the blocked PR (optional)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+concurrency:
+  group:
+    det-resolve-${{ github.event.client_payload.repo_name || inputs.repo_name }}-${{
+    github.event.client_payload.target_branch || inputs.target_branch }}
+  cancel-in-progress: false
+
+jobs:
+  resolve:
+    name: Deterministic take-LDR resolve (escalate only if genuinely ambiguous)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    outputs:
+      outcome: ${{ steps.run.outputs.outcome }}
+    steps:
+      - name: Resolve + attempt deterministic take-LDR
+        id: run
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO_NAME: ${{ github.event.client_payload.repo_name || inputs.repo_name }}
+          SOURCE_BRANCH: ${{ github.event.client_payload.source_branch || inputs.source_branch }}
+          TARGET_BRANCH: ${{ github.event.client_payload.target_branch || inputs.target_branch }}
+          PR_URL: ${{ github.event.client_payload.original_pr_url || inputs.original_pr_url }}
+        run: |
+          set -uo pipefail
+          : "${REPO_NAME:?repo_name required}"
+          : "${SOURCE_BRANCH:?source_branch required}"
+          : "${TARGET_BRANCH:?target_branch required}"
+          LDR="live-defi-rollout"
+
+          escalate() {
+            echo "→ escalating to conflict-resolution-agent (VM worker): $1"
+            gh api "repos/${OWNER}/unified-trading-pm/dispatches" \
+              -f event_type=merge-conflict-detected \
+              -f "client_payload[repo_name]=${REPO_NAME}" \
+              -f "client_payload[source_branch]=${SOURCE_BRANCH}" \
+              -f "client_payload[target_branch]=${TARGET_BRANCH}" \
+              -f "client_payload[original_pr_url]=${PR_URL}" \
+              && echo "outcome=escalated" >> "$GITHUB_OUTPUT" || echo "outcome=escalate_dispatch_failed" >> "$GITHUB_OUTPUT"
+          }
+
+          # Take-LDR is only valid when the source is LDR (push target = unprotected LDR).
+          if [ "$SOURCE_BRANCH" != "$LDR" ]; then
+            escalate "source=$SOURCE_BRANCH is not live-defi-rollout (take-LDR only resolves LDR→target)"
+            exit 0
+          fi
+
+          git config --global user.name "uts-deterministic-resolver[bot]"
+          git config --global user.email "uts-deterministic-resolver[bot]@users.noreply.github.com"
+          git clone --quiet "https://x-access-token:${GH_TOKEN}@github.com/${OWNER}/${REPO_NAME}.git" repo
+          cd repo
+          git fetch --quiet origin "$LDR" "$TARGET_BRANCH"
+
+          # SAFETY GATE: target must carry NO unique non-merge content vs LDR (pure stale + merge-nodes).
+          UNIQUE=$(git log --no-merges --format='%h %s' "origin/${LDR}..origin/${TARGET_BRANCH}" 2>/dev/null || true)
+          if [ -n "$UNIQUE" ]; then
+            echo "Target ${TARGET_BRANCH} carries unique NON-MERGE commit(s) vs LDR — NOT a clean take-LDR:"
+            echo "$UNIQUE"
+            escalate "target has unique non-merge content (genuine divergence)"
+            exit 0
+          fi
+
+          # Deterministic take-LDR: merge target into LDR with -X ours, so LDR ⊇ target → LDR→target is a clean FF.
+          git checkout -B _detresolve "origin/${LDR}" --quiet
+          if ! git merge -X ours --no-ff --no-commit "origin/${TARGET_BRANCH}"; then
+            echo "merge -X ours left conflicts (unexpected for take-LDR) — escalating"
+            git merge --abort || true
+            escalate "merge -X ours did not cleanly resolve"
+            exit 0
+          fi
+          git commit --no-verify --no-edit \
+            -m "merge(${TARGET_BRANCH}→${LDR}): deterministic take-LDR resolution of ${LDR}→${TARGET_BRANCH} conflict — target absorbed as ancestor (stale + merge-nodes only); promotion PR becomes clean FF. No agent/credits (deterministic common-case)."
+
+          # Conditional push: re-fetch, confirm LDR didn't race + we're still an ancestor-superset.
+          git fetch --quiet origin "$LDR"
+          if [ "$(git rev-list --count "origin/${LDR}..HEAD")" -gt 0 ] && git merge-base --is-ancestor "origin/${LDR}" HEAD; then
+            if git push origin "HEAD:${LDR}" 2>&1 | tee /tmp/push.log; then
+              echo "✅ Deterministic take-LDR resolved ${REPO_NAME} ${LDR}→${TARGET_BRANCH} (pushed LDR; PR now clean FF)"
+              echo "outcome=resolved" >> "$GITHUB_OUTPUT"
+            else
+              grep -q "non-fast-forward\|rejected" /tmp/push.log && echo "outcome=raced" >> "$GITHUB_OUTPUT" || { echo "outcome=push_error" >> "$GITHUB_OUTPUT"; exit 1; }
+            fi
+          else
+            echo "LDR raced or not FF — re-dispatch will retry; no-op this run"
+            echo "outcome=raced" >> "$GITHUB_OUTPUT"
+          fi
+
+  notify:
+    name: Slack — deterministic resolve outcome
+    needs: [resolve]
+    if: always() && needs.resolve.outputs.outcome != 'resolved' && needs.resolve.outputs.outcome != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Deterministic promotion-conflict resolver: ${{ github.event.client_payload.repo_name || inputs.repo_name }}
+        ${{ github.event.client_payload.target_branch || inputs.target_branch }} → outcome=${{ needs.resolve.outputs.outcome }}"
+      severity: ${{ needs.resolve.outputs.outcome == 'escalated' && 'INFO' || 'WARNING' }}
+      conclusion: ${{ needs.resolve.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit

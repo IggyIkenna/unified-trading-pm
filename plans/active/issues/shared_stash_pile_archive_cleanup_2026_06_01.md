@@ -8,6 +8,8 @@ priority: P3
 status: active
 locked_by: live-defi-rollout
 locked_since: 2026-06-01
+estimate_calibrated_ai_days: 0.4
+estimate_class: infra
 ---
 
 # Shared git stash pile — archived + cleared (2026-06-01)

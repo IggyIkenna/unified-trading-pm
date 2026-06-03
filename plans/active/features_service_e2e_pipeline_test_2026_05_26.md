@@ -330,13 +330,16 @@ resolves the minimum window each family/feature needs and backfills exactly that
     (`day=.../feature_group=.../timeframe=.../instr.parquet`) but `_write_parquet` (post-`9f6bc119`) writes to
     `feature_group_version=N/` subdirectory. Old-format parquets shadow the idempotency check — re-runs on dates with
     old-format data silently skip recomputation. Tracked for cleanup.
-  - **[FINDING-H] P1 BLOCKER — `cross_asset_correlation` DuplicateError on suffix `_2` join:** `_ingest_delta_one` reads
-    ALL parquets under `day={date}/` (all feature groups). After `diagonal_relaxed` concat, both `macd_histogram_mom`
-    and `macd_histogram_mom_2` coexist. `df1.join(df2, suffix="_2")` at `cross_asset_correlation.py:94` renames df2's
-    `macd_histogram_mom` → `macd_histogram_mom_2`, colliding with the existing column.
-    `polars.exceptions.DuplicateError`. Pre-existing in the cross_asset_correlation calculator — fixed suffix `_2` is
-    fragile when feature columns naturally carry `_2` suffixes. Cross_instrument full e2e remains BLOCKED on this
-    finding until the suffix is made unique (e.g., `_right_2` or UUID-per-join).
+  - **[FINDING-H] ✅ FIXED 2026-06-03 (was a FALSE FLIP — parent `[VALIDATE]` item ticked `[x]` while this sub-bullet
+    said BLOCKED).** `cross_asset_correlation` joined the two WIDE per-instrument frames with `suffix="_2"`; after the
+    `diagonal_relaxed` concat df2 already carries real `*_2` columns (`macd_histogram_mom_2`), so the rename collided →
+    `polars.exceptions.DuplicateError: column with name 'close_2' already exists`. **Root-fix:** the calculator only
+    reads `timestamp/close/close_2/instrument_id`, so it now **projects to those columns BEFORE the join** (not a
+    fragile unique suffix) → collision structurally impossible + join is cheap. Regression test reproduces the old
+    `DuplicateError` and asserts the fix (proven: old wide join raises, new projected join is clean). Verified
+    basedpyright 0/0/0 + ruff + QG green. **Shipped in PR #8** (`IggyIkenna/features-service`, base `staging`, branch
+    `fix/finding-h-checkexists-2026-06-03`) — quickmerge→staging is held by the DEP-ORDER gate (UTL/UAC not yet on
+    staging); Ikenna to coordinate the merge.
 
 ### Phase 5 — e2e harness + governance `[P1]`
 
@@ -549,6 +552,94 @@ cross_instrument `close` (FINDING-F): **DECIDED 2026-05-27 → Option A (delta_o
 volatility `empty_confirmed`: re-scoped into the per-service status-calibration audit
 (`plans/active/issues/capture_status_calibration_per_service_2026_05_27.md`) — do NOT reflexively confirm-empty; gate it
 behind genuine-absence confirmation.
+
+## 2026-06-03 — Scope narrowed to 2 strategies + Track-2 fixes shipped (session handoff)
+
+**Operator-directed re-scope (2026-06-03):** validate the features pipeline e2e **specifically for the two MVP
+strategies** `CARRY_BASIS_PERP` + `CARRY_STAKED_BASIS` first, narrow the pipeline to exactly what they consume, then fan
+out to more strategies/asset-groups. This **collapses the data-depth problem** — neither strategy needs the
+deep-lookback candle families.
+
+### Strategy-slice dependency audit (what the 2 strategies actually consume from the pipeline)
+
+| Feature consumed                  | Producer (family/group)                   | Upstream input                                 | Data-depth     | Input exists in GCS?                        |
+| --------------------------------- | ----------------------------------------- | ---------------------------------------------- | -------------- | ------------------------------------------- |
+| `staking_apy_bps`                 | **features-onchain** `lst_yields`         | MTDS `lst_rates`                               | 2 daily points | ✅ `lst-rates-<pid>` (2020→2026)            |
+| `lst_native_rate`(+`_ts`)         | **features-onchain** `lst_native_rates`   | MTDS `lst_rates`                               | 1 point        | ✅                                          |
+| `funding_rate_apy_bps`            | **features-onchain** `perp_funding_rates` | `perp_funding`/`derivative_ticker`             | 1 day          | ✅ `perp-funding-<pid>` (2024→)             |
+| `health_factor`                   | **features-onchain**                      | Aave RPC (live state)                          | per-tick       | runtime                                     |
+| `usdc_idle_yield_apy_bps`         | **STUB — not wired** (defaults 0)         | —                                              | —              | known/acked gap (conservative floor)        |
+| `funding_oi` (annualized funding) | **delta_one** `funding_oi`                | `derivative_ticker`(CeFi)/`perp_funding`(DeFi) | ~2d @1h        | raw tick ✅                                 |
+| `realized_vol_20` @1h             | **delta_one** `returns`                   | `trades`→candles / `oracle_prices`             | ~1 day         | needs short MDPS (candles not yet produced) |
+
+**Consequences:** (1) data-depth for these 2 strategies is **1–2 days**, not months — the `market_structure@24h` 240-day
+requirement is OFF this path. (2) `cross_instrument` / `multi_timeframe` / `market_structure` are **NOT consumed by
+either strategy** → FINDING-H and the mtf 4h/24h gap are off the critical path for this validation (still fixed
+FINDING-H opportunistically — PR #8). (3) **features-onchain is the PRIMARY family to validate.** Strategy engines
+consume these via a features-dict at `on_tick`; tracers/backtest-loaders ALSO compute the same numbers locally from raw
+MTDS (a live=batch consistency point to confirm later, not block on).
+
+### Upstream data existence (verified on GCS 2026-06-03)
+
+`lst-rates` (2020→2026 ✅) · `perp-funding` (2024→ ✅) · `market-data-tick-defi-prd` raw tick (2020→2026-05-28 ✅, DeFi
+venues incl UNISWAP_V3/CURVE/BALANCER… — **Drift/Orca NOT seen on sampled 05-03/04-09, needs explicit confirm**) ·
+`market-data-tick-cefi-prd` raw tick incl **BITGET-SPOT 2024-11-08→2026-05-06 contiguous ✅** ·
+`features-onchain-{defi, cefi}-{prd,test}` buckets all exist. **MDPS processed_candles essentially NOT run** (prd has
+only scattered days).
+
+### BITGET-SPOT audit — producible upstream gap, NOT `empty_confirmed` (operator principle 2026-06-03)
+
+> "If a downstream needs upstream data in a particular shape and doesn't get it, that's a **genuine upstream gap to
+> FIX**, not an absence to mark." BITGET-SPOT raw tick exists ~18 months deep → MDPS **can** produce the candles → the
+> mtf "silent skip" is a producible gap (run MDPS), not `empty_confirmed(NO_INPUT_AVAILABLE)`. This **supersedes** the
+> Temporary-state row below for the BITGET-SPOT case. Buffer-depth correction: the plan's earlier "24h needs ~14 days"
+> is only true for ~14-lookback groups; `market_structure@24h` (200-lookback) needs **~240 contiguous days**
+> (`lookback × seconds(tf) × 1.2`). Relevant to the fan-out, not the 2 strategies.
+
+### Track-2 fixes — SHIPPED as PR #8 (verification of "done" items that were NOT actually done)
+
+- **FINDING-H** (cross_asset_correlation `DuplicateError`) — was a FALSE FLIP; now genuinely fixed
+  (project-before-join).
+- **`check_exists` versioned-path mismatch** (delta_one) — was an open P2 NOTE; now probes the
+  `feature_group_version={N}/` path the writer uses (idempotent-skip was silently never firing). Misleading
+  `check_exists_always_false` test renamed.
+- Both: basedpyright 0/0/0, ruff clean, `quality-gates.sh --no-fix` exit 0, regression tests green (FINDING-H test
+  proven to catch the real `DuplicateError`). **PR #8** `IggyIkenna/features-service` base `staging`, branch
+  `fix/finding-h-checkexists-2026-06-03`. **Held by DEP-ORDER gate** (UTL/UAC not on staging) → Ikenna coordinates
+  merge.
+
+### Where this session STOPPED + key discovery for the next session
+
+Stopped at Track-1 Phase-A **safety verification** (before any pipeline write). Discovery: **features-onchain routes to
+the `-test` bucket via `IS_TEST_RUN=true`** (config field, "Route writes to -test- bucket instead of prod (E2E test
+mode)") — NOT `PROTOCOL_DATA_SINK_BUCKET_{AG}` (that's delta_one's mechanism; onchain `feature_writer.bucket` resolves
+the canonical bucket directly). The CLI also has `--dry-run` (dumps to local `data/sample/`, no GCS write) for a
+zero-risk read→calc smoke. **Next session:** dry-run smoke → then `IS_TEST_RUN=true` run → `features-onchain-defi-test`
+→ read-back assert.
+
+### Open Track-1 todos (narrowed 2-strategy validation — the actual goal)
+
+- [ ] [SCRIPT] P0. **Phase A — features-onchain staked-basis slice e2e.** `--dry-run` smoke (read
+      `lst-rates`+`perp-funding` from prd, compute) then `IS_TEST_RUN=true` run of `lst_yields` / `lst_native_rates` /
+      `perp_funding_rates` / `health_factor` (DEFI, window e.g. 2026-04-07..09) → `features-onchain-defi-test` →
+      read-back assert sane ranges (`lst_native_rate≈1.0–1.2`, staking/funding APY plausible). No MDPS needed. Repo:
+      features-service.
+- [ ] [INFRA] P0. **Phase B — short CeFi MDPS top-up + delta_one funding_oi/realized_vol.** Run MDPS for ~2–3 days over
+      the perp venues (read raw tick from `market-data-tick-cefi-prd`, write processed*candles to a `-test` bucket via
+      `MDPS_OUTPUT_BUCKET*{CAT}`) → run delta_one `funding_oi`+`returns`(realized_vol_20)@1h → `-test` → read-back.
+      Repos: market-data-processing-service + features-service.
+- [ ] [INFRA] P1. **Basis-perp DeFi leg — confirm Drift/Orca coverage.** Verify `venue=DRIFT data_type=perp_funding` +
+      `venue=ORCA/RAYDIUM data_type=dex_pool_state` exist in `market-data-tick-defi-prd` for the test window; MTDS/MDPS
+      top-up if missing. Repo: market-tick-data-service.
+- [ ] [VALIDATE] P1. **Phase C — strategy read-back.** Confirm `CarryStakedBasisRankAllocator` /
+      `CarryBasisPerpRankAllocator` (+ `trace_carry_staked_basis.py`) consume the `-test` features and produce a
+      non-empty ranked result. Repo: strategy-service.
+- [ ] [SCRIPT] P2. **Perf/resource instrumentation** per `(asset_group × feature category)` across the Phase A/B runs
+      (wall-clock, peak RSS, rows-in/out, parquet size). Repo: features-service `scripts/e2e/`.
+- [ ] [INFRA] P2. **DEFERRED (fan-out, not the 2 strategies):** MDPS 1h backfill `2026-04-14→04-30` for mtf 4h/24h; and
+      BITGET-SPOT 4h/24h candles via MDPS (producible gap — see audit above, do NOT `empty_confirmed`). Repo: MDPS.
+- [ ] [VALIDATE] P2. **`usdc_idle_yield_apy_bps` stub** — confirm leave-as-0-floor (acked) vs wire `venue_funding_yield`
+      upstream; folded with the per-service status-calibration audit. Repo: features-service onchain + delta_one.
 
 ## Temporary states + their canonical follow-up plans
 

@@ -219,10 +219,14 @@ column is RED, not exempt.
       (FIXTURE_EVENTS, INJURIES, …) auto-stamp; `record_empty` paths are exempt (no category).
 - [x] ✅ [TEST] P1. Sports `FIXTURES` multi-source covered in UTL `test_manifest_writer_source.py` — utl@0f7198f2
       (raise-without-source + stamp-with-`api_football`); + UAC generic resolution for sports uac@559dc81b.
-- [ ] [SCRIPT] P1. Write `backfill_sports_source_column.py` (copy tradfi template) — **path→column migration**: read the
-      source from the existing path segment (`data_source=ODDS_API/` legacy, `pipeline_mode=batch_api_football/` newer),
-      write it into the `source` column on every row, and emit on the canonical column layout. Map each path token →
-      closed-set source string. Idempotent.
+- [x] ✅ [SCRIPT] P1. ~~Write `backfill_sports_source_column.py` (copy tradfi template)~~ — **CLOSED WON'T-DO 2026-06-03
+      (redundant + would violate single-walk discipline).** The path→column source lift is ALREADY implemented in
+      `market-tick-data-service/.../scripts/rebuild_sports_manifest_v9.py` `_source_from_row()` (reads source from the
+      `source`/`data_source`/`venue` columns + the `pipeline_mode` path token `batch_X→X`, closed-set), and the
+      rebuilder re-emits every captured row via `writer.add(source=…)` on the canonical column layout as part of the
+      single C-walk. A separate script would be a second sports source walk — banned by the next todo + single-walk
+      discipline. Verified via the 2026-06-03 dry-run (MDPS PLAN lines drop `data_source=ODDS_API/` from the path →
+      source goes to column).
 - [ ] [DATA] P1. Backfill the existing sports corpus — **fold into `sports_manifest_canonicalisation_2026_06_01.md`
       C-source rider** (its single bundled walk owns the sports `_index`; do NOT open a separate sports source walk —
       single-walk discipline). If that walk has not launched, run direct (parallel in-region VMs sharded by `day=`, see
@@ -231,19 +235,35 @@ column is RED, not exempt.
 
 ### Phase 5 — Downstream reconciliation wired for all multi-source asset groups (P0 correctness)
 
-- [ ] [TEST] P0. Prove the consumer read path resolves source priority for **cefi/defi/sports** (not just tradfi):
-      2-source fixture (same instrument+ts from two providers, co-mingled in one folder) → consumer emits exactly ONE
+- [ ] [TEST] P0. Prove the consumer read path resolves source priority for **cefi/defi/tradfi** (not just tradfi):
+      2-source cell (same instrument+ts from two providers, co-mingled in one folder) → consumer emits exactly ONE
       resolved row via `select_primary_available_source()`. No silent double-count. Cover features-service consumers.
-      **PARTIAL — resolution PRIMITIVES proven generic for cefi/defi/sports (uac@559dc81b: select_primary picks index-0
-      primary per cell; detect_dual_source_conflicts surfaces overlaps). REMAINING: wire the resolver into the actual
-      consumer read path (features-service loaders) — currently dead code (see finding below).**
+      **PARTIAL — resolution PRIMITIVES proven generic (uac@559dc81b: select_primary picks index-0 primary per cell;
+      detect_dual_source_conflicts surfaces overlaps). REMAINING: wire the resolver into the cefi/tradfi consumer read
+      paths — currently dead code (see finding below).** **⚠️ SPORTS DESCOPED 2026-06-03 (slot-4 read-path audit):
+      sports multi-source is `FIELD_UNION`, NOT same-field source-pick — different providers contribute DIFFERENT fields
+      per fixture (API-Football base + FootyStats predictions + Understat xG), merged by
+      `features_service/sports/exporters/derived_features_exporter.py::_merge_provider_columns` ("left-merge
+      non-overlapping provider columns" — the resolver docstring's rule-4, explicitly "handled at the consumer/writer
+      layer, NOT by select_primary"); odds are per-bookmaker (each `venue=` is a DISTINCT instrument, not the same
+      metric twice). So `select_primary_available_source` does not apply to sports — sports reads are already correct.
+      Remaining scope is **cefi/tradfi** same-field dual-source ONLY (e.g. tradfi databento/massive), owned by this
+      cross-AG plan, not slot-4 sports.**
 - [x] ✅ [UAC] P1. Confirmed (2026-06-01 read-path audit): `detect_dual_source_conflicts()` /
       `select_primary_available_source()` are generic (not tradfi-gated) but **invoked by NO non-test consumer** —
       result filed as the finding below. The conflict-detection primitive itself is tested (uac@559dc81b).
-- [ ] [UAC] P1. **FINDING (2026-06-01 read-path audit)**: `select_primary_available_source()` /
-      `detect_dual_source_conflicts()` are generic + unit-tested (uac@559dc81b) but **called by NO non-test consumer** —
-      dead code at the read layer. Wire the resolver into the actual consumer read path (features-service loaders + any
-      manifest/parquet reader that merges co-mingled multi-source folders) so reads emit one resolved row per cell.
+- [ ] [UAC] P1. **FINDING (2026-06-01 read-path audit; SHARPENED 2026-06-03 slot-4)**:
+      `select_primary_available_source()` / `detect_dual_source_conflicts()` are generic + unit-tested (uac@559dc81b)
+      but **called by NO non-test consumer** — dead code at the read layer. **Read-layer reality (slot-4 audit):** there
+      is NO single generic features-service reader — each family has its own loader
+      (`delta_one/app/core/data_loader.py`, `volatility/core/data_loader.py`,
+      `onchain/adapters/mtds_canonical_reader.py` [DeFi-only], sports `data/gcs_reader.py`), so this is a **per-loader**
+      wire, not one insertion point. **Sports is OUT** (FIELD_UNION, see Phase-5 TEST todo). Practical same-field cases
+      needing the resolver: **tradfi** (databento/massive co-mingled — the only live 2-source pair today) + **cefi**
+      when its 2nd source lands. Recipe per loader: after reading a cell's parquet, take the distinct `source` column
+      values → `select_primary_available_source(ag, data_type, available)` → filter rows to the winning source
+      (dedup-to-primary), with a 2-source→1-row regression test. Owned by this cross-AG plan (tradfi/cefi), not slot-4
+      sports.
 - [ ] [UTL] P1. **FINDING (2026-06-01 read-path audit)**: `manifest_consolidator.py` dedup key (`_BASE_DEDUP_COLS` +
       `_OPTIONAL_DEDUP_COLS`) **omits `source`** — two source rows for one `(date, venue, data_type, …)` cell collapse
       to ONE row by last-write-wins on `(attempted_at, written_at)`, NOT by `SOURCE_PRIORITY`. Matches the shipped

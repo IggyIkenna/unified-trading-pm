@@ -45,6 +45,152 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > remaining schema signal (`error_reason` for CF-5, object paths for CF-2/3/9) into a **reusable audit tool**, then the
 > walk lands every CF-1…CF-12 fix.
 
+## Slot-3 CeFi master orchestrator — owned + attached plans/issues
+
+> **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot. **Slot 3 = CeFi end-to-end** across every
+> service — instruments-service → MTDS → MDPS → features → downstream → bucket/data/manifest/UI. **THIS plan is the CeFi
+> master orchestrator**: every cefi-related plan + issue cross-references here; orphaned cefi issues attach here.
+> Sibling AG masters: **defi → slot 2**, **sports → slot 4**, **prediction → slot 5**
+> (`prediction_manifest_canonicalisation_2026_06_01.md`), **tradfi → slot 6**
+> (`tradfi_manifest_canonicalisation_2026_06_01.md`). Cross-cutting service plans keep their own `assigned_vm` (vm-ml /
+> vm-cross-cutting) as PRIMARY owner — slot-3 tracks + drives only their **cefi slice**, not the whole plan.
+
+**Absorbed (cefi-primary — slot-3 owns outright):**
+
+- `issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md` — **ABSORBED 2026-06-03** (harsh out for the
+  day; was harsh-held). The manifest↔file disconnect (MTDS marks `processed_candles` `captured` for KRAKEN/BITFINEX with
+  no file; ~42% phantom on the test date) IS the CF-11 honest-absence reconciliation this plan owns — folded as the
+  CF-11 "MTDS processed_candles phantom-`captured` reconcile" todo below. Issue doc archives when that todo is GREEN.
+
+**Cross-referenced cefi slices (primary owner keeps the plan; slot-3 drives the cefi portion):**
+
+| Plan / issue                                                                                                                    | Primary VM         | CeFi slice                                                                            |
+| ------------------------------------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------- |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`                                                                  | vm-cross-cutting   | L3 cefi ordering + L6 legacy `market-data-tick-cefi` delete (this plan's E8 hand-off) |
+| `data_source_provenance_all_asset_groups_2026_06_01.md`                                                                         | vm-ml              | cefi `source=tardis` column (this plan's C-source RIDER)                              |
+| `pipeline_mode_partition_migration_2026_06_01.md`                                                                               | vm-cross-cutting   | cefi `pipeline_mode=` partition (this plan's C-pipeline_mode RIDER)                   |
+| `data_pipeline_acquisition_remediation_2026_06_03.md`                                                                           | orchestrator-agent | cefi audit-finding phase                                                              |
+| `issues/gcs_hive_partition_malformed_paths_remediation_2026_06_01.md`                                                           | vm-ml              | cefi 9 root-level real-data files (SUPERSEDED by E2 migrator)                         |
+| `features_input_manifest_migration` / `features_service_e2e_pipeline_test` / `features_calc_efficiency_and_correctness`         | vm-ml              | cefi processed_candles read-path + e2e + calc correctness                             |
+| `mdps_filter_pushdown_memory_audit_and_fix` / `mdps_pure_polars_migration` / `mdps_long_running_multi_shard_architecture_audit` | vm-ml              | cefi MDPS processing slice                                                            |
+| `issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`                                                                     | vm-ml              | cefi state adapters (derivative / futures / options / book_snapshot)                  |
+
+## 🎬 NEXT-SESSION HANDOFF (slot-3 cefi, paste-ready, 2026-06-03)
+
+**GOAL:** complete CeFi work **up to and including the dry-run VM + bucket creation**. **HARD CONSTRAINT (operator):**
+EVERY coding task across ALL repos must be DONE + green-on-LDR **before** you launch the dry-run VM or create any
+bucket. Code first; GCS execution only after.
+
+**OUT OF SCOPE this session (deliberate, later):** the IRREVERSIBLE ~1.2M-object orphan delete (old
+`day=/asset_group=cefi/` no-`pipeline_mode=` objects + 9 L-flat root files) and the **E8 legacy-bucket delete**. Do NOT
+run them — they need the pre-delete idempotent-guarantee + verification + operator awareness.
+
+**STATE — DO NOT RE-DERIVE (verified 2026-06-03):** the `-prd` `pipeline_mode=` migration is **COMPLETE corpus-wide**
+(raw_tick + candles + 9 L-flat all have canonical forms; sampled 2020→2026). The migrator WORKS — the "E4-BUG" claim was
+**RETRACTED** (`moved=0` = idempotent-skip). Only ADDITIVE data work left = the `--also-legacy` 5,233-cell gap-fill. E5
+rebuild DONE (mtds@2c3a479b). features-service residual #1 (933b8747) + conftest fix (d39d154f) SHIPPED; the
+features-service full-QG flake is **macOS-local** (Linux `quality-gates-v2` green — don't chase on Linux; ship via
+operator exemption if a local macOS gate blocks).
+
+**PHASE 1 — ALL CODING (ship each via quickmerge; flip the checkbox same-turn):**
+
+- [x] ✅ [CODE] instruments-service — CF-11 IS-side write-path: cefi reference-data adapters now **raise on a genuine
+      fetch-failure** (→ `_fetch_one` `failed[]` → `attempted_failed`) instead of `return []` (which landed the venue in
+      `_non_error_venues` → excluded from `expected_venues` → silent universe shrink, worse than `empty_confirmed`).
+      Cross-AG sweep slot-6@e2e008f0 fixed aster/hyperliquid/tardis (RuntimeError); slot-3 completed the one they missed
+      — **DeribitCombo** (`get_instruments` tracks per-currency `failures`, re-raises if EVERY currency failed; partial
+      success preserved) — instruments-service@f2ca5954 + regression tests (IS QG --no-fix exit 0, 3097 pass). Mirrors
+      the tradfi databento CF-11 fix. (cefi CF-11 below)
+- [x] ✅ [CODE] market-data-processing-service — CF-11 #3: **VERIFIED no emission bug** (slot-3 grep-then-READ
+      2026-06-03). The apparent ohlcv "under-emission" is the **intended WriteGate honest-coverage** behaviour —
+      `canonical_writer.py:1318-1322` documents that policy-gated rows write bytes (heartbeat) but deliberately skip the
+      manifest `captured` row; the normal path emits exactly one row per published candle; a manifest-write failure
+      emits `MANIFEST_WRITE_FAILED` (not silent). So MDPS faithfully reflects published candles. The real `ohlcv` gap
+      (8,715 rows; BITGET-heavy files) is a **candle BACKFILL (DATA)**, not a code bug → tracked as the CF-11 #2
+      candle-coverage DATA item below. No MDPS code change.
+- [ ] [CODE] unified-trading-pm — identity-hook follow-ups (`issues/commit_identity_misconfig_fleet_2026_06_03.md`):
+      root-cause the bot-email leak + recurrence-guard in `verify-slot-host-symmetry.sh`; `setup-tab-worktrees.sh`
+      provisions `extensions.worktreeConfig` + `--worktree` identity. SSOT:
+      `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution". (EDITS DONE — leak root-caused
+      `rollout-semver-agent.sh:117` shared-config write → one-shot `git -c`; `setup-workspace-from-manifest.sh:345`
+      `--global agent@ci.local` → only-seed-if-unset canonical; provisioning + recurrence-guard added. Pending PM QG
+      ship.)
+- [x] ✅ [CODE] market-tick-data-service — orphan-sweep/gap-fill **VERIFIED needs no code** (slot-3 2026-06-03): the
+      migrator `migrate_cefi_flat_to_v9_canonical.py` already handles `--also-legacy` over all 3 layouts, idempotent
+      skip-if-exists = copies ONLY the gap. The explicit orphan-DELETE mode is deliberately NEXT session (irreversible).
+- [ ] grep this plan for remaining open `[ ] [CODE]` todos.
+
+**GATE:** confirm ALL Phase-1 coding shipped + `quality-gates-v2` green on LDR per repo BEFORE Phase 2.
+
+**PHASE 2 — DRY-RUN VM + BUCKET CREATION (only after Phase-1 green):** create any buckets the plan needs (via
+`resolve_bucket_name`, never inline `gs://`); re-run the E4 **dry-run** on a VM to measure the REMAINING scope (the
+`--also-legacy` gap-fill + orphan count — NOT the done `-prd` walk), **sharded by year / bigger-mem** (the 1.9M legacy
+listing OOM'd an e2-standard-4). `VM_TASK=canonical-migration`,
+`VM_MIGRATION_CMD=… migrate_cefi_flat_to_v9_canonical --start-date … --end-date … --also-legacy` (NO `--apply` = dry).
+No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP at dry-run + bucket creation — the
+`--apply` gap-fill / orphan delete / E8 are the NEXT session.
+
+## E2E code-readiness audit (slot-3, 2026-06-03) — get the CODE canonical BEFORE the migration runs
+
+> **Operator framing**: "code e2e" = after the migration runs, future backfills + code + data-status summary + drilldown
+> all align with the migrated structure. The migration's PATH/SCHEMA/COLUMNS must be IDENTICAL in the writers, readers,
+> preflight gates, manifest rebuild, and deployment-api/UI — and empty + partial must be handled the same in code as in
+> reality. 5-dimension audit (path / schema-columns / empty-partial / data-status-UI / plan-sweep).
+
+**✅ GREEN (verified consistent — do not touch):**
+
+- **Path correctness**: migration, live+batch writers, MTDS reader, features reader, `rebuild_cefi_manifest.py` ALL go
+  through the UAC `candidate_parquet_paths()` SSOT and insert `pipeline_mode=` left of `asset_group=cefi`;
+  reader-fallback probes both shapes until ~06-15 (PREP3 writer pipeline_mode= PRIMARY landed mtds@f50116ca). The path
+  the migration reads/writes == the writers'/readers'/preflight's path.
+- **Data-status infra**: deployment-api reads canonical `market-data-tick-cefi-prd` via `resolve_bucket_name`, uses UTL
+  `read_availability_index` (v9 columns), renders 4-state status, derives drilldown axis order from the UAC registry.
+
+**🔴 P0 — E2E-blocking code (OPERATOR-APPROVED to do THIS session before the dry-run):**
+
+- [x] ✅ [CODE] P0. **`rebuild_cefi_manifest.py` CF-11 3-way classifier** — **DONE (mtds@fa2b02c7).** New
+      `reemit_cefi_honest_absence_rows` pass (mirrors the proven `rebuild_tradfi_manifest` sibling): reads the prior
+      `_index`, filters to the run date-range + cefi, dedups vs freshly-scanned keys, then (a) within-bounds empty
+      (blank-reason OR `SOURCE_RETURNED_ZERO` on a guaranteed-when-listed `trades`/`ohlcv*`/`book_snapshot_5` OR
+      invalid-reason) → `record_failed(WITHIN_BOUNDS_EMPTY_RECLASSIFIED)`; typed-empty on a sparse data_type
+      (funding/options_chain/…) → `record_empty` PRESERVED; (b) prior `attempted_failed` → `record_failed` PRESERVED
+      (the ~1.33M survive); phantom captured-no-object → `record_failed(PHANTOM_CAPTURED_NO_OBJECT)`; (c) +24 unit
+      tests; `--scan-only` flag restores pure-scan. MTDS QG --no-fix exit 0. Closes the open E5/CF-11 items at §CF-11
+      below.
+- [x] ✅ [CODE] P0. **Live cefi writer source+pipeline_mode COLUMN parity** — **CONFIRMED gap + FIXED (mtds@4e5fa57f).**
+      orchestrator.py finalize per-instrument `add()` stamped source/pipeline_mode ONLY for sports odds (comment:
+      "Non-sports shards leave source=None"); cefi/defi/prediction captured rows got blank `pipeline_mode` (`add()`
+      doesn't auto-derive it) → Batch≠Live drift. Now every non-sports per-instrument row derives `source` via
+      `get_primary_source(asset_group,data_type)` + `pipeline_mode` via `_resolve_pipeline_mode_for_sentinel` (same
+      helpers the bundled path + migrator/rebuild use) + stamps both. Sports branch unchanged (no slot-4 collision; the
+      `else` branch is additive). source= is crosscutting (all asset_groups). MTDS QG --no-fix exit 0.
+
+**🟡 P1 — data-status / drilldown reflects the migrated structure (DEFERRED to a tracked follow-up unless quick):**
+
+- [ ] [CODE] P1. **deployment-api FLAG-1** — CeFi multi-source UNION coverage + per-source breakdown (dedup via
+      `select_primary_available_source`; `groupby("source")` on the `_index` source column). CeFi single-source today,
+      but the column/dedup path must exist for swap-resilience. Cross-ref
+      `downstream_services_manifest_canonicalisation_2026_06_01.md` FLAG-1.
+- [ ] [CODE] P1. **deployment-api FLAG-3** — env-tier the hardcoded `*-store` bucket f-strings → `resolve_bucket_name`
+      (`commentary/pipeline_uat.py`, `deployment_api_config.py`). Cross-ref downstream plan FLAG-3.
+- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** — the shard-atom dedup test exists for
+      **DeFi only** (`test_pipeline_mode_rows_do_not_double_count_shards`); add a **cefi parity** test + ensure cefi
+      drilldown does not double-count the same `(venue,data_type,instrument_id,day)` across pipeline_modes; add a
+      `pipeline_mode` filter param to the hierarchical-drilldown endpoint (UI label work needs the playwright gate).
+
+**⚪ P2 / needs-confirm (tracked):**
+
+- [ ] [CODE] P2. **MDPS GAP-7** — `category`→`asset_group` param rename in `dependency_checker` (vocabulary; cross-ref
+      downstream plan GAP-7).
+- [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain):
+      verify the finalize cluster-validation rejects an incomplete bundle (`len(observed)==len(expected)`, not just
+      count-threshold) so a partial write is NOT phantom-`captured`. Audit flagged a possible gap at
+      `orchestrator.py:~3144` — VERIFY against the existing cluster validation before treating as a fix.
+- [ ] [CODE] P2. **CONFIRM reader empty-vs-failed differentiation** — does the cefi read/preflight path treat
+      `attempted_failed` (retry/alert) differently from `empty_confirmed(SOURCE_RETURNED_ZERO)` (accept) per
+      `codex/02-data/honest-absence-downstream-handling.md`, or collapse both to "unavailable"? Verify, then fix if
+      collapsed.
+
 ## Why this exists — cefi canonical FORM is broken corpus-wide (+ a recent 838-cell data gap)
 
 The 2026-06-01 `_index` comparison (legacy `market-data-tick-cefi-…` vs canonical `market-data-tick-cefi-prd-…`) showed
@@ -102,12 +248,17 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 
 ### C — single-walk (gap-fill + canonicalisation)
 
-- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: before the walk,
+- [x] ✅ [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: before the walk,
       enumerate ALL top-level trees + nested layouts in the cefi source + canonical buckets (`raw_tick_data/by_date/`
       flat-symbol, `processed_candles/by_date/day=/timeframe=/…`, any `day=/category=` or bare `{venue}/{chain}/date=`).
       Per layout: object count + sample schema; classify duplicate (keep freshest) vs complementary (migrate all). The
       walk MUST cover every in-scope layout or it is incomplete (review-blocking). SSOT:
-      `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § Cross-AG lesson + grounded recipe Phase 0.
+      `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § Cross-AG lesson + grounded recipe Phase 0. DONE
+      (slot 10, 2026-06-03): exhaustive enumeration confirmed THREE layouts (not 2 from shallow probe). Legacy: L1=9
+      flat orphans, L2=2,613 day=/pipeline_mode=batch_tardis/asset_group=cefi/ (MOST CANONICAL), L3=460 candle day-dirs.
+      Canonical: C1=9 flat orphans, C2=2,594 day=/asset_group=cefi/ (MISSING pipeline_mode= — LESS canonical than L2),
+      C3=464 candle day-dirs. Key finding: legacy L2 is more canonical than canonical C2. 19-day raw gap (L2−C2). Walk
+      implications documented in SSOT §Phase-0 cefi-specific verification. PM@2f315f0fb.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -116,14 +267,17 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 > (`python -u`, counter every ~1000) + per-object `try/except…continue` isolation + idempotent re-runs. SSOT:
 > `codex/05-infrastructure/gcs-object-operations.md` § "Migration-script performance contract".
 
-- [ ] [DATA] P0. C0 ONE bundled **WHOLE-CORPUS** walk (the finding makes this corpus-wide, not 838 cells): (a)
+- [x] ✅ [DATA] P0. C0 ONE bundled **WHOLE-CORPUS** walk (the finding makes this corpus-wide, not 838 cells): (a)
       re-version **every** cefi row+parquet **v8→v9** (CF-1) asserting data-state, not the constant; (b) add the
       **`source` column** = `tardis` on every row (CF-4) + (c) the **`asset_group=cefi` column/key** on rows + paths
       (CF-2) + (d) the **`pipeline_mode=` partition** + non-blank column (CF-3); (e) typed empty-reasons (CF-5); (f) the
       838-cell legacy→canonical gap-fill copy (`raw_tick_data/` + `processed_candles/`, layout-aware — cefi has NO
       `by_date/`). Column adds (b–c) are a CONTENT rewrite → download+transform+upload **parallelised per the perf
       contract** (NOT a server-side path move; NOT "run locally" — this is a VM-scale walk now, gated on L0). The
-      838-cell pure-path copies use `gcs_copy_object`. Idempotent.
+      838-cell pure-path copies use `gcs_copy_object`. Idempotent. — DONE (slot 10, 2026-06-03):
+      market-tick-data-service@53671a0 (Kraken BASE/QUOTE 2-level path fix) + @7cb9947. TOTAL planned=3928281
+      written/moved=1863687 (dry-run: 3,916,302). 112 corrupt KRAKEN-SPOT USD.parquet objects from partial apply deleted
+      before re-run with fix. Canonical bucket now has pipeline_mode=batch_tardis paths.
 - [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi).
 - [ ] [DATA] P1. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`, swap-resilient) lands in THIS walk
@@ -175,10 +329,39 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       blank/`UNKNOWN` venue + blank data_type skip+logged for E6. Candles = pipeline_mode insert. Knobs
       `--workers`/`--start-date`/`--end-date`/`--also-legacy` + `python -u` + per-object isolation + idempotent. All 3
       layout transforms unit-validated; lint+typecheck clean. — market-tick-data-service@844124f7, slot-3 2026-06-01.
-- [ ] [DATA] P0. E3 Confirm cefi writer drained (mdps-backfill-cefi already self-terminated); snapshot
-      `cefi-prd/_index`.
-- [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise
-      → full-VM run (no fire-and-forget verification).
+- [x] ✅ [DATA] P0. E3 Confirm cefi writer drained + snapshot `cefi-prd/_index` — **DONE (slot-3, 2026-06-03).** No live
+      cefi writer VM (`gcloud compute instances list --filter="name~cefi OR name~mdps-backfill-cefi"` → empty);
+      `_index/per_vm/` holds only the stale `_legacy_seed.parquet` (2026-05-12, no active shard emission). Consolidated
+      `availability_index.parquet` (47.58 MiB, last consolidator write 2026-06-03T09:28Z) snapshotted to
+      `_index/snapshots/pre_migration_2026-06-03.parquet` (49,893,721 bytes == source; sits beside the prior
+      `pre_migration_2026-05-22.parquet`). Pre-migration safety point established; E4 walk can run.
+- [x] ✅ [DATA] P0. E4 — **the `-prd` raw_tick + candles PATH migration is ALREADY DONE** (slot-3 calibration + GCS
+      verify 2026-06-03). `--apply` calibration slices reported `moved=0` NOT from a bug but because the migrator
+      correctly **idempotent-skips** (`_move_day_one:219` `gcs_describe_object(dst) is not None`): the canonical
+      `pipeline_mode=` dests already exist. Verified on day=2024-06-03 — `_canon_day_rel` computes
+      `day=/asset_group=cefi/…/ADAUSDT.parquet` → `day=/pipeline_mode=batch_tardis/asset_group=cefi/…/ADAUSDT.parquet`
+      (dst≠src, `pipeline_mode` inserted — migrator is CORRECT), and GCS shows BOTH forms coexisting:
+      `day=2024-06-03/asset_group=cefi/` = **474 OLD/orphan** objects + `pipeline_mode=batch_tardis/` +
+      `batch_hyperliquid_rest/` = **482 MIGRATED** objects. So the corpus-wide `pipeline_mode=` insert already ran (a
+      prior `--apply`); `gcs_copy_object` copies (not moves) → the old `day=/asset_group=cefi/` objects remain ORPHANS.
+- [ ] [DATA] P0. **❌ RETRACTION of the earlier "E4-BUG / we-keep-missing-things" P0 (it was WRONG).** I read
+      `moved=0` + a `head -3` listing (which shows `asset_group=` paths — they sort BEFORE `pipeline_mode=`) and wrongly
+      concluded "no `pipeline_mode=` sibling / migrator no-ops L-bulk". The FULL listing shows the `pipeline_mode=`
+      siblings DO exist (482/day). slot-10's `C2 = day=/asset_group=cefi/` count is exactly these **post-migration
+      orphans**, not a pre-migration gap. No migrator fix is needed.
+- [ ] [DATA] P0. **E4 remaining work = ORPHAN SWEEP + gap-fill, NOT a path walk.** (slot-3 verify 2026-06-03: the
+      `pipeline_mode=` migration is COMPLETE corpus-wide — sampled days 2020→2026 ALL have both forms; the **9 L-flat
+      orphans are ALSO migrated** (e.g. `SOL-ETH.parquet` →
+      `day=2024-11-07/pipeline_mode=batch_tardis/…/SOL-ETH.parquet` exists; the 9 root files remain only as orphans). So
+      the ONLY additive work left is the legacy gap-fill.) (a) **🛑 IRREVERSIBLE — delete the OLD
+      `day=/asset_group=cefi/…` (no-`pipeline_mode=`) orphan objects corpus-wide (~474/day × ~2,613 days ≈ 1.2M) + the 9
+      root L-flat orphans** now their `pipeline_mode=` forms exist. PRE-DELETE GUARANTEE (mandatory): first run
+      `migrate_cefi_flat_to_v9_canonical --apply` over the FULL range once (idempotent — copies any orphan still lacking
+      a sibling, skips the rest) so EVERY orphan provably has a migrated dest; THEN delete (count via Monitoring
+      live-object, NOT naive recursive `ls`; per-object isolation; idempotent). This IS the E7 orphan-sweep. (b)
+      `--also-legacy` 5,233-cell legacy→canonical gap-fill (additive; VM-scale — the 1.9M legacy listing stalled an
+      e2-standard-4, so shard/bigger-mem). **Deliberate execution (irreversible deletes + VM-scale) — not to be
+      rushed.** Repo: market-tick-data-service.
 - [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE (mtds@2c3a479b, 2026-06-02)** via the RECOMMENDED fork (A):
       `rebuild_cefi_manifest.py` now (1) parses an OPTIONAL `pipeline_mode=(?P<pipeline_mode>[^/]+)/` segment in all 3
       `_PAT_*` matchers (between `day=` and `asset_group=`); (2) lists at DAY level (`raw_tick_data/by_date/day={d}/`)
@@ -233,15 +416,49 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 > nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as
 > complete.
 
-- [ ] [DATA] P0. **Rebuild classifier (`rebuild_cefi_manifest.py` / E5): within-bounds empty → `attempted_failed`.** For
-      every empty cell: instrument in the IS CeFi universe + data_type guaranteed-when-listed (trades/ohlcv on an active
-      venue+symbol) + within coverage window + not a known gap → `attempted_failed` (`record_failed`), NOT
-      `empty_confirmed`. Conservative per-data_type guarantee set (funding / options_chain can be legitimately sparse →
-      keep typed-empty; a wrongly-kept trades/ohlcv empty on a live symbol-day is silent incompleteness — operator's
-      stated priority is the latter is worse).
-- [ ] [DATA] P0. **Rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
-      failure to `empty_confirmed`. (The existing 1.33M `attempted_failed` rows — E6 below — must survive as v9
-      `attempted_failed`, still flagged for backfill, not collapsed to empty.)
+- [x] ✅ [CODE] P0. **Rebuild classifier (`rebuild_cefi_manifest.py` / E5): within-bounds empty → `attempted_failed`.**
+      **DONE (mtds@fa2b02c7)** — see the audit P0 #1 above. `reemit_cefi_honest_absence_rows` reclassifies blank-reason
+      OR `SOURCE_RETURNED_ZERO`-on-guaranteed (`trades`/`ohlcv*`/`book_snapshot_5`) OR invalid-reason →
+      `record_failed(WITHIN_BOUNDS_EMPTY_RECLASSIFIED)`; keeps typed-empty on sparse data_types (funding/options_chain).
+      (Coverage-window / known-gap precision deferred — the conservative data_type-guarantee + reason gate is the
+      operator-prioritised core; a per-instrument IS-universe/coverage cross-check is a NICE-TO-HAVE refinement, tracked
+      as the P2 below.)
+- [x] ✅ [CODE] P0. **Rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — **DONE
+      (mtds@fa2b02c7).** The pass re-emits every prior `attempted_failed` row (not superseded by a fresh parquet) via
+      `record_failed` with its original `error_reason` (blank→`UNCLASSIFIED_ADAPTER_ERROR`) — the ~1.33M survive as v9
+      `attempted_failed`, still flagged for backfill, never collapsed to empty. +unit test asserts preservation.
+- [ ] [CODE] P2. **NICE-TO-HAVE — rebuild within-bounds precision**: cross-check the reclassify decision against the IS
+      CeFi universe + per-instrument coverage windows + the known-gap registry (today the gate is the conservative
+      data_type-guarantee + reason heuristic, which the operator prioritised; the IS-universe cross-check would tighten
+      false-positive reclassifications on genuinely-sparse symbol-days). Provenance: slot-3 E2E audit 2026-06-03.
+- [ ] [DATA] P0. **Absorbed from `cefi_processed_candles_manifest_file_disconnect` (harsh) — ROOT CAUSE CORRECTED by
+      direct `_index` query (slot-3 2026-06-03).** The reported "MTDS marks `processed_candles` `captured` with no file"
+      is a **category error, NOT manifest corruption.** Reading the live cefi `_index` (2,640,864 rows): the manifest
+      **already disambiguates surfaces via `data_type`** — RAW tick (`trades` 1.19M / `book_snapshot_5` /
+      `derivative_ticker` / `liquidations` / `futures_chain`, ~all `service_name=market-tick-data-service`) vs CANDLE
+      (`ohlcv_1m/5m/15m/1h/4h/1d`, **only 8,715 rows**, mostly `service_name=market-data-processing-service`). The issue
+      cross-checked `processed_candles/` FILES against **`trades`-captured** rows; a `trades` `captured` row (MTDS)
+      correctly means the **RAW** tick file exists (VERIFIED: day=2026-05-02 BITFINEX/BITGET/KRAKEN raw `trades` files
+      present) — the manifest **never marked CANDLES captured** for those venues (on 2026-05-02 KRAKEN/BITFINEX have NO
+      `ohlcv` rows at all). So MTDS is NOT writing phantom processed-candle rows; hypothesis (b) is disproved and the
+      `reconcile_phantom_manifest_rows_all.py` flip-to-`attempted_failed` would WRONGLY demote correct raw rows (it only
+      probes `raw_tick_data/` anyway). Real findings to action (3 sub-items, repos noted):
+  - [x] ✅ [CODE] P0. **Read-side contract fix (features-service)** — **DONE (features-service@933b8747, slot-3
+        2026-06-03).** `LookbackValidator._build_captured_index` credited ANY captured `data_type` as a candle-available
+        lookback date (raw `trades`/`book_snapshot_5` over-counted history off the shared `_index`); now filters to the
+        feature*groups' candle
+        `ohlcv*\*`data_types via`resolve_data_type_for_feature_group`(mirrors the already-correct    `get_available_instruments`). +regression test (`ohlcv_1m`counted;`trades`/`book_snapshot_5`not). Verified     delta_one 20/20 + basedpyright-clean diff. **Shipped under operator EXEMPTION** (local macOS QG red only on the     foreign non-deterministic flake`features_service_full_qg_test_pollution_flake_2026_06_03.md`; Linux     `quality-gates-v2`
+        re-verifies at promotion). Repo: features-service.
+  - [ ] [DATA] P1. **Real cefi candle-coverage gap (partial backfill).** `ohlcv_*` manifest rows are sparse (8,715) and
+        processed-candle FILES exist only for a partial venue set (BITGET-heavy; e.g. day=2026-05-03 = BITGET-FUTURES
+        319 / BITGET-SPOT 151 / BITFINEX-FUTURES 90 / KRAKEN-FUTURES 18). MDPS candle generation for cefi is incomplete
+        → track + complete the candle backfill (separate from raw-tick canonicalisation). Repo: MDPS.
+  - [ ] [DATA] P1. **VERIFY MDPS candle-manifest faithfulness.** Do the `ohlcv_*` rows faithfully reflect the candle
+        files that DO exist, or is MDPS under-emitting `ohlcv` rows for written candle files? Compare `ohlcv` row
+        coverage vs candle-file coverage on a sample day. Also reconcile the minor cross-writes (782 MTDS-written
+        `ohlcv` rows; 616 MDPS-written `trades` rows) — confirm which service legitimately emits `ohlcv` per venue (MTDS
+        REST-poll venues like LIGHTER/PACIFICA vs MDPS-processed). Repo: MDPS (+ MTDS REST-poll path). On all three
+        GREEN, archive the absorbed issue doc.
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS cefi/tardis adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for an in-universe instrument within coverage bounds, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the cefi/tardis

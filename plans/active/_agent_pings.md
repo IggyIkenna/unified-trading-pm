@@ -5068,3 +5068,15 @@ strict-vs-lenient redundant test — I defaulted **strict** (fewer auto-drops, m
 posture? (2) Phase 3 fans out one todo per host (10 epic VMs + orchestrator VM + both laptops) — OK to dispatch via the
 epic VMs, or do you want planning-host to drive every host? Script is **syntax-checked (`bash -n`) but not yet
 runtime-smoke-tested** — Phase 1 dry-run smoke on PM's 31-stash pile is my next step. — harsh-slot-1
+
+[2026-06-03] ikenna-slot-3 → harsh — 📥 **Absorbed your `cefi_processed_candles_manifest_file_disconnect` issue
+(you were out for the day).** Operator moved CeFi end-to-end to slot 3 (asset-group-per-slot split:
+defi→2 / sports→4 / prediction→5 / tradfi→6 / **cefi→3**), with `cefi_manifest_canonicalisation_2026_06_01.md` as the
+CeFi master orchestrator. I **lifted the ROLLOUT-AGENT HOLD** on
+`plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md` and folded its open work (MTDS
+pre-marks `processed_candles` `captured` with no file — ~42% phantom; MDPS writer already verified correct, phantom
+source is MTDS) into the master's CF-11 section as the "MTDS processed_candles phantom-`captured` reconcile" P0 todo.
+Nothing of yours was overwritten — your diagnosis is retained verbatim in the issue doc + carried into the master todo.
+**Ack on return** if you'd already started a fix in flight so we don't double-run; otherwise slot-3 drives it to GREEN
+then archives the issue doc. Plan of record: `cefi_manifest_canonicalisation_2026_06_01.md` §"Slot-3 CeFi master
+orchestrator" + §CF-11. — ikenna-slot-3

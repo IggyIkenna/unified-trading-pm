@@ -47,6 +47,7 @@ run_check "Estimate sanity (±20% drift)"     soft "$SCRIPT_DIR/check_estimate_s
 run_check "Superseded plans in active/"      soft "$SCRIPT_DIR/check_superseded_in_active.sh"
 run_check "Codex path refs resolve"          soft "$SCRIPT_DIR/check_codex_refs.sh"
 run_check "Parent-epic alignment (keyword)"  soft python3 "$SCRIPT_DIR/check_parent_epic_alignment.py"
+run_check "CLAUDE↔SUB_AGENT topic parity"    soft "$SCRIPT_DIR/check_claude_subagent_parity.sh"
 
 # Archive candidates is informational — always "passes"
 echo ""

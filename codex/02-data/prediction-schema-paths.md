@@ -90,16 +90,30 @@ surface as honest absence.
 
 ### Target (post-Plan A)
 
+> **⚠️ SHIPPED-DESIGN CORRECTION (slot-5, 2026-06-03 — supersedes the object-bundle layout below for the tick bucket).**
+> The market-data-tick raw OBJECTS are NOT bundled into a `canonical_question_group={cqg}/ticks.parquet` per-(cqg,day)
+> object. The shipped design (UAC `build_prediction_partition_path` + MTDS `PartitionedTickWriter` +
+> `migrate_prediction_to_pred_prd_v9.py` + `rebuild_prediction_manifest.py`) keeps raw objects **PER-CID**:
+> `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=prediction/venue={V}/instrument_type=prediction_market/data_type=trades/{conditionId}.parquet`
+> — `{conditionId}` is the per-instrument FILENAME, NOT a `canonical_question_group=` path segment, and there is NO
+> `prediction_canonical_question_group` raw-object tree (verified: 0 such objects in legacy). The
+> `prediction_canonical_question_group` bundle is a **MANIFEST-ONLY** data_type: the rebuild scans the per-cid `trades`
+> objects, RE-COMPUTES `canonical_question_group` per object via `classify_polymarket_to_canonical_group`, and emits one
+> `record_captured_from_counts` manifest row per
+> `(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, day, pipeline_mode)`
+> with `observed_clusters={conditionId: rows}`. This was a deliberate choice — bundle at the manifest layer WITHOUT
+> touching the streaming-write (per-cid) architecture (MTDS `orchestrator.py`). The shard ATOM below is correct as the
+> MANIFEST row-key; only the raw-object path shape in the code block is superseded. SSOT:
+> `plans/active/prediction_manifest_canonicalisation_2026_06_01.md` § E5/E6b.
+
 ```
 instruments-store-pred-prd-{project}/
   by_date/day={date}/asset_group=prediction/
     venue=POLYMARKET/data_type=MARKET_LIFECYCLE/lifecycle.parquet     ← per-day lifecycle bundle (market_id is a row-level column)
 
-market-data-tick-pred-prd-{project}/
-  raw_tick_data/by_date/day={date}/asset_group=prediction/venue=POLYMARKET/
-    data_type=prediction_canonical_question_group/
-      canonical_question_group={cqg}/
-        ticks.parquet     ← per-day CLOB-tick bundle for the canonical_question_group (market_id is a row-level column)
+market-data-tick-pred-prd-{project}/    ← raw OBJECTS are per-cid (see correction banner above); the bundle below is MANIFEST-ONLY
+  raw_tick_data/by_date/day={date}/pipeline_mode={mode}/asset_group=prediction/venue=POLYMARKET/instrument_type=prediction_market/
+    data_type=trades/{conditionId}.parquet     ← per-cid CLOB-tick object (canonical_question_group RE-COMPUTED at rebuild → manifest bundle)
 ```
 
 **Shard atom** (banner-canonical per

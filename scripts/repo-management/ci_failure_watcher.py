@@ -123,6 +123,9 @@ WATCHED_BRANCHES = ["main", "staging"]
 PROMOTION_BASES = ["staging", "main"]
 
 _FAIL_CONCLUSIONS = {"failure", "startup_failure", "timed_out"}
+# statusCheckRollup conclusions are UPPERCASE. A BLOCKED PR is escalatable as a CI failure
+# ONLY when a required check actually FAILED (not merely pending / a transient staging-lock).
+_FAIL_CONCLUSIONS_UPPER = {"FAILURE", "TIMED_OUT", "STARTUP_FAILURE"}
 _STUCK_STATES = {"CONFLICTING", "DIRTY", "BLOCKED"}
 
 # Heads that are part of the promotion contract (LDR -> staging -> main). A stuck PR
@@ -256,7 +259,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                 "--limit",
                 "30",
                 "--json",
-                "number,title,mergeStateStatus,isDraft,autoMergeRequest,createdAt,headRefName,url",
+                "number,title,mergeStateStatus,isDraft,autoMergeRequest,createdAt,headRefName,url,statusCheckRollup",
             ]
         )
         if not isinstance(prs, list):
@@ -273,6 +276,11 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
             age_min = (now - _parse_ts(pr["createdAt"])).total_seconds() / 60.0
             if age_min < stuck_minutes:
                 continue
+            rollup = pr.get("statusCheckRollup") or []
+            failed_check = any(
+                isinstance(c, dict) and (c.get("conclusion") in _FAIL_CONCLUSIONS_UPPER or c.get("state") == "FAILURE")
+                for c in rollup
+            )
             stuck.append(
                 {
                     "repo": repo,
@@ -284,6 +292,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "auto_merge": pr.get("autoMergeRequest") is not None,
                     "age_min": int(age_min),
                     "url": pr.get("url") or "",
+                    "failed_check": failed_check,
                 }
             )
     return stuck
@@ -352,6 +361,25 @@ def conflict_prs_to_escalate(stuck: list[dict], already_escalated: set[tuple[str
     return out
 
 
+def blocked_failing_prs_to_escalate(stuck: list[dict], already_escalated: set[tuple[str, int]]) -> list[dict]:
+    """Pure selector: BLOCKED stuck PRs with a FAILED required check → escalate as sit_failure.
+
+    With human approvals at 0 fleet-wide, a BLOCKED promotion PR is (almost always) blocked by a
+    failing required check (quality-gates-v2 RED) — which the orchestrator's escalate agent CAN
+    triage + fix on live-defi-rollout, unlike a transient staging-lock (``failed_check`` False)
+    that clears itself. Guarded on ``failed_check`` so a pending lock never spawns a worker. No IO
+    — the label set is injected so this is unit-testable.
+    """
+    out: list[dict] = []
+    for s in stuck:
+        if s.get("state") != "BLOCKED" or not s.get("failed_check"):
+            continue
+        if (s.get("repo"), int(s.get("number", 0))) in already_escalated:
+            continue
+        out.append(s)
+    return out
+
+
 def _pr_has_escalation_label(repo: str, number: int) -> bool:
     """True if the PR already carries ``_ESCALATION_LABEL`` (best-effort; False on error)."""
     data = gh_json(["pr", "view", str(number), "--repo", f"{ORG}/{repo}", "--json", "labels"])
@@ -373,17 +401,26 @@ def _dispatch_escalation(s: dict) -> bool:
     """
     repo = s["repo"]
     number = int(s["number"])
-    context = (
-        f"Promotion PR {repo}#{number} ({s.get('head')}→{s.get('base')}) has been "
-        f"{s.get('state')} for {s.get('age_min')}m and cannot auto-merge. Resolve the merge "
-        f"conflict on live-defi-rollout, push, and let quality-gates-v2 re-gate it."
-    )
+    is_conflict = s.get("state") in _CONFLICT_STATES
+    wall_type = "merge_conflict" if is_conflict else "sit_failure"
+    if is_conflict:
+        context = (
+            f"Promotion PR {repo}#{number} ({s.get('head')}→{s.get('base')}) has been "
+            f"{s.get('state')} for {s.get('age_min')}m and cannot auto-merge. Resolve the merge "
+            f"conflict on live-defi-rollout, push, and let quality-gates-v2 re-gate it."
+        )
+    else:
+        context = (
+            f"Promotion PR {repo}#{number} ({s.get('head')}→{s.get('base')}) has been BLOCKED for "
+            f"{s.get('age_min')}m by a FAILED required check (quality-gates-v2 RED). Read the failing "
+            f"gate log, fix the root cause on live-defi-rollout, push, and let quality-gates-v2 re-gate."
+        )
     payload = {
         "event_type": "escalate-to-orchestrator",
         "client_payload": {
             "repo": repo,
             "pr_number": number,
-            "wall_type": "merge_conflict",
+            "wall_type": wall_type,
             "context": context,
             "authoring_slot": "ci",
         },
@@ -420,7 +457,7 @@ def _dispatch_escalation(s: dict) -> bool:
         capture_output=True,
         text=True,
     )
-    print(f"  -> escalated {repo}#{number} ({s.get('state')}) to orchestrator (merge_conflict)")
+    print(f"  -> escalated {repo}#{number} ({s.get('state')}) to orchestrator ({wall_type})")
     return True
 
 
@@ -432,7 +469,12 @@ def escalate_stuck_prs(stuck: list[dict], *, dry_run: bool = True) -> list[dict]
     PR (e.g. BLOCKED) never triggers a ``gh`` call.
     """
     dispatched: list[dict] = []
-    for s in conflict_prs_to_escalate(stuck, already_escalated=set()):
+    # Conflict-stuck (CONFLICTING/DIRTY) → merge_conflict; BLOCKED-with-failed-check → sit_failure.
+    # Both reuse the same per-PR label idempotency. _dispatch_escalation derives the wall_type from state.
+    candidates = conflict_prs_to_escalate(stuck, already_escalated=set()) + blocked_failing_prs_to_escalate(
+        stuck, already_escalated=set()
+    )
+    for s in candidates:
         repo, number = s["repo"], int(s["number"])
         if _pr_has_escalation_label(repo, number):
             continue  # already handed off — don't re-dispatch

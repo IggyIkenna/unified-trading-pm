@@ -7,7 +7,7 @@
 # everything else.
 #
 # SSOT: docs/repo-management/CI-CD-FLOW.md (this script wraps it)
-# Codex: unified-trading-codex/06-coding-standards/setup-standards.md
+# Codex: unified-trading-pm/codex/06-coding-standards/setup-standards.md (codex repo archived → folded into PM)
 #
 # Prerequisites (only these, nothing else):
 #   - git (with SSH key configured for github.com, OR use --https)
@@ -637,7 +637,8 @@ echo -e "\n  Cloned: $CLONE_OK | Existing: $CLONE_SKIP | Failed: $CLONE_FAIL"
 
 # ── PHASE 2.5: READINESS-REF FILES ───────────────────────────────────────────
 # Create .readiness-ref (committed text file) in each repo pointing to its
-# canonical checklist in unified-trading-codex. Path is RELATIVE so it works
+# canonical checklist in unified-trading-pm/codex/ (the unified-trading-codex repo
+# is ARCHIVED — folded into PM at codex/). Path is RELATIVE so it works
 # on GHA runners where workspace root differs from local machines.
 # The companion .readiness symlink is gitignored and created fresh by
 # setup-workspace.sh.
@@ -652,7 +653,7 @@ if [ "$CHECK_ONLY" = false ]; then
     [ -d "$REPO_PATH" ] || continue
 
     READINESS_REF_FILE="$REPO_PATH/.readiness-ref"
-    READINESS_REF_CONTENT="../../unified-trading-codex/10-audit/repos/${repo}.yaml"
+    READINESS_REF_CONTENT="../unified-trading-pm/codex/10-audit/repos/${repo}.yaml"
 
     if [ -f "$READINESS_REF_FILE" ]; then
       EXISTING=$(cat "$READINESS_REF_FILE")

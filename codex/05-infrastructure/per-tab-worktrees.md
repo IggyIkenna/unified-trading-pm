@@ -560,6 +560,74 @@ resolution** (see [`plan-aware-merge-resolution.md`](plan-aware-merge-resolution
 structured protocol: classify conflict shape (append-section / checkbox-flip / paragraph-rewrite), auto-resolve trivial
 ones, escalate semantic conflicts to the operator with plan-context reasoning.
 
+### Align = the merged combination (rebase-onto-LDR), not "take one side" (codified 2026-06-03)
+
+When a slot tab branch has **diverged** from LDR (your commits + N incoming; `origin/tab/<op>/N` is no longer an
+ancestor of `origin/live-defi-rollout`, so the tab→LDR mirror jams), aligning is a **content merge, not a pointer
+overwrite**:
+
+1. `git rebase origin/live-defi-rollout` — replays YOUR commits onto current LDR, dropping patch-id duplicates.
+2. **Resolve each conflict keeping BOTH sides' genuine work.** Additive plan/doc/code from both agents survives. Where
+   two agents independently wrote the **same** rule/fix (a "two-similar" conflict), MERGE into the single best version
+   (fold the weaker subset into the stronger superset — don't keep redundant duplicates). Incident 2026-06-03: a slot
+   independently added a "never pipe a backgrounded command through `tail`/`head`" rule that a richer "Background-task
+   honesty" rule subsumed → merged into one.
+3. **VERIFY content survival before pushing** — grep your key additions AND the incoming ones in each rebased file. A
+   wording / em-dash mismatch can read as "lost" when it survived; a genuine drop MUST be caught here, not after the
+   push.
+4. `git push --force-with-lease=tab/<op>/N:<old-tip-sha> origin HEAD:tab/<op>/N`.
+
+**`--force-with-lease` is branch-tip safety, NOT content safety (HARD distinction).** The lease only refuses the push if
+`origin/tab/<op>/N` moved since your fetch (catching a concurrent push to YOUR branch). It does **not** inspect files or
+whether another agent had work on them. OTHER agents' work is protected by: (a) rebasing **onto** current LDR so their
+commits are your BASE (never overwritten — LDR itself is untouched by the push); (b) the conflict-merge keeping both;
+(c) the post-rebase verify. Safe ONLY because the tab branch is the slot's alone and you rebased onto (not discarded)
+LDR. **NEVER `--force` / `--force-with-lease` a shared branch (`live-defi-rollout` / `main`).**
+
+## Commit attribution — slot + host in the author NAME (codified 2026-06-03)
+
+**Problem (two layers, both found in the 2026-06-03 slot-3 audit):**
+
+1. The author **name** is bare `ikennaigboaka` everywhere → CI alerts + cross-agent triage cannot tell which slot / host
+   produced a commit, and a foreign commit on a slot's tab branch is invisible by author.
+2. The author **email is WRONG fleet-wide** — of 25 slot worktrees, ~14 carried the
+   `semver-rollout[bot]@users.noreply.github.com` email (so **agent commits there masquerade as the semver bot** —
+   risky, since semver-agent's own bot/author checks key off that email) and ~7 carried `agent@ci.local` (unattributed).
+   Only `unified-trading-pm` was correct. Almost certainly leaked from a setup/semver step that wrote the bot identity
+   into persistent per-worktree config. **Root-cause hunt + recurrence-guard is part of the implementation todo.**
+
+**Mechanism (low-risk — local per-worktree config only affects that slot's commits):** STANDARDISE both name + email:
+
+- `user.name = "ikennaigboaka [slot-<N>·<host>]"` — `<N>` from the `tab/<op>/<N>` branch; `<host>` = `laptop` (or the
+  short hostname) on a workstation, the `vm-<id>` on a fleet VM.
+- `user.email = "ikennaigboaka@gmail.com"` — the GitHub-attributed human account (NOT the bot, NOT `agent@ci.local`).
+  GitHub commit attribution + semver-agent bot/author checks key off the EMAIL, so this both fixes attribution and stops
+  the bot-masquerade, while making `git log --format=%an`, the GitHub author column, and CI `head_commit.author.name`
+  correct + slot-aware.
+
+**Set per-worktree — MECHANISM GOTCHA (codified 2026-06-03):** `.tabs/<N>/<repo>` are **git worktrees that SHARE the
+main clone's `.git/config`**, so plain `git config user.name` is shared across ALL worktrees of a repo (last-writer-wins
+— useless for per-slot identity; the 2026-06-03 naive loop made every slot read `[main·laptop]`). Per-slot identity
+**requires git's per-worktree config**:
+
+```bash
+# once per repo (on the shared config):
+git config extensions.worktreeConfig true
+# then per worktree (writes .git/worktrees/<wt>/config.worktree, NOT the shared file):
+git config --worktree user.name  "ikennaigboaka [slot-<N>·<host>]"
+git config --worktree user.email "ikennaigboaka@gmail.com"
+```
+
+`setup-tab-worktrees.sh` runs this at `--init` / `--add-slot` / `--reset-slot` (it already writes a per-slot `.envrc`;
+the same provisioning step enables `extensions.worktreeConfig` + sets `--worktree` identity). Sub-agents share the slot
+worktree → inherit the `--worktree` tag automatically. Do NOT hand-edit `~/.gitconfig`.
+
+**Consumers:** CI alert workflows attribute via `github.event.head_commit.author.name`; the slot-git-status-report +
+orphan-ping crons can group by slot. A machine-parseable `Agent-Slot:` / `Agent-Host:` commit trailer (a
+`prepare-commit-msg` hook) is the follow-up if the name string proves awkward to parse. Implementation (setup script +
+CI parse) is tracked as a plan todo; until it lands, agents set the name manually per the CLAUDE.md Git-discipline
+directive.
+
 ## Per-shippable-unit FF-push into `live-defi-rollout` (HARD RULE codified 2026-05-11)
 
 Every push to a slot branch MUST be followed immediately by a server-side fast-forward push of the slot tip into

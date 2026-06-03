@@ -17,6 +17,7 @@ import importlib.util
 import sys
 import types
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import MagicMock
 
 
@@ -164,3 +165,33 @@ class TestClassifyCommitData:
             message="ci: auto-merge\n\nCo-Authored-By: Claude Haiku <noreply@anthropic.com>",
         )
         assert role == "automation"
+
+
+class TestStuckPrEscalationSelectors:
+    """Pure selectors deciding which stuck PRs hand off to the orchestrator + as which wall_type."""
+
+    _STUCK: ClassVar[list[dict]] = [
+        {"repo": "r", "number": 1, "state": "BLOCKED", "failed_check": True},  # CI-RED -> sit_failure
+        {"repo": "r", "number": 2, "state": "BLOCKED", "failed_check": False},  # transient lock -> SKIP
+        {"repo": "r", "number": 3, "state": "CONFLICTING", "failed_check": False},  # -> merge_conflict
+        {"repo": "r", "number": 4, "state": "DIRTY", "failed_check": False},  # -> merge_conflict
+    ]
+
+    def test_blocked_failing_selects_only_failed_check(self) -> None:
+        """A BLOCKED PR escalates ONLY when a required check actually failed (not a pending lock)."""
+        sel = MOD.blocked_failing_prs_to_escalate(self._STUCK, set())  # type: ignore[attr-defined]
+        assert [s["number"] for s in sel] == [1]  # #2 (lock, no failed check) excluded
+
+    def test_conflict_selects_conflict_states(self) -> None:
+        sel = MOD.conflict_prs_to_escalate(self._STUCK, set())  # type: ignore[attr-defined]
+        assert sorted(s["number"] for s in sel) == [3, 4]
+
+    def test_blocked_failing_idempotent_via_label_set(self) -> None:
+        sel = MOD.blocked_failing_prs_to_escalate(self._STUCK, {("r", 1)})  # type: ignore[attr-defined]
+        assert sel == []
+
+    def test_selectors_are_disjoint(self) -> None:
+        """Each stuck PR is escalated by exactly one selector — no double-dispatch."""
+        conflict = {s["number"] for s in MOD.conflict_prs_to_escalate(self._STUCK, set())}  # type: ignore[attr-defined]
+        blocked = {s["number"] for s in MOD.blocked_failing_prs_to_escalate(self._STUCK, set())}  # type: ignore[attr-defined]
+        assert conflict.isdisjoint(blocked)

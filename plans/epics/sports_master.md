@@ -349,9 +349,13 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       UTL `classify_legacy_empty_row` helper (Tier 3D.2) handles reader-side fallback for rows without coverage info.
       Reader side tolerates gracefully — no one-time migration needed (per honest-absence doc § "Per-reason-group →
       consumer policy" reader fallback). UTL@94e43e8c.
-- [ ] [AGENT] P3. Add `axis: per_feature_per_league_per_fixture_date` to `_sports_honest_coverage` in data-status
-      reconciler. Per-feature-group denominator = (clipped fixture dates) × (in-coverage leagues). [AUDIT 2026-05-07:
-      FRESH — actionable]
+- [x] ✅ [AGENT] P3. Add `axis: per_feature_per_league_per_fixture_date` to `_sports_honest_coverage` in data-status
+      reconciler. Per-feature-group denominator = (clipped fixture dates) × (in-coverage leagues). — **VERIFIED ALREADY
+      SATISFIED 2026-06-03 (deployment-api@96e7ac7)**: the axis is declared in `SportsAxis` + assigned to every
+      calculator in `FEATURES_SPORTS_PER_CALC_META`, and `_sports_honest_coverage` already computes `expected_shards` as
+      the sum across leagues of `_features_sports_expected_dates_for_calculator(...)` (fixture-dates ×
+      in-coverage-leagues, per calculator = per feature). Added 3 verification tests
+      (`tests/unit/test_features_sports_per_feature_axis.py`); no production change needed.
 
 ### Fixture truthset recovery (`sports_fixtures_truthset_recovery`)
 
@@ -1046,23 +1050,35 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 > **MIGRATED FROM**: `plans/active/trigger_based_reference_data_2026_04_13.md` Phase A2.4-5 + A3.2-4 + A4.1 + C1b.
 > Already-shipped items (A2.1-3, A3.1) were flipped in the source plan (pm@<flip-sha>).
 
-- [ ] [CODE] P2. **GCS write path for Transfermarkt mappings: `master/` (append-only) + `snapshots/` (trigger-dated)** —
-      Change `_fetch_transfermarkt_data` write path from `by_date/` only to also write
-      `sports_reference/master/entity=teams/`, `sports_reference/master/entity=team_mapping/`,
-      `sports_reference/master/entity=player_values/` (accumulating) +
-      `sports_reference/snapshots/entity=player_values/season={Y}/trigger={T}/` (point-in-time). ML training needs
-      point-in-time squad values to avoid lookahead bias.
-- [ ] [CODE] P2. **team_mapping append-only** — read existing master parquet, merge new rows, write back. Depends on GCS
-      write-path item above.
-- [ ] [QG] P2. `bash scripts/quality-gates.sh` on instruments-service after A2.4-5.
+- [x] ✅ [CODE] P2. **GCS write path for Transfermarkt mappings: `master/` (append-only) + `snapshots/`
+      (trigger-dated)** — DONE 2026-06-03 (instruments-service@06e1274b). `_fetch_transfermarkt_data` now also writes
+      (keeping `by_date/`): `sports_reference/master/entity={teams,team_mapping,player_values}/master.parquet`
+      (accumulating) + `sports_reference/snapshots/entity=player_values/season={Y}/trigger={T}/player_values.parquet`
+      (point-in-time, UTC trigger date) — via new `_master_blob_path` / `_snapshot_blob_path_player_values` /
+      `_write_snapshot_player_values` helpers; bucket via `resolve_bucket_name`, cloud-agnostic storage client;
+      all-non-blocking via `classify_and_emit_error`. Point-in-time squad values for lookahead-bias-free ML training.
+- [x] ✅ [CODE] P2. **team_mapping append-only** — DONE 2026-06-03 (instruments-service@06e1274b).
+      `_write_master_append`: download existing master (404→fresh) → `pd.concat([existing, new])` →
+      `drop_duplicates(subset=key, keep="last")` (new wins) → upload. Dedup keys:
+      `player_values=(canonical_league,team_id,season)` / `teams=(team_id,season)` /
+      `team_mapping=(canonical_league,team_id)`.
+- [x] ✅ [QG] P2. `bash scripts/quality-gates.sh` on instruments-service after A2.4-5 — exit 0; 18 unit tests
+      (`tests/unit/test_transfermarkt_master_snapshots.py`, mocked storage). instruments-service@06e1274b. (NOTE:
+      shipped via direct-LDR-push — sub-agent mis-cited the dirty-deps exception, UAC was clean; QG-green on LDR so it
+      promotes via Tier-C, not lost.)
 - [ ] [SCRIPT] P2. **Trigger-date backfill script** — for each league, for each trigger date 2019-2026 (from
       `get_reference_refresh_dates()`), run instruments-service with
       `--season=X --start-date=trigger_date     --end-date=trigger_date`. Template: adapts `sports_chunked_backfill.sh`
       pattern but iterates trigger dates not date ranges.
 - [ ] [SCRIPT] P2. **VM fleet run** for trigger-date backfill (parallelize by league). Operational.
 - [ ] [QG] P2. Validate GCS snapshots exist for all trigger dates × leagues × seasons.
-- [ ] [CODE] P2. **Trigger-date denominator in deployment-api** for mapping entities (teams/team_mapping/player_values).
-      Depends on write-path item (must have data at `master/`/`snapshots/` to denominate against).
+- [x] ✅ [CODE] P2. **Trigger-date denominator in deployment-api** for mapping entities
+      (teams/team*mapping/player_values). Depends on write-path item (must have data at `master/`/`snapshots/` to
+      denominate against). — **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1`
+      (~365/yr) and `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written
+      at trigger dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+      `\_sports_trigger_dates_for*{window,league}`helpers (union     of`get_reference_refresh_dates`across leagues, clipped) reading from the UAC`LEAGUE_REGISTRY`(no GCS I/O, so it     works before the IS write-path lands — coverage shows 0% until then, correctly).`TEAMS`→`global_trigger_date`,     `PLAYER_VALUES`→`per_league_trigger_date`.
+      8 tests incl. the trigger-date≪daily-calendar invariant. QG exit 0.
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
 ## Assigned active plans

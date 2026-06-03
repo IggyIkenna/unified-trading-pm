@@ -427,28 +427,42 @@ _QM_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
 if [ -z "$_QM_BRANCH" ]; then
   echo "[$REPO_NAME] detached HEAD — skipping not-behind gate"
 else
-  git fetch origin "$_QM_BRANCH" --quiet 2>/dev/null || true
-  if ! git rev-parse "origin/$_QM_BRANCH" >/dev/null 2>&1; then
-    echo "[$REPO_NAME] no origin/$_QM_BRANCH yet — skipping not-behind gate"
+  # Reconcile against the CONFIGURED UPSTREAM (@{u}), NOT origin/<branch-name>.
+  # Slot worktrees on tab/<op>/<N> track origin/live-defi-rollout, while
+  # origin/tab/<op>/<N> may be a stale snapshot — comparing against the latter
+  # triggers a bogus 500+-commit rebase against a dead branch (incident 2026-06-03).
+  _QM_UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+  if [ -n "$_QM_UPSTREAM" ]; then
+    _QM_REMOTE_REF="$_QM_UPSTREAM"
+    _QM_REMOTE_NAME="${_QM_UPSTREAM%%/*}"
+    _QM_REMOTE_BRANCH="${_QM_UPSTREAM#*/}"
   else
-    _QM_BEHIND=$(git rev-list "HEAD..origin/$_QM_BRANCH" --count 2>/dev/null || echo 0)
-    _QM_AHEAD=$(git rev-list "origin/$_QM_BRANCH..HEAD" --count 2>/dev/null || echo 0)
+    _QM_REMOTE_REF="origin/$_QM_BRANCH"
+    _QM_REMOTE_NAME="origin"
+    _QM_REMOTE_BRANCH="$_QM_BRANCH"
+  fi
+  git fetch "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null || true
+  if ! git rev-parse "$_QM_REMOTE_REF" >/dev/null 2>&1; then
+    echo "[$REPO_NAME] no $_QM_REMOTE_REF yet — skipping not-behind gate"
+  else
+    _QM_BEHIND=$(git rev-list "HEAD..$_QM_REMOTE_REF" --count 2>/dev/null || echo 0)
+    _QM_AHEAD=$(git rev-list "$_QM_REMOTE_REF..HEAD" --count 2>/dev/null || echo 0)
     if [ "${_QM_BEHIND:-0}" = "0" ]; then
-      echo "[$REPO_NAME] ✅ not behind origin/$_QM_BRANCH (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
+      echo "[$REPO_NAME] ✅ not behind $_QM_REMOTE_REF (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
     else
-      echo "[$REPO_NAME] behind origin/$_QM_BRANCH by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
-      if git pull --ff-only origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+      echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
+      if git pull --ff-only "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ fast-forwarded to latest — now current"
-      elif git pull --rebase --autostash origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+      elif git pull --rebase --autostash "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
       else
         git rebase --abort 2>/dev/null || true   # clean up any half-done rebase
         if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
           echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (rebase conflicts) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
         else
-          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind origin/$_QM_BRANCH and auto-rebase hit conflicts."
+          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind $_QM_REMOTE_REF and auto-rebase hit conflicts."
           echo "   Pull the latest first (resolving conflicts), then re-run:"
-          echo "     git pull --rebase origin $_QM_BRANCH"
+          echo "     git pull --rebase $_QM_REMOTE_NAME $_QM_REMOTE_BRANCH"
           echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
           exit 1
         fi
@@ -699,7 +713,15 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
   ALIGN_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/check-dependency-alignment.py"
   if [ -f "$ALIGN_SCRIPT" ]; then
     cd "$WORKSPACE_ROOT"
-    source .venv-workspace/bin/activate 2>/dev/null || true
+    # Guard the source: `source`/`.` is a POSIX special builtin, so a missing file under
+    # `set -e` exits the shell IMMEDIATELY, bypassing `|| true` (incident 2026-06-03 — a
+    # slot worktree's WORKSPACE_ROOT has no .venv-workspace, killing quickmerge silently).
+    # The venv may live at WORKSPACE_ROOT or at the true repos-root (slot worktrees); try both.
+    if [ -f .venv-workspace/bin/activate ]; then
+      source .venv-workspace/bin/activate 2>/dev/null || true
+    elif [ -f ../.venv-workspace/bin/activate ]; then
+      source ../.venv-workspace/bin/activate 2>/dev/null || true
+    fi
     python unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>/dev/null || true
     if python "$ALIGN_SCRIPT" --json 2>/dev/null | grep -q '"aligned": true'; then
       echo "[$REPO_NAME] ✅ Dependency alignment PASSED"
@@ -1133,13 +1155,23 @@ if [ "$RESTORE_STASH" = 1 ] && git stash list | grep -q "quickmerge-$$"; then
   git stash pop --quiet
 fi
 
-# Auto-format with Prettier BEFORE staging (so pre-commit validation passes)
-# Run twice to handle idempotency
-if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier" .pre-commit-config.yaml 2>/dev/null; then
-  if command -v pre-commit &>/dev/null; then
-    pre-commit run prettier --all-files >/dev/null 2>&1 || true
-    pre-commit run prettier --all-files >/dev/null 2>&1 || true
+# Auto-format with Prettier BEFORE staging (so pre-commit validation passes).
+# SCOPE TO --files: a tree-wide `prettier --write "**/*"` reflows FOREIGN files (another
+# slot's WIP) into working-tree residue that makes the slot perpetually dirty → the
+# FF-pull cron skips it → the slot stops syncing (observed 2026-06-02: 69-file reflow
+# residue). Mirrors the prettier-autostage hook's "never touch foreign-dirty files" rule.
+# The on-commit prettier-autostage hook re-formats + re-stages the staged subset anyway,
+# so this pre-format is only a fast-path. Only the unscoped (--files-absent) path
+# formats tree-wide — there the caller owns the whole tree.
+if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier\|prettier-autostage" .pre-commit-config.yaml 2>/dev/null; then
+  if [ -n "$FILES_ARG" ]; then
+    # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
+    npx --yes prettier@3.6.2 --write --ignore-unknown $FILES_ARG >/dev/null 2>&1 || true
   else
+    # Unscoped ship (caller owns the whole tree): canonical prettier@3.6.2 tree-wide.
+    # (Dropped the dead `pre-commit run prettier` probe — the hook id is prettier-autostage
+    # so it never matched; prek is the canonical runner now, and the on-commit hook
+    # re-formats + auto-stages anyway. npx pins the canonical version on every host.)
     npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
     npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
   fi
@@ -1184,13 +1216,26 @@ if [ -z "$(git diff --cached --name-only)" ] && [ -z "$(git status --porcelain)"
   # in a previous quickmerge run. Skip commit and go straight to push + PR.
   echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed. Proceeding to push."
 elif ! git commit -m "$COMMIT_MSG" --quiet; then
-  # Pre-commit may have modified files (e.g. Prettier). Stage and retry once.
-  git add -A
+  # Pre-commit may have modified files (e.g. Prettier). Re-stage and retry once.
+  # RE-ASSERT --files SCOPE: a hook that reformats files must NOT let `git add -A`
+  # sweep FOREIGN modified files (another agent's WIP, an inventory regen, a concurrent
+  # edit) into a scoped commit — that is the prek-auto-stage-vs-`--files` foot-gun. When
+  # --files is set, re-stage ONLY those paths (the hook's edits to YOUR files re-stage;
+  # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
+  if [ -n "$FILES_ARG" ]; then
+    for f in $FILES_ARG; do [ -e "$f" ] && git add "$f"; done
+  else
+    git add -A
+  fi
   if ! git commit -m "$COMMIT_MSG" --quiet; then
     echo "[$REPO_NAME] ❌ Commit failed (pre-commit may have failed). Run: pre-commit run --all-files; git add -A; git commit -m \"...\"" >&2
     exit 1
   fi
-  echo "[$REPO_NAME] Pre-commit modified files; staged and committed on retry" >&2
+  if [ -n "$FILES_ARG" ]; then
+    echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
+  else
+    echo "[$REPO_NAME] Pre-commit modified files; staged and committed on retry" >&2
+  fi
 fi
 
 git push -u origin "$BRANCH" --quiet 2>/dev/null
@@ -1203,19 +1248,18 @@ ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+
 if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
-elif [ "$REPO_NAME" = "unified-trading-pm" ] || [ "$REPO_NAME" = "unified-trading-codex" ]; then
-  # PM/codex fast-path: doc/plan-only changes skip staging, go direct to main.
-  # Script/workflow changes still route through staging for proper SIT validation.
-  STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
-  NON_DOC_CHANGES=$(echo "$STAGED_FILES" | grep -vE '^(plans/|docs/|cursor-configs/|cursor-rules/|\.cursorrules$|.*\.md$|.*\.mdc$)' | head -1 || true)
-  if [ -z "$NON_DOC_CHANGES" ]; then
-    PR_BASE="main"
-    echo "[$REPO_NAME] Doc/plan-only change: PR targets main directly (fast-path — triggers plan agents immediately)"
-  else
-    PR_BASE="staging"
-    echo "[$REPO_NAME] Infrastructure change detected: PR targets staging (scripts/workflows need SIT validation)"
-    echo "[$REPO_NAME] Non-doc files: $(echo "$STAGED_FILES" | grep -vE '^(plans/|docs/|cursor-configs/|cursor-rules/)' | head -5 | tr '\n' ' ')"
-  fi
+elif [ "$REPO_NAME" = "unified-trading-pm" ]; then
+  # Option B (operator decision 2026-06-03): PM ships to main directly — NO staging.
+  # (unified-trading-codex is ARCHIVED — folded into PM at codex/; no longer a live repo,
+  # so it is not handled here.)
+  # PM is not a deployed package and is the SIT *debouncer* (it is not itself SIT-covered),
+  # so a staging hop adds zero SIT value. The main PR's quality-gates-v2 (plan-hygiene,
+  # manifest/dependency-alignment, codex-ref validation, ruff on tooling scripts) is the full
+  # per-repo gate. BOTH docs/plans AND scripts/workflows target main here. Downstream service
+  # repos building on staging still get PM via the dep-clone fallback (clone -b staging → -b main),
+  # so PM having no staging branch is transparent to them. SSOT: codex/08-workflows/ci-cd-flow.md.
+  PR_BASE="main"
+  echo "[$REPO_NAME] Option B: PR targets main directly (PM has no staging; v2 on the main PR is the gate)"
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"

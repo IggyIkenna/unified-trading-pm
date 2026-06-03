@@ -181,13 +181,16 @@ jobs:
               done
               if [ "$MSTATE" = "dirty" ]; then
                 CONFLICT_URL="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
-                echo "  CONFLICT on PR #$PR_NUM ($CONFLICT_URL) — dispatching conflict-resolution-agent"
+                echo "  CONFLICT on PR #$PR_NUM ($CONFLICT_URL) — dispatching deterministic resolver (take-LDR; escalates to the VM conflict-agent only if genuinely ambiguous)"
+                # Operator principle 2026-06-03: deterministic common-case (LDR→staging staleness = take-LDR,
+                # no agent/credits); the resolver escalates to merge-conflict-detected (VM worker) only when the
+                # target carries genuine unique non-merge content. SSOT: deterministic-promotion-conflict-resolve.yml.
                 curl -s -X POST \
                   "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
                   -H "Authorization: Bearer $GH_TOKEN" \
                   -H "Content-Type: application/json" \
-                  -d "{\"event_type\":\"merge-conflict-detected\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"live-defi-rollout\",\"target_branch\":\"staging\",\"original_pr_url\":\"${CONFLICT_URL}\"}}" \
-                  && echo "    dispatched" || echo "    WARN: dispatch failed"
+                  -d "{\"event_type\":\"promotion-conflict\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"live-defi-rollout\",\"target_branch\":\"staging\",\"original_pr_url\":\"${CONFLICT_URL}\"}}" \
+                  && echo "    dispatched (deterministic resolver)" || echo "    WARN: dispatch failed"
                 CONFLICTED="$CONFLICTED $REPO"; CONFLICTED_COUNT=$((CONFLICTED_COUNT + 1))
               else
                 echo "  $REPO: existing PR #$PR_NUM mergeable_state=$MSTATE (auto-merge already pending)"

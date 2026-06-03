@@ -67,7 +67,7 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
 
 ## Phase 1 — Data-correctness (P0/P1)
 
-- [ ] [DATA-CORRECTNESS] P0. Fix MTDS `dex_swaps` silent truncation at 5,000 swaps/day/pool — repo:
+- [x] ✅ [DATA-CORRECTNESS] P0. Fix MTDS `dex_swaps` silent truncation at 5,000 swaps/day/pool — repo:
       market-tick-data-service @ `market_tick_data_service/cli/handlers/dex_swaps_handler.py:569`
       (`for page in     range(5)` + break on `len(df)<1000`, writes the partial 5k as if complete). Replace the hard
       5-page cap with full pagination (skip-loop until `len(df)<1000`, no upper bound) OR, if an explicit cap is
@@ -75,7 +75,10 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       the last page is full so the manifest never marks a truncated day `captured`-complete. Add a regression test (pool
       with >5k swaps/day → all rows captured OR truncation flagged). cold-start: read `SUB_AGENT_MANDATORY_RULES.md`;
       The Graph query orders `timestamp asc` `first:1000`. owning-epic: mtds_mdps_master (audit item: defi `dex_swaps`
-      truncation).
+      truncation). DONE (slot 10, 2026-06-03): replaced `for page in range(5)` with unbounded `while True:` skip-loop;
+      regression test TestPaginationNoTruncation.test_collects_more_than_5000_rows asserts 6,000 rows collected from
+      6-page mock. Committed market-tick-data-service@7cb9947; QG passed; tab branch pushed — staging PR pending dep
+      promotion (UTL + UAC at FEATURE_GREEN).
 
 ## Phase 2 — Live-coverage parity (P1, batch=live)
 

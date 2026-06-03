@@ -599,10 +599,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       ("Resolve the instruments-store-sports bucket name") — mirrors the UAC gcs_paths facade → **rides the cross-AG UAC
       `bucket_name` facade fix** (coordinate at `defi_manifest…` §MASTER; not a unilateral sports-lane change). UI
       data-status views read the (canonical) deployment-api → no separate UI fix.
-- [ ] [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)**: every sports test (unit + integration) that
-      references a bucket/path/manifest convention must use the canonical `-prd-` v9 form, so QG REGRESSION-CATCHES any
-      future dead-bucket association. Grep sports tests for legacy bucket/path literals; update to canonical. (This is
-      the mechanism that makes the regression gate self-enforcing — a reverting change fails QG.)
+- [x] ✅ [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)** — VERIFIED ALREADY SATISFIED 2026-06-03.
+      Comprehensive grep of every features-service test (unit + integration) for legacy sports bucket/path literals
+      (`instruments-store-sports-central` / `market-data-tick-sports-central` / `category=sports` / no-env
+      `gs://…sports` forms) returned **zero hits** — the sports tests already route through
+      `resolve_bucket(kind=…, asset_group="sports")` / the canonical `-prd-` form, and
+      `tests/sports/unit/test_gcs_paths_and_reader_deps.py` IS the self-enforcing regression guard (its only "legacy
+      form" mentions are docstrings describing what it guards against). No change needed; the mechanism is in place.
 - [x] ✅ [DATA] P0. **League rewrite table — ENUMERATED ON REAL DATA (sports-slot 2026-06-02; no dry-run needed — read
       the prod `_index` + UAC registry directly)**. The "278k suffixed rows" is **mostly LEGIT tier leagues**
       (`LIGUE_1`, `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full
@@ -748,11 +751,21 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       fixtures date>=2018-01-01 (api_football coverage start); re-raised before generic except-Exception; 4 unit tests:
       within-coverage raises, pre-coverage returns empty, non-required entity returns empty, blob-present returns data;
       QG ALL GATES PASSED
-- [ ] [CODE] P2. **features-service sports — wire `assert_consolidator_healthy` for live mode**: live
-      `AssetScopedFeaturesRunner` starts without asserting the sports manifest consolidator is alive. Wire
-      `assert_consolidator_healthy(bucket)` for the sports instruments-store bucket at live startup (mirrors pattern in
-      other live families). Repo: `features-service`. File: `features_service/sports/live/runner.py` or the UTL
-      `build_asset_scoped_runner` factory hook.
+- [x] ✅ [CODE] P2. **features-service sports — wire `assert_consolidator_healthy` for live mode** — DONE 2026-06-03
+      (features-service@this-branch). `features_service/sports/live/runner.py` `build_runner` now runs
+      `_assert_upstream_manifest_healthy(asset_group)` before building — gates **BOTH** sports upstreams (`market-data`
+      tick = MDPS odds/candles AND `instruments-store` = IS fixtures; sports has two upstreams vs delta_one's one),
+      raising `ManifestConsolidatorStaleError` to fail-to-start. Regression test
+      `tests/common/test_live_runner.py::test_sports_wrapper_build_runner_gates_on_consolidator` (monkeypatches the
+      gate, asserts both sports-scoped buckets fire). **Caught a latent bug**: the delta_one pattern I mirrored used the
+      INVALID `kind="market-data-tick"` (raises `BucketNamingError` — valid kind is `"market-data"`); see next item.
+- [x] ✅ [CODE] P1. **Cross-family latent bug — `resolve_bucket_name(kind="market-data-tick")` is INVALID, raises
+      `BucketNamingError`** (found 2026-06-03 via the sports consolidator-gate test). The canonical tick-bucket kind is
+      `"market-data"` (yaml-keyed; aliased `"tick-data"`), used by 10+ consumers (sports/onchain/volatility/delta_one
+      config). Three live-mode call sites used the invalid string — would crash at runtime, **untested** (no test mocked
+      the kind) — FIXED features-service@this-branch: `delta_one/cli/handlers/live_handler.py:41` (candle-freshness
+      gate), `cefi/cli/handlers/perp_funding_handler.py:83` + `cefi/calculators/perp_funding_rates.py:72` (perp-funding
+      preflight). Data-correctness fix per the heartbeat rule; provenance: slot-4 sports e2e session.
 - [x] ✅ [CODE] P2. **IS + MTDS sports — add v9 schema column checks to upstream preflight** — BOTH DONE 2026-06-02: IS:
       `sports_dependency.py` has `check_sports_manifest_v9_columns(manifest_df)` (SPORTS_V9_ENFORCED field in
       `InstrumentsServiceConfig`). MTDS: `_check_sports_v9_columns()` helper + `SPORTS_V9_ENFORCED` field in
@@ -786,6 +799,170 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > POST-walk regression guard. (c) `LA_LIGA_2` Segunda-vs-season disambiguation — operator/registry decision (3,465
 > rows). (d) IS orchestrator `category=` kwargs — per-site UTL-contract check (P1). All tracked above; none block the
 > dry-run.
+
+### Post-migration LIVE-WRITER + downstream-reader readiness gaps (slot-4 cross-service audit 2026-06-03)
+
+> **Why this section exists.** The migration (C-walk + `migrate_sports_canonical_v9.py`) canonicalises the EXISTING
+> sports corpus to v9. But the **live writers + downstream readers** that produce/consume NEW data going forward (MTDS /
+> MDPS / features / strategy) must ALSO emit/probe the canonical v9 form — else after the migration runs, new writes
+> DIVERGE from migrated data and consumers miss it. A 5-service read-only audit (2026-06-03, dimensions: pre-flight /
+> missing-partial-reasons / read-write paths) found the writers were only **HALF-migrated**: `category=`→ `asset_group=`
+> was done, but the **`pipeline_mode=` path segment and the `source=` column were never added**, and several output
+> buckets are still hardcoded legacy f-strings. **Ground truth (resolved a doc contradiction):** `pipeline_mode` IS
+> canonical for sports — the sports SSOT `candidate_parquet_paths()`
+> (`unified_api_contracts/canonical/domain/sports/gcs_paths.py:153`) emits the `pipeline_mode=`-aware path as its
+> Level-1 probe, and `migrate_sports_canonical_v9.py` produces `pipeline_mode=batch_odds_api/asset_group=sports/…`
+> (2026-06-03 dry-run confirmed). The CLAUDE.md "sports uses `candidate_parquet_paths()` (unaffected)" note means
+> "sports has its OWN path helper, not the generic raw_tick prober" — NOT "sports has no pipeline_mode".
+> **execution-service is effectively N/A** (event-driven venue-API order placement, no GCS sports reads) — 2 minor
+> non-blocking items noted at the end.
+
+**P0 — hard breaks (new writes diverge from migrated data, or land in dead buckets):**
+
+- [x] ✅ [CODE] P0. **DONE mtds@4fbc0730 — sports raw-tick write path now carries `pipeline_mode=` (verified vs
+      migration `_canon_mdps_raw_prd` SSOT + path-shape/source= tests; on LDR).** Original gap: MISSING `pipeline_mode=`
+      — repo: `market-tick-data-service`, `market_tick_data_service/engine/orchestrator.py:2740-2758` (the inline sports
+      odds path builder). It writes `day={D}/asset_group=sports/data_source={SRC}/venue=…` with NO `pipeline_mode=`
+      segment, while the non-sports builder `_build_partition_path_for_asset_group` (orchestrator.py:980-994) inserts
+      `pipeline_mode={pm}/` via `derive_pipeline_mode_for_row(venue, ag, data_type)`. Post-migration, migrated data
+      lives at `pipeline_mode=batch_odds_api/asset_group=sports/…` but new live writes land at `asset_group=sports/…` →
+      divergent paths. **Fix**: insert `pipeline_mode={derive_pipeline_mode_for_row(...)}/` after `day={D}/` in BOTH the
+      per-fixture and league-aggregate branches; add a path-shape unit test asserting the segment is present.
+- [x] ✅ [CODE] P0. **DONE mdps@3dd3f15 — sports processed writer (`scripts/reprocess_sports_odds.py`, the actual sports
+      candle writer) now embeds `pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/` (verified vs
+      migration `_canon_mdps_candle` SSOT + path-shape test; on tab).** Original gap: MISSING
+      `pipeline_mode=`/`asset_group=` hive keys — repo: `market-data-processing-service`, `…/config.py:131`
+      (`get_processed_path`) + `…/output_path_helpers.py:53-75` (`build_processed_candle_path`). The blob key is
+      `processed_candles/by_date/day=/timeframe=/data_type=/venue=/…` — no `pipeline_mode=batch_*/` (the
+      `partition_path` passed to UTL validation has `asset_group=` but the actual GCS blob key does not). Post-migration
+      v9 readers won't find new sports processed candles. **Fix**: embed `pipeline_mode={pm}/asset_group=sports/` in the
+      processed blob prefix (align with the migration target + `candidate_parquet_paths`); path-shape test.
+- [x] ✅ [CODE] P0. **DONE mtds@4fbc0730 + mdps@3dd3f15 — sports captured rows now stamp `source=` (MTDS: `odds_api` via
+      source-map; MDPS: `mdps_odds_horizon_bucket` via `_resolve_primary_source_for_candle`, None-fallback for unwired
+      AGs preserves cefi/defi/tradfi behaviour). Tests assert source= on captured rows.** Original gap: OMIT `source=` —
+      repos: `market-tick-data-service` (`engine/orchestrator.py:3084-3121`, `record_captured_from_counts`/`add()` for
+      sports) + `market-data-processing-service` (`…/canonical_writer.py:1426`, `record_captured`). v9 requires `source`
+      on every captured cell (operator 2026-06-01, crosscutting — cefi/defi/sports are RED per CLAUDE.md). Without it
+      sports rows lack the column the v9 walk adds → `MissingSourceError` / null-source breaks
+      `select_primary_available_source`. **Fix**: pass `source=get_primary_source("sports", data_type)` (e.g.
+      `odds_api`) to `record_captured`/`add`/`record_empty` for sports shards in both services. (Composes with
+      `data_source_provenance_all_asset_groups_2026_06_01.md` §Phase 1 — this is the sports write-path slice that plan
+      left RED.)
+- [x] ✅ [CODE] P0. **DONE features-service@78a9a26f — all 3 sports output call sites now use
+      `resolve_bucket(kind="features-sports", asset_group="sports")` (env-tiered `-prd-` form) + 3 tests. (Also
+      unblocked 2 foreign QG gates: a 51L method from 933b8747 + a uv.lock desync.)** Original gap: bucket f-string
+      drops env-tier — repo: `features-service`, `features_service/sports/cli/handlers/batch_handler.py:722` +
+      `…/cli/handlers/live_handler.py:108` + `…/app/pubsub/subscriber.py:65`:
+      `bucket or f"features-sports-{project_id}"` produces `features-sports-central-element-323112` but the canonical
+      bucket is `features-sports-prd-central-element-323112` (`cloud-providers.yaml`). Post-migration the non-env-tiered
+      bucket does not exist → **all sports feature writes hard-fail**. **Fix**: replace all 3 with
+      `resolve_bucket(kind="features-sports", asset_group="sports")` (the migration script
+      `features_sports_reconcile_available_at.py:261` already uses the correct form).
+- [x] ✅ [CODE] P0. **DONE strategy-service@7025bedc + deployment-service@5ad0951 — `VenueBalanceTracker` now resolves
+      via `resolve_bucket_name` (allocation → flat `strategy-store`, shared by all non-prediction AGs; positions → new
+      `position-store-sports` kind registered in cloud-providers.yaml GCP+AWS) + regression test.** Original gap:
+      hardcoded legacy no-env buckets — repo: `strategy-service`,
+      `strategy_service/position/core/venue_balance_tracker.py:57-58`: `f"strategy-store-sports-{project_id}"` +
+      `f"position-store-sports-{project_id}"`. Used by `load_allocation()` (:414), `save_eod_snapshot()` (:478),
+      `load_snapshot()` (:508) → **404 post-migration**. **Fix**: resolve via
+      `resolve_bucket_name(cloud=…, kind="strategy-store"/"position-store", asset_group="sports")` (register the kinds
+      in `cloud-providers.yaml` if absent — verify first). Same anti-pattern as the `ecc7cc0f` DependencyChecker fix.
+
+- [ ] [CODE] P0. **READ paths don't probe the migration's `pipeline_mode=` path (the writers were fixed, the readers
+      were NOT)** — repo: `features-service`. The sports READERS hand-construct exact paths and `blob_exists`-probe
+      them, bypassing the `pipeline_mode`-aware UAC SSOT `candidate_parquet_paths`:
+      `sports/data/gcs_reader.py::read_odds_data` (~:326) probes `raw_tick_data/by_date/day={D}/asset_group=sports/…`
+      then `…/category=sports/…` — **neither has `pipeline_mode=`**; the `sports_reference` entity reads
+      (`_singleton_path`/`_league_prefix` ~:99-128) similarly build `sports_reference/by_date/day={D}/entity=…` with no
+      `pipeline_mode=`. After the migration writes `pipeline_mode=batch_odds_api/asset_group=sports/…` (and
+      `sports_reference/by_date/day=/pipeline_mode=/entity=…`), these readers look for the NON-pipeline_mode path →
+      **MISS all migrated data** (silent empty reads → false honest-absence). **No sports reader calls
+      `candidate_parquet_paths`** (the SSOT that emits the Level-1 `pipeline_mode`-aware probe + Level-2 legacy
+      fallback). **DISCOVERED 2026-06-03 (the prior 5-service audit wrongly concluded "pipeline_mode N/A for sports
+      reads").** (MDPS `orchestration_scanner._list_instrument_files` is OK — it
+      `list_blobs(prefix="raw_tick_data/by_date/day={D}/")`, which is `pipeline_mode`-agnostic, so it finds migrated
+      data.) **Fix**: route the features sports readers through
+      `candidate_parquet_paths(data_type, day, league_id,     pipeline_mode=…)` (it already returns the migration's path
+      as Level-1 + legacy as fallback), OR add the `pipeline_mode=`-prefixed candidates to the `blob_exists` lists. Add
+      a read-path test asserting the reader finds a `pipeline_mode=batch_odds_api/asset_group=sports/…` object. **Pairs
+      with the P0 writer fixes — writes + reads MUST use the identical migration path.**
+- [ ] [DATA/CODE] P1. **Schema/column PARITY pass — verify the v9 manifest column set + dtypes are IDENTICAL across
+      writer ⇄ migration ⇄ reader** (operator: "same columns, no schema types, everything the same"). Writers now stamp
+      `source`+`pipeline_mode` (P0.3) and MTDS `_check_sports_v9_columns` enforces the new-col set at preflight, but no
+      end-to-end check confirms EVERY v9 column (`schema_version=9`, `asset_group`, `source`, `pipeline_mode`,
+      `available_at`, `capture_status`, typed `error_reason`) is present AND the same dtype in: the live writer's
+      `record_captured`/`add`, the migration's `rebuild_sports_manifest_v9` emission, and the downstream
+      data-status/feature readers. **Fix**: write a parity assertion (or extend `cf_manifest_audit`) comparing the
+      column schema of a live-written sports `_index` row vs a migration-rebuilt row vs the reader's expected schema;
+      reconcile any drift.
+- [ ] [DATA/CODE] P1. **Partial-capture manifest correctness for sports — confirm** (operator: "handling partial data
+      correctly"). MTDS handles partial at write (per-shard captured-set, partial venues not skipped) + MDPS/features
+      track calculator partial status, but no explicit confirmation that a day where SOME leagues/venues captured and
+      OTHERS legitimately empty produces the CORRECT per-shard manifest rows (captured rows for the present shards +
+      typed-empty rows for the absent-but-expected, NOT a single blanket cell). **Fix**: a partial-day test (e.g. EPL
+      captured + off-season league empty on the same day) asserting per-shard rows are emitted with the right
+      capture_status/reason per shard (4-pillar cluster-coverage validation).
+
+**P1 — correctness/safety (silently compute/trade on stale or mislabelled data):**
+
+- [x] ✅ [CODE] P1. **DONE 2026-06-03 — consolidator pre-flight added: MTDS@a75f021a (`process_ticks` after the v9-col
+      check), MDPS@fc64192 (`dependency_checker`), features-service@4b628d1a (batch_handler via new shared
+      `_manifest_preflight`, mirroring the live runner); loud-fails `ManifestConsolidatorStaleError`, gated by
+      `not force`.** Original gap: No `assert_consolidator_healthy` pre-flight in MTDS / MDPS / features-BATCH — repos:
+      `market-tick-data-service` (`engine/orchestrator.py` `process_ticks()` before `read_availability_index`),
+      `market-data-processing-service` (`…/orchestration_service.py` startup / `_check_dependencies`),
+      `features-service` (`features_service/sports/cli/handlers/batch_handler.py` `BatchHandler.run()` — the **live**
+      runner gate shipped 2026-06-03 features-service@ae75b44b but batch has none). **Fix**: add the shared UTL gate
+      before each upstream manifest read (template: features `sports/live/runner.py:_assert_upstream_manifest_healthy`);
+      loud-fail (`ManifestConsolidatorStaleError`) on a stale/missing index when per-VM shards exist.
+- [x] ✅ [CODE] P1. **DONE 2026-06-03 — live writers now emit TYPED `EmptyConfirmedReason` via the SAME UAC
+      `is_expected_for_source` (+ `footystats_season_status_for_day`) SSOT that `rebuild_sports_manifest_v9.py`'s CF-5
+      classifier uses — NO parallel taxonomy. MTDS@a75f021a (oracle steps 4+5 in the sentinel path), MDPS@fc64192
+      (`classify_sports_empty_reason`); `SOURCE_RETURNED_ZERO` only when a fixture WAS expected but source returned
+      zero; CF-11 attempted_failed split intact.** Original gap: Blanket `SOURCE_RETURNED_ZERO` instead of TYPED
+      fixture/season reasons (going-forward writers) — repos: `market-data-processing-service` (`…/batch_workers.py:178`
+      `_handle_empty_tick_data`, default `canonical_writer.py:1668`) + `market-tick-data-service`
+      (`engine/orchestrator.py:3586,3635` per-fixture sentinels). The migration RELABELS the existing corpus (keystone
+      classifier, SHIPPED), but the LIVE writers still emit blanket `SOURCE_RETURNED_ZERO` for no-fixture/off-season
+      days → re-introduces the silent-lie the walk fixes. **Fix**: at empty-write time, look up the sports fixture
+      calendar (`get_league_fixture_calendar` / FIXTURES truth set) and emit the typed `EmptyConfirmedReason`
+      (`EXPECTED_NO_FIXTURE` / `EXPECTED_PAUSED_LEAGUE` / coverage/transfer-window/genesis) — the write-path twin of the
+      migration's CF-5 classifier.
+- [x] ✅ [CODE] P1. **DONE strategy-service@c2793217 — (8a)
+      `check_allocation_manifest(date, features_bucket,     asset_group="sports")` wired into the sports batch
+      allocation loop (`batch_handler._run_handle_prechecks`): skip on `empty_confirmed`/`attempted_failed` (batch), log
+      `UPSTREAM_FEATURES_FAILED` on attempted_failed (live). (8b) `SportsFeatureSubscriber` now gates on honest-empty
+      (`_is_honest_empty_vector` — returns early, no signal/publish). QG exit 0; 5+9 tests.** ⚠️ **Contract gap (8b)**:
+      the FSS Pub/Sub event does NOT carry `capture_status` (it lives in the GCS manifest) — the subscriber uses an
+      implied-probability heuristic; the real fix is adding `capture_status` to the UAC `SportsFeatureEvent` contract
+      (captured as a follow-up below). Original gap: allocation-guard orphaned for sports + PubSub subscriber has no
+      capture_status gate.
+
+**Follow-ups surfaced by the P1 work (2026-06-03):**
+
+- [x] ✅ [CODE] P2. **DONE 2026-06-03 — `capture_status` now carried on the FSS→strategy sports PubSub payload.** Wire
+      trace: that path is raw PubSub JSON (a dict), NOT the Redis-cascade `FeaturesComputedEvent` — so `capture_status`
+      was added as a **sports-payload key** (UAC `SPORTS_FEATURE_PAYLOAD_CAPTURE_STATUS_KEY` +
+      `SportsFeatureCaptureStatus` Literal in `canonical/domain/sports/live.py`, uac@ec947a7e+b24baa7d), NOT on the
+      generic cross-AG event (avoids all-families blast radius — correct scoping). features-service@e2249fd9 stamps it
+      on every emitted record (`subscriber._classify_record_capture_status`); strategy-service@fb3f8f7f reads it first
+      and gates on `empty_confirmed`/`attempted_failed`, keeping `_is_honest_empty_vector` as a pre-rollout fallback
+      only. 3 (UAC) + 9 (features) + 12 (strategy) tests. Original gap: allocation-guard's subscriber had no real
+      capture_status signal.
+- [x] ✅ [CODE] P3. **DONE features-service@e2249fd9** — `sports/live/runner.py` now imports + re-exports
+      `assert_upstream_manifest_healthy` from the shared `sports/cli/handlers/_manifest_preflight.py`; the duplicate
+      `_assert_upstream_manifest_healthy` deleted (ONE gate impl). `test_live_runner.py` monkeypatch retargeted to
+      `_manifest_preflight.assert_consolidator_healthy`. No behaviour change.
+
+**Non-blocking / N/A (documented for completeness, no migration break):**
+
+- [ ] [CODE] P3. **execution-service minor manifest hygiene** — repo: `execution-service`. Sports execution is
+      event-driven (venue-API order placement, no GCS sports reads → canonical-path dimensions N/A). Two cosmetic items:
+      (1) execution-result manifest rows write `asset_group=""` (`engine/modes/live/data_sink.py:128`) — not queryable
+      by `asset_group=sports`; (2) `get_bucket_for_asset_group()` (`service_config.py:694`) hard-raises for `"sports"`/
+      `"prediction"` + the live sink hardcodes `get_execution_bucket("cefi")` (`live_execution_handler.py:572`) so
+      sports fills land in the CeFi execution bucket. Only bites IF sports results are later routed to a canonical
+      `asset_group=sports` bucket. **NICE-TO-HAVE** — file/fix when sports execution-store separation is scoped.
 
 ### Verify + handoff to decommission
 

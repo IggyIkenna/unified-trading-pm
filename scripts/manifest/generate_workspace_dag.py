@@ -2,9 +2,12 @@
 """Generate WORKSPACE_MANIFEST_DAG.svg from workspace-manifest.json.
 
 SSOT: unified-trading-pm/workspace-manifest.json
-Output: unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg
-Symlink: unified-trading-codex/04-architecture/WORKSPACE_MANIFEST_DAG.svg
-    -> ../../unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg
+Output: unified-trading-pm/WORKSPACE_MANIFEST_DAG.svg (GITIGNORED — generated artifact, regenerate
+    on demand; tracking it churns the worktree. See item H, cicd_contract_hardening_2026_06_01.)
+Symlink: codex/04-architecture/WORKSPACE_MANIFEST_DAG.svg -> ../../WORKSPACE_MANIFEST_DAG.svg
+    (codex is now a subtree of unified-trading-pm after the 2026-03-27 consolidation; the codex
+    doc reference is a tracked symlink to this generated root output — restored 2026-06-03 after the
+    consolidation had materialised it into a stale real-file copy).
 """
 
 from __future__ import annotations

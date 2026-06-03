@@ -20,6 +20,37 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
 
+> **🟢 VM RUNNING — E4 DRY migration (slot-5 2026-06-03 19:03 UTC).** `canonical-migration-prediction-20260603-190322`
+> (asia-northeast1-c, e2-standard-8) running
+> `migrate_prediction_to_pred_prd_v9 --start-date 2025-03-14 --end-date 2026-06-01 --workers 64` in **DRY mode (no
+> `--apply` — NO mutations, plans the moves only)**. SHA-pinned mtds@90aeb7dd / utl@101960a4 / uac@1bd28d8c (fresh
+> tarballs built 2026-06-03 — the prior tarball predated the `eb5eaad2` gcs_copy_object import fix). Auto-shutdown on
+> completion. **DO NOT launch a second prediction migration VM or run E2–E8 while this is up.** The IRREVERSIBLE
+> full-run (`full`/`--apply`) + E8 legacy-delete stay gated on operator review of this dry output. Banner-remove owned
+> by slot-5 at completion.
+
+## Slot-5 Prediction master orchestrator — owned + attached plans/issues
+
+> **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot (five slots). **Slot 5 = Prediction
+> end-to-end** across every service — instruments-service → MTDS → MDPS → features → downstream → strategy/execution →
+> bucket/data/manifest/UI. **THIS plan is the Prediction master orchestrator**: every prediction-related plan + issue
+> cross-references here; orphaned prediction issues attach here. Sibling AG masters: **defi → slot 2**
+> (`defi_manifest_canonicalisation_2026_06_01.md`), **cefi → slot 3** (`cefi_manifest_canonicalisation_2026_06_01.md`),
+> **sports → slot 4** (`sports_manifest_canonicalisation_2026_06_01.md`), **tradfi → slot 6**
+> (`tradfi_manifest_canonicalisation_2026_06_01.md`). Cross-cutting per-service plans keep their own `assigned_vm`
+> (vm-ml / vm-cross-cutting) as PRIMARY owner — slot-5 tracks + drives only their **prediction slice**, not the whole
+> plan.
+
+**Cross-referenced prediction slices (primary owner keeps the plan; slot-5 drives the prediction portion):**
+
+| Plan / issue                                                   | Primary VM       | Prediction slice                                                                            |
+| -------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------- |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` | vm-cross-cutting | L3 prediction ordering + L6 legacy `market-data-tick-prediction` delete                     |
+| `data_source_provenance_all_asset_groups_2026_06_01.md`        | vm-ml            | prediction `source=API` column (this plan's C-source RIDER)                                 |
+| `pipeline_mode_partition_migration_2026_06_01.md`              | vm-cross-cutting | prediction `pipeline_mode=` partition (this plan's C-pipeline_mode RIDER)                   |
+| `instruments_manifest_canonicalisation_2026_06_01.md`          | vm-cross-cutting | `instruments-store-prediction` reference slice                                              |
+| `downstream_services_manifest_canonicalisation_2026_06_01.md`  | vm-ml            | prediction MDPS/features/execution canonical-form slice + Kalshi classifier-None divergence |
+
 > **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
 > `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** — a FULL
 > re-canonicalisation, not the headline cell-count (same shape as the cefi reference incident). **CF-2 gotcha**: the
@@ -295,10 +326,19 @@ be fixed first if run on a VM.
       small):** blank `data_type` (17 rows, both buckets) is skip+logged by the migrator → diagnose at rebuild from the
       parquet's own `data_type` column; confirm the ~21 UNKNOWN-venue cells are object-backed (relabel) vs phantom
       (honest drop).
-- [ ] [DATA] P0. E6b CODEX-ALIGNMENT VERIFY-ITEM (operator final-gate 2026-06-01): a codex-alignment audit confirmed
-      paths/columns/buckets/vocab are ALIGNED across codex + IS/MTDS/MDPS (all use UAC builders + `resolve_bucket_name`;
-      no inline divergence) — see `cf_data_state_audit_slot3_2026_06_01.md`. **ONE prediction nuance to confirm before
-      apply**: `codex/02-data/prediction-schema-paths.md` describes a `canonical_question_group={cqg}/` PATH SEGMENT for
+- [x] ✅ [DATA] P0. E6b CODEX-ALIGNMENT VERIFY — DONE (slot-5 2026-06-03). **Resolved: NO migrator change needed + codex
+      reconciled.** Confirmed against (1) UAC `build_prediction_partition_path` — `{conditionId}.parquet` is the
+      per-instrument FILENAME, explicitly "NOT a partition segment"; (2) legacy data — **0**
+      `data_type=prediction_canonical_question_group` raw objects across sampled days (only `data_type=trades` per-cid).
+      `prediction_canonical_question_group` is a MANIFEST-ONLY bundled data_type (rebuild re-computes cqg per-cid → one
+      `record_captured_from_counts` row), so there is no `canonical_question_group={cqg}/` object segment to build — the
+      migrator's cqg-as-filename output is correct and the canonical reader resolves it. The codex
+      `prediction-schema-paths.md` "Target (post-Plan A)" object-bundle layout was STALE/aspirational → added a
+      SHIPPED-DESIGN CORRECTION banner (per-cid objects + manifest-only bundle). Original verify text below.
+      <br>**Original:** a codex-alignment audit confirmed paths/columns/buckets/vocab are ALIGNED across codex +
+      IS/MTDS/MDPS (all use UAC builders + `resolve_bucket_name`; no inline divergence) — see
+      `cf_data_state_audit_slot3_2026_06_01.md`. **ONE prediction nuance to confirm before apply**:
+      `codex/02-data/prediction-schema-paths.md` describes a `canonical_question_group={cqg}/` PATH SEGMENT for
       `data_type=prediction_canonical_question_group` (post-Plan-A target). The migrator's `candidate_parquet_paths`
       builds `.../data_type={DT}/{filename}.parquet` (cqg-as-filename, NO segment). For the 289 legacy question_group
       cells: list an ACTUAL legacy question_group object, confirm whether the canonical layout uses the SEGMENT vs the
@@ -343,13 +383,26 @@ verify + the gated delete.
 > fetch succeeded + genuinely no trades/prices → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we
 > don't know why" masquerading as complete.
 
-- [ ] [DATA] P0. **E5 rebuild classifier (`rebuild_prediction_manifest.py`): within-bounds empty → `attempted_failed`.**
-      For every empty cell: if the market/condition exists + is within its active window + data_type
-      guaranteed-when-listed (trades / prices on a live market) + not pre-launch → `attempted_failed` (`record_failed`),
-      NOT `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 41 existing `SOURCE_RETURNED_ZERO` rows — genuine
-      source-zero vs masked fetch failure. Preserve the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
-- [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel
-      a failure to `empty_confirmed`; they stay flagged for backfill.
+- [x] ✅ [DATA] P0. **E5 rebuild classifier: within-bounds empty → `attempted_failed` — DONE (mtds@62b7ff74, slot-5
+      2026-06-03).** The 41 `SOURCE_RETURNED_ZERO` (per-condition_id) are now reclassified: lifecycle bounds loaded per
+      date from the FIXED reader (`start_date`/`end_date_iso`), and a row live in-window
+      (`start_date<=day<end_date_iso`) → `record_failed(WithinBoundsSourceZero)` (attempted_failed); out-of-window /
+      no-bounds preserved as typed empty. `EXPECTED_PRE_VENUE_LAUNCH` preserved. Tests: within-vs-out-of-bounds +
+      no-bounds; QG exit 0. Superseded-PARTIAL note: (mtds@59d25967, slot-5 2026-06-03): the rebuild now AUDITS the
+      `SOURCE_RETURNED_ZERO` rows (per-row WARN log `(date,venue,instrument_id)` via `reemit_honest_absence_rows` + a
+      `source_returned_zero_preserved` counter) and PRESERVES the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
+      **RESIDUAL (this item stays open):** the actual within-bounds RECLASSIFICATION (`SOURCE_RETURNED_ZERO` on a live
+      market in-window → `attempted_failed`) is conservatively deferred — it needs a per-market lifecycle
+      (created_at/settlement) lookup from instruments-store `MARKET_LIFECYCLE` at rebuild time (cross-service GCS read;
+      named dependency in the code TODO). Wire that lookup to finish this item.
+- [x] ✅ [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED — DONE (mtds@59d25967,
+      slot-5 2026-06-03).** `reemit_honest_absence_rows` reads the existing pred-prd `_index`
+      (`read_availability_index`), and for every `attempted_failed`/`empty_confirmed` row whose
+      `(date,venue,data_type,instrument_type,instrument_id)` key is NOT covered by the fresh object-scan, re-emits it
+      with status PRESERVED (`record_failed` error preserved / `record_empty` reason validated vs
+      `EMPTY_CONFIRMED_REASONS`) — fixing the pure-object-scan false-complete (honest-absence rows were being lost).
+      Fresh captured/failed always wins the dedup; never silently relabels a failure to `empty_confirmed`. 3 new tests
+      (re-emit / dedup-skip / status-preserved), 17/17 green; mtds QG `--no-fix` exit 0.
 - [x] ✅ [CODE] P1. **Batch=live classifier-None divergence — DONE (mtds@5744ba61, 2026-06-02).** The live Polymarket
       adapter now emits `None` (NaN), NOT `"OTHER"`, for a sub-threshold classifier result (polymarket_adapter.py ~735);
       the orchestrator `write_chunk` splits null cqg rows BEFORE the captured groupby (`_prediction_unclassified` keyed
@@ -358,17 +411,36 @@ verify + the gated delete.
       (value `"OTHER"`) stays a CAPTURED bundle, distinct from the `None` sentinel (they were indistinguishable before).
       3 regression tests in `test_polymarket_bundling_finalize.py` + updated `test_polymarket_adapter_lifecycle_gating`
       (now asserts sub-threshold → `None`, NOT `"OTHER"`). mtds QG green.
-- [ ] [CODE] P1. **Kalshi classifier-None divergence (DISCOVERY slot-3 2026-06-02, mtds — follow-up to the Polymarket
-      fix above)**: the Kalshi adapter still maps an unclassified result → `canonical_question_group="OTHER"`
-      (`test_kalshi_adapter_lifecycle_gating.py:246` asserts it). The orchestrator finalize (shared across all
-      prediction venues) treats a non-null `"OTHER"` as a REAL captured group, so Kalshi unclassified markets are
-      bundled CAPTURED while Polymarket now routes them to `attempted_failed` — a venue-inconsistency + batch≠live for
-      Kalshi. Fix the Kalshi adapter the same way (emit `None` for sub-threshold so the shared orchestrator routes it to
-      `attempted_failed[ClassifierConfidenceLow]`); update the Kalshi lifecycle-gating test to assert `None` not
-      `"OTHER"`. Target: `market-tick-data-service` Kalshi prediction adapter +
-      `test_kalshi_adapter_lifecycle_gating.py`. Low live urgency today (prediction live corpus is Polymarket CLOB), but
-      required for venue parity before Kalshi goes live.
-- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS prediction Polymarket adapters)**: on a genuine API error
+- [x] ✅ [CODE] P1. **Kalshi classifier-None divergence — DONE (mtds@584871e9, slot-6 2026-06-03).** The Kalshi adapter
+      (`kalshi_adapter.py`) now stamps `None` (NaN) for a sub-threshold `classify_kalshi_to_canonical_group` result
+      instead of collapsing to `CanonicalQuestionGroup.OTHER`; the venue-agnostic orchestrator finalize (the shared
+      `_prediction_unclassified` split shipped with the Polymarket fix mtds@5744ba61) routes it to
+      `record_failed[ClassifierConfidenceLow]` — byte-identical to the batch `rebuild_prediction_manifest`. Real
+      `CanonicalQuestionGroup.OTHER` stays a captured bundle. Removed the now-unused enum import;
+      `test_kalshi_adapter_lifecycle_gating.py::test_unclassified_canonical_group_is_none_not_other` flipped to assert
+      `isna().all()` + `"OTHER" not in …` (9/9 green); mtds `quality-gates.sh --no-fix` exit 0, sentinel==HEAD. On LDR
+      via the tab→LDR mirror; staging-promotion gated on the workspace dep-tier drain (UTL+UAC LDR-ahead-of-staging).
+      Original finding below for reference. ~~the Kalshi adapter still maps an unclassified result →
+      `canonical_question_group="OTHER"`~~ (`test_kalshi_adapter_lifecycle_gating.py:246` asserts it). The orchestrator
+      finalize (shared across all prediction venues) treats a non-null `"OTHER"` as a REAL captured group, so Kalshi
+      unclassified markets are bundled CAPTURED while Polymarket now routes them to `attempted_failed` — a
+      venue-inconsistency + batch≠live for Kalshi. Fix the Kalshi adapter the same way (emit `None` for sub-threshold so
+      the shared orchestrator routes it to `attempted_failed[ClassifierConfidenceLow]`); update the Kalshi
+      lifecycle-gating test to assert `None` not `"OTHER"`. Target: `market-tick-data-service` Kalshi prediction
+      adapter + `test_kalshi_adapter_lifecycle_gating.py`. Low live urgency today (prediction live corpus is Polymarket
+      CLOB), but required for venue parity before Kalshi goes live.
+- [x] ✅ [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS prediction Polymarket adapters) — DONE (IS fix
+      instruments-service@65e1f8f0, slot-6 2026-06-03).** MTDS side already VERIFIED COMPLIANT (diagnosis retained
+      below). IS-side residual verify COMPLETE + found-and-fixed a concrete gap: the Polymarket CLOB universe scan
+      (`polymarket.py::_fetch_all_raw_clob_markets`) caught a mid-pagination `aiohttp.ClientError` with only
+      `logger.warning` + `break` → returned the PARTIAL `all_markets` accumulated so far, which is cached 24 h
+      (`_get_raw_clob_markets_cached`) and read by every per-date filter as a COMPLETE (but smaller) universe →
+      false-complete coverage with ZERO failure signal (A8/CF-11 class). Fix: classify + emit `ADAPTER_FETCH_FAILED`
+      (mirrors `_fetch_clob_history`/`_fetch_page`) then RAISE so the per-venue handler records the cell
+      `attempted_failed` rather than caching a truncated universe (single-venue pagination loop → respects
+      shard-isolation). Regression test `test_clob_scan_midscan_failure_raises_not_truncates` (5/5 green); IS
+      `quality-gates.sh --no-fix` exit 0, sentinel==HEAD. On LDR via tab→LDR mirror; staging-promotion gated on the
+      workspace dep-tier drain (UTL+UAC). **Original audit + MTDS diagnosis:** on a genuine API error
       (timeout/5xx/429/auth) for a live market/condition within its active window, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the prediction
       Polymarket CLOB/Gamma fetch paths for `except … record_empty` / bare `return []` swallows; gate empty-vs-failed on
@@ -380,9 +452,123 @@ verify + the gated delete.
       None-classifier divergence above, which was about UNCLASSIFIABLE markets, not fetch errors.) RESIDUAL = focused
       instruments-service write-path verify. See cefi plan § CF-11 for the full diagnosis.
 
+## Deployment-API/UI prediction v9 data-status alignment (CODE — E2E readiness; slot-5 audit 2026-06-03)
+
+> **Why (operator 2026-06-03):** "code e2e ready" = the deployment-api data-status summary + the deployment-ui drilldown
+> must render the prediction v9 canonical form (the manifest-only `prediction_canonical_question_group` bundle atom +
+> `pipeline_mode`/`source`/`schema_version`/`available_at`) BEFORE the migration runs, so post-migration backfills,
+> code, and the data-status display all agree. Findings from a read-only deployment-api/ui audit (slot-5 2026-06-03).
+> The manifest atom is the MANIFEST-ONLY bundle (per E5/E6b): one row per
+> `(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, day, pipeline_mode)`
+> with `observed_clusters={conditionId: rows}`; raw objects stay per-cid `data_type=trades/{conditionId}.parquet`.
+
+- [x] ✅ [CODE] P0. **deployment-api `_prediction_venue_detail` reads the bundled atom — DONE (deployment-api@2ac1dfa,
+      slot-5 2026-06-03).** Now reads `data_type=prediction_canonical_question_group` rows, takes cqg from
+      `instrument_id` (v9; falls back to `underlying` for the migration window), expands `observed_clusters` for the
+      per-market drilldown, surfaces `source`+`pipeline_mode` per leaf. ruff+basedpyright clean; QG `--no-fix` exit 0.
+      ~~reads the bundled atom, not `underlying`~~\*\* — repo `deployment-api`,
+      `deployment_api/services/shard_detail.py:1364-1372` groups by the `underlying` column and emits it AS
+      `canonical_question_group`. Post-v9 the manifest carries an explicit `canonical_question_group` column on the
+      bundled `data_type=prediction_canonical_question_group` rows + per-market `observed_clusters` JSON. Fix: read
+      `canonical_question_group` from the bundled row + expand `observed_clusters` (`{conditionId: rows}`) for the
+      per-market drilldown leaf; stop assuming `underlying==cqg`. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. **deployment-api turbo aggregation handles the bundled data_type — DONE (deployment-api@2ac1dfa).**
+      `data_status_service._read_defi_merged_index` + `data_status_hierarchical.get_hierarchical_drilldown` promote
+      `canonical_question_group` from `instrument_id` for prediction so the turbo breakdown + SHARD_AXIS_MATRIX axis +
+      filters resolve against v9 rows. ~~aggregation handles the prediction bundled data_type~~\*\* — repo
+      `deployment-api`, `deployment_api/services/data_status_service.py:2022` (+ `data_status_hierarchical.py:369`):
+      aggregation assumes flat per-venue rows; add the `prediction_canonical_question_group` bundled-row path so the
+      summary counts per-`(venue, canonical_question_group, day)` (not per-flat-venue) and rolls up `observed_clusters`.
+      parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. **deployment-api surfaces `source`+`pipeline_mode` for prediction — DONE (deployment-api@2ac1dfa).**
+      `_prediction_venue_detail` emits `source`/`pipeline_mode` per leaf; `routes/data_status.py` filters already wired
+      through `_apply_row_filters`/`_apply_pipeline_mode_filter` (now resolve correctly post-promotion). ~~surfaces
+      `source` (+ `pipeline_mode`) for prediction~~\** — repo `deployment-api`, `deployment_api/routes/data_status.py`
+      prediction handlers accept `pipeline_mode` but never surface the v9 row-level `source`
+      (polymarket*clob/gamma_api/kalshi\*\*) as a column/filter. Add `source` to the prediction data-status response +
+      filter, mirroring the cross-AG source-provenance display. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. **deployment-ui renders the cqg bundle — DONE (deployment-ui@4a358ec, slot-5 2026-06-03) | pw:L2 ✓ |
+      regression: tests/smoke/prediction_v9_breakdown.spec.ts**. `[UI]` data-status-helpers
+      prediction→`canonical_question_group` breakdown + `DataStatusTab` source badge + `observed_clusters`
+      per-conditionId drilldown + v9 mock. tsc clean; vitest 273 pass (17 new); playwright 97 pass. ~~renders the cqg
+      bundle, not flat venues~~\*\* — repo `deployment-ui`, `src/lib/data-status-helpers.ts:24` hardwires prediction to
+      a `venues` breakdown; post-v9 the shard axis is `(venue, canonical_question_group, day)` with per-market clusters.
+      Add a prediction breakdown branch (`breakdown_axis` → canonical_question_group → market_id cluster drilldown).
+      `[UI]` — needs `pw:L2 ✓` + regression spec per the playwright gate. parent_epic: mtds_mdps_master.
+
+- [x] ✅ [CODE] P0. **Shared prediction lifecycle reader FIXED (mtds@62b7ff74, slot-5 2026-06-03) — derive bounds from
+      `start_date`/`end_date_iso` (batch=live; repairs live gating too)** (slot-5 discovery 2026-06-03).
+      `base_prediction_adapter._load_market_lifecycle_for_date` reads `market_lifecycle/by_canonical_group/` which has
+      **0 objects** (IS never populated MARKET_LIFECYCLE), and `polymarket_adapter._load_lifecycles_from_gcs`'s
+      `instrument_availability/` fallback checks for `available_from_datetime`/`available_to_datetime` columns that **DO
+      NOT EXIST** — the real `instruments.parquet` has `start_date`/`end_date_iso`/`active`/`closed` (verified
+      day=2025-03-14, 157 rows). Net: the reader returns `{}` for every date, so the **LIVE** MTDS writer's lifecycle
+      gating (no-ticks-before-created / after-settlement) is a SILENT NO-OP, and batch within-bounds reclassification
+      has no source. Fix the shared reader to derive `(market_created_at=start_date, settlement_time=end_date_iso)`
+      keyed by `condition_id` from `instrument_availability` (graceful: prefer MARKET_LIFECYCLE when it lands). Repo:
+      market-tick-data-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. **E5 rebuild: robust `_index` read DONE (mtds@62b7ff74) — direct parquet fallback + within-bounds
+      reclassification** (slot-5 2026-06-03). `reemit_honest_absence_rows` uses `read_availability_index(bucket)` which
+      returns **0 rows on this host** (gcsfs/aiodns DNS flakiness — the audit reads `_index/availability_index.parquet`
+      directly via download+`pd.read_parquet` for exactly this reason) → the re-emit can SILENTLY no-op. Fix: read the
+      `_index/availability_index.parquet` object directly (fallback when `read_availability_index` yields 0). THEN wire
+      the within-bounds reclassification: the 41 `SOURCE_RETURNED_ZERO` rows are per-`condition_id` (`data_type=trades`,
+      `instrument_id=0x…`), so for each, load lifecycle bounds (fixed reader above) for its date and if
+      `start_date ≤ day < end_date_iso` (live + in-window) → `record_failed` (attempted_failed); else preserve typed
+      empty. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. **MARKET_LIFECYCLE SSOT writer VERIFIED-CORRECT + tested (instruments-service@e3360f05, slot-6
+      2026-06-03); residual = a BACKFILL, not a code gap.** The writer already exists + is correct:
+      `orchestrator._write_market_lifecycle` (called from `save_instrument_data_to_gcs`) emits
+      `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet` with
+      `market_id`/`market_created_at`/`settlement_time` — the exact path+columns the MTDS reader
+      `_load_market_lifecycle_for_date` expects (round-trip verified). +8 contract tests pinning it. The 0-GCS-objects
+      is because **IS hasn't been re-run on prediction since the code landed** → a backfill (operator/infra: re-run IS
+      `--asset-group prediction` for the range), NOT a code fix. Until backfilled, the MTDS reader uses the
+      `instrument_availability` bridge (slot-5 fix mtds@62b7ff74). ORIGINAL: (slot-5 discovery 2026-06-03; DIAGNOSED
+      slot-5 2026-06-03 — the write path EXISTS, the 0-objects cause is real-data/operational, VM-verify). The canonical
+      `market_lifecycle/by_canonical_group/group=*/day=*/market_lifecycle.parquet` (market_id → created/settlement) is
+      unpopulated (0 objects); the MTDS reader bridges via `instrument_availability` for now (item above). **DIAGNOSIS
+      (not a missing write path — grep-then-read):** the writer is wired —
+      `orchestrator.py:2418 _write_market_lifecycle(...)` is called per-canonical-group inside the prediction branch;
+      `_build_market_lifecycle_df` (orchestrator.py:3324) builds from `venue_df` which is
+      `InstrumentRecord.model_dump()` (orchestrator.py:2238) → it HAS
+      `instrument_key`/`available_from_datetime`/`available_to_datetime` (NOT `start_date`/`end_date_iso` — those are
+      raw Polymarket fields used to BUILD the record, and the slot-5 `start_date`/`end_date_iso` parquet was the
+      DIFFERENT `instrument_availability/` write, not this one). So `_build_market_lifecycle_df` is structurally
+      correct; it drops every row whose `available_from_datetime` OR `available_to_datetime` is null (line 3344), and
+      BOTH are null when `polymarket.py classify_lifecycle()` returns `None` (line 882-883). **So 0 objects = either (a)
+      `classify_lifecycle` returns None for most/all markets** (then the fix is in `classify_lifecycle` / its
+      created_at/closed_time/end_date_iso parse — line 1116/1120 — make it resolve bounds robustly, mirroring the
+      @62b7ff74 MTDS-reader fix that derives from start_date/end_date_iso), **or (b) no recent IS prediction enumerate
+      run has executed** (operational — the write only fires on a fresh run). **VM-VERIFY REQUIRED (can't verify locally
+      — GCS reads flaky from the Mac slot host):** on a VM, run the IS prediction enumerate for a sample date + (1) log
+      how many markets get a non-None `classify_lifecycle`, (2) check whether `market_lifecycle/by_canonical_group/`
+      objects appear. If (a), fix `classify_lifecycle`; if (b), it self- resolves on the next run. Repo:
+      instruments-service. parent_epic: mtds_mdps_master.
+
 ## Success criteria
 
+- [ ] [CODE] P1. **Post-migration verify: deployment-api turbo response ↔ deployment-ui contract** (slot-5 2026-06-03).
+      The deployment-api (@2ac1dfa) + deployment-ui (@4a358ec) prediction-v9 fixes were each verified independently
+      (api: unit tests; ui: against its own mock `_mkPredictionByQuestionGroup`). Once the migration runs and real v9
+      `pred-prd/_index` rows exist, confirm END-TO-END that the turbo response actually emits
+      `breakdown_axis="canonical_question_group"` + per-cqg `observed_clusters={conditionId:rows}` + `source` in the
+      shape the UI's `TurboSubDimension` consumes (else the UI renders empty). Repos: deployment-api + deployment-ui.
+- [x] ✅ [CODE] P2. **deployment-api `fetch_venue_detail` bucket routing for prediction v9 — FIXED + CONFIRMED-BUG
+      (deployment-api@318db9b, slot-5 2026-06-03).** It WAS a real bug, not just uncertainty: `_prediction_venue_detail`
+      read `build_bucket_name("instruments-service","prediction")` = `instruments-store-pred-prd-{pid}`, but the v9
+      cqg-bundle manifest (`data_type=prediction_canonical_question_group` + `observed_clusters`) is MTDS-written into
+      `market-data-tick-pred-prd-{pid}` → the prediction v9 drilldown read an empty/wrong bucket. `fetch_venue_detail`
+      also IGNORES its `service` arg (`_ = service`), so the fix hardcodes the MTDS bucket
+      (`build_bucket_name("market-tick-data-service","prediction")`) — correct because prediction venue-detail is
+      definitionally MTDS-manifest-based (shard axis `("market-tick-data-service","prediction")`). Regression test
+      `test_prediction_reads_mtds_bucket_not_instruments_store` asserts the MTDS bucket regardless of the caller's
+      service arg (4/4 prediction tests green; QG `--no-fix` exit 0). On LDR FEATURE_GREEN; staging-promotion gated on
+      the workspace dep-tier drain (UTL/UAC/deployment-service/strategy-service). Repo: deployment-api.
+
 - 0 legacy-only prediction cells (canonical holds all historical POLYMARKET data + question-groups).
+- **Deployment-api/UI render the prediction v9 bundled atom + `source`/`pipeline_mode` (data-status summary + drilldown
+  agree with the canonical manifest) — the 4 CODE items above GREEN.**
 - Canonical `pred-prd` `_index` = v9 + `pipeline_mode=` partition present + **`source` stamped on every cell (zero blank
   — HARD; the API source per venue, swap-resilient)**.
 - `mdps-prediction-2025` relaunch unblocked (writes canonical-only).

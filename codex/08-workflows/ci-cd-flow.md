@@ -34,15 +34,49 @@ main ───────────────► always stable; triggers ve
 **Never** push directly to `main` — always via quickmerge. The quickmerge script is the **only** sanctioned merge path
 (it runs QG, handles dep-branch resolution, and respects the two-pass model).
 
+### PM / codex repos — main-direct, NO staging (Option B, operator decision 2026-06-03)
+
+`unified-trading-pm` + `unified-trading-codex` are **not deployed packages**, and PM is the **SIT debouncer** (it is not
+itself SIT-covered), so a staging hop adds no SIT value. **quickmerge routes PM/codex PRs to `main` directly** (both
+docs AND scripts/workflows — not just the doc-fast-path); the main PR's `quality-gates-v2` (plan-hygiene /
+manifest+dependency-alignment / codex-ref / ruff) is the full per-repo gate. PM has **no `staging` branch** —
+`pin_branch_protection_rulesets.py` + `verify_branch_protection_check_names.py` already tolerate this (no staging
+ruleset → skip/pass). Downstream service repos building on `staging` still get PM transparently via the dep-clone
+fallback (`clone -b staging` → `-b main`). For PM, **`main` is the reconciliation point** — it does for plans exactly
+what `staging` does for service repos.
+
+### Convergence + conflict-resolution model (the LDR ↔ reconciliation loop)
+
+- **LDR = the fast live integration axis** — agents commit here (tab→LDR), allowed to be _temporarily inconsistent_; no
+  remote gate, FF-pull keeps every slot ≤5 min current.
+- **The gated PR boundary = the reconciliation point** — `staging` for service repos, the `main` PR for PM/codex.
+  Content only reaches `main` after the gate + conflict-resolution, so `main` is the _reconciled output_, never raw.
+- **`main-backmerge-to-ldr.yml` feeds the reconciled result back to LDR** on every main push (additive merge, never
+  force, never drop) → FF-pull → **every host (other VMs + operator laptops) converges**.
+- **Three conflict layers — composable, no race:** (1) **TEXTUAL merge** → `conflict-resolution-agent` (reads all active
+  plans, preserves both sides); MUST run on the Max-plan setup-token worker via `escalate-to-orchestrator`, not API
+  credits. (2) **SEMANTIC** (two individually-valid plans whose _work_ conflicts, no textual overlap) → per-VM
+  `review.md` + the scripted cross-plan **target-surface** overlap detector → owning epic-VM orchestrator reconciles or
+  operator-blocks. (3) **HYGIENE** → `plan-health-agent` (scripted + Haiku, report-only).
+- **Every alerting event ALSO pings the orchestrator** (not Slack-only): the operator does not continuously watch
+  `#ci-failures`, so each alert (CI-fail, stuck PR, backmerge conflict) escalates to the orchestrator, which delegates
+  to the owning slot / review-agent / epic-VM. (Backmerge-conflict + all-failure-class escalation tracked in
+  `plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.)
+
 ---
 
 ## Two-Pass Workflow Model (the unit of work)
 
-> **Order is non-negotiable: quality gates BEFORE quickmerge.** Never invoke `quickmerge` until
-> `bash scripts/quality-gates.sh` has exited 0 on the **current HEAD**. Pass 1 (the full gate) is what runs the tests
-> and writes the `.qg_last_passed_sha` sentinel; Pass 2 (`quickmerge --agent`) refuses to proceed without a matching
-> sentinel and skips test re-runs on the strength of it. Run quickmerge first (or after only a partial Pass 1) and
-> either it hard-refuses or — worse, if you reach for skip flags — the change ships with tests never having run.
+> **Order is non-negotiable: quality gates BEFORE COMMIT** — the commit is the per-repo **quality boundary** (tightened
+> 2026-06-03; supersedes "before quickmerge"). A **code** commit toward the integration branch must come from a
+> `quality-gates.sh`-green tree, NOT on the strength of the light prek hook alone
+> (ruff/format/gitleaks/conventional-commit). So Pass 1 (the full gate) runs on HEAD's content BEFORE you `git commit`
+> code — not merely before quickmerge. Pass 1 writes the `.qg_last_passed_sha` sentinel; Pass 2 (`quickmerge --agent`)
+> refuses to proceed without a matching sentinel and skips test re-runs on the strength of it. Realize it cheaply via
+> **QG-sweep batching** (gate ONCE over a batch → make per-shippable-unit commits from that green tree) — the gate is
+> per-batch, not per-commit. **Scope**: binds commits that touch source the gate checks; pure doc / plan-flip / markdown
+> commits (e.g. `docs(plans):` flips) take the prek hook only — full QG is a source gate. Reach for quickmerge first (or
+> skip flags) and either it hard-refuses or — worse — the change ships with tests never having run.
 
 Every shippable unit goes through exactly two passes:
 
@@ -62,9 +96,56 @@ Pass 2 — Quickmerge (--agent fast-path)
   • Reads .qg_last_passed_sha — verifies SHA matches current HEAD
     SHA mismatch / sentinel missing → EXIT 1: "Run quality-gates.sh on current HEAD first"
     SHA match → skips all Pass 2 QG re-runs (sentinel IS the guarantee)
+  • stages ONLY --files; if a pre-commit hook reformats files and the first commit
+    fails, the RETRY re-stages ONLY --files again (never `git add -A`) — a hook can't
+    bundle foreign modified files into a scoped commit
   • commits, creates PR targeting staging, enables auto-merge
   • --to-staging routes to staging instead of main (for breaking changes)
 ```
+
+> **`--files` scope is re-asserted on the prek commit-retry, and the pre-stage prettier is `--files`-scoped (foot-gun
+> fix 2026-06-03).** Two places leaked foreign files into a scoped `--files` ship: (1) the commit-retry did `git add -A`
+> after a hook reformatted staged files, sweeping ANY modified worktree file — a concurrent agent's WIP, an inventory
+> regen — into the commit; (2) the pre-stage auto-format ran `prettier --write "**/*"` tree-wide, reflowing foreign
+> files into residue. Both now scope to `--files` (the unscoped, `--files`-absent path still formats tree-wide +
+> `git add -A` — there the caller owns the whole tree).
+>
+> **Why scoping does NOT orphan foreign edits** (the natural objection — "if prek reformats a foreign file and we don't
+> stage it, isn't it stranded dirty forever, jamming FF-sync?"): the workspace answer is to **never create or touch
+> foreign dirt**, not to sweep it into a stranger's commit. The on-commit `prettier-autostage` hook
+> ([`scripts/hooks/prettier-autostage.sh`](../../scripts/hooks/prettier-autostage.sh)) only re-stages the _subset
+> already staged_ ∩ modified (never a foreign-dirty file another slot holds open) AND **no-ops when the branch is behind
+> origin** specifically so an about-to-be-blocked commit leaves zero reflow residue (the 2026-06-02 incident: a 69-file
+> reflow residue stopped a slot's FF-sync). `git add -A` violated that rule — it didn't rescue foreign edits, it
+> mis-attributed them into an unrelated PR. Foreign dirt from another process (e.g. the inventory regen) is its owner's
+> to commit, or the FF-pull autostash's to carry — not quickmerge's. A HAND `git commit` is NOT covered — re-stage by
+> name after any hook reformat, never `-A`. Fleet propagation: `scripts/propagation/rollout-quickmerge.py`.
+
+### STAGE 0.4 Not-Behind Gate — behind-remote reconcile (multi-agent safety)
+
+Before committing, quickmerge runs the **Not-Behind Gate** ([`quickmerge.sh`](../../scripts/quickmerge.sh) STAGE 0.4).
+It must never ship from a STALE base, but local commits / uncommitted work that DEVIATE from origin are fine — that's
+the work being merged. So if `HEAD` is BEHIND `origin/<current-branch>` it pulls latest FIRST, in this order:
+
+1. `git pull --ff-only` — clean catch-up when you have no local commits.
+2. else `git pull --rebase --autostash` — replays YOUR commits on top of the incoming, stashing uncommitted work first.
+3. else `git rebase --abort` (your work restored intact — **never overwritten, never blind-merged**) and **BLOCK with
+   exit 1**. Emergency override only: `QUICKMERGE_ALLOW_BEHIND=1`.
+
+So quickmerging while behind by N with same-file local commits does NOT clobber the peer's work — it auto-reconciles if
+it can, else stops and hands the conflict back. **PM-as-a-repo is covered by the same gate** (it keys off the current
+branch's upstream); no PM special-case.
+
+**Recovery on the exit-1 block** (the same recipe as the "Autostash conflict on rebase" rule in `CLAUDE.md`): evaluate
+sync (`git rev-list --count HEAD..origin/<b>` / `..HEAD`) → preserve the peer's commits (NEVER
+`git checkout HEAD -- <f>` / `reset --hard` on dirty unowned work) → stash YOUR files by name →
+`git pull --rebase origin <b>` → reconcile the **essence** of both sides (3-way, keep both intents) → re-run
+`quality-gates.sh` → re-run quickmerge.
+
+> **Forward (tracked: `plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`)**: the prose block is
+> being upgraded to a machine-parseable contract —
+> `QUICKMERGE_BLOCKED code=BEHIND_DIVERGED_CONFLICT|AUTOSTASH_POP_CONFLICT …` + a `RECOVERY:` line — so a spawned agent
+> recognises it and self-runs the recipe above without an operator paste.
 
 **Pass 1 fix-mode — choose by WHAT you will commit (HARD RULE; AUTO-FIX rewrites the WHOLE worktree, not just your
 files).** The sentinel is written on any COMPLETE green run — fix-mode OR `--no-fix` (the write is gated on
@@ -214,9 +295,9 @@ QG + sentinel is the only gate on LDR (by design). This is intentional integrati
 **required-check ruleset is enforced at the staging/main PR** (the promotion boundary); **local QG (`quality-gates.sh` →
 sentinel) is the agent + quickmerge pre-flight** (fail-fast), not a server gate; and the integration axis stays cheap to
 push to. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH` — so **every repo's default branch MUST be
-`main`**; a non-main default (e.g. `live-defi-rollout`) mislocates the required check onto LDR and `GH013`-rejects pushes
-to the integration axis (incident 2026-06-03: `unified-trading-api` + `greeks-service`; `verify_branch_protection_check_names.py`
-now asserts `default_branch == main` fleet-wide).
+`main`**; a non-main default (e.g. `live-defi-rollout`) mislocates the required check onto LDR and `GH013`-rejects
+pushes to the integration axis (incident 2026-06-03: `unified-trading-api` + `greeks-service`;
+`verify_branch_protection_check_names.py` now asserts `default_branch == main` fleet-wide).
 
 ### Branch-triggered build — hotfix image off an arbitrary branch (no main promotion, codified 2026-06-01)
 

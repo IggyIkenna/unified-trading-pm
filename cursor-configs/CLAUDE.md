@@ -8,6 +8,15 @@
 > agent-loaded context dropped (those root files no longer load). Keep the sharp directive + 1-line pointer; these rules
 > are NOT waste — they encode behaviours agents were missing; condense, don't drop.
 >
+> **Durable facts live HERE (one-liner + codex pointer), NEVER in agent "memory" (HARD RULE codified 2026-06-03)**:
+> Claude `memory/` is per-cwd (a different store per tab/slot), local-only (never git-tracked, never reaches a VM or a
+> teammate), and NOT inherited by sub-agents — so anything useful to another agent MUST land in this file (one-liner) +
+> its codex SSOT (detail), not memory. "Already in codex" is NOT a reason to skip — migrate it as a one-liner + SSOT
+> reference. Memory is reserved for session-local / personal (label Ikenna-vs-Harsh or macOS-vs-Linux deltas inline here
+> instead) / secrets-adjacent state (procedures + Secret-Manager _names_ may live here; raw key/token VALUES never do).
+> Sub-agents reach topic-parity via `SUB_AGENT_MANDATORY_RULES.md` (same topics, one-liner density). This header is the
+> SSOT for the rule.
+>
 > **Size budget**: keep lean (~400–600 lines — not a hard floor). When a section outgrows its essence, push the detail
 > to its codex SSOT + leave the directive + pointer here. Hard cap 1500/90KB (review-blocking).
 
@@ -97,13 +106,48 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   finished unit — quickmerge routes ALL commits → `staging` → SIT → `main`; `--to-staging` is a **no-op**. Never raw
   `git push` for CODE (quickmerge early-exits "nothing to commit" on a clean tree → direct LDR pushes silently pile up
   behind main). Always `--agent` in Claude Code.
+- **Commit attribution = slot + host (so CI alerts + triage know WHO did what; codified 2026-06-03)**: every commit's
+  author **NAME** carries the slot + host — `ikennaigboaka [slot-<N>·<host>]` (`<host>` = `laptop` / hostname on a
+  workstation, the `vm-<id>` on a fleet VM; `<N>` from the `tab/<op>/<N>` branch) AND **email =
+  `ikennaigboaka@gmail.com`** (the GitHub-attributed account). **⚠️ The per-repo email is currently WRONG fleet-wide**
+  (slot-3 audit 2026-06-03: ~14 of 25 worktrees carry the `semver-rollout[bot]@users.noreply.github.com` email → **agent
+  commits there masquerade as the semver bot**; ~7 carry `agent@ci.local` → unattributed) — so this is a STANDARDISE,
+  not "leave unchanged". GitHub attribution + semver-agent bot/author checks key off the EMAIL (hence the bot-leak is
+  dangerous); fixing name+email per-worktree makes `git log --format=%an` / the GitHub author column / CI
+  `head_commit.author.name` correct + slot- aware (the gap that made cross-agent triage guess-work). **MECHANISM GOTCHA
+  (2026-06-03): `.tabs/<N>/<repo>` are git WORKTREES sharing the main clone's `.git/config` → plain
+  `git config user.name` is SHARED across all worktrees of a repo (last-writer-wins, useless for per-slot). Per-slot
+  identity REQUIRES `git config extensions.worktreeConfig true` (once per repo) +
+  `git config --worktree user.name/user.email` (per worktree).** Set per-worktree by `setup-tab-worktrees.sh` (do NOT
+  hand-edit `~/.gitconfig`); manual fallback in a slot worktree:
+  `git config extensions.worktreeConfig true && git config --worktree user.name "ikennaigboaka [slot-3·laptop]" && git config --worktree user.email "ikennaigboaka@gmail.com"`.
+  SSOT + root-cause hunt: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
 - **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit _promotes_ via
   quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
   (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
-- **Quality gates BEFORE quickmerge — non-negotiable order (HARD RULE)**: never invoke `quickmerge` until
-  `bash scripts/quality-gates.sh` has exited 0 on the current HEAD (the sentinel `.qg_last_passed_sha` is written on any
-  COMPLETE green run — fix-mode OR `--no-fix`; it is NOT gated on fix-mode). **Pass-1 MODE is a deliberate choice —
-  AUTO-FIX (`ruff format`/`--fix`) rewrites the WHOLE worktree, not just your files (HARD RULE, two cases):**
+- **PM → `main` directly, NO staging (Option B, 2026-06-03; staging branch DELETED 2026-06-03)**: `unified-trading-pm`
+  is not a deployed package (PM is the SIT _debouncer_, not SIT-covered) → quickmerge routes its PRs to `main` (both
+  docs AND scripts/workflows); the main PR's `quality-gates-v2` is the gate. PM has no `staging` (the stale branch was
+  deleted
+  - the dead `pm-staging-to-main-bypass.yml` removed); for PM **`main` is the reconciliation point** (does for plans
+    what staging does for service repos). **`unified-trading-codex` is ARCHIVED — folded into PM at `codex/`; it is NOT
+    a live repo** (not in `workspace-manifest.json.repositories`, in the `prune_removed_repositories.py` REMOVED set,
+    clone scripts skip it) — never treat it as a clonable/promotable/protectable repo; the `codex/` _directory_ inside
+    PM is the live SSOT. Convergence + 3-layer conflict model (textual=conflict-resolution-agent /
+    semantic=reviewer+overlap-detector / hygiene=plan-health; **every alert → the orchestrator, not Slack-only**) SSOT:
+    `codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model".
+- **Quality gates BEFORE COMMIT — the commit IS the per-repo quality boundary (HARD RULE; tightened 2026-06-03,
+  supersedes "before quickmerge")**: a **code** commit to the integration branch must be made from a
+  `quality-gates.sh`-green tree — never on the strength of the light prek hook alone
+  (ruff/format/gitleaks/conventional-commit). So `bash scripts/quality-gates.sh` must have exited 0 on HEAD's content
+  before you `git commit` code, NOT merely before `quickmerge`. This already held on the quickmerge path (Pass-1 QG →
+  Pass-2 commits); it now equally binds the direct **Commit+Push+Flip** path. Realize it cheaply via **QG-sweep
+  batching** (run the gate ONCE over a batch → make per-shippable-unit commits from that green tree) — the gate is
+  per-batch, not per-commit. **Scope**: binds commits that touch source the gate checks; pure doc / plan-flip / markdown
+  commits (e.g. `docs(plans):` flips) take the prek hook only — full QG is a Python/source gate, not a docs gate. The
+  sentinel `.qg_last_passed_sha` is written on any COMPLETE green run (fix-mode OR `--no-fix`; NOT gated on fix-mode),
+  and quickmerge still verifies it. **Pass-1 MODE is a deliberate choice — AUTO-FIX (`ruff format`/`--fix`) rewrites the
+  WHOLE worktree, not just your files (HARD RULE, two cases):**
   1. **Committing only your OWN named files** (the normal `quickmerge --agent --files '<paths>'` ship): format your
      files first (`ruff format <paths>`), then run **`bash scripts/quality-gates.sh --no-fix`** — full gate, writes the
      sentinel, **NO tree reformat**. Ship mode here would reformat unrelated/foreign files → re-dirties the slot, breaks
@@ -120,6 +164,13 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   remote tag, e.g. `v1.0.0`/`v1.2.0`): fix with `git fetch origin --tags --force` (local-only; remote is canonical for
   release tags — never force-push tags the other way), then `git pull --ff-only`. SSOT:
   `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 — troubleshooting".
+- **Quickmerge behind-remote (multi-agent)**: STAGE 0.4 Not-Behind Gate auto-reconciles (ff → rebase-autostash) and, on
+  a genuine same-file conflict, `rebase --abort`s (work intact — **never overwrites/blind-merges**) + BLOCKS exit 1
+  (`QUICKMERGE_ALLOW_BEHIND=1` emergency-only). On the block, reconcile per the autostash-conflict recipe above
+  (preserve peer commits → stash YOUR files by name → `pull --rebase` → reconcile essence → re-QG → re-quickmerge) —
+  never blind-overwrite a diverged same-file integration branch. PM-as-a-repo uses the same gate. SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "STAGE 0.4 Not-Behind Gate"; structured `QUICKMERGE_BLOCKED` contract tracked in
+  `plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
 - **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01 `main`-direct
@@ -141,6 +192,12 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - No `os.getenv()` — use `UnifiedCloudConfig`. No `# type: ignore`. No `try/except ImportError`.
 - `logger.warning("%s", _err.message)` not `logger.warning(_err.message)`.
 - No hardcoded `"/tmp"` — use `tempfile.gettempdir()`. SSOT: `codex/06-coding-standards/quality-gates.md`.
+- **Lazy-import heavy ML deps** (`optuna`/`sklearn`/`lightgbm`) INSIDE the methods that use them, never module-level —
+  UTL loads via the `__init__` chain in every service, so a module-level ML import crashes non-ML repos (e.g. the API
+  gateway). SSOT: `codex/06-coding-standards/README.md` § imports.
+- **`pyrightconfig.json` silently overrides `pyproject.toml`** — when both exist, basedpyright reads ONLY the former's
+  excludes/severities; mirror excludes into it or delete it. SSOT: `codex/06-coding-standards/quality-gates.md` § "Type
+  Checking Standards".
 
 ### Service architecture
 
@@ -176,9 +233,14 @@ constant**.
 
 - `EmptyConfirmedReason` is a closed set (UAC `EMPTY_CONFIRMED_REASONS`); blank reason → `LegacyBlankErrorReasonError`.
 - Cluster validation MANDATORY at `record_captured()` for bundled data_types (else `MissingClusterValidationError`).
-- **TradFi `source=` REQUIRED** (`record_captured(source=...)`; closed set `databento`/`massive`; else
-  `MissingSourceError`; QG STEP 5.64). Multi-source union: ≥1 `captured` → cell `captured`; priority via
-  `select_primary_available_source()`.
+- **`source=` provenance is CROSSCUTTING — all asset_groups, not TradFi-only** (operator-confirmed 2026-06-01;
+  supersedes the prior TradFi-only framing). The same logical metric arrives from >1 source over time, so disambiguate
+  with a **row-level `source` column + a per-source manifest row** (NOT a hive path key); `record_captured(source=...)`
+  REQUIRED for every captured cell (even single-source today, for swap-resilience); raise `MissingSourceError` when
+  blank or not in `SOURCE_PRIORITY[(asset_group, data_type)]`; resolve downstream via
+  `select_primary_available_source()` (multi-source union: ≥1 `captured` → cell `captured`). Computed/service-only
+  outputs are exempt. Today only `tradfi` is wired (`databento`/`massive`, QG STEP 5.64); cefi/defi/sports are RED gaps;
+  prediction N/A. SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
 - `available_at` is per-row write-time (UTL asserts). Service-output emission via `_resolve_policy_output_data_type` +
   `_publish_emission_check`.
 - **Single-walk discipline (HARD RULE)**: the Phase 2.2 migration walks every parquet ONCE — any new whole-corpus GCS
@@ -231,7 +293,10 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   `registry/data_source_continuity.py`.
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
-  parquets to mask phantoms.
+  parquets to mask phantoms. **After a GCS path migration, large phantom counts are usually false positives** — verify
+  `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` covers the new path shape BEFORE any `--apply` (running `--apply` on false
+  positives flips real `captured` rows → `attempted_failed`); fix templates + re-run. SSOT:
+  `codex/02-data/pipeline-mode-partition.md` § Axis-10.
 - **Manifest consolidator runtime**: Cloud Run Jobs + Scheduler (GCP) / Batch Fargate + EventBridge (AWS) — NOT a VM
   (legacy GCE launcher DELETED 2026-05-20; do not relaunch). TF:
   `deployment-service/terraform/{gcp,aws}/manifest_consolidator_scheduler.tf`. **Liveness (live)**: read path loud-fails
@@ -311,6 +376,28 @@ shared-tree model"). The invariants that must stay in-head:
   `git checkout HEAD -- <file>` on a dirty file you don't own — UNRECOVERABLE.
 - **Verify your work against the stable remote ref, never `FETCH_HEAD`** (it lies under a concurrent session):
   `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>`.
+- **Slot tab branch diverged from LDR → quickmerge re-tangles + the tab→LDR mirror jams (recovery, codified
+  2026-06-03)**: if `origin/tab/<op>/N` is NOT an ancestor of `origin/live-defi-rollout`
+  (`git merge-base --is-ancestor origin/tab/<op>/N origin/live-defi-rollout` fails), quickmerge's mid-run sync
+  re-applies LDR's commits as **patch-id DUPLICATES** on top of yours on every run (symptom: "3 ahead / 2 behind",
+  brand-new SHAs each attempt, your changes bounced back to the working tree). Fix:
+  `git rebase origin/live-defi-rollout` (drops the duplicates — "skipped previously applied commit"), then
+  `git push --force-with-lease origin HEAD:tab/<op>/N` to realign the remote tab branch onto LDR. This is the
+  `slot-master-rebase.sh` operation by hand; safe (own slot branch + `--force-with-lease`). Verify with
+  `git merge-base --is-ancestor origin/live-defi-rollout HEAD` (true = mirror can FF again).
+  - **Align = the MERGED COMBINATION, never "take mine" / "take theirs" (codified 2026-06-03)**: the rebase replays YOUR
+    commits onto current LDR; on each conflict keep **BOTH sides' genuine work** (additive plan/doc/code), and where two
+    agents independently wrote the **same** rule/fix, MERGE into the single best version (don't keep redundant
+    duplicates). **Then VERIFY content survival** — grep your key additions AND the incoming ones in the rebased file
+    before pushing (an em-dash / wording mismatch can read as "lost" when it survived; a real drop must be caught here).
+  - **`--force-with-lease` is BRANCH-TIP safety, NOT content safety (HARD distinction)**: it only refuses the push if
+    the remote `tab/<op>/N` moved since your fetch (catches a concurrent push to YOUR branch) — it does **NOT** inspect
+    files or whether anyone had work on them. What actually protects OTHER agents' work is (a) rebasing **onto** current
+    LDR so their commits are your BASE (not overwritten), (b) the conflict-merge keeping both, (c) the post-rebase
+    verify. Safe here only because the tab branch is yours alone + you rebased onto (not discarded) LDR. **NEVER
+    force-push a shared branch (`live-defi-rollout` / `main`).** Caveat: all fleet commits share the `ikennaigboaka`
+    identity, so a foreign commit on your tab branch is invisible by author — read the messages (the [slot·host] author
+    tag above fixes this).
 - **Autostash conflict on rebase** (`Applying autostash resulted in conflicts`) → `git rebase --abort` (state safe,
   autostash intact), stash only YOUR files by name, redo — **NEVER** `git checkout HEAD -- <file>` then `git stash drop`
   (destroys the foreign agent's only WIP copy). § "Step 7" above.
@@ -367,6 +454,18 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   paste.)
 - **Rule-amnesia stop** — halt the session if an agent uses `os.getenv()` / `pip install` / direct `git push` /
   `setup_cloud_logging` / suggests skipping tests.
+- **No `python3 << EOF` / inline-Python for file analysis** — catastrophic `re` backtracking caused two 12–22h runaway
+  processes; use `rg`/`grep`, and if Python is genuinely needed wrap it in `timeout 30` + read line-by-line.
+- **Background-task honesty** — NEVER report a backgrounded task (`run_in_background` Bash / sub-agent / workflow / VM
+  launch) as "done" before seeing its actual exit/output; a `| tail`/`| head` pipe buffers → empty until completion, so
+  "no output yet" ≠ "finished" (say "still running" + why); let `run_in_background` stream to a file, then read it with
+  a SEPARATE call. Harness-tracked tasks auto-re-invoke on exit → rely on that completion signal, do NOT burn credits
+  polling them. Poll ONLY genuinely external/untracked work (CI runs, remote VM jobs, deploys) at an interval matched to
+  how fast that state changes. Write monitors that watch the RIGHT signal (correct log path + explicit done/terminated
+  condition) with a generous fallback timeout, so they don't exit inconclusively and force a re-investigation.
+- **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
+  in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
+  only after all come up empty. Composes with the "harvest from existing" discipline.
 
 ### Python service/library specifics
 
@@ -402,6 +501,36 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   `workspace-manifest.json` registry. NOT a Python package. `workspace-manifest.json` change → regen DAG SVG
   (`scripts/manifest/generate_workspace_dag.py`). Never push PM unless dependency-alignment passes
   (`check-dependency-alignment.py --json` → `"aligned": true`).
+
+### Migrated operational one-liners (memory→CLAUDE.md SSOT-refs, 2026-06-03)
+
+Cross-domain rules folded out of per-tab session memory; detail lives in the cited SSOT (read it, don't act from this
+line):
+
+- **HWM is never raw equity** — three simultaneous methods: TWR HWM (perf %), Notional HWM (transfer-adjusted native
+  units), PnL Recovery (USDT for `pnl_based` accounts); never `max(equities)`, never convert a USDT recovery seed to
+  BTC. Code: UTL `post_trade/hwm_invariants.py` + client-reporting-api `core/hwm_seeds.py`. SSOT:
+  `codex/09-strategy/operational/pnl-attribution.md`.
+- **Treasury/wallet hierarchy is keyed by `share_class`, not chain** (USDC/ETH/SOL/BTC) — DeFi 20% treasury / 80%
+  hot-per-strategy-per-chain, CeFi 0/100, Sports no split; Copper MPC custody. SSOT:
+  `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
+- **Never copy instrument definitions between dates** — instruments expire/list daily (CME futures/options); always
+  re-run the instruments-service CLI for the specific missing date. Only static exception: CBOE VIX index.
+- **Server-side Next.js API routes use `firebase-admin`, never the client SDK** — the client SDK reads
+  `NEXT_PUBLIC_FIREBASE_*` and silently no-ops on UAT (route returns 200 with no write / empty `submissionId`). SSOT:
+  `codex/08-workflows/client-onboarding.md` + `codex/05-infrastructure/firebase-split-topology.md`.
+- **GCS canonical batch paths carry `pipeline_mode=batch_*/` LEFT of `asset_group=`** (Phase 3 done) — a prober hitting
+  `raw_tick_data/by_date/day=*/asset_group=*/` without `pipeline_mode=` is on the OLD shape; reader-fallback probes both
+  until Phase 8 (~2026-06-15) removes it. Sports uses `candidate_parquet_paths()` (unaffected). SSOT:
+  `codex/02-data/pipeline-mode-partition.md`.
+- **Bump `MAX_DURATION=600` over suppressing the QG `<300s` time check** — when a suite organically outgrows the budget,
+  raise it (with a `#` comment on what grew); never deselect/skip slow tests (masks runaway regressions).
+  `IGNORE_TIMEOUT=true`/`PYRIGHT_TIMEOUT` stay sanctioned for META-gate-only trips. SSOT:
+  `codex/06-coding-standards/quality-gates.md`.
+- **UTL-on-a-VM crash-cascade checklist** — pip-installing UTL on a VM also needs: (1) `cloud-providers.yaml` on disk +
+  its env var, (2) `GCP_PROJECT_ID`/`PROJECT_ID`/`DEPLOYMENT_ENV_SHORT` exported (prod→prd/staging→stg/dev→dev), (3)
+  `deployment_service` importable, (4) NO backticks inside the `STARTUP="..."` heredoc (shell command-substitution at
+  launch). SSOT: `codex/05-infrastructure/vm-tarball-deployment.md` § "UTL-on-a-VM staging checklist".
 
 ---
 
@@ -613,6 +742,10 @@ orchestrator inboxes on failure. Full SSOT: `codex/11-project-management/plan-hy
 (MANDATORY): `git status && git diff --cached --stat` (NO path arg — see the whole index); `git restore --staged <file>`
 anything not yours; stage by name, never `git add .`/`-A`. Bundle Edit→stage→commit→push in ONE Bash call; `--no-verify`
 authorized only on prek auto-restore symptoms ("Restored working tree changes from .../prek/patches/").
+`quickmerge --agent --files '<paths>'` **re-asserts `--files` scope on the prek commit-retry** (when a hook reformats
+files and the first commit fails, it re-stages ONLY your `--files`, never `git add -A`) so a hook can't bundle FOREIGN
+modified files (another agent's WIP, an inventory regen) into your scoped commit — but for a hand `git commit` the
+discipline is yours. SSOT: `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model".
 
 ### Half 2 — flip the plan checkbox in the SAME AGENT TURN as Half-1 (the most-violated half)
 
@@ -775,11 +908,12 @@ Foundation-Completion-Gate / External-Data / Plans-Run-To-Completion / Manifest-
 `codex/02-data/data-pipeline-correctness-hard-rule.md`; migration sequencing (Phase ordering HARD, slot-1 owns
 broadcast/ACK): `plans/epics/mtds_mdps_master.md`.
 
-**Quality Gates Are A Merge Prerequisite (HARD RULE)**: no code merges to `live-defi-rollout` without
-`bash scripts/quality-gates.sh` exit 0 for the touched repo + cross-repo consumers; reviewers reject PRs lacking a
-QG-green evidence line. Exemption only via operator `BLOCKED-OPERATOR-DECISION`. **This is the LOCAL / agent pre-flight
-(an agent + quickmerge requirement — fail-fast so you never put un-QG'd code on the integration branch or waste a
-doomed CI/PR cycle), NOT a server gate. `live-defi-rollout` carries NO required-check ruleset — it is the unprotected
+**Quality Gates Are A Commit + Merge Prerequisite (HARD RULE)**: no code is **committed** toward / merged to
+`live-defi-rollout` without `bash scripts/quality-gates.sh` exit 0 for the touched repo + cross-repo consumers
+(commit-as-boundary, see § "Quality gates BEFORE COMMIT"); reviewers reject PRs lacking a QG-green evidence line.
+Exemption only via operator `BLOCKED-OPERATOR-DECISION`. **This is the LOCAL / agent pre-flight (an agent +
+commit/quickmerge requirement — fail-fast so you never put un-QG'd code on the integration branch or waste a doomed
+CI/PR cycle), NOT a server gate. `live-defi-rollout` carries NO required-check ruleset — it is the unprotected
 integration axis by design (`codex/08-workflows/ci-cd-flow.md`). The SERVER-ENFORCED required check (`quality-gates-v2`)
 fires at the staging/main PR — the promotion boundary. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH`, so
 every repo's default branch MUST be `main` (a non-main default mislocates the required check onto LDR and blocks pushes
@@ -792,6 +926,21 @@ per-shippable-unit commits + flips from that green tree (Commit+Push+Flip intact
 `quality-gates.sh` / `basedpyright`** (may be another slot's). When only the `<300s` META-gate trips (substantive gates
 green): `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are sanctioned. SSOT: `codex/06-coding-standards/quality-gates.md`
 § "QG-sweep batching".
+
+**Generated artifacts + QG sentinels are gitignored, NEVER committed; generators MUST be deterministic (HARD RULE,
+codified 2026-06-03)**: every file `quality-gates.sh`/`quickmerge` regenerates from a tracked SSOT is `.gitignore`'d +
+`git rm --cached`'d — tracking it only churns the worktree → jams `slot-cron-ff-pull.sh` → drift (the root cause of the
+chronic dirty-pull toil). Canonical ignore set (PM): `docs/repo-management/CI-CD-PIPELINE.svg`/`.html` (←
+`cicd-pipeline-definition.yaml`), `WORKSPACE_MANIFEST_DAG.svg` + `DATA_FLOW_DAG.svg` (← `workspace-manifest.json`),
+`derived-dependency-manifest.json` (← all `pyproject.toml`), `coverage.xml`, and the QG sentinels `.qg_last_passed_sha`
+
+- `.qg_content_sentinel` (local-only caches). Every consumer regenerates from the SSOT before reading, so a committed
+  copy is always a stale cache; nothing imports an SVG (zero logic blast radius). **Generators MUST emit
+  deterministically** — `sorted()` any set/map before rendering (incident: `generate-cicd-diagram.py` iterated a `set()`
+  of marker colours → byte-churned the SVG every run with no real change). **If you see a generated artifact dirty/`??`
+  after a QG run, do NOT stage it** — it is regen churn; gitignore + `git rm --cached` it (and add the pattern to the
+  canonical template `scripts/propagation/templates/gitignore-python.txt` for fleet rollout). SSOT:
+  `cicd_contract_hardening_2026_06_01.md` item H + `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.
 
 **Every active ping references a plan item (HARD RULE)**: no orphan pings in the `_agent_pings.md` ledgers — every entry
 cites a plan-of-record (`plans/active|epics|audit|active/issues/<slug>.md`, incl date-suffixed). References nothing →

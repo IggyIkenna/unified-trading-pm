@@ -201,8 +201,8 @@ def infer_tags(name: str, info: dict[str, object]) -> list[str]:  # noqa: C901
     if "admin" in name_lower:
         tags.add("config")
 
-    # PM / codex (devops/docs)
-    if name_lower in ("unified-trading-pm", "unified-trading-codex"):
+    # PM (devops/docs). unified-trading-codex is ARCHIVED (folded into PM at codex/) — not a live repo.
+    if name_lower == "unified-trading-pm":
         tags.add("config")
 
     # System integration tests

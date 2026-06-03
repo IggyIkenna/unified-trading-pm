@@ -63,6 +63,8 @@ EMPTY_STR_EXCLUDE_GLOBS=(
     # STAGE 1.8 dep-order gate: parses workspace-manifest.json dicts with safe
     # .get("name","") defaults — same manifest-parse pattern as the entries above.
     "!**/tier_c_promotion_gate.py"
+    # Guard 1 — ci_status single-writer: same json.loads(manifest) + .get parse pattern.
+    "!**/check_ci_status_bot_only.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS=(
     "!**/check-repo-readiness.py"
@@ -264,12 +266,17 @@ EMPTY_STR_EXCLUDE_GLOBS+=(
     "!**/tier_c_promotion_gate.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
+    "!**/check_ci_status_bot_only.py"
     "!**/check_parent_epic_alignment.py"
     "!**/check_tradfi_source_explicit_at_record_captured.py"
     "!**/pin_branch_protection_rulesets.py"
     "!**/reap_stale_blockers.py"
     "!**/tier_c_promotion_gate.py"
     "!**/verify_branch_protection_check_names.py"
+    # check_ci_status_bot_only.py: benign `manifest.get("repositories", {})` JSON default
+    # (same category — already in EMPTY_STR_EXCLUDE_GLOBS; was missed from this list when it
+    # landed). NOT the os.getenv empty-fallback anti-pattern.
+    "!**/check_ci_status_bot_only.py"
 )
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 
@@ -455,6 +462,26 @@ if [ -f "$CRED_ASK_CHECKER" ]; then
         echo "❌ Credential-ask orphan regression — see CLAUDE.md § 'External Data Is Always Available'" >&2
         echo "   File the ping + reference it in the plan line, OR" >&2
         echo "   if intentional debt, re-baseline with: python3 ${CRED_ASK_CHECKER} --baseline-write" >&2
+        exit 1
+    fi
+fi
+
+# ── Post-gates: ci_status single-writer guard (Guard 1 — HARD, blocking) ──
+# SSOT: cicd_contract_hardening_2026_06_01.md § "ci_status consistency hardening".
+# repositories.*.ci_status is bot-written-only (ci-status-update[bot], driven by
+# quality-gates-v2 → ci-status-update.yml). A local / manual / Prettier edit forks the
+# value — the 2026-06-03 staging dam (LDR FEATURE_GREEN vs main FAILING → promoter
+# dep-blocked the fleet). Block any uncommitted ci_status change vs HEAD (change-set
+# relative, so a pre-existing LDR-vs-main fork never false-positives). The CI/PR layer
+# runs the same script with --baseline-ref origin/<base> + --actor "$GITHUB_ACTOR".
+CI_STATUS_GUARD="${REPO_ROOT}/scripts/cicd/check_ci_status_bot_only.py"
+if [ -f "$CI_STATUS_GUARD" ]; then
+    echo "Running ci_status single-writer guard (Guard 1)..."
+    if python3 "$CI_STATUS_GUARD" --baseline-ref HEAD --actor "${GITHUB_ACTOR:-}"; then
+        log_success "ci_status single-writer guard passed"
+    else
+        echo "❌ ci_status edited outside ci-status-update[bot] — revert the ci_status change(s) above." >&2
+        echo "   ci_status is bot-written state; only quality-gates-v2 → ci-status-update may change it." >&2
         exit 1
     fi
 fi

@@ -112,15 +112,21 @@ for REPO in $REPOS; do
     continue
   fi
 
-  # Commit to the repo
+  # Commit to the repo.
+  # IMPORTANT: use a ONE-SHOT transient identity via `git -c …` — NOT persistent
+  # `git config`. `.tabs/<N>/<repo>` worktrees SHARE the main clone's `.git/config`, so a
+  # persistent `git config user.email "semver-rollout[bot]@…"` here leaks the bot identity
+  # into every slot worktree of this repo (agent commits then masquerade as the bot — the
+  # 2026-06-03 fleet misconfig). The bot identity is needed only for THIS commit.
+  # SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution".
   cd "$REPO_DIR"
-  git config user.name "semver-rollout[bot]" 2>/dev/null || true
-  git config user.email "semver-rollout[bot]@users.noreply.github.com" 2>/dev/null || true
+  _bot_name="semver-rollout[bot]"
+  _bot_email="semver-rollout[bot]@users.noreply.github.com"
 
   git add ".github/workflows/semver-agent.yml" 2>/dev/null || true
   git rm ".github/workflows/version-bump.yml" --cached 2>/dev/null || true
   if ! git diff --staged --quiet 2>/dev/null; then
-    git commit -m "feat: roll out semver-agent.yml, retire version-bump.yml [skip ci]
+    git -c user.name="$_bot_name" -c user.email="$_bot_email" commit -m "feat: roll out semver-agent.yml, retire version-bump.yml [skip ci]
 
 semver-agent.yml fires on staging push (not main), uses Claude Haiku for
 commit analysis + API diff detection, blocks staging-to-main on label mismatch.

@@ -20,6 +20,48 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)
 
+## Slot-6 TradFi master orchestrator — owned + attached plans/issues
+
+> **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot (five slots). **Slot 6 = TradFi
+> end-to-end** across every service — instruments-service → MTDS → MDPS → features → downstream → strategy/execution →
+> bucket/data/manifest/UI. **THIS plan is the TradFi master orchestrator**: every tradfi-related plan + issue
+> cross-references here; orphaned tradfi issues attach here. Sibling AG masters: **defi → slot 2**
+> (`defi_manifest_canonicalisation_2026_06_01.md`), **cefi → slot 3** (`cefi_manifest_canonicalisation_2026_06_01.md`),
+> **sports → slot 4** (`sports_manifest_canonicalisation_2026_06_01.md`), **prediction → slot 5**
+> (`prediction_manifest_canonicalisation_2026_06_01.md`). Cross-cutting per-service plans keep their own `assigned_vm`
+> (vm-ml / vm-cross-cutting) as PRIMARY owner — slot-6 tracks + drives only their **tradfi slice**, not the whole plan.
+
+**Cross-referenced tradfi slices (primary owner keeps the plan; slot-6 drives the tradfi portion):**
+
+| Plan / issue                                                   | Primary VM       | TradFi slice                                                                                       |
+| -------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
+| `tradfi_massive_dual_source_2026_05_28.md`                     | vm-tradfi        | Massive ingest + `source=databento\|massive` write-path (this plan's C-source RIDER; absorbs -031) |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` | vm-cross-cutting | L3 tradfi ordering + L6 legacy `market-data-tick-tradfi` delete                                    |
+| `pipeline_mode_partition_migration_2026_06_01.md`              | vm-cross-cutting | tradfi `pipeline_mode=` partition (this plan's C-pipeline_mode RIDER)                              |
+| `instruments_manifest_canonicalisation_2026_06_01.md`          | vm-cross-cutting | `instruments-store-tradfi` reference slice                                                         |
+| `downstream_services_manifest_canonicalisation_2026_06_01.md`  | vm-ml            | tradfi MDPS/features/execution canonical-form slice                                                |
+| tradfi phase-3 backfill + VIX/Massive continuity work          | vm-tradfi        | tradfi data acquisition slice                                                                      |
+
+> **🤝 HANDOFF (slot-5 → slot-6, 2026-06-03) — E5 carry-forward + CF-11 + IS databento, code-complete, BLOCKED
+> dep-tier.** Slot-5 (pre-reassignment) built + verified the following TradFi work; handing to slot-6 (TradFi owner) per
+> the one-AG-per-slot reassignment. **Nothing is lost — code is on `origin/handoff/tradfi-e5-cf11-slot6` in both
+> repos:**
+>
+> 1. **mtds E5 rebuild CF-11 carry-forward — DONE, QG-green** (`handoff/tradfi-e5-cf11-slot6`@2746cf1a). The rebuild now
+>    re-emits the ~43k non-captured legacy `_index` rows (was silently dropping them = false-complete coverage), with
+>    the CF-11 3-way trading-day classifier (blank/`SOURCE_RETURNED_ZERO` on a trading day → `attempted_failed` via
+>    `record_zero_rows`). 11 unit tests green. See E5 STATUS todo below.
+> 2. **IS databento parse-failure event — DONE (un-QG'd)** (`handoff/tradfi-e5-cf11-slot6`@b4a43093). Observability fix
+>    only — see the CONFIRMED databento:820 SILENT-SHRINK finding + the **P0 [CODE] state-threading fix todo** below
+>    (the real data-correctness fix, not yet built).
+> 3. **`available_at` reclassified** to an E4 parquet-layer verify (not a rebuild/manifest concern) — see E5 STATUS
+>    todo.
+>
+> **BLOCKER (both repos): dep-tier gate** — mtds needs UTL's `record_zero_rows`, which is on LDR but **NOT on staging**
+> (verified 0/staging). Skipping the gate would break mtds on staging. **Slot-6 next step**: once the LDR→staging
+> automation drains UTL+UAC (semver-agent on quality-gates-v2), `git merge`/cherry-pick the handoff branch + ship via
+> `quickmerge --agent` (mtds is QG-green; run the IS QG for the databento branch). Then flip the E5 + CF-11 todos.
+
 > **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
 > `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** and glued
 > venues — a FULL re-canonicalisation, not the headline cell-count. (Tradfi already reads v8 per CONFLICT-2 — confirm
@@ -235,10 +277,20 @@ VM.
       instrument_id=stem; chain bundle → underlying=; optional pipeline_mode= segment + legacy tolerance); day-level
       list; `-prd` bucket; stamps `pipeline_mode` (path-or-`derive_pipeline_mode_for_row`) + `source` (REQUIRED,
       `source_string_for(pm)`); SKIPS the `day-` hyphen 0-row placeholder tree (E7 deletes those). Modeled on the cefi
-      E5. **REMAINING (gate G4, tracked via CF-11 todos + Verify): `available_at` (parquet-col-else-day-EOD) +
-      legacy-`_index` re-emit of `attempted_failed`/typed-`empty_confirmed` rows (CF-11) + the 5 `SOURCE_RETURNED_ZERO`
-      audit.** Executes `tradfi_massive` Task -031 (source re-consolidation). Original recipe retained below for
-      reference.
+      E5. **REMAINING (gate G4) — STATUS (slot-5 2026-06-03):** (a) **legacy-`_index` carry-forward of
+      `attempted_failed`/typed-`empty_confirmed` rows + the CF-11 3-way trading-day classifier = DONE** (mtds handoff
+      branch `handoff/tradfi-e5-cf11-slot6`@2746cf1a (QG-green; ship via quickmerge once UTL+UAC on staging — dep-tier:
+      needs UTL record_zero_rows)): `rebuild_tradfi_manifest.py` now reads the legacy `_index`, re-emits non-captured
+      rows v9 (date-windowed for shard-idempotency), routes blank/`SOURCE_RETURNED_ZERO` empties on a TRADING day (via
+      UAC `non_trading_day_reason`) → `attempted_failed` (`record_zero_rows(was_expected=True)`), preserves typed
+      weekend/holiday empties + the 6,036 existing `attempted_failed` verbatim, dedups against captured cells; 11 unit
+      tests. The 5 `SOURCE_RETURNED_ZERO` rows are auto-re-evaluated by the classifier at rebuild time. (b)
+      **`available_at` = NOT a rebuild/manifest concern** — it is a per-row column INSIDE the data tick parquets (UTL
+      `AvailabilityRecord` manifest schema has NO `available_at` field; CF-8 conflated the two). The data parquets
+      already carry it (orphan-sweep sample, E7-evidence todo below); the migrator's whole-object server-side copy
+      preserves it. → reclassified as an **E4 parquet-layer VERIFY** (confirm all legacy parquets carry `available_at`;
+      backfill only any that don't), removed from the rebuild's scope. Executes `tradfi_massive` Task -031 (source
+      re-consolidation). Original recipe retained below for reference.
 - [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): NEW `rebuild_tradfi_manifest.py`.
       REFERENCE: cefi E5 DONE (mtds@2c3a479b) — copy its structure (optional `pipeline_mode=` regex segment, DAY-level
       list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via
@@ -281,39 +333,104 @@ VM.
 > only if a trading session was open + fetch succeeded + genuinely nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank
 > `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as complete.
 
-- [ ] [DATA] P0. **E5 rebuild classifier: within-bounds trading-day empty → `attempted_failed`.** For every empty cell:
-      if it is a trading day (NOT weekend/holiday) + ticker in universe + data_type guaranteed-when-listed (trades /
-      tbbo / ohlcv on an active venue+ticker) + within coverage window → `attempted_failed` (`record_failed`), NOT
-      `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 5 existing `SOURCE_RETURNED_ZERO` rows specifically — confirm
-      genuine source-zero vs masked fetch failure. Preserve the legit weekend/holiday/out-of-coverage typed empties.
-- [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows (6,036) v9, status PRESERVED** — never silently
-      relabel a failure to `empty_confirmed`; they stay flagged for backfill.
-- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS tradfi databento/massive adapters)**: on a genuine API error
-      (timeout/5xx/429/auth) for an in-universe ticker on a trading day within coverage bounds, the handler MUST
-      `record_failed` (→ `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`.
-      Grep the tradfi databento/massive fetch paths for `except … record_empty` / bare `return []` swallows; gate
-      empty-vs-failed on trading-calendar + ticker-in-universe + UAC coverage. Cross-ref the sports CF-11 model
-      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11). **DIAGNOSIS (slot-3 2026-06-02): MTDS side VERIFIED
-      COMPLIANT** — same finding as the cefi CF-11 todo (the MTDS orchestrator finalize is shared across AGs): tradfi
-      databento/massive adapters classify+emit+re-raise (no swallow), and `orchestrator.py:3818`/`:3766` gate
+- [x] ✅ [DATA] P0. **E5 rebuild classifier: within-bounds trading-day empty → `attempted_failed` — DONE (mtds@90aeb7dd,
+      slot-6 2026-06-03).** rebuild_tradfi_manifest reclassifies via UAC `is_non_trading_day(venue,day)` (the SAME
+      helper the orchestrator uses → batch=live): a `SOURCE_RETURNED_ZERO` on a TRADING day →
+      `record_failed(WithinBoundsTradfiSourceZero)` (attempted_failed);
+      weekend/holiday/out-of-coverage/calendar-exception preserved as typed empty. The 5 existing SOURCE_RETURNED_ZERO
+      are audited by this path. Tests: trading-day-reclassified / weekend-preserved / holiday-preserved /
+      calendar-exception-preserved. ORIGINAL: For every empty cell: if it is a trading day (NOT weekend/holiday) +
+      ticker in universe + data_type guaranteed-when-listed (trades / tbbo / ohlcv on an active venue+ticker) + within
+      coverage window → `attempted_failed` (`record_failed`), NOT `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 5
+      existing `SOURCE_RETURNED_ZERO` rows specifically — confirm genuine source-zero vs masked fetch failure. Preserve
+      the legit weekend/holiday/out-of-coverage typed empties.
+- [x] ✅ [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows (6,036) v9, status PRESERVED — DONE
+      (mtds@90aeb7dd, slot-6 2026-06-03).** `reemit_honest_absence_rows` reads the existing tradfi `_index` (robust:
+      `read_availability_index` → direct `_index/availability_index.parquet` fallback on gcsfs DNS flakiness) + re-emits
+      every `attempted_failed`/`empty_confirmed` row not covered by the object-scan (dedup by row_key, `record_failed`
+      error / `record_empty` reason preserved + validated vs EMPTY_CONFIRMED_REASONS), fixing the pure-object-scan
+      false-complete. 11 tests; QG --no-fix exit 0. ORIGINAL: never silently relabel a failure to `empty_confirmed`;
+      they stay flagged for backfill.
+- [x] ✅ [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS tradfi databento/massive) — DONE
+      (instruments-service@bd1456aa, slot-6 2026-06-03).** MTDS side was VERIFIED COMPLIANT (below); IS-side residual is
+      now fixed — Databento fetch-failure threads state → attempted_failed (see the STATE-threading item). on a genuine
+      API error (timeout/5xx/429/auth) for an in-universe ticker on a trading day within coverage bounds, the handler
+      MUST `record_failed` (→ `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT
+      `record_empty`. Grep the tradfi databento/massive fetch paths for `except … record_empty` / bare `return []`
+      swallows; gate empty-vs-failed on trading-calendar + ticker-in-universe + UAC coverage. Cross-ref the sports CF-11
+      model (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11). **DIAGNOSIS (slot-3 2026-06-02): MTDS side
+      VERIFIED COMPLIANT** — same finding as the cefi CF-11 todo (the MTDS orchestrator finalize is shared across AGs):
+      tradfi databento/massive adapters classify+emit+re-raise (no swallow), and `orchestrator.py:3818`/`:3766` gate
       `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded fetch-failure (incl.
       `failed_per_dt_by_venue` for bundled-Databento partial-success). RESIDUAL = focused instruments-service write-path
       verify. See cefi plan § CF-11 for the full diagnosis.
-- [ ] [CODE] P1. **IS-side CF-11 verify (slot/Harsh 2026-06-02, read-only) — partial result + 1 concrete zero-signal
-      gap.** Read the IS tradfi universe-discovery adapter
-      `instruments-service/.../reference_data/adapters/tradfi/     databento.py`: `_fetch_symbols` handles a
-      `BentoError` (L820) by `classify_venue_error("DATABENTO",…)` + emit `ADAPTER_FETCH_FAILED` + **`return []`**, and
-      `get_instruments` (L537-547) does `results.extend(batch)` with NO raise/record — the classify+emit-event+return-[]
-      shape (consistent with the shard-isolation "no raise in per-venue loops" rule). **CONCRETE GAP**: the SECOND site
-      `databento.py:826` (`data.to_df()` parse failure) does `logger.warning` + `return []` with **NO
-      `ADAPTER_FETCH_FAILED` event + NO classify** → on a transient parse failure those symbols vanish from the
-      discovered universe with ZERO failure signal (silent universe truncation = A8-class false-complete coverage). Fix
-      = mirror the L820 branch (classify + emit `ADAPTER_FETCH_FAILED`) on the parse-failure branch. **OPEN QUESTION
-      (needs the IS catalogue/manifest-layer read — deeper context, owner call):** whether the IS layer converts an
-      emitted `ADAPTER_FETCH_FAILED` + empty return into an `attempted_failed` manifest row (then L820 is compliant) or
-      the empty universe silently shrinks the expected set (then L820 is also a gap) — so L820 compliance is
-      UNCONFIRMED, only L826 (no event at all) is a confirmed gap. Repo: instruments-service. parent_epic:
+- [x] ✅ [CODE] P1. **IS-side CF-11 verify — DONE (superseded by the STATE-threading fix below,
+      instruments-service@bd1456aa).** The observability-only event-emission (handoff branch) is now subsumed: the
+      parse-failure branch emits `ADAPTER_FETCH_FAILED` AND the real state-threading fix lands the `attempted_failed`
+      row. (slot/Harsh 2026-06-02, read-only) — partial result + 1 concrete zero-signal gap.** Read the IS tradfi
+      universe-discovery adapter `instruments-service/.../reference_data/adapters/tradfi/     databento.py`:
+      `_fetch_symbols` handles a `BentoError` (L820) by `classify_venue_error("DATABENTO",…)` + emit
+      `ADAPTER_FETCH_FAILED` + **`return []`**, and `get_instruments` (L537-547) does `results.extend(batch)` with NO
+      raise/record — the classify+emit-event+return-[] shape (consistent with the shard-isolation "no raise in per-venue
+      loops" rule). **CONCRETE GAP**: the SECOND site `databento.py:826` (`data.to_df()` parse failure) does
+      `logger.warning` + `return []` with **NO `ADAPTER_FETCH_FAILED` event + NO classify** → on a transient parse
+      failure those symbols vanish from the discovered universe with ZERO failure signal (silent universe truncation =
+      A8-class false-complete coverage). Fix = mirror the L820 branch (classify + emit `ADAPTER_FETCH_FAILED`) on the
+      parse-failure branch — **DONE (slot-5 2026-06-03, instruments-service handoff branch
+      `handoff/tradfi-e5-cf11-slot6`@b4a43093 (un-QG'd; run IS QG before ship))**: the `data.to_df()` parse branch now
+      classifies (`VALIDATION_ERROR`) + emits `ADAPTER_FETCH_FAILED` like the L820 branch. **OPEN QUESTION NOW RESOLVED
+      → CONFIRMED (B) SILENT-SHRINK GAP (slot-5 2026-06-03 trace, verified file:line):** the emitted
+      `ADAPTER_FETCH_FAILED` is **fire-and-forget — the manifest layer never reads it\*\*, so neither L820 NOR L826
+      produces an `attempted_failed` row. Trace: `databento.py:820` SWALLOWS the `BentoError` (`return []`, no re-raise)
+      → `base_adapter.py:240` caches the `[]` as a legit result → `urdi_reference_provider.py:_fetch_one` only
+      classifies failures from RAISED exceptions (its `except Timeout/Connection/RuntimeError/ValueError` → `failed[]`),
+      so an empty return is a CLEAN success → the venue lands in `orchestrator.py` `_non_error_venues` (NOT
+      `failed_venues`) → on a trading-day zero the orchestrator does NOT `record_failed`; the cell has NO honest
+      `attempted_failed` row (A8-class false-complete coverage). The event-emission fix above is OBSERVABILITY-ONLY — it
+      does not close the data gap. Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. **IS Databento fetch-failure threads STATE — DONE (instruments-service@bd1456aa, slot-6
+      2026-06-03).** databento.py `_fetch_symbols` BentoError + `data.to_df()` parse-failure branches now RE-RAISE
+      `RuntimeError` (after classify+emit) → caught by `urdi_reference_provider._fetch_one`'s per-venue
+      `except RuntimeError` (shard-isolation boundary) → venue in `failed[]` → excluded from `_non_error_venues` →
+      orchestrator `record_failed` → honest `attempted_failed` row. Genuine empty still returns `[]` cleanly;
+      `base_adapter` cache skips write on raise (no failed-fetch memoization). 4 tests (raise-on-fail /
+      genuine-empty-clean / cache-not-memoized) + 40/40 file; IS QG --no-fix exit 0. Caveat: same swallow likely in
+      cefi/defi/sports IS adapters → separate audit. Closes the CONFIRMED silent-shrink gap above).\*\* The real fix:
+      the `databento.py` `BentoError` branch (L820) + parse-failure branch (L826) must SIGNAL the failure to URDI as
+      state so it reaches `_non_error_venues`-vs-`failed_venues` accounting — either re-raise a
+      `urdi_reference_provider._fetch_one`-classifiable exception (RuntimeError/ConnectionError/… per its `except`
+      ladder) so the venue lands in `failed[]`, OR thread a per-venue failure flag through `get_instruments_cached` →
+      URDI → orchestrator. Blast radius (own unit, NOT a same-commit hack): (1) must NOT cache `[]` from a failed fetch
+      (`base_adapter.py:240`); (2) audit every other `get_instruments()` caller that relies on the graceful
+      `[]`-on-failure contract; (3) ensure orchestrator records `attempted_failed` (not raise-and-abort) on a
+      trading-day fetch-fail so it's a retryable honest-absence row, not a shard crash; (4) unit test: fetch-fail on a
+      trading-day in-universe venue → `attempted_failed` row, genuine-empty → `empty_confirmed`. Cross-ref the same
+      adapter-swallow pattern likely affects cefi/other IS adapters (verify). Repo: instruments-service. parent_epic:
       mtds_mdps_master.
+
+- [x] ✅ [CODE] P1. **Cross-AG IS adapter fetch-failure swallow — AUDITED + FIXED (instruments-service@e2e008f0, slot-6
+      2026-06-03).** Audited all 3 AGs vs `_fetch_one` consumption: **cefi** hyperliquid/aster/tardis(×2) + **sports**
+      betfair + **defi** lighter(×2) had the return-[]-on-fetch-error swallow → now RE-RAISE (→ failed[] →
+      attempted*failed). **defi family otherwise CLEAN** (raises ConnectionError already); sports
+      footystats/understat/etc. correctly excluded (not URDI-consumed); tardis preserves per-exchange partial-success
+      isolation (raises only if all-fail-empty). +12 regression tests + 7 old-contract tests updated to assert raise; IS
+      QG exit 0. ORIGINAL: (slot-6 discovery 2026-06-03, surfaced by the tradfi Databento state-threading fix
+      instruments-service@bd1456aa). The `\_fetch*_`→     classify+emit`ADAPTER_FETCH_FAILED`+`return
+      []`(no re-raise) pattern that silently shrank the tradfi universe     almost certainly exists in other IS reference-data adapters (cefi tardis/exchange, defi, sports) → same A8     false-complete on a fetch error. Audit each`reference_data/adapters/_/`fetch path; apply the same fix (re-raise     a`\_fetch_one`-classifiable exception so the venue lands in `failed[]`→`attempted_failed`); don't cache `[]`
+      from a failed fetch. Repo: instruments-service. parent_epic: mtds_mdps_master.
+
+- [ ] [CODE] P2. **SSOT-cleanliness: fold `pipeline_mode` into UAC `build_tradfi_partition_path` (remove the MTDS mirror
+      divergence)** (slot-6 path-correctness audit 2026-06-03 — latent footgun, NOT a live bug). The UAC base builder
+      `unified-api-contracts/.../canonical/partition_paths.py::build_tradfi_partition_path` produces the path WITHOUT
+      `pipeline_mode=`; `candidate_parquet_paths(pipeline_mode=...)` layers it, the live writer
+      (`tradfi_shared.build_tradfi_partition_path`) inserts it inline ("mirrors UAC byte-for-byte but accepts
+      pipeline_mode"), and the orchestrator inserts it via `.replace`. All ACTUAL write/migrate/read/rebuild paths are
+      consistent + pipeline_mode-aware TODAY (audit-verified GREEN), but the UAC base builder + the MTDS mirror have
+      drifted apart — a future caller using the bare UAC builder would write the pre-migration path. Fix: add optional
+      `pipeline_mode` to UAC `build_tradfi_partition_path` (insert LEFT of asset_group=, matching
+      `candidate_parquet_paths`) so the MTDS mirror can delegate instead of diverging; update orchestrator to pass it
+      rather than `.replace`. Cross-repo (UAC + mtds), so a coordinated pass. Repos: unified-api-contracts +
+      market-tick-data-service. parent_epic: mtds_mdps_master.
 
 ## Success criteria
 

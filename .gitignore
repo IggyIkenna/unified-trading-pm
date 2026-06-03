@@ -27,8 +27,23 @@ central-element-323112-*.json
 *.p12
 *.json.bak
 
-# --- QG sentinel (local-only SHA fingerprint; never committed) ---
+# --- QG sentinels (local-only fingerprints; never committed) ---
 /.qg_last_passed_sha
+/.qg_content_sentinel
+
+# --- Generated artifacts: regenerated on every QG/quickmerge run from tracked SSOTs;
+#     tracking them only churns the worktree (item H, cicd_contract_hardening_2026_06_01).
+#     SVG/HTML ← docs/repo-management/cicd-pipeline-definition.yaml (generate-cicd-diagram.py)
+#     derived-dependency-manifest.json ← all pyproject.toml (generate-derived-manifest.py;
+#       every consumer regenerates before reading, so the committed copy was a stale cache) ---
+/docs/repo-management/CI-CD-PIPELINE.svg
+/docs/repo-management/CI-CD-PIPELINE.html
+/derived-dependency-manifest.json
+#     DAG SVGs ← workspace-manifest.json (generate_workspace_dag.py / generate_data_flow_dag.py;
+#       generators are deterministic — churn is driven by mutable ci_status inside the manifest,
+#       so untracking removes it without needing the ci_status sidecar; nothing imports an SVG) ---
+/WORKSPACE_MANIFEST_DAG.svg
+/DATA_FLOW_DAG.svg
 
 # --- OS / editor ---
 .DS_Store
@@ -140,3 +155,5 @@ logs/
 !github-integration/data/
 !github-integration/data/*.json
 .smoke-dirt.txt
+# Benchmark evidence CSVs (committed as plan evidence per qg-bench-aggregate)
+!scripts/dev/qg-bench-under-load-*.csv

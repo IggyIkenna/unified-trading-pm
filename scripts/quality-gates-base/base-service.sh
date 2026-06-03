@@ -2538,7 +2538,11 @@ if ! _qg_update_ci_status_pass; then
     log_fail "Failed to update ci_status (LOCAL_PASS) in workspace-manifest.json"
     exit 1
 fi
-if [[ "${GITHUB_ACTIONS:-}" != "true" && "${MANIFEST_STATE_WRITER:-0}" == "1" ]]; then
+# DAG SVGs are GITIGNORED generated artifacts (item H, 2026-06-03): regenerate them on every local
+# QG run so the codex/04-architecture symlinks stay fresh — gitignored output → zero worktree churn.
+# The former MANIFEST_STATE_WRITER gate (single-writer-cron era, when these were tracked) is removed;
+# ci_status gating is unaffected (it lives in _qg_update_ci_status_pass above).
+if [[ "${GITHUB_ACTIONS:-}" != "true" ]]; then
     _MANIFEST="${REPO_ROOT}/unified-trading-pm/workspace-manifest.json"
     if [[ -f "$_MANIFEST" ]] && command -v python3 &>/dev/null; then
         _DAG_SCRIPT="${REPO_ROOT}/unified-trading-pm/scripts/manifest/generate_workspace_dag.py"

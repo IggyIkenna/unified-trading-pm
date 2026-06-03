@@ -137,12 +137,130 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F6 — pm-pull install on VMs [P1] _(MIGRATED FROM `plan_hygiene_silent_failure_capture_2026_05_29`)_
 
-- [ ] [SCRIPT] P1. **MIGRATED FROM:** `plan_hygiene_silent_failure_capture` (its deferred "audit + install pm-pull on the
-      other 9 epic VMs"). `bootstrap_vm.sh` does **not** install pm-pull — fresh/replacement VMs rely on the separate
-      `scripts/orchestrator/run_fleet_install_pm_pull.sh` post-launch step, so a freshly-bootstrapped VM doesn't
-      auto-pull PM (regen then reads a stale clone). Bake the `pm-pull` timer+service install into `bootstrap_vm.sh` so a
-      fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic VMs when they start
-      (currently off). Composes with F2–F4 (same per-VM rollout).
+- [ ] [SCRIPT] P1. **MIGRATED FROM:** `plan_hygiene_silent_failure_capture` (its deferred "audit + install pm-pull on
+      the other 9 epic VMs"). `bootstrap_vm.sh` does **not** install pm-pull — fresh/replacement VMs rely on the
+      separate `scripts/orchestrator/run_fleet_install_pm_pull.sh` post-launch step, so a freshly-bootstrapped VM
+      doesn't auto-pull PM (regen then reads a stale clone). Bake the `pm-pull` timer+service install into
+      `bootstrap_vm.sh` so a fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic
+      VMs when they start (currently off). Composes with F2–F4 (same per-VM rollout).
+
+### F9 — review-agent auto-spawn per VM (persistent-role keep-alive) [DONE]
+
+- [x] ✅ [INFRA] P1. **DONE + deployed + verified-firing 2026-06-03 — agent-orchestrator@415ff06.** New
+      `_ensure_review_agents` runs every tick BEFORE the queue early-exit and keeps the designated review slot(s) alive
+      with the `review` boot prompt (queue-independent); `_should_spawn` now skips review slots (`reason="review_slot"`)
+      so a worker is never dropped onto one. Review slots designated per-host via `ORCHESTRATOR_REVIEW_SLOTS`
+      (`config.review_slot_ids()`; empty=off, back-compat) — no schema migration (`SlotRow` has no role column). Reuses
+      the flap/cooldown/headroom + branch-state gate; `agents/review.md` already shipped. +10 unit tests;
+      ruff/pyright 0. **Live-verified on vm-0** (`ORCHESTRATOR_REVIEW_SLOTS=2`, restart): the loop fired
+      `AutoSpawnLoop: review agent spawn failed slot=2 … branch-state quarantine` — i.e. it ran queue-independently,
+      picked slot 2, attempted the review-template spawn, and was correctly gated by the SAME branch-state guard as
+      workers (slot 2's worktrees are dirty — F13). On a clean slot it spawns green. **Fleet rollout** = set
+      `ORCHESTRATOR_REVIEW_SLOTS=2` in `bootstrap_vm.sh` (folds into F12's per-VM env work).
+
+  _Original task (kept for context):_ **Operator-requested 2026-06-03 — half-built design, finish the wiring.** Per
+  `codex/12-agent-workflow/orchestrator-multi-vm-topology.md:107` each epic VM = slot-1 **main** + slot-2 **review**
+  (Sonnet 4.6) + N workers. The review agent reviews each worker commit against the plan + FF-merges slot branches →
+  LDR. **Already shipped**: `agents/review.md` boot prompt + the `role` model (`orm.py:231` `main|review|backup|custom`;
+  `worktree_claim.py`). **Gap**: `AutoSpawnLoop` (`server/autospawn.py`) ONLY spawns task-`worker`s — it early-exits on
+  empty queue (`_run_one_tick:395`), renders `prompt_template="worker"`, and `_should_spawn:484` ignores role. So (a)
+  nothing keeps a persistent review agent alive (it's commit-polling, not task-driven → never queue-triggered), and (b)
+  AutoSpawn would wrongly drop a _worker_ onto the review slot. **Implement**: (1) `config.persistent_role_slots()`
+  resolving review-role slots (SSOT = `SlotRow.role='review'`; bootstrap assigns slot-2 `role=review` per VM); (2) a
+  queue-INDEPENDENT keep-alive pass in the tick (before the empty-queue early-exit) that spawns `template="review"` on
+  any dead review-role slot (reuse the flap/cooldown + `_do_spawn(prompt_template=...)` machinery); (3) `_should_spawn`
+  skips persistent-role slots in the worker loop (only `worker`/`custom`/None get task-workers). Unit tests: review slot
+  stays alive with empty queue; worker never spawned on review slot. Then bootstrap role-assignment + VM deploy. Repo:
+  agent-orchestrator. Forward-looking (fleet mostly stopped; review runs on vm-0 today, all epic VMs when on).
+
+### F10 — CI conflict-resolution: capacity model (dedicated vs slot-on-existing) [P2]
+
+- [ ] [DESIGN] P2. **Operator framing 2026-06-03.** The CI→orchestrator→delegate path is BUILT this session
+      (`conflict-resolution-agent.yml` / `ci_failure_watcher` / `main-backmerge-to-ldr` →
+      `repository_dispatch     escalate-to-orchestrator` → orchestrator spawns a Max worker via `agents/escalate.md`).
+      It spawns on whatever VM has a free slot (today vm-0). Decide whether to RESERVE a dedicated conflict-resolution
+      VM/slot (guaranteed availability, isolation from epic work) vs the current any-free-slot model. No new mechanism
+      either way — same escalate→spawn path; this is purely a capacity/pinning decision. Repo: agent-orchestrator
+      (slot-role pin) + deployment-service (if a dedicated VM). Composes with F9 (same persistent-role-slot machinery).
+
+### F11 — "backlog won't clear" — diagnosed + fixed (3 root causes) [P1]
+
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-03 — operator "clear the backlog on background VMs".** The yaml-prune was a red
+      herring (it worked: 12 tasks = open checkboxes). The real backlog AutoSpawn dispatches from is `state.db`, which
+      had **761 total / 304 QUEUED / 448 done** and never shrank. Three root causes, all fixed: 1.
+      **`ORCHESTRATOR_REGEN_DB_PATH` was unset** → the loop's prune ran **yaml-only** (`pruned_db=0` every tick) →
+      state.db never pruned. Set it in vm-0 `.env.local` (→ loop now prunes state.db) + restart. **Fleet rollout =
+      F12.** 2. **regen ingested non-dispatchable todos** (`BLOCKED-OPERATOR/-BILLING/-CREDENTIALS/-UPSTREAM-OUTAGE`,
+      `_(stretch, optional)_`) that can never flip → churn. `_parse_open_todos` now skips them
+      (agent-orchestrator@428400f; closed taxonomy + 2 tests). Applied in add + prune passes (existing such tasks
+      auto-orphan). 3. **the prune only GC'd yaml-orphan IDs, never state.db rows absent from the yaml ENTIRELY**
+      (archived/other-VM/ old-cycle) → 290 unclaimable queued **zombies**. `_prune_stale` now deletes every
+      queued+undispatched row whose task_id isn't in the post-prune backlog, guarded on non-empty `current_briefs` so a
+      failed scan can't wipe the queue (agent-orchestrator@e50b6b9; +2 tests; done/dispatched never touched). **Deployed
+      to vm-0** (FF + restart) + **one-time GC cleared 302→12 queued** (backed up state.db first); loop-path regen
+      verified steady at `total=12 pruned_db=0`. 64 tests / ruff / pyright 0. Repo: agent-orchestrator.
+
+### F12 — bake ORCHESTRATOR_REGEN_DB_PATH + the GC fix into the fleet [P1]
+
+- [ ] [INFRA] P1. **Durable fleet rollout of F11 (vm-0 fixed live; other VMs pending).** (a) `bootstrap_vm.sh` must
+      upsert `ORCHESTRATOR_REGEN_DB_PATH=<state.db>` into `.env.local` (same upsert pattern as F2/F3 for
+      VM_ID/AUTOSPAWN) so every VM's loop prunes state.db — without it the zombie accumulation recurs per-VM. (b) The GC
+      code fix (agent-orchestrator@e50b6b9) reaches the 9 stopped epic VMs automatically on their next FF-pull/restart;
+      verify on first start. Composes with F2–F4 (same per-VM rollout). Repo: agent-orchestrator (bootstrap) +
+      deployment-service launchers if the env must be exported at launch.
+
+### F13 — vm-0 slot worktree hygiene blocking ALL spawn (dirty pyproject + diverged PM) [P1]
+
+- [ ] [INFRA] P1. **Surfaced by the F9 verification 2026-06-03 — RC4 class, recurring + systemic.** The branch-state
+      gate quarantines slot 2 (and likely others) for BOTH worker + review spawn: (a) **uncommitted `pyproject.toml`**
+      on `agent-orchestrator` (behind 33) + `alerting-service` (behind 21) → ff-only pull aborts ("local changes would
+      be overwritten") so `slot-cron-ff-pull` can never advance them — this is the chronic worktree-dirty toil (likely
+      uv.lock/version churn or a QG-modified pyproject); (b) **`unified-trading-pm` diverged 11-ahead / 584-behind** →
+      FM5 quarantine (the slot-branch-diverged recipe: check the 11 ahead for unpushed work FIRST, then
+      `git rebase origin/live-defi-rollout` + `push --force-with-lease`). Recipe per inherited-WIP + the diverged-slot
+      CLAUDE.md rules: commit the dirty pyproject as `chore(orphan-wip)` (or diagnose the churn source + gitignore if
+      generated), FF the clean repos, rebase the diverged PM. Composes with F7 (slot-4 WIP) — same class. Until cleared,
+      spawn (worker AND review) stays quarantined on the affected slots **by design** (the gate is correct). Repo:
+      agent-orchestrator host worktrees. Provenance: F9 live-verification log 2026-06-03.
+
+### F7 — slot-4 WIP recovery on the live vm-0 host [P1]
+
+- [ ] [INFRA] P1. **The only genuine residual quarantine on vm-0** (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree
+      realign (see below) deliberately SKIPPED 2 slot-4 repos on feature branches — genuine mid-work WIP, not safe to
+      relabel (inherited-WIP rule): `unified-api-contracts` on `fix/tradfi-exchange-mappings-minimal`,
+      `unified-trading-pm` on `fix/pm-ci-self-clone`. Slot 4 will keep tripping FM7 (correctly) until recovered: inspect
+      each repo's WIP → commit/quickmerge or stash → then `git branch -m … tab/vm-0/4` (or recreate the slot-4 worktrees
+      on `tab/vm-0/4`). Until then slot 4 stays quarantined by design. Repo: agent-orchestrator host (live VM op, no
+      repo change) + the 2 named repos for the WIP itself.
+
+### F8 — self-heal: realign a RUNNING VM's worktrees to its VM_ID without a full re-bootstrap [P1]
+
+- [ ] [SCRIPT] P1. **Gap surfaced 2026-06-03.** F2/F4 bake `tab/<VM_ID>/<slot>` branding into `bootstrap_vm.sh`, but it
+      only applies on (re-)bootstrap. A VM that was already RUNNING when `129dc6a` landed keeps its pre-migration
+      worktree naming and stays 100%-quarantined silently — exactly what happened to vm-0 (api-host): 539 AutoSpawn
+      ticks all `failed=N` for ~? until the manual realign below. Harden so this self-heals: either (a) a `slot-cron`
+      step that detects `HEAD prefix != tab/<ORCHESTRATOR_VM_ID>/` on a `tab/*/<slot>` branch and `git branch -m`s it
+      (skipping non-`tab/*` feature branches = WIP, per F7), or (b) a one-shot on `systemctl restart`/startup. Compose
+      with the existing FF-pull cron. Repo: agent-orchestrator (+ `slot-cron-ff-pull.sh` in unified-trading-pm if the
+      check lands there). Pair with a `verify-slot-host-symmetry.sh` probe that fails a host whose worktrees don't match
+      its VM_ID.
+
+## 2026-06-03 — F4 applied LIVE to the AutoSpawn host vm-0 (i-0c9b283b31d6b5ca7), spawn confirmed
+
+The 2026-06-02 fixes validated on `vm-cefi` (then stopped). The **live AutoSpawn host** `vm-0` (the plan's "central",
+`ORCHESTRATOR_AUTOSPAWN_ENABLED=true`) was still on pre-`129dc6a` worktree naming (`tab/ikennaigboaka/N` +
+`tab/ikennaigboakam/N`) vs the code-expected `tab/vm-0/N` → **fully quarantined**
+(`AutoSpawnLoop tick: checked=6 spawned=0 failed=6`, repeating). Applied F4 manually (it had only been baked for
+re-bootstrap):
+
+- Renamed **476 worktree branches** `tab/{ikennaigboaka,ikennaigboakam}/<slot>` → `tab/vm-0/<slot>` (local
+  `git branch -m`, no content change; skipped feature-branch WIP per F7).
+- **Confirmed spawn**: `13:22:11 AutoSpawnLoop tick: checked=6 spawned=1`; `13:26:36 … skips={'worker_active': 2}`; live
+  tmux `orch-slot-10` running. Quarantine cleared for all aligned slots (2/5/9 transient mid-rename, now clean); only
+  slot 4 remains (WIP, F7).
+
+This is the same manual realign F2's note anticipated for _stopped_ VMs — applied here to a _running_ one; F8 hardens it
+so it self-heals.
 
 ## Per-VM application runbook (when a VM is started)
 

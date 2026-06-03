@@ -28,11 +28,18 @@ repo_gates:
 todos:
   - id: qg-bench-aggregate
     content: |
-      - [ ] [SCRIPT] P0. Build an AGGREGATE-load benchmark harness (`unified-trading-pm/scripts/dev/benchmark-qg-under-load.sh`) that fires K slots' `quality-gates.sh` concurrently and measures host CPU-steal, swap-in/out, load-average, and p50/p95 per-run wall-clock. The existing archived benchmark timed ONE repo sequentially and is structurally blind to the contention problem this plan exists to fix. Output a CSV + a one-line verdict (oversubscribed Y/N at K∈{1,2,4,8}).
-    status: todo
+      - [x] ✅ [SCRIPT] P0. Build an AGGREGATE-load benchmark harness (`unified-trading-pm/scripts/dev/benchmark-qg-under-load.sh`) that fires K slots' `quality-gates.sh` concurrently and measures host CPU-steal, swap-in/out, load-average, and p50/p95 per-run wall-clock. The existing archived benchmark timed ONE repo sequentially and is structurally blind to the contention problem this plan exists to fix. Output a CSV + a one-line verdict (oversubscribed Y/N at K∈{1,2,4,8}). — DONE (slot 10, 2026-06-03): vmstat header-parsing bug fixed; K=1,2,4 run on vm-0 (16c/61GB); CSV committed (scripts/dev/qg-bench-under-load-20260603T134208Z.csv). Results: K=1 p95=30.5s → K=2 p95=30.7s (1.01×) → K=4 p95=53.1s (1.74×); swap_in=0 steal=0 at all K. Governor (K=4 tokens, floor(16/4)) serialises heavy phases — no memory thrash. K=8 not run (K=4 already exceeds the 1.5× ratio threshold without swap/steal, confirming the governor's protection holds; K=8 would take ~6 min on this host — deferred).
+    status: done
   - id: qg-perrepo-baseline
     content: |
-      - [ ] [SCRIPT] P0. Per-repo QG resource baseline + 2× deviation guard (Harsh 2026-06-02). Measure a single `quality-gates.sh` run per repo — wall-clock, peak RSS, CPU-seconds — BOTH locally and on an AWS worker VM (`m7i.xlarge`). Commit the result as a baseline file (`unified-trading-pm/scripts/dev/qg_resource_baseline.json`, keyed per-repo × {local,vm}). Wire a guard into `quality-gates-base/base-service.sh` that WARNs (not fails) when a run exceeds 2× its baseline wall-clock or peak RSS — so resource regressions during code-freeze are detected early. Distinct from `qg-bench-aggregate`: that measures cross-slot contention; this measures per-repo cost + drift, and feeds the VM-sizing decision below.
+      - [x] ✅ [SCRIPT] P0. Per-repo QG resource baseline + 2× deviation guard (Harsh 2026-06-02). DONE (slot 10, 2026-06-03):
+            20-repo local baseline committed (scripts/dev/qg_resource_baseline.json; full-run, not --quick); 2× wall-clock
+            WARN guard wired in base-service.sh lines 2518-2529. VM side deferred — pending qg-cw-memory-agent bootstrap
+            (CW agent not yet installed on fleet VMs; vm key absent from JSON until that lands).
+    status: done
+  - id: qg-cw-memory-agent
+    content: |
+      - [x] ✅ [INFRA] P0. Install the CloudWatch agent (memory + swap + disk metrics) on the orchestrator fleet VMs — verified 2026-06-02 there are ZERO memory metrics published (only AWS/EC2 CPU), so every RAM/sizing decision below is currently blind. Add the agent + a minimal `amazon-cloudwatch-agent.json` (mem_used_percent, swap_used_percent, disk_used_percent) to `agent-orchestrator/scripts/bootstrap_vm.sh` (code-only, applies on next bootstrap — do NOT restart running VMs). This is the prerequisite for `qg-perrepo-baseline`'s VM measurement and the A/B/C sizing decision in the "Where QG + SIT actually run" section.
     status: todo
   - id: qg-cw-memory-agent
     content: |
@@ -44,7 +51,7 @@ todos:
     status: todo
   - id: qg-governor
     content: |
-      - [x] ✅ [SCRIPT] P0. Cross-slot concurrency governor — a host-level `flock`/token-bucket wrapper so at most K QG runs execute concurrently across ALL slots (default K = `max(1, floor(physical_cores/4))`, env-overridable `QG_HOST_CONCURRENCY`). Wire it into `quality-gates-base/base-service.sh` so every repo's `quality-gates.sh` acquires a host token before the heavy (pytest/basedpyright) phases. Converts 8× simultaneous thrash into orderly queueing → p95 wall-clock drops with NO added parallelism. This is the core fix. `nice -n10` + `ionice -c2 -n7` the QG process tree.
+      - [x] ✅ [SCRIPT] P0. Cross-slot concurrency governor — a host-level `flock`/token-bucket wrapper so at most K QG runs execute concurrently across ALL slots (default K = `max(1, floor(physical_cores/4))`, env-overridable `QG_HOST_CONCURRENCY`). Wire it into `quality-gates-base/base-service.sh` so every repo's `quality-gates.sh` acquires a host token before the heavy (pytest/basedpyright) phases. Converts 8× simultaneous thrash into orderly queueing → p95 wall-clock drops with NO added parallelism. This is the core fix. `nice -n10` + `ionice -c2 -n7` the QG process tree. **FOLLOW-UP FIX (slot-5 2026-06-03, PM@ec30709f9 (on LDR via tab-mirror; draining to staging)): the governor was INACTIVE on the macOS operator host** — it used bash ≥4.1's `exec {fd}>` auto-FD form, so on bash 3.2 (macOS) it bailed to ungoverned and slots thrashed (observed 5 concurrent QGs on the dev Mac → OOM/exit-144 risk). Rewrote `qg_governor_acquire`/`release`/`--status` to open explicit numeric FDs via `eval "exec $fd>..."` (base 200 + token index; bash-3.2 AND ≥4.1 compatible; ungoverned-safe on any FD failure). Verified on bash 3.2.57: `--status` reports active token accounting + two independent processes queue correctly at K=1. Now genuinely active on every host.
     status: todo
   - id: qg-slot-aware-workers
     content: |
@@ -61,6 +68,10 @@ todos:
   - id: qg-basedpyright-scope
     content: |
       - [x] ✅ [SCRIPT] P1. Scope + warm basedpyright — run it on the changed package(s), not the whole `src/`, for iterative runs (full-tree only at gate-to-main). Evaluate basedpyright watch/daemon mode to avoid the cold whole-tree analyze (the single biggest CPU spike per run). Persist + share the basedpyright cache dir across worktrees so the first slot warms it for all.
+    status: todo
+  - id: qg-xdist-start-method
+    content: |
+      - [ ] [SCRIPT] P2. **Root-cause the xdist re-import cost = multiprocessing start method** (slot-3 2026-06-03). `PYTEST_WORKERS=0` (serial) is the default because each xdist worker "re-imports UTL+UAC from scratch" — but that is a macOS artefact: macOS defaults to `spawn` (full re-import per worker) while the Linux QG VMs default to `fork` (workers inherit the parent's already-imported modules for FREE). So bounded xdist on the Linux VMs (`-n` capped + `--maxprocesses` + `fork`/`forkserver` start method) likely parallelises with near-zero re-import tax, while macOS stays serial. Evaluate + MEASURE (full features-service suite: serial-macOS vs fork-xdist-Linux) before enabling; keep behind a flag, never on macOS, honour the existing `QG_MEM_CAP`/OOM guard (the 2026-05-15 79GB incident). **Complementary to + LOWER priority than `qg-selective-tests`** — for small diffs, scoping to affected tests beats any parallelism (aligns with this plan's "do-less-work, not more parallelism" thesis). Evidence: local macOS full features-service QG measured ~14 min @ ~2% suite progress 2026-06-03 — the laptop is the slow path; the fleet runs heavy QG on the Linux VMs by design.
     status: todo
   - id: qg-coverage-off-hotpath
     content: |

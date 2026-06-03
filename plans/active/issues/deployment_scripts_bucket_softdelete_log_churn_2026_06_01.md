@@ -11,6 +11,8 @@ source:
   - deployment-service/cloud-build/refresh-tarballs.cloudbuild.yaml
   - deployment-service/scripts/vm/create-code-tarballs.sh
 locked_by: live-defi-rollout
+estimate_calibrated_ai_days: 0.2
+estimate_class: infra
 ---
 
 > **🟡 PROCESS NOTE (Ikenna 2026-06-02) — `deployment-service #15` is the wrong delivery vehicle for this work.** PR #15

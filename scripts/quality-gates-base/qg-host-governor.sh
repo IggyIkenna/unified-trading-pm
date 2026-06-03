@@ -54,6 +54,17 @@ _qg_governor_default_k() {
 _qg_governor_k() { echo "${QG_HOST_CONCURRENCY:-$(_qg_governor_default_k)}"; }
 _qg_governor_dir() { echo "${QG_GOVERNOR_DIR:-${TMPDIR:-/tmp}/qg-host-governor}"; }
 
+# Base file-descriptor for the token locks. The original used bash >=4.1's
+# `exec {fd}>` auto-FD form, which is unparseable on bash 3.2 (the macOS
+# operator host) → the governor silently went INACTIVE there, so concurrent
+# QG runs on a Mac dev host were never throttled (host thrash / OOM, exit 144).
+# Explicit numeric FDs opened via `eval "exec $fd>..."` work on bash 3.2 AND
+# bash >=4.1, so the governor is now active on every host. High base (200) to
+# avoid colliding with FDs quality-gates.sh holds. A token uses base+i (i=1..K).
+_QG_GOV_FD_BASE=200
+# Temp FD for the non-blocking probe in --status (must not overlap base+1..base+K).
+_QG_GOV_PROBE_FD=199
+
 # De-prioritise the current process tree so a held token never starves interactive work.
 _qg_governor_deprioritise() {
     local inc="${QG_GOVERNOR_NICE:-10}"
@@ -65,12 +76,6 @@ _qg_governor_deprioritise() {
 qg_governor_acquire() {
     [[ "${QG_GOVERNOR_DISABLE:-}" == "true" ]] && return 0
     command -v flock >/dev/null 2>&1 || { echo "[qg-governor] flock(1) absent — running ungoverned" >&2; return 0; }
-    # bash <4.1 lacks the `exec {fd}>` auto-fd syntax used below (macOS ships bash 3.2). Without
-    # this guard that `exec` is parsed as a command, terminates quality-gates.sh BEFORE [3] TESTS,
-    # and the .qg_last_passed_sha sentinel is never written → quickmerge can't promote from a Mac.
-    # Degrade to ungoverned, same as a missing flock.
-    { [[ "${BASH_VERSINFO[0]:-0}" -gt 4 ]] || { [[ "${BASH_VERSINFO[0]:-0}" -eq 4 ]] && [[ "${BASH_VERSINFO[1]:-0}" -ge 1 ]]; }; } \
-        || { echo "[qg-governor] bash ${BASH_VERSION} <4.1 lacks {fd}> — running ungoverned" >&2; return 0; }
     [[ -n "${_QG_GOV_FD:-}" ]] && return 0   # already holding a token (idempotent)
 
     local k dir fd
@@ -81,14 +86,20 @@ qg_governor_acquire() {
     while true; do
         local i
         for (( i=1; i<=k; i++ )); do
-            exec {fd}>"$dir/slot.$i" 2>/dev/null || continue
+            fd=$(( _QG_GOV_FD_BASE + i ))
+            # Explicit numeric FD opened via eval — parses on bash 3.2 (the macOS operator
+            # host) AND bash >=4.1. The previous `exec {fd}>` auto-FD form is bash >=4.1-only,
+            # so the governor silently went INACTIVE on a Mac → 8-slot QG thrash / OOM (exit 144).
+            # On ANY failure we `continue` (try next slot) or fall through ungoverned, so a
+            # botched FD never terminates quality-gates.sh before the sentinel is written.
+            eval "exec ${fd}>\"\$dir/slot.\$i\"" 2>/dev/null || continue
             if flock -n "$fd"; then
                 _QG_GOV_FD=$fd
                 _qg_governor_deprioritise
                 [[ "$waited" -gt 0 ]] && echo "[qg-governor] token $i/$k acquired after ${waited}s wait" >&2
                 return 0
             fi
-            exec {fd}>&-   # slot busy — close and try next
+            eval "exec ${fd}>&-"   # slot busy — close and try next
         done
         sleep 2; waited=$(( waited + 2 ))
         # narrate every ~30s so a long queue is visible, not silent
@@ -100,23 +111,21 @@ qg_governor_acquire() {
 qg_governor_release() {
     [[ -n "${_QG_GOV_FD:-}" ]] || return 0
     flock -u "$_QG_GOV_FD" 2>/dev/null || true
-    exec {_QG_GOV_FD}>&- 2>/dev/null || true
+    eval "exec ${_QG_GOV_FD}>&-" 2>/dev/null || true   # explicit FD (bash 3.2-compatible)
     _QG_GOV_FD=""
 }
 
 _qg_governor_status() {
     local k dir; k="$(_qg_governor_k)"; dir="$(_qg_governor_dir)"
     echo "qg-host-governor: K=${k}  dir=${dir}  flock=$(command -v flock >/dev/null 2>&1 && echo yes || echo MISSING)"
-    # bash <4.1 lacks `exec {tfd}>` used by the token probe below — report inactive rather
-    # than emit bogus held-counts (the probe's exec fails → every slot mis-counts as held).
-    { [[ "${BASH_VERSINFO[0]:-0}" -gt 4 ]] || { [[ "${BASH_VERSINFO[0]:-0}" -eq 4 ]] && [[ "${BASH_VERSINFO[1]:-0}" -ge 1 ]]; }; } \
-        || { echo "  (bash ${BASH_VERSION} <4.1 — governor inactive; token accounting unavailable)"; return 0; }
     if [[ -d "$dir" ]]; then
-        local held=0 i
+        local held=0 i tfd="$_QG_GOV_PROBE_FD"
         for (( i=1; i<=k; i++ )); do
             [[ -e "$dir/slot.$i" ]] || continue
-            # a slot is held iff a non-blocking flock fails
-            if ! ( exec {tfd}>"$dir/slot.$i" && flock -n "$tfd" ) 2>/dev/null; then
+            # a slot is held iff a non-blocking flock fails. Explicit numeric probe FD via
+            # eval (bash 3.2-compatible) in a SUBSHELL so the open/lock never leaks into the
+            # caller's FD table or holds the lock past the probe.
+            if ! ( eval "exec ${tfd}>\"\$dir/slot.\$i\"" && flock -n "$tfd" ) 2>/dev/null; then
                 held=$(( held + 1 ))
             fi
         done

@@ -58,22 +58,37 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 ### Sub-plan registry (what this master wraps)
 
-| Plan                                                        | Role / layer                                                                                      | Status                           | Parallel?                     |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | -------------------------------- | ----------------------------- |
-| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | L1 code-fix ✅ · L2 drain+cron-pause · L6 decommission                                            | code shipped; decommission gated | after L3 per-AG               |
-| THIS plan §A–G                                              | L1 DeFi writer code · **L3 DeFi single-walk (§C)** · L5 DeFi backfill                             | C open (C0 RUN-ON-VM)            | DeFi-only, serial within DeFi |
-| `data_source_provenance_all_asset_groups_2026_06_01`        | L1 write-path `source=` · rides each L3 walk                                                      | open (tradfi done)               | parallel per-AG (NOT tradfi)  |
-| `pipeline_mode_implementation_2026_05_28`                   | L1 `pipeline_mode` column                                                                         | ✅ DONE                          | —                             |
-| `pipeline_mode_partition_migration_2026_06_01`              | L3 RIDER: on-disk `pipeline_mode=` partition                                                      | open P2                          | **rides each AG's L3 walk**   |
-| `tradfi_massive_dual_source_2026_05_28`                     | tradfi L1 source write-path + Massive ingest (NOT the L3 walk)                                    | mostly ✅; -031 absorbed by ↓    | done — see CONFLICT-2         |
-| `tradfi_manifest_canonicalisation_2026_06_01`               | **L3 tradfi single-walk** (v9 + pipeline_mode partition + source re-consol)                       | open P0                          | parallel per-AG               |
-| `sports_manifest_canonicalisation_2026_06_01`               | **L3 sports single-walk** (v9 + partition + fixture-dependent typed reasons + source path→column) | open P0                          | parallel per-AG               |
-| `instruments_manifest_canonicalisation_2026_06_01`          | **L3 per-SERVICE** (instruments I/O input — all-AG reference/instrument indices, audit-first)     | open P0                          | parallel per-service          |
-| `downstream_services_manifest_canonicalisation_2026_06_01`  | **L3 per-SERVICE** (MDPS/features/strategy/execution — audit-first, low-data quick walk)          | open P1                          | parallel per-service          |
-| `canonical_form_cross_service_audit_checklist` (audit SSOT) | **L7 AUDIT SSOT**: CF-1…CF-12 union + (service×CF) coverage matrix — re-run proves canonical      | shipped                          | —                             |
-| `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`    | **L4/L7 "no fallback"**: reader fail-fast default + liveness                                      | step-1 ✅; follow-up open        | parallel (independent)        |
-| `aws_manifest_consolidator_scope_2026_05_21`                | L4 AWS canonical consolidator                                                                     | P1.10 `tofu apply` open (HUMAN)  | parallel (AWS infra)          |
-| `manifest_consolidator_liveness_health_2026_06_01`          | L4 GCP consolidator liveness                                                                      | (not on this branch)             | parallel — CONFLICT-3         |
+| Plan                                                        | Role / layer                                                                                                     | Status                           | Parallel?                     |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------- | ----------------------------- |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | L1 code-fix ✅ · L2 drain+cron-pause · L6 decommission                                                           | code shipped; decommission gated | after L3 per-AG               |
+| THIS plan §A–G                                              | L1 DeFi writer code · **L3 DeFi single-walk (§C)** · L5 DeFi backfill                                            | C open (C0 RUN-ON-VM)            | DeFi-only, serial within DeFi |
+| `data_source_provenance_all_asset_groups_2026_06_01`        | L1 write-path `source=` · rides each L3 walk                                                                     | open (tradfi done)               | parallel per-AG (NOT tradfi)  |
+| `pipeline_mode_implementation_2026_05_28`                   | L1 `pipeline_mode` column                                                                                        | ✅ DONE                          | —                             |
+| `pipeline_mode_partition_migration_2026_06_01`              | L3 RIDER: on-disk `pipeline_mode=` partition                                                                     | open P2                          | **rides each AG's L3 walk**   |
+| `tradfi_massive_dual_source_2026_05_28`                     | tradfi L1 source write-path + Massive ingest (NOT the L3 walk)                                                   | mostly ✅; -031 absorbed by ↓    | done — see CONFLICT-2         |
+| `tradfi_manifest_canonicalisation_2026_06_01`               | **L3 tradfi single-walk** (v9 + pipeline_mode partition + source re-consol)                                      | open P0                          | parallel per-AG               |
+| `sports_manifest_canonicalisation_2026_06_01`               | **L3 sports single-walk** (v9 + partition + fixture-dependent typed reasons + source path→column)                | open P0                          | parallel per-AG               |
+| `instruments_manifest_canonicalisation_2026_06_01`          | **L3 per-SERVICE** (instruments I/O input — all-AG reference/instrument indices, audit-first)                    | open P0                          | parallel per-service          |
+| `downstream_services_manifest_canonicalisation_2026_06_01`  | **L3 per-SERVICE** (MDPS/features/strategy/execution — audit-first, low-data quick walk)                         | open P1                          | parallel per-service          |
+| `canonical_form_cross_service_audit_checklist` (audit SSOT) | **L7 AUDIT SSOT**: CF-1…CF-12 union + (service×CF) coverage matrix — re-run proves canonical                     | shipped                          | —                             |
+| `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`    | **L4/L7 "no fallback"**: reader fail-fast default + liveness                                                     | step-1 ✅; follow-up open        | parallel (independent)        |
+| `aws_manifest_consolidator_scope_2026_05_21`                | L4 AWS canonical consolidator                                                                                    | P1.10 `tofu apply` open (HUMAN)  | parallel (AWS infra)          |
+| `manifest_consolidator_liveness_health_2026_06_01`          | L4 GCP consolidator liveness                                                                                     | (not on this branch)             | parallel — CONFLICT-3         |
+| `solana_defi_legacy_migration_2026_05_27`                   | **DeFi-specific** Solana legacy→canonical (Kamino/Solend/Orca/Raydium) — SAME dedicated DeFi buckets §C rewrites | open P1                          | DeFi-only — serialise with §C |
+
+> **This master owns the ENTIRE DeFi vertical (slot 2, five-slot asset-group split, operator 2026-06-03).** Beyond the
+> cross-AG canonicalisation sub-plans above, slot-2 / this master orchestrates ALL DeFi work across **IS
+> (instruments-service) · MTDS · MDPS · features · all downstream (strategy/execution) · all buckets/data/manifest · the
+> data-status UI** — the DeFi slice of every per-service plan rides §H, and the DeFi-specific plans + issues below are
+> wrapped here. Orphaned DeFi cross-references attach to THIS plan. (`master_to_live_defi_2026_05_23.md` is the
+> higher-level live-cutover master — this canonicalisation plan is its data-layer child, NOT subordinated to it.)
+
+### DeFi-scope wrapped issues (this master owns / closes their DeFi slice)
+
+| Issue                                                           | What it is                                                                      | How this master resolves it                                       |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `issues/defi_code_codex_drift_2026_05_27`                       | DeFi code↔codex drift audit (D1–D13: data-types, venues, banned providers)      | §A writer + §F docs/SSOT close the code/codex drift items         |
+| `issues/features_service_defi_data_loading_blockers_2026_05_29` | features-service DeFi e2e blocked on data-layer (dex_swaps→dex_pool_swaps etc.) | §C0–C2 canonical-naming walk + §D features propagation resolve it |
 
 ### Layered order (gates top-down; asset_groups parallelise within a layer)
 
@@ -134,49 +149,66 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 - **CONFLICT-4 — `data_source_provenance` must SKIP tradfi.** tradfi's `source` column already shipped via
   `tradfi_massive`; provenance must not re-walk tradfi. Scope it to cefi/defi/sports/prediction.
 
-### Agent assignment (2026-06-01; **three-slot split — sports peeled to its own lane 2026-06-03, operator**; the SUM completes EVERYTHING, no defers, no fallbacks)
+### Agent assignment (2026-06-01; **FIVE-slot split — one slot per asset_group, full asset-group split, operator 2026-06-03**; the SUM completes EVERYTHING, no defers, no fallbacks)
 
-> **Reassignment 2026-06-03 (operator) — clean asset-group split, sports = a FULL vertical:** sports is the heaviest
-> non-defi lane, so it gets a **dedicated slot 4** that owns **everything sports across every service** — IS
-> (instruments-store-sports reference) + MTDS (market-data-tick-sports) + MDPS + features + execution + the deployment
-> UI/menu/bucket/data/manifest surfaces — not just the MTDS walk. `sports_manifest_canonicalisation_2026_06_01.md` is
-> the **MASTER orchestrator plan for the whole sports vertical** (the sports analogue of this defi plan): every other
-> sports plan/issue + every orphaned sports cross-reference attaches to it. Slot 3 keeps the three lighter AGs (cefi /
-> tradfi / prediction) + the **non-sports** parts of the two per-service surfaces (instruments, downstream). This
-> matches the already-adopted framing in `downstream_services_manifest_canonicalisation_2026_06_01.md` (§ "slot-3 AGs:
-> cefi / tradfi / prediction; sports = its own slot").
+> **Reassignment 2026-06-03 (operator) — clean asset-group split, ONE slot per asset_group (5 slots).** Each of the five
+> asset_groups is a **full vertical** owned by a **dedicated slot** that owns **everything for that AG across every
+> service** — IS (instruments-store reference) + MTDS (market-data-tick) + MDPS + features + strategy/execution + the
+> deployment UI/menu/bucket/data/manifest surfaces — not just the MTDS walk. Each AG's
+> `*_manifest_canonicalisation_2026_06_01.md` is the **MASTER orchestrator plan for that whole vertical** (this defi
+> plan is the defi analogue): every other plan/issue for that AG + every orphaned cross-reference attaches to its AG
+> master. The two per-service plans (`instruments`, `downstream`) are **sliced across all five AG slots** — each AG owns
+> its own slice; `vm-cross-cutting` / `vm-ml` hold only the non-AG glue (cross-AG reference indices, shared reader
+> form). A slot does NOT edit another AG slot's surfaces — ping instead.
 >
-> **Slot 2 = the DeFi lane (this plan).** Owns `defi_manifest_canonicalisation_2026_06_01.md` end-to-end: the MASTER
-> coordinator role + §A (defi writers) + §B (defi consolidation/data-status) + **§C the DeFi single-walk** (C0–C12) + §D
-> (defi features) + §E (cefi-perp hedge leg the defi hybrid needs) + §F (defi docs) + §G (Solana basis MVP). The defi C0
-> walk carries the defi riders (source col + pipeline_mode partition + v9 + category→asset_group) per § Rider closure.
+> | Slot | AG         | vm            | AG master plan                                    |
+> | ---- | ---------- | ------------- | ------------------------------------------------- |
+> | 2    | DeFi       | vm-defi       | `defi_manifest_canonicalisation_2026_06_01`       |
+> | 3    | CeFi       | vm-cefi       | `cefi_manifest_canonicalisation_2026_06_01`       |
+> | 4    | Sports     | vm-sports     | `sports_manifest_canonicalisation_2026_06_01`     |
+> | 5    | Prediction | vm-prediction | `prediction_manifest_canonicalisation_2026_06_01` |
+> | 6    | TradFi     | vm-tradfi     | `tradfi_manifest_canonicalisation_2026_06_01`     |
 >
-> **Slot 3 = cefi + tradfi + prediction + the two per-service surfaces (NOT sports — that is slot 4).** Owns, to
-> C-GREEN:
+> **Slot 2 = the ENTIRE DeFi vertical (this plan).** Owns `defi_manifest_canonicalisation_2026_06_01.md` end-to-end: the
+> MASTER coordinator role + §A (defi writers) + §B (defi consolidation/data-status) + **§C the DeFi single-walk**
+> (C0–C12)
 >
-> 1. `cefi_manifest_canonicalisation_2026_06_01.md` — cefi single-walk (838-cell gap-fill + v9 + partition + source).
-> 2. `tradfi_manifest_canonicalisation_2026_06_01.md` — tradfi single-walk (v9 + partition + source re-consol; absorbs
->    `tradfi_massive` -031).
-> 3. `prediction_manifest_canonicalisation_2026_06_01.md` — prediction single-walk (legacy→canonical copy + v9 +
->    partition + source = API).
-> 4. `instruments_manifest_canonicalisation_2026_06_01.md` — the I/O input surface, **non-sports only**
->    (`instruments-store-{cefi,defi,tradfi,prediction}` + cross-AG reference/instrument-record/universe indices),
->    audit-first. **The sports instruments-store rides slot 4, not here.**
-> 5. `downstream_services_manifest_canonicalisation_2026_06_01.md` — MDPS/features/strategy/execution canonical FORM for
->    **cefi / tradfi / prediction**, audit-first, low-data. **Sports rows/tests across MDPS/features/execution ride
->    slot 4.**
+> - §D (defi features) + §E (cefi-perp hedge leg the defi hybrid needs) + §F (defi docs) + §G (Solana basis MVP) + **§H
+>   the DeFi slices of the instruments + downstream per-service plans**. The defi C0 walk carries the defi riders
+>   (source col + pipeline_mode partition + v9 + category→asset_group) per § Rider closure.
 >
-> **Slot 4 = the ENTIRE sports vertical (dedicated — a full asset-group lane across every service).** Owns
-> `sports_manifest_canonicalisation_2026_06_01.md` as the **sports MASTER orchestrator plan**, and through it everything
-> sports across all services: **both sports surfaces** — `market-data-tick-sports` (MTDS) **and**
-> `instruments-store-sports` (IS reference, 2.68M rows + the 316-cell legacy→prd data-loss-gated migration) — plus the
-> sports rows/tests in MDPS / features / execution, the sports deployment-UI/menu/bucket surfaces, the sports
-> single-walk (v9 + partition + fixture/season/transfer-window/genesis typed reasons + source path→column), and its
-> riders. **Every other sports plan/issue + every orphaned sports cross-reference is cross-linked INTO the sports master
-> plan** (`sports_retired_data_types_code_cleanup`, `epics/sports_master`, and the sports slices of the phase-3 backfill
-> / provenance / bucket-SSOT plans). Slot 4 does NOT edit slot-3's non-sports surfaces — ping instead.
+> **Slot 3 = the ENTIRE CeFi vertical.** Owns `cefi_manifest_canonicalisation_2026_06_01.md` as the **CeFi MASTER
+> orchestrator** (cefi single-walk: 838-cell gap-fill + v9 + partition + source) + the cefi slices of IS / MDPS /
+> features / strategy-execution / downstream + the cefi deployment-UI/bucket surfaces + every cefi plan/issue
+> cross-linked in.
 >
-> Each slot-3 / slot-4 plan's single bundled walk INCLUDES its rider work — so completing them also closes
+> **Slot 4 = the ENTIRE sports vertical.** Owns `sports_manifest_canonicalisation_2026_06_01.md` as the **sports MASTER
+> orchestrator**, and through it everything sports across all services: **both sports surfaces** —
+> `market-data-tick-sports` (MTDS) **and** `instruments-store-sports` (IS reference, 2.68M rows + the 316-cell
+> legacy→prd data-loss-gated migration) — plus the sports rows/tests in MDPS / features / execution, the sports
+> deployment-UI/menu/bucket surfaces, the sports single-walk (v9 + partition + fixture/season/transfer-window/genesis
+> typed reasons + source path→column), and its riders. **Every other sports plan/issue + every orphaned sports
+> cross-reference is cross-linked INTO the sports master plan** (`sports_retired_data_types_code_cleanup`,
+> `epics/sports_master`, and the sports slices of the phase-3 backfill / provenance / bucket-SSOT plans).
+>
+> **Slot 5 = the ENTIRE Prediction vertical.** Owns `prediction_manifest_canonicalisation_2026_06_01.md` as the
+> **Prediction MASTER orchestrator** (prediction single-walk: legacy→canonical copy + v9 + partition + source = API) +
+> the prediction slices of IS / MDPS / features / strategy-execution / downstream + the prediction deployment-UI/bucket
+> surfaces + every prediction plan/issue (Polymarket/Kalshi work, the Kalshi classifier-None divergence) cross-linked
+> in.
+>
+> **Slot 6 = the ENTIRE TradFi vertical.** Owns `tradfi_manifest_canonicalisation_2026_06_01.md` as the **TradFi MASTER
+> orchestrator** (tradfi single-walk: v9 + partition + source re-consol; **absorbs `tradfi_massive` -031**) + the tradfi
+> slices of IS / MDPS / features / strategy-execution / downstream + the tradfi deployment-UI/bucket surfaces + every
+> tradfi plan/issue (`tradfi_massive_dual_source_2026_05_28`, the tradfi phase-3 backfill slice, the VIX/Massive
+> continuity work) cross-linked in.
+>
+> **The two per-service plans are sliced, not slot-owned.** `instruments_manifest_canonicalisation_2026_06_01.md` and
+> `downstream_services_manifest_canonicalisation_2026_06_01.md` each carry five AG slices — defi→slot 2 (§H here),
+> cefi→slot 3, sports→slot 4, prediction→slot 5, tradfi→slot 6 — plus the cross-AG glue (`vm-cross-cutting` / `vm-ml`).
+> No slot edits another AG's slice.
+>
+> Each AG-slot plan's single bundled walk INCLUDES its rider work — so completing them also closes
 > `data_source_provenance_all_asset_groups_2026_06_01` (cefi/sports/prediction source; tradfi skipped per CONFLICT-4) +
 > `pipeline_mode_partition_migration_2026_06_01` (cefi/tradfi/sports/prediction/instruments) for those AGs. **No second
 > walk on any `_index`** (single-walk discipline). **NO DEFERS, NO FALLBACKS** (CLAUDE.md "Data Pipeline Correctness Is
@@ -334,16 +366,26 @@ What to verify/wire (B0 corrected scope):
       uniform first-captured `2021-01-01` across ALL chains incl. Base (launched 2023), which is impossible →
       investigate (placeholder/wrong-date captured rows) BEFORE adding launch dates. Do NOT bulk-add ambiguous dates.
       Then re-run the relabel. parent_epic: manifest_master.
-- [ ] [CODE] P1. A2b wire `lst_rates_handler` (L512-535) + `solana_defi_handler` empty branches to emit
-      `EXPECTED_PRE_VENUE_LAUNCH` via the `VENUE-CHAIN` launch lookup (perp_funding_handler L344-353 already does it for
-      Aster — the pattern). So future writes are correct. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. A2b — `DefiManifestRecorder.record_zero_rows()` routes pre-launch zero-rows →
+      `EXPECTED_PRE_VENUE_LAUNCH` via the venue-chain launch lookup; `lst_rates_handler` + `solana_defi_handler` empty
+      branches wired + regression tests. — mtds@PR#115 + mtds@48d08b11 (PR#117). **Incident note**: #115 used a
+      bare-venue launch lookup but `DEFI_VENUE_LAUNCH_DATES` keys by `VENUE-CHAIN` → pre-launch mis-routed to
+      `SOURCE_RETURNED_ZERO`; #117 fixed to `f"{venue}-{chain}"` + bare fallback. 2444 unit tests green.
 - [x] ✅ [CODE] P1. A3 data_type name SSOT at write — **verify-done 2026-06-01**: every DeFi handler `_DATA_TYPE`
       constant + `data_type=` literal is underscore-canonical
       (`dex_pools`/`dex_swaps`/`lending_indices`/`lst_rates`/`oracle_prices`/ `perp_funding`/`dex_pool_state`); **zero
       hyphen literals written by any handler**. The hyphen variants (`lending-indices`/`dex-pools`/`dex-swaps`) +
       `staking_yields` in the corpus are purely LEGACY data → fixed by C2.
-- [ ] [CODE] P2. A4 chain dimension always populated: QG guard fails a DeFi `record_captured`/`record_empty` with blank
-      `chain` for a chain-scoped data_type.
+- [x] ✅ [CODE] P2. A4 (WRITE-PATH) — `BlankChainError` guard on `record_captured` (canonical data rows fail loud on a
+      blank chain). — mtds@PR#115; **narrowed to the write-path only in mtds@48d08b11 (PR#117)** after the original
+      `_build_row_key` guard broke `perp_funding_handler` gmx's intentional `chain=''` coarse freshness-marker (2
+      `TestFreshnessSkip` failures — a #115 regression caught + fixed same-session).
+- [ ] [CODE] P2. **A4-full — extend the blank-chain guard to ALL record paths (re-filed from the #117 narrowing).**
+      Prerequisite: make `perp_funding_handler` GMX per-chain — `_collect_gmx` already records ARBITRUM+AVALANCHE
+      captured rows, but the loop uses a coarse `chain=''` freshness/attempt marker (`_chain_map.get("gmx","")`, L312 +
+      the fallback empty at L369). Make the freshness check + fallback-empty per-chain so no `chain=''` row is ever
+      keyed, THEN restore the `_build_row_key` blank-chain guard so empty/failed markers are also chain-canonical.
+      parent_epic: mtds_mdps_master.
 - [ ] [CODE] P1. A5 LIGHTER perp_funding adapter fix: `SOURCE_RETURNED_ZERO` across full post-launch life (zkSync
       endpoint returns nothing) — verify endpoint/auth.
 - [x] ✅ [CODE] P0. A6 `expected_unattempted` is ALREADY canonical in UAC (`honest_coverage.py`:
@@ -1068,6 +1110,28 @@ What to verify/wire (B0 corrected scope):
   that issue documents is OBSOLETE — Drift V2 historical now flows via `data.api.drift.trade` Velocity Data API per the
   archived MVP plan + new codex `codex/04-architecture/drift-v2-data-sources.md`). Issue doc gets a SUPERSEDED banner in
   the same archival commit.
+
+## H. DeFi slices of the per-service plans (claimed via the five-slot asset-group split, operator 2026-06-03)
+
+> These are the **DeFi-asset-group slices** of the two per-service canonicalisation plans. Under the five-slot split
+> they ride **slot 2** (this lane), not the per-service plans' nominal `vm-cross-cutting` / `vm-ml`. Tracked here as
+> real `- [ ]` items (not a referenced-but-unowned gap). Coordinate read-only with the other AG slots on shared helpers;
+> never edit another AG's slice of those plans.
+
+- [ ] [DATA] P0. **`instruments-store-defi` reference-surface canonical-form walk** (the DeFi slice of
+      `instruments_manifest_canonicalisation_2026_06_01.md`, whose §C excludes defi). Phase-0 layout audit → single
+      bundled walk on the `instruments-store-defi` `_index` + objects to v9 + `asset_group=` + `pipeline_mode=`
+      partition + `source` column + typed `EmptyConfirmedReason`, same target form as the MTDS DeFi C0 walk. Re-run
+      CF-1…CF-12 → GREEN before any DeFi instruments writer relaunch (master L3-gates-L5). NEVER a second walk on this
+      `_index`.
+- [ ] [CODE] P1. **DeFi downstream reader confirm** (the DeFi slice of
+      `downstream_services_manifest_canonicalisation_2026_06_01.md` PREP3): confirm the MDPS candle-builder raw-tick
+      read + features-onchain `data_loader` resolve the `pipeline_mode=` path PRIMARY for DeFi (writer side already
+      shipped mdps@4b9e6e5 + features@dec1b687). Close the PREP3 "🟡 reader slot-2 coordination" note for DeFi.
+- [ ] [CODE] P2. **FLAG 2 — `_BUCKET_CATEGORY_OVERRIDES` DeFi scope** (the DeFi slice flagged to slot-2 in the
+      downstream plan): a DeFi `category` override absent from `cloud-providers.yaml` / unresolved by
+      `resolve_bucket_name` → post-delete silent-empty. Resolve with
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` L6 (owns the bucket-name SSOT + the actual delete).
 
 ## Verification (full-execution criterion)
 
