@@ -1204,18 +1204,15 @@ if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
 elif [ "$REPO_NAME" = "unified-trading-pm" ] || [ "$REPO_NAME" = "unified-trading-codex" ]; then
-  # PM/codex fast-path: doc/plan-only changes skip staging, go direct to main.
-  # Script/workflow changes still route through staging for proper SIT validation.
-  STAGED_FILES=$(git diff --cached --name-only 2>/dev/null || true)
-  NON_DOC_CHANGES=$(echo "$STAGED_FILES" | grep -vE '^(plans/|docs/|cursor-configs/|cursor-rules/|\.cursorrules$|.*\.md$|.*\.mdc$)' | head -1 || true)
-  if [ -z "$NON_DOC_CHANGES" ]; then
-    PR_BASE="main"
-    echo "[$REPO_NAME] Doc/plan-only change: PR targets main directly (fast-path — triggers plan agents immediately)"
-  else
-    PR_BASE="staging"
-    echo "[$REPO_NAME] Infrastructure change detected: PR targets staging (scripts/workflows need SIT validation)"
-    echo "[$REPO_NAME] Non-doc files: $(echo "$STAGED_FILES" | grep -vE '^(plans/|docs/|cursor-configs/|cursor-rules/)' | head -5 | tr '\n' ' ')"
-  fi
+  # Option B (operator decision 2026-06-03): PM/codex ship to main directly — NO staging.
+  # PM is not a deployed package and is the SIT *debouncer* (it is not itself SIT-covered),
+  # so a staging hop adds zero SIT value. The main PR's quality-gates-v2 (plan-hygiene,
+  # manifest/dependency-alignment, codex-ref validation, ruff on tooling scripts) is the full
+  # per-repo gate. BOTH docs/plans AND scripts/workflows target main here. Downstream service
+  # repos building on staging still get PM via the dep-clone fallback (clone -b staging → -b main),
+  # so PM having no staging branch is transparent to them. SSOT: codex/08-workflows/ci-cd-flow.md.
+  PR_BASE="main"
+  echo "[$REPO_NAME] Option B: PR targets main directly (PM/codex have no staging; v2 on the main PR is the gate)"
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"
