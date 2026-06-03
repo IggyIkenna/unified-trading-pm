@@ -39,6 +39,19 @@ recurs on every other slot/host until the provisioning is fixed.**
 
 ## Recommended decision
 
+> **Enforcement is inherently CLIENT-SIDE** (GitHub accepts any commit author — no server gate). Three layers; the
+> shared-template commit hook is the only one that applies to EVERY commit in EVERY repo. The CLAUDE.md directive is a
+> read-it-and-comply instruction, NOT a gate — it does not block a bad commit.
+
+- [ ] [INFRA] P1. **Commit-time identity hook in the SHARED pre-commit templates (the actual "everywhere" enforcer).**
+      Add a `local` hook (`fix-commit-identity`) to each `scripts/pre-commit-templates/*.pre-commit-config.yaml`
+      (python-service / python-library / ui / docs) → rolled out to all repos via the existing template→repo mechanism
+      (same path as ruff / gitleaks / conventional-pre-commit). The hook derives the EXPECTED identity — slot `<N>` from
+      the `tab/<op>/<N>` branch, `<host>` from `VM_NAME` (→ `vm-<id>`) else `laptop`/hostname — and **self-heals**
+      `git config user.name/user.email` (or blocks with the exact fix command) so a commit cannot be made with a wrong /
+      leaked identity, regardless of provisioning state. This survives the bot-email leak by construction. Repo:
+      unified-trading-pm (templates) + `install-hooks.sh` rollout. SSOT: `codex/05-infrastructure/per-tab-worktrees.md`
+      § "Commit attribution".
 - [ ] [INFRA] P1. **`setup-tab-worktrees.sh` standardises identity per worktree** at
       `--init`/`--add-slot`/`--reset-slot`: `git config user.name "ikennaigboaka [slot-<N>·<host>]"` +
       `git config user.email "ikennaigboaka@gmail.com"` (`<host>` = `laptop`/hostname on a workstation, `vm-<id>` on a
