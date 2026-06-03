@@ -485,6 +485,18 @@ verify + the gated delete.
 
 ## Success criteria
 
+- [ ] [CODE] P1. **Post-migration verify: deployment-api turbo response ↔ deployment-ui contract** (slot-5 2026-06-03).
+      The deployment-api (@2ac1dfa) + deployment-ui (@4a358ec) prediction-v9 fixes were each verified independently
+      (api: unit tests; ui: against its own mock `_mkPredictionByQuestionGroup`). Once the migration runs and real v9
+      `pred-prd/_index` rows exist, confirm END-TO-END that the turbo response actually emits
+      `breakdown_axis="canonical_question_group"` + per-cqg `observed_clusters={conditionId:rows}` + `source` in the
+      shape the UI's `TurboSubDimension` consumes (else the UI renders empty). Repos: deployment-api + deployment-ui.
+- [ ] [CODE] P2. **deployment-api `fetch_venue_detail` bucket routing for prediction v9** (uncertainty flagged by the
+      shard_detail fix @2ac1dfa). v9 prediction rows live in the MTDS `market-data-tick-pred-prd-{pid}` bucket, but
+      `_instruments_bucket_for_category("prediction")` resolves the instruments-service bucket — verify the caller
+      passes `service="market-tick-data-service"` so `_prediction_venue_detail` reads the right bucket for v9 rows.
+      Repo: deployment-api.
+
 - 0 legacy-only prediction cells (canonical holds all historical POLYMARKET data + question-groups).
 - **Deployment-api/UI render the prediction v9 bundled atom + `source`/`pipeline_mode` (data-status summary + drilldown
   agree with the canonical manifest) — the 4 CODE items above GREEN.**
