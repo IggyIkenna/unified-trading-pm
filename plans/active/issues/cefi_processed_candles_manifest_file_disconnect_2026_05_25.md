@@ -1,7 +1,7 @@
 ---
 title:
-  "CeFi processed_candles: manifest ↔ file disconnect (manifest claims captured for venues with no files; corpus written
-  without/with-stale manifest emission)"
+  "CeFi processed_candles: manifest ↔ file disconnect (manifest claims captured for venues with no files; corpus
+  written without/with-stale manifest emission)"
 created: 2026-05-25
 source:
   - plans/active/features_input_manifest_migration_2026_05_25.md
