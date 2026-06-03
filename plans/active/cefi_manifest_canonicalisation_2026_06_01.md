@@ -205,8 +205,12 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       blank/`UNKNOWN` venue + blank data_type skip+logged for E6. Candles = pipeline_mode insert. Knobs
       `--workers`/`--start-date`/`--end-date`/`--also-legacy` + `python -u` + per-object isolation + idempotent. All 3
       layout transforms unit-validated; lint+typecheck clean. — market-tick-data-service@844124f7, slot-3 2026-06-01.
-- [ ] [DATA] P0. E3 Confirm cefi writer drained (mdps-backfill-cefi already self-terminated); snapshot
-      `cefi-prd/_index`.
+- [x] ✅ [DATA] P0. E3 Confirm cefi writer drained + snapshot `cefi-prd/_index` — **DONE (slot-3, 2026-06-03).** No live
+      cefi writer VM (`gcloud compute instances list --filter="name~cefi OR name~mdps-backfill-cefi"` → empty);
+      `_index/per_vm/` holds only the stale `_legacy_seed.parquet` (2026-05-12, no active shard emission). Consolidated
+      `availability_index.parquet` (47.58 MiB, last consolidator write 2026-06-03T09:28Z) snapshotted to
+      `_index/snapshots/pre_migration_2026-06-03.parquet` (49,893,721 bytes == source; sits beside the prior
+      `pre_migration_2026-05-22.parquet`). Pre-migration safety point established; E4 walk can run.
 - [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise
       → full-VM run (no fire-and-forget verification).
 - [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE (mtds@2c3a479b, 2026-06-02)** via the RECOMMENDED fork (A):
