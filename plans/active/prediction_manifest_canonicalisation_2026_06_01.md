@@ -483,6 +483,31 @@ verify + the gated delete.
       Add a prediction breakdown branch (`breakdown_axis` → canonical_question_group → market_id cluster drilldown).
       `[UI]` — needs `pw:L2 ✓` + regression spec per the playwright gate. parent_epic: mtds_mdps_master.
 
+- [ ] [CODE] P0. **Shared prediction lifecycle reader is broken — derive bounds from `start_date`/`end_date_iso`
+      (batch=live; repairs live gating too)** (slot-5 discovery 2026-06-03).
+      `base_prediction_adapter._load_market_lifecycle_for_date` reads `market_lifecycle/by_canonical_group/` which has
+      **0 objects** (IS never populated MARKET_LIFECYCLE), and `polymarket_adapter._load_lifecycles_from_gcs`'s
+      `instrument_availability/` fallback checks for `available_from_datetime`/`available_to_datetime` columns that **DO
+      NOT EXIST** — the real `instruments.parquet` has `start_date`/`end_date_iso`/`active`/`closed` (verified
+      day=2025-03-14, 157 rows). Net: the reader returns `{}` for every date, so the **LIVE** MTDS writer's lifecycle
+      gating (no-ticks-before-created / after-settlement) is a SILENT NO-OP, and batch within-bounds reclassification
+      has no source. Fix the shared reader to derive `(market_created_at=start_date, settlement_time=end_date_iso)`
+      keyed by `condition_id` from `instrument_availability` (graceful: prefer MARKET_LIFECYCLE when it lands). Repo:
+      market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. **E5 rebuild: robust `_index` read (direct parquet, not `read_availability_index`) + wire within-bounds
+      reclassification** (slot-5 2026-06-03). `reemit_honest_absence_rows` uses `read_availability_index(bucket)` which
+      returns **0 rows on this host** (gcsfs/aiodns DNS flakiness — the audit reads `_index/availability_index.parquet`
+      directly via download+`pd.read_parquet` for exactly this reason) → the re-emit can SILENTLY no-op. Fix: read the
+      `_index/availability_index.parquet` object directly (fallback when `read_availability_index` yields 0). THEN wire
+      the within-bounds reclassification: the 41 `SOURCE_RETURNED_ZERO` rows are per-`condition_id` (`data_type=trades`,
+      `instrument_id=0x…`), so for each, load lifecycle bounds (fixed reader above) for its date and if
+      `start_date ≤ day < end_date_iso` (live + in-window) → `record_failed` (attempted_failed); else preserve typed
+      empty. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [DATA] P1. **instruments-service: populate MARKET_LIFECYCLE SSOT for prediction** (slot-5 discovery 2026-06-03).
+      The canonical `market_lifecycle/by_canonical_group/group=*/day=*/market_lifecycle.parquet` (market_id →
+      created/settlement) is unpopulated (0 objects); the MTDS reader bridges via `instrument_availability` for now
+      (item above). Proper SSOT = IS writes MARKET_LIFECYCLE. Repo: instruments-service. parent_epic: mtds_mdps_master.
+
 ## Success criteria
 
 - [ ] [CODE] P1. **Post-migration verify: deployment-api turbo response ↔ deployment-ui contract** (slot-5 2026-06-03).
