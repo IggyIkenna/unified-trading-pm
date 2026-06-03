@@ -205,8 +205,10 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > pointed at a legacy bucket name, a `category=` path, a no-`pipeline_mode=` read, an old on-disk `data_type`, or a v8
 > manifest-read assumption **regresses to a dead reference**. This gate canonicalises the CODE (read + write + status +
 > tests) FIRST, so QG is a live safety-net that fails on any dead-bucket/old-convention drift — BEFORE we dry-run. Scope
-> = the slot-3 AGs **cefi / tradfi / prediction** (defi = slot-2; sports = sports slot — coordinate, don't edit). **No
-> migration dry-run (G1) proceeds for an AG until its row in the matrix below is GREEN** (QG-enforced).
+> = the slot-3 AGs **cefi / tradfi / prediction** (defi = slot-2; **sports = slot 4, the
+> `sports_manifest_canonicalisation` master orchestrator — all sports MDPS/features/execution rows ride there;
+> coordinate, don't edit**). **No migration dry-run (G1) proceeds for an AG until its row in the matrix below is GREEN**
+> (QG-enforced).
 
 **Convention SSOTs to align every surface to** (the 5 axes the operator named):
 
