@@ -60,6 +60,17 @@ affects `ruff`. The semantic match still holds: locally autofix drift, in CI pro
 A "shippable unit" = the smallest meaningful slice that QGs cleanly. **Shipping CODE is a TWO-PASS model (staging-first,
 live model 2026-06-02) — NEVER a raw `git push` of code:**
 
+> **Commit attribution + branch alignment (2026-06-03).** Your commits auto-carry the **slot+host author tag** —
+> `ikennaigboaka [slot-<N>·<host>]` (set per-worktree; sub-agents SHARE the slot's identity, so your commits attribute
+> to the slot too). Author email is unchanged (`ikennaigboaka@gmail.com`) — only the NAME encodes who/where, so CI
+> alerts + cross-agent triage stop being guess-work. If the slot's tab branch has **diverged** from LDR (the tab→LDR
+> mirror jams), **ALIGN = the merged combination**: `git rebase origin/live-defi-rollout`, resolve each conflict keeping
+> **BOTH** sides' genuine work (merge two-similar into the best single version), **verify** your + the incoming
+> additions survived, then `git push --force-with-lease origin HEAD:tab/<op>/N`. `--force-with-lease` is **branch-tip
+> safety only, NOT content safety** (the rebase-onto-LDR + verify is what protects others' work); **NEVER force-push
+> `live-defi-rollout`/`main`**. SSOT: `codex/05-infrastructure/per-tab-worktrees.md` §§ "Commit attribution" +
+> "Reconciliation".
+
 1. **Pass 1 — full quality gate writes the sentinel.** `cd <repo> && bash scripts/quality-gates.sh` MUST exit 0 on your
    current HEAD. On exit 0 it writes `.qg_last_passed_sha` (== HEAD). Skipping Pass 1 means the change never ran tests,
    and Pass 2 hard-refuses on the missing/stale sentinel. **The commit is the per-repo quality boundary** (HARD RULE,

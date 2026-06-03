@@ -106,6 +106,18 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   finished unit — quickmerge routes ALL commits → `staging` → SIT → `main`; `--to-staging` is a **no-op**. Never raw
   `git push` for CODE (quickmerge early-exits "nothing to commit" on a clean tree → direct LDR pushes silently pile up
   behind main). Always `--agent` in Claude Code.
+- **Commit attribution = slot + host (so CI alerts + triage know WHO did what; codified 2026-06-03)**: every commit's
+  author **NAME** carries the slot + host — `ikennaigboaka [slot-<N>·<host>]` (`<host>` = `laptop` / hostname on a
+  workstation, the `vm-<id>` on a fleet VM; `<N>` from the `tab/<op>/<N>` branch) AND **email =
+  `ikennaigboaka@gmail.com`** (the GitHub-attributed account). **⚠️ The per-repo email is currently WRONG fleet-wide**
+  (slot-3 audit 2026-06-03: ~14 of 25 worktrees carry the `semver-rollout[bot]@users.noreply.github.com` email → **agent
+  commits there masquerade as the semver bot**; ~7 carry `agent@ci.local` → unattributed) — so this is a STANDARDISE,
+  not "leave unchanged". GitHub attribution + semver-agent bot/author checks key off the EMAIL (hence the bot-leak is
+  dangerous); fixing name+email per-worktree makes `git log --format=%an` / the GitHub author column / CI
+  `head_commit.author.name` correct + slot- aware (the gap that made cross-agent triage guess-work). Set per-worktree by
+  `setup-tab-worktrees.sh` (do NOT hand-edit `~/.gitconfig`); manual fallback per slot worktree:
+  `git config user.name "ikennaigboaka [slot-3·laptop]" && git config user.email "ikennaigboaka@gmail.com"`. SSOT +
+  root-cause hunt: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
 - **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit _promotes_ via
   quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
   (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
@@ -364,6 +376,19 @@ shared-tree model"). The invariants that must stay in-head:
   `git push --force-with-lease origin HEAD:tab/<op>/N` to realign the remote tab branch onto LDR. This is the
   `slot-master-rebase.sh` operation by hand; safe (own slot branch + `--force-with-lease`). Verify with
   `git merge-base --is-ancestor origin/live-defi-rollout HEAD` (true = mirror can FF again).
+  - **Align = the MERGED COMBINATION, never "take mine" / "take theirs" (codified 2026-06-03)**: the rebase replays YOUR
+    commits onto current LDR; on each conflict keep **BOTH sides' genuine work** (additive plan/doc/code), and where two
+    agents independently wrote the **same** rule/fix, MERGE into the single best version (don't keep redundant
+    duplicates). **Then VERIFY content survival** — grep your key additions AND the incoming ones in the rebased file
+    before pushing (an em-dash / wording mismatch can read as "lost" when it survived; a real drop must be caught here).
+  - **`--force-with-lease` is BRANCH-TIP safety, NOT content safety (HARD distinction)**: it only refuses the push if
+    the remote `tab/<op>/N` moved since your fetch (catches a concurrent push to YOUR branch) — it does **NOT** inspect
+    files or whether anyone had work on them. What actually protects OTHER agents' work is (a) rebasing **onto** current
+    LDR so their commits are your BASE (not overwritten), (b) the conflict-merge keeping both, (c) the post-rebase
+    verify. Safe here only because the tab branch is yours alone + you rebased onto (not discarded) LDR. **NEVER
+    force-push a shared branch (`live-defi-rollout` / `main`).** Caveat: all fleet commits share the `ikennaigboaka`
+    identity, so a foreign commit on your tab branch is invisible by author — read the messages (the [slot·host] author
+    tag above fixes this).
 - **Autostash conflict on rebase** (`Applying autostash resulted in conflicts`) → `git rebase --abort` (state safe,
   autostash intact), stash only YOUR files by name, redo — **NEVER** `git checkout HEAD -- <file>` then `git stash drop`
   (destroys the foreign agent's only WIP copy). § "Step 7" above.
