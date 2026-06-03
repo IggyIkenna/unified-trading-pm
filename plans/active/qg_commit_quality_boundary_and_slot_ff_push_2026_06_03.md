@@ -157,3 +157,43 @@ All on `origin/live-defi-rollout`; full detail in
 - Canonical docs agree: commit is the per-repo quality boundary (no more merge-vs-commit-prereq drift).
 - (If ratified) slot FF-push cron drains clean/aged/ahead-only commits to LDR; no more uta-style stranding.
 - The governor-unmasked per-repo QG debt is tracked + greened via cicd Phase 6 (cross-linked, not duplicated).
+
+## Conflict-resolution + convergence model — Option-B follow-on (design locked 2026-06-03)
+
+> **Convergence model (confirmed — mostly already built).** LDR = fast live integration (agents work here, allowed
+> temporarily inconsistent); the gated **main PR is the reconciliation point** (under Option B, PM's main does for plans
+> what staging does for service repos); `main-backmerge-to-ldr.yml` feeds reconciled main→LDR on every main push
+> (additive merge, never force/drop) → FF-pull cron (≤5 min) converges every host (other VMs + laptops). **Three
+> conflict layers, no race:** TEXTUAL merge = conflict-resolution-agent; SEMANTIC = per-VM `review.md` + the new
+> cross-plan detector; HYGIENE = plan-health-agent (scripted + Haiku, report-only).
+
+- [ ] [SCRIPT] P1. **conflict-resolution-agent → Max-plan worker (drop API credits).** Today it runs `claude-code`
+      in-GHA via `ANTHROPIC_API_KEY_CICD` (`conflict-resolution-agent.yml:296/305`). Conflict resolution is the HARD
+      judgment task + must not be pay-per-call API. Route via `escalate-to-orchestrator.yml` (`POST /api/escalate`,
+      type=merge_conflict) → orchestrator spawns a setup-token Max worker → resolves on LDR; remove the in-GHA API path.
+      repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **Every Slack-alert event ALSO pings the orchestrator → it delegates (operator-blindness fix,
+      operator 2026-06-03).** Operator doesn't always watch #ci-failures, so every alert must reach the orchestrator,
+      which delegates to the owning slot / review-agent / epic-VM. Gaps: (a) `main-backmerge-to-ldr.yml` conflict →
+      opens a HUMAN PR only (`:95` "no auto-resolve") → ADD orchestrator escalation (autonomous main↔LDR reconcile); (b)
+      `ci_failure_watcher.py` escalates only CONFLICT stuck-PRs (`conflict_prs_to_escalate`) → extend to ALL failure
+      classes (test/lint/coverage RED). repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **Semantic cross-plan/cross-slot conflict DETECTOR (scripted-first + epic-VM decides).** Catches "two
+      individually-valid plans whose WORK conflicts, no textual overlap" — which no existing layer does. (1) scripted
+      overlap-detector: parse active-plan todos for declared **target surface** (repo/file/symbol), flag cross-slot
+      overlaps, feed to plan-health-agent like the hygiene scripts. (2) on flag → ping the OWNING epic-VM orchestrator →
+      auto-reconcile (worker) or post proposed solution + operator-block (VM chat / laptop). Reuses
+      escalate-to-orchestrator + reviewer→worker→main — no new escalation path. repo: unified-trading-pm +
+      agent-orchestrator.
+- [ ] [DOC] P1. **Lock the convergence + 3-layer-conflict + Option-B model in canonical docs:** ci-cd-flow.md (LDR=live
+      / main=reconciliation-under-B / backmerge=feedback / Slack⟹orchestrator / PM-codex→main-no-staging), CLAUDE.md
+      (short rule), SUB_AGENT_MANDATORY_RULES (target-surface declaration + 3-layer model + check overlapping open
+      claims before starting). repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **Finish codex-not-a-separate-repo cleanup.** Live SSOT (`workflow-templates/`) + deployed fleet
+      already correct. Fixed: `scripts/templates/semver-agent.yml` (c10463f69),
+      `scripts/propagation/templates/semver-agent.yml` (0ca9dc657). Remaining:
+      `propagation/templates/major-bump-approval.yml` (checkout + 3 consumers + a write-back
+      `cd ../unified-trading-codex` that commits BR8 → redirect to PM/codex + commit-to-PM),
+      `setup-workspace-from-manifest.sh` (optional clone of the ARCHIVED codex repo → remove), + a few doc mentions
+      (readiness-verifier.yml, setup.sh, \_workspace-lib.sh, compute-epic-readiness.py, check-repo-readiness.py,
+      workspace-bootstrap.sh, auto-populate-tags.py — verify benign-vs-broken). repo: unified-trading-pm.
