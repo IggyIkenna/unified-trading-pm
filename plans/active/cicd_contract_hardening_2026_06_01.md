@@ -74,6 +74,23 @@ BFS over each repo's pyproject `path = "../<repo>"` lines (see deployment-api �
 = v2. deployment-api/SIT main are blocked-on-v2 until their v2 greens (they were already blocked pre-migration — this is
 actionable now, not a regression). **Do not leave any ruleset `enforcement=disabled`.**
 
+**FINDING + FIX (2026-06-03, slot tab/ikennaigboaka/4): two repos had the WRONG default branch → `require-quality-gates`
+ruleset mislocated onto their LDR.** The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH` (correct, fleet-wide).
+But **`unified-trading-api` + `greeks-service` had `default_branch = live-defi-rollout`** (the rest of the fleet is
+`main`), so `~DEFAULT_BRANCH` resolved to LDR and the required `…/quality-gates-v2` check landed on the **integration
+axis** — every raw/FF push to their LDR was rejected `GH013` (surfaced trying to land a uv.lock re-lock on uta). **FIXED:**
+`gh api -X PATCH repos/IggyIkenna/{unified-trading-api,greeks-service} -f default_branch=main` → ruleset auto-re-pointed
+to `main`; LDR rules now 0 (verified); uta re-lock then FF-pushed cleanly. These were the only 2 drifted repos (fleet
+default-branch sweep clean otherwise).
+- [ ] [SCRIPT] P2. **Prevent default-branch drift**: add a fleet check (extend `verify_branch_protection_check_names.py`
+      or `pin_branch_protection_rulesets`) asserting every repo's `default_branch == main`; new-repo bootstrap must set
+      default=main so `~DEFAULT_BRANCH` rulesets never land on LDR.
+- [ ] [DOC] P1. **Reconcile the LDR-protection contradiction**: this plan's goal (§ top: "v2 on all branches incl
+      `live-defi-rollout`") vs `codex/08-workflows/ci-cd-flow.md` ("LDR is explicitly EXCLUDED — local QG + sentinel is
+      the only gate on LDR, by design"). Decide whether LDR is required-check-protected or not — it determines whether
+      raw/FF-push-to-LDR is viable (the `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` FF-push design
+      assumes LDR stays unprotected). Currently 22/24 repos have LDR unprotected (default=main).
+
 **Coverage repos** (`client-reporting-api`, `batch-live`, `ibkr`) need **real tests written** (not floor-lowering /
 coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
 
