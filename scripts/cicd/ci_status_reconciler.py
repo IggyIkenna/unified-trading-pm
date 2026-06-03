@@ -27,7 +27,9 @@ those are promotion state, not drift) and NEVER acts on an absent v2 signal
 
 from __future__ import annotations
 
-from typing import NamedTuple
+import argparse
+import sys
+from typing import NamedTuple, cast
 
 # v2 conclusion per branch: "success" | "failure" | "" (no run / unknown)
 Conclusion = str
@@ -85,8 +87,6 @@ def _main(argv: list[str]) -> int:
     Prints one line: ``RECONCILE <target_status> <reason>`` or ``SKIP <reason>``
     (exit 0 always; the workflow parses the first token).
     """
-    import argparse
-
     parser = argparse.ArgumentParser(description="Guard 3 ci_status drift decision")
     parser.add_argument("--current", required=True, help="current manifest ci_status")
     parser.add_argument("--main", default="", help="latest v2 conclusion on main")
@@ -94,7 +94,12 @@ def _main(argv: list[str]) -> int:
     parser.add_argument("--ldr", default="", help="latest v2 conclusion on live-defi-rollout")
     args = parser.parse_args(argv)
 
-    d = decide(args.current, args.main, args.staging, args.ldr)
+    d = decide(
+        cast("str", args.current),
+        cast("str", args.main),
+        cast("str", args.staging),
+        cast("str", args.ldr),
+    )
     if d.reconcile:
         print(f"RECONCILE {d.target_status} {d.reason}")
     else:
@@ -103,6 +108,4 @@ def _main(argv: list[str]) -> int:
 
 
 if __name__ == "__main__":
-    import sys
-
     raise SystemExit(_main(sys.argv[1:]))
