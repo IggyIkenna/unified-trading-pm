@@ -217,7 +217,24 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       `_index/snapshots/pre_migration_2026-06-03.parquet` (49,893,721 bytes == source; sits beside the prior
       `pre_migration_2026-05-22.parquet`). Pre-migration safety point established; E4 walk can run.
 - [ ] [DATA] P0. E4 Dry-VM → review timing (cefi is 2.6M index rows / largest; date-shard across VMs if >1h) → optimise
-      → full-VM run (no fire-and-forget verification).
+      → full-VM run (no fire-and-forget verification). **🛑 BLOCKED on E4-BUG below — do NOT fan out until fixed.**
+- [ ] [CODE] P0. **🛑 E4-BUG — migrator silently NO-OPs the dominant L-bulk layout (slot-3 calibration 2026-06-03).**
+      Local `--apply` calibration slices (2026-05-01..07 and 2024-06-01..07) on `market-data-tick-cefi-prd` report
+      `planned=N moved=0` for BOTH raw_tick + candles — i.e. the migrator copied NOTHING. But the actual leaf paths
+      **lack `pipeline_mode=`** (verified:
+      `…/day=2024-06-03/asset_group=cefi/venue=BINANCE-FUTURES/instrument_type=perpetual/data_type=book_snapshot_5/ADAUSDT.parquet`),
+      and there is **no `pipeline_mode=` sibling** (so it's not the idempotent dest-exists skip). Per `_canon_day_rel`
+      (`migrate_cefi_flat_to_v9_canonical.py:153`, "Returns the SAME rel if already canonical → no-op", consumed at
+      `_move_day_one:210` `if gs://full == gs://dst: return (1,0)`), the migrator is computing **dst == src** for the
+      L-bulk `day=/asset_group=cefi/…` form — i.e. the **per-symbol `candidate_parquet_paths` SSOT rebuild is NOT
+      inserting `pipeline_mode=` after `day=`** → it treats already-non-canonical paths as canonical and skips them. The
+      **DRY run hid this** (`_move_day_one:212` returns `(1,0)` for every object in dry mode without computing the real
+      move), so the earlier "planned≈total" was an object count, NOT a migration-needed count. **This is the exact "we
+      keep missing things" trap.** FIX before any fan-out: make `_canon_day_rel` insert `pipeline_mode=` for the L-bulk
+      per-symbol case (the `candidate_parquet_paths` call must emit `pipeline_mode=` LEFT of `asset_group=`), add a unit
+      test asserting `day=/asset_group=cefi/…` → `day=/pipeline_mode=batch_tardis/asset_group=cefi/…` (dst != src), and
+      re-run a calibration slice expecting `moved>0`. Then re-scope: the real migration-needed count is unknown until a
+      corrected `--apply` slice runs. Repo: market-tick-data-service.
 - [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE (mtds@2c3a479b, 2026-06-02)** via the RECOMMENDED fork (A):
       `rebuild_cefi_manifest.py` now (1) parses an OPTIONAL `pipeline_mode=(?P<pipeline_mode>[^/]+)/` segment in all 3
       `_PAT_*` matchers (between `day=` and `asset_group=`); (2) lists at DAY level (`raw_tick_data/by_date/day={d}/`)
