@@ -375,3 +375,71 @@ assigned to slot 4). All data pipeline tasks depend on this condition:
 
 **Action needed**: Slot 4 must complete Phase 5A/5B/5C to unblock. Slot 5 auto-picks up Phase 6A immediately once
 unblocked.
+
+---
+
+## [HANDOFF → slot-5 Prediction] from slot-6 interactive (Ikenna), 2026-06-03
+
+> **Why this ping:** the operator had slot-6 (this interactive session) drive Prediction work before the plan
+> re-confirmed the canonical split (**slot 5 = Prediction**, slot 6 = TradFi). All work below is SHIPPED to
+> `live-defi-rollout` (tab→LDR mirror confirmed MIRRORED→LDR for every repo) + plan checkboxes flipped. **Slot 5: this
+> is your lane now — please pick up from the "OPEN / next" list.** Plan of record:
+> `plans/active/prediction_manifest_canonicalisation_2026_06_01.md` (+ `downstream_services_…`,
+> `data_source_provenance_…`).
+
+### SHIPPED + flipped this session (all on LDR)
+
+- **mtds@584871e9** — Kalshi classifier-None divergence: emit `None` (not `"OTHER"`) for sub-threshold → orchestrator
+  routes `record_failed[ClassifierConfidenceLow]` (venue parity w/ Polymarket@5744ba61). (prediction CF-11 +
+  downstream_services Kalshi item — both flipped.)
+- **instruments-service@65e1f8f0** — Polymarket CLOB universe scan (`_fetch_all_raw_clob_markets`): mid-pagination
+  `ClientError` was `logger.warning`+`break` → returned a PARTIAL universe cached 24h as false-complete. Now
+  classify+emit `ADAPTER_FETCH_FAILED` + RAISE. +regression test. (CF-11 IS write-path — flipped.)
+- **deployment-api@2ac1dfa** — data-status reads the v9 bundled `prediction_canonical_question_group` atom: cqg from
+  `instrument_id` (fallback `underlying`), `observed_clusters` per-market drilldown, `source`/`pipeline_mode` surfaced;
+  turbo + hierarchical promote cqg from instrument_id. (3 deployment items flipped.)
+- **deployment-ui@4a358ec** — `canonical_question_group` breakdown + per-market cluster drilldown + source badge + v9
+  mock; `pw:L2 ✓` 97 pass + regression `tests/smoke/prediction_v9_breakdown.spec.ts`. (1 item flipped.)
+- **mtds@59d25967** — rebuild re-emit honest-absence: `reemit_honest_absence_rows` re-emits existing
+  `empty_confirmed`/`attempted_failed` `_index` rows not covered by the object-scan (dedup, status preserved) → fixes
+  the pure-object-scan false-complete.
+- **mtds@62b7ff74** — lifecycle reader repair + within-bounds reclassification (the big one):
+  - `base_prediction_adapter._load_market_lifecycle_for_date` now derives bounds from the REAL `instrument_availability`
+    cols (`condition_id`/`start_date`→created/`end_date_iso`→settlement) — MARKET_LIFECYCLE is unpopulated AND the old
+    fallback checked non-existent `available_from/to_datetime`. **This also repairs the LIVE writer's lifecycle gating,
+    which was a silent no-op.**
+  - rebuild robust `_index` read: `read_availability_index` no-ops on gcsfs DNS flakiness → direct
+    `_index/availability_index.parquet` read fallback.
+  - 41 `SOURCE_RETURNED_ZERO` (per-condition_id) reclassified: live in-window → `record_failed`; else preserve typed
+    empty.
+
+### DRY-RUNS (both exit 0)
+
+- migrator `migrate_prediction_to_pred_prd_v9` (dry default): `planned=1,897,691 copied=0`, CANON-only cells preserved.
+- rebuild dry: pre-migration unrepresentative (`570,700 unparseable` = correct rejection of pre-v9 paths) → rebuild is
+  meaningful only AFTER migrator `--apply`.
+
+### ⚠️ LIVE-BEHAVIOR CHANGE (mtds@62b7ff74)
+
+The live MTDS writer now ACTUALLY enforces `[created_at, settlement_time)` lifecycle gating (was a no-op). Expect a
+small per-day row reduction for early/late-lifecycle Polymarket markets. No within-bounds data dropped. Watch live
+capture counts on next run.
+
+### OPEN / next (your lane, slot-5)
+
+- **OPERATOR/DRAIN-GATED — the migration RUN**: E3 drain `mdps-prediction-2025` → snapshot `_index` → E4 full migrate
+  (~1.9M objects) → E5 rebuild → E7 CF audit GREEN → **E8 irreversible legacy delete**. Needs the writer-drain approval
+  (Plans-Run-To-Completion).
+- `[CODE] P1` **instruments-service: populate MARKET_LIFECYCLE SSOT** — bridge (instrument_availability parse) is in;
+  canonical fix is IS writing `market_lifecycle/by_canonical_group/`.
+- `[CODE] P1` **post-migration api↔ui turbo-contract verify** + **deployment-api `fetch_venue_detail` bucket routing**
+  (MTDS vs instruments bucket for prediction v9) — verifiable once real v9 `_index` exists.
+- Cross-referenced slices (other-VM primary, you drive the prediction portion): `source`-stamp (rebuild already stamps
+  via `source_string_for`), `pipeline_mode=` partition (rides the walk), `instruments-store-prediction`,
+  `bucket_name_ssot…` L6 delete.
+
+### STATE
+
+All trees clean; every tab→LDR mirror healthy; staging promotion gated workspace-wide on the **UTL+UAC dep-tier drain**
+(not prediction-specific). Codex `prediction-schema-paths.md` reconciled (per-cid objects + manifest-only cqg bundle;
+the object-bundle "Target" was superseded). — slot-6 (Ikenna)
