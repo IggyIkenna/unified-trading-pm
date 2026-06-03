@@ -719,7 +719,14 @@ done
 if $PYTHON_CMD -c "import pip_audit" 2>/dev/null; then
     # CVE-2026-4539: pygments 2.19.2 (latest, no fix version) — transitive via pytest+rich
     # CVE-2026-45409: idna 3.14 follow-up to CVE-2024-3651; fix: upgrade to idna>=3.15
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409"
+    # CVE-2026-34993: aiohttp <=3.13.5 CookieJar.load() RCE on UNTRUSTED input. fix_versions=[3.14.0] BUT 3.14.0
+    #   removed aiohttp.streams.AsyncStreamReaderMixin → breaks vcrpy 8.1.1 (latest) MockStream fleet-wide (64 VCR
+    #   AttributeError). These libs use aiohttp as a client and never CookieJar.load() untrusted files → surface nil.
+    #   SUCCESSOR: bump aiohttp>=3.14 + vcrpy when vcrpy ships aiohttp-3.14 compat. Tracked:
+    #   plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    # CVE-2026-47265: aiohttp <=3.13.5 cookies re-sent after cross-origin redirect; fix_versions=[3.14.0] (same
+    #   vcrpy block). The aiohttp-3.13.5 CVE set grows until the fleet can reach 3.14.0 (vcrpy-unblock).
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265"
     _pa_out=$($PYTHON_CMD -m pip_audit $_pa_extra 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }
 elif command -v pip-audit &>/dev/null; then
     _pa_out=$(pip-audit 2>&1) || { echo "$_pa_out"; log_fail "pip-audit vulnerabilities"; V=$(( V + 1 )); }

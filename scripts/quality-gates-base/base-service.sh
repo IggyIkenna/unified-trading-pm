@@ -913,7 +913,17 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-45409: idna 3.11 — follow-up to CVE-2024-3651; no patched release as of 2026-05-22
     # CVE-2026-3219: pip 26.0.1 concatenated tar+ZIP handling; fix: upgrade pip >= 26.1
     # CVE-2026-6357: pip < 26.1 self-update check; fix: upgrade pip >= 26.1
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357"
+    # CVE-2026-34993: aiohttp <=3.13.5 CookieJar.load() RCE on UNTRUSTED cookie input. fix_versions=[3.14.0],
+    #   BUT aiohttp 3.14.0 removed aiohttp.streams.AsyncStreamReaderMixin → breaks vcrpy 8.1.1 (latest release)
+    #   fleet-wide (vcr/stubs/aiohttp_stubs.py MockStream) → 64 VCR cassette tests AttributeError. These services
+    #   use aiohttp as an HTTP CLIENT and never call CookieJar.load() on untrusted files → exploit surface nil.
+    #   SUCCESSOR (remove this ignore): bump aiohttp>=3.14 + vcrpy once vcrpy ships an aiohttp-3.14-compatible release
+    #   (or an aiohttp 3.13.x backport fix lands). Tracked: plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md.
+    #   Non-vcrpy repos (features-service, deployment-api) already run aiohttp 3.14.0 (CVEs actually patched there).
+    # CVE-2026-47265: aiohttp <=3.13.5 — cookies set via the `cookies=` param are re-sent after a cross-origin
+    #   redirect. fix_versions=[3.14.0] (same vcrpy block as CVE-2026-34993). aiohttp 3.13.5 keeps accumulating
+    #   cookie CVEs fixed only in 3.14.0; this ignore set grows until the vcrpy-unblock lets the fleet reach 3.14.0.
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265"
     # run_timeout 180: OSV API can stall indefinitely in Cloud Build (no connection-level timeout
     # in pip-audit itself). Exit 124 = timeout → warn-only; image still passes (advisory gate).
     _pa_rc=0
