@@ -173,10 +173,17 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       `downstream_services_manifest_canonicalisation_2026_06_01.md` FLAG-1.
 - [ ] [CODE] P1. **deployment-api FLAG-3** — env-tier the hardcoded `*-store` bucket f-strings → `resolve_bucket_name`
       (`commentary/pipeline_uat.py`, `deployment_api_config.py`). Cross-ref downstream plan FLAG-3.
-- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** — the shard-atom dedup test exists for
-      **DeFi only** (`test_pipeline_mode_rows_do_not_double_count_shards`); add a **cefi parity** test + ensure cefi
-      drilldown does not double-count the same `(venue,data_type,instrument_id,day)` across pipeline_modes; add a
-      `pipeline_mode` filter param to the hierarchical-drilldown endpoint (UI label work needs the playwright gate).
+- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** (deployment-api; downstream owner).
+      **CONFIRMED read-only (slot-3 2026-06-03):** the dedup MECHANISM exists + is AG-agnostic — the count is
+      `len(captured_df.drop_duplicates(subset=_shard_atom_cols))` and `_shard_atom_cols` derives from the UAC
+      `SHARD_AXIS_MATRIX`, which for cefi is `(venue, data_type, instrument_type, instrument_id, day)` — pipeline_mode
+      is NOT a cefi shard-atom axis, so multiple `pipeline_mode=` rows for one cell collapse to ONE shard (no
+      double-count). The existing `test_pipeline_mode_rows_do_not_double_count_shards` guards the DeFi
+      **chain**-breakdown builder; REMAINING for the deployment-api/`downstream_services_manifest_canonicalisation`
+      owner: (a) a **cefi parity test** (venue-breakdown builder) as a regression guard, (b) the `pipeline_mode`
+      drilldown **filter param** (a feature-add; UI label is playwright-gated). NOT a cefi-correctness gap today (dedup
+      works); a regression-guard + feature enhancement for the deployment-api owner. (In practice cefi double-count is
+      also unlikely — a cefi cell carries ONE pipeline_mode per day, batch OR live, not both.)
 
 **⚪ P2 / needs-confirm (tracked):**
 
