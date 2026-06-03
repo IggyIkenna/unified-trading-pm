@@ -60,11 +60,17 @@ All on `origin/live-defi-rollout`; full detail in [uv_lockfile_determinism_2026_
    full-QG-green first, leaning on the existing **QG-sweep batching** rule so it isn't per-commit-expensive.
 2. **Staging/SIT stays the cross-repo integration gate** (unchanged). The commit-gate covers per-repo correctness only;
    a locally-green commit can still break a downstream repo — that's what staging/SIT catches. Layering preserved.
-3. **(PROPOSED — needs operator ratification)** Periodic **FF-push of clean / >1h-old / ahead-only (0-behind) slot
-   commits to LDR**, mirroring `slot-cron-ff-pull.sh`'s existing `_agent_pings.md` commit+FF-push+retry-on-race logic.
-   FF-only = lossless (rejected on race, never overwrites). **This LOOSENS the "Never raw `git push` for CODE to LDR"
-   HARD RULE** → must be ratified explicitly before the cron change + rule edit ship. Rationale: if commits are
-   QG-green (decision 1), FF-pushing them to LDR hands consumers pre-validated work; staging gates cross-repo (decision 2).
+3. **FF-push to LDR = NARROW LAST-RESORT, not a routine path (operator framing 2026-06-03).** Primary stays: agents
+   **quickmerge** finished units → staging PR (gated); for substantial work, always a PR. The **alert→auto-PR /
+   auto-merge / promotion automation is already substantially built** in PM `.github/workflows/`:
+   `ldr-to-staging-promote.yml` (Tier C — drains committed-LDR → staging), `ci-failure-watcher.yml` (stuck-PR poller +
+   alerts, cron `*/15`), `escalate-to-orchestrator.yml` + `conflict-resolution-agent.yml` (auto-triage/resolve),
+   `auto-merge-minor-fixes.yml`, `main-backmerge-to-ldr.yml`. The cron FF-push fills only the remaining gap — a
+   **QG-green** commit an agent made but didn't quickmerge, sat clean >1h → FF-push to LDR, where the **existing Tier C
+   bot then promotes it to staging** (still gated). So the HARD-RULE carve-out is NARROW (last-resort drain of QG-green
+   stranded commits), **not** a routine direct-push loosening — only ahead-only/clean/aged, FF-only (lossless). Still
+   NEEDS-RATIFICATION for the carve-out wording, but small blast radius. The auto-PR automation's remaining wiring is
+   owned by cicd_contract_hardening (escalate @127/929, auto-merge @1138) — cross-link, don't duplicate.
 
 ## Action items — doc/rule/codex alignment (precise edits)
 
