@@ -239,8 +239,12 @@ constant**.
   REQUIRED for every captured cell (even single-source today, for swap-resilience); raise `MissingSourceError` when
   blank or not in `SOURCE_PRIORITY[(asset_group, data_type)]`; resolve downstream via
   `select_primary_available_source()` (multi-source union: ≥1 `captured` → cell `captured`). Computed/service-only
-  outputs are exempt. Today only `tradfi` is wired (`databento`/`massive`, QG STEP 5.64); cefi/defi/sports are RED gaps;
-  prediction N/A. SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
+  outputs are exempt. Wired today: `tradfi` (`databento`/`massive`) + **`prediction`** (`polymarket_clob`/
+  `polymarket_gamma_api`, single-source → the writer auto-stamps via `default_source`; UAC `SOURCE_PRIORITY` already
+  carries the prediction pairs). cefi/defi/sports are RED gaps. **Prediction `venue ≠ source`**: Polymarket-vs-Kalshi
+  dispersion is a feature-layer concern, NOT a source merge; historical `_index` source-stamp rides the prediction
+  canonicalisation walk (live/new writes auto-stamp already). SSOT:
+  `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
 - `available_at` is per-row write-time (UTL asserts). Service-output emission via `_resolve_policy_output_data_type` +
   `_publish_emission_check`.
 - **Single-walk discipline (HARD RULE)**: the Phase 2.2 migration walks every parquet ONCE — any new whole-corpus GCS

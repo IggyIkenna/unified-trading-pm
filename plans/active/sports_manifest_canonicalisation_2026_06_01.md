@@ -868,9 +868,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `resolve_bucket_name(cloud=…, kind="strategy-store"/"position-store", asset_group="sports")` (register the kinds
       in `cloud-providers.yaml` if absent — verify first). Same anti-pattern as the `ecc7cc0f` DependencyChecker fix.
 
-- [ ] [CODE] P0. **READ paths don't probe the migration's `pipeline_mode=` path (the writers were fixed, the readers
-      were NOT)** — repo: `features-service`. The sports READERS hand-construct exact paths and `blob_exists`-probe
-      them, bypassing the `pipeline_mode`-aware UAC SSOT `candidate_parquet_paths`:
+- [x] ✅ [CODE] P0. **DONE features-service@fd1a2b17 (probing mechanism) + @7baba0d4 (per-entity value via UAC SSOT).
+      Sports reads now probe the migration's `pipeline_mode=` path + legacy fallback: raw odds → explicit
+      `pipeline_mode=batch_odds_api/asset_group=sports/` candidate; sports_reference →
+      `candidate_parquet_paths(pipeline_mode=pipeline_mode_for_sports_entity(entity))` (per-entity). Read tests assert
+      canonical + legacy hits.** Original gap: **READ paths don't probe the migration's `pipeline_mode=` path (the
+      writers were fixed, the readers were NOT)** — repo: `features-service`. The sports READERS hand-construct exact
+      paths and `blob_exists`-probe them, bypassing the `pipeline_mode`-aware UAC SSOT `candidate_parquet_paths`:
       `sports/data/gcs_reader.py::read_odds_data` (~:326) probes `raw_tick_data/by_date/day={D}/asset_group=sports/…`
       then `…/category=sports/…` — **neither has `pipeline_mode=`**; the `sports_reference` entity reads
       (`_singleton_path`/`_league_prefix` ~:99-128) similarly build `sports_reference/by_date/day={D}/entity=…` with no
@@ -908,11 +912,18 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       pipeline SOURCE, no upstream manifest to gate.) Add a path-shape + source= test. **The IS reads must also probe
       the `pipeline_mode=` sports_reference path — verify under the read-path P0 above (IS is both writer and reader of
       its reference surface).**
-- [ ] [CODE] P0. **CRITICAL — the `pipeline_mode` value for instruments-store `sports_reference` is DERIVED 3 DIFFERENT
-      WAYS that DISAGREE (path ≠ manifest ≠ reader); needs ONE shared UAC SSOT.** Repos: `unified-api-contracts` (new
-      SSOT) + `market-tick-data-service` (migration) + `instruments-service` (writer) + `features-service` (reader).
-      DISCOVERED 2026-06-03. The entity folders on disk are **data-type-named** (`entity=fixtures`, `fixture_events`,
-      `teams`, `xg`…), NOT provider-named. The three derivations:
+- [x] ✅ [CODE] P0. **RESOLVED 2026-06-03 — ONE UAC SSOT `pipeline_mode_for_sports_entity` (uac@a16c0808, 16 entities,
+      unknown→batch_instruments_service) now used by ALL FOUR: migration `_canon_instr_reference` (mtds@6ee55b40), IS
+      writer (is@855e4172, replaced its local map), features reader (features@7baba0d4, replaced fixed value), and the
+      IS/rebuild manifest path. VERIFIED end-to-end:
+      `pipeline_mode_for_sports_entity(entity) == _canon_instr_reference path PM` for
+      fixtures(batch_api_football)/understat_xg(batch_understat)/player_values(batch_transfermarkt)/footystats_predictions(batch_footystats)/venues(batch_instruments_service)
+      — all OK. Migration object-path == manifest == writer == reader. 7+6+2 tests across the repos.** Original gap:
+      **CRITICAL — the `pipeline_mode` value for instruments-store `sports_reference` is DERIVED 3 DIFFERENT WAYS that
+      DISAGREE (path ≠ manifest ≠ reader); needs ONE shared UAC SSOT.** Repos: `unified-api-contracts` (new SSOT) +
+      `market-tick-data-service` (migration) + `instruments-service` (writer) + `features-service` (reader). DISCOVERED
+      2026-06-03. The entity folders on disk are **data-type-named** (`entity=fixtures`, `fixture_events`, `teams`,
+      `xg`…), NOT provider-named. The three derivations:
   - **Migration object-path** `migrate_sports_canonical_v9.py::_canon_instr_reference` maps `entity` through an
     `entity_to_source` dict that ONLY contains provider names (`api_football`/`footystats`/…) → data-type entities miss
     → **falls back to `batch_instruments_service`**. WRONG.
