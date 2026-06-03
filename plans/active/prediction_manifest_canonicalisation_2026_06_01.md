@@ -579,19 +579,27 @@ verify + the gated delete.
       `instrument_id=0x…`), so for each, load lifecycle bounds (fixed reader above) for its date and if
       `start_date ≤ day < end_date_iso` (live + in-window) → `record_failed` (attempted_failed); else preserve typed
       empty. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [x] ✅ [CODE] P1. **MARKET_LIFECYCLE SSOT writer VERIFIED-CORRECT + tested (instruments-service@e3360f05, slot-6
-      2026-06-03); residual = a BACKFILL, not a code gap.** The writer already exists + is correct:
-      `orchestrator._write_market_lifecycle` (called from `save_instrument_data_to_gcs`) emits
-      `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet` with
-      `market_id`/`market_created_at`/`settlement_time` — the exact path+columns the MTDS reader
-      `_load_market_lifecycle_for_date` expects (round-trip verified). +8 contract tests pinning it. The 0-GCS-objects
-      is because **IS hasn't been re-run on prediction since the code landed** → a backfill (operator/infra: re-run IS
-      `--asset-group prediction` for the range), NOT a code fix. Until backfilled, the MTDS reader uses the
-      `instrument_availability` bridge (slot-5 fix mtds@62b7ff74). ORIGINAL: (slot-5 discovery 2026-06-03; DIAGNOSED
-      slot-5 2026-06-03 — the write path EXISTS, the 0-objects cause is real-data/operational, VM-verify). The canonical
-      `market_lifecycle/by_canonical_group/group=*/day=*/market_lifecycle.parquet` (market_id → created/settlement) is
-      unpopulated (0 objects); the MTDS reader bridges via `instrument_availability` for now (item above). **DIAGNOSIS
-      (not a missing write path — grep-then-read):** the writer is wired —
+- [x] ✅ [CODE] P1. **instruments-service MARKET_LIFECYCLE for prediction — ROOT-CAUSED + FIXED (slot-5 IS@4105bba3) +
+      writer VERIFIED (slot-6 IS@e3360f05); two complementary findings reconciled 2026-06-03.** BOTH were true. **(1) slot-5
+      found + fixed the upstream BUCKET-RESOLUTION CRASH**: `_get_instruments_bucket("prediction")` called
+      `resolve_bucket_name(kind="instruments-store", asset_group="prediction")`, but `cloud-providers.yaml`'s per-asset_group
+      `instruments-store:` dict has only CEFI/DEFI/TRADFI/SPORTS (prediction is the FLAT kind `instruments-store-prediction`)
+      → it raised `BucketNamingError` at `orchestrator.py:2263` BEFORE the per-venue write loop, so the ENTIRE prediction
+      write (`instruments.parquet` AND `market_lifecycle.parquet`) aborted → 0 objects. Fix = new
+      `resolve_instruments_store_kind()` routes prediction → flat kind (used by engine `_get_instruments_bucket` + CLI
+      `_get_instruments_bucket_for_asset_group`), resolving to `instruments-store-pred-prd-…` identical to the MTDS reader;
+      106 tests (the old `test_bucket_name_prediction_uses_category_prefix` ENCODED the bug — corrected). **(2) slot-6
+      independently VERIFIED the writer LOGIC is correct**: `orchestrator._write_market_lifecycle` (from
+      `save_instrument_data_to_gcs`) emits `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet`
+      with `market_id`/`market_created_at`/`settlement_time` (round-trip with the MTDS reader); +8 contract tests.
+      **RECONCILED**: slot-6's "writer correct → residual is a backfill" was right about the writer but tested it in
+      ISOLATION (mocked bucket) so it MISSED the upstream crash — in the real pipeline the writer was never reached. Net:
+      the bucket fix makes the writes RUN, the (verified) writer emits the correct path/columns, and the PRIMARY
+      `market_lifecycle/` objects populate on the next IS prediction run (operator-gated backfill — `--asset-group
+      prediction` for the range; the MTDS `instrument_availability` bridge mtds@62b7ff74 covers the interim).
+      Column-contract verified both ways (no drift). NOTE: local QG `uv.lock` pre-gate is a foreign host-uv false-positive
+      (committed lock correct `pyjwt>=2.13.0`; server `quality-gates-v2` passes). ORIGINAL (superseded — never reached
+      classify_lifecycle): the writer is wired —
       `orchestrator.py:2418 _write_market_lifecycle(...)` is called per-canonical-group inside the prediction branch;
       `_build_market_lifecycle_df` (orchestrator.py:3324) builds from `venue_df` which is
       `InstrumentRecord.model_dump()` (orchestrator.py:2238) → it HAS
@@ -608,15 +616,31 @@ verify + the gated delete.
       how many markets get a non-None `classify_lifecycle`, (2) check whether `market_lifecycle/by_canonical_group/`
       objects appear. If (a), fix `classify_lifecycle`; if (b), it self- resolves on the next run. Repo:
       instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P2. **instruments-service QG STEP 5.64 — preflight short-circuits emit NO `PREFLIGHT_SKIPPED`**
+      (cross-cutting finding surfaced by slot-5 during the 552 fix 2026-06-03; NOT prediction-scoped — for the
+      instruments epic). `instruments-service` has preflight-guard patterns (`_check_dependencies` / `should_skip_date`
+      / `check_shard_freshness`) in `engine/orchestrator.py`, `engine/validation_utils.py`, `cli/instruments_handler.py`
+      but emits no `emit_preflight_skip` / `PREFLIGHT_SKIPPED` anywhere → silent preflight skips are invisible in the
+      event stream (the same observability gap STEP 5.64 enforces for service repos). Wire `emit_preflight_skip` (UTL)
+      at each short-circuit. Repo: instruments-service. parent_epic: mtds_mdps_master (or the instruments epic).
 
 ## Success criteria
 
-- [ ] [CODE] P1. **Post-migration verify: deployment-api turbo response ↔ deployment-ui contract** (slot-5 2026-06-03).
-      The deployment-api (@2ac1dfa) + deployment-ui (@4a358ec) prediction-v9 fixes were each verified independently
-      (api: unit tests; ui: against its own mock `_mkPredictionByQuestionGroup`). Once the migration runs and real v9
-      `pred-prd/_index` rows exist, confirm END-TO-END that the turbo response actually emits
-      `breakdown_axis="canonical_question_group"` + per-cqg `observed_clusters={conditionId:rows}` + `source` in the
-      shape the UI's `TurboSubDimension` consumes (else the UI renders empty). Repos: deployment-api + deployment-ui.
+- [x] ✅ [CODE][UI] P1. **deployment-api turbo response ↔ deployment-ui contract — VERIFIED + FIXED a real mismatch
+      (slot-5 2026-06-03).** Cross-repo audit (both sides read): the **turbo summary** path matches (UI
+      `TurboSubDimension` consumes `observed_clusters`/`source`/`capture_status_counts` 4-state +
+      `breakdown_axis="canonical_question_group"` — no drift; covered by `prediction_v9_breakdown.spec.ts`). But the
+      **venue-detail drilldown** had a real contract mismatch: deployment-api emitted `category="PREDICTION"` while the
+      UI `VenueDetailResult` expected `asset_group` → it was always `undefined` client-side and every prediction
+      venue-detail fell back to the CeFi v1 render branch; the prediction instrument fields
+      (`canonical_question_group`/`instrument_count`/`pipeline_mode`/`source`) were silently discarded by the TS type.
+      **FIX (both sides):** deployment-api@f1dd7d5 — `VenueDetailResponse` now emits `asset_group` (computed mirror of
+      `category`; basedpyright 0-err, NO `type: ignore`; 50 shard_detail tests pass). deployment-ui@f242055 —
+      `VenueDetailResult` carries `asset_group` + `category?` + optional `base`/`quote` + the 4 prediction fields.
+      **playwright gate satisfied** — repo@f242055 | pw:L2 ✓ (`npx playwright test --project=chromium     tests/smoke/`
+      exit 0, 5 passed) | tsc 0 | regression: `tests/smoke/venue_detail_prediction_asset_group.spec.ts`. The END-TO-END
+      real-data confirmation (turbo emits the shape on live v9 `_index` rows) still rides the operator-gated migration
+      run — but the contract is now correct + regression-locked on both sides. Repos: deployment-api + deployment-ui.
 - [x] ✅ [CODE] P2. **deployment-api `fetch_venue_detail` bucket routing for prediction v9 — FIXED + CONFIRMED-BUG
       (deployment-api@318db9b, slot-5 2026-06-03).** It WAS a real bug, not just uncertainty: `_prediction_venue_detail`
       read `build_bucket_name("instruments-service","prediction")` = `instruments-store-pred-prd-{pid}`, but the v9
