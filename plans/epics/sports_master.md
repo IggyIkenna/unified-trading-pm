@@ -349,9 +349,13 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
       UTL `classify_legacy_empty_row` helper (Tier 3D.2) handles reader-side fallback for rows without coverage info.
       Reader side tolerates gracefully — no one-time migration needed (per honest-absence doc § "Per-reason-group →
       consumer policy" reader fallback). UTL@94e43e8c.
-- [ ] [AGENT] P3. Add `axis: per_feature_per_league_per_fixture_date` to `_sports_honest_coverage` in data-status
-      reconciler. Per-feature-group denominator = (clipped fixture dates) × (in-coverage leagues). [AUDIT 2026-05-07:
-      FRESH — actionable]
+- [x] ✅ [AGENT] P3. Add `axis: per_feature_per_league_per_fixture_date` to `_sports_honest_coverage` in data-status
+      reconciler. Per-feature-group denominator = (clipped fixture dates) × (in-coverage leagues). — **VERIFIED ALREADY
+      SATISFIED 2026-06-03 (deployment-api@96e7ac7)**: the axis is declared in `SportsAxis` + assigned to every
+      calculator in `FEATURES_SPORTS_PER_CALC_META`, and `_sports_honest_coverage` already computes `expected_shards` as
+      the sum across leagues of `_features_sports_expected_dates_for_calculator(...)` (fixture-dates ×
+      in-coverage-leagues, per calculator = per feature). Added 3 verification tests
+      (`tests/unit/test_features_sports_per_feature_axis.py`); no production change needed.
 
 ### Fixture truthset recovery (`sports_fixtures_truthset_recovery`)
 
@@ -1061,8 +1065,13 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
       pattern but iterates trigger dates not date ranges.
 - [ ] [SCRIPT] P2. **VM fleet run** for trigger-date backfill (parallelize by league). Operational.
 - [ ] [QG] P2. Validate GCS snapshots exist for all trigger dates × leagues × seasons.
-- [ ] [CODE] P2. **Trigger-date denominator in deployment-api** for mapping entities (teams/team_mapping/player_values).
-      Depends on write-path item (must have data at `master/`/`snapshots/` to denominate against).
+- [x] ✅ [CODE] P2. **Trigger-date denominator in deployment-api** for mapping entities
+      (teams/team*mapping/player_values). Depends on write-path item (must have data at `master/`/`snapshots/` to
+      denominate against). — **DONE 2026-06-03 (deployment-api@96e7ac7)**: `TEAMS` was `global_periodic cadence_days=1`
+      (~365/yr) and `PLAYER_VALUES` was `per_league_periodic cadence_days=90` (quarterly approx) — both WRONG (written
+      at trigger dates only). Added `global_trigger_date` + `per_league_trigger_date` axes +
+      `\_sports_trigger_dates_for*{window,league}`helpers (union     of`get_reference_refresh_dates`across leagues, clipped) reading from the UAC`LEAGUE_REGISTRY`(no GCS I/O, so it     works before the IS write-path lands — coverage shows 0% until then, correctly).`TEAMS`→`global_trigger_date`,     `PLAYER_VALUES`→`per_league_trigger_date`.
+      8 tests incl. the trigger-date≪daily-calendar invariant. QG exit 0.
 - [ ] [QG] P2. `bash scripts/quality-gates.sh` on deployment-api after A4.1.
 
 ## Assigned active plans
