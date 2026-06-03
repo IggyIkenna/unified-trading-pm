@@ -172,7 +172,9 @@ be fixed first if run on a VM.
       `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays distinguishable). Closes
       `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**: Polymarket/Kalshi remain
       VENUES (cross-venue dispersion is a feature-layer concern, not a source merge); when Kalshi lands it is a venue
-      addition AND its cells stamp `kalshi*\*` as source. Do NOT open a separate prediction source walk.
+      addition AND its cells stamp
+      `kalshi*\*`as source. Do NOT open a separate prediction source walk.     **[CODE-WIRED — slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE foundation is     already in place: UAC`SOURCE*PRIORITY`carries`("prediction","trades")=["polymarket_clob"]`,     `("prediction","book_snapshot")`, `("prediction","prediction_canonical_question_group")`, and     `("prediction","MARKET_LIFECYCLE")=["polymarket_gamma_api"]`(+`EMISSION_LATENCY_MS_BY_SOURCE`entries), and the     UTL`manifest_writer.add()/record_captured\*`AUTO-STAMP the sole external source via`default_source`for     single-source cells (no`MissingSourceError`—`source_required`is False). So **live/new writes already stamp    `source`**; this rider is now just the HISTORICAL `\_index`backfill — ensure the rebuild's`record*\*`calls flow     the parquet's own`data_source`(or let`default_source`auto-stamp`polymarket_clob`), no writer code change     needed. The stale "prediction N/A" line was corrected in CLAUDE.md + `data_source_provenance`
+      row (slot-5 2026-06-03).
 
 ### Verify + handoff to decommission
 
