@@ -374,14 +374,18 @@ verify + the gated delete.
 > fetch succeeded + genuinely no trades/prices → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we
 > don't know why" masquerading as complete.
 
-- [ ] [DATA] P0. **E5 rebuild classifier: within-bounds empty → `attempted_failed`.** PARTIAL (mtds@59d25967, slot-5
-      2026-06-03): the rebuild now AUDITS the `SOURCE_RETURNED_ZERO` rows (per-row WARN log `(date,venue,instrument_id)`
-      via `reemit_honest_absence_rows` + a `source_returned_zero_preserved` counter) and PRESERVES the legit
-      `EXPECTED_PRE_VENUE_LAUNCH` typed empties. **RESIDUAL (this item stays open):** the actual within-bounds
-      RECLASSIFICATION (`SOURCE_RETURNED_ZERO` on a live market in-window → `attempted_failed`) is conservatively
-      deferred — it needs a per-market lifecycle (created_at/settlement) lookup from instruments-store
-      `MARKET_LIFECYCLE` at rebuild time (cross-service GCS read; named dependency in the code TODO). Wire that lookup
-      to finish this item.
+- [x] ✅ [DATA] P0. **E5 rebuild classifier: within-bounds empty → `attempted_failed` — DONE (mtds@62b7ff74, slot-5
+      2026-06-03).** The 41 `SOURCE_RETURNED_ZERO` (per-condition_id) are now reclassified: lifecycle bounds loaded per
+      date from the FIXED reader (`start_date`/`end_date_iso`), and a row live in-window
+      (`start_date<=day<end_date_iso`) → `record_failed(WithinBoundsSourceZero)` (attempted_failed); out-of-window /
+      no-bounds preserved as typed empty. `EXPECTED_PRE_VENUE_LAUNCH` preserved. Tests: within-vs-out-of-bounds +
+      no-bounds; QG exit 0. Superseded-PARTIAL note: (mtds@59d25967, slot-5 2026-06-03): the rebuild now AUDITS the
+      `SOURCE_RETURNED_ZERO` rows (per-row WARN log `(date,venue,instrument_id)` via `reemit_honest_absence_rows` + a
+      `source_returned_zero_preserved` counter) and PRESERVES the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
+      **RESIDUAL (this item stays open):** the actual within-bounds RECLASSIFICATION (`SOURCE_RETURNED_ZERO` on a live
+      market in-window → `attempted_failed`) is conservatively deferred — it needs a per-market lifecycle
+      (created_at/settlement) lookup from instruments-store `MARKET_LIFECYCLE` at rebuild time (cross-service GCS read;
+      named dependency in the code TODO). Wire that lookup to finish this item.
 - [x] ✅ [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED — DONE (mtds@59d25967,
       slot-5 2026-06-03).** `reemit_honest_absence_rows` reads the existing pred-prd `_index`
       (`read_availability_index`), and for every `attempted_failed`/`empty_confirmed` row whose
@@ -483,8 +487,8 @@ verify + the gated delete.
       Add a prediction breakdown branch (`breakdown_axis` → canonical_question_group → market_id cluster drilldown).
       `[UI]` — needs `pw:L2 ✓` + regression spec per the playwright gate. parent_epic: mtds_mdps_master.
 
-- [ ] [CODE] P0. **Shared prediction lifecycle reader is broken — derive bounds from `start_date`/`end_date_iso`
-      (batch=live; repairs live gating too)** (slot-5 discovery 2026-06-03).
+- [x] ✅ [CODE] P0. **Shared prediction lifecycle reader FIXED (mtds@62b7ff74, slot-5 2026-06-03) — derive bounds from
+      `start_date`/`end_date_iso` (batch=live; repairs live gating too)** (slot-5 discovery 2026-06-03).
       `base_prediction_adapter._load_market_lifecycle_for_date` reads `market_lifecycle/by_canonical_group/` which has
       **0 objects** (IS never populated MARKET_LIFECYCLE), and `polymarket_adapter._load_lifecycles_from_gcs`'s
       `instrument_availability/` fallback checks for `available_from_datetime`/`available_to_datetime` columns that **DO
@@ -494,7 +498,7 @@ verify + the gated delete.
       has no source. Fix the shared reader to derive `(market_created_at=start_date, settlement_time=end_date_iso)`
       keyed by `condition_id` from `instrument_availability` (graceful: prefer MARKET_LIFECYCLE when it lands). Repo:
       market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. **E5 rebuild: robust `_index` read (direct parquet, not `read_availability_index`) + wire within-bounds
+- [x] ✅ [CODE] P0. **E5 rebuild: robust `_index` read DONE (mtds@62b7ff74) — direct parquet fallback + within-bounds
       reclassification** (slot-5 2026-06-03). `reemit_honest_absence_rows` uses `read_availability_index(bucket)` which
       returns **0 rows on this host** (gcsfs/aiodns DNS flakiness — the audit reads `_index/availability_index.parquet`
       directly via download+`pd.read_parquet` for exactly this reason) → the re-emit can SILENTLY no-op. Fix: read the
