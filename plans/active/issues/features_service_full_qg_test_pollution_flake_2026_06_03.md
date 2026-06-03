@@ -48,3 +48,30 @@ the singleton + restore `get_settings` in `tests/cross_instrument/conftest.py`),
 Then the full QG goes green and residual #1 ships via quickmerge. Owner: **features-service (vm-ml)**. Interim: local
 features-service ships are blocked until green — route via a Linux QG VM (different process/order may not trip it) OR
 fix the leak first. Repro: `bash scripts/quality-gates.sh --no-fix` (full) fails; `tests/calendar/unit/` alone passes.
+
+## UPDATE — slot-3 deeper dig (2026-06-03): NON-DETERMINISTIC + MULTI-VECTOR (scope ↑)
+
+Attempting the fix (operator chose "fix the flake") surfaced that it is **bigger than one culprit**:
+
+- **Different tests fail on different runs.** Run 1 (`quality-gates.sh`): the calendar `record_empty` test. Run 2
+  (`pytest tests/ -x`):
+  `tests/sports/integration/test_sports_integration.py::TestAvailableAtStampingIntegration::test_all_14_tables_have_available_at_after_batch_run`
+  — a `DependencyError` (mock GCS missing `entity=fixtures` blob). Both runs carry the SAME
+  `atexit manifest flush failed for features-cross-instrument-cefi-test-project … MagicMock get_settings().base_timeframe`
+  fingerprint.
+- **≥2 pollution vectors**, not one: (1) UTL **`_WRITE_BUFFER`** global (`manifest_writer.py:908`, bucket→records,
+  flushed at `atexit.register(flush_all_pending_buckets)` :1031) — a cross_instrument cefi test buffers a row with
+  `timeframe = get_settings().base_timeframe` (a MagicMock) and never flushes/clears it, so the row outlives the
+  `@patch` teardown; (2) **mock-GCS in-memory store** state — the sports-integration failure is a seeded `fixtures` blob
+  missing, i.e. cross-test GCS-store pollution, NOT the manifest buffer. The cross_instrument conftest autouse fixture
+  is only network-blocking — the leak is in a specific test, not the conftest.
+- **Likely macOS-local.** features-service ships via Linux CI, so the suite is presumably stably green on the Linux QG
+  VMs; the non-determinism reproduced twice here on local macOS. **CONFIRM**: is `quality-gates-v2` green for
+  features-service on the Linux runner? If yes, this is a local-dev-experience flake, not a fleet gate-breaker.
+
+**Revised recommendation:** (a) **ship residual #1 via a Linux slot/VM** (or let the staging-PR `quality-gates-v2` run
+on Linux) — do NOT block it on this; (b) treat the isolation remediation as a **dedicated features-service task** (not a
+30-min fix): add an **autouse reset of `_WRITE_BUFFER` + `_LIVE_WRITERS`** AND **mock-GCS-store isolation** between
+tests, find+fix the cross_instrument MagicMock-`get_settings` buffer-write, then verify across several full-suite runs
+(non-determinism → one green run is not proof). Owner: features-service (vm-ml). Partly composes with
+`quality_gates_resource_contention_speedup_2026_06_02.md`.
