@@ -8,6 +8,15 @@
 > agent-loaded context dropped (those root files no longer load). Keep the sharp directive + 1-line pointer; these rules
 > are NOT waste — they encode behaviours agents were missing; condense, don't drop.
 >
+> **Durable facts live HERE (one-liner + codex pointer), NEVER in agent "memory" (HARD RULE codified 2026-06-03)**:
+> Claude `memory/` is per-cwd (a different store per tab/slot), local-only (never git-tracked, never reaches a VM or a
+> teammate), and NOT inherited by sub-agents — so anything useful to another agent MUST land in this file (one-liner) +
+> its codex SSOT (detail), not memory. "Already in codex" is NOT a reason to skip — migrate it as a one-liner + SSOT
+> reference. Memory is reserved for session-local / personal (label Ikenna-vs-Harsh or macOS-vs-Linux deltas inline here
+> instead) / secrets-adjacent state (procedures + Secret-Manager _names_ may live here; raw key/token VALUES never do).
+> Sub-agents reach topic-parity via `SUB_AGENT_MANDATORY_RULES.md` (same topics, one-liner density). This header is the
+> SSOT for the rule.
+>
 > **Size budget**: keep lean (~400–600 lines — not a hard floor). When a section outgrows its essence, push the detail
 > to its codex SSOT + leave the directive + pointer here. Hard cap 1500/90KB (review-blocking).
 
@@ -154,6 +163,12 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - No `os.getenv()` — use `UnifiedCloudConfig`. No `# type: ignore`. No `try/except ImportError`.
 - `logger.warning("%s", _err.message)` not `logger.warning(_err.message)`.
 - No hardcoded `"/tmp"` — use `tempfile.gettempdir()`. SSOT: `codex/06-coding-standards/quality-gates.md`.
+- **Lazy-import heavy ML deps** (`optuna`/`sklearn`/`lightgbm`) INSIDE the methods that use them, never module-level —
+  UTL loads via the `__init__` chain in every service, so a module-level ML import crashes non-ML repos (e.g. the API
+  gateway). SSOT: `codex/06-coding-standards/README.md` § imports.
+- **`pyrightconfig.json` silently overrides `pyproject.toml`** — when both exist, basedpyright reads ONLY the former's
+  excludes/severities; mirror excludes into it or delete it. SSOT: `codex/06-coding-standards/quality-gates.md` § "Type
+  Checking Standards".
 
 ### Service architecture
 
@@ -189,9 +204,14 @@ constant**.
 
 - `EmptyConfirmedReason` is a closed set (UAC `EMPTY_CONFIRMED_REASONS`); blank reason → `LegacyBlankErrorReasonError`.
 - Cluster validation MANDATORY at `record_captured()` for bundled data_types (else `MissingClusterValidationError`).
-- **TradFi `source=` REQUIRED** (`record_captured(source=...)`; closed set `databento`/`massive`; else
-  `MissingSourceError`; QG STEP 5.64). Multi-source union: ≥1 `captured` → cell `captured`; priority via
-  `select_primary_available_source()`.
+- **`source=` provenance is CROSSCUTTING — all asset_groups, not TradFi-only** (operator-confirmed 2026-06-01;
+  supersedes the prior TradFi-only framing). The same logical metric arrives from >1 source over time, so disambiguate
+  with a **row-level `source` column + a per-source manifest row** (NOT a hive path key); `record_captured(source=...)`
+  REQUIRED for every captured cell (even single-source today, for swap-resilience); raise `MissingSourceError` when
+  blank or not in `SOURCE_PRIORITY[(asset_group, data_type)]`; resolve downstream via
+  `select_primary_available_source()` (multi-source union: ≥1 `captured` → cell `captured`). Computed/service-only
+  outputs are exempt. Today only `tradfi` is wired (`databento`/`massive`, QG STEP 5.64); cefi/defi/sports are RED gaps;
+  prediction N/A. SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
 - `available_at` is per-row write-time (UTL asserts). Service-output emission via `_resolve_policy_output_data_type` +
   `_publish_emission_check`.
 - **Single-walk discipline (HARD RULE)**: the Phase 2.2 migration walks every parquet ONCE — any new whole-corpus GCS
@@ -244,7 +264,10 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   `registry/data_source_continuity.py`.
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
-  parquets to mask phantoms.
+  parquets to mask phantoms. **After a GCS path migration, large phantom counts are usually false positives** — verify
+  `ASSET_GROUP_CONFIG[ag]["prefix_tpls"]` covers the new path shape BEFORE any `--apply` (running `--apply` on false
+  positives flips real `captured` rows → `attempted_failed`); fix templates + re-run. SSOT:
+  `codex/02-data/pipeline-mode-partition.md` § Axis-10.
 - **Manifest consolidator runtime**: Cloud Run Jobs + Scheduler (GCP) / Batch Fargate + EventBridge (AWS) — NOT a VM
   (legacy GCE launcher DELETED 2026-05-20; do not relaunch). TF:
   `deployment-service/terraform/{gcp,aws}/manifest_consolidator_scheduler.tf`. **Liveness (live)**: read path loud-fails
@@ -389,6 +412,13 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   paste.)
 - **Rule-amnesia stop** — halt the session if an agent uses `os.getenv()` / `pip install` / direct `git push` /
   `setup_cloud_logging` / suggests skipping tests.
+- **No `python3 << EOF` / inline-Python for file analysis** — catastrophic `re` backtracking caused two 12–22h runaway
+  processes; use `rg`/`grep`, and if Python is genuinely needed wrap it in `timeout 30` + read line-by-line.
+- **Never pipe a backgrounded command through `tail`/`head`** — the pipe buffers ALL output until the process exits
+  (zero visible progress for 30+ min); let `run_in_background` stream to a file, then read it with a SEPARATE call.
+- **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
+  in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
+  only after all come up empty. Composes with the "harvest from existing" discipline.
 
 ### Python service/library specifics
 
@@ -424,6 +454,36 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   `workspace-manifest.json` registry. NOT a Python package. `workspace-manifest.json` change → regen DAG SVG
   (`scripts/manifest/generate_workspace_dag.py`). Never push PM unless dependency-alignment passes
   (`check-dependency-alignment.py --json` → `"aligned": true`).
+
+### Migrated operational one-liners (memory→CLAUDE.md SSOT-refs, 2026-06-03)
+
+Cross-domain rules folded out of per-tab session memory; detail lives in the cited SSOT (read it, don't act from this
+line):
+
+- **HWM is never raw equity** — three simultaneous methods: TWR HWM (perf %), Notional HWM (transfer-adjusted native
+  units), PnL Recovery (USDT for `pnl_based` accounts); never `max(equities)`, never convert a USDT recovery seed to
+  BTC. Code: UTL `post_trade/hwm_invariants.py` + client-reporting-api `core/hwm_seeds.py`. SSOT:
+  `codex/09-strategy/operational/pnl-attribution.md`.
+- **Treasury/wallet hierarchy is keyed by `share_class`, not chain** (USDC/ETH/SOL/BTC) — DeFi 20% treasury / 80%
+  hot-per-strategy-per-chain, CeFi 0/100, Sports no split; Copper MPC custody. SSOT:
+  `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
+- **Never copy instrument definitions between dates** — instruments expire/list daily (CME futures/options); always
+  re-run the instruments-service CLI for the specific missing date. Only static exception: CBOE VIX index.
+- **Server-side Next.js API routes use `firebase-admin`, never the client SDK** — the client SDK reads
+  `NEXT_PUBLIC_FIREBASE_*` and silently no-ops on UAT (route returns 200 with no write / empty `submissionId`). SSOT:
+  `codex/08-workflows/client-onboarding.md` + `codex/05-infrastructure/firebase-split-topology.md`.
+- **GCS canonical batch paths carry `pipeline_mode=batch_*/` LEFT of `asset_group=`** (Phase 3 done) — a prober hitting
+  `raw_tick_data/by_date/day=*/asset_group=*/` without `pipeline_mode=` is on the OLD shape; reader-fallback probes both
+  until Phase 8 (~2026-06-15) removes it. Sports uses `candidate_parquet_paths()` (unaffected). SSOT:
+  `codex/02-data/pipeline-mode-partition.md`.
+- **Bump `MAX_DURATION=600` over suppressing the QG `<300s` time check** — when a suite organically outgrows the budget,
+  raise it (with a `#` comment on what grew); never deselect/skip slow tests (masks runaway regressions).
+  `IGNORE_TIMEOUT=true`/`PYRIGHT_TIMEOUT` stay sanctioned for META-gate-only trips. SSOT:
+  `codex/06-coding-standards/quality-gates.md`.
+- **UTL-on-a-VM crash-cascade checklist** — pip-installing UTL on a VM also needs: (1) `cloud-providers.yaml` on disk +
+  its env var, (2) `GCP_PROJECT_ID`/`PROJECT_ID`/`DEPLOYMENT_ENV_SHORT` exported (prod→prd/staging→stg/dev→dev), (3)
+  `deployment_service` importable, (4) NO backticks inside the `STARTUP="..."` heredoc (shell command-substitution at
+  launch). SSOT: `codex/05-infrastructure/vm-tarball-deployment.md` § "UTL-on-a-VM staging checklist".
 
 ---
 

@@ -723,6 +723,28 @@ deployment-service@29eb7ad.
 
 ---
 
+## UTL-on-a-VM staging checklist (crash-cascade prevention)
+
+`pip install`-ing `unified-trading-library` on a VM is necessary but NOT sufficient — UTL resolves cloud config, project
+identity, and the deployment-service log-backup path at import/runtime. Miss any of the four below and the VM crashes in
+a cascade (the watchdog can't back up logs → it looks like a silent VM death). Codified from a recurring incident. All
+four must hold:
+
+1. **`cloud-providers.yaml` is on disk + pointed at by its env var.** The bucket-name SSOT resolver reads it; absent →
+   `resolve_bucket_name()` fails on first use. Stage the file in the tarball / startup and export the path env.
+2. **Project + env vars exported**: `GCP_PROJECT_ID` (and `PROJECT_ID`) + `DEPLOYMENT_ENV_SHORT` (`prod`→`prd` /
+   `staging`→`stg` / `dev`→`dev`). UTL uses `GCP_PROJECT_ID` (never `GOOGLE_CLOUD_PROJECT`/`GCP_PROJECT`).
+3. **`deployment_service` is importable** on the VM — the watchdog's log-backup path imports it; missing → the backup
+   step throws and the watchdog itself dies.
+4. **No backticks inside the `STARTUP="..."` heredoc.** Backticks trigger shell command-substitution at launch time
+   (before the script runs), corrupting the startup script. Use `$(...)` only where substitution is intended; avoid
+   backticks in any embedded documentation strings.
+
+Symptom when violated: VM reaches `RUNNING` but produces no heartbeat / no progress and the zombie watchdog reports it
+as silent. Verify all four at the T+10min post-launch check.
+
+---
+
 ## Cross-references
 
 - Operational howto: [`deployment-service/scripts/vm/README.md`](../../../deployment-service/scripts/vm/README.md)

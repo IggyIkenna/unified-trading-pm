@@ -217,6 +217,108 @@ back-merges to LDR — so a `quality-gates.sh`-green commit is the per-repo boun
 - If paste impractical (small-context spawn), prepend at TOP of prompt: "Before any action, read
   `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules strictly."
 
+## Topic-parity index — one-liner + pointer (read CLAUDE.md § / the codex SSOT for detail)
+
+You have topic-parity with CLAUDE.md via this index: every workspace rule is named here so you know it exists and where
+to read it. The sections above are the non-negotiable floor; the lines below are the rest of the surface — read the
+pointer before acting on any of them.
+
+**Model + environment**
+
+- **Model tier**: default Sonnet 4.6 / thinking medium; escalate to Opus only for cross-repo/>200k-ctx; your own `Agent`
+  spawns MUST set `model=` explicitly. SSOT: `codex/06-coding-standards/model-tier-selection.md`.
+- **Venv split**: tests via `quality-gates.sh` only; per-family layouts (`tests/<family>/unit/`) need
+  `PYTEST_UNIT_DIR="tests/"` set before `source base-service.sh`. SSOT: `codex/06-coding-standards/quality-gates.md`.
+
+**Data / manifest correctness (the heartbeat — no deferrals)**
+
+- **Manifest**: 4-state `capture_status`; canonical schema v9 but **trust the actual `schema_version` distribution, not
+  the constant**; never emit silent placeholders. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
+- **`source=` provenance is CROSSCUTTING** (all asset_groups, not TradFi-only): row-level `source` column + per-source
+  manifest row + `MissingSourceError` per captured cell; resolve via `SOURCE_PRIORITY`. SSOT:
+  `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
+- **Shard-granularity SSOT**: shard atom identical across writer/manifest/status/gate/UI; 4-pillar validation. **Live =
+  batch / Batch = Live**: same code path, no live-only data_types, no per-asset-group backtest engines.
+- **GCS paths carry `pipeline_mode=batch_*/` left of `asset_group=`**; phantom-audit `--apply` only after `prefix_tpls`
+  cover the new shape (else flips real `captured`→`attempted_failed`). SSOT: `codex/02-data/pipeline-mode-partition.md`.
+- **Data audit RED freezes layer-N+1 work**; only operator-gated `BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/
+  `-UPSTREAM-OUTAGE` defer (DEFERRED needs a named successor plan). SSOT:
+  `codex/02-data/external-data-always-available-rule.md` + `data-pipeline-correctness-hard-rule.md`.
+
+**Architecture**
+
+- **instruments-service owns reference data + venue URLs/universe** (MTDS derives, never hardcodes); MTDS is market data
+  only; never copy instrument definitions between dates (re-run the IS CLI; VIX index is the only static exception).
+- **HWM is never raw equity** (TWR / Notional / PnL-recovery); **treasury keyed by `share_class`, not chain**. SSOTs:
+  `codex/09-strategy/operational/pnl-attribution.md`, `codex/04-architecture/wallet-hierarchy-and-capital-flow.md`.
+- **Client funds NEVER move between clients** — every transfer scoped to one `client_id`; "cross-client rebalancing" is
+  review-blocking (say "intra-client multi-portfolio/wallet"). SSOT: `codex/04-architecture/client-funds-isolation.md`.
+- **Server-side Next.js routes use `firebase-admin`, never the client SDK** (silent 200-no-write on UAT). SSOT:
+  `codex/08-workflows/client-onboarding.md` + `codex/05-infrastructure/firebase-split-topology.md`.
+- **DeFi execution**: credential convention per interface; `DefiErrorCode` for classification; removed providers
+  (Elysium/Arkham/Bloxroute/Infura/Kaiko/Polygon.io) — do NOT reference; May-23 custody = `CLOUD_KMS_ENCRYPTED`. SSOT:
+  `codex/04-architecture/defi-execution-overview.md`.
+
+**Infra / VM / orchestrator**
+
+- **VM launchers** live in `deployment-service/scripts/vm/` (prefix in `VM_PREFIX_TO_BUCKET` + lifecycle_class; zone
+  `asia-northeast1-c`, fall back within-region only). **UTL-on-a-VM** needs cloud-providers.yaml + project/env vars +
+  `deployment_service` importable + no backticks in the STARTUP heredoc. SSOT:
+  `codex/05-infrastructure/vm-tarball-deployment.md`.
+- **GCS object ops**: use `unified_trading_library.cloud_interface.gcs_copy_object`/`gcs_delete_object`/
+  `gcs_describe_object` — never subprocess `gcloud`/`gsutil` per-object. SSOT:
+  `codex/05-infrastructure/gcs-object-operations.md`.
+- **Manifest consolidator** is Cloud Run / Batch-Fargate (NOT a VM); read path loud-fails on a stale index. Per-VM
+  shards: `VM_NAME=<tag>` + `MANIFEST_PER_VM_SHARDS=true`. Pre-migration: drain ALL VMs + consolidate + snapshot first.
+- **Orchestrator**: backlog auto-derives from plan `- [ ]` checkboxes (never hand-edit `backlog.yaml`); AutoSpawn/
+  Watchdog/Failover ON by default (don't manually kill tmux); auth = HS256 operator JWT + ES256 internal proxy + per-id
+  setup-token env files (never `.credentials.json`). SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
+
+**Plans / process / CI**
+
+- **Plan format**: `- [x] [CAT] P0. ...`; active plans need `parent_epic:` + 3 estimate fields + `assigned_vm:`
+  (orphans/unknown-vm review-blocking); epics in `plans/epics/` are estimate-exempt. SSOT: `plans/PLAN_FORMAT.md`.
+- **Estimate calibration**: refactor 0.4× / design 0.6× / infra 0.8× / brand-new 1.0× / research 1.2×.
+- **Fanning-out = a tracked plan todo** (target repo named) — never verbal/chat dispatch; grep `plans/active/` before
+  ending a session. **Every active ping references a plan-of-record** or it's removed.
+- **CI**: after a main/PR push verify `gh run list`; required check is `quality-gates-v2`; on fail
+  `gh run view --log-failed` + fix root cause (CI failures are NOT issues to flag). LDR has no remote CI.
+- **Version**: never bump manually (semver-agent owns it); docs/`*.md`/`*.mdc` PR→main, scripts/workflows PR→staging;
+  respect `locked_by:`, never unlock autonomously; 5-step plan-archival ritual incl. codex-alignment check.
+- **Post-phase codex audit**: update changed codex contracts / stub new patterns / SUPERSEDED-banner invalidated docs.
+- **No summary docs** (`*_SUMMARY.md` etc.); **prettier** `.md/.json/.yaml/.ts*` before commit; **delete deprecated
+  code** (no shims); **never** `git reset --hard`/`clean -fd`/`restore` on uncommitted work; plans live only under
+  `unified-trading-pm/`.
+- **Kill-switch scope**: protective arming is always autonomous; resume/un-kill autonomous only within the auto-recovery
+  matrix (`manual_unkill` = human-only). SSOT: `codex/04-architecture/autonomous-recovery-matrix.md`.
+
+**Agent behavior + tooling footguns**
+
+- **No `python3 << EOF` for file analysis** (regex-backtracking runaways) — use `rg`/`grep`; **never pipe a backgrounded
+  command through `tail`/`head`** (buffers until exit). **Context7** for external-lib questions; **max 10 parallel
+  agents** (never same file). **Clear context = implement, don't ask** when plan/SSOT names the canonical approach.
+- **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
+- **QG-sweep**: batch the GATE not the commits; shared-host ≤1–2 full QGs at once; never bulk-kill another slot's
+  `pytest`/QG/`basedpyright`; bump `MAX_DURATION=600` over suppressing the `<300s` check.
+
+**Python / UI specifics**
+
+- **No pickle**; file limits (900 lines / 200 func / 50 method / coverage ≥70%); `engine/` imports nothing from
+  `adapters/`; **UTC always** (`datetime.now(timezone.utc)`); aiohttp not requests in async; **cloud-agnostic I/O**
+  (`get_storage_client()`/`get_secret_client()`); event metadata
+  (`correlation_id`/`duration_ms`/`stack_trace`/`client_order_id`).
+- **Lazy-import heavy ML deps** (optuna/sklearn/lightgbm) inside methods; **`pyrightconfig.json` overrides
+  `pyproject.toml`** for basedpyright.
+- **UI repos**: tsc/ESLint/Vitest/Playwright only (never uv/pytest/ruff); TS strict, no `any`; Vitest `pool:"forks"`; UI
+  todos need `[UI]` + `pw:L2 ✓` + a cited regression spec before ticking. SSOT:
+  `codex/06-coding-standards/ui-testing-layers.md`.
+
+**UAC**
+
+- Import `from unified_api_contracts.{domain} import X` only (never `canonical.*`/`normalize_utils.*`); never reference
+  deleted dirs (`canonical/normalize/`, `external/sports|onchain|macro|kaiko|polygon/`, `schemas/`, `shared/`); global
+  ledger in `unified_api_contracts.canonical.crosscutting.ledger`. SSOT: `codex/02-data/contracts-scope-and-layout.md`.
+
 ## When in doubt
 
 - **Read `cursor-configs/CLAUDE.md`** in full — it's the workspace SSOT for every HARD RULE + key rule.
