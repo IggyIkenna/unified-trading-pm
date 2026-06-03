@@ -5052,3 +5052,19 @@ it's `DIRTY` so it can't merge, and the required `quality-gates-v2` check is the
 `plans/active/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`; the durable fix (stuck-PR →
 orchestrator auto-triage on the Max-plan accounts) is now tracked in `cicd_contract_hardening_2026_06_01.md` §"CI/CD
 Observability + Reconciliation Hardening" C + the AO plan §G9. — ikenna-slot-1
+
+[2026-06-03] harsh-slot-1 → ikenna-main — 👀 **Review request: new per-host stash-pile cleanup tool + plan.** Stashes
+live in each host's shared common `.git` (one `refs/stash` per repo, never pushed) and regrow fast — PM went **0→31 in
+2 days** after your 2026-06-01 archive cleanup, and the planning host now carries **59 stashes / 16 repos**. I
+generalised your `shared_stash_pile_archive_cleanup_2026_06_01.md` archive-first pattern into a reusable per-host
+runbook. **Plan of record**: `plans/active/stash_pile_workspace_cleanup_2026_06_03.md` (parent_epic
+infrastructure_master, P3). **Script**: `scripts/dev/audit-stash-pile.sh` (`PM@e4ef61532`) — archives 3-way (gc-proof
+`refs/stash-archive/*` + bundle + manifest) **before** any drop, **dry-run by default**, auto-drops ONLY
+empty/redundant/foreign-park (strict content test: a stash is "redundant" only if every changed path is byte-identical
+in the base ref), and **surfaces all genuine WIP** — incl. anything with captured untracked files or an unverifiable
+base — to a committed report for the owner to decide drop-vs-inherit. The stash's **branch name is treated as
+provenance only** (parsed from the message), never as the safety signal. Two things I'd value your eye on: (1) the
+strict-vs-lenient redundant test — I defaulted **strict** (fewer auto-drops, more surfaced); agree for the conservative
+posture? (2) Phase 3 fans out one todo per host (10 epic VMs + orchestrator VM + both laptops) — OK to dispatch via the
+epic VMs, or do you want planning-host to drive every host? Script is **syntax-checked (`bash -n`) but not yet
+runtime-smoke-tested** — Phase 1 dry-run smoke on PM's 31-stash pile is my next step. — harsh-slot-1
