@@ -276,19 +276,32 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 - [ ] [DATA] P0. **Rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
       failure to `empty_confirmed`. (The existing 1.33M `attempted_failed` rows — E6 below — must survive as v9
       `attempted_failed`, still flagged for backfill, not collapsed to empty.)
-- [ ] [DATA] P0. **Absorbed from `cefi_processed_candles_manifest_file_disconnect` (harsh, 2026-06-03): MTDS
-      processed_candles phantom-`captured` reconcile.** MTDS marks `processed_candles/` cells `captured` (with row
-      counts) for KRAKEN/BITFINEX/late-April venues where **no processed-candle file exists** (~42% phantom on the
-      2026-05-02 test date; late-April dates fully phantom; verified by direct GCS object-listing 2026-05-26). MDPS
-      writer already VERIFIED correct (`io/writer.py:write_candles` co-emits parquet + manifest row, returns None on
-      empty) — the phantom source is **MTDS** (all phantom rows `service_name="market-tick-data-service"`). Root-cause
-      the MTDS pre-marking (hypotheses: (a) MTDS raw rows + MDPS processed rows share ONE `_index` with conflicting
-      `captured` semantics — raw-captured ≠ processed-available, so a processed-candle consumer over-trusts MTDS raw
-      rows; (b) backfill in-progress + MTDS marks `captured` ahead of MDPS). Then reconcile phantom `captured` →
-      `attempted_failed`/`expected_unattempted` (honest-absence) IN the E5 rebuild, OR complete the cefi
-      processed-candles backfill + re-emit from corpus. Quantify exhaustively first:
-      `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group cefi --dry-run`. Repo: MTDS (+
-      IS verify). On GREEN, archive the absorbed issue doc.
+- [ ] [DATA] P0. **Absorbed from `cefi_processed_candles_manifest_file_disconnect` (harsh) — ROOT CAUSE CORRECTED by
+      direct `_index` query (slot-3 2026-06-03).** The reported "MTDS marks `processed_candles` `captured` with no file"
+      is a **category error, NOT manifest corruption.** Reading the live cefi `_index` (2,640,864 rows): the manifest
+      **already disambiguates surfaces via `data_type`** — RAW tick (`trades` 1.19M / `book_snapshot_5` /
+      `derivative_ticker` / `liquidations` / `futures_chain`, ~all `service_name=market-tick-data-service`) vs CANDLE
+      (`ohlcv_1m/5m/15m/1h/4h/1d`, **only 8,715 rows**, mostly `service_name=market-data-processing-service`). The issue
+      cross-checked `processed_candles/` FILES against **`trades`-captured** rows; a `trades` `captured` row (MTDS)
+      correctly means the **RAW** tick file exists (VERIFIED: day=2026-05-02 BITFINEX/BITGET/KRAKEN raw `trades` files
+      present) — the manifest **never marked CANDLES captured** for those venues (on 2026-05-02 KRAKEN/BITFINEX have NO
+      `ohlcv` rows at all). So MTDS is NOT writing phantom processed-candle rows; hypothesis (b) is disproved and the
+      `reconcile_phantom_manifest_rows_all.py` flip-to-`attempted_failed` would WRONGLY demote correct raw rows (it only
+      probes `raw_tick_data/` anyway). Real findings to action (3 sub-items, repos noted):
+  - [ ] [CODE] P0. **Read-side contract fix (features-service).** Whatever derives cefi candle / processed-candle
+        availability MUST key off `ohlcv_*` `data_type` rows (the candle surface), NOT `trades`-captured rows nor a raw
+        `processed_candles/` path probe. Find + fix the consumer (the `features_service_e2e_pipeline_test` Phase-0 path
+        that surfaced this). Repo: features-service.
+  - [ ] [DATA] P1. **Real cefi candle-coverage gap (partial backfill).** `ohlcv_*` manifest rows are sparse (8,715) and
+        processed-candle FILES exist only for a partial venue set (BITGET-heavy; e.g. day=2026-05-03 = BITGET-FUTURES
+        319 / BITGET-SPOT 151 / BITFINEX-FUTURES 90 / KRAKEN-FUTURES 18). MDPS candle generation for cefi is incomplete
+        → track + complete the candle backfill (separate from raw-tick canonicalisation). Repo: MDPS.
+  - [ ] [DATA] P1. **VERIFY MDPS candle-manifest faithfulness.** Do the `ohlcv_*` rows faithfully reflect the candle
+        files that DO exist, or is MDPS under-emitting `ohlcv` rows for written candle files? Compare `ohlcv` row
+        coverage vs candle-file coverage on a sample day. Also reconcile the minor cross-writes (782 MTDS-written
+        `ohlcv` rows; 616 MDPS-written `trades` rows) — confirm which service legitimately emits `ohlcv` per venue (MTDS
+        REST-poll venues like LIGHTER/PACIFICA vs MDPS-processed). Repo: MDPS (+ MTDS REST-poll path). On all three
+        GREEN, archive the absorbed issue doc.
 - [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS cefi/tardis adapters)**: on a genuine API error
       (timeout/5xx/429/auth) for an in-universe instrument within coverage bounds, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the cefi/tardis

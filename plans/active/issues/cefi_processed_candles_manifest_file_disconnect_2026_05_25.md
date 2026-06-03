@@ -14,10 +14,21 @@ priority: P2
 ---
 
 > **🟩 ABSORBED INTO THE CEFI MASTER — slot-3, 2026-06-03.** Operator moved CeFi end-to-end to slot 3 (harsh out for the
-> day). SSOT for this work is now `cefi_manifest_canonicalisation_2026_06_01.md` (the CeFi master orchestrator), tracked
-> as the **"MTDS processed_candles phantom-`captured` reconcile"** todo in its CF-11 section. The earlier ROLLOUT-AGENT
-> HOLD is **LIFTED** (no longer harsh-held). This doc archives when that todo is GREEN. The diagnosis below is retained
-> for context and carried into the master todo. (Harsh: ack on return — see `plans/active/_agent_pings.md`.)
+> day). SSOT for this work is now `cefi_manifest_canonicalisation_2026_06_01.md` (the CeFi master orchestrator) §CF-11.
+> The earlier ROLLOUT-AGENT HOLD is **LIFTED** (no longer harsh-held). Harsh: ack on return — see
+> `plans/active/_agent_pings.md`.
+>
+> **🔬 ROOT CAUSE CORRECTED — direct `_index` query (slot-3 2026-06-03).** The "manifest claims `captured` for
+> processed*candles with no file" framing below is a **category error, not manifest corruption.** The cefi `_index`
+> (2,640,864 rows) **already disambiguates surfaces via `data_type`**: RAW tick (`trades` 1.19M etc., `service_name=`
+> market-tick-data-service) vs CANDLE (`ohlcv_1m/5m/…`, only **8,715 rows**, mostly market-data-processing-service). The
+> observations below cross-checked `processed_candles/` FILES against **`trades`-captured** rows — but a `trades`
+> `captured` row (MTDS) correctly means the **RAW** file exists (verified: day=2026-05-02 BITFINEX/BITGET/KRAKEN raw
+> `trades` present; those venues have NO `ohlcv` rows). So MTDS writes no phantom candle rows; the
+> `reconcile→attempted_failed` fix would wrongly demote correct raw rows. **Real residuals** (now tracked as 3 sub-todos
+> in the master §CF-11): (1) read-side contract — candle consumers must key off
+> `ohlcv*\*`, not `trades`/`processed_candles/`path (features-service); (2) real partial cefi candle backfill (MDPS); (3) verify MDPS`ohlcv`
+> row-vs-file faithfulness. This doc archives when those are GREEN. Diagnosis below retained for context.
 
 ## What I found
 
