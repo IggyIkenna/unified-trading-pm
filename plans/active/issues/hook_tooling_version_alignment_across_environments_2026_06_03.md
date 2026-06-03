@@ -54,24 +54,33 @@ pre-formats with prettier 3.6.2 but CI/the hook checks with 3.2.0, every touched
 VMs committing without hooks installed means agent commits on the fleet skip gitleaks + the branch-drift gate + the
 auto-stage safety entirely — a correctness + secrets-hygiene gap, not just cosmetic.
 
-## Recommended decision (operator)
+## Decisions (operator, 2026-06-03)
 
-1. **prek vs pre-commit going forward** — standardize on **prek** as the single runner (it's the one CLAUDE.md already
-   references). If so: keep the `prek` pin, **retire the `pre-commit<4.0.0` pin** (or bump it so the laptop's 4.5.1 is
-   legal), and update `check-precommit-versions.py` + quickmerge's probe to use `prek` (prek → pre-commit → npx).
-2. **Canonical prettier version** — pick ONE (align quickmerge's `prettier@X`, the `.pre-commit-config` mirror rev, and
-   the prettier-autostage resolver to the same X) and make `check-precommit-versions.py` enforce it like it does ruff.
-3. **VM bootstrap** — add prek install (at the pinned version) + `prek install` (hook setup) to `bootstrap_vm.sh`, and a
-   prek presence+version assertion to `worker-host-preflight.sh`, so the fleet matches the laptop/CI toolchain.
+1. **Hook runner = prek (single runner).** Retire the `pre-commit` pin from `workspace-constraints.toml`; switch
+   `check-precommit-versions.py` + quickmerge to prek. (Resolves the laptop 4.5.1-vs-`<4.0.0` drift by removing the dead
+   pin.)
+2. **Canonical prettier = `3.6.2`** (verified: `unified-trading-system-ui` + `deployment-ui` `package.json` both pin
+   `^3.6.2`; quickmerge already uses `prettier@3.6.2`). The `.pre-commit-config.yaml` `v3.2.0` mirror rev is **DEAD**
+   (replaced by the `prettier-autostage` wrapper, which resolves repo-local 3.6.2) — it is a stale-config landmine to
+   clean up, not an active second version.
+3. **VM bootstrap** — add prek + `prek install` to `bootstrap_vm.sh` + a prek assertion in `worker-host-preflight.sh`.
 
-## Proposed todos (after decisions)
+**Already aligned (no work needed):** quickmerge's `--files` path pre-formats with `npx prettier@3.6.2` scoped to
+`--files` and re-stages only `--files` on retry (shipped 2026-06-03 PRs) — so the path agents actually use already
+matches both decisions on every host (laptop + VM), independent of whether prek/pre-commit is installed.
 
-- [ ] [SCRIPT] P1. Standardize hook runner = prek; retire/bump the `pre-commit` pin in `workspace-constraints.toml`
-      (re-derive via `resolve-canonical-versions.py`). Target: unified-trading-pm.
-- [ ] [SCRIPT] P1. Pin one canonical prettier version across `quickmerge.sh`, `.pre-commit-config.yaml`, and
-      `prettier-autostage.sh`; extend `check-precommit-versions.py` to assert prettier rev like ruff. Target:
-      unified-trading-pm + fleet via `rollout-prettier-unified.py`.
-- [ ] [SCRIPT] P1. `bootstrap_vm.sh`: install prek at the pinned version + run `prek install`;
-      `worker-host-preflight.sh`: assert prek present + version-matches. Target: agent-orchestrator.
-- [ ] [SCRIPT] P2. quickmerge probe order `prek` → `pre-commit` → npx (align with the runner decision). Target:
-      unified-trading-pm.
+## Actionable todos
+
+- [ ] [SCRIPT] P1. `bootstrap_vm.sh`: install prek at the pinned version + run `prek install` (so on-commit hooks —
+      gitleaks / branch-drift / prettier-autostage — actually run on worker+orchestrator VMs, not just laptop/CI);
+      `worker-host-preflight.sh`: assert prek present + version-matches. **Highest impact** (VM commits currently bypass
+      all hooks). Target: agent-orchestrator. NOTE: untestable from a laptop slot + AO is mid-migration (G6) — route to
+      the AO/fleet owner.
+- [ ] [SCRIPT] P1. Retire the `pre-commit` pin in `workspace-constraints.toml` (prek-only); re-derive via
+      `resolve-canonical-versions.py`; switch `check-precommit-versions.py`'s `pre-commit install` → `prek install` and
+      add a prettier-`3.6.2` rev assertion alongside the ruff one. Target: unified-trading-pm.
+- [ ] [SCRIPT] P2. Clean up the dead `.pre-commit-config.yaml` prettier mirror `rev: v3.2.0` → `v3.6.2` (or remove the
+      replaced mirror block) for clarity; roll out fleet-wide via `rollout-prettier-unified.py`. Target:
+      unified-trading-pm + fleet.
+- [ ] [SCRIPT] P3. quickmerge UNSCOPED-path probe (`--files`-absent) `pre-commit run prettier` → prek (cosmetic; the
+      `--files` path is already canonical-npx). Target: unified-trading-pm.
