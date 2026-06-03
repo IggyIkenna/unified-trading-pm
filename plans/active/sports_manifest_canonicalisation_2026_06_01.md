@@ -940,17 +940,19 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 **Follow-ups surfaced by the P1 work (2026-06-03):**
 
-- [ ] [CODE] P2. **Add `capture_status` to the FSS `SportsFeatureEvent` Pub/Sub contract** — repos:
-      `unified-api-contracts` (add the field to the sports feature event schema) + `features-service` (stamp it on emit,
-      from the manifest) + `strategy-service` (`SportsFeatureSubscriber` consume it instead of the implied-probability
-      heuristic shipped in c2793217). Surfaced by P1.8b: honest-absence info lives in the GCS manifest, not the event,
-      so the live subscriber can only heuristically detect empty vectors today. Proper fix = carry `capture_status` on
-      the event so the subscriber gates on the real 4-state signal.
-- [ ] [CODE] P3. **Unify the duplicated `assert_upstream_manifest_healthy` in features-service** — repo:
-      `features-service`. P1.6 (features@4b628d1a) created the shared `sports/cli/handlers/_manifest_preflight.py` for
-      the batch path, but `sports/live/runner.py` keeps its own identical copy because the existing live-runner test
-      monkeypatches `runner.assert_consolidator_healthy` at module level. Refactor the live-runner test to patch the
-      shared module, then delete the duplicate so there is ONE gate implementation. Tidy-up; no behaviour change.
+- [x] ✅ [CODE] P2. **DONE 2026-06-03 — `capture_status` now carried on the FSS→strategy sports PubSub payload.** Wire
+      trace: that path is raw PubSub JSON (a dict), NOT the Redis-cascade `FeaturesComputedEvent` — so `capture_status`
+      was added as a **sports-payload key** (UAC `SPORTS_FEATURE_PAYLOAD_CAPTURE_STATUS_KEY` +
+      `SportsFeatureCaptureStatus` Literal in `canonical/domain/sports/live.py`, uac@ec947a7e+b24baa7d), NOT on the
+      generic cross-AG event (avoids all-families blast radius — correct scoping). features-service@e2249fd9 stamps it
+      on every emitted record (`subscriber._classify_record_capture_status`); strategy-service@fb3f8f7f reads it first
+      and gates on `empty_confirmed`/`attempted_failed`, keeping `_is_honest_empty_vector` as a pre-rollout fallback
+      only. 3 (UAC) + 9 (features) + 12 (strategy) tests. Original gap: allocation-guard's subscriber had no real
+      capture_status signal.
+- [x] ✅ [CODE] P3. **DONE features-service@e2249fd9** — `sports/live/runner.py` now imports + re-exports
+      `assert_upstream_manifest_healthy` from the shared `sports/cli/handlers/_manifest_preflight.py`; the duplicate
+      `_assert_upstream_manifest_healthy` deleted (ONE gate impl). `test_live_runner.py` monkeypatch retargeted to
+      `_manifest_preflight.assert_consolidator_healthy`. No behaviour change.
 
 **Non-blocking / N/A (documented for completeness, no migration break):**
 
