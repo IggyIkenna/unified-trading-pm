@@ -562,6 +562,53 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       hand-corrected** via `ci-status-update` → MAIN_GREEN (v2 was green on main/staging/LDR; the FAILING was the
       Agent-Audit false-flip), which unblocked UTL in the dep-order gate. Guard 3 prevents recurrence. NOTE: it
       activates once on PM main (reaches main via the normal flow). repo: unified-trading-pm.
+      **VALIDATED IN PRODUCTION 2026-06-03**: Guard 3 dispatch found + reconciled **6 false-FAILING drift repos**
+      (client-reporting-api, deployment-service, instruments-service, market-tick-data-service, trading-agent-service,
+      unified-trading-pm — all v2-green on main, ci_status falsely FAILING from Agent-Audit flips) → MAIN_GREEN,
+      un-jamming the dep-order cascade. The "FAILING" repos were drift, NOT genuine reds (corrected an earlier
+      mis-diagnosis). The Agent-Audit credit-outage flips were the systemic source; Guard 3 is the standing cure.
+- [x] ✅ [SCRIPT] P1. **GAP CLOSED: FEATURE_GREEN→STAGING_GREEN now auto-advances (Guard 3, option-c)** — slot-1
+      2026-06-03 (PM@abe2ec3ae). Guard 3 (`ci-status-reconciler.yml`) deterministically advances a FEATURE_GREEN repo →
+      STAGING_GREEN iff staging-v2 is green AND `compare staging...live-defi-rollout ahead_by==0` (staging current with
+      LDR = merged) — truthful + non-over-promoting (merged+green guard). Closes the GITHUB_TOKEN-merge-no-v2-trigger
+      jam without ~14 manual fires; runs every 30 min. Live once #120 lands on main. (original gap analysis:) the recurring
+      cascade jam. When a LDR→staging PR auto-merges, the merge push to `staging` is made by GITHUB_TOKEN, which (by
+      design) does NOT trigger workflows → the `push:[staging]` `quality-gates-v2` never runs → its
+      `ci-status-update STAGING_GREEN` never fires → the repo stays `FEATURE_GREEN` after merging, dep-blocking its
+      dependents (observed 2026-06-03: UAC + ibkr merged to staging but stuck at FEATURE; UAC unblocked by a MANUAL
+      truthful `ci-status-update STAGING_GREEN` fire). Guard 3 does NOT fix this (it only reconciles FAILING↔green, not
+      tier-advance). **Systemic fix options:** (a) a `staging-merge → ci-status-update STAGING_GREEN` workflow
+      (`on: pull_request closed+merged, base staging`, fired with GH_PAT — verifies the PR's v2 was green), OR (b) arm
+      the promoter's auto-merge with GH_PAT so the staging push DOES trigger v2, OR (c) extend Guard 3 to advance
+      `FEATURE_GREEN→STAGING_GREEN` when `staging ⊇ LDR` (merged) AND staging-v2 green (needs a branch-ancestry check).
+      Interim (manual): fire `ci-status-update STAGING_GREEN` for each repo confirmed merged-to-staging + v2-green.
+      repo: unified-trading-pm. **This is the main remaining systemic blocker to a hands-off cascade.**
+- [ ] [INFRA] P0. **🔴 NEW DOMINANT BLOCKER — fresh aiohttp CVE fails pip-audit FLEET-WIDE → gates EVERY repo's v2
+      (and PM #120).** Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run: `aiohttp 3.13.5: CVE-2026-34993 +
+      CVE-2026-47265` (newly-published 2026 advisories). pip-audit is a **BLOCKING** gate (`base-service.sh:907`), so
+      every fresh `quality-gates-v2` run now fails on it → **nothing promotes LDR→staging→main** until resolved, and
+      **#120 (the Guard-3 serialization + FEATURE→STAGING auto-advance enhancements) can't reach main** → the cascade
+      self-sustaining-ness is gated on this. **DECISION (operator/security — not a unilateral agent call):** (a)
+      **PREFERRED if a patched aiohttp exists** — bump aiohttp to the fixed release (workspace-constraints.toml +
+      per-repo uv.lock re-lock, fleet-wide) — this is the proper security fix, not masking; OR (b) **if no fix yet /
+      accepted** — add `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` to the curated list at
+      `scripts/quality-gates-base/base-service.sh:916` (the established pattern — 4 CVEs already curated there) + the
+      base-library/base-ui mirrors, with a tracking note. This is the #1 thing to clear to let the (already-built)
+      cascade machinery finish. repo: unified-trading-pm (template) + fleet re-lock. **BLOCKED-OPERATOR-DECISION.**
+- [ ] [INFRA] P1. **Genuine v2-red repos surfaced by the cascade (NOT drift — need real per-repo fixes; the substance
+      of their own plans).** Distinct from the false-FAILING drift Guard 3 clears: (a) **execution-service** staging v2
+      fails with `ImportError: cannot import name …` (a stale cross-symbol import on staging — likely resolves when the
+      LDR→staging promotion lands LDR's current code, BUT verify LDR itself is import-clean; if LDR has the ImportError
+      it's a real code bug). (b) **agent-orchestrator** main v2 = failure (AO-specific; AO is mid-staging-migration per
+      `agent_orchestrator_e2e § G6`). These correctly DO NOT promote (don't ship red code) — they need per-repo
+      diagnosis + fix, not a ci_status reconcile. Cascade flows around them (their dependents may dep-block on them).
+      repos: execution-service, agent-orchestrator. Surfaced slot-1 2026-06-03.
+- [x] ✅ [SCRIPT] P0. **REGRESSION fixed: gitignored DAG-svg froze ci_status fleet-wide** — slot-1 2026-06-03 (PM #119).
+      The 2026-06-03 canonical ignore set gitignored `WORKSPACE_MANIFEST_DAG.svg`, but `ci-status-update.yml` still did
+      `git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg` → `git add` of an ignored path exits 1 → EVERY
+      ci_status write failed → cascade frozen. Fixed: commit only the manifest SSOT. **Lesson (codified in the canonical
+      ignore-set rule):** when gitignoring a previously-tracked regen artifact, audit + update every workflow/script that
+      `git add`s it. repo: unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Full PM `LDR→main` promotion — DONE 2026-06-03 (slot-1): dam DRAINED via #116 (MERGED).** main was
       254 behind LDR; PM workflows EXECUTE from main, so every LDR-shipped fix (Guard 2/3, deterministic resolver, clean
       conflict-agent, codex wipe, qg-gate fix) was INERT until this landed. Resolved deterministically: merged main→tab

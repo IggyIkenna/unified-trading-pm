@@ -20,14 +20,11 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
 
-> **🟢 VM RUNNING — E4 DRY migration (slot-5 2026-06-03 19:03 UTC).** `canonical-migration-prediction-20260603-190322`
-> (asia-northeast1-c, e2-standard-8) running
-> `migrate_prediction_to_pred_prd_v9 --start-date 2025-03-14 --end-date 2026-06-01 --workers 64` in **DRY mode (no
-> `--apply` — NO mutations, plans the moves only)**. SHA-pinned mtds@90aeb7dd / utl@101960a4 / uac@1bd28d8c (fresh
-> tarballs built 2026-06-03 — the prior tarball predated the `eb5eaad2` gcs_copy_object import fix). Auto-shutdown on
-> completion. **DO NOT launch a second prediction migration VM or run E2–E8 while this is up.** The IRREVERSIBLE
-> full-run (`full`/`--apply`) + E8 legacy-delete stay gated on operator review of this dry output. Banner-remove owned
-> by slot-5 at completion.
+> **⏸️ E4 DRY-RUN DONE 2026-06-03 (VM auto-deleted) — full-run AWAITING OPERATOR REVIEW.** The dry migration planned
+> **1,897,691** object moves (0 copied) cleanly (exit 0) — see the E4 todo for the per-phase breakdown + verified
+> transforms. **The next step is the IRREVERSIBLE-DIRECTION FULL run (`… full`/`--apply`, the live 1.9M write) — do NOT
+> fire it without operator sign-off on the dry plan.** E8 legacy-delete stays separately gated (post-E7-GREEN + shared
+> fleet drain with slot-2).
 
 ## Slot-5 Prediction master orchestrator — owned + attached plans/issues
 
@@ -145,13 +142,24 @@ be fixed first if run on a VM.
 > 4. Verify with `cf_manifest_audit_2026_06_01.py` (CF-1…CF-12 GREEN on pred-prd data-state) → delete legacy bucket.
 >    VM-run (object scan + consolidator); prediction-writer (`mdps-prediction-2025`) confirmed drained before `--apply`.
 
-- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
-      top-level trees + nested layouts in the prediction source + canonical buckets before the walk (`raw_tick_data/`,
-      `processed_candles/`, the 6-dimension `day=/category=/data_source=/venue=/…/market_category=/…` polymarket
-      layout); classify duplicate (keep freshest) vs complementary (migrate all → canonical v9). The existing
-      `rebuild_prediction_manifest.py` (ManifestWriter rebuild) is the manifest-side template. Cover every in-scope
-      layout or the walk is incomplete (review-blocking). SSOT:
-      `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
+- [x] ✅ [DATA] P0. **Phase 0 — layout audit DONE (slot-5 2026-06-03, read-only GCS metadata scoping — no data
+      download).** Enumerated both buckets. **Layouts found**: `_index/` (+ `per_vm/`,
+      `snapshots/pre_migration_2026-05-22`), `_vm_staging/` (prediction_backfill/features/pipeline),
+      `raw_tick_data/by_date/day=…` + `processed_candles/by_date/day=…`. The CANONICAL `pred-prd` raw objects STILL
+      carry the OLD 6-dim
+      `day=/category=prediction/data_source=POLYMARKET_CLOB/     venue=/chain=/market_category=/underlying=/market_type=/resolution_period=/data_type=/{cid}.parquet`
+      shape (NOT yet `pipeline_mode=/asset_group=` — **EXPECTED**: the migration that rewrites the shape is E4
+      `--apply`, operator-gated + not yet run; the dry run is clean). LEGACY raw uses
+      `asset_group=prediction/venue=/instrument_type=/data_type=`. Candles (both buckets):
+      `processed_candles/by_date/day=/timeframe=/data_type=/venue=/{id}.parquet` (no `pipeline_mode=` yet — what item
+      228's fix + the migrator now add). **Sharding/perf scope**: ~44–200 raw parquets/day (healthy, activity-driven),
+      parquet sizes 16–38 KB avg ~27 KB (**no tiny-file explosion, no hot-spot shard**), canonical 352 days
+      (2025-03-14→2026-04-29) vs legacy 422 days (→2026-05-22; legacy ~2 mo ahead). Migrator's ~1,897,691 planned moves
+      reconcile as raw+candles (×timeframes) + stale `category=` subtree + staging across both buckets. **Full-run
+      wall-clock estimate**: 1.9M ÷ (32–64 workers × server-side `gcs_copy_object` ~100 ms) ≈ **1.6–4 h** (schedule a 4
+      h window; re-snapshot `_index` pre-cutover — the snapshot is 2026-05-22, stale). No layout anomaly beyond the
+      expected pre-migration old-shape. SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded
+      recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -175,7 +183,9 @@ be fixed first if run on a VM.
       `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays distinguishable). Closes
       `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**: Polymarket/Kalshi remain
       VENUES (cross-venue dispersion is a feature-layer concern, not a source merge); when Kalshi lands it is a venue
-      addition AND its cells stamp `kalshi*\*` as source. Do NOT open a separate prediction source walk.
+      addition AND its cells stamp
+      `kalshi*\*`as source. Do NOT open a separate prediction source walk.     **[CODE-WIRED — slot-5 confirmed 2026-06-03; operator picked source-column over N/A]** The CODE foundation is     already in place: UAC`SOURCE*PRIORITY`carries`("prediction","trades")=["polymarket_clob"]`,     `("prediction","book_snapshot")`, `("prediction","prediction_canonical_question_group")`, and     `("prediction","MARKET_LIFECYCLE")=["polymarket_gamma_api"]`(+`EMISSION_LATENCY_MS_BY_SOURCE`entries), and the     UTL`manifest_writer.add()/record_captured\*`AUTO-STAMP the sole external source via`default_source`for     single-source cells (no`MissingSourceError`—`source_required`is False). So **live/new writes already stamp    `source`**; this rider is now just the HISTORICAL `\_index`backfill — ensure the rebuild's`record*\*`calls flow     the parquet's own`data_source`(or let`default_source`auto-stamp`polymarket_clob`), no writer code change     needed. The stale "prediction N/A" line was corrected in CLAUDE.md + `data_source_provenance`
+      row (slot-5 2026-06-03).
 
 ### Verify + handoff to decommission
 
@@ -215,11 +225,42 @@ be fixed first if run on a VM.
 - [ ] [DATA] P0. E3 Confirm `mdps-prediction-2025` writer drained; snapshot `pred-prd/_index` →
       `_index/snapshots/pre_v9_canonical_2026_06_01.parquet`.
 - [ ] [DATA] P0. E4 Dry-VM run + full-VM run. **Launcher WIRED 2026-06-01** (deployment-service@f8866b6): `prediction`
-      now invokes `migrate_prediction_to_pred_prd_v9` (dry-by-default + `--apply`) — run
-      `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh prediction 2025-03-14 2026-06-01 dry` then
-      review planned moves/timing in the VM log → optimise workers if >1h → re-fire `full` (no fire-and-forget:
-      STARTED<60s + progress/hr + STOPPED; T+10min `gcloud instances describe`). **PENDING: VM launch + monitor (next
-      session — VM-only per local-DNS constraint).**
+      now invokes `migrate_prediction_to_pred_prd_v9` (dry-by-default + `--apply`). **DRY-RUN DONE + CLEAN (slot-5
+      2026-06-03, VM `canonical-migration-prediction-20260603-190322`, sha-pinned mtds@90aeb7dd, exit_code=0,
+      auto-deleted).** Planned moves (`copied=0`, dry): `raw_tick_data/by_date` **751,723** +
+      `processed_candles/by_date` **582,730** + stale pred-prd `category=` **563,238** = **TOTAL 1,897,691** objects.
+      Transforms verified correct vs canonical target: `category=prediction`→`asset_group=prediction`,
+      `pipeline_mode=batch_polymarket_clob` inserted (LEFT of `asset_group=`), env-tier `prediction`→`pred-prd`, the
+      6-dim `data_source=/market_category=/underlying=/     market_type=/resolution_period=` segments dropped→parquet
+      columns. NO errors/exceptions/skips. NB: had to rebuild the code tarball first — the prior GCS tarball (db6d947d)
+      predated `eb5eaad2` (`gcs_copy_object` deep-import fix) and would have ImportError'd. **REMAINING
+      (operator-gated): the FULL run (`… full`/`--apply`) is the live 1.9M object write** — fire only after operator
+      reviews this dry plan (no fire-and-forget: STARTED<60s + progress/hr + STOPPED; T+10min
+      `gcloud instances describe`). Dry run took ~3 min (1.9M plan @ workers=64) so the full copy (server-side
+      `gcs_copy_object`) is well within budget — no worker re-tune needed.
+- [x] ✅ [CODE] P0. **BATCH≠LIVE for processed_candles `pipeline_mode=` — FIXED (option a) — mdps@5e7f075 | QG ✅ ALL
+      QUALITY GATES PASSED (1550s) | basedpyright 0 err | 8 regression tests
+      `tests/unit/test_pipeline_mode_in_candle_paths.py`.** `get_processed_path` (config.py) + both live candle writers
+      (`CandleWriteMixin._write_candles`, `GCSDataSink.write_candles`) + the prior-day-seed READ now thread
+      `pipeline_mode.value` into the object path, inserting `pipeline_mode={pm}/` after `day={D}/` — matching the
+      migrator `_canon_candle_rel` + the raw-writer `orchestrator.py:994` (path==manifest invariant). Cross-AG (all
+      asset_groups' candles). On LDR; staging promotion dep-tier-blocked behind UTL/MTDS/UAC (FEATURE_GREEN) — drains
+      when they promote. ORIGINAL GAP: The migrator inserts a `pipeline_mode=` segment into candle paths
+      (`migrate_prediction_to_pred_prd_v9.py:176-188` `_insert_pipeline_mode_for_candle`, "no UAC candle builder"; dry
+      run wrote `processed_candles/by_date/day=/pipeline_mode=batch_polymarket_clob/     timeframe=/data_type=/…` —
+      582,730 candle objects), but the LIVE MDPS candle writer
+      (`market-data-processing-service config.py:46 get_processed_path`) returns
+      `processed_candles/by_date/day={d}/timeframe={tf}/data_type={dt}` with **NO `pipeline_mode=` segment**. So
+      post-migration the migrated candles sit at a `pipeline_mode=` path that a relaunched `mdps-prediction-2025` would
+      NOT write to → two candle forms in the bucket + a batch≠live drift (the raw_tick writer is fine —
+      `orchestrator.py:994` DOES insert `pipeline_mode=` for raw, the path==manifest invariant; only the CANDLE path
+      lacks it). **Reconcile BEFORE the full run touches candles:** either (a) wire `pipeline_mode=` into
+      `get_processed_path` (+ the candle manifest), making MDPS candles batch=live with the migrator (preferred —
+      matches the raw-writer precedent + the `pipeline_mode_partition_migration` intent), OR (b) if the canonical candle
+      form should NOT carry `pipeline_mode=`, drop the migrator's `_insert_pipeline_mode_for_candle` so it copies
+      candles path-only. Also confirm the candle READER (features-service / MDPS scan) dual-probes both forms during the
+      window. Repos: market-data-processing-service (+ migrate_prediction_to_pred_prd_v9 if option b). parent_epic:
+      mtds_mdps_master.
 
   > **✅ GRANULARITY RESOLVED (slot-3 2026-06-02 — the atom is the live-writer atom, batch=live SSOT).** A sub-agent
   > draft was REVERTED for collapsing the row key to `(date,venue,instrument_type,data_type)` (dropped `{cid}` +
@@ -346,7 +387,18 @@ be fixed first if run on a VM.
       extend the migrator's prediction path build for that data_type. (raw_tick/trades/ohlcv = unaffected.)
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-pred-prd-…` → CF-1…CF-12 GREEN on
       data-state (v9, source populated, pipeline_mode, asset_group, available_at, 0 legacy-only). Flip the CF-coverage
-      rows in `predictions_master_audit_instructions.md`.
+      rows in `predictions_master_audit_instructions.md`. **[PRE-RUN BASELINE — slot-5 ran the audit 2026-06-03 on the
+      current (un-migrated) `_index`: 16,812 rows / 31 cols / 14,491 captured / 2,321 empty_confirmed].** GREEN now:
+      CF-2-rows (`asset_group` col present, no `category` col), CF-5 (typed empty — `EXPECTED_PRE_VENUE_LAUNCH` 2,280 /
+      `SOURCE_RETURNED_ZERO` 41, 0 blank), CF-9 (env `-prd-` bucket). RED now — **all "RED because not-yet-migrated",
+      NOT code regressions** (each is produced by the rebuild/migrate step that is operator-gated + hasn't run): CF-1
+      (100% v8 — rebuild stamps v9), CF-3 (`pipeline_mode` blank — rebuild stamps), CF-4 (`source` col absent — C-source
+      rider stamps; live writes already auto-stamp per item 170), CF-7 (blank/`UNKNOWN` venue +
+      blank/`prediction_trades` data_type — `_cf7_normalise` in the migrator fixes), CF-8 (`available_at` absent, only
+      `written_at` — rebuild writes it). **2,039 legacy-only cells** (canonical 805 captured vs legacy 2,822,
+      overlap 783) = the data-loss risk that keeps **E8 legacy-delete HARD-gated until the migration runs**. So E7 is
+      GREEN-able only AFTER the gated E4 full-run + rebuild; the code side is ready (verified no defect introduced by
+      E2/E5).
 - [ ] [DATA] P0. E8 Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy `market-data-tick-prediction` + stale
       pred-prd `category=` paths (single source of truth).
 
@@ -391,10 +443,21 @@ verify + the gated delete.
       no-bounds; QG exit 0. Superseded-PARTIAL note: (mtds@59d25967, slot-5 2026-06-03): the rebuild now AUDITS the
       `SOURCE_RETURNED_ZERO` rows (per-row WARN log `(date,venue,instrument_id)` via `reemit_honest_absence_rows` + a
       `source_returned_zero_preserved` counter) and PRESERVES the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
-      **RESIDUAL (this item stays open):** the actual within-bounds RECLASSIFICATION (`SOURCE_RETURNED_ZERO` on a live
-      market in-window → `attempted_failed`) is conservatively deferred — it needs a per-market lifecycle
-      (created_at/settlement) lookup from instruments-store `MARKET_LIFECYCLE` at rebuild time (cross-service GCS read;
-      named dependency in the code TODO). Wire that lookup to finish this item.
+      **RESIDUAL NOW CLOSED (slot-5 2026-06-03, verified — supersedes the stale "deferred" note):** the within-bounds
+      RECLASSIFICATION IS wired + tested (it was completed in the same @62b7ff74 work — see the "robust `_index` read +
+      within-bounds reclassification DONE" item below). Verified by reading the shipped code, not re-implementing:
+      `reemit_honest_absence_rows` (rebuild_prediction_manifest.py:648-706) loads per-date lifecycle bounds via
+      `_load_market_lifecycle_for_date` (cached), and for each `SOURCE_RETURNED_ZERO` row whose `condition_id` is live
+      in-window (`created_at <= day < settlement`) emits `record_failed(error="WithinBoundsSourceZero")`
+      (attempted_failed), else preserves the typed empty + logs. The lookup it depends on returns real bounds:
+      `_load_market_lifecycle_for_date` (base_prediction_adapter.py:89-121) falls back from the empty
+      `market_lifecycle/by_canonical_group/` to `instrument_availability/…/instruments.parquet` keyed by `condition_id`
+      (`start_date`→created, `end_date_iso`→settlement). Tests:
+      `test_reemit_source_returned_zero_within_bounds_reclassified` (FIX 3a) +
+      `test_load_market_lifecycle_fallback_parses_start_end_columns` (FIX 1) + the 15-test
+      `test_market_lifecycle_loader` suite. **Real-data verification** (does the bounds lookup actually fire for the 41
+      rows) is the post-migration rebuild VM run — the E4 DRY run (2026-06-03) confirmed the migrator + tarball + code
+      chain runs correctly on a VM. No code change needed.
 - [x] ✅ [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED — DONE (mtds@59d25967,
       slot-5 2026-06-03).** `reemit_honest_absence_rows` reads the existing pred-prd `_index`
       (`read_availability_index`), and for every `attempted_failed`/`empty_confirmed` row whose
@@ -516,19 +579,27 @@ verify + the gated delete.
       `instrument_id=0x…`), so for each, load lifecycle bounds (fixed reader above) for its date and if
       `start_date ≤ day < end_date_iso` (live + in-window) → `record_failed` (attempted_failed); else preserve typed
       empty. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [x] ✅ [CODE] P1. **MARKET_LIFECYCLE SSOT writer VERIFIED-CORRECT + tested (instruments-service@e3360f05, slot-6
-      2026-06-03); residual = a BACKFILL, not a code gap.** The writer already exists + is correct:
-      `orchestrator._write_market_lifecycle` (called from `save_instrument_data_to_gcs`) emits
-      `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet` with
-      `market_id`/`market_created_at`/`settlement_time` — the exact path+columns the MTDS reader
-      `_load_market_lifecycle_for_date` expects (round-trip verified). +8 contract tests pinning it. The 0-GCS-objects
-      is because **IS hasn't been re-run on prediction since the code landed** → a backfill (operator/infra: re-run IS
-      `--asset-group prediction` for the range), NOT a code fix. Until backfilled, the MTDS reader uses the
-      `instrument_availability` bridge (slot-5 fix mtds@62b7ff74). ORIGINAL: (slot-5 discovery 2026-06-03; DIAGNOSED
-      slot-5 2026-06-03 — the write path EXISTS, the 0-objects cause is real-data/operational, VM-verify). The canonical
-      `market_lifecycle/by_canonical_group/group=*/day=*/market_lifecycle.parquet` (market_id → created/settlement) is
-      unpopulated (0 objects); the MTDS reader bridges via `instrument_availability` for now (item above). **DIAGNOSIS
-      (not a missing write path — grep-then-read):** the writer is wired —
+- [x] ✅ [CODE] P1. **instruments-service MARKET_LIFECYCLE for prediction — ROOT-CAUSED + FIXED (slot-5 IS@4105bba3) +
+      writer VERIFIED (slot-6 IS@e3360f05); two complementary findings reconciled 2026-06-03.** BOTH were true. **(1) slot-5
+      found + fixed the upstream BUCKET-RESOLUTION CRASH**: `_get_instruments_bucket("prediction")` called
+      `resolve_bucket_name(kind="instruments-store", asset_group="prediction")`, but `cloud-providers.yaml`'s per-asset_group
+      `instruments-store:` dict has only CEFI/DEFI/TRADFI/SPORTS (prediction is the FLAT kind `instruments-store-prediction`)
+      → it raised `BucketNamingError` at `orchestrator.py:2263` BEFORE the per-venue write loop, so the ENTIRE prediction
+      write (`instruments.parquet` AND `market_lifecycle.parquet`) aborted → 0 objects. Fix = new
+      `resolve_instruments_store_kind()` routes prediction → flat kind (used by engine `_get_instruments_bucket` + CLI
+      `_get_instruments_bucket_for_asset_group`), resolving to `instruments-store-pred-prd-…` identical to the MTDS reader;
+      106 tests (the old `test_bucket_name_prediction_uses_category_prefix` ENCODED the bug — corrected). **(2) slot-6
+      independently VERIFIED the writer LOGIC is correct**: `orchestrator._write_market_lifecycle` (from
+      `save_instrument_data_to_gcs`) emits `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet`
+      with `market_id`/`market_created_at`/`settlement_time` (round-trip with the MTDS reader); +8 contract tests.
+      **RECONCILED**: slot-6's "writer correct → residual is a backfill" was right about the writer but tested it in
+      ISOLATION (mocked bucket) so it MISSED the upstream crash — in the real pipeline the writer was never reached. Net:
+      the bucket fix makes the writes RUN, the (verified) writer emits the correct path/columns, and the PRIMARY
+      `market_lifecycle/` objects populate on the next IS prediction run (operator-gated backfill — `--asset-group
+      prediction` for the range; the MTDS `instrument_availability` bridge mtds@62b7ff74 covers the interim).
+      Column-contract verified both ways (no drift). NOTE: local QG `uv.lock` pre-gate is a foreign host-uv false-positive
+      (committed lock correct `pyjwt>=2.13.0`; server `quality-gates-v2` passes). ORIGINAL (superseded — never reached
+      classify_lifecycle): the writer is wired —
       `orchestrator.py:2418 _write_market_lifecycle(...)` is called per-canonical-group inside the prediction branch;
       `_build_market_lifecycle_df` (orchestrator.py:3324) builds from `venue_df` which is
       `InstrumentRecord.model_dump()` (orchestrator.py:2238) → it HAS
@@ -545,15 +616,31 @@ verify + the gated delete.
       how many markets get a non-None `classify_lifecycle`, (2) check whether `market_lifecycle/by_canonical_group/`
       objects appear. If (a), fix `classify_lifecycle`; if (b), it self- resolves on the next run. Repo:
       instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P2. **instruments-service QG STEP 5.64 — preflight short-circuits emit NO `PREFLIGHT_SKIPPED`**
+      (cross-cutting finding surfaced by slot-5 during the 552 fix 2026-06-03; NOT prediction-scoped — for the
+      instruments epic). `instruments-service` has preflight-guard patterns (`_check_dependencies` / `should_skip_date`
+      / `check_shard_freshness`) in `engine/orchestrator.py`, `engine/validation_utils.py`, `cli/instruments_handler.py`
+      but emits no `emit_preflight_skip` / `PREFLIGHT_SKIPPED` anywhere → silent preflight skips are invisible in the
+      event stream (the same observability gap STEP 5.64 enforces for service repos). Wire `emit_preflight_skip` (UTL)
+      at each short-circuit. Repo: instruments-service. parent_epic: mtds_mdps_master (or the instruments epic).
 
 ## Success criteria
 
-- [ ] [CODE] P1. **Post-migration verify: deployment-api turbo response ↔ deployment-ui contract** (slot-5 2026-06-03).
-      The deployment-api (@2ac1dfa) + deployment-ui (@4a358ec) prediction-v9 fixes were each verified independently
-      (api: unit tests; ui: against its own mock `_mkPredictionByQuestionGroup`). Once the migration runs and real v9
-      `pred-prd/_index` rows exist, confirm END-TO-END that the turbo response actually emits
-      `breakdown_axis="canonical_question_group"` + per-cqg `observed_clusters={conditionId:rows}` + `source` in the
-      shape the UI's `TurboSubDimension` consumes (else the UI renders empty). Repos: deployment-api + deployment-ui.
+- [x] ✅ [CODE][UI] P1. **deployment-api turbo response ↔ deployment-ui contract — VERIFIED + FIXED a real mismatch
+      (slot-5 2026-06-03).** Cross-repo audit (both sides read): the **turbo summary** path matches (UI
+      `TurboSubDimension` consumes `observed_clusters`/`source`/`capture_status_counts` 4-state +
+      `breakdown_axis="canonical_question_group"` — no drift; covered by `prediction_v9_breakdown.spec.ts`). But the
+      **venue-detail drilldown** had a real contract mismatch: deployment-api emitted `category="PREDICTION"` while the
+      UI `VenueDetailResult` expected `asset_group` → it was always `undefined` client-side and every prediction
+      venue-detail fell back to the CeFi v1 render branch; the prediction instrument fields
+      (`canonical_question_group`/`instrument_count`/`pipeline_mode`/`source`) were silently discarded by the TS type.
+      **FIX (both sides):** deployment-api@f1dd7d5 — `VenueDetailResponse` now emits `asset_group` (computed mirror of
+      `category`; basedpyright 0-err, NO `type: ignore`; 50 shard_detail tests pass). deployment-ui@f242055 —
+      `VenueDetailResult` carries `asset_group` + `category?` + optional `base`/`quote` + the 4 prediction fields.
+      **playwright gate satisfied** — repo@f242055 | pw:L2 ✓ (`npx playwright test --project=chromium     tests/smoke/`
+      exit 0, 5 passed) | tsc 0 | regression: `tests/smoke/venue_detail_prediction_asset_group.spec.ts`. The END-TO-END
+      real-data confirmation (turbo emits the shape on live v9 `_index` rows) still rides the operator-gated migration
+      run — but the contract is now correct + regression-locked on both sides. Repos: deployment-api + deployment-ui.
 - [x] ✅ [CODE] P2. **deployment-api `fetch_venue_detail` bucket routing for prediction v9 — FIXED + CONFIRMED-BUG
       (deployment-api@318db9b, slot-5 2026-06-03).** It WAS a real bug, not just uncertainty: `_prediction_venue_detail`
       read `build_bucket_name("instruments-service","prediction")` = `instruments-store-pred-prd-{pid}`, but the v9

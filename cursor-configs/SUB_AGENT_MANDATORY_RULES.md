@@ -321,6 +321,10 @@ pointer before acting on any of them.
 - **No `python3 << EOF` for file analysis** (regex-backtracking runaways) — use `rg`/`grep`; **never pipe a backgrounded
   command through `tail`/`head`** (buffers until exit). **Context7** for external-lib questions; **max 10 parallel
   agents** (never same file). **Clear context = implement, don't ask** when plan/SSOT names the canonical approach.
+- **Async-wait/poll discipline**: when waiting on external work (CI, the promotion cascade, VM jobs, deploys) watch a
+  PROGRESS metric not just `done`; poll **short (~30–45 s) first then EXPAND**; a FLAT metric = **STALL → diagnose the
+  blocker now** (`gh run view --log-failed`), never wait it out; rely on harness auto-re-invoke for tracked tasks; stay
+  productive meanwhile. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
 - **QG-sweep**: batch the GATE not the commits; shared-host ≤1–2 full QGs at once; never bulk-kill another slot's
   `pytest`/QG/`basedpyright`; bump `MAX_DURATION=600` over suppressing the `<300s` check.

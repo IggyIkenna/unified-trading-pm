@@ -239,8 +239,12 @@ constant**.
   REQUIRED for every captured cell (even single-source today, for swap-resilience); raise `MissingSourceError` when
   blank or not in `SOURCE_PRIORITY[(asset_group, data_type)]`; resolve downstream via
   `select_primary_available_source()` (multi-source union: ≥1 `captured` → cell `captured`). Computed/service-only
-  outputs are exempt. Today only `tradfi` is wired (`databento`/`massive`, QG STEP 5.64); cefi/defi/sports are RED gaps;
-  prediction N/A. SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
+  outputs are exempt. Wired today: `tradfi` (`databento`/`massive`) + **`prediction`** (`polymarket_clob`/
+  `polymarket_gamma_api`, single-source → the writer auto-stamps via `default_source`; UAC `SOURCE_PRIORITY` already
+  carries the prediction pairs). cefi/defi/sports are RED gaps. **Prediction `venue ≠ source`**: Polymarket-vs-Kalshi
+  dispersion is a feature-layer concern, NOT a source merge; historical `_index` source-stamp rides the prediction
+  canonicalisation walk (live/new writes auto-stamp already). SSOT:
+  `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
 - `available_at` is per-row write-time (UTL asserts). Service-output emission via `_resolve_policy_output_data_type` +
   `_publish_emission_check`.
 - **Single-walk discipline (HARD RULE)**: the Phase 2.2 migration walks every parquet ONCE — any new whole-corpus GCS
@@ -462,7 +466,15 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   a SEPARATE call. Harness-tracked tasks auto-re-invoke on exit → rely on that completion signal, do NOT burn credits
   polling them. Poll ONLY genuinely external/untracked work (CI runs, remote VM jobs, deploys) at an interval matched to
   how fast that state changes. Write monitors that watch the RIGHT signal (correct log path + explicit done/terminated
-  condition) with a generous fallback timeout, so they don't exit inconclusively and force a re-investigation.
+  condition) with a generous fallback timeout, so they don't exit inconclusively and force a re-investigation. **Poll
+  cadence + stall-intervention (HARD RULE, codified 2026-06-03)**: watch a PROGRESS metric (a number that climbs — repos
+  `≥STAGING_GREEN`, PRs merged, rows backfilled), not just `done`; **start with short ~30–45 s ticks** to confirm the
+  mechanism moves + catch a stall fast, **then EXPAND** the interval once progress is confirmed (stay <5 min while
+  actively polling to keep cache warm; 20–30 min only for idle waits). A **flat** metric across ticks = **STALL → STOP
+  and diagnose the blocker** (`gh run view --log-failed`), never wait it out — a jammed pipeline does not self-unstick
+  (incident: a frozen `ci_status` writer caught in ~6 min by short polling that a 16-min done-watcher would have
+  wasted). Stay productive on independent work during the wait; never idle-burn the window. SSOT:
+  `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.
