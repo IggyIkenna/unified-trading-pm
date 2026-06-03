@@ -76,6 +76,46 @@ source:
 > **Hygiene status (2026-06-03 audit):** all 25 cluster plans/issues are now `parent_epic`-attached + estimated. Epics:
 > `infrastructure_master`, `orchestrator_master`, `plan_hygiene_master`. No orphans remain in the CI/CD cluster.
 
+## 🤖 Finishing-agent brief (dispatch-ready)
+
+> **Task:** finish the CI/CD / GHA / orchestrator / quality-gate / Slack-alerting hardening to a clean, self-sustaining
+> state. **First** read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full, then the "🧭 CI/CD MASTER INDEX" above.
+> Work the waves **in order**; do not start a later wave until the earlier is green.
+
+**WAVE 0 — clean starting state (FIRST — it unblocks every other agent's commits/PRs):**
+
+1. Reconcile DIRTY promotion PRs so auto-merge resumes: **PM #116** (rebase tab onto main + resolve, or supersede via
+   the proper LDR→main promotion), **UAC's 4 conflicting PRs**, **mtds / deployment-service / alerting-service**. Use
+   the conflict-resolution-agent where it fits; NEVER stomp another agent's WIP.
+2. Green `utl_full_quality_gates_green` — UTL is the T0 dep-base; its red status dep-blocks the whole fleet's promotion.
+3. Clear dirty worktrees/stashes + harden the FF cron: `stash_pile_workspace_cleanup`,
+   `issues/shared_stash_pile_archive_cleanup`, `issues/local_slot_cron_ff_pull_hardening`.
+4. Fix `issues/commit_identity_misconfig_fleet` + `issues/hook_tooling_version_alignment` (both block commits landing) +
+   `issues/features_service_full_qg_test_pollution_flake` (false-red QG).
+5. Do the **full PM `LDR→main` promotion** (§ "ci_status consistency hardening") — back-merge main→LDR (absorb the 9),
+   then gated LDR→main PR. Clears the stale-main-manifest dam + lands the `tier-ab-green` chain on main.
+
+**WAVE 1 — consistency machinery:** build **Guard 2** (single-SSOT-branch + `main-backmerge-to-ldr` must not carry
+ci_status backward) and **Guard 3** (drift reconciler: v2-green-but-ci_status-FAILING → re-fire ci-status-update); add
+the promoter "skip main-direct repos" fix (close spurious PM #113); finish `ci_canonical_v2_migration`,
+`harden_grepable_rules_into_ci_gates`, `uv_lockfile_determinism`, `quality_gates_resource_contention_speedup`. (**Already
+done — verify, don't redo:** Guard 1 @ad2f72187, the `tier-ab-green` chain @66b523383, QG-before-commit reframe.)
+
+**WAVE 2 — orchestrator + alerting:** `orchestrator_fleet_worker_spawn_enablement` (F7 slot-4 WIP, F8 self-heal, F12
+fleet env-rollout, F13 worktree hygiene; F9 review-spawn already done), `agent_orchestrator_e2e` G6 (AO `staging`
+branch + quickmerge), `issues/api_host_chronic_impairment`, `issues/running_vm_fleet_status`. Verify the Slack
+#ci-failures + `ci_failure_watcher` + every-alert→orchestrator path; finish the Telegram-retire-in-templates todo.
+
+**WAVE 3 — drain + hygiene:** drive `ldr-to-staging-promote` (it self-cascades once the chain is on main) until all 21
+active + fund-admin/greeks reach `STAGING_GREEN`, then the SIT→main phase. Then `codex_vs_repo_docs_ssot_audit`,
+`issues/issue_docs_remediation_sweep`, `harsh_day_master`, `agent_context_and_memory_hygiene`.
+
+**Rules:** code commits only from a `quality-gates.sh`-green tree (QG-before-COMMIT, batched per QG-sweep); ship via
+`quickmerge --agent --files '<paths>'`; Commit+Push+Flip the plan checkbox same-turn; conditional-push (fetch first,
+never stomp incoming); PM commits route to `main` (Option B). Capture any discovery as a plan todo immediately.
+**Success criterion:** all active repos on `staging` + `main` with `quality-gates-v2` + SIT green, the FF cron +
+auto-merge + promotion cascade flowing unattended, and no agent's commits queuing.
+
 ## HANDOFF — next agent (state as of 2026-06-01)
 
 **Goal:** every repo on `quality-gates-v2` — the required-check **ruleset on `main`** (+ `require-staging-lock-check` on
