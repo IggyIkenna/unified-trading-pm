@@ -868,6 +868,41 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `resolve_bucket_name(cloud=…, kind="strategy-store"/"position-store", asset_group="sports")` (register the kinds
       in `cloud-providers.yaml` if absent — verify first). Same anti-pattern as the `ecc7cc0f` DependencyChecker fix.
 
+- [ ] [CODE] P0. **READ paths don't probe the migration's `pipeline_mode=` path (the writers were fixed, the readers
+      were NOT)** — repo: `features-service`. The sports READERS hand-construct exact paths and `blob_exists`-probe
+      them, bypassing the `pipeline_mode`-aware UAC SSOT `candidate_parquet_paths`:
+      `sports/data/gcs_reader.py::read_odds_data` (~:326) probes `raw_tick_data/by_date/day={D}/asset_group=sports/…`
+      then `…/category=sports/…` — **neither has `pipeline_mode=`**; the `sports_reference` entity reads
+      (`_singleton_path`/`_league_prefix` ~:99-128) similarly build `sports_reference/by_date/day={D}/entity=…` with no
+      `pipeline_mode=`. After the migration writes `pipeline_mode=batch_odds_api/asset_group=sports/…` (and
+      `sports_reference/by_date/day=/pipeline_mode=/entity=…`), these readers look for the NON-pipeline_mode path →
+      **MISS all migrated data** (silent empty reads → false honest-absence). **No sports reader calls
+      `candidate_parquet_paths`** (the SSOT that emits the Level-1 `pipeline_mode`-aware probe + Level-2 legacy
+      fallback). **DISCOVERED 2026-06-03 (the prior 5-service audit wrongly concluded "pipeline_mode N/A for sports
+      reads").** (MDPS `orchestration_scanner._list_instrument_files` is OK — it
+      `list_blobs(prefix="raw_tick_data/by_date/day={D}/")`, which is `pipeline_mode`-agnostic, so it finds migrated
+      data.) **Fix**: route the features sports readers through
+      `candidate_parquet_paths(data_type, day, league_id,     pipeline_mode=…)` (it already returns the migration's path
+      as Level-1 + legacy as fallback), OR add the `pipeline_mode=`-prefixed candidates to the `blob_exists` lists. Add
+      a read-path test asserting the reader finds a `pipeline_mode=batch_odds_api/asset_group=sports/…` object. **Pairs
+      with the P0 writer fixes — writes + reads MUST use the identical migration path.**
+- [ ] [DATA/CODE] P1. **Schema/column PARITY pass — verify the v9 manifest column set + dtypes are IDENTICAL across
+      writer ⇄ migration ⇄ reader** (operator: "same columns, no schema types, everything the same"). Writers now stamp
+      `source`+`pipeline_mode` (P0.3) and MTDS `_check_sports_v9_columns` enforces the new-col set at preflight, but no
+      end-to-end check confirms EVERY v9 column (`schema_version=9`, `asset_group`, `source`, `pipeline_mode`,
+      `available_at`, `capture_status`, typed `error_reason`) is present AND the same dtype in: the live writer's
+      `record_captured`/`add`, the migration's `rebuild_sports_manifest_v9` emission, and the downstream
+      data-status/feature readers. **Fix**: write a parity assertion (or extend `cf_manifest_audit`) comparing the
+      column schema of a live-written sports `_index` row vs a migration-rebuilt row vs the reader's expected schema;
+      reconcile any drift.
+- [ ] [DATA/CODE] P1. **Partial-capture manifest correctness for sports — confirm** (operator: "handling partial data
+      correctly"). MTDS handles partial at write (per-shard captured-set, partial venues not skipped) + MDPS/features
+      track calculator partial status, but no explicit confirmation that a day where SOME leagues/venues captured and
+      OTHERS legitimately empty produces the CORRECT per-shard manifest rows (captured rows for the present shards +
+      typed-empty rows for the absent-but-expected, NOT a single blanket cell). **Fix**: a partial-day test (e.g. EPL
+      captured + off-season league empty on the same day) asserting per-shard rows are emitted with the right
+      capture_status/reason per shard (4-pillar cluster-coverage validation).
+
 **P1 — correctness/safety (silently compute/trade on stale or mislabelled data):**
 
 - [x] ✅ [CODE] P1. **DONE 2026-06-03 — consolidator pre-flight added: MTDS@a75f021a (`process_ticks` after the v9-col
