@@ -144,23 +144,34 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
       `bootstrap_vm.sh` so a fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic
       VMs when they start (currently off). Composes with F2–F4 (same per-VM rollout).
 
-### F9 — review-agent auto-spawn per VM (persistent-role keep-alive) [P1]
+### F9 — review-agent auto-spawn per VM (persistent-role keep-alive) [DONE]
 
-- [ ] [INFRA] P1. **Operator-requested 2026-06-03 — half-built design, finish the wiring.** Per
-      `codex/12-agent-workflow/orchestrator-multi-vm-topology.md:107` each epic VM = slot-1 **main** + slot-2 **review**
-      (Sonnet 4.6) + N workers. The review agent reviews each worker commit against the plan + FF-merges slot branches →
-      LDR. **Already shipped**: `agents/review.md` boot prompt + the `role` model (`orm.py:231`
-      `main|review|backup|custom`; `worktree_claim.py`). **Gap**: `AutoSpawnLoop` (`server/autospawn.py`) ONLY spawns
-      task-`worker`s — it early-exits on empty queue (`_run_one_tick:395`), renders `prompt_template="worker"`, and
-      `_should_spawn:484` ignores role. So (a) nothing keeps a persistent review agent alive (it's commit-polling, not
-      task-driven → never queue-triggered), and (b) AutoSpawn would wrongly drop a _worker_ onto the review slot.
-      **Implement**: (1) `config.persistent_role_slots()` resolving review-role slots (SSOT = `SlotRow.role='review'`;
-      bootstrap assigns slot-2 `role=review` per VM); (2) a queue-INDEPENDENT keep-alive pass in the tick (before the
-      empty-queue early-exit) that spawns `template="review"` on any dead review-role slot (reuse the flap/cooldown +
-      `_do_spawn(prompt_template=...)` machinery); (3) `_should_spawn` skips persistent-role slots in the worker loop
-      (only `worker`/`custom`/None get task-workers). Unit tests: review slot stays alive with empty queue; worker never
-      spawned on review slot. Then bootstrap role-assignment + VM deploy. Repo: agent-orchestrator. Forward-looking
-      (fleet mostly stopped; review runs on vm-0 today, all epic VMs when on).
+- [x] ✅ [INFRA] P1. **DONE + deployed + verified-firing 2026-06-03 — agent-orchestrator@415ff06.** New
+      `_ensure_review_agents` runs every tick BEFORE the queue early-exit and keeps the designated review slot(s) alive
+      with the `review` boot prompt (queue-independent); `_should_spawn` now skips review slots (`reason="review_slot"`)
+      so a worker is never dropped onto one. Review slots designated per-host via `ORCHESTRATOR_REVIEW_SLOTS`
+      (`config.review_slot_ids()`; empty=off, back-compat) — no schema migration (`SlotRow` has no role column). Reuses
+      the flap/cooldown/headroom + branch-state gate; `agents/review.md` already shipped. +10 unit tests;
+      ruff/pyright 0. **Live-verified on vm-0** (`ORCHESTRATOR_REVIEW_SLOTS=2`, restart): the loop fired
+      `AutoSpawnLoop: review agent spawn failed slot=2 … branch-state quarantine` — i.e. it ran queue-independently,
+      picked slot 2, attempted the review-template spawn, and was correctly gated by the SAME branch-state guard as
+      workers (slot 2's worktrees are dirty — F13). On a clean slot it spawns green. **Fleet rollout** = set
+      `ORCHESTRATOR_REVIEW_SLOTS=2` in `bootstrap_vm.sh` (folds into F12's per-VM env work).
+
+  _Original task (kept for context):_ **Operator-requested 2026-06-03 — half-built design, finish the wiring.** Per
+  `codex/12-agent-workflow/orchestrator-multi-vm-topology.md:107` each epic VM = slot-1 **main** + slot-2 **review**
+  (Sonnet 4.6) + N workers. The review agent reviews each worker commit against the plan + FF-merges slot branches →
+  LDR. **Already shipped**: `agents/review.md` boot prompt + the `role` model (`orm.py:231` `main|review|backup|custom`;
+  `worktree_claim.py`). **Gap**: `AutoSpawnLoop` (`server/autospawn.py`) ONLY spawns task-`worker`s — it early-exits on
+  empty queue (`_run_one_tick:395`), renders `prompt_template="worker"`, and `_should_spawn:484` ignores role. So (a)
+  nothing keeps a persistent review agent alive (it's commit-polling, not task-driven → never queue-triggered), and (b)
+  AutoSpawn would wrongly drop a _worker_ onto the review slot. **Implement**: (1) `config.persistent_role_slots()`
+  resolving review-role slots (SSOT = `SlotRow.role='review'`; bootstrap assigns slot-2 `role=review` per VM); (2) a
+  queue-INDEPENDENT keep-alive pass in the tick (before the empty-queue early-exit) that spawns `template="review"` on
+  any dead review-role slot (reuse the flap/cooldown + `_do_spawn(prompt_template=...)` machinery); (3) `_should_spawn`
+  skips persistent-role slots in the worker loop (only `worker`/`custom`/None get task-workers). Unit tests: review slot
+  stays alive with empty queue; worker never spawned on review slot. Then bootstrap role-assignment + VM deploy. Repo:
+  agent-orchestrator. Forward-looking (fleet mostly stopped; review runs on vm-0 today, all epic VMs when on).
 
 ### F10 — CI conflict-resolution: capacity model (dedicated vs slot-on-existing) [P2]
 
@@ -197,6 +208,20 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
       code fix (agent-orchestrator@e50b6b9) reaches the 9 stopped epic VMs automatically on their next FF-pull/restart;
       verify on first start. Composes with F2–F4 (same per-VM rollout). Repo: agent-orchestrator (bootstrap) +
       deployment-service launchers if the env must be exported at launch.
+
+### F13 — vm-0 slot worktree hygiene blocking ALL spawn (dirty pyproject + diverged PM) [P1]
+
+- [ ] [INFRA] P1. **Surfaced by the F9 verification 2026-06-03 — RC4 class, recurring + systemic.** The branch-state
+      gate quarantines slot 2 (and likely others) for BOTH worker + review spawn: (a) **uncommitted `pyproject.toml`**
+      on `agent-orchestrator` (behind 33) + `alerting-service` (behind 21) → ff-only pull aborts ("local changes would
+      be overwritten") so `slot-cron-ff-pull` can never advance them — this is the chronic worktree-dirty toil (likely
+      uv.lock/version churn or a QG-modified pyproject); (b) **`unified-trading-pm` diverged 11-ahead / 584-behind** →
+      FM5 quarantine (the slot-branch-diverged recipe: check the 11 ahead for unpushed work FIRST, then
+      `git rebase origin/live-defi-rollout` + `push --force-with-lease`). Recipe per inherited-WIP + the diverged-slot
+      CLAUDE.md rules: commit the dirty pyproject as `chore(orphan-wip)` (or diagnose the churn source + gitignore if
+      generated), FF the clean repos, rebase the diverged PM. Composes with F7 (slot-4 WIP) — same class. Until cleared,
+      spawn (worker AND review) stays quarantined on the affected slots **by design** (the gate is correct). Repo:
+      agent-orchestrator host worktrees. Provenance: F9 live-verification log 2026-06-03.
 
 ### F7 — slot-4 WIP recovery on the live vm-0 host [P1]
 
