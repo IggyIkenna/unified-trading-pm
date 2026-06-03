@@ -886,6 +886,25 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       as Level-1 + legacy as fallback), OR add the `pipeline_mode=`-prefixed candidates to the `blob_exists` lists. Add
       a read-path test asserting the reader finds a `pipeline_mode=batch_odds_api/asset_group=sports/…` object. **Pairs
       with the P0 writer fixes — writes + reads MUST use the identical migration path.**
+- [ ] [CODE] P0. **instruments-service WRITER (the 6th service — NOT in the original 5-service audit) object path is
+      MISSING `pipeline_mode=` + omits `source=`** — repo: `instruments-service`,
+      `instruments_service/engine/orchestrator.py`. The IS writer of the `instruments-store-sports` `sports_reference`
+      surface stamps `pipeline_mode=` on the MANIFEST row (`record_captured_from_counts(pipeline_mode=…)` ~:1589/1771,
+      `_pipeline_mode_for_sports_data_type`) BUT writes the OBJECT to
+      `sports_reference/by_date/day={D}/entity={E}/league={L}/…` (~:3664/3711/3774/3838/3921) with **NO `pipeline_mode=`
+      in the object path** → path≠manifest invariant violated; and `record_captured_from_counts` does **not** pass
+      `source=`. The migration `_canon_instr_reference` (`migrate_sports_canonical_v9.py`) writes the canonical target
+      `sports_reference/by_date/day={D}/pipeline_mode={PM}/entity={E}/…` (PM derived from entity via
+      `_pipeline_mode_for_source`) — so post-migration the IS writer's new objects DIVERGE from the migrated layout, and
+      the candidate_parquet_paths SSOT probes the `pipeline_mode=` path. **DISCOVERED 2026-06-03** (instruments-service
+      was the upstream writer overlooked by the MTDS/MDPS/features/strategy/execution audit). **Fix**: (a) insert
+      `pipeline_mode={_pipeline_mode_for_sports_data_type(entity)}/` after `day={D}/` in EVERY IS sports_reference
+      object write path (match `_canon_instr_reference` exactly); (b) pass `source=` to
+      `record_captured_from_counts`/`add` for sports cells (derive the same way the migration's `_source_from_row` does
+      — entity→source). (Typed empty reasons already DONE — is@608e7ca7. Consolidator preflight is N/A — IS is the
+      pipeline SOURCE, no upstream manifest to gate.) Add a path-shape + source= test. **The IS reads must also probe
+      the `pipeline_mode=` sports_reference path — verify under the read-path P0 above (IS is both writer and reader of
+      its reference surface).**
 - [ ] [DATA/CODE] P1. **Schema/column PARITY pass — verify the v9 manifest column set + dtypes are IDENTICAL across
       writer ⇄ migration ⇄ reader** (operator: "same columns, no schema types, everything the same"). Writers now stamp
       `source`+`pipeline_mode` (P0.3) and MTDS `_check_sports_v9_columns` enforces the new-col set at preflight, but no
@@ -996,6 +1015,21 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       raw+candle, instruments-store 5 trees, CF-7 normalise, ThreadPoolExecutor + gcs_copy_object, dry-run default
 - [ ] [DATA] P0. E3 Confirm `sports-scheduler` writer drained; snapshot the sports `_index`(es).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (786k index rows; no fire-and-forget).
+  - **SHARDING + PERFORMANCE SCOPING (slot-4 dry-runs 2026-06-03, no `--apply`):** Dry-run (list+plan, no copy) timings:
+    **MDPS** 30-day window (2025-09 across prd + legacy-no-env raw + processed trees) = **16,544 objects in 19 s**; data
+    is sparse (~7-9 active days/month — sports doesn't write every day). **Instruments** 3-day window = 10,083 planned,
+    dominated by the `instrument_availability` tree (**119,858 objects walked**); full surface = **2.68 M rows**.
+    Extrapolated object counts: MDPS ≈ **0.9-1.1 M objects** (786 k index rows), instruments-store ≈ **2.5-2.7 M**.
+    **Recommended shard axis = `day=`** (the natural partition both `migrate_sports_canonical_v9.py` surfaces already
+    iterate; `--start-date/--end-date` shard cleanly with NO overlap). **Recommended fleet**: shard the full range
+    (2019→2026) **by year** across ~7-8 in-region (`asia-northeast1`) ephemeral VMs (one year each), `--workers 32-64`
+    (`gcs_copy_object` REST ~100 ms, GIL-released → ~640 obj/s at 64w). Est. `--apply` copy time: MDPS ≈ **25-30 min
+    single-VM** (≈ **4 min/VM** at 7-way), instruments-store ≈ **70 min single-VM** (≈ **10 min/VM**). Instruments is
+    the long pole — shard it **by year × entity-tree** (`sports_reference` vs `instrument_availability`) if finer
+    parallelism is needed. **Per-VM shard isolation** (`VM_NAME=` + `MANIFEST_PER_VM_SHARDS=true`) so the manifest
+    consolidator merges per-VM shards after. No fire-and-forget (STARTED<60s + hourly progress + STOPPED at exit). The
+    dry-run already validates the dest-path transform per object, so E4's "optimise" step is mainly tuning `--workers`
+    against the live REST 429-rate. **Gated on E3 drain; the scoping above needs no data download (list+plan only).**
 - [ ] [DATA] P0. E5 **KEYSTONE reason relabel** (CF-5): composite 9-step classifier now FULLY SHIPPED (instruments 368k
       relabels from 8-step + step 6.5 FIXTURES truthset join for ~15,700 unresolved-league rows). VM production run
       pending E3 drain. — market-tick-data-service@680dff5f | composite 8-step classifier: instruments 368,036 relabels;

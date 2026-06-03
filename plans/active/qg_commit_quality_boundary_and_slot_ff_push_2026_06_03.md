@@ -46,6 +46,20 @@ All on `origin/live-defi-rollout`; full detail in
 
 ## Key discovery (cross-cuts cicd_contract_hardening Phase 6)
 
+- [ ] [SCRIPT] P1. **Self-counting `until ≤1 pgrep 'bash scripts/quality-gates.sh'` drain-gate DEADLOCKS fleet-wide
+      (slot-6 discovery 2026-06-03).** The common ad-hoc shared-host QG drain-gate
+      (`until [ "$(pgrep -f 'bash scripts/quality-gates.sh' | wc -l)" -le 1 ]; do sleep; done; bash scripts/quality-gates.sh ...`)
+      is self-defeating: the WAITER's own command line contains the literal `bash scripts/quality-gates.sh`, so
+      `pgrep     -f` counts every slot's waiter (including itself). With N slots each spinning a waiter, the count is
+      always ≥N → never ≤1 → **all slots spin forever, zero QGs run** (observed: ~10 "QG" procs host-wide, memory 34%
+      free = they were spinning waiters, not real load; the whole fleet's shipping stalled). FIX: the drain-gate MUST
+      gate on a signal that excludes waiters — gate on **memory pressure** (run if free >~20%) and/or count only ACTUAL
+      executions via a marker the waiter doesn't share (e.g. `pgrep -f 'quality-gates.sh --no-fix'` won't help since the
+      waiter has it too; use a lock-file/`flock` or a tmpdir token, OR gate on `pytest`/`basedpyright` proc count). Make
+      it a shared helper (`scripts/dev/qg-host-gate.sh`) so slots stop hand-rolling the broken pattern. Cross-cuts the
+      "≤1-2 full QGs host-wide" QG-sweep rule — the rule is right, the ad-hoc IMPLEMENTATION is the bug. Repo:
+      unified-trading-pm (helper) + the QG-sweep SSOT note. parent: this plan.
+
 - [ ] [INFRA] P1. **The governor bash-3.2 crash had been MASKING pre-existing per-repo QG debt workspace-wide** — every
       macOS `quality-gates.sh` died at stage [2], so no repo's stage-5+ failures (codex baselines, cloudbuild-schema,
       size/import) were visible locally. Fixing the governor makes local QG run fully and **surfaces** that debt

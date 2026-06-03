@@ -173,23 +173,78 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       `downstream_services_manifest_canonicalisation_2026_06_01.md` FLAG-1.
 - [ ] [CODE] P1. **deployment-api FLAG-3** — env-tier the hardcoded `*-store` bucket f-strings → `resolve_bucket_name`
       (`commentary/pipeline_uat.py`, `deployment_api_config.py`). Cross-ref downstream plan FLAG-3.
-- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** — the shard-atom dedup test exists for
-      **DeFi only** (`test_pipeline_mode_rows_do_not_double_count_shards`); add a **cefi parity** test + ensure cefi
-      drilldown does not double-count the same `(venue,data_type,instrument_id,day)` across pipeline_modes; add a
-      `pipeline_mode` filter param to the hierarchical-drilldown endpoint (UI label work needs the playwright gate).
+- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** (deployment-api; downstream owner).
+      **CONFIRMED read-only (slot-3 2026-06-03):** the dedup MECHANISM exists + is AG-agnostic — the count is
+      `len(captured_df.drop_duplicates(subset=_shard_atom_cols))` and `_shard_atom_cols` derives from the UAC
+      `SHARD_AXIS_MATRIX`, which for cefi is `(venue, data_type, instrument_type, instrument_id, day)` — pipeline_mode
+      is NOT a cefi shard-atom axis, so multiple `pipeline_mode=` rows for one cell collapse to ONE shard (no
+      double-count). The existing `test_pipeline_mode_rows_do_not_double_count_shards` guards the DeFi
+      **chain**-breakdown builder; REMAINING for the deployment-api/`downstream_services_manifest_canonicalisation`
+      owner: (a) a **cefi parity test** (venue-breakdown builder) as a regression guard, (b) the `pipeline_mode`
+      drilldown **filter param** (a feature-add; UI label is playwright-gated). NOT a cefi-correctness gap today (dedup
+      works); a regression-guard + feature enhancement for the deployment-api owner. (In practice cefi double-count is
+      also unlikely — a cefi cell carries ONE pipeline_mode per day, batch OR live, not both.)
 
 **⚪ P2 / needs-confirm (tracked):**
 
 - [ ] [CODE] P2. **MDPS GAP-7** — `category`→`asset_group` param rename in `dependency_checker` (vocabulary; cross-ref
       downstream plan GAP-7).
-- [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain):
-      verify the finalize cluster-validation rejects an incomplete bundle (`len(observed)==len(expected)`, not just
-      count-threshold) so a partial write is NOT phantom-`captured`. Audit flagged a possible gap at
-      `orchestrator.py:~3144` — VERIFY against the existing cluster validation before treating as a fix.
-- [ ] [CODE] P2. **CONFIRM reader empty-vs-failed differentiation** — does the cefi read/preflight path treat
-      `attempted_failed` (retry/alert) differently from `empty_confirmed(SOURCE_RETURNED_ZERO)` (accept) per
-      `codex/02-data/honest-absence-downstream-handling.md`, or collapse both to "unavailable"? Verify, then fix if
-      collapsed.
+- [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain).
+      **PARTIALLY CONFIRMED (slot-3 read-only 2026-06-03):** the finalize path DOES run cluster validation
+      (`record_captured_from_counts(expected_root_clusters, observed_clusters)`; CLAUDE.md 4-pillar "cluster coverage ≥
+      expected" — `MissingClusterValidationError` if absent), so the gate is PRESENT (not missing). The audit's worry is
+      the `≥ count-threshold` vs `len(observed)==len(expected)` precision (a partial bundle that meets the count but
+      misses a cluster root). The cluster-validation internals live in UTL `manifest_writer.py`
+      `record_captured_from_counts` — left as a refinement for the cluster-SSOT owner (`mtds_mdps_master`) to tighten if
+      `≥` admits incomplete bundles; **NOT a slot-3-solo fix** (UTL + the bundled writer span DeFi/sports too). The live
+      writer's per-instrument path is unaffected (no clusters). Repo: UTL/MTDS — owning VM.
+- [x] ✅ [CODE] P2. **CONFIRM reader empty-vs-failed differentiation — NOT A GAP (slot-3 read-only 2026-06-03).** The
+      MTDS reader (`reader.py:583-639`) fetches `capture_status == "captured"` data + raises `ShardNotFoundError` for
+      any non-captured cell — it does NOT (and should not) differentiate empty-vs-failed at the raw-read layer. The
+      `attempted_failed` (retry) vs `empty_confirmed` (accept) differentiation is correctly handled ONE layer up at the
+      **manifest-query / pre-flight** consumer (the backfill pre-flight reads `capture_status` and retries
+      `attempted_failed`, skips `captured`/`empty_confirmed` — the honest-absence consumer policy). No reader fix
+      needed.
+
+## Phase 2 — dry-run + sharding/performance scope (slot-3, 2026-06-03)
+
+> **✅ DRY-RUN COMPLETE — `mtds-migrate-cefi-v9dry-2024`** (n2-highmem-4, asia-northeast1-c, **NO `--apply`**;
+> exit_code=0, self-deleted; ~3 min wall).
+> `migrate_cefi_flat_to_v9_canonical --start-date 2024-01-01 --end-date 2024-12-31 --also-legacy --workers 32`.
+> **Result: `TOTAL planned=914,624 written/moved=0 (DRY-RUN)`** for the 2024 shard (candles `planned=45,585`; 9 L-flat
+> orphans fan-out shown with correct canonical dests). **`moved=0` = idempotent-skip** (the `-prd` already holds the
+> migrated `pipeline_mode=` forms — consistent with the verified corpus-complete state). **No OOM at 32 GB** for a dense
+> ~914k-object year (vs the 16 GB e2-standard-4 OOM on the all-years 1.9M listing). PLAN paths verified canonical
+> (`day=/pipeline_mode=batch_tardis/asset_group=cefi/venue=/instrument_type=/data_type=/…`). Banner removed (VM
+> self-deleted). Coding gate MET first: IS@f2ca5954 + MTDS@fa2b02c7/4e5fa57f + PM@878dd9553 all QG-green + on LDR.
+
+**Per-year object distribution (measured 2026-06-03, delimited day-dir listing on the legacy bucket):**
+
+| year  | day-dirs  | notes                          |
+| ----- | --------- | ------------------------------ |
+| 2019  | 277       | partial (from 2019-03-30)      |
+| 2020  | 366       |                                |
+| 2021  | 365       |                                |
+| 2022  | 365       |                                |
+| 2023  | 365       |                                |
+| 2024  | 366       |                                |
+| 2025  | 365       |                                |
+| 2026  | 144       | partial (to 2026-05-24)        |
+| **Σ** | **2,613** | == plan L2 count; ~2.377M objs |
+
+≈ **910 objects/day-dir**, ≈ **300k objects/year**. The e2-standard-4 (16 GB) OOM was loading **all 2.377M** legacy
+object names at once.
+
+**Sharding + machine-size recommendation (for the NEXT-session `--apply`):** **8 year-shards (2019…2026), one VM each,
+`n2-highmem-4` (32 GB)** — a per-year shard (~300k object names) fits comfortably in 32 GB (the OOM was 8× that on half
+the RAM). Server-side `gcs_copy_object` at `--workers 32` (GIL-free I/O) → the per-year copy is network-bound, not
+CPU-bound, so 4 vCPU suffices. The running 2024 dry-run validates the real per-year listing time + the 32 GB headroom
+(result appended here on completion).
+
+- [ ] [DATA] P0. **NEXT SESSION — execute the migration** (after the dry-run validates perf): run the 8 year-sharded
+      `--also-legacy --apply` gap-fill (5,233 legacy-only cells), then the irreversible orphan-sweep (with the mandatory
+      pre-delete idempotent-`--apply`-over-full-range guarantee), then E5 manifest rebuild (now CF-11-canonical
+      @mtds#fa2b02c7), E7 verify, E8 legacy-bucket delete. NOT this session (irreversible).
 
 ## Why this exists — cefi canonical FORM is broken corpus-wide (+ a recent 838-cell data gap)
 

@@ -517,8 +517,15 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `claude-api-health-monitor` now reports `New state: healthy`. BUT see the next two items: the credits were NOT
       actually required for conflict-resolution (it escalates to the VM, not the GHA API), and the agent still fails for
       OTHER reasons — so this credit top-up alone does not drain the cascade.**
-- [ ] [SCRIPT] P0. **Finish the conflict-resolution-agent VM-cutover (it's half-done + buggy → still dams the
-      cascade).** The agent's header documents a 2026-06-03 cutover from in-GHA `ANTHROPIC_API_KEY_CICD`+`claude-code`
+- [x] ✅ [SCRIPT] P0. **conflict-resolution-agent VM-cutover COMPLETE on main** — DONE 2026-06-03 (slot-1). The clean
+      escalate-only version (no `claude-api-health-precheck`, no in-GHA clone/resolve — verified `stale-steps: 0` on
+      `origin/main`) reached main via the #116 dam-drain (main:=LDR). It now ONLY dispatches `escalate-to-orchestrator`
+      (Max-plan setup-token VM worker, no GHA Anthropic credits). The earlier failures (vestigial precheck false-gate +
+      `fatal: destination path 'unified-trading-pm' already exists` clone bug) were the STALE main copy running; #116
+      replaced it. **Remaining (folded into Part-B2 fleet-roll below): `semver-agent` per-repo copies still carry the
+      vestigial precheck** (the `semver-agent.yml.tmpl` is already clean → fleet-roll removes it). repo:
+      unified-trading-pm. (original finding retained:) The agent's header documents a 2026-06-03 cutover from in-GHA
+      `ANTHROPIC_API_KEY_CICD`+`claude-code`
       TO `escalate-to-orchestrator` (POST /api/escalate → orchestrator spawns a Max-plan **setup-token** worker — NOT
       pay-per-call API credits). So it should NOT depend on GHA Anthropic credits at all. But the cutover is INCOMPLETE:
       (a) it still carries a **vestigial `claude-api-health-precheck`** that gates on GHA-API-credit health — the WRONG
@@ -529,8 +536,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       precheck + the leftover in-GHA clone/resolve so the job ONLY dispatches escalate-to-orchestrator** (per its own
       header), and verify the orchestrator-VM worker actually resolves + pushes. Same audit for `semver-agent` (it also
       carries the precheck). repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. **Deterministic take-LDR promotion-conflict resolver (agents only for genuine semantic escalation).**
-      Operator principle (2026-06-03): minimise agent dependency — deterministic scripts for hygiene + the common-case
+- [x] ✅ [SCRIPT] P1. **Deterministic take-LDR promotion-conflict resolver — BUILT + shipped + LIVE on main** (slot-1
+      2026-06-03; `deterministic-promotion-conflict-resolve.yml` + promoter rewired to dispatch `promotion-conflict`).
+      On a LDR→staging conflict it merges target→LDR with `-X ours` (take-LDR) and pushes LDR (unprotected — no
+      protected-branch push) so the PR becomes a clean FF; SAFETY-gated to source==LDR + target has 0 unique non-merge
+      commits, else ESCALATES to the VM conflict-agent. Reached main via #116. **Validated live on UAC #67** (manual
+      take-LDR resolve, same mechanism — staging's 1 stale CI-migration merge-node absorbed). Removes Claude from the
+      promotion critical path for the common case. repo: unified-trading-pm. (original spec:) Operator principle
+      (2026-06-03): minimise agent dependency — deterministic scripts for hygiene + the common-case
       conflicts; escalate to an agent (VM worker) ONLY when a conflict is genuinely ambiguous. The promotion conflicts
       that dammed the cascade are NOT ambiguous — they are **take-LDR** (staging/main are stale-vs-LDR; `git cherry`
       proved 0 unique content; ci_status handled by Guard 2). So before dispatching the (VM) conflict-agent, the
@@ -549,7 +562,13 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       hand-corrected** via `ci-status-update` → MAIN_GREEN (v2 was green on main/staging/LDR; the FAILING was the
       Agent-Audit false-flip), which unblocked UTL in the dep-order gate. Guard 3 prevents recurrence. NOTE: it
       activates once on PM main (reaches main via the normal flow). repo: unified-trading-pm.
-- [ ] [INFRA] P0. **Full PM `LDR→main` promotion (needed regardless of ci_status home).** main +221/−9 vs LDR →
+- [x] ✅ [INFRA] P0. **Full PM `LDR→main` promotion — DONE 2026-06-03 (slot-1): dam DRAINED via #116 (MERGED).** main was
+      254 behind LDR; PM workflows EXECUTE from main, so every LDR-shipped fix (Guard 2/3, deterministic resolver, clean
+      conflict-agent, codex wipe, qg-gate fix) was INERT until this landed. Resolved deterministically: merged main→tab
+      with `-X ours` (take-LDR — main had 0 unique content per `git cherry`) + Guard-2 reconcile overlaid main's
+      authoritative ci_status; stale tracked regen artifacts removed; #116 merged as a MERGE commit (main now a
+      patch-equal superset of LDR → clean ongoing sync). main:=LDR verified (all 4 machinery files + clean conflict-agent
+      present on origin/main). repo: unified-trading-pm. (original finding retained for history:) main +221/−9 vs LDR →
       back-merge `main→LDR` (absorb the 9), then gated `LDR→main` PR. Lands the `tier-ab-green` chain-wiring, the
       fund-admin/greeks manifest entries, fresh ci_status, + 221 PM commits. Until it lands the promoter reads a stale
       main manifest (the live dam). repo: unified-trading-pm. **FINDING (2026-06-03, slot-1) — the dam is a LARGE
