@@ -1,0 +1,11 @@
+row_type,k,rep,repo,wall_s,max_rss_mb,exit_code,max_swap_in,max_swap_out,max_steal,loadavg_1m_peak
+run,1,1,instruments-service,30.5,681,1,0,0,0,0.75
+summary,1,,,30.5|p50 30.5|p95,,,0,0,0,0.75
+run,2,1,instruments-service,30.7,681,1,0,0,0,2.45
+run,2,1,unified-trading-library,40.2,621,1,0,0,0,2.45
+summary,2,,,30.7|p50 30.7|p95,,,0,0,0,2.45
+run,4,1,instruments-service,34.5,681,1,0,0,0,5.46
+run,4,1,unified-trading-library,46.4,621,1,0,0,0,5.46
+run,4,1,alerting-service,53.1,550,1,0,0,0,5.46
+run,4,1,deployment-api,178.8,1344,0,0,0,0,5.46
+summary,4,,,46.4|p50 53.1|p95,,,0,0,0,5.46

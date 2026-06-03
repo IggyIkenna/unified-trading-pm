@@ -161,10 +161,10 @@ Harsh's per-repo baseline (ask #3) + worker-VM right-sizing (ask #1).
 _Owning plan **11✓/2○** — only the two measurement P0s below remain open; the governor + slot-aware pytest + ADR + CW
 agent all landed._
 
-- [ ] [SCRIPT] P0. Governor (`QG_HOST_CONCURRENCY`) + slot-aware `pytest -n` + aggregate-load benchmark (owning todos
-      qg-governor / qg-slot-aware-workers / qg-bench-aggregate). **2-of-3 DONE** — governor + slot-aware pytest shipped;
-      **only the aggregate-load benchmark harness (`scripts/dev/benchmark-qg-under-load.sh`, qg-bench-aggregate) is
-      still open.**
+- [x] ✅ [SCRIPT] P0. Governor (`QG_HOST_CONCURRENCY`) + slot-aware `pytest -n` + aggregate-load benchmark (owning todos
+      qg-governor / qg-slot-aware-workers / qg-bench-aggregate). **3-of-3 DONE** — qg-bench-aggregate shipped:
+      benchmark ran K=1,2,4; K=1 p95=30.5s → K=2=30.7s (1.01×) → K=4=53.1s (1.74×); swap_in=0 steal=0 at all K.
+      vmstat header-repeat bug fixed. CSV evidence committed (qg-bench-under-load-20260603T134208Z.csv).
 - [ ] [SCRIPT] P0. Per-repo QG baseline — time/CPU/RAM, **local + on an AWS worker VM** → committed baseline file + a 2×
       deviation guard (ask #3; owning todo qg-perrepo-baseline). **OPEN — the main remaining E item.**
 - [x] ✅ [INFRA] P1. Worker-VM right-sizing, **data-driven off the baseline** (ask #1; owning todo qg-vm-rightsizing). —

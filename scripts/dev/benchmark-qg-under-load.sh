@@ -167,9 +167,10 @@ for K in "${KS[@]}"; do
         wait "$VMSTAT_PID" "$LOAD_PID" 2>/dev/null || true
 
         # host-metric peaks for this batch
-        max_si=$(awk 'NR>2{print $7}' "$local_vm" | sort -n | tail -1); max_si=${max_si:-0}
-        max_so=$(awk 'NR>2{print $8}' "$local_vm" | sort -n | tail -1); max_so=${max_so:-0}
-        max_st=$(awk 'NR>2{print $17}' "$local_vm" | sort -n | tail -1); max_st=${max_st:-0}
+        # vmstat re-prints headers periodically; $7~/^[0-9]+$/ filters them out.
+        max_si=$(awk 'NR>2 && $7~/^[0-9]+$/{print $7}' "$local_vm" | sort -n | tail -1); max_si=${max_si:-0}
+        max_so=$(awk 'NR>2 && $8~/^[0-9]+$/{print $8}' "$local_vm" | sort -n | tail -1); max_so=${max_so:-0}
+        max_st=$(awk 'NR>2 && $17~/^[0-9]+$/{print $17}' "$local_vm" | sort -n | tail -1); max_st=${max_st:-0}
         max_load=$(sort -n "$load_log" | tail -1); max_load=${max_load:-0}
 
         # per-run rows

@@ -155,3 +155,5 @@ logs/
 !github-integration/data/
 !github-integration/data/*.json
 .smoke-dirt.txt
+# Benchmark evidence CSVs (committed as plan evidence per qg-bench-aggregate)
+!scripts/dev/qg-bench-under-load-*.csv
