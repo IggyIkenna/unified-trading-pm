@@ -67,11 +67,16 @@ what `staging` does for service repos.
 
 ## Two-Pass Workflow Model (the unit of work)
 
-> **Order is non-negotiable: quality gates BEFORE quickmerge.** Never invoke `quickmerge` until
-> `bash scripts/quality-gates.sh` has exited 0 on the **current HEAD**. Pass 1 (the full gate) is what runs the tests
-> and writes the `.qg_last_passed_sha` sentinel; Pass 2 (`quickmerge --agent`) refuses to proceed without a matching
-> sentinel and skips test re-runs on the strength of it. Run quickmerge first (or after only a partial Pass 1) and
-> either it hard-refuses or — worse, if you reach for skip flags — the change ships with tests never having run.
+> **Order is non-negotiable: quality gates BEFORE COMMIT** — the commit is the per-repo **quality boundary** (tightened
+> 2026-06-03; supersedes "before quickmerge"). A **code** commit toward the integration branch must come from a
+> `quality-gates.sh`-green tree, NOT on the strength of the light prek hook alone
+> (ruff/format/gitleaks/conventional-commit). So Pass 1 (the full gate) runs on HEAD's content BEFORE you `git commit`
+> code — not merely before quickmerge. Pass 1 writes the `.qg_last_passed_sha` sentinel; Pass 2 (`quickmerge --agent`)
+> refuses to proceed without a matching sentinel and skips test re-runs on the strength of it. Realize it cheaply via
+> **QG-sweep batching** (gate ONCE over a batch → make per-shippable-unit commits from that green tree) — the gate is
+> per-batch, not per-commit. **Scope**: binds commits that touch source the gate checks; pure doc / plan-flip / markdown
+> commits (e.g. `docs(plans):` flips) take the prek hook only — full QG is a source gate. Reach for quickmerge first (or
+> skip flags) and either it hard-refuses or — worse — the change ships with tests never having run.
 
 Every shippable unit goes through exactly two passes:
 

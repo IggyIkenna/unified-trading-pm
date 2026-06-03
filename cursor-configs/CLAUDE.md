@@ -865,10 +865,11 @@ Foundation-Completion-Gate / External-Data / Plans-Run-To-Completion / Manifest-
 `codex/02-data/data-pipeline-correctness-hard-rule.md`; migration sequencing (Phase ordering HARD, slot-1 owns
 broadcast/ACK): `plans/epics/mtds_mdps_master.md`.
 
-**Quality Gates Are A Merge Prerequisite (HARD RULE)**: no code merges to `live-defi-rollout` without
-`bash scripts/quality-gates.sh` exit 0 for the touched repo + cross-repo consumers; reviewers reject PRs lacking a
-QG-green evidence line. Exemption only via operator `BLOCKED-OPERATOR-DECISION`. **This is the LOCAL / agent pre-flight
-(an agent + quickmerge requirement — fail-fast so you never put un-QG'd code on the integration branch or waste a doomed
+**Quality Gates Are A Commit + Merge Prerequisite (HARD RULE)**: no code is **committed** toward / merged to
+`live-defi-rollout` without `bash scripts/quality-gates.sh` exit 0 for the touched repo + cross-repo consumers
+(commit-as-boundary, see § "Quality gates BEFORE COMMIT"); reviewers reject PRs lacking a QG-green evidence line.
+Exemption only via operator `BLOCKED-OPERATOR-DECISION`. **This is the LOCAL / agent pre-flight (an agent +
+commit/quickmerge requirement — fail-fast so you never put un-QG'd code on the integration branch or waste a doomed
 CI/PR cycle), NOT a server gate. `live-defi-rollout` carries NO required-check ruleset — it is the unprotected
 integration axis by design (`codex/08-workflows/ci-cd-flow.md`). The SERVER-ENFORCED required check (`quality-gates-v2`)
 fires at the staging/main PR — the promotion boundary. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH`, so

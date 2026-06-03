@@ -180,6 +180,14 @@ dedicated job directly — but never commit the churn from a slot worktree.
 
 ## Two-Pass Workflow Model
 
+> **The commit is the per-repo quality boundary (HARD RULE, tightened 2026-06-03; was "before quickmerge").** A **code**
+> commit toward the integration branch must be made from a `quality-gates.sh`-green tree: the `prek` pre-commit hook
+> (ruff/format/gitleaks/conventional-commit) is the **LIGHT** gate; the full `quality-gates.sh` (Pass 1) is the
+> **commit-prerequisite**. This binds the direct **Commit+Push+Flip** path, not only quickmerge. Run it cheaply via
+> **QG-sweep batching** (§ below — gate ONCE over a batch → per-shippable-unit commits from that green tree; per-batch,
+> not per-commit). Pure doc / plan-flip / markdown commits (e.g. `docs(plans):` flips) take the prek hook only — full QG
+> is a source gate.
+
 The recommended workflow separates a **full validation pass** from a **lightweight pre-PR pass**:
 
 | Pass                    | Command                                    | What runs                                         | When                           |
@@ -2781,21 +2789,21 @@ substantive STEP and writes the sentinel on a true pass. Do NOT use them to mask
 
 ## Resource governance under multi-slot load (codified 2026-06-02)
 
-> Plan: `plans/active/quality_gates_resource_contention_speedup_2026_06_02.md`. The shared-host concurrency rule above is
-> the **manual** discipline ("humans/agents keep full QGs to 1–2"); the mechanisms below **automate** it inside
+> Plan: `plans/active/quality_gates_resource_contention_speedup_2026_06_02.md`. The shared-host concurrency rule above
+> is the **manual** discipline ("humans/agents keep full QGs to 1–2"); the mechanisms below **automate** it inside
 > `quality-gates-base/base-service.sh` so it holds even when N slots gate unattended.
 
-**The anti-pattern (measured, not theoretical):** `pytest -n auto` per slot, or **uncapped native BLAS/OMP thread pools**
-per slot, on a shared host is **oversubscription, not speedup**. Measured 2026-06-02 on the 24-core dev box: ml-service's
-gate spawned **100+ threads / ~13 effective cores** from numpy/sklearn/lightgbm/xgboost (the `pytest -n` default was
-already `1` — the fan-out was native thread pools, NOT xdist). When several slots do this at once the box swaps and every
-run slows. Adding parallelism makes the aggregate worse.
+**The anti-pattern (measured, not theoretical):** `pytest -n auto` per slot, or **uncapped native BLAS/OMP thread
+pools** per slot, on a shared host is **oversubscription, not speedup**. Measured 2026-06-02 on the 24-core dev box:
+ml-service's gate spawned **100+ threads / ~13 effective cores** from numpy/sklearn/lightgbm/xgboost (the `pytest -n`
+default was already `1` — the fan-out was native thread pools, NOT xdist). When several slots do this at once the box
+swaps and every run slows. Adding parallelism makes the aggregate worse.
 
 ### The four levers (all in `base-service.sh`, sourced live by every repo's `quality-gates.sh`)
 
-1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens
-   (K = `max(1, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`). `qg_governor_acquire` is called before the
-   heavy phases (`[3] TESTS`) and `qg_governor_release` after `[4] TYPE CHECK`; at most K QG heavy-phases run concurrently
+1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens (K =
+   `max(1, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`). `qg_governor_acquire` is called before the heavy
+   phases (`[3] TESTS`) and `qg_governor_release` after `[4] TYPE CHECK`; at most K QG heavy-phases run concurrently
    **across all slots**, the rest queue. The held process is `nice -n10` + `ionice -c2 -n7` so it never starves
    interactive work. `flock` auto-frees on process death (no stuck tokens). No-op when `QG_GOVERNOR_DISABLE=true` or
    `flock(1)` is absent. Introspect: `bash qg-host-governor.sh --status`. This converts N-way thrash into orderly
@@ -2806,24 +2814,24 @@ run slows. Adding parallelism makes the aggregate worse.
    `source base-service.sh`.
 3. **Coverage off the hot path.** `--cov` (per-line instrumentation) is a large CPU/RAM cost. Iterative/`--quick` runs
    skip it; the coverage floor is still **enforced on the full gate run** (quickmerge Pass 1). The merge-gate coverage
-   requirement is unchanged — only *when* it is paid.
-4. **Shared caches.** `RUFF_CACHE_DIR` (and the basedpyright cache, already keyed per-service in `$TMPDIR`) are repointed
-   to host-shared dirs so the first slot to run warms them for all — the default in-worktree `.ruff_cache`/`.pytest_cache`
-   defeats cross-slot reuse.
+   requirement is unchanged — only _when_ it is paid.
+4. **Shared caches.** `RUFF_CACHE_DIR` (and the basedpyright cache, already keyed per-service in `$TMPDIR`) are
+   repointed to host-shared dirs so the first slot to run warms them for all — the default in-worktree
+   `.ruff_cache`/`.pytest_cache` defeats cross-slot reuse.
 
 ### Per-repo resource baseline + 2× drift guard
 
 `scripts/dev/measure-qg-baseline.sh --env local|vm [--jobs N]` records per-repo wall/RSS/CPU to
-`scripts/dev/qg_resource_baseline.json` (keyed repo × {local,vm}; RSS + CPU are parallelism-invariant so `--jobs>1` stays
-accurate, only wall can inflate — validated on this box at j=4 with <3% deviation). `base-service.sh` then WARNs (never
-fails) when a run's wall-clock exceeds **2× its committed baseline** — an early resource-regression signal during
+`scripts/dev/qg_resource_baseline.json` (keyed repo × {local,vm}; RSS + CPU are parallelism-invariant so `--jobs>1`
+stays accurate, only wall can inflate — validated on this box at j=4 with <3% deviation). `base-service.sh` then WARNs
+(never fails) when a run's wall-clock exceeds **2× its committed baseline** — an early resource-regression signal during
 code-freeze. Aggregate cross-slot contention is measured separately by `scripts/dev/benchmark-qg-under-load.sh`.
 
 ### VM-sizing (data-driven, not a guess)
 
-The binding constraint is **peak RSS**, not cores. Measured ceiling (local, full gates): **unified-trading-library
-5.27 GB**, then execution/features ~1.9 GB — so a *single* heavy gate overshoots the current `m7i.xlarge` 2 GB/slot budget
-by up to 2.6×. **Decision (operator 2026-06-02): keep QG LOCAL on 16 GB workers, no fleet change** — the governor caps
+The binding constraint is **peak RSS**, not cores. Measured ceiling (local, full gates): **unified-trading-library 5.27
+GB**, then execution/features ~1.9 GB — so a _single_ heavy gate overshoots the current `m7i.xlarge` 2 GB/slot budget by
+up to 2.6×. **Decision (operator 2026-06-02): keep QG LOCAL on 16 GB workers, no fleet change** — the governor caps
 K=`floor(vCPU/4)`=1 on a 4-vCPU worker so the single-run peak (~5.3 GB) fits 16 GB; sizing rule
 `per-VM RAM ≥ peak-per-run-RSS × K`. Central self-hosted-runner QG (Option B) was **rejected** — it breaks the local
 pass/fail feedback loop. ADR: `adr-qg-offload-self-hosted-runners-2026-06-02.md`.
@@ -2841,13 +2849,13 @@ it matters most there). `base-ui.sh` (TS repos) is out of scope (no pytest fan-o
   versions) to the last FULL green run; light codex/production checks still run. **Safe by construction:** no sentinel /
   malformed hash / any content change → normal full run; only an exact 64-char match skips. `.qg_content_sentinel` is
   separate from quickmerge's `.qg_last_passed_sha`. Escape: `QG_SENTINEL_DISABLE=true`.
-- **Selective testing (`qg-selective-tests`) — AUDITED, NOT enabled (operator 2026-06-02).** Evaluated `pytest-testmon` /
-  import-graph changed-files→affected-tests mapping. **Decision: keep running the FULL test suite** — not ready to bypass
-  any test; a missed-test false-negative is strictly worse than slowness, and the green sentinel + governor already
-  remove most of the cost without ever skipping a test on changed content. Revisit only behind `QG_SELECTIVE=true`
-  default-off once proven sound.
-- **basedpyright scope (`qg-basedpyright-scope`) — AUDITED, no scoping (data-driven).** Measured basedpyright at
-  **~5.4 s / 9.6 CPU-s** (NOT the "biggest CPU spike" the original plan assumed) — scoping to changed packages saves
-  ~nothing while risking missed cross-file type errors. **Keep full-tree analysis.** Cache already shared
-  (`$TMPDIR/basedpyright-cache/$SERVICE_NAME`). The real basedpyright lever is *strictness* (warn-only by default unless
+- **Selective testing (`qg-selective-tests`) — AUDITED, NOT enabled (operator 2026-06-02).** Evaluated `pytest-testmon`
+  / import-graph changed-files→affected-tests mapping. **Decision: keep running the FULL test suite** — not ready to
+  bypass any test; a missed-test false-negative is strictly worse than slowness, and the green sentinel + governor
+  already remove most of the cost without ever skipping a test on changed content. Revisit only behind
+  `QG_SELECTIVE=true` default-off once proven sound.
+- **basedpyright scope (`qg-basedpyright-scope`) — AUDITED, no scoping (data-driven).** Measured basedpyright at **~5.4
+  s / 9.6 CPU-s** (NOT the "biggest CPU spike" the original plan assumed) — scoping to changed packages saves ~nothing
+  while risking missed cross-file type errors. **Keep full-tree analysis.** Cache already shared
+  (`$TMPDIR/basedpyright-cache/$SERVICE_NAME`). The real basedpyright lever is _strictness_ (warn-only by default unless
   `BASEDPYRIGHT_MAX_ERRORS` is set) — a separate policy decision, not a speed one.
