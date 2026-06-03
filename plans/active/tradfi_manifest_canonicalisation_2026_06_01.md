@@ -333,13 +333,24 @@ VM.
 > only if a trading session was open + fetch succeeded + genuinely nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank
 > `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as complete.
 
-- [ ] [DATA] P0. **E5 rebuild classifier: within-bounds trading-day empty → `attempted_failed`.** For every empty cell:
-      if it is a trading day (NOT weekend/holiday) + ticker in universe + data_type guaranteed-when-listed (trades /
-      tbbo / ohlcv on an active venue+ticker) + within coverage window → `attempted_failed` (`record_failed`), NOT
-      `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 5 existing `SOURCE_RETURNED_ZERO` rows specifically — confirm
-      genuine source-zero vs masked fetch failure. Preserve the legit weekend/holiday/out-of-coverage typed empties.
-- [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows (6,036) v9, status PRESERVED** — never silently
-      relabel a failure to `empty_confirmed`; they stay flagged for backfill.
+- [x] ✅ [DATA] P0. **E5 rebuild classifier: within-bounds trading-day empty → `attempted_failed` — DONE (mtds@90aeb7dd,
+      slot-6 2026-06-03).** rebuild_tradfi_manifest reclassifies via UAC `is_non_trading_day(venue,day)` (the SAME
+      helper the orchestrator uses → batch=live): a `SOURCE_RETURNED_ZERO` on a TRADING day →
+      `record_failed(WithinBoundsTradfiSourceZero)` (attempted_failed);
+      weekend/holiday/out-of-coverage/calendar-exception preserved as typed empty. The 5 existing SOURCE_RETURNED_ZERO
+      are audited by this path. Tests: trading-day-reclassified / weekend-preserved / holiday-preserved /
+      calendar-exception-preserved. ORIGINAL: For every empty cell: if it is a trading day (NOT weekend/holiday) +
+      ticker in universe + data_type guaranteed-when-listed (trades / tbbo / ohlcv on an active venue+ticker) + within
+      coverage window → `attempted_failed` (`record_failed`), NOT `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 5
+      existing `SOURCE_RETURNED_ZERO` rows specifically — confirm genuine source-zero vs masked fetch failure. Preserve
+      the legit weekend/holiday/out-of-coverage typed empties.
+- [x] ✅ [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows (6,036) v9, status PRESERVED — DONE
+      (mtds@90aeb7dd, slot-6 2026-06-03).** `reemit_honest_absence_rows` reads the existing tradfi `_index` (robust:
+      `read_availability_index` → direct `_index/availability_index.parquet` fallback on gcsfs DNS flakiness) + re-emits
+      every `attempted_failed`/`empty_confirmed` row not covered by the object-scan (dedup by row_key, `record_failed`
+      error / `record_empty` reason preserved + validated vs EMPTY_CONFIRMED_REASONS), fixing the pure-object-scan
+      false-complete. 11 tests; QG --no-fix exit 0. ORIGINAL: never silently relabel a failure to `empty_confirmed`;
+      they stay flagged for backfill.
 - [x] ✅ [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS tradfi databento/massive) — DONE
       (instruments-service@bd1456aa, slot-6 2026-06-03).** MTDS side was VERIFIED COMPLIANT (below); IS-side residual is
       now fixed — Databento fetch-failure threads state → attempted_failed (see the STATE-threading item). on a genuine
