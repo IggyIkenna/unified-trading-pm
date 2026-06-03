@@ -71,16 +71,24 @@ matches both decisions on every host (laptop + VM), independent of whether prek/
 
 ## Actionable todos
 
-- [ ] [SCRIPT] P1. `bootstrap_vm.sh`: install prek at the pinned version + run `prek install` (so on-commit hooks —
-      gitleaks / branch-drift / prettier-autostage — actually run on worker+orchestrator VMs, not just laptop/CI);
-      `worker-host-preflight.sh`: assert prek present + version-matches. **Highest impact** (VM commits currently bypass
-      all hooks). Target: agent-orchestrator. NOTE: untestable from a laptop slot + AO is mid-migration (G6) — route to
-      the AO/fleet owner.
-- [ ] [SCRIPT] P1. Retire the `pre-commit` pin in `workspace-constraints.toml` (prek-only); re-derive via
-      `resolve-canonical-versions.py`; switch `check-precommit-versions.py`'s `pre-commit install` → `prek install` and
-      add a prettier-`3.6.2` rev assertion alongside the ruff one. Target: unified-trading-pm.
-- [ ] [SCRIPT] P2. Clean up the dead `.pre-commit-config.yaml` prettier mirror `rev: v3.2.0` → `v3.6.2` (or remove the
-      replaced mirror block) for clarity; roll out fleet-wide via `rollout-prettier-unified.py`. Target:
-      unified-trading-pm + fleet.
-- [ ] [SCRIPT] P3. quickmerge UNSCOPED-path probe (`--files`-absent) `pre-commit run prettier` → prek (cosmetic; the
-      `--files` path is already canonical-npx). Target: unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. `bootstrap_vm.sh`: install prek (`uv tool install`, pinned `>=0.3.0,<1.0.0`) + new Step 4.6 runs
+      `prek install` per repo so on-commit hooks (gitleaks / branch-drift / prettier-autostage) run on worker VMs; added
+      `ripgrep`+`jq` to apt; `worker-host-preflight.sh` asserts prek/rg/jq + ≥1 installed hook. —
+      agent-orchestrator@7cec71c (shipped via AO tab→LDR; non-source shell change, prek-hook gated). VM-runtime
+      verification pending next VM (re)bootstrap — packer AMI build should rebake to include rg/jq/prek.
+- [x] ✅ [SCRIPT] P1. **Root cause: stale scaffolding** — AO+UAC were the last two repos still declaring `pre-commit` (5
+      repos already on `prek`; AO's comment referenced a UTL pre-commit pin that no longer exists). Migrated AO + UAC
+      pyproject `pre-commit`→`prek>=0.3.0,<1.0.0` + their README/OPERATIONS docs (`prek install`); switched
+      `check-precommit-versions.py` to install the hook via prek (pre-commit fallback). — agent-orchestrator@7cec71c +
+      unified-api-contracts@66d07dfe + unified-trading-pm@<PM PR #116 follow-on>. **DEFERRED (sub-item):** re-deriving
+      `workspace-constraints.toml` to drop the now-orphaned `pre_commit` pin — `resolve-canonical-versions.py` produced
+      a CORRUPT diff in this worktree (malformed duplicate keys; not all repos aligned locally), so it must run from a
+      clean full-checkout host. The orphaned pin is harmless (pre-commit is no longer the invoked runner). Target:
+      unified-trading-pm.
+- [x] ✅ [SCRIPT] ~~P2~~ **MISREAD — no action.** The `.pre-commit-config.yaml` `rev: v3.2.0` is the
+      **conventional-pre-commit** rev, NOT prettier. Prettier is the local `prettier-autostage` wrapper with no pinned
+      rev (resolves repo-local 3.6.2). So there is no dead prettier mirror + no 3.6.2-vs-3.2.0 prettier conflict — the
+      earlier "prettier drift" finding was wrong.
+- [x] ✅ [SCRIPT] P3. quickmerge UNSCOPED-path probe: dropped the dead `pre-commit run prettier` branch (hook id is
+      `prettier-autostage`, never matched) → canonical `npx prettier@3.6.2` tree-wide. — unified-trading-pm@<PM PR #116
+      follow-on>.
