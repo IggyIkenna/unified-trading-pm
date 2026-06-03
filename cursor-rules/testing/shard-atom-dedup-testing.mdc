@@ -1,0 +1,115 @@
+---
+description: "Tests must verify shards are not double-counted when aggregating across pipeline_modes or sources"
+globs: ["*/tests/test_*.py", "*/tests/integration/*"]
+alwaysApply: false
+priority: 80
+tags: [testing, manifest, shard-atom, data-correctness, critical]
+---
+
+# Shard-Atom Dedup Testing Requirement
+
+## Rule
+
+For every data service that supports multi-source or multi-pipeline_mode aggregation, tests MUST verify that the shard-atom (the smallest unit of data: `(venue, data_type, instrument_id, day)`) is NOT double-counted in aggregate roll-ups or drilldown queries. This is critical because:
+
+- Multiple sources or pipeline_modes may exist for the same shard
+- Dedup must occur at the source selection / rollup layer, NOT silently in the UI
+- Silent double-counting is a silent data correctness bug
+
+## Pattern
+
+### Test 1: Shard-Atom Dedup Across Pipeline Modes
+
+For services supporting `pipeline_mode=batch_*/` partitioning:
+
+```python
+def test_pipeline_mode_rows_do_not_double_count_shards(self):
+    """
+    Verify that when multiple pipeline_modes exist for the same shard,
+    the aggregate count treats it as ONE shard, not N pipeline_modes.
+
+    Example: If we have:
+    - pipeline_mode=batch_tardis/asset_group=cefi/venue=KRAKEN/data_type=trades/day=2026-06-01
+    - pipeline_mode=batch_hyperliquid_rest/asset_group=cefi/venue=KRAKEN/data_type=trades/day=2026-06-01
+
+    Then count(shards) should be 1, not 2.
+    """
+    # Arrange: Create manifest rows for the SAME shard in two pipeline_modes
+    manifest = build_manifest([
+        Row(venue="KRAKEN", data_type="trades", instrument_id="BTC-USD", day="2026-06-01",
+            asset_group="cefi", pipeline_mode="batch_tardis", capture_status="captured"),
+        Row(venue="KRAKEN", data_type="trades", instrument_id="BTC-USD", day="2026-06-01",
+            asset_group="cefi", pipeline_mode="batch_hyperliquid_rest", capture_status="captured"),
+    ])
+
+    # Act: Query the manifest via the drilldown/UI endpoint
+    response = api.get(f"/api/manifest/drilldown?day=2026-06-01&venue=KRAKEN&asset_group=cefi")
+
+    # Assert: Shard is counted ONCE (via source dedup)
+    assert response["shard_count"] == 1, "Duplicate shards across pipeline_modes detected"
+    assert response["rows"] == 1, "Only one row returned after dedup"
+```
+
+### Test 2: Shard-Atom Dedup Across Sources
+
+For services supporting multi-source aggregation (via `select_primary_available_source()`):
+
+```python
+def test_multi_source_dedup_selects_primary(self):
+    """
+    Verify that when multiple sources exist for the same shard,
+    only the PRIMARY source is selected in aggregates.
+    """
+    manifest = build_manifest([
+        Row(venue="BITFINEX", data_type="trades", instrument_id="ETH-USD", day="2026-06-01",
+            source="databento", capture_status="captured"),
+        Row(venue="BITFINEX", data_type="trades", instrument_id="ETH-USD", day="2026-06-01",
+            source="tardis", capture_status="captured"),
+    ])
+
+    # Act
+    response = api.get(f"/api/manifest/drilldown?day=2026-06-01&venue=BITFINEX")
+
+    # Assert: Only primary source row is counted
+    selected_row = response["rows"][0]
+    assert selected_row["source"] == "databento", "Primary source not selected"
+    assert response["shard_count"] == 1
+```
+
+### Test 3: CeFi Parity (New)
+
+For CeFi reader implementations that must match DeFi's shard-atom dedup:
+
+```python
+def test_cefi_drilldown_does_not_double_count_shards(self):
+    """
+    CeFi multi-source UNION coverage test — same dedup logic as DeFi.
+    Ensures cefi processed_candles aggregation does not double-count
+    shards when multiple sources exist.
+    """
+    # Same pattern as DeFi test, but parameterized for cefi asset_group
+    manifest = build_manifest([
+        Row(venue="KRAKEN", data_type="ohlcv_1m", instrument_id="BTC-USD", day="2026-06-01",
+            asset_group="cefi", source="tardis"),
+        Row(venue="KRAKEN", data_type="ohlcv_1m", instrument_id="BTC-USD", day="2026-06-01",
+            asset_group="cefi", source="hyperliquid_rest"),
+    ])
+
+    # Verify dedup
+    response = api.get(f"/api/manifest/drilldown?asset_group=cefi&venue=KRAKEN&data_type=ohlcv_1m")
+    assert response["shard_count"] == 1
+```
+
+## Anti-Patterns
+
+- ❌ Silently selecting one source without a test — dedup policy must be explicit
+- ❌ Drilldown endpoint returning multiple rows for the same shard — double-counts in UI
+- ❌ `test_pipeline_mode_rows_do_not_double_count_shards` **only for DeFi** — must exist for CeFi too after Phase 3
+- ❌ Aggregate shard count = sum of row counts — must dedup by shard_key first
+- ❌ No test for source selection order — PRIMARY source MUST be deterministic (via `SOURCE_PRIORITY`)
+
+## Reference
+
+- SSOT: `codex/02-data/manifest-honest-absence-downstream-handling.md` § Shard-granularity SSOT
+- Plan: `plans/active/cefi_manifest_canonicalisation_2026_06_01.md` § CF-11 (CeFi parity requirement)
+- Related: `cursor-rules/data/pipeline-mode-partition-structure.mdc` (the partitioning that enables this test)
