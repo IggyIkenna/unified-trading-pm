@@ -119,8 +119,8 @@ DEFERRED-POST-CUTOVER · **estimate**: 12 cal AI-days (class: infra)
       engine") with a guard that returns a typed "archetype not in rollout" error against an explicit
       `SUPPORTED_ARCHETYPES` allowlist; fix the stale "53"→55 docstring/count. Supersedes the per-archetype
       `ARBITRAGE_CROSS_DOMAIN_EVENT` note in `config_grid_archetype_extend`. Repo: strategy-service. **NB**: respect the
-      active strategy-service LOGIC-FREEZE — this lives in `factory.py`/registry, not `engine/strategies/v2/`; land after
-      confirming the freeze does not cover the factory, else hold for the `🟢 STRATEGY-LOGIC UNFREEZE` ping.
+      active strategy-service LOGIC-FREEZE — this lives in `factory.py`/registry, not `engine/strategies/v2/`; land
+      after confirming the freeze does not cover the factory, else hold for the `🟢 STRATEGY-LOGIC UNFREEZE` ping.
 
 ### [`compute_optimization_mock_data_2026_05_13`](../active/compute_optimization_mock_data_2026_05_13.md)
 

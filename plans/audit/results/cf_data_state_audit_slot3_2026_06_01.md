@@ -207,7 +207,7 @@ Confirms the multi-layout reality — each AG bucket has ≥2 distinct layouts t
 | cefi       | **FLAT** `raw_tick_data/by_date/{SYMBOL}.parquet` — NO path dims; day/venue/data_type only in parquet cols (`exchange,symbol,timestamp[epoch-µs],data_type`)                             | `processed_candles/by_date/day=/timeframe=/data_type=/venue=`                                    | flat → derive dims + fan-out to day= partitions                                                                                |
 | tradfi     | **HYPHEN pseudo-hive** `raw_tick_data/by_date/day-2025-11-02/data_type-ohlcv_1m/equities/NYSE/{id}.parquet` (`-` not `=`, bare `equities`/`NYSE`) + a `databento-batch-registry/` tree   | same candle layout                                                                               | hyphen-delim parse; sample raw file had **0 rows** (verify not-empty); cols `timestamp,symbol,ohlcv,instrument_key,underlying` |
 | sports     | full hive `raw_tick_data/by_date/day=/category=/data_source=/venue=/league_id=/instrument_type=/data_type=` (parquet already has `source` + `data_source` cols)                          | `processed/by_date/day=/data_type=/league_id=/timeframe=` (also has `source`/`data_source` cols) | category=→asset_group=, data_source= path→source col (already in col too), keystone reason relabel                             |
-| prediction | legacy `raw_tick_data/by_date/day=/asset_group=/venue=/instrument_type=/data_type=` (near-canon) vs canonical pred-prd `…/category=/data_source=/venue=/…market_category=/underlying=/…` | candle layout                                                                                    | INVERTED legacy↔canonical; `rebuild_prediction_manifest.py` exists                                                             |
+| prediction | legacy `raw_tick_data/by_date/day=/asset_group=/venue=/instrument_type=/data_type=` (near-canon) vs canonical pred-prd `…/category=/data_source=/venue=/…market_category=/underlying=/…` | candle layout                                                                                    | INVERTED legacy↔canonical; `rebuild_prediction_manifest.py` exists                                                            |
 
 **Conclusion**: per-AG bespoke migrators (matching the existing `migrate_{sports,tradfi,polymarket}_canonical.py`
 structure), NOT one generalized tool. cefi needs a NEW flat→hive fan-out migrator (none exists). Each converges its
@@ -304,8 +304,8 @@ why the operator gated it on "only once we're on v9, no more missing things" —
     legacy + manifest row v9-correct; (f) ONLY THEN bulk-delete legacy buckets + superseded in-bucket paths (prediction
     `category=`, cefi `day=/asset_group=` lacking `pipeline_mode=`) at once; (g) fleet-drain (w/ slot-2) precedes it.
 
-12. **0-ROW OBJECT CONTAMINATION is per-AG — audit EACH, never assume tradfi-only (operator cross-check 2026-06-02).**
-    A clean pipeline records empties manifest-only (`record_empty`, NO object), so a 0-row PARQUET OBJECT on disk = a
+12. **0-ROW OBJECT CONTAMINATION is per-AG — audit EACH, never assume tradfi-only (operator cross-check 2026-06-02).** A
+    clean pipeline records empties manifest-only (`record_empty`, NO object), so a 0-row PARQUET OBJECT on disk = a
     bad-write bug, and a path-only migrator would COPY it into canonical → phantom canonical cell (false-complete at the
     G6 count). Row-count (footer) audit of all three slot-3 AGs (2026-06-02): **tradfi = CONTAMINATED** (the ~110k
     hyphen `day-` Massive dry-run placeholders, uniform 3070/4251-byte header-only → migrator 0-row guard + E7 delete);

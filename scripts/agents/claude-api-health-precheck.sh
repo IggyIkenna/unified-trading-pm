@@ -2,21 +2,20 @@
 # claude-api-health-precheck.sh — Check Claude API health before invoking agent workflows.
 #
 # Checks the last run of claude-api-health-monitor.yml via GH API.
-# If the last health check failed (conclusion != success), fast-fails with Telegram alert.
+# If the last health check failed (conclusion != success), fast-fails with Slack alert.
 #
 # Usage:
 #   source scripts/agents/claude-api-health-precheck.sh
 #   check_claude_api_health  # exits 1 if unhealthy
 #
 # Requires env vars:
-#   GH_TOKEN             — GitHub PAT for API access
-#   GH_ORG               — GitHub org (default: IggyIkenna)
+#   GH_TOKEN               — GitHub PAT for API access
+#   GH_ORG                 — GitHub org (default: IggyIkenna)
 #
 # Optional env vars:
-#   TELEGRAM_BOT_TOKEN   — For alert on failure
-#   TELEGRAM_CHAT_ID     — Target chat
-#   CALLING_WORKFLOW      — Name of the calling workflow (for alert context)
-#   SKIP_HEALTH_CHECK    — Set to "true" to bypass (emergency override)
+#   SLACK_CI_WEBHOOK_URL   — For alert on failure (Slack #ci-failures incoming webhook)
+#   CALLING_WORKFLOW        — Name of the calling workflow (for alert context)
+#   SKIP_HEALTH_CHECK      — Set to "true" to bypass (emergency override)
 
 set -euo pipefail
 
@@ -83,16 +82,16 @@ check_claude_api_health() {
     return 0
   fi
 
-  # Health check failed — send Telegram alert and fail
+  # Health check failed — send Slack alert (#ci-failures) and fail
   echo "[claude-health-precheck] FAIL: Claude API health check conclusion=$conclusion"
   echo "[claude-health-precheck] Aborting $calling_workflow to avoid wasting API credits on a degraded API"
 
-  if [ -n "${TELEGRAM_BOT_TOKEN:-}" ] && [ -n "${TELEGRAM_CHAT_ID:-}" ]; then
-    local text="⚠️ *Claude API Unhealthy — Agent Skipped*%0AWorkflow: \`${calling_workflow}\`%0ALast health check: \`${conclusion}\` at ${created_at}%0ASkipping agent invocation until API recovers.%0AOverride: set SKIP_HEALTH_CHECK=true"
-    curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-      -d "chat_id=${TELEGRAM_CHAT_ID}" \
-      -d "text=${text}" \
-      -d "parse_mode=Markdown" > /dev/null 2>&1 || true
+  local webhook="${SLACK_CI_WEBHOOK_URL:-}"
+  if [ -n "$webhook" ] && [ "${webhook#https://}" != "$webhook" ]; then
+    local text="Claude API Unhealthy — Agent Skipped\nWorkflow: ${calling_workflow}\nLast health check: ${conclusion} at ${created_at}\nSkipping agent invocation until API recovers.\nOverride: set SKIP_HEALTH_CHECK=true"
+    curl -s -o /dev/null -X POST "$webhook" \
+      -H 'Content-Type: application/json' \
+      --data "$(python3 -c "import json,sys; print(json.dumps({'text': sys.argv[1]}))" "$text")" || true
   fi
 
   return 1

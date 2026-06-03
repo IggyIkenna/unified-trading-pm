@@ -715,30 +715,6 @@
       "internal_count": 2,
       "external_count": 59
     },
-    "features-calendar-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
-    "features-commodity-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
-    "features-cross-instrument-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
-    "features-delta-one-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
-    "features-multi-timeframe-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
-    "features-onchain-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
     "features-service": {
       "internal_deps": {
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
@@ -890,33 +866,6 @@
       "internal_count": 2,
       "external_count": 47
     },
-    "features-sports-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
-    "features-volatility-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
-    "greeks-service": {
-      "internal_deps": {
-        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
-        "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
-      },
-      "external_deps": {
-        "fastapi<1.0.0,": [
-          "fastapi<1.0.0,>=0.115.0"
-        ],
-        "pydantic": [
-          "pydantic>=2.12.5,<3.0.0"
-        ],
-        "uvicorn": [
-          "uvicorn[standard]>=0.27.0,<1.0.0"
-        ]
-      },
-      "internal_count": 2,
-      "external_count": 3
-    },
     "fund-administration-service": {
       "internal_deps": {
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
@@ -992,6 +941,25 @@
       },
       "internal_count": 2,
       "external_count": 22
+    },
+    "greeks-service": {
+      "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
+      },
+      "external_deps": {
+        "fastapi<1.0.0,": [
+          "fastapi<1.0.0,>=0.115.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn[standard]>=0.27.0,<1.0.0"
+        ]
+      },
+      "internal_count": 2,
+      "external_count": 3
     },
     "market-data-processing-service": {
       "internal_deps": {
@@ -1239,13 +1207,156 @@
       "internal_count": 2,
       "external_count": 40
     },
-    "ml-inference-service": {
-      "skipped": true,
-      "reason": "not a directory"
-    },
-    "ml-training-service": {
-      "skipped": true,
-      "reason": "not a directory"
+    "ml-service": {
+      "internal_deps": {
+        "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
+        "unified-trading-library": "unified-trading-library>=0.3.0,<1.0.0"
+      },
+      "external_deps": {
+        "aiobotocore": [
+          "aiobotocore>=2.11.0,<3.0.0"
+        ],
+        "aiohttp": [
+          "aiohttp>=3.13.4,<4.0.0"
+        ],
+        "bandit": [
+          "bandit>=1.7.0,<2.0.0"
+        ],
+        "basedpyright": [
+          "basedpyright==1.38.2"
+        ],
+        "boto3": [
+          "boto3>=1.40.70,<2.0.0"
+        ],
+        "catboost": [
+          "catboost>=1.2.0,<2.0.0"
+        ],
+        "db-dtypes": [
+          "db-dtypes>=1.5.0,<2.0.0"
+        ],
+        "fastapi": [
+          "fastapi>=0.115.0,<1.0.0"
+        ],
+        "joblib": [
+          "joblib>=1.3.0,<2.0.0"
+        ],
+        "lightgbm": [
+          "lightgbm>=4.0.0,<5.0.0"
+        ],
+        "matplotlib": [
+          "matplotlib>=3.9.0,<4.0.0"
+        ],
+        "numpy": [
+          "numpy>=2.3.0,<2.4.0"
+        ],
+        "onnxruntime": [
+          "onnxruntime>=1.18.0,<2.0.0"
+        ],
+        "opentelemetry-api": [
+          "opentelemetry-api>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-exporter-otlp-proto-grpc": [
+          "opentelemetry-exporter-otlp-proto-grpc>=1.27.0,<2.0.0"
+        ],
+        "opentelemetry-instrumentation-fastapi": [
+          "opentelemetry-instrumentation-fastapi>=0.48b0,<1.0.0"
+        ],
+        "opentelemetry-sdk": [
+          "opentelemetry-sdk>=1.27.0,<2.0.0"
+        ],
+        "optuna": [
+          "optuna>=4.0.0,<5.0.0"
+        ],
+        "pandas": [
+          "pandas>=2.3.0,<3.0.0"
+        ],
+        "pandas-stubs": [
+          "pandas-stubs>=2.2.0,<3.0.0"
+        ],
+        "pillow": [
+          "pillow>=12.2.0,<13.0.0"
+        ],
+        "pip-audit": [
+          "pip-audit>=2.7.0,<3.0.0"
+        ],
+        "polars": [
+          "polars>=1.37.0,<2.0.0"
+        ],
+        "prometheus-client": [
+          "prometheus-client>=0.20.0,<1.0.0"
+        ],
+        "psutil": [
+          "psutil>=6.0.0,<7.0.0"
+        ],
+        "pyarrow": [
+          "pyarrow>=23.0.0,<24.0.0"
+        ],
+        "pydantic": [
+          "pydantic>=2.12.5,<3.0.0"
+        ],
+        "pydantic-settings": [
+          "pydantic-settings>=2.12.0,<3.0.0"
+        ],
+        "pygments": [
+          "pygments>=2.20.0,<3.0.0"
+        ],
+        "pytest": [
+          "pytest>=9.0.3,<10.0.0"
+        ],
+        "pytest-asyncio": [
+          "pytest-asyncio>=0.25.0,<2.0.0"
+        ],
+        "pytest-cov": [
+          "pytest-cov>=7.0.0,<8.0.0"
+        ],
+        "pytest-mock": [
+          "pytest-mock>=3.15.0,<4.0.0"
+        ],
+        "pytest-socket": [
+          "pytest-socket>=0.7.0,<1.0.0"
+        ],
+        "pytest-timeout": [
+          "pytest-timeout>=2.4.0,<3.0.0"
+        ],
+        "pytest-xdist": [
+          "pytest-xdist>=3.6.0,<4.0.0"
+        ],
+        "python-dateutil": [
+          "python-dateutil>=2.8.2,<3.0.0"
+        ],
+        "requests": [
+          "requests>=2.33.0,<3.0.0"
+        ],
+        "ruff": [
+          "ruff==0.15.0"
+        ],
+        "scikit-learn": [
+          "scikit-learn>=1.5.0,<2.0.0"
+        ],
+        "shap": [
+          "shap>=0.51.0,<1.0.0"
+        ],
+        "sse-starlette": [
+          "sse-starlette>=1.6.1,<2.0.0"
+        ],
+        "ta-lib": [
+          "ta-lib>=0.6.8,<1.0.0"
+        ],
+        "tqdm": [
+          "tqdm>=4.66.0,<5.0.0"
+        ],
+        "types-requests": [
+          "types-requests>=2.32.0,<3.0.0"
+        ],
+        "uvicorn": [
+          "uvicorn>=0.34.0,<1.0.0"
+        ],
+        "xgboost": [
+          "xgboost>=2.0.0,<4.0.0"
+        ]
+      },
+      "internal_count": 2,
+      "external_count": 47
     },
     "strategy-service": {
       "internal_deps": {
@@ -1846,7 +1957,6 @@
     },
     "deployment-service": {
       "internal_deps": {
-        "deployment-api": "deployment-api>=0.1.0,<1.0.0",
         "unified-api-contracts": "unified-api-contracts>=0.1.0,<1.0.0",
         "unified-trading-library": "unified-trading-library>=0.1.0,<1.0.0"
       },
@@ -1877,6 +1987,9 @@
         ],
         "google-cloud-run<1.0.0,": [
           "google-cloud-run<1.0.0,>=0.15.0"
+        ],
+        "jinja2": [
+          "jinja2>=3.0.0,<4.0.0"
         ],
         "pip-audit": [
           "pip-audit>=2.7.0,<3.0.0"
@@ -1927,8 +2040,8 @@
           "web3>=6.20.0,<8.0.0"
         ]
       },
-      "internal_count": 3,
-      "external_count": 25
+      "internal_count": 2,
+      "external_count": 26
     },
     "deployment-ui": {
       "internal_deps": {},

@@ -1,8 +1,9 @@
 name: Notify Slack
 
-# Reusable workflow — drop-in replacement for notify-telegram.yml for Slack.
-# Callers pass the same inputs; this posts to the Slack incoming webhook.
-# SLACK_WEBHOOK_URL must be set as a GitHub Actions org/repo secret.
+# Reusable workflow — canonical notification channel (Slack #ci-failures).
+# Callers pass inputs; this posts to the Slack incoming webhook.
+# Preferred secret: SLACK_CI_WEBHOOK_URL (the valid #ci-failures webhook).
+# SLACK_WEBHOOK_URL is accepted as a fallback.
 
 on:
   workflow_call:

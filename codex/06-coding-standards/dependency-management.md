@@ -457,3 +457,25 @@ Ruff changes formatting behavior between versions. Even a minor version bump can
 pre-commit hooks to modify files during commit. All four locations (pyproject.toml, .pre-commit-config.yaml,
 quality-gates.sh, CI config) must use the same exact version. See
 [Ruff Version Synchronization](#ruff-version-synchronization) above.
+
+## uv.lock Determinism — Three Roles (codified 2026-06-02)
+
+`uv.lock` is committed by design (see `.cursor/rules/dependencies/uv-lock-file.mdc`). For "QG green locally → push →
+everyone pulls byte-identical deps" to actually hold, three roles must stay separated:
+
+| Role            | Owner                | Mechanism                                                                      |
+| --------------- | -------------------- | ------------------------------------------------------------------------------ |
+| **Writer**      | `quickmerge` only    | runs `uv lock`, then stages + commits the changed lock                         |
+| **Verifier**    | quality gates        | `uv lock --check` — **read-only**, never mutates the lock                      |
+| **Determinism** | pinned uv (`0.10.8`) | install-pinned at every generation site so the same deps serialize identically |
+
+**Why pin uv** (exactly like Ruff): `uv.lock` carries a `revision` header bumped by uv across versions, so an unpinned
+uv reformats the lock even with identical deps — dirtying trees + jamming the FF-pull cron, and false-failing
+`uv lock --check`. Pin sites: `scripts/setup.sh`, `scripts/quality-gates-base/base-service.sh` +`base-library.sh`
+bootstraps, `.github/workflows/python-quality-gates-v2.yml`, and the UTL base-image `Dockerfile`.
+
+**Why QG must be read-only**: the QG bootstrap previously ran `uv lock` (mutating), which rewrote `uv.lock` on every
+local run. Flipped to `uv lock --check` — blocking when on the pinned uv, warn otherwise (so a different uv's serializer
+reformatting cannot false-block). A stale lock is now a hard QG failure, not a silent rewrite.
+
+SSOT: `plans/active/uv_lockfile_determinism_2026_06_02.md`.

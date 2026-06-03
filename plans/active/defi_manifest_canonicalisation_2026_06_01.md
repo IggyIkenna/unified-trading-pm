@@ -25,21 +25,30 @@ source:
 
 ## MASTER — cross-plan execution order → single canonical SSOT (no fallback, no dual)
 
-> **🔎 CROSS-AG DEAD-BUCKET REGRESSION FINDING (escalated from the sports lane 2026-06-02 — affects EVERY AG before its
-> legacy delete)**: two shared surfaces still resolve the NO-ENV (legacy) bucket form, which BREAKS once any AG's legacy
-> bucket is deleted: (1) **UAC `gcs_paths.bucket_name(asset_group, …)` returns the NO-ENV form** (e.g.
-> `market-data-tick-sports-{PID}` / `instruments-store-{ag}-{PID}`), pinned by
+> **✅ CROSS-AG DEAD-BUCKET REGRESSION FINDING — RESOLVED 2026-06-02 (was: escalated from the sports lane — affected
+> EVERY AG before its legacy delete)**: two shared surfaces still resolve the NO-ENV (legacy) bucket form, which BREAKS
+> once any AG's legacy bucket is deleted: (1) **UAC `gcs_paths.bucket_name(asset_group, …)` returns the NO-ENV form**
+> (e.g. `market-data-tick-sports-{PID}` / `instruments-store-{ag}-{PID}`), pinned by
 > `unified-api-contracts/tests/unit/test_gcs_paths_facade.py` — it CONTRADICTS the UTL SSOT `resolve_bucket_name` which
 > returns `-prd-`; the UI mirrors it (`unified-trading-system-ui/context/api-contracts/…/sports/mapping_resolver.py`).
-> (2) **UTL `instrument_lifecycle_loader.py` `_BUCKETS` / `_INSTRUMENTS_STORE_BUCKETS`** hardcode the no-env template for
-> ALL AGs (cefi/defi/tradfi/sports/prediction). Sports-lane already fixed its OWN readers (`sports_fixtures.py` keystone
-> truthset reader → `resolve_bucket_name`, e2e scripts → `-prd-`; UTL@b3b70c13 + e2e@b418afc). **These two SHARED
-> surfaces must be canonicalised once, cross-AG, BEFORE the first legacy delete** — either route them through
+> (2) **UTL `instrument_lifecycle_loader.py` `_BUCKETS` / `_INSTRUMENTS_STORE_BUCKETS`** hardcode the no-env template
+> for ALL AGs (cefi/defi/tradfi/sports/prediction). Sports-lane already fixed its OWN readers (`sports_fixtures.py`
+> keystone truthset reader → `resolve_bucket_name`, e2e scripts → `-prd-`; UTL@b3b70c13 + e2e@b418afc). **These two
+> SHARED surfaces must be canonicalised once, cross-AG, BEFORE the first legacy delete** — either route them through
 > `resolve_bucket_name` or make the facade env-tiered, + update the pinning tests so QG regression-catches. Each AG's
 > dead-bucket sweep (in its `*_manifest_canonicalisation` plan) depends on this. Owner: master coordinator / UAC+UTL
 > owner (NOT a per-AG-lane unilateral change — it would desync the other lanes). SSOT for the sports slice:
 > `sports_manifest_canonicalisation_2026_06_01.md` § "Dead-bucket regression gate".
-
+>
+> **✅ RESOLVED 2026-06-02 (dedicated cross-AG session)**: both shared surfaces are now canonical — (1) UAC
+> `gcs_paths.bucket_name(...)` defaults `env="prd"` (env-tiered `-prd-`, no longer no-env); (2) UTL
+> `instrument_lifecycle_loader` routes through `resolve_bucket_name` (UTL@fd91ee74 Task 3,
+> `_BUCKETS`/`_INSTRUMENTS_STORE_BUCKETS` hardcodes removed). The remaining cross-AG no-env / explicit-`project_id`
+> readers were swept the same session: UTL `instruments_catalog_reader`@4c1c9a68, instruments-service
+> `catalogue_builder`@f693e34e (also removed a dead `try/except ImportError` inline no-env fallback), deployment-service
+> `manifest_reader` + `sports_trigger_scheduler`@9886911. **QG ratchet STEP 5.93**
+> `check_no_explicit_project_id_bucket.py` (PM@60a27debe) regression-guards the whole class. (IS `sports_dependency` +
+> features `gcs_paths` were already canonical via the sports lane.)
 
 **Goal (operator)**: full canonical DATA + MANIFEST — historically AND for all backfill + crons + code — one SSOT, no
 legacy, no fallback read path, no dual-write. **Invariant**: a legacy bucket is deleted ONLY after canonical provably
@@ -125,29 +134,49 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 - **CONFLICT-4 — `data_source_provenance` must SKIP tradfi.** tradfi's `source` column already shipped via
   `tradfi_massive`; provenance must not re-walk tradfi. Scope it to cefi/defi/sports/prediction.
 
-### Agent assignment (2026-06-01 — two-slot split; the SUM completes EVERYTHING, no defers, no fallbacks)
+### Agent assignment (2026-06-01; **three-slot split — sports peeled to its own lane 2026-06-03, operator**; the SUM completes EVERYTHING, no defers, no fallbacks)
 
+> **Reassignment 2026-06-03 (operator) — clean asset-group split, sports = a FULL vertical:** sports is the heaviest
+> non-defi lane, so it gets a **dedicated slot 4** that owns **everything sports across every service** — IS
+> (instruments-store-sports reference) + MTDS (market-data-tick-sports) + MDPS + features + execution + the deployment
+> UI/menu/bucket/data/manifest surfaces — not just the MTDS walk. `sports_manifest_canonicalisation_2026_06_01.md` is
+> the **MASTER orchestrator plan for the whole sports vertical** (the sports analogue of this defi plan): every other
+> sports plan/issue + every orphaned sports cross-reference attaches to it. Slot 3 keeps the three lighter AGs (cefi /
+> tradfi / prediction) + the **non-sports** parts of the two per-service surfaces (instruments, downstream). This
+> matches the already-adopted framing in `downstream_services_manifest_canonicalisation_2026_06_01.md` (§ "slot-3 AGs:
+> cefi / tradfi / prediction; sports = its own slot").
+>
 > **Slot 2 = the DeFi lane (this plan).** Owns `defi_manifest_canonicalisation_2026_06_01.md` end-to-end: the MASTER
 > coordinator role + §A (defi writers) + §B (defi consolidation/data-status) + **§C the DeFi single-walk** (C0–C12) + §D
 > (defi features) + §E (cefi-perp hedge leg the defi hybrid needs) + §F (defi docs) + §G (Solana basis MVP). The defi C0
 > walk carries the defi riders (source col + pipeline_mode partition + v9 + category→asset_group) per § Rider closure.
 >
-> **Slot 3 = everything else (the other four asset_groups + the per-service surfaces + their riders).** Owns, to
+> **Slot 3 = cefi + tradfi + prediction + the two per-service surfaces (NOT sports — that is slot 4).** Owns, to
 > C-GREEN:
 >
 > 1. `cefi_manifest_canonicalisation_2026_06_01.md` — cefi single-walk (838-cell gap-fill + v9 + partition + source).
 > 2. `tradfi_manifest_canonicalisation_2026_06_01.md` — tradfi single-walk (v9 + partition + source re-consol; absorbs
 >    `tradfi_massive` -031).
-> 3. `sports_manifest_canonicalisation_2026_06_01.md` — sports single-walk (v9 + partition + fixture/season/
->    transfer-window/genesis typed reasons + source path→column; both sports surfaces).
-> 4. `prediction_manifest_canonicalisation_2026_06_01.md` — prediction single-walk (legacy→canonical copy + v9 +
+> 3. `prediction_manifest_canonicalisation_2026_06_01.md` — prediction single-walk (legacy→canonical copy + v9 +
 >    partition + source = API).
-> 5. `instruments_manifest_canonicalisation_2026_06_01.md` — the I/O input surface (non-sports instruments-store +
->    cross-AG reference indices), audit-first.
-> 6. `downstream_services_manifest_canonicalisation_2026_06_01.md` — MDPS/features/strategy/execution canonical FORM,
->    audit-first, low-data.
+> 4. `instruments_manifest_canonicalisation_2026_06_01.md` — the I/O input surface, **non-sports only**
+>    (`instruments-store-{cefi,defi,tradfi,prediction}` + cross-AG reference/instrument-record/universe indices),
+>    audit-first. **The sports instruments-store rides slot 4, not here.**
+> 5. `downstream_services_manifest_canonicalisation_2026_06_01.md` — MDPS/features/strategy/execution canonical FORM for
+>    **cefi / tradfi / prediction**, audit-first, low-data. **Sports rows/tests across MDPS/features/execution ride
+>    slot 4.**
 >
-> Each slot-3 plan's single bundled walk INCLUDES its rider work — so completing them also closes
+> **Slot 4 = the ENTIRE sports vertical (dedicated — a full asset-group lane across every service).** Owns
+> `sports_manifest_canonicalisation_2026_06_01.md` as the **sports MASTER orchestrator plan**, and through it everything
+> sports across all services: **both sports surfaces** — `market-data-tick-sports` (MTDS) **and**
+> `instruments-store-sports` (IS reference, 2.68M rows + the 316-cell legacy→prd data-loss-gated migration) — plus the
+> sports rows/tests in MDPS / features / execution, the sports deployment-UI/menu/bucket surfaces, the sports
+> single-walk (v9 + partition + fixture/season/transfer-window/genesis typed reasons + source path→column), and its
+> riders. **Every other sports plan/issue + every orphaned sports cross-reference is cross-linked INTO the sports master
+> plan** (`sports_retired_data_types_code_cleanup`, `epics/sports_master`, and the sports slices of the phase-3 backfill
+> / provenance / bucket-SSOT plans). Slot 4 does NOT edit slot-3's non-sports surfaces — ping instead.
+>
+> Each slot-3 / slot-4 plan's single bundled walk INCLUDES its rider work — so completing them also closes
 > `data_source_provenance_all_asset_groups_2026_06_01` (cefi/sports/prediction source; tradfi skipped per CONFLICT-4) +
 > `pipeline_mode_partition_migration_2026_06_01` (cefi/tradfi/sports/prediction/instruments) for those AGs. **No second
 > walk on any `_index`** (single-walk discipline). **NO DEFERS, NO FALLBACKS** (CLAUDE.md "Data Pipeline Correctness Is
@@ -325,66 +354,67 @@ What to verify/wire (B0 corrected scope):
       caller sees zero-rows-no-error → `record_empty(SOURCE_RETURNED_ZERO)` = a silent lie the data is genuinely empty.
       **Fixed (mtds@d3d26f56, re-raise → caller `record_failed`)**: `lst_rates_handler` L697, `oracle_prices_handler`
       L820/L948. **Swept clean**: instruments-service + features-service adapter I/O — **no swallow sites found** (the
-      bug was MTDS-specific). **⚠️ CORRECTION 2026-06-02 (slot-2): the IS "swept clean" claim was INCOMPLETE** — A7 swept
-      the `except → return []` shape, but a SECOND shape (`HTTP-200 {"errors":[...]}` / missing-`data` → `return []`
-      "treating as empty") survives in IS DeFi subgraph adapters (aave_v3/spark/morpho/uniswap_v3) — see **A8** (reopens
-      this). **`lending_indices_handler` L989** (Aave RPC fallback): the handler already routes
-      subgraph errors to `record_failed` (comments L736-741/L838-839 reference a prior fix for this exact class) — the
-      residual `_do_rpc_walk` `return []` is an ambiguous fallback path, NOT a clear bug; flagged for careful tracing
-      under audit item (i), do NOT rush a fix. Per-adapter audit codified in
-      `defi_master`(aa)/`mtds_mdps`(i)/`instruments`(h)/ `features_and_ml`(u). 3 mtds fixes need QG green before LDR.
-      parent_epic: mtds_mdps_master.
+      bug was MTDS-specific). **⚠️ CORRECTION 2026-06-02 (slot-2): the IS "swept clean" claim was INCOMPLETE** — A7
+      swept the `except → return []` shape, but a SECOND shape (`HTTP-200 {"errors":[...]}` / missing-`data` →
+      `return []` "treating as empty") survives in IS DeFi subgraph adapters (aave_v3/spark/morpho/uniswap_v3) — see
+      **A8** (reopens this). **`lending_indices_handler` L989** (Aave RPC fallback): the handler already routes subgraph
+      errors to `record_failed` (comments L736-741/L838-839 reference a prior fix for this exact class) — the residual
+      `_do_rpc_walk` `return []` is an ambiguous fallback path, NOT a clear bug; flagged for careful tracing under audit
+      item (i), do NOT rush a fix. Per-adapter audit codified in `defi_master`(aa)/`mtds_mdps`(i)/`instruments`(h)/
+      `features_and_ml`(u). 3 mtds fixes need QG green before LDR. parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P1. A8 **REOPENS A7's "instruments-service swept clean" claim — a SECOND swallow shape exists in IS DeFi
       subgraph adapters** (slot-2 audit 2026-06-02, answering operator "is an API issue → attempted_failed not
       empty_confirmed?"). **✅ A8 SHIPPED for the 3 single-query subgraph adapters — IS@17309f05** (new shared
       `defi_utils.assert_subgraph_payload()` raises ConnectionError on 200-with-`errors`/missing-`data` →
       `aave_v3`+`spark`+`morpho` wired; 4 enshrined-the-bug unit tests updated). **✅ A8b SHIPPED — IS@359f245c**:
-      `uniswap_v3` made cascade-aware (tries Messari/Algebra/Sushi; RAISES only if ALL legs errored with 0 pools; fixed a
-      messari `{data:None}` NoneType crash) + 7 REST/Solana adapters (drift/flash_trade/lifinity/mango/meteora/phoenix/
-      zeta) routed through new `defi_utils.extract_rest_list_or_raise()` (bare `[]`/`{key:[]}`=legit-empty,
-      missing-key/error-envelope=raise); jupiter/pyth left (static-constant discovery, no swallow). Tests flipped+added;
-      IS QG green. Repo: instruments-service. parent_epic: mtds_mdps_master.
-      A7 swept the `except Exception: … return []` shape and found IS clean — but it MISSED the
-      `HTTP-200 + {"errors":[...]}` / missing-`data`-field → `return []` "treating as empty" shape. CONFIRMED in
-      `instruments-service/instruments_service/reference_data/adapters/defi/aave_v3.py:144-152` +
-      `spark.py:166-173` (both in the `get_instruments` discovery path; comment literally says "rate-limit / transient
-      indexing issues … treating as empty"). On a transient subgraph error these return an EMPTY instrument universe with
-      NO exception → those instrument-days silently drop out of the expected universe entirely (never `attempted_failed`,
-      never even `expected_unattempted` — worse than `empty_confirmed`). FIX: on a 200-with-`errors` body raise (→ caller
-      records the discovery failure) instead of `return []`. **Audit ALL ~53 DeFi adapters under
-      `reference_data/adapters/defi/` for the same shape** (the `return []`-on-soft-error pattern is workspace-wide; only
-      aave_v3/spark carry the explicit "treating as empty" comment but the others need verifying). Repo:
-      instruments-service. parent_epic: mtds_mdps_master.
+      `uniswap_v3` made cascade-aware (tries Messari/Algebra/Sushi; RAISES only if ALL legs errored with 0 pools; fixed
+      a messari `{data:None}` NoneType crash) + 7 REST/Solana adapters
+      (drift/flash_trade/lifinity/mango/meteora/phoenix/ zeta) routed through new
+      `defi_utils.extract_rest_list_or_raise()` (bare `[]`/`{key:[]}`=legit-empty, missing-key/error-envelope=raise);
+      jupiter/pyth left (static-constant discovery, no swallow). Tests flipped+added; IS QG green. Repo:
+      instruments-service. parent_epic: mtds_mdps_master. A7 swept the `except Exception: … return []` shape and found
+      IS clean — but it MISSED the `HTTP-200 + {"errors":[...]}` / missing-`data`-field → `return []` "treating as
+      empty" shape. CONFIRMED in
+      `instruments-service/instruments_service/reference_data/adapters/defi/aave_v3.py:144-152` + `spark.py:166-173`
+      (both in the `get_instruments` discovery path; comment literally says "rate-limit / transient indexing issues …
+      treating as empty"). On a transient subgraph error these return an EMPTY instrument universe with NO exception →
+      those instrument-days silently drop out of the expected universe entirely (never `attempted_failed`, never even
+      `expected_unattempted` — worse than `empty_confirmed`). FIX: on a 200-with-`errors` body raise (→ caller records
+      the discovery failure) instead of `return []`. **Audit ALL ~53 DeFi adapters under `reference_data/adapters/defi/`
+      for the same shape** (the `return []`-on-soft-error pattern is workspace-wide; only aave_v3/spark carry the
+      explicit "treating as empty" comment but the others need verifying). Repo: instruments-service. parent_epic:
+      mtds_mdps_master.
 - [x] ✅ [CODE] P1. A9 **MTDS `dex_swaps_handler` balancer branch made consistent with the cascade's honest-failure
       handling — SHIPPED mtds@45dced01.** The univ3/messari cascade already RAISES `RuntimeError` when all schemas
       return GraphQL errors (`dex_swaps_handler.py:700-708`, "records ADAPTER_FETCH_FAILED rather than
       SOURCE_RETURNED_ZERO") — the single-query **balancer** branch (`dex_swaps_handler.py:658`) returned an empty frame
       on a `None` (200-with-`errors`) response → downstream `record_empty(SOURCE_RETURNED_ZERO)` (false complete-empty).
-      Now raises on `data is None`, matching the cascade. MTDS QG green (sentinel 8ffb2acd). (Same commit set unblocked a
-      pre-existing foreign import-pattern violation in `migrate_tradfi_to_v9_canonical.py` → facade import,
+      Now raises on `data is None`, matching the cascade. MTDS QG green (sentinel 8ffb2acd). (Same commit set unblocked
+      a pre-existing foreign import-pattern violation in `migrate_tradfi_to_v9_canonical.py` → facade import,
       mtds@89aff1b1.) Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
 - [ ] [CODE] P1. A10 **wire the `EmptyFromLiveInstrumentError` backstop — it is DEFINED but never RAISED** (slot-2 audit
       2026-06-02). The operator-directed (2026-05-07) safety net — `record_empty(SOURCE_RETURNED_ZERO)` must cross-check
       the IS catalog and reject (force `attempted_failed`) when the instrument was ALIVE on that day — exists only as a
       class in `unified-api-contracts/.../honest_coverage.py:979` + `__all__` export; grep finds ZERO raise sites in the
       write path. UTL `record_empty` (`manifest_writer.py:1958`) only guards blank/unknown reason
-      (`LegacyBlankErrorReasonError`), NOT live-instrument emptiness. Without this backstop, correctness depends entirely
-      on each adapter raising — so the A8/A9 swallow gaps go uncaught. **DESIGN (operator-refined 2026-06-02): abstract
-      into a UTL helper + ENFORCE with a quality gate** — the "expected universe" oracle is per-asset-group (sports =
-      fixtures exist for the day; cefi/defi/tradfi/prediction = instrument listed-and-not-delisted), but the *routing*
-      (zero-rows + was-expected → `attempted_failed` via `EmptyFromLiveInstrumentError`, else
+      (`LegacyBlankErrorReasonError`), NOT live-instrument emptiness. Without this backstop, correctness depends
+      entirely on each adapter raising — so the A8/A9 swallow gaps go uncaught. **DESIGN (operator-refined 2026-06-02):
+      abstract into a UTL helper + ENFORCE with a quality gate** — the "expected universe" oracle is per-asset-group
+      (sports = fixtures exist for the day; cefi/defi/tradfi/prediction = instrument listed-and-not-delisted), but the
+      _routing_ (zero-rows + was-expected → `attempted_failed` via `EmptyFromLiveInstrumentError`, else
       `empty_confirmed[reason]`) is generic and belongs in UTL so callers can't get it wrong. Sub-items:
-  - [x] ✅ [CODE] P1. **A10a — UAC `was_instrument_alive(available_from, available_to, day) -> bool` SHIPPED uac@10e69f08.**
-        Pure lifecycle primitive (on `InstrumentRecord.available_from_datetime`/`available_to_datetime` + shard `day`)
-        next to `EmptyFromLiveInstrumentError`; CONSERVATIVE (fires only on positive catalog confirmation; unknown
+  - [x] ✅ [CODE] P1. **A10a — UAC `was_instrument_alive(available_from, available_to, day) -> bool` SHIPPED
+        uac@10e69f08.** Pure lifecycle primitive (on
+        `InstrumentRecord.available_from_datetime`/`available_to_datetime` + shard `day`) next to
+        `EmptyFromLiveInstrumentError`; CONSERVATIVE (fires only on positive catalog confirmation; unknown
         `available_from` → False). Facade-exported (`from unified_api_contracts import was_instrument_alive`) + 5 unit
         tests. UAC QG green. Repo: unified-api-contracts. parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P1. **A10b — UTL `ManifestWriter.record_zero_rows(...)` routing helper SHIPPED utl@44d762d9** (+ UAC
-        facade-export `EmptyFromLiveInstrumentError` uac@daf1888c). `was_expected` → `record_failed(
-        EmptyFromLiveInstrumentError(...))` (attempted_failed); else → `record_empty(reason)`. Caller computes
-        `was_expected` from the per-AG oracle (sports fixtures / `was_instrument_alive`). Single sanctioned zero-rows
-        write path; +2 routing tests; UAC+UTL QG green. Repos: unified-trading-library + unified-api-contracts.
-        parent_epic: mtds_mdps_master.
+        facade-export `EmptyFromLiveInstrumentError` uac@daf1888c). `was_expected` →
+        `record_failed(     EmptyFromLiveInstrumentError(...))` (attempted_failed); else → `record_empty(reason)`.
+        Caller computes `was_expected` from the per-AG oracle (sports fixtures / `was_instrument_alive`). Single
+        sanctioned zero-rows write path; +2 routing tests; UAC+UTL QG green. Repos: unified-trading-library +
+        unified-api-contracts. parent_epic: mtds_mdps_master.
   - [ ] [CODE] P1. **A10c — QG enforcement step** (MTDS/IS/MDPS/features quality-gates, STEP 5.70 family): fail any
         `record_empty(...SOURCE_RETURNED_ZERO...)` callsite NOT routed through `record_zero_rows` (baselined ratchet +
         `# QG-allow:` waiver for audited exceptions). Makes the backstop un-bypassable. Repo: per-service
@@ -392,25 +422,25 @@ What to verify/wire (B0 corrected scope):
   - [ ] [CODE] P1. **A10d — migrate the DeFi `SOURCE_RETURNED_ZERO` callsites** (dex_pools/dex_swaps/lst/lending/perp
         handlers) to `record_zero_rows` with the `was_instrument_alive` oracle. NOTE: DeFi records at (venue,chain)
         shard granularity, so the oracle is "was ANY in-universe instrument for this venue/chain alive on this day" —
-        and for DeFi the venue-launch gate (A1/A2, shipped) already covers most of it; A10d closes the residual.
-        Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-      Repos: unified-api-contracts + unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against
-      legacy/dead buckets BEFORE the migrations run** (operator 2026-06-02: "refactor read/write cloud-storage paths
-      across the board to match canonical so QG-fed tests don't regress by association with dead buckets; same for
-      data-status in deployment API + UI which resolve many bucket-name / menu / data_type / manifest conventions").
-      Slot-2 two-front audit 2026-06-02 found the C0-CN sweep aligned the DeFi raw read/write path but NOT the
-      **manifest-handler / data-status / deployment-API+UI** surfaces, which hardcode legacy bucket names + data_types.
-      Each sub-item names repo + file:line; VERIFY-then-fix (some are intentional logical-name distinctions — confirm
-      against `codex/02-data/per-asset-group-bucket-layouts.md` + `resolve_bucket_name()` before editing). Tag `[DATA]`
-      surfaces that need a test added so the regression can't reappear. parent_epic: mtds_mdps_master.
+        and for DeFi the venue-launch gate (A1/A2, shipped) already covers most of it; A10d closes the residual. Repo:
+        market-tick-data-service. parent_epic: mtds_mdps_master. Repos: unified-api-contracts +
+        unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against legacy/dead
+      buckets BEFORE the migrations run** (operator 2026-06-02: "refactor read/write cloud-storage paths across the
+      board to match canonical so QG-fed tests don't regress by association with dead buckets; same for data-status in
+      deployment API + UI which resolve many bucket-name / menu / data_type / manifest conventions"). Slot-2 two-front
+      audit 2026-06-02 found the C0-CN sweep aligned the DeFi raw read/write path but NOT the **manifest-handler /
+      data-status / deployment-API+UI** surfaces, which hardcode legacy bucket names + data_types. Each sub-item names
+      repo + file:line; VERIFY-then-fix (some are intentional logical-name distinctions — confirm against
+      `codex/02-data/per-asset-group-bucket-layouts.md` + `resolve_bucket_name()` before editing). Tag `[DATA]` surfaces
+      that need a test added so the regression can't reappear. parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P0. **A11a — MTDS `data_manifest_handler.py` SHIPPED mtds@7ebfa749.** The 5 `_scan_*` f-strings
-        (`market-data-tick-defi`, `gas-fees`, `{bucket_key}-{pid}`) now resolve via `resolve_bucket_name(kind=…,
-        asset_group="defi")` → env-tiered `-prd` canonical; resolutions verified end-to-end; MTDS QG green
-        (IGNORE_TIMEOUT — only the <300s meta-gate tripped on the contended host; all substantive gates passed).
-        Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-  - [x] ✅ [CODE] P0. **A11b — deployment-service data-status now resolves buckets via `resolve_bucket_name()` —
-        SHIPPED deployment-service@2e91ab2.** `manifest_reader.py` (BUCKET_TEMPLATES + _EXTRA_BUCKETS → canonical kinds),
+        (`market-data-tick-defi`, `gas-fees`, `{bucket_key}-{pid}`) now resolve via
+        `resolve_bucket_name(kind=…,     asset_group="defi")` → env-tiered `-prd` canonical; resolutions verified
+        end-to-end; MTDS QG green (IGNORE_TIMEOUT — only the <300s meta-gate tripped on the contended host; all
+        substantive gates passed). Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P0. **A11b — deployment-service data-status now resolves buckets via `resolve_bucket_name()` — SHIPPED
+        deployment-service@2e91ab2.** `manifest_reader.py` (BUCKET_TEMPLATES + \_EXTRA_BUCKETS → canonical kinds),
         `catalog.py` (SERVICE_GCS_CONFIGS), `data_status_checkers.py` (L624) all route through
         `resolve_bucket_name(kind=…, asset_group=…)` → env-tiered `-prd` canonical (survives legacy-bucket deletion);
         behavior-preserving + verified equivalent. + cloud-providers.yaml 6 DeFi kinds. deployment-service QG green
@@ -419,82 +449,98 @@ What to verify/wire (B0 corrected scope):
         pre-existing contract violation (the `/data-status` route delegated to `DataCatalog` which computes
         file-existence completion, NOT canonical honest-coverage — the banned inline pattern). `get_data_status` now
         ADDITIVELY attaches `coverage` (canonical 5-field `compute_honest_coverage`) + `coverage_counts`, resolving each
-        AG's bucket via `resolve_bucket_name` + summing `CaptureStatusCounts` from `compute_coverage_for_bucket` (UI keys
-        preserved; catalog file-existence metric untouched). STEP 5.90 ✅. Repo: deployment-service. parent_epic:
+        AG's bucket via `resolve_bucket_name` + summing `CaptureStatusCounts` from `compute_coverage_for_bucket` (UI
+        keys preserved; catalog file-existence metric untouched). STEP 5.90 ✅. Repo: deployment-service. parent_epic:
         mtds_mdps_master.
-  - [x] ✅ [CODE] P1. **A11c — DONE (slot-2 2026-06-02): full canonical denominator collapse across UAC + cross-repo cascade** — uac@a967121a + mdps@56503c2 + deployment-api@14dfe2e + mtds@b986a3e1 (all QG-green except deployment-api's pre-existing acknowledged provenance debt). Residual follow-ups DECOUPLED + tracked below: A11c-candle-enum (Phase-2 collision) + C0-RD6 (`_DEX_EXT` split). **A11c — UAC `registry/market_data_categories.py` DeFi data_type list legacy vs canonical**: L144-177
-        lists `dex_pools`/`dex_swaps` (legacy logical) while the v9 on-disk + manifest canonical is
+  - [x] ✅ [CODE] P1. **A11c — DONE (slot-2 2026-06-02): full canonical denominator collapse across UAC + cross-repo
+        cascade** — uac@a967121a + mdps@56503c2 + deployment-api@14dfe2e + mtds@b986a3e1 (all QG-green except
+        deployment-api's pre-existing acknowledged provenance debt). Residual follow-ups DECOUPLED + tracked below:
+        A11c-candle-enum (Phase-2 collision) + C0-RD6 (`_DEX_EXT` split). **A11c — UAC
+        `registry/market_data_categories.py` DeFi data_type list legacy vs canonical**: L144-177 lists
+        `dex_pools`/`dex_swaps` (legacy logical) while the v9 on-disk + manifest canonical is
         `dex_pool_state`/`dex_pool_swaps` (operator-locked `defi-canonical-naming-ssot.md`). VERIFY whether this list is
-        a logical menu (intentional) or a physical-key source consumed by data-status; if the latter, align to canonical
-        + reconcile `registry/data_type_capability.py` L336-345 "aspirational/deferred" note. Repo: unified-api-contracts.
-        **⚠️ VERIFIED-CONSUMED + SCOPE EXPANDED 2026-06-02 (slot-2 grep-then-read): A11c is NOT a logical menu — it is a
-        physical expected-key consumed by the data-status DENOMINATOR**, and the legacy `dex_pools`/`dex_swaps` data_type
-        string is used as a physical key across a COUPLED SET of UAC registries far beyond A11c's 2 named files, ALL of
-        which the C0-CN sweep (CN1–CN8) left on the legacy name even though CN2 already moved the **manifest** data_type to
-        canonical `dex_pool_state`/`dex_pool_swaps`. Confirmed break: `registry/expected_coverage.py` `expected_coverage()`
-        does a literal `data_type not in in_scope_types` match (`_DEFI[venue]=["dex_pools","dex_swaps"]`) → a canonical
-        `dex_pool_state` cell returns `NOT_IN_SCOPE` (canonical pool/swap rows fall OUT of the DeFi coverage denominator).
-        Coupled UAC surfaces still on legacy name: `expected_coverage.py` (`_DEFI_DEX_PAIRS`), `defi_venue_capabilities.py`
-        (35 per-(venue,data_type) start-date keys), `capability_declarations/_defi.py` (protocol `data_types`),
-        `market_data_categories.py` (BASE_GRANULARITY/NEEDS_CANDLE_PROCESSING/DATA_TYPES_BY_ASSET_GROUP/_PER_INSTRUMENT_SHARD
+        a logical menu (intentional) or a physical-key source consumed by data-status; if the latter, align to
+        canonical + reconcile `registry/data_type_capability.py` L336-345 "aspirational/deferred" note. Repo:
+        unified-api-contracts. **⚠️ VERIFIED-CONSUMED + SCOPE EXPANDED 2026-06-02 (slot-2 grep-then-read): A11c is NOT a
+        logical menu — it is a physical expected-key consumed by the data-status DENOMINATOR**, and the legacy
+        `dex_pools`/`dex_swaps` data_type string is used as a physical key across a COUPLED SET of UAC registries far
+        beyond A11c's 2 named files, ALL of which the C0-CN sweep (CN1–CN8) left on the legacy name even though CN2
+        already moved the **manifest** data_type to canonical `dex_pool_state`/`dex_pool_swaps`. Confirmed break:
+        `registry/expected_coverage.py` `expected_coverage()` does a literal `data_type not in in_scope_types` match
+        (`_DEFI[venue]=["dex_pools","dex_swaps"]`) → a canonical `dex_pool_state` cell returns `NOT_IN_SCOPE` (canonical
+        pool/swap rows fall OUT of the DeFi coverage denominator). Coupled UAC surfaces still on legacy name:
+        `expected_coverage.py` (`_DEFI_DEX_PAIRS`), `defi_venue_capabilities.py` (35 per-(venue,data_type) start-date
+        keys), `capability_declarations/_defi.py` (protocol `data_types`), `market_data_categories.py`
+        (BASE_GRANULARITY/NEEDS_CANDLE_PROCESSING/DATA_TYPES_BY_ASSET_GROUP/\_PER_INSTRUMENT_SHARD
         /FEATURE_GROUP_DATA_TYPE_OVERRIDES), `source_priority.py`, `availability_semantics.py`,
         `canonical/domain/features/required_inputs.py`, `defi_prediction_instrument_seeds.py`, `venue_constants.py`
-        (`DEX_POOL`), `internal/domain/.../candle_schema.py` (`DEX_POOLS`/`DEX_SWAPS` enum), `internal/schemas/contracts.py`
-        + `_defi_v2_contracts.py` (schema-registry keys). Cross-repo consumers of these registries (MTDS orchestrator, MDPS
-        scanner, deployment-api data_status, features data_loader) inherit the key. **This is the "reader/denominator fixes
-        land FIRST" gate (naming-SSOT Sequencing #1) — it must land BEFORE the C0 `--apply` or migrated data is NOT_IN_SCOPE
-        in data-status.** Decision recorded with operator 2026-06-02 (full canonical rename, lands before apply). Repo:
-        unified-api-contracts (+ coupled cross-repo consumer verification).
-    - [x] ✅ [CODE] P1. **A11c-UAC — UAC registries + tests + venue_data_types.yaml canonicalised** — uac@a967121a + PM-configs@ad30e9fd1 (slot-2 2026-06-02, UAC QG green):
-          word-boundary rename `dex_pools`→`dex_pool_state`, `dex_swaps`→`dex_pool_swaps` across all 14 UAC source files
-          above + `data_type_capability.py` note reconciled + 6 UAC tests updated (`test_data_type_canonicalization`
-          `_BANNED_ALIASES`: `dex_pools`/`dex_swaps` now THEMSELVES banned legacy aliases) + both `venue_data_types.yaml`
-          (PM-configs + mtds-configs). Bucket NAMES (`dex-pools`/`dex-swaps` hyphen) + enum MEMBER names (`DEX_POOLS`)
-          preserved — only the data_type STRING value collapsed. Pending UAC QG-green + commit.
+        (`DEX_POOL`), `internal/domain/.../candle_schema.py` (`DEX_POOLS`/`DEX_SWAPS` enum),
+        `internal/schemas/contracts.py` + `_defi_v2_contracts.py` (schema-registry keys). Cross-repo consumers of these
+        registries (MTDS orchestrator, MDPS scanner, deployment-api data_status, features data_loader) inherit the key.
+        **This is the "reader/denominator fixes land FIRST" gate (naming-SSOT Sequencing #1) — it must land BEFORE the
+        C0 `--apply` or migrated data is NOT_IN_SCOPE in data-status.** Decision recorded with operator 2026-06-02 (full
+        canonical rename, lands before apply). Repo: unified-api-contracts (+ coupled cross-repo consumer verification).
+    - [x] ✅ [CODE] P1. **A11c-UAC — UAC registries + tests + venue_data_types.yaml canonicalised** — uac@a967121a +
+          PM-configs@ad30e9fd1 (slot-2 2026-06-02, UAC QG green): word-boundary rename `dex_pools`→`dex_pool_state`,
+          `dex_swaps`→`dex_pool_swaps` across all 14 UAC source files above + `data_type_capability.py` note
+          reconciled + 6 UAC tests updated (`test_data_type_canonicalization` `_BANNED_ALIASES`: `dex_pools`/`dex_swaps`
+          now THEMSELVES banned legacy aliases) + both `venue_data_types.yaml` (PM-configs + mtds-configs). Bucket NAMES
+          (`dex-pools`/`dex-swaps` hyphen) + enum MEMBER names (`DEX_POOLS`) preserved — only the data_type STRING value
+          collapsed. Pending UAC QG-green + commit.
     - [x] ✅ [CODE] P1. **A11c-MDPS — candle-adapter re-registered dex_pool_swaps** — mdps@56503c2 (MDPS QG green). the
           orchestrator selects the candle adapter by the exact UAC data_type, now `dex_pool_swaps`, but
-          `app/adapters/defi/swap_adapter.py` registers `@CandleAdapterRegistry.register(DEFI, "dex_swaps")` → "No adapter
-          for defi/dex_pool_swaps" (the adapter docstring warns of this exact failure). Re-register under `dex_pool_swaps`
-          + update `app/core/canonical_writer.py` legacy keys (`"dex_swaps":"swaps_ohlcv"`, `("defi","dex_swaps"):"swap"`)
-          to canonical. `orchestration_scanner.py` `_CANONICAL_LEGACY` map already accepts both (transition-aware — no
-          change). Repo: market-data-processing-service. parent_epic: mtds_mdps_master.
-    - [x] ✅ [CODE] P1. **A11c-deployment-api — data-status canonical** — deployment-api@14dfe2e (TESTS green; repo QG blocked ONLY by PRE-EXISTING acknowledged schema-provenance debt across many local DTOs — UNRELATED, flagged for workspace-QG-green sweep). `_BUCKET_DOMAIN_TO_DATA_TYPE`
-          (`services/data_status_service.py` `"dex-swaps":"dex_swaps"`/`"dex-pools":"dex_pools"`) + `services/shard_detail.py`
-          grouped-bundle set + `services/data_query_service.py` `"DEFI":["dex_swaps",…]` default → canonical
+          `app/adapters/defi/swap_adapter.py` registers `@CandleAdapterRegistry.register(DEFI, "dex_swaps")` → "No
+          adapter for defi/dex_pool_swaps" (the adapter docstring warns of this exact failure). Re-register under
+          `dex_pool_swaps` + update `app/core/canonical_writer.py` legacy keys (`"dex_swaps":"swaps_ohlcv"`,
+          `("defi","dex_swaps"):"swap"`) to canonical. `orchestration_scanner.py` `_CANONICAL_LEGACY` map already
+          accepts both (transition-aware — no change). Repo: market-data-processing-service. parent_epic:
+          mtds_mdps_master.
+    - [x] ✅ [CODE] P1. **A11c-deployment-api — data-status canonical** — deployment-api@14dfe2e (TESTS green; repo QG
+          blocked ONLY by PRE-EXISTING acknowledged schema-provenance debt across many local DTOs — UNRELATED, flagged
+          for workspace-QG-green sweep). `_BUCKET_DOMAIN_TO_DATA_TYPE` (`services/data_status_service.py`
+          `"dex-swaps":"dex_swaps"`/`"dex-pools":"dex_pools"`) + `services/shard_detail.py` grouped-bundle set +
+          `services/data_query_service.py` `"DEFI":["dex_swaps",…]` default → canonical
           `dex_pool_swaps`/`dex_pool_state` (the expected denominator via `get_expected_data_types_for_venue` is now
           canonical, so these must match). Repo: deployment-api. parent_epic: mtds_mdps_master.
-    - [x] ✅ [CODE] P1. **A11c-MTDS — adapters + orchestrator + live connector canonical** — mtds@b986a3e1 (MTDS QG green; ALSO flipped 5 DeFi DEX adapters' SUPPORTED_DATA_TYPES/_default_data_types/branch-dispatch, forced canonical by the UAC denominator flip) (slot-2 2026-06-02):
-          `engine/orchestrator.py` per-data_type config (`"dex_pools"`/`"dex_swaps"` sort-key map L621-622) + live
-          `live/connectors/curve_defi_ws.py` `_data_type == "dex_pools"`/`"dex_swaps"` dispatch (live=batch — handler now
-          sets canonical `_DATA_TYPE`) → canonical. Do NOT touch the historical migration/backfill SCRIPTS that
-          intentionally map legacy→canonical (`migrate_legacy_solana_*`, `canonicalize_defi_manifest_data_types_*`,
-          `gate3_solana_manifest_reconcile`). Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-    - [x] ✅ [CODE] P2. **A11c-features — verify-only: NO functional break** (Explore sub-agent confirmed features-onchain already canonical-aware post-C0-CN4; hits are comments/docstrings/yaml) (slot-2 2026-06-02). features-onchain hits are comments/docstrings
-          + `feature_definitions.yaml` post-C0-CN4; confirm no functional `data_type=="dex_pools"` literal break, update
-          docstrings/yaml for accuracy. Repo: features-service. parent_epic: features_and_ml_master.
+    - [x] ✅ [CODE] P1. **A11c-MTDS — adapters + orchestrator + live connector canonical** — mtds@b986a3e1 (MTDS QG
+          green; ALSO flipped 5 DeFi DEX adapters' SUPPORTED*DATA_TYPES/\_default_data_types/branch-dispatch, forced
+          canonical by the UAC denominator flip) (slot-2 2026-06-02): `engine/orchestrator.py` per-data_type config
+          (`"dex_pools"`/`"dex_swaps"` sort-key map L621-622) + live `live/connectors/curve_defi_ws.py`
+          `_data_type == "dex_pools"`/`"dex_swaps"` dispatch (live=batch — handler now sets canonical `_DATA_TYPE`) →
+          canonical. Do NOT touch the historical migration/backfill SCRIPTS that intentionally map legacy→canonical
+          (`migrate_legacy_solana*_`, `canonicalize*defi_manifest_data_types*_`,     `gate3_solana_manifest_reconcile`).
+          Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+    - [x] ✅ [CODE] P2. **A11c-features — verify-only: NO functional break** (Explore sub-agent confirmed
+          features-onchain already canonical-aware post-C0-CN4; hits are comments/docstrings/yaml) (slot-2 2026-06-02).
+          features-onchain hits are comments/docstrings + `feature_definitions.yaml` post-C0-CN4; confirm no functional
+          `data_type=="dex_pools"` literal break, update docstrings/yaml for accuracy. Repo: features-service.
+          parent_epic: features_and_ml_master.
     - [ ] [CODE] P2. **A11c-candle-enum — UAC `candle_schema.DataType` snapshot-vs-timeseries naming COLLISION** (slot-2
           found 2026-06-02): `internal/domain/market_data_processing/candle_schema.py` `DataType` enum has BOTH a legacy
           `DEX_POOLS = "dex_pools"` / `DEX_SWAPS = "dex_swaps"` (candle-input) AND a DISTINCT Phase-2
-          `DEX_POOL_STATE = "dex_pool_state"` (spot-DEX time-series state, comment: "distinct from the existing DEX_POOLS
-          *snapshot* type"). The operator-locked canonical pool name `dex_pool_state` **collides** with the Phase-2
-          member's value → a StrEnum alias if DEX_POOLS is renamed to it. **Slot-2 left DEX_POOLS/DEX_SWAPS on the legacy
-          values** (they are not consumed by member-name anywhere; functional collapse is enforced on
+          `DEX_POOL_STATE = "dex_pool_state"` (spot-DEX time-series state, comment: "distinct from the existing
+          DEX*POOLS \_snapshot* type"). The operator-locked canonical pool name `dex_pool_state` **collides** with the
+          Phase-2 member's value → a StrEnum alias if DEX_POOLS is renamed to it. **Slot-2 left DEX_POOLS/DEX_SWAPS on
+          the legacy values** (they are not consumed by member-name anywhere; functional collapse is enforced on
           market_data_categories/expected_coverage/defi_venue_capabilities). RECONCILE: decide whether the legacy
-          `dex_pools` snapshot type and the Phase-2 `dex_pool_state` time-series type are the SAME (merge — remove DEX_POOLS,
-          point all to DEX_POOL_STATE) or genuinely DIFFERENT shapes (then the operator's canonical-pool name needs a
-          distinct token from the Phase-2 type — **operator decision**). Also check `DEX_POOL_SWAPS` does not exist yet
-          (only DEX_POOL_STATE/DEX_ORDERBOOK/DEX_QUOTE/DEX_TRADES). Repo: unified-api-contracts. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P1. **A11d — MTDS `data_manifest_handler.py` OPERATIONS metadata legacy data_types** (`bucket_type:
-        dex-pools`/`dex-swaps`/`lending-indices`) — reconcile with the canonical `dex_pool_state`/`dex_pool_swaps`
-        handler `_DATA_TYPE` consts (C0-CN2). Repo: market-tick-data-service.
-  - [ ] [DATA] P1. **A11e — TESTS encoding legacy buckets/data_types (silent-regression maskers)**: e.g.
-        mtds `tests/unit/test_smoke_matrix.py` (`market-data-tick-{category}-{pid}` mock), `test_defi_manifest_recorder.py`
+          `dex_pools` snapshot type and the Phase-2 `dex_pool_state` time-series type are the SAME (merge — remove
+          DEX_POOLS, point all to DEX_POOL_STATE) or genuinely DIFFERENT shapes (then the operator's canonical-pool name
+          needs a distinct token from the Phase-2 type — **operator decision**). Also check `DEX_POOL_SWAPS` does not
+          exist yet (only DEX_POOL_STATE/DEX_ORDERBOOK/DEX_QUOTE/DEX_TRADES). Repo: unified-api-contracts. parent_epic:
+          mtds_mdps_master.
+  - [ ] [CODE] P1. **A11d — MTDS `data_manifest_handler.py` OPERATIONS metadata legacy data_types**
+        (`bucket_type:     dex-pools`/`dex-swaps`/`lending-indices`) — reconcile with the canonical
+        `dex_pool_state`/`dex_pool_swaps` handler `_DATA_TYPE` consts (C0-CN2). Repo: market-tick-data-service.
+  - [ ] [DATA] P1. **A11e — TESTS encoding legacy buckets/data_types (silent-regression maskers)**: e.g. mtds
+        `tests/unit/test_smoke_matrix.py` (`market-data-tick-{category}-{pid}` mock), `test_defi_manifest_recorder.py`
         (`data_type="dex_pools"` asserts), `test_curve_defi_ws_connector.py` (`dex_pools`); deployment-ui
-        `tests/unit/components/DataStatusTab.phase8h.test.ts` (`honest["dex_pools"]`). Update to assert CANONICAL forms +
-        add a guard test so the legacy form can't silently pass. Repos: market-tick-data-service + deployment-ui.
+        `tests/unit/components/DataStatusTab.phase8h.test.ts` (`honest["dex_pools"]`). Update to assert CANONICAL
+        forms + add a guard test so the legacy form can't silently pass. Repos: market-tick-data-service +
+        deployment-ui.
   - [ ] [CODE] P2. **A11f — residual `category=` writers** (legacy hive key vs canonical `asset_group=`): mtds
-        `market_interface/__init__.py` + live manifest recorder `category=` alias. Readers already probe canonical→legacy
-        (transitional OK); migrate writers so post-cutover writes are canonical-only. Repo: market-tick-data-service.
+        `market_interface/__init__.py` + live manifest recorder `category=` alias. Readers already probe
+        canonical→legacy (transitional OK); migrate writers so post-cutover writes are canonical-only. Repo:
+        market-tick-data-service.
 - [ ] [CODE] P0. A12 **UPSTREAM-DATA PREFLIGHT CHECKS — every consuming service, every in-scope (DeFi) cell** (operator
       2026-06-02). Audit + ensure each consuming service runs an upstream-data **preflight** before processing, that:
       (1) **reads via the post-migration canonical SSOT** — `resolve_bucket_name()` buckets + canonical
@@ -508,12 +554,13 @@ What to verify/wire (B0 corrected scope):
       modes; only the POST-check ACTION differs — **live** → emit alert + trip circuit-breaker + halt/skip-trade (bad
       data is capital risk; never trade on it), **batch** → fill-what-you-can + log + continue (best-effort backfill, no
       halt). Verify the action divergence is wired (live circuit-breaker/alerting on failed preflight) and that the
-      CHECK itself is shared code (no live-only/batch-only check drift). **Scope: DeFi** across mtds (handlers/readers) ·
-      mdps (scanner/adapters) · features-onchain (readers/calculators) · strategy (data preflight before signal) ·
+      CHECK itself is shared code (no live-only/batch-only check drift). **Scope: DeFi** across mtds (handlers/readers)
+      · mdps (scanner/adapters) · features-onchain (readers/calculators) · strategy (data preflight before signal) ·
       execution (mark/price preflight before order). **Audit-first** (read DATA-STATE + code; surface where checks are
       missing/legacy-bucket-bound/live-batch-asymmetric), then fix per service with a guard test. Sub-items per service
       to be filed from the audit. **GATED-COMPOSES**: depends on A11 (canonical buckets) + A8/A9/A10 (honest-absence
-      routing) being landed so the preflight reads the right place + marks the right state. parent_epic: mtds_mdps_master.
+      routing) being landed so the preflight reads the right place + marks the right state. parent_epic:
+      mtds_mdps_master.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
@@ -645,22 +692,25 @@ What to verify/wire (B0 corrected scope):
 >       perp funding-derive; unattributable rows→`_needs_attribution/` (never guess-then-delete). Perf-contract
 >       conformant (ThreadPool/--workers/--start-end date-shard/idempotent/per-cell isolation). **DONE —
 >       mtds@e14d656b.**
-> - [x] ✅ [DATA] P0. C0-RD3b — **VM dry-run validation — GREEN** (in-region VM `canonical-migration-defi-20260601-214111`,
->       2022-01 L1-heavy slice, pinned mtds@e14d656b). **0 errors, 0 UNRECOGNISED trees, `_needs_attribution=0` across
->       ALL 6 buckets** (lst token→venue split, oracle CHAINLINK+chain attribution, perp GMX→ARBITRUM default-chain all
->       resolved every row). Authoritative superset unions: dex_pools 53 cols (EVM + Solana-AMM coexist), lending_indices
->       43, dex_swaps 31, perp_funding 20, lst_rates 17, oracle_prices 17. Path convention confirmed
+> - [x] ✅ [DATA] P0. C0-RD3b — **VM dry-run validation — GREEN** (in-region VM
+>       `canonical-migration-defi-20260601-214111`, 2022-01 L1-heavy slice, pinned mtds@e14d656b). **0 errors, 0
+>       UNRECOGNISED trees, `_needs_attribution=0` across ALL 6 buckets** (lst token→venue split, oracle CHAINLINK+chain
+>       attribution, perp GMX→ARBITRUM default-chain all resolved every row). Authoritative superset unions: dex_pools
+>       53 cols (EVM + Solana-AMM coexist), lending_indices 43, dex_swaps 31, perp_funding 20, lst_rates 17,
+>       oracle_prices 17. Path convention confirmed
 >       (`…/venue=BALANCER/chain=ARBITRUM/instrument_type=pool/data_type=dex_pools/balancer_ARBITRUM_2022-01-03.parquet`).
 >       Dedup collapses multi-write-ts duplicates (dex-pools 2573→899 cells, lst 279→31). Walkthrough in operator chat.
->       Follow-up mtds@e46b5f6b adds per-phase timing + obj/s + LOUD error-exit for the apply run. parent_epic: manifest_master.
+>       Follow-up mtds@e46b5f6b adds per-phase timing + obj/s + LOUD error-exit for the apply run. parent_epic:
+>       manifest_master.
 > - [x] ✅ [CODE] P0. C0-RD3c — **oracle attribution + needs_attribution diagnostic — SHIPPED mtds@90aac6e1** (slot-2
 >       2026-06-02). The full-range dry surfaced held rows the 2022-01 slice (RD3b) didn't: ~5,187 oracle (pre-chain
->       Chainlink) + ~917 lst. Migration tool now inverts `oracle_prices_handler._CHAINLINK_FEEDS_BY_CHAIN`+`_PYTH_FEEDS`
->       → `contract→chain` and fills blank-chain oracle rows from the row `contract` (deterministic; addresses are
->       chain-unique) + a dry-run DIAGNOSTIC enumerating distinct unattributable `(contract,feed)`/`(token,protocol)`
->       so the residual lst-token registry (UAC `LST_VENUE_TO_TOKENS`) is closed from REAL data, not guessed.
->       `_needs_attribution` stays HELD-never-guessed. **Next: busy-week re-dry → read the diagnostic → add the
->       enumerated lst tokens → re-dry to needs_attr≈0 (or operator-ack) → THEN C0-RD4.** parent_epic: mtds_mdps_master.
+>       Chainlink) + ~917 lst. Migration tool now inverts
+>       `oracle_prices_handler._CHAINLINK_FEEDS_BY_CHAIN`+`_PYTH_FEEDS` → `contract→chain` and fills blank-chain oracle
+>       rows from the row `contract` (deterministic; addresses are chain-unique) + a dry-run DIAGNOSTIC enumerating
+>       distinct unattributable `(contract,feed)`/`(token,protocol)` so the residual lst-token registry (UAC
+>       `LST_VENUE_TO_TOKENS`) is closed from REAL data, not guessed. `_needs_attribution` stays HELD-never-guessed.
+>       **Next: busy-week re-dry → read the diagnostic → add the enumerated lst tokens → re-dry to needs_attr≈0 (or
+>       operator-ack) → THEN C0-RD4.** parent_epic: mtds_mdps_master.
 > - [ ] [DATA] P0. C0-RD4 — **completeness + uniformity gate**: post-walk, assert canonical `-prd` distinct-cell count ≥
 >       union of all 3 source layouts' distinct cells (per bucket); **exactly ONE schema (column set) per data_type
 >       across ALL output objects** (no schema drift between cells of different source-layout origin); CF-1…CF-12 GREEN
@@ -668,68 +718,76 @@ What to verify/wire (B0 corrected scope):
 >       Only then is C-GREEN.
 > - [ ] [DATA] P0. C0-RD5 — **delete ALL legacy** (every source bucket + every legacy path/tree) ONLY after C0-RD4
 >       GREEN, so data-status/manifest shows a single canonical v9 SSOT (operator end-state). Snapshots retained.
+> - [ ] [DATA] P0. C0-RD5b — **orphan sweep of the pre-existing legacy-FORM objects ALREADY in `-prd`** (slot/Harsh
+>       bucket-state verification 2026-06-02). The `-prd` buckets were pre-seeded by an earlier env-split copy and hold
+>       legacy-FORM objects (`day=/asset_group=defi/…`, NO `pipeline_mode=`; sample parquet cols lack
+>       `schema_version`/`source`/`pipeline_mode`/`asset_group`). The C0 walk writes NEW canonical paths
+>       (`day=/pipeline_mode=/asset_group=defi/…`), so those pre-existing `-prd` objects become ORPHANS → the C0e
+>       consolidator rebuild would double-count or a non-`pipeline_mode`-aware reader reads stale. So C0-RD4/RD5 MUST
+>       also delete the legacy-FORM objects sitting in `-prd` (not just the legacy SOURCE buckets). Measured 2026-06-02
+>       (Cloud Monitoring `storage/v2/total_count`, live-object): `market-data-tick-defi-prd` 365,792 (~43% of legacy
+>       855,497) + still carries legacy flat `dex_pools/{kamino,orca,raydium}/` trees (3-layout NOT consolidated);
+>       `dex-pools-prd` 185,079 (~97%), `dex-swaps-prd` 68,764 (~99%) — all legacy-FORM. parent_epic: manifest_master.
 > - [ ] [CODE] P1. C0-RD6 — **exclude the exact-alias columns from the `dex_swaps` superset union** (DeFi #4, from
 >       archived `features_service_defi_data_loading_blockers`). Slot-7 DeFi #3 investigation confirmed `swap_count` ==
 >       `trade_count` and `volume_quote_usd` == `volume` (intentional aliases populated in
 >       `market_data_processing_service/app/adapters/defi/swap_adapter.py:159-160`). Dropping them is **lossless-in-
 >       information** (no data lost — the values survive in `trade_count`/`volume`), so it is compatible with the
 >       operator "lossless superset-union, drop nothing-of-value" rule. **Fold into the C0-RD3 union for `dex_swaps`
->       BEFORE C0-RD4 apply** (so the single canonical write omits the 2 dup cols — currently `dex_swaps` union = 31 cols
->       → 29); if C0-RD4 has already applied, this becomes a scheduled post-C0 next-migration-window column cleanup (no
->       extra whole-corpus walk per single-walk discipline). Paired non-manifest edits: drop the 2 columns from UAC
->       `DEX_SWAPS_SCHEMA` + stop emitting them in `swap_adapter.py`. parent_epic: manifest_master. Repos:
->       unified-api-contracts + market-data-processing-service.
->       **⚠️ BLOCKER FOUND 2026-06-02 (slot-2) — needs a schema SPLIT, not a flat drop**: the candle-output
->       `DEX_SWAPS_SCHEMA` is `_candle_contracts.py` `_DEX_EXT = [swap_count, volume_quote_usd]`, but `_DEX_EXT` is
->       **SHARED** — it is applied to BOTH `swaps_ohlcv_{tf}` (dex_pool_swaps) AND `state_ohlcv_{tf}` (dex_pool_state)
->       via `extra_cols=_DEX_EXT` (L375/L390/L401). The docstring says `dex_pool_state → OHLCV(mid) + swap_count` (state
->       legitimately keeps `swap_count`), so a flat drop of both cols from `_DEX_EXT` would over-reach and strip
->       `swap_count` from `dex_pool_state` too. C0-RD6 therefore requires SPLITTING `_DEX_EXT` into a swaps-ext (drop both
->       dup aliases) vs state-ext (keep `swap_count` only — note state never had `volume_quote_usd` per the docstring, so
->       there is also a pre-existing state/`_DEX_EXT` inconsistency to fix). The swap_adapter `swap_count=`/`volume_quote_usd=`
->       emission was provisionally added then **reverted** by slot-2 (kept ONLY the A11c `dex_pool_swaps` re-registration)
->       so C0-RD6 can land as its own careful unit. Also still owed: the RAW migration superset-union exclusion (31→29) in
->       `migrate_defi_full_v9_canonical.py` `_VENUE_SCHEMA["dex_pool_swaps"]` before apply. DECOUPLED from the A11c landing.
+>       BEFORE C0-RD4 apply** (so the single canonical write omits the 2 dup cols — currently `dex_swaps` union = 31
+>       cols → 29); if C0-RD4 has already applied, this becomes a scheduled post-C0 next-migration-window column cleanup
+>       (no extra whole-corpus walk per single-walk discipline). Paired non-manifest edits: drop the 2 columns from UAC
+>       `DEX_SWAPS_SCHEMA` + stop emitting them in `swap_adapter.py`. parent*epic: manifest_master. Repos:
+>       unified-api-contracts + market-data-processing-service. **⚠️ BLOCKER FOUND 2026-06-02 (slot-2) — needs a schema
+>       SPLIT, not a flat drop**: the candle-output `DEX_SWAPS_SCHEMA` is `_candle_contracts.py`
+>       `_DEX_EXT = [swap_count, volume_quote_usd]`, but `_DEX_EXT` is **SHARED** — it is applied to BOTH
+>       `swaps_ohlcv*{tf}`(dex_pool_swaps) AND`state*ohlcv*{tf}`(dex_pool_state)     via`extra_cols=\_DEX_EXT`(L375/L390/L401). The docstring says`dex_pool_state
+>       → OHLCV(mid) +
+>       swap_count`(state     legitimately keeps`swap_count`), so a flat drop of both cols from `\_DEX_EXT`would over-reach and strip    `swap_count`from`dex_pool_state`too. C0-RD6 therefore requires SPLITTING`\_DEX_EXT`into a swaps-ext (drop both     dup aliases) vs state-ext (keep`swap_count`only — note state never had`volume_quote_usd` per the docstring, so     there is also a pre-existing state/`\_DEX_EXT`inconsistency to fix). The swap_adapter`swap_count=`/`volume_quote_usd=`    emission was provisionally added then **reverted** by slot-2 (kept ONLY the A11c`dex_pool_swaps`re-registration)     so C0-RD6 can land as its own careful unit. Also still owed: the RAW migration superset-union exclusion (31→29) in    `migrate_defi_full_v9_canonical.py` `\_VENUE_SCHEMA["dex_pool_swaps"]`
+>       before apply. DECOUPLED from the A11c landing.
 
 ### C0-CN — Canonical-naming reconciliation (operator-locked 2026-06-01) — SSOT `codex/02-data/defi-canonical-naming-ssot.md`
 
-> A naming-alignment audit (codex + IS + MTDS + MDPS, 2026-06-01) found the migration would have regressed
-> consumers (it normalised the on-disk `data_type` to the logical manifest name, and the live readers don't read
-> `pipeline_mode=`). Operator directive: **converge on the canonical form, fix the readers/writers + plans + codex —
-> do not bend the migration to legacy.** Locked canonical: path `…/day=/pipeline_mode={mode}/asset_group=defi/venue=/
-> chain=/instrument_type=/data_type=/…`; data_type `dex_pool_state`/`dex_pool_swaps` (collapsed ONE name everywhere,
-> not the legacy on-disk-vs-manifest split) + `lst_rates`/`lending_indices`/`oracle_prices`/`perp_funding`; chain
-> `HYPERLIQUID` (not `HYPERLIQUID_L1`); `instrument_type=perpetual` VALID for DeFi on-chain perps (Drift/GMX/HL);
-> bare `venue=` + separate `chain=`; dedicated `{stem}-prd-` buckets. **Migration already conforms (mtds@6a8372b2).**
-> **The apply is GATED on the reader fixes landing** (else migrated data is unreadable). Full status + sequencing:
-> the codex SSOT above.
+> A naming-alignment audit (codex + IS + MTDS + MDPS, 2026-06-01) found the migration would have regressed consumers (it
+> normalised the on-disk `data_type` to the logical manifest name, and the live readers don't read `pipeline_mode=`).
+> Operator directive: **converge on the canonical form, fix the readers/writers + plans + codex — do not bend the
+> migration to legacy.** Locked canonical: path
+> `…/day=/pipeline_mode={mode}/asset_group=defi/venue=/ chain=/instrument_type=/data_type=/…`; data_type
+> `dex_pool_state`/`dex_pool_swaps` (collapsed ONE name everywhere, not the legacy on-disk-vs-manifest split) +
+> `lst_rates`/`lending_indices`/`oracle_prices`/`perp_funding`; chain `HYPERLIQUID` (not `HYPERLIQUID_L1`);
+> `instrument_type=perpetual` VALID for DeFi on-chain perps (Drift/GMX/HL); bare `venue=` + separate `chain=`; dedicated
+> `{stem}-prd-` buckets. **Migration already conforms (mtds@6a8372b2).** **The apply is GATED on the reader fixes
+> landing** (else migrated data is unreadable). Full status + sequencing: the codex SSOT above.
 
 - [x] ✅ [CODE] P0. C0-CN1 — migration writes canonical (`dex_pool_state`/`dex_pool_swaps`, `pipeline_mode=` path,
       `HYPERLIQUID`, `perpetual`). mtds@6a8372b2 + codex `defi-canonical-naming-ssot.md`. parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P0. C0-CN2 — **MTDS handlers**: `dex_pools_handler._DATA_TYPE`→`dex_pool_state`,
       `dex_swaps_handler._DATA_TYPE`→`dex_pool_swaps` (both path + manifest), `pipeline_mode=` threaded into
-      `write_defi_rows`/`build_defi_partition_path` (live=batch). **mtds@0a3a7071, QG green.** parent_epic: mtds_mdps_master.
+      `write_defi_rows`/`build_defi_partition_path` (live=batch). **mtds@0a3a7071, QG green.** parent_epic:
+      mtds_mdps_master.
 - [x] ✅ [CODE] P0. C0-CN3 — **on-disk↔logical data_type remap dropped (now identity)**: mtds `defi_catalog_reader`
-      `_ITYPE_TO_DATA_TYPE[POOL]`→`dex_pool_state` (mtds@0a3a7071); features `mtds_output_config._PATH_DATA_TYPE` identity
-      + `_MTDS_OUTPUT_BUCKET_DOMAINS` rekeyed to `dex_pool_state`/`dex_pool_swaps` (features-service@dec1b687). No live
-      consolidator remap existed. parent_epic: mtds_mdps_master.
+      `_ITYPE_TO_DATA_TYPE[POOL]`→`dex_pool_state` (mtds@0a3a7071); features `mtds_output_config._PATH_DATA_TYPE`
+      identity + `_MTDS_OUTPUT_BUCKET_DOMAINS` rekeyed to `dex_pool_state`/`dex_pool_swaps` (features-service@dec1b687).
+      No live consolidator remap existed. parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P0. C0-CN4 — **features-onchain reader pipeline_mode-aware**: `mtds_canonical_reader`
       `read_canonical_defi_parquets` probes `pipeline_mode=batch`→bare→`pipeline_mode=live`→legacy via UAC
       `build_defi_partition_path(pipeline_mode=)`; `_PATH_DATA_TYPE` identity. **features-service@dec1b687, QG green.**
       parent_epic: features_and_ml_master.
 - [x] ✅ [CODE] P0. C0-CN5 — **MDPS reader pipeline_mode-aware + canonical data_type**: `orchestration_scanner`
-      `_blob_matches_data_type_partition` accepts `dex_pool_state`/`dex_pool_swaps` (+ legacy) under `pipeline_mode={batch|live}`
-      (day-prefix listing captures the segment). **mdps@4b9e6e5, QG green.** parent_epic: mtds_mdps_master.
+      `_blob_matches_data_type_partition` accepts `dex_pool_state`/`dex_pool_swaps` (+ legacy) under
+      `pipeline_mode={batch|live}` (day-prefix listing captures the segment). **mdps@4b9e6e5, QG green.** parent_epic:
+      mtds_mdps_master.
 - [x] ✅ [CODE] P0. C0-CN6 — **UAC**: `build_defi_partition_path(pipeline_mode=)` canonical (candidate_parquet_paths
       delegates); `to_canonical_chain_wire`+`CHAIN_WIRE_VALUE_OVERRIDES` resolve HL→`HYPERLIQUID` (non-breaking alias);
       `DEFI_ONCHAIN_INSTRUMENT_TYPES`+=`PERPETUAL`. **uac@dad96e42, QG green.** parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P0. C0-CN7 — **instruments-service: VERIFIED no change needed** — IS already produces DeFi `perpetual`
-      InstrumentRecords (Lighter/etc. perp adapters) + the UAC validator already accepts `perpetual` (routed via the pair
-      branch; UAC allowlist now also lists it); chain wire via UAC `to_canonical_chain_wire`; IS is data_type-agnostic for
-      the tick universe. parent_epic: mtds_mdps_master.
+      InstrumentRecords (Lighter/etc. perp adapters) + the UAC validator already accepts `perpetual` (routed via the
+      pair branch; UAC allowlist now also lists it); chain wire via UAC `to_canonical_chain_wire`; IS is
+      data_type-agnostic for the tick universe. parent_epic: mtds_mdps_master.
 - [x] ✅ [DOCS] P1. C0-CN8 — codex `02-data/defi-data-types-catalog.md` banner **resolves D14** (canonical
-      `dex_pool_state`/`dex_pool_swaps`, NOT `dex_pools`; `pipeline_mode=` path; `HYPERLIQUID`; DeFi `perpetual`; EVM+Solana
-      union) + cross-refs `defi-canonical-naming-ssot.md` (authoritative SSOT, already shipped). parent_epic: mtds_mdps_master.
+      `dex_pool_state`/`dex_pool_swaps`, NOT `dex_pools`; `pipeline_mode=` path; `HYPERLIQUID`; DeFi `perpetual`;
+      EVM+Solana union) + cross-refs `defi-canonical-naming-ssot.md` (authoritative SSOT, already shipped). parent_epic:
+      mtds_mdps_master.
 
 - [ ] [DATA] P0. C0 **path + bucket canonicalisation (the foundational migration) — RUN ON A VM (operator-confirmed
       2026-06-01)**. **Two-tool lineage (system-first)**: Phase-1.8 `migrate_defi_canonical.py` already did
@@ -741,6 +799,15 @@ What to verify/wire (B0 corrected scope):
       `migrate*\*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the     flat objects to FULL canonical: `category=defi`→`asset_group=defi`+`pipeline_mode={MODE}`partition +     schema_version=9 +`source`column (UAC SOURCE_PRIORITY) + canonical`\_V{N}` venue (UAC SSOT, complete incl     TraderJoe/Velodrome post-C12-UAC) + **`available_at`preserve-or-backfill** (preserve where present; backfill only     missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split`{kind}-prd-{project}`
       bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f VM-cutover sub-todos
       below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
+  - [ ] [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets do NOT exist yet** (slot/Harsh bucket-state
+        verification 2026-06-02): `oracle-prices-prd`, `lst-rates-prd`, `lending-indices-prd`, `perp-funding-prd`,
+        `gas-fees-prd` (also confirm `evm-defi`/`solana-defi`/`liquidations` `-prd`). The logical mapping already exists
+        — `deployment-service/configs/cloud-providers.yaml` resolves these to `{stem}-prd-{pid}` (dedicated per-type,
+        settled 2026-06-02 — NOT folded into `market-data-tick-defi-prd`) — but the physical buckets are unprovisioned,
+        so `migrate_defi_full_v9_canonical` would fail-write the oracle/lst/lending/perp/gas data_types. HARD
+        prerequisite for the C0d apply for those types (NOT for dex_pools/dex_swaps, whose `-prd` buckets exist).
+        Provision via Terraform before C0d. (NOT launched — documented per operator "no new buckets/VMs for now".)
+        parent_epic: manifest_master.
   - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802;
         dry=default/full=--apply; `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day
         slice (rolls into C0b dry VM).
@@ -857,11 +924,11 @@ What to verify/wire (B0 corrected scope):
 - [ ] [DATA] P1. D2 **MDPS swaps_ohlcv reprocess for the stale chain-column `attempted_failed` rows** (MIGRATED FROM
       archived `issues/uniswap_v3_ethereum_28k_attempted_failed_2026_05_28.md`, slot-2 2026-06-02). 28,634
       `UNISWAP_V3-ETHEREUM` `swaps_ohlcv_*` rows on the **consolidated `market-data-tick-defi` `_index`**
-      (`processed_candles` layer) are `attempted_failed`/`SCHEMA_VALIDATION_FAILED` — **stale point-in-time records** from
-      the 2026-05-23/24 chain-propagation fix-deploy window (root cause = blank `chain`; the canonical migration removes
-      it source-side). Code fix already live (`mdps@7f1a5b5`+`3799c8d`); slot-7 pre-flight verified live candles now
-      carry `chain`. **No code change** — needs an MDPS reprocess rerun once our C0 canonicalises the source (rows flip
-      `captured`). Companion chain-column venues to reprocess in the SAME pass (do NOT race the migration with a
+      (`processed_candles` layer) are `attempted_failed`/`SCHEMA_VALIDATION_FAILED` — **stale point-in-time records**
+      from the 2026-05-23/24 chain-propagation fix-deploy window (root cause = blank `chain`; the canonical migration
+      removes it source-side). Code fix already live (`mdps@7f1a5b5`+`3799c8d`); slot-7 pre-flight verified live candles
+      now carry `chain`. **No code change** — needs an MDPS reprocess rerun once our C0 canonicalises the source (rows
+      flip `captured`). Companion chain-column venues to reprocess in the SAME pass (do NOT race the migration with a
       one-venue VM): UNISWAP_V2-ETHEREUM 3,444 · AAVEV3-OPTIMISM 2,820 · EIGENLAYER 1,311 · CURVE-ETHEREUM 1,281 · MAKER
       1,113 · FRAX 1,032 · DRIFT-SOLANA 200 · KAMINO/JITO/MARGINFI ~75. **GATED on C-GREEN.** Verify post-retry:
       `attempted_failed` for these venues → 0 (now `captured` or legit `empty_confirmed`). Repos:

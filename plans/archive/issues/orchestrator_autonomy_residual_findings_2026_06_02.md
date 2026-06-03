@@ -16,7 +16,7 @@ source:
   - deployment-ui/.gitignore (no playwright-report line) + git ls-files (1 tracked playwright-report artifact) @
     2026-06-02
 parent_epic: plans/epics/orchestrator_master.md
-locked_by: orchestrator_autonomy_residual_findings_2026_06_02
+status: RESOLVED — archived 2026-06-02 (F1/F2/FM3 + disk-guard all closed; see Resolution section)
 ---
 
 ## What I found
@@ -100,26 +100,28 @@ moved aside.
 and no `playwright-report/` `.gitignore` line. See open todo below.
 
 **Also done this session (related):** agent-orchestrator `main` FF'd to `7f0bdbf` (== LDR; main is agent-orchestrator's
-canonical branch per the repo exception) — operator-authorized override of the HS256-retirement soak gate. Fresh
-**AMI built from main** after fixing two pre-existing bugs in the (previously never-successfully-run) packer build path:
-(1) warm-cache cloned PRIVATE repos over unauth'd https → inject `gh_pat` as a git `insteadOf` cred, scrubbed in cleanup
+canonical branch per the repo exception) — operator-authorized override of the HS256-retirement soak gate. Fresh **AMI
+built from main** after fixing two pre-existing bugs in the (previously never-successfully-run) packer build path: (1)
+warm-cache cloned PRIVATE repos over unauth'd https → inject `gh_pat` as a git `insteadOf` cred, scrubbed in cleanup
 (deployment-service `b5e4f01`); (2) `uv` installed under `/home/ubuntu/.local/bin` (HOME preserved by `sudo -E`) but the
 symlink logic only checked `/root/*` → `uv: command not found` → resolve wherever it landed (deployment-service
 `823ec84`).
 
 **AMI produced:** `ami-008943905b499a3f4` (ap-northeast-1, `agent-orchestrator-20260602-055620`, Branch tag
-`live-defi-rollout` == main == `7f0bdbf`, State=available). Consume via `AMI_ID=ami-008943905b499a3f4 bash
-deployment-service/scripts/vm/launch-epic-vm-aws.sh --vm-id <id>` (the launcher's AMI_ID is optional; cold-bootstrap is
-the fallback). A 3rd packer bug was fixed to get here: `--global` insteadOf went to /root/.gitconfig but warm-cache's
-`sudo -E` git reads /home/ubuntu/.gitconfig → switched to `--system` /etc/gitconfig (deployment-service `5186179`).
+`live-defi-rollout` == main == `7f0bdbf`, State=available). Consume via
+`AMI_ID=ami-008943905b499a3f4 bash deployment-service/scripts/vm/launch-epic-vm-aws.sh --vm-id <id>` (the launcher's
+AMI_ID is optional; cold-bootstrap is the fallback). A 3rd packer bug was fixed to get here: `--global` insteadOf went
+to /root/.gitconfig but warm-cache's `sudo -E` git reads /home/ubuntu/.gitconfig → switched to `--system` /etc/gitconfig
+(deployment-service `5186179`).
 
 ## Remaining open todos — ALL CLOSED 2026-06-02
 
-- [x] ✅ [SCRIPT] P2. **deployment-ui FM3** — DONE (deployment-ui `8f1fe86`): `git rm --cached playwright-report/index.html`
-      + `playwright-report/` added to the repo-specific-exceptions section of `deployment-ui/.gitignore` (survives the
-      central-template sync). `unified-trading-system-ui` (which now holds the user-management/auth functionality folded
-      in from the archived `user-management-ui`) already ignored it + tracked 0 such files — no work needed there.
-      Non-behavioral repo-hygiene change; no UI surface touched (playwright gate N/A).
+- [x] ✅ [SCRIPT] P2. **deployment-ui FM3** — DONE (deployment-ui `8f1fe86`):
+      `git rm --cached playwright-report/index.html` + `playwright-report/` added to the repo-specific-exceptions
+      section of `deployment-ui/.gitignore` (survives the central-template sync). `unified-trading-system-ui` (which now
+      holds the user-management/auth functionality folded in from the archived `user-management-ui`) already ignored
+      it + tracked 0 such files — no work needed there. Non-behavioral repo-hygiene change; no UI surface touched
+      (playwright gate N/A).
 - [x] ✅ [INFRA] P2. **Epic-VM disk-bloat guard** — DONE (agent-orchestrator `5508efa`, on LDR + main):
       `scripts/vm-disk-guard.sh` vacuums regenerable caches (npm `_cacache`, uv/pip wheels) + the journal when root
       usage ≥ THRESHOLD (default 80%); touches nothing under repos/data/state; always exits 0. `bootstrap_vm.sh` Step
@@ -129,23 +131,23 @@ the fallback). A 3rd packer bug was fixed to get here: `--global` insteadOf went
 
 ## One residual — CLOSED 2026-06-02
 
-- [x] ✅ [SCRIPT] P3. **vm-disk-guard cron installed on all 9 stopped epic VMs** — started all 9, installed the root cron
-      (every 6h) + test-ran the guard (freed space on most: cefi 82→75%, trading-core 89→71%, sports/tradfi 57→48%),
-      then re-stopped. The cron now persists in each VM's EBS crontab, so all 11 fleet VMs (2 running + 9 stopped) carry
-      it. **Root cause of the high usage (corrected after a real `du`):** NOT the repo footprint — it was **`/tmp` (9G
-      on vm-orchestrator) full of 3-4-day-old throwaway test/QG/repro venvs (`vm-venv`, `vm-repro-venv*`, `test_venv*` @
-      ~1.7G each) + stale QG logs/parquets**. The cache-only guard couldn't reclaim it (it skipped /tmp). Enhanced the
-      guard (agent-orchestrator `2c7ec6b`, LDR+main) to age-gate-vacuum stale `/tmp` (older than TMP_AGE_DAYS=2, excluding
-      live systemd-private + X11/ICE sockets) → vm-orchestrator dropped **84%→52%** (/tmp 9.0G→83M). The legit baseline
-      (~11G: 8 slot worktrees + venvs in /home) is correct and stays. The 9 stopped VMs reclaim their stale /tmp on next
-      boot (updated script via clone + already-installed cron).
+- [x] ✅ [SCRIPT] P3. **vm-disk-guard cron installed on all 9 stopped epic VMs** — started all 9, installed the root
+      cron (every 6h) + test-ran the guard (freed space on most: cefi 82→75%, trading-core 89→71%, sports/tradfi
+      57→48%), then re-stopped. The cron now persists in each VM's EBS crontab, so all 11 fleet VMs (2 running + 9
+      stopped) carry it. **Root cause of the high usage (corrected after a real `du`):** NOT the repo footprint — it was
+      **`/tmp` (9G on vm-orchestrator) full of 3-4-day-old throwaway test/QG/repro venvs (`vm-venv`, `vm-repro-venv*`,
+      `test_venv*` @ ~1.7G each) + stale QG logs/parquets**. The cache-only guard couldn't reclaim it (it skipped /tmp).
+      Enhanced the guard (agent-orchestrator `2c7ec6b`, LDR+main) to age-gate-vacuum stale `/tmp` (older than
+      TMP_AGE_DAYS=2, excluding live systemd-private + X11/ICE sockets) → vm-orchestrator dropped **84%→52%** (/tmp
+      9.0G→83M). The legit baseline (~11G: 8 slot worktrees + venvs in /home) is correct and stays. The 9 stopped VMs
+      reclaim their stale /tmp on next boot (updated script via clone + already-installed cron).
 
 **Better fix — /tmp is now a capped tmpfs (the real answer to "why does /tmp persist at all"):** /tmp's contract is
 transient/safe-to-wipe, so it is now RAM-backed (`tmpfs /tmp ... size=2G,mode=1777`) — auto-clears on reboot and the 2G
-cap makes a runaway test/repro venv fail fast instead of wedging the 30G root. Safe on the 16G+ fleet VMs (tmpfs uses RAM
-only as files exist). Baked into `bootstrap_vm.sh` Step 7.6 (agent-orchestrator `70b916e`, LDR+main); **active on both
-running VMs** (vm-orchestrator + api-host, verified healthy :8026=200 / central :8765=200 after the live remount); fstab
-written on all 9 stopped VMs (activates on their next start). All 9 also brought to freshest code (`70b916e`) + both
-disk-guard crons (6h + @reboot). The `vm-disk-guard` /tmp branch is now belt-and-suspenders behind the tmpfs.
+cap makes a runaway test/repro venv fail fast instead of wedging the 30G root. Safe on the 16G+ fleet VMs (tmpfs uses
+RAM only as files exist). Baked into `bootstrap_vm.sh` Step 7.6 (agent-orchestrator `70b916e`, LDR+main); **active on
+both running VMs** (vm-orchestrator + api-host, verified healthy :8026=200 / central :8765=200 after the live remount);
+fstab written on all 9 stopped VMs (activates on their next start). All 9 also brought to freshest code (`70b916e`) +
+both disk-guard crons (6h + @reboot). The `vm-disk-guard` /tmp branch is now belt-and-suspenders behind the tmpfs.
 
 This issue doc is fully resolved (F1/F2/FM3 + disk-guard all closed) — ready to archive into the orchestrator epic.

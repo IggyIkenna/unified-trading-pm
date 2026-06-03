@@ -15,7 +15,6 @@ estimate_calibration_note: |
   diagnostics) + small targeted code/config changes (resource limits, watchdog
   auto-reboot, monitoring) + replacing the chatty Anthropic-CLI usage poller
   with a cheaper API call. No new product features.
-locked_by: live-defi-rollout
 locked_since: 2026-05-29
 related:
   - issues/api_host_chronic_impairment_2026_05_29.md

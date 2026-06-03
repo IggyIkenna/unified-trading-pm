@@ -27,48 +27,71 @@ activate `.venv-workspace` for tests (that's the IDE / general-Python venv).
 
 ### Ship mode vs diagnostic mode (HARD RULE — choose intentionally)
 
-| Intent                                                                                   | Command                                  | Behavior                                                                                                                                                                             |
-| ---------------------------------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Shipping work** (commit-bound)                                                         | `bash scripts/quality-gates.sh`          | `FIX_MODE=true` (default) → `[1/6] AUTO-FIX` block runs `ruff format` + `ruff check --fix` **in-place**, then LINT + TYPECHECK + TESTS. Pick up the autofixed result in your commit. |
-| **Diagnostic / observation** (memory profiling, exploring failures, "what would CI see") | `bash scripts/quality-gates.sh --no-fix` | AUTO-FIX block **skipped**. Drift = fail. **Identical to CI behavior.**                                                                                                              |
-| **CI** (`.github/workflows/python-quality-gates.yml`)                                    | `bash scripts/quality-gates.sh --no-fix` | Same as diagnostic. Zero autofix. Drift = build fail.                                                                                                                                |
+| Intent                                                                                                                                                    | Command                                  | Behavior                                                                                                                                                                          |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Deliberate tree-wide reformat** (you own everything AUTO-FIX touches)                                                                                   | `bash scripts/quality-gates.sh`          | `FIX_MODE=true` (default) → `[1/6] AUTO-FIX` runs `ruff format` + `ruff check --fix` **in-place across the WHOLE worktree** (not just your files), then LINT + TYPECHECK + TESTS. |
+| **Diagnostic / observation** (memory profiling, exploring failures, "what would CI see")                                                                  | `bash scripts/quality-gates.sh --no-fix` | AUTO-FIX block **skipped**. Drift = fail. **Identical to CI behavior.**                                                                                                           |
+| **CI** (`.github/workflows/quality-gates-v2.yml` — required check `quality-gates-v2`; v1 `python-quality-gates.yml` / `quality-gates` RETIRED 2026-05-29) | `bash scripts/quality-gates.sh --no-fix` | Same as diagnostic. Zero autofix. Drift = build fail.                                                                                                                             |
 
 **Why this matters** — incident 2026-05-15: an agent ran `bash scripts/quality-gates.sh` (ship mode) for a
 memory-diagnostic measurement. The AUTO-FIX block reformatted **350 unrelated files** in the worktree. The agent had to
 manually `git restore .` to avoid leaking foreign formatting changes into a commit (which would have collided with
 parallel agents editing the same files).
 
-**The rule**: if your purpose is anything OTHER than "I am about to commit these changes," use `--no-fix`. This
-includes: measuring memory, reproducing a failure, exploring `pytest` output, verifying CI parity, ad-hoc gate runs.
+**The rule — decide by WHAT you will commit, not merely "am I committing" (AUTO-FIX rewrites the WHOLE tree, not just
+your files):**
+
+1. **You are only going to commit your OWN named files** (the normal per-unit ship —
+   `quickmerge --agent --files '<paths>'`): **use `--no-fix`.** Ship mode would reformat unrelated / foreign files
+   across the worktree → re-dirties the slot (breaks FF-sync) and risks leaking foreign formatting. Verify your files
+   with `ruff check` + `basedpyright` + `pytest` on the touched paths; quickmerge then runs the gate it needs (Pass 1).
+2. **You knowingly intend to "ruff up" other files and will own/commit whatever AUTO-FIX touches** (a deliberate
+   tree-wide format pass, or a solo worktree where re-dirtying is fine): **ship mode is allowed**
+   (`bash scripts/quality-gates.sh`, autofix ON) — that IS its purpose.
+
+Anything else (measuring memory, reproducing a failure, exploring `pytest` output, verifying CI parity, ad-hoc gate
+runs) → `--no-fix`.
 
 (Note: `basedpyright` and `pytest` are check-only at all times — they don't have an autofix mode, so `--no-fix` only
 affects `ruff`. The semantic match still holds: locally autofix drift, in CI prove zero drift.)
 
-## Commit + push + flip plan checkbox AS YOU SHIP each item (HARD RULE)
+## Commit + ship + flip plan checkbox AS YOU SHIP each item (HARD RULE)
 
-A "shippable unit" = the smallest meaningful slice that QGs cleanly. The moment a unit is green:
+A "shippable unit" = the smallest meaningful slice that QGs cleanly. **Shipping CODE is a TWO-PASS model (staging-first,
+live model 2026-06-02) — NEVER a raw `git push` of code:**
 
-1. **Stage explicitly by name**: `git add <file1> <file2>` — NEVER `git add .` / `git add -A` (vacuums foreign agents'
-   work into your commit). Use `git add -p` for partial-file staging on shared files.
-2. **Pre-commit check (mandatory)**:
+1. **Pass 1 — full quality gate writes the sentinel.** `cd <repo> && bash scripts/quality-gates.sh` MUST exit 0 on your
+   current HEAD. On exit 0 it writes `.qg_last_passed_sha` (== HEAD). Skipping Pass 1 means the change never ran tests,
+   and Pass 2 hard-refuses on the missing/stale sentinel.
+2. **Pass 2 — `quickmerge` commits + opens the auto-merging staging PR.**
    ```bash
-   git status                 # full picture
-   git diff --cached --stat   # NO PATH ARGUMENT — see entire index
+   bash scripts/quickmerge.sh "feat: ..." --agent --files '<path1> <path2>'
    ```
-   Anything not yours? `git restore --staged <file>` before committing.
-3. **Commit + push** in ONE Bash call (tighten the Edit→commit window to beat the prek auto-restore race):
-   ```bash
-   git add <file1> <file2> && git diff --cached --name-status \
-     && git commit --no-verify -m "..." && git push origin live-defi-rollout --no-verify
-   ```
-   `--no-verify` is **authorized** when the prek auto-restore race is observed wiping your edits (Edit succeeds but file
-   unmodified at commit, OR commit lands under wrong author with empty diff). Otherwise keep hooks on.
-4. **Conditional push (multi-agent safety)**: before push,
+   ALWAYS `--agent` in Claude Code; ALWAYS scope with `--files` (named paths — NEVER the whole tree; that vacuums
+   foreign agents' work). quickmerge verifies sentinel == HEAD, stages ONLY your `--files`, commits, and routes the unit
+   `live-defi-rollout` → `staging` → SIT → `main` (→ Cloud Build image on `main`). It **early-exits "nothing to commit"
+   on a clean tree**, so a forgotten `--files` ships NOTHING — and a raw `git push origin live-defi-rollout` of code
+   silently piles up on LDR _behind_ main (it never opens a staging PR). `--dep-branch` is human-only.
+   - **Pre-`--files` hygiene (mandatory)**: `git status && git diff --cached --stat` (NO path argument — see the WHOLE
+     index) so you pass only YOUR paths. Foreign dirty files left out of `--files` stay untouched.
+   - **prek auto-restore race**: if you must hand-commit (Edit succeeds but file unmodified at commit, OR commit lands
+     under wrong author with empty diff), bundle Edit → stage-by-name → commit → push in ONE Bash call with
+     `--no-verify`, then verify with `git show --stat HEAD` that your file landed with non-zero insertions.
+3. **The ONLY sanctioned raw `git push origin live-defi-rollout` = dirty deps.** When a dep repo is dirty mid-edit,
+   commit + push the dep directly to `live-defi-rollout` (do NOT quickmerge with dirty deps). The other sanctioned raw
+   pushes are the ff-pull-in and the cross-repo PM plan-flip in step 5. **Everything else ships via quickmerge.**
+4. **Conditional push (multi-agent safety)**: before any push,
    `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
    document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main
-   agent decides rebase / merge / cherry-pick.
+   agent decides rebase / merge / cherry-pick. **Shared `.tabs/<N>/` worktree (a concurrent agent moves `HEAD` /
+   `FETCH_HEAD` under you)**: verify ONLY against the stable remote ref
+   (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`), never `FETCH_HEAD`, and promote YOUR commit via a
+   throwaway worktree off `origin/live-defi-rollout` so the other agent is undisturbed. SSOT: `cursor-configs/CLAUDE.md`
+   § "Concurrent agent in your shared `.tabs/<N>/` worktree".
 5. **Plan flip in same logical unit as code**: edit the plan checkbox `- [ ]` → `- [x] (commit-sha + brief evidence)`.
-   Commit the plan flip with `docs(plans):` prefix. Push.
+   Commit the plan flip with the **MANDATORY `docs(plans):` prefix** (`plan(...)` is hook-rejected) + push. A plan-flip
+   on a PM `*.md`/`*.mdc` is docs fast-path (PR targets `main`); the PM staging→main bypass + main-backmerge keep PM
+   synced with no manual reconcile.
 
 ## Foot-guns (every one has burned the workspace; mitigations are codified)
 

@@ -76,3 +76,6 @@ deployment-service:e439811
 fund-administration-service:77f2989
 ml-service:5edac74
 ml-training-service:6515277
+
+# Intentional reset to origin/live-defi-rollout — branch alignment 2026-06-03
+batch-live-reconciliation-service:ab4b25a

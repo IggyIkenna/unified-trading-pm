@@ -377,11 +377,15 @@ if [ "$IN_CI" = true ]; then
     log_skip "CI mode"
 elif [ "$CHECK_ONLY" = true ]; then
     command -v uv &>/dev/null && log_ok "uv available" || { log_fail "uv not found"; ISSUES=$((ISSUES + 1)); }
-elif command -v uv &>/dev/null; then
-    log_skip "uv already installed ($(uv --version 2>&1 | head -1))"
+# uv is pinned for lockfile determinism — an unpinned uv reformats uv.lock (revision bump)
+# even with identical deps, dirtying trees + jamming the FF-pull cron.
+# SSOT for the pin: plans/active/uv_lockfile_determinism_2026_06_02.md (Phase 1 will move
+# this constant into resolve-canonical-versions.py so it is read, not hardcoded in 3 places).
+elif command -v uv &>/dev/null && uv --version 2>&1 | grep -q '0\.10\.8'; then
+    log_skip "uv 0.10.8 already installed (pinned)"
 else
-    "$PYTHON_CMD" -m pip install uv --quiet 2>/dev/null
-    log_ok "Installed uv"
+    "$PYTHON_CMD" -m pip install "uv==0.10.8" --quiet 2>/dev/null
+    log_ok "Installed uv 0.10.8 (pinned)"
 fi
 
 # ── [4] VENV CREATION ──────────────────────────────────────────────────────

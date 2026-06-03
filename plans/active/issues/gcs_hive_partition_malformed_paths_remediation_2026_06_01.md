@@ -19,25 +19,27 @@ priority: P2
 
 # GCS hive-partition malformed paths — remediation
 
-> **🟦 SUPERSEDED-BY (slot-3 2026-06-02, operator cross-check)** — both GCS **data** remediations are now executed by the
-> per-AG v9 canonicalisation migration (NOT a separate run). **Verified current + correct on 2026-06-02** (not stale,
-> not irrelevant): Pattern-1 tradfi hyphen files re-confirmed 0-row placeholders (AAPL/AUD/CME-option all 0 rows);
-> Pattern-2 cefi 9 root real-data files re-confirmed present in both prd + legacy; defi/prediction/sports re-confirmed
-> clean.
+> **🟦 SUPERSEDED-BY (slot-3 2026-06-02, operator cross-check)** — both GCS **data** remediations are now executed by
+> the per-AG v9 canonicalisation migration (NOT a separate run). **Verified current + correct on 2026-06-02** (not
+> stale, not irrelevant): Pattern-1 tradfi hyphen files re-confirmed 0-row placeholders (AAPL/AUD/CME-option all 0
+> rows); Pattern-2 cefi 9 root real-data files re-confirmed present in both prd + legacy; defi/prediction/sports
+> re-confirmed clean.
 >
 > - **Pattern 2 (CeFi 9 root real-data files)** → **SUPERSEDED by `cefi_manifest_canonicalisation` E2** —
 >   `migrate_cefi_flat_to_v9_canonical.py` L-flat branch reads each root `{SYMBOL}.parquet`, regroups by
->   (venue,itype,dtype,day), and fans out to canonical `day=/pipeline_mode=/asset_group=cefi/…` paths (read+regroup+write,
->   the 9 orphans). Resolves the Pattern-2 "CeFi Pattern-2 migration" todo by construction when cefi migration runs.
-> - **Pattern 1 (TradFi ~110k 0-row hyphen placeholders)** → **SUPERSEDED by `tradfi_manifest_canonicalisation` E2+E7** —
->   `migrate_tradfi_to_v9_canonical.py` has a 0-row footer guard that NEVER migrates them; the 12 `day-*` hyphen prefixes
->   are bulk-deleted at tradfi E7 (with the pre-delete 0-row re-assert guard). Plus a NEW coverage-gap todo: equities/ETF
->   were never genuinely ingested → backfill (tradfi plan P1).
+>   (venue,itype,dtype,day), and fans out to canonical `day=/pipeline_mode=/asset_group=cefi/…` paths
+>   (read+regroup+write, the 9 orphans). Resolves the Pattern-2 "CeFi Pattern-2 migration" todo by construction when
+>   cefi migration runs.
+> - **Pattern 1 (TradFi ~110k 0-row hyphen placeholders)** → **SUPERSEDED by `tradfi_manifest_canonicalisation` E2+E7**
+>   — `migrate_tradfi_to_v9_canonical.py` has a 0-row footer guard that NEVER migrates them; the 12 `day-*` hyphen
+>   prefixes are bulk-deleted at tradfi E7 (with the pre-delete 0-row re-assert guard). Plus a NEW coverage-gap todo:
+>   equities/ETF were never genuinely ingested → backfill (tradfi plan P1).
 > - **P2 recurrence guard** (QG/CI check that fails on any `raw_tick_data/by_date/` object not matching
 >   `^…/day=\d{4}-\d{2}-\d{2}/`) stays here — generic, AG-independent; keep until landed, then this doc archives.
 >
 > **"Irrelevant vs old-information" (operator's question):** NEITHER. The doc was current + correct — it CAUGHT a real
-> bug (the first tradfi migrator draft would have migrated the 0-row placeholders) which the row-count cross-check fixed.
+> bug (the first tradfi migrator draft would have migrated the 0-row placeholders) which the row-count cross-check
+> fixed.
 
 > **Scope note (operator decision 2026-06-01)**: GCS data operations in this plan are **NOT executed yet** — operator
 > chose "report a plan, execute nothing" for the data and "fix docs/code only" for the TradFi empties. The doc-drift fix
@@ -147,12 +149,11 @@ So the existing rewriter is insufficient for both patterns as-is.
       phase-2-6 cutover-runbook "from" state) retain the no-env form.
 - [ ] [SCRIPT] P1. **TradFi Pattern-1 cleanup** — **SUPERSEDED → `tradfi_manifest_canonicalisation_2026_06_01.md` E7**
       (0-row guard skips migration + E7 bulk-deletes the 12 hyphen prefixes). Original text retained for reference:
-      operator chose "leave GCS, fix docs/code". When greenlit: bulk-delete
-      the ~110k 0-row objects under the 12 `day-*` hyphen prefixes (they are not manifest-tracked; a real Massive
-      backfill writes canonical paths). Pre-delete guard: assert each object is 0-row before deletion; abort the prefix
-      if any non-empty object appears (would mean real data, not a phantom). Recommended: extend
-      `_migrate_tradfi_hyphen_rewriter` with a `--delete-empty-only` mode using `gcs_delete_object` (UTL, workers=32) —
-      NOT subprocess gsutil.
+      operator chose "leave GCS, fix docs/code". When greenlit: bulk-delete the ~110k 0-row objects under the 12 `day-*`
+      hyphen prefixes (they are not manifest-tracked; a real Massive backfill writes canonical paths). Pre-delete guard:
+      assert each object is 0-row before deletion; abort the prefix if any non-empty object appears (would mean real
+      data, not a phantom). Recommended: extend `_migrate_tradfi_hyphen_rewriter` with a `--delete-empty-only` mode
+      using `gcs_delete_object` (UTL, workers=32) — NOT subprocess gsutil.
 - [ ] [SCRIPT] P1. **CeFi Pattern-2 migration** — **SUPERSEDED → `cefi_manifest_canonicalisation_2026_06_01.md` E2**
       (`migrate_cefi_flat_to_v9_canonical.py` L-flat branch already does exactly this). Original text retained for
       reference: for each of the 9 root files: read footer → derive

@@ -40,6 +40,81 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pin_branch_protection_rulesets import ORG, REPOS
 
+# ── Push-author attribution ────────────────────────────────────────────────────
+# Operator-approved 2026-06-02 (cicd_contract_hardening_2026_06_01.md line ~264).
+#
+# Classification rule (pure function over author/committer/message — testable without network):
+#   automation  = committer is "github-actions[bot]" or "GitHub"
+#   background-agent = commit message contains "Co-Authored-By: Claude"
+#   human       = author name in {iggyikenna, cosmictrader} (case-insensitive)
+#   unknown     = anything else
+#
+# The gh-api call is cached per sha so each sha is looked up at most once per run.
+# Safe default: ("unknown", "unknown") on any error — NEVER raises, NEVER fails the watcher.
+
+_HUMAN_NAMES = {"iggyikenna", "cosmictrader"}
+_AUTOMATION_COMMITTERS = {"github-actions[bot]", "github"}
+
+_commit_cache: dict[str, tuple[str, str]] = {}
+
+
+def _classify_commit_data(author: str, committer: str, message: str) -> tuple[str, str]:
+    """Classify a commit's pusher from raw git metadata.
+
+    Pure function — testable without network calls.
+
+    Returns:
+        (name, role) where role is one of: "human", "background-agent", "automation", "unknown"
+    """
+    committer_lc = committer.strip().lower()
+    author_lc = author.strip().lower()
+
+    if committer_lc in _AUTOMATION_COMMITTERS:
+        return (author.strip() or committer.strip(), "automation")
+
+    if "co-authored-by: claude" in message.lower():
+        return (author.strip() or "agent", "background-agent")
+
+    if author_lc in _HUMAN_NAMES:
+        return (author.strip(), "human")
+
+    return (author.strip() or "unknown", "unknown")
+
+
+def classify_pusher(repo: str, sha: str) -> tuple[str, str]:
+    """Look up commit metadata from GitHub and classify the pusher.
+
+    Returns:
+        (name, role) — safe default ("unknown", "unknown") on any gh/network error.
+
+    Caches results per sha so multiple alert lines for the same commit share one API call.
+    """
+    if not sha:
+        return ("unknown", "unknown")
+    cache_key = f"{repo}:{sha}"
+    if cache_key in _commit_cache:
+        return _commit_cache[cache_key]
+
+    result = gh_json(
+        [
+            "api",
+            f"repos/{ORG}/{repo}/commits/{sha}",
+            "--jq",
+            "{author:.commit.author.name,committer:.commit.committer.name,message:.commit.message}",
+        ]
+    )
+    if not isinstance(result, dict):
+        _commit_cache[cache_key] = ("unknown", "unknown")
+        return ("unknown", "unknown")
+
+    author = result.get("author") or ""
+    committer = result.get("committer") or ""
+    message = result.get("message") or ""
+    classified = _classify_commit_data(author, committer, message)
+    _commit_cache[cache_key] = classified
+    return classified
+
+
 # Branches where remote CI actually runs. live-defi-rollout has NO remote CI
 # (CLAUDE.md § "CI Verification After Every Push") so watching it is pointless.
 WATCHED_BRANCHES = ["main", "staging"]
@@ -55,6 +130,16 @@ _STUCK_STATES = {"CONFLICTING", "DIRTY", "BLOCKED"}
 # feature/chore branches are NOT paged unless they have auto-merge ON (the plan's core
 # "auto-merge-stuck is a PR state" case) — otherwise the channel fills with abandoned PRs.
 _PROMOTION_HEADS = {"live-defi-rollout", "staging"}
+
+# Stuck states the orchestrator can RESOLVE as a merge_conflict wall (the `escalate`
+# agent rebases/resolves on live-defi-rollout). BLOCKED is a gate/review wall — it is
+# paged but never auto-escalated as a conflict (there is nothing to resolve).
+_CONFLICT_STATES = {"CONFLICTING", "DIRTY"}
+# Idempotency marker: a PR carrying this label has already been handed off, so the
+# */15m cron must not re-dispatch it every tick.
+_ESCALATION_LABEL = "escalation-dispatched"
+# escalate-to-orchestrator.yml lives in the PM repo and is fired via repository_dispatch.
+_PM_DISPATCH_REPO = "unified-trading-pm"
 
 
 def gh_json(args: list[str]) -> list[dict] | dict | None:
@@ -99,7 +184,7 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
             "--limit",
             str(limit),
             "--json",
-            "workflowName,conclusion,status,createdAt,url,databaseId,event",
+            "workflowName,conclusion,status,createdAt,url,databaseId,event,headSha",
         ]
     )
     if not isinstance(runs, list):
@@ -122,6 +207,8 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
         prev_failed = bool(prev) and prev.get("conclusion") in _FAIL_CONCLUSIONS
 
         if latest_failed and not prev_failed:
+            sha = latest.get("headSha") or ""
+            pusher_name, pusher_role = classify_pusher(repo, sha)
             transitions.append(
                 {
                     "kind": "failing",
@@ -130,9 +217,13 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "workflow": workflow_name,
                     "conclusion": latest.get("conclusion"),
                     "url": latest.get("url") or "",
+                    "pusher_name": pusher_name,
+                    "pusher_role": pusher_role,
                 }
             )
         elif not latest_failed and latest.get("conclusion") == "success" and prev_failed:
+            sha = latest.get("headSha") or ""
+            pusher_name, pusher_role = classify_pusher(repo, sha)
             transitions.append(
                 {
                     "kind": "recovered",
@@ -141,6 +232,8 @@ def detect_transitions(repo: str, branch: str, limit: int, now: _dt.datetime, fr
                     "workflow": workflow_name,
                     "conclusion": "success",
                     "url": latest.get("url") or "",
+                    "pusher_name": pusher_name,
+                    "pusher_role": pusher_role,
                 }
             )
     return transitions
@@ -205,11 +298,15 @@ def build_report(transitions: list[dict], stuck: list[dict]) -> tuple[bool, str,
     if failing:
         lines.append(f":x: *{len(failing)} workflow(s) STARTED FAILING:*")
         for t in failing:
-            lines.append(f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} ({t['conclusion']}) <{t['url']}|run>")
+            pusher = f"👤 pushed by {t['pusher_name']} [{t['pusher_role']}]"
+            lines.append(
+                f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} ({t['conclusion']}) <{t['url']}|run>  {pusher}"
+            )
     if recovered:
         lines.append(f":white_check_mark: *{len(recovered)} workflow(s) RECOVERED:*")
         for t in recovered:
-            lines.append(f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} <{t['url']}|run>")
+            pusher = f"👤 pushed by {t['pusher_name']} [{t['pusher_role']}]"
+            lines.append(f"  • `{t['repo']}`@`{t['branch']}` — {t['workflow']} <{t['url']}|run>  {pusher}")
     if stuck:
         lines.append(f":hourglass_flowing_sand: *{len(stuck)} promotion PR(s) STUCK (auto-merge wedged):*")
         for s in stuck:
@@ -237,6 +334,114 @@ def write_github_output(alert: bool, severity: str, report: str) -> None:
         fh.write("__RPT__\n")
 
 
+def conflict_prs_to_escalate(stuck: list[dict], already_escalated: set[tuple[str, int]]) -> list[dict]:
+    """Pure selector: which stuck PRs are merge-conflict walls not yet handed off.
+
+    A PR qualifies iff its ``state`` is a conflict (``CONFLICTING``/``DIRTY`` — a
+    wall the ``escalate`` agent can resolve) AND ``(repo, number)`` is not already in
+    ``already_escalated`` (the idempotency set, derived from the PR label). No IO — the
+    label set is injected so this is unit-testable without ``gh``/network.
+    """
+    out: list[dict] = []
+    for s in stuck:
+        if s.get("state") not in _CONFLICT_STATES:
+            continue
+        if (s.get("repo"), int(s.get("number", 0))) in already_escalated:
+            continue
+        out.append(s)
+    return out
+
+
+def _pr_has_escalation_label(repo: str, number: int) -> bool:
+    """True if the PR already carries ``_ESCALATION_LABEL`` (best-effort; False on error)."""
+    data = gh_json(["pr", "view", str(number), "--repo", f"{ORG}/{repo}", "--json", "labels"])
+    if not isinstance(data, dict):
+        return False
+    labels = data.get("labels")
+    if not isinstance(labels, list):
+        return False
+    return any(isinstance(lbl, dict) and lbl.get("name") == _ESCALATION_LABEL for lbl in labels)
+
+
+def _dispatch_escalation(s: dict) -> bool:
+    """Fire escalate-to-orchestrator for one conflict-stuck PR + mark it idempotent.
+
+    Returns True iff the repository_dispatch POST succeeded. Best-effort labels the PR
+    with ``_ESCALATION_LABEL`` (creating the label if missing) so the next cron tick
+    skips it. The orchestrator's ``escalate`` agent then resolves the conflict on
+    live-defi-rollout (see escalate-to-orchestrator.yml + server/escalation.py).
+    """
+    repo = s["repo"]
+    number = int(s["number"])
+    context = (
+        f"Promotion PR {repo}#{number} ({s.get('head')}→{s.get('base')}) has been "
+        f"{s.get('state')} for {s.get('age_min')}m and cannot auto-merge. Resolve the merge "
+        f"conflict on live-defi-rollout, push, and let quality-gates-v2 re-gate it."
+    )
+    payload = {
+        "event_type": "escalate-to-orchestrator",
+        "client_payload": {
+            "repo": repo,
+            "pr_number": number,
+            "wall_type": "merge_conflict",
+            "context": context,
+            "authoring_slot": "ci",
+        },
+    }
+    proc = subprocess.run(
+        ["gh", "api", f"repos/{ORG}/{_PM_DISPATCH_REPO}/dispatches", "--input", "-"],
+        input=json.dumps(payload),
+        capture_output=True,
+        text=True,
+    )
+    if proc.returncode != 0:
+        print(f"  ! escalate dispatch failed for {repo}#{number}: {proc.stderr.strip()[:200]}", file=sys.stderr)
+        return False
+    # Mark idempotent (label create is --force so it's a no-op if it already exists).
+    subprocess.run(
+        [
+            "gh",
+            "label",
+            "create",
+            _ESCALATION_LABEL,
+            "--repo",
+            f"{ORG}/{repo}",
+            "--force",
+            "--color",
+            "B60205",
+            "--description",
+            "Handed to the orchestrator for conflict resolution",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    subprocess.run(
+        ["gh", "pr", "edit", str(number), "--repo", f"{ORG}/{repo}", "--add-label", _ESCALATION_LABEL],
+        capture_output=True,
+        text=True,
+    )
+    print(f"  -> escalated {repo}#{number} ({s.get('state')}) to orchestrator (merge_conflict)")
+    return True
+
+
+def escalate_stuck_prs(stuck: list[dict], *, dry_run: bool = True) -> list[dict]:
+    """Hand each conflict-stuck promotion PR to the orchestrator (idempotent via label).
+
+    Returns the PRs dispatched (in ``dry_run``, the PRs that WOULD be dispatched — used
+    by the report/tests). The label check happens per-candidate so a non-conflict stuck
+    PR (e.g. BLOCKED) never triggers a ``gh`` call.
+    """
+    dispatched: list[dict] = []
+    for s in conflict_prs_to_escalate(stuck, already_escalated=set()):
+        repo, number = s["repo"], int(s["number"])
+        if _pr_has_escalation_label(repo, number):
+            continue  # already handed off — don't re-dispatch
+        if not dry_run and not _dispatch_escalation(s):
+            continue  # dispatch failed — don't claim it
+        dispatched.append(s)
+    return dispatched
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", help="Watch a single repo instead of the full fleet.")
@@ -250,6 +455,13 @@ def main() -> int:
         "(stateless guard against re-paging ancient dead workflows). Cron is */15m.",
     )
     parser.add_argument("--now", help="Override 'now' (ISO8601) for deterministic testing.")
+    parser.add_argument(
+        "--escalate",
+        action="store_true",
+        help="Hand conflict-stuck (CONFLICTING/DIRTY) promotion PRs to the orchestrator via "
+        "escalate-to-orchestrator (idempotent per PR label). Default OFF — only the cron passes "
+        "it, so --repo/--now diagnostic runs never dispatch.",
+    )
     args = parser.parse_args()
 
     repos = [args.repo] if args.repo else REPOS
@@ -265,6 +477,13 @@ def main() -> int:
     alert, severity, report = build_report(transitions, stuck)
     print(report)
     write_github_output(alert, severity, report)
+
+    # Close the loop: hand merge-conflict-stuck promotion PRs to the orchestrator
+    # (resolve) rather than only paging. Idempotent per PR label so the */15m cron does
+    # not re-dispatch. Disabling auto-merge on a DIRTY PR is pointless (operator note) —
+    # the lever is resolution, gated by the REQUIRED quality-gates-v2 check.
+    if args.escalate and stuck:
+        escalate_stuck_prs(stuck, dry_run=False)
     return 0
 
 

@@ -252,6 +252,116 @@ jobs:
             -d '{"event_type": "staging-changed", "client_payload": {"reason": "sha-pinning-retest"}}' \
             || true
 
+      # ─────────────────────────────────────────────────────────────────────────
+      # STAGE 1.8: DEP-ORDER GATE (staging → main)
+      # Complement to quickmerge.sh STAGE 1.7 (LDR→staging dep-order gate).
+      # Prevents the UTL-before-UAC main race: before promoting repo X to main,
+      # every dep D must already be on main (ci_status = MAIN_GREEN or SIT_VALIDATED).
+      #
+      # ci_status on-main signal: python-quality-gates-v2.yml emits MAIN_GREEN when
+      # a QG push run passes on the `main` branch (landed with this commit).
+      # SIT_VALIDATED is also accepted as "dep is on main" because the promotion
+      # lifecycle resets ci_status from SIT_VALIDATED→FEATURE_GREEN only AFTER the
+      # dep is already merged to main — so SIT_VALIDATED is always a valid on-main
+      # signal during the promotion window.
+      #
+      # Safe-defaults (match STAGE 1.7 from quickmerge.sh):
+      #   - manifest file missing       → PASS  (no gate data available)
+      #   - repo not in manifest        → PASS  (repo has no recorded deps)
+      #   - dep not in manifest         → PASS  (dep not tracked; can't assert)
+      #   - dep ci_status unset/None    → PASS  (not configured, treat as external)
+      # A gate error (e.g. Python crash) logs a warning and does NOT block the
+      # promotion — consistent with how the existing readiness gate treats missing
+      # codex YAML (advisory-only).
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: STAGE 1.8 — Dep-order gate (staging → main)
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json
+          import sys
+
+          MANIFEST = "workspace-manifest.json"
+
+          # Statuses that mean dep IS on main (PASS)
+          ON_MAIN_STATUSES = {"MAIN_GREEN", "SIT_VALIDATED"}
+
+          try:
+              with open(MANIFEST) as f:
+                  manifest = json.load(f)
+          except Exception as e:
+              print(f"STAGE 1.8: manifest read error ({e}) — gate skipped (safe-default: pass)")
+              sys.exit(0)
+
+          staging_versions = manifest.get("staging_versions", {})
+          stable_versions = manifest.get("versions", {})
+          repos_data = manifest.get("repositories", {})
+
+          # Collect repos being promoted in this run (staging_versions differs from stable)
+          promoting = [
+              r for r, sv in staging_versions.items()
+              if not r.startswith("_") and sv != stable_versions.get(r)
+          ]
+
+          if not promoting:
+              print("STAGE 1.8: no repos being promoted — gate skipped")
+              sys.exit(0)
+
+          print(f"STAGE 1.8: Dep-Order Gate (staging → main)")
+          print(f"  Checking {len(promoting)} repo(s) for dep-on-main readiness")
+
+          blocked_pairs: list[str] = []
+
+          for repo in promoting:
+              repo_info = repos_data.get(repo)
+              if repo_info is None:
+                  print(f"  PASS (no manifest entry): {repo}")
+                  continue
+
+              deps = repo_info.get("dependencies", [])
+              if not deps:
+                  print(f"  PASS (no deps): {repo}")
+                  continue
+
+              repo_blocked: list[str] = []
+              for dep in deps:
+                  dep_name = dep.get("name", dep) if isinstance(dep, dict) else str(dep)
+                  if not dep_name or dep_name not in repos_data:
+                      # Dep not in manifest → safe-default pass
+                      continue
+                  dep_status = repos_data[dep_name].get("ci_status") or ""
+                  if not dep_status:
+                      # ci_status not set → safe-default pass (treat as external / not tracked)
+                      continue
+                  if dep_status not in ON_MAIN_STATUSES:
+                      repo_blocked.append(f"{dep_name}:{dep_status}")
+
+              if repo_blocked:
+                  for entry in repo_blocked:
+                      dep_name_only = entry.split(":")[0]
+                      dep_status_only = entry.split(":")[1]
+                      print(f"  ❌ DEP-ORDER BLOCK: {repo} → dep {dep_name_only} is {dep_status_only} (not yet on main).")
+                      print(f"     Fix: promote {dep_name_only} to main first, wait for its QG-on-main to emit MAIN_GREEN,")
+                      print(f"          then re-trigger SIT / staging-validated to promote {repo}.")
+                      blocked_pairs.append(entry)
+              else:
+                  print(f"  ✅ PASS: {repo} — all deps on main")
+
+          if blocked_pairs:
+              print()
+              print("══════════════════════════════════════════════════════════════")
+              print("❌ STAGE 1.8 DEP-ORDER GATE BLOCKED staging→main promotion.")
+              print(f"   {len(blocked_pairs)} dep(s) are NOT yet on main.")
+              print("   ci_status lifecycle: FEATURE_GREEN → STAGING_GREEN → SIT_VALIDATED → MAIN_GREEN")
+              print("   Required for staging→main: MAIN_GREEN or SIT_VALIDATED")
+              print("══════════════════════════════════════════════════════════════")
+              sys.exit(1)
+
+          print()
+          print("STAGE 1.8: ✅ All promoted repos have deps on main — dep-order safe")
+          PYEOF
+
       - name: Merge staging → main for all repos with staging changes
         id: promote
         env:

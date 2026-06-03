@@ -57,7 +57,10 @@ jobs:
 
       - name: Install uv
         shell: bash
-        run: pip install uv
+        # Pinned for uv.lock determinism — an unpinned uv reformats the lock (revision bump)
+        # even with identical deps, so CI's `uv lock --check` would false-fail.
+        # SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
+        run: pip install "uv==0.10.8"
 
       - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache
@@ -246,9 +249,15 @@ jobs:
         run: |
           [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping ci-status-update" && exit 0
 
-          # Determine ci_status based on job result AND which branch triggered
+          # Determine ci_status based on job result AND which branch triggered.
+          # Branch→status mapping mirrors the ci_status lifecycle in ci-status-update.yml:
+          #   main    → MAIN_GREEN  (dep-on-main gate signal for staging-to-main STAGE 1.8)
+          #   staging → STAGING_GREEN
+          #   other   → FEATURE_GREEN
           if [ "${{ job.status }}" != "success" ]; then
             STATUS="FAILING"
+          elif [ "$TRIGGER_BRANCH" = "main" ]; then
+            STATUS="MAIN_GREEN"
           elif [ "$TRIGGER_BRANCH" = "staging" ]; then
             STATUS="STAGING_GREEN"
           else

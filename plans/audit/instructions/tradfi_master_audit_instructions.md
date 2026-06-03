@@ -141,8 +141,9 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
       `available_at` · env-split bucket · batch=live. GREEN = all data-state.
 - [ ] (CF-5 tradfi reasons) every empty tradfi cell typed: `EXPECTED_KNOWN_SOURCE_GAP` / genuine `SOURCE_RETURNED_ZERO`;
       0 blank.
-- [ ] (CF-7 tradfi names) underscore data_type (`trades`/`tbbo`/`ohlcv_1m`/`ohlcv_15m`/`options_chain`/`futures_chain`) +
-      canonical ticker/exchange-symbol `venue`.
+- [ ] (CF-7 tradfi names) underscore data_type
+      (`trades`/`tbbo`/`ohlcv_1m`/`ohlcv_15m`/`options_chain`/`futures_chain`) + canonical ticker/exchange-symbol
+      `venue`.
 
 ## Success Criteria
 

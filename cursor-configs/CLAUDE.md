@@ -3,9 +3,10 @@
 > **Lean index** of workspace rules. Each rule has a 1-line essence + a pointer to its full SSOT. When a rule applies,
 > **read the SSOT pointer** — don't act from memory.
 >
-> Condensing 2026-06-02 (in progress): grew to ~1180 lines / 84KB; shrinking back toward ~600 by relocating detail to
-> codex SSOTs and keeping the sharp directive + 1-line pointer here. These rules are NOT waste — they encode behaviours
-> agents were missing; condense, don't drop.
+> Reworked 2026-06-02: 1180 → ~900 by relocating detail to codex SSOTs, then → ~955 by **folding in** the 5 former
+> per-domain `.claude/rules/*.md` files (their unique rules were missing here + never reached repo-level agents). Net
+> agent-loaded context dropped (those root files no longer load). Keep the sharp directive + 1-line pointer; these rules
+> are NOT waste — they encode behaviours agents were missing; condense, don't drop.
 >
 > **Size budget**: keep lean (~400–600 lines — not a hard floor). When a section outgrows its essence, push the detail
 > to its codex SSOT + leave the directive + pointer here. Hard cap 1500/90KB (review-blocking).
@@ -92,10 +93,28 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 
 ### Git discipline
 
-- `bash scripts/quickmerge.sh "msg" --agent` not `git push` for promotion-to-main. Always `--agent` in Claude Code.
-- Dirty deps → commit + push directly to `live-defi-rollout`. DO NOT quickmerge when dep repos dirty.
-- Two-pass: Pass 1 = `bash scripts/quality-gates.sh`. Pass 2 = `quickmerge --agent` (lint/format/typecheck/codex, no
-  tests).
+- **Staging-first (live model 2026-06-02)**: `bash scripts/quickmerge.sh "msg" --agent --files '<paths>'` to ship a
+  finished unit — quickmerge routes ALL commits → `staging` → SIT → `main`; `--to-staging` is a **no-op**. Never raw
+  `git push` for CODE (quickmerge early-exits "nothing to commit" on a clean tree → direct LDR pushes silently pile up
+  behind main). Always `--agent` in Claude Code.
+- **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit _promotes_ via
+  quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
+  (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
+- **Quality gates BEFORE quickmerge — non-negotiable order (HARD RULE)**: never invoke `quickmerge` until
+  `bash scripts/quality-gates.sh` has exited 0 on the current HEAD (the sentinel `.qg_last_passed_sha` is written on any
+  COMPLETE green run — fix-mode OR `--no-fix`; it is NOT gated on fix-mode). **Pass-1 MODE is a deliberate choice —
+  AUTO-FIX (`ruff format`/`--fix`) rewrites the WHOLE worktree, not just your files (HARD RULE, two cases):**
+  1. **Committing only your OWN named files** (the normal `quickmerge --agent --files '<paths>'` ship): format your
+     files first (`ruff format <paths>`), then run **`bash scripts/quality-gates.sh --no-fix`** — full gate, writes the
+     sentinel, **NO tree reformat**. Ship mode here would reformat unrelated/foreign files → re-dirties the slot, breaks
+     FF-sync, risks leaking foreign formatting into your commit.
+  2. **You knowingly intend a tree-wide reformat and will own everything AUTO-FIX touches** (a deliberate format pass /
+     solo worktree): ship mode `bash scripts/quality-gates.sh` (autofix ON) is correct — that is its purpose.
+
+  Pass 2 = `quickmerge --agent` (verifies sentinel == HEAD, skips redundant QG, opens the auto-merging `staging` PR) —
+  it hard-refuses if the sentinel is missing/stale, so skipping Pass 1 means the change never ran tests. SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model (the unit of work)".
+
 - `--dep-branch` is human-only.
 - **`git pull` rejected with `(would clobber existing tag)`** (stale local release tag vs semver-agent's canonical
   remote tag, e.g. `v1.0.0`/`v1.2.0`): fix with `git fetch origin --tags --force` (local-only; remote is canonical for
@@ -103,14 +122,17 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 — troubleshooting".
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
-- **agent-orchestrator EXCEPTION (codified 2026-06-01)**: `agent-orchestrator` is the ONE repo whose integration target
-  is **`main`, NOT `live-defi-rollout`**. It is operator/agent tooling — NOT production trading code — so it **bypasses
-  the production code-hardening path** (`live-defi-rollout` → `staging` → `main`). The slot model still applies: commit
-  to the slot branch `tab/<operator>/<N>` to isolate per-agent commits, then **fast-forward the slot branch to `main`**
-  (its slot branch tracks `origin/main`; every OTHER repo's slot branch tracks `origin/live-defi-rollout`). Do NOT route
-  agent-orchestrator changes through LDR/staging or treat its `main`-behind-LDR as drift to "promote" — `main` is its
-  canonical. (Its work may also appear on LDR via the `tab-mirror` GHA; that is harmless mirroring, not the target.)
-  SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
+- **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01 `main`-direct
+  exception)**: the target is for `agent-orchestrator` to follow the **same** `tab/<op>/<N>` → LDR → `staging` → SIT →
+  `main` flow as every other repo. **AO slot branches already track `origin/live-defi-rollout` like every repo** — the
+  former `agent-orchestrator`→`main` base override was REMOVED (it made every AO slot read as diverged; do NOT re-add it
+  in `workspace-manifest.json`, `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`). **Still
+  mid-migration**: AO has no `staging` branch and no `quickmerge.sh` yet (tracked in
+  `plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G6 — BLOCKED-OPERATOR, since
+  creating `staging` fires a fleet backend restart). So `main` is the deploy/CICD target reached via the
+  LDR→`staging`→SIT→`main` path; until `staging` lands, `main` legitimately lags LDR (do NOT treat `main`-behind-LDR as
+  drift; the `tab-mirror` GHA FF's tab→LDR). Once G6 lands `staging` + quickmerge, the path is fully standard. SSOT:
+  `codex/04-architecture/agent-orchestrator-overview.md` + the G6 plan above.
 
 ### Imports + types
 
@@ -146,41 +168,24 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 ### Manifest + honest absence
 
 Manifest v5+: 4-state `capture_status` (`captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`). Three
-categories of "missing": (1) expected gap → `record_empty(reason=<typed>)`, (2) unexpected gap →
-`DependencyError(fail_fast=True)`, (3) schema-drift bug → RAISE LOUD. Never emit silent placeholders.
+"missing" categories: expected → `record_empty(reason=<typed>)`; unexpected → `DependencyError(fail_fast=True)`;
+schema-drift → RAISE LOUD. Never emit silent placeholders. **Canonical schema = v9 workspace-wide** (`_index` 8→9 adds
+`source`/`asset_group`/`pipeline_mode`, bundled into each AG's single canonicalisation walk — coordinated by the
+`*_manifest_canonicalisation_2026_06_01.md` plans); **trust the actual `schema_version` distribution, never the
+constant**.
 
-**Current canonical manifest schema = v9, workspace-wide (all asset groups, NOT tradfi-only).**
-`MANIFEST_SCHEMA_VERSION` 8→9; each asset group's `_index` migrates 8→9 (adds `source`/`asset_group`/`pipeline_mode`
-cols) bundled into its single canonicalisation walk. Trust the actual `schema_version` distribution, never the constant.
-SSOT: the per-asset-group `*_manifest_canonicalisation_2026_06_01.md` plans coordinated by
-`defi_manifest_canonicalisation_2026_06_01.md`.
-
-- 33-member `EmptyConfirmedReason` closed set (29 `EXPECTED_*` + `SOURCE_RETURNED_ZERO` + `NO_INPUT_AVAILABLE` +
-  `LEG_ABSENT_LEFT` + `LEG_ABSENT_RIGHT`) in UAC `EMPTY_CONFIRMED_REASONS`. Blank reason →
-  `LegacyBlankErrorReasonError`. Enum:
-  `unified_api_contracts.canonical.crosscutting.honest_coverage.EmptyConfirmedReason`. Per-reason consumer policy table:
-  `codex/02-data/honest-absence-downstream-handling.md` § "Per-reason-group → consumer policy".
-- Cluster validation MANDATORY at `record_captured()` for bundled data_types. UTL raises `MissingClusterValidationError`
-  if kwargs absent.
-- **TradFi `source` column (v9 schema)**: `record_captured(source=...)` REQUIRED for all TradFi writes. UTL raises
-  `MissingSourceError` when `asset_group="tradfi"` and `source` omitted. Closed set: `"databento"` / `"massive"`. QG
-  STEP 5.64 enforces; use `# QG-allow: tradfi-source-not-applicable` for kwargs-forwarding patterns.
-  MANIFEST_SCHEMA_VERSION bumped 8→9. Multi-source union semantics: if ≥1 source is `captured`, downstream treats the
-  cell as `captured`. Source priority: `select_primary_available_source()` in
-  `unified_api_contracts.canonical.crosscutting.source_priority`. SSOT:
-  `codex/02-data/honest-absence-downstream-handling.md` § "Multi-source cell consumer policy". Landed:
-  `tradfi_massive_dual_source_2026_05_28.md` Phase 3.
-- `available_at` is per-row write-time. UTL `record_captured` asserts presence internally.
-- Service-output emission: every publish path through `_resolve_policy_output_data_type` + `_publish_emission_check`.
-  SSOT: `codex/02-data/service-output-emission-semantics.md`.
-- **Single-walk discipline (HARD RULE — post Phase 2.2)**: The Phase 2.2 GCS bundled migration walks every parquet ONCE.
-  Any post-Phase-2 plan proposing another whole-corpus GCS walk is **review-blocking**. New schema columns,
-  partition-key changes, or filename renames MUST bundle into the Phase 2 walk or wait for a scheduled next-migration
-  window. SSOT: `plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`.
+- `EmptyConfirmedReason` is a closed set (UAC `EMPTY_CONFIRMED_REASONS`); blank reason → `LegacyBlankErrorReasonError`.
+- Cluster validation MANDATORY at `record_captured()` for bundled data_types (else `MissingClusterValidationError`).
+- **TradFi `source=` REQUIRED** (`record_captured(source=...)`; closed set `databento`/`massive`; else
+  `MissingSourceError`; QG STEP 5.64). Multi-source union: ≥1 `captured` → cell `captured`; priority via
+  `select_primary_available_source()`.
+- `available_at` is per-row write-time (UTL asserts). Service-output emission via `_resolve_policy_output_data_type` +
+  `_publish_emission_check`.
+- **Single-walk discipline (HARD RULE)**: the Phase 2.2 migration walks every parquet ONCE — any new whole-corpus GCS
+  walk is review-blocking; bundle schema/partition/rename changes into it.
 
 SSOT: `codex/02-data/availability-manifest-and-data-status.md` + `codex/02-data/honest-absence-downstream-handling.md`
-(§ "Reason taxonomy" — 31-reason table; § "Per-service consumer-class audit" — per-service skip/alert rules; §
-"Per-reason-group → consumer policy" — per-reason ML/execution/rolling-window lookup).
+(reason taxonomy + per-service / per-reason consumer policy).
 
 ### Shard-granularity SSOT (CRITICAL)
 
@@ -212,20 +217,12 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 
 ### Other key rules
 
-- **Inherited-dirty-WIP resolution — liveness-gated, role-aware (HARD RULE codified 2026-06-01)**: a slot worktree
-  `.tabs/<N>/<repo>` is exclusively that slot's, so dirty content is almost always a previous session of _you_ that is
-  now gone → **inherit it** (commit as `chore(orphan-wip)` + push). The discriminator is **LIVENESS, not slot-id
-  identity**: a dead/absent/expired `.agent-claim` (or one owned by the session being respawned) → inherit; a DIFFERENT
-  live tmux session owning a fresh claim, OR a dirty file with mtime < 120 s (a live interactive operator/Cursor editor)
-  → **PROTECT, never stomp**. An agent resolving inherited WIP must first detect whether it is a background autonomous
-  worker (tmux `orch-slot-*` / `ORCHESTRATOR_*` env / claim `role`) or an interactive operator session — background:
-  `notify_*`-ping the operator + inherit once the prior maker's claim TTL expires; interactive: ASK the operator whether
-  other agents are finished, then commit. **Quarantine is never terminal** (a dead maker's WIP must eventually be
-  inherited); **never `git add -A` a wiped/mass-delete index** (FM2 guard refuses + quarantines). Slot integration base
-  is `live-defi-rollout` for EVERY repo incl. agent-orchestrator (a `main` base reads every slot as diverged —
-  2026-05-24 incident). SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Pre-spawn branch-state + liveness-gated
-  dirty resolution" + `agent-orchestrator/server/worktree_clean_check.py` +
-  `plans/active/orchestrator_autonomy_audit_remediation_2026_06_01.md`.
+- **Inherited-dirty-WIP — liveness-gated, role-aware (HARD RULE)**: a slot worktree is exclusively that slot's → dirty
+  content is usually a dead prior session of you → **inherit** (`chore(orphan-wip)` + push). Discriminator is **LIVENESS
+  not identity**: dead/expired `.agent-claim` → inherit; a DIFFERENT live session's fresh claim OR a file with mtime
+  <120 s (live editor) → **PROTECT, never stomp**. Background worker → `notify_*` + inherit on TTL expiry; interactive →
+  ASK first. Never `git add -A` a wiped/mass-delete index (FM2 guard). Slot base is `live-defi-rollout` for every repo.
+  SSOT: `codex/05-infrastructure/per-tab-worktrees.md` + `agent-orchestrator/server/worktree_clean_check.py`.
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in
   `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage: `clip_dates_to_source_coverage()` +
   `is_in_known_gap()`.
@@ -235,28 +232,20 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
 - **Manifest phantom audit**:
   `instruments-service/scripts/reconcile_phantom_manifest_rows_all.py --asset-group X --dry-run`. Do NOT write empty
   parquets to mask phantoms.
-- **Manifest consolidator runtime**: GCP: Cloud Run Jobs + Cloud Scheduler (20 Phase A jobs — 10 env-tiered + 10 legacy
-  flat, all `*/1 * * * *`; Phase D 14 Group B jobs TF authored pending `tofu apply`). AWS: Batch Fargate + EventBridge
-  Rules (10 Phase C + 16 Phase D Group B both LIVE 2026-06-01 — 26 rules ENABLED, 26 Batch job defs). Terraform:
-  `deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf` (GCP) +
-  `deployment-service/terraform/aws/manifest_consolidator_scheduler.tf` (AWS). Legacy GCE VM launcher DELETED 2026-05-20
-  (was `launch-manifest-consolidator-vm.sh`). DO NOT relaunch the VM. **Liveness contract (2026-06-01, live)**: the read
-  path loud-fails by DEFAULT on a stale/missing consolidated index when per-VM shards exist
-  (`ManifestConsolidatorStaleError`; `MANIFEST_ALLOW_STALE_FALLBACK=true` opts back into the recovery merge); a
-  `ConsolidatorLivenessMonitor` watchdog (Cloud Run Job `uts-prod-consolidator-liveness-watchdog`, Scheduler `*/2`)
-  emits `CONSOLIDATOR_DOWN` on heartbeat absence; `assert_consolidator_healthy(bucket)` is the shared preflight gate.
-  SSOT: `codex/05-infrastructure/manifest-consolidator-ssot.md` § "Liveness + health contract".
+- **Manifest consolidator runtime**: Cloud Run Jobs + Scheduler (GCP) / Batch Fargate + EventBridge (AWS) — NOT a VM
+  (legacy GCE launcher DELETED 2026-05-20; do not relaunch). TF:
+  `deployment-service/terraform/{gcp,aws}/manifest_consolidator_scheduler.tf`. **Liveness (live)**: read path loud-fails
+  by DEFAULT on a stale/missing index when per-VM shards exist (`ManifestConsolidatorStaleError`;
+  `MANIFEST_ALLOW_STALE_FALLBACK=true` to opt into recovery merge); watchdog emits `CONSOLIDATOR_DOWN`;
+  `assert_consolidator_healthy(bucket)` is the shared preflight gate. SSOT:
+  `codex/05-infrastructure/manifest-consolidator-ssot.md`.
 - **VM tarball**: `bash deployment-service/scripts/vm/create-code-tarballs.sh`. SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md`.
-- **VM launchers**: every `gcloud compute instances create` in `deployment-service/scripts/vm/`. VM naming: first
-  segment must be in `VM_PREFIX_TO_BUCKET` in `vm_zombie_watchdog.py`. **lifecycle_class required (Phase A.2)**: every
-  non-`None` entry MUST be
-  `VmPrefixSpec(bucket=..., lifecycle_class=LifecycleClass.<EPHEMERAL_BATCH|EPHEMERAL_EXPERIMENT|SCHEDULED_RECURRING|LONG_LIVED_LIVE>)`.
-  **Experiment VM name suffix**: `EPHEMERAL_EXPERIMENT` VMs include the run_id: `{prefix}{run_id}-{ts}` (e.g.
-  `exp-ml-{uuidv7}-{yyyymmdd}`). Reserved experiment prefixes: `exp-ml-`, `exp-strategy-`, `exp-execution-`. **Zone**:
-  default `asia-northeast1-c`. STOCKOUT fallback = `asia-northeast1-b` or `asia-northeast1-a` (same region). NEVER fall
-  back to another region (e.g. `us-central1`) — all GCS data is in asia-northeast1; cross-region egress adds cost and
-  latency and is caught during T+10min zone audit.
+- **VM launchers**: all `gcloud compute instances create` live in `deployment-service/scripts/vm/`; VM name's first
+  segment must be in `VM_PREFIX_TO_BUCKET` (`vm_zombie_watchdog.py`) with a `lifecycle_class`
+  (`EPHEMERAL_BATCH|EPHEMERAL_EXPERIMENT|SCHEDULED_RECURRING|LONG_LIVED_LIVE`); experiment VMs embed the run_id
+  (`exp-{ml,strategy,execution}-{uuidv7}-{ts}`). **Zone** default `asia-northeast1-c`; stockout falls back within-region
+  only (`-b`/`-a`), NEVER another region (all GCS data is in asia-northeast1).
 - **No fire-and-forget VM launches (CRITICAL)**: STARTED within 60s + ≥1 progress/hour + STOPPED/FAILED at exit. Verify
   at T+10min post-launch (deployment registry heartbeat + `gcloud instances describe` = RUNNING). SSOT:
   `codex/05-infrastructure/vm-tarball-deployment.md` § "Post-launch verification — T+10min check".
@@ -277,124 +266,56 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   JWT never reaches a worker. Regression symptom: login 200 but `/api/backends` 401s. SSOT:
   `codex/04-architecture/agent-orchestrator-overview.md` §Auth + §"Auth — long-lived setup-tokens";
   `codex/12-agent-workflow/orchestrator-multi-vm-topology.md`.
-- **Agent-orchestrator auth — setup-tokens only (HARD RULE codified 2026-05-28, Phase 4b-cleanup)**: every account in
-  `agent-orchestrator/data/config/accounts.json` MUST authenticate via its own `oauth_token_env_file`
-  (`~/.claude-accounts/<id>.env`) containing a long-lived setup-token minted via `claude setup-token`. **Never copy
-  `~/.claude/.credentials.json` between machines**. The legacy `.credentials.<id>.json` swap path + the
-  `swap_claude_account.sh` flow are removed; the runtime refuses to spawn a worker / agent / `/usage` probe for an
-  account with no env file. To onboard a new account: (1) run `claude setup-token` on a browser machine, (2) write
-  `CLAUDE_CODE_OAUTH_TOKEN=…` + `unset ANTHROPIC_API_KEY` to `~/.claude-accounts/<id>.env` (mode 600), (3) push to the
-  creds bucket (`gs://central-element-323112-orchestrator-creds/accounts/` and
-  `s3://uts-orchestrator-creds-427895769566/accounts/`), (4) add `oauth_token_env_file` + `setup_token_expires_at` to
-  `accounts.json`. SSOT: `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
-- **Agent-orchestrator backlog is plan-driven (HARD RULE codified 2026-05-28, Phase 6)**: tasks in
-  `agent-orchestrator/data/config/backlog.yaml` are auto-derived from `- [ ]` checkboxes in `plans/active/*.md` by
-  `server/regen_backlog_from_plan.py`. **Do not hand-edit `backlog.yaml` to add new tasks** — write the todo in the
-  relevant active plan file using the canonical format (`- [ ] [CATEGORY] P<0-3>. Description`) and let the next
-  `PlanRegenLoop` tick (≤6h, or POST `/api/backlog/regen` for immediate) pull it into the backlog. Idempotency is
-  content-based (dedup by raw todo line), so flipping or editing a todo in the plan won't reset the backlog state.
-  Hand-edits are still legitimate for _tuning_ derived tasks (priority, repos, target_slot, est_hours, collision_group)
-  once they've been auto-created. SSOT: `agent-orchestrator/server/regen_backlog_from_plan.py` +
-  `unified-trading-pm/plans/PLAN_FORMAT.md`.
-- **Fanning out work = writing tracked plan todos. The plan todo IS the dispatch (HARD RULE codified 2026-06-01)**:
-  whenever you decide a unit of work should be done by a slot/worker — "a slot should do X", "this needs a dedicated
-  per-repo pass", "fan this out", "assign to slot N", "out of scope for me, hand off" — the decision is **not real until
-  it is a `- [ ]` todo in a PM active plan** using the canonical format (`- [ ] [CATEGORY] P<0-3>. Description`) with
-  the **target repo named** and **enough self-contained context that a cold sub-agent can act** (it starts fresh + reads
-  `SUB_AGENT_MANDATORY_RULES.md`). That plan todo is the ONLY sanctioned dispatch path: `PlanRegenLoop` derives the
-  orchestrator backlog from it (per the rule above) and a slot picks it up. **Banned (review-blocking):** punting work
-  in chat / a summary only ("X is blocked, needs a slot"), verbally assigning a slot without a plan todo, or marking an
-  audit/diagnosis "done" when its follow-ups are only described, not tracked. **Grep-to-verify before ending any session
-  that identified fan-out work**: `rg "<the work>" plans/active/` — no `- [ ]` match → STOP, write the todo first. A
-  diagnosis that names N repos needing fixes MUST leave N tracked todos behind. Reference incident (2026-06-01): a
-  7-repo QG-green remediation surfaced mid-session; per this rule each repo became a tracked todo in
-  `cicd_contract_hardening_2026_06_01.md` rather than a verbal "fan it out". Composes with: _Capture Discoveries As Plan
-  Todos Immediately_, _Agent-orchestrator backlog is plan-driven_, and _Sub-Agents need full rules_ (the todo carries
-  the context the cold worker needs). SSOT: `plans/PLAN_FORMAT.md` + `codex/12-agent-workflow/`.
-- **Workflow-capable GH_TOKEN everywhere — no permission-based work-stoppage (HARD RULE codified 2026-06-01)**: every
-  execution context — **each slot, the operator/Harsh main worktree, AND every orchestrator VM worker** — MUST have a
-  `GH_TOKEN` that can edit `.github/workflows` (i.e. `GH_PAT` from Secret Manager, which carries fine-grained
-  **"Workflows: read/write"**). The gh CLI **keyring login token (`gho_…`) lacks the `workflow` scope**
-  (`repo, read:org, gist, admin:public_key` only), so any `gh`-API / HTTPS push that creates or updates a workflow file
-  is silently refused — which stalled a CI v1→v2 migration mid-flight (2026-06-01). **Canonical load:**
-  `source unified-trading-pm/scripts/workspace/load-gh-token.sh` (fetches `GH_PAT` from GCP SM → AWS SM, exports
-  `GH_TOKEN`+`GITHUB_TOKEN`; env beats the keyring for gh + git). It is sourced by `workspace-bootstrap.sh` (local
-  hosts) and MUST be exported into orchestrator VM worker envs by `agent-orchestrator/scripts/bootstrap_vm.sh`.
-  `verify-slot-host-symmetry.sh` now probes workflow-capability (non-mutating PUT → 409/422 = OK, 403 = blocked) and
-  FAILS a host that lacks it. **Note:** git push **over SSH** (a user key) is exempt from the workflow-scope
-  restriction, so ssh-protocol slots can already push workflow files via `git`; this rule closes the `gh`-API / HTTPS
-  path that is restricted. SSOT: `scripts/workspace/load-gh-token.sh` + `codex/12-agent-workflow/`.
-- **Orchestrator regen is authoritative — yaml + state.db must match current plans. No zombies. (HARD RULE codified
-  2026-05-30)**: `regen_backlog_from_plan.py` is the single source of truth for backlog state. `backlog.yaml` and
-  `state.db` MUST reflect only tasks whose `- [ ]` checkbox is open in an active plan.
-  `ORCHESTRATOR_REGEN_PRUNE_STALE=true` is the default on every fleet VM (enabled via
-  `/etc/systemd/system/orchestrator.service.d/prune-stale.conf`). If you observe `state.db` queued-row count drifting
-  more than ±5 from `backlog.yaml` task count on any VM, run `scripts/orchestrator/verify_fleet_prune_state.sh` to audit
-  and `scripts/orchestrator/enable_prune_stale.sh` to re-enable pruning. SSOT:
-  `plans/active/agent_orchestrator_backlog_state_alignment_2026_05_29.md`.
-- **Orchestrator autospawn: workers self-heal (HARD RULE codified 2026-05-30)**: `ORCHESTRATOR_AUTOSPAWN_ENABLED=true`
-  is the default on every fleet VM (enabled via `/etc/systemd/system/orchestrator.service.d/autospawn.conf`). The
-  `AutoSpawnLoop` in `server/autospawn.py` wakes a slot automatically when queue > 0 AND no active worker AND account
-  headroom > 50%. Manual SSM spawn (`/api/slots/<id>/spawn`) is only needed for cold-start of a new VM that has never
-  had a drop-in written. If a VM stays idle > 15 min with queued tasks, check that the drop-in exists and
-  `ORCHESTRATOR_AUTOSPAWN_ENABLED=true` is in the unit env. SSOT: `plans/active/autospawn_idle_vms_2026_05_30.md`.
-- **Orchestrator host-offline failover (HARD RULE codified 2026-05-30)**: Soft-pinned tasks fall over to fleet VMs
-  automatically when a host's heartbeat is silent > 10 min. Hard pins (`failover_allowed: false` in plan task YAML) stay
-  — honoured regardless of host state. `ORCHESTRATOR_FAILOVER_ENABLED=true` on **vm-orchestrator only** (single source
-  of failover decisions — enabling on multiple VMs causes race conditions). Enabled via
-  `/etc/systemd/system/orchestrator.service.d/failover.conf`. Re-routing is logged as `failover_rerouted` activity
-  events + rolls back automatically (`failover_rolled_back`) when the host returns with unclaimed tasks. Script:
-  `scripts/orchestrator/enable_failover.sh`. SSOT: `plans/active/harsh_pc_dispatch_failover_2026_05_30.md`.
-- **Orchestrator worker liveness: WorkerLivenessWatchdog auto-kills stuck/silent/context-full workers (HARD RULE
-  codified 2026-06-01)**: `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true` is the default on every fleet VM (enabled via
-  `/etc/systemd/system/orchestrator.service.d/watchdog.conf`). The `WorkerLivenessWatchdog` in
-  `server/worker_liveness_watchdog.py` detects three failure modes every 60 s: (1) **stuck-at-prompt** — pane shows
-  non-empty buffered input with no delta for ≥3 consecutive ticks; (2) **heartbeat-silent** — no `/progress` ping in
-  > 900 s AND tmux alive AND slot not blocked; (3) **context-full** — pane matches `/clear to save Xk tokens` (immediate
-  > kill). After a kill, `AutoSpawnLoop` respawns a fresh session within 60 s. **Operator must not manually kill tmux
-  > sessions to restore velocity** — the watchdog handles it. Anti-thrash: per-slot 5-min kill cooldown + per-VM 20
-  > kills/day cap (Slack alert fires + watchdog goes dormant on cap). Never kill a `blocked` slot. Never kill during
-  > `Crunched for / Cogitated for / Worked for / Baked for` pane state (active extended-thinking). Rollout script:
-  > `scripts/orchestrator/enable_worker_watchdog.sh`. SSOT:
-  > `plans/active/agent_orchestrator_worker_liveness_watchdog_2026_06_01.md`.
+- **Agent-orchestrator accounts auth via setup-tokens only**: each account in `accounts.json` uses its own
+  `oauth_token_env_file` (`~/.claude-accounts/<id>.env`, a `claude setup-token`); **never copy
+  `~/.claude/.credentials.json`** (the legacy `.credentials.<id>.json` / `swap_claude_account.sh` path is removed).
+  SSOT: `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+- **Orchestrator backlog is plan-driven + regen-authoritative (HARD RULE)**: backlog tasks auto-derive from `- [ ]`
+  checkboxes in `plans/active/*.md` via `server/regen_backlog_from_plan.py` — **never hand-add to `backlog.yaml`**
+  (write the todo in the plan; next `PlanRegenLoop` tick / `POST /api/backlog/regen` pulls it; hand-edits only TUNE
+  derived tasks). `yaml`+`state.db` reflect ONLY open plan checkboxes (`ORCHESTRATOR_REGEN_PRUNE_STALE=true` default —
+  no zombies; ±5 drift → `verify_fleet_prune_state.sh`). SSOT: `server/regen_backlog_from_plan.py` +
+  `agent_orchestrator_backlog_state_alignment_2026_05_29.md`.
+- **Fanning out work = a tracked plan todo — the todo IS the dispatch (HARD RULE)**: any "a slot should do X / fan out /
+  hand off / out of scope for me" is NOT real until it's a `- [ ] [CATEGORY] P<n>. …` todo in a PM active plan with the
+  **target repo named** + cold-start context (worker reads `SUB_AGENT_MANDATORY_RULES.md`). Banned: verbal/chat
+  dispatch, or marking an audit "done" with follow-ups only described. **Grep `plans/active/` to verify** before ending
+  a session that found fan-out work.
+- **Workflow-capable `GH_TOKEN` everywhere** (each slot + operator + every VM worker):
+  `source scripts/workspace/load-gh-token.sh` (GH*PAT from SM, carries Workflows:write). The keyring
+  `gho*`token lacks the`workflow`scope → silently refuses workflow-file pushes via`gh`-API/HTTPS (SSH `git`push is exempt);`verify-slot-host-symmetry.sh`
+  probes + fails a host lacking it.
+- **Orchestrator runtime self-heals (defaults ON, fleet-wide)**: **AutoSpawn** wakes an idle slot when queue>0 + no
+  active worker + headroom>50% (`ORCHESTRATOR_AUTOSPAWN_ENABLED`; manual `/api/slots/<id>/spawn` only for cold-start);
+  **host-offline FAILOVER** (vm-orchestrator ONLY — multi-VM races) reroutes soft-pinned tasks when a host is silent
+  > 10 min, hard pins (`failover_allowed: false`) stay, auto-rolls-back on return (`ORCHESTRATOR_FAILOVER_ENABLED`);
+  > **WorkerLivenessWatchdog** kills stuck-at-prompt / heartbeat-silent(>900 s) / context-full workers every 60 s then
+  > AutoSpawn respawns (`ORCHESTRATOR_WORKER_WATCHDOG_ENABLED`; per-slot 5-min cooldown + 20 kills/day/VM cap; never
+  > kills a `blocked` or extended-thinking slot) — **operator must NOT manually kill tmux to restore velocity**. SSOT:
+  > `codex/04-architecture/agent-orchestrator-overview.md` §Auto-spawn / §Watchdog / §Failover.
 - **Temporary state must have a named successor plan** in `## Temporary states + their canonical follow-up plans`.
 
 ### Two teammates × multiple parallel agents (CRITICAL)
 
-Harsh AND Ikenna both run parallel agents. Untracked files / dirty mid-edit / recent remote commits = someone else's
-in-flight work. **Do not touch files outside your clear context.**
+**Per-tab worktrees now isolate every worker** (`.tabs/<N>/<repo>` on `tab/<op>/<N>`), and execution runs on the
+**orchestrator VMs** — Ikenna + Harsh author/audit plans locally, the orchestrator assigns them to VM workers, and all
+code / quality-gates / quickmerge happen there. That isolation has **largely solved** the old shared-tree collision
+class: you rarely share a tree with another live agent. The file-ownership discipline + the rare edge-case recoveries
+still apply — full step-by-step recipes live in `codex/05-infrastructure/per-tab-worktrees.md` (§ "Step 7 —
+troubleshooting", § "Isolated-worktree promotion under shared-worktree ref races", § "Foot-gun mitigations vs.
+shared-tree model"). The invariants that must stay in-head:
 
-- Never `git checkout origin/<branch> -- .` (dumps remote work) or `git checkout -- <file>` on foreign-owned dirty files
-  (UNRECOVERABLE).
-- Right recovery: (a) scope tool to YOUR files; (b) stash foreign files before tool runs; (c) accept you can't auto-fix
-  foreign code.
-- **Untracked file in a dep repo = NOT YOURS.**
-- QG fails on file you don't own → tell the user.
-- **Autostash conflict during rebase → `git rebase --abort`, do not patch around.** If `git pull --rebase --autostash`
-  (or `git rebase --autostash`) reports `Applying autostash resulted in conflicts. Your changes are safe in the stash.`,
-  the autostash holds **foreign-dirty** content that conflicted with the rebased HEAD. Safe recovery:
-  `git rebase --abort` returns the repo to its pre-rebase state with the autostash intact. Then explicitly stash only
-  YOUR files by name (`git stash push -- path/to/your_file`), redo the rebase, and pop your stash back. **NEVER
-  `git checkout HEAD -- <conflicted_file>` to clear markers and then `git stash drop`** — that destroys the foreign
-  agent's only copy of their WIP. The dropped-commit hash printed by `git stash drop` is reachable via
-  `git stash store <hash>` until next GC, but treat that as a near-miss incident, not a routine path. Incident
-  reference: slot-1 2026-05-19 strategy-service autostash drop (recovered via dangling commit, logged in
-  `ikenna_orchestrator/pings/slot_1.md`). Full SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 —
-  troubleshooting".
-- **Concurrent agent in your shared `.tabs/<N>/` worktree (refs move under you) → isolated-worktree promotion, NOT
-  `FETCH_HEAD`.** When another session OR an orchestrator-spawned worker shares your slot's `.git`, it rewrites `HEAD` /
-  `FETCH_HEAD` / the slot branch mid-task: your push to `live-defi-rollout` is rejected and `FETCH_HEAD`-based
-  diagnostics LIE (you may wrongly conclude "my work is already on LDR" — the moving `FETCH_HEAD` briefly pointed at the
-  worker's local tip that contained your own commit). (1) Verify ONLY against the stable remote-tracking ref:
-  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>` —
-  never `FETCH_HEAD`. (2) Do NOT autostash-rebase the shared dirty tree (same foreign-WIP foot-gun as above). (3)
-  Promote YOUR work via a throwaway worktree off the integration branch — never touches the shared `.tabs/<N>/` tree, so
-  the concurrent worker is undisturbed: `git worktree add --detach /tmp/promote-$$ origin/live-defi-rollout` →
-  cherry-pick your commit → on conflict KEEP LDR's side for the other agent's hunks + trim any of their snapshot that
-  auto-merged in but isn't on LDR (`git checkout origin/live-defi-rollout -- <file>` then re-add only your hunk) → gate
-  on `git diff --cached origin/live-defi-rollout` showing YOURS-ONLY lines → push → `git worktree remove --force`. Full
-  SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Isolated-worktree promotion under shared-worktree ref races".
-  Incident: slot-1 2026-06-01 data-source-provenance promotion.
+- **Don't edit unfamiliar files.** Untracked / mid-edit-dirty / recently-pushed = someone else's in-flight work.
+  **Untracked file in a dep repo = NOT YOURS.** QG fails on a file you don't own → tell the user.
+- **Never** `git checkout origin/<branch> -- .` (dumps remote work) or `git checkout -- <file>` /
+  `git checkout HEAD -- <file>` on a dirty file you don't own — UNRECOVERABLE.
+- **Verify your work against the stable remote ref, never `FETCH_HEAD`** (it lies under a concurrent session):
+  `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>`.
+- **Autostash conflict on rebase** (`Applying autostash resulted in conflicts`) → `git rebase --abort` (state safe,
+  autostash intact), stash only YOUR files by name, redo — **NEVER** `git checkout HEAD -- <file>` then `git stash drop`
+  (destroys the foreign agent's only WIP copy). § "Step 7" above.
+- **Rare — a concurrent session shares your slot's `.git`** → promote your commit via a throwaway worktree off the
+  integration branch, never touching the shared tree. § "Isolated-worktree promotion" above.
 
 ### Clear context = implement, don't ask
 
@@ -412,6 +333,75 @@ says "AWAITING USER DIRECTION."
 - Firebase `execution-full` enforcement is at UI layer for May-23; backend Firebase integration is post-cutover.
 - Valid promote targets May-23: `paper_1d` → `live_early` only. `live_full` is post-cutover.
 - SSOT: `codex/04-architecture/promote-workflow-architecture.md` + `codex/09-strategy/operational/cli-promote-paths.md`.
+
+---
+
+## Cross-Cutting Rules (docs · code-quality · agent-behavior · Python · UI · PM)
+
+Folded 2026-06-02 from the per-domain `.claude/rules/*.md` files (now tombstoned, operator removes from disk — they were
+workspace-root-only + untracked, so these rules never reached repo-level agents; now they propagate via this one SSOT).
+
+### Docs + code quality
+
+- **No summary docs.** Never create `*_SUMMARY.md`/`*_STATUS.md`/`READY_TO_*`/`COMPLETION_*`/`FINAL_*`. Docs only if
+  explicitly requested or they're specs (architecture/API/schema). Finish a task → respond with text, not a recap file.
+- **Prettier before commit** on `.md`/`.json`/`.yaml`/`.ts`/`.tsx`/`.css`: `npx prettier --write <file>`.
+- **Delete deprecated code.** No parallel old+new paths; no backward-compat shims / re-export stubs / `_old.py` /
+  `# deprecated` (only exception: `__init__.py` public-API re-exports). Find consumers with `rg`, update all, delete
+  old.
+- **Never revert local changes** — no `git reset --hard`/`git clean -fd`/`git restore`/`git checkout` that discards
+  uncommitted work; `git stash push -u -m` before a branch switch (on feature branches, local dep changes ARE the
+  feature).
+- **Runtime verification** — never claim "done" without running the code, waiting 8-10s, reading the terminal, grepping
+  for errors. "Compiles" ≠ "works".
+- **Plans live only under `unified-trading-pm/`** (`plans/active/` working · `plans/ai/` ephemeral · `plans/epics/` ·
+  `plans/archive/`) — never in the workspace root, codex root, or a service's `docs/`.
+- **Rollout tracking** — "plan complete" = ALL in-scope repos updated, OR scope explicitly limited with a pending list.
+
+### Agent behavior
+
+- **Context7 for external libs** — append "use context7" for React/Next/Tailwind/library/API questions.
+- **Parallel agents** max 10 (different repos always safe; same file never). **Sub-agents** are ~10× cheaper + preserve
+  context — use for multi-repo / 3+ steps / >100K-token reads; they return ONLY final results (≤400 tokens). (They start
+  fresh + don't inherit rules — see § "Sub-Agents & Autonomous Agents" for the mandatory `SUB_AGENT_MANDATORY_RULES.md`
+  paste.)
+- **Rule-amnesia stop** — halt the session if an agent uses `os.getenv()` / `pip install` / direct `git push` /
+  `setup_cloud_logging` / suggests skipping tests.
+
+### Python service/library specifics
+
+- **No pickle** (joblib/JSON/Parquet instead); no bare `except:`; no creds in repo. **`setup.sh`** mandatory +
+  idempotent per repo. **File limits**: 900 lines max (warn 700) / function 200 / method 50 / class 900 / complexity 10
+  / imports 30 / params 5 / coverage ≥70%.
+- **engine/adapters/cli**: `engine/` has ZERO imports from `adapters/`; adapters <100 lines. **Singleton adapter**
+  (`_ADAPTER_CACHE`, one per venue). **Concurrency**: I/O-bound MAX_WORKERS=16, CPU-bound 1-3; RAM 85%→reduce 50%,
+  90%→emergency shutdown. **aiohttp** not `requests` in async code.
+- **ConfigStore** from `unified_trading_services` for hot-reload runtime config. **IBKR** only via `ibkr-gateway-infra`
+  (mock at the `ib_insync` object level — no HTTP VCR).
+- **UTC datetimes always** — `datetime.now(timezone.utc)`; never `datetime.now()` / `datetime.utcnow()` /
+  `datetime.today()`.
+- **Cloud-agnostic I/O** — all storage/secrets via `get_storage_client()` / `get_secret_client()`
+  (unified-cloud-interface); never `from google.cloud import *` or `import boto3` directly. Project-id env =
+  `GCP_PROJECT_ID` (never `GOOGLE_CLOUD_PROJECT` / `GCP_PROJECT`); API keys from Secret Manager, never `os.environ`.
+- **Event metadata** (`setup_events`/`log_event`, 11 lifecycle events) — `correlation_id` on coordination events,
+  `duration_ms` on COMPLETED, `stack_trace` on FAILED, `client_order_id` on execution events.
+- **Dep tiers** — T0 (no unified deps) → T1 (T0 only) → T2 (T0+T1); no circular imports. **CI test-in-image** — quality
+  gates run INSIDE the Docker image; never git-clone source in Cloud Build.
+
+### UI (TypeScript) specifics
+
+- **No Python tools in UI repos** — tsc/ESLint/Vitest/Playwright, never uv/basedpyright/pytest/ruff. **TS strict**:
+  `tsc --noEmit`, no `any`, no `@ts-ignore`, zero ESLint warnings.
+- **Vitest `pool: "forks"`** (not threads — prevents zombie node procs); `CI=true npm test -- --run`. **Build smoke**:
+  `NEXT_PUBLIC_MOCK_API=true pnpm build`. **UI is its own repo** — React/TS never inside a Python service repo.
+  (Composes with the playwright gate above.)
+
+### PM repo (`unified-trading-pm`, Level 0)
+
+- SSOT template host (`setup.sh`/`quality-gates.sh`/`quickmerge.sh`/`version-bump.yml` copied to all repos) +
+  `workspace-manifest.json` registry. NOT a Python package. `workspace-manifest.json` change → regen DAG SVG
+  (`scripts/manifest/generate_workspace_dag.py`). Never push PM unless dependency-alignment passes
+  (`check-dependency-alignment.py --json` → `"aligned": true`).
 
 ---
 
@@ -596,49 +586,15 @@ Findings Triage). Full SSOT: `codex/11-project-management/active-plan-inventory-
 
 ## Local slot host = VM slot host — symmetric worker model (HARD RULE codified 2026-05-20)
 
-> Operator 2026-05-20: "aren't we still pinging locally to the same server the UI and API sees so that locally we can
-> act like we are just another slot in the pipeline — that's what Harsh is doing or supposed to do, no? Should be fixed,
-> documented, tested, in CLAUDE.md."
-
-**Every host that owns slot worktrees follows the same contract**, regardless of whether it's the VM, the operator's
-laptop, or Harsh's laptop:
-
-| Behavior                                  | VM  | Operator laptop | Harsh laptop       |
-| ----------------------------------------- | --- | --------------- | ------------------ |
-| `slot-cron-ff-pull.sh` every 5 min        | ✓   | ✓               | ✓ (post-migration) |
-| `slot-git-status-report.sh` every 5 min   | ✓   | ✓               | ✓ (post-migration) |
-| Per-slot worktree on `tab/<operator>/<N>` | ✓   | ✓               | ✓                  |
-| Commit + Push + Flip same-turn HARD RULE  | ✓   | ✓               | ✓                  |
-| Spawn workers via `/api/slots/<N>/spawn`  | ✓   | optional        | optional           |
-| Interactive Claude Code chat as a slot    | ✓   | ✓               | ✓                  |
-
-**Operator's interactive session counts as a slot.** When the operator works in `.tabs/<N>/<repo>/` from a Cursor /
-Claude Code window, they ARE slot N for the purposes of:
-
-- The slot's branch convention (`tab/<operator>/<N>`)
-- The Commit + Push + Flip plan checkbox HARD RULE (no 9-hour-old uncommitted WIP; ship per shippable unit)
-- The git-status reporter (their dirty state shows on the dashboard alongside spawned workers)
-- The FF-pull cron (their worktree gets FF-pulled the same as a worker's)
-
-**The orchestrator does NOT differentiate** between "interactive operator session" and "spawned tmux worker" for these
-purposes. Both are slots. Both show on the Fleet tab. Both follow the same rules. The only operational difference is
-whether the slot is `paused` (interactive — operator controls it) or `working` (orchestrator dispatches tasks to it).
-
-**Verification (mandatory on every host setup)**: `bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh` —
-returns exit 0 if both crons are installed + last run within 10 min + last report posted to backend OK.
-
-**Why this matters**: a local 9-hour-old dirty WIP on the operator's own slot is the same anti-pattern as a worker
-sitting on uncommitted code for 9 hours. Both violate Commit+Push+Flip. Both block downstream FF-pulls. Both create the
-"stale code" problem the whole worktree model exists to prevent. The orchestrator can't tell the difference, which is
-the point: same model, same rules, same accountability.
-
-SSOTs:
-
-- `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` — Harsh's host onboarding recipe
-- `agent-orchestrator/agents/worker.md` — the slot-as-worker contract (applies to interactive sessions too)
-- `unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh` — FF-pull cron (works on macOS + Linux)
-- `unified-trading-pm/scripts/dev/slot-git-status-report.sh` — drift reporter (cross-platform)
-- `unified-trading-pm/scripts/verify-slot-host-symmetry.sh` — verification (test new hosts)
+**Every host owning slot worktrees follows the SAME contract** — VM, operator laptop, Harsh laptop alike: per-slot
+worktree on `tab/<operator>/<N>`, `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min, and Commit + Push +
+Flip same-turn. **An interactive Claude Code session IS slot N** (same branch, same Commit+Push+Flip, same FF-pull +
+status-report); the orchestrator doesn't differentiate it from a spawned worker (only `paused` vs `working` differs). So
+a 9-hour uncommitted local WIP is the same anti-pattern as a stale worker — both block FF-pulls + create the "stale
+code" the worktree model prevents. **Verify every host**: `bash scripts/verify-slot-host-symmetry.sh` (exit 0 = both
+crons installed + ran <10 min + report posted). SSOTs: `codex/12-agent-workflow/harsh-laptop-migration-2026-05-20.md` ·
+`agent-orchestrator/agents/worker.md` · `scripts/dev/slot-cron-ff-pull.sh` · `slot-git-status-report.sh` ·
+`scripts/verify-slot-host-symmetry.sh`.
 
 ## Plan Hygiene — Frontmatter, Line Caps, Archive Candidates
 
@@ -650,90 +606,29 @@ orchestrator inboxes on failure. Full SSOT: `codex/11-project-management/plan-hy
 
 ## Commit + Push + Flip Plan Checkboxes As You Ship Each Item (HARD RULE)
 
-> **The #1 source of wasted reallocation + false-progress reporting.** Repeated violation observed 2026-05-14/15: slots
-> 5+7 each shipped 15+ items without flipping work-split checkboxes; daily analysis reported ~14% progress when actual
-> was ~70%. **Half-1 without Half-2 in the same agent turn is a rule violation — NOT "I'll do it later".**
+> **#1 source of wasted reallocation + false-progress** (2026-05-14/15: slots shipped 15+ items unflipped; dashboard
+> showed ~14% vs ~70% actual). Half-1 without Half-2 in the SAME agent turn is a violation — not "later".
 
-**Half 1 — Commit + push at every shippable unit.** Pushed = real. Per-shippable-unit cadence, NOT per-hour, NOT
-per-session.
+**Half 1 — commit + push at every shippable unit** (pushed = real; per-unit, not per-hour/session). Pre-commit
+(MANDATORY): `git status && git diff --cached --stat` (NO path arg — see the whole index); `git restore --staged <file>`
+anything not yours; stage by name, never `git add .`/`-A`. Bundle Edit→stage→commit→push in ONE Bash call; `--no-verify`
+authorized only on prek auto-restore symptoms ("Restored working tree changes from .../prek/patches/").
 
-Pre-commit check (MANDATORY — catches accidental bundling):
+### Half 2 — flip the plan checkbox in the SAME AGENT TURN as Half-1 (the most-violated half)
 
-```bash
-git status && git diff --cached --stat   # NO PATH ARGUMENT — see entire index
-```
+The next Bash call after the code push, before any new item — NOT next session / EOD. Flip `N. [item]` →
+`N. ✅ [item] — <repo>@<sha> + evidence`; commit with the **MANDATORY `docs(plans):` prefix** (`plan(...)` is
+hook-rejected) + push. **Self-check before the next item**: `git log --oneline -5` should alternate code-commit ↔
+`docs(plans): flip`; two consecutive code commits with no flip between → STOP + flip first. Found unflipped items
+(recovery/audit) → stop new work, walk the branch log, ship one
+`docs(plans): backfill plan-flips for items X/Y/Z — <repos>@<shas>`, then resume.
 
-If anything not yours: `git restore --staged <file>` before commit.
+**Why**: an unflipped item is invisible to the orchestrator → it re-dispatches to another slot that re-implements
+(wasted hours + conflicts) — a flipped checkbox is the orchestrator's done-signal, not "bookkeeping".
 
-**Foot-gun #4** (prek auto-restore): bundle Edit→stage→commit→push into ONE Bash call. `--no-verify` IS authorized when
-auto-restore symptoms observed (diagnostic: "Restored working tree changes from .../prek/patches/" in output). Stage
-explicitly by name; never `git add .` / `-A`.
-
-### Half 2 — Flip the checkbox IN THE SAME AGENT TURN as Half-1 (the most-violated half — read carefully)
-
-**"Same logical unit"** = the next Bash invocation after the code push, in the same agent turn, before starting any new
-item. NOT next session. NOT end of day. NOT "when I remember". If you committed code at 14:32 and the flip commit lands
-at 17:50, you violated this rule for 3h18m.
-
-**The compliance pattern (memorize)**:
-
-```bash
-# Step 1: ship code
-cd <service-repo> && git add <my-files> && git commit -m "feat: ..." && git push origin HEAD:live-defi-rollout
-SHA=$(git rev-parse --short HEAD)
-
-# Step 2: IMMEDIATELY flip the plan checkbox (next Bash call, same turn)
-cd ${WORKSPACE_ROOT}/unified-trading-pm
-# Edit work_split or plan-of-record:
-#   N. [item description]
-# becomes
-#   N. ✅ [item description] — <repo>@<SHA> + brief evidence
-git add plans/active/<plan>.md
-git commit -m "docs(plans): flip item N — <one-line evidence>" && git push origin HEAD:live-defi-rollout
-```
-
-**`docs(plans):` prefix is MANDATORY** for flip commits (`plan(...)` is rejected by the conventional-commits hook).
-
-**Self-check before starting the NEXT item** (MANDATORY):
-
-```bash
-git log --oneline -5
-# Expected: alternating "feat/fix/refactor: ..." and "docs(plans): flip ..." commits.
-# Two consecutive code commits with no docs(plans) flip in between → STOP, flip before next item.
-```
-
-**Rule violations** (review-blocking; agent should self-correct before proceeding):
-
-- ❌ "I'll flip at end of session" — other slots are reading the work-split RIGHT NOW for reallocation.
-- ❌ "One batch flip commit at the end" — the next reallocation sweep may re-dispatch items 3+4 during the gap.
-- ❌ "The code is on LDR, the flip is bookkeeping" — a flipped checkbox is the ORCHESTRATOR'S done-signal. Without it,
-  the item is functionally unfinished from dispatch's view.
-- ❌ "I forgot which item this commit closed" — you committed too many items in one push. Split next commit per
-  shippable unit.
-- ❌ Plan-flip commit lands hours/days after code commit — window is the SAME AGENT TURN.
-
-**If you find unflipped items** (during recovery / audit / reassignment):
-
-1. STOP picking up new work.
-2. Walk your tab branch's git log since last known flip; for each code commit that closed an item, flip its checkbox
-   with `- [x] ✅ ... — <repo>@<sha> (backfilled <date>)`.
-3. Ship as one `docs(plans): backfill plan-flips for items X/Y/Z — <repos>@<shas>` commit. Push.
-4. THEN resume normal work.
-
-**Why this is THE wasted-reallocation source**: orchestrator reallocates based on work-split table state. Unflipped item
-→ orchestrator may re-dispatch to another slot. Other slot reads the plan, doesn't see the LDR code (it reads the
-checkbox, not a workspace grep), and re-implements. Net: wasted slot-hours + merge conflicts.
-
-**Reference 2026-05-14/15 incident**: slots 5+7 each shipped 15+ items without Half-2. Three slots looked idle in
-dashboard view when they were the workspace's top performers — operator nearly reallocated load away from them. Backfill
-operation required to repair.
-
-**Half 3 — Session-end deferred-work scoreboard.** Multi-item sessions with non-final state →
-`## Deferred work after <date> <session-tag>` table in plan body before `## Temporary states`.
-
-**The 3 halves compose**: Half-1 alone = "shipped but invisible"; Half-1+2 alone = "shipped + visible, missing context
-for next agent"; Half-1+2+3 = full handoff. Half-3 matters when item is non-final; Half-2 ALWAYS matters when item is
-final.
+**Half 3 — session-end**: multi-item sessions with non-final state get a `## Deferred work after <date>` table before
+`## Temporary states`. Half-2 ALWAYS matters when an item is final; Half-3 when non-final. Full treatment + the
+2026-05-14/15 incident: `codex/12-agent-workflow/commit-push-flip-rule.md`.
 
 ---
 
@@ -760,8 +655,15 @@ phase — plans omitting this are review-blocking.
   normal PR → quickmerge auto-merge** (a green gate merges it). NEVER leave a ruleset `enforcement=disabled` /
   `enforce_admins` off; resolve conflicts ON `live-defi-rollout`, never a throwaway branch. SSOT:
   `codex/08-workflows/ci-cd-flow.md` § "Force-push vs let-CI/CD".
-- **Promotion automation (staging→main: semver / SIT / staging-to-main) is under repair** (was dead, admin-bypassed) —
-  status + ordered backlog: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Phase 6 — CONSOLIDATED HAND-OFF".
+- **Promotion automation (staging→main: semver / SIT / staging-to-main) REPAIRED 2026-06-02** — semver-agent now watches
+  `quality-gates-v2` (was watching a dead `Quality Gates` check; cicd #504), so the LDR→staging→SIT→main→image pipeline
+  flows again. **Ship every unit via `quickmerge --agent --files '<paths>'`** (Pass 1 local `quality-gates.sh` writes
+  the sentinel → Pass 2 quickmerge commits + opens the staging PR + auto-merges). **Do NOT
+  `git push HEAD:live-defi-rollout` directly** — quickmerge **early-exits "nothing to commit" on a clean tree**, so
+  direct-pushed commits never open a staging PR and silently pile up on LDR behind main (slot-7 2026-06-02: PM was level
+  but mtds +131 / deployment +92 / alerting +22 behind main from direct LDR pushes). Existing committed-LDR backlog
+  drains via the staging→main automation or a per-repo staging PR — NOT a retroactive quickmerge. Residual hardening +
+  backlog-drain status: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Phase 6 — CONSOLIDATED HAND-OFF".
 - Pushes to `live-defi-rollout` / `feat/*` → NO remote CI. Quality enforced locally via `quality-gates.sh`.
 - On CI fail: `gh run view <run-id> --log-failed`. Fix root cause. Push again.
 - CI failures are NOT issues to flag — fix in real time.
@@ -799,43 +701,17 @@ frontmatter: `title`/`created`/`author`/`source[]`/`locked_by`. Body: `## What I
 
 ## External Data Is Always Available — Never Silently Defer Adapters (HARD RULE codified 2026-05-14)
 
-**Premise**: for every asset_group and every MVP archetype, **data exists**. If the public/free path is exhausted, the
-unblock is a credential / subscription / account-provisioning ask to the operator — NOT a license to defer or descope
-the adapter. Applies workspace-wide; primary targets are `instruments-service` and `market-tick-data-service` (MTDS)
-adapters/handlers/clients, but the rule generalises (DeFi protocol-rate readers, sports/prediction feed adapters, tradfi
-vendor SDKs, on-chain RPC providers).
+**Premise**: for every asset_group × MVP archetype, **data exists** — if the public/free path is exhausted, the unblock
+is a credential/subscription **ask to the operator, NOT** a license to defer/descope (paid tiers exist: Helius/Alchemy,
+Glassnode/Kaiko, Tardis, Databento, Sportradar/The-Odds-API…). Banned: "no public API / free tier exhausted / no test
+data / subscription required / can't repro in sandbox" used to drop scope.
 
-**Banned reasoning patterns** (every one of these is a violation if it leads to scope removal):
-
-- "No public API for X" → there's a paid tier (Helius for Solana, Alchemy paid for high-rate,
-  Glassnode/Kaiko/IntoTheBlock for on-chain analytics, Tardis for historical CEX ticks, Databento/Polygon.io for tradfi,
-  Sportradar/Footystats/The-Odds-API for sports).
-- "Free tier exhausted" → upgrade the tier; this is a sub-1-hour operator credential swap, not a multi-week scope cut.
-- "No test data" → mock the API contract from public docs + integration-test against the live endpoint once credentials
-  land.
-- "Subscription required" → that's the unblock, not the blocker. Ping operator.
-- "Couldn't reproduce in sandbox" → ship the adapter, gate the integration test behind a `requires_credentials` mark.
-
-**Required action when an agent hits this wall**:
-
-1. **Build the adapter scaffold anyway.** Schema + UAC contract + auth shape + retry/backoff/rate-limit semantics +
-   error classification (`classify_venue_error()`) + manifest emission per writegate Phase 6.x. Unit tests against mocks
-   (per docs). Integration tests marked `@pytest.mark.requires_credentials` + skipped by default.
-2. **File a `pings/slot_<N>.md` operator-credential request** with exact shape:
-   ```
-   CREDENTIAL APPROVAL REQUEST — <adapter_name>
-   Vendor: <name + tier + cost estimate>
-   What I need: <API key | OAuth flow | account email + signup | hardware-2FA setup>
-   Account to use: <existing operator email | new account needed>
-   Unblocks: <list of asset_group × archetype combos + which May-23 gate>
-   Without it: integration tests skip; unit + scaffold ship + adapter is dormant
-   ```
-3. **Adapter stays ON the live list.** Status = `BLOCKED-CREDENTIALS`, NOT `DEFERRED` and NOT `POST-CUTOVER`. Plan-flip
-   is `- [ ] [BLOCKED-CREDENTIALS — pinging operator]` not a checkbox flip.
-4. **Cross-link in master plan.** Add row to `master_to_live_defi_2026_05_23.md` § "Credential asks awaiting operator"
-   so it's visible in the daily inventory regenerator. (Section auto-created if absent.)
-5. **Never move the adapter to a post-cutover plan without explicit operator [ack]** on the slot ping. Silent deferral =
-   blocked PR.
+**Required when you hit the wall**: (1) build the adapter scaffold anyway (schema + UAC contract + auth/retry +
+`classify_venue_error()` + manifest emission; unit tests on mocks; integration tests
+`@pytest.mark.requires_credentials`, skipped by default); (2) file a `CREDENTIAL APPROVAL REQUEST` in
+`pings/slot_<N>.md` (vendor+tier+cost / what's needed / account / what it unblocks); (3) status =
+**`BLOCKED-CREDENTIALS`** (NOT `DEFERRED`/`POST-CUTOVER`); (4) cross-link the master plan's "Credential asks awaiting
+operator"; (5) never move to post-cutover without operator `[ack]`.
 
 **Status taxonomy** (closed set; replaces ad-hoc "deferred" language):
 
@@ -856,20 +732,10 @@ vendor SDKs, on-chain RPC providers).
 
 Sports + Prediction tracks have parallel coverage targets independent of the DeFi archetypes.
 
-**Enforcement**:
-
-- Plan reviewer rejects any plan that contains "DEFERRED — no data" / "no API access" / "post-cutover — credentials"
-  without an operator [ack] ping link.
-- Inventory regenerator surfaces `BLOCKED-CREDENTIALS` count as a master plan column.
-- PM `quality-gates.sh` runs `scripts/quality_gates/check_credential_ask_orphans.py` — baselined ratchet that fails on
-  any `BLOCKED-CREDENTIALS` plan line lacking a ping reference (±5-line context: `*orchestrator/pings/slot_N.md` path,
-  `CREDENTIAL APPROVAL REQUEST`, `[ack]`, named SM secret, or `CONFIRMED-STATUS`). Re-baseline only with
-  `--baseline-write` after intentional debt.
-
-Composes with: Findings Triage (this rule is the per-data-source case of "fix now if you have context"); Capture
-Discoveries As Plan Todos (the ping IS the discovery capture); Commit + Push + Flip (the `BLOCKED-CREDENTIALS` status is
-the plan-flip equivalent); Plans Run To Actual Completion (the adapter doesn't run to completion without credentials →
-credentials are the operationally-shipped definition).
+**Enforcement**: PM `quality-gates.sh` runs `scripts/quality_gates/check_credential_ask_orphans.py` (baselined ratchet —
+fails on a `BLOCKED-CREDENTIALS` plan line with no ping reference). Full rule + credential-request template +
+composes-with (Findings-Triage / Capture-Discoveries / Commit+Push+Flip / Plans-Run-To-Completion):
+`codex/02-data/external-data-always-available-rule.md`.
 
 ---
 
@@ -895,111 +761,44 @@ Every Tab in daily work-split MUST declare Full-Execution Criterion. SSOT: `plan
 
 ## Data Pipeline Correctness Is The Heartbeat — No Exceptions, No Cutbacks (HARD RULE — codified 2026-05-20)
 
-> Operator directive 2026-05-20: the data pipeline is the heartbeat of everything (paper-trade, strategy, execution).
-> When a data audit surfaces issues, **every issue is fixed in full** — every missing venue × data_type × time range
-> backfilled, every silent empty diagnosed, every schema-version row migrated, every batch adapter paired with a live
-> equivalent. **No deferrals to hit a calendar deadline. No asset_group skipped.**
+> Operator 2026-05-20: the data pipeline is the heartbeat — when an audit surfaces issues, **every** issue is fixed in
+> full (every venue × data_type × time-range backfilled, every silent-empty diagnosed, every schema row migrated, every
+> batch adapter paired with live). **No deferrals for a deadline. No asset_group skipped.**
 
-**The only legitimate deferral path** (closed set, agent never decides autonomously — operator-only):
+**Only legitimate deferral** (operator-only — agent never decides): `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION`
+/ `BLOCKED-UPSTREAM-OUTAGE`. **Banned**: "skip for the deadline" · "post-cutover" · "most cells captured, rest later" ·
+"the constant says v8 so good enough" (read the actual `schema_version` distribution — incident: 0% of 7.4M rows at v8
+despite the bump) · "do A5/A6 later". **Consequences**: layer-N+1 work FREEZES while a data audit is RED for affected
+asset_groups (foundation-completion-gate); slot-1 reassigns slots to data-fix until GREEN; reviewer rejects layer-N+1
+plans with open audit P0s; every audit must state where it sampled vs walked + remaining gaps. Composes with
+Foundation-Completion-Gate / External-Data / Plans-Run-To-Completion / Manifest-Honest-Absence. Full SSOT:
+`codex/02-data/data-pipeline-correctness-hard-rule.md`; migration sequencing (Phase ordering HARD, slot-1 owns
+broadcast/ACK): `plans/epics/mtds_mdps_master.md`.
 
-- `BLOCKED-CREDENTIALS` — credential ask filed + operator-acked (per `External Data Is Always Available`).
-- `BLOCKED-OPERATOR-DECISION` — operator explicitly articulates why a specific (venue, data_type, time-range) is removed
-  from scope. Agent surfaces the gap + proposes options; operator decides scope.
-- `BLOCKED-UPSTREAM-OUTAGE` — third-party degraded; ping logged; auto-resumes on health check.
+**Quality Gates Are A Merge Prerequisite (HARD RULE)**: no code merges to `live-defi-rollout` without
+`bash scripts/quality-gates.sh` exit 0 for the touched repo + cross-repo consumers; reviewers reject PRs lacking a
+QG-green evidence line. Exemption only via operator `BLOCKED-OPERATOR-DECISION`. **This is the LOCAL / agent pre-flight
+(an agent + quickmerge requirement — fail-fast so you never put un-QG'd code on the integration branch or waste a
+doomed CI/PR cycle), NOT a server gate. `live-defi-rollout` carries NO required-check ruleset — it is the unprotected
+integration axis by design (`codex/08-workflows/ci-cd-flow.md`). The SERVER-ENFORCED required check (`quality-gates-v2`)
+fires at the staging/main PR — the promotion boundary. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH`, so
+every repo's default branch MUST be `main` (a non-main default mislocates the required check onto LDR and blocks pushes
+to the integration axis — incident 2026-06-03 uta+greeks; `verify_branch_protection_check_names.py` now asserts it).**
 
-**Banned reasoning patterns** (review-blocking):
+**Batch the GATE, not the commits — QG-sweep (2026-06-02)**: for a batch of related edits, make ALL edits (code-only
+agents verify with `basedpyright` on touched files), run `quality-gates.sh` ONCE per repo over the batch, THEN make
+per-shippable-unit commits + flips from that green tree (Commit+Push+Flip intact — only GATE RUNS batch). **Shared-host
+(HARD)**: ≤1–2 full QGs at once host-wide (they serialize; exceeding OOM-kills, exit 144); **NEVER bulk-kill `pytest` /
+`quality-gates.sh` / `basedpyright`** (may be another slot's). When only the `<300s` META-gate trips (substantive gates
+green): `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are sanctioned. SSOT: `codex/06-coding-standards/quality-gates.md`
+§ "QG-sweep batching".
 
-- "We'll skip this for the deadline" — deadline ≠ license to ship broken data.
-- "This asset_group is post-cutover" — every asset_group is in scope unless operator explicitly removes it.
-- "Most cells captured, backfill the rest later" — every cell is in scope unless operator explicitly removes it.
-- "The constant says v8, that's good enough" — code-constant ≠ data-state. Read the actual `schema_version` column
-  distribution per bucket (incident 2026-05-20: 0% of 7.4M prod rows at v8 despite constant bump).
-- "We'll do A5 / A6 later" — when a data audit names sub-audits (dependency-fail propagation, batch-live parity), those
-  are part of the same gate, not optional extensions.
-
-**Operational consequences**:
-
-1. **Layer-N+1 work freezes when a data audit is RED for affected asset_groups** (foundation-completion-gate expansion —
-   see `codex/11-project-management/foundation-completion-gate-discipline.md`).
-2. **Slot reassignment is mandatory**: slot 1 main reassigns slots from layer-N+1 to data-fix work until the audit is
-   GREEN. Slots that "double down on bad code" (build paper-trade / strategy / execution on top of unaudited data) are
-   blocked, not deprioritised.
-3. **Plan reviewer rejects** any plan proposing layer-N+1 changes while the relevant data audit has open P0 items
-   without an operator-acked `BLOCKED-*` status.
-4. **Every data audit MUST surface** (a) where it sampled vs walked exhaustively, (b) what coverage gaps remain. Audits
-   without this transparency section are review-blocked.
-
-**Composes with**: `Foundation-Completion-Gate Discipline` (data-correctness expansion of that gate);
-`External Data Is Always Available` (per-data-source case — credentials unblock, not scope removal);
-`Plans Run To Actual Completion` (operationally-shipped = every cell, not "most cells"); `Manifest + Honest Absence`
-(per-cell expression — every cell either `captured` or `empty_confirmed[reason=<typed>]` with operator-acked reason).
-
-**Reference incident (2026-05-20)**: Mega-audit Phase A surfaced 765 `DIVERGENT_EMPTY` + 236,892 `MISSING_EXPECTED`
-cells across MTDS buckets + **0% of 7.4M prod manifest rows at v8** + 1.3M NULL-schema-version rows. Operator codifying
-this rule: "I'm tired of doing this same thing a million times. We're on version eight for a reason. It's because you
-keep being sloppy and keep missing out stuff."
-
-**Full SSOT**: `codex/02-data/data-pipeline-correctness-hard-rule.md`.
-
-**Operator-handoff entry point for migration coordination**: `plans/epics/mtds_mdps_master.md` — sequences (Phase -2)
-strategy/ml/features repo consolidation finish → (Phase -1) workspace-wide QG green → (Phases 0-10) data-pipeline
-migration as previously sequenced → (Phases 11-14) backfill-to-100% + live-data + batch-live-symmetry +
-strategy/execution deployment-topology cleanup. Slot-1 main owns broadcast + ACK tracking; phase ordering is HARD (do
-not reorder). Per-phase plan-of-record + owner slot + verification criterion in the coordinator plan.
-
-**Quality Gates Are A Merge Prerequisite (HARD RULE — codified 2026-05-20 round 5)**: no code change merges to
-`live-defi-rollout` (any service repo) without `bash scripts/quality-gates.sh` exit 0 for the touched repo + any
-cross-repo consumers. Plan reviewers reject PRs that lack a QG-green evidence line. Harsh-side slots own the
-workspace-wide QG-green sweep as a prerequisite for any ikenna-side migration work. Operator-tunable exemption only via
-`BLOCKED-OPERATOR-DECISION` with explicit articulation. Composes with `Plans Run To Actual Completion` +
-`Data Pipeline Correctness Is The Heartbeat`.
-
-**Batch the GATE, not the commits — QG-sweep technique (codified 2026-06-02)**: `quality-gates.sh` is expensive
-(~100–500s/run, worse under host contention), so when shipping MANY related code items (esp. across repos and/or via
-parallel code-only sub-agents) do NOT run a full QG before every small edit. Instead: (1) make ALL the code edits for
-the batch (code-only agents verify with `basedpyright` on touched files, NOT full QG); (2) run `quality-gates.sh` ONCE
-per repo over the whole batch — a single green sweep validates all of that repo's edits; (3) THEN make
-**per-shippable-unit commits + plan-flips** from that green tree (Commit + Push + Flip stays fully intact — only the
-GATE RUNS are batched, never the commits). **Shared-host QG concurrency (HARD)**: the dev host is shared across ALL
-slots — `quality-gates.sh`'s "keep parallel QGs to 1–2" warning is HOST-WIDE, not per-slot. Run **≤1–2 full QGs at
-once** (full QGs serialize; code-only `basedpyright`-only agents parallelize safely); exceeding it OOM-kills gates (exit
-144 mid-TESTS). **NEVER bulk-kill `pytest`/`quality-gates.sh`/`basedpyright` processes** (by pattern or PPID=1) — they
-may belong to another slot's session (the process-space form of "don't touch outside your context"); stop only your own
-tracked background tasks. When only the `<300s` (or inner `run_timeout`) META-gate trips under contention — all
-substantive gates green — `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are the sanctioned overrides (the gate prints
-"ALL QUALITY GATES PASSED" + writes the sentinel). Full SSOT: `codex/06-coding-standards/quality-gates.md` § "QG-sweep
-batching + shared-host concurrency". Composes with `Commit + Push + Flip` + `Quality Gates Are A Merge Prerequisite`.
-
-**Every Active Ping Must Reference A Plan Item (HARD RULE — codified 2026-05-20 round 5; cadence tightened round 6)**:
-no orphan pings in `plans/active/_agent_pings.md` / `ikenna_orchestrator/_agent_pings.md` /
-`harsh_orchestrator/_agent_pings.md`. Every active entry MUST cite a plan-of-record (`plans/active/<slug>.md`,
-`plans/epics/<slug>.md`, `plans/audit/<slug>.md`, or `plans/active/issues/<slug>.md`). Bare slug links to date-suffixed
-plan files (`<slug>_YYYY_MM_DD.md`) inside the same ping-ledger directory also count.
-
-**If an agent's ping references nothing**, the agent MUST EITHER (a) file a new plan / extend an existing one before
-posting (preferred), OR (b) remove the ping. **Forcing agents to make plans or issues around their pings is the point**
-— pings without plan-state get lost; plans persist + propagate via the inventory regenerator.
-
-**Cadence**: every 4 hours (6×/day), NOT weekly. Cron stack:
-
-- **Local** (Ikenna's machine, `crontab -e`):
-  ```
-  0 */4 * * * cd ${WORKSPACE_ROOT}/unified-trading-pm && bash scripts/agents/audit_ping_orphans.sh >> /tmp/orphan_pings_audit.log 2>&1
-  ```
-- **GCP Cloud Run Job + Cloud Scheduler** (`central-element-323112` / `asia-northeast1`, offset by 2h so passes don't
-  collide): `15 2,6,10,14,18,22 * * *` UTC. Job name `uts-prod-orphan-ping-audit` clones unified-trading-pm @
-  live-defi-rollout, runs the audit script, commits + pushes orphan notifications back to LDR. Image:
-  `gcr.io/google.com/cloudsdktool/google-cloud-cli:slim`. GH PAT sourced from Secret Manager `GH_PAT`. Terraform SSOT:
-  `deployment-service/terraform/gcp/orphan_ping_audit_scheduler.tf`. Entrypoint:
-  `scripts/agents/cron_orphan_ping_audit_entrypoint.sh`. (AWS-VM path NOT used — agent-orchestrator's prod backend is
-  Cloud Run; reusing the existing GCP cron stack avoids a new infra surface.)
-
-When orphans are detected: the script appends a `## [orphan-ping-cron]` notification to BOTH orchestrator inboxes
-(`ikenna_orchestrator/_agent_pings.md` + `harsh_orchestrator/_agent_pings.md`) listing every orphan + remediation steps.
-Slot-1 main + harsh main are responsible for clearing the notification within one cron cycle (4h).
-
-**Audit script SSOT**: `unified-trading-pm/scripts/agents/audit_ping_orphans.sh`. Composes with
-`Capture Discoveries As Plan Todos Immediately` (every discovery is already a plan todo — pings just point at the todo).
+**Every active ping references a plan item (HARD RULE)**: no orphan pings in the `_agent_pings.md` ledgers — every entry
+cites a plan-of-record (`plans/active|epics|audit|active/issues/<slug>.md`, incl date-suffixed). References nothing →
+file/extend a plan first or remove the ping. A 4-hourly cron (`scripts/agents/audit_ping_orphans.sh` local + GCP
+`uts-prod-orphan-ping-audit`) appends `## [orphan-ping-cron]` notices to both orchestrator inboxes; slot-1 + harsh-main
+clear them within a cycle. SSOT: `scripts/agents/audit_ping_orphans.sh` +
+`deployment-service/terraform/gcp/orphan_ping_audit_scheduler.tf`.
 
 ---
 

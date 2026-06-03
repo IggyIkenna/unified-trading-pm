@@ -11,16 +11,16 @@ locked_by: live-defi-rollout
 ---
 
 > **✅ RESOLVED + ARCHIVED 2026-06-01 (slot 7).** Fix landed on LDR: **features-service@`587e494e`**.
-> `config.get_output_bucket` now honours `get_data_sink` (PROTOCOL_DATA_SINK_BUCKET_{AG}) first then bucket-name SSOT;
-> `get_input_bucket` mirrors it via `get_data_source` (PROTOCOL_DATA_SOURCE_BUCKET_{AG}); `get_instruments_store_bucket`
-> stays on the SSOT (the `routing_key=asset_group` trick would resolve the wrong bucket for it). +3 passing unit tests in
-> `tests/unit/test_config.py` (sink override / source override / SSOT fallback); ruff-clean; codex-clean.
+> `config.get_output_bucket` now honours `get_data_sink` (PROTOCOL*DATA_SINK_BUCKET*{AG}) first then bucket-name SSOT;
+> `get_input_bucket` mirrors it via `get_data_source` (PROTOCOL*DATA_SOURCE_BUCKET*{AG}); `get_instruments_store_bucket`
+> stays on the SSOT (the `routing_key=asset_group` trick would resolve the wrong bucket for it). +3 passing unit tests
+> in `tests/unit/test_config.py` (sink override / source override / SSOT fallback); ruff-clean; codex-clean.
 >
 > **Landing was unblocked by a CI-config fix**: features-service had **no `main`/`staging` branches**, so its GitHub
-> default branch was `live-defi-rollout` and the `require-quality-gates` ruleset (target `~DEFAULT_BRANCH`) wrongly gated
-> LDR. Fixed: created `main`+`staging` from LDR HEAD + set default → `main` (so v2 now gates `main`, LDR is free-push, as
-> per the workspace model). The features QG coverage-floor / per-family `PYTEST_UNIT_DIR` issue now correctly gates
-> main-promotion, not LDR — tracked separately in `cicd_contract_hardening_2026_06_01.md`.
+> default branch was `live-defi-rollout` and the `require-quality-gates` ruleset (target `~DEFAULT_BRANCH`) wrongly
+> gated LDR. Fixed: created `main`+`staging` from LDR HEAD + set default → `main` (so v2 now gates `main`, LDR is
+> free-push, as per the workspace model). The features QG coverage-floor / per-family `PYTEST_UNIT_DIR` issue now
+> correctly gates main-promotion, not LDR — tracked separately in `cicd_contract_hardening_2026_06_01.md`.
 
 ## What I found
 

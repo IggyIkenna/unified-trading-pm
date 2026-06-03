@@ -6,8 +6,6 @@ name: workspace_config_drift_remediation
 created: 2026-06-01
 parent_epic: epics/infrastructure_master.md
 assigned_vm: vm-cross-cutting
-locked_by: live-defi-rollout
-locked_since: 2026-06-01
 status: active
 priority: P2
 model_tier: sonnet-doable
@@ -62,72 +60,75 @@ estimate_calibrated_ai_days: 1.2
       not a staging PR — staging is 632 commits behind LDR, branching off it to edit this newer script is a stale-base
       revert hazard (don't-dump-others'-work HARD RULE); LDR→staging reconciliation carries it forward. Flagged to
       operator.
-- [x] ✅ [SCRIPT] P2. **Item 3 — regression guard.** Add a check (PM `quality-gates.sh` step and/or pytest) asserting the
-      canonical `.code-workspace` `folders[]` (minus workspace-root) == active+scaffolded repo set in
+- [x] ✅ [SCRIPT] P2. **Item 3 — regression guard.** Add a check (PM `quality-gates.sh` step and/or pytest) asserting
+      the canonical `.code-workspace` `folders[]` (minus workspace-root) == active+scaffolded repo set in
       `workspace-manifest.json`, and that no listed path is a known archived/consolidated repo. Optionally assert
       `git.scanRepositories`/`git.ignoredRepositories` entries resolve to real repo names. Closes Finding 3 (no guard ⇒
       both drifts went silent). **Script → PR targets `staging`** (bundle with Item 2; include the Item-1 canonical fix
       on the staging branch so the guard is green there too). — unified-trading-pm@79263233d |
       `scripts/quality_gates/check_workspace_code_workspace_drift.py` (basedpyright-clean, strict) wired into
-      `quality-gates.sh` post-gates (blocking) + 9-case pytest `tests/unit/test_check_workspace_code_workspace_drift.py`.
-      Verified clean on current workspace (25 repos), negative tests exit 1. Same LDR-not-staging deviation as Item 2.
+      `quality-gates.sh` post-gates (blocking) + 9-case pytest
+      `tests/unit/test_check_workspace_code_workspace_drift.py`. Verified clean on current workspace (25 repos),
+      negative tests exit 1. Same LDR-not-staging deviation as Item 2.
 - [x] ✅ [PM] P2. **Item 4 — adjudicate the features-service `ci_status` edit (Observation A).** Slot-5 `stash@{0}`
       (`slot5-FOREIGN: features-service ci_status LOCAL_PASS->FAILING`) held an uncommitted flip that was starving
       slot-5 PM's FF-pull cron (963 behind). **Resolved 2026-06-01 (operator-acked: drop stash):** investigated the CI
       first — the authoritative workflow `quality-gates-v2` is **GREEN** on features-service's current LDR HEAD
-      (`dd5812b5fb`); the earlier red `quality-gates-v2` runs were fixed by the latest `fix(tests): drop project_id
-      substitution assertions` commit. The failures flooding `gh run list` are all `agent-audit.yml` — infra noise (0s
-      duration, "log not found" = the workflow never starts; trigger/permission config), not test/quality failures. So
-      committed `ci_status: LOCAL_PASS` is currently accurate and the slot-5 `FAILING` flip was stale (reflected the
-      pre-fix red state). Dropped `stash@{0}` from slot-5's PM worktree (recoverable commit `f98114f266` until GC); the
-      two surviving `stash@{0..1}` are slot-1 WIP, untouched. Slot-5 PM tree now clean + 0 behind origin/LDR — FF-pull
-      unblocked.
-- [x] ✅ [SCRIPT] P3. **Item 5 — FF-pull starvation watchdog signal (spec delivered).** Spec below
-      (§ "Item 5 spec"). Proposes the detection rule + ping payload for the slot-5-963-behind failure mode.
+      (`dd5812b5fb`); the earlier red `quality-gates-v2` runs were fixed by the latest
+      `fix(tests): drop project_id     substitution assertions` commit. The failures flooding `gh run list` are all
+      `agent-audit.yml` — infra noise (0s duration, "log not found" = the workflow never starts; trigger/permission
+      config), not test/quality failures. So committed `ci_status: LOCAL_PASS` is currently accurate and the slot-5
+      `FAILING` flip was stale (reflected the pre-fix red state). Dropped `stash@{0}` from slot-5's PM worktree
+      (recoverable commit `f98114f266` until GC); the two surviving `stash@{0..1}` are slot-1 WIP, untouched. Slot-5 PM
+      tree now clean + 0 behind origin/LDR — FF-pull unblocked.
+- [x] ✅ [SCRIPT] P3. **Item 5 — FF-pull starvation watchdog signal (spec delivered).** Spec below (§ "Item 5 spec").
+      Proposes the detection rule + ping payload for the slot-5-963-behind failure mode.
 - [x] ✅ [SCRIPT] P3. **Item 5b — implement the FF-pull starvation watchdog.** Wired the § "Item 5 spec" `collision`
       detection (incoming-changed-files ∩ dirty-files ≠ ∅, gated on `behind ≥ FF_STARVE_COMMIT_THRESHOLD` or age >
       `FF_STARVE_AGE_HOURS`) into `scripts/dev/slot-git-status-report.sh` (it already walks each repo's ahead/behind +
-      dirty state) which POSTs a one-per-(slot,repo) `FF-PULL STARVATION` ping to `/api/slots/<N>/message` (`from_role:
-      main`) the same way it POSTs git-status, de-duped via `.tabs/.ff-starve-state/` markers that clear on next
-      successful FF. `slot-cron-ff-pull.sh` stays the actor; the report cron is the detector/alerter. Detection logic is a
-      standalone testable `scripts/dev/ff-starvation-detect.sh`. Added `tests/test_ff_starvation_detect.bats` (10 cases:
-      collision→signal, non-colliding-dirty→no-signal, below-threshold→no-signal, clean/up-to-date→no-signal + syntax +
-      arg-validation). Updated `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7" (troubleshooting row + dedicated
-      watchdog subsection). **Landed on LDR** (same staging-632-behind deviation as Items 2/3). — code
-      unified-trading-pm@899e36e92 | bats 10/10 green | full PM QG `--no-fix` exit 0 (basedpyright ratchet held; new
-      scripts are bash, no JSON-parsing python so no empty-fallback exclude needed).
+      dirty state) which POSTs a one-per-(slot,repo) `FF-PULL STARVATION` ping to `/api/slots/<N>/message`
+      (`from_role:     main`) the same way it POSTs git-status, de-duped via `.tabs/.ff-starve-state/` markers that
+      clear on next successful FF. `slot-cron-ff-pull.sh` stays the actor; the report cron is the detector/alerter.
+      Detection logic is a standalone testable `scripts/dev/ff-starvation-detect.sh`. Added
+      `tests/test_ff_starvation_detect.bats` (10 cases: collision→signal, non-colliding-dirty→no-signal,
+      below-threshold→no-signal, clean/up-to-date→no-signal + syntax + arg-validation). Updated
+      `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7" (troubleshooting row + dedicated watchdog subsection).
+      **Landed on LDR** (same staging-632-behind deviation as Items 2/3). — code unified-trading-pm@899e36e92 | bats
+      10/10 green | full PM QG `--no-fix` exit 0 (basedpyright ratchet held; new scripts are bash, no JSON-parsing
+      python so no empty-fallback exclude needed).
 
 ## Discoveries (captured per HARD RULE)
 
 - [x] ✅ [SCRIPT] P3. **`agent-audit.yml` fails at 0s with no logs on features-service LDR** (surfaced during Item 4
       investigation). **Root-caused + fixed.** The 0s "log not found" failures are GitHub **`startup_failure`** runs
       ("This run likely failed because of a workflow file issue") — the workflow never starts a job, so there are no
-      logs. **Cause**: features-service ran the *legacy inline-prototype* `agent-audit.yml` whose "Self-dispatch retry on
-      failure" step had `if: failure() && fromJSON(inputs.attempt || '1') < 3` plus `inputs.attempt`/`inputs.prior_context`
-      in step `env:`. GitHub evaluates those expressions when **compiling the workflow for a push event**, where the
-      `inputs` context does not exist → compile error → a `startup_failure` run attributed to the push, even though the
-      trigger is `workflow_dispatch`-only. That's why a dispatch-only workflow showed "Triggered via push" at 0s on every
-      LDR push. **Scope = NOT workspace-wide**: legacy repos WITHOUT that self-dispatch step (e.g. strategy-service,
-      deployment-service) create zero runs; only repos with the `fromJSON(inputs.attempt` step startup-fail. The 3
-      affected repos: **features-service, market-data-processing-service, market-tick-data-service**. **Fix applied to
-      features-service**: migrated its `agent-audit.yml` to the canonical thin form (reusable `python-quality-gates-v2`
-      call, no `inputs.*` in expressions) matching execution-service/instruments-service/UAC; `dep_repos` matches its own
+      logs. **Cause**: features-service ran the _legacy inline-prototype_ `agent-audit.yml` whose "Self-dispatch retry
+      on failure" step had `if: failure() && fromJSON(inputs.attempt || '1') < 3` plus
+      `inputs.attempt`/`inputs.prior_context` in step `env:`. GitHub evaluates those expressions when **compiling the
+      workflow for a push event**, where the `inputs` context does not exist → compile error → a `startup_failure` run
+      attributed to the push, even though the trigger is `workflow_dispatch`-only. That's why a dispatch-only workflow
+      showed "Triggered via push" at 0s on every LDR push. **Scope = NOT workspace-wide**: legacy repos WITHOUT that
+      self-dispatch step (e.g. strategy-service, deployment-service) create zero runs; only repos with the
+      `fromJSON(inputs.attempt` step startup-fail. The 3 affected repos: **features-service,
+      market-data-processing-service, market-tick-data-service**. **Fix applied to features-service**: migrated its
+      `agent-audit.yml` to the canonical thin form (reusable `python-quality-gates-v2` call, no `inputs.*` in
+      expressions) matching execution-service/instruments-service/UAC; `dep_repos` matches its own
       `quality-gates-v2.yml`. `agent-audit.yml` is NOT a PM-templated workflow, so per-repo edit is correct.
-      **Verified**: pushing the fix (features-service@dba0f5bf) created **zero** agent-audit runs (vs a startup_failure on
-      every prior push) → compiles clean + correctly dispatch-only. — features-service@dba0f5bf | provenance: Item 4
+      **Verified**: pushing the fix (features-service@dba0f5bf) created **zero** agent-audit runs (vs a startup_failure
+      on every prior push) → compiles clean + correctly dispatch-only. — features-service@dba0f5bf | provenance: Item 4
       investigation 2026-06-01. **Cross-repo follow-ups tracked below.**
 - [x] ✅ [SCRIPT] P3. **Migrate `market-data-processing-service` `agent-audit.yml` to the canonical thin form** (same
       `startup_failure`-on-push defect as features-service — had the `fromJSON(inputs.attempt` self-dispatch step).
       Replaced `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin form;
       `dep_repos: "unified-trading-library market-tick-data-service unified-api-contracts"` (matches its own
-      `quality-gates-v2.yml`). **Verified**: push of the fix created zero new agent-audit runs (latest run predates it). —
-      market-data-processing-service@e992a71 | provenance: agent-audit.yml discovery 2026-06-01.
+      `quality-gates-v2.yml`). **Verified**: push of the fix created zero new agent-audit runs (latest run predates it).
+      — market-data-processing-service@e992a71 | provenance: agent-audit.yml discovery 2026-06-01.
 - [x] ✅ [SCRIPT] P3. **Migrate `market-tick-data-service` `agent-audit.yml` to the canonical thin form** (same
       `startup_failure`-on-push defect — confirmed 0s push failures + had the `fromJSON(inputs.attempt` self-dispatch
-      step). Replaced `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin form;
-      `dep_repos: "unified-trading-library unified-api-contracts"` (matches its own `quality-gates-v2.yml`). **Verified**:
-      push of the fix created zero new agent-audit runs (latest run predates it). — market-tick-data-service@6fcca80f |
-      provenance: agent-audit.yml discovery 2026-06-01.
+      step). Replaced `.github/workflows/agent-audit.yml` with the reusable `python-quality-gates-v2.yml@main` thin
+      form; `dep_repos: "unified-trading-library unified-api-contracts"` (matches its own `quality-gates-v2.yml`).
+      **Verified**: push of the fix created zero new agent-audit runs (latest run predates it). —
+      market-tick-data-service@6fcca80f | provenance: agent-audit.yml discovery 2026-06-01.
 - [x] ✅ [SCRIPT] P2. **Runbook Execution-Owner check fails on a vendored codex mirror** (surfaced running the Item 5b
       merge-prerequisite QG). `scripts/quality_gates/check_runbook_execution_owner.py` walks the whole workspace for
       `*runbook*.md` and flagged `unified-trading-system-ui/context/codex/05-infrastructure/sit-runbook.md` (no
@@ -158,8 +159,8 @@ STARVED  = collision AND behind >= THRESHOLD          # THRESHOLD default 25 com
 ```
 
 `collision` (not merely `dirty`) is the precise trigger: a dirty file that does **not** intersect the incoming change
-set does not block `--ff-only`, so it is not a starvation cause and must not page. The `behind >= THRESHOLD` /
-age-gate avoids paging on normal in-flight work (a slot 1–2 commits behind mid-edit is healthy).
+set does not block `--ff-only`, so it is not a starvation cause and must not page. The `behind >= THRESHOLD` / age-gate
+avoids paging on normal in-flight work (a slot 1–2 commits behind mid-edit is healthy).
 
 **Signal** — emit ONE orchestrator ping per (slot, repo) while STARVED (de-duplicated; clears on next successful FF):
 
@@ -176,12 +177,12 @@ repo's ahead/behind + dirty state for the dashboard) and POST the signal to the 
 drift reporter posts git-status. `slot-cron-ff-pull.sh` stays the actor (it does the FF); the report cron is the
 detector/alerter. Threshold + age-gate live in env (`FF_STARVE_COMMIT_THRESHOLD`, `FF_STARVE_AGE_HOURS`).
 
-**Composes with**: the slot-host-symmetry HARD RULE (every host's slots FF-pull every 5 min) — this watchdog is the
-"why didn't it?" alarm for when that contract silently fails. Does NOT auto-resolve the collision (that needs the
+**Composes with**: the slot-host-symmetry HARD RULE (every host's slots FF-pull every 5 min) — this watchdog is the "why
+didn't it?" alarm for when that contract silently fails. Does NOT auto-resolve the collision (that needs the
 stash-by-name + adjudicate judgment from the two-teammates HARD RULE — see Item 4 for an instance).
 
 ## Codex SSOT updates
 
 - [x] `codex/05-infrastructure/per-tab-worktrees.md` — documented the canonical-vs-slot `.code-workspace` path-style
-  contract (Item 2) + the regression guard (Item 3) in a new "### `.code-workspace` path-style contract" subsection.
-  Landed alongside Item 3.
+      contract (Item 2) + the regression guard (Item 3) in a new "### `.code-workspace` path-style contract" subsection.
+      Landed alongside Item 3.

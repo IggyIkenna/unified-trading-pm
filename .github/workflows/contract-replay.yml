@@ -12,8 +12,6 @@ on:
     secrets:
       GH_PAT:
         required: false
-      TELEGRAM_BOT_TOKEN:
-        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

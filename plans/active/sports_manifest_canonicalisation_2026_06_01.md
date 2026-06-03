@@ -1,7 +1,7 @@
 ---
 title:
   "Sports manifest + data canonicalisation (v9 + pipeline_mode partition + fixture-dependent typed reasons single-walk)
-  — L3 owner for sports"
+  — slot-4 MASTER orchestrator for the ENTIRE sports vertical (IS + MTDS + MDPS + features + execution + UI/bucket)"
 created: 2026-06-01
 author: ikenna
 parent_epic: epics/mtds_mdps_master.md
@@ -17,15 +17,32 @@ source:
   - defi_manifest_canonicalisation_2026_06_01.md §MASTER (L3 sports lane — was "verify-only"; canonical FORM still owed)
   - _index comparison 2026-06-01 (sports DATA complete: 0 legacy-only cells)
   - data_source_provenance_all_asset_groups_2026_06_01.md Phase 4 (sports source path→column — rides this walk)
-master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT coordinator)
+master:
+  SELF — this plan is the slot-4 MASTER orchestrator for the sports vertical
+  (defi_manifest_canonicalisation_2026_06_01.md remains the workspace-wide canonical-SSOT coordinator the sports walk
+  conforms to)
+role: sports-vertical master orchestrator (slot 4)
+orchestrates:
+  - sports_retired_data_types_code_cleanup_2026_05_13.md
+  - epics/sports_master.md
+  - "sports slices of: mdps_backfill_phase3 · mtds_backfill_phase3 · instruments_backfill_phase3 ·
+    features_backfill_phase3 · data_source_provenance_all_asset_groups_2026_06_01 ·
+    bucket_name_ssot_legacy_dual_write_remediation_2026_06_01"
 ---
 
-# Sports manifest + data canonicalisation (L3 owner for sports)
+# Sports manifest + data canonicalisation — slot-4 MASTER orchestrator for the sports vertical
 
-> ## 🎬 SLOT PICKUP PROMPT (clean handoff — paste verbatim into a fresh sports slot, 2026-06-01)
+> ## 🎬 SLOT PICKUP PROMPT (clean handoff — paste verbatim into the slot-4 sports lane; 2026-06-01, slot pinned 2026-06-03)
 >
-> You are the **sports** slot for the non-DeFi data+manifest canonicalisation. Your lane is **sports ONLY** — prediction
-> is slot-3's proving ground (done/in-flight), cefi/tradfi are other slots, defi is slot-2. Do not touch them.
+> You are **slot 4 — the dedicated sports slot**, and this plan is your **MASTER orchestrator plan for the ENTIRE sports
+> vertical** (operator 2026-06-03, clean asset-group split). Your lane is **everything sports across every service** —
+> IS (`instruments-store-sports` reference) + MTDS (`market-data-tick-sports`) + MDPS + features + execution + the
+> sports deployment-UI/menu/bucket/data/manifest surfaces. **All of it, end to end.** prediction / cefi / tradfi are
+> **slot 3** (incl. the non-sports parts of instruments + downstream); defi is **slot 2**. Do not touch them.
+>
+> **As master orchestrator you also OWN the sports cross-references**: every other sports plan/issue and every orphaned
+> sports cross-reference attaches here (see § "Orchestrated sports sub-plans & cross-references" below) — when you find
+> a dangling sports item in another plan, pull it in or cross-link it to this master rather than leaving it orphaned.
 >
 > **FIRST**: read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` and follow ALL rules.
 > `git pull --ff-only origin live-defi-rollout` before starting. You are a slot on `tab/<operator>/<N>` —
@@ -136,13 +153,38 @@ canonical — including the 4-state honest reason — so the next sports coverag
 The bundled walk is **layout-aware** (per the remediation note that sports uses `processed/` + `sports_reference/`, not
 the cefi/defi `raw_tick_data/by_date/` shape).
 
-## Scope boundary — what this plan does NOT own (no overlap)
+## Orchestrated sports sub-plans & cross-references (master role — slot 4)
+
+As of 2026-06-03 this plan is the **MASTER orchestrator for the whole sports vertical** (operator: "slot 4 has
+everything sports — IS, MTDS, MDPS, features, all downstream, all bucket/data/manifest/UI — with the canonicalisation
+manifest plan as the master orchestrator for all those other plans and issues"). Slot 4 drives, sequences, and keeps
+green the following — **and any orphaned sports cross-reference found in another plan is pulled in / cross-linked here,
+not left dangling**:
+
+| Sub-plan / surface                                              | Sports scope it carries                                                                   | Relationship                      |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------- |
+| `epics/sports_master.md`                                        | 25,652 `MISSING_EXPECTED` odds-cell coverage backfill (bookmaker coverage)                | orchestrated (coverage, not FORM) |
+| `sports_retired_data_types_code_cleanup_2026_05_13.md`          | `TRANSFERMARKT_LEAGUES` / `SFI_LEAGUES` retirement (88,779 rows → `EXPECTED_DEPRECATED…`) | orchestrated                      |
+| `mtds_backfill_phase3` / `mdps_backfill_phase3`                 | sports MTDS/MDPS odds-tick rows + the MDPS sports routing/output-bucket tests             | sports slice rides slot 4         |
+| `instruments_backfill_phase3`                                   | `instruments-store-sports` reference (fixtures + 20 ref data_types, 2.68M rows)           | sports slice rides slot 4         |
+| `features_backfill_phase3` / features-service sports            | sports features rows + sports `_index`                                                    | sports slice rides slot 4         |
+| `data_source_provenance_all_asset_groups_2026_06_01.md` Phase 4 | sports `source` path→column backfill                                                      | RIDER of this single walk         |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`  | sports bucket-name SSOT + decommission of every other sports bucket                       | orchestrated (bucket surface)     |
+
+"Orchestrated" = slot 4 owns sequencing + green-ness + cross-link, even where the body executes in the sub-plan. The
+single canonical walk below executes the FORM/honest-absence/RIDER work inline; coverage backfill + retired-type cleanup
+execute in their own plans but report up to this master.
+
+## Scope boundary — what this master coordinates vs executes inline (no double-execution)
+
+These ride **separate sub-plans** (executed there, tracked here — see the orchestration table above); this plan does NOT
+re-execute their bodies inline:
 
 - **The 25,652 `MISSING_EXPECTED` odds cells** (BET365/BETFAIR/DRAFTKINGS/FANDUEL/ODDS_API/PINNACLE × odds_snapshot +
-  odds_movement, absorbed 2026-05-20) — owned by **`epics/sports_master.md`** (coverage backfill, not canonicalisation).
-  This plan canonicalises the FORM + relabels honest-absence; it does NOT backfill missing bookmaker coverage.
+  odds_movement, absorbed 2026-05-20) — coverage backfill in **`epics/sports_master.md`** (not canonicalisation). This
+  plan canonicalises the FORM + relabels honest-absence; it does NOT backfill missing bookmaker coverage.
 - **Retired-data-type cleanup** (`TRANSFERMARKT_LEAGUES` / `SFI_LEAGUES`, 88,779 rows → `EXPECTED_DEPRECATED_DATA_TYPE`)
-  — owned by `sports_retired_data_types_code_cleanup_2026_05_13.md`.
+  — `sports_retired_data_types_code_cleanup_2026_05_13.md`.
 - **`source` write-path code** — owned by `data_source_provenance` Phase 4 (already shipped the multi-source `FIXTURES`
   stamping at the instruments-service writers); this plan only runs the **path→column data backfill + re-consolidation**
   as a RIDER of the single walk.
@@ -632,17 +674,25 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       UTL contract upgrade. Filed as UTL-contract todo below. `base_adapter.py:185` is `ErrorCategory` enum (different
       axis — not an asset-group column). `sports_fixtures_daily_repoll.py:43` is a docstring. No IS renames needed; UTL
       must rename its `category` param to `asset_group` — see UTL-contract upgrade todo. — instruments-service@8958a2ae
-- [ ] [CODE] P1. **UTL contract upgrade: rename `record_captured(category=…)` param to `asset_group=` — HARD ATOMIC
+- [x] ✅ [CODE] P1. **UTL contract upgrade: rename `record_captured(category=…)` param to `asset_group=` — HARD ATOMIC
       CUT, ZERO ALIAS (operator directive 2026-06-02, dispatched to a dedicated session)**:
       `unified_trading_library/manifest_writer.py:2629` declares `category: str`; internally maps to `asset_group`
-      (1800/2451/2794). Operator: do it NOW workspace-wide, **no lingering deprecated alias** — the shipped end-state has
-      NO `category` kwarg in any ManifestWriter signature; a missed caller must FAIL LOUD (TypeError), never silently
-      forward. Approach = ONE coordinated sweep: (1) UTL adds `asset_group=` + transiently accepts both; (2) update EVERY
-      caller across ALL repos (instruments-service ~18 sites + sports_fixtures_daily_repoll, MTDS, features, strategy,
-      execution, alerting, deployment-api, e2e, migration scripts) `category=`→`asset_group=`; (3) UTL commit that
-      REMOVES `category` — lands in the SAME sweep so zero alias ships. NEW QG ratchet fails on any `category=` at a
-      ManifestWriter call site. Leave unrelated `ErrorCategory`/`market_category`/`BookmakerCategory`. Provenance:
-      instruments-service@8958a2ae diagnosis. NOT deferred — in-flight in the dedicated session.
+      (1800/2451/2794). Operator: do it NOW workspace-wide, **no lingering deprecated alias** — the shipped end-state
+      has NO `category` kwarg in any ManifestWriter signature; a missed caller must FAIL LOUD (TypeError), never
+      silently forward. Approach = ONE coordinated sweep: (1) UTL adds `asset_group=` + transiently accepts both; (2)
+      update EVERY caller across ALL repos (instruments-service ~18 sites + sports*fixtures_daily_repoll, MTDS,
+      features, strategy, execution, alerting, deployment-api, e2e, migration scripts) `category=`→`asset_group=`; (3)
+      UTL commit that REMOVES `category` — lands in the SAME sweep so zero alias ships. NEW QG ratchet fails on any
+      `category=` at a ManifestWriter call site. Leave unrelated `ErrorCategory`/`market_category`/`BookmakerCategory`.
+      Provenance: instruments-service@8958a2ae diagnosis. ✅ DONE 2026-06-02 (dedicated session) — shipped
+      workspace-wide, ZERO alias. UTL@9db7fd69 (rename + tests, no `category` kwarg in any ManifestWriter signature).
+      Callers `asset_group=`: instruments-service@3ade065b (20 sites incl orchestrator x17 + repoll + 2 scripts),
+      MTDS@d0dad2da (3), MDPS@b67afaa (2), execution-service@0eb6b945a (2), strategy-service@882da071 (1). 91 sites
+      total (28 callers + 63 UTL tests). features/alerting/deployment-api/e2e: **0** ManifestWriter `category=`
+      callsites per workspace-wide AST audit — no change needed (the repo list was speculative). QG ratchet **STEP
+      5.92** `check_no_category_kwarg_at_manifest_write.py` (PM@60a27debe) bans any regression; the existing
+      tradfi-source ratchet was updated to read `asset_group=` (else the rename would silently disable it).
+      Event-payload observability dict keys kept as `category` for dashboard stability (write \_param* only).
 - [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads**: `mtds_canonical_reader.py`
       explicitly builds `category=defi/` twin paths for backward compatibility — this is intentional (reads legacy
       on-disk data). Post sports/defi migration when `category=` paths are decommissioned, remove the twin.

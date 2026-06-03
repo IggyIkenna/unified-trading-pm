@@ -26,7 +26,9 @@ supersedes:
 
 ## ✅ ARCHIVED 2026-06-01
 
-Cross-operator auth-failover (account rotation on auth-fail, healing on heartbeat) shipped + deployed. 0 open todos. Fleet-verified live (both AWS orchestrator VMs @589b711). **Deferred work:** none. **Codex aligned** (agent-orchestrator-overview / -autospawn / -worker-liveness — all current 2026-06-01). Unlocked for archival.
+Cross-operator auth-failover (account rotation on auth-fail, healing on heartbeat) shipped + deployed. 0 open todos.
+Fleet-verified live (both AWS orchestrator VMs @589b711). **Deferred work:** none. **Codex aligned**
+(agent-orchestrator-overview / -autospawn / -worker-liveness — all current 2026-06-01). Unlocked for archival.
 
 # Cross-operator account rotation + auth-fail trigger + Slack alert
 

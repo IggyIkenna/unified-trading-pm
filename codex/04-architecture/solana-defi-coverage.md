@@ -148,9 +148,9 @@ rows before the floor date are `empty_confirmed/EXPECTED_PRE_VENUE_LAUNCH`.
 
 > Added 2026-05-13 per `plans/active/solana_restaking_rewards_coverage_2026_05_13.md`.
 
-| Venue                | UAC Key                                              | Program ID (best-guess)                         | Deploy Date | Adapter                           | Status                                           |
-| -------------------- | ---------------------------------------------------- | ----------------------------------------------- | ----------- | --------------------------------- | ------------------------------------------------ |
-| JITORESTAKING-SOLANA | `CANONICAL_VENUE_TO_ADAPTER["JITORESTAKING-SOLANA"]` | Jito Vault Program (multiple VRT mints)         | 2024-08-01  | `adapters/defi/jito_restaking.py` | ✅ shipped (Plan A)                              |
+| Venue                | UAC Key                                              | Program ID (best-guess)                 | Deploy Date | Adapter                           | Status              |
+| -------------------- | ---------------------------------------------------- | --------------------------------------- | ----------- | --------------------------------- | ------------------- |
+| JITORESTAKING-SOLANA | `CANONICAL_VENUE_TO_ADAPTER["JITORESTAKING-SOLANA"]` | Jito Vault Program (multiple VRT mints) | 2024-08-01  | `adapters/defi/jito_restaking.py` | ✅ shipped (Plan A) |
 
 > Solayer/Picasso/Cambrian removed 2026-06-02 — no usable/decodable data source (operator decision). The Plan-E
 > SOLAYER/PICASSO/CAMBRIAN-SOLANA venues, UAC capabilities, and IS adapters were fully wiped. sSOL is a custom LRT vault
@@ -170,12 +170,12 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 
 ### Restaking data type taxonomy (SSOT)
 
-| Data type                      | Semantic                                                      | Availability                       |
-| ------------------------------ | ------------------------------------------------------------- | ---------------------------------- |
-| `restaking_rewards`            | Per-epoch/operator reward accrual rate (APY + absolute)       | REST API / RPC (future MTDS scope) |
-| `restaking_operator_set`       | Active operators/NCNs securing a vault                        | On-chain account reads             |
-| `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (no live venue)| API / SDK                          |
-| `lst_rates`                    | Exchange rate (underlying SOL per receipt token)              | Stake pool state accounts          |
+| Data type                      | Semantic                                                        | Availability                       |
+| ------------------------------ | --------------------------------------------------------------- | ---------------------------------- |
+| `restaking_rewards`            | Per-epoch/operator reward accrual rate (APY + absolute)         | REST API / RPC (future MTDS scope) |
+| `restaking_operator_set`       | Active operators/NCNs securing a vault                          | On-chain account reads             |
+| `cross_chain_restaking_routes` | Available cross-chain paths for restaked assets (no live venue) | API / SDK                          |
+| `lst_rates`                    | Exchange rate (underlying SOL per receipt token)                | Stake pool state accounts          |
 
 ### Jito Restaking (already shipped — Plan A)
 
@@ -186,11 +186,11 @@ the AVS premium component, causing P&L to appear worse than actual. Restaking co
 ### Solayer / Picasso / Cambrian — REMOVED 2026-06-02
 
 The Plan-E Solayer, Picasso, and Cambrian restaking venues were **fully removed 2026-06-02 (operator decision)** — no
-usable/decodable data source. Solayer's sSOL is a custom LRT vault with no decodable exchange-rate layout / no IDL, so it
-could not be field-verified; Picasso (~3 tx/month, no public yield/rate API) and Cambrian (a developer SDK for building
-NCNs on Jito Restaking, not a DeFi venue) had only best-guess placeholder program IDs that were never verified. The
-venues, UAC `PROTOCOL_CAPABILITIES`/`_STATIC_VENUE_CHAINS` entries, IS `solayer.py`/`picasso.py`/`cambrian.py` adapters,
-and all tests were wiped. "Rather have no implementation than a partial one." SSOT:
+usable/decodable data source. Solayer's sSOL is a custom LRT vault with no decodable exchange-rate layout / no IDL, so
+it could not be field-verified; Picasso (~3 tx/month, no public yield/rate API) and Cambrian (a developer SDK for
+building NCNs on Jito Restaking, not a DeFi venue) had only best-guess placeholder program IDs that were never verified.
+The venues, UAC `PROTOCOL_CAPABILITIES`/`_STATIC_VENUE_CHAINS` entries, IS `solayer.py`/`picasso.py`/`cambrian.py`
+adapters, and all tests were wiped. "Rather have no implementation than a partial one." SSOT:
 `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.
 
 ### carry_staked_basis cross-reference

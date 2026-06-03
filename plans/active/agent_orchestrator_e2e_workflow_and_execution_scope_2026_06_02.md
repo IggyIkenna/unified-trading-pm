@@ -16,7 +16,7 @@ related_plans:
   - plans/active/quality_gates_resource_contention_speedup_2026_06_02.md
   - plans/active/cicd_contract_hardening_2026_06_01.md
   - plans/epics/orchestrator_master.md
-  - plans/active/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
+  - plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
 ---
 
 # Agent-orchestrator e2e workflow + execution-scope field
@@ -48,6 +48,17 @@ supersedes the prior `main`-direct exception).** Today the repo has `origin/live
 server-deploy axis) → quickmerge→`staging` → SIT → `main` path. **LDR** is the continuous-integration axis; quickmerge→
 staging is the **promotion step when a unit is done**; merge-to-`main` is the CICD trigger (see G6).
 
+## Status snapshot (2026-06-02)
+
+| Bucket                                                              | Gaps                                                                                        | Notes                                                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ **Done + shipped** (slot 2)                                      | **G1**, **G2** (30-min interval), **G4**, **G5**, **G6** v1-ghost-cleanup-on-LDR, **G7 P0** | All flipped with SHA evidence; e2e_demo + check.sh green                                                                                                                                                                                                                                                                                                                          |
+| 🔴 **Deferred — GitHub billing**                                    | **G6** branch-protection (require `…/quality-gates-v2`)                                     | Not an access issue (session is admin via `GH_PAT`); GitHub feature-gates rulesets/branch-protection for this private repo (`403 upgrade-to-Pro`). Unblocks when the billing/credit-card issue clears — then create the ruleset like the sibling repos.                                                                                                                           |
+| 🟡 **Deferred — operator deploy green-light**                       | **G6** create `staging` + remove v1 ghosts from `main` + SIT gate                           | Both fire CICD → a fleet **backend restart**, out of bounds until the operator green-lights a deploy. G5 already made a deploy state-safe.                                                                                                                                                                                                                                        |
+| ➡️ **Owned by another plan**                                        | worker-VM / QG **resourcing + sizing**                                                      | The "do workers need more RAM / dedicated QG+SIT runner" question is tracked in [`quality_gates_resource_contention_speedup_2026_06_02.md`](quality_gates_resource_contention_speedup_2026_06_02.md) — 3 options (A scale-workers / B self-hosted runner pool / C bespoke RPC) documented there, data-gated on `qg-perrepo-baseline` + `qg-cw-memory-agent`. Not duplicated here. |
+| 👤 **Owned by other agent** (boot-prompt / CLAUDE.md context-bloat) | **G3**, **G7 P1**, **G8** (+ residuals)                                                     | Left open intentionally — another agent is doing the boot-prompt + CLAUDE.md de-bloat and will flip these + push when done. Do not touch from this side.                                                                                                                                                                                                                          |
+| ⚪ **Optional, not required**                                       | **G2** push-trigger stretch                                                                 | `POST /api/backlog/regen` endpoint already exists; only an optional GHA hook remains. 30-min floor makes it unnecessary.                                                                                                                                                                                                                                                          |
+
 ## Gaps to close
 
 ### G1 — execution-scope plan-routing field [P0] _(the field Harsh asked for)_
@@ -72,17 +83,19 @@ confirmed). 6h is far too much latency: plans are authored continuously, so back
       `server/regen_backlog_from_plan.py`; docstrings updated + comment decoupled from the SQLite-backup cadence. This
       was a code-vs-doc drift — the codex overview already documented `default 1800`.
       `test_default_regen_interval_is_at_most_30min` added. — agent-orchestrator@e21bd41
-- [ ] [DESIGN] P1. _(stretch)_ For near-instant ack, add a push-triggered `POST /api/backlog/regen` callable from a
-      post-push GHA hook — polling at 30 min is the floor, push is the ceiling. Not required for the 30-min fix.
+- [ ] [DESIGN] P1. _(stretch, optional)_ Near-instant ack. The `POST /api/backlog/regen` endpoint **already exists**
+      (`server/server.py:1581`, AUTHED) — what's missing is a post-push GHA hook in unified-trading-pm that calls it on
+      `plans/active/*.md` changes. Deferred: it needs a GHA→central-orchestrator auth token (the operator JWT /
+      internal-secret) wired as a repo secret — a small auth/secrets task, not required given the 30-min floor from the
+      G2 default + the 5-min `pm-pull` (effective ≤30 min today).
 
 ### G3 — merge-flow doc drift [P0] _(fix lives in the context-hygiene plan)_
 
-- [ ] [DOC] P0. The live staging-first quickmerge flow contradicts the rules fed to agents
-      (`.claude/rules/workspace-workflow.md` "staging = breaking changes"; `cursor-configs/CLAUDE.md` "quickmerge for
-      promotion-to-main" / "DO NOT quickmerge dirty deps → push LDR"). Reconcile to the live model + the LDR dual-path.
-      Tracked as instance (e) in
-      [agent_context_and_memory_hygiene_2026_06_02.md](agent_context_and_memory_hygiene_2026_06_02.md) Phase 3 — fix
-      there, do not duplicate.
+- [x] ✅ [DOC] P0. **DONE via context-hygiene Phase 3** (as planned — "fix there, do not duplicate"): merge-flow
+      reconciled to staging-first at 3 SSOTs — `cursor-configs/CLAUDE.md` Git-discipline (PM@6da4f1175), and the local
+      `.claude/rules/workspace-workflow.md` + `universal.md` ("staging=breaking" + "--to-staging for breaking" →
+      staging-first + LDR dual-path). The `workspace-workflow.md`/`universal.md` files were subsequently folded into
+      CLAUDE.md + tombstoned (PM@6e7a6e01d).
 
 ### G4 — prove the loop end-to-end [P1]
 
@@ -140,16 +153,28 @@ can never touch it — this is what makes the "update code → restart backend" 
 Operator steer 2026-06-02: keep **local SQLite as the live source of truth** (long-running VMs) + add a **pre-restart
 flush** so no data is lost on deploy/restart, rather than going full GCS-restore-on-boot.
 
-- [ ] [SCRIPT] P0. Move the live DB off the repo checkout: set `ORCHESTRATOR_DB_PATH` to a persistent path
-      (`/var/lib/orchestrator/state.db`) in `bootstrap_vm.sh` + the systemd unit (`ReadWritePaths` + a one-time migrate
-      of the existing DB). A code redeploy then cannot wipe state.
-- [ ] [SCRIPT] P0. Harden the pre-restart flush: add an explicit `flush+snapshot` step the deploy/restart path calls
-      BEFORE sending SIGTERM (e.g. `POST /api/admin/snapshot` or a systemd `ExecStop=` pre-hook), and raise
-      `TimeoutStopSec` enough for the snapshot to finish. Goal: zero data loss on a planned restart even if the GCS
-      upload is slow.
-- [ ] [DESIGN] P1. OOM/hard-kill RPO: tighten the periodic `SnapshotLoop` interval (or WAL-checkpoint cadence) so an
-      unplanned kill loses at most a bounded window. Confirm `_state` + loop state fully rehydrate from SQLite on boot
-      (already true by trace — add a restart test that asserts it).
+- [x] ✅ [SCRIPT] P0. DB + state.json moved off the repo checkout to **`/var/lib/orchestrator/`** via
+      `ORCHESTRATOR_DB_PATH` + `ORCHESTRATOR_STATE_JSON` in the systemd unit (+ `ReadWritePaths=/var/lib/orchestrator`
+      under `ProtectSystem=strict`); `bootstrap_vm.sh` creates+chowns the dir and does an **idempotent one-time move**
+      of any existing in-repo `data/state/state.db` (+wal/shm/json). A redeploy can no longer wipe state. —
+      agent-orchestrator@ff4fc23
+- [x] ✅ [SCRIPT] P0. Pre-restart flush hardened: `TimeoutStopSec` **30 → 90** so the lifespan shutdown snapshot (which
+      IS the pre-restart flush — `snapshot_session(reason="shutdown")`) completes even on a slow GCS/S3 upload. No
+      `ExecStop` curl hook added — it would need the `/api/snapshot` auth token, and it's redundant now that the DB is
+      persistent (a truncated snapshot only stales the DR archive, never live state). — agent-orchestrator@ff4fc23
+- [x] ✅ [DESIGN] P1. OOM/hard-kill RPO: the periodic snapshot is already `ORCHESTRATOR_SNAPSHOT_INTERVAL_SECONDS=1800`
+      (30 min) in the unit — that bounds the **DR-archive** staleness; the **live** RPO is now ~0 because the WAL DB
+      sits on the persistent path and survives the kill. `_state` + loop-state rehydration from SQLite on boot is
+      **proven by e2e_demo step 12** (stop+resume returns both in-progress tasks). No interval change needed.
+- **Downstream-consumer fixes found during G5 (SSOT consistency for the moved path):**
+  - `restore_from_gcs.sh` — defaulted to `${REPO_ROOT}/data/state.db` (wrong: missed the `/state/` subdir) and read a
+    typo'd `ORCHESTRATOR_STATE_JSON_PATH` env var (never took effect). Now defaults to `/var/lib/orchestrator/` and
+    reads the correct `ORCHESTRATOR_STATE_JSON`.
+  - `gcs_sync.commit_state_to_git` — would have poisoned its `git add` with the out-of-repo state.json path; now skips
+    any path outside `repo_root` (state.json is covered by the DB + GCS/S3 snapshot).
+
+**Scope = code only (operator decision 2026-06-02).** Applies on the next bootstrap/deploy; the 2 live VMs migrate via
+the idempotent one-time move in `bootstrap_vm.sh` when re-bootstrapped. e2e_demo regression green; check.sh green.
 
 ### G6 — staging branch + CICD for agent-orchestrator [P0] _(operator decision 2026-06-02)_
 
@@ -159,15 +184,33 @@ flush** so no data is lost on deploy/restart, rather than going full GCS-restore
 missing is the **`staging` branch itself** + the v1-ghost cleanup. Its local gate is **`scripts/check.sh`** (no
 `scripts/quickmerge.sh`/`quality-gates.sh` — it is not a uv service repo).
 
-- [ ] [INFRA] P0. Create the `staging` branch for agent-orchestrator + a `staging-to-main` SIT/promotion gate mirroring
-      the trading-repo flow. Removes the old `main`-direct exception. (Quickmerge in the trading repos is already
-      staging-first — PR base = staging, `--to-staging` is a no-op — see G3/G7.)
-- [ ] [INFRA] P0. Delete the stale v1 ghost workflows still present in agent-orchestrator (`quality-gates.yml`,
-      `workspace-qg.yml`) — the v2 migration removed these from every other repo (deployment-ui done 2026-06-02). Pin
-      branch protection to require `Quality Gates (agent-orchestrator) / quality-gates-v2`.
-- [ ] [INFRA] P0. Confirm the merge→CICD restart path: dashboard rebuild + GHA-restart of the backend on deploy.
-      **Depends on G5** — do not enable the auto-restart until the DB is off the repo checkout + the pre-restart flush
-      is in place, or a deploy could wipe/lose state.
+**Access + safety reality (verified 2026-06-02, corrected):** with `GH_PAT` the session IS repo **admin** (owner
+`IggyIkenna`) — the earlier "push-only/not-admin" note was a wrong-token error (keyring `gho_` is push-only, `GH_PAT` is
+admin). The real branch-protection blocker is a **GitHub billing/feature gate**, not access: branch-protection +
+rulesets return `403 "Upgrade to GitHub Pro or make this repository public"` for **agent-orchestrator specifically**.
+Every sibling repo (unified-trading-pm, execution-service, deployment-ui, alerting-service…) HAS active rulesets —
+grandfathered from the v2-migration tooling during a paid-plan window that **deliberately skipped agent-orchestrator**
+(the codified `main`-direct operator-tooling exception). It never got a ruleset and the feature is now gated for
+creating one. The v2 **workflow already runs** on agent-orchestrator main/staging — only the _required-check
+enforcement_ is missing. Also: creating `staging` or pushing to `main` fires the deploy path (`dispatch-cloud-build` on
+staging; main→`cloud-build-router`) which **restarts the fleet backends** — out of bounds until the operator
+green-lights a deploy (2026-06-02 directive: "don't restart the running backends").
+
+- [x] ✅ [INFRA] P0. Deleted the stale v1 ghost workflows on LDR (`quality-gates.yml`, `workspace-qg.yml`).
+      `workspace-     qg.yml` had still been triggering on every `live-defi-rollout` push (wasted runs); neither carries
+      a cloud-build dispatch so removal triggers no deploy. — agent-orchestrator@0249a83
+- [ ] [INFRA] P0. **BLOCKED-OPERATOR** — remove the v1 ghosts from `main` too + create the `staging` branch +
+      `staging-to-main` SIT gate. Both actions trigger CICD → a fleet backend **restart**, so they wait for the operator
+      to green-light a deploy. (LDR-side deletion above promotes to main on that same deploy.)
+- [ ] [INFRA] P0. **BLOCKED-BILLING** — pin branch protection to require
+      `Quality Gates (agent-orchestrator) /     quality-gates-v2`. Not an access problem (session is admin via
+      `GH_PAT`); GitHub **feature-gates** rulesets + branch-protection for this repo (`403 upgrade-to-Pro`), the only
+      repo of the set so gated. Resolve by ONE of: (a) upgrade the GitHub plan (Pro/Team) so a ruleset can be created
+      here, (b) make the repo public (rulesets free for public), or (c) accept "v2 runs but isn't a hard-required gate"
+      (operator tooling). Operator/billing decision.
+- [x] ✅ [INFRA] P0. merge→CICD restart path confirmed wired: `quality-gates-v2.yml` `dispatch-cloud-build` (staging) +
+      main→`cloud-build-router`→`uts-prod`. **Now safe w.r.t. state** since G5 moved the DB off the repo checkout — a
+      deploy/restart no longer risks state. Actual enablement = the operator's deploy green-light (above).
 
 ### G7 — reconcile agent boot prompts to the staging-first quickmerge + v2 flow [P0] _(operator-raised 2026-06-02)_
 
@@ -185,10 +228,9 @@ flow" + `quickmerge --agent`, but they carry the **same staging-vs-LDR drift as 
 - [ ] [DOC] P1. Clarify the **operator-tooling exception** (`worker.md:228`): agent-orchestrator's own gate is
       `scripts/check.sh` (correct, verified) — but once G6 lands its `staging` flow, document whether agents working
       _inside_ agent-orchestrator ship via `check.sh` + reviewed direct push or via the new staging PR path.
-- [ ] [DOC] P1. Note that "v2" = the CI required-check rename (`…/quality-gates-v2`, migration COMPLETE 2026-06-02,
-      17/17 repos); the LOCAL two-pass commands (`scripts/quality-gates.sh` → `quickmerge.sh --agent`) are unchanged —
-      so no command edits are needed, only the target-branch + `--to-staging` corrections. Cross-link G3 (do not
-      duplicate the rules-file fix that lives in the context-hygiene plan).
+- [x] ✅ [DOC] P1. Verified: "v2" = the CI required-check rename (`…/quality-gates-v2`, 17/17 repos); LOCAL two-pass
+      commands (`scripts/quality-gates.sh` → `quickmerge.sh --agent`) are unchanged — so no command edits were needed,
+      only the target-branch + `--to-staging` corrections, which G7 + the context-hygiene Phase-3 merge-flow fix landed.
 
 ### G8 — worker boot-context de-bloat (executor-minimal context) [P0] _(Harsh 2026-06-02; verified)_
 
@@ -205,26 +247,84 @@ operator context (governance / planning / master-plan / model-tier rules).
   `.claude/CLAUDE.md` symlink → it doesn't replace, it doubles.
 - **Competing rules SSOTs:** `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (180 L; CLAUDE.md says "paste via
   inject-mandatory-rules.sh") vs `agents/RULES.md` (355 L; what the spawn actually uses) — two drifting docs.
-- **Stale paths:** `worker.md:114` `WORKSPACE_ROOT:-/home/ubuntu/...`; `RULES.md:224` `cat /home/hk/...SUB_AGENT...`.
-- **Possible CLAUDE.md double-load:** reachable via `<repo>/.claude/CLAUDE.md` AND workspace `.claude/rules/CLAUDE.md`.
+- **Stale paths:** `worker.md:114` `WORKSPACE_ROOT:-/home/ubuntu/...`; `RULES.md` `cat /home/hk/...SUB_AGENT...`.
+- **CLAUDE.md double-load — RESOLVED (not a real bloat source):** Claude Code de-duplicates auto-loaded context by
+  **resolved path**, so the same physical `cursor-configs/CLAUDE.md` reached via two symlinks
+  (`<repo>/.claude/CLAUDE.md`
+  - workspace `.claude/rules/CLAUDE.md`) loads ONCE. On the **VM** (where workers run) only the repo symlink path exists
+    — there is no workspace `.claude/rules` there — so a single load regardless. The real duplication is **content**:
+    `RULES.md`/`worker.md` restating CLAUDE.md's rules as different prose (a true second copy) → fixed by slimming,
+    below.
 
-- [ ] [DESIGN] P0. Define the **minimal worker (executor) context**: workers need repo conventions + execution rules,
-      NOT the full operator CLAUDE.md (governance/planning/master-plan) or MEMORY.md. Decide whether workers auto-load a
-      lean worker-rule-set instead of the 84 KB operator CLAUDE.md, and make `worker.md`/`RULES.md` **point to** it
-      rather than restating rules. Pick ONE canonical agent-rules doc (RULES.md vs SUB_AGENT_MANDATORY_RULES.md) + merge
-      the other; fix CLAUDE.md's stale "inject via inject-mandatory-rules.sh" line. (Cross-link G7 — merge-flow done
-      there; this kills the bloat.)
-- [ ] [SCRIPT] P1. Fix stale paths: `worker.md:114` /home/ubuntu → `$WORKSPACE_ROOT`; `RULES.md:224` /home/hk →
-      relative/`$WORKSPACE_ROOT`.
-- [ ] [SCRIPT] P1. Confirm + fix CLAUDE.md double-load (repo `.claude/CLAUDE.md` + workspace `.claude/rules/CLAUDE.md`).
+- [x] ✅ [SCRIPT] P0. Added `.claude/CLAUDE.md` + `.claude/SUB_AGENT_MANDATORY_RULES.md` symlinks (→
+      `../../unified-trading-pm/cursor-configs/...`) to the 2-of-3 repos that lacked them: **agent-orchestrator**
+      (`.claude/` was gitignored wholesale → un-ignored the 2 SSOT symlinks) + **ml-service**. Now all 22 service repos
+      match the pattern; AO agents auto-load CLAUDE.md instead of relying on RULES.md restating it. VMs get them via
+      clone/worktree (PM is a sibling; `setup-tab-worktrees.sh` checks them out as tracked files — no bootstrap edit
+      needed). — agent-orchestrator@bf85d21 + ml-service@f17f13e
+- [x] ✅ [DESIGN] P0. **Slimmed `RULES.md` to worker-lifecycle-only** (option a): 357 → 233 L — stripped the
+      generic-rule restatements (the 8 code rules / QG entrypoint / git discipline / findings-triage, all now
+      auto-loaded via the `.claude/CLAUDE.md` symlink); kept worker-lifecycle-unique content (worktree scope, the
+      server-verified ship→flip→`/done` loop incl. M3 cross-repo verification, sub-agent spawning, the backlog/HTTP API
+      surface); §6 now points to the CLAUDE.md sections instead of duplicating. **RULES.md vs
+      SUB_AGENT_MANDATORY_RULES.md stay separate** (justified: RULES.md = worker-lifecycle boot prompt; SUB_AGENT = the
+      paste-into-`Task()` sub-agent ruleset — distinct audiences, not a dup). Also de-staled the CLAUDE.md AO
+      branch-model exception (transitional, cross-links G6). — agent-orchestrator@41cb2a5 + unified-trading-pm@b811b4232
+- [x] ✅ [SCRIPT] P1. Fixed stale paths: `worker.md:114` boot loop `WORKSPACE_ROOT` fallback `/home/ubuntu` → `$HOME`
+      (workers run as the operator → correct base on any VM); `RULES.md` `cat /home/hk/…` → relative sibling path (prior
+      session). Also exported `WORKSPACE_ROOT` in `bootstrap_vm.sh` (.env.local → systemd → tmux workers + operator
+      .bashrc/.profile, mirroring GH_TOKEN) so the fallback is a safety net not the primary. —
+      agent-orchestrator@41cb2a5
+- [x] ✅ [SCRIPT] P1. CLAUDE.md double-load — **RESOLVED as not-a-real-issue** (see finding above): CC de-dups by
+      resolved path, and the VM has only the single repo-symlink path. The real dup was content (RULES.md restating
+      CLAUDE.md), fixed by the slim. — analysis, no code change needed.
+
+### G8 residual discoveries (surfaced during the de-bloat pass 2026-06-02)
+
+- [x] ✅ [DOC] P2. `agents/main.md` cutover section generalised — retitled
+      `## Tomorrow-morning specifics (cutover day,     2026-05-19)` →
+      `## Cold-start morning (no work_split authored yet)` + de-dated the work_split reference (the content was a useful
+      cold-start runbook, not conditionally-reachable code). — agent-orchestrator@c605f95
+- [x] ✅ [DOC] P2. `SUB_AGENT_MANDATORY_RULES.md` freshness pass — **verified clean** (180 L): grep found NO stale facts
+      (no HS256, no `main`-direct/AO-branch claim, no "staging=breaking"/"promotion-to-main", no v5/v8 manifest, no
+      removed venues, no `category=`). Its `git push origin live-defi-rollout` guidance is correct per the LDR CI-axis
+      model (not stale). No edit needed; stays distinct from RULES.md (worker-lifecycle) by design.
+- [ ] [INFRA] P2. **IAM gap**: the `harsh-worker` AWS IAM user (`arn:aws:iam::427895769566:user/harsh-worker`) lacks
+      `ssm:SendCommand`, so a Harsh slot can't inspect/operate the fleet VMs via SSM (the fleet is SSM-access, not open
+      SSH). If Harsh slots are expected to do fleet ops, grant the SSM action; else document that fleet ops route
+      through the central VM / operator session only. Surfaced when verifying the AO `.claude/` symlink on
+      `vm-orchestrator`.
+
+### G9 — conflict-resolution + stuck-PR remediation runs on the orchestrator (Max-plan accounts, $0 API) [P1] _(operator 2026-06-02)_
+
+Today merge-conflict / stuck-PR remediation runs **in a GHA runner on `ANTHROPIC_API_KEY_CICD` (paid API)** via
+`conflict-resolution-agent.yml`, and it only **proposes** a resolution PR ("will NOT auto-merge"). It should instead be
+**dispatched to this orchestrator**, which spawns a Claude Code worker on one of the **4 Claude Max accounts**
+(setup-token auth, ~1yr) — **$0 marginal API cost** — and that worker, being a full agent, **resolves → runs Pass-1 QG →
+enables auto-merge on `quality-gates-v2` green** (the required check stays the gate). This is the orchestrator-side half
+of cicd plan §"CI/CD Observability + Reconciliation Hardening" B/C
+([`cicd_contract_hardening_2026_06_01.md`](cicd_contract_hardening_2026_06_01.md)); the GHA-trigger half
+(`escalate-to-orchestrator.yml`, retiring the API path, auto-merge guard) is owned there. No dual-tracking: **GHA wiring
+= cicd plan; worker + account model = here.**
+
+- [ ] [AGENT] P1. **Conflict-resolver worker template** — a spawn profile/agent prompt the orchestrator dispatches on a
+      Max-plan account for `merge-conflict-detected` / `stuck_promotion_pr` events: clone target repo at the PR head,
+      resolve the conflict, run `quality-gates.sh` (Pass 1, `--no-fix`), and on green enable v2-gated auto-merge (or
+      close-superseded when the PR's content is already on the target). reads `SUB_AGENT_MANDATORY_RULES.md`. repo:
+      agent-orchestrator (`agents/conflict-resolver.md` + dispatch route in `server/`; reuses `escalation.py`).
+- [ ] [AGENT] P1. **Orchestrator spawn route accepts the escalate payload** (repo, source/target branch, PR url, plan
+      refs) from PM `escalate-to-orchestrator.yml` and enqueues the conflict-resolver worker on a free Max-plan account
+      (account-rotation + rate-limit aware, per the existing 4-account health model). repo: agent-orchestrator.
 
 ## Related open work (NOT absorbed here)
 
 The archived `orchestrator_autonomy_audit_remediation_2026_06_01` left **F1/F2/FM3** open (running VM behind LDR HEAD;
-vm-ml SSM-degraded/now-stopped; foreign-repo playwright-report still tracked). These are tracked in
-[issues/orchestrator_autonomy_residual_findings_2026_06_02.md](issues/orchestrator_autonomy_residual_findings_2026_06_02.md)
-— owned there, referenced here so the e2e picture is complete. Fleet is currently consolidated to **2 running VMs**
-(vm-orchestrator + api-host); 9 epic VMs stopped.
+vm-ml SSM-degraded/now-stopped; foreign-repo playwright-report still tracked). **All three RESOLVED + the residual issue
+doc ARCHIVED 2026-06-02** (F1 = `data/state/` gitignore fix unwedged ao-self-pull; F2 = vm-ml SSM recovered on
+stop/start; FM3 = deployment-ui playwright-report `git rm --cached` + gitignored @`8f1fe86`; plus the epic-VM disk-bloat
+guard + capped-tmpfs `/tmp`):
+[archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md](../archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md).
+Fleet is currently consolidated to **2 running VMs** (vm-orchestrator + api-host); 9 epic VMs stopped.
 
 ## Full-execution criterion (PLAN_FORMAT §8)
 

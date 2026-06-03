@@ -42,6 +42,9 @@
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
 #   --skip-codex       Skip codex compliance check (Stage 3 §5). Human-only escape hatch; never use with --agent.
 #   --skip-preflight   Skip pre-flight audit (Stage 2). Human-only escape hatch; never use with --agent.
+#   --skip-dep-tier-gate Skip dep-tier-readiness check (Stage 1.7). HUMAN-ONLY — agents must NOT use this.
+#                      Use only when manually force-promoting out-of-order (e.g. hotfix on L0 lib while L1 is
+#                      below staging). Prints a loud warning. Never combine with --agent.
 #   --user-approved    Deprecated — Stage 0.3 is advisory-only; no gate to bypass.
 #                      Version bumps are GHA-only (semver-agent.yml). Kept for backwards compat.
 #
@@ -53,6 +56,8 @@
 # Pipeline:
 #   1. Dependency validation (workspace-manifest.json)
 #   1.5. PM: dependency alignment check; ALL: staging lock check
+#   1.6. Dependency version gate (deps semver-behind staging)
+#   1.7. Dependency tier-readiness gate (deps ci_status must be STAGING_GREEN+ for LDR→staging promote)
 #   2. Pre-flight audit (skippable with --skip-preflight for multi-agent use)
 #   3. Local quality gates (two-phase: auto-fix → verify)
 #   4. Act simulation (default; skip with --quick)
@@ -97,6 +102,7 @@ QUICK=false
 NO_PR=false
 SKIP_CODEX=""
 SKIP_PREFLIGHT=false
+SKIP_DEP_TIER_GATE=false
 USER_APPROVED=false
 AGENT_MODE=false
 
@@ -147,6 +153,10 @@ while [[ $# -gt 0 ]]; do
       SKIP_PREFLIGHT=true
       shift
       ;;
+    --skip-dep-tier-gate)
+      SKIP_DEP_TIER_GATE=true
+      shift
+      ;;
     --user-approved)
       USER_APPROVED=true
       shift
@@ -180,6 +190,16 @@ if [ "$AGENT_MODE" = true ] && [ -n "$DEP_BRANCH" ]; then
   echo "❌ --dep-branch is not allowed in --agent mode."
   echo "   Agents use active_feature_branch from workspace-manifest.json automatically."
   echo "   Remove --dep-branch from your quickmerge call."
+  exit 1
+fi
+
+# --skip-dep-tier-gate is HUMAN-ONLY. Mirrors the --dep-branch guard: agents must never
+# bypass the dep-tier readiness check (it exists precisely to catch agent promotion races).
+if [ "$AGENT_MODE" = true ] && [ "$SKIP_DEP_TIER_GATE" = "true" ]; then
+  echo "❌ --skip-dep-tier-gate is not allowed in --agent mode."
+  echo "   This flag bypasses the dep-tier-readiness gate that prevents dep-order races."
+  echo "   Agents must promote deps to staging before promoting consumers."
+  echo "   Remove --skip-dep-tier-gate from your quickmerge call."
   exit 1
 fi
 
@@ -389,6 +409,52 @@ git fetch origin main --quiet 2>/dev/null || true
 if [ "$NO_PR" != "true" ] && [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/null; then
   echo "[$REPO_NAME] Nothing to commit — exiting fast"
   exit 0
+fi
+
+# ============================================================================
+# STAGE 0.4: NOT-BEHIND GATE — quickmerge must not run from a STALE base
+# The ONLY requirement is: local must NOT be BEHIND origin/<branch> (no unpulled
+# remote commits). Having local commits / uncommitted changes that DEVIATE from
+# origin is expected and fine — that's the work you're merging. So if behind, we
+# pull the latest FIRST: fast-forward when possible, otherwise rebase your local
+# commits on top of the latest. Block only if that rebase genuinely conflicts.
+# Emergency override only: QUICKMERGE_ALLOW_BEHIND=1
+# ============================================================================
+echo "=========================================="
+echo "STAGE 0.4: Not-Behind Gate (pull latest first)"
+echo "=========================================="
+_QM_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
+if [ -z "$_QM_BRANCH" ]; then
+  echo "[$REPO_NAME] detached HEAD — skipping not-behind gate"
+else
+  git fetch origin "$_QM_BRANCH" --quiet 2>/dev/null || true
+  if ! git rev-parse "origin/$_QM_BRANCH" >/dev/null 2>&1; then
+    echo "[$REPO_NAME] no origin/$_QM_BRANCH yet — skipping not-behind gate"
+  else
+    _QM_BEHIND=$(git rev-list "HEAD..origin/$_QM_BRANCH" --count 2>/dev/null || echo 0)
+    _QM_AHEAD=$(git rev-list "origin/$_QM_BRANCH..HEAD" --count 2>/dev/null || echo 0)
+    if [ "${_QM_BEHIND:-0}" = "0" ]; then
+      echo "[$REPO_NAME] ✅ not behind origin/$_QM_BRANCH (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
+    else
+      echo "[$REPO_NAME] behind origin/$_QM_BRANCH by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
+      if git pull --ff-only origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+        echo "[$REPO_NAME] ✅ fast-forwarded to latest — now current"
+      elif git pull --rebase --autostash origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+        echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
+      else
+        git rebase --abort 2>/dev/null || true   # clean up any half-done rebase
+        if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+          echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (rebase conflicts) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
+        else
+          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind origin/$_QM_BRANCH and auto-rebase hit conflicts."
+          echo "   Pull the latest first (resolving conflicts), then re-run:"
+          echo "     git pull --rebase origin $_QM_BRANCH"
+          echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
+          exit 1
+        fi
+      fi
+    fi
+  fi
 fi
 
 # ============================================================================
@@ -671,9 +737,14 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
 fi
 
 # ============================================================================
-# STAGE 1.6: DEPENDENCY VERSION DRIFT CHECK (staging canary)
-# Compares local PM manifest against remote PM manifest (one fetch, not 70).
-# If your dependencies have been bumped on staging, warns you to pull latest.
+# STAGE 1.6: DEPENDENCY VERSION GATE (semver behind staging_versions)
+# Layer-2 of the branch-and-version reference model
+# (codex/08-workflows/branch-and-version-reference-model.md): a dependency is
+# "safe to depend on" only once promoted LDR→staging→main (SIT + semver). If any
+# of THIS repo's pinned dep versions is semver-BEHIND staging_versions (read from
+# origin/main), auto-pull the PM manifest and re-check; BLOCK if still behind.
+# Being version-AHEAD of staging is fine (a local deviation, not a stale base).
+# Emergency override only: QUICKMERGE_ALLOW_BEHIND=1
 # ============================================================================
 if [ -f "$MANIFEST_PATH" ]; then
   PM_DIR="$WORKSPACE_ROOT/unified-trading-pm"
@@ -684,52 +755,158 @@ if [ -f "$MANIFEST_PATH" ]; then
     REMOTE_MANIFEST=$(cd "$PM_DIR" && git show origin/main:workspace-manifest.json 2>/dev/null || :)
   fi
 
-  if [ -n "$REMOTE_MANIFEST" ]; then
-    DEP_DRIFT=$(python3 -c "
+  # Echoes one line per dep whose LOCAL pinned version is semver-< staging/main.
+  # Re-runnable (reads the live MANIFEST_PATH), so we can re-check after a PM pull.
+  _dep_versions_behind() {
+    [ -n "$REMOTE_MANIFEST" ] || return 0
+    python3 -c "
+import json
+def pv(v):
+    try:
+        p = [int(x) for x in str(v).split('.')[:3]]
+        return tuple(p + [0] * (3 - len(p)))
+    except Exception:
+        return None
+lm = json.load(open('${MANIFEST_PATH}'))
+rm = json.loads('''${REMOTE_MANIFEST}''') if '''${REMOTE_MANIFEST}''' else {}
+repo = '${REPO_NAME}'
+deps = [d.get('name', d) if isinstance(d, dict) else d for d in lm.get('repositories', {}).get(repo, {}).get('dependencies', [])]
+lv = lm.get('versions', {}); rstag = rm.get('staging_versions', {}); rmain = rm.get('versions', {})
+for dep in deps:
+    l = lv.get(dep, ''); r = rstag.get(dep, '') or rmain.get(dep, '')
+    if not l or not r or str(r).startswith('_'):
+        continue
+    pl, pr = pv(l), pv(r)
+    if pl is None or pr is None:
+        continue
+    if pl < pr:
+        print(f'  {dep}: local={l} < staging/main={r}')
+" 2>/dev/null || :
+  }
+
+  DEP_BEHIND="$(_dep_versions_behind)"
+  if [ -n "$DEP_BEHIND" ]; then
+    echo "=========================================="
+    echo "STAGE 1.6: Dependency Version Gate"
+    echo "=========================================="
+    echo "[$REPO_NAME] pinned dependency version(s) BEHIND staging/main (un-integration-tested base):"
+    echo "$DEP_BEHIND"
+    echo "[$REPO_NAME] auto-pulling PM manifest (origin/main) to pick up promoted versions..."
+    if (cd "$PM_DIR" && git pull --ff-only origin main --quiet 2>/dev/null); then
+      DEP_BEHIND="$(_dep_versions_behind)"
+    fi
+    if [ -z "$DEP_BEHIND" ]; then
+      echo "[$REPO_NAME] ✅ resolved after PM pull — dep versions now current with staging/main"
+    elif [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
+      echo "[$REPO_NAME] ⚠️  still behind after pull — QUICKMERGE_ALLOW_BEHIND=1, continuing:"
+      echo "$DEP_BEHIND"
+    else
+      echo "[$REPO_NAME] ❌ BLOCKED: dependency version(s) still behind staging/main after PM pull:"
+      echo "$DEP_BEHIND"
+      echo "   Your deps must not be behind their staging-promoted (SIT-tested) versions."
+      echo "   Sync PM + re-align, then re-run:"
+      echo "     cd unified-trading-pm && git pull origin main"
+      echo "     python scripts/manifest/fix_external_dependency_alignment.py --apply   # if pyproject pins drifted"
+      echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
+      exit 1
+    fi
+    echo ""
+  fi
+fi
+
+# ============================================================================
+# STAGE 1.7: DEPENDENCY TIER-READINESS GATE
+# Prevents dep-order races (e.g. UTL-before-UAC main race 2026-06-02).
+# Rule: when promoting THIS repo from LDR→staging, every dep D must ALREADY be at
+# or above the staging tier — i.e. D.ci_status ∈ {STAGING_GREEN, SIT_VALIDATED}.
+# ci_status is written by ci-status-update.yml on every QG pass on the staging
+# branch, so it is a trustworthy "promoted+passed staging" signal.
+#
+# ci_status lifecycle for reference:
+#   NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN → STAGING_PENDING
+#   → STAGING_GREEN → SIT_VALIDATED
+#   Any state → FAILING on QG failure.
+#
+# Below-staging statuses (BLOCK): FEATURE_GREEN, LOCAL_PASS, NOT_CONFIGURED, FAILING
+# At-or-above staging (PASS):     STAGING_GREEN, SIT_VALIDATED
+# Exempt from check:              no dependencies, manifest not found, dep not in manifest
+#
+# Human-only escape: --skip-dep-tier-gate (agents MUST NOT use; see flag guard above).
+# ============================================================================
+if [ "$TO_STAGING" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ]; then
+  if [ "$SKIP_DEP_TIER_GATE" = "true" ]; then
+    echo "=========================================="
+    echo "STAGE 1.7: Dependency Tier-Readiness Gate"
+    echo "=========================================="
+    echo "⚠️  [$REPO_NAME] --skip-dep-tier-gate: BYPASSING dep tier-readiness check (HUMAN-ONLY override)."
+    echo "   This skips the guard that prevents dep-order races (e.g. UTL-before-UAC)."
+    echo "   Ensure deps are promoted to staging manually before this repo's CI completes."
+    echo ""
+  else
+    _DEP_TIER_BLOCKED=$(python3 -c "
 import json, sys
 
-local_manifest = json.load(open('${MANIFEST_PATH}'))
-remote_manifest = json.loads('''${REMOTE_MANIFEST}''') if '''${REMOTE_MANIFEST}''' else {}
+manifest_path = '${MANIFEST_PATH}'
+repo_name = '${REPO_NAME}'
 
-repo = '${REPO_NAME}'
-repos_data = local_manifest.get('repositories', {})
-repo_deps = [d.get('name', d) if isinstance(d, dict) else d for d in repos_data.get(repo, {}).get('dependencies', [])]
+# Statuses that mean dep IS at-or-above staging tier (PASS)
+AT_OR_ABOVE_STAGING = {'STAGING_GREEN', 'SIT_VALIDATED'}
 
-local_versions = local_manifest.get('versions', {})
-remote_versions = remote_manifest.get('versions', {})
-remote_staging = remote_manifest.get('staging_versions', {})
+try:
+    with open(manifest_path) as f:
+        m = json.load(f)
+except Exception:
+    sys.exit(0)
 
-drifted = []
-for dep in repo_deps:
-    local_v = local_versions.get(dep, '')
-    # Check both remote main versions and staging_versions
-    remote_main_v = remote_versions.get(dep, '')
-    remote_stag_v = remote_staging.get(dep, '')
-    if remote_stag_v and not remote_stag_v.startswith('_') and remote_stag_v != local_v:
-        drifted.append(f'  {dep}: local={local_v} staging={remote_stag_v}')
-    elif remote_main_v and remote_main_v != local_v:
-        drifted.append(f'  {dep}: local={local_v} main={remote_main_v}')
+repos = m.get('repositories', {})
+repo_info = repos.get(repo_name, {})
+deps = repo_info.get('dependencies', [])
 
-if drifted:
-    for d in drifted:
-        print(d)
-" 2>/dev/null || :)
+blocked = []
+for dep in deps:
+    dep_name = dep.get('name', dep) if isinstance(dep, dict) else str(dep)
+    if not dep_name or dep_name not in repos:
+        continue
+    dep_status = repos[dep_name].get('ci_status') or 'NOT_CONFIGURED'
+    if dep_status not in AT_OR_ABOVE_STAGING:
+        blocked.append(f'{dep_name}:{dep_status}')
 
-    if [ -n "$DEP_DRIFT" ]; then
+if blocked:
+    print(' '.join(blocked))
+" 2>/dev/null || echo "")
+
+    if [ -n "$_DEP_TIER_BLOCKED" ]; then
       echo "=========================================="
-      echo "STAGE 1.6: Dependency Version Drift"
+      echo "STAGE 1.7: Dependency Tier-Readiness Gate"
       echo "=========================================="
       echo ""
-      echo "[$REPO_NAME] Dependencies bumped on remote that your local doesn't have:"
-      echo "$DEP_DRIFT"
+      echo "═══════════════════════════════════════════════════════"
+      echo "❌ DEP-ORDER: cannot promote $REPO_NAME to staging —"
+      echo "   one or more dependencies are NOT yet on staging."
+      echo "═══════════════════════════════════════════════════════"
       echo ""
-      echo "Someone (or a workflow) upgraded your dependencies on staging/main."
-      echo "Consider pulling latest: cd <dep> && git pull origin staging"
-      echo "Or sync PM manifest: cd unified-trading-pm && git pull origin main"
+      for _blocked_entry in $_DEP_TIER_BLOCKED; do
+        _bname="${_blocked_entry%%:*}"
+        _bstatus="${_blocked_entry##*:}"
+        echo "   ❌ DEP-ORDER: $_bname is $_bstatus (not yet on staging)."
+        echo "      Promote $_bname to staging before promoting $REPO_NAME."
+        echo "        cd \$WORKSPACE_ROOT/$_bname && bash scripts/quickmerge.sh \"chore: promote\" --agent --files '...'"
+        echo ""
+      done
+      echo "   ci_status lifecycle: NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN"
+      echo "                        → STAGING_GREEN → SIT_VALIDATED"
+      echo "   Required for LDR→staging: STAGING_GREEN or SIT_VALIDATED"
       echo ""
-      echo "Continuing (warning only — QG catches constraint mismatches)."
-      echo ""
+      echo "   Human-only escape (incidents / hotfixes ONLY):"
+      echo "     bash scripts/quickmerge.sh \"$COMMIT_MSG\" --skip-dep-tier-gate ..."
+      echo "═══════════════════════════════════════════════════════"
+      exit 1
     fi
+    echo "=========================================="
+    echo "STAGE 1.7: Dependency Tier-Readiness Gate"
+    echo "=========================================="
+    echo "[$REPO_NAME] ✅ All deps at STAGING_GREEN or above — dep-order safe"
+    echo ""
   fi
 fi
 

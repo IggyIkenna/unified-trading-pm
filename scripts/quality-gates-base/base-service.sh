@@ -57,6 +57,47 @@ set -e
 source "${BASH_SOURCE[0]%/*}/qg-common.sh"
 cd "$PROJECT_ROOT"
 
+# ── QG RESOURCE GOVERNANCE ────────────────────────────────────────────────────
+# Plan: quality_gates_resource_contention_speedup_2026_06_02.
+# (1) Host concurrency governor — token bucket so at most K QG heavy-phases run
+#     concurrently across ALL slots. Sourced here so qg_governor_acquire/release
+#     bracket the heavy phases below.
+source "${BASH_SOURCE[0]%/*}/qg-host-governor.sh"
+# (2) Thread-pool caps — stop one repo's native BLAS/OMP pools (numpy/sklearn/
+#     lightgbm/xgboost) from fanning out across every core under multi-slot load
+#     (measured: ml-service spawned 100+ threads). With the governor's K-cap this
+#     keeps the box from oversubscribing. Per-repo override: export QG_THREAD_CAP.
+export OMP_NUM_THREADS="${QG_THREAD_CAP:-2}" OPENBLAS_NUM_THREADS="${QG_THREAD_CAP:-2}" \
+       MKL_NUM_THREADS="${QG_THREAD_CAP:-2}" NUMEXPR_NUM_THREADS="${QG_THREAD_CAP:-2}"
+# (3) Shared ruff cache across worktrees/slots — the default .ruff_cache lives in
+#     each worktree and defeats cross-slot reuse; repoint to a host-shared dir.
+export RUFF_CACHE_DIR="${RUFF_CACHE_DIR:-${TMPDIR:-/tmp}/qg-ruff-cache}"
+# (4) Green sentinel (qg-repo-green-sentinel): a CONSERVATIVE content hash of the
+#     working tree + gate-script + tool versions. When it is byte-identical to the
+#     last FULL green run, the heavy phases (TESTS + TYPE CHECK) are skipped — that
+#     content was already fully verified, incl. coverage. ANY change → different hash
+#     → full run. Light phases (codex/production) still run so external-state drift is
+#     caught. Robust: a malformed/empty hash NEVER triggers a skip. Escape:
+#     QG_SENTINEL_DISABLE=true.  Separate file (.qg_content_sentinel) so quickmerge's
+#     .qg_last_passed_sha (git HEAD) is untouched.
+_qg_content_hash() {
+    {
+        git rev-parse HEAD 2>/dev/null || echo no-head
+        git diff HEAD 2>/dev/null                                       # uncommitted tracked changes
+        # untracked files — but EXCLUDE QG artifacts that change every run (else the
+        # hash self-references and the sentinel can never hit).
+        git ls-files --others --exclude-standard 2>/dev/null \
+            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
+            | sort | while IFS= read -r _f; do
+                [ -f "$_f" ] && sha256sum "$_f" 2>/dev/null
+            done
+        sha256sum "${BASH_SOURCE[0]}" "${BASH_SOURCE[0]%/*}/qg-host-governor.sh" 2>/dev/null  # gate logic
+        "${RUFF_CMD:-ruff}" --version 2>/dev/null
+        "${BASEDPYRIGHT_CMD:-basedpyright}" --version 2>/dev/null
+        "${PYTHON_CMD:-python3}" --version 2>/dev/null                   # tool versions
+    } | sha256sum | awk '{print $1}'
+}
+
 # ╔══ MEMORY GOVERNANCE [OOM MITIGATION — added 2026-05-15] ═══════════════════╗
 # Cap heavy subprocesses (pytest, basedpyright) at QG_MEM_CAP. Prevents one
 # runaway process from OOM-killing the whole machine.
@@ -143,8 +184,17 @@ _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scr
 
 # ── BOOTSTRAP (local only; CI has its own setup) ─────────────────────────────
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
-    command -v uv &>/dev/null || pip install uv --quiet
-    uv lock 2>/dev/null || :
+    command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # Read-only freshness gate — do NOT mutate uv.lock here (mutating it dirtied trees + jammed
+    # the FF-pull cron). BLOCKING only when on the pinned uv (else a different uv's serializer
+    # reformatting would false-fail); warn otherwise. SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
+    _uvver=$(uv --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+    if [ "$_uvver" = "0.10.8" ]; then
+        uv lock --check 2>/dev/null || { echo "❌ uv.lock out of sync with pyproject.toml — run 'uv lock' && commit"; exit 1; }
+    else
+        echo "⚠️  uv $_uvver != pinned 0.10.8 — run setup.sh to pin; skipping blocking uv.lock check (warn only)"
+        uv lock --check 2>/dev/null || echo "⚠️  uv.lock may be out of sync — re-check on pinned uv 0.10.8"
+    fi
     [ ! -d ".venv" ] && uv venv .venv
     [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
     for lib in "${LOCAL_DEPS[@]}"; do
@@ -246,8 +296,30 @@ if [ "$RUN_LINT" = true ]; then
     _lint_out=$(run_timeout 30 $RUFF_CMD check $SOURCE_DIRS 2>&1) || { echo "$_lint_out"; log_fail "Lint FAILED"; exit 1; }
 fi
 
+# ── GREEN SENTINEL: skip heavy phases when content is byte-identical to last full green ──
+_QG_SENTINEL_HIT=false
+_QG_SENTINEL_FILE="${PROJECT_ROOT}/.qg_content_sentinel"   # per-repo (REPO_ROOT is the workspace root)
+_QG_CONTENT_HASH=""
+if [ "${QG_SENTINEL_DISABLE:-false}" != "true" ]; then
+    _QG_CONTENT_HASH="$(_qg_content_hash)"
+    # Only a well-formed 64-char hash that EXACTLY matches the stored sentinel triggers
+    # a skip — a malformed/empty hash can never accidentally match.
+    if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ -f "$_QG_SENTINEL_FILE" ] \
+       && [ "$(cat "$_QG_SENTINEL_FILE" 2>/dev/null)" = "$_QG_CONTENT_HASH" ]; then
+        _QG_SENTINEL_HIT=true
+        log_success "Green sentinel HIT — working tree byte-identical to last full green; skipping TESTS + TYPE CHECK (light checks still run)"
+    fi
+fi
+
+# ── HOST CONCURRENCY GOVERNOR: acquire before the heavy phases (TESTS + TYPECHECK) ──
+# Blocks until <=K QG heavy-phases run host-wide (K=floor(cores/4)); released after
+# TYPE CHECK. The OS auto-frees the flock on any early exit between here and release.
+# No-op when QG_GOVERNOR_DISABLE=true or flock(1) is absent. Skipped on a sentinel hit
+# (no heavy phase to govern).
+[ "$_QG_SENTINEL_HIT" = true ] || qg_governor_acquire
+
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
-if [ "$RUN_TESTS" = true ]; then
+if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_section "[3/6] TESTS"
     # Coverage floor governance (add-coverage-floor-governance)
     # Use PROJECT_ROOT (set by qg-common.sh from the caller stub's location) so we read
@@ -262,7 +334,14 @@ if [ "$RUN_TESTS" = true ]; then
     check_emulator_reachability
     $PYTHON_CMD -c "import pytest_timeout" 2>/dev/null || { log_fail "pytest-timeout required: uv pip install pytest-timeout"; exit 1; }
     $PYTHON_CMD -c "import xdist" 2>/dev/null || { log_fail "pytest-xdist required: uv pip install pytest-xdist"; exit 1; }
-    COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+    # Coverage off the hot path (qg-coverage-off-hotpath): per-line instrumentation
+    # is a large CPU/RAM cost. Iterative/--quick runs skip it; the coverage floor is
+    # still ENFORCED on the full gate run (quickmerge Pass 1) — merge gate unchanged.
+    if [ "$QUICK_MODE" = true ]; then
+        COV=""
+    else
+        COV="--cov=$SOURCE_DIR --cov-report=xml:coverage.xml --cov-fail-under=$MIN_COVERAGE"
+    fi
     # ╔══ [OOM MITIGATION — added 2026-05-15] ═════════════════════════════════╗
     # OLD (pre-2026-05-15): xdist used 25% of logical CPUs by default. With 8
     # slots × ~4 workers × 2-4GB each peak the 93GB dev box hit OOM.
@@ -415,7 +494,7 @@ fi
 
 # ── [4] TYPE CHECK (basedpyright, 120s, zombie cleanup) ──────────────────────
 log_section "[4/6] TYPE CHECK"
-if [ "$SKIP_TYPECHECK" != "true" ]; then
+if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
     cleanup_zombie_pyright() {
         # || : on every line + after done: CI uses set -eo pipefail; grep exits 1 when no processes
         # found, which would kill the script before basedpyright even starts without these guards.
@@ -504,6 +583,11 @@ if [ "$SKIP_TYPECHECK" != "true" ]; then
     fi
 fi
 [ "$SKIP_TYPECHECK" = "true" ] && echo -e "${YELLOW}⚠️  Type check SKIPPED (--skip-typecheck flag)${NC}"
+
+# ── HOST CONCURRENCY GOVERNOR: release the token — heavy phases (TESTS + TYPECHECK)
+# are done; the lighter codex/validator phases run ungoverned. (OS auto-frees on exit.)
+# No-op when a sentinel hit meant we never acquired.
+[ "${_QG_SENTINEL_HIT:-false}" = true ] || qg_governor_release
 
 # ── [5] CODEX COMPLIANCE ──────────────────────────────────────────────────────
 # All checks are blocking unless excluded via QUALITY_GATE_BYPASS_AUDIT.md.
@@ -1684,6 +1768,61 @@ else
     log_success "STEP 5.69: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
+# STEP 5.92 — Ban legacy `category=` kwarg at ManifestWriter writes (v9 canonical)
+#
+# The UTL ManifestWriter asset-group write param was renamed `category` →
+# `asset_group` (2026-06-02; sports_/defi_manifest_canonicalisation cross-AG
+# dead-bucket root). v9 post-migration canonical vocabulary is `asset_group`
+# everywhere — never `category`, not even as a fallback (operator 2026-06-02).
+# AST-walk, zero-tolerance (the workspace-wide rename removed every occurrence).
+# (5.71-5.91 are in use elsewhere in this file — these two ratchets take 5.92/5.93.)
+_NOCAT_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_category_kwarg_at_manifest_write.py"
+if [ -f "$_NOCAT_CHECKER" ]; then
+    _NC_REPO=$(basename "$PROJECT_ROOT")
+    _NC_WS="$REPO_ROOT"
+    _NC_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _NC_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_NOCAT_CHECKER" \
+            --workspace-root "$_NC_WS" --scope "$_NC_REPO" "${_NC_SRC_ARG[@]}" >/tmp/no_category_kwarg_qg.log 2>&1; then
+        log_success "STEP 5.92: No legacy category= kwarg at ManifestWriter writes (asset_group= is v9 canonical)"
+    else
+        log_fail "STEP 5.92: Legacy category= kwarg(s) at ManifestWriter writes — rename to asset_group= (UTL contract, v9 canonical):"
+        cat /tmp/no_category_kwarg_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_category_kwarg_at_manifest_write.py --workspace-root $_NC_WS --scope $_NC_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.92: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
+# STEP 5.93 — Ban explicit project_id= on asset-group bucket builders (no-env bypass)
+#
+# Passing project_id to get_bucket_name()/get_write_bucket_name() bypasses the
+# cloud-providers.yaml SSOT and returns the legacy no-env bucket shape (e.g.
+# instruments-store-sports-{pid}), which is DELETED at each asset_group's
+# legacy-bucket decommission. Canonical: drop project_id (delegates to the yaml
+# SSOT → env-tiered -prd-) or use resolve_bucket_name(...). AST-walk, scoped to
+# string-literal asset-group domains; scripts/tests/migration trees + the
+# bucket-naming SSOT modules are exempt. Zero-tolerance.
+_NOPID_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_no_explicit_project_id_bucket.py"
+if [ -f "$_NOPID_CHECKER" ]; then
+    _NP_REPO=$(basename "$PROJECT_ROOT")
+    _NP_WS="$REPO_ROOT"
+    _NP_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _NP_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_NOPID_CHECKER" \
+            --workspace-root "$_NP_WS" --scope "$_NP_REPO" "${_NP_SRC_ARG[@]}" >/tmp/no_explicit_project_id_bucket_qg.log 2>&1; then
+        log_success "STEP 5.93: No explicit project_id on asset-group bucket builders (delegates to yaml SSOT → -prd- canonical)"
+    else
+        log_fail "STEP 5.93: Explicit project_id on asset-group bucket builder(s) → legacy no-env bucket. Drop project_id or use resolve_bucket_name(...):"
+        cat /tmp/no_explicit_project_id_bucket_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_no_explicit_project_id_bucket.py --workspace-root $_NP_WS --scope $_NP_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.93: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # STEP 5.70 — Explicit pipeline_mode= kwarg at every ManifestWriter.record_* call
 #
 # (5.6x is exhausted — 5.65/5.67/5.69 in use, 5.66/5.68 reserved above — so this
@@ -2375,6 +2514,20 @@ fi
 # ── DURATION CHECK ───────────────────────────────────────────────────────────
 MAX_DURATION=${MAX_DURATION:-300}
 QG_END=$(date +%s); DUR=$((QG_END - QG_START))
+
+# ── 2× RESOURCE-DRIFT GUARD (qg-perrepo-baseline) ─────────────────────────────
+# WARN (never fail) when this run's wall-clock exceeds 2× the committed per-repo
+# baseline — an early signal of a resource regression during code-freeze. Keyed by
+# repo folder name in qg_resource_baseline.json (local side). Fully defensive.
+_QG_BASELINE="${REPO_ROOT}/unified-trading-pm/scripts/dev/qg_resource_baseline.json"
+if [ -f "$_QG_BASELINE" ] && command -v python3 >/dev/null 2>&1; then
+    _qg_repo_key="$(basename "$PROJECT_ROOT")"
+    _base_wall="$(python3 -c "import json,sys; d=json.load(open(sys.argv[1])); print(d.get(sys.argv[2],{}).get('local',{}).get('wall_s',0))" "$_QG_BASELINE" "$_qg_repo_key" 2>/dev/null || echo 0)"
+    if awk "BEGIN{exit !(${_base_wall:-0}>0 && ${DUR:-0} > 2*${_base_wall:-0})}" 2>/dev/null; then
+        log_warn "Resource drift: wall ${DUR}s > 2× baseline ${_base_wall}s for ${_qg_repo_key} (qg_resource_baseline.json) — investigate before merge"
+    fi
+fi
+
 if [ "$IGNORE_TIMEOUT" != "true" ] && [ $DUR -gt $MAX_DURATION ]; then
     log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"
     exit 1
@@ -2417,9 +2570,22 @@ if [[ "${RUN_TESTS}" == "true" ]] && \
    [[ "${QUICK_MODE}" == "false" ]] && \
    [[ "${ACT_MODE}" == "false" ]] && \
    [[ -z "${SKIP_CODEX_FLAG:-}" ]]; then
-    git rev-parse HEAD > "${REPO_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
-        echo "Sentinel written: .qg_last_passed_sha=$(cat "${REPO_ROOT}/.qg_last_passed_sha")" || \
+    # Write to PROJECT_ROOT (the gated repo's root — same dir the content sentinel below
+    # uses), NOT REPO_ROOT: qg-common.sh resolves REPO_ROOT to PROJECT_ROOT/.. (the WORKSPACE
+    # parent), so writing there put .qg_last_passed_sha one level above the repo where
+    # `quickmerge --agent` reads it (CWD = repo root) → the agent fast-path always saw it
+    # "missing" and hard-refused, fleet-wide. This block also runs on a green-skip
+    # (sentinel-HIT keeps RUN_TESTS=true), so the SHA sentinel is refreshed on fast-green too.
+    git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
+        echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" || \
         echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+    # Green content sentinel (qg-repo-green-sentinel): record the content hash so an
+    # unchanged tree skips the heavy phases next run. Only here — a COMPLETE green run
+    # (this block) — so the sentinel always represents a coverage-inclusive pass.
+    if [ "${#_QG_CONTENT_HASH}" -eq 64 ]; then
+        echo "$_QG_CONTENT_HASH" > "${PROJECT_ROOT}/.qg_content_sentinel" 2>/dev/null \
+            && echo "Green sentinel written: .qg_content_sentinel (unchanged tree → fast green next run)" || true
+    fi
 else
     echo "Sentinel NOT written — partial run detected (skip flags active). Run full quality-gates.sh to enable quickmerge --agent fast-path."
 fi

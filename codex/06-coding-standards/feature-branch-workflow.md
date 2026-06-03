@@ -315,31 +315,31 @@ after each repo's main merge and check the `versions` map.
 ## `require-quality-gates` ruleset set + the one exemption (codified 2026-06-01)
 
 Every active workspace repo carries a `require-quality-gates` repository **ruleset** (`target: branch`, condition
-`~DEFAULT_BRANCH`, `bypass_actors: []`, rule `required_status_checks` → context `Quality Gates (<repo>) /
-quality-gates-v2`, or the UI gate `… / quality-gates` for TS/Vite repos). It is the canonical server-side gate; classic
-branch protection mirrors the same context (see § Branch model / `ci-cd-flow.md`).
+`~DEFAULT_BRANCH`, `bypass_actors: []`, rule `required_status_checks` → context
+`Quality Gates (<repo>) / quality-gates-v2`, or the UI gate `… / quality-gates` for TS/Vite repos). It is the canonical
+server-side gate; classic branch protection mirrors the same context (see § Branch model / `ci-cd-flow.md`).
 
 **The single exemption is `agent-orchestrator`** — it is operator/agent tooling, not production trading code, so it
 bypasses the production hardening path (its integration target axis is documented in CLAUDE.md § "Git discipline" /
 `agent-orchestrator-overview.md`). It does NOT get a `require-quality-gates` ruleset.
 
 **Per-repo prerequisite (HARD — DEADLOCK otherwise):** before creating a repo's ruleset, confirm its v2 job `name:`
-emits `Quality Gates (<repo>) / quality-gates-v2` (NOT the hand-copied `alerting-service` name) AND a GREEN run exists on
-the **default branch**. For **LDR-default repos** (`features-service`, `greeks-service`, `unified-trading-api`) the v2
-workflow MUST also trigger on `live-defi-rollout` (add it to `push`/`pull_request` branches, like features-service) so
-the required check runs on the default branch — otherwise the ruleset blocks slot pushes to LDR.
+emits `Quality Gates (<repo>) / quality-gates-v2` (NOT the hand-copied `alerting-service` name) AND a GREEN run exists
+on the **default branch**. For **LDR-default repos** (`features-service`, `greeks-service`, `unified-trading-api`) the
+v2 workflow MUST also trigger on `live-defi-rollout` (add it to `push`/`pull_request` branches, like features-service)
+so the required check runs on the default branch — otherwise the ruleset blocks slot pushes to LDR.
 
 Ruleset additions (the 7 non-`agent-orchestrator` repos surfaced 2026-06-01):
 
-| Repo                        | Default br | Ruleset id  | Status (2026-06-01)                                                          |
-| --------------------------- | ---------- | ----------- | --------------------------------------------------------------------------- |
-| `unified-trading-api`       | LDR        | 17135955    | ✅ active (LDR added to v2 triggers; green LDR run)                          |
-| `ml-service`                | main       | 17136124    | ✅ active (job-name `(alerting-service)`→`(ml-service)` fixed; green main)   |
-| `features-service`          | LDR        | 17136160    | ✅ active (green LDR v2 already; LDR already in triggers)                    |
-| `greeks-service`            | LDR        | —           | ⏳ v2-RED (MIN_COVERAGE=0 floor + codex + C901); GH_PAT secret provisioned   |
-| `fund-administration-service`| main      | —           | ⏳ v2-RED (`uv sync` starlette↔utl conflict); caller rolled out             |
-| `e2e-testing`               | main       | —           | ⏳ v2-RED (14 ruff lint); caller rolled out                                  |
-| `unified-trading-system-ui` | main       | —           | ⏳ no UI gate yet — roll out `ui-quality-gates`; ruleset on `… / quality-gates` |
+| Repo                          | Default br | Ruleset id | Status (2026-06-01)                                                             |
+| ----------------------------- | ---------- | ---------- | ------------------------------------------------------------------------------- |
+| `unified-trading-api`         | LDR        | 17135955   | ✅ active (LDR added to v2 triggers; green LDR run)                             |
+| `ml-service`                  | main       | 17136124   | ✅ active (job-name `(alerting-service)`→`(ml-service)` fixed; green main)      |
+| `features-service`            | LDR        | 17136160   | ✅ active (green LDR v2 already; LDR already in triggers)                       |
+| `greeks-service`              | LDR        | —          | ⏳ v2-RED (MIN_COVERAGE=0 floor + codex + C901); GH_PAT secret provisioned      |
+| `fund-administration-service` | main       | —          | ⏳ v2-RED (`uv sync` starlette↔utl conflict); caller rolled out                |
+| `e2e-testing`                 | main       | —          | ⏳ v2-RED (14 ruff lint); caller rolled out                                     |
+| `unified-trading-system-ui`   | main       | —          | ⏳ no UI gate yet — roll out `ui-quality-gates`; ruleset on `… / quality-gates` |
 
 The 4 ⏳ rows are HARD-GATED on a green default-branch run first (never create the ruleset on a red repo — the required
 check would be unsatisfiable and freeze the branch). Tracked per-repo in
@@ -348,19 +348,22 @@ check would be unsatisfiable and freeze the branch). Tracked per-repo in
 ### Zero human-approvals — the green gate IS the review (autonomous CI/CD, codified 2026-06-02)
 
 **`required_approving_review_count = 0` on `main` + `staging`, fleet-wide.** For autonomous operation a green
-`quality-gates-v2` required check is the merge criterion — a mandatory human approval on top blocks agent-opened PRs from
-auto-merging (a green-gated PR sits `BLOCKED` waiting on an approval that never comes, since an author can't approve their
-own PR and `enforce_admins` binds admins to the review). So the human-approval layer is removed; **everything else stays**:
+`quality-gates-v2` required check is the merge criterion — a mandatory human approval on top blocks agent-opened PRs
+from auto-merging (a green-gated PR sits `BLOCKED` waiting on an approval that never comes, since an author can't
+approve their own PR and `enforce_admins` binds admins to the review). So the human-approval layer is removed;
+**everything else stays**:
 
-- the `require-quality-gates` ruleset (v2 context, `bypass_actors: []`) — REQUIRED; **no one (incl. admins) merges past a
-  red gate**;
+- the `require-quality-gates` ruleset (v2 context, `bypass_actors: []`) — REQUIRED; **no one (incl. admins) merges past
+  a red gate**;
 - `enforce_admins: true` — the gate binds everyone;
-- "require a PR before merging" stays (`count = 0` still requires a PR — just no approval), so the PR + gate flow is intact.
+- "require a PR before merging" stays (`count = 0` still requires a PR — just no approval), so the PR + gate flow is
+  intact.
 
-Net: a green `quality-gates-v2` → the PR auto-merges, hands-off. SSOTs updated so it does not regress on re-provisioning:
-`ops/branch-protection-template.json` (`required_approving_review_count: 0`), `scripts/repo-management/admin-force-sync-all-to-main.sh`
-(`// 0` default). Operator decision 2026-06-02. Re-introduce human review only as a deliberate per-repo policy, never the
-default. Tracked: `plans/active/cicd_contract_hardening_2026_06_01.md`.
+Net: a green `quality-gates-v2` → the PR auto-merges, hands-off. SSOTs updated so it does not regress on
+re-provisioning: `ops/branch-protection-template.json` (`required_approving_review_count: 0`),
+`scripts/repo-management/admin-force-sync-all-to-main.sh` (`// 0` default). Operator decision 2026-06-02. Re-introduce
+human review only as a deliberate per-repo policy, never the default. Tracked:
+`plans/active/cicd_contract_hardening_2026_06_01.md`.
 
 ---
 

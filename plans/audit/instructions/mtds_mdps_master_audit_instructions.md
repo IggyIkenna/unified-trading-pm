@@ -4,7 +4,7 @@ type: audit-instructions
 epic: mtds_mdps_master
 assigned_vm: vm-ml
 tier: L1
-last_updated: 2026-06-01
+last_updated: 2026-06-03
 related_plans:
   - active/mdps_filter_pushdown_memory_audit_and_fix_2026_05_28.md # tactical fixes shipped 2026-05-28
   - active/mdps_long_running_multi_shard_architecture_audit_2026_05_28.md # architectural refactor track
@@ -108,6 +108,27 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
       `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home: `manifest_master` item
       (i).
 
+- [ ] (k) **Per-venue acquisition-METHOD registry + verification (codified 2026-06-03)**: items (a)–(j) prove a cell is
+      _recorded_ honestly; this item proves the _fetch itself_ is the right + complete method for every live venue ×
+      data_type — the "which API / method per venue" dimension. Expected-method SSOT =
+      `codex/02-data/mtds-data-source-coverage-matrix.md` (the `adapter (live / batch)` column) +
+      `codex/02-data/mtds-download-api.md` + `codex/02-data/defi-venue-protocol-catalogue.md`. For **every** venue in
+      the coverage matrix, read the adapter/handler and verify, **per data_type** (classify each mismatch
+      `aligned`/`codex-stale`/`code-bug` per the drift-register method): (1) **endpoint match** — the actual REST
+      endpoint / RPC method / subgraph query / WebSocket channel called matches the documented source (Tardis bulk CSV,
+      CCXT public path, venue WS, The Graph gateway + `subgraph_id`, Solana RPC / Helius, Drift Velocity Data API, S3
+      archive, …). (2) **completeness mechanics** — pagination / full-history reachability is implemented (The Graph
+      1000-row page + `skip`/timestamp cursor; Tardis per-day coverage; Velocity API paging; WS gap-backfill on
+      reconnect) so a backfill cannot silently truncate; rate-limit + retry/backoff present; concurrency caps wired
+      (`MAX_WORKERS`). (3) **auth provenance** — every credentialled venue reads its key via Secret Manager /
+      `ApiKeyReloader`, never `os.getenv()`; public venues declare no key. (4) **no stub-emit** — a data_type the matrix
+      says the venue produces is actually fetched, not a scaffold returning `[]` / empty (composes with item (i) swallow
+      audit + `defi_master` item (n) venue/capability consistency). **Deliverable**: a per-venue table
+      `venue | data_type | documented source | code endpoint/method | pagination? | rate-limit/retry? | auth source | emits-real-data? | verdict`.
+      GREEN = every live venue × data_type matches the matrix with pagination + rate-limit + SM-auth verified and zero
+      stub-emit. Cross-ref: `defi_master` (Solana basis MVP source-of-truth note — Drift Velocity API), `cefi_master`
+      (Tardis-vs-venue-WS).
+
 ### Batch vs Live Parity
 
 - (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with
@@ -198,7 +219,7 @@ not a code constant** (the manifest-v8 lesson: a constant said v8 while 0% of 7.
 
 ## Success Criteria
 
-- All correctness checklist items (a)–(j) GREEN
+- All correctness checklist items (a)–(k) GREEN
 - Multi-source cells stamp `source` at write time (item j) — zero blank `source` on any `(asset_group, data_type)` with
   a multi-entry `SOURCE_PRIORITY`, read from actual prod rows
 - `a6_batch_live_adapter_parity.py` shows 100% parity (batch count == live count per venue per asset_group)

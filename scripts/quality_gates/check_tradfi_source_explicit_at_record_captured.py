@@ -256,12 +256,14 @@ def _scan_file(
         if "source" in kwarg_names:
             continue
         # Only flag when the cell is statically resolvable AND multi-source.
-        # Unresolvable (variable) category/data_type → skip (runtime gate backstop).
-        category = _resolve_kwarg_str(node, "category", consts)
+        # Unresolvable (variable) asset_group/data_type → skip (runtime gate backstop).
+        # NB: the manifest-write param was renamed ``category`` → ``asset_group``
+        # (UTL ManifestWriter contract upgrade, 2026-06-02) — resolve the new name.
+        asset_group = _resolve_kwarg_str(node, "asset_group", consts)
         data_type = _resolve_kwarg_str(node, "data_type", consts)
-        if category is None or data_type is None:
+        if asset_group is None or data_type is None:
             continue
-        if source_required is None or not source_required(category, data_type):  # type: ignore[operator]
+        if source_required is None or not source_required(asset_group, data_type):  # type: ignore[operator]
             continue
         snippet = _line(lines, node.lineno)
         if WHITELIST_MARKER in snippet:

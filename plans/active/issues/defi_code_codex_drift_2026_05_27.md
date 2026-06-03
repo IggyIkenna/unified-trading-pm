@@ -79,9 +79,9 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       lending_indices is bypass. QG green (ruff + basedpyright + `test_defi_bypass_routing` 41/41). — 2026-05-27.
 - [ ] [CODE] P2. D10 (generalized) — 6 venues `DEFI_VENUE_PHASE=live` with no `PROTOCOL_CAPABILITIES`/`SUBGRAPH_IDS`
       (EULER_V2, VENUS, BENQI, RADIANT-ETH, MARGINFI, SOLEND): add backing OR downgrade/register. Confirm intent with
-      operator/Ikenna. **The 3 inverse venues (SOLAYER/PICASSO/CAMBRIAN: capability-without-venue) are RESOLVED —
-      fully removed 2026-06-02 (operator decision, no usable/decodable data source); UAC capabilities + IS adapters
-      wiped. SSOT: `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.**
+      operator/Ikenna. **The 3 inverse venues (SOLAYER/PICASSO/CAMBRIAN: capability-without-venue) are RESOLVED — fully
+      removed 2026-06-02 (operator decision, no usable/decodable data source); UAC capabilities + IS adapters wiped.
+      SSOT: `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.**
 - [ ] [CODE] P3. D14 — `dex_pools_handler.py`: manifest records canonical `data_type="dex_pools"` (L62) but parquet
       writes `data_type="dex_pool_state"` (L569) → manifest≠data divergence. Canonical is `dex_pools`. The write-flip
       CANNOT be done standalone — it would split forward-writes (`dex_pools/`) from historical (`dex_pool_state/`),

@@ -38,6 +38,12 @@ main ───────────────► always stable; triggers ve
 
 ## Two-Pass Workflow Model (the unit of work)
 
+> **Order is non-negotiable: quality gates BEFORE quickmerge.** Never invoke `quickmerge` until
+> `bash scripts/quality-gates.sh` has exited 0 on the **current HEAD**. Pass 1 (the full gate) is what runs the tests
+> and writes the `.qg_last_passed_sha` sentinel; Pass 2 (`quickmerge --agent`) refuses to proceed without a matching
+> sentinel and skips test re-runs on the strength of it. Run quickmerge first (or after only a partial Pass 1) and
+> either it hard-refuses or — worse, if you reach for skip flags — the change ships with tests never having run.
+
 Every shippable unit goes through exactly two passes:
 
 ```
@@ -60,13 +66,30 @@ Pass 2 — Quickmerge (--agent fast-path)
   • --to-staging routes to staging instead of main (for breaking changes)
 ```
 
+**Pass 1 fix-mode — choose by WHAT you will commit (HARD RULE; AUTO-FIX rewrites the WHOLE worktree, not just your
+files).** The sentinel is written on any COMPLETE green run — fix-mode OR `--no-fix` (the write is gated on
+`RUN_TESTS && RUN_LINT && !QUICK && !ACT && !SKIP_CODEX`, NOT on fix-mode), so both modes satisfy Pass 1:
+
+1. **Committing only your OWN named files** (the normal `quickmerge --agent --files '<paths>'` ship):
+   `ruff format <your-paths>` first, then run **`bash scripts/quality-gates.sh --no-fix`**. Full gate, writes the
+   sentinel, **does NOT reformat the tree**. Running ship mode here makes AUTO-FIX (`ruff format` + `ruff check --fix`)
+   rewrite unrelated / foreign files in the worktree → re-dirties the slot (breaks the FF-sync the per-tab-worktree
+   model depends on) and risks vacuuming foreign formatting into your commit. (Incident 2026-05-15: a ship-mode run for
+   a _diagnostic_ reformatted 350 unrelated files; 2026-06-02: a ship-mode Pass-1 over 3 files re-dirtied 14 unrelated
+   files.)
+2. **You knowingly intend a tree-wide reformat and will own everything AUTO-FIX touches** (a deliberate format pass, or
+   a solo worktree where re-dirtying is fine): plain **`bash scripts/quality-gates.sh`** (autofix ON) is correct — that
+   is its purpose.
+
+Either way the run must be FULL (no `--skip-*`/`--quick`) or no sentinel is written and quickmerge refuses.
+
 **Why the sentinel?** Eliminates the staleness gap where an agent calls quickmerge after incremental edits without
 re-running Pass 1. The SHA check is the enforcement mechanism — no partial run can fake a full pass. Pass 2 no longer
 re-runs lint/typecheck/codex: the sentinel guarantees they passed.
 
 **Pass 1 is now the SOLE upstream quality checkpoint (codified 2026-06-02).** With human approvals removed fleet-wide
-(`required_approving_review_count=0` — autonomous CI/CD, see § "Agent vs Human Paths" + feature-branch-workflow.md
-§ "Zero human-approvals"), **nobody reviews an agent's PR before it auto-merges on a green gate.** So the FULL local
+(`required_approving_review_count=0` — autonomous CI/CD, see § "Agent vs Human Paths" + feature-branch-workflow.md §
+"Zero human-approvals"), **nobody reviews an agent's PR before it auto-merges on a green gate.** So the FULL local
 `quality-gates.sh` (Pass 1) + the quickmerge `--agent` sentinel check are no longer just a fast-path convenience — they
 are the load-bearing quality bar. Two non-negotiables follow: (1) **always run the FULL Pass 1** (no skip flags) before
 quickmerge — a partial run writes no sentinel and quickmerge will refuse; (2) **never hand-`git push`/merge to a
@@ -157,16 +180,16 @@ version into every dependent repo's pyproject, and those updates flow back throu
 `quickmerge → staging → main` path.
 
 **The closure rule (applies to version bumps AND the PM doc-fast-path):** any commit that lands **directly on `main`**
-MUST be back-merged to `live-defi-rollout`, or the standing LDR→staging PR conflicts on the changed line (classically the
-version line — the generalized form of the Phase-5 main↔LDR drift). Two sources of main-only commits:
+MUST be back-merged to `live-defi-rollout`, or the standing LDR→staging PR conflicts on the changed line (classically
+the version line — the generalized form of the Phase-5 main↔LDR drift). Two sources of main-only commits:
 
 - **semver bump on `main`** — the main-side version write (+ any `[skip ci]` manifest/deps automation).
 - **PM doc-fast-path** — PM plans/docs/cursor-rules (`*.md` / `*.mdc`) PR **directly to `main`**, bypassing LDR→staging.
 
 Both are reconciled by **`.github/workflows/main-backmerge-to-ldr.yml`** (PM, trigger `push:[main]`; mirrors
-`tab-mirror-to-ldr.yml` in reverse) — it auto-advances a `main → live-defi-rollout` back-merge so main-only commits never
-strand. **Never leave a main-only commit unmirrored** — an unmirrored main commit is the exact mechanism behind the
-Phase-5 PM main↔LDR ~95-file drift.
+`tab-mirror-to-ldr.yml` in reverse) — it auto-advances a `main → live-defi-rollout` back-merge so main-only commits
+never strand. **Never leave a main-only commit unmirrored** — an unmirrored main commit is the exact mechanism behind
+the Phase-5 PM main↔LDR ~95-file drift.
 
 ---
 
@@ -187,7 +210,13 @@ on Linux; local uses workspace path deps on macOS. The dep-resolution gap is the
 the staging PR boundary.
 
 **workspace-qg triggers**: `push: [main, staging]` + `pull_request: [main, staging]`. LDR is explicitly excluded — local
-QG + sentinel is the only gate on LDR (by design).
+QG + sentinel is the only gate on LDR (by design). This is intentional integration-branch best practice: the
+**required-check ruleset is enforced at the staging/main PR** (the promotion boundary); **local QG (`quality-gates.sh` →
+sentinel) is the agent + quickmerge pre-flight** (fail-fast), not a server gate; and the integration axis stays cheap to
+push to. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH` — so **every repo's default branch MUST be
+`main`**; a non-main default (e.g. `live-defi-rollout`) mislocates the required check onto LDR and `GH013`-rejects pushes
+to the integration axis (incident 2026-06-03: `unified-trading-api` + `greeks-service`; `verify_branch_protection_check_names.py`
+now asserts `default_branch == main` fleet-wide).
 
 ### Branch-triggered build — hotfix image off an arbitrary branch (no main promotion, codified 2026-06-01)
 
@@ -209,17 +238,17 @@ Both are escape hatches for iteration speed; the canonical production path stays
 
 ## Agent vs Human Paths
 
-| Operation          | Agent                                                    | Human                                                    |
-| ------------------ | -------------------------------------------------------- | -------------------------------------------------------- |
-| Run quality gates  | `bash scripts/quality-gates.sh` (FULL — no skip flags)   | Same                                                     |
-| Quickmerge         | `bash scripts/quickmerge.sh "..." --agent --files '...'` | `bash scripts/quickmerge.sh "..."`                       |
-| SHA sentinel check | Automatic in `--agent` — blocks on mismatch              | Not enforced (human responsibility)                      |
-| Push to LDR        | quickmerge pushes branch, creates staging PR             | Same via quickmerge                                      |
-| Promote LDR → main | ✅ Autonomous, green-gated: quickmerge → staging (auto-merge on green `quality-gates-v2`) → automated staging→main (semver/SIT). **No human merge** — the green gate is the approval (`required_approving_review_count=0`, codified 2026-06-02). | Same; admin-merge only a genuinely-stuck promotion |
-| Dep-branch work    | ❌ NOT ALLOWED (`--dep-branch` human-only)               | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
-| Version graduation | ❌ NOT ALLOWED                                           | `gh workflow run request-major-bump.yml ...`             |
-| Kill-switch arming | ❌ NOT ALLOWED                                           | Manual via deployment-service API                        |
-| Wallet key ops     | ❌ NOT ALLOWED                                           | Hardware wallet / KMS console                            |
+| Operation          | Agent                                                                                                                                                                                                                                            | Human                                                    |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------- |
+| Run quality gates  | `bash scripts/quality-gates.sh` (FULL — no skip flags)                                                                                                                                                                                           | Same                                                     |
+| Quickmerge         | `bash scripts/quickmerge.sh "..." --agent --files '...'`                                                                                                                                                                                         | `bash scripts/quickmerge.sh "..."`                       |
+| SHA sentinel check | Automatic in `--agent` — blocks on mismatch                                                                                                                                                                                                      | Not enforced (human responsibility)                      |
+| Push to LDR        | quickmerge pushes branch, creates staging PR                                                                                                                                                                                                     | Same via quickmerge                                      |
+| Promote LDR → main | ✅ Autonomous, green-gated: quickmerge → staging (auto-merge on green `quality-gates-v2`) → automated staging→main (semver/SIT). **No human merge** — the green gate is the approval (`required_approving_review_count=0`, codified 2026-06-02). | Same; admin-merge only a genuinely-stuck promotion       |
+| Dep-branch work    | ❌ NOT ALLOWED (`--dep-branch` human-only)                                                                                                                                                                                                       | `bash scripts/quickmerge.sh "..." --dep-branch "feat/X"` |
+| Version graduation | ❌ NOT ALLOWED                                                                                                                                                                                                                                   | `gh workflow run request-major-bump.yml ...`             |
+| Kill-switch arming | ❌ NOT ALLOWED                                                                                                                                                                                                                                   | Manual via deployment-service API                        |
+| Wallet key ops     | ❌ NOT ALLOWED                                                                                                                                                                                                                                   | Hardware wallet / KMS console                            |
 
 ---
 
@@ -288,18 +317,18 @@ red/blocked branch. Only enable it on a branch whose v2 is **green** (enabling o
 service repos). **EXCEPTION — orchestration repos that DIRECT-push `[skip ci]` bookkeeping commits to their own `main`**
 (`unified-trading-pm`: `staging-to-main` promotes the manifest; `sit-gate` / `sit-unlock` / `hotfix-mode` /
 `sit-debounce-trigger` write staging lock/mode state) **run `enforce_admins=FALSE`.** A `[skip ci]` commit never
-produces a `quality-gates-v2` run, and a required-check PR would deadlock (the check can only run *after* the push it is
+produces a `quality-gates-v2` run, and a required-check PR would deadlock (the check can only run _after_ the push it is
 blocking), so these direct pushes cannot satisfy a v2 gate — they bypass it as the admin `GH_PAT`. The ruleset
-(`require-quality-gates`, admin `bypass_mode: always`) + classic `required_status_checks` fully gate **everyone**
-(the green `quality-gates-v2` check is the merge criterion). **Human review is NOT a gate** — `required_pull_request_reviews`
-is `required_approving_review_count=0` fleet-wide (codified 2026-06-02, autonomous CI/CD: see § "Two-Pass" + feature-branch-workflow.md
-§ "Zero human-approvals"); a green gate auto-merges, so agents promote via quickmerge with no manual merge. Only the special
-PM SIT-chain `[skip ci]` manifest pushes bypass via `enforce_admins=false` as described above. Verified by the #257 chain
-e2e: with `enforce_admins=true` the `staging-to-main` manifest push was REJECTED (`GH013 … "quality-gates-v2" is
-expected` / `Changes must be made through a pull request`); with `enforce_admins=false` it pushes (`Bypassed rule
-violations for refs/heads/main`) and the promote job is green. **Do NOT "restore" PM `main` to `enforce_admins=true`** —
-it strands the SIT-chain manifest writes. (The earlier claim that `[skip ci]` automation reaches `main` via the
-staging→main PR flow was wrong: `staging-to-main` STEP 10 is a plain `git push`, not a PR.)
+(`require-quality-gates`, admin `bypass_mode: always`) + classic `required_status_checks` fully gate **everyone** (the
+green `quality-gates-v2` check is the merge criterion). **Human review is NOT a gate** — `required_pull_request_reviews`
+is `required_approving_review_count=0` fleet-wide (codified 2026-06-02, autonomous CI/CD: see § "Two-Pass" +
+feature-branch-workflow.md § "Zero human-approvals"); a green gate auto-merges, so agents promote via quickmerge with no
+manual merge. Only the special PM SIT-chain `[skip ci]` manifest pushes bypass via `enforce_admins=false` as described
+above. Verified by the #257 chain e2e: with `enforce_admins=true` the `staging-to-main` manifest push was REJECTED
+(`GH013 … "quality-gates-v2" is expected` / `Changes must be made through a pull request`); with `enforce_admins=false`
+it pushes (`Bypassed rule violations for refs/heads/main`) and the promote job is green. **Do NOT "restore" PM `main` to
+`enforce_admins=true`** — it strands the SIT-chain manifest writes. (The earlier claim that `[skip ci]` automation
+reaches `main` via the staging→main PR flow was wrong: `staging-to-main` STEP 10 is a plain `git push`, not a PR.)
 
 ## Force-push vs let-CI/CD — the decision rule (codified 2026-06-01)
 
@@ -338,16 +367,16 @@ below). Progress (2026-06-01 evening):
 - SIT chain (`sit-gate` ← `sit-lock`; `staging-to-main` ← `staging-validated`) — **REVIVED + e2e-green 2026-06-01
   (#257)**. Four stacked bugs, all fixed: (1) `system-integration-tests/smoke-test-gate.yml` self-cancelled — its setup
   job's first step was `sleep 600` and `concurrency: cancel-in-progress: true` killed it mid-wait, so it never reached
-  the `sit-lock`/`staging-validated` dispatch; AND it never listened for PM's `staging-changed` dispatch (orphaned). Fix:
-  `on: repository_dispatch:[staging-changed]` (PM is the single debouncer), drop the in-job sleep, `cancel-in-progress:
-  false`, `ref: staging` on checkouts, resolve real staging SHA. (2) 4 PM workflows (`staging-to-main`, `sit-gate`,
-  `sit-unlock`, `hotfix-mode`) crashed with `SyntaxError` on a broken heredoc terminator `PYEOF || exit 1` (trailing text
-  → not recognised → Python swallowed it) → bare `PYEOF`. (3) `staging-to-main` STEP 10 manifest `[skip ci]` push to PM
-  `main` rejected by `enforce_admins=true` (GH013) → `enforce_admins=false` on PM `main` (see branch-protection §
-  exception above). (4) STEP 11 cascade `KeyError: 'OWNER'` (shell vars not exported to the heredoc) → declared in the
-  step `env:`. e2e: `repository_dispatch staging-changed` → gate runs green; `staging-validated` →
-  `staging-to-main` promote job **all-steps green** (merge → record → promote+clear-lock → commit-manifest → cascade →
-  staging-unlocked).
+  the `sit-lock`/`staging-validated` dispatch; AND it never listened for PM's `staging-changed` dispatch (orphaned).
+  Fix: `on: repository_dispatch:[staging-changed]` (PM is the single debouncer), drop the in-job sleep,
+  `cancel-in-progress: false`, `ref: staging` on checkouts, resolve real staging SHA. (2) 4 PM workflows
+  (`staging-to-main`, `sit-gate`, `sit-unlock`, `hotfix-mode`) crashed with `SyntaxError` on a broken heredoc terminator
+  `PYEOF || exit 1` (trailing text → not recognised → Python swallowed it) → bare `PYEOF`. (3) `staging-to-main` STEP 10
+  manifest `[skip ci]` push to PM `main` rejected by `enforce_admins=true` (GH013) → `enforce_admins=false` on PM `main`
+  (see branch-protection § exception above). (4) STEP 11 cascade `KeyError: 'OWNER'` (shell vars not exported to the
+  heredoc) → declared in the step `env:`. e2e: `repository_dispatch staging-changed` → gate runs green;
+  `staging-validated` → `staging-to-main` promote job **all-steps green** (merge → record → promote+clear-lock →
+  commit-manifest → cascade → staging-unlocked).
 - orchestrator-dispatch escalation for judgment cases (conflict / label-mismatch / SIT-triage) via the setup-token
   worker fleet — NOT API credits in GHA — remaining.
 

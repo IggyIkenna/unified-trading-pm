@@ -80,7 +80,7 @@ title: <human-readable title>
 parent_epic: <epic-slug> # REQUIRED — absence = ORPHAN = review-blocking
 priority: P0 | P1 | P2 | P3 # rolls up to epic's priority block
 status: active | blocked | paused | complete | cancelled
-execution_scope: orchestrator-agent | local-only # OPTIONAL; absent ⇒ orchestrator-agent (see below)
+execution_scope: orchestrator-agent | local-only # FUNDAMENTAL — declare on every plan; absent ⇒ orchestrator-agent
 estimate_class: refactor | design | infra | brand-new | research
 estimate_baseline_ai_days: <N> # raw estimate
 estimate_calibrated_ai_days: <N> # baseline × class multiplier (see codex/08-workflows/estimation-calibration.md)
@@ -91,8 +91,8 @@ related_plans:
 ---
 ```
 
-**`execution_scope`** (optional; closed set of two — codified 2026-06-02) controls whether the agent-orchestrator
-ingests the plan's `- [ ]` todos into its backlog:
+**`execution_scope`** (fundamental frontmatter field — declare on every plan; closed set of two — codified 2026-06-02)
+controls whether the agent-orchestrator ingests the plan's `- [ ]` todos into its backlog:
 
 - **`orchestrator-agent`** (the default when the field is ABSENT — backward-compatible, no backfill of existing plans):
   the orchestrator scans the plan and auto-derives backlog tasks (per `regen_backlog_from_plan.py`), which slots/workers

@@ -52,9 +52,10 @@ INTEGRATION_BRANCH="live-defi-rollout"
 
 # FM6 (orchestrator_autonomy_audit_remediation): per-repo integration base. Reads
 # workspace-manifest.json repositories.<repo>.integration_branch, defaulting to
-# ${INTEGRATION_BRANCH} (live-defi-rollout). agent-orchestrator carries
-# integration_branch=main (it CI-promotes tab→main, not LDR). Mirrors the
-# orchestrator-runtime rule in agent-orchestrator worktree_clean_check.base_branch_for_repo.
+# ${INTEGRATION_BRANCH} (live-defi-rollout). Per operator decision 2026-06-02,
+# EVERY repo (incl. agent-orchestrator) integrates via live-defi-rollout — do NOT
+# re-add an agent-orchestrator→main override (it made every AO slot read as diverged;
+# the override was removed). Mirrors agent-orchestrator worktree_clean_check.base_branch_for_repo.
 base_branch_for_repo() {
     local repo="$1" base=""
     base="$(python3 -c "import json; m=json.load(open('${MANIFEST}')); print(m.get('repositories',{}).get('${repo}',{}).get('integration_branch','') or '')" 2>/dev/null || true)"

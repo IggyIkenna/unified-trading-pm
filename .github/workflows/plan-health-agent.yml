@@ -1,69 +1,81 @@
 name: Plan Health Agent
 
-# Checks active plans for contradictions and archives fully-completed plans.
-# Uses claude-haiku-4-5 (cheap, targeted).
+# Daily plan-health audit of unified-trading-pm active plans. REPORT-ONLY — never
+# mutates plans.
+#
+# Design: do EVERYTHING deterministic in a script (plan counts, the canonical hygiene
+# sweep — frontmatter / todo-format / line-caps / SSOT plan formatting — archive
+# candidate × locked_by cross-reference, inventory regen) and hand the agent a compact
+# digest. The cheap Haiku agent then does the ONE thing a script cannot: cross-plan
+# contradiction detection. Findings are surfaced to the GHA run summary + Slack.
+#
+# Only the PM repo is checked out, to keep agent context (and cost) small.
 #
 # Triggers:
-#   - push to plans/active/** (plan changes)
 #   - daily 02:00 UTC
 #   - manual workflow_dispatch
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - "plans/active/**"
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
-    inputs:
-      dry_run:
-        description: "Dry run (report only, no archiving)"
-        default: "false"
-        type: string
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}
   cancel-in-progress: true
 
 jobs:
   plan-health:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 12
+
+    outputs:
+      summary: ${{ steps.report.outputs.summary }}
 
     env:
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
       GH_TOKEN: ${{ secrets.GH_PAT }}
-      DRY_RUN: ${{ inputs.dry_run || 'false' }}
 
     steps:
       - name: Checkout unified-trading-pm
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
-          fetch-depth: 0
+          fetch-depth: 0 # hygiene sweep's todo-regression check diffs against origin
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
 
       - name: Claude API health precheck
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           GH_ORG: IggyIkenna
-          TELEGRAM_BOT_TOKEN_PROD: ${{ secrets.TELEGRAM_BOT_TOKEN_PROD }}
-          TELEGRAM_BOT_TOKEN_STAGING: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
-          TELEGRAM_BOT_TOKEN_DEV: ${{ secrets.TELEGRAM_BOT_TOKEN_DEV }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID_PROD: ${{ vars.TELEGRAM_CHAT_ID_PROD || vars.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_STAGING: ${{ vars.TELEGRAM_CHAT_ID_STAGING || vars.TELEGRAM_CHAT_ID }}
-          TELEGRAM_CHAT_ID_DEV: ${{ vars.TELEGRAM_CHAT_ID_DEV || vars.TELEGRAM_CHAT_ID }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           CALLING_WORKFLOW: plan-health-agent
         run: |
           source scripts/agents/claude-api-health-precheck.sh
           check_claude_api_health
 
-      - name: Configure git identity
+      # ── STEP 1: deterministic digest (the heavy lifting — no LLM) ──────────
+      - name: Build deterministic plan-health digest
+        id: digest
         run: |
-          git config --global user.email "agent@ci.local"
-          git config --global user.name "Plan Health Agent"
+          SUMMARY_LINE=$(bash scripts/plan-hygiene/build_health_digest.sh plan_health_digest.md | sed -n 's/^SUMMARY=//p')
+          echo "summary=${SUMMARY_LINE}" >> "$GITHUB_OUTPUT"
+          echo "=== Deterministic digest ==="
+          cat plan_health_digest.md
+
+      # ── STEP 1b: deterministic plan skeleton (slim contradiction-detection input) ──
+      # Full epics+active+issues corpus is ~3 MB (~800K tokens) — 4x Haiku's window.
+      # Extract frontmatter + headers + open todos (~30K tokens) so the agent gets a
+      # reliable, bounded, full-corpus view instead of sampling whole plan bodies.
+      - name: Extract plan skeletons
+        run: |
+          bash scripts/plan-hygiene/extract_plan_skeleton.sh plan_skeleton.md
+          echo "skeleton size: $(wc -c < plan_skeleton.md) bytes (~$(( $(wc -c < plan_skeleton.md) / 4 )) tokens)"
 
       - name: Install Claude Code CLI
         run: npm install -g @anthropic-ai/claude-code --quiet
@@ -83,11 +95,13 @@ jobs:
             exit 1
           fi
 
-      - name: Run plan health agent
+      # ── STEP 2: minimal Haiku agent — contradiction detection ONLY ─────────
+      - name: Run plan health agent (contradiction detection)
+        id: agent
         if: env.ANTHROPIC_API_KEY != ''
         run: |
-          PLAN_DIR="plans/active"
-          ARCHIVE_DIR="plans/archive"
+          DIGEST="$(cat plan_health_digest.md)"
+          SKELETON="$(cat plan_skeleton.md)"
 
           PROMPT="# ══════════════════════════════════════════════════════════════════
           # MANDATORY RULES — READ BEFORE ANY ACTION
@@ -96,45 +110,77 @@ jobs:
           ${MANDATORY_RULES}
 
           # ══════════════════════════════════════════════════════════════════
-          # TASK
+          # TASK — REPORT ONLY. DO NOT EDIT, MOVE, COMMIT, OR git mv ANY FILE.
           # ══════════════════════════════════════════════════════════════════
 
-          You are a plan health agent for the unified-trading-system. Follow these rules exactly:
-          - No chain-of-thought, no prose explanations
-          - Output only: JSON summary + shell commands to run (if any)
-          - Be minimal and precise
+          You are the plan health agent for unified-trading-pm. Counts, hygiene checks,
+          formatting, and archive/lock status are ALREADY computed deterministically — do
+          NOT recompute or second-guess them. Your ONLY job is the one thing a script
+          cannot do: detect cross-plan contradictions.
 
-          TASK 1 — CONTRADICTION CHECK:
-          Read every .md file in ${PLAN_DIR}/. For each pair of plans that share overlapping scope (same service, same architectural area, same todo ID pattern):
-          - Check if they assign contradictory statuses (e.g. one marks a todo completed, another marks it pending with different implementation)
-          - Check if they mandate contradictory architectural decisions
-          Output: JSON array of contradictions: [{plan_a, plan_b, description}] or [] if none.
+          Rules: no chain-of-thought, no prose. Output ONLY a single JSON object.
+          Work from the two pre-computed inputs below. Do NOT read full plan files — the
+          full corpus is ~4x your context window; the skeleton is the authoritative,
+          complete, bounded view of every in-scope plan.
 
-          TASK 1.5 — PLAN LOCK CHECK:
-          Before archiving ANY plan, check its YAML frontmatter for 'locked_by' field.
-          If 'locked_by' is present and non-empty: DO NOT archive. Report: \"LOCKED: {plan} locked by {branch} since {date} — skipping archival.\"
-          Also check for plan-level 'depends_on' in frontmatter: if plan X has depends_on listing plan Y's name, and plan Y is being considered for archival, BLOCK the archive. Report: \"BLOCKED: {Y} cannot be archived — plan {X} depends on it.\"
+          ── Pre-computed digest (authoritative — trust these numbers) ──────────────
+          ${DIGEST}
 
-          TASK 2 — ARCHIVE FULLY-COMPLETED PLANS:
-          A plan is fully completed if ALL of its todos have status: completed (or it has no todos and is marked completed).
-          For each fully-completed plan:
-          - Move the file from ${PLAN_DIR}/ to ${ARCHIVE_DIR}/ using: git mv plans/active/PLAN.md plans/archive/PLAN.md
-          - Update plans/active/INDEX.md to remove the plan entry
-          List the plans you moved.
+          ── Plan skeletons (frontmatter + headers + open todos for EVERY in-scope plan;
+             scope = plans/active + plans/epics + plans/active/issues; archive + non-plan
+             files already excluded) ─────────────────────────────────────────────────
+          ${SKELETON}
+          ──────────────────────────────────────────────────────────────────────────
 
-          $([ \"$DRY_RUN\" = \"true\" ] && echo \"DRY RUN: Report what would be archived but do NOT run git mv or make any changes.\" || true)
+          CONTRADICTION CHECK:
+          Using ONLY the skeletons above, for each pair of plans with overlapping scope
+          (same service, same architectural area, or same todo-ID/topic), flag clear
+          contradictions where they:
+            - assign contradictory statuses to the same work (one done, one pending), or
+            - mandate contradictory architectural decisions (incl. an active plan
+              contradicting its parent_epic).
+          Be conservative — only flag clear contradictions, not mere overlap. If a pair
+          looks contradictory but the skeleton lacks detail to be sure, omit it.
 
-          After moving files (if any), run:
-            bash scripts/quickmerge.sh 'chore: archive completed plans, plan health check' --files 'plans/active/INDEX.md' --quick
-
-          If no changes needed, output: {\"status\": \"healthy\", \"contradictions\": [], \"archived\": []}"
+          Output EXACTLY this JSON shape and nothing else:
+          {\"contradictions\": [{\"plan_a\": \"...\", \"plan_b\": \"...\", \"description\": \"...\"}]}
+          If none: {\"contradictions\": []}"
 
           claude --print --dangerously-skip-permissions --model claude-haiku-4-5-20251001 "$PROMPT" \
-            || echo "Plan health agent exited non-zero — check logs"
+            > agent_out.txt 2>&1 || echo "Plan health agent exited non-zero — check logs"
 
-      - name: Skip — no API key
+          echo "=== Agent output ==="
+          cat agent_out.txt
+
+      - name: Skip agent — no API key
         if: env.ANTHROPIC_API_KEY == ''
-        run: echo "ANTHROPIC_API_KEY not set — skipping plan health agent"
+        run: |
+          echo '{"contradictions": []}' > agent_out.txt
+
+      # ── STEP 3: assemble report → GHA run summary + Slack one-liner ────────
+      - name: Assemble report
+        id: report
+        if: always()
+        run: |
+          # Extract the agent's JSON contradiction object (last {...} block), default empty.
+          CONTRA_JSON=$(grep -oE '\{.*"contradictions".*\}' agent_out.txt 2>/dev/null | tail -1 || true)
+          [ -z "$CONTRA_JSON" ] && CONTRA_JSON='{"contradictions": []}'
+          CONTRA_COUNT=$(printf '%s' "$CONTRA_JSON" | grep -oE '"plan_a"' | wc -l | tr -d ' ')
+
+          SUMMARY="${{ steps.digest.outputs.summary }} | contradictions: ${CONTRA_COUNT}"
+          echo "summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "# Plan Health Agent — daily report"
+            echo ""
+            cat plan_health_digest.md 2>/dev/null || echo "_(digest unavailable)_"
+            echo ""
+            echo "## Cross-plan contradictions: ${CONTRA_COUNT}"
+            echo ""
+            echo '```json'
+            printf '%s\n' "$CONTRA_JSON"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
   notify:
@@ -143,9 +189,9 @@ jobs:
     if: always()
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: "plan-health-agent | PM plans checked"
+      message: "plan-health-agent (daily) | ${{ needs.plan-health.outputs.summary || 'run failed — see logs' }}"
       severity: "INFO"
-      conclusion: ${{ needs.md-health.result }}
+      conclusion: ${{ needs.plan-health.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     secrets: inherit
@@ -160,7 +206,7 @@ jobs:
       repo_name: unified-trading-pm
       workflow_name: ${{ github.workflow }}
       run_id: ${{ github.run_id }}
-      conclusion: ${{ needs.md-health.result }}
+      conclusion: ${{ needs.plan-health.result }}
       branch: ${{ github.ref_name }}
       commit_sha: ${{ github.sha }}
       details_json: '{"event": "plan-health-check"}'

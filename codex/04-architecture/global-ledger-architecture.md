@@ -159,10 +159,10 @@ sub-plan.
 | **Per-snapshot delta (chosen)** | `(rate_t - rate_{t-1}) / rate_{t-1}` annualised        | Reflects latest rate; consistent cadence with MTDS tick frequency; smooth LST curve makes per-snapshot noise negligible |
 | Daily-checkpoint delta          | `(eod_rate_t - eod_rate_{t-1}) / eod_rate_{t-1}` × 365 | Adds 12–24h latency; requires MTDS to distinguish "end-of-day" snapshot — not available in IS `lst_rates` schema        |
 
-| Owner-repo option         | Pros                                                                                                   | Recommendation                                                                                                                 |
-| ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| Owner-repo option         | Pros                                                                                                    | Recommendation                                                                                                                 |
+| ------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | **MTDS-derived (chosen)** | Consistent with `dividend_yield` architecture; IS stays pure reference data; no IS↔MTDS contract drift | ✓                                                                                                                              |
-| IS-write-time             | Closer to source; no MTDS state                                                                        | Violates IS reference-only contract (`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`); blurs contract boundary |
+| IS-write-time             | Closer to source; no MTDS state                                                                         | Violates IS reference-only contract (`codex/04-architecture/instruments-service-as-ssot-for-mtds.md`); blurs contract boundary |
 
 ### Formula (operator-ACK pending 2026-05-24)
 

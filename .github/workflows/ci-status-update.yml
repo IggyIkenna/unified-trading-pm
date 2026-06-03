@@ -7,12 +7,15 @@ name: ci-status-update
 #
 # Trigger: repository_dispatch event_type=ci-status-update
 # Payload: { repo, status, branch, sha }
-#   status: FEATURE_GREEN | STAGING_GREEN | FAILING
+#   status: FEATURE_GREEN | STAGING_GREEN | MAIN_GREEN | FAILING
 #   branch: the branch that triggered the QG run (used to determine status)
 #
-# ci_status lifecycle (8 states):
+# ci_status lifecycle (9 states):
 #   NOT_CONFIGURED → LOCAL_PASS → FEATURE_GREEN → STAGING_PENDING → STAGING_GREEN → SIT_VALIDATED
+#   SIT_VALIDATED → MAIN_GREEN  (written by python-quality-gates-v2.yml when QG passes on main)
 #   Any state can regress to FAILING on QG failure.
+# MAIN_GREEN is the dep-on-main gate signal used by staging-to-main.yml STAGE 1.8:
+#   before promoting repo X to main, every dep D must have ci_status=MAIN_GREEN (or SIT_VALIDATED).
 # See rollout plan § ci_status Lifecycle State Machine for full spec.
 
 on:
@@ -56,7 +59,7 @@ jobs:
             exit 0
           fi
 
-          VALID_STATUSES="FEATURE_GREEN STAGING_GREEN FAILING LOCAL_PASS SIT_VALIDATED"
+          VALID_STATUSES="FEATURE_GREEN STAGING_GREEN MAIN_GREEN FAILING LOCAL_PASS SIT_VALIDATED"
           if ! echo "$VALID_STATUSES" | tr ' ' '\n' | grep -qx "$STATUS"; then
             echo "Invalid status '$STATUS'. Must be one of: $VALID_STATUSES. Skipping."
             echo "skip=true" >> "$GITHUB_OUTPUT"
@@ -139,6 +142,8 @@ jobs:
           STATUS: ${{ github.event.client_payload.status }}
           PREV: ${{ needs.update-ci-status.outputs.prev_status }}
           EXCERPT_B64: ${{ github.event.client_payload.failure_excerpt_b64 }}
+          SHA: ${{ github.event.client_payload.sha || '' }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
           if [ "${STATUS}" = "FAILING" ]; then
@@ -152,6 +157,40 @@ jobs:
             EXCERPT=$(printf '%s' "${EXCERPT_B64}" | base64 -d 2>/dev/null || true)
             if [ -n "${EXCERPT}" ]; then
               MSG=$(printf '%s\n\n*Failure excerpt (last lines of QG output):*\n```\n%s\n```' "${MSG}" "${EXCERPT}")
+            fi
+          fi
+          # ── Push-author attribution (operator-approved 2026-06-02) ─────────────
+          # Classification mirror of ci_failure_watcher.py::_classify_commit_data:
+          #   automation  = committer is "github-actions[bot]" or "GitHub"
+          #   background-agent = message contains "Co-Authored-By: Claude"
+          #   human       = author name in {IggyIkenna, CosmicTrader} (case-insensitive)
+          #   unknown     = anything else
+          # Gracefully skips if SHA is empty or the gh api call fails.
+          if [ -n "${SHA:-}" ]; then
+            COMMIT_JSON=$(gh api "repos/${GITHUB_REPOSITORY_OWNER}/${REPO}/commits/${SHA}" \
+              --jq '{author:.commit.author.name,committer:.commit.committer.name,message:.commit.message}' \
+              2>/dev/null || true)
+            if [ -n "${COMMIT_JSON:-}" ]; then
+              COMMIT_AUTHOR=$(printf '%s' "${COMMIT_JSON}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('author',''))" 2>/dev/null || true)
+              COMMIT_COMMITTER=$(printf '%s' "${COMMIT_JSON}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('committer',''))" 2>/dev/null || true)
+              COMMIT_MESSAGE=$(printf '%s' "${COMMIT_JSON}" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('message',''))" 2>/dev/null || true)
+              COMMITTER_LC=$(printf '%s' "${COMMIT_COMMITTER}" | tr '[:upper:]' '[:lower:]')
+              AUTHOR_LC=$(printf '%s' "${COMMIT_AUTHOR}" | tr '[:upper:]' '[:lower:]')
+              MSG_LC=$(printf '%s' "${COMMIT_MESSAGE}" | tr '[:upper:]' '[:lower:]')
+              if [ "${COMMITTER_LC}" = "github-actions[bot]" ] || [ "${COMMITTER_LC}" = "github" ]; then
+                PUSHER_ROLE="automation"
+                PUSHER_NAME="${COMMIT_AUTHOR}"
+              elif printf '%s' "${MSG_LC}" | grep -q "co-authored-by: claude"; then
+                PUSHER_ROLE="background-agent"
+                PUSHER_NAME="${COMMIT_AUTHOR}"
+              elif [ "${AUTHOR_LC}" = "iggyikenna" ] || [ "${AUTHOR_LC}" = "cosmictrader" ]; then
+                PUSHER_ROLE="human"
+                PUSHER_NAME="${COMMIT_AUTHOR}"
+              else
+                PUSHER_ROLE="unknown"
+                PUSHER_NAME="${COMMIT_AUTHOR:-unknown}"
+              fi
+              MSG=$(printf '%s\n👤 pushed by %s [%s]' "${MSG}" "${PUSHER_NAME}" "${PUSHER_ROLE}")
             fi
           fi
           {

@@ -36,6 +36,26 @@ if [ "$#" -eq 0 ]; then
   exit 0
 fi
 
+# ── Skip when the branch is BEHIND origin ────────────────────────────────────
+# This hook runs BEFORE check-branch-drift.sh in the pre-commit order, so if the
+# branch is behind origin the commit will abort on the drift gate — but prettier
+# would already have reflowed + re-staged files, leaving that reflow as working-tree
+# residue. Accumulated residue makes a slot worktree perpetually dirty, so the
+# FF-pull cron skips it and the slot stops syncing (observed 2026-06-02: PM slot,
+# 69-file prettier reflow residue from aborted commits). Mirror check-branch-drift.sh's
+# condition and no-op early so an about-to-be-blocked commit leaves NO residue.
+if [[ -z "${GITHUB_ACTIONS:-}" && -z "${CI:-}" && "${SKIP_BRANCH_DRIFT:-0}" != "1" ]]; then
+  _PA_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+  if [[ -n "$_PA_BRANCH" && "$_PA_BRANCH" != "HEAD" ]]; then
+    git fetch origin "$_PA_BRANCH" --quiet 2>/dev/null || true
+    _PA_BEHIND=$(git rev-list "HEAD..origin/$_PA_BRANCH" --count 2>/dev/null || echo 0)
+    if [ "${_PA_BEHIND:-0}" -gt 0 ] 2>/dev/null; then
+      echo "[prettier-autostage] branch behind origin/$_PA_BRANCH by $_PA_BEHIND — skipping format (the drift gate will block this commit; avoids leaving reflow residue that stops slot FF-sync)."
+      exit 0
+    fi
+  fi
+fi
+
 # Locate prettier. Prefer repo-local (node_modules/.bin/prettier), fall back to npx,
 # then to a globally-installed prettier on PATH.
 PRETTIER=""

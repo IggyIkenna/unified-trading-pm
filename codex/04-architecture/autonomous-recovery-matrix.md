@@ -393,20 +393,20 @@ Scenarios with `synthetic=true` are excluded from P&L attribution. The `Scenario
 
 ## Hard-stop scope: agent vs human (codified 2026-06-02)
 
-The CLAUDE.md "Hard-stop list" defers to this matrix for *which kill-switch / trading-halt actions an autonomous agent may
-take vs which require a human.* The rule is **direction- + scope-aware, not a blanket "kill-switch = human" gate** —
+The CLAUDE.md "Hard-stop list" defers to this matrix for _which kill-switch / trading-halt actions an autonomous agent
+may take vs which require a human._ The rule is **direction- + scope-aware, not a blanket "kill-switch = human" gate** —
 because a fail-safe halt left waiting 8 h on a human is worse than the halt itself:
 
-| Action | Who | Why |
-| --- | --- | --- |
-| **Arm** kill-switch / `STOP_NEW_ONLY` / firm-wide halt (protective) | **Agent + runtime — always autonomous** | Fail toward safety; the runtime already auto-arms (G1/G4 SHIPPED). An agent that spots a novel failure overnight halts-to-safety without waiting. |
-| **Relaunch** crashed safety/monitoring VMs (alerting / watchdog / consolidator) | **Agent — autonomous** | Infra op (CLAUDE.md "do NOT pause for operator approval on infra ops"); keeps the autonomous risk system alive so it *can* auto-halt. |
-| **Resume / un-kill / disarm — within DR + auto-recovery scope** (`auto_cooldown` breakers: `BLOCK_NEW`, `SCALE_DOWN`; self-recover on the Recovery-Timeline above) | **Agent + runtime — autonomous** | Reversible, least-restrictive; the engine's `AUTO_DISARM` / `TIMEOUT_DISARM` paths already do this without an operator. |
-| **Resume / un-kill / disarm — OUTSIDE scope** | **Human only** | Two cases: (1) a `manual_unkill` destructive breaker (`KILL_ALL`, `CANCEL_OPEN` — operator sign-off by design, `manual_unkill(operator_id=…)`); (2) a novel situation this matrix / the DR runbook does NOT cover. |
-| Wallet keys / move capital / force-push `main` / 1.0.0 graduation | **Human only** | Unchanged hard-stops — risk-increasing + irreversible, unrelated to recovery. |
+| Action                                                                                                                                                             | Who                                     | Why                                                                                                                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Arm** kill-switch / `STOP_NEW_ONLY` / firm-wide halt (protective)                                                                                                | **Agent + runtime — always autonomous** | Fail toward safety; the runtime already auto-arms (G1/G4 SHIPPED). An agent that spots a novel failure overnight halts-to-safety without waiting.                                                                  |
+| **Relaunch** crashed safety/monitoring VMs (alerting / watchdog / consolidator)                                                                                    | **Agent — autonomous**                  | Infra op (CLAUDE.md "do NOT pause for operator approval on infra ops"); keeps the autonomous risk system alive so it _can_ auto-halt.                                                                              |
+| **Resume / un-kill / disarm — within DR + auto-recovery scope** (`auto_cooldown` breakers: `BLOCK_NEW`, `SCALE_DOWN`; self-recover on the Recovery-Timeline above) | **Agent + runtime — autonomous**        | Reversible, least-restrictive; the engine's `AUTO_DISARM` / `TIMEOUT_DISARM` paths already do this without an operator.                                                                                            |
+| **Resume / un-kill / disarm — OUTSIDE scope**                                                                                                                      | **Human only**                          | Two cases: (1) a `manual_unkill` destructive breaker (`KILL_ALL`, `CANCEL_OPEN` — operator sign-off by design, `manual_unkill(operator_id=…)`); (2) a novel situation this matrix / the DR runbook does NOT cover. |
+| Wallet keys / move capital / force-push `main` / 1.0.0 graduation                                                                                                  | **Human only**                          | Unchanged hard-stops — risk-increasing + irreversible, unrelated to recovery.                                                                                                                                      |
 
-**One-line invariant:** the gate is on the **risk-increasing** direction *and only when it falls outside the defined
-DR/auto-recovery scope* — never on the protective direction, and never on in-scope reversible resume. SSOT mirror:
+**One-line invariant:** the gate is on the **risk-increasing** direction _and only when it falls outside the defined
+DR/auto-recovery scope_ — never on the protective direction, and never on in-scope reversible resume. SSOT mirror:
 CLAUDE.md § "Plans Run To Actual Completion → Hard-stop list".
 
 ## Related

@@ -63,12 +63,12 @@ related:
 > DeFi-bucket seed without confirming defi_manifest C0 is not mid-walk (and vice-versa).
 > `data_source_provenance_all_asset_groups_2026_06_01.md` (`source`-column backfill) must NOT open a third walk — its
 > row-backfill rides defi_manifest's C0 single-walk. Coordination owner: epic `mtds_mdps_master`. Banner-remove when the
-> DeFi `_index` is canonical + seeded (defi_manifest C-GREEN).
-> **CANONICAL NAMING (operator-locked 2026-06-01) — `codex/02-data/defi-canonical-naming-ssot.md`**: the DeFi seed +
-> the L6 **legacy DELETE this plan owns (Phase 7)** MUST use the canonical forms (pool data_type `dex_pool_state`/
-> `dex_pool_swaps` — NOT `dex_pools`; `pipeline_mode=` path; chain `HYPERLIQUID`). **What ends (HARD)**: the DeFi
-> legacy-bucket DELETE runs **ONLY AFTER** defi_manifest C0 RD4 is GREEN per bucket (canonical proven complete +
-> consumers re-pointed) — never before. Delete-before-C-GREEN = data loss.
+> DeFi `_index` is canonical + seeded (defi_manifest C-GREEN). **CANONICAL NAMING (operator-locked 2026-06-01) —
+> `codex/02-data/defi-canonical-naming-ssot.md`**: the DeFi seed + the L6 **legacy DELETE this plan owns (Phase 7)**
+> MUST use the canonical forms (pool data_type `dex_pool_state`/ `dex_pool_swaps` — NOT `dex_pools`; `pipeline_mode=`
+> path; chain `HYPERLIQUID`). **What ends (HARD)**: the DeFi legacy-bucket DELETE runs **ONLY AFTER** defi_manifest C0
+> RD4 is GREEN per bucket (canonical proven complete + consumers re-pointed) — never before. Delete-before-C-GREEN =
+> data loss.
 
 ## Cross-plan ordering → single canonical SSOT (no fallback, no dual) — operator-requested 2026-06-01
 
@@ -340,6 +340,15 @@ infra. **Relaunch prerequisite plans** (writers must NOT be relaunched before th
       the instruments-store legacy buckets per the adjacent drift), GCP + AWS. Canonical `-prd-`/`-pred-prd-` becomes
       the sole SSOT. Record in `_index/snapshots/decommission_2026_06_0X.md`. **Do NOT delete an AG's legacy bucket
       while its L3 plan is open** — prediction/cefi hold legacy-only history.
+- [ ] [SCRIPT] P0. **Version-aware + orphan-aware delete (slot/Harsh bucket-state verification 2026-06-02).** Two gaps
+      the per-bucket delete must handle, surfaced by reading live bucket state: (1) the canonical `-prd` buckets were
+      pre-seeded by a PARTIAL env-split copy in legacy FORM (live-object: defi ~43% / cefi ~65% / tradfi ~93% of legacy;
+      cefi also ~17 days stale) — after each L3 form-walk writes canonical `pipeline_mode=` paths, the pre-existing
+      legacy-FORM objects inside `-prd` are ORPHANS and must be swept (owned in each AG's L3 verify step), else the
+      consolidator rebuild double-counts; (2) the legacy buckets carry large NONCURRENT/soft-deleted version history
+      (cefi 3.81M, tradfi 3.52M, defi 1.15M noncurrent via Cloud Monitoring `storage/v2/total_count`) — the decommission
+      must purge object VERSIONS (not just live objects), and the "canonical ≥ legacy" verify gate must compare
+      Monitoring `type=live-object` counts, never a naive recursive `ls` (which counts versions + soft-deleted).
 
 ## Phase 8 — Governance + codex (P1)
 

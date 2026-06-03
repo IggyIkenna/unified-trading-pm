@@ -15,6 +15,7 @@ overview: One-line description
 type: code | infra | deployment | business | mixed
 epic: epic-code-completion | epic-deployment | epic-business | epic-infra | none
 status: active | blocked | paused
+execution_scope: orchestrator-agent | local-only # FUNDAMENTAL — orchestrator-agent (fleet-dispatchable) unless this is operator-only local work
 
 completion_gates:
   code: C5 # C0–C5 or "none" — gate ALL repos must reach before archiving

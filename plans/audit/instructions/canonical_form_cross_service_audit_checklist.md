@@ -24,6 +24,7 @@
 > The headline was a prior; the data-state is the truth. The walk fixes all of it.
 >
 > **Banned responses to an expanded finding** (every one is review-blocking):
+>
 > - descope to the headline number ("the plan said 838 cells, I'll just do those");
 > - defer the extra to a follow-up plan / mark it post-cutover;
 > - stamp it `BLOCKED-OPERATOR-DECISION` (a data-state gap is NOT a design fork — just fix it);
@@ -36,7 +37,8 @@
 > on the ACTUAL data-state**, whatever that turns out to require. The ONLY legitimate non-completion is the genuine
 > operator-gated closed set: `BLOCKED-CREDENTIALS` / `BLOCKED-OPERATOR-DECISION` (a real design fork, not a data gap) /
 > `BLOCKED-UPSTREAM-OUTAGE` / `BLOCKED-PLAYWRIGHT`. Composes with CLAUDE.md "Data Pipeline Correctness Is The Heartbeat"
-> + "Plans Run To Actual Completion" + "Complete, don't defer".
+>
+> - "Plans Run To Actual Completion" + "Complete, don't defer".
 
 ## The matrix being audited — (service × asset_group) cells
 

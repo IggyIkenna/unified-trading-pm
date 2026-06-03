@@ -502,7 +502,7 @@
       "testing_level": "integration",
       "skipped_gates": [],
       "notes": "New repo 2026-04-20 \u2014 Phase 2 of fund_administration_service_and_pooled_subscription_redemption plan. Local-only until Phase 6 staging deploy. Subscription + redemption state machines + capital-routing orchestrator using execution-service TransferAdapter with FundTransferContext. Follow-up: promote FundTransferContext to UAC to remove SCHEMA_PROVENANCE_EXEMPT local mirror.",
-      "status": "active",
+      "status": "scaffolded",
       "service_declaration": {
         "mode": "live",
         "capabilities_needed": [
@@ -551,7 +551,7 @@
       "testing_level": "unit",
       "skipped_gates": [],
       "notes": "PricingLedger greeks + carry-rate writer. Subscribes to MTDS mark_update; consumes IS InstrumentRecord; writes option_delta/gamma/theta/vega/rho + funding/lending/borrow/staking/dividend/rebase to PricingLedger MARK_UPDATE rows. Two modes: live (streaming) + batch (backfill). Stubbed 2026-05-23 (greeks-service@b9dbade, 15 files); worktree model wired. Folded under mtds_mdps_master epic. Plan: pricing_ledger_carry_rates_mtds_2026_06_01. (Re-added 2026-05-23 after stale-commit 54cd3245e clobbered the original 1b7dca671 registration.)",
-      "status": "active",
+      "status": "scaffolded",
       "service_declaration": {
         "mode": "live",
         "capabilities_needed": [
@@ -797,11 +797,6 @@
           "name": "unified-api-contracts",
           "version": ">=0.1.20,<1.0.0",
           "required": true
-        },
-        {
-          "name": "unified-trading-deployment",
-          "version": ">=0.1.0,<1.0.0",
-          "required": false
         }
       ],
       "ci_status": "FEATURE_GREEN",

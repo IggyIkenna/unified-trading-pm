@@ -119,26 +119,28 @@ written. · **estimate**: 2.4 cal AI-days (class: brand-new)
 
 ## Findings — 2026-06-01 cross-plan deviation sweep (slot-1)
 
-Surfaced by a plan-hygiene + cross-plan-deviation pass (sweep green; 2 frontmatter + 8 todo-format hard failures fixed in
-PM@6a1d2e466). Corpus is largely well-disciplined — vocabulary (`asset_group`/`source`/removed-providers/URDI) clean,
+Surfaced by a plan-hygiene + cross-plan-deviation pass (sweep green; 2 frontmatter + 8 todo-format hard failures fixed
+in PM@6a1d2e466). Corpus is largely well-disciplined — vocabulary (`asset_group`/`source`/removed-providers/URDI) clean,
 SSOT pointers unbroken, and contentious technical decisions (source auto-stamp, custody staging, promote targets,
 single-walk discipline) consistently aligned. Residual items:
 
-- [x] ✅ [CLAUDE-MD] P2. **Manifest v9 framing generalised** — CLAUDE.md documented v9 only under the TradFi-source bullet
-      while 11 active `*_manifest_canonicalisation` plans make v9 the workspace-wide canonical target. Added a general
-      "current canonical schema = v9, all asset groups" line. (CLAUDE.md this session.)
+- [x] ✅ [CLAUDE-MD] P2. **Manifest v9 framing generalised** — CLAUDE.md documented v9 only under the TradFi-source
+      bullet while 11 active `*_manifest_canonicalisation` plans make v9 the workspace-wide canonical target. Added a
+      general "current canonical schema = v9, all asset groups" line. (CLAUDE.md this session.)
 - [x] ✅ [PLAN] P2. **2 RESOLVED issue docs archived** — `quality_gates_sh_missing_sentinel_write_2026_05_29` +
       `check_staging_lock_ruleset_hygiene_2026_05_29` both self-declared `status: RESOLVED` + "Issue archives." with 0
       open todos; moved to `plans/archive/2026_06/` this session (issue-doc-lifecycle HARD RULE).
-- [ ] [PLAN] P1. **Stale 2026-05-23 deadline framing** (today is past the milestone) — `master_to_live_defi_2026_05_23.md`
-      + ~10 cross-refs (INDEX, `aws_cloud_toggle_and_backfill_parity`, `human_work_backlog`) still use future-tense
-      "live by 2026-05-23 / pre-/post-cutover". Slot-1 owns the master-plan refresh: re-date to actual status or archive
-      if the cutover executed. (Master plan was dirty/in-flight at sweep time — coordinate before editing.)
-- [ ] [PLAN] P2. **DEFERRED items with placeholder successors** — `tradfi_massive_dual_source` (`tradfi_massive_live_ws_<TBD>`,
-      `tradfi_cfe_vx_futures_<date>`), `ci_canonical_v2_migration` / `cicd_contract_hardening`
-      (`cleanup_v1_quality_gates_workflows_<TBD/date>`), `mdps_pure_polars_migration`, `features_registry_status_versioning`
-      name a successor *pattern* (`<YYYY_MM_DD>`/`<TBD>`), not a filed `plans/active/` plan. Named-successor rule wants a
-      real file; file them or convert to `BLOCKED-*` where genuinely gated (e.g. GH ticket #4422570).
+- [ ] [PLAN] P1. **Stale 2026-05-23 deadline framing** (today is past the milestone) —
+      `master_to_live_defi_2026_05_23.md` + ~10 cross-refs (INDEX, `aws_cloud_toggle_and_backfill_parity`,
+      `human_work_backlog`) still use future-tense "live by 2026-05-23 / pre-/post-cutover". Slot-1 owns the master-plan
+      refresh: re-date to actual status or archive if the cutover executed. (Master plan was dirty/in-flight at sweep
+      time — coordinate before editing.)
+- [ ] [PLAN] P2. **DEFERRED items with placeholder successors** — `tradfi_massive_dual_source`
+      (`tradfi_massive_live_ws_<TBD>`, `tradfi_cfe_vx_futures_<date>`), `ci_canonical_v2_migration` /
+      `cicd_contract_hardening` (`cleanup_v1_quality_gates_workflows_<TBD/date>`), `mdps_pure_polars_migration`,
+      `features_registry_status_versioning` name a successor _pattern_ (`<YYYY_MM_DD>`/`<TBD>`), not a filed
+      `plans/active/` plan. Named-successor rule wants a real file; file them or convert to `BLOCKED-*` where genuinely
+      gated (e.g. GH ticket #4422570).
 
 ## Deferred work — migrated from archived plans
 

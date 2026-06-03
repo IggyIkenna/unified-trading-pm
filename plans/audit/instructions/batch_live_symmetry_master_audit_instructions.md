@@ -4,7 +4,7 @@ type: audit-instructions
 epic: batch_live_symmetry_master
 assigned_vm: vm-cross-cutting
 tier: L4
-last_updated: 2026-05-22
+last_updated: 2026-06-03
 ---
 
 # Batch=Live Symmetry Master — Audit Instructions
@@ -85,6 +85,27 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
       window has occurred, or (ii) exists and is scheduled into the upcoming window. A migration window that walked the
       corpus WITHOUT bundling the `pipeline_mode=` partition is a finding (single-walk discipline breach).
 
+- [ ] (k) **Different-source batch↔live equivalence + accepted-divergence register (codified 2026-06-03)**: items
+      (a)–(f) prove batch and live adapters EXIST in equal count with identical schema / field sets; this item proves
+      that where batch and live acquire the SAME cell from a **different upstream source**, the two are _semantically_
+      equivalent — count parity (a6) is blind to a live WS path that produces a different shape/cadence than the batch
+      source. **Step 1 — enumerate the different-source pairs**: for every (service, asset*group, venue, data_type),
+      record the batch upstream vs the live upstream from `codex/02-data/mtds-data-source-coverage-matrix.md` + the
+      adapter code. Known classes: CeFi `trades` / `book_snapshot_5` = Tardis bulk CSV (batch) vs venue WebSocket
+      (live); DeFi DEX = The Graph subgraph-historical (batch) vs subgraph-current / WS (live); Solana DEX
+      (Orca/Raydium/Drift/Phoenix) = S3 archive / RPC snapshot (batch) vs WebSocket (live). **Step 2 — verify
+      equivalence** on an overlapping window: same \_populated* field set (not merely same schema), comparable
+      cadence/granularity, and a 1-pair reconciliation fixture where the two sources agree on overlapping-timestamp
+      values within tolerance (no systematic shift, no field one source carries that the other silently drops). **Step 3
+      — accepted-divergence register**: any pair that diverges BY DESIGN (e.g. Morpho batch skipped — no historical
+      subgraph; Solana DEX snapshot-vs-WS granularity; any live-only or batch-only data_type) MUST appear in an explicit
+      register in the result:
+      `venue | data_type | batch_source | live_source | divergence | why-accepted | tracking-plan`. **An undocumented
+      different-source divergence is RED** — a6 passing while the live source emits a different tick shape is the exact
+      blind spot this item closes. GREEN = every different-source pair either reconciles on its overlap window OR is in
+      the accepted-divergence register with a named tracking plan; zero silent divergences. Cross-ref:
+      `mtds_mdps_master` item (k) (per-venue acquisition-method registry), `defi_master`, `cefi_master`.
+
 ### E2E Cross-Cutting Verification
 
 - (e2e-batch-live) **Batch-live round-trip**: pick one (venue, data_type) pair, run batch adapter → confirm manifest row
@@ -94,7 +115,7 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
 
 ## Success Criteria
 
-- All 10 checklist items (a)–(j) GREEN
+- All 11 checklist items (a)–(k) GREEN
 - `a6_batch_live_adapter_parity.py` shows 100% adapter parity (every batch adapter has a live counterpart)
 - A3 manifest divergence: zero `DIVERGENT_EMPTY` across all services
 - `count(*) WHERE pipeline_mode IS NULL OR pipeline_mode = ''` = 0 (or documented exempt) across every asset-group

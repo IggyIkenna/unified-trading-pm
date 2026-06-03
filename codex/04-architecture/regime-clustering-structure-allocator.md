@@ -181,4 +181,4 @@ strategy-service — never inside ml-service.
 | Deflated Sharpe                           | `walk_forward_kpi.py` `WalkForwardReport`            | OOS Sharpe with multiple-testing correction  |
 | PBO (Probability of Backtest Overfitting) | computed per cluster                                 | Rejects in-sample-only artefacts             |
 | OOD abstain coverage                      | `walk_forward_kpi.py` `RegimeOosReport`              | 100% of OOD ticks must route to abstain      |
-| Backtest↔paper tracking error             | `tracking_error_kpi.py` `BacktestPaperParityChecker` | Proves continuous→discrete bridge is real    |
+| Backtest↔paper tracking error            | `tracking_error_kpi.py` `BacktestPaperParityChecker` | Proves continuous→discrete bridge is real    |
