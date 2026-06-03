@@ -87,7 +87,14 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
    `FETCH_HEAD` under you)**: verify ONLY against the stable remote ref
    (`git merge-base --is-ancestor <sha> origin/live-defi-rollout`), never `FETCH_HEAD`, and promote YOUR commit via a
    throwaway worktree off `origin/live-defi-rollout` so the other agent is undisturbed. SSOT: `cursor-configs/CLAUDE.md`
-   § "Concurrent agent in your shared `.tabs/<N>/` worktree".
+   § "Concurrent agent in your shared `.tabs/<N>/` worktree". **Behind-remote at quickmerge time**: quickmerge's STAGE
+   0.4 Not-Behind Gate auto-reconciles (ff → rebase-autostash) and, if your same-file commits genuinely conflict with
+   the incoming, `rebase --abort`s (your work intact, never overwritten) and BLOCKS exit 1. On that block do NOT force
+   or blind-overwrite — run the recovery recipe: preserve the peer's commits, stash YOUR files by name,
+   `git pull --rebase`, reconcile the ESSENCE of both sides, re-run `quality-gates.sh`, re-run quickmerge
+   (`QUICKMERGE_ALLOW_BEHIND=1` is emergency-only). Same recipe as the autostash-conflict rule. (Forward: a structured
+   `QUICKMERGE_BLOCKED code=…` contract is landing per `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` so
+   you recognise it programmatically.)
 5. **Plan flip in same logical unit as code**: edit the plan checkbox `- [ ]` → `- [x] (commit-sha + brief evidence)`.
    Commit the plan flip with the **MANDATORY `docs(plans):` prefix** (`plan(...)` is hook-rejected) + push. A plan-flip
    on a PM `*.md`/`*.mdc` is docs fast-path (PR targets `main`); the PM staging→main bypass + main-backmerge keep PM

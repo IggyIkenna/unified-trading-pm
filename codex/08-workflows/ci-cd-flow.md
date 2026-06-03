@@ -66,6 +66,32 @@ Pass 2 — Quickmerge (--agent fast-path)
   • --to-staging routes to staging instead of main (for breaking changes)
 ```
 
+### STAGE 0.4 Not-Behind Gate — behind-remote reconcile (multi-agent safety)
+
+Before committing, quickmerge runs the **Not-Behind Gate** ([`quickmerge.sh`](../../scripts/quickmerge.sh) STAGE 0.4).
+It must never ship from a STALE base, but local commits / uncommitted work that DEVIATE from origin are fine — that's
+the work being merged. So if `HEAD` is BEHIND `origin/<current-branch>` it pulls latest FIRST, in this order:
+
+1. `git pull --ff-only` — clean catch-up when you have no local commits.
+2. else `git pull --rebase --autostash` — replays YOUR commits on top of the incoming, stashing uncommitted work first.
+3. else `git rebase --abort` (your work restored intact — **never overwritten, never blind-merged**) and **BLOCK with
+   exit 1**. Emergency override only: `QUICKMERGE_ALLOW_BEHIND=1`.
+
+So quickmerging while behind by N with same-file local commits does NOT clobber the peer's work — it auto-reconciles if
+it can, else stops and hands the conflict back. **PM-as-a-repo is covered by the same gate** (it keys off the current
+branch's upstream); no PM special-case.
+
+**Recovery on the exit-1 block** (the same recipe as the "Autostash conflict on rebase" rule in `CLAUDE.md`): evaluate
+sync (`git rev-list --count HEAD..origin/<b>` / `..HEAD`) → preserve the peer's commits (NEVER
+`git checkout HEAD -- <f>` / `reset --hard` on dirty unowned work) → stash YOUR files by name →
+`git pull --rebase origin <b>` → reconcile the **essence** of both sides (3-way, keep both intents) → re-run
+`quality-gates.sh` → re-run quickmerge.
+
+> **Forward (tracked: `plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`)**: the prose block is
+> being upgraded to a machine-parseable contract —
+> `QUICKMERGE_BLOCKED code=BEHIND_DIVERGED_CONFLICT|AUTOSTASH_POP_CONFLICT …` + a `RECOVERY:` line — so a spawned agent
+> recognises it and self-runs the recipe above without an operator paste.
+
 **Pass 1 fix-mode — choose by WHAT you will commit (HARD RULE; AUTO-FIX rewrites the WHOLE worktree, not just your
 files).** The sentinel is written on any COMPLETE green run — fix-mode OR `--no-fix` (the write is gated on
 `RUN_TESTS && RUN_LINT && !QUICK && !ACT && !SKIP_CODEX`, NOT on fix-mode), so both modes satisfy Pass 1:
@@ -214,9 +240,9 @@ QG + sentinel is the only gate on LDR (by design). This is intentional integrati
 **required-check ruleset is enforced at the staging/main PR** (the promotion boundary); **local QG (`quality-gates.sh` →
 sentinel) is the agent + quickmerge pre-flight** (fail-fast), not a server gate; and the integration axis stays cheap to
 push to. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH` — so **every repo's default branch MUST be
-`main`**; a non-main default (e.g. `live-defi-rollout`) mislocates the required check onto LDR and `GH013`-rejects pushes
-to the integration axis (incident 2026-06-03: `unified-trading-api` + `greeks-service`; `verify_branch_protection_check_names.py`
-now asserts `default_branch == main` fleet-wide).
+`main`**; a non-main default (e.g. `live-defi-rollout`) mislocates the required check onto LDR and `GH013`-rejects
+pushes to the integration axis (incident 2026-06-03: `unified-trading-api` + `greeks-service`;
+`verify_branch_protection_check_names.py` now asserts `default_branch == main` fleet-wide).
 
 ### Branch-triggered build — hotfix image off an arbitrary branch (no main promotion, codified 2026-06-01)
 

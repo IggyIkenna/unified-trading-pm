@@ -20,6 +20,28 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)
 
+## Slot-6 TradFi master orchestrator — owned + attached plans/issues
+
+> **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot (five slots). **Slot 6 = TradFi
+> end-to-end** across every service — instruments-service → MTDS → MDPS → features → downstream → strategy/execution →
+> bucket/data/manifest/UI. **THIS plan is the TradFi master orchestrator**: every tradfi-related plan + issue
+> cross-references here; orphaned tradfi issues attach here. Sibling AG masters: **defi → slot 2**
+> (`defi_manifest_canonicalisation_2026_06_01.md`), **cefi → slot 3** (`cefi_manifest_canonicalisation_2026_06_01.md`),
+> **sports → slot 4** (`sports_manifest_canonicalisation_2026_06_01.md`), **prediction → slot 5**
+> (`prediction_manifest_canonicalisation_2026_06_01.md`). Cross-cutting per-service plans keep their own `assigned_vm`
+> (vm-ml / vm-cross-cutting) as PRIMARY owner — slot-6 tracks + drives only their **tradfi slice**, not the whole plan.
+
+**Cross-referenced tradfi slices (primary owner keeps the plan; slot-6 drives the tradfi portion):**
+
+| Plan / issue                                                   | Primary VM       | TradFi slice                                                                                       |
+| -------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
+| `tradfi_massive_dual_source_2026_05_28.md`                     | vm-tradfi        | Massive ingest + `source=databento\|massive` write-path (this plan's C-source RIDER; absorbs -031) |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` | vm-cross-cutting | L3 tradfi ordering + L6 legacy `market-data-tick-tradfi` delete                                    |
+| `pipeline_mode_partition_migration_2026_06_01.md`              | vm-cross-cutting | tradfi `pipeline_mode=` partition (this plan's C-pipeline_mode RIDER)                              |
+| `instruments_manifest_canonicalisation_2026_06_01.md`          | vm-cross-cutting | `instruments-store-tradfi` reference slice                                                         |
+| `downstream_services_manifest_canonicalisation_2026_06_01.md`  | vm-ml            | tradfi MDPS/features/execution canonical-form slice                                                |
+| tradfi phase-3 backfill + VIX/Massive continuity work          | vm-tradfi        | tradfi data acquisition slice                                                                      |
+
 > **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
 > `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** and glued
 > venues — a FULL re-canonicalisation, not the headline cell-count. (Tradfi already reads v8 per CONFLICT-2 — confirm

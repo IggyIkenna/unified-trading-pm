@@ -125,6 +125,45 @@ All on `origin/live-defi-rollout`; full detail in
       wording drafted; gap-analysis line anchors in the session notes). **Do NOT edit the HARD RULE until operator
       ratifies decision 3.**
 
+### Quickmerge behind/diverge error contract — agents self-serve recovery (operator design 2026-06-03; many-parallel-agents driver)
+
+> **Driver (operator)**: with dozens of agents running, the behind-remote-LDR + uncommitted-same-file reconcile must be
+> a self-describing error the agent already knows how to act on — NOT an operator paste per agent. quickmerge STAGE 0.4
+> already does the SAFE mechanical half (auto-ff → auto-rebase-autostash → `rebase --abort` + exit 1 on real conflict;
+> never overwrites, never blind-merges — [`quickmerge.sh`](../../scripts/quickmerge.sh) STAGE 0.4). The gap is (1) the
+> block is human prose, not an agent-actionable contract; (2) the uncommitted-same-file autostash-pop edge (the
+> "Applying autostash resulted in conflicts" foot-gun) isn't trapped distinctly. PM-as-a-repo is COVERED by the same
+> gate (it keys off the current branch's upstream), so no PM-specific code — one template change rolled fleet-wide.
+
+- [ ] [INFRA] P1. **quickmerge STAGE 0.4 — structured error contract.** Replace the prose block with a machine-parseable
+      sentinel + recovery block:
+      `QUICKMERGE_BLOCKED code=BEHIND_DIVERGED_CONFLICT repo=<r> branch=<b> behind=<n>     ahead=<m> conflicts="<files>"`
+      followed by a `RECOVERY:` line pointing at the SUB_AGENT_MANDATORY_RULES recipe. Add a DISTINCT
+      `code=AUTOSTASH_POP_CONFLICT` trap: after `git pull --rebase --autostash` detect a leftover `git stash list` entry
+      / conflict markers and emit that code instead of silently continuing. Preserve exit 1 + the
+      `QUICKMERGE_ALLOW_BEHIND=1` override. Edit the **canonical PM template** `scripts/quickmerge.sh`, then
+      `rollout-workflow-templates.sh` to all repos (never per-repo). Regression: shell unit asserting both codes fire on
+      a synthesized behind+diverge + autostash-pop fixture.
+- [ ] [INFRA] P1. **quickmerge STAGE 0.4 — reconcile against the configured UPSTREAM, not `origin/<branch-name>` (BUG,
+      LIVE incident 2026-06-03 slot-2).** STAGE 0.4 sets `_QM_BRANCH=$(git branch --show-current)` and compares against
+      `origin/$_QM_BRANCH`. For a slot worktree on `tab/<op>/<N>` whose **upstream is `origin/live-defi-rollout`** (the
+      base for every repo) but whose `origin/tab/<op>/<N>` is STALE (the FF-push-back half of the slot cron isn't
+      running — see decision 3 / the FF-push item below), this makes quickmerge attempt a 500+-commit autostash-rebase
+      against a dead branch → conflict → BLOCKED, even though HEAD is **behind 0 / ahead 0 vs the real upstream LDR**.
+      Incident: slot-2 was exactly at LDR tip + QG-green, but quickmerge tried to rebase 556 commits onto
+      `origin/tab/ikennaigboaka/2` (frozen 2026-06-01) and blocked. **Fix**: STAGE 0.4 must resolve the comparison ref
+      from `git rev-parse --abbrev-ref @{u}` (the configured upstream) when it exists, falling back to
+      `origin/<branch-name>` only if no upstream is set. PM template → rollout. (Workaround used 2026-06-03: ship from a
+      fresh branch with no `origin/` counterpart so STAGE 0.4 auto-skips.)
+- [x] ✅ [DOC] P1. **SUB_AGENT_MANDATORY_RULES.md** — added the behind-remote recovery recipe keyed on the
+      `QUICKMERGE_BLOCKED` block (operative today against the existing exit-1; structured codes land with the INFRA
+      item). — PM@pending (this batch).
+- [x] ✅ [DOC] P1. **codex/08-workflows/ci-cd-flow.md** § "STAGE 0.4 Not-Behind Gate" — documented the gate (ff →
+      rebase-autostash → abort+exit-1, never overwrites) + recovery recipe + PM-as-a-repo coverage + forward
+      structured-contract note. — PM@pending (this batch).
+- [x] ✅ [DOC] P2. **CLAUDE.md** git-discipline — one-line pointer to the gate + recovery recipe + the tracked
+      structured contract. — PM@pending (this batch).
+
 ### Residual
 
 - [ ] [DEPS] P3. **unified-trading-api** re-lock commit (1 trivial metadata-sync, 0 version moves) — race-blocked by the
