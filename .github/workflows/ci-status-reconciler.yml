@@ -84,6 +84,30 @@ jobs:
             MAIN_C=$(latest_v2 "$REPO" main)
             STG_C=$(latest_v2 "$REPO" staging)
             LDR_C=$(latest_v2 "$REPO" live-defi-rollout)
+
+            # FEATURE→STAGING auto-advance (closes the GITHUB_TOKEN-merge-no-v2-trigger gap):
+            # a LDR→staging auto-merge is pushed by GITHUB_TOKEN, which does NOT trigger the
+            # push:[staging] v2 → ci-status-update STAGING_GREEN never fires → the repo stays
+            # FEATURE_GREEN after merging, dep-blocking dependents. Deterministically advance it
+            # iff (1) ci_status is FEATURE_GREEN, (2) staging v2 is green, AND (3) staging is
+            # CURRENT with LDR (ahead_by==0 → already merged). Truthful + non-over-promoting
+            # (the merged+green guard). cicd_contract_hardening § "FEATURE→STAGING gap".
+            if [ "$CUR" = "FEATURE_GREEN" ] && [ "$STG_C" = "success" ]; then
+              AHEAD=$(gh api "repos/${OWNER}/${REPO}/compare/staging...live-defi-rollout" --jq '.ahead_by' 2>/dev/null || echo "-1")
+              if [ "$AHEAD" = "0" ]; then
+                echo "ADVANCE $REPO: FEATURE_GREEN → STAGING_GREEN (staging merged+green)"
+                if [ "$DRY_RUN" != "true" ]; then
+                  curl -sf -X POST -H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+                    "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+                    -d "{\"event_type\":\"ci-status-update\",\"client_payload\":{\"repo\":\"${REPO}\",\"status\":\"STAGING_GREEN\",\"branch\":\"staging\"}}" \
+                    && echo "  fired ci-status-update $REPO → STAGING_GREEN" || echo "  WARN: dispatch failed for $REPO"
+                  sleep 70
+                fi
+                RECONCILED="$RECONCILED $REPO:STAGING_GREEN"; RECONCILED_COUNT=$((RECONCILED_COUNT + 1))
+                continue
+              fi
+            fi
+
             DECISION=$(python3 scripts/cicd/ci_status_reconciler.py \
               --current "$CUR" --main "$MAIN_C" --staging "$STG_C" --ldr "$LDR_C")
             VERB="${DECISION%% *}"
