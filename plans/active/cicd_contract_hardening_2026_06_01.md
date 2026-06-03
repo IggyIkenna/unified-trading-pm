@@ -382,6 +382,46 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       per-repo v2 debt as staging PRs surface it. Then the SIT-lock → `staging-to-main` phase. Target: full active fleet
       (21 active + fund-admin/greeks) on staging. repo: unified-trading-pm (the dispatch) + per-repo v2 fixes as needed.
 
+### ci_status consistency hardening (operator decision 2026-06-03: KEEP in PM manifest + 3 guards)
+
+> **Decision:** ci_status stays a field in PM `workspace-manifest.json` (NOT moved to Actions variables — keeps the
+> dashboard/DAG readers unchanged). Trade-off accepted: we BUILD the consistency machinery a branch-independent store
+> would give free. Root failure this dammed (06-01→06-03): two independently-edited copies drifted — main `UTL=FAILING`
+> (stuck; a recovery transition was missed) vs LDR `UTL=FEATURE_GREEN` (stale snapshot via backmerge) — and the promoter
+> reads main, so the whole fleet dep-blocked behind a phantom-red base.
+
+- [ ] [SCRIPT] P0. **Guard 1 — single-writer enforcement.** PM QG step + PR check that REJECTS any commit/PR touching
+      `repositories.*.ci_status` unless author == `ci-status-update[bot]`. Prevents a slot / Prettier / manual edit
+      forking the value (the exact LDR-vs-main fork above). New `scripts/cicd/check_ci_status_bot_only.py` wired into PM
+      `quality-gates.sh` + a lightweight PR-context check. Tests: bot-edit passes, human-edit fails, no-change passes.
+      repo: unified-trading-pm.
+- [ ] [SCRIPT] P0. **Guard 2 — single-SSOT-branch discipline.** (a) ALL readers (promoter, sit-gate, staging-to-main,
+      dashboard) read ci_status from **main only** (promoter already does — make explicit + audit the rest). (b)
+      `main-backmerge-to-ldr.yml` must NOT carry ci_status BACKWARD to LDR — a `.gitattributes merge=ours` on the
+      ci_status region / post-backmerge restore, OR declare LDR's copy non-authoritative. Kills the stale-copy
+      round-trip. repo: unified-trading-pm.
+- [ ] [SCRIPT] P0. **Guard 3 — drift reconciler (watchdog).** Cron (~30-60m): per repo, compare latest
+      `quality-gates-v2` conclusion on its SSOT branch vs manifest `ci_status`; on mismatch (v2=success but
+      ci_status=FAILING — the missed-recovery / stuck-UTL case; or vice-versa) re-fire `ci-status-update` with the
+      correct status. Catches dropped transitions (e.g. an Agent-Audit failure flipped FAILING, no green event reset
+      it). New `ci-status-reconciler.yml`. repo: unified-trading-pm.
+- [ ] [INFRA] P0. **Full PM `LDR→main` promotion (needed regardless of ci_status home).** main +221/−9 vs LDR →
+      back-merge `main→LDR` (absorb the 9), then gated `LDR→main` PR. Lands the `tier-ab-green` chain-wiring, the
+      fund-admin/greeks manifest entries, fresh ci_status, + 221 PM commits. Until it lands the promoter reads a stale
+      main manifest (the live dam). repo: unified-trading-pm.
+- [ ] [INFRA] P0. **Reconcile stuck promotion PRs fleet-wide (DIRTY → won't auto-merge).** Several LDR→staging/→main PRs
+      are `mergeable_state=dirty` (merge-conflict, accumulated session commits) so v2-auto-merge never fires — e.g. **PM
+      PR #116** (DIRTY vs main — blocks ALL PM work reaching main), **UAC #67** (conflict → conflict-agent dispatched).
+      Per repo: rebase head onto base + resolve (or conflict-resolution-agent), then auto-merge resumes. Audit the full
+      open-PR set for `dirty` + clear. repos: all with stuck PRs. **Observed 2026-06-03:** PM #116 (tab/ikennaigboaka/1→
+      main, CONFLICTING — the concurrent CLAUDE↔SUB_AGENT consolidation PR), UAC **4/4 open conflicting**, mtds 1,
+      deployment-service 1, alerting-service 1; UTL/execution/strategy/instruments have 0 open (clean).
+- [ ] [SCRIPT] P1. **Promoter must SKIP main-direct repos (Option B) from the staging sweep.** `ldr-to-staging-promote`
+      opened **PM #113 (LDR→staging)** even though PM/codex are main-direct with no staging tier — it gates only on
+      staging-branch existence, so a stray PM `staging` branch made it eligible. Fix: exclude repos flagged main-direct
+      (PM, codex) in `tier_c_promotion_gate.py` / the promoter's repo set (or delete PM's `staging` branch per Option B,
+      and assert no main-direct repo has one). Close the spurious PM #113. repo: unified-trading-pm.
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
