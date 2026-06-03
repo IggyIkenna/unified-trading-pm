@@ -97,15 +97,21 @@ All on `origin/live-defi-rollout`; full detail in
 
 ### Reconcile the QG-timing inconsistency (commit-prereq) — SAFE (tightening; fixes existing drift)
 
-- [ ] [DOC] P1. **CLAUDE.md** (canonical `cursor-configs/CLAUDE.md`) "Quality gates BEFORE quickmerge" → reframe as
-      "Quality gates BEFORE **commit**" (no commit to the workspace branch until `quality-gates.sh` exit 0 on HEAD; then
-      quickmerge commits+PRs). Reconciles with SUB_AGENT_MANDATORY_RULES which already says commit-prereq.
-- [ ] [DOC] P1. **codex/08-workflows/ci-cd-flow.md** § "Two-Pass Workflow Model" — same reframe (QG before commit, not
-      just before quickmerge); state the commit is the per-repo quality boundary.
-- [ ] [DOC] P2. **SUB_AGENT_MANDATORY_RULES.md** — already commit-prereq; add the explicit "commit only from a QG-green
-      tree (full `quality-gates.sh`, not just the prek hook); use QG-sweep batching" sentence.
-- [ ] [DOC] P2. **codex/06-coding-standards/quality-gates.md** — note the commit-as-quality-boundary framing + that the
-      prek hook is the LIGHT gate, full QG is the commit-prereq.
+- [x] ✅ [DOC] P1. **DONE — unified-trading-pm@5dbe60407.** `cursor-configs/CLAUDE.md` "Quality gates BEFORE quickmerge"
+      → reframed "Quality gates BEFORE **COMMIT** — the commit IS the per-repo quality boundary"; scoped to code commits
+      (doc/plan-flip/markdown take prek only); realized via QG-sweep batching (per-batch not per-commit). Also
+      reconciled the "Quality Gates Are A Merge Prerequisite" block → "Commit + Merge Prerequisite".
+- [x] ✅ [DOC] P1. **DONE — @5dbe60407.** `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model" blockquote
+      reframed (QG before commit, not just quickmerge; commit = per-repo quality boundary; QG-sweep batching; doc-commit
+      scope carve-out).
+- [ ] [DOC] P2. **[BLOCKED-CONCURRENT-EDIT]** `SUB_AGENT_MANDATORY_RULES.md` — add the explicit "commit only from a
+      QG-green tree (full `quality-gates.sh`, not just the prek hook); use QG-sweep batching" sentence. **Held**: the
+      file is foreign-dirty under a concurrent plan-hygiene session (which is also adding
+      `scripts/plan-hygiene/check_claude_subagent_parity.sh` — CLAUDE↔SUB_AGENT parity). Apply once that lands (or let
+      the parity check propagate the CLAUDE.md framing) to avoid clobbering its WIP.
+- [x] ✅ [DOC] P2. **DONE — @5dbe60407.** `codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model" —
+      added the commit-as-quality-boundary callout (prek = LIGHT gate; full QG = commit-prereq; QG-sweep batching;
+      doc-commit carve-out).
 
 ### FF-push slot→LDR — PROPOSED, ratify before shipping (loosens a HARD RULE)
 
