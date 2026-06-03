@@ -124,12 +124,14 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `codex/08-workflows/deployment-flow.md`.
 - **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01 `main`-direct
   exception)**: the target is for `agent-orchestrator` to follow the **same** `tab/<op>/<N>` → LDR → `staging` → SIT →
-  `main` flow as every other repo. **Today it is mid-migration**: AO has no `staging` branch and no `quickmerge.sh` yet
-  (tracked in `plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G6), so the **current**
-  de-facto ship path is still commit on the slot branch `tab/<operator>/<N>` → **fast-forward to `main`** (its slot
-  branch tracks `origin/main`; every OTHER repo's tracks `origin/live-defi-rollout`). `main` remains AO's canonical (do
-  NOT treat `main`-behind-LDR as drift; LDR `tab-mirror` GHA appearance is harmless). Once G6 lands the `staging`
-  branch + quickmerge, switch to the standard staging-first path. SSOT:
+  `main` flow as every other repo. **AO slot branches already track `origin/live-defi-rollout` like every repo** — the
+  former `agent-orchestrator`→`main` base override was REMOVED (it made every AO slot read as diverged; do NOT re-add it
+  in `workspace-manifest.json`, `setup-tab-worktrees.sh`, or `worktree_clean_check.base_branch_for_repo`). **Still
+  mid-migration**: AO has no `staging` branch and no `quickmerge.sh` yet (tracked in
+  `plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md` § G6 — BLOCKED-OPERATOR, since
+  creating `staging` fires a fleet backend restart). So `main` is the deploy/CICD target reached via the
+  LDR→`staging`→SIT→`main` path; until `staging` lands, `main` legitimately lags LDR (do NOT treat `main`-behind-LDR as
+  drift; the `tab-mirror` GHA FF's tab→LDR). Once G6 lands `staging` + quickmerge, the path is fully standard. SSOT:
   `codex/04-architecture/agent-orchestrator-overview.md` + the G6 plan above.
 
 ### Imports + types
