@@ -94,19 +94,30 @@ operator exemption if a local macOS gate blocks).
 
 **PHASE 1 — ALL CODING (ship each via quickmerge; flip the checkbox same-turn):**
 
-- [ ] [CODE] instruments-service — CF-11 IS-side write-path: verify the IS layer records `attempted_failed` from the
-      emitted `ADAPTER_FETCH_FAILED` when a cefi reference-data adapter returns `[]` (aster/hyperliquid/deribit_combo/
-      tardis); FIX if the event→manifest wiring is missing (in-universe + within-coverage empties → `attempted_failed`,
-      not `empty_confirmed`). (cefi CF-11 below)
-- [ ] [CODE] market-data-processing-service — CF-11 #3: verify `ohlcv` manifest rows faithfully reflect the candle FILES
-      that exist (only 8,715 `ohlcv` rows; files exist BITGET-heavy); FIX if MDPS under-emits. Reconcile cross-writes
-      (782 MTDS `ohlcv` rows, 616 MDPS `trades` rows). CF-11 #2 candle-coverage gap = likely a backfill; scope it.
+- [x] ✅ [CODE] instruments-service — CF-11 IS-side write-path: cefi reference-data adapters now **raise on a genuine
+      fetch-failure** (→ `_fetch_one` `failed[]` → `attempted_failed`) instead of `return []` (which landed the venue in
+      `_non_error_venues` → excluded from `expected_venues` → silent universe shrink, worse than `empty_confirmed`).
+      Cross-AG sweep slot-6@e2e008f0 fixed aster/hyperliquid/tardis (RuntimeError); slot-3 completed the one they missed
+      — **DeribitCombo** (`get_instruments` tracks per-currency `failures`, re-raises if EVERY currency failed; partial
+      success preserved) — instruments-service@f2ca5954 + regression tests (IS QG --no-fix exit 0, 3097 pass). Mirrors
+      the tradfi databento CF-11 fix. (cefi CF-11 below)
+- [x] ✅ [CODE] market-data-processing-service — CF-11 #3: **VERIFIED no emission bug** (slot-3 grep-then-READ
+      2026-06-03). The apparent ohlcv "under-emission" is the **intended WriteGate honest-coverage** behaviour —
+      `canonical_writer.py:1318-1322` documents that policy-gated rows write bytes (heartbeat) but deliberately skip the
+      manifest `captured` row; the normal path emits exactly one row per published candle; a manifest-write failure
+      emits `MANIFEST_WRITE_FAILED` (not silent). So MDPS faithfully reflects published candles. The real `ohlcv` gap
+      (8,715 rows; BITGET-heavy files) is a **candle BACKFILL (DATA)**, not a code bug → tracked as the CF-11 #2
+      candle-coverage DATA item below. No MDPS code change.
 - [ ] [CODE] unified-trading-pm — identity-hook follow-ups (`issues/commit_identity_misconfig_fleet_2026_06_03.md`):
       root-cause the bot-email leak + recurrence-guard in `verify-slot-host-symmetry.sh`; `setup-tab-worktrees.sh`
       provisions `extensions.worktreeConfig` + `--worktree` identity. SSOT:
-      `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
-- [ ] [CODE] market-tick-data-service — only if the orphan-sweep/gap-fill needs code (e.g. explicit orphan-DELETE mode,
-      or confirm `--also-legacy` copies ONLY the 5,233-cell gap). Migrator otherwise works.
+      `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution". (EDITS DONE — leak root-caused
+      `rollout-semver-agent.sh:117` shared-config write → one-shot `git -c`; `setup-workspace-from-manifest.sh:345`
+      `--global agent@ci.local` → only-seed-if-unset canonical; provisioning + recurrence-guard added. Pending PM QG
+      ship.)
+- [x] ✅ [CODE] market-tick-data-service — orphan-sweep/gap-fill **VERIFIED needs no code** (slot-3 2026-06-03): the
+      migrator `migrate_cefi_flat_to_v9_canonical.py` already handles `--also-legacy` over all 3 layouts, idempotent
+      skip-if-exists = copies ONLY the gap. The explicit orphan-DELETE mode is deliberately NEXT session (irreversible).
 - [ ] grep this plan for remaining open `[ ] [CODE]` todos.
 
 **GATE:** confirm ALL Phase-1 coding shipped + `quality-gates-v2` green on LDR per repo BEFORE Phase 2.
@@ -118,6 +129,66 @@ listing OOM'd an e2-standard-4). `VM_TASK=canonical-migration`,
 `VM_MIGRATION_CMD=… migrate_cefi_flat_to_v9_canonical --start-date … --end-date … --also-legacy` (NO `--apply` = dry).
 No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP at dry-run + bucket creation — the
 `--apply` gap-fill / orphan delete / E8 are the NEXT session.
+
+## E2E code-readiness audit (slot-3, 2026-06-03) — get the CODE canonical BEFORE the migration runs
+
+> **Operator framing**: "code e2e" = after the migration runs, future backfills + code + data-status summary + drilldown
+> all align with the migrated structure. The migration's PATH/SCHEMA/COLUMNS must be IDENTICAL in the writers, readers,
+> preflight gates, manifest rebuild, and deployment-api/UI — and empty + partial must be handled the same in code as in
+> reality. 5-dimension audit (path / schema-columns / empty-partial / data-status-UI / plan-sweep).
+
+**✅ GREEN (verified consistent — do not touch):**
+
+- **Path correctness**: migration, live+batch writers, MTDS reader, features reader, `rebuild_cefi_manifest.py` ALL go
+  through the UAC `candidate_parquet_paths()` SSOT and insert `pipeline_mode=` left of `asset_group=cefi`;
+  reader-fallback probes both shapes until ~06-15 (PREP3 writer pipeline_mode= PRIMARY landed mtds@f50116ca). The path
+  the migration reads/writes == the writers'/readers'/preflight's path.
+- **Data-status infra**: deployment-api reads canonical `market-data-tick-cefi-prd` via `resolve_bucket_name`, uses UTL
+  `read_availability_index` (v9 columns), renders 4-state status, derives drilldown axis order from the UAC registry.
+
+**🔴 P0 — E2E-blocking code (OPERATOR-APPROVED to do THIS session before the dry-run):**
+
+- [ ] [CODE] P0. **`rebuild_cefi_manifest.py` CF-11 3-way classifier** (mtds; the rebuild LOGIC the migration runs).
+      Today it marks every found parquet `captured/row_count=0`; it must: (a) within-bounds empty (in-universe +
+      guaranteed-when-listed `trades`/`ohlcv` on active venue+symbol + within coverage + not known-gap) →
+      `attempted_failed` (`record_failed`), NOT `empty_confirmed`; conservative per-data_type guarantee set
+      (funding/options_chain may be legitimately sparse → keep typed-empty); (b) re-emit existing `_index`
+      `attempted_failed`/typed-`empty_confirmed` rows as v9 with status PRESERVED (read prior `_index` via
+      `read_availability_index`; never relabel a failure to empty; preserve the ~1.33M `attempted_failed`); (c)
+      unit-test the 3-way tree. **Must be canonical BEFORE the migration's rebuild runs** else the rebuilt `_index`
+      marks masked failures as complete. (Same as the open E5/CF-11 items at §CF-11 below — consolidated here as the
+      audit's #1.)
+- [ ] [CODE] P0. **Live cefi writer source+pipeline_mode COLUMN parity** (mtds `engine/orchestrator.py`; ⚠️ slot-4 has
+      active uncommitted orchestrator.py sports edits — coordinate/avoid collision). Path is correct, but CONFIRM the
+      live cefi `add()` stamps the `source` (=tardis) + `pipeline_mode` COLUMNS (v9 plumbing exists + is wired for
+      sports; cefi may be omitted — plan E5 fork-A "closes the live-writer CF-3 gap so batch=live"). If omitted, FIX so
+      live = batch on columns, else post-migration LIVE backfills drift from the v9-column structure. Confirm-then-fix.
+
+**🟡 P1 — data-status / drilldown reflects the migrated structure (DEFERRED to a tracked follow-up unless quick):**
+
+- [ ] [CODE] P1. **deployment-api FLAG-1** — CeFi multi-source UNION coverage + per-source breakdown (dedup via
+      `select_primary_available_source`; `groupby("source")` on the `_index` source column). CeFi single-source today,
+      but the column/dedup path must exist for swap-resilience. Cross-ref
+      `downstream_services_manifest_canonicalisation_2026_06_01.md` FLAG-1.
+- [ ] [CODE] P1. **deployment-api FLAG-3** — env-tier the hardcoded `*-store` bucket f-strings → `resolve_bucket_name`
+      (`commentary/pipeline_uat.py`, `deployment_api_config.py`). Cross-ref downstream plan FLAG-3.
+- [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** — the shard-atom dedup test exists for
+      **DeFi only** (`test_pipeline_mode_rows_do_not_double_count_shards`); add a **cefi parity** test + ensure cefi
+      drilldown does not double-count the same `(venue,data_type,instrument_id,day)` across pipeline_modes; add a
+      `pipeline_mode` filter param to the hierarchical-drilldown endpoint (UI label work needs the playwright gate).
+
+**⚪ P2 / needs-confirm (tracked):**
+
+- [ ] [CODE] P2. **MDPS GAP-7** — `category`→`asset_group` param rename in `dependency_checker` (vocabulary; cross-ref
+      downstream plan GAP-7).
+- [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain):
+      verify the finalize cluster-validation rejects an incomplete bundle (`len(observed)==len(expected)`, not just
+      count-threshold) so a partial write is NOT phantom-`captured`. Audit flagged a possible gap at
+      `orchestrator.py:~3144` — VERIFY against the existing cluster validation before treating as a fix.
+- [ ] [CODE] P2. **CONFIRM reader empty-vs-failed differentiation** — does the cefi read/preflight path treat
+      `attempted_failed` (retry/alert) differently from `empty_confirmed(SOURCE_RETURNED_ZERO)` (accept) per
+      `codex/02-data/honest-absence-downstream-handling.md`, or collapse both to "unavailable"? Verify, then fix if
+      collapsed.
 
 ## Why this exists — cefi canonical FORM is broken corpus-wide (+ a recent 838-cell data gap)
 
