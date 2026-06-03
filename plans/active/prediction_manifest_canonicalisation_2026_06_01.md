@@ -387,19 +387,29 @@ verify + the gated delete.
       `record_failed[ClassifierConfidenceLow]` — byte-identical to the batch `rebuild_prediction_manifest`. Real
       `CanonicalQuestionGroup.OTHER` stays a captured bundle. Removed the now-unused enum import;
       `test_kalshi_adapter_lifecycle_gating.py::test_unclassified_canonical_group_is_none_not_other` flipped to assert
-      `isna().all()` + `"OTHER" not in …` (9/9 green); mtds `quality-gates.sh --no-fix` exit 0, sentinel==HEAD. On
-      LDR via the tab→LDR mirror; staging-promotion gated on the workspace dep-tier drain (UTL+UAC LDR-ahead-of-staging).
+      `isna().all()` + `"OTHER" not in …` (9/9 green); mtds `quality-gates.sh --no-fix` exit 0, sentinel==HEAD. On LDR
+      via the tab→LDR mirror; staging-promotion gated on the workspace dep-tier drain (UTL+UAC LDR-ahead-of-staging).
       Original finding below for reference. ~~the Kalshi adapter still maps an unclassified result →
-      `canonical_question_group="OTHER"`~~
-      (`test_kalshi_adapter_lifecycle_gating.py:246` asserts it). The orchestrator finalize (shared across all
-      prediction venues) treats a non-null `"OTHER"` as a REAL captured group, so Kalshi unclassified markets are
-      bundled CAPTURED while Polymarket now routes them to `attempted_failed` — a venue-inconsistency + batch≠live for
-      Kalshi. Fix the Kalshi adapter the same way (emit `None` for sub-threshold so the shared orchestrator routes it to
-      `attempted_failed[ClassifierConfidenceLow]`); update the Kalshi lifecycle-gating test to assert `None` not
-      `"OTHER"`. Target: `market-tick-data-service` Kalshi prediction adapter +
-      `test_kalshi_adapter_lifecycle_gating.py`. Low live urgency today (prediction live corpus is Polymarket CLOB), but
-      required for venue parity before Kalshi goes live.
-- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS prediction Polymarket adapters)**: on a genuine API error
+      `canonical_question_group="OTHER"`~~ (`test_kalshi_adapter_lifecycle_gating.py:246` asserts it). The orchestrator
+      finalize (shared across all prediction venues) treats a non-null `"OTHER"` as a REAL captured group, so Kalshi
+      unclassified markets are bundled CAPTURED while Polymarket now routes them to `attempted_failed` — a
+      venue-inconsistency + batch≠live for Kalshi. Fix the Kalshi adapter the same way (emit `None` for sub-threshold so
+      the shared orchestrator routes it to `attempted_failed[ClassifierConfidenceLow]`); update the Kalshi
+      lifecycle-gating test to assert `None` not `"OTHER"`. Target: `market-tick-data-service` Kalshi prediction
+      adapter + `test_kalshi_adapter_lifecycle_gating.py`. Low live urgency today (prediction live corpus is Polymarket
+      CLOB), but required for venue parity before Kalshi goes live.
+- [x] ✅ [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS prediction Polymarket adapters) — DONE (IS fix
+      instruments-service@65e1f8f0, slot-6 2026-06-03).** MTDS side already VERIFIED COMPLIANT (diagnosis retained
+      below). IS-side residual verify COMPLETE + found-and-fixed a concrete gap: the Polymarket CLOB universe scan
+      (`polymarket.py::_fetch_all_raw_clob_markets`) caught a mid-pagination `aiohttp.ClientError` with only
+      `logger.warning` + `break` → returned the PARTIAL `all_markets` accumulated so far, which is cached 24 h
+      (`_get_raw_clob_markets_cached`) and read by every per-date filter as a COMPLETE (but smaller) universe →
+      false-complete coverage with ZERO failure signal (A8/CF-11 class). Fix: classify + emit `ADAPTER_FETCH_FAILED`
+      (mirrors `_fetch_clob_history`/`_fetch_page`) then RAISE so the per-venue handler records the cell
+      `attempted_failed` rather than caching a truncated universe (single-venue pagination loop → respects
+      shard-isolation). Regression test `test_clob_scan_midscan_failure_raises_not_truncates` (5/5 green); IS
+      `quality-gates.sh --no-fix` exit 0, sentinel==HEAD. On LDR via tab→LDR mirror; staging-promotion gated on the
+      workspace dep-tier drain (UTL+UAC). **Original audit + MTDS diagnosis:** on a genuine API error
       (timeout/5xx/429/auth) for a live market/condition within its active window, the handler MUST `record_failed` (→
       `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the prediction
       Polymarket CLOB/Gamma fetch paths for `except … record_empty` / bare `return []` swallows; gate empty-vs-failed on
