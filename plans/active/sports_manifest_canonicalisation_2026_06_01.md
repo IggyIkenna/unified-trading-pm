@@ -886,8 +886,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       as Level-1 + legacy as fallback), OR add the `pipeline_mode=`-prefixed candidates to the `blob_exists` lists. Add
       a read-path test asserting the reader finds a `pipeline_mode=batch_odds_api/asset_group=sports/…` object. **Pairs
       with the P0 writer fixes — writes + reads MUST use the identical migration path.**
-- [ ] [CODE] P0. **instruments-service WRITER (the 6th service — NOT in the original 5-service audit) object path is
-      MISSING `pipeline_mode=` + omits `source=`** — repo: `instruments-service`,
+- [x] ✅ [CODE] P0. **DONE instruments-service@4459799d — IS sports_reference object path now carries `pipeline_mode=`
+      (source-derived, == manifest) + `source=` on captured rows; reads probe canonical-first + legacy fallback;
+      `path==manifest` invariant test.** (`pipeline_mode` value-consistency across migration+reader finalized by the
+      keystone UAC-SSOT P0 below.) Original gap: **instruments-service WRITER (the 6th service — NOT in the original
+      5-service audit) object path is MISSING `pipeline_mode=` + omits `source=`** — repo: `instruments-service`,
       `instruments_service/engine/orchestrator.py`. The IS writer of the `instruments-store-sports` `sports_reference`
       surface stamps `pipeline_mode=` on the MANIFEST row (`record_captured_from_counts(pipeline_mode=…)` ~:1589/1771,
       `_pipeline_mode_for_sports_data_type`) BUT writes the OBJECT to
