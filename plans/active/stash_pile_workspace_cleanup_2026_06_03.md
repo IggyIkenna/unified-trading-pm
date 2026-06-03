@@ -19,8 +19,8 @@ locked_since: 2026-06-03
 
 ## Why this plan
 
-The 2026-06-01 cleanup (`shared_stash_pile_archive_cleanup_2026_06_01.md`) archived + cleared a **91-deep** stash pile in
-`unified-trading-pm` on one host. Two days later that same repo's pile is **back to 31**, and a host-wide scan shows
+The 2026-06-01 cleanup (`shared_stash_pile_archive_cleanup_2026_06_01.md`) archived + cleared a **91-deep** stash pile
+in `unified-trading-pm` on one host. Two days later that same repo's pile is **back to 31**, and a host-wide scan shows
 **59 stashes across 16 repos on the planning host alone** — so this is (a) workspace-wide, not PM-only, and (b)
 continuous, not one-shot. We need a **reusable, archive-first, conservative tool** that any host owner runs locally,
 plus a fan-out so every host (VMs + operator laptops) gets swept once.
@@ -34,14 +34,14 @@ runs the identical script locally.
 
 ### Snapshot — planning host, 2026-06-03 (grounds the plan; not authoritative for other hosts)
 
-| Repo | Stashes |  | Repo | Stashes |
-|---|---|---|---|---|
-| unified-trading-pm | 31 |  | features-service | 2 |
-| execution-service | 5 |  | client-reporting-api | 2 |
-| instruments-service | 3 |  | deployment-api | 2 |
-| alerting-service | 2 |  | market-data-processing-service | 2 |
-| trading-agent-service | 2 |  | unified-trading-system-ui | 2 |
-| agent-orchestrator / ibkr-gateway-infra / ml-service / strategy-service / system-integration-tests / unified-trading-api | 1 each | | | |
+| Repo                                                                                                                     | Stashes |     | Repo                           | Stashes |
+| ------------------------------------------------------------------------------------------------------------------------ | ------- | --- | ------------------------------ | ------- |
+| unified-trading-pm                                                                                                       | 31      |     | features-service               | 2       |
+| execution-service                                                                                                        | 5       |     | client-reporting-api           | 2       |
+| instruments-service                                                                                                      | 3       |     | deployment-api                 | 2       |
+| alerting-service                                                                                                         | 2       |     | market-data-processing-service | 2       |
+| trading-agent-service                                                                                                    | 2       |     | unified-trading-system-ui      | 2       |
+| agent-orchestrator / ibkr-gateway-infra / ml-service / strategy-service / system-integration-tests / unified-trading-api | 1 each  |     |                                |         |
 
 **TOTAL: 59 / 16 repos.** Other hosts (10 epic VMs + orchestrator VM + Ikenna laptop + Harsh laptop) are unknown until
 each runs the audit.
@@ -61,12 +61,12 @@ each runs the audit.
 Per stash, compute: index, sha, **branch-of-origin** (parsed from `WIP on <branch>` / `On <branch>`), **age** (stash
 commit date), file count, `.py` count, and a class:
 
-| Class | Mechanical test | Action |
-|---|---|---|
-| **empty** | `git stash show --stat <ref>` lists 0 files | **auto-drop** |
-| **redundant** | stash's tree diffed against the repo base (`origin/live-defi-rollout`, or `origin/main` for agent-orchestrator) has **no net change** — content already merged | **auto-drop** |
-| **foreign-park / autostash residue** | label matches `foreign-*` / autostash pattern **AND** tree is already an ancestor of base (no unique content) | **auto-drop** |
-| **genuine-WIP** | net diff vs base exists and is not attributable to an empty/redundant/park class | **surface in report → owner confirms** (drop, or inherit-and-commit onto its own `tab/<op>/<N>` branch) |
+| Class                                | Mechanical test                                                                                                                                                | Action                                                                                                  |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **empty**                            | `git stash show --stat <ref>` lists 0 files                                                                                                                    | **auto-drop**                                                                                           |
+| **redundant**                        | stash's tree diffed against the repo base (`origin/live-defi-rollout`, or `origin/main` for agent-orchestrator) has **no net change** — content already merged | **auto-drop**                                                                                           |
+| **foreign-park / autostash residue** | label matches `foreign-*` / autostash pattern **AND** tree is already an ancestor of base (no unique content)                                                  | **auto-drop**                                                                                           |
+| **genuine-WIP**                      | net diff vs base exists and is not attributable to an empty/redundant/park class                                                                               | **surface in report → owner confirms** (drop, or inherit-and-commit onto its own `tab/<op>/<N>` branch) |
 
 > **Conservative scope chosen 2026-06-03:** even genuine WIP from an apparently-dead local session is **surfaced, not
 > auto-inherited**. The owner (or operator) decides drop-vs-inherit. The script never auto-commits another slot's WIP.
@@ -76,10 +76,10 @@ commit date), file count, `.py` count, and a class:
 ### Phase 1 — build + smoke-test the script (this host)
 
 - [ ] [INFRA] P3. Write `unified-trading-pm/scripts/dev/audit-stash-pile.sh` (home: alongside the other per-host
-      slot-hygiene scripts — `slot-cron-ff-pull.sh`, `verify-slot-host-symmetry.sh`). Behaviour:
-      iterate every repo under `$WORKSPACE_ROOT` with a non-empty `refs/stash`; per repo → archive 3-way under
-      `.stash-archive-<host>-<date>/` + `refs/stash-archive/*`; classify each stash per the taxonomy; in `--apply`
-      mode auto-drop only empty/redundant/foreign-park; always write a per-host markdown report
+      slot-hygiene scripts — `slot-cron-ff-pull.sh`, `verify-slot-host-symmetry.sh`). Behaviour: iterate every repo
+      under `$WORKSPACE_ROOT` with a non-empty `refs/stash`; per repo → archive 3-way under
+      `.stash-archive-<host>-<date>/` + `refs/stash-archive/*`; classify each stash per the taxonomy; in `--apply` mode
+      auto-drop only empty/redundant/foreign-park; always write a per-host markdown report
       `.stash-audit-<host>-<date>.md` listing every genuine-WIP survivor with owner branch + diffstat + age. **Default =
       dry-run** (classify + report, drop nothing). Flags: `--apply`, `--repo <name>` (single-repo smoke), `--base <ref>`
       override. Base ref resolves per-repo: `origin/main` for agent-orchestrator, `origin/live-defi-rollout` otherwise.
@@ -91,8 +91,8 @@ commit date), file count, `.py` count, and a class:
 ### Phase 2 — sweep this host
 
 - [ ] [INFRA] P3. Run `audit-stash-pile.sh --apply` across all repos on the planning host; commit the generated
-      `.stash-audit-<host>-2026_06_03.md` report (path under PM repo, or attach to this plan). Auto-drop count + survivor
-      count recorded in the report. Do NOT purge archives yet. — owner: planning-host
+      `.stash-audit-<host>-2026_06_03.md` report (path under PM repo, or attach to this plan). Auto-drop count +
+      survivor count recorded in the report. Do NOT purge archives yet. — owner: planning-host
 
 ### Phase 3 — fan out to every other host (the todo IS the dispatch)
 
@@ -115,8 +115,8 @@ surface — do not auto-drop — genuine WIP.
 
 ### Phase 4 — owner review of genuine-WIP survivors + final purge
 
-- [ ] [INFRA] P3. Aggregate all per-host reports; for each genuine-WIP survivor, ping its branch owner to decide
-      drop vs inherit-and-commit (`chore(orphan-wip)` onto its own `tab/<op>/<N>` branch). Owners resolve within the
+- [ ] [INFRA] P3. Aggregate all per-host reports; for each genuine-WIP survivor, ping its branch owner to decide drop vs
+      inherit-and-commit (`chore(orphan-wip)` onto its own `tab/<op>/<N>` branch). Owners resolve within the
       confirmation window. — owner: planning-host
 - [ ] [INFRA] P3. After the ~1-week confirmation window (target **2026-06-10**), per host: if no restore was requested,
       purge that host's archive —
@@ -133,6 +133,6 @@ surface — do not auto-drop — genuine WIP.
 ## Relationship to the 2026-06-01 issue doc
 
 `shared_stash_pile_archive_cleanup_2026_06_01.md` covered ONLY `unified-trading-pm` on ONE host and has its own
-2026-06-08 purge window — it proceeds independently. This plan generalises its proven archive-first pattern to all
-repos × all hosts and supersedes it as the canonical recurring runbook once the script lands. Do not duplicate the
-PM-specific purge here.
+2026-06-08 purge window — it proceeds independently. This plan generalises its proven archive-first pattern to all repos
+× all hosts and supersedes it as the canonical recurring runbook once the script lands. Do not duplicate the PM-specific
+purge here.
