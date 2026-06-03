@@ -34,6 +34,35 @@ main ───────────────► always stable; triggers ve
 **Never** push directly to `main` — always via quickmerge. The quickmerge script is the **only** sanctioned merge path
 (it runs QG, handles dep-branch resolution, and respects the two-pass model).
 
+### PM / codex repos — main-direct, NO staging (Option B, operator decision 2026-06-03)
+
+`unified-trading-pm` + `unified-trading-codex` are **not deployed packages**, and PM is the **SIT debouncer** (it is not
+itself SIT-covered), so a staging hop adds no SIT value. **quickmerge routes PM/codex PRs to `main` directly** (both
+docs AND scripts/workflows — not just the doc-fast-path); the main PR's `quality-gates-v2` (plan-hygiene /
+manifest+dependency-alignment / codex-ref / ruff) is the full per-repo gate. PM has **no `staging` branch** —
+`pin_branch_protection_rulesets.py` + `verify_branch_protection_check_names.py` already tolerate this (no staging
+ruleset → skip/pass). Downstream service repos building on `staging` still get PM transparently via the dep-clone
+fallback (`clone -b staging` → `-b main`). For PM, **`main` is the reconciliation point** — it does for plans exactly
+what `staging` does for service repos.
+
+### Convergence + conflict-resolution model (the LDR ↔ reconciliation loop)
+
+- **LDR = the fast live integration axis** — agents commit here (tab→LDR), allowed to be _temporarily inconsistent_; no
+  remote gate, FF-pull keeps every slot ≤5 min current.
+- **The gated PR boundary = the reconciliation point** — `staging` for service repos, the `main` PR for PM/codex.
+  Content only reaches `main` after the gate + conflict-resolution, so `main` is the _reconciled output_, never raw.
+- **`main-backmerge-to-ldr.yml` feeds the reconciled result back to LDR** on every main push (additive merge, never
+  force, never drop) → FF-pull → **every host (other VMs + operator laptops) converges**.
+- **Three conflict layers — composable, no race:** (1) **TEXTUAL merge** → `conflict-resolution-agent` (reads all active
+  plans, preserves both sides); MUST run on the Max-plan setup-token worker via `escalate-to-orchestrator`, not API
+  credits. (2) **SEMANTIC** (two individually-valid plans whose _work_ conflicts, no textual overlap) → per-VM
+  `review.md` + the scripted cross-plan **target-surface** overlap detector → owning epic-VM orchestrator reconciles or
+  operator-blocks. (3) **HYGIENE** → `plan-health-agent` (scripted + Haiku, report-only).
+- **Every alerting event ALSO pings the orchestrator** (not Slack-only): the operator does not continuously watch
+  `#ci-failures`, so each alert (CI-fail, stuck PR, backmerge conflict) escalates to the orchestrator, which delegates
+  to the owning slot / review-agent / epic-VM. (Backmerge-conflict + all-failure-class escalation tracked in
+  `plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.)
+
 ---
 
 ## Two-Pass Workflow Model (the unit of work)
@@ -214,9 +243,9 @@ QG + sentinel is the only gate on LDR (by design). This is intentional integrati
 **required-check ruleset is enforced at the staging/main PR** (the promotion boundary); **local QG (`quality-gates.sh` →
 sentinel) is the agent + quickmerge pre-flight** (fail-fast), not a server gate; and the integration axis stays cheap to
 push to. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH` — so **every repo's default branch MUST be
-`main`**; a non-main default (e.g. `live-defi-rollout`) mislocates the required check onto LDR and `GH013`-rejects pushes
-to the integration axis (incident 2026-06-03: `unified-trading-api` + `greeks-service`; `verify_branch_protection_check_names.py`
-now asserts `default_branch == main` fleet-wide).
+`main`**; a non-main default (e.g. `live-defi-rollout`) mislocates the required check onto LDR and `GH013`-rejects
+pushes to the integration axis (incident 2026-06-03: `unified-trading-api` + `greeks-service`;
+`verify_branch_protection_check_names.py` now asserts `default_branch == main` fleet-wide).
 
 ### Branch-triggered build — hotfix image off an arbitrary branch (no main promotion, codified 2026-06-01)
 

@@ -100,6 +100,12 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit _promotes_ via
   quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
   (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
+- **PM/codex → `main` directly, NO staging (Option B, 2026-06-03)**: `unified-trading-pm` + `unified-trading-codex` are
+  not deployed packages (PM is the SIT _debouncer_, not SIT-covered) → quickmerge routes their PRs to `main` (both docs
+  AND scripts/workflows); the main PR's `quality-gates-v2` is the gate. PM has no `staging`; for PM **`main` is the
+  reconciliation point** (does for plans what staging does for service repos). Convergence + 3-layer conflict model
+  (textual=conflict-resolution-agent / semantic=reviewer+overlap-detector / hygiene=plan-health; **every alert → the
+  orchestrator, not Slack-only**) SSOT: `codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model".
 - **Quality gates BEFORE quickmerge — non-negotiable order (HARD RULE)**: never invoke `quickmerge` until
   `bash scripts/quality-gates.sh` has exited 0 on the current HEAD (the sentinel `.qg_last_passed_sha` is written on any
   COMPLETE green run — fix-mode OR `--no-fix`; it is NOT gated on fix-mode). **Pass-1 MODE is a deliberate choice —

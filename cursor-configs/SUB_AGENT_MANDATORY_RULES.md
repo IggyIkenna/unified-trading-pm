@@ -159,6 +159,16 @@ columns / hive vocab / path templates / error-reason taxonomy), add a top-of-fil
 `> **🟢 VM RUNNING — ...**` banner to every other active plan whose work is influenced. Reader contract: scan
 top-of-file banners before touching the affected surface.
 
+**Declare your plan's TARGET SURFACE + check for overlapping open claims before you start (HARD RULE 2026-06-03).** In
+your plan/todo, name the repo + file/symbol surface your work touches. Before starting, grep `plans/active/` for another
+open todo claiming the same surface — if one exists you likely have a **semantic conflict** (two valid plans, work
+collides) that no textual merge will catch; coordinate/reconcile or flag it first. Conflicts resolve in 3 layers (SSOT
+`codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model"): **textual merge** →
+conflict-resolution-agent; **semantic** → the per-VM review agent + the scripted cross-plan overlap detector → owning
+epic-VM orchestrator; **hygiene** → plan-health-agent. You author on **LDR (fast, may be temporarily inconsistent)**;
+reconciliation happens at the gated PR boundary (`staging` for service repos, the `main` PR for PM/codex) then
+back-merges to LDR — so a `quality-gates.sh`-green commit is the per-repo boundary, not the final word.
+
 ## Banned patterns (workspace-wide, zero exceptions)
 
 - ❌ `os.getenv()` — use `UnifiedCloudConfig`

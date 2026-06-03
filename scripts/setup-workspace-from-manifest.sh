@@ -222,11 +222,8 @@ if [ ! -d "$WORKSPACE_ROOT/unified-trading-pm" ]; then
 else
     info "unified-trading-pm: already present"
 fi
-if [ ! -d "$WORKSPACE_ROOT/unified-trading-codex" ]; then
-    clone_repo "unified-trading-codex" "optional" "any"
-else
-    info "unified-trading-codex: already present"
-fi
+# codex/ is folded into unified-trading-pm at unified-trading-pm/codex/ — the standalone
+# unified-trading-codex repo is ARCHIVED. Do NOT clone it; consumers read from PM/codex/.
 
 # ── AGENT FILES SETUP ────────────────────────────────────────────────────────
 # Cursor rules: copied as real files (ephemeral, NOT symlinks, NOT committed).
