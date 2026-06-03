@@ -51,6 +51,18 @@ All on `origin/live-defi-rollout`; full detail in [uv_lockfile_determinism_2026_
       on the *local* gate specifically. Cross-link, don't duplicate: the debt-greening lives in cicd Phase 6; this plan
       owns the governor-fix that exposed it. **DEFERRED to the cicd Phase-6 per-repo sweep.**
 
+- [ ] [SCRIPT] P2. **QG sentinels not gitignored fleet-wide → per-QG-run drift (TWO failure modes)** —
+      `.qg_last_passed_sha` (and `.qg_content_sentinel`) are local caches written by `quality-gates.sh`. (a)
+      **untracked** in most repos → reappear as `??` after every QG run; (b) **already committed/tracked** in some repos
+      (found: `agent-orchestrator`, `unified-api-contracts` — a machine-specific HEAD SHA was committed) → **gitignore
+      alone does NOTHING, needs `git rm --cached`**. Both re-dirty slot trees + jam `slot-cron-ff-pull.sh` (observed:
+      alerting-service, 2026-06-03). Fix: add both patterns to the **canonical `.gitignore` template**
+      (`scripts/templates/`, the workspace SSOT) + roll out to all repos; AND for each repo run
+      `git ls-files | grep -E 'qg_last_passed_sha|qg_content_sentinel'` → `git rm --cached` any tracked instance.
+      **Done this session (slot branches)**: `alerting-service` (gitignore — was untracked), `agent-orchestrator` +
+      `unified-api-contracts` (`rm --cached` + gitignore — were tracked). Repo: unified-trading-pm (template) + remaining
+      ~22 service repos. Provenance: alerting drift triage this session.
+
 ## Design decisions (this session)
 
 1. **Commit = the per-repo quality boundary.** A commit may only be made from a `quality-gates.sh`-green tree
