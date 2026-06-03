@@ -562,6 +562,29 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       hand-corrected** via `ci-status-update` → MAIN_GREEN (v2 was green on main/staging/LDR; the FAILING was the
       Agent-Audit false-flip), which unblocked UTL in the dep-order gate. Guard 3 prevents recurrence. NOTE: it
       activates once on PM main (reaches main via the normal flow). repo: unified-trading-pm.
+      **VALIDATED IN PRODUCTION 2026-06-03**: Guard 3 dispatch found + reconciled **6 false-FAILING drift repos**
+      (client-reporting-api, deployment-service, instruments-service, market-tick-data-service, trading-agent-service,
+      unified-trading-pm — all v2-green on main, ci_status falsely FAILING from Agent-Audit flips) → MAIN_GREEN,
+      un-jamming the dep-order cascade. The "FAILING" repos were drift, NOT genuine reds (corrected an earlier
+      mis-diagnosis). The Agent-Audit credit-outage flips were the systemic source; Guard 3 is the standing cure.
+- [ ] [SCRIPT] P1. **GAP: FEATURE_GREEN→STAGING_GREEN does not auto-advance after a staging auto-merge** (the recurring
+      cascade jam). When a LDR→staging PR auto-merges, the merge push to `staging` is made by GITHUB_TOKEN, which (by
+      design) does NOT trigger workflows → the `push:[staging]` `quality-gates-v2` never runs → its
+      `ci-status-update STAGING_GREEN` never fires → the repo stays `FEATURE_GREEN` after merging, dep-blocking its
+      dependents (observed 2026-06-03: UAC + ibkr merged to staging but stuck at FEATURE; UAC unblocked by a MANUAL
+      truthful `ci-status-update STAGING_GREEN` fire). Guard 3 does NOT fix this (it only reconciles FAILING↔green, not
+      tier-advance). **Systemic fix options:** (a) a `staging-merge → ci-status-update STAGING_GREEN` workflow
+      (`on: pull_request closed+merged, base staging`, fired with GH_PAT — verifies the PR's v2 was green), OR (b) arm
+      the promoter's auto-merge with GH_PAT so the staging push DOES trigger v2, OR (c) extend Guard 3 to advance
+      `FEATURE_GREEN→STAGING_GREEN` when `staging ⊇ LDR` (merged) AND staging-v2 green (needs a branch-ancestry check).
+      Interim (manual): fire `ci-status-update STAGING_GREEN` for each repo confirmed merged-to-staging + v2-green.
+      repo: unified-trading-pm. **This is the main remaining systemic blocker to a hands-off cascade.**
+- [x] ✅ [SCRIPT] P0. **REGRESSION fixed: gitignored DAG-svg froze ci_status fleet-wide** — slot-1 2026-06-03 (PM #119).
+      The 2026-06-03 canonical ignore set gitignored `WORKSPACE_MANIFEST_DAG.svg`, but `ci-status-update.yml` still did
+      `git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg` → `git add` of an ignored path exits 1 → EVERY
+      ci_status write failed → cascade frozen. Fixed: commit only the manifest SSOT. **Lesson (codified in the canonical
+      ignore-set rule):** when gitignoring a previously-tracked regen artifact, audit + update every workflow/script that
+      `git add`s it. repo: unified-trading-pm.
 - [x] ✅ [INFRA] P0. **Full PM `LDR→main` promotion — DONE 2026-06-03 (slot-1): dam DRAINED via #116 (MERGED).** main was
       254 behind LDR; PM workflows EXECUTE from main, so every LDR-shipped fix (Guard 2/3, deterministic resolver, clean
       conflict-agent, codex wipe, qg-gate fix) was INERT until this landed. Resolved deterministically: merged main→tab
