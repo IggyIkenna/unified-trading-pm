@@ -123,6 +123,36 @@ jobs:
           git commit -m "ci: update ci_status for ${{ github.event.client_payload.repo }} (${{ github.event.client_payload.status }}) [skip ci]"
           git push origin HEAD
 
+      # Event-driven LDR→staging cascade (was: only the 6h cron advanced one dep-tier
+      # per run). When a repo reaches the staging line, its dependents become promotable
+      # → re-fire ldr-to-staging-promote NOW instead of waiting up to 6h. The promoter's
+      # concurrency group (cancel-in-progress:false) serialises runs and it no-ops when
+      # nothing new is promotable, so the chain advances one tier per hop and
+      # self-terminates. SSOT: ldr-to-staging-promote.yml (repository_dispatch: tier-ab-green).
+      - name: Re-fire LDR→staging promoter on a staging-line transition
+        if: steps.update.outputs.skip != 'true'
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}
+          STATUS: ${{ github.event.client_payload.status }}
+          REPO: ${{ github.event.client_payload.repo }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -uo pipefail
+          case "$STATUS" in
+            STAGING_GREEN | SIT_VALIDATED | MAIN_GREEN)
+              echo "→ $REPO reached $STATUS; re-firing tier-ab-green to ldr-to-staging-promote"
+              curl -sf -X POST \
+                -H "Authorization: token ${GH_PAT}" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+                -d "{\"event_type\":\"tier-ab-green\",\"client_payload\":{\"trigger_repo\":\"${REPO}\",\"trigger_status\":\"${STATUS}\"}}" \
+                && echo "promoter re-fired" || echo "dispatch failed (non-fatal; 6h cron remains the backstop)"
+              ;;
+            *)
+              echo "Status $STATUS is not a staging-line transition — no promoter re-fire."
+              ;;
+          esac
+
   # ── BUILD MESSAGE BODY (decodes optional failure excerpt) ────────────────────
   build-message:
     name: Build notification message
