@@ -1,0 +1,130 @@
+name: ci-status-reconciler
+
+# GUARD 3 — ci_status drift reconciler (cicd_contract_hardening_2026_06_01 § "Guard 3").
+#
+# WHY: manifest ci_status is the dep-order gate the LDR→staging promoter reads, and it is
+# meant to track quality-gates-v2 (the authoritative deploy gate). A NON-v2 workflow (e.g.
+# "Agent Audit") can flip a repo to FAILING with no green event to reset it — a dropped
+# transition that leaves a repo *falsely-FAILING* and dams the whole dep-ordered cascade
+# (incident 2026-06-03: unified-trading-library v2-green on main/staging/LDR but ci_status
+# FAILING blocked every dependent). This watchdog detects that drift and re-fires
+# ci-status-update with the corrected status — closing the gap between "v2 says green" and
+# "manifest says FAILING" (and the reverse: green-but-latest-v2-failed → FAILING).
+#
+# Conservative: only the two unambiguous drift directions (decision core +
+# unit tests: scripts/cicd/ci_status_reconciler.py). Never touches green↔green tier
+# differences; never acts on an absent v2 signal (fail-safe). Reads ci_status from main
+# (the single SSOT branch); fixes via the bot-only ci-status-update dispatch (Guard 1).
+#
+# Trigger: every 30 min (drift cadence) + manual dispatch (dry_run lists without firing).
+# SSOT: this file is PM-only (it reads workspace-manifest.json which lives only in PM).
+
+on:
+  schedule:
+    - cron: "23,53 * * * *" # ~every 30 min, off the top-of-hour
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List drifts that WOULD be reconciled without firing ci-status-update"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-status-reconciler
+  cancel-in-progress: false
+
+jobs:
+  reconcile:
+    runs-on: ubuntu-latest
+    outputs:
+      reconciled: ${{ steps.run.outputs.reconciled }}
+      reconciled_count: ${{ steps.run.outputs.reconciled_count }}
+    steps:
+      - name: Checkout PM (main — the ci_status SSOT branch)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 1
+
+      - name: Reconcile ci_status drift vs quality-gates-v2
+        id: run
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          set -uo pipefail
+
+          # Repos to check: those carrying a ci_status in the manifest.
+          REPOS=$(python3 - <<'PYEOF'
+          import json
+          with open("workspace-manifest.json") as f:
+              m = json.load(f)
+          for name, info in m.get("repositories", {}).items():
+              if name.startswith("_") or not isinstance(info, dict):
+                  continue
+              if "ci_status" in info:
+                  print(f"{name}\t{info.get('ci_status','')}")
+          PYEOF
+          )
+
+          latest_v2() { # repo branch → "success"|"failure"|"" (latest COMPLETED v2 run)
+            gh run list --repo "$OWNER/$1" --branch "$2" --workflow quality-gates-v2.yml \
+              --status completed --limit 1 --json conclusion --jq '.[0].conclusion // ""' 2>/dev/null || echo ""
+          }
+
+          RECONCILED=""; RECONCILED_COUNT=0
+          while IFS=$'\t' read -r REPO CUR; do
+            [ -z "$REPO" ] && continue
+            MAIN_C=$(latest_v2 "$REPO" main)
+            STG_C=$(latest_v2 "$REPO" staging)
+            LDR_C=$(latest_v2 "$REPO" live-defi-rollout)
+            DECISION=$(python3 scripts/cicd/ci_status_reconciler.py \
+              --current "$CUR" --main "$MAIN_C" --staging "$STG_C" --ldr "$LDR_C")
+            VERB="${DECISION%% *}"
+            if [ "$VERB" = "RECONCILE" ]; then
+              TARGET=$(echo "$DECISION" | awk '{print $2}')
+              echo "DRIFT  $REPO: $CUR → $TARGET  (main=$MAIN_C staging=$STG_C ldr=$LDR_C)"
+              if [ "$DRY_RUN" = "true" ]; then
+                echo "  DRY-RUN: would fire ci-status-update $REPO → $TARGET"
+              else
+                curl -sf -X POST \
+                  -H "Authorization: token ${GH_TOKEN}" \
+                  -H "Accept: application/vnd.github+json" \
+                  "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \
+                  -d "{\"event_type\":\"ci-status-update\",\"client_payload\":{\"repo\":\"${REPO}\",\"status\":\"${TARGET}\",\"branch\":\"main\"}}" \
+                  && echo "  fired ci-status-update $REPO → $TARGET" \
+                  || echo "  WARN: dispatch failed for $REPO"
+              fi
+              RECONCILED="$RECONCILED $REPO:$TARGET"; RECONCILED_COUNT=$((RECONCILED_COUNT + 1))
+            else
+              echo "ok     $REPO: $CUR (${DECISION#SKIP })"
+            fi
+          done <<< "$REPOS"
+
+          {
+            echo "reconciled=$RECONCILED"
+            echo "reconciled_count=$RECONCILED_COUNT"
+          } >> "$GITHUB_OUTPUT"
+          echo ""
+          echo "=== Guard 3 reconcile summary: $RECONCILED_COUNT drift(s) corrected:$RECONCILED ==="
+
+  notify:
+    name: Slack — Guard 3 ci_status drift reconciled
+    needs: [reconcile]
+    if: always() && needs.reconcile.outputs.reconciled_count != '0' && needs.reconcile.outputs.reconciled_count != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Guard 3 reconciled ${{ needs.reconcile.outputs.reconciled_count }} ci_status drift(s) (v2 vs manifest): ${{
+        needs.reconcile.outputs.reconciled }}"
+      severity: "INFO"
+      conclusion: ${{ needs.reconcile.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
