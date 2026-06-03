@@ -173,13 +173,15 @@ All on `origin/live-defi-rollout`; full detail in
       env — NOT on the central VM, NOT in GCP/AWS SM) via SSM + set it on PM Actions (value never printed).
       **Verified:** escalate re-run `26877427868` → **SUCCESS** ("dispatched to orchestrator — Max worker resolving on
       LDR"). The GHA→orchestrator bridge is ALIVE; ci-failure-watcher's conflict escalations now actually land.
-- [ ] [SCRIPT] P2 _(was P1; de-prioritized — DORMANT legacy path)_. **conflict-resolution-agent → escalate (drop in-GHA
-      API).** Still runs `claude-code` via `ANTHROPIC_API_KEY_CICD` (`:296/305`) BUT is **dormant** (no runs since
-      2026-03-13) and **superseded** by the now-working escalate→Max-worker path. 3 callers fire
-      `merge-conflict-detected` (staging-to-main / ldr-to-staging-promote / feature-branch-to-staging template).
-      Cleanup: route it to `escalate-to-orchestrator` (or deprecate + point those 3 callers at escalate). Needs care
-      (gut the 700-line in-GHA-Claude job + gate the PR steps) → focused testable change, not a hot-path edit. repo:
-      unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **conflict-resolution-agent cut over to the Max-plan worker (in-GHA API DROPPED)** —
+      unified-trading-pm@df841daaf. Replaced the 700-line `ANTHROPIC_API_KEY_CICD` + `claude-code` in-GHA resolver with
+      a clean 84-line **escalate-relay**: on `merge-conflict-detected` it `repository_dispatch`es
+      `escalate-to-orchestrator` (`wall_type=merge_conflict`, `model=opus`) via `GH_PAT` → orchestrator spawns a
+      setup-token Max worker that resolves ON live-defi-rollout + re-gates via quality-gates-v2. Trigger contract
+      preserved (repo_name/source_branch/target_branch/original_pr_url); 3 callers (staging-to-main /
+      ldr-to-staging-promote / feature-branch-to-staging) unchanged. YAML validated; no active API ref.
+      Verified-by-construction (uses the same escalate interface proven green this session); a real conflict exercises
+      it end-to-end.
 - [~] [SCRIPT] P1. **Every Slack-alert event ALSO pings the orchestrator → it delegates.** (a)
   `main-backmerge-to-ldr.yml` conflict → **DONE** (unified-trading-pm@c1fa002b1: repository_dispatches
   escalate-to-orchestrator (opus) via GH_PAT alongside the human PR). (b) `ci_failure_watcher.py` already escalates
