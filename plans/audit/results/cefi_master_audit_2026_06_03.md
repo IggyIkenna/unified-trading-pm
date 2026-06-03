@@ -20,6 +20,20 @@ not_covered: data-state corpus coverage (CF-1…12 data-state, per-venue capture
 Sibling of `defi_master_audit_2026_06_03.md`. Same operator framing + same code-verified method (2 sub-agent passes: 4a
 instruments+MTDS-tick, 4b MDPS→features-delta-one→perp-archetype), key findings spot-verified by the auditor.
 
+## Adversarial verification (2026-06-03) — findings reclassified
+
+Independent adversarial-refutation pass; the fix plan `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md`
+acts only on survivors:
+
+- **CONFIRMED (fix-now)**: funding-feature name/unit mismatch (P1 — no alias layer exists; `basis_perp` is the outlier
+  vs sibling `staked_basis`); non-HL CeFi trades-only live / no live book+ticker (P1).
+- **PARTIAL**: CeFi `source=""` — manifest-column half CONFIRMED (the `record_captured_from_counts` path sets no
+  `source=`), per-row-parquet half **REFUTED** (cefi IS in `SOURCE_PRIORITY` → per-row stamp works); the genuine gap is
+  owned by `data_source_provenance_all_asset_groups_2026_06_01.md`. `funding_oi` `need_data` = KNOWN-TRACKED
+  (`features_registry_status_versioning_2026_05_28.md`).
+- **REFUTED (out of scope)**: MTDS `TardisAdapter` "self-discovers universe" — `download_batch` uses IS-catalog
+  `instrument_ids`; `availableSymbols` is a separate validation method, not the download path.
+
 ## Verdict by stage
 
 | Stage                            | Verdict          | Headline                                                                                                                                        |

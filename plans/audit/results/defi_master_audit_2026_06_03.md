@@ -27,6 +27,21 @@ features-onchain → strategy) on `live-defi-rollout`. It does **NOT** cover the
 Motivated the two new everlasting audit items shipped this run (PM@a2baf04ed, push held on benign alignment gate):
 `mtds_mdps_master` (k) per-venue acquisition-method registry, `batch_live_symmetry` (k) different-source equivalence.
 
+## Adversarial verification (2026-06-03) — findings reclassified
+
+After this report, an independent adversarial-refutation pass re-checked every gap item against caller chains, config,
+registries, and codex. The fix plan `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` acts ONLY on the
+survivors:
+
+- **CONFIRMED (fix-now)**: `dex_swaps` 5k/day truncation (P0/P1); orca/raydium no live WS (P1).
+- **PARTIAL (narrower than stated)**: hardcoded hosts (P2 — QG does NOT flag them; 3 bare literals, varying severity);
+  DeFi live `--trigger` stub (P2 — unwired forward-flag; live works via `--mode live`, not a breakage).
+- **REFUTED (out of scope — do NOT action)**: `(DEFI,liquidations)` no-adapter (name conflation — DeFi venues declare
+  `liquidation_events`, skip unreachable); `dex_swaps` generic bucket (codex-intended home, not a defect);
+  `mid_price_<venue>` "missing" (runtime widening seam, archetype not blocked); `funding_rate_apy_bps` 0-producer
+  (FACTUALLY WRONG — produced by 2 calculators); `usdc_idle_yield_apy_bps` (reporting-only, not in `net_carry` — not a
+  correctness bug).
+
 ## Method
 
 Four code-verified sub-agent passes (3a instruments, 3b MTDS tick, 3c MDPS+features-onchain, 3d strategy), each
