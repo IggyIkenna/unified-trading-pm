@@ -396,10 +396,21 @@ verify + the gated delete.
       no-bounds; QG exit 0. Superseded-PARTIAL note: (mtds@59d25967, slot-5 2026-06-03): the rebuild now AUDITS the
       `SOURCE_RETURNED_ZERO` rows (per-row WARN log `(date,venue,instrument_id)` via `reemit_honest_absence_rows` + a
       `source_returned_zero_preserved` counter) and PRESERVES the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
-      **RESIDUAL (this item stays open):** the actual within-bounds RECLASSIFICATION (`SOURCE_RETURNED_ZERO` on a live
-      market in-window → `attempted_failed`) is conservatively deferred — it needs a per-market lifecycle
-      (created_at/settlement) lookup from instruments-store `MARKET_LIFECYCLE` at rebuild time (cross-service GCS read;
-      named dependency in the code TODO). Wire that lookup to finish this item.
+      **RESIDUAL NOW CLOSED (slot-5 2026-06-03, verified — supersedes the stale "deferred" note):** the within-bounds
+      RECLASSIFICATION IS wired + tested (it was completed in the same @62b7ff74 work — see the "robust `_index` read +
+      within-bounds reclassification DONE" item below). Verified by reading the shipped code, not re-implementing:
+      `reemit_honest_absence_rows` (rebuild_prediction_manifest.py:648-706) loads per-date lifecycle bounds via
+      `_load_market_lifecycle_for_date` (cached), and for each `SOURCE_RETURNED_ZERO` row whose `condition_id` is live
+      in-window (`created_at <= day < settlement`) emits `record_failed(error="WithinBoundsSourceZero")`
+      (attempted_failed), else preserves the typed empty + logs. The lookup it depends on returns real bounds:
+      `_load_market_lifecycle_for_date` (base_prediction_adapter.py:89-121) falls back from the empty
+      `market_lifecycle/by_canonical_group/` to `instrument_availability/…/instruments.parquet` keyed by `condition_id`
+      (`start_date`→created, `end_date_iso`→settlement). Tests:
+      `test_reemit_source_returned_zero_within_bounds_reclassified` (FIX 3a) +
+      `test_load_market_lifecycle_fallback_parses_start_end_columns` (FIX 1) + the 15-test
+      `test_market_lifecycle_loader` suite. **Real-data verification** (does the bounds lookup actually fire for the 41
+      rows) is the post-migration rebuild VM run — the E4 DRY run (2026-06-03) confirmed the migrator + tarball + code
+      chain runs correctly on a VM. No code change needed.
 - [x] ✅ [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED — DONE (mtds@59d25967,
       slot-5 2026-06-03).** `reemit_honest_absence_rows` reads the existing pred-prd `_index`
       (`read_availability_index`), and for every `attempted_failed`/`empty_confirmed` row whose
