@@ -137,12 +137,51 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F6 — pm-pull install on VMs [P1] _(MIGRATED FROM `plan_hygiene_silent_failure_capture_2026_05_29`)_
 
-- [ ] [SCRIPT] P1. **MIGRATED FROM:** `plan_hygiene_silent_failure_capture` (its deferred "audit + install pm-pull on the
-      other 9 epic VMs"). `bootstrap_vm.sh` does **not** install pm-pull — fresh/replacement VMs rely on the separate
-      `scripts/orchestrator/run_fleet_install_pm_pull.sh` post-launch step, so a freshly-bootstrapped VM doesn't
-      auto-pull PM (regen then reads a stale clone). Bake the `pm-pull` timer+service install into `bootstrap_vm.sh` so a
-      fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic VMs when they start
-      (currently off). Composes with F2–F4 (same per-VM rollout).
+- [ ] [SCRIPT] P1. **MIGRATED FROM:** `plan_hygiene_silent_failure_capture` (its deferred "audit + install pm-pull on
+      the other 9 epic VMs"). `bootstrap_vm.sh` does **not** install pm-pull — fresh/replacement VMs rely on the
+      separate `scripts/orchestrator/run_fleet_install_pm_pull.sh` post-launch step, so a freshly-bootstrapped VM
+      doesn't auto-pull PM (regen then reads a stale clone). Bake the `pm-pull` timer+service install into
+      `bootstrap_vm.sh` so a fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic
+      VMs when they start (currently off). Composes with F2–F4 (same per-VM rollout).
+
+### F7 — slot-4 WIP recovery on the live vm-0 host [P1]
+
+- [ ] [INFRA] P1. **The only genuine residual quarantine on vm-0** (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree
+      realign (see below) deliberately SKIPPED 2 slot-4 repos on feature branches — genuine mid-work WIP, not safe to
+      relabel (inherited-WIP rule): `unified-api-contracts` on `fix/tradfi-exchange-mappings-minimal`,
+      `unified-trading-pm` on `fix/pm-ci-self-clone`. Slot 4 will keep tripping FM7 (correctly) until recovered: inspect
+      each repo's WIP → commit/quickmerge or stash → then `git branch -m … tab/vm-0/4` (or recreate the slot-4 worktrees
+      on `tab/vm-0/4`). Until then slot 4 stays quarantined by design. Repo: agent-orchestrator host (live VM op, no
+      repo change) + the 2 named repos for the WIP itself.
+
+### F8 — self-heal: realign a RUNNING VM's worktrees to its VM_ID without a full re-bootstrap [P1]
+
+- [ ] [SCRIPT] P1. **Gap surfaced 2026-06-03.** F2/F4 bake `tab/<VM_ID>/<slot>` branding into `bootstrap_vm.sh`, but it
+      only applies on (re-)bootstrap. A VM that was already RUNNING when `129dc6a` landed keeps its pre-migration
+      worktree naming and stays 100%-quarantined silently — exactly what happened to vm-0 (api-host): 539 AutoSpawn
+      ticks all `failed=N` for ~? until the manual realign below. Harden so this self-heals: either (a) a `slot-cron`
+      step that detects `HEAD prefix != tab/<ORCHESTRATOR_VM_ID>/` on a `tab/*/<slot>` branch and `git branch -m`s it
+      (skipping non-`tab/*` feature branches = WIP, per F7), or (b) a one-shot on `systemctl restart`/startup. Compose
+      with the existing FF-pull cron. Repo: agent-orchestrator (+ `slot-cron-ff-pull.sh` in unified-trading-pm if the
+      check lands there). Pair with a `verify-slot-host-symmetry.sh` probe that fails a host whose worktrees don't match
+      its VM_ID.
+
+## 2026-06-03 — F4 applied LIVE to the AutoSpawn host vm-0 (i-0c9b283b31d6b5ca7), spawn confirmed
+
+The 2026-06-02 fixes validated on `vm-cefi` (then stopped). The **live AutoSpawn host** `vm-0` (the plan's "central",
+`ORCHESTRATOR_AUTOSPAWN_ENABLED=true`) was still on pre-`129dc6a` worktree naming (`tab/ikennaigboaka/N` +
+`tab/ikennaigboakam/N`) vs the code-expected `tab/vm-0/N` → **fully quarantined**
+(`AutoSpawnLoop tick: checked=6 spawned=0 failed=6`, repeating). Applied F4 manually (it had only been baked for
+re-bootstrap):
+
+- Renamed **476 worktree branches** `tab/{ikennaigboaka,ikennaigboakam}/<slot>` → `tab/vm-0/<slot>` (local
+  `git branch -m`, no content change; skipped feature-branch WIP per F7).
+- **Confirmed spawn**: `13:22:11 AutoSpawnLoop tick: checked=6 spawned=1`; `13:26:36 … skips={'worker_active': 2}`; live
+  tmux `orch-slot-10` running. Quarantine cleared for all aligned slots (2/5/9 transient mid-rename, now clean); only
+  slot 4 remains (WIP, F7).
+
+This is the same manual realign F2's note anticipated for _stopped_ VMs — applied here to a _running_ one; F8 hardens it
+so it self-heals.
 
 ## Per-VM application runbook (when a VM is started)
 
