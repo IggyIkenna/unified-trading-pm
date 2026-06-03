@@ -605,10 +605,22 @@ LDR. **NEVER `--force` / `--force-with-lease` a shared branch (`live-defi-rollou
   the bot-masquerade, while making `git log --format=%an`, the GitHub author column, and CI `head_commit.author.name`
   correct + slot-aware.
 
-**Set per-worktree (not `~/.gitconfig`):** `setup-tab-worktrees.sh` sets it at `--init` / `--add-slot` / `--reset-slot`
-(it already writes a per-slot `.envrc`; the same provisioning step runs `git config user.name`). Sub-agents share the
-slot worktree → inherit the tag automatically. Manual fallback in a slot worktree:
-`git config user.name "ikennaigboaka [slot-3·laptop]"`.
+**Set per-worktree — MECHANISM GOTCHA (codified 2026-06-03):** `.tabs/<N>/<repo>` are **git worktrees that SHARE the
+main clone's `.git/config`**, so plain `git config user.name` is shared across ALL worktrees of a repo (last-writer-wins
+— useless for per-slot identity; the 2026-06-03 naive loop made every slot read `[main·laptop]`). Per-slot identity
+**requires git's per-worktree config**:
+
+```bash
+# once per repo (on the shared config):
+git config extensions.worktreeConfig true
+# then per worktree (writes .git/worktrees/<wt>/config.worktree, NOT the shared file):
+git config --worktree user.name  "ikennaigboaka [slot-<N>·<host>]"
+git config --worktree user.email "ikennaigboaka@gmail.com"
+```
+
+`setup-tab-worktrees.sh` runs this at `--init` / `--add-slot` / `--reset-slot` (it already writes a per-slot `.envrc`;
+the same provisioning step enables `extensions.worktreeConfig` + sets `--worktree` identity). Sub-agents share the slot
+worktree → inherit the `--worktree` tag automatically. Do NOT hand-edit `~/.gitconfig`.
 
 **Consumers:** CI alert workflows attribute via `github.event.head_commit.author.name`; the slot-git-status-report +
 orphan-ping crons can group by slot. A machine-parseable `Agent-Slot:` / `Agent-Host:` commit trailer (a

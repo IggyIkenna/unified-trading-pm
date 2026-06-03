@@ -47,16 +47,20 @@ recurs on every other slot/host until the provisioning is fixed.**
       Add a `local` hook (`fix-commit-identity`) to each `scripts/pre-commit-templates/*.pre-commit-config.yaml`
       (python-service / python-library / ui / docs) → rolled out to all repos via the existing template→repo mechanism
       (same path as ruff / gitleaks / conventional-pre-commit). The hook derives the EXPECTED identity — slot `<N>` from
-      the `tab/<op>/<N>` branch, `<host>` from `VM_NAME` (→ `vm-<id>`) else `laptop`/hostname — and **self-heals**
-      `git config user.name/user.email` (or blocks with the exact fix command) so a commit cannot be made with a wrong /
-      leaked identity, regardless of provisioning state. This survives the bot-email leak by construction. Repo:
-      unified-trading-pm (templates) + `install-hooks.sh` rollout. SSOT: `codex/05-infrastructure/per-tab-worktrees.md`
-      § "Commit attribution".
+      the `tab/<op>/<N>` branch, `<host>` from `VM_NAME` (→ `vm-<id>`) else `laptop`/hostname — and **self-heals via
+      `git config extensions.worktreeConfig true` + `git config --worktree user.name/user.email`** (NOT plain
+      `git config` — `.tabs/<N>/<repo>` are worktrees sharing one `.git/config`, so plain config is last-writer-wins
+      across slots; see codex § "Commit attribution" GOTCHA) — or blocks with the exact fix command, so a commit cannot
+      be made with a wrong / leaked identity, regardless of provisioning state. Survives the bot-email leak by
+      construction. Repo: unified-trading-pm (templates) + `install-hooks.sh` rollout. SSOT:
+      `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
 - [ ] [INFRA] P1. **`setup-tab-worktrees.sh` standardises identity per worktree** at
-      `--init`/`--add-slot`/`--reset-slot`: `git config user.name "ikennaigboaka [slot-<N>·<host>]"` +
-      `git config user.email "ikennaigboaka@gmail.com"` (`<host>` = `laptop`/hostname on a workstation, `vm-<id>` on a
-      fleet VM; `<N>` from the `tab/<op>/<N>` branch). Repo: unified-trading-pm (`scripts/dev/setup-tab-worktrees.sh`).
-      SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
+      `--init`/`--add-slot`/`--reset-slot` via `git config extensions.worktreeConfig true` (once per repo) +
+      `git config --worktree user.name     "ikennaigboaka [slot-<N>·<host>]"` +
+      `git config --worktree user.email "ikennaigboaka@gmail.com"` (`<host>` = `laptop`/hostname on a workstation,
+      `vm-<id>` on a fleet VM; `<N>` from the `tab/<op>/<N>` branch). Repo: unified-trading-pm
+      (`scripts/dev/setup-tab-worktrees.sh`). SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit
+      attribution".
 - [ ] [INFRA] P1. **Root-cause the bot-email leak** — find what writes `semver-rollout[bot]` / `agent@ci.local` into
       persistent per-worktree `git config` (candidate: a `setup.sh` / semver-agent / CI bootstrap step using
       `git config` instead of `git -c user.email=…` one-shots) and stop it writing persistent identity. Add a recurrence

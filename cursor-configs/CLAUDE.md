@@ -114,10 +114,14 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   commits there masquerade as the semver bot**; ~7 carry `agent@ci.local` → unattributed) — so this is a STANDARDISE,
   not "leave unchanged". GitHub attribution + semver-agent bot/author checks key off the EMAIL (hence the bot-leak is
   dangerous); fixing name+email per-worktree makes `git log --format=%an` / the GitHub author column / CI
-  `head_commit.author.name` correct + slot- aware (the gap that made cross-agent triage guess-work). Set per-worktree by
-  `setup-tab-worktrees.sh` (do NOT hand-edit `~/.gitconfig`); manual fallback per slot worktree:
-  `git config user.name "ikennaigboaka [slot-3·laptop]" && git config user.email "ikennaigboaka@gmail.com"`. SSOT +
-  root-cause hunt: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
+  `head_commit.author.name` correct + slot- aware (the gap that made cross-agent triage guess-work). **MECHANISM GOTCHA
+  (2026-06-03): `.tabs/<N>/<repo>` are git WORKTREES sharing the main clone's `.git/config` → plain
+  `git config user.name` is SHARED across all worktrees of a repo (last-writer-wins, useless for per-slot). Per-slot
+  identity REQUIRES `git config extensions.worktreeConfig true` (once per repo) +
+  `git config --worktree user.name/user.email` (per worktree).** Set per-worktree by `setup-tab-worktrees.sh` (do NOT
+  hand-edit `~/.gitconfig`); manual fallback in a slot worktree:
+  `git config extensions.worktreeConfig true && git config --worktree user.name "ikennaigboaka [slot-3·laptop]" && git config --worktree user.email "ikennaigboaka@gmail.com"`.
+  SSOT + root-cause hunt: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
 - **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit _promotes_ via
   quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
   (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
