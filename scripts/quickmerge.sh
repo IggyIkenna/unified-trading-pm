@@ -427,28 +427,42 @@ _QM_BRANCH=$(git branch --show-current 2>/dev/null || echo "")
 if [ -z "$_QM_BRANCH" ]; then
   echo "[$REPO_NAME] detached HEAD — skipping not-behind gate"
 else
-  git fetch origin "$_QM_BRANCH" --quiet 2>/dev/null || true
-  if ! git rev-parse "origin/$_QM_BRANCH" >/dev/null 2>&1; then
-    echo "[$REPO_NAME] no origin/$_QM_BRANCH yet — skipping not-behind gate"
+  # Reconcile against the CONFIGURED UPSTREAM (@{u}), NOT origin/<branch-name>.
+  # Slot worktrees on tab/<op>/<N> track origin/live-defi-rollout, while
+  # origin/tab/<op>/<N> may be a stale snapshot — comparing against the latter
+  # triggers a bogus 500+-commit rebase against a dead branch (incident 2026-06-03).
+  _QM_UPSTREAM=$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+  if [ -n "$_QM_UPSTREAM" ]; then
+    _QM_REMOTE_REF="$_QM_UPSTREAM"
+    _QM_REMOTE_NAME="${_QM_UPSTREAM%%/*}"
+    _QM_REMOTE_BRANCH="${_QM_UPSTREAM#*/}"
   else
-    _QM_BEHIND=$(git rev-list "HEAD..origin/$_QM_BRANCH" --count 2>/dev/null || echo 0)
-    _QM_AHEAD=$(git rev-list "origin/$_QM_BRANCH..HEAD" --count 2>/dev/null || echo 0)
+    _QM_REMOTE_REF="origin/$_QM_BRANCH"
+    _QM_REMOTE_NAME="origin"
+    _QM_REMOTE_BRANCH="$_QM_BRANCH"
+  fi
+  git fetch "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null || true
+  if ! git rev-parse "$_QM_REMOTE_REF" >/dev/null 2>&1; then
+    echo "[$REPO_NAME] no $_QM_REMOTE_REF yet — skipping not-behind gate"
+  else
+    _QM_BEHIND=$(git rev-list "HEAD..$_QM_REMOTE_REF" --count 2>/dev/null || echo 0)
+    _QM_AHEAD=$(git rev-list "$_QM_REMOTE_REF..HEAD" --count 2>/dev/null || echo 0)
     if [ "${_QM_BEHIND:-0}" = "0" ]; then
-      echo "[$REPO_NAME] ✅ not behind origin/$_QM_BRANCH (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
+      echo "[$REPO_NAME] ✅ not behind $_QM_REMOTE_REF (ahead=$_QM_AHEAD; local deviations are fine) — proceeding"
     else
-      echo "[$REPO_NAME] behind origin/$_QM_BRANCH by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
-      if git pull --ff-only origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+      echo "[$REPO_NAME] behind $_QM_REMOTE_REF by $_QM_BEHIND (ahead=$_QM_AHEAD) — pulling latest first..."
+      if git pull --ff-only "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ fast-forwarded to latest — now current"
-      elif git pull --rebase --autostash origin "$_QM_BRANCH" --quiet 2>/dev/null; then
+      elif git pull --rebase --autostash "$_QM_REMOTE_NAME" "$_QM_REMOTE_BRANCH" --quiet 2>/dev/null; then
         echo "[$REPO_NAME] ✅ rebased local commits onto latest — now current"
       else
         git rebase --abort 2>/dev/null || true   # clean up any half-done rebase
         if [ "${QUICKMERGE_ALLOW_BEHIND:-}" = "1" ]; then
           echo "[$REPO_NAME] ⚠️  still $_QM_BEHIND behind (rebase conflicts) — QUICKMERGE_ALLOW_BEHIND=1, continuing"
         else
-          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind origin/$_QM_BRANCH and auto-rebase hit conflicts."
+          echo "[$REPO_NAME] ❌ BLOCKED: $_QM_BEHIND behind $_QM_REMOTE_REF and auto-rebase hit conflicts."
           echo "   Pull the latest first (resolving conflicts), then re-run:"
-          echo "     git pull --rebase origin $_QM_BRANCH"
+          echo "     git pull --rebase $_QM_REMOTE_NAME $_QM_REMOTE_BRANCH"
           echo "   Emergency override: QUICKMERGE_ALLOW_BEHIND=1 bash scripts/quickmerge.sh ..."
           exit 1
         fi
@@ -699,7 +713,15 @@ if [ "$REPO_NAME" = "unified-trading-pm" ]; then
   ALIGN_SCRIPT="$WORKSPACE_ROOT/unified-trading-pm/scripts/manifest/check-dependency-alignment.py"
   if [ -f "$ALIGN_SCRIPT" ]; then
     cd "$WORKSPACE_ROOT"
-    source .venv-workspace/bin/activate 2>/dev/null || true
+    # Guard the source: `source`/`.` is a POSIX special builtin, so a missing file under
+    # `set -e` exits the shell IMMEDIATELY, bypassing `|| true` (incident 2026-06-03 — a
+    # slot worktree's WORKSPACE_ROOT has no .venv-workspace, killing quickmerge silently).
+    # The venv may live at WORKSPACE_ROOT or at the true repos-root (slot worktrees); try both.
+    if [ -f .venv-workspace/bin/activate ]; then
+      source .venv-workspace/bin/activate 2>/dev/null || true
+    elif [ -f ../.venv-workspace/bin/activate ]; then
+      source ../.venv-workspace/bin/activate 2>/dev/null || true
+    fi
     python unified-trading-pm/scripts/manifest/generate-derived-manifest.py 2>/dev/null || true
     if python "$ALIGN_SCRIPT" --json 2>/dev/null | grep -q '"aligned": true'; then
       echo "[$REPO_NAME] ✅ Dependency alignment PASSED"

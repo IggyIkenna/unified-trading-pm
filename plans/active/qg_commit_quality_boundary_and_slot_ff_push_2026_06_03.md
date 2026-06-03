@@ -144,7 +144,10 @@ All on `origin/live-defi-rollout`; full detail in
       `QUICKMERGE_ALLOW_BEHIND=1` override. Edit the **canonical PM template** `scripts/quickmerge.sh`, then
       `rollout-workflow-templates.sh` to all repos (never per-repo). Regression: shell unit asserting both codes fire on
       a synthesized behind+diverge + autostash-pop fixture.
-- [ ] [INFRA] P1. **quickmerge STAGE 0.4 — reconcile against the configured UPSTREAM, not `origin/<branch-name>` (BUG,
+- [x] ✅ [INFRA] P1. **FIXED (PM `scripts/quickmerge.sh`, this batch — live fleet-wide via the per-repo symlinks).**
+      STAGE 0.4 now resolves the comparison ref from `git rev-parse --abbrev-ref @{u}` (configured upstream) when set,
+      falling back to `origin/<branch-name>` only if no upstream. Verified: `@{u}` → `origin/live-defi-rollout` on a
+      slot branch. **quickmerge STAGE 0.4 — reconcile against the configured UPSTREAM, not `origin/<branch-name>` (BUG,
       LIVE incident 2026-06-03 slot-2).** STAGE 0.4 sets `_QM_BRANCH=$(git branch --show-current)` and compares against
       `origin/$_QM_BRANCH`. For a slot worktree on `tab/<op>/<N>` whose **upstream is `origin/live-defi-rollout`** (the
       base for every repo) but whose `origin/tab/<op>/<N>` is STALE (the FF-push-back half of the slot cron isn't
@@ -155,25 +158,33 @@ All on `origin/live-defi-rollout`; full detail in
       from `git rev-parse --abbrev-ref @{u}` (the configured upstream) when it exists, falling back to
       `origin/<branch-name>` only if no upstream is set. PM template → rollout. (Workaround used 2026-06-03: ship from a
       fresh branch with no `origin/` counterpart so STAGE 0.4 auto-skips.)
-- [ ] [INFRA] P1. **quickmerge STAGE 1.5 — `source .venv-workspace/bin/activate` KILLS quickmerge in a slot worktree
-      (BUG, LIVE incident 2026-06-03 slot-2).** Line ~702 `source .venv-workspace/bin/activate 2>/dev/null || true` runs
-      after `cd "$WORKSPACE_ROOT"`. For a slot worktree, `WORKSPACE_ROOT=$REPO_ROOT/..` = `.tabs/<N>`, where
-      `.venv-workspace` does NOT exist (it lives at the true top-level `unified-trading-system-repos/.venv-workspace`).
-      `source`/`.` is a POSIX **special builtin** → a not-found file under `set -e` exits the non-interactive shell
-      **immediately, bypassing `|| true`** (confirmed: `bash -ec 'source missing 2>/dev/null || true; echo X'` prints
-      nothing, exits 1). So quickmerge dies silently at the dep-align stage with NO ❌ printed. **Fix**: guard with
+- [x] ✅ [INFRA] P1. **FIXED (PM `scripts/quickmerge.sh`, this batch — live fleet-wide via symlinks).** The STAGE 1.5
+      `source` is now guarded:
+      `if [ -f .venv-workspace/bin/activate ]; then source …; elif [ -f ../.venv-workspace/…];     then source …; fi`
+      (tests before sourcing → no special-builtin exit; also finds the venv at the true repos-root for slot worktrees).
+      Verified standalone with the slot symlink REMOVED: block survives + `python` resolves to the top-level workspace
+      venv. **quickmerge STAGE 1.5 — `source .venv-workspace/bin/activate` KILLS quickmerge in a slot worktree (BUG,
+      LIVE incident 2026-06-03 slot-2).** Line ~702 `source .venv-workspace/bin/activate 2>/dev/null || true` runs after
+      `cd "$WORKSPACE_ROOT"`. For a slot worktree, `WORKSPACE_ROOT=$REPO_ROOT/..` = `.tabs/<N>`, where `.venv-workspace`
+      does NOT exist (it lives at the true top-level `unified-trading-system-repos/.venv-workspace`). `source`/`.` is a
+      POSIX **special builtin** → a not-found file under `set -e` exits the non-interactive shell **immediately,
+      bypassing `|| true`** (confirmed: `bash -ec 'source missing 2>/dev/null || true; echo X'` prints nothing, exits
+      1). So quickmerge dies silently at the dep-align stage with NO ❌ printed. **Fix**: guard with
       `[ -f .venv-workspace/bin/activate ] && source ...` (test before sourcing — a test failing under `set -e` inside
       `&&` is safe), and/or resolve the venv at the true workspace root not the slot `WORKSPACE_ROOT`. PM template →
       rollout. (Workaround used 2026-06-03: `ln -s <top-level>/.venv-workspace .tabs/2/.venv-workspace`.)
-- [ ] [INFRA] P2. **quickmerge STAGE 1.5 dep-align hard-errors when `derived-dependency-manifest.json` is ABSENT (BUG,
-      slot-2 2026-06-03).** The item-H generated-artifact untracking (LDR) deletes `derived-dependency-manifest.json`;
-      after an FF a slot has no local copy, and `check-dependency-alignment.py` exits with "Run
-      generate-derived-manifest.py first" → quickmerge dep-align fails. quickmerge line ~703 DOES call
-      `generate-derived-manifest.py` first, but only `2>/dev/null || true` — so if the generate step itself is the thing
-      that died (it shares the same venv/PATH the `source` bug above broke), the stale/missing manifest cascades.
-      **Fix**: the dep-align stage should hard-require a successful generate (not `|| true`-swallow it) OR the checker
-      should auto-generate when absent. PM template → rollout. (Workaround used 2026-06-03: ran
-      `generate-derived-manifest.py` manually pre-quickmerge.)
+- [ ] [INFRA] P2. **OBSERVED CASCADE RESOLVED by the STAGE 1.5 `source`-guard fix above; the standalone hardening below
+      remains open.** With the venv now activating, line ~703 `generate-derived-manifest.py` runs and re-creates the
+      manifest, so the absent-manifest checker error no longer fires in the normal path. STILL TODO (defence-in-depth):
+      make generate hard-required (not `|| true`-swallowed) OR have the checker auto-generate when absent. **quickmerge
+      STAGE 1.5 dep-align hard-errors when `derived-dependency-manifest.json` is ABSENT (BUG, slot-2 2026-06-03).** The
+      item-H generated-artifact untracking (LDR) deletes `derived-dependency-manifest.json`; after an FF a slot has no
+      local copy, and `check-dependency-alignment.py` exits with "Run generate-derived-manifest.py first" → quickmerge
+      dep-align fails. quickmerge line ~703 DOES call `generate-derived-manifest.py` first, but only
+      `2>/dev/null || true` — so if the generate step itself is the thing that died (it shares the same venv/PATH the
+      `source` bug above broke), the stale/missing manifest cascades. **Fix**: the dep-align stage should hard-require a
+      successful generate (not `|| true`-swallow it) OR the checker should auto-generate when absent. PM template →
+      rollout. (Workaround used 2026-06-03: ran `generate-derived-manifest.py` manually pre-quickmerge.)
 - [x] ✅ [DOC] P1. **SUB_AGENT_MANDATORY_RULES.md** — added the behind-remote recovery recipe keyed on the
       `QUICKMERGE_BLOCKED` block (operative today against the existing exit-1; structured codes land with the INFRA
       item). — PM@pending (this batch).
