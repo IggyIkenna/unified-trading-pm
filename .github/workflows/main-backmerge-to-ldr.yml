@@ -58,6 +58,7 @@ jobs:
         id: bm
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           set -uo pipefail
 
@@ -130,6 +131,19 @@ jobs:
             else
               echo "[backmerge] conflict PR #${EXISTING} already open"
             fi
+            # ALSO escalate to the orchestrator (Max worker) so the conflict is actively resolved on
+            # live-defi-rollout, not just parked in a human PR — "every alert → orchestrator" (2026-06-03).
+            # Fired with GH_PAT: a repository_dispatch from GITHUB_TOKEN does NOT trigger workflows.
+            CONFLICT_PR="$(gh pr list --base live-defi-rollout --head main --state open --json number -q '.[0].number' 2>/dev/null || echo 0)"
+            GH_TOKEN="${GH_PAT:-}" gh api "repos/${GITHUB_REPOSITORY}/dispatches" \
+              -f event_type=escalate-to-orchestrator \
+              -f 'client_payload[repo]=unified-trading-pm' \
+              -f "client_payload[pr_number]=${CONFLICT_PR:-0}" \
+              -f 'client_payload[wall_type]=merge_conflict' \
+              -f "client_payload[context]=main->live-defi-rollout back-merge conflict: ${REASON}. Resolve on live-defi-rollout (never force-push); quality-gates-v2 re-gates." \
+              -f 'client_payload[model]=opus' \
+              >/dev/null 2>&1 && echo "[backmerge] escalated conflict to orchestrator (opus worker)" \
+              || echo "[backmerge] orchestrator escalation dispatch failed (best-effort; human PR still open)"
           fi
 
           # A real error (not conflict/race/noop/merged) is the only red-fail case.
