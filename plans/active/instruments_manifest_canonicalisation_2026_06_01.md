@@ -93,9 +93,13 @@ VM. Runs behind the pre-migration drain.
       `instruments_master_audit_instructions.md` Canonical-form section. All CF-RED bundled into the per-bucket
       single-walk (prior-not-ceiling).
 - [x] ✅ [DATA] P0. Bucket inventory: all instruments-store indexes are **AG-partitioned** (one `_index` per
-      `instruments-store-{ag}-prd`); cefi/defi/tradfi/pred/sports each have `_index/availability_index.parquet`. defi =
-      slot-2; sports reference surface rides the sports plan; this plan owns cefi/tradfi/pred (+ any cross-AG reference
-      indices — none found as a separate bucket). Object counts resolved per-bucket in the C0 walk.
+      `instruments-store-{ag}-prd`); cefi/defi/tradfi/pred/sports each have `_index/availability_index.parquet`.
+      **Five-slot asset-group split (operator 2026-06-03)** — each AG's instruments-store reference slice rides its AG
+      slot: **defi→slot 2** (`instruments-store-defi` tracked in `defi_manifest_canonicalisation_2026_06_01.md` §H),
+      **cefi→slot 3**, **sports→slot 4** (rides the sports master), **prediction→slot 5**, **tradfi→slot 6**. This plan
+      (vm-cross-cutting) stays PRIMARY owner and drives the **cross-AG reference/instrument-record/universe indices** +
+      coordinates each AG slice with its slot (referenced, not edited per-AG here). Object counts resolved per-bucket in
+      the C0 walk.
 
 ### C — single-walk (bundled CF-1…CF-12) per in-scope instruments bucket
 

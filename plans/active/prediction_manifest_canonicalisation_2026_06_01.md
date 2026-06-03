@@ -20,6 +20,28 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
 
+## Slot-5 Prediction master orchestrator — owned + attached plans/issues
+
+> **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot (five slots). **Slot 5 = Prediction
+> end-to-end** across every service — instruments-service → MTDS → MDPS → features → downstream → strategy/execution →
+> bucket/data/manifest/UI. **THIS plan is the Prediction master orchestrator**: every prediction-related plan + issue
+> cross-references here; orphaned prediction issues attach here. Sibling AG masters: **defi → slot 2**
+> (`defi_manifest_canonicalisation_2026_06_01.md`), **cefi → slot 3** (`cefi_manifest_canonicalisation_2026_06_01.md`),
+> **sports → slot 4** (`sports_manifest_canonicalisation_2026_06_01.md`), **tradfi → slot 6**
+> (`tradfi_manifest_canonicalisation_2026_06_01.md`). Cross-cutting per-service plans keep their own `assigned_vm`
+> (vm-ml / vm-cross-cutting) as PRIMARY owner — slot-5 tracks + drives only their **prediction slice**, not the whole
+> plan.
+
+**Cross-referenced prediction slices (primary owner keeps the plan; slot-5 drives the prediction portion):**
+
+| Plan / issue                                                   | Primary VM       | Prediction slice                                                                            |
+| -------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------- |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` | vm-cross-cutting | L3 prediction ordering + L6 legacy `market-data-tick-prediction` delete                     |
+| `data_source_provenance_all_asset_groups_2026_06_01.md`        | vm-ml            | prediction `source=API` column (this plan's C-source RIDER)                                 |
+| `pipeline_mode_partition_migration_2026_06_01.md`              | vm-cross-cutting | prediction `pipeline_mode=` partition (this plan's C-pipeline_mode RIDER)                   |
+| `instruments_manifest_canonicalisation_2026_06_01.md`          | vm-cross-cutting | `instruments-store-prediction` reference slice                                              |
+| `downstream_services_manifest_canonicalisation_2026_06_01.md`  | vm-ml            | prediction MDPS/features/execution canonical-form slice + Kalshi classifier-None divergence |
+
 > **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
 > `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** — a FULL
 > re-canonicalisation, not the headline cell-count (same shape as the cefi reference incident). **CF-2 gotcha**: the

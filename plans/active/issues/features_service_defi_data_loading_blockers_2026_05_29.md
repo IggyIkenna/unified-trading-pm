@@ -7,6 +7,9 @@ source:
   - market-data-tick-defi-central-element-323112 (legacy)
   - market-data-tick-defi-prd-central-element-323112 (prd)
 locked_by: live-defi-rollout
+master:
+  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §C0–C2 canonical-naming walk +
+  §D features propagation resolve the DeFi slice. Asset-group slot split, 2026-06-03)
 priority: P2
 ---
 
@@ -21,8 +24,8 @@ priority: P2
 > - **#3** — `dex_swaps` OHLC semantics: **investigate** the MDPS writer; report whether O/H/L/C are spot price or a
 >   normalized metric. File a UAC contract-doc todo OR an MDPS-bug todo per the finding. No blind edit. [slot 7 reports]
 > - **#4** — drop duplicate columns `swap_count` (==`trade_count`) + `volume_quote_usd` (==`volume`) from
->   `DEX_SWAPS_SCHEMA` as a UAC cleanup — only if it does not collide with `defi_manifest_canonicalisation`. [slot 7 >
->   code]
+>   `DEX_SWAPS_SCHEMA` as a UAC cleanup — only if it does not collide with `defi_manifest_canonicalisation`. [slot 7 > >
+>   > code]
 
 ## What I found
 

@@ -32,7 +32,7 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > those should be fairly quick — but still should be audited and in plans." So this plan is **audit-first**: read each
 > service's actual `_index` state (small corpus → fast), then bundle any debt into ONE single-walk per bucket.
 
-## 🎯 NEXT-AGENT CODE-CANONICALISATION CONSOLIDATION BACKLOG (slot-3 AGs: cefi / tradfi / prediction)
+## 🎯 NEXT-AGENT CODE-CANONICALISATION CONSOLIDATION BACKLOG (AG slices: cefi→slot 3 · prediction→slot 5 · tradfi→slot 6; defi→slot 2 §H; sports→slot 4)
 
 > **Operator directive 2026-06-02**: "I want all the code to be at its canonical point so that the migration is aligned
 > … a change I'm not going to have to revert, a manifest change I'm not going to have to change again, a migration
@@ -40,8 +40,10 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > work so the next agent can drive every read/write/status/rebuild path to the v9 post-migration canonical form BEFORE
 > the migration RUN — so the migration + delete (operational session) needs ZERO further code edits. Each item names the
 > target repo + file + exact change + home plan; a cold sub-agent should read
-> `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` first. **defi = slot-2's lane** (referenced, never edited here);
-> **sports = its own slot**.
+> `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` first. **Five-slot asset-group split (operator 2026-06-03)** — this plan
+> (vm-ml) is PRIMARY owner and drives each AG's downstream slice with its AG slot: **defi→slot 2** (referenced, tracked
+> in `defi_manifest_canonicalisation_2026_06_01.md` §H — never edited here), **cefi→slot 3**, **sports→slot 4**,
+> **prediction→slot 5**, **tradfi→slot 6**. A slot drives only its own AG slice; coordinate, don't edit another AG's.
 >
 > **Done this programme (do NOT redo — verify on origin/live-defi-rollout):** Item-3 CRIT-2 non-router freshness gate
 > (execution-service@12561a9ee) · Item-4 Polymarket None→attempted_failed batch=live (mtds@5744ba61) · CRIT-1 MDPS
@@ -185,10 +187,11 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       (Level-1 `pipeline_mode={mode}/` probe → Level-2 no-pm fallback); `manifest_reader_fallback` Level-0 probes
       `pipeline_mode=`; MDPS `cloud_data_provider.py` only resolves buckets (no raw-tick partition-path building);
       slot-2 already shipped pipeline_mode-aware MDPS+features reads for **DeFi** (mdps@4b9e6e5 + features@dec1b687).
-      **TODO (slot-2 + slot-3 coordinate):** confirm the MDPS candle-builder raw-tick read + features-onchain
-      `data_loader` read resolve the `pipeline_mode=` path PRIMARY for the **non-defi** AGs too (cefi/tradfi/prediction)
-      — i.e. they read via the pipeline_mode-aware MTDS reader / `candidate_parquet_paths` / `manifest_reader_fallback`,
-      NOT a direct
+      **DeFi slice → slot 2** (the DeFi reader confirm is tracked in `defi_manifest_canonicalisation_2026_06_01.md` §H,
+      five-slot asset-group split). **TODO (each non-defi AG slot, this plan):** confirm the MDPS candle-builder
+      raw-tick read + features-onchain `data_loader` read resolve the `pipeline_mode=` path PRIMARY for the **non-defi**
+      AGs too (cefi/tradfi/prediction) — i.e. they read via the pipeline_mode-aware MTDS reader /
+      `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct
       `build*\*\_partition_path`that would miss migrated data after the legacy     delete. If any direct base-builder read remains, switch it to the pipeline_mode-aware path (same fix as the writer).     This is the only PREP3 residual before the per-AG G3`--apply`→delete;
       the writer side + MTDS reader are done.
 
@@ -324,8 +327,9 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 - [ ] [CODE] P2. **FLAG 2 (DEFI scope → slot-2 / bucket_name_ssot): `_BUCKET_CATEGORY_OVERRIDES`**
       (data_status_service.py:2902) hardcodes 6 DeFi sub-buckets
       (`gas-fees`/`oracle-prices`/`perp-funding`/`lending-indices`/`lst-rates`/`liquidations`) bypassing
-      `resolve_bucket_name` + absent from yaml → post-delete silent-empty (swallowed except). DEFI=slot-2; flag to
-      slot-2 + `bucket_name_ssot…` L6. Out of slot-3 AG scope.
+      `resolve_bucket_name` + absent from yaml → post-delete silent-empty (swallowed except). **DEFI=slot-2 — tracked in
+      `defi_manifest_canonicalisation_2026_06_01.md` §H** (five-slot asset-group split, operator 2026-06-03) +
+      `bucket_name_ssot…` L6. Not in another AG slice's scope.
 - [x] ✅ [CODE] P0. **deployment-ui — DATA-STATUS — VERIFIED CANONICAL (slot-3 agent B, 2026-06-02), no change needed.**
       The UI builds NO bucket names + makes NO GCS calls — it is a pure consumer of deployment-api responses, passing
       `asset_group` query params (CEFI/TRADFI/PREDICTION; never `category=`; has a backward-compat

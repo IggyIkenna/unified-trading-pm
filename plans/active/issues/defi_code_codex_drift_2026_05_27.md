@@ -6,6 +6,9 @@ source:
   - codex/02-data/data-lineage-MTDS-features-ml.md
   - codex/02-data/defi-data-types-catalog.md
 locked_by: live-defi-rollout
+master:
+  defi_manifest_canonicalisation_2026_06_01.md (DeFi vertical orchestrator — slot-2 owns; §A writers + §F docs/SSOT
+  close these drift items. Asset-group slot split, 2026-06-03)
 status: active
 priority: P2
 ---

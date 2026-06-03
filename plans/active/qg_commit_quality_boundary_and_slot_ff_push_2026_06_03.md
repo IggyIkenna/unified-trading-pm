@@ -125,6 +125,64 @@ All on `origin/live-defi-rollout`; full detail in
       wording drafted; gap-analysis line anchors in the session notes). **Do NOT edit the HARD RULE until operator
       ratifies decision 3.**
 
+### Quickmerge behind/diverge error contract — agents self-serve recovery (operator design 2026-06-03; many-parallel-agents driver)
+
+> **Driver (operator)**: with dozens of agents running, the behind-remote-LDR + uncommitted-same-file reconcile must be
+> a self-describing error the agent already knows how to act on — NOT an operator paste per agent. quickmerge STAGE 0.4
+> already does the SAFE mechanical half (auto-ff → auto-rebase-autostash → `rebase --abort` + exit 1 on real conflict;
+> never overwrites, never blind-merges — [`quickmerge.sh`](../../scripts/quickmerge.sh) STAGE 0.4). The gap is (1) the
+> block is human prose, not an agent-actionable contract; (2) the uncommitted-same-file autostash-pop edge (the
+> "Applying autostash resulted in conflicts" foot-gun) isn't trapped distinctly. PM-as-a-repo is COVERED by the same
+> gate (it keys off the current branch's upstream), so no PM-specific code — one template change rolled fleet-wide.
+
+- [ ] [INFRA] P1. **quickmerge STAGE 0.4 — structured error contract.** Replace the prose block with a machine-parseable
+      sentinel + recovery block:
+      `QUICKMERGE_BLOCKED code=BEHIND_DIVERGED_CONFLICT repo=<r> branch=<b> behind=<n>     ahead=<m> conflicts="<files>"`
+      followed by a `RECOVERY:` line pointing at the SUB_AGENT_MANDATORY_RULES recipe. Add a DISTINCT
+      `code=AUTOSTASH_POP_CONFLICT` trap: after `git pull --rebase --autostash` detect a leftover `git stash list` entry
+      / conflict markers and emit that code instead of silently continuing. Preserve exit 1 + the
+      `QUICKMERGE_ALLOW_BEHIND=1` override. Edit the **canonical PM template** `scripts/quickmerge.sh`, then
+      `rollout-workflow-templates.sh` to all repos (never per-repo). Regression: shell unit asserting both codes fire on
+      a synthesized behind+diverge + autostash-pop fixture.
+- [ ] [INFRA] P1. **quickmerge STAGE 0.4 — reconcile against the configured UPSTREAM, not `origin/<branch-name>` (BUG,
+      LIVE incident 2026-06-03 slot-2).** STAGE 0.4 sets `_QM_BRANCH=$(git branch --show-current)` and compares against
+      `origin/$_QM_BRANCH`. For a slot worktree on `tab/<op>/<N>` whose **upstream is `origin/live-defi-rollout`** (the
+      base for every repo) but whose `origin/tab/<op>/<N>` is STALE (the FF-push-back half of the slot cron isn't
+      running — see decision 3 / the FF-push item below), this makes quickmerge attempt a 500+-commit autostash-rebase
+      against a dead branch → conflict → BLOCKED, even though HEAD is **behind 0 / ahead 0 vs the real upstream LDR**.
+      Incident: slot-2 was exactly at LDR tip + QG-green, but quickmerge tried to rebase 556 commits onto
+      `origin/tab/ikennaigboaka/2` (frozen 2026-06-01) and blocked. **Fix**: STAGE 0.4 must resolve the comparison ref
+      from `git rev-parse --abbrev-ref @{u}` (the configured upstream) when it exists, falling back to
+      `origin/<branch-name>` only if no upstream is set. PM template → rollout. (Workaround used 2026-06-03: ship from a
+      fresh branch with no `origin/` counterpart so STAGE 0.4 auto-skips.)
+- [ ] [INFRA] P1. **quickmerge STAGE 1.5 — `source .venv-workspace/bin/activate` KILLS quickmerge in a slot worktree
+      (BUG, LIVE incident 2026-06-03 slot-2).** Line ~702 `source .venv-workspace/bin/activate 2>/dev/null || true` runs
+      after `cd "$WORKSPACE_ROOT"`. For a slot worktree, `WORKSPACE_ROOT=$REPO_ROOT/..` = `.tabs/<N>`, where
+      `.venv-workspace` does NOT exist (it lives at the true top-level `unified-trading-system-repos/.venv-workspace`).
+      `source`/`.` is a POSIX **special builtin** → a not-found file under `set -e` exits the non-interactive shell
+      **immediately, bypassing `|| true`** (confirmed: `bash -ec 'source missing 2>/dev/null || true; echo X'` prints
+      nothing, exits 1). So quickmerge dies silently at the dep-align stage with NO ❌ printed. **Fix**: guard with
+      `[ -f .venv-workspace/bin/activate ] && source ...` (test before sourcing — a test failing under `set -e` inside
+      `&&` is safe), and/or resolve the venv at the true workspace root not the slot `WORKSPACE_ROOT`. PM template →
+      rollout. (Workaround used 2026-06-03: `ln -s <top-level>/.venv-workspace .tabs/2/.venv-workspace`.)
+- [ ] [INFRA] P2. **quickmerge STAGE 1.5 dep-align hard-errors when `derived-dependency-manifest.json` is ABSENT (BUG,
+      slot-2 2026-06-03).** The item-H generated-artifact untracking (LDR) deletes `derived-dependency-manifest.json`;
+      after an FF a slot has no local copy, and `check-dependency-alignment.py` exits with "Run
+      generate-derived-manifest.py first" → quickmerge dep-align fails. quickmerge line ~703 DOES call
+      `generate-derived-manifest.py` first, but only `2>/dev/null || true` — so if the generate step itself is the thing
+      that died (it shares the same venv/PATH the `source` bug above broke), the stale/missing manifest cascades.
+      **Fix**: the dep-align stage should hard-require a successful generate (not `|| true`-swallow it) OR the checker
+      should auto-generate when absent. PM template → rollout. (Workaround used 2026-06-03: ran
+      `generate-derived-manifest.py` manually pre-quickmerge.)
+- [x] ✅ [DOC] P1. **SUB_AGENT_MANDATORY_RULES.md** — added the behind-remote recovery recipe keyed on the
+      `QUICKMERGE_BLOCKED` block (operative today against the existing exit-1; structured codes land with the INFRA
+      item). — PM@pending (this batch).
+- [x] ✅ [DOC] P1. **codex/08-workflows/ci-cd-flow.md** § "STAGE 0.4 Not-Behind Gate" — documented the gate (ff →
+      rebase-autostash → abort+exit-1, never overwrites) + recovery recipe + PM-as-a-repo coverage + forward
+      structured-contract note. — PM@pending (this batch).
+- [x] ✅ [DOC] P2. **CLAUDE.md** git-discipline — one-line pointer to the gate + recovery recipe + the tracked
+      structured contract. — PM@pending (this batch).
+
 ### Residual
 
 - [ ] [DEPS] P3. **unified-trading-api** re-lock commit (1 trivial metadata-sync, 0 version moves) — race-blocked by the

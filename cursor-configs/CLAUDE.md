@@ -126,6 +126,13 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   remote tag, e.g. `v1.0.0`/`v1.2.0`): fix with `git fetch origin --tags --force` (local-only; remote is canonical for
   release tags — never force-push tags the other way), then `git pull --ff-only`. SSOT:
   `codex/05-infrastructure/per-tab-worktrees.md` § "Step 7 — troubleshooting".
+- **Quickmerge behind-remote (multi-agent)**: STAGE 0.4 Not-Behind Gate auto-reconciles (ff → rebase-autostash) and, on
+  a genuine same-file conflict, `rebase --abort`s (work intact — **never overwrites/blind-merges**) + BLOCKS exit 1
+  (`QUICKMERGE_ALLOW_BEHIND=1` emergency-only). On the block, reconcile per the autostash-conflict recipe above
+  (preserve peer commits → stash YOUR files by name → `pull --rebase` → reconcile essence → re-QG → re-quickmerge) —
+  never blind-overwrite a diverged same-file integration branch. PM-as-a-repo uses the same gate. SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "STAGE 0.4 Not-Behind Gate"; structured `QUICKMERGE_BLOCKED` contract tracked in
+  `plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.
 - **Full operator deployment flow** (dev → staging → main + paper → live strategy promotion):
   `codex/08-workflows/deployment-flow.md`.
 - **agent-orchestrator branch model — TRANSITIONAL (operator decision 2026-06-02 supersedes the 2026-06-01 `main`-direct
