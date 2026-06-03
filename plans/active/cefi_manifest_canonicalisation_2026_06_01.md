@@ -293,10 +293,12 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       `ohlcv` rows at all). So MTDS is NOT writing phantom processed-candle rows; hypothesis (b) is disproved and the
       `reconcile_phantom_manifest_rows_all.py` flip-to-`attempted_failed` would WRONGLY demote correct raw rows (it only
       probes `raw_tick_data/` anyway). Real findings to action (3 sub-items, repos noted):
-  - [ ] [CODE] P0. **Read-side contract fix (features-service).** Whatever derives cefi candle / processed-candle
-        availability MUST key off `ohlcv_*` `data_type` rows (the candle surface), NOT `trades`-captured rows nor a raw
-        `processed_candles/` path probe. Find + fix the consumer (the `features_service_e2e_pipeline_test` Phase-0 path
-        that surfaced this). Repo: features-service.
+  - [x] ✅ [CODE] P0. **Read-side contract fix (features-service)** — **DONE (features-service@933b8747, slot-3
+        2026-06-03).** `LookbackValidator._build_captured_index` credited ANY captured `data_type` as a candle-available
+        lookback date (raw `trades`/`book_snapshot_5` over-counted history off the shared `_index`); now filters to the
+        feature*groups' candle
+        `ohlcv*\*`data_types via`resolve_data_type_for_feature_group`(mirrors the already-correct    `get_available_instruments`). +regression test (`ohlcv_1m`counted;`trades`/`book_snapshot_5`not). Verified     delta_one 20/20 + basedpyright-clean diff. **Shipped under operator EXEMPTION** (local macOS QG red only on the     foreign non-deterministic flake`features_service_full_qg_test_pollution_flake_2026_06_03.md`; Linux     `quality-gates-v2`
+        re-verifies at promotion). Repo: features-service.
   - [ ] [DATA] P1. **Real cefi candle-coverage gap (partial backfill).** `ohlcv_*` manifest rows are sparse (8,715) and
         processed-candle FILES exist only for a partial venue set (BITGET-heavy; e.g. day=2026-05-03 = BITGET-FUTURES
         319 / BITGET-SPOT 151 / BITFINEX-FUTURES 90 / KRAKEN-FUTURES 18). MDPS candle generation for cefi is incomplete
