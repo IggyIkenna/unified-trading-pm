@@ -750,21 +750,29 @@ by a PR:
       `batch-live-reconciliation-service`'s superseded unpushed QG-fix preserved as branch `ldr-sync-recovery-ab4b25a`
       before reset. Confirmed: every top-level clone on LDR, behind=0. — one-time op | issue:
       `plans/active/issues/local_slot_cron_ff_pull_hardening_2026_06_02.md`
-- [ ] [SCRIPT] P2. **Untracking the DAG SVGs (option a, shipped 2026-06-03) SUPERSEDES the single-writer mitigation
-      machinery — retire/neuter it (cleanup, not blocker).** Now that `WORKSPACE_MANIFEST_DAG.svg` + `DATA_FLOW_DAG.svg`
-      are gitignored, the following are dead/no-ops and should be removed to avoid confusion: (1)
-      **`scripts/manifest/refresh-manifest-dag.sh`** — its `*/30` cron regenerates + commits the SVGs to LDR;
-      post-untrack its `git add`/`git diff`/commit all no-op (gitignored), so the dedicated-writer job is obsolete
-      (repurpose to a local regenerate-for-viewing + ensure-codex-symlinks helper, or retire the cron). It's a RUNBOOK
-      owned by the planning/orchestrator host cron → coordinate with the owner before removing. (2) The
-      **`MANIFEST_STATE_WRITER=1` gate** in `base-*.sh` / `_ci-status-updater.sh` (which suppressed per-QG DAG regen) is
-      now redundant _for the DAG SVGs_ — but it ALSO gates `ci_status` writes, so do NOT blanket-remove until item-H
-      option (b) (ci_status sidecar) is decided; scope the removal to the DAG-SVG regen only. (3) The
-      **slot-cron-ff-pull.sh DAG-SVG auto-discard** is now a no-op for these files (they're gitignored). **Also note**:
-      the codex doc copies (`codex/04-architecture/{WORKSPACE_MANIFEST,DATA_FLOW}_DAG.svg`) were stale real-file copies
-      materialised from the 2026-03-27 codex→PM consolidation (used to be cross-repo symlinks) — restored to symlinks →
-      the generated root + generator docstring fixed (PM@this-branch 2026-06-03). Provenance: slot-4 dirty-tree audit
-      this session.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-06-03 (PM@this-branch).** Untracking the DAG SVGs (option a) SUPERSEDED the
+      single-writer mitigation machinery; retired/scoped as below. **(1) `refresh-manifest-dag.sh` retired** as a
+      committing cron → rewritten to a thin local on-demand regenerator (no worktree/commit/push), header documents the
+      retirement + tells the host to drop the `*/30` crontab line (host-side residual — operator removes the crontab
+      entry; the script itself now no-ops `--commit`). **(2) `MANIFEST_STATE_WRITER` gate removed from the DAG-regen
+      block in all 4 `base-*.sh`** (service/library/ui/codex) — DAG regen now runs on every local QG (gitignored output
+      → no churn → codex symlinks stay fresh); `ci_status` gating left fully intact (`_qg_update_ci_status_pass`,
+      untouched — still pending item-H option (b)). **(3) slot-cron-ff-pull.sh DAG auto-discard** is now an inert no-op
+      (files gitignored) — left as-is (harmless; cosmetic removal optional). Verified: all 4 base scripts + the refresh
+      script pass `bash -n`; a refresh run produces zero tracked churn. **Below = the original finding (kept for
+      provenance).** Now that `WORKSPACE_MANIFEST_DAG.svg` + `DATA_FLOW_DAG.svg` are gitignored, the following are
+      dead/no-ops and should be removed to avoid confusion: (1) **`scripts/manifest/refresh-manifest-dag.sh`** — its
+      `*/30` cron regenerates + commits the SVGs to LDR; post-untrack its `git add`/`git diff`/commit all no-op
+      (gitignored), so the dedicated-writer job is obsolete (repurpose to a local regenerate-for-viewing +
+      ensure-codex-symlinks helper, or retire the cron). It's a RUNBOOK owned by the planning/orchestrator host cron →
+      coordinate with the owner before removing. (2) The **`MANIFEST_STATE_WRITER=1` gate** in `base-*.sh` /
+      `_ci-status-updater.sh` (which suppressed per-QG DAG regen) is now redundant _for the DAG SVGs_ — but it ALSO
+      gates `ci_status` writes, so do NOT blanket-remove until item-H option (b) (ci_status sidecar) is decided; scope
+      the removal to the DAG-SVG regen only. (3) The **slot-cron-ff-pull.sh DAG-SVG auto-discard** is now a no-op for
+      these files (they're gitignored). **Also note**: the codex doc copies
+      (`codex/04-architecture/{WORKSPACE_MANIFEST,DATA_FLOW}_DAG.svg`) were stale real-file copies materialised from the
+      2026-03-27 codex→PM consolidation (used to be cross-repo symlinks) — restored to symlinks → the generated root +
+      generator docstring fixed (PM@this-branch 2026-06-03). Provenance: slot-4 dirty-tree audit this session.
 
 - [x] ✅ [SCRIPT] P2. RESOLVED 2026-06-02: **`claude-api-health-monitor` is permanently false-`degraded` → CRITICAL
       alert every 15 min (diagnosed 2026-06-02).** Two issues, one MINE-fixed: (1) its Slack notify job was failing on
