@@ -595,6 +595,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `scripts/quality-gates-base/base-service.sh:916` (the established pattern — 4 CVEs already curated there) + the
       base-library/base-ui mirrors, with a tracking note. This is the #1 thing to clear to let the (already-built)
       cascade machinery finish. repo: unified-trading-pm (template) + fleet re-lock. **BLOCKED-OPERATOR-DECISION.**
+      **TURNKEY for the decision (slot-1 2026-06-03):** aiohttp is constrained `>=3.13.4,<4.0.0`
+      (`workspace-constraints.toml:8` + `unified-trading-library/pyproject.toml:89`), currently resolving to **3.13.5**.
+      → **Option (a)** if a patched 3.13.x exists (couldn't verify — no PyPI/advisory access here): pin
+      `aiohttp>=<patched>,<4.0.0` in `workspace-constraints.toml` + `uv lock` re-lock fleet-wide (a re-lock alone pulls
+      the latest in-range, so it self-fixes IF the patch is published). → **Option (b)** if no fix yet: add
+      `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` at `base-service.sh:916` (+ base-library/base-ui),
+      tracked for removal when patched. Either is one focused change; whole fleet's v2 + #120 + the cascade unblock the
+      moment it lands.
 - [ ] [INFRA] P1. **Genuine v2-red repos surfaced by the cascade (NOT drift — need real per-repo fixes; the substance
       of their own plans).** Distinct from the false-FAILING drift Guard 3 clears: (a) **execution-service** staging v2
       fails with `ImportError: cannot import name …` (a stale cross-symbol import on staging — likely resolves when the
