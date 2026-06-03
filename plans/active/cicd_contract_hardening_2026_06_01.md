@@ -513,7 +513,33 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       credits / fix billing** (Plans & Billing) — one top-up unblocks conflict-resolution + agent-audits + orchestrator
       workers fleet-wide. **This is a hard-stop for agents (cannot purchase credits).** Until resolved: the CLEAN-repo
       cascade still flows (proof: deployment-ui #17 promoted LDR→staging + MERGED 2026-06-03); only
-      CONFLICT-resolution-dependent promotions stay blocked.
+      CONFLICT-resolution-dependent promotions stay blocked. **✅ RESOLVED 2026-06-03 — operator topped up credits;
+      `claude-api-health-monitor` now reports `New state: healthy`. BUT see the next two items: the credits were NOT
+      actually required for conflict-resolution (it escalates to the VM, not the GHA API), and the agent still fails for
+      OTHER reasons — so this credit top-up alone does not drain the cascade.**
+- [ ] [SCRIPT] P0. **Finish the conflict-resolution-agent VM-cutover (it's half-done + buggy → still dams the
+      cascade).** The agent's header documents a 2026-06-03 cutover from in-GHA `ANTHROPIC_API_KEY_CICD`+`claude-code`
+      TO `escalate-to-orchestrator` (POST /api/escalate → orchestrator spawns a Max-plan **setup-token** worker — NOT
+      pay-per-call API credits). So it should NOT depend on GHA Anthropic credits at all. But the cutover is INCOMPLETE:
+      (a) it still carries a **vestigial `claude-api-health-precheck`** that gates on GHA-API-credit health — the WRONG
+      signal post-cutover (this is what false-dammed it during the credit outage; remove it). (b) the `escalate` job
+      still has **in-GHA clone/resolve steps** that fail on a clone bug:
+      `fatal: destination path 'unified-trading-pm'     already exists and is not an empty directory`
+      (clone-into-existing-dir; observed on the ibkr-gateway-infra dispatch 2026-06-03 19:38). **Fix: drop the
+      precheck + the leftover in-GHA clone/resolve so the job ONLY dispatches escalate-to-orchestrator** (per its own
+      header), and verify the orchestrator-VM worker actually resolves + pushes. Same audit for `semver-agent` (it also
+      carries the precheck). repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **Deterministic take-LDR promotion-conflict resolver (agents only for genuine semantic escalation).**
+      Operator principle (2026-06-03): minimise agent dependency — deterministic scripts for hygiene + the common-case
+      conflicts; escalate to an agent (VM worker) ONLY when a conflict is genuinely ambiguous. The promotion conflicts
+      that dammed the cascade are NOT ambiguous — they are **take-LDR** (staging/main are stale-vs-LDR; `git cherry`
+      proved 0 unique content; ci_status handled by Guard 2). So before dispatching the (VM) conflict-agent, the
+      promoter should run a deterministic resolver: for an LDR→staging (or staging→main) conflict, `merge -X theirs`=LDR
+      for the stale-promotion-branch files + Guard-2 reconcile for `workspace-manifest.json` ci_status, push, done — no
+      agent, no credits. Only fall through to the VM agent when the merge has a conflict OUTSIDE the take-LDR/ci_status
+      rule (true semantic divergence). Composes with Guard 2/Guard 3 (also deterministic, no agent). This removes Claude
+      from the promotion CRITICAL PATH entirely. repo: unified-trading-pm. **This is the durable unblock for UAC #67 +
+      the 16 dep-blocked repos** (UAC staging = 1 stale CI-migration commit vs LDR → pure take-LDR).
 - [x] ✅ [SCRIPT] P0. **Guard 3 — drift reconciler (watchdog)** — BUILT + shipped slot-1 2026-06-03 (PM@522e1da8b).
       `ci-status-reconciler.yml` (every 30m + dispatch/dry_run) + `scripts/cicd/ci_status_reconciler.py` (pure decision
       core, 7 unit tests): per repo, compares latest `quality-gates-v2` conclusion per branch vs manifest `ci_status`;
