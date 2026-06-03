@@ -599,10 +599,13 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       ("Resolve the instruments-store-sports bucket name") — mirrors the UAC gcs_paths facade → **rides the cross-AG UAC
       `bucket_name` facade fix** (coordinate at `defi_manifest…` §MASTER; not a unilateral sports-lane change). UI
       data-status views read the (canonical) deployment-api → no separate UI fix.
-- [ ] [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)**: every sports test (unit + integration) that
-      references a bucket/path/manifest convention must use the canonical `-prd-` v9 form, so QG REGRESSION-CATCHES any
-      future dead-bucket association. Grep sports tests for legacy bucket/path literals; update to canonical. (This is
-      the mechanism that makes the regression gate self-enforcing — a reverting change fails QG.)
+- [x] ✅ [CODE] P0. **Tests-feeding-QG use canonical buckets/paths (sports)** — VERIFIED ALREADY SATISFIED 2026-06-03.
+      Comprehensive grep of every features-service test (unit + integration) for legacy sports bucket/path literals
+      (`instruments-store-sports-central` / `market-data-tick-sports-central` / `category=sports` / no-env
+      `gs://…sports` forms) returned **zero hits** — the sports tests already route through
+      `resolve_bucket(kind=…, asset_group="sports")` / the canonical `-prd-` form, and
+      `tests/sports/unit/test_gcs_paths_and_reader_deps.py` IS the self-enforcing regression guard (its only "legacy
+      form" mentions are docstrings describing what it guards against). No change needed; the mechanism is in place.
 - [x] ✅ [DATA] P0. **League rewrite table — ENUMERATED ON REAL DATA (sports-slot 2026-06-02; no dry-run needed — read
       the prod `_index` + UAC registry directly)**. The "278k suffixed rows" is **mostly LEGIT tier leagues**
       (`LIGUE_1`, `LIGUE_2`, `BUNDESLIGA_2`, `K_LEAGUE_1/2`, `LIGA_3`, `GREEK_SUPER_LEAGUE_2`, `LIGA_PORTUGAL_2` — full
@@ -748,11 +751,21 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       fixtures date>=2018-01-01 (api_football coverage start); re-raised before generic except-Exception; 4 unit tests:
       within-coverage raises, pre-coverage returns empty, non-required entity returns empty, blob-present returns data;
       QG ALL GATES PASSED
-- [ ] [CODE] P2. **features-service sports — wire `assert_consolidator_healthy` for live mode**: live
-      `AssetScopedFeaturesRunner` starts without asserting the sports manifest consolidator is alive. Wire
-      `assert_consolidator_healthy(bucket)` for the sports instruments-store bucket at live startup (mirrors pattern in
-      other live families). Repo: `features-service`. File: `features_service/sports/live/runner.py` or the UTL
-      `build_asset_scoped_runner` factory hook.
+- [x] ✅ [CODE] P2. **features-service sports — wire `assert_consolidator_healthy` for live mode** — DONE 2026-06-03
+      (features-service@this-branch). `features_service/sports/live/runner.py` `build_runner` now runs
+      `_assert_upstream_manifest_healthy(asset_group)` before building — gates **BOTH** sports upstreams (`market-data`
+      tick = MDPS odds/candles AND `instruments-store` = IS fixtures; sports has two upstreams vs delta_one's one),
+      raising `ManifestConsolidatorStaleError` to fail-to-start. Regression test
+      `tests/common/test_live_runner.py::test_sports_wrapper_build_runner_gates_on_consolidator` (monkeypatches the
+      gate, asserts both sports-scoped buckets fire). **Caught a latent bug**: the delta_one pattern I mirrored used the
+      INVALID `kind="market-data-tick"` (raises `BucketNamingError` — valid kind is `"market-data"`); see next item.
+- [x] ✅ [CODE] P1. **Cross-family latent bug — `resolve_bucket_name(kind="market-data-tick")` is INVALID, raises
+      `BucketNamingError`** (found 2026-06-03 via the sports consolidator-gate test). The canonical tick-bucket kind is
+      `"market-data"` (yaml-keyed; aliased `"tick-data"`), used by 10+ consumers (sports/onchain/volatility/delta_one
+      config). Three live-mode call sites used the invalid string — would crash at runtime, **untested** (no test mocked
+      the kind) — FIXED features-service@this-branch: `delta_one/cli/handlers/live_handler.py:41` (candle-freshness
+      gate), `cefi/cli/handlers/perp_funding_handler.py:83` + `cefi/calculators/perp_funding_rates.py:72` (perp-funding
+      preflight). Data-correctness fix per the heartbeat rule; provenance: slot-4 sports e2e session.
 - [x] ✅ [CODE] P2. **IS + MTDS sports — add v9 schema column checks to upstream preflight** — BOTH DONE 2026-06-02: IS:
       `sports_dependency.py` has `check_sports_manifest_v9_columns(manifest_df)` (SPORTS_V9_ENFORCED field in
       `InstrumentsServiceConfig`). MTDS: `_check_sports_v9_columns()` helper + `SPORTS_V9_ENFORCED` field in
