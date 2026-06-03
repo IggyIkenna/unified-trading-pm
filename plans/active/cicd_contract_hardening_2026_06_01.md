@@ -350,6 +350,38 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       repo's workflows** — so migrate the templates + helpers to the Slack #ci-failures path (SLACK_CI_WEBHOOK_URL) too,
       then grep-verify 0 functional Telegram refs workspace-wide. repo: unified-trading-pm.
 
+### Staging-freeze diagnosis + event-driven cascade fix (2026-06-03 slot 1)
+
+> **Symptom (operator):** repos are feature-green on LDR but **not reaching staging** — staging frozen ~06-01 fleet-wide
+> (LDR ahead of staging by **+17 … +760**; main only +1-5 behind). Diagnosed to two compounding causes; promoter itself
+> is healthy + dep-order-correct.
+
+- [x] ✅ [INFRA] P0. **ROOT CAUSE 1 — stale `ci_status=FAILING` on `unified-trading-library` (the T0 base) dep-dammed
+      the WHOLE fleet.** Tier-C promoter (run 26889904899, 14:02) showed
+      `GATE BLOCK unified-trading-library: Tier A —     LDR CI is FAILING`, and every downstream repo
+      `BLOCK: dep-order — depends on unified-trading-library:FAILING`. UTL's actual v2 was GREEN (06-02 12:28/12:38) —
+      the FAILING was a stale status from the 06-02 transient pyjwt-CVE bump that never reset. **Now self-cleared**
+      (manifest: UTL `FEATURE_GREEN`, 0 `FAILING` fleet-wide). (NB: the suspected `ci-status-update`
+      `repos`-vs-`repositories` key bug was a MISREAD — it reads `repositories` correctly; no bug.)
+- [x] ✅ [INFRA] P0. **ROOT CAUSE 2 — the event-driven cascade was never wired → fell back to 6h-cron, one dep-tier per
+      run (~day+ to drain).** `ldr-to-staging-promote.yml` already listens on
+      `repository_dispatch: [ldr-to-staging,     tier-ab-green]`, but **nothing ever sent `tier-ab-green`** — so after a
+      tier reached `STAGING_GREEN`, nothing re-fired the promoter to advance the next tier. **FIX (unified-trading-pm,
+      ci-status-update.yml):** on any `STAGING_GREEN | SIT_VALIDATED | MAIN_GREEN` transition, `ci-status-update` now
+      `repository_dispatch`es `tier-ab-green` to the promoter → the cascade **self-chains** tier-by-tier (promote → PRs
+      merge → v2-on-staging marks STAGING_GREEN → re-fire → next tier), serialised by the promoter's concurrency group,
+      self-terminating when nothing new is promotable. Takes effect once PM lands on `main` (the default branch
+      repository_dispatch runs from).
+- [x] ✅ [INFRA] P1. **fund-administration-service + greeks-service included per operator "if QG-green, include them".**
+      Both are `status=scaffolded` + v2-GREEN on LDR but had **no staging branch** → the promoter auto-skipped them.
+      Created `staging` from `main` for both (fund-admin @1c2c94f8, greeks @2d2d6bb1) → now LDR+2 ahead, in the sweep.
+      `ibkr-gateway-infra` was already `active` + staging-ready. (`scaffolded` status left as-is — accurate; the
+      promoter gates on staging-branch + ci_status, not status, so the branch is enough to include them.)
+- [ ] [INFRA] P1. **Drain to completion + verify.** Kick `ldr-to-staging-promote` (manual dispatch) to start the chain
+      now that UTL is unblocked; watch UTL/UAC → services → APIs → deployment → UI → IaC cascade to `STAGING_GREEN`. Fix
+      per-repo v2 debt as staging PRs surface it. Then the SIT-lock → `staging-to-main` phase. Target: full active fleet
+      (21 active + fund-admin/greeks) on staging. repo: unified-trading-pm (the dispatch) + per-repo v2 fixes as needed.
+
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
 > **Self-contained for a fresh agent.** ONE ordered backlog covering BOTH workstreams: **(A)** revive the dead
