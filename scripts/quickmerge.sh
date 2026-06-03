@@ -1167,10 +1167,11 @@ if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier\|prettier-autos
   if [ -n "$FILES_ARG" ]; then
     # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
     npx --yes prettier@3.6.2 --write --ignore-unknown $FILES_ARG >/dev/null 2>&1 || true
-  elif command -v pre-commit &>/dev/null; then
-    pre-commit run prettier --all-files >/dev/null 2>&1 || true
-    pre-commit run prettier --all-files >/dev/null 2>&1 || true
   else
+    # Unscoped ship (caller owns the whole tree): canonical prettier@3.6.2 tree-wide.
+    # (Dropped the dead `pre-commit run prettier` probe — the hook id is prettier-autostage
+    # so it never matched; prek is the canonical runner now, and the on-commit hook
+    # re-formats + auto-stages anyway. npx pins the canonical version on every host.)
     npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
     npx --yes prettier@3.6.2 --write "**/*.{ts,tsx,js,jsx,json,md,yaml,yml,css}" --ignore-unknown >/dev/null 2>&1 || true
   fi

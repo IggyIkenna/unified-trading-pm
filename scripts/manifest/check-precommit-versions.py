@@ -25,6 +25,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 import tomllib
@@ -219,14 +220,23 @@ def add_bump_library_hook(config_path: Path) -> None:
 
 
 def run_precommit_install(repo_path: Path) -> bool:
-    """Run `pre-commit install` in the repo directory. Returns True on success."""
-    result = subprocess.run(
-        ["pre-commit", "install"],
-        cwd=repo_path,
-        capture_output=True,
-        text=True,
-    )
-    return result.returncode == 0
+    """Install the git pre-commit hook in the repo. Returns True on success.
+
+    prek is the canonical workspace runner (migrated from pre-commit 2026-06-03); fall
+    back to `pre-commit install` only where prek is not yet on PATH.
+    """
+    for runner in ("prek", "pre-commit"):
+        if shutil.which(runner) is None:
+            continue
+        result = subprocess.run(
+            [runner, "install"],
+            cwd=repo_path,
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode == 0:
+            return True
+    return False
 
 
 def main() -> int:
