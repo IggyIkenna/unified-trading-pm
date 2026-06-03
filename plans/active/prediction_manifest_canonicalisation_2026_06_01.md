@@ -440,26 +440,39 @@ verify + the gated delete.
 > `(asset_group, venue, data_type=prediction_canonical_question_group, canonical_question_group, day, pipeline_mode)`
 > with `observed_clusters={conditionId: rows}`; raw objects stay per-cid `data_type=trades/{conditionId}.parquet`.
 
-- [ ] [CODE] P0. **deployment-api `_prediction_venue_detail` reads the bundled atom, not `underlying`** — repo
-      `deployment-api`, `deployment_api/services/shard_detail.py:1364-1372` groups by the `underlying` column and emits
-      it AS `canonical_question_group`. Post-v9 the manifest carries an explicit `canonical_question_group` column on
-      the bundled `data_type=prediction_canonical_question_group` rows + per-market `observed_clusters` JSON. Fix: read
+- [x] ✅ [CODE] P0. **deployment-api `_prediction_venue_detail` reads the bundled atom — DONE (deployment-api@2ac1dfa,
+      slot-5 2026-06-03).** Now reads `data_type=prediction_canonical_question_group` rows, takes cqg from
+      `instrument_id` (v9; falls back to `underlying` for the migration window), expands `observed_clusters` for the
+      per-market drilldown, surfaces `source`+`pipeline_mode` per leaf. ruff+basedpyright clean; QG `--no-fix` exit 0.
+      ~~reads the bundled atom, not `underlying`~~\*\* — repo `deployment-api`,
+      `deployment_api/services/shard_detail.py:1364-1372` groups by the `underlying` column and emits it AS
+      `canonical_question_group`. Post-v9 the manifest carries an explicit `canonical_question_group` column on the
+      bundled `data_type=prediction_canonical_question_group` rows + per-market `observed_clusters` JSON. Fix: read
       `canonical_question_group` from the bundled row + expand `observed_clusters` (`{conditionId: rows}`) for the
       per-market drilldown leaf; stop assuming `underlying==cqg`. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. **deployment-api turbo data-status aggregation handles the prediction bundled data_type** — repo
+- [x] ✅ [CODE] P0. **deployment-api turbo aggregation handles the bundled data_type — DONE (deployment-api@2ac1dfa).**
+      `data_status_service._read_defi_merged_index` + `data_status_hierarchical.get_hierarchical_drilldown` promote
+      `canonical_question_group` from `instrument_id` for prediction so the turbo breakdown + SHARD_AXIS_MATRIX axis +
+      filters resolve against v9 rows. ~~aggregation handles the prediction bundled data_type~~\*\* — repo
       `deployment-api`, `deployment_api/services/data_status_service.py:2022` (+ `data_status_hierarchical.py:369`):
       aggregation assumes flat per-venue rows; add the `prediction_canonical_question_group` bundled-row path so the
       summary counts per-`(venue, canonical_question_group, day)` (not per-flat-venue) and rolls up `observed_clusters`.
       parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. **deployment-api surfaces `source` (+ `pipeline_mode`) for prediction** — repo `deployment-api`,
-      `deployment_api/routes/data_status.py` prediction handlers accept `pipeline_mode` but never surface the v9
-      row-level `source` (polymarket*clob/gamma_api/kalshi*\*) as a column/filter. Add `source` to the prediction
-      data-status response + filter, mirroring the cross-AG source-provenance display. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. **deployment-ui prediction breakdown renders the cqg bundle, not flat venues** — repo `deployment-ui`,
-      `src/lib/data-status-helpers.ts:24` hardwires prediction to a `venues` breakdown; post-v9 the shard axis is
-      `(venue, canonical_question_group, day)` with per-market clusters. Add a prediction breakdown branch
-      (`breakdown_axis` → canonical_question_group → market_id cluster drilldown). `[UI]` — needs `pw:L2 ✓` + regression
-      spec per the playwright gate. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. **deployment-api surfaces `source`+`pipeline_mode` for prediction — DONE (deployment-api@2ac1dfa).**
+      `_prediction_venue_detail` emits `source`/`pipeline_mode` per leaf; `routes/data_status.py` filters already wired
+      through `_apply_row_filters`/`_apply_pipeline_mode_filter` (now resolve correctly post-promotion). ~~surfaces
+      `source` (+ `pipeline_mode`) for prediction~~\** — repo `deployment-api`, `deployment_api/routes/data_status.py`
+      prediction handlers accept `pipeline_mode` but never surface the v9 row-level `source`
+      (polymarket*clob/gamma_api/kalshi\*\*) as a column/filter. Add `source` to the prediction data-status response +
+      filter, mirroring the cross-AG source-provenance display. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. **deployment-ui renders the cqg bundle — DONE (deployment-ui@4a358ec, slot-5 2026-06-03) | pw:L2 ✓ |
+      regression: tests/smoke/prediction_v9_breakdown.spec.ts**. `[UI]` data-status-helpers
+      prediction→`canonical_question_group` breakdown + `DataStatusTab` source badge + `observed_clusters`
+      per-conditionId drilldown + v9 mock. tsc clean; vitest 273 pass (17 new); playwright 97 pass. ~~renders the cqg
+      bundle, not flat venues~~\*\* — repo `deployment-ui`, `src/lib/data-status-helpers.ts:24` hardwires prediction to
+      a `venues` breakdown; post-v9 the shard axis is `(venue, canonical_question_group, day)` with per-market clusters.
+      Add a prediction breakdown branch (`breakdown_axis` → canonical_question_group → market_id cluster drilldown).
+      `[UI]` — needs `pw:L2 ✓` + regression spec per the playwright gate. parent_epic: mtds_mdps_master.
 
 ## Success criteria
 
