@@ -31,47 +31,47 @@ source:
 
 ### WAVE 0 — clean starting state (unblock the pipeline for ALL agents — DO FIRST) · ~9 AI-days
 
-| plan | epic | est | why it's WAVE-0 (unblocks) |
-|---|---|---|---|
+| plan                                                                                                             | epic  | est      | why it's WAVE-0 (unblocks)                                                                                   |
+| ---------------------------------------------------------------------------------------------------------------- | ----- | -------- | ------------------------------------------------------------------------------------------------------------ |
 | **cicd_contract_hardening** (this) § "Reconcile stuck promotion PRs" + "Full PM→main promotion" + staging-freeze | infra | (in 1.2) | DIRTY PRs (PM #116, UAC ×4, mtds/deploy/alerting) block auto-merge; stale-main-manifest dams the whole fleet |
-| `utl_full_quality_gates_green` | infra | 4.8 | UTL is the T0 base — its red QG dep-blocks EVERY downstream promotion |
-| `stash_pile_workspace_cleanup` + `issues/shared_stash_pile_archive_cleanup` | infra | 1.6 | dirty worktrees/stashes jam `slot-cron-ff-pull` |
-| `issues/local_slot_cron_ff_pull_hardening` | infra | 0.4 | the FF cron push/pull itself |
-| `issues/commit_identity_misconfig_fleet` | infra | 0.4 | commits land wrong-author / blocked |
-| `issues/hook_tooling_version_alignment_across_environments` | infra | 0.4 | prek hook version skew blocks commits |
-| `issues/features_service_full_qg_test_pollution_flake` | infra | 0.4 | QG flake → false-red blocks promotion |
+| `utl_full_quality_gates_green`                                                                                   | infra | 4.8      | UTL is the T0 base — its red QG dep-blocks EVERY downstream promotion                                        |
+| `stash_pile_workspace_cleanup` + `issues/shared_stash_pile_archive_cleanup`                                      | infra | 1.6      | dirty worktrees/stashes jam `slot-cron-ff-pull`                                                              |
+| `issues/local_slot_cron_ff_pull_hardening`                                                                       | infra | 0.4      | the FF cron push/pull itself                                                                                 |
+| `issues/commit_identity_misconfig_fleet`                                                                         | infra | 0.4      | commits land wrong-author / blocked                                                                          |
+| `issues/hook_tooling_version_alignment_across_environments`                                                      | infra | 0.4      | prek hook version skew blocks commits                                                                        |
+| `issues/features_service_full_qg_test_pollution_flake`                                                           | infra | 0.4      | QG flake → false-red blocks promotion                                                                        |
 
 ### WAVE 1 — CI/CD consistency machinery (so it stays clean) · ~10 AI-days
 
-| plan | epic | est | scope |
-|---|---|---|---|
-| `cicd_contract_hardening` § "ci_status consistency hardening" | infra | (in 1.2) | Guard 1 ✅ done; **Guard 2** (single-SSOT-branch + backmerge-no-ci_status-backward), **Guard 3** (drift reconciler), promoter-skip-main-direct, `tier-ab-green` chain (done) |
-| `ci_canonical_v2_migration` | infra | 4.0 | `quality-gates-v2` the required check on every repo |
-| `qg_commit_quality_boundary_and_slot_ff_push` | infra | 1.2 | QG-before-commit (done) + FF-push carve-out |
-| `quality_gates_resource_contention_speedup` | infra | 2.4 | QG host-governor / shared-host serialization |
-| `harden_grepable_rules_into_ci_gates` | plan_hygiene | 0.8 | grep-rules → enforced CI gates |
-| `uv_lockfile_determinism` | infra | 1.6 | uv pin + read-only lock verifier (mostly done) |
+| plan                                                          | epic         | est      | scope                                                                                                                                                                        |
+| ------------------------------------------------------------- | ------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cicd_contract_hardening` § "ci_status consistency hardening" | infra        | (in 1.2) | Guard 1 ✅ done; **Guard 2** (single-SSOT-branch + backmerge-no-ci_status-backward), **Guard 3** (drift reconciler), promoter-skip-main-direct, `tier-ab-green` chain (done) |
+| `ci_canonical_v2_migration`                                   | infra        | 4.0      | `quality-gates-v2` the required check on every repo                                                                                                                          |
+| `qg_commit_quality_boundary_and_slot_ff_push`                 | infra        | 1.2      | QG-before-commit (done) + FF-push carve-out                                                                                                                                  |
+| `quality_gates_resource_contention_speedup`                   | infra        | 2.4      | QG host-governor / shared-host serialization                                                                                                                                 |
+| `harden_grepable_rules_into_ci_gates`                         | plan_hygiene | 0.8      | grep-rules → enforced CI gates                                                                                                                                               |
+| `uv_lockfile_determinism`                                     | infra        | 1.6      | uv pin + read-only lock verifier (mostly done)                                                                                                                               |
 
 ### WAVE 2 — orchestrator + Slack-alerting framework · ~3 AI-days
 
-| plan | epic | est | scope |
-|---|---|---|---|
-| `orchestrator_fleet_worker_spawn_enablement` | orchestrator | 1.2 | F7 slot-4 WIP, F8 self-heal, F9 review-spawn ✅, F12 fleet env, F13 worktree hygiene |
-| `agent_orchestrator_e2e_workflow_and_execution_scope` | orchestrator | 0.9 | G6 AO `staging` branch + quickmerge; escalation bridge ✅ |
-| `issues/api_host_chronic_impairment` | orchestrator | 0.8 | the orchestrator host stability |
-| `issues/running_vm_fleet_status` + `issues/infra_slot_sync_session_handoff` | orchestrator | 0.4 | fleet status + slot-sync handoff |
-| _Slack alerting pipeline_ → covered IN this plan: #ci-failures migration + `ci_failure_watcher` + every-alert→orchestrator (P2 Telegram-retire-in-templates todo) | infra | (in 1.2) | no separate plan |
+| plan                                                                                                                                                              | epic         | est      | scope                                                                                |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ | -------- | ------------------------------------------------------------------------------------ |
+| `orchestrator_fleet_worker_spawn_enablement`                                                                                                                      | orchestrator | 1.2      | F7 slot-4 WIP, F8 self-heal, F9 review-spawn ✅, F12 fleet env, F13 worktree hygiene |
+| `agent_orchestrator_e2e_workflow_and_execution_scope`                                                                                                             | orchestrator | 0.9      | G6 AO `staging` branch + quickmerge; escalation bridge ✅                            |
+| `issues/api_host_chronic_impairment`                                                                                                                              | orchestrator | 0.8      | the orchestrator host stability                                                      |
+| `issues/running_vm_fleet_status` + `issues/infra_slot_sync_session_handoff`                                                                                       | orchestrator | 0.4      | fleet status + slot-sync handoff                                                     |
+| _Slack alerting pipeline_ → covered IN this plan: #ci-failures migration + `ci_failure_watcher` + every-alert→orchestrator (P2 Telegram-retire-in-templates todo) | infra        | (in 1.2) | no separate plan                                                                     |
 
 ### WAVE 3 — drain to completion + hygiene/cleanup · ~14 AI-days
 
-| plan | epic | est | scope |
-|---|---|---|---|
-| `cicd_contract_hardening` § "Drain to completion" + Phase 6 QG-debt greening | infra | (in 1.2) | drive UTL/UAC→services→…→IaC to STAGING_GREEN, then SIT→main |
-| `codex_vs_repo_docs_ssot_audit` | plan_hygiene | 3.2 | docs SSOT reconciliation |
-| `issues/issue_docs_remediation_sweep` | (master) | 4.0 | issue-doc lifecycle cleanup |
-| `harsh_day_master` | plan_hygiene | 1.6 | plan-hygiene + per-repo QG |
-| `agent_context_and_memory_hygiene` | plan_hygiene | 0.6 | agent context/memory rules |
-| `issues/deployment_scripts_bucket_softdelete_log_churn` | infra | 0.2 | log churn cleanup |
+| plan                                                                         | epic         | est      | scope                                                        |
+| ---------------------------------------------------------------------------- | ------------ | -------- | ------------------------------------------------------------ |
+| `cicd_contract_hardening` § "Drain to completion" + Phase 6 QG-debt greening | infra        | (in 1.2) | drive UTL/UAC→services→…→IaC to STAGING_GREEN, then SIT→main |
+| `codex_vs_repo_docs_ssot_audit`                                              | plan_hygiene | 3.2      | docs SSOT reconciliation                                     |
+| `issues/issue_docs_remediation_sweep`                                        | (master)     | 4.0      | issue-doc lifecycle cleanup                                  |
+| `harsh_day_master`                                                           | plan_hygiene | 1.6      | plan-hygiene + per-repo QG                                   |
+| `agent_context_and_memory_hygiene`                                           | plan_hygiene | 0.6      | agent context/memory rules                                   |
+| `issues/deployment_scripts_bucket_softdelete_log_churn`                      | infra        | 0.2      | log churn cleanup                                            |
 
 > **Hygiene status (2026-06-03 audit):** all 25 cluster plans/issues are now `parent_epic`-attached + estimated. Epics:
 > `infrastructure_master`, `orchestrator_master`, `plan_hygiene_master`. No orphans remain in the CI/CD cluster.
@@ -98,8 +98,9 @@ source:
 **WAVE 1 — consistency machinery:** build **Guard 2** (single-SSOT-branch + `main-backmerge-to-ldr` must not carry
 ci_status backward) and **Guard 3** (drift reconciler: v2-green-but-ci_status-FAILING → re-fire ci-status-update); add
 the promoter "skip main-direct repos" fix (close spurious PM #113); finish `ci_canonical_v2_migration`,
-`harden_grepable_rules_into_ci_gates`, `uv_lockfile_determinism`, `quality_gates_resource_contention_speedup`. (**Already
-done — verify, don't redo:** Guard 1 @ad2f72187, the `tier-ab-green` chain @66b523383, QG-before-commit reframe.)
+`harden_grepable_rules_into_ci_gates`, `uv_lockfile_determinism`, `quality_gates_resource_contention_speedup`.
+(**Already done — verify, don't redo:** Guard 1 @ad2f72187, the `tier-ab-green` chain @66b523383, QG-before-commit
+reframe.)
 
 **WAVE 2 — orchestrator + alerting:** `orchestrator_fleet_worker_spawn_enablement` (F7 slot-4 WIP, F8 self-heal, F12
 fleet env-rollout, F13 worktree hygiene; F9 review-spawn already done), `agent_orchestrator_e2e` G6 (AO `staging`
@@ -490,10 +491,11 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `scripts/cicd/check_ci_status_bot_only.py`: change-set-relative diff (working-tree vs HEAD locally / head vs base
       in CI — so a pre-existing LDR-vs-main fork never false-positives), bot-actor bypass
       (`ci-status-update[bot]`/`github-actions[bot]`), fail-open on missing baseline. Wired into PM `quality-gates.sh`
-      post-gates (HARD, blocking) with `--actor "$GITHUB_ACTOR"`. 8 unit tests (`tests/unit/test_check_ci_status_bot_only.py`),
-      ruff green, pyright-excluded (same manifest-parse pattern as `tier_c_promotion_gate.py`). **Follow-up (small):** add
-      the CI/PR-context invocation (`--baseline-ref origin/<base> --actor "$GITHUB_ACTOR"`) into `python-quality-gates-v2`
-      so the bot-bypass + base-diff also enforce server-side on PRs (local layer shipped).
+      post-gates (HARD, blocking) with `--actor "$GITHUB_ACTOR"`. 8 unit tests
+      (`tests/unit/test_check_ci_status_bot_only.py`), ruff green, pyright-excluded (same manifest-parse pattern as
+      `tier_c_promotion_gate.py`). **Follow-up (small):** add the CI/PR-context invocation
+      (`--baseline-ref origin/<base> --actor "$GITHUB_ACTOR"`) into `python-quality-gates-v2` so the bot-bypass +
+      base-diff also enforce server-side on PRs (local layer shipped).
 - [ ] [SCRIPT] P0. **Guard 2 — single-SSOT-branch discipline.** (a) ALL readers (promoter, sit-gate, staging-to-main,
       dashboard) read ci_status from **main only** (promoter already does — make explicit + audit the rest). (b)
       `main-backmerge-to-ldr.yml` must NOT carry ci_status BACKWARD to LDR — a `.gitattributes merge=ours` on the
@@ -507,7 +509,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 - [ ] [INFRA] P0. **Full PM `LDR→main` promotion (needed regardless of ci_status home).** main +221/−9 vs LDR →
       back-merge `main→LDR` (absorb the 9), then gated `LDR→main` PR. Lands the `tier-ab-green` chain-wiring, the
       fund-admin/greeks manifest entries, fresh ci_status, + 221 PM commits. Until it lands the promoter reads a stale
-      main manifest (the live dam). repo: unified-trading-pm.
+      main manifest (the live dam). repo: unified-trading-pm. **FINDING (2026-06-03, slot-1): the dam drain is
+      GUARD-2-COUPLED — sequence it AFTER Guard 2.** State: LDR ahead 251 / main ahead 14; 13 of the 14 main-only
+      commits are `ci: update ci_status …` bot commits that edit `workspace-manifest.json` ci_status fields (+1 real
+      `docs(plans)` dca8864dd). Because both sides edit the SAME manifest ci_status region, EVERY LDR→main PR (#116) and
+      any `main→LDR` back-merge is `CONFLICTING` on exactly those fields — resolving by hand on a fleet-critical
+      850-repo manifest IS the Guard-2 "don't carry ci_status backward" logic done manually (regression-prone). So:
+      build Guard 2 first (merge=ours/ci_status-region restore), then the back-merge + LDR→main PR drains cleanly. The
+      qg-v2 gate-block on the PR is already cleared (qg fix below); the conflict is the sole remaining blocker.
 - [ ] [INFRA] P0. **Reconcile stuck promotion PRs fleet-wide (DIRTY → won't auto-merge).** Several LDR→staging/→main PRs
       are `mergeable_state=dirty` (merge-conflict, accumulated session commits) so v2-auto-merge never fires — e.g. **PM
       PR #116** (DIRTY vs main — blocks ALL PM work reaching main), **UAC #67** (conflict → conflict-agent dispatched).
@@ -515,11 +524,34 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       open-PR set for `dirty` + clear. repos: all with stuck PRs. **Observed 2026-06-03:** PM #116 (tab/ikennaigboaka/1→
       main, CONFLICTING — the concurrent CLAUDE↔SUB_AGENT consolidation PR), UAC **4/4 open conflicting**, mtds 1,
       deployment-service 1, alerting-service 1; UTL/execution/strategy/instruments have 0 open (clean).
-- [ ] [SCRIPT] P1. **Promoter must SKIP main-direct repos (Option B) from the staging sweep.** `ldr-to-staging-promote`
-      opened **PM #113 (LDR→staging)** even though PM/codex are main-direct with no staging tier — it gates only on
-      staging-branch existence, so a stray PM `staging` branch made it eligible. Fix: exclude repos flagged main-direct
-      (PM, codex) in `tier_c_promotion_gate.py` / the promoter's repo set (or delete PM's `staging` branch per Option B,
-      and assert no main-direct repo has one). Close the spurious PM #113. repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **Promoter must SKIP main-direct repos (Option B) from the staging sweep** — DONE 2026-06-03
+      (slot-1) via the operator-directed "delete PM staging" path. `ldr-to-staging-promote` opened **PM #113
+      (LDR→staging)** even though PM/codex are main-direct; it gates only on staging-branch existence, so a stray PM
+      `staging` branch made it eligible. **FIX SHIPPED:** deleted PM's remote `staging` branch (removed its classic
+      branch-protection `allow_deletions=false` first; the `require-quality-gates` ruleset targets only
+      `~DEFAULT_BRANCH`=main, untouched). PM #113 **auto-closed** when its base disappeared. Verified: quickmerge
+      already routes PM/codex→main (quickmerge.sh:1251-1260, Option B); `pin_branch_protection_rulesets.py:197` already
+      exempts PM from the staging ruleset; PM staging had 0 unique commits (−1098 vs main, −1334 vs LDR) → safe delete.
+      The promoter's existing "skip repos without a staging branch" guard now skips PM permanently. repo:
+      unified-trading-pm.
+- [ ] [SCRIPT] P1. **Residual main-direct hardening (follow-ups to the PM-staging delete above).** (a) **codex still has
+      a `staging` branch** (`unified-trading-codex` is also main-direct, Option B) → the promoter can open a spurious
+      codex LDR→staging PR; delete it the same way (verify 0 unique commits first) OR add the durable flag-based
+      exclusion. (b) **Durable fix (more robust than per-branch deletion):** add an explicit `main_direct` repo set
+      (`unified-trading-pm`, `unified-trading-codex`) to `tier_c_promotion_gate.py` / the promoter so a _re-created_
+      staging branch can't re-trigger. (c) **Dead workflow:** `pm-staging-to-main-bypass.yml` triggers on `staging`
+      quality-gates-v2 — now inert (no PM staging); remove it + audit PM workflows that reference `staging`
+      (`staging-to-main.yml`, `sit-gate.yml`, `ci-status-update.yml`, `sit-unlock.yml`,
+      `conflict-resolution-merged.yml`) for now-dead PM-staging assumptions. repo: unified-trading-pm +
+      unified-trading-codex.
+- [x] ✅ [SCRIPT] P0. **PM quality-gates-v2 RED root-caused + fixed** — slot-1 2026-06-03, PM@1a5b64e05 (on LDR via
+      mirror). The Guard-1 bot-only script `check_ci_status_bot_only.py` reads `manifest.get("repositories", {})` as an
+      isinstance-guarded fail-open tolerant reader (same benign category as `tier_c_promotion_gate.py` /
+      `gcs_bucket_stats.py` already excluded), but landed @983a30c6f WITHOUT being added to
+      `EMPTY_DICT_LIST_EXCLUDE_GLOBS` → it was the sole non-excluded "Empty dict/list fallback — fail fast" offender,
+      reddening PM v2. Added it to the exclude list; verified 0 remaining non-excluded offenders. This was the qg-v2
+      gate-block on the PM→main PR (the conflict is now the only remaining blocker — see dam-drain finding above). repo:
+      unified-trading-pm.
 
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
