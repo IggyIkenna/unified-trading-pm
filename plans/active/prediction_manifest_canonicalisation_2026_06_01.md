@@ -520,11 +520,17 @@ verify + the gated delete.
       `pred-prd/_index` rows exist, confirm END-TO-END that the turbo response actually emits
       `breakdown_axis="canonical_question_group"` + per-cqg `observed_clusters={conditionId:rows}` + `source` in the
       shape the UI's `TurboSubDimension` consumes (else the UI renders empty). Repos: deployment-api + deployment-ui.
-- [ ] [CODE] P2. **deployment-api `fetch_venue_detail` bucket routing for prediction v9** (uncertainty flagged by the
-      shard_detail fix @2ac1dfa). v9 prediction rows live in the MTDS `market-data-tick-pred-prd-{pid}` bucket, but
-      `_instruments_bucket_for_category("prediction")` resolves the instruments-service bucket — verify the caller
-      passes `service="market-tick-data-service"` so `_prediction_venue_detail` reads the right bucket for v9 rows.
-      Repo: deployment-api.
+- [x] ✅ [CODE] P2. **deployment-api `fetch_venue_detail` bucket routing for prediction v9 — FIXED + CONFIRMED-BUG
+      (deployment-api@318db9b, slot-5 2026-06-03).** It WAS a real bug, not just uncertainty: `_prediction_venue_detail`
+      read `build_bucket_name("instruments-service","prediction")` = `instruments-store-pred-prd-{pid}`, but the v9
+      cqg-bundle manifest (`data_type=prediction_canonical_question_group` + `observed_clusters`) is MTDS-written into
+      `market-data-tick-pred-prd-{pid}` → the prediction v9 drilldown read an empty/wrong bucket. `fetch_venue_detail`
+      also IGNORES its `service` arg (`_ = service`), so the fix hardcodes the MTDS bucket
+      (`build_bucket_name("market-tick-data-service","prediction")`) — correct because prediction venue-detail is
+      definitionally MTDS-manifest-based (shard axis `("market-tick-data-service","prediction")`). Regression test
+      `test_prediction_reads_mtds_bucket_not_instruments_store` asserts the MTDS bucket regardless of the caller's
+      service arg (4/4 prediction tests green; QG `--no-fix` exit 0). On LDR FEATURE_GREEN; staging-promotion gated on
+      the workspace dep-tier drain (UTL/UAC/deployment-service/strategy-service). Repo: deployment-api.
 
 - 0 legacy-only prediction cells (canonical holds all historical POLYMARKET data + question-groups).
 - **Deployment-api/UI render the prediction v9 bundled atom + `source`/`pipeline_mode` (data-status summary + drilldown
