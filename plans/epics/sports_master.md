@@ -1050,15 +1050,22 @@ Phases 1-3+5, C.6 report_time, MatchStatus SSOT item.
 > **MIGRATED FROM**: `plans/active/trigger_based_reference_data_2026_04_13.md` Phase A2.4-5 + A3.2-4 + A4.1 + C1b.
 > Already-shipped items (A2.1-3, A3.1) were flipped in the source plan (pm@<flip-sha>).
 
-- [ ] [CODE] P2. **GCS write path for Transfermarkt mappings: `master/` (append-only) + `snapshots/` (trigger-dated)** —
-      Change `_fetch_transfermarkt_data` write path from `by_date/` only to also write
-      `sports_reference/master/entity=teams/`, `sports_reference/master/entity=team_mapping/`,
-      `sports_reference/master/entity=player_values/` (accumulating) +
-      `sports_reference/snapshots/entity=player_values/season={Y}/trigger={T}/` (point-in-time). ML training needs
-      point-in-time squad values to avoid lookahead bias.
-- [ ] [CODE] P2. **team_mapping append-only** — read existing master parquet, merge new rows, write back. Depends on GCS
-      write-path item above.
-- [ ] [QG] P2. `bash scripts/quality-gates.sh` on instruments-service after A2.4-5.
+- [x] ✅ [CODE] P2. **GCS write path for Transfermarkt mappings: `master/` (append-only) + `snapshots/`
+      (trigger-dated)** — DONE 2026-06-03 (instruments-service@06e1274b). `_fetch_transfermarkt_data` now also writes
+      (keeping `by_date/`): `sports_reference/master/entity={teams,team_mapping,player_values}/master.parquet`
+      (accumulating) + `sports_reference/snapshots/entity=player_values/season={Y}/trigger={T}/player_values.parquet`
+      (point-in-time, UTC trigger date) — via new `_master_blob_path` / `_snapshot_blob_path_player_values` /
+      `_write_snapshot_player_values` helpers; bucket via `resolve_bucket_name`, cloud-agnostic storage client;
+      all-non-blocking via `classify_and_emit_error`. Point-in-time squad values for lookahead-bias-free ML training.
+- [x] ✅ [CODE] P2. **team_mapping append-only** — DONE 2026-06-03 (instruments-service@06e1274b).
+      `_write_master_append`: download existing master (404→fresh) → `pd.concat([existing, new])` →
+      `drop_duplicates(subset=key, keep="last")` (new wins) → upload. Dedup keys:
+      `player_values=(canonical_league,team_id,season)` / `teams=(team_id,season)` /
+      `team_mapping=(canonical_league,team_id)`.
+- [x] ✅ [QG] P2. `bash scripts/quality-gates.sh` on instruments-service after A2.4-5 — exit 0; 18 unit tests
+      (`tests/unit/test_transfermarkt_master_snapshots.py`, mocked storage). instruments-service@06e1274b. (NOTE:
+      shipped via direct-LDR-push — sub-agent mis-cited the dirty-deps exception, UAC was clean; QG-green on LDR so it
+      promotes via Tier-C, not lost.)
 - [ ] [SCRIPT] P2. **Trigger-date backfill script** — for each league, for each trigger date 2019-2026 (from
       `get_reference_refresh_dates()`), run instruments-service with
       `--season=X --start-date=trigger_date     --end-date=trigger_date`. Template: adapts `sports_chunked_backfill.sh`
