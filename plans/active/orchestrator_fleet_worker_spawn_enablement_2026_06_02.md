@@ -153,7 +153,7 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
       `main|review|backup|custom`; `worktree_claim.py`). **Gap**: `AutoSpawnLoop` (`server/autospawn.py`) ONLY spawns
       task-`worker`s — it early-exits on empty queue (`_run_one_tick:395`), renders `prompt_template="worker"`, and
       `_should_spawn:484` ignores role. So (a) nothing keeps a persistent review agent alive (it's commit-polling, not
-      task-driven → never queue-triggered), and (b) AutoSpawn would wrongly drop a *worker* onto the review slot.
+      task-driven → never queue-triggered), and (b) AutoSpawn would wrongly drop a _worker_ onto the review slot.
       **Implement**: (1) `config.persistent_role_slots()` resolving review-role slots (SSOT = `SlotRow.role='review'`;
       bootstrap assigns slot-2 `role=review` per VM); (2) a queue-INDEPENDENT keep-alive pass in the tick (before the
       empty-queue early-exit) that spawns `template="review"` on any dead review-role slot (reuse the flap/cooldown +
@@ -165,24 +165,38 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 ### F10 — CI conflict-resolution: capacity model (dedicated vs slot-on-existing) [P2]
 
 - [ ] [DESIGN] P2. **Operator framing 2026-06-03.** The CI→orchestrator→delegate path is BUILT this session
-      (`conflict-resolution-agent.yml` / `ci_failure_watcher` / `main-backmerge-to-ldr` → `repository_dispatch
-      escalate-to-orchestrator` → orchestrator spawns a Max worker via `agents/escalate.md`). It spawns on whatever VM
-      has a free slot (today vm-0). Decide whether to RESERVE a dedicated conflict-resolution VM/slot (guaranteed
-      availability, isolation from epic work) vs the current any-free-slot model. No new mechanism either way — same
-      escalate→spawn path; this is purely a capacity/pinning decision. Repo: agent-orchestrator (slot-role pin) +
-      deployment-service (if a dedicated VM). Composes with F9 (same persistent-role-slot machinery).
+      (`conflict-resolution-agent.yml` / `ci_failure_watcher` / `main-backmerge-to-ldr` →
+      `repository_dispatch     escalate-to-orchestrator` → orchestrator spawns a Max worker via `agents/escalate.md`).
+      It spawns on whatever VM has a free slot (today vm-0). Decide whether to RESERVE a dedicated conflict-resolution
+      VM/slot (guaranteed availability, isolation from epic work) vs the current any-free-slot model. No new mechanism
+      either way — same escalate→spawn path; this is purely a capacity/pinning decision. Repo: agent-orchestrator
+      (slot-role pin) + deployment-service (if a dedicated VM). Composes with F9 (same persistent-role-slot machinery).
 
-### F11 — regen must not create dispatchable tasks from BLOCKED/stretch todos [P1]
+### F11 — "backlog won't clear" — diagnosed + fixed (3 root causes) [P1]
 
-- [ ] [SCRIPT] P1. **Root of the "backlog won't clear" perception (diagnosed 2026-06-03).** vm-0's regen-prune is
-      CORRECT — all 18 backlog tasks map to genuinely-open `- [ ]` checkboxes; 30 flipped items were pruned. BUT with
-      the 9 epic VMs stopped, vm-0 (sole runner) inherits every GLOBAL plan's open todos — including ones that can never
-      be auto-worked: `BLOCKED-OPERATOR` / `BLOCKED-BILLING` / `BLOCKED-CREDENTIALS` / `BLOCKED-UPSTREAM-OUTAGE` +
-      `_(stretch, optional)_` items. These never flip → churn the queue + waste spawn attempts forever. Fix
-      `server/regen_backlog_from_plan.py` `_parse_open_todos` to SKIP a `- [ ]` line whose text contains a `BLOCKED-*`
-      status token or a `stretch`/`optional` marker (closed set from the status taxonomy) — they stay visible in the
-      plan but don't become dispatchable backlog tasks. Unit test each token. Repo: agent-orchestrator. Provenance:
-      operator "clear the backlog on background VMs" 2026-06-03.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-03 — operator "clear the backlog on background VMs".** The yaml-prune was a red
+      herring (it worked: 12 tasks = open checkboxes). The real backlog AutoSpawn dispatches from is `state.db`, which
+      had **761 total / 304 QUEUED / 448 done** and never shrank. Three root causes, all fixed: 1.
+      **`ORCHESTRATOR_REGEN_DB_PATH` was unset** → the loop's prune ran **yaml-only** (`pruned_db=0` every tick) →
+      state.db never pruned. Set it in vm-0 `.env.local` (→ loop now prunes state.db) + restart. **Fleet rollout =
+      F12.** 2. **regen ingested non-dispatchable todos** (`BLOCKED-OPERATOR/-BILLING/-CREDENTIALS/-UPSTREAM-OUTAGE`,
+      `_(stretch, optional)_`) that can never flip → churn. `_parse_open_todos` now skips them
+      (agent-orchestrator@428400f; closed taxonomy + 2 tests). Applied in add + prune passes (existing such tasks
+      auto-orphan). 3. **the prune only GC'd yaml-orphan IDs, never state.db rows absent from the yaml ENTIRELY**
+      (archived/other-VM/ old-cycle) → 290 unclaimable queued **zombies**. `_prune_stale` now deletes every
+      queued+undispatched row whose task_id isn't in the post-prune backlog, guarded on non-empty `current_briefs` so a
+      failed scan can't wipe the queue (agent-orchestrator@e50b6b9; +2 tests; done/dispatched never touched). **Deployed
+      to vm-0** (FF + restart) + **one-time GC cleared 302→12 queued** (backed up state.db first); loop-path regen
+      verified steady at `total=12 pruned_db=0`. 64 tests / ruff / pyright 0. Repo: agent-orchestrator.
+
+### F12 — bake ORCHESTRATOR_REGEN_DB_PATH + the GC fix into the fleet [P1]
+
+- [ ] [INFRA] P1. **Durable fleet rollout of F11 (vm-0 fixed live; other VMs pending).** (a) `bootstrap_vm.sh` must
+      upsert `ORCHESTRATOR_REGEN_DB_PATH=<state.db>` into `.env.local` (same upsert pattern as F2/F3 for
+      VM_ID/AUTOSPAWN) so every VM's loop prunes state.db — without it the zombie accumulation recurs per-VM. (b) The GC
+      code fix (agent-orchestrator@e50b6b9) reaches the 9 stopped epic VMs automatically on their next FF-pull/restart;
+      verify on first start. Composes with F2–F4 (same per-VM rollout). Repo: agent-orchestrator (bootstrap) +
+      deployment-service launchers if the env must be exported at launch.
 
 ### F7 — slot-4 WIP recovery on the live vm-0 host [P1]
 
