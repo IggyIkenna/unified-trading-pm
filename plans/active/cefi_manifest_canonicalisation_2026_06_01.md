@@ -148,21 +148,22 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 
 **🔴 P0 — E2E-blocking code (OPERATOR-APPROVED to do THIS session before the dry-run):**
 
-- [ ] [CODE] P0. **`rebuild_cefi_manifest.py` CF-11 3-way classifier** (mtds; the rebuild LOGIC the migration runs).
-      Today it marks every found parquet `captured/row_count=0`; it must: (a) within-bounds empty (in-universe +
-      guaranteed-when-listed `trades`/`ohlcv` on active venue+symbol + within coverage + not known-gap) →
-      `attempted_failed` (`record_failed`), NOT `empty_confirmed`; conservative per-data_type guarantee set
-      (funding/options_chain may be legitimately sparse → keep typed-empty); (b) re-emit existing `_index`
-      `attempted_failed`/typed-`empty_confirmed` rows as v9 with status PRESERVED (read prior `_index` via
-      `read_availability_index`; never relabel a failure to empty; preserve the ~1.33M `attempted_failed`); (c)
-      unit-test the 3-way tree. **Must be canonical BEFORE the migration's rebuild runs** else the rebuilt `_index`
-      marks masked failures as complete. (Same as the open E5/CF-11 items at §CF-11 below — consolidated here as the
-      audit's #1.)
-- [ ] [CODE] P0. **Live cefi writer source+pipeline_mode COLUMN parity** (mtds `engine/orchestrator.py`; ⚠️ slot-4 has
-      active uncommitted orchestrator.py sports edits — coordinate/avoid collision). Path is correct, but CONFIRM the
-      live cefi `add()` stamps the `source` (=tardis) + `pipeline_mode` COLUMNS (v9 plumbing exists + is wired for
-      sports; cefi may be omitted — plan E5 fork-A "closes the live-writer CF-3 gap so batch=live"). If omitted, FIX so
-      live = batch on columns, else post-migration LIVE backfills drift from the v9-column structure. Confirm-then-fix.
+- [x] ✅ [CODE] P0. **`rebuild_cefi_manifest.py` CF-11 3-way classifier** — **DONE (mtds@fa2b02c7).** New
+      `reemit_cefi_honest_absence_rows` pass (mirrors the proven `rebuild_tradfi_manifest` sibling): reads the prior
+      `_index`, filters to the run date-range + cefi, dedups vs freshly-scanned keys, then (a) within-bounds empty
+      (blank-reason OR `SOURCE_RETURNED_ZERO` on a guaranteed-when-listed `trades`/`ohlcv*`/`book_snapshot_5` OR
+      invalid-reason) → `record_failed(WITHIN_BOUNDS_EMPTY_RECLASSIFIED)`; typed-empty on a sparse data_type
+      (funding/options_chain/…) → `record_empty` PRESERVED; (b) prior `attempted_failed` → `record_failed` PRESERVED
+      (the ~1.33M survive); phantom captured-no-object → `record_failed(PHANTOM_CAPTURED_NO_OBJECT)`; (c) +24 unit
+      tests; `--scan-only` flag restores pure-scan. MTDS QG --no-fix exit 0. Closes the open E5/CF-11 items at §CF-11
+      below.
+- [x] ✅ [CODE] P0. **Live cefi writer source+pipeline_mode COLUMN parity** — **CONFIRMED gap + FIXED (mtds@4e5fa57f).**
+      orchestrator.py finalize per-instrument `add()` stamped source/pipeline_mode ONLY for sports odds (comment:
+      "Non-sports shards leave source=None"); cefi/defi/prediction captured rows got blank `pipeline_mode` (`add()`
+      doesn't auto-derive it) → Batch≠Live drift. Now every non-sports per-instrument row derives `source` via
+      `get_primary_source(asset_group,data_type)` + `pipeline_mode` via `_resolve_pipeline_mode_for_sentinel` (same
+      helpers the bundled path + migrator/rebuild use) + stamps both. Sports branch unchanged (no slot-4 collision; the
+      `else` branch is additive). source= is crosscutting (all asset_groups). MTDS QG --no-fix exit 0.
 
 **🟡 P1 — data-status / drilldown reflects the migrated structure (DEFERRED to a tracked follow-up unless quick):**
 
@@ -273,10 +274,10 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       838-cell legacy→canonical gap-fill copy (`raw_tick_data/` + `processed_candles/`, layout-aware — cefi has NO
       `by_date/`). Column adds (b–c) are a CONTENT rewrite → download+transform+upload **parallelised per the perf
       contract** (NOT a server-side path move; NOT "run locally" — this is a VM-scale walk now, gated on L0). The
-      838-cell pure-path copies use `gcs_copy_object`. Idempotent.
-      — DONE (slot 10, 2026-06-03): market-tick-data-service@53671a0 (Kraken BASE/QUOTE 2-level path fix) + @7cb9947.
-      TOTAL planned=3928281 written/moved=1863687 (dry-run: 3,916,302). 112 corrupt KRAKEN-SPOT USD.parquet objects
-      from partial apply deleted before re-run with fix. Canonical bucket now has pipeline_mode=batch_tardis paths.
+      838-cell pure-path copies use `gcs_copy_object`. Idempotent. — DONE (slot 10, 2026-06-03):
+      market-tick-data-service@53671a0 (Kraken BASE/QUOTE 2-level path fix) + @7cb9947. TOTAL planned=3928281
+      written/moved=1863687 (dry-run: 3,916,302). 112 corrupt KRAKEN-SPOT USD.parquet objects from partial apply deleted
+      before re-run with fix. Canonical bucket now has pipeline_mode=batch_tardis paths.
 - [ ] [DATA] P0. C-pipeline_mode RIDER (folded into C0 (d)): the `pipeline_mode=` partition lands in THIS walk
       (satisfies `pipeline_mode_partition_migration` for cefi).
 - [ ] [DATA] P1. C-source RIDER (folded into C0 (b)): the `source` column (`tardis`, swap-resilient) lands in THIS walk
@@ -415,15 +416,21 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 > nothing → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we don't know why" masquerading as
 > complete.
 
-- [ ] [DATA] P0. **Rebuild classifier (`rebuild_cefi_manifest.py` / E5): within-bounds empty → `attempted_failed`.** For
-      every empty cell: instrument in the IS CeFi universe + data_type guaranteed-when-listed (trades/ohlcv on an active
-      venue+symbol) + within coverage window + not a known gap → `attempted_failed` (`record_failed`), NOT
-      `empty_confirmed`. Conservative per-data_type guarantee set (funding / options_chain can be legitimately sparse →
-      keep typed-empty; a wrongly-kept trades/ohlcv empty on a live symbol-day is silent incompleteness — operator's
-      stated priority is the latter is worse).
-- [ ] [DATA] P0. **Rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel a
-      failure to `empty_confirmed`. (The existing 1.33M `attempted_failed` rows — E6 below — must survive as v9
-      `attempted_failed`, still flagged for backfill, not collapsed to empty.)
+- [x] ✅ [CODE] P0. **Rebuild classifier (`rebuild_cefi_manifest.py` / E5): within-bounds empty → `attempted_failed`.**
+      **DONE (mtds@fa2b02c7)** — see the audit P0 #1 above. `reemit_cefi_honest_absence_rows` reclassifies blank-reason
+      OR `SOURCE_RETURNED_ZERO`-on-guaranteed (`trades`/`ohlcv*`/`book_snapshot_5`) OR invalid-reason →
+      `record_failed(WITHIN_BOUNDS_EMPTY_RECLASSIFIED)`; keeps typed-empty on sparse data_types (funding/options_chain).
+      (Coverage-window / known-gap precision deferred — the conservative data_type-guarantee + reason gate is the
+      operator-prioritised core; a per-instrument IS-universe/coverage cross-check is a NICE-TO-HAVE refinement, tracked
+      as the P2 below.)
+- [x] ✅ [CODE] P0. **Rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — **DONE
+      (mtds@fa2b02c7).** The pass re-emits every prior `attempted_failed` row (not superseded by a fresh parquet) via
+      `record_failed` with its original `error_reason` (blank→`UNCLASSIFIED_ADAPTER_ERROR`) — the ~1.33M survive as v9
+      `attempted_failed`, still flagged for backfill, never collapsed to empty. +unit test asserts preservation.
+- [ ] [CODE] P2. **NICE-TO-HAVE — rebuild within-bounds precision**: cross-check the reclassify decision against the IS
+      CeFi universe + per-instrument coverage windows + the known-gap registry (today the gate is the conservative
+      data_type-guarantee + reason heuristic, which the operator prioritised; the IS-universe cross-check would tighten
+      false-positive reclassifications on genuinely-sparse symbol-days). Provenance: slot-3 E2E audit 2026-06-03.
 - [ ] [DATA] P0. **Absorbed from `cefi_processed_candles_manifest_file_disconnect` (harsh) — ROOT CAUSE CORRECTED by
       direct `_index` query (slot-3 2026-06-03).** The reported "MTDS marks `processed_candles` `captured` with no file"
       is a **category error, NOT manifest corruption.** Reading the live cefi `_index` (2,640,864 rows): the manifest
