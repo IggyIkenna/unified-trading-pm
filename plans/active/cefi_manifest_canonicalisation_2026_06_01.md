@@ -182,23 +182,34 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 
 - [ ] [CODE] P2. **MDPS GAP-7** — `category`→`asset_group` param rename in `dependency_checker` (vocabulary; cross-ref
       downstream plan GAP-7).
-- [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain):
-      verify the finalize cluster-validation rejects an incomplete bundle (`len(observed)==len(expected)`, not just
-      count-threshold) so a partial write is NOT phantom-`captured`. Audit flagged a possible gap at
-      `orchestrator.py:~3144` — VERIFY against the existing cluster validation before treating as a fix.
-- [ ] [CODE] P2. **CONFIRM reader empty-vs-failed differentiation** — does the cefi read/preflight path treat
-      `attempted_failed` (retry/alert) differently from `empty_confirmed(SOURCE_RETURNED_ZERO)` (accept) per
-      `codex/02-data/honest-absence-downstream-handling.md`, or collapse both to "unavailable"? Verify, then fix if
-      collapsed.
+- [ ] [DATA] P2. **CONFIRM partial-BUNDLE completeness guard** — bundled cefi data_types (book_snapshot/options_chain).
+      **PARTIALLY CONFIRMED (slot-3 read-only 2026-06-03):** the finalize path DOES run cluster validation
+      (`record_captured_from_counts(expected_root_clusters, observed_clusters)`; CLAUDE.md 4-pillar "cluster coverage ≥
+      expected" — `MissingClusterValidationError` if absent), so the gate is PRESENT (not missing). The audit's worry is
+      the `≥ count-threshold` vs `len(observed)==len(expected)` precision (a partial bundle that meets the count but
+      misses a cluster root). The cluster-validation internals live in UTL `manifest_writer.py`
+      `record_captured_from_counts` — left as a refinement for the cluster-SSOT owner (`mtds_mdps_master`) to tighten if
+      `≥` admits incomplete bundles; **NOT a slot-3-solo fix** (UTL + the bundled writer span DeFi/sports too). The live
+      writer's per-instrument path is unaffected (no clusters). Repo: UTL/MTDS — owning VM.
+- [x] ✅ [CODE] P2. **CONFIRM reader empty-vs-failed differentiation — NOT A GAP (slot-3 read-only 2026-06-03).** The
+      MTDS reader (`reader.py:583-639`) fetches `capture_status == "captured"` data + raises `ShardNotFoundError` for
+      any non-captured cell — it does NOT (and should not) differentiate empty-vs-failed at the raw-read layer. The
+      `attempted_failed` (retry) vs `empty_confirmed` (accept) differentiation is correctly handled ONE layer up at the
+      **manifest-query / pre-flight** consumer (the backfill pre-flight reads `capture_status` and retries
+      `attempted_failed`, skips `captured`/`empty_confirmed` — the honest-absence consumer policy). No reader fix
+      needed.
 
 ## Phase 2 — dry-run + sharding/performance scope (slot-3, 2026-06-03)
 
-> **🟢 VM RUNNING — `mtds-migrate-cefi-v9dry-2024`** (n2-highmem-4, asia-northeast1-c, **DRY-RUN, NO `--apply`**):
-> `migrate_cefi_flat_to_v9_canonical --start-date 2024-01-01 --end-date 2024-12-31 --also-legacy --workers 32`. Scopes a
-> representative dense year's `--also-legacy` listing perf + validates no-OOM at 32 GB. run.log:
-> `gs://deployment-scripts-central-element-323112/vm-logs/mtds-migrate-cefi-v9dry-2024/run.log`. Banner-removed by
-> slot-3 at completion. (Coding gate MET first: IS@f2ca5954 + MTDS@fa2b02c7/4e5fa57f + PM@878dd9553 all QG-green + on
-> LDR.)
+> **✅ DRY-RUN COMPLETE — `mtds-migrate-cefi-v9dry-2024`** (n2-highmem-4, asia-northeast1-c, **NO `--apply`**;
+> exit_code=0, self-deleted; ~3 min wall).
+> `migrate_cefi_flat_to_v9_canonical --start-date 2024-01-01 --end-date 2024-12-31 --also-legacy --workers 32`.
+> **Result: `TOTAL planned=914,624 written/moved=0 (DRY-RUN)`** for the 2024 shard (candles `planned=45,585`; 9 L-flat
+> orphans fan-out shown with correct canonical dests). **`moved=0` = idempotent-skip** (the `-prd` already holds the
+> migrated `pipeline_mode=` forms — consistent with the verified corpus-complete state). **No OOM at 32 GB** for a dense
+> ~914k-object year (vs the 16 GB e2-standard-4 OOM on the all-years 1.9M listing). PLAN paths verified canonical
+> (`day=/pipeline_mode=batch_tardis/asset_group=cefi/venue=/instrument_type=/data_type=/…`). Banner removed (VM
+> self-deleted). Coding gate MET first: IS@f2ca5954 + MTDS@fa2b02c7/4e5fa57f + PM@878dd9553 all QG-green + on LDR.
 
 **Per-year object distribution (measured 2026-06-03, delimited day-dir listing on the legacy bucket):**
 
