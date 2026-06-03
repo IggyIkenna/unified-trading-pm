@@ -191,6 +191,43 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       `codex/02-data/honest-absence-downstream-handling.md`, or collapse both to "unavailable"? Verify, then fix if
       collapsed.
 
+## Phase 2 — dry-run + sharding/performance scope (slot-3, 2026-06-03)
+
+> **🟢 VM RUNNING — `mtds-migrate-cefi-v9dry-2024`** (n2-highmem-4, asia-northeast1-c, **DRY-RUN, NO `--apply`**):
+> `migrate_cefi_flat_to_v9_canonical --start-date 2024-01-01 --end-date 2024-12-31 --also-legacy --workers 32`. Scopes a
+> representative dense year's `--also-legacy` listing perf + validates no-OOM at 32 GB. run.log:
+> `gs://deployment-scripts-central-element-323112/vm-logs/mtds-migrate-cefi-v9dry-2024/run.log`. Banner-removed by
+> slot-3 at completion. (Coding gate MET first: IS@f2ca5954 + MTDS@fa2b02c7/4e5fa57f + PM@878dd9553 all QG-green + on
+> LDR.)
+
+**Per-year object distribution (measured 2026-06-03, delimited day-dir listing on the legacy bucket):**
+
+| year  | day-dirs  | notes                          |
+| ----- | --------- | ------------------------------ |
+| 2019  | 277       | partial (from 2019-03-30)      |
+| 2020  | 366       |                                |
+| 2021  | 365       |                                |
+| 2022  | 365       |                                |
+| 2023  | 365       |                                |
+| 2024  | 366       |                                |
+| 2025  | 365       |                                |
+| 2026  | 144       | partial (to 2026-05-24)        |
+| **Σ** | **2,613** | == plan L2 count; ~2.377M objs |
+
+≈ **910 objects/day-dir**, ≈ **300k objects/year**. The e2-standard-4 (16 GB) OOM was loading **all 2.377M** legacy
+object names at once.
+
+**Sharding + machine-size recommendation (for the NEXT-session `--apply`):** **8 year-shards (2019…2026), one VM each,
+`n2-highmem-4` (32 GB)** — a per-year shard (~300k object names) fits comfortably in 32 GB (the OOM was 8× that on half
+the RAM). Server-side `gcs_copy_object` at `--workers 32` (GIL-free I/O) → the per-year copy is network-bound, not
+CPU-bound, so 4 vCPU suffices. The running 2024 dry-run validates the real per-year listing time + the 32 GB headroom
+(result appended here on completion).
+
+- [ ] [DATA] P0. **NEXT SESSION — execute the migration** (after the dry-run validates perf): run the 8 year-sharded
+      `--also-legacy --apply` gap-fill (5,233 legacy-only cells), then the irreversible orphan-sweep (with the mandatory
+      pre-delete idempotent-`--apply`-over-full-range guarantee), then E5 manifest rebuild (now CF-11-canonical
+      @mtds#fa2b02c7), E7 verify, E8 legacy-bucket delete. NOT this session (irreversible).
+
 ## Why this exists — cefi canonical FORM is broken corpus-wide (+ a recent 838-cell data gap)
 
 The 2026-06-01 `_index` comparison (legacy `market-data-tick-cefi-…` vs canonical `market-data-tick-cefi-prd-…`) showed
