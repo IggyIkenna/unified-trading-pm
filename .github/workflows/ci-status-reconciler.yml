@@ -100,6 +100,12 @@ jobs:
                   -d "{\"event_type\":\"ci-status-update\",\"client_payload\":{\"repo\":\"${REPO}\",\"status\":\"${TARGET}\",\"branch\":\"main\"}}" \
                   && echo "  fired ci-status-update $REPO → $TARGET" \
                   || echo "  WARN: dispatch failed for $REPO"
+                # SERIALIZE: ci-status-update has concurrency group manifest-update with
+                # cancel-in-progress:false → GitHub keeps in-progress + queues AT MOST ONE pending
+                # and CANCELS any further pending runs. Rapid-fire dispatches therefore mostly
+                # cancel (only ~2 of N land). Sleep so each ci-status-update commits before the
+                # next is dispatched, so ALL reconciles land in one Guard-3 run.
+                sleep 70
               fi
               RECONCILED="$RECONCILED $REPO:$TARGET"; RECONCILED_COUNT=$((RECONCILED_COUNT + 1))
             else
