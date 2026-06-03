@@ -104,11 +104,12 @@ All on `origin/live-defi-rollout`; full detail in
 - [x] ✅ [DOC] P1. **DONE — @5dbe60407.** `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model" blockquote
       reframed (QG before commit, not just quickmerge; commit = per-repo quality boundary; QG-sweep batching; doc-commit
       scope carve-out).
-- [ ] [DOC] P2. **[BLOCKED-CONCURRENT-EDIT]** `SUB_AGENT_MANDATORY_RULES.md` — add the explicit "commit only from a
-      QG-green tree (full `quality-gates.sh`, not just the prek hook); use QG-sweep batching" sentence. **Held**: the
-      file is foreign-dirty under a concurrent plan-hygiene session (which is also adding
-      `scripts/plan-hygiene/check_claude_subagent_parity.sh` — CLAUDE↔SUB_AGENT parity). Apply once that lands (or let
-      the parity check propagate the CLAUDE.md framing) to avoid clobbering its WIP.
+- [x] ✅ [DOC] P2. **DONE — unified-trading-pm@7c3643236.** Added the commit-as-quality-boundary framing to
+      `SUB_AGENT_MANDATORY_RULES.md` Pass-1 bullet (binds every code commit incl direct Commit+Push+Flip, not just the
+      quickmerge ship; prek=LIGHT gate / full QG=commit-prereq; QG-sweep batching; doc/plan-flip/markdown commits take
+      prek only). Applied AFTER the concurrent plan-hygiene session finished + committed (`f98182875` — its
+      `check_claude_subagent_parity.sh` CLAUDE↔SUB_AGENT drift check now landed), so no collision; this mirror also
+      satisfies that parity check vs the CLAUDE.md reframe (@8fd3dced5). All 4 [DOC] commit-prereq items now done.
 - [x] ✅ [DOC] P2. **DONE — @5dbe60407.** `codex/06-coding-standards/quality-gates.md` § "Two-Pass Workflow Model" —
       added the commit-as-quality-boundary callout (prek = LIGHT gate; full QG = commit-prereq; QG-sweep batching;
       doc-commit carve-out).
