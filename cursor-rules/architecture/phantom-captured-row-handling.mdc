@@ -1,0 +1,155 @@
+---
+description: "Manifest readers must handle phantom-captured rows (manifest marks captured but file is missing)"
+globs: ["*/readers/*.py", "*reader*.py", "*manifest*.py"]
+alwaysApply: false
+priority: 75
+tags: [data, manifest-correctness, phantom-captured, error-handling, critical]
+---
+
+# Phantom-Captured Row Handling in Manifest Readers
+
+## Rule
+
+A **phantom-captured row** is a manifest entry where `capture_status=captured` but the corresponding GCS object does NOT exist. This can occur due to:
+- Manifest write succeeding but object write failing
+- Object being deleted after manifest row written (corruption)
+- Path schema migration incomplete
+
+Manifest readers MUST gracefully detect and handle phantom rows WITHOUT silently passing through a non-existent object. The handler must:
+
+1. **Detect**: Attempt to read the object; if 404/missing, classify as phantom
+2. **Classify**: Determine whether this is:
+   - A genuine error (object should exist but doesn't → `attempted_failed`)
+   - A path migration mismatch (reader looking for old path when new path exists → fall back)
+   - A stale manifest entry → skip + alert
+3. **Respond**: Choose remediation based on data_type + asset_group + venue policy
+
+## Pattern
+
+### Reader Preflight (before object read)
+
+```python
+def preflight_check_manifest_row(row: ManifestRow) -> tuple[bool, str]:
+    """
+    Before reading a captured row, verify the object exists.
+
+    Returns: (can_read: bool, reason: str)
+    """
+    if row.capture_status != "captured":
+        return True, "not_captured"
+
+    # Try primary path first (with pipeline_mode)
+    primary_path = construct_path_with_pipeline_mode(row)
+    if blob_exists(primary_path):
+        return True, "found_primary"
+
+    # Fallback to legacy path (without pipeline_mode) until ~2026-06-15
+    legacy_path = construct_path_without_pipeline_mode(row)
+    if blob_exists(legacy_path):
+        return True, "found_legacy"
+
+    # Object missing — this is a phantom row
+    return False, "phantom_captured_no_object"
+```
+
+### Error Response to Phantom Row
+
+```python
+def handle_phantom_row(row: ManifestRow, reason: str) -> None:
+    """Raise explicit error on phantom row, never silently skip."""
+    raise PhantomCapturedRowError(
+        f"Manifest marks captured but object missing: "
+        f"venue={row.venue} day={row.day} data_type={row.data_type} "
+        f"capture_status={row.capture_status} reason={reason}"
+    )
+```
+
+### Reader Honest-Absence Handling
+
+After preflight, if the row CAN be read, process normally. If phantom:
+
+```python
+def read_from_manifest(manifest_rows: List[ManifestRow]):
+    """
+    Read data from manifest, skipping phantom rows.
+    """
+    valid_rows = []
+    phantom_count = 0
+
+    for row in manifest_rows:
+        can_read, reason = preflight_check_manifest_row(row)
+        if not can_read:
+            phantom_count += 1
+            # Log the phantom + continue (do NOT raise mid-loop)
+            logger.warning(
+                f"Skipping phantom manifest row: {reason}",
+                extra={"venue": row.venue, "day": row.day, "data_type": row.data_type},
+            )
+            continue
+
+        valid_rows.append(row)
+
+    if phantom_count > 0:
+        # Alert operations: phantom rows detected
+        log_event("MANIFEST_PHANTOM_DETECTED", {"count": phantom_count})
+
+    return valid_rows
+```
+
+## Anti-Patterns
+
+- ❌ Silently returning empty data when `blob_exists(path)` fails — always log + raise explicit error
+- ❌ Assuming `capture_status=captured` means object definitely exists — preflight check REQUIRED
+- ❌ Ignoring path migration (pipeline_mode= addition) — check BOTH forms temporarily
+- ❌ `except OSError: continue` without logging phantom detection — silent failures hide data corruption
+- ❌ Returning a NaN/zero value to mask a missing object — return `empty_confirmed` reason explicitly
+
+## Testing
+
+Add tests for phantom row handling:
+
+```python
+def test_reader_detects_phantom_captured_row(self):
+    """Manifest marks captured but object missing."""
+    manifest = build_manifest([
+        Row(venue="KRAKEN", capture_status="captured", object_path="gs://bucket/fake_path"),
+    ])
+    # Don't create the actual object
+
+    # Assert reader raises PhantomCapturedRowError
+    with pytest.raises(PhantomCapturedRowError):
+        reader.read_from_manifest(manifest)
+
+def test_reader_falls_back_to_legacy_path(self):
+    """Reader can find object via legacy path when primary (pipeline_mode=) missing."""
+    # Create object at legacy path: day=/asset_group=/...
+    write_object("gs://bucket/day=2026-06-01/asset_group=cefi/data.parquet")
+
+    # Manifest row points to primary path: day=/pipeline_mode=/asset_group=/...
+    manifest = build_manifest([
+        Row(venue="KRAKEN", capture_status="captured", path_form="pipeline_mode"),
+    ])
+
+    # Assert reader finds it via fallback
+    result = reader.read_from_manifest(manifest)
+    assert result is not None, "Fallback to legacy path failed"
+
+def test_reader_logs_phantom_and_continues(self):
+    """Reader logs phantom rows but continues with valid rows."""
+    manifest = build_manifest([
+        Row(venue="KRAKEN", capture_status="captured", object_path="gs://missing"),  # phantom
+        Row(venue="BINANCE", capture_status="captured", object_path="gs://real"),    # valid
+    ])
+    write_object("gs://real")
+
+    result = reader.read_from_manifest(manifest)
+    assert len(result) == 1, "Should read 1 valid row"
+    # Verify log contains "PHANTOM" or "phantom"
+    assert any("phantom" in call.lower() for call in captured_logs)
+```
+
+## Reference
+
+- SSOT: `codex/02-data/pipeline-mode-partition.md` § Axis-10 (Manifest phantom audit)
+- Plan: `plans/active/cefi_manifest_canonicalisation_2026_06_01.md` § CF-11 (Root-cause analysis + phantom reconcile)
+- Related: `cursor-rules/architecture/pipeline-mode-partition-structure.mdc` (path migration that triggers phantom scenarios)

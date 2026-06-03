@@ -1,0 +1,71 @@
+---
+description: "GCS paths must include pipeline_mode= left of asset_group= for canonical data partitioning"
+globs: ["*/config.py", "*/gcs_paths.py", "*migration*.py"]
+alwaysApply: false
+priority: 85
+tags: [data, gcs-paths, pipeline-mode, manifest, critical]
+---
+
+# Pipeline Mode Partition Structure in GCS Paths
+
+## Rule
+
+All canonical data written to GCS MUST include `pipeline_mode=<mode>/` as a hive-partition key positioned **LEFT of** `asset_group=`. This partitioning enables swap-resilience by allowing readers to select data from specific pipelines (batch_v9, batch_tardis, etc.) and is mandatory for Phase 3+ multi-source reconciliation.
+
+**Canonical form:**
+```
+gs://bucket/raw_tick_data/by_date/day={DATE}/pipeline_mode={MODE}/asset_group={AG}/venue={VENUE}/data_type={DT}/{instrument}.parquet
+```
+
+## Pattern
+
+When constructing GCS paths:
+
+1. **Path builders** must include pipeline_mode BETWEEN `day=` and `asset_group=`:
+   ```python
+   from unified_api_contracts.canonical import candidate_parquet_paths
+
+   def build_canonical_path(ag, venue, data_type, day):
+       # Path MUST be: day=/pipeline_mode=/asset_group=/...
+       return f"day={day}/pipeline_mode=batch_tardis/asset_group={ag}/venue={venue}/data_type={data_type}/"
+   ```
+
+2. **Reader fallback** (temporary until ~2026-06-15) must check both forms:
+   ```python
+   # Check NEW form first (with pipeline_mode)
+   canonical_path = f"day={day}/pipeline_mode=batch_v9/asset_group={ag}/..."
+   if not blob_exists(canonical_path):
+       # Fall back to legacy form (WITHOUT pipeline_mode) temporarily
+       legacy_path = f"day={day}/asset_group={ag}/..."
+       return legacy_path
+   return canonical_path
+   ```
+
+3. **Migration scripts** must insert `pipeline_mode=` when moving objects:
+   ```python
+   # Compute new path with pipeline_mode inserted
+   old_path = f"day={day}/asset_group={ag}/..."
+   new_path = f"day={day}/pipeline_mode={derive_pipeline_mode_for_row(...)}/asset_group={ag}/..."
+   gcs_copy_object(old_path, new_path)
+   ```
+
+## Anti-Patterns
+
+- ❌ Path without `pipeline_mode=`: `day=/asset_group=/venue=/...` (legacy form — valid temporarily for readers, invalid for NEW writes)
+- ❌ `pipeline_mode=` in wrong position: `day=/asset_group=/pipeline_mode=/...` (order matters for canonical sorting)
+- ❌ Hardcoding pipeline mode: `pipeline_mode=batch_v9` — derive via `derive_pipeline_mode_for_row(venue, ag, data_type)`
+- ❌ Reader NOT checking both forms — fallback required until Phase 8 deprecation (2026-06-15)
+- ❌ Writers NOT stamping `pipeline_mode` column — every manifest row for new writes MUST carry source + pipeline_mode
+
+## Testing
+
+Add regression tests for multi-source scenarios:
+- Happy path: reader finds object at `pipeline_mode=batch_tardis/asset_group=cefi/...`
+- Fallback path: reader falls back to legacy `asset_group=cefi/...` if primary not found
+- Migration: migrated objects appear at new path + are found by reader
+
+## Reference
+
+- SSOT: `codex/02-data/pipeline-mode-partition.md`
+- Plan: `plans/active/pipeline_mode_partition_migration_2026_06_01.md`
+- Codex: `unified-trading-codex` (folded into `unified-trading-pm/codex/`)
