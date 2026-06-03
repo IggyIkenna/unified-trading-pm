@@ -182,12 +182,14 @@ All on `origin/live-defi-rollout`; full detail in
       ldr-to-staging-promote / feature-branch-to-staging) unchanged. YAML validated; no active API ref.
       Verified-by-construction (uses the same escalate interface proven green this session); a real conflict exercises
       it end-to-end.
-- [~] [SCRIPT] P1. **Every Slack-alert event ALSO pings the orchestrator → it delegates.** (a)
-  `main-backmerge-to-ldr.yml` conflict → **DONE** (unified-trading-pm@c1fa002b1: repository_dispatches
-  escalate-to-orchestrator (opus) via GH_PAT alongside the human PR). (b) `ci_failure_watcher.py` already escalates
-  CONFLICT stuck-PRs (**verified live** — it fired the deployment-service#15 escalation this session). REMAINING: extend
-  the watcher to ALL failure classes (test/lint/coverage RED), assigning to the owning epic-VM/slot. repo:
-  unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **Every Slack-alert event ALSO pings the orchestrator → it delegates.** (a)
+      `main-backmerge-to-ldr.yml` conflict → escalates escalate-to-orchestrator (opus) via GH_PAT alongside the human PR
+      (unified-trading-pm@c1fa002b1). (b) `ci_failure_watcher.py` escalates CONFLICT stuck-PRs as merge_conflict
+      (verified live — deployment-service#15) **AND now BLOCKED-with-failed-check stuck-PRs as sit_failure**
+      (unified-trading-pm@783b28153 + tests @b4dd80fed) — guarded on `statusCheckRollup` so transient staging-locks
+      don't spawn workers; reuses the per-PR label idempotency. So conflict, CI-RED, and backmerge-conflict alerts all
+      reach the orchestrator. (Raw non-PR workflow-run failures stay Slack-only by design — escalating those needs a
+      non-PR idempotency mechanism; the actionable cases all surface as stuck PRs, which are now covered.)
 - [ ] [SCRIPT] P2. **Semantic cross-plan/cross-slot conflict DETECTOR (scripted-first + epic-VM decides).** Catches "two
       individually-valid plans whose WORK conflicts, no textual overlap" — which no existing layer does. (1) scripted
       overlap-detector: parse active-plan todos for declared **target surface** (repo/file/symbol), flag cross-slot
