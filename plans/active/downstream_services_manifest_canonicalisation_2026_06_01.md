@@ -89,17 +89,17 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 ### TIER 2 — data-status / deployment-api code (so post-delete reads/counts don't regress)
 
-- [ ] [CODE] P1. **FLAG-1 (deployment-api) — DECIDED (operator 2026-06-02): UNION + manifest-derived per-source
-      breakdown.** Headline coverage = **union** (a `(venue, data_type, date)` cell is green if ≥1 source `captured`) →
-      dedupe the multi-source rows in `_mtds_honest_coverage_for_venue` via `select_primary_available_source` (UAC
-      `source_priority`) so two source-rows can't inflate `found_dates`. **Per-source breakdown** (databento vs massive)
-      is surfaced in the data-status drilldown derived from the **`_index` `source` COLUMN** that
-      `read_availability_index` already loads — i.e. a `groupby("source")` on the in-memory manifest rows, NOT a
-      per-parquet column scan (the v9 manifest denormalises `source` to the row level, so the breakdown is effectively
-      free; the parquet-data-column path is slow and MUST be avoided). Implementation: (1) union-dedupe in the
-      aggregator for the denominator; (2) add a per-source sub-aggregate from the same `_index` rows for the drilldown.
-      Add a QG test asserting union (2 source rows on one date → 1 found-date) + the per-source split. Repo:
-      **deployment-api**. Home: this plan FLAG-1. (No longer operator-blocked.)
+- [x] ✅ [CODE] P1. **FLAG-1 (deployment-api) — SHIPPED deployment-api@60cd585 (slot-6 2026-06-03).** UNION +
+      manifest-derived per-source breakdown.** Headline coverage = **union** (a `(venue, data_type, date)` cell is green
+      if ≥1 source `captured`) → dedupe the multi-source rows in `_mtds_honest_coverage_for_venue` via
+      `select_primary_available_source` (UAC `source_priority`) so two source-rows can't inflate `found_dates`.
+      **Per-source breakdown** (databento vs massive) is surfaced in the data-status drilldown derived from the
+      **`_index` `source` COLUMN** that `read_availability_index` already loads — i.e. a `groupby("source")` on the
+      in-memory manifest rows, NOT a per-parquet column scan (the v9 manifest denormalises `source` to the row level, so
+      the breakdown is effectively free; the parquet-data-column path is slow and MUST be avoided). Implementation: (1)
+      union-dedupe in the aggregator for the denominator; (2) add a per-source sub-aggregate from the same `_index` rows
+      for the drilldown. Add a QG test asserting union (2 source rows on one date → 1 found-date) + the per-source
+      split. Repo: **deployment-api\*\*. Home: this plan FLAG-1. (No longer operator-blocked.)
 - [ ] [CODE] P1. **FLAG-3 (deployment-api) — DECIDED (operator 2026-06-02): env-tier the `*-store` buckets, `-prd`
       initial.** The `instruments-store` / `features-store` / `ml-store` / `execution-store` (+ `ml-configs-store`,
       `deployment_api_config.py:547`) buckets get **env-tiered** (split env-wise: prd/stg/dev), with `-prd` as the
@@ -113,10 +113,14 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       `-prd` bucket as part of the initial migration. Coordinate with the active deployment-api agent. Repo:
       **deployment-api** (+ deployment-service cloud-providers.yaml). Home: this plan FLAG-3 + `bucket_name_ssot…`. (No
       longer operator-blocked.)
-- [ ] [CODE] P2. **FLAG-4 (deployment-api, OPERATOR/VenueMapping decision)** —
-      `MTDS_CATEGORY_META["TRADFI"].venue_accessor` = `all_databento_venues` (6) omits Massive-only venues → misleading
-      TRADFI honest-coverage denominator. Add Massive venues to the accessor (operator/VenueMapping call). Repo:
-      **deployment-api**. Home: this plan FLAG-4.
+- [x] ✅ [CODE] P2. **FLAG-4 — RESOLVED-BY-VERIFICATION (slot-6 2026-06-03): premise was a misread.**
+      `MTDS_CATEGORY_META["TRADFI"].venue_accessor = all_databento_venues` does **NOT** omit venues — it already
+      resolves to the FULL tradfi set `[CME, CBOE, NASDAQ, NYSE, ICE, FX]` (the "Massive-only" venues CBOE+FX are
+      already in it). So the denominator is correct today. Added a correctly-named alias
+      `VenueMapping.all_tradfi_venues` (= the same set) in **UAC@0abbdf86** for future clarity; deployment-api stays on
+      the behavior-identical `all_databento_venues` (deployment-api@60cd585, comment added) — rename deferred to a
+      post-UAC-cascade pass to avoid a forward-dep break against the deployed pinned UAC. Repo: deployment-api +
+      unified-api-contracts. Home: this plan FLAG-4.
 
 ### TIER 3 — guards + vocab + tests + docs (canonical safety-net)
 
