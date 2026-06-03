@@ -43,16 +43,19 @@ recurs on every other slot/host until the provisioning is fixed.**
 > shared-template commit hook is the only one that applies to EVERY commit in EVERY repo. The CLAUDE.md directive is a
 > read-it-and-comply instruction, NOT a gate — it does not block a bad commit.
 
-- [ ] [INFRA] P1. **Commit-time identity hook in the SHARED pre-commit templates (the actual "everywhere" enforcer).**
-      Add a `local` hook (`fix-commit-identity`) to each `scripts/pre-commit-templates/*.pre-commit-config.yaml`
-      (python-service / python-library / ui / docs) → rolled out to all repos via the existing template→repo mechanism
-      (same path as ruff / gitleaks / conventional-pre-commit). The hook derives the EXPECTED identity — slot `<N>` from
-      the `tab/<op>/<N>` branch, `<host>` from `VM_NAME` (→ `vm-<id>`) else `laptop`/hostname — and **self-heals via
-      `git config extensions.worktreeConfig true` + `git config --worktree user.name/user.email`** (NOT plain
-      `git config` — `.tabs/<N>/<repo>` are worktrees sharing one `.git/config`, so plain config is last-writer-wins
-      across slots; see codex § "Commit attribution" GOTCHA) — or blocks with the exact fix command, so a commit cannot
-      be made with a wrong / leaked identity, regardless of provisioning state. Survives the bot-email leak by
-      construction. Repo: unified-trading-pm (templates) + `install-hooks.sh` rollout. SSOT:
+- [x] ✅ [INFRA] P1. **Commit-time identity hook BUILT (the "everywhere" enforcer)** — `PM@92223c894`. Script
+      `scripts/hooks/fix-commit-identity.sh` (derives slot from `tab/<op>/<N>` branch + host from `VM_NAME` else laptop;
+      enforces `git config --worktree user.name="ikennaigboaka [slot-N·host]"` / `user.email=ikennaigboaka@gmail.com`;
+      **FAIL-CLOSED** — git resolves author before hooks, so it blocks + self-heals on drift, re-commit lands correct;
+      **silent no-op when correct**; **skips in CI** so the semver bot identity is preserved). Wired into all 4
+      `scripts/pre-commit-templates/*.pre-commit-config.yaml` + PM's live `.pre-commit-config.yaml`. Tested end-to-end
+      (laptop→`slot-7·laptop`, `VM_NAME=vm-cefi`→`slot-7·vm-cefi`, wrong-identity commit blocked then retry correct) and
+      ran live on PM@92223c894 ("Enforce slot·host commit identity … Passed").
+- [ ] [INFRA] P1. **DEPLOY the hook to all repos + VMs** — run `bash scripts/propagation/rollout-pre-commit-configs.sh`
+      (copies the updated templates → every repo's `.pre-commit-config.yaml`; dry-run 2026-06-03 shows all 25 repos
+      drifted from template, so this ALSO re-aligns pre-existing config drift), then commit+push each changed
+      `.pre-commit-config.yaml` per repo (→ tab → LDR → VMs pull → `prek install` → enforced on every commit). 25-repo
+      controlled deploy (handle per-repo tab-vs-LDR divergence as in the recovery rule). SSOT:
       `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
 - [ ] [INFRA] P1. **`setup-tab-worktrees.sh` standardises identity per worktree** at
       `--init`/`--add-slot`/`--reset-slot` via `git config extensions.worktreeConfig true` (once per repo) +
