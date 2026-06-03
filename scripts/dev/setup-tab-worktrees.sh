@@ -50,6 +50,17 @@ TABS_DIR="${WORKSPACE_ROOT}/.tabs"
 MANIFEST="${PM_DIR}/workspace-manifest.json"
 INTEGRATION_BRANCH="live-defi-rollout"
 
+# Per-worktree commit identity (commit_identity_misconfig_fleet_2026_06_03). Provision
+# the SAME identity the fix-commit-identity pre-commit hook expects, so the hook is a
+# silent no-op rather than a fail-closed block on the first commit:
+#   name  = "ikennaigboaka [slot-<N>·<host>]"   email = "ikennaigboaka@gmail.com"
+# <host> = VM_NAME on a fleet VM, else "laptop". Worktrees SHARE the main clone's
+# .git/config, so per-slot identity REQUIRES extensions.worktreeConfig + git config
+# --worktree (a plain `git config user.name` is last-writer-wins across all slots).
+# SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution".
+WORKTREE_HOST="${VM_NAME:-laptop}"
+CANON_GIT_EMAIL="ikennaigboaka@gmail.com"
+
 # FM6 (orchestrator_autonomy_audit_remediation): per-repo integration base. Reads
 # workspace-manifest.json repositories.<repo>.integration_branch, defaulting to
 # ${INTEGRATION_BRANCH} (live-defi-rollout). Per operator decision 2026-06-02,
@@ -179,6 +190,20 @@ EOF
     fi
 }
 
+set_worktree_identity() {
+    # Provision the canonical per-worktree commit identity (idempotent). Worktrees share
+    # the main clone's .git/config, so a plain `git config user.name` is last-writer-wins
+    # across all slots — per-slot identity REQUIRES extensions.worktreeConfig (once per
+    # repo's shared config) + `git config --worktree`. Produces EXACTLY the name the
+    # fix-commit-identity pre-commit hook expects → the hook stays a silent no-op.
+    # SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution".
+    local slot="$1" slot_repo_dir="$2"
+    [[ -d "${slot_repo_dir}/.git" || -f "${slot_repo_dir}/.git" ]] || return 0
+    git -C "${slot_repo_dir}" config extensions.worktreeConfig true 2>/dev/null || true
+    git -C "${slot_repo_dir}" config --worktree user.name "ikennaigboaka [slot-${slot}·${WORKTREE_HOST}]" 2>/dev/null || true
+    git -C "${slot_repo_dir}" config --worktree user.email "${CANON_GIT_EMAIL}" 2>/dev/null || true
+}
+
 ensure_repo_worktree() {
     # Create worktree for one repo at one slot. Idempotent.
     local repo="$1" slot="$2"
@@ -193,6 +218,7 @@ ensure_repo_worktree() {
     fi
     if [[ -e "${slot_repo_dir}" ]]; then
         log "  OK   ${repo} (worktree exists)"
+        set_worktree_identity "${slot}" "${slot_repo_dir}"  # re-assert identity on re-run (idempotent fix)
         return 0
     fi
     mkdir -p "$(slot_dir "${slot}")"
@@ -208,6 +234,7 @@ ensure_repo_worktree() {
     if git -C "${sibling}" show-ref --verify --quiet "refs/heads/${branch}"; then
         git -C "${sibling}" worktree add "${slot_repo_dir}" "${branch}" >/dev/null
         log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, local)"
+        set_worktree_identity "${slot}" "${slot_repo_dir}"
         return 0
     fi
     # Refresh remote-tracking refs for both the slot branch + the integration
@@ -225,6 +252,7 @@ ensure_repo_worktree() {
             "origin/${base}" >/dev/null
         log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, new from ${base})"
     fi
+    set_worktree_identity "${slot}" "${slot_repo_dir}"
 }
 
 write_slot_envrc() {
@@ -349,6 +377,11 @@ case "${MODE}" in
         log "Resetting slot ${SLOT_NUM} for new theme (operator '${OPERATOR}')"
         verify_slot_clean "${SLOT_NUM}" || { err "Slot ${SLOT_NUM} dirty — see above. Aborting reset."; exit 2; }
         rebase_slot "${SLOT_NUM}" || { err "Slot ${SLOT_NUM} rebase failed. Resolve manually, then re-run."; exit 3; }
+        # Re-assert per-worktree commit identity (idempotent) so a re-themed slot keeps the
+        # canonical slot·host attribution.
+        while IFS= read -r repo; do
+            set_worktree_identity "${SLOT_NUM}" "$(slot_dir "${SLOT_NUM}")/${repo}"
+        done < <(active_repos)
         truncate_slot_ping "${SLOT_NUM}"
         log "Slot ${SLOT_NUM} reset complete. Ready for new theme assignment."
         ;;

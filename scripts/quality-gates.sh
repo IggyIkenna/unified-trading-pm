@@ -273,6 +273,10 @@ EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
     "!**/reap_stale_blockers.py"
     "!**/tier_c_promotion_gate.py"
     "!**/verify_branch_protection_check_names.py"
+    # check_ci_status_bot_only.py: benign `manifest.get("repositories", {})` JSON default
+    # (same category — already in EMPTY_STR_EXCLUDE_GLOBS; was missed from this list when it
+    # landed). NOT the os.getenv empty-fallback anti-pattern.
+    "!**/check_ci_status_bot_only.py"
 )
 source "${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/base-service.sh"
 

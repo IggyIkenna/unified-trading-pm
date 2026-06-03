@@ -13,6 +13,8 @@
 #   5. Last reporter post returned HTTP 200 (against $ORCH_URL)
 #   6. ${WORKSPACE_ROOT}/.tabs/ exists with at least 1 slot worktree
 #   7. ${ORCH_TOKEN_FILE:-$HOME/.orch_token} is readable
+#   8. backend reachable + workflow-capable GH_TOKEN
+#   9. per-worktree commit identity canonical (recurrence guard for the bot-email leak)
 #
 # Usage: bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh
 #        bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh --quiet
@@ -187,6 +189,43 @@ else
         403)     bad "GH_TOKEN lacks Workflows:write (HTTP 403) — workflow migrations will block" ;;
         *)       bad "GH_TOKEN workflow-capability probe inconclusive (HTTP ${_code})" ;;
     esac
+fi
+
+# 9. Per-worktree commit identity (recurrence guard for commit_identity_misconfig_fleet_2026_06_03).
+#    Every slot worktree must carry the canonical identity — user.email == the GitHub-
+#    attributed account AND user.name == "ikennaigboaka [slot-<N>·…". A bot/CI email
+#    (semver-rollout[bot] / agent@ci.local) or a bare "ikennaigboaka" name means a
+#    persistent-config leak recurred (root-caused in rollout-semver-agent.sh +
+#    setup-workspace-from-manifest.sh). Fix: re-run setup-tab-worktrees.sh (provisions
+#    per-worktree identity) or the manual fallback in CLAUDE.md § "Commit attribution".
+section "per-worktree commit identity (recurrence guard)"
+CANON_EMAIL="ikennaigboaka@gmail.com"
+if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
+    bad_identity=0
+    checked=0
+    for _slot_dir in "${WORKSPACE_ROOT}"/.tabs/*/; do
+        _slot="$(basename "${_slot_dir}")"
+        [[ "${_slot}" =~ ^[0-9]+$ ]] || continue
+        for _repo_dir in "${_slot_dir}"*/; do
+            [[ -d "${_repo_dir}/.git" || -f "${_repo_dir}/.git" ]] || continue
+            checked=$((checked + 1))
+            _email="$(git -C "${_repo_dir}" config user.email 2>/dev/null || echo '')"
+            _name="$(git -C "${_repo_dir}" config user.name 2>/dev/null || echo '')"
+            if [[ "${_email}" != "${CANON_EMAIL}" ]] || [[ "${_name}" != *"[slot-${_slot}·"* ]]; then
+                bad "slot-${_slot}/$(basename "${_repo_dir}"): identity '${_name} <${_email}>' (want '…[slot-${_slot}·…] <${CANON_EMAIL}>')"
+                bad_identity=$((bad_identity + 1))
+            fi
+        done
+    done
+    if [[ ${checked} -eq 0 ]]; then
+        bad "no slot worktrees found to check identity (run setup-tab-worktrees.sh --init)"
+    elif [[ ${bad_identity} -eq 0 ]]; then
+        ok "all ${checked} slot worktree(s) carry canonical per-worktree identity"
+    else
+        bad "${bad_identity}/${checked} slot worktree(s) have non-canonical identity (commit-attribution leak recurred)"
+    fi
+else
+    bad ".tabs/ missing — cannot verify per-worktree identity"
 fi
 
 section "result: ${pass} passed / ${fail} failed"

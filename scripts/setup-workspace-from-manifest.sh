@@ -341,9 +341,20 @@ if [ -d "$SERVICE_DIR" ] && [ -f "$SERVICE_DIR/pyproject.toml" ]; then
         || { echo -e "${RED}❌ failed to install $SERVICE_NAME${NC}" >&2; exit 1; }
 fi
 
-# ── GIT IDENTITY (for agent commit steps) ────────────────────────────────────
-git config --global user.email "${GIT_USER_EMAIL:-agent@ci.local}" 2>/dev/null || true
-git config --global user.name "${GIT_USER_NAME:-Audit Agent}" 2>/dev/null || true
+# ── GIT IDENTITY (fallback for agent commit steps) ───────────────────────────
+# Seed a GLOBAL fallback identity ONLY when the machine has none — never clobber an
+# existing (possibly already-correct) global identity, and never write a bot/CI email.
+# The default is the canonical GitHub-attributed human account (NOT `agent@ci.local`),
+# so even an un-provisioned worktree attributes correctly. Per-worktree identity
+# (`git config --worktree`, set by setup-tab-worktrees.sh) + the fix-commit-identity
+# pre-commit hook refine this to `ikennaigboaka [slot-N·host]` and OVERRIDE this global.
+# SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution".
+if [ -z "$(git config --global user.email 2>/dev/null)" ]; then
+    git config --global user.email "${GIT_USER_EMAIL:-ikennaigboaka@gmail.com}" 2>/dev/null || true
+fi
+if [ -z "$(git config --global user.name 2>/dev/null)" ]; then
+    git config --global user.name "${GIT_USER_NAME:-ikennaigboaka}" 2>/dev/null || true
+fi
 
 echo ""
 ok "Workspace bootstrap complete: $WORKSPACE_ROOT"
