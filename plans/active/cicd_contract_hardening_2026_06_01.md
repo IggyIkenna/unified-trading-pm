@@ -390,11 +390,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 > (stuck; a recovery transition was missed) vs LDR `UTL=FEATURE_GREEN` (stale snapshot via backmerge) — and the promoter
 > reads main, so the whole fleet dep-blocked behind a phantom-red base.
 
-- [ ] [SCRIPT] P0. **Guard 1 — single-writer enforcement.** PM QG step + PR check that REJECTS any commit/PR touching
-      `repositories.*.ci_status` unless author == `ci-status-update[bot]`. Prevents a slot / Prettier / manual edit
-      forking the value (the exact LDR-vs-main fork above). New `scripts/cicd/check_ci_status_bot_only.py` wired into PM
-      `quality-gates.sh` + a lightweight PR-context check. Tests: bot-edit passes, human-edit fails, no-change passes.
-      repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P0. **Guard 1 — single-writer enforcement — DONE (unified-trading-pm@ad2f72187).**
+      `scripts/cicd/check_ci_status_bot_only.py`: change-set-relative diff (working-tree vs HEAD locally / head vs base
+      in CI — so a pre-existing LDR-vs-main fork never false-positives), bot-actor bypass
+      (`ci-status-update[bot]`/`github-actions[bot]`), fail-open on missing baseline. Wired into PM `quality-gates.sh`
+      post-gates (HARD, blocking) with `--actor "$GITHUB_ACTOR"`. 8 unit tests (`tests/unit/test_check_ci_status_bot_only.py`),
+      ruff green, pyright-excluded (same manifest-parse pattern as `tier_c_promotion_gate.py`). **Follow-up (small):** add
+      the CI/PR-context invocation (`--baseline-ref origin/<base> --actor "$GITHUB_ACTOR"`) into `python-quality-gates-v2`
+      so the bot-bypass + base-diff also enforce server-side on PRs (local layer shipped).
 - [ ] [SCRIPT] P0. **Guard 2 — single-SSOT-branch discipline.** (a) ALL readers (promoter, sit-gate, staging-to-main,
       dashboard) read ci_status from **main only** (promoter already does — make explicit + audit the rest). (b)
       `main-backmerge-to-ldr.yml` must NOT carry ci_status BACKWARD to LDR — a `.gitattributes merge=ours` on the
