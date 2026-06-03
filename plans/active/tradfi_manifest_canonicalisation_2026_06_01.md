@@ -340,51 +340,62 @@ VM.
       genuine source-zero vs masked fetch failure. Preserve the legit weekend/holiday/out-of-coverage typed empties.
 - [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows (6,036) v9, status PRESERVED** — never silently
       relabel a failure to `empty_confirmed`; they stay flagged for backfill.
-- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS tradfi databento/massive adapters)**: on a genuine API error
-      (timeout/5xx/429/auth) for an in-universe ticker on a trading day within coverage bounds, the handler MUST
-      `record_failed` (→ `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`.
-      Grep the tradfi databento/massive fetch paths for `except … record_empty` / bare `return []` swallows; gate
-      empty-vs-failed on trading-calendar + ticker-in-universe + UAC coverage. Cross-ref the sports CF-11 model
-      (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11). **DIAGNOSIS (slot-3 2026-06-02): MTDS side VERIFIED
-      COMPLIANT** — same finding as the cefi CF-11 todo (the MTDS orchestrator finalize is shared across AGs): tradfi
-      databento/massive adapters classify+emit+re-raise (no swallow), and `orchestrator.py:3818`/`:3766` gate
+- [x] ✅ [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS tradfi databento/massive) — DONE
+      (instruments-service@bd1456aa, slot-6 2026-06-03).** MTDS side was VERIFIED COMPLIANT (below); IS-side residual is
+      now fixed — Databento fetch-failure threads state → attempted_failed (see the STATE-threading item). on a genuine
+      API error (timeout/5xx/429/auth) for an in-universe ticker on a trading day within coverage bounds, the handler
+      MUST `record_failed` (→ `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT
+      `record_empty`. Grep the tradfi databento/massive fetch paths for `except … record_empty` / bare `return []`
+      swallows; gate empty-vs-failed on trading-calendar + ticker-in-universe + UAC coverage. Cross-ref the sports CF-11
+      model (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11). **DIAGNOSIS (slot-3 2026-06-02): MTDS side
+      VERIFIED COMPLIANT** — same finding as the cefi CF-11 todo (the MTDS orchestrator finalize is shared across AGs):
+      tradfi databento/massive adapters classify+emit+re-raise (no swallow), and `orchestrator.py:3818`/`:3766` gate
       `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded fetch-failure (incl.
       `failed_per_dt_by_venue` for bundled-Databento partial-success). RESIDUAL = focused instruments-service write-path
       verify. See cefi plan § CF-11 for the full diagnosis.
-- [ ] [CODE] P1. **IS-side CF-11 verify (slot/Harsh 2026-06-02, read-only) — partial result + 1 concrete zero-signal
-      gap.** Read the IS tradfi universe-discovery adapter
-      `instruments-service/.../reference_data/adapters/tradfi/     databento.py`: `_fetch_symbols` handles a
-      `BentoError` (L820) by `classify_venue_error("DATABENTO",…)` + emit `ADAPTER_FETCH_FAILED` + **`return []`**, and
-      `get_instruments` (L537-547) does `results.extend(batch)` with NO raise/record — the classify+emit-event+return-[]
-      shape (consistent with the shard-isolation "no raise in per-venue loops" rule). **CONCRETE GAP**: the SECOND site
-      `databento.py:826` (`data.to_df()` parse failure) does `logger.warning` + `return []` with **NO
-      `ADAPTER_FETCH_FAILED` event + NO classify** → on a transient parse failure those symbols vanish from the
-      discovered universe with ZERO failure signal (silent universe truncation = A8-class false-complete coverage). Fix
-      = mirror the L820 branch (classify + emit `ADAPTER_FETCH_FAILED`) on the parse-failure branch — **DONE (slot-5
-      2026-06-03, instruments-service handoff branch `handoff/tradfi-e5-cf11-slot6`@b4a43093 (un-QG'd; run IS QG before
-      ship))**: the `data.to_df()` parse branch now classifies (`VALIDATION_ERROR`) + emits `ADAPTER_FETCH_FAILED` like
-      the L820 branch. **OPEN QUESTION NOW RESOLVED → CONFIRMED (B) SILENT-SHRINK GAP (slot-5 2026-06-03 trace, verified
-      file:line):** the emitted `ADAPTER_FETCH_FAILED` is **fire-and-forget — the manifest layer never reads it**, so
-      neither L820 NOR L826 produces an `attempted_failed` row. Trace: `databento.py:820` SWALLOWS the `BentoError`
-      (`return []`, no re-raise) → `base_adapter.py:240` caches the `[]` as a legit result →
-      `urdi_reference_provider.py:_fetch_one` only classifies failures from RAISED exceptions (its
-      `except Timeout/Connection/RuntimeError/ValueError` → `failed[]`), so an empty return is a CLEAN success → the
-      venue lands in `orchestrator.py` `_non_error_venues` (NOT `failed_venues`) → on a trading-day zero the
-      orchestrator does NOT `record_failed`; the cell has NO honest `attempted_failed` row (A8-class false-complete
-      coverage). The event-emission fix above is OBSERVABILITY-ONLY — it does not close the data gap. Repo:
-      instruments-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. **IS Databento fetch-failure must thread STATE, not just fire an event (closes the CONFIRMED
-      silent-shrink gap above).** The real fix: the `databento.py` `BentoError` branch (L820) + parse-failure branch
-      (L826) must SIGNAL the failure to URDI as state so it reaches `_non_error_venues`-vs-`failed_venues` accounting —
-      either re-raise a `urdi_reference_provider._fetch_one`-classifiable exception (RuntimeError/ConnectionError/… per
-      its `except` ladder) so the venue lands in `failed[]`, OR thread a per-venue failure flag through
-      `get_instruments_cached` → URDI → orchestrator. Blast radius (own unit, NOT a same-commit hack): (1) must NOT
-      cache `[]` from a failed fetch (`base_adapter.py:240`); (2) audit every other `get_instruments()` caller that
-      relies on the graceful `[]`-on-failure contract; (3) ensure orchestrator records `attempted_failed` (not
-      raise-and-abort) on a trading-day fetch-fail so it's a retryable honest-absence row, not a shard crash; (4) unit
-      test: fetch-fail on a trading-day in-universe venue → `attempted_failed` row, genuine-empty → `empty_confirmed`.
-      Cross-ref the same adapter-swallow pattern likely affects cefi/other IS adapters (verify). Repo:
-      instruments-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. **IS-side CF-11 verify — DONE (superseded by the STATE-threading fix below,
+      instruments-service@bd1456aa).** The observability-only event-emission (handoff branch) is now subsumed: the
+      parse-failure branch emits `ADAPTER_FETCH_FAILED` AND the real state-threading fix lands the `attempted_failed`
+      row. (slot/Harsh 2026-06-02, read-only) — partial result + 1 concrete zero-signal gap.** Read the IS tradfi
+      universe-discovery adapter `instruments-service/.../reference_data/adapters/tradfi/     databento.py`:
+      `_fetch_symbols` handles a `BentoError` (L820) by `classify_venue_error("DATABENTO",…)` + emit
+      `ADAPTER_FETCH_FAILED` + **`return []`**, and `get_instruments` (L537-547) does `results.extend(batch)` with NO
+      raise/record — the classify+emit-event+return-[] shape (consistent with the shard-isolation "no raise in per-venue
+      loops" rule). **CONCRETE GAP**: the SECOND site `databento.py:826` (`data.to_df()` parse failure) does
+      `logger.warning` + `return []` with **NO `ADAPTER_FETCH_FAILED` event + NO classify** → on a transient parse
+      failure those symbols vanish from the discovered universe with ZERO failure signal (silent universe truncation =
+      A8-class false-complete coverage). Fix = mirror the L820 branch (classify + emit `ADAPTER_FETCH_FAILED`) on the
+      parse-failure branch — **DONE (slot-5 2026-06-03, instruments-service handoff branch
+      `handoff/tradfi-e5-cf11-slot6`@b4a43093 (un-QG'd; run IS QG before ship))**: the `data.to_df()` parse branch now
+      classifies (`VALIDATION_ERROR`) + emits `ADAPTER_FETCH_FAILED` like the L820 branch. **OPEN QUESTION NOW RESOLVED
+      → CONFIRMED (B) SILENT-SHRINK GAP (slot-5 2026-06-03 trace, verified file:line):** the emitted
+      `ADAPTER_FETCH_FAILED` is **fire-and-forget — the manifest layer never reads it\*\*, so neither L820 NOR L826
+      produces an `attempted_failed` row. Trace: `databento.py:820` SWALLOWS the `BentoError` (`return []`, no re-raise)
+      → `base_adapter.py:240` caches the `[]` as a legit result → `urdi_reference_provider.py:_fetch_one` only
+      classifies failures from RAISED exceptions (its `except Timeout/Connection/RuntimeError/ValueError` → `failed[]`),
+      so an empty return is a CLEAN success → the venue lands in `orchestrator.py` `_non_error_venues` (NOT
+      `failed_venues`) → on a trading-day zero the orchestrator does NOT `record_failed`; the cell has NO honest
+      `attempted_failed` row (A8-class false-complete coverage). The event-emission fix above is OBSERVABILITY-ONLY — it
+      does not close the data gap. Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. **IS Databento fetch-failure threads STATE — DONE (instruments-service@bd1456aa, slot-6
+      2026-06-03).** databento.py `_fetch_symbols` BentoError + `data.to_df()` parse-failure branches now RE-RAISE
+      `RuntimeError` (after classify+emit) → caught by `urdi_reference_provider._fetch_one`'s per-venue
+      `except RuntimeError` (shard-isolation boundary) → venue in `failed[]` → excluded from `_non_error_venues` →
+      orchestrator `record_failed` → honest `attempted_failed` row. Genuine empty still returns `[]` cleanly;
+      `base_adapter` cache skips write on raise (no failed-fetch memoization). 4 tests (raise-on-fail /
+      genuine-empty-clean / cache-not-memoized) + 40/40 file; IS QG --no-fix exit 0. Caveat: same swallow likely in
+      cefi/defi/sports IS adapters → separate audit. Closes the CONFIRMED silent-shrink gap above).\*\* The real fix:
+      the `databento.py` `BentoError` branch (L820) + parse-failure branch (L826) must SIGNAL the failure to URDI as
+      state so it reaches `_non_error_venues`-vs-`failed_venues` accounting — either re-raise a
+      `urdi_reference_provider._fetch_one`-classifiable exception (RuntimeError/ConnectionError/… per its `except`
+      ladder) so the venue lands in `failed[]`, OR thread a per-venue failure flag through `get_instruments_cached` →
+      URDI → orchestrator. Blast radius (own unit, NOT a same-commit hack): (1) must NOT cache `[]` from a failed fetch
+      (`base_adapter.py:240`); (2) audit every other `get_instruments()` caller that relies on the graceful
+      `[]`-on-failure contract; (3) ensure orchestrator records `attempted_failed` (not raise-and-abort) on a
+      trading-day fetch-fail so it's a retryable honest-absence row, not a shard crash; (4) unit test: fetch-fail on a
+      trading-day in-universe venue → `attempted_failed` row, genuine-empty → `empty_confirmed`. Cross-ref the same
+      adapter-swallow pattern likely affects cefi/other IS adapters (verify). Repo: instruments-service. parent_epic:
+      mtds_mdps_master.
 
 ## Success criteria
 
