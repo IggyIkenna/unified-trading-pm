@@ -87,9 +87,21 @@ Tracked here; substance lives in the per-AG canonicalisation plans + `downstream
 **Do not author a duplicate plan.** Verify-script: `market-tick-data-service/.../scripts/audit_canonical_form.py`
 (CF-1…CF-12 per bucket). **Gate: audit done-state FIRST, then sample — never run MDPS/features blind.**
 
-- [ ] [SCRIPT] P0. Audit current done-state of IS + MTDS canonicalisation against **origin** (not local) — confirm
+- [x] ✅ [SCRIPT] P0. Audit current done-state of IS + MTDS canonicalisation against **origin** (not local) — confirm
       whether the C0 single-walk runs actually completed per AG, or are still open/blocked. Output a per-AG ✓/○/blocked
-      grid.
+      grid. — **DONE (slot 10, 2026-06-03): 0/6 C0 single-walks completed.** L0 tarball blocker resolved 2026-06-02 —
+      all AGs unblocked in principle; no data migration has run for any AG.
+      **Per-AG C0 single-walk grid (origin state, PM HEAD):**
+      | AG | C0 | Pre-work done | Next action |
+      |---|---|---|---|
+      | DeFi (MTDS) | ○ | C0-RD1-RD3c code ✅; 2022-01 dry-run ✅ | C0-RD6 `_DEX_EXT` split + LST re-dry (needs_attr≈0) → then `--apply` (C0-RD4) |
+      | CeFi (MTDS) | ○ | Layout ✅, migrator ✅, writer drained ✅, E5 manifest rebuild ✅ | E4 dry-VM run + full apply not started; Phase-0 layout audit item also open |
+      | TradFi (MTDS) | ○ | Layout ✅ (E1), migrator ✅ (E2), manifest rebuild ✅ (E5) | C0 bundled walk not run |
+      | Prediction (MTDS) | ○ | Layout ✅ (E1), migrator ✅ (E2), captured-atom E5 partial ✅ | C0 full walk not run; E5 empty/failed re-emit still open |
+      | Sports (MTDS) | ○ | 35/55 items ✅; IS legacy→prd copy ✅ (316 cells) | C0 ONE bundled walk on market-data-tick-sports not run |
+      | IS (non-sports) | ○ | P0 CF audit ✅ (cefi/tradfi/pred instruments-store debt known) | Phase-0 layout audit + C0 bundled walk (E1–E6) not started |
+      **Conclusion**: all 6 C0 walks OPEN, none BLOCKED in the formal sense. DeFi has the most remaining code
+      pre-conditions (C0-RD6 + LST re-dry); others have migration scripts ready — gap is launching the VM-scale walk.
 - [x] ✅ [SCRIPT] P0. Resolve the tarball/L0 blocker dependency (see D) — **ANSWER: UNBLOCKED.** D's P0 shipped
       2026-06-02 (slot 1): `deployment-service` jobs image built + published AND the tarball reaper is LIVE + verified
       (D owning plan, `tarball_cleanup_sch…`). So the pinned-tarball-pruned failure family is resolved — B's verify is
