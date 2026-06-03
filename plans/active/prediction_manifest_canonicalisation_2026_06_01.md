@@ -20,6 +20,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
 
+> **🟢 VM RUNNING — E4 DRY migration (slot-5 2026-06-03 19:03 UTC).** `canonical-migration-prediction-20260603-190322`
+> (asia-northeast1-c, e2-standard-8) running
+> `migrate_prediction_to_pred_prd_v9 --start-date 2025-03-14 --end-date 2026-06-01 --workers 64` in **DRY mode (no
+> `--apply` — NO mutations, plans the moves only)**. SHA-pinned mtds@90aeb7dd / utl@101960a4 / uac@1bd28d8c (fresh
+> tarballs built 2026-06-03 — the prior tarball predated the `eb5eaad2` gcs_copy_object import fix). Auto-shutdown on
+> completion. **DO NOT launch a second prediction migration VM or run E2–E8 while this is up.** The IRREVERSIBLE
+> full-run (`full`/`--apply`) + E8 legacy-delete stay gated on operator review of this dry output. Banner-remove owned
+> by slot-5 at completion.
+
 ## Slot-5 Prediction master orchestrator — owned + attached plans/issues
 
 > **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot (five slots). **Slot 5 = Prediction
