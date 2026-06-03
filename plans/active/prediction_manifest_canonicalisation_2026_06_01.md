@@ -20,14 +20,11 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
 
-> **🟢 VM RUNNING — E4 DRY migration (slot-5 2026-06-03 19:03 UTC).** `canonical-migration-prediction-20260603-190322`
-> (asia-northeast1-c, e2-standard-8) running
-> `migrate_prediction_to_pred_prd_v9 --start-date 2025-03-14 --end-date 2026-06-01 --workers 64` in **DRY mode (no
-> `--apply` — NO mutations, plans the moves only)**. SHA-pinned mtds@90aeb7dd / utl@101960a4 / uac@1bd28d8c (fresh
-> tarballs built 2026-06-03 — the prior tarball predated the `eb5eaad2` gcs_copy_object import fix). Auto-shutdown on
-> completion. **DO NOT launch a second prediction migration VM or run E2–E8 while this is up.** The IRREVERSIBLE
-> full-run (`full`/`--apply`) + E8 legacy-delete stay gated on operator review of this dry output. Banner-remove owned
-> by slot-5 at completion.
+> **⏸️ E4 DRY-RUN DONE 2026-06-03 (VM auto-deleted) — full-run AWAITING OPERATOR REVIEW.** The dry migration planned
+> **1,897,691** object moves (0 copied) cleanly (exit 0) — see the E4 todo for the per-phase breakdown + verified
+> transforms. **The next step is the IRREVERSIBLE-DIRECTION FULL run (`… full`/`--apply`, the live 1.9M write) — do NOT
+> fire it without operator sign-off on the dry plan.** E8 legacy-delete stays separately gated (post-E7-GREEN + shared
+> fleet drain with slot-2).
 
 ## Slot-5 Prediction master orchestrator — owned + attached plans/issues
 
@@ -215,11 +212,19 @@ be fixed first if run on a VM.
 - [ ] [DATA] P0. E3 Confirm `mdps-prediction-2025` writer drained; snapshot `pred-prd/_index` →
       `_index/snapshots/pre_v9_canonical_2026_06_01.parquet`.
 - [ ] [DATA] P0. E4 Dry-VM run + full-VM run. **Launcher WIRED 2026-06-01** (deployment-service@f8866b6): `prediction`
-      now invokes `migrate_prediction_to_pred_prd_v9` (dry-by-default + `--apply`) — run
-      `bash deployment-service/scripts/vm/launch-canonical-migration-vm.sh prediction 2025-03-14 2026-06-01 dry` then
-      review planned moves/timing in the VM log → optimise workers if >1h → re-fire `full` (no fire-and-forget:
-      STARTED<60s + progress/hr + STOPPED; T+10min `gcloud instances describe`). **PENDING: VM launch + monitor (next
-      session — VM-only per local-DNS constraint).**
+      now invokes `migrate_prediction_to_pred_prd_v9` (dry-by-default + `--apply`). **DRY-RUN DONE + CLEAN (slot-5
+      2026-06-03, VM `canonical-migration-prediction-20260603-190322`, sha-pinned mtds@90aeb7dd, exit_code=0,
+      auto-deleted).** Planned moves (`copied=0`, dry): `raw_tick_data/by_date` **751,723** +
+      `processed_candles/by_date` **582,730** + stale pred-prd `category=` **563,238** = **TOTAL 1,897,691** objects.
+      Transforms verified correct vs canonical target: `category=prediction`→`asset_group=prediction`,
+      `pipeline_mode=batch_polymarket_clob` inserted (LEFT of `asset_group=`), env-tier `prediction`→`pred-prd`, the
+      6-dim `data_source=/market_category=/underlying=/     market_type=/resolution_period=` segments dropped→parquet
+      columns. NO errors/exceptions/skips. NB: had to rebuild the code tarball first — the prior GCS tarball (db6d947d)
+      predated `eb5eaad2` (`gcs_copy_object` deep-import fix) and would have ImportError'd. **REMAINING
+      (operator-gated): the FULL run (`… full`/`--apply`) is the live 1.9M object write** — fire only after operator
+      reviews this dry plan (no fire-and-forget: STARTED<60s + progress/hr + STOPPED; T+10min
+      `gcloud instances describe`). Dry run took ~3 min (1.9M plan @ workers=64) so the full copy (server-side
+      `gcs_copy_object`) is well within budget — no worker re-tune needed.
 
   > **✅ GRANULARITY RESOLVED (slot-3 2026-06-02 — the atom is the live-writer atom, batch=live SSOT).** A sub-agent
   > draft was REVERTED for collapsing the row key to `(date,venue,instrument_type,data_type)` (dropped `{cid}` +
