@@ -4,10 +4,12 @@ name: Plan Health Agent
 # mutates plans.
 #
 # Design: do EVERYTHING deterministic in a script (plan counts, the canonical hygiene
-# sweep — frontmatter / todo-format / line-caps / SSOT plan formatting — archive
-# candidate × locked_by cross-reference, inventory regen) and hand the agent a compact
-# digest. The cheap Haiku agent then does the ONE thing a script cannot: cross-plan
-# contradiction detection. Findings are surfaced to the GHA run summary + Slack.
+# sweep — frontmatter / todo-format / line-caps / SSOT plan formatting / CLAUDE↔SUB_AGENT
+# topic parity — archive candidate × locked_by cross-reference, inventory regen) and hand
+# the agent a compact digest. The cheap Haiku agent then does the TWO things a script
+# cannot: (1) cross-plan contradiction detection, and (2) doc-drift detection — where a
+# CLAUDE.md / SUB_AGENT rule claim is contradicted/superseded by the live active plans.
+# Findings are surfaced to the GHA run summary + Slack.
 #
 # Only the PM repo is checked out, to keep agent context (and cost) small.
 #
@@ -95,7 +97,23 @@ jobs:
             exit 1
           fi
 
-      # ── STEP 2: minimal Haiku agent — contradiction detection ONLY ─────────
+      - name: Load CLAUDE.md into env (for doc-drift check)
+        run: |
+          # CLAUDE.md is the workspace rule index; feed it so the agent can flag where a
+          # CLAUDE.md / SUB_AGENT rule claim is CONTRADICTED by an active plan or epic
+          # (the semantic counterpart to the deterministic check_claude_subagent_parity.sh).
+          if [ -f "cursor-configs/CLAUDE.md" ]; then
+            {
+              echo "WORKSPACE_RULES_CLAUDE<<CLAUDE_EOF"
+              cat "cursor-configs/CLAUDE.md"
+              echo "CLAUDE_EOF"
+            } >> "$GITHUB_ENV"
+          else
+            echo "ERROR: cursor-configs/CLAUDE.md not found"
+            exit 1
+          fi
+
+      # ── STEP 2: minimal Haiku agent — contradiction + doc-drift detection ──
       - name: Run plan health agent (contradiction detection)
         id: agent
         if: env.ANTHROPIC_API_KEY != ''
@@ -115,11 +133,13 @@ jobs:
 
           You are the plan health agent for unified-trading-pm. Counts, hygiene checks,
           formatting, and archive/lock status are ALREADY computed deterministically — do
-          NOT recompute or second-guess them. Your ONLY job is the one thing a script
-          cannot do: detect cross-plan contradictions.
+          NOT recompute or second-guess them. Your job is the TWO things a script cannot
+          do: (1) detect cross-plan contradictions, and (2) detect doc-drift — where a
+          governance-doc rule (CLAUDE.md / SUB_AGENT_MANDATORY_RULES.md) is CONTRADICTED
+          by the live active plans/epics.
 
           Rules: no chain-of-thought, no prose. Output ONLY a single JSON object.
-          Work from the two pre-computed inputs below. Do NOT read full plan files — the
+          Work from the pre-computed inputs below. Do NOT read full plan files — the
           full corpus is ~4x your context window; the skeleton is the authoritative,
           complete, bounded view of every in-scope plan.
 
@@ -130,9 +150,12 @@ jobs:
              scope = plans/active + plans/epics + plans/active/issues; archive + non-plan
              files already excluded) ─────────────────────────────────────────────────
           ${SKELETON}
+
+          ── CLAUDE.md (workspace rule index — the governance SSOT to drift-check) ────
+          ${WORKSPACE_RULES_CLAUDE}
           ──────────────────────────────────────────────────────────────────────────
 
-          CONTRADICTION CHECK:
+          CHECK 1 — CONTRADICTION (cross-plan):
           Using ONLY the skeletons above, for each pair of plans with overlapping scope
           (same service, same architectural area, or same todo-ID/topic), flag clear
           contradictions where they:
@@ -142,9 +165,19 @@ jobs:
           Be conservative — only flag clear contradictions, not mere overlap. If a pair
           looks contradictory but the skeleton lacks detail to be sure, omit it.
 
+          CHECK 2 — DOC-DRIFT (CLAUDE.md / SUB_AGENT vs live plans):
+          Compare rule CLAIMS in CLAUDE.md and SUB_AGENT_MANDATORY_RULES.md (the
+          MANDATORY RULES block at the top) against the plan skeletons. Flag a doc rule
+          that is clearly CONTRADICTED or SUPERSEDED by an active plan/epic — e.g. the
+          doc states a scope/value/status as X, but a plan's title/frontmatter/todos say
+          the canonical answer is now Y (the kind of staleness where the doc narrows or
+          contradicts shipped/in-flight plan scope). Be conservative — only flag clear
+          contradictions a reader could verify from the skeleton; omit mere elaboration
+          or topics a plan simply doesn't mention.
+
           Output EXACTLY this JSON shape and nothing else:
-          {\"contradictions\": [{\"plan_a\": \"...\", \"plan_b\": \"...\", \"description\": \"...\"}]}
-          If none: {\"contradictions\": []}"
+          {\"contradictions\": [{\"plan_a\": \"...\", \"plan_b\": \"...\", \"description\": \"...\"}], \"doc_drift\": [{\"doc\": \"CLAUDE.md|SUB_AGENT_MANDATORY_RULES.md\", \"claim\": \"...\", \"contradicted_by\": \"<plan file>\", \"description\": \"...\"}]}
+          If none: {\"contradictions\": [], \"doc_drift\": []}"
 
           claude --print --dangerously-skip-permissions --model claude-haiku-4-5-20251001 "$PROMPT" \
             > agent_out.txt 2>&1 || echo "Plan health agent exited non-zero — check logs"
@@ -155,19 +188,20 @@ jobs:
       - name: Skip agent — no API key
         if: env.ANTHROPIC_API_KEY == ''
         run: |
-          echo '{"contradictions": []}' > agent_out.txt
+          echo '{"contradictions": [], "doc_drift": []}' > agent_out.txt
 
       # ── STEP 3: assemble report → GHA run summary + Slack one-liner ────────
       - name: Assemble report
         id: report
         if: always()
         run: |
-          # Extract the agent's JSON contradiction object (last {...} block), default empty.
+          # Extract the agent's JSON object (last {...} block), default empty.
           CONTRA_JSON=$(grep -oE '\{.*"contradictions".*\}' agent_out.txt 2>/dev/null | tail -1 || true)
-          [ -z "$CONTRA_JSON" ] && CONTRA_JSON='{"contradictions": []}'
+          [ -z "$CONTRA_JSON" ] && CONTRA_JSON='{"contradictions": [], "doc_drift": []}'
           CONTRA_COUNT=$(printf '%s' "$CONTRA_JSON" | grep -oE '"plan_a"' | wc -l | tr -d ' ')
+          DRIFT_COUNT=$(printf '%s' "$CONTRA_JSON" | grep -oE '"contradicted_by"' | wc -l | tr -d ' ')
 
-          SUMMARY="${{ steps.digest.outputs.summary }} | contradictions: ${CONTRA_COUNT}"
+          SUMMARY="${{ steps.digest.outputs.summary }} | contradictions: ${CONTRA_COUNT} | doc-drift: ${DRIFT_COUNT}"
           echo "summary=${SUMMARY}" >> "$GITHUB_OUTPUT"
 
           {
@@ -176,6 +210,7 @@ jobs:
             cat plan_health_digest.md 2>/dev/null || echo "_(digest unavailable)_"
             echo ""
             echo "## Cross-plan contradictions: ${CONTRA_COUNT}"
+            echo "## CLAUDE.md/SUB_AGENT doc-drift vs live plans: ${DRIFT_COUNT}"
             echo ""
             echo '```json'
             printf '%s\n' "$CONTRA_JSON"

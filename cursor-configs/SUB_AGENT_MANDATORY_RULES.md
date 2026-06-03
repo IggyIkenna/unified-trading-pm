@@ -229,6 +229,9 @@ pointer before acting on any of them.
   spawns MUST set `model=` explicitly. SSOT: `codex/06-coding-standards/model-tier-selection.md`.
 - **Venv split**: tests via `quality-gates.sh` only; per-family layouts (`tests/<family>/unit/`) need
   `PYTEST_UNIT_DIR="tests/"` set before `source base-service.sh`. SSOT: `codex/06-coding-standards/quality-gates.md`.
+- **Master plan**: 2 DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live on a real wallet; TradFi
+  / Sports / Predictions run as parallel non-blocking tracks. SSOT: `plans/active/master_to_live_defi_2026_05_23.md` +
+  `plans/epics/`.
 
 **Data / manifest correctness (the heartbeat — no deferrals)**
 

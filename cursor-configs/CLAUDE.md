@@ -115,10 +115,18 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   reconciliation point** (does for plans what staging does for service repos). Convergence + 3-layer conflict model
   (textual=conflict-resolution-agent / semantic=reviewer+overlap-detector / hygiene=plan-health; **every alert → the
   orchestrator, not Slack-only**) SSOT: `codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model".
-- **Quality gates BEFORE quickmerge — non-negotiable order (HARD RULE)**: never invoke `quickmerge` until
-  `bash scripts/quality-gates.sh` has exited 0 on the current HEAD (the sentinel `.qg_last_passed_sha` is written on any
-  COMPLETE green run — fix-mode OR `--no-fix`; it is NOT gated on fix-mode). **Pass-1 MODE is a deliberate choice —
-  AUTO-FIX (`ruff format`/`--fix`) rewrites the WHOLE worktree, not just your files (HARD RULE, two cases):**
+- **Quality gates BEFORE COMMIT — the commit IS the per-repo quality boundary (HARD RULE; tightened 2026-06-03,
+  supersedes "before quickmerge")**: a **code** commit to the integration branch must be made from a
+  `quality-gates.sh`-green tree — never on the strength of the light prek hook alone
+  (ruff/format/gitleaks/conventional-commit). So `bash scripts/quality-gates.sh` must have exited 0 on HEAD's content
+  before you `git commit` code, NOT merely before `quickmerge`. This already held on the quickmerge path (Pass-1 QG →
+  Pass-2 commits); it now equally binds the direct **Commit+Push+Flip** path. Realize it cheaply via **QG-sweep
+  batching** (run the gate ONCE over a batch → make per-shippable-unit commits from that green tree) — the gate is
+  per-batch, not per-commit. **Scope**: binds commits that touch source the gate checks; pure doc / plan-flip / markdown
+  commits (e.g. `docs(plans):` flips) take the prek hook only — full QG is a Python/source gate, not a docs gate. The
+  sentinel `.qg_last_passed_sha` is written on any COMPLETE green run (fix-mode OR `--no-fix`; NOT gated on fix-mode),
+  and quickmerge still verifies it. **Pass-1 MODE is a deliberate choice — AUTO-FIX (`ruff format`/`--fix`) rewrites the
+  WHOLE worktree, not just your files (HARD RULE, two cases):**
   1. **Committing only your OWN named files** (the normal `quickmerge --agent --files '<paths>'` ship): format your
      files first (`ruff format <paths>`), then run **`bash scripts/quality-gates.sh --no-fix`** — full gate, writes the
      sentinel, **NO tree reformat**. Ship mode here would reformat unrelated/foreign files → re-dirties the slot, breaks

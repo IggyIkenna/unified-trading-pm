@@ -28,18 +28,19 @@ of `archive/`.
 
 All scripts live in `unified-trading-pm/scripts/plan-hygiene/`.
 
-| Script                          | What it checks                                                                         | Exit code                          |
-| ------------------------------- | -------------------------------------------------------------------------------------- | ---------------------------------- |
-| `run_hygiene_sweep.sh`          | Orchestrates all checks below + inventory regenerator                                  | 0 = all pass, 1 = any hard failure |
-| `check_frontmatter.sh`          | `---` on own first line; required fields present; no deprecated fields                 | 0 = clean                          |
-| `check_line_caps.sh`            | Soft warn >500L, hard fail >1000L; umbrella exemption (locked + >100 todos)            | 0 = no hard violations             |
-| `check_todo_regression.sh`      | Every plan's open todo count ≥ count on `origin/live-defi-rollout`                     | 0 = no regressions                 |
-| `check_archive_candidates.sh`   | Plans with 0 open todos and >0 done — prints list for operator review                  | always 0 (informational)           |
-| `check_codex_refs.sh`           | All `codex/...` paths in plan bodies resolve to real files                             | always 0 (soft)                    |
-| `check_estimate_sanity.sh`      | `estimate_calibrated ≈ baseline × class_multiplier` within ±20%                        | always 0 (soft)                    |
-| `check_superseded_in_active.sh` | No `*SUPERSEDED*` filenames or superseded `parent_epic` slugs in `active/`             | always 0 (soft)                    |
-| `install_hooks.sh`              | Installs `check_todo_regression.sh` + `check_frontmatter.sh` as `.git/hooks/pre-push`  | — (run once)                       |
-| `fix_frontmatter.py`            | Auto-fix: unjam `---key:` lines, remove deprecated fields, add missing required fields | — (run manually)                   |
+| Script                            | What it checks                                                                                                                                              | Exit code                          |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `run_hygiene_sweep.sh`            | Orchestrates all checks below + inventory regenerator                                                                                                       | 0 = all pass, 1 = any hard failure |
+| `check_frontmatter.sh`            | `---` on own first line; required fields present; no deprecated fields                                                                                      | 0 = clean                          |
+| `check_line_caps.sh`              | Soft warn >500L, hard fail >1000L; umbrella exemption (locked + >100 todos)                                                                                 | 0 = no hard violations             |
+| `check_todo_regression.sh`        | Every plan's open todo count ≥ count on `origin/live-defi-rollout`                                                                                          | 0 = no regressions                 |
+| `check_archive_candidates.sh`     | Plans with 0 open todos and >0 done — prints list for operator review                                                                                       | always 0 (informational)           |
+| `check_codex_refs.sh`             | All `codex/...` paths in plan bodies resolve to real files                                                                                                  | always 0 (soft)                    |
+| `check_estimate_sanity.sh`        | `estimate_calibrated ≈ baseline × class_multiplier` within ±20%                                                                                             | always 0 (soft)                    |
+| `check_superseded_in_active.sh`   | No `*SUPERSEDED*` filenames or superseded `parent_epic` slugs in `active/`                                                                                  | always 0 (soft)                    |
+| `check_claude_subagent_parity.sh` | Every `## ` topic in `CLAUDE.md` has a counterpart in `SUB_AGENT_MANDATORY_RULES.md` (topic-parity drift — a rule added to CLAUDE.md must reach sub-agents) | always 0 (soft)                    |
+| `install_hooks.sh`                | Installs `check_todo_regression.sh` + `check_frontmatter.sh` as `.git/hooks/pre-push`                                                                       | — (run once)                       |
+| `fix_frontmatter.py`              | Auto-fix: unjam `---key:` lines, remove deprecated fields, add missing required fields                                                                      | — (run manually)                   |
 
 ### Required plan frontmatter fields
 
@@ -93,6 +94,22 @@ Terraform SSOT (when shipped): `deployment-service/terraform/gcp/hygiene_sweep_s
 `scripts/plan-hygiene/cron_hygiene_sweep_entrypoint.sh`.
 
 Status: **Phase 6 of `plan_hygiene_automation_2026_05_21.md` — not yet shipped.**
+
+## Plan Health Agent (GHA — `.github/workflows/plan-health-agent.yml`, daily 02:00 UTC)
+
+Report-only daily audit. The deterministic `build_health_digest.sh` runs the full hygiene sweep (including
+`check_claude_subagent_parity.sh`) and hands a compact digest + plan skeletons to a cheap Haiku agent. The agent does
+the **two things a script cannot**:
+
+1. **Cross-plan contradiction** — pairs of plans assigning contradictory status / architecture to the same scope.
+2. **Doc-drift (CLAUDE.md / SUB_AGENT vs live plans)** — a governance-doc rule CLAIM that is contradicted or superseded
+   by an active plan/epic (e.g. CLAUDE.md framing `source=` as TradFi-only while the active plan declares it
+   crosscutting). This is the **semantic** counterpart to the deterministic topic-parity check: parity catches a topic
+   that never reached SUB*AGENT; doc-drift catches a topic whose \_content* has gone stale vs the plans. CLAUDE.md is
+   injected into the agent prompt (`WORKSPACE_RULES_CLAUDE`); SUB_AGENT arrives as the `MANDATORY_RULES` block.
+
+Output JSON: `{"contradictions": [...], "doc_drift": [{"doc","claim","contradicted_by","description"}]}` → GHA run
+summary + Slack one-liner (`contradictions: N | doc-drift: M`).
 
 ---
 
