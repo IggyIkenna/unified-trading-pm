@@ -714,7 +714,13 @@ by a PR:
   - **(a) Untrack the generated DAG SVGs** — `git rm --cached` + `.gitignore`
     `WORKSPACE_MANIFEST_DAG.svg`/`DATA_FLOW_DAG.svg`; regenerate them in a CI/docs-publish job (or on-demand) instead of
     tracking on the dev branch. **Zero logic blast radius** (nothing imports an SVG); the dashboard would consume the
-    CI-published copy. RECOMMENDED — easy + removes half the churn.
+    CI-published copy. RECOMMENDED — easy + removes half the churn. — **✅ SHIPPED unified-trading-pm@(this branch)
+    2026-06-03**: both DAG SVGs `git rm --cached` + gitignored (alongside the CI-CD-PIPELINE.svg/html +
+    derived-dependency-manifest.json batch); verified both generators are already deterministic (two regens
+    byte-identical, so no generator fix needed — the churn was purely ci_status-driven, which untracking removes). The
+    "regenerate in CI" half is unnecessary — nothing reads the committed SVG; generators run locally/on-demand. **Only
+    (b) remains BLOCKED-OPERATOR-DECISION.** Gotcha also codified into CLAUDE.md + SUB_AGENT_MANDATORY_RULES (generated
+    artifacts gitignored + deterministic generators).
   - **(b) Move `ci_status` out of `workspace-manifest.json`** into a gitignored sidecar (`workspace-ci-status.json`) or
     a small state store; tooling reads it from there. Removes the other half (mutable CI state stops living in a
     version-controlled file). **Blast radius: ~24 files** read `ci_status` from the manifest (scripts + workflows) → a

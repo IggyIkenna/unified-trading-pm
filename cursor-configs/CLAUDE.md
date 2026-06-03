@@ -311,6 +311,15 @@ shared-tree model"). The invariants that must stay in-head:
   `git checkout HEAD -- <file>` on a dirty file you don't own — UNRECOVERABLE.
 - **Verify your work against the stable remote ref, never `FETCH_HEAD`** (it lies under a concurrent session):
   `git merge-base --is-ancestor <sha> origin/live-defi-rollout` / `git cat-file -e origin/live-defi-rollout:<path>`.
+- **Slot tab branch diverged from LDR → quickmerge re-tangles + the tab→LDR mirror jams (recovery, codified
+  2026-06-03)**: if `origin/tab/<op>/N` is NOT an ancestor of `origin/live-defi-rollout`
+  (`git merge-base --is-ancestor origin/tab/<op>/N origin/live-defi-rollout` fails), quickmerge's mid-run sync
+  re-applies LDR's commits as **patch-id DUPLICATES** on top of yours on every run (symptom: "3 ahead / 2 behind",
+  brand-new SHAs each attempt, your changes bounced back to the working tree). Fix:
+  `git rebase origin/live-defi-rollout` (drops the duplicates — "skipped previously applied commit"), then
+  `git push --force-with-lease origin HEAD:tab/<op>/N` to realign the remote tab branch onto LDR. This is the
+  `slot-master-rebase.sh` operation by hand; safe (own slot branch + `--force-with-lease`). Verify with
+  `git merge-base --is-ancestor origin/live-defi-rollout HEAD` (true = mirror can FF again).
 - **Autostash conflict on rebase** (`Applying autostash resulted in conflicts`) → `git rebase --abort` (state safe,
   autostash intact), stash only YOUR files by name, redo — **NEVER** `git checkout HEAD -- <file>` then `git stash drop`
   (destroys the foreign agent's only WIP copy). § "Step 7" above.
@@ -778,8 +787,8 @@ broadcast/ACK): `plans/epics/mtds_mdps_master.md`.
 **Quality Gates Are A Merge Prerequisite (HARD RULE)**: no code merges to `live-defi-rollout` without
 `bash scripts/quality-gates.sh` exit 0 for the touched repo + cross-repo consumers; reviewers reject PRs lacking a
 QG-green evidence line. Exemption only via operator `BLOCKED-OPERATOR-DECISION`. **This is the LOCAL / agent pre-flight
-(an agent + quickmerge requirement — fail-fast so you never put un-QG'd code on the integration branch or waste a
-doomed CI/PR cycle), NOT a server gate. `live-defi-rollout` carries NO required-check ruleset — it is the unprotected
+(an agent + quickmerge requirement — fail-fast so you never put un-QG'd code on the integration branch or waste a doomed
+CI/PR cycle), NOT a server gate. `live-defi-rollout` carries NO required-check ruleset — it is the unprotected
 integration axis by design (`codex/08-workflows/ci-cd-flow.md`). The SERVER-ENFORCED required check (`quality-gates-v2`)
 fires at the staging/main PR — the promotion boundary. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH`, so
 every repo's default branch MUST be `main` (a non-main default mislocates the required check onto LDR and blocks pushes
@@ -792,6 +801,21 @@ per-shippable-unit commits + flips from that green tree (Commit+Push+Flip intact
 `quality-gates.sh` / `basedpyright`** (may be another slot's). When only the `<300s` META-gate trips (substantive gates
 green): `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are sanctioned. SSOT: `codex/06-coding-standards/quality-gates.md`
 § "QG-sweep batching".
+
+**Generated artifacts + QG sentinels are gitignored, NEVER committed; generators MUST be deterministic (HARD RULE,
+codified 2026-06-03)**: every file `quality-gates.sh`/`quickmerge` regenerates from a tracked SSOT is `.gitignore`'d +
+`git rm --cached`'d — tracking it only churns the worktree → jams `slot-cron-ff-pull.sh` → drift (the root cause of the
+chronic dirty-pull toil). Canonical ignore set (PM): `docs/repo-management/CI-CD-PIPELINE.svg`/`.html` (←
+`cicd-pipeline-definition.yaml`), `WORKSPACE_MANIFEST_DAG.svg` + `DATA_FLOW_DAG.svg` (← `workspace-manifest.json`),
+`derived-dependency-manifest.json` (← all `pyproject.toml`), `coverage.xml`, and the QG sentinels `.qg_last_passed_sha`
+
+- `.qg_content_sentinel` (local-only caches). Every consumer regenerates from the SSOT before reading, so a committed
+  copy is always a stale cache; nothing imports an SVG (zero logic blast radius). **Generators MUST emit
+  deterministically** — `sorted()` any set/map before rendering (incident: `generate-cicd-diagram.py` iterated a `set()`
+  of marker colours → byte-churned the SVG every run with no real change). **If you see a generated artifact dirty/`??`
+  after a QG run, do NOT stage it** — it is regen churn; gitignore + `git rm --cached` it (and add the pattern to the
+  canonical template `scripts/propagation/templates/gitignore-python.txt` for fleet rollout). SSOT:
+  `cicd_contract_hardening_2026_06_01.md` item H + `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`.
 
 **Every active ping references a plan item (HARD RULE)**: no orphan pings in the `_agent_pings.md` ledgers — every entry
 cites a plan-of-record (`plans/active|epics|audit|active/issues/<slug>.md`, incl date-suffixed). References nothing →

@@ -103,6 +103,12 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
 - **#4 — prek auto-restore wipes in-flight Edit between Edit and commit**: tighten Edit → stage → commit → push into ONE
   Bash call; use `--no-verify` when observed; verify with `git show --stat HEAD` that your file actually landed with
   non-zero insertions.
+- **#5 — Staging a QG-regenerated artifact**: `quality-gates.sh`/`quickmerge` regenerate gitignored artifacts every run
+  (`*_DAG.svg`, `CI-CD-PIPELINE.svg/html`, `derived-dependency-manifest.json`, `coverage.xml`) + write the
+  `.qg_last_passed_sha` / `.qg_content_sentinel` caches. These are gitignored — if one shows dirty/`??`, it is regen
+  churn: **NEVER `git add` it** (named-file `--files` already protects you). If a generated artifact or sentinel is
+  somehow tracked in your repo, `git rm --cached` + gitignore it. Generators must emit deterministically (`sorted()`
+  sets before rendering) — a non-deterministic generator byte-churns its output every run.
 
 ## Findings Triage Discipline (HARD RULE)
 
