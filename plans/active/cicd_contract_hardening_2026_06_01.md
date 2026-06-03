@@ -509,14 +509,21 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
 - [ ] [INFRA] P0. **Full PM `LDR→main` promotion (needed regardless of ci_status home).** main +221/−9 vs LDR →
       back-merge `main→LDR` (absorb the 9), then gated `LDR→main` PR. Lands the `tier-ab-green` chain-wiring, the
       fund-admin/greeks manifest entries, fresh ci_status, + 221 PM commits. Until it lands the promoter reads a stale
-      main manifest (the live dam). repo: unified-trading-pm. **FINDING (2026-06-03, slot-1): the dam drain is
-      GUARD-2-COUPLED — sequence it AFTER Guard 2.** State: LDR ahead 251 / main ahead 14; 13 of the 14 main-only
-      commits are `ci: update ci_status …` bot commits that edit `workspace-manifest.json` ci_status fields (+1 real
-      `docs(plans)` dca8864dd). Because both sides edit the SAME manifest ci_status region, EVERY LDR→main PR (#116) and
-      any `main→LDR` back-merge is `CONFLICTING` on exactly those fields — resolving by hand on a fleet-critical
-      850-repo manifest IS the Guard-2 "don't carry ci_status backward" logic done manually (regression-prone). So:
-      build Guard 2 first (merge=ours/ci_status-region restore), then the back-merge + LDR→main PR drains cleanly. The
-      qg-v2 gate-block on the PR is already cleared (qg fix below); the conflict is the sole remaining blocker.
+      main manifest (the live dam). repo: unified-trading-pm. **FINDING (2026-06-03, slot-1) — the dam is a LARGE
+      GENUINE DIVERGENCE, not a ci_status-only conflict.** Verified by attempting `git merge origin/main` onto the LDR
+      tip (then ABORTED, no harm): it conflicts on **31 files** — code (`quality-gates.sh`, `quickmerge.sh`,
+      `ci_failure_watcher.py`, `qg-host-governor.sh`, pre-commit templates), docs (`CLAUDE.md`,
+      `SUB_AGENT_MANDATORY_RULES.md`, `ci-cd-flow.md`), and ~14 plan files — i.e. the "~95-file PR #103" class of
+      accumulated main↔LDR drift, NOT just the 13 ci_status lines. So **Guard 2 (shipped @8124c9de2) does NOT auto-drain
+      THIS dam**: by design it auto-resolves ONLY a ci_status-**only** manifest conflict and escalates a multi-file
+      divergence (which is correct — Guard 2 prevents the routine drift from re-forming a dam; it is not a
+      bulk-reconcile tool). **Drain procedure (BLOCKED-ON-COORDINATED-RECONCILE — too large + multi-agent-edited to
+      hand-merge casually in one slot session; use the conflict-resolution-agent or a deliberate manual pass):** LDR is
+      the integration line with all the latest work → resolve the 31 conflicts **take-LDR (ours)** for the
+      heavily-edited code/docs/plans while PRESERVING main's genuine unique content — the 1 real `docs(plans)` commit
+      dca8864dd ("redesign manifest-canon slot split") + fresh ci_status (Guard-2 reconcile handles the ci_status
+      region) — and strip the stray `*.bak`/`*.bak2` files main carries. Then push reconciled LDR + open the gated
+      LDR→main PR. The qg-v2 gate-block on the PR is already cleared (qg fix below).
 - [ ] [INFRA] P0. **Reconcile stuck promotion PRs fleet-wide (DIRTY → won't auto-merge).** Several LDR→staging/→main PRs
       are `mergeable_state=dirty` (merge-conflict, accumulated session commits) so v2-auto-merge never fires — e.g. **PM
       PR #116** (DIRTY vs main — blocks ALL PM work reaching main), **UAC #67** (conflict → conflict-agent dispatched).
