@@ -27,8 +27,18 @@ central-element-323112-*.json
 *.p12
 *.json.bak
 
-# --- QG sentinel (local-only SHA fingerprint; never committed) ---
+# --- QG sentinels (local-only fingerprints; never committed) ---
 /.qg_last_passed_sha
+/.qg_content_sentinel
+
+# --- Generated artifacts: regenerated on every QG/quickmerge run from tracked SSOTs;
+#     tracking them only churns the worktree (item H, cicd_contract_hardening_2026_06_01).
+#     SVG/HTML ← docs/repo-management/cicd-pipeline-definition.yaml (generate-cicd-diagram.py)
+#     derived-dependency-manifest.json ← all pyproject.toml (generate-derived-manifest.py;
+#       every consumer regenerates before reading, so the committed copy was a stale cache) ---
+/docs/repo-management/CI-CD-PIPELINE.svg
+/docs/repo-management/CI-CD-PIPELINE.html
+/derived-dependency-manifest.json
 
 # --- OS / editor ---
 .DS_Store

@@ -289,7 +289,9 @@ def generate_svg(defn: dict) -> str:
     all_colors = {BRANCH_COLORS.get(n.get("branch", "both"), "#777") for n in nodes}
     all_colors |= {BRANCH_COLORS.get(c.get("branch", "both"), "#777") for c in conns}
     parts.append("<defs>")
-    for col in all_colors:
+    # sorted() → deterministic marker order (set iteration is non-deterministic across runs and
+    # was the sole source of byte-churn that re-dirtied the tracked SVG every regen — item H).
+    for col in sorted(all_colors):
         cid = col.lstrip("#")
         parts.append(
             f'<marker id="ah-{cid}" markerWidth="12" markerHeight="8" '
