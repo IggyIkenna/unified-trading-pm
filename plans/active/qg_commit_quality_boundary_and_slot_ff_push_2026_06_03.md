@@ -185,10 +185,11 @@ All on `origin/live-defi-rollout`; full detail in
       auto-reconcile (worker) or post proposed solution + operator-block (VM chat / laptop). Reuses
       escalate-to-orchestrator + reviewer→worker→main — no new escalation path. repo: unified-trading-pm +
       agent-orchestrator.
-- [ ] [DOC] P1. **Lock the convergence + 3-layer-conflict + Option-B model in canonical docs:** ci-cd-flow.md (LDR=live
-      / main=reconciliation-under-B / backmerge=feedback / Slack⟹orchestrator / PM-codex→main-no-staging), CLAUDE.md
-      (short rule), SUB_AGENT_MANDATORY_RULES (target-surface declaration + 3-layer model + check overlapping open
-      claims before starting). repo: unified-trading-pm.
+- [x] ✅ [DOC] P1. **Lock the convergence + 3-layer-conflict + Option-B model in canonical docs** —
+      unified-trading-pm@706fe8170: ci-cd-flow.md (new "PM/codex main-direct (Option B)" + "Convergence +
+      conflict-resolution model" sections), CLAUDE.md (PM/codex→main directive + pointer), SUB_AGENT_MANDATORY_RULES
+      (target-surface declaration + 3-layer model + check overlapping open claims). setup-workspace codex-clone removed
+      in same commit.
 - [ ] [SCRIPT] P2. **Finish codex-not-a-separate-repo cleanup.** Live SSOT (`workflow-templates/`) + deployed fleet
       already correct. Fixed: `scripts/templates/semver-agent.yml` (c10463f69),
       `scripts/propagation/templates/semver-agent.yml` (0ca9dc657). Remaining:
