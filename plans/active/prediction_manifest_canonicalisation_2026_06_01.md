@@ -374,13 +374,22 @@ verify + the gated delete.
 > fetch succeeded + genuinely no trades/prices → `SOURCE_RETURNED_ZERO`. A blanket/blank `SOURCE_RETURNED_ZERO` = "we
 > don't know why" masquerading as complete.
 
-- [ ] [DATA] P0. **E5 rebuild classifier (`rebuild_prediction_manifest.py`): within-bounds empty → `attempted_failed`.**
-      For every empty cell: if the market/condition exists + is within its active window + data_type
-      guaranteed-when-listed (trades / prices on a live market) + not pre-launch → `attempted_failed` (`record_failed`),
-      NOT `SOURCE_RETURNED_ZERO`/`empty_confirmed`. Audit the 41 existing `SOURCE_RETURNED_ZERO` rows — genuine
-      source-zero vs masked fetch failure. Preserve the legit `EXPECTED_PRE_VENUE_LAUNCH` typed empties.
-- [ ] [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED** — never silently relabel
-      a failure to `empty_confirmed`; they stay flagged for backfill.
+- [ ] [DATA] P0. **E5 rebuild classifier: within-bounds empty → `attempted_failed`.** PARTIAL (mtds@59d25967, slot-5
+      2026-06-03): the rebuild now AUDITS the `SOURCE_RETURNED_ZERO` rows (per-row WARN log `(date,venue,instrument_id)`
+      via `reemit_honest_absence_rows` + a `source_returned_zero_preserved` counter) and PRESERVES the legit
+      `EXPECTED_PRE_VENUE_LAUNCH` typed empties. **RESIDUAL (this item stays open):** the actual within-bounds
+      RECLASSIFICATION (`SOURCE_RETURNED_ZERO` on a live market in-window → `attempted_failed`) is conservatively
+      deferred — it needs a per-market lifecycle (created_at/settlement) lookup from instruments-store
+      `MARKET_LIFECYCLE` at rebuild time (cross-service GCS read; named dependency in the code TODO). Wire that lookup
+      to finish this item.
+- [x] ✅ [DATA] P0. **E5 rebuild: re-emit existing `attempted_failed` rows v9, status PRESERVED — DONE (mtds@59d25967,
+      slot-5 2026-06-03).** `reemit_honest_absence_rows` reads the existing pred-prd `_index`
+      (`read_availability_index`), and for every `attempted_failed`/`empty_confirmed` row whose
+      `(date,venue,data_type,instrument_type,instrument_id)` key is NOT covered by the fresh object-scan, re-emits it
+      with status PRESERVED (`record_failed` error preserved / `record_empty` reason validated vs
+      `EMPTY_CONFIRMED_REASONS`) — fixing the pure-object-scan false-complete (honest-absence rows were being lost).
+      Fresh captured/failed always wins the dedup; never silently relabels a failure to `empty_confirmed`. 3 new tests
+      (re-emit / dedup-skip / status-preserved), 17/17 green; mtds QG `--no-fix` exit 0.
 - [x] ✅ [CODE] P1. **Batch=live classifier-None divergence — DONE (mtds@5744ba61, 2026-06-02).** The live Polymarket
       adapter now emits `None` (NaN), NOT `"OTHER"`, for a sub-threshold classifier result (polymarket_adapter.py ~735);
       the orchestrator `write_chunk` splits null cqg rows BEFORE the captured groupby (`_prediction_unclassified` keyed
