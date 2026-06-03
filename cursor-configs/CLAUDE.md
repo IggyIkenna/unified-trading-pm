@@ -777,7 +777,13 @@ broadcast/ACK): `plans/epics/mtds_mdps_master.md`.
 
 **Quality Gates Are A Merge Prerequisite (HARD RULE)**: no code merges to `live-defi-rollout` without
 `bash scripts/quality-gates.sh` exit 0 for the touched repo + cross-repo consumers; reviewers reject PRs lacking a
-QG-green evidence line. Exemption only via operator `BLOCKED-OPERATOR-DECISION`.
+QG-green evidence line. Exemption only via operator `BLOCKED-OPERATOR-DECISION`. **This is the LOCAL / agent pre-flight
+(an agent + quickmerge requirement — fail-fast so you never put un-QG'd code on the integration branch or waste a
+doomed CI/PR cycle), NOT a server gate. `live-defi-rollout` carries NO required-check ruleset — it is the unprotected
+integration axis by design (`codex/08-workflows/ci-cd-flow.md`). The SERVER-ENFORCED required check (`quality-gates-v2`)
+fires at the staging/main PR — the promotion boundary. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH`, so
+every repo's default branch MUST be `main` (a non-main default mislocates the required check onto LDR and blocks pushes
+to the integration axis — incident 2026-06-03 uta+greeks; `verify_branch_protection_check_names.py` now asserts it).**
 
 **Batch the GATE, not the commits — QG-sweep (2026-06-02)**: for a batch of related edits, make ALL edits (code-only
 agents verify with `basedpyright` on touched files), run `quality-gates.sh` ONCE per repo over the batch, THEN make

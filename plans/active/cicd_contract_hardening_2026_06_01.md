@@ -22,8 +22,12 @@ source:
 
 ## HANDOFF — next agent (state as of 2026-06-01)
 
-**Goal:** every repo on `quality-gates-v2` (ruleset required-check = `…/quality-gates-v2`), on all branches (main +
-staging + live-defi-rollout), all green. 17-repo ruleset set; **8 were not on v2** at start.
+**Goal:** every repo on `quality-gates-v2` — the required-check **ruleset on `main`** (+ `require-staging-lock-check`
+on `staging`); the v2 workflow **runs and is green** across branches. **`live-defi-rollout` carries NO required-check
+ruleset — it is the unprotected integration axis (local QG + sentinel is the only gate on LDR, by design; see
+`ci-cd-flow.md`).** The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH`, which MUST resolve to `main` — so
+every repo's default branch must be `main` (default-branch finding below). 17-repo ruleset set; **8 were not on v2** at
+start.
 
 **Token (prerequisite — already solved):** `source unified-trading-pm/scripts/workspace/load-gh-token.sh` → exports
 `GH_TOKEN` from `.act-secrets` (workspace root) or Secret Manager; it has `Workflows: write`. The default gh keyring
@@ -85,11 +89,13 @@ default-branch sweep clean otherwise).
 - [ ] [SCRIPT] P2. **Prevent default-branch drift**: add a fleet check (extend `verify_branch_protection_check_names.py`
       or `pin_branch_protection_rulesets`) asserting every repo's `default_branch == main`; new-repo bootstrap must set
       default=main so `~DEFAULT_BRANCH` rulesets never land on LDR.
-- [ ] [DOC] P1. **Reconcile the LDR-protection contradiction**: this plan's goal (§ top: "v2 on all branches incl
-      `live-defi-rollout`") vs `codex/08-workflows/ci-cd-flow.md` ("LDR is explicitly EXCLUDED — local QG + sentinel is
-      the only gate on LDR, by design"). Decide whether LDR is required-check-protected or not — it determines whether
-      raw/FF-push-to-LDR is viable (the `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` FF-push design
-      assumes LDR stays unprotected). Currently 22/24 repos have LDR unprotected (default=main).
+- [x] ✅ [DOC] P1. **Reconcile the LDR-protection contradiction — RESOLVED (operator 2026-06-03): LDR stays UNPROTECTED**
+      (no required-check ruleset) — best practice for an integration branch. The required check is enforced at the
+      **staging/main PR** (the auto-merge/promotion boundary); **local QG + sentinel** is the agent + quickmerge
+      pre-flight on LDR (fail-fast, NOT a server gate). The goal-line wording above was corrected to match
+      `ci-cd-flow.md` ("runs+green across branches; required ruleset on main, LDR unprotected"). ⇒ raw/FF-push-to-LDR
+      IS viable, so the `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` FF-push design holds. Prevention:
+      the default-branch==main assertion (above) keeps the `~DEFAULT_BRANCH` ruleset off LDR.
 
 **Coverage repos** (`client-reporting-api`, `batch-live`, `ibkr`) need **real tests written** (not floor-lowering /
 coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.

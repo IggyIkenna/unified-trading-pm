@@ -128,6 +128,18 @@ All on `origin/live-defi-rollout`; full detail in [uv_lockfile_determinism_2026_
   tab→LDR→staging→main flow) shares the commit/push model; the commit-as-quality-boundary rule applies to AO too once
   G6 lands its quickmerge path.
 
+## LDR-protection resolution (2026-06-03) — docs reconciled
+
+- [x] [DOC] **RESOLVED + reconciled across docs**: LDR is the **unprotected integration axis** (no required-check
+      ruleset) — best practice. The enforced `quality-gates-v2` check fires at the **staging/main PR** (promotion
+      boundary); **local QG + sentinel is the agent + quickmerge pre-flight** (fail-fast), not a server gate. Reconciled:
+      `cicd_contract_hardening` goal-line ("runs+green across branches; required ruleset on main, LDR unprotected") +
+      its reconcile-todo marked RESOLVED; canonical `CLAUDE.md` "Merge Prerequisite" rule clarified (local pre-flight vs
+      staging/main server gate; default-branch must be `main`); `ci-cd-flow.md` reinforced. **Root-cause code fix
+      shipped**: `verify_branch_protection_check_names.py` now asserts `default_branch == main` fleet-wide (uta+greeks
+      were `live-defi-rollout` → fixed to `main`; `~DEFAULT_BRANCH` ruleset no longer lands on LDR). ⇒ **the FF-push
+      design (decision 3) holds** — raw/FF-push to the unprotected LDR is viable.
+
 ## Success criteria
 - Canonical docs agree: commit is the per-repo quality boundary (no more merge-vs-commit-prereq drift).
 - (If ratified) slot FF-push cron drains clean/aged/ahead-only commits to LDR; no more uta-style stranding.

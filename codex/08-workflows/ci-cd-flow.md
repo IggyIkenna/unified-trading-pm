@@ -210,7 +210,13 @@ on Linux; local uses workspace path deps on macOS. The dep-resolution gap is the
 the staging PR boundary.
 
 **workspace-qg triggers**: `push: [main, staging]` + `pull_request: [main, staging]`. LDR is explicitly excluded — local
-QG + sentinel is the only gate on LDR (by design).
+QG + sentinel is the only gate on LDR (by design). This is intentional integration-branch best practice: the
+**required-check ruleset is enforced at the staging/main PR** (the promotion boundary); **local QG (`quality-gates.sh` →
+sentinel) is the agent + quickmerge pre-flight** (fail-fast), not a server gate; and the integration axis stays cheap to
+push to. The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH` — so **every repo's default branch MUST be
+`main`**; a non-main default (e.g. `live-defi-rollout`) mislocates the required check onto LDR and `GH013`-rejects pushes
+to the integration axis (incident 2026-06-03: `unified-trading-api` + `greeks-service`; `verify_branch_protection_check_names.py`
+now asserts `default_branch == main` fleet-wide).
 
 ### Branch-triggered build — hotfix image off an arbitrary branch (no main promotion, codified 2026-06-01)
 
