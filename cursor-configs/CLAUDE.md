@@ -422,8 +422,13 @@ workspace-root-only + untracked, so these rules never reached repo-level agents;
   `setup_cloud_logging` / suggests skipping tests.
 - **No `python3 << EOF` / inline-Python for file analysis** — catastrophic `re` backtracking caused two 12–22h runaway
   processes; use `rg`/`grep`, and if Python is genuinely needed wrap it in `timeout 30` + read line-by-line.
-- **Never pipe a backgrounded command through `tail`/`head`** — the pipe buffers ALL output until the process exits
-  (zero visible progress for 30+ min); let `run_in_background` stream to a file, then read it with a SEPARATE call.
+- **Background-task honesty** — NEVER report a backgrounded task (`run_in_background` Bash / sub-agent / workflow / VM
+  launch) as "done" before seeing its actual exit/output; a `| tail`/`| head` pipe buffers → empty until completion, so
+  "no output yet" ≠ "finished" (say "still running" + why); let `run_in_background` stream to a file, then read it with
+  a SEPARATE call. Harness-tracked tasks auto-re-invoke on exit → rely on that completion signal, do NOT burn credits
+  polling them. Poll ONLY genuinely external/untracked work (CI runs, remote VM jobs, deploys) at an interval matched to
+  how fast that state changes. Write monitors that watch the RIGHT signal (correct log path + explicit done/terminated
+  condition) with a generous fallback timeout, so they don't exit inconclusively and force a re-investigation.
 - **Grep codex before asking the operator for committed numbers** — pricing/cost/revenue figures usually already exist
   in `codex/14-customer-journeys/commercial-model/`, plans, or memory; search all three + transcribe, don't block. Ask
   only after all come up empty. Composes with the "harvest from existing" discipline.
