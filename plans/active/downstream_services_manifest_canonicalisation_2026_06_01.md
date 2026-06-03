@@ -86,6 +86,10 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       (these AGs have no `_index` yet → writer-fix-first, not migrate-a-nonexistent-corpus). Repos:
       **market-data-processing-service / features-service / strategy-service / execution-service**. Home: this plan § C
       (line ~454) + Phase-C.
+  - **MDPS portion DONE (slot-6 2026-06-03, mdps@986e72c):** `live_workers` emits typed
+    `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` on zero-row fetches (no blank reason) + `canonical_writer` bridges
+    tradfi `ohlcv_15m`/`ohlcv_24h`/`tbbo` → their `SOURCE_PRIORITY` keys so v9 source-column denormalisation resolves.
+    QG green 169s. Checkbox stays OPEN for the features/strategy/execution writer portions (other slots/repos).
 
 ### TIER 2 — data-status / deployment-api code (so post-delete reads/counts don't regress)
 

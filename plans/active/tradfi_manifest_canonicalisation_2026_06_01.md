@@ -419,8 +419,9 @@ VM.
       []`(no re-raise) pattern that silently shrank the tradfi universe     almost certainly exists in other IS reference-data adapters (cefi tardis/exchange, defi, sports) → same A8     false-complete on a fetch error. Audit each`reference_data/adapters/_/`fetch path; apply the same fix (re-raise     a`\_fetch_one`-classifiable exception so the venue lands in `failed[]`→`attempted_failed`); don't cache `[]`
       from a failed fetch. Repo: instruments-service. parent_epic: mtds_mdps_master.
 
-- [ ] [CODE] P2. **SSOT-cleanliness: fold `pipeline_mode` into UAC `build_tradfi_partition_path` (remove the MTDS mirror
-      divergence)** (slot-6 path-correctness audit 2026-06-03 — latent footgun, NOT a live bug). The UAC base builder
+- [x] ✅ [CODE] P2. **SSOT-cleanliness — SHIPPED slot-6 2026-06-03 (UAC@0abbdf86 + mtds@ce0a7d7a).** fold
+      `pipeline_mode` into UAC `build_tradfi_partition_path` (remove the MTDS mirror divergence)** (slot-6
+      path-correctness audit 2026-06-03 — latent footgun, NOT a live bug). The UAC base builder
       `unified-api-contracts/.../canonical/partition_paths.py::build_tradfi_partition_path` produces the path WITHOUT
       `pipeline_mode=`; `candidate_parquet_paths(pipeline_mode=...)` layers it, the live writer
       (`tradfi_shared.build_tradfi_partition_path`) inserts it inline ("mirrors UAC byte-for-byte but accepts
@@ -430,7 +431,15 @@ VM.
       `pipeline_mode` to UAC `build_tradfi_partition_path` (insert LEFT of asset_group=, matching
       `candidate_parquet_paths`) so the MTDS mirror can delegate instead of diverging; update orchestrator to pass it
       rather than `.replace`. Cross-repo (UAC + mtds), so a coordinated pass. Repos: unified-api-contracts +
-      market-tick-data-service. parent_epic: mtds_mdps_master.
+      market-tick-data-service. parent_epic: mtds_mdps_master. **DONE (slot-6 2026-06-03):** UAC
+      `build_tradfi_partition_path` now accepts optional `pipeline_mode=` (inserted LEFT of `asset_group=`, matching
+      `candidate_parquet_paths`) @0abbdf86. **Full delegation deferred** — the UAC typed builder requires an
+      `InstrumentType` enum that does NOT model TradFi series-class tokens (`rates`/`etf_flows`), so the MTDS mirror
+      keeps its inline build; instead a **byte-identity guard test\*\*
+      (`tests/market_interface/unit/test_tradfi_shared_path_byte_identity.py`, mtds@ce0a7d7a) asserts mirror == UAC
+      builder for overlapping types → any drift is now a test failure (the footgun the item targeted is closed).
+      Residual nice-to-have: extend the UAC `InstrumentType` enum to cover TradFi series-class tokens, then delete the
+      mirror + delegate — tracked here, P3.
 
 ## Success criteria
 
