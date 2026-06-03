@@ -142,13 +142,24 @@ be fixed first if run on a VM.
 > 4. Verify with `cf_manifest_audit_2026_06_01.py` (CF-1…CF-12 GREEN on pred-prd data-state) → delete legacy bucket.
 >    VM-run (object scan + consolidator); prediction-writer (`mdps-prediction-2025`) confirmed drained before `--apply`.
 
-- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
-      top-level trees + nested layouts in the prediction source + canonical buckets before the walk (`raw_tick_data/`,
-      `processed_candles/`, the 6-dimension `day=/category=/data_source=/venue=/…/market_category=/…` polymarket
-      layout); classify duplicate (keep freshest) vs complementary (migrate all → canonical v9). The existing
-      `rebuild_prediction_manifest.py` (ManifestWriter rebuild) is the manifest-side template. Cover every in-scope
-      layout or the walk is incomplete (review-blocking). SSOT:
-      `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded recipe Phase 0.
+- [x] ✅ [DATA] P0. **Phase 0 — layout audit DONE (slot-5 2026-06-03, read-only GCS metadata scoping — no data
+      download).** Enumerated both buckets. **Layouts found**: `_index/` (+ `per_vm/`,
+      `snapshots/pre_migration_2026-05-22`), `_vm_staging/` (prediction_backfill/features/pipeline),
+      `raw_tick_data/by_date/day=…` + `processed_candles/by_date/day=…`. The CANONICAL `pred-prd` raw objects STILL
+      carry the OLD 6-dim
+      `day=/category=prediction/data_source=POLYMARKET_CLOB/     venue=/chain=/market_category=/underlying=/market_type=/resolution_period=/data_type=/{cid}.parquet`
+      shape (NOT yet `pipeline_mode=/asset_group=` — **EXPECTED**: the migration that rewrites the shape is E4
+      `--apply`, operator-gated + not yet run; the dry run is clean). LEGACY raw uses
+      `asset_group=prediction/venue=/instrument_type=/data_type=`. Candles (both buckets):
+      `processed_candles/by_date/day=/timeframe=/data_type=/venue=/{id}.parquet` (no `pipeline_mode=` yet — what item
+      228's fix + the migrator now add). **Sharding/perf scope**: ~44–200 raw parquets/day (healthy, activity-driven),
+      parquet sizes 16–38 KB avg ~27 KB (**no tiny-file explosion, no hot-spot shard**), canonical 352 days
+      (2025-03-14→2026-04-29) vs legacy 422 days (→2026-05-22; legacy ~2 mo ahead). Migrator's ~1,897,691 planned moves
+      reconcile as raw+candles (×timeframes) + stale `category=` subtree + staging across both buckets. **Full-run
+      wall-clock estimate**: 1.9M ÷ (32–64 workers × server-side `gcs_copy_object` ~100 ms) ≈ **1.6–4 h** (schedule a 4
+      h window; re-snapshot `_index` pre-cutover — the snapshot is 2026-05-22, stale). No layout anomaly beyond the
+      expected pre-migration old-shape. SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` § grounded
+      recipe Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -227,13 +238,19 @@ be fixed first if run on a VM.
       reviews this dry plan (no fire-and-forget: STARTED<60s + progress/hr + STOPPED; T+10min
       `gcloud instances describe`). Dry run took ~3 min (1.9M plan @ workers=64) so the full copy (server-side
       `gcs_copy_object`) is well within budget — no worker re-tune needed.
-- [ ] [CODE] P0. **BATCH≠LIVE for processed_candles `pipeline_mode=` — GAP found in the pre-full-run readiness audit
-      (slot-5 2026-06-03; CROSS-AG, blocks the candle portion of the full run).** The migrator inserts a
-      `pipeline_mode=` segment into candle paths (`migrate_prediction_to_pred_prd_v9.py:176-188`
-      `_insert_pipeline_mode_for_candle`, "no UAC candle builder"; dry run wrote
-      `processed_candles/by_date/day=/pipeline_mode=batch_polymarket_clob/     timeframe=/data_type=/…` — 582,730 candle
-      objects), but the LIVE MDPS candle writer (`market-data-processing-service config.py:46 get_processed_path`)
-      returns `processed_candles/by_date/day={d}/timeframe={tf}/data_type={dt}` with **NO `pipeline_mode=` segment**. So
+- [x] ✅ [CODE] P0. **BATCH≠LIVE for processed_candles `pipeline_mode=` — FIXED (option a) — mdps@5e7f075 | QG ✅ ALL
+      QUALITY GATES PASSED (1550s) | basedpyright 0 err | 8 regression tests
+      `tests/unit/test_pipeline_mode_in_candle_paths.py`.** `get_processed_path` (config.py) + both live candle writers
+      (`CandleWriteMixin._write_candles`, `GCSDataSink.write_candles`) + the prior-day-seed READ now thread
+      `pipeline_mode.value` into the object path, inserting `pipeline_mode={pm}/` after `day={D}/` — matching the
+      migrator `_canon_candle_rel` + the raw-writer `orchestrator.py:994` (path==manifest invariant). Cross-AG (all
+      asset_groups' candles). On LDR; staging promotion dep-tier-blocked behind UTL/MTDS/UAC (FEATURE_GREEN) — drains
+      when they promote. ORIGINAL GAP: The migrator inserts a `pipeline_mode=` segment into candle paths
+      (`migrate_prediction_to_pred_prd_v9.py:176-188` `_insert_pipeline_mode_for_candle`, "no UAC candle builder"; dry
+      run wrote `processed_candles/by_date/day=/pipeline_mode=batch_polymarket_clob/     timeframe=/data_type=/…` —
+      582,730 candle objects), but the LIVE MDPS candle writer
+      (`market-data-processing-service config.py:46 get_processed_path`) returns
+      `processed_candles/by_date/day={d}/timeframe={tf}/data_type={dt}` with **NO `pipeline_mode=` segment**. So
       post-migration the migrated candles sit at a `pipeline_mode=` path that a relaunched `mdps-prediction-2025` would
       NOT write to → two candle forms in the bucket + a batch≠live drift (the raw_tick writer is fine —
       `orchestrator.py:994` DOES insert `pipeline_mode=` for raw, the path==manifest invariant; only the CANDLE path
@@ -370,7 +387,18 @@ be fixed first if run on a VM.
       extend the migrator's prediction path build for that data_type. (raw_tick/trades/ohlcv = unaffected.)
 - [ ] [DATA] P0. E7 Verify: `cf_manifest_audit_2026_06_01.py market-data-tick-pred-prd-…` → CF-1…CF-12 GREEN on
       data-state (v9, source populated, pipeline_mode, asset_group, available_at, 0 legacy-only). Flip the CF-coverage
-      rows in `predictions_master_audit_instructions.md`.
+      rows in `predictions_master_audit_instructions.md`. **[PRE-RUN BASELINE — slot-5 ran the audit 2026-06-03 on the
+      current (un-migrated) `_index`: 16,812 rows / 31 cols / 14,491 captured / 2,321 empty_confirmed].** GREEN now:
+      CF-2-rows (`asset_group` col present, no `category` col), CF-5 (typed empty — `EXPECTED_PRE_VENUE_LAUNCH` 2,280 /
+      `SOURCE_RETURNED_ZERO` 41, 0 blank), CF-9 (env `-prd-` bucket). RED now — **all "RED because not-yet-migrated",
+      NOT code regressions** (each is produced by the rebuild/migrate step that is operator-gated + hasn't run): CF-1
+      (100% v8 — rebuild stamps v9), CF-3 (`pipeline_mode` blank — rebuild stamps), CF-4 (`source` col absent — C-source
+      rider stamps; live writes already auto-stamp per item 170), CF-7 (blank/`UNKNOWN` venue +
+      blank/`prediction_trades` data_type — `_cf7_normalise` in the migrator fixes), CF-8 (`available_at` absent, only
+      `written_at` — rebuild writes it). **2,039 legacy-only cells** (canonical 805 captured vs legacy 2,822,
+      overlap 783) = the data-loss risk that keeps **E8 legacy-delete HARD-gated until the migration runs**. So E7 is
+      GREEN-able only AFTER the gated E4 full-run + rebuild; the code side is ready (verified no defect introduced by
+      E2/E5).
 - [ ] [DATA] P0. E8 Hand C-GREEN to `bucket_name_ssot…` L6 → delete legacy `market-data-tick-prediction` + stale
       pred-prd `category=` paths (single source of truth).
 
