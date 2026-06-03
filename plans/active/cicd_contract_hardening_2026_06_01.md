@@ -541,16 +541,25 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       exempts PM from the staging ruleset; PM staging had 0 unique commits (−1098 vs main, −1334 vs LDR) → safe delete.
       The promoter's existing "skip repos without a staging branch" guard now skips PM permanently. repo:
       unified-trading-pm.
-- [ ] [SCRIPT] P1. **Residual main-direct hardening (follow-ups to the PM-staging delete above).** (a) **codex still has
-      a `staging` branch** (`unified-trading-codex` is also main-direct, Option B) → the promoter can open a spurious
-      codex LDR→staging PR; delete it the same way (verify 0 unique commits first) OR add the durable flag-based
-      exclusion. (b) **Durable fix (more robust than per-branch deletion):** add an explicit `main_direct` repo set
-      (`unified-trading-pm`, `unified-trading-codex`) to `tier_c_promotion_gate.py` / the promoter so a _re-created_
-      staging branch can't re-trigger. (c) **Dead workflow:** `pm-staging-to-main-bypass.yml` triggers on `staging`
-      quality-gates-v2 — now inert (no PM staging); remove it + audit PM workflows that reference `staging`
-      (`staging-to-main.yml`, `sit-gate.yml`, `ci-status-update.yml`, `sit-unlock.yml`,
-      `conflict-resolution-merged.yml`) for now-dead PM-staging assumptions. repo: unified-trading-pm +
-      unified-trading-codex.
+- [x] ✅ [SCRIPT] P1. **Residual main-direct hardening (follow-ups to the PM-staging delete)** — DONE 2026-06-03
+      (slot-1). (a) **codex = N/A**: `unified-trading-codex` is an **archived/read-only** GitHub repo (its content is
+      folded into PM at `codex/`) AND it is **not in `workspace-manifest.json.repositories`** (`in repos: False`), so
+      the promoter never iterates it — no spurious-PR risk; its stale `staging` branch + 2 old `auto/*` PRs can't be
+      modified (archived) and are harmless. (b) **Dead workflow REMOVED**: `git rm pm-staging-to-main-bypass.yml`
+      (triggered on staging quality-gates-v2 — inert now that PM has no staging; no remaining references). repo:
+      unified-trading-pm. **NEW FINDING (P1) — PM has NO automated LDR→main promoter now that staging + the bypass are
+      gone.** Steady-state PM work reaches main via per-quickmerge `tab/<slot>→main` PRs (quickmerge.sh:1259, v2-gated
+      auto-merge) — fine for quickmerged units. BUT commits that land on LDR **without** a quickmerge tab→main PR
+      (FF-cron pulls, direct tab pushes, the tab-mirror) have no automated drain to main → they re-accumulate (the dam
+      re-forms). Need EITHER (i) strict quickmerge-only discipline for PM (no direct LDR/tab pushes of content destined
+      for main) OR (ii) an automated **`pm-ldr-to-main-promote.yml`** (the LDR→main analogue of
+      `ldr-to-staging-promote`, gated on v2, conflict→escalate) — the natural replacement for the removed bypass.
+      Compose with Guard 3. repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **Guard 2(a) reader audit — ci_status must be read from MAIN, not the checkout ref.** Confirmed
+      `ldr-to-staging-promote` runs on PM's default branch (main) → reads main ✓. But `sit-gate.yml` /
+      `staging-to-main.yml` `open("workspace-manifest.json")` from their **checkout ref** (which is `staging` for those
+      triggers) → can read a STALE ci_status. Make each explicitly fetch + read main's manifest (or assert the checkout
+      is main) so ci_status reads are single-SSOT. repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P0. **PM quality-gates-v2 RED root-caused + fixed** — slot-1 2026-06-03, PM@1a5b64e05 (on LDR via
       mirror). The Guard-1 bot-only script `check_ci_status_bot_only.py` reads `manifest.get("repositories", {})` as an
       isinstance-guarded fail-open tolerant reader (same benign category as `tier_c_promotion_gate.py` /
