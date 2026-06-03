@@ -870,28 +870,52 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 **P1 — correctness/safety (silently compute/trade on stale or mislabelled data):**
 
-- [ ] [CODE] P1. **No `assert_consolidator_healthy` pre-flight in MTDS / MDPS / features-BATCH** — repos:
+- [x] ✅ [CODE] P1. **DONE 2026-06-03 — consolidator pre-flight added: MTDS@a75f021a (`process_ticks` after the v9-col
+      check), MDPS@fc64192 (`dependency_checker`), features-service@4b628d1a (batch_handler via new shared
+      `_manifest_preflight`, mirroring the live runner); loud-fails `ManifestConsolidatorStaleError`, gated by
+      `not force`.** Original gap: No `assert_consolidator_healthy` pre-flight in MTDS / MDPS / features-BATCH — repos:
       `market-tick-data-service` (`engine/orchestrator.py` `process_ticks()` before `read_availability_index`),
       `market-data-processing-service` (`…/orchestration_service.py` startup / `_check_dependencies`),
       `features-service` (`features_service/sports/cli/handlers/batch_handler.py` `BatchHandler.run()` — the **live**
       runner gate shipped 2026-06-03 features-service@ae75b44b but batch has none). **Fix**: add the shared UTL gate
       before each upstream manifest read (template: features `sports/live/runner.py:_assert_upstream_manifest_healthy`);
       loud-fail (`ManifestConsolidatorStaleError`) on a stale/missing index when per-VM shards exist.
-- [ ] [CODE] P1. **Blanket `SOURCE_RETURNED_ZERO` instead of TYPED fixture/season reasons (going-forward writers)** —
-      repos: `market-data-processing-service` (`…/batch_workers.py:178` `_handle_empty_tick_data`, default
-      `canonical_writer.py:1668`) + `market-tick-data-service` (`engine/orchestrator.py:3586,3635` per-fixture
-      sentinels). The migration RELABELS the existing corpus (keystone classifier, SHIPPED), but the LIVE writers still
-      emit blanket `SOURCE_RETURNED_ZERO` for no-fixture/off-season days → re-introduces the silent-lie the walk fixes.
-      **Fix**: at empty-write time, look up the sports fixture calendar (`get_league_fixture_calendar` / FIXTURES truth
-      set) and emit the typed `EmptyConfirmedReason` (`EXPECTED_NO_FIXTURE` / `EXPECTED_PAUSED_LEAGUE` /
-      coverage/transfer-window/genesis) — the write-path twin of the migration's CF-5 classifier.
-- [ ] [CODE] P1. **strategy-service allocation-guard orphaned for sports + PubSub subscriber has no capture_status
-      gate** — repo: `strategy-service`. `manifest_allocation_guard.check_allocation_manifest()` is implemented +
-      correct (4-state aware) but **never called** from the sports batch/live allocation cycle (only unit tests call
-      it); and `SportsFeatureSubscriber` processes incoming feature messages with no upstream `capture_status` check.
-      **Fix**: wire `check_allocation_manifest(date, features_bucket, asset_group="sports")` into the sports allocation
-      date loop; gate the subscriber on honest-absence (don't allocate on `empty_confirmed`/`attempted_failed` upstream
-      cells).
+- [x] ✅ [CODE] P1. **DONE 2026-06-03 — live writers now emit TYPED `EmptyConfirmedReason` via the SAME UAC
+      `is_expected_for_source` (+ `footystats_season_status_for_day`) SSOT that `rebuild_sports_manifest_v9.py`'s CF-5
+      classifier uses — NO parallel taxonomy. MTDS@a75f021a (oracle steps 4+5 in the sentinel path), MDPS@fc64192
+      (`classify_sports_empty_reason`); `SOURCE_RETURNED_ZERO` only when a fixture WAS expected but source returned
+      zero; CF-11 attempted_failed split intact.** Original gap: Blanket `SOURCE_RETURNED_ZERO` instead of TYPED
+      fixture/season reasons (going-forward writers) — repos: `market-data-processing-service` (`…/batch_workers.py:178`
+      `_handle_empty_tick_data`, default `canonical_writer.py:1668`) + `market-tick-data-service`
+      (`engine/orchestrator.py:3586,3635` per-fixture sentinels). The migration RELABELS the existing corpus (keystone
+      classifier, SHIPPED), but the LIVE writers still emit blanket `SOURCE_RETURNED_ZERO` for no-fixture/off-season
+      days → re-introduces the silent-lie the walk fixes. **Fix**: at empty-write time, look up the sports fixture
+      calendar (`get_league_fixture_calendar` / FIXTURES truth set) and emit the typed `EmptyConfirmedReason`
+      (`EXPECTED_NO_FIXTURE` / `EXPECTED_PAUSED_LEAGUE` / coverage/transfer-window/genesis) — the write-path twin of the
+      migration's CF-5 classifier.
+- [x] ✅ [CODE] P1. **DONE strategy-service@c2793217 — (8a)
+      `check_allocation_manifest(date, features_bucket,     asset_group="sports")` wired into the sports batch
+      allocation loop (`batch_handler._run_handle_prechecks`): skip on `empty_confirmed`/`attempted_failed` (batch), log
+      `UPSTREAM_FEATURES_FAILED` on attempted_failed (live). (8b) `SportsFeatureSubscriber` now gates on honest-empty
+      (`_is_honest_empty_vector` — returns early, no signal/publish). QG exit 0; 5+9 tests.** ⚠️ **Contract gap (8b)**:
+      the FSS Pub/Sub event does NOT carry `capture_status` (it lives in the GCS manifest) — the subscriber uses an
+      implied-probability heuristic; the real fix is adding `capture_status` to the UAC `SportsFeatureEvent` contract
+      (captured as a follow-up below). Original gap: allocation-guard orphaned for sports + PubSub subscriber has no
+      capture_status gate.
+
+**Follow-ups surfaced by the P1 work (2026-06-03):**
+
+- [ ] [CODE] P2. **Add `capture_status` to the FSS `SportsFeatureEvent` Pub/Sub contract** — repos:
+      `unified-api-contracts` (add the field to the sports feature event schema) + `features-service` (stamp it on emit,
+      from the manifest) + `strategy-service` (`SportsFeatureSubscriber` consume it instead of the implied-probability
+      heuristic shipped in c2793217). Surfaced by P1.8b: honest-absence info lives in the GCS manifest, not the event,
+      so the live subscriber can only heuristically detect empty vectors today. Proper fix = carry `capture_status` on
+      the event so the subscriber gates on the real 4-state signal.
+- [ ] [CODE] P3. **Unify the duplicated `assert_upstream_manifest_healthy` in features-service** — repo:
+      `features-service`. P1.6 (features@4b628d1a) created the shared `sports/cli/handlers/_manifest_preflight.py` for
+      the batch path, but `sports/live/runner.py` keeps its own identical copy because the existing live-runner test
+      monkeypatches `runner.assert_consolidator_healthy` at module level. Refactor the live-runner test to patch the
+      shared module, then delete the duplicate so there is ONE gate implementation. Tidy-up; no behaviour change.
 
 **Non-blocking / N/A (documented for completeness, no migration break):**
 
