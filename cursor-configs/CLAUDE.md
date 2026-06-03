@@ -703,6 +703,10 @@ orchestrator inboxes on failure. Full SSOT: `codex/11-project-management/plan-hy
 (MANDATORY): `git status && git diff --cached --stat` (NO path arg — see the whole index); `git restore --staged <file>`
 anything not yours; stage by name, never `git add .`/`-A`. Bundle Edit→stage→commit→push in ONE Bash call; `--no-verify`
 authorized only on prek auto-restore symptoms ("Restored working tree changes from .../prek/patches/").
+`quickmerge --agent --files '<paths>'` **re-asserts `--files` scope on the prek commit-retry** (when a hook reformats
+files and the first commit fails, it re-stages ONLY your `--files`, never `git add -A`) so a hook can't bundle FOREIGN
+modified files (another agent's WIP, an inventory regen) into your scoped commit — but for a hand `git commit` the
+discipline is yours. SSOT: `codex/08-workflows/ci-cd-flow.md` § "Two-Pass Workflow Model".
 
 ### Half 2 — flip the plan checkbox in the SAME AGENT TURN as Half-1 (the most-violated half)
 

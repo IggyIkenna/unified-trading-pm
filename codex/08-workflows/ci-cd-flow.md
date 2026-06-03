@@ -96,9 +96,19 @@ Pass 2 — Quickmerge (--agent fast-path)
   • Reads .qg_last_passed_sha — verifies SHA matches current HEAD
     SHA mismatch / sentinel missing → EXIT 1: "Run quality-gates.sh on current HEAD first"
     SHA match → skips all Pass 2 QG re-runs (sentinel IS the guarantee)
+  • stages ONLY --files; if a pre-commit hook reformats files and the first commit
+    fails, the RETRY re-stages ONLY --files again (never `git add -A`) — a hook can't
+    bundle foreign modified files into a scoped commit
   • commits, creates PR targeting staging, enables auto-merge
   • --to-staging routes to staging instead of main (for breaking changes)
 ```
+
+> **`--files` scope is re-asserted on the prek commit-retry (foot-gun fix 2026-06-03).** The original retry path did
+> `git add -A` after a pre-commit hook (prettier/ruff) reformatted files, which swept ANY modified file in the worktree
+> — a concurrent agent's WIP, an inventory regen, a foreign doc edit — into the scoped commit. The retry now re-stages
+> only the `--files` paths (the hook's edits to YOUR files re-stage; foreign modified files stay out of the index). Only
+> the unscoped (`--files`-absent) path still uses `git add -A`. A HAND `git commit` is NOT covered — re-stage by name
+> after any hook reformat. Fleet propagation: `scripts/propagation/rollout-quickmerge.py`.
 
 ### STAGE 0.4 Not-Behind Gate — behind-remote reconcile (multi-agent safety)
 

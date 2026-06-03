@@ -69,9 +69,12 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
    ```
    ALWAYS `--agent` in Claude Code; ALWAYS scope with `--files` (named paths — NEVER the whole tree; that vacuums
    foreign agents' work). quickmerge verifies sentinel == HEAD, stages ONLY your `--files`, commits, and routes the unit
-   `live-defi-rollout` → `staging` → SIT → `main` (→ Cloud Build image on `main`). It **early-exits "nothing to commit"
-   on a clean tree**, so a forgotten `--files` ships NOTHING — and a raw `git push origin live-defi-rollout` of code
-   silently piles up on LDR _behind_ main (it never opens a staging PR). `--dep-branch` is human-only.
+   `live-defi-rollout` → `staging` → SIT → `main` (→ Cloud Build image on `main`). **`--files` scope is re-asserted on
+   the prek commit-retry** — if a hook reformats files and the first commit fails, quickmerge re-stages ONLY your
+   `--files` (never `git add -A`), so a hook can't sweep FOREIGN modified files into your scoped commit. It
+   **early-exits "nothing to commit" on a clean tree**, so a forgotten `--files` ships NOTHING — and a raw
+   `git push origin live-defi-rollout` of code silently piles up on LDR _behind_ main (it never opens a staging PR).
+   `--dep-branch` is human-only.
    - **Pre-`--files` hygiene (mandatory)**: `git status && git diff --cached --stat` (NO path argument — see the WHOLE
      index) so you pass only YOUR paths. Foreign dirty files left out of `--files` stay untouched.
    - **prek auto-restore race**: if you must hand-commit (Edit succeeds but file unmodified at commit, OR commit lands
@@ -102,8 +105,10 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
 
 ## Foot-guns (every one has burned the workspace; mitigations are codified)
 
-- **#1 — Foreign work bundled into your commit**: parallel agent's `git add -A` between your stage + commit. Mitigated
-  by named-file staging + pre-commit check above.
+- **#1 — Foreign work bundled into your commit**: a parallel agent's `git add -A` (or a pre-commit hook's reformat +
+  blind re-stage) between your stage + commit. Mitigated by named-file staging + the pre-commit check above, AND by
+  quickmerge re-asserting `--files` scope on its commit-retry (it re-stages only your `--files`, never `git add -A`). On
+  a HAND `git commit`, the scope discipline is still yours — re-stage by name after any hook reformat, never `-A`.
 - **#2 — `git diff --cached --stat <path>` masks other staged hunks**: never pass a path argument to that command.
 - **#3 — Concurrent agent's reset wipes your staged renames**: after every `git mv` / `git rm` / `git add`, run
   `git diff --cached --name-status` to verify YOUR entries are still in the index before committing.

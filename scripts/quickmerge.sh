@@ -1206,13 +1206,26 @@ if [ -z "$(git diff --cached --name-only)" ] && [ -z "$(git status --porcelain)"
   # in a previous quickmerge run. Skip commit and go straight to push + PR.
   echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed. Proceeding to push."
 elif ! git commit -m "$COMMIT_MSG" --quiet; then
-  # Pre-commit may have modified files (e.g. Prettier). Stage and retry once.
-  git add -A
+  # Pre-commit may have modified files (e.g. Prettier). Re-stage and retry once.
+  # RE-ASSERT --files SCOPE: a hook that reformats files must NOT let `git add -A`
+  # sweep FOREIGN modified files (another agent's WIP, an inventory regen, a concurrent
+  # edit) into a scoped commit — that is the prek-auto-stage-vs-`--files` foot-gun. When
+  # --files is set, re-stage ONLY those paths (the hook's edits to YOUR files re-stage;
+  # foreign modified files stay out of the index). Only the unscoped path uses `git add -A`.
+  if [ -n "$FILES_ARG" ]; then
+    for f in $FILES_ARG; do [ -e "$f" ] && git add "$f"; done
+  else
+    git add -A
+  fi
   if ! git commit -m "$COMMIT_MSG" --quiet; then
     echo "[$REPO_NAME] ❌ Commit failed (pre-commit may have failed). Run: pre-commit run --all-files; git add -A; git commit -m \"...\"" >&2
     exit 1
   fi
-  echo "[$REPO_NAME] Pre-commit modified files; staged and committed on retry" >&2
+  if [ -n "$FILES_ARG" ]; then
+    echo "[$REPO_NAME] Pre-commit modified files; re-staged (scoped to --files) and committed on retry" >&2
+  else
+    echo "[$REPO_NAME] Pre-commit modified files; staged and committed on retry" >&2
+  fi
 fi
 
 git push -u origin "$BRANCH" --quiet 2>/dev/null
