@@ -472,6 +472,17 @@ Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab
       eval: Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01): allow
       deploying the dashboard SPA from `live-defi-rollout` (not only `main`) so server + UI iterate on one branch
       without the FF-to-`main` hop. Scope the CI-gate + Firebase-Hosting target implications.
+- [ ] [SCRIPT] P2. **agent-orchestrator `quality-gates-v2` required check is structurally RED on `main` (exit 127)** —
+      discovered 2026-06-03. The shared `python-quality-gates-v2.yml` runs `bash scripts/quality-gates.sh`, but
+      agent-orchestrator has **no `scripts/quality-gates.sh`** (and no local `.venv`) → every `main` run fails with
+      `bash: scripts/quality-gates.sh: No such file or directory` (pre-existing: runs 26824357511, 26819893551, and the
+      2026-06-03 run all fail identically at the "Run quality gates" step). AO's required check therefore can NEVER go
+      green. Fix: add an AO `scripts/quality-gates.sh` (wire the QG base for AO's `server/` package layout) OR make the
+      reusable v2 workflow skip/tolerate repos with no `scripts/quality-gates.sh`. Belongs to the two-axis CI-gate axis
+      above. **NOTE (2026-06-03):** AO `main` was inadvertently FF-advanced to the LDR tip (`b8ef156`→`7979d3e`, 6
+      server-code commits) by an operator-approved push made on the outdated "AO→main" premise; per the two-axis rule
+      `main` is supposed to LAG LDR on server code. No harm (work was already on LDR; SPA build ignores server code); the
+      lag self-re-establishes on the next LDR-only server commit. Not reverting (force-push to `main` is human-only).
 
 ### THE force-push-vs-let-CI/CD decision rule (read before touching main/staging)
 
