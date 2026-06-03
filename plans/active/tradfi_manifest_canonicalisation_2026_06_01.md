@@ -271,6 +271,16 @@ VM.
 - [ ] [DATA] P0. E3 Confirm tradfi writer drained; snapshot `tradfi-prd/_index` (pre-migration drain per tradfi_massive
       -029).
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → full-VM run (144k index rows — modest; no fire-and-forget).
+  - **DRY-RUN SCOPING DONE (slot-6 2026-06-03 — sharding/perf scoped, NO apply; full-VM run stays operator-gated):**
+    - **Migrator** `migrate_tradfi_to_v9_canonical.py --dry-run` (real GCS `tradfi-prd`): **5,305,520 objects** planned,
+      **moved=0 (dry)**, **100,698 L-hyphen placeholders correctly skipped** (0-row guard), **0 errors** → clean,
+      date-shardable corpus; placeholder-skip is honest-absence-safe.
+    - **Rebuild** `rebuild_tradfi_manifest.py --dry-run`: **704,641 shards / 6 venues**, distribution **CME 486,189
+      (69%)** · NYSE 162,519 · NASDAQ 44,203 · ICE 9,452 · CBOE 1,607 · FX 671; **1,984 distinct dates**; CF-11 re-emit
+      path exercised (no-op in mock = no local `_index`, works against real GCS).
+    - **Sharding/perf recommendation**: shard the full run **by `day=`** (1,984 dates) across VMs; **CME is the heavy
+      partition** (69%) → give it dedicated shards; use **workers=32 REST-API** (GCS-object-ops rule, ~250× vs CLI).
+      Migrator is `--apply`-gated + dry-by-default; E3 drain + snapshot still precede the real run.
 - [x] ✅ [DATA] P0. E5 Manifest rebuild → v9 — **DONE: NEW `rebuild_tradfi_manifest.py` (mtds@e6250b99, 2026-06-02, 20
       tests)**. Scans canonical
       `day=/pipeline_mode=/asset_group=tradfi/venue=/instrument_type=/data_type=/[underlying=/]{file}` (per-instrument →
