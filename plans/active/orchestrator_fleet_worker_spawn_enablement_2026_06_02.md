@@ -144,6 +144,46 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
       `bootstrap_vm.sh` so a fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic
       VMs when they start (currently off). Composes with F2–F4 (same per-VM rollout).
 
+### F9 — review-agent auto-spawn per VM (persistent-role keep-alive) [P1]
+
+- [ ] [INFRA] P1. **Operator-requested 2026-06-03 — half-built design, finish the wiring.** Per
+      `codex/12-agent-workflow/orchestrator-multi-vm-topology.md:107` each epic VM = slot-1 **main** + slot-2 **review**
+      (Sonnet 4.6) + N workers. The review agent reviews each worker commit against the plan + FF-merges slot branches →
+      LDR. **Already shipped**: `agents/review.md` boot prompt + the `role` model (`orm.py:231`
+      `main|review|backup|custom`; `worktree_claim.py`). **Gap**: `AutoSpawnLoop` (`server/autospawn.py`) ONLY spawns
+      task-`worker`s — it early-exits on empty queue (`_run_one_tick:395`), renders `prompt_template="worker"`, and
+      `_should_spawn:484` ignores role. So (a) nothing keeps a persistent review agent alive (it's commit-polling, not
+      task-driven → never queue-triggered), and (b) AutoSpawn would wrongly drop a *worker* onto the review slot.
+      **Implement**: (1) `config.persistent_role_slots()` resolving review-role slots (SSOT = `SlotRow.role='review'`;
+      bootstrap assigns slot-2 `role=review` per VM); (2) a queue-INDEPENDENT keep-alive pass in the tick (before the
+      empty-queue early-exit) that spawns `template="review"` on any dead review-role slot (reuse the flap/cooldown +
+      `_do_spawn(prompt_template=...)` machinery); (3) `_should_spawn` skips persistent-role slots in the worker loop
+      (only `worker`/`custom`/None get task-workers). Unit tests: review slot stays alive with empty queue; worker never
+      spawned on review slot. Then bootstrap role-assignment + VM deploy. Repo: agent-orchestrator. Forward-looking
+      (fleet mostly stopped; review runs on vm-0 today, all epic VMs when on).
+
+### F10 — CI conflict-resolution: capacity model (dedicated vs slot-on-existing) [P2]
+
+- [ ] [DESIGN] P2. **Operator framing 2026-06-03.** The CI→orchestrator→delegate path is BUILT this session
+      (`conflict-resolution-agent.yml` / `ci_failure_watcher` / `main-backmerge-to-ldr` → `repository_dispatch
+      escalate-to-orchestrator` → orchestrator spawns a Max worker via `agents/escalate.md`). It spawns on whatever VM
+      has a free slot (today vm-0). Decide whether to RESERVE a dedicated conflict-resolution VM/slot (guaranteed
+      availability, isolation from epic work) vs the current any-free-slot model. No new mechanism either way — same
+      escalate→spawn path; this is purely a capacity/pinning decision. Repo: agent-orchestrator (slot-role pin) +
+      deployment-service (if a dedicated VM). Composes with F9 (same persistent-role-slot machinery).
+
+### F11 — regen must not create dispatchable tasks from BLOCKED/stretch todos [P1]
+
+- [ ] [SCRIPT] P1. **Root of the "backlog won't clear" perception (diagnosed 2026-06-03).** vm-0's regen-prune is
+      CORRECT — all 18 backlog tasks map to genuinely-open `- [ ]` checkboxes; 30 flipped items were pruned. BUT with
+      the 9 epic VMs stopped, vm-0 (sole runner) inherits every GLOBAL plan's open todos — including ones that can never
+      be auto-worked: `BLOCKED-OPERATOR` / `BLOCKED-BILLING` / `BLOCKED-CREDENTIALS` / `BLOCKED-UPSTREAM-OUTAGE` +
+      `_(stretch, optional)_` items. These never flip → churn the queue + waste spawn attempts forever. Fix
+      `server/regen_backlog_from_plan.py` `_parse_open_todos` to SKIP a `- [ ]` line whose text contains a `BLOCKED-*`
+      status token or a `stretch`/`optional` marker (closed set from the status taxonomy) — they stay visible in the
+      plan but don't become dispatchable backlog tasks. Unit test each token. Repo: agent-orchestrator. Provenance:
+      operator "clear the backlog on background VMs" 2026-06-03.
+
 ### F7 — slot-4 WIP recovery on the live vm-0 host [P1]
 
 - [ ] [INFRA] P1. **The only genuine residual quarantine on vm-0** (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree
