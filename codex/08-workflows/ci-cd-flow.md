@@ -103,12 +103,23 @@ Pass 2 — Quickmerge (--agent fast-path)
   • --to-staging routes to staging instead of main (for breaking changes)
 ```
 
-> **`--files` scope is re-asserted on the prek commit-retry (foot-gun fix 2026-06-03).** The original retry path did
-> `git add -A` after a pre-commit hook (prettier/ruff) reformatted files, which swept ANY modified file in the worktree
-> — a concurrent agent's WIP, an inventory regen, a foreign doc edit — into the scoped commit. The retry now re-stages
-> only the `--files` paths (the hook's edits to YOUR files re-stage; foreign modified files stay out of the index). Only
-> the unscoped (`--files`-absent) path still uses `git add -A`. A HAND `git commit` is NOT covered — re-stage by name
-> after any hook reformat. Fleet propagation: `scripts/propagation/rollout-quickmerge.py`.
+> **`--files` scope is re-asserted on the prek commit-retry, and the pre-stage prettier is `--files`-scoped (foot-gun
+> fix 2026-06-03).** Two places leaked foreign files into a scoped `--files` ship: (1) the commit-retry did `git add -A`
+> after a hook reformatted staged files, sweeping ANY modified worktree file — a concurrent agent's WIP, an inventory
+> regen — into the commit; (2) the pre-stage auto-format ran `prettier --write "**/*"` tree-wide, reflowing foreign
+> files into residue. Both now scope to `--files` (the unscoped, `--files`-absent path still formats tree-wide +
+> `git add -A` — there the caller owns the whole tree).
+>
+> **Why scoping does NOT orphan foreign edits** (the natural objection — "if prek reformats a foreign file and we don't
+> stage it, isn't it stranded dirty forever, jamming FF-sync?"): the workspace answer is to **never create or touch
+> foreign dirt**, not to sweep it into a stranger's commit. The on-commit `prettier-autostage` hook
+> ([`scripts/hooks/prettier-autostage.sh`](../../scripts/hooks/prettier-autostage.sh)) only re-stages the _subset
+> already staged_ ∩ modified (never a foreign-dirty file another slot holds open) AND **no-ops when the branch is behind
+> origin** specifically so an about-to-be-blocked commit leaves zero reflow residue (the 2026-06-02 incident: a 69-file
+> reflow residue stopped a slot's FF-sync). `git add -A` violated that rule — it didn't rescue foreign edits, it
+> mis-attributed them into an unrelated PR. Foreign dirt from another process (e.g. the inventory regen) is its owner's
+> to commit, or the FF-pull autostash's to carry — not quickmerge's. A HAND `git commit` is NOT covered — re-stage by
+> name after any hook reformat, never `-A`. Fleet propagation: `scripts/propagation/rollout-quickmerge.py`.
 
 ### STAGE 0.4 Not-Behind Gate — behind-remote reconcile (multi-agent safety)
 

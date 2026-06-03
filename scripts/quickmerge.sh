@@ -1155,10 +1155,19 @@ if [ "$RESTORE_STASH" = 1 ] && git stash list | grep -q "quickmerge-$$"; then
   git stash pop --quiet
 fi
 
-# Auto-format with Prettier BEFORE staging (so pre-commit validation passes)
-# Run twice to handle idempotency
-if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier" .pre-commit-config.yaml 2>/dev/null; then
-  if command -v pre-commit &>/dev/null; then
+# Auto-format with Prettier BEFORE staging (so pre-commit validation passes).
+# SCOPE TO --files: a tree-wide `prettier --write "**/*"` reflows FOREIGN files (another
+# slot's WIP) into working-tree residue that makes the slot perpetually dirty → the
+# FF-pull cron skips it → the slot stops syncing (observed 2026-06-02: 69-file reflow
+# residue). Mirrors the prettier-autostage hook's "never touch foreign-dirty files" rule.
+# The on-commit prettier-autostage hook re-formats + re-stages the staged subset anyway,
+# so this pre-format is only a fast-path. Only the unscoped (--files-absent) path
+# formats tree-wide — there the caller owns the whole tree.
+if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier\|prettier-autostage" .pre-commit-config.yaml 2>/dev/null; then
+  if [ -n "$FILES_ARG" ]; then
+    # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
+    npx --yes prettier@3.6.2 --write --ignore-unknown $FILES_ARG >/dev/null 2>&1 || true
+  elif command -v pre-commit &>/dev/null; then
     pre-commit run prettier --all-files >/dev/null 2>&1 || true
     pre-commit run prettier --all-files >/dev/null 2>&1 || true
   else
