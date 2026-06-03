@@ -75,6 +75,50 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 | `mdps_filter_pushdown_memory_audit_and_fix` / `mdps_pure_polars_migration` / `mdps_long_running_multi_shard_architecture_audit` | vm-ml              | cefi MDPS processing slice                                                            |
 | `issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`                                                                     | vm-ml              | cefi state adapters (derivative / futures / options / book_snapshot)                  |
 
+## 🎬 NEXT-SESSION HANDOFF (slot-3 cefi, paste-ready, 2026-06-03)
+
+**GOAL:** complete CeFi work **up to and including the dry-run VM + bucket creation**. **HARD CONSTRAINT (operator):**
+EVERY coding task across ALL repos must be DONE + green-on-LDR **before** you launch the dry-run VM or create any
+bucket. Code first; GCS execution only after.
+
+**OUT OF SCOPE this session (deliberate, later):** the IRREVERSIBLE ~1.2M-object orphan delete (old
+`day=/asset_group=cefi/` no-`pipeline_mode=` objects + 9 L-flat root files) and the **E8 legacy-bucket delete**. Do NOT
+run them — they need the pre-delete idempotent-guarantee + verification + operator awareness.
+
+**STATE — DO NOT RE-DERIVE (verified 2026-06-03):** the `-prd` `pipeline_mode=` migration is **COMPLETE corpus-wide**
+(raw_tick + candles + 9 L-flat all have canonical forms; sampled 2020→2026). The migrator WORKS — the "E4-BUG" claim was
+**RETRACTED** (`moved=0` = idempotent-skip). Only ADDITIVE data work left = the `--also-legacy` 5,233-cell gap-fill. E5
+rebuild DONE (mtds@2c3a479b). features-service residual #1 (933b8747) + conftest fix (d39d154f) SHIPPED; the
+features-service full-QG flake is **macOS-local** (Linux `quality-gates-v2` green — don't chase on Linux; ship via
+operator exemption if a local macOS gate blocks).
+
+**PHASE 1 — ALL CODING (ship each via quickmerge; flip the checkbox same-turn):**
+
+- [ ] [CODE] instruments-service — CF-11 IS-side write-path: verify the IS layer records `attempted_failed` from the
+      emitted `ADAPTER_FETCH_FAILED` when a cefi reference-data adapter returns `[]` (aster/hyperliquid/deribit_combo/
+      tardis); FIX if the event→manifest wiring is missing (in-universe + within-coverage empties → `attempted_failed`,
+      not `empty_confirmed`). (cefi CF-11 below)
+- [ ] [CODE] market-data-processing-service — CF-11 #3: verify `ohlcv` manifest rows faithfully reflect the candle FILES
+      that exist (only 8,715 `ohlcv` rows; files exist BITGET-heavy); FIX if MDPS under-emits. Reconcile cross-writes
+      (782 MTDS `ohlcv` rows, 616 MDPS `trades` rows). CF-11 #2 candle-coverage gap = likely a backfill; scope it.
+- [ ] [CODE] unified-trading-pm — identity-hook follow-ups (`issues/commit_identity_misconfig_fleet_2026_06_03.md`):
+      root-cause the bot-email leak + recurrence-guard in `verify-slot-host-symmetry.sh`; `setup-tab-worktrees.sh`
+      provisions `extensions.worktreeConfig` + `--worktree` identity. SSOT:
+      `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
+- [ ] [CODE] market-tick-data-service — only if the orphan-sweep/gap-fill needs code (e.g. explicit orphan-DELETE mode,
+      or confirm `--also-legacy` copies ONLY the 5,233-cell gap). Migrator otherwise works.
+- [ ] grep this plan for remaining open `[ ] [CODE]` todos.
+
+**GATE:** confirm ALL Phase-1 coding shipped + `quality-gates-v2` green on LDR per repo BEFORE Phase 2.
+
+**PHASE 2 — DRY-RUN VM + BUCKET CREATION (only after Phase-1 green):** create any buckets the plan needs (via
+`resolve_bucket_name`, never inline `gs://`); re-run the E4 **dry-run** on a VM to measure the REMAINING scope (the
+`--also-legacy` gap-fill + orphan count — NOT the done `-prd` walk), **sharded by year / bigger-mem** (the 1.9M legacy
+listing OOM'd an e2-standard-4). `VM_TASK=canonical-migration`,
+`VM_MIGRATION_CMD=… migrate_cefi_flat_to_v9_canonical --start-date … --end-date … --also-legacy` (NO `--apply` = dry).
+No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP at dry-run + bucket creation — the
+`--apply` gap-fill / orphan delete / E8 are the NEXT session.
+
 ## Why this exists — cefi canonical FORM is broken corpus-wide (+ a recent 838-cell data gap)
 
 The 2026-06-01 `_index` comparison (legacy `market-data-tick-cefi-…` vs canonical `market-data-tick-cefi-prd-…`) showed
