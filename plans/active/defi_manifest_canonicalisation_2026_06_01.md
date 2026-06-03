@@ -366,16 +366,26 @@ What to verify/wire (B0 corrected scope):
       uniform first-captured `2021-01-01` across ALL chains incl. Base (launched 2023), which is impossible →
       investigate (placeholder/wrong-date captured rows) BEFORE adding launch dates. Do NOT bulk-add ambiguous dates.
       Then re-run the relabel. parent_epic: manifest_master.
-- [ ] [CODE] P1. A2b wire `lst_rates_handler` (L512-535) + `solana_defi_handler` empty branches to emit
-      `EXPECTED_PRE_VENUE_LAUNCH` via the `VENUE-CHAIN` launch lookup (perp_funding_handler L344-353 already does it for
-      Aster — the pattern). So future writes are correct. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. A2b — `DefiManifestRecorder.record_zero_rows()` routes pre-launch zero-rows →
+      `EXPECTED_PRE_VENUE_LAUNCH` via the venue-chain launch lookup; `lst_rates_handler` + `solana_defi_handler` empty
+      branches wired + regression tests. — mtds@PR#115 + mtds@48d08b11 (PR#117). **Incident note**: #115 used a
+      bare-venue launch lookup but `DEFI_VENUE_LAUNCH_DATES` keys by `VENUE-CHAIN` → pre-launch mis-routed to
+      `SOURCE_RETURNED_ZERO`; #117 fixed to `f"{venue}-{chain}"` + bare fallback. 2444 unit tests green.
 - [x] ✅ [CODE] P1. A3 data_type name SSOT at write — **verify-done 2026-06-01**: every DeFi handler `_DATA_TYPE`
       constant + `data_type=` literal is underscore-canonical
       (`dex_pools`/`dex_swaps`/`lending_indices`/`lst_rates`/`oracle_prices`/ `perp_funding`/`dex_pool_state`); **zero
       hyphen literals written by any handler**. The hyphen variants (`lending-indices`/`dex-pools`/`dex-swaps`) +
       `staking_yields` in the corpus are purely LEGACY data → fixed by C2.
-- [ ] [CODE] P2. A4 chain dimension always populated: QG guard fails a DeFi `record_captured`/`record_empty` with blank
-      `chain` for a chain-scoped data_type.
+- [x] ✅ [CODE] P2. A4 (WRITE-PATH) — `BlankChainError` guard on `record_captured` (canonical data rows fail loud on a
+      blank chain). — mtds@PR#115; **narrowed to the write-path only in mtds@48d08b11 (PR#117)** after the original
+      `_build_row_key` guard broke `perp_funding_handler` gmx's intentional `chain=''` coarse freshness-marker (2
+      `TestFreshnessSkip` failures — a #115 regression caught + fixed same-session).
+- [ ] [CODE] P2. **A4-full — extend the blank-chain guard to ALL record paths (re-filed from the #117 narrowing).**
+      Prerequisite: make `perp_funding_handler` GMX per-chain — `_collect_gmx` already records ARBITRUM+AVALANCHE
+      captured rows, but the loop uses a coarse `chain=''` freshness/attempt marker (`_chain_map.get("gmx","")`, L312 +
+      the fallback empty at L369). Make the freshness check + fallback-empty per-chain so no `chain=''` row is ever
+      keyed, THEN restore the `_build_row_key` blank-chain guard so empty/failed markers are also chain-canonical.
+      parent_epic: mtds_mdps_master.
 - [ ] [CODE] P1. A5 LIGHTER perp_funding adapter fix: `SOURCE_RETURNED_ZERO` across full post-launch life (zkSync
       endpoint returns nothing) — verify endpoint/auth.
 - [x] ✅ [CODE] P0. A6 `expected_unattempted` is ALREADY canonical in UAC (`honest_coverage.py`:
