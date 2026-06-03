@@ -583,6 +583,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `FEATURE_GREEN→STAGING_GREEN` when `staging ⊇ LDR` (merged) AND staging-v2 green (needs a branch-ancestry check).
       Interim (manual): fire `ci-status-update STAGING_GREEN` for each repo confirmed merged-to-staging + v2-green.
       repo: unified-trading-pm. **This is the main remaining systemic blocker to a hands-off cascade.**
+- [ ] [INFRA] P1. **Genuine v2-red repos surfaced by the cascade (NOT drift — need real per-repo fixes; the substance
+      of their own plans).** Distinct from the false-FAILING drift Guard 3 clears: (a) **execution-service** staging v2
+      fails with `ImportError: cannot import name …` (a stale cross-symbol import on staging — likely resolves when the
+      LDR→staging promotion lands LDR's current code, BUT verify LDR itself is import-clean; if LDR has the ImportError
+      it's a real code bug). (b) **agent-orchestrator** main v2 = failure (AO-specific; AO is mid-staging-migration per
+      `agent_orchestrator_e2e § G6`). These correctly DO NOT promote (don't ship red code) — they need per-repo
+      diagnosis + fix, not a ci_status reconcile. Cascade flows around them (their dependents may dep-block on them).
+      repos: execution-service, agent-orchestrator. Surfaced slot-1 2026-06-03.
 - [x] ✅ [SCRIPT] P0. **REGRESSION fixed: gitignored DAG-svg froze ci_status fleet-wide** — slot-1 2026-06-03 (PM #119).
       The 2026-06-03 canonical ignore set gitignored `WORKSPACE_MANIFEST_DAG.svg`, but `ci-status-update.yml` still did
       `git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg` → `git add` of an ignored path exits 1 → EVERY
