@@ -196,6 +196,13 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       `candidate_parquet_paths` / `manifest_reader_fallback`, NOT a direct
       `build*\*\_partition_path`that would miss migrated data after the legacy     delete. If any direct base-builder read remains, switch it to the pipeline_mode-aware path (same fix as the writer).     This is the only PREP3 residual before the per-AG G3`--apply`→delete;
       the writer side + MTDS reader are done.
+- [x] ✅ [CODE] P1. **tradfi reader residual CLOSED (slot-6 2026-06-03)** — audit found the features **volatility**
+      (`volatility/engine/orchestrator.py`) + **cross_instrument** (`cross_instrument/engine/raw_data_loader.py`)
+      readers resolved tradfi raw-tick via a direct `build_cefi_partition_path(...)` with NO `pipeline_mode=` → would
+      miss migrated data after the legacy delete (exactly the PREP3 residual above). Fixed: derive `pipeline_mode`
+      per-row (`derive_pipeline_mode_for_row`) + build the `pipeline_mode=`-PRIMARY path with a legacy no-pm fallback;
+      preflight gates now target `options_chain`/`futures_chain` specifically. Import via the UAC top facade (STEP 5.23
+      clean). Shipped **features-service@61e8accd** (+ aiohttp dep-fix @af95529b). Full QG green (410s).
 
 ## PRE-DRY-RUN CODE-CANONICALISATION PREFLIGHT — no dead-bucket association; QG must catch regression (operator 2026-06-02, HARD GATE before ANY migration dry-run)
 
