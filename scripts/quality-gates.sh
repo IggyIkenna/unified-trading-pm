@@ -266,6 +266,7 @@ EMPTY_STR_EXCLUDE_GLOBS+=(
     "!**/tier_c_promotion_gate.py"
 )
 EMPTY_DICT_LIST_EXCLUDE_GLOBS+=(
+    "!**/check_ci_status_bot_only.py"
     "!**/check_parent_epic_alignment.py"
     "!**/check_tradfi_source_explicit_at_record_captured.py"
     "!**/pin_branch_protection_rulesets.py"
