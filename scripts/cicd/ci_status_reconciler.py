@@ -86,6 +86,7 @@ def _main(argv: list[str]) -> int:
     (exit 0 always; the workflow parses the first token).
     """
     import argparse
+    from typing import cast
 
     parser = argparse.ArgumentParser(description="Guard 3 ci_status drift decision")
     parser.add_argument("--current", required=True, help="current manifest ci_status")
@@ -94,7 +95,12 @@ def _main(argv: list[str]) -> int:
     parser.add_argument("--ldr", default="", help="latest v2 conclusion on live-defi-rollout")
     args = parser.parse_args(argv)
 
-    d = decide(args.current, args.main, args.staging, args.ldr)
+    d = decide(
+        cast("str", args.current),
+        cast("str", args.main),
+        cast("str", args.staging),
+        cast("str", args.ldr),
+    )
     if d.reconcile:
         print(f"RECONCILE {d.target_status} {d.reason}")
     else:

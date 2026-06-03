@@ -32,6 +32,9 @@ import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
+from typing import cast
+
+_EMPTY_MAP: Mapping[str, object] = {}
 
 # Fields written by CI automation on main (single authoritative home). On the
 # back-merge these always resolve to main (``theirs``); LDR's copy is
@@ -55,7 +58,7 @@ ConflictPath = tuple[str, ...]
 
 def _load(path: str) -> object:
     with Path(path).open(encoding="utf-8") as handle:
-        return json.load(handle)
+        return cast("object", json.load(handle))
 
 
 def _merge_value(base: object, ours: object, theirs: object, path: ConflictPath) -> tuple[object, list[ConflictPath]]:
@@ -70,10 +73,10 @@ def _merge_value(base: object, ours: object, theirs: object, path: ConflictPath)
         return ours, []
     # both sides changed differently relative to base
     if isinstance(ours, Mapping) and isinstance(theirs, Mapping):
-        base_map = base if isinstance(base, Mapping) else {}
-        return _merge_dict(base_map, ours, theirs, path)
+        base_map = cast("Mapping[str, object]", base) if isinstance(base, Mapping) else _EMPTY_MAP
+        return _merge_dict(base_map, cast("Mapping[str, object]", ours), cast("Mapping[str, object]", theirs), path)
     # scalar/list both-changed → genuine conflict
-    return ours, [path]
+    return cast("object", ours), [path]
 
 
 def _merge_dict(
@@ -122,8 +125,8 @@ def _is_ci_field(path: ConflictPath) -> bool:
 def reconcile(base: object, ours: object, theirs: object) -> tuple[object, list[ConflictPath]]:
     if not (isinstance(ours, Mapping) and isinstance(theirs, Mapping)):
         raise ValueError("manifest root must be a JSON object")
-    base_map = base if isinstance(base, Mapping) else {}
-    return _merge_dict(base_map, ours, theirs, ())
+    base_map = cast("Mapping[str, object]", base) if isinstance(base, Mapping) else _EMPTY_MAP
+    return _merge_dict(base_map, cast("Mapping[str, object]", ours), cast("Mapping[str, object]", theirs), ())
 
 
 def main(argv: list[str]) -> int:
@@ -133,8 +136,12 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--theirs", required=True, help="main-side manifest (MERGE_HEAD)")
     parser.add_argument("--out", required=True, help="path to write the reconciled manifest")
     args = parser.parse_args(argv)
+    base_p = cast("str", args.base)
+    ours_p = cast("str", args.ours)
+    theirs_p = cast("str", args.theirs)
+    out_p = cast("str", args.out)
 
-    merged, conflicts = reconcile(_load(args.base), _load(args.ours), _load(args.theirs))
+    merged, conflicts = reconcile(_load(base_p), _load(ours_p), _load(theirs_p))
 
     if conflicts:
         sys.stderr.write("GENUINE NON-CI CONFLICT — cannot auto-resolve; escalate to human PR:\n")
@@ -142,12 +149,12 @@ def main(argv: list[str]) -> int:
             sys.stderr.write(f"  - {'.'.join(path)}\n")
         return 2
 
-    out_path = Path(args.out)
+    out_path = Path(out_p)
     with out_path.open("w", encoding="utf-8") as handle:
         json.dump(merged, handle, indent=2, ensure_ascii=False)
         handle.write("\n")
     sys.stdout.write(
-        f"reconciled {args.out}: CI-automation fields resolved to main (theirs); "
+        f"reconciled {out_p}: CI-automation fields resolved to main (theirs); "
         "all other fields 3-way merged with no conflict\n"
     )
     return 0
