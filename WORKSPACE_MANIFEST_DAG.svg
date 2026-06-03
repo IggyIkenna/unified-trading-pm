@@ -76,9 +76,8 @@
   <text x="95" y="462" text-anchor="middle" class="level-label">L2</text>
   <text x="150" y="462" class="desc">Trading library (Tier 1) — depends on UAC. (1 repos)</text>
   <rect x="70" y="485" width="181" height="38" class="lib" />
-  <rect x="70" y="485" width="4" height="38" fill="#ef4444" rx="2" />
   <text x="160" y="503" text-anchor="middle" class="label">unified-trading-library</text>
-  <circle cx="241" cy="493" r="6" fill="#ef4444" stroke="#fff" stroke-width="1" />
+  <circle cx="241" cy="493" r="6" fill="#94a3b8" stroke="#fff" stroke-width="1" />
   <text x="160" y="515" text-anchor="middle" class="ver">0.3.167</text>
   <!-- L3: Instrument registry — depends on UAC + UTL. (1 repos) -->
   <rect x="40" y="557" width="2320" height="107" class="level-bg" />
