@@ -22,8 +22,8 @@ source:
 
 ## HANDOFF — next agent (state as of 2026-06-01)
 
-**Goal:** every repo on `quality-gates-v2` — the required-check **ruleset on `main`** (+ `require-staging-lock-check`
-on `staging`); the v2 workflow **runs and is green** across branches. **`live-defi-rollout` carries NO required-check
+**Goal:** every repo on `quality-gates-v2` — the required-check **ruleset on `main`** (+ `require-staging-lock-check` on
+`staging`); the v2 workflow **runs and is green** across branches. **`live-defi-rollout` carries NO required-check
 ruleset — it is the unprotected integration axis (local QG + sentinel is the only gate on LDR, by design; see
 `ci-cd-flow.md`).** The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH`, which MUST resolve to `main` — so
 every repo's default branch must be `main` (default-branch finding below). 17-repo ruleset set; **8 were not on v2** at
@@ -79,23 +79,24 @@ BFS over each repo's pyproject `path = "../<repo>"` lines (see deployment-api �
 actionable now, not a regression). **Do not leave any ruleset `enforcement=disabled`.**
 
 **FINDING + FIX (2026-06-03, slot tab/ikennaigboaka/4): two repos had the WRONG default branch → `require-quality-gates`
-ruleset mislocated onto their LDR.** The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH` (correct, fleet-wide).
-But **`unified-trading-api` + `greeks-service` had `default_branch = live-defi-rollout`** (the rest of the fleet is
-`main`), so `~DEFAULT_BRANCH` resolved to LDR and the required `…/quality-gates-v2` check landed on the **integration
-axis** — every raw/FF push to their LDR was rejected `GH013` (surfaced trying to land a uv.lock re-lock on uta). **FIXED:**
-`gh api -X PATCH repos/IggyIkenna/{unified-trading-api,greeks-service} -f default_branch=main` → ruleset auto-re-pointed
-to `main`; LDR rules now 0 (verified); uta re-lock then FF-pushed cleanly. These were the only 2 drifted repos (fleet
-default-branch sweep clean otherwise).
+ruleset mislocated onto their LDR.** The `require-quality-gates` ruleset targets `~DEFAULT_BRANCH` (correct,
+fleet-wide). But **`unified-trading-api` + `greeks-service` had `default_branch = live-defi-rollout`** (the rest of the
+fleet is `main`), so `~DEFAULT_BRANCH` resolved to LDR and the required `…/quality-gates-v2` check landed on the
+**integration axis** — every raw/FF push to their LDR was rejected `GH013` (surfaced trying to land a uv.lock re-lock on
+uta). **FIXED:** `gh api -X PATCH repos/IggyIkenna/{unified-trading-api,greeks-service} -f default_branch=main` →
+ruleset auto-re-pointed to `main`; LDR rules now 0 (verified); uta re-lock then FF-pushed cleanly. These were the only 2
+drifted repos (fleet default-branch sweep clean otherwise).
+
 - [ ] [SCRIPT] P2. **Prevent default-branch drift**: add a fleet check (extend `verify_branch_protection_check_names.py`
       or `pin_branch_protection_rulesets`) asserting every repo's `default_branch == main`; new-repo bootstrap must set
       default=main so `~DEFAULT_BRANCH` rulesets never land on LDR.
-- [x] ✅ [DOC] P1. **Reconcile the LDR-protection contradiction — RESOLVED (operator 2026-06-03): LDR stays UNPROTECTED**
-      (no required-check ruleset) — best practice for an integration branch. The required check is enforced at the
-      **staging/main PR** (the auto-merge/promotion boundary); **local QG + sentinel** is the agent + quickmerge
-      pre-flight on LDR (fail-fast, NOT a server gate). The goal-line wording above was corrected to match
-      `ci-cd-flow.md` ("runs+green across branches; required ruleset on main, LDR unprotected"). ⇒ raw/FF-push-to-LDR
-      IS viable, so the `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` FF-push design holds. Prevention:
-      the default-branch==main assertion (above) keeps the `~DEFAULT_BRANCH` ruleset off LDR.
+- [x] ✅ [DOC] P1. **Reconcile the LDR-protection contradiction — RESOLVED (operator 2026-06-03): LDR stays
+      UNPROTECTED** (no required-check ruleset) — best practice for an integration branch. The required check is
+      enforced at the **staging/main PR** (the auto-merge/promotion boundary); **local QG + sentinel** is the agent +
+      quickmerge pre-flight on LDR (fail-fast, NOT a server gate). The goal-line wording above was corrected to match
+      `ci-cd-flow.md` ("runs+green across branches; required ruleset on main, LDR unprotected"). ⇒ raw/FF-push-to-LDR IS
+      viable, so the `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` FF-push design holds. Prevention: the
+      default-branch==main assertion (above) keeps the `~DEFAULT_BRANCH` ruleset off LDR.
 
 **Coverage repos** (`client-reporting-api`, `batch-live`, `ibkr`) need **real tests written** (not floor-lowering /
 coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
@@ -1087,20 +1088,19 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 **A. Broken-now alert bugs (silent failures — do first, tiny):**
 
-- [x] ✅ [SCRIPT] P0. **`sit-starvation-detector` reads `locked_at` but `sit-gate` writes `locked_since` → DEAD watchdog**
-      (the dangling-lock check always skips → never pages). Fix the field name. repo: unified-trading-pm
-      (`.github/workflows/sit-starvation-detector.yml`). This is why the 2026-06-02 dangling lock went unalerted.
-      **DONE 2026-06-02** — detector now reads `locked_since` (the field `sit-gate` writes) + stale threshold lowered
-      1h→25m (a SIT run is ~15m). unified-trading-pm@e7e05a233 (PR #111 → main; main is PM default branch where the
-      cron runs). Verified live: `git show origin/main` showed `staging.get('locked_at','')`; sit-gate writes
-      `locked_since`.
-- [x] ✅ [SCRIPT] P0. **`sit-unlock` Slack message is hardcoded "staging unlocked" even when the unlock PUSH fails** → tie
-      the message to `unlock-staging.result` ("❌ AUTO-UNLOCK FAILED — staging dangling-locked, fleet merges blocked").
-      repo: unified-trading-pm (`sit-unlock.yml`). **DONE 2026-06-02** — `notify.message` is now a conditional
-      expression on `needs.unlock-staging.result` (success → "staging unlocked"; failure → "❌ AUTO-UNLOCK FAILED —
-      staging dangling-locked, fleet merges blocked"). unified-trading-pm@e7e05a233 (PR #111 → main).
-- [x] ✅ [SCRIPT] P1. **`sit-unlock` push lacks the 5× rebase-retry loop** `staging-to-main.yml` already has → add it (the
-      non-FF race is what left the lock dangling). repo: unified-trading-pm (`sit-unlock.yml`). **ALREADY DONE** —
+- [x] ✅ [SCRIPT] P0. **`sit-starvation-detector` reads `locked_at` but `sit-gate` writes `locked_since` → DEAD
+      watchdog** (the dangling-lock check always skips → never pages). Fix the field name. repo: unified-trading-pm
+      (`.github/workflows/sit-starvation-detector.yml`). This is why the 2026-06-02 dangling lock went unalerted. **DONE
+      2026-06-02** — detector now reads `locked_since` (the field `sit-gate` writes) + stale threshold lowered 1h→25m (a
+      SIT run is ~15m). unified-trading-pm@e7e05a233 (PR #111 → main; main is PM default branch where the cron runs).
+      Verified live: `git show origin/main` showed `staging.get('locked_at','')`; sit-gate writes `locked_since`.
+- [x] ✅ [SCRIPT] P0. **`sit-unlock` Slack message is hardcoded "staging unlocked" even when the unlock PUSH fails** →
+      tie the message to `unlock-staging.result` ("❌ AUTO-UNLOCK FAILED — staging dangling-locked, fleet merges
+      blocked"). repo: unified-trading-pm (`sit-unlock.yml`). **DONE 2026-06-02** — `notify.message` is now a
+      conditional expression on `needs.unlock-staging.result` (success → "staging unlocked"; failure → "❌ AUTO-UNLOCK
+      FAILED — staging dangling-locked, fleet merges blocked"). unified-trading-pm@e7e05a233 (PR #111 → main).
+- [x] ✅ [SCRIPT] P1. **`sit-unlock` push lacks the 5× rebase-retry loop** `staging-to-main.yml` already has → add it
+      (the non-FF race is what left the lock dangling). repo: unified-trading-pm (`sit-unlock.yml`). **ALREADY DONE** —
       verified the 5× rebase-retry loop is present on both LDR (`unified-trading-pm@f65057afb`) and `main` (PR #110,
       merged 2026-06-02). No action needed; flipped on verification.
 
@@ -1113,28 +1113,35 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `unified-trading-pm@47a597ac4` → LDR-direct** (gate machinery; operator-authorized direct push). Now writes to
       `${PROJECT_ROOT}` (the repo root, matching the content sentinel) + verified: sentinel lands at the PM repo root ==
       HEAD on a full green run AND on a green-skip (sentinel-HIT keeps `RUN_TESTS=true`). Two-pass restored fleet-wide.
-- [ ] [SCRIPT] P1. **LDR PM gate was RED — direct evidence for item D (Tier A).** While shipping A, `quality-gates.sh
-      --no-fix` on LDR HEAD failed: (1) `scripts/cicd/tier_c_promotion_gate.py` (STAGE-1.8, `157df99ff`) had
-      unbaselined `.get(...,"")/{}/[]` manifest-parse defaults; (2) `.code-workspace` listed `status=future` repos
-      (greeks-service, fund-administration-service); (3) `tests/unit/test_staging_to_main_dep_order_gate.py` import-sort.
-      All three fixed (`2a5f89522`). **UPDATE 2026-06-02:** tier_c baseline + folders[] removal reached LDR; a
-      concurrent agent then flipped greeks/fund-admin `future→scaffolded` (`b03611fb5`) — so the correct end-state is
-      now folders[] *includes* them (scaffolded). That `.code-workspace`↔manifest consistency is **owned by the live
-      concurrent agent** (active <5 min ago) — I did NOT edit `.code-workspace` (collision). LDR is transiently
-      drift-RED until they reconcile; the STEP-0b drain PR (#113) holds on auto-merge until then. repo:
-      unified-trading-pm.
-- [ ] [SCRIPT] P2. **`staging` is ~1196 commits / ~1 month behind LDR; no open staging PR; staging-first path unused
-      for PM.** Recent PM CI fixes (#108/#109/#110, #111, #112) all went **direct PR→main** (the default branch where
-      the crons run), NOT via staging. The generated-file churn below is why a PM `quickmerge` re-dirties the tree every
+- [ ] [SCRIPT] P1. **LDR PM gate was RED — direct evidence for item D (Tier A).** While shipping A,
+      `quality-gates.sh     --no-fix` on LDR HEAD failed: (1) `scripts/cicd/tier_c_promotion_gate.py` (STAGE-1.8,
+      `157df99ff`) had unbaselined `.get(...,"")/{}/[]` manifest-parse defaults; (2) `.code-workspace` listed
+      `status=future` repos (greeks-service, fund-administration-service); (3)
+      `tests/unit/test_staging_to_main_dep_order_gate.py` import-sort. All three fixed (`2a5f89522`). **UPDATE
+      2026-06-02:** tier*c baseline + folders[] removal reached LDR; a concurrent agent then flipped greeks/fund-admin
+      `future→scaffolded` (`b03611fb5`) — so the correct end-state is now folders[] \_includes* them (scaffolded). That
+      `.code-workspace`↔manifest consistency is **owned by the live concurrent agent** (active <5 min ago) — I did NOT
+      edit `.code-workspace` (collision). LDR is transiently drift-RED until they reconcile; the STEP-0b drain PR (#113)
+      holds on auto-merge until then. repo: unified-trading-pm.
+- [ ] [SCRIPT] P2. **`staging` is ~1196 commits / ~1 month behind LDR; no open staging PR; staging-first path unused for
+      PM.** Recent PM CI fixes (#108/#109/#110, #111, #112) all went **direct PR→main** (the default branch where the
+      crons run), NOT via staging. The generated-file churn below is why a PM `quickmerge` re-dirties the tree every
       run. **STEP 0b IN MOTION 2026-06-02:** manual LDR→staging drain PR **#113** created with auto-merge → promotes
-      once v2-green (pending the concurrent agent's `.code-workspace` reconcile) → pm-staging-to-main-bypass then carries
-      it to main + the Tier-C dep-order gate cron goes live + the backlog drains. repo: unified-trading-pm. (Item H.)
-- [ ] [SCRIPT] P2. **quickmerge regenerates + stages DRIFTED generated files every PM run** (`derived-dependency-
-      manifest.json`, `docs/repo-management/CI-CD-PIPELINE.{svg,html}`) and the prek `end-of-file-fixer` then fails on
-      the regenerated SVG → commit aborts; `.qg_content_sentinel` (a gate artifact) was also staged. This is the
-      **root cause of the dirty-pull churn item H targets**, observed live this session — had to hand-commit
-      `--no-verify` with named `--files`. Untracking these (item H) + a `prettier`/eof-safe SVG generator would fix it.
-      repo: unified-trading-pm. (Direct evidence for item H.)
+      once v2-green (pending the concurrent agent's `.code-workspace` reconcile) → pm-staging-to-main-bypass then
+      carries it to main + the Tier-C dep-order gate cron goes live + the backlog drains. repo: unified-trading-pm.
+      (Item H.)
+- [x] ✅ [SCRIPT] P2. **quickmerge regenerates + stages DRIFTED generated files every PM run**
+      (`derived-dependency-     manifest.json`, `docs/repo-management/CI-CD-PIPELINE.{svg,html}`) and the prek
+      `end-of-file-fixer` then fails on the regenerated SVG → commit aborts; `.qg_content_sentinel` (a gate artifact)
+      was also staged. This is the **root cause of the dirty-pull churn item H targets**, observed live this session —
+      had to hand-commit `--no-verify` with named `--files`. Untracking these (item H) + a `prettier`/eof-safe SVG
+      generator would fix it. repo: unified-trading-pm. (Direct evidence for item H.) — **FIXED
+      unified-trading-pm@7b6a46b48 (2026-06-03):** (1) root-caused the SVG churn to non-deterministic `set()` iteration
+      emitting `<marker>` defs in `generate-cicd-diagram.py` → `sorted(all_colors)` (verified two regens byte-identical
+      — no eof-fixer flap); (2) `git rm --cached` + `.gitignore` `CI-CD-PIPELINE.svg/html` +
+      `derived-dependency-manifest.json` (every consumer regenerates from tracked SSOTs before reading — committed
+      copies were stale caches; no GHA/code consumes them); (3) gitignored `.qg_content_sentinel`. Verified: a full QG
+      post-gates regen now leaves the worktree CLEAN.
 
 **B. Conflict resolution → VM orchestrator on Max-plan accounts ($0 API), CAN auto-merge (operator 2026-06-02):**
 
@@ -1153,37 +1160,38 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       (`merge_conflict | label_mismatch | sit_failure`) to `POST /api/escalate` with `X-Orchestrator-Secret`; callable
       via `workflow_call` / `workflow_dispatch` / `repository_dispatch(escalate-to-orchestrator)`. 503=retryable
       soft-warn; 401/400/timeout hard-fail; Slack notify on dispatch/failure. **B3 (orchestrator-side worker, § G9) is
-      ALREADY SATISFIED** by the existing `escalate` agent: `server/escalation.py` `escalate(wall_type="merge_conflict")`
-      spawns a setup-token (Max-plan, $0-API) worker on a free slot via `agents/escalate.md`, which resolves on
-      `live-defi-rollout` + pings the authoring slot. Requires one ops step: set the **`ORCHESTRATOR_INTERNAL_SECRET`**
-      GitHub secret in unified-trading-pm (+ optional `ORCHESTRATOR_URL` var; default
-      `https://agent-orchestrator.odum-research.com`).
+      ALREADY SATISFIED** by the existing `escalate` agent: `server/escalation.py`
+      `escalate(wall_type="merge_conflict")` spawns a setup-token (Max-plan, $0-API) worker on a free slot via
+      `agents/escalate.md`, which resolves on `live-defi-rollout` + pings the authoring slot. Requires one ops step: set
+      the **`ORCHESTRATOR_INTERNAL_SECRET`** GitHub secret in unified-trading-pm (+ optional `ORCHESTRATOR_URL` var;
+      default `https://agent-orchestrator.odum-research.com`).
 - [ ] [SCRIPT] P1. **Allow auto-merge for orchestrator-resolved PRs** — remove the "will NOT auto-merge" guard; the
       REQUIRED `quality-gates-v2` check (not a toggle) remains the gate. repo: unified-trading-pm.
 
 **C. Close the auto-remediation loop:**
 
 - [x] ✅ [SCRIPT] P1. **Wire the stuck-PR watcher → fire `escalate-to-orchestrator`** (supersession-close OR resolve)
-      instead of only paging. repo: unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py`).
-      **DONE 2026-06-02 — `unified-trading-pm@40d019f86`** (on LDR, riding the #113 drain → v2-gated to staging/main).
-      `escalate_stuck_prs()` fires `escalate-to-orchestrator` (repository_dispatch, `wall_type=merge_conflict`) for
+      instead of only paging. repo: unified-trading-pm (`scripts/repo-management/ci_failure_watcher.py`). **DONE
+      2026-06-02 — `unified-trading-pm@40d019f86`** (on LDR, riding the #113 drain → v2-gated to staging/main).
+      `escalate_stuck_prs()` fires `escalate-to-orchestrator` (repository*dispatch, `wall_type=merge_conflict`) for
       promotion PRs stuck `CONFLICTING`/`DIRTY`; `BLOCKED` is paged not escalated; idempotent per PR label
       `escalation-dispatched` (no */15m re-dispatch); gated behind `--escalate` (cron passes it). Pure selector
       `conflict_prs_to_escalate()` has a hermetic 5-case unit test (`tests/unit/test_ci_failure_watcher_escalate.py`).
       Ruff + basedpyright clean, test green. (Resolution is the lever, not the auto-merge toggle — operator note above.)
       **UNBLOCKED 2026-06-02 — B2 (`escalate-to-orchestrator.yml`) now exists on main, so the dispatch target is live.**
-      Implementation (ready for a worker): add `escalate_stuck_prs(stuck, *, dry_run)` to `ci_failure_watcher.py` that,
-      for each stuck PR whose `state ∈ {CONFLICTING, DIRTY}` (merge_conflict walls — NOT `BLOCKED`, which is a
-      gate/review wall, not a conflict), fires `gh api repos/IggyIkenna/unified-trading-pm/dispatches` with
-      `event_type=escalate-to-orchestrator` + a JSON `client_payload` `{repo, pr_number, wall_type:"merge_conflict",
-      context:"<head→base stuck <state> for <age>m">, authoring_slot:"ci"}` (build the body with a dict + `gh api
-      --input -`, NOT `-f` nested-field encoding). **Idempotency (critical — cron is */15m, must not re-fire):** gate on
-      a PR label `escalation-dispatched` — skip PRs that already carry it; add it after a successful dispatch
-      (`gh pr edit <n> --repo … --add-label escalation-dispatched`, create-if-missing). Gate the whole behaviour behind
-      a `--escalate` flag (default OFF) that only `ci-failure-watcher.yml` passes, so `--now`/test runs never dispatch.
-      Ship with a hermetic unit test mirroring `tests/unit/test_tier_c_promotion_gate.py` (import the function, feed
-      fake stuck dicts, assert dispatch-vs-skip on state + label). The escalate worker (orchestrator `escalate` agent)
-      then resolves on `live-defi-rollout`; supersession-close stays a human/worker judgment within that agent.
+      Implementation (ready for a worker): add `escalate_stuck_prs(stuck, _,     dry_run)`to`ci_failure_watcher.py`that,
+      for each stuck PR whose`state ∈ {CONFLICTING,     DIRTY}`(merge_conflict walls — NOT`BLOCKED`, which is a
+      gate/review wall, not a conflict), fires `gh api     repos/IggyIkenna/unified-trading-pm/dispatches`with
+      `event_type=escalate-to-orchestrator`+ a JSON`client_payload`
+      `{repo,     pr_number, wall_type:"merge_conflict", context:"<head→base stuck <state> for <age>m">,     authoring_slot:"ci"}`(build
+      the body with a dict +`gh api     --input -`, NOT `-f`nested-field encoding). **Idempotency (critical — cron is
+      \*/15m, must not re-fire):** gate on a PR label`escalation-dispatched` — skip PRs that already carry it; add it
+      after a successful dispatch (`gh     pr edit <n> --repo … --add-label     escalation-dispatched`,
+      create-if-missing). Gate the whole behaviour behind a `--escalate`flag (default OFF) that
+      only`ci-failure-watcher.yml`passes, so`--now`/test runs never dispatch. Ship with a hermetic unit test mirroring
+      `tests/unit/test_tier_c_promotion_gate.py`(import the function, feed fake stuck dicts, assert dispatch-vs-skip on
+      state + label). The escalate worker (orchestrator`escalate`agent) then resolves on`live-defi-rollout`;
+      supersession-close stays a human/worker judgment within that agent.
 - **Canonical note (operator 2026-06-02):** _disabling auto-merge on a stuck `DIRTY` PR is **pointless**_ — a
   conflicting PR cannot auto-merge anyway, and once resolved the REQUIRED `quality-gates-v2` check is the gate, not the
   toggle. The lever is **auto-triage** (close-superseded / resolve), never the auto-merge toggle. (See the
