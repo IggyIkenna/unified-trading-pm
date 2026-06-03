@@ -65,6 +65,10 @@ todos:
     content: |
       - [x] ✅ [SCRIPT] P1. Scope + warm basedpyright — run it on the changed package(s), not the whole `src/`, for iterative runs (full-tree only at gate-to-main). Evaluate basedpyright watch/daemon mode to avoid the cold whole-tree analyze (the single biggest CPU spike per run). Persist + share the basedpyright cache dir across worktrees so the first slot warms it for all.
     status: todo
+  - id: qg-xdist-start-method
+    content: |
+      - [ ] [SCRIPT] P2. **Root-cause the xdist re-import cost = multiprocessing start method** (slot-3 2026-06-03). `PYTEST_WORKERS=0` (serial) is the default because each xdist worker "re-imports UTL+UAC from scratch" — but that is a macOS artefact: macOS defaults to `spawn` (full re-import per worker) while the Linux QG VMs default to `fork` (workers inherit the parent's already-imported modules for FREE). So bounded xdist on the Linux VMs (`-n` capped + `--maxprocesses` + `fork`/`forkserver` start method) likely parallelises with near-zero re-import tax, while macOS stays serial. Evaluate + MEASURE (full features-service suite: serial-macOS vs fork-xdist-Linux) before enabling; keep behind a flag, never on macOS, honour the existing `QG_MEM_CAP`/OOM guard (the 2026-05-15 79GB incident). **Complementary to + LOWER priority than `qg-selective-tests`** — for small diffs, scoping to affected tests beats any parallelism (aligns with this plan's "do-less-work, not more parallelism" thesis). Evidence: local macOS full features-service QG measured ~14 min @ ~2% suite progress 2026-06-03 — the laptop is the slow path; the fleet runs heavy QG on the Linux VMs by design.
+    status: todo
   - id: qg-coverage-off-hotpath
     content: |
       - [x] ✅ [SCRIPT] P1. Move `--cov` off the hot path — coverage instrumentation touches every executed line (large CPU/RAM cost). Make it opt-in: iterative/`--quick` runs skip coverage; coverage + the coverage floor are enforced ONLY on the gate-to-main (quickmerge Pass 1) full run. No change to the merge-gate coverage requirement — only to when it is paid.
