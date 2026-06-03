@@ -419,6 +419,19 @@ VM.
       []`(no re-raise) pattern that silently shrank the tradfi universe     almost certainly exists in other IS reference-data adapters (cefi tardis/exchange, defi, sports) → same A8     false-complete on a fetch error. Audit each`reference_data/adapters/_/`fetch path; apply the same fix (re-raise     a`\_fetch_one`-classifiable exception so the venue lands in `failed[]`→`attempted_failed`); don't cache `[]`
       from a failed fetch. Repo: instruments-service. parent_epic: mtds_mdps_master.
 
+- [ ] [CODE] P2. **SSOT-cleanliness: fold `pipeline_mode` into UAC `build_tradfi_partition_path` (remove the MTDS mirror
+      divergence)** (slot-6 path-correctness audit 2026-06-03 — latent footgun, NOT a live bug). The UAC base builder
+      `unified-api-contracts/.../canonical/partition_paths.py::build_tradfi_partition_path` produces the path WITHOUT
+      `pipeline_mode=`; `candidate_parquet_paths(pipeline_mode=...)` layers it, the live writer
+      (`tradfi_shared.build_tradfi_partition_path`) inserts it inline ("mirrors UAC byte-for-byte but accepts
+      pipeline_mode"), and the orchestrator inserts it via `.replace`. All ACTUAL write/migrate/read/rebuild paths are
+      consistent + pipeline_mode-aware TODAY (audit-verified GREEN), but the UAC base builder + the MTDS mirror have
+      drifted apart — a future caller using the bare UAC builder would write the pre-migration path. Fix: add optional
+      `pipeline_mode` to UAC `build_tradfi_partition_path` (insert LEFT of asset_group=, matching
+      `candidate_parquet_paths`) so the MTDS mirror can delegate instead of diverging; update orchestrator to pass it
+      rather than `.replace`. Cross-repo (UAC + mtds), so a coordinated pass. Repos: unified-api-contracts +
+      market-tick-data-service. parent_epic: mtds_mdps_master.
+
 ## Success criteria
 
 - Canonical `tradfi-prd` `_index` = **v9** (data-state verified) + `pipeline_mode=` partition + `source` populated +
