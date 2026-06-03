@@ -507,10 +507,27 @@ verify + the gated delete.
       `instrument_id=0x…`), so for each, load lifecycle bounds (fixed reader above) for its date and if
       `start_date ≤ day < end_date_iso` (live + in-window) → `record_failed` (attempted_failed); else preserve typed
       empty. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [DATA] P1. **instruments-service: populate MARKET_LIFECYCLE SSOT for prediction** (slot-5 discovery 2026-06-03).
-      The canonical `market_lifecycle/by_canonical_group/group=*/day=*/market_lifecycle.parquet` (market_id →
+- [ ] [DATA] P1. **instruments-service: populate MARKET_LIFECYCLE SSOT for prediction** (slot-5 discovery 2026-06-03;
+      DIAGNOSED slot-5 2026-06-03 — the write path EXISTS, the 0-objects cause is real-data/operational, VM-verify). The
+      canonical `market_lifecycle/by_canonical_group/group=*/day=*/market_lifecycle.parquet` (market_id →
       created/settlement) is unpopulated (0 objects); the MTDS reader bridges via `instrument_availability` for now
-      (item above). Proper SSOT = IS writes MARKET_LIFECYCLE. Repo: instruments-service. parent_epic: mtds_mdps_master.
+      (item above). **DIAGNOSIS (not a missing write path — grep-then-read):** the writer is wired —
+      `orchestrator.py:2418 _write_market_lifecycle(...)` is called per-canonical-group inside the prediction branch;
+      `_build_market_lifecycle_df` (orchestrator.py:3324) builds from `venue_df` which is
+      `InstrumentRecord.model_dump()` (orchestrator.py:2238) → it HAS
+      `instrument_key`/`available_from_datetime`/`available_to_datetime` (NOT `start_date`/`end_date_iso` — those are
+      raw Polymarket fields used to BUILD the record, and the slot-5 `start_date`/`end_date_iso` parquet was the
+      DIFFERENT `instrument_availability/` write, not this one). So `_build_market_lifecycle_df` is structurally
+      correct; it drops every row whose `available_from_datetime` OR `available_to_datetime` is null (line 3344), and
+      BOTH are null when `polymarket.py classify_lifecycle()` returns `None` (line 882-883). **So 0 objects = either (a)
+      `classify_lifecycle` returns None for most/all markets** (then the fix is in `classify_lifecycle` / its
+      created_at/closed_time/end_date_iso parse — line 1116/1120 — make it resolve bounds robustly, mirroring the
+      @62b7ff74 MTDS-reader fix that derives from start_date/end_date_iso), **or (b) no recent IS prediction enumerate
+      run has executed** (operational — the write only fires on a fresh run). **VM-VERIFY REQUIRED (can't verify locally
+      — GCS reads flaky from the Mac slot host):** on a VM, run the IS prediction enumerate for a sample date + (1) log
+      how many markets get a non-None `classify_lifecycle`, (2) check whether `market_lifecycle/by_canonical_group/`
+      objects appear. If (a), fix `classify_lifecycle`; if (b), it self- resolves on the next run. Repo:
+      instruments-service. parent_epic: mtds_mdps_master.
 
 ## Success criteria
 
