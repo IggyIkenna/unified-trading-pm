@@ -568,6 +568,40 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       reddening PM v2. Added it to the exclude list; verified 0 remaining non-excluded offenders. This was the qg-v2
       gate-block on the PM→main PR (the conflict is now the only remaining blocker — see dam-drain finding above). repo:
       unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Fleet-wide stale-PR sweep + "main has NO unique content" finding** — slot-1 2026-06-03
+      (operator-directed). **KEY FINDING (validates operator's thesis): LDR is the superset of truth; main carries NO
+      unique CONTENT fleet-wide** — `git cherry origin/live-defi-rollout origin/main` = **0 absent** for UAC + mtds
+      (their "2 main-ahead" commits are merge-commit NODES from prior LDR→main PRs, not content); AO/alerting/UTL are
+      `main-ahead=0` (strictly behind); PM's only genuine-absent commit `dca8864dd` is a **PR-#114 squash** whose
+      substance (slot-4 = sports vertical) is **already on LDR** (the manifest-canon plans carry "slot 4"). ⇒ **No
+      cherry-picks needed anywhere**; every repo can drain as **`main := LDR`** preserving only ci_status (Guard 2). The
+      promotion conflicts were squash-node + ci_status entanglement, NOT lost code. **PR sweep (code is on LDR → stale
+      promotion PRs bear no unique code):** CLOSED 10 stale (UAC #5/#9/#10 autos; LDR→staging syncs alerting #9 /
+      batch-live #4 / client-reporting #4 / ibkr #5 / mtds #80 / trading-agent #2; deployment-ui #3 auto) + deleted
+      their branches. **Discriminator = PR base, not age**: base=staging/main → promotion (code on LDR, safe close);
+      base=LDR → may carry un-integrated code (inspect). **LEFT (recent ≤3d / special):** features #8, UAC #67, UI #19
+      (recent promotions), PM #116 (the dam), deployment #15 (Harsh's tab→staging), mtds #79 (semver bot). repos: fleet.
+- [ ] [SCRIPT] P2. **7 old feature/odd-base PRs carry UNIQUE commits (deserve attention — NOT auto-closed).** All have
+      `ahead-of-LDR>0` by patch-id (verified), so per the base-not-age rule they were NOT swept: **mtks #94**
+      (data-io-production-readiness, **344 commits**, Jan 2026 — large old branch, likely superseded but unconfirmed);
+      **UI #10** live-defi-rollout-copy (1: ui consolidation), **#4** tiny-pr-change (1: package.json version comment),
+      **#2** task-planning-and-qa (11: app-dir restructure/phase-2 refactor), **#1** react-child-error (2: UnifiedShell
+      prop fix); **deployment-ui #4** python-3.13 chore (1). **uta #5** chore/uvlock-drift (1,
+      base=**live-defi-rollout** → a PR INTO the trunk, recent 2026-06-02 — the uv.lock re-lock; check if already FF'd
+      to LDR). Owner inspects each: if head ⊆ LDR by patch-id → close; else merge/integrate. repos:
+      market-tick-data-service, unified-trading-system-ui, deployment-ui, unified-trading-api.
+- [x] ✅ [SCRIPT] P1. **Wipe `unified-trading-codex` from operational tooling (archived repo → folded into PM/codex/)**
+      — slot-1 2026-06-03 (operator-directed: "wiped from git + anything that thinks it sees it"). codex is already
+      not-in-manifest + in `prune_removed_repositories.py` REMOVED + clone-scripts skip it. Fixed the remaining
+      live-repo references: `quickmerge.sh` Option-B condition (PM-only now), `auto-populate-tags.py` tuple (PM-only),
+      `cursor-configs/CLAUDE.md` Option-B bullet (PM-only + codex-archived note), `workspace-bootstrap.sh` header
+      pointer + the `.readiness-ref` write path (`../../unified-trading-codex/10-audit/...` →
+      `../unified-trading-pm/codex/10-audit/...`). repo: unified-trading-pm. **Follow-up (P3):** ~217 files still
+      mention the literal string in PROSE — overwhelmingly legit refs to the codex KNOWLEDGE BASE (now at PM/codex/),
+      not live-repo references; a mechanical prose sweep (`unified-trading-codex` → `unified-trading-pm/codex` where it
+      denotes a path) is low-priority hygiene, not a "thinks-it-sees-a-repo" hazard. Also: existing committed
+      `.readiness-ref` files across repos still point at the old path until a `workspace-bootstrap.sh` re-run
+      regenerates them.
 
 ## Phase 6 — CONSOLIDATED HAND-OFF EXECUTION PLAN (CI/CD repair + QG-debt cleanup)
 
