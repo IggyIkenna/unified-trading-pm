@@ -1248,8 +1248,10 @@ ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+
 if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
-elif [ "$REPO_NAME" = "unified-trading-pm" ] || [ "$REPO_NAME" = "unified-trading-codex" ]; then
-  # Option B (operator decision 2026-06-03): PM/codex ship to main directly — NO staging.
+elif [ "$REPO_NAME" = "unified-trading-pm" ]; then
+  # Option B (operator decision 2026-06-03): PM ships to main directly — NO staging.
+  # (unified-trading-codex is ARCHIVED — folded into PM at codex/; no longer a live repo,
+  # so it is not handled here.)
   # PM is not a deployed package and is the SIT *debouncer* (it is not itself SIT-covered),
   # so a staging hop adds zero SIT value. The main PR's quality-gates-v2 (plan-hygiene,
   # manifest/dependency-alignment, codex-ref validation, ruff on tooling scripts) is the full
@@ -1257,7 +1259,7 @@ elif [ "$REPO_NAME" = "unified-trading-pm" ] || [ "$REPO_NAME" = "unified-tradin
   # repos building on staging still get PM via the dep-clone fallback (clone -b staging → -b main),
   # so PM having no staging branch is transparent to them. SSOT: codex/08-workflows/ci-cd-flow.md.
   PR_BASE="main"
-  echo "[$REPO_NAME] Option B: PR targets main directly (PM/codex have no staging; v2 on the main PR is the gate)"
+  echo "[$REPO_NAME] Option B: PR targets main directly (PM has no staging; v2 on the main PR is the gate)"
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"

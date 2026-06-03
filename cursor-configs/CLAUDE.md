@@ -125,12 +125,17 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 - **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit _promotes_ via
   quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
   (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.
-- **PM/codex → `main` directly, NO staging (Option B, 2026-06-03)**: `unified-trading-pm` + `unified-trading-codex` are
-  not deployed packages (PM is the SIT _debouncer_, not SIT-covered) → quickmerge routes their PRs to `main` (both docs
-  AND scripts/workflows); the main PR's `quality-gates-v2` is the gate. PM has no `staging`; for PM **`main` is the
-  reconciliation point** (does for plans what staging does for service repos). Convergence + 3-layer conflict model
-  (textual=conflict-resolution-agent / semantic=reviewer+overlap-detector / hygiene=plan-health; **every alert → the
-  orchestrator, not Slack-only**) SSOT: `codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model".
+- **PM → `main` directly, NO staging (Option B, 2026-06-03; staging branch DELETED 2026-06-03)**: `unified-trading-pm`
+  is not a deployed package (PM is the SIT _debouncer_, not SIT-covered) → quickmerge routes its PRs to `main` (both
+  docs AND scripts/workflows); the main PR's `quality-gates-v2` is the gate. PM has no `staging` (the stale branch was
+  deleted
+  - the dead `pm-staging-to-main-bypass.yml` removed); for PM **`main` is the reconciliation point** (does for plans
+    what staging does for service repos). **`unified-trading-codex` is ARCHIVED — folded into PM at `codex/`; it is NOT
+    a live repo** (not in `workspace-manifest.json.repositories`, in the `prune_removed_repositories.py` REMOVED set,
+    clone scripts skip it) — never treat it as a clonable/promotable/protectable repo; the `codex/` _directory_ inside
+    PM is the live SSOT. Convergence + 3-layer conflict model (textual=conflict-resolution-agent /
+    semantic=reviewer+overlap-detector / hygiene=plan-health; **every alert → the orchestrator, not Slack-only**) SSOT:
+    `codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model".
 - **Quality gates BEFORE COMMIT — the commit IS the per-repo quality boundary (HARD RULE; tightened 2026-06-03,
   supersedes "before quickmerge")**: a **code** commit to the integration branch must be made from a
   `quality-gates.sh`-green tree — never on the strength of the light prek hook alone
