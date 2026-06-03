@@ -73,12 +73,14 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       `SOURCE_RETURNED_ZERO`** (genuine vs masked fetch-failure) + preserve the 2,280 `EXPECTED_PRE_VENUE_LAUNCH`
       (pre-launch check via UAC `venue_launch_dates`). Unit-test the 3-way tree per script. Repo:
       **market-tick-data-service**. Home: each AG plan § CF-11 + E5.
-- [ ] [CODE] P1. **Kalshi None-classifier divergence** — same fix as Polymarket@5744ba61. Kalshi adapter must emit
-      `None` (not `"OTHER"`) for a sub-threshold classification so the shared orchestrator finalize routes it to
-      `attempted_failed[ClassifierConfidenceLow]` (venue parity + batch=live); update
-      `test_kalshi_adapter_lifecycle_gating.py` to assert `None` not `"OTHER"`. Repo: **market-tick-data-service**.
-      Home: prediction plan § CF-11. (Low live urgency — Polymarket-only corpus today — but required before Kalshi goes
-      live.)
+- [x] ✅ [CODE] P1. **Kalshi None-classifier divergence — DONE (mtds@584871e9, slot-5/6 2026-06-03).** Kalshi adapter
+      now emits `None` (not `"OTHER"`) for a sub-threshold classification → the venue-agnostic orchestrator finalize
+      routes it to `record_failed[ClassifierConfidenceLow]` (venue parity w/ Polymarket@5744ba61 + batch=live parity w/
+      rebuild_prediction_manifest);
+      `test_kalshi_adapter_lifecycle_gating.py::test_unclassified_canonical_group_is_none_not_other` asserts `None` not
+      `"OTHER"` (9/9 green); mtds QG `--no-fix` exit 0. Cross-referenced from the prediction master plan § CF-11. Repo:
+      **market-tick-data-service**. Home: prediction plan § CF-11. (Low live urgency — Polymarket-only corpus today —
+      but required before Kalshi goes live.)
 - [ ] [CODE] P1. **Downstream writer-fixes (MDPS / features / strategy / execution)** — emit typed
       `EmptyConfirmedReason` + `attempted_failed`-not-swallow (CF-11) so the FIRST volume each writes is born-canonical
       (these AGs have no `_index` yet → writer-fix-first, not migrate-a-nonexistent-corpus). Repos:

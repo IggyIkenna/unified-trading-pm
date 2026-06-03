@@ -317,10 +317,19 @@ be fixed first if run on a VM.
       small):** blank `data_type` (17 rows, both buckets) is skip+logged by the migrator → diagnose at rebuild from the
       parquet's own `data_type` column; confirm the ~21 UNKNOWN-venue cells are object-backed (relabel) vs phantom
       (honest drop).
-- [ ] [DATA] P0. E6b CODEX-ALIGNMENT VERIFY-ITEM (operator final-gate 2026-06-01): a codex-alignment audit confirmed
-      paths/columns/buckets/vocab are ALIGNED across codex + IS/MTDS/MDPS (all use UAC builders + `resolve_bucket_name`;
-      no inline divergence) — see `cf_data_state_audit_slot3_2026_06_01.md`. **ONE prediction nuance to confirm before
-      apply**: `codex/02-data/prediction-schema-paths.md` describes a `canonical_question_group={cqg}/` PATH SEGMENT for
+- [x] ✅ [DATA] P0. E6b CODEX-ALIGNMENT VERIFY — DONE (slot-5 2026-06-03). **Resolved: NO migrator change needed + codex
+      reconciled.** Confirmed against (1) UAC `build_prediction_partition_path` — `{conditionId}.parquet` is the
+      per-instrument FILENAME, explicitly "NOT a partition segment"; (2) legacy data — **0**
+      `data_type=prediction_canonical_question_group` raw objects across sampled days (only `data_type=trades` per-cid).
+      `prediction_canonical_question_group` is a MANIFEST-ONLY bundled data_type (rebuild re-computes cqg per-cid → one
+      `record_captured_from_counts` row), so there is no `canonical_question_group={cqg}/` object segment to build — the
+      migrator's cqg-as-filename output is correct and the canonical reader resolves it. The codex
+      `prediction-schema-paths.md` "Target (post-Plan A)" object-bundle layout was STALE/aspirational → added a
+      SHIPPED-DESIGN CORRECTION banner (per-cid objects + manifest-only bundle). Original verify text below.
+      <br>**Original:** a codex-alignment audit confirmed paths/columns/buckets/vocab are ALIGNED across codex +
+      IS/MTDS/MDPS (all use UAC builders + `resolve_bucket_name`; no inline divergence) — see
+      `cf_data_state_audit_slot3_2026_06_01.md`. **ONE prediction nuance to confirm before apply**:
+      `codex/02-data/prediction-schema-paths.md` describes a `canonical_question_group={cqg}/` PATH SEGMENT for
       `data_type=prediction_canonical_question_group` (post-Plan-A target). The migrator's `candidate_parquet_paths`
       builds `.../data_type={DT}/{filename}.parquet` (cqg-as-filename, NO segment). For the 289 legacy question_group
       cells: list an ACTUAL legacy question_group object, confirm whether the canonical layout uses the SEGMENT vs the
