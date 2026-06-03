@@ -167,11 +167,19 @@ All on `origin/live-defi-rollout`; full detail in
 > conflict layers, no race:** TEXTUAL merge = conflict-resolution-agent; SEMANTIC = per-VM `review.md` + the new
 > cross-plan detector; HYGIENE = plan-health-agent (scripted + Haiku, report-only).
 
-- [ ] [SCRIPT] P1. **conflict-resolution-agent → Max-plan worker (drop API credits).** Today it runs `claude-code`
-      in-GHA via `ANTHROPIC_API_KEY_CICD` (`conflict-resolution-agent.yml:296/305`). Conflict resolution is the HARD
-      judgment task + must not be pay-per-call API. Route via `escalate-to-orchestrator.yml` (`POST /api/escalate`,
-      type=merge_conflict) → orchestrator spawns a setup-token Max worker → resolves on LDR; remove the in-GHA API path.
-      repo: unified-trading-pm.
+- [ ] [SCRIPT] **P0 PREREQUISITE (blocks the whole escalation pipeline — discovered 2026-06-03).** The GHA→orchestrator
+      bridge is **auth-dead**: `ORCHESTRATOR_INTERNAL_SECRET` is **NOT in PM's Actions secrets** (PM has GH_PAT /
+      ANTHROPIC / SLACK / GCP_SA but not it), and `escalate-to-orchestrator.yml`'s only run (2026-06-03T09:57,
+      repository_dispatch) **FAILED**. So **no** alert can reach the orchestrator today — this is the real root of the
+      operator-blindness, not the wiring. Fix: read the canonical `ORCHESTRATOR_INTERNAL_SECRET` off the central
+      orchestrator VM (`i-007e8d99d12831578`, via SSM — it lives in the server env, not GCP/AWS SM) and set it as a PM
+      Actions secret so it MATCHES what the server validates. Until this lands, the two P1 wirings below escalate into a
+      void. repo: unified-trading-pm (+ orchestrator VM read).
+- [ ] [SCRIPT] P1. **conflict-resolution-agent → Max-plan worker (drop API credits).** _(blocked on the P0 above)_ Today
+      it runs `claude-code` in-GHA via `ANTHROPIC_API_KEY_CICD` (`conflict-resolution-agent.yml:296/305`). Conflict
+      resolution is the HARD judgment task + must not be pay-per-call API. Route via `escalate-to-orchestrator.yml`
+      (`POST /api/escalate`, type=merge_conflict) → orchestrator spawns a setup-token Max worker → resolves on LDR;
+      remove the in-GHA API path. repo: unified-trading-pm.
 - [ ] [SCRIPT] P1. **Every Slack-alert event ALSO pings the orchestrator → it delegates (operator-blindness fix,
       operator 2026-06-03).** Operator doesn't always watch #ci-failures, so every alert must reach the orchestrator,
       which delegates to the owning slot / review-agent / epic-VM. Gaps: (a) `main-backmerge-to-ldr.yml` conflict →
