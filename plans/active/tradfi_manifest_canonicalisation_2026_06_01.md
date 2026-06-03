@@ -408,12 +408,15 @@ VM.
       adapter-swallow pattern likely affects cefi/other IS adapters (verify). Repo: instruments-service. parent_epic:
       mtds_mdps_master.
 
-- [ ] [CODE] P1. **Cross-AG: audit cefi/defi/sports IS adapters for the same fetch-failure swallow** (slot-6 discovery
-      2026-06-03, surfaced by the tradfi Databento state-threading fix instruments-service@bd1456aa). The `_fetch_*` →
-      classify+emit `ADAPTER_FETCH_FAILED` + `return []` (no re-raise) pattern that silently shrank the tradfi universe
-      almost certainly exists in other IS reference-data adapters (cefi tardis/exchange, defi, sports) → same A8
-      false-complete on a fetch error. Audit each `reference_data/adapters/*/` fetch path; apply the same fix (re-raise
-      a `_fetch_one`-classifiable exception so the venue lands in `failed[]` → `attempted_failed`); don't cache `[]`
+- [x] ✅ [CODE] P1. **Cross-AG IS adapter fetch-failure swallow — AUDITED + FIXED (instruments-service@e2e008f0, slot-6
+      2026-06-03).** Audited all 3 AGs vs `_fetch_one` consumption: **cefi** hyperliquid/aster/tardis(×2) + **sports**
+      betfair + **defi** lighter(×2) had the return-[]-on-fetch-error swallow → now RE-RAISE (→ failed[] →
+      attempted*failed). **defi family otherwise CLEAN** (raises ConnectionError already); sports
+      footystats/understat/etc. correctly excluded (not URDI-consumed); tardis preserves per-exchange partial-success
+      isolation (raises only if all-fail-empty). +12 regression tests + 7 old-contract tests updated to assert raise; IS
+      QG exit 0. ORIGINAL: (slot-6 discovery 2026-06-03, surfaced by the tradfi Databento state-threading fix
+      instruments-service@bd1456aa). The `\_fetch*_`→     classify+emit`ADAPTER_FETCH_FAILED`+`return
+      []`(no re-raise) pattern that silently shrank the tradfi universe     almost certainly exists in other IS reference-data adapters (cefi tardis/exchange, defi, sports) → same A8     false-complete on a fetch error. Audit each`reference_data/adapters/_/`fetch path; apply the same fix (re-raise     a`\_fetch_one`-classifiable exception so the venue lands in `failed[]`→`attempted_failed`); don't cache `[]`
       from a failed fetch. Repo: instruments-service. parent_epic: mtds_mdps_master.
 
 ## Success criteria
