@@ -9,6 +9,9 @@ source:
   - codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution"
 locked_by: live-defi-rollout
 priority: P1
+parent_epic: infrastructure_master
+estimate_calibrated_ai_days: 0.4
+estimate_class: infra
 ---
 
 ## What I found

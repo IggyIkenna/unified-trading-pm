@@ -20,6 +20,62 @@ source:
 
 # CI/CD contract hardening — workspace-wide gate enforcement + build provenance
 
+## 🧭 CI/CD MASTER INDEX (this plan is the master; 2026-06-03 audit)
+
+> **This plan is the master for all CI/CD-infra work** — GHA, agent-orchestrator, quality-gates, Slack-alerting,
+> promotion/SIT, FF-cron, plan-hygiene gates. Audit 2026-06-03: **25 plans/issues · ~36 calibrated AI-days · 155 open
+> todos.** All are epic-attached + estimated (the 9 orphan/un-estimated issues were fixed in this audit). Ordering
+> principle (operator): **WAVE 0 = get to a CLEAN STARTING STATE first** — unblock anything that stops a commit, an FF
+> cron push/pull, a GHA, or an auto-merge, so **other agents can commit/promote while the rest is built** (else they
+> just queue). Then consistency machinery → orchestrator/alerting → drain+cleanup.
+
+### WAVE 0 — clean starting state (unblock the pipeline for ALL agents — DO FIRST) · ~9 AI-days
+
+| plan | epic | est | why it's WAVE-0 (unblocks) |
+|---|---|---|---|
+| **cicd_contract_hardening** (this) § "Reconcile stuck promotion PRs" + "Full PM→main promotion" + staging-freeze | infra | (in 1.2) | DIRTY PRs (PM #116, UAC ×4, mtds/deploy/alerting) block auto-merge; stale-main-manifest dams the whole fleet |
+| `utl_full_quality_gates_green` | infra | 4.8 | UTL is the T0 base — its red QG dep-blocks EVERY downstream promotion |
+| `stash_pile_workspace_cleanup` + `issues/shared_stash_pile_archive_cleanup` | infra | 1.6 | dirty worktrees/stashes jam `slot-cron-ff-pull` |
+| `issues/local_slot_cron_ff_pull_hardening` | infra | 0.4 | the FF cron push/pull itself |
+| `issues/commit_identity_misconfig_fleet` | infra | 0.4 | commits land wrong-author / blocked |
+| `issues/hook_tooling_version_alignment_across_environments` | infra | 0.4 | prek hook version skew blocks commits |
+| `issues/features_service_full_qg_test_pollution_flake` | infra | 0.4 | QG flake → false-red blocks promotion |
+
+### WAVE 1 — CI/CD consistency machinery (so it stays clean) · ~10 AI-days
+
+| plan | epic | est | scope |
+|---|---|---|---|
+| `cicd_contract_hardening` § "ci_status consistency hardening" | infra | (in 1.2) | Guard 1 ✅ done; **Guard 2** (single-SSOT-branch + backmerge-no-ci_status-backward), **Guard 3** (drift reconciler), promoter-skip-main-direct, `tier-ab-green` chain (done) |
+| `ci_canonical_v2_migration` | infra | 4.0 | `quality-gates-v2` the required check on every repo |
+| `qg_commit_quality_boundary_and_slot_ff_push` | infra | 1.2 | QG-before-commit (done) + FF-push carve-out |
+| `quality_gates_resource_contention_speedup` | infra | 2.4 | QG host-governor / shared-host serialization |
+| `harden_grepable_rules_into_ci_gates` | plan_hygiene | 0.8 | grep-rules → enforced CI gates |
+| `uv_lockfile_determinism` | infra | 1.6 | uv pin + read-only lock verifier (mostly done) |
+
+### WAVE 2 — orchestrator + Slack-alerting framework · ~3 AI-days
+
+| plan | epic | est | scope |
+|---|---|---|---|
+| `orchestrator_fleet_worker_spawn_enablement` | orchestrator | 1.2 | F7 slot-4 WIP, F8 self-heal, F9 review-spawn ✅, F12 fleet env, F13 worktree hygiene |
+| `agent_orchestrator_e2e_workflow_and_execution_scope` | orchestrator | 0.9 | G6 AO `staging` branch + quickmerge; escalation bridge ✅ |
+| `issues/api_host_chronic_impairment` | orchestrator | 0.8 | the orchestrator host stability |
+| `issues/running_vm_fleet_status` + `issues/infra_slot_sync_session_handoff` | orchestrator | 0.4 | fleet status + slot-sync handoff |
+| _Slack alerting pipeline_ → covered IN this plan: #ci-failures migration + `ci_failure_watcher` + every-alert→orchestrator (P2 Telegram-retire-in-templates todo) | infra | (in 1.2) | no separate plan |
+
+### WAVE 3 — drain to completion + hygiene/cleanup · ~14 AI-days
+
+| plan | epic | est | scope |
+|---|---|---|---|
+| `cicd_contract_hardening` § "Drain to completion" + Phase 6 QG-debt greening | infra | (in 1.2) | drive UTL/UAC→services→…→IaC to STAGING_GREEN, then SIT→main |
+| `codex_vs_repo_docs_ssot_audit` | plan_hygiene | 3.2 | docs SSOT reconciliation |
+| `issues/issue_docs_remediation_sweep` | (master) | 4.0 | issue-doc lifecycle cleanup |
+| `harsh_day_master` | plan_hygiene | 1.6 | plan-hygiene + per-repo QG |
+| `agent_context_and_memory_hygiene` | plan_hygiene | 0.6 | agent context/memory rules |
+| `issues/deployment_scripts_bucket_softdelete_log_churn` | infra | 0.2 | log churn cleanup |
+
+> **Hygiene status (2026-06-03 audit):** all 25 cluster plans/issues are now `parent_epic`-attached + estimated. Epics:
+> `infrastructure_master`, `orchestrator_master`, `plan_hygiene_master`. No orphans remain in the CI/CD cluster.
+
 ## HANDOFF — next agent (state as of 2026-06-01)
 
 **Goal:** every repo on `quality-gates-v2` — the required-check **ruleset on `main`** (+ `require-staging-lock-check` on

@@ -19,6 +19,9 @@ source:
   - scripts/manifest/check-precommit-versions.py — aligns ruff + pre-commit-hooks REVS to workspace-constraints.toml via
     `pre-commit install` (not prek); does NOT cover prettier version; is not run on VMs
 locked_by: live-defi-rollout
+parent_epic: infrastructure_master
+estimate_calibrated_ai_days: 0.4
+estimate_class: infra
 ---
 
 ## What I found

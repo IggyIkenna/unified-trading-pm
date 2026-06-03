@@ -11,6 +11,8 @@ source:
   - aws ec2 / ssm fleet state 2026-06-02
 parent_epic: plans/epics/orchestrator_master.md
 locked_by: infra_slot_sync_session_handoff_2026_06_02
+estimate_calibrated_ai_days: 0.2
+estimate_class: infra
 ---
 
 ## What this session set out to do (arc)

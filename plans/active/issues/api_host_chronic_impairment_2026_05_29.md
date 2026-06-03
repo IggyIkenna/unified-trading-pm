@@ -15,6 +15,9 @@ source:
 locked_by: api_host_chronic_impairment_2026_05_29
 priority: P2
 status: active
+parent_epic: orchestrator_master
+estimate_calibrated_ai_days: 0.8
+estimate_class: infra
 ---
 
 > **🔄 VERIFICATION 2026-06-01 (harsh) — KEEP OPEN; plan covered the defensive layer only.** The

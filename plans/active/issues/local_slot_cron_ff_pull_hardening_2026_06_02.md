@@ -8,6 +8,9 @@ source:
   - "CLAUDE.md § Local slot host = VM slot host — symmetric worker model"
 locked_by: live-defi-rollout
 status: RESOLVED — ready to archive once acked
+parent_epic: infrastructure_master
+estimate_calibrated_ai_days: 0.4
+estimate_class: infra
 ---
 
 > **✅ RESOLVED 2026-06-02.** All three layers shipped + one-time sync executed. This doc records the problem +
