@@ -501,11 +501,28 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `main-backmerge-to-ldr.yml` must NOT carry ci_status BACKWARD to LDR — a `.gitattributes merge=ours` on the
       ci_status region / post-backmerge restore, OR declare LDR's copy non-authoritative. Kills the stale-copy
       round-trip. repo: unified-trading-pm.
-- [ ] [SCRIPT] P0. **Guard 3 — drift reconciler (watchdog).** Cron (~30-60m): per repo, compare latest
-      `quality-gates-v2` conclusion on its SSOT branch vs manifest `ci_status`; on mismatch (v2=success but
-      ci_status=FAILING — the missed-recovery / stuck-UTL case; or vice-versa) re-fire `ci-status-update` with the
-      correct status. Catches dropped transitions (e.g. an Agent-Audit failure flipped FAILING, no green event reset
-      it). New `ci-status-reconciler.yml`. repo: unified-trading-pm.
+- [ ] [OPERATOR] P0. **🔴 BLOCKED-CREDENTIALS — Anthropic account is OUT OF CREDITS (the systemic root blocker of the
+      entire agentic-CICD self-healing layer).** Found 2026-06-03 (slot-1) tracing the dammed cascade.
+      `claude-api-health-monitor` reports (every run since ~09:47):
+      `degraded (billing_credits: "Your credit balance is     too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.")`.
+      Cascade chain: **out-of-credits → health-monitor degraded → `claude-api-health-precheck` GATES the
+      conflict-resolution-agent (refuses to burn credits on a degraded API) → UAC #67 + every conflicting promotion PR
+      can't self-resolve → dep-order dams 16 repos behind UAC.** Almost certainly ALSO the cause of the "Agent Audit"
+      failure that false-flipped UTL ci_status=FAILING (Agent Audit is agentic → out of credits → failed → flipped), and
+      of any silent orchestrator-worker stalls (workers sign Anthropic API calls). **OPERATOR ACTION: top up Anthropic
+      credits / fix billing** (Plans & Billing) — one top-up unblocks conflict-resolution + agent-audits + orchestrator
+      workers fleet-wide. **This is a hard-stop for agents (cannot purchase credits).** Until resolved: the CLEAN-repo
+      cascade still flows (proof: deployment-ui #17 promoted LDR→staging + MERGED 2026-06-03); only
+      CONFLICT-resolution-dependent promotions stay blocked.
+- [x] ✅ [SCRIPT] P0. **Guard 3 — drift reconciler (watchdog)** — BUILT + shipped slot-1 2026-06-03 (PM@522e1da8b).
+      `ci-status-reconciler.yml` (every 30m + dispatch/dry_run) + `scripts/cicd/ci_status_reconciler.py` (pure decision
+      core, 7 unit tests): per repo, compares latest `quality-gates-v2` conclusion per branch vs manifest `ci_status`;
+      corrects ONLY the two unambiguous drifts — missed-recovery (FAILING but v2 green → the green tier v2 reached) and
+      missed-regression (green but latest v2 failed → FAILING) — via the bot-only `ci-status-update` dispatch (Guard 1);
+      never touches green↔green tier diffs; fail-safe no-op on absent v2. **Live UTL drift (the stuck-UTL case) already
+      hand-corrected** via `ci-status-update` → MAIN_GREEN (v2 was green on main/staging/LDR; the FAILING was the
+      Agent-Audit false-flip), which unblocked UTL in the dep-order gate. Guard 3 prevents recurrence. NOTE: it
+      activates once on PM main (reaches main via the normal flow). repo: unified-trading-pm.
 - [ ] [INFRA] P0. **Full PM `LDR→main` promotion (needed regardless of ci_status home).** main +221/−9 vs LDR →
       back-merge `main→LDR` (absorb the 9), then gated `LDR→main` PR. Lands the `tier-ab-green` chain-wiring, the
       fund-admin/greeks manifest entries, fresh ci_status, + 221 PM commits. Until it lands the promoter reads a stale
