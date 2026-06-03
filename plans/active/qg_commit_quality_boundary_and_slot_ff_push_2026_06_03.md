@@ -88,7 +88,15 @@ All on `origin/live-defi-rollout`; full detail in [uv_lockfile_determinism_2026_
 ### FF-push slot→LDR — PROPOSED, ratify before shipping (loosens a HARD RULE)
 - [ ] [INFRA] P2. **[NEEDS-RATIFICATION]** Extend `scripts/dev/slot-cron-ff-pull.sh` to FF-push clean / >1h-old /
       ahead-only (0-behind) slot commits to LDR (generalize the ping-flush block; FF-only; retry-on-race). Makes the
-      uta-style straggler self-resolve.
+      uta-style straggler self-resolve. **Placement = the symmetric slot-host cron stack** (per the "Local slot host =
+      VM slot host" HARD RULE): one SSOT script in PM, run every 5 min on EVERY slot host — the agent-orchestrator's
+      VM worker slots, the operator laptop, Harsh's laptop — so each host drains its OWN slots' stranded QG-green
+      commits (no central pusher; symmetric, verified by `verify-slot-host-symmetry.sh`). Composes with
+      agent_orchestrator_e2e (worker-slot model) + the per-tab-worktrees SSOT.
+      **Makes the slot-host cron bidirectional**: today it is pull-only (`slot-cron-ff-pull.sh` FF-pulls incoming);
+      background/spawned worker agents need the PUSH side too — FF-pull to stay current AND FF-push the QG-green work
+      they commit, else their commits strand on the worker's tab branch exactly like the uta re-lock did. A background
+      worker that finishes + moves on (no interactive operator to quickmerge) is the canonical strander this closes.
 - [ ] [DOC] P2. **[NEEDS-RATIFICATION]** Reconcile the "Never raw `git push` for CODE" HARD RULE in CLAUDE.md +
       SUB_AGENT_MANDATORY_RULES.md + ci-cd-flow.md to carve out the cron FF-push of QG-green committed work
       (exact wording drafted; gap-analysis line anchors in the session notes). **Do NOT edit the HARD RULE until
