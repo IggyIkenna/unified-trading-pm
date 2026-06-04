@@ -137,6 +137,102 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 > preflight gates, manifest rebuild, and deployment-api/UI — and empty + partial must be handled the same in code as in
 > reality. 5-dimension audit (path / schema-columns / empty-partial / data-status-UI / plan-sweep).
 
+### 🚦 CeFi E2E RUN-READINESS GATE (full IS→execution audit, 2026-06-04, slot-3 + sub-agents)
+
+> **Operator bar (2026-06-04):** before the migration runs, ALL of the below must be DONE + ticked: ① migrator dry-run,
+> ② manifest-rebuild dry-run, ③ **pre-flight engrained on EVERY service IS→execution using the canonical post-migration
+> paths**, ④ **empty/partial handled honestly** — the zero-volume / NaN / last-price-forward-fill candle taxonomy in
+> MDPS
+>
+> - downstream consuming it correctly (batch AND live), ⑤ **read+write paths match the post-migration shape
+>   everywhere.** A full IS→MTDS→MDPS→features→strategy→execution audit (2026-06-04) ran each layer against the
+>   canonical `day=/pipeline_mode=batch_*/asset_group=cefi/venue=/instrument_type=/data_type=/` SSOT
+>   (`build_cefi_partition_path` / `candidate_parquet_paths` / `resolve_bucket_name`). **VERDICT: NOT-YET-READY — 2×P0 +
+>   2×P1 migration-blocking gaps.**
+
+**✅ READY (verified this audit — do not re-litigate):**
+
+- **IS** — reference-store writes go through `resolve_bucket_name`/`get_write_bucket_name` + canonical prefixes
+  (`catalogue_builder.py:185`, `orchestrator.py:1859`); manifest `record_*` pass explicit `pipeline_mode=`;
+  skip-existing pre-flight (`instruments_handler.py:64`). IS writes its OWN `instruments-store-*`, not `raw_tick_data`,
+  so the pipeline_mode raw-tick rule doesn't bind it. PATH-PARITY MATCH.
+- **MTDS batch** — cefi batch writer routes `build_cefi_partition_path` + inserts `pipeline_mode=` LEFT of
+  `asset_group=` (`engine/orchestrator.py:930-1005`); reader 3-level fallback probes canonical FIRST
+  (`reader.py:281-295`); capture pre-flight `_skip_states={CAPTURED,EMPTY_CONFIRMED}`, retries `attempted_failed`,
+  bait-sentinel guard (`orchestrator.py:2201-2228`). Migration-safe.
+- **MDPS candle-absence taxonomy is HONEST** — `base_adapter._finalize_session_grid` produces a dense session grid:
+  no-trade bin in a live session → **forward-filled `o=h=l=c=prev_close`, `volume=0`** (zero-volume + last-price), state
+  streams zero-fill flow cols (never NaN), pre-first-obs bins → NaN (honest), fully-empty shard → `record_empty` (the
+  banned 1440-NaN-placeholder shape was removed, mtds@d717c59 / per-tf `record_empty_for_shard`). All 5 core cefi
+  adapters (trades/book_snapshot/derivative/futures_chain/options_chain) route the session grid. Aggregator
+  (`fast_candle_aggregation.py:304`) NaN-guards the rollup. Read+write canonical.
+- **features-service** — cefi reads via `candidate_parquet_paths("cefi",…)` + `resolve_bucket_name`
+  (`cefi/calculators/perp_funding_rates.py:115`), honest null handling (no `fillna(0)`; emits typed
+  `record_empty(EXPECTED_NO_FUNDING_RATE_TICKS)`), 4-state pre-flight (`volatility/core/data_loader.py:43`). This repo
+  is the **reference exemplar** — bring strategy + execution cefi reads to parity with it. PATH MATCH / PRE-FLIGHT
+  PRESENT / CANDLE SAFE.
+
+**🔴 P0 — migration-BLOCKING (must be DONE + ticked before the real run):**
+
+- [ ] [CODE] P0. **market-tick-data-service (+ market-data-processing-service lockstep) — LIVE cefi writer path
+      divergence.** `live/websocket_runner.py:93-116` `live_tick_blob_path` builds an INLINE f-string
+      `…/pipeline_mode=live_websocket/asset_group={ag}/data_type={dt}/venue={V}/{id}.parquet` — `data_type=` BEFORE
+      `venue=` and **NO `instrument_type=` segment** — whereas the batch writer + `reader.py:283` `_make_base` use
+      `asset_group/venue/instrument_type/data_type`. ⇒ **the reader cannot read live-written cefi ticks** (Batch≠Live +
+      post-migration unreadable). MDPS `live_aggregator.py:141-153` `default_tick_blob_path` is in lockstep with the
+      WRONG order. **Fix:** route the live writer through UAC
+      `build_cefi_partition_path(..., pipeline_mode="live_websocket")` so live==batch segment order + carries
+      `instrument_type=` (already available at `websocket_runner.py:688`); fix the MDPS lockstep helper the same way.
+      Regression: a test asserting `live_tick_blob_path == reader _make_base` order.
+- [ ] [CODE] P0. **execution-service — legacy raw_tick paths, 0 `candidate_parquet_paths`, 0 `pipeline_mode`.** ALL raw
+      candle/mark/orderbook reads hardcode `raw_tick_data/by_date/day={date}/data_type={dt}` with NO
+      `pipeline_mode=`/`asset_group=cefi/` (`data/loaders/base.py:182`, `data/checker.py:155,323`,
+      `data/loader_transforms.py:150`, `data/loaders/defi.py:41,77`, `data/loader_local.py:62`,
+      `l2_depth_provider.py:34` `_L2_ORDERBOOK_PATH_TEMPLATE`). Relies ENTIRELY on the reader-fallback that Phase 8
+      removes (~2026-06-15) ⇒ cefi backtest + live mark reads silently return EMPTY after cutover. **Fix:** route every
+      raw read through `candidate_parquet_paths()` (pipeline_mode-aware first, legacy fallback) — mirror
+      features-service `perp_funding_rates.py`.
+
+**🟡 P1 — pre-flight engrained (blocking the "pre-flight on every service" bar):**
+
+- [ ] [CODE] P1. **strategy-service — no 4-state pre-flight on the cefi market-data-tick bucket.**
+      `engine/core/dependency_checker.py:64-82` `UPSTREAM_DEPS` checks ml-predictions / features-delta-one /
+      instruments-store but has **no entry for `market-data-tick-cefi`**, which strategy consumes
+      (`service_entry.py:648`) WITHOUT a manifest pre-flight ⇒ can't distinguish zero-volume vs `empty_confirmed` vs
+      `attempted_failed` on the candle leg. **Fix:** add a `bucket_kind="market-data-tick", asset_group_required=True`
+      `UPSTREAM_DEPS` entry so cefi candle availability is pre-flighted like features (mirror
+      `batch_handler.check_allocation_manifest` 4-state logic).
+- [ ] [CODE] P1. **execution-service — no manifest 4-state pre-flight.** `data/checker.py` (`check_gcs_file_exists` /
+      `check_data_availability` / `blob_exists` `:168,214,335`) is a raw path-EXISTENCE probe — never reads
+      `availability_index` / `capture_status`, so it cannot tell zero-volume / `empty_confirmed` / `attempted_failed`
+      from genuinely-missing. **Fix:** replace the path-probe with `read_availability_index` + a 4-state gate (mirror
+      strategy `check_allocation_manifest`).
+
+**⚪ P2/P3 — correctness hardening (not run-blocking but in-scope for "engrained"):**
+
+- [ ] [CODE] P2. **strategy-service** — `cli/handlers/batch_handler.py:411` hardcodes `kind="features-sports"` in the
+      allocation guard; cefi allocation cycles run it against a SPORTS-kind bucket (mis-kind copy-paste) ⇒ the cefi
+      guard may pass/skip on sports state. **Fix:** parametrize `kind` by `asset_group` (or add a cefi branch).
+- [ ] [CODE] P2. **market-tick-data-service** — `reader.read_from_manifest` (`reader.py:572-655`) does NOT lift
+      `pipeline_mode` from the validated manifest row (passes caller default `None`) ⇒ canonical-FIRST probe is inert
+      for manifest-driven reads, leaving them on the soon-removed bare fallback. **Fix:** read the row's `pipeline_mode`
+      column and thread it into `read_shard`.
+- [ ] [CODE] P2. **execution-service** — `l2_depth_provider.py:197` `from google.cloud import storage` + `gcs.Client()`
+      direct (cloud-agnostic I/O violation). **Fix:** `get_storage_client()`.
+- [ ] [DATA] P3. **market-data-processing-service** — leading-NaN before first observation for state adapters that skip
+      the session-grid finalize (already tracked: `issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`). Confirm
+      all cefi adapters route `_finalize_session_grid`; liquidations (no grid) is intentional event-counts — verify.
+- [ ] [CODE] P3. **strategy-service** — `gcs_feature_provider.py:99` `merged.ffill()` across sampling frequencies could
+      mask a genuine gap; gate with a staleness limit. **execution-service** `benchmark_service.py:302` stale
+      `gs://unified-trading-system/raw_tick_data/...` path comment + unimplemented stub — delete/refresh.
+
+**UAC/UTL helpers (the absence "explainer"):** `build_cefi_partition_path` / `candidate_parquet_paths`
+(`canonical/partition_paths.py:392`) are the path SSOT; the `empty_confirmed` closed-set taxonomy lives in
+`canonical/crosscutting/honest_coverage.py` (the `EXPECTED_NO_*` / `SOURCE_RETURNED_ZERO` reasons features uses). The
+candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.py:36-624` (`_finalize_session_grid`) —
+**this MDPS docstring is the de-facto SSOT for the candle-absence semantics; the P0/P1 downstream fixes must consume it
+(distinguish volume=0 vs NaN vs forward-filled), not re-derive.**
+
 **✅ GREEN (verified consistent — do not touch):**
 
 - **Path correctness**: migration, live+batch writers, MTDS reader, features reader, `rebuild_cefi_manifest.py` ALL go
