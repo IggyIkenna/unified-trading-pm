@@ -1,0 +1,154 @@
+---
+description: "Live WebSocket connectors must emit identical schema to batch adapters for the same venue/data_type"
+globs: ["*/live/connectors/*_ws.py", "*/adapters/*_adapter.py", "*/market_interface/adapters/*.py"]
+alwaysApply: false
+priority: 85
+tags: [data-correctness, live, batch, schema, connectors, critical]
+---
+
+# Batch=Live Connector Schema Parity
+
+## Rule
+
+When implementing a live WebSocket connector for a venue that already has batch data collection:
+
+1. **Same output schema**: Live connector output MUST be serialized to the EXACT SAME DataFrame columns and dtypes as the batch adapter
+2. **Same normalization**: Apply identical field mappings, unit conversions, and canonical names (e.g., `mark_price`, not `currentPrice`)
+3. **Schema audit gate**: Every new live connector MUST pass the `batch_live_symmetry` audit (item k) verifying 1:1 column parity
+4. **No schema divergence**: If batch and live differ (e.g., batch has `fee_currency` but live doesn't), document as accepted-divergence in the plan with explicit acceptance
+
+This prevents downstream readers (features-service, strategy-service) from handling different schemas per venue/mode.
+
+## Pattern
+
+### Live Connector Implementation (orca_defi_ws.py style)
+
+```python
+# market_tick_data_service/live/connectors/orca_defi_ws.py
+class OrcaWebSocketConnector:
+    """
+    Orca DEX WebSocket connector — emits trades matching orca_batch_adapter schema.
+    See: market_interface/adapters/defi/orca_batch_adapter.py (batch schema reference)
+    """
+
+    REQUIRED_COLUMNS = [  # MUST match batch adapter output
+        "exchange_ts",
+        "system_ts",
+        "venue",
+        "instrument_id",
+        "side",  # 'buy' or 'sell'
+        "price",
+        "amount",
+        "notional",
+        "trade_id",
+    ]
+
+    async def ingest_trades(self, msg):
+        """
+        Normalize venue-native trade event to canonical schema.
+        Compare against orca_batch_adapter._normalize_trade() for column parity.
+        """
+        # Venue-native: {"program": "...", "signature": "...", "slot": "...", "data": {...}}
+        trade_event = msg["data"]
+
+        # Normalize to batch schema
+        canonical = {
+            "exchange_ts": trade_event["timestamp"],
+            "system_ts": time.time_ns() / 1e9,
+            "venue": "ORCA",
+            "instrument_id": f"{trade_event['mint_a']}/{trade_event['mint_b']}",
+            "side": "buy" if trade_event["is_a_to_b"] else "sell",
+            "price": float(trade_event["price"]),
+            "amount": float(trade_event["amount_a"]),
+            "notional": float(trade_event["price"]) * float(trade_event["amount_a"]),
+            "trade_id": trade_event["signature"],  # unique on-chain signature
+        }
+
+        # Verify columns match batch schema
+        assert set(canonical.keys()) == set(self.REQUIRED_COLUMNS), \
+            f"Schema mismatch: {set(canonical.keys()) - set(self.REQUIRED_COLUMNS)}"
+
+        self.buffer.append(canonical)
+```
+
+### Batch Adapter (Reference Schema)
+
+```python
+# market_tick_data_service/market_interface/adapters/defi/orca_batch_adapter.py
+class OrcaAdapter:
+    """Batch adapter for Orca DEX — establishes canonical schema."""
+
+    @staticmethod
+    def _normalize_trade(event: dict) -> dict:
+        """
+        Orca native → canonical DataFrame columns.
+        Live connector MUST output identical columns.
+        """
+        return {
+            "exchange_ts": event["timestamp"],
+            "system_ts": time.time_ns() / 1e9,
+            "venue": "ORCA",
+            "instrument_id": f"{event['mint_a']}/{event['mint_b']}",
+            "side": "buy" if event["is_a_to_b"] else "sell",
+            "price": float(event["price"]),
+            "amount": float(event["amount_a"]),
+            "notional": float(event["price"]) * float(event["amount_a"]),
+            "trade_id": event["signature"],
+        }
+
+    def get_trades(self, day: str) -> pd.DataFrame:
+        # ... fetch from batch API ...
+        return pd.DataFrame([self._normalize_trade(e) for e in events])
+```
+
+### Schema Audit (batch_live_symmetry Verification)
+
+```python
+# In the plan's "success criteria" or as a regression test:
+def test_batch_live_orca_schema_parity(self):
+    """
+    Verify live orca_ws emits same columns/dtypes as orca_batch_adapter.
+    Ensures downstream readers (features-service) handle both identically.
+    """
+    # Batch schema
+    batch_trades = orca_batch_adapter.get_trades("2026-06-01")
+    batch_schema = batch_trades.dtypes.to_dict()
+
+    # Live schema (simulated message)
+    live_connector = OrcaWebSocketConnector()
+    live_msg = {"data": {"timestamp": ..., "mint_a": ..., ...}}
+    live_connector.ingest_trades(live_msg)
+    live_trades = pd.DataFrame(live_connector.buffer)
+    live_schema = live_trades.dtypes.to_dict()
+
+    # Assert parity
+    assert batch_schema.keys() == live_schema.keys(), \
+        f"Column mismatch: batch={list(batch_schema.keys())} vs live={list(live_schema.keys())}"
+
+    for col in batch_schema.keys():
+        assert batch_schema[col] == live_schema[col], \
+            f"dtype mismatch {col}: batch={batch_schema[col]} vs live={live_schema[col]}"
+```
+
+## Anti-Patterns
+
+- ❌ Live connector emits `current_price` when batch uses `price` → downstream column lookup fails
+- ❌ Live sends price as cents; batch as nominal → same column, different units
+- ❌ Live has `timestamp_ms` only; batch has `timestamp_sec` → date alignment breaks downstream
+- ❌ Skipping a column in live (e.g., no `notional` in live) → features-service gets NaN
+- ❌ "Accepted divergence" without documented rationale in the plan — divergence MUST be explicit + justified
+
+## DO
+
+- ✅ Start with the batch adapter's `_normalize_*` method as the schema definition
+- ✅ Copy that normalization logic into live connector (test-driven: assert columns match)
+- ✅ Run `batch_live_symmetry` audit on every new live connector before merging
+- ✅ Document any intentional divergence in the plan with venue + column + reason
+- ✅ Test that live + batch produce identical dtype/column order for a sample message
+
+## Reference
+
+- Plan: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 2 (orca+raydium live connectors, book+ticker for CeFi)
+- Plan: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` § Success criteria (batch_live_symmetry audit item k)
+- SSOT: `codex/02-data/mtds-data-source-coverage-matrix.md` (adapter/live coverage matrix)
+- Related: `cursor-rules/testing/schema-drift-detection-guards.mdc` (downstream schema validation)
