@@ -68,8 +68,11 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
 > **BOTH** sides' genuine work (merge two-similar into the best single version), **verify** your + the incoming
 > additions survived, then `git push --force-with-lease origin HEAD:tab/<op>/N`. `--force-with-lease` is **branch-tip
 > safety only, NOT content safety** (the rebase-onto-LDR + verify is what protects others' work); **NEVER force-push
-> `live-defi-rollout`/`main`**. SSOT: `codex/05-infrastructure/per-tab-worktrees.md` §§ "Commit attribution" +
-> "Reconciliation".
+> `live-defi-rollout`/`main`**. **NEVER `git push -u` a tab branch** — push `git push origin HEAD:tab/<op>/N` (no `-u`);
+> `-u` re-points the upstream off `origin/live-defi-rollout` → the IDE shows a PHANTOM "ahead N" vs the stale remote tab
+> (not real drift). If `git rev-parse --abbrev-ref @{upstream}` ≠ `origin/live-defi-rollout`, fix:
+> `git branch --set-upstream-to=origin/live-defi-rollout tab/<op>/N`. SSOT:
+> `codex/05-infrastructure/per-tab-worktrees.md` §§ "Commit attribution" + "Reconciliation" + "Upstream tracking".
 
 1. **Pass 1 — full quality gate writes the sentinel.** `cd <repo> && bash scripts/quality-gates.sh` MUST exit 0 on your
    current HEAD. On exit 0 it writes `.qg_last_passed_sha` (== HEAD). Skipping Pass 1 means the change never ran tests,

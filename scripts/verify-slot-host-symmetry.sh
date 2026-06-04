@@ -15,6 +15,7 @@
 #   7. ${ORCH_TOKEN_FILE:-$HOME/.orch_token} is readable
 #   8. backend reachable + workflow-capable GH_TOKEN
 #   9. per-worktree commit identity canonical (recurrence guard for the bot-email leak)
+#  10. per-worktree @{upstream} == origin/live-defi-rollout (drift guard — phantom 'ahead N')
 #
 # Usage: bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh
 #        bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh --quiet
@@ -226,6 +227,40 @@ if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
     fi
 else
     bad ".tabs/ missing — cannot verify per-worktree identity"
+fi
+
+# 10. Per-worktree upstream tracking (drift guard — codified 2026-06-04). A stray `git push -u`
+#     re-points @{upstream} off origin/live-defi-rollout → phantom "ahead N" in the IDE vs the
+#     stale remote tab. slot-cron-ff-pull auto-heals it each tick; this asserts the steady state.
+#     SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Upstream tracking".
+section "per-worktree upstream tracking (drift guard)"
+WANT_UPSTREAM="origin/live-defi-rollout"
+if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
+    bad_upstream=0
+    checked_up=0
+    for _slot_dir in "${WORKSPACE_ROOT}"/.tabs/*/; do
+        _slot="$(basename "${_slot_dir}")"
+        [[ "${_slot}" =~ ^[0-9]+$ ]] || continue
+        for _repo_dir in "${_slot_dir}"*/; do
+            [[ -d "${_repo_dir}/.git" || -f "${_repo_dir}/.git" ]] || continue
+            checked_up=$((checked_up + 1))
+            _up="$(git -C "${_repo_dir}" rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || echo '')"
+            # empty upstream (never pushed) is acceptable; only a non-LDR upstream is drift.
+            if [[ -n "${_up}" && "${_up}" != "${WANT_UPSTREAM}" ]]; then
+                bad "slot-${_slot}/$(basename "${_repo_dir}"): @{upstream}='${_up}' (want '${WANT_UPSTREAM}' — stray 'git push -u' drifted it; fix: git -C <dir> branch --set-upstream-to=${WANT_UPSTREAM} <branch>)"
+                bad_upstream=$((bad_upstream + 1))
+            fi
+        done
+    done
+    if [[ ${checked_up} -eq 0 ]]; then
+        bad "no slot worktrees found to check upstream"
+    elif [[ ${bad_upstream} -eq 0 ]]; then
+        ok "all ${checked_up} slot worktree(s) track ${WANT_UPSTREAM}"
+    else
+        bad "${bad_upstream}/${checked_up} slot worktree(s) drifted off ${WANT_UPSTREAM} (slot-cron-ff-pull auto-heals next tick)"
+    fi
+else
+    bad ".tabs/ missing — cannot verify upstream tracking"
 fi
 
 section "result: ${pass} passed / ${fail} failed"

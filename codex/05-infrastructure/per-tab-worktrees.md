@@ -628,6 +628,36 @@ orphan-ping crons can group by slot. A machine-parseable `Agent-Slot:` / `Agent-
 CI parse) is tracked as a plan todo; until it lands, agents set the name manually per the CLAUDE.md Git-discipline
 directive.
 
+## Upstream tracking — a tab branch upstream STAYS `origin/live-defi-rollout` (HARD RULE codified 2026-06-04)
+
+**The git upstream of every `tab/<op>/N` worktree MUST be `origin/live-defi-rollout`, NEVER `origin/tab/<op>/N`.**
+`setup-tab-worktrees.sh` sets it correctly (`git worktree add --track -b tab/<op>/N … origin/live-defi-rollout` → the
+`--track` makes the upstream LDR). The drift cause is a single command: **`git push -u origin HEAD:tab/<op>/N`** (or
+`git branch --set-upstream-to=origin/tab/<op>/N`) re-points the upstream to the remote tab branch. Symptom: the git
+client / IDE source-control panel then shows a **phantom "ahead N"** (e.g. "ahead 52/70") measured against the **stale
+remote tab branch** — which is NOT real divergence (local is still exactly at LDR, `0/0` vs `origin/live-defi-rollout`).
+The remote tab is just behind because the FF-push of a finished unit and the cron lag the integration tip.
+
+**Rule for agents (local OR VM):**
+
+- **NEVER `git push -u` a tab branch.** Push with the explicit refspec, no `-u`: `git push origin HEAD:tab/<op>/N` (this
+  is already the per-shippable-unit form below; it does NOT touch the upstream). Never
+  `git branch --set-upstream-to=origin/tab/...`.
+- **Detect**: `git rev-parse --abbrev-ref --symbolic-full-name @{upstream}` MUST print `origin/live-defi-rollout`. If it
+  prints `origin/tab/<op>/N`, the worktree has drifted.
+- **Fix (idempotent, safe)**: `git branch --set-upstream-to=origin/live-defi-rollout tab/<op>/N`.
+- **Why it's harmless functionally but still must be fixed**: `slot-cron-ff-pull.sh` pulls `live-defi-rollout`
+  **explicitly** (`git pull --rebase origin live-defi-rollout`), not via `@{upstream}`, so the FF-pull is unaffected;
+  and `push.default=simple` **refuses** a bare `git push` when the branch name (`tab/<op>/N`) ≠ the upstream name
+  (`live-defi-rollout`), so a tab branch can NEVER accidentally push to LDR even with the upstream set to LDR. The only
+  damage is that the ahead/behind **display lies** (phantom "ahead N"), which wastes triage time and masks the true
+  position vs the integration axis. So keep all worktrees uniform on `origin/live-defi-rollout`.
+- **Audit the whole slot host**:
+  `for d in */; do (cd "$d" && echo "$d $(git rev-parse --abbrev-ref @{upstream} 2>/dev/null)"); done` — every line
+  should end `origin/live-defi-rollout`. (2026-06-04 audit: 22/25 correct; mtds + UAC + UTL had drifted to `origin/tab`
+  from a prior `git push -u` and were re-synced.) Candidate for `verify-slot-host-symmetry.sh` to assert per tick so
+  drift self-heals fleet-wide.
+
 ## Per-shippable-unit FF-push into `live-defi-rollout` (HARD RULE codified 2026-05-11)
 
 Every push to a slot branch MUST be followed immediately by a server-side fast-forward push of the slot tip into
