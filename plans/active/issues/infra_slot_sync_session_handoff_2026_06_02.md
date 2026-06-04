@@ -139,3 +139,9 @@ alerting/e2e) — intentionally untouched. One stash (`pm stash@{0}`) is mine an
       ui-api-mapping.json, orchestrator_vm_registry.yaml, AO scripts/config — 2026-06-04.
 - [x] ✅ [SCRIPT] **escalate-to-orchestrator alert honest** — no longer claims "a worker is resolving" on an empty
       escalation_id; warns + links the dashboard — 2026-06-04.
+
+**CORRECTION (same session):** the "slot-cron-ff-pull.timer INACTIVE" todo above is WRONG — ff-pull is a 5-min
+**crontab** (no systemd timer exists), present + running. It was *failing* on the git corruption, not absent; post
+object-repair it ff-pulls clean slots + correctly `[skip:diverged]`/`[skip:dirty]` the rest (verified live on vm-0
+`/tmp/slot-cron-ff-pull.log` 15:40Z). Residual: vm-0 slot-7 worktrees diverged (ahead-1/behind-N ×~8 repos) + a few
+LDR-branch dirty worktrees need `slot-master-rebase` (cron skips them by design; they don't block working slots 5/9/10).
