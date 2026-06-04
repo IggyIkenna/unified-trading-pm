@@ -1077,6 +1077,69 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       only (no prediction execution process wired today). **DEFERRED** to the prediction track — successor:
       `prediction_manifest_canonicalisation_2026_06_01.md`.
 
+### Post-migration read-path regressions — slot-4 e2e readiness audit (2026-06-04)
+
+> A fresh 7-dimension e2e readiness audit (slot-4, 2026-06-04, ahead of the real migrate/rebuild apply runs) re-verified
+> the whole sports vertical and found the prior "reads fixed" P0 claims (@fd1a2b17/@7baba0d4) were **INCOMPLETE**: three
+> sports READERS + one cross-AG startup gate still spoke the pre-migration / wrong canonical path and would regress at
+> cutover (the operator's "code must not regress by association with dead buckets" class — these only bite once the
+> legacy objects are dropped or on the canonical-only layout, so they pass a dual-layout smoke test today). All four are
+> fixed + regression-tested + on LDR. The **migrator dry-run** (MDPS 2-day window 2026-06-04, `copied=0`, 0 errors)
+> independently validated the canonical target paths these fixes now probe (raw → `pipeline_mode=batch_odds_api/`;
+> candle →
+> `pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/.../league_id=/timeframe=/bucketed.parquet`).
+> Otherwise the audit confirmed dims ③ (4-state consolidator pre-flight), ④ (typed honest-absence + CF-11 + downstream
+> capture_status gating), ⑥ (IS/UAC guardrails + FIXTURES truthset), ⑦ (deployment-api coverage uses the UAC
+> fixtures/leagues universe as the denominator, not manifest-rows) all GREEN; the remaining open items are the VM-gated
+> E3–E8 operational runs (unchanged).
+
+- [x] ✅ [CODE] P0. **MDPS `reprocess_sports_odds` raw-odds read prefix was `pipeline_mode=batch_api_football` for a
+      `data_source=ODDS_API` path** — the MTDS writer + migration `_canon_mdps_raw_prd` emit source-derived
+      `batch_odds_api`, so the reader matched neither the migrated NOR (post-`--drop-stale`) any object → silent-empty.
+      Fixed → `batch_odds_api`; regression test asserts the constant. — market-data-processing-service@6105699
+- [x] ✅ [CODE] P0. **features `read_bucketed_odds` read a single bare
+      `processed/.../data_type=odds_horizon_bucket/bucketed.parquet`** — real layout is per-`(league_id,timeframe)`
+      shards, migrated under `pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/` → the single-blob read
+      missed BOTH the per-shard split AND the migrated path (silent-empty odds features at the live
+      `odds_features_exporter` consumer). Fixed to list+concat every `bucketed.parquet` under the canonical prefix then
+      legacy fallback; 4 tests. — features-service@88cbb844
+- [x] ✅ [CODE] P1. **IS `check_api_football_dependency` exact-probed a bare `entity=fixtures/fixtures.parquet`** — the
+      IS writer + migration write FIXTURES per-league under
+      `pipeline_mode=batch_api_football/entity=fixtures/league={L}/` → exact probe matched neither the per-league layout
+      nor `pipeline_mode` → spurious `DependencyError` post-migration. Fixed to list the canonical pipeline_mode prefix
+      then the legacy prefix (any object = fixtures present); 3 tests. — instruments-service@4631b469
+- [x] ✅ [CODE] P0. **CROSS-AG — strategy-service GAP-5 live-startup consolidator gate passed
+      `kind="market-data-tick"`** (NOT a registered `resolve_bucket_name` kind/alias) → uncaught `BucketNamingError`
+      (the `except` caught only `ManifestConsolidatorStaleError`) → crashed the live trade-loop startup for EVERY
+      asset_group (cefi/defi/tradfi/sports), regardless of consolidator health. Same class as the features-service
+      ae75b44b fix; the prior test mocked `resolve_bucket_name`'s return so never exercised the kind. Fixed →
+      `kind="market-data"` + regression test asserting the kind. — strategy-service@85864b22
+
+**Follow-ups (P2/P3 — captured per Capture-Discoveries; NOT migration-blocking):**
+
+- [ ] [CODE] P2. **MDPS sports candle empty-handler passes `league_id=""` → blanket `SOURCE_RETURNED_ZERO`** — repo:
+      `market-data-processing-service`, `app/core/batch_workers.py:191-198` `_handle_empty_tick_data`. For a SPORTS
+      empty shard routed through the generic tick→candle empty-handler, `classify_sports_empty_reason(league_id="")`
+      short-circuits to SRZ (`canonical_writer.py:1717`) so the typed fixture/season oracle never runs. The in-code
+      comment documents this as a conservative fallback (this layer carries only `instrument_id`, not `league_id`);
+      sports odds primarily flow through `reprocess_sports_odds`/`record_empty_for_shard` (typed-correct), so it is off
+      the primary path. Fix: derive `league_id` from `instrument_id` so the oracle runs for any sports shard reaching
+      this handler. Provenance: slot-4 e2e audit 2026-06-04 (dim ④).
+- [ ] [CODE] P2. **features-service `batch_write.py:67` builds the no-env `features-sports-{project_id}` default** —
+      repo: `features-service`. The 3 primary sports output call sites were fixed to `resolve_bucket` (@78a9a26f) but
+      this CLI default fallback still yields the no-env form → 404 post-migration when the batch-write CLI is invoked
+      without `--bucket`. Fix: `resolve_bucket(kind="features-sports", asset_group="sports")`. Provenance: slot-4 e2e
+      audit 2026-06-04 (dim ⑤/⑥).
+- [ ] [DOC] P3. **codex doc drift — `get_league_fixture_calendar`** is described as "Dates with actual fixtures" in
+      `codex/02-data/availability-manifest-and-data-status.md` but the impl returns the active-season DAY GRID
+      (`league_data.py:356-394`) → the sports coverage DENOMINATOR is marginally generous (safe direction — over-counts
+      expected, never hides a gap). Correct the doc wording OR tighten the helper to actual scheduled-fixture days.
+      Provenance: slot-4 e2e audit 2026-06-04 (dim ⑦).
+- [ ] [TEST] P3. **deployment-api `test_no_category_asset_group_fallback.py` doesn't parametrize the sports
+      `per_venue_day_bundle` `_shard_prefix` branch** (`data_status_drilldown.py:905-913` — correct by construction, no
+      `asset_group=`/`category=` key, but unpinned by the ratchet). Add a sports case. Provenance: slot-4 e2e audit
+      2026-06-04 (dim ⑦).
+
 ### Verify + handoff to decommission
 
 - [ ] [DATA] P0. Post-walk: fresh `_index` read — `schema_version=9` (data-state) for 100% of rows; `pipeline_mode=`
