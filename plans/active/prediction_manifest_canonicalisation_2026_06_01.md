@@ -683,6 +683,58 @@ verify + the gated delete.
       (5398/5673/5894/6518/6821) return silently; `emit_preflight_skip` (UTL) is not imported. Not a run-blocker
       (observability only). repo: instruments-service.
 
+## Readiness gate — operator's 7 criteria (slot-5 audit 2026-06-04 — extends slot-4's 4-item audit above)
+
+> The operator's 2026-06-04 list is **7** criteria; slot-4's audit above covered the TradFi-style first ~5. This extends
+> with **⑥ (IS+UAC guardrails)** + **⑦ (coverage denominator)** and **corrects ③** per slot-4's MDPS-consolidator
+> finding. Slot-5 verified every contested claim (one fan-out agent's "critical gaps" on `candidate_parquet_paths` /
+> phantom-auditor / candle-handling were grep-then-conclude noise — all refuted). Net verdict: ①④⑤⑥ verified; **③ has a
+> real gap (slot-4 Gap 2)**; ② coupled to the gated migration; **⑦ is a genuine CROSS-AG gap**.
+>
+> - **① migrator dry-run ✅ DONE** (1,897,691 planned, exit 0); **⑤ paths-match ✅** (raw orchestrator insert + candle
+>   fix mdps@5e7f075 on LDR + dual-probe readers).
+> - **③ pre-flight 4-state — ✅ MOSTLY, ONE REAL GAP (slot-4 Gap 2, confirmed):** the MDPS `assert_consolidator_healthy`
+>   gate is **SPORTS-ONLY** (`dependency_checker.py:359 if asset_group=="SPORTS"`) → prediction gets NO consolidator
+>   health gate at MDPS (stale pred-prd `_index` read silently on live). Fix = extend the gate to prediction (see slot-4
+>   Gap 2 above — do NOT duplicate). features-delta_one / strategy (`manifest_allocation_guard`) / execution DO have
+>   their 4-state preflight on the pred-prd bucket.
+> - **④ empty/partial honest + downstream batch+live ✅** (within-bounds `reemit_honest_absence_rows`; lifecycle
+>   pre-creation/post-settlement reject in adapters → typed-empty/expected not failure; the no-trade CANDLE uses the
+>   SHARED MDPS `candle_write_mixin` finalize = NaN-vol + prior-day last-price carry, deterministic batch==live; UAC
+>   `EmptyConfirmedReason`/`CanonicalQuestionGroup`/`MarketLifecycle` shared).
+> - **⑥ IS+UAC guardrail vs impossible instruments ✅** (universe from IS `instrument_availability`; lifecycle reject;
+>   UAC cqg+lifecycle contracts; phantom auditor HAS prediction — `reconcile_phantom_manifest_rows_all.py`
+>   ASSET_GROUP_CONFIG["prediction"], refutes the "sports-only" noise — see the P2 bucket-name nit below).
+
+- [ ] [DATA] P0. **② Manifest-rebuild dry-run — BLOCKED on the gated migration (slot-5 2026-06-04).**
+      `rebuild_prediction_manifest.py --dry-run` runs (CLI verified, ran it) but on the CURRENT `pred-prd` bucket every
+      object reports "unparseable blob" because the bucket is still the PRE-migration `category=/data_source=` shape
+      (the canonical `pipeline_mode=/asset_group=prediction/` shape is what E4 `--apply` produces — operator-gated). So
+      a MEANINGFUL rebuild scoping (the tradfi-equivalent "N shards / venues") CANNOT be done pre-migration (unlike
+      tradfi, whose `-prd` bucket already had canonical objects). ACTION: run `--dry-run` immediately AFTER the E4 full
+      run (or on a migrated sample) → record the scoping → flip. Repo: market-tick-data-service.
+- [ ] [CODE] P1. **⑦ Coverage denominator does NOT use the could-exist universe — genuine CROSS-AG gap (slot-5 audit
+      2026-06-04; affects ALL asset_groups' raw-tick coverage, prediction included).** deployment-api
+      `data_status_hierarchical.py` computes the raw-tick coverage denominator from the MANIFEST ONLY
+      (`read_availability_index`; the 4-state total is correct for ROWS THAT EXIST) — it NEVER intersects the
+      instruments-service could-exist universe (confirmed: zero IS/catalogue refs). So a market that EXISTS in IS (a
+      `condition_id` active on day D) whose **tick backfill has NOT run** produces **no manifest row** → invisible: the
+      denominator silently shrinks to only-attempted and coverage% inflates. **No tick-layer rebuild seeds
+      `expected_unattempted` from the IS universe** (prediction rebuild has none; sports:921/cefi:552 only PRESERVE
+      existing rows — "record_expected_unattempted doesn't exist in this writer pattern"). Only the FEATURES delta-one
+      layer seeds it (`record_out_of_scope_instruments`, per-AG — so FEATURE coverage is correct; RAW-TICK is not).
+      **FIX (design call — likely BLOCKED-OPERATOR-DECISION on WHERE):** (a) a tick-manifest pre-flight seeds
+      `expected_unattempted` for the IS could-exist universe (condition_ids active per `market_lifecycle`
+      not-yet-captured) so the denominator == could-exist universe; OR (b) deployment-api intersects the IS catalogue at
+      read-time. + regression test (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). Repos:
+      market-tick-data-service + deployment-api + instruments-service. parent_epic: mtds_mdps_master. **Operator: this
+      is the exact "instruments exist but backfill hasn't run" visibility gap you named — cross-AG, so it likely wants
+      ONE shared fix.**
+- [ ] [CODE] P2. **⑥ minor — phantom auditor prediction bucket is the LEGACY long-form name** (slot-5 2026-06-04):
+      `reconcile_phantom_manifest_rows_all.py:85` maps `"prediction": ("market-data-tick-prediction", None)` (the
+      L6-delete legacy bucket), not env-tiered `market-data-tick-pred-prd`. Resolve via `resolve_bucket_name` so the
+      phantom audit runs against the canonical bucket post-migration. Repo: instruments-service.
+
 ## Success criteria
 
 - [x] ✅ [CODE][UI] P1. **deployment-api turbo response ↔ deployment-ui contract — VERIFIED + FIXED a real mismatch
