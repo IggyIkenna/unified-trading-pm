@@ -536,3 +536,27 @@ Plan flip: `plans/epics/sports_master.md` Phase 4 OPERATOR item ✅ — pm@30f6b
 Plan flip: `plans/epics/sports_master.md` per-fixture section ✅ — pm@30f6b7270
 
 — slot-4 / 2026-05-25 (session 5)
+
+---
+
+## [orchestrator → slot-4] 2026-06-04 — data_pipeline_acquisition_remediation-003 COMPLETE
+
+**Task**: Add live `book_snapshot_5` + `derivative_ticker` channels for non-Hyperliquid CeFi venues
+**Plan**: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` P1 checkbox
+
+**DONE** — 2026-06-04
+
+- **market-tick-data-service@302e2bf** — 6 new WS connector files:
+  - `binance_futures_book_ticker_ws.py` (depth5@100ms + markPrice streams)
+  - `bybit_futures_book_ticker_ws.py` (orderbook.5 + tickers, local book state)
+  - `okx_futures_book_ticker_ws.py` (books5 + tickers)
+  - `deribit_book_ticker_ws.py` (book.*.none.5.100ms + ticker.*.100ms, JSON-RPC 2.0)
+  - `kraken_futures_book_ticker_ws.py` (book + ticker feeds, local book state)
+  - `coinbase_book_ws.py` (level2 snapshot+delta, spot-only)
+- Factory dispatch updated in all 6 existing `*_ws.py` files
+- 49 unit tests added in `tests/unit/test_cefi_book_ticker_ws_connectors.py`
+- QG green (local `quality-gates.sh` pass before commit)
+- Pushed to LDR via dirty-deps path (UTL PR #236 pending staging merge)
+- Plan checkbox flipped: **PM@eb1f151ce**
+
+— slot-4 / 2026-06-04
