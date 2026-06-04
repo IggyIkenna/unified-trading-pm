@@ -173,7 +173,25 @@ VM.
 - [ ] [DATA] P1. Verify the corpus venue / data_type strings are underscore-canonical: data-state shows venues
       `BARCHART/CBOE/CME/FX/ICE/NASDAQ/NYSE/YAHOO_FINANCE` (canonical) BUT also `UNKNOWN` + blank `''` (drift to
       diagnose); data_types `ohlcv_15m/ohlcv_1m/ohlcv_24h/options_chain/tbbo/trades` + blank `''`. Relabel/diagnose the
-      `UNKNOWN`/blank rows in the walk (do NOT bulk-rename ambiguous strings).
+      `UNKNOWN`/blank rows in the walk (do NOT bulk-rename ambiguous strings). **✅ DIAGNOSIS DONE (slot-6 2026-06-04,
+      live `-prd` `_index` read, 144,062 rows — pre-migration de-risk so the E5/E6 walk is ready):** the drift is
+      **6,602 rows / 4.6%** — **DRIFT-VENUE 4,130** (3,540 blank + 590 `UNKNOWN`; spread across tbbo/trades/ohlcv real
+      data_types; **blank `instrument_type` + `asset_group=None`**; 3,955 captured + 175 attempted_failed; dates
+      2020→2026) + **DRIFT-DATA_TYPE 2,472** (all blank; real venues CBOE/ICE/CME/NASDAQ/NYSE/FX; blank instrument_type;
+      all captured). These are NOT ambiguous strings to rename — they are **under-populated older-schema manifest rows**
+      (the writer left venue/data_type/instrument_type/asset_group blank). **Resolution = PATH RE-DERIVATION, not a
+      string-rename table**: E5 `rebuild_tradfi_manifest.py` scans the canonical object paths
+      (`venue=/data_type=/asset_group=/instrument_type=` segments) and re-stamps these fields → captured drift rows are
+      FIXED in-walk by the object scan (consistent with "do NOT bulk-rename"). **⚠️ RISK to verify in the walk (why this
+      stays open):** (1) any drift row whose OBJECT is NOT at a canonical `venue=`-bearing path (e.g. an L-hyphen 0-row
+      placeholder, which the migrator SKIPS) will NOT be re-derived → its captured status must be re-evaluated, not
+      silently dropped (a blank-venue "captured" backed only by a placeholder is a false-capture → should become
+      honest-absence, not coverage). (2) the 175 blank-venue `attempted_failed` rows pass through
+      `reemit_honest_absence_rows`, whose `row_key` includes venue — a blank venue can mis-dedup; confirm they re-emit
+      under their PATH-derived venue. **Post-walk verify hook (add to E7):** re-run this audit on the rebuilt `_index` →
+      assert **0 blank/`UNKNOWN` venue + 0 blank data_type + 0 `asset_group=None`**, and assert total captured-cell
+      count does not silently shrink by ~6,602 (coverage-regression guard). Audit script:
+      `/tmp/tradfi_index_drift_audit.py` (read-only, reproducible).
 
 ### C — single-walk (v9 + partition + canonical verify + source re-consolidate)
 
