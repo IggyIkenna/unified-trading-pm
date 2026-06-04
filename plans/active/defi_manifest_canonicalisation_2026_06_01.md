@@ -613,11 +613,21 @@ What to verify/wire (B0 corrected scope):
         DataStalenessError, live-halt vs batch-warn), execution-service (`validation/freshness_gate` — NaN/Inf benchmark
         blocked BOTH modes; stale → live kill_switch.activate vs batch degrade+continue). Concrete GAPS filed below
         (A12a-A12e). parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P1. A12a — **MTDS DeFi handlers lack the upstream-IS-manifest preflight gate** (slot-2 2026-06-04): no
-        DeFi handler imports `unified_trading_library.instruments_preflight`/calls `run_preflight`; the handler
-        `preflight()` only fetches the API key. MTDS is the one chain layer reading instruments-service WITHOUT a
-        manifest-freshness preflight. Wire `run_preflight` (or the IS-manifest check) into the DeFi collect path; guard
-        test. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P1. A12a — **upstream-IS preflight GATE wired** (uac@d67d8061 + mtds@e2fc7d51): added
+        `PreflightTrigger.DEFI_COLLECT_DAILY` → `defi_market_data` → `INSTRUMENTS_PREFLIGHT_REQUIREMENTS`
+        (instrument-catalog ≤24h, mirrors CeFi/TradFi) in UAC; `assert_defi_catalog_fresh()` in `_defi_manifest.py`
+        wraps UTL `run_preflight` (honest-absence: returns False → caller `record_failed` per shard, no raise in
+        per-venue loop; live circuit-breaker downstream). Wired into the 2 May-23-critical handlers
+        (dex_pools=arbitrage, lst_rates=carry) + guard tests (UAC +4, MTDS +3). Both repos QG-green. **Residual
+        (A12a-rollout, P1)**: the same one-line gate at the remaining ~25 DeFi collect handlers (mechanical) — see
+        sub-todo. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. A12a-rollout — extend `assert_defi_catalog_fresh()` (the A12a gate) to the remaining ~25 DeFi collect
+        handlers (eigenlayer*rewards, evm_defi, gas_fee, lending_indices, liquidations, oracle_prices, perp_funding,
+        solana_defi, native_staking, vault_share_price, staking_yields, token_transfers, position_data,
+        flash_loan_events, governance*\*, mev_events, jupiter_quote, orca_whirlpool_state, raydium_classic_amm,
+        aggregator_route, bridge_events, drift_v2_historical, protocol_outage_detector, liquidation_events) at each
+        `process()` chokepoint + a per-handler guard test. Mechanical (mirror dex_pools/lst_rates). Repo:
+        market-tick-data-service. parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P1. A12b — **CONFIRMED ALREADY EXISTS, no change needed** (slot-2 deep-read 2026-06-04): the DeFi
         owed-cell backstop is enumerator-driven —
         `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_defi` yields
@@ -628,11 +638,14 @@ What to verify/wire (B0 corrected scope):
         (+ 2 negatives). The earlier "unconfirmed" was a grep-0 artifact; `EmptyFromLiveInstrumentError` is correctly an
         MTDS-CONSUMER concern (A10c/d), not IS. IS DeFi writes resolve buckets via `resolve_bucket_name` (canonical).
         Repo: instruments-service (no code change). parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P1. A12c — **DeFi `source=` provenance is a RED gap** (cross-cutting, per
-        `data_source_provenance_all_asset_groups_2026_06_01`): `record_captured(source=…)` wired tradfi+prediction only;
-        defi/cefi/sports RED. DeFi manifest rows are not source-stamped → multi-source swap-resilience +
-        `select_primary_available_source()` won't function for DeFi. Wire `source=` into the DeFi recorder/handlers.
-        Repo: market-tick-data-service + UAC SOURCE_PRIORITY[(defi,*)]. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P1. A12c — **CONFIRMED already-wired for DeFi** (slot-2 deep-read 2026-06-04; guard added
+        mtds@e2fc7d51): the earlier "RED gap" was stale. UAC `SOURCE_PRIORITY[(defi,*)]` already carries every DeFi
+        data*type; `ManifestWriter.add()._resolve_and_validate_source` auto-stamps single-source cells + raises
+        `MissingSourceError` on blank multi-source; `DefiManifestRecorder.record_captured` already accepts+forwards
+        `source`. The only multi-source DeFi cells — `oracle_prices` (pyth_hermes/chainlink) + `native_staking_rates`
+        (solana_rpc/helius_rpc) — already pass `source=`; all others single-source → auto-stamped. Added the missing
+        integration guard through the REAL writer (`test_defi_recorder_real_writer*\*`: single-source auto-stamp +
+        multi-source blank → MissingSourceError). No UAC/handler change needed. parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P2. A12d — **DONE** (mtds@b66b15d2): deleted 6 stale `*.bak` files (native_staking /
         protocol_outage_detector / staking_yields / tick_data / token_transfers / websocket_streaming). Bucket-SSOT
         audit found **no hardcoded-bucket drift** — every DeFi handler resolves writes via `resolve_bucket_name` /
@@ -936,7 +949,11 @@ What to verify/wire (B0 corrected scope):
         cols), lending-indices 138,325 (43), dex-swaps 69,236, lst-rates 34,821 (17), oracle-prices 13,167, perp-funding
         11,486. Sharding/perf: dex-pools+lending+swaps ≈88% of objects → most date-shards/workers there; the launcher's
         date-shard + `--workers 96` + per-bucket-VM model fits; union cols vary (53/43/17) so v9 must union per-bucket.
-        Remaining = the `--phase all` migrate-PLAN dry run (planned_cells per bucket) on the dry VM.
+        **`--phase all` migrate-PLAN dry-run VALIDATED** (local, lst-rates, 2026-06-04, clean network): planned_cells=96
+        / objects_read=96 / cells_written=0 (DRY) / **0 errors / 0 needs_attr / 0 dedup_dropped**; sample PLAN cells
+        (COINBASE/STADER/STAKEWISE/MARINADE...) correctly identified for canonical `pipeline_mode=batch/` rewrite +
+        migrate=6.3s. Migrator dry-run confirmed end-to-end. Remaining = the full dry VM over ALL 6 buckets (operational
+        C0b step) once the pre-migration drain (C0c) is scheduled.
   - [ ] [DATA] P0. C0c — **pre-migration drain (HARD RULE)**: stop GCP+AWS fleet (`vm_zombie_watchdog.py` inventory →
         per-prefix SIGTERM → wait STOPPED) + run consolidator + snapshot each in-scope `_index` to
         `_index/snapshots/pre_migration_2026_06_01.parquet`. Confirm the bucket-remediation DeFi seed is NOT mid-walk
