@@ -276,8 +276,8 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 
 **🟡 GAPS — Dim 6 (guardrail holes):**
 
-- [ ] [CODE] P2. **market-tick-data-service — hardcoded date-BLIND fallback universe bypasses IS.**
-      `engine/orchestrator.py:326-439` `_VENUE_WIRE_SYMBOL_FALLBACK` (static MVP majors per venue) is substituted by
+- [x] ✅ [CODE] P2. **MTDS hardcoded date-BLIND fallback universe — FIXED (mtds@ae5f56b0, QG exit 0).** Was bypassing
+      IS: `engine/orchestrator.py:326-439` `_VENUE_WIRE_SYMBOL_FALLBACK` (static MVP majors per venue) is substituted by
       `_uac_seed_instruments_for_venue` (`:411`) when `_check_instruments_available(venue,date)` is False
       (`:2316-2326`). Bounded to majors + logged + honest-skip when empty (so practical "cannot-exist" risk is low —
       majors exist every operational date), BUT it is date-BLIND (ignores venue-launch/delist per date) + bypasses the
