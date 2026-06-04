@@ -225,9 +225,11 @@ flow" + `quickmerge --agent`, but they carry the **same staging-vs-LDR drift as 
       brief says so"). — agent-orchestrator@33b1057
 - [x] ✅ [DOC] P1. `agents/RULES.md:52-67` ship-cadence block — fixed: Pass-2 comment now names the `staging` base +
       `--to-staging` no-op + v2 required check; sentinel two-pass kept. — agent-orchestrator@33b1057
-- [ ] [DOC] P1. Clarify the **operator-tooling exception** (`worker.md:228`): agent-orchestrator's own gate is
+- [x] ✅ [DOC] P1. Clarify the **operator-tooling exception** (`worker.md:228`): agent-orchestrator's own gate is
       `scripts/check.sh` (correct, verified) — but once G6 lands its `staging` flow, document whether agents working
       _inside_ agent-orchestrator ship via `check.sh` + reviewed direct push or via the new staging PR path.
+      Documented two-phase model in `agents/worker.md`: TODAY = check.sh + direct LDR push (no staging); AFTER G6 =
+      check.sh (Pass 1) + quickmerge.sh --agent (Pass 2). — agent-orchestrator@946091c
 - [x] ✅ [DOC] P1. Verified: "v2" = the CI required-check rename (`…/quality-gates-v2`, 17/17 repos); LOCAL two-pass
       commands (`scripts/quality-gates.sh` → `quickmerge.sh --agent`) are unchanged — so no command edits were needed,
       only the target-branch + `--to-staging` corrections, which G7 + the context-hygiene Phase-3 merge-flow fix landed.
