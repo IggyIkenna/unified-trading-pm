@@ -22,7 +22,7 @@ Two assertions:
       (per CLAUDE.md "shard-granularity SSOT" + UAC MalformedRowKeyError logic):
         options_chain                      → ``options_chain=``
         futures_chain                      → ``chain=``
-        prediction_canonical_question_group → ``canonical_question_group=``
+        prediction_canonical_question_group → ``instrument_id=`` (the cqg, canonical v9 column)
         sports_fixture_bundle              → ``fixture_id=``
 
       Inline opt-out: ``# QG-allow: shard-key-not-applicable`` on the same line.
@@ -84,10 +84,15 @@ _UAC_VALIDATION_REL = (
 
 #: Bundled data_type literals → required shard-key kwarg name.
 #: Source: UAC MalformedRowKeyError guard + CLAUDE.md "shard-granularity SSOT".
+#: prediction: the bundled cqg atom's identity is carried in ``instrument_id`` (the canonical v9
+#: convention — MTDS ``record_captured_from_counts`` puts cqg in the row_key ``instrument_id`` and
+#: deployment-api ``_prediction_venue_detail`` reads ``instrument_id`` first). ``record_captured``
+#: has no ``canonical_question_group`` param (the prior required kwarg was unsatisfiable), so the
+#: checkable column is ``instrument_id`` (slot-5 2026-06-04, STEP 5.83 reconciliation).
 BUNDLED_TYPE_REQUIRED_KWARGS: Final[dict[str, str]] = {
     "options_chain": "options_chain",
     "futures_chain": "chain",
-    "prediction_canonical_question_group": "canonical_question_group",
+    "prediction_canonical_question_group": "instrument_id",
     "sports_fixture_bundle": "fixture_id",
 }
 
