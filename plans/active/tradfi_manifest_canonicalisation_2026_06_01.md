@@ -486,6 +486,78 @@ VM.
       manual run) asserting the honest-absence row is consumed as absence (not data) end-to-end. Repos: e2e-testing (+
       features/strategy if a consumer gap surfaces). parent_epic: mtds_mdps_master.
 
+## 🤝 HANDOFF (slot-6 → next agent, 2026-06-04) — TradFi readiness: 1 item left (⑦ UI)
+
+> **Asset group: TRADFI** (slot 6; THIS plan is the tradfi master orchestrator — one AG per slot; sibling AG masters
+> linked at the top of this plan). Venues: CME / CBOE / NASDAQ / NYSE / ICE / FX. data_types: ohlcv_15m, ohlcv_24h,
+> ohlcv_1m, tbbo, trades, futures_chain, options_chain. Canonical path:
+> `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=tradfi/venue={V}/instrument_type={IT}/data_type={DT}/[underlying={U}/]{file}`.
+
+### Where we are vs the operator's 7-criteria "ready for full migration" bar
+
+**6 of 7 criteria are MET + verified on real GCS/code (see the readiness checklist immediately below for evidence + the
+shas).** Only **⑦ has an open piece, and it is UI-only** — the deployment-api side of ⑦ is verified-correct (no change).
+
+| #                                                            | Status                          | Note                                                                                                                                                                                                                  |
+| ------------------------------------------------------------ | ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ① Migrator dry-run                                           | ✅ DONE                         | real-GCS `migrate_tradfi_to_v9_canonical.py --dry-run` = 5,305,520 objects, 0 moved, 0 err                                                                                                                            |
+| ② Rebuild dry-run                                            | ✅ VALIDATED (real-GCS bounded) | `rebuild_tradfi_manifest.py` 2026-range: 114,771 shards, 37,477 reemit_empty + 6,041 reemit_failed, CF-11 reclassify. **Full-corpus = VM job** (see "remaining for FULL migration")                                   |
+| ③ 4-state preflight every svc IS→exec                        | ✅                              | MTDS/MDPS/features 4-state-aware (`dependency_checker`, `manifest_window_guard`+GAP-4); strategy `manifest_allocation_guard`; execution N/A (signals, not candles)                                                    |
+| ④ Empty/partial honest (zero-vol/NaN/last-price) batch+live  | ✅                              | MDPS `ohlcv_passthrough`/`tbbo_adapter`/`trades_adapter` (honest empty→record_empty typed; open-no-trade→last-price-carry o=h=l=c=prev_close vol=0; NaN-OHLC only where by-design for quote data; batch=live)         |
+| ⑤ Read/write paths post-migration                            | ✅                              | UAC `build_tradfi_partition_path(pipeline_mode)` + features `gcs_reader` pm-aware + mtds byte-identity guard + canonical migrator                                                                                     |
+| ⑥ IS/UAC guardrail vs instruments that can't exist           | ✅                              | `market-tick-data-service/.../engine/tradfi_catalog_reader.py` reads IS `instruments-store-tradfi`, EXCLUDES `{expired,delisted}` + out-of-availability-window per date, feeds orchestrator (universe=IS, not a seed) |
+| ⑦ deployment-api/UI could-exist num/denom + pending-backfill | ⚠️ **API ✅ / UI OPEN**         | see below                                                                                                                                                                                                             |
+
+### ⑦ — THE ONE THING TO FIX (deployment-UI; API needs NO change)
+
+- **deployment-api is CORRECT — do NOT change it.** `deployment-api/deployment_api/services/data_status_hierarchical.py`
+  `DrilldownNode` already: `total = captured + empty_confirmed + attempted_failed + expected_unattempted` (the
+  could-exist denominator, see the "B3" comment ~line 107), `completion_pct = captured/total`, and **returns
+  `expected_unattempted` per node** (`to_dict`, ~line 125). The tradfi venue denominator = the UAC could-exist universe
+  (FLAG-1/FLAG-4, all 6 venues incl CBOE+FX). So numerator/denominator already = universe-of-what-could-exist with the
+  un-run backfill (`expected_unattempted` = "instruments exist, data-capture not yet attempted") IN the denominator.
+- **deployment-UI is the gap.**
+  `unified-trading-system-ui/components/ops/deployment/data-status/data-status-section-turbo.tsx` (the main data-status
+  view, ~779 lines) renders `completion_pct` + `dates_found/dates_expected/dates_missing` (so the gap _is_ visible + the
+  denominator IS could-exist), but it does **NOT label the `expected_unattempted` / "pending backfill" bucket
+  distinctly** from failed/missing (grep: **0 UI hits for `expected_unattempted`**). The fix: surface a distinct
+  **"pending backfill (instruments exist, never attempted)"** bucket/badge from the API's `expected_unattempted` field
+  in the data-status node display (turbo + the leaf detail).
+- **HARD RULE — this is PLAYWRIGHT-GATED**: cannot tick without `[UI]` tag + `pw:L2 ✓`
+  (`npx playwright test --project=chromium tests/smoke/` exit 0) + a NEW/updated regression spec under
+  `tests/e2e|playbooks|widgets|smoke/` that fails if the pending-backfill bucket is removed. Evidence format:
+  `— unified-trading-system-ui@<sha> | pw:L2 ✓ | regression: tests/<path>.spec.ts`. Playwright MCP is connected this
+  environment.
+- **Scope:** ~1 component (+ its TS type if `expected_unattempted` isn't yet on the turbo node type) + 1 regression
+  spec. Cross-AG bonus: the same label helps every AG's data-status view (the API field is generic).
+
+### What remains for the FULL migration to actually RUN (beyond the 7 dry-gate criteria)
+
+The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute the real migration:
+
+1. **⑦ UI** above (so operators see honest pending-backfill coverage).
+2. **② full-corpus on a VM** — `migrate_tradfi_to_v9_canonical.py --apply` + `rebuild_tradfi_manifest.py` over the WHOLE
+   `tradfi-prd` corpus (5.3M objects / ~2,700 dates ≈ 11h single-thread) is a **VM job** ("VM-only whole-corpus walks"
+   gate, top of this plan). Gated on **E3 pre-migration drain** (stop tradfi writers + consolidate + snapshot
+   `_index/snapshots/pre_migration_<date>.parquet`) — the `--apply` is IRREVERSIBLE-adjacent; the legacy delete (L6) is
+   gated on CF-GREEN-on-real-data. Sequencing SSOT: `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`
+   L3/L6.
+3. The pre-existing open data items already in this plan (e.g. the v8→v9 data-state walk, `available_at`, the slot-5
+   handoff E5/CF-11 dep-tier blocker at the top) — read this plan top-to-bottom; they are tracked.
+
+### Gotchas for the next agent (learned this session)
+
+- **Run GCS scans SERIALLY at low workers** (≤16, or 8 for the instruments surface). Multiple concurrent `workers=32`
+  GCS scanners saturate the local connection pool → `DNS timeout` / `No route to host` (errno 65). Migrator + rebuild
+  each scan the corpus — one at a time.
+- **Verify Explore-agent findings before acting** — this session's audit agents produced TWO false "P0 blockers" (an
+  MTDS-write-path flag that cited the _old superseded_ migrator, and a "no IS guardrail" that missed
+  `tradfi_catalog_reader`). Grep-then-READ; the catalog reader + v9 migrator are canonical.
+- The bounded rebuild flags pre-migration `category=` blobs as "unparseable" — that's EXPECTED (corpus is pre-migration;
+  the real `--apply` run canonicalizes them).
+- You have ADC GCS on `central-element-323112` — the "VM-pending / no GCS access locally" caveats in older plan items
+  are runnable as DRY scoping from a workstation (that's how ①/② real-GCS counts were captured).
+
 ## Pre-run 7-criteria readiness — VERIFIED slot-6 2026-06-04 (operator readiness bar)
 
 > Audit (3-agent fan-out, every flag operator-verified — both agent "P0 blockers" were false positives). **6/7 met; ②
