@@ -20,6 +20,14 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)
 
+> **🔴 FOUNDATION GATE (2026-06-04) — the proper instrument catalogue blocks the tradfi MTDS `--apply`.** Before the
+> tradfi MarketTick-data migration `--apply` runs,
+> `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting) must be GREEN — the
+> could-exist-universe SSOT (`expected_unattempted` / coverage denominators / instrument-existence guards), built by
+> rolling up the per-date `instrument_availability/by_date/` definitions (the v2 enumerator's `catalog.parquet` had no
+> producer). **Dry-runs (migrator + manifest-rebuild) are NOT gated** — only the irreversible `--apply`. Depends on
+> `instruments_manifest_canonicalisation`. Cross-ref: defi master coordinator §MASTER.
+
 ## Slot-6 TradFi master orchestrator — owned + attached plans/issues
 
 > **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot (five slots). **Slot 6 = TradFi

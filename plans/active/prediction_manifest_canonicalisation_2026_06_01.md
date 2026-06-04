@@ -20,6 +20,14 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
 
+> **🔴 FOUNDATION GATE (2026-06-04) — the proper instrument catalogue blocks the prediction MTDS `--apply`.** Before the
+> prediction MarketTick-data migration `--apply` runs,
+> `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting) must be GREEN — the
+> could-exist-universe SSOT (`expected_unattempted` / coverage denominators / instrument-existence guards), built by
+> rolling up the per-date `instrument_availability/by_date/` definitions (the v2 enumerator's `catalog.parquet` had no
+> producer). **Dry-runs (migrator + manifest-rebuild) are NOT gated** — only the irreversible `--apply`. Depends on
+> `instruments_manifest_canonicalisation`. Cross-ref: defi master coordinator §MASTER.
+
 > **⏸️ E4 DRY-RUN DONE 2026-06-03 (VM auto-deleted) — full-run AWAITING OPERATOR REVIEW.** The dry migration planned
 > **1,897,691** object moves (0 copied) cleanly (exit 0) — see the E4 todo for the per-phase breakdown + verified
 > transforms. **The next step is the IRREVERSIBLE-DIRECTION FULL run (`… full`/`--apply`, the live 1.9M write) — do NOT

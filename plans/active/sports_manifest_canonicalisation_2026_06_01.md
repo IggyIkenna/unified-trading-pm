@@ -32,6 +32,14 @@ orchestrates:
 
 # Sports manifest + data canonicalisation — slot-4 MASTER orchestrator for the sports vertical
 
+> **🔴 FOUNDATION GATE (2026-06-04) — the proper instrument catalogue (incl. sports FIXTURES) blocks the sports MTDS
+> `--apply`.** Before the sports MarketTick-data migration `--apply` runs,
+> `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting) must be GREEN — the
+> could-exist-universe SSOT (`expected_unattempted` / coverage denominators), built by rolling up the per-date
+> definitions. Sports fixtures are first-class in that plan (same instruments-service, same `by_date/` shape).
+> **Dry-runs (migrator + manifest-rebuild) are NOT gated** — only the irreversible `--apply`. Depends on
+> `instruments_manifest_canonicalisation`. Cross-ref: defi master coordinator §MASTER.
+
 > ## 🎬 SLOT PICKUP PROMPT (clean handoff — paste verbatim into the slot-4 sports lane; 2026-06-01, slot pinned 2026-06-03)
 >
 > You are **slot 4 — the dedicated sports slot**, and this plan is your **MASTER orchestrator plan for the ENTIRE sports
