@@ -438,6 +438,18 @@ What to verify/wire (B0 corrected scope):
       for the same shape** (the `return []`-on-soft-error pattern is workspace-wide; only aave_v3/spark carry the
       explicit "treating as empty" comment but the others need verifying). Repo: instruments-service. parent_epic:
       mtds_mdps_master.
+- [x] ✅ [CODE] P1. A8c **COMPLETES the A8 "audit ALL ~53 adapters" sweep — 4 MORE swallow adapters found + fixed
+      (slot-2 readiness audit 2026-06-04, IS@8f754326).** A8/A8b named aave_v3/spark/morpho/uniswap_v3 + the 7
+      REST/Solana adapters; the readiness re-sweep (`grep '.get("data", {})' / 'data.get("data") or {}'` across
+      `reference_data/adapters/defi/`) found 4 residual swallow shapes the prior audit missed — all archetype-relevant:
+      **uniswap_v2 + uniswap_v4** (The Graph subgraph → now `assert_subgraph_payload()` raises on 200-with-`errors` /
+      missing-`data`), **curve + raydium** (REST envelope → now raise on `success=false` / missing-`data`, the
+      REST-appropriate guard — NOT the subgraph helper, since their bodies carry no GraphQL `errors` array). On a
+      transient upstream error these previously returned an EMPTY instrument universe with no exception → those
+      instrument-days dropped out of the expected-coverage denominator (false-complete) instead of honest
+      `attempted_failed`. +12 credential-free regression tests (`test_balancer_compound_swallow_guard.py` — all 6
+      adapters: error-body→raise + legit-empty→[]). IS QG green (sentinel 71250154). Repo: instruments-service.
+      parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P1. A9 **MTDS `dex_swaps_handler` balancer branch made consistent with the cascade's honest-failure
       handling — SHIPPED mtds@45dced01.** The univ3/messari cascade already RAISES `RuntimeError` when all schemas
       return GraphQL errors (`dex_swaps_handler.py:700-708`, "records ADAPTER_FETCH_FAILED rather than
