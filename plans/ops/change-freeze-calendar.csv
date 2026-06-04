@@ -1,63 +1,62 @@
 window_id,event_name,event_type,recurrence,start_utc,end_utc,dst_note,block_autonomous,block_prod_deploy,affects_venues,notes
-US_CLOSE_DAILY,US Market Close,market_close,daily,20:55,21:05,US DST (Mar-Nov): 19:55-20:05 UTC,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","NYSE/NASDAQ closing auction; high vol window"
-EU_OPEN_DAILY,EU Market Open,market_open,daily,06:55,07:05,EU DST (Mar-Oct): 05:55-06:05 UTC,true,true,"databento,ibkr,ecb","LSE/Euronext opening auction; gap risk"
-OPT_EXPIRY_2026_01,Options Expiry Jan,options_expiry,3rd_friday_monthly,2026-01-16T19:00,2026-01-16T21:30,,true,true,"deribit,ibkr,databento","Monthly options/futures expiry; pin risk"
-OPT_EXPIRY_2026_02,Options Expiry Feb,options_expiry,3rd_friday_monthly,2026-02-20T19:00,2026-02-20T21:30,,true,true,"deribit,ibkr,databento","Monthly options/futures expiry; pin risk"
-OPT_EXPIRY_2026_03,Options Expiry Mar,options_expiry,3rd_friday_monthly,2026-03-20T19:00,2026-03-20T21:30,,true,true,"deribit,ibkr,databento","Quarterly expiry (triple witching)"
-OPT_EXPIRY_2026_04,Options Expiry Apr,options_expiry,3rd_friday_monthly,2026-04-17T19:00,2026-04-17T21:30,,true,true,"deribit,ibkr,databento","Monthly options/futures expiry; pin risk"
-OPT_EXPIRY_2026_05,Options Expiry May,options_expiry,3rd_friday_monthly,2026-05-15T19:00,2026-05-15T21:30,,true,true,"deribit,ibkr,databento","Monthly options/futures expiry; pin risk"
-OPT_EXPIRY_2026_06,Options Expiry Jun,options_expiry,3rd_friday_monthly,2026-06-19T19:00,2026-06-19T21:30,,true,true,"deribit,ibkr,databento","Quarterly expiry (triple witching)"
-OPT_EXPIRY_2026_07,Options Expiry Jul,options_expiry,3rd_friday_monthly,2026-07-17T19:00,2026-07-17T21:30,,true,true,"deribit,ibkr,databento","Monthly options/futures expiry; pin risk"
-OPT_EXPIRY_2026_08,Options Expiry Aug,options_expiry,3rd_friday_monthly,2026-08-21T19:00,2026-08-21T21:30,,true,true,"deribit,ibkr,databento","Monthly options/futures expiry; pin risk"
-OPT_EXPIRY_2026_09,Options Expiry Sep,options_expiry,3rd_friday_monthly,2026-09-18T19:00,2026-09-18T21:30,,true,true,"deribit,ibkr,databento","Quarterly expiry (triple witching)"
-OPT_EXPIRY_2026_10,Options Expiry Oct,options_expiry,3rd_friday_monthly,2026-10-16T19:00,2026-10-16T21:30,,true,true,"deribit,ibkr,databento","Monthly options/futures expiry; pin risk"
-OPT_EXPIRY_2026_11,Options Expiry Nov,options_expiry,3rd_friday_monthly,2026-11-20T19:00,2026-11-20T21:30,,true,true,"deribit,ibkr,databento","Monthly options/futures expiry; pin risk"
-OPT_EXPIRY_2026_12,Options Expiry Dec,options_expiry,3rd_friday_monthly,2026-12-18T19:00,2026-12-18T21:30,,true,true,"deribit,ibkr,databento","Quarterly expiry (triple witching)"
-BOJ_2026_Q1,BOJ Rate Decision Q1,central_bank,quarterly,2026-01-24T02:00,2026-01-24T06:00,,true,true,"ibkr,databento","BOJ monetary policy; JPY crosses volatile"
-BOJ_2026_Q2,BOJ Rate Decision Q2,central_bank,quarterly,2026-04-28T02:00,2026-04-28T06:00,,true,true,"ibkr,databento","BOJ monetary policy; JPY crosses volatile"
-BOJ_2026_Q3,BOJ Rate Decision Q3,central_bank,quarterly,2026-07-15T02:00,2026-07-15T06:00,,true,true,"ibkr,databento","BOJ monetary policy; JPY crosses volatile"
-BOJ_2026_Q4,BOJ Rate Decision Q4,central_bank,quarterly,2026-10-29T02:00,2026-10-29T06:00,,true,true,"ibkr,databento","BOJ monetary policy; JPY crosses volatile"
-FOMC_2026_01,FOMC Jan,central_bank,8x_yearly,2026-01-28T18:00,2026-01-28T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Fed rate decision + press conference"
-FOMC_2026_03,FOMC Mar,central_bank,8x_yearly,2026-03-18T18:00,2026-03-18T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Fed rate decision + SEP/dot plot"
-FOMC_2026_05,FOMC May,central_bank,8x_yearly,2026-05-06T18:00,2026-05-06T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Fed rate decision + press conference"
-FOMC_2026_06,FOMC Jun,central_bank,8x_yearly,2026-06-17T18:00,2026-06-17T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Fed rate decision + SEP/dot plot"
-FOMC_2026_07,FOMC Jul,central_bank,8x_yearly,2026-07-29T18:00,2026-07-29T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Fed rate decision + press conference"
-FOMC_2026_09,FOMC Sep,central_bank,8x_yearly,2026-09-16T18:00,2026-09-16T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Fed rate decision + SEP/dot plot"
-FOMC_2026_11,FOMC Nov,central_bank,8x_yearly,2026-11-04T18:00,2026-11-04T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Fed rate decision + press conference"
-FOMC_2026_12,FOMC Dec,central_bank,8x_yearly,2026-12-16T18:00,2026-12-16T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Fed rate decision + SEP/dot plot"
-FUNDING_00,Crypto Funding Rate 00:00,funding_snapshot,every_8h,23:55,00:05,,true,false,"binance,bybit,okx,deribit,hyperliquid","Funding rate settlement; basis trades adjust"
-FUNDING_08,Crypto Funding Rate 08:00,funding_snapshot,every_8h,07:55,08:05,,true,false,"binance,bybit,okx,deribit,hyperliquid","Funding rate settlement; basis trades adjust"
-FUNDING_16,Crypto Funding Rate 16:00,funding_snapshot,every_8h,15:55,16:05,,true,false,"binance,bybit,okx,deribit,hyperliquid","Funding rate settlement; basis trades adjust"
-NFP_2026_04,NFP Apr,macro_release,1st_friday_monthly,2026-04-03T13:25,2026-04-03T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2026_05,NFP May,macro_release,1st_friday_monthly,2026-05-01T13:25,2026-05-01T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2026_06,NFP Jun,macro_release,1st_friday_monthly,2026-06-05T13:25,2026-06-05T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2026_07,NFP Jul,macro_release,1st_friday_monthly,2026-07-03T13:25,2026-07-03T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2026_08,NFP Aug,macro_release,1st_friday_monthly,2026-08-07T13:25,2026-08-07T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2026_09,NFP Sep,macro_release,1st_friday_monthly,2026-09-04T13:25,2026-09-04T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2026_10,NFP Oct,macro_release,1st_friday_monthly,2026-10-02T13:25,2026-10-02T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2026_11,NFP Nov,macro_release,1st_friday_monthly,2026-11-06T13:25,2026-11-06T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2026_12,NFP Dec,macro_release,1st_friday_monthly,2026-12-04T13:25,2026-12-04T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2027_01,NFP Jan,macro_release,1st_friday_monthly,2027-01-08T13:25,2027-01-08T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2027_02,NFP Feb,macro_release,1st_friday_monthly,2027-02-05T13:25,2027-02-05T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-NFP_2027_03,NFP Mar,macro_release,1st_friday_monthly,2027-03-05T13:25,2027-03-05T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","Non-Farm Payrolls release; high vol"
-ECB_2026_04,ECB Apr,central_bank,8x_yearly,2026-04-16T12:15,2026-04-16T13:30,,true,true,"databento,ibkr,ecb","ECB rate decision + press conference"
-ECB_2026_06,ECB Jun,central_bank,8x_yearly,2026-06-04T12:15,2026-06-04T13:30,,true,true,"databento,ibkr,ecb","ECB rate decision + press conference"
-ECB_2026_07,ECB Jul,central_bank,8x_yearly,2026-07-16T12:15,2026-07-16T13:30,,true,true,"databento,ibkr,ecb","ECB rate decision + press conference"
-ECB_2026_09,ECB Sep,central_bank,8x_yearly,2026-09-10T12:15,2026-09-10T13:30,,true,true,"databento,ibkr,ecb","ECB rate decision + press conference"
-ECB_2026_10,ECB Oct,central_bank,8x_yearly,2026-10-22T12:15,2026-10-22T13:30,,true,true,"databento,ibkr,ecb","ECB rate decision + press conference"
-ECB_2026_12,ECB Dec,central_bank,8x_yearly,2026-12-10T12:15,2026-12-10T13:30,,true,true,"databento,ibkr,ecb","ECB rate decision + press conference"
-ECB_2027_01,ECB Jan,central_bank,8x_yearly,2027-01-21T12:15,2027-01-21T13:30,,true,true,"databento,ibkr,ecb","ECB rate decision + press conference"
-ECB_2027_03,ECB Mar,central_bank,8x_yearly,2027-03-11T12:15,2027-03-11T13:30,,true,true,"databento,ibkr,ecb","ECB rate decision + press conference"
-BOE_2026_05,BOE May,central_bank,8x_yearly,2026-05-07T12:00,2026-05-07T12:30,,true,true,"databento,ibkr","BOE rate decision"
-BOE_2026_06,BOE Jun,central_bank,8x_yearly,2026-06-18T12:00,2026-06-18T12:30,,true,true,"databento,ibkr","BOE rate decision"
-BOE_2026_08,BOE Aug,central_bank,8x_yearly,2026-08-06T12:00,2026-08-06T12:30,,true,true,"databento,ibkr","BOE rate decision"
-BOE_2026_09,BOE Sep,central_bank,8x_yearly,2026-09-17T12:00,2026-09-17T12:30,,true,true,"databento,ibkr","BOE rate decision"
-BOE_2026_11,BOE Nov,central_bank,8x_yearly,2026-11-05T12:00,2026-11-05T12:30,,true,true,"databento,ibkr","BOE rate decision"
-BOE_2026_12,BOE Dec,central_bank,8x_yearly,2026-12-17T12:00,2026-12-17T12:30,,true,true,"databento,ibkr","BOE rate decision"
-BOE_2027_02,BOE Feb,central_bank,8x_yearly,2027-02-04T12:00,2027-02-04T12:30,,true,true,"databento,ibkr","BOE rate decision"
-BOE_2027_03,BOE Mar,central_bank,8x_yearly,2027-03-18T12:00,2027-03-18T12:30,,true,true,"databento,ibkr","BOE rate decision"
-ASIA_OPEN_DAILY,Asian Session Open,session_boundary,daily,00:00,00:30,No DST adjustment (JST/HKT fixed),true,true,"binance,bybit,okx","Tokyo/HK open; liquidity transition"
-ASIA_CLOSE_DAILY,Asian Session Close,session_boundary,daily,06:00,06:30,No DST adjustment (JST/HKT fixed),true,true,"binance,bybit,okx","Tokyo/HK close; liquidity gap risk"
-EU_CLOSE_DAILY,European Session Close,session_boundary,daily,16:00,16:30,EU DST (Mar-Oct): 15:00-15:30 UTC,true,true,"databento,ibkr,ecb","LSE/Euronext closing auction"
-US_OPEN_DAILY,US Session Open,session_boundary,daily,13:30,14:00,US DST (Mar-Nov): 13:30-14:00 UTC,true,true,"databento,ibkr","NYSE/NASDAQ opening; high vol"
-US_CLOSE_EXT_DAILY,US Session Close,session_boundary,daily,20:00,20:30,US DST (Mar-Nov): 20:00-20:30 UTC,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","NYSE/NASDAQ close + after-hours transition"
+US_CLOSE_DAILY,US Market Close,market_close,daily,20:55,21:00,US DST (Mar-Nov): 19:55-20:00 UTC,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",NYSE/NASDAQ closing auction; high vol window
+EU_OPEN_DAILY,EU Market Open,market_open,daily,06:55,07:00,EU DST (Mar-Oct): 05:55-06:00 UTC,true,true,"databento,ibkr,ecb",LSE/Euronext opening auction; gap risk
+EU_CLOSE_DAILY,European Session Close,session_boundary,daily,16:00,16:05,EU DST (Mar-Oct): 15:00-15:05 UTC,true,true,"databento,ibkr,ecb",LSE/Euronext closing auction
+US_OPEN_DAILY,US Session Open,session_boundary,daily,13:30,13:35,US DST (Mar-Nov): 13:30-13:35 UTC,true,true,"databento,ibkr",NYSE/NASDAQ opening; high vol
+US_CLOSE_EXT_DAILY,US Session Close,session_boundary,daily,20:00,20:05,US DST (Mar-Nov): 20:00-20:05 UTC,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",NYSE/NASDAQ close + after-hours transition
+FUNDING_00,Crypto Funding Rate 00:00,funding_snapshot,every_8h,23:55,00:05,,true,false,"binance,bybit,okx,deribit,hyperliquid",Funding rate settlement; basis trades adjust
+FUNDING_08,Crypto Funding Rate 08:00,funding_snapshot,every_8h,07:55,08:05,,true,false,"binance,bybit,okx,deribit,hyperliquid",Funding rate settlement; basis trades adjust
+FUNDING_16,Crypto Funding Rate 16:00,funding_snapshot,every_8h,15:55,16:05,,true,false,"binance,bybit,okx,deribit,hyperliquid",Funding rate settlement; basis trades adjust
+NFP_2026_01,NFP Jan,macro_release,1st_friday_monthly,2026-01-02T13:25,2026-01-02T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_02,NFP Feb,macro_release,1st_friday_monthly,2026-02-06T13:25,2026-02-06T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_03,NFP Mar,macro_release,1st_friday_monthly,2026-03-06T13:25,2026-03-06T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_04,NFP Apr,macro_release,1st_friday_monthly,2026-04-03T13:25,2026-04-03T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_05,NFP May,macro_release,1st_friday_monthly,2026-05-01T13:25,2026-05-01T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_06,NFP Jun,macro_release,1st_friday_monthly,2026-06-05T13:25,2026-06-05T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_07,NFP Jul,macro_release,1st_friday_monthly,2026-07-03T13:25,2026-07-03T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_08,NFP Aug,macro_release,1st_friday_monthly,2026-08-07T13:25,2026-08-07T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_09,NFP Sep,macro_release,1st_friday_monthly,2026-09-04T13:25,2026-09-04T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_10,NFP Oct,macro_release,1st_friday_monthly,2026-10-02T13:25,2026-10-02T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_11,NFP Nov,macro_release,1st_friday_monthly,2026-11-06T13:25,2026-11-06T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2026_12,NFP Dec,macro_release,1st_friday_monthly,2026-12-04T13:25,2026-12-04T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+NFP_2027_01,NFP Jan,macro_release,1st_friday_monthly,2027-01-01T13:25,2027-01-01T14:00,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Non-Farm Payrolls release; high vol
+OPT_EXPIRY_2026_01,Options Expiry Jan,options_expiry,3rd_friday_monthly,2026-01-16T19:00,2026-01-16T21:30,,true,true,"deribit,ibkr,databento",Monthly options/futures expiry; pin risk
+OPT_EXPIRY_2026_02,Options Expiry Feb,options_expiry,3rd_friday_monthly,2026-02-20T19:00,2026-02-20T21:30,,true,true,"deribit,ibkr,databento",Monthly options/futures expiry; pin risk
+OPT_EXPIRY_2026_03,Options Expiry Mar,options_expiry,3rd_friday_monthly,2026-03-20T19:00,2026-03-20T21:30,,true,true,"deribit,ibkr,databento",Quarterly expiry (triple witching)
+OPT_EXPIRY_2026_04,Options Expiry Apr,options_expiry,3rd_friday_monthly,2026-04-17T19:00,2026-04-17T21:30,,true,true,"deribit,ibkr,databento",Monthly options/futures expiry; pin risk
+OPT_EXPIRY_2026_05,Options Expiry May,options_expiry,3rd_friday_monthly,2026-05-15T19:00,2026-05-15T21:30,,true,true,"deribit,ibkr,databento",Monthly options/futures expiry; pin risk
+OPT_EXPIRY_2026_06,Options Expiry Jun,options_expiry,3rd_friday_monthly,2026-06-19T19:00,2026-06-19T21:30,,true,true,"deribit,ibkr,databento",Quarterly expiry (triple witching)
+OPT_EXPIRY_2026_07,Options Expiry Jul,options_expiry,3rd_friday_monthly,2026-07-17T19:00,2026-07-17T21:30,,true,true,"deribit,ibkr,databento",Monthly options/futures expiry; pin risk
+OPT_EXPIRY_2026_08,Options Expiry Aug,options_expiry,3rd_friday_monthly,2026-08-21T19:00,2026-08-21T21:30,,true,true,"deribit,ibkr,databento",Monthly options/futures expiry; pin risk
+OPT_EXPIRY_2026_09,Options Expiry Sep,options_expiry,3rd_friday_monthly,2026-09-18T19:00,2026-09-18T21:30,,true,true,"deribit,ibkr,databento",Quarterly expiry (triple witching)
+OPT_EXPIRY_2026_10,Options Expiry Oct,options_expiry,3rd_friday_monthly,2026-10-16T19:00,2026-10-16T21:30,,true,true,"deribit,ibkr,databento",Monthly options/futures expiry; pin risk
+OPT_EXPIRY_2026_11,Options Expiry Nov,options_expiry,3rd_friday_monthly,2026-11-20T19:00,2026-11-20T21:30,,true,true,"deribit,ibkr,databento",Monthly options/futures expiry; pin risk
+OPT_EXPIRY_2026_12,Options Expiry Dec,options_expiry,3rd_friday_monthly,2026-12-18T19:00,2026-12-18T21:30,,true,true,"deribit,ibkr,databento",Quarterly expiry (triple witching)
+FOMC_2026_01,FOMC Jan,central_bank,8x_yearly,2026-01-28T18:00,2026-01-28T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Fed rate decision + press conference
+FOMC_2026_03,FOMC Mar,central_bank,8x_yearly,2026-03-18T18:00,2026-03-18T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Fed rate decision + press conference
+FOMC_2026_05,FOMC May,central_bank,8x_yearly,2026-05-06T18:00,2026-05-06T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Fed rate decision + press conference
+FOMC_2026_06,FOMC Jun,central_bank,8x_yearly,2026-06-17T18:00,2026-06-17T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Fed rate decision + press conference
+FOMC_2026_07,FOMC Jul,central_bank,8x_yearly,2026-07-29T18:00,2026-07-29T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Fed rate decision + press conference
+FOMC_2026_09,FOMC Sep,central_bank,8x_yearly,2026-09-16T18:00,2026-09-16T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Fed rate decision + press conference
+FOMC_2026_11,FOMC Nov,central_bank,8x_yearly,2026-11-04T18:00,2026-11-04T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Fed rate decision + press conference
+FOMC_2026_12,FOMC Dec,central_bank,8x_yearly,2026-12-16T18:00,2026-12-16T20:30,,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr",Fed rate decision + press conference
+ECB_2026_01,ECB Jan,central_bank,8x_yearly,2026-01-22T12:15,2026-01-22T13:30,,true,true,"databento,ibkr,ecb",ECB rate decision + press conference
+ECB_2026_03,ECB Mar,central_bank,8x_yearly,2026-03-12T12:15,2026-03-12T13:30,,true,true,"databento,ibkr,ecb",ECB rate decision + press conference
+ECB_2026_04,ECB Apr,central_bank,8x_yearly,2026-04-16T12:15,2026-04-16T13:30,,true,true,"databento,ibkr,ecb",ECB rate decision + press conference
+ECB_2026_06,ECB Jun,central_bank,8x_yearly,2026-06-04T12:15,2026-06-04T13:30,,true,true,"databento,ibkr,ecb",ECB rate decision + press conference
+ECB_2026_07,ECB Jul,central_bank,8x_yearly,2026-07-16T12:15,2026-07-16T13:30,,true,true,"databento,ibkr,ecb",ECB rate decision + press conference
+ECB_2026_09,ECB Sep,central_bank,8x_yearly,2026-09-10T12:15,2026-09-10T13:30,,true,true,"databento,ibkr,ecb",ECB rate decision + press conference
+ECB_2026_10,ECB Oct,central_bank,8x_yearly,2026-10-22T12:15,2026-10-22T13:30,,true,true,"databento,ibkr,ecb",ECB rate decision + press conference
+ECB_2026_12,ECB Dec,central_bank,8x_yearly,2026-12-10T12:15,2026-12-10T13:30,,true,true,"databento,ibkr,ecb",ECB rate decision + press conference
+BOE_2026_02,BOE Feb,central_bank,8x_yearly,2026-02-05T12:00,2026-02-05T12:30,,true,true,"databento,ibkr",BOE rate decision
+BOE_2026_03,BOE Mar,central_bank,8x_yearly,2026-03-19T12:00,2026-03-19T12:30,,true,true,"databento,ibkr",BOE rate decision
+BOE_2026_05,BOE May,central_bank,8x_yearly,2026-05-07T12:00,2026-05-07T12:30,,true,true,"databento,ibkr",BOE rate decision
+BOE_2026_06,BOE Jun,central_bank,8x_yearly,2026-06-18T12:00,2026-06-18T12:30,,true,true,"databento,ibkr",BOE rate decision
+BOE_2026_08,BOE Aug,central_bank,8x_yearly,2026-08-06T12:00,2026-08-06T12:30,,true,true,"databento,ibkr",BOE rate decision
+BOE_2026_09,BOE Sep,central_bank,8x_yearly,2026-09-17T12:00,2026-09-17T12:30,,true,true,"databento,ibkr",BOE rate decision
+BOE_2026_11,BOE Nov,central_bank,8x_yearly,2026-11-05T12:00,2026-11-05T12:30,,true,true,"databento,ibkr",BOE rate decision
+BOE_2026_12,BOE Dec,central_bank,8x_yearly,2026-12-17T12:00,2026-12-17T12:30,,true,true,"databento,ibkr",BOE rate decision
+BOJ_2026_01,BOJ Q1,central_bank,quarterly,2026-01-24T02:00,2026-01-24T06:00,,true,true,"databento,ibkr",BOJ monetary policy; JPY crosses volatile
+BOJ_2026_04,BOJ Q2,central_bank,quarterly,2026-04-28T02:00,2026-04-28T06:00,,true,true,"databento,ibkr",BOJ monetary policy; JPY crosses volatile
+BOJ_2026_07,BOJ Q3,central_bank,quarterly,2026-07-15T02:00,2026-07-15T06:00,,true,true,"databento,ibkr",BOJ monetary policy; JPY crosses volatile
+BOJ_2026_10,BOJ Q4,central_bank,quarterly,2026-10-29T02:00,2026-10-29T06:00,,true,true,"databento,ibkr",BOJ monetary policy; JPY crosses volatile
