@@ -67,7 +67,11 @@ decision + the successor.
 2. **deployment-service** — duplicate-key fix (2a) was made + verified to unblock deployment-api's `uv lock` during the
    shipping window, but **reverted (not committed)**: committing (2a) forces a re-lock that hits the pre-existing cbor2
    corruption (2b), and a full lock regen of a foreign repo is out of tradfi scope + risky. The worktree was restored to
-   the clean LDR-passing state. **Both (2a) + (2b) deferred to the cicd/dep-security epic** (successor below).
+   the clean LDR-passing state. **Both (2a) + (2b) deferred to the cicd/dep-security epic** (successor below). **➡️
+   UPDATE 2026-06-04 (slot-4): (2a)+(2b) NOW FIXED** — deployment-service@3899a5d. The from-scratch lock regen (the
+   "full lock regen with the right source config" anticipated above) was done + `quality-gates.sh` is GREEN; the cbor2
+   dangling edge was dropped (no current dep needs it). See the ✅ successor todo for the full recipe. Item (1) (aiohttp
+   CVE) remains the only open blocker in this doc.
 
 ## Successor (close this issue when done)
 
