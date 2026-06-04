@@ -1,0 +1,145 @@
+---
+description: "Path builders with SSOT mirrors must have byte-identity guard tests to detect drift"
+globs: ["*/tradfi*.py", "*/partition*.py", "*/tests/test_*path*.py"]
+alwaysApply: false
+priority: 75
+tags: [testing, data-correctness, path-canonicalization, critical]
+---
+
+# Byte-Identity Guard Tests for Path Builders
+
+## Rule
+
+When a service implements a path-builder that **mirrors** a UAC canonical builder (e.g., MTDS `tradfi_shared.build_tradfi_partition_path` mirrors `unified-api-contracts/.../canonical/partition_paths.py::build_tradfi_partition_path`), a **byte-identity guard test** MUST verify they produce identical paths for overlapping types.
+
+This catches latent drift (e.g., parameter order, pipeline_mode position) before it silently mislocates objects in GCS.
+
+## Why
+
+- **Divergence footgun** — a mirror is easier to write than to maintain; small diff (parameter forgotten, position shifted) silently breaks object location
+- **Type coverage**: UAC builder's domain may differ from service's usage (e.g., UAC enum doesn't cover TradFi series-class tokens) → service keeps a mirror
+- **Drift detection** — a byte-identity test forces any change to BOTH files at once; skipping one side fails CI
+
+## Pattern
+
+### Detection Phase (Plan Documentation)
+
+When designing the split:
+
+```markdown
+- [CODE] P2. **SSOT-cleanliness — fold `pipeline_mode` into UAC builder.**
+  The UAC base builder produces path WITHOUT `pipeline_mode=`;
+  MTDS mirror inserts it inline. To close the drift footgun:
+  → Extend UAC builder to accept optional `pipeline_mode=`
+  → Replace MTDS mirror with UAC delegation
+  → OR (if UAC enum doesn't cover all types) add byte-identity test.
+```
+
+### Implementation (if full delegation blocked)
+
+```python
+# tests/market_interface/unit/test_tradfi_shared_path_byte_identity.py
+def test_tradfi_path_builder_byte_identity_vs_uac_canonical(self):
+    """
+    MTDS tradfi_shared.build_tradfi_partition_path MUST produce
+    byte-identical paths to UAC canonical builder for all overlapping
+    instrument types (FUTURE/OPTION/INDEX/SPOT where both builders support).
+
+    Why: MTDS carries a mirror of the UAC builder to handle TradFi
+    series-class tokens (rates/etf_flows) not in UAC enum. The mirror
+    drifts if not tested — drift = silent path mismatch = data mislocated.
+    Byte-identity test catches this at commit time.
+    """
+    from unified_api_contracts.canonical import build_tradfi_partition_path as uac_builder
+    from tradfi_shared import build_tradfi_partition_path as mtds_builder
+
+    # Test overlapping types (UAC enum covers these)
+    test_cases = [
+        ('FUTURE', 'CME', 'ES', 'trade', '2026-06-01'),
+        ('OPTION', 'CBOE', 'SPX', 'quote', '2026-06-01'),
+        ('INDEX', 'NYSE', 'VIX', 'trade', '2026-06-01'),
+        ('SPOT', 'ICE', 'WTI', 'ohlcv_1m', '2026-06-01'),
+    ]
+
+    for instr_type, venue, symbol, data_type, day in test_cases:
+        uac_path = uac_builder(
+            instrument_type=InstrumentType[instr_type],
+            venue=venue,
+            symbol=symbol,
+            data_type=data_type,
+            day=day,
+            pipeline_mode='batch_v9'
+        )
+        mtds_path = mtds_builder(
+            instrument_type=instr_type,
+            venue=venue,
+            symbol=symbol,
+            data_type=data_type,
+            day=day,
+            pipeline_mode='batch_v9'
+        )
+
+        self.assertEqual(
+            uac_path, mtds_path,
+            f"Drift detected: UAC={uac_path}, MTDS={mtds_path}. "
+            f"Sync the builders or update both together."
+        )
+
+def test_tradfi_path_builder_handles_series_class_tokens(self):
+    """
+    MTDS builder handles TradFi series-class tokens (rates, etf_flows)
+    not in UAC InstrumentType enum. Verify these types produce
+    valid paths (UAC builder cannot test them).
+    """
+    mtds_path = mtds_builder(
+        instrument_type='rates',  # TradFi-only, not in UAC enum
+        venue='CME',
+        symbol='ZB',
+        data_type='ohlcv_24h',
+        day='2026-06-01',
+        pipeline_mode='batch_v9'
+    )
+
+    # Verify format (should match canonical: day=/pipeline_mode=/asset_group=tradfi/...)
+    self.assertIn('day=2026-06-01', mtds_path)
+    self.assertIn('pipeline_mode=batch_v9', mtds_path)
+    self.assertIn('asset_group=tradfi', mtds_path)
+```
+
+### Plan Tracking (Deferred Case)
+
+If full delegation is blocked by UAC enum gaps:
+
+```markdown
+- [x] ✅ [CODE] P2. SSOT-cleanliness — SHIPPED with byte-identity guard.
+  UAC builder now accepts optional `pipeline_mode=`.
+  MTDS mirror kept (UAC InstrumentType enum doesn't cover series-class tokens).
+  **Guard test added** (`test_tradfi_shared_path_byte_identity.py`) → any drift = CI fail.
+
+  **Nice-to-have P3:** extend UAC enum to rates/etf_flows, then delete mirror + delegate.
+```
+
+## Integration Points
+
+- **QG STEP 2 (Unit tests)**: byte-identity test runs and must pass
+- **Cross-repo sync**: when UAC builder changes, MTDS mirrors must update + test re-passes
+- **Plan tracking**: byte-identity replaces the need for full delegation IF UAC enum is incomplete
+
+## Anti-Patterns
+
+- ❌ Maintain a mirror builder with ZERO test coverage (drift is invisible)
+- ❌ "Byte-identity is overkill" — it's not; parametric drift catches silently-wrong paths
+- ❌ UAC builder changes without updating the mirror (the whole point of the test is to force sync)
+- ❌ Manual assertion in comments ("this mirrors UAC by design") — codify it as a test
+
+## DO
+
+- ✅ Add a byte-identity test whenever a service mirrors a UAC builder
+- ✅ For blocked full delegation, document it in plan + leave a P3 nice-to-have
+- ✅ Test both the overlapping types (parity with UAC) and service-specific types (rates, etf_flows)
+- ✅ On builder drift, fail fast in CI (don't let it silently propagate)
+
+## Reference
+
+- Plan: `plans/active/tradfi_manifest_canonicalisation_2026_06_01.md` (P2 — path SSOT)
+- SSOT: `codex/04-architecture/path-canonicalization.md` (canonical GCS paths)
