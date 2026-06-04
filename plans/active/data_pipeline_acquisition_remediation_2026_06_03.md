@@ -82,13 +82,14 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
 
 ## Phase 2 — Live-coverage parity (P1, batch=live)
 
-- [ ] [BATCH-LIVE] P1. Add live WebSocket connectors for Orca + Raydium (Solana DEX) — repo: market-tick-data-service @
+- [x] ✅ [BATCH-LIVE] P1. Add live WebSocket connectors for Orca + Raydium (Solana DEX) — repo: market-tick-data-service @
       `market_tick_data_service/live/connectors/` (no orca/raydium module → never registered via
       `register_ws_feed_connector`; siblings phoenix/drift/jito have them). Either implement the two connectors (model
       on `phoenix_ws.py` Jupiter-poll pattern) and register them, OR — if snapshot-only is the deliberate MVP choice —
       record an explicit accepted-divergence register entry per `batch_live_symmetry` item (k) with a tracking note.
       Both venues are in the `arbitrage_price_dispersion` × DeFi MVP matrix. cold-start: `SUB_AGENT_MANDATORY_RULES.md`;
       live runner is `live/websocket_runner.py` + `connector_registry.py`. owning-epic: defi_master (vm-defi).
+      — market-tick-data-service@7dec607 | QG ✓ (2547 passed) | orca_defi_ws.py + raydium_defi_ws.py + register_all() + tests
 - [ ] [BATCH-LIVE] P1. Add live `book_snapshot_5` + `derivative_ticker` channels for non-Hyperliquid CeFi venues
       (Binance/Bybit/OKX/Deribit/Kraken/Coinbase) — repo: market-tick-data-service @ `live/connectors/*_ws.py` (each
       currently subscribes `trades` only; only Hyperliquid has live book+ticker via `hyperliquid_l2book_ws.py` /
