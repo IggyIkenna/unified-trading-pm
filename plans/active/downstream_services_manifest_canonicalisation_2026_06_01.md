@@ -61,7 +61,12 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
       `classify_venue_error()`/ `ADAPTER_FETCH_FAILED`) on a genuine API error (timeout/5xx/429/auth) for an in-universe
       instrument within coverage — NOT `record_empty`/`return []`. Grep `instruments-service` reference adapters for
       `except … record_empty` / bare `return []` swallows; gate empty-vs-failed on instrument-in-universe + UAC coverage
-      bounds. Repo: **instruments-service**. Home: each AG plan § CF-11 (full diagnosis in cefi plan).
+      bounds. Repo: **instruments-service**. Home: each AG plan § CF-11 (full diagnosis in cefi plan). **✅ CEFI SLICE
+      VERIFIED CLOSED (slot-3 2026-06-04):** all 4 cefi adapters (aster/hyperliquid/tardis/deribit_combo) re-raise on
+      genuine fetch failure → `_fetch_one` `failed[]` → `record_failed`/`attempted_failed`
+      (`orchestrator.py:1746`+`:2978-2993`); regression `tests/unit/test_is_adapter_fetch_failure_raises.py`
+      (`e2e008f0`+ `f2ca5954`). Checkbox stays OPEN for the **tradfi** (databento ZERO-signal swallow
+      `databento.py:826`, slot-6) + **prediction** (polymarket, slot-5) slices.
 - [ ] [CODE] P0. **E5 manifest-rebuild logic — CF-11 3-way decision tree**
       (`rebuild_{cefi,tradfi,prediction}_manifest.py`, mtds `scripts/`). Captured-atom rebuilds DONE; STILL OPEN — make
       the LOGIC canonical now so the migration-RUN session needs no script edits: (a) **within-bounds empty →

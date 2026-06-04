@@ -200,7 +200,14 @@ column is RED, not exempt.
 - [ ] [MTDS] P1. Thread `source="tardis"` through every CeFi adapter write + extend
       `record_empty_for_shard`/`record_failed_for_shard` to accept + forward `source`.
       `market-data-processing-service/.../core/canonical_writer.py`. (No `SOURCE_PRIORITY` change needed yet — `tardis`
-      is already the declared source; expand the list only when the alternative actually lands.)
+      is already the declared source; expand the list only when the alternative actually lands.) **PARTIAL-VERIFIED
+      (slot-3 cefi run-readiness re-audit 2026-06-04):** the **captured** write-path already auto-derives + stamps
+      `source="tardis"` for cefi on BOTH surfaces — UAC `SOURCE_PRIORITY` registers `("cefi", <data_type>) → ["tardis"]`
+      (source_priority.py:152-160), the MTDS raw-tick writer derives via `get_primary_source` (mtds@4e5fa57f), and the
+      MDPS candle writer derives via `_resolve_primary_source_for_candle` (canonical_writer.py:1316-1319). REMAINING for
+      this item: confirm the `record_empty_for_shard` / `record_failed_for_shard` empty/failed paths likewise forward
+      `source` (the captured path is done), + the [TEST] below, + the [DATA] historical backfill (rides the cefi
+      C-source RIDER). Repo: market-data-processing-service.
 - [ ] [TEST] P1. CeFi unit test: a cefi cell without `source=` raises; `source="tardis"` persists; a future
       `["<alt>", "tardis"]` registry expansion resolves two sources by priority.
 - [ ] [DATA] P1. Backfill `source="tardis"` onto the existing cefi corpus — **fold into

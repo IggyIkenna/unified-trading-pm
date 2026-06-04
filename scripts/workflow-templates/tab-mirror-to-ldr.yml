@@ -5,12 +5,18 @@
 #   A. tab -> LDR  (push to a `tab/**` branch — the `mirror` job below). Lands agent work
 #      committed on a tab branch onto LDR. Original behaviour; see decision table below.
 #
-#   B. LDR -> tab  (push to `live-defi-rollout`, plus a safety schedule + manual dispatch —
-#      the `ldr_to_tabs` job). The "keep-tabs-current-down" leg, added 2026-06-04
+#   B. LDR -> tab  (every-15-min schedule + manual dispatch — the `ldr_to_tabs` job). The
+#      "keep-tabs-current-down" leg, added 2026-06-04
 #      (qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md § "Remote tab branch
-#      stays current with LDR"). For EVERY `tab/*` branch:
-#        - purely BEHIND LDR (ancestor)  -> FF the remote tab up to LDR (host-independent;
-#          covers headless/offline VMs the local slot-cron-ff-pull can't reach).
+#      stays current with LDR"). NOT push-triggered: it runs on a `*/15 * * * *` cron and FFs
+#      each behind tab only up to the latest LDR commit that is **older than 15 minutes** — a
+#      "settle window" so freshly-landed LDR commits aren't propagated onto remote tabs until
+#      they've stabilized (never races an in-flight host that's about to push to its own tab).
+#      For EVERY `tab/*` branch:
+#        - purely BEHIND LDR (ancestor)  -> FF the remote tab up to the >15-min-old LDR commit
+#          (host-independent; covers headless/offline VMs the local slot-cron-ff-pull can't
+#          reach). A tab already caught up to that aged commit (only behind by <15-min-old
+#          commits) is left until those age in — deferred, not drift.
 #        - purely AHEAD (own commits)    -> leave it; leg A lands it on the next tab push.
 #        - DIVERGED (ahead AND behind)   -> never touched here -> ALERT (#ci-failures +
 #          orchestrator). This is the divergence monitor escalation path
@@ -66,10 +72,9 @@ name: tab-mirror-to-ldr
 on:
   push:
     branches:
-      - "tab/**" # leg A: tab -> LDR
-      - "live-defi-rollout" # leg B: LDR -> tabs (FF behind tabs) + divergence/collision alert
+      - "tab/**" # leg A: tab -> LDR (land agent work promptly — stays push-triggered)
   schedule:
-    - cron: "17 */6 * * *" # leg B safety net: catch a divergence that persists while LDR is quiet
+    - cron: "*/15 * * * *" # leg B: every 15 min, FF behind tabs to the LDR commit that's >15 min old
   workflow_dispatch: {} # manual leg-B sweep
 
 concurrency:
@@ -225,12 +230,11 @@ jobs:
           exit 0
 
   ldr_to_tabs:
-    # Leg B — runs on a push to live-defi-rollout, a safety schedule, or manual dispatch.
-    # FFs every behind-only tab up to LDR (host-independent); alerts on diverged tabs +
-    # name collisions. FF/alert-only — never force-pushes a tab, never auto-merges a divergence.
-    if:
-      github.ref == 'refs/heads/live-defi-rollout' || github.event_name == 'schedule' || github.event_name ==
-      'workflow_dispatch'
+    # Leg B — runs every 15 min (schedule) or on manual dispatch. FFs every behind-only tab up
+    # to the latest LDR commit OLDER THAN 15 MIN (settle window — never propagates a just-landed
+    # commit onto remote tabs); alerts on diverged tabs + name collisions. FF/alert-only — never
+    # force-pushes a tab, never auto-merges a divergence.
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -251,8 +255,13 @@ jobs:
           git fetch --prune origin '+refs/heads/tab/*:refs/remotes/origin/tab/*' >/dev/null 2>&1 || true
           git fetch -q origin live-defi-rollout
           ldr="$(git rev-parse origin/live-defi-rollout)"
+          # Settle window: FF tabs only up to the latest LDR commit older than 15 min, so a
+          # just-landed commit isn't propagated onto remote tabs until it stabilizes. Empty if
+          # EVERY LDR commit is <15 min old (very fresh history) -> defer all FF this tick.
+          ff_target="$(git rev-list -1 --before='15 minutes ago' origin/live-defi-rollout 2>/dev/null || true)"
+          echo "[ldr->tab] LDR tip=${ldr:0:8}; 15-min-settled FF target=${ff_target:0:8}"
 
-          ff_n=0; div_n=0; col_n=0
+          ff_n=0; defer_n=0; div_n=0; col_n=0
           : > /tmp/ffed.txt; : > /tmp/diverged.txt; : > /tmp/collisions.txt
           declare -A div_hosts
 
@@ -272,14 +281,20 @@ jobs:
             [ "$tip" = "$ldr" ] && continue              # already current
 
             if git merge-base --is-ancestor "$tip" "$ldr"; then
-              # behind-only -> FF the remote tab to LDR. Default push is FF-only; GITHUB_TOKEN
+              # behind-only vs LDR tip. FF only up to the 15-min-settled target, so a just-landed
+              # commit isn't pushed onto the tab yet. Default push is FF-only; GITHUB_TOKEN
               # authorship suppresses a recursive leg-A trigger.
-              if git push origin "${ldr}:refs/heads/${br}" >/tmp/ff.log 2>&1; then
-                behind="$(git rev-list --count "${tip}..${ldr}")"
-                printf '• `%s` (+%s)\n' "$br" "$behind" >> /tmp/ffed.txt
-                ff_n=$((ff_n+1))
+              if [ -n "$ff_target" ] && [ "$tip" != "$ff_target" ] && git merge-base --is-ancestor "$tip" "$ff_target"; then
+                if git push origin "${ff_target}:refs/heads/${br}" >/tmp/ff.log 2>&1; then
+                  behind="$(git rev-list --count "${tip}..${ff_target}")"
+                  printf '• `%s` (+%s -> settled %s)\n' "$br" "$behind" "${ff_target:0:8}" >> /tmp/ffed.txt
+                  ff_n=$((ff_n+1))
+                else
+                  echo "[ldr->tab] FF push FAILED for ${br}:"; cat /tmp/ff.log
+                fi
               else
-                echo "[ldr->tab] FF push FAILED for ${br}:"; cat /tmp/ff.log
+                # behind only by commits <15 min old (or no aged target this tick) — defer to settle
+                defer_n=$((defer_n+1))
               fi
             elif git merge-base --is-ancestor "$ldr" "$tip"; then
               :                                          # ahead-only (own commits) — leg A lands it; benign
@@ -294,11 +309,12 @@ jobs:
 
           {
             echo "ff_n=${ff_n}"
+            echo "defer_n=${defer_n}"
             echo "div_n=${div_n}"
             echo "col_n=${col_n}"
             echo "div_hosts=${#div_hosts[@]}"
           } >> "$GITHUB_OUTPUT"
-          echo "[ldr->tab] FF'd ${ff_n} behind tab(s); ${div_n} diverged across ${#div_hosts[@]} host(s); ${col_n} name-collision(s)"
+          echo "[ldr->tab] FF'd ${ff_n} tab(s) to settled target; deferred ${defer_n} (<15-min-fresh); ${div_n} diverged across ${#div_hosts[@]} host(s); ${col_n} name-collision(s)"
 
       - name: Alert on divergence / collisions (#ci-failures + orchestrator)
         if: always() && (steps.sweep.outputs.div_n != '0' || steps.sweep.outputs.col_n != '0')

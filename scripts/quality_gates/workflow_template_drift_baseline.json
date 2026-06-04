@@ -1,30 +1,7 @@
 {
   "drift": [
-    "alerting-service/tab-mirror-to-ldr.yml",
-    "batch-live-reconciliation-service/tab-mirror-to-ldr.yml",
-    "client-reporting-api/tab-mirror-to-ldr.yml",
-    "deployment-api/tab-mirror-to-ldr.yml",
-    "deployment-service/tab-mirror-to-ldr.yml",
-    "deployment-ui/tab-mirror-to-ldr.yml",
-    "e2e-testing/tab-mirror-to-ldr.yml",
-    "execution-service/tab-mirror-to-ldr.yml",
-    "features-service/tab-mirror-to-ldr.yml",
-    "fund-administration-service/tab-mirror-to-ldr.yml",
     "greeks-service/main-backmerge-to-ldr.yml",
-    "greeks-service/tab-mirror-to-ldr.yml",
-    "ibkr-gateway-infra/tab-mirror-to-ldr.yml",
-    "instruments-service/tab-mirror-to-ldr.yml",
-    "market-data-processing-service/tab-mirror-to-ldr.yml",
-    "market-tick-data-service/tab-mirror-to-ldr.yml",
-    "ml-service/tab-mirror-to-ldr.yml",
-    "strategy-service/tab-mirror-to-ldr.yml",
-    "system-integration-tests/tab-mirror-to-ldr.yml",
-    "trading-agent-service/tab-mirror-to-ldr.yml",
-    "unified-api-contracts/tab-mirror-to-ldr.yml",
-    "unified-trading-api/tab-mirror-to-ldr.yml",
-    "unified-trading-library/tab-mirror-to-ldr.yml",
     "unified-trading-pm/major-bump-issue-handler.yml",
-    "unified-trading-pm/request-major-bump.yml",
-    "unified-trading-system-ui/tab-mirror-to-ldr.yml"
+    "unified-trading-pm/request-major-bump.yml"
   ]
 }
