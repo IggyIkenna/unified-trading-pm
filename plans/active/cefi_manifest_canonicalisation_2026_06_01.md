@@ -287,11 +287,16 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       `cli/handlers/` for `*_TOKENS/_MARKETS/_PAIRS/_UNIVERSE` names, so the `engine/`-resident
       `_VENUE_WIRE_SYMBOL_FALLBACK` dict above is INVISIBLE to the gate. **Fix:** extend the scan to `engine/` + the
       `*_FALLBACK` / wire-symbol-dict pattern (PM template — rollout to all repos).
-- [ ] [CODE] P2. **strategy-service — no IS instrument-existence guardrail.** `preflight.py` (venue auth+balance only) +
-      `risk_preflight_gate.py` (risk rules only) do NOT validate a cefi instrument EXISTS in IS for the date before
-      emitting an instruction (0 hits for `instrument_availability`/`InstrumentRecord` in non-test source); a strategy
-      config naming a delisted/non-existent cefi instrument is only caught later at execution. **Fix:** add an
-      IS-catalog existence check to strategy preflight (mirror execution `catalog_validator`).
+- [x] ✅ [CODE] P2. **strategy-service — IS instrument-existence guardrail ADDED (strategy@fdb86a54, QG exit 0).** Was:
+      `preflight.py` (venue auth+balance only) + `risk_preflight_gate.py` (risk rules only) never validated a cefi
+      instrument EXISTS in IS for the date before emitting an instruction → a config naming a delisted/non-existent cefi
+      instrument was only caught at execution. **DONE:** new `engine/core/instrument_existence_guard.py`
+      (`validate_cefi_instruments_exist`) reads the per-date per-venue IS availability universe
+      (`instrument_availability/by_date/day={date}/venue={venue}/instruments.parquet` via `resolve_bucket_name`) and,
+      mirroring execution's `catalog_validator`: `fail_on_missing=True` → `DependencyError` on a confirmed-absent id;
+      `False` → drops absent ids + emits `PREFLIGHT_SKIPPED`; transient IS read error → fails OPEN (never hard-blocks
+      live, GAP-5 style). Wired into `batch_handler.handle()` for cefi runs before `_execute_backtests` (gated on
+      `fail_on_missing_deps` + `not skip_dependency_check`). +5 unit tests; basedpyright 0.
 - [x] ✅ [CODE] P3. **execution-service — Deribit live-order not-found guard FIXED (execution@f111a8e2c, QG exit 0).**
       Was SWALLOWED: `venues/deribit_orders.py:84-90` raises `ValueError("…not found or expired")` but the enclosing
       `except (OSError, ValueError, RuntimeError)` at `:89` catches it → only `logger.warning` → a non-existent/expired
