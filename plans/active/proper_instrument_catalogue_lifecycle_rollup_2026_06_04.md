@@ -69,7 +69,7 @@ and it is correct + self-refreshing, with no separate artifact to drift.
 
 ## The four requirements (operator, 2026-06-04)
 
-- [ ] [AUDIT] P0. **IS completeness gate — `instrument_availability/by_date/` is 100% complete (no `attempted_failed`)
+- [x] ✅ [AUDIT] P0. **IS completeness gate — `instrument_availability/by_date/` is 100% complete (no `attempted_failed`)
       per the UAC expected shard universe (venues × data_types × dates), ALL asset groups + sports fixtures (same
       service).** Build/extend a completeness check that, per AG, diffs the captured `by_date/` instrument-definition
       cells against UAC's expected `(venue × instrument-defn data_type × date)` universe and reports
@@ -78,7 +78,18 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       provisional. Run it BEST-EFFORT now (surface gross gaps) and RE-RUN as a hard gate AFTER the IS manifest
       canonicalisation lands. No catalogue/enumerator output can be trusted while this is RED for an AG. Repo:
       instruments-service (+ UAC for the expected-universe definition). assigned_vm: vm-cross-cutting.
-- [ ] [CODE] P0. **Roll-up producer — derive the lifecycle catalogue from the per-date `by_date/` definitions.** New
+      — **SHIPPED (tool built, provisional)** instruments-service@4026d79e | `scripts/audit_instrument_definition_completeness.py`
+      reads the IS availability `_index`, tabulates instrument-definition cells by `capture_status`, surfaces every
+      `attempted_failed` cell as a gap (per-venue counts + `(venue,date,data_type)` sample), verdict `COMPLETE
+      (provisional)`/`INCOMPLETE` (exit 0/2). Pure `summarise_completeness()` unit-tested (status tabulation,
+      attempted_failed surfacing, blank→captured coercion, empty index). QG `--no-fix` exit 0; 15/15 tests green.
+      **Best-effort cefi run NOT YET EXECUTED** — blocked at the moment by a transient foreign dep-import skew in the
+      shared `unified-trading-library` (+6 ahead of LDR, references `PipelineMode.BATCH_EXECUTION_SERVICE`) vs
+      `unified-api-contracts` (316 dirty foreign files; enum has only `BATCH_STRATEGY_SERVICE`), which breaks
+      `import unified_trading_library` in this slot's dep worktrees. NOT my code (foreign in-flight dep work). Re-run
+      the cefi best-effort (`--asset-group cefi`) once the UTL/UAC worktrees reconcile; the **hard-gate** re-run (full
+      UAC expected-universe diff) is still post-IS-manifest-canonicalisation. Verdict remains PROVISIONAL + UNRUN-on-cefi.
+- [x] ✅ [CODE] P0. **Roll-up producer — derive the lifecycle catalogue from the per-date `by_date/` definitions.** New
       instruments-service script/job (per AG, AG-agnostic core): walk
       `instrument_availability/by_date/day={date}/venue={venue}/instruments.parquet`, aggregate to one
       `InstrumentCatalogEntry` row per instrument (`instrument_id`, `instrument_type`, `venue`, `chain`/`league_id`,
@@ -87,6 +98,17 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `InstrumentCatalogEntry` / `_catalog_from_dataframe` contract the enumerator already consumes (no schema drift).
       Cloud-agnostic I/O (`get_storage_client`, `resolve_bucket_name` — never inline `gs://`). +unit tests (roll-up
       lifecycle math; monotonic-guard accept/reject/override). Repo: instruments-service.
+      — **SHIPPED** instruments-service@4026d79e | `scripts/build_instrument_catalogue.py`. AG-agnostic core:
+      `build_catalogue_dataframe()` (pure lifecycle math — first/last day windows, `available_to=None` when present on
+      the latest snapshot day) + `evaluate_monotonic_guard()` (pure: first-run/grow/equal accept, shrink reject,
+      `--allow-catalogue-shrink` override) + `promote_catalogue()` (temp-first write → guard → copy-over canonical →
+      delete temp). Writes the canonical path the launcher (`launch-expected-universe-v2-vm.sh` L165-174) + v2
+      enumerator read: `get_write_bucket_name("instruments", ag)` + `{DEPLOYMENT_ENV}/catalog.parquet`. Output columns
+      consumed by `enumerate_expected_universe._catalog_from_dataframe` (no schema drift — verified by a test that feeds
+      the rolled-up frame straight into the enumerator helper). Cloud-agnostic via `get_storage_client`/
+      `get_write_bucket_name`. v9, NOT v10. QG `--no-fix` exit 0; 15/15 tests green; ruff + import-patterns clean.
+      **Live cefi GCS dry-run pending** (same transient UTL/UAC dep-import skew above; not a credential ask) — run
+      `--asset-group cefi --dry-run` once deps reconcile to prove the walk end-to-end against real `by_date/`.
 - [ ] [INFRA] P1. **Trigger on every instruments update (per AG; reference data → generally ≤ a few times/day).** Wire
       the roll-up to run after each IS instrument-definition write per AG (event-driven off the IS write, or a frequent
       scheduler keyed to the IS update cadence — pick per the IS update mechanism; do NOT fire-and-forget). The v2
@@ -97,6 +119,18 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `_enumerate_v2_*` reads it and emits `expected_unattempted` against the real, current universe. Per-AG slices
       drive via the sibling AG masters (cefi → slot-3, defi → slot-2, sports → slot-4, prediction → slot-5, tradfi →
       slot-6); vm-cross-cutting owns the shared roll-up + the gate.
+- [ ] [CODE] P1. **FINDING (slot-7, 2026-06-04) — two divergent catalogue read-paths must be reconciled.** The
+      standalone v2 enumerator (`enumerate_expected_universe.py --catalog-path`) + the launcher
+      (`launch-expected-universe-v2-vm.sh` L165-174) read **`{env}/catalog.parquet`** (the path this plan's roll-up
+      producer now writes). But the UTL runtime reader `unified_trading_library/instruments_catalog_reader.py`
+      `_CATALOG_BLOB` reads a **different** object — `reference_data/instruments/{asset_group}/all.parquet` — which is
+      what the *current-snapshot* `CatalogueBuilder.write_to_gcs` (instruments-service
+      `reference_data/catalogue/catalogue_builder.py`) emits (a live URDI fetch, NOT a lifecycle roll-up). So the MTDS
+      preflight / UTL-side "could-exist" cross-ref reads a snapshot at one path while the enumerator reads the lifecycle
+      catalogue at another → they can disagree on whether an instrument exists. Reconcile in Phase 3: point
+      `instruments_catalog_reader._CATALOG_BLOB` at `{env}/catalog.parquet` (the roll-up output) AND
+      decide CatalogueBuilder's fate (retire its all.parquet write, or keep it as a distinct current-snapshot artifact
+      with a clearly-different consumer). Repo: unified-trading-library + instruments-service. assigned_vm: vm-cross-cutting.
 
 ## Phased DAG + gates
 
