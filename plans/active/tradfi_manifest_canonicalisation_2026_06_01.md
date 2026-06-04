@@ -514,15 +514,15 @@ VM.
 **6 of 7 criteria are MET + verified on real GCS/code (see the readiness checklist immediately below for evidence + the
 shas).** Only **⑦ has an open piece, and it is UI-only** — the deployment-api side of ⑦ is verified-correct (no change).
 
-| #                                                            | Status                            | Note                                                                                                                                                                                                                  |
-| ------------------------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ① Migrator dry-run                                           | ✅ DONE                           | real-GCS `migrate_tradfi_to_v9_canonical.py --dry-run` = 5,305,520 objects, 0 moved, 0 err                                                                                                                            |
-| ② Rebuild dry-run                                            | ✅ VALIDATED (real-GCS bounded)   | `rebuild_tradfi_manifest.py` 2026-range: 114,771 shards, 37,477 reemit_empty + 6,041 reemit_failed, CF-11 reclassify. **Full-corpus = VM job** (see "remaining for FULL migration")                                   |
-| ③ 4-state preflight every svc IS→exec                        | ✅                                | MTDS/MDPS/features 4-state-aware (`dependency_checker`, `manifest_window_guard`+GAP-4); strategy `manifest_allocation_guard`; execution N/A (signals, not candles)                                                    |
-| ④ Empty/partial honest (zero-vol/NaN/last-price) batch+live  | ✅                                | MDPS `ohlcv_passthrough`/`tbbo_adapter`/`trades_adapter` (honest empty→record_empty typed; open-no-trade→last-price-carry o=h=l=c=prev_close vol=0; NaN-OHLC only where by-design for quote data; batch=live)         |
-| ⑤ Read/write paths post-migration                            | ✅                                | UAC `build_tradfi_partition_path(pipeline_mode)` + features `gcs_reader` pm-aware + mtds byte-identity guard + canonical migrator                                                                                     |
-| ⑥ IS/UAC guardrail vs instruments that can't exist           | ✅                                | `market-tick-data-service/.../engine/tradfi_catalog_reader.py` reads IS `instruments-store-tradfi`, EXCLUDES `{expired,delisted}` + out-of-availability-window per date, feeds orchestrator (universe=IS, not a seed) |
-| ⑦ deployment-api/UI could-exist num/denom + pending-backfill | ✅ **DONE** (UI@846c7c67, PR #20) | turbo venue card now renders a distinct "pending backfill" (`expected_unattempted_pending_fetch`) badge; API unchanged. pw:L2 chromium ✅ + Vitest regression; P3 follow-up = live-turbo e2e                          |
+| #                                                            | Status                            | Note                                                                                                                                                                                                                        |
+| ------------------------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ① Migrator dry-run                                           | ✅ DONE                           | real-GCS `migrate_tradfi_to_v9_canonical.py --dry-run` = 5,305,520 objects, 0 moved, 0 err                                                                                                                                  |
+| ② Rebuild dry-run                                            | ✅ VALIDATED (real-GCS bounded)   | `rebuild_tradfi_manifest.py` 2026-range: 114,771 shards, 37,477 reemit_empty + 6,041 reemit_failed, CF-11 reclassify. **Full-corpus = VM job** (see "remaining for FULL migration")                                         |
+| ③ 4-state preflight every svc IS→exec                        | ✅                                | MTDS/MDPS/features 4-state-aware (`dependency_checker`, `manifest_window_guard`+GAP-4); strategy `manifest_allocation_guard`; execution N/A (signals, not candles)                                                          |
+| ④ Empty/partial honest (zero-vol/NaN/last-price) batch+live  | ✅                                | MDPS `ohlcv_passthrough`/`tbbo_adapter`/`trades_adapter` (honest empty→record_empty typed; open-no-trade→last-price-carry o=h=l=c=prev_close vol=0; NaN-OHLC only where by-design for quote data; batch=live)               |
+| ⑤ Read/write paths post-migration                            | ✅                                | UAC `build_tradfi_partition_path(pipeline_mode)` + features `gcs_reader` pm-aware + mtds byte-identity guard + canonical migrator                                                                                           |
+| ⑥ IS/UAC guardrail vs instruments that can't exist           | ✅                                | `market-tick-data-service/.../engine/tradfi_catalog_reader.py` reads IS `instruments-store-tradfi`, EXCLUDES `{expired,delisted}` + out-of-availability-window per date, feeds orchestrator (universe=IS, not a seed)       |
+| ⑦ deployment-api/UI could-exist num/denom + pending-backfill | ✅ **DONE** (UI@846c7c67, PR #20) | turbo venue card now renders a distinct "pending backfill" (`expected_unattempted_pending_fetch`) badge; API unchanged. pw:L2 literal `tests/smoke/` ✅ (UI@61488c8b) + Vitest regression; canvas CI native-build unblocked |
 
 ### ⑦ — THE ONE THING TO FIX (deployment-UI; API needs NO change)
 
@@ -621,19 +621,24 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
       **chromium playwright `environment-mode-invariants.spec.ts` ✅** · 272 test files / coverage 49.53%≥40% · build
       ✅). Regression guard = 2 Vitest widgets specs (6 tests; the wiring spec renders the REAL `DataStatusSectionTurbo`
       and asserts the badge from turbo `capture_status_counts` — fails if the `<CaptureStatusBuckets/>` wiring is
-      reverted). **pw:L2 nuance (honest)**: the literal `npx playwright test --project=chromium tests/smoke/` is
-      structurally unsatisfiable in this repo (`tests/smoke/` is empty and sits OUTSIDE playwright
-      `testDir: ./tests/e2e`) — the chromium-playwright evidence is the gate's `environment-mode-invariants.spec.ts`
-      pass; the change-specific regression is the Vitest widgets spec (an allowed `tests/widgets/` guard). See the P3
-      follow-up below for the dedicated live-turbo-view e2e.
-- [ ] [TEST][UI] P3. **⑦ follow-up — dedicated live-turbo-view playwright e2e (NICE-TO-HAVE).** Add a chromium e2e under
-      `tests/e2e/` that `page.route`-mocks `/api/data-status/turbo` with a venue carrying
-      `capture_status_counts.expected_unattempted_pending_fetch>0`, drives the devops → Data Status →
-      market-tick-data-service turbo view, and asserts `[data-testid="pending-backfill-bucket"]` renders end-to-end.
-      Deferred because the turbo **results** view renders empty in pure mock mode (the UI turbo mock fallback returns
-      `{categories:{}}`), so the e2e needs the route-mock + correct turbo-service binding; the component wiring is
-      already covered by the Vitest wiring spec above. Repo: **unified-trading-system-ui**. parent_epic:
-      mtds_mdps_master. Provenance: slot-6 2026-06-04 ⑦ session.
+      reverted). **pw:L2 caveat — NOW RESOLVED (slot-6 2026-06-04, unified-trading-system-ui@61488c8b):** the literal
+      `npx playwright test --project=chromium tests/smoke/` was previously unsatisfiable (`tests/smoke/` empty + outside
+      `testDir`); fixed by (a) widening the chromium project to `testDir: ./tests` + `testMatch: [e2e, smoke]` (collects
+      0 vitest files), (b) fixing the baseURL/webServer 3000→3100 mismatch + self-starting the mock server, (c)
+      enriching the mock-handler `/api/data-status/turbo` with `capture_status_counts` so the bucket renders in mock
+      mode, (d) excluding `tests/smoke/**` from vitest. **`tests/smoke/data-status-pending-backfill.smoke.spec.ts` now
+      passes (`playwright test --project=chromium tests/smoke/` → 1 passed)** — a real chromium e2e asserting the badge
+      in the live devops turbo view. So pw:L2 is satisfied by BOTH the gate's `environment-mode-invariants` AND this
+      dedicated smoke. (Separately fixed the pre-existing CI `pnpm install` failure: removed the vestigial
+      `canvas@2.11.2` dep — never imported, vitest uses happy-dom not jsdom — which was failing the runner's native
+      build (`pkg-config     pixman-1 not found`); repo-wide unblock, no workflow edits.)
+- [x] ✅ [TEST][UI] P3. **⑦ follow-up — dedicated live-turbo-view playwright e2e — DONE (slot-6 2026-06-04,
+      unified-trading-system-ui@61488c8b).** `tests/smoke/data-status-pending-backfill.smoke.spec.ts` drives the devops
+      → Data Status turbo view (`serviceName="market-tick-data-service"` at `app/(ops)/devops/page.tsx`) and asserts
+      `[data-testid="pending-backfill-bucket"]` renders end-to-end; `playwright test --project=chromium tests/smoke/` →
+      1 passed. The turbo-empty-in-mock-mode problem was fixed at the SOURCE (mock-handler now serves
+      `capture_status_counts`) rather than via per-test route-mocks, so the bucket also shows in mock-mode dev. Repo:
+      **unified-trading-system-ui**. parent_epic: mtds_mdps_master. Provenance: slot-6 2026-06-04 ⑦ session.
 
 ## Success criteria
 
