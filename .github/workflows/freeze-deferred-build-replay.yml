@@ -1,0 +1,158 @@
+name: freeze-deferred-build-replay
+
+# Defer-and-replay for change-freeze-blocked prod builds (cicd_contract_hardening § "freeze defer-and-replay").
+#
+# WHY: cloud-build-router.yml builds prod images on `repository_dispatch: qg-passed`. When a change-freeze
+# window is active (e.g. ECB rate decision), the freeze-check job blocks the build and route-build is skipped
+# — and because repository_dispatch payloads are NOT replayable, the qg-passed is DROPPED, leaving the repo
+# without a prod image until a brand-new qg-passed happens to fire. cloud-build-router now persists each
+# freeze-blocked payload as a `deferred-build-*` artifact (its defer-on-freeze job). THIS workflow drains
+# those artifacts once the freeze lifts and re-dispatches qg-passed, so the deferred builds run themselves —
+# no manual re-trigger.
+#
+# Self-gating: it inlines a PROD_DEPLOY freeze check (intentionally NON-failing — unlike the canonical
+# change-freeze-check.yml which exit-1s on the prod-deploy path; the canonical CSV at
+# plans/ops/change-freeze-calendar.csv remains the SSOT for window definitions). If still frozen it no-ops
+# quietly (no ci-failures noise every tick); only when the window has lifted does it replay. Re-dispatching
+# while frozen would just get re-blocked + re-deferred into a loop, so the gate is required.
+#
+# Idempotent: each artifact is DELETED immediately after its payload is re-dispatched, so a build replays
+# exactly once. dry_run lists what WOULD replay without dispatching or deleting.
+
+on:
+  schedule:
+    - cron: "*/15 * * * *" # drain shortly after any freeze window lifts
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List deferred builds that WOULD replay, without dispatching or deleting"
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: read
+  actions: write # delete drained artifacts
+
+concurrency:
+  group: freeze-deferred-build-replay
+  cancel-in-progress: false
+
+jobs:
+  replay:
+    runs-on: ubuntu-latest
+    outputs:
+      replayed_count: ${{ steps.drain.outputs.replayed_count }}
+    steps:
+      - name: Checkout PM (freeze calendar)
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            plans/ops/change-freeze-calendar.csv
+
+      - name: Am I in a PROD_DEPLOY freeze window now? (non-failing — SSOT logic mirrors change-freeze-check.yml)
+        id: freeze
+        shell: bash
+        run: |
+          set -uo pipefail
+          CALENDAR="plans/ops/change-freeze-calendar.csv"
+          FROZEN="false"; REASON=""
+          if [ -f "$CALENDAR" ]; then
+            NOW_EPOCH=$(date -u +%s)
+            NOW_TIME=$(date -u +"%H:%M")
+            BLOCKFILE="$(mktemp)"
+            tail -n +2 "$CALENDAR" | while IFS=, read -r window_id event_name event_type recurrence start_utc end_utc dst_note block_autonomous block_prod_deploy affects_venues notes; do
+              [ -z "$window_id" ] && continue
+              [ "$block_prod_deploy" = "true" ] || continue
+              MATCH="false"
+              if [[ "$start_utc" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T ]]; then
+                S=$(date -u -d "$start_utc" +%s 2>/dev/null || echo 0)
+                E=$(date -u -d "$end_utc" +%s 2>/dev/null || echo 0)
+                if [ "$NOW_EPOCH" -ge "$S" ] && [ "$NOW_EPOCH" -le "$E" ]; then MATCH="true"; fi
+              elif [[ "$start_utc" =~ ^[0-9]{2}:[0-9]{2}$ ]]; then
+                if { [[ "$NOW_TIME" > "$start_utc" ]] || [[ "$NOW_TIME" == "$start_utc" ]]; } && [[ "$NOW_TIME" < "$end_utc" ]]; then MATCH="true"; fi
+                if [[ "$start_utc" > "$end_utc" ]]; then
+                  if [[ "$NOW_TIME" > "$start_utc" ]] || [[ "$NOW_TIME" == "$start_utc" ]] || [[ "$NOW_TIME" < "$end_utc" ]]; then MATCH="true"; fi
+                fi
+              fi
+              if [ "$MATCH" = "true" ]; then
+                printf '%s' "$event_name ($window_id): $start_utc to $end_utc UTC" > "$BLOCKFILE"
+                break
+              fi
+            done
+            if [ -s "$BLOCKFILE" ]; then FROZEN="true"; REASON="$(cat "$BLOCKFILE")"; fi
+            rm -f "$BLOCKFILE"
+          fi
+          echo "frozen=$FROZEN" >> "$GITHUB_OUTPUT"
+          echo "reason=$REASON" >> "$GITHUB_OUTPUT"
+          if [ "$FROZEN" = "true" ]; then
+            echo "::notice::PROD_DEPLOY freeze still active ($REASON) — deferring replay to a later tick"
+          else
+            echo "::notice::No active PROD_DEPLOY freeze — draining any deferred builds"
+          fi
+
+      - name: Drain deferred-build artifacts → re-dispatch qg-passed
+        id: drain
+        if: steps.freeze.outputs.frozen != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          DRY_RUN: ${{ inputs.dry_run == false && 'false' || (github.event_name == 'schedule' && 'false' || 'true') }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          # On a scheduled tick we always replay; manual dispatch honours dry_run (default true).
+          echo "dry_run=$DRY_RUN"
+          ARTS=$(gh api --paginate "repos/${OWNER}/unified-trading-pm/actions/artifacts" \
+            --jq '.artifacts[] | select(.name | startswith("deferred-build-")) | select(.expired == false) | "\(.id)\t\(.name)"' 2>/dev/null || true)
+          if [ -z "$ARTS" ]; then
+            echo "No deferred-build artifacts to replay."
+            exit 0
+          fi
+          COUNT=0
+          while IFS=$'\t' read -r ART_ID ART_NAME; do
+            [ -z "$ART_ID" ] && continue
+            echo "── deferred artifact: $ART_NAME (id=$ART_ID)"
+            TMP="$(mktemp -d)"
+            if ! gh api "repos/${OWNER}/unified-trading-pm/actions/artifacts/${ART_ID}/zip" > "$TMP/a.zip" 2>/dev/null; then
+              echo "  WARN: download failed — skipping"; continue
+            fi
+            unzip -o -q "$TMP/a.zip" -d "$TMP" || { echo "  WARN: unzip failed — skipping"; continue; }
+            PAYLOAD_FILE="$(find "$TMP" -name 'payload.json' | head -1)"
+            [ -z "$PAYLOAD_FILE" ] && { echo "  WARN: no payload.json — skipping"; continue; }
+            REPO=$(jq -r '.repo' "$PAYLOAD_FILE"); BRANCH=$(jq -r '.branch' "$PAYLOAD_FILE")
+            VERSION=$(jq -r '.version' "$PAYLOAD_FILE"); SHA=$(jq -r '.commit_sha' "$PAYLOAD_FILE")
+            RTYPE=$(jq -r '.repo_type' "$PAYLOAD_FILE")
+            echo "  replay qg-passed: repo=$REPO branch=$BRANCH version=$VERSION type=$RTYPE"
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  DRY-RUN: would re-dispatch qg-passed + delete artifact $ART_ID"
+            else
+              if gh api -X POST "repos/${OWNER}/unified-trading-pm/dispatches" \
+                   -f "event_type=qg-passed" \
+                   -F "client_payload[repo]=$REPO" -F "client_payload[branch]=$BRANCH" \
+                   -F "client_payload[version]=$VERSION" -F "client_payload[commit_sha]=$SHA" \
+                   -F "client_payload[repo_type]=$RTYPE" -F "client_payload[replayed_from_freeze]=true" 2>/dev/null; then
+                echo "  re-dispatched qg-passed for $REPO"
+                gh api -X DELETE "repos/${OWNER}/unified-trading-pm/actions/artifacts/${ART_ID}" 2>/dev/null \
+                  && echo "  deleted artifact $ART_ID (replay-once)" || echo "  WARN: artifact delete failed (may replay again)"
+                COUNT=$((COUNT + 1))
+              else
+                echo "  WARN: re-dispatch failed for $REPO — artifact kept for next tick"
+              fi
+            fi
+          done <<< "$ARTS"
+          echo "replayed_count=$COUNT" >> "$GITHUB_OUTPUT"
+          echo "=== freeze-deferred replay: $COUNT build(s) re-dispatched (dry_run=$DRY_RUN) ==="
+
+  notify:
+    name: Slack — freeze-deferred replay
+    needs: [replay]
+    if: always() && needs.replay.outputs.replayed_count != '0' && needs.replay.outputs.replayed_count != ''
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: "freeze-deferred-build-replay re-dispatched ${{ needs.replay.outputs.replayed_count }} freeze-deferred prod build(s) after the freeze window lifted"
+      severity: "INFO"
+      conclusion: ${{ needs.replay.result }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit

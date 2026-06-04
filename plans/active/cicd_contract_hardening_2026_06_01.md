@@ -358,6 +358,22 @@ self-recovers. Done:
       `tab/ikennaigboaka/1` onto LDR (own bootstrap-prek commit replayed, slot-3 commit-identity-hook commit absorbed),
       force-with-lease pushed; slot clean, commit FF-mirroring to LDR.
 
+**Freeze defer-and-replay (gap found + fixed 2026-06-04):**
+
+- [x] ✅ [SCRIPT] P1. **Change-freeze BLOCKED prod builds were DROPPED, not requeued.** During the ECB Jun freeze
+      (`ECB_2026_06`, 2026-06-04 12:15–13:30 UTC, `block_prod_deploy=true`) the cascade's `qg-passed` events hit
+      `cloud-build-router.yml`; `freeze-check` correctly blocked them (conclusion=failure) but `route-build` was skipped
+      and the `repository_dispatch` payload was **dropped** — 6 prod image-builds (12:19–12:46 UTC) lost, recoverable
+      only by a brand-new `qg-passed`. **Fix (defer-and-replay):** (1) cloud-build-router gains a `defer-on-freeze` job
+      (runs only when blocked) that persists the `{repo,branch,version,commit_sha,repo_type}` payload as a
+      `deferred-build-*` artifact; (2) new **`freeze-deferred-build-replay.yml`** cron (every 15 min) — inlines a
+      NON-failing PROD_DEPLOY freeze check (canonical window SSOT stays `change-freeze-calendar.csv`), and once the
+      window lifts drains the artifacts → re-dispatches `qg-passed` → deletes each artifact (replay-once). `dry_run`
+      lists without dispatching; Slack only on actual replays (no per-tick noise). All additive — zero change to the
+      existing freeze-check/route-build prod path. repo: unified-trading-pm. _Note: the 6 builds dropped BEFORE this
+      landed have no persisted payload; they re-build on their repos' next `qg-passed` (or a one-off manual
+      cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops._
+
 Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT machinery):
 
 - [ ] [TEST] P1. **features-service staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports

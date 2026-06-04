@@ -57,6 +57,51 @@ jobs:
       check_type: PROD_DEPLOY
     secrets: inherit
 
+  # When a change-freeze blocks this prod build, the qg-passed payload would
+  # otherwise be DROPPED (route-build is skipped and repository_dispatch payloads
+  # are not replayable) — leaving the repo without a prod image until a brand-new
+  # qg-passed fires. Persist the payload as an artifact so freeze-deferred-build-replay.yml
+  # can re-dispatch it once the freeze window lifts (defer-and-replay, not drop).
+  # SSOT: cicd_contract_hardening_2026_06_01 § "freeze defer-and-replay".
+  defer-on-freeze:
+    needs: freeze-check
+    if: needs.freeze-check.outputs.blocked == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Persist deferred qg-passed payload
+        env:
+          CP_REPO: ${{ github.event.client_payload.repo }}
+          CP_BRANCH: ${{ github.event.client_payload.branch }}
+          CP_VERSION: ${{ github.event.client_payload.version }}
+          CP_SHA: ${{ github.event.client_payload.commit_sha }}
+          CP_TYPE: ${{ github.event.client_payload.repo_type }}
+          DEFER_REASON: ${{ needs.freeze-check.outputs.reason }}
+          DEFER_RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          mkdir -p _deferred
+          # values passed via env (not ${{ }} in the script body) — no code-injection via payload
+          python3 - > _deferred/payload.json <<'PYEOF'
+          import json, os
+          print(json.dumps({
+              "repo": os.environ["CP_REPO"],
+              "branch": os.environ["CP_BRANCH"],
+              "version": os.environ["CP_VERSION"],
+              "commit_sha": os.environ["CP_SHA"],
+              "repo_type": os.environ["CP_TYPE"],
+              "deferred_reason": os.environ.get("DEFER_REASON", ""),
+              "deferred_run_id": os.environ.get("DEFER_RUN_ID", ""),
+          }))
+          PYEOF
+          echo "Deferred (freeze-blocked) build payload:"
+          cat _deferred/payload.json
+      - name: Upload deferred-build artifact (drained by freeze-deferred-build-replay.yml)
+        uses: actions/upload-artifact@v4
+        with:
+          name: deferred-build-${{ github.event.client_payload.repo }}-${{ github.event.client_payload.version }}-${{ github.run_id }}
+          path: _deferred/payload.json
+          retention-days: 7
+
   route-build:
     needs: freeze-check
     if: needs.freeze-check.outputs.blocked != 'true'
