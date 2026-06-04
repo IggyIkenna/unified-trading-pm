@@ -343,8 +343,18 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       build its catalog from the IS availability index at runtime (the exact `read_availability_index`→`{venue:[ids]}`
       pattern deployment-api now uses in `_build_cefi_is_instruments_provider`, eliminating the `--catalog-path`
       dependency). A drafted `expected_universe_cefi_scheduler.tf` (Cloud Run Job + weekly Scheduler, env-tiered buckets
-      per `manifest_consolidator_scheduler.tf`) was NOT committed pending this decision. **Operator: pick (a) or (b)
-      before scheduling.**
+      per `manifest_consolidator_scheduler.tf`) was NOT committed pending this decision. **RESOLVED 2026-06-04 →
+      SUPERSEDED-BY `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`** (operator decision: the
+      real fix is a proper, self-refreshing instrument catalogue rolled up from the per-date `by_date/` definitions —
+      foundation-level, all asset groups, gates the MTDS migration `--apply`). This cefi cron becomes a thin wrapper
+      once that plan's Phase 3 lands; tracked there, no longer a cefi-solo item.
+- [ ] [CODE] P3. **deployment-api per-date denominator refinement (separate follow-up, NOT migration-blocking).** The
+      cefi coverage denominator (deployment-api@d55bcb6) reads ONE current IS availability snapshot
+      (`read_availability_index`), not the per-date `instrument_availability/by_date/` definitions — so it is the
+      latest-known universe, NOT per-date point-in-time-correct (the universe as-of each historical date). Acceptable
+      for a coverage denominator (and a big improvement over the 21/10 MVP seed), but if data-status should be
+      time-sliced per historical date, switch the provider to read the per-date `by_date/` definitions. Repo:
+      deployment-api. Depends on the proper catalogue plan above for the per-date source contract.
 
 **VERDICT:** ⑥ **PARTIAL** — IS-derived per-date capture + UAC combo gate + execution preflight are real + date-correct;
 the residual holes (date-blind MTDS fallback un-caught by its QG, no strategy IS-existence check, swallowed Deribit live
