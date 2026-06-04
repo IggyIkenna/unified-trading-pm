@@ -283,10 +283,13 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       majors exist every operational date), BUT it is date-BLIND (ignores venue-launch/delist per date) + bypasses the
       IS SSOT. **Fix:** gate the fallback behind a batch-bootstrap-only flag (never the live path); in normal operation,
       when IS is missing → honest-skip / `record_failed(EXPECTED_*)` rather than substitute a hardcoded universe.
-- [ ] [SCRIPT] P2. **unified-trading-pm QG blind spot** — `scripts/qg/no_hardcoded_venue_universe.sh:22-40` scans only
-      `cli/handlers/` for `*_TOKENS/_MARKETS/_PAIRS/_UNIVERSE` names, so the `engine/`-resident
-      `_VENUE_WIRE_SYMBOL_FALLBACK` dict above is INVISIBLE to the gate. **Fix:** extend the scan to `engine/` + the
-      `*_FALLBACK` / wire-symbol-dict pattern (PM template — rollout to all repos).
+- [x] ✅ [SCRIPT] P2. **unified-trading-pm QG blind spot — FIXED (pm@c04f7760b + mtds@f2c6ada0).** Was: the QG scanned
+      only `cli/handlers/`, so the `engine/`-resident `_VENUE_WIRE_SYMBOL_FALLBACK` dict was INVISIBLE to the gate.
+      **DONE:** `no_hardcoded_venue_universe.sh` now scans BOTH `cli/handlers/` AND `engine/`, adds the
+      `_WIRE_SYMBOL_FALLBACK` / `_VENUE_*_FALLBACK` patterns, and an inline `# qg-allow: venue-universe-fallback <reason>`
+      allowlist for a deliberately-gated fallback. Verified: the extended scan flags the unmarked dict (exit 1) and
+      passes once marked. mtds@f2c6ada0 carries the sanction marker on `_VENUE_WIRE_SYMBOL_FALLBACK` (gated behind
+      `MTDS_ALLOW_HARDCODED_UNIVERSE_FALLBACK`); any NEW unmarked hardcoded-universe dict in engine/ now fails the gate.
 - [x] ✅ [CODE] P2. **strategy-service — IS instrument-existence guardrail ADDED (strategy@fdb86a54, QG exit 0).** Was:
       `preflight.py` (venue auth+balance only) + `risk_preflight_gate.py` (risk rules only) never validated a cefi
       instrument EXISTS in IS for the date before emitting an instruction → a config naming a delisted/non-existent cefi
