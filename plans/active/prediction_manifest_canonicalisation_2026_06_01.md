@@ -340,9 +340,12 @@ be fixed first if run on a VM.
       below):** re-emit of the EXISTING `_index`'s `empty_confirmed`/`attempted_failed` rows that have NO backing object
       (a pure object-scan loses them) + within-bounds-empty classification + the IS/MTDS write-path audit — at parity
       with cefi E5's deferred CF-11 enhancements. Build-spec reference retained below.
-- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): **REFERENCE: cefi E5 DONE
-      (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional `pipeline_mode=` regex segment,
-      DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
+- [x] ✅ [DATA] P2. E5 build-spec reference — **SUPERSEDED by the captured-atom E5 rebuild DONE (mtds@d1f1317d) +
+      pipeline_mode-SSOT unification (mtds@ea2c2d50) above; closed as reference-only (slot-5 2026-06-04).** The actual
+      `rebuild_prediction_manifest.py` was rewritten to the CORRECTION spec (re-computes cqg per-cid, batch=live atom);
+      this row is retained below only as the historical build-spec breadcrumb, no remaining work. **REFERENCE: cefi E5
+      DONE (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional `pipeline_mode=` regex
+      segment, DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
       `derive_pipeline_mode_for_row`). Prediction differs: its CANONICAL*PATH_RE must be **REWRITTEN** to the
       post-migrator form (verified 2026-06-02 via `candidate_parquet_paths`):
       `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=prediction/venue={V}/instrument_type={IT}/data_type={DT}/{cid}.parquet`
@@ -764,10 +767,16 @@ venue-override question) + the operator-gated migration walk:**
       otherwise has data). ROLLOUT = extend this same `record_expected_unattempted` propagation to seed
       per-`condition_id` from the IS lifecycle universe (active-on-day-D minus captured `observed_clusters`) — reuse the
       existing helper + `_load_market_lifecycle_for_date`, don't invent a new mechanism.
-- [ ] [CODE] P2. **⑥ minor — phantom auditor prediction bucket is the LEGACY long-form name** (slot-5 2026-06-04):
-      `reconcile_phantom_manifest_rows_all.py:85` maps `"prediction": ("market-data-tick-prediction", None)` (the
-      L6-delete legacy bucket), not env-tiered `market-data-tick-pred-prd`. Resolve via `resolve_bucket_name` so the
-      phantom audit runs against the canonical bucket post-migration. Repo: instruments-service.
+- [x] ✅ [CODE] P2. **⑥ phantom auditor prediction bucket — REFUTED / ALREADY-CORRECT (slot-5 audit 2026-06-04).** The
+      finding was a grep-then-conclude misread: `reconcile_phantom_manifest_rows_all.py:85` maps
+      `"prediction": ("market-data-tick-prediction", None)`, but `market-data-tick-prediction` is a
+      **cloud-providers.yaml config KEY** (line 170) whose template VALUE is the **canonical**
+      `market-data-tick-pred-${DEPLOYMENT_ENV_SHORT}-${pid}` — NOT the legacy long-form
+      `market-data-tick-prediction-{pid}` (no env token). The auditor already resolves via
+      `resolve_bucket_name(kind="market-data-tick-prediction")` (line 805). **Verified by running the resolver** (slot-5
+      2026-06-04): `resolve_bucket_name(cloud='gcp', kind='market-data-tick-prediction', asset_group=None)` →
+      `market-data-tick-pred-prd-central-element-323112` (the canonical bucket the MTDS reader/MDPS gate use). No change
+      needed; the phantom audit already targets the canonical post-migration bucket. Repo: instruments-service.
 
 ## Success criteria
 
