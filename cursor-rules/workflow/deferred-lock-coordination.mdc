@@ -1,0 +1,79 @@
+---
+description: "When dependency lock fixes are interdependent (e.g., duplicate key blocks cbor2 regen), coordinate as a single atomic change"
+globs: ["*/pyproject.toml", "*/uv.lock", "scripts/*lock*.sh"]
+alwaysApply: false
+priority: 70
+tags: [dependencies, workflow, coordination, critical]
+---
+
+# Deferred Lock Coordination — Atomic Dependency Fixes
+
+## Rule
+
+When a uv lock fix requires resolving **multiple pre-existing issues** (e.g., removing a duplicate TOML key that unblocks regenerating a corrupted lock entry), do NOT commit the first fix in isolation. Instead:
+
+1. **Identify all blockers** — remove duplicate key → regen → hits cbor2 corruption
+2. **Plan as atomic change** — fix both (2a) + (2b) in a single `uv lock --upgrade` cycle
+3. **Defer if out-of-scope** — if (2b) requires cross-repo dep-infra work, document it as a **named successor** tied to an epic
+4. **Restore to clean state** — revert any in-progress fixes to avoid leaving the tree in a partially-fixed state
+
+## Why
+
+- Committing (2a) forces a re-lock that exposes (2b), causing the commit to fail CI
+- A "partial fix" left uncommitted confuses future agents and blocks progress
+- Cross-repo dependency coordination requires explicit planning and async hand-off
+
+## Pattern
+
+### Discovery Phase
+
+```
+Found: deployment-service/pyproject.toml has duplicate [tool.uv.sources.unified-api-contracts] key
+→ Remove it + try `uv lock` locally
+→ Hits cbor2 "missing source" corruption on the lock regen
+→ Revert both changes (not committing either)
+```
+
+### Tracking in Plan
+
+```markdown
+- [ ] [DEPS] P2. **Fix deployment-service uv blockers (2a duplicate key + 2b corrupt cbor2).**
+      Recipe: remove duplicate, clean regen resolving cbor2 source ambiguity, verify QG green.
+      Repo: deployment-service. Owner: cicd/dep-security epic. **Blocked:** (2a) + (2b) must fix together.
+      Cold-start: [issue-plan-link].
+```
+
+### Successor Pattern
+
+When the primary repo work is out-of-scope:
+
+```markdown
+- [ ] [CICD] P1. **Successor: resolve deployment-service + cicd/dep-infra debt.**
+      After (2a) upstream fix lands: remove ignore-vuln CVE flags + test vcrpy green.
+      Owner: cicd/dep-security epic. (Original cicd issue: [link].)
+```
+
+## Integration Points
+
+- **QG gate**: `uv.lock` sync check passes (doesn't force regenerate), so partial fixes can hide
+- **CI smoke**: `uv lock --upgrade-package` may force regenerate and fail — use to detect hidden blockers
+- **Local workflow**: always test `uv lock --upgrade` before committing lock changes (not just `uv sync`)
+
+## Anti-Patterns
+
+- ❌ Commit (2a) alone, leaving (2b) as "someone else's problem" — tree is broken, CI fails
+- ❌ Leave an in-progress fix reverted but undocumented — future agent repeats the same discovery
+- ❌ Defer without naming a successor — no way to track when the blocker is unblocked
+- ❌ Cross-repo work without coordinating the epic/owner — work gets lost between repos
+
+## DO
+
+- ✅ Test `uv lock --upgrade` locally before any commit (catches hidden blockers early)
+- ✅ When blocked, revert to clean LDR and document both (2a) and (2b) in the plan
+- ✅ Name the successor epic/plan that will resolve the cross-repo work
+- ✅ Leave the tree in a CI-passing state — no partially-fixed commits
+
+## Reference
+
+- Plan: `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` (deployment-service blockers)
+- SSOT: `codex/06-coding-standards/quality-gates.md` (uv lock gate behavior)

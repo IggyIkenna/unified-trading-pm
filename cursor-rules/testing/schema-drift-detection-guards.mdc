@@ -1,0 +1,126 @@
+---
+description: "Manifest readers must detect and warn on v8/v9 schema mixing or missing required columns"
+globs: ["*/manifest_*.py", "*/dependency_checker.py", "*_guard.py"]
+alwaysApply: false
+priority: 75
+tags: [testing, manifest, data-correctness, validation, critical]
+---
+
+# Schema Drift Detection Guards for Manifest Processing
+
+## Rule
+
+Services reading manifest data (features-service, strategy-service, market-data-processing-service) MUST detect schema version drift at manifest-read time and WARN when:
+
+1. **Mixed v8/v9 in one read** — some rows `schema_version=8`, others `schema_version=9`
+2. **Missing required v9 columns** — `schema_version=9` rows lacking `asset_group` or `source` columns
+3. **Schema-column mismatch** — actual parquet dtype differs from expected v9 schema
+
+This prevents silent data misinterpretation when old and new codebases operate on the same manifest.
+
+## Pattern
+
+### Implementation in Service Manifest Reader
+
+```python
+# In features-service/manifest_window_guard or equivalent
+def _warn_on_v9_schema_drift(self, manifest_df):
+    """
+    Detect and warn on v8/v9 schema mixing or missing v9 columns.
+    Raises if conditions indicate corruption, warns if data is transitional.
+    """
+    if manifest_df.empty:
+        return
+
+    schema_versions = manifest_df['schema_version'].unique()
+
+    # Check 1: Mixed schema versions
+    if len(schema_versions) > 1:
+        v8_count = (manifest_df['schema_version'] == 8).sum()
+        v9_count = (manifest_df['schema_version'] == 9).sum()
+        logger.warning(
+            f"Mixed manifest schema versions: {v8_count} v8 rows, {v9_count} v9 rows. "
+            f"Reader expects uniform schema. (Transitional state OK until v8 fully drained.)"
+        )
+
+    # Check 2: v9-specific columns missing (only warn on v9 rows)
+    v9_rows = manifest_df[manifest_df['schema_version'] == 9]
+    if not v9_rows.empty:
+        required_v9_cols = ['asset_group', 'source', 'pipeline_mode', 'available_at', 'capture_status']
+        missing_cols = [c for c in required_v9_cols if c not in v9_rows.columns]
+        if missing_cols:
+            raise ManifestSchemaError(
+                f"v9 rows missing required columns: {missing_cols}. "
+                f"Check writer: {v9_rows.columns.tolist()}"
+            )
+```
+
+### Test Pattern
+
+```python
+def test_warn_on_mixed_v8_v9_schema(self):
+    """
+    When a manifest read returns both v8 and v9 rows,
+    the guard MUST log a warning (not silently proceed).
+    """
+    mixed_manifest = pd.DataFrame({
+        'schema_version': [8, 8, 9, 9],
+        'asset_group': [None, None, 'cefi', 'defi'],
+        'source': [None, None, 'tardis', 'databento'],
+        ...
+    })
+
+    with self.assertLogs(level='WARNING') as cm:
+        self._warn_on_v9_schema_drift(mixed_manifest)
+
+    self.assertIn('Mixed manifest schema versions', cm.output[0])
+    self.assertIn('2 v8 rows, 2 v9 rows', cm.output[0])
+
+def test_raise_on_v9_missing_asset_group_column(self):
+    """
+    When v9 rows lack the asset_group column,
+    the guard MUST raise (this is an error, not a warning).
+    """
+    incomplete_v9 = pd.DataFrame({
+        'schema_version': [9, 9],
+        'source': ['tardis', 'tardis'],
+        # asset_group MISSING
+        ...
+    })
+
+    with self.assertRaises(ManifestSchemaError) as cm:
+        self._warn_on_v9_schema_drift(incomplete_v9)
+
+    self.assertIn("v9 rows missing required columns: ['asset_group']", str(cm.exception))
+```
+
+## Placement
+
+- **features-service**: call in `manifest_window_guard()` after `read_availability_index()`
+- **market-data-processing-service**: call in `dependency_checker()` after manifest read
+- **strategy-service**: call in `manifest_allocation_guard()` (TBD)
+
+## Why
+
+- **Silent data loss** — if a v9 reader doesn't see `asset_group`, it may skip rows or cross-asset groups
+- **Transition safety** — during v8→v9 migration, mixed schemas are temporary; explicit warnings prevent surprises
+- **Drift detection** — if a writer regresses to v8-only, the warning catches it before downstream corruption
+
+## Anti-Patterns
+
+- ❌ Silently skip v8 rows when v9 is expected (hides data loss)
+- ❌ Warn but continue when v9 columns are MISSING (should raise; data is corrupt)
+- ❌ Only warn, never test the warning (drift detection is useless without regression tests)
+- ❌ Inconsistent warnings across services (each reader must check the same conditions)
+
+## DO
+
+- ✅ Warn on mixed v8/v9 (transitional state is OK temporarily)
+- ✅ Raise on missing v9 columns (corruption indicator — must be explicit)
+- ✅ Write a unit test for each guard condition
+- ✅ Log the actual columns found + required columns in error messages (helps debug)
+
+## Reference
+
+- Plan: `plans/active/downstream_services_manifest_canonicalisation_2026_06_01.md` (GAP-4)
+- SSOT: `codex/02-data/availability-manifest-and-data-status.md` (manifest schema v9)
