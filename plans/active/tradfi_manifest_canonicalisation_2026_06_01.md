@@ -65,10 +65,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > 3. **`available_at` reclassified** to an E4 parquet-layer verify (not a rebuild/manifest concern) — see E5 STATUS
 >    todo.
 >
-> **BLOCKER (both repos): dep-tier gate** — mtds needs UTL's `record_zero_rows`, which is on LDR but **NOT on staging**
-> (verified 0/staging). Skipping the gate would break mtds on staging. **Slot-6 next step**: once the LDR→staging
-> automation drains UTL+UAC (semver-agent on quality-gates-v2), `git merge`/cherry-pick the handoff branch + ship via
-> `quickmerge --agent` (mtds is QG-green; run the IS QG for the databento branch). Then flip the E5 + CF-11 todos.
+> **✅ RESOLVED — handoff fully landed + dep-tier blocker MOOT (slot-6 verified 2026-06-04).** The dep-tier gate is
+> cleared (`record_zero_rows` is now on `origin/staging`) AND the handoff branches were **superseded by later commits
+> already on LDR** — verified by `branch -r --contains` / content-grep: mtds E5+CF-11 landed via mtds@90aeb7dd /
+> @e6250b99 / @ce0a7d7a (`rebuild_tradfi_manifest.py` + `reemit_honest_absence_rows` + CF-11 reclassify +
+> `test_rebuild_tradfi_manifest_cf11.py` all on LDR); the IS databento state-threading fix landed (the
+> `raise RuntimeError` after classify+emit at `databento.py:825/849` is on LDR — bd1456aa's content, re-SHA'd through
+> quickmerge) + the cross-AG sibling IS@e2e008f0; UAC@0abbdf86 on LDR. So the stale
+> `origin/handoff/tradfi-e5-cf11-slot6` branches in mtds + IS carry NOTHING not on LDR — they are dead and may be
+> deleted. The E5 / CF-11 / IS-databento todos below are already ✅. No merge/cherry-pick action remains.
 
 > **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
 > `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** and glued
@@ -468,31 +473,58 @@ VM.
 > owner) should confirm + tick these — slot-5 is NOT marking them (cross-slot ownership). The actual full migration
 > run + E8 legacy-delete stay operator-gated regardless.
 
-- [ ] [DATA] P0. **Criterion 1+2 — migrator + rebuild DRY-RUNS done → mark them.** Both already executed (slot-6
-      2026-06-03, see E4 item above): `migrate_tradfi_to_v9_canonical.py --dry-run` = 5,305,520 objects / 0 err /
-      100,698 placeholders skipped; `rebuild_tradfi_manifest.py --dry-run` = 704,641 shards / 6 venues. ACTION: split
-      the E4 checkbox so the dry-run half can tick `- [x]` (full-VM run stays gated).
-- [ ] [DATA] P0. **Criterion 4 — read/write paths MATCH post-migration everywhere → CONFIRMED, mark it.** slot-5 audit
-      verified all surfaces use the identical `derive_pipeline_mode_for_row` →
-      `pipeline_mode=batch_*/asset_group=tradfi/` (path==manifest invariant): UAC `build_tradfi_partition_path`, live
-      MTDS writer (`orchestrator.py:991-1005`), MDPS candle writer (`get_processed_path` pipeline_mode= — the cross-AG
-      fix mdps@5e7f075 is on LDR), migrator `_canon_rel`, and `rebuild_tradfi_manifest`; readers dual-probe via
-      `candidate_parquet_paths`; the MTDS-mirror vs UAC-builder divergence is closed by the byte-identity test
-      (mtds@ce0a7d7a). ACTION: tick the path-correctness rows.
-- [ ] [CODE] P0. **Criterion 3 — pre-flight + empty/partial (zero-vol/NaN/last-price candles) batch+live → CONFIRMED
-      wired, mark it.** slot-5 audit verified: MDPS finalize-session represents an empty bin as **NaN-volume + prior-day
-      last-price carry-forward**, deterministic + **batch==live** (`tests/unit/test_batch_live_mode_parity.py` +
-      `test_finalize_session_grid_seed.py`); off-session via `market_state`; CF-11 honest-absence in
-      `rebuild_tradfi_manifest.py:241` (`reemit_honest_absence_rows`, trading-day empties → `attempted_failed`);
-      features-service delta_one `dependency_checker` reads the v9 `_index` (`read_availability_index` +
-      `UPSTREAM_DEPS` + `validate_can_run(asset_group=…)` incl. TRADFI); strategy-service `manifest_allocation_guard`.
-      ACTION: tick the preflight/honest-absence rows.
-- [ ] [TEST] P1. **Criterion 3 — the ONE genuine residual: a single END-TO-END batch+live confirmation** that a
-      zero-volume / NaN / off-session TradFi candle flows IS→MTDS→MDPS→features→strategy→execution correctly in BOTH
-      modes (the per-layer pieces are verified individually; what's not pinned is one e2e pass proving they compose — no
-      silent NaN-propagation / phantom-candle / divide-by-zero downstream). Add an e2e/integration test (or a documented
-      manual run) asserting the honest-absence row is consumed as absence (not data) end-to-end. Repos: e2e-testing (+
-      features/strategy if a consumer gap surfaces). parent_epic: mtds_mdps_master.
+- [x] ✅ [DATA] P0. **Criterion 1+2 — migrator + rebuild DRY-RUNS done — MARKED (slot-6 2026-06-04 re-audit).** Both
+      executed (see E4 item above): `migrate_tradfi_to_v9_canonical.py --dry-run` = 5,305,520 objects / 0 err / 100,698
+      placeholders skipped; `rebuild_tradfi_manifest.py --dry-run` = 704,641 shards / 6 venues. **Independently
+      re-verified vs LDR code** (fan-out Explore agent + file:line): migrator is dry-by-default + `--apply`, 3-layout
+      handling, 0-row placeholder guard, ThreadPoolExecutor + `gcs_copy_object` + `--workers/--start-date/--end-date`,
+      per-object try/except; rebuild stamps pipeline_mode+source+v9, `reemit_honest_absence_rows`, CF-11 trading-day
+      reclassify + `test_rebuild_tradfi_manifest_cf11.py`. Full-VM `--apply` stays operator-gated.
+- [x] ✅ [DATA] P0. **Criterion 4 — read/write paths MATCH post-migration everywhere — MARKED (slot-6 2026-06-04
+      re-audit).** Independently re-verified vs LDR: identical `derive_pipeline_mode_for_row` →
+      `pipeline_mode=batch_*/asset_group=tradfi/` across UAC `build_tradfi_partition_path(pipeline_mode)` (LEFT of
+      asset_group=), live MTDS writer (`orchestrator.py:1001-1005`), MDPS `get_processed_path`, migrator + rebuild;
+      readers dual-probe `candidate_parquet_paths`; mirror==UAC byte-identity test (mtds@ce0a7d7a) present + passing.
+- [x] ✅ [CODE] P0. **Criterion 3 — pre-flight + empty/partial (zero-vol/NaN/last-price candles) batch+live — MARKED
+      (slot-6 2026-06-04 re-audit + direct read).** Independently re-verified: MDPS `ohlcv_passthrough` empty→zero-row
+      `_make_empty_candle_output` (Path A) + open-no-trade→`o=h=l=c=prev_close, vol=0` (NO NaN OHLC; legacy 1440-NaN
+      DELETED) + CLOSED-bars-dropped; `tbbo_adapter` NaN-by-design for quote data + honest LOCF spread/mid;
+      `supports_prior_day_seed` single path; **batch==live parity test asserts identical columns + available_at +
+      record_captured** (`test_batch_live_mode_parity.py`). CF-11 `reemit_honest_absence_rows`; features delta_one
+      `dependency_checker` counts only `captured` (incl TRADFI); strategy `manifest_allocation_guard`. execution N/A
+      (signals, not candles).
+- [x] ✅ [TEST] P1. **Criterion 3 — the ONE genuine residual e2e batch+live confirmation — DONE (slot-6 2026-06-04,
+      strategy-service@0575be56, on tab→LDR).** Added `tests/unit/test_tradfi_honest_absence_batch_live_parity.py` (6
+      tests; ruff + basedpyright clean + 6/6 pass): asserts the honest-absence row is consumed as ABSENCE (not data) at
+      the strategy allocation seam against the REAL v9 `_index` row shape
+      (date/venue/data_type/asset_group/capture_status/schema_version/source/ pipeline_mode/available_at) across the
+      full 4-state matrix in BOTH modes — captured→proceed; off-session EXPECTED_WEEKEND empty_confirmed→skip-no-alert;
+      trading-day attempted_failed→skip + live-only alert; **batch≡live skip-parity proven for every state** (sole
+      mode-diff = live alert on attempted_failed). The full 7-layer httpx run is the documented manual run; this is the
+      durable regression guard. **Side-finding pinned + tracked** (see new P2 below): the 4th honest-absence state
+      `expected_unattempted` (pending-backfill) currently fail-opens→proceeds at this seam. Repo: strategy-service.
+      parent_epic: mtds_mdps_master. **STAGING-PROMOTION STATUS (slot-6 2026-06-04, not blocking this DONE):** the
+      commit is on tab→LDR (integration axis); the `quickmerge` LDR→staging promotion is BLOCKED-DEPENDENCY by the
+      STAGE-1.7 dep-tier gate (unified-trading-library + unified-api-contracts are MAIN_GREEN, not yet on staging —
+      fleet CICD-drain, not a tradfi blocker) → rides the staging-promotion automation once deps drain. Note:
+      strategy-service local full-QG also trips a **pre-existing** `uv lock --check` resolution conflict
+      (`starlette>=1.0.1` wanted vs UTL caps `<1.0.0`, "for a non-current environment") — environment/uv-version
+      artifact (base-service.sh hard-fails on non-pinned uv, soft-warns on pinned uv 0.10.8; the test's own
+      ruff/basedpyright/pytest are clean) — NOT introduced by this change. Cross-repo dep-alignment, owner =
+      vm-cross-cutting; flagged for the next strategy-service/UTL dep pass.
+- [ ] [CODE] P2. **strategy allocation guard treats `expected_unattempted` as fail-open→PROCEED (4th honest-absence
+      state not gated at the allocation seam)** (slot-6 finding 2026-06-04, while building the criterion-3 e2e).
+      DIAGNOSIS (both sides read): `strategy_service/manifest_allocation_guard.py::_classify_status` maps only
+      captured/empty_confirmed/attempted_failed; anything else (incl. `expected_unattempted`) → `"unknown"` → fail-open
+      → allocator PROCEEDS. features-service DOES emit `expected_unattempted` rows into the features manifest the guard
+      reads (`features_service/delta_one/cli/handlers/_expected_unattempted.py` → `record_expected_unattempted`), so the
+      state genuinely reaches this seam. So a pending-backfill / out-of-scope cell can be treated as "proceed" rather
+      than absence. **NOT unilaterally changed** — the guard inspects only `matching["capture_status"].iloc[0]` per
+      AG×date, so a blanket `expected_unattempted`→skip risks skipping an entire AG-date on a single out-of-scope
+      instrument (a real allocator-logic regression). Operator decision needed: (a) leave fail-open (current), (b) treat
+      `expected_unattempted`→`expected_gap` (skip-no-alert) AND refine the iloc[0] coarseness to a per-cell decision.
+      Current behaviour is PINNED by `test_expected_unattempted_fail_open_pinned` (a change-detector) so any future flip
+      is deliberate. Repo: strategy-service. parent_epic: mtds_mdps_master.
 
 ## 🤝 HANDOFF (slot-6 → next agent, 2026-06-04) — TradFi readiness: ⑦ UI DONE (UI@846c7c67, PR #20→staging); remaining = operator-gated full migration run
 
@@ -670,3 +702,13 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
       `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_tradfi` row-key/data_types
       match the tradfi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The
       mechanism + bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.
+      **SLOT-6 NOTE (2026-06-04, atom-alignment VERIFIED):** read
+      `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_tradfi` — it respects
+      available_from/available_to lifecycle (date<af → EXPECTED_INSTRUMENT_NOT_LISTED; date>at →
+      EXPECTED_INSTRUMENT_DELISTED; alive + no manifest row → `expected_unattempted`) and builds the row_key from
+      `(venue, chain="", data_type, instrument_type, instrument_id, league_id="", date)` = the tradfi per-instrument
+      captured atom. Logic CONFIRMED correct. **Remaining is genuinely VM + POST-MIGRATION gated**: `--apply-write`
+      hard-requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<tag>` (per-VM shard isolation, refuses locally) AND must
+      seed the v9 `_index` AFTER the canonical `--apply` migration (seeding the pre-migration v8 corpus would be
+      rewritten by the walk). So this rides post-migration on a VM — not a local task. Open work = catalog-parquet
+      build + VM `--apply-write` run + the IS-universe⊃manifest regression test.
