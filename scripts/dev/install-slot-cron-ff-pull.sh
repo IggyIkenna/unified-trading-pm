@@ -60,7 +60,7 @@ fi
 VERIFY_SCRIPT="${WORKSPACE_ROOT}/unified-trading-pm/scripts/verify-slot-host-symmetry.sh"
 VERIFY_LOG="/tmp/slot-host-symmetry-verify.log"
 VERIFY_MARKER="# slot-host-symmetry-verify"
-VERIFY_INTERVAL=30
+VERIFY_INTERVAL=15  # operator 2026-06-04: */15 so drift/health surfaces within 15m, not 30
 
 CRON_LINE="*/${INTERVAL} * * * * cd \"${SLOT_DIR}\" && bash \"${PULL_SCRIPT}\" --all-slots --quiet >> \"${LOG_FILE}\" 2>&1 ${MARKER}"
 VERIFY_LINE="*/${VERIFY_INTERVAL} * * * * cd \"${SLOT_DIR}\" && bash \"${VERIFY_SCRIPT}\" --quiet --alert >> \"${VERIFY_LOG}\" 2>&1 ${VERIFY_MARKER}"
