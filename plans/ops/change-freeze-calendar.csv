@@ -61,4 +61,3 @@ ASIA_CLOSE_DAILY,Asian Session Close,session_boundary,daily,06:00,06:30,No DST a
 EU_CLOSE_DAILY,European Session Close,session_boundary,daily,16:00,16:30,EU DST (Mar-Oct): 15:00-15:30 UTC,true,true,"databento,ibkr,ecb","LSE/Euronext closing auction"
 US_OPEN_DAILY,US Session Open,session_boundary,daily,13:30,14:00,US DST (Mar-Nov): 13:30-14:00 UTC,true,true,"databento,ibkr","NYSE/NASDAQ opening; high vol"
 US_CLOSE_EXT_DAILY,US Session Close,session_boundary,daily,20:00,20:30,US DST (Mar-Nov): 20:00-20:30 UTC,true,true,"binance,coinbase,deribit,bybit,okx,databento,ibkr","NYSE/NASDAQ close + after-hours transition"
-SELFTEST_DEFER_REPLAY,Self-test defer-replay,test,8x_yearly,2026-06-04T13:58,2026-06-04T14:40,,false,true,"__selftest__","TEMPORARY self-test of freeze defer-and-replay — auto-removed same session"
