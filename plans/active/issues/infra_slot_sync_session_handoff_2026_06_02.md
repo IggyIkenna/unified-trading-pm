@@ -163,3 +163,21 @@ Follow-ups on the alert sources (all `agent-orchestrator/scripts/fleet-git-healt
       block — so a stopped/decommissioned VM (e.g. i-007e8d99) or a planned-but-unlaunched epic VM never reads as a
       dead-VM incident. slot-stale + worker-liveness alerts should likewise only fire for slots on a live VM. repo:
       agent-orchestrator (server/health.py + worker_liveness.py + the guard).
+
+## Deploy path for the orchestrator + alert code (audited 2026-06-04)
+
+**Where deploy happens:** entirely **VM-local cron on vm-0** (ubuntu crontab) — NO GHA, NO cloud scheduler, NO laptop:
+- `*/15 * * * * agent-orchestrator/scripts/ao-self-pull.sh` → `git fetch` + **FF the AO clone (live-defi-rollout) + restart `orchestrator.service`**. This is how a guard/backend/alert-code fix reaches the running process.
+- `*/30 * * * * agent-orchestrator/scripts/fleet-git-health-guard.sh` → the git-health Slack alert source.
+- `*/5 * * * * unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh --all-slots` → slot worktrees.
+
+**The alert code (guard + `slack_notify`) runs from the AO clone on `live-defi-rollout`.** A fix is deployed iff it lands
+on origin/live-defi-rollout AND `ao-self-pull` can FF (clone clean). **Verified 2026-06-04:** the clone was jammed 3-behind
+by a dirty `data/config/backlog.mock.yaml` (runtime-churned — 6317-line diff; `ao-self-pull` skips-dirty by design);
+cleared it → self-pull FF'd `415ff06 → 946091c` + restarted → now `behind=0, dirty=0`. **Deploy path confirmed working.**
+
+- [ ] [INFRA] P1. **`data/config/backlog.mock.yaml` re-jams the deploy path.** The runtime rewrites it (6317-line churn)
+      though its header says "immutable at runtime" → it goes dirty → `ao-self-pull` skips → the AO clone (guard +
+      backend) goes STALE and a fix never deploys. Diagnose why prod vm-0 writes the MOCK backlog (mock-mode leak?) →
+      fix the writer, OR gitignore + `git rm --cached` + seed from template (same class as the CI-CD-PIPELINE.svg churn).
+      Until fixed, the orchestrator's own deploy-currency is fragile. repo: agent-orchestrator.
