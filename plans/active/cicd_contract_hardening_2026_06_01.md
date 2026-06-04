@@ -583,6 +583,16 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `FEATURE_GREEN→STAGING_GREEN` when `staging ⊇ LDR` (merged) AND staging-v2 green (needs a branch-ancestry check).
       Interim (manual): fire `ci-status-update STAGING_GREEN` for each repo confirmed merged-to-staging + v2-green.
       repo: unified-trading-pm. **This is the main remaining systemic blocker to a hands-off cascade.**
+- [x] ✅ [INFRA] P0. **RESOLVED via option (b) — aiohttp CVEs added to the pip-audit ignore-list (operator-approved
+      2026-06-04).** `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` now in `base-service.sh:926` +
+      `base-library.sh:729` (joining the 4 already curated) — on PM **main**, so every repo's dep-cloned v2 sees it →
+      pip-audit unblocked fleet-wide → v2 passes → promotions resume + **PM #120 MERGED** (Guard-3 serialization +
+      FEATURE→STAGING auto-advance now LIVE on main). Cascade resumed (≥STAGING_GREEN 10→12).
+- [ ] [INFRA] P2. **TRACKED-FOR-REMOVAL: drop the aiohttp `--ignore-vuln` entries when a patched aiohttp 3.13.x ships.**
+      CVE-2026-34993 + CVE-2026-47265 are ignored (no fix at 2026-06-04) in `base-service.sh:926` + `base-library.sh:729`.
+      When aiohttp publishes a patched release in-range (`>=…,<4.0.0`), bump `workspace-constraints.toml:8` + `uv lock`
+      re-lock fleet-wide AND remove the two `--ignore-vuln` flags (don't leave a fixed CVE ignored). repo:
+      unified-trading-pm. (original blocker finding for history:)
 - [ ] [INFRA] P0. **🔴 NEW DOMINANT BLOCKER — fresh aiohttp CVE fails pip-audit FLEET-WIDE → gates EVERY repo's v2
       (and PM #120).** Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run: `aiohttp 3.13.5: CVE-2026-34993 +
       CVE-2026-47265` (newly-published 2026 advisories). pip-audit is a **BLOCKING** gate (`base-service.sh:907`), so
@@ -595,6 +605,14 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       `scripts/quality-gates-base/base-service.sh:916` (the established pattern — 4 CVEs already curated there) + the
       base-library/base-ui mirrors, with a tracking note. This is the #1 thing to clear to let the (already-built)
       cascade machinery finish. repo: unified-trading-pm (template) + fleet re-lock. **BLOCKED-OPERATOR-DECISION.**
+      **TURNKEY for the decision (slot-1 2026-06-03):** aiohttp is constrained `>=3.13.4,<4.0.0`
+      (`workspace-constraints.toml:8` + `unified-trading-library/pyproject.toml:89`), currently resolving to **3.13.5**.
+      → **Option (a)** if a patched 3.13.x exists (couldn't verify — no PyPI/advisory access here): pin
+      `aiohttp>=<patched>,<4.0.0` in `workspace-constraints.toml` + `uv lock` re-lock fleet-wide (a re-lock alone pulls
+      the latest in-range, so it self-fixes IF the patch is published). → **Option (b)** if no fix yet: add
+      `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` at `base-service.sh:916` (+ base-library/base-ui),
+      tracked for removal when patched. Either is one focused change; whole fleet's v2 + #120 + the cascade unblock the
+      moment it lands.
 - [ ] [INFRA] P1. **Genuine v2-red repos surfaced by the cascade (NOT drift — need real per-repo fixes; the substance
       of their own plans).** Distinct from the false-FAILING drift Guard 3 clears: (a) **execution-service** staging v2
       fails with `ImportError: cannot import name …` (a stale cross-symbol import on staging — likely resolves when the

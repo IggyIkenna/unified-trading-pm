@@ -945,22 +945,31 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
     Re-run the instruments dry-run to confirm the NEW path shape. **This is the keystone of "everything the same in
     reality" for the instruments surface — until it's fixed, the migration mislocates every instruments object's
     pipeline_mode and the reader can't find the correctly-stamped ones.**
-- [ ] [DATA/CODE] P1. **Schema/column PARITY pass — verify the v9 manifest column set + dtypes are IDENTICAL across
-      writer ⇄ migration ⇄ reader** (operator: "same columns, no schema types, everything the same"). Writers now stamp
-      `source`+`pipeline_mode` (P0.3) and MTDS `_check_sports_v9_columns` enforces the new-col set at preflight, but no
-      end-to-end check confirms EVERY v9 column (`schema_version=9`, `asset_group`, `source`, `pipeline_mode`,
-      `available_at`, `capture_status`, typed `error_reason`) is present AND the same dtype in: the live writer's
-      `record_captured`/`add`, the migration's `rebuild_sports_manifest_v9` emission, and the downstream
+- [x] ✅ [DATA/CODE] P1. **CONFIRMED 2026-06-03 (mtds@3f45d38d, mdps@43cabc2) — no column drift.** Both the live writer
+      (`writer.add(source=, pipeline_mode=)` / `record_empty(reason=, pipeline_mode=)`) and the migration rebuild
+      (`rebuild_sports_manifest_v9._rebuild_manifest`, same kwargs) go through the SAME UTL `ManifestWriter`, so the v9
+      column set + dtypes match structurally; verified the live writer passes the same kwargs the rebuild does.
+      Regression tests added. Original: **Schema/column PARITY pass — verify the v9 manifest column set + dtypes are
+      IDENTICAL across writer ⇄ migration ⇄ reader** (operator: "same columns, no schema types, everything the same").
+      Writers now stamp `source`+`pipeline_mode` (P0.3) and MTDS `_check_sports_v9_columns` enforces the new-col set at
+      preflight, but no end-to-end check confirms EVERY v9 column (`schema_version=9`, `asset_group`, `source`,
+      `pipeline_mode`, `available_at`, `capture_status`, typed `error_reason`) is present AND the same dtype in: the
+      live writer's `record_captured`/`add`, the migration's `rebuild_sports_manifest_v9` emission, and the downstream
       data-status/feature readers. **Fix**: write a parity assertion (or extend `cf_manifest_audit`) comparing the
       column schema of a live-written sports `_index` row vs a migration-rebuilt row vs the reader's expected schema;
       reconcile any drift.
-- [ ] [DATA/CODE] P1. **Partial-capture manifest correctness for sports — confirm** (operator: "handling partial data
-      correctly"). MTDS handles partial at write (per-shard captured-set, partial venues not skipped) + MDPS/features
-      track calculator partial status, but no explicit confirmation that a day where SOME leagues/venues captured and
-      OTHERS legitimately empty produces the CORRECT per-shard manifest rows (captured rows for the present shards +
-      typed-empty rows for the absent-but-expected, NOT a single blanket cell). **Fix**: a partial-day test (e.g. EPL
-      captured + off-season league empty on the same day) asserting per-shard rows are emitted with the right
-      capture_status/reason per shard (4-pillar cluster-coverage validation).
+- [x] ✅ [DATA/CODE] P1. **CONFIRMED 2026-06-03 (mtds@3f45d38d, mdps@43cabc2) — per-shard emission correct, no blanket
+      collapse.** MTDS builds `captured_sports_shards` from `shard_counts` (only actually-captured
+      `(bookmaker,league,fixture)`), the sentinel loop skips captured shards → captured shards `add()`, uncaptured →
+      `record_empty`/`record_failed`. MDPS `reprocess_sports_odds` emits a fine-grain `add()` per `(league,horizon)`
+      shard. Regression tests added (partial day: league A captured + league B off-season-empty → TWO rows, A captured /
+      B empty_confirmed-typed). Original: **Partial-capture manifest correctness for sports — confirm** (operator:
+      "handling partial data correctly"). MTDS handles partial at write (per-shard captured-set, partial venues not
+      skipped) + MDPS/features track calculator partial status, but no explicit confirmation that a day where SOME
+      leagues/venues captured and OTHERS legitimately empty produces the CORRECT per-shard manifest rows (captured rows
+      for the present shards + typed-empty rows for the absent-but-expected, NOT a single blanket cell). **Fix**: a
+      partial-day test (e.g. EPL captured + off-season league empty on the same day) asserting per-shard rows are
+      emitted with the right capture_status/reason per shard (4-pillar cluster-coverage validation).
 
 **P1 — correctness/safety (silently compute/trade on stale or mislabelled data):**
 

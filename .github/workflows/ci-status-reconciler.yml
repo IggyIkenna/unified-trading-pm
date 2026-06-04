@@ -16,12 +16,13 @@ name: ci-status-reconciler
 # differences; never acts on an absent v2 signal (fail-safe). Reads ci_status from main
 # (the single SSOT branch); fixes via the bot-only ci-status-update dispatch (Guard 1).
 #
-# Trigger: every 30 min (drift cadence) + manual dispatch (dry_run lists without firing).
+# Trigger: every 10 min (drift cadence; tightened from 30 min to shorten the dep-order
+# tier-wait) + manual dispatch (dry_run lists without firing).
 # SSOT: this file is PM-only (it reads workspace-manifest.json which lives only in PM).
 
 on:
   schedule:
-    - cron: "23,53 * * * *" # ~every 30 min, off the top-of-hour
+    - cron: "*/10 * * * *" # every 10 min — tightened from 30 min 2026-06-04 to collapse the dep-order tier-wait (FEATURE→STAGING advance + drift reconcile latency)
   workflow_dispatch:
     inputs:
       dry_run:
