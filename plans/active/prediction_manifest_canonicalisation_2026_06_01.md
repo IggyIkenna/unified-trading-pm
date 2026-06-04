@@ -709,6 +709,21 @@ venue-override question) + the operator-gated migration walk:**
 
 ## Readiness gate — operator's 7 criteria (slot-5 audit 2026-06-04 — extends slot-4's 4-item audit above)
 
+> **🔁 RE-VERIFIED 2026-06-05 (slot-5, independent 3-agent code read, ahead of the gated apply runs).** Three parallel
+> read-only agents re-checked every contested DONE claim against shipped code (NOT annotations): **①②③④⑤⑥ all VERIFIED
+> GREEN** — read/write path parity (raw+candle `pipeline_mode=` insert, migrator/rebuild on the SAME
+> `derive_pipeline_mode_for_row` SSOT, rebuild regex matches the post-migrator shape, downstream readers all on
+> `resolve_bucket_name`+canonical `asset_group=` with dual-probe), 4-state preflight (MDPS consolidator gate generalized
+> to prediction flat-kinds), CF-11 honest-absence 3-way tree, classifier-None NaN parity (Polymarket+Kalshi), IS
+> mid-pagination raise, phantom auditor canonical bucket, deployment-api/UI cqg-bundle reads + 4-state denominator. **⑦
+> has ONE real, correctly-OPEN gap = the prediction cqg-grain coverage catalogue** (the v2 enumerator + generic roll-up
+> are condition_id-grain; the captured atom is per-cqg → denominator would inflate). It is GATED on a not-yet-populated
+> upstream (`market_lifecycle/by_canonical_group/` = 0 objects until the operator-gated IS prediction backfill) + VM
+> verify, so it is correctly open — precise executable spec recorded in § "⑦ PREDICTION SLICE". No code regression vs
+> the migration found; the gated apply/rebuild/delete runs (C0/E4-full/E7/E8) remain the only path-critical operational
+> steps. Docs reconciled this session: codex `prediction-data-types-catalog.md` (source≠venue invariant + canonical v9
+> `pipeline_mode=` path) + the foundation-gate cqg caveat.
+>
 > The operator's 2026-06-04 list is **7** criteria; slot-4's audit above covered the TradFi-style first ~5. This extends
 > with **⑥ (IS+UAC guardrails)** + **⑦ (coverage denominator)** and **corrects ③** per slot-4's MDPS-consolidator
 > finding. Slot-5 verified every contested claim (one fan-out agent's "critical gaps" on `candidate_parquet_paths` /
