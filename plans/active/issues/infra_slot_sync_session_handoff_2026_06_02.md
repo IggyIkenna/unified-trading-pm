@@ -181,3 +181,27 @@ cleared it → self-pull FF'd `415ff06 → 946091c` + restarted → now `behind=
       backend) goes STALE and a fix never deploys. Diagnose why prod vm-0 writes the MOCK backlog (mock-mode leak?) →
       fix the writer, OR gitignore + `git rm --cached` + seed from template (same class as the CI-CD-PIPELINE.svg churn).
       Until fixed, the orchestrator's own deploy-currency is fragile. repo: agent-orchestrator.
+
+## CORRECTION + cron landscape (2026-06-04)
+
+**`backlog.mock.yaml` — KEEP TRACKED (my earlier "gitignore it" todo was WRONG).** Per `agent-orchestrator/server/
+config.py` `backlog_path()`: **mock mode reads `backlog.mock.yaml` (88-line demo fixture B-001..B-003); LIVE reads
+`backlog.yaml`** (untracked runtime state). vm-0 is `ORCHESTRATOR_MODE=live` → it reads `backlog.yaml`, NOT the mock.
+So backlog.mock.yaml is a legit small COMMITTED demo/e2e fixture — keep it tracked, do NOT gitignore. The 6317-line
+churn came from a **past mock/demo run on the live box** writing real tasks into the mock path; cleared it (back to the
+88-line committed version), and live-mode vm-0 won't re-churn it. **Real fix = don't run e2e_demo/mock-mode on the live
+VM** (or point the demo at a gitignored `state.mock.*`-style copy). ao-self-pull could also auto-stash known-runtime-
+churn files before FF. repo: agent-orchestrator.
+
+**Cron landscape (so the two are not confused):**
+
+| cron / loop | host | cadence | job |
+|---|---|---|---|
+| `ao-self-pull.sh` | **VM only** | 15 min | pull the AO **code** clone (live-defi-rollout) + **restart orchestrator** = deploy-currency for the orchestrator itself |
+| `slot-cron-ff-pull.sh` | laptop **+** VM | 5 min | **FF-only PULL** of slot worktrees (no commit, no push) |
+| `slot-git-status-report.sh` | laptop + VM | 5 min | report slot git status to the orchestrator |
+| WorkerLivenessKicker (`_maybe_alert_git_staleness`) | VM (backend) | 60 s | **ALERT** on stale/dirty/unpushed (the "stagnant ~threshold") — alerts, does NOT auto-commit |
+| `tab-mirror-to-ldr.yml` | **GHA** | on push | FF pushed `tab/*` → `live-defi-rollout` |
+
+→ `ao-self-pull` (orchestrator code deploy) is NOT the same as the laptop's `slot-cron-ff-pull` (slot-worktree pull).
+There is **no auto-commit-stagnant cron** — "stagnant" is an alert; Commit+Push+Flip is the agent's job.
