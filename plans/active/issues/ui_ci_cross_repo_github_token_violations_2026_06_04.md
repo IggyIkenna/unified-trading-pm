@@ -1,7 +1,7 @@
 ---
 title:
-  unified-trading-system-ui registry-drift CI job is stale vs the generator interface (token fixed; generator-args +
-  UAC-install remain)
+  unified-trading-system-ui registry-drift CI job — mechanics FIXED (tokens/UIC/generator-args/py3.13/UTL); registry
+  CONTENT regen remains (env-matched UAC main + playwright)
 created: 2026-06-04
 author: ikennaigboaka [slot-1·laptop]
 source:
@@ -23,29 +23,31 @@ The `registry-drift` job in `unified-trading-system-ui/.github/workflows/ci.yml`
    **vestigial** — `generate_ui_reference_data.py` reads UIC enums from `unified_api_contracts.internal` (an import),
    not from a `../unified-config-interface` checkout. Removed the step + the `--uic-root` flag. (The repo still exists
    on GitHub but this job never reads it.)
-3. **[REMAINING — needs a UI slot]** The generator invocation is still stale: the job calls it with `--uac-root` and
-   `--out`, but `generate_ui_reference_data.py` (last changed PM 2026-06-01) uses `parser.parse_args()` and accepts
-   **only `--output-dir`** — it derives `workspace_root` from its own path and imports `unified_api_contracts`. So:
-   - `--uac-root` / `--out` are unrecognized → `argparse` exits non-zero (the job fails at this step).
-   - The job only runs `pip install pydantic`; it never installs UAC, so `import unified_api_contracts` would
-     `ModuleNotFoundError` even if the args were right. The ci.yml registry-drift job was last touched 2026-05-03 — it
-     predates the generator's current CLI.
+3. **[FIXED — UI@4cc69d85, 2026-06-04]** The generator invocation was stale: the job called it with `--uac-root` /
+   `--out`, but `generate_ui_reference_data.py` (PM, current) uses `parser.parse_args()` and accepts **only
+   `--output-dir`** (derives `workspace_root` from its own path; writes `<output-dir>/ui-reference-data.json`). It also
+   only `pip install pydantic` (never UAC) on py3.12, but the generator imports `unified_api_contracts` AND
+   `unified_trading_library` (for `config_schemas`), both `requires-python >=3.13`. Reworked the job: **py3.13**,
+   **checkout + `pip install -e` both UAC and UTL**, call with **`--output-dir /tmp/freshreg`**, diff
+   `/tmp/freshreg/ui-reference-data.json`. Verified locally: the generator runs clean with `--output-dir` and emits the
+   455 KB `ui-reference-data.json`.
 
-## Why it matters
+## REMAINING — registry CONTENT is stale (separate from the now-fixed mechanics)
 
-STEP 5.18 (the token check) is now green, which unblocks the UI repo's QG token gate (the thing that blocked the
-tab-mirror rollout). But the registry-drift **GHA job itself** still fails at the generator step until issue 3 is fixed
-— so the job has been red since the generator changed (2026-06-01), independent of tokens.
+With mechanics fixed, the job now runs — and correctly surfaces that **`lib/registry/ui-reference-data.json` is itself
+stale** vs current UAC (~15 keys differ: `strategy_registry`, `client_registry`, `venue_data_availability`,
+`config_schemas`, …). It's been drifting since the job broke (2026-06-01). This must be regenerated + committed, but
+**not from this laptop**:
 
-## Recommended decision
+- **Env-match**: CI checks out UAC's **default branch (`main`)**, which is **diverged from `live-defi-rollout`** (main 4
+  ahead / 17 behind LDR as of 2026-06-04). A laptop slot is on LDR, so its regen would NOT match CI's `main`-based regen
+  → committing it would still show drift. The regen must come from the same UAC ref CI uses (the GHA job, or a
+  `main`-pinned checkout + UTL + py3.13).
+- **Playwright gate (HARD RULE)**: `lib/registry/ui-reference-data.json` feeds UI dropdowns / catalogues, so a
+  regen-commit is a UI-data change → needs `pw:L2 ✓` + a regression spec per CLAUDE.md § "UI changes — playwright gate".
 
-A **UI-capable slot** (can run the GHA job / has a dev environment) should rework the registry-drift job to match the
-current generator interface:
-
-- Install UAC (+ UTL) so `import unified_api_contracts` resolves (e.g. `uv pip install -e ../unified-api-contracts`).
-- Call `generate_ui_reference_data.py` with its real flag (`--output-dir <tmp>`), or no args (defaults to
-  `workspace_root/unified-api-contracts/openapi`), then diff against `lib/registry/ui-reference-data.json`.
-- Verify the job goes green in GHA (cannot be verified locally — needs the GHA sibling-checkout context).
+Owner: a UI-capable slot that can (a) regenerate from the CI-matching UAC ref and (b) run playwright. Once committed,
+the registry-drift GHA job (mechanics already fixed) goes green.
 
 Also pre-existing + unrelated (noted, not fixed here): `codecov/codecov-action@v3` at ci.yml:40 is flagged by actionlint
 as too old — bump to a current major.
