@@ -2160,6 +2160,37 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       (`test_ws_cassette_coexistence[orca/raydium_defi_ws]`, unregistered REST pollers) were already fixed at root
       (uac@d67d8061). repo: unified-api-contracts. parent_epic: (cicd hardening).
 
+### Auto-rebasing tab-mirror — diverged tabs self-heal (slot-2 2026-06-04, operator-approved fleet-wide)
+
+> **Root cause (operator Q):** both directions of slot↔LDR sync were FF-only and SKIPPED on a diverged (ahead AND
+> behind) tab. On a hot integration branch (PM LDR especially), a slot's pushed commits perpetually lost the FF race →
+> piled up "ahead and behind" forever → needed a manual `git rebase origin/live-defi-rollout`. The tab-mirror GHA hit
+> `[skip:diverged]` and the local `slot-cron-ff-pull` hit `[skip:diverged]` — neither self-heals, so the divergence
+> compounds silently. Mirror is FF-only by design (never rewrite a locally-held branch); the fix makes the rewrite
+> safe + automatic and gives the local cron a clean adoption path.
+
+- [x] ✅ [SCRIPT] P1. **tab-mirror-to-ldr GHA: rebase diverged tabs onto LDR instead of skipping** (PM@fe5fe064e):
+      `decision=rebase` (was `skip:diverged`) rebases the tab's commits onto current LDR, FF-pushes LDR (3-attempt race
+      retry), then realigns the remote tab via `--force-with-lease=<branch>:<orig-sha>`. Safe because: a no-conflict
+      rebase is content-clean; the tab force-push uses `GITHUB_TOKEN` (GitHub suppresses recursive workflow triggers →
+      no loop); the lease refuses if a concurrent agent pushed the tab; a real textual CONFLICT aborts + surfaces via
+      the orchestrator webhook (`outcome=conflict`) — the ONLY thing that now blocks auto-landing. Canonical template +
+      PM self-copy + rolled out to 23 mirror-carrying repos
+      (`rollout-workflow-templates.sh --template     tab-mirror-to-ldr.yml`). repo: unified-trading-pm (+ 23 service
+      repos).
+- [x] ✅ [SCRIPT] P1. **slot-cron-ff-pull Step 5: clean-gated adopt of the GHA-rewritten tab** (PM@fe5fe064e): on
+      diverged, when every ahead-commit is already patch-id-present in LDR (`git cherry` '+' count == 0) AND the tree is
+      clean, `[adopt-rebase]` drops the mirrored dups and FFs local to LDR — non-destructive, never rewrites genuine
+      in-flight work or touches dirty WIP. Any other divergence (real new local commits, or dirty tree) stays
+      `[skip:diverged]` for manual recovery. repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. **Extend the auto-rebasing mirror to `agent-orchestrator`** — excluded from the 2026-06-04 rollout
+      (it did not previously carry tab-mirror-to-ldr.yml + has a transitional branch model; the GHA hardcodes
+      `live-defi-rollout` which must be confirmed present + clean on AO first). repo: agent-orchestrator. parent_epic:
+      (cicd hardening).
+- [ ] [TEST] P2. **Observe ≥3 real diverged-tab cycles auto-heal** (rebased+landed on LDR + local `[adopt-rebase]`)
+      before declaring the treadmill closed; watch the orchestrator `/api/mirror-events` for any `outcome=conflict` or
+      `race-exhausted` and confirm they reflect genuine conflicts only. repo: unified-trading-pm.
+
 ### Phase 3 — Image-build provenance + branch-triggered builds (audit k2/k3)
 
 - [x] ✅ [SCRIPT] P1. **GCP immutable-tag parity — already satisfied (finding was stale).** Verified 2026-06-01:
