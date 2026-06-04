@@ -269,3 +269,19 @@ Triggered by "any escalation agents being called / is everything mirrored to mai
       bugs) is restored. Template PM@10645e6b3.
 - [ ] [SCRIPT] P2. **Close idle PRs** after drain: ml-inference `main<-auto/*` (8 stale), `chore/sync-to-staging-*`
       dupes (risk/pnl/pbm/ml-inference/ml-training), old `version-bump`/`bump-version` PRs.
+
+## ROOT CAUSE: recurring LDR deletion = delete_branch_on_merge (2026-06-04)
+
+The "publish branch" prompt for unified-trading-library across all slots (recurring — recreated earlier today, gone
+again) traced to: **GitHub repo setting `delete_branch_on_merge=true` + the LDR→staging promotion PR has
+head=`live-defi-rollout`** → every successful staging promotion AUTO-DELETES the head branch = the integration branch.
+- UTL: PR #237 (staging<-live-defi-rollout) merged 18:46 → deleted LDR (last seen 18:36). PR #234 did the same 06-03.
+- [x] ✅ **UTL LDR recreated** from preserved local `c5b014783` (= last origin SHA, zero data loss) + slot upstream reset.
+- [x] ✅ **Fleet sweep (ALL 112 org repos)**: 20 had `delete_branch_on_merge=true`. Fixed all 15 non-archived → false
+      (13 of them HAD an LDR branch = were latent time-bombs: unified-{events,market,config,trade-execution}-interface +
+      8 *-ui repos + sports-betting-service + unified-trading-deployment-v2). 5 archived (pnl-attribution, codex,
+      unified-domain-client, matching-engine-library, execution-algo-library) are read-only → harmless, left as-is.
+- [ ] [INFRA] P1. **Prevent regression**: repo-creation / bootstrap MUST set `delete_branch_on_merge=false` (the
+      LDR→staging promotion uses LDR as PR head, so auto-delete-head is incompatible with the integration model). Add a
+      `verify_branch_protection_check_names.py`-style assertion OR a fleet settings-reconciler that fails if any active
+      repo has it true. repo: unified-trading-pm scripts.
