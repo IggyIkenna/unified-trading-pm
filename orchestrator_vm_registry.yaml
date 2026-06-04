@@ -40,7 +40,7 @@ vms:
     cloud: aws
     aws_instance_id: i-05805eb07fdf180b6
     public_ip: "43.207.178.164"
-    api_url: "http://43.207.178.164:8026"
+    api_url: "http://43.207.178.164:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -60,7 +60,7 @@ vms:
     cloud: aws
     aws_instance_id: i-003be935f72c13d51
     public_ip: "43.207.36.161"
-    api_url: "http://43.207.36.161:8026"
+    api_url: "http://43.207.36.161:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -80,7 +80,7 @@ vms:
     cloud: aws
     aws_instance_id: i-0a663001399ef5f49
     public_ip: "18.181.221.162"
-    api_url: "http://18.181.221.162:8026"
+    api_url: "http://18.181.221.162:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -99,7 +99,7 @@ vms:
     cloud: aws
     aws_instance_id: i-005e1bada21b1653f
     public_ip: "13.115.221.87"
-    api_url: "http://13.115.221.87:8026"
+    api_url: "http://13.115.221.87:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -118,7 +118,7 @@ vms:
     cloud: aws
     aws_instance_id: i-063bc8dbf59f36220
     public_ip: "43.207.224.187"
-    api_url: "http://43.207.224.187:8026"
+    api_url: "http://43.207.224.187:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -139,7 +139,7 @@ vms:
     cloud: aws
     aws_instance_id: i-02294132088f23e50
     public_ip: "13.114.121.99"
-    api_url: "http://13.114.121.99:8026"
+    api_url: "http://13.114.121.99:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -164,7 +164,7 @@ vms:
     cloud: aws
     aws_instance_id: i-0e51b9c73666b3a8b
     public_ip: "54.238.66.156"
-    api_url: "http://54.238.66.156:8026"
+    api_url: "http://54.238.66.156:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -191,7 +191,7 @@ vms:
     cloud: aws
     aws_instance_id: i-0e89a5f6bd7123521
     public_ip: "18.183.155.33"
-    api_url: "http://18.183.155.33:8026"
+    api_url: "http://18.183.155.33:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -216,7 +216,7 @@ vms:
     cloud: aws
     aws_instance_id: i-06e33c6e188798333
     public_ip: "13.158.82.128"
-    api_url: "http://13.158.82.128:8026"
+    api_url: "http://13.158.82.128:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
@@ -245,7 +245,7 @@ vms:
     cloud: aws
     aws_instance_id: i-007e8d99d12831578
     public_ip: "52.193.229.193"
-    api_url: "http://52.193.229.193:8026"
+    api_url: "http://52.193.229.193:8765"
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic

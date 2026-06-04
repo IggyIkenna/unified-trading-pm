@@ -10,7 +10,7 @@ owner: ikenna
 # Agent Orchestrator Worker Topology
 
 Fleet model: **1 planning VM (GCP) + 10 epic VMs (AWS)** as of 2026-05-22. Each VM runs the orchestrator service on port
-8026 + a set of Claude Code worker slots. Planning VM holds 2 interactive slots; each epic VM holds 8 slots.
+8765 + a set of Claude Code worker slots. Planning VM holds 2 interactive slots; each epic VM holds 8 slots.
 
 Total capacity: **82 worker slots** across 11 VMs.
 
@@ -54,7 +54,7 @@ IPs are dynamic (no EIPs yet — deferred post-cutover). All VMs use instance pr
 ### Fleet dashboard entry point
 
 Fleet tab at `agent-orchestrator.odum-research.com/#fleet` reads `data/config/backends.json` in the agent-orchestrator
-repo. Each VM's URL is the direct `http://<public-ip>:8026` endpoint. Port 8026 is open to 0.0.0.0/0 in the security
+repo. Each VM's URL is the direct `http://<public-ip>:8765` endpoint. Port 8765 is open to 0.0.0.0/0 in the security
 group.
 
 Re-launch fleet:

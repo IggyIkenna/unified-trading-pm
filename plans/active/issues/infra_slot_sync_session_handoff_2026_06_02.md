@@ -99,3 +99,43 @@ stuck commits incl. `semver-agent.yml` (`65a21cb`); pre-commit config rollout (`
 Every key commit I made is **verified on LDR** (and agent-orchestrator on main). Nothing of mine is lost or stranded
 except the one **ruleset-blocked uta config (local-only)**. The only dirty I left is **foreign/active** (PM migration,
 alerting/e2e) — intentionally untouched. One stash (`pm stash@{0}`) is mine and awaits a drop/pop decision.
+
+---
+
+## INCIDENT 2026-06-04 — orchestrator fleet dead (git corruption) + recovery
+
+**Symptom:** all "✅ success" escalation/conflict-resolution Slack alerts were hollow — the orchestrator fleet had
+**zero live workers** (agents=1 archived, all slots killed/stale/paused). The git-health guard alerted **`git fsck
+--connectivity-only FAILED (missing/broken objects)` on every repo, both VMs** (187 on i-007e8d99, 507 on i-0c9b283b).
+
+**Root cause chain:** git object-store corruption (missing objects) → `ff-pull` failed → branch-state quarantine
+(FM5/FM7) → AutoSpawn couldn't spawn → slots died → no workers → escalations accepted but never worked (mdps #91
+"a worker is resolving" was FALSE).
+
+**Recovery (DONE 2026-06-04):**
+- `git fetch origin` re-downloaded missing objects on every repo on BOTH VMs → fsck clean; **0 re-clones needed**
+  (disk was fine, 59%/53%). ff-pull works again (`ff_done` observed live).
+- Restarted both orchestrators.
+- Reconciled blocked slots on vm-0 (i-0c9b283b): `git stash -u` the disposable dirty churn on slots 2/3/5/9 → 9/10 clean.
+- **Verified revival:** AutoSpawn `spawned=2` then `worker_active=4`; 3 live tmux worker sessions (orch-slot-5/9/10).
+
+**Follow-up todos (open):**
+- [ ] [INFRA] P1. **slot-cron-ff-pull.timer is INACTIVE on BOTH orchestrator VMs** (i-0c9b283b + i-007e8d99) — the
+      missing auto-ff-pull is the likely drift→corruption root cause. Install/enable the timer so slots stay clean+current
+      (canonical-plan-flow.md already flagged it "absent on vm-orchestrator"). repo: agent-orchestrator / deployment.
+- [ ] [INFRA] P1. **git-health guard should auto-`git fetch` to self-heal** missing-but-reachable objects (it detected
+      corruption but only alerted — a fetch would have auto-repaired, as the manual recovery proved). repo: agent-orchestrator.
+- [ ] [INFRA] P2. **i-007e8d99 (vm-orchestrator) is misconfigured** — `ORCHESTRATOR_VM_ID=unknown-vm`, AutoSpawn off,
+      runs PlanRegenLoop+FailoverLoop only (no workers), slots on `tab/rootm/N`. Decide: assign a real registry VM_ID +
+      enable AutoSpawn (if it should be a worker), OR decommission if redundant with vm-0. NOT killed — has a live
+      coordination role. repo: agent-orchestrator + orchestrator_vm_registry.yaml.
+- [ ] [INFRA] P2. **vm-0 slot-4 stuck wrong_branch** — UAC on `fix/tradfi-exchange-mappings-minimal`, PM on
+      `fix/pm-ci-self-clone`; `checkout tab/vm-0/4` failed. Reconcile (1 slot; 9 others working). repo: agent-orchestrator.
+- [ ] [INFRA] P3. **Review + drop the recovery stashes** on vm-0 slots 2/3/5/9 (`recovery-2026-06-04 dead-slot clean`)
+      — mostly generated churn (CI-CD-PIPELINE.svg/html, ping ledgers) + a couple real md edits to inherit. repo: agent-orchestrator.
+- [ ] [INFRA] P3. **vm-0 AutoSpawn SQLAlchemy exception** intermittently in the tick log — investigate (sqlite write
+      contention?). Spawning still works (worker_active=4). repo: agent-orchestrator.
+- [x] ✅ [SCRIPT] **Port SSOT canonicalized 8765** (retired stale 8026) across CLAUDE.md, codex overview + worker-topology,
+      ui-api-mapping.json, orchestrator_vm_registry.yaml, AO scripts/config — 2026-06-04.
+- [x] ✅ [SCRIPT] **escalate-to-orchestrator alert honest** — no longer claims "a worker is resolving" on an empty
+      escalation_id; warns + links the dashboard — 2026-06-04.
