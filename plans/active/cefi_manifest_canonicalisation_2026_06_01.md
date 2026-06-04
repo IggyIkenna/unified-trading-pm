@@ -182,14 +182,24 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       reader-order + case parity. **MDPS lockstep `default_tick_blob_path` fixed the same way (mdps@b9b3263, QG exit
       0).** MTDS QG exit 0. (Also shipped: P2 `reader.read_from_manifest` lifts pipeline_mode from the captured row —
       canonical path probed first.)
-- [ ] [CODE] P0. **execution-service — legacy raw_tick paths, 0 `candidate_parquet_paths`, 0 `pipeline_mode`.** ALL raw
+- [x] ✅ [CODE] P0. **execution-service legacy raw_tick paths → UAC SSOT — FIXED (execution@6230c18d0).** Was: ALL raw
       candle/mark/orderbook reads hardcode `raw_tick_data/by_date/day={date}/data_type={dt}` with NO
       `pipeline_mode=`/`asset_group=cefi/` (`data/loaders/base.py:182`, `data/checker.py:155,323`,
       `data/loader_transforms.py:150`, `data/loaders/defi.py:41,77`, `data/loader_local.py:62`,
       `l2_depth_provider.py:34` `_L2_ORDERBOOK_PATH_TEMPLATE`). Relies ENTIRELY on the reader-fallback that Phase 8
       removes (~2026-06-15) ⇒ cefi backtest + live mark reads silently return EMPTY after cutover. **Fix:** route every
       raw read through `candidate_parquet_paths()` (pipeline_mode-aware first, legacy fallback) — mirror
-      features-service `perp_funding_rates.py`.
+      features-service `perp_funding_rates.py`. **DONE:** new `data/canonical_paths.py` SSOT
+      (`build_candidate_raw_tick_paths` canonical-first + legacy fallback, probe both → works pre/post-migration) wired
+      into loader_base/loaders.base/ loader_transforms/loader_local/l2_depth_provider; signatures unchanged; +18 tests;
+      basedpyright 0; QG exit 0.
+- [ ] [CODE] P1. **execution-service — `data/loaders/defi.py:41,77` DeFi raw-tick reads still legacy (slot-2/defi
+      owner).** The shared `candidate_parquet_paths` DeFi branch needs a `chain` kwarg
+      (`build_defi_partition_path(venue, chain, …)`) + a defi instrument-id→chain mapping that the cefi-scoped fix did
+      not supply (calling it as-is raises `KeyError("chain")`). `loader.py` `load_swaps`/`_build_swaps_paths` DeFi paths
+      likewise unchanged. Mirror the cefi `canonical_paths.build_candidate_raw_tick_paths` pattern with the defi chain
+      axis. Target repo: execution-service (DeFi slice). Provenance: cefi E2E audit 2026-06-04 (the cefi P0 above is
+      GREEN; this is the defi sibling).
 
 **🟡 P1 — pre-flight engrained (blocking the "pre-flight on every service" bar):**
 
@@ -200,11 +210,12 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       ticks. So no raw-tick `UPSTREAM_DEPS` entry is warranted (a `required` one would be wrong). Strategy's cefi
       pre-flight already exists (consolidator-health + features 4-state). The actual cefi gap was the allocation guard
       hitting the WRONG features bucket — see P2 (now P0-level), **FIXED**.
-- [ ] [CODE] P1. **execution-service — no manifest 4-state pre-flight.** `data/checker.py` (`check_gcs_file_exists` /
-      `check_data_availability` / `blob_exists` `:168,214,335`) is a raw path-EXISTENCE probe — never reads
-      `availability_index` / `capture_status`, so it cannot tell zero-volume / `empty_confirmed` / `attempted_failed`
-      from genuinely-missing. **Fix:** replace the path-probe with `read_availability_index` + a 4-state gate (mirror
-      strategy `check_allocation_manifest`).
+- [x] ✅ [CODE] P1. **execution-service manifest 4-state pre-flight — ADDED (execution@6230c18d0).** Was:
+      `data/checker.py` (`check_gcs_file_exists` / `check_data_availability` / `blob_exists` `:168,214,335`) is a raw
+      path-EXISTENCE probe — never reads `availability_index` / `capture_status`, so it cannot tell zero-volume /
+      `empty_confirmed` / `attempted_failed` from genuinely-missing. **DONE:**
+      `canonical_paths.resolve_manifest_capture_status()` (4-state, fail-open) gates `checker._gcs_lookup_and_check` —
+      empty_confirmed→honest-absence skip, attempted_failed→skip+alert, captured/unknown→proceed.
 
 **⚪ P2/P3 — correctness hardening (not run-blocking but in-scope for "engrained"):**
 
@@ -221,14 +232,14 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       from the captured manifest row into `read_shard` so the canonical `pipeline_mode=` path is probed FIRST (caller
       override still wins). +2 regression tests. Was leaving manifest-driven reads on the soon-removed bare fallback.
       **DONE — mtds (shipping with the P0 live-writer fix).**
-- [ ] [CODE] P2. **execution-service** — `l2_depth_provider.py:197` `from google.cloud import storage` + `gcs.Client()`
-      direct (cloud-agnostic I/O violation). **Fix:** `get_storage_client()`.
+- [x] ✅ [CODE] P2. **execution-service** — `l2_depth_provider.py` `from google.cloud import storage` / `gcs.Client()` →
+      `get_storage_client()` (cloud-agnostic). **DONE — execution@6230c18d0.**
 - [ ] [DATA] P3. **market-data-processing-service** — leading-NaN before first observation for state adapters that skip
       the session-grid finalize (already tracked: `issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`). Confirm
       all cefi adapters route `_finalize_session_grid`; liquidations (no grid) is intentional event-counts — verify.
 - [ ] [CODE] P3. **strategy-service** — `gcs_feature_provider.py:99` `merged.ffill()` across sampling frequencies could
-      mask a genuine gap; gate with a staleness limit. **execution-service** `benchmark_service.py:302` stale
-      `gs://unified-trading-system/raw_tick_data/...` path comment + unimplemented stub — delete/refresh.
+      mask a genuine gap; gate with a staleness limit (strategy — still open). **execution-service**
+      `benchmark_service.py` stale `gs://` comment refreshed ✅ (execution@6230c18d0).
 
 **UAC/UTL helpers (the absence "explainer"):** `build_cefi_partition_path` / `candidate_parquet_paths`
 (`canonical/partition_paths.py:392`) are the path SSOT; the `empty_confirmed` closed-set taxonomy lives in
