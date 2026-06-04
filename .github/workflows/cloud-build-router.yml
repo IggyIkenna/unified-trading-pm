@@ -65,7 +65,10 @@ jobs:
   # SSOT: cicd_contract_hardening_2026_06_01 § "freeze defer-and-replay".
   defer-on-freeze:
     needs: freeze-check
-    if: needs.freeze-check.outputs.blocked == 'true'
+    # always() is REQUIRED: change-freeze-check EXITS 1 when it blocks, so without
+    # always() the implicit success() gate skips this job on the very runs we must
+    # capture (verified 2026-06-04: defer-on-freeze was silently skipped → no artifact).
+    if: always() && needs.freeze-check.outputs.blocked == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Persist deferred qg-passed payload
