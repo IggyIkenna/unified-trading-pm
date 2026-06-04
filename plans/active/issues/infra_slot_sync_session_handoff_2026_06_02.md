@@ -145,3 +145,21 @@ alerting/e2e) — intentionally untouched. One stash (`pm stash@{0}`) is mine an
 object-repair it ff-pulls clean slots + correctly `[skip:diverged]`/`[skip:dirty]` the rest (verified live on vm-0
 `/tmp/slot-cron-ff-pull.log` 15:40Z). Residual: vm-0 slot-7 worktrees diverged (ahead-1/behind-N ×~8 repos) + a few
 LDR-branch dirty worktrees need `slot-master-rebase` (cron skips them by design; they don't block working slots 5/9/10).
+
+## Alert-scoping audit (2026-06-04) — alerts must cover only what's supposed to be alive
+
+Audited the #agent-orchestrator-alerts noise. **vm-0 verified 100% fsck-clean** (29 main + 478 worktrees, 0 fail) —
+the "507 issues @16:00" was a STALE guard run (scanned pre/mid-repair); the recovery held. Liveness SSOT now codified in
+`codex/05-infrastructure/agent-orchestrator-worker-topology.md` § "LIVE STATUS" + CLAUDE.md (live = vm-0 only).
+Follow-ups on the alert sources (all `agent-orchestrator/scripts/fleet-git-health-guard.sh` + server/worker_liveness.py):
+
+- [ ] [INFRA] P1. **git-health guard should SELF-HEAL** — on `fsck` failure, run `git fetch origin` first (recovers
+      missing-but-reachable objects, exactly what the 2026-06-04 manual recovery did) and only alert if fsck STILL fails
+      after fetch. Turns a 500-line corruption alert into auto-repair. repo: agent-orchestrator (fleet-git-health-guard.sh).
+- [ ] [INFRA] P2. **git-health guard should SUMMARISE, not dump** — it `find`s every `.git` (29 main + ~478 worktrees)
+      and emits one Slack line each (500+). Dedupe to "N repos with fsck issues (main: …; worktrees: …)" and weight
+      MAIN-clone failures (actionable) over worktree noise. repo: agent-orchestrator.
+- [ ] [INFRA] P2. **All orchestrator alerts scope to the LIVE set** (currently just vm-0) per the topology LIVE-STATUS
+      block — so a stopped/decommissioned VM (e.g. i-007e8d99) or a planned-but-unlaunched epic VM never reads as a
+      dead-VM incident. slot-stale + worker-liveness alerts should likewise only fire for slots on a live VM. repo:
+      agent-orchestrator (server/health.py + worker_liveness.py + the guard).

@@ -677,6 +677,12 @@ do NOT reference) · **orchestration → `agent-orchestrator`** (FastAPI + Vite 
 LEDGER.md remains as offline fallback only; the `harsh_orchestrator/` LEDGER + dispatch files were retired 2026-05-25 →
 `plans/archive/orchestrator_legacy/` (only `harsh_orchestrator/_agent_pings.md` stays in place — still read by the live
 plan-hygiene + orphan-ping crons). SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
+**LIVE orchestrator = ONE VM (audited 2026-06-04): `vm-0` / `agent-orchestrator-vm-1` / `i-0c9b283b31d6b5ca7`** — the
+CI-responder (`api.agent-orchestrator.odum-research.com → 13.113.200.22`) + worker host (AutoSpawn ON). The per-epic
+fleet (`vm-defi`/`vm-cefi`/…) is post-cutover/NOT running; `i-007e8d99` (`vm-orchestrator`) was STOPPED 2026-06-04
+(vestigial). **Alerts (git-health guard / slot-stale / worker-liveness) scope to the LIVE set — a stale alert about a
+stopped VM is not a dead-VM incident.** Liveness SSOT = `codex/05-infrastructure/agent-orchestrator-worker-topology.md`
+§ "LIVE STATUS" (the `orchestrator_vm_registry.yaml` is auto-regenerated from epic frontmatter — NOT a liveness source).
 
 **UAC import rule**: `from unified_api_contracts.{domain} import ...` only. Never `canonical.*` or `normalize_utils.*`.
 SSOT: `imports/uac-import-surface-enforcement.mdc`. Full decision tree: `SUB_AGENT_MANDATORY_RULES.md` §0.
