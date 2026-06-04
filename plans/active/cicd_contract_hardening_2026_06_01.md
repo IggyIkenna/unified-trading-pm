@@ -2384,9 +2384,14 @@ behind the exact drift this whole audit is about.
 > diverged one → this alert is its escalation path). Belongs in the CI-alert pipeline (this plan's WAVE 2:
 > #ci-failures + `ci_failure_watcher` + every-alert→orchestrator).
 
-- [ ] [SCRIPT] P2. **Tab-branch divergence monitor → Slack #ci-failures + orchestrator.** Add a check (server-side GHA
-      on push-to-LDR, and/or the per-host `slot-git-status-report.sh` so headless VMs are covered) that, for every
-      `tab/*` branch × every repo, evaluates
+- [x] ✅ [SCRIPT] P2. **Tab-branch divergence monitor → Slack #ci-failures + orchestrator.** SHIPPED 2026-06-04 (PM PR
+      #132 + #134; rolled out to all 24 repos). Folded into the `ldr_to_tabs` job in `tab-mirror-to-ldr.yml` (shares the
+      one `*/15` sweep over `tab/*`): a DIVERGED tab (own commits AND behind LDR) → Slack `#ci-failures`
+      (`SLACK_CI_WEBHOOK_URL`) + best-effort orchestrator `/api/mirror-events`, with repo + per-host roll-up + shas; a
+      generic `root`/`rootm` prefix → name-collision alert. FF/alert-only; never auto-force-resolves. Also flags any
+      `tab/<prefix>/<N>` claimed by >1 host until global-uniqueness fully rolls out. **Original spec:** Add a check
+      (server-side GHA on push-to-LDR, and/or the per-host `slot-git-status-report.sh` so headless VMs are covered)
+      that, for every `tab/*` branch × every repo, evaluates
       `git merge-base --is-ancestor origin/tab/<op>/<N> origin/live-defi-rollout`: **true** (behind-or-equal / ancestor)
       → OK, silent; **false** (DIVERGED — own commits + missing LDR) → **alert**. Alert payload:
       `repo + slot + host (laptop/vm-<id>) + ahead/behind counts + the diverging shas/authors`, plus a fleet roll-up ("N
