@@ -451,6 +451,41 @@ VM.
       Residual nice-to-have: extend the UAC `InstrumentType` enum to cover TradFi series-class tokens, then delete the
       mirror + delegate — tracked here, P3.
 
+## Readiness gate — 4 ready-to-run criteria (slot-5 audit 2026-06-04, handed to slot-6/vm-tradfi to MARK)
+
+> Operator 2026-06-04 named 4 criteria that must be **completed + marked done in this plan** before the TradFi full run.
+> Slot-5 ran a read-only cross-repo audit (2 fan-out agents + self-verification — one agent's "NOT READY" verdict was
+> grep-then-conclude noise: it reported `rebuild_tradfi_manifest.py`/features-preflight/batch-live-parity-test as "not
+> found" when they exist, just in different repos). **The infrastructure for all 4 is in place + verified.** Slot-6 (the
+> owner) should confirm + tick these — slot-5 is NOT marking them (cross-slot ownership). The actual full migration
+> run + E8 legacy-delete stay operator-gated regardless.
+
+- [ ] [DATA] P0. **Criterion 1+2 — migrator + rebuild DRY-RUNS done → mark them.** Both already executed (slot-6
+      2026-06-03, see E4 item above): `migrate_tradfi_to_v9_canonical.py --dry-run` = 5,305,520 objects / 0 err /
+      100,698 placeholders skipped; `rebuild_tradfi_manifest.py --dry-run` = 704,641 shards / 6 venues. ACTION: split
+      the E4 checkbox so the dry-run half can tick `- [x]` (full-VM run stays gated).
+- [ ] [DATA] P0. **Criterion 4 — read/write paths MATCH post-migration everywhere → CONFIRMED, mark it.** slot-5 audit
+      verified all surfaces use the identical `derive_pipeline_mode_for_row` →
+      `pipeline_mode=batch_*/asset_group=tradfi/` (path==manifest invariant): UAC `build_tradfi_partition_path`, live
+      MTDS writer (`orchestrator.py:991-1005`), MDPS candle writer (`get_processed_path` pipeline_mode= — the cross-AG
+      fix mdps@5e7f075 is on LDR), migrator `_canon_rel`, and `rebuild_tradfi_manifest`; readers dual-probe via
+      `candidate_parquet_paths`; the MTDS-mirror vs UAC-builder divergence is closed by the byte-identity test
+      (mtds@ce0a7d7a). ACTION: tick the path-correctness rows.
+- [ ] [CODE] P0. **Criterion 3 — pre-flight + empty/partial (zero-vol/NaN/last-price candles) batch+live → CONFIRMED
+      wired, mark it.** slot-5 audit verified: MDPS finalize-session represents an empty bin as **NaN-volume + prior-day
+      last-price carry-forward**, deterministic + **batch==live** (`tests/unit/test_batch_live_mode_parity.py` +
+      `test_finalize_session_grid_seed.py`); off-session via `market_state`; CF-11 honest-absence in
+      `rebuild_tradfi_manifest.py:241` (`reemit_honest_absence_rows`, trading-day empties → `attempted_failed`);
+      features-service delta_one `dependency_checker` reads the v9 `_index` (`read_availability_index` +
+      `UPSTREAM_DEPS` + `validate_can_run(asset_group=…)` incl. TRADFI); strategy-service `manifest_allocation_guard`.
+      ACTION: tick the preflight/honest-absence rows.
+- [ ] [TEST] P1. **Criterion 3 — the ONE genuine residual: a single END-TO-END batch+live confirmation** that a
+      zero-volume / NaN / off-session TradFi candle flows IS→MTDS→MDPS→features→strategy→execution correctly in BOTH
+      modes (the per-layer pieces are verified individually; what's not pinned is one e2e pass proving they compose — no
+      silent NaN-propagation / phantom-candle / divide-by-zero downstream). Add an e2e/integration test (or a documented
+      manual run) asserting the honest-absence row is consumed as absence (not data) end-to-end. Repos: e2e-testing (+
+      features/strategy if a consumer gap surfaces). parent_epic: mtds_mdps_master.
+
 ## Success criteria
 
 - Canonical `tradfi-prd` `_index` = **v9** (data-state verified) + `pipeline_mode=` partition + `source` populated +

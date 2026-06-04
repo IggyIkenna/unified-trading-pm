@@ -612,15 +612,22 @@ What to verify/wire (B0 corrected scope):
       rows generate; validate the denominator. **GATED on C-GREEN** — the owed rows must land in the canonical structure
       (env-split/`pipeline_mode`/`asset_group=`), so migrate first. Closes deferred
       `issues/expected_unattempted_validation_pending_phase3_2026_05_19.md`. parent_epic: manifest_master.
-- [ ] [CODE] P1. B1 `coverage-summary` (`data_status_service._build_coverage_for_cat`): drop the `len(index)`
-      self-referential denominator; read the 4-state (or expected-dates oracle) + `is_expected()` gate; align with
-      `manifest-status`.
-- [ ] [CODE] P0. B2 drilldown (`data_status_hierarchical._aggregate_counts`): count the 4th bin `expected_unattempted`
-      so genuinely-missing cells appear in the tree (the most useful "where's the missing data" view). Generic path →
-      fixes IS/MTDS/MDPS/features at once.
-- [ ] [CODE] P1. B3 drilldown denominator: `% = captured / (captured+empty+failed+expected_unattempted)`;
-      pre-genesis/launch render out_of_scope (already excluded by the oracle once B0 lands).
-- [ ] [CODE] P2. B4 `data_status_rollup_worker.py`: read the 4-state, not manifest row count.
+- [x] ✅ [CODE] P1. B1 `coverage-summary` (`data_status_service._build_coverage_for_cat`): drops the `len(index)`
+      self-referential denominator — reads the 4-state `capture_status` breakdown + honest `completion_pct`
+      (captured/(captured+empty+failed+expected_unattempted)), aggregated into service totals; v4 rows without
+      capture_status keep the legacy all-captured path. — deployment-api@c631b39 (on LDR) | QG ✅ (938s) | regression:
+      test_data_status_hierarchical.py + test_data_status_capture_status.py (603 green).
+- [x] ✅ [CODE] P0. B2 drilldown (`data_status_hierarchical._aggregate_counts`): now counts the 4th bin
+      `expected_unattempted` (4-tuple); `DrilldownNode`+`_totals_dict`+`_children_for_axis`+both
+      `get_hierarchical_drilldown` unpack sites carry it; to_dict golden schema now 11 keys. Generic path → fixes
+      IS/MTDS/MDPS/features at once. — deployment-api@c631b39 | regression:
+      test_to_dict_golden_schema_has_exactly_eleven_keys + test_capture_status_counts_split_by_status (4-bin) +
+      test_expected_unattempted_counts_in_total_and_dilutes_completion.
+- [x] ✅ [CODE] P1. B3 drilldown denominator: `% = captured / (captured+empty+failed+expected_unattempted)` — `total`
+      property + `_totals_dict` + B1 coverage all include the 4th bin. — deployment-api@c631b39.
+- [x] ✅ [CODE] P2. B4 `data_status_rollup_worker.py`: **subsumed by B1** — the worker only delegates to
+      `_get_coverage_summary_sync`/`_get_manifest_status_sync` (no row-count denominator of its own); B1's 4-state flows
+      through it. Verified: worker `len()` uses are blob byte-sizes + asset_group count only. — deployment-api@c631b39.
 - [ ] [UI] P1. B5 deployment-ui drilldown: render the 4-state (esp. `expected_unattempted`) + per-chain split; badge
       legend. (playwright gate applies)
 
@@ -841,21 +848,26 @@ What to verify/wire (B0 corrected scope):
       `migrate*\*.py`; dry-run-able; ruff+parse clean; helpers verified) — that takes the     flat objects to FULL canonical: `category=defi`→`asset_group=defi`+`pipeline_mode={MODE}`partition +     schema_version=9 +`source`column (UAC SOURCE_PRIORITY) + canonical`\_V{N}` venue (UAC SSOT, complete incl     TraderJoe/Velodrome post-C12-UAC) + **`available_at`preserve-or-backfill** (preserve where present; backfill only     missing/null from day end-of-day UTC — never regenerate to migration-time) + env-split`{kind}-prd-{project}`
       bucket. mtds@a07cea55; launcher deployment-service@4484802. **Remaining = the C0a–C0f VM-cutover sub-todos
       below.** parent_epic: manifest_master. **The VM-cutover sequence is tracked as explicit sub-todos C0a–C0f below.**
-  - [ ] [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets do NOT exist yet** (slot/Harsh bucket-state
-        verification 2026-06-02): `oracle-prices-prd`, `lst-rates-prd`, `lending-indices-prd`, `perp-funding-prd`,
-        `gas-fees-prd` (also confirm `evm-defi`/`solana-defi`/`liquidations` `-prd`). The logical mapping already exists
-        — `deployment-service/configs/cloud-providers.yaml` resolves these to `{stem}-prd-{pid}` (dedicated per-type,
-        settled 2026-06-02 — NOT folded into `market-data-tick-defi-prd`) — but the physical buckets are unprovisioned,
-        so `migrate_defi_full_v9_canonical` would fail-write the oracle/lst/lending/perp/gas data_types. HARD
-        prerequisite for the C0d apply for those types (NOT for dex_pools/dex_swaps, whose `-prd` buckets exist).
-        Provision via Terraform before C0d. (NOT launched — documented per operator "no new buckets/VMs for now".)
-        parent_epic: manifest_master.
+  - [x] ✅ [SCRIPT] P0. C0-PROVISION — **5 dedicated DeFi `-prd` buckets PROVISIONED** (operator-authorized 2026-06-03,
+        supersedes the "no new buckets/VMs" pause): `oracle-prices-prd`, `lst-rates-prd`, `lending-indices-prd`,
+        `perp-funding-prd`, `gas-fees-prd` — all `*-prd-central-element-323112`, ASIA-NORTHEAST1, NEARLINE@90d +
+        versioning + UBLA + prod labels. Via `terraform apply -target` against `terraform/state/prod` (clean-create:
+        plan = 5 add / 0 change / 0 destroy; backend reset to dev after; `gcloud storage buckets describe` verified all
+        5). `evm-defi-prd`/`solana-defi-prd`/`eigenlayer-rewards-prd` + `dex-pools`/`dex-swaps` `-prd` already existed.
+        **Residual (P1)**: `liquidations-prd` is absent + has no TF resource (`liquidations_handler` resolves it via
+        cloud-providers.yaml:186) → future liquidations backfills would fail-write; add the TF resource + apply. —
+        deployment-service (TF resources applied). parent_epic: manifest_master.
   - [x] ✅ [CODE] P0. C0a — wire the tool into the launcher **DONE** (deployment-service@4484802;
         dry=default/full=--apply; `bash -n` + command-emission verified). Remaining: a `--start/--end` smoke on a 1-day
         slice (rolls into C0b dry VM).
   - [ ] [DATA] P0. C0b — **dry VM** (`launch-canonical-migration-vm.sh defi <start> <end> dry`) → review the planned
         rewrites in the VM log (sample legacy→canonical paths, venue canonicalisation,
-        v9/source/pipeline_mode/available_at).
+        v9/source/pipeline_mode/available_at). **Discover-phase CORPUS SCOPING DONE** (local dry-run 2026-06-03,
+        workers=32, read-only): 6 buckets / **~458,486 objects** / discover wall ~2.2h — dex-pools 191,451 (53 union
+        cols), lending-indices 138,325 (43), dex-swaps 69,236, lst-rates 34,821 (17), oracle-prices 13,167, perp-funding
+        11,486. Sharding/perf: dex-pools+lending+swaps ≈88% of objects → most date-shards/workers there; the launcher's
+        date-shard + `--workers 96` + per-bucket-VM model fits; union cols vary (53/43/17) so v9 must union per-bucket.
+        Remaining = the `--phase all` migrate-PLAN dry run (planned_cells per bucket) on the dry VM.
   - [ ] [DATA] P0. C0c — **pre-migration drain (HARD RULE)**: stop GCP+AWS fleet (`vm_zombie_watchdog.py` inventory →
         per-prefix SIGTERM → wait STOPPED) + run consolidator + snapshot each in-scope `_index` to
         `_index/snapshots/pre_migration_2026_06_01.parquet`. Confirm the bucket-remediation DeFi seed is NOT mid-walk
