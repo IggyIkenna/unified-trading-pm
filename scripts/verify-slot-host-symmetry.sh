@@ -192,6 +192,13 @@ else
     esac
 fi
 
+# Snapshot HOST-level failures (checks 1-8: crons, logs, backend, token, .tabs) BEFORE the
+# per-worktree checks below. The per-worktree checks (#9 identity, #10 upstream) iterate
+# hundreds of worktrees and can report hundreds of nits — real, but commit-hygiene/drift
+# concerns, NOT host symmetry. The --alert Slack post fires ONLY on host_fail>0 so a host
+# that's fully symmetric doesn't spam "475 failed" every 30 min over per-worktree nits.
+host_fail=${fail}
+
 # 9. Per-worktree commit identity (recurrence guard for commit_identity_misconfig_fleet_2026_06_03).
 #    Every slot worktree must carry the canonical identity — user.email == the GitHub-
 #    attributed account AND user.name == "ikennaigboaka [slot-<N>·…". A bot/CI email
@@ -266,18 +273,22 @@ fi
 section "result: ${pass} passed / ${fail} failed"
 
 if [[ ${fail} -gt 0 ]]; then
-    # --alert (periodic-cron mode): post a concise drift alert to Slack so an
-    # unattended host's symmetry drift is VISIBLE, not just exit-1 into a log.
-    if [[ ${ALERT} -eq 1 ]]; then
+    # --alert (periodic-cron mode): post a Slack drift alert ONLY on HOST-level breaks
+    # (crons/logs/backend/token/.tabs) — NOT per-worktree nits (#9/#10), which can number in
+    # the hundreds and would spam. Per-worktree drift is logged + exit-1'd, just not alerted.
+    if [[ ${ALERT} -eq 1 && ${host_fail:-0} -gt 0 ]]; then
+        _wt_fail=$(( fail - host_fail ))
         _wh="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null || true)}"
         if [[ -n "${_wh}" ]]; then
             _host="$(hostname)"
             curl -sS -X POST "${_wh}" -H 'Content-Type: application/json' \
-                -d "{\"text\":\":warning: slot-host-symmetry DRIFT on \`${_host}\` — ${fail} check(s) failed (of $((pass+fail))). Run verify-slot-host-symmetry.sh on that host to see + fix. SSOT: CLAUDE.md § 'Local slot host = VM slot host'.\"}" \
-                >/dev/null 2>&1 && echo "[alert] posted symmetry-drift alert to Slack" || echo "[alert] WARN: Slack post failed"
+                -d "{\"text\":\":warning: slot-host-symmetry DRIFT on \`${_host}\` — ${host_fail} HOST-level check(s) failed (crons/logs/backend/token)$([ ${_wt_fail} -gt 0 ] && echo " + ${_wt_fail} per-worktree nit(s)"). Run verify-slot-host-symmetry.sh on that host. SSOT: CLAUDE.md § 'Local slot host = VM slot host'.\"}" \
+                >/dev/null 2>&1 && echo "[alert] posted host-level symmetry-drift alert to Slack" || echo "[alert] WARN: Slack post failed"
         else
-            echo "[alert] WARN: no Slack webhook (set AGENT_ORCHESTRATOR_SLACK_WEBHOOK or grant gcloud SM access) — drift NOT alerted"
+            echo "[alert] WARN: no Slack webhook — host-level drift NOT alerted"
         fi
+    elif [[ ${ALERT} -eq 1 ]]; then
+        echo "[alert] host-level checks PASS; $(( fail - host_fail )) per-worktree nit(s) only — NOT alerting (logged + exit-1)"
     fi
     [[ ${QUIET} -eq 0 ]] && cat <<EOF
 
