@@ -13,6 +13,7 @@ from detect_template_drift import (  # type: ignore[import-not-found]
     PREK_SSOT_COMMENT,
     _check_prek,
     _check_repo,
+    _check_workflows,
     run,
 )
 
@@ -277,3 +278,58 @@ class TestCheckPrek:
         report = _check_prek("test-service", "service", tmp_repo)
         checks = [i.check for i in report.items]
         assert any("prek-stale-rev" in c for c in checks)
+
+
+class TestCheckWorkflows:
+    """Workflow-template byte-parity guard (the SSOT enforcement for flat-copied workflows)."""
+
+    @staticmethod
+    def _setup(workspace: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        """Point WORKFLOW_TEMPLATE_DIR at a tmp template dir holding one flat .yml template."""
+        import detect_template_drift as mod  # type: ignore[import-not-found]
+
+        tmpl_dir = workspace / "unified-trading-pm" / "scripts" / "workflow-templates"
+        tmpl_dir.mkdir(parents=True, exist_ok=True)
+        (tmpl_dir / "tab-mirror-to-ldr.yml").write_text("name: tab-mirror\non: {push: {}}\n")
+        # a .yml.tmpl must be IGNORED (substituted per-repo, not byte-comparable)
+        (tmpl_dir / "semver-agent.yml.tmpl").write_text("name: semver {{SUB}}\n")
+        monkeypatch.setattr(mod, "WORKFLOW_TEMPLATE_DIR", tmpl_dir)
+        return tmpl_dir
+
+    def _write_copy(self, workspace: Path, repo: str, name: str, content: str) -> None:
+        wf = workspace / repo / ".github" / "workflows"
+        wf.mkdir(parents=True, exist_ok=True)
+        (wf / name).write_text(content)
+
+    def test_matching_copy_is_clean(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._setup(tmp_repo, monkeypatch)
+        self._write_copy(tmp_repo, "svc", "tab-mirror-to-ldr.yml", "name: tab-mirror\non: {push: {}}\n")
+        report = _check_workflows("svc", "service", tmp_repo)
+        assert report.is_clean, f"expected clean, got {report.items}"
+
+    def test_differing_copy_errors(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._setup(tmp_repo, monkeypatch)
+        self._write_copy(tmp_repo, "svc", "tab-mirror-to-ldr.yml", "name: tab-mirror\non: {push: {}}\n# HAND EDIT\n")
+        report = _check_workflows("svc", "service", tmp_repo)
+        assert report.has_errors
+        assert any(i.check == "workflow-drift-tab-mirror-to-ldr.yml" for i in report.items)
+
+    def test_missing_copy_warns_not_errors(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._setup(tmp_repo, monkeypatch)
+        (tmp_repo / "svc").mkdir()  # repo present but no .github/workflows copy
+        report = _check_workflows("svc", "service", tmp_repo)
+        assert report.has_warnings and not report.has_errors
+        assert any(i.check == "workflow-missing-tab-mirror-to-ldr.yml" for i in report.items)
+
+    def test_tmpl_template_is_ignored(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._setup(tmp_repo, monkeypatch)
+        self._write_copy(tmp_repo, "svc", "tab-mirror-to-ldr.yml", "name: tab-mirror\non: {push: {}}\n")
+        report = _check_workflows("svc", "service", tmp_repo)
+        # only the flat .yml is checked; the .yml.tmpl never produces a finding
+        assert not any("semver-agent" in i.check for i in report.items)
+
+    def test_absent_repo_warns_for_ci_noop(self, tmp_repo: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._setup(tmp_repo, monkeypatch)
+        report = _check_workflows("not-checked-out", "service", tmp_repo)
+        assert report.has_warnings and not report.has_errors
+        assert any(i.check == "workflow-repo-absent" for i in report.items)

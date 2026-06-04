@@ -448,6 +448,27 @@ if [ -f "$VM_REGISTRY_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: Workflow-template parity — baselined ratchet (blocking on NEW drift) ──
+# SSOT: detect_template_drift.py § "workflow-template parity". Flat .github/workflows/*.yml are
+# cp'd verbatim from scripts/workflow-templates/ by rollout-workflow-templates.sh, so every per-repo
+# copy MUST byte-match the SSOT. Closes the hole that flat-copied workflows had no drift guard for
+# (e.g. the tab-mirror-to-ldr.yml dual-path). Ratcheted: only NEW drift beyond
+# workflow_template_drift_baseline.json blocks; CI (siblings absent) degrades to a no-op, so this is
+# the LOCAL / full-workspace gate. Ratchet down via --baseline-write as repos are re-rolled-out.
+WORKFLOW_PARITY_CHECKER="${REPO_ROOT}/scripts/quality_gates/detect_template_drift.py"
+if [ -f "$WORKFLOW_PARITY_CHECKER" ]; then
+    echo "Running workflow-template parity check (baselined ratchet)..."
+    if python3 "$WORKFLOW_PARITY_CHECKER" --workflows >/dev/null; then
+        log_success "Workflow-template parity passed (no new drift beyond baseline)"
+    else
+        echo "❌ NEW workflow-template drift — a .github/workflows/*.yml copy diverged from its SSOT" >&2
+        echo "   Run: python3 ${WORKFLOW_PARITY_CHECKER} --workflows   (shows which repo/template)" >&2
+        echo "   Fix: re-run rollout-workflow-templates.sh — NEVER hand-edit a per-repo copy" >&2
+        echo "   If intentional, re-baseline: python3 ${WORKFLOW_PARITY_CHECKER} --baseline-write" >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: Credential-ask orphan scanner — baselined ratchet ──
 # SSOT: CLAUDE.md § "External Data Is Always Available — Never Silently Defer Adapters" (HARD RULE).
 # Every BLOCKED-CREDENTIALS plan item MUST cite an operator credential-ask ping (filed in
