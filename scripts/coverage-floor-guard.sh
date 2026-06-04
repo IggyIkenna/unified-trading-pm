@@ -10,8 +10,11 @@ QG_SCRIPT="${1:-scripts/quality-gates.sh}"
 PYPROJECT="${2:-pyproject.toml}"
 EXCEPTION_FILE=".coverage-floor-exception.md"
 
-# Read MIN_COVERAGE from repo QG stub
-MIN_COVERAGE=$(grep -E '^MIN_COVERAGE=' "$QG_SCRIPT" 2>/dev/null | head -1 | cut -d'=' -f2 || echo "$SYSTEM_FLOOR")
+# Read MIN_COVERAGE from repo QG stub.
+# `cut -d'#' -f1` strips any inline comment (e.g. `MIN_COVERAGE=28  # ISS-031: restore...`) BEFORE the
+# whitespace-strip — otherwise the comment glues onto the value (`28#ISS-031...`) and every integer
+# comparison below errors with "integer expression expected", silently masking the floor check.
+MIN_COVERAGE=$(grep -E '^MIN_COVERAGE=' "$QG_SCRIPT" 2>/dev/null | head -1 | cut -d'=' -f2 | cut -d'#' -f1 || echo "$SYSTEM_FLOOR")
 MIN_COVERAGE="${MIN_COVERAGE//[[:space:]]/}"
 
 # Read fail_under from pyproject.toml
