@@ -286,10 +286,11 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 - [x] ✅ [SCRIPT] P2. **unified-trading-pm QG blind spot — FIXED (pm@c04f7760b + mtds@f2c6ada0).** Was: the QG scanned
       only `cli/handlers/`, so the `engine/`-resident `_VENUE_WIRE_SYMBOL_FALLBACK` dict was INVISIBLE to the gate.
       **DONE:** `no_hardcoded_venue_universe.sh` now scans BOTH `cli/handlers/` AND `engine/`, adds the
-      `_WIRE_SYMBOL_FALLBACK` / `_VENUE_*_FALLBACK` patterns, and an inline `# qg-allow: venue-universe-fallback <reason>`
-      allowlist for a deliberately-gated fallback. Verified: the extended scan flags the unmarked dict (exit 1) and
-      passes once marked. mtds@f2c6ada0 carries the sanction marker on `_VENUE_WIRE_SYMBOL_FALLBACK` (gated behind
-      `MTDS_ALLOW_HARDCODED_UNIVERSE_FALLBACK`); any NEW unmarked hardcoded-universe dict in engine/ now fails the gate.
+      `_WIRE_SYMBOL_FALLBACK` / `_VENUE_*_FALLBACK` patterns, and an inline
+      `# qg-allow: venue-universe-fallback <reason>` allowlist for a deliberately-gated fallback. Verified: the extended
+      scan flags the unmarked dict (exit 1) and passes once marked. mtds@f2c6ada0 carries the sanction marker on
+      `_VENUE_WIRE_SYMBOL_FALLBACK` (gated behind `MTDS_ALLOW_HARDCODED_UNIVERSE_FALLBACK`); any NEW unmarked
+      hardcoded-universe dict in engine/ now fails the gate.
 - [x] ✅ [CODE] P2. **strategy-service — IS instrument-existence guardrail ADDED (strategy@fdb86a54, QG exit 0).** Was:
       `preflight.py` (venue auth+balance only) + `risk_preflight_gate.py` (risk rules only) never validated a cefi
       instrument EXISTS in IS for the date before emitting an instruction → a config naming a delisted/non-existent cefi
@@ -314,19 +315,36 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 
 **🟡 GAPS — Dim 7 (denominator precision):**
 
-- [ ] [CODE] P2. **deployment-api in-process per-instrument denominator uses a capped MVP seed, not the real IS
-      universe.** `data_status_service.py:1417` `_per_instrument_shard_denominator` →
-      `get_expected_instruments_for_venue(...,     instruments_provider=None)` → falls back to
-      `_SPOT_MVP_SEED_INSTRUMENTS` (21) + `_PERP_MVP_SEED_INSTRUMENTS` (10) (`market_data_categories.py:1013-1058`) →
-      UNDER-counts the real ~200-perp / full-spot cefi universe → that path's coverage reads optimistically (mitigated
-      where the manifest-seeded `expected_unattempted` rows dominate, but the two universes can disagree). **Fix:**
-      inject a live IS-catalog `instruments_provider` (or raise the per-instrument cap) for cefi so the in-process
-      denominator matches the enumerator's full universe.
-- [ ] [INFRA] P3. **`expected_unattempted` is enumerator-run-dependent (not auto per-write).** A not-yet-backfilled cefi
-      cell is invisible until the v2 enumerator VM runs (`launch-expected-universe-v2-vm.sh cefi --apply-write`; cadence
-      "one-shot then quarterly"). cefi is currently seeded (4.1M rows) but NEW venues/instruments between runs are
-      invisible (`honest_coverage.py:623` warns a fresh AG reads a misleading 100%). **Fix:** schedule the cefi v2
-      enumerator on a recurring cron (not one-shot/quarterly).
+- [x] ✅ [CODE] P2. **deployment-api in-process per-instrument denominator now uses the live IS universe — FIXED
+      (deployment-api@d55bcb6, QG exit 0, 407s).** Was: `_per_instrument_coverage` sized the cefi per-(instrument,date)
+      denominator from UAC's capped MVP seed (21 spot / 10 perp) → under-counted the real ~200-perp cefi universe →
+      optimistic coverage. **DONE:** new `_build_cefi_is_instruments_provider(cloud)` reads the live IS cefi
+      availability index (`instruments-store-cefi` via `resolve_bucket_name` + `read_availability_index` →
+      `{venue: [instrument_id]}`) ONCE per CEFI category call and injects it into `get_expected_instruments_for_venue`
+      with `cap=None` (no MVP truncation); other asset_groups unchanged (provider=None, cap=50). **Fail-open done
+      RIGHT:** catalog unreadable/empty → builder returns `None` (NOT a `lambda: None` provider) so the caller injects
+      no provider and UAC uses its MVP seed — a non-None provider that _returns_ None would yield an EMPTY universe
+      (denominator→0); caught this exact bug in review (it had broken `test_cefi_per_venue_denominator_honest` +
+      `test_category_completion_not_tautology`) and fixed it. +6 unit tests; basedpyright 0. NB: uses the IS
+      availability index (the IS-published instrument_id universe) — same underlying IS data the v2 enumerator's catalog
+      derives from, without replicating its catalog loader.
+- [ ] [INFRA] P3. **`expected_unattempted` is enumerator-run-dependent (not auto per-write) — BLOCKED-OPERATOR-DECISION
+      on a missing prerequisite (slot-3 2026-06-04).** A not-yet-backfilled cefi cell is invisible until the v2
+      enumerator VM runs (`launch-expected-universe-v2-vm.sh cefi --apply-write`; cadence "one-shot then quarterly").
+      cefi is currently seeded (4.1M rows) but NEW venues/instruments between runs are invisible
+      (`honest_coverage.py:623` warns a fresh AG reads a misleading 100%). **Why a naive recurring cron is NOT
+      shippable:** the v2 enumerator REQUIRES `--catalog-path` = a pre-built IS catalog parquet
+      (`gs://instruments-store-cefi-{env_short}-{project}/{env}/catalog.parquet`; the launcher defaults to it,
+      `enumerate_expected_universe.py:1410` hard-fails `missing_catalog_path` without it). **NO automated/recurring
+      producer of that `catalog.parquet` exists** (workspace grep 2026-06-04: only the launcher + its test reference the
+      path; nothing writes it) — it is operator-supplied. So a recurring enumerator scheduler would read a stale/absent
+      catalog (fire-and-forget failure, banned). A correct fix needs a PREREQUISITE: either (a) add a recurring
+      catalog-build step that writes `{env}/catalog.parquet` from the IS store, or (b) refactor the v2 enumerator to
+      build its catalog from the IS availability index at runtime (the exact `read_availability_index`→`{venue:[ids]}`
+      pattern deployment-api now uses in `_build_cefi_is_instruments_provider`, eliminating the `--catalog-path`
+      dependency). A drafted `expected_universe_cefi_scheduler.tf` (Cloud Run Job + weekly Scheduler, env-tiered buckets
+      per `manifest_consolidator_scheduler.tf`) was NOT committed pending this decision. **Operator: pick (a) or (b)
+      before scheduling.**
 
 **VERDICT:** ⑥ **PARTIAL** — IS-derived per-date capture + UAC combo gate + execution preflight are real + date-correct;
 the residual holes (date-blind MTDS fallback un-caught by its QG, no strategy IS-existence check, swallowed Deribit live
