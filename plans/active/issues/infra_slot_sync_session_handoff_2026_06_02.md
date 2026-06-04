@@ -295,3 +295,16 @@ head=`live-defi-rollout`** → every successful staging promotion AUTO-DELETES t
       uv WORKSPACE settings-discovery issue specific to the full CI clone layout (siblings + editable [tool.uv.sources]
       → UTL+UAC). Repro needs running deployment-service `quality-gates.sh` locally with all deps cloned. repo:
       deployment-service. (PR #18 staging<-LDR stays blocked until fixed.)
+
+## Fleet promotion FINISHED (2026-06-04 ~21:00) — Semver Agent re-fired with fixed template
+
+After deploying the corrected template fleet-wide, re-kicked every repo's staging quality-gates-v2 to re-fire Semver
+Agent. RESULT — fleet versioning/release pipeline (dead since 06-03) RESTORED:
+- [x] ✅ **~22/25 manifest repos promote GREEN** on the fixed template: success (UTL v1.2.0, UAC, instruments v1.3.0,
+      strategy, execution, mtds, alerting, ibkr, batch, client-reporting, trading-agent, ml-service, greeks,
+      fund-admin, e2e-testing, unified-trading-api, deployment-ui) OR skipped=healthy-no-bump (deployment-api, mdps,
+      system-integration-tests).
+- [ ] [INFRA] P2. **unified-trading-system-ui semver-agent fails step 2 checkout: "Input required and not supplied:
+      token"** — repo is MISSING the `GH_PAT` secret (other repos have it). Also a TS repo running the PYTHON
+      semver-agent template (questionable fit — it greps pyproject version). Decide: add GH_PAT secret OR remove
+      semver-agent from UI repos (use package.json versioning). repo: unified-trading-system-ui.
