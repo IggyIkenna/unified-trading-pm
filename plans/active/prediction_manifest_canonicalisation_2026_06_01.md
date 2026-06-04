@@ -651,33 +651,44 @@ verify + the gated delete.
       keeps a legacy `category=` dual-probe fallback for the migration window — correct). No downstream reader stuck on
       a legacy-only path. CONFIRMED.
 
-**GAPS (the remaining work to reach fully-ready):**
+**GAPS — both readiness-blocking P1s now CLOSED 2026-06-04 (slot-4); residual = 2 latent P2s (observability + a UAC
+venue-override question) + the operator-gated migration walk:**
 
-- [ ] [CODE] P1. **MTDS keystone: migrator `pipeline_mode` for cqg DRIFTS from the UAC SSOT** — repo:
-      `market-tick-data-service`. `migrate_prediction_to_pred_prd_v9.py:89`
-      `_GAMMA_DATA_TYPES =     {prediction_canonical_question_group}` maps cqg→`batch_polymarket_gamma_api`, but the
-      authoritative UAC SSOT `source_priority.py:271` says
-      `("prediction","prediction_canonical_question_group") = ["polymarket_clob"]` → CLOB, and BOTH the live writer
-      (`orchestrator.py:1001` via `derive_pipeline_mode_for_row`→SOURCE_PRIORITY) AND the rebuild
-      (`rebuild_prediction_manifest.py:401` hardcoded CLOB, "mirror the live writer") use CLOB. So the migrator is the
-      lone outlier (3-of-4 say CLOB) AND it omits `MARKET_LIFECYCLE` which IS gamma per `source_priority.py:278`.
-      **Latent today** (cqg is manifest-only — no raw cqg objects to migrate; MARKET_LIFECYCLE is instruments-service
-      data, outside the MTDS migrator's raw_tick/candle scope — so the migrator's ACTUAL output is all-CLOB, correct),
-      but it's a path==manifest divergence RISK + SSOT drift (the exact sports-keystone bug class). **Fix (durable,
-      mirrors the sports `pipeline_mode_for_sports_entity` SSOT-unification):** route the migrator's
-      `_pipeline_mode_for_data_type` through UTL `derive_pipeline_mode_for_row("POLYMARKET","prediction",data_type)`
-      (the same SSOT the live writer uses) — auto-corrects cqg→CLOB + MARKET_LIFECYCLE→gamma, deletes the local map so
-      it can never drift again. Also align the rebuild's hardcode to the SSOT (same function) so all FOUR derive
-      identically. **Operator semantic confirm**: the migrator comment claims cqg is "Gamma API topology origin"; the
-      SSOT says CLOB (cqg atom = aggregated CLOB trades). If the operator wants cqg=gamma, change SOURCE_PRIORITY (+ all
-      4 consumers) instead — but as-is the SSOT is CLOB and the migrator must match it. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. **MDPS prediction consolidator preflight MISSING (sports-only today)** — repo:
-      `market-data-processing-service`. `app/core/dependency_checker.py:359` gates `assert_consolidator_healthy()` on
-      `if asset_group.upper() == "SPORTS"` only — prediction gets NO upstream manifest-consolidator health gate, so a
-      stale/missing pred-prd `_index` is read silently on live (the exact gap the sports gate closes). **Fix:** extend
-      the gate to PREDICTION (kinds `("market-data","instruments-store")`, `asset_group="prediction"` →
-      `market-data-tick-pred-prd` + `instruments-store-pred-prd`), ideally generic for any AG with a consolidator.
-      Mirror the sports test. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. **MTDS keystone: migrator+rebuild pipeline_mode unified through the UAC SSOT — DONE 2026-06-04
+      (slot-4, operator cqg=clob decision)** — market-tick-data-service@ea2c2d50. The migrator's local
+      `_GAMMA_DATA_TYPES={prediction_canonical_question_group}` (cqg→`batch_polymarket_gamma_api`) drifted from the
+      authoritative UAC SSOT — `source_priority.py:271`
+      `("prediction","prediction_canonical_question_group") =     ["polymarket_clob"]` — while the live writer
+      (`derive_pipeline_mode_for_row`) + the rebuild (hardcoded CLOB) already used CLOB → migrated object PATH could
+      disagree with the manifest ROW (path==manifest risk; sports-keystone class). **Fix:** routed BOTH
+      `_pipeline_mode_for_data_type` (migrator) AND `bundle_pm` (rebuild) through the SAME UTL
+      `derive_pipeline_mode_for_row("POLYMARKET","prediction",data_type)` SSOT the live writer uses → all three derive
+      IDENTICALLY, local map deleted. cqg/trades/candles → `batch_polymarket_clob`. 3 regression tests lock
+      migrator==SSOT parity; 22 existing rebuild tests unchanged; QG green (225s). **SSOT nuance found + recorded:**
+      `derive_pipeline_mode_for_row` resolves ALL Polymarket data_types to CLOB because a **venue override**
+      (`POLYMARKET → BATCH_POLYMARKET_CLOB` in `pipeline_mode_resolver.py:_VENUE_OVERRIDES`) short-circuits BEFORE the
+      per-data_type SOURCE_PRIORITY lookup — so `MARKET_LIFECYCLE` resolves CLOB too (despite `source_priority.py:278`
+      data = gamma). That keeps all four consumers consistent at CLOB (good for path==manifest) but is a separate latent
+      UAC question → see the new handoff todo below. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P2. **HANDOFF→UAC/prediction: POLYMARKET venue override masks the per-data_type gamma source** — repo:
+      `unified-api-contracts` (+ `unified-trading-library`). `derive_pipeline_mode_for_row`'s
+      `_VENUE_OVERRIDES["POLYMARKET"]     = BATCH_POLYMARKET_CLOB` fires before the SOURCE_PRIORITY lookup, so
+      `("prediction","MARKET_LIFECYCLE") =     ["polymarket_gamma_api"]` (`source_priority.py:278`) is NEVER realised —
+      every Polymarket row (incl. gamma-sourced MARKET_LIFECYCLE) resolves CLOB. Latent (all consumers use the resolver
+      → all consistent at CLOB; no live MARKET_LIFECYCLE pipeline_mode-sensitive divergence today). Decide: is the broad
+      venue override correct (all Polymarket = clob — then `batch_polymarket_gamma_api` is effectively dead +
+      SOURCE_PRIORITY:278 is misleading), or should the override yield to the per-data_type source so MARKET_LIFECYCLE =
+      gamma? Surfaced 2026-06-04 while unifying the migrator. **DEFERRED** to the prediction/UAC track. parent_epic:
+      mtds_mdps_master.
+- [x] ✅ [CODE] P1. **MDPS prediction consolidator preflight — DONE 2026-06-04 (slot-4, parity with sports)** —
+      market-data-processing-service@eb8d00a. `dependency_checker.validate_can_run` gated
+      `assert_consolidator_healthy()` (market-data + instruments-store) on `asset_group==SPORTS` ONLY → prediction MDPS
+      read the pred-prd `_index` with no consolidator health gate (stale/missing read silently on live). Extended the
+      gate to PREDICTION. Key correctness detail: prediction resolves the **dedicated flat kinds**
+      `market-data-tick-prediction` / `instruments-store-prediction` (→ `*-pred-prd`), NOT the per-AG map (kind=
+      `market-data`, asset_group=`prediction`) which RAISES `BucketNamingError` (prediction not in the map — the same
+      map-vs-flat asymmetry as the execution-store). 2 new tests (both flat kinds gated + stale raises) + 4 existing
+      sports tests green; QG green (156s). parent_epic: mtds_mdps_master.
 - [ ] [CODE] P2. **instruments-service preflight short-circuits emit no `PREFLIGHT_SKIPPED`** (observability parity) —
       DUPLICATE of the existing IS STEP 5.64 todo above; 5 `_should_skip_date_for_per_league` sites in `orchestrator.py`
       (5398/5673/5894/6518/6821) return silently; `emit_preflight_skip` (UTL) is not imported. Not a run-blocker
