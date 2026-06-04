@@ -580,29 +580,30 @@ verify + the gated delete.
       `start_date ≤ day < end_date_iso` (live + in-window) → `record_failed` (attempted_failed); else preserve typed
       empty. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P1. **instruments-service MARKET_LIFECYCLE for prediction — ROOT-CAUSED + FIXED (slot-5 IS@4105bba3) +
-      writer VERIFIED (slot-6 IS@e3360f05); two complementary findings reconciled 2026-06-03.** BOTH were true. **(1) slot-5
-      found + fixed the upstream BUCKET-RESOLUTION CRASH**: `_get_instruments_bucket("prediction")` called
-      `resolve_bucket_name(kind="instruments-store", asset_group="prediction")`, but `cloud-providers.yaml`'s per-asset_group
-      `instruments-store:` dict has only CEFI/DEFI/TRADFI/SPORTS (prediction is the FLAT kind `instruments-store-prediction`)
-      → it raised `BucketNamingError` at `orchestrator.py:2263` BEFORE the per-venue write loop, so the ENTIRE prediction
-      write (`instruments.parquet` AND `market_lifecycle.parquet`) aborted → 0 objects. Fix = new
-      `resolve_instruments_store_kind()` routes prediction → flat kind (used by engine `_get_instruments_bucket` + CLI
-      `_get_instruments_bucket_for_asset_group`), resolving to `instruments-store-pred-prd-…` identical to the MTDS reader;
-      106 tests (the old `test_bucket_name_prediction_uses_category_prefix` ENCODED the bug — corrected). **(2) slot-6
-      independently VERIFIED the writer LOGIC is correct**: `orchestrator._write_market_lifecycle` (from
-      `save_instrument_data_to_gcs`) emits `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet`
-      with `market_id`/`market_created_at`/`settlement_time` (round-trip with the MTDS reader); +8 contract tests.
+      writer VERIFIED (slot-6 IS@e3360f05); two complementary findings reconciled 2026-06-03.** BOTH were true. **(1)
+      slot-5 found + fixed the upstream BUCKET-RESOLUTION CRASH**: `_get_instruments_bucket("prediction")` called
+      `resolve_bucket_name(kind="instruments-store", asset_group="prediction")`, but `cloud-providers.yaml`'s
+      per-asset_group `instruments-store:` dict has only CEFI/DEFI/TRADFI/SPORTS (prediction is the FLAT kind
+      `instruments-store-prediction`) → it raised `BucketNamingError` at `orchestrator.py:2263` BEFORE the per-venue
+      write loop, so the ENTIRE prediction write (`instruments.parquet` AND `market_lifecycle.parquet`) aborted → 0
+      objects. Fix = new `resolve_instruments_store_kind()` routes prediction → flat kind (used by engine
+      `_get_instruments_bucket` + CLI `_get_instruments_bucket_for_asset_group`), resolving to
+      `instruments-store-pred-prd-…` identical to the MTDS reader; 106 tests (the old
+      `test_bucket_name_prediction_uses_category_prefix` ENCODED the bug — corrected). **(2) slot-6 independently
+      VERIFIED the writer LOGIC is correct**: `orchestrator._write_market_lifecycle` (from
+      `save_instrument_data_to_gcs`) emits
+      `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet` with
+      `market_id`/`market_created_at`/`settlement_time` (round-trip with the MTDS reader); +8 contract tests.
       **RECONCILED**: slot-6's "writer correct → residual is a backfill" was right about the writer but tested it in
-      ISOLATION (mocked bucket) so it MISSED the upstream crash — in the real pipeline the writer was never reached. Net:
-      the bucket fix makes the writes RUN, the (verified) writer emits the correct path/columns, and the PRIMARY
-      `market_lifecycle/` objects populate on the next IS prediction run (operator-gated backfill — `--asset-group
-      prediction` for the range; the MTDS `instrument_availability` bridge mtds@62b7ff74 covers the interim).
-      Column-contract verified both ways (no drift). NOTE: local QG `uv.lock` pre-gate is a foreign host-uv false-positive
-      (committed lock correct `pyjwt>=2.13.0`; server `quality-gates-v2` passes). ORIGINAL (superseded — never reached
-      classify_lifecycle): the writer is wired —
-      `orchestrator.py:2418 _write_market_lifecycle(...)` is called per-canonical-group inside the prediction branch;
-      `_build_market_lifecycle_df` (orchestrator.py:3324) builds from `venue_df` which is
-      `InstrumentRecord.model_dump()` (orchestrator.py:2238) → it HAS
+      ISOLATION (mocked bucket) so it MISSED the upstream crash — in the real pipeline the writer was never reached.
+      Net: the bucket fix makes the writes RUN, the (verified) writer emits the correct path/columns, and the PRIMARY
+      `market_lifecycle/` objects populate on the next IS prediction run (operator-gated backfill —
+      `--asset-group     prediction` for the range; the MTDS `instrument_availability` bridge mtds@62b7ff74 covers the
+      interim). Column-contract verified both ways (no drift). NOTE: local QG `uv.lock` pre-gate is a foreign host-uv
+      false-positive (committed lock correct `pyjwt>=2.13.0`; server `quality-gates-v2` passes). ORIGINAL (superseded —
+      never reached classify_lifecycle): the writer is wired — `orchestrator.py:2418 _write_market_lifecycle(...)` is
+      called per-canonical-group inside the prediction branch; `_build_market_lifecycle_df` (orchestrator.py:3324)
+      builds from `venue_df` which is `InstrumentRecord.model_dump()` (orchestrator.py:2238) → it HAS
       `instrument_key`/`available_from_datetime`/`available_to_datetime` (NOT `start_date`/`end_date_iso` — those are
       raw Polymarket fields used to BUILD the record, and the slot-5 `start_date`/`end_date_iso` parquet was the
       DIFFERENT `instrument_availability/` write, not this one). So `_build_market_lifecycle_df` is structurally
@@ -623,6 +624,64 @@ verify + the gated delete.
       but emits no `emit_preflight_skip` / `PREFLIGHT_SKIPPED` anywhere → silent preflight skips are invisible in the
       event stream (the same observability gap STEP 5.64 enforces for service repos). Wire `emit_preflight_skip` (UTL)
       at each short-circuit. Repo: instruments-service. parent_epic: mtds_mdps_master (or the instruments epic).
+
+## Slot-4 ready-to-run audit 2026-06-04 (operator-requested: migrator dry-run · manifest-rebuild dry-run · preflight IS→execution empty/partial batch=live · read/write path post-migration parity)
+
+> Cross-service code audit (5 services × 4 dimensions, read-only). VERDICT: the prediction vertical is **~90%
+> code-ready** — most of the operator's 4 readiness items are CONFIRMED-WIRED by slot-5's prior work; 3 gaps remain (1
+> latent SSOT-drift, 1 real preflight gap, 1 known observability todo). The actual full migration WALK stays
+> operator-gated (C0/E4-full).
+
+**CONFIRMED (verified against shipped code, not annotations):**
+
+- [x] ✅ **(1) Migrator dry-run** — `migrate_prediction_to_pred_prd_v9.py` is dry-by-default + `--apply`; idempotent
+      (`gcs_describe_object` skip); server-side `gcs_copy_object`; no import-time risk; launcher dry-by-default
+      (`deployment-service/scripts/vm/launch-canonical-migration-vm.sh:94-98`). E4 dry-VM run already DONE clean (slot-5
+      2026-06-03, 1.9M-object plan, exit 0). **READY.**
+- [x] ✅ **(2) Manifest-rebuild dry-run MODE** — `rebuild_prediction_manifest.py` has `--dry-run` (`_DryWriter` no-op,
+      lines ~847-899); previews per-`capture_status` counts (captured*bundles / failed_envelope / failed_unclassified /
+      failed_zero_row / reemit*\*) WITHOUT mutating `_index`. The rebuild meaningfully runs POST-migration (scans the
+      migrated canonical objects), so its dry-run is the post-walk step — mode is READY now.
+- [x] ✅ **(3a) Empty/partial CF-11 3-way decision tree (batch=live)** — within-bounds zero → `attempted_failed`
+      (lifecycle bounds); typed empties (`EXPECTED_PRE_VENUE_LAUNCH`) preserved; classifier-None → CLOB NaN (not
+      "OTHER", batch=live `polymarket_adapter.py`); zero-row → `record_failed`; untyped empty reason → demoted to
+      `record_failed` (never blank). prediction is trade-based (no zero-vol OHLCV). CONFIRMED-WIRED.
+- [x] ✅ **(4) Read/write path post-migration parity (downstream readers)** — MDPS / features-service / strategy /
+      execution all resolve prediction via `resolve_bucket_name` + canonical `asset_group=prediction` paths (features
+      keeps a legacy `category=` dual-probe fallback for the migration window — correct). No downstream reader stuck on
+      a legacy-only path. CONFIRMED.
+
+**GAPS (the remaining work to reach fully-ready):**
+
+- [ ] [CODE] P1. **MTDS keystone: migrator `pipeline_mode` for cqg DRIFTS from the UAC SSOT** — repo:
+      `market-tick-data-service`. `migrate_prediction_to_pred_prd_v9.py:89`
+      `_GAMMA_DATA_TYPES =     {prediction_canonical_question_group}` maps cqg→`batch_polymarket_gamma_api`, but the
+      authoritative UAC SSOT `source_priority.py:271` says
+      `("prediction","prediction_canonical_question_group") = ["polymarket_clob"]` → CLOB, and BOTH the live writer
+      (`orchestrator.py:1001` via `derive_pipeline_mode_for_row`→SOURCE_PRIORITY) AND the rebuild
+      (`rebuild_prediction_manifest.py:401` hardcoded CLOB, "mirror the live writer") use CLOB. So the migrator is the
+      lone outlier (3-of-4 say CLOB) AND it omits `MARKET_LIFECYCLE` which IS gamma per `source_priority.py:278`.
+      **Latent today** (cqg is manifest-only — no raw cqg objects to migrate; MARKET_LIFECYCLE is instruments-service
+      data, outside the MTDS migrator's raw_tick/candle scope — so the migrator's ACTUAL output is all-CLOB, correct),
+      but it's a path==manifest divergence RISK + SSOT drift (the exact sports-keystone bug class). **Fix (durable,
+      mirrors the sports `pipeline_mode_for_sports_entity` SSOT-unification):** route the migrator's
+      `_pipeline_mode_for_data_type` through UTL `derive_pipeline_mode_for_row("POLYMARKET","prediction",data_type)`
+      (the same SSOT the live writer uses) — auto-corrects cqg→CLOB + MARKET_LIFECYCLE→gamma, deletes the local map so
+      it can never drift again. Also align the rebuild's hardcode to the SSOT (same function) so all FOUR derive
+      identically. **Operator semantic confirm**: the migrator comment claims cqg is "Gamma API topology origin"; the
+      SSOT says CLOB (cqg atom = aggregated CLOB trades). If the operator wants cqg=gamma, change SOURCE_PRIORITY (+ all
+      4 consumers) instead — but as-is the SSOT is CLOB and the migrator must match it. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. **MDPS prediction consolidator preflight MISSING (sports-only today)** — repo:
+      `market-data-processing-service`. `app/core/dependency_checker.py:359` gates `assert_consolidator_healthy()` on
+      `if asset_group.upper() == "SPORTS"` only — prediction gets NO upstream manifest-consolidator health gate, so a
+      stale/missing pred-prd `_index` is read silently on live (the exact gap the sports gate closes). **Fix:** extend
+      the gate to PREDICTION (kinds `("market-data","instruments-store")`, `asset_group="prediction"` →
+      `market-data-tick-pred-prd` + `instruments-store-pred-prd`), ideally generic for any AG with a consolidator.
+      Mirror the sports test. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P2. **instruments-service preflight short-circuits emit no `PREFLIGHT_SKIPPED`** (observability parity) —
+      DUPLICATE of the existing IS STEP 5.64 todo above; 5 `_should_skip_date_for_per_league` sites in `orchestrator.py`
+      (5398/5673/5894/6518/6821) return silently; `emit_preflight_skip` (UTL) is not imported. Not a run-blocker
+      (observability only). repo: instruments-service.
 
 ## Success criteria
 
