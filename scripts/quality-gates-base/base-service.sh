@@ -1473,6 +1473,29 @@ else
     log_ok "Codex compliance PASSED"
 fi
 
+# ── [5.5a] WORKFLOW EXPRESSION GUARD (always-on, version-proof) ───────────────
+# Incident 2026-06-04: an empty `${{ }}` expression inside a run-block COMMENT in
+# cloud-build-router.yml reached main and broke the workflow's PARSE — GitHub
+# rejected it with "workflow file issue", 0 jobs, so defer-on-freeze never ran.
+# The actionlint block below was ALSO silently skipped for unified-trading-pm (its
+# `[ -d $REPO_ROOT/.github/workflows ]` guard is false in the CI reusable-workflow
+# context — no [5.5/6] line in PM's v2 log), so nothing caught it. This standalone
+# guard is the targeted, fleet-safe fix: robust dir-detection + a regex for the
+# exact parse-breaking class. It does NOT run full actionlint (which surfaces many
+# pre-existing best-practice nits fleet-wide), only the always-invalid empty-expr.
+# GitHub evaluates ${{ }} everywhere incl. run-block comments; to show a literal
+# `${{` escape it (e.g. `$\{\{`), never write a bare `${{ }}`.
+_WF_DIR_GUARD=""
+for _cand in "${REPO_ROOT:-}/.github/workflows" "$(git rev-parse --show-toplevel 2>/dev/null)/.github/workflows" "${PROJECT_ROOT:-}/.github/workflows" "./.github/workflows"; do
+    [ -d "$_cand" ] && { _WF_DIR_GUARD="$_cand"; break; }
+done
+if [ -n "$_WF_DIR_GUARD" ]; then
+    if grep -rnE '\$\{\{[[:space:]]*\}\}' "$_WF_DIR_GUARD" 2>/dev/null; then
+        log_fail "Workflow: empty \${{ }} expression(s) above — GitHub rejects these at parse time (0 jobs). Reword/escape."
+        exit 1
+    fi
+fi
+
 # ── [5.5] WORKFLOW LINT (actionlint) ──────────────────────────────────────────
 if [ -d "${REPO_ROOT}/.github/workflows" ]; then
     log_section "[5.5/6] WORKFLOW LINT (actionlint)"

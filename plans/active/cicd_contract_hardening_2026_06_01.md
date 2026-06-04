@@ -374,6 +374,22 @@ self-recovers. Done:
       landed have no persisted payload; they re-build on their repos' next `qg-passed` (or a one-off manual
       cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops._
 
+- [x] ✅ [SCRIPT] P1. **Hardened QG against the workflow-parse-break class (2026-06-04).** The empty-`${{ }}` bug
+      reached main because PM's `[5.5] WORKFLOW LINT (actionlint)` block is **silently skipped in CI** — its
+      `[ -d "${REPO_ROOT}/.github/workflows" ]` guard is false in the v2 reusable-workflow context (confirmed: no
+      `[5.5/6]` line in PM's v2 log; sections jump [4/6]→[5/6]). Added **[5.5a] WORKFLOW EXPRESSION GUARD** to
+      `base-service.sh`: always-on (robust dir-detection via REPO_ROOT / git-toplevel / PROJECT_ROOT / CWD), version-proof
+      regex `\$\{\{[[:space:]]*\}\}`, hard-fails on any empty/whitespace-only expression (the exact parse-breaking class,
+      0 false-positives across all 52 PM workflows). Kept the broader actionlint block at its original gate (see
+      follow-up). repo: unified-trading-pm (base-service.sh → fleet via template).
+- [ ] [SCRIPT] P2. **FOLLOW-UP: re-enable the full [5.5] actionlint gate for PM (+ any repo where REPO_ROOT mis-resolves)
+      in CI.** Fixing the dir-detection to run full actionlint surfaces **7 pre-existing PM workflow nits** (untrusted
+      `github.event.*` in inline scripts: major-bump-approval/issue-handler; undefined-output refs:
+      plan-notification `md_summary`, rules-alignment-agent `md_file`, request-major-bump-reusable `slack_webhook_url`;
+      `sit-debounce-trigger` cron */2 < 5-min min; `update-repo-version` shellcheck SC1121) — none parse-breaking, but
+      they must be fixed/baselined BEFORE making full actionlint a hard CI gate (else PM QG breaks fleet-wide). Clean the
+      7, then broaden the [5.5] dir-guard to git-toplevel like [5.5a]. repo: unified-trading-pm.
+
 Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT machinery):
 
 - [ ] [TEST] P1. **features-service staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports
