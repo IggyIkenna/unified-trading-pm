@@ -227,9 +227,9 @@ flow" + `quickmerge --agent`, but they carry the **same staging-vs-LDR drift as 
       `--to-staging` no-op + v2 required check; sentinel two-pass kept. — agent-orchestrator@33b1057
 - [x] ✅ [DOC] P1. Clarify the **operator-tooling exception** (`worker.md:228`): agent-orchestrator's own gate is
       `scripts/check.sh` (correct, verified) — but once G6 lands its `staging` flow, document whether agents working
-      _inside_ agent-orchestrator ship via `check.sh` + reviewed direct push or via the new staging PR path.
-      Documented two-phase model in `agents/worker.md`: TODAY = check.sh + direct LDR push (no staging); AFTER G6 =
-      check.sh (Pass 1) + quickmerge.sh --agent (Pass 2). — agent-orchestrator@946091c
+      _inside_ agent-orchestrator ship via `check.sh` + reviewed direct push or via the new staging PR path. Documented
+      two-phase model in `agents/worker.md`: TODAY = check.sh + direct LDR push (no staging); AFTER G6 = check.sh
+      (Pass 1) + quickmerge.sh --agent (Pass 2). — agent-orchestrator@946091c
 - [x] ✅ [DOC] P1. Verified: "v2" = the CI required-check rename (`…/quality-gates-v2`, 17/17 repos); LOCAL two-pass
       commands (`scripts/quality-gates.sh` → `quickmerge.sh --agent`) are unchanged — so no command edits were needed,
       only the target-branch + `--to-staging` corrections, which G7 + the context-hygiene Phase-3 merge-flow fix landed.
@@ -327,6 +327,30 @@ stop/start; FM3 = deployment-ui playwright-report `git rm --cached` + gitignored
 guard + capped-tmpfs `/tmp`):
 [archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md](../archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md).
 Fleet is currently consolidated to **2 running VMs** (vm-orchestrator + api-host); 9 epic VMs stopped.
+
+### Audit: VM slot-host crons (slot-cron-ff-pull / slot-git-status-report) are NOT in VM provisioning — slot-5 finding 2026-06-04
+
+- [ ] [INFRA] P1. **The orchestrator VM bootstrap does NOT install the symmetric-worker crons — audit + wire it.**
+      CLAUDE.md § "Local slot host = VM slot host" says EVERY host owning slot worktrees (VM + laptop) runs
+      `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min. But `agent-orchestrator/scripts/bootstrap_vm.sh`
+      clones PM + runs `setup-tab-worktrees.sh` (provisions worktrees) and installs only the **vm-disk-guard** cron
+      (Step 7.5) — it **never installs `slot-cron-ff-pull` or `slot-git-status-report`** (confirmed: grep of
+      bootstrap_vm.sh + every `deployment-service/scripts/vm/*` finds zero installs; the ONLY installers are the MANUAL
+      `install-slot-cron-ff-pull.sh` + the laptop-migration crontab step). So VMs likely have these crons ONLY if
+      someone ran the manual install — unverifiable without SSH/exec into each. **Why it matters now**: the
+      upstream-drift self-heal just landed IN `slot-cron-ff-pull.sh` (`@{upstream}` reset,
+      unified-trading-pm@3c29614ee) + the `verify-slot-host-symmetry.sh` check 10 — **both only run where that cron
+      exists**. NOTE the orchestrator runtime DOES FF-sync worktree CONTENT via `worktree_clean_check.py` (`ff_done`),
+      but that resets branch content, NOT the `@{upstream}` config — so a VM kept content-fresh by the orchestrator
+      still won't get the upstream-reset unless the cron is present. **ACTIONS**: (1) add idempotent
+      `slot-cron-ff-pull` + `slot-git-status-report` cron installs to `bootstrap_vm.sh` (a Step 7.x, mirroring the
+      vm-disk-guard block) so every NEW VM auto-gets them; (2) audit the **2 running VMs** (vm-orchestrator + api-host)
+      NOW — `crontab -l | grep -E 'slot-cron-ff-pull|slot-git-status-report'` + run `verify-slot-host-symmetry.sh`
+      (checks 1/2/10) per host, install if missing; (3) the **9 stopped epic VMs** — they re-provision on next launch,
+      so confirm the bootstrap_vm.sh fix covers them (or one-shot install on start); (4) optionally also wire the
+      `@{upstream}` reset into `worktree_clean_check.py`'s FF-sync path so VMs covered via the orchestrator runtime (not
+      the cron) self-heal upstream too. Repos: agent-orchestrator (bootstrap_vm.sh + worktree_clean_check.py) +
+      deployment-service VM launchers. parent_epic: orchestrator_master (or this plan).
 
 ## Full-execution criterion (PLAN_FORMAT §8)
 
