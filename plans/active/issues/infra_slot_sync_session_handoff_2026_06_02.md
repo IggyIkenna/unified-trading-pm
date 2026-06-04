@@ -237,3 +237,28 @@ The recurring 507 git-health alert + the new 475 symmetry-verify alert were BOTH
 
 Note: the "Escalation NOT confirmed for mdps#91 — no worker spawned" Slack is the HONEST alert working — a real state
 (no free slot / headroom for the escalation), not noise. Tracked under the fleet-spawn + slot-4-wrong-branch items.
+
+## Orchestrator + staging→main promotion remediation (2026-06-04 PM)
+
+Triggered by "any escalation agents being called / is everything mirrored to main" audit. Findings + fixes:
+
+- [x] ✅ **Dashboard "vm Unreachable" / dispatch traceback** — `get_fleet_summary` 500: `storage.Client()` could not
+      determine GCP project (user-cred ADC has none; `GOOGLE_CLOUD_PROJECT` unset) → ES256 internal-token GCS key load
+      failed. Fixed live on vm-0 (.env.local) + durable: `auth.py` passes project explicitly + `bootstrap_vm.sh` writes
+      `GOOGLE_CLOUD_PROJECT`. agent-orchestrator@8904142. fleet_summary now 200.
+- [x] ✅ **Escalation capacity** — slot-2 (PM diverged, reset to LDR; 9 stale commits → `origin/backup/slot-2-pm-wip-2026-06-04`)
+      + slot-4 (UAC+PM `fix/*` → tab/vm-0/4). AutoSpawn `failed=2`→`spawned=2 failed=0`.
+- [x] ✅ **Semver Agent jam #1 (PM checkout)** — `path: ../unified-trading-pm` escaped GITHUB_WORKSPACE →
+      actions/checkout rejects → step 3 failed on EVERY repo → staging→main jammed fleet-wide (staging 9-17 ahead of
+      main, v2 green). Template fixed → `path: pm-readiness`. PM@f9deb76f7.
+- [x] ✅ **Semver Agent jam #2 (broken pipe)** — `LATEST_MSG=$(echo "$COMMITS" | head -1)`: large COMMITS floods pipe,
+      head closes early → echo SIGPIPE → pipefail → step 4 "Compute next semver" aborts. Only surfaced after #1 fixed
+      (steps 4-7 had never run). Template fixed → here-string `head -1 <<< "$COMMITS"`. PM@10645e6b3.
+- [ ] [SCRIPT] P1. **Fan out FULLY-corrected semver-agent template to all 22 repos' main** — the first fan-out deployed
+      the PATH fix only (sed); those repos still carry jam #2. Redeploy the validated template (path+pipe) once UTL
+      canary validates end-to-end (steps 4-7 + staging→main promotion + version bump). Then re-kick each repo's staging
+      QG to drain its 4-90 commit backlog via the automation. repo: all service repos + UTL/UAC.
+- [ ] [INFRA] P1. **3 repos have genuine pre-existing v2 reds** (block their own staging→main): agent-orchestrator,
+      unified-trading-api, unified-trading-system-ui — all fail at "step 13: Run quality gates". Separate diagnosis each.
+- [ ] [SCRIPT] P2. **Close idle PRs** after drain: ml-inference `main<-auto/*` (8 stale), `chore/sync-to-staging-*`
+      dupes (risk/pnl/pbm/ml-inference/ml-training), old `version-bump`/`bump-version` PRs.
