@@ -220,3 +220,20 @@ There is **no auto-commit-stagnant cron** — "stagnant" is an alert; Commit+Pus
       silently downgraded a host's ff-pull). Fixed to `*/5`.
 
 PM@live-defi-rollout. The symmetric-host contract is now ENFORCED (auto-install + self-verify-alert), not just documented.
+
+## Alert-noise root-caused + FIXED (2026-06-04 17:xx)
+
+The recurring 507 git-health alert + the new 475 symmetry-verify alert were BOTH false positives, now fixed + deployed to vm-0:
+- [x] ✅ **git-health guard false 507** — the guard runs from ROOT's crontab and ran `git fsck` AS ROOT on ubuntu-owned
+      repos → `dubious ownership` → false "fsck FAILED" ×507 (vm-0 is actually fsck-clean). Fixed `fleet-git-health-guard.sh`:
+      run fsck as `${USER_NAME}` + MAIN-CLONES-ONLY (worktrees share objects → no 500-line dumps) + self-heal (fetch
+      before alerting). Verified on vm-0: now "OK — no fsck breakage". agent-orchestrator@live-defi-rollout.
+- [x] ✅ **verify --alert 475-spam** — the `--alert` counted hundreds of per-worktree identity/upstream nits as
+      "failures". Fixed: alert ONLY on HOST-level breaks (crons/logs/backend/token); per-worktree nits logged + exit-1
+      but not Slack'd. Verified on vm-0: "host-level checks PASS; 475 per-worktree nit(s) only — NOT alerting".
+- [ ] [INFRA] P2. **475 per-worktree nits on vm-0 are REAL (just not alert-worthy)** — worktrees with empty/blank commit
+      identity (`' <>'`) + mis-set @{upstream}. Tracked under commit_identity_misconfig_fleet + the upstream-drift rule;
+      fix via `setup-tab-worktrees.sh` per-worktree identity re-assert. repo: agent-orchestrator host.
+
+Note: the "Escalation NOT confirmed for mdps#91 — no worker spawned" Slack is the HONEST alert working — a real state
+(no free slot / headroom for the escalation), not noise. Tracked under the fleet-spawn + slot-4-wrong-branch items.
