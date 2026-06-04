@@ -28,7 +28,30 @@ canonical there. Do not duplicate the list here — read the registry.
 
 ---
 
-## Current fleet — AWS EC2 ap-northeast-1 (commissioned 2026-05-22)
+## LIVE STATUS — what is actually supposed to be alive (SSOT, audited 2026-06-04)
+
+> **Only ONE orchestrator VM is live, and it is the only one that must be: `vm-0` = `agent-orchestrator-vm-1` =
+> `i-0c9b283b31d6b5ca7`** (m8i.4xlarge, ap-northeast-1). It is **THE CI-responder** —
+> `api.agent-orchestrator.odum-research.com → 13.113.200.22 → vm-0` — and the worker host (10 slots `tab/vm-0/N`,
+> AutoSpawn ON, backend uvicorn `:8765` behind nginx). **This is the only VM whose health/alerts matter.**
+>
+> **NOT live (do NOT treat their silence — or alerts about them — as an incident):**
+>
+> - `i-007e8d99d12831578` (`vm-orchestrator` in the table below) — **STOPPED 2026-06-04** (vestigial: ran duplicate
+>   PlanRegen/Failover against an isolated DB, not in `backends.json`, `VM_ID=unknown-vm`, not the CI-responder). Revive
+>   only if a distinct purpose is defined; otherwise terminate.
+> - The per-epic VMs in the table below (`vm-defi`/`vm-cefi`/…) — **commissioned 2026-05-22 but NOT running** (stopped;
+>   the listed IPs are stale). They are **post-cutover / aspirational**, not a live fleet.
+>
+> **Alert-scoping rule (HARD):** `fleet-git-health-guard.sh` + slot-stale + worker-liveness alerts must scope to the
+> **live set above** (currently just vm-0). The guard is a per-VM cron, so a stopped VM self-stops alerting — but the
+> guard also has NO internal scoping (it fsck's every `.git` incl. ~478 worktrees → 500+-line dumps) and does NOT
+> self-heal (it should `git fetch` to recover missing-but-reachable objects, which is what the 2026-06-04 recovery did
+> by hand). When a VM is intentionally stopped, record it here so a stale alert isn't mistaken for a dead-VM incident.
+> SSOT for live-vs-planned = **this block**; the table below is the historical/planned commissioning map, NOT a
+> liveness statement.
+
+## Current fleet — AWS EC2 ap-northeast-1 (commissioned 2026-05-22; see LIVE STATUS above for what actually runs)
 
 > **AWS is the default cloud provider** as of 2026-05-22 (Phase 4 smoke passed). GCP path remains fully functional via
 > `CLOUD_PROVIDER=gcp`. GCP epic fleet decommissioned 2026-05-22 to avoid cost; planning VM at 34.146.53.106 remains

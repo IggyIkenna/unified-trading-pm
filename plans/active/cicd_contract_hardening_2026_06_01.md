@@ -379,38 +379,39 @@ self-recovers. Done:
       only by a brand-new `qg-passed`. **Fix (defer-and-replay):** (1) cloud-build-router gains a `defer-on-freeze` job
       (runs only when blocked) that persists the `{repo,branch,version,commit_sha,repo_type}` payload as a
       `deferred-build-*` artifact; (2) new **`freeze-deferred-build-replay.yml`** cron (every 15 min) — inlines a
-      NON-failing PROD_DEPLOY freeze check (canonical window SSOT stays `change-freeze-calendar.csv`), and once the
+      NON-failing PROD*DEPLOY freeze check (canonical window SSOT stays `change-freeze-calendar.csv`), and once the
       window lifts drains the artifacts → re-dispatches `qg-passed` → deletes each artifact (replay-once). `dry_run`
       lists without dispatching; Slack only on actual replays (no per-tick noise). All additive — zero change to the
-      existing freeze-check/route-build prod path. repo: unified-trading-pm. _Note: the 6 builds dropped BEFORE this
+      existing freeze-check/route-build prod path. repo: unified-trading-pm. \_Note: the 6 builds dropped BEFORE this
       landed have no persisted payload; they re-build on their repos' next `qg-passed` (or a one-off manual
-      cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops._
-      **VERIFIED END-TO-END 2026-06-04** via a temporary `SELFTEST_DEFER_REPLAY` freeze window (added + removed same
-      session): benign `qg-passed` during the window → freeze-check blocked → `defer-on-freeze` uploaded the artifact →
-      window removed → replay drained it (`re-dispatched qg-passed ... deleted artifact (replay-once)`, 1 build, 0
-      remaining). **Four bugs caught BY the verification + fixed**: (1) `ruff E501` in the validator edit; (2) replay
-      re-dispatch used `gh api -F client_payload[k]=v` which does NOT build nested JSON → switched to `jq`+`curl`;
-      (3) an empty-`${{ }}` in a router comment that had **broken cloud-build-router on main (0 jobs)** — also hardened
-      by the new [5.5a] guard; (4) `defer-on-freeze` needed `if: always() && ...` (change-freeze-check EXITS 1 when
-      blocking, so the implicit `success()` gate silently skipped the defer job on exactly the runs to capture).
+      cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops.* **VERIFIED END-TO-END 2026-06-04**
+      via a temporary `SELFTEST_DEFER_REPLAY` freeze window (added + removed same session): benign `qg-passed` during
+      the window → freeze-check blocked → `defer-on-freeze` uploaded the artifact → window removed → replay drained it
+      (`re-dispatched qg-passed ... deleted artifact (replay-once)`, 1 build, 0 remaining). **Four bugs caught BY the
+      verification + fixed**: (1) `ruff E501` in the validator edit; (2) replay re-dispatch used
+      `gh api -F client_payload[k]=v` which does NOT build nested JSON → switched to `jq`+`curl`; (3) an empty-`${{ }}`
+      in a router comment that had **broken cloud-build-router on main (0 jobs)** — also hardened by the new [5.5a]
+      guard; (4) `defer-on-freeze` needed `if: always() && ...` (change-freeze-check EXITS 1 when blocking, so the
+      implicit `success()` gate silently skipped the defer job on exactly the runs to capture).
 
 - [x] ✅ [SCRIPT] P1. **Hardened QG against the workflow-parse-break class (2026-06-04).** The empty-`${{ }}` bug
       reached main because PM's `[5.5] WORKFLOW LINT (actionlint)` block is **silently skipped in CI** — its
       `[ -d "${REPO_ROOT}/.github/workflows" ]` guard is false in the v2 reusable-workflow context (confirmed: no
       `[5.5/6]` line in PM's v2 log; sections jump [4/6]→[5/6]). Added **[5.5a] WORKFLOW EXPRESSION GUARD** to
-      `base-service.sh`: always-on (robust dir-detection via REPO_ROOT / git-toplevel / PROJECT_ROOT / CWD), version-proof
-      regex `\$\{\{[[:space:]]*\}\}`, hard-fails on any empty/whitespace-only expression (the exact parse-breaking class,
-      0 false-positives across all 52 PM workflows). Kept the broader actionlint block at its original gate (see
-      follow-up). repo: unified-trading-pm (base-service.sh → fleet via template).
-- [ ] [SCRIPT] P2. **FOLLOW-UP: re-enable the full [5.5] actionlint gate for PM (+ any repo where REPO_ROOT mis-resolves)
-      in CI.** Fixing the dir-detection to run full actionlint surfaces **7 pre-existing PM workflow nits** (untrusted
-      `github.event.*` in inline scripts: major-bump-approval/issue-handler; undefined-output refs:
+      `base-service.sh`: always-on (robust dir-detection via REPO_ROOT / git-toplevel / PROJECT_ROOT / CWD),
+      version-proof regex `\$\{\{[[:space:]]*\}\}`, hard-fails on any empty/whitespace-only expression (the exact
+      parse-breaking class, 0 false-positives across all 52 PM workflows). Kept the broader actionlint block at its
+      original gate (see follow-up). repo: unified-trading-pm (base-service.sh → fleet via template).
+- [ ] [SCRIPT] P2. **FOLLOW-UP: re-enable the full [5.5] actionlint gate for PM (+ any repo where REPO_ROOT
+      mis-resolves) in CI.** Fixing the dir-detection to run full actionlint surfaces **7 pre-existing PM workflow
+      nits** (untrusted `github.event.*` in inline scripts: major-bump-approval/issue-handler; undefined-output refs:
       plan-notification `md_summary`, rules-alignment-agent `md_file`, request-major-bump-reusable `slack_webhook_url`;
-      `sit-debounce-trigger` cron */2 < 5-min min; `update-repo-version` shellcheck SC1121) — none parse-breaking, but
-      they must be fixed/baselined BEFORE making full actionlint a hard CI gate (else PM QG breaks fleet-wide). Clean the
-      7, then broaden the [5.5] dir-guard to git-toplevel like [5.5a]. repo: unified-trading-pm.
+      `sit-debounce-trigger` cron \*/2 < 5-min min; `update-repo-version` shellcheck SC1121) — none parse-breaking, but
+      they must be fixed/baselined BEFORE making full actionlint a hard CI gate (else PM QG breaks fleet-wide). Clean
+      the 7, then broaden the [5.5] dir-guard to git-toplevel like [5.5a]. repo: unified-trading-pm.
 
-Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT machinery):
+Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT
+machinery):
 
 - [ ] [TEST] P1. **features-service staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports
       `ml_service` but does not declare it (the SAME finding as the Wave-1 cleanup todo above — canonical fix = add
@@ -2141,6 +2142,55 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       the zero-approvals codification above (today enforced by the template/force-sync defaults but not actively
       audited). — repo: unified-trading-pm.
 
+### QG-infra reliability (slot-2 2026-06-04, surfaced fixing the DeFi A12 QGs)
+
+- [x] ✅ [SCRIPT] P1. **coverage-floor-guard inline-comment parse bug FIXED** (PM@b42be03c2): `cut -d'=' -f2` captured
+      the inline comment on `MIN_COVERAGE=28  # ISS-031: restore...`; the whitespace-strip glued it to the value
+      (`28#ISS-031...`) → every integer comparison errored ("integer expression expected") → the floor check was
+      SILENTLY MASKED (fell through to the pass branch). Added `| cut -d'#' -f1`. Now correctly parses 28, evaluates
+      28<70, honors the existing operator-approved `.coverage-floor-exception.md` (MTDS passes via the exception, not by
+      accident). Fleet-wide this affected only MTDS (only repo with an inline comment on MIN_COVERAGE);
+      regression-verified (non-comment `MIN_COVERAGE=85` → clean pass). repo: unified-trading-pm.
+- [ ] [TEST] P2. **`unified-api-contracts` `cassette_orphan_checker` intermittent flakiness** (slot-2 obs 2026-06-04):
+      `tests/test_cassette_orphan_checker.py::{test_returns_venue_aware_dict, test_no_unallowlisted_orphans,     test_legacy_wrapper_returns_set_of_names}`
+      FAILED in 1 of 4 full-suite QG runs (passed in isolation + passed the other 3 runs) → a test-isolation/ordering
+      issue under the parallel (xdist) suite, not a code regression (the scan is ~273s/test → race-prone).
+      LOW-confidence (1/4) — monitor; if it recurs, add per-test isolation (fresh tmp scan-root / serialize the
+      orphan-scan group / xdist-group marker). The DETERMINISTIC sibling failures
+      (`test_ws_cassette_coexistence[orca/raydium_defi_ws]`, unregistered REST pollers) were already fixed at root
+      (uac@d67d8061). repo: unified-api-contracts. parent_epic: (cicd hardening).
+
+### Auto-rebasing tab-mirror — diverged tabs self-heal (slot-2 2026-06-04, operator-approved fleet-wide)
+
+> **Root cause (operator Q):** both directions of slot↔LDR sync were FF-only and SKIPPED on a diverged (ahead AND
+> behind) tab. On a hot integration branch (PM LDR especially), a slot's pushed commits perpetually lost the FF race →
+> piled up "ahead and behind" forever → needed a manual `git rebase origin/live-defi-rollout`. The tab-mirror GHA hit
+> `[skip:diverged]` and the local `slot-cron-ff-pull` hit `[skip:diverged]` — neither self-heals, so the divergence
+> compounds silently. Mirror is FF-only by design (never rewrite a locally-held branch); the fix makes the rewrite
+> safe + automatic and gives the local cron a clean adoption path.
+
+- [x] ✅ [SCRIPT] P1. **tab-mirror-to-ldr GHA: rebase diverged tabs onto LDR instead of skipping** (PM@fe5fe064e):
+      `decision=rebase` (was `skip:diverged`) rebases the tab's commits onto current LDR, FF-pushes LDR (3-attempt race
+      retry), then realigns the remote tab via `--force-with-lease=<branch>:<orig-sha>`. Safe because: a no-conflict
+      rebase is content-clean; the tab force-push uses `GITHUB_TOKEN` (GitHub suppresses recursive workflow triggers →
+      no loop); the lease refuses if a concurrent agent pushed the tab; a real textual CONFLICT aborts + surfaces via
+      the orchestrator webhook (`outcome=conflict`) — the ONLY thing that now blocks auto-landing. Canonical template +
+      PM self-copy + rolled out to 23 mirror-carrying repos
+      (`rollout-workflow-templates.sh --template     tab-mirror-to-ldr.yml`). repo: unified-trading-pm (+ 23 service
+      repos).
+- [x] ✅ [SCRIPT] P1. **slot-cron-ff-pull Step 5: clean-gated adopt of the GHA-rewritten tab** (PM@fe5fe064e): on
+      diverged, when every ahead-commit is already patch-id-present in LDR (`git cherry` '+' count == 0) AND the tree is
+      clean, `[adopt-rebase]` drops the mirrored dups and FFs local to LDR — non-destructive, never rewrites genuine
+      in-flight work or touches dirty WIP. Any other divergence (real new local commits, or dirty tree) stays
+      `[skip:diverged]` for manual recovery. repo: unified-trading-pm.
+- [ ] [SCRIPT] P3. **Extend the auto-rebasing mirror to `agent-orchestrator`** — excluded from the 2026-06-04 rollout
+      (it did not previously carry tab-mirror-to-ldr.yml + has a transitional branch model; the GHA hardcodes
+      `live-defi-rollout` which must be confirmed present + clean on AO first). repo: agent-orchestrator. parent_epic:
+      (cicd hardening).
+- [ ] [TEST] P2. **Observe ≥3 real diverged-tab cycles auto-heal** (rebased+landed on LDR + local `[adopt-rebase]`)
+      before declaring the treadmill closed; watch the orchestrator `/api/mirror-events` for any `outcome=conflict` or
+      `race-exhausted` and confirm they reflect genuine conflicts only. repo: unified-trading-pm.
+
 ### Phase 3 — Image-build provenance + branch-triggered builds (audit k2/k3)
 
 - [x] ✅ [SCRIPT] P1. **GCP immutable-tag parity — already satisfied (finding was stale).** Verified 2026-06-01:
@@ -2322,3 +2372,33 @@ behind the exact drift this whole audit is about.
   `cleanup_v1_quality_gates_workflows_<date>.md` once GH Support ticket #4422570 clears (per archived ci_canonical).
 - The active/archive **duplicate** of `ci_canonical_v2_migration_2026_05_29.md` (present in both `plans/active/` and
   `plans/archive/2026_05/`) is a plan-hygiene artifact, not CI/CD machinery — leave for the plan-hygiene sweep.
+
+## Tab-branch divergence detection → CI alert (operator-requested 2026-06-04; headless-fleet visibility)
+
+> **Driver (operator + slot-5 audit 2026-06-04):** a remote tab branch that's purely BEHIND LDR is benign, but a
+> **DIVERGED** one (has its own commits AND is missing LDR commits) is the dangerous state — it jams the `tab→LDR`
+> mirror + makes quickmerge re-apply LDR as patch-id duplicates (the re-tangle in CLAUDE.md § "Slot tab branch diverged
+> from LDR"). Easy to spot by eye on VS Code locally; **invisible on the background AWS VM fleet**, which is exactly
+> where a tab silently goes sideways. Pairs with the server-side `LDR→tab` FF mirror in
+> `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (that mirror FFs behind-only tabs + REFUSES to touch a
+> diverged one → this alert is its escalation path). Belongs in the CI-alert pipeline (this plan's WAVE 2:
+> #ci-failures + `ci_failure_watcher` + every-alert→orchestrator).
+
+- [ ] [SCRIPT] P2. **Tab-branch divergence monitor → Slack #ci-failures + orchestrator.** Add a check (server-side GHA
+      on push-to-LDR, and/or the per-host `slot-git-status-report.sh` so headless VMs are covered) that, for every
+      `tab/*` branch × every repo, evaluates
+      `git merge-base --is-ancestor origin/tab/<op>/<N> origin/live-defi-rollout`: **true** (behind-or-equal / ancestor)
+      → OK, silent; **false** (DIVERGED — own commits + missing LDR) → **alert**. Alert payload:
+      `repo + slot + host (laptop/vm-<id>) + ahead/behind counts + the diverging shas/authors`, plus a fleet roll-up ("N
+      repos diverged across M hosts") so a quiet VM is loud. Route via the existing #ci-failures +
+      every-alert→orchestrator path (NOT a new channel); reuse the push-author attribution work (this plan, "Add
+      push-author attribution to CI alerts"). **Never auto-force-resolve** — alert only; the safe auto-fix is the
+      `tab→LDR` rebase-diverged-onto-LDR path (`e21ca439` tab-mirror), everything else is human/agent. **Sweeps EVERY
+      `tab/*` branch fleet-wide** (all operators/slots/hosts, not just the local host's slots) so a quiet AWS/GCP VM is
+      covered — which DEPENDS on tab branch names being globally unique (per
+      `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § precondition "Make tab branch names globally
+      unique"); until that lands, the monitor MUST additionally flag any `tab/<prefix>/<N>` claimed by >1 host as a
+      name-collision alert (a collision is worse than a divergence — it silently merges two hosts' work). Repos:
+      `unified-trading-pm` (tab-mirror GHA template + `scripts/dev/slot-git-status-report.sh`) + agent-orchestrator
+      (alert sink). Cross-link: `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Server-side LDR→tab FF
+      mirror" + § precondition. parent_epic: (this plan is the CI/CD master).

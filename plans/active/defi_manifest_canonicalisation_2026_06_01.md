@@ -25,6 +25,17 @@ source:
 
 ## MASTER — cross-plan execution order → single canonical SSOT (no fallback, no dual)
 
+> **🔴 CROSS-AG FOUNDATION GATE (filed 2026-06-04, slot-3) — blocks EVERY AG's MTDS `--apply`.** instruments-service is
+> the foundation; before any AG runs its MarketTick-data migration `--apply`, the **proper instrument catalogue** must
+> be GREEN: `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting). It builds
+> the time-independent known-instrument universe by rolling up the maintained per-date
+> `instrument_availability/by_date/` definitions (the v2 enumerator's `catalog.parquet` had **no producer** → a static
+> snapshot that goes stale two ways). Every AG lane (cefi/defi/tradfi/sports-fixtures/prediction) depends on it for a
+> correct could-exist universe (`expected_unattempted`, coverage denominators, instrument-existence guards). **Dry-runs
+> (migrator + manifest-rebuild) are NOT gated** by it — only the irreversible `--apply`. Depends on
+> `instruments_manifest_canonicalisation` (IS indices canonical first). Per-AG slices drive via each AG master; the
+> shared roll-up + completeness gate are vm-cross-cutting.
+
 > **✅ CROSS-AG DEAD-BUCKET REGRESSION FINDING — RESOLVED 2026-06-02 (was: escalated from the sports lane — affected
 > EVERY AG before its legacy delete)**: two shared surfaces still resolve the NO-ENV (legacy) bucket form, which BREAKS
 > once any AG's legacy bucket is deleted: (1) **UAC `gcs_paths.bucket_name(asset_group, …)` returns the NO-ENV form**
@@ -58,23 +69,24 @@ empty-reason, `source` column) BUNDLES into that bucket's single walk; no plan o
 
 ### Sub-plan registry (what this master wraps)
 
-| Plan                                                        | Role / layer                                                                                                     | Status                           | Parallel?                     |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------- | ----------------------------- |
-| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | L1 code-fix ✅ · L2 drain+cron-pause · L6 decommission                                                           | code shipped; decommission gated | after L3 per-AG               |
-| THIS plan §A–G                                              | L1 DeFi writer code · **L3 DeFi single-walk (§C)** · L5 DeFi backfill                                            | C open (C0 RUN-ON-VM)            | DeFi-only, serial within DeFi |
-| `data_source_provenance_all_asset_groups_2026_06_01`        | L1 write-path `source=` · rides each L3 walk                                                                     | open (tradfi done)               | parallel per-AG (NOT tradfi)  |
-| `pipeline_mode_implementation_2026_05_28`                   | L1 `pipeline_mode` column                                                                                        | ✅ DONE                          | —                             |
-| `pipeline_mode_partition_migration_2026_06_01`              | L3 RIDER: on-disk `pipeline_mode=` partition                                                                     | open P2                          | **rides each AG's L3 walk**   |
-| `tradfi_massive_dual_source_2026_05_28`                     | tradfi L1 source write-path + Massive ingest (NOT the L3 walk)                                                   | mostly ✅; -031 absorbed by ↓    | done — see CONFLICT-2         |
-| `tradfi_manifest_canonicalisation_2026_06_01`               | **L3 tradfi single-walk** (v9 + pipeline_mode partition + source re-consol)                                      | open P0                          | parallel per-AG               |
-| `sports_manifest_canonicalisation_2026_06_01`               | **L3 sports single-walk** (v9 + partition + fixture-dependent typed reasons + source path→column)                | open P0                          | parallel per-AG               |
-| `instruments_manifest_canonicalisation_2026_06_01`          | **L3 per-SERVICE** (instruments I/O input — all-AG reference/instrument indices, audit-first)                    | open P0                          | parallel per-service          |
-| `downstream_services_manifest_canonicalisation_2026_06_01`  | **L3 per-SERVICE** (MDPS/features/strategy/execution — audit-first, low-data quick walk)                         | open P1                          | parallel per-service          |
-| `canonical_form_cross_service_audit_checklist` (audit SSOT) | **L7 AUDIT SSOT**: CF-1…CF-12 union + (service×CF) coverage matrix — re-run proves canonical                     | shipped                          | —                             |
-| `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`    | **L4/L7 "no fallback"**: reader fail-fast default + liveness                                                     | step-1 ✅; follow-up open        | parallel (independent)        |
-| `aws_manifest_consolidator_scope_2026_05_21`                | L4 AWS canonical consolidator                                                                                    | P1.10 `tofu apply` open (HUMAN)  | parallel (AWS infra)          |
-| `manifest_consolidator_liveness_health_2026_06_01`          | L4 GCP consolidator liveness                                                                                     | (not on this branch)             | parallel — CONFLICT-3         |
-| `solana_defi_legacy_migration_2026_05_27`                   | **DeFi-specific** Solana legacy→canonical (Kamino/Solend/Orca/Raydium) — SAME dedicated DeFi buckets §C rewrites | open P1                          | DeFi-only — serialise with §C |
+| Plan                                                        | Role / layer                                                                                                                                                                             | Status                           | Parallel?                                                                                                      |
+| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01` | L1 code-fix ✅ · L2 drain+cron-pause · L6 decommission                                                                                                                                   | code shipped; decommission gated | after L3 per-AG                                                                                                |
+| THIS plan §A–G                                              | L1 DeFi writer code · **L3 DeFi single-walk (§C)** · L5 DeFi backfill                                                                                                                    | C open (C0 RUN-ON-VM)            | DeFi-only, serial within DeFi                                                                                  |
+| `data_source_provenance_all_asset_groups_2026_06_01`        | L1 write-path `source=` · rides each L3 walk                                                                                                                                             | open (tradfi done)               | parallel per-AG (NOT tradfi)                                                                                   |
+| `pipeline_mode_implementation_2026_05_28`                   | L1 `pipeline_mode` column                                                                                                                                                                | ✅ DONE                          | —                                                                                                              |
+| `pipeline_mode_partition_migration_2026_06_01`              | L3 RIDER: on-disk `pipeline_mode=` partition                                                                                                                                             | open P2                          | **rides each AG's L3 walk**                                                                                    |
+| `tradfi_massive_dual_source_2026_05_28`                     | tradfi L1 source write-path + Massive ingest (NOT the L3 walk)                                                                                                                           | mostly ✅; -031 absorbed by ↓    | done — see CONFLICT-2                                                                                          |
+| `tradfi_manifest_canonicalisation_2026_06_01`               | **L3 tradfi single-walk** (v9 + pipeline_mode partition + source re-consol)                                                                                                              | open P0                          | parallel per-AG                                                                                                |
+| `sports_manifest_canonicalisation_2026_06_01`               | **L3 sports single-walk** (v9 + partition + fixture-dependent typed reasons + source path→column)                                                                                        | open P0                          | parallel per-AG                                                                                                |
+| `instruments_manifest_canonicalisation_2026_06_01`          | **L3 per-SERVICE** (instruments I/O input — all-AG reference/instrument indices, audit-first)                                                                                            | open P0                          | parallel per-service                                                                                           |
+| `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`   | **L3.5 FOUNDATION** — lifecycle catalogue roll-up from per-date `by_date/` defns (all-AG + sports fixtures); the could-exist-universe SSOT feeding `expected_unattempted` + denominators | open P0                          | **GATES every AG's MTDS `--apply`** (dry-runs NOT gated; depends on `instruments_manifest_canonicalisation` ↑) |
+| `downstream_services_manifest_canonicalisation_2026_06_01`  | **L3 per-SERVICE** (MDPS/features/strategy/execution — audit-first, low-data quick walk)                                                                                                 | open P1                          | parallel per-service                                                                                           |
+| `canonical_form_cross_service_audit_checklist` (audit SSOT) | **L7 AUDIT SSOT**: CF-1…CF-12 union + (service×CF) coverage matrix — re-run proves canonical                                                                                             | shipped                          | —                                                                                                              |
+| `manifest_reader_fail_fast_on_stale_fallback_2026_05_28`    | **L4/L7 "no fallback"**: reader fail-fast default + liveness                                                                                                                             | step-1 ✅; follow-up open        | parallel (independent)                                                                                         |
+| `aws_manifest_consolidator_scope_2026_05_21`                | L4 AWS canonical consolidator                                                                                                                                                            | P1.10 `tofu apply` open (HUMAN)  | parallel (AWS infra)                                                                                           |
+| `manifest_consolidator_liveness_health_2026_06_01`          | L4 GCP consolidator liveness                                                                                                                                                             | (not on this branch)             | parallel — CONFLICT-3                                                                                          |
+| `solana_defi_legacy_migration_2026_05_27`                   | **DeFi-specific** Solana legacy→canonical (Kamino/Solend/Orca/Raydium) — SAME dedicated DeFi buckets §C rewrites                                                                         | open P1                          | DeFi-only — serialise with §C                                                                                  |
 
 > **This master owns the ENTIRE DeFi vertical (slot 2, five-slot asset-group split, operator 2026-06-03).** Beyond the
 > cross-AG canonicalisation sub-plans above, slot-2 / this master orchestrates ALL DeFi work across **IS
@@ -603,6 +615,88 @@ What to verify/wire (B0 corrected scope):
       to be filed from the audit. **GATED-COMPOSES**: depends on A11 (canonical buckets) + A8/A9/A10 (honest-absence
       routing) being landed so the preflight reads the right place + marks the right state. parent_epic:
       mtds_mdps_master.
+  - [x] ✅ [AUDIT] P0. A12-AUDIT — **6-service preflight audit DONE (slot-2, 2026-06-04)**: preflight + honest-absence +
+        the operator's zero-volume/NaN/last-price candle ask are **substantially engrained via SHARED code** (UAC
+        `honest_coverage.py` EmptyConfirmedReason/RecordFailedReason/compute_honest_coverage; UTL BaseDependencyChecker
+        / run_preflight / assert_consolidator_healthy / classify_venue_error; MDPS `BaseCandleAdapter`
+        `_make_zero_activity_candle_output`/`_carry_forward_ohlc` LOCF/`_finalize_session_grid`). **4/6 services DONE**:
+        MDPS candle layer (zero-vol/LOCF/NaN, batch=live via batch_workers+live_workers), features-onchain
+        (capture_status-aware DependencyError), strategy-service (`validation/freshness_gate.assert_feature_fresh` →
+        DataStalenessError, live-halt vs batch-warn), execution-service (`validation/freshness_gate` — NaN/Inf benchmark
+        blocked BOTH modes; stale → live kill_switch.activate vs batch degrade+continue). Concrete GAPS filed below
+        (A12a-A12e). parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P1. A12a — **upstream-IS preflight GATE wired** (uac@d67d8061 + mtds@e2fc7d51): added
+        `PreflightTrigger.DEFI_COLLECT_DAILY` → `defi_market_data` → `INSTRUMENTS_PREFLIGHT_REQUIREMENTS`
+        (instrument-catalog ≤24h, mirrors CeFi/TradFi) in UAC; `assert_defi_catalog_fresh()` in `_defi_manifest.py`
+        wraps UTL `run_preflight` (honest-absence: returns False → caller `record_failed` per shard, no raise in
+        per-venue loop; live circuit-breaker downstream). Wired into the 2 May-23-critical handlers
+        (dex_pools=arbitrage, lst_rates=carry) + guard tests (UAC +4, MTDS +3). Both repos QG-green. **Residual
+        (A12a-rollout, P1)**: the same one-line gate at the remaining ~25 DeFi collect handlers (mechanical) — see
+        sub-todo. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. A12a-rollout — extend `assert_defi_catalog_fresh()` (the A12a gate) to the remaining ~25 DeFi collect
+        handlers (eigenlayer*rewards, evm_defi, gas_fee, lending_indices, liquidations, oracle_prices, perp_funding,
+        solana_defi, native_staking, vault_share_price, staking_yields, token_transfers, position_data,
+        flash_loan_events, governance*\*, mev_events, jupiter_quote, orca_whirlpool_state, raydium_classic_amm,
+        aggregator_route, bridge_events, drift_v2_historical, protocol_outage_detector, liquidation_events) at each
+        `process()` chokepoint + a per-handler guard test. Mechanical (mirror dex_pools/lst_rates). Repo:
+        market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P1. A12b — **CONFIRMED ALREADY EXISTS, no change needed** (slot-2 deep-read 2026-06-04): the DeFi
+        owed-cell backstop is enumerator-driven —
+        `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_defi` yields
+        `ExpectedRow(capture_status="expected_unattempted")` for every catalog-alive DeFi cell with no manifest row
+        (pre-genesis/listing → `empty_confirmed[EXPECTED_*]`; delisted → `EXPECTED_INSTRUMENT_DELISTED`), materialised
+        by `_write_absent_rows` (per-VM shard, row_count=0, never omitted/fabricated), guarded by
+        `test_enumerate_expected_universe_v2.py::test_defi_v2_alive_date_not_in_present_set_yields_expected_unattempted`
+        (+ 2 negatives). The earlier "unconfirmed" was a grep-0 artifact; `EmptyFromLiveInstrumentError` is correctly an
+        MTDS-CONSUMER concern (A10c/d), not IS. IS DeFi writes resolve buckets via `resolve_bucket_name` (canonical).
+        Repo: instruments-service (no code change). parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P1. A12c — **CONFIRMED already-wired for DeFi** (slot-2 deep-read 2026-06-04; guard added
+        mtds@e2fc7d51): the earlier "RED gap" was stale. UAC `SOURCE_PRIORITY[(defi,*)]` already carries every DeFi
+        data*type; `ManifestWriter.add()._resolve_and_validate_source` auto-stamps single-source cells + raises
+        `MissingSourceError` on blank multi-source; `DefiManifestRecorder.record_captured` already accepts+forwards
+        `source`. The only multi-source DeFi cells — `oracle_prices` (pyth_hermes/chainlink) + `native_staking_rates`
+        (solana_rpc/helius_rpc) — already pass `source=`; all others single-source → auto-stamped. Added the missing
+        integration guard through the REAL writer (`test_defi_recorder_real_writer*\*`: single-source auto-stamp +
+        multi-source blank → MissingSourceError). No UAC/handler change needed. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P2. A12d — **DONE** (mtds@b66b15d2): deleted 6 stale `*.bak` files (native_staking /
+        protocol_outage_detector / staking_yields / tick_data / token_transfers / websocket_streaming). Bucket-SSOT
+        audit found **no hardcoded-bucket drift** — every DeFi handler resolves writes via `resolve_bucket_name` /
+        `get_write_bucket_name` / `build_bucket` (the `gs://` strings are log-format args, not inline f-strings); the
+        `_defi_instruments.py` constant fallbacks are the intentional IS-fallback contract (left, noted). Residual flag:
+        `gas_fee_handler.py:960` `_collect_latest_fees` builds a non-canonical `gas_fees/chain_id=…` path manually (not
+        a `write_defi_rows` call) — triaged into A11/legacy-path sweep. Repo: market-tick-data-service. parent_epic:
+        mtds_mdps_master.
+  - [x] ✅ [DATA] P2. A12e — **CONFIRMED intended (operator-locked Option A 2026-05-16)**: MDPS aggregates 5 DeFi
+        data_types (book_snapshot_5/dex_swaps/fx_rates/market_state/liquidity) with the full zero-vol/last-price/NaN
+        candle treatment (`BaseCandleAdapter._make_zero_activity_candle_output`/`_carry_forward_ohlc` LOCF/
+        `_finalize_session_grid`); on-chain snapshot types (vault_share_price/lst_rates/oracle_prices/lending_indices/
+        perp_funding) BYPASS MDPS by design → flow MTDS-raw direct to features-onchain, which applies its own honest
+        NaN/all-null handling (e.g. `perp_funding_rates_defi.py` → `record_empty(EXPECTED_NO_FUNDING_RATE_TICKS)`). So
+        the candle-honesty IS covered end-to-end, just split across MDPS (swap/state types) + features-onchain (snapshot
+        types) per the locked architecture. parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P0. A12f (PATHS MATCH POST-MIGRATION — deliverable-4 PATH closure DONE; mtds@b66b15d2): the 3-way path
+        divergence is RESOLVED — **(1) DONE** live DeFi writers now emit the canonical `pipeline_mode="batch"` segment
+        on all 44 `write_defi_rows` calls across 26 handlers (coarse ingestion mode, NOT run*tag →
+        `test_live_run_tag_leaves_path_unchanged` preserved); **(2) DONE** `rebuild_defi_manifest.py` regex + day-prefix
+        probe made pipeline_mode-aware (parses migrated `pipeline_mode=batch/` + bare legacy; +10 tests) so
+        post-migration rebuild no longer emits zero rows. Now migrator + live-writers + rebuild-scanner + reader ALL
+        agree on `day=/pipeline_mode=batch/asset_group=defi/…`. MTDS QG green (286s, codex 14/15). **RESIDUAL (3) —
+        column-vocab reconcile (P2, decoupled below as A12f-col):** the on-disk PATH segment is now coarse `batch`
+        everywhere, but the manifest pipeline_mode COLUMN still differs (migrator stamps coarse `"batch"` string; live
+        recorders pass fine `PipelineMode` enum to record*\*). Path-match (the deliverable) is closed; column-vocab is a
+        forward-compat consistency item. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P2. A12f-col — **pipeline_mode COLUMN vocab reconcile** (decoupled from A12f): pick ONE vocab for the
+        manifest `pipeline_mode` column — coarse `batch`/`live` (matches the path segment + migrator) vs the fine
+        `PipelineMode` enum the live recorders currently pass to `record_captured`/`record_empty`/`record_failed`. Today
+        the column is path-derived (coarse) at read-time so this is forward-compat, not a current-correctness bug; ties
+        to the cross-AG `PipelineMode` vocabulary decision. Repo: market-tick-data-service (+ UAC). parent_epic:
+        mtds_mdps_master.
+  - [x] ✅ [CODE] P1. A12g — **DONE** (mtds@b66b15d2): added `tests/unit/scripts/test_migrate_defi_full_v9_canonical.py`
+        (13 tests) covering the v9 migrator the launcher actually runs — asserts `_canonical_path` emits
+        `pipeline_mode=batch/` left of `asset_group=defi/`, `_conform` stamps
+        schema_version=9/asset_group/pipeline_mode/ source/available_at + LOUD-fails columns outside the union, and
+        dry-run plans without writing (fake in-memory gcsfs, credential-free). Repo: market-tick-data-service.
+        parent_epic: mtds_mdps_master.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
@@ -867,7 +961,11 @@ What to verify/wire (B0 corrected scope):
         cols), lending-indices 138,325 (43), dex-swaps 69,236, lst-rates 34,821 (17), oracle-prices 13,167, perp-funding
         11,486. Sharding/perf: dex-pools+lending+swaps ≈88% of objects → most date-shards/workers there; the launcher's
         date-shard + `--workers 96` + per-bucket-VM model fits; union cols vary (53/43/17) so v9 must union per-bucket.
-        Remaining = the `--phase all` migrate-PLAN dry run (planned_cells per bucket) on the dry VM.
+        **`--phase all` migrate-PLAN dry-run VALIDATED** (local, lst-rates, 2026-06-04, clean network): planned_cells=96
+        / objects_read=96 / cells_written=0 (DRY) / **0 errors / 0 needs_attr / 0 dedup_dropped**; sample PLAN cells
+        (COINBASE/STADER/STAKEWISE/MARINADE...) correctly identified for canonical `pipeline_mode=batch/` rewrite +
+        migrate=6.3s. Migrator dry-run confirmed end-to-end. Remaining = the full dry VM over ALL 6 buckets (operational
+        C0b step) once the pre-migration drain (C0c) is scheduled.
   - [ ] [DATA] P0. C0c — **pre-migration drain (HARD RULE)**: stop GCP+AWS fleet (`vm_zombie_watchdog.py` inventory →
         per-prefix SIGTERM → wait STOPPED) + run consolidator + snapshot each in-scope `_index` to
         `_index/snapshots/pre_migration_2026_06_01.parquet`. Confirm the bucket-remediation DeFi seed is NOT mid-walk
@@ -1170,3 +1268,22 @@ coverage-summary == drilldown == manifest-status denominators; features-onchain-
 >    SAME `market-data-tick-defi-prd-…` `_index` this plan's C0 rewrites. The remediation seed must run BEFORE C0 (so C0
 >    canonicalises the seeded legacy rows: old venue strings / v4–v8 / phantom grid). Do NOT run C0 while the
 >    remediation DeFi seed is mid-walk, and vice-versa. `data_source_provenance_…` rides C0 (no third walk).
+
+## ⑦ Coverage-denominator could-exist seed — cross-AG note (filed by slot-5 2026-06-04)
+
+> Operator 2026-06-04 (point ⑦): the deployment-api/ui coverage **denominator** must reflect the **could-exist
+> universe** (instruments/fixtures that exist in IS but whose backfill has NOT run), not just rows that exist in the
+> manifest. **The seeding mechanism already exists** — `instruments-service/scripts/enumerate_expected_universe.py` (v2
+> expected-universe enumerator) cross-joins the IS catalog × dates × data_types, subtracts existing manifest rows, and
+> seeds `record_expected_unattempted` for the residual; deployment-api `data_status_hierarchical` already counts
+> `expected_unattempted` in the 4-state denominator. Slot-5 fixed the cross-cutting blocker: the enumerator's default
+> bucket map was stale for ALL 5 AGs (missing the `-prd-` env tier) → now resolves via `resolve_bucket_name`
+> (instruments-service, ⑦ in `prediction_manifest_canonicalisation_2026_06_01.md`). **Remaining for defi:**
+
+- [ ] [CODE] P1. ⑦ defi could-exist denominator seed — build the `--catalog-path` parquet from the defi IS catalog
+      (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
+      `enumerate_expected_universe.py --asset-group defi --catalog-path <catalog> --apply-write` against the canonical
+      `_index` so the raw-tick denominator == could-exist universe (active-but-uncaptured instruments seeded
+      `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_defi` row-key/data_types match
+      the defi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
+      bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.

@@ -145,3 +145,143 @@ alerting/e2e) — intentionally untouched. One stash (`pm stash@{0}`) is mine an
 object-repair it ff-pulls clean slots + correctly `[skip:diverged]`/`[skip:dirty]` the rest (verified live on vm-0
 `/tmp/slot-cron-ff-pull.log` 15:40Z). Residual: vm-0 slot-7 worktrees diverged (ahead-1/behind-N ×~8 repos) + a few
 LDR-branch dirty worktrees need `slot-master-rebase` (cron skips them by design; they don't block working slots 5/9/10).
+
+## Alert-scoping audit (2026-06-04) — alerts must cover only what's supposed to be alive
+
+Audited the #agent-orchestrator-alerts noise. **vm-0 verified 100% fsck-clean** (29 main + 478 worktrees, 0 fail) —
+the "507 issues @16:00" was a STALE guard run (scanned pre/mid-repair); the recovery held. Liveness SSOT now codified in
+`codex/05-infrastructure/agent-orchestrator-worker-topology.md` § "LIVE STATUS" + CLAUDE.md (live = vm-0 only).
+Follow-ups on the alert sources (all `agent-orchestrator/scripts/fleet-git-health-guard.sh` + server/worker_liveness.py):
+
+- [ ] [INFRA] P1. **git-health guard should SELF-HEAL** — on `fsck` failure, run `git fetch origin` first (recovers
+      missing-but-reachable objects, exactly what the 2026-06-04 manual recovery did) and only alert if fsck STILL fails
+      after fetch. Turns a 500-line corruption alert into auto-repair. repo: agent-orchestrator (fleet-git-health-guard.sh).
+- [ ] [INFRA] P2. **git-health guard should SUMMARISE, not dump** — it `find`s every `.git` (29 main + ~478 worktrees)
+      and emits one Slack line each (500+). Dedupe to "N repos with fsck issues (main: …; worktrees: …)" and weight
+      MAIN-clone failures (actionable) over worktree noise. repo: agent-orchestrator.
+- [ ] [INFRA] P2. **All orchestrator alerts scope to the LIVE set** (currently just vm-0) per the topology LIVE-STATUS
+      block — so a stopped/decommissioned VM (e.g. i-007e8d99) or a planned-but-unlaunched epic VM never reads as a
+      dead-VM incident. slot-stale + worker-liveness alerts should likewise only fire for slots on a live VM. repo:
+      agent-orchestrator (server/health.py + worker_liveness.py + the guard).
+
+## Deploy path for the orchestrator + alert code (audited 2026-06-04)
+
+**Where deploy happens:** entirely **VM-local cron on vm-0** (ubuntu crontab) — NO GHA, NO cloud scheduler, NO laptop:
+- `*/15 * * * * agent-orchestrator/scripts/ao-self-pull.sh` → `git fetch` + **FF the AO clone (live-defi-rollout) + restart `orchestrator.service`**. This is how a guard/backend/alert-code fix reaches the running process.
+- `*/30 * * * * agent-orchestrator/scripts/fleet-git-health-guard.sh` → the git-health Slack alert source.
+- `*/5 * * * * unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh --all-slots` → slot worktrees.
+
+**The alert code (guard + `slack_notify`) runs from the AO clone on `live-defi-rollout`.** A fix is deployed iff it lands
+on origin/live-defi-rollout AND `ao-self-pull` can FF (clone clean). **Verified 2026-06-04:** the clone was jammed 3-behind
+by a dirty `data/config/backlog.mock.yaml` (runtime-churned — 6317-line diff; `ao-self-pull` skips-dirty by design);
+cleared it → self-pull FF'd `415ff06 → 946091c` + restarted → now `behind=0, dirty=0`. **Deploy path confirmed working.**
+
+- [ ] [INFRA] P1. **`data/config/backlog.mock.yaml` re-jams the deploy path.** The runtime rewrites it (6317-line churn)
+      though its header says "immutable at runtime" → it goes dirty → `ao-self-pull` skips → the AO clone (guard +
+      backend) goes STALE and a fix never deploys. Diagnose why prod vm-0 writes the MOCK backlog (mock-mode leak?) →
+      fix the writer, OR gitignore + `git rm --cached` + seed from template (same class as the CI-CD-PIPELINE.svg churn).
+      Until fixed, the orchestrator's own deploy-currency is fragile. repo: agent-orchestrator.
+
+## CORRECTION + cron landscape (2026-06-04)
+
+**`backlog.mock.yaml` — KEEP TRACKED (my earlier "gitignore it" todo was WRONG).** Per `agent-orchestrator/server/
+config.py` `backlog_path()`: **mock mode reads `backlog.mock.yaml` (88-line demo fixture B-001..B-003); LIVE reads
+`backlog.yaml`** (untracked runtime state). vm-0 is `ORCHESTRATOR_MODE=live` → it reads `backlog.yaml`, NOT the mock.
+So backlog.mock.yaml is a legit small COMMITTED demo/e2e fixture — keep it tracked, do NOT gitignore. The 6317-line
+churn came from a **past mock/demo run on the live box** writing real tasks into the mock path; cleared it (back to the
+88-line committed version), and live-mode vm-0 won't re-churn it. **Real fix = don't run e2e_demo/mock-mode on the live
+VM** (or point the demo at a gitignored `state.mock.*`-style copy). ao-self-pull could also auto-stash known-runtime-
+churn files before FF. repo: agent-orchestrator.
+
+**Cron landscape (so the two are not confused):**
+
+| cron / loop | host | cadence | job |
+|---|---|---|---|
+| `ao-self-pull.sh` | **VM only** | 15 min | pull the AO **code** clone (live-defi-rollout) + **restart orchestrator** = deploy-currency for the orchestrator itself |
+| `slot-cron-ff-pull.sh` | laptop **+** VM | 5 min | **FF-only PULL** of slot worktrees (no commit, no push) |
+| `slot-git-status-report.sh` | laptop + VM | 5 min | report slot git status to the orchestrator |
+| WorkerLivenessKicker (`_maybe_alert_git_staleness`) | VM (backend) | 60 s | **ALERT** on stale/dirty/unpushed (the "stagnant ~threshold") — alerts, does NOT auto-commit |
+| `tab-mirror-to-ldr.yml` | **GHA** | on push | FF pushed `tab/*` → `live-defi-rollout` |
+
+→ `ao-self-pull` (orchestrator code deploy) is NOT the same as the laptop's `slot-cron-ff-pull` (slot-worktree pull).
+There is **no auto-commit-stagnant cron** — "stagnant" is an alert; Commit+Push+Flip is the agent's job.
+
+## Symmetric-host enforcement SHIPPED (2026-06-04)
+
+- [x] ✅ **(a) Auto-install on provision** — `setup-tab-worktrees.sh --init` now invokes
+      `install-slot-cron-ff-pull.sh` → a new host gets the ff-pull cron + verify cron BY CONSTRUCTION (no
+      remembered manual step). Idempotent + best-effort.
+- [x] ✅ **(b) Periodic verify + Slack-alert-on-drift** — `install-slot-cron-ff-pull.sh` now also registers a `*/30`
+      `slot-host-symmetry-verify` cron running `verify-slot-host-symmetry.sh --alert`; the new `--alert` flag posts a
+      Slack drift alert (webhook from `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` / GCP SM) on any non-compliance. **Verified
+      live** (posted the 2 commit-identity drifts). Rolled onto the live vm-0 + this laptop (both crons present, `*/5`
+      ff-pull restored).
+- [x] ✅ **Installer default cadence bug** — was `*/15`, contradicting CLAUDE.md's mandated 5-min cadence (it had
+      silently downgraded a host's ff-pull). Fixed to `*/5`.
+
+PM@live-defi-rollout. The symmetric-host contract is now ENFORCED (auto-install + self-verify-alert), not just documented.
+
+## Alert-noise root-caused + FIXED (2026-06-04 17:xx)
+
+The recurring 507 git-health alert + the new 475 symmetry-verify alert were BOTH false positives, now fixed + deployed to vm-0:
+- [x] ✅ **git-health guard false 507** — the guard runs from ROOT's crontab and ran `git fsck` AS ROOT on ubuntu-owned
+      repos → `dubious ownership` → false "fsck FAILED" ×507 (vm-0 is actually fsck-clean). Fixed `fleet-git-health-guard.sh`:
+      run fsck as `${USER_NAME}` + MAIN-CLONES-ONLY (worktrees share objects → no 500-line dumps) + self-heal (fetch
+      before alerting). Verified on vm-0: now "OK — no fsck breakage". agent-orchestrator@live-defi-rollout.
+- [x] ✅ **verify --alert 475-spam** — the `--alert` counted hundreds of per-worktree identity/upstream nits as
+      "failures". Fixed: alert ONLY on HOST-level breaks (crons/logs/backend/token); per-worktree nits logged + exit-1
+      but not Slack'd. Verified on vm-0: "host-level checks PASS; 475 per-worktree nit(s) only — NOT alerting".
+- [ ] [INFRA] P2. **475 per-worktree nits on vm-0 are REAL (just not alert-worthy)** — worktrees with empty/blank commit
+      identity (`' <>'`) + mis-set @{upstream}. Tracked under commit_identity_misconfig_fleet + the upstream-drift rule;
+      fix via `setup-tab-worktrees.sh` per-worktree identity re-assert. repo: agent-orchestrator host.
+
+Note: the "Escalation NOT confirmed for mdps#91 — no worker spawned" Slack is the HONEST alert working — a real state
+(no free slot / headroom for the escalation), not noise. Tracked under the fleet-spawn + slot-4-wrong-branch items.
+
+## Orchestrator + staging→main promotion remediation (2026-06-04 PM)
+
+Triggered by "any escalation agents being called / is everything mirrored to main" audit. Findings + fixes:
+
+- [x] ✅ **Dashboard "vm Unreachable" / dispatch traceback** — `get_fleet_summary` 500: `storage.Client()` could not
+      determine GCP project (user-cred ADC has none; `GOOGLE_CLOUD_PROJECT` unset) → ES256 internal-token GCS key load
+      failed. Fixed live on vm-0 (.env.local) + durable: `auth.py` passes project explicitly + `bootstrap_vm.sh` writes
+      `GOOGLE_CLOUD_PROJECT`. agent-orchestrator@8904142. fleet_summary now 200.
+- [x] ✅ **Escalation capacity** — slot-2 (PM diverged, reset to LDR; 9 stale commits → `origin/backup/slot-2-pm-wip-2026-06-04`)
+      + slot-4 (UAC+PM `fix/*` → tab/vm-0/4). AutoSpawn `failed=2`→`spawned=2 failed=0`.
+- [x] ✅ **Semver Agent jam #1 (PM checkout)** — `path: ../unified-trading-pm` escaped GITHUB_WORKSPACE →
+      actions/checkout rejects → step 3 failed on EVERY repo → staging→main jammed fleet-wide (staging 9-17 ahead of
+      main, v2 green). Template fixed → `path: pm-readiness`. PM@f9deb76f7.
+- [x] ✅ **Semver Agent jam #2 (broken pipe)** — `LATEST_MSG=$(echo "$COMMITS" | head -1)`: large COMMITS floods pipe,
+      head closes early → echo SIGPIPE → pipefail → step 4 "Compute next semver" aborts. Only surfaced after #1 fixed
+      (steps 4-7 had never run). Template fixed → here-string `head -1 <<< "$COMMITS"`. PM@10645e6b3.
+- [x] ✅ **Fanned out FULLY-corrected semver-agent template (path+pipe) to fleet main** — 22 repos merged (20 one-pass
+      + greeks-service [was missed by list] + UTL canary). unified-trading-api unblocked via LDR-merge-into-PR (pyjwt).
+      ONLY agent-orchestrator left (no quality-gates.sh = G6 gap). All 25 manifest repos HAVE semver-agent.yml (none
+      missing). Validated end-to-end on UTL (v1.2.0). repo: all fleet.
+- [x] ✅ **2 of 3 v2-reds FIXED + VERIFIED green**: unified-trading-system-ui (`canvas@2.11.2` transitive optional
+      native-build → `pnpm.neverBuiltDependencies:[canvas]`, ui@7a822bd9, v2 GREEN) + unified-trading-api (pip-audit
+      pyjwt 2.12.1 → 4 CVEs → bumped `pyjwt>=2.13.0` + re-lock, uta@cee22b1, v2 GREEN; also fixed uv.lock drift).
+- [ ] [INFRA] P1. **agent-orchestrator v2-red = no `scripts/quality-gates.sh`** (exit 127) — the mid-migration G6 gap
+      (`agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md`, BLOCKED-OPERATOR: creating AO staging/gate
+      fires a fleet restart). Not a one-line fix; build AO's gate as part of G6.
+- [x] ✅ **Semver Agent VALIDATED end-to-end** — UTL ran all steps green (4 compute / 6 dispatch-version-bump / 7
+      schema-changed) + cut `v1.2.0`. The release/versioning pipeline (dead fleet-wide since 06-03 from the 2 stacked
+      bugs) is restored. Template PM@10645e6b3.
+- [ ] [SCRIPT] P2. **Close idle PRs** after drain: ml-inference `main<-auto/*` (8 stale), `chore/sync-to-staging-*`
+      dupes (risk/pnl/pbm/ml-inference/ml-training), old `version-bump`/`bump-version` PRs.
+
+## ROOT CAUSE: recurring LDR deletion = delete_branch_on_merge (2026-06-04)
+
+The "publish branch" prompt for unified-trading-library across all slots (recurring — recreated earlier today, gone
+again) traced to: **GitHub repo setting `delete_branch_on_merge=true` + the LDR→staging promotion PR has
+head=`live-defi-rollout`** → every successful staging promotion AUTO-DELETES the head branch = the integration branch.
+- UTL: PR #237 (staging<-live-defi-rollout) merged 18:46 → deleted LDR (last seen 18:36). PR #234 did the same 06-03.
+- [x] ✅ **UTL LDR recreated** from preserved local `c5b014783` (= last origin SHA, zero data loss) + slot upstream reset.
+- [x] ✅ **Fleet sweep (ALL 112 org repos)**: 20 had `delete_branch_on_merge=true`. Fixed all 15 non-archived → false
+      (13 of them HAD an LDR branch = were latent time-bombs: unified-{events,market,config,trade-execution}-interface +
+      8 *-ui repos + sports-betting-service + unified-trading-deployment-v2). 5 archived (pnl-attribution, codex,
+      unified-domain-client, matching-engine-library, execution-algo-library) are read-only → harmless, left as-is.
+- [ ] [INFRA] P1. **Prevent regression**: repo-creation / bootstrap MUST set `delete_branch_on_merge=false` (the
+      LDR→staging promotion uses LDR as PR head, so auto-delete-head is incompatible with the integration model). Add a
+      `verify_branch_protection_check_names.py`-style assertion OR a fleet settings-reconciler that fails if any active
+      repo has it true. repo: unified-trading-pm scripts.

@@ -20,6 +20,14 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)
 
+> **🔴 FOUNDATION GATE (2026-06-04) — the proper instrument catalogue blocks the tradfi MTDS `--apply`.** Before the
+> tradfi MarketTick-data migration `--apply` runs,
+> `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting) must be GREEN — the
+> could-exist-universe SSOT (`expected_unattempted` / coverage denominators / instrument-existence guards), built by
+> rolling up the per-date `instrument_availability/by_date/` definitions (the v2 enumerator's `catalog.parquet` had no
+> producer). **Dry-runs (migrator + manifest-rebuild) are NOT gated** — only the irreversible `--apply`. Depends on
+> `instruments_manifest_canonicalisation`. Cross-ref: defi master coordinator §MASTER.
+
 ## Slot-6 TradFi master orchestrator — owned + attached plans/issues
 
 > **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot (five slots). **Slot 6 = TradFi
@@ -608,3 +616,22 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
 ## Codex SSOTs
 
 - `codex/02-data/availability-manifest-and-data-status.md` — tradfi canonical form (v9 + pipeline_mode partition).
+
+## ⑦ Coverage-denominator could-exist seed — cross-AG note (filed by slot-5 2026-06-04)
+
+> Operator 2026-06-04 (point ⑦): the deployment-api/ui coverage **denominator** must reflect the **could-exist
+> universe** (instruments/fixtures that exist in IS but whose backfill has NOT run), not just rows that exist in the
+> manifest. **The seeding mechanism already exists** — `instruments-service/scripts/enumerate_expected_universe.py` (v2
+> expected-universe enumerator) cross-joins the IS catalog × dates × data_types, subtracts existing manifest rows, and
+> seeds `record_expected_unattempted` for the residual; deployment-api `data_status_hierarchical` already counts
+> `expected_unattempted` in the 4-state denominator. Slot-5 fixed the cross-cutting blocker: the enumerator's default
+> bucket map was stale for ALL 5 AGs (missing the `-prd-` env tier) → now resolves via `resolve_bucket_name`
+> (instruments-service, ⑦ in `prediction_manifest_canonicalisation_2026_06_01.md`). **Remaining for tradfi:**
+
+- [ ] [CODE] P1. ⑦ tradfi could-exist denominator seed — build the `--catalog-path` parquet from the tradfi IS catalog
+      (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
+      `enumerate_expected_universe.py --asset-group tradfi --catalog-path <catalog> --apply-write` against the canonical
+      `_index` so the raw-tick denominator == could-exist universe (active-but-uncaptured instruments seeded
+      `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_tradfi` row-key/data_types
+      match the tradfi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The
+      mechanism + bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.

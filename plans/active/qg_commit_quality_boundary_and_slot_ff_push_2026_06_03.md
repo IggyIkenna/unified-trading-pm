@@ -146,6 +146,63 @@ All on `origin/live-defi-rollout`; full detail in
       wording drafted; gap-analysis line anchors in the session notes). **Do NOT edit the HARD RULE until operator
       ratifies decision 3.**
 
+### Remote tab branch stays current with LDR — server-side `LDR→tab` FF mirror (operator-chosen 2026-06-04, host-independent)
+
+> **Driver (operator + slot-5 audit 2026-06-04):** a repo a slot DIDN'T commit to this session has its **local** tab
+> branch kept current by `slot-cron-ff-pull.sh` (FF-pull LDR→local), but its **remote** tab branch
+> (`origin/tab/<op>/<N>`) drifts BEHIND LDR because nothing pushes it (the cron is pull-only; the agent only pushes
+> after a commit). Incident: slot-5 UAC remote tab stuck at `0abbdf86`, 3 commits behind LDR (peer slot-2/slot-3 commits
+> the cron had already FF'd into local) → VS Code showed a misleading `0↓ 3↑` because the worktree upstream was ALSO
+> mis-set to `origin/tab/...` (the `git push -u` footgun). **`behind`-only is BENIGN** (the `tab→LDR` mirror no-ops, the
+> next commit FFs forward) — the only thing that's ever dangerous is **DIVERGENCE** (tab has own commits AND is behind),
+> which is the alert in cicd (below). This is hygiene + a headless-fleet visibility fix, NOT a correctness gap.
+
+> **PRECONDITION (operator 2026-06-04): the fleet-wide `tab/*` mirror + divergence monitor below are only SAFE if every
+> tab branch name is globally unique.** Both operate by globbing `tab/*` across the whole fleet (laptop + every AWS/GCP
+> VM), so two hosts sharing one branch name = the mirror FFs host-A's remote with host-B's commits (silent stomp) and
+> the divergence alert mis-attributes. Today names are NOT guaranteed unique: `setup-tab-worktrees.sh` derives the
+> prefix from `$USER`/`--operator` ([setup-tab-worktrees.sh:130-137](../../scripts/dev/setup-tab-worktrees.sh#L130)), so
+> any VM running as `root` collapses to `tab/rootm/<N>` — every root VM collides on the same name (confirmed live:
+> `tab/rootm/1..8` alongside the correctly-named `tab/vm-0/10`). Fix it FIRST (todo below), then the glob is sound.
+
+- [ ] [INFRA] P1. **Make tab branch names globally unique via the VM naming convention (PRECONDITION for the fleet-wide
+      mirror + divergence monitor).** On a fleet VM the operator prefix MUST encode the globally-unique VM id, not
+      `$USER` — reuse the value already computed for commit attribution: `WORKTREE_HOST="${VM_NAME:-laptop}"`
+      ([setup-tab-worktrees.sh:61](../../scripts/dev/setup-tab-worktrees.sh#L61)). So branch derivation becomes
+      `tab/<vm-name-or-operator>/<N>` where the prefix is `$VM_NAME` whenever set (every fleet VM), falling back to the
+      operator prefix only on a human laptop — killing the `$USER=root → tab/rootm/<N>` fleet-wide collision class. Add
+      a **uniqueness assertion in `verify-slot-host-symmetry.sh`**: across
+      `git ls-remote --heads origin 'refs/heads/tab/*'`, no `tab/<prefix>/<N>` may be claimed by >1 host (cross-check
+      against the VM registry / `orchestrator_vm_registry.yaml` so a stale-but-unique name is fine but a true collision
+      is review-blocking). Migrate the existing mis-named `tab/rootm/*` branches to their VM-scoped names as part of the
+      rollout (do NOT just rename — repoint the owning VM's worktrees, then delete the stale remote branch once empty).
+      HARD invariant: a tab branch name is a global key — one host, fleet-wide. Repos: `unified-trading-pm`
+      (`scripts/dev/setup-tab-worktrees.sh` + `scripts/verify-slot-host-symmetry.sh`). parent_epic: (per-tab-worktrees /
+      cicd master).
+- [ ] [INFRA] P2. **Server-side `LDR→tab` FF mirror — make the existing tab-mirror BIDIRECTIONAL (FF-or-alert, never
+      force).** Extend the `tab-mirror-to-ldr` GHA (SSOT: `unified-trading-pm/scripts/workflow-templates/`, runs on push
+      to LDR) so that, in addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does **`LDR→tab`: FF
+      every `tab/*` branch that is purely BEHIND LDR** (ancestor) up to LDR. **HARD invariants:** FF-only, **never
+      force-push**, never auto-merge. A tab that is BOTH ahead+behind (DIVERGED) → **do NOT touch it** → emit the
+      divergence alert (cicd item below); the one safe auto-resolution is the existing "rebase diverged tab onto LDR"
+      path (`e21ca439` — preserves the tab's own commits + pulls LDR in), reuse it, don't re-invent. **Why server-side
+      not the cron**: host-independent — refreshes a slot's remote tab branch whether the owning host (laptop / AWS VM)
+      is online or not (the headless-fleet gap the cron can't cover). **Operates over EVERY `tab/*` branch fleet-wide**
+      (all operators, all slots, every host) — DEPENDS on the global-uniqueness precondition above (without it the glob
+      can FF one host's remote with another host's commits). Composes with — does NOT replace — the cron FF-push of
+      QG-green _committed_ agent work above (that's the `ahead`/push-agent-work-up leg; this is the `behind`/keep-tabs-
+      current-down leg). Repo: `unified-trading-pm` (workflow-templates → `rollout-workflow-templates.sh`). parent_epic:
+      (cicd master — cross-link `cicd_contract_hardening_2026_06_01.md`).
+- [ ] [INFRA] P2. **Pin every tab worktree's upstream to `origin/live-defi-rollout` + assert it in
+      `verify-slot-host-symmetry.sh`.** Root cause of the misleading `N↑` display: a `git push -u` (or
+      `branch --set-upstream-to=origin/tab/...`) re-points a worktree's upstream to its (stale) remote tab branch, so VS
+      Code's ahead/behind reads against the stale tab instead of LDR (phantom-ahead footgun, already documented in
+      CLAUDE.md § "Upstream tracking"). `setup-tab-worktrees.sh --track` sets it correctly; add a guard in
+      `verify-slot-host-symmetry.sh` that asserts `git rev-parse --abbrev-ref @{upstream} == origin/live-defi-rollout`
+      for every worktree (fix + warn on mismatch) so the only thing the arrows ever show fleet-wide is genuine LDR
+      drift. Repos: `unified-trading-pm` (`scripts/verify-slot-host-symmetry.sh` +
+      `scripts/dev/setup-tab-worktrees.sh`). parent_epic: (per-tab-worktrees / cicd master).
+
 ### Quickmerge behind/diverge error contract — agents self-serve recovery (operator design 2026-06-03; many-parallel-agents driver)
 
 > **Driver (operator)**: with dozens of agents running, the behind-remote-LDR + uncommitted-same-file reconcile must be

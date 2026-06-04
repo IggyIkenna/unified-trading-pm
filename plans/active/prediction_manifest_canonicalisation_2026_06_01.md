@@ -20,6 +20,14 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
 
+> **🔴 FOUNDATION GATE (2026-06-04) — the proper instrument catalogue blocks the prediction MTDS `--apply`.** Before the
+> prediction MarketTick-data migration `--apply` runs,
+> `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting) must be GREEN — the
+> could-exist-universe SSOT (`expected_unattempted` / coverage denominators / instrument-existence guards), built by
+> rolling up the per-date `instrument_availability/by_date/` definitions (the v2 enumerator's `catalog.parquet` had no
+> producer). **Dry-runs (migrator + manifest-rebuild) are NOT gated** — only the irreversible `--apply`. Depends on
+> `instruments_manifest_canonicalisation`. Cross-ref: defi master coordinator §MASTER.
+
 > **⏸️ E4 DRY-RUN DONE 2026-06-03 (VM auto-deleted) — full-run AWAITING OPERATOR REVIEW.** The dry migration planned
 > **1,897,691** object moves (0 copied) cleanly (exit 0) — see the E4 todo for the per-phase breakdown + verified
 > transforms. **The next step is the IRREVERSIBLE-DIRECTION FULL run (`… full`/`--apply`, the live 1.9M write) — do NOT
@@ -340,9 +348,12 @@ be fixed first if run on a VM.
       below):** re-emit of the EXISTING `_index`'s `empty_confirmed`/`attempted_failed` rows that have NO backing object
       (a pure object-scan loses them) + within-bounds-empty classification + the IS/MTDS write-path audit — at parity
       with cefi E5's deferred CF-11 enhancements. Build-spec reference retained below.
-- [ ] [DATA] P2. E5 build-spec reference (superseded by the DONE item above): **REFERENCE: cefi E5 DONE
-      (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional `pipeline_mode=` regex segment,
-      DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
+- [x] ✅ [DATA] P2. E5 build-spec reference — **SUPERSEDED by the captured-atom E5 rebuild DONE (mtds@d1f1317d) +
+      pipeline_mode-SSOT unification (mtds@ea2c2d50) above; closed as reference-only (slot-5 2026-06-04).** The actual
+      `rebuild_prediction_manifest.py` was rewritten to the CORRECTION spec (re-computes cqg per-cid, batch=live atom);
+      this row is retained below only as the historical build-spec breadcrumb, no remaining work. **REFERENCE: cefi E5
+      DONE (mtds@2c3a479b) + tradfi E5 DONE (mtds@e6250b99)** — copy their pattern (optional `pipeline_mode=` regex
+      segment, DAY-level list prefix, canonical `-prd` bucket, stamp `pipeline_mode` via path-or-
       `derive_pipeline_mode_for_row`). Prediction differs: its CANONICAL*PATH_RE must be **REWRITTEN** to the
       post-migrator form (verified 2026-06-02 via `candidate_parquet_paths`):
       `raw_tick_data/by_date/day={D}/pipeline_mode={mode}/asset_group=prediction/venue={V}/instrument_type={IT}/data_type={DT}/{cid}.parquet`
@@ -617,13 +628,13 @@ verify + the gated delete.
       how many markets get a non-None `classify_lifecycle`, (2) check whether `market_lifecycle/by_canonical_group/`
       objects appear. If (a), fix `classify_lifecycle`; if (b), it self- resolves on the next run. Repo:
       instruments-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P2. **instruments-service QG STEP 5.64 — preflight short-circuits emit NO `PREFLIGHT_SKIPPED`**
-      (cross-cutting finding surfaced by slot-5 during the 552 fix 2026-06-03; NOT prediction-scoped — for the
-      instruments epic). `instruments-service` has preflight-guard patterns (`_check_dependencies` / `should_skip_date`
-      / `check_shard_freshness`) in `engine/orchestrator.py`, `engine/validation_utils.py`, `cli/instruments_handler.py`
-      but emits no `emit_preflight_skip` / `PREFLIGHT_SKIPPED` anywhere → silent preflight skips are invisible in the
-      event stream (the same observability gap STEP 5.64 enforces for service repos). Wire `emit_preflight_skip` (UTL)
-      at each short-circuit. Repo: instruments-service. parent_epic: mtds_mdps_master (or the instruments epic).
+- [x] ✅ [CODE] P2. **instruments-service preflight short-circuits emit `PREFLIGHT_SKIPPED` — DONE 2026-06-04 (slot-4)**
+      — instruments-service@510b4c4b. The per-league preflight `_should_skip_date_for_per_league`
+      (`engine/orchestrator.py`) returned `True` silently when all expected canonical leagues were already covered for a
+      date — invisible in the event stream (the STEP 5.64 observability gap). Now emits `emit_preflight_skip` (UTL) with
+      `PreflightSkipReason.SHARD_ALREADY_FRESH` + `asset_group=sports` + `feature_group=data_type` + `date` before
+      returning True. ONE edit in the shared helper covers all 5 callers (FootyStats PREDICTIONS/MATCHES/ODDS,
+      PLAYER_VALUES Transfermarkt, SFI_PROGRESSIVE_STATS). QG green (133s). Repo: instruments-service.
 
 ## Slot-4 ready-to-run audit 2026-06-04 (operator-requested: migrator dry-run · manifest-rebuild dry-run · preflight IS→execution empty/partial batch=live · read/write path post-migration parity)
 
@@ -651,37 +662,50 @@ verify + the gated delete.
       keeps a legacy `category=` dual-probe fallback for the migration window — correct). No downstream reader stuck on
       a legacy-only path. CONFIRMED.
 
-**GAPS (the remaining work to reach fully-ready):**
+**GAPS — both readiness-blocking P1s now CLOSED 2026-06-04 (slot-4); residual = 2 latent P2s (observability + a UAC
+venue-override question) + the operator-gated migration walk:**
 
-- [ ] [CODE] P1. **MTDS keystone: migrator `pipeline_mode` for cqg DRIFTS from the UAC SSOT** — repo:
-      `market-tick-data-service`. `migrate_prediction_to_pred_prd_v9.py:89`
-      `_GAMMA_DATA_TYPES =     {prediction_canonical_question_group}` maps cqg→`batch_polymarket_gamma_api`, but the
-      authoritative UAC SSOT `source_priority.py:271` says
-      `("prediction","prediction_canonical_question_group") = ["polymarket_clob"]` → CLOB, and BOTH the live writer
-      (`orchestrator.py:1001` via `derive_pipeline_mode_for_row`→SOURCE_PRIORITY) AND the rebuild
-      (`rebuild_prediction_manifest.py:401` hardcoded CLOB, "mirror the live writer") use CLOB. So the migrator is the
-      lone outlier (3-of-4 say CLOB) AND it omits `MARKET_LIFECYCLE` which IS gamma per `source_priority.py:278`.
-      **Latent today** (cqg is manifest-only — no raw cqg objects to migrate; MARKET_LIFECYCLE is instruments-service
-      data, outside the MTDS migrator's raw_tick/candle scope — so the migrator's ACTUAL output is all-CLOB, correct),
-      but it's a path==manifest divergence RISK + SSOT drift (the exact sports-keystone bug class). **Fix (durable,
-      mirrors the sports `pipeline_mode_for_sports_entity` SSOT-unification):** route the migrator's
-      `_pipeline_mode_for_data_type` through UTL `derive_pipeline_mode_for_row("POLYMARKET","prediction",data_type)`
-      (the same SSOT the live writer uses) — auto-corrects cqg→CLOB + MARKET_LIFECYCLE→gamma, deletes the local map so
-      it can never drift again. Also align the rebuild's hardcode to the SSOT (same function) so all FOUR derive
-      identically. **Operator semantic confirm**: the migrator comment claims cqg is "Gamma API topology origin"; the
-      SSOT says CLOB (cqg atom = aggregated CLOB trades). If the operator wants cqg=gamma, change SOURCE_PRIORITY (+ all
-      4 consumers) instead — but as-is the SSOT is CLOB and the migrator must match it. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. **MDPS prediction consolidator preflight MISSING (sports-only today)** — repo:
-      `market-data-processing-service`. `app/core/dependency_checker.py:359` gates `assert_consolidator_healthy()` on
-      `if asset_group.upper() == "SPORTS"` only — prediction gets NO upstream manifest-consolidator health gate, so a
-      stale/missing pred-prd `_index` is read silently on live (the exact gap the sports gate closes). **Fix:** extend
-      the gate to PREDICTION (kinds `("market-data","instruments-store")`, `asset_group="prediction"` →
-      `market-data-tick-pred-prd` + `instruments-store-pred-prd`), ideally generic for any AG with a consolidator.
-      Mirror the sports test. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P2. **instruments-service preflight short-circuits emit no `PREFLIGHT_SKIPPED`** (observability parity) —
-      DUPLICATE of the existing IS STEP 5.64 todo above; 5 `_should_skip_date_for_per_league` sites in `orchestrator.py`
-      (5398/5673/5894/6518/6821) return silently; `emit_preflight_skip` (UTL) is not imported. Not a run-blocker
-      (observability only). repo: instruments-service.
+- [x] ✅ [CODE] P1. **MTDS keystone: migrator+rebuild pipeline_mode unified through the UAC SSOT — DONE 2026-06-04
+      (slot-4, operator cqg=clob decision)** — market-tick-data-service@ea2c2d50. The migrator's local
+      `_GAMMA_DATA_TYPES={prediction_canonical_question_group}` (cqg→`batch_polymarket_gamma_api`) drifted from the
+      authoritative UAC SSOT — `source_priority.py:271`
+      `("prediction","prediction_canonical_question_group") =     ["polymarket_clob"]` — while the live writer
+      (`derive_pipeline_mode_for_row`) + the rebuild (hardcoded CLOB) already used CLOB → migrated object PATH could
+      disagree with the manifest ROW (path==manifest risk; sports-keystone class). **Fix:** routed BOTH
+      `_pipeline_mode_for_data_type` (migrator) AND `bundle_pm` (rebuild) through the SAME UTL
+      `derive_pipeline_mode_for_row("POLYMARKET","prediction",data_type)` SSOT the live writer uses → all three derive
+      IDENTICALLY, local map deleted. cqg/trades/candles → `batch_polymarket_clob`. 3 regression tests lock
+      migrator==SSOT parity; 22 existing rebuild tests unchanged; QG green (225s). **SSOT nuance found + recorded:**
+      `derive_pipeline_mode_for_row` resolves ALL Polymarket data_types to CLOB because a **venue override**
+      (`POLYMARKET → BATCH_POLYMARKET_CLOB` in `pipeline_mode_resolver.py:_VENUE_OVERRIDES`) short-circuits BEFORE the
+      per-data_type SOURCE_PRIORITY lookup — so `MARKET_LIFECYCLE` resolves CLOB too (despite `source_priority.py:278`
+      data = gamma). That keeps all four consumers consistent at CLOB (good for path==manifest) but is a separate latent
+      UAC question → see the new handoff todo below. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P2. **POLYMARKET venue override masking the per-data_type gamma source — FIXED 2026-06-04 (slot-4,
+      operator: honor the data_type source)** — unified-trading-library@01ca49ea. `derive_pipeline_mode_for_row`'s
+      `_VENUE_OVERRIDES["POLYMARKET"] = BATCH_POLYMARKET_CLOB` fired before the per-data_type SOURCE_PRIORITY lookup, so
+      `("prediction","MARKET_LIFECYCLE") = ["polymarket_gamma_api"]` (`source_priority.py:278`) was masked — every
+      Polymarket row (incl. gamma-sourced MARKET_LIFECYCLE) resolved CLOB. **Fix:** POLYMARKET is a MULTI-SOURCE venue
+      (CLOB trades/book/cqg, Gamma lifecycle) — a single venue override can't express that, so the POLYMARKET override
+      was REMOVED; POLYMARKET now resolves per-data_type via SOURCE_PRIORITY (MARKET_LIFECYCLE → gamma_api ✅;
+      trades/cqg → clob; unknown → prediction asset_group fallback clob). Single-source venues (HYPERLIQUID→tardis etc.)
+      keep their override (the override is for venues whose source is fixed regardless of data_type). Zero blast radius
+      outside prediction (POLYMARKET is prediction-only — confirmed by a venue×SOURCE_PRIORITY conflict scan; the 1180
+      cartesian "conflicts" were all impossible pairings like HYPERLIQUID×sports). 36 existing + 3 new resolver tests
+      green; QG green (459s). repos: unified-trading-library (+ no UAC change needed — SOURCE_PRIORITY was already
+      correct).
+- [x] ✅ [CODE] P1. **MDPS prediction consolidator preflight — DONE 2026-06-04 (slot-4, parity with sports)** —
+      market-data-processing-service@eb8d00a. `dependency_checker.validate_can_run` gated
+      `assert_consolidator_healthy()` (market-data + instruments-store) on `asset_group==SPORTS` ONLY → prediction MDPS
+      read the pred-prd `_index` with no consolidator health gate (stale/missing read silently on live). Extended the
+      gate to PREDICTION. Key correctness detail: prediction resolves the **dedicated flat kinds**
+      `market-data-tick-prediction` / `instruments-store-prediction` (→ `*-pred-prd`), NOT the per-AG map (kind=
+      `market-data`, asset_group=`prediction`) which RAISES `BucketNamingError` (prediction not in the map — the same
+      map-vs-flat asymmetry as the execution-store). 2 new tests (both flat kinds gated + stale raises) + 4 existing
+      sports tests green; QG green (156s). parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P2. **instruments-service `PREFLIGHT_SKIPPED` — DONE 2026-06-04 (slot-4)** —
+      instruments-service@510b4c4b (see the flipped STEP 5.64 todo above; emit wired in the shared
+      `_should_skip_date_for_per_league` helper → covers all 5 callers).
 
 ## Readiness gate — operator's 7 criteria (slot-5 audit 2026-06-04 — extends slot-4's 4-item audit above)
 
@@ -723,38 +747,74 @@ verify + the gated delete.
       cqg mapping for those condition_ids on day 1 — likely the same `classify_polymarket_to_canonical_group` coverage
       slot-4's migrator-cqg-drift gap touches). The full-range scoping number (tradfi-equivalent) rides the gated E4
       full run; the 1-day sample is the proof-of-capability. Repo: market-tick-data-service.
-- [ ] [CODE] P1. **⑦ Coverage denominator does NOT use the could-exist universe — genuine CROSS-AG gap (slot-5 audit
-      2026-06-04; affects ALL asset_groups' raw-tick coverage, prediction included).** deployment-api
-      `data_status_hierarchical.py` computes the raw-tick coverage denominator from the MANIFEST ONLY
-      (`read_availability_index`; the 4-state total is correct for ROWS THAT EXIST) — it NEVER intersects the
-      instruments-service could-exist universe (confirmed: zero IS/catalogue refs). So a market that EXISTS in IS (a
-      `condition_id` active on day D) whose **tick backfill has NOT run** produces **no manifest row** → invisible: the
-      denominator silently shrinks to only-attempted and coverage% inflates. **No tick-layer rebuild seeds
-      `expected_unattempted` from the IS universe** (prediction rebuild has none; sports:921/cefi:552 only PRESERVE
-      existing rows — "record_expected_unattempted doesn't exist in this writer pattern"). Only the FEATURES delta-one
-      layer seeds it (`record_out_of_scope_instruments`, per-AG — so FEATURE coverage is correct; RAW-TICK is not).
-      **FIX (design call — likely BLOCKED-OPERATOR-DECISION on WHERE):** (a) a tick-manifest pre-flight seeds
-      `expected_unattempted` for the IS could-exist universe (condition_ids active per `market_lifecycle`
-      not-yet-captured) so the denominator == could-exist universe; OR (b) deployment-api intersects the IS catalogue at
-      read-time. + regression test (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). Repos:
-      market-tick-data-service + deployment-api + instruments-service. parent_epic: mtds_mdps_master. **Operator: this
-      is the exact "instruments exist but backfill hasn't run" visibility gap you named — cross-AG, so it likely wants
-      ONE shared fix.** **PATTERN FOUND (the rollout the operator remembered "we did for some stuff") — slot-5
-      2026-06-04:** the MTDS orchestrator ALREADY seeds expected_unattempted at the tick layer —
-      `engine/orchestrator.py:3496` `record_expected_unattempted` (the
-      `expected_unattempted_propagation_chain_2026_05_12` work): for venues in `skipped_shards` (venues IS supplied NO
-      instruments for on (venue,date)), it writes `record_expected_unattempted` per expected data_type "so the manifest
-      denominator accounts for these shards instead of leaving them invisible" — gated by
-      `get_expected_data_types_for_venue` + `VENUE_DATA_TYPE_CAPABILITIES`. **So the pattern + the helper exist; the gap
-      is GRANULARITY**: it fires at the VENUE level (whole venue had no instruments), NOT the per-market level
-      prediction needs (a `condition_id` that IS HAS but whose tick backfill hasn't run, when the venue POLYMARKET
-      otherwise has data). ROLLOUT = extend this same `record_expected_unattempted` propagation to seed
-      per-`condition_id` from the IS lifecycle universe (active-on-day-D minus captured `observed_clusters`) — reuse the
-      existing helper + `_load_market_lifecycle_for_date`, don't invent a new mechanism.
-- [ ] [CODE] P2. **⑥ minor — phantom auditor prediction bucket is the LEGACY long-form name** (slot-5 2026-06-04):
-      `reconcile_phantom_manifest_rows_all.py:85` maps `"prediction": ("market-data-tick-prediction", None)` (the
-      L6-delete legacy bucket), not env-tiered `market-data-tick-pred-prd`. Resolve via `resolve_bucket_name` so the
-      phantom audit runs against the canonical bucket post-migration. Repo: instruments-service.
+
+  > **⑦ Coverage denominator — could-exist universe (slot-5 audit + partial fix 2026-06-04).** The denominator gap the
+  > operator named ("instruments/fixtures exist but the backfill hasn't run"). **The canonical SEEDING MECHANISM ALREADY
+  > EXISTS** — `instruments-service/scripts/enumerate_expected_universe.py` (the v2 expected-universe enumerator,
+  > `expected_universe_v2` design): it cross-joins the IS instrument catalog × date axis × data_types, subtracts the
+  > existing manifest rows, and seeds `record_expected_unattempted` for the residual so the denominator == could-exist
+  > universe (deployment-api `data_status_hierarchical._aggregate_counts` ALREADY sums all 4 states incl
+  > `expected_unattempted` — so the manifest IS the SSOT and the read side is correct once the rows exist).
+  > `_V2_ENUMERATORS` covers all 5 AGs incl `_enumerate_v2_prediction` (per-market `market_created_at`/`settlement_time`
+  > lifecycle bounds → `EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED`/`expected_unattempted`). So the design fork in the
+  > original write-up below is RESOLVED: it is option (a) manifest-seed (NOT deployment-api read-time), via the existing
+  > enumerator. The SHIPPED cross-cutting fix + the remaining (prediction-catalog + a non-trivial IS writer migration)
+  > are the sub-todos.
+
+- [x] ✅ [CODE] P1. **⑦ CROSS-CUTTING — enumerator default-bucket map was stale for ALL 5 AGs; resolved via the
+      bucket-name SSOT (instruments-service@29939809, slot-5 2026-06-04).** `enumerate_expected_universe.py`'s
+      `ASSET_GROUP_BUCKETS` hardcoded `market-data-tick-{ag}-{PROJECT_ID}` literals that were **ALL missing the
+      `-{DEPLOYMENT_ENV_SHORT}-` env tier** (verified by running `resolve_bucket_name`: e.g.
+      `market-data-tick-cefi-{pid}` vs the canonical `market-data-tick-cefi-prd-{pid}`; prediction was the legacy
+      long-form `market-data-tick-prediction-{pid}` — the L6-delete bucket — instead of
+      `market-data-tick-pred-prd-{pid}`). So a no-`--bucket` enumerator run targeted a NON-EXISTENT bucket for **every**
+      asset_group → empty manifest read → the could-exist seed silently no-op'd. **Replaced the static dict with
+      `_default_bucket_for(asset_group)` → `resolve_bucket_name` (sports→instruments-store, prediction→flat
+      `market-data-tick-prediction` kind→`*-pred-prd`, cefi/defi/tradfi→per-AG `market-data` kind), matching the MTDS
+      reader + MDPS consolidator gate.** 2 regression tests (`_default_bucket_for` env-tier per AG +
+      `SUPPORTED_ASSET_GROUPS`); IS QG `--no-fix` exit 0. This unblocks the enumerator for prediction AND the other 4
+      AGs (cross-cutting). Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. **⑦ PREDICTION SLICE — run/wire the prediction v2 enumerator with a cqg-granularity catalog (gated VM
+      verify).** `_enumerate_v2_prediction` emits per-`instrument_id` rows from the catalog; the prediction CAPTURED
+      atom is the per-cqg BUNDLE (`data_type=prediction_canonical_question_group`, `instrument_id=cqg`), so to seed a
+      denominator that matches the captured granularity the catalog (`--catalog-path`) must carry
+      `instrument_id=canonical_question_group` + `data_type=prediction_canonical_question_group` per active market —
+      i.e. the IS instrument_availability condition_ids classified to cqgs via `classify_polymarket_to_canonical_group`
+      (needs title/slug fields). VERIFY on a VM (GCS flaky locally): build the catalog from IS `instrument_availability`
+      for a sample range, run `enumerate_expected_universe.py --asset-group prediction --catalog-path … --apply-write`,
+      confirm `expected_unattempted` cqg rows land in `market-data-tick-pred-prd` `_index` for active-but-uncaptured
+      cqgs, and that deployment-api's denominator grows to the could-exist universe (regression: IS-universe ⊃ manifest
+      ⇒ denominator doesn't shrink). Repos: instruments-service (catalog loader cqg classification) +
+      market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. **⑦ CROSS-AG ROLLOUT — run the v2 enumerator per AG (ideas filed in each AG plan, slot-5 2026-06-04).**
+      The `_enumerate_v2_{cefi,defi,tradfi,sports}` enumerators are built + the default-bucket fix now points them at
+      the canonical bucket; the remaining work per AG is to build the catalog (`--catalog-path` from that AG's IS
+      catalog) + run `--apply-write` so each AG's raw-tick denominator == could-exist universe + add the
+      IS-universe⊃manifest regression. Filed as todos in the sibling masters for their slots:
+      `cefi_…`/`defi_…`/`sports_…`/`tradfi_manifest_canonicalisation_2026_06_01.md`. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P2. **⑦-adjacent IS writer finding (STEP 5.83, prediction) — `orchestrator.py:2410` uses `underlying=` for
+      the cqg, not the canonical bundled-shard key.** Surfaced by the IS QG STEP 5.83 cross-cutting scan (slot-5
+      2026-06-04; advisory/baselined — IS QG exit 0, NOT a run-blocker).
+      `instruments_service/engine/orchestrator.py:2410` calls
+      `record_captured(data_type="prediction_canonical_question_group", …, underlying=_group_str, …)` — a DIRECT
+      `data_type=` literal kwarg WITHOUT the `canonical_question_group=` shard key the checker requires for the bundled
+      data_type. **Not a trivial fix**: `record_captured` (UTL) has no `canonical_question_group` param + no `**kwargs`
+      (and `canonical_question_group` is NOT in `_ROW_KEY_COLUMNS`), so the IS prediction writer should align to the
+      MTDS bundled-atom convention (`record_captured_from_counts`, data_type carried INSIDE `row_key`, cqg as
+      `instrument_id`) OR the checker's required-kwarg map updated — a cross-service convention call (MTDS uses
+      `instrument_id=cqg` in `row_key` and passes 5.83; IS uses `underlying=cqg` as a direct kwarg and trips it).
+      Reconcile with the v9 bundled-atom SSOT (deployment-api reads `instrument_id`/falls back to `underlying`). Repo:
+      instruments-service (+ UTL/PM checker if the convention is the kwarg-map). parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P2. **⑥ phantom auditor prediction bucket — REFUTED / ALREADY-CORRECT (slot-5 audit 2026-06-04).** The
+      finding was a grep-then-conclude misread: `reconcile_phantom_manifest_rows_all.py:85` maps
+      `"prediction": ("market-data-tick-prediction", None)`, but `market-data-tick-prediction` is a
+      **cloud-providers.yaml config KEY** (line 170) whose template VALUE is the **canonical**
+      `market-data-tick-pred-${DEPLOYMENT_ENV_SHORT}-${pid}` — NOT the legacy long-form
+      `market-data-tick-prediction-{pid}` (no env token). The auditor already resolves via
+      `resolve_bucket_name(kind="market-data-tick-prediction")` (line 805). **Verified by running the resolver** (slot-5
+      2026-06-04): `resolve_bucket_name(cloud='gcp', kind='market-data-tick-prediction', asset_group=None)` →
+      `market-data-tick-pred-prd-central-element-323112` (the canonical bucket the MTDS reader/MDPS gate use). No change
+      needed; the phantom audit already targets the canonical post-migration bucket. Repo: instruments-service.
 
 ## Success criteria
 
