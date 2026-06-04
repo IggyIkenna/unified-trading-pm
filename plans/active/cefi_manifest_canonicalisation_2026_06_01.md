@@ -292,8 +292,8 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       emitting an instruction (0 hits for `instrument_availability`/`InstrumentRecord` in non-test source); a strategy
       config naming a delisted/non-existent cefi instrument is only caught later at execution. **Fix:** add an
       IS-catalog existence check to strategy preflight (mirror execution `catalog_validator`).
-- [ ] [CODE] P3. **execution-service — Deribit live-order not-found guard is SWALLOWED.**
-      `venues/deribit_orders.py:84-90` raises `ValueError("…not found or expired")` but the enclosing
+- [x] ✅ [CODE] P3. **execution-service — Deribit live-order not-found guard FIXED (execution@f111a8e2c, QG exit 0).**
+      Was SWALLOWED: `venues/deribit_orders.py:84-90` raises `ValueError("…not found or expired")` but the enclosing
       `except (OSError, ValueError, RuntimeError)` at `:89` catches it → only `logger.warning` → a non-existent/expired
       Deribit instrument does NOT hard-block the live order (and validates against the venue API, not IS). **Fix:**
       re-raise the not-found `ValueError` on the live path.
