@@ -1043,21 +1043,26 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       raises) — execution-service QG green @c513a6d9. **Promotion note**: both commits landed on LDR via the tab-mirror;
       the staging PR drains via the staging→main automation once `unified-api-contracts` clears the dep-tier gate
       (quickmerge LDR→staging was dep-order-blocked on UAC's unstaged LDR backlog, not on this change).
-- [ ] [CODE] P3. **HANDOFF→PREDICTION (slot-3): align prediction execution-store resolution** — repos:
-      `execution-service` + `deployment-service`. Surfaced 2026-06-04 while wiring the sports execution-store: the two
-      resolution paths DISAGREE for `prediction`.
-      `ExecutionServicesConfig.get_bucket_for_asset_group('execution', 'prediction')` constructs
-      `execution-store-prediction-{pid}` (non-env-split), but
-      `resolve_bucket_name(kind='execution-store',     asset_group='prediction')` **raises `BucketNamingError`** —
-      `prediction` is NOT in the execution-store MAP (only CEFI/DEFI/SPORTS/TRADFI). The canonical prediction execution
-      bucket instead lives under a DIFFERENT kind string: `resolve_bucket_name(kind='execution-store-prediction')` →
-      `execution-store-pred-${DEPLOYMENT_ENV_SHORT}-     ${pid}` (env-split, `pred` abbrev; `cloud-providers.yaml:167`).
-      So the config and the canonical SSOT disagree on BOTH the kind surface AND the bucket shape — a prediction
-      execution process would WRITE to one bucket while cross-service readers resolve another (or raise). Latent only
-      (no prediction execution process wired today). Fix when prediction execution is scoped: pick ONE shape (most
-      likely add `PREDICTION` to the execution-store map matching the env-split flat key, or align the config
-      construction) so writer==reader. Sports is unaffected (map entry == config construction). **DEFERRED** to the
-      prediction track — successor: `prediction_manifest_canonicalisation_2026_06_01.md`.
+- [x] ✅ [CODE] P3. **Prediction execution-store config/SSOT mismatch — config side RESOLVED 2026-06-04 (slot-4)** —
+      execution-service@419895ed7. Surfaced while wiring the sports execution-store: the execution-service config
+      constructed `execution-store-prediction-{pid}` (non-env-split) for prediction, but the canonical SSOT is
+      **env-split** — `cloud-providers.yaml:173/327` flat key `execution-store-prediction` →
+      `execution-store-pred-${DEPLOYMENT_ENV_SHORT}-${pid}`, AND `terraform/gcp/main.tf:1575` provisions
+      `execution-store-prediction-${environment}-${project_id}` (yaml + terraform AGREE on env-split). The config's
+      generic non-env construction was the wrong side. **Fix**: `ExecutionServicesConfig.get_bucket_for_asset_group` now
+      EXCLUDES prediction (valid-set back to `cefi/tradfi/defi/sports`) and **raises** for it rather than constructing a
+      wrong non-env bucket — with an inline note that prediction execution must resolve via
+      `resolve_bucket_name(kind='execution-store-prediction')`. Removed the `execution_sink_bucket_prediction` field +
+      flipped the unit test to `test_prediction_execution_bucket_raises`. Sports unaffected (config fallback == yaml
+      SSOT, both non-env). basedpyright clean. **Residual for slot-3** (below) — wiring prediction execution itself.
+- [ ] [CODE] P3. **HANDOFF→PREDICTION (slot-3): wire prediction execution-store via the canonical env-split bucket** —
+      repo: `execution-service` (+ `prediction` strategy/execution wiring). The config now correctly RAISES on
+      `asset_group='prediction'` (fail-loud, no wrong bucket). When prediction execution is scoped, resolve its store
+      via `resolve_bucket_name(kind='execution-store-prediction')` → `execution-store-pred-${env}-${pid}` (env-split;
+      matches `cloud-providers.yaml:173` + `terraform/gcp/main.tf:1575`) and inject it as the execution sink bucket — do
+      NOT re-add prediction to `get_bucket_for_asset_group`'s generic construction (it can't produce env-split). Latent
+      only (no prediction execution process wired today). **DEFERRED** to the prediction track — successor:
+      `prediction_manifest_canonicalisation_2026_06_01.md`.
 
 ### Verify + handoff to decommission
 
