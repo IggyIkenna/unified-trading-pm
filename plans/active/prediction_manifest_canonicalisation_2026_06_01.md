@@ -693,11 +693,15 @@ verify + the gated delete.
 >
 > - **① migrator dry-run ✅ DONE** (1,897,691 planned, exit 0); **⑤ paths-match ✅** (raw orchestrator insert + candle
 >   fix mdps@5e7f075 on LDR + dual-probe readers).
-> - **③ pre-flight 4-state — ✅ MOSTLY, ONE REAL GAP (slot-4 Gap 2, confirmed):** the MDPS `assert_consolidator_healthy`
->   gate is **SPORTS-ONLY** (`dependency_checker.py:359 if asset_group=="SPORTS"`) → prediction gets NO consolidator
->   health gate at MDPS (stale pred-prd `_index` read silently on live). Fix = extend the gate to prediction (see slot-4
->   Gap 2 above — do NOT duplicate). features-delta_one / strategy (`manifest_allocation_guard`) / execution DO have
->   their 4-state preflight on the pred-prd bucket.
+> - **③ pre-flight 4-state — ✅ NOW FIXED (slot-4 found the gap, slot-5 fixed it — mdps@b8b515d):** the MDPS
+>   `assert_consolidator_healthy` gate was **SPORTS-ONLY** (`dependency_checker.py` `if asset_group=="SPORTS"`) →
+>   prediction (+ cefi/tradfi/defi) got no consolidator-health gate. **GENERALIZED to EVERY asset_group** (operator
+>   2026-06-04: it's the SAME gate — a stale upstream consolidator is a silent-correctness risk for any AG with upstream
+>   data, not just sports; no-op on fresh buckets so it only fires on a genuinely-stale consolidator). Prediction
+>   resolves the FLAT bucket kinds (`market-data-tick-prediction`/`instruments-store-prediction`), others the per-AG
+>   dict kinds. 7 tests (parametrized cefi/tradfi/defi + prediction flat-kinds regression; flipped the old
+>   non-sports-skips test). features-delta_one / strategy (`manifest_allocation_guard`) / execution already had their
+>   4-state preflight. **(This subsumes slot-4 Gap 2 — done.)**
 > - **④ empty/partial honest + downstream batch+live ✅** (within-bounds `reemit_honest_absence_rows`; lifecycle
 >   pre-creation/post-settlement reject in adapters → typed-empty/expected not failure; the no-trade CANDLE uses the
 >   SHARED MDPS `candle_write_mixin` finalize = NaN-vol + prior-day last-price carry, deterministic batch==live; UAC
@@ -706,13 +710,19 @@ verify + the gated delete.
 >   UAC cqg+lifecycle contracts; phantom auditor HAS prediction — `reconcile_phantom_manifest_rows_all.py`
 >   ASSET_GROUP_CONFIG["prediction"], refutes the "sports-only" noise — see the P2 bucket-name nit below).
 
-- [ ] [DATA] P0. **② Manifest-rebuild dry-run — BLOCKED on the gated migration (slot-5 2026-06-04).**
-      `rebuild_prediction_manifest.py --dry-run` runs (CLI verified, ran it) but on the CURRENT `pred-prd` bucket every
-      object reports "unparseable blob" because the bucket is still the PRE-migration `category=/data_source=` shape
-      (the canonical `pipeline_mode=/asset_group=prediction/` shape is what E4 `--apply` produces — operator-gated). So
-      a MEANINGFUL rebuild scoping (the tradfi-equivalent "N shards / venues") CANNOT be done pre-migration (unlike
-      tradfi, whose `-prd` bucket already had canonical objects). ACTION: run `--dry-run` immediately AFTER the E4 full
-      run (or on a migrated sample) → record the scoping → flip. Repo: market-tick-data-service.
+- [x] ✅ [DATA] P0. **② Manifest-rebuild dry-run — DEMONSTRATED on a 1-day canonical sample (slot-5 2026-06-04).** The
+      live `pred-prd` bucket was still pre-migration (old `category=/data_source=` shape → the rebuild's full-range
+      `--dry-run` reported every object "unparseable"). So (per operator "create the paths so we can dry-run") I
+      migrated **1 day** (`migrate_prediction_to_pred_prd_v9.py --start-date 2025-03-14 --end-date 2025-03-14 --apply` →
+      **537 objects copied** = raw 96 + candles 441, additive — old-shape preserved, idempotent vs the full run), then
+      ran `rebuild_prediction_manifest.py --dry-run` on it: **Listed 85 canonical objects** (vs 0 pre-sample),
+      classified **1 captured cqg-bundle**, ran the **CF-11 honest-absence re-emit (2,321 empties, 41
+      SOURCE_RETURNED_ZERO preserved)** — proving the rebuild parses + classifies the canonical shape end-to-end. ENV
+      gotcha: both the migrator's `gcs_copy_object` AND the rebuild's CF-11 `_index` read need `GCP_PROJECT_ID` set
+      (else copy/read fail). **Residual to check (NOT a blocker):** 84/85 sample objects were `failed_unclassified` (no
+      cqg mapping for those condition_ids on day 1 — likely the same `classify_polymarket_to_canonical_group` coverage
+      slot-4's migrator-cqg-drift gap touches). The full-range scoping number (tradfi-equivalent) rides the gated E4
+      full run; the 1-day sample is the proof-of-capability. Repo: market-tick-data-service.
 - [ ] [CODE] P1. **⑦ Coverage denominator does NOT use the could-exist universe — genuine CROSS-AG gap (slot-5 audit
       2026-06-04; affects ALL asset_groups' raw-tick coverage, prediction included).** deployment-api
       `data_status_hierarchical.py` computes the raw-tick coverage denominator from the MANIFEST ONLY
@@ -729,7 +739,18 @@ verify + the gated delete.
       read-time. + regression test (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). Repos:
       market-tick-data-service + deployment-api + instruments-service. parent_epic: mtds_mdps_master. **Operator: this
       is the exact "instruments exist but backfill hasn't run" visibility gap you named — cross-AG, so it likely wants
-      ONE shared fix.**
+      ONE shared fix.** **PATTERN FOUND (the rollout the operator remembered "we did for some stuff") — slot-5
+      2026-06-04:** the MTDS orchestrator ALREADY seeds expected_unattempted at the tick layer —
+      `engine/orchestrator.py:3496` `record_expected_unattempted` (the
+      `expected_unattempted_propagation_chain_2026_05_12` work): for venues in `skipped_shards` (venues IS supplied NO
+      instruments for on (venue,date)), it writes `record_expected_unattempted` per expected data_type "so the manifest
+      denominator accounts for these shards instead of leaving them invisible" — gated by
+      `get_expected_data_types_for_venue` + `VENUE_DATA_TYPE_CAPABILITIES`. **So the pattern + the helper exist; the gap
+      is GRANULARITY**: it fires at the VENUE level (whole venue had no instruments), NOT the per-market level
+      prediction needs (a `condition_id` that IS HAS but whose tick backfill hasn't run, when the venue POLYMARKET
+      otherwise has data). ROLLOUT = extend this same `record_expected_unattempted` propagation to seed
+      per-`condition_id` from the IS lifecycle universe (active-on-day-D minus captured `observed_clusters`) — reuse the
+      existing helper + `_load_market_lifecycle_for_date`, don't invent a new mechanism.
 - [ ] [CODE] P2. **⑥ minor — phantom auditor prediction bucket is the LEGACY long-form name** (slot-5 2026-06-04):
       `reconcile_phantom_manifest_rows_all.py:85` maps `"prediction": ("market-data-tick-prediction", None)` (the
       L6-delete legacy bucket), not env-tiered `market-data-tick-pred-prd`. Resolve via `resolve_bucket_name` so the
