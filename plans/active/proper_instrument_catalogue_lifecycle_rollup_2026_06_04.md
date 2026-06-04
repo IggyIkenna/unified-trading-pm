@@ -83,13 +83,14 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `attempted_failed` cell as a gap (per-venue counts + `(venue,date,data_type)` sample), verdict
       `COMPLETE     (provisional)`/`INCOMPLETE` (exit 0/2). Pure `summarise_completeness()` unit-tested (status
       tabulation, attempted_failed surfacing, blank→captured coercion, empty index). QG `--no-fix` exit 0; 15/15 tests
-      green. **Best-effort cefi run NOT YET EXECUTED** — blocked at the moment by a transient foreign dep-import skew in
-      the shared `unified-trading-library` (+6 ahead of LDR, references `PipelineMode.BATCH_EXECUTION_SERVICE`) vs
-      `unified-api-contracts` (316 dirty foreign files; enum has only `BATCH_STRATEGY_SERVICE`), which breaks
-      `import unified_trading_library` in this slot's dep worktrees. NOT my code (foreign in-flight dep work). Re-run
-      the cefi best-effort (`--asset-group cefi`) once the UTL/UAC worktrees reconcile; the **hard-gate** re-run (full
-      UAC expected-universe diff) is still post-IS-manifest-canonicalisation. Verdict remains PROVISIONAL +
-      UNRUN-on-cefi.
+      green. **Best-effort cefi run EXECUTED 2026-06-05** (read-only, single `_index` read): **30,803
+      instrument-definition cells, ALL `captured` — 0 `empty_confirmed` / 0 `attempted_failed` / 0
+      `expected_unattempted` → VERDICT `COMPLETE (provisional)`, exit 0.** No external/venue API calls (reads the
+      consolidated availability manifest only). PROVISIONAL stands: this proves nothing FAILED among the cells the
+      pre-migration `_index` tracks, NOT that the full UAC expected universe is covered — the **hard-gate** re-run (full
+      `venue × instrument-defn data_type × date` expected-universe diff) is still post-IS-manifest-canonicalisation.
+      (The run was initially blocked by a stale UAC dep worktree — 317 behind LDR carrying a 2-week-old foreign VM
+      commit `02b83705` — resolved by realigning that worktree to LDR per operator decision 2026-06-05.)
 - [x] ✅ [CODE] P0. **Roll-up producer — derive the lifecycle catalogue from the per-date `by_date/` definitions.** New
       instruments-service script/job (per AG, AG-agnostic core): walk
       `instrument_availability/by_date/day={date}/venue={venue}/instruments.parquet`, aggregate to one
@@ -107,9 +108,16 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       enumerator read: `get_write_bucket_name("instruments", ag)` + `{DEPLOYMENT_ENV}/catalog.parquet`. Output columns
       consumed by `enumerate_expected_universe._catalog_from_dataframe` (no schema drift — verified by a test that feeds
       the rolled-up frame straight into the enumerator helper). Cloud-agnostic via `get_storage_client`/
-      `get_write_bucket_name`. v9, NOT v10. QG `--no-fix` exit 0; 15/15 tests green; ruff + import-patterns clean.
-      **Live cefi GCS dry-run pending** (same transient UTL/UAC dep-import skew above; not a credential ask) — run
-      `--asset-group cefi --dry-run` once deps reconcile to prove the walk end-to-end against real `by_date/`.
+      `get_write_bucket_name`. v9, NOT v10. **By_date download is concurrent** (instruments-service@d00fe2d9 —
+      `ThreadPoolExecutor`, `MAX_DOWNLOAD_WORKERS=16`, I/O-bound per coding standards; the single-threaded walk timed
+      out on the full corpus) + a `--max-blobs` DIAGNOSTIC cap that **forces dry-run** (a truncated walk is incomplete →
+      never promotable). QG `--no-fix` exit 0; 18/18 tests green; ruff + import-patterns clean. **Live cefi dry-run
+      PROVEN end-to-end 2026-06-05 on real prod GCS** (`instruments-store-cefi-prd-central-element-323112`): concurrent
+      walk of `by_date/` → rolled up instruments → monotonic guard `ACCEPT (no_prior_catalogue)` →
+      `[dry-run] would     promote …/prod/catalog.parquet`, exit 0. **No external/venue API calls** — reads our own
+      already-captured `by_date/` parquets (the catalogue is a roll-up of stored data, not a re-fetch); does NOT require
+      the manifest migration. NOTE: `list_blobs` over the whole prefix is the dominant cost for the full corpus → the
+      full unbounded run belongs on the Phase-2 VM trigger, not a laptop.
 - [ ] [INFRA] P1. **Trigger on every instruments update (per AG; reference data → generally ≤ a few times/day).** Wire
       the roll-up to run after each IS instrument-definition write per AG (event-driven off the IS write, or a frequent
       scheduler keyed to the IS update cadence — pick per the IS update mechanism; do NOT fire-and-forget). The v2
