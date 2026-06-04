@@ -241,6 +241,88 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       mask a genuine gap; gate with a staleness limit (strategy — still open). **execution-service**
       `benchmark_service.py` stale `gs://` comment refreshed ✅ (execution@6230c18d0).
 
+### 🔎 DIMENSION 6 + 7 AUDIT (IS/UAC instrument guardrails + could-exist denominators, 2026-06-04, slot-3 + sub-agents)
+
+> Operator extended the readiness bar: **⑥** code must GUARDRAIL against using instruments / fixtures /
+> (venue×instrument_type×data_type) combos that **cannot exist** per IS+UAC; **⑦** deployment-api/ui coverage must use
+> the **universe of what COULD exist** (IS instruments × UAC valid combos × upstream availability) as the DENOMINATOR,
+> with the manifest marking could-exist-but-not-yet-backfilled cells as `expected_unattempted` (not invisible / no row).
+
+**✅ VERIFIED (Dim 6 — IS/UAC guardrails, mostly in place):**
+
+- MTDS cefi capture resolves its universe + venue URLs FROM IS, per date: `engine/cefi_catalog_reader.py:62-236`
+  (`CeFiCatalogReader.list_instruments` filters status/availability-window per processing-date), wired at
+  `orchestrator.py:2148`/`:3436`; `list_not_yet_listed()` emits `EXPECTED_INSTRUMENT_NOT_LISTED`. Per-date existence
+  gate `_check_instruments_available` (`orchestrator.py:285`).
+- UAC combo guardrail BEFORE fetch: `orchestrator.py:2342-2364` intersects requested data_types with
+  `get_expected_data_types_for_venue(venue)` (UAC `market_data_categories.py:440-492`) — drops venue-unsupported types.
+- execution-service batch preflight RAISES on missing cefi instrument: `instruments/factory.py:197-236`
+  (`INSTRUMENT_NOT_FOUND`, cefi has no config fallback), `engine/validation/{instrument,catalog}_validator.py` read
+  `instrument_availability/by_date/day={date}/` per date. Date-correct (no cross-date instrument reuse found).
+
+**✅ VERIFIED (Dim 7 — could-exist denominators, machinery EXISTS + RUN for cefi):**
+
+- `expected_unattempted` universe emission is cefi-wired + has RUN:
+  `instruments-service/scripts/enumerate_expected_universe.py` `_enumerate_v2_cefi()` cross-joins IS catalog × dates ×
+  `DATA_TYPES_BY_ASSET_GROUP["cefi"]`, diffs vs existing rows, emits `expected_unattempted` for alive-but-absent cells
+  (lifecycle reasons EXPECTED_INSTRUMENT_NOT_LISTED/\_DELISTED/ \_PRE_VENUE_LAUNCH). Live cefi `_index` ≈ 11.7% (4.1M
+  rows) expected_unattempted — the not-backfilled gap is MATERIALISED as rows, not invisible. UTL
+  `manifest_writer.py:2115` `record_expected_unattempted()`.
+- Denominator is universe-aware: UAC `honest_coverage.py:575` `compute_honest_coverage()` denom =
+  captured+empty_confirmed+known_empty+attempted_failed+**expected_unattempted_pending_fetch** (the could-exist gap is
+  IN the denominator). deployment-api `data_status_service.py:25` imports it. UI shows it DISTINCTLY:
+  `deployment-ui HonestCoverageCard.tsx:52` + `VenueCoverageTable.tsx` render `expected_unattempted` as its own segment
+  (playwright `tests/smoke/venue_year_coverage.spec.ts` mocks cefi).
+
+**🟡 GAPS — Dim 6 (guardrail holes):**
+
+- [ ] [CODE] P2. **market-tick-data-service — hardcoded date-BLIND fallback universe bypasses IS.**
+      `engine/orchestrator.py:326-439` `_VENUE_WIRE_SYMBOL_FALLBACK` (static MVP majors per venue) is substituted by
+      `_uac_seed_instruments_for_venue` (`:411`) when `_check_instruments_available(venue,date)` is False
+      (`:2316-2326`). Bounded to majors + logged + honest-skip when empty (so practical "cannot-exist" risk is low —
+      majors exist every operational date), BUT it is date-BLIND (ignores venue-launch/delist per date) + bypasses the
+      IS SSOT. **Fix:** gate the fallback behind a batch-bootstrap-only flag (never the live path); in normal operation,
+      when IS is missing → honest-skip / `record_failed(EXPECTED_*)` rather than substitute a hardcoded universe.
+- [ ] [SCRIPT] P2. **unified-trading-pm QG blind spot** — `scripts/qg/no_hardcoded_venue_universe.sh:22-40` scans only
+      `cli/handlers/` for `*_TOKENS/_MARKETS/_PAIRS/_UNIVERSE` names, so the `engine/`-resident
+      `_VENUE_WIRE_SYMBOL_FALLBACK` dict above is INVISIBLE to the gate. **Fix:** extend the scan to `engine/` + the
+      `*_FALLBACK` / wire-symbol-dict pattern (PM template — rollout to all repos).
+- [ ] [CODE] P2. **strategy-service — no IS instrument-existence guardrail.** `preflight.py` (venue auth+balance only) +
+      `risk_preflight_gate.py` (risk rules only) do NOT validate a cefi instrument EXISTS in IS for the date before
+      emitting an instruction (0 hits for `instrument_availability`/`InstrumentRecord` in non-test source); a strategy
+      config naming a delisted/non-existent cefi instrument is only caught later at execution. **Fix:** add an
+      IS-catalog existence check to strategy preflight (mirror execution `catalog_validator`).
+- [ ] [CODE] P3. **execution-service — Deribit live-order not-found guard is SWALLOWED.**
+      `venues/deribit_orders.py:84-90` raises `ValueError("…not found or expired")` but the enclosing
+      `except (OSError, ValueError, RuntimeError)` at `:89` catches it → only `logger.warning` → a non-existent/expired
+      Deribit instrument does NOT hard-block the live order (and validates against the venue API, not IS). **Fix:**
+      re-raise the not-found `ValueError` on the live path.
+- [ ] [CODE] P3. **unified-api-contracts — `validate_data_type_for_venue` permissive on unknown venue.**
+      `market_data_categories.py:456-457` returns True for an unknown/typo'd venue → escapes the combo guardrail.
+      **Fix:** fail-closed (or warn-loud) for unknown venues on the live path.
+
+**🟡 GAPS — Dim 7 (denominator precision):**
+
+- [ ] [CODE] P2. **deployment-api in-process per-instrument denominator uses a capped MVP seed, not the real IS
+      universe.** `data_status_service.py:1417` `_per_instrument_shard_denominator` →
+      `get_expected_instruments_for_venue(...,     instruments_provider=None)` → falls back to
+      `_SPOT_MVP_SEED_INSTRUMENTS` (21) + `_PERP_MVP_SEED_INSTRUMENTS` (10) (`market_data_categories.py:1013-1058`) →
+      UNDER-counts the real ~200-perp / full-spot cefi universe → that path's coverage reads optimistically (mitigated
+      where the manifest-seeded `expected_unattempted` rows dominate, but the two universes can disagree). **Fix:**
+      inject a live IS-catalog `instruments_provider` (or raise the per-instrument cap) for cefi so the in-process
+      denominator matches the enumerator's full universe.
+- [ ] [INFRA] P3. **`expected_unattempted` is enumerator-run-dependent (not auto per-write).** A not-yet-backfilled cefi
+      cell is invisible until the v2 enumerator VM runs (`launch-expected-universe-v2-vm.sh cefi --apply-write`; cadence
+      "one-shot then quarterly"). cefi is currently seeded (4.1M rows) but NEW venues/instruments between runs are
+      invisible (`honest_coverage.py:623` warns a fresh AG reads a misleading 100%). **Fix:** schedule the cefi v2
+      enumerator on a recurring cron (not one-shot/quarterly).
+
+**VERDICT:** ⑥ **PARTIAL** — IS-derived per-date capture + UAC combo gate + execution preflight are real + date-correct;
+the residual holes (date-blind MTDS fallback un-caught by its QG, no strategy IS-existence check, swallowed Deribit live
+guard, permissive unknown-venue) are tracked above. ⑦ **STRONG** — the could-exist universe drives
+`expected_unattempted` (run for cefi, 4.1M rows) + the canonical denominator includes it + the UI shows it distinctly;
+residual is the in-process MVP-seed denominator under-count + the enumerator cadence (both tracked).
+
 **UAC/UTL helpers (the absence "explainer"):** `build_cefi_partition_path` / `candidate_parquet_paths`
 (`canonical/partition_paths.py:392`) are the path SSOT; the `empty_confirmed` closed-set taxonomy lives in
 `canonical/crosscutting/honest_coverage.py` (the `EXPECTED_NO_*` / `SOURCE_RETURNED_ZERO` reasons features uses). The
