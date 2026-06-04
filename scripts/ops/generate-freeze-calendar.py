@@ -60,7 +60,6 @@ HEADER = [
 ALL_VENUES = "binance,coinbase,deribit,bybit,okx,databento,ibkr"
 CRYPTO_VENUES = "binance,bybit,okx,deribit,hyperliquid"
 TRAD_VENUES = "databento,ibkr"
-CRYPTO_CEFI = "binance,bybit,okx"
 
 
 def generate_daily_windows() -> list[Row]:
@@ -72,8 +71,8 @@ def generate_daily_windows() -> list[Row]:
             "event_type": "market_close",
             "recurrence": "daily",
             "start_utc": "20:55",
-            "end_utc": "21:05",
-            "dst_note": "US DST (Mar-Nov): 19:55-20:05 UTC",
+            "end_utc": "21:00",
+            "dst_note": "US DST (Mar-Nov): 19:55-20:00 UTC",
             "block_autonomous": "true",
             "block_prod_deploy": "true",
             "affects_venues": ALL_VENUES,
@@ -85,47 +84,25 @@ def generate_daily_windows() -> list[Row]:
             "event_type": "market_open",
             "recurrence": "daily",
             "start_utc": "06:55",
-            "end_utc": "07:05",
-            "dst_note": "EU DST (Mar-Oct): 05:55-06:05 UTC",
+            "end_utc": "07:00",
+            "dst_note": "EU DST (Mar-Oct): 05:55-06:00 UTC",
             "block_autonomous": "true",
             "block_prod_deploy": "true",
             "affects_venues": "databento,ibkr,ecb",
             "notes": "LSE/Euronext opening auction; gap risk",
         },
-        {
-            "window_id": "ASIA_OPEN_DAILY",
-            "event_name": "Asian Session Open",
-            "event_type": "session_boundary",
-            "recurrence": "daily",
-            "start_utc": "00:00",
-            "end_utc": "00:30",
-            "dst_note": "No DST adjustment (JST/HKT fixed)",
-            "block_autonomous": "true",
-            "block_prod_deploy": "true",
-            "affects_venues": CRYPTO_CEFI,
-            "notes": "Tokyo/HK open; liquidity transition",
-        },
-        {
-            "window_id": "ASIA_CLOSE_DAILY",
-            "event_name": "Asian Session Close",
-            "event_type": "session_boundary",
-            "recurrence": "daily",
-            "start_utc": "06:00",
-            "end_utc": "06:30",
-            "dst_note": "No DST adjustment (JST/HKT fixed)",
-            "block_autonomous": "true",
-            "block_prod_deploy": "true",
-            "affects_venues": CRYPTO_CEFI,
-            "notes": "Tokyo/HK close; liquidity gap risk",
-        },
+        # ASIA_OPEN/CLOSE removed 2026-06-04: crypto venues trade 24/7 with no opening/closing
+        # auction — "Asian session" boundaries carry no auction/pin risk worth a prod freeze
+        # (operator call: focus session freezes on TradFi auctions). Crypto event risk is the
+        # funding snapshots (kept, autonomous-only) + macro releases (FOMC/ECB/NFP).
         {
             "window_id": "EU_CLOSE_DAILY",
             "event_name": "European Session Close",
             "event_type": "session_boundary",
             "recurrence": "daily",
             "start_utc": "16:00",
-            "end_utc": "16:30",
-            "dst_note": "EU DST (Mar-Oct): 15:00-15:30 UTC",
+            "end_utc": "16:05",
+            "dst_note": "EU DST (Mar-Oct): 15:00-15:05 UTC",
             "block_autonomous": "true",
             "block_prod_deploy": "true",
             "affects_venues": "databento,ibkr,ecb",
@@ -137,8 +114,8 @@ def generate_daily_windows() -> list[Row]:
             "event_type": "session_boundary",
             "recurrence": "daily",
             "start_utc": "13:30",
-            "end_utc": "14:00",
-            "dst_note": "US DST (Mar-Nov): 13:30-14:00 UTC",
+            "end_utc": "13:35",
+            "dst_note": "US DST (Mar-Nov): 13:30-13:35 UTC",
             "block_autonomous": "true",
             "block_prod_deploy": "true",
             "affects_venues": TRAD_VENUES,
@@ -150,8 +127,8 @@ def generate_daily_windows() -> list[Row]:
             "event_type": "session_boundary",
             "recurrence": "daily",
             "start_utc": "20:00",
-            "end_utc": "20:30",
-            "dst_note": "US DST (Mar-Nov): 20:00-20:30 UTC",
+            "end_utc": "20:05",
+            "dst_note": "US DST (Mar-Nov): 20:00-20:05 UTC",
             "block_autonomous": "true",
             "block_prod_deploy": "true",
             "affects_venues": ALL_VENUES,
