@@ -285,3 +285,13 @@ head=`live-defi-rollout`** → every successful staging promotion AUTO-DELETES t
       LDR→staging promotion uses LDR as PR head, so auto-delete-head is incompatible with the integration model). Add a
       `verify_branch_protection_check_names.py`-style assertion OR a fleet settings-reconciler that fails if any active
       repo has it true. repo: unified-trading-pm scripts.
+
+## deployment-service LDR v2 RED — uv workspace parse (2026-06-04)
+
+- [ ] [INFRA] P1. **deployment-service LDR quality-gates-v2 fails at step 12 install**: `uv sync` →
+      `warning: Failed to parse pyproject.toml during settings discovery` ×3 → `error: Failed to parse: pyproject.toml`.
+      main is GREEN (767 behind LDR); isolated, NOT blocking fleet promotion. Diagnosed: all 6 cloned deps' LDR
+      pyprojects (PM/UTL/deployment-api/UAC/strategy/mtds) parse fine individually with tomllib AND uv 0.10.8 → it's a
+      uv WORKSPACE settings-discovery issue specific to the full CI clone layout (siblings + editable [tool.uv.sources]
+      → UTL+UAC). Repro needs running deployment-service `quality-gates.sh` locally with all deps cloned. repo:
+      deployment-service. (PR #18 staging<-LDR stays blocked until fixed.)
