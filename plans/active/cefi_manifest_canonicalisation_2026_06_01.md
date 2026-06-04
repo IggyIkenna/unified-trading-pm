@@ -108,13 +108,17 @@ operator exemption if a local macOS gate blocks).
       emits `MANIFEST_WRITE_FAILED` (not silent). So MDPS faithfully reflects published candles. The real `ohlcv` gap
       (8,715 rows; BITGET-heavy files) is a **candle BACKFILL (DATA)**, not a code bug → tracked as the CF-11 #2
       candle-coverage DATA item below. No MDPS code change.
-- [ ] [CODE] unified-trading-pm — identity-hook follow-ups (`issues/commit_identity_misconfig_fleet_2026_06_03.md`):
-      root-cause the bot-email leak + recurrence-guard in `verify-slot-host-symmetry.sh`; `setup-tab-worktrees.sh`
-      provisions `extensions.worktreeConfig` + `--worktree` identity. SSOT:
-      `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution". (EDITS DONE — leak root-caused
-      `rollout-semver-agent.sh:117` shared-config write → one-shot `git -c`; `setup-workspace-from-manifest.sh:345`
-      `--global agent@ci.local` → only-seed-if-unset canonical; provisioning + recurrence-guard added. Pending PM QG
-      ship.)
+- [x] ✅ [CODE] unified-trading-pm — identity-hook follow-ups (`issues/commit_identity_misconfig_fleet_2026_06_03.md`) —
+      **SHIPPED + VERIFIED on LDR (slot-3 re-verify 2026-06-04).** Leak root-caused + fixed: `rollout-semver-agent.sh`
+      (one-shot transient `git -c user.name=… -c user.email=… commit`, lines 116-129, never a persistent shared-config
+      write); `setup-workspace-from-manifest.sh` only-seeds-if-unset the canonical
+      `ikennaigboaka@gmail.com`/`ikennaigboaka` (lines 347-356, no more `--global agent@ci.local`);
+      `setup-tab-worktrees.sh` provisions `extensions.worktreeConfig true` + `--worktree user.name/email` per slot
+      (lines 214-216); NEW self-heal pre-commit hook `scripts/hooks/fix-commit-identity.sh` blocks+repairs a wrong
+      per-worktree identity; recurrence-guard in `verify-slot-host-symmetry.sh`. Verified live: all slot-3 worktrees
+      author `ikennaigboaka [slot-3·laptop]` / `ikennaigboaka@gmail.com` with `worktreeConfig=true`. SSOT:
+      `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution". Issue doc
+      `commit_identity_misconfig_fleet_2026_06_03.md` → archivable.
 - [x] ✅ [CODE] market-tick-data-service — orphan-sweep/gap-fill **VERIFIED needs no code** (slot-3 2026-06-03): the
       migrator `migrate_cefi_flat_to_v9_canonical.py` already handles `--also-legacy` over all 3 layouts, idempotent
       skip-if-exists = copies ONLY the gap. The explicit orphan-DELETE mode is deliberately NEXT session (irreversible).
@@ -149,6 +153,66 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 >   canonical `day=/pipeline_mode=batch_*/asset_group=cefi/venue=/instrument_type=/data_type=/` SSOT
 >   (`build_cefi_partition_path` / `candidate_parquet_paths` / `resolve_bucket_name`). **VERDICT: NOT-YET-READY — 2×P0 +
 >   2×P1 migration-blocking gaps.**
+
+> **🔬 RE-VERIFICATION GATE STATUS (slot-3 + sub-agents, 2026-06-04) — the 2026-06-04 P0/P1 gaps are now ALL GREEN; the
+> CODE side of the run-readiness bar is MET.** Re-audited each of the operator's 7 dimensions against the actual code on
+> LDR:
+>
+> - **① migrator dry-run** — DONE (`mtds-migrate-cefi-v9dry-2024`, exit 0; see Phase 2). **② manifest-rebuild dry-run**
+>   — DONE (caught + fixed the 1187→12 false-phantom bug; see E5 dry-run §).
+> - **③ pre-flight engrained IS→execution (4-state)** — GREEN. execution-service `resolve_manifest_capture_status()`
+>   gates `checker._gcs_lookup_and_check` (4-state, fail-open); strategy gates on features 4-state +
+>   `instrument_existence_guard`; features `volatility/core/data_loader.py` 4-state; MTDS capture pre-flight
+>   `_skip_states`. The two P0s (MTDS live-writer path divergence `318473eb`, execution legacy raw_tick paths
+>   `6230c18d0`)
+>   - both P1s (execution 4-state checker `6230c18d0`, strategy features-bucket fix `879d1bbd`) are SHIPPED + flipped
+>     above.
+> - **④ empty/partial honest + downstream** — GREEN. MDPS `_finalize_session_grid` zero-volume/LOCF/NaN taxonomy is the
+>   SSOT; features consumes it with typed `record_empty` (no `fillna(0)`); reader empty-vs-failed differentiation
+>   handled one layer up at the pre-flight consumer (confirmed not-a-gap).
+> - **⑤ read+write paths match post-migration shape everywhere** — GREEN, re-verified 5/5 (sub-agent 2026-06-04): MTDS
+>   batch + live writers, MTDS reader 3-level fallback (canonical first), execution `canonical_paths.py`, features
+>   `perp_funding_rates.py`, strategy `batch_handler`/`instrument_existence_guard` all route the UAC SSOT and insert
+>   `pipeline_mode=` LEFT of `asset_group=cefi`. NB a sub-agent flagged a "UAC SSOT regression" (cefi paths lack
+>   `pipeline_mode=`) — **FALSE ALARM**: `build_cefi_partition_path` (partition_paths.py:274/309) and
+>   `candidate_parquet_paths` (:397/450-459) both natively accept + insert `pipeline_mode=`; the agent only read the
+>   module-docstring back-compat (omitted) form. No fix needed.
+> - **⑥ IS/UAC guardrails** — re-verified PARTIAL→effectively GREEN: the residual holes (date-blind MTDS fallback,
+>   strategy IS-existence check, swallowed Deribit live guard, permissive unknown-venue) are all flipped DONE above.
+> - **⑦ could-exist denominators** — STRONG: `expected_unattempted` run for cefi (4.1M rows); denominator includes it;
+>   UI shows it distinctly. Residual = the proper-catalogue cron (SUPERSEDED into
+>   `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`) + per-date precision (tracked P3).
+> - **CF-11 (IS + MTDS)** — **CLOSED both sides** (this re-audit): all 4 cefi IS adapters now re-raise on genuine fetch
+>   failure → `attempted_failed` (`e2e008f0`+`f2ca5954`); MTDS already compliant. Flipped above.
+> - **Batch=Live source provenance** — re-verified the cefi `source="tardis"` WRITE-path is live on BOTH paths: UAC
+>   `SOURCE_PRIORITY` registers `("cefi", <data_type>) → ["tardis"]` (source_priority.py:152-160), so the MTDS raw-tick
+>   writer (`get_primary_source`, mtds@4e5fa57f) AND the MDPS candle writer (`_resolve_primary_source_for_candle`) both
+>   auto-derive + stamp `source="tardis"`. (The historical-corpus source backfill rides the C-source RIDER in the
+>   migration walk — next session.) **Stale-comment finding tracked below.**
+>
+> **CONCLUSION:** the CODE half of the run-readiness bar is MET — remaining work is the irreversible GCS execution
+> (migrate `--apply` gap-fill, orphan sweep, E5 rebuild, E7 verify, E8 legacy delete) + historical
+> source/`expected_unattempted` backfills, all deliberately NEXT-session per the handoff. No new migration-blocking CODE
+> gap found.
+
+**🟢 RE-AUDIT FINDINGS (slot-3 2026-06-04) — tracked so the cefi master orchestrator owns them:**
+
+- [ ] [CODE] P3. **MDPS stale source-gap comment** — `market-data-processing-service/.../app/core/canonical_writer.py`
+      (~line 1312) comments "cefi/defi/tradfi are RED gaps per the 2026-06-01 plan" for `source=`, but UAC
+      `SOURCE_PRIORITY` now registers cefi (→`tardis`) so `_resolve_primary_source_for_candle` resolves + stamps it.
+      Refresh the comment to reflect cefi/prediction are now WIRED (defi/sports remain the RED pairs). Doc-comment only;
+      no logic change. Repo: market-data-processing-service. Provenance: cefi run-readiness re-audit 2026-06-04.
+- [ ] [CODE-BUG] P1. **CeFi funding-feature producer/consumer name+unit mismatch (cefi slice cross-ref).** Producer
+      `features-service/.../delta_one/app/calculators/funding_oi.py:84` emits `funding_rate_annualized` (US,
+      **fraction**); consumer `strategy-service/.../engine/strategies/v2/carry_and_yield/basis_perp.py:67` reads
+      `funding_rate_annualised_bps` (UK, **bps**) → `features.get()` → `None` → silent no-trade in the cefi carry
+      archetype. **PRIMARY OWNER = `data_pipeline_acquisition_remediation_2026_06_03.md` Phase 3** (orchestrator-agent
+      VM + features-service vm-ml) — the fix is COUPLED to that plan's separate Phase-4 funding_oi registration (the
+      registry `funding_oi` group is a `_placeholder`/`need_data` spec today, so the features are not yet produced to
+      GCS and the name mismatch is moot until that registration lands; a partial producer-rename now would drift from
+      the registration). slot-3 tracks the cefi slice here; the implementation rides the funding_oi registration in the
+      owning plan. Add a test pinning the exact consumed key+unit when it lands. Provenance: cefi run-readiness re-audit
+      2026-06-04.
 
 **✅ READY (verified this audit — do not re-litigate):**
 
@@ -788,11 +852,21 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
         `ohlcv` rows; 616 MDPS-written `trades` rows) — confirm which service legitimately emits `ohlcv` per venue (MTDS
         REST-poll venues like LIGHTER/PACIFICA vs MDPS-processed). Repo: MDPS (+ MTDS REST-poll path). On all three
         GREEN, archive the absorbed issue doc.
-- [ ] [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS cefi/tardis adapters)**: on a genuine API error
-      (timeout/5xx/429/auth) for an in-universe instrument within coverage bounds, the handler MUST `record_failed` (→
-      `attempted_failed`) via `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the cefi/tardis
-      fetch paths in MTDS handlers + instruments-service for `except … record_empty` / bare `return []` swallows; gate
-      the empty-vs-failed decision on instrument-in-universe + UAC coverage bounds. Cross-ref the sports CF-11 model
+- [x] ✅ [CODE] P0. **Write-path CF-11 audit + fix (IS + MTDS cefi/tardis adapters) — BOTH SIDES NOW VERIFIED CLOSED
+      (slot-3 deep audit 2026-06-04).** MTDS side was already compliant (diagnosis below). **IS RESIDUAL NOW RESOLVED:**
+      a full IS→manifest trace confirms a genuine cefi reference-data fetch error lands as `attempted_failed`, NOT a
+      silent universe shrink. All four cefi IS adapters were fixed to **RE-RAISE** on a genuine fetch failure (NOT
+      `return []`): `aster.py:152-154`, `hyperliquid.py:115-117` (both `e2e008f0`), `tardis.py:467-494`
+      (`if not results and failures: raise`, `e2e008f0`), `deribit_combo_adapter.py:232-236`+`297-300` (`f2ca5954`). The
+      RuntimeError threads into `urdi_reference_provider._fetch_one` → `failed[]` → excluded from `_non_error_venues`
+      (`orchestrator.py:1746-1748`) → honest-coverage writes `record_failed(...)` `attempted_failed` rows for every
+      `missing_shard` (`orchestrator.py:2978-2993`). Regression locked by
+      `tests/unit/test_is_adapter_fetch_failure_raises.py`. Closes the residual + the P1 IS-side verify below. Original
+      diagnosis preserved: **DIAGNOSIS (slot-3 2026-06-02, grep-then-READ — MTDS (timeout/5xx/429/auth) for an
+      in-universe instrument within coverage bounds, the handler MUST `record_failed` (→ `attempted_failed`) via
+      `classify_venue_error()`/`ADAPTER_FETCH_FAILED`, NOT `record_empty`. Grep the cefi/tardis fetch paths in MTDS
+      handlers + instruments-service for `except … record_empty` / bare `return []` swallows; gate the empty-vs-failed
+      decision on instrument-in-universe + UAC coverage bounds. Cross-ref the sports CF-11 model
       (`sports_manifest_canonicalisation_2026_06_01.md` § CF-11). **DIAGNOSIS (slot-3 2026-06-02, grep-then-READ — MTDS
       side VERIFIED COMPLIANT, no swallow):** the MTDS write-path already implements the sports CF-11 model for
       cefi/tradfi/prediction. (a) Adapters (tardis/ccxt/databento/massive/ polymarket) classify via
@@ -804,11 +878,16 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       (`orchestrator.py:3766` —
       `if tier3_classified_error is not None: record_failed else record_empty(SOURCE_RETURNED_ZERO)`). So a swallowed
       fetch-failure cannot land as a frozen `SOURCE_RETURNED_ZERO` from the MTDS path. **RESIDUAL (still `- [ ]`):** the
-      **instruments-service** fetch paths were NOT exhaustively read this session — focused verify needed that IS
+      **instruments-service\*\* fetch paths were NOT exhaustively read this session — focused verify needed that IS
       reference-data fetch errors likewise `record_failed` (not `record_empty`/`return []`). Reclassify this todo as
       "verify IS write-path CF-11 (MTDS already compliant)" — the heavy lift the todo assumed is largely absent.
-- [ ] [CODE] P1. **IS-side CF-11 verify (slot/Harsh 2026-06-02, read-only) — cefi IS adapters use the
-      classify+emit-event+return-[] shape.** Read the cefi IS reference-data adapters
+- [x] ✅ [CODE] P1. **IS-side CF-11 verify — RESOLVED (slot-3 deep audit 2026-06-04): the open question is ANSWERED — a
+      genuine cefi IS fetch failure DOES become `attempted_failed`, no silent universe shrink.** The earlier `return []`
+      shape was the gap; all four cefi adapters now RE-RAISE (`e2e008f0` + `f2ca5954`) so `_fetch_one` routes them into
+      `failed[]` → `record_failed`/`attempted_failed` (full trace in the P0 above). The event→manifest wiring is the
+      `_non_error_venues` exclusion (`orchestrator.py:1746`) + honest-coverage `record_failed` (`:2978-2993`).
+      UNCONFIRMED → CONFIRMED. Original read-only note preserved: **(slot/Harsh 2026-06-02, read-only) — cefi IS
+      adapters use the classify+emit-event+return-[] shape.** Read the cefi IS reference-data adapters
       (`instruments-service/.../reference_data/adapters/cefi/`): `aster.py` / `hyperliquid.py` /
       `deribit_combo_adapter.py` / `tardis.py` handle transient API errors via `classify_venue_error(...)` + emit
       `ADAPTER_FETCH_FAILED`, then `return []` (consistent with the shard-isolation "no raise in per-venue loops" rule;
