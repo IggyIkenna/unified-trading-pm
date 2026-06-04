@@ -2393,7 +2393,12 @@ behind the exact drift this whole audit is about.
       repos diverged across M hosts") so a quiet VM is loud. Route via the existing #ci-failures +
       every-alert→orchestrator path (NOT a new channel); reuse the push-author attribution work (this plan, "Add
       push-author attribution to CI alerts"). **Never auto-force-resolve** — alert only; the safe auto-fix is the
-      `tab→LDR` rebase-diverged-onto-LDR path (`e21ca439` tab-mirror), everything else is human/agent. Repos:
+      `tab→LDR` rebase-diverged-onto-LDR path (`e21ca439` tab-mirror), everything else is human/agent. **Sweeps EVERY
+      `tab/*` branch fleet-wide** (all operators/slots/hosts, not just the local host's slots) so a quiet AWS/GCP VM is
+      covered — which DEPENDS on tab branch names being globally unique (per
+      `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § precondition "Make tab branch names globally
+      unique"); until that lands, the monitor MUST additionally flag any `tab/<prefix>/<N>` claimed by >1 host as a
+      name-collision alert (a collision is worse than a divergence — it silently merges two hosts' work). Repos:
       `unified-trading-pm` (tab-mirror GHA template + `scripts/dev/slot-git-status-report.sh`) + agent-orchestrator
       (alert sink). Cross-link: `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Server-side LDR→tab FF
-      mirror". parent_epic: (this plan is the CI/CD master).
+      mirror" + § precondition. parent_epic: (this plan is the CI/CD master).

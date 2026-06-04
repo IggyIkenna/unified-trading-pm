@@ -76,9 +76,18 @@ base_branch_for_repo() {
 # --- Arg parsing -----------------------------------------------------------
 OPERATOR="${USER:-unknown}"
 # Slots 1..MAIN_SLOT_MAX are main agents; the rest are workers. Branch prefix is
-# role-encoded: main → ${MAIN_PREFIX} (default ${OPERATOR}m), worker → ${WORKER_PREFIX}
-# (default ${OPERATOR}). Both default-derived from OPERATOR; either can be env-overridden
+# role-encoded: main → ${MAIN_PREFIX} (default <base>m), worker → ${WORKER_PREFIX}
+# (default <base>). Both default-derived from <base>; either can be env-overridden
 # (e.g. Ikenna: WORKER_PREFIX=iggy MAIN_PREFIX=iim). Resolved AFTER arg parse (below).
+#
+# GLOBAL-UNIQUENESS (tab_branch_global_uniqueness 2026-06-04): a tab branch name is a
+# GLOBAL key — exactly one host fleet-wide — because the server-side LDR→tab FF mirror +
+# divergence monitor glob `tab/*` across the whole fleet (laptop + every VM). The prefix
+# <base> is therefore VM_NAME on a fleet VM (globally unique by the VM naming convention),
+# falling back to OPERATOR only on a human laptop. Deriving from $USER on a VM collapsed
+# every root VM onto the SAME `tab/rootm/<N>` (live collision: tab/rootm/1..8) — the bug
+# this fixes. <base> == WORKTREE_HOST identity (=${VM_NAME:-laptop}) already used for commit
+# attribution, so branch name and committer host now agree.
 MAIN_SLOT_MAX="${MAIN_SLOT_MAX:-20}"
 MODE=""
 SLOT_COUNT=""
@@ -107,9 +116,12 @@ if [[ "${MODE}" == "init" && -z "${SLOT_COUNT}" ]]; then
     echo "ERROR: --init requires --slots <N>" >&2; exit 1
 fi
 
-# Resolve branch prefixes now that --operator is known (env override wins).
-WORKER_PREFIX="${WORKER_PREFIX:-${OPERATOR}}"
-MAIN_PREFIX="${MAIN_PREFIX:-${OPERATOR}m}"
+# Resolve branch prefixes now that --operator is known (env override wins). Prefix base is
+# VM_NAME on a fleet VM (globally unique), else OPERATOR on a laptop — see GLOBAL-UNIQUENESS
+# note above. An explicit --operator still wins on a VM only if VM_NAME is unset.
+PREFIX_BASE="${VM_NAME:-${OPERATOR}}"
+WORKER_PREFIX="${WORKER_PREFIX:-${PREFIX_BASE}}"
+MAIN_PREFIX="${MAIN_PREFIX:-${PREFIX_BASE}m}"
 
 # --- Helpers ---------------------------------------------------------------
 log()  { printf '[setup-tab-worktrees] %s\n' "$*"; }

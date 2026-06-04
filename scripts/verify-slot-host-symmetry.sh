@@ -16,6 +16,7 @@
 #   8. backend reachable + workflow-capable GH_TOKEN
 #   9. per-worktree commit identity canonical (recurrence guard for the bot-email leak)
 #  10. per-worktree @{upstream} == origin/live-defi-rollout (drift guard — phantom 'ahead N')
+#  11. tab branch names are globally unique (VM-scoped on a VM, never generic root/rootm)
 #
 # Usage: bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh
 #        bash unified-trading-pm/scripts/verify-slot-host-symmetry.sh --quiet
@@ -268,6 +269,49 @@ if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
     fi
 else
     bad ".tabs/ missing — cannot verify upstream tracking"
+fi
+
+# 11. Tab branch names globally unique (tab_branch_global_uniqueness 2026-06-04). A tab
+#     branch name is a GLOBAL key — exactly one host fleet-wide — because the server-side
+#     LDR→tab FF mirror + divergence monitor glob `tab/*`. setup-tab-worktrees.sh now bases
+#     the prefix on VM_NAME on a fleet VM (else OPERATOR on a laptop). This asserts the steady
+#     state: every slot branch here carries THIS host's prefix base, and never the generic
+#     `root`/`rootm` (the $USER-on-a-VM collision class — live: tab/rootm/1..8).
+#     SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Global branch-name uniqueness".
+section "tab branch name global uniqueness"
+EXPECT_BASE="${VM_NAME:-}"   # only enforce VM containment when on a fleet VM
+if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
+    bad_name=0
+    checked_name=0
+    for _slot_dir in "${WORKSPACE_ROOT}"/.tabs/*/; do
+        _slot="$(basename "${_slot_dir}")"
+        [[ "${_slot}" =~ ^[0-9]+$ ]] || continue
+        for _repo_dir in "${_slot_dir}"*/; do
+            [[ -d "${_repo_dir}/.git" || -f "${_repo_dir}/.git" ]] || continue
+            _br="$(git -C "${_repo_dir}" rev-parse --abbrev-ref HEAD 2>/dev/null || echo '')"
+            [[ "${_br}" == tab/*/* ]] || continue   # only check tab/<prefix>/<N> branches
+            checked_name=$((checked_name + 1))
+            _prefix="${_br#tab/}"; _prefix="${_prefix%/*}"   # tab/<prefix>/<N> → <prefix>
+            # (a) generic $USER-derived prefix is always a collision class
+            if [[ "${_prefix}" == "root" || "${_prefix}" == "rootm" ]]; then
+                bad "slot-${_slot}/$(basename "${_repo_dir}"): branch '${_br}' uses generic prefix '${_prefix}' (\$USER-on-VM collision — re-provision with VM_NAME set: setup-tab-worktrees.sh --reset-slot ${_slot})"
+                bad_name=$((bad_name + 1))
+            # (b) on a fleet VM the prefix MUST contain the (globally-unique) VM_NAME
+            elif [[ -n "${EXPECT_BASE}" && "${_prefix}" != "${EXPECT_BASE}" && "${_prefix}" != "${EXPECT_BASE}m" ]]; then
+                bad "slot-${_slot}/$(basename "${_repo_dir}"): branch '${_br}' prefix '${_prefix}' is not VM-scoped (want '${EXPECT_BASE}' or '${EXPECT_BASE}m' — collides across hosts; re-provision with --reset-slot ${_slot})"
+                bad_name=$((bad_name + 1))
+            fi
+        done
+    done
+    if [[ ${checked_name} -eq 0 ]]; then
+        ok "no tab/* slot branches to check for name uniqueness"
+    elif [[ ${bad_name} -eq 0 ]]; then
+        ok "all ${checked_name} slot branch(es) globally-unique-named$([[ -n "${EXPECT_BASE}" ]] && echo " (VM-scoped: ${EXPECT_BASE})")"
+    else
+        bad "${bad_name}/${checked_name} slot branch(es) have collision-prone names (see above)"
+    fi
+else
+    bad ".tabs/ missing — cannot verify tab branch name uniqueness"
 fi
 
 section "result: ${pass} passed / ${fail} failed"
