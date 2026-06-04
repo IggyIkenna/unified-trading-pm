@@ -366,6 +366,19 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 > shard is empty** is almost certainly a masked fetch failure → `attempted_failed` (retry/backfill), NOT a false
 > `empty_confirmed` that claims "we know there's nothing" and freezes the gap forever.
 
+> **✅ REAL-GCS DRY-RUN VERIFIED — closes the "VM-pending / no GCS access locally" caveats on the items below (slot-6
+> 2026-06-04, ADC on `central-element-323112`).** All scans dry (`copied=0`, no writes), run serially (GCS
+> connection-pool saturation lesson). **① Migrator (`migrate_sports_canonical_v9.py --surface {mdps,instruments}`):**
+> mdps TOTAL **planned=617,271** (prd raw 231,533 + processed 109,312 + legacy raw 276,426); instruments TOTAL
+> **planned=753,402**. 0 net errors. **② Rebuild
+> (`rebuild_sports_manifest_v9.py --surface {mdps,instruments} --dry-run`):** mdps → **584,177 empty_confirmed + 202,067
+> captured + 164 existing attempted_failed** (CF-11 step 6.7: **0** match-day-empties upgraded on mdps; 100% league_id
+> resolution). instruments → **1,909,553 empty_confirmed (151,786 → attempted_failed via CF-11) + 586,597 captured +
+> 178,025 existing attempted_failed**; 8-step oracle {relabel_no_fixture_truthset 1,002,757 · relabel 231,810 ·
+> mark_attempted_failed 151,786 · keep_src_zero 424,014 · relabel_retired 56,624 · relabel_free_text 22,978 · keep_typed
+> 19,584}; **15,694 unresolved league_ids (0.8%) stay SOURCE_RETURNED_ZERO** (top SCOTTISH_LEAGUE_CUP_185 15,609). The
+> per-item "VM dry-run needed for real counts" caveats below are now SATISFIED.
+
 - [x] ✅ [DATA] P0. **Rebuild classifier: add match-day-empty → `attempted_failed`** (`rebuild_sports_manifest_v9.py`).
       Currently STEP 8 (line ~475) sends a match-day empty (`(league,date)` IN fixtures truthset) on a per-fixture
       derived data_type to `keep_src_zero` → `SOURCE_RETURNED_ZERO` `empty_confirmed`. FIX: if fixture EXISTS +
