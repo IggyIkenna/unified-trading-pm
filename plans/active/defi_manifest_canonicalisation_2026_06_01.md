@@ -603,6 +603,59 @@ What to verify/wire (B0 corrected scope):
       to be filed from the audit. **GATED-COMPOSES**: depends on A11 (canonical buckets) + A8/A9/A10 (honest-absence
       routing) being landed so the preflight reads the right place + marks the right state. parent_epic:
       mtds_mdps_master.
+  - [x] ✅ [AUDIT] P0. A12-AUDIT — **6-service preflight audit DONE (slot-2, 2026-06-04)**: preflight + honest-absence +
+        the operator's zero-volume/NaN/last-price candle ask are **substantially engrained via SHARED code** (UAC
+        `honest_coverage.py` EmptyConfirmedReason/RecordFailedReason/compute_honest_coverage; UTL BaseDependencyChecker
+        / run_preflight / assert_consolidator_healthy / classify_venue_error; MDPS `BaseCandleAdapter`
+        `_make_zero_activity_candle_output`/`_carry_forward_ohlc` LOCF/`_finalize_session_grid`). **4/6 services DONE**:
+        MDPS candle layer (zero-vol/LOCF/NaN, batch=live via batch_workers+live_workers), features-onchain
+        (capture_status-aware DependencyError), strategy-service (`validation/freshness_gate.assert_feature_fresh` →
+        DataStalenessError, live-halt vs batch-warn), execution-service (`validation/freshness_gate` — NaN/Inf benchmark
+        blocked BOTH modes; stale → live kill_switch.activate vs batch degrade+continue). Concrete GAPS filed below
+        (A12a-A12e). parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. A12a — **MTDS DeFi handlers lack the upstream-IS-manifest preflight gate** (slot-2 2026-06-04): no
+        DeFi handler imports `unified_trading_library.instruments_preflight`/calls `run_preflight`; the handler
+        `preflight()` only fetches the API key. MTDS is the one chain layer reading instruments-service WITHOUT a
+        manifest-freshness preflight. Wire `run_preflight` (or the IS-manifest check) into the DeFi collect path; guard
+        test. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. A12b — **instruments-service DeFi `expected_unattempted` owed-cell backstop unconfirmed** (slot-2
+        2026-06-04): the DeFi universe walk must seed `expected_unattempted` (pending-fetch) rows for owed-but-absent
+        cells so `compute_honest_coverage` denominator is honest. Composes with A10 (`EmptyFromLiveInstrumentError` —
+        DEFINED+exported uac@daf1888c but verify it RAISES on the DeFi path). Diagnose the orchestrator DeFi path (read,
+        don't grep-conclude) + wire if absent. Repo: instruments-service. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. A12c — **DeFi `source=` provenance is a RED gap** (cross-cutting, per
+        `data_source_provenance_all_asset_groups_2026_06_01`): `record_captured(source=…)` wired tradfi+prediction only;
+        defi/cefi/sports RED. DeFi manifest rows are not source-stamped → multi-source swap-resilience +
+        `select_primary_available_source()` won't function for DeFi. Wire `source=` into the DeFi recorder/handlers.
+        Repo: market-tick-data-service + UAC SOURCE_PRIORITY[(defi,*)]. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P2. A12d — **MTDS DeFi IS-as-SSOT hardcode drift** (slot-2 2026-06-04): `_defi_instruments.py` carries
+        hardcoded protocol-constant fallbacks; `resolve_bucket_name` confirmed only in `dex_swaps_handler.py` (not
+        uniform across evm_defi/solana_defi/staking_yields/vault_share_price handlers); stray `*.bak` files
+        (native_staking_handler.py.bak, staking_yields_handler.py.bak). Make IS→MTDS URL/universe derivation uniform +
+        delete .bak. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [ ] [DATA] P2. A12e — **MDPS DeFi candle coverage is partial by data_type** (operator-confirm): MDPS aggregates 5
+        DeFi data_types (book_snapshot_5/dex_swaps/fx_rates/market_state/liquidity); on-chain snapshot types
+        (vault_share_price/lst_rates/oracle_prices/lending_indices/perp_funding) BYPASS MDPS → flow MTDS-raw direct to
+        features-onchain (operator-confirmed Option A 2026-05-16). So the zero-vol/last-price/NaN candle treatment is
+        NOT uniform across all DeFi data_types — the snapshot types rely on features-onchain NaN handling. CONFIRM this
+        split is still intended + that features-onchain's snapshot-NaN handling is equivalently honest. parent_epic:
+        mtds_mdps_master.
+  - [ ] [CODE] P0. A12f (PATHS MATCH POST-MIGRATION — the deliverable-4 closure; rides
+        `pipeline_mode_partition_migration_2026_06_01`): the migrator writes `pipeline_mode=batch/` paths but the LIVE
+        writers (`write_defi_rows` — no handler passes the coarse arg) + the manifest-rebuild scanner
+        (`rebuild_defi_manifest.py` `_PAT_DEFI_FULL` regex + day-prefix probe) are BARE → 3-way path divergence (reader
+        bridges via fallback probe, but live-write↔migrated + rebuild-scan↔migrated DIVERGE). Close by: (1) live DeFi
+        writers emit `pipeline_mode={batch|live}` per ingestion mode (the pipeline_mode_partition rider — NOT derived
+        from run_tag, which stays a separate namespace concept; preserves `test_live_run_tag_leaves_path_unchanged`);
+        (2) `rebuild_defi_manifest.py` regex+probe made pipeline_mode-aware (else post-migration rebuild emits ZERO rows
+        for migrated cells); (3) reconcile the pipeline_mode COLUMN coarse-`batch`-string (migrator) vs fine
+        `PipelineMode` enum (live recorder) — pick one vocab. Repos: market-tick-data-service (+ UAC). parent_epic:
+        mtds_mdps_master.
+  - [ ] [CODE] P1. A12g — **migrator `migrate_defi_full_v9_canonical.py` has ZERO unit tests** (slot-2 2026-06-04): the
+        only migrate test (`test_migrate_defi_canonical.py`) targets the SUPERSEDED bare-path
+        `migrate_defi_canonical.py` and asserts bare paths (opposite shape). Add unit tests for the v9 migrator the
+        launcher actually runs (canonical `pipeline_mode=batch/` path + v9 column stamps + dry-plan). Repo:
+        market-tick-data-service. parent_epic: mtds_mdps_master.
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
