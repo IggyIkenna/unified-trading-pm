@@ -385,6 +385,14 @@ self-recovers. Done:
       existing freeze-check/route-build prod path. repo: unified-trading-pm. _Note: the 6 builds dropped BEFORE this
       landed have no persisted payload; they re-build on their repos' next `qg-passed` (or a one-off manual
       cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops._
+      **VERIFIED END-TO-END 2026-06-04** via a temporary `SELFTEST_DEFER_REPLAY` freeze window (added + removed same
+      session): benign `qg-passed` during the window → freeze-check blocked → `defer-on-freeze` uploaded the artifact →
+      window removed → replay drained it (`re-dispatched qg-passed ... deleted artifact (replay-once)`, 1 build, 0
+      remaining). **Four bugs caught BY the verification + fixed**: (1) `ruff E501` in the validator edit; (2) replay
+      re-dispatch used `gh api -F client_payload[k]=v` which does NOT build nested JSON → switched to `jq`+`curl`;
+      (3) an empty-`${{ }}` in a router comment that had **broken cloud-build-router on main (0 jobs)** — also hardened
+      by the new [5.5a] guard; (4) `defer-on-freeze` needed `if: always() && ...` (change-freeze-check EXITS 1 when
+      blocking, so the implicit `success()` gate silently skipped the defer job on exactly the runs to capture).
 
 - [x] ✅ [SCRIPT] P1. **Hardened QG against the workflow-parse-break class (2026-06-04).** The empty-`${{ }}` bug
       reached main because PM's `[5.5] WORKFLOW LINT (actionlint)` block is **silently skipped in CI** — its
