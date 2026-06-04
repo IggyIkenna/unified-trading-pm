@@ -672,7 +672,7 @@ Look at the existing system before implementing. Key repo map: events → UTL ·
 unified-cloud-interface · market data → MTDS · execution → execution-service · reference data → instruments-service
 (`URDI` is a phantom name — does NOT exist) · UI → `unified-trading-system-ui` (consolidated, includes user-management
 functionality) + `deployment-ui` (`user-management-ui` repo is ARCHIVED 2026-05 — folded into unified-trading-system-ui;
-do NOT reference) · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; port 8026 locally;
+do NOT reference) · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; backend uvicorn binds 8765 (local + VM; nginx fronts :80/:443 public on VMs; legacy 8026 retired);
 `agent-orchestrator.odum-research.com` prod; dashboard is authoritative work-split surface. `ikenna_orchestrator/`
 LEDGER.md remains as offline fallback only; the `harsh_orchestrator/` LEDGER + dispatch files were retired 2026-05-25 →
 `plans/archive/orchestrator_legacy/` (only `harsh_orchestrator/_agent_pings.md` stays in place — still read by the live

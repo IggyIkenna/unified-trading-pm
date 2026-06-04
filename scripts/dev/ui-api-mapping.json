@@ -109,10 +109,10 @@
     },
     "agent-orchestrator": {
       "repo": "agent-orchestrator",
-      "port": 8026,
+      "port": 8765,
       "module": "server.server",
       "extra_args": "",
-      "$note": "FastAPI orchestrator for parallel Claude Code worker agents. Boot via uvicorn (not python -m): `uvicorn server.server:app --port 8026`. Dashboard is a separate Vite app at agent-orchestrator/dashboard/ (npm run dev), default port 5173 in scripts/dev.sh. Cloud Run target uses PORT=8080 internally per Dockerfile. Operator tooling — exempt from QG STEPs 5.61 + 5.34 per plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md."
+      "$note": "FastAPI orchestrator for parallel Claude Code worker agents. Boot via uvicorn (not python -m): `uvicorn server.server:app --port 8765`. Dashboard is a separate Vite app at agent-orchestrator/dashboard/ (npm run dev), default port 5173 in scripts/dev.sh. Cloud Run target uses PORT=8080 internally per Dockerfile. Operator tooling — exempt from QG STEPs 5.61 + 5.34 per plans/active/agent_orchestrator_cloud_run_deployment_2026_05_19.md."
     }
   }
 }

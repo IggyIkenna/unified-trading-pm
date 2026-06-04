@@ -98,6 +98,10 @@ jobs:
     outputs:
       dispatched: ${{ steps.post.outputs.dispatched }}
       escalation_id: ${{ steps.post.outputs.escalation_id }}
+      slot_id: ${{ steps.post.outputs.slot_id }}
+      orch_url: ${{ steps.post.outputs.orch_url }}
+      repo: ${{ steps.inputs.outputs.repo }}
+      pr_number: ${{ steps.inputs.outputs.pr_number }}
     steps:
       - name: Resolve inputs (workflow_call / dispatch / repository_dispatch)
         id: inputs
@@ -180,14 +184,24 @@ jobs:
           echo "HTTP ${HTTP}"
           cat "$RESP" || true
           echo ""
+          echo "orch_url=${ORCH_URL}" >> "$GITHUB_OUTPUT"
 
           case "$HTTP" in
             200)
               ESC_ID=$(jq -r '.escalation_id // ""' "$RESP" 2>/dev/null || echo "")
               SLOT_ID=$(jq -r '.slot_id // ""' "$RESP" 2>/dev/null || echo "")
-              echo "✅ Escalation dispatched (escalation_id=${ESC_ID}, slot=${SLOT_ID})."
-              echo "dispatched=true" >> "$GITHUB_OUTPUT"
               echo "escalation_id=${ESC_ID}" >> "$GITHUB_OUTPUT"
+              echo "slot_id=${SLOT_ID}" >> "$GITHUB_OUTPUT"
+              if [ -n "$ESC_ID" ]; then
+                echo "✅ Escalation dispatched (escalation_id=${ESC_ID}, slot=${SLOT_ID})."
+                echo "dispatched=true" >> "$GITHUB_OUTPUT"
+              else
+                # 200 but NO escalation_id → the orchestrator did NOT create a real escalation
+                # (e.g. stale deploy / unexpected body). Do NOT claim a worker is resolving the
+                # wall — that is the false-success this guard fixes. Treat as not-dispatched.
+                echo "::warning::Orchestrator returned 200 but NO escalation_id — escalation NOT confirmed; no worker spawned. Body above."
+                echo "dispatched=false" >> "$GITHUB_OUTPUT"
+              fi
               ;;
             503)
               # No free slot / no headroom setup-token account — transient capacity, retryable.
@@ -221,11 +235,15 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        ${{ needs.escalate.outputs.dispatched == 'true' && format('Escalation dispatched to orchestrator
-        (escalation_id={0}) — a Max-plan worker is resolving the wall on live-defi-rollout.',
-        needs.escalate.outputs.escalation_id) || '⚠️ Escalation NOT dispatched (no orchestrator capacity or a failure) —
-        the CI/CD wall is still open. Check the run log.' }}
-      severity: ${{ needs.escalate.result == 'success' && 'INFO' || 'WARNING' }}
+        ${{ needs.escalate.outputs.dispatched == 'true' && format('✅ Escalation `{0}` dispatched → a Max-plan worker
+        (slot {1}) is resolving {2}#{3} on live-defi-rollout. Verify the worker live on the orchestrator dashboard
+        (Agents panel) → <{4}|open dashboard>.', needs.escalate.outputs.escalation_id, needs.escalate.outputs.slot_id,
+        needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) || format('⚠️
+        Escalation NOT confirmed for {0}#{1} — NO worker was spawned (orchestrator returned no escalation_id, or no
+        free slot / headroom account, or was unreachable). The wall is STILL OPEN. Check the run log + dashboard →
+        <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
+        needs.escalate.outputs.orch_url) }}
+      severity: ${{ needs.escalate.outputs.dispatched == 'true' && 'INFO' || 'WARNING' }}
       conclusion: ${{ needs.escalate.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

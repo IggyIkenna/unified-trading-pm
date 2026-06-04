@@ -21,7 +21,7 @@ See § "Difference vs trading services" below.
 
 **Repo map pointer**: events → UTL · schemas → UAC · **orchestration → agent-orchestrator** (see
 `cursor-configs/CLAUDE.md` § "System-First Architecture" —
-`port 8026 locally; agent-orchestrator.odum-research.com prod`).
+`port 8765 locally; agent-orchestrator.odum-research.com prod`).
 
 Cross-links: operator runbook → `codex/08-workflows/agent-orchestrator-e2e-operator-runbook.md`; infra/deploy reference
 → `codex/05-infrastructure/agent-orchestrator-deploy.md`; **central API host** (instance, ports, watchdog, auto-reboot,
@@ -59,21 +59,21 @@ Current production shape — Firebase Hosting SPA + central API VM + private-VPC
                                 │ ORCHESTRATOR_USE_PRIVATE_URLS=true
                                 ▼
                         ┌──────────────────────────────────────────┐
-                        │  10 epic EC2 VMs, all :8026              │
+                        │  10 epic EC2 VMs, all :8765              │
                         │  vm-defi / vm-cefi / vm-tradfi / ...     │
                         │  (orchestrator backend per VM)           │
                         └──────────────────────────────────────────┘
 ```
 
 The browser **never** reaches the epic VMs directly — only the central API has a public TLS endpoint. Per-VM ports
-(:8026) are open to 0.0.0.0/0 in the security group as a fallback, but day-to-day traffic flows through the central
+(:8765) are open to 0.0.0.0/0 in the security group as a fallback, but day-to-day traffic flows through the central
 proxy. See § "Connectivity model — centralized API router" below.
 
 Historical Cloud Run shape (`agent-orchestrator-{staging|prod}.run.app`, europe-west4) is documented in
 [`../05-infrastructure/agent-orchestrator-deploy.md`](../05-infrastructure/agent-orchestrator-deploy.md) § "Cloud Run
 service shape (HISTORICAL)" — not running, kept as cloud-agnostic fallback reference.
 
-**Local dev** (port 8026): see § "Local dev" below.
+**Local dev** (port 8765): see § "Local dev" below.
 
 ---
 
@@ -155,13 +155,13 @@ See the "Secrets + buckets" table above for the current cloud bucket layout + th
 | -------------- | -------------------------------------------------------------- | -------------------------------------------------------------------- |
 | Production SPA | https://agent-orchestrator.odum-research.com                   | Firebase Hosting; talks to central API below                         |
 | Central API    | https://api.agent-orchestrator.odum-research.com               | EC2 VM `13.113.200.22`, nginx → app :8765 (verified live 2026-05-28) |
-| Local dev      | http://localhost:5173 (Vite) + http://localhost:8026 (backend) | see § "Local dev"                                                    |
+| Local dev      | http://localhost:5173 (Vite) + http://localhost:8765 (backend) | see § "Local dev"                                                    |
 
 ---
 
-## Local dev — port 8026
+## Local dev — port 8765
 
-Port 8026 is registered in `unified-trading-pm/scripts/dev/ui-api-mapping.json`.
+Port 8765 is registered in `unified-trading-pm/scripts/dev/ui-api-mapping.json`.
 
 ```bash
 cd agent-orchestrator
@@ -171,14 +171,14 @@ uv venv && uv sync
 .venv/bin/pre-commit install --install-hooks
 cd dashboard && npm install && cd ..
 
-# Boot everything (backend :8026 + Vite dashboard :5173)
+# Boot everything (backend :8765 + Vite dashboard :5173)
 scripts/dev.sh          # live mode
 scripts/dev.sh --mock   # demo mode
 ```
 
 Note: the central API VM listens on `127.0.0.1:8765` behind nginx (TLS terminated at :443). Fleet VMs listen on
-`0.0.0.0:8026` directly (no nginx, no per-VM TLS — the central API proxies to them over the private VPC). Local dev uses
-:8026 per the workspace port registry. Vite dev server is always `:5173` locally.
+`0.0.0.0:8765` directly (no nginx, no per-VM TLS — the central API proxies to them over the private VPC). Local dev uses
+:8765 per the workspace port registry. Vite dev server is always `:5173` locally.
 
 **Quality gates**: `bash scripts/check.sh` (ruff + basedpyright + prettier + tsc). No standard `quality-gates.sh`
 integration — operator tooling exemption.
