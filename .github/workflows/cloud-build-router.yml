@@ -80,7 +80,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p _deferred
-          # values passed via env (not ${{ }} in the script body) — no code-injection via payload
+          # values passed via env (not GitHub-Actions expressions in the script body) — no code-injection via payload
           python3 - > _deferred/payload.json <<'PYEOF'
           import json, os
           print(json.dumps({

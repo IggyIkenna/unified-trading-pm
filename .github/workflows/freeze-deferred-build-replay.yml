@@ -127,11 +127,14 @@ jobs:
             if [ "$DRY_RUN" = "true" ]; then
               echo "  DRY-RUN: would re-dispatch qg-passed + delete artifact $ART_ID"
             else
-              if gh api -X POST "repos/${OWNER}/unified-trading-pm/dispatches" \
-                   -f "event_type=qg-passed" \
-                   -F "client_payload[repo]=$REPO" -F "client_payload[branch]=$BRANCH" \
-                   -F "client_payload[version]=$VERSION" -F "client_payload[commit_sha]=$SHA" \
-                   -F "client_payload[repo_type]=$RTYPE" -F "client_payload[replayed_from_freeze]=true" 2>/dev/null; then
+              # Build the dispatch body with jq (valid nested JSON + correct escaping) and
+              # POST via curl — the proven pattern used by ci-status-reconciler.yml. (gh api's
+              # `-F client_payload[k]=v` does NOT build nested JSON, so it is NOT used here.)
+              BODY=$(jq -n --arg repo "$REPO" --arg branch "$BRANCH" --arg version "$VERSION" \
+                --arg sha "$SHA" --arg rtype "$RTYPE" \
+                '{event_type:"qg-passed",client_payload:{repo:$repo,branch:$branch,version:$version,commit_sha:$sha,repo_type:$rtype,replayed_from_freeze:true}}')
+              if curl -sf -X POST -H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
+                   "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" -d "$BODY" 2>/dev/null; then
                 echo "  re-dispatched qg-passed for $REPO"
                 gh api -X DELETE "repos/${OWNER}/unified-trading-pm/actions/artifacts/${ART_ID}" 2>/dev/null \
                   && echo "  deleted artifact $ART_ID (replay-once)" || echo "  WARN: artifact delete failed (may replay again)"
