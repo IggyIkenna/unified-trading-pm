@@ -289,6 +289,14 @@ Reviewer rejects ticks without `pw:` + `regression:` evidence. Todos on fleet VM
   <120 s (live editor) → **PROTECT, never stomp**. Background worker → `notify_*` + inherit on TTL expiry; interactive →
   ASK first. Never `git add -A` a wiped/mass-delete index (FM2 guard). Slot base is `live-defi-rollout` for every repo.
   SSOT: `codex/05-infrastructure/per-tab-worktrees.md` + `agent-orchestrator/server/worktree_clean_check.py`.
+- **Tab worktree upstream STAYS `origin/live-defi-rollout` — never `git push -u` a tab branch (HARD RULE 2026-06-04)**:
+  push with the explicit refspec only (`git push origin HEAD:tab/<op>/N`, NO `-u`); a `git push -u` (or
+  `branch --set-upstream-to=origin/tab/...`) re-points the upstream to `origin/tab/<op>/N` → the IDE then shows a
+  **phantom "ahead N"** vs the STALE remote tab (NOT real drift — local is still `0/0` vs LDR). Detect:
+  `git rev-parse --abbrev-ref @{upstream}` ≠ `origin/live-defi-rollout`; fix:
+  `git branch --set-upstream-to=origin/live-defi-rollout tab/<op>/N`. Harmless functionally (FF-cron pulls LDR
+  explicitly + `push.default=simple` refuses a mismatched-name bare push → a tab branch can't accidentally push to LDR),
+  but the ahead/behind display lies. SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Upstream tracking".
 - **Sports GCS paths**: `unified_api_contracts.sports.candidate_parquet_paths()` in
   `unified_api_contracts/canonical/domain/sports/gcs_paths.py`. Coverage: `clip_dates_to_source_coverage()` +
   `is_in_known_gap()`.
