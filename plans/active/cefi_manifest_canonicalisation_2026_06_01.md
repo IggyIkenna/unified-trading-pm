@@ -194,14 +194,35 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 > (migrate `--apply` gap-fill, orphan sweep, E5 rebuild, E7 verify, E8 legacy delete) + historical
 > source/`expected_unattempted` backfills, all deliberately NEXT-session per the handoff. No new migration-blocking CODE
 > gap found.
+>
+> **🔁 INDEPENDENT CODE RE-VERIFICATION (slot-3 interactive + 5 Explore sub-agents, 2026-06-04 — did NOT trust the prior
+> "GREEN" prose; re-read the actual code on LDR per claim).** Confirmed TRUE on LDR: execution `canonical_paths.py`
+> (`build_candidate_raw_tick_paths` canonical-first + `resolve_manifest_capture_status` 4-state fail-open) wired into
+> all 5 raw-read sites + `l2_depth_provider` cloud-agnostic + factory/validators raise per-date; MTDS live-writer
+> `build_cefi_partition_path` + `pipeline_mode=live_websocket` LEFT of `asset_group` (byte-parity with batch), reader
+> canonical-first 3-level fallback + manifest pipeline_mode lift, `rebuild_cefi_manifest`
+> `reemit_cefi_honest_absence_rows` CF-11 classifier + false-phantom fixes (slash-symbol stem / itype-case / drop-junk),
+> live finalize stamps `source`+`pipeline_mode`, migrator parallel+idempotent; features cefi UAC reads + honest-null +
+> `LookbackValidator` candle-only filter; strategy `instrument_existence_guard` + `features-delta-one` bucket fix;
+> deployment-api live-IS cefi denominator (`cap=None`, fail-open returns None) + 4-state denom incl
+> `expected_unattempted` + per-source `groupby("source")`; deployment-ui distinct `expected_unattempted` segments +
+> smoke spec; IS 4 cefi adapters re-raise→`attempted_failed` (+regression test); UAC `validate_data_type_for_venue`
+> `strict=` fail-closed + `SOURCE_PRIORITY[("cefi",*)]→tardis` + `get_expected_data_types_for_venue`. **One wording
+> correction (not a gap):** the Deribit not-found guard manifests as a REJECTED `ExecutionResult` (order never placed),
+> not an uncaught raise — plan item reworded above; guardrail property holds. Still-open (matches checkboxes below, none
+> migration-blocking): MDPS stale source-gap comment (P3, FIXED this session — mdps@6188588), strategy
+> `gcs_feature_provider.ffill()` staleness cap (P3, risk-gated — touches live carry signals), deployment-api FLAG-3 UAT
+> store f-strings (P1, carry `# CORRECT-LOCAL` QG-allowlist markers today → not blocking), funding name/unit mismatch
+> (P1, COUPLED to `data_pipeline_acquisition_remediation` funding_oi registration — fix rides that plan).
 
 **🟢 RE-AUDIT FINDINGS (slot-3 2026-06-04) — tracked so the cefi master orchestrator owns them:**
 
-- [ ] [CODE] P3. **MDPS stale source-gap comment** — `market-data-processing-service/.../app/core/canonical_writer.py`
-      (~line 1312) comments "cefi/defi/tradfi are RED gaps per the 2026-06-01 plan" for `source=`, but UAC
-      `SOURCE_PRIORITY` now registers cefi (→`tardis`) so `_resolve_primary_source_for_candle` resolves + stamps it.
-      Refresh the comment to reflect cefi/prediction are now WIRED (defi/sports remain the RED pairs). Doc-comment only;
-      no logic change. Repo: market-data-processing-service. Provenance: cefi run-readiness re-audit 2026-06-04.
+- [x] ✅ [CODE] P3. **MDPS stale source-gap comment — FIXED (mdps@6188588, QG exit 0 172s, PR #94→staging).**
+      `canonical_writer.py:1304-1315` previously said "cefi/defi/tradfi are RED gaps per the 2026-06-01 plan" for
+      `source=`. Refreshed to the verified reality: WIRED today = tradfi (databento/massive), prediction
+      (polymarket\__), cefi (tardis —
+      `SOURCE_PRIORITY[("cefi",_)]→tardis`, so `\_resolve_primary_source_for_candle`stamps every cefi     candle), and sports/odds_horizon_bucket (mdps_odds_horizon_bucket); RED gap remaining = defi. Doc-comment only; no     logic change (the`try/except
+      KeyError → None` fallback is unchanged). Provenance: cefi run-readiness re-audit 2026-06-04.
 - [ ] [CODE-BUG] P1. **CeFi funding-feature producer/consumer name+unit mismatch (cefi slice cross-ref).** Producer
       `features-service/.../delta_one/app/calculators/funding_oi.py:84` emits `funding_rate_annualized` (US,
       **fraction**); consumer `strategy-service/.../engine/strategies/v2/carry_and_yield/basis_perp.py:67` reads
@@ -366,10 +387,17 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       live, GAP-5 style). Wired into `batch_handler.handle()` for cefi runs before `_execute_backtests` (gated on
       `fail_on_missing_deps` + `not skip_dependency_check`). +5 unit tests; basedpyright 0.
 - [x] ✅ [CODE] P3. **execution-service — Deribit live-order not-found guard FIXED (execution@f111a8e2c, QG exit 0).**
-      Was SWALLOWED: `venues/deribit_orders.py:84-90` raises `ValueError("…not found or expired")` but the enclosing
-      `except (OSError, ValueError, RuntimeError)` at `:89` catches it → only `logger.warning` → a non-existent/expired
-      Deribit instrument does NOT hard-block the live order (and validates against the venue API, not IS). **Fix:**
-      re-raise the not-found `ValueError` on the live path.
+      Was SWALLOWED: `_validate_instrument_before_order`'s instrument-fetch `except` previously caught
+      `(OSError, ValueError, RuntimeError)` → only `logger.warning` → the not-found `ValueError` was eaten at the
+      validation site and the order proceeded. **Fix (verified on LDR, slot-3 re-audit 2026-06-04):** the inner except
+      is now narrowed to `(OSError, RuntimeError)` (`deribit_orders.py:80`) so the CONFIRMED not-found `ValueError`
+      (`:99`) propagates out of validation; at the `submit_order` boundary the outer
+      `except (OSError, ValueError, RuntimeError)` (`:296`) converts it to a **REJECTED `ExecutionResult`** via
+      `_make_rejected_result` — the raise fires at `:261`, BEFORE the HTTP submit at `:286`, so **no live order is ever
+      placed** against an instrument the venue has no live definition for. (Manifests as a rejection, not an uncaught
+      raise — the guardrail property holds; this is the more graceful per-order outcome, consistent with how other order
+      failures are surfaced. Validates against the venue live-definition set, not IS — the IS-existence guard is
+      strategy-side, shipped above.)
 - [x] ✅ [CODE] P3. **unified-api-contracts — `validate_data_type_for_venue` unknown-venue fail-closed — FIXED
       (uac@7f31f342, QG exit 0, 298s).** Added opt-in `strict=` param: default stays permissive/advisory (back-compat
       for warn-only callers); the live CAPTURE path passes `strict=True` → returns False (fail-CLOSED) for an
