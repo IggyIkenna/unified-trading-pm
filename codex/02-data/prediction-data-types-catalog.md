@@ -1,7 +1,7 @@
 ---
 scope: [engineer, admin]
 status: canonical
-last_reviewed: 2026-05-24
+last_reviewed: 2026-06-04
 ---
 
 # Prediction Data Types Catalog
@@ -37,19 +37,55 @@ day) combo should trade. Aggregator uses `attempt_coverage_pct` for the displaye
 (UAC@7511207a). `prediction_trades` folded into canonical `trades`. UAC now: `trades` +
 `prediction_canonical_question_group` + `market_lifecycle`.
 
+### Source vs Venue invariant (HARD — both are true, never collapsed)
+
+> Codifies the prediction `source`-provenance invariant (`data_source_provenance_all_asset_groups_2026_06_01.md` CODEX
+> P2, slot-5 2026-06-04). Two distinct axes that are routinely confused:
+
+- **`venue`** = WHERE the market trades — `POLYMARKET`, `KALSHI`. Cross-venue **price dispersion** (Polymarket-vs-Kalshi
+  on the same canonical question) is a **feature-layer** concern, computed downstream from two captured venue cells. It
+  is **NOT** a manifest `source` merge — each venue stays its own `(asset_group=prediction, venue, …)` shard. When
+  Kalshi goes live it is a **venue addition** (a new shard-axis value), not a new source for Polymarket's cells.
+- **`source`** = the DATA-PROVIDER API a cell's bytes came from — `polymarket_clob` (trades / book / the
+  `prediction_canonical_question_group` bundle), `polymarket_gamma_api` (`MARKET_LIFECYCLE`), `kalshi_*` (Kalshi cells).
+  Every captured prediction cell stamps its own `source` (swap-resilience: a future Polymarket data-provider change
+  stays distinguishable). Single-source today → the UTL writer auto-stamps via `default_source`
+  (`source_required=False`, no `MissingSourceError`); UAC `SOURCE_PRIORITY` carries the prediction pairs.
+
+So a Polymarket `MARKET_LIFECYCLE` cell is `venue=POLYMARKET, source=polymarket_gamma_api`, while a Polymarket `trades`
+cell is `venue=POLYMARKET, source=polymarket_clob` — **same venue, different source**. `derive_pipeline_mode_for_row`
+honors this per-data_type (the blanket `POLYMARKET → CLOB` venue override was removed — UTL@01ca49ea, slot-4 2026-06-04
+— so gamma-sourced lifecycle resolves gamma, not CLOB). Do NOT treat Kalshi-vs-Polymarket as a
+`select_primary_available_source()` union (that resolver is for the SAME logical cell arriving from >1 provider, e.g.
+tradfi databento/massive — not two venues).
+
 ### GCS Path Convention
 
+Canonical (v9, post-`prediction_manifest_canonicalisation` migration) — `pipeline_mode=` is a hive partition LEFT of
+`asset_group=` (path==manifest invariant; inserted by the live raw writer `orchestrator.py:~1005`, the migrator, and the
+manifest rebuild via the SAME `derive_pipeline_mode_for_row` SSOT):
+
 ```
-{resolved-prediction-tick-bucket}/raw_tick_data/by_date/day={date}/asset_group=prediction/
-  venue={VENUE}/data_type={data_type}/{shard_key}.parquet
+{resolved-prediction-tick-bucket}/raw_tick_data/by_date/day={date}/pipeline_mode={mode}/
+  asset_group=prediction/venue={VENUE}/instrument_type={IT}/data_type={data_type}/{shard_key}.parquet
 ```
+
+`{mode}` = `batch_polymarket_clob` (trades / book / the `prediction_canonical_question_group` bundle) or
+`batch_polymarket_gamma_api` (`MARKET_LIFECYCLE`) — derived per-data_type, never venue-blanket. The migration-window
+readers dual-probe BOTH the legacy (no-`pipeline_mode=`) and canonical shapes until the global Phase-8 cutover removes
+the fallback (~2026-06-15, per `codex/02-data/pipeline-mode-partition.md`).
 
 For `prediction_canonical_question_group` (cluster-grain): shard is per `canonical_question_group`, not per
-`conditionId`. `conditionId` is a row-level column + cluster validation key.
+`conditionId`. `conditionId` is a row-level column + cluster validation key. The raw OBJECTS stay per-cid
+(`…/data_type=trades/{conditionId}.parquet`); the cqg bundle is a **manifest-only** row (`record_captured_from_counts`
+with `observed_clusters={conditionId: rows}`) — there is no `canonical_question_group=` object path segment (verified
+E6b, prediction plan).
 
 Bucket name is resolved via
-`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="market-data-tick", asset_group="prediction", env=...)`
-per CLAUDE.md § "Bucket-name SSOT" — never inline `gs://...` / `s3://...` (QG STEP 5.69 ratchet enforces).
+`unified_trading_library.cloud_interface.bucket_naming.resolve_bucket_name(cloud=..., kind="market-data-tick-prediction", env=...)`
+(the FLAT prediction kind → `market-data-tick-pred-{env_short}-{pid}`; NOT the per-AG
+`kind="market-data", asset_group="prediction"` map, which raises `BucketNamingError`) per CLAUDE.md § "Bucket-name SSOT"
+— never inline `gs://...` / `s3://...` (QG STEP 5.69 ratchet enforces).
 
 ### Instrument Type Mapping
 

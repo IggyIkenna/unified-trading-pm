@@ -709,6 +709,21 @@ venue-override question) + the operator-gated migration walk:**
 
 ## Readiness gate — operator's 7 criteria (slot-5 audit 2026-06-04 — extends slot-4's 4-item audit above)
 
+> **🔁 RE-VERIFIED 2026-06-05 (slot-5, independent 3-agent code read, ahead of the gated apply runs).** Three parallel
+> read-only agents re-checked every contested DONE claim against shipped code (NOT annotations): **①②③④⑤⑥ all VERIFIED
+> GREEN** — read/write path parity (raw+candle `pipeline_mode=` insert, migrator/rebuild on the SAME
+> `derive_pipeline_mode_for_row` SSOT, rebuild regex matches the post-migrator shape, downstream readers all on
+> `resolve_bucket_name`+canonical `asset_group=` with dual-probe), 4-state preflight (MDPS consolidator gate generalized
+> to prediction flat-kinds), CF-11 honest-absence 3-way tree, classifier-None NaN parity (Polymarket+Kalshi), IS
+> mid-pagination raise, phantom auditor canonical bucket, deployment-api/UI cqg-bundle reads + 4-state denominator. **⑦
+> has ONE real, correctly-OPEN gap = the prediction cqg-grain coverage catalogue** (the v2 enumerator + generic roll-up
+> are condition_id-grain; the captured atom is per-cqg → denominator would inflate). It is GATED on a not-yet-populated
+> upstream (`market_lifecycle/by_canonical_group/` = 0 objects until the operator-gated IS prediction backfill) + VM
+> verify, so it is correctly open — precise executable spec recorded in § "⑦ PREDICTION SLICE". No code regression vs
+> the migration found; the gated apply/rebuild/delete runs (C0/E4-full/E7/E8) remain the only path-critical operational
+> steps. Docs reconciled this session: codex `prediction-data-types-catalog.md` (source≠venue invariant + canonical v9
+> `pipeline_mode=` path) + the foundation-gate cqg caveat.
+>
 > The operator's 2026-06-04 list is **7** criteria; slot-4's audit above covered the TradFi-style first ~5. This extends
 > with **⑥ (IS+UAC guardrails)** + **⑦ (coverage denominator)** and **corrects ③** per slot-4's MDPS-consolidator
 > finding. Slot-5 verified every contested claim (one fan-out agent's "critical gaps" on `candidate_parquet_paths` /
@@ -774,18 +789,42 @@ venue-override question) + the operator-gated migration walk:**
       reader + MDPS consolidator gate.** 2 regression tests (`_default_bucket_for` env-tier per AG +
       `SUPPORTED_ASSET_GROUPS`); IS QG `--no-fix` exit 0. This unblocks the enumerator for prediction AND the other 4
       AGs (cross-cutting). Repo: instruments-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. **⑦ PREDICTION SLICE — run/wire the prediction v2 enumerator with a cqg-granularity catalog (gated VM
-      verify).** `_enumerate_v2_prediction` emits per-`instrument_id` rows from the catalog; the prediction CAPTURED
-      atom is the per-cqg BUNDLE (`data_type=prediction_canonical_question_group`, `instrument_id=cqg`), so to seed a
-      denominator that matches the captured granularity the catalog (`--catalog-path`) must carry
-      `instrument_id=canonical_question_group` + `data_type=prediction_canonical_question_group` per active market —
-      i.e. the IS instrument_availability condition_ids classified to cqgs via `classify_polymarket_to_canonical_group`
-      (needs title/slug fields). VERIFY on a VM (GCS flaky locally): build the catalog from IS `instrument_availability`
-      for a sample range, run `enumerate_expected_universe.py --asset-group prediction --catalog-path … --apply-write`,
+- [ ] [CODE] P1. **⑦ PREDICTION SLICE — wire the prediction cqg-grain lifecycle catalogue + run the v2 enumerator
+      (VALID-but-GATED; precise spec slot-5 2026-06-04).** **STATUS reconciled by the 2026-06-04 readiness audit: this
+      is a REAL code gap (NOT done, NOT superseded) but it is GATED on a not-yet-populated upstream + VM verify — so it
+      is correctly OPEN; building speculative code against a 0-object input now would be premature.** Three findings
+      nail the exact build: 1. **Granularity gap is REAL (confirmed against shipped code).** `_enumerate_v2_prediction`
+      (`enumerate_expected_universe.py:786`) emits one `expected_unattempted` row per
+      `catalog.instrument_id × dt in        data_types`. The generic roll-up `build_instrument_catalogue.py` (foundation
+      plan, shipped IS@4026d79e) emits one catalog row per `by_date` `instrument_key` = **condition_id**. The captured
+      atom is the per-**cqg** bundle (`data_type=prediction_canonical_question_group`, `instrument_id=cqg`,
+      `observed_clusters={conditionId:rows}`). A condition_id-grain catalog × the bundled data_type ⇒ the seeded
+      `(…,instrument_id=condition_id,…)` keys NEVER match the captured `(…,instrument_id=cqg,…)` keys ⇒ EVERY
+      condition_id-day is over-seeded `expected_unattempted` (denominator inflated by the cqg→condition_id fan-out). So
+      the prediction catalogue MUST be **cqg-grain**. 2. **The cqg-grain source ALREADY EXISTS in IS (no classifier
+      re-run needed in the catalogue builder).** IS writes
+      `market_lifecycle/by_canonical_group/group={g}/day={d}/market_lifecycle.parquet` (`orchestrator.py:3380-3456`)
+      with columns
+      `market_id, canonical_question_group, market_created_at,        resolution_time, settlement_time, status` — i.e. a
+      per-cqg lifecycle row. The prediction catalogue producer should roll **that** up (one `CatalogRow` per cqg:
+      `instrument_id=cqg`, `data_type=prediction_canonical_question_group`, `instrument_type=prediction`,
+      `venue=POLYMARKET`, `available_from=min(market_created_at)`, `available_to=max(settlement_time)` or None while
+      alive). The UAC `CatalogRow` already carries `canonical_question_group` (`instruments_catalog.py:110`). Fallback
+      only if that artifact is unavailable: classify per-cid `instruments.parquet` via
+      `classify_polymarket_to_canonical_group(title,slug,event_slug,outcome,condition_id)` (None → skip, mirrors
+      `ClassifierConfidenceLow`). 3. **GATED on a 0-object upstream + VM.** `market_lifecycle/by_canonical_group/` is
+      currently **0 objects** — it populates only on the operator-gated IS prediction backfill (the bucket-resolution
+      crash is FIXED IS@4105bba3 / writer VERIFIED IS@e3360f05, but the run hasn't fired). And GCS is flaky from the Mac
+      slot host. So the producer can be UNIT-tested now (synthetic per-cqg frames) but cannot be END-TO-END verified
+      until (a) the IS prediction backfill populates `market_lifecycle/by_canonical_group/` (or the cqg column lands in
+      `by_date`), and (b) a VM runs it. **Run on a VM, post-backfill:** build the cqg catalogue,
+      `enumerate_expected_universe.py --asset-group        prediction --catalog-path … --data-types prediction_canonical_question_group --apply-write`,
       confirm `expected_unattempted` cqg rows land in `market-data-tick-pred-prd` `_index` for active-but-uncaptured
-      cqgs, and that deployment-api's denominator grows to the could-exist universe (regression: IS-universe ⊃ manifest
-      ⇒ denominator doesn't shrink). Repos: instruments-service (catalog loader cqg classification) +
-      market-tick-data-service. parent_epic: mtds_mdps_master.
+      cqgs, and that deployment-api's denominator grows to the could-exist universe (regression: IS-cqg-universe ⊃
+      manifest ⇒ denominator doesn't shrink). Repos: instruments-service (prediction cqg catalogue producer + ensure the
+      enumerator emits ONLY `prediction_canonical_question_group` for prediction) + market-tick-data-service.
+      parent_epic: mtds_mdps_master. Depends on `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` Phase 3
+      (all-AG adoption — prediction slice) + the gated IS prediction backfill.
 - [ ] [CODE] P1. **⑦ CROSS-AG ROLLOUT — run the v2 enumerator per AG (ideas filed in each AG plan, slot-5 2026-06-04).**
       The `_enumerate_v2_{cefi,defi,tradfi,sports}` enumerators are built + the default-bucket fix now points them at
       the canonical bucket; the remaining work per AG is to build the catalog (`--catalog-path` from that AG's IS
