@@ -281,3 +281,23 @@ so it self-heals.
 A started VM, after the runbook, auto-ingests its `assigned_vm` plans AND spawns a worker that executes a task, flips
 the checkbox, and pushes to `live-defi-rollout` — verified by the `orchestrator_pipeline_e2e_test` round-trip going
 green through the execution half (not just discovery).
+
+---
+
+## 2026-06-04 recovery outcomes + Slack-observability gap (slot-1 session)
+
+- **F13 (slot worktree hygiene blocking spawn) — RESOLVED.** Root cause was deeper than dirty trees: **git
+  object-store corruption fleet-wide** (fsck missing/broken objects) → ff-pull failed → quarantine → 0 workers.
+  Fixed via `git fetch` re-download (0 re-clones), reconciled slots 2/3/5/9 (stashed disposable churn), restarted
+  orchestrator. **vm-0 revived: 9/10 slots clean, AutoSpawn `worker_active=4`, live workers on slots 5/9/10.**
+- **F7 (slot-4 WIP) — still open, confirmed-needs-WIP-recovery.** `origin/tab/vm-0/4` **does not exist** for
+  `unified-api-contracts` (on `fix/tradfi-exchange-mappings-minimal`) + `unified-trading-pm` (on `fix/pm-ci-self-clone`)
+  — the slot branch was never created / was replaced by these feature branches holding unmerged WIP. Fix = inspect the
+  WIP (merged? abandonable?) → merge or set aside → create `tab/vm-0/4` from LDR + recreate the 2 worktrees. Slot-4
+  stays quarantined by design (1 of 10) until then. NOT blind-switchable.
+- [ ] [AGENT] P1. **NEW GAP — no positive "picking up CI work" Slack alert.** The orchestrator only Slacks on
+      FAILURES (`notify_spawn_failure`/`slot_stale`/`slot_failed`/`agent_stuck_*`/`git_staleness_red`/`unpushed_plans`).
+      There is NO success/work-pickup alert, so #agent-orchestrator-alerts shows only warnings — an operator cannot SEE
+      the fleet *working*. Add `notify_work_picked_up(slot, repo, task/escalation_id)` fired when a worker boots onto a
+      task (esp. a CI escalation) so CI-pickup is positively visible. repo: agent-orchestrator (server/slack_notify.py
+      + the boot/escalation spawn path). Provenance: 2026-06-04 Slack-observability audit.
