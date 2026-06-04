@@ -260,7 +260,27 @@ ff_one() {
     if [[ "${merge_base}" != "${remote_sha}" && "${merge_base}" != "${local_sha}" ]]; then
         ahead=$(git rev-list --count "origin/${int_branch}..HEAD")
         behind=$(git rev-list --count "HEAD..origin/${int_branch}")
-        log "[skip:diverged] ${repo_name} (${branch} → ${int_branch}) — ahead ${ahead}, behind ${behind}; need manual rebase"
+        # Auto-adopt ONLY the "tab-mirror GHA rebased origin/tab onto LDR" signature:
+        # every ahead-commit is already patch-id-present in LDR (`git cherry` marks the
+        # already-applied ones '-', genuinely-new ones '+'), AND the tree is clean. Then a
+        # rebase just drops the dups and FFs local to LDR — non-destructive, and it never
+        # rewrites genuine in-flight work or touches dirty WIP. Any other divergence
+        # (real new local commits, or a dirty tree) stays [skip:diverged] for the agent /
+        # manual `git rebase origin/<int_branch>` recovery. See tab-mirror-to-ldr.yml §4.
+        genuine_ahead=$(git cherry "origin/${int_branch}" HEAD 2>/dev/null | grep -c '^+' || true)
+        dirty=$(git status --porcelain 2>/dev/null | head -c1)
+        if [[ "${genuine_ahead}" -eq 0 && -z "${dirty}" ]]; then
+            if [[ "${DRY_RUN}" -eq 1 ]]; then
+                log "[dry-run:adopt-rebase] ${repo_name} (${branch}) — ${ahead} ahead all mirrored to ${int_branch}; would rebase-adopt to ${remote_sha:0:8}"
+            elif git rebase "origin/${int_branch}" >/dev/null 2>&1; then
+                log "[adopt-rebase] ${repo_name} (${branch}) — dropped ${ahead} mirrored dup(s); now == ${int_branch} ${remote_sha:0:8}"
+            else
+                git rebase --abort >/dev/null 2>&1 || true
+                log "[skip:adopt-failed] ${repo_name} (${branch}) — rebase aborted unexpectedly; manual inspection"
+            fi
+        else
+            log "[skip:diverged] ${repo_name} (${branch} → ${int_branch}) — ahead ${ahead} (${genuine_ahead} genuine), behind ${behind}${dirty:+, dirty tree}; manual/mirror will handle"
+        fi
         popd >/dev/null
         return 0
     fi
