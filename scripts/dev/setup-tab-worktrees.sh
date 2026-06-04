@@ -366,6 +366,16 @@ case "${MODE}" in
         for ((i=1; i<=SLOT_COUNT; i++)); do
             provision_slot "${i}"
         done
+        # Symmetric-host contract (CLAUDE.md § "Local slot host = VM slot host"): a freshly
+        # provisioned host MUST run the slot-cron-ff-pull cron + the symmetry-verify cron, or
+        # it silently drifts (the 2026-06-04 incident: an idle VM had no ff-pull cron → stale
+        # → git corruption). Install them here so a new host is symmetric BY CONSTRUCTION,
+        # not by a remembered manual step. Idempotent + best-effort (don't fail provisioning).
+        if [[ -x "${PM_DIR}/scripts/dev/install-slot-cron-ff-pull.sh" ]]; then
+            log "Installing slot-host crons (ff-pull + symmetry-verify) for symmetric-host compliance…"
+            WORKSPACE_ROOT="${WORKSPACE_ROOT}" bash "${PM_DIR}/scripts/dev/install-slot-cron-ff-pull.sh" 2>&1 | sed 's/^/  /' \
+                || err "slot-host cron install reported an issue — run verify-slot-host-symmetry.sh + install-slot-cron-ff-pull.sh manually"
+        fi
         log "Done. ${SLOT_COUNT} slots ready. Next: assign themes via the daily work-split plan + ${OPERATOR}_orchestrator/LEDGER.md slot↔theme table."
         ;;
     add-slot)

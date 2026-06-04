@@ -28,8 +28,8 @@
 
 set -uo pipefail
 
-QUIET=0
-[[ "${1:-}" == "--quiet" ]] && QUIET=1
+QUIET=0; ALERT=0
+for _a in "$@"; do case "${_a}" in --quiet) QUIET=1;; --alert) ALERT=1;; esac; done
 
 ORCH_URL="${ORCH_URL:-https://api.agent-orchestrator.odum-research.com}"
 TOKEN_FILE="${ORCH_TOKEN_FILE:-${HOME}/.orch_token}"
@@ -231,6 +231,19 @@ fi
 section "result: ${pass} passed / ${fail} failed"
 
 if [[ ${fail} -gt 0 ]]; then
+    # --alert (periodic-cron mode): post a concise drift alert to Slack so an
+    # unattended host's symmetry drift is VISIBLE, not just exit-1 into a log.
+    if [[ ${ALERT} -eq 1 ]]; then
+        _wh="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null || true)}"
+        if [[ -n "${_wh}" ]]; then
+            _host="$(hostname)"
+            curl -sS -X POST "${_wh}" -H 'Content-Type: application/json' \
+                -d "{\"text\":\":warning: slot-host-symmetry DRIFT on \`${_host}\` — ${fail} check(s) failed (of $((pass+fail))). Run verify-slot-host-symmetry.sh on that host to see + fix. SSOT: CLAUDE.md § 'Local slot host = VM slot host'.\"}" \
+                >/dev/null 2>&1 && echo "[alert] posted symmetry-drift alert to Slack" || echo "[alert] WARN: Slack post failed"
+        else
+            echo "[alert] WARN: no Slack webhook (set AGENT_ORCHESTRATOR_SLACK_WEBHOOK or grant gcloud SM access) — drift NOT alerted"
+        fi
+    fi
     [[ ${QUIET} -eq 0 ]] && cat <<EOF
 
 This host is NOT fully compliant with the local↔VM slot-host symmetry contract.
