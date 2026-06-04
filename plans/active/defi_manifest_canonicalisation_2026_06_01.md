@@ -594,15 +594,41 @@ What to verify/wire (B0 corrected scope):
           needs a distinct token from the Phase-2 type — **operator decision**). Also check `DEX_POOL_SWAPS` does not
           exist yet (only DEX_POOL_STATE/DEX_ORDERBOOK/DEX_QUOTE/DEX_TRADES). Repo: unified-api-contracts. parent_epic:
           mtds_mdps_master.
-  - [ ] [CODE] P1. **A11d — MTDS `data_manifest_handler.py` OPERATIONS metadata legacy data_types**
-        (`bucket_type:     dex-pools`/`dex-swaps`/`lending-indices`) — reconcile with the canonical
-        `dex_pool_state`/`dex_pool_swaps` handler `_DATA_TYPE` consts (C0-CN2). Repo: market-tick-data-service.
-  - [ ] [DATA] P1. **A11e — TESTS encoding legacy buckets/data_types (silent-regression maskers)**: e.g. mtds
-        `tests/unit/test_smoke_matrix.py` (`market-data-tick-{category}-{pid}` mock), `test_defi_manifest_recorder.py`
-        (`data_type="dex_pools"` asserts), `test_curve_defi_ws_connector.py` (`dex_pools`); deployment-ui
-        `tests/unit/components/DataStatusTab.phase8h.test.ts` (`honest["dex_pools"]`). Update to assert CANONICAL
-        forms + add a guard test so the legacy form can't silently pass. Repos: market-tick-data-service +
-        deployment-ui.
+  - [x] ✅ [CODE] P1. **A11d — DONE (slot-2 2026-06-04, mtds@aa92be0f).** Grep-then-read corrected the framing: the
+        `OPERATIONS` `bucket_type` values (`dex-pools`/`dex-swaps`/`lending-indices`) are the **correct `kind=`
+        strings** for `resolve_bucket_name` (hyphen bucket NAMES, not data*types) + the `OPERATIONS` list is dead
+        metadata (never iterated) → no change. The REAL physical bug was in the same file: the 3
+        `\_scan*\*`functions wrote the     availability-index`data*type`as`prefix.replace("*",
+        "-")`, which **hyphenated EVERY prefix**     (`lending_indices`→`lending-indices`, `lst_rates`→`lst-rates`, `oracle_prices`→`oracle-prices`, …) AND used the     legacy pool/swap names — so a reader pointed at this index post-migration would see a data_type that does NOT     match the canonical consolidated `\_index`. Fixed: new `\_canonical_data_type()`maps`dex_pools`→`dex_pool_state`,     `dex_swaps`→`dex_pool_swaps`,
+        all others identity-underscore; 3 callsites + venue-derivation updated; +3 regression tests. Repo:
+        market-tick-data-service.
+  - [~] [DATA] P1. **A11e — PARTIAL (slot-2 2026-06-04, mtds@aa92be0f): the genuinely-wrong tests fixed.**
+    `test_curve_defi_ws_connector.py` was asserting `dex_pools`/`dex_swaps` — strings the **production connector does
+    NOT dispatch on** (it dispatches `dex_pool_state`/`dex_pool_swaps`) → updated to canonical (8 sites + 2 test names).
+    `test_defi_manifest_recorder.py` `data_type=` literals → canonical `dex_pool_state`. **REMAINING (lower value —
+    their PRODUCTION assertions are already canonical, the legacy strings are test scaffolding that doesn't mask a
+    runtime bug):** mtds `test_smoke_matrix.py` (`market-data-tick-{category}` mock + `category` parquet column — needs
+    reading `smoke.py`'s current bucket resolution first) + deployment-ui `DataStatusTab.phase8h.test.ts`
+    (`honest["dex_pools"]` — TS, rides B5). Repos: market-tick-data-service + deployment-ui.
+  - [ ] [CODE] P1. **A11g — solana_defi_handler writes legacy `dex_pools` data_type to BOTH manifest + path (slot-2
+        readiness audit 2026-06-04) — GATED on the A11c-candle-enum operator decision, do NOT unilaterally flip.**
+        `_PROTOCOL_TO_DATA_TYPE` maps kamino/orca/raydium/phoenix → `"dex_pools"`
+        (`solana_defi_handler.py:197,199-201`), forwarded to `recorder.record_*(data_type=...)` (L408/419/430) +
+        `write_defi_rows(data_type=data_type or "dex_pools")` (L530). EVM `dex_pools_handler` already emits canonical
+        `dex_pool_state` (C0-CN2), so post-migration live Solana writes would desync (canonical historical
+        `dex_pool_state` vs new `dex_pools`) → NOT_IN_SCOPE in the canonical denominator. **BUT** this collides with the
+        OPEN **A11c-candle-enum** operator decision (is the `dex_pools` snapshot the SAME as the `dex_pool_state`
+        time-series?) and the `solana_defi_legacy_migration_2026_05_27.md` § G-note that Kamino vault-metadata
+        `dex_pools` is _complementary, not conflicting_ with `DEX_POOL_STATE`. Resolve WITH the A11c-candle-enum
+        decision: if SAME → flip `_PROTOCOL_TO_DATA_TYPE` Solana AMM venues to `dex_pool_state` + add a guard test; if
+        DIFFERENT → Kamino keeps a distinct token (then document the split). Repo: market-tick-data-service.
+        parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P2. **A11e-schema-validation — VERIFIED NON-ISSUE (slot-2 2026-06-04).** `schema_validation.py`
+        `_REQUIRED_COLUMNS` keys `"dex_pools"`/`"dex_swaps"` are an INTERNAL schema-validation lookup key, matched by
+        the handler callsites passing the SAME literal (`validate_before_write(df, "dex_pools", …)`) — both sides agree
+        so validation works today; it is decoupled from the canonical on-disk/manifest data_type (`_DATA_TYPE` const =
+        `dex_pool_state`, already canonical). Not a migration regression; renaming both sides would be cosmetic +
+        carries silent-no-op risk if mismatched → left as-is. Repo: market-tick-data-service.
   - [ ] [CODE] P2. **A11f — residual `category=` writers** (legacy hive key vs canonical `asset_group=`): mtds
         `market_interface/__init__.py` + live manifest recorder `category=` alias. Readers already probe
         canonical→legacy (transitional OK); migrate writers so post-cutover writes are canonical-only. Repo:
