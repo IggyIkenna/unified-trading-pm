@@ -179,9 +179,9 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       (byte-identical) with `pipeline_mode=live_websocket` LEFT of `asset_group=`, venue UPPER +
       instrument_type/data_type lower (reader case-parity); `instrument_type=` threaded from the flush call site (was
       discarded); defi/other mirror the reader's generic order (chain before venue). +regression tests asserting
-      reader-order + case parity. **MDPS lockstep `default_tick_blob_path` fixed the same way (shipping with the MDPS
-      commit below).** MTDS QG exit 0. (Also shipped: P2 `reader.read_from_manifest` lifts pipeline_mode from the
-      captured row — canonical path probed first.)
+      reader-order + case parity. **MDPS lockstep `default_tick_blob_path` fixed the same way (mdps@b9b3263, QG exit
+      0).** MTDS QG exit 0. (Also shipped: P2 `reader.read_from_manifest` lifts pipeline_mode from the captured row —
+      canonical path probed first.)
 - [ ] [CODE] P0. **execution-service — legacy raw_tick paths, 0 `candidate_parquet_paths`, 0 `pipeline_mode`.** ALL raw
       candle/mark/orderbook reads hardcode `raw_tick_data/by_date/day={date}/data_type={dt}` with NO
       `pipeline_mode=`/`asset_group=cefi/` (`data/loaders/base.py:182`, `data/checker.py:155,323`,
@@ -216,7 +216,7 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       proceed) — the 4-state allocation gate was a silent **no-op for cefi**. **FIXED:**
       `features_kind = "features-sports"     if asset_group=="sports" else "features-delta-one"` (sports behaviour
       unchanged; cefi/defi/tradfi/prediction now gate on their REAL features index). This was the real "strategy cefi
-      pre-flight" gap (P1 above was the red herring).
+      pre-flight" gap (P1 above was the red herring). **DONE — strategy@879d1bbd, QG exit 0** (+ regression test).
 - [x] ✅ [CODE] P2. **market-tick-data-service** — `reader.read_from_manifest` (`reader.py`) now LIFTS `pipeline_mode`
       from the captured manifest row into `read_shard` so the canonical `pipeline_mode=` path is probed FIRST (caller
       override still wins). +2 regression tests. Was leaving manifest-driven reads on the soon-removed bare fallback.
