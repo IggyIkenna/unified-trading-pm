@@ -241,10 +241,52 @@ the RAM). Server-side `gcs_copy_object` at `--workers 32` (GIL-free I/O) → the
 CPU-bound, so 4 vCPU suffices. The running 2024 dry-run validates the real per-year listing time + the 32 GB headroom
 (result appended here on completion).
 
+### ✅ E5 MANIFEST-REBUILD DRY-RUN — the real `_index`-rebuild step, validated 2026-06-04 (slot-3)
+
+> Operator Q: _"have we dry-run the manifest (`_index`) rebuild to check it works as expected?"_ — **YES, and it caught
+> a serious false-phantom bug that would have corrupted the `_index`.** Ran
+> `rebuild_cefi_manifest --dry-run --start-date 2024-06-01 --end-date 2024-06-07` against the real `-prd` v8 `_index`
+> (laptop ADC, `CLOUD_MOCK_MODE=false`; exit 0, ~100 s/week; reads the v8 index + classifies with NO column-name crash —
+> validates the `reason`/`error_reason` fallback + the whole CF-11 re-emit pass on real data).
+
+**Bug the dry-run surfaced (3 covered-key match gaps → FALSE phantom demotes of REAL captured cells):** the first run
+flagged **`phantom_to_failed=1187`/week** — prior-`captured` cells the object scan "couldn't find" → it would
+`record_failed(PHANTOM_CAPTURED_NO_OBJECT)` them, i.e. **flip real captured → attempted_failed corpus-wide** (the exact
+data-corruption the workspace rule forbids). Root-caused to THREE gaps, each fixed + locked with a regression test (mtds
+`rebuild_cefi_manifest.py` + `test_rebuild_cefi_manifest_cf11.py`, 5 new tests):
+
+1. **Kraken slash-symbols** (`ADA/USD`, `XBT/USD`) — written as a 2-segment path
+   `…/data_type=book_snapshot_5/ADA/USD.parquet`; the parser stem `[^/]+` can't cross the slash → object `unparseable`
+   (576/week) → its captured cell looked phantom. Fix: stem `→ [^/=]+(?:/[^/=]+)*` (allows slash-symbols, excludes `=`
+   so it can't swallow a bundle path).
+2. **`instrument_type` case** — prior v8 `_index` stores `SPOT_PAIR` (UPPERCASE, old-writer anomaly) but the GCS path is
+   `spot_pair`; the covered-key compared it case-sensitively (only `venue` was normalised) → EVERY real Kraken/spot
+   captured cell missed the dedup. Fix: lowercase `instrument_type` on both sides of the covered-key (canonical form).
+3. **Malformed/sentinel junk rows** — blank venue, no cell key (blank instrument_id AND underlying), or the `ticks`
+   bundle-filename leaked into `instrument_id`; demoting them mints junk `attempted_failed` rows. Fix: **DROP** them
+   (`dropped_malformed_captured`), never demote.
+
+**Result after fixes (same week):** `phantom_to_failed 1187 → 12` (the 12 are genuine — DERIBIT
+`futures_chain`/`options_chain` with a real `underlying` but verifiably NO object → honest absence → `attempted_failed`
+for retry, CORRECT); `dropped_malformed_captured=399`; `reemit_skipped_covered 2938 → 3714` (+776 Kraken cells now
+correctly matched); `reemit_attempted_failed=3763` preserved; `unparseable 576 → 0`. **The rebuild now works as expected
+— verified the real v8 `_index` reads + classifies correctly + no real captured cell is demoted.** Before the REAL run,
+re-confirm on a wider date range (the dry-run was a 1-week sample; the slash-symbol + case gaps are corpus-wide so
+they'll recur identically, but a multi-year `--scan-only`/`--dry-run` spot-check of the phantom count is the cheap final
+gate).
+
+- [x] ✅ [CODE] P0. **E5 rebuild false-phantom fixes (3 covered-key gaps)** — slash-symbol parser stem,
+      `instrument_type` case-canonical covered-key, malformed-junk drop. mtds `rebuild_cefi_manifest.py` + 5 regression
+      tests. Caught by the 2026-06-04 manifest-rebuild dry-run (1187→12 false phantoms/week). **DONE — mtds@60debbfe**
+      (tab→LDR; staging deferred behind the UTL/UAC dep-tier dam) | QG --no-fix exit 0 | 29/29 CF-11 tests green.
+- [ ] [DATA] P1. **Before the REAL `_index` rebuild — multi-year dry-run phantom spot-check**: re-run
+      `rebuild_cefi_manifest --dry-run` over a multi-year span (or the full corpus) and confirm `phantom_to_failed`
+      stays small + well-formed (DERIBIT-chain-style true phantoms only), `dropped_malformed_captured` is junk-only, and
+      `unparseable=0`. Cheap final gate before the irreversible-adjacent index overwrite.
 - [ ] [DATA] P0. **NEXT SESSION — execute the migration** (after the dry-run validates perf): run the 8 year-sharded
       `--also-legacy --apply` gap-fill (5,233 legacy-only cells), then the irreversible orphan-sweep (with the mandatory
-      pre-delete idempotent-`--apply`-over-full-range guarantee), then E5 manifest rebuild (now CF-11-canonical
-      @mtds#fa2b02c7), E7 verify, E8 legacy-bucket delete. NOT this session (irreversible).
+      pre-delete idempotent-`--apply`-over-full-range guarantee), then E5 manifest rebuild (now CF-11-canonical +
+      false-phantom-safe @mtds#fa2b02c7+this-fix), E7 verify, E8 legacy-bucket delete. NOT this session (irreversible).
 
 ## Why this exists — cefi canonical FORM is broken corpus-wide (+ a recent 838-cell data gap)
 
