@@ -379,38 +379,39 @@ self-recovers. Done:
       only by a brand-new `qg-passed`. **Fix (defer-and-replay):** (1) cloud-build-router gains a `defer-on-freeze` job
       (runs only when blocked) that persists the `{repo,branch,version,commit_sha,repo_type}` payload as a
       `deferred-build-*` artifact; (2) new **`freeze-deferred-build-replay.yml`** cron (every 15 min) — inlines a
-      NON-failing PROD_DEPLOY freeze check (canonical window SSOT stays `change-freeze-calendar.csv`), and once the
+      NON-failing PROD*DEPLOY freeze check (canonical window SSOT stays `change-freeze-calendar.csv`), and once the
       window lifts drains the artifacts → re-dispatches `qg-passed` → deletes each artifact (replay-once). `dry_run`
       lists without dispatching; Slack only on actual replays (no per-tick noise). All additive — zero change to the
-      existing freeze-check/route-build prod path. repo: unified-trading-pm. _Note: the 6 builds dropped BEFORE this
+      existing freeze-check/route-build prod path. repo: unified-trading-pm. \_Note: the 6 builds dropped BEFORE this
       landed have no persisted payload; they re-build on their repos' next `qg-passed` (or a one-off manual
-      cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops._
-      **VERIFIED END-TO-END 2026-06-04** via a temporary `SELFTEST_DEFER_REPLAY` freeze window (added + removed same
-      session): benign `qg-passed` during the window → freeze-check blocked → `defer-on-freeze` uploaded the artifact →
-      window removed → replay drained it (`re-dispatched qg-passed ... deleted artifact (replay-once)`, 1 build, 0
-      remaining). **Four bugs caught BY the verification + fixed**: (1) `ruff E501` in the validator edit; (2) replay
-      re-dispatch used `gh api -F client_payload[k]=v` which does NOT build nested JSON → switched to `jq`+`curl`;
-      (3) an empty-`${{ }}` in a router comment that had **broken cloud-build-router on main (0 jobs)** — also hardened
-      by the new [5.5a] guard; (4) `defer-on-freeze` needed `if: always() && ...` (change-freeze-check EXITS 1 when
-      blocking, so the implicit `success()` gate silently skipped the defer job on exactly the runs to capture).
+      cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops.* **VERIFIED END-TO-END 2026-06-04**
+      via a temporary `SELFTEST_DEFER_REPLAY` freeze window (added + removed same session): benign `qg-passed` during
+      the window → freeze-check blocked → `defer-on-freeze` uploaded the artifact → window removed → replay drained it
+      (`re-dispatched qg-passed ... deleted artifact (replay-once)`, 1 build, 0 remaining). **Four bugs caught BY the
+      verification + fixed**: (1) `ruff E501` in the validator edit; (2) replay re-dispatch used
+      `gh api -F client_payload[k]=v` which does NOT build nested JSON → switched to `jq`+`curl`; (3) an empty-`${{ }}`
+      in a router comment that had **broken cloud-build-router on main (0 jobs)** — also hardened by the new [5.5a]
+      guard; (4) `defer-on-freeze` needed `if: always() && ...` (change-freeze-check EXITS 1 when blocking, so the
+      implicit `success()` gate silently skipped the defer job on exactly the runs to capture).
 
 - [x] ✅ [SCRIPT] P1. **Hardened QG against the workflow-parse-break class (2026-06-04).** The empty-`${{ }}` bug
       reached main because PM's `[5.5] WORKFLOW LINT (actionlint)` block is **silently skipped in CI** — its
       `[ -d "${REPO_ROOT}/.github/workflows" ]` guard is false in the v2 reusable-workflow context (confirmed: no
       `[5.5/6]` line in PM's v2 log; sections jump [4/6]→[5/6]). Added **[5.5a] WORKFLOW EXPRESSION GUARD** to
-      `base-service.sh`: always-on (robust dir-detection via REPO_ROOT / git-toplevel / PROJECT_ROOT / CWD), version-proof
-      regex `\$\{\{[[:space:]]*\}\}`, hard-fails on any empty/whitespace-only expression (the exact parse-breaking class,
-      0 false-positives across all 52 PM workflows). Kept the broader actionlint block at its original gate (see
-      follow-up). repo: unified-trading-pm (base-service.sh → fleet via template).
-- [ ] [SCRIPT] P2. **FOLLOW-UP: re-enable the full [5.5] actionlint gate for PM (+ any repo where REPO_ROOT mis-resolves)
-      in CI.** Fixing the dir-detection to run full actionlint surfaces **7 pre-existing PM workflow nits** (untrusted
-      `github.event.*` in inline scripts: major-bump-approval/issue-handler; undefined-output refs:
+      `base-service.sh`: always-on (robust dir-detection via REPO_ROOT / git-toplevel / PROJECT_ROOT / CWD),
+      version-proof regex `\$\{\{[[:space:]]*\}\}`, hard-fails on any empty/whitespace-only expression (the exact
+      parse-breaking class, 0 false-positives across all 52 PM workflows). Kept the broader actionlint block at its
+      original gate (see follow-up). repo: unified-trading-pm (base-service.sh → fleet via template).
+- [ ] [SCRIPT] P2. **FOLLOW-UP: re-enable the full [5.5] actionlint gate for PM (+ any repo where REPO_ROOT
+      mis-resolves) in CI.** Fixing the dir-detection to run full actionlint surfaces **7 pre-existing PM workflow
+      nits** (untrusted `github.event.*` in inline scripts: major-bump-approval/issue-handler; undefined-output refs:
       plan-notification `md_summary`, rules-alignment-agent `md_file`, request-major-bump-reusable `slack_webhook_url`;
-      `sit-debounce-trigger` cron */2 < 5-min min; `update-repo-version` shellcheck SC1121) — none parse-breaking, but
-      they must be fixed/baselined BEFORE making full actionlint a hard CI gate (else PM QG breaks fleet-wide). Clean the
-      7, then broaden the [5.5] dir-guard to git-toplevel like [5.5a]. repo: unified-trading-pm.
+      `sit-debounce-trigger` cron \*/2 < 5-min min; `update-repo-version` shellcheck SC1121) — none parse-breaking, but
+      they must be fixed/baselined BEFORE making full actionlint a hard CI gate (else PM QG breaks fleet-wide). Clean
+      the 7, then broaden the [5.5] dir-guard to git-toplevel like [5.5a]. repo: unified-trading-pm.
 
-Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT machinery):
+Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT
+machinery):
 
 - [ ] [TEST] P1. **features-service staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports
       `ml_service` but does not declare it (the SAME finding as the Wave-1 cleanup todo above — canonical fix = add
@@ -2140,6 +2141,24 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       a companion) so a repo that drifts back to requiring human review surfaces in the consistency audit — completes
       the zero-approvals codification above (today enforced by the template/force-sync defaults but not actively
       audited). — repo: unified-trading-pm.
+
+### QG-infra reliability (slot-2 2026-06-04, surfaced fixing the DeFi A12 QGs)
+
+- [x] ✅ [SCRIPT] P1. **coverage-floor-guard inline-comment parse bug FIXED** (PM@b42be03c2): `cut -d'=' -f2` captured
+      the inline comment on `MIN_COVERAGE=28  # ISS-031: restore...`; the whitespace-strip glued it to the value
+      (`28#ISS-031...`) → every integer comparison errored ("integer expression expected") → the floor check was
+      SILENTLY MASKED (fell through to the pass branch). Added `| cut -d'#' -f1`. Now correctly parses 28, evaluates
+      28<70, honors the existing operator-approved `.coverage-floor-exception.md` (MTDS passes via the exception, not by
+      accident). Fleet-wide this affected only MTDS (only repo with an inline comment on MIN_COVERAGE);
+      regression-verified (non-comment `MIN_COVERAGE=85` → clean pass). repo: unified-trading-pm.
+- [ ] [TEST] P2. **`unified-api-contracts` `cassette_orphan_checker` intermittent flakiness** (slot-2 obs 2026-06-04):
+      `tests/test_cassette_orphan_checker.py::{test_returns_venue_aware_dict, test_no_unallowlisted_orphans,     test_legacy_wrapper_returns_set_of_names}`
+      FAILED in 1 of 4 full-suite QG runs (passed in isolation + passed the other 3 runs) → a test-isolation/ordering
+      issue under the parallel (xdist) suite, not a code regression (the scan is ~273s/test → race-prone).
+      LOW-confidence (1/4) — monitor; if it recurs, add per-test isolation (fresh tmp scan-root / serialize the
+      orphan-scan group / xdist-group marker). The DETERMINISTIC sibling failures
+      (`test_ws_cassette_coexistence[orca/raydium_defi_ws]`, unregistered REST pollers) were already fixed at root
+      (uac@d67d8061). repo: unified-api-contracts. parent_epic: (cicd hardening).
 
 ### Phase 3 — Image-build provenance + branch-triggered builds (audit k2/k3)
 
