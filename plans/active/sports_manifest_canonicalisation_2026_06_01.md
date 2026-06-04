@@ -1076,14 +1076,15 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       `resolve_bucket_name(kind='execution-store-prediction')`. Removed the `execution_sink_bucket_prediction` field +
       flipped the unit test to `test_prediction_execution_bucket_raises`. Sports unaffected (config fallback == yaml
       SSOT, both non-env). basedpyright clean. **Residual for slot-3** (below) — wiring prediction execution itself.
-- [ ] [CODE] P3. **HANDOFF→PREDICTION (slot-3): wire prediction execution-store via the canonical env-split bucket** —
-      repo: `execution-service` (+ `prediction` strategy/execution wiring). The config now correctly RAISES on
-      `asset_group='prediction'` (fail-loud, no wrong bucket). When prediction execution is scoped, resolve its store
-      via `resolve_bucket_name(kind='execution-store-prediction')` → `execution-store-pred-${env}-${pid}` (env-split;
-      matches `cloud-providers.yaml:173` + `terraform/gcp/main.tf:1575`) and inject it as the execution sink bucket — do
-      NOT re-add prediction to `get_bucket_for_asset_group`'s generic construction (it can't produce env-split). Latent
-      only (no prediction execution process wired today). **DEFERRED** to the prediction track — successor:
-      `prediction_manifest_canonicalisation_2026_06_01.md`.
+- [x] ✅ [CODE] P3. **HANDOFF→PREDICTION: prediction execution-store wired via the canonical env-split bucket — DONE
+      (execution-service@d1bd640ab, slot-5 2026-06-05).** `get_bucket_for_asset_group('execution','prediction')` now
+      resolves via `resolve_bucket_name(kind='execution-store-prediction')` → `execution-store-pred-${env}-${pid}`
+      (env-split), instead of the fail-loud raise — the generic `{prefix}-{group}-{pid}` construction can't produce the
+      env tier, so it's resolved via the SSOT (NOT re-added to the generic construction, per the handoff). Other
+      prediction bucket_types still raise (only the execution store is env-split-wired). Latent today (no prediction
+      execution process running) but ready so a future prediction-execution process is a no-op. Test flipped: prediction
+      execution resolves via the SSOT (mocked) + non-execution still raises; basedpyright clean; QG exit 0
+      (sentinel==HEAD). parent_epic: mtds_mdps_master.
 
 ### Post-migration read-path regressions — slot-4 e2e readiness audit (2026-06-04)
 
