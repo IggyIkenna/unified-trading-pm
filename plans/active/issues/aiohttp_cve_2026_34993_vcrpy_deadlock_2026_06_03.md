@@ -77,8 +77,15 @@ decision + the successor.
       `uv lock --upgrade-package aiohttp` + `uv lock --upgrade-package vcrpy` per repo, re-QG). Owner: cicd/dep-security
       epic. Verifier: `pip-audit` clean with NO `--ignore-vuln CVE-2026-34993` + all VCR cassette tests green.
       Cold-start: read this issue doc.
-- [ ] [DEPS] P2. **Fix deployment-service uv blockers (2a duplicate `[tool.uv.sources.unified-api-contracts]` key + 2b
-      corrupt `cbor2` lock entry)** so `uv lock --upgrade` works again. Recipe: remove the duplicate uv.sources block,
-      then do a clean `uv lock` regen resolving the cbor2 missing-`source` ambiguity (pin the index/source), verify the
-      lock diff is minimal + QG green. Repo: deployment-service. Owner: cicd/dep-security epic. Cold-start: this issue
-      doc § "What I found 2". (Did NOT block tradfi: deployment-api already shipped; steady-state QG passes.)
+- [x] ✅ [DEPS] P2. **Fix deployment-service uv blockers (2a duplicate `[tool.uv.sources.unified-api-contracts]` key +
+      2b corrupt `cbor2` lock entry) — DONE 2026-06-04 (slot-4)** — deployment-service@3899a5d. Removed the duplicate
+      `[tool.uv.sources.unified-api-contracts]` stanza (2a) — that re-exposed 2b: the lock had a dangling
+      `{ name =     "cbor2" }` dependency edge with NO `[[package]]` cbor2 definition (uv couldn't disambiguate →
+      "missing source field but more than one matching package"). The minimal-diff `uv lock --upgrade` recipe did NOT
+      work (uv parses the corrupt lock before resolving); the actual fix was a **from-scratch regen**
+      (`rm uv.lock && uv lock`): 257→207 packages — orphaned transitive deps (cbor2 itself +
+      autobahn/automat/binance-futures-connector/asgiref/backoff, none required by any current dep) dropped + minor
+      version bumps. **`bash scripts/quality-gates.sh` GREEN (181s)** — full tests + basedpyright + coverage pass
+      against the regenerated lock; deployment-service QG no longer foreign-blocked. Lock churn re-validates at
+      promotion via CI test-in-image. (Surfaced + fixed while shipping the sports execution-store —
+      `sports_manifest_canonicalisation_2026_06_01.md`.)
