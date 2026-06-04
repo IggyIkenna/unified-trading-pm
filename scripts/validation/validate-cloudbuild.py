@@ -90,14 +90,15 @@ def main() -> None:
     # it (or network access to SchemaStore) is absent, degrade gracefully to a SKIP rather
     # than crashing the gate with a ModuleNotFoundError (mirrors the "skip if gcloud absent"
     # philosophy). find_spec — not a try/except import — respects the no-fallback-import rule.
+    _skip = "SKIP: %s — skipping cloudbuild schema validation (structural step checks still run)"
     if importlib.util.find_spec("jsonschema") is None:
-        print("SKIP: jsonschema unavailable — skipping cloudbuild schema validation (structural step checks still run)", file=sys.stderr)
+        print(_skip % "jsonschema unavailable", file=sys.stderr)
         sys.exit(0)
 
     try:
         schema = load_schema()
     except (urllib.error.URLError, TimeoutError, OSError) as e:
-        print(f"SKIP: cloudbuild schema fetch failed ({e}) — skipping schema validation (structural step checks still run)", file=sys.stderr)
+        print(_skip % f"schema fetch failed ({e})", file=sys.stderr)
         sys.exit(0)
 
     files: list[Path] = []
