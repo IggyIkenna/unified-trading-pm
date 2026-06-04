@@ -308,9 +308,13 @@ column is RED, not exempt.
       (`record_captured_from_counts`). **Historical backfill/re-consolidation folds into
       `prediction_manifest_canonicalisation_2026_06_01.md` C-source rider** (its single bundled walk owns the prediction
       `_index` — do NOT open a separate prediction source walk).
-- [ ] [CODEX] P2. Document the prediction invariant precisely: stamping `source` ≠ treating venues as sources —
-      Polymarket/Kalshi stay separate **venues**, cross-venue dispersion is a feature-layer concern, and when Kalshi
-      lands it is a venue addition; AND each venue's cell still stamps its own source. Both are true.
+- [x] ✅ [CODEX] P2. **Document the prediction invariant precisely — DONE (slot-5 2026-06-04).** Added a "Source vs
+      Venue invariant (HARD)" section to `codex/02-data/prediction-data-types-catalog.md`: stamping `source` ≠ treating
+      venues as sources — Polymarket/Kalshi stay separate **venues** (cross-venue dispersion is a feature-layer concern,
+      Kalshi lands as a venue addition), AND each venue cell stamps its own provider `source`
+      (`polymarket_clob`/`polymarket_gamma_api`/`kalshi_*`); same-venue-different-source example (Polymarket
+      `MARKET_LIFECYCLE`=gamma vs `trades`=clob) + the UTL@01ca49ea venue-override removal + the "not a
+      `select_primary_available_source()` union" caveat. Both are true.
 
 ### Phase 7 — Prod data-state verification (P1, post-enforcement)
 
