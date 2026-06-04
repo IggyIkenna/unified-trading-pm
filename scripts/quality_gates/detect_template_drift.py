@@ -23,15 +23,26 @@ quality-gates.sh checks:
 8. ruff rev — must match SSOT template canonical version.
 9. conventional-pre-commit rev — must match SSOT template.
 
-UI repos and repos without quality-gates.sh are skipped for QG checks.
+workflow-template parity checks (--workflows flag — runs ONLY this check, not the qg/prek ones):
+10. For every FLAT `.yml` template in scripts/workflow-templates/ (NOT `.yml.tmpl`, which is
+    substituted per-repo so can't byte-compare), each repo's `.github/workflows/<name>` must
+    byte-match the SSOT template. A present-but-different copy is an ERROR (someone hand-edited
+    a per-repo copy, or it rotted after a template change without re-rollout — the SSOT hole
+    that flat-copied workflows otherwise have NO guard for). A missing copy is a WARN (needs
+    `rollout-workflow-templates.sh`). A repo not checked out (CI, where siblings are absent) is
+    a WARN — so the guard is a no-op in CI and a hard gate locally / on a full-workspace host.
+
+UI repos and repos without quality-gates.sh are skipped for QG checks. Workflow parity does NOT
+skip by type (generic .yml templates roll out to every repo, UI included).
 All repos with .pre-commit-config.yaml are checked when --prek is passed.
 
 Usage
 -----
     python3 scripts/quality_gates/detect_template_drift.py [--workspace-root PATH]
     python3 scripts/quality_gates/detect_template_drift.py --repo features-service
-    python3 scripts/quality_gates/detect_template_drift.py --prek   # also check .pre-commit-config.yaml
-    python3 scripts/quality_gates/detect_template_drift.py --json   # machine-readable output
+    python3 scripts/quality_gates/detect_template_drift.py --prek        # also check .pre-commit-config.yaml
+    python3 scripts/quality_gates/detect_template_drift.py --workflows   # ONLY workflow-template parity
+    python3 scripts/quality_gates/detect_template_drift.py --json        # machine-readable output
 """
 
 from __future__ import annotations
@@ -98,6 +109,31 @@ PREK_MANDATORY_HOOKS: Final[tuple[str, ...]] = (
     "gitleaks",
 )
 PREK_SSOT_COMMENT: Final[str] = "# Template SSOT: unified-trading-pm/scripts/pre-commit-templates/"
+
+# Workflow-template parity: flat `.yml` templates here are cp'd verbatim into every repo's
+# .github/workflows/ by rollout-workflow-templates.sh, so each copy MUST byte-match the SSOT.
+# `.yml.tmpl` templates are substituted per-repo and are NOT byte-comparable (excluded by the
+# `*.yml` glob).
+WORKFLOW_TEMPLATE_DIR: Final[Path] = PM_ROOT / "scripts" / "workflow-templates"
+
+# Baselined ratchet (mirrors check_credential_ask_orphans.py): the workspace already carries
+# pre-existing workflow drift (templates that rotted before this guard existed). Block only NEW
+# drift beyond this baseline; ratchet the baseline DOWN as repos are re-rolled-out. Each entry is
+# a "<repo>/<template>.yml" key. Regenerate with `--workflows --baseline-write`.
+WORKFLOW_DRIFT_BASELINE_PATH: Final[Path] = SCRIPT_DIR / "workflow_template_drift_baseline.json"
+
+
+def _drift_key(repo_name: str, template_name: str) -> str:
+    return f"{repo_name}/{template_name}"
+
+
+def _load_workflow_drift_baseline() -> set[str]:
+    if not WORKFLOW_DRIFT_BASELINE_PATH.exists():
+        return set()
+    with WORKFLOW_DRIFT_BASELINE_PATH.open() as f:
+        raw = cast(dict[str, object], json.load(f))
+    entries = raw.get("drift", [])  # noqa: qg-empty-fallback
+    return set(cast(list[str], entries)) if isinstance(entries, list) else set()
 
 
 # ── Data model ────────────────────────────────────────────────────────────────
@@ -314,7 +350,109 @@ def _check_prek(
     return report
 
 
+# ── Workflow-template parity ───────────────────────────────────────────────────
+
+
+def _check_workflows(
+    repo_name: str,
+    repo_type: str,
+    workspace_root: Path,
+) -> RepoDriftReport:
+    """Assert each repo's .github/workflows/<t>.yml byte-matches the SSOT template.
+
+    Closes the SSOT hole that flat-copied workflow templates otherwise have no guard for.
+    differ -> error (true positive: a hand-edited / rotted copy). missing -> warn (needs
+    rollout). repo-absent -> warn (CI degrades to no-op; runs as a hard gate locally).
+    """
+    gh_dir = workspace_root / repo_name / ".github" / "workflows"
+    report = RepoDriftReport(repo_name=repo_name, repo_type=repo_type, qg_path=gh_dir)
+
+    if not (workspace_root / repo_name).exists():
+        report.items.append(
+            DriftItem(
+                "warn",
+                "workflow-repo-absent",
+                f"{repo_name} not checked out — workflow parity skipped (CI no-op; enforced locally)",
+            )
+        )
+        return report
+
+    for template in sorted(WORKFLOW_TEMPLATE_DIR.glob("*.yml")):
+        name = template.name
+        copy = gh_dir / name
+        if not copy.exists():
+            report.items.append(
+                DriftItem(
+                    "warn",
+                    f"workflow-missing-{name}",
+                    f".github/workflows/{name} missing — run "
+                    f"rollout-workflow-templates.sh --repo {repo_name} --template {name}",
+                )
+            )
+            continue
+        if copy.read_bytes() != template.read_bytes():
+            report.items.append(
+                DriftItem(
+                    "error",
+                    f"workflow-drift-{name}",
+                    f".github/workflows/{name} differs from SSOT scripts/workflow-templates/{name} — "
+                    f"re-run rollout-workflow-templates.sh (never hand-edit the per-repo copy)",
+                )
+            )
+
+    return report
+
+
 # ── Main ─────────────────────────────────────────────────────────────────────
+
+
+def _report_workflow_drift(reports: list[RepoDriftReport], output_json: bool, write_baseline: bool) -> int:
+    """Baselined ratchet for workflow-template parity: block only NEW drift beyond the baseline."""
+    current: set[str] = {
+        _drift_key(r.repo_name, it.check.removeprefix("workflow-drift-"))
+        for r in reports
+        for it in r.items
+        if it.severity == "error" and it.check.startswith("workflow-drift-")
+    }
+
+    if write_baseline:
+        WORKFLOW_DRIFT_BASELINE_PATH.write_text(json.dumps({"drift": sorted(current)}, indent=2) + "\n")
+        print(f"Wrote workflow-drift baseline: {len(current)} entries -> {WORKFLOW_DRIFT_BASELINE_PATH.name}")
+        return 0
+
+    baseline = _load_workflow_drift_baseline()
+    new_drift = current - baseline
+    ratchet_candidates = baseline - current  # baselined entries now clean — baseline can tighten
+
+    if output_json:
+        print(
+            json.dumps(
+                {
+                    "current_drift": sorted(current),
+                    "baseline": sorted(baseline),
+                    "new_drift": sorted(new_drift),
+                    "ratchet_candidates": sorted(ratchet_candidates),
+                },
+                indent=2,
+            )
+        )
+        return 1 if new_drift else 0
+
+    warns = sum(1 for r in reports for it in r.items if it.severity == "warn")
+    print(f"\nWorkflow-template parity — {len(reports)} repos, {len(current)} drifted copy(ies), {warns} warn(s)")
+    print(f"  baselined (grandfathered): {len(current & baseline)}")
+    print(f"  NEW drift (blocking):      {len(new_drift)}")
+    if ratchet_candidates:
+        print(f"  ratchet down: {len(ratchet_candidates)} baselined entry(ies) now clean — re-run --baseline-write")
+    print()
+    if new_drift:
+        print("❌ NEW workflow-template drift (a per-repo copy was hand-edited or rotted vs the SSOT):")
+        for k in sorted(new_drift):
+            print(f"  [ERROR] {k} — re-run rollout-workflow-templates.sh; never hand-edit the per-repo copy")
+        print()
+        return 1
+    print("✅ No new workflow-template drift beyond baseline")
+    return 0
 
 
 def run(
@@ -322,6 +460,8 @@ def run(
     filter_repo: str | None = None,
     output_json: bool = False,
     check_prek: bool = False,
+    check_workflows: bool = False,
+    write_baseline: bool = False,
 ) -> int:
     if not MANIFEST_PATH.exists():
         print(f"ERROR: workspace manifest not found at {MANIFEST_PATH}", file=sys.stderr)
@@ -336,9 +476,16 @@ def run(
 
         if archived:
             continue
-        if repo_type in SKIP_REPO_TYPES:
-            continue
         if filter_repo and repo_name != filter_repo:
+            continue
+
+        # Workflows-only mode: generic .yml templates roll out to EVERY repo (UI included),
+        # so don't apply SKIP_REPO_TYPES, and don't run the qg/prek checks.
+        if check_workflows:
+            reports.append(_check_workflows(repo_name, repo_type, workspace_root))
+            continue
+
+        if repo_type in SKIP_REPO_TYPES:
             continue
 
         report = _check_repo(repo_name, repo_type, workspace_root)
@@ -350,6 +497,9 @@ def run(
                 # Merge prek items into main report under prek-prefixed checks
                 for item in prek_report.items:
                     report.items.append(item)
+
+    if check_workflows:
+        return _report_workflow_drift(reports, output_json=output_json, write_baseline=write_baseline)
 
     if output_json:
         out: list[dict[str, object]] = [
@@ -396,14 +546,35 @@ def main() -> None:
     parser.add_argument(
         "--prek", action="store_true", dest="check_prek", help="Also check .pre-commit-config.yaml drift"
     )
+    parser.add_argument(
+        "--workflows",
+        action="store_true",
+        dest="check_workflows",
+        help="ONLY check .github/workflows/*.yml byte-parity vs scripts/workflow-templates/ (baselined ratchet)",
+    )
+    parser.add_argument(
+        "--baseline-write",
+        action="store_true",
+        dest="write_baseline",
+        help="Rewrite the workflow-drift baseline to current state (implies --workflows)",
+    )
     args = parser.parse_args()
 
     workspace_root = cast(Path, args.workspace_root)
     filter_repo = cast(str | None, args.repo)
     output_json = cast(bool, args.output_json)
     check_prek = cast(bool, args.check_prek)
+    write_baseline = cast(bool, args.write_baseline)
+    check_workflows = cast(bool, args.check_workflows) or write_baseline  # baseline-write implies workflows
     sys.exit(
-        run(workspace_root=workspace_root, filter_repo=filter_repo, output_json=output_json, check_prek=check_prek)
+        run(
+            workspace_root=workspace_root,
+            filter_repo=filter_repo,
+            output_json=output_json,
+            check_prek=check_prek,
+            check_workflows=check_workflows,
+            write_baseline=write_baseline,
+        )
     )
 
 
