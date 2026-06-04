@@ -205,3 +205,18 @@ churn files before FF. repo: agent-orchestrator.
 
 → `ao-self-pull` (orchestrator code deploy) is NOT the same as the laptop's `slot-cron-ff-pull` (slot-worktree pull).
 There is **no auto-commit-stagnant cron** — "stagnant" is an alert; Commit+Push+Flip is the agent's job.
+
+## Symmetric-host enforcement SHIPPED (2026-06-04)
+
+- [x] ✅ **(a) Auto-install on provision** — `setup-tab-worktrees.sh --init` now invokes
+      `install-slot-cron-ff-pull.sh` → a new host gets the ff-pull cron + verify cron BY CONSTRUCTION (no
+      remembered manual step). Idempotent + best-effort.
+- [x] ✅ **(b) Periodic verify + Slack-alert-on-drift** — `install-slot-cron-ff-pull.sh` now also registers a `*/30`
+      `slot-host-symmetry-verify` cron running `verify-slot-host-symmetry.sh --alert`; the new `--alert` flag posts a
+      Slack drift alert (webhook from `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` / GCP SM) on any non-compliance. **Verified
+      live** (posted the 2 commit-identity drifts). Rolled onto the live vm-0 + this laptop (both crons present, `*/5`
+      ff-pull restored).
+- [x] ✅ **Installer default cadence bug** — was `*/15`, contradicting CLAUDE.md's mandated 5-min cadence (it had
+      silently downgraded a host's ff-pull). Fixed to `*/5`.
+
+PM@live-defi-rollout. The symmetric-host contract is now ENFORCED (auto-install + self-verify-alert), not just documented.
