@@ -331,7 +331,71 @@ Wave-1 greened on LDR: greeks `@2d2d6bb` · e2e-testing `@eabdf05` · fund-admin
       2026-06-02 (space added, mtds green); (b) ISS-031 — restore mtds coverage toward the 70% system floor after the
       test migration completes (28% is a low documented exception). repo: market-tick-data-service.
 
-### SIT integration `code_test` upstream failures (surfaced 2026-06-02 by SIT modernization; gate staging→main)
+### Wave-2 cascade-completion session (2026-06-04, slot-1) — machinery proven, long-tail driven ≥STAGING_GREEN 13→18/25
+
+The Guard-machinery from the 2026-06-03 work was exercised end-to-end this session; the cascade now flows and
+self-recovers. Done:
+
+- [x] ✅ [SCRIPT] P1. **Guard-3 cron 30m→10m** to collapse the dep-order tier-wait. `ci-status-reconciler.yml`
+      `"23,53 * * * *"`→`"*/10 * * * *"`. unified-trading-pm@PR #121 MERGED to main 2026-06-04.
+- [x] ✅ [SCRIPT] P0. **STEP 5.17 `validate-cloudbuild.py` crashed fleet-wide on `ModuleNotFoundError: jsonschema`**
+      (neither a repo dep nor installed by the QG bootstrap) → spurious "cloudbuild.yaml schema validation failed" on any
+      venv/CI lacking it. Now degrades to SKIP-with-warning via `importlib.util.find_spec` (no fallback import) + on a
+      SchemaStore fetch failure; the substantive test/vuln-scan/push step-presence `rg` checks are unaffected.
+      unified-trading-pm LDR (tab-mirror) + main PR. repo: unified-trading-pm.
+- [x] ✅ [TEST] P1. **batch-live-reconciliation-service genuine LDR v2 RED** — 3 ruff `F811` (DataPipeline/PaperLive/
+      BatchPaper threshold classes defined twice, exact-dup block in `models/deviation_thresholds.py`) + `uv.lock` out of
+      sync (stale `pre-commit` + transitive deps after the workspace pre-commit→prek migration). Removed dup block,
+      relocked. QG green (70s). batch-live-reconciliation-service@2137791 → LDR (tab-mirror). This was the dam behind
+      LDR→staging PR #16.
+- [x] ✅ [INFRA] P1. **3 cascade-tracked repos had no `staging` branch → promoter auto-skipped them** (same class as the
+      2026-06-02 fund-admin/greeks fix). All v2-green on LDR+main → created `staging` from `main` for **e2e-testing**,
+      **ml-service**, **unified-trading-api** so the promoter opens their LDR→staging PRs.
+- [x] ✅ [SCRIPT] P1. **stale-aiohttp reds auto-recovered** — execution-service + fund-admin #4 + greeks #1 LDR→staging
+      merged/re-ran green once PM LDR carried the aiohttp `--ignore-vuln` (the failures predated the ignore landing); no
+      code fix needed, the machinery (rerun + Guard-3 advance) handled it.
+- [x] ✅ [SCRIPT] P1. **agent-orchestrator slot-branch 1-ahead/1-behind LDR** (operator-flagged) — rebased
+      `tab/ikennaigboaka/1` onto LDR (own bootstrap-prek commit replayed, slot-3 commit-identity-hook commit absorbed),
+      force-with-lease pushed; slot clean, commit FF-mirroring to LDR.
+
+**Freeze defer-and-replay (gap found + fixed 2026-06-04):**
+
+- [x] ✅ [SCRIPT] P1. **Change-freeze BLOCKED prod builds were DROPPED, not requeued.** During the ECB Jun freeze
+      (`ECB_2026_06`, 2026-06-04 12:15–13:30 UTC, `block_prod_deploy=true`) the cascade's `qg-passed` events hit
+      `cloud-build-router.yml`; `freeze-check` correctly blocked them (conclusion=failure) but `route-build` was skipped
+      and the `repository_dispatch` payload was **dropped** — 6 prod image-builds (12:19–12:46 UTC) lost, recoverable
+      only by a brand-new `qg-passed`. **Fix (defer-and-replay):** (1) cloud-build-router gains a `defer-on-freeze` job
+      (runs only when blocked) that persists the `{repo,branch,version,commit_sha,repo_type}` payload as a
+      `deferred-build-*` artifact; (2) new **`freeze-deferred-build-replay.yml`** cron (every 15 min) — inlines a
+      NON-failing PROD_DEPLOY freeze check (canonical window SSOT stays `change-freeze-calendar.csv`), and once the
+      window lifts drains the artifacts → re-dispatches `qg-passed` → deletes each artifact (replay-once). `dry_run`
+      lists without dispatching; Slack only on actual replays (no per-tick noise). All additive — zero change to the
+      existing freeze-check/route-build prod path. repo: unified-trading-pm. _Note: the 6 builds dropped BEFORE this
+      landed have no persisted payload; they re-build on their repos' next `qg-passed` (or a one-off manual
+      cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops._
+
+Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT machinery):
+
+- [ ] [TEST] P1. **features-service staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports
+      `ml_service` but does not declare it (the SAME finding as the Wave-1 cleanup todo above — canonical fix = add
+      ml-service to manifest **or** drop the `regime_clustering.py` lazy import; dep-graph decision, circular-dep risk →
+      owning slot, not a blind edit). (2) Codex compliance FAILED: 1 violation (max 0). Repo stays FEATURE_GREEN-gated
+      until both are fixed. repo: features-service.
+- [ ] [TEST] P1. **agent-orchestrator main-v2 RED** — the sole remaining FAILING repo (separate track; AO is
+      mid-staging-migration per the AO E2E plan G6). Diagnose + green on its own track. repo: agent-orchestrator.
+- [ ] [SCRIPT] P1. **mdps LDR→staging PR #91 CONFLICTING (DIRTY)** — staging is 2-ahead / 371-behind LDR; the 2 unique
+      staging commits are stale promotion/CI-merge artifacts (`feat(workspace-sweep): live-defi-rollout → staging` +
+      `ci: merge main into staging — quality-gates-v2 migration #86`) whose content originated on LDR, but a
+      delete/modify conflict means `-X ours` take-LDR aborts. Because staging has unique non-merge commits this is the
+      deterministic resolver's **escalate-to-VM-agent** case (NOT auto take-LDR) — resolver DISPATCHED 2026-06-04
+      (`deterministic-promotion-conflict-resolve.yml`, run queued). VM agent resolves keeping LDR content + the genuine
+      delta. repo: market-data-processing-service.
+- [ ] [UI] P2. **unified-trading-system-ui LDR→staging PR #19 UNSTABLE** — MERGEABLE (no git conflict) but **AWS
+      CodeBuild + Vercel deployment checks FAIL** (real build/deploy break, not a merge conflict). Do NOT force-merge
+      with failing deploy checks. UI track — needs a UI-capable slot to diagnose the CodeBuild/Vercel build failure +
+      `pw:L2` per the playwright gate. repo: unified-trading-system-ui.
+
+
 
 > SIT v2 QG is GREEN; these are in the SIT _integration_ `code_test` suite (the staging→main gate content), NOT the v2
 > QG. All 3 are UPSTREAM (not SIT's to fix). They must be green for a trustworthy staging→main SIT promotion.

@@ -696,13 +696,18 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       5.92** `check_no_category_kwarg_at_manifest_write.py` (PM@60a27debe) bans any regression; the existing
       tradfi-source ratchet was updated to read `asset_group=` (else the rename would silently disable it).
       Event-payload observability dict keys kept as `category` for dashboard stability (write \_param* only).
-- [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads**: `mtds_canonical_reader.py`
-      explicitly builds `category=defi/` twin paths for backward compatibility — this is intentional (reads legacy
-      on-disk data). Post sports/defi migration when `category=` paths are decommissioned, remove the twin.
-      `eigen_rewards_calculator.py:54` hardcodes `category=defi/` path — after migration, should use
-      `asset_group=defi/`. `ErrorCategory.*` usages are unrelated error classification enum, leave alone. Repo:
-      `features-service`. **DEFERRED** until the relevant asset_group bucket migration walk completes (cannot remove
-      `category=` reading until the data is migrated). Capture as post-migration cleanup.
+- [ ] [CODE] P1. **features-service: ban `category=defi` in on-disk GCS path reads**: **GATED ON DEFI MIGRATION —
+      VERIFIED STILL-REQUIRED 2026-06-04 (slot-4)**, NOT sports. Corrected file paths (files live in the `onchain/`
+      subtree, not `delta_one/app/*`): `features_service/onchain/adapters/mtds_canonical_reader.py` (`_legacy_twin()` at
+      L71-72 + the candidate builder L82-123) explicitly builds the legacy `category=defi/` twin alongside the canonical
+      `asset_group=defi/` for backward-compatible reads of un-migrated on-disk data;
+      `features_service/onchain/app/calculators/eigen_rewards_calculator.py:53-54` lists both the canonical
+      `asset_group=defi/` and legacy `category=defi/` suffixes. `ErrorCategory.*` (e.g. eigen L205) is the unrelated
+      error-classification enum — leave alone. **STAYS GATED**: `defi_manifest_canonicalisation_2026_06_01.md` still has
+      40 open todos incl. `[DATA] P0 C0 path+bucket canonicalisation (the foundational migration) — RUN ON A VM` (the
+      defi C0 walk has NOT run → legacy `category=defi/` parquets are still on disk → removing the twin now would break
+      defi reads). Removal is a clean one-shot once defi C0 reaches C-GREEN. **DEFERRED** — named successor:
+      `defi_manifest_canonicalisation_2026_06_01.md` § C0/C-GREEN; not a sports-track blocker.
 - [x] ✅ [CODE] P0. **Upstream pre-flight data-check audit + batch=live symmetry (ALL sports services)** — AUDIT
       COMPLETE 2026-06-02. Per-service table below; gaps captured as P1/P2 todos beneath. Every service either VERIFIED
       GREEN or has a tracked gap-todo. Evidence: this slot, reading code in-repo (grep-then-read across 5 services).
@@ -1024,13 +1029,35 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 **Non-blocking / N/A (documented for completeness, no migration break):**
 
-- [ ] [CODE] P3. **execution-service minor manifest hygiene** — repo: `execution-service`. Sports execution is
-      event-driven (venue-API order placement, no GCS sports reads → canonical-path dimensions N/A). Two cosmetic items:
-      (1) execution-result manifest rows write `asset_group=""` (`engine/modes/live/data_sink.py:128`) — not queryable
-      by `asset_group=sports`; (2) `get_bucket_for_asset_group()` (`service_config.py:694`) hard-raises for `"sports"`/
-      `"prediction"` + the live sink hardcodes `get_execution_bucket("cefi")` (`live_execution_handler.py:572`) so
-      sports fills land in the CeFi execution bucket. Only bites IF sports results are later routed to a canonical
-      `asset_group=sports` bucket. **NICE-TO-HAVE** — file/fix when sports execution-store separation is scoped.
+- [x] ✅ [CODE] P3. **execution-service minor manifest hygiene — DONE 2026-06-04 (separate sports-execution-store,
+      operator-approved)** — execution-service@1ae2de968 + deployment-service@1a5331f. Both cosmetic items fixed: (1)
+      execution-result manifest rows now stamp the real `asset_group` (was `asset_group=""`) — `LiveCloudStorageSink`
+      carries `asset_group`, `record_captured(asset_group=self.asset_group)` (`engine/modes/live/data_sink.py`); (2)
+      `get_bucket_for_asset_group()` accepts `sports`/`prediction` (was hard-raise), a typed `asset_group` config field
+      (`EXECUTION_ASSET_GROUP`/`VM_ASSET_GROUP`) + `execution_sink_bucket_sports`/`_prediction` fields drive it, and
+      `_get_or_create_live_sink()` resolves bucket + asset_group from config (no hardcoded `"cefi"`). Sports execution
+      results now route to a dedicated `execution-store-sports-{pid}` bucket — registered in `cloud-providers.yaml`
+      execution-store map (GCP+AWS, non-env-split to match the family + the config construction); verified
+      `resolve_bucket_name(kind=execution-store, asset_group=sports) -> execution-store-sports-{pid}`. 5 regression
+      tests (sink asset_group threading, manifest-row stamp, sports/prediction bucket resolution, invalid-AG still
+      raises) — execution-service QG green @c513a6d9. **Promotion note**: both commits landed on LDR via the tab-mirror;
+      the staging PR drains via the staging→main automation once `unified-api-contracts` clears the dep-tier gate
+      (quickmerge LDR→staging was dep-order-blocked on UAC's unstaged LDR backlog, not on this change).
+- [ ] [CODE] P3. **HANDOFF→PREDICTION (slot-3): align prediction execution-store resolution** — repos:
+      `execution-service` + `deployment-service`. Surfaced 2026-06-04 while wiring the sports execution-store: the two
+      resolution paths DISAGREE for `prediction`.
+      `ExecutionServicesConfig.get_bucket_for_asset_group('execution', 'prediction')` constructs
+      `execution-store-prediction-{pid}` (non-env-split), but
+      `resolve_bucket_name(kind='execution-store',     asset_group='prediction')` **raises `BucketNamingError`** —
+      `prediction` is NOT in the execution-store MAP (only CEFI/DEFI/SPORTS/TRADFI). The canonical prediction execution
+      bucket instead lives under a DIFFERENT kind string: `resolve_bucket_name(kind='execution-store-prediction')` →
+      `execution-store-pred-${DEPLOYMENT_ENV_SHORT}-     ${pid}` (env-split, `pred` abbrev; `cloud-providers.yaml:167`).
+      So the config and the canonical SSOT disagree on BOTH the kind surface AND the bucket shape — a prediction
+      execution process would WRITE to one bucket while cross-service readers resolve another (or raise). Latent only
+      (no prediction execution process wired today). Fix when prediction execution is scoped: pick ONE shape (most
+      likely add `PREDICTION` to the execution-store map matching the env-split flat key, or align the config
+      construction) so writer==reader. Sports is unaffected (map entry == config construction). **DEFERRED** to the
+      prediction track — successor: `prediction_manifest_canonicalisation_2026_06_01.md`.
 
 ### Verify + handoff to decommission
 

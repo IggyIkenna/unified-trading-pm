@@ -14,8 +14,10 @@ from __future__ import annotations
 
 import argparse
 import http.client
+import importlib.util
 import json
 import sys
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import cast
@@ -81,7 +83,23 @@ def main() -> None:
     parser.add_argument("--quiet", "-q", action="store_true", help="Only print failures")
     args = parser.parse_args(namespace=_ParsedArgs())
 
-    schema = load_schema()
+    # The SchemaStore schema validation is the "portable bonus" half of STEP 5.17 — the
+    # substantive structural checks (test / vuln-scan / push step presence) run separately
+    # in base-service.sh via ripgrep and do NOT depend on this script. jsonschema is not a
+    # repo dependency and is not installed by the QG bootstrap, so on any host/CI venv where
+    # it (or network access to SchemaStore) is absent, degrade gracefully to a SKIP rather
+    # than crashing the gate with a ModuleNotFoundError (mirrors the "skip if gcloud absent"
+    # philosophy). find_spec — not a try/except import — respects the no-fallback-import rule.
+    _skip = "SKIP: %s — skipping cloudbuild schema validation (structural step checks still run)"
+    if importlib.util.find_spec("jsonschema") is None:
+        print(_skip % "jsonschema unavailable", file=sys.stderr)
+        sys.exit(0)
+
+    try:
+        schema = load_schema()
+    except (urllib.error.URLError, TimeoutError, OSError) as e:
+        print(_skip % f"schema fetch failed ({e})", file=sys.stderr)
+        sys.exit(0)
 
     files: list[Path] = []
     if args.workspace:
