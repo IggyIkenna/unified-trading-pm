@@ -146,6 +146,39 @@ All on `origin/live-defi-rollout`; full detail in
       wording drafted; gap-analysis line anchors in the session notes). **Do NOT edit the HARD RULE until operator
       ratifies decision 3.**
 
+### Remote tab branch stays current with LDR — server-side `LDR→tab` FF mirror (operator-chosen 2026-06-04, host-independent)
+
+> **Driver (operator + slot-5 audit 2026-06-04):** a repo a slot DIDN'T commit to this session has its **local** tab
+> branch kept current by `slot-cron-ff-pull.sh` (FF-pull LDR→local), but its **remote** tab branch
+> (`origin/tab/<op>/<N>`) drifts BEHIND LDR because nothing pushes it (the cron is pull-only; the agent only pushes
+> after a commit). Incident: slot-5 UAC remote tab stuck at `0abbdf86`, 3 commits behind LDR (peer slot-2/slot-3 commits
+> the cron had already FF'd into local) → VS Code showed a misleading `0↓ 3↑` because the worktree upstream was ALSO
+> mis-set to `origin/tab/...` (the `git push -u` footgun). **`behind`-only is BENIGN** (the `tab→LDR` mirror no-ops, the
+> next commit FFs forward) — the only thing that's ever dangerous is **DIVERGENCE** (tab has own commits AND is behind),
+> which is the alert in cicd (below). This is hygiene + a headless-fleet visibility fix, NOT a correctness gap.
+
+- [ ] [INFRA] P2. **Server-side `LDR→tab` FF mirror — make the existing tab-mirror BIDIRECTIONAL (FF-or-alert, never
+      force).** Extend the `tab-mirror-to-ldr` GHA (SSOT: `unified-trading-pm/scripts/workflow-templates/`, runs on push
+      to LDR) so that, in addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does **`LDR→tab`: FF
+      every `tab/*` branch that is purely BEHIND LDR** (ancestor) up to LDR. **HARD invariants:** FF-only, **never
+      force-push**, never auto-merge. A tab that is BOTH ahead+behind (DIVERGED) → **do NOT touch it** → emit the
+      divergence alert (cicd item below); the one safe auto-resolution is the existing "rebase diverged tab onto LDR"
+      path (`e21ca439` — preserves the tab's own commits + pulls LDR in), reuse it, don't re-invent. **Why server-side
+      not the cron**: host-independent — refreshes a slot's remote tab branch whether the owning host (laptop / AWS VM)
+      is online or not (the headless-fleet gap the cron can't cover). Composes with — does NOT replace — the cron
+      FF-push of QG-green _committed_ agent work above (that's the `ahead`/push-agent-work-up leg; this is the
+      `behind`/keep-tabs- current-down leg). Repo: `unified-trading-pm` (workflow-templates →
+      `rollout-workflow-templates.sh`). parent_epic: (cicd master — cross-link `cicd_contract_hardening_2026_06_01.md`).
+- [ ] [INFRA] P2. **Pin every tab worktree's upstream to `origin/live-defi-rollout` + assert it in
+      `verify-slot-host-symmetry.sh`.** Root cause of the misleading `N↑` display: a `git push -u` (or
+      `branch --set-upstream-to=origin/tab/...`) re-points a worktree's upstream to its (stale) remote tab branch, so VS
+      Code's ahead/behind reads against the stale tab instead of LDR (phantom-ahead footgun, already documented in
+      CLAUDE.md § "Upstream tracking"). `setup-tab-worktrees.sh --track` sets it correctly; add a guard in
+      `verify-slot-host-symmetry.sh` that asserts `git rev-parse --abbrev-ref @{upstream} == origin/live-defi-rollout`
+      for every worktree (fix + warn on mismatch) so the only thing the arrows ever show fleet-wide is genuine LDR
+      drift. Repos: `unified-trading-pm` (`scripts/verify-slot-host-symmetry.sh` +
+      `scripts/dev/setup-tab-worktrees.sh`). parent_epic: (per-tab-worktrees / cicd master).
+
 ### Quickmerge behind/diverge error contract — agents self-serve recovery (operator design 2026-06-03; many-parallel-agents driver)
 
 > **Driver (operator)**: with dozens of agents running, the behind-remote-LDR + uncommitted-same-file reconcile must be

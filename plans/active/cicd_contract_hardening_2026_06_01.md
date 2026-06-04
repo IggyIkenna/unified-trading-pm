@@ -2372,3 +2372,28 @@ behind the exact drift this whole audit is about.
   `cleanup_v1_quality_gates_workflows_<date>.md` once GH Support ticket #4422570 clears (per archived ci_canonical).
 - The active/archive **duplicate** of `ci_canonical_v2_migration_2026_05_29.md` (present in both `plans/active/` and
   `plans/archive/2026_05/`) is a plan-hygiene artifact, not CI/CD machinery — leave for the plan-hygiene sweep.
+
+## Tab-branch divergence detection → CI alert (operator-requested 2026-06-04; headless-fleet visibility)
+
+> **Driver (operator + slot-5 audit 2026-06-04):** a remote tab branch that's purely BEHIND LDR is benign, but a
+> **DIVERGED** one (has its own commits AND is missing LDR commits) is the dangerous state — it jams the `tab→LDR`
+> mirror + makes quickmerge re-apply LDR as patch-id duplicates (the re-tangle in CLAUDE.md § "Slot tab branch diverged
+> from LDR"). Easy to spot by eye on VS Code locally; **invisible on the background AWS VM fleet**, which is exactly
+> where a tab silently goes sideways. Pairs with the server-side `LDR→tab` FF mirror in
+> `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (that mirror FFs behind-only tabs + REFUSES to touch a
+> diverged one → this alert is its escalation path). Belongs in the CI-alert pipeline (this plan's WAVE 2:
+> #ci-failures + `ci_failure_watcher` + every-alert→orchestrator).
+
+- [ ] [SCRIPT] P2. **Tab-branch divergence monitor → Slack #ci-failures + orchestrator.** Add a check (server-side GHA
+      on push-to-LDR, and/or the per-host `slot-git-status-report.sh` so headless VMs are covered) that, for every
+      `tab/*` branch × every repo, evaluates
+      `git merge-base --is-ancestor origin/tab/<op>/<N> origin/live-defi-rollout`: **true** (behind-or-equal / ancestor)
+      → OK, silent; **false** (DIVERGED — own commits + missing LDR) → **alert**. Alert payload:
+      `repo + slot + host (laptop/vm-<id>) + ahead/behind counts + the diverging shas/authors`, plus a fleet roll-up ("N
+      repos diverged across M hosts") so a quiet VM is loud. Route via the existing #ci-failures +
+      every-alert→orchestrator path (NOT a new channel); reuse the push-author attribution work (this plan, "Add
+      push-author attribution to CI alerts"). **Never auto-force-resolve** — alert only; the safe auto-fix is the
+      `tab→LDR` rebase-diverged-onto-LDR path (`e21ca439` tab-mirror), everything else is human/agent. Repos:
+      `unified-trading-pm` (tab-mirror GHA template + `scripts/dev/slot-git-status-report.sh`) + agent-orchestrator
+      (alert sink). Cross-link: `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Server-side LDR→tab FF
+      mirror". parent_epic: (this plan is the CI/CD master).
