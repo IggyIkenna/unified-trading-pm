@@ -486,6 +486,40 @@ VM.
       manual run) asserting the honest-absence row is consumed as absence (not data) end-to-end. Repos: e2e-testing (+
       features/strategy if a consumer gap surfaces). parent_epic: mtds_mdps_master.
 
+## Pre-run 7-criteria readiness — VERIFIED slot-6 2026-06-04 (operator readiness bar)
+
+> Audit (3-agent fan-out, every flag operator-verified — both agent "P0 blockers" were false positives). **6/7 met; ②
+> real-GCS rebuild running; ⑦ the lone open item.**
+
+- [x] ✅ **① Migrator dry-run** — real-GCS `migrate_tradfi_to_v9_canonical.py --dry-run`: **5,305,520 objects** planned,
+      0 moved, 100,698 L-hyphen placeholders skipped, 0 err (plan E4).
+- [ ] **② Manifest-rebuild dry-run** — REAL-GCS dry running (`rebuild_tradfi_manifest.py`, bounded 2026 range to
+      validate mechanism on real data; flags pre-migration `category=` blobs as unparseable = expected). Full-corpus
+      (5.3M / ~2,700 dates, ~11h single-thread) is a **VM job** (plan's "VM-only whole-corpus walks" gate). Mock-704k
+      done earlier.
+- [x] ✅ **③ 4-state preflight every service IS→execution** — MTDS/MDPS/features 4-state-aware (`dependency_checker`,
+      `manifest_window_guard`+GAP-4 drift-WARN); strategy `manifest_allocation_guard`. execution = N/A (consumes
+      strategy signals, not tradfi candles).
+- [x] ✅ **④ Empty/partial honest (zero-vol/NaN/last-price + data-type-dependent equiv) batch+live** — MDPS
+      `ohlcv_passthrough` (empty→zero-row→`record_empty` typed; open-no-trade→`o=h=l=c=prev_close, vol=0`; NO NaN OHLC;
+      1440-NaN bug deleted 2026-05-26) + `tbbo_adapter` (empty→`_make_empty_candle_output`; OHLCV=NaN by-design for
+      quote data; spread/mid via honest LOCF) + `trades_adapter`; `supports_prior_day_seed` (batch=live single path).
+- [x] ✅ **⑤ Read/write paths match post-migration** — UAC SSOT `build_tradfi_partition_path(pipeline_mode)` +
+      `candidate_parquet_paths`; features `gcs_reader` pipeline_mode-aware; mtds byte-identity guard; canonical migrator
+      (all shipped this session).
+- [x] ✅ **⑥ IS+UAC guardrail vs instruments that cannot exist** — `engine/tradfi_catalog_reader.py` reads IS
+      `instruments-store-tradfi` (CatalogueBuilder) per-date; `_INACTIVE_STATUSES={expired,delisted}` +
+      availability-window EXCLUDED; feeds orchestrator Tier-3 override (universe=IS, not a seed); missing catalog →
+      UAC-seed fallback.
+- [ ] [CODE] P2. **⑦ deployment-api/UI pending-backfill (expected_unattempted) surfacing** — denominator ALREADY = UAC
+      could-exist universe (FLAG-1/FLAG-4, all 6 tradfi venues incl CBOE/FX) ✅; the `ln`-pending modeling exists
+      (`unified_trading_library/manifest_freshness.py`: `ln`+non-EXPECTED = pending-fetch gap). **Open**: surface
+      `expected_unattempted` ("instruments exist, backfill not yet run") as a DISTINCT pending-backfill bucket in the
+      deployment-api `ln`-metric coverage response
+      (`deployment-api/deployment_api/services/data_status_{service,drilldown,hierarchical}.py`) + the deployment-UI
+      data-status view (PLAYWRIGHT-GATED — needs `pw:L2 ✓` + regression spec). Repos: **deployment-api +
+      unified-trading-system-ui**. Needs a focused UI-capable session.
+
 ## Success criteria
 
 - Canonical `tradfi-prd` `_index` = **v9** (data-state verified) + `pipeline_mode=` partition + `source` populated +
