@@ -90,7 +90,7 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       Both venues are in the `arbitrage_price_dispersion` × DeFi MVP matrix. cold-start: `SUB_AGENT_MANDATORY_RULES.md`;
       live runner is `live/websocket_runner.py` + `connector_registry.py`. owning-epic: defi_master (vm-defi).
       — market-tick-data-service@7dec607 | QG ✓ (2547 passed) | orca_defi_ws.py + raydium_defi_ws.py + register_all() + tests
-- [ ] [BATCH-LIVE] P1. Add live `book_snapshot_5` + `derivative_ticker` channels for non-Hyperliquid CeFi venues
+- [x] ✅ [BATCH-LIVE] P1. Add live `book_snapshot_5` + `derivative_ticker` channels for non-Hyperliquid CeFi venues
       (Binance/Bybit/OKX/Deribit/Kraken/Coinbase) — repo: market-tick-data-service @ `live/connectors/*_ws.py` (each
       currently subscribes `trades` only; only Hyperliquid has live book+ticker via `hyperliquid_l2book_ws.py` /
       `hyperliquid_ticker_ws.py`). Live perp mark/funding (from `derivative_ticker`) is currently absent for all CeFi
@@ -98,6 +98,9 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       WS docs), normalise to the SAME canonical schema as the Tardis batch path, and verify equivalence per
       `batch_live_symmetry` item (k). cold-start: `SUB_AGENT_MANDATORY_RULES.md`; batch schema in
       `market_interface/adapters/tradfi/tardis_adapter.py`. owning-epic: cefi_master (vm-cefi).
+      — market-tick-data-service@302e2bf | QG ✓ (49 tests, all 6 venues) | 6 new connectors (binance_futures_book_ticker_ws.py,
+      bybit_futures_book_ticker_ws.py, okx_futures_book_ticker_ws.py, deribit_book_ticker_ws.py,
+      kraken_futures_book_ticker_ws.py, coinbase_book_ws.py) + factory dispatch updates + 49 unit tests
 - [ ] [BATCH-LIVE] P2. Add a live WS connector for Upbit (currently batch-only, no `live/connectors/` module) — repo:
       market-tick-data-service. owning-epic: cefi_master.
 
