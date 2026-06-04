@@ -165,20 +165,20 @@ All on `origin/live-defi-rollout`; full detail in
 > any VM running as `root` collapses to `tab/rootm/<N>` — every root VM collides on the same name (confirmed live:
 > `tab/rootm/1..8` alongside the correctly-named `tab/vm-0/10`). Fix it FIRST (todo below), then the glob is sound.
 
-- [ ] [INFRA] P1. **Make tab branch names globally unique via the VM naming convention (PRECONDITION for the fleet-wide
-      mirror + divergence monitor).** On a fleet VM the operator prefix MUST encode the globally-unique VM id, not
-      `$USER` — reuse the value already computed for commit attribution: `WORKTREE_HOST="${VM_NAME:-laptop}"`
-      ([setup-tab-worktrees.sh:61](../../scripts/dev/setup-tab-worktrees.sh#L61)). So branch derivation becomes
-      `tab/<vm-name-or-operator>/<N>` where the prefix is `$VM_NAME` whenever set (every fleet VM), falling back to the
-      operator prefix only on a human laptop — killing the `$USER=root → tab/rootm/<N>` fleet-wide collision class. Add
-      a **uniqueness assertion in `verify-slot-host-symmetry.sh`**: across
-      `git ls-remote --heads origin 'refs/heads/tab/*'`, no `tab/<prefix>/<N>` may be claimed by >1 host (cross-check
-      against the VM registry / `orchestrator_vm_registry.yaml` so a stale-but-unique name is fine but a true collision
-      is review-blocking). Migrate the existing mis-named `tab/rootm/*` branches to their VM-scoped names as part of the
-      rollout (do NOT just rename — repoint the owning VM's worktrees, then delete the stale remote branch once empty).
-      HARD invariant: a tab branch name is a global key — one host, fleet-wide. Repos: `unified-trading-pm`
-      (`scripts/dev/setup-tab-worktrees.sh` + `scripts/verify-slot-host-symmetry.sh`). parent_epic: (per-tab-worktrees /
-      cicd master).
+- [~] [INFRA] P1. **Make tab branch names globally unique via the VM naming convention (PRECONDITION for the fleet-wide
+  mirror + divergence monitor).** CODE SHIPPED 2026-06-04 (unified-trading-pm@35f6fb051, PM PR #130 merged to main): (a)
+  ✅ `setup-tab-worktrees.sh` now bases the prefix on `PREFIX_BASE="${VM_NAME:-${OPERATOR}}"` — `$VM_NAME` on a fleet VM
+  (globally unique by the VM naming convention), `OPERATOR` only on a laptop; verified a root VM now yields
+  `tab/<vm>m/3` / `tab/<vm>/21` instead of the colliding `tab/rootm/<N>`, laptop unchanged. (b) ✅
+  `verify-slot-host-symmetry.sh` check #11 asserts every slot branch is globally-unique-named (VM-scoped on a VM, never
+  generic `root`/`rootm`); verified both directions (passes on laptop's 275 `tab/ikennaigboaka/*`, flags every branch
+  when run with a mismatched `VM_NAME`). HARD invariant: a tab branch name is a global key — one host, fleet-wide.
+  **REMAINING (c) — `BLOCKED-OPERATOR` (dead root VMs):** migrate the live mis-named `tab/rootm/1..8` branches to
+  VM-scoped names — do NOT rename; re-provision the owning VM's worktrees with `VM_NAME` set
+  (`setup-tab-worktrees.sh --reset-slot N`) using the now-fixed script, then delete each stale `tab/rootm/<N>` once
+  empty. Can't action from this host (those VMs are down per operator 2026-06-04); the fix lands automatically on their
+  next re-provision. Repos: `unified-trading-pm` (`scripts/dev/setup-tab-worktrees.sh` +
+  `scripts/verify-slot-host-symmetry.sh`). parent_epic: (per-tab-worktrees / cicd master).
 - [ ] [INFRA] P2. **Server-side `LDR→tab` FF mirror — make the existing tab-mirror BIDIRECTIONAL (FF-or-alert, never
       force).** Extend the `tab-mirror-to-ldr` GHA (SSOT: `unified-trading-pm/scripts/workflow-templates/`, runs on push
       to LDR) so that, in addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does **`LDR→tab`: FF
