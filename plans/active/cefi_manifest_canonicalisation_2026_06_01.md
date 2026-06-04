@@ -297,9 +297,12 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       `except (OSError, ValueError, RuntimeError)` at `:89` catches it → only `logger.warning` → a non-existent/expired
       Deribit instrument does NOT hard-block the live order (and validates against the venue API, not IS). **Fix:**
       re-raise the not-found `ValueError` on the live path.
-- [ ] [CODE] P3. **unified-api-contracts — `validate_data_type_for_venue` permissive on unknown venue.**
-      `market_data_categories.py:456-457` returns True for an unknown/typo'd venue → escapes the combo guardrail.
-      **Fix:** fail-closed (or warn-loud) for unknown venues on the live path.
+- [x] ✅ [CODE] P3. **unified-api-contracts — `validate_data_type_for_venue` unknown-venue fail-closed — FIXED
+      (uac@7f31f342, QG exit 0, 298s).** Added opt-in `strict=` param: default stays permissive/advisory (back-compat
+      for warn-only callers); the live CAPTURE path passes `strict=True` → returns False (fail-CLOSED) for an
+      unknown/typo'd venue (no valid set), so a venue UAC does not recognise cannot have a valid (venue × data_type)
+      combo and is never attempted / phantom-written. +2 unit tests (`test_validate_data_type_for_venue_strict.py`).
+      mtds@ae5f56b0 already consumes the strict= param on capture — UAC landing keeps the workspace consistent.
 
 **🟡 GAPS — Dim 7 (denominator precision):**
 
