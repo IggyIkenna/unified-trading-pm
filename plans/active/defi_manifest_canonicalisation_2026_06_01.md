@@ -481,9 +481,19 @@ What to verify/wire (B0 corrected scope):
         Caller computes `was_expected` from the per-AG oracle (sports fixtures / `was_instrument_alive`). Single
         sanctioned zero-rows write path; +2 routing tests; UAC+UTL QG green. Repos: unified-trading-library +
         unified-api-contracts. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P1. **A10c — QG enforcement step** (MTDS/IS/MDPS/features quality-gates, STEP 5.70 family): fail any
-        `record_empty(...SOURCE_RETURNED_ZERO...)` callsite NOT routed through `record_zero_rows` (baselined ratchet +
-        `# QG-allow:` waiver for audited exceptions). Makes the backstop un-bypassable. Repo: per-service
+  - [x] ✅ [CODE] P1. **A10c — DONE for DeFi-MTDS (slot-2 2026-06-05, PM@4fbc82a6e + mtds@76d650f0).** Shipped
+        `scripts/qg/no_unrouted_source_returned_zero.sh` — block-scans MTDS DeFi `*_handler.py` for a raw
+        `record_empty(SOURCE_RETURNED_ZERO)` and HARD-FAILS (wired into mtds `quality-gates.sh` STEP 5.87) unless the
+        call carries an inline `# QG-allow:` waiver (the lending_indices `expected_coverage()`-oracle callsite has one).
+        Validated: passes the post-A10d tree, fails on an injected raw callsite. **Scoped to DeFi-MTDS** because
+        `record_zero_rows` is the `DefiManifestRecorder` path — not the originally-stated fleet-wide "MTDS/IS/MDPS/
+        features" (those services have no `DefiManifestRecorder`; their generic UTL `ManifestWriter.record_zero_rows`
+        adoption is each AG-slot's work). **A10c-fleet (NEW, P2, follow-up)**: extend the same ratchet to the other
+        services/AGs once they migrate their `record_empty(SOURCE_RETURNED_ZERO)` callsites (e.g. tradfi
+        `tardis_adapter.py:1769`) to the UTL `record_zero_rows` — a per-AG-slot task, baseline their current callsites.
+        Original spec below. **A10c — QG enforcement step** (MTDS/IS/MDPS/features quality-gates, STEP 5.70 family):
+        fail any `record_empty(...SOURCE_RETURNED_ZERO...)` callsite NOT routed through `record_zero_rows` (baselined
+        ratchet + `# QG-allow:` waiver for audited exceptions). Makes the backstop un-bypassable. Repo: per-service
         `quality-gates.sh` + a shared check script. parent_epic: mtds_mdps_master. **DESIGN VERIFIED + SCOPED (slot-2
         readiness audit 2026-06-04) — this is a FLEET-WIDE QG-infra change, NOT MTDS-local (high blast radius → must
         validate every service's gate before rollout, do not rush):** the check script lives in the SSOT dir
