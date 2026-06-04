@@ -339,13 +339,13 @@ self-recovers. Done:
 - [x] ✅ [SCRIPT] P1. **Guard-3 cron 30m→10m** to collapse the dep-order tier-wait. `ci-status-reconciler.yml`
       `"23,53 * * * *"`→`"*/10 * * * *"`. unified-trading-pm@PR #121 MERGED to main 2026-06-04.
 - [x] ✅ [SCRIPT] P0. **STEP 5.17 `validate-cloudbuild.py` crashed fleet-wide on `ModuleNotFoundError: jsonschema`**
-      (neither a repo dep nor installed by the QG bootstrap) → spurious "cloudbuild.yaml schema validation failed" on any
-      venv/CI lacking it. Now degrades to SKIP-with-warning via `importlib.util.find_spec` (no fallback import) + on a
-      SchemaStore fetch failure; the substantive test/vuln-scan/push step-presence `rg` checks are unaffected.
+      (neither a repo dep nor installed by the QG bootstrap) → spurious "cloudbuild.yaml schema validation failed" on
+      any venv/CI lacking it. Now degrades to SKIP-with-warning via `importlib.util.find_spec` (no fallback import) + on
+      a SchemaStore fetch failure; the substantive test/vuln-scan/push step-presence `rg` checks are unaffected.
       unified-trading-pm LDR (tab-mirror) + main PR. repo: unified-trading-pm.
 - [x] ✅ [TEST] P1. **batch-live-reconciliation-service genuine LDR v2 RED** — 3 ruff `F811` (DataPipeline/PaperLive/
-      BatchPaper threshold classes defined twice, exact-dup block in `models/deviation_thresholds.py`) + `uv.lock` out of
-      sync (stale `pre-commit` + transitive deps after the workspace pre-commit→prek migration). Removed dup block,
+      BatchPaper threshold classes defined twice, exact-dup block in `models/deviation_thresholds.py`) + `uv.lock` out
+      of sync (stale `pre-commit` + transitive deps after the workspace pre-commit→prek migration). Removed dup block,
       relocked. QG green (70s). batch-live-reconciliation-service@2137791 → LDR (tab-mirror). This was the dam behind
       LDR→staging PR #16.
 - [x] ✅ [INFRA] P1. **3 cascade-tracked repos had no `staging` branch → promoter auto-skipped them** (same class as the
@@ -357,6 +357,18 @@ self-recovers. Done:
 - [x] ✅ [SCRIPT] P1. **agent-orchestrator slot-branch 1-ahead/1-behind LDR** (operator-flagged) — rebased
       `tab/ikennaigboaka/1` onto LDR (own bootstrap-prek commit replayed, slot-3 commit-identity-hook commit absorbed),
       force-with-lease pushed; slot clean, commit FF-mirroring to LDR.
+- [x] ✅ [SCRIPT] P1. **UAC LDR→staging PR #69 was BLOCKED on a stale required check — unblocked 2026-06-04 (slot-4).**
+      PR #69 (`chore(promote): LDR → staging Tier-C auto-drain`, auto-merge ENABLED) sat `mergeStateStatus=BLOCKED`
+      despite `mergeable=MERGEABLE`: the required `Quality Gates (unified-api-contracts) / quality-gates-v2` had run on
+      the PR's OLD head (2026-06-03 21:20) but a new commit (`0abbdf86` tradfi-partition) FF-mirrored onto LDR
+      2026-06-04 13:07 and did **not** re-trigger v2 on the PR's new head (the tab-mirror FF push didn't fire a
+      `pull_request:synchronize` v2 run). Fix: `gh workflow run quality-gates-v2.yml --ref live-defi-rollout`
+      (run 26954271658) → produces the required check on `0abbdf86` → auto-merge fires → UAC reaches staging → the
+      execution-service + deployment-service LDR→staging **dep-tier gate** (which had blocked sports-execution-store
+      promotion, `sports_manifest_canonicalisation_2026_06_01.md`) clears. **Machinery gap captured**: a tab-mirror FF
+      onto an LDR branch with an open LDR→staging PR does not always re-run the PR's required v2 check → the PR silently
+      stalls with auto-merge armed. Candidate hardening: have the Tier-C promoter re-dispatch v2 (or close/reopen) when
+      it detects the PR head advanced past its last v2 run. repo: unified-api-contracts (+ promoter automation).
 
 **Freeze defer-and-replay (gap found + fixed 2026-06-04):**
 
@@ -373,6 +385,14 @@ self-recovers. Done:
       existing freeze-check/route-build prod path. repo: unified-trading-pm. _Note: the 6 builds dropped BEFORE this
       landed have no persisted payload; they re-build on their repos' next `qg-passed` (or a one-off manual
       cloud-build-router trigger) — the mechanism prevents all FUTURE freeze drops._
+      **VERIFIED END-TO-END 2026-06-04** via a temporary `SELFTEST_DEFER_REPLAY` freeze window (added + removed same
+      session): benign `qg-passed` during the window → freeze-check blocked → `defer-on-freeze` uploaded the artifact →
+      window removed → replay drained it (`re-dispatched qg-passed ... deleted artifact (replay-once)`, 1 build, 0
+      remaining). **Four bugs caught BY the verification + fixed**: (1) `ruff E501` in the validator edit; (2) replay
+      re-dispatch used `gh api -F client_payload[k]=v` which does NOT build nested JSON → switched to `jq`+`curl`;
+      (3) an empty-`${{ }}` in a router comment that had **broken cloud-build-router on main (0 jobs)** — also hardened
+      by the new [5.5a] guard; (4) `defer-on-freeze` needed `if: always() && ...` (change-freeze-check EXITS 1 when
+      blocking, so the implicit `success()` gate silently skipped the defer job on exactly the runs to capture).
 
 - [x] ✅ [SCRIPT] P1. **Hardened QG against the workflow-parse-break class (2026-06-04).** The empty-`${{ }}` bug
       reached main because PM's `[5.5] WORKFLOW LINT (actionlint)` block is **silently skipped in CI** — its
@@ -410,8 +430,6 @@ Remaining genuine reds (correctly **gated** by the now-working cascade — pre-e
       CodeBuild + Vercel deployment checks FAIL** (real build/deploy break, not a merge conflict). Do NOT force-merge
       with failing deploy checks. UI track — needs a UI-capable slot to diagnose the CodeBuild/Vercel build failure +
       `pw:L2` per the playwright gate. repo: unified-trading-system-ui.
-
-
 
 > SIT v2 QG is GREEN; these are in the SIT _integration_ `code_test` suite (the staging→main gate content), NOT the v2
 > QG. All 3 are UPSTREAM (not SIT's to fix). They must be green for a trustworthy staging→main SIT promotion.
@@ -605,12 +623,11 @@ Remaining genuine reds (correctly **gated** by the now-working cascade — pre-e
       replaced it. **Remaining (folded into Part-B2 fleet-roll below): `semver-agent` per-repo copies still carry the
       vestigial precheck** (the `semver-agent.yml.tmpl` is already clean → fleet-roll removes it). repo:
       unified-trading-pm. (original finding retained:) The agent's header documents a 2026-06-03 cutover from in-GHA
-      `ANTHROPIC_API_KEY_CICD`+`claude-code`
-      TO `escalate-to-orchestrator` (POST /api/escalate → orchestrator spawns a Max-plan **setup-token** worker — NOT
-      pay-per-call API credits). So it should NOT depend on GHA Anthropic credits at all. But the cutover is INCOMPLETE:
-      (a) it still carries a **vestigial `claude-api-health-precheck`** that gates on GHA-API-credit health — the WRONG
-      signal post-cutover (this is what false-dammed it during the credit outage; remove it). (b) the `escalate` job
-      still has **in-GHA clone/resolve steps** that fail on a clone bug:
+      `ANTHROPIC_API_KEY_CICD`+`claude-code` TO `escalate-to-orchestrator` (POST /api/escalate → orchestrator spawns a
+      Max-plan **setup-token** worker — NOT pay-per-call API credits). So it should NOT depend on GHA Anthropic credits
+      at all. But the cutover is INCOMPLETE: (a) it still carries a **vestigial `claude-api-health-precheck`** that
+      gates on GHA-API-credit health — the WRONG signal post-cutover (this is what false-dammed it during the credit
+      outage; remove it). (b) the `escalate` job still has **in-GHA clone/resolve steps** that fail on a clone bug:
       `fatal: destination path 'unified-trading-pm'     already exists and is not an empty directory`
       (clone-into-existing-dir; observed on the ibkr-gateway-infra dispatch 2026-06-03 19:38). **Fix: drop the
       precheck + the leftover in-GHA clone/resolve so the job ONLY dispatches escalate-to-orchestrator** (per its own
@@ -623,16 +640,16 @@ Remaining genuine reds (correctly **gated** by the now-working cascade — pre-e
       commits, else ESCALATES to the VM conflict-agent. Reached main via #116. **Validated live on UAC #67** (manual
       take-LDR resolve, same mechanism — staging's 1 stale CI-migration merge-node absorbed). Removes Claude from the
       promotion critical path for the common case. repo: unified-trading-pm. (original spec:) Operator principle
-      (2026-06-03): minimise agent dependency — deterministic scripts for hygiene + the common-case
-      conflicts; escalate to an agent (VM worker) ONLY when a conflict is genuinely ambiguous. The promotion conflicts
-      that dammed the cascade are NOT ambiguous — they are **take-LDR** (staging/main are stale-vs-LDR; `git cherry`
-      proved 0 unique content; ci_status handled by Guard 2). So before dispatching the (VM) conflict-agent, the
-      promoter should run a deterministic resolver: for an LDR→staging (or staging→main) conflict, `merge -X theirs`=LDR
-      for the stale-promotion-branch files + Guard-2 reconcile for `workspace-manifest.json` ci_status, push, done — no
-      agent, no credits. Only fall through to the VM agent when the merge has a conflict OUTSIDE the take-LDR/ci_status
-      rule (true semantic divergence). Composes with Guard 2/Guard 3 (also deterministic, no agent). This removes Claude
-      from the promotion CRITICAL PATH entirely. repo: unified-trading-pm. **This is the durable unblock for UAC #67 +
-      the 16 dep-blocked repos** (UAC staging = 1 stale CI-migration commit vs LDR → pure take-LDR).
+      (2026-06-03): minimise agent dependency — deterministic scripts for hygiene + the common-case conflicts; escalate
+      to an agent (VM worker) ONLY when a conflict is genuinely ambiguous. The promotion conflicts that dammed the
+      cascade are NOT ambiguous — they are **take-LDR** (staging/main are stale-vs-LDR; `git cherry` proved 0 unique
+      content; ci_status handled by Guard 2). So before dispatching the (VM) conflict-agent, the promoter should run a
+      deterministic resolver: for an LDR→staging (or staging→main) conflict, `merge -X theirs`=LDR for the
+      stale-promotion-branch files + Guard-2 reconcile for `workspace-manifest.json` ci_status, push, done — no agent,
+      no credits. Only fall through to the VM agent when the merge has a conflict OUTSIDE the take-LDR/ci_status rule
+      (true semantic divergence). Composes with Guard 2/Guard 3 (also deterministic, no agent). This removes Claude from
+      the promotion CRITICAL PATH entirely. repo: unified-trading-pm. **This is the durable unblock for UAC #67 + the 16
+      dep-blocked repos** (UAC staging = 1 stale CI-migration commit vs LDR → pure take-LDR).
 - [x] ✅ [SCRIPT] P0. **Guard 3 — drift reconciler (watchdog)** — BUILT + shipped slot-1 2026-06-03 (PM@522e1da8b).
       `ci-status-reconciler.yml` (every 30m + dispatch/dry_run) + `scripts/cicd/ci_status_reconciler.py` (pure decision
       core, 7 unit tests): per repo, compares latest `quality-gates-v2` conclusion per branch vs manifest `ci_status`;
@@ -641,19 +658,19 @@ Remaining genuine reds (correctly **gated** by the now-working cascade — pre-e
       never touches green↔green tier diffs; fail-safe no-op on absent v2. **Live UTL drift (the stuck-UTL case) already
       hand-corrected** via `ci-status-update` → MAIN_GREEN (v2 was green on main/staging/LDR; the FAILING was the
       Agent-Audit false-flip), which unblocked UTL in the dep-order gate. Guard 3 prevents recurrence. NOTE: it
-      activates once on PM main (reaches main via the normal flow). repo: unified-trading-pm.
-      **VALIDATED IN PRODUCTION 2026-06-03**: Guard 3 dispatch found + reconciled **6 false-FAILING drift repos**
-      (client-reporting-api, deployment-service, instruments-service, market-tick-data-service, trading-agent-service,
-      unified-trading-pm — all v2-green on main, ci_status falsely FAILING from Agent-Audit flips) → MAIN_GREEN,
-      un-jamming the dep-order cascade. The "FAILING" repos were drift, NOT genuine reds (corrected an earlier
-      mis-diagnosis). The Agent-Audit credit-outage flips were the systemic source; Guard 3 is the standing cure.
+      activates once on PM main (reaches main via the normal flow). repo: unified-trading-pm. **VALIDATED IN PRODUCTION
+      2026-06-03**: Guard 3 dispatch found + reconciled **6 false-FAILING drift repos** (client-reporting-api,
+      deployment-service, instruments-service, market-tick-data-service, trading-agent-service, unified-trading-pm — all
+      v2-green on main, ci_status falsely FAILING from Agent-Audit flips) → MAIN_GREEN, un-jamming the dep-order
+      cascade. The "FAILING" repos were drift, NOT genuine reds (corrected an earlier mis-diagnosis). The Agent-Audit
+      credit-outage flips were the systemic source; Guard 3 is the standing cure.
 - [x] ✅ [SCRIPT] P1. **GAP CLOSED: FEATURE_GREEN→STAGING_GREEN now auto-advances (Guard 3, option-c)** — slot-1
       2026-06-03 (PM@abe2ec3ae). Guard 3 (`ci-status-reconciler.yml`) deterministically advances a FEATURE_GREEN repo →
       STAGING_GREEN iff staging-v2 is green AND `compare staging...live-defi-rollout ahead_by==0` (staging current with
       LDR = merged) — truthful + non-over-promoting (merged+green guard). Closes the GITHUB_TOKEN-merge-no-v2-trigger
-      jam without ~14 manual fires; runs every 30 min. Live once #120 lands on main. (original gap analysis:) the recurring
-      cascade jam. When a LDR→staging PR auto-merges, the merge push to `staging` is made by GITHUB_TOKEN, which (by
-      design) does NOT trigger workflows → the `push:[staging]` `quality-gates-v2` never runs → its
+      jam without ~14 manual fires; runs every 30 min. Live once #120 lands on main. (original gap analysis:) the
+      recurring cascade jam. When a LDR→staging PR auto-merges, the merge push to `staging` is made by GITHUB_TOKEN,
+      which (by design) does NOT trigger workflows → the `push:[staging]` `quality-gates-v2` never runs → its
       `ci-status-update STAGING_GREEN` never fires → the repo stays `FEATURE_GREEN` after merging, dep-blocking its
       dependents (observed 2026-06-03: UAC + ibkr merged to staging but stuck at FEATURE; UAC unblocked by a MANUAL
       truthful `ci-status-update STAGING_GREEN` fire). Guard 3 does NOT fix this (it only reconciles FAILING↔green, not
@@ -669,19 +686,20 @@ Remaining genuine reds (correctly **gated** by the now-working cascade — pre-e
       pip-audit unblocked fleet-wide → v2 passes → promotions resume + **PM #120 MERGED** (Guard-3 serialization +
       FEATURE→STAGING auto-advance now LIVE on main). Cascade resumed (≥STAGING_GREEN 10→12).
 - [ ] [INFRA] P2. **TRACKED-FOR-REMOVAL: drop the aiohttp `--ignore-vuln` entries when a patched aiohttp 3.13.x ships.**
-      CVE-2026-34993 + CVE-2026-47265 are ignored (no fix at 2026-06-04) in `base-service.sh:926` + `base-library.sh:729`.
-      When aiohttp publishes a patched release in-range (`>=…,<4.0.0`), bump `workspace-constraints.toml:8` + `uv lock`
-      re-lock fleet-wide AND remove the two `--ignore-vuln` flags (don't leave a fixed CVE ignored). repo:
-      unified-trading-pm. (original blocker finding for history:)
-- [ ] [INFRA] P0. **🔴 NEW DOMINANT BLOCKER — fresh aiohttp CVE fails pip-audit FLEET-WIDE → gates EVERY repo's v2
-      (and PM #120).** Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run: `aiohttp 3.13.5: CVE-2026-34993 +
-      CVE-2026-47265` (newly-published 2026 advisories). pip-audit is a **BLOCKING** gate (`base-service.sh:907`), so
-      every fresh `quality-gates-v2` run now fails on it → **nothing promotes LDR→staging→main** until resolved, and
-      **#120 (the Guard-3 serialization + FEATURE→STAGING auto-advance enhancements) can't reach main** → the cascade
-      self-sustaining-ness is gated on this. **DECISION (operator/security — not a unilateral agent call):** (a)
-      **PREFERRED if a patched aiohttp exists** — bump aiohttp to the fixed release (workspace-constraints.toml +
-      per-repo uv.lock re-lock, fleet-wide) — this is the proper security fix, not masking; OR (b) **if no fix yet /
-      accepted** — add `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` to the curated list at
+      CVE-2026-34993 + CVE-2026-47265 are ignored (no fix at 2026-06-04) in `base-service.sh:926` +
+      `base-library.sh:729`. When aiohttp publishes a patched release in-range (`>=…,<4.0.0`), bump
+      `workspace-constraints.toml:8` + `uv lock` re-lock fleet-wide AND remove the two `--ignore-vuln` flags (don't
+      leave a fixed CVE ignored). repo: unified-trading-pm. (original blocker finding for history:)
+- [ ] [INFRA] P0. **🔴 NEW DOMINANT BLOCKER — fresh aiohttp CVE fails pip-audit FLEET-WIDE → gates EVERY repo's v2 (and
+      PM #120).** Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run:
+      `aiohttp 3.13.5: CVE-2026-34993 +     CVE-2026-47265` (newly-published 2026 advisories). pip-audit is a
+      **BLOCKING** gate (`base-service.sh:907`), so every fresh `quality-gates-v2` run now fails on it → **nothing
+      promotes LDR→staging→main** until resolved, and **#120 (the Guard-3 serialization + FEATURE→STAGING auto-advance
+      enhancements) can't reach main** → the cascade self-sustaining-ness is gated on this. **DECISION
+      (operator/security — not a unilateral agent call):** (a) **PREFERRED if a patched aiohttp exists** — bump aiohttp
+      to the fixed release (workspace-constraints.toml + per-repo uv.lock re-lock, fleet-wide) — this is the proper
+      security fix, not masking; OR (b) **if no fix yet / accepted** — add
+      `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` to the curated list at
       `scripts/quality-gates-base/base-service.sh:916` (the established pattern — 4 CVEs already curated there) + the
       base-library/base-ui mirrors, with a tracking note. This is the #1 thing to clear to let the (already-built)
       cascade machinery finish. repo: unified-trading-pm (template) + fleet re-lock. **BLOCKED-OPERATOR-DECISION.**
@@ -693,8 +711,8 @@ Remaining genuine reds (correctly **gated** by the now-working cascade — pre-e
       `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` at `base-service.sh:916` (+ base-library/base-ui),
       tracked for removal when patched. Either is one focused change; whole fleet's v2 + #120 + the cascade unblock the
       moment it lands.
-- [ ] [INFRA] P1. **Genuine v2-red repos surfaced by the cascade (NOT drift — need real per-repo fixes; the substance
-      of their own plans).** Distinct from the false-FAILING drift Guard 3 clears: (a) **execution-service** staging v2
+- [ ] [INFRA] P1. **Genuine v2-red repos surfaced by the cascade (NOT drift — need real per-repo fixes; the substance of
+      their own plans).** Distinct from the false-FAILING drift Guard 3 clears: (a) **execution-service** staging v2
       fails with `ImportError: cannot import name …` (a stale cross-symbol import on staging — likely resolves when the
       LDR→staging promotion lands LDR's current code, BUT verify LDR itself is import-clean; if LDR has the ImportError
       it's a real code bug). (b) **agent-orchestrator** main v2 = failure (AO-specific; AO is mid-staging-migration per
@@ -705,25 +723,25 @@ Remaining genuine reds (correctly **gated** by the now-working cascade — pre-e
       The 2026-06-03 canonical ignore set gitignored `WORKSPACE_MANIFEST_DAG.svg`, but `ci-status-update.yml` still did
       `git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg` → `git add` of an ignored path exits 1 → EVERY
       ci_status write failed → cascade frozen. Fixed: commit only the manifest SSOT. **Lesson (codified in the canonical
-      ignore-set rule):** when gitignoring a previously-tracked regen artifact, audit + update every workflow/script that
-      `git add`s it. repo: unified-trading-pm.
-- [x] ✅ [INFRA] P0. **Full PM `LDR→main` promotion — DONE 2026-06-03 (slot-1): dam DRAINED via #116 (MERGED).** main was
-      254 behind LDR; PM workflows EXECUTE from main, so every LDR-shipped fix (Guard 2/3, deterministic resolver, clean
-      conflict-agent, codex wipe, qg-gate fix) was INERT until this landed. Resolved deterministically: merged main→tab
-      with `-X ours` (take-LDR — main had 0 unique content per `git cherry`) + Guard-2 reconcile overlaid main's
-      authoritative ci_status; stale tracked regen artifacts removed; #116 merged as a MERGE commit (main now a
-      patch-equal superset of LDR → clean ongoing sync). main:=LDR verified (all 4 machinery files + clean conflict-agent
-      present on origin/main). repo: unified-trading-pm. (original finding retained for history:) main +221/−9 vs LDR →
-      back-merge `main→LDR` (absorb the 9), then gated `LDR→main` PR. Lands the `tier-ab-green` chain-wiring, the
-      fund-admin/greeks manifest entries, fresh ci_status, + 221 PM commits. Until it lands the promoter reads a stale
-      main manifest (the live dam). repo: unified-trading-pm. **FINDING (2026-06-03, slot-1) — the dam is a LARGE
-      GENUINE DIVERGENCE, not a ci_status-only conflict.** Verified by attempting `git merge origin/main` onto the LDR
-      tip (then ABORTED, no harm): it conflicts on **31 files** — code (`quality-gates.sh`, `quickmerge.sh`,
-      `ci_failure_watcher.py`, `qg-host-governor.sh`, pre-commit templates), docs (`CLAUDE.md`,
-      `SUB_AGENT_MANDATORY_RULES.md`, `ci-cd-flow.md`), and ~14 plan files — i.e. the "~95-file PR #103" class of
-      accumulated main↔LDR drift, NOT just the 13 ci_status lines. So **Guard 2 (shipped @8124c9de2) does NOT auto-drain
-      THIS dam**: by design it auto-resolves ONLY a ci_status-**only** manifest conflict and escalates a multi-file
-      divergence (which is correct — Guard 2 prevents the routine drift from re-forming a dam; it is not a
+      ignore-set rule):** when gitignoring a previously-tracked regen artifact, audit + update every workflow/script
+      that `git add`s it. repo: unified-trading-pm.
+- [x] ✅ [INFRA] P0. **Full PM `LDR→main` promotion — DONE 2026-06-03 (slot-1): dam DRAINED via #116 (MERGED).** main
+      was 254 behind LDR; PM workflows EXECUTE from main, so every LDR-shipped fix (Guard 2/3, deterministic resolver,
+      clean conflict-agent, codex wipe, qg-gate fix) was INERT until this landed. Resolved deterministically: merged
+      main→tab with `-X ours` (take-LDR — main had 0 unique content per `git cherry`) + Guard-2 reconcile overlaid
+      main's authoritative ci_status; stale tracked regen artifacts removed; #116 merged as a MERGE commit (main now a
+      patch-equal superset of LDR → clean ongoing sync). main:=LDR verified (all 4 machinery files + clean
+      conflict-agent present on origin/main). repo: unified-trading-pm. (original finding retained for history:) main
+      +221/−9 vs LDR → back-merge `main→LDR` (absorb the 9), then gated `LDR→main` PR. Lands the `tier-ab-green`
+      chain-wiring, the fund-admin/greeks manifest entries, fresh ci_status, + 221 PM commits. Until it lands the
+      promoter reads a stale main manifest (the live dam). repo: unified-trading-pm. **FINDING (2026-06-03, slot-1) —
+      the dam is a LARGE GENUINE DIVERGENCE, not a ci_status-only conflict.** Verified by attempting
+      `git merge origin/main` onto the LDR tip (then ABORTED, no harm): it conflicts on **31 files** — code
+      (`quality-gates.sh`, `quickmerge.sh`, `ci_failure_watcher.py`, `qg-host-governor.sh`, pre-commit templates), docs
+      (`CLAUDE.md`, `SUB_AGENT_MANDATORY_RULES.md`, `ci-cd-flow.md`), and ~14 plan files — i.e. the "~95-file PR #103"
+      class of accumulated main↔LDR drift, NOT just the 13 ci_status lines. So **Guard 2 (shipped @8124c9de2) does NOT
+      auto-drain THIS dam**: by design it auto-resolves ONLY a ci_status-**only** manifest conflict and escalates a
+      multi-file divergence (which is correct — Guard 2 prevents the routine drift from re-forming a dam; it is not a
       bulk-reconcile tool). **Drain procedure (BLOCKED-ON-COORDINATED-RECONCILE — too large + multi-agent-edited to
       hand-merge casually in one slot session; use the conflict-resolution-agent or a deliberate manual pass):** LDR is
       the integration line with all the latest work → resolve the 31 conflicts **take-LDR (ours)** for the
