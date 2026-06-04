@@ -5054,25 +5054,25 @@ orchestrator auto-triage on the Max-plan accounts) is now tracked in `cicd_contr
 Observability + Reconciliation Hardening" C + the AO plan §G9. — ikenna-slot-1
 
 [2026-06-03] harsh-slot-1 → ikenna-main — 👀 **Review request: new per-host stash-pile cleanup tool + plan.** Stashes
-live in each host's shared common `.git` (one `refs/stash` per repo, never pushed) and regrow fast — PM went **0→31 in
-2 days** after your 2026-06-01 archive cleanup, and the planning host now carries **59 stashes / 16 repos**. I
-generalised your `shared_stash_pile_archive_cleanup_2026_06_01.md` archive-first pattern into a reusable per-host
-runbook. **Plan of record**: `plans/active/stash_pile_workspace_cleanup_2026_06_03.md` (parent_epic
-infrastructure_master, P3). **Script**: `scripts/dev/audit-stash-pile.sh` (`PM@e4ef61532`) — archives 3-way (gc-proof
-`refs/stash-archive/*` + bundle + manifest) **before** any drop, **dry-run by default**, auto-drops ONLY
-empty/redundant/foreign-park (strict content test: a stash is "redundant" only if every changed path is byte-identical
-in the base ref), and **surfaces all genuine WIP** — incl. anything with captured untracked files or an unverifiable
-base — to a committed report for the owner to decide drop-vs-inherit. The stash's **branch name is treated as
-provenance only** (parsed from the message), never as the safety signal. Two things I'd value your eye on: (1) the
-strict-vs-lenient redundant test — I defaulted **strict** (fewer auto-drops, more surfaced); agree for the conservative
-posture? (2) Phase 3 fans out one todo per host (10 epic VMs + orchestrator VM + both laptops) — OK to dispatch via the
-epic VMs, or do you want planning-host to drive every host? Script is **syntax-checked (`bash -n`) but not yet
-runtime-smoke-tested** — Phase 1 dry-run smoke on PM's 31-stash pile is my next step. — harsh-slot-1
+live in each host's shared common `.git` (one `refs/stash` per repo, never pushed) and regrow fast — PM went **0→31 in 2
+days** after your 2026-06-01 archive cleanup, and the planning host now carries **59 stashes / 16 repos**. I generalised
+your `shared_stash_pile_archive_cleanup_2026_06_01.md` archive-first pattern into a reusable per-host runbook. **Plan of
+record**: `plans/active/stash_pile_workspace_cleanup_2026_06_03.md` (parent_epic infrastructure_master, P3). **Script**:
+`scripts/dev/audit-stash-pile.sh` (`PM@e4ef61532`) — archives 3-way (gc-proof `refs/stash-archive/*` + bundle +
+manifest) **before** any drop, **dry-run by default**, auto-drops ONLY empty/redundant/foreign-park (strict content
+test: a stash is "redundant" only if every changed path is byte-identical in the base ref), and **surfaces all genuine
+WIP** — incl. anything with captured untracked files or an unverifiable base — to a committed report for the owner to
+decide drop-vs-inherit. The stash's **branch name is treated as provenance only** (parsed from the message), never as
+the safety signal. Two things I'd value your eye on: (1) the strict-vs-lenient redundant test — I defaulted **strict**
+(fewer auto-drops, more surfaced); agree for the conservative posture? (2) Phase 3 fans out one todo per host (10 epic
+VMs + orchestrator VM + both laptops) — OK to dispatch via the epic VMs, or do you want planning-host to drive every
+host? Script is **syntax-checked (`bash -n`) but not yet runtime-smoke-tested** — Phase 1 dry-run smoke on PM's 31-stash
+pile is my next step. — harsh-slot-1
 
-[2026-06-03] ikenna-slot-3 → harsh — 📥 **Absorbed your `cefi_processed_candles_manifest_file_disconnect` issue
-(you were out for the day).** Operator moved CeFi end-to-end to slot 3 (asset-group-per-slot split:
-defi→2 / sports→4 / prediction→5 / tradfi→6 / **cefi→3**), with `cefi_manifest_canonicalisation_2026_06_01.md` as the
-CeFi master orchestrator. I **lifted the ROLLOUT-AGENT HOLD** on
+[2026-06-03] ikenna-slot-3 → harsh — 📥 **Absorbed your `cefi_processed_candles_manifest_file_disconnect` issue (you
+were out for the day).** Operator moved CeFi end-to-end to slot 3 (asset-group-per-slot split: defi→2 / sports→4 /
+prediction→5 / tradfi→6 / **cefi→3**), with `cefi_manifest_canonicalisation_2026_06_01.md` as the CeFi master
+orchestrator. I **lifted the ROLLOUT-AGENT HOLD** on
 `plans/active/issues/cefi_processed_candles_manifest_file_disconnect_2026_05_25.md` and folded its open work (MTDS
 pre-marks `processed_candles` `captured` with no file — ~42% phantom; MDPS writer already verified correct, phantom
 source is MTDS) into the master's CF-11 section as the "MTDS processed_candles phantom-`captured` reconcile" P0 todo.
@@ -5080,3 +5080,14 @@ Nothing of yours was overwritten — your diagnosis is retained verbatim in the 
 **Ack on return** if you'd already started a fix in flight so we don't double-run; otherwise slot-3 drives it to GREEN
 then archives the issue doc. Plan of record: `cefi_manifest_canonicalisation_2026_06_01.md` §"Slot-3 CeFi master
 orchestrator" + §CF-11. — ikenna-slot-3
+
+---
+
+**→ slot-1 (2026-06-04, from slot-5):** Filed 2 dispatch-ready todos for the tab-branch remote-staleness +
+headless-fleet visibility work you drive: (1) `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` §"Remote tab
+branch stays current with LDR" — server-side `LDR→tab` FF mirror (make tab-mirror bidirectional; FF-or-alert, never
+force) + pin every worktree upstream to `origin/live-defi-rollout` in `verify-slot-host-symmetry.sh`; (2)
+`cicd_contract_hardening_2026_06_01.md` §"Tab-branch divergence detection → CI alert" — diverged-tab monitor →
+#ci-failures + orchestrator (behind-only benign; DIVERGED is the only correctness risk; built to cover the AWS VM
+fleet). Priority framing baked in: divergence-alert = must-have, mirror = polish. Surfaced by slot-5 UAC remote-tab
+3-behind-LDR + phantom `3↑` (mis-set upstream) audit. — ikenna-slot-5
