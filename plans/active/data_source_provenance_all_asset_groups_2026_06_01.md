@@ -255,22 +255,32 @@ column is RED, not exempt.
       layer, NOT by select_primary"); odds are per-bookmaker (each `venue=` is a DISTINCT instrument, not the same
       metric twice). So `select_primary_available_source` does not apply to sports — sports reads are already correct.
       Remaining scope is **cefi/tradfi** same-field dual-source ONLY (e.g. tradfi databento/massive), owned by this
-      cross-AG plan, not slot-4 sports.**
+      cross-AG plan, not slot-4 sports.** **TRADFI SLICE DONE + LAYER CORRECTED (slot-6 2026-06-05, UAC@637288d4 +
+      mtds@0579438):** the read-path resolution is wired at the **MDPS raw read** (the actual co-mingle surface — two
+      `pipeline_mode=`-partitioned objects per cell, NOT row-level co-mingle in one parquet; see the resolved FINDING
+      below). `_resolve_multi_source_blobs` collapses a 2-source cell to exactly ONE primary-source object → no
+      double-aggregate; regression `tests/unit/test_orchestration_scanner_multi_source.py` asserts 2-source→1 primary
+      (databento>massive; massive>yahoo for ohlcv_15m) + the no-op guards. This covers tradfi (the only live 2-source
+      pair). **REMAINING for full P0:** cefi when its 2nd source lands (same MDPS path, no new wiring — just a cefi
+      regression case) → so this P0 is tradfi-complete; leave open for the cefi-2nd-source case.
 - [x] ✅ [UAC] P1. Confirmed (2026-06-01 read-path audit): `detect_dual_source_conflicts()` /
       `select_primary_available_source()` are generic (not tradfi-gated) but **invoked by NO non-test consumer** —
       result filed as the finding below. The conflict-detection primitive itself is tested (uac@559dc81b).
-- [ ] [UAC] P1. **FINDING (2026-06-01 read-path audit; SHARPENED 2026-06-03 slot-4)**:
-      `select_primary_available_source()` / `detect_dual_source_conflicts()` are generic + unit-tested (uac@559dc81b)
-      but **called by NO non-test consumer** — dead code at the read layer. **Read-layer reality (slot-4 audit):** there
-      is NO single generic features-service reader — each family has its own loader
-      (`delta_one/app/core/data_loader.py`, `volatility/core/data_loader.py`,
-      `onchain/adapters/mtds_canonical_reader.py` [DeFi-only], sports `data/gcs_reader.py`), so this is a **per-loader**
-      wire, not one insertion point. **Sports is OUT** (FIELD_UNION, see Phase-5 TEST todo). Practical same-field cases
-      needing the resolver: **tradfi** (databento/massive co-mingled — the only live 2-source pair today) + **cefi**
-      when its 2nd source lands. Recipe per loader: after reading a cell's parquet, take the distinct `source` column
-      values → `select_primary_available_source(ag, data_type, available)` → filter rows to the winning source
-      (dedup-to-primary), with a 2-source→1-row regression test. Owned by this cross-AG plan (tradfi/cefi), not slot-4
-      sports.
+- [x] ✅ [UAC] P1. **FINDING RESOLVED — resolver now a LIVE consumer + storage-layout assumption CORRECTED (slot-6
+      2026-06-05, UAC@637288d4 + mtds@0579438).** `select_primary_available_source()` was dead because it was (a) NOT
+      even exported from the `unified_api_contracts` top-level surface and (b) unwired. **Both fixed:** exported it (+
+      `get_all_sources_with_priority` + `detect_dual_source_conflicts`) from UAC `__init__`, and wired it into the
+      **MDPS raw read** (`orchestration_scanner._list_instrument_files` → `_resolve_multi_source_blobs`). **CORRECTION
+      to the prior "per-loader row-filter" recipe:** the actual storage layout is NOT one parquet with mixed-`source`
+      rows — multi-source = **two separate objects partitioned by the per-source `pipeline_mode=` hive key** (databento
+      → `pipeline_mode=batch_databento/`, massive → `…batch_massive/`), same instrument stem. So (1) the co-mingling
+      surfaces at the **MDPS day-prefix scan** (it lists BOTH → would aggregate the cell twice), NOT inside a features
+      loader; (2) the features family loaders (`delta_one/data_loader.py` etc.) read **MDPS output** which is now
+      already source-resolved, and their scan prefixes omit `pipeline_mode=` so they never even see the variants —
+      wiring there would be **dead code**. → a SINGLE correct insertion point (MDPS raw read), not a per-loader wire.
+      STRICT no-op guard (acts only on ≥2 distinct parseable `pipeline_mode=`→source in one cell + registered
+      `(ag,dt)`); 9 unit tests + 15 existing scanner tests green. Sports still OUT (FIELD_UNION). Repos:
+      unified-api-contracts + market-data-processing-service.
 - [ ] [UTL] P1. **FINDING (2026-06-01 read-path audit)**: `manifest_consolidator.py` dedup key (`_BASE_DEDUP_COLS` +
       `_OPTIONAL_DEDUP_COLS`) **omits `source`** — two source rows for one `(date, venue, data_type, …)` cell collapse
       to ONE row by last-write-wins on `(attempted_at, written_at)`, NOT by `SOURCE_PRIORITY`. Matches the shipped
