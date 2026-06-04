@@ -1046,11 +1046,14 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 - [ ] [CODE] P3. **HANDOFF→PREDICTION (slot-3): align prediction execution-store resolution** — repos:
       `execution-service` + `deployment-service`. Surfaced 2026-06-04 while wiring the sports execution-store: the two
       resolution paths DISAGREE for `prediction`.
-      `ExecutionServicesConfig.get_bucket_for_asset_group('execution',     'prediction')` constructs
+      `ExecutionServicesConfig.get_bucket_for_asset_group('execution', 'prediction')` constructs
       `execution-store-prediction-{pid}` (non-env-split), but
-      `resolve_bucket_name(kind='execution-store', asset_group='prediction')` returns the **separate flat key**
-      `execution-store-pred-${DEPLOYMENT_ENV_SHORT}-${pid}` (env-split, `pred` abbrev; `cloud-providers.yaml:167`) — so
-      a prediction execution process would WRITE to one bucket while cross-service readers resolve another. Latent only
+      `resolve_bucket_name(kind='execution-store',     asset_group='prediction')` **raises `BucketNamingError`** —
+      `prediction` is NOT in the execution-store MAP (only CEFI/DEFI/SPORTS/TRADFI). The canonical prediction execution
+      bucket instead lives under a DIFFERENT kind string: `resolve_bucket_name(kind='execution-store-prediction')` →
+      `execution-store-pred-${DEPLOYMENT_ENV_SHORT}-     ${pid}` (env-split, `pred` abbrev; `cloud-providers.yaml:167`).
+      So the config and the canonical SSOT disagree on BOTH the kind surface AND the bucket shape — a prediction
+      execution process would WRITE to one bucket while cross-service readers resolve another (or raise). Latent only
       (no prediction execution process wired today). Fix when prediction execution is scoped: pick ONE shape (most
       likely add `PREDICTION` to the execution-store map matching the env-split flat key, or align the config
       construction) so writer==reader. Sports is unaffected (map entry == config construction). **DEFERRED** to the
