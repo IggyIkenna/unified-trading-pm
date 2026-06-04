@@ -254,10 +254,10 @@ Triggered by "any escalation agents being called / is everything mirrored to mai
 - [x] ✅ **Semver Agent jam #2 (broken pipe)** — `LATEST_MSG=$(echo "$COMMITS" | head -1)`: large COMMITS floods pipe,
       head closes early → echo SIGPIPE → pipefail → step 4 "Compute next semver" aborts. Only surfaced after #1 fixed
       (steps 4-7 had never run). Template fixed → here-string `head -1 <<< "$COMMITS"`. PM@10645e6b3.
-- [ ] [SCRIPT] P1. **Fan out FULLY-corrected semver-agent template to all 22 repos' main** — the first fan-out deployed
-      the PATH fix only (sed); those repos still carry jam #2. Redeploy the validated template (path+pipe) once UTL
-      canary validates end-to-end (steps 4-7 + staging→main promotion + version bump). Then re-kick each repo's staging
-      QG to drain its 4-90 commit backlog via the automation. repo: all service repos + UTL/UAC.
+- [x] ✅ **Fanned out FULLY-corrected semver-agent template (path+pipe) to fleet main** — 22 repos merged (20 one-pass
+      + greeks-service [was missed by list] + UTL canary). unified-trading-api unblocked via LDR-merge-into-PR (pyjwt).
+      ONLY agent-orchestrator left (no quality-gates.sh = G6 gap). All 25 manifest repos HAVE semver-agent.yml (none
+      missing). Validated end-to-end on UTL (v1.2.0). repo: all fleet.
 - [x] ✅ **2 of 3 v2-reds FIXED + VERIFIED green**: unified-trading-system-ui (`canvas@2.11.2` transitive optional
       native-build → `pnpm.neverBuiltDependencies:[canvas]`, ui@7a822bd9, v2 GREEN) + unified-trading-api (pip-audit
       pyjwt 2.12.1 → 4 CVEs → bumped `pyjwt>=2.13.0` + re-lock, uta@cee22b1, v2 GREEN; also fixed uv.lock drift).
