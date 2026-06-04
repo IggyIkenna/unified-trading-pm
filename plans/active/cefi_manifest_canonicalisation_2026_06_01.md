@@ -174,16 +174,14 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 
 **🔴 P0 — migration-BLOCKING (must be DONE + ticked before the real run):**
 
-- [ ] [CODE] P0. **market-tick-data-service (+ market-data-processing-service lockstep) — LIVE cefi writer path
-      divergence.** `live/websocket_runner.py:93-116` `live_tick_blob_path` builds an INLINE f-string
-      `…/pipeline_mode=live_websocket/asset_group={ag}/data_type={dt}/venue={V}/{id}.parquet` — `data_type=` BEFORE
-      `venue=` and **NO `instrument_type=` segment** — whereas the batch writer + `reader.py:283` `_make_base` use
-      `asset_group/venue/instrument_type/data_type`. ⇒ **the reader cannot read live-written cefi ticks** (Batch≠Live +
-      post-migration unreadable). MDPS `live_aggregator.py:141-153` `default_tick_blob_path` is in lockstep with the
-      WRONG order. **Fix:** route the live writer through UAC
-      `build_cefi_partition_path(..., pipeline_mode="live_websocket")` so live==batch segment order + carries
-      `instrument_type=` (already available at `websocket_runner.py:688`); fix the MDPS lockstep helper the same way.
-      Regression: a test asserting `live_tick_blob_path == reader _make_base` order.
+- [x] ✅ [CODE] P0. **MTDS live cefi writer path divergence — FIXED (mtds@318473eb).** `live_tick_blob_path`
+      (websocket_runner.py) now routes cefi through the SAME UAC `build_cefi_partition_path` the batch writer uses
+      (byte-identical) with `pipeline_mode=live_websocket` LEFT of `asset_group=`, venue UPPER +
+      instrument_type/data_type lower (reader case-parity); `instrument_type=` threaded from the flush call site (was
+      discarded); defi/other mirror the reader's generic order (chain before venue). +regression tests asserting
+      reader-order + case parity. **MDPS lockstep `default_tick_blob_path` fixed the same way (shipping with the MDPS
+      commit below).** MTDS QG exit 0. (Also shipped: P2 `reader.read_from_manifest` lifts pipeline_mode from the
+      captured row — canonical path probed first.)
 - [ ] [CODE] P0. **execution-service — legacy raw_tick paths, 0 `candidate_parquet_paths`, 0 `pipeline_mode`.** ALL raw
       candle/mark/orderbook reads hardcode `raw_tick_data/by_date/day={date}/data_type={dt}` with NO
       `pipeline_mode=`/`asset_group=cefi/` (`data/loaders/base.py:182`, `data/checker.py:155,323`,
@@ -195,13 +193,13 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 
 **🟡 P1 — pre-flight engrained (blocking the "pre-flight on every service" bar):**
 
-- [ ] [CODE] P1. **strategy-service — no 4-state pre-flight on the cefi market-data-tick bucket.**
-      `engine/core/dependency_checker.py:64-82` `UPSTREAM_DEPS` checks ml-predictions / features-delta-one /
-      instruments-store but has **no entry for `market-data-tick-cefi`**, which strategy consumes
-      (`service_entry.py:648`) WITHOUT a manifest pre-flight ⇒ can't distinguish zero-volume vs `empty_confirmed` vs
-      `attempted_failed` on the candle leg. **Fix:** add a `bucket_kind="market-data-tick", asset_group_required=True`
-      `UPSTREAM_DEPS` entry so cefi candle availability is pre-flighted like features (mirror
-      `batch_handler.check_allocation_manifest` 4-state logic).
+- [x] ✅ [CODE] P1. **strategy-service cefi pre-flight — DIAGNOSED over-flagged; the REAL gap was P2 (FIXED).**
+      Grep-then-read correction: `service_entry.py:648`'s `market-data-tick-cefi` is the **GAP-5 consolidator-HEALTH
+      startup gate** (`assert_consolidator_healthy`), NOT a raw-tick data read — strategy consumes **features**
+      (features-delta-one, already in `UPSTREAM_DEPS` + 4-state-gated via `check_allocation_manifest`), not raw cefi
+      ticks. So no raw-tick `UPSTREAM_DEPS` entry is warranted (a `required` one would be wrong). Strategy's cefi
+      pre-flight already exists (consolidator-health + features 4-state). The actual cefi gap was the allocation guard
+      hitting the WRONG features bucket — see P2 (now P0-level), **FIXED**.
 - [ ] [CODE] P1. **execution-service — no manifest 4-state pre-flight.** `data/checker.py` (`check_gcs_file_exists` /
       `check_data_availability` / `blob_exists` `:168,214,335`) is a raw path-EXISTENCE probe — never reads
       `availability_index` / `capture_status`, so it cannot tell zero-volume / `empty_confirmed` / `attempted_failed`
@@ -210,13 +208,19 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 
 **⚪ P2/P3 — correctness hardening (not run-blocking but in-scope for "engrained"):**
 
-- [ ] [CODE] P2. **strategy-service** — `cli/handlers/batch_handler.py:411` hardcodes `kind="features-sports"` in the
-      allocation guard; cefi allocation cycles run it against a SPORTS-kind bucket (mis-kind copy-paste) ⇒ the cefi
-      guard may pass/skip on sports state. **Fix:** parametrize `kind` by `asset_group` (or add a cefi branch).
-- [ ] [CODE] P2. **market-tick-data-service** — `reader.read_from_manifest` (`reader.py:572-655`) does NOT lift
-      `pipeline_mode` from the validated manifest row (passes caller default `None`) ⇒ canonical-FIRST probe is inert
-      for manifest-driven reads, leaving them on the soon-removed bare fallback. **Fix:** read the row's `pipeline_mode`
-      column and thread it into `read_shard`.
+- [x] ✅ [CODE] P1(↑from P2). **strategy-service allocation guard hit the WRONG features bucket for cefi — FIXED.**
+      `cli/handlers/batch_handler.py:_check_manifest_for_category` (called per-category incl. cefi at :480) hardcoded
+      `kind="features-sports"` for EVERY category. cefi features live in `features-delta-one` (cloud-providers.yaml:67
+      `features-delta-one-cefi-${GCP_PROJECT_ID}`); `features-sports` is the sports-only flat key. ⇒ a cefi allocation
+      cycle resolved a sports bucket, found no availability index, and **FAILED OPEN** (`capture_status="unknown"` →
+      proceed) — the 4-state allocation gate was a silent **no-op for cefi**. **FIXED:**
+      `features_kind = "features-sports"     if asset_group=="sports" else "features-delta-one"` (sports behaviour
+      unchanged; cefi/defi/tradfi/prediction now gate on their REAL features index). This was the real "strategy cefi
+      pre-flight" gap (P1 above was the red herring).
+- [x] ✅ [CODE] P2. **market-tick-data-service** — `reader.read_from_manifest` (`reader.py`) now LIFTS `pipeline_mode`
+      from the captured manifest row into `read_shard` so the canonical `pipeline_mode=` path is probed FIRST (caller
+      override still wins). +2 regression tests. Was leaving manifest-driven reads on the soon-removed bare fallback.
+      **DONE — mtds (shipping with the P0 live-writer fix).**
 - [ ] [CODE] P2. **execution-service** — `l2_depth_provider.py:197` `from google.cloud import storage` + `gcs.Client()`
       direct (cloud-agnostic I/O violation). **Fix:** `get_storage_client()`.
 - [ ] [DATA] P3. **market-data-processing-service** — leading-NaN before first observation for state adapters that skip
