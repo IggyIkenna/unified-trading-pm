@@ -367,6 +367,17 @@ Remaining genuine reds (correctly **gated** by the now-working cascade — pre-e
       until both are fixed. repo: features-service.
 - [ ] [TEST] P1. **agent-orchestrator main-v2 RED** — the sole remaining FAILING repo (separate track; AO is
       mid-staging-migration per the AO E2E plan G6). Diagnose + green on its own track. repo: agent-orchestrator.
+- [ ] [SCRIPT] P1. **mdps LDR→staging PR #91 CONFLICTING (DIRTY)** — staging is 2-ahead / 371-behind LDR; the 2 unique
+      staging commits are stale promotion/CI-merge artifacts (`feat(workspace-sweep): live-defi-rollout → staging` +
+      `ci: merge main into staging — quality-gates-v2 migration #86`) whose content originated on LDR, but a
+      delete/modify conflict means `-X ours` take-LDR aborts. Because staging has unique non-merge commits this is the
+      deterministic resolver's **escalate-to-VM-agent** case (NOT auto take-LDR) — resolver DISPATCHED 2026-06-04
+      (`deterministic-promotion-conflict-resolve.yml`, run queued). VM agent resolves keeping LDR content + the genuine
+      delta. repo: market-data-processing-service.
+- [ ] [UI] P2. **unified-trading-system-ui LDR→staging PR #19 UNSTABLE** — MERGEABLE (no git conflict) but **AWS
+      CodeBuild + Vercel deployment checks FAIL** (real build/deploy break, not a merge conflict). Do NOT force-merge
+      with failing deploy checks. UI track — needs a UI-capable slot to diagnose the CodeBuild/Vercel build failure +
+      `pw:L2` per the playwright gate. repo: unified-trading-system-ui.
 
 
 
