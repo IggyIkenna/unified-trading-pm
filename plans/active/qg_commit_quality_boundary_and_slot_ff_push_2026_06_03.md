@@ -179,20 +179,23 @@ All on `origin/live-defi-rollout`; full detail in
   empty. Can't action from this host (those VMs are down per operator 2026-06-04); the fix lands automatically on their
   next re-provision. Repos: `unified-trading-pm` (`scripts/dev/setup-tab-worktrees.sh` +
   `scripts/verify-slot-host-symmetry.sh`). parent_epic: (per-tab-worktrees / cicd master).
-- [ ] [INFRA] P2. **Server-side `LDR→tab` FF mirror — make the existing tab-mirror BIDIRECTIONAL (FF-or-alert, never
-      force).** Extend the `tab-mirror-to-ldr` GHA (SSOT: `unified-trading-pm/scripts/workflow-templates/`, runs on push
-      to LDR) so that, in addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does **`LDR→tab`: FF
-      every `tab/*` branch that is purely BEHIND LDR** (ancestor) up to LDR. **HARD invariants:** FF-only, **never
-      force-push**, never auto-merge. A tab that is BOTH ahead+behind (DIVERGED) → **do NOT touch it** → emit the
-      divergence alert (cicd item below); the one safe auto-resolution is the existing "rebase diverged tab onto LDR"
-      path (`e21ca439` — preserves the tab's own commits + pulls LDR in), reuse it, don't re-invent. **Why server-side
-      not the cron**: host-independent — refreshes a slot's remote tab branch whether the owning host (laptop / AWS VM)
-      is online or not (the headless-fleet gap the cron can't cover). **Operates over EVERY `tab/*` branch fleet-wide**
-      (all operators, all slots, every host) — DEPENDS on the global-uniqueness precondition above (without it the glob
-      can FF one host's remote with another host's commits). Composes with — does NOT replace — the cron FF-push of
-      QG-green _committed_ agent work above (that's the `ahead`/push-agent-work-up leg; this is the `behind`/keep-tabs-
-      current-down leg). Repo: `unified-trading-pm` (workflow-templates → `rollout-workflow-templates.sh`). parent_epic:
-      (cicd master — cross-link `cicd_contract_hardening_2026_06_01.md`).
+- [x] ✅ [INFRA] P2. **Server-side `LDR→tab` FF mirror — make the existing tab-mirror BIDIRECTIONAL (FF-or-alert, never
+      force).** SHIPPED 2026-06-04 (PM PR #132 + #134; rolled out to all 24 repos). Added a `ldr_to_tabs` job to
+      `tab-mirror-to-ldr.yml` that FFs every behind-only `tab/*` up to LDR. **Cadence (operator-chosen 2026-06-04):**
+      NOT push-triggered — runs on a `*/15 * * * *` schedule and FFs each tab only up to the latest LDR commit **older
+      than 15 min** (settle window, so a just-landed commit isn't propagated onto remote tabs until it stabilizes).
+      FF/alert-only; never force-pushes a tab; GITHUB*TOKEN push so no recursive leg-A trigger. Diverged tab → never
+      touched → escalates to the divergence monitor (cicd item below). DEPENDS on the global-uniqueness precondition
+      above (✅ shipped). Parity guarded by `detect_template_drift.py --workflows` (PM PR #133). **Original spec
+      (push-triggered):** Extend the `tab-mirror-to-ldr` GHA (SSOT: `unified-trading-pm/scripts/workflow-templates/`,
+      runs on push to LDR) so that, in addition to `tab→LDR` (FF LDR from an ahead-only tab — existing), it also does
+      \*\*`LDR→tab`: FF every
+      `tab/*` branch that is purely BEHIND LDR** (ancestor) up to LDR. **HARD invariants:**     FF-only, **never force-push**, never auto-merge. A tab that is BOTH ahead+behind (DIVERGED) → **do NOT touch it**     → emit the divergence alert (cicd item below); the one safe auto-resolution is the existing "rebase diverged tab     onto LDR" path (`e21ca439`— preserves the tab's own commits + pulls LDR in), reuse it, don't re-invent. **Why     server-side not the cron**: host-independent — refreshes a slot's remote tab branch whether the owning host     (laptop / AWS VM) is online or not (the headless-fleet gap the cron can't cover). **Operates over EVERY`tab/_`
+      branch fleet-wide\*\* (all operators, all slots, every host) — DEPENDS on the global-uniqueness precondition above
+      (without it the glob can FF one host's remote with another host's commits). Composes with — does NOT replace — the
+      cron FF-push of QG-green \_committed_ agent work above (that's the `ahead`/push-agent-work-up leg; this is the
+      `behind`/keep-tabs- current-down leg). Repo: `unified-trading-pm` (workflow-templates →
+      `rollout-workflow-templates.sh`). parent_epic: (cicd master — cross-link `cicd_contract_hardening_2026_06_01.md`).
 - [ ] [INFRA] P2. **Pin every tab worktree's upstream to `origin/live-defi-rollout` + assert it in
       `verify-slot-host-symmetry.sh`.** Root cause of the misleading `N↑` display: a `git push -u` (or
       `branch --set-upstream-to=origin/tab/...`) re-points a worktree's upstream to its (stale) remote tab branch, so VS
