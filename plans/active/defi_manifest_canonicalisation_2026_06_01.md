@@ -484,13 +484,38 @@ What to verify/wire (B0 corrected scope):
   - [ ] [CODE] P1. **A10c — QG enforcement step** (MTDS/IS/MDPS/features quality-gates, STEP 5.70 family): fail any
         `record_empty(...SOURCE_RETURNED_ZERO...)` callsite NOT routed through `record_zero_rows` (baselined ratchet +
         `# QG-allow:` waiver for audited exceptions). Makes the backstop un-bypassable. Repo: per-service
-        `quality-gates.sh` + a shared check script. parent_epic: mtds_mdps_master.
+        `quality-gates.sh` + a shared check script. parent_epic: mtds_mdps_master. **DESIGN VERIFIED + SCOPED (slot-2
+        readiness audit 2026-06-04) — this is a FLEET-WIDE QG-infra change, NOT MTDS-local (high blast radius → must
+        validate every service's gate before rollout, do not rush):** the check script lives in the SSOT dir
+        `unified-trading-pm/scripts/qg/` (template = `no_blank_empty_reason.sh`; it scans ALL service dirs
+        mtds/IS/features/strategy/execution/ml), wired into the STEP 5.70 block of `quality-gates-base/base-service.sh`,
+        rolled out fleet-wide. UNLIKE `no_blank_empty_reason` (already 0 violations), there are **~26 existing raw DeFi
+        callsites + ≥1 TradFi (`tardis_adapter.py:1769`)** → it CANNOT be a bare grep-fail; it MUST be a **baselined
+        ratchet** (model on `honest_coverage_ratchet.py/.sh` + `no_adapter_contract_regression`: a baseline JSON of the
+        current violators, fail only on NEW/unbaselined callsites, `--regenerate-baseline` to lock, `# QG-allow:`
+        per-line waiver). The baseline = the A10d inventory below + the TradFi callsite. Validation: run
+        `quality-gates.sh` in mtds/IS/features/strategy/execution/ml after adding the check + baseline → all must stay
+        green. Repo: unified-trading-pm (`scripts/qg/` + base-service.sh) + per-service `quality-gates.sh`. parent_epic:
+        mtds_mdps_master.
   - [ ] [CODE] P1. **A10d — migrate the DeFi `SOURCE_RETURNED_ZERO` callsites** (dex_pools/dex_swaps/lst/lending/perp
         handlers) to `record_zero_rows` with the `was_instrument_alive` oracle. NOTE: DeFi records at (venue,chain)
         shard granularity, so the oracle is "was ANY in-universe instrument for this venue/chain alive on this day" —
         and for DeFi the venue-launch gate (A1/A2, shipped) already covers most of it; A10d closes the residual. Repo:
-        market-tick-data-service. parent_epic: mtds_mdps_master. Repos: unified-api-contracts +
-        unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
+        market-tick-data-service. parent_epic: mtds_mdps_master. Repos: unified-api-contracts + **EXACT CALLSITE
+        INVENTORY (slot-2 readiness audit 2026-06-04) — ~26 raw `record_empty(reason=SOURCE_RETURNED_ZERO)` sites still
+        bypassing `record_zero_rows` (lst_rates_handler + solana_defi_handler ALREADY migrated):** dex_swaps_handler:477
+        · dex_pools_handler:517 · position_data_handler:141,196 · liquidations_handler:336 · token_transfers_handler:204
+        · bridge_events_handler:159 · eigenlayer_rewards_handler:190 · gas_fee_handler:276,338,395 ·
+        flash_loan_events_handler:158 · jupiter_quote_handler:339 · raydium_classic_amm_handler:389 ·
+        orca_whirlpool_state_handler:359 · protocol_outage_detector_handler:104 · drift_v2_historical_handler:451 ·
+        liquidation_events_handler:212 · lending_indices_handler:447,485 · governance_events_handler:141 ·
+        staking_yields_handler:132,185,238 · governance_proposals_handler:142 · vault_share_price_handler:308,527 ·
+        aggregator_route_handler:580 · perp_funding_handler:390,434 · oracle_prices_handler:791 ·
+        mev_events_handler:145. (Out of A10d scope but also raw: tradfi
+        `market_interface/adapters/tradfi/tardis_adapter.py:1769` — feeds the A10c cross-repo baseline.) Each →
+        `recorder.record_zero_rows(...)` (the `DefiManifestRecorder.record_zero_rows` venue-launch-date-aware path at
+        `_defi_manifest.py:370`); A10c ratchet baselines these so they grind down without a flag-day. Repos:
+        unified-api-contracts + unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
 - [ ] [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against legacy/dead
       buckets BEFORE the migrations run** (operator 2026-06-02: "refactor read/write cloud-storage paths across the
       board to match canonical so QG-fed tests don't regress by association with dead buckets; same for data-status in
@@ -616,10 +641,10 @@ What to verify/wire (B0 corrected scope):
         (`solana_defi_handler.py:197,199-201`), forwarded to `recorder.record_*(data_type=...)` (L408/419/430) +
         `write_defi_rows(data_type=data_type or "dex_pools")` (L530). EVM `dex_pools_handler` already emits canonical
         `dex_pool_state` (C0-CN2), so post-migration live Solana writes would desync (canonical historical
-        `dex_pool_state` vs new `dex_pools`) → NOT_IN_SCOPE in the canonical denominator. **BUT** this collides with the
+        `dex_pool_state` vs new `dex_pools`) → NOT*IN_SCOPE in the canonical denominator. **BUT** this collides with the
         OPEN **A11c-candle-enum** operator decision (is the `dex_pools` snapshot the SAME as the `dex_pool_state`
         time-series?) and the `solana_defi_legacy_migration_2026_05_27.md` § G-note that Kamino vault-metadata
-        `dex_pools` is _complementary, not conflicting_ with `DEX_POOL_STATE`. Resolve WITH the A11c-candle-enum
+        `dex_pools` is \_complementary, not conflicting* with `DEX_POOL_STATE`. Resolve WITH the A11c-candle-enum
         decision: if SAME → flip `_PROTOCOL_TO_DATA_TYPE` Solana AMM venues to `dex_pool_state` + add a guard test; if
         DIFFERENT → Kamino keeps a distinct token (then document the split). Repo: market-tick-data-service.
         parent_epic: mtds_mdps_master.
@@ -671,13 +696,22 @@ What to verify/wire (B0 corrected scope):
         (dex_pools=arbitrage, lst_rates=carry) + guard tests (UAC +4, MTDS +3). Both repos QG-green. **Residual
         (A12a-rollout, P1)**: the same one-line gate at the remaining ~25 DeFi collect handlers (mechanical) — see
         sub-todo. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P1. A12a-rollout — extend `assert_defi_catalog_fresh()` (the A12a gate) to the remaining ~25 DeFi collect
-        handlers (eigenlayer*rewards, evm_defi, gas_fee, lending_indices, liquidations, oracle_prices, perp_funding,
-        solana_defi, native_staking, vault_share_price, staking_yields, token_transfers, position_data,
-        flash_loan_events, governance*\*, mev_events, jupiter_quote, orca_whirlpool_state, raydium_classic_amm,
-        aggregator_route, bridge_events, drift_v2_historical, protocol_outage_detector, liquidation_events) at each
-        `process()` chokepoint + a per-handler guard test. Mechanical (mirror dex_pools/lst_rates). Repo:
-        market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P1. A12a-rollout — extend `assert_defi_catalog_fresh()` (the A12a gate) to the DeFi collect handlers that
+        **actually depend on the IS catalog**. **SCOPE CORRECTED (slot-2 readiness audit 2026-06-04): the "~25" is
+        really 9 IS-dependent handlers, not 25** — the other ~17 derive their universe from hardcoded/chain-level
+        constants (no IS catalog read), so a stale-catalog gate there would be a FALSE block (defer/exempt them with a
+        one-line note). **WIRE (9, each reads IS `_defi_instruments`/`read_instrument_addresses`):**
+        lending_indices_handler:347 · liquidations_handler:229 · liquidation_events_handler:89 ·
+        flash_loan_events_handler:73 · bridge_events_handler:76 · native_staking_handler:267 · solana_defi_handler:332 ·
+        aggregator_route_handler:397 · token_transfers_handler:127 — at the `process()` chokepoint, mirroring
+        dex_pools_handler.py:435-449
+        (`if not assert_defi_catalog_fresh(...): record_failed per expected (venue,chain) shard; return early`) + a
+        per-handler guard test (patch the gate `return_value=False` → asserts record_failed per shard + early return;
+        pattern at `tests/unit/test_lst_rates_handler.py`). **EXEMPT (no IS-catalog dependency — hardcoded/chain-level
+        universe; note inline, don't gate):** gas_fee, mev_events, oracle_prices, orca_whirlpool_state,
+        raydium_classic_amm, phoenix_orderbook, vault_share_price, protocol_outage_detector, governance_events,
+        governance_proposals, eigenlayer_rewards, drift_v2_historical, staking_yields, perp_funding, position_data,
+        evm_defi, jupiter_quote. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P1. A12b — **CONFIRMED ALREADY EXISTS, no change needed** (slot-2 deep-read 2026-06-04): the DeFi
         owed-cell backstop is enumerator-driven —
         `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_defi` yields
