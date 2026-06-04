@@ -34,12 +34,20 @@ decision + the successor.
   aiohttp-backed VCR tests). **No vcrpy release supports aiohttp 3.14 yet** (8.1.1 is newest).
 - Net deadlock for VCR-using repos: aiohttp 3.13.5 → pip-audit CVE FAIL; aiohttp 3.14.0 → vcrpy tests FAIL.
 
-### 2. deployment-service/pyproject.toml has a committed duplicate TOML key
+### 2. deployment-service has TWO pre-existing uv blockers (duplicate TOML key + corrupt cbor2 lock entry)
 
-- `[tool.uv.sources.unified-api-contracts]` was declared **twice** (identical blocks), committed on
+- **(2a)** `[tool.uv.sources.unified-api-contracts]` declared **twice** (identical blocks), committed on
   `origin/live-defi-rollout`. A stricter `uv` rejects it (`TOML parse error … duplicate key`), so **any
   `uv lock --upgrade`** against deployment-service's dep tree (deployment-api depends on it as an editable path-dep)
   fails fleet-wide. A plain `uv lock` survived via cache; `--upgrade-package` forced the rebuild that exposed it.
+- **(2b)** After fixing (2a) locally, `uv lock` then fails with
+  `Failed to parse uv.lock — Dependency 'cbor2' has missing 'source' field but has more than one matching package` — a
+  **second, deeper pre-existing lock corruption** (also on LDR baseline) that blocks regenerating deployment-service's
+  lock entirely.
+- **Net**: the committed LDR state passes QG (the `uv.lock out of sync` gate only checks sync, never regenerates), so
+  neither (2a) nor (2b) blocks the steady state — they only bite a `uv lock --upgrade`. Removing the duplicate (2a)
+  forces a re-lock, which then hits (2b). So (2a) **cannot be cleanly committed without first resolving (2b)** (a full
+  lock regen with the right index/source config). Foreign-repo dep-infra debt requiring a coordinated pass — deferred.
 
 ## Why it matters
 
@@ -56,7 +64,10 @@ decision + the successor.
    Rationale: these services use aiohttp as an HTTP **client** and never call `CookieJar.load()` on untrusted files →
    exploit surface is nil; the only patched version breaks vcrpy fleet-wide. Repos **without** vcrpy (features-service,
    deployment-api) run the genuinely-patched **aiohttp 3.14.0**; vcrpy repos stay on 3.13.5 + ignore.
-2. **deployment-service** — removed the duplicate `[tool.uv.sources.unified-api-contracts]` block.
+2. **deployment-service** — duplicate-key fix (2a) was made + verified to unblock deployment-api's `uv lock` during the
+   shipping window, but **reverted (not committed)**: committing (2a) forces a re-lock that hits the pre-existing cbor2
+   corruption (2b), and a full lock regen of a foreign repo is out of tradfi scope + risky. The worktree was restored to
+   the clean LDR-passing state. **Both (2a) + (2b) deferred to the cicd/dep-security epic** (successor below).
 
 ## Successor (close this issue when done)
 
@@ -66,3 +77,8 @@ decision + the successor.
       `uv lock --upgrade-package aiohttp` + `uv lock --upgrade-package vcrpy` per repo, re-QG). Owner: cicd/dep-security
       epic. Verifier: `pip-audit` clean with NO `--ignore-vuln CVE-2026-34993` + all VCR cassette tests green.
       Cold-start: read this issue doc.
+- [ ] [DEPS] P2. **Fix deployment-service uv blockers (2a duplicate `[tool.uv.sources.unified-api-contracts]` key + 2b
+      corrupt `cbor2` lock entry)** so `uv lock --upgrade` works again. Recipe: remove the duplicate uv.sources block,
+      then do a clean `uv lock` regen resolving the cbor2 missing-`source` ambiguity (pin the index/source), verify the
+      lock diff is minimal + QG green. Repo: deployment-service. Owner: cicd/dep-security epic. Cold-start: this issue
+      doc § "What I found 2". (Did NOT block tradfi: deployment-api already shipped; steady-state QG passes.)
