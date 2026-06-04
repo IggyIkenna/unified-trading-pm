@@ -617,13 +617,13 @@ verify + the gated delete.
       how many markets get a non-None `classify_lifecycle`, (2) check whether `market_lifecycle/by_canonical_group/`
       objects appear. If (a), fix `classify_lifecycle`; if (b), it self- resolves on the next run. Repo:
       instruments-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P2. **instruments-service QG STEP 5.64 — preflight short-circuits emit NO `PREFLIGHT_SKIPPED`**
-      (cross-cutting finding surfaced by slot-5 during the 552 fix 2026-06-03; NOT prediction-scoped — for the
-      instruments epic). `instruments-service` has preflight-guard patterns (`_check_dependencies` / `should_skip_date`
-      / `check_shard_freshness`) in `engine/orchestrator.py`, `engine/validation_utils.py`, `cli/instruments_handler.py`
-      but emits no `emit_preflight_skip` / `PREFLIGHT_SKIPPED` anywhere → silent preflight skips are invisible in the
-      event stream (the same observability gap STEP 5.64 enforces for service repos). Wire `emit_preflight_skip` (UTL)
-      at each short-circuit. Repo: instruments-service. parent_epic: mtds_mdps_master (or the instruments epic).
+- [x] ✅ [CODE] P2. **instruments-service preflight short-circuits emit `PREFLIGHT_SKIPPED` — DONE 2026-06-04 (slot-4)**
+      — instruments-service@510b4c4b. The per-league preflight `_should_skip_date_for_per_league`
+      (`engine/orchestrator.py`) returned `True` silently when all expected canonical leagues were already covered for a
+      date — invisible in the event stream (the STEP 5.64 observability gap). Now emits `emit_preflight_skip` (UTL) with
+      `PreflightSkipReason.SHARD_ALREADY_FRESH` + `asset_group=sports` + `feature_group=data_type` + `date` before
+      returning True. ONE edit in the shared helper covers all 5 callers (FootyStats PREDICTIONS/MATCHES/ODDS,
+      PLAYER_VALUES Transfermarkt, SFI_PROGRESSIVE_STATS). QG green (133s). Repo: instruments-service.
 
 ## Slot-4 ready-to-run audit 2026-06-04 (operator-requested: migrator dry-run · manifest-rebuild dry-run · preflight IS→execution empty/partial batch=live · read/write path post-migration parity)
 
@@ -670,16 +670,19 @@ venue-override question) + the operator-gated migration walk:**
       per-data_type SOURCE_PRIORITY lookup — so `MARKET_LIFECYCLE` resolves CLOB too (despite `source_priority.py:278`
       data = gamma). That keeps all four consumers consistent at CLOB (good for path==manifest) but is a separate latent
       UAC question → see the new handoff todo below. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P2. **HANDOFF→UAC/prediction: POLYMARKET venue override masks the per-data_type gamma source** — repo:
-      `unified-api-contracts` (+ `unified-trading-library`). `derive_pipeline_mode_for_row`'s
-      `_VENUE_OVERRIDES["POLYMARKET"]     = BATCH_POLYMARKET_CLOB` fires before the SOURCE_PRIORITY lookup, so
-      `("prediction","MARKET_LIFECYCLE") =     ["polymarket_gamma_api"]` (`source_priority.py:278`) is NEVER realised —
-      every Polymarket row (incl. gamma-sourced MARKET_LIFECYCLE) resolves CLOB. Latent (all consumers use the resolver
-      → all consistent at CLOB; no live MARKET_LIFECYCLE pipeline_mode-sensitive divergence today). Decide: is the broad
-      venue override correct (all Polymarket = clob — then `batch_polymarket_gamma_api` is effectively dead +
-      SOURCE_PRIORITY:278 is misleading), or should the override yield to the per-data_type source so MARKET_LIFECYCLE =
-      gamma? Surfaced 2026-06-04 while unifying the migrator. **DEFERRED** to the prediction/UAC track. parent_epic:
-      mtds_mdps_master.
+- [x] ✅ [CODE] P2. **POLYMARKET venue override masking the per-data_type gamma source — FIXED 2026-06-04 (slot-4,
+      operator: honor the data_type source)** — unified-trading-library@01ca49ea. `derive_pipeline_mode_for_row`'s
+      `_VENUE_OVERRIDES["POLYMARKET"] = BATCH_POLYMARKET_CLOB` fired before the per-data_type SOURCE_PRIORITY lookup, so
+      `("prediction","MARKET_LIFECYCLE") = ["polymarket_gamma_api"]` (`source_priority.py:278`) was masked — every
+      Polymarket row (incl. gamma-sourced MARKET_LIFECYCLE) resolved CLOB. **Fix:** POLYMARKET is a MULTI-SOURCE venue
+      (CLOB trades/book/cqg, Gamma lifecycle) — a single venue override can't express that, so the POLYMARKET override
+      was REMOVED; POLYMARKET now resolves per-data_type via SOURCE_PRIORITY (MARKET_LIFECYCLE → gamma_api ✅;
+      trades/cqg → clob; unknown → prediction asset_group fallback clob). Single-source venues (HYPERLIQUID→tardis etc.)
+      keep their override (the override is for venues whose source is fixed regardless of data_type). Zero blast radius
+      outside prediction (POLYMARKET is prediction-only — confirmed by a venue×SOURCE_PRIORITY conflict scan; the 1180
+      cartesian "conflicts" were all impossible pairings like HYPERLIQUID×sports). 36 existing + 3 new resolver tests
+      green; QG green (459s). repos: unified-trading-library (+ no UAC change needed — SOURCE_PRIORITY was already
+      correct).
 - [x] ✅ [CODE] P1. **MDPS prediction consolidator preflight — DONE 2026-06-04 (slot-4, parity with sports)** —
       market-data-processing-service@eb8d00a. `dependency_checker.validate_can_run` gated
       `assert_consolidator_healthy()` (market-data + instruments-store) on `asset_group==SPORTS` ONLY → prediction MDPS
@@ -689,10 +692,9 @@ venue-override question) + the operator-gated migration walk:**
       `market-data`, asset_group=`prediction`) which RAISES `BucketNamingError` (prediction not in the map — the same
       map-vs-flat asymmetry as the execution-store). 2 new tests (both flat kinds gated + stale raises) + 4 existing
       sports tests green; QG green (156s). parent_epic: mtds_mdps_master.
-- [ ] [CODE] P2. **instruments-service preflight short-circuits emit no `PREFLIGHT_SKIPPED`** (observability parity) —
-      DUPLICATE of the existing IS STEP 5.64 todo above; 5 `_should_skip_date_for_per_league` sites in `orchestrator.py`
-      (5398/5673/5894/6518/6821) return silently; `emit_preflight_skip` (UTL) is not imported. Not a run-blocker
-      (observability only). repo: instruments-service.
+- [x] ✅ [CODE] P2. **instruments-service `PREFLIGHT_SKIPPED` — DONE 2026-06-04 (slot-4)** —
+      instruments-service@510b4c4b (see the flipped STEP 5.64 todo above; emit wired in the shared
+      `_should_skip_date_for_per_league` helper → covers all 5 callers).
 
 ## Readiness gate — operator's 7 criteria (slot-5 audit 2026-06-04 — extends slot-4's 4-item audit above)
 

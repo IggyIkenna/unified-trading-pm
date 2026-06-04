@@ -1162,6 +1162,45 @@ LDR. The remaining work is OPERATIONAL (VM whole-corpus walk under the fleet dra
 of which is bypassable by an interactive slot. The IRREVERSIBLE legacy-bucket delete (E8) stays gated on
 CF-GREEN-on-real- data + the fleet drain + operator.
 
+## Slot-4 sports 7-criteria completion audit 2026-06-04 (operator-requested; cross-service, 4 read-only agents + verify)
+
+> VERDICT: **all 7 criteria COMPLETE** for the sports asset_group at the CODE level (the full migration WALK stays
+> operator-gated). Two agent-flagged "gaps" were verified as grep-then-conclude artifacts (already-wired / N/A).
+
+- [x] ✅ **① Migrator dry-run** — `migrate_sports_canonical_v9.py`: dry-by-default + `--apply`; idempotent
+      (`gcs_describe_object` skip); server-side `gcs_copy_object`; path transforms via the UAC `candidate_parquet_paths`
+      SSOT; no import-time risk.
+- [x] ✅ **② Manifest-rebuild dry-run** — `rebuild_sports_manifest_v9.py`: `--dry-run` (default) previews per-
+      `capture_status` counts + the reason-relabel histogram + action distribution, NO `_index` write.
+- [x] ✅ **③ 4-state preflight on every service IS→execution (respective sports buckets)** — IS
+      (`sports_dependency.py`), MTDS (`market_interface/sports/registry.py`), MDPS (`dependency_checker.py`
+      `validate_can_run` — dual `assert_consolidator_healthy` on market-data-tick-sports + instruments-store-sports),
+      features (`sports/cli/handlers/_manifest_preflight.py` — same dual gate, live==batch). strategy/execution do NOT
+      read sports MARKET-DATA canonically (strategy reads features via strategy-store; execution is event-driven) → the
+      consolidator gate is correctly absent there (N/A, not a gap).
+- [x] ✅ **④ Empty/partial honest + downstream handles (batch==live)** — API error on an EXISTING fixture →
+      `record_failed` (attempted_failed), NOT empty_confirmed; no-fixture / pre-season / off-season → typed
+      `EmptyConfirmedReason.EXPECTED_NO_FIXTURE` / `EXPECTED_PRE_SEASON` (IS `orchestrator.py:1628/1903` +
+      `sports_fixtures_daily_repoll.py:314` via the fixture oracle — NO blank reasons); manifest 4-state explains every
+      zero; batch and live emit identical schema (features `_manifest_preflight.py` is the shared live==batch gate).
+- [x] ✅ **⑤ Read/write paths match post-migration everywhere** — migrator, rebuild, live raw-writer, live candle-writer
+      (MDPS) and downstream readers (features `sports/data/gcs_reader.py`) all derive pipeline_mode via the UAC
+      `pipeline_mode_for_sports_entity` / `pipeline_mode_for_source` SSOT family — NO local-map drift (the sports
+      keystone was already unified; the prediction-style drift does not exist in sports). All readers probe via
+      `candidate_parquet_paths()`.
+- [x] ✅ **⑥ IS + UAC guardrails vs instruments/fixtures that cannot exist** — UAC `clip_dates_to_source_coverage()` +
+      `is_in_known_gap()` (`canonical/domain/sports/league_data.py`) DEFINED + USED across IS orchestrator / features
+      `honest_coverage_report.py` / MTDS rebuild / deployment-api; the per-league preflight derives the EXPECTED league
+      universe from UAC `get_expected_leagues_for_source()` (NOT hardcoded); out-of-coverage / pre-existence / known-gap
+      (date,league) → typed empty (`EXPECTED_KNOWN_SOURCE_GAP` / `EXPECTED_NO_FIXTURE`), never
+      attempted/flagged-missing.
+- [x] ✅ **⑦ deployment-api/UI numerator/denominator = the could-exist universe (IS+UAC+manifest)** — deployment-api
+      `data_status_service.py` `_sports_honest_coverage` (≈L841-899): denominator = the EXPECTED set from
+      `get_league_fixture_calendar()` (the canonical league×date universe, source-agnostic), numerator = manifest rows
+      with captured / typed-empty status. **Instruments-exist-but-backfill-not-run is in the denominator but NOT the
+      numerator → shows as MISSING (under-coverage), never silently excluded** (no false 100%). UI renders the v9
+      4-state sports drilldown.
+
 ## Success criteria
 
 - Canonical sports `_index` = v9 + `pipeline_mode=` partition + `source` column + canonical venue/league/data_type.
