@@ -118,6 +118,25 @@ ff_one() {
         return 0
     fi
 
+    # Step 0: upstream self-heal (codified 2026-06-04). A tab worktree's @{upstream} MUST be
+    # origin/<int_branch> (set by setup-tab-worktrees.sh --track). A stray `git push -u origin
+    # HEAD:tab/<op>/N` re-points it to origin/<tab-branch>, after which the IDE shows a PHANTOM
+    # "ahead N" measured vs the STALE remote tab (not real drift). Functionally harmless (the FF
+    # below pulls <int_branch> EXPLICITLY, and push.default=simple refuses a mismatched-name bare
+    # push) but the display lies — so re-point it every tick. Runs on EVERY slot host (laptop + VM)
+    # since this cron does. SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Upstream tracking".
+    local _want_upstream _have_upstream
+    _want_upstream="origin/${int_branch}"
+    _have_upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || echo "")
+    if [[ -n "${_have_upstream}" && "${_have_upstream}" != "${_want_upstream}" ]]; then
+        if [[ "${DRY_RUN}" -eq 0 ]]; then
+            git branch --set-upstream-to="${_want_upstream}" "${branch}" >/dev/null 2>&1 \
+                && log "[upstream-fix] ${repo_name} — reset @{upstream} ${_have_upstream} → ${_want_upstream}"
+        else
+            log "[upstream-fix:dry] ${repo_name} — would reset @{upstream} ${_have_upstream} → ${_want_upstream}"
+        fi
+    fi
+
     # Step 1: dirty-tree check (any unstaged or staged change).
     # First auto-discard the closed set of locally-regenerated / CI-authoritative artifacts
     # so they never block the FF-pull (mirrors the VM's pm-pull-ff.sh; was local-vs-VM asymmetry
