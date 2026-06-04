@@ -1256,3 +1256,22 @@ coverage-summary == drilldown == manifest-status denominators; features-onchain-
 >    SAME `market-data-tick-defi-prd-…` `_index` this plan's C0 rewrites. The remediation seed must run BEFORE C0 (so C0
 >    canonicalises the seeded legacy rows: old venue strings / v4–v8 / phantom grid). Do NOT run C0 while the
 >    remediation DeFi seed is mid-walk, and vice-versa. `data_source_provenance_…` rides C0 (no third walk).
+
+## ⑦ Coverage-denominator could-exist seed — cross-AG note (filed by slot-5 2026-06-04)
+
+> Operator 2026-06-04 (point ⑦): the deployment-api/ui coverage **denominator** must reflect the **could-exist
+> universe** (instruments/fixtures that exist in IS but whose backfill has NOT run), not just rows that exist in the
+> manifest. **The seeding mechanism already exists** — `instruments-service/scripts/enumerate_expected_universe.py` (v2
+> expected-universe enumerator) cross-joins the IS catalog × dates × data_types, subtracts existing manifest rows, and
+> seeds `record_expected_unattempted` for the residual; deployment-api `data_status_hierarchical` already counts
+> `expected_unattempted` in the 4-state denominator. Slot-5 fixed the cross-cutting blocker: the enumerator's default
+> bucket map was stale for ALL 5 AGs (missing the `-prd-` env tier) → now resolves via `resolve_bucket_name`
+> (instruments-service, ⑦ in `prediction_manifest_canonicalisation_2026_06_01.md`). **Remaining for defi:**
+
+- [ ] [CODE] P1. ⑦ defi could-exist denominator seed — build the `--catalog-path` parquet from the defi IS catalog
+      (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
+      `enumerate_expected_universe.py --asset-group defi --catalog-path <catalog> --apply-write` against the canonical
+      `_index` so the raw-tick denominator == could-exist universe (active-but-uncaptured instruments seeded
+      `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_defi` row-key/data_types match
+      the defi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
+      bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.

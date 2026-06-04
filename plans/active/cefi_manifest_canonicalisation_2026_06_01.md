@@ -321,9 +321,9 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
       optimistic coverage. **DONE:** new `_build_cefi_is_instruments_provider(cloud)` reads the live IS cefi
       availability index (`instruments-store-cefi` via `resolve_bucket_name` + `read_availability_index` →
       `{venue: [instrument_id]}`) ONCE per CEFI category call and injects it into `get_expected_instruments_for_venue`
-      with `cap=None` (no MVP truncation); other asset_groups unchanged (provider=None, cap=50). **Fail-open done
+      with `cap=None` (no MVP truncation); other asset*groups unchanged (provider=None, cap=50). **Fail-open done
       RIGHT:** catalog unreadable/empty → builder returns `None` (NOT a `lambda: None` provider) so the caller injects
-      no provider and UAC uses its MVP seed — a non-None provider that _returns_ None would yield an EMPTY universe
+      no provider and UAC uses its MVP seed — a non-None provider that \_returns* None would yield an EMPTY universe
       (denominator→0); caught this exact bug in review (it had broken `test_cefi_per_venue_denominator_honest` +
       `test_category_completion_not_tautology`) and fixed it. +6 unit tests; basedpyright 0. NB: uses the IS
       availability index (the IS-published instrument_id universe) — same underlying IS data the v2 enumerator's catalog
@@ -819,3 +819,22 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
 ## Codex SSOTs
 
 - `codex/02-data/availability-manifest-and-data-status.md` — cefi canonical form.
+
+## ⑦ Coverage-denominator could-exist seed — cross-AG note (filed by slot-5 2026-06-04)
+
+> Operator 2026-06-04 (point ⑦): the deployment-api/ui coverage **denominator** must reflect the **could-exist
+> universe** (instruments/fixtures that exist in IS but whose backfill has NOT run), not just rows that exist in the
+> manifest. **The seeding mechanism already exists** — `instruments-service/scripts/enumerate_expected_universe.py` (v2
+> expected-universe enumerator) cross-joins the IS catalog × dates × data_types, subtracts existing manifest rows, and
+> seeds `record_expected_unattempted` for the residual; deployment-api `data_status_hierarchical` already counts
+> `expected_unattempted` in the 4-state denominator. Slot-5 fixed the cross-cutting blocker: the enumerator's default
+> bucket map was stale for ALL 5 AGs (missing the `-prd-` env tier) → now resolves via `resolve_bucket_name`
+> (instruments-service, ⑦ in `prediction_manifest_canonicalisation_2026_06_01.md`). **Remaining for cefi:**
+
+- [ ] [CODE] P1. ⑦ cefi could-exist denominator seed — build the `--catalog-path` parquet from the cefi IS catalog
+      (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
+      `enumerate_expected_universe.py --asset-group cefi --catalog-path <catalog> --apply-write` against the canonical
+      `_index` so the raw-tick denominator == could-exist universe (active-but-uncaptured instruments seeded
+      `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_cefi` row-key/data_types match
+      the cefi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
+      bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.

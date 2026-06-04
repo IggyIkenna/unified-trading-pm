@@ -739,34 +739,64 @@ venue-override question) + the operator-gated migration walk:**
       cqg mapping for those condition_ids on day 1 — likely the same `classify_polymarket_to_canonical_group` coverage
       slot-4's migrator-cqg-drift gap touches). The full-range scoping number (tradfi-equivalent) rides the gated E4
       full run; the 1-day sample is the proof-of-capability. Repo: market-tick-data-service.
-- [ ] [CODE] P1. **⑦ Coverage denominator does NOT use the could-exist universe — genuine CROSS-AG gap (slot-5 audit
-      2026-06-04; affects ALL asset_groups' raw-tick coverage, prediction included).** deployment-api
-      `data_status_hierarchical.py` computes the raw-tick coverage denominator from the MANIFEST ONLY
-      (`read_availability_index`; the 4-state total is correct for ROWS THAT EXIST) — it NEVER intersects the
-      instruments-service could-exist universe (confirmed: zero IS/catalogue refs). So a market that EXISTS in IS (a
-      `condition_id` active on day D) whose **tick backfill has NOT run** produces **no manifest row** → invisible: the
-      denominator silently shrinks to only-attempted and coverage% inflates. **No tick-layer rebuild seeds
-      `expected_unattempted` from the IS universe** (prediction rebuild has none; sports:921/cefi:552 only PRESERVE
-      existing rows — "record_expected_unattempted doesn't exist in this writer pattern"). Only the FEATURES delta-one
-      layer seeds it (`record_out_of_scope_instruments`, per-AG — so FEATURE coverage is correct; RAW-TICK is not).
-      **FIX (design call — likely BLOCKED-OPERATOR-DECISION on WHERE):** (a) a tick-manifest pre-flight seeds
-      `expected_unattempted` for the IS could-exist universe (condition_ids active per `market_lifecycle`
-      not-yet-captured) so the denominator == could-exist universe; OR (b) deployment-api intersects the IS catalogue at
-      read-time. + regression test (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). Repos:
-      market-tick-data-service + deployment-api + instruments-service. parent_epic: mtds_mdps_master. **Operator: this
-      is the exact "instruments exist but backfill hasn't run" visibility gap you named — cross-AG, so it likely wants
-      ONE shared fix.** **PATTERN FOUND (the rollout the operator remembered "we did for some stuff") — slot-5
-      2026-06-04:** the MTDS orchestrator ALREADY seeds expected_unattempted at the tick layer —
-      `engine/orchestrator.py:3496` `record_expected_unattempted` (the
-      `expected_unattempted_propagation_chain_2026_05_12` work): for venues in `skipped_shards` (venues IS supplied NO
-      instruments for on (venue,date)), it writes `record_expected_unattempted` per expected data_type "so the manifest
-      denominator accounts for these shards instead of leaving them invisible" — gated by
-      `get_expected_data_types_for_venue` + `VENUE_DATA_TYPE_CAPABILITIES`. **So the pattern + the helper exist; the gap
-      is GRANULARITY**: it fires at the VENUE level (whole venue had no instruments), NOT the per-market level
-      prediction needs (a `condition_id` that IS HAS but whose tick backfill hasn't run, when the venue POLYMARKET
-      otherwise has data). ROLLOUT = extend this same `record_expected_unattempted` propagation to seed
-      per-`condition_id` from the IS lifecycle universe (active-on-day-D minus captured `observed_clusters`) — reuse the
-      existing helper + `_load_market_lifecycle_for_date`, don't invent a new mechanism.
+
+  > **⑦ Coverage denominator — could-exist universe (slot-5 audit + partial fix 2026-06-04).** The denominator gap the
+  > operator named ("instruments/fixtures exist but the backfill hasn't run"). **The canonical SEEDING MECHANISM ALREADY
+  > EXISTS** — `instruments-service/scripts/enumerate_expected_universe.py` (the v2 expected-universe enumerator,
+  > `expected_universe_v2` design): it cross-joins the IS instrument catalog × date axis × data_types, subtracts the
+  > existing manifest rows, and seeds `record_expected_unattempted` for the residual so the denominator == could-exist
+  > universe (deployment-api `data_status_hierarchical._aggregate_counts` ALREADY sums all 4 states incl
+  > `expected_unattempted` — so the manifest IS the SSOT and the read side is correct once the rows exist).
+  > `_V2_ENUMERATORS` covers all 5 AGs incl `_enumerate_v2_prediction` (per-market `market_created_at`/`settlement_time`
+  > lifecycle bounds → `EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED`/`expected_unattempted`). So the design fork in the
+  > original write-up below is RESOLVED: it is option (a) manifest-seed (NOT deployment-api read-time), via the existing
+  > enumerator. The SHIPPED cross-cutting fix + the remaining (prediction-catalog + a non-trivial IS writer migration)
+  > are the sub-todos.
+
+- [x] ✅ [CODE] P1. **⑦ CROSS-CUTTING — enumerator default-bucket map was stale for ALL 5 AGs; resolved via the
+      bucket-name SSOT (instruments-service@29939809, slot-5 2026-06-04).** `enumerate_expected_universe.py`'s
+      `ASSET_GROUP_BUCKETS` hardcoded `market-data-tick-{ag}-{PROJECT_ID}` literals that were **ALL missing the
+      `-{DEPLOYMENT_ENV_SHORT}-` env tier** (verified by running `resolve_bucket_name`: e.g.
+      `market-data-tick-cefi-{pid}` vs the canonical `market-data-tick-cefi-prd-{pid}`; prediction was the legacy
+      long-form `market-data-tick-prediction-{pid}` — the L6-delete bucket — instead of
+      `market-data-tick-pred-prd-{pid}`). So a no-`--bucket` enumerator run targeted a NON-EXISTENT bucket for **every**
+      asset_group → empty manifest read → the could-exist seed silently no-op'd. **Replaced the static dict with
+      `_default_bucket_for(asset_group)` → `resolve_bucket_name` (sports→instruments-store, prediction→flat
+      `market-data-tick-prediction` kind→`*-pred-prd`, cefi/defi/tradfi→per-AG `market-data` kind), matching the MTDS
+      reader + MDPS consolidator gate.** 2 regression tests (`_default_bucket_for` env-tier per AG +
+      `SUPPORTED_ASSET_GROUPS`); IS QG `--no-fix` exit 0. This unblocks the enumerator for prediction AND the other 4
+      AGs (cross-cutting). Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. **⑦ PREDICTION SLICE — run/wire the prediction v2 enumerator with a cqg-granularity catalog (gated VM
+      verify).** `_enumerate_v2_prediction` emits per-`instrument_id` rows from the catalog; the prediction CAPTURED
+      atom is the per-cqg BUNDLE (`data_type=prediction_canonical_question_group`, `instrument_id=cqg`), so to seed a
+      denominator that matches the captured granularity the catalog (`--catalog-path`) must carry
+      `instrument_id=canonical_question_group` + `data_type=prediction_canonical_question_group` per active market —
+      i.e. the IS instrument_availability condition_ids classified to cqgs via `classify_polymarket_to_canonical_group`
+      (needs title/slug fields). VERIFY on a VM (GCS flaky locally): build the catalog from IS `instrument_availability`
+      for a sample range, run `enumerate_expected_universe.py --asset-group prediction --catalog-path … --apply-write`,
+      confirm `expected_unattempted` cqg rows land in `market-data-tick-pred-prd` `_index` for active-but-uncaptured
+      cqgs, and that deployment-api's denominator grows to the could-exist universe (regression: IS-universe ⊃ manifest
+      ⇒ denominator doesn't shrink). Repos: instruments-service (catalog loader cqg classification) +
+      market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. **⑦ CROSS-AG ROLLOUT — run the v2 enumerator per AG (ideas filed in each AG plan, slot-5 2026-06-04).**
+      The `_enumerate_v2_{cefi,defi,tradfi,sports}` enumerators are built + the default-bucket fix now points them at
+      the canonical bucket; the remaining work per AG is to build the catalog (`--catalog-path` from that AG's IS
+      catalog) + run `--apply-write` so each AG's raw-tick denominator == could-exist universe + add the
+      IS-universe⊃manifest regression. Filed as todos in the sibling masters for their slots:
+      `cefi_…`/`defi_…`/`sports_…`/`tradfi_manifest_canonicalisation_2026_06_01.md`. parent_epic: mtds_mdps_master.
+- [ ] [CODE] P2. **⑦-adjacent IS writer finding (STEP 5.83, prediction) — `orchestrator.py:2410` uses `underlying=` for
+      the cqg, not the canonical bundled-shard key.** Surfaced by the IS QG STEP 5.83 cross-cutting scan (slot-5
+      2026-06-04; advisory/baselined — IS QG exit 0, NOT a run-blocker).
+      `instruments_service/engine/orchestrator.py:2410` calls
+      `record_captured(data_type="prediction_canonical_question_group", …, underlying=_group_str, …)` — a DIRECT
+      `data_type=` literal kwarg WITHOUT the `canonical_question_group=` shard key the checker requires for the bundled
+      data_type. **Not a trivial fix**: `record_captured` (UTL) has no `canonical_question_group` param + no `**kwargs`
+      (and `canonical_question_group` is NOT in `_ROW_KEY_COLUMNS`), so the IS prediction writer should align to the
+      MTDS bundled-atom convention (`record_captured_from_counts`, data_type carried INSIDE `row_key`, cqg as
+      `instrument_id`) OR the checker's required-kwarg map updated — a cross-service convention call (MTDS uses
+      `instrument_id=cqg` in `row_key` and passes 5.83; IS uses `underlying=cqg` as a direct kwarg and trips it).
+      Reconcile with the v9 bundled-atom SSOT (deployment-api reads `instrument_id`/falls back to `underlying`). Repo:
+      instruments-service (+ UTL/PM checker if the convention is the kwarg-map). parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P2. **⑥ phantom auditor prediction bucket — REFUTED / ALREADY-CORRECT (slot-5 audit 2026-06-04).** The
       finding was a grep-then-conclude misread: `reconcile_phantom_manifest_rows_all.py:85` maps
       `"prediction": ("market-data-tick-prediction", None)`, but `market-data-tick-prediction` is a
