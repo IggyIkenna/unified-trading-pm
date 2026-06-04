@@ -493,10 +493,12 @@ VM.
 
 - [x] ✅ **① Migrator dry-run** — real-GCS `migrate_tradfi_to_v9_canonical.py --dry-run`: **5,305,520 objects** planned,
       0 moved, 100,698 L-hyphen placeholders skipped, 0 err (plan E4).
-- [ ] **② Manifest-rebuild dry-run** — REAL-GCS dry running (`rebuild_tradfi_manifest.py`, bounded 2026 range to
-      validate mechanism on real data; flags pre-migration `category=` blobs as unparseable = expected). Full-corpus
-      (5.3M / ~2,700 dates, ~11h single-thread) is a **VM job** (plan's "VM-only whole-corpus walks" gate). Mock-704k
-      done earlier.
+- [x] ✅ **② Manifest-rebuild dry-run** — REAL-GCS dry VALIDATED (slot-6 2026-06-04, bounded 2026-01-01..06-02, 522s):
+      `rebuild_tradfi_manifest.py` → total_shards=114,771, 6 venues, **reemit_empty=37,477 + reemit_failed=6,041
+      honest-absence rows re-emitted**, CF-11 reclassified 5 within-bounds SOURCE_RETURNED_ZERO→attempted_failed, 2,246
+      pre-migration `category=` blobs flagged unparseable (expected — canonicalized on the real run). Mechanism
+      confirmed on real data. **Full-corpus (5.3M / ~2,700 dates ≈11h single-thread) = VM job** (plan's "VM-only
+      whole-corpus walks" gate). Mock-704k done earlier.
 - [x] ✅ **③ 4-state preflight every service IS→execution** — MTDS/MDPS/features 4-state-aware (`dependency_checker`,
       `manifest_window_guard`+GAP-4 drift-WARN); strategy `manifest_allocation_guard`. execution = N/A (consumes
       strategy signals, not tradfi candles).
@@ -511,14 +513,17 @@ VM.
       `instruments-store-tradfi` (CatalogueBuilder) per-date; `_INACTIVE_STATUSES={expired,delisted}` +
       availability-window EXCLUDED; feeds orchestrator Tier-3 override (universe=IS, not a seed); missing catalog →
       UAC-seed fallback.
-- [ ] [CODE] P2. **⑦ deployment-api/UI pending-backfill (expected_unattempted) surfacing** — denominator ALREADY = UAC
-      could-exist universe (FLAG-1/FLAG-4, all 6 tradfi venues incl CBOE/FX) ✅; the `ln`-pending modeling exists
-      (`unified_trading_library/manifest_freshness.py`: `ln`+non-EXPECTED = pending-fetch gap). **Open**: surface
-      `expected_unattempted` ("instruments exist, backfill not yet run") as a DISTINCT pending-backfill bucket in the
-      deployment-api `ln`-metric coverage response
-      (`deployment-api/deployment_api/services/data_status_{service,drilldown,hierarchical}.py`) + the deployment-UI
-      data-status view (PLAYWRIGHT-GATED — needs `pw:L2 ✓` + regression spec). Repos: **deployment-api +
-      unified-trading-system-ui**. Needs a focused UI-capable session.
+- [ ] [CODE][UI] P2. **⑦ pending-backfill (expected_unattempted) surfacing** — **API SIDE VERIFIED CORRECT, NO CHANGE
+      (slot-6 2026-06-04)**: `data_status_hierarchical.py`
+      `DrilldownNode.total = captured+empty_confirmed+     attempted_failed+expected_unattempted` (could-exist
+      denominator, comment "B3"), `completion_pct = captured/total`, and `expected_unattempted` is returned per node
+      (`to_dict` line 125). Denominator also = UAC venue universe (FLAG-1/FLAG-4, 6 venues). So numerator/denominator
+      already = universe-of-what-could-exist with pending-backfill in the denominator. **UI GAP (the only work)**: the
+      deployment-UI data-status view shows `completion_pct` + empty-days but does NOT surface the 4-state breakdown /
+      `expected_unattempted` as a distinct "pending backfill" bucket (grep: 0 UI hits for `expected_unattempted`). Fix =
+      render the pending-backfill bucket from the API response in the data-status view. Repo:
+      **unified-trading-system-ui** (PLAYWRIGHT-GATED — `pw:L2 ✓` + regression spec). In progress this session
+      (playwright MCP connected).
 
 ## Success criteria
 
