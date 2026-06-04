@@ -1,0 +1,124 @@
+---
+description: "Pagination caps must signal truncation explicitly via record_failed(), never silently mark complete"
+globs: ["*/handlers/*_handler.py", "*/adapters/*_adapter.py", "*/cli/handlers/*.py"]
+alwaysApply: false
+priority: 80
+tags: [data-correctness, pagination, manifest, truncation, critical]
+---
+
+# Data Pagination Truncation Honesty
+
+## Rule
+
+When paginating remote data and hitting a cap (page limit, time budget, or hardcoded limit), NEVER silently mark the result as `captured`-complete. Instead:
+
+1. **If pagination incomplete** (hit cap before exhausting source): emit `record_failed(reason="pagination_capped")` with metadata indicating last_page, total_requested, total_received
+2. **If explicitly truncating** (intentional cost limit): emit manifest entry with `truncated=True` flag (if schema supports it) or use `record_failed` with reason `truncation_cost_limit`
+3. **Always log the truncation decision** with venue, data_type, day, page_count, and why stopping
+
+This prevents data anomalies from silently corrupting downstream processing (partial days marked complete in manifest).
+
+## Pattern
+
+### Honest Truncation Signal (correct)
+
+```python
+# market_tick_data_service/cli/handlers/dex_swaps_handler.py
+def fetch_dex_swaps_paginated(venue, day):
+    all_swaps = []
+    page = 0
+    MAX_PAGES = None  # No hardcoded cap; paginate until exhaust source
+
+    while True:
+        swaps = query_graph_api(venue=venue, day=day, skip=page*1000, first=1000)
+        all_swaps.extend(swaps)
+        page += 1
+
+        # Stop when source returns fewer than page size (exhausted)
+        if len(swaps) < 1000:
+            logger.info(f"Pagination complete: {venue}/{day} — {len(all_swaps)} total swaps in {page} pages")
+            record_captured(venue, day, all_swaps)
+            break
+
+        # Cost limit: if we hit a config-driven cap, signal it explicitly
+        if page >= config.MAX_PAGES_FOR_VENUE.get(venue, 999):
+            logger.warning(
+                f"Pagination capped: {venue}/{day} — {len(all_swaps)} swaps collected over {page} pages, "
+                f"stopping at config limit {config.MAX_PAGES_FOR_VENUE[venue]}"
+            )
+            record_failed(
+                venue=venue,
+                day=day,
+                reason="pagination_capped",
+                metadata={
+                    "pages_collected": page,
+                    "swaps_collected": len(all_swaps),
+                    "cap_reason": "config_cost_limit",
+                }
+            )
+            break
+```
+
+### Test Pattern
+
+```python
+def test_pagination_no_silent_truncation(self):
+    """
+    Verify that >5k-swaps/day are fully collected,
+    OR if a cap is hit, truncation is explicitly signaled (not silently marked complete).
+    """
+    # Mock The Graph API: 6 pages of 1000 swaps each (6,000 total)
+    mock_pages = [
+        pd.DataFrame({"swap_id": range(i*1000, (i+1)*1000)})
+        for i in range(6)
+    ]
+
+    with patch("graph_client.query") as mock_query:
+        mock_query.side_effect = mock_pages
+
+        result = fetch_dex_swaps_paginated("UNISWAP", "2026-06-01")
+
+        # Assert: all 6,000 collected (no hardcoded cap)
+        assert result["swaps_count"] == 6000, "Pagination stopped early"
+        assert result["capture_status"] == "captured", "Full pagination marked captured"
+
+def test_pagination_capped_signals_truncation(self):
+    """
+    If a cost-limit cap is enforced (e.g., max 5 pages),
+    verify that truncation is explicitly flagged, not silent.
+    """
+    config.MAX_PAGES_FOR_VENUE["UNISWAP"] = 5
+    mock_pages = [pd.DataFrame({...}) for _ in range(6)]  # Try 6, cap at 5
+
+    with patch("graph_client.query") as mock_query:
+        mock_query.side_effect = mock_pages
+
+        result = fetch_dex_swaps_paginated("UNISWAP", "2026-06-01")
+
+        # Assert: stopped at cap, but NOT silently marked complete
+        assert result["capture_status"] == "attempted_failed"
+        assert result["failure_reason"] == "pagination_capped"
+        assert result["metadata"]["pages_collected"] == 5
+```
+
+## Anti-Patterns
+
+- ❌ `for page in range(5):` + `break if len(df)<1000` → writes 5 pages as if complete (silent truncation)
+- ❌ Silently dropping pages when hitting a quota — always emit failure reason
+- ❌ Marking day `captured` when data is partial — must use `record_failed` or `truncated=True`
+- ❌ Logging the cap but not emitting manifest signal — both required
+- ❌ Hardcoding limits without config — cost limits MUST be config-driven and logged
+
+## DO
+
+- ✅ Paginate until source exhausted (no hardcoded page limit)
+- ✅ If cost/quota limit is needed: make it config-driven + log it + emit `record_failed`
+- ✅ Test that >5k-swaps/day → all rows captured OR truncation explicitly flagged
+- ✅ Include last_page, total_requested, total_received in metadata when capping
+- ✅ Never silently mark partial data as `captured`-complete
+
+## Reference
+
+- Plan: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 1 (dex_swaps truncation)
+- SSOT: `codex/02-data/availability-manifest-and-data-status.md` § Honest-absence capture signals
+- Related: `cursor-rules/architecture/phantom-captured-row-handling.mdc` (reader-side honest-absence)

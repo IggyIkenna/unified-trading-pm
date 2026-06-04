@@ -1,0 +1,220 @@
+---
+description: "Venue API hostnames must be derived from UAC registry, never hardcoded as string literals"
+globs: ["*/adapters/**/*.py", "*/connectors/**/*.py", "*/cli/handlers/*.py", "*market_interface*.py"]
+alwaysApply: false
+priority: 80
+tags: [config, venue-registry, architecture, hardcoded-hosts, critical]
+---
+
+# Venue URL Registry Derivation Pattern
+
+## Rule
+
+Venue API hostnames (e.g., `api.curve.finance`, `lite-api.jup.ag`, `blue-api.morpho.org`) MUST be:
+
+1. **Registered in UAC** (`unified_api_contracts`) as venue protocol metadata
+2. **Derived at call time** via a registry function (e.g., `get_solana_protocol_url(venue)`) with an optional fallback
+3. **Never hardcoded** as string literals in adapter/connector source code
+
+This enables centralized venue URL management, supports easy fallback/failover, and prevents silent breakage when venues move API endpoints.
+
+## Pattern
+
+### UAC Venue Registry (unified_api_contracts)
+
+```python
+# unified_api_contracts/canonical/venues/defi_protocols.py
+# Central registry for DeFi protocol API endpoints
+
+SOLANA_PROTOCOL_HOSTS = {
+    "JUPITER": "lite-api.jup.ag",
+    "ORCA": "api.orca.so",
+    "RAYDIUM": "api.raydium.io",
+    "KAMINO": "api.kamino.finance",
+}
+
+def get_solana_protocol_url(venue: str, fallback: str = None) -> str:
+    """
+    Retrieve the canonical API host for a Solana DEX.
+
+    Args:
+        venue: Protocol name (JUPITER, ORCA, RAYDIUM, etc.)
+        fallback: Optional fallback URL if venue not in registry
+
+    Returns:
+        Full base URL (https://{host})
+
+    Raises:
+        UnknownVenueError if venue not registered and no fallback provided
+    """
+    if venue not in SOLANA_PROTOCOL_HOSTS:
+        if fallback:
+            logger.warning(f"Venue {venue} not in registry; using fallback {fallback}")
+            return f"https://{fallback}"
+        raise UnknownVenueError(f"Venue {venue} not registered in SOLANA_PROTOCOL_HOSTS")
+
+    host = SOLANA_PROTOCOL_HOSTS[venue]
+    return f"https://{host}"
+
+# Example: EVM/Curve protocol
+EVM_PROTOCOL_HOSTS = {
+    "CURVE": "api.curve.finance",
+    "MORPHO": "blue-api.morpho.org",
+    "AAVE": "api.aave.com",
+}
+
+def get_evm_protocol_url(venue: str, fallback: str = None) -> str:
+    """Similar pattern for EVM protocols."""
+    if venue not in EVM_PROTOCOL_HOSTS:
+        if fallback:
+            logger.warning(f"EVM Venue {venue} not in registry; using fallback {fallback}")
+            return f"https://{fallback}"
+        raise UnknownVenueError(f"EVM Venue {venue} not registered in EVM_PROTOCOL_HOSTS")
+
+    host = EVM_PROTOCOL_HOSTS[venue]
+    return f"https://{host}"
+```
+
+### Adapter/Connector Usage (CORRECT)
+
+```python
+# market_tick_data_service/market_interface/adapters/defi/curve_adapter.py
+from unified_api_contracts.canonical.venues.defi_protocols import get_evm_protocol_url
+
+class CurveAdapter:
+    """Curve DEX adapter — uses registered endpoint."""
+
+    def __init__(self):
+        # CORRECT: derive from registry with optional fallback
+        self.base_url = get_evm_protocol_url("CURVE", fallback="api.curve.finance.legacy")
+        # Example: if new Curve moved to curve-v2-api.com, update UAC registry → changes auto-propagate
+
+    def get_pools(self, day: str) -> pd.DataFrame:
+        url = f"{self.base_url}/pools?day={day}"
+        response = requests.get(url)
+        return self._normalize_response(response)
+
+# market_tick_data_service/cli/handlers/_solana_defi_fetch.py
+from unified_api_contracts.canonical.venues.defi_protocols import get_solana_protocol_url
+
+def fetch_jupiter_quote(venue_pair: str):
+    """
+    Fetch a quote from Jupiter.
+    CORRECT: use registry-derived URL, not hardcoded.
+    """
+    base_url = get_solana_protocol_url("JUPITER")  # Derives "https://lite-api.jup.ag"
+    quote_url = f"{base_url}/quote?inputMint=EPjFWdd5..."
+    response = requests.get(quote_url)
+    return response.json()
+
+# market_tick_data_service/live/connectors/morpho_defi_ws.py
+from unified_api_contracts.canonical.venues.defi_protocols import get_evm_protocol_url
+
+class MorphoWebSocketConnector:
+    """Morpho Blue live WebSocket — uses registry-derived endpoint."""
+
+    def __init__(self):
+        self.api_host = get_evm_protocol_url("MORPHO")  # Derives "https://blue-api.morpho.org"
+        self.ws_url = f"wss://{self.api_host}/ws"  # Convert http→wss for WebSocket
+
+    async def connect(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.ws_connect(self.ws_url) as ws:
+                await self._handle_messages(ws)
+```
+
+### ANTI-PATTERN: Hardcoded URLs (WRONG)
+
+```python
+# ❌ NEVER do this:
+
+# curve_adapter.py
+class CurveAdapter:
+    def __init__(self):
+        # WRONG: hardcoded literal
+        self.base_url = "https://api.curve.finance"
+
+# _solana_defi_fetch.py
+def fetch_jupiter_quote(venue_pair: str):
+    # WRONG: hardcoded URL, venue rename breaks it
+    _JUPITER_QUOTE_API = "https://lite-api.jup.ag"  # If Jupiter changes endpoint → code breaks silently
+
+# morpho_defi_ws.py
+class MorphoWebSocketConnector:
+    def __init__(self):
+        # WRONG: magic string, no fallback, no registry
+        self.ws_url = "wss://blue-api.morpho.org/ws"
+```
+
+### Quality Gate Enforcement
+
+```bash
+# .github/workflows/quality-gates-v2.yml (or scripts/quality-gates.sh)
+# QG Step: no_hardcoded_venue_urls.sh (widen scan directory + patterns)
+
+#!/bin/bash
+# Check for hardcoded venue URLs across adapters + connectors
+
+FORBIDDEN_PATTERNS=(
+    "api\.curve\.finance"
+    "lite-api\.jup\.ag"
+    "blue-api\.morpho\.org"
+    "api\.orca\.so"
+    "api\.raydium\.io"
+)
+
+SCAN_PATHS=(
+    "market_interface/adapters/"
+    "live/connectors/"
+    "cli/handlers/"
+)
+
+for pattern in "${FORBIDDEN_PATTERNS[@]}"; do
+    for path in "${SCAN_PATHS[@]}"; do
+        if grep -r "$pattern" "$path" --include="*.py" | grep -v "# SSOT:" | grep -v "unified_api_contracts"; then
+            echo "❌ ERROR: Hardcoded venue URL '$pattern' found in $path"
+            echo "   FIX: Use get_evm_protocol_url() / get_solana_protocol_url() from UAC instead"
+            exit 1
+        fi
+    done
+done
+
+echo "✅ No hardcoded venue URLs detected"
+```
+
+## Anti-Patterns
+
+- ❌ Hardcoding `api.curve.finance` in adapter code → venue URL change breaks silently
+- ❌ Registering URL in code but not exporting from UAC → not discoverable/not reusable
+- ❌ No fallback parameter → single point of failure (registry outage = adapter down)
+- ❌ QG scan only checks `cli/handlers/` → misses `adapters/` and `connectors/` with hardcoded URLs
+- ❌ "Future migration to registry" — no, it's a hard rule starting now; use registry today
+
+## DO
+
+- ✅ Add venue host to `unified_api_contracts/canonical/venues/*.py`
+- ✅ Import + call `get_*_protocol_url(venue, fallback=...)` in every adapter/connector
+- ✅ Include a fallback for known old URLs (transient migration period)
+- ✅ Widen the QG scan to catch hardcoded hosts in all `*/adapters/` and `*/connectors/` directories
+- ✅ Test that adapter URL comes from UAC registry, not a local constant
+
+## Testing
+
+```python
+def test_adapter_derives_url_from_registry(self):
+    """Verify adapter uses get_evm_protocol_url(), not hardcoded URL."""
+    adapter = CurveAdapter()
+
+    # Assert: URL was derived from registry (not hardcoded)
+    # Detect: check if CurveAdapter.__init__ calls get_evm_protocol_url
+    import inspect
+    source = inspect.getsource(CurveAdapter.__init__)
+    assert "get_evm_protocol_url" in source, "Adapter must derive URL from registry"
+    assert 'base_url = "https://' not in source, "Hardcoded URL found in adapter"
+```
+
+## Reference
+
+- Plan: `plans/active/data_pipeline_acquisition_remediation_2026_06_03.md` § Phase 4 (venue URL registry)
+- SSOT: `unified_api_contracts/canonical/venues/` (canonical host registry)
+- Related: `cursor-rules/workflow/no_hardcoded_venue_urls.sh` (QG enforcement)
