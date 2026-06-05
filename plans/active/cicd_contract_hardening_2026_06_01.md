@@ -1790,6 +1790,30 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       alert (`🔴 flow-blocked` / `🟢 flow-recovered`) mirroring `ci-status-update`'s anti-spam gate. **SUPERSEDES E +
       F** once built (they fold into it). repo: unified-trading-pm.
 
+> **E/F/G VERIFICATION + escalate/back-FF model — slot-1 ikenna 2026-06-05** (operator asked to record findings; not
+> built — these land in the live concurrent agent's `ci_status`/reconciler surface; G supersedes E+F so build G, not E/F):
+>
+> - **E partially covered.** `ci-status-update.yml` already fires the transition-gated Slack `#ci-failures` alert on
+>   `notify_worthy = (status=="FAILING") or (prev=="FAILING" and recovered)` — so the **recovery / "resolved" bookend
+>   exists** (the FROM-FAILING half). Residual: an explicit **SIT-pass** alert (today SIT-green is implied via
+>   promotion) + **main-branch severity** (a `main` QG fail should read CRITICAL distinct from a staging-PR fail — the
+>   notify is currently binary). The per-PR-merge "no longer relevant" close is the only truly-missing E bookend.
+> - **F half-covered.** `main-backmerge-to-ldr.yml` does `main`→LDR back-merge (Guard 2 auto-resolves `ci_status`-only
+>   manifest conflicts; real conflict → human PR **+ orchestrator escalation**). Residual: **staging→LDR backmerge**
+>   (staging-only commits can strand) + a **behind/ahead reporter** for main↔staging / staging↔LDR (only main→LDR is
+>   watched today).
+> - **G not built.** The superseding unified flow-health reporter is unbuilt. Recommend building it as a **standalone
+>   new cron workflow** (reads ci_status + the three ahead/behind deltas + oldest stuck-PR + staging-lock → one
+>   transition alert) so it does NOT edit the concurrent agent's hot `ci-status-update`/reconciler files; fold E+F into
+>   it. Needs an owner (route to the ci_status-surface agent, or a standalone slot).
+> - **Escalate + back-FF loop = VERIFIED COMPLETE** ("every alert → orchestrator", 2026-06-03, concurrent agent). The
+>   escalate agent handles **both peer conflicts AND broken quality gates**: `WALL_TYPES =
+>   {merge_conflict, label_mismatch, sit_failure}`, and `ci_failure_watcher.blocked_failing_prs_to_escalate` routes a
+>   BLOCKED PR with a RED required check (quality-gates-v2) in as `sit_failure`. The worker resolves on
+>   `live-defi-rollout` (never force-pushes / never self-merges). LDR stays healthy via `main-backmerge-to-ldr.yml`; a
+>   non-FF back-merge opens a human `main→LDR` PR **and** fires the orchestrator escalation. So the full
+>   detect→escalate→fix-on-LDR→back-FF→re-escalate-if-conflict loop the operator described is already wired.
+
 **H. Root cause of the slot-dirty-pull churn (bit this session repeatedly):**
 
 - [x] ✅ [SCRIPT] P2. **QG sentinels (`.qg_content_sentinel` / `.qg_last_passed_sha`) now gitignored FLEET-WIDE (slot-3
