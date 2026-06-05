@@ -550,14 +550,18 @@ machinery):
       patterns). Gate error = warning-only, does NOT block. 18 hermetic unit tests in
       tests/unit/test_staging_to_main_dep_order_gate.py (8 PASS + 6 BLOCK + 4 lifecycle constants). QG green.
 
-- [ ] [SCRIPT] P2. **Finish Telegram-retire in the TEMPLATE SSOT (else rollout re-introduces it).** The 2026-06-02
-      operator-decided Telegram→Slack#ci-failures migration is DONE for `.github/workflows/` (10 workflows, grep-clean,
-      dd4732880) — but `scripts/workflow-templates/` (the rollout SSOT via rollout-workflow-templates.sh),
-      `scripts/propagation/templates/`, `scripts/templates/`, and helper scripts (`telegram-helpers.sh`,
-      `send-telegram-rate-limited.sh`, `dispatch-helpers.sh`, `claude-helpers.sh`) still reference Telegram. **Because
-      workflow-templates is the SSOT, the next `rollout-workflow-templates.sh` would re-introduce Telegram into every
-      repo's workflows** — so migrate the templates + helpers to the Slack #ci-failures path (SLACK_CI_WEBHOOK_URL) too,
-      then grep-verify 0 functional Telegram refs workspace-wide. repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **Telegram-retire in the TEMPLATE SSOT — DONE 2026-06-05**
+      (87c4b2af3/a33acd75f/b08535717/4ac5cd03a): all 4 workflow-templates (major-bump-issue-handler, request-major-bump,
+      semver-agent.yml.tmpl, update-dependency-version) now use the inline-Slack `SLACK_CI_WEBHOOK_URL` path (NOT the
+      reusable — it isn't propagated to service repos); 0 live Telegram wiring remains. Rollout no longer re-injects
+      Telegram. ORIG:** The 2026-06-02 operator-decided Telegram→Slack#ci-failures migration is DONE for
+      `.github/workflows/` (10 workflows, grep-clean, dd4732880) — but `scripts/workflow-templates/` (the rollout SSOT
+      via rollout-workflow-templates.sh), `scripts/propagation/templates/`, `scripts/templates/`, and helper scripts
+      (`telegram-helpers.sh`, `send-telegram-rate-limited.sh`, `dispatch-helpers.sh`, `claude-helpers.sh`) still
+      reference Telegram. **Because workflow-templates is the SSOT, the next `rollout-workflow-templates.sh` would
+      re-introduce Telegram into every repo's workflows\*\* — so migrate the templates + helpers to the Slack
+      #ci-failures path (SLACK_CI_WEBHOOK_URL) too, then grep-verify 0 functional Telegram refs workspace-wide. repo:
+      unified-trading-pm.
 
 ### Staging-freeze diagnosis + event-driven cascade fix (2026-06-03 slot 1)
 
@@ -1791,14 +1795,20 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 **F. Drift / reconciliation gaps:**
 
-- [ ] [SCRIPT] P2. **behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR is
+- [x] ✅ [SCRIPT] P2. **behind/ahead reporter — DONE via PR #145** (flow-health reporter computes all 3 pairs as message
+      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR is
       watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
-- [ ] [SCRIPT] P2. **staging→LDR backmerge** — only `main-backmerge-to-ldr.yml` exists; staging-only commits can strand.
+- [x] ✅ [SCRIPT] P2. **staging→LDR backmerge — DONE 2026-06-05** (`unified-trading-pm@8cd62f42e` retains
+      `.github/workflows/staging-backmerge-to-ldr.yml`: staging→LDR no-ff merge, 5× FF-retry, conflict PR + escalation;
+      shares backmerge-to-ldr concurrency w/ main-backmerge). ORIG: staging→LDR backmerge — only main-backmerge existed.
       repo: unified-trading-pm.
 
 **G. The better way — collapse the point-checks:**
 
-- [x] ✅ [SCRIPT] P2. **Unified flow-health reporter** — one cron computing, per repo,
+- [x] ✅ [SCRIPT] P2. **Unified flow-health reporter — CANONICAL = PR #145** (the better impl: behind/ahead = context
+      not offender-trigger → no false-positive on normal staging-behind-LDR drift; durable committed-state;
+      schema-gate-safe). A concurrent agent of mine shipped a DUP to LDR — REVERTED `8cd62f42e` (kept my
+      staging-backmerge). Cross-slot ping in `_agent_pings.md`. ORIG: one cron computing, per repo,
       `{ldr_green, ahead/behind ×3 (main/staging/LDR), oldest stuck-PR age, staging lock-state}` → a single transition
       alert (`🔴 flow-blocked` / `🟢 flow-recovered`) mirroring `ci-status-update`'s anti-spam gate. **SUPERSEDES E +
       F** once built (they fold into it). repo: unified-trading-pm. **BUILT 2026-06-05 — PR #145 (auto-merge enabled, ON
