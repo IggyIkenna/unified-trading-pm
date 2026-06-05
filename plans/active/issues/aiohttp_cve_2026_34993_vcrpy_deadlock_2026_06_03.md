@@ -114,10 +114,20 @@ wedged LDR→staging promotion _should_ surface in `ci_status` (vs being owned s
 poller) is an open alerting-design question — noted here, not yet root-caused, deliberately not filed as a standalone
 issue.
 
-**Recommended action — UPDATED 2026-06-05 (operator decision): KEEP `aiohttp` 3.14.0; fix the deadlock on the vcrpy
-side, NOT by downgrading aiohttp.** 3.14.0 is the genuinely-patched, audited version and is now the fleet-wide locked
-version (verified: all repos on `aiohttp=3.14.0`), so a revert to 3.13.5 is explicitly REJECTED — it would re-open the
-CVE to keep a test shim happy. The break is entirely in `vcrpy`'s aiohttp stub
+> **⛔ SUPERSEDED 2026-06-05 (operator override, Ikenna [slot-1·laptop]) — the "keep 3.14 + vcrpy shim" direction below
+> was NOT taken. The operator chose to DOWNGRADE the whole fleet to `aiohttp>=3.13.4,<3.14.0` (locked to 3.13.5)
+> instead. This was an explicit override of the immediately-prior committed "KEEP 3.14 + shim" decision (commits
+> `a28b9ee7d`/`f51e48a23`), made with full knowledge of the conflict. The downgrade is now the workspace SSOT — recorded
+> as a KNOWN EXCEPTION in `cursor-configs/CLAUDE.md` § "Dependencies + builds". Rationale for override: ship the
+> simplest guaranteed-working state now (3.13.5 ran fleet-wide for weeks pre-bump), rather than author + verify a compat
+> shim against an unreleased vcrpy fix. The shim approach is preserved below for the record but is NOT the plan of
+> record. ⚠️ Another session had committed the shim direction — they should `git pull` + read the CLAUDE.md exception
+> before doing further aiohttp/vcrpy work.**
+
+**Recommended action — SUPERSEDED (see banner above): KEEP `aiohttp` 3.14.0; fix the deadlock on the vcrpy side, NOT by
+downgrading aiohttp.** 3.14.0 is the genuinely-patched, audited version and is now the fleet-wide locked version
+(verified: all repos on `aiohttp=3.14.0`), so a revert to 3.13.5 is explicitly REJECTED — it would re-open the CVE to
+keep a test shim happy. The break is entirely in `vcrpy`'s aiohttp stub
 (`vcr/stubs/aiohttp_stubs.py: MockStream(asyncio.StreamReader, streams.AsyncStreamReaderMixin)`), which references the
 symbol aiohttp 3.14 removed. **`vcrpy` 8.1.1 is the LATEST PyPI release (verified — no >8.1.1 exists), so there is no
 upgrade path** — the fix is a **compatibility shim** that re-provides `AsyncStreamReaderMixin` before vcrpy imports it
@@ -127,17 +137,25 @@ base), wired in the VCR repos' test bootstrap (conftest/sitecustomize). Once the
 
 ## Successor (close this issue when done)
 
-- [ ] [DEPS] P1. **Add a vcrpy↔aiohttp-3.14 compat shim to the VCR repos (UAC / UTL / execution-service / MTDS) — KEEP
-      aiohttp 3.14.0, do NOT downgrade.** Re-provide `aiohttp.streams.AsyncStreamReaderMixin` (an empty mixin base)
-      before vcrpy imports its aiohttp stub — wire it in each repo's test bootstrap (`conftest.py` /
-      `sitecustomize`-style early import) so `vcr/stubs/aiohttp_stubs.py` loads under aiohttp 3.14. vcrpy 8.1.1 is the
-      latest PyPI release (no upgrade path), so the shim is the fix. Verifier: all `tests/vcr/*` green on aiohttp
-      3.14.0. Owner: cicd/dep-security epic. Cold-start: read the AUDIT UPDATE above. (Actively jamming the LDR→staging
-      promotion on every VCR repo until landed.)
-- [ ] [DEPS] P2. **Drop the `--ignore-vuln CVE-2026-34993` from `base-service.sh` + `base-library.sh` once the P1 shim
-      makes VCR green** — aiohttp is already 3.14.0 fleet-wide (the genuinely-patched version), so the ignore is now
-      redundant masking; remove it so pip-audit reflects the real (clean) state. Verifier: `pip-audit` clean with NO
-      `--ignore-vuln CVE-2026-34993` + all VCR cassette tests green. Owner: cicd/dep-security epic.
+- [x] ✅ [DEPS] P1. **SUPERSEDED by override → REPLACED with the fleet downgrade (DONE 2026-06-05, Ikenna [slot-1]).**
+      The shim was NOT built. Instead, per operator override, the **whole fleet** was pinned to
+      `aiohttp>=3.13.4,<3.14.0` (locked to 3.13.5): `workspace-constraints.toml` + regenerated
+      `canonical-dependency-manifest.json` + all 18 repos that declare aiohttp directly (alerting,
+      batch-live-reconciliation, client-reporting-api, deployment-api, deployment-service, execution-service, features,
+      fund-administration, instruments, market-data-processing, market-tick-data, ml-service, strategy-service,
+      trading-agent, unified-api-contracts, unified-trading-api, unified-trading-library, unified-trading-pm), each
+      `uv lock --upgrade-package aiohttp` → 3.13.5. **Verified:** `check-dependency-alignment.py --json` →
+      `aligned: true` (0 aiohttp issues); UAC `tests/vcr/` → 145 passed/6 skipped (the failing promote run 27009399635
+      is now green); `--ignore-vuln CVE-2026-34993/47265` stays in the QG bases (covers the non-exploitable CVE).
+      Recorded as a KNOWN EXCEPTION in `cursor-configs/CLAUDE.md`.
+- [ ] [DEPS] P2. **Lift the `<3.14` cap + bump fleet to `aiohttp>=3.14` + drop the two `--ignore-vuln` flags — ONLY when
+      vcrpy ships an aiohttp-3.14-compatible release** (track [vcrpy#995](https://github.com/kevin1024/vcrpy/issues/995)
+      / >8.1.1). Steps: bump `workspace-constraints.toml` → regen `canonical-dependency-manifest.json` → set all 18
+      repos → `uv lock --upgrade-package aiohttp` + `uv lock --upgrade-package vcrpy` per repo → remove
+      `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` from `base-service.sh` + `base-library.sh` → re-QG +
+      update the `cursor-configs/CLAUDE.md` known-exception. Verifier: `pip-audit` clean with NO aiohttp ignores + all
+      VCR cassette tests green on aiohttp 3.14. Owner: `cicd_contract_hardening_2026_06_01.md` (parent_epic:
+      infrastructure_master) — NOTE: there is no `cicd/dep-security` epic; the earlier successor todos misnamed it.
 - [x] ✅ [DEPS] P2. **Fix deployment-service uv blockers (2a duplicate `[tool.uv.sources.unified-api-contracts]` key +
       2b corrupt `cbor2` lock entry) — DONE 2026-06-04 (slot-4)** — deployment-service@3899a5d. Removed the duplicate
       `[tool.uv.sources.unified-api-contracts]` stanza (2a) — that re-exposed 2b: the lock had a dangling

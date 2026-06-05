@@ -549,17 +549,17 @@ design).
       tab-mirror push LDR with the workflow-scoped GH_PAT instead of `GITHUB_TOKEN` → `synchronize` fires natively, no
       stale checks ever, no close+reopen needed. Not done here (tab-mirror is the actively-churning active-host-filter
       file; editing = 24-repo re-rollout + concurrent-edit risk).
-- [ ] [DEPS] P0. **Fleet-wide aiohttp on the CVE-vulnerable floor `>=3.13.4` (CVE-2026-34993 RCE) — SECURITY + PM-gate
-      blocker (2026-06-05).** 17 repos + `canonical-dependency-manifest.json` all pin `aiohttp>=3.13.4,<4.0.0`
-      (vulnerable; fix = 3.14.0). The fan-out's client-reporting CVE bump to `>=3.14.0` was correct but **half-applied**
-      (canonical + the other 17 not bumped) → client-reporting is now the lone dep-alignment outlier → **PM
-      `check-dependency-alignment` FAILS → blocks ALL PM quickmerges** (Phase B + plan stuck behind it). FIX (security
-      direction, bump UP not down): set `canonical-dependency-manifest.json` aiohttp → `>=3.14.0,<4.0.0`, bump all 17
-      repos' pyproject to match, `uv     lock` each, ship. Repos: batch-live-reconciliation, deployment-api, alerting,
-      instruments, fund-administration, market-tick-data, execution, strategy, features, unified-api-contracts,
-      unified-trading-api, unified-trading-pm, trading-agent, unified-trading-library, market-data-processing,
-      deployment-service, ml-service. Lesson: a CVE dep bump MUST also bump the canonical manifest (else it self-blocks
-      the PM gate).
+- [x] ✅ [DEPS] P0. **RESOLVED 2026-06-05 (Ikenna [slot-1]) — fleet aiohttp UNIFIED at `>=3.13.4,<3.14.0`, NOT bumped to
+      3.14.** This todo originally prescribed "bump UP to 3.14 fleet-wide" — **reversed by operator override**: aiohttp
+      3.14 breaks vcrpy 8.1.1 (removed `AsyncStreamReaderMixin`) → jams every VCR repo's promotion, and no compatible
+      vcrpy exists. The real blocker here — the dep-alignment failure — is fixed by making the fleet UNIFORM at the
+      lower floor: `workspace-constraints.toml` + regenerated `canonical-dependency-manifest.json` + all 18 repos pin
+      `aiohttp>=3.13.4,<3.14.0` (locked 3.13.5); `check-dependency-alignment.py --json` → **`aligned: true`**. CVE stays
+      covered by the sanctioned `--ignore-vuln` in the QG bases (non-exploitable client-only usage). SSOT:
+      `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` + `cursor-configs/CLAUDE.md` §
+      "Dependencies + builds" (KNOWN EXCEPTION). **Lesson retained:** a CVE dep bump MUST also bump the canonical
+      manifest in lockstep (else it self-blocks the PM `check-dependency-alignment` gate) — satisfied now at the unified
+      <3.14 floor.
 - [x] ✅ [DEPS] P1. **Stale `uv.lock` sweep — DONE 2026-06-05.** 2 BLOCKED repos failed codex pip-audit from stale locks
       (aiohttp, starlette CVEs); the aiohttp fleet bump re-locked 17. `uv lock --check` sweep across the fleet found 4
       more stale: client-reporting-api, greeks-service, ibkr-gateway-infra re-locked + shipped (now in-sync);

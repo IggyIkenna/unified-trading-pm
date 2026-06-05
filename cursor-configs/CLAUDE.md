@@ -97,6 +97,16 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 
 - Flat deps only — one `[project.dependencies]` per `pyproject.toml`. No extras.
 - `uv pip install` not `pip install`.
+- **KNOWN EXCEPTION — `aiohttp` pinned `<3.14` fleet-wide (do NOT bump to 3.14 / "fix the CVE" — operator decision
+  2026-06-05):** the canonical range is `aiohttp>=3.13.4,<3.14.0` in `workspace-constraints.toml` +
+  `canonical-dependency-manifest.json` + all 18 repos that declare it (locked to 3.13.5). aiohttp 3.14.0 removed
+  `aiohttp.streams.AsyncStreamReaderMixin`, which **vcrpy 8.1.1 (latest PyPI, no fix released —
+  [vcrpy#995](https://github.com/kevin1024/vcrpy/issues/995)/PR#996 open)** still references → 3.14 breaks every VCR
+  cassette suite (UAC/UTL/execution-service/MTDS) and jams the LDR→staging promotion. CVE-2026-34993/47265 are covered
+  by the **sanctioned `--ignore-vuln` already in `base-service.sh` + `base-library.sh`** (non-exploitable: client-only
+  aiohttp usage, no `CookieJar.load()` on untrusted input). **Lift the cap ONLY when a vcrpy release supports aiohttp
+  3.14** — then bump the canonical range, re-lock fleet-wide, drop the two `--ignore-vuln` flags. SSOT:
+  `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`.
 - Dockerfiles: `ARG PROJECT_ID` +
   `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
 
