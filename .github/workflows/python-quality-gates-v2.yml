@@ -216,6 +216,8 @@ jobs:
 
       - name: Install dependencies
         shell: bash
+        env:
+          DEP_REPOS: ${{ inputs.dep_repos }}
         run: |
           uv venv .venv
           uv sync
