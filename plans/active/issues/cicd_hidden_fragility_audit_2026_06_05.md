@@ -1,13 +1,14 @@
 ---
 title: CI/CD pipeline hidden-fragility audit — silent-failure & instability risks
 created: 2026-06-05
-author: harshkantariya
 source:
   - 6-agent parallel CI/CD subsystem audit (slot-1, 2026-06-05)
   - independent verification against live workflows + GitHub Actions run history
 locked_by: live-defi-rollout
 related:
   - plans/active/cicd_contract_hardening_2026_06_01.md
+priority: P2
+status: active
 ---
 
 ## What I found

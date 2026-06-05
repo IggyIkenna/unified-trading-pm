@@ -1,7 +1,6 @@
 ---
 title: "MASTER: canonical-SSOT for data+manifest (cross-plan coordinator) + DeFi manifest canonicalisation"
 created: 2026-06-01
-author: ikenna
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-defi
 status: active

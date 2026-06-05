@@ -1,12 +1,13 @@
 ---
 title: Fleet dep-infra blockers — aiohttp CVE-2026-34993 vs vcrpy deadlock + deployment-service pyproject duplicate-key
 created: 2026-06-03
-author: ikennaigboaka [slot-6·laptop]
 source:
   - features-service quality-gates.sh pip-audit (CVE-2026-34993)
   - unified-api-contracts quality-gates.sh (64 vcrpy AttributeError on aiohttp 3.14.0)
   - deployment-api uv lock --upgrade-package aiohttp (deployment-service pyproject TOML parse error)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

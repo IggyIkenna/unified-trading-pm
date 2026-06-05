@@ -3,11 +3,12 @@ title:
   Fleet promotion pipeline — staging mechanics RESTORED; 7 repos blocked at quality-gates-v2 on real QG debt +
   dependency-ordering
 created: 2026-06-05
-author: ikennaigboaka [slot-1·laptop]
 source:
   - UI registry-drift fix → discovered staging 192-behind → fleet-wide promotion-pipeline breakage
   - per-repo staging↔main↔LDR topology audit 2026-06-05
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

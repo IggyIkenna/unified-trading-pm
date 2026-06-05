@@ -1,7 +1,6 @@
 ---
 title: deployment-scripts bucket — 57 TiB (99.9% soft-deleted) from VM run.log re-upload churn + 7-day soft-delete
 created: 2026-06-01
-author: harsh
 parent_epic: infrastructure_master
 source:
   - unified-trading-library/unified_trading_library/lifecycle/uploader.py
@@ -13,6 +12,8 @@ source:
 locked_by: live-defi-rollout
 estimate_calibrated_ai_days: 0.2
 estimate_class: infra
+priority: P2
+status: active
 ---
 
 > **🟡 PROCESS NOTE (Ikenna 2026-06-02) — `deployment-service #15` is the wrong delivery vehicle for this work.** PR #15

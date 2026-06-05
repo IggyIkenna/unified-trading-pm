@@ -1,12 +1,13 @@
 ---
 title: CI false-positive alerts — infra/checkout noise pages #ci-failures indistinguishably from real reds (suppression catalogue seed)
 created: 2026-06-05
-author: harsh [hk·interactive]
 source:
   - deployment-service quality-gates-v2 run 27008990509 (live-defi-rollout promote PR) — actual job-log read
   - per-run "Notify #ci-failures" step conclusions verified via actions/runs/<id>/jobs API
   - live red-board sweep 2026-06-05 across 26 workspace repos
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 > Seeded per Ikenna's 2026-06-05 ask ("help diagnose false positives and missed alerts … start verbose, cut when

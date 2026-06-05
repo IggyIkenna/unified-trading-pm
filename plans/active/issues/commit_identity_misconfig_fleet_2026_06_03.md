@@ -3,7 +3,6 @@ title:
   "Commit identity wrong fleet-wide — ~14/25 worktrees author as semver-rollout[bot], ~7 as agent@ci.local; + add
   slot·host attribution"
 created: 2026-06-03
-author: ikenna (slot-3)
 source:
   - slot-3 worktree audit 2026-06-03 (git config user.email across .tabs/3/*)
   - codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution"
@@ -12,6 +11,7 @@ priority: P1
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
+status: active
 ---
 
 ## What I found

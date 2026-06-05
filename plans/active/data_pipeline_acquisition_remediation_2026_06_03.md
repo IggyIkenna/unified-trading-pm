@@ -9,7 +9,6 @@ estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
 locked_by: live-defi-rollout
 locked_since: 2026-06-03
-type: code
 completion_gates:
   code: C5
   deployment: none

@@ -3,7 +3,6 @@ title:
   "Instruments-service manifest + data canonicalisation (audit-first single-walk) — L3 owner for the instruments I/O
   surface"
 created: 2026-06-01
-author: ikenna
 parent_epic: epics/instruments_master.md
 assigned_vm: vm-cross-cutting
 status: active

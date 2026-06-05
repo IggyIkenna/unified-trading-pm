@@ -1,7 +1,6 @@
 ---
 title: Local slot-cron FF-pull hardening — stale top-level clones + ping-ledger FF-block
 created: 2026-06-02
-author: ikenna (slot 1 main)
 source:
   - plans/active/cicd_contract_hardening_2026_06_01.md
   - codex/05-infrastructure/per-tab-worktrees.md
@@ -11,6 +10,7 @@ status: RESOLVED — ready to archive once acked
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
+priority: P2
 ---
 
 > **✅ RESOLVED 2026-06-02.** All three layers shipped + one-time sync executed. This doc records the problem +

@@ -3,7 +3,6 @@ title:
   "pipeline_mode standardisation — source-aware live, batch→live continuity, replay/recovery mode, reader precedence +
   live-readiness gates"
 created: 2026-06-05
-author: ikenna [slot-6·laptop]
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-cross-cutting
 status: active

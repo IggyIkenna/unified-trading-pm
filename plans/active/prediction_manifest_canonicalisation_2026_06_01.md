@@ -1,7 +1,6 @@
 ---
 title: "Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction"
 created: 2026-06-01
-author: ikenna
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-prediction
 status: active

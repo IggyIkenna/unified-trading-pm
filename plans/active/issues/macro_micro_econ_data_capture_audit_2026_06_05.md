@@ -1,7 +1,6 @@
 ---
 title: "Macro + micro economic data capture — coverage audit across all 5 asset groups (capacity vs backfill)"
 created: 2026-06-05
-author: Harsh (audit run via Claude Code)
 source:
   - Codebase audit 2026-06-05 — 6-domain parallel sweep (macro / CeFi / DeFi / TradFi / Sports+Prediction /
     codex-registry) walking the adapter→pipeline→manifest→codex chain with file:line evidence
@@ -15,6 +14,8 @@ status: active
 estimate_class: infra
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 5
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Macro + micro economic data capture — coverage audit (2026-06-05)

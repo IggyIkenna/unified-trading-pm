@@ -1,11 +1,12 @@
 ---
 title: Orphaned unmerged work on 7 tab/rootm/* branches (dead root-VM agent slots) — review-or-inherit before deletion
 created: 2026-06-05
-author: ikennaigboaka [slot-1·laptop]
 source:
   - tab/rootm/* cleanup 2026-06-05 (global-unique tab-branch naming follow-up)
   - tab_branch_global_uniqueness (qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md § precondition)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

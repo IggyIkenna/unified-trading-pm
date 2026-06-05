@@ -3,12 +3,13 @@ title:
   unified-trading-system-ui registry-drift CI job — RESOLVED (tokens/UIC/generator-args/py3.13/UTL/PM-checkout +
   registry refreshed from UAC main, pw:L2 ✓); GHA-green is the final confirmation
 created: 2026-06-04
-author: ikennaigboaka [slot-1·laptop]
 source:
   - tab-mirror fleet rollout 2026-06-04 (the only repo that failed STEP 5.18 token-check during rollout)
   - unified-trading-system-ui/.github/workflows/ci.yml (registry-drift job)
   - unified-trading-pm/scripts/openapi/generate_ui_reference_data.py (current interface)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
