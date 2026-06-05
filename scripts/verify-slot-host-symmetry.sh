@@ -208,7 +208,16 @@ host_fail=${fail}
 #    setup-workspace-from-manifest.sh). Fix: re-run setup-tab-worktrees.sh (provisions
 #    per-worktree identity) or the manual fallback in CLAUDE.md § "Commit attribution".
 section "per-worktree commit identity (recurrence guard)"
-CANON_EMAIL="ikennaigboaka@gmail.com"
+# Per-operator canonical identity — NOT hardcoded. The GitHub-attributed email differs per
+# operator (Ikenna ikennaigboaka@gmail.com vs Harsh harshkantariya.work@gmail.com), so a
+# hardcoded constant made step 9 unachievable on Harsh's laptop without mislabeling his
+# commits as Ikenna's. Resolve the SAME way the provisioner (setup-tab-worktrees.sh) + the
+# per-repo hook (fix-commit-identity.sh) do: env SLOT_CANON_EMAIL → per-machine
+# `git config --global slotIdentity.email` → fleet default (VMs + Ikenna laptop).
+# A non-Ikenna host declares itself once: git config --global slotIdentity.email <email>.
+# SSOT: CLAUDE.md § "Commit attribution".
+CANON_EMAIL="${SLOT_CANON_EMAIL:-$(git config --global slotIdentity.email 2>/dev/null || true)}"
+CANON_EMAIL="${CANON_EMAIL:-ikennaigboaka@gmail.com}"
 if [[ -d "${WORKSPACE_ROOT}/.tabs" ]]; then
     bad_identity=0
     checked=0

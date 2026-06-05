@@ -45,13 +45,17 @@ related_plans:
       (stopped). Active set → `ikennaigboaka hk planning`. SHIPPED 2026-06-05 (see evidence on flip). Repo:
       `unified-trading-pm` (`scripts/workflow-templates/tab-mirror-to-ldr.yml` + PM copy; re-rollout to fleet).
       parent_epic: orchestrator_master.
-- [ ] [INFRA] P1. **Provision 5 interactive planning slots on the central VM as `tab/planning/N`.** NOTE this is a
-      RENAME, not a fresh box: the live central VM (`i-0c9b283b…`/`13.113.200.22`) is currently branded **`vm-0`**
-      (`tab/vm-0/10` exists, AutoSpawn ON, per the worker-topology LIVE STATUS) — it had THREE names (`planning-vm` /
-      `vm-0` / "Central API VM"), now canonicalized to `planning`. So: set `ORCHESTRATOR_VM_ID=planning`, re-provision
-      slots as `tab/planning/1-5`, **scope AutoSpawn so it does NOT auto-assign backlog jobs to the human planning
-      slots** (Ikenna/Harsh drive; escalation+plan-health stay ping-driven), and retire the stale `tab/vm-0/10`. SSH
-      into `13.113.200.22` →
+- [x] ✅ [INFRA] P1. **Provision 5 interactive planning slots on the central VM as `tab/planning/N`.** SHIPPED
+      2026-06-05 (clean re-provision of the live central VM, `i-0c9b283b…`/`13.113.200.22`). Done: backed up
+      `.env.local`/`backends.json`/`state.db`; stopped orchestrator; killed the 5 `orch-slot-*` workers; set
+      `ORCHESTRATOR_VM_ID=vm-0→planning` + `ORCHESTRATOR_VM_ROLE=epic→planning` in `.env.local`; renamed
+      `ikenna-vm→planning` in `backends.json`; tore down all **489** `tab/vm-0/*` worktrees; re-init **5** slots
+      `tab/planning/1-5` (uniform `planning` prefix, `.worktree-identity.conf` persisted) + ff-pull cron; restarted
+      orchestrator. **VERIFIED**: API `/health`=200 on the EIP, backend `VM_ID=planning ROLE=planning`, 5 slots, 0
+      `vm-0` worktrees left, orphan remote `tab/vm-0/10` deleted. No backlog auto-assign (ROLE=planning + no plans
+      `assigned_vm: planning` → empty backlog → humans drive; escalation+plan-health remain ping-driven). **It WAS a
+      rename** from the 3-named box (`planning-vm` / `vm-0` / "Central API VM" / `ikenna-vm`). Original detail: SSH into
+      `13.113.200.22` →
       `ORCHESTRATOR_VM_ID=planning bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 5 --operator planning`
       (uniform `planning` prefix via the durable fix) + `install-slot-cron-ff-pull.sh` +
       `verify-slot-host-symmetry.sh`=0. **Slot roles (operator 2026-06-05 — review ≠ CI-escalation ≠ plan-health, three
@@ -75,7 +79,15 @@ related_plans:
       `ORCHESTRATOR_VM_ID`, so `bootstrap_vm.sh`'s `VM_ID=${ORCHESTRATOR_VM_ID:-${VM_NAME}}` would brand the long name.
       Add `export ORCHESTRATOR_VM_ID=planning` to the central VM's user-data before the bootstrap call (same
       VM_NAME≠VM_ID bug class fixed in setup-tab-worktrees.sh). Repo: `agent-orchestrator` / launch config. parent_epic:
-      orchestrator_master.
+      orchestrator_master. **Note: needs an instance stop to edit user-data — defer to a maintenance window; the running
+      box is already `planning` via `.env.local` + the persisted `.worktree-identity.conf`, so this only affects a
+      future full re-launch.**
+- [ ] [DOC] P2. **Align the registry id `planning-vm` → `planning`** to match the now-running
+      `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches (the box's canonical name). Residual after the
+      2026-06-05 re-provision: the registry ENTRY was updated (instance id + EIP + central-API note) but its `id:` is
+      still `planning-vm`; this plan's `assigned_vm: planning-vm` + any other `assigned_vm` refs would move to
+      `planning`. Low-risk (planning VM owns no executing epics) but closes the last name-mismatch. Run
+      `regen_vm_registry.py --check` after. Repo: `unified-trading-pm`. parent_epic: orchestrator_master.
 - [x] ✅ [DOC] P1. **Fix `orchestrator_vm_registry.yaml` staleness.** SHIPPED 2026-06-05. (a) `planning-vm` entry: added
       real instance id `i-0c9b283b31d6b5ca7` + `public_ip: 13.113.200.22` (Elastic IP) + `api_url`/`fqdn`
       `api.agent-orchestrator.odum-research.com` + instance_type + the "THIS IS THE CENTRAL API VM" note + 5-slot

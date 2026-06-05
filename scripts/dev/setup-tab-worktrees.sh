@@ -67,7 +67,16 @@ INTEGRATION_BRANCH="live-defi-rollout"
 # WORKTREE_HOST is resolved AFTER arg-parse + persisted-identity read-back (below),
 # from the canonical short host id (ORCHESTRATOR_VM_ID-first) so the commit host
 # AGREES with the branch prefix — see the DURABLE-IDENTITY block.
-CANON_GIT_EMAIL="ikennaigboaka@gmail.com"
+# Per-operator (NOT hardcoded — Harsh's laptop commits as harshkantariya.work@gmail.com, not
+# Ikenna's). Resolution: env SLOT_CANON_EMAIL/SLOT_CANON_NAME → per-machine `git config --global
+# slotIdentity.email`/`.name` → fleet default (VMs + Ikenna laptop). Mirrors the per-repo
+# fix-commit-identity.sh hook so the hook is a silent no-op after provisioning. A non-Ikenna
+# host declares itself once: git config --global slotIdentity.email <email> ; .name <handle>.
+# SSOT: CLAUDE.md § "Commit attribution".
+CANON_GIT_EMAIL="${SLOT_CANON_EMAIL:-$(git config --global slotIdentity.email 2>/dev/null || true)}"
+CANON_GIT_EMAIL="${CANON_GIT_EMAIL:-ikennaigboaka@gmail.com}"
+CANON_GIT_NAME="${SLOT_CANON_NAME:-$(git config --global slotIdentity.name 2>/dev/null || true)}"
+CANON_GIT_NAME="${CANON_GIT_NAME:-ikennaigboaka}"
 
 # FM6 (orchestrator_autonomy_audit_remediation): per-repo integration base. Reads
 # workspace-manifest.json repositories.<repo>.integration_branch, defaulting to
@@ -272,7 +281,7 @@ set_worktree_identity() {
     local slot="$1" slot_repo_dir="$2"
     [[ -d "${slot_repo_dir}/.git" || -f "${slot_repo_dir}/.git" ]] || return 0
     git -C "${slot_repo_dir}" config extensions.worktreeConfig true 2>/dev/null || true
-    git -C "${slot_repo_dir}" config --worktree user.name "ikennaigboaka [slot-${slot}·${WORKTREE_HOST}]" 2>/dev/null || true
+    git -C "${slot_repo_dir}" config --worktree user.name "${CANON_GIT_NAME} [slot-${slot}·${WORKTREE_HOST}]" 2>/dev/null || true
     git -C "${slot_repo_dir}" config --worktree user.email "${CANON_GIT_EMAIL}" 2>/dev/null || true
 }
 
