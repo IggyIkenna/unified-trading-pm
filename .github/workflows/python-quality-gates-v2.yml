@@ -219,6 +219,22 @@ jobs:
         run: |
           uv venv .venv
           uv sync
+          # Install test-only sibling deps that were cloned (DEP_REPOS) but are NOT in
+          # [project.dependencies], so `uv sync` skips them — e.g. deployment-api for
+          # deployment-service (a test-only peer; tests import deployment_api, but it was
+          # dropped from pyproject to break the deployment-api<->deployment-service circular
+          # dep + fix dependency-alignment). The local `quality-gates.sh` installs these via
+          # its LOCAL_DEPS block, but that block is guarded `if [ -z GITHUB_ACTIONS ]` (= CI
+          # has its own setup) — so in CI nothing installed the sibling clone → conftest
+          # ImportError. The `uv pip show` guard makes this a strict NO-OP for every normal
+          # pyproject dep (already installed by uv sync); it only installs a genuinely-missing
+          # cloned peer, into the same .venv used by the gate step below.
+          for dep in $DEP_REPOS; do
+            if [ -d "../$dep" ] && ! uv pip show "$dep" >/dev/null 2>&1; then
+              echo "Installing test-only sibling dep not in pyproject: ../$dep"
+              uv pip install -e "../$dep" || echo "WARN: editable install of ../$dep failed (non-fatal)"
+            fi
+          done
 
       - name: Run quality gates
         shell: bash
