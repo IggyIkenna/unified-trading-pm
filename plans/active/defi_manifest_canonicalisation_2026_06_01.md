@@ -633,6 +633,15 @@ What to verify/wire (B0 corrected scope):
           DEX_POOLS, point all to DEX_POOL_STATE) or genuinely DIFFERENT shapes (then the operator's canonical-pool name
           needs a distinct token from the Phase-2 type — **operator decision**). Also check `DEX_POOL_SWAPS` does not
           exist yet (only DEX_POOL_STATE/DEX_ORDERBOOK/DEX_QUOTE/DEX_TRADES). Repo: unified-api-contracts. parent_epic:
+          mtds_mdps_master. **⚖️ OPERATOR DECIDED 2026-06-05 = SAME / one SSOT (see A11g): merge.** The data-path
+          collapse shipped (A11g flipped solana_defi to `dex_pool_state`; the C0 union proven a lossless superset of the
+          vault snapshot). The candle-enum is now the last vestige. **Remaining UAC+MDPS taxonomy cleanup (bounded, own
+          QG cycle — verified safe scope 2026-06-05):** `DataType.DEX_POOLS` is referenced by member-name NOWHERE
+          (grep-clean across uac/mtds/mdps/features); `DataType.DEX_SWAPS` is referenced ONLY at MDPS `models.py:141`;
+          `DEX_POOL_SWAPS` does NOT yet exist in the candle enum. Steps: (1) add `DEX_POOL_SWAPS = "dex_pool_swaps"` to
+          the candle `DataType` enum next to `DEX_POOL_STATE`; (2) repoint MDPS `models.py:141` `DataType.DEX_SWAPS` →
+          `DEX_POOL_SWAPS`; (3) remove the legacy `DEX_POOLS`/`DEX_SWAPS` members (StrEnum-value collision then gone);
+          (4) UAC + MDPS QG. Repo: unified-api-contracts + market-data-processing-service. parent_epic:
           mtds_mdps_master.
   - [x] ✅ [CODE] P1. **A11d — DONE (slot-2 2026-06-04, mtds@aa92be0f).** Grep-then-read corrected the framing: the
         `OPERATIONS` `bucket_type` values (`dex-pools`/`dex-swaps`/`lending-indices`) are the **correct `kind=`
@@ -650,19 +659,17 @@ What to verify/wire (B0 corrected scope):
     runtime bug):** mtds `test_smoke_matrix.py` (`market-data-tick-{category}` mock + `category` parquet column — needs
     reading `smoke.py`'s current bucket resolution first) + deployment-ui `DataStatusTab.phase8h.test.ts`
     (`honest["dex_pools"]` — TS, rides B5). Repos: market-tick-data-service + deployment-ui.
-  - [ ] [CODE] P1. **A11g — solana_defi_handler writes legacy `dex_pools` data_type to BOTH manifest + path (slot-2
-        readiness audit 2026-06-04) — GATED on the A11c-candle-enum operator decision, do NOT unilaterally flip.**
-        `_PROTOCOL_TO_DATA_TYPE` maps kamino/orca/raydium/phoenix → `"dex_pools"`
-        (`solana_defi_handler.py:197,199-201`), forwarded to `recorder.record_*(data_type=...)` (L408/419/430) +
-        `write_defi_rows(data_type=data_type or "dex_pools")` (L530). EVM `dex_pools_handler` already emits canonical
-        `dex_pool_state` (C0-CN2), so post-migration live Solana writes would desync (canonical historical
-        `dex_pool_state` vs new `dex_pools`) → NOT*IN_SCOPE in the canonical denominator. **BUT** this collides with the
-        OPEN **A11c-candle-enum** operator decision (is the `dex_pools` snapshot the SAME as the `dex_pool_state`
-        time-series?) and the `solana_defi_legacy_migration_2026_05_27.md` § G-note that Kamino vault-metadata
-        `dex_pools` is \_complementary, not conflicting* with `DEX_POOL_STATE`. Resolve WITH the A11c-candle-enum
-        decision: if SAME → flip `_PROTOCOL_TO_DATA_TYPE` Solana AMM venues to `dex_pool_state` + add a guard test; if
-        DIFFERENT → Kamino keeps a distinct token (then document the split). Repo: market-tick-data-service.
-        parent_epic: mtds_mdps_master.
+  - [x] ✅ [CODE] P1. **A11g — DONE (operator decision 2026-06-05 = SAME / one SSOT; mtds@fbff8cf0).** Operator: "the
+        migration takes a UNION of the different legacy data types → one SSOT — verify whether the extra info is outside
+        canonical dex_pool_state." **INVESTIGATED + verified LOSSLESS**: the C0 migrator's
+        `_CANONICAL_UNION["dex_pool_state"]` (53 cols) already unions BOTH the Kamino **vault-metadata** columns
+        (`vault_address`/`vault_type`/`total_shares`/`tvl_usd`/`token_a*`/`token_b*`/`status`/`pool_id`) AND the
+        Orca/Raydium/Phoenix **AMM-state** columns (`sqrt_price`/`liquidity`/`tick`/`tick_spacing`/`fee_rate_bps`) — a
+        field-by-field check found **ZERO Kamino columns missing** from the union. So the vault "extra info" survives as
+        union columns; no second data_type is warranted (the `solana_defi_legacy_migration` G-note "complementary" view
+        is superseded by the union being a superset). Flipped `_PROTOCOL_TO_DATA_TYPE` kamino/orca/raydium/phoenix →
+        `dex_pool_state` + the `write_defi_rows` fallback; 64 solana tests green; MTDS QG green (A10c OK). Live Solana
+        writes now match the canonical `_index`. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P2. **A11e-schema-validation — VERIFIED NON-ISSUE (slot-2 2026-06-04).** `schema_validation.py`
         `_REQUIRED_COLUMNS` keys `"dex_pools"`/`"dex_swaps"` are an INTERNAL schema-validation lookup key, matched by
         the handler callsites passing the SAME literal (`validate_before_write(df, "dex_pools", …)`) — both sides agree

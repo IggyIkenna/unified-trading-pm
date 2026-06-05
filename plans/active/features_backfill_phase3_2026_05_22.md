@@ -15,6 +15,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **⚠️ SUPERSEDED — folded into the v9 single-walk canonicalisation (2026-06-05).** The 15 `DEFERRED-BLOCKED [GATE]`
+> FEAT-3.4.* items were never run (gated on the MDPS per-AG `-V` being GREEN) — and that whole layer now rides the
+> canonicalisation chain `instruments → MTDS → MDPS → features → strategy → execution`. **Live home:**
+> `downstream_services_manifest_canonicalisation_2026_06_01.md` (explicit MDPS / **features** / strategy / execution
+> layer, sequenced AFTER the per-AG MTDS/MDPS walks). The feature compute re-runs against the v9 layout there, not via
+> the old VM relaunch here. Archive (needs `[unlock-plan]`) ONLY after the downstream features canonicalisation lands.
+
 # Features-service compute relaunch — Phase 3 per-asset-group
 
 Unpacks `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3.4 (FEAT-3.4.A/B) into per-asset-group compute
