@@ -468,17 +468,18 @@ design).
       against. **Operator/orchestrator fix** (admin): reconcile staging's required-status-check contexts to the
       CodeBuild gate (or restore the v2 GHA trigger on LDR→staging PRs) for strategy-service; likely fleet-wide for
       repos migrated to CodeBuild. Force-merge / protection edits are human/admin — NOT done autonomously.
-- [ ] [QG] P1. **deployment-api #17 — BLOCKED by dep-tier ordering, own issues resolved.** Editable-metadata TOML
-      dup-key already fixed on LDR (deployment-service @5734823); brittle `-prd`-hardcoded test fixed + QG-green (staged
-      UNCOMMITTED). Can't ship: quickmerge dep-tier gate refuses promotion ahead of `deployment-service` (770 ahead of
-      staging) + `strategy-service` (57 ahead), both FEATURE_GREEN not STAGING_GREEN; `--skip-dep-tier-gate` is
-      human-only. **Resolve**: sequence — green+promote strategy-service (keystone) + deployment-service to staging
-      first, then deployment-api promotes; OR operator `--skip-dep-tier-gate` for this test-only hotfix. **Update
-      2026-06-05 (slot-7)**: strategy-service keystone type-debt is now RESOLVED + GREEN on LDR (76e01808, QG + #67
-      CodeBuild gate green) — but it is **still FEATURE_GREEN, not STAGING_GREEN**: #67 can't merge to staging until the
-      branch-protection context mismatch above is fixed AND/OR the dep-tier gate is operator-skipped. So #17 stays
-      dep-tier-BLOCKED until #67 actually lands on staging. Net: keystone code-debt cleared; #17 unblock now waits on
-      the CICD-mechanism todo + dep-tier sequencing, not on code.
+- [x] ✅ [QG] P1. **deployment-api #17 — UNBLOCKED + `-prd` test fix SHIPPED (2026-06-05, slot-7).** Both deps now
+      MERGED to staging (`deployment-service` #21 @12:40Z + `strategy-service` #67), so both read **STAGING_GREEN** on
+      the canonical `origin/main` manifest → dep-tier gate satisfied. Re-derived the brittle `-prd`-hardcoded test in
+      `tests/unit/test_shard_detail_service.py::test_prediction_reads_mtds_bucket_not_instruments_store`: now asserts
+      the env-invariant prefix `market-data-tick-pred-` (was `market-data-tick-pred-prd`, which failed in CI where
+      env=test → bucket `market-data-tick-pred-test-…`). QG-green; quickmerge dep-tier gate **PASSED** ("All deps at
+      STAGING_GREEN or above"); shipped `deployment-api@2217f14` → LDR via tab-mirror; promotion PR #20 opened (v2
+      validating the fix on the env=test runner). **NO `--skip-dep-tier-gate` used** — the gate initially mis-blocked
+      because the local PM manifest was 53 commits stale (LDR copy lagged the main→LDR ci_status back-merge:
+      LDR=FEATURE_GREEN vs main=STAGING_GREEN); corrected to the verified `origin/main` truth (the proper sequence: deps
+      genuinely on staging), not bypassed. Pre-flight false-block (deployment-service untracked QG-sentinel caches) →
+      root-caused to a `.gitignore` gap, fixed separately.
 
 ### DIRTY conflicts (5 PRs) — step 3
 
@@ -492,21 +493,21 @@ design).
       MERGED** (LDR@935771f; LDR's `smoke-test-gate.yml` is a strict superset of staging's #257/#362/#375 fixes + §299
       slice). **deployment-service #21 — conflict RESOLVED → MERGEABLE** (LDR@4fcdbea, identical tree) but merge still
       BLOCKED by a SEPARATE pre-existing v2 regression (next item), NOT a conflict.
-- [x] ✅ [QG] P1. **deployment-service v2 regression FIXED → PR #21 MERGED to staging (2026-06-05).**
-      `quality-gates-v2` was failing on `tests/conftest.py` → `ModuleNotFoundError: No module named 'deployment_api'`.
-      Root cause: commit `5734823` (2026-06-04 23:11) dropped `deployment-api` from
-      `[project.dependencies]`+`[tool.uv.sources]` (correctly, to break the circular dep / fix dependency-alignment)
-      intending it install "test-only via LOCAL_DEPS" — BUT the LOCAL_DEPS `uv pip install -e ...` block in
-      `base-service.sh:199-203` is guarded `if [ -z "${GITHUB_ACTIONS:-}" ]` (local-only; "CI has its own setup"), so in
-      CI the sibling-cloned `../deployment-api` was never installed. **Fix (fleet, option a): PM reusable
-      `python-quality-gates-v2.yml` now, after `uv sync`, editable-installs any cloned `DEP_REPOS` peer that `uv pip
-      show` reports absent** (unified-trading-pm@9e313cd8f + the prior commit). Guarded → strict NO-OP for every normal
-      pyproject dep; only installs a genuinely-missing test-only peer (deployment-api), into the same `.venv` the gate
-      uses. Validated: deployment-service #21 v2 **GREEN (4m0s) → MERGED 12:40Z**; fleet spot-check (instruments-service
-      v2 success @12:33, strategy-service @11:43) confirms the loop is a no-op elsewhere (no regression). Required-check
-      gate for deployment-service staging is v2 (the non-required AWS CodeBuild check is separately red — pre-existing,
-      did not block; flag for the CodeBuild-gate track). **Note: a workflow RE-RUN pins the old reusable-workflow SHA —
-      a FRESH run (close+reopen / new push) is required to pick up a reusable-workflow change.**
+- [x] ✅ [QG] P1. **deployment-service v2 regression FIXED → PR #21 MERGED to staging (2026-06-05).** `quality-gates-v2`
+      was failing on `tests/conftest.py` → `ModuleNotFoundError: No module named 'deployment_api'`. Root cause: commit
+      `5734823` (2026-06-04 23:11) dropped `deployment-api` from `[project.dependencies]`+`[tool.uv.sources]`
+      (correctly, to break the circular dep / fix dependency-alignment) intending it install "test-only via LOCAL_DEPS"
+      — BUT the LOCAL_DEPS `uv pip install -e ...` block in `base-service.sh:199-203` is guarded
+      `if [ -z "${GITHUB_ACTIONS:-}" ]` (local-only; "CI has its own setup"), so in CI the sibling-cloned
+      `../deployment-api` was never installed. **Fix (fleet, option a): PM reusable `python-quality-gates-v2.yml` now,
+      after `uv sync`, editable-installs any cloned `DEP_REPOS` peer that `uv pip     show` reports absent**
+      (unified-trading-pm@9e313cd8f + the prior commit). Guarded → strict NO-OP for every normal pyproject dep; only
+      installs a genuinely-missing test-only peer (deployment-api), into the same `.venv` the gate uses. Validated:
+      deployment-service #21 v2 **GREEN (4m0s) → MERGED 12:40Z**; fleet spot-check (instruments-service v2 success
+      @12:33, strategy-service @11:43) confirms the loop is a no-op elsewhere (no regression). Required-check gate for
+      deployment-service staging is v2 (the non-required AWS CodeBuild check is separately red — pre-existing, did not
+      block; flag for the CodeBuild-gate track). **Note: a workflow RE-RUN pins the old reusable-workflow SHA — a FRESH
+      run (close+reopen / new push) is required to pick up a reusable-workflow change.**
 - [ ] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
       **Harsh's**, confirm before closing), mtds #94 (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
 
