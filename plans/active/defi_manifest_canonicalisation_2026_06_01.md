@@ -830,18 +830,17 @@ What to verify/wire (B0 corrected scope):
 - [x] ✅ [CODE] P2. B4 `data_status_rollup_worker.py`: **subsumed by B1** — the worker only delegates to
       `_get_coverage_summary_sync`/`_get_manifest_status_sync` (no row-count denominator of its own); B1's 4-state flows
       through it. Verified: worker `len()` uses are blob byte-sizes + asset_group count only. — deployment-api@c631b39.
-- [~] [UI][BLOCKED-PLAYWRIGHT] P1. B5 — **CODE DONE (slot-2 2026-06-05, deployment-ui@fa975ee); full `tests/smoke/`
-  playwright gate blocked by an env dep gap.** `HierarchicalShardDrilldown` now renders the 4th state
-  `expected_unattempted` — a totals "N pending" pill, a per-node "Nu" badge (so it appears at each drilled axis incl.
-  per-chain), and a 4-state legend. `DrilldownNode`/`DrilldownTotals` TS types gained `expected_unattempted` (the
-  deployment-api already returns it — the type dropped it, so the component literally couldn't show it). Evidence:
-  `tsc --noEmit` clean | vitest 15/15 incl new B5 regression (`HierarchicalShardDrilldown.test.tsx`: pending pill + `Nu`
-  badge + legend) | core playwright smoke (app/routes/nav/regression-guards) **72 passed**. **The full
-  `npx playwright test --project=chromium tests/smoke/` cannot run on this worktree** —
-  `tests/smoke/     accessibility_audit.spec.ts` imports `@axe-core/playwright` which is **not installed** in this
-  worktree's node_modules (environment gap, NOT this change). Stays `[BLOCKED-PLAYWRIGHT]` until a UI-capable slot with
-  the dep runs the full smoke. Evidence: deployment-ui@fa975ee | pw:L2 core-72 ✓ (full-suite env-blocked) | regression:
-  src/components/HierarchicalShardDrilldown.test.tsx.
+- [x] ✅ [UI] P1. B5 — **DONE (slot-2 2026-06-05, deployment-ui@fa975ee); full `tests/smoke/` playwright gate now
+      GREEN.** `HierarchicalShardDrilldown` renders the 4th state `expected_unattempted` — a totals "N pending" pill, a
+      per-node "Nu" badge (so it appears at each drilled axis incl. per-chain), and a 4-state legend.
+      `DrilldownNode`/`DrilldownTotals` TS types gained `expected_unattempted` (the deployment-api already returns it —
+      the type dropped it, so the component literally couldn't show it). The prior `[BLOCKED-PLAYWRIGHT]` was an
+      environment gap, NOT this change: `@axe-core/playwright` (listed in package.json `^4.11.3`) was missing from the
+      worktree's incomplete `node_modules`; resolved by a clean `npm ci` (no package.json change). On a UI-capable host
+      (chromium present, dev server auto-started on :5183) the FULL gate
+      `CI=true npx playwright test --project=chromium tests/smoke/` ran **160 passed / 21 files, exit 0** (incl.
+      `accessibility_audit.spec.ts`), and `HierarchicalShardDrilldown.test.tsx` vitest **15/15**. Evidence: —
+      deployment-ui@fa975ee | pw:L2 ✓ | regression: src/components/HierarchicalShardDrilldown.test.tsx.
 
 ## C. Data / manifest migration (single-walk, bundled) — fix existing rows
 
