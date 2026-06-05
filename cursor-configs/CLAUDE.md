@@ -232,6 +232,14 @@ schema-drift → RAISE LOUD. Never emit silent placeholders. **Canonical schema 
 constant**.
 
 - `EmptyConfirmedReason` is a closed set (UAC `EMPTY_CONFIRMED_REASONS`); blank reason → `LegacyBlankErrorReasonError`.
+- **`expected_unattempted` is MATERIALISED by the WRITER, READ by consumers — never re-derived (F4)**: IS-listed +
+  post-genesis + post-launch + in-coverage-but-no-data-yet cells are seeded at shard grain by the MTDS
+  instruments-service pre-flight (`record_expected_unattempted`) + the IS `enumerate_expected_universe.py` v2 enumerator
+  (could-exist universe from the `build_instrument_catalogue.py` lifecycle roll-up) — **writer/orchestrator-driven, NOT
+  consolidator-driven**. Strategy/features pre-flight + deployment-api/UI denominator READ the 4-state
+  (`% = captured / (captured+empty+failed+expected_unattempted)`); never re-derive genesis/launch/IS rules per consumer.
+  DeFi zero-rows shards route through `DefiManifestRecorder.record_zero_rows` (venue-launch-date-aware), enforced by the
+  A10c QG ratchet. SSOT: `codex/02-data/availability-manifest-and-data-status.md`.
 - Cluster validation MANDATORY at `record_captured()` for bundled data_types (else `MissingClusterValidationError`).
 - **`source=` provenance is CROSSCUTTING — all asset_groups, not TradFi-only** (operator-confirmed 2026-06-01;
   supersedes the prior TradFi-only framing). The same logical metric arrives from >1 source over time, so disambiguate
@@ -680,14 +688,15 @@ Look at the existing system before implementing. Key repo map: events → UTL ·
 unified-cloud-interface · market data → MTDS · execution → execution-service · reference data → instruments-service
 (`URDI` is a phantom name — does NOT exist) · UI → `unified-trading-system-ui` (consolidated, includes user-management
 functionality) + `deployment-ui` (`user-management-ui` repo is ARCHIVED 2026-05 — folded into unified-trading-system-ui;
-do NOT reference) · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; backend uvicorn binds 8765 (local + VM; nginx fronts :80/:443 public on VMs; legacy 8026 retired);
-`agent-orchestrator.odum-research.com` prod; dashboard is authoritative work-split surface. `ikenna_orchestrator/`
-LEDGER.md remains as offline fallback only; the `harsh_orchestrator/` LEDGER + dispatch files were retired 2026-05-25 →
-`plans/archive/orchestrator_legacy/` (only `harsh_orchestrator/_agent_pings.md` stays in place — still read by the live
-plan-hygiene + orphan-ping crons). SSOT: `codex/04-architecture/agent-orchestrator-overview.md`.
-**LIVE orchestrator = ONE VM (audited 2026-06-04): `vm-0` / `agent-orchestrator-vm-1` / `i-0c9b283b31d6b5ca7`** — the
-CI-responder (`api.agent-orchestrator.odum-research.com → 13.113.200.22`) + worker host (AutoSpawn ON). The per-epic
-fleet (`vm-defi`/`vm-cefi`/…) is post-cutover/NOT running; `i-007e8d99` (`vm-orchestrator`) was STOPPED 2026-06-04
+do NOT reference) · **orchestration → `agent-orchestrator`** (FastAPI + Vite dashboard; backend uvicorn binds 8765
+(local + VM; nginx fronts :80/:443 public on VMs; legacy 8026 retired); `agent-orchestrator.odum-research.com` prod;
+dashboard is authoritative work-split surface. `ikenna_orchestrator/` LEDGER.md remains as offline fallback only; the
+`harsh_orchestrator/` LEDGER + dispatch files were retired 2026-05-25 → `plans/archive/orchestrator_legacy/` (only
+`harsh_orchestrator/_agent_pings.md` stays in place — still read by the live plan-hygiene + orphan-ping crons). SSOT:
+`codex/04-architecture/agent-orchestrator-overview.md`. **LIVE orchestrator = ONE VM (audited 2026-06-04): `vm-0` /
+`agent-orchestrator-vm-1` / `i-0c9b283b31d6b5ca7`** — the CI-responder
+(`api.agent-orchestrator.odum-research.com → 13.113.200.22`) + worker host (AutoSpawn ON). The per-epic fleet
+(`vm-defi`/`vm-cefi`/…) is post-cutover/NOT running; `i-007e8d99` (`vm-orchestrator`) was STOPPED 2026-06-04
 (vestigial). **Alerts (git-health guard / slot-stale / worker-liveness) scope to the LIVE set — a stale alert about a
 stopped VM is not a dead-VM incident.** Liveness SSOT = `codex/05-infrastructure/agent-orchestrator-worker-topology.md`
 § "LIVE STATUS" (the `orchestrator_vm_registry.yaml` is auto-regenerated from epic frontmatter — NOT a liveness source).

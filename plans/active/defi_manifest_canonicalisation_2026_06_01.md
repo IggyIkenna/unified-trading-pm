@@ -1194,17 +1194,27 @@ What to verify/wire (B0 corrected scope):
 
 ## F. Docs / SSOT — record canonical forms
 
-- [ ] [DOCS] P1. F1 `codex/02-data/defi-data-types-catalog.md`: underscore-canonical data_type names + dedicated bucket
-      per type + hyphen aliases deprecated.
-- [ ] [DOCS] P1. F2 `codex/02-data/availability-manifest-and-data-status.md` + `data-status-drilldown.md`: document the
-      materialised `expected_unattempted` 4-state + the manifest-annotates-once/consumers-read principle + per-chain
-      requirement.
+- [x] ✅ [DOCS] P1. F1 — DONE (slot-2 2026-06-05): `codex/02-data/defi-data-types-catalog.md` already carries the
+      operator-locked "🛑 D14 RESOLVED + CANONICAL NAMING LOCKED" banner (canonical data_type = `dex_pool_state`/
+      `dex_pool_swaps` EVERYWHERE; `dex_pools`/`dex_swaps` retired; hyphen aliases deprecated) + the C0-CN8 cross-ref to
+      `defi-canonical-naming-ssot.md`. The dated 2026-05-27 "PARTIAL STALENESS" banner's `dex_swaps` line is a
+      historical record explicitly superseded by the D14 banner directly below it. Underscore-canonical names +
+      dedicated bucket per type are documented.
+- [x] ✅ [DOCS] P1. F2 — DONE (slot-2 2026-06-05): added the **"Annotate-once, read-everywhere"** governing-principle
+      box to `codex/02-data/availability-manifest-and-data-status.md` § "What Is the Availability Manifest?" — documents
+      the materialised `expected_unattempted` 4-state (writer/pre-flight-driven, NOT consolidator), the
+      manifest-annotates- once / consumers-read denominator principle, the `record_zero_rows` pre-launch demotion + A10c
+      ratchet, and the per-(venue,chain) requirement. (The 4-state + per-chain start-dates were already present; this
+      adds the explicit annotate-once principle.)
 - [x] ✅ [DOCS] P2. F3 — DONE (slot-2 2026-06-05, mtds@fca15304): `_defi_manifest.record_empty` docstring rewritten —
       the old "future refinement: per-handler date-aware classifier" note now points to `record_zero_rows` (the shipped
       A2b/A10d helper), states the "source succeeded, zero rows" path MUST use `record_zero_rows` (pre-launch demotion),
       pre-genesis handled upstream by A1, and `record_empty` stays for an already-typed reason in hand.
-- [ ] [DOCS] P2. F4 CLAUDE.md "Manifest + honest absence" note: `expected_unattempted` is materialised at consolidation
-      from the oracle; consumers read, never re-derive.
+- [x] ✅ [DOCS] P2. F4 — DONE (slot-2 2026-06-05): added the **"`expected_unattempted` is MATERIALISED by the WRITER,
+      READ by consumers — never re-derived"** bullet to CLAUDE.md (`cursor-configs/CLAUDE.md`) § "Manifest + honest
+      absence" — corrects the earlier "materialised at consolidation" framing to writer/pre-flight-driven (MTDS IS
+      pre-flight `record_expected_unattempted` + IS `enumerate_expected_universe` + `build_instrument_catalogue`),
+      states consumers READ the 4-state denominator + never re-derive, and cross-refs the A10c ratchet + the F2 SSOT.
 
 ## G. Solana basis MVP — operationalisation (migrated from archived `solana_basis_trading_mvp_2026_06_01.md`)
 
@@ -1383,10 +1393,17 @@ coverage-summary == drilldown == manifest-status denominators; features-onchain-
 > bucket map was stale for ALL 5 AGs (missing the `-prd-` env tier) → now resolves via `resolve_bucket_name`
 > (instruments-service, ⑦ in `prediction_manifest_canonicalisation_2026_06_01.md`). **Remaining for defi:**
 
-- [ ] [CODE] P1. ⑦ defi could-exist denominator seed — build the `--catalog-path` parquet from the defi IS catalog
-      (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
-      `enumerate_expected_universe.py --asset-group defi --catalog-path <catalog> --apply-write` against the canonical
-      `_index` so the raw-tick denominator == could-exist universe (active-but-uncaptured instruments seeded
-      `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_defi` row-key/data_types match
-      the defi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
-      bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.
+- [~] [CODE] P1. ⑦ defi could-exist denominator seed — **CODE-READY (slot-2 2026-06-05, is@bb8fb203); only the VM
+  `--apply-write` run is operator/VM-gated.** Grep-then-read found the catalog-build is ALREADY shipped:
+  `instruments-service/scripts/build_instrument_catalogue.py` is the defi-capable lifecycle roll-up — it unions the
+  per-date `instrument_availability/by_date/day=…/venue=…/instruments.parquet` defns into one catalogue parquet with
+  exactly the `instrument_id`/`instrument_type`/`venue`/`chain`/`available_from`/`available_to` columns
+  `enumerate_expected_universe._catalog_from_dataframe` consumes. `_enumerate_v2_defi` (chain-genesis + listing + delist
+  lifecycle) + the `--asset-group/--catalog-path/--apply-write` flags + the `resolve_bucket_name` env-tier fix already
+  ship. **Added the missing denominator-monotonicity regression**
+  (`test_defi_v2_denominator_is_could_exist_universe_not_just_manifest`): an alive-but-uncaptured DeFi instrument is
+  seeded `expected_unattempted` (denominator grows), a captured one is skipped (not dropped) → could-exist ⊇ manifest,
+  never shrinks. **REMAINING (operator/VM, NOT code)**: run `build_instrument_catalogue.py --asset-group     defi` then
+  `enumerate_expected_universe.py --asset-group defi --catalog-path <catalog> --apply-write` on a VM against the
+  canonical `_index` (gated on C-GREEN + the cross-AG `proper_instrument_catalogue_lifecycle_rollup` foundation).
+  parent_epic: mtds_mdps_master.
