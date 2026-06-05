@@ -14,8 +14,13 @@
 #   canonical handle: Ikenna = `ikennaigboaka` (override WORKER_PREFIX=MAIN_PREFIX=ikennaigboaka),
 #   Harsh = `hk` (operator decision 2026-06-05: Harsh's local PC is `hk` for every slot — NOT the
 #   role-split `hkm`, and NOT `harsh`, which is reserved for Harsh's separate AWS VM). So provision
-#   a laptop with MAIN_PREFIX=WORKER_PREFIX=<handle>. The role-split `<base>m` default is for fleet
-#   VMs only (and even those are branded uniformly as tab/<vm-id>/<N> by bootstrap_vm.sh).
+#   a laptop with MAIN_PREFIX=WORKER_PREFIX=<handle>.
+#   VMs brand by their ROLE/VM-id, NEVER a human operator's name (operator decision 2026-06-05):
+#   set ORCHESTRATOR_VM_ID and the prefix follows — `vm-defi`, `vm-orchestrator`, and the interactive
+#   planning VM = `planning` (it was mis-provisioned as `--operator ikenna` → `tab/ikenna/<N>`, which
+#   confusingly collided with Ikenna's LAPTOP identity; the planning-vm is a separate host and must be
+#   `tab/planning/<N>`, set ORCHESTRATOR_VM_ID=planning). The role-split `<base>m` default applies only
+#   when neither a VM-id nor a uniform-prefix override is given.
 #   Tier 3 — Sub-agents within a slot:   share the slot's worktree; master agent
 #            partitions fan-out + reconciles.
 #
