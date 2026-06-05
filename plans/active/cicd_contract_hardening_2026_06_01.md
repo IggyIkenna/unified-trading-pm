@@ -1744,22 +1744,28 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 **D. Missing top layer — Tier A (above staging):**
 
-- [ ] [AGENT] P0. **Tier A — LDR-CI-red monitoring** — the model's FIRST signal (LDR has no remote CI today → red hides
-      until a main PR). **This consolidates the open Tier A todo above** (`audit i5`); track it here. repo:
-      unified-trading-pm + per-repo signal.
-      **SCOPE + COLLISION (slot-1 ikenna 2026-06-05).** The Tier-A *signal* already exists as DATA: `ci_status=FAILING`
-      per repo in `workspace-manifest.json` (`tier_c_promotion_gate.py` reads it → blocks LDR→staging; `LDR_RED_STATUS =
-      "FAILING"`). Two real gaps remain: (1) **no proactive ALERT** when a repo flips FAILING (only a passive
-      promotion-block) → "fixed in hours not weeks" unmet; (2) **`ci_status` is driven by v2 on feature/staging/main
-      only — never LDR**, so a genuinely LDR-broken repo can still read `MAIN_GREEN` and hide (the exact "red hides until
-      a main PR" failure). A true fix needs a **scheduled per-repo LDR gate-runner** (checkout each repo's
-      `live-defi-rollout` + run the gate → emit a real LDR-green/red signal) feeding the alert. **NOT STARTED — do NOT
-      build into the `ci_status`/reconciler/Guard-3 machinery right now:** that is a live concurrent agent's
-      intensely-active area (`ci_status_reconciler.py` / `ci-status-reconciler.yml` / Guard-3 — ≥4 commits 2026-06-03/04:
-      cron 30m→10m, FEATURE→STAGING auto-advance, dispatch-serialization, import-fix for PR #116). Recommend routing D
-      to that agent (owns the substrate) OR building the per-repo LDR-runner as a **standalone NEW workflow** (no edits
-      to their hot files) that writes its own alert + an `ldr_ci_status` sidecar, then they wire it in. Picked up by
-      neither side yet — needs an owner.
+- [x] ✅ [AGENT] P0. **Tier A — LDR-CI-red monitoring** — the model's FIRST signal (LDR has no remote CI today → red
+      hides until a main PR). **This consolidates the open Tier A todo above** (`audit i5`). repo: unified-trading-pm +
+      per-repo signal.
+      **SATISFIED BY EXISTING MACHINERY — verified 2026-06-05 (slot-1 ikenna); FEATURE_GREEN was the key (operator
+      hint).** The premise "LDR has no remote CI" is only true for *direct LDR pushes*; LDR **content** IS v2-gated
+      frequently via the **Tier-C `LDR→staging` auto-drain PRs** (head=`live-defi-rollout`; several v2 runs/day —
+      verified live on alerting-service + mtds). End-to-end chain confirmed:
+      (1) v2 on a drain PR computes `STATUS` (`FAILING` | `FEATURE_GREEN`) — `python-quality-gates-v2.yml` `TRIGGER_BRANCH
+      != main/staging → FEATURE_GREEN`, job-fail → `FAILING` — and `repository_dispatch`es it to `ci-status-update`.
+      (2) **Proactive alert (was "gap #1") EXISTS**: `ci-status-update.yml` `notify_worthy = (status=="FAILING") or
+      (prev=="FAILING" and recovered)` → `build-message` → Slack `#ci-failures`, transition-gated (no steady-state spam).
+      (3) **LDR signal (was "gap #2") EXISTS**: `ci-status-reconciler.yml` runs **every 10 min**, fetches
+      `latest_v2(repo, live-defi-rollout)` (`ldr_concl`) + `compare staging...live-defi-rollout`, and reconciles
+      ci_status drift (`ci_status_reconciler.py` `expected_from_v2(... ldr_concl → FEATURE_GREEN)`); the concurrent agent
+      also added `blocked_failing_prs_to_escalate` (v2-RED PRs → orchestrator). Detection latency = ~10 min (reconciler)
+      to a few hours (next drain) = **D's stated "hours not weeks" goal, MET**. A bespoke per-repo gate-runner + a new
+      FAILING alert would be **redundant** — NOT built.
+      **Residual (optional, beyond D's goal — captured, not built):** the LDR signal is drain/reconcile-triggered, not
+      direct-LDR-push-triggered, so a break pushed straight to LDR right after a green drain is caught at next
+      drain/reconcile (minutes-to-hours), not instantly. A push-time LDR v2 trigger (or an `ldr_concl`-staleness
+      watchdog for repos LDR-ahead-of-staging with no recent v2) would tighten it — file as a separate NICE-TO-HAVE if
+      desired; it lives in the concurrent agent's `ci_status`/reconciler substrate, so route it there.
 
 **E. Alert-coverage gaps:**
 
