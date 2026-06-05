@@ -291,11 +291,12 @@ operator context (governance / planning / master-plan / model-tier rules).
       (no HS256, no `main`-direct/AO-branch claim, no "staging=breaking"/"promotion-to-main", no v5/v8 manifest, no
       removed venues, no `category=`). Its `git push origin live-defi-rollout` guidance is correct per the LDR CI-axis
       model (not stale). No edit needed; stays distinct from RULES.md (worker-lifecycle) by design.
-- [ ] [INFRA] P2. **IAM gap**: the `harsh-worker` AWS IAM user (`arn:aws:iam::427895769566:user/harsh-worker`) lacks
+- [x] ✅ [INFRA] P2. **IAM gap**: the `harsh-worker` AWS IAM user (`arn:aws:iam::427895769566:user/harsh-worker`) lacks
       `ssm:SendCommand`, so a Harsh slot can't inspect/operate the fleet VMs via SSM (the fleet is SSM-access, not open
       SSH). If Harsh slots are expected to do fleet ops, grant the SSM action; else document that fleet ops route
       through the central VM / operator session only. Surfaced when verifying the AO `.claude/` symlink on
-      `vm-orchestrator`.
+      `vm-orchestrator`. — agent-orchestrator@b5c2586 (documented: fleet ops route through operator/central-VM; SSM
+      grant path documented in docs/OPERATIONS.md § "Fleet VM direct access (SSM)")
 
 ### G9 — conflict-resolution + stuck-PR remediation runs on the orchestrator (Max-plan accounts, $0 API) [P1] _(operator 2026-06-02)_
 
