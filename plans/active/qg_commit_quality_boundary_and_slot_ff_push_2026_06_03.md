@@ -421,12 +421,21 @@ design).
 - [x] ✅ **trading-agent-service #10** — REAL: pip-audit CVE (`starlette 0.52.1` → PYSEC-2026-161) from a **stale
       uv.lock**. `uv lock` → starlette 1.1.0 → shipped (LDR @5555cca) → MERGED to staging.
 - [x] ✅ **execution-service #211** — STALE (LDR v2 was green @06-04); re-triggered → v2 in_progress → will unblock.
-- [ ] [QG] P1. **instruments-service #396 — FOLLOW-UP (not shipped).** Agent applied IMDS test-isolation fix
-      (`tests/conftest.py` default `CLOUD_PROVIDER=local` + per-test `_sports_ref_sink_for` mock) for the one CI socket
-      failure. BUT local QG shows **80 unrelated failures** vs CI's "1 failed, 3140 passed" → ambiguous: local env-rot
-      OR the _global_ conftest change regressed bucket-sensitive tests. **Resolve**: determine regression-vs-env; prefer
-      the NARROW fix (per-test mock only, drop the global conftest change → zero blast radius), re-validate, ship. Fix
-      preserved UNCOMMITTED in `.tabs/1/instruments-service` worktree.
+- [x] ✅ [QG] P1. **instruments-service #396 — SHIPPED (LDR).** instruments-service@cca9dc9b | QG `quality-gates.sh`
+      GREEN (166s, sentinel written) | landed on LDR via tab-mirror leg-A FF. **Verdict: the 80 local failures were
+      ENV-ROT, not real debt** — a fresh `bash scripts/setup.sh` (uv sync + re-pin editable siblings) cleared them; the
+      formerly-failing `tests/unit/triggers/test_sports_fixtures_daily_repoll.py` + the socket test passed (28/28). Took
+      the **NARROW fix** (per-test `_sports_ref_sink_for` mock on the two writer tests; NO global conftest
+      `CLOUD_PROVIDER=local`, zero blast radius — confirmed the global change was already reverted). **2nd real issue
+      found**: import-patterns FAILED on `orchestrator.py:107`
+      (`from unified_trading_library.fixtures import     extract_match_lifecycle`) — new debt from 48c6b4ad (2026-06-05,
+      after the 06-03 CI pass; #396's frozen v2 never saw it). `extract_match_lifecycle` is exposed via the `fixtures`
+      subpackage facade but NOT on the UTL root, so the checker's `--fix` would BREAK the import → applied the
+      sanctioned single-line `# noqa: qg-deep-import` (≤120 so ruff doesn't re-wrap it off the `from` line). **Note
+      (operator): quickmerge LDR→staging promotion was blocked by the Stage-1.7 dep-tier gate —
+      `unified-trading-library` reads MAIN_GREEN not STAGING_GREEN (likely FALSE-POSITIVE: main ⊐ staging, so
+      IS-on-staging vs UTL-on-main carries no ordering risk). The fix is on LDR (greens #396's v2); the staging MERGE
+      needs operator `--skip-dep-tier-gate` OR UTL promoted to staging first.**
 - [ ] [QG] P0. **strategy-service #67 — REAL multi-day type-debt (KEYSTONE).** STEP 5.12b URI = 1 false-positive (fixed,
       `evidence_router.py:59` noqa, staged). STEP 5.21 = pyright config drift: flipping `reportUnknown*` none→error
       surfaces **628 errors / ~60 files** (hotspots: `batch_handler.py` 124, `pnl_monitor.py` 69, `risk_monitor.py` 66,
@@ -441,8 +450,28 @@ design).
 
 ### DIRTY conflicts (5 PRs) — step 3
 
-- [ ] [QG] P1. **LDR→staging merge conflicts**: deployment-service #21, mtds #91, system-integration-tests #21 — resolve
-      `live-defi-rollout`↔`staging` conflicts per repo (after the BLOCKED fixes settle; LDR is moving).
+- [x] ✅ [QG] P1. **LDR→staging merge conflicts RESOLVED (2026-06-05)**: all 3 staging branches had diverged at an
+      old/ancient merge-base (their unique commits were superseded squash-promotions + a `merge main into staging` v2
+      migration — content already on LDR). Resolved per CLAUDE.md "resolve conflicts ON live-defi-rollout": merged
+      `origin/staging` INTO LDR per repo, conflicts taken to LDR (the superseding/canonical side — verified each staging
+      delta was either superseded, stale pre-migration vocab `crypto_cefi`/`crypto_defi`/`URDI`, dead code LDR removed
+      `lending_indices_adapter.py`, or PM-template-owned), merge tree byte-identical to LDR each time → makes staging an
+      ancestor so the promotion PR merges clean. **mtds #91 — MERGED** (LDR@f46cea5). **system-integration-tests #21 —
+      MERGED** (LDR@935771f; LDR's `smoke-test-gate.yml` is a strict superset of staging's #257/#362/#375 fixes + §299
+      slice). **deployment-service #21 — conflict RESOLVED → MERGEABLE** (LDR@4fcdbea, identical tree) but merge still
+      BLOCKED by a SEPARATE pre-existing v2 regression (next item), NOT a conflict.
+- [ ] [QG] P1. **deployment-service v2 regression blocks promotion PR #21 (found 2026-06-05; NOT a merge conflict).**
+      `quality-gates-v2` fails on `tests/conftest.py` → `ModuleNotFoundError: No module named 'deployment_api'`. Root
+      cause: commit `5734823` (2026-06-04 23:11) dropped `deployment-api` from
+      `[project.dependencies]`+`[tool.uv.sources]` (correctly, to break the circular dep / fix dependency-alignment)
+      intending it install "test-only via LOCAL_DEPS" — BUT the LOCAL_DEPS `uv pip install -e ...` block in
+      `base-service.sh:199-203` is guarded by `if [ -z "${GITHUB_ACTIONS:-}" ]` (= **local-only; "CI has its own
+      setup"**), so in CI the sibling-cloned `../deployment-api` is never installed. Fix options (all v2-debt track, NOT
+      conflict-resolution): (a) install LOCAL_DEPS in the CI path of `base-service.sh`/`quality-gates-v2.yml`
+      (fleet-template change → PM SSOT + rollout); or (b) re-add a non-circular test-only install. Composes with the
+      deployment-api #17 LOCAL_DEPS item above. The conflict-resolution merge (LDR@4fcdbea, tree-identical to LDR) is
+      correct and unaffected — keeping staging's old `[tool.uv.sources.deployment-api]` would re-create the circular dep
+      and still not install it in CI.
 - [ ] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
       **Harsh's**, confirm before closing), mtds #94 (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
 
@@ -479,9 +508,9 @@ design).
 
 ### Temporary states (uncommitted fixes preserved in slot-1 worktrees)
 
-- `.tabs/1/strategy-service` (URI noqa), `.tabs/1/instruments-service` (IMDS isolation), `.tabs/1/deployment-api`
-  (`-prd` test fix) — left UNCOMMITTED for the follow-up remediations above; the ff-pull cron will `[skip:dirty]` them
-  until resolved. Successor: the three FOLLOW-UP todos above.
+- `.tabs/1/strategy-service` (URI noqa), `.tabs/1/deployment-api` (`-prd` test fix) — left UNCOMMITTED for the follow-up
+  remediations above; the ff-pull cron will `[skip:dirty]` them until resolved. Successor: the FOLLOW-UP todos above.
+  (`.tabs/1/instruments-service` IMDS isolation SHIPPED 2026-06-05 → instruments-service@cca9dc9b, on LDR.)
 
 ## Cross-links (do NOT duplicate — these items live in the named plans)
 
