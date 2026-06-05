@@ -128,13 +128,16 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       NOTE: QG `no_hardcoded_venue_urls.sh` does NOT currently catch these (narrow allowlist + scans only
       `cli/handlers/`) — also widen the QG scan dir + patterns so the contract is actually enforced. owning-epic:
       mtds_mdps_master / instruments_master.
-- [ ] [STUB] P2. Resolve the instruments-service DeFi live `--trigger` dispatcher stub — repo: instruments-service @
+- [x] ✅ [STUB] P2. Resolve the instruments-service DeFi live `--trigger` dispatcher stub — repo: instruments-service @
       `instruments_service/cli/instruments_handler.py:143-149` (`--trigger` parsed→stored→logged, never dispatched; only
       `triggers/sports_fixtures_daily_repoll.py` exists; CLI help advertises `defi.token_lists.refresh`). Nothing
       currently invokes `--trigger` for defi (live DeFi runs via `--mode live`), so this is an unwired forward-flag, NOT
       a breakage. Either (a) implement the defi trigger dispatcher + module if the per-asset-group trigger taxonomy is
       wanted, or (b) remove the advertised-but-unimplemented `defi.*` examples from CLI help and document `--mode live`
       as the live-DeFi path. Operator decision on (a) vs (b). owning-epic: instruments_master.
+      — instruments-service@0809f1fa73be03ae848e6891da9b9644280b763d | option (b) taken: removed defi.token_lists.refresh
+      from CLI help (defi live-mode uses --mode live, not --trigger; DeFi on-chain triggers are defi_master scope);
+      also fixed 3 pre-existing test failures from UTL fixture mock gap (extract_match_lifecycle + FakeClient classmethods)
 
 ## Cross-references (owned elsewhere — do NOT duplicate)
 
