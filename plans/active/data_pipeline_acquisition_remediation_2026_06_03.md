@@ -106,7 +106,7 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
 
 ## Phase 3 — Feature wiring (P1)
 
-- [ ] [CODE-BUG] P1. Fix the CeFi funding-feature producer/consumer name+unit mismatch — repos: features-service +
+- [x] ✅ [CODE-BUG] P1. Fix the CeFi funding-feature producer/consumer name+unit mismatch — repos: features-service +
       strategy-service. Producer `features-service/.../delta_one/app/calculators/funding_oi.py:84` emits
       `funding_rate_annualized` = `funding_rate*3*365` (US spelling, **fraction**); consumer
       `strategy-service/.../engine/strategies/v2/carry_and_yield/basis_perp.py:67` reads `funding_rate_annualised_bps`
@@ -115,6 +115,7 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       it (composes with Phase-4 funding_oi registration). Add a test pinning the exact consumed key+unit. cold-start:
       `SUB_AGENT_MANDATORY_RULES.md`; sibling `staked_basis.py:283` reads `funding_rate_apy_bps` correctly. owning-epic:
       features_and_ml_master (vm-ml).
+      — features-service@cfc76836 | strategy-service@80fd1b9e | test_funding_rate_annualised_bps_key_and_unit pins key+unit; 296 delta_one tests pass
 
 ## Phase 4 — Contract hygiene (P2)
 
