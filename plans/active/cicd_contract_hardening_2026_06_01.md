@@ -1685,8 +1685,13 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 > [`agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md`](agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md)
 > § G9 (cross-linked).
 
-- [ ] [SCRIPT] P1. **Retire the in-GHA Claude-API path in `conflict-resolution-agent.yml`** — drop
+- [x] ✅ [SCRIPT] P1. **Retire the in-GHA Claude-API path in `conflict-resolution-agent.yml`** — drop
       `ANTHROPIC_API_KEY_CICD` + the `npm i @anthropic-ai/claude-code` run. repo: unified-trading-pm.
+      **DONE 2026-06-03 — `unified-trading-pm@e39130524`** ("cut conflict-resolution-agent over to the Max-plan worker").
+      The in-GHA Anthropic-API path (`ANTHROPIC_API_KEY_CICD` + claude-code CLI + the health-precheck/error-classify
+      steps) is REMOVED; the single `escalate` job now dispatches `repository_dispatch event_type=escalate-to-orchestrator`
+      with `client_payload[wall_type]=merge_conflict` → fires `escalate-to-orchestrator.yml` (B2) → `POST /api/escalate`
+      → Max-plan setup-token worker resolves on `live-defi-rollout`. (Verified on main; flipped on verification.)
 - [x] ✅ [SCRIPT] P1. **Build `escalate-to-orchestrator.yml`** — the missing PM→orchestrator GHA dispatch (POST conflict
       context to the orchestrator spawn API). **MERGES the open "escalate-overstated" P2 item above** (`escalation.py` +
       `escalate.md` exist on LDR; only the GHA trigger is absent). repos: unified-trading-pm + agent-orchestrator.
@@ -1699,8 +1704,13 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `agents/escalate.md`, which resolves on `live-defi-rollout` + pings the authoring slot. Requires one ops step: set
       the **`ORCHESTRATOR_INTERNAL_SECRET`** GitHub secret in unified-trading-pm (+ optional `ORCHESTRATOR_URL` var;
       default `https://agent-orchestrator.odum-research.com`).
-- [ ] [SCRIPT] P1. **Allow auto-merge for orchestrator-resolved PRs** — remove the "will NOT auto-merge" guard; the
+- [x] ✅ [SCRIPT] P1. **Allow auto-merge for orchestrator-resolved PRs** — remove the "will NOT auto-merge" guard; the
       REQUIRED `quality-gates-v2` check (not a toggle) remains the gate. repo: unified-trading-pm.
+      **DONE 2026-06-03 — `unified-trading-pm@e39130524`** (same cutover). The old in-GHA resolver created a resolution
+      PR carrying a "will NOT auto-merge" guard; that whole path is gone. The orchestrator worker now resolves directly
+      on `live-defi-rollout` and lets `quality-gates-v2` re-gate the resulting promotion PR (the REQUIRED check is the
+      gate — no manual toggle). The worker never force-pushes / never self-merges. Also resolved the ops dependency
+      flagged under B2: **`ORCHESTRATOR_INTERNAL_SECRET`** is set in PM Actions (escalate verified green 2026-06-03).
 
 **C. Close the auto-remediation loop:**
 
