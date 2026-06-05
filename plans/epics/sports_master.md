@@ -1018,12 +1018,13 @@ ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
       betfair/kalshi/polymarket/matchbook), and not in `SportsRouter`/`SportsExecutionRouter`. NB `scrapers/bet365.py`
       is an ODDS-DATA reader (no `place_bet`) — keep. The only residual is the inert `DEFERRED-INDEFINITELY` `browser/`
       stub family (~69 venues, all `NotImplementedError`); a 3-venue carve-out is a no-op/odds-data-risk. **OPTION-B
-      (open, operator-sized)**: physically delete the WHOLE deferred `browser/` execution-stub subsystem +
-      `VENUE_EXECUTION_REGISTRY` scraper entries + `VENUE_KEY_TO_ADAPTER` as one unit — needs operator confirmation the
-      scaffolding is abandoned (not just deferred). ~~bet365 wired wrong (phantom import per SP-13); DraftKings /~~
-      FanDuel have NO scraper (only `NotImplementedError` browser stubs in `sports_execution/adapters/scrapers/`). Fix
-      scope: either ship the scrapers OR delete the venue capability entries for DK/FD so they don't show as live in the
-      catalogue.
+      DONE (operator confirmed "physically delete it, it's pointless for now" 2026-06-05 —
+      execution-service@8c24f9009)**: deleted the WHOLE deferred `adapters/browser/` execution-stub subsystem (8 files,
+      ~68 stubs) + its browser-only test + the `routing.py` `browser_automation` source/`get_browser_adapter` branch;
+      KEPT `scrapers/` (odds-data), the 4 real venues, and the UAC-owned `VENUE_EXECUTION_REGISTRY` (no local registry
+      files existed). 304 targeted tests green, basedpyright clean, clean break (no shims). (Supersedes the earlier
+      OPTION-B-open note + the original SP-5 "bet365 wired wrong / DK-FD have no scraper — ship-or-delete" framing —
+      both resolved by the deletion above.)
 - [x] ✅ [SCRIPT] **P1**. **SP-10 — cluster-validation kwargs MISSING workspace-wide**. **[DONE —
       instruments-service@b2a7ad75 2026-06-05: ASSESSED — no sports `record_captured_from_counts` site is a genuine
       multi-cluster bundle (one row per entity at (date,data_type[,league]); league is the row KEY, not a sub-cluster)
