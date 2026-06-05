@@ -537,6 +537,26 @@ What to verify/wire (B0 corrected scope):
         `recorder.record_zero_rows(...)` (the `DefiManifestRecorder.record_zero_rows` venue-launch-date-aware path at
         `_defi_manifest.py:370`); A10c ratchet baselines these so they grind down without a flag-day. Repos:
         unified-api-contracts + unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [ ] [SCRIPT] P2. **A10c-fleet — extend the SOURCE_RETURNED_ZERO routing ratchet beyond DeFi-MTDS, fleet-wide.**
+        COORDINATION + GENERIC-RATCHET INFRA SHIPPED (slot-1 2026-06-05): the DeFi A10c shell
+        (`scripts/qg/no_unrouted_source_returned_zero.sh`) is zero-tolerance but DeFi-handler-only (the
+        `DefiManifestRecorder` path). This generalises it to the UTL `ManifestWriter.record_zero_rows` (A10b) path that
+        any AG/service routes through. **Shipped (PM):** `scripts/quality_gates/check_unrouted_source_returned_zero.py`
+        (AST per-file-count GRIND-DOWN ratchet, model = STEP 5.70 + `check_adapter_contract_regression.py`) +
+        `unrouted_source_returned_zero_baseline.yaml` (baselines ALL 15 current cross-repo callsites so no repo breaks
+        day-one) + wired as **base-service.sh STEP 5.86** (per-repo `--scope`, baselined→WARN / NEW→FAIL, inline
+        `# QG-allow: <reason>` waiver). Validated: green per-repo scope; a NEW non-baselined callsite FAILS; a waivered
+        one PASSES. **Baseline inventory (the per-AG migration backlog — 15 files):** instruments-service
+        `engine/orchestrator.py` ×3; market-tick-data-service `engine/orchestrator.py` ×3 (sports v1-oracle) +
+        `live/websocket_runner.py` + `adapters/tradfi/tardis_adapter.py:1769` + `cli/handlers/_defi_manifest.py` (recorder
+        internal → waiver); features-service `multi_timeframe` ×2 + `sports` ×2 + `commodity`/`cross_instrument`/`onchain`/
+        `delta_one`/`calendar`/`volatility` ×1 each; unified-trading-library `manifest_writer.py` + `streaming/candle_writer.py`
+        (internals → waiver). **DONE only when:** every AG migrates its callsites to `record_zero_rows(was_expected=<oracle>)`
+        (UAC `was_instrument_alive` for cefi/defi/tradfi/prediction; sports fixtures) OR adds a typed-reason `# QG-allow:`,
+        the baseline is regenerated to lock (→ empty), and `quality-gates.sh` is green in every affected repo. **Per-AG
+        migration is dispatched as `- [ ]` todos in each `*_manifest_canonicalisation_2026_06_01.md`** (do NOT mass-migrate
+        another AG's code from this slot). Repos: unified-trading-pm (infra) + all service repos (per-AG). parent_epic:
+        mtds_mdps_master.
 - [ ] [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against legacy/dead
       buckets BEFORE the migrations run** (operator 2026-06-02: "refactor read/write cloud-storage paths across the
       board to match canonical so QG-fed tests don't regress by association with dead buckets; same for data-status in
