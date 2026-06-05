@@ -279,13 +279,18 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
 - [ ] [CODE] P1. **enumerate_expected_universe stamps pipeline_mode+source on `record_empty`** (#4) — derive pm/source
       per seeded cell (the seeded universe is for a known source per (ag,dt)). Repo: instruments-service. Adjacent to
       the tradfi ⑦ denominator item (slot-6 in-lane).
-- [ ] [DESIGN] P0. **M1 — `{mode}_{source}[_{transport}]` enum** (operator-ratify): add `LIVE_<SOURCE>` (+
-      `REPLAY_<SOURCE>`, M-D3) members; round-trip `source_string_for`/`pipeline_mode_for_source` for live+replay;
-      optional transport segment only where a source has >1 transport per shard; migrate `live_websocket` objects +
-      writers + readers + reconciliation-service. Repos: UAC + UTL + MTDS + features +
-      batch-live-reconciliation-service.
-- [ ] [DESIGN] P0. **M2 — source-capability registry in UAC** — tag each `data_source` with `{batch, live, replay}` (+
-      transports) it can run. New axis alongside `SOURCE_PRIORITY`. Repo: unified-api-contracts.
+- [ ] [DESIGN] P0. **M1 — `{mode}_{source}[_{transport}]` enum** (operator-ratify). **PARTIAL — Phase 0.1 shipped the
+      abstract `Mode{BATCH,LIVE,REPLAY}` enum + `mode_of(PipelineMode)` (UAC@a2eab633).** REMAINING (the BREAKING part,
+      next unit — needs M2 flags ratified first): add the concrete `LIVE_<SOURCE>`/`REPLAY_<SOURCE>` members; round-trip
+      `source_string_for`/`pipeline_mode_for_source` for live+replay; optional transport segment only where a source
+      has >1 transport per shard; migrate `live_websocket` objects + writers + readers + reconciliation-service. Repos:
+      UAC + UTL + MTDS + features + batch-live-reconciliation-service.
+- [x] ✅ [DESIGN] P0. **M2 — source-capability registry in UAC — Phase 0.1 DONE (draft seed) (UAC@a2eab633).**
+      `SOURCE_MODE_CAPABILITY` (source→`{Mode}`) + `modes_for_source`/`source_supports`/`sources_supporting`; batch=all
+      (certain), live/replay seeded with the operator-stated facts (chain RPCs replay-capable; Tardis live-not-replay),
+      rest DRAFT. 11 tests assert completeness + batch-floor + stated facts only (uncertain flags free to change on
+      ratify). **REMAINING: per-source live/replay RATIFY (operator/domain), then they become load-bearing.** Repo:
+      unified-api-contracts.
 - [ ] [DESIGN] P0. **M3 — per-shard available-sources registry in UAC** + the M2×M3 "possible-when" guardrail API
       (`could_exist(shard, mode)`); extends the ⑥ existence-guard + ⑦ could-exist denominator to the mode axis. Repo:
       unified-api-contracts (+ consumers IS/MTDS/features/deployment-api).
@@ -303,10 +308,11 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       alerting-service + MTDS/execution recovery + autonomous-recovery-matrix.
 - [ ] [CODE] P1. **write-time cross-check** `source_string_for(pipeline_mode)==source` for batch (#6) — assert in UTL
       `_resolve_and_validate_source`. Repo: unified-trading-library.
-- [ ] [DESIGN] P0. **M8 — cadence axis** — add a `cadence` enum (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/
-      `continuous_live`/`recovery_replay`) as a manifest COLUMN + deployment-registry field, ORTHOGONAL to
-      `pipeline_mode` (NOT a path key, never fragments the union). Repos: UAC (enum) + UTL (column) + deployment-service
-      (run_class topology) + MTDS/IS (stamp) + deployment-api/UI (slice-by-cadence).
+- [ ] [DESIGN] P0. **M8 — cadence axis. PARTIAL — Phase 0.1 shipped the `Cadence` enum
+      (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live`/`recovery_replay`) in UAC@a2eab633.**
+      REMAINING: wire it as a manifest COLUMN (UTL) + deployment-registry `run_class` (deployment-service) + writer
+      stamp (MTDS/IS) + slice-by-cadence (deployment-api/UI). ORTHOGONAL to `pipeline_mode` (NOT a path key, never
+      fragments the union). Also shipped Phase 0.1: **M9 `MOCK_SOURCE`** (dev-tier-only mock) in the same commit.
 - [ ] [DOCS] P0. **FULL doc-coherence audit (BEFORE + AFTER), not just a sweep** (#7) — audit EVERY layer for logic that
       CONTRADICTS M1–M8 and reconcile: CLAUDE.md (the `source=` provenance rule, the `pipeline_mode=` partition rule,
       the "Live = batch" rule, the VIX/sports source notes) · codex (`02-data/pipeline-mode-partition.md`,
