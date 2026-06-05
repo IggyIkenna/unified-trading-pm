@@ -58,7 +58,9 @@ INTEGRATION_BRANCH="live-defi-rollout"
 # .git/config, so per-slot identity REQUIRES extensions.worktreeConfig + git config
 # --worktree (a plain `git config user.name` is last-writer-wins across all slots).
 # SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution".
-WORKTREE_HOST="${VM_NAME:-laptop}"
+# WORKTREE_HOST is resolved AFTER arg-parse + persisted-identity read-back (below),
+# from the canonical short host id (ORCHESTRATOR_VM_ID-first) so the commit host
+# AGREES with the branch prefix — see the DURABLE-IDENTITY block.
 CANON_GIT_EMAIL="ikennaigboaka@gmail.com"
 
 # FM6 (orchestrator_autonomy_audit_remediation): per-repo integration base. Reads
@@ -92,6 +94,7 @@ MAIN_SLOT_MAX="${MAIN_SLOT_MAX:-20}"
 MODE=""
 SLOT_COUNT=""
 SLOT_NUM=""
+OPERATOR_EXPLICIT=0   # set to 1 only when --operator is passed (gates persisted read-back)
 
 usage() {
     sed -n '2,30p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
@@ -105,7 +108,7 @@ while [[ $# -gt 0 ]]; do
         --reset-slot)   MODE="reset-slot";  SLOT_NUM="$2"; shift 2;;
         --list)         MODE="list";        shift;;
         --slots)        SLOT_COUNT="$2";    shift 2;;
-        --operator)     OPERATOR="$2";      shift 2;;
+        --operator)     OPERATOR="$2";      OPERATOR_EXPLICIT=1; shift 2;;
         -h|--help)      usage 0;;
         *)              echo "Unknown arg: $1" >&2; usage 1;;
     esac
@@ -116,17 +119,68 @@ if [[ "${MODE}" == "init" && -z "${SLOT_COUNT}" ]]; then
     echo "ERROR: --init requires --slots <N>" >&2; exit 1
 fi
 
-# Resolve branch prefixes now that --operator is known (env override wins). Prefix base is
-# VM_NAME on a fleet VM (globally unique), else OPERATOR on a laptop — see GLOBAL-UNIQUENESS
-# note above. An explicit --operator still wins on a VM only if VM_NAME is unset.
-PREFIX_BASE="${VM_NAME:-${OPERATOR}}"
-WORKER_PREFIX="${WORKER_PREFIX:-${PREFIX_BASE}}"
-MAIN_PREFIX="${MAIN_PREFIX:-${PREFIX_BASE}m}"
-
-# --- Helpers ---------------------------------------------------------------
+# --- Helpers (defined early — the DURABLE IDENTITY block below logs) --------
 log()  { printf '[setup-tab-worktrees] %s\n' "$*"; }
 err()  { printf '[setup-tab-worktrees] ERROR: %s\n' "$*" >&2; }
 
+# --- DURABLE IDENTITY (tab_branch_global_uniqueness — durability follow-up 2026-06-05) ----
+# The 2026-06-04 fix made the prefix VM-scoped, but only on --init: a BARE re-run
+# (`--reset-slot N` / `--add-slot N` with nothing in the env) re-derived the prefix from
+# the AMBIENT env, leaving two holes this block closes:
+#   (1) ambient-loss regression — a manual SSH session that never sourced the VM's startup
+#       env has no $VM_NAME, so the fallback collapsed to $USER=root → re-wrote the colliding
+#       tab/rootm/<N> (the exact branch --init was fixed to avoid).
+#   (2) VM_NAME ≠ ORCHESTRATOR_VM_ID fork — bootstrap_vm.sh brands branches from
+#       VM_ID="${ORCHESTRATOR_VM_ID:-${VM_NAME}}" (the short registry id, e.g. vm-cefi); keying
+#       off raw VM_NAME here could fork tab/<long-instance-name>/<N> divergent from the init's
+#       tab/<vm-id>/<N>.
+# Fix: (a) prefer ORCHESTRATOR_VM_ID (== bootstrap VM_ID == registry id) over VM_NAME; (b)
+# PERSIST the resolved identity at provision time + READ IT BACK on a bare re-run so the prefix
+# can never regress off the ambient env. Explicit overrides (--operator / MAIN_PREFIX /
+# WORKER_PREFIX / ORCHESTRATOR_VM_ID / VM_NAME — incl. everything bootstrap passes) still win.
+# SSOT: plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md.
+IDENTITY_CONF="${TABS_DIR}/.worktree-identity.conf"
+
+# Canonical short host id: ORCHESTRATOR_VM_ID wins (matches bootstrap_vm.sh VM_ID), then
+# VM_NAME, then empty (=> a laptop; leaves PREFIX_BASE=OPERATOR + WORKTREE_HOST=laptop intact).
+HOST_ID="${ORCHESTRATOR_VM_ID:-${VM_NAME:-}}"
+
+# Read-back: only when this run carries NO explicit identity override — recover what --init
+# persisted so a bare --reset-slot/--add-slot reproduces the SAME prefix + host (verbatim,
+# bypassing the role-suffix derivation so bootstrap's uniform tab/<vm-id>/<N> is preserved).
+if [[ "${OPERATOR_EXPLICIT}" == "0" && -z "${HOST_ID}" \
+      && -z "${MAIN_PREFIX:-}" && -z "${WORKER_PREFIX:-}" && -f "${IDENTITY_CONF}" ]]; then
+    # shellcheck disable=SC1090
+    source "${IDENTITY_CONF}"
+    OPERATOR="${PERSISTED_OPERATOR:-${OPERATOR}}"
+    HOST_ID="${PERSISTED_HOST_ID:-${HOST_ID}}"
+    MAIN_PREFIX="${MAIN_PREFIX:-${PERSISTED_MAIN_PREFIX:-}}"
+    WORKER_PREFIX="${WORKER_PREFIX:-${PERSISTED_WORKER_PREFIX:-}}"
+    log "Recovered persisted slot identity from ${IDENTITY_CONF} (operator=${OPERATOR}, host_id=${HOST_ID:-<laptop>})"
+fi
+
+# Resolve branch prefixes now that operator + host id are known (any value set above wins).
+PREFIX_BASE="${HOST_ID:-${OPERATOR}}"
+WORKER_PREFIX="${WORKER_PREFIX:-${PREFIX_BASE}}"
+MAIN_PREFIX="${MAIN_PREFIX:-${PREFIX_BASE}m}"
+# Commit-attribution host AGREES with the branch prefix (both ORCHESTRATOR_VM_ID-first).
+WORKTREE_HOST="${HOST_ID:-laptop}"
+
+# Persist the FINAL resolved identity so the next bare re-run reproduces it verbatim.
+persist_identity() {
+    mkdir -p "${TABS_DIR}"
+    cat > "${IDENTITY_CONF}" <<EOF
+# Auto-generated by setup-tab-worktrees.sh — canonical slot identity for THIS host.
+# Read back on bare --reset-slot/--add-slot re-runs so the branch prefix + commit host
+# can't regress to \$USER when the ambient env lost ORCHESTRATOR_VM_ID/VM_NAME.
+PERSISTED_OPERATOR="${OPERATOR}"
+PERSISTED_HOST_ID="${HOST_ID}"
+PERSISTED_MAIN_PREFIX="${MAIN_PREFIX}"
+PERSISTED_WORKER_PREFIX="${WORKER_PREFIX}"
+EOF
+}
+
+# --- Helpers ---------------------------------------------------------------
 active_repos() {
     # Emit one repo name per line, active (not archived_into) only.
     python3 - "${MANIFEST}" <<'PY'
@@ -320,7 +374,7 @@ copy_workspace_file() {
 
 provision_slot() {
     local slot="$1"
-    log "Provisioning slot ${slot} (branch tab/${OPERATOR}/${slot}) ..."
+    log "Provisioning slot ${slot} (branch $(slot_branch "${slot}")) ..."
     write_slot_envrc "${slot}"
     copy_workspace_file "${slot}"
     while IFS= read -r repo; do
@@ -375,6 +429,8 @@ case "${MODE}" in
     init)
         log "Initialising ${SLOT_COUNT} slots for operator '${OPERATOR}' under ${TABS_DIR}/"
         mkdir -p "${TABS_DIR}"
+        persist_identity   # durable prefix/host for bare re-runs (see DURABLE IDENTITY block)
+        log "  Branch prefix: main=tab/${MAIN_PREFIX}/<N>, worker=tab/${WORKER_PREFIX}/<N>, commit host=${WORKTREE_HOST}"
         for ((i=1; i<=SLOT_COUNT; i++)); do
             provision_slot "${i}"
         done
@@ -393,6 +449,7 @@ case "${MODE}" in
     add-slot)
         log "Adding slot ${SLOT_NUM} for operator '${OPERATOR}'"
         mkdir -p "${TABS_DIR}"
+        persist_identity   # refresh durable identity (idempotent; no-op if unchanged)
         provision_slot "${SLOT_NUM}"
         ;;
     reset-slot)
