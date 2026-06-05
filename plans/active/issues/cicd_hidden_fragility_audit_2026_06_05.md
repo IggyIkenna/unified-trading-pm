@@ -298,6 +298,36 @@ C3 (storm + label-bypass), H2 (concurrency-group fragmentation), H5 (green-senti
 - `ci_false_positive_alerts_infra_noise_2026_06_05.md` — `#ci-failures` over-paging on infra noise; its UAC `ci_status`
   lead is explained by my **H1**.
 
+## Plan + doc corrections needed (for Ikenna to apply at the source)
+
+These existing records are now **factually wrong** (they make the pipeline look fixed). Listed as precise edits so they
+can be corrected where they live — left for Ikenna to apply since `cicd_contract_hardening_2026_06_01.md` is his
+actively-worked master plan.
+
+1. **`cicd_contract_hardening_2026_06_01.md` ~L1362 — un-flip / qualify the semver ✅ (C2).** Currently
+   `[x] ✅ DONE 2026-06-02`. Reality: `unified-trading-pm` was never in the fix list and `semver-agent.yml:38` is still
+   `["Quality Gates"]`. → flip to `[ ]` (or mark `✅ PARTIAL`) + add: _"PM still on dead name — fix
+   `unified-trading-pm/.github/workflows/semver-agent.yml:38` → `["quality-gates-v2"]`; delete stale
+   `scripts/templates/semver-agent.yml` + `scripts/propagation/templates/semver-agent.yml`."_
+
+2. **`CLAUDE.md` § Version / Workflow / Plan Governance — qualify the "REPAIRED 2026-06-02" claim (C2).** Append:
+   _"EXCEPT `unified-trading-pm` itself, whose `semver-agent.yml` still triggers on the dead `Quality Gates` name (see
+   `cicd_hidden_fragility_audit_2026_06_05.md` C2)."_
+
+3. **`cicd_contract_hardening_2026_06_01.md` ~L248 — update the escalation item (C1).** It says "PM
+   `escalate-to-orchestrator.yml` **does NOT exist**." It exists now → replace with: _"workflow exists but `:151`
+   defaults to the SPA host `agent-orchestrator.odum-research.com` (no `api.`) → escalations return 200-but-dead. Fix
+   default URL → `https://api.agent-orchestrator.odum-research.com`."_
+
+4. **`cicd_contract_hardening_2026_06_01.md` ~L1625 — add a residual under the starvation ✅ (H3).** The
+   `locked_at`→`locked_since` field fix is done, but add: _"RESIDUAL: `locked_alert_sent` is set True and never reset →
+   after the first page the dangling-lock watchdog is silent forever. Reset it to False when `sit-gate` sets
+   `locked=True`."_
+
+5. **Add new plan items** (reference this issue doc) for the net-new findings with no existing tracker: C3, H2, H5, H6,
+   M1, M4, M5, M6, plus the untracked gaps in M2 (suffix-blind verifier + stale classic/Terraform IaC) and M3
+   (fail-open-on-blank `ci_status`). Suggested home: the CI/CD master plan's Wave-2 / observability block.
+
 ## Verification log
 
 | ID  | Status   | Confirmed by                                                                         |
