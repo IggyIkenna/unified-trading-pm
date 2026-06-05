@@ -739,7 +739,7 @@ hard-fail once the new schema lands — schema split MUST ship in a single works
 break sports parquets mid-migration. Coordinate with `writegate_honest_coverage_endtoend_2026_05_06`. Reader-side join
 helper hides the split so consumers don't need to refactor (per issue's preferred approach).
 
-- [ ] [SCRIPT] P0. UAC: split `CanonicalFixture` into `CanonicalFixtureSchedule` (kickoff_time, league_id, home_team_id,
+- [x] ✅ [SCRIPT] P0. **UAC schema DONE additively (uac@c4058c68, 2026-06-05) — writer-emit + entity-split + migration GATED until AFTER canonicalisation (single-walk).** Added CanonicalFixtureSchedule + CanonicalFixtureOutcomes + MatchResult + FIXTURES_SCHEDULE/FIXTURES_OUTCOMES constants + MatchLifecycle ALONGSIDE the live CanonicalFixture/FIXTURES (NOT a rename/replace yet). The entity-folder split + `migrate_fixtures_split.py` walk + writegate same-day flip are the gated walk-after steps. ~~split `CanonicalFixture` into `CanonicalFixtureSchedule` (kickoff_time, league_id, home_team_id,~~
       away_team_id, venue, status, scheduled fields) + `CanonicalFixtureOutcomes` (home_score_regulation,
       away_score_regulation, home_score_after_extra_time, away_score_after_extra_time,
       home_score_after_penalty_shootout, away_score_after_penalty_shootout, home_penalty_shootout_score,
@@ -810,12 +810,12 @@ by the C.6 match_end_time cascade above; Q3 (predictions) is gold standard, no w
 Phase 3 (per operator decision 2026-05-08: tradfi_master owns Q1+Q2; sports_master owns Q4-Q7; operator chose Option (a)
 for Q7 — UTL helper at instruments-service write-time, NOT a separate pre-features extractor service).
 
-- [ ] [SCRIPT] P0. UAC `CanonicalFixtureSchedule` extension (Q5): `halftime_start_time`, `halftime_end_time`,
+- [x] ✅ [SCRIPT] P0. **UAC Q5 fields DONE (uac@c4058c68): CanonicalFixtureSchedule carries all HT/ET/PEN phase timestamps (nullable, tz-aware).** Populate-from-api-football at write-time is the IS Phase-3 piece (pending). ~~extension (Q5): `halftime_start_time`, `halftime_end_time`,~~
       `extra_time_first_half_start_time`, `extra_time_first_half_end_time`, `extra_time_second_half_start_time`,
       `extra_time_second_half_end_time`, `penalty_shootout_start_time`, `penalty_shootout_end_time`,
       `whistle_full_time_at`. All nullable (regular matches don't have ET/penalties). Populate from api_football
       `periods.first` / `periods.second` / `et` / `score.penalty.played_at` at write-time.
-- [ ] [SCRIPT] P0. UAC `CanonicalFixtureOutcomes` score-distinction columns (Q6): `home_score_regulation`,
+- [x] ✅ [SCRIPT] P0. **UAC Q6 fields DONE (uac@c4058c68): CanonicalFixtureOutcomes carries regulation/ET/PEN score-distinction + went_to_extra_time/went_to_penalties + match_result (pen-shootout never collapsed).** Populate-from-api-football at write-time is the IS Phase-3 piece (pending). ~~score-distinction columns (Q6): `home_score_regulation`,~~
       `home_score_after_extra_time`, `home_score_after_penalty_shootout`, `home_penalty_shootout_score`,
       `away_score_regulation`, `away_score_after_extra_time`, `away_score_after_penalty_shootout`,
       `away_penalty_shootout_score`, `went_to_extra_time` (bool), `went_to_penalties` (bool), `match_result` (`home_win`
@@ -990,7 +990,7 @@ ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
       `execution_service.sports_execution.adapters.<subdir>.<module>` per the post-merge layout in
       `execution-service/execution_service/sports_execution/adapters/__init__.py:1-32`. Other agent in flight on this
       fix.
-- [ ] [SCRIPT] **P1**. **SP-5 — bet365 + DK/FD scrapers**. bet365 wired wrong (phantom import per SP-13); DraftKings /
+- [x] ✅ [SCRIPT] **P1**. **SP-5 — bet365 + DK/FD as live EXECUTION venues = ALREADY NOT LIVE (slot-4 investigation 2026-06-05; operator "delete")**: bet365/DraftKings/FanDuel carry NO execution routing — absent from MTDS `_ADAPTER_PATHS` (removed 2026-05-12), NOT execution-declared in UAC capability decls (only betfair/kalshi/polymarket/matchbook), and not in `SportsRouter`/`SportsExecutionRouter`. NB `scrapers/bet365.py` is an ODDS-DATA reader (no `place_bet`) — keep. The only residual is the inert `DEFERRED-INDEFINITELY` `browser/` stub family (~69 venues, all `NotImplementedError`); a 3-venue carve-out is a no-op/odds-data-risk. **OPTION-B (open, operator-sized)**: physically delete the WHOLE deferred `browser/` execution-stub subsystem + `VENUE_EXECUTION_REGISTRY` scraper entries + `VENUE_KEY_TO_ADAPTER` as one unit — needs operator confirmation the scaffolding is abandoned (not just deferred). ~~bet365 wired wrong (phantom import per SP-13); DraftKings /~~
       FanDuel have NO scraper (only `NotImplementedError` browser stubs in `sports_execution/adapters/scrapers/`). Fix
       scope: either ship the scrapers OR delete the venue capability entries for DK/FD so they don't show as live in the
       catalogue.
