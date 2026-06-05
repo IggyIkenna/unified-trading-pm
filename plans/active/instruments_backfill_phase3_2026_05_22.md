@@ -15,6 +15,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **⚠️ SUPERSEDED — folded into the v9 single-walk canonicalisation (2026-06-05).** The remaining `DEFERRED-BLOCKED`
+> items here are NOT lost. Re-touching the corpus now would double-walk + write the pre-v9 layout, so instruments
+> gap-fill rides the per-AG canonicalisation walks. **Live home:** `instruments_manifest_canonicalisation_2026_06_01.md`
+> (non-sports instruments-store surface) + `sports_manifest_canonicalisation_2026_06_01.md` (sports reference rides the
+> sports walk). **Credential asks** (Kalshi, Databento) live in `data_source_provenance_all_asset_groups_2026_06_01.md`
+> + `master_to_live_defi_2026_05_23.md`. Archive (needs `[unlock-plan]`) ONLY after those walks land v9 for instruments.
+
 # Instruments-service catalogue forward-fill — Phase 3 per-asset-group
 
 Unpacks `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3.1 into per-asset-group items.

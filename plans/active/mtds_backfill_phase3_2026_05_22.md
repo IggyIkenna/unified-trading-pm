@@ -18,6 +18,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **⚠️ SUPERSEDED — folded into the v9 single-walk canonicalisation (2026-06-05).** The `DEFERRED-BLOCKED`
+> VMs-IN-FLIGHT items are NOT lost — MTDS multi-venue gap-fill is bundled INTO the per-AG canonicalisation single-walk
+> (gap-fill + canonicalise + the new `pipeline_mode=batch_*/` path + `source` column + v9 in one pass). **Live home:**
+> `cefi`/`defi`/`tradfi`/`sports`/`prediction`_manifest_canonicalisation_2026_06_01.md (each canonicalises the MTDS
+> tick surface for its AG). Already-migrated items (bucket naming → `bucket_name_ssot_canonicalisation`) keep their
+> existing successor links below. Archive (needs `[unlock-plan]`) ONLY after the per-AG walks land v9 for MTDS.
+
 # MTDS multi-venue backfill VM relaunch — Phase 3 per-asset-group
 
 Unpacks `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3.2 (MTDS-3.2.A through 3.2.E) into

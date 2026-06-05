@@ -15,6 +15,13 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
+> **⚠️ SUPERSEDED — folded into the v9 single-walk canonicalisation (2026-06-05).** The `DEFERRED-BLOCKED` VM-RUNNING /
+> GATE items are NOT lost — MDPS bar gap-fill is bundled INTO the per-AG canonicalisation single-walk (gap-fill +
+> canonicalise + `pipeline_mode`/`source`/v9 in one pass; doing the old separate VM relaunch now would double-walk).
+> **Live home:** `cefi`/`defi`/`tradfi`/`sports`/`prediction`_manifest_canonicalisation_2026_06_01.md (per-AG MDPS
+> surface) + `downstream_services_manifest_canonicalisation_2026_06_01.md` (MDPS layer). Archive (needs `[unlock-plan]`)
+> ONLY after the per-AG walks land v9 + the operator verifies the MDPS bar coverage on the new layout.
+
 # MDPS bar reprocessor relaunch — Phase 3 per-asset-group
 
 Unpacks `code_freeze_migrate_backfill_sequencing_2026_05_10.md` Phase 3.3 (MDPS-3.3.A/B) into per-asset-group
