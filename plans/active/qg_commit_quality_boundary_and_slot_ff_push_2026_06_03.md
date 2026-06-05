@@ -455,19 +455,21 @@ design).
       `# noqa: gs-uri`). pytest **4670 passed**. **2 latent runtime bugs surfaced + fixed**: (a) `fill_event_consumer`
       cross-client-reject acked via `message.ack()` — absent on sync-pull `PubSubReceivedMessage` →
       `subscriber.acknowledge(ack_ids=…)`; (b) `aggregated_position_subscriber` read `msg.asset_group`, real field is
-      `asset_class`; both stale unit-test mocks updated. **#67 still merge-BLOCKED but NOT on type-debt** — see the two
-      residual-blocker todos below (branch-protection context mismatch + dep-tier). quickmerge LDR→staging was Stage-1.7
-      dep-tier-gated (utl/uac/mtds not STAGING_GREEN); landed via tab-mirror instead; `--skip-dep-tier-gate` NOT used
+      `asset_class`; both stale unit-test mocks updated. **#67 MERGED to staging 2026-06-05 11:43:50Z** — once the
+      `Quality Gates (strategy-service) / quality-gates-v2` GHA finished GREEN on 76e01808 (alongside `AWS CodeBuild` +
+      `check-staging-lock` + plan-alignment, all SUCCESS) the standing auto-merge merged it; **strategy-service is now
+      STAGING_GREEN**. quickmerge's own LDR→staging attempt had tripped the Stage-1.7 dep-tier gate (a
+      stale-LDR-manifest false-positive), so the fix landed via tab-mirror FF instead — `--skip-dep-tier-gate` NOT used
       (human-only).
-- [ ] [CICD] P0. **strategy-service #67 branch-protection context MISMATCH dead-locks merge (found 2026-06-05,
-      slot-7).** `staging` protection (classic + ruleset) requires context
-      **`Quality Gates (strategy-service) / quality-gates-v2`** `+` `check-staging-lock`, but the repo's gate migrated
-      to **`AWS CodeBuild ap-northeast-1 (strategy-service)`** (GREEN on #67) — the required GHA context never reports →
-      `mergeStateStatus=BLOCKED` despite `mergeable=MERGEABLE` + auto-merge enabled + all present checks green. This is
-      the "silently dead-lock" the CLAUDE.md branch-protection rule + `verify_branch_protection_check_names.py` guard
-      against. **Operator/orchestrator fix** (admin): reconcile staging's required-status-check contexts to the
-      CodeBuild gate (or restore the v2 GHA trigger on LDR→staging PRs) for strategy-service; likely fleet-wide for
-      repos migrated to CodeBuild. Force-merge / protection edits are human/admin — NOT done autonomously.
+- [x] ✅ [CICD] P0. **RETRACTED — the "branch-protection mismatch" was a FALSE ALARM (mis-read, slot-7 2026-06-05).** I
+      snapshotted #67's check rollup while the `quality-gates-v2` GHA (~4 min) was still in-flight — only the webhook
+      `AWS CodeBuild` had reported — and wrongly concluded the required
+      `Quality Gates (strategy-service) / quality-gates-v2` context never fires. It DOES: the v2 GHA ran on 76e01808
+      (`pull_request`, conclusion=success) and posted the required context → #67 auto-merged. strategy-service's staging
+      protection is **IDENTICAL** to the working repos (execution-service / client-reporting-api / instruments-service /
+      deployment-service all require `Quality Gates (<repo>) / quality-gates-v2` + `check-staging-lock`). **No
+      protection or workflow change needed.** Lesson: wait for ALL required checks (incl. the slow v2 GHA) to settle
+      before diagnosing a stuck promotion PR.
 - [ ] [QG] P1. **deployment-api #17 — `-prd` test fix SHIPPED ✅ but promotion now BLOCKED by a SECOND (pre-existing,
       unmasked) codex blocker (2026-06-05, slot-7).** **(a) `-prd` sub-fix DONE + CI-validated:** both deps now MERGED
       to staging (`deployment-service` #21 @12:40Z + `strategy-service` #67) → both STAGING_GREEN on canonical
