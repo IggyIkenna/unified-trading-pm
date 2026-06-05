@@ -1,0 +1,71 @@
+name: flow-health-reporter
+
+# Unified CI/CD flow-health reporter (plan § G — supersedes the scattered E + F point-checks).
+# ONE cron computes the whole promotion-flow health per repo (ci_status, behind ×3, oldest
+# stuck-PR, staging-lock) and emits ONE transition alert (🔴 flow-blocked / 🟢 flow-recovered),
+# anti-spam-gated against a small committed state file (mirrors ci-status-update). Standalone:
+# it READS the ci_status surface but never edits ci-status-update.yml / the reconciler.
+# SSOT: scripts/repo-management/flow_health_reporter.py + cicd_contract_hardening_2026_06_01 § G.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 min — flow drift is slow; the per-event alerts (ci-status-update, sit-starvation) cover the fast path
+  workflow_dispatch:
+
+permissions:
+  contents: write # only to commit the state file on a transition
+
+concurrency:
+  group: flow-health-reporter
+  cancel-in-progress: true
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    outputs:
+      transition: ${{ steps.scan.outputs.transition }}
+      blocked: ${{ steps.scan.outputs.blocked }}
+      message: ${{ steps.scan.outputs.message }}
+    steps:
+      - name: Checkout PM
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Compute flow health
+        id: scan
+        env:
+          # Cross-repo compare/PR reads need fleet-wide scope; default GITHUB_TOKEN is repo-scoped.
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: python3 scripts/repo-management/flow_health_reporter.py
+
+      - name: Commit state on transition (low-churn — only when 🔴↔🟢 flips)
+        if: steps.scan.outputs.transition == 'true'
+        run: |
+          set -euo pipefail
+          git config user.name "uts-flow-health-bot"
+          git config user.email "uts-flow-health-bot@users.noreply.github.com"
+          if git diff --quiet scripts/repo-management/flow_health_state.json; then
+            echo "No state change to commit."
+            exit 0
+          fi
+          git add scripts/repo-management/flow_health_state.json
+          git commit -m "chore(flow-health): record flow verdict transition [skip ci]"
+          for attempt in 1 2 3; do
+            git push && break
+            echo "push rejected (attempt ${attempt}); rebasing"
+            git pull --rebase --autostash origin "${GITHUB_REF_NAME}" || true
+            [ "${attempt}" = "3" ] && { echo "could not push flow-health state after 3 tries"; exit 0; }
+          done
+
+  notify:
+    name: Slack — Flow Health
+    needs: [report]
+    if: needs.report.outputs.transition == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.report.outputs.message }}
+      severity: ${{ needs.report.outputs.blocked == 'true' && 'CRITICAL' || 'INFO' }}
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
