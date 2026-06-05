@@ -17,10 +17,19 @@ vms:
   # ---------- Planning VM ----------
 
   - id: planning-vm
-    fqdn: api-planning.agent-orchestrator.odum-research.com
+    # THIS IS THE CENTRAL API VM (reconciled 2026-06-05): the single always-on endpoint everything
+    # (CI escalations + dashboard + operator chat) pings. nginx :443 → orchestrator backend :8765.
+    # tab branches brand `planning` (ORCHESTRATOR_VM_ID=planning), NOT the operator name `ikenna`.
+    cloud: aws
+    aws_instance_id: i-0c9b283b31d6b5ca7
+    public_ip: "13.113.200.22" # ELASTIC IP — stable across reboots; DNS api.agent-orchestrator points here
+    api_url: "https://api.agent-orchestrator.odum-research.com"
+    fqdn: api.agent-orchestrator.odum-research.com
+    region: ap-northeast-1
+    instance_type: m8i.4xlarge
     ssh_host: human-planning-vm
     role: planning
-    label: "Planning (Ikenna + Harsh interactive)"
+    label: "Central API + Planning VM (Ikenna + Harsh interactive)"
     operators: [ikenna, harsh]
     accounts:
       primary: ikennaigboaka@gmail.com
@@ -28,10 +37,16 @@ vms:
         - ikenna@odum-research.com
         - iggy2london@gmail.com
         - harshkantariyawork@gmail.com
-    master_plans: [] # planning VM doesn't execute — produces wrapper plans for epic VMs
+    master_plans: [] # planning VM doesn't execute epics — produces wrapper plans + central routing
     notes: |
-      Slot 1 = Ikenna interactive (Opus 4.7 1M); slot 2 = Harsh interactive. No centralised workers.
+      Central API VM == Planning VM. Auto-spawns SLOTS, never auto-assigns JOBS — "workers" here are
+      humans (Ikenna/Harsh) in isolated worktrees, like a laptop. tab/planning/N (5 slots, 2026-06-05):
+        slot1 = Ikenna interactive (Opus)   slot2 = Harsh interactive (Opus)
+        slot3 = review (code review of this machine's slot_done output, review.md, Sonnet)
+        slot4 = CI-escalation (escalate.md — merge-conflict/SIT/label fixes on LDR)
+        slot5 = plan-health agent (pinged by the LDR→main promotion workflow; FF main→LDR + plan hygiene)
       Both operators see each other's chats via /api/agents/by-role/main/history view.
+      SSOT: plans/active/planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05.md.
 
   # ---------- L0 Asset-group VMs (5) ----------
 
@@ -241,15 +256,20 @@ vms:
   # ---------- L5 Meta (orchestrator self-managing) ----------
 
   - id: vm-orchestrator
-    fqdn: api-orchestrator.agent-orchestrator.odum-research.com
+    # PARKED EPIC VM (reconciled 2026-06-05). This is NOT the running central orchestrator — that lives
+    # on the planning-vm (the Central API VM, EIP 13.113.200.22). This box is the *epic* VM that owns the
+    # agent-orchestrator CODEBASE epic. STOPPED by operator 2026-06-04 15:51 GMT; stays parked until CI/CD
+    # + epic dispatch is ready (we don't hand epics to background agents until the orchestrator is fixed).
+    # Old public_ip 52.193.229.193 was DEAD (no EIP, IP released on stop) — removed to stop misdirection.
+    status: parked-stopped
     cloud: aws
     aws_instance_id: i-007e8d99d12831578
-    public_ip: "52.193.229.193"
-    api_url: "http://52.193.229.193:8765"
+    public_ip: null # ephemeral (no EIP); reassigned on next start — do not hardcode
+    api_url: null
     region: ap-northeast-1
     launched: "2026-05-22"
     role: epic
-    label: "Orchestrator master (the agent-orchestrator multi-VM stack itself)"
+    label: "Orchestrator-codebase epic VM (agent-orchestrator stack development) — PARKED/stopped"
     accounts:
       primary: ikennaigboaka@gmail.com
       failover:

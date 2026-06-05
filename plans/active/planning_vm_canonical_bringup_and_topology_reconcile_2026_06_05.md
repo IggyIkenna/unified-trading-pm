@@ -44,33 +44,43 @@ related_plans:
       (stopped). Active set → `ikennaigboaka hk planning`. SHIPPED 2026-06-05 (see evidence on flip). Repo:
       `unified-trading-pm` (`scripts/workflow-templates/tab-mirror-to-ldr.yml` + PM copy; re-rollout to fleet).
       parent_epic: orchestrator_master.
-- [ ] [INFRA] P1. **Provision 4 interactive planning slots on the central VM as `tab/planning/N`** (the old
+- [ ] [INFRA] P1. **Provision 5 interactive planning slots on the central VM as `tab/planning/N`** (the old
       `tab/ikenna/*` were its mis-named slots, now deleted; zero `tab/planning/*` exist). SSH into `13.113.200.22` →
-      `ORCHESTRATOR_VM_ID=planning bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 4 --operator planning`
+      `ORCHESTRATOR_VM_ID=planning bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 5 --operator planning`
       (uniform `planning` prefix via the durable fix) + `install-slot-cron-ff-pull.sh` +
-      `verify-slot-host-symmetry.sh`=0. **Slot roles (operator 2026-06-05 — review ≠ CI-escalation, distinct `review.md`
-      vs `escalate.md` agents):** slot1 = Ikenna (interactive planning, Opus), slot2 = Harsh (interactive planning,
-      Opus), slot3 = **review** (code review, `review.md`, Sonnet), slot4 = **CI-escalation + plan-health
-      reconciliation** (`escalate.md` — merge-conflict / SIT / label-mismatch fixes + plan-hygiene; a DEDICATED slot so
-      escalation jobs never grab Ikenna's/Harsh's interactive slots). **BLOCKED-OPERATOR-CONFIRM**: touches the live
-      central box — awaiting operator go. Repo: `agent-orchestrator` (bootstrap) + the central VM. parent_epic:
-      orchestrator_master.
+      `verify-slot-host-symmetry.sh`=0. **Slot roles (operator 2026-06-05 — review ≠ CI-escalation ≠ plan-health, three
+      distinct agents `review.md` / `escalate.md` / plan-health):** slot1 = Ikenna (interactive planning, Opus), slot2 =
+      Harsh (interactive planning, Opus), slot3 = **review** (code review of THIS machine's slot_done output —
+      `review.md` watches completed-worker commits vs the task done_definition; it is NOT a global PR reviewer), slot4 =
+      **CI-escalation** (`escalate.md` — merge-conflict / SIT / label-mismatch fixes on LDR; dedicated so escalations
+      never grab Ikenna's/Harsh's interactive slots), slot5 = **plan-health agent** (see next todo).
+      **BLOCKED-OPERATOR-CONFIRM**: touches the live central box — awaiting operator go. Repo: `agent-orchestrator`
+      (bootstrap) + the central VM. parent_epic: orchestrator_master.
+- [ ] [SCRIPT] P1. **Plan-health AGENT (slot5) pinged on each LDR→main merge attempt + FF main→LDR (operator
+      2026-06-05).** Distinct from the two EXISTING pieces — `plan-health-agent.yml` (daily, **report-only** digest) and
+      `main-backmerge-to-ldr.yml` (deterministic `merge` + FF main→LDR on push to main). The GAP: an ACTIVE judgment
+      agent the **LDR→main promotion workflow pings** (escalation-style `POST /api/escalate` with a `plan-health` role)
+      so that on every main↔LDR reconciliation the plans are actively kept clean (flip/dedup/hygiene), and main is FF'd
+      back to LDR cleanly. Build: (a) a `plan-health.md` (or reuse `escalate.md` with a plan-health prompt) agent role;
+      (b) wire the LDR→main promote/back-merge workflow to ping it; (c) it runs on planning slot5. Repos:
+      `agent-orchestrator` (agent role + ping) + `unified-trading-pm` (workflow). parent_epic: orchestrator_master.
 - [ ] [INFRA] P1. **Make `ORCHESTRATOR_VM_ID=planning` durable in the central VM's provisioning** so its slots can't
       regress to a long instance-name prefix. Its user-data exports `VM_NAME="agent-orch-vm-..."` but NOT
       `ORCHESTRATOR_VM_ID`, so `bootstrap_vm.sh`'s `VM_ID=${ORCHESTRATOR_VM_ID:-${VM_NAME}}` would brand the long name.
       Add `export ORCHESTRATOR_VM_ID=planning` to the central VM's user-data before the bootstrap call (same
       VM_NAME≠VM_ID bug class fixed in setup-tab-worktrees.sh). Repo: `agent-orchestrator` / launch config. parent_epic:
       orchestrator_master.
-- [ ] [DOC] P1. **Fix `orchestrator_vm_registry.yaml` staleness.** (a) `planning-vm` entry: add the real instance id
-      `i-0c9b283b31d6b5ca7` + `public_ip: 13.113.200.22` (Elastic IP) + `api_url`/`fqdn`
-      `api.agent-orchestrator.odum-research.com`; note it IS the central API VM. (b) `vm-orchestrator` entry: correct
-      the DEAD `public_ip: 52.193.229.193`, mark it a PARKED epic VM (stopped 2026-06-04; owns the orchestrator-codebase
-      epic; NOT the running central orchestrator). Run `regen_vm_registry.py --check` after. Repo: `unified-trading-pm`.
-      parent_epic: orchestrator_master.
-- [ ] [DOC] P1. **Reconcile conflicting docs/plans so the `vm-orchestrator`-vs-central naming confusion is killed.** The
-      central orchestrator backend runs on the PLANNING VM (`13.113.200.22`); `vm-orchestrator` is the epic VM that owns
-      the agent-orchestrator _codebase_ epic. Audit + correct any doc/plan that conflates them (grep `vm-orchestrator` +
-      `52.193.229.193` across `codex/`, `plans/`, `agent-orchestrator/`); add a one-line "why stopped / what it is" note
-      so teammates aren't confused. SSOT to keep authoritative:
-      `codex/12-agent-workflow/orchestrator-multi-vm-topology.md`. Repo: `unified-trading-pm` + `agent-orchestrator`.
-      parent_epic: orchestrator_master.
+- [x] ✅ [DOC] P1. **Fix `orchestrator_vm_registry.yaml` staleness.** SHIPPED 2026-06-05. (a) `planning-vm` entry: added
+      real instance id `i-0c9b283b31d6b5ca7` + `public_ip: 13.113.200.22` (Elastic IP) + `api_url`/`fqdn`
+      `api.agent-orchestrator.odum-research.com` + instance_type + the "THIS IS THE CENTRAL API VM" note + 5-slot
+      composition. (b) `vm-orchestrator`: nulled the DEAD `52.193.229.193`/`api_url`, added `status: parked-stopped` +
+      relabelled "Orchestrator-codebase epic VM … PARKED/stopped". `regen_vm_registry.py --check` = OK (11 vm-ids
+      valid). Repo: `unified-trading-pm`. parent_epic: orchestrator_master.
+- [x] ✅ [DOC] P1. **Reconcile conflicting docs so the `vm-orchestrator`-vs-central naming confusion is killed.**
+      SHIPPED 2026-06-05. Swept `vm-orchestrator` + `52.193.229.193` across `codex/` + `plans/` + `agent-orchestrator/`:
+      the topology SSOT (`orchestrator-multi-vm-topology.md`) was ALREADY correct ("Central API VM = Planning VM @
+      13.113.200.22"); the overview + canonical-plan-flow do NOT conflate (no central/escalation claim on
+      vm-orchestrator); the only live stale ref was the dead-IP row in
+      `codex/05-infrastructure/agent-orchestrator-worker-topology.md` → fixed (vm-orchestrator marked parked + a
+      "central = planning VM, EIP 13.113.200.22" clarifier added). Remaining 52.193.229.193 refs are in an ARCHIVED plan
+      (left as-is). Repo: `unified-trading-pm`. parent_epic: orchestrator_master.

@@ -48,8 +48,8 @@ canonical there. Do not duplicate the list here — read the registry.
 > guard also has NO internal scoping (it fsck's every `.git` incl. ~478 worktrees → 500+-line dumps) and does NOT
 > self-heal (it should `git fetch` to recover missing-but-reachable objects, which is what the 2026-06-04 recovery did
 > by hand). When a VM is intentionally stopped, record it here so a stale alert isn't mistaken for a dead-VM incident.
-> SSOT for live-vs-planned = **this block**; the table below is the historical/planned commissioning map, NOT a
-> liveness statement.
+> SSOT for live-vs-planned = **this block**; the table below is the historical/planned commissioning map, NOT a liveness
+> statement.
 
 ## Current fleet — AWS EC2 ap-northeast-1 (commissioned 2026-05-22; see LIVE STATUS above for what actually runs)
 
@@ -57,22 +57,25 @@ canonical there. Do not duplicate the list here — read the registry.
 > `CLOUD_PROVIDER=gcp`. GCP epic fleet decommissioned 2026-05-22 to avoid cost; planning VM at 34.146.53.106 remains
 > live until DNS is wired to AWS.
 
-| VM id            | Cloud | IP             | Instance ID         | Epics / workstreams         |
-| ---------------- | ----- | -------------- | ------------------- | --------------------------- |
-| planning-vm      | GCP   | 34.146.53.106  | (GCE)               | Interactive + governance    |
-| vm-defi          | AWS   | 43.207.178.164 | i-05805eb07fdf180b6 | DeFi + manifest             |
-| vm-cefi          | AWS   | 43.207.36.161  | i-003be935f72c13d51 | CeFi + instruments          |
-| vm-tradfi        | AWS   | 18.181.221.162 | i-0a663001399ef5f49 | TradFi                      |
-| vm-sports        | AWS   | 13.115.221.87  | i-005e1bada21b1653f | Sports                      |
-| vm-prediction    | AWS   | 43.207.224.187 | i-063bc8dbf59f36220 | Predictions                 |
-| vm-ml            | AWS   | 13.114.121.99  | i-02294132088f23e50 | MTDS/MDPS + features + ML   |
-| vm-trading-core  | AWS   | 54.238.66.156  | i-0e51b9c73666b3a8b | Strategy + execution        |
-| vm-operator-ops  | AWS   | 18.183.155.33  | i-0e89a5f6bd7123521 | DART + promote + deploy-ui  |
-| vm-cross-cutting | AWS   | 13.158.82.128  | i-06e33c6e188798333 | Infrastructure + governance |
-| vm-orchestrator  | AWS   | 52.193.229.193 | i-007e8d99d12831578 | Orchestrator self           |
+| VM id            | Cloud | IP             | Instance ID         | Epics / workstreams                                                                                                                          |
+| ---------------- | ----- | -------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| planning-vm      | GCP   | 34.146.53.106  | (GCE)               | Interactive + governance                                                                                                                     |
+| vm-defi          | AWS   | 43.207.178.164 | i-05805eb07fdf180b6 | DeFi + manifest                                                                                                                              |
+| vm-cefi          | AWS   | 43.207.36.161  | i-003be935f72c13d51 | CeFi + instruments                                                                                                                           |
+| vm-tradfi        | AWS   | 18.181.221.162 | i-0a663001399ef5f49 | TradFi                                                                                                                                       |
+| vm-sports        | AWS   | 13.115.221.87  | i-005e1bada21b1653f | Sports                                                                                                                                       |
+| vm-prediction    | AWS   | 43.207.224.187 | i-063bc8dbf59f36220 | Predictions                                                                                                                                  |
+| vm-ml            | AWS   | 13.114.121.99  | i-02294132088f23e50 | MTDS/MDPS + features + ML                                                                                                                    |
+| vm-trading-core  | AWS   | 54.238.66.156  | i-0e51b9c73666b3a8b | Strategy + execution                                                                                                                         |
+| vm-operator-ops  | AWS   | 18.183.155.33  | i-0e89a5f6bd7123521 | DART + promote + deploy-ui                                                                                                                   |
+| vm-cross-cutting | AWS   | 13.158.82.128  | i-06e33c6e188798333 | Infrastructure + governance                                                                                                                  |
+| vm-orchestrator  | AWS   | _(parked)_     | i-007e8d99d12831578 | Orchestrator-codebase epic (STOPPED 2026-06-04; parked until CI/CD ready). NOT the central API — that's the planning VM (EIP 13.113.200.22). |
 
-IPs are dynamic (no EIPs yet — deferred post-cutover). All VMs use instance profile `uts-orchestrator-epic` in account
-427895769566 / ap-northeast-1 / security group sg-0080310387e84f613.
+IPs are dynamic (no EIPs yet — deferred post-cutover) **for the EPIC VMs**; they're private and reached via the central
+VM's VPC proxy, so dynamic IPs are fine. The ONE stable public endpoint is the **Central API = Planning VM** (EIP
+`13.113.200.22`, `api.agent-orchestrator.odum-research.com`) — see
+`codex/12-agent-workflow/orchestrator-multi-vm-topology.md`. All VMs use instance profile `uts-orchestrator-epic` in
+account 427895769566 / ap-northeast-1 / security group sg-0080310387e84f613.
 
 ### Fleet dashboard entry point
 
