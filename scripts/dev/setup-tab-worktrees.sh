@@ -10,11 +10,12 @@
 # Slot-number → role → branch-prefix scheme (operator-configurable):
 #   Slots 1..MAIN_SLOT_MAX (default 20) = MAIN agents   → tab/${MAIN_PREFIX}/<N>
 #   Slots > MAIN_SLOT_MAX                = WORKER agents → tab/${WORKER_PREFIX}/<N>
-#   Harsh  (operator hk): MAIN_PREFIX=hkm  WORKER_PREFIX=hk   → tab/hkm/3 , tab/hk/21
-#   Ikenna picks his own (e.g. --operator ii → tab/iim/3 , tab/ii/21, or override
-#   WORKER_PREFIX/MAIN_PREFIX env for iggy/ikenna). The prefix alone tells you
-#   BOTH operator and role at a glance — no collision since hk ≠ hkm as ref path
-#   components.
+#   LAPTOPS use a UNIFORM prefix for ALL slots (no main/worker `m` split), the operator's
+#   canonical handle: Ikenna = `ikennaigboaka` (override WORKER_PREFIX=MAIN_PREFIX=ikennaigboaka),
+#   Harsh = `hk` (operator decision 2026-06-05: Harsh's local PC is `hk` for every slot — NOT the
+#   role-split `hkm`, and NOT `harsh`, which is reserved for Harsh's separate AWS VM). So provision
+#   a laptop with MAIN_PREFIX=WORKER_PREFIX=<handle>. The role-split `<base>m` default is for fleet
+#   VMs only (and even those are branded uniformly as tab/<vm-id>/<N> by bootstrap_vm.sh).
 #   Tier 3 — Sub-agents within a slot:   share the slot's worktree; master agent
 #            partitions fan-out + reconciles.
 #
