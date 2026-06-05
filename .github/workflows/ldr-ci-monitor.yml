@@ -1,0 +1,92 @@
+name: ldr-ci-monitor
+
+# Tier-A live-defi-rollout CI-red monitor (cicd_contract_hardening item D — Tier A).
+#
+# PROBLEM: `live-defi-rollout` (LDR) is the workspace integration axis and carries NO remote
+# CI by design — quality-gates-v2.yml triggers only on push/PR to main+staging (the gate is
+# enforced LOCALLY before each commit). A commit that skipped the local gate lands RED on LDR
+# and stays INVISIBLE until weeks later when a staging/main promotion PR finally runs the
+# server-enforced gate. This monitor gives a per-repo "is LDR green?" signal in HOURS.
+#
+# DETECTION (see scripts/repo-management/ldr_ci_monitor.py for the full rationale): each 30-min
+# tick, per repo, READ the conclusion of the prior tick's workflow_dispatch quality-gates-v2 run
+# against the LDR ref (the ONE authoritative gate — never a drift-prone bespoke check), DETECT a
+# red-transition vs the persisted `ldr_ci_status` manifest field (transition-gated exactly like
+# ci-status-update.yml's notify_worthy), then DISPATCH a fresh LDR run for the next tick to read.
+# Decoupling dispatch from read keeps the cron fast (a full QG run takes minutes).
+#
+# DEDICATED SIGNAL: writes the manifest `ldr_ci_status` field (GREEN|RED|UNKNOWN) — NEVER the
+# promotion `ci_status` field (owned by ci-status-update.yml, drives the dep-on-main gate).
+#
+# FAIL-OPEN: any gh/network/parse error → UNKNOWN (never pages, never transitions). Exit is
+# always 0; alerting is driven by the `alert` output, never exit status — the monitor cannot
+# page on its own bugs.
+#
+# NOTE: GitHub `schedule:` only fires from the DEFAULT branch (main), so this is live once
+# merged to main. Use `workflow_dispatch` to run on demand meanwhile.
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 minutes
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    outputs:
+      alert: ${{ steps.scan.outputs.alert }}
+      severity: ${{ steps.scan.outputs.severity }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # GH_PAT (carries Workflows:write + fleet read) is needed to dispatch
+          # quality-gates-v2 on each repo's LDR ref + commit the manifest ldr_ci_status update.
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Read LDR gate conclusions, detect red-transitions, dispatch next-tick runs
+        id: scan
+        env:
+          # Cross-repo run reads + workflow_dispatch across the fleet need the PAT (the default
+          # GITHUB_TOKEN is repo-scoped and lacks the workflow scope to dispatch elsewhere).
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: python3 scripts/repo-management/ldr_ci_monitor.py
+
+      - name: Commit ldr_ci_status manifest update
+        run: |
+          set -euo pipefail
+          # Only the manifest (the ldr_ci_status SSOT) is committed. UNKNOWN reads never write,
+          # so a tick with no real change produces no diff and no commit.
+          if git diff --quiet workspace-manifest.json 2>/dev/null; then
+            echo "No ldr_ci_status changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add workspace-manifest.json
+          git commit -m "ci: update ldr_ci_status (LDR-CI-red monitor) [skip ci]"
+          git push origin HEAD
+
+  notify:
+    needs: monitor
+    if: needs.monitor.outputs.alert == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: |
+        LDR-CI-red monitor detected live-defi-rollout state transition(s):
+        ${{ needs.monitor.outputs.report }}
+      severity: ${{ needs.monitor.outputs.severity }}
+      workflow_name: ldr-ci-monitor
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      # Dedicated #ci-failures incoming webhook (falls back to general if unset).
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
