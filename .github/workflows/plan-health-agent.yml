@@ -17,6 +17,18 @@ name: Plan Health Agent
 # CLAUDE.md / SUB_AGENT rule claim is contradicted/superseded by the live active plans.
 # Findings are surfaced to the GHA run summary + Slack.
 #
+# ── PHASE 2 (item I) NOTE — the Haiku-via-API report MOVES to the planning-VM slot ──
+# The daily `plan-health` job still runs the contradiction/doc-drift check via the paid
+# ANTHROPIC_API_KEY (`claude --model claude-haiku-4-5 …`). Phase 2 of cicd plan
+# § "CI/CD Observability + Reconciliation Hardening" I MOVES that LLM step OFF this paid
+# API onto a planning-VM **orchestrator slot** (Claude Max-plan setup-token account →
+# $0 marginal API cost — the B-block pattern). The orchestrator-side dispatch is BUILT:
+# agent-orchestrator `agents/plan-health.md` + `server/plan_health.py` +
+# `POST /api/plan-health/{dispatch,result}` reuse THIS step's prompt logic. It will be
+# wired to feed this gate once the planning-VM orchestrator is LIVE (idle Max-plan slot +
+# AutoSpawn). Until that slot is PROVEN live, the paid API path below STAYS as-is — do NOT
+# rip it out. Cross-link: agent_orchestrator_e2e_..._2026_06_02.md § G9.
+#
 # Only the PM repo is checked out, to keep agent context (and cost) small.
 #
 # Triggers:
@@ -49,15 +61,54 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
-      - name: Checkout unified-trading-pm
+      - name: Checkout unified-trading-pm (PR head branch — auto-fix commits push back to it)
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GH_PAT }}
+          # Check out the PR HEAD branch (not the detached merge commit) so the
+          # deterministic auto-fix step can commit + push fixes back to the PR.
+          ref: ${{ github.head_ref }}
           fetch-depth: 0 # the todo-regression check diffs against origin
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      # ── Phase 2 (item I): deterministic auto-fix BEFORE the sweep ──────────
+      # Run the fixable-hygiene auto-fixer and, if it changed plans, commit +
+      # push to the PR head branch so FIXABLE findings auto-resolve at the gate.
+      # The sweep then runs on the fixed tree; only genuinely UNFIXABLE hard
+      # failures still exit 1 (the hard gate stays intact). Loop-guard: the
+      # commit is skipped on a no-op AND when HEAD is already an auto-fix commit
+      # (the pushed commit re-triggers the PR check → without the guard it could
+      # re-commit forever).
+      - name: Auto-fix fixable plan hygiene (fix_frontmatter.py) + commit to PR head
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          # Pass the PR head ref via env (NOT inline ${{ }}) to avoid script-injection.
+          PR_HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          LOOP_GUARD_MARKER="[plan-health-autofix]"
+          LAST_MSG="$(git log -1 --pretty=%s || true)"
+          if printf '%s' "$LAST_MSG" | grep -qF "$LOOP_GUARD_MARKER"; then
+            echo "HEAD is already an auto-fix commit ($LAST_MSG) — skip to avoid a commit loop."
+            exit 0
+          fi
+          echo "Running deterministic frontmatter auto-fix…"
+          python3 scripts/plan-hygiene/fix_frontmatter.py || true
+          if git diff --quiet; then
+            echo "No fixable hygiene changes — nothing to commit."
+            exit 0
+          fi
+          echo "Auto-fix changed files — committing to PR head branch '${PR_HEAD_REF}':"
+          git diff --stat
+          git config user.name "plan-health-bot"
+          git config user.email "plan-health-bot@users.noreply.github.com"
+          # Stage ONLY the plan dirs the auto-fixer touches (never -A — keep scope tight).
+          git add plans/active plans/epics
+          git commit -m "docs(plans): auto-fix plan hygiene at the gate ${LOOP_GUARD_MARKER}"
+          git push origin "HEAD:${PR_HEAD_REF}"
+          echo "Pushed auto-fix; the re-triggered PR check runs the sweep on the fixed tree."
       - name: Plan-hygiene hard gate (deterministic, --ci exits 1 on hard failures)
         run: |
           echo "PM is staging-less; this is the LDR→main pseudo-staging gate (plan hygiene)."
@@ -151,6 +202,11 @@ jobs:
           fi
 
       # ── STEP 2: minimal Haiku agent — contradiction + doc-drift detection ──
+      # PHASE 2 (item I): this paid Haiku-via-API step MOVES to a planning-VM
+      # orchestrator Max-plan slot ($0 API) once that orchestrator is live — the
+      # dispatch is BUILT (agent-orchestrator agents/plan-health.md +
+      # server/plan_health.py reuse this prompt's logic). Kept as the live path
+      # until the slot is proven live. See top-of-file Phase 2 note.
       - name: Run plan health agent (contradiction detection)
         id: agent
         if: env.ANTHROPIC_API_KEY != ''
