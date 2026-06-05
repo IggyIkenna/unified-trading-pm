@@ -179,6 +179,35 @@ All on `origin/live-defi-rollout`; full detail in
   empty. Can't action from this host (those VMs are down per operator 2026-06-04); the fix lands automatically on their
   next re-provision. Repos: `unified-trading-pm` (`scripts/dev/setup-tab-worktrees.sh` +
   `scripts/verify-slot-host-symmetry.sh`). parent_epic: (per-tab-worktrees / cicd master).
+- [x] ✅ [INFRA] P1. **Make the VM-scoped prefix DURABLE across bare re-runs + align it on `ORCHESTRATOR_VM_ID` (closes
+      the residual `rootm`-regression hole left by item above).** SHIPPED 2026-06-05 — `unified-trading-pm@852040bb9`:
+      (a) `setup-tab-worktrees.sh` now resolves `HOST_ID="${ORCHESTRATOR_VM_ID:-${VM_NAME:-}}"` (== bootstrap `VM_ID`)
+      for both prefix + commit host; (b) persists `OPERATOR`/`HOST_ID`/`MAIN_PREFIX`/`WORKER_PREFIX` to
+      `${TABS_DIR}/.worktree-identity.conf` at `--init`/`--add-slot` and reads it back on a bare re-run; (c)
+      `fix-commit-identity.sh` host now `ORCHESTRATOR_VM_ID`-first. **Verified (isolated resolution harness, 3
+      scenarios):** laptop init+bare-reset → `tab/ikennaigboaka/N` (host=laptop, unchanged); VM bootstrap →
+      `tab/vm-cefi/N`; **VM bare `--reset-slot` with the ambient env LOST (USER=root, no VM vars) → recovers
+      `tab/vm-cefi/N`, NOT `tab/rootm/N`** — the regression closed. `bash -n` + `shellcheck -S error` clean on both
+      scripts. Residual `tab/rootm/<N>` now only possible on a VM never provisioned with ANY VM env (= remaining-(c)
+      operator re-provision). Provenance: session audit 2026-06-05 (slot-1). The 2026-06-04 fix only covers `--init`; a
+      bare `--reset-slot N` / `--add-slot N` re-derives the prefix from the **ambient** env, so the `rootm` collision is
+      NOT actually closed — two live gaps: **(1) ambient-loss regression** — a manual SSH session that didn't source the
+      VM's startup env has no `$VM_NAME`, so `PREFIX_BASE="${VM_NAME:-${OPERATOR}}"` falls back to `$USER`=`root` →
+      re-writes `tab/rootm/<N>` (exactly the branch the init fix was meant to prevent); **(2) `VM_NAME` ≠
+      `ORCHESTRATOR_VM_ID` fork** — `bootstrap_vm.sh:110` brands branches from
+      `VM_ID="${ORCHESTRATOR_VM_ID:-${VM_NAME}}"` (the short registry id, e.g. `vm-cefi`), but
+      `setup-tab-worktrees.sh` + `fix-commit-identity.sh` key off raw `VM_NAME`; when they differ a re-run forks
+      `tab/<long-instance-name>/<N>` divergent from the init's `tab/<vm-id>/<N>`. **Fix (CODE, this repo):** (a) prefer
+      `ORCHESTRATOR_VM_ID` over `VM_NAME` in `setup-tab-worktrees.sh` (`HOST_ID="${ORCHESTRATOR_VM_ID:-${VM_NAME:-}}"`)
+      so its prefix + commit host agree with bootstrap's `VM_ID`; (b) **persist** the resolved
+      `OPERATOR`/`HOST_ID`/`MAIN_PREFIX`/`WORKER_PREFIX` to `${TABS_DIR}/.worktree-identity.conf` at provision time and
+      **read it back** on a bare re-run (no `--operator`, no `ORCHESTRATOR_VM_ID`/`VM_NAME`, no `MAIN/WORKER_PREFIX`
+      env) so the prefix can never regress to `$USER`; (c) mirror the `ORCHESTRATOR_VM_ID`-first preference into
+      `fix-commit-identity.sh` so the commit host matches the branch host. Explicit overrides (incl. bootstrap's
+      `--operator`/`MAIN_PREFIX`/`WORKER_PREFIX`) still win; laptop behaviour unchanged (no
+      `VM_NAME`/`ORCHESTRATOR_VM_ID` → `HOST_ID` empty → `PREFIX_BASE=OPERATOR`). Repos: `unified-trading-pm`
+      (`scripts/dev/setup-tab-worktrees.sh` + `scripts/hooks/fix-commit-identity.sh`). parent_epic: (per-tab-worktrees /
+      cicd master).
 - [x] ✅ [INFRA] P2. **Server-side `LDR→tab` FF mirror — make the existing tab-mirror BIDIRECTIONAL (FF-or-alert, never
       force).** SHIPPED 2026-06-04 (PM PR #132 + #134; rolled out to all 24 repos). Added a `ldr_to_tabs` job to
       `tab-mirror-to-ldr.yml` that FFs every behind-only `tab/*` up to LDR. **Cadence (operator-chosen 2026-06-04):**
