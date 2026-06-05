@@ -122,51 +122,114 @@ tasks. If a manifest check shows them empty for a window, the fix is **run the b
 3. **"External data is always available — never silently defer adapters" (HARD RULE).** The Category C sources are
    free/public; per the rule, the unblock for the paid ones (ETF flows, Glassnode) is a credential/subscription **ask**,
    not a descope.
-4. **The immediate trading use case.** The BTC/S&P decorrelation + MicroStrategy-driven move that started this thread
-   needs **ETF flows + macro** — both in the thin/missing column.
+4. **The immediate trading use case (refined w/ Ikenna 2026-06-05).** MicroStrategy/Saylor sells **actual BTC, not ETF
+   shares** — so the "who's selling" signal is **on-chain whale-wallet / entity flows** (Glassnode-class labeling),
+   _not_ ETF flows. ETF flows remain useful for the BTC-ETF-demand / S&P-decorrelation axis but are a _different_
+   signal. Both the on-chain whale-flow source and macro sit in the thin/missing column. (Corrects the earlier ETF-flow
+   conflation.)
 5. **Batch == live.** Macro/alt-data must capture once and replay the same rows; a capture-at-publish discipline
    (immutable `available_at` = capture time) fits the existing manifest/parquet model and avoids the point-in-time
    pitfalls flagged in the news-vendor research.
 
-## What is NOT yet verified — Phase 0 (the capacity-vs-backfill resolver)
+## Phase 0 — live capture verification (EXECUTED 2026-06-05)
 
-This audit verified **code capacity** (file:line on the ladder). It did **NOT** verify actual GCS/manifest **row
-population**. Before any build, run Phase 0 to classify each Category-A/B data_type as _populated_ vs
-_empty-needs-backfill_:
+Verified against the live `data-status-rollup` (Cloud Run job, every 5 min →
+`gs://central-element-323112-data-status-rollups/<service>/{coverage,full}.json.gz`; snapshot 2026-06-03) — the same
+coverage surface the deployment-UI data-status drilldown reads. **This settles capacity vs backfill with hard numbers.**
 
-- For each macro/micro `data_type`: resolve bucket via `resolve_bucket_name(...)`, read the manifest `_index`, and
-  report captured/empty/expected_unattempted counts over a known window (e.g. last 90d). Use the actual
-  `schema_version` + `capture_status` distribution, never the constant.
-- Spot-inspect a sample parquet per data_type (row count > 0, schema matches contract, no silent placeholders).
-- Output: a per-data_type table — **populated** (done) / **coded-but-empty** (Category A → run backfill) / **orphaned**
-  (Category B → wire+run) / **absent** (Category C → build).
+### Micro / market-structure — CAPTURED + POPULATED ✅
+
+| Asset group    | Bucket                          | Days found/expected (2018–2026) | Head date      | Venues                                                                                                         | Notes                                                                                                                    |
+| -------------- | ------------------------------- | ------------------------------- | -------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **CeFi**       | `market-data-tick-cefi-…`       | 29.4% (2577/3076)               | 2026-04-18     | 20 (Binance/Bybit/OKX/Deribit/Hyperliquid/Kraken/Bitget/Bitfinex/Aster/Upbit + DEX-perps)                      | 121B obs; per-venue high (Binance-fut 87%); per-data_type uneven (trades/derivative_ticker rich, book_snapshot_5 sparse) |
+| **TradFi**     | `market-data-tick-tradfi-…`     | 79.1% (2297/3076)               | 2026-04-15     | 6 exchanges: CBOE, CME, FX, ICE, NASDAQ, NYSE                                                                  | equity/futures OHLCV (Databento)                                                                                         |
+| **DeFi**       | `market-data-tick-defi-…`       | 46.8% (2340/3076)               | **2026-05-28** | **70** (all LST, lending ×8 chains, DEX, + explicit `LST_RATES`/`ORACLE_PRICES`/`GAS_FEES`/`CHAINLINK`/`PYTH`) | most comprehensive + current                                                                                             |
+| **Sports**     | `market-data-tick-sports-…`     | 100% (2128 days)                | —              | (league/match axis)                                                                                            | populated                                                                                                                |
+| **Prediction** | `market-data-tick-prediction-…` | 78% but only 398 days           | 2026           | Polymarket, Kalshi                                                                                             | captured but sparse/recent                                                                                               |
+
+### Macro / economic — CODED, NOT POPULATED ❌ (capacity ≠ backfill, confirmed)
+
+- **MTDS manifest keyword scan: `fred`=0, `yield_curve`=0, `economic`=0, `vix`=0** across the ENTIRE production
+  manifest. The FRED rates/curve/CPI capture (`fred_adapter`) has **never run in production — 0 rows.** (By contrast
+  `derivative_ticker`=48, `lst_rates`=24, `oracle_prices`=46, `gas_fees`=12 confirm micro is real.)
+- **`features-calendar-service` rollup: `bucket=""`, 0 shards, 0% completion** for every asset group — the macro
+  calendar features (economic_events dates, NFP/CPI/GDP actuals, time_features, yield_curve features) are **not
+  populated and not even monitored**.
+- **`features-onchain-service` rollup: 0 shards** — the DeFi on-chain FEATURE layer is unpopulated too (raw on-chain
+  data IS in MTDS DeFi; the downstream feature computation hasn't run).
+
+**Conclusion — answers the operator's exact question:** for **macro**, the hypothesis is confirmed — _we have the
+capacity (adapters/calculators) but never ran the backfill_; the FRED rates/curve/inflation slice is a **run task, not a
+build task**. For **micro**, we both built and populated it. The free Category-C macro sources
+(CFTC/EIA/Baker-Hughes/fear_greed) remain genuine build tasks.
+
+### Secondary findings from the live data
+
+- **Head-of-feed staleness:** CeFi head = 2026-04-18, TradFi = 2026-04-15 (~7 weeks stale vs 2026-06-05); DeFi current
+  (2026-05-28). CeFi/TradFi capture appears stalled/paused at the head — worth a separate operational check.
+- **Feature layers (calendar + onchain) empty** even where raw is captured → the feature-computation cadence is not
+  running (the Category-B orphan finding, confirmed live).
+
+## Vendor cost/coverage refresh (Ikenna's questions, 2026-06-05)
+
+Web-verified; refines the news-vendor research 2026-06-05. Lens = "cheap + useful enough to _preliminary-add to the
+chain to assess viability_" (Ikenna's bar), not a full build.
+
+| Vendor                              | What it gives us                                                                                                                                                                                                               | Real cost                                                                                                  | Verdict                                                                                                                                                    |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Glassnode (Studio Professional)** | **on-chain whale/entity flows** — Whale Exchange Flows (1k+ BTC entity deposits = large-holder selling pressure), entity-adjusted flows, whale cohorts, supply distribution. The actual "Saylor-type" signal. API is Pro-only. | **$999/yr** (NOT the ~$10k recalled — that's bespoke Enterprise). $29-49/mo retail has no entity data/API. | **strong + cheap** — best single add for the on-chain "who's selling" signal                                                                               |
+| **CryptoQuant**                     | exchange/whale/miner flow intelligence + API (Glassnode alternative)                                                                                                                                                           | ~hundreds–low-thousands $/yr                                                                               | **we already have an L1 `cryptoquant_adapter.py`** (Category B) — wiring it may beat buying Glassnode; evaluate both                                       |
+| **CoinGlass API**                   | spot BTC/ETH/SOL ETF flow-history **+** cross-venue funding/OI/liquidations/long-short (the CeFi-aggregator gap in this audit)                                                                                                 | $29 Hobbyist / $79 Startup / **$299 Standard (commercial+history)** / $699 Pro per mo                      | **good dual-purpose** — one sub covers ETF flows AND the missing CeFi aggregator tier                                                                      |
+| **CryptoPanic**                     | crypto news aggregation + crowd-vote PanicScore sentiment                                                                                                                                                                      | free Developer tier ends 2026-04-01; paid Growth/Enterprise ~$30/mo (unverified, bot-gated)                | **cheap but get a quote**; sentiment is crowd-vote (noisy), not NLP                                                                                        |
+| **RavenPack / Bigdata.com**         | news NLP / sentiment / event _detection_ (Edge). **NOT** the "HFT NFP/GDP actuals" the LinkedIn pitch implied — "squawk" is a third-party term (Newsquawk/LiveSquawk).                                                         | enterprise contact-sales; small-fund ~$50-150k/yr; macro slice = same Edge license                         | **expensive + mis-pitched** — for fast economic ACTUALS the real vendors are **AlphaFlash (CME, sub-second NFP/CPI/FOMC), Newsquawk, haawks**              |
+| **Polygon.io / Massive (Benzinga)** | US-equity news (published_utc PIT, Benzinga archive to 2001) + ticker sentiment                                                                                                                                                | $29-79/mo                                                                                                  | ⚠️ **Polygon.io is on our internal REMOVED-providers list (banned TradFi provider); Massive is its rebrand** — learn _why_ it was removed before re-adding |
+| **LunarCrush**                      | crypto (now equities) social metrics (Galaxy Score, AltRank, social volume)                                                                                                                                                    | ~$24/mo                                                                                                    | cheap social-sentiment feed; metrics not raw news                                                                                                          |
+
+**Net:** cheapest high-value adds = **Glassnode Pro (~$999/yr)** for the on-chain whale-flow / Saylor signal, and
+**CoinGlass (~$299/mo)** if we want ETF flows + the CeFi-aggregator gap in one sub. Both are operator
+credential/subscription asks. **CryptoQuant is already half-wired** (Category B) — evaluate wiring it before buying
+Glassnode.
+
+## Architecture direction (Ikenna + Harsh, 2026-06-05)
+
+Agreed end-state for news/alt-text: **cheap LLM (Haiku) + our own embeddings/entity-graphs extract news into
+_deterministic_ features** (`entity_sold_btc=1`, amount, long/short + sector/entity-impact "weightage knobs") feeding
+the existing ~20k-feature gradient-boosted-tree stack — i.e. LLM-as-feature-extractor, not LLM-as-trader. Polymarket is
+**both a venue and a (free, already-captured) deterministic political/event data source**. This is a large, _later_
+effort (post the current data-pipeline push); the near-term move is only to **preliminary-add a cheap+useful source to
+assess viability** — pointing back to Glassnode Pro / CoinGlass / fear_greed, not the full news-NLP build.
 
 ## Recommended decision
 
 Phased, foundation-first; parallel-up _within_ a layer, not across:
 
-- **Phase 0 — Verify population** (above). ~0.5d. Settles which Category-A items are merely un-backfilled.
-- **Phase 1 — Free quick wins (highest value × ease):**
-  1. **fear_greed** adapter — free, no-auth, UAC scaffold + capability already exist → ~100 lines. Crypto risk sentiment
-     for CeFi+DeFi.
-  2. **CFTC COT** + **EIA** + **Baker Hughes** — free macro, capabilities declared, adapters small.
-  3. Wire the **Category B orphans** (yield_curve / economic_results into `CALENDAR_FEATURE_GROUPS`; decide MTDS-FRED vs
-     features-FRED as the single source of truth — do not run both).
-- **Phase 2 — ETF flows** (explicitly wanted): build the flow data_type; source decision is operator's (free-unlicensed
-  Farside vs **CoinGlass ~$29/mo licensed** vs SEC N-PORT) — see news-vendor research 2026-06-05.
-- **Phase 3 — Bring macro/alt-data into the honest-coverage gate:** add an `altdata` (or fold into a SHARED axis) key in
+- **Phase 0 — Verify population — DONE 2026-06-05** (above): micro populated; **macro = 0 rows (capacity exists,
+  backfill never ran)**; feature layers (calendar/onchain) empty; CeFi/TradFi heads ~7wk stale.
+- **Phase 1 — RUN WHAT WE ALREADY HAVE (≈0 build — the capacity-vs-backfill wins):**
+  1. **Run the FRED macro backfill** (rates/curve/CPI/VIX-daily) — the adapter exists and emits, it has simply never
+     run. Pick MTDS-FRED **or** features-FRED as the single source of truth (do not run both) and backfill from 2018.
+  2. **Wire the Category-B orphans** so the feature layer populates: `yield_curve` / `economic_results` into
+     `CALENDAR_FEATURE_GROUPS`; trigger the calendar + on-chain feature computation (both currently 0 shards).
+  3. **Investigate the CeFi/TradFi head-staleness** (~7wk) — capture paused, or a lagging batch cadence?
+- **Phase 2 — Free quick-win adapters (small builds, capabilities already declared):** **fear_greed** (free, no-auth,
+  ~100 lines), then **CFTC COT** + **EIA** + **Baker Hughes** (free macro).
+- **Phase 3 — On-chain whale-flow signal (the Saylor signal):** wire the existing L1 `cryptoquant_adapter.py`, and/or
+  operator approves **Glassnode Pro (~$999/yr)** credential ask.
+- **Phase 4 — ETF flows:** build the flow data_type — **CoinGlass (~$299/mo commercial, also fills the CeFi-aggregator
+  gap)** vs free-unlicensed Farside vs SEC N-PORT — operator's call.
+- **Phase 5 — Bring macro/alt-data into the honest-coverage gate:** add an `altdata` (or fold into a SHARED axis) key in
   `expected_coverage`, set `coverage_start` dates, register in the data-status matrix so macro can no longer be silently
   empty.
-- **Phase 4 — Remaining Category C breadth:** Glassnode on-chain sentiment, CeFi aggregators (Coinglass/Hyblock), live
-  stablecoin peg, dYdX funding, Manifold, equity fundamentals — likely an epic-scoped follow-on (estimate above covers
-  Phases 0–2 + B-wiring; full C breadth is larger).
+- **Phase 6 — Remaining Category C breadth:** Glassnode sentiment metrics, CeFi aggregators (Coinglass/Hyblock), live
+  stablecoin peg, dYdX funding, Manifold, equity fundamentals — likely an epic-scoped follow-on.
 
 ## Open questions for operator (Harsh + Ikenna)
 
 1. **`altdata` home:** revive `altdata` as a real asset_group, or model macro as a SHARED cross-asset axis? (Decides
    where data_types + buckets live.)
-2. **Build-vs-buy for paid sources:** approve CoinGlass (~$29/mo, ETF flows) and Glassnode (~$29/mo, on-chain
-   sentiment)? Both are credential/subscription asks per the External-Data rule.
+2. **Build-vs-buy for paid sources:** approve **Glassnode Pro (~$999/yr, whale/entity flows)** and/or **CoinGlass
+   (~$299/mo, ETF flows + CeFi aggregator)** — or evaluate the already-half-wired **CryptoQuant** adapter first? All are
+   credential/subscription asks per the External-Data rule.
 3. **Single FRED source of truth:** MTDS `fred_adapter` vs features-service `calendar/fred_adapter` — both exist; one
    should be deleted (no parallel paths).
 4. **Scope of first tranche:** all 5 asset groups' macro at once, or crypto (CeFi+DeFi) macro/sentiment + ETF flows
