@@ -48,11 +48,33 @@ if [ ! -d "${SLOT_DIR}" ]; then
     exit 1
 fi
 
+# Phase D guard (2026-06-05): install MUST run from the workspace-ROOT PM clone, never a slot
+# worktree — else the baked-in absolute ROOT_PM/SLOT_DIR point at .tabs/N/.tabs/N and the cron
+# self-pulls into the wrong tree. WORKSPACE_ROOT is the parent of .tabs/, so it must NOT contain it.
+case "${WORKSPACE_ROOT}" in
+    */.tabs/*|*/.tabs) echo "Refusing: WORKSPACE_ROOT='${WORKSPACE_ROOT}' is inside a slot worktree (.tabs/). Run install from the root clone." >&2; exit 1;;
+esac
+
 PULL_SCRIPT="${WORKSPACE_ROOT}/unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh"
 if [ ! -x "${PULL_SCRIPT}" ]; then
     echo "FF-pull script not executable at ${PULL_SCRIPT}" >&2
     exit 1
 fi
+
+# Executor self-heal (Phase B, 2026-06-05): each cron line FIRST hard-pulls its OWN script(s)
+# from LDR before running, so a stale/dirty PM clone never starves the cron of current code
+# (kills the chicken-and-egg that froze the top-level PM clone 195 commits behind). The self-pull
+# lives in the crontab line (the immutable anchor) — NOT inside the scripts it updates. It is:
+#   - surgical: overwrites ONLY the tracked cron scripts; every other dirty PM file is untouched.
+#   - offline-safe: `|| true` → a failed fetch/checkout just runs the last-good local copy.
+#   - correct: `git checkout origin/LDR -- <file>` lands at the real path so the script's
+#     BASH_SOURCE-relative sibling (cron-branch-overrides.txt) + --help still resolve (NOT show|bash).
+# Treat these cron scripts as LDR-authoritative + QG-gated: local edits to them are overwritten each
+# tick by design, so changes ship via PR→QG→LDR, never local. GHA workflows are exempt (fresh checkout).
+PM_DIR="${WORKSPACE_ROOT}/unified-trading-pm"
+INTEGRATION_BRANCH="live-defi-rollout"
+SELF_PULL_FF="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/dev/slot-cron-ff-pull.sh scripts/dev/cron-branch-overrides.txt 2>/dev/null; } || true"
+SELF_PULL_VERIFY="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/verify-slot-host-symmetry.sh 2>/dev/null; } || true"
 
 # Periodic symmetry verify + Slack-alert-on-drift — ENFORCES the symmetric-host
 # contract (CLAUDE.md § "Local slot host = VM slot host") rather than just documenting
@@ -62,8 +84,8 @@ VERIFY_LOG="/tmp/slot-host-symmetry-verify.log"
 VERIFY_MARKER="# slot-host-symmetry-verify"
 VERIFY_INTERVAL=15  # operator 2026-06-04: */15 so drift/health surfaces within 15m, not 30
 
-CRON_LINE="*/${INTERVAL} * * * * cd \"${SLOT_DIR}\" && bash \"${PULL_SCRIPT}\" --all-slots --quiet >> \"${LOG_FILE}\" 2>&1 ${MARKER}"
-VERIFY_LINE="*/${VERIFY_INTERVAL} * * * * cd \"${SLOT_DIR}\" && bash \"${VERIFY_SCRIPT}\" --quiet --alert >> \"${VERIFY_LOG}\" 2>&1 ${VERIFY_MARKER}"
+CRON_LINE="*/${INTERVAL} * * * * ${SELF_PULL_FF}; cd \"${SLOT_DIR}\" && bash \"${PULL_SCRIPT}\" --all-slots --quiet >> \"${LOG_FILE}\" 2>&1 ${MARKER}"
+VERIFY_LINE="*/${VERIFY_INTERVAL} * * * * ${SELF_PULL_VERIFY}; cd \"${SLOT_DIR}\" && bash \"${VERIFY_SCRIPT}\" --quiet --alert >> \"${VERIFY_LOG}\" 2>&1 ${VERIFY_MARKER}"
 
 # Idempotent install/replace of one marked cron line. Re-reads crontab each call so
 # multiple ensure_cron calls compose safely.

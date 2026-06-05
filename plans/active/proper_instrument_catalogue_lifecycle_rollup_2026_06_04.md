@@ -138,7 +138,20 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `prediction_canonical_question_group` for prediction. Full spec + the gated-upstream (0-object >
       `by_canonical_group/` until the IS prediction backfill) dependency: >
       `prediction_manifest_canonicalisation_2026_06_01.md` § "⑦ PREDICTION SLICE". Sports has the analogous per-league >
-      vs per-fixture grain question — confirm with slot-4 before a plain run.
+      vs per-fixture grain question — confirm with slot-4 before a plain run. > **cefi slice progress (slot-7,
+      2026-06-05):** (a) **enumerator-read VERIFIED** — integration test > (instruments-service@eb00e2ad,
+      `test_cefi_enumerator_reads_rollup_catalogue_and_emits_expected_unattempted`) > proves producer →
+      `_catalog_from_dataframe` → `enumerate_v2(asset_group=cefi)` emits NOT_LISTED / DELISTED / >
+      `expected_unattempted` (and skips captured cells) correctly against the rolled-up catalogue. (b) **cefi
+      catalogue > apply IN PROGRESS** — real producer run over the full cefi `by_date/` corpus (28,174 parquets)
+      promoting > `instruments-store-cefi-prd-…/prod/catalog.parquet`. Migration-stability confirmed: the IS
+      canonicalisation > re-keys `by_date` PATHS (`pipeline_mode=` partition, `category=`→`asset_group=`) + re-versions
+      the `_index` to v9, > but it is a **path-only `gcs_copy_object` re-key** — instrument identity/lifecycle columns +
+      which-instruments- > existed-when are unchanged, so the catalogue CONTENT is migration-stable (a now-built
+      catalogue == a > post-migration one; the monotonic guard makes any regen safe). Follow-up: confirm the producer's
+      `by_date/` walk > prefix still resolves once the objects gain the `pipeline_mode=` partition (top prefix + `day=`
+      regex are robust; > verify post-migration). defi / tradfi remain plain `--asset-group <ag>` runs;
+      prediction/sports need the > granularity-aware producer above.
 - [ ] [CODE] P1. **FINDING (slot-7, 2026-06-04) — two divergent catalogue read-paths must be reconciled.** The
       standalone v2 enumerator (`enumerate_expected_universe.py --catalog-path`) + the launcher
       (`launch-expected-universe-v2-vm.sh` L165-174) read **`{env}/catalog.parquet`** (the path this plan's roll-up

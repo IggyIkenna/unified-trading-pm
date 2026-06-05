@@ -120,7 +120,13 @@ retired; code must reflect that.
       numerator and denominator at panel-aggregation. Combined with Phase 2 unit test
       `test_capture_status_filter_excludes_empty_confirmed` (proves `empty_confirmed` never counts in `shards_found`) +
       Phase 3 item 1 manifest scan (88,779 historical retired rows all `empty_confirmed/EXPECTED_DEPRECATED_DATA_TYPE`,
-      0 new post-cleanup) the surface is honest.
+      0 new post-cleanup) the surface is honest. **Later code-level re-verification 2026-05-30 (merged 2026-06-05 from
+      the stale `plans/active/` duplicate during migration-completion — no evidence discarded):** code-level audit
+      confirms `EXPECTED_DEPRECATED_DATA_TYPE` is in `_EMPTY_REASON_KEYS` taxonomy; `ok_mask` treats `empty_confirmed`
+      rows as OK (not missing from denominator); `TestRetiredDataTypesHonestCoverage` +
+      `test_each_registered_reason_routes_to_correct_bucket` pass (21/21 tests, QG green). Also deployment-api@c328334
+      (slot 2) adds `TestSportsRetiredDataTypeFiltering` — verifies `SPORTS_DATA_TYPE_META` excludes retired types and
+      `_build_data_type_grouping` clips them from the denominator; QG green 252s.
 
 ## Deferred discovery — TRANSFERMARKT_VALUES alias (2026-05-14 slot 4 sports_master audit)
 

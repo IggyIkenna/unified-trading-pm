@@ -14,7 +14,7 @@
     },
     {
       "name": "aiohttp",
-      "versionRange": "aiohttp>=3.13.4,<4.0.0"
+      "versionRange": "aiohttp>=3.14.0,<4.0.0"
     },
     {
       "name": "aioresponses",

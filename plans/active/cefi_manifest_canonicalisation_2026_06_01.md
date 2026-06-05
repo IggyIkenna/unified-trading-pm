@@ -209,11 +209,14 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 > smoke spec; IS 4 cefi adapters re-raise→`attempted_failed` (+regression test); UAC `validate_data_type_for_venue`
 > `strict=` fail-closed + `SOURCE_PRIORITY[("cefi",*)]→tardis` + `get_expected_data_types_for_venue`. **One wording
 > correction (not a gap):** the Deribit not-found guard manifests as a REJECTED `ExecutionResult` (order never placed),
-> not an uncaught raise — plan item reworded above; guardrail property holds. Still-open (matches checkboxes below, none
-> migration-blocking): MDPS stale source-gap comment (P3, FIXED this session — mdps@6188588), strategy
-> `gcs_feature_provider.ffill()` staleness cap (P3, risk-gated — touches live carry signals), deployment-api FLAG-3 UAT
-> store f-strings (P1, carry `# CORRECT-LOCAL` QG-allowlist markers today → not blocking), funding name/unit mismatch
-> (P1, COUPLED to `data_pipeline_acquisition_remediation` funding_oi registration — fix rides that plan).
+> not an uncaught raise — plan item reworded above; guardrail property holds. **Follow-up sweep 2026-06-05 (operator
+> ask):** MDPS stale source-gap comment **FIXED** (mdps@6188588); strategy `gcs_feature_provider` unbounded-ffill
+> staleness cap **FIXED** (strategy@d97e89aa, +4 tests); deployment-api FLAG-3 **RE-SCOPED** — not a mechanical swap
+> (the `pipeline_uat.py` `# CORRECT-LOCAL` reads are non-AG pipeline-health buckets, not AG-scoped market-data stores; a
+> blind `resolve_bucket_name` swap would break them → downstream-owner UAT-model decision, see item below); funding
+> name/unit mismatch remains COUPLED to `data_pipeline_acquisition_remediation` funding_oi registration (fix rides that
+> plan — moot until the registry spec lands). Cross-cutting: QG-sentinel gitignore rolled out fleet-wide
+> (`cicd_contract_hardening` item H) — canonical template + 8 repos, killing the dirty-pull churn.
 
 **🟢 RE-AUDIT FINDINGS (slot-3 2026-06-04) — tracked so the cefi master orchestrator owns them:**
 
@@ -322,8 +325,15 @@ No-fire-and-forget (STARTED + T+10min + read `…/vm-logs/<vm>/run.log`). STOP a
 - [ ] [DATA] P3. **market-data-processing-service** — leading-NaN before first observation for state adapters that skip
       the session-grid finalize (already tracked: `issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`). Confirm
       all cefi adapters route `_finalize_session_grid`; liquidations (no grid) is intentional event-counts — verify.
-- [ ] [CODE] P3. **strategy-service** — `gcs_feature_provider.py:99` `merged.ffill()` across sampling frequencies could
-      mask a genuine gap; gate with a staleness limit (strategy — still open). **execution-service**
+- [x] ✅ [CODE] P3. **strategy-service — `gcs_feature_provider` unbounded ffill staleness cap FIXED (strategy@d97e89aa,
+      QG exit 0 195s, PR #70→staging).** `get_merged_features` outer-joins carry feature groups of different sampling
+      frequencies then forward-filled with an UNBOUNDED `merged.ffill()` → a dead/stale upstream feed could silently
+      propagate a stale value into a live carry signal forever. **Fix:** new
+      `_ffill_with_staleness_cap(df, max_staleness)` (time-based, all-pandas) nulls any forward-filled cell carried
+      longer than `max_ffill_staleness` (configurable per-call; default `pd.Timedelta(days=3)` — generously bridges
+      daily/funding features + backfill hiccups, bounds a dead feed; `None` = legacy unbounded). The strategy then sees
+      an honest gap, not a stale number; a warning logs when masking occurs. +4 regression tests (within-cap preserved /
+      fresh-obs resets clock / None disables / non-time index falls back); basedpyright 0. **execution-service**
       `benchmark_service.py` stale `gs://` comment refreshed ✅ (execution@6230c18d0).
 
 ### 🔎 DIMENSION 6 + 7 AUDIT (IS/UAC instrument guardrails + could-exist denominators, 2026-06-04, slot-3 + sub-agents)
@@ -495,8 +505,19 @@ candle-level zero-volume/LOCF/NaN contract is documented in MDPS `base_adapter.p
       `select_primary_available_source`; `groupby("source")` on the `_index` source column). CeFi single-source today,
       but the column/dedup path must exist for swap-resilience. Cross-ref
       `downstream_services_manifest_canonicalisation_2026_06_01.md` FLAG-1.
-- [ ] [CODE] P1. **deployment-api FLAG-3** — env-tier the hardcoded `*-store` bucket f-strings → `resolve_bucket_name`
-      (`commentary/pipeline_uat.py`, `deployment_api_config.py`). Cross-ref downstream plan FLAG-3.
+- [ ] [CODE] P1. **deployment-api FLAG-3 — RE-SCOPED (slot-3 evaluation 2026-06-05): NOT a mechanical
+      f-string→`resolve_bucket_name` swap; a blind swap would BREAK working code.** The `commentary/pipeline_uat.py`
+      reads (`instruments-store-{pid}/instruments/latest/manifest.json`, `features-store-{pid}/health/latest.json`,
+      `ml-store-{pid}/training/latest/metrics.json`, `execution-store-{pid}/t1_recon/latest/summary.json`) are NON-AG
+      **pipeline-health summary** buckets carrying `# CORRECT-LOCAL` markers (a deliberate QG STEP-5.69 allowlist), NOT
+      the AG-scoped market-data stores. The canonical `resolve_bucket_name(kind="instruments-store", asset_group=…)`
+      everywhere else resolves a PER-AG bucket (`instruments-store-cefi-…`) with a different path shape — there is no
+      single non-AG `instruments-store-{pid}` in that registry, so swapping these would point the health reads at
+      wrong/nonexistent buckets (they already `try/except`→None-degrade gracefully today). REMAINING for the
+      deployment-api/downstream owner: decide the UAT health-summary bucket MODEL (keep the `# CORRECT-LOCAL` aggregate
+      form, or migrate the health summaries into per-AG/env-tiered buckets) — a model decision, not a slot-3 mechanical
+      edit. `deployment_api_config.py` store buckets already use typed `effective_*` config (FLAG-3-compliant).
+      Cross-ref downstream plan FLAG-3.
 - [ ] [CODE] P1. **deployment-api CeFi pipeline_mode dedup + drilldown filter** (deployment-api; downstream owner).
       **CONFIRMED read-only (slot-3 2026-06-03):** the dedup MECHANISM exists + is AG-agnostic — the count is
       `len(captured_df.drop_duplicates(subset=_shard_atom_cols))` and `_shard_atom_cols` derives from the UAC
