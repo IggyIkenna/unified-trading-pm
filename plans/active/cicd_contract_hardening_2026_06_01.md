@@ -2424,3 +2424,24 @@ behind the exact drift this whole audit is about.
       `unified-trading-pm` (tab-mirror GHA template + `scripts/dev/slot-git-status-report.sh`) + agent-orchestrator
       (alert sink). Cross-link: `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Server-side LDR→tab FF
       mirror" + § precondition. parent_epic: (this plan is the CI/CD master).
+- [~] [SCRIPT] P1. **Active-host filter on the divergence monitor — stop dormant-host alert spam (the monitor above
+  sweeps EVERY `tab/*` with no host filter, so a parked epic VM / offline laptop / decommissioned root VM spams
+  #ci-failures every 15 min; live incident 2026-06-05: 17 diverged across 5 hosts, almost all dormant).** Provenance:
+  operator session 2026-06-05 (slot-1). **Design (operator-chosen):** an `is_active(prefix)` allowlist in
+  `tab-mirror-to-ldr.yml` splits the sweep three ways — **LOUD** (`:rotating_light:` every 15 min) only for ACTIVE
+  prefixes; **once-a-day low-severity "stranded work on dormant host" digest** (`:information_source:`, 06:00 UTC tick)
+  for a non-active prefix that carries genuinely-unmerged commits (`git cherry '+' > 0`) so stranded work isn't lost;
+  **silent** for a non-active prefix with 0 unmerged (benign stale pointer). Name-collision alerts also gate on
+  `is_active` (a `rootm` collision is a known dormant artifact, no longer spammed). **Active set (operator-policy
+  2026-06-05):** the currently-driving operator laptop (transient) + the DURABLE escalation sink, which MUST be a VM
+  never a long-lived laptop = `vm-orchestrator` (runs agent-orchestrator `escalation.py` / `POST /api/escalate`). Seeded
+  `ACTIVE_PREFIX_BASES="ikennaigboaka ikenna vm-orchestrator"`; everything else (hk/harsh offline, all parked epic VMs,
+  root/rootm, orphan vm-0) parked. Verified (bash sim vs the 17 live diverged branches): 17 loud → 3 (only the
+  operator-laptop ones) → 0 after the abandoned-slot cleanup below; 7 → daily digest, 7 → silent. **(a) ✅ template**
+  `scripts/workflow-templates/tab-mirror-to-ldr.yml` + **PM's own `.github/workflows/` copy** updated (PM is where the
+  incident fired). **(b) REMAINING — fleet rollout:**
+  `bash scripts/workflow-templates/rollout-workflow-templates.sh --template tab-mirror-to-ldr.yml` → commit the per-repo
+  copy in the other ~23 repos (each runs its own sweep). **(c) future:** auto-derive `ACTIVE_PREFIX_BASES` from
+  `orchestrator_vm_registry.yaml` (an `active:` flag) + live orchestrator liveness instead of the hand-maintained list.
+  Repos: `unified-trading-pm` (template + own copy) → all repos via rollout. parent_epic: (this plan is the CI/CD
+  master). Cross-link: `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Server-side LDR→tab FF mirror".
