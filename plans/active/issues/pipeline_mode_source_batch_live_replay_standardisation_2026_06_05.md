@@ -49,13 +49,12 @@ found in any migrator; the batch dual-SSOT is the intentional path-pruning-vs-pr
 
 ## Why it matters — batch→live transition correctness
 
-Operator question (2026-06-05) — paraphrased: if we save batch up until midnight and decide to run live at 4am UTC
-there's a 5-hour gap — what backfills it? Or do we run live concurrently from yesterday before midnight so two
-pipeline*modes (same schema) run concurrently? And if live breaks, do we need another pipeline_mode (replay/recovery) —
-same or different source (DeFi can replay from chain; Tardis may not allow tick replay so replay from the exchange)? The
-reader must pull
-`live*_`where it exists then`batch\__`as backup — and a downtime refill goes into live, batch, or a 3rd`replay*\*`/`recovery*\*`
-mode?
+Operator question (2026-06-05), paraphrased: if we save batch up until midnight and decide to run live at 4am UTC there
+is a 5-hour gap — what backfills it? Or do we run live concurrently from yesterday before midnight, so two pipeline
+modes (same schema) run concurrently? And if live breaks, do we need another pipeline mode (replay/recovery) — same or
+different source (DeFi can replay from chain; Tardis may not allow tick replay, so replay from the exchange)? The reader
+must prefer a live mode where it exists, then a batch mode as backup — and a downtime refill goes into the live mode,
+the batch mode, or a third replay/recovery mode.
 
 This is the crux of going live: **feature lookback windows need continuous coverage at the flip moment**. A strategy
 flipping to live at 4am whose features need a 60-day (or even intraday) lookback must read a GAP-FREE union of
