@@ -61,17 +61,36 @@ triggers on push/PR to `main`; there is no `develop`). Result:
   files: `__tests__/scripts/block-list-parity.test.ts` (reads `codex/block-list.md`, which isn't in the UI CI checkout)
   and `tests/unit/lib/briefings/validate-script.test.ts`. Neither touches the registry.
 
-## NEW BLOCKER (the real remaining work) — the `test` gate fails on 2 pre-existing UI tests
+## `test` gate — FIXED + CI-VERIFIED (UI@4f0afb7f, run `26997006308`, 2026-06-05)
 
-Because `registry-drift` (and **every** UI→main merge) is gated behind `needs: test`, those 2 failures block the
-registry-drift confirmation AND all UI promotion to `main`. Both are env/CI-shape issues, not the registry:
+The 2 failures were both **cross-repo codex-parity guards** that need `unified-trading-pm/codex` (present in a
+full-workspace checkout, absent in the UI's isolated CI). Fixed to **skip gracefully when codex is absent** (YAML schema
+validation still runs; parity still enforced locally / in any job that checks out PM):
 
-- `block-list-parity.test.ts` expects `codex/block-list.md` present — but the UI CI never checks out PM/codex (the test
-  needs a PM checkout, or should skip when codex is absent).
-- `briefings/validate-script.test.ts` — `validate-briefings-yaml.ts` exits non-zero against the current store.
+- `block-list-parity.test.ts` → `describe.skipIf(!existsSync(codex md))`.
+- `validate-briefings-yaml.ts` → skip the codex-parity pass when `CODEX_DIR` absent (warn), keep YAML validation;
+  `validate-script.test.ts` accepts the "skipped" message.
 
-Owner: a UI slot — fix/repair those 2 tests (or decouple `registry-drift` from `needs: test`). Once `test` is green,
-`registry-drift` runs and (per the CI-faithful regen above) should pass.
+**Verified in CI**: the `test` job now **PASSES (5m27s green)** — this unblocks `registry-drift` AND all UI→main merges.
+
+## ✅ FULLY RESOLVED — `registry-drift` green end-to-end in CI (run `26999068427`, 2026-06-05)
+
+The job had **never functioned** (sibling `path:../` checkouts + non-deterministic generator). All root causes fixed:
+
+- **GHA checkout layout** (`path: ../X` rejected — "not under GITHUB_WORKSPACE", in the original ci.yml too): deps now
+  checked out under `_deps/` (UAC/UTL@main, PM@live-defi-rollout).
+- **Generator layout-coupling**: added explicit `--ui-root` / `--uac-root` / `--pm-root` to
+  `generate_ui_reference_data.py` (PM PR #141, byte-defaults preserve local behaviour) so it works under any layout.
+- **Generator NON-DETERMINISM** (the deepest bug — registry-drift could never have passed): set-derived values emitted
+  in random order. Fixed with `sort_keys=True` at dump + `sorted()` on `instrument_types_by_venue`. Verified 3 runs
+  byte-identical.
+- **Registry content**: regenerated CI-faithfully from UAC main with the deterministic generator (UI@cc423206).
+- **Format-insensitive diff**: the committed file is prettier-formatted (compact arrays) vs the generator's `indent=2`;
+  the diff now canonicalizes both sides (`json.dump(sort_keys, indent=2)`) so it compares CONTENT, not formatting
+  (UI@2feb98af).
+
+**CI VERIFIED**: `test` (5m20s) + `registry-drift` (1m44s) **both pass** (PR #26, closed; run `26999068427`). pw:L2 ✓
+throughout. **Issue fully resolved — ready to archive.**
 
 Pre-existing + unrelated (still open, not fixed here): `codecov/codecov-action@v3` at ci.yml:40 is flagged by actionlint
 as too old — bump to a current major.
