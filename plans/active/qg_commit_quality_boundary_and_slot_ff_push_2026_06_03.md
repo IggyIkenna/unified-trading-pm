@@ -421,21 +421,30 @@ design).
 - [x] ✅ **trading-agent-service #10** — REAL: pip-audit CVE (`starlette 0.52.1` → PYSEC-2026-161) from a **stale
       uv.lock**. `uv lock` → starlette 1.1.0 → shipped (LDR @5555cca) → MERGED to staging.
 - [x] ✅ **execution-service #211** — STALE (LDR v2 was green @06-04); re-triggered → v2 in_progress → will unblock.
-- [x] ✅ [QG] P1. **instruments-service #396 — SHIPPED (LDR).** instruments-service@cca9dc9b | QG `quality-gates.sh`
-      GREEN (166s, sentinel written) | landed on LDR via tab-mirror leg-A FF. **Verdict: the 80 local failures were
-      ENV-ROT, not real debt** — a fresh `bash scripts/setup.sh` (uv sync + re-pin editable siblings) cleared them; the
-      formerly-failing `tests/unit/triggers/test_sports_fixtures_daily_repoll.py` + the socket test passed (28/28). Took
-      the **NARROW fix** (per-test `_sports_ref_sink_for` mock on the two writer tests; NO global conftest
-      `CLOUD_PROVIDER=local`, zero blast radius — confirmed the global change was already reverted). **2nd real issue
-      found**: import-patterns FAILED on `orchestrator.py:107`
-      (`from unified_trading_library.fixtures import     extract_match_lifecycle`) — new debt from 48c6b4ad (2026-06-05,
-      after the 06-03 CI pass; #396's frozen v2 never saw it). `extract_match_lifecycle` is exposed via the `fixtures`
-      subpackage facade but NOT on the UTL root, so the checker's `--fix` would BREAK the import → applied the
-      sanctioned single-line `# noqa: qg-deep-import` (≤120 so ruff doesn't re-wrap it off the `from` line). **Note
-      (operator): quickmerge LDR→staging promotion was blocked by the Stage-1.7 dep-tier gate —
-      `unified-trading-library` reads MAIN_GREEN not STAGING_GREEN (likely FALSE-POSITIVE: main ⊐ staging, so
-      IS-on-staging vs UTL-on-main carries no ordering risk). The fix is on LDR (greens #396's v2); the staging MERGE
-      needs operator `--skip-dep-tier-gate` OR UTL promoted to staging first.**
+- [x] ✅ [QG] P1. **instruments-service #396 — GREEN + UNBLOCKED.** #396 v2 GREEN on LDR head
+      instruments-service@812061d6 (run 27011366414) → mergeStateStatus **CLEAN** (was BLOCKED); Tier-C auto-drain
+      automation owns the staging merge. THREE distinct issues fixed (3 LDR commits via tab-mirror leg-A FF; each from a
+      `quality-gates.sh`-GREEN tree): 1. **Socket/IMDS test** (the original work order) — **ENV-ROT verdict**: the ~80
+      local failures cleared with a fresh `bash scripts/setup.sh` (uv sync + re-pin editable siblings); CI never had
+      them. Applied the **NARROW fix** (per-test `_sports_ref_sink_for` mock on the two writer tests; NO global conftest
+      `CLOUD_PROVIDER=local` — confirmed already reverted; zero blast radius). is@cca9dc9b. 2. **import-patterns** on
+      `orchestrator.py:107` (`from unified_trading_library.fixtures import        extract_match_lifecycle`) — NEW debt
+      from 48c6b4ad (today, after the 06-03 CI pass; #396's frozen v2 never saw it). Symbol is on the `fixtures`
+      subpackage facade, NOT the UTL root → the checker's `--fix` would BREAK it → sanctioned single-line
+      `# noqa: qg-deep-import` (≤120 so ruff keeps it on the `from` line). is@cca9dc9b. 3.
+      **`test_enumerate_expected_universe.py::test_default_bucket_for_…`** — NEW debt from 29939809 (today). The test
+      pinned `-prd-`, but CI resolves buckets against PM's pre-substituted `ci-test-cloud-providers.yaml` where the env
+      tier is the literal `test` (no `${DEPLOYMENT_ENV_SHORT}` placeholder) → `-test-`, unfixable by any env var. Passed
+      locally (real placeholder yaml), failed only in CI. Fix: assert the canonical env-tiered **SHAPE** (a tier segment
+      present before the project_id, regex anchored so the `test-project` pid can't false-match) instead of the literal
+      `-prd-` — preserves the regression intent (guard the legacy _untiered_ `market-data-tick-prediction-<pid>`) while
+      robust to both SSOTs. Validated against the actual `ci-test-cloud-providers.yaml`. is@c30362b5 (env-hermeticity,
+      partial) + is@812061d6 (tier-tolerant shape, the decisive one). **dep-tier gate note (RESOLVED — earlier worry was
+      wrong):** quickmerge's Stage-1.7 dep-tier gate refused the LDR→staging promotion (`unified-trading-library`
+      MAIN_GREEN not STAGING_GREEN) — but that gate is **client-side only**; landing the fix on LDR via the standard
+      tab-mirror leg-A and re-running v2 took #396 to CLEAN with NO `--skip-dep-tier-gate` needed (server gate =
+      `quality-gates-v2` alone; UTL-on-main ⊐ staging carries no real ordering risk, confirming the gate was a
+      false-positive here).
 - [ ] [QG] P0. **strategy-service #67 — REAL multi-day type-debt (KEYSTONE).** STEP 5.12b URI = 1 false-positive (fixed,
       `evidence_router.py:59` noqa, staged). STEP 5.21 = pyright config drift: flipping `reportUnknown*` none→error
       surfaces **628 errors / ~60 files** (hotspots: `batch_handler.py` 124, `pnl_monitor.py` 69, `risk_monitor.py` 66,
@@ -505,6 +514,15 @@ design).
       more stale: client-reporting-api, greeks-service, ibkr-gateway-infra re-locked + shipped (now in-sync);
       system-integration-tests left to the LDR→staging conflict agent (it owns sit #21). Composes with
       `uv_lockfile_determinism_2026_06_02.md`.
+- [ ] [TEST] P2. **Tests that pin a LITERAL env-tier bucket name silently pass locally but FAIL in CI (cross-cutting
+      pattern, surfaced via instruments #396, 2026-06-05).** CI resolves buckets against PM's pre-substituted
+      `scripts/quality-gates-base/ci-test-cloud-providers.yaml`, where the env tier is the literal `test` (no
+      `${DEPLOYMENT_ENV_SHORT}` placeholder) — so any test asserting `== "...-prd-..."` (or any specific tier) is
+      unfixable by env monkeypatching and fails ONLY in CI (passes locally against the real placeholder yaml). Fix
+      pattern: assert the env-tiered SHAPE (`-(?:prd|stg|dev|test|ci)-{pid}$`, anchored so the `test-project` pid can't
+      false-match) not a literal tier. Repo: any service repo. **Sweep**: `rg -n 'prd-test-project|"-prd-"' --type py`
+      across `*/tests/` for other literal-tier bucket assertions before they wedge a promotion PR. Provenance: #396
+      enumerate-bucket test (is@812061d6).
 
 ### Temporary states (uncommitted fixes preserved in slot-1 worktrees)
 
