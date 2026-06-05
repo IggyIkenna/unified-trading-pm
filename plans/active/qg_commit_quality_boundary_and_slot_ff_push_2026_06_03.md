@@ -492,18 +492,21 @@ design).
       MERGED** (LDR@935771f; LDR's `smoke-test-gate.yml` is a strict superset of staging's #257/#362/#375 fixes + §299
       slice). **deployment-service #21 — conflict RESOLVED → MERGEABLE** (LDR@4fcdbea, identical tree) but merge still
       BLOCKED by a SEPARATE pre-existing v2 regression (next item), NOT a conflict.
-- [ ] [QG] P1. **deployment-service v2 regression blocks promotion PR #21 (found 2026-06-05; NOT a merge conflict).**
-      `quality-gates-v2` fails on `tests/conftest.py` → `ModuleNotFoundError: No module named 'deployment_api'`. Root
-      cause: commit `5734823` (2026-06-04 23:11) dropped `deployment-api` from
+- [x] ✅ [QG] P1. **deployment-service v2 regression FIXED → PR #21 MERGED to staging (2026-06-05).**
+      `quality-gates-v2` was failing on `tests/conftest.py` → `ModuleNotFoundError: No module named 'deployment_api'`.
+      Root cause: commit `5734823` (2026-06-04 23:11) dropped `deployment-api` from
       `[project.dependencies]`+`[tool.uv.sources]` (correctly, to break the circular dep / fix dependency-alignment)
       intending it install "test-only via LOCAL_DEPS" — BUT the LOCAL_DEPS `uv pip install -e ...` block in
-      `base-service.sh:199-203` is guarded by `if [ -z "${GITHUB_ACTIONS:-}" ]` (= **local-only; "CI has its own
-      setup"**), so in CI the sibling-cloned `../deployment-api` is never installed. Fix options (all v2-debt track, NOT
-      conflict-resolution): (a) install LOCAL_DEPS in the CI path of `base-service.sh`/`quality-gates-v2.yml`
-      (fleet-template change → PM SSOT + rollout); or (b) re-add a non-circular test-only install. Composes with the
-      deployment-api #17 LOCAL_DEPS item above. The conflict-resolution merge (LDR@4fcdbea, tree-identical to LDR) is
-      correct and unaffected — keeping staging's old `[tool.uv.sources.deployment-api]` would re-create the circular dep
-      and still not install it in CI.
+      `base-service.sh:199-203` is guarded `if [ -z "${GITHUB_ACTIONS:-}" ]` (local-only; "CI has its own setup"), so in
+      CI the sibling-cloned `../deployment-api` was never installed. **Fix (fleet, option a): PM reusable
+      `python-quality-gates-v2.yml` now, after `uv sync`, editable-installs any cloned `DEP_REPOS` peer that `uv pip
+      show` reports absent** (unified-trading-pm@9e313cd8f + the prior commit). Guarded → strict NO-OP for every normal
+      pyproject dep; only installs a genuinely-missing test-only peer (deployment-api), into the same `.venv` the gate
+      uses. Validated: deployment-service #21 v2 **GREEN (4m0s) → MERGED 12:40Z**; fleet spot-check (instruments-service
+      v2 success @12:33, strategy-service @11:43) confirms the loop is a no-op elsewhere (no regression). Required-check
+      gate for deployment-service staging is v2 (the non-required AWS CodeBuild check is separately red — pre-existing,
+      did not block; flag for the CodeBuild-gate track). **Note: a workflow RE-RUN pins the old reusable-workflow SHA —
+      a FRESH run (close+reopen / new push) is required to pick up a reusable-workflow change.**
 - [ ] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
       **Harsh's**, confirm before closing), mtds #94 (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
 
