@@ -4,6 +4,15 @@ title:
   live-readiness gates"
 created: 2026-06-05
 author: ikenna [slot-6·laptop]
+parent_epic: epics/mtds_mdps_master.md
+assigned_vm: vm-cross-cutting
+status: active
+priority: P0
+estimate_class: infra
+estimate_baseline_ai_days: 12
+estimate_calibrated_ai_days: 9.6
+locked_since: 2026-06-05
+ratified: 2026-06-05 (operator — all 6 decisions + refinements)
 source:
   - audit 2026-06-05 (5-agent fan-out:
       UAC/UTL model + MTDS/IS writers + downstream readers + cross-AG migrators + 4 doc layers; load-bearing claims
@@ -15,6 +24,20 @@ locked_by: live-defi-rollout
 ---
 
 # pipeline_mode standardisation — source-aware live + batch/live/replay continuity
+
+> **✅ RATIFIED (operator 2026-06-05)** — all 6 decisions + the #4 (manifest-column) / #6 (CLI-mode + mock/dev) /
+> cadence refinements are accepted; this issue doc is promoted to an active plan. Recommendations below are now the
+> agreed contract.
+>
+> **🔴 P0 BLOCKER TO THE v9 DATA + MANIFEST MIGRATIONS (HARD sequencing — operator 2026-06-05).** Strict order: **(1)
+> ALL code lands + QG-green across every repo → (2) DRY-RUN migrations per asset_group → (3) REAL `--apply` per
+> asset_group.** Because the v9 canonicalisation walks each corpus ONCE (single-walk HARD RULE), the new manifest
+> columns (`live_<source>`/`replay_<source>` form, `source` populated, `cadence`, `transport`) MUST be in the code
+> BEFORE any `--apply` — else the walk bakes in the old model and fixing it needs a banned second whole-corpus walk.
+> **Therefore the per-AG `*_manifest_canonicalisation_2026_06_01.md` `--apply` runs
+> (cefi/defi/tradfi/sports/prediction + instruments) are GATED on Phase 0 of this plan being GREEN.** Per-AG nuances are
+> handled in separate Phase-1/2 lanes; cross-cutting (UAC/UTL/registries) is the shared Phase-0 foundation. Cross-link:
+> every `*_manifest_canonicalisation` plan + `pipeline_mode_partition_migration` + `data_source_provenance`.
 
 ## What I found — the `pipeline_mode` axis is asymmetric, and the batch→live→replay continuity model is undesigned
 
@@ -149,6 +172,33 @@ prioritises. **Operational cadence / deployment topology is a DIFFERENT axis** a
 (observability axis, column + deployment registry). Reference data (IS instruments/fixtures) is `batch_<source>` +
 cadence `scheduled_recurring` — it has no live stream to reconcile against.
 
+**M8b — cadence is also the UTL `ServiceBootstrap`/CLI `--mode` (operator 2026-06-05)**: the deployment self-describes
+how it is running — `--mode {batch|live|replay}` (+ `canonical` for migration runs) at the CLI/bootstrap layer → the
+`run_class`/cadence is set at deploy-time, not guessed. (Composes with the `--operation`/`--mode`/`--asset-group` CLI
+convention.)
+
+### M5b — the drilldown dims MUST be v9 manifest COLUMNS (fast-query) — bundle into the SAME v9 walk (operator 2026-06-05)
+
+For #4 (union view + drilldown) to be FAST, the slice dimensions must be **manifest columns**, not derived by listing
+GCS objects. Verified v9 `AvailabilityRecord` (UTL `manifest_writer.py`) already carries the full shard atom + status +
+could-exist as columns:
+`date/venue/instrument_type/data_type/asset_group/instrument_id/underlying/chain/league_id/timeframe` ·
+`capture_status/error_reason/row_count` · `expected/available/expected_window_completeness_fraction` · `pipeline_mode`
+(v8) · `source` (v9, schema-present). **So v9 is already well-suited for fast shard drilldowns** — the additions are
+small: **(a) `cadence` + (b) `transport` as new columns, and (c) actually POPULATING `source`** (schema-present but
+empty for AGs whose re-consolidation hasn't run). **HARD — bundle these into the IN-FLIGHT v9 canonicalisation walk
+(single-walk discipline), NOT a later v10 second walk.** The manifest is the fast-query index; the GCS hive path keys
+(`day/pipeline_mode/asset_group/venue/instrument_type/data_type/[underlying]`) MUST each have a mirrored manifest column
+(the shard-granularity SSOT) so data-status/UI never scan objects — confirm cadence/transport satisfy that mirror.
+
+### M9 — `mock`/`dev` axis: simulated data via a `mock` source + the DEV cloud-storage path split (operator 2026-06-05)
+
+Mocking falls out naturally: `source = mock` (or a `mock`-tagged pipeline_mode) → routed to the **DEV cloud-storage
+path** via the existing env-tier bucket split (`-dev-`/`-stg-` vs `-prd-`), so **fake/simulated data never touches
+prod**. This lets dev smoothly move between fake/simulated and real data without affecting production, and makes test
+fixtures first-class (a `mock` capability in the M2 registry). Env-tier is itself an orthogonal axis (already in
+`resolve_bucket_name`) — `mock` composes with it (mock ⇒ dev-tier only).
+
 ## Cross-repo blast radius — all 25 workspace repos triaged (so each owner understands their slice)
 
 > "26th" = the archived `unified-trading-codex` (folded into PM `codex/`), not a live repo. Tiers: 🔴 defines/changes
@@ -181,7 +231,43 @@ cadence `scheduled_recurring` — it has no live stream to reconcile against.
 | **agent-orchestrator**                        | ⚪   | meta/orchestration — no data-pipeline change.                                                                                                                                                                                              |
 | **unified-trading-pm**                        | ⚪   | this issue doc + the codex/CLAUDE.md/sub-agent-rules/plan coherence audit (below).                                                                                                                                                         |
 
-## Proposed plan items (route to owners on ack)
+## Phased execution & dependency order (ratified 2026-06-05) — code → dry-run → real
+
+> The single most important constraint: **no `--apply` data/manifest migration runs until ALL Phase-0 code is GREEN**
+> (single-walk discipline). Per-AG nuances split into separate lanes in Phase 1/2; cross-cutting is the shared Phase 0.
+
+**Phase 0 — CODE ONLY (the blocker; all repos; no data ops). DAG within Phase 0:**
+
+- **0.1 Foundation (UAC)** — must land first: M1 enum (`{mode}_{source}[_{transport}]`) · M2 source-capability registry
+  · M3 per-shard availability + `could_exist(shard, mode)` · M4 precedence resolver · M8 cadence enum · M9 `mock`
+  source.
+- **0.2 Manifest (UTL, depends 0.1)** — add `cadence`+`transport` columns (M5b) · require/validate `pipeline_mode` (#2)
+  · cross-check `source==source_string_for(pm)` (#6) · `ServiceBootstrap --mode` carries batch/live/replay/canonical
+  (M8b).
+- **0.3 Writers (MTDS + IS, depends 0.1/0.2)** — stamp `live_<source>`/`replay_<source>` + source + cadence + transport;
+  mock→dev path (M9); **#1 defi rebuild stamps pm+source**; **#4 enumerator stamps pm+source**; per-AG nuance isolated.
+- **0.4 Readers (MDPS + features + strategy, depends 0.1/0.2)** — pipeline_mode-aware (#3) + mode-contextual union (M4).
+- **0.5 Reconciliation + gates (batch-live-reconciliation-service + strategy)** — union + precedence + M6 startup gate.
+- **0.6 Ops/recovery (deployment-service + alerting)** — M8 cadence topology + M9 dev/mock split; M7 autonomous replay.
+- **0.7 Status/UI (deployment-api + UI)** — M5 union + pipeline_mode/cadence drilldown columns.
+- **0.8 Doc before-audit reconcile (#7)** — CLAUDE.md + codex + sub-agent-rules + all per-AG plans (no stale
+  `pipeline_mode==source` / `live_websocket` / `live=batch⇒identical-path` claims).
+- **GATE 0**: every repo QG-green + a cross-repo SIT proving write→manifest(all columns)→union-read→gate. Only then →
+  Phase 1.
+
+**Phase 1 — DRY-RUN migrations, per asset_group (depends GATE 0).** Re-run each `migrate_*` + `rebuild_*_manifest`
+`--dry-run` so they emit the NEW columns (live\_<source>/source/cadence/transport) into the v9 form; verify the manifest
+drilldown dims are fully populated + the GCS path↔column mirror holds. Lanes: cefi · defi · tradfi · sports · prediction
+· instruments (each its own dry-run + per-AG nuance). **GATE 1**: dry-run clean per AG.
+
+**Phase 2 — REAL `--apply`, per asset_group (depends GATE 1; operator-gated; single-walk).** Each AG's v9
+canonicalisation `--apply` now carries EVERYTHING in ONE walk. This is the existing per-AG `*_manifest_canonicalisation`
+`--apply` — which this plan GATES. Per-AG lanes; instruments (cross-cutting) sequenced per its own plan. Post-walk
+verify: all drilldown columns populated, 0 `live_websocket`, source non-empty where required.
+
+**Phase 3 — Doc after-audit (#7 second pass)** — re-audit all doc layers vs the shipped contract.
+
+## Work units (phase-tagged; route to owners)
 
 - [ ] [CODE] P1. **STANDARDISE the per-AG manifest stamping** — fix #1 (defi rebuild stamp `pipeline_mode`+`source`) +
       #2 (make UTL `add()` require/auto-derive `pipeline_mode` like `record_captured`, OR delete the legacy `add()`
