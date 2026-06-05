@@ -448,10 +448,18 @@ design).
 
 ### CI-mechanism findings (permanent fixes worth landing)
 
-- [ ] [SCRIPT] P1. **Promotion PRs don't re-run `quality-gates-v2` when LDR advances** — the required check freezes on
-      the PR-open SHA, so a fix landing on LDR leaves the PR BLOCKED on a stale red/green check until a manual
-      close+reopen (hit on batch-live-recon #16, execution #211). Make `ldr-to-staging-promote` (or a small watcher)
-      re-trigger v2 on head advance. This is the dominant cause of "wedged for hours" PRs.
+- [x] ✅ [SCRIPT] P1. **Promotion PRs don't re-run `quality-gates-v2` when LDR advances — FIXED (workaround)
+      2026-06-05.** ROOT CAUSE: tab-mirror FF's `live-defi-rollout` using `GITHUB_TOKEN`, and GitHub suppresses workflow
+      triggers on `GITHUB_TOKEN` pushes (recursion prevention) → NO `pull_request:synchronize` on the
+      `--head live-defi-rollout` promotion PR → v2 freezes on the pre-advance SHA → PR sits BLOCKED on a stale check
+      (hit batch-live-recon #16, execution #211, both needed manual close+reopen). FIX SHIPPED:
+      `ldr-to-staging-promote.yml` now has a conservative stale-check guard in the existing-PR branch — if
+      `mergeable_state=blocked` AND quality-gates-v2 is ABSENT on the current head SHA, it close+reopens the PR (fresh
+      `pull_request` event → v2 on current head); leaves v2-present-but-failing (genuine debt) and in-progress runs
+      untouched. Auto-clears within the 6h promote cadence. **DEEPER ROOT FIX (deferred to operator CI/CD work):** make
+      tab-mirror push LDR with the workflow-scoped GH_PAT instead of `GITHUB_TOKEN` → `synchronize` fires natively, no
+      stale checks ever, no close+reopen needed. Not done here (tab-mirror is the actively-churning active-host-filter
+      file; editing = 24-repo re-rollout + concurrent-edit risk).
 - [ ] [DEPS] P0. **Fleet-wide aiohttp on the CVE-vulnerable floor `>=3.13.4` (CVE-2026-34993 RCE) — SECURITY + PM-gate
       blocker (2026-06-05).** 17 repos + `canonical-dependency-manifest.json` all pin `aiohttp>=3.13.4,<4.0.0`
       (vulnerable; fix = 3.14.0). The fan-out's client-reporting CVE bump to `>=3.14.0` was correct but **half-applied**
@@ -463,9 +471,11 @@ design).
       unified-trading-api, unified-trading-pm, trading-agent, unified-trading-library, market-data-processing,
       deployment-service, ml-service. Lesson: a CVE dep bump MUST also bump the canonical manifest (else it self-blocks
       the PM gate).
-- [ ] [DEPS] P1. **Stale `uv.lock` → pip-audit CVE failures fleet-wide** — 2 of the BLOCKED repos failed codex pip-audit
-      purely from stale locks resolving vulnerable transitive deps (aiohttp, starlette). Sweep `uv lock` across repos
-      (composes with `uv_lockfile_determinism_2026_06_02.md`); audit for more lurking stale locks.
+- [x] ✅ [DEPS] P1. **Stale `uv.lock` sweep — DONE 2026-06-05.** 2 BLOCKED repos failed codex pip-audit from stale locks
+      (aiohttp, starlette CVEs); the aiohttp fleet bump re-locked 17. `uv lock --check` sweep across the fleet found 4
+      more stale: client-reporting-api, greeks-service, ibkr-gateway-infra re-locked + shipped (now in-sync);
+      system-integration-tests left to the LDR→staging conflict agent (it owns sit #21). Composes with
+      `uv_lockfile_determinism_2026_06_02.md`.
 
 ### Temporary states (uncommitted fixes preserved in slot-1 worktrees)
 
