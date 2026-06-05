@@ -44,8 +44,13 @@ related_plans:
       (stopped). Active set → `ikennaigboaka hk planning`. SHIPPED 2026-06-05 (see evidence on flip). Repo:
       `unified-trading-pm` (`scripts/workflow-templates/tab-mirror-to-ldr.yml` + PM copy; re-rollout to fleet).
       parent_epic: orchestrator_master.
-- [ ] [INFRA] P1. **Provision 5 interactive planning slots on the central VM as `tab/planning/N`** (the old
-      `tab/ikenna/*` were its mis-named slots, now deleted; zero `tab/planning/*` exist). SSH into `13.113.200.22` →
+- [ ] [INFRA] P1. **Provision 5 interactive planning slots on the central VM as `tab/planning/N`.** NOTE this is a
+      RENAME, not a fresh box: the live central VM (`i-0c9b283b…`/`13.113.200.22`) is currently branded **`vm-0`**
+      (`tab/vm-0/10` exists, AutoSpawn ON, per the worker-topology LIVE STATUS) — it had THREE names (`planning-vm` /
+      `vm-0` / "Central API VM"), now canonicalized to `planning`. So: set `ORCHESTRATOR_VM_ID=planning`, re-provision
+      slots as `tab/planning/1-5`, **scope AutoSpawn so it does NOT auto-assign backlog jobs to the human planning
+      slots** (Ikenna/Harsh drive; escalation+plan-health stay ping-driven), and retire the stale `tab/vm-0/10`. SSH
+      into `13.113.200.22` →
       `ORCHESTRATOR_VM_ID=planning bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 5 --operator planning`
       (uniform `planning` prefix via the durable fix) + `install-slot-cron-ff-pull.sh` +
       `verify-slot-host-symmetry.sh`=0. **Slot roles (operator 2026-06-05 — review ≠ CI-escalation ≠ plan-health, three
