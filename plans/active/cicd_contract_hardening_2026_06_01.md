@@ -1747,6 +1747,19 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 - [ ] [AGENT] P0. **Tier A — LDR-CI-red monitoring** — the model's FIRST signal (LDR has no remote CI today → red hides
       until a main PR). **This consolidates the open Tier A todo above** (`audit i5`); track it here. repo:
       unified-trading-pm + per-repo signal.
+      **SCOPE + COLLISION (slot-1 ikenna 2026-06-05).** The Tier-A *signal* already exists as DATA: `ci_status=FAILING`
+      per repo in `workspace-manifest.json` (`tier_c_promotion_gate.py` reads it → blocks LDR→staging; `LDR_RED_STATUS =
+      "FAILING"`). Two real gaps remain: (1) **no proactive ALERT** when a repo flips FAILING (only a passive
+      promotion-block) → "fixed in hours not weeks" unmet; (2) **`ci_status` is driven by v2 on feature/staging/main
+      only — never LDR**, so a genuinely LDR-broken repo can still read `MAIN_GREEN` and hide (the exact "red hides until
+      a main PR" failure). A true fix needs a **scheduled per-repo LDR gate-runner** (checkout each repo's
+      `live-defi-rollout` + run the gate → emit a real LDR-green/red signal) feeding the alert. **NOT STARTED — do NOT
+      build into the `ci_status`/reconciler/Guard-3 machinery right now:** that is a live concurrent agent's
+      intensely-active area (`ci_status_reconciler.py` / `ci-status-reconciler.yml` / Guard-3 — ≥4 commits 2026-06-03/04:
+      cron 30m→10m, FEATURE→STAGING auto-advance, dispatch-serialization, import-fix for PR #116). Recommend routing D
+      to that agent (owns the substrate) OR building the per-repo LDR-runner as a **standalone NEW workflow** (no edits
+      to their hot files) that writes its own alert + an `ldr_ci_status` sidecar, then they wire it in. Picked up by
+      neither side yet — needs an owner.
 
 **E. Alert-coverage gaps:**
 
