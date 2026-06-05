@@ -282,15 +282,30 @@ the highest-value reconciliation outputs (a green-looking plan hiding a still-br
 - **M3** — dependency-ordering is the `fleet_promotion_pipeline_repair_2026_06_05.md` workstream + STAGE 1.8; the
   **fail-open-on-blank-`ci_status`** default is the untracked nuance (and C2/H2 are exactly what produce blank
   `ci_status` → they widen this window).
-- **H4** — the rollout SSOT + parity guard exist and were used for v1→v2 (plan line 159); the **current 22-repo
-  `tab-mirror` drift is a fresh unrolled batch** (06-04/05 edits).
+- **H4** — the rollout SSOT + parity guard exist and were used for v1→v2 (plan line 159). This is a **recurring class,
+  not a one-off**: the 22-repo `tab-mirror` drift was rolled out + baselined 2026-06-05 (`fde9cf4b9`), but the detector
+  **now shows 63 NEW drift** from the same-day Telegram→Slack edits to the `major-bump-issue-handler` /
+  `request-major-bump` / `update-dependency-version` templates that **were not rolled out**. Confirms the pattern: edit
+  template → skip `rollout-workflow-templates.sh` → CI never catches it (local-only gate). **Live now.**
 - **M6** — plan line 1084 describes idempotency as an intended staging-to-main step; the **implementation is dead code**
   (the bug, not the intent).
+- **H5** — the green-sentinel was BUILT + ✅ in `quality_gates_resource_contention_speedup_2026_06_02.md`
+  (`qg-repo-green-sentinel`) under an **explicit "soundness over speed" HARD constraint**. My finding is a **soundness
+  hole in that shipped feature**: the content-hash includes source + tests + pyproject + lockfile + tool-config + QG
+  versions but **omits cross-repo dependency state**, and the SHA sentinel refreshes on a green-skip — so a cross-repo
+  dep change is invisible → tests skipped. Net-new bug against a tracked+done feature.
+- **H6** — the cron self-pull is an **intentional fix being rolled out** in
+  `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Cron-executor staleness" (Phase B/C, open P0s). My
+  finding is the **syntax-gate hardening** on it (only a one-time `bash -n` exists at L190, not an at-adoption gate) — a
+  refinement of the tracked mechanism, not a new problem class.
+- **M4** — tracked in `local_slot_cron_ff_pull_hardening_2026_06_02.md` (the exact `[skip:dirty]`→stale-forever
+  incident; fixed for the PM-ping case via auto-flush). My finding **generalizes it** to ANY dirty worktree + adds the
+  missing **behind-distance alert** — a partially-tracked extension.
 
-### Net-new (no existing item)
+### Net-new (no existing tracker)
 
-C3 (storm + label-bypass), H2 (concurrency-group fragmentation), H5 (green-sentinel skip), H6 (cron self-update), M1
-(sentinel/`--files`), M4 (dirty-behind no alert), M5 (`--baseline-write` ratchet).
+C3 (storm + label-bypass), H2 (concurrency-group fragmentation), M1 (sentinel-vs-`--files` ordering — confirmed absent
+from `qg_commit_quality_boundary`), M5 (`--baseline-write` ratchet). _(M6 is a broken impl of a tracked step.)_
 
 ### Sibling issue docs filed today — adjacent, not dups
 
@@ -325,9 +340,17 @@ actively-worked master plan.
    after the first page the dangling-lock watchdog is silent forever. Reset it to False when `sit-gate` sets
    `locked=True`."_
 
-5. **Add new plan items** (reference this issue doc) for the net-new findings with no existing tracker: C3, H2, H5, H6,
-   M1, M4, M5, M6, plus the untracked gaps in M2 (suffix-blind verifier + stale classic/Terraform IaC) and M3
-   (fail-open-on-blank `ci_status`). Suggested home: the CI/CD master plan's Wave-2 / observability block.
+5. **New plan items** (reference this issue doc) for the genuinely net-new findings: **C3, H2, M1, M5** (+ M6 = broken
+   impl of a tracked step). Suggested home: the CI/CD master plan's Wave-2 / observability block.
+6. **Fold into existing trackers** (don't re-file — extend the doc that already owns the mechanism):
+   - **H5** → `quality_gates_resource_contention_speedup_2026_06_02.md` § `qg-repo-green-sentinel` — add the soundness
+     residual (content-hash omits cross-repo dep state; SHA sentinel refreshes on green-skip).
+   - **H6** → `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Cron-executor staleness" Phase B/C — add an
+     at-adoption `bash -n` syntax-gate to the self-pull.
+   - **M4** → `local_slot_cron_ff_pull_hardening_2026_06_02.md` — generalize beyond pings; add a behind-distance alert.
+   - **M2** gaps (suffix-blind verifier + stale classic/Terraform IaC) → the open item at plan **L187**.
+   - **M3** (fail-open-on-blank `ci_status`) → the dep-ordering workstream in
+     `fleet_promotion_pipeline_repair_2026_06_05.md`.
 
 ## Verification log
 
