@@ -1788,21 +1788,27 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 - [x] ✅ [SCRIPT] P2. **Unified flow-health reporter** — one cron computing, per repo,
       `{ldr_green, ahead/behind ×3 (main/staging/LDR), oldest stuck-PR age, staging lock-state}` → a single transition
       alert (`🔴 flow-blocked` / `🟢 flow-recovered`) mirroring `ci-status-update`'s anti-spam gate. **SUPERSEDES E +
-      F** once built (they fold into it). repo: unified-trading-pm.
-      **BUILT 2026-06-05 — PR #145 (auto-merge enabled, ON branch `ci/flow-health-reporter`).** Code is clean (ruff + basedpyright 0-err + 8-case hermetic test + codex/TypedDict gates all pass). **Merge-to-main is GATED by a PRE-EXISTING fleet-wide blocker, NOT G:** the `--workflows` template-parity check finds `tab-mirror-to-ldr.yml` drifted from its SSOT in **25 repos** (NEW drift, unbaselined → blocks ALL PM main PRs). That is a fleet re-rollout (`rollout-workflow-templates.sh`) / baseline-ratchet owned by the CI-template surface, not this PR — #145 auto-merges once it clears. (orig note: DONE 2026-06-05 — PR #145 → main) (`scripts/repo-management/flow_health_reporter.py` +
+      F** once built (they fold into it). repo: unified-trading-pm. **BUILT 2026-06-05 — PR #145 (auto-merge enabled, ON
+      branch `ci/flow-health-reporter`).** Code is clean (ruff + basedpyright 0-err + 8-case hermetic test +
+      codex/TypedDict gates all pass). **Merge-to-main is GATED by a PRE-EXISTING fleet-wide blocker, NOT G:** the
+      `--workflows` template-parity check finds `tab-mirror-to-ldr.yml` drifted from its SSOT in **25 repos** (NEW
+      drift, unbaselined → blocks ALL PM main PRs). That is a fleet re-rollout (`rollout-workflow-templates.sh`) /
+      baseline-ratchet owned by the CI-template surface, not this PR — #145 auto-merges once it clears. (orig note: DONE
+      2026-06-05 — PR #145 → main) (`scripts/repo-management/flow_health_reporter.py` +
       `.github/workflows/flow-health-reporter.yml` + hermetic test). Every-30m cron: pure `compute_flow_health()`
       reduces per-repo {ci_status, behind ×3, oldest-stuck-PR, staging-lock} → ONE transition alert. Offender triggers
       are the unambiguous signals only (`ci_status=FAILING` / staging lock >25m / stuck PR >60m / main ≥40 behind
       staging) so the normal LDR-ahead drift never false-positives; behind ×3 reported as context. Anti-spam via a
       committed state file (alert+commit only on a 🔴↔🟢 flip). **Built STANDALONE — reads the ci_status surface, never
       edits `ci-status-update.yml`/`ci-status-reconciler` (zero collision with the concurrent agent's hot files).**
-      `compute_flow_health()` hermetically unit-tested (8 cases); basedpyright + ruff clean; fail-safe (exit 0).
-      **E + F now FOLD INTO this** — their residuals (explicit SIT-pass / main-branch-severity / staging→LDR backmerge /
+      `compute_flow_health()` hermetically unit-tested (8 cases); basedpyright + ruff clean; fail-safe (exit 0). **E + F
+      now FOLD INTO this** — their residuals (explicit SIT-pass / main-branch-severity / staging→LDR backmerge /
       behind-ahead reporter) are either covered by G's single alert or are the remaining standalone-buildable tails
       noted in the E/F verification block above.
 
 > **E/F/G VERIFICATION + escalate/back-FF model — slot-1 ikenna 2026-06-05** (operator asked to record findings; not
-> built — these land in the live concurrent agent's `ci_status`/reconciler surface; G supersedes E+F so build G, not E/F):
+> built — these land in the live concurrent agent's `ci_status`/reconciler surface; G supersedes E+F so build G, not
+> E/F):
 >
 > - **E partially covered.** `ci-status-update.yml` already fires the transition-gated Slack `#ci-failures` alert on
 >   `notify_worthy = (status=="FAILING") or (prev=="FAILING" and recovered)` — so the **recovery / "resolved" bookend
@@ -1818,14 +1824,26 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 >   transition alert) so it does NOT edit the concurrent agent's hot `ci-status-update`/reconciler files; fold E+F into
 >   it. Needs an owner (route to the ci_status-surface agent, or a standalone slot).
 > - **Escalate + back-FF loop = VERIFIED COMPLETE** ("every alert → orchestrator", 2026-06-03, concurrent agent). The
->   escalate agent handles **both peer conflicts AND broken quality gates**: `WALL_TYPES =
->   {merge_conflict, label_mismatch, sit_failure}`, and `ci_failure_watcher.blocked_failing_prs_to_escalate` routes a
->   BLOCKED PR with a RED required check (quality-gates-v2) in as `sit_failure`. The worker resolves on
->   `live-defi-rollout` (never force-pushes / never self-merges). LDR stays healthy via `main-backmerge-to-ldr.yml`; a
->   non-FF back-merge opens a human `main→LDR` PR **and** fires the orchestrator escalation. So the full
->   detect→escalate→fix-on-LDR→back-FF→re-escalate-if-conflict loop the operator described is already wired.
+>   escalate agent handles **both peer conflicts AND broken quality gates**:
+>   `WALL_TYPES = {merge_conflict, label_mismatch, sit_failure}`, and
+>   `ci_failure_watcher.blocked_failing_prs_to_escalate` routes a BLOCKED PR with a RED required check
+>   (quality-gates-v2) in as `sit_failure`. The worker resolves on `live-defi-rollout` (never force-pushes / never
+>   self-merges). LDR stays healthy via `main-backmerge-to-ldr.yml`; a non-FF back-merge opens a human `main→LDR` PR
+>   **and** fires the orchestrator escalation. So the full detect→escalate→fix-on-LDR→back-FF→re-escalate-if-conflict
+>   loop the operator described is already wired.
 
 **H. Root cause of the slot-dirty-pull churn (bit this session repeatedly):**
+
+- [x] ✅ [SCRIPT] P2. **coverage\*.xml stopped being tracked/churning — DONE 2026-06-05.** Generated pytest coverage XML
+      (the alerting/e2e dirty-pull source): added `coverage*.xml`/`pytest.xml`/`junit.xml`/`test-results.xml` to the
+      gitignore-python rollout template + FF-cron auto-discard of `coverage*.xml` (`unified-trading-pm@ab343f6d0`);
+      `git rm --cached` the 3 tracked `coverage_*.xml` + gitignore in execution-service (`execution-service@515474317`).
+- [x] ✅ [VERIFY] **Cascade promotion behavior CONFIRMED (operator 2026-06-05):** await previous success (dep-order
+      gates STAGE 1.7 LDR→staging + 1.8 staging→main) · escalate on failure
+      (`deterministic-promotion-conflict-resolve.yml` + `merge-conflict-detected` dispatch) · continue (staging-to-main
+      topo loop + `start_from_repo` resume) · lock new entries to staging meantime (`sit-gate` staging lock +
+      `staging-lock-check` exit-1 during the SIT batch) + `cascade-qg-ordering.yml`. The "solve a whole batch in one go,
+      lock staging meantime" loop is implemented.
 
 - [x] ✅ [SCRIPT] P2. **QG sentinels (`.qg_content_sentinel` / `.qg_last_passed_sha`) now gitignored FLEET-WIDE (slot-3
       2026-06-05) — the dirty-pull churn root cause.** These are regenerated by `scripts/quality-gates.sh` every run +
@@ -1858,16 +1876,20 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `run_hygiene_sweep.sh --ci` (deterministic, $0/no-LLM, exits 1 on any HARD failure → fails the PM→main PR check).
       Daily report job + Slack notify scoped to non-PR events. **NOT YET a required check** (see next). repo:
       unified-trading-pm.
-- [ ] [SCRIPT] P0. **Fix the 3 current PM hard-hygiene failures so the gate can go REQUIRED without deadlock.** Sweep
-      `--ci` today fails on: Todo-regression-vs-origin, Frontmatter-validity, Todo-format. `fix_frontmatter.py`
-      auto-fixes the frontmatter one; the other two need investigation. Until the sweep is green, a required check would
-      block EVERY PM→main PR. repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. **Make `plan-health-gate` a REQUIRED status check on PM `main`** (gh ruleset) — ONLY after the sweep
-      is green. This is the switch that turns the `exit 1` into a true merge block. repo: unified-trading-pm.
-- [ ] [AGENT] P2. **Phase 2 — auto-fix + Haiku-via-planning-VM-slot:** (a) before the sweep, run `fix_frontmatter.py` (+
-      other fixable hygiene) and commit to the PR head so fixable findings auto-resolve at the gate; (b) move the Haiku
-      contradiction/doc-drift detection OFF the API onto a **planning-VM orchestrator slot** (Max-plan account, $0 API —
-      the B-block pattern) feeding this same gate. Cross-link: `agent_orchestrator_e2e_..._2026_06_02.md` §G9.
+- [x] ✅ [SCRIPT] P0. **Fix the 3 PM hard-hygiene failures — DONE 2026-06-05 (`unified-trading-pm@324cb74e9`).**
+      Surgical: +`locked_by` on orchestrator_fleet_worker_spawn + planning_vm_canonical (frontmatter);
+      `cefi_manifest:125` malformed `- [ ] grep…` → canonical `- [ ] [SCRIPT] P3.` (kept open so todo-regression stays
+      green); todo-regression already green in a clean tree. Sweep `--ci` now Hard failures: 0.
+- [ ] [SCRIPT] P1. **Make `plan-health-gate` a REQUIRED status check on PM `main`** (gh ruleset) — ONLY after the gate
+      workflow (`a62a16531`) reaches main + sweep stays green. This is the switch that turns the `exit 1` into a true
+      merge block. repo: unified-trading-pm.
+- [x] ✅ [AGENT] P2. **Phase 2 — auto-fix + Haiku-via-planning-VM-slot — DONE 2026-06-05.** (a) auto-fix at the gate:
+      `plan-health-gate` now runs `fix_frontmatter.py` + commits to the PR head before the sweep, loop-guarded
+      (`unified-trading-pm@59588057d`); (b) Haiku→planning-VM slot BUILT: `agent-orchestrator@64c47d4` —
+      `agents/plan-health.md` worker profile + `server/plan_health.py` dispatch +
+      `POST /api/plan-health/{dispatch,result}` + 15 tests (AO QG-green). **Activates when the planning-VM orchestrator
+      is live** (idle Max-plan slot + AutoSpawn); until then the paid-API Haiku step stays the live path (deliberately
+      not removed). Cross-link: `agent_orchestrator_e2e_..._2026_06_02.md` §G9.
 
 - branch protection for the original 5 repos → `workspace_repo_branch_protection_gaps_2026_05_29.md` (DONE).
 - [x] ✅ [SCRIPT] P2. **Reconcile/verify — DONE 2026-06-01.** Confirmed all 4 named repos LACK the
