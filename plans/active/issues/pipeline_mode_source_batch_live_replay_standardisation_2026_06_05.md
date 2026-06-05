@@ -128,6 +128,59 @@ Alerting + auto-recovery DETECT a gap (batch stopped + no live + replay-capable 
 themselves** — the same mechanism that refills today's gaps when the system goes down, autonomously, same-data where
 capable. "Gaps are OK" is a per-shard DR config, not a default. (Composes with the autonomous-recovery-matrix.)
 
+### M8 — Operational CADENCE is a SEPARATE axis from the batch/live/replay reconciliation class (operator 2026-06-05)
+
+The `pipeline_mode` (batch/live/replay) is the **reconciliation/provenance class** — what the reader unions +
+prioritises. **Operational cadence / deployment topology is a DIFFERENT axis** and must NOT be folded into
+`pipeline_mode`, or the same logical query fragments into many pipelines to union. Cadence values: `one_off_backfill` /
+`t1_daily` / `scheduled_recurring` / `continuous_live` / `recovery_replay`.
+
+- **api-football fixtures 7-days-ahead**: data-class = **batch** (an archived query snapshot, not a live stream, not a
+  recovery), cadence = **scheduled_recurring**. Sparse/forward-looking is a CADENCE property, not a new pipeline_mode.
+- **T+1 backfill vs one-off historical backfill**: BOTH are data-class = **batch** → SAME `pipeline_mode`
+  (`batch_tardis`) → **ONE pipeline to union** (your downside avoided). They differ only in cadence (`t1_daily` vs
+  `one_off_backfill`) = deployment topology. So you do NOT split the union by cadence.
+- **What separation BUYS you (observability, NOT reconciliation)**: what ran · what failed · where one-off backfills
+  started/stopped · where scheduled runs fired. → cadence lives as a **manifest column + the deployment registry**, NOT
+  a GCS path key (so it never fragments the data or the union). The reader unions over `pipeline_mode`; the ops/UI
+  surfaces slice by `cadence`.
+
+**Net rule**: `pipeline_mode = {batch|live|replay}_{source}[_{transport}]` (reconciliation axis, path key) ⟂ `cadence`
+(observability axis, column + deployment registry). Reference data (IS instruments/fixtures) is `batch_<source>` +
+cadence `scheduled_recurring` — it has no live stream to reconcile against.
+
+## Cross-repo blast radius — all 25 workspace repos triaged (so each owner understands their slice)
+
+> "26th" = the archived `unified-trading-codex` (folded into PM `codex/`), not a live repo. Tiers: 🔴 defines/changes
+> contract · 🟠 writes · 🟢 reads/consumes (mode-aware union) · 🔵 ops/status/infra · ⚪ test/docs/minimal.
+
+| Repo                                          | Tier | What this design requires of it                                                                                                                                                                                                            |
+| --------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **unified-api-contracts**                     | 🔴   | DEFINES it all: `{mode}_{source}[_{transport}]` enum (M1) · source-capability registry (M2) · per-shard availability (M3) · `could_exist(shard,mode)` guardrail · mode-contextual precedence resolver (M4) · cadence enum (M8). The spine. |
+| **unified-trading-library**                   | 🔴   | ManifestWriter: require/validate `pipeline_mode` (fix #2) · cross-check `source==source_string_for(pm)` (#6) · add `cadence` column · `derive_pipeline_mode_for_row` for live/replay.                                                      |
+| **market-tick-data-service**                  | 🟠   | live writer stamps `live_<source>` (not `live_websocket`) · new `replay_<source>` write path (M-D3) · cadence tag · reads M2/M3 to know what to run + startup-fill (M6).                                                                   |
+| **instruments-service**                       | 🟠   | reference/fixtures writer stamps `batch_<source>` + cadence=`scheduled_recurring` · `enumerate_expected_universe` stamps pm+source (#4) · IS catalog FEEDS M3 per-shard availability (the could-exist universe).                           |
+| **market-data-processing-service**            | 🟢   | raw-read dedup extends to `live_<source>`/`replay` (slot-6 dedup already in for batch) · processed_candles carry pipeline_mode · mode-contextual union read (M4).                                                                          |
+| **features-service**                          | 🟢   | delta_one/volatility/onchain/sports loaders pipeline_mode-aware (#3) + mode-contextual union (M4) + source resolution.                                                                                                                     |
+| **strategy-service**                          | 🟢   | `manifest_allocation_guard` reads per-mode capture_status · hosts the **live-flip readiness gate** (M6) — refuse flip if the `[batch-cutoff→now]` tail isn't covered per shard capability.                                                 |
+| **batch-live-reconciliation-service**         | 🔵   | the HOME for M4 mode-contextual precedence + the cross-mode UNION reconciliation + the M6 startup/continuity gate.                                                                                                                         |
+| **alerting-service**                          | 🔵   | M7: detect `(batch-stopped + no-live + replay-capable)` gap → fire `replay_<source>` autonomously; alert on uncoverable gaps.                                                                                                              |
+| **deployment-service**                        | 🔵   | CADENCE = deployment topology: `one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live` map to VM launchers / Cloud Run Jobs / Scheduler; registers `run_class`. Owns the M8 ops axis.                                        |
+| **deployment-api**                            | 🔵   | data-status: extend 4-state counts with `pipeline_mode` + `cadence` dimensions; could-exist denominator per mode (M3/M5).                                                                                                                  |
+| **deployment-ui / unified-trading-system-ui** | 🔵   | M5 union view + `pipeline_mode`/`cadence` drilldown (the "visualisation game").                                                                                                                                                            |
+| **ml-service**                                | 🟢   | consumes features (downstream of the union); inherits mode-aware reads — light touch, verify no pipeline_mode assumption.                                                                                                                  |
+| **greeks-service**                            | 🟢   | consumes market data → use the mode-aware union reader; light touch.                                                                                                                                                                       |
+| **execution-service**                         | 🟢   | itself a SOURCE (`execution_service` pipeline_mode); ensure execution-fill writes carry pm + cadence; consumer side light.                                                                                                                 |
+| **trading-agent-service**                     | 🟢   | downstream consumer; verify it reads via the union, not a raw single-mode path.                                                                                                                                                            |
+| **ibkr-gateway-infra**                        | 🟠   | a LIVE source (IBKR equities/futures stream) → tag its capability in M2 (`{live}`/`{live,replay?}`); stamps `live_<source>`.                                                                                                               |
+| **unified-trading-api**                       | 🟢   | API gateway surfacing data-status — passes through the pipeline_mode/cadence dimensions.                                                                                                                                                   |
+| **client-reporting-api**                      | 🟢   | reads data for reports → union reader; light touch.                                                                                                                                                                                        |
+| **fund-administration-service**               | 🟢   | downstream; light touch.                                                                                                                                                                                                                   |
+| **e2e-testing**                               | ⚪   | e2e for the cross-mode union + precedence + startup-gate + autonomous-replay.                                                                                                                                                              |
+| **system-integration-tests**                  | ⚪   | SIT for the cross-repo flow (write→manifest→union read→gate).                                                                                                                                                                              |
+| **agent-orchestrator**                        | ⚪   | meta/orchestration — no data-pipeline change.                                                                                                                                                                                              |
+| **unified-trading-pm**                        | ⚪   | this issue doc + the codex/CLAUDE.md/sub-agent-rules/plan coherence audit (below).                                                                                                                                                         |
+
 ## Proposed plan items (route to owners on ack)
 
 - [ ] [CODE] P1. **STANDARDISE the per-AG manifest stamping** — fix #1 (defi rebuild stamp `pipeline_mode`+`source`) +
@@ -164,10 +217,22 @@ capable. "Gaps are OK" is a per-shard DR config, not a default. (Composes with t
       alerting-service + MTDS/execution recovery + autonomous-recovery-matrix.
 - [ ] [CODE] P1. **write-time cross-check** `source_string_for(pipeline_mode)==source` for batch (#6) — assert in UTL
       `_resolve_and_validate_source`. Repo: unified-trading-library.
-- [ ] [DOCS] P1. **Doc coherence sweep** (#7) — CLAUDE.md + codex `pipeline-mode-partition.md` +
-      `SUB_AGENT_MANDATORY_RULES.md`: the (source column = vendor SSOT) vs (pipeline*mode = mode SSOT + source/transport
-      path key) split, the `{mode}*{source}[_{transport}]` form, the M2/M3 capability×availability SSOT, mode-contextual
-      precedence, and the source-stamping rule for sub-agents.
+- [ ] [DESIGN] P0. **M8 — cadence axis** — add a `cadence` enum (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/
+      `continuous_live`/`recovery_replay`) as a manifest COLUMN + deployment-registry field, ORTHOGONAL to
+      `pipeline_mode` (NOT a path key, never fragments the union). Repos: UAC (enum) + UTL (column) + deployment-service
+      (run_class topology) + MTDS/IS (stamp) + deployment-api/UI (slice-by-cadence).
+- [ ] [DOCS] P0. **FULL doc-coherence audit (BEFORE + AFTER), not just a sweep** (#7) — audit EVERY layer for logic that
+      CONTRADICTS M1–M8 and reconcile: CLAUDE.md (the `source=` provenance rule, the `pipeline_mode=` partition rule,
+      the "Live = batch" rule, the VIX/sports source notes) · codex (`02-data/pipeline-mode-partition.md`,
+      `availability-manifest-and-data-status.md`, `honest-absence-downstream-handling.md`,
+      `pipeline-mode-and-batch-live-reconciliation.md`, `external-data-always-available-rule.md`) · ALL per-AG
+      `*_manifest_canonicalisation` + `pipeline_mode_partition_migration` + `data_source_provenance` +
+      `tradfi_massive_dual_source` plans · `SUB_AGENT_MANDATORY_RULES.md` (currently barely mentions source-stamping →
+      sub-agents don't inherit it). **Pre-audit already done (2026-06-05, agent E)**: all 4 layers implicitly assume
+      `pipeline_mode` encodes source (batch-only assumption); none acknowledge the live asymmetry, the cadence axis, or
+      replay. **Post-ratify**: a SECOND pass once M1–M8 land, so the docs match the new contract (no stale
+      "pipeline_mode==source" / "live_websocket" / "live=batch ⇒ identical path" claims). Repo: unified-trading-pm (+
+      codex). Owner: slot-6 can drive the audit; per-repo doc deltas to owners.
 
 ## Operator decisions needed (closed-set forks)
 
@@ -179,3 +244,6 @@ capable. "Gaps are OK" is a per-shard DR config, not a default. (Composes with t
    consumer config?
 4. **M5**: data status = ONE union view + pipeline_mode drilldown (vs separate batch/live status surfaces)?
 5. **M6/M7**: capability-driven startup gate + autonomous replay-on-gap; per-shard "gaps-OK" as a DR config?
+6. **M8**: confirm cadence (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live`/`recovery_replay`) is
+   a SEPARATE observability axis (column + deployment registry), NOT folded into `pipeline_mode` (so the same Tardis
+   query for t+1 vs long-term stays ONE pipeline to union)?
