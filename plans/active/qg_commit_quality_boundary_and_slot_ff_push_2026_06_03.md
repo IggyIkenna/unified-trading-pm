@@ -436,8 +436,8 @@ design).
       pinned `-prd-`, but CI resolves buckets against PM's pre-substituted `ci-test-cloud-providers.yaml` where the env
       tier is the literal `test` (no `${DEPLOYMENT_ENV_SHORT}` placeholder) → `-test-`, unfixable by any env var. Passed
       locally (real placeholder yaml), failed only in CI. Fix: assert the canonical env-tiered **SHAPE** (a tier segment
-      present before the project_id, regex anchored so the `test-project` pid can't false-match) instead of the literal
-      `-prd-` — preserves the regression intent (guard the legacy _untiered_ `market-data-tick-prediction-<pid>`) while
+      present before the project*id, regex anchored so the `test-project` pid can't false-match) instead of the literal
+      `-prd-` — preserves the regression intent (guard the legacy \_untiered* `market-data-tick-prediction-<pid>`) while
       robust to both SSOTs. Validated against the actual `ci-test-cloud-providers.yaml`. is@c30362b5 (env-hermeticity,
       partial) + is@812061d6 (tier-tolerant shape, the decisive one). **dep-tier gate note (RESOLVED — earlier worry was
       wrong):** quickmerge's Stage-1.7 dep-tier gate refused the LDR→staging promotion (`unified-trading-library`
@@ -445,17 +445,40 @@ design).
       tab-mirror leg-A and re-running v2 took #396 to CLEAN with NO `--skip-dep-tier-gate` needed (server gate =
       `quality-gates-v2` alone; UTL-on-main ⊐ staging carries no real ordering risk, confirming the gate was a
       false-positive here).
-- [ ] [QG] P0. **strategy-service #67 — REAL multi-day type-debt (KEYSTONE).** STEP 5.12b URI = 1 false-positive (fixed,
-      `evidence_router.py:59` noqa, staged). STEP 5.21 = pyright config drift: flipping `reportUnknown*` none→error
-      surfaces **628 errors / ~60 files** (hotspots: `batch_handler.py` 124, `pnl_monitor.py` 69, `risk_monitor.py` 66,
-      `exposure_monitor.py` 48); zero-baseline policy → none suppressible. **Needs a dedicated typed-code remediation
-      (multi-day).** Blocks deployment-api too (dep-tier). URI fix staged UNCOMMITTED in worktree.
+- [x] ✅ [QG] P0. **strategy-service #67 — type-debt remediation SHIPPED (KEYSTONE).** strategy-service@76e01808
+      (slot-7) on `live-defi-rollout` via tab-mirror FF | `quality-gates.sh` GREEN 191s (sentinel written) + **PR #67
+      `AWS CodeBuild` gate GREEN** on 76e01808 | basedpyright **628→0** zero-baseline: 5
+      `reportUnknown{Member,Argument,Variable,Parameter,     Lambda}Type` keys flipped none→error in
+      `pyproject.toml [tool.basedpyright]` (STEP 5.21 ✅), 54 source files genuinely typed (real annotations / typed
+      containers / isinstance-narrowed locals / justified `cast`s / `runtime_checkable` Protocol facades for unstubbed
+      pyarrow+numba; **NO** `# type: ignore` / `Any` / baseline-mask). STEP 5.12b ✅ (`evidence_router.py:59`
+      `# noqa: gs-uri`). pytest **4670 passed**. **2 latent runtime bugs surfaced + fixed**: (a) `fill_event_consumer`
+      cross-client-reject acked via `message.ack()` — absent on sync-pull `PubSubReceivedMessage` →
+      `subscriber.acknowledge(ack_ids=…)`; (b) `aggregated_position_subscriber` read `msg.asset_group`, real field is
+      `asset_class`; both stale unit-test mocks updated. **#67 still merge-BLOCKED but NOT on type-debt** — see the two
+      residual-blocker todos below (branch-protection context mismatch + dep-tier). quickmerge LDR→staging was Stage-1.7
+      dep-tier-gated (utl/uac/mtds not STAGING_GREEN); landed via tab-mirror instead; `--skip-dep-tier-gate` NOT used
+      (human-only).
+- [ ] [CICD] P0. **strategy-service #67 branch-protection context MISMATCH dead-locks merge (found 2026-06-05,
+      slot-7).** `staging` protection (classic + ruleset) requires context
+      **`Quality Gates (strategy-service) / quality-gates-v2`** `+` `check-staging-lock`, but the repo's gate migrated
+      to **`AWS CodeBuild ap-northeast-1 (strategy-service)`** (GREEN on #67) — the required GHA context never reports →
+      `mergeStateStatus=BLOCKED` despite `mergeable=MERGEABLE` + auto-merge enabled + all present checks green. This is
+      the "silently dead-lock" the CLAUDE.md branch-protection rule + `verify_branch_protection_check_names.py` guard
+      against. **Operator/orchestrator fix** (admin): reconcile staging's required-status-check contexts to the
+      CodeBuild gate (or restore the v2 GHA trigger on LDR→staging PRs) for strategy-service; likely fleet-wide for
+      repos migrated to CodeBuild. Force-merge / protection edits are human/admin — NOT done autonomously.
 - [ ] [QG] P1. **deployment-api #17 — BLOCKED by dep-tier ordering, own issues resolved.** Editable-metadata TOML
       dup-key already fixed on LDR (deployment-service @5734823); brittle `-prd`-hardcoded test fixed + QG-green (staged
       UNCOMMITTED). Can't ship: quickmerge dep-tier gate refuses promotion ahead of `deployment-service` (770 ahead of
       staging) + `strategy-service` (57 ahead), both FEATURE_GREEN not STAGING_GREEN; `--skip-dep-tier-gate` is
       human-only. **Resolve**: sequence — green+promote strategy-service (keystone) + deployment-service to staging
-      first, then deployment-api promotes; OR operator `--skip-dep-tier-gate` for this test-only hotfix.
+      first, then deployment-api promotes; OR operator `--skip-dep-tier-gate` for this test-only hotfix. **Update
+      2026-06-05 (slot-7)**: strategy-service keystone type-debt is now RESOLVED + GREEN on LDR (76e01808, QG + #67
+      CodeBuild gate green) — but it is **still FEATURE_GREEN, not STAGING_GREEN**: #67 can't merge to staging until the
+      branch-protection context mismatch above is fixed AND/OR the dep-tier gate is operator-skipped. So #17 stays
+      dep-tier-BLOCKED until #67 actually lands on staging. Net: keystone code-debt cleared; #17 unblock now waits on
+      the CICD-mechanism todo + dep-tier sequencing, not on code.
 
 ### DIRTY conflicts (5 PRs) — step 3
 
