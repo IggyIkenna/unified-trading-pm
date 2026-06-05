@@ -406,6 +406,73 @@ design).
       hot-fix axis today (Phase G matures this); (P5) upstream drift auto-heals debounced (10-min grace). Fix every
       divergent/ duplicate statement in place; one SSOT per rule.
 
+## Stuck promotion-PR remediation — 12 wedged LDR→staging PRs (2026-06-05)
+
+> Triggered by the CI-watcher alert: 12 promotion PRs BLOCKED/DIRTY 6–65h + 3 failing PM@main monitors. Diagnosed: NOT
+> one shared cause — **per-repo heterogeneous v2 debt** (= cicd Phase-6 territory) + a CI-mechanism gap. Fixed via a
+> 7-repo fix-agent fan-out (2026-06-05).
+
+### Results (7 BLOCKED repos)
+
+- [x] ✅ **batch-live-reconciliation #16** — STALE check (F811 dup-dataclass fix already on LDR @2137791; promotion PR's
+      v2 was frozen on the pre-fix SHA). Re-triggered via close+reopen → v2 green → CLEAN/merging.
+- [x] ✅ **client-reporting-api #14** — REAL: pip-audit CVE (`aiohttp 3.13.5` → CVE-2026-34993) from a **stale
+      uv.lock**. Bumped `aiohttp>=3.14.0` + `uv lock` → shipped (LDR @7ac0624) → MERGED to staging.
+- [x] ✅ **trading-agent-service #10** — REAL: pip-audit CVE (`starlette 0.52.1` → PYSEC-2026-161) from a **stale
+      uv.lock**. `uv lock` → starlette 1.1.0 → shipped (LDR @5555cca) → MERGED to staging.
+- [x] ✅ **execution-service #211** — STALE (LDR v2 was green @06-04); re-triggered → v2 in_progress → will unblock.
+- [ ] [QG] P1. **instruments-service #396 — FOLLOW-UP (not shipped).** Agent applied IMDS test-isolation fix
+      (`tests/conftest.py` default `CLOUD_PROVIDER=local` + per-test `_sports_ref_sink_for` mock) for the one CI socket
+      failure. BUT local QG shows **80 unrelated failures** vs CI's "1 failed, 3140 passed" → ambiguous: local env-rot
+      OR the _global_ conftest change regressed bucket-sensitive tests. **Resolve**: determine regression-vs-env; prefer
+      the NARROW fix (per-test mock only, drop the global conftest change → zero blast radius), re-validate, ship. Fix
+      preserved UNCOMMITTED in `.tabs/1/instruments-service` worktree.
+- [ ] [QG] P0. **strategy-service #67 — REAL multi-day type-debt (KEYSTONE).** STEP 5.12b URI = 1 false-positive (fixed,
+      `evidence_router.py:59` noqa, staged). STEP 5.21 = pyright config drift: flipping `reportUnknown*` none→error
+      surfaces **628 errors / ~60 files** (hotspots: `batch_handler.py` 124, `pnl_monitor.py` 69, `risk_monitor.py` 66,
+      `exposure_monitor.py` 48); zero-baseline policy → none suppressible. **Needs a dedicated typed-code remediation
+      (multi-day).** Blocks deployment-api too (dep-tier). URI fix staged UNCOMMITTED in worktree.
+- [ ] [QG] P1. **deployment-api #17 — BLOCKED by dep-tier ordering, own issues resolved.** Editable-metadata TOML
+      dup-key already fixed on LDR (deployment-service @5734823); brittle `-prd`-hardcoded test fixed + QG-green (staged
+      UNCOMMITTED). Can't ship: quickmerge dep-tier gate refuses promotion ahead of `deployment-service` (770 ahead of
+      staging) + `strategy-service` (57 ahead), both FEATURE_GREEN not STAGING_GREEN; `--skip-dep-tier-gate` is
+      human-only. **Resolve**: sequence — green+promote strategy-service (keystone) + deployment-service to staging
+      first, then deployment-api promotes; OR operator `--skip-dep-tier-gate` for this test-only hotfix.
+
+### DIRTY conflicts (5 PRs) — step 3
+
+- [ ] [QG] P1. **LDR→staging merge conflicts**: deployment-service #21, mtds #91, system-integration-tests #21 — resolve
+      `live-defi-rollout`↔`staging` conflicts per repo (after the BLOCKED fixes settle; LDR is moving).
+- [ ] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
+      **Harsh's**, confirm before closing), mtds #94 (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
+
+### CI-mechanism findings (permanent fixes worth landing)
+
+- [ ] [SCRIPT] P1. **Promotion PRs don't re-run `quality-gates-v2` when LDR advances** — the required check freezes on
+      the PR-open SHA, so a fix landing on LDR leaves the PR BLOCKED on a stale red/green check until a manual
+      close+reopen (hit on batch-live-recon #16, execution #211). Make `ldr-to-staging-promote` (or a small watcher)
+      re-trigger v2 on head advance. This is the dominant cause of "wedged for hours" PRs.
+- [ ] [DEPS] P0. **Fleet-wide aiohttp on the CVE-vulnerable floor `>=3.13.4` (CVE-2026-34993 RCE) — SECURITY + PM-gate
+      blocker (2026-06-05).** 17 repos + `canonical-dependency-manifest.json` all pin `aiohttp>=3.13.4,<4.0.0`
+      (vulnerable; fix = 3.14.0). The fan-out's client-reporting CVE bump to `>=3.14.0` was correct but **half-applied**
+      (canonical + the other 17 not bumped) → client-reporting is now the lone dep-alignment outlier → **PM
+      `check-dependency-alignment` FAILS → blocks ALL PM quickmerges** (Phase B + plan stuck behind it). FIX (security
+      direction, bump UP not down): set `canonical-dependency-manifest.json` aiohttp → `>=3.14.0,<4.0.0`, bump all 17
+      repos' pyproject to match, `uv     lock` each, ship. Repos: batch-live-reconciliation, deployment-api, alerting,
+      instruments, fund-administration, market-tick-data, execution, strategy, features, unified-api-contracts,
+      unified-trading-api, unified-trading-pm, trading-agent, unified-trading-library, market-data-processing,
+      deployment-service, ml-service. Lesson: a CVE dep bump MUST also bump the canonical manifest (else it self-blocks
+      the PM gate).
+- [ ] [DEPS] P1. **Stale `uv.lock` → pip-audit CVE failures fleet-wide** — 2 of the BLOCKED repos failed codex pip-audit
+      purely from stale locks resolving vulnerable transitive deps (aiohttp, starlette). Sweep `uv lock` across repos
+      (composes with `uv_lockfile_determinism_2026_06_02.md`); audit for more lurking stale locks.
+
+### Temporary states (uncommitted fixes preserved in slot-1 worktrees)
+
+- `.tabs/1/strategy-service` (URI noqa), `.tabs/1/instruments-service` (IMDS isolation), `.tabs/1/deployment-api`
+  (`-prd` test fix) — left UNCOMMITTED for the follow-up remediations above; the ff-pull cron will `[skip:dirty]` them
+  until resolved. Successor: the three FOLLOW-UP todos above.
+
 ## Cross-links (do NOT duplicate — these items live in the named plans)
 
 - **cicd_contract_hardening_2026_06_01.md**: per-repo QG-debt greening (Phase 6) ← amplified by the governor fix here;
