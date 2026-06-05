@@ -66,14 +66,17 @@ related_plans:
       never grab Ikenna's/Harsh's interactive slots), slot5 = **plan-health agent** (see next todo).
       **BLOCKED-OPERATOR-CONFIRM**: touches the live central box — awaiting operator go. Repo: `agent-orchestrator`
       (bootstrap) + the central VM. parent_epic: orchestrator_master.
-- [ ] [SCRIPT] P1. **Plan-health AGENT (slot5) pinged on each LDR→main merge attempt + FF main→LDR (operator
-      2026-06-05).** Distinct from the two EXISTING pieces — `plan-health-agent.yml` (daily, **report-only** digest) and
-      `main-backmerge-to-ldr.yml` (deterministic `merge` + FF main→LDR on push to main). The GAP: an ACTIVE judgment
-      agent the **LDR→main promotion workflow pings** (escalation-style `POST /api/escalate` with a `plan-health` role)
-      so that on every main↔LDR reconciliation the plans are actively kept clean (flip/dedup/hygiene), and main is FF'd
-      back to LDR cleanly. Build: (a) a `plan-health.md` (or reuse `escalate.md` with a plan-health prompt) agent role;
-      (b) wire the LDR→main promote/back-merge workflow to ping it; (c) it runs on planning slot5. Repos:
-      `agent-orchestrator` (agent role + ping) + `unified-trading-pm` (workflow). parent_epic: orchestrator_master.
+- [x] ✅ [SCRIPT] P1. **Plan-health agent triggered on each LDR→main reconciliation.** SHIPPED 2026-06-05 — RECONCILED
+      with existing work (avoided a duplicate): the plan-health AGENT + dispatch ALREADY existed on LDR
+      (`agent-orchestrator/server/plan_health.py` + `agents/plan-health.md` + `POST /api/plan-health/dispatch`, the
+      `$0`-API Max-plan-slot cross-plan-contradiction + governance-doc-drift detector). Its header said it was "BUILT
+      but only runs once the planning-VM orchestrator is live" — which THIS plan's re-provision just made true (5 live
+      planning slots). The only GAP was the on-merge trigger: wired `main-backmerge-to-ldr.yml` (PM-only step, gated on
+      `decision != noop`) to `POST /api/plan-health/dispatch` after each main↔LDR back-merge, so the agent runs on every
+      LDR→main reconciliation (not just the daily cron) and the plans stay clean as the branches sync. The FF main→LDR
+      itself is the deterministic back-merge job (already there). I dropped my initial escalation.py
+      `wall_type=plan_health` duplicate in favour of the existing `/api/plan-health/dispatch`. Repos:
+      `unified-trading-pm` (workflow template + copy). parent_epic: orchestrator_master.
 - [ ] [INFRA] P1. **Make `ORCHESTRATOR_VM_ID=planning` durable in the central VM's provisioning** so its slots can't
       regress to a long instance-name prefix. Its user-data exports `VM_NAME="agent-orch-vm-..."` but NOT
       `ORCHESTRATOR_VM_ID`, so `bootstrap_vm.sh`'s `VM_ID=${ORCHESTRATOR_VM_ID:-${VM_NAME}}` would brand the long name.
