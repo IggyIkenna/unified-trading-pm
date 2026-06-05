@@ -120,7 +120,7 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
 
 ## Phase 4 — Contract hygiene (P2)
 
-- [ ] [CONTRACT] P2. Register the 3 bare-literal venue hosts in UAC + derive at call time — repo:
+- [x] ✅ [CONTRACT] P2. Register the 3 bare-literal venue hosts in UAC + derive at call time — repo:
       market-tick-data-service: `market_interface/adapters/defi/curve_adapter.py:118` (`api.curve.finance`),
       `cli/handlers/_solana_defi_fetch.py:36` (`_JUPITER_QUOTE_API = lite-api.jup.ag`),
       `live/connectors/morpho_defi_ws.py:41` (`blue-api.morpho.org`). Follow the kamino/orca/raydium pattern
@@ -128,6 +128,9 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       NOTE: QG `no_hardcoded_venue_urls.sh` does NOT currently catch these (narrow allowlist + scans only
       `cli/handlers/`) — also widen the QG scan dir + patterns so the contract is actually enforced. owning-epic:
       mtds_mdps_master / instruments_master.
+      — uac@789a93a (EVM_DEFI_REST_URLS + get_evm_protocol_rest_url; VCR/aiohttp compat patch; WS cassette map) |
+        mtds@b85b6e4 (curve/morpho/jupiter hosts derived from UAC) |
+        pm@4c6182cd7 (no_hardcoded_venue_urls.sh widened: live/connectors + adapters/defi + 3 new patterns)
 - [x] ✅ [STUB] P2. Resolve the instruments-service DeFi live `--trigger` dispatcher stub — repo: instruments-service @
       `instruments_service/cli/instruments_handler.py:143-149` (`--trigger` parsed→stored→logged, never dispatched; only
       `triggers/sports_fixtures_daily_repoll.py` exists; CLI help advertises `defi.token_lists.refresh`). Nothing
