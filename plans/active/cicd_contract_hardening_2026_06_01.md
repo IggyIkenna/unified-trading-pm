@@ -82,6 +82,19 @@ source:
 > state. **First** read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full, then the "🧭 CI/CD MASTER INDEX" above.
 > Work the waves **in order**; do not start a later wave until the earlier is green.
 
+> **📌 2026-06-05 PROGRESS — staging promotion pipeline reconciled (WAVE-0 §1 + staging-resync DONE).** The
+> LDR→staging→main pipeline was found broken **fleet-wide** (staging 192–761 behind main; LDR→staging auto-drain
+> perpetually conflicting → main advancing only via ad-hoc direct merges). **Done:** all 8 service repos' staging
+> reconciled up to main + drained from LDR (aggregate `promote/staging-resync-20260605` PRs open with auto-merge; stale
+> PRs closed; staging-only work preserved). **unified-trading-system-ui** + **market-tick-data-service** fully promoted
+> to `main`; **features-service** staging merged. **Remaining = exactly this plan's QG-debt + dep-ordering work:** 7
+> repos' staging→main PRs are **blocked on `quality-gates-v2`** on the merged superset (e.g. utl: `ImportError`
+> `CanonicalFixtureOutcomes`/`MatchResult` from `uac.sports` + coverage 79.85%<80%). Fix as a **dependency-ordered**
+> pass — **T0 `utl`/`uac` first** (= WAVE-0 §2 `utl_full_quality_gates_green`), then services, then IaC; each tier green
+> before the next (= WAVE-3 drain). The reconciled branches/PRs are the starting point — do NOT force-merge past the
+> gate. Full per-repo state + validated reconciliation recipe:
+> **`issues/fleet_promotion_pipeline_repair_2026_06_05.md`**.
+
 **WAVE 0 — clean starting state (FIRST — it unblocks every other agent's commits/PRs):**
 
 1. Reconcile DIRTY promotion PRs so auto-merge resumes: **PM #116** (rebase tab onto main + resolve, or supersede via
