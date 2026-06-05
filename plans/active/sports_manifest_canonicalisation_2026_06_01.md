@@ -1126,7 +1126,7 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
 
 **Follow-ups (P2/P3 — captured per Capture-Discoveries; NOT migration-blocking):**
 
-- [ ] [CODE] P2. **MDPS sports candle empty-handler passes `league_id=""` → blanket `SOURCE_RETURNED_ZERO`** — repo:
+- [x] ✅ [CODE] P2. **MDPS sports candle empty-handler `league_id=""` → SRZ — RESOLVED (mdps@dd5def4, 2026-06-05): honest-safe, documented (NOT a derivation)** — the sports `instrument_id` at this candle layer is MARKET-specific (not league-encoded) + the tick DataFrame is empty, so league_id is genuinely unresolvable here; SRZ is the honest fallback (fabricating EXPECTED_NO_FIXTURE without fixture context would be a false claim). Typed path is `reprocess_sports_odds`. Comment clarified. ~~repo:~~
       `market-data-processing-service`, `app/core/batch_workers.py:191-198` `_handle_empty_tick_data`. For a SPORTS
       empty shard routed through the generic tick→candle empty-handler, `classify_sports_empty_reason(league_id="")`
       short-circuits to SRZ (`canonical_writer.py:1717`) so the typed fixture/season oracle never runs. The in-code
@@ -1134,17 +1134,17 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       sports odds primarily flow through `reprocess_sports_odds`/`record_empty_for_shard` (typed-correct), so it is off
       the primary path. Fix: derive `league_id` from `instrument_id` so the oracle runs for any sports shard reaching
       this handler. Provenance: slot-4 e2e audit 2026-06-04 (dim ④).
-- [ ] [CODE] P2. **features-service `batch_write.py:67` builds the no-env `features-sports-{project_id}` default** —
+- [x] ✅ [CODE] P2. **features-service `batch_write.py` no-env default bucket → resolve_bucket — DONE (features@8086b5cc, 2026-06-05)** —
       repo: `features-service`. The 3 primary sports output call sites were fixed to `resolve_bucket` (@78a9a26f) but
       this CLI default fallback still yields the no-env form → 404 post-migration when the batch-write CLI is invoked
       without `--bucket`. Fix: `resolve_bucket(kind="features-sports", asset_group="sports")`. Provenance: slot-4 e2e
       audit 2026-06-04 (dim ⑤/⑥).
-- [ ] [DOC] P3. **codex doc drift — `get_league_fixture_calendar`** is described as "Dates with actual fixtures" in
+- [x] ✅ [DOC] P3. **codex doc drift — `get_league_fixture_calendar` — DONE (PM@d910cabbb, 2026-06-05): corrected to "active-season day grid" + denominator note.** ~~is described as "Dates with actual fixtures" in~~
       `codex/02-data/availability-manifest-and-data-status.md` but the impl returns the active-season DAY GRID
       (`league_data.py:356-394`) → the sports coverage DENOMINATOR is marginally generous (safe direction — over-counts
       expected, never hides a gap). Correct the doc wording OR tighten the helper to actual scheduled-fixture days.
       Provenance: slot-4 e2e audit 2026-06-04 (dim ⑦).
-- [ ] [TEST] P3. **deployment-api `test_no_category_asset_group_fallback.py` doesn't parametrize the sports
+- [x] ✅ [TEST] P3. **deployment-api ratchet — sports `_shard_prefix` no-category pin — DONE (deployment-api@9d20681, 2026-06-05): 2 tests added.** ~~`test_no_category_asset_group_fallback.py` doesn't parametrize the sports~~
       `per_venue_day_bundle` `_shard_prefix` branch** (`data_status_drilldown.py:905-913` — correct by construction, no
       `asset_group=`/`category=` key, but unpinned by the ratchet). Add a sports case. Provenance: slot-4 e2e audit
       2026-06-04 (dim ⑦).

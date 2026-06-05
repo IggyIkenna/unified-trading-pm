@@ -46,6 +46,20 @@ last_reviewed: 2026-05-19
 Every GCS data bucket has an `_index/availability_index.parquet` file. This parquet file is the **index of what data
 exists** in that bucket. Each row represents one shard — a unit of data written atomically.
 
+> **Annotate-once, read-everywhere (governing principle; F2).** The manifest is the canonical honest **4-state** ledger
+> (`captured` / `empty_confirmed[typed reason]` / `attempted_failed` / **`expected_unattempted`**). Every cell is
+> annotated **ONCE at write / pre-flight time** — the `expected_unattempted` 4th state (IS-listed + post-genesis +
+> post-launch + in-coverage but no data yet) is **MATERIALISED by the WRITER**, not the consolidator: the MTDS
+> instruments-service pre-flight calls `record_expected_unattempted` at shard grain, and the IS
+> `enumerate_expected_universe.py` v2 enumerator seeds the could-exist universe from the `build_instrument_catalogue.py`
+> lifecycle roll-up. Every downstream consumer — the data-status coverage summary + drilldown, strategy/features
+> pre-flight — **READS** `capture_status` and the honest denominator
+> (`% = captured / (captured + empty_confirmed + attempted_failed + expected_unattempted)`); **never re-derives** the
+> expected set or genesis/launch/IS rules per consumer. DeFi pre-launch zero-rows are demoted to
+> `EXPECTED_PRE_VENUE_LAUNCH` by `DefiManifestRecorder.record_zero_rows` (UAC `DEFI_VENUE_LAUNCH_DATES`), enforced by
+> the A10c QG ratchet. Per-chain matters: a venue (e.g. AAVE_V3) has different launch/genesis dates per chain, so each
+> (venue, chain) shard is annotated independently — never collapse chains.
+
 Services write to the manifest via `ManifestWriter` (UTL). The deployment-api reads it via `read_availability_index()`.
 The deployment-ui renders it as the data status page.
 
