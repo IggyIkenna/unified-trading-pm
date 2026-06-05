@@ -88,8 +88,9 @@ break and the promotion is jammed. Audited the locked versions on `origin/live-d
 | market-tick-data-service | `<4.0.0,>=3.14.0` | **3.14.0**     | **8.1.1**    |
 
 All four are now on **aiohttp 3.14.0 + vcrpy 8.1.1** — the **exact deadlock combo** this doc identified (vcrpy 8.1.1
-references `aiohttp.streams.AsyncStreamReaderMixin`, removed in 3.14). The successor's precondition ("once vcrpy >8.1.1
-ships") is **NOT met** — vcrpy is still 8.1.1, no aiohttp-3.14-compatible release exists. So the bump is premature.
+references `aiohttp.streams.AsyncStreamReaderMixin`, removed in 3.14). vcrpy 8.1.1 is the latest PyPI release — **no
+aiohttp-3.14-compatible vcrpy exists**, so the "wait for vcrpy >8.1.1" successor path is a dead end; the fix is the
+compat shim (P1 below), keeping aiohttp at the correct 3.14.0.
 
 **Mechanism**: a fleet-wide CVE-remediation pass landed
 `fix(deps): bump aiohttp>=3.14.0 (CVE-2026-34993 RCE) + uv relock` on 2026-06-05 (UAC@`edf83a5`, UTL@`6731826`,
