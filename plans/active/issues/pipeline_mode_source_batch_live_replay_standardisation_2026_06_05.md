@@ -56,52 +56,77 @@ different source (DeFi can replay from chain; Tardis may not allow tick replay, 
 must prefer a live mode where it exists, then a batch mode as backup — and a downtime refill goes into the live mode,
 the batch mode, or a third replay/recovery mode.
 
-This is the crux of going live: **feature lookback windows need continuous coverage at the flip moment**. A strategy
-flipping to live at 4am whose features need a 60-day (or even intraday) lookback must read a GAP-FREE union of
-batch+live(+replay) across the window — or it computes wrong / divides-by-zero / phantom-NaNs. The current model has no
-defined continuity contract, no warm-up gate, and no recovery mode.
+This is the crux of going live: **a strategy needs a GAP-FREE series across its window at the flip moment**. The deep
+history (e.g. a 60-day MA) comes from **batch** — that part is fine. The risk is the **tail**: the
+`[batch-cutoff → now]` window (batch for a shard may only land hours late, or stop at midnight), which must be filled by
+live or replay (see M6 — it is NOT a feature-lookback problem). Get it wrong → compute-wrong / divide-by-zero /
+phantom-NaN. The current model has no defined continuity contract, no capability registry, and no recovery mode.
 
-## The 4 design decisions needed (recommended + open operator fork)
+## The model (refined with operator 2026-06-05) — capability registry × per-shard availability × mode-contextual precedence
 
-### D1 — Make `pipeline_mode` source-aware for live: `live_<source>` (symmetric with batch)
+### M1 — pipeline*mode form: `{mode}*{source}[_{transport}]`
 
-**Recommend YES.** Replace the single `live_websocket` with `live_<source>` (`live_tardis`, `live_hyperliquid_ws`,
-`live_pyth`, …) for every live-capable source. This (a) fixes the live multi-source path collision (#5 — each source
-gets its own path key), (b) makes `source_string_for(live_X)` work → the asymmetry disappears, (c) makes the model fully
-symmetric (`batch_X` ↔ `live_X`), (d) lets the slot-6 MDPS multi-source dedup work for live too. The `source` column
-stays (swap-resilience + the live writer already knows its source). **Open fork**: websocket-vs-REST is a transport
-detail — confirm the live axis is (mode=live × source=vendor), i.e. `live_<vendor>` not `live_<transport>`. Migration:
-the live writer stamps `live_<source>` going forward; any historical `live_websocket` objects migrate by reading their
-`source` column. Closed-set enum change → coordinated UAC + UTL + writers + readers + reconciliation-service + a
-one-time path migration.
+`mode ∈ {batch, live, replay}` × `source = vendor` × optional `transport ∈ {rest, websocket, flat_file}`. Source-aware
+for ALL modes (`live_<source>`, not the single `live_websocket`) → fixes the live path collision (#5), makes
+`source_string_for` round-trip live, fully symmetric. **Transport (rest/ws/flat_file)**: worth carrying for
+observability AND because the SAME source can serve the SAME shard via BOTH rest + websocket — a hard source→transport
+mapping would lose that. **Open fork (M1)**: transport as a trailing path/enum segment (`live_tardis_websocket`) vs a
+separate column — **recommend keep `pipeline_mode = {mode}_{source}` as the reconciliation axis, and only add the
+transport segment/column where a source genuinely has >1 transport for the same shard** (else it's noise). `source`
+column stays (swap-resilience).
 
-### D2 — Batch→live continuity: reader reads the cross-mode UNION + a warm-up coverage gate
+### M2 — Source-capability registry (UAC SSOT) — tag each source with the modes it can run
 
-**Recommend**: the reader resolves a logical cell from the **union across pipeline_modes**, reconciled per row-key by a
-defined precedence (D4). So a feature's lookback is satisfied by whatever mode filled each day — `batch_*` for
-historical, `live_*` for recent — with NO gap IF the union is complete. The midnight→4am gap is then a **coverage**
-problem, solved by EITHER (a) **live started with a warm-up lead** = the max feature lookback (live + batch overlap; the
-clean option — two modes, same schema, running concurrently, reader reconciles), OR (b) a catch-up `batch_*`/`replay_*`
-run fills the gap. **A pre-live "warm-up coverage gate"** asserts the lookback window is gap-free (union of all modes)
-BEFORE a strategy may flip to live. **Open fork**: minimum warm-up lead policy (per-archetype max-lookback, or a fixed
-conservative buffer).
+Per `data_source`: the set of modes it CAN run `{batch, live, replay}` (+ transports). E.g. `databento {batch}` ·
+`massive {batch}` · `tardis {batch, live}` · chain RPC `{batch, live, replay}` · exchange REST `{batch, replay}`. This
+is a NEW registry axis alongside `SOURCE_PRIORITY`.
 
-### D3 — Add a `replay_*` / `recovery_*` pipeline_mode for live-downtime refill (source may differ)
+### M3 — Per-shard available-sources (UAC SSOT) — and the guardrail
 
-**Recommend YES, as a DISTINCT 3rd mode** `replay_<source>` (or `recovery_<source>`), because (a) the replay source can
-DIFFER from the live source — DeFi replays from the blockchain RPC (deterministic, always available); CeFi replays from
-the exchange's own REST/historical when Tardis can't tick-replay — so it must carry its own source provenance; (b) a
-distinct mode preserves honesty (you KNOW a cell was recovered, not primary-live). **Where the refill goes**: into
-`replay_<source>`, NOT silently into live/batch. **Open fork**: is replay a first-class `replay_<source>` family, or a
-flag on the existing modes? (Recommend first-class for provenance + reconciliation clarity.)
+Per shard (`data_type` / `instrument_type` / `fixture` / `entity` / …): which `data_source`s serve it. **M2 × M3 → "what
+is possible WHEN", per shard per mode** = the could-exist universe per mode. This is the **guardrail** (UAC's job):
+never look for / cover off data that can't exist for that shard in that mode. (Extends the ⑥ instrument-existence
+guard + the ⑦ could-exist denominator to the mode axis.)
 
-### D4 — Reader precedence + live-readiness gates
+### M4 — Mode-CONTEXTUAL precedence (a consumption config, not one global order)
 
-**Recommend** the reconciliation precedence per (cell, row-key): **`live_* > replay_* > batch_*`** within the live
-window (live is real-time truth; replay fills live's gaps; batch is the historical archive), and `batch_*` authoritative
-pre-live. Extends today's "live > batch" rule (source_priority.py:628) to three tiers. **Live-readiness gate** (before a
-strategy flips to live): (1) lookback window fully covered by the union, (2) live running ≥ warm-up lead, (3) zero
-unfilled live-downtime gaps in the window. Owned by / wired through the **`batch-live-reconciliation-service`**.
+The union precedence depends on the consumer's mode-context (live trading vs t+1 backtest reconciliation):
+
+- **Live-mode consumer**: `live > replay > batch` (live is real-time truth; replay fills live gaps; batch backs history
+  — live only holds recent, so 10 days of live → uses 10 days of live, replay fills the gaps, batch fills the rest).
+- **Batch-mode consumer**: `batch > replay > live` (the batch SSOT is authoritative for backtest/T+1; replay fills its
+  gaps; live last).
+
+`replay` is ALWAYS the middle tier (gap-fill). Extends today's "live > batch" (source_priority.py:628) to the 3-mode ×
+2-context matrix. It is a **config** because batch-vs-live results must prioritise different pipelines.
+
+### M5 — Data status & manifest: per-mode rows, ONE union view + drilldown
+
+The manifest already carries `pipeline_mode` per row (per-mode rows; replay is just another value). **Data status = the
+UNION** (what's available regardless of mode — the system can consume any mode per M4), NOT separate batch/live views;
+the **drilldown** exposes the per-mode breakdown + deltas (a visualisation surface — "which days came from
+live/replay/batch"). deployment-api/UI extend the 4-state counts with a pipeline_mode dimension.
+
+### M6 — Startup/continuity = the BATCH-CUTOFF window, NOT feature-lookback (operator correction)
+
+Feature lookback (e.g. 100-day MAs) is satisfied by **batch** — it does NOT need live. The real gap is narrower: a
+shard's batch SSOT has a **cutoff** (e.g. yesterday's batch only lands at 5am, or batch stops at midnight), so to
+operate at 4am the `[batch-cutoff → now]` window must be filled by SOMETHING. The fill policy is a **static per-shard
+reality** read from M2×M3:
+
+- shard has a **replay-capable** source → run `replay_<source>` over `[cutoff → now]` at startup (autonomous).
+- no replay but a **live** source → live must ALREADY be running (started ahead) — else cannot operate that shard.
+- no replay AND no live (batch is the sole SSOT we union against, e.g. sports fixtures) → wait for batch / refuse to
+  start / a configured-OK-gap (DR config).
+
+The code KNOWS, per shard, which of these applies (UAC) → "I can replay" / "I must pre-run live" / "I can't start". This
+**replaces** my earlier (wrong) "warm-up lead ≥ max feature lookback" framing.
+
+### M7 — Autonomous recovery
+
+Alerting + auto-recovery DETECT a gap (batch stopped + no live + replay-capable shard) and **trigger the replay
+themselves** — the same mechanism that refills today's gaps when the system goes down, autonomously, same-data where
+capable. "Gaps are OK" is a per-shard DR config, not a default. (Composes with the autonomous-recovery-matrix.)
 
 ## Proposed plan items (route to owners on ack)
 
@@ -115,26 +140,42 @@ unfilled live-downtime gaps in the window. Owned by / wired through the **`batch
 - [ ] [CODE] P1. **enumerate_expected_universe stamps pipeline_mode+source on `record_empty`** (#4) — derive pm/source
       per seeded cell (the seeded universe is for a known source per (ag,dt)). Repo: instruments-service. Adjacent to
       the tradfi ⑦ denominator item (slot-6 in-lane).
-- [ ] [DESIGN] P0. **D1 — `live_<source>` enum** (operator-ratify first): add `LIVE_<SOURCE>` members, make
-      `source_string_for`/`pipeline_mode_for_source` round-trip live, migrate `live_websocket` objects + writers +
-      readers + reconciliation-service. Repos: UAC + UTL + MTDS + features + batch-live-reconciliation-service.
-- [ ] [DESIGN] P0. **D3 — `replay_<source>` mode** (operator-ratify): add the family + recovery-write path + provenance.
-      Repos: UAC + UTL + MTDS + execution/recovery runbooks.
-- [ ] [CODE] P0. **D2+D4 — cross-mode union reader + warm-up coverage gate + live-readiness gate + 3-tier precedence
-      (`live > replay > batch`).** Repos: batch-live-reconciliation-service + features + strategy (the live-flip gate).
+- [ ] [DESIGN] P0. **M1 — `{mode}_{source}[_{transport}]` enum** (operator-ratify): add `LIVE_<SOURCE>` (+
+      `REPLAY_<SOURCE>`, M-D3) members; round-trip `source_string_for`/`pipeline_mode_for_source` for live+replay;
+      optional transport segment only where a source has >1 transport per shard; migrate `live_websocket` objects +
+      writers + readers + reconciliation-service. Repos: UAC + UTL + MTDS + features +
+      batch-live-reconciliation-service.
+- [ ] [DESIGN] P0. **M2 — source-capability registry in UAC** — tag each `data_source` with `{batch, live, replay}` (+
+      transports) it can run. New axis alongside `SOURCE_PRIORITY`. Repo: unified-api-contracts.
+- [ ] [DESIGN] P0. **M3 — per-shard available-sources registry in UAC** + the M2×M3 "possible-when" guardrail API
+      (`could_exist(shard, mode)`); extends the ⑥ existence-guard + ⑦ could-exist denominator to the mode axis. Repo:
+      unified-api-contracts (+ consumers IS/MTDS/features/deployment-api).
+- [ ] [CODE] P0. **M4 — mode-contextual precedence** — `select_for_mode(consumer_mode, available_modes)`: live-mode
+      `live>replay>batch`, batch-mode `batch>replay>live` (replay always middle). A config on the consumer. Repos: UAC
+      (resolver) + batch-live-reconciliation-service + features/strategy readers.
+- [ ] [CODE] P0. **M5 — data status = UNION + pipeline_mode drilldown** — deployment-api/UI extend the 4-state counts
+      with a pipeline_mode dimension (one union view + per-mode breakdown + deltas). Repos: deployment-api +
+      unified-trading-system-ui.
+- [ ] [CODE] P0. **M6 — capability-driven startup gate** — per shard, from M2×M3: replay-capable → autostart replay over
+      `[batch-cutoff → now]`; else live-required → assert live already running; else wait/refuse/configured-gap. Repos:
+      batch-live-reconciliation-service + strategy (live-flip gate) + MTDS (startup).
+- [ ] [CODE] P0. **M7 — autonomous recovery triggers replay** — alerting/auto-recovery detects (batch-stopped +
+      no-live + replay-capable) → fires `replay_<source>` autonomously; per-shard "gaps-OK" DR config. Repos:
+      alerting-service + MTDS/execution recovery + autonomous-recovery-matrix.
 - [ ] [CODE] P1. **write-time cross-check** `source_string_for(pipeline_mode)==source` for batch (#6) — assert in UTL
       `_resolve_and_validate_source`. Repo: unified-trading-library.
 - [ ] [DOCS] P1. **Doc coherence sweep** (#7) — CLAUDE.md + codex `pipeline-mode-partition.md` +
-      `SUB_AGENT_MANDATORY_RULES.md`: state the (source column = vendor SSOT) vs (pipeline*mode = mode SSOT +
-      batch-source path key) split, the live asymmetry → `live*<source>` target, and the source-stamping rule for
-      sub-agents.
+      `SUB_AGENT_MANDATORY_RULES.md`: the (source column = vendor SSOT) vs (pipeline*mode = mode SSOT + source/transport
+      path key) split, the `{mode}*{source}[_{transport}]` form, the M2/M3 capability×availability SSOT, mode-contextual
+      precedence, and the source-stamping rule for sub-agents.
 
 ## Operator decisions needed (closed-set forks)
 
-1. **D1**: ratify `live_<source>` (vendor, not transport) as the live pipeline_mode form? (vs keep `live_websocket` +
-   rely on the source column only).
-2. **D2**: warm-up policy — live-lead-≥-max-lookback (concurrent overlap) vs catch-up backfill of the gap?
-3. **D3**: `replay_<source>` as a first-class pipeline_mode family vs a flag? And recovery-source policy per AG (DeFi
-   chain-replay / CeFi exchange-REST / etc.).
-4. **D4**: confirm 3-tier precedence `live > replay > batch` + the live-readiness gate location
-   (batch-live-reconciliation-service).
+1. **M1**: ratify `{mode}_{source}[_{transport}]` (`live_<source>`/`replay_<source>`)? + transport: trailing
+   segment/column **only where a source has >1 transport per shard**, vs always, vs never.
+2. **M2/M3**: build the per-source capability tags + per-shard available-sources as UAC registries (the "possible-when"
+   guardrail SSOT)? — recommend YES (this is the spine; replaces an ad-hoc per-AG recovery-source policy).
+3. **M4**: confirm **mode-contextual** precedence (live-mode `live>replay>batch`; batch-mode `batch>replay>live`) as a
+   consumer config?
+4. **M5**: data status = ONE union view + pipeline_mode drilldown (vs separate batch/live status surfaces)?
+5. **M6/M7**: capability-driven startup gate + autonomous replay-on-gap; per-shard "gaps-OK" as a DR config?

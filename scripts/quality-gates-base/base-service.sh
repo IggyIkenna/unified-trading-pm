@@ -148,7 +148,7 @@ if [[ "$QG_MEM_CAP" != "0" ]]; then
         # Warn once per shell so the macOS teammate knows the cap is inactive.
         echo "⚠️  QG_MEM_CAP=$QG_MEM_CAP set but systemd-run unavailable on this host" >&2
         echo "    → running pytest + basedpyright without hard memory cap" >&2
-        echo "    → on macOS / small-RAM hosts: keep parallel QGs to 1-2 slots max" >&2
+        echo "    → on macOS / small-RAM hosts: keep parallel QGs to 2 slots max" >&2
         echo "    → silence this warning: export QG_MEM_CAP=0  in your shell rc" >&2
         export _QG_OOM_WARN_SHOWN=1
     fi
@@ -312,7 +312,7 @@ if [ "${QG_SENTINEL_DISABLE:-false}" != "true" ]; then
 fi
 
 # ── HOST CONCURRENCY GOVERNOR: acquire before the heavy phases (TESTS + TYPECHECK) ──
-# Blocks until <=K QG heavy-phases run host-wide (K=floor(cores/4)); released after
+# Blocks until <=K QG heavy-phases run host-wide (K=max(2, floor(cores/4))); released after
 # TYPE CHECK. The OS auto-frees the flock on any early exit between here and release.
 # No-op when QG_GOVERNOR_DISABLE=true or flock(1) is absent. Skipped on a sentinel hit
 # (no heavy phase to govern).

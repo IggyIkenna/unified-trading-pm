@@ -329,8 +329,8 @@ pointer before acting on any of them.
   blocker now** (`gh run view --log-failed`), never wait it out; rely on harness auto-re-invoke for tracked tasks; stay
   productive meanwhile. SSOT: `codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
-- **QG-sweep**: batch the GATE not the commits; shared-host ≤1–2 full QGs at once; never bulk-kill another slot's
-  `pytest`/QG/`basedpyright`; bump `MAX_DURATION=600` over suppressing the `<300s` check.
+- **QG-sweep**: batch the GATE not the commits; shared-host ≤2 full QGs at once (governor floor raised 1→2, 2026-06-05);
+  never bulk-kill another slot's `pytest`/QG/`basedpyright`; bump `MAX_DURATION=600` over suppressing the `<300s` check.
 
 **Python / UI specifics**
 

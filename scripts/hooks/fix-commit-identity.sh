@@ -34,8 +34,11 @@ branch="$(git symbolic-ref --short HEAD 2>/dev/null || git rev-parse --abbrev-re
 slot="$(printf '%s' "$branch" | sed -nE 's#^tab/[^/]+/([0-9]+)$#\1#p')"
 if [ -n "$slot" ]; then label="slot-${slot}"; else label="main"; fi
 
-# 3) Derive host: a fleet VM advertises VM_NAME (e.g. vm-cefi); else this is a laptop.
-host="${VM_NAME:-laptop}"
+# 3) Derive host: a fleet VM advertises ORCHESTRATOR_VM_ID (the canonical short registry id,
+#    e.g. vm-cefi — same value bootstrap_vm.sh brands the tab branch prefix with), with VM_NAME
+#    as a fallback; else this is a laptop. ORCHESTRATOR_VM_ID-first keeps the commit host in
+#    agreement with the branch prefix (setup-tab-worktrees.sh resolves both the same way).
+host="${ORCHESTRATOR_VM_ID:-${VM_NAME:-laptop}}"
 
 exp_name="ikennaigboaka [${label}·${host}]"
 cur_name="$(git config user.name 2>/dev/null || echo '')"

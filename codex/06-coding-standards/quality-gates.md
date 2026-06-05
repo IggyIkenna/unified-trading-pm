@@ -2766,10 +2766,11 @@ false-progress-prevention of per-item flips, while removing the repeated multi-m
 The dev host is **shared across every slot** (slot 1 in `.tabs/1`, slot 2 in `.tabs/2`, … are separate process trees on
 the SAME machine). Two consequences:
 
-- **Run ≤1–2 full QGs at once.** `quality-gates.sh`'s own "keep parallel QGs to 1–2 slots max" warning is **host-wide,
-  not per-slot**. Exceeding it (e.g. 2 background QG agents + your own runs → ~30 concurrent pytest/basedpyright procs)
-  makes the gates OOM-kill each other — symptom: exit **144** mid-`TESTS`, no `ALL QUALITY GATES PASSED`, no sentinel.
-  Full QGs serialize; code-only `basedpyright`-only agents parallelize.
+- **Run ≤2 full QGs at once** (raised from 1 → 2, operator 2026-06-05 — see the governor floor change below).
+  `quality-gates.sh`'s own "keep parallel QGs to 2 slots max" warning is **host-wide, not per-slot**. Exceeding it (e.g.
+  2 background QG agents + your own runs → ~30 concurrent pytest/basedpyright procs) makes the gates OOM-kill each other
+  — symptom: exit **144** mid-`TESTS`, no `ALL QUALITY GATES PASSED`, no sentinel. Full QGs serialize; code-only
+  `basedpyright`-only agents parallelize.
 - **Never bulk-kill `pytest` / `quality-gates.sh` / `basedpyright` processes** (by pattern, or by PPID=1 "orphan"
   sweep). They may belong to **another slot's** session — killing them is the process-space form of "don't touch outside
   your clear context" (incident 2026-06-02: a PPID/pattern reap killed slot-1's pytest under a `claude` process in
@@ -2802,12 +2803,14 @@ swaps and every run slows. Adding parallelism makes the aggregate worse.
 ### The four levers (all in `base-service.sh`, sourced live by every repo's `quality-gates.sh`)
 
 1. **Host concurrency governor — `quality-gates-base/qg-host-governor.sh`.** A `flock` token bucket of **K** tokens (K =
-   `max(1, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`). `qg_governor_acquire` is called before the heavy
-   phases (`[3] TESTS`) and `qg_governor_release` after `[4] TYPE CHECK`; at most K QG heavy-phases run concurrently
-   **across all slots**, the rest queue. The held process is `nice -n10` + `ionice -c2 -n7` so it never starves
-   interactive work. `flock` auto-frees on process death (no stuck tokens). No-op when `QG_GOVERNOR_DISABLE=true` or
-   `flock(1)` is absent. Introspect: `bash qg-host-governor.sh --status`. This converts N-way thrash into orderly
-   queueing → aggregate p95 drops with **no added parallelism**.
+   `max(2, floor(physical_cores/4))`, override `QG_HOST_CONCURRENCY`; the **floor was raised 1 → 2 on 2026-06-05** so a
+   shared host always permits 2 concurrent full QGs — on the macOS operator host `lscpu`+`nproc` are both absent → cores
+   degrades to 4 → `floor(4/4)=1`, and the min-2 floor lifts it to exactly 2). `qg_governor_acquire` is called before
+   the heavy phases (`[3] TESTS`) and `qg_governor_release` after `[4] TYPE CHECK`; at most K QG heavy-phases run
+   concurrently **across all slots**, the rest queue. The held process is `nice -n10` + `ionice -c2 -n7` so it never
+   starves interactive work. `flock` auto-frees on process death (no stuck tokens). No-op when
+   `QG_GOVERNOR_DISABLE=true` or `flock(1)` is absent. Introspect: `bash qg-host-governor.sh --status`. This converts
+   N-way thrash into orderly queueing → aggregate p95 drops with **no added parallelism**.
 2. **Thread-pool caps.** `base-service.sh` exports `OMP_NUM_THREADS` / `OPENBLAS_NUM_THREADS` / `MKL_NUM_THREADS` /
    `NUMEXPR_NUM_THREADS` = `${QG_THREAD_CAP:-2}` — caps the native fan-out above. Capping `pytest -n` alone is
    insufficient when the parallelism is BLAS/OMP, not xdist. Per-repo override: `export QG_THREAD_CAP=N` before
@@ -2832,9 +2835,9 @@ code-freeze. Aggregate cross-slot contention is measured separately by `scripts/
 The binding constraint is **peak RSS**, not cores. Measured ceiling (local, full gates): **unified-trading-library 5.27
 GB**, then execution/features ~1.9 GB — so a _single_ heavy gate overshoots the current `m7i.xlarge` 2 GB/slot budget by
 up to 2.6×. **Decision (operator 2026-06-02): keep QG LOCAL on 16 GB workers, no fleet change** — the governor caps
-K=`floor(vCPU/4)`=1 on a 4-vCPU worker so the single-run peak (~5.3 GB) fits 16 GB; sizing rule
-`per-VM RAM ≥ peak-per-run-RSS × K`. Central self-hosted-runner QG (Option B) was **rejected** — it breaks the local
-pass/fail feedback loop. ADR: `adr-qg-offload-self-hosted-runners-2026-06-02.md`.
+K=`max(2, floor(vCPU/4))`=2 on a 4-vCPU worker (floor raised 1 → 2, operator 2026-06-05) so two concurrent peaks (~10.6
+GB) still fit 16 GB; sizing rule `per-VM RAM ≥ peak-per-run-RSS × K`. Central self-hosted-runner QG (Option B) was
+**rejected** — it breaks the local pass/fail feedback loop. ADR: `adr-qg-offload-self-hosted-runners-2026-06-02.md`.
 
 ### Both base files are governed
 
