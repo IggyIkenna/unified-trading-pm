@@ -249,6 +249,55 @@ widening these windows.
 Route to `cicd_contract_hardening_2026_06_01.md` (Ikenna owns the CI/CD area; this is active work). Items are
 independent and parallelizable.
 
+## Reconciliation vs existing issue docs + plans
+
+Checked all of `plans/active/issues/` + the CI/CD master plan `cicd_contract_hardening_2026_06_01.md` (2532 lines).
+**None of the 15 findings is a duplicate.** Several intersect existing items whose status is now **stale** — those are
+the highest-value reconciliation outputs (a green-looking plan hiding a still-broken mechanism).
+
+### Existing items my findings prove STALE (plan/CLAUDE.md need correction)
+
+- **C2** ↔ plan **line 1362** `[x] ✅ DONE 2026-06-02` ("semver-agent watches DEAD name → fixed on 8 repos"). The
+  item's own list **excludes `unified-trading-pm`**, and the live file `semver-agent.yml:38` is still
+  `["Quality Gates"]`. **The ✅ is incomplete — PM was missed.** `CLAUDE.md` § Version/Workflow ("Promotion automation …
+  REPAIRED 2026-06-02 — semver-agent now watches quality-gates-v2 … pipeline flows again") inherits the same overclaim.
+  → reopen + add PM.
+- **C1** ↔ plan **line 248** `[ ]` says "PM `escalate-to-orchestrator.yml` **does NOT exist**" (2026-06-02 re-audit),
+  consolidated into "Observability+Reconciliation B". The workflow **exists now** and carries the wrong-host bug. →
+  update: workflow present; root cause is the SPA-host default (`:151`), not absence.
+- **H3** ↔ plan **line 1625** `[x] ✅ DONE` fixed the starvation detector's `locked_at`→`locked_since` field bug (made
+  the age-check fire). My finding is a **separate residual**: `locked_alert_sent` is set once and never reset → after
+  the first page it is silent forever. **The plan believes the dangling-lock watchdog is fixed; it is still partially
+  dead.** → add residual sub-item.
+
+### Existing mechanisms my findings EXTEND (gaps, not dups)
+
+- **H1** — the FEATURE→STAGING auto-advance is Guard 3 (plan line 654 ✅); the missing **headSha** check is untracked.
+  **This also explains the open "lead" in `ci_false_positive_alerts_infra_noise_2026_06_05.md` (UAC reads
+  `STAGING_GREEN` despite a live red promote PR)** — that doc left it as a lead; H1 is the mechanism.
+- **M2** — plan **line 187** `[ ]` ("prevent default-branch drift; extend the verifier") covers the
+  static-list/default-branch part; the **suffix-blind `startswith` verifier + stale classic scripts
+  (`set-branch-protection.sh`, `branch-protection-template.json`) + Terraform map** are untracked.
+- **M3** — dependency-ordering is the `fleet_promotion_pipeline_repair_2026_06_05.md` workstream + STAGE 1.8; the
+  **fail-open-on-blank-`ci_status`** default is the untracked nuance (and C2/H2 are exactly what produce blank
+  `ci_status` → they widen this window).
+- **H4** — the rollout SSOT + parity guard exist and were used for v1→v2 (plan line 159); the **current 22-repo
+  `tab-mirror` drift is a fresh unrolled batch** (06-04/05 edits).
+- **M6** — plan line 1084 describes idempotency as an intended staging-to-main step; the **implementation is dead code**
+  (the bug, not the intent).
+
+### Net-new (no existing item)
+
+C3 (storm + label-bypass), H2 (concurrency-group fragmentation), H5 (green-sentinel skip), H6 (cron self-update), M1
+(sentinel/`--files`), M4 (dirty-behind no alert), M5 (`--baseline-write` ratchet).
+
+### Sibling issue docs filed today — adjacent, not dups
+
+- `fleet_promotion_pipeline_repair_2026_06_05.md` — staging-behind-main backlog + 7 repos' genuine QG debt +
+  dep-ordering (operational; corroborates the M3 theme).
+- `ci_false_positive_alerts_infra_noise_2026_06_05.md` — `#ci-failures` over-paging on infra noise; its UAC `ci_status`
+  lead is explained by my **H1**.
+
 ## Verification log
 
 | ID  | Status   | Confirmed by                                                                         |
