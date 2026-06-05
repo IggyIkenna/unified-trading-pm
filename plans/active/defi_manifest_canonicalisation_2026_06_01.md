@@ -537,8 +537,37 @@ What to verify/wire (B0 corrected scope):
         `recorder.record_zero_rows(...)` (the `DefiManifestRecorder.record_zero_rows` venue-launch-date-aware path at
         `_defi_manifest.py:370`); A10c ratchet baselines these so they grind down without a flag-day. Repos:
         unified-api-contracts + unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
-  - [ ] [SCRIPT] P2. **A10c-fleet — extend the SOURCE_RETURNED_ZERO routing ratchet beyond DeFi-MTDS, fleet-wide.**
-        COORDINATION + GENERIC-RATCHET INFRA SHIPPED (slot-1 2026-06-05): the DeFi A10c shell
+  - [x] ✅ [SCRIPT] P2. **A10c-fleet — DONE (slot-1 2026-06-05). Ratchet generalised fleet-wide + ALL 15 callsites
+        migrated/waivered + baseline LOCKED to empty (now zero-tolerance fleet-wide).** Infra: PM@9295ddaa4
+        (`check_unrouted_source_returned_zero.py` + STEP 5.86 + pip PYSEC-2026-196 ignore). Per-AG migrations (each
+        repo green on STEP 5.86; shipped to LDR via the dirty-deps direct-push exception while the workspace's UTL/UAC
+        deps were mid-edit): **mtds@bc83f93f** — `tardis_adapter.py:1769` MIGRATED to
+        `record_zero_rows(was_expected=was_instrument_alive(venue,instrument_id,day), pipeline_mode=BATCH_TARDIS)` (the
+        canonical reference) + sports `orchestrator.py:3676` MIGRATED (`was_expected=True`, fixture catalogued);
+        tier2/tier3/`websocket_runner`/`_defi_manifest` waivered (oracle/Protocol not wired at those grains — see
+        follow-up). **instruments-service@6d38a178** — 4 callsites waivered (sports SFI/entity + weather-dedup).
+        **features-service@75559c0a** — 8 callsites waivered (`feature-computed-output`: features are computed from
+        upstream, not external-source fetches). **unified-trading-library@8c700670** — 2 internal callsites waivered
+        (`record-zero-rows-internal`: the library's own `record_captured_from_counts` + `close_candle_writer` write
+        paths). Baseline regenerated → `baseline: {}` (PM, exemption-shipped) so any NEW raw
+        `record_empty(SOURCE_RETURNED_ZERO)` anywhere now fails — the DeFi-only A10c backstop is now fleet-wide.
+        SHIP NOTE: PM-side commits (ratchet infra + baseline + this flip) reached LDR via a BLOCKED-OPERATOR-DECISION
+        exemption because the PM `quality-gates.sh` tree was red ONLY from a concurrent slot's un-gated CI files
+        (`scripts/cicd/flow_health.py` + `scripts/repo-management/ldr_ci_monitor.py`, ruff + empty-dict) + the
+        operator-accepted pip CVE — none from this change. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P3. **A10c-fleet-followup — REAL oracle/Protocol migration of the conservatively-waivered source-zero
+        callsites (DEFERRED, named successor of A10c-fleet).** The A10c-fleet sub-agents added documented `# QG-allow:`
+        waivers (not speculative oracles) where a genuine external-source-zero shard COULD route through
+        `record_zero_rows` but the per-grain oracle/Protocol is not yet wired — migrate these once that infra lands:
+        (1) **instruments-service `engine/orchestrator.py:7317,7328`** (`sports-sfi-stats-latency`) — SFI returns 0 rows
+        for a date with match IDs present (code already knows data is expected); wire the sports fixture oracle at the
+        date grain → `record_zero_rows(was_expected=True)`. (2) **mtds `engine/orchestrator.py:3988`** (tier3) — blocked
+        on `instrument_catalog` wiring (writegate Phase 3.D.5 Wave 2/3); `:4040` (tier2) needs a venue-level (no
+        per-instrument) oracle. (3) **mtds `live/websocket_runner.py:777`** — the `ShardManifestRecorder` Protocol does
+        not expose `record_zero_rows`; add it to the Protocol + all impls (MTDSShardManifestRecorder + test doubles),
+        then route the live empty-window write. Repos: instruments-service + market-tick-data-service. parent_epic:
+        mtds_mdps_master.
+        **Infra detail (A10c-fleet design record, retained):** the DeFi A10c shell
         (`scripts/qg/no_unrouted_source_returned_zero.sh`) is zero-tolerance but DeFi-handler-only (the
         `DefiManifestRecorder` path). This generalises it to the UTL `ManifestWriter.record_zero_rows` (A10b) path that
         any AG/service routes through. **Shipped (PM):** `scripts/quality_gates/check_unrouted_source_returned_zero.py`
