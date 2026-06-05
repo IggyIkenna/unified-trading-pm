@@ -957,10 +957,11 @@ to the integration axis — incident 2026-06-03 uta+greeks; `verify_branch_prote
 **Batch the GATE, not the commits — QG-sweep (2026-06-02)**: for a batch of related edits, make ALL edits (code-only
 agents verify with `basedpyright` on touched files), run `quality-gates.sh` ONCE per repo over the batch, THEN make
 per-shippable-unit commits + flips from that green tree (Commit+Push+Flip intact — only GATE RUNS batch). **Shared-host
-(HARD)**: ≤1–2 full QGs at once host-wide (they serialize; exceeding OOM-kills, exit 144); **NEVER bulk-kill `pytest` /
-`quality-gates.sh` / `basedpyright`** (may be another slot's). When only the `<300s` META-gate trips (substantive gates
-green): `IGNORE_TIMEOUT=true` / `PYRIGHT_TIMEOUT=<n>` are sanctioned. SSOT: `codex/06-coding-standards/quality-gates.md`
-§ "QG-sweep batching".
+(HARD)**: ≤2 full QGs at once host-wide (raised from 1 → 2, operator 2026-06-05 — the `qg-host-governor.sh` token floor
+is now `max(2, floor(cores/4))`; RAM-safe since UTL's 5.27 GB peak × 2 ≈ 10.6 GB fits a 16 GB worker); they serialize
+beyond that; exceeding OOM-kills, exit 144; **NEVER bulk-kill `pytest` / `quality-gates.sh` / `basedpyright`** (may be
+another slot's). When only the `<300s` META-gate trips (substantive gates green): `IGNORE_TIMEOUT=true` /
+`PYRIGHT_TIMEOUT=<n>` are sanctioned. SSOT: `codex/06-coding-standards/quality-gates.md` § "QG-sweep batching".
 
 **Generated artifacts + QG sentinels are gitignored, NEVER committed; generators MUST be deterministic (HARD RULE,
 codified 2026-06-03)**: every file `quality-gates.sh`/`quickmerge` regenerates from a tracked SSOT is `.gitignore`'d +

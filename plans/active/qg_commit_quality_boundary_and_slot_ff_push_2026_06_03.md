@@ -309,6 +309,103 @@ All on `origin/live-defi-rollout`; full detail in
 - [ ] [DEPS] P3. **unified-trading-api** re-lock commit (1 trivial metadata-sync, 0 version moves) — race-blocked by the
       ci_status bot on uta's LDR; lands via the FF-push cron (once shipped) or a quiet-window FF push.
 
+## Cron-executor staleness → e2e self-pull rollout (operator design 2026-06-05)
+
+> **Root cause (2026-06-05 incident):** slot-1's instruments-service + mtds showed `1 ahead / 6(5) behind LDR` —
+> duplicate tab-mirror commits the FF-pull cron's `[adopt-rebase]` (Step 5) + upstream self-heal (Step 0) already fix
+> automatically. They never ran because **the cron executes its script from the workspace-root PM clone, which was 195
+> commits behind + dirty** (one uncommitted plan file) → its own FF self-skipped `[skip:dirty]` → it ran pre-self-heal
+> code. Same failure mode the script's own comment records ("stranded the top-level PM clone 1164 commits behind"). The
+> drift is **planted at bootstrap**: `setup-tab-worktrees.sh` `worktree add --track origin/<tab-branch>` sets
+> `@{upstream}` = remote tab branch for any repo whose tab branch already exists (UTL/UAC/mtds/mdps cluster). It is
+> **machine-only** — GHA workflows run from a fresh remote checkout each time, so they are immune by design.
+
+### Phase A — auto-heal NOW (laptop) — DONE 2026-06-05
+
+- [x] ✅ [OPS] P0. Unstuck laptop root PM clone: rescued slot-2's uncommitted plan edit (`stash@{0}` +
+      `/tmp/rescue_slot2_defi_provenance_2026_06_05.patch`), FF'd root clone 195 commits → current code, ran one manual
+      tick → `[adopt-rebase]` healed slot-1 IS (`51de1ce4`) + mtds (`76d650f0`) to LDR (0/0); `[upstream-fix]` reset all
+      drifted upstreams (UTL/UAC/mtds/mdps, tabs 1·3·4·5·6·7) → `origin/live-defi-rollout`.
+- [ ] [PLAN] P1. **Land slot-2's rescued edit** (DeFi provenance `A12c ✅` flip + `A12a` remaining-handlers todo, in
+      `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`) onto LDR via a slot quickmerge
+      `docs(plans):` — it currently lives ONLY in `stash@{0}` + the `/tmp` patch on the laptop root clone (unique, not
+      on LDR).
+
+### Phase B — permanent executor self-pull (the core fix) — `unified-trading-pm/scripts/dev/`
+
+- [ ] [SCRIPT] P0. **Cron line self-pulls its own script from LDR before running** — so a stale/dirty PM clone never
+      starves the cron of current code (kills the chicken-and-egg). Pattern (in the crontab line = immutable anchor, NOT
+      inside the script):
+      `cd <ROOT_PM> && git fetch -q origin live-defi-rollout 2>/dev/null; git checkout -q     origin/live-defi-rollout -- <script> <tracked-sibling-deps> 2>/dev/null; cd <CWD> && bash <ROOT_PM>/<script> <args>`.
+      Use `git checkout origin/LDR -- <file>` (lands at real path → `BASH_SOURCE`-relative sibling + `--help` still
+      work); NOT `git show | bash -s`. Offline-safe via `|| true` (falls back to last-good local copy, never skips a
+      tick). For `slot-cron-ff-pull.sh` pull BOTH it + `scripts/dev/cron-branch-overrides.txt` (tracked sibling dep,
+      line 47).
+- [ ] [SCRIPT] P1. Factor the self-pull into a shared helper sourced by every cron-installer so the pattern is DRY in
+      source even though each emitted crontab line is self-contained.
+
+### Phase C — apply self-pull to EVERY machine-run PM cron (audit 2026-06-05)
+
+These all run PM-repo scripts from the root clone (= identical staleness exposure). GHA workflows excluded (current by
+design).
+
+- [ ] [SCRIPT] P0. `slot-cron-ff-pull` (root clone, \*/5) — self-pull.
+- [ ] [SCRIPT] P0. `slot-host-symmetry-verify` (root clone) — self-pull **+ fix cadence drift** (installed `*/30`,
+      install script wants `*/15` per 2026-06-04 — proof the installer wasn't re-run since the clone went stale).
+- [ ] [SCRIPT] P1. `slot-git-status-report` (root clone, \*/5) — self-pull (`scripts/dev/slot-git-status-report.sh`).
+- [ ] [SCRIPT] P1. `orphan-ping-audit` (root clone, every 4h, `scripts/agents/audit_ping_orphans.sh`) — self-pull;
+      update its self-installer.
+- [ ] [SCRIPT] P2. `refresh-manifest-dag` (`scripts/manifest/refresh-manifest-dag.sh`, \*/30) — runs from the slot-1
+      worktree (FF-managed, lower risk) — add self-pull for consistency OR document why exempt.
+
+### Phase D — bootstrap enforcement so drift never re-plants
+
+- [ ] [SCRIPT] P0. `setup-tab-worktrees.sh:258-261` — after `worktree add --track … origin/${branch}`, force
+      `git -C <slot_dir> branch --set-upstream-to=origin/live-defi-rollout ${branch}` so upstream = LDR even when the
+      worktree is created from an existing remote tab branch (closes the drift-at-source gap).
+- [ ] [SCRIPT] P1. Install scripts (`install-slot-cron-ff-pull.sh` + siblings) — abort if `WORKSPACE_ROOT` resolves
+      inside `/.tabs/` (install MUST run from the root clone, else it bakes wrong `ROOT_PM`/`SLOT_DIR` absolute paths —
+      protects Harsh + VM installs).
+
+### Phase E — debounced upstream auto-fix + escalation (operator refinement 2026-06-05)
+
+- [ ] [SCRIPT] P1. `slot-cron-ff-pull.sh` Step 0 — replace the IMMEDIATE upstream reset with a **10-min grace**: marker
+      `$TMPDIR/slot-upstream-drift/<host>-<slot>-<repo>` records first-seen; `--set-upstream-to=LDR` only once the
+      marker is ≥10 min old (room for intentional temporary switches); clear marker when aligned.
+- [ ] [SCRIPT] P1. `verify-slot-host-symmetry.sh` — **Slack-alert if a drift marker is ≥15 min old** (auto-fix-failed
+      signal; expected no-op since the 10-min fix clears it). Reuses the same marker dir.
+
+### Phase F — fleet rollout + verification (Harsh + VM)
+
+- [ ] [OPS] P0. Re-run `install-slot-cron-ff-pull.sh` on THIS laptop after B–E land (installs self-pull lines + corrects
+      the `*/30`→`*/15` verify cadence).
+- [ ] [OPS] P0. Verify `ROOT_PM`/`SLOT_DIR` correctness on **Harsh's laptop + the AWS VM** (`crontab -l` host-correct
+      absolute paths) + re-run install there + one-time root-clone unstick if stranded
+      (`git -C <host>/unified-trading-pm rev-list --count HEAD..origin/live-defi-rollout`). Dispatch via orchestrator.
+- [ ] [DOCS] P1. `codex/05-infrastructure/per-tab-worktrees.md` § "Cron-based FF puller" — document the
+      self-pull-executor principle + the rule "every machine-run PM cron self-pulls its script from LDR before running;
+      GHA exempt (current by design)". + one-liner in canonical `CLAUDE.md`.
+
+### Phase G — LATER (June): crons on a gated hot-fix path
+
+- [ ] [DESIGN] P3. **LATER (June).** Crons currently self-pull from `live-defi-rollout` (the integration/hot-fix axis) —
+      so a cron-script change reaches every machine the moment it's on LDR, on the implicit assumption the author ran QG
+      before pushing. Mature this into an **enforced** hot-fix path: cron scripts self-pull from a branch whose changes
+      are **forced through `quality-gates-v2`** (e.g. promote cron-script changes to `main` and have crons pull `main`,
+      or a dedicated gated `cron-release` ref). Makes "QG ran before this cron changed" a guarantee, not a convention.
+      Not urgent — the self-pull (Phase B) already removes the staleness foot-gun; this only adds the gate. Successor
+      framing, not a blocker.
+
+### Phase H — single-source-of-truth audit (operator 2026-06-05) — no contradictions across docs
+
+- [ ] [DOCS] P0. **Full contradiction sweep** so codex + canonical `CLAUDE.md` + `SUB_AGENT_MANDATORY_RULES.md` + cursor
+      `.mdc` rules + the scripts' own header comments all agree on: (P1) slot `@{upstream}` is ALWAYS
+      `origin/live-defi-rollout`; (P2) FF-pull is FF-only EXCEPT the bounded `[adopt-rebase]` that drops patch-id-dup
+      commits on a clean tree — so any "never rebase / never destructive" wording is now stale; (P3) machine-run PM
+      crons self-pull their script from LDR before running, GHA exempt (fresh checkout per run); (P4) crons pull the LDR
+      hot-fix axis today (Phase G matures this); (P5) upstream drift auto-heals debounced (10-min grace). Fix every
+      divergent/ duplicate statement in place; one SSOT per rule.
+
 ## Cross-links (do NOT duplicate — these items live in the named plans)
 
 - **cicd_contract_hardening_2026_06_01.md**: per-repo QG-debt greening (Phase 6) ← amplified by the governor fix here;

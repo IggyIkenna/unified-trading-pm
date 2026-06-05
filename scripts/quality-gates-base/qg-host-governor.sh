@@ -14,7 +14,7 @@
 # MECHANISM
 #   Token bucket of K tokens implemented as K flock(1) lockfiles in a host-shared dir. A run
 #   acquires one token (blocking until one frees), holds it for the heavy phase, releases it.
-#   K defaults to max(1, floor(physical_cores / 4)) — overridable via QG_HOST_CONCURRENCY.
+#   K defaults to max(2, floor(physical_cores / 4)) — overridable via QG_HOST_CONCURRENCY.
 #   The acquiring process tree is de-prioritised (nice + ionice) so a held QG never starves
 #   interactive work.
 #
@@ -40,14 +40,20 @@
 # Safe to source repeatedly; functions are idempotent. No effect on correctness — purely
 # a scheduling throttle, so a missing flock(1) degrades gracefully to "no governor".
 
-# ── default K = max(1, floor(physical_cores / 4)) ────────────────────────────
+# ── default K = max(2, floor(physical_cores / 4)) ────────────────────────────
+# Floor RAISED 1 → 2 (operator 2026-06-05): the host must be able to run 2 full QGs
+# at once, not just 1. RAM-safe by the documented sizing rule (per-VM RAM ≥ peak-RSS
+# × K): the UTL ceiling 5.27 GB × 2 = ~10.6 GB still fits a 16 GB worker; service
+# repos (~1.9 GB) are trivial. On the macOS operator host lscpu+nproc are both absent
+# → cores degrades to 4 → floor(4/4)=1 → the min-2 floor lifts it to exactly 2 (the
+# desired Mac cap); bigger boxes keep their higher floor(cores/4) (24-core → 6).
 _qg_governor_default_k() {
     local cores
     # physical cores if lscpu is available, else logical (nproc), else 4
     cores="$(lscpu -p=core 2>/dev/null | grep -vc '^#')"
     [[ "${cores:-0}" -ge 1 ]] || cores="$(nproc 2>/dev/null || echo 4)"
     local k=$(( cores / 4 ))
-    (( k >= 1 )) || k=1
+    (( k >= 2 )) || k=2
     echo "$k"
 }
 
