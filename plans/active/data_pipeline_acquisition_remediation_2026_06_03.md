@@ -101,8 +101,9 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       — market-tick-data-service@302e2bf | QG ✓ (49 tests, all 6 venues) | 6 new connectors (binance_futures_book_ticker_ws.py,
       bybit_futures_book_ticker_ws.py, okx_futures_book_ticker_ws.py, deribit_book_ticker_ws.py,
       kraken_futures_book_ticker_ws.py, coinbase_book_ws.py) + factory dispatch updates + 49 unit tests
-- [ ] [BATCH-LIVE] P2. Add a live WS connector for Upbit (currently batch-only, no `live/connectors/` module) — repo:
+- [x] ✅ [BATCH-LIVE] P2. Add a live WS connector for Upbit (currently batch-only, no `live/connectors/` module) — repo:
       market-tick-data-service. owning-epic: cefi_master.
+      — market-tick-data-service@e958732 | QG ✓ (upbit_spot_ws.py + __init__.py + 7 unit tests) | PR#130 auto-merge to staging
 
 ## Phase 3 — Feature wiring (P1)
 
