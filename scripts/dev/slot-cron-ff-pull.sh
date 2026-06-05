@@ -151,6 +151,12 @@ ff_one() {
                 git checkout -q -- "${_regen}" 2>/dev/null || true
             fi
         done
+        # coverage*.xml : generated pytest artifacts (gitignored fleet-wide via the python
+        # template, but discard any that predate the gitignore rollout so they never block FF).
+        git clean -fq -- 'coverage*.xml' 2>/dev/null || true
+        for _cov in $(git ls-files -m -- 'coverage*.xml' 2>/dev/null); do
+            git checkout -q -- "${_cov}" 2>/dev/null || true
+        done
         if ! git diff --quiet -- workspace-manifest.json 2>/dev/null; then
             _nonstatus=$(git diff -- workspace-manifest.json 2>/dev/null \
                 | grep -E '^[+-]' | grep -vE '^[+-]{3}' | grep -vE '"ci_status":' || true)
