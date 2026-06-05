@@ -325,6 +325,29 @@ column is RED, not exempt.
       (`polymarket_clob`/`polymarket_gamma_api`/`kalshi_*`); same-venue-different-source example (Polymarket
       `MARKET_LIFECYCLE`=gamma vs `trades`=clob) + the UTL@01ca49ea venue-override removal + the "not a
       `select_primary_available_source()` union" caveat. Both are true.
+- [x] ✅ [MTDS] P1. **A12c — DeFi `source=` provenance write-path CONFIRMED shipped** (audit 2026-06-04 slot-2): the
+      multi-source DeFi cells already thread `source=` at every `record_captured` — `oracle_prices_handler`
+      (`pyth_hermes`/`chainlink`) + `native_staking_handler` (`solana_rpc`/`helius_rpc`); every other DeFi data*type is
+      single-source per UAC
+      `SOURCE_PRIORITY[(defi,*)]`(all entries present) → the UTL`ManifestWriter.add()`gate     auto-stamps via`default\*source`/ raises`MissingSourceError`on a blank multi-source cell. Added the MTDS     integration guard exercising the REAL writer gate through`DefiManifestRecorder`(single-source auto-stamp +     multi-source blank-raise + multi-source explicit-stamp) —`market-tick-data-service`@    `tests/unit/test_defi_manifest_recorder.py::test_defi_recorder_real_writer\**`. UAC + UTL gate tests already exist     (`test*manifest_writer_source.py::test_record_captured_defi\*\_`).
+- [ ] [MTDS] P1. **A12a — wire the upstream instruments-service DeFi-catalog PREFLIGHT into the REMAINING DeFi collect
+      handlers** (shared gate landed 2026-06-04 slot-2: UAC `PreflightTrigger.DEFI_COLLECT_DAILY` +
+      `INSTRUMENTS_PREFLIGHT_REQUIREMENTS[(DEFI,"defi_market_data")]` → `instrument-catalog` within 24h, exported from
+      UAC top-level; MTDS `_defi_manifest.assert_defi_catalog_fresh()` wraps
+      `unified_trading_library.instruments_preflight.run_preflight` and routes honest absence — `record_failed` per
+      shard, never raises in a per-venue loop). **WIRED so far**: `dex_pools_handler` (arbitrage critical path) +
+      `lst_rates_handler` (carry critical path). **REMAINING** DeFi collect handlers in
+      `market-tick-data-service/market_tick_data_service/cli/handlers/` to call `assert_defi_catalog_fresh(...)` at
+      their `process()` chokepoint before the source fetch + record honest absence on a stale catalog:
+      `dex_swaps_handler`, `lending_indices_handler`, `perp_funding_handler`, `oracle_prices_handler`,
+      `liquidations_handler`, `liquidation_events_handler`, `staking_yields_handler`, `eigenlayer_rewards_handler`,
+      `vault_share_price_handler`, `gas_fee_handler`, `bridge_events_handler`, `governance_events_handler`,
+      `governance_proposals_handler`, `mev_events_handler`, `token_transfers_handler`, `position_data_handler`,
+      `aggregator_route_handler`, `flash_loan_events_handler`, `jupiter_quote_handler`, `phoenix_orderbook_handler`,
+      `orca_whirlpool_state_handler`, `raydium_classic_amm_handler`, `drift_v2_historical_handler`,
+      `solana_defi_handler`, `evm_defi_handler`. (Existing handler tests that call `process()` must patch
+      `assert_defi_catalog_fresh` → True, as done for dex_pools/lst_rates.) **Codex SSOT**: add a DeFi row to the
+      instruments-preflight-chain doc (`codex/04-architecture/instruments-preflight-chain.md`).
 
 ### Phase 7 — Prod data-state verification (P1, post-enforcement)
 
