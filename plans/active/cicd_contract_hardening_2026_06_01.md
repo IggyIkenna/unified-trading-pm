@@ -1789,7 +1789,7 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `{ldr_green, ahead/behind ×3 (main/staging/LDR), oldest stuck-PR age, staging lock-state}` → a single transition
       alert (`🔴 flow-blocked` / `🟢 flow-recovered`) mirroring `ci-status-update`'s anti-spam gate. **SUPERSEDES E +
       F** once built (they fold into it). repo: unified-trading-pm.
-      **DONE 2026-06-05 — PR #145 → main** (`scripts/repo-management/flow_health_reporter.py` +
+      **BUILT 2026-06-05 — PR #145 (auto-merge enabled, ON branch `ci/flow-health-reporter`).** Code is clean (ruff + basedpyright 0-err + 8-case hermetic test + codex/TypedDict gates all pass). **Merge-to-main is GATED by a PRE-EXISTING fleet-wide blocker, NOT G:** the `--workflows` template-parity check finds `tab-mirror-to-ldr.yml` drifted from its SSOT in **25 repos** (NEW drift, unbaselined → blocks ALL PM main PRs). That is a fleet re-rollout (`rollout-workflow-templates.sh`) / baseline-ratchet owned by the CI-template surface, not this PR — #145 auto-merges once it clears. (orig note: DONE 2026-06-05 — PR #145 → main) (`scripts/repo-management/flow_health_reporter.py` +
       `.github/workflows/flow-health-reporter.yml` + hermetic test). Every-30m cron: pure `compute_flow_health()`
       reduces per-repo {ci_status, behind ×3, oldest-stuck-PR, staging-lock} → ONE transition alert. Offender triggers
       are the unambiguous signals only (`ci_status=FAILING` / staging lock >25m / stuck PR >60m / main ≥40 behind
