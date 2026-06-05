@@ -20,6 +20,12 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
 
+> **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
+> discipline: this corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated
+> `source`, `cadence`, `transport` — so running `--apply` before that code lands bakes in the old model + forces a
+> banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.**
+
 > **🔴 FOUNDATION GATE (2026-06-04) — the proper instrument catalogue blocks the prediction MTDS `--apply`.** Before the
 > prediction MarketTick-data migration `--apply` runs,
 > `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting) must be GREEN — the

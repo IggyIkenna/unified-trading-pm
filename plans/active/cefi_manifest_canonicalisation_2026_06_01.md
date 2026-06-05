@@ -19,6 +19,12 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # CeFi legacy gap-fill + manifest canonicalisation (L3 owner for cefi)
 
+> **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
+> discipline: this corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated
+> `source`, `cadence`, `transport` — so running `--apply` before that code lands bakes in the old model + forces a
+> banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.**
+
 > **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
 > `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** and glued
 > venues (`AERODROMEV3`/`TRADER_JOEV2`) — a FULL re-canonicalisation, not the headline cell-count. **CF-2 gotcha**: the

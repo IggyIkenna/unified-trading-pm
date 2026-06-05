@@ -18,6 +18,13 @@ source:
 
 # MASTER: Canonical-SSOT for Data + Manifest (cross-plan coordinator) + DeFi Manifest Canonicalisation
 
+> **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` (every AG this MASTER coordinates) is BLOCKED until
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
+> discipline: each corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated
+> `source`, `cadence`, `transport` — so running `--apply` before that code lands bakes in the old model + forces a
+> banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.** (DeFi additionally: fix
+> the `rebuild_defi_manifest.py` blank-`pipeline_mode`/`source` bug #1 from that plan in Phase 0.3 before its dry-run.)
+
 > **This file plays two roles** (operator 2026-06-01): (1) the **MASTER coordinator** for the whole "single canonical
 > SSOT — no fallback, no dual" programme (the `## MASTER` section sequences every sub-plan); (2) the **DeFi L3
 > executor** (the `## A`–`## G` sections ARE the DeFi single-walk). An agent drives the MASTER section + delegates the

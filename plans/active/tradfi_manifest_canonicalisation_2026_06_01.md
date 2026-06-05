@@ -20,6 +20,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)
 
+> **🔴 P0 GATE (operator 2026-06-05) — supersedes the "7/7 criteria ready, only operator-gated" readiness call below for
+> the `--apply`.** The tradfi v9 `--apply` is BLOCKED until
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN. Single-walk
+> discipline: this corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated
+> `source`, `cadence`, `transport`. Running `--apply` before that code lands bakes in the old model + forces a banned
+> second walk. The 7-criteria readiness (migrator/rebuild/preflight/honest-absence/paths/guards/UI) remains valid for
+> the CURRENT model — but the `--apply` now waits for the standardisation Phase 0 so the one walk is future-proof.
+> **Dry-runs are NOT gated; only the irreversible `--apply`.**
+
 > **🔴 FOUNDATION GATE (2026-06-04) — the proper instrument catalogue blocks the tradfi MTDS `--apply`.** Before the
 > tradfi MarketTick-data migration `--apply` runs,
 > `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting) must be GREEN — the
