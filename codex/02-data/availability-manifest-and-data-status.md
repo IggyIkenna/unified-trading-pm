@@ -714,24 +714,29 @@ availability_pct = found_shards / expected_shards × 100
 
 The denominator comes from **UAC only**. Never hardcoded in services.
 
-| Dimension                 | UAC function                                                 | What it returns                                  |
-| ------------------------- | ------------------------------------------------------------ | ------------------------------------------------ |
-| Venue start date          | `VenueMapping.get_venue_start_date(venue)`                   | When a venue's data begins                       |
-| Chain start date (DeFi)   | `get_venue_chain_start_date(venue, chain)`                   | When a protocol deployed on a chain              |
-| Data type start date      | `get_venue_data_type_start_date(venue, data_type)`           | When a specific data type became available       |
-| Expected trading dates    | `VenueMapping.get_expected_trading_dates(venue, start, end)` | Trading days only (excludes weekends for TradFi) |
-| Fixture calendar (SPORTS) | `get_league_fixture_calendar(league_id, start, end)`         | Dates with actual fixtures                       |
-| Expected data types       | `get_expected_data_types_for_venue(venue)`                   | Which data types a venue should produce          |
-| Expected instrument types | `get_expected_instrument_types_for_venue(venue)`             | Which instrument types a venue should produce    |
-| Expected bookmakers       | `get_expected_bookmakers()`                                  | Audited bookmakers with start dates              |
-| Expected feature groups   | `get_expected_feature_groups_for_service(service)`           | Feature groups per service                       |
-| Expected timeframes       | `get_expected_timeframes_for_service(service, category)`     | Timeframes per service+category                  |
+| Dimension                 | UAC function                                                 | What it returns                                                     |
+| ------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------- |
+| Venue start date          | `VenueMapping.get_venue_start_date(venue)`                   | When a venue's data begins                                          |
+| Chain start date (DeFi)   | `get_venue_chain_start_date(venue, chain)`                   | When a protocol deployed on a chain                                 |
+| Data type start date      | `get_venue_data_type_start_date(venue, data_type)`           | When a specific data type became available                          |
+| Expected trading dates    | `VenueMapping.get_expected_trading_dates(venue, start, end)` | Trading days only (excludes weekends for TradFi)                    |
+| Fixture calendar (SPORTS) | `get_league_fixture_calendar(league_id, start, end)`         | Active-season calendar days (not scheduled-fixture days — see note) |
+| Expected data types       | `get_expected_data_types_for_venue(venue)`                   | Which data types a venue should produce                             |
+| Expected instrument types | `get_expected_instrument_types_for_venue(venue)`             | Which instrument types a venue should produce                       |
+| Expected bookmakers       | `get_expected_bookmakers()`                                  | Audited bookmakers with start dates                                 |
+| Expected feature groups   | `get_expected_feature_groups_for_service(service)`           | Feature groups per service                                          |
+| Expected timeframes       | `get_expected_timeframes_for_service(service, category)`     | Timeframes per service+category                                     |
 
 ### Sparseness
 
 Not all shards are expected every day:
 
-- **Sports fixtures:** A day with no fixtures in a league is NOT a missing shard. Denominator = fixture calendar.
+- **Sports fixtures:** A day with no fixtures in a league is NOT a missing shard. Denominator = fixture calendar. **Note
+  (slot-4 2026-06-05):** `get_league_fixture_calendar` returns the **active-season day grid** (every in-season day per
+  `SEASON_BY_COUNTRY`), not the literal set of scheduled-fixture rows (`league_data.py:356-394`). So on an in-season day
+  with no actual match the cell can read as "expected/missing" rather than "no fixture" — the denominator is marginally
+  **generous** (over-counts expected, **never hides a gap** → safe direction). For exact no-match-day precision, join
+  the FIXTURES truthset (as the migration's CF-5 classifier does) rather than the season grid.
 - **TradFi weekends:** Saturday/Sunday are not trading days. Denominator = trading calendar.
 - **Transfer windows:** Transfer data arrives on seasonal cadence, not daily.
 - **Chain start dates:** AAVE_V3 on LINEA started much later than on ETHEREUM. Per-chain start dates.
@@ -1531,8 +1536,8 @@ Idempotent + safe to run concurrently with the scheduled cycle.
 
 ### Read path fail-fast on stale-fallback (2026-05-28 opt-in) — SUPERSEDED 2026-06-01
 
-> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK`
-> opt-in described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
+> **⚠ SUPERSEDED by the 2026-06-01 default-RAISE liveness contract above.** The `MANIFEST_FAIL_ON_STALE_FALLBACK` opt-in
+> described below is no longer the canonical model. As of 2026-06-01, `read_availability_index()` raises
 > `ManifestConsolidatorStaleError` by default; the escape hatch is now `MANIFEST_ALLOW_STALE_FALLBACK=true` (inverted
 > from the original opt-in). See "Read path fail-fast (consolidator liveness contract, 2026-06-01)" above for the
 > current SSOT.

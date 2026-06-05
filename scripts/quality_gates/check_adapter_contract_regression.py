@@ -52,12 +52,17 @@ import yaml
 
 # ── Constants ────────────────────────────────────────────────────────────────
 
-#: The 5 adapter-contract patterns. Combined into a single regex for one-pass counting.
+#: The adapter-contract patterns. Combined into a single regex for one-pass counting.
+#: ``record_zero_rows`` (added 2026-06-05, plan §A10d) is the sanctioned honest-absence write path
+#: — handlers route "source succeeded, zero rows" through it instead of a bare
+#: ``record_empty(SOURCE_RETURNED_ZERO)``; counting it keeps the contract-call total stable across
+#: that rename (and recognises it as a first-class manifest-emission contract call).
 CONTRACT_PATTERNS: Final[tuple[str, ...]] = (
     "classify_venue_error",
     "ADAPTER_FETCH_FAILED",
     "record_captured",
     "record_empty",
+    "record_zero_rows",
     "record_failed",
 )
 

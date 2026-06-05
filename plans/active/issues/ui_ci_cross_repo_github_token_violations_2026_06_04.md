@@ -1,7 +1,7 @@
 ---
 title:
-  unified-trading-system-ui registry-drift CI job — mechanics FIXED (tokens/UIC/generator-args/py3.13/UTL); registry
-  CONTENT regen remains (env-matched UAC main + playwright)
+  unified-trading-system-ui registry-drift CI job — RESOLVED (tokens/UIC/generator-args/py3.13/UTL/PM-checkout +
+  registry refreshed from UAC main, pw:L2 ✓); GHA-green is the final confirmation
 created: 2026-06-04
 author: ikennaigboaka [slot-1·laptop]
 source:
@@ -32,22 +32,26 @@ The `registry-drift` job in `unified-trading-system-ui/.github/workflows/ci.yml`
    `/tmp/freshreg/ui-reference-data.json`. Verified locally: the generator runs clean with `--output-dir` and emits the
    455 KB `ui-reference-data.json`.
 
-## REMAINING — registry CONTENT is stale (separate from the now-fixed mechanics)
+4. **[FIXED — UI@c1793688, 2026-06-04]** The job never checked out **PM** (where the generator lives), so
+   `../unified-trading-pm/...` was file-not-found in CI — the job couldn't even invoke the generator. Added a PM sibling
+   checkout (GH_PAT). PM's generator is byte-identical main↔LDR, so the `main` checkout is correct.
 
-With mechanics fixed, the job now runs — and correctly surfaces that **`lib/registry/ui-reference-data.json` is itself
-stale** vs current UAC (~15 keys differ: `strategy_registry`, `client_registry`, `venue_data_availability`,
-`config_schemas`, …). It's been drifting since the job broke (2026-06-01). This must be regenerated + committed, but
-**not from this laptop**:
+## RESOLVED — registry CONTENT refreshed (UI@c1793688)
 
-- **Env-match**: CI checks out UAC's **default branch (`main`)**, which is **diverged from `live-defi-rollout`** (main 4
-  ahead / 17 behind LDR as of 2026-06-04). A laptop slot is on LDR, so its regen would NOT match CI's `main`-based regen
-  → committing it would still show drift. The regen must come from the same UAC ref CI uses (the GHA job, or a
-  `main`-pinned checkout + UTL + py3.13).
-- **Playwright gate (HARD RULE)**: `lib/registry/ui-reference-data.json` feeds UI dropdowns / catalogues, so a
-  regen-commit is a UI-data change → needs `pw:L2 ✓` + a regression spec per CLAUDE.md § "UI changes — playwright gate".
+The committed `lib/registry/ui-reference-data.json` was substantially stale vs UAC (15 keys: `strategy_registry`,
+`client_registry`, `venue_data_availability`, `config_schemas`, …) — drifting since the job broke 2026-06-01.
+Regenerated **CI-faithfully** and committed (8907+/2116-):
 
-Owner: a UI-capable slot that can (a) regenerate from the CI-matching UAC ref and (b) run playwright. Once committed,
-the registry-drift GHA job (mechanics already fixed) goes green.
+- Built an isolated py3.13 env with **UAC main + UTL main** (the exact refs CI checks out), via detached worktrees at
+  those refs. Verified the generator's aux-source files (`openapi/config-registry.json`, `system-topology.json`) and
+  PM's generator are **identical main↔LDR**, so the main-regen == what CI produces (the only main-vs-LDR delta was
+  `uac_enums`/`registries`, both import-driven and correctly taken from main).
+- **Playwright gate satisfied**: `npx playwright test --project=chromium tests/smoke/` → **1 passed (43.1s)**.
+  regression: `tests/smoke/data-status-pending-backfill.smoke.spec.ts` + the registry-drift CI job itself.
 
-Also pre-existing + unrelated (noted, not fixed here): `codecov/codecov-action@v3` at ci.yml:40 is flagged by actionlint
+**Final confirmation pending = the GHA run**: this is the one thing that can only be proven in CI. Generated
+CI-faithfully, so the registry-drift job should now go green on the next UI PR; if any residual diff appears it'll be a
+minor env nuance to iterate on the GHA run. Issue is otherwise fully resolved — archive once the GHA run is green.
+
+Pre-existing + unrelated (still open, not fixed here): `codecov/codecov-action@v3` at ci.yml:40 is flagged by actionlint
 as too old — bump to a current major.

@@ -789,11 +789,26 @@ venue-override question) + the operator-gated migration walk:**
       reader + MDPS consolidator gate.** 2 regression tests (`_default_bucket_for` env-tier per AG +
       `SUPPORTED_ASSET_GROUPS`); IS QG `--no-fix` exit 0. This unblocks the enumerator for prediction AND the other 4
       AGs (cross-cutting). Repo: instruments-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. **⑦ PREDICTION SLICE — wire the prediction cqg-grain lifecycle catalogue + run the v2 enumerator
-      (VALID-but-GATED; precise spec slot-5 2026-06-04).** **STATUS reconciled by the 2026-06-04 readiness audit: this
-      is a REAL code gap (NOT done, NOT superseded) but it is GATED on a not-yet-populated upstream + VM verify — so it
-      is correctly OPEN; building speculative code against a 0-object input now would be premature.** Three findings
-      nail the exact build: 1. **Granularity gap is REAL (confirmed against shipped code).** `_enumerate_v2_prediction`
+- [x] ✅ [CODE] P1. **⑦ PREDICTION SLICE — cqg-grain catalogue PRODUCER + enumerator grain-binding SHIPPED
+      (instruments-service@ec75c4e9, slot-5 2026-06-05). VM run + IS backfill remain operator-gated (operational, NOT
+      code).** Operator directive 2026-06-05 ("do these apart from migration/backfill runs") → built the CODE now,
+      unit-tested; the GCS run that POPULATES the catalogue stays gated. **Shipped (self-contained in IS, no
+      UAC/UTL/MTDS change):** (1) `InstrumentCatalogEntry` gains an optional `data_type` grain-binding (None =
+      legacy/other AGs); `_enumerate_v2_prediction` emits a catalogue row at ITS `data_type`+grain when set (no
+      cqg→conditionId cross-product inflation). (2) `build_instrument_catalogue.build_prediction_catalogue_dataframe` —
+      multi-grain roll-up parsing the `canonical_question_group=` path segment → one cqg-bundle row
+      (`data_type=prediction_canonical_question_group`, `instrument_id=cqg`) + per-conditionId rows
+      (`trades`/`market_lifecycle`); `run_rollup` dispatches prediction; the prediction iterator mirrors the foreign
+      concurrent-download + `--max-blobs` perf (merged with IS@d00fe2d9). (3) 6 new unit tests (cqg/cid grain split,
+      lifecycle span, blank-cqg skip, enumerator grain-bound round-trip); basedpyright net-zero; QG exit 0
+      (IGNORE_TIMEOUT — host-shared concurrency only tripped the <600s META-gate; STEP 5.83 ✅). **REMAINING (gated, NOT
+      code):** run `build_instrument_catalogue --asset-group prediction` +
+      `enumerate_expected_universe --asset-group     prediction --catalog-path … --data-types prediction_canonical_question_group --apply-write`
+      on a VM AFTER the operator-gated IS prediction backfill populates
+      `instrument_availability/by_date/.../canonical_question_group=/` (currently 0 objects), then confirm
+      `expected_unattempted` cqg rows land + deployment-api's denominator grows (regression: IS-cqg-universe ⊃ manifest
+      ⇒ no shrink). The reverse-engineered build spec is retained below for the gated run. Three findings nailed the
+      build: 1. **Granularity gap is REAL (confirmed against shipped code).** `_enumerate_v2_prediction`
       (`enumerate_expected_universe.py:786`) emits one `expected_unattempted` row per
       `catalog.instrument_id × dt in        data_types`. The generic roll-up `build_instrument_catalogue.py` (foundation
       plan, shipped IS@4026d79e) emits one catalog row per `by_date` `instrument_key` = **condition_id**. The captured
@@ -831,19 +846,16 @@ venue-override question) + the operator-gated migration walk:**
       catalog) + run `--apply-write` so each AG's raw-tick denominator == could-exist universe + add the
       IS-universe⊃manifest regression. Filed as todos in the sibling masters for their slots:
       `cefi_…`/`defi_…`/`sports_…`/`tradfi_manifest_canonicalisation_2026_06_01.md`. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P2. **⑦-adjacent IS writer finding (STEP 5.83, prediction) — `orchestrator.py:2410` uses `underlying=` for
-      the cqg, not the canonical bundled-shard key.** Surfaced by the IS QG STEP 5.83 cross-cutting scan (slot-5
-      2026-06-04; advisory/baselined — IS QG exit 0, NOT a run-blocker).
-      `instruments_service/engine/orchestrator.py:2410` calls
-      `record_captured(data_type="prediction_canonical_question_group", …, underlying=_group_str, …)` — a DIRECT
-      `data_type=` literal kwarg WITHOUT the `canonical_question_group=` shard key the checker requires for the bundled
-      data_type. **Not a trivial fix**: `record_captured` (UTL) has no `canonical_question_group` param + no `**kwargs`
-      (and `canonical_question_group` is NOT in `_ROW_KEY_COLUMNS`), so the IS prediction writer should align to the
-      MTDS bundled-atom convention (`record_captured_from_counts`, data_type carried INSIDE `row_key`, cqg as
-      `instrument_id`) OR the checker's required-kwarg map updated — a cross-service convention call (MTDS uses
-      `instrument_id=cqg` in `row_key` and passes 5.83; IS uses `underlying=cqg` as a direct kwarg and trips it).
-      Reconcile with the v9 bundled-atom SSOT (deployment-api reads `instrument_id`/falls back to `underlying`). Repo:
-      instruments-service (+ UTL/PM checker if the convention is the kwarg-map). parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P2. **⑦-adjacent IS writer (STEP 5.83, prediction) — RECONCILED to the canonical v9 bundled-atom
+      convention (instruments-service@ec75c4e9 + PM checker, slot-5 2026-06-05).** The cross-service convention call was
+      resolved toward `instrument_id` (the v9 canonical cqg column): (1) the IS prediction `record_captured`
+      (`orchestrator.py`) now carries the cqg in **`instrument_id=_group_str`** (matching the MTDS
+      `record_captured_from_counts` row_key + what deployment-api `_prediction_venue_detail` reads first); `underlying`
+      kept as the migration-window fallback. (2) the PM checker `check_uac_hard_required_fields.py`
+      `BUNDLED_TYPE_REQUIRED_KWARGS["prediction_canonical_question_group"]` moved from the **unsatisfiable**
+      `canonical_question_group` (NOT a `record_captured` param — confirmed against the UTL signature) →
+      `instrument_id`. Checker now passes against the IS source (`[OK] STEP 5.83 … bundled-shard key kwargs OK`); IS QG
+      exit 0. The PM + IS sides land together (the checker is run by the IS QG). parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P2. **⑥ phantom auditor prediction bucket — REFUTED / ALREADY-CORRECT (slot-5 audit 2026-06-04).** The
       finding was a grep-then-conclude misread: `reconcile_phantom_manifest_rows_all.py:85` maps
       `"prediction": ("market-data-tick-prediction", None)`, but `market-data-tick-prediction` is a

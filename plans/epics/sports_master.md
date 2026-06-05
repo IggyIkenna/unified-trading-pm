@@ -415,7 +415,9 @@ hard-fails every sports `record_captured` call as long as parquets stamp the pre
 - [ ] [HUMAN] P0. Wait for `af-backfill-test-`, `sfi-backfill-` VMs to drain. [AUDIT 2026-05-07: IN-FLIGHT —
       sfi-backfill-20260507-010938 RUNNING (T+5h); af-backfill-test- not in current snapshot]
 - [ ] [HUMAN] P0. Run real recon scoped to footystats first. [AUDIT 2026-05-07: FRESH — actionable]
-- [ ] [HUMAN] P0. deployment-api `_sports_honest_coverage` MR review + merge. [AUDIT 2026-05-07: FRESH — actionable]
+- [x] ✅ [HUMAN] P0. deployment-api `_sports_honest_coverage` MR review + merge. **[DONE — verified 2026-06-05 (slot-4
+      e2e audit dim ⑦): merged + live in `data_status_service.py` (the primary sports coverage path, denominator from
+      the UAC fixtures/leagues universe).]**
 
 ### Sports half of `sports_predictions_e2e` — 288M ODDS_API row migration
 
@@ -975,7 +977,10 @@ backtest in the unified pipeline. No live trading. Bugs/backfills/schema fixes i
 Folded from `plans/archive/issues/catalogue_audit_sports_2026_05_12.md` — re-audit verdicts (2026-05-12,
 ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
 
-- [ ] [SCRIPT] **P0**. **SP-13 — MTDS sports registry phantom-import bug (critical-path May-23 blocker)**.
+- [x] ✅ [SCRIPT] **P0**. **SP-13 — MTDS sports registry phantom-import bug (critical-path May-23 blocker)**. **[DONE —
+      verified 2026-06-05 (slot-4): `registry.py:39-41` `_ADAPTER_PATHS` already routes all keys to canonical
+      `execution_service.sports_execution.adapters.*`; the phantom `unified_sports_execution_interface` package is
+      eliminated. The earlier in-flight fix shipped; checkbox was stale.]**
       `market-tick-data-service/market_tick_data_service/market_interface/sports/registry.py:23-40` `_ADAPTER_PATHS`
       routes 18 sportsbook/exchange/bookmaker keys (betfair / matchbook / onexbet / odds_api / skybet / coral /
       paddypower / betfred / betvictor / boylesports / bwin / ladbrokes / williamhill / betway / unibet / bet888sport /
@@ -989,17 +994,32 @@ ikenna-sports-re-audit-sp-5-10-12 slot 8 sub-agent):
       FanDuel have NO scraper (only `NotImplementedError` browser stubs in `sports_execution/adapters/scrapers/`). Fix
       scope: either ship the scrapers OR delete the venue capability entries for DK/FD so they don't show as live in the
       catalogue.
-- [ ] [SCRIPT] **P1**. **SP-10 — cluster-validation kwargs MISSING workspace-wide**. 0 hits for `expected_root_clusters`
+- [x] ✅ [SCRIPT] **P1**. **SP-10 — cluster-validation kwargs MISSING workspace-wide**. **[DONE —
+      instruments-service@b2a7ad75 2026-06-05: ASSESSED — no sports `record_captured_from_counts` site is a genuine
+      multi-cluster bundle (one row per entity at (date,data_type[,league]); league is the row KEY, not a sub-cluster)
+      AND no authoritative expected-cluster source applies (`get_expected_bookmakers` is the MTDS per-bookmaker feed,
+      not the IS aggregated FootyStats odds) → any expectation would FALSE-FAIL captured data. All 10 `{}` sites
+      documented with an SP-10 rationale + `test_sports_cluster_validation_contract.py` pins the gate (missing cluster →
+      attempted_failed). The empty dict is the CORRECT, now-guarded decision.]** ~~0 hits for `expected_root_clusters`~~
       / `cluster_extractor` in any sports adapter. CLAUDE.md cluster-validation mandate (`record_captured()` for bundled
       data_types) not wired through `instruments_service/engine/orchestrator.py` for sports per-fixture bundles. Add
       cluster kwargs at the bundle-writer boundary in orchestrator.
-- [ ] [SCRIPT] **P1**. **SP-12(a) — execution-service `sports_execution` missing `classify_venue_error()`**.
+- [x] ✅ [SCRIPT] **P1**. **SP-12(a) — execution-service `sports_execution` missing `classify_venue_error()`**. **[DONE
+      — verified 2026-06-05: `classify_venue_error` is wired across 7 sports_execution adapters
+      (onexbet/api_football/betfair/polymarket_clob/matchbook/kalshi/odds_api); the "0 hits" claim was stale.]**
       instruments-service sports reference adapters GREEN via `BaseSportsReferenceAdapter`; execution-service
       sports_execution has 0 hits. Add classify wiring at adapter-base level.
-- [ ] [SCRIPT] **P2**. **SP-12(e) — capability-decl vs method match**. 17 caps declared vs 15 execution classes present.
-      Reconcile.
-- [ ] [SCRIPT] **P2**. **SP-12(f) — shard-level isolation**. Orchestrator-level catch preserves isolation but
-      per-adapter not enforced. Tighten.
+- [x] ✅ [SCRIPT] **P2**. **SP-12(e) — capability-decl vs method match**. **[DONE — execution-service@dbab41a0e
+      2026-06-05: VERIFIED CONSISTENT — exactly 4 execution-capable sources (betfair/kalshi/polymarket/matchbook) each
+      have an adapter; the other 11 sources are market/reference-data-only (Pinnacle correctly has NO execution
+      adapter). The "17 vs 15" was a stale ill-posed count (it counted all sports SourceCapability data-feeds incl.
+      removed _MANIFOLD/_SHARPAPI). Bidirectional capability⇄adapter drift-guard test added.]** ~~17 caps declared vs 15
+      execution classes present. Reconcile.~~
+- [x] ✅ [SCRIPT] **P2**. **SP-12(f) — shard-level isolation**. **[DONE — execution-service@dbab41a0e 2026-06-05:
+      ALREADY per-adapter — `concurrent_executor._execute_single` wraps each venue's `place_bet()` in its own try/except
+      + records the failure (not swallowed); `asyncio.gather` returns one result per venue without aborting the batch.
+      Per-adapter isolation regression tests added.]** ~~Orchestrator-level catch preserves isolation but per-adapter
+      not enforced. Tighten.~~
 
 Already GREEN (re-audit closed): SP-1/SP-2/SP-3 case-folding (cross_asset_group Phase 1D), SP-4 data-type-namespace note
 (cross_asset_group Phase 1D), SP-6 KNOWN_COVERAGE_GAPS (folded to sports phantom-recon plan), SP-7 launch-dates

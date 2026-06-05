@@ -481,9 +481,19 @@ What to verify/wire (B0 corrected scope):
         Caller computes `was_expected` from the per-AG oracle (sports fixtures / `was_instrument_alive`). Single
         sanctioned zero-rows write path; +2 routing tests; UAC+UTL QG green. Repos: unified-trading-library +
         unified-api-contracts. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P1. **A10c — QG enforcement step** (MTDS/IS/MDPS/features quality-gates, STEP 5.70 family): fail any
-        `record_empty(...SOURCE_RETURNED_ZERO...)` callsite NOT routed through `record_zero_rows` (baselined ratchet +
-        `# QG-allow:` waiver for audited exceptions). Makes the backstop un-bypassable. Repo: per-service
+  - [x] ✅ [CODE] P1. **A10c — DONE for DeFi-MTDS (slot-2 2026-06-05, PM@4fbc82a6e + mtds@76d650f0).** Shipped
+        `scripts/qg/no_unrouted_source_returned_zero.sh` — block-scans MTDS DeFi `*_handler.py` for a raw
+        `record_empty(SOURCE_RETURNED_ZERO)` and HARD-FAILS (wired into mtds `quality-gates.sh` STEP 5.87) unless the
+        call carries an inline `# QG-allow:` waiver (the lending_indices `expected_coverage()`-oracle callsite has one).
+        Validated: passes the post-A10d tree, fails on an injected raw callsite. **Scoped to DeFi-MTDS** because
+        `record_zero_rows` is the `DefiManifestRecorder` path — not the originally-stated fleet-wide "MTDS/IS/MDPS/
+        features" (those services have no `DefiManifestRecorder`; their generic UTL `ManifestWriter.record_zero_rows`
+        adoption is each AG-slot's work). **A10c-fleet (NEW, P2, follow-up)**: extend the same ratchet to the other
+        services/AGs once they migrate their `record_empty(SOURCE_RETURNED_ZERO)` callsites (e.g. tradfi
+        `tardis_adapter.py:1769`) to the UTL `record_zero_rows` — a per-AG-slot task, baseline their current callsites.
+        Original spec below. **A10c — QG enforcement step** (MTDS/IS/MDPS/features quality-gates, STEP 5.70 family):
+        fail any `record_empty(...SOURCE_RETURNED_ZERO...)` callsite NOT routed through `record_zero_rows` (baselined
+        ratchet + `# QG-allow:` waiver for audited exceptions). Makes the backstop un-bypassable. Repo: per-service
         `quality-gates.sh` + a shared check script. parent_epic: mtds_mdps_master. **DESIGN VERIFIED + SCOPED (slot-2
         readiness audit 2026-06-04) — this is a FLEET-WIDE QG-infra change, NOT MTDS-local (high blast radius → must
         validate every service's gate before rollout, do not rush):** the check script lives in the SSOT dir
@@ -497,15 +507,20 @@ What to verify/wire (B0 corrected scope):
         `quality-gates.sh` in mtds/IS/features/strategy/execution/ml after adding the check + baseline → all must stay
         green. Repo: unified-trading-pm (`scripts/qg/` + base-service.sh) + per-service `quality-gates.sh`. parent_epic:
         mtds_mdps_master.
-  - [ ] [CODE] P1. **A10d — migrate the DeFi `SOURCE_RETURNED_ZERO` callsites** (dex_pools/dex_swaps/lst/lending/perp
-        handlers) to `record_zero_rows` with the `was_instrument_alive` oracle. NOTE: DeFi records at (venue,chain)
-        shard granularity, so the oracle is "was ANY in-universe instrument for this venue/chain alive on this day" —
-        and for DeFi the venue-launch gate (A1/A2, shipped) already covers most of it; A10d closes the residual. Repo:
-        market-tick-data-service. parent_epic: mtds_mdps_master. Repos: unified-api-contracts + **EXACT CALLSITE
-        INVENTORY (slot-2 readiness audit 2026-06-04) — ~26 raw `record_empty(reason=SOURCE_RETURNED_ZERO)` sites still
-        bypassing `record_zero_rows` (lst_rates_handler + solana_defi_handler ALREADY migrated):** dex_swaps_handler:477
-        · dex_pools_handler:517 · position_data_handler:141,196 · liquidations_handler:336 · token_transfers_handler:204
-        · bridge_events_handler:159 · eigenlayer_rewards_handler:190 · gas_fee_handler:276,338,395 ·
+  - [x] ✅ [CODE] P1. **A10d — DONE (slot-2 2026-06-05, mtds@fca15304): 31 callsites migrated across 24 handlers, 1
+        correctly EXEMPT** (`lending_indices_handler:442` keeps `record_empty(reason=_oracle_result.reason …)` — the
+        `expected_coverage()` oracle's typed reason is more honest than the launch-date heuristic). 4 handler-test
+        assertions + 2 recorder-integration tests flipped to `record_zero_rows`; MTDS QG green (sentinel 1b742ed6).
+        Original scoping inventory retained below. **A10d — migrate the DeFi `SOURCE_RETURNED_ZERO` callsites**
+        (dex_pools/dex_swaps/lst/lending/perp handlers) to `record_zero_rows` with the `was_instrument_alive` oracle.
+        NOTE: DeFi records at (venue,chain) shard granularity, so the oracle is "was ANY in-universe instrument for this
+        venue/chain alive on this day" — and for DeFi the venue-launch gate (A1/A2, shipped) already covers most of it;
+        A10d closes the residual. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Repos:
+        unified-api-contracts + **EXACT CALLSITE INVENTORY (slot-2 readiness audit 2026-06-04) — ~26 raw
+        `record_empty(reason=SOURCE_RETURNED_ZERO)` sites still bypassing `record_zero_rows` (lst_rates_handler +
+        solana_defi_handler ALREADY migrated):** dex_swaps_handler:477 · dex_pools_handler:517 ·
+        position_data_handler:141,196 · liquidations_handler:336 · token_transfers_handler:204 ·
+        bridge_events_handler:159 · eigenlayer_rewards_handler:190 · gas_fee_handler:276,338,395 ·
         flash_loan_events_handler:158 · jupiter_quote_handler:339 · raydium_classic_amm_handler:389 ·
         orca_whirlpool_state_handler:359 · protocol_outage_detector_handler:104 · drift_v2_historical_handler:451 ·
         liquidation_events_handler:212 · lending_indices_handler:447,485 · governance_events_handler:141 ·
@@ -696,15 +711,22 @@ What to verify/wire (B0 corrected scope):
         (dex_pools=arbitrage, lst_rates=carry) + guard tests (UAC +4, MTDS +3). Both repos QG-green. **Residual
         (A12a-rollout, P1)**: the same one-line gate at the remaining ~25 DeFi collect handlers (mechanical) — see
         sub-todo. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P1. A12a-rollout — extend `assert_defi_catalog_fresh()` (the A12a gate) to the DeFi collect handlers that
-        **actually depend on the IS catalog**. **SCOPE CORRECTED (slot-2 readiness audit 2026-06-04): the "~25" is
-        really 9 IS-dependent handlers, not 25** — the other ~17 derive their universe from hardcoded/chain-level
-        constants (no IS catalog read), so a stale-catalog gate there would be a FALSE block (defer/exempt them with a
-        one-line note). **WIRE (9, each reads IS `_defi_instruments`/`read_instrument_addresses`):**
-        lending_indices_handler:347 · liquidations_handler:229 · liquidation_events_handler:89 ·
-        flash_loan_events_handler:73 · bridge_events_handler:76 · native_staking_handler:267 · solana_defi_handler:332 ·
-        aggregator_route_handler:397 · token_transfers_handler:127 — at the `process()` chokepoint, mirroring
-        dex_pools_handler.py:435-449
+  - [x] ✅ [CODE] P1. **A12a-rollout — DONE (slot-2 2026-06-05, mtds@fca15304).** Wired `assert_defi_catalog_fresh()`
+        into all 9 IS-catalog-dependent handlers (lending_indices, liquidations, liquidation_events, flash_loan_events,
+        bridge_events, native_staking, solana_defi, aggregator_route, token_transfers) at the `process()` chokepoint
+        mirroring dex_pools (stale catalog → `record_failed` per shard + early return, shard-isolated, no raise) + 9
+        guard tests + an autouse fresh-catalog fixture for existing process-path tests. The ~17 hardcoded-universe
+        handlers are correctly EXEMPT (no IS-catalog read → a stale-catalog gate there is a false block). MTDS QG green.
+        **FOUND (filed A12h below)**: `aggregator_route_handler` has a pre-existing `PipelineMode("BATCH")` bug (not a
+        valid enum value → ValueError at process-time); out of A12a scope, flagged for fix. Original worklist below.
+        A12a-rollout — extend `assert_defi_catalog_fresh()` (the A12a gate) to the DeFi collect handlers that **actually
+        depend on the IS catalog**. **SCOPE CORRECTED (slot-2 readiness audit 2026-06-04): the "~25" is really 9
+        IS-dependent handlers, not 25** — the other ~17 derive their universe from hardcoded/chain-level constants (no
+        IS catalog read), so a stale-catalog gate there would be a FALSE block (defer/exempt them with a one-line note).
+        **WIRE (9, each reads IS `_defi_instruments`/`read_instrument_addresses`):** lending_indices_handler:347 ·
+        liquidations_handler:229 · liquidation_events_handler:89 · flash_loan_events_handler:73 ·
+        bridge_events_handler:76 · native_staking_handler:267 · solana_defi_handler:332 · aggregator_route_handler:397 ·
+        token_transfers_handler:127 — at the `process()` chokepoint, mirroring dex_pools_handler.py:435-449
         (`if not assert_defi_catalog_fresh(...): record_failed per expected (venue,chain) shard; return early`) + a
         per-handler guard test (patch the gate `return_value=False` → asserts record_failed per shard + early return;
         pattern at `tests/unit/test_lst_rates_handler.py`). **EXEMPT (no IS-catalog dependency — hardcoded/chain-level
@@ -712,6 +734,13 @@ What to verify/wire (B0 corrected scope):
         raydium_classic_amm, phoenix_orderbook, vault_share_price, protocol_outage_detector, governance_events,
         governance_proposals, eigenlayer_rewards, drift_v2_historical, staking_yields, perp_funding, position_data,
         evm_defi, jupiter_quote. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+  - [ ] [CODE] P2. **A12h — `aggregator_route_handler` pre-existing `PipelineMode("BATCH")` bug** (found by the A12a
+        sub-agent 2026-06-05): the handler builds `pipeline_mode = PipelineMode("BATCH")`, but `"BATCH"` is not a valid
+        `PipelineMode` enum value → `ValueError` at `process()` time (the handler is effectively broken in production
+        before the new preflight gate even runs). Pre-existing, out of A12a-rollout scope. Fix: use the correct coarse
+        member (the canonical `pipeline_mode` the other DeFi handlers pass, e.g. `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` /
+        the aggregator's actual ingestion mode) + a regression test. Repo: market-tick-data-service. parent_epic:
+        mtds_mdps_master.
   - [x] ✅ [CODE] P1. A12b — **CONFIRMED ALREADY EXISTS, no change needed** (slot-2 deep-read 2026-06-04): the DeFi
         owed-cell backstop is enumerator-driven —
         `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_defi` yields
@@ -1170,8 +1199,10 @@ What to verify/wire (B0 corrected scope):
 - [ ] [DOCS] P1. F2 `codex/02-data/availability-manifest-and-data-status.md` + `data-status-drilldown.md`: document the
       materialised `expected_unattempted` 4-state + the manifest-annotates-once/consumers-read principle + per-chain
       requirement.
-- [ ] [DOCS] P2. F3 `_defi_manifest.py` reason-labeling docstring (~L213-220 "future refinement" TODO) → mark
-      pre-genesis done (A1); note pre-launch (A2).
+- [x] ✅ [DOCS] P2. F3 — DONE (slot-2 2026-06-05, mtds@fca15304): `_defi_manifest.record_empty` docstring rewritten —
+      the old "future refinement: per-handler date-aware classifier" note now points to `record_zero_rows` (the shipped
+      A2b/A10d helper), states the "source succeeded, zero rows" path MUST use `record_zero_rows` (pre-launch demotion),
+      pre-genesis handled upstream by A1, and `record_empty` stays for an already-typed reason in hand.
 - [ ] [DOCS] P2. F4 CLAUDE.md "Manifest + honest absence" note: `expected_unattempted` is materialised at consolidation
       from the oracle; consumers read, never re-derive.
 
