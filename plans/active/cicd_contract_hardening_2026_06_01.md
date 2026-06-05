@@ -1785,10 +1785,21 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 **G. The better way — collapse the point-checks:**
 
-- [ ] [SCRIPT] P2. **Unified flow-health reporter** — one cron computing, per repo,
+- [x] ✅ [SCRIPT] P2. **Unified flow-health reporter** — one cron computing, per repo,
       `{ldr_green, ahead/behind ×3 (main/staging/LDR), oldest stuck-PR age, staging lock-state}` → a single transition
       alert (`🔴 flow-blocked` / `🟢 flow-recovered`) mirroring `ci-status-update`'s anti-spam gate. **SUPERSEDES E +
       F** once built (they fold into it). repo: unified-trading-pm.
+      **DONE 2026-06-05 — PR #145 → main** (`scripts/repo-management/flow_health_reporter.py` +
+      `.github/workflows/flow-health-reporter.yml` + hermetic test). Every-30m cron: pure `compute_flow_health()`
+      reduces per-repo {ci_status, behind ×3, oldest-stuck-PR, staging-lock} → ONE transition alert. Offender triggers
+      are the unambiguous signals only (`ci_status=FAILING` / staging lock >25m / stuck PR >60m / main ≥40 behind
+      staging) so the normal LDR-ahead drift never false-positives; behind ×3 reported as context. Anti-spam via a
+      committed state file (alert+commit only on a 🔴↔🟢 flip). **Built STANDALONE — reads the ci_status surface, never
+      edits `ci-status-update.yml`/`ci-status-reconciler` (zero collision with the concurrent agent's hot files).**
+      `compute_flow_health()` hermetically unit-tested (8 cases); basedpyright + ruff clean; fail-safe (exit 0).
+      **E + F now FOLD INTO this** — their residuals (explicit SIT-pass / main-branch-severity / staging→LDR backmerge /
+      behind-ahead reporter) are either covered by G's single alert or are the remaining standalone-buildable tails
+      noted in the E/F verification block above.
 
 > **E/F/G VERIFICATION + escalate/back-FF model — slot-1 ikenna 2026-06-05** (operator asked to record findings; not
 > built — these land in the live concurrent agent's `ci_status`/reconciler surface; G supersedes E+F so build G, not E/F):
