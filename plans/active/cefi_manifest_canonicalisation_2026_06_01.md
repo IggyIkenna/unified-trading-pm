@@ -122,7 +122,7 @@ operator exemption if a local macOS gate blocks).
 - [x] ✅ [CODE] market-tick-data-service — orphan-sweep/gap-fill **VERIFIED needs no code** (slot-3 2026-06-03): the
       migrator `migrate_cefi_flat_to_v9_canonical.py` already handles `--also-legacy` over all 3 layouts, idempotent
       skip-if-exists = copies ONLY the gap. The explicit orphan-DELETE mode is deliberately NEXT session (irreversible).
-- [ ] grep this plan for remaining open `[ ] [CODE]` todos.
+- [ ] [SCRIPT] P3. grep this plan for remaining open `[ ] [CODE]` todos.
 
 **GATE:** confirm ALL Phase-1 coding shipped + `quality-gates-v2` green on LDR per repo BEFORE Phase 2.
 

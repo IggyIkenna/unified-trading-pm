@@ -8,6 +8,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 created: 2026-06-05
+locked_by: live-defi-rollout
 source:
   - operator session 2026-06-05 (slot tab/ikennaigboaka/1) — planning-VM spin-up + static-IP/topology clarification
 related_plans:
