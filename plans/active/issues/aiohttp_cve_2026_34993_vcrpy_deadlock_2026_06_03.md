@@ -73,8 +73,56 @@ decision + the successor.
    dangling edge was dropped (no current dep needs it). See the ✅ successor todo for the full recipe. Item (1) (aiohttp
    CVE) remains the only open blocker in this doc.
 
+## AUDIT UPDATE 2026-06-05 (harsh [hk]) — a premature fleet-wide bump RE-INTRODUCED the deadlock on all 4 VCR repos
+
+While diagnosing the live CI red-board, I found the documented decision (item 1: "vcrpy repos **stay on 3.13.5** +
+ignore CVE; only non-vcrpy repos run 3.14.0") has been **reversed** — and it is now live-breaking promotions. Audited
+the locked versions on `origin/live-defi-rollout`:
+
+| Repo (vcrpy-using)       | pyproject aiohttp | LOCKED aiohttp | LOCKED vcrpy |
+| ------------------------ | ----------------- | -------------- | ------------ |
+| unified-api-contracts    | `>=3.14.0`        | **3.14.0**     | **8.1.1**    |
+| unified-trading-library  | `<4.0.0,>=3.14.0` | **3.14.0**     | **8.1.1**    |
+| execution-service        | `<4.0.0,>=3.14.0` | **3.14.0**     | **8.1.1**    |
+| market-tick-data-service | `<4.0.0,>=3.14.0` | **3.14.0**     | **8.1.1**    |
+
+All four are now on **aiohttp 3.14.0 + vcrpy 8.1.1** — the **exact deadlock combo** this doc identified (vcrpy 8.1.1
+references `aiohttp.streams.AsyncStreamReaderMixin`, removed in 3.14). The successor's precondition ("once vcrpy >8.1.1
+ships") is **NOT met** — vcrpy is still 8.1.1, no aiohttp-3.14-compatible release exists. So the bump is premature.
+
+**Mechanism**: a fleet-wide CVE-remediation pass landed
+`fix(deps): bump aiohttp>=3.14.0 (CVE-2026-34993 RCE) + uv relock` on 2026-06-05 (UAC@`edf83a5`, UTL@`6731826`,
+execution-service@`520723bb`, MTDS@`0d144e6`). The commit message mentions only the CVE — it did **not** account for the
+vcrpy deadlock recorded here, so this reads as an inadvertent collision with the locked decision, not a deliberate
+successor completion.
+
+**Verified breakage** (not theoretical):
+
+- UAC LDR→staging promote PR `quality-gates-v2` run **27009399635** FAILS with ~15
+  `AttributeError: module 'aiohttp.streams' has no attribute 'AsyncStreamReaderMixin'` across `tests/vcr/test_*` (the
+  doc's predicted 64-test break, partially surfaced before pytest cut output).
+- UTL / execution-service / MTDS carry the identical broken lock → same VCR break (UTL `ci_status=FAILING` on
+  `origin/main`; the other two carry the broken combo and will break on any VCR-test re-run).
+
+**Side observation (NOT a separate filing — flagging for awareness):** UAC's authoritative `ci_status` on `origin/main`
+reads `STAGING_GREEN` despite this live LDR VCR break (its last _merged_ staging state is green; the failing content
+sits on the un-merged promote PR). deployment-service / UTL / strategy-service all correctly show `FAILING`. Whether a
+wedged LDR→staging promotion _should_ surface in `ci_status` (vs being owned solely by the `ci_failure_watcher` stuck-PR
+poller) is an open alerting-design question — noted here, not yet root-caused, deliberately not filed as a standalone
+issue.
+
+**Recommended action (escalate to Ikenna — cross-repo, contradicts a locked decision):** the only viable unblock today
+is to **honour the original decision** — revert the 4 VCR repos to `aiohttp` 3.13.5 + restore the
+`--ignore-vuln CVE-2026-34993` (already in the QG bases), since no compatible vcrpy exists to complete the successor the
+other way. Re-confirm whether vcrpy has shipped an aiohttp-3.14 release before choosing revert-vs-forward.
+
 ## Successor (close this issue when done)
 
+- [ ] [DEPS] P1. **Resolve the 2026-06-05 premature bump — revert the 4 VCR repos (UAC / UTL / execution-service / MTDS)
+      to `aiohttp` 3.13.5 + restore the `--ignore-vuln CVE-2026-34993` ignore**, OR (only if a vcrpy >8.1.1 with
+      aiohttp-3.14 support now exists) bump vcrpy in lockstep. Repos as listed. Verifier: all `tests/vcr/*` green +
+      pip-audit honours the documented ignore. Owner: cicd/dep-security epic. Cold-start: read the AUDIT UPDATE above.
+      (Raised from the P2 below to P1 — it is now actively jamming the LDR→staging promotion on every VCR repo.)
 - [ ] [DEPS] P2. **Remove the `CVE-2026-34993` ignore + bump `aiohttp>=3.14` fleet-wide** once **vcrpy** ships an
       aiohttp-3.14-compatible release (track vcrpy >8.1.1) OR an aiohttp 3.13.x backport of the CookieJar fix lands.
       Repos: ALL (edit `base-service.sh` + `base-library.sh` to drop the ignore, then
