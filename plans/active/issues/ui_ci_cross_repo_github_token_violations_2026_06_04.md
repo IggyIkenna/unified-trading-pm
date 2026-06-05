@@ -49,9 +49,29 @@ Regenerated **CI-faithfully** and committed (8907+/2116-):
 - **Playwright gate satisfied**: `npx playwright test --project=chromium tests/smoke/` → **1 passed (43.1s)**.
   regression: `tests/smoke/data-status-pending-backfill.smoke.spec.ts` + the registry-drift CI job itself.
 
-**Final confirmation pending = the GHA run**: this is the one thing that can only be proven in CI. Generated
-CI-faithfully, so the registry-drift job should now go green on the next UI PR; if any residual diff appears it'll be a
-minor env nuance to iterate on the GHA run. Issue is otherwise fully resolved — archive once the GHA run is green.
+## GHA run DONE (verification PR #23, closed; run `actions/runs/26994730312`, 2026-06-05)
+
+Opened a `live-defi-rollout → main` verification PR (no auto-merge) to actually run CI (the `registry-drift` job only
+triggers on push/PR to `main`; there is no `develop`). Result:
+
+- **My work verified GREEN**: lint ✓, type check ✓, `tests/unit/lib/reference-data.test.ts` (37) ✓,
+  `widget-registry-scope.test.ts` (9) ✓ — the registry refresh + all ci.yml fixes are clean. **270/272 test files
+  passed.**
+- **`registry-drift` itself was SKIPPED** — it's `needs: test`, and `test` failed on **2 pre-existing, unrelated**
+  files: `__tests__/scripts/block-list-parity.test.ts` (reads `codex/block-list.md`, which isn't in the UI CI checkout)
+  and `tests/unit/lib/briefings/validate-script.test.ts`. Neither touches the registry.
+
+## NEW BLOCKER (the real remaining work) — the `test` gate fails on 2 pre-existing UI tests
+
+Because `registry-drift` (and **every** UI→main merge) is gated behind `needs: test`, those 2 failures block the
+registry-drift confirmation AND all UI promotion to `main`. Both are env/CI-shape issues, not the registry:
+
+- `block-list-parity.test.ts` expects `codex/block-list.md` present — but the UI CI never checks out PM/codex (the test
+  needs a PM checkout, or should skip when codex is absent).
+- `briefings/validate-script.test.ts` — `validate-briefings-yaml.ts` exits non-zero against the current store.
+
+Owner: a UI slot — fix/repair those 2 tests (or decouple `registry-drift` from `needs: test`). Once `test` is green,
+`registry-drift` runs and (per the CI-faithful regen above) should pass.
 
 Pre-existing + unrelated (still open, not fixed here): `codecov/codecov-action@v3` at ci.yml:40 is flagged by actionlint
 as too old — bump to a current major.
