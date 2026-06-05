@@ -40,7 +40,7 @@ import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import cast
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from pin_branch_protection_rulesets import ORG, REPOS
@@ -49,25 +49,11 @@ _LDR_RED_STATUS = "FAILING"
 _STUCK_PR_STATES = {"CONFLICTING", "DIRTY", "BLOCKED"}
 _PROMOTION_HEADS = {"live-defi-rollout", "staging"}
 
-
-class RepoState(TypedDict):
-    repo: str
-    ci_status: str
-    main_behind_staging: int
-    staging_behind_ldr: int
-    main_behind_ldr: int
-    oldest_stuck_min: int
-    staging_locked_min: int
-
-
-class Offender(TypedDict):
-    repo: str
-    reasons: list[str]
-
-
-class Verdict(TypedDict):
-    blocked: bool
-    offenders: list[Offender]
+# Shapes are plain dict[str, object] (NOT TypedDict/BaseModel/dataclass — the codex
+# schema-provenance gate bans local data contracts in script source; domain contracts live
+# in UAC/UIC). The _as_* helpers narrow reads to concrete types so strict basedpyright stays
+# clean. Per-repo state keys: repo, ci_status, main_behind_staging, staging_behind_ldr,
+# main_behind_ldr, oldest_stuck_min, staging_locked_min. Verdict: {blocked, offenders:[{repo,reasons}]}.
 
 
 # ── narrowing helpers (strict-basedpyright clean; mirrors check_workspace_code_workspace_drift) ──
@@ -93,10 +79,10 @@ def _as_str(value: object, default: str = "") -> str:
 
 
 def compute_flow_health(
-    repo_states: list[RepoState], *, stuck_min: int, lock_stale_min: int, promote_stuck_behind: int
-) -> Verdict:
+    repo_states: list[dict[str, object]], *, stuck_min: int, lock_stale_min: int, promote_stuck_behind: int
+) -> dict[str, object]:
     """Reduce per-repo gathered state to a fleet verdict + offender list. Pure."""
-    offenders: list[Offender] = []
+    offenders: list[dict[str, object]] = []
     for s in repo_states:
         reasons: list[str] = []
         if s.get("ci_status") == _LDR_RED_STATUS:
@@ -115,15 +101,18 @@ def compute_flow_health(
     return {"blocked": bool(offenders), "offenders": offenders}
 
 
-def render_message(verdict: Verdict, prev_blocked: bool) -> str:
+def render_message(verdict: dict[str, object], prev_blocked: bool) -> str:
     """Slack mrkdwn for a flow-health TRANSITION (recovered vs blocked)."""
-    if not verdict["blocked"]:
+    offenders = _as_list(verdict.get("offenders"))
+    if not verdict.get("blocked"):
         return (
             ":large_green_circle: *flow-recovered* — all repos clear (ci_status green, no stuck PRs, staging unlocked)."
         )
-    lines = [f":red_circle: *flow-blocked* — {len(verdict['offenders'])} repo(s) wedging the promotion flow:"]
-    for o in verdict["offenders"]:
-        lines.append(f"  • `{o['repo']}` — {', '.join(o['reasons'])}")
+    lines = [f":red_circle: *flow-blocked* — {len(offenders)} repo(s) wedging the promotion flow:"]
+    for o_obj in offenders:
+        o = _as_dict(o_obj)
+        reasons = [_as_str(r) for r in _as_list(o.get("reasons"))]
+        lines.append(f"  • `{_as_str(o.get('repo'))}` — {', '.join(reasons)}")
     if not prev_blocked:
         lines.append(
             "_(first transition into blocked — fix on live-defi-rollout; escalate agent handles conflicts + RED)_"
@@ -198,10 +187,10 @@ def _staging_locked_min(staging: dict[str, object], now: _dt.datetime) -> int:
     return int((now - t).total_seconds() / 60.0)
 
 
-def gather_repo_states(manifest: dict[str, object], repos: list[str], now: _dt.datetime) -> list[RepoState]:
+def gather_repo_states(manifest: dict[str, object], repos: list[str], now: _dt.datetime) -> list[dict[str, object]]:
     repositories = _as_dict(manifest.get("repositories"))
     locked_min = _staging_locked_min(_as_dict(manifest.get("staging_status")), now)
-    states: list[RepoState] = []
+    states: list[dict[str, object]] = []
     for repo in repos:
         meta = _as_dict(repositories.get(repo))
         states.append(
@@ -278,16 +267,17 @@ def main() -> int:
         except (OSError, json.JSONDecodeError):
             prev_blocked = False
 
-    transition = verdict["blocked"] != prev_blocked
+    blocked = bool(verdict.get("blocked"))
+    transition = blocked != prev_blocked
     message = render_message(verdict, prev_blocked)
     print(message)
-    _write_output(verdict["blocked"], transition, message)
+    _write_output(blocked, transition, message)
 
     # Persist new verdict ONLY on transition (low-churn; the workflow commits it [skip ci]).
     if transition:
         payload: dict[str, object] = {
-            "blocked": verdict["blocked"],
-            "offenders": verdict["offenders"],
+            "blocked": blocked,
+            "offenders": _as_list(verdict.get("offenders")),
             "ts": now.isoformat(),
         }
         _ = state_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
