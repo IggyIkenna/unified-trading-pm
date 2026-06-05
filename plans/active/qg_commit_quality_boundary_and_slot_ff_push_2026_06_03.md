@@ -468,18 +468,40 @@ design).
       against. **Operator/orchestrator fix** (admin): reconcile staging's required-status-check contexts to the
       CodeBuild gate (or restore the v2 GHA trigger on LDR→staging PRs) for strategy-service; likely fleet-wide for
       repos migrated to CodeBuild. Force-merge / protection edits are human/admin — NOT done autonomously.
-- [x] ✅ [QG] P1. **deployment-api #17 — UNBLOCKED + `-prd` test fix SHIPPED (2026-06-05, slot-7).** Both deps now
-      MERGED to staging (`deployment-service` #21 @12:40Z + `strategy-service` #67), so both read **STAGING_GREEN** on
-      the canonical `origin/main` manifest → dep-tier gate satisfied. Re-derived the brittle `-prd`-hardcoded test in
-      `tests/unit/test_shard_detail_service.py::test_prediction_reads_mtds_bucket_not_instruments_store`: now asserts
-      the env-invariant prefix `market-data-tick-pred-` (was `market-data-tick-pred-prd`, which failed in CI where
-      env=test → bucket `market-data-tick-pred-test-…`). QG-green; quickmerge dep-tier gate **PASSED** ("All deps at
-      STAGING_GREEN or above"); shipped `deployment-api@2217f14` → LDR via tab-mirror; promotion PR #20 opened (v2
-      validating the fix on the env=test runner). **NO `--skip-dep-tier-gate` used** — the gate initially mis-blocked
-      because the local PM manifest was 53 commits stale (LDR copy lagged the main→LDR ci_status back-merge:
-      LDR=FEATURE_GREEN vs main=STAGING_GREEN); corrected to the verified `origin/main` truth (the proper sequence: deps
-      genuinely on staging), not bypassed. Pre-flight false-block (deployment-service untracked QG-sentinel caches) →
-      root-caused to a `.gitignore` gap, fixed separately.
+- [ ] [QG] P1. **deployment-api #17 — `-prd` test fix SHIPPED ✅ but promotion now BLOCKED by a SECOND (pre-existing,
+      unmasked) codex blocker (2026-06-05, slot-7).** **(a) `-prd` sub-fix DONE + CI-validated:** both deps now MERGED
+      to staging (`deployment-service` #21 @12:40Z + `strategy-service` #67) → both STAGING_GREEN on canonical
+      `origin/main` manifest → dep-tier gate satisfied (NO `--skip-dep-tier-gate`; gate initially mis-blocked on a
+      53-commit-stale LDR manifest — LDR lagged the main→LDR ci_status back-merge, LDR=FEATURE_GREEN vs
+      main=STAGING_GREEN — corrected to the verified `origin/main` truth, the proper sequence). Re-derived the brittle
+      test in `tests/unit/test_shard_detail_service.py::test_prediction_reads_mtds_bucket_not_instruments_store` →
+      asserts the env-invariant `market-data-tick-pred-` prefix (was `-pred-prd`, failing in CI env=test). Shipped
+      `deployment-api@2217f14` → LDR; promotion PRs #20 (tab/7→staging, quickmerge) + #17 (LDR→staging). The `-prd` test
+      now PASSES in CI. **(b) NEW BLOCKER — v2 STILL RED on codex compliance (24 violations > ratchet 23):** the `-prd`
+      pytest failure had been MASKING this (codex runs after tests). deployment-api has **9 pre-existing deep UAC
+      `from unified_api_contracts.registry.<module> import …` imports** (violate the top-level/one-level-facade UAC
+      rule); the Linux-CI gate flags them, **but macOS local QG false-negatives** (the check's `grep -vP` PCRE filter
+      silently no-ops on BSD grep → local reported "No deep imports" / 23). Fix is **partly cross-repo** — facade map:
+      convertible to `from unified_api_contracts.registry import …` deployment-api-only = `data_status_axis_matrix`
+      (SHARD_AXIS_MATRIX/get_shard_axes/get_breakdown_axes/get_primary_axis/BREAKDOWN_AXES/DISPLAY_AXES/PRIMARY_AXIS),
+      `tardis_free_coverage` (TARDIS_FREE_ROLLING_WINDOW_DAYS), `market_data_categories`
+      (TRADFI_TICK_DATA_WINDOWS/is_in_tradfi_tick_window); **NOT facade-exported (need a UAC `registry/__init__.py`
+      re-export decision)** = `chain_env` (get_chain_genesis_date/get_protocol_launch_date), `withdrawal_approval_rules`
+      (get_approver_pool/get_required_approvers), `defi_venues` (ALL_DEFI_VENUES/LEGACY_DEFI_VENUE_ALIASES). Check fails
+      on ANY remaining deep import (all-or-nothing). Tracked as its own finding below.
+- [ ] [QG] P1. **FINDING (2026-06-05, slot-7): deployment-api 9 deep UAC `registry.<module>` imports block #17/#20 v2
+      (codex 24 > ratchet 23).** Surfaced after the `-prd` test fix above unmasked the codex step. Sites:
+      `services/data_status_service.py` (registry.data_status_axis_matrix, registry.chain_env, registry.defi_venues),
+      `services/data_status_hierarchical.py` (registry.data_status_axis_matrix), `routes/config.py`
+      (registry.data_status_axis_matrix), `utils/path_combinatorics.py` (registry.market_data_categories ×2),
+      `routes/client_treasury.py` (registry.withdrawal_approval_rules), `routes/data_status_tardis_windows.py`
+      (registry.tardis_free_coverage). **Decision needed (operator/UAC owner):** for the 3 non-facade modules
+      (chain_env/withdrawal_approval_rules/defi_venues) — re-export their symbols in `unified-api-contracts`
+      `registry/__init__.py` (cross-repo, preferred per the UAC top-level rule) vs `# noqa` with a one-line internal-API
+      reason. The 6 facade-exported sites convert to `from unified_api_contracts.registry import …` in deployment-api
+      alone. **macOS-vs-Linux gate delta**: the deep-import check (`base-service.sh` ~L803-808) uses `grep -vP` → BSD
+      grep lacks `-P` → silently no-ops → macOS local QG cannot catch this class (validate via `rg`/`ggrep`/Linux CI,
+      not the macOS gate). Repos: deployment-api (+ unified-api-contracts if facade route chosen).
 
 ### DIRTY conflicts (5 PRs) — step 3
 
