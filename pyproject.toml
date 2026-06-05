@@ -149,6 +149,7 @@ ignore = [
     "scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py",
     "scripts/quality_gates/check_removed_symbols.py",
     "scripts/quality_gates/check_uac_hard_required_fields.py",
+    "scripts/quality_gates/check_unrouted_source_returned_zero.py",
     "scripts/quality_gates/qg_audit.py",
     "scripts/sports/migrate_player_mappings_to_canonical.py",
     "scripts/sports/migrate_sports_gcs_to_hive.py",

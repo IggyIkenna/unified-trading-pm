@@ -923,7 +923,11 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     # CVE-2026-47265: aiohttp <=3.13.5 — cookies set via the `cookies=` param are re-sent after a cross-origin
     #   redirect. fix_versions=[3.14.0] (same vcrpy block as CVE-2026-34993). aiohttp 3.13.5 keeps accumulating
     #   cookie CVEs fixed only in 3.14.0; this ignore set grows until the vcrpy-unblock lets the fleet reach 3.14.0.
-    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265"
+    # PYSEC-2026-196: pip 26.1.1 — console_scripts/gui_scripts treated as paths without sanitizing the resolved
+    #   absolute path. The fleet stays on the vulnerable pip line because the next pip release is incompatible with
+    #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
+    #   packages at runtime. SUCCESSOR (remove this ignore): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
+    _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln PYSEC-2026-196"
     # run_timeout 180: OSV API can stall indefinitely in Cloud Build (no connection-level timeout
     # in pip-audit itself). Exit 124 = timeout → warn-only; image still passes (advisory gate).
     _pa_rc=0
@@ -2413,6 +2417,47 @@ if [ -n "${SOURCE_DIR:-}" ] && [ -d "$SOURCE_DIR" ]; then
     fi
 else
     log_success "STEP 5.85: no-inline-pipeline-mode-string-literal — skipped (SOURCE_DIR not set)"
+fi
+
+# ── STEP 5.86: fleet-wide SOURCE_RETURNED_ZERO routing ratchet (A10c-fleet) ────
+#
+# Generalises the DeFi-MTDS-only A10c check (scripts/qg/no_unrouted_source_returned_zero.sh,
+# zero-tolerance, DeFi handlers only) to EVERY service / asset_group: a "source succeeded,
+# zero rows" shard MUST route through the generic UTL ManifestWriter.record_zero_rows(...)
+# (plan §A10b) — which sends a genuinely-empty shard to empty_confirmed but a shard the per-AG
+# expected-universe oracle (UAC was_instrument_alive / a sports fixture lookup) says SHOULD have
+# had data to attempted_failed — instead of a raw record_empty(reason=SOURCE_RETURNED_ZERO) that
+# masks the fetch failure as honest absence.
+#
+# Baselined GRIND-DOWN ratchet (model: STEP 5.70 + check_adapter_contract_regression.py): every
+# pre-migration unrouted callsite is in unrouted_source_returned_zero_baseline.yaml → it WARNs
+# (exit-clean) until its AG-slot migrates it; a NEW unrouted callsite (or a non-baselined file
+# with one) FAILS. As each AG migrates, re-run with --regenerate-baseline to LOCK the lower count.
+# A genuinely-typed-reason callsite where record_zero_rows does not apply (service-output /
+# computed output / pipeline-mode-not-applicable) gets an inline '# QG-allow: <reason>' marker.
+#
+# SSOT: defi_manifest_canonicalisation_2026_06_01.md §A10c-fleet
+#       (+ each AG's *_manifest_canonicalisation_2026_06_01.md migration todo).
+_SRZ_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_unrouted_source_returned_zero.py"
+if [ -f "$_SRZ_CHECKER" ]; then
+    # Slot-worktree-aware: scope=this repo's dir; workspace-root=REPO_ROOT (== workspace root per
+    # qg-common.sh). Same shape as STEP 5.70.
+    _SRZ_REPO=$(basename "$PROJECT_ROOT")
+    if $PYTHON_CMD "$_SRZ_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_SRZ_REPO" >/tmp/unrouted_srz_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/unrouted_srz_qg.log 2>/dev/null; then
+            log_warn "STEP 5.86: $(grep -c '^\[WARN\]' /tmp/unrouted_srz_qg.log) baselined unrouted SOURCE_RETURNED_ZERO callsite(s) pending A10c-fleet migration; 0 new"
+        else
+            log_success "STEP 5.86: every zero-rows shard routes through record_zero_rows (or carries # QG-allow:)"
+        fi
+    else
+        log_fail "STEP 5.86: NEW unrouted record_empty(SOURCE_RETURNED_ZERO) callsite — route via ManifestWriter.record_zero_rows(was_expected=<oracle>, ...) or add inline '# QG-allow: <reason>' (A10c-fleet):"
+        cat /tmp/unrouted_srz_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_unrouted_source_returned_zero.py --workspace-root $REPO_ROOT --scope $_SRZ_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.86: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
 
 # ── STEP 5.89: record_empty/record_expected_empty reason closed-set ───────────
