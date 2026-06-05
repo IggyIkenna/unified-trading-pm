@@ -748,13 +748,18 @@ What to verify/wire (B0 corrected scope):
         raydium_classic_amm, phoenix_orderbook, vault_share_price, protocol_outage_detector, governance_events,
         governance_proposals, eigenlayer_rewards, drift_v2_historical, staking_yields, perp_funding, position_data,
         evm_defi, jupiter_quote. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-  - [ ] [CODE] P2. **A12h — `aggregator_route_handler` pre-existing `PipelineMode("BATCH")` bug** (found by the A12a
-        sub-agent 2026-06-05): the handler builds `pipeline_mode = PipelineMode("BATCH")`, but `"BATCH"` is not a valid
-        `PipelineMode` enum value → `ValueError` at `process()` time (the handler is effectively broken in production
-        before the new preflight gate even runs). Pre-existing, out of A12a-rollout scope. Fix: use the correct coarse
-        member (the canonical `pipeline_mode` the other DeFi handlers pass, e.g. `PipelineMode.BATCH_ONCHAIN_SUBGRAPH` /
-        the aggregator's actual ingestion mode) + a regression test. Repo: market-tick-data-service. parent_epic:
-        mtds_mdps_master.
+  - [x] ✅ [CODE] P2. **A12h — `aggregator_route_handler` pre-existing `PipelineMode("BATCH")` bug** (found by the A12a
+        sub-agent 2026-06-05): the handler built `pipeline_mode = PipelineMode("BATCH")`, but `"BATCH"` is not a valid
+        `PipelineMode` enum value → `ValueError` at `process()` time (line ~411 runs before the preflight gate, so the
+        handler was effectively broken in production). **FIXED — market-tick-data-service@7c577483**: replaced with
+        `PipelineMode.BATCH_ONCHAIN_RPC` — aggregator quotes (Jupiter/1inch/0x/ParaSwap) are synchronous REST
+        request/response, the same RPC-style ingestion shape as `dex_pools`/`gas_fees`/`position_data` (all
+        `BATCH_ONCHAIN_RPC`); no aggregator-specific enum exists and the value is single-valued across both the Solana
+        (Jupiter) and EVM venues. Regression test `tests/unit/test_aggregator_route_handler_a12h_pipeline_mode.py` (2
+        tests) drives `process()` to the collect path with the REAL (unpatched) `PipelineMode` enum so a regression to
+        an invalid literal re-surfaces as a `ValueError`, and asserts the forwarded
+        `pipeline_mode is PipelineMode.BATCH_ONCHAIN_RPC`. QG green (`--no-fix`, `IGNORE_TIMEOUT=true` for the `<300s`
+        meta-only trip; sentinel == HEAD). Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
   - [x] ✅ [CODE] P1. A12b — **CONFIRMED ALREADY EXISTS, no change needed** (slot-2 deep-read 2026-06-04): the DeFi
         owed-cell backstop is enumerator-driven —
         `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_defi` yields
