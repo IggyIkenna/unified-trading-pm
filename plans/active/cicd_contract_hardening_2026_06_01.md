@@ -1686,12 +1686,12 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 > § G9 (cross-linked).
 
 - [x] ✅ [SCRIPT] P1. **Retire the in-GHA Claude-API path in `conflict-resolution-agent.yml`** — drop
-      `ANTHROPIC_API_KEY_CICD` + the `npm i @anthropic-ai/claude-code` run. repo: unified-trading-pm.
-      **DONE 2026-06-03 — `unified-trading-pm@e39130524`** ("cut conflict-resolution-agent over to the Max-plan worker").
-      The in-GHA Anthropic-API path (`ANTHROPIC_API_KEY_CICD` + claude-code CLI + the health-precheck/error-classify
-      steps) is REMOVED; the single `escalate` job now dispatches `repository_dispatch event_type=escalate-to-orchestrator`
-      with `client_payload[wall_type]=merge_conflict` → fires `escalate-to-orchestrator.yml` (B2) → `POST /api/escalate`
-      → Max-plan setup-token worker resolves on `live-defi-rollout`. (Verified on main; flipped on verification.)
+      `ANTHROPIC_API_KEY_CICD` + the `npm i @anthropic-ai/claude-code` run. repo: unified-trading-pm. **DONE 2026-06-03
+      — `unified-trading-pm@e39130524`** ("cut conflict-resolution-agent over to the Max-plan worker"). The in-GHA
+      Anthropic-API path (`ANTHROPIC_API_KEY_CICD` + claude-code CLI + the health-precheck/error-classify steps) is
+      REMOVED; the single `escalate` job now dispatches `repository_dispatch event_type=escalate-to-orchestrator` with
+      `client_payload[wall_type]=merge_conflict` → fires `escalate-to-orchestrator.yml` (B2) → `POST /api/escalate` →
+      Max-plan setup-token worker resolves on `live-defi-rollout`. (Verified on main; flipped on verification.)
 - [x] ✅ [SCRIPT] P1. **Build `escalate-to-orchestrator.yml`** — the missing PM→orchestrator GHA dispatch (POST conflict
       context to the orchestrator spawn API). **MERGES the open "escalate-overstated" P2 item above** (`escalation.py` +
       `escalate.md` exist on LDR; only the GHA trigger is absent). repos: unified-trading-pm + agent-orchestrator.
@@ -1705,12 +1705,12 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       the **`ORCHESTRATOR_INTERNAL_SECRET`** GitHub secret in unified-trading-pm (+ optional `ORCHESTRATOR_URL` var;
       default `https://agent-orchestrator.odum-research.com`).
 - [x] ✅ [SCRIPT] P1. **Allow auto-merge for orchestrator-resolved PRs** — remove the "will NOT auto-merge" guard; the
-      REQUIRED `quality-gates-v2` check (not a toggle) remains the gate. repo: unified-trading-pm.
-      **DONE 2026-06-03 — `unified-trading-pm@e39130524`** (same cutover). The old in-GHA resolver created a resolution
-      PR carrying a "will NOT auto-merge" guard; that whole path is gone. The orchestrator worker now resolves directly
-      on `live-defi-rollout` and lets `quality-gates-v2` re-gate the resulting promotion PR (the REQUIRED check is the
-      gate — no manual toggle). The worker never force-pushes / never self-merges. Also resolved the ops dependency
-      flagged under B2: **`ORCHESTRATOR_INTERNAL_SECRET`** is set in PM Actions (escalate verified green 2026-06-03).
+      REQUIRED `quality-gates-v2` check (not a toggle) remains the gate. repo: unified-trading-pm. **DONE 2026-06-03 —
+      `unified-trading-pm@e39130524`** (same cutover). The old in-GHA resolver created a resolution PR carrying a "will
+      NOT auto-merge" guard; that whole path is gone. The orchestrator worker now resolves directly on
+      `live-defi-rollout` and lets `quality-gates-v2` re-gate the resulting promotion PR (the REQUIRED check is the gate
+      — no manual toggle). The worker never force-pushes / never self-merges. Also resolved the ops dependency flagged
+      under B2: **`ORCHESTRATOR_INTERNAL_SECRET`** is set in PM Actions (escalate verified green 2026-06-03).
 
 **C. Close the auto-remediation loop:**
 
@@ -1746,26 +1746,26 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 
 - [x] ✅ [AGENT] P0. **Tier A — LDR-CI-red monitoring** — the model's FIRST signal (LDR has no remote CI today → red
       hides until a main PR). **This consolidates the open Tier A todo above** (`audit i5`). repo: unified-trading-pm +
-      per-repo signal.
-      **SATISFIED BY EXISTING MACHINERY — verified 2026-06-05 (slot-1 ikenna); FEATURE_GREEN was the key (operator
-      hint).** The premise "LDR has no remote CI" is only true for *direct LDR pushes*; LDR **content** IS v2-gated
-      frequently via the **Tier-C `LDR→staging` auto-drain PRs** (head=`live-defi-rollout`; several v2 runs/day —
-      verified live on alerting-service + mtds). End-to-end chain confirmed:
-      (1) v2 on a drain PR computes `STATUS` (`FAILING` | `FEATURE_GREEN`) — `python-quality-gates-v2.yml` `TRIGGER_BRANCH
-      != main/staging → FEATURE_GREEN`, job-fail → `FAILING` — and `repository_dispatch`es it to `ci-status-update`.
-      (2) **Proactive alert (was "gap #1") EXISTS**: `ci-status-update.yml` `notify_worthy = (status=="FAILING") or
-      (prev=="FAILING" and recovered)` → `build-message` → Slack `#ci-failures`, transition-gated (no steady-state spam).
-      (3) **LDR signal (was "gap #2") EXISTS**: `ci-status-reconciler.yml` runs **every 10 min**, fetches
-      `latest_v2(repo, live-defi-rollout)` (`ldr_concl`) + `compare staging...live-defi-rollout`, and reconciles
-      ci_status drift (`ci_status_reconciler.py` `expected_from_v2(... ldr_concl → FEATURE_GREEN)`); the concurrent agent
-      also added `blocked_failing_prs_to_escalate` (v2-RED PRs → orchestrator). Detection latency = ~10 min (reconciler)
-      to a few hours (next drain) = **D's stated "hours not weeks" goal, MET**. A bespoke per-repo gate-runner + a new
-      FAILING alert would be **redundant** — NOT built.
-      **Residual (optional, beyond D's goal — captured, not built):** the LDR signal is drain/reconcile-triggered, not
-      direct-LDR-push-triggered, so a break pushed straight to LDR right after a green drain is caught at next
-      drain/reconcile (minutes-to-hours), not instantly. A push-time LDR v2 trigger (or an `ldr_concl`-staleness
-      watchdog for repos LDR-ahead-of-staging with no recent v2) would tighten it — file as a separate NICE-TO-HAVE if
-      desired; it lives in the concurrent agent's `ci_status`/reconciler substrate, so route it there.
+      per-repo signal. **SATISFIED BY EXISTING MACHINERY — verified 2026-06-05 (slot-1 ikenna); FEATURE_GREEN was the
+      key (operator hint).** The premise "LDR has no remote CI" is only true for _direct LDR pushes_; LDR **content** IS
+      v2-gated frequently via the **Tier-C `LDR→staging` auto-drain PRs** (head=`live-defi-rollout`; several v2 runs/day
+      — verified live on alerting-service + mtds). End-to-end chain confirmed: (1) v2 on a drain PR computes `STATUS`
+      (`FAILING` | `FEATURE_GREEN`) — `python-quality-gates-v2.yml`
+      `TRIGGER_BRANCH     != main/staging → FEATURE_GREEN`, job-fail → `FAILING` — and `repository_dispatch`es it to
+      `ci-status-update`. (2) **Proactive alert (was "gap #1") EXISTS**: `ci-status-update.yml`
+      `notify_worthy = (status=="FAILING") or     (prev=="FAILING" and recovered)` → `build-message` → Slack
+      `#ci-failures`, transition-gated (no steady-state spam). (3) **LDR signal (was "gap #2") EXISTS**:
+      `ci-status-reconciler.yml` runs **every 10 min**, fetches `latest_v2(repo, live-defi-rollout)` (`ldr_concl`) +
+      `compare staging...live-defi-rollout`, and reconciles ci_status drift (`ci_status_reconciler.py`
+      `expected_from_v2(... ldr_concl → FEATURE_GREEN)`); the concurrent agent also added
+      `blocked_failing_prs_to_escalate` (v2-RED PRs → orchestrator). Detection latency = ~10 min (reconciler) to a few
+      hours (next drain) = **D's stated "hours not weeks" goal, MET**. A bespoke per-repo gate-runner + a new FAILING
+      alert would be **redundant** — NOT built. **Residual (optional, beyond D's goal — captured, not built):** the LDR
+      signal is drain/reconcile-triggered, not direct-LDR-push-triggered, so a break pushed straight to LDR right after
+      a green drain is caught at next drain/reconcile (minutes-to-hours), not instantly. A push-time LDR v2 trigger (or
+      an `ldr_concl`-staleness watchdog for repos LDR-ahead-of-staging with no recent v2) would tighten it — file as a
+      separate NICE-TO-HAVE if desired; it lives in the concurrent agent's `ci_status`/reconciler substrate, so route it
+      there.
 
 **E. Alert-coverage gaps:**
 
@@ -1836,6 +1836,27 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       (ci_status is a durable cross-workflow state read by sit-gate/ci-status workflows; a gitignored sidecar is never
       committed → workflows can't read it). So this todo is largely a no-op pending the operator's structural call on
       ci_status; the dirty-pull churn it targeted is resolved by the gitignore rollout above.
+
+**I. PM plan-health HARD GATE on the LDR→main PR — PM's staging-less "pseudo-staging" (operator 2026-06-05):**
+
+> PM is staging-less (LDR→main direct), so the PM→main PR is the only gate point. Plan-hygiene is a sweep on plans we
+> pull from LDR anyway → block dirty plans AT the main PR, fix them, and the fix FF's main→LDR so everyone pulls
+> pristine plans. Operator chose a HARD gate ("no point not blocking — we FF it back to LDR right after it's fixed").
+
+- [x] ✅ [SCRIPT] P1. **`plan-health-agent.yml`: HARD GATE on `pull_request:[main]`** — new `plan-health-gate` job runs
+      `run_hygiene_sweep.sh --ci` (deterministic, $0/no-LLM, exits 1 on any HARD failure → fails the PM→main PR check).
+      Daily report job + Slack notify scoped to non-PR events. **NOT YET a required check** (see next). repo:
+      unified-trading-pm.
+- [ ] [SCRIPT] P0. **Fix the 3 current PM hard-hygiene failures so the gate can go REQUIRED without deadlock.** Sweep
+      `--ci` today fails on: Todo-regression-vs-origin, Frontmatter-validity, Todo-format. `fix_frontmatter.py`
+      auto-fixes the frontmatter one; the other two need investigation. Until the sweep is green, a required check would
+      block EVERY PM→main PR. repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **Make `plan-health-gate` a REQUIRED status check on PM `main`** (gh ruleset) — ONLY after the sweep
+      is green. This is the switch that turns the `exit 1` into a true merge block. repo: unified-trading-pm.
+- [ ] [AGENT] P2. **Phase 2 — auto-fix + Haiku-via-planning-VM-slot:** (a) before the sweep, run `fix_frontmatter.py` (+
+      other fixable hygiene) and commit to the PR head so fixable findings auto-resolve at the gate; (b) move the Haiku
+      contradiction/doc-drift detection OFF the API onto a **planning-VM orchestrator slot** (Max-plan account, $0 API —
+      the B-block pattern) feeding this same gate. Cross-link: `agent_orchestrator_e2e_..._2026_06_02.md` §G9.
 
 - branch protection for the original 5 repos → `workspace_repo_branch_protection_gaps_2026_05_29.md` (DONE).
 - [x] ✅ [SCRIPT] P2. **Reconcile/verify — DONE 2026-06-01.** Confirmed all 4 named repos LACK the

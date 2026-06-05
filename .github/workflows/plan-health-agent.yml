@@ -1,7 +1,13 @@
 name: Plan Health Agent
 
-# Daily plan-health audit of unified-trading-pm active plans. REPORT-ONLY — never
-# mutates plans.
+# Two modes:
+#   1. DAILY/dispatch (job `plan-health`): full report — deterministic digest + Haiku
+#      contradiction/doc-drift detection. REPORT-ONLY, never mutates plans.
+#   2. PR→main HARD GATE (job `plan-health-gate`): PM is staging-less (LDR→main direct),
+#      so this deterministic plan-hygiene sweep is PM's fast "pseudo-staging" check on the
+#      promotion PR. `run_hygiene_sweep.sh --ci` exits 1 on any HARD failure → blocks the
+#      PR until plans are pristine; the fix then FF's main→LDR so everyone pulls clean.
+#      Deterministic + $0 (no LLM). Becomes a REQUIRED check once the sweep is green.
 #
 # Design: do EVERYTHING deterministic in a script (plan counts, the canonical hygiene
 # sweep — frontmatter / todo-format / line-caps / SSOT plan formatting / CLAUDE↔SUB_AGENT
@@ -21,13 +27,44 @@ on:
   schedule:
     - cron: "0 2 * * *"
   workflow_dispatch:
+  # HARD GATE on the PM→main promotion PR (PM is staging-less → LDR→main direct;
+  # this deterministic plan-hygiene sweep is PM's fast "pseudo-staging" check).
+  pull_request:
+    branches: [main]
 
 concurrency:
-  group: ${{ github.workflow }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
+  # ── HARD GATE (PR→main only): deterministic plan-hygiene sweep, $0 (no LLM) ──
+  # exit 1 on any HARD failure → blocks the PM→main PR until plans are pristine.
+  # Make it a REQUIRED check on main branch protection ONLY once the sweep is
+  # green (today it has 3 hard failures — fix those first or it deadlocks merges).
+  # Phase 2 (tracked in cicd plan): auto-fix the fixable findings + commit to the
+  # PR head (fix_frontmatter.py), and run the Haiku contradiction check on a
+  # planning-VM orchestrator slot (Max-plan, $0 API) feeding this same gate.
+  plan-health-gate:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout unified-trading-pm
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0 # the todo-regression check diffs against origin
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Plan-hygiene hard gate (deterministic, --ci exits 1 on hard failures)
+        run: |
+          echo "PM is staging-less; this is the LDR→main pseudo-staging gate (plan hygiene)."
+          bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci
+
   plan-health:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 12
 
@@ -221,7 +258,8 @@ jobs:
   notify:
     name: Slack — Plan Health Agent
     needs: [plan-health]
-    if: always()
+    # Daily/dispatch report only — the PR hard-gate surfaces its result on the PR check itself.
+    if: always() && github.event_name != 'pull_request'
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: "plan-health-agent (daily) | ${{ needs.plan-health.outputs.summary || 'run failed — see logs' }}"
