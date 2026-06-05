@@ -77,14 +77,19 @@ related_plans:
       itself is the deterministic back-merge job (already there). I dropped my initial escalation.py
       `wall_type=plan_health` duplicate in favour of the existing `/api/plan-health/dispatch`. Repos:
       `unified-trading-pm` (workflow template + copy). parent_epic: orchestrator_master.
-- [ ] [INFRA] P1. **Make `ORCHESTRATOR_VM_ID=planning` durable in the central VM's provisioning** so its slots can't
-      regress to a long instance-name prefix. Its user-data exports `VM_NAME="agent-orch-vm-..."` but NOT
-      `ORCHESTRATOR_VM_ID`, so `bootstrap_vm.sh`'s `VM_ID=${ORCHESTRATOR_VM_ID:-${VM_NAME}}` would brand the long name.
-      Add `export ORCHESTRATOR_VM_ID=planning` to the central VM's user-data before the bootstrap call (same
-      VM_NAME≠VM_ID bug class fixed in setup-tab-worktrees.sh). Repo: `agent-orchestrator` / launch config. parent_epic:
-      orchestrator_master. **Note: needs an instance stop to edit user-data — defer to a maintenance window; the running
-      box is already `planning` via `.env.local` + the persisted `.worktree-identity.conf`, so this only affects a
-      future full re-launch.**
+- [x] ✅ [INFRA] P1. **Make `ORCHESTRATOR_VM_ID=planning` durable in the central VM's provisioning.** SHIPPED 2026-06-05
+      at the PROVISIONING SOURCE (no live-API outage): `deployment-service/scripts/vm/launch-planning-vm.sh` now
+      `export ORCHESTRATOR_VM_ID=planning` in the startup script before `bootstrap_vm.sh` + bumped `--slots 2 → 5`, so a
+      fresh planning-VM launch brands `tab/planning/N` instead of falling back to the dated `VM_NAME`
+      (`agent-orch-planning-vm-YYYYMMDD`) — the `VM_ID=${ORCHESTRATOR_VM_ID:-${VM_NAME}}` bug. **Deliberately did NOT
+      stop the live AWS box to edit its instance user-data**: that user-data runs ONCE at first launch (so editing it
+      changes nothing for this instance) and the running box is already `planning` via `.env.local` +
+      `.worktree-identity.conf` (survives reboots) — a fresh launch uses the LAUNCHER, not the old instance's user-data,
+      so fixing the launcher is the real durable fix and an outage would be pure cost. **Residual (optional, no
+      urgency):** the live central box is a _repurposed AWS epic instance_ (launched via `launch-epic-vm-aws.sh` as
+      `vm-orchestrator`, not the GCP `launch-planning-vm.sh`); a dedicated **AWS** planning launcher would let a fresh
+      AWS planning VM brand `planning` from scratch — file if/when AWS planning VMs are launched fresh. Repo:
+      `deployment-service`. parent_epic: orchestrator_master.
 - [x] ✅ [DOC] P2. **Align the registry id `planning-vm` → `planning`** to match the running
       `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches. SHIPPED 2026-06-05: renamed the
       `orchestrator_vm_registry.yaml` `id:` + every live `assigned_vm: planning-vm` ref (this plan +
