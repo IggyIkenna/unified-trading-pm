@@ -504,22 +504,20 @@ jobs:
             cat /tmp/schema_dispatch_response.json 2>/dev/null || true
           fi
 
-      # ── TELEGRAM NOTIFY ─────────────────────────────────────────────────────
-      - name: Notify Telegram
+      # ── SLACK NOTIFY (#ci-failures) ──────────────────────────────────────────
+      - name: Notify Slack
         if: always()
         env:
-          TELEGRAM_BOT_TOKEN_STAGING: ${{ secrets.TELEGRAM_BOT_TOKEN_STAGING }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID_STAGING: ${{ vars.TELEGRAM_CHAT_ID_STAGING || vars.TELEGRAM_CHAT_ID }}
+          # Retired Telegram -> Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
           STATUS: ${{ job.status }}
         run: |
           # semver-agent always runs on staging branch
-          TOKEN="${TELEGRAM_BOT_TOKEN_STAGING:-${TELEGRAM_BOT_TOKEN:-}}"
-          CHAT_ID="${TELEGRAM_CHAT_ID_STAGING:-}"
-          [ -z "$TOKEN" ] && echo "No bot token — skipping Telegram notify" && exit 0
-          [ -z "$CHAT_ID" ] && echo "No chat ID — skipping Telegram notify" && exit 0
           TEXT="*semver-agent* | __REPO_NAME__ | ${STATUS} | branch: staging | triggered by QG pass on staging (pre-SIT)"
-          curl -s -X POST "https://api.telegram.org/bot${TOKEN}/sendMessage" \
-            -d chat_id="${CHAT_ID}" \
-            -d text="${TEXT}" \
-            -d parse_mode="Markdown" || true
+          # Best-effort -- never fail the run on a missing/misconfigured webhook.
+          case "${SLACK_WEBHOOK_URL:-}" in
+            https://*)
+              curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                --data "$(jq -n --arg t "$TEXT" '{text:$t}')" && echo "Slack notification sent" || true ;;
+            *) echo "SLACK_CI_WEBHOOK_URL not set/https -- skipping notification" ;;
+          esac
