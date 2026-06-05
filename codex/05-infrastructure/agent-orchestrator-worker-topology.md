@@ -31,14 +31,15 @@ canonical there. Do not duplicate the list here — read the registry.
 ## LIVE STATUS — what is actually supposed to be alive (SSOT, audited 2026-06-04)
 
 > **Only ONE orchestrator VM is live, and it is the only one that must be: the PLANNING / CENTRAL-API VM** — canonical
-> id **`planning`** (operator 2026-06-05; historically mis-branded `vm-0`, also called `planning-vm` in the registry) =
-> `agent-orchestrator-vm-1` = `i-0c9b283b31d6b5ca7` (m8i.4xlarge, ap-northeast-1, **Elastic IP**). It is **THE single
-> central API + CI-responder** — `api.agent-orchestrator.odum-research.com → 13.113.200.22` — backend uvicorn `:8765`
-> behind nginx :443. **This is the only VM whose health/alerts matter.** **Slots = `tab/planning/N`** (being renamed
-> from the transitional `tab/vm-0/N`; 5-slot composition: Ikenna / Harsh interactive · review · CI-escalation ·
-> plan-health). **Behaviour (operator 2026-06-05): it auto-spawns the SLOTS (tmux) but does NOT auto-assign backlog jobs
-> to the human planning slots** — Ikenna/Harsh drive those like a laptop; CI-escalation + plan-health are
-> **ping-driven** (CI `POST /api/escalate`), not backlog auto-assignment. Rename + AutoSpawn-job scoping tracked in
+> id **`planning`** (operator 2026-06-05; historically mis-branded `vm-0`, historically `planning-vm` in the registry,
+> renamed to `planning` 2026-06-05) = `agent-orchestrator-vm-1` = `i-0c9b283b31d6b5ca7` (m8i.4xlarge, ap-northeast-1,
+> **Elastic IP**). It is **THE single central API + CI-responder** —
+> `api.agent-orchestrator.odum-research.com → 13.113.200.22` — backend uvicorn `:8765` behind nginx :443. **This is the
+> only VM whose health/alerts matter.** **Slots = `tab/planning/N`** (being renamed from the transitional `tab/vm-0/N`;
+> 5-slot composition: Ikenna / Harsh interactive · review · CI-escalation · plan-health). **Behaviour (operator
+> 2026-06-05): it auto-spawns the SLOTS (tmux) but does NOT auto-assign backlog jobs to the human planning slots** —
+> Ikenna/Harsh drive those like a laptop; CI-escalation + plan-health are **ping-driven** (CI `POST /api/escalate`), not
+> backlog auto-assignment. Rename + AutoSpawn-job scoping tracked in
 > `plans/active/planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05.md`.
 >
 > **NOT live (do NOT treat their silence — or alerts about them — as an incident):**

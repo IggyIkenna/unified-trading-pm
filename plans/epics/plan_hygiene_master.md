@@ -5,7 +5,7 @@ type: epic
 tier: L5
 priority: P1
 status: active
-assigned_vm: planning-vm
+assigned_vm: planning
 cadence: daily-cron + on-demand
 locked_by: live-defi-rollout
 locked_since: 2026-05-21

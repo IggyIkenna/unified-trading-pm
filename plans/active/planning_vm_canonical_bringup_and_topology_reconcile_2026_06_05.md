@@ -1,7 +1,7 @@
 ---
 title: Planning-VM canonical bring-up + multi-VM topology reconciliation
 parent_epic: orchestrator_master
-assigned_vm: planning-vm
+assigned_vm: planning
 priority: P1
 status: active
 estimate_class: infra
@@ -85,12 +85,15 @@ related_plans:
       orchestrator_master. **Note: needs an instance stop to edit user-data — defer to a maintenance window; the running
       box is already `planning` via `.env.local` + the persisted `.worktree-identity.conf`, so this only affects a
       future full re-launch.**
-- [ ] [DOC] P2. **Align the registry id `planning-vm` → `planning`** to match the now-running
-      `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches (the box's canonical name). Residual after the
-      2026-06-05 re-provision: the registry ENTRY was updated (instance id + EIP + central-API note) but its `id:` is
-      still `planning-vm`; this plan's `assigned_vm: planning-vm` + any other `assigned_vm` refs would move to
-      `planning`. Low-risk (planning VM owns no executing epics) but closes the last name-mismatch. Run
-      `regen_vm_registry.py --check` after. Repo: `unified-trading-pm`. parent_epic: orchestrator_master.
+- [x] ✅ [DOC] P2. **Align the registry id `planning-vm` → `planning`** to match the running
+      `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches. SHIPPED 2026-06-05: renamed the
+      `orchestrator_vm_registry.yaml` `id:` + every live `assigned_vm: planning-vm` ref (this plan +
+      `master_to_live_defi_2026_05_23.md` (frontmatter-only edit; lock blocks archival not edits) + the
+      `plan_hygiene_master.md` epic) + the id-refs in `codex/12-agent-workflow/orchestrator-multi-vm-topology.md` +
+      `epic-keyword-surface.yaml`, and updated the historical note in `agent-orchestrator-worker-topology.md`.
+      **Preserved** the `launch-planning-vm.sh` script-name refs in `vm-tarball-deployment.md` (those are filenames, not
+      the id). `regen_vm_registry.py --check` = OK (11 vm-ids valid). The last name-mismatch is closed: registry id ==
+      `ORCHESTRATOR_VM_ID` == branch prefix == `planning`. Repo: `unified-trading-pm`. parent_epic: orchestrator_master.
 - [x] ✅ [DOC] P1. **Fix `orchestrator_vm_registry.yaml` staleness.** SHIPPED 2026-06-05. (a) `planning-vm` entry: added
       real instance id `i-0c9b283b31d6b5ca7` + `public_ip: 13.113.200.22` (Elastic IP) + `api_url`/`fqdn`
       `api.agent-orchestrator.odum-research.com` + instance_type + the "THIS IS THE CENTRAL API VM" note + 5-slot

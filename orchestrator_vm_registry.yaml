@@ -16,7 +16,7 @@ schema_notes: |
 vms:
   # ---------- Planning VM ----------
 
-  - id: planning-vm
+  - id: planning
     # THIS IS THE CENTRAL API VM (reconciled 2026-06-05): the single always-on endpoint everything
     # (CI escalations + dashboard + operator chat) pings. nginx :443 → orchestrator backend :8765.
     # tab branches brand `planning` (ORCHESTRATOR_VM_ID=planning), NOT the operator name `ikenna`.
