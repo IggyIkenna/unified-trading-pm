@@ -15,35 +15,5 @@
 #
 # SSOT: plans/active/defi_manifest_canonicalisation_2026_06_01.md §A10c-fleet
 #       (+ each AG's *_manifest_canonicalisation_2026_06_01.md migration todo).
-baseline:
-  features-service/features_service/calendar/engine/calendar_orchestrator.py:
-    count: 1
-  features-service/features_service/commodity/cli/handlers/batch_handler.py:
-    count: 1
-  features-service/features_service/cross_instrument/cli/handlers/batch_handler.py:
-    count: 1
-  features-service/features_service/delta_one/engine/orchestrator.py:
-    count: 1
-  features-service/features_service/multi_timeframe/engine/orchestrator.py:
-    count: 2
-  features-service/features_service/onchain/engine/orchestrator.py:
-    count: 1
-  features-service/features_service/sports/cli/handlers/batch_handler.py:
-    count: 2
-  features-service/features_service/volatility/engine/feature_group_service.py:
-    count: 1
-  instruments-service/instruments_service/engine/orchestrator.py:
-    count: 3
-  market-tick-data-service/market_tick_data_service/cli/handlers/_defi_manifest.py:
-    count: 1
-  market-tick-data-service/market_tick_data_service/engine/orchestrator.py:
-    count: 3
-  market-tick-data-service/market_tick_data_service/live/websocket_runner.py:
-    count: 1
-  market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py:
-    count: 1
-  unified-trading-library/unified_trading_library/manifest_writer.py:
-    count: 1
-  unified-trading-library/unified_trading_library/streaming/candle_writer.py:
-    count: 1
+baseline: {}
 note: Seeded 2026-06-05 (slot-1) — A10c-fleet baseline of pre-migration unrouted callsites.
