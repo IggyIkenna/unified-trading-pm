@@ -111,9 +111,17 @@ Tracked here; substance lives in the per-AG canonicalisation plans + `downstream
       confirm manifest schema = v9. Empty buckets legitimately have no manifest — enumerate which, so "no manifest" is
       distinguishable from "missing manifest". (No central bucket registry found → build the expected-bucket list from
       `deployment-service/configs/cloud-providers.yaml` + the per-AG plans.)
-- [ ] [SCRIPT] P1. Sanity (not blind-run) the MDPS + features-service downstream todos in
+- [x] ✅ [SCRIPT] P1. Sanity (not blind-run) the MDPS + features-service downstream todos in
       `downstream_services_manifest_canonicalisation` — verify live=batch dep-check + v9-schema asserts; run only on AGs
       whose upstream is migrated, sampling across data_types/venues/AGs (per Harsh's standing approach).
+      **DONE (slot-5, 2026-06-05):** Code-level sanity on origin/live-defi-rollout. Data sampling N/A (0/6 C0 walks
+      completed per B-P0 audit → no migrated upstream). Shipped items verified: MDPS CRIT-1 `skip_dependency_check=False`
+      (live_mode_handler.py:235) ✅; MDPS GAP-4 `_warn_on_v9_schema_drift` (dependency_checker.py:75,735) ✅; MDPS
+      writer typed `EmptyConfirmedReason.SOURCE_RETURNED_ZERO` (live_workers.py:930) ✅; features GAP-4
+      `_warn_on_v9_schema_drift` (manifest_window_guard.py:54,127) ✅; features GAP-6 `assert_consolidator_healthy` in
+      delta_one LiveHandler (live_handler.py:42) ✅; features writer typed reasons across delta_one/volatility/
+      cross_instrument/calendar/cefi ✅. Open per plan: strategy GAP-4 warn (manifest_allocation_guard — no v9 warn),
+      strategy+execution writer CF-11 fixes, IS tradfi/prediction CF-11 residual, FLAG-3 deployment-api, GAP-7 rename.
 
 ## C — Orchestrator e2e + execution-scope field _(Harsh ask #3 + chat 39–48, 89)_
 
