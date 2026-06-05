@@ -71,7 +71,12 @@ def extract_uac_registries() -> dict[str, object]:
         )
 
         data["venue_category_map"] = {str(k): str(v) for k, v in VENUE_CATEGORY_MAP.items()}
-        data["instrument_types_by_venue"] = {str(k): [str(t) for t in v] for k, v in INSTRUMENT_TYPES_BY_VENUE.items()}
+        # sorted() the inner values: INSTRUMENT_TYPES_BY_VENUE values are sets, so an unsorted
+        # list comprehension emits a non-deterministic order → the registry-drift CI diff would
+        # false-fail every run. (HARD RULE: generators MUST emit deterministically.)
+        data["instrument_types_by_venue"] = {
+            str(k): sorted(str(t) for t in v) for k, v in INSTRUMENT_TYPES_BY_VENUE.items()
+        }
         data["instrument_type_folder_map"] = {str(k): str(v) for k, v in INSTRUMENT_TYPE_FOLDER_MAP.items()}
         data["clob_venues"] = sorted(str(v) for v in CLOB_VENUES)
         data["dex_venues"] = sorted(str(v) for v in DEX_VENUES)
@@ -313,11 +318,11 @@ def extract_service_port_registry() -> dict[str, object]:
     return {}
 
 
-def extract_strategy_configs(workspace_root: Path) -> list[dict[str, object]]:
+def extract_strategy_configs(ui_root: Path, uac_root: Path) -> list[dict[str, object]]:
     """Extract strategy configs from system-topology.json (sourced from strategy-manifest.json)."""
-    topo_path = workspace_root / "unified-trading-system-ui" / "lib" / "registry" / "system-topology.json"
+    topo_path = ui_root / "lib" / "registry" / "system-topology.json"
     if not topo_path.exists():
-        topo_path = workspace_root / "unified-api-contracts" / "openapi" / "system-topology.json"
+        topo_path = uac_root / "openapi" / "system-topology.json"
     if not topo_path.exists():
         logger.warning("  system-topology.json not found")
         return []
@@ -646,10 +651,11 @@ def extract_lifecycle_enums() -> dict[str, list[str]]:
     return result
 
 
-def validate_config_registry_coverage(workspace_root: Path) -> None:
+def validate_config_registry_coverage(pm_root: Path, uac_root: Path, repos_root: Path) -> None:
     """Check which service/api repos have config files vs config-registry.json coverage."""
-    manifest_path = workspace_root / "unified-trading-pm" / "workspace-manifest.json"
-    config_registry_path = workspace_root / "unified-api-contracts" / "openapi" / "config-registry.json"
+    manifest_path = pm_root / "workspace-manifest.json"
+    config_registry_path = uac_root / "openapi" / "config-registry.json"
+    workspace_root = repos_root  # per-repo existence probe below (lenient — absent repos skipped)
 
     if not manifest_path.exists():
         logger.warning("  workspace-manifest.json not found at %s", manifest_path)
@@ -718,10 +724,25 @@ def main() -> None:
         default=None,
         help="Output directory",
     )
+    # Explicit repo roots so the generator works regardless of checkout layout (e.g. GitHub
+    # Actions, where sibling repos can't live outside GITHUB_WORKSPACE). Each defaults to the
+    # sibling-of-PM path, preserving the original local-workspace behaviour.
+    parser.add_argument(
+        "--ui-root", type=Path, default=None, help="Path to the unified-trading-system-ui repo (default: sibling)"
+    )
+    parser.add_argument(
+        "--uac-root", type=Path, default=None, help="Path to the unified-api-contracts repo (default: sibling)"
+    )
+    parser.add_argument(
+        "--pm-root", type=Path, default=None, help="Path to the unified-trading-pm repo (default: sibling)"
+    )
     args = parser.parse_args()
 
     workspace_root = Path(__file__).resolve().parent.parent.parent.parent
-    output_dir = args.output_dir or (workspace_root / "unified-api-contracts" / "openapi")
+    ui_root = args.ui_root or (workspace_root / "unified-trading-system-ui")
+    uac_root = args.uac_root or (workspace_root / "unified-api-contracts")
+    pm_root = args.pm_root or (workspace_root / "unified-trading-pm")
+    output_dir = args.output_dir or (uac_root / "openapi")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Generating UI reference data...")
@@ -758,7 +779,7 @@ def main() -> None:
     reference["service_port_registry"] = extract_service_port_registry()
 
     logger.info("\n7. Extracting strategy configs from system-topology...")
-    reference["strategy_configs"] = extract_strategy_configs(workspace_root)
+    reference["strategy_configs"] = extract_strategy_configs(ui_root, uac_root)
 
     logger.info("\n8. Extracting execution algo definitions...")
     reference["execution_algos"] = extract_execution_algos()
@@ -800,12 +821,15 @@ def main() -> None:
     reference["lifecycle_enums"] = extract_lifecycle_enums()
 
     logger.info("\n21. Validating config registry coverage...")
-    validate_config_registry_coverage(workspace_root)
+    validate_config_registry_coverage(pm_root, uac_root, workspace_root)
 
     # Write output
     output_path = output_dir / "ui-reference-data.json"
     with open(output_path, "w") as f:
-        json.dump(reference, f, indent=2, sort_keys=False, default=str)
+        # sort_keys=True for DETERMINISM: several source registries are built from sets, so
+        # their dict key-iteration order varies per process → without this the registry-drift
+        # CI diff false-fails every run. (HARD RULE: generators MUST emit deterministically.)
+        json.dump(reference, f, indent=2, sort_keys=True, default=str)
     logger.info("\nOutput written: %s", output_path)
 
     # Summary
