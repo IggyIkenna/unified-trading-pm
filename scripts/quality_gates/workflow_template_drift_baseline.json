@@ -1,6 +1,5 @@
 {
   "drift": [
-    "greeks-service/main-backmerge-to-ldr.yml",
     "unified-trading-pm/major-bump-issue-handler.yml",
     "unified-trading-pm/request-major-bump.yml"
   ]
