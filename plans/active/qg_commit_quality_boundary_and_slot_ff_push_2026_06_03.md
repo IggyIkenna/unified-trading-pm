@@ -560,6 +560,19 @@ design).
       tab-mirror push LDR with the workflow-scoped GH_PAT instead of `GITHUB_TOKEN` → `synchronize` fires natively, no
       stale checks ever, no close+reopen needed. Not done here (tab-mirror is the actively-churning active-host-filter
       file; editing = 24-repo re-rollout + concurrent-edit risk).
+- [ ] [SCRIPT] P2. **PAT-push root fix for the v2-stale-check gap — PICK UP WHEN `tab-mirror-to-ldr.yml` IS CLEAN (not
+      being actively edited).** Makes the close+reopen workaround (shipped in PM#144) redundant. ROOT CAUSE recap:
+      tab-mirror FF's `live-defi-rollout` with `${{ secrets.GITHUB_TOKEN }}`; GitHub suppresses
+      `pull_request:synchronize` on GITHUB_TOKEN-authored pushes → promotion-PR `quality-gates-v2` freezes on the
+      pre-advance SHA. EXACT CHANGE: in `scripts/workflow-templates/tab-mirror-to-ldr.yml`, the **leg-A (tab→LDR) job's
+      `actions/checkout` `token:`** → `${{ secrets.GH_PAT }}` (workflow-scoped PAT, already used by
+      quality-gates-v2/semver/ci-failure-watcher); **LEAVE leg-B (LDR→tab FF + tab force-push) on `GITHUB_TOKEN`** — its
+      no-recursion design is deliberate (file comments ~lines 28/47/168). Then
+      `bash scripts/workflow-templates/rollout-workflow-templates.sh --template     tab-mirror-to-ldr.yml` + ship the 24
+      repos. **WAIT-FOR-CLEAN GATE**: this is the actively-churning active-host-filter SSOT (Harsh iterating 2026-06-05:
+      89f4c0b50 / e8fa1c92e / 0496f96a5) — land ATOMICALLY inside that work (one edit + one re-rollout), never raced,
+      else the 24 copies re-drift. Verify after: a fix landing on LDR auto-re-runs the promotion PR's v2 with NO
+      close+reopen.
 - [x] ✅ [DEPS] P0. **RESOLVED 2026-06-05 (Ikenna [slot-1]) — fleet aiohttp UNIFIED at `>=3.13.4,<3.14.0`, NOT bumped to
       3.14.** This todo originally prescribed "bump UP to 3.14 fleet-wide" — **reversed by operator override**: aiohttp
       3.14 breaks vcrpy 8.1.1 (removed `AsyncStreamReaderMixin`) → jams every VCR repo's promotion, and no compatible
@@ -572,8 +585,9 @@ design).
       manifest in lockstep (else it self-blocks the PM `check-dependency-alignment` gate) — satisfied now at the unified
       <3.14 floor.
 - [x] ✅ [DEPS] P1. **Stale `uv.lock` sweep — DONE 2026-06-05.** 2 BLOCKED repos failed codex pip-audit from stale locks
-      (aiohttp, starlette CVEs); the aiohttp fleet bump re-locked 17. `uv lock --check` sweep across the fleet found 4
-      more stale: client-reporting-api, greeks-service, ibkr-gateway-infra re-locked + shipped (now in-sync);
+      (aiohttp, starlette CVEs); the aiohttp work re-locked 17 (the 3.14 bump was REVERSED — fleet re-locked at the
+      `<3.14` floor / 3.13.5; see the aiohttp item above). `uv lock --check` sweep across the fleet found 4 more stale:
+      client-reporting-api, greeks-service, ibkr-gateway-infra re-locked + shipped (now in-sync);
       system-integration-tests left to the LDR→staging conflict agent (it owns sit #21). Composes with
       `uv_lockfile_determinism_2026_06_02.md`.
 - [ ] [TEST] P2. **Tests that pin a LITERAL env-tier bucket name silently pass locally but FAIL in CI (cross-cutting
@@ -585,6 +599,28 @@ design).
       false-match) not a literal tier. Repo: any service repo. **Sweep**: `rg -n 'prd-test-project|"-prd-"' --type py`
       across `*/tests/` for other literal-tier bucket assertions before they wedge a promotion PR. Provenance: #396
       enumerate-bucket test (is@812061d6).
+
+### Loose ends discovered during the 2026-06-05 sweep (capture-discoveries)
+
+- [x] ✅ [DEPS] P0. **aiohttp PM canonical reversal LANDED ON LDR (2026-06-06).** The 17 service repos + PM
+      `canonical-dependency-manifest.json` + `workspace-constraints.toml` + PM pyproject/uv.lock are all at
+      `aiohttp>=3.13.4,<3.14.0` on `origin/live-defi-rollout` (VERIFIED: LDR canonical `<3.14`, instruments-service LDR
+      `<3.14`) → dep-alignment un-broken. Shipped via tab-mirror after clearing the PM-QG debt below.
+- [x] ✅ [SCRIPT] P1. **PM-QG debt that blocked PM main — CLEARED (2026-06-06).** PM `quality-gates-v2` had stacked
+      pre-existing debt blocking every PM ship (PM#144 + the aiohttp reversal). Cleared this session: lint
+      (F401/RUF100/SIM103 in `ldr_ci_monitor.py`); the codex **empty-fallback** in `ldr_ci_monitor.py` (216/245 →
+      `manifest["repositories"]` fail-fast; 248 → `manifest_repos[repo]`, repo guaranteed present from `new_levels`); a
+      workflow-`${{}}` false-positive comment in `plan-health-agent.yml`; and **4 drifted workflow templates**
+      (major-bump-issue-handler / request-major-bump / update-dependency-version / main-backmerge-to-ldr) rolled out +
+      shipped across 24 repos (drift 0). PM QG GREEN. RESIDUAL fleet per-repo QG-debt remains tracked in
+      `cicd_contract_hardening_2026_06_01.md` Phase 6.
+- [ ] [INFRA] P2. **VM registry `active:` flag for alert-suppression (hybrid topology, operator 2026-06-05).** Fleet is
+      hybrid (1 always-on `agent-orchestrator-vm-1` + epic VMs on-demand, currently stopped for local CI/CD work —
+      INTENTIONAL, `assigned_vm` stays on epic VMs, NOT re-pointed). To stop alerts firing for intentionally-stopped VMs,
+      add a per-VM `active: true|false` flag to `orchestrator_vm_registry.yaml` (+ `regen_vm_registry.py`) that the VM-level
+      alerters (zombie-watchdog / host-offline / dead-man-switch) read to suppress non-active hosts. Partly covered today
+      by Harsh's tab-mirror active-host-filter (tab-divergence alerts only); this is the VM-liveness-alert side. Low
+      urgency — VMs are off + nothing firing.
 
 ### Temporary states (uncommitted fixes preserved in slot-1 worktrees)
 
