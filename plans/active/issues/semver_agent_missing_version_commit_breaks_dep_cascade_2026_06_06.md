@@ -85,10 +85,51 @@ then re-run the dep-update v2 runs. Alternatively, if the bumps are NOT intended
 manifest versions — but the semver computation + manifest both treat 0.2.0/0.4.0 as the real next version, so completing
 the bump is the correct path.
 
+## Resolution (2026-06-06)
+
+**Unblock COMPLETE — all 6 failing dep-update v2 runs are now GREEN; ci_status for the 4 affected repos is
+FEATURE_GREEN; all 6 dep-update PRs are CLEAN/mergeable.**
+
+Decisive diagnosis refinement: the v2 failures had a SECOND, primary cause beyond the semver missing-commit bug — the
+dep-update branches are cut from **staging**, which fleet-wide still lacks the LDR `aiohttp>=3.13.4,<3.14.0` cap (the
+operator-sanctioned vcrpy-8.1.1-compat pin). The dep-clone in `python-quality-gates-v2.yml` clones the dep repos at
+`DEP_BRANCH=<the dep-update head branch>`; that branch existed in the dep repos with the stale `aiohttp>=3.14.0`
+constraint, so the editable UTL/mtds pulled aiohttp 3.14.0 → `vcrpy 8.1.1` (`AsyncStreamReaderMixin`) + `ClientResponse`
+(`stream_writer`) breakage → import/test failures, and on relock a `uv` "No solution" (project pins `<3.14` while the
+editable UTL 0.3.167 from the dep-update branch pins `>=3.14`). The original `SPORTS_FEATURE_PAYLOAD_CAPTURE_STATUS_KEY`
+ImportError was a downstream artefact of this, NOT a real uac problem (uac source has the symbol on every branch).
+
+Applied unblock (via GitHub Contents/Git API, [skip ci] commits):
+
+1. Capped `"aiohttp>=3.13.4,<3.14.0"` + relocked `uv.lock` from LDR on the 6 failing dep-update PR branches
+   (strategy-service #73/#74, market-tick-data-service #133, execution-service #216, market-data-processing-service
+   #96/#97).
+2. Capped + relocked the `dep-update/unified-api-contracts-0.2.0` branch in **unified-trading-library** (the editable
+   UTL the dependents clone — it had stale `>=3.14.0`); created `dep-update/market-tick-data-service-0.4.0` branches in
+   unified-trading-library / unified-api-contracts / market-tick-data-service pointing at their (capped) LDR so the
+   dep-clone resolves a capped editable dep instead of falling to stale `main`.
+3. Re-dispatched + PR-synchronized all 6 → all GREEN; re-fired the `ci-status-update` for mtds to converge the manifest.
+
+**Systemic fix shipped (PM #149, MERGED to main):** `semver-agent.yml` now commits
+`chore(release): bump version to X [skip ci]` to staging BEFORE dispatching the version-bump cascade (both the
+`always_patch` inline path and the main compute path; `permissions: contents: write`). Applied to both live templates:
+`scripts/propagation/templates/semver-agent.yml` (the `{{SERVICE_NAME}}` SSOT) +
+`scripts/workflow-templates/semver-agent.yml.tmpl`. Also relocked PM `uv.lock` (1.2.0→1.2.3, same lock-drift class) to
+unblock the PM gate. **Note the residual chicken-and-egg:** the published `unified-trading-library==0.3.167` wheel still
+hard-requires `aiohttp>=3.14.0`; until UTL completes its LDR→staging→main promotion + a real version bump (now enabled
+by the semver fix; UTL LDR has the cap but is still 0.3.167), the published-wheel metadata can re-bite any consumer that
+resolves UTL from the registry rather than the editable clone. UTL promotion PR #243 (LDR→staging) is the carrier.
+
 ## Follow-up todos
 
+- [ ] [SCRIPT] P0. Promote the LDR `aiohttp <3.14` cap to **staging** fleet-wide (strategy-service,
+      market-tick-data-service, execution-service, market-data-processing-service, unified-trading-library — staging
+      lacks the cap; that is why dep-update branches inherit the bad constraint). Drive UTL LDR→staging→main (PR #243) +
+      a UTL version bump > 0.3.167 so the published wheel caps aiohttp; then future dep-update branches need no manual
+      cap.
 - [ ] [SCRIPT] P0. Deploy updated `semver-agent.yml` to all fleet repos via `scripts/rollout-semver-agent.sh` (verify
-      `contents: write` + the new "Apply version bump to staging" step landed on each repo's staging).
+      `contents: write` + the new "Apply version bump to staging" step landed on each repo's staging). PM #149 fixed the
+      TEMPLATE; the per-repo live workflows still lack the step until rolled out.
 - [ ] [SCRIPT] P1. `update-dependency-version.yml`: relock `uv.lock` after the constraint bump (or document why the
       path-source makes it unnecessary). Target: `scripts/workflow-templates/update-dependency-version.yml` +
       `scripts/propagation/templates/update-dependency-version.yml` (de-drift the two copies in the same change).
@@ -97,3 +138,8 @@ the bump is the correct path.
 - [ ] [SCRIPT] P2. `python-quality-gates-v2.yml` dep-clone: when `DEP_BRANCH` (the head dep-update branch) does not
       exist in a dep repo, fall back to that dep's CURRENT computed version/tag rather than silently to `main` — so the
       tested dep version is explicit.
+- [ ] [SCRIPT] P1. **PM's own `uv.lock` drifts on every PM version bump** (same class as the dep-update relock gap):
+      `update-repo-version.yml` bumps PM `pyproject.toml` (e.g. 1.2.0→1.2.3→1.2.4 on #149 merge) but never relocks
+      `uv.lock`, so `uv lock --check` fails the PM gate fleet-wide until a human relocks. Observed twice this session
+      (relocked 1.2.0→1.2.3, then 1.2.3→1.2.4). Add a `uv lock` + commit step to `update-repo-version.yml` after the
+      `sed` PM version bump.
