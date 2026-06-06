@@ -328,7 +328,11 @@ jobs:
   persist:
     name: Persist — Plan Health Event
     needs: [plan-health, notify]
-    if: always()
+    # Daily/dispatch only — on a PR the `plan-health`/`notify` jobs are skipped (the
+    # hard gate surfaces its own result on the PR check), so persisting a "skipped"
+    # plan-health conclusion would (a) be meaningless and (b) mark the whole PR run
+    # `failure` even though the gate passed. Scope persist to non-PR events, like notify.
+    if: always() && github.event_name != 'pull_request'
     uses: ./.github/workflows/persist-cicd-event.yml
     secrets: inherit
     with:
