@@ -70,8 +70,13 @@ jobs:
             exit 0
           fi
 
-          # Update the correct version section based on branch
-          python3 - <<PYEOF
+          # Update the correct version section based on branch.
+          # NOTE: the heredoc terminator MUST be a bare `PYEOF` on its own line —
+          # `PYEOF || exit 1` is NOT a valid heredoc terminator (bash then swallows
+          # every subsequent line up to the next bare `PYEOF`, feeding malformed
+          # input to python so it silently no-ops and /tmp/bump_type.txt is never
+          # written). Use `if ! python3 - <<PYEOF ... PYEOF; then ...; fi` instead.
+          if ! python3 - <<PYEOF
           import json
 
           with open("workspace-manifest.json") as f:
@@ -149,15 +154,31 @@ jobs:
           _os.replace(tmp_path, "workspace-manifest.json")
 
           print(f"Updated {repo} → {version} (branch={branch}, bump_type={bump_type})")
-          PYEOF || exit 1
+          PYEOF
+          then
+            echo "FATAL: manifest-mutation python step failed"
+            exit 1
+          fi
           python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
             || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
 
+          # Read the bump_type/is_breaking the python step wrote. These MUST exist now
+          # (the python step succeeded above); guard defensively so set -u can never trip.
+          if [ ! -f /tmp/bump_type.txt ]; then
+            echo "FATAL: /tmp/bump_type.txt missing after manifest-mutation step"
+            exit 1
+          fi
           BUMP_TYPE=$(cat /tmp/bump_type.txt)
+          BUMP_TYPE="${BUMP_TYPE:-patch}"
           IS_BREAKING=$(cat /tmp/is_breaking.txt 2>/dev/null || echo "false")
+          IS_BREAKING="${IS_BREAKING:-false}"
 
           # (b) Bump PM's own patch version in pyproject.toml
-          CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml)
+          CURRENT=$(grep -oP '^version\s*=\s*"\K[0-9]+\.[0-9]+\.[0-9]+' pyproject.toml || true)
+          if [ -z "${CURRENT:-}" ]; then
+            echo "FATAL: could not parse current PM version from pyproject.toml"
+            exit 1
+          fi
           IFS='.' read -r PMAJOR PMINOR PPATCH <<< "$CURRENT"
           NEW_PPATCH=$((PPATCH + 1))
           NEW_PM_VERSION="${PMAJOR}.${PMINOR}.${NEW_PPATCH}"
