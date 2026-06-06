@@ -78,9 +78,9 @@
     "instruments-service": "0.1.22",
     "market-tick-data-service": "0.3.1",
     "system-integration-tests": "0.2.0",
-    "unified-api-contracts": "0.1.20",
+    "unified-api-contracts": "0.2.0",
     "unified-trading-library": "0.3.167",
-    "unified-trading-pm": "1.2.3"
+    "unified-trading-pm": "1.2.4"
   },
   "repositories": {
     "alerting-service": {
@@ -162,7 +162,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
@@ -276,7 +276,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/).",
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -551,7 +551,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -601,7 +601,7 @@
       "status": "active",
       "completion_path": "tradfi",
       "notes": "Terraform + scripts for IBKR Gateway VM setup, SSH tunnel, startup. IaC for TradFi execution connectivity. 2026-03-05: Added scripts/ (quickmerge, setup, quality-gates), .github/workflows/ (quality-gates, version-bump), VERSION file, .pre-commit-config.yaml.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": "N/A",
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -757,7 +757,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -875,7 +875,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1061,7 +1061,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1233,7 +1233,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1787,26 +1787,26 @@
     "instruments-service": "0.1.22",
     "market-tick-data-service": "0.4.0",
     "system-integration-tests": "0.2.0",
-    "unified-api-contracts": "0.2.0",
     "unified-trading-library": "0.3.167",
     "unified-trading-pm": "1.2.0",
-    "e2e-testing": "0.2.0"
+    "e2e-testing": "0.2.0",
+    "unified-api-contracts": "0.2.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-06T15:13:34.590390Z",
-    "locked_reason": "Breaking MINOR bump cascade: market-tick-data-service=0.4.0 (pre-1.0.0)",
-    "lock_version": "0.4.0",
-    "pending_repos": []
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
+    "lock_version": null,
+    "pending_repos": [
+      "market-tick-data-service",
+      "unified-trading-pm",
+      "e2e-testing"
+    ],
+    "sit_retry_count": 1
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "unified-api-contracts": {
-      "version": "0.2.0",
-      "sha": "bf90830b9160f322313ac71a82e654079ce86c6d",
-      "branch": "staging"
-    },
     "e2e-testing": {
       "version": "0.2.0",
       "sha": "2fc0348d68669885ba4ba13fc77f0433234a86b9",
@@ -1816,11 +1816,27 @@
       "version": "0.4.0",
       "sha": "75b48d96f67f48676a3a3a0979533ab5f405958f",
       "branch": "staging"
+    },
+    "unified-api-contracts": {
+      "version": "0.2.0",
+      "sha": "bf90830b9160f322313ac71a82e654079ce86c6d",
+      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
-    "history": []
+    "history": [
+      {
+        "promoted_at": "2026-06-06T15:32:54.671367Z",
+        "commits": {
+          "unified-api-contracts": {
+            "version": "0.2.0",
+            "sha": "bf90830b9160f322313ac71a82e654079ce86c6d",
+            "branch": "staging"
+          }
+        }
+      }
+    ]
   },
   "deployed_versions": {
     "_note": "Current deployed image tag per repo per environment. Updated by Cloud Build post-deploy.",
