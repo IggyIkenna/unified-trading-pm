@@ -529,9 +529,20 @@ design).
       installs a genuinely-missing test-only peer (deployment-api), into the same `.venv` the gate uses. Validated:
       deployment-service #21 v2 **GREEN (4m0s) → MERGED 12:40Z**; fleet spot-check (instruments-service v2 success
       @12:33, strategy-service @11:43) confirms the loop is a no-op elsewhere (no regression). Required-check gate for
-      deployment-service staging is v2 (the non-required AWS CodeBuild check is separately red — pre-existing, did not
-      block; flag for the CodeBuild-gate track). **Note: a workflow RE-RUN pins the old reusable-workflow SHA — a FRESH
-      run (close+reopen / new push) is required to pick up a reusable-workflow change.**
+      deployment-service staging is v2 only (the non-required AWS CodeBuild check was red but did not block — see the
+      separate CodeBuild item below; it is NOT the deployment_api cause). **Note: a workflow RE-RUN pins the old
+      reusable-workflow SHA — a FRESH run (close+reopen / new push) is required to pick up a reusable-workflow change.**
+- [ ] [CICD] P2. **deployment-service AWS CodeBuild gate red — BUILD-phase exit 127 (infra, NOT deployment_api;
+      found 2026-06-05).** CodeBuild `deployment-service` fails at the BUILD phase:
+      `docker run … $ECR_REPO:$VERSION … "scripts/quality-gates.sh --no-fix --quick"` → **exit 127** (command/image not
+      found), and POST_BUILD `uv pip install build twine` → **exit 127** (`uv` not on the CodeBuild host PATH). Exit 127
+      = the command/image isn't found, NOT a test failure (which is exit 1) — so this is unrelated to the deployment_api
+      v2 regression fixed above. Likely `$ECR_REPO`/`$VERSION` unresolved (image never pushed for this SHA) and/or `uv`
+      missing from the CodeBuild image. **Non-blocking**: CodeBuild is NOT a required check for deployment-service staging
+      (v2 + check-staging-lock are), so #21 merged fine; this is informational red. Pre-existing (was red on the earlier
+      #21 runs too). Belongs to the CodeBuild-gate track (same surface as the strategy-service #67 CodeBuild-vs-v2
+      branch-protection item). Repo: deployment-service (`buildspec.aws.yaml` + the ECR image pipeline / CodeBuild project
+      env). Provenance: #21 promotion-PR check audit, slot-1.
 - [ ] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
       **Harsh's**, confirm before closing), mtds #94 (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
 
