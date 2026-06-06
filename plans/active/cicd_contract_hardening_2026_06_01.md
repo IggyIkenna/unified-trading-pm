@@ -76,6 +76,70 @@ source:
 > **Hygiene status (2026-06-03 audit):** all 25 cluster plans/issues are now `parent_epic`-attached + estimated. Epics:
 > `infrastructure_master`, `orchestrator_master`, `plan_hygiene_master`. No orphans remain in the CI/CD cluster.
 
+## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
+
+> **The chicken-and-egg (operator 2026-06-06):** the corrected CI/CD machinery — `quality-gates-v2` check-contexts,
+> promotion/SIT automation, the tab-mirror active-host filter, the `ci_status` guards, the FF-cron self-pull, the
+> commit-identity hook — only TAKES EFFECT once it is on each repo's **default branch `main`** (scheduled GHAs +
+> required checks read `main`). But fleet `main` is **9–13 commits behind LDR**, so the pipeline is half-wired. Shipping
+> the fixes piecemeal means N promote cycles each fighting a half-built pipeline. **Strategy: land EVERY code-doable
+> CI/CD task on `live-defi-rollout` FIRST, then run ONE fleet promote cycle** — the pipeline goes half-wired →
+> fully-wired in a single cut. This is the operative sequencing for the whole CI/CD cluster; the WAVES/Finishing-brief
+> below are the _detail_, this is the _order of operations_.
+
+### Execution model
+
+- **Phase A — land all code-doable work on LDR** (the bulk: **~78 code-doable todos across 7 plans**, manifest below).
+  Per repo: **QG-sweep batch** (run `quality-gates.sh` ONCE over the batch) → **Commit+Push+Flip** each shippable unit
+  to the tab branch → tab-mirror FF→LDR. **Dependency order (HARD):** T0 `utl`/`uac` FIRST (they dep-block the whole
+  fleet) → PM scripts/workflows/templates → service repos → `agent-orchestrator` → IaC/`deployment-service`. Each tier
+  green on LDR before the next.
+- **Phase B — ONE promote cycle** (run ONCE, only after Phase A is LDR-green fleet-wide): drive `ldr-to-staging-promote`
+  (self-cascades) → SIT → `staging-to-main` for the ~21 service repos; **`unified-trading-pm` promotes LDR→`main`
+  DIRECTLY (Option B — PM has no `staging`, by design).** All corrected GHA procedures land on every `main` together.
+  This IS the WAVE-3 drain — do not run it incrementally.
+- **NOT-CODE (~25 items)** — operator/infra-ops (manual promotion waves, branch-protection admin API, VM ops,
+  aiohttp/pyjwt CVE calls, `BLOCKED-OPERATOR`/`BLOCKED-BILLING`) — are **excluded from Phase A**; they are Phase-B
+  operator actions or separately tracked. Rolled up at the end so nothing is lost.
+
+### CODE-DOABLE TASK MANIFEST (reference index — survey 2026-06-06)
+
+> The `- [ ]` checkboxes LIVE IN THE CITED SOURCE PLAN — flip them there as shipped. This is a read-only index (no
+> checkboxes here on purpose: backlog-regen would double-count). Counts are open code-doable todos.
+
+| #   | Source plan (open code-doable)                            | repos touched                                                      | theme / what to do                                                                                                                                                                                                                                                                                                                            |
+| --- | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `utl_full_quality_gates_green` (13)                       | UTL, UAC, PM                                                       | **T0 — FIRST.** basedpyright strict-green (type stubs, `reportUnknownMemberType`→error, annotate residual), UAC registry-facade re-exports, coverage ≥80%, helper-extract ≤50L, wire UTL into the v2 required check, flip manifest_reader C4                                                                                                  |
+| 2   | `commit_identity_misconfig_fleet` (4)                     | PM + 25 repos                                                      | deploy the commit-identity hook fleet-wide, standardise it in `setup-tab-worktrees.sh`, root-cause + guard the semver-bot-email leak                                                                                                                                                                                                          |
+| 3   | `qg_commit_quality_boundary_and_slot_ff_push` (26)        | PM scripts/templates, `deployment-service`                         | FF-cron **self-pull hardening** (gate on fresh LDR), setup-tab-worktrees upstream-pin, quickmerge STAGE-0.4 structured-error contract + dep-align, QG-sentinel gitignore + rollout, AWS CodeBuild exit-127 fix, PAT-push tab-mirror fix + rollout, env-tier bucket-test sweep, semantic cross-plan conflict detector, doc-contradiction sweep |
+| 4   | `cicd_contract_hardening` (THIS, 29)                      | PM, agent-orchestrator, features, SIT, mtds, uac, ui, all-services | default-branch==`main` verifier, escalate-to-orchestrator GHA, `ci_failure_watcher` alerts (stuck-PR→escalation, PR-resolved bookend, SIT-pass, main-QG severity), `ci_status` Guard 2/3, plan-health-gate required check, **pyjwt→2.13.0 fleet lock bump**, per-repo QG-debt greening, auto-rebasing mirror→AO, gitignore `*_DAG.svg`        |
+| 5   | `agent_orchestrator_e2e_workflow_and_execution_scope` (6) | PM, agent-orchestrator                                             | G2 backlog/regen GHA hook, G6 AO `staging` + v2-pin (CODE parts; the backend restart is `BLOCKED-OPERATOR`), G9 conflict-resolver worker + spawn route, bootstrap_vm cron installs                                                                                                                                                            |
+
+**Not in Phase A (no code-doable open todos):** `pipeline_mode_partition_migration` (2 open = infra GCS-walk),
+`shared_stash_pile_archive_cleanup` (1 = time-gated purge after 2026-06-08). **Zero-open (folded/evidence only):**
+`cicd_hidden_fragility_audit`, `ci_false_positive_alerts_infra_noise`, `fleet_promotion_pipeline_repair`,
+`ui_ci_cross_repo_github_token_violations`. **Also in the cluster (see the WAVE tables above for scope):**
+`harden_grepable_rules_into_ci_gates`, `uv_lockfile_determinism`, `orchestrator_fleet_worker_spawn_enablement`,
+`codex_vs_repo_docs_ssot_audit`, `harsh_day_master`, `agent_context_and_memory_hygiene`.
+
+### NOT-CODE rollup (Phase-B / operator — do NOT attempt in Phase A)
+
+- Manual fleet promotion waves + stuck-PR dirty-mergestate reconciliation (VM conflict-agent): PM #116, UAC ×4, mtds /
+  deployment-service / alerting-service.
+- Branch-protection admin (needs repo-admin token): re-pin rulesets, `enforce_admins` tail, `default_branch` PATCH.
+- aiohttp CVE-2026-34993/47265 (`--ignore-vuln` already sanctioned) + the pyjwt advisory operator call (the lock-bump
+  itself is code-doable, item 4).
+- agent-orchestrator G6 `staging` creation (`BLOCKED-OPERATOR` — fires a fleet backend restart) + GitHub Pro / public
+  repo (`BLOCKED-BILLING`).
+- macOS import-overhead infra fix (CI is the authoritative verifier); credit/CVE operator decisions.
+
+### Hand-off invariant
+
+This section + the **🧭 CI/CD MASTER INDEX** + the **🤖 Finishing-agent brief** are the complete CI/CD pickup surface. A
+next agent: (1) reads `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`, (2) works **Phase A in dep order** from the
+manifest's source plans (the `- [ ]` live there — flip them in-plan as shipped), (3) does **NOT** run Phase B until LDR
+is green fleet-wide, (4) captures any new finding as a `- [ ]` in the **right source plan**, never as a checkbox here.
+
 ## 🤖 Finishing-agent brief (dispatch-ready)
 
 > **Task:** finish the CI/CD / GHA / orchestrator / quality-gate / Slack-alerting hardening to a clean, self-sustaining
