@@ -123,7 +123,14 @@ already declares
 per source + per-operation REST/WS. M2 should **derive** the `{batch,live,replay}` capability from `SourceCapability`
 (and add an explicit `supports_replay` + intraday-replay flag there) rather than the standalone draft
 `SOURCE_MODE_CAPABILITY` dict (which is the Phase-0.1 placeholder). Also: `hyperliquid_rest` bakes the transport into
-the source name — the M1 antipattern (target `hyperliquid` + transport).
+the source name — the M1 antipattern (target `hyperliquid` + transport). **TARGET API (explicit — the
+data-type-dependence is a hard contract, not a narration):** the capability lookup is
+**`modes_for(source, data_type) -> frozenset[Mode]`** (keyed per `(source, data_type)`, derived from
+`SourceCapability.operations` — ws-prefixed op ⇒ `LIVE`, REST op ⇒ `BATCH`, + the new `supports_replay`/intraday flag).
+The Phase-0.1 `modes_for_source(source)` shipped in UAC@a2eab633 is the **COARSE per-source placeholder** and MUST be
+SUPERSEDED by the per-`(source, data_type)` form (e.g. `modes_for("hyperliquid","trades")={BATCH,LIVE}` vs
+`modes_for("hyperliquid","funding_rates")={BATCH}`); M3's `could_exist(shard, mode)` calls THIS, so the guardrail is
+data-type-aware end-to-end.
 
 ### M3 — Per-shard available-sources (UAC SSOT) — and the guardrail
 
