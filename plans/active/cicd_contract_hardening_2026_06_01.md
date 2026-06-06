@@ -2834,3 +2834,30 @@ should finish (no more frozen-pipeline blockers, just iteration + 2 known per-la
 
 Read `cursor-configs/AUTONOMOUS_AGENT_RULES.md` + the 📌 2026-06-06 PROGRESS block (top) + this section. The pipeline is
 no longer frozen — work items 1–4 above in order; the version-bump + staging-to-main machinery now functions correctly.
+
+### 🟢 UPDATE — convergent unblock COMPLETE (2026-06-06, later in session)
+
+Two more systemic fixes landed + the convergent root-cause cleared:
+
+5. **semver-agent dropped the version-commit step** (the `version-bump.yml`→`semver-agent.yml` migration removed
+   `chore(release): bump version` → manifest/reality version divergence + broke the dep-update cascade). **Fixed: PM PR
+   #149 (merged)** — re-added the apply+commit step to the semver-agent templates. Issue doc:
+   `plans/active/issues/semver_agent_missing_version_commit_breaks_dep_cascade_2026_06_06.md`. Follow-ups (P0/P1): roll
+   the fixed `semver-agent.yml` to all repos' live workflows (`scripts/rollout-semver-agent.sh`); add `uv lock` to
+   `update-dependency-version.yml` + `update-repo-version.yml` (recurring lock-drift class).
+6. **SIT `smoke-test-gate.yml` (drives `staging-validated`) never cloned sibling repos** → `uv pip install -e .` failed
+   ("Distribution not found") + checked out the archived `unified-trading-codex`. **Fixed: `system-integration-tests@
+   dc00485`** — added an "Assemble sibling workspace" clone step to all 3 jobs (mirrors the green `full-workspace-sit`)
+   + repointed the codex readiness check. (`full-workspace-sit` nightly was already GREEN — only the smoke gate was red.)
+
+**🟢 CONVERGENT ROOT-CAUSE CLEARED:** the operator-sanctioned `aiohttp>=3.13.4,<3.14.0` cap was on LDR fleet-wide but
+MISSING on `staging` for 7 repos (utl/features/strategy/execution/deployment-api/mdps/mtds), so every staging-cloning
+gate (SIT smoke-gate, dep-update cascade) hit the removed-`AsyncStreamReaderMixin` aiohttp 3.14 → uv "No solution".
+**All 7 now drained: `staging == LDR` with the `<3.14` cap** (verified `git rev-list staging..LDR == 0` + pyproject
+shows the cap on all 7). This unblocks SIT + the dep-update cascade + dependent-tier staging→main promotion.
+
+**Pipeline state at session end: UNFROZEN, repaired, proven end-to-end, and the convergent blocker cleared.** The fleet
+now drains main bottom-up via the (now-correct) machinery: version-bump (auto on staging-QG) → SIT-validate (smoke gate
+fixed; should green now staging carries the aiohttp cap) → staging-to-main (promote-ready/skip-blocked). Remaining =
+iterative multi-tier drain to converge every repo's `main` + the WAVE-1/2 machinery todos; no frozen-pipeline blockers
+remain. Minor cleanup: a few duplicate open LDR→staging resync PRs (harmless; auto-close as the canonical drain merges).

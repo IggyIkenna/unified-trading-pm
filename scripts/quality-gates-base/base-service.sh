@@ -1501,13 +1501,21 @@ if [ -n "$_WF_DIR_GUARD" ]; then
 fi
 
 # ── [5.5] WORKFLOW LINT (actionlint) ──────────────────────────────────────────
-if [ -d "${REPO_ROOT}/.github/workflows" ]; then
+# Dir-detection broadened to git-toplevel (mirrors [5.5a]) — the original
+# `[ -d ${REPO_ROOT}/.github/workflows ]` guard was silently false in the v2
+# reusable-workflow context (REPO_ROOT mis-resolves), so full actionlint never ran
+# for PM. Resolve the workflows dir robustly so the gate actually fires.
+_WF_LINT_DIR=""
+for _cand in "${REPO_ROOT:-}/.github/workflows" "$(git rev-parse --show-toplevel 2>/dev/null)/.github/workflows" "${PROJECT_ROOT:-}/.github/workflows" "./.github/workflows"; do
+    [ -d "$_cand" ] && { _WF_LINT_DIR="$_cand"; break; }
+done
+if [ -n "$_WF_LINT_DIR" ]; then
     log_section "[5.5/6] WORKFLOW LINT (actionlint)"
     if command -v actionlint &>/dev/null; then
         WORKFLOW_ERRORS=0
         while IFS= read -r -d '' wf; do
             actionlint "$wf" 2>&1 || WORKFLOW_ERRORS=$(( WORKFLOW_ERRORS + 1 ))
-        done < <(find "${REPO_ROOT}/.github/workflows" -name "*.yml" -print0 2>/dev/null)
+        done < <(find "$_WF_LINT_DIR" -name "*.yml" -print0 2>/dev/null)
         [ $WORKFLOW_ERRORS -gt 0 ] && { log_fail "Workflow lint FAILED: $WORKFLOW_ERRORS file(s) with errors"; exit 1; }
         log_ok "Workflow lint PASSED"
     else
@@ -1517,7 +1525,7 @@ if [ -d "${REPO_ROOT}/.github/workflows" ]; then
     # Cross-repo checkout must use GH_PAT, not GITHUB_TOKEN (GITHUB_TOKEN is repo-scoped only)
     _TOKEN_CHECKER="${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check-workflow-tokens.py"
     if [ -f "$_TOKEN_CHECKER" ]; then
-        if ! $PYTHON_CMD "$_TOKEN_CHECKER" --dir "${REPO_ROOT}/.github/workflows" 2>&1; then
+        if ! $PYTHON_CMD "$_TOKEN_CHECKER" --dir "$_WF_LINT_DIR" 2>&1; then
             log_fail "Workflow: cross-repo checkout uses secrets.GITHUB_TOKEN — must use secrets.GH_PAT"
             exit 1
         fi
@@ -1527,7 +1535,7 @@ if [ -d "${REPO_ROOT}/.github/workflows" ]; then
     # Bash-guard checks: secrets.TELEGRAM_CHAT_ID (→ vars.) and $(&&) without || true
     _BASH_GUARD_CHECKER="${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check-workflow-bash-guards.py"
     if [ -f "$_BASH_GUARD_CHECKER" ]; then
-        if ! $PYTHON_CMD "$_BASH_GUARD_CHECKER" --dir "${REPO_ROOT}/.github/workflows" 2>&1; then
+        if ! $PYTHON_CMD "$_BASH_GUARD_CHECKER" --dir "$_WF_LINT_DIR" 2>&1; then
             log_fail "Workflow bash-guard violations found — see output above"
             exit 1
         fi

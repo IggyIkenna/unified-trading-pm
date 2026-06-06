@@ -66,12 +66,14 @@ jobs:
 
       - name: Extract major-bump metadata from issue body
         id: metadata
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
         run: |
           set -euo pipefail
 
           # The issue body embeds JSON in an HTML comment:
           # <!-- major-bump-metadata {"repo": "...", "proposed_version": "...", ...} -->
-          ISSUE_BODY="${{ github.event.issue.body }}"
+          # ISSUE_BODY is passed via env (untrusted github.event.* must not be inlined).
 
           METADATA=$(echo "$ISSUE_BODY" | \
             grep -oP '(?<=<!-- major-bump-metadata ).*?(?= -->)' || echo "")

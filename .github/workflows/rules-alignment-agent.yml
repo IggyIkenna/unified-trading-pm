@@ -73,8 +73,8 @@ jobs:
       - name: Identify changed plan files
         id: changed-plans
         run: |
-          if [ -n "${{ inputs.md_file }}" ]; then
-            CHANGED="${{ inputs.md_file }}"
+          if [ -n "${{ inputs.plan_file }}" ]; then
+            CHANGED="${{ inputs.plan_file }}"
           else
             CHANGED=$(git diff HEAD~1 --name-only -- 'plans/active/' | tr '\n' ' ')
           fi
