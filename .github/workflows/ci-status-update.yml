@@ -37,6 +37,8 @@ jobs:
       skip: ${{ steps.update.outputs.skip }}
       notify_worthy: ${{ steps.update.outputs.notify_worthy }}
       prev_status: ${{ steps.update.outputs.prev_status }}
+      severity_class: ${{ steps.update.outputs.severity_class }}
+      sit_pass: ${{ steps.update.outputs.sit_pass }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,6 +52,7 @@ jobs:
           REPO: ${{ github.event.client_payload.repo }}
           STATUS: ${{ github.event.client_payload.status }}
           SHA: ${{ github.event.client_payload.sha || '' }}
+          BRANCH: ${{ github.event.client_payload.branch || '' }}
         run: |
           set -euo pipefail
 
@@ -75,6 +78,7 @@ jobs:
 
           repo = os.environ["REPO"]
           status = os.environ["STATUS"]
+          branch = os.environ.get("BRANCH", "")
 
           manifest_path = Path("workspace-manifest.json")
           with open(manifest_path) as f:
@@ -96,16 +100,35 @@ jobs:
           print(f"Updated {repo} ci_status: {prev} -> {status}")
 
           # Transition-gate the Slack notify: only alert on a state CHANGE that matters —
-          # a regression TO FAILING, or a recovery FROM FAILING. Steady-state (prev==status)
-          # and green<->green tier moves (FEATURE_GREEN<->STAGING_GREEN) are NOT alerted —
+          # a regression TO FAILING, a recovery FROM FAILING, OR a transition INTO
+          # SIT_VALIDATED (the explicit SIT-pass alert — previously SIT-green was only
+          # implied via promotion, never surfaced). Steady-state (prev==status) and
+          # green<->green tier moves (FEATURE_GREEN<->STAGING_GREEN) are NOT alerted —
           # those were spam ("telling us things are fine"). The manifest write + persist
           # (dashboard data) still ALWAYS run; only the #ci-failures Slack ping is gated.
-          notify_worthy = (status == "FAILING") or (prev == "FAILING" and status != "FAILING")
+          sit_pass = status == "SIT_VALIDATED" and prev != "SIT_VALIDATED"
+          notify_worthy = (
+              (status == "FAILING")
+              or (prev == "FAILING" and status != "FAILING")
+              or sit_pass
+          )
+          # Severity class for the alert (consumed by build-message + the Slack notify):
+          #   main-branch FAILING  → CRITICAL  (a break on main is the worst case — the
+          #                          released/promoted line is red, distinct from a
+          #                          staging-PR fail which is caught pre-promotion)
+          #   any other FAILING    → WARNING
+          #   SIT-pass / recovery  → INFO
+          if status == "FAILING":
+              severity_class = "CRITICAL" if branch == "main" else "WARNING"
+          else:
+              severity_class = "INFO"
           gh_out = os.environ.get("GITHUB_OUTPUT")
           if gh_out:
               with open(gh_out, "a") as out:
                   out.write(f"notify_worthy={'true' if notify_worthy else 'false'}\n")
                   out.write(f"prev_status={prev}\n")
+                  out.write(f"severity_class={severity_class}\n")
+                  out.write(f"sit_pass={'true' if sit_pass else 'false'}\n")
           PYEOF
 
           python3 scripts/manifest/generate_workspace_dag.py
@@ -174,13 +197,25 @@ jobs:
           REPO: ${{ github.event.client_payload.repo }}
           STATUS: ${{ github.event.client_payload.status }}
           PREV: ${{ needs.update-ci-status.outputs.prev_status }}
+          BRANCH: ${{ github.event.client_payload.branch || '' }}
+          SEVERITY_CLASS: ${{ needs.update-ci-status.outputs.severity_class }}
+          SIT_PASS: ${{ needs.update-ci-status.outputs.sit_pass }}
           EXCERPT_B64: ${{ github.event.client_payload.failure_excerpt_b64 }}
           SHA: ${{ github.event.client_payload.sha || '' }}
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set -euo pipefail
           if [ "${STATUS}" = "FAILING" ]; then
-            MSG="🔴 CI REGRESSION: *${REPO}* is now *FAILING* (was ${PREV})"
+            if [ "${BRANCH}" = "main" ]; then
+              # A break on main = the released/promoted line is red → CRITICAL, distinct
+              # from a staging-PR fail (caught pre-promotion). Make the branch explicit.
+              MSG="🚨 CI REGRESSION on *main*: *${REPO}* is *FAILING* (was ${PREV}) — the promoted/main line is RED"
+            else
+              MSG="🔴 CI REGRESSION: *${REPO}* is now *FAILING* (was ${PREV})${BRANCH:+ [branch: ${BRANCH}]}"
+            fi
+          elif [ "${SIT_PASS}" = "true" ]; then
+            # Explicit SIT-pass alert — SIT-green was previously only implied via promotion.
+            MSG="✅ SIT PASSED: *${REPO}* ${PREV} → *SIT_VALIDATED* (system-integration-tests green; clear to promote staging→main)"
           else
             MSG="🟢 CI RECOVERED: *${REPO}* ${PREV} → *${STATUS}*"
           fi
@@ -247,7 +282,12 @@ jobs:
       # meta-job's result. Otherwise FAILING repos render with ✅/Conclusion: success
       # because the manifest write itself succeeded. Manifest-job failure also flips to
       # failure so degraded ci-status writes don't mask under a green tick.
-      severity: ${{ github.event.client_payload.status == 'FAILING' && 'CRITICAL' || 'INFO' }}
+      # severity_class is computed by update-ci-status: CRITICAL for a main-branch FAILING
+      # (worst case — the promoted line is red), WARNING for any other FAILING, INFO for a
+      # SIT-pass / recovery. Falls back to the old status-only rule if unset.
+      severity:
+        ${{ needs.update-ci-status.outputs.severity_class || (github.event.client_payload.status == 'FAILING' &&
+        'CRITICAL' || 'INFO') }}
       conclusion:
         ${{ (github.event.client_payload.status == 'FAILING' || needs.update-ci-status.result != 'success') && 'failure'
         || 'success' }}

@@ -298,8 +298,67 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
     return stuck
 
 
-def build_report(transitions: list[dict], stuck: list[dict]) -> tuple[bool, str, str]:
+def detect_resolved_prs(repo: str, resolved_hours: float, now: _dt.datetime) -> list[dict]:
+    """Return promotion PRs that recently MERGED or CLOSED — the bookend for a previously
+    open/stuck/failing promotion PR.
+
+    A FAILING promotion PR posts an open alert (detect_stuck_prs + the transition alerts);
+    when it finally merges/closes, the open alert is left dangling ("is it still broken?").
+    This emits a closing "resolved / no longer relevant" bookend so the channel reflects the
+    PR's terminal state. Stateless: we look at PRs into a promotion base whose head is a
+    promotion head (LDR/staging) that reached a terminal state within the recent window
+    (matched to the cron cadence so each resolution is reported once).
+    """
+    resolved: list[dict] = []
+    for base in PROMOTION_BASES:
+        prs = gh_json(
+            [
+                "pr",
+                "list",
+                "--repo",
+                f"{ORG}/{repo}",
+                "--base",
+                base,
+                "--state",
+                "closed",
+                "--limit",
+                "30",
+                "--json",
+                "number,title,state,merged,closedAt,headRefName,url",
+            ]
+        )
+        if not isinstance(prs, list):
+            continue
+        for pr in prs:
+            # Only promotion-contract PRs (same gate as detect_stuck_prs) so random closed
+            # feature branches don't post resolved-bookends.
+            if pr.get("headRefName") not in _PROMOTION_HEADS:
+                continue
+            closed_at = pr.get("closedAt")
+            if not closed_at:
+                continue
+            age_h = (now - _parse_ts(closed_at)).total_seconds() / 3600.0
+            if age_h < 0 or age_h > resolved_hours:
+                continue  # outside the recent window → already reported (or not yet)
+            resolved.append(
+                {
+                    "repo": repo,
+                    "base": base,
+                    "number": pr["number"],
+                    "title": pr.get("title") or "",
+                    "head": pr.get("headRefName") or "",
+                    "merged": bool(pr.get("merged")),
+                    "url": pr.get("url") or "",
+                }
+            )
+    return resolved
+
+
+def build_report(
+    transitions: list[dict], stuck: list[dict], resolved: list[dict] | None = None
+) -> tuple[bool, str, str]:
     """Return (alert, severity, mrkdwn_report)."""
+    resolved = resolved or []
     failing = [t for t in transitions if t["kind"] == "failing"]
     recovered = [t for t in transitions if t["kind"] == "recovered"]
 
@@ -324,11 +383,16 @@ def build_report(transitions: list[dict], stuck: list[dict]) -> tuple[bool, str,
                 f"  • `{s['repo']}` #{s['number']} {s['head']}→{s['base']} — "
                 f"{s['state']} for {s['age_min']}m, {am} <{s['url']}|PR>"
             )
+    if resolved:
+        lines.append(f":ballot_box_with_check: *{len(resolved)} promotion PR(s) RESOLVED (merged/closed):*")
+        for r in resolved:
+            verb = "merged" if r["merged"] else "closed"
+            lines.append(f"  • `{r['repo']}` #{r['number']} {r['head']}→{r['base']} {verb} <{r['url']}|PR>")
 
-    alert = bool(failing or stuck)  # recoveries alone post as INFO, not a page
+    alert = bool(failing or stuck)  # recoveries/resolutions alone post as INFO, not a page
     severity = "CRITICAL" if (failing or stuck) else "INFO"
-    report = "\n".join(lines) if lines else "No CI transitions or stuck PRs detected."
-    return (alert or bool(recovered)), severity, report
+    report = "\n".join(lines) if lines else "No CI transitions, stuck PRs, or resolutions detected."
+    return (alert or bool(recovered) or bool(resolved)), severity, report
 
 
 def write_github_output(alert: bool, severity: str, report: str) -> None:
@@ -496,6 +560,14 @@ def main() -> int:
         help="Only alert on a transition whose latest run is within this many hours "
         "(stateless guard against re-paging ancient dead workflows). Cron is */15m.",
     )
+    parser.add_argument(
+        "--resolved-hours",
+        type=float,
+        default=0.5,
+        help="Report a promotion PR merged/closed within this many hours as a 'resolved' "
+        "bookend (closes a dangling FAILING/stuck alert). Matched to the */15m cron so each "
+        "resolution posts once. Set 0 to disable.",
+    )
     parser.add_argument("--now", help="Override 'now' (ISO8601) for deterministic testing.")
     parser.add_argument(
         "--escalate",
@@ -511,12 +583,15 @@ def main() -> int:
 
     transitions: list[dict] = []
     stuck: list[dict] = []
+    resolved: list[dict] = []
     for repo in repos:
         for branch in WATCHED_BRANCHES:
             transitions.extend(detect_transitions(repo, branch, args.limit, now, args.fresh_hours))
         stuck.extend(detect_stuck_prs(repo, args.stuck_minutes, now))
+        if args.resolved_hours > 0:
+            resolved.extend(detect_resolved_prs(repo, args.resolved_hours, now))
 
-    alert, severity, report = build_report(transitions, stuck)
+    alert, severity, report = build_report(transitions, stuck, resolved)
     print(report)
     write_github_output(alert, severity, report)
 
