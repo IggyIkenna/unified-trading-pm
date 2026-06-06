@@ -1797,7 +1797,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": null,
+    "locked_reason": "SIT failed — open for fixes",
     "lock_version": null,
     "pending_repos": [
       "market-tick-data-service",
