@@ -91,10 +91,16 @@ related_plans:
       role tag `ikenna-brain`, `i-0c9b283b…` — with no scripted launcher (provisioned manually/one-off; no
       `launch-brain.sh`). So an epic-VM launch CANNOT collide with it: `launch-epic-vm-aws.sh --vm-id vm-defi` makes a
       SEPARATE instance `agent-orch-vm-defi-<date>` (own `ORCHESTRATOR_VM_ID=vm-defi` → `tab/vm-defi/N`),
-      singleton-locked on `agent-orch-vm-defi-*` which never matches `agent-orchestrator-vm-1`. The only genuine gap:
-      there is no canonical AWS launcher for the central/brain box itself — if it ever needs a from-scratch relaunch,
-      write a `launch-central-brain-aws.sh` (export `ORCHESTRATOR_VM_ID=planning` + `--role planning --slots 5`, attach
-      the EIP) rather than hand-provisioning. Repo: `deployment-service`. parent_epic: orchestrator_master.
+      singleton-locked on `agent-orch-vm-defi-*` which never matches `agent-orchestrator-vm-1`. **Gap RESOLVED
+      2026-06-05:** wrote `deployment-service/scripts/vm/launch-central-brain-aws.sh` (modeled on
+      `launch-epic-vm-aws.sh`) — canonical from-scratch relaunch of the central box: fixed Name
+      `agent-orchestrator-vm-1` + role tag `ikenna-brain` + singleton-locked on `agent-orchestrator-vm-` (one brain),
+      `m8i.4xlarge`/60GB, user-data `export ORCHESTRATOR_VM_ID=planning` → `bootstrap_vm.sh --role planning --slots 5`,
+      installs nginx, and **auto-re-associates the EIP** (`eipalloc-07b7bfe509d63c477` / 13.113.200.22)
+      post-`instance-running` (DNS stays valid). `--dry-run`/`--force` supported; `bash -n` + `shellcheck -S error`
+      clean. Documented prereqs (prebaked AMI with nginx+cert, and keeping the `ORCHESTRATOR_ENV_LOCAL` Secrets-Manager
+      secret's `ORCHESTRATOR_VM_ID=planning` in sync — bootstrap fetches that for the running backend id). Repo:
+      `deployment-service`. parent_epic: orchestrator_master.
 - [x] ✅ [DOC] P2. **Align the registry id `planning-vm` → `planning`** to match the running
       `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches. SHIPPED 2026-06-05: renamed the
       `orchestrator_vm_registry.yaml` `id:` + every live `assigned_vm: planning-vm` ref (this plan +
