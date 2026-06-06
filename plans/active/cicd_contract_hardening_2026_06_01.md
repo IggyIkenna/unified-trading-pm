@@ -143,8 +143,10 @@ is green fleet-wide, (4) captures any new finding as a `- [ ]` in the **right so
 ## 🤖 Finishing-agent brief (dispatch-ready)
 
 > **Task:** finish the CI/CD / GHA / orchestrator / quality-gate / Slack-alerting hardening to a clean, self-sustaining
-> state. **First** read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full, then the "🧭 CI/CD MASTER INDEX" above.
-> Work the waves **in order**; do not start a later wave until the earlier is green.
+> state. **First** read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (safety floor) **and
+> `cursor-configs/AUTONOMOUS_AGENT_RULES.md` (the COMPLETION contract — finish-to-done, no re-dispatch loops, full
+> chicken-and-egg authority, journal-to-plan-across-compression)** in full, then the "🧭 CI/CD MASTER INDEX" above. Work
+> the waves **in order**; do not start a later wave until the earlier is green.
 
 > **📌 2026-06-05 PROGRESS — staging promotion pipeline reconciled (WAVE-0 §1 + staging-resync DONE).** The
 > LDR→staging→main pipeline was found broken **fleet-wide** (staging 192–761 behind main; LDR→staging auto-drain
