@@ -41,9 +41,12 @@ central-element-323112-*.json
 /derived-dependency-manifest.json
 #     DAG SVGs ← workspace-manifest.json (generate_workspace_dag.py / generate_data_flow_dag.py;
 #       generators are deterministic — churn is driven by mutable ci_status inside the manifest,
-#       so untracking removes it without needing the ci_status sidecar; nothing imports an SVG) ---
-/WORKSPACE_MANIFEST_DAG.svg
-/DATA_FLOW_DAG.svg
+#       so untracking removes it without needing the ci_status sidecar; nothing imports an SVG).
+#       Patterns are NOT root-anchored: the canonical DAGs now live under codex/04-architecture/
+#       (the old `/WORKSPACE_MANIFEST_DAG.svg` root-anchored rule missed them → they stayed tracked
+#       and churned, jamming slot-cron-ff-pull). Match by basename anywhere. (cicd item; 2026-06-06) ---
+*_DAG.svg
+CANONICAL_DEPENDENCY_MANIFEST.svg
 
 # --- OS / editor ---
 .DS_Store

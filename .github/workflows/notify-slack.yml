@@ -54,6 +54,14 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Post to Slack
+        # Notifications are BEST-EFFORT: a webhook timeout / HTTP error / network blip
+        # from the runner (e.g. `urlopen error timed out`) must NEVER fail the calling
+        # workflow or flip its conclusion to failure. continue-on-error keeps the step's
+        # own status green regardless of the post outcome (the inner python still logs
+        # success/failure for visibility). Incident 2026-06-06: a Slack webhook timeout in
+        # staging-to-main's notify-promotion-complete job marked an otherwise-successful
+        # promotion run as `failure`.
+        continue-on-error: true
         env:
           # Prefer the dedicated valid #ci-failures webhook; fall back to the generic one.
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
