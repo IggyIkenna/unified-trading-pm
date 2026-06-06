@@ -983,16 +983,16 @@ machinery):
 - [x] ✅ [DEP] P0. **DONE (verified 2026-06-06) — every fleet `uv.lock` already resolves `pyjwt 2.13.0`** (surveyed all
       24 repos: all at 2.13.0 on LDR; uac/PM carry no pyjwt in lock). The bump landed on LDR fleet-wide; reaches each
       `main` via the staging→main drain. No action needed beyond the drain. **Fleet-wide `pyjwt` → 2.13.0 bump
-      (security; fixes pip-audit PYSEC-2026-175/177/178/179).** Repos:
-      every repo whose `uv.lock` pins pyjwt < 2.13.0 (unified-trading-library, instruments-service, alerting-service,
-      execution-service, features-service, fund-administration-service, market-data-processing-service,
-      market-tick-data-service, ml-service, strategy-service, trading-agent-service, client-reporting-api,
-      unified-trading-api, batch-live-reconciliation-service, deployment-service, e2e-testing, ibkr-gateway-infra). Per
-      repo (in the workspace layout so sibling editable paths resolve — NOT a /tmp worktree):
-      `uv lock --upgrade-package pyjwt` → confirm lock resolves `pyjwt 2.13.0` → `bash scripts/quality-gates.sh` green →
-      quickmerge / LDR→main PR. The constraint already permits 2.13.0, so it's a lock-only change (no pyproject edit).
-      greeks-service + deployment-api already at 2.13.0 (no-op). **e2e-testing main is currently RED on exactly this** —
-      its promotion (e2e-testing#3) merged but post-merge main v2 failed pip-audit; this bump greens it.
+      (security; fixes pip-audit PYSEC-2026-175/177/178/179).** Repos: every repo whose `uv.lock` pins pyjwt < 2.13.0
+      (unified-trading-library, instruments-service, alerting-service, execution-service, features-service,
+      fund-administration-service, market-data-processing-service, market-tick-data-service, ml-service,
+      strategy-service, trading-agent-service, client-reporting-api, unified-trading-api,
+      batch-live-reconciliation-service, deployment-service, e2e-testing, ibkr-gateway-infra). Per repo (in the
+      workspace layout so sibling editable paths resolve — NOT a /tmp worktree): `uv lock --upgrade-package pyjwt` →
+      confirm lock resolves `pyjwt 2.13.0` → `bash scripts/quality-gates.sh` green → quickmerge / LDR→main PR. The
+      constraint already permits 2.13.0, so it's a lock-only change (no pyproject edit). greeks-service + deployment-api
+      already at 2.13.0 (no-op). **e2e-testing main is currently RED on exactly this** — its promotion (e2e-testing#3)
+      merged but post-merge main v2 failed pip-audit; this bump greens it.
 
 ### State as of 2026-06-01 (DONE — do not redo)
 
@@ -1249,6 +1249,43 @@ by a PR:
       (`pbms_aggregator._VenueData` → `.VenueData`); `pytest tests/ -m code_test --collect-only` now exits 0
       (**4235/4722 collected, 487 deselected**, only harmless `full_e2e` unknown-mark warnings). **REMAINING:** full
       symbol-drift sweep across the rest of `tests/`, `deployment_test` re-green, and one run-to-completion — kept open.
+- [x] ✅ [SCRIPT] P0. DONE 2026-06-06 (slot-1 SIT diagnosis): **smoke-test-gate.yml never assembled the editable-dep
+      sibling workspace before `uv pip install -e .` → Smoke Test Gate FAILED on every staging-promotion dispatch →
+      `staging-validated` never fired → staging→main needed manual nudges.** Root cause (run 27066432311
+      `Code Tests     (static)` → "Install dependencies"): the `code-tests`, `abbreviated-tests`, and `deployment-tests`
+      jobs ran `uv pip install -e .`, which resolves SIT's `[tool.uv.sources] path=../<repo>` editable deps FROM DISK,
+      but the workflow only checked out SIT itself →
+      `error: Distribution not found at file:///.../unified-trading-library`. Also a stale `actions/checkout` of the
+      ARCHIVED `unified-trading-codex` (`##[error]Repository path … not under …`). **FIX shipped —
+      `system-integration-tests@dc00485` (LDR + tab/ikennaigboaka/1):** added an "Assemble sibling workspace (editable
+      path deps)" step to all three jobs that clones the active PM-manifest topologicalOrder set as `../<repo>` siblings
+      (staging→main fallback, mirrors the green `full-workspace-sit.yml`); removed the archived `unified-trading-codex`
+      checkout + repointed the readiness check to `../unified-trading-pm/codex/10-audit/repos`; re-locked `uv.lock`
+      (dropped pre-commit + transitive deps removed from pyproject in 9bad68c). QG green (106s, sentinel
+      dc00485-parent). repo: system-integration-tests. **NOTE the gate is still RED until the aiohttp-staging drift
+      below is promoted — see next todo.**
+- [ ] [INFRA] P0. **🔴 SIT GATE STILL RED — fleet-wide aiohttp `<3.14` revert landed on LDR but NOT promoted to
+      `staging` (6+ repos) → SIT workspace-assembly (`uv pip install -e .` / `uv sync` over the editable closure) is
+      UNSATISFIABLE → both `smoke-test-gate` code-tests AND `quality-gates-v2` (the required check on every SIT staging
+      PR) fail with
+      `× No solution found … alerting-service depends on aiohttp>=3.13.4,<3.14.0 … mtds==0.2.0 depends on     aiohttp>=3.14.0,<4.0.0 … unsatisfiable`.**
+      Provenance: slot-1 SIT diagnosis 2026-06-06; PR #22 qg-v2 run 27065734898; the operator aiohttp `<3.14` HARD RULE
+      (CLAUDE.md — 3.14 removed `AsyncStreamReaderMixin` → breaks vcrpy 8.1.1). The revert (e.g. mtds `de42ced`) is on
+      every repo's **LDR** (verified `<3.14.0` on UTL/features/strategy/execution/deployment-api/mtds/market-tick-data
+      LDR) but their **staging** branches still carry the pre-revert `>=3.14.0,<4.0.0` bump (e.g. mtds staging
+      `2a3af45 fix(deps): bump aiohttp>=3.14.0`). Drifted on staging: **unified-trading-library · features-service ·
+      strategy-service · execution-service · deployment-api · market-data-processing-service ·
+      market-tick-data-service** (UAC/alerting/instruments/client-reporting-api/ deployment-service staging are already
+      `<3.14`). **FIX = promote each drifted repo LDR→staging** (the standard staging-to-main wave; LDR already carries
+      the correct pin so this is promotion, not new code). mtds staging is DIVERGED-by-merge-commits-only from LDR
+      (`b86bae6`/`916f386` are LDR→staging merge PRs #95/#91) so a fresh LDR→staging merge brings `de42ced`'s revert
+      cleanly. Until then the SIT gate cannot go green and staging→main needs manual `staging-to-main.yml` dispatch.
+      repos: market-data-processing-service, market-tick-data-service, unified-trading-library, features-service,
+      strategy-service, execution-service, deployment-api.
+- [ ] [TEST] P2. **SIT PR #22 (`feat!: update unified-api-contracts to 0.2.0` → staging) is BLOCKED by the same aiohttp
+      drift** (its `quality-gates-v2` fails with the identical `No solution found` resolution error, NOT a UAC-0.2.0
+      problem). It will unblock automatically once the aiohttp-staging promotion above lands; re-run its qg-v2 then.
+      repo: system-integration-tests. Provenance: slot-1 2026-06-06.
 - [x] ✅ [SCRIPT] P1. DONE 2026-06-02 (operator: repoint to unified_api_contracts.internal) —
       system-integration-tests@80aacfa (LDR/main/staging): repointed the adoption check to unified-api-contracts +
       check_uac_adoption.py (scans unified_api_contracts/internal/; same --orphans-only/--workspace interface).
@@ -1999,18 +2036,18 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 - [x] ✅ [SCRIPT] P2. **DONE (DAG-SVG half, 2026-06-06 `unified-trading-pm@749558968`)** — the prior root-anchored
       ignore rules (`/WORKSPACE_MANIFEST_DAG.svg`, `/DATA_FLOW_DAG.svg`) silently MISSED the codex-relocated DAGs
       (`codex/04-architecture/{DATA_FLOW,WORKSPACE_MANIFEST,RUNTIME_DEPLOYMENT_TOPOLOGY}_DAG.svg`) AND
-      `CANONICAL_DEPENDENCY_MANIFEST.svg` → all 4 stayed tracked + byte-churned (hit live this session: the SVG was dirty
-      on a clean checkout). Fixed: non-anchored basename patterns (`*_DAG.svg`, `CANONICAL_DEPENDENCY_MANIFEST.svg`) +
-      `git rm --cached` the 4 files. The `ci_status`-sidecar half remains a no-op (infeasible per the NB below — durable
-      cross-workflow state can't live in a gitignored file). **Untrack generated `*_DAG.svg` + move mutable `ci_status`
-      to a sidecar file** — today both live in
-      tracked `workspace-manifest.json`, so every pull is dirty → blocks FF-sync + spawns the prettier-reflow churn.
-      repo: unified-trading-pm. operator-decision (structural). **NB (slot-3 2026-06-05):** the `*_DAG.svg` half is
-      effectively addressed — both DAG SVGs are already `git rm --cached` + gitignored (DONE items above); the residual
-      is only the `ci_status`-in-`workspace-manifest.json` sidecar, which a prior analysis found **infeasible/obsolete**
-      (ci_status is a durable cross-workflow state read by sit-gate/ci-status workflows; a gitignored sidecar is never
-      committed → workflows can't read it). So this todo is largely a no-op pending the operator's structural call on
-      ci_status; the dirty-pull churn it targeted is resolved by the gitignore rollout above.
+      `CANONICAL_DEPENDENCY_MANIFEST.svg` → all 4 stayed tracked + byte-churned (hit live this session: the SVG was
+      dirty on a clean checkout). Fixed: non-anchored basename patterns (`*_DAG.svg`,
+      `CANONICAL_DEPENDENCY_MANIFEST.svg`) + `git rm --cached` the 4 files. The `ci_status`-sidecar half remains a no-op
+      (infeasible per the NB below — durable cross-workflow state can't live in a gitignored file). **Untrack generated
+      `*_DAG.svg` + move mutable `ci_status` to a sidecar file** — today both live in tracked `workspace-manifest.json`,
+      so every pull is dirty → blocks FF-sync + spawns the prettier-reflow churn. repo: unified-trading-pm.
+      operator-decision (structural). **NB (slot-3 2026-06-05):** the `*_DAG.svg` half is effectively addressed — both
+      DAG SVGs are already `git rm --cached` + gitignored (DONE items above); the residual is only the
+      `ci_status`-in-`workspace-manifest.json` sidecar, which a prior analysis found **infeasible/obsolete** (ci_status
+      is a durable cross-workflow state read by sit-gate/ci-status workflows; a gitignored sidecar is never committed →
+      workflows can't read it). So this todo is largely a no-op pending the operator's structural call on ci_status; the
+      dirty-pull churn it targeted is resolved by the gitignore rollout above.
 
 **I. PM plan-health HARD GATE on the LDR→main PR — PM's staging-less "pseudo-staging" (operator 2026-06-05):**
 
@@ -2702,25 +2739,31 @@ behind the exact drift this whole audit is about.
 ## 🟢 Progress Log — 2026-06-06 autonomous finish-to-DONE session (slot-1, append-only)
 
 > Operating under `cursor-configs/AUTONOMOUS_AGENT_RULES.md`. This is the append-only action ledger; the diagnosis +
-> pickup surface is the **📌 2026-06-06 PROGRESS** block near the top of this plan (read that first if context compressed).
+> pickup surface is the **📌 2026-06-06 PROGRESS** block near the top of this plan (read that first if context
+> compressed).
 
 **What this session FIXED (the pipeline was deeply stalled; root causes found + repaired):**
 
 1. **Authored `cursor-configs/AUTONOMOUS_AGENT_RULES.md`** (the completion contract) + wired into this plan's
    Finishing-agent brief + workspace CLAUDE.md § Sub-Agents. `unified-trading-pm@2e495ef29` / `afb6b6e4f`.
 2. **LDR greened fleet-wide** — survey found only UTL + features-service red on LDR. Fixed both:
-   - UTL codex-compliance 7>6 ratchet (hardcoded prod project-id in a test docstring) → `unified-trading-library@9a4ddbe9`.
+   - UTL codex-compliance 7>6 ratchet (hardcoded prod project-id in a test docstring) →
+     `unified-trading-library@9a4ddbe9`.
    - features-service STEP 5.31 bucket-name comment ratchet → `features-service@db32578c`. Both v2-on-LDR now green.
 3. **Reconciled all DIRTY LDR→staging drains** (ml/unified-trading-api/fund-administration/greeks/e2e) — their
    staging-only divergence was 100% CI/promotion/merge artifacts (verified per repo); reconciled staging→LDR via
-   `-X theirs` resync PRs (all MERGED), old DIRTY PRs closed. uac drain #84 MERGED. instruments#399 + deployment-service#22
-   redundant 06-05 resyncs CLOSED (staging already = LDR there). uac#81/utl#242/execution#211 redundant PRs closed.
+   `-X theirs` resync PRs (all MERGED), old DIRTY PRs closed. uac drain #84 MERGED. instruments#399 +
+   deployment-service#22 redundant 06-05 resyncs CLOSED (staging already = LDR there). uac#81/utl#242/execution#211
+   redundant PRs closed.
 4. **🔑 ROOT-CAUSE FIX of the dead staging→main automation:** `update-repo-version.yml` (bumps `staging_versions`, the
-   version-delta promotion trigger) was CRASHING every run (`/tmp/bump_type.txt` missing + unbound `CURRENT`; root cause:
-   bare PYEOF heredoc terminator) → `staging_versions` never bumped → SIT + staging-to-main idle since 06-01 despite
-   staging being 13–43 commits ahead of main with real release code. Fixed + merged: `unified-trading-pm` PR **#146**
-   (also caught PM main up — 8-file net diff). Pilot revival dispatched (v2 on uac staging → semver-agent →
-   update-repo-version → staging_versions[uac] bump → sit-debounce → SIT → staging-to-main). **✅ VERIFIED 2026-06-06 15:04Z:** semver-agent→update-repo-version (15:04 SUCCESS, was failing)→`staging_versions[uac]` bumped 0.1.20→0.2.0. The version-bump automation is REPAIRED and flowing end-to-end. Next link = SIT (sit-debounce picks up pending=1→sit-gate→SIT→staging-validated→staging-to-main).
+   version-delta promotion trigger) was CRASHING every run (`/tmp/bump_type.txt` missing + unbound `CURRENT`; root
+   cause: bare PYEOF heredoc terminator) → `staging_versions` never bumped → SIT + staging-to-main idle since 06-01
+   despite staging being 13–43 commits ahead of main with real release code. Fixed + merged: `unified-trading-pm` PR
+   **#146** (also caught PM main up — 8-file net diff). Pilot revival dispatched (v2 on uac staging → semver-agent →
+   update-repo-version → staging_versions[uac] bump → sit-debounce → SIT → staging-to-main). **✅ VERIFIED 2026-06-06
+   15:04Z:** semver-agent→update-repo-version (15:04 SUCCESS, was failing)→`staging_versions[uac]` bumped 0.1.20→0.2.0.
+   The version-bump automation is REPAIRED and flowing end-to-end. Next link = SIT (sit-debounce picks up
+   pending=1→sit-gate→SIT→staging-validated→staging-to-main).
 5. **Untracked churning generated DAG SVGs** (root-anchored ignores missed the codex-relocated `*_DAG.svg` +
    `CANONICAL_DEPENDENCY_MANIFEST.svg`) → `unified-trading-pm@749558968`. Flipped plan item ~line 1999.
 6. **Flipped:** pyjwt→2.13.0 (already on LDR fleet-wide, verified all 24 locks), DAG-SVG gitignore. `@3a5f4188e`.
@@ -2753,8 +2796,8 @@ behind the exact drift this whole audit is about.
    "nothing to promote" forever. **Fixed: PM PR #146 (merged).** VERIFIED: semver-agent→update-repo-version now green;
    `staging_versions[uac]` bumped 0.1.20→0.2.0.
 2. **`staging-to-main.yml` was all-or-nothing + Slack-fatal** — the STAGE 1.8 dep-order gate `exit 1`'d the whole run if
-   ANY pending repo had a dep not-yet-on-main (so a mixed batch promoted NOTHING), and a Slack webhook timeout marked the
-   whole promotion failed. **Fixed: PM PR #147 (merged)** — now promotes the READY subset, skips+warns blocked repos
+   ANY pending repo had a dep not-yet-on-main (so a mixed batch promoted NOTHING), and a Slack webhook timeout marked
+   the whole promotion failed. **Fixed: PM PR #147 (merged)** — now promotes the READY subset, skips+warns blocked repos
    (drains bottom-up across runs), and Slack is non-fatal. VERIFIED: run 27066366593 promoted uac→main (PR #85), skipped
    mtds/e2e (deps not on main), conclusion SUCCESS.
 
@@ -2777,8 +2820,8 @@ should finish (no more frozen-pipeline blockers, just iteration + 2 known per-la
    (cycles staging-to-main); continue dispatching v2-on-staging per tier as needed.
 2. **🔴 dep-update cascade v2 failures** — when a dep bumps (uac→0.2.0), the cascade opens `dep-update/<dep>-<ver>`
    branches in dependents to bump the constraint, and several are RED on v2 (e.g. strategy/mtds `dep-update/*` v2
-   failure → sets the dependent's ci_status FAILING, which blocks the dep-order gate). Diagnose + green these (likely the
-   dep isn't on main/published yet when the dependent's v2 clones it, OR a real constraint issue) — this is the next
+   failure → sets the dependent's ci_status FAILING, which blocks the dep-order gate). Diagnose + green these (likely
+   the dep isn't on main/published yet when the dependent's v2 clones it, OR a real constraint issue) — this is the next
    layer to unblock the dependent tiers.
 3. **🔴 SIT (system-integration-tests) is RED** — its own v2/checks fail (stale suite, ~line 1189). SIT is the AUTO
    trigger for staging-to-main (`staging-validated`) AND advances ci_status STAGING_GREEN→SIT_VALIDATED. With SIT broken
@@ -2788,5 +2831,6 @@ should finish (no more frozen-pipeline blockers, just iteration + 2 known per-la
    plan-health-gate required check, actionlint [5.5] re-enable, AO staging/G6, divergence active-host-filter rollout).
 
 ### Pickup for the next agent
+
 Read `cursor-configs/AUTONOMOUS_AGENT_RULES.md` + the 📌 2026-06-06 PROGRESS block (top) + this section. The pipeline is
 no longer frozen — work items 1–4 above in order; the version-bump + staging-to-main machinery now functions correctly.
