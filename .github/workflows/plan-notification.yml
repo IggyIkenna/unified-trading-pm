@@ -165,7 +165,7 @@ jobs:
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        "Plan Updated — ${{ needs.notify-plan-change.outputs.md_summary }}. View run: ${{ github.server_url }}/${{
+        "Plan Updated — ${{ needs.notify-plan-change.outputs.plan_summary }}. View run: ${{ github.server_url }}/${{
         github.repository }}/actions/runs/${{ github.run_id }}"
       severity: "INFO"
       conclusion: ${{ needs.notify-plan-change.result }}

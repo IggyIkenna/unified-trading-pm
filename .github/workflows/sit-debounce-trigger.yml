@@ -18,7 +18,10 @@ name: SIT Debounce Trigger
 
 on:
   schedule:
-    - cron: "*/2 * * * *"
+    # GitHub Actions never runs scheduled jobs more often than every 5 minutes, so
+    # */2 was misleading (silently coalesced to ~*/5). The real low-latency trigger
+    # is the repository_dispatch below; this cron is only a fallback poll.
+    - cron: "*/5 * * * *"
   repository_dispatch:
     types: [staging-changed]
   workflow_dispatch:
