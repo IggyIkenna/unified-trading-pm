@@ -132,7 +132,8 @@
         "alerting",
         "cross-domain",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -184,7 +185,8 @@
         "standard"
       ],
       "coverage_pct": 80,
-      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md"
+      "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
+      "ldr_ci_status": "GREEN"
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -241,7 +243,8 @@
         "analytics",
         "cefi",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "deployment-api": {
       "type": "api-service",
@@ -304,7 +307,8 @@
         "cefi",
         "deployment",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -346,7 +350,8 @@
         "cefi",
         "deployment",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "execution-service": {
       "type": "service",
@@ -401,7 +406,8 @@
         "cefi",
         "execution",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "features-service": {
       "type": "service",
@@ -611,7 +617,8 @@
       "tags": [
         "standard",
         "tradfi"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "instruments-service": {
       "type": "service",
@@ -664,7 +671,8 @@
         "cross-domain",
         "data-ingestion",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "market-data-processing-service": {
       "type": "service",
@@ -722,7 +730,8 @@
         "cefi",
         "data-ingestion",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -774,7 +783,8 @@
         "cefi",
         "data-ingestion",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "ml-service": {
       "type": "service",
@@ -893,7 +903,8 @@
         "cefi",
         "execution",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "system-integration-tests": {
       "type": "test-harness",
@@ -976,7 +987,8 @@
         "cefi",
         "monitoring",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "trading-agent-service": {
       "type": "service",
@@ -1030,7 +1042,8 @@
         "execution",
         "standard",
         "tradfi"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "unified-api-contracts": {
       "type": "library",
@@ -1069,7 +1082,8 @@
         "contracts",
         "critical",
         "cross-domain"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-library": {
       "type": "library",
@@ -1113,7 +1127,8 @@
         "contracts",
         "critical",
         "cross-domain"
-      ]
+      ],
+      "ldr_ci_status": "RED"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1142,7 +1157,8 @@
         "config",
         "cross-domain",
         "standard"
-      ]
+      ],
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-api": {
       "github_url": "https://github.com/IggyIkenna/unified-trading-api",
@@ -1230,7 +1246,8 @@
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "skipped_gates": [],
-      "semver_policy": "agent"
+      "semver_policy": "agent",
+      "ldr_ci_status": "GREEN"
     },
     "e2e-testing": {
       "type": "test-harness",
