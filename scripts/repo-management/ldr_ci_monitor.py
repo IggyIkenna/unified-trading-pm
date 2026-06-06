@@ -70,7 +70,6 @@ gh hiccup cannot itself wedge or page the monitor.
 from __future__ import annotations
 
 import argparse
-import datetime as _dt
 import json
 import os
 import subprocess
@@ -80,7 +79,7 @@ from pathlib import Path
 # Reuse the canonical fleet list so this stays in lock-step with the rulesets + the rest of
 # the CI machinery (pin_branch_protection_rulesets.py is the SSOT for the gated fleet).
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from pin_branch_protection_rulesets import ORG, REPOS  # noqa: E402
+from pin_branch_protection_rulesets import ORG, REPOS
 
 # The integration axis we monitor. Mirrors workspace-manifest.json:active_feature_branch.
 LDR_BRANCH = "live-defi-rollout"
@@ -196,9 +195,7 @@ def notify_worthy(prev: str, level: str) -> bool:
     """
     if level == RED and prev != RED:
         return True
-    if level == GREEN and prev == RED:
-        return True
-    return False
+    return level == GREEN and prev == RED
 
 
 def load_manifest(path: Path) -> dict:
@@ -216,7 +213,7 @@ def evaluate_fleet(
         new_levels maps repo -> level for every repo whose level is NOT UNKNOWN (UNKNOWN
         reads are fail-open and never overwrite a known persisted level).
     """
-    manifest_repos = manifest.get("repositories", {})
+    manifest_repos = manifest["repositories"]
     transitions: list[dict] = []
     new_levels: dict[str, str] = {}
     for repo in repos:
@@ -245,10 +242,10 @@ def evaluate_fleet(
 
 def apply_levels(manifest: dict, new_levels: dict[str, str]) -> bool:
     """Write the dedicated ldr_ci_status field. Returns True if anything changed."""
-    manifest_repos = manifest.get("repositories", {})
+    manifest_repos = manifest["repositories"]
     changed = False
     for repo, level in new_levels.items():
-        if manifest_repos.get(repo, {}).get("ldr_ci_status") != level:
+        if manifest_repos[repo].get("ldr_ci_status") != level:
             manifest_repos[repo]["ldr_ci_status"] = level
             changed = True
     return changed

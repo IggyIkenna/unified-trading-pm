@@ -84,7 +84,7 @@ jobs:
       - name: Auto-fix fixable plan hygiene (fix_frontmatter.py) + commit to PR head
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
-          # Pass the PR head ref via env (NOT inline ${{ }}) to avoid script-injection.
+          # Pass the PR head ref via env (NOT an inline GitHub expression) to avoid script-injection.
           PR_HEAD_REF: ${{ github.head_ref }}
         run: |
           set -euo pipefail

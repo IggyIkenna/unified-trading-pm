@@ -1,7 +1,7 @@
 {
   "description": "Canonical list of external (PyPI) dependency version ranges for the workspace. SSOT. Internal/private repos are in workspace-manifest.json.",
   "sourceFile": "workspace-constraints.toml",
-  "generatedAt": "2026-06-01T21:52:49.744971+00:00",
+  "generatedAt": "2026-06-05T17:40:44.575024+00:00",
   "generator": "unified-trading-pm/scripts/manifest/generate_canonical_dependency_manifest.py",
   "externalPackages": [
     {
@@ -14,7 +14,7 @@
     },
     {
       "name": "aiohttp",
-      "versionRange": "aiohttp>=3.14.0,<4.0.0"
+      "versionRange": "aiohttp>=3.13.4,<3.14.0"
     },
     {
       "name": "aioresponses",
