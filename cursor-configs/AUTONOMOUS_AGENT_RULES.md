@@ -69,6 +69,17 @@ answer yourself or with common sense, I want to come back to a working <thing>, 
    forced-tradeoff decision made under rule 1, every genuine impossibility, and the verified end-state. There should be
    nothing for the operator to "pick up" — that is the whole point.
 
+10. **Use the full observability + control surface proactively — you drive the machinery, you don't just watch it.** You
+    are authorized and expected to: **manually trigger workflows** (`gh workflow run <wf>.yml --ref <branch>`,
+    `repository_dispatch` events, re-dispatch a stale required check, kick the promoter / SIT / staging-to-main) to
+    unstick a stalled stage or to verify a fix — do not wait passively for a cron when a manual dispatch confirms it
+    now; **emit and read Slack alerts** (the `#ci-failures` webhook `SLACK_CI_WEBHOOK_URL` + the every-alert →
+    orchestrator path) so progress and failures are visible, and use them to monitor the cascade end-to-end; **watch the
+    right progress metric** (repos reaching `STAGING_GREEN`/`main`, PRs merged, runs going green) with short ticks first
+    then widen, and on a flat metric STOP-and-diagnose (`gh run view --log-failed`) rather than wait it out. Reach for
+    every tool that gives you signal or control — manual triggers, Slack, `gh run`/`gh pr` polling, monitors — instead
+    of blocking on the operator or on a schedule.
+
 ## The anti-pattern this prevents
 
 > Agent does 60% of a lifecycle, ships it, marks the rest `DEFERRED` / `BLOCKED-OPERATOR`, writes a summary. Next agent
