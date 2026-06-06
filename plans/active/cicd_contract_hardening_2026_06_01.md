@@ -310,9 +310,13 @@ uta). **FIXED:** `gh api -X PATCH repos/IggyIkenna/{unified-trading-api,greeks-s
 ruleset auto-re-pointed to `main`; LDR rules now 0 (verified); uta re-lock then FF-pushed cleanly. These were the only 2
 drifted repos (fleet default-branch sweep clean otherwise).
 
-- [ ] [SCRIPT] P2. **Prevent default-branch drift**: add a fleet check (extend `verify_branch_protection_check_names.py`
-      or `pin_branch_protection_rulesets`) asserting every repo's `default_branch == main`; new-repo bootstrap must set
-      default=main so `~DEFAULT_BRANCH` rulesets never land on LDR.
+- [x] ✅ [SCRIPT] P2. **Prevent default-branch drift** — DONE 2026-06-07 (PM@<sha>):
+      `verify_branch_protection_check_names.py` now (1) sources its repo list from
+      `workspace-manifest.json:repositories` (the old hardcoded list OMITTED the two repos that actually drifted —
+      `unified-trading-api` + `greeks-service` — making the drift invisible), and (2) asserts `default_branch == main`
+      for EVERY active repo with an explicit drift report + the exact `gh api -X PATCH` fix line. Ran live against the
+      fleet: all 25 active repos `default_branch=main`, exit 0. Ruleset-name consistency is now only asserted where the
+      ruleset exists (mid-migration repos w/o a ruleset are not false failures).
 - [x] ✅ [DOC] P1. **Reconcile the LDR-protection contradiction — RESOLVED (operator 2026-06-03): LDR stays
       UNPROTECTED** (no required-check ruleset) — best practice for an integration branch. The required check is
       enforced at the **staging/main PR** (the auto-merge/promotion boundary); **local QG + sentinel** is the agent +
@@ -528,13 +532,16 @@ self-recovers. Done:
       version-proof regex `\$\{\{[[:space:]]*\}\}`, hard-fails on any empty/whitespace-only expression (the exact
       parse-breaking class, 0 false-positives across all 52 PM workflows). Kept the broader actionlint block at its
       original gate (see follow-up). repo: unified-trading-pm (base-service.sh → fleet via template).
-- [ ] [SCRIPT] P2. **FOLLOW-UP: re-enable the full [5.5] actionlint gate for PM (+ any repo where REPO_ROOT
-      mis-resolves) in CI.** Fixing the dir-detection to run full actionlint surfaces **7 pre-existing PM workflow
-      nits** (untrusted `github.event.*` in inline scripts: major-bump-approval/issue-handler; undefined-output refs:
-      plan-notification `md_summary`, rules-alignment-agent `md_file`, request-major-bump-reusable `slack_webhook_url`;
-      `sit-debounce-trigger` cron \*/2 < 5-min min; `update-repo-version` shellcheck SC1121) — none parse-breaking, but
-      they must be fixed/baselined BEFORE making full actionlint a hard CI gate (else PM QG breaks fleet-wide). Clean
-      the 7, then broaden the [5.5] dir-guard to git-toplevel like [5.5a]. repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **FOLLOW-UP: re-enable the full [5.5] actionlint gate for PM** — DONE 2026-06-07 (PM@<sha>). Fixed
+      all the pre-existing PM workflow nits: untrusted `github.event.*` now passed via `env:` in major-bump-approval
+      (`ISSUE_BODY`) + major-bump-issue-handler (`COMMENT_BODY`, `ISSUE_BODY`); undefined-output refs corrected —
+      plan-notification `md_summary`→`plan_summary`, rules-alignment-agent `inputs.md_file`→`inputs.plan_file`,
+      request-major-bump-reusable dropped the undeclared `secrets.SLACK_WEBHOOK_URL` fallback (use the declared
+      `SLACK_CI_WEBHOOK_URL`); `sit-debounce-trigger` cron `*/2`→`*/5` (GH never runs <5-min anyway; repository_dispatch
+      is the real trigger). The `update-repo-version` SC1121 no longer reproduces under the current shellcheck (8.x).
+      Then broadened the `[5.5]` actionlint dir-guard in `base-service.sh` to robust git-toplevel detection (mirrors
+      `[5.5a]`) so the full gate actually fires for PM. Verified `actionlint -shellcheck <sc> .github/workflows/*.yml` →
+      exit 0 across all 54 PM workflows. repo: unified-trading-pm (base-service.sh → fleet via template).
 
 Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT
 machinery):
@@ -2846,9 +2853,11 @@ Two more systemic fixes landed + the convergent root-cause cleared:
    the fixed `semver-agent.yml` to all repos' live workflows (`scripts/rollout-semver-agent.sh`); add `uv lock` to
    `update-dependency-version.yml` + `update-repo-version.yml` (recurring lock-drift class).
 6. **SIT `smoke-test-gate.yml` (drives `staging-validated`) never cloned sibling repos** → `uv pip install -e .` failed
-   ("Distribution not found") + checked out the archived `unified-trading-codex`. **Fixed: `system-integration-tests@
-   dc00485`** — added an "Assemble sibling workspace" clone step to all 3 jobs (mirrors the green `full-workspace-sit`)
-   + repointed the codex readiness check. (`full-workspace-sit` nightly was already GREEN — only the smoke gate was red.)
+   ("Distribution not found") + checked out the archived `unified-trading-codex`. **Fixed:
+   `system-integration-tests@ dc00485`** — added an "Assemble sibling workspace" clone step to all 3 jobs (mirrors the
+   green `full-workspace-sit`)
+   - repointed the codex readiness check. (`full-workspace-sit` nightly was already GREEN — only the smoke gate was
+     red.)
 
 **🟢 CONVERGENT ROOT-CAUSE CLEARED:** the operator-sanctioned `aiohttp>=3.13.4,<3.14.0` cap was on LDR fleet-wide but
 MISSING on `staging` for 7 repos (utl/features/strategy/execution/deployment-api/mdps/mtds), so every staging-cloning

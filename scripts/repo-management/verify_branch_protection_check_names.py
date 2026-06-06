@@ -14,26 +14,25 @@ to the issue doc above.
 
 import json
 import subprocess
+from pathlib import Path
 
-REPOS = [
-    "alerting-service",
-    "batch-live-reconciliation-service",
-    "client-reporting-api",
-    "deployment-api",
-    "deployment-service",
-    "deployment-ui",
-    "execution-service",
-    "ibkr-gateway-infra",
-    "instruments-service",
-    "market-data-processing-service",
-    "market-tick-data-service",
-    "strategy-service",
-    "system-integration-tests",
-    "trading-agent-service",
-    "unified-api-contracts",
-    "unified-trading-library",
-    "unified-trading-pm",
-]
+# Source the active-repo list from the canonical workspace manifest so this fleet
+# check can never silently miss a repo (incident 2026-06-03: the two repos that had
+# default_branch drift — unified-trading-api + greeks-service — were absent from the
+# old hardcoded list, so the drift was invisible to this verifier). The manifest's
+# `repositories` dict is the single source of truth for active repos.
+_MANIFEST = Path(__file__).resolve().parents[2] / "workspace-manifest.json"
+
+
+def _active_repos() -> list[str]:
+    data = json.loads(_MANIFEST.read_text())
+    repos = data["repositories"]
+    # `unified-trading-codex` is archived/folded into PM and never has its own GitHub
+    # rules; exclude any entry explicitly marked archived/removed if present.
+    return sorted(name for name, meta in repos.items() if not (isinstance(meta, dict) and meta.get("archived")))
+
+
+REPOS = _active_repos()
 
 
 def gh(args):
@@ -58,26 +57,39 @@ def contexts_for(repo, rsname):
 
 def main():
     allok = True
-    print(f"{'REPO':<32} {'MAIN required':<55} {'STAGING required'}")
-    print("-" * 130)
+    drift = []
+    print(f"{'REPO':<32} {'DEFBR':<6} {'MAIN required':<55} {'STAGING required'}")
+    print("-" * 138)
     for repo in REPOS:
         m = contexts_for(repo, "require-quality-gates")
         s = contexts_for(repo, "require-staging-lock-check")
-        # default_branch MUST be main: require-quality-gates targets ~DEFAULT_BRANCH, so a non-main
-        # default (e.g. live-defi-rollout) mislocates the required check onto the integration axis and
-        # blocks raw/FF pushes to LDR (GH013). LDR is the unprotected integration axis by design
-        # (ci-cd-flow.md); the required check belongs on main (+ staging-lock on staging). Incident
-        # 2026-06-03: unified-trading-api + greeks-service had default=live-defi-rollout. Fix = set default=main.
+        # default_branch MUST be main for EVERY active repo (fleet-wide assertion):
+        # require-quality-gates targets ~DEFAULT_BRANCH, so a non-main default (e.g.
+        # live-defi-rollout) mislocates the required check onto the integration axis and
+        # blocks raw/FF pushes to LDR (GH013). LDR is the unprotected integration axis by
+        # design (ci-cd-flow.md); the required check belongs on main (+ staging-lock on
+        # staging). Incident 2026-06-03: unified-trading-api + greeks-service had
+        # default=live-defi-rollout. Fix = `gh api -X PATCH repos/IggyIkenna/<repo> -f default_branch=main`.
         db = gh(["api", f"repos/IggyIkenna/{repo}", "--jq", ".default_branch"]).stdout.strip()
         db_ok = db == "main"
-        m_ok = m is not None and len(m) == 1 and m[0].startswith(f"Quality Gates ({repo})")
+        # Ruleset-name consistency is only asserted for repos that actually HAVE the
+        # require-quality-gates ruleset (m is not None). A repo with no ruleset yet
+        # (e.g. agent-orchestrator mid-staging-migration, e2e-testing) is not a failure
+        # here — its default-branch is still asserted == main above.
+        m_ok = (m is None) or (len(m) == 1 and m[0].startswith(f"Quality Gates ({repo})"))
         s_ok = (s is None) or (
             len(s) == 2 and "check-staging-lock" in s and any(c.startswith(f"Quality Gates ({repo})") for c in s)
         )
         flag = "" if (m_ok and s_ok and db_ok) else "  <-- CHECK" + ("" if db_ok else f" [default_branch={db}!=main]")
         if flag:
             allok = False
-        print(f"{repo:<32} {m!s:<55} {s!s}{flag}")
+        if not db_ok:
+            drift.append((repo, db))
+        print(f"{repo:<32} {db:<6} {m!s:<55} {s!s}{flag}")
+    if drift:
+        print("\nDEFAULT-BRANCH DRIFT (must be `main`):")
+        for repo, db in drift:
+            print(f"  {repo}: default_branch={db}  →  gh api -X PATCH repos/IggyIkenna/{repo} -f default_branch=main")
     print("\nALL RULESETS CONSISTENT:", allok)
     return 0 if allok else 1
 
