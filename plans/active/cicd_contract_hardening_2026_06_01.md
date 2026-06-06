@@ -161,6 +161,32 @@ is green fleet-wide, (4) captures any new finding as a `- [ ]` in the **right so
 > gate. Full per-repo state + validated reconciliation recipe:
 > **`issues/fleet_promotion_pipeline_repair_2026_06_05.md`**.
 
+> **📌 2026-06-06 PROGRESS — autonomous finish-to-done session (slot-1, operator away).** Operating under the new
+> `cursor-configs/AUTONOMOUS_AGENT_RULES.md` (full authority, no deferrals). **Findings vs prior notes (state moved):**
+>
+> 1. **LDR is GREEN fleet-wide** now — fleet v2-on-LDR survey 13:32: only `unified-trading-library` + `features-service`
+>    were red, both fixed this session: UTL codex-compliance was 7>6 ratchet (removed a hardcoded prod project-id in a
+>    test docstring) → `utl@9a4ddbe9`; features STEP 5.31 bucket-name comment ratchet → `features-service@db32578c`.
+>    Both v2-on-LDR = success. The older feared blockers (UTL `uac.sports` ImportError + coverage 79.85%) are already
+>    resolved on LDR.
+> 2. **pyjwt → 2.13.0 is ALREADY DONE on LDR fleet-wide** (every uv.lock resolves 2.13.0) — the P0 todo (~line 936) is
+>    stale on LDR; just needs the drain to carry it to main + the checkbox flipped.
+> 3. **ROOT CAUSE of the staging→main stall (stalled since 06-01) = STALE `check-staging-lock` STATUS on the open
+>    staging-PR heads.** `staging_status.locked` on PM `main` is currently **false** (the sit-unlock retry-with-rebase
+>    fix already landed), so staging is NOT actually locked — but the `check-staging-lock` commit-status on each open
+>    LDR→staging PR head was left **pending** from the 06-02 lock and never refreshed → combined status `pending` →
+>    every staging PR `BLOCKED` despite v2-green + auto-merge-enabled. **Fix applied:** dispatched `staging-unlocked`
+>    `repository_dispatch` to all 22 repos to re-run the Staging Lock Check on the open PR heads. (If that does not
+>    refresh a given PR's head status, close/reopen the PR to re-fire its `pull_request` checks.)
+> 4. **Promoter machinery is ALIVE** (`ldr-to-staging-promote` cascading every ~2min; `ci-status-update`, `sit-debounce`,
+>    `cloud-build-router`, `tab-mirror`, `freeze-deferred-build-replay` all firing). The drain is gated only by (3) +
+>    the handful of genuinely-DIRTY PRs.
+> 5. **staging is AHEAD of main** (5–40 commits) and only slightly behind LDR — the 06-05 `staging-resync-*` PRs are now
+>    largely **redundant/obsolete** (they merged main→staging when staging was behind; staging is now ahead). Close the
+>    redundant DIRTY resync PRs where the plain LDR→staging drain is MERGEABLE; the priority stage is **staging→main**.
+>
+> **Continue from the Progress Log appended at the very end of this plan + the todo flips below.**
+
 **WAVE 0 — clean starting state (FIRST — it unblocks every other agent's commits/PRs):**
 
 1. Reconcile DIRTY promotion PRs so auto-merge resumes: **PM #116** (rebase tab onto main + resolve, or supersede via
