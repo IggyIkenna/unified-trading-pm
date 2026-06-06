@@ -101,23 +101,19 @@ related_plans:
       clean. Documented prereqs (prebaked AMI with nginx+cert, and keeping the `ORCHESTRATOR_ENV_LOCAL` Secrets-Manager
       secret's `ORCHESTRATOR_VM_ID=planning` in sync — bootstrap fetches that for the running backend id). Repo:
       `deployment-service`. parent_epic: orchestrator_master.
-- [ ] [SCRIPT] P2. **BLOCKED-OPERATOR-DECISION: shared planning-VM per-operator commit attribution — Harsh's slots
-      masquerade as Ikenna.** DISCOVERED 2026-06-05: `agent-orchestrator-vm-1` is genuinely SHARED — Harsh's
-      `harsh-primary` Claude account (operator=harsh) drives its slots alongside Ikenna's three (`sub-a-ikenna` /
-      `sub-b-iggy2london` / `sub-c-ikenna-odum`); registry design is slot1=Ikenna, slot2=Harsh interactive. BUT all 5
-      slot worktrees commit as `ikennaigboaka [slot-N·planning] <ikennaigboaka@gmail.com>` (AWS role tag `ikenna-brain`,
-      GCP label `operator=ikenna`) → Harsh's interactive planning on the box is git-attributed to Ikenna, violating the
-      commit-attribution HARD RULE (Harsh's work masquerading as Ikenna). ROOT: the identity mechanism is per-MACHINE
-      (one canonical id per host — correct for laptops ikennaigboaka/hk, wrong for a shared box), with no
-      per-slot/per-operator notion; and the accounts are NOT slot-pinned (`pinned_slot: -`), so even cost attribution
-      isn't operator-stable per slot. FIX MODELS (operator picks): **(a) per-slot operator map** — pin slot1→Ikenna /
-      slot2→Harsh, `setup-tab-worktrees.sh` sets each slot's `--worktree user.name/email` to its operator + pin
-      `harsh-primary` to slot2 in `accounts.json` (simple, but Harsh is fixed to slot2); **(b) per-account identity** —
-      the worker derives git identity from the driving account's `operator` field at spawn (most correct: attribution
-      follows whoever actually drives, any slot); **(c) accept** — the shared box stays Ikenna-attributed, per-operator
-      attribution happens only on each operator's own laptop. Also fix slot4's stale `·laptop` host tag → `·planning`.
-      Repo: `unified-trading-pm` (`scripts/dev/setup-tab-worktrees.sh`) + `agent-orchestrator` (accounts/spawn).
-      parent_epic: orchestrator_master.
+- [x] ✅ [SCRIPT] P2. **Shared planning-VM per-operator commit attribution — OPERATOR DECISION (c) ACCEPT, 2026-06-05.**
+      DISCOVERED 2026-06-05: `agent-orchestrator-vm-1` is genuinely SHARED — Harsh's `harsh-primary` Claude account
+      (operator=harsh) drives its slots alongside Ikenna's three (`sub-a-ikenna` / `sub-b-iggy2london` /
+      `sub-c-ikenna-odum`); registry design is slot1=Ikenna, slot2=Harsh interactive. BUT all 5 slot worktrees commit as
+      `ikennaigboaka [slot-N·planning] <ikennaigboaka@gmail.com>` (AWS role tag `ikenna-brain`, GCP label
+      `operator=ikenna`), so Harsh's interactive planning on the box is git-attributed to Ikenna. ROOT: the identity
+      mechanism is per-MACHINE (one canonical id per host — correct for laptops ikennaigboaka/hk, no
+      per-slot/per-operator notion), and accounts are NOT slot-pinned (`pinned_slot: -`). **Operator chose (c) ACCEPT**
+      (over per-account-identity or per-slot-operator-map): the shared box stays Ikenna-attributed by design — the box
+      IS Ikenna's brain; per-operator git attribution happens only on each operator's OWN laptop (ikennaigboaka / hk).
+      No `setup-tab-worktrees.sh` / `accounts.json` change. **Done**: fixed slot4's stale `·laptop` host tag →
+      `·planning` across its 3 affected worktrees (pm / agent-orchestrator / deployment-service) so all 5 slots are
+      uniformly `[slot-N·planning]`. parent_epic: orchestrator_master.
 - [x] ✅ [DOC] P2. **Align the registry id `planning-vm` → `planning`** to match the running
       `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches. SHIPPED 2026-06-05: renamed the
       `orchestrator_vm_registry.yaml` `id:` + every live `assigned_vm: planning-vm` ref (this plan +
