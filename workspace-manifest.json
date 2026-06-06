@@ -502,7 +502,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 84,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
