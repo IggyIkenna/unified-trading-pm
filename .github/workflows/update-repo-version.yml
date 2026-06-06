@@ -42,6 +42,10 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
+      # uv is needed to re-lock uv.lock after the PM pyproject version bump (lock-drift fix).
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Update manifest, bump PM version, compute dependents
         id: update
         run: |
@@ -184,6 +188,18 @@ jobs:
           NEW_PM_VERSION="${PMAJOR}.${PMINOR}.${NEW_PPATCH}"
           sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW_PM_VERSION}\"/" pyproject.toml
 
+          # Re-lock uv.lock so the project's own version line in the lock tracks the
+          # pyproject bump — otherwise `uv lock --check` (the QG lock-sync gate) fails
+          # on the very next PM PR with "uv.lock out of sync with pyproject.toml" (the
+          # recurring lock-drift class; incident 2026-06-07: PM 1.2.4→1.2.8 drift).
+          # Best-effort: uv is installed via the official action below; if it is somehow
+          # unavailable, do not fail the manifest update (a follow-up relock recovers it).
+          if command -v uv >/dev/null 2>&1; then
+            uv lock || echo "WARN: uv lock failed — uv.lock may drift; relock manually"
+          else
+            echo "WARN: uv not on PATH — skipping uv lock (uv.lock may drift)"
+          fi
+
           # Also update PM's own version entry in the manifest (atomic write: tmp + rename)
           python3 -c "
           import json, os
@@ -246,12 +262,14 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet workspace-manifest.json pyproject.toml plans/audit/manifest-mutations.jsonl 2>/dev/null; then
+          if git diff --quiet workspace-manifest.json pyproject.toml uv.lock plans/audit/manifest-mutations.jsonl 2>/dev/null; then
             echo "No changes. Skipping commit."
             exit 0
           fi
 
           git add workspace-manifest.json pyproject.toml
+          # Stage the re-locked uv.lock alongside the pyproject bump so they never drift.
+          git add uv.lock 2>/dev/null || true
           git add plans/audit/manifest-mutations.jsonl 2>/dev/null || true
           git commit -m "chore(manifest): update ${{ steps.update.outputs.repo }} to ${{ steps.update.outputs.version }}, bump PM to ${{ steps.update.outputs.pm_version }} [skip ci]"
           git push
