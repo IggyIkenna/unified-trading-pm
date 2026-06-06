@@ -76,11 +76,77 @@ source:
 > **Hygiene status (2026-06-03 audit):** all 25 cluster plans/issues are now `parent_epic`-attached + estimated. Epics:
 > `infrastructure_master`, `orchestrator_master`, `plan_hygiene_master`. No orphans remain in the CI/CD cluster.
 
+## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
+
+> **The chicken-and-egg (operator 2026-06-06):** the corrected CI/CD machinery — `quality-gates-v2` check-contexts,
+> promotion/SIT automation, the tab-mirror active-host filter, the `ci_status` guards, the FF-cron self-pull, the
+> commit-identity hook — only TAKES EFFECT once it is on each repo's **default branch `main`** (scheduled GHAs +
+> required checks read `main`). But fleet `main` is **9–13 commits behind LDR**, so the pipeline is half-wired. Shipping
+> the fixes piecemeal means N promote cycles each fighting a half-built pipeline. **Strategy: land EVERY code-doable
+> CI/CD task on `live-defi-rollout` FIRST, then run ONE fleet promote cycle** — the pipeline goes half-wired →
+> fully-wired in a single cut. This is the operative sequencing for the whole CI/CD cluster; the WAVES/Finishing-brief
+> below are the _detail_, this is the _order of operations_.
+
+### Execution model
+
+- **Phase A — land all code-doable work on LDR** (the bulk: **~78 code-doable todos across 7 plans**, manifest below).
+  Per repo: **QG-sweep batch** (run `quality-gates.sh` ONCE over the batch) → **Commit+Push+Flip** each shippable unit
+  to the tab branch → tab-mirror FF→LDR. **Dependency order (HARD):** T0 `utl`/`uac` FIRST (they dep-block the whole
+  fleet) → PM scripts/workflows/templates → service repos → `agent-orchestrator` → IaC/`deployment-service`. Each tier
+  green on LDR before the next.
+- **Phase B — ONE promote cycle** (run ONCE, only after Phase A is LDR-green fleet-wide): drive `ldr-to-staging-promote`
+  (self-cascades) → SIT → `staging-to-main` for the ~21 service repos; **`unified-trading-pm` promotes LDR→`main`
+  DIRECTLY (Option B — PM has no `staging`, by design).** All corrected GHA procedures land on every `main` together.
+  This IS the WAVE-3 drain — do not run it incrementally.
+- **NOT-CODE (~25 items)** — operator/infra-ops (manual promotion waves, branch-protection admin API, VM ops,
+  aiohttp/pyjwt CVE calls, `BLOCKED-OPERATOR`/`BLOCKED-BILLING`) — are **excluded from Phase A**; they are Phase-B
+  operator actions or separately tracked. Rolled up at the end so nothing is lost.
+
+### CODE-DOABLE TASK MANIFEST (reference index — survey 2026-06-06)
+
+> The `- [ ]` checkboxes LIVE IN THE CITED SOURCE PLAN — flip them there as shipped. This is a read-only index (no
+> checkboxes here on purpose: backlog-regen would double-count). Counts are open code-doable todos.
+
+| #   | Source plan (open code-doable)                            | repos touched                                                      | theme / what to do                                                                                                                                                                                                                                                                                                                            |
+| --- | --------------------------------------------------------- | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | `utl_full_quality_gates_green` (13)                       | UTL, UAC, PM                                                       | **T0 — FIRST.** basedpyright strict-green (type stubs, `reportUnknownMemberType`→error, annotate residual), UAC registry-facade re-exports, coverage ≥80%, helper-extract ≤50L, wire UTL into the v2 required check, flip manifest_reader C4                                                                                                  |
+| 2   | `commit_identity_misconfig_fleet` (4)                     | PM + 25 repos                                                      | deploy the commit-identity hook fleet-wide, standardise it in `setup-tab-worktrees.sh`, root-cause + guard the semver-bot-email leak                                                                                                                                                                                                          |
+| 3   | `qg_commit_quality_boundary_and_slot_ff_push` (26)        | PM scripts/templates, `deployment-service`                         | FF-cron **self-pull hardening** (gate on fresh LDR), setup-tab-worktrees upstream-pin, quickmerge STAGE-0.4 structured-error contract + dep-align, QG-sentinel gitignore + rollout, AWS CodeBuild exit-127 fix, PAT-push tab-mirror fix + rollout, env-tier bucket-test sweep, semantic cross-plan conflict detector, doc-contradiction sweep |
+| 4   | `cicd_contract_hardening` (THIS, 29)                      | PM, agent-orchestrator, features, SIT, mtds, uac, ui, all-services | default-branch==`main` verifier, escalate-to-orchestrator GHA, `ci_failure_watcher` alerts (stuck-PR→escalation, PR-resolved bookend, SIT-pass, main-QG severity), `ci_status` Guard 2/3, plan-health-gate required check, **pyjwt→2.13.0 fleet lock bump**, per-repo QG-debt greening, auto-rebasing mirror→AO, gitignore `*_DAG.svg`        |
+| 5   | `agent_orchestrator_e2e_workflow_and_execution_scope` (6) | PM, agent-orchestrator                                             | G2 backlog/regen GHA hook, G6 AO `staging` + v2-pin (CODE parts; the backend restart is `BLOCKED-OPERATOR`), G9 conflict-resolver worker + spawn route, bootstrap_vm cron installs                                                                                                                                                            |
+
+**Not in Phase A (no code-doable open todos):** `pipeline_mode_partition_migration` (2 open = infra GCS-walk),
+`shared_stash_pile_archive_cleanup` (1 = time-gated purge after 2026-06-08). **Zero-open (folded/evidence only):**
+`cicd_hidden_fragility_audit`, `ci_false_positive_alerts_infra_noise`, `fleet_promotion_pipeline_repair`,
+`ui_ci_cross_repo_github_token_violations`. **Also in the cluster (see the WAVE tables above for scope):**
+`harden_grepable_rules_into_ci_gates`, `uv_lockfile_determinism`, `orchestrator_fleet_worker_spawn_enablement`,
+`codex_vs_repo_docs_ssot_audit`, `harsh_day_master`, `agent_context_and_memory_hygiene`.
+
+### NOT-CODE rollup (Phase-B / operator — do NOT attempt in Phase A)
+
+- Manual fleet promotion waves + stuck-PR dirty-mergestate reconciliation (VM conflict-agent): PM #116, UAC ×4, mtds /
+  deployment-service / alerting-service.
+- Branch-protection admin (needs repo-admin token): re-pin rulesets, `enforce_admins` tail, `default_branch` PATCH.
+- aiohttp CVE-2026-34993/47265 (`--ignore-vuln` already sanctioned) + the pyjwt advisory operator call (the lock-bump
+  itself is code-doable, item 4).
+- agent-orchestrator G6 `staging` creation (`BLOCKED-OPERATOR` — fires a fleet backend restart) + GitHub Pro / public
+  repo (`BLOCKED-BILLING`).
+- macOS import-overhead infra fix (CI is the authoritative verifier); credit/CVE operator decisions.
+
+### Hand-off invariant
+
+This section + the **🧭 CI/CD MASTER INDEX** + the **🤖 Finishing-agent brief** are the complete CI/CD pickup surface. A
+next agent: (1) reads `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`, (2) works **Phase A in dep order** from the
+manifest's source plans (the `- [ ]` live there — flip them in-plan as shipped), (3) does **NOT** run Phase B until LDR
+is green fleet-wide, (4) captures any new finding as a `- [ ]` in the **right source plan**, never as a checkbox here.
+
 ## 🤖 Finishing-agent brief (dispatch-ready)
 
 > **Task:** finish the CI/CD / GHA / orchestrator / quality-gate / Slack-alerting hardening to a clean, self-sustaining
-> state. **First** read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full, then the "🧭 CI/CD MASTER INDEX" above.
-> Work the waves **in order**; do not start a later wave until the earlier is green.
+> state. **First** read `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` (safety floor) **and
+> `cursor-configs/AUTONOMOUS_AGENT_RULES.md` (the COMPLETION contract — finish-to-done, no re-dispatch loops, full
+> chicken-and-egg authority, journal-to-plan-across-compression)** in full, then the "🧭 CI/CD MASTER INDEX" above. Work
+> the waves **in order**; do not start a later wave until the earlier is green.
 
 > **📌 2026-06-05 PROGRESS — staging promotion pipeline reconciled (WAVE-0 §1 + staging-resync DONE).** The
 > LDR→staging→main pipeline was found broken **fleet-wide** (staging 192–761 behind main; LDR→staging auto-drain
@@ -94,6 +160,53 @@ source:
 > before the next (= WAVE-3 drain). The reconciled branches/PRs are the starting point — do NOT force-merge past the
 > gate. Full per-repo state + validated reconciliation recipe:
 > **`issues/fleet_promotion_pipeline_repair_2026_06_05.md`**.
+
+> **📌 2026-06-06 PROGRESS — autonomous finish-to-done session (slot-1, operator away).** Operating under the new
+> `cursor-configs/AUTONOMOUS_AGENT_RULES.md` (full authority, no deferrals). **Findings vs prior notes (state moved):**
+>
+> 1. **LDR is GREEN fleet-wide** now — fleet v2-on-LDR survey 13:32: only `unified-trading-library` + `features-service`
+>    were red, both fixed this session: UTL codex-compliance was 7>6 ratchet (removed a hardcoded prod project-id in a
+>    test docstring) → `utl@9a4ddbe9`; features STEP 5.31 bucket-name comment ratchet → `features-service@db32578c`.
+>    Both v2-on-LDR = success. The older feared blockers (UTL `uac.sports` ImportError + coverage 79.85%) are already
+>    resolved on LDR.
+> 2. **pyjwt → 2.13.0 is ALREADY DONE on LDR fleet-wide** (every uv.lock resolves 2.13.0) — the P0 todo (~line 936) is
+>    stale on LDR; just needs the drain to carry it to main + the checkbox flipped.
+> 3. **ROOT CAUSE of the staging→main stall (stalled since 06-01) = STALE `check-staging-lock` STATUS on the open
+>    staging-PR heads.** `staging_status.locked` on PM `main` is currently **false** (the sit-unlock retry-with-rebase
+>    fix already landed), so staging is NOT actually locked — but the `check-staging-lock` commit-status on each open
+>    LDR→staging PR head was left **pending** from the 06-02 lock and never refreshed → combined status `pending` →
+>    every staging PR `BLOCKED` despite v2-green + auto-merge-enabled. **Fix applied:** dispatched `staging-unlocked`
+>    `repository_dispatch` to all 22 repos to re-run the Staging Lock Check on the open PR heads. (If that does not
+>    refresh a given PR's head status, close/reopen the PR to re-fire its `pull_request` checks.)
+> 4. **Promoter machinery is ALIVE** (`ldr-to-staging-promote` cascading every ~2min; `ci-status-update`,
+>    `sit-debounce`, `cloud-build-router`, `tab-mirror`, `freeze-deferred-build-replay` all firing). The drain is gated
+>    only by (3) + the handful of genuinely-DIRTY PRs.
+> 5. **staging is AHEAD of main** (5–40 commits) and only slightly behind LDR — the 06-05 `staging-resync-*` PRs are now
+>    largely **redundant/obsolete** (they merged main→staging when staging was behind; staging is now ahead). Close the
+>    redundant DIRTY resync PRs where the plain LDR→staging drain is MERGEABLE; the priority stage is **staging→main**.
+> 6. **✅ FIXED 2026-06-06 (PR #146 → PM main):** the `update-repo-version.yml` crash was a **malformed heredoc
+>    terminator** — line 152 was `PYEOF || exit 1`, which bash does NOT recognise as a heredoc end-delimiter (it must be
+>    a bare `PYEOF` alone on the line). Bash therefore swallowed the entire rest of the step (lines 75→197) as the FIRST
+>    python's stdin, up to the SECOND heredoc's bare `PYEOF`. That python failed on the malformed input (silent — no
+>    output), `/tmp/bump_type.txt` was never written, and the inert `|| exit 1` (now inside the consumed heredoc) let
+>    the script stagger on to `cat: /tmp/bump_type.txt: No such file` + `CURRENT: unbound variable`. Fix: bare `PYEOF`
+>    terminator wrapped in `if ! python3 - <<PYEOF … PYEOF; then exit 1; fi`, plus `CURRENT`/`BUMP_TYPE` guarded under
+>    `set -u`. Verified end-to-end: a `version-bump` dispatch (uac→0.2.0, branch=staging) now bumps
+>    `staging_versions[unified-api-contracts]` and exits 0. See § "ROOT CAUSE" below for the original diagnosis.
+> 7. **🔴 ROOT CAUSE of the dead staging→main automation (THE durable finding 2026-06-06):** the SIT→staging-to-main
+>    chain is **version-delta-driven** — `sit-debounce-trigger` + `staging-to-main` only act on repos where manifest
+>    `staging_versions[repo] != versions[repo]`. Currently `staging_versions == versions` for ALL repos (pending=0), so
+>    the chain is idle **even though staging is 13–43 commits ahead of main with genuine release code** (e.g.
+>    instruments main..LDR = `feat!: v9 sports_reference path` + adapters + 5585 insertions; pyproject still 0.1.22 on
+>    all 3 branches — the code never bumped the version). `staging_versions` is supposed to be bumped by **semver-agent
+>    → `update-repo-version.yml`** on staging merges, BUT **`update-repo-version.yml` is CRASHING every run**
+>    (`cat: /tmp/bump_type.txt: No such file` + `line 27: CURRENT: unbound variable`) while trying to bump e.g.
+>    uac→0.2.0 → `staging_versions` never updates → the whole version-driven promotion is frozen. **Fix = repair
+>    `update-repo-version.yml`** (revives self-sustaining promotion) AND/OR converge main directly per-repo (proven
+>    06-02 method) for the immediate catch-up. NOTE there may be additional broken links downstream (SIT suite is noted
+>    stale at ~line 1189) — verify SIT passes once versions bump. This is the central remaining systemic CI/CD defect.
+>
+> **Continue from the Progress Log appended at the very end of this plan + the todo flips below.**
 
 **WAVE 0 — clean starting state (FIRST — it unblocks every other agent's commits/PRs):**
 

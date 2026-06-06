@@ -1143,7 +1143,14 @@ Sub-agents start FRESH. Paste `SUB_AGENT_MANDATORY_RULES.md` (10KB lean file) at
 - If paste impractical: include "Before any action, read SUB_AGENT_MANDATORY_RULES.md and follow ALL rules strictly."
 - **If rules injection fails, agent MUST NOT proceed.**
 
-SSOTs: `unified-trading-pm/scripts/agents/inject-mandatory-rules.sh` + `cursor-configs/SUB_AGENT_MANDATORY_RULES.md`.
+**Finish-to-DONE dispatches** (operator: "finish this completely while I'm away, don't ask me, I want a working <thing>
+when I'm back"): ALSO paste `cursor-configs/AUTONOMOUS_AGENT_RULES.md` — the **completion contract** (no
+DEFERRED/BLOCKED-OPERATOR leftovers, full chicken-and-egg authority incl. force-push main/staging + reconcile-down-here,
+journal-to-plan-across-context-compression, parallelize-with-sub-agents, end-with-a-report). `SUB_AGENT_MANDATORY_RULES`
+is the safety floor; `AUTONOMOUS_AGENT_RULES` is the finish-line. Prevents the half-done-then-re-dispatch loop.
+
+SSOTs: `unified-trading-pm/scripts/agents/inject-mandatory-rules.sh` + `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` +
+`cursor-configs/AUTONOMOUS_AGENT_RULES.md`.
 
 ---
 

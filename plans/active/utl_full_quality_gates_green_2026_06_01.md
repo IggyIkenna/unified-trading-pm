@@ -40,6 +40,16 @@ single plan owned it. This plan is that owner.
 > **Blocks**: `manifest_reader_fail_fast_on_stale_fallback_2026_05_28` C4 (full `quality-gates.sh` exit 0) closes when
 > this plan reaches Phase 6.
 
+> **2026-06-06 — remote `quality-gates-v2` codex-compliance overflow resolved (partial unblock, NOT plan-complete).**
+> The remote v2 check on `live-defi-rollout` was failing `❌ Codex compliance FAILED: 7 violations (max allowed: 6)` —
+> one over the `CODEX_MAX_VIOLATIONS=6` ratchet. Root cause of the +1: a hardcoded prod project id
+> (`central-element-323112`) embedded in the module docstring of `tests/unit/test_sports_fixtures_bucket.py` tripped the
+> `Hardcoded prod project ID in tests` check (`rg central-element-323112 tests/`). Genuinely fixed by replacing the
+> literal with the generic `{project_id}` placeholder (meaning unchanged) — unified-trading-library@9a4ddbe9. v2 now
+> green: run `27064253803` `✅ Codex compliance PASSED`. **This only restores the remote-v2 ratchet headroom; the full
+> local `quality-gates.sh` exit-0 success criterion (B1 strict-basedpyright, B2 imports, B3 deep-imports, B4 size, B5
+> coverage, + the empty-string-fallback hits in `manifest_writer.py`) remains open — the Phases below are unchanged.**
+
 ## The backlog (verified @ `unified-trading-library@73209d50`)
 
 | #   | Check                                                                                                                                                          | Scope                                                                                                                                                                                               | Why it's not a quick fix                                                                                                                                                                               |

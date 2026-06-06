@@ -101,6 +101,19 @@ related_plans:
       clean. Documented prereqs (prebaked AMI with nginx+cert, and keeping the `ORCHESTRATOR_ENV_LOCAL` Secrets-Manager
       secret's `ORCHESTRATOR_VM_ID=planning` in sync — bootstrap fetches that for the running backend id). Repo:
       `deployment-service`. parent_epic: orchestrator_master.
+- [x] ✅ [SCRIPT] P2. **Shared planning-VM per-operator commit attribution — OPERATOR DECISION (c) ACCEPT, 2026-06-05.**
+      DISCOVERED 2026-06-05: `agent-orchestrator-vm-1` is genuinely SHARED — Harsh's `harsh-primary` Claude account
+      (operator=harsh) drives its slots alongside Ikenna's three (`sub-a-ikenna` / `sub-b-iggy2london` /
+      `sub-c-ikenna-odum`); registry design is slot1=Ikenna, slot2=Harsh interactive. BUT all 5 slot worktrees commit as
+      `ikennaigboaka [slot-N·planning] <ikennaigboaka@gmail.com>` (AWS role tag `ikenna-brain`, GCP label
+      `operator=ikenna`), so Harsh's interactive planning on the box is git-attributed to Ikenna. ROOT: the identity
+      mechanism is per-MACHINE (one canonical id per host — correct for laptops ikennaigboaka/hk, no
+      per-slot/per-operator notion), and accounts are NOT slot-pinned (`pinned_slot: -`). **Operator chose (c) ACCEPT**
+      (over per-account-identity or per-slot-operator-map): the shared box stays Ikenna-attributed by design — the box
+      IS Ikenna's brain; per-operator git attribution happens only on each operator's OWN laptop (ikennaigboaka / hk).
+      No `setup-tab-worktrees.sh` / `accounts.json` change. **Done**: fixed slot4's stale `·laptop` host tag →
+      `·planning` across its 3 affected worktrees (pm / agent-orchestrator / deployment-service) so all 5 slots are
+      uniformly `[slot-N·planning]`. parent_epic: orchestrator_master.
 - [x] ✅ [DOC] P2. **Align the registry id `planning-vm` → `planning`** to match the running
       `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches. SHIPPED 2026-06-05: renamed the
       `orchestrator_vm_registry.yaml` `id:` + every live `assigned_vm: planning-vm` ref (this plan +
