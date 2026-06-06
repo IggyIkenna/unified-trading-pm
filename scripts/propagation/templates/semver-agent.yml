@@ -46,7 +46,7 @@ env:
   GH_ORG: IggyIkenna
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 concurrency:
@@ -129,6 +129,25 @@ jobs:
               --field state=success \
               --field context="semver-agent/label-check" \
               --field description="always_patch policy: patch bump applied, label check skipped." || true
+            # APPLY the version to pyproject.toml + commit BEFORE dispatch (root-cause fix
+            # 2026-06-06): the cascade fans out dependent constraint bumps to ${NEW_VERSION};
+            # if the dep repo's OWN pyproject is never written, dependents require a version
+            # that does not exist (path-source overrides version) → unsatisfiable → dep-update
+            # v2 FAILING → staging→main dep-order gate jammed. `[skip ci]` avoids a QG re-loop.
+            if grep -qE "^version = \"${CURRENT}\"" pyproject.toml; then
+              sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW_VERSION}\"/" pyproject.toml
+              if ! git diff --quiet pyproject.toml; then
+                git config user.name "semver-agent[bot]"
+                git config user.email "semver-rollout[bot]@users.noreply.github.com"
+                git add pyproject.toml
+                git commit -m "chore(release): bump version to ${NEW_VERSION} [skip ci]"
+                git fetch origin staging --quiet
+                git push origin "HEAD:refs/heads/staging" || { git rebase origin/staging && git push origin "HEAD:refs/heads/staging"; }
+                echo "Committed chore(release): bump version to ${NEW_VERSION} on staging (always_patch)."
+              fi
+            else
+              echo "WARN: pyproject version != ${CURRENT}; skipping apply (will still dispatch)."
+            fi
             HTTP_STATUS=$(curl -s -o /tmp/dispatch_response.json -w "%{http_code}" -X POST \
               -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
               -H "Accept: application/vnd.github+json" \
@@ -424,6 +443,49 @@ jobs:
             || echo "WARNING: Issue creation failed (label may not exist) — continuing"
 
           echo "Issue created. Skipping version-bump dispatch until user approves."
+
+      # APPLY the computed version to the repo's OWN pyproject.toml BEFORE dispatching.
+      # ROOT-CAUSE FIX (2026-06-06): the retired version-bump.yml committed
+      # `chore(release): bump version to X`; the semver-agent migration DROPPED it (compute +
+      # dispatch only). PM then recorded the new version + fanned out `dep-update/<dep>-X`
+      # constraint bumps (">=X") to dependents — but the dep repo's pyproject stayed at the
+      # OLD version. Dependents consume the dep via `[tool.uv.sources] path=...` at its
+      # PHYSICAL version, so ">=X" was UNSATISFIABLE → broken CI installs → dep-update v2
+      # FAILING → staging→main dep-order gate jammed (uac dispatched 0.2.0 / mtds 0.4.0 but
+      # both repos stayed 0.1.20 / 0.3.1). Committing here makes the dispatched version EXIST.
+      - name: Apply version bump to staging (chore(release))
+        if: steps.compute.outputs.skip != 'true' && steps.compute.outputs.bump != 'major_blocked'
+        run: |
+          set -euo pipefail
+
+          NEW_VERSION="${{ steps.compute.outputs.new_version }}"
+          CURRENT="${{ steps.compute.outputs.current_version }}"
+
+          if [ -z "$NEW_VERSION" ]; then
+            echo "FATAL: empty new_version — cannot apply." >&2
+            exit 1
+          fi
+          if ! grep -qE "^version = \"${CURRENT}\"" pyproject.toml; then
+            echo "FATAL: pyproject.toml version is not '${CURRENT}' (compute baseline) — refusing to sed." >&2
+            grep -E "^version = " pyproject.toml || true
+            exit 1
+          fi
+          sed -i "s/^version = \"${CURRENT}\"/version = \"${NEW_VERSION}\"/" pyproject.toml
+          if git diff --quiet pyproject.toml; then
+            echo "pyproject.toml already at ${NEW_VERSION} — nothing to commit (idempotent)."
+            exit 0
+          fi
+          git config user.name "semver-agent[bot]"
+          git config user.email "semver-rollout[bot]@users.noreply.github.com"
+          git add pyproject.toml
+          git commit -m "chore(release): bump version to ${NEW_VERSION} [skip ci]"
+          git fetch origin staging --quiet
+          if ! git push origin "HEAD:refs/heads/staging"; then
+            echo "Non-FF push to staging — rebasing onto origin/staging and retrying once."
+            git rebase origin/staging
+            git push origin "HEAD:refs/heads/staging"
+          fi
+          echo "Committed + pushed chore(release): bump version to ${NEW_VERSION} on staging."
 
       - name: Dispatch version-bump to unified-trading-pm
         if: steps.compute.outputs.skip != 'true' && steps.compute.outputs.bump != 'major_blocked'
