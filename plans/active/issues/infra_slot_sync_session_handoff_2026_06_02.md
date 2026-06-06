@@ -4,7 +4,6 @@ title:
   fix + pre-commit config rollout (slot-1, 2026-06-02). Self-audited commit locations: LDR / main / local-only / dirty /
   stash."
 created: 2026-06-02
-author: ikenna (slot-1, Opus)
 source:
   - git fetch + rev-list audit across touched repos 2026-06-02 (slot vs origin/live-defi-rollout vs origin/main)
   - git stash list across touched repos 2026-06-02
@@ -13,6 +12,8 @@ parent_epic: plans/epics/orchestrator_master.md
 locked_by: infra_slot_sync_session_handoff_2026_06_02
 estimate_calibrated_ai_days: 0.2
 estimate_class: infra
+priority: P2
+status: active
 ---
 
 ## What this session set out to do (arc)

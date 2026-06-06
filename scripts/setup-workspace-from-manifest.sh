@@ -349,11 +349,16 @@ fi
 # (`git config --worktree`, set by setup-tab-worktrees.sh) + the fix-commit-identity
 # pre-commit hook refine this to `ikennaigboaka [slot-N·host]` and OVERRIDE this global.
 # SSOT: codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution".
+# Per-operator (NOT a hardcoded Ikenna default): a non-Ikenna host (Harsh) that has declared
+# `git config --global slotIdentity.email/.name` seeds ITS account, not Ikenna's. Order:
+# explicit GIT_USER_*/SLOT_CANON_* env → per-machine slotIdentity.* → fleet default.
+_canon_email="${GIT_USER_EMAIL:-${SLOT_CANON_EMAIL:-$(git config --global slotIdentity.email 2>/dev/null || true)}}"
+_canon_name="${GIT_USER_NAME:-${SLOT_CANON_NAME:-$(git config --global slotIdentity.name 2>/dev/null || true)}}"
 if [ -z "$(git config --global user.email 2>/dev/null)" ]; then
-    git config --global user.email "${GIT_USER_EMAIL:-ikennaigboaka@gmail.com}" 2>/dev/null || true
+    git config --global user.email "${_canon_email:-ikennaigboaka@gmail.com}" 2>/dev/null || true
 fi
 if [ -z "$(git config --global user.name 2>/dev/null)" ]; then
-    git config --global user.name "${GIT_USER_NAME:-ikennaigboaka}" 2>/dev/null || true
+    git config --global user.name "${_canon_name:-ikennaigboaka}" 2>/dev/null || true
 fi
 
 echo ""

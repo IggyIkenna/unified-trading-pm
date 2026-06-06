@@ -97,6 +97,16 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 
 - Flat deps only — one `[project.dependencies]` per `pyproject.toml`. No extras.
 - `uv pip install` not `pip install`.
+- **KNOWN EXCEPTION — `aiohttp` pinned `<3.14` fleet-wide (do NOT bump to 3.14 / "fix the CVE" — operator decision
+  2026-06-05):** the canonical range is `aiohttp>=3.13.4,<3.14.0` in `workspace-constraints.toml` +
+  `canonical-dependency-manifest.json` + all 18 repos that declare it (locked to 3.13.5). aiohttp 3.14.0 removed
+  `aiohttp.streams.AsyncStreamReaderMixin`, which **vcrpy 8.1.1 (latest PyPI, no fix released —
+  [vcrpy#995](https://github.com/kevin1024/vcrpy/issues/995)/PR#996 open)** still references → 3.14 breaks every VCR
+  cassette suite (UAC/UTL/execution-service/MTDS) and jams the LDR→staging promotion. CVE-2026-34993/47265 are covered
+  by the **sanctioned `--ignore-vuln` already in `base-service.sh` + `base-library.sh`** (non-exploitable: client-only
+  aiohttp usage, no `CookieJar.load()` on untrusted input). **Lift the cap ONLY when a vcrpy release supports aiohttp
+  3.14** — then bump the canonical range, re-lock fleet-wide, drop the two `--ignore-vuln` flags. SSOT:
+  `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`.
 - Dockerfiles: `ARG PROJECT_ID` +
   `FROM --platform=linux/amd64 asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest`
 
@@ -121,7 +131,15 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   `git config --worktree user.name/user.email` (per worktree).** Set per-worktree by `setup-tab-worktrees.sh` (do NOT
   hand-edit `~/.gitconfig`); manual fallback in a slot worktree:
   `git config extensions.worktreeConfig true && git config --worktree user.name "ikennaigboaka [slot-3·laptop]" && git config --worktree user.email "ikennaigboaka@gmail.com"`.
-  SSOT + root-cause hunt: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
+  **Per-operator, NOT hardcoded (codified 2026-06-05)**: the email + name handle are the OPERATOR's own GitHub account —
+  Ikenna `ikennaigboaka@gmail.com`, **Harsh `harshkantariya <harshkantariya.work@gmail.com>`**. All three identity
+  scripts (`fix-commit-identity.sh` hook · `setup-tab-worktrees.sh` · `verify-slot-host-symmetry.sh`) resolve it
+  host-stably: env `SLOT_CANON_EMAIL`/`SLOT_CANON_NAME` → per-machine `git config --global slotIdentity.email`/`.name` →
+  Ikenna fleet default (VMs leave it unset). A non-Ikenna laptop declares itself ONCE:
+  `git config --global slotIdentity.email "harshkantariya.work@gmail.com" && git config --global slotIdentity.name "harshkantariya"`.
+  The prior hardcoded `ikennaigboaka@gmail.com` constant made Harsh's `verify` step 9 unachievable without the hook
+  rewriting his commits to Ikenna's identity. SSOT + root-cause hunt: `codex/05-infrastructure/per-tab-worktrees.md` §
+  "Commit attribution".
 - **LDR dual-path**: `live-defi-rollout` is the continuous-integration axis; a finished unit _promotes_ via
   quickmerge→staging. The ONE direct-LDR-push exception: **dirty deps** → commit + push directly to `live-defi-rollout`
   (do NOT quickmerge when dep repos are dirty). The other raw pushes are the ff-pull-in + cross-repo PM plan-flip.

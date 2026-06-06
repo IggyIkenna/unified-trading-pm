@@ -3,7 +3,6 @@ title:
   "Instruments-service manifest + data canonicalisation (audit-first single-walk) — L3 owner for the instruments I/O
   surface"
 created: 2026-06-01
-author: ikenna
 parent_epic: epics/instruments_master.md
 assigned_vm: vm-cross-cutting
 status: active
@@ -20,6 +19,14 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 ---
 
 # Instruments-service manifest + data canonicalisation (L3 owner for the instruments I/O surface)
+
+> **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
+> discipline: this corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated
+> `source`, `cadence`, `transport` — so running `--apply` before that code lands bakes in the old model + forces a
+> banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.** (Instruments is
+> cross-cutting: reference/fixtures write `batch_<source>` + cadence `scheduled_recurring`, and the IS catalogue FEEDS
+> the M3 per-shard availability registry — so IS is also a Phase-0.3 producer, not only a migration target.)
 
 > **MASTER**: `defi_manifest_canonicalisation_2026_06_01.md` §MASTER (L3, per-service axis). Instruments-service is the
 > **input (I/O) side** of the data pipeline — it owns reference data (instrument records, universe, fixtures, capability

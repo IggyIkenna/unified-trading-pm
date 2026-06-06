@@ -1,7 +1,6 @@
 ---
 title: "CeFi legacy gap-fill + manifest canonicalisation (single-walk) — L3 owner for cefi"
 created: 2026-06-01
-author: ikenna
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-cefi
 status: active
@@ -18,6 +17,12 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 ---
 
 # CeFi legacy gap-fill + manifest canonicalisation (L3 owner for cefi)
+
+> **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
+> discipline: this corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated
+> `source`, `cadence`, `transport` — so running `--apply` before that code lands bakes in the old model + forces a
+> banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.**
 
 > **🔎 CROSS-AG FINDING from defi (2026-06-01) — CHECK THE SAME HERE**: defi's CF data-state audit found the legacy
 > `_index` **100% NOT v9** (v4/5/6/8 spread), with **no `source`/`asset_group`/`pipeline_mode` COLUMNS** and glued
@@ -122,7 +127,7 @@ operator exemption if a local macOS gate blocks).
 - [x] ✅ [CODE] market-tick-data-service — orphan-sweep/gap-fill **VERIFIED needs no code** (slot-3 2026-06-03): the
       migrator `migrate_cefi_flat_to_v9_canonical.py` already handles `--also-legacy` over all 3 layouts, idempotent
       skip-if-exists = copies ONLY the gap. The explicit orphan-DELETE mode is deliberately NEXT session (irreversible).
-- [ ] grep this plan for remaining open `[ ] [CODE]` todos.
+- [ ] [SCRIPT] P3. grep this plan for remaining open `[ ] [CODE]` todos.
 
 **GATE:** confirm ALL Phase-1 coding shipped + `quality-gates-v2` green on LDR per repo BEFORE Phase 2.
 

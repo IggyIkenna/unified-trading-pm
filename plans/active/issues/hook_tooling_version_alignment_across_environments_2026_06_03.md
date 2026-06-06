@@ -4,7 +4,6 @@ title:
   orchestrator VM vs worker VMs) — worker VMs install neither prek nor pre-commit, so agent commits there bypass hooks +
   use a different prettier than laptop/CI → reformat-residue churn that jams FF-sync"
 created: 2026-06-03
-author: ikenna (slot 1)
 source:
   - agent-orchestrator/scripts/bootstrap_vm.sh — installs apt base + Node 20 + uv + Claude CLI + an orchestrator .venv;
     greps for prek/pre-commit/workspace-bootstrap/.venv-workspace/install-hooks all return nothing → neither hook runner
@@ -22,6 +21,8 @@ locked_by: live-defi-rollout
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
+priority: P2
+status: active
 ---
 
 ## What I found

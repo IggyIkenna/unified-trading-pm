@@ -507,7 +507,7 @@ orchestrator_master:
     - orchestrator
     - worker-slot
     - worker slot
-    - planning-vm
+    - planning
     - planning vm
     - dashboard
     - backlog

@@ -25,7 +25,22 @@ if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
   exit 0
 fi
 
-CANON_EMAIL="ikennaigboaka@gmail.com"
+# Canonical per-host identity (per-operator). The GitHub-attributed email + name handle DIFFER
+# per operator (Ikenna `ikennaigboaka@gmail.com` vs Harsh `harshkantariya.work@gmail.com`), so
+# they MUST NOT be hardcoded — a hardcoded constant rewrote every non-Ikenna slot's commits to
+# Ikenna's identity (the bug that made Harsh's verify-slot-host-symmetry step 4 unachievable).
+# Resolution order (host-stable + readable from this per-repo pre-commit hook):
+#   1. env override            SLOT_CANON_EMAIL / SLOT_CANON_NAME
+#   2. per-machine git config   `git config --global slotIdentity.email` / `slotIdentity.name`
+#   3. fleet default            ikennaigboaka@gmail.com / ikennaigboaka  (VMs + Ikenna laptop)
+# A non-Ikenna host declares itself ONCE (Harsh's laptop):
+#   git config --global slotIdentity.email "harshkantariya.work@gmail.com"
+#   git config --global slotIdentity.name  "harshkantariya"
+# SSOT: CLAUDE.md § "Commit attribution" + codex/05-infrastructure/per-tab-worktrees.md.
+CANON_EMAIL="${SLOT_CANON_EMAIL:-$(git config --global slotIdentity.email 2>/dev/null || true)}"
+CANON_EMAIL="${CANON_EMAIL:-ikennaigboaka@gmail.com}"
+CANON_NAME="${SLOT_CANON_NAME:-$(git config --global slotIdentity.name 2>/dev/null || true)}"
+CANON_NAME="${CANON_NAME:-ikennaigboaka}"
 
 # 2) Derive the EXPECTED label: slot-<N> from a tab/<op>/<N> branch, else "main".
 #    `symbolic-ref --short` resolves the branch name even on an unborn branch (no commits yet),
@@ -40,7 +55,7 @@ if [ -n "$slot" ]; then label="slot-${slot}"; else label="main"; fi
 #    agreement with the branch prefix (setup-tab-worktrees.sh resolves both the same way).
 host="${ORCHESTRATOR_VM_ID:-${VM_NAME:-laptop}}"
 
-exp_name="ikennaigboaka [${label}·${host}]"
+exp_name="${CANON_NAME} [${label}·${host}]"
 cur_name="$(git config user.name 2>/dev/null || echo '')"
 cur_email="$(git config user.email 2>/dev/null || echo '')"
 

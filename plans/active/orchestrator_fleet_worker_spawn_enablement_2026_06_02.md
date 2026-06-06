@@ -9,6 +9,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
 created: 2026-06-02
+locked_by: live-defi-rollout
 related_plans:
   - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
   - plans/epics/orchestrator_master.md

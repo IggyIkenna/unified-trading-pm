@@ -872,7 +872,7 @@ manifest_path = '${MANIFEST_PATH}'
 repo_name = '${REPO_NAME}'
 
 # Statuses that mean dep IS at-or-above staging tier (PASS)
-AT_OR_ABOVE_STAGING = {'STAGING_GREEN', 'SIT_VALIDATED'}
+AT_OR_ABOVE_STAGING = {'STAGING_GREEN', 'SIT_VALIDATED', 'MAIN_GREEN'}
 
 try:
     with open(manifest_path) as f:

@@ -192,6 +192,33 @@ jobs:
                   -d "{\"event_type\":\"promotion-conflict\",\"client_payload\":{\"repo_name\":\"${REPO}\",\"source_branch\":\"live-defi-rollout\",\"target_branch\":\"staging\",\"original_pr_url\":\"${CONFLICT_URL}\"}}" \
                   && echo "    dispatched (deterministic resolver)" || echo "    WARN: dispatch failed"
                 CONFLICTED="$CONFLICTED $REPO"; CONFLICTED_COUNT=$((CONFLICTED_COUNT + 1))
+              elif [ "$MSTATE" = "blocked" ]; then
+                # Stale-check guard (2026-06-05): tab-mirror FF's live-defi-rollout using GITHUB_TOKEN,
+                # and GitHub suppresses workflow triggers on GITHUB_TOKEN pushes (recursion prevention) →
+                # NO pull_request:synchronize on this promotion PR when LDR advances → quality-gates-v2
+                # freezes on the pre-advance SHA → the PR sits BLOCKED on a stale check forever (observed:
+                # batch-live-reconciliation #16, execution-service #211 — both needed a manual close+reopen).
+                # CONSERVATIVE re-trigger: only if v2 is ABSENT on the CURRENT head SHA (the stale-trigger
+                # signature). If v2 IS present on head (genuine gate failure, or a run in progress), leave it.
+                HEAD_SHA=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.head.sha' 2>/dev/null || echo "")
+                HAS_V2=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" \
+                  --jq '[.check_runs[]|select(.name|test("quality-gates-v2"))]|length' 2>/dev/null || echo "0")
+                if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ]; then
+                  echo "  STALE-CHECK on PR #$PR_NUM — quality-gates-v2 absent on current head ${HEAD_SHA:0:8} (GITHUB_TOKEN-push didn't fire synchronize); close+reopen to re-trigger"
+                  if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
+                    sleep 3
+                    gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
+                      && gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+                    echo "    re-triggered (fresh pull_request event → v2 on current head)"
+                    PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
+                  else
+                    echo "    WARN: close failed — leaving PR #$PR_NUM blocked"
+                    BLOCKED="$BLOCKED $REPO"; BLOCKED_COUNT=$((BLOCKED_COUNT + 1))
+                  fi
+                else
+                  echo "  $REPO: existing PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving for the per-repo fix"
+                  BLOCKED="$BLOCKED $REPO"; BLOCKED_COUNT=$((BLOCKED_COUNT + 1))
+                fi
               else
                 echo "  $REPO: existing PR #$PR_NUM mergeable_state=$MSTATE (auto-merge already pending)"
                 PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))

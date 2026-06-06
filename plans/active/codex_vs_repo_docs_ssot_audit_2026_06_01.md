@@ -5,7 +5,6 @@ parent_epic: plan_hygiene_master
 assigned_vm: vm-ml
 priority: P1
 created: 2026-06-01
-author: harsh + claude (session 67c17024)
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2

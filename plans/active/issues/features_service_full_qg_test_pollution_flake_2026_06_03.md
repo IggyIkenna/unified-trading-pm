@@ -3,7 +3,6 @@ title:
   "features-service full QG red — cross-family test pollution (leaked cross_instrument global manifest writer w/
   MagicMock get_settings poisons calendar capture_status test)"
 created: 2026-06-03
-author: ikenna (slot-3)
 source:
   - features-service tests/calendar/unit/test_calendar_orchestrator_capture_status.py
   - features-service tests/cross_instrument/ (global/singleton manifest writer + get_settings mock)
@@ -12,6 +11,7 @@ priority: P1
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
+status: active
 ---
 
 ## What I found

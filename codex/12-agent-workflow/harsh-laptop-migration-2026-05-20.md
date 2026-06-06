@@ -206,6 +206,37 @@ VM).
 
 ---
 
+## Step 4.5 — declare this laptop's commit identity (per-operator; codified 2026-06-05)
+
+Harsh's laptop commits as **his own** GitHub account (`harshkantariya <harshkantariya.work@gmail.com>`), not Ikenna's.
+The identity scripts (`fix-commit-identity.sh` hook · `setup-tab-worktrees.sh` · `verify-slot-host-symmetry.sh`) read a
+per-machine declaration; without it they fall back to the Ikenna fleet default and `verify` step 9 fails (or the hook
+rewrites his commits to Ikenna). Declare it ONCE per machine, then re-stamp the already-provisioned worktrees:
+
+```bash
+WORKSPACE_PATH="${HOME}/Code/unified-trading-system-repos"   # adjust as needed
+
+# 1. per-machine declaration (read by every git invocation, incl. the per-repo pre-commit hook)
+git config --global slotIdentity.email "harshkantariya.work@gmail.com"
+git config --global slotIdentity.name  "harshkantariya"
+
+# 2. re-stamp every existing slot worktree's per-worktree identity (his slots are tab/hk/<N>, host=laptop)
+cd "${WORKSPACE_PATH}"
+for d in .tabs/[0-9]*/*/; do
+  [ -e "$d/.git" ] || continue
+  slot="$(basename "$(dirname "$d")")"
+  git -C "$d" config extensions.worktreeConfig true
+  git -C "$d" config --worktree user.name  "harshkantariya [slot-${slot}·laptop]"
+  git -C "$d" config --worktree user.email "harshkantariya.work@gmail.com"
+done
+```
+
+(Future `setup-tab-worktrees.sh --init/--add-slot/--reset-slot` runs now read the same declaration and provision the
+correct identity automatically — the re-stamp loop above is only needed for worktrees provisioned before this fix.)
+SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
+
+---
+
 ## Step 5 — install the two crons (every 5 min, offset by 2 min)
 
 ```bash

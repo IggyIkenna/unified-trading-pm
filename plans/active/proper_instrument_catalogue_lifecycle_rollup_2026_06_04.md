@@ -3,7 +3,6 @@ title:
   "Proper instrument catalogue — lifecycle roll-up from per-date definitions + IS completeness gate (all asset groups,
   v9)"
 created: 2026-06-04
-author: ikenna
 parent_epic: epics/instruments_master.md
 assigned_vm: vm-cross-cutting
 status: active
@@ -143,7 +142,8 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `test_cefi_enumerator_reads_rollup_catalogue_and_emits_expected_unattempted`) > proves producer →
       `_catalog_from_dataframe` → `enumerate_v2(asset_group=cefi)` emits NOT_LISTED / DELISTED / >
       `expected_unattempted` (and skips captured cells) correctly against the rolled-up catalogue. (b) **cefi
-      catalogue > apply IN PROGRESS** — real producer run over the full cefi `by_date/` corpus (28,174 parquets)
+      catalogue > APPLIED 2026-06-05 (213,990-row catalogue promoted; guard ACCEPT; live enumerator check ✓; data_type
+      null for single-grain cefi)** — real producer run over the full cefi `by_date/` corpus (28,174 parquets)
       promoting > `instruments-store-cefi-prd-…/prod/catalog.parquet`. Migration-stability confirmed: the IS
       canonicalisation > re-keys `by_date` PATHS (`pipeline_mode=` partition, `category=`→`asset_group=`) + re-versions
       the `_index` to v9, > but it is a **path-only `gcs_copy_object` re-key** — instrument identity/lifecycle columns +

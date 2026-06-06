@@ -1,7 +1,6 @@
 ---
 title: "Prediction manifest + data canonicalisation (legacy→canonical, single-walk) — L3 owner for prediction"
 created: 2026-06-01
-author: ikenna
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-prediction
 status: active
@@ -19,6 +18,12 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 ---
 
 # Prediction manifest + data canonicalisation (L3 owner for prediction)
+
+> **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
+> discipline: this corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated
+> `source`, `cadence`, `transport` — so running `--apply` before that code lands bakes in the old model + forces a
+> banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.**
 
 > **🔴 FOUNDATION GATE (2026-06-04) — the proper instrument catalogue blocks the prediction MTDS `--apply`.** Before the
 > prediction MarketTick-data migration `--apply` runs,

@@ -21,6 +21,8 @@ set -euo pipefail
 REPO_ROOT="${1:-$(git rev-parse --show-toplevel)}"
 
 HANDLER_DIR="${REPO_ROOT}/market-tick-data-service/market_tick_data_service/cli/handlers"
+LIVE_CONNECTORS_DIR="${REPO_ROOT}/market-tick-data-service/market_tick_data_service/live/connectors"
+ADAPTERS_DEFI_DIR="${REPO_ROOT}/market-tick-data-service/market_tick_data_service/market_interface/adapters/defi"
 
 if [[ ! -d "$HANDLER_DIR" ]]; then
     echo "SKIP: MTDS handler directory not found: $HANDLER_DIR"
@@ -55,6 +57,34 @@ for _PAT in \
 ; do
     if grep -rn "$_PAT" "$HANDLER_DIR" --include="*.py" 2>/dev/null | grep -v '^\s*#\|:[[:space:]]*#'; then
         echo "ERROR: Hardcoded CeFi perp venue URL in MTDS handler (use CEFI_PERP_VENUE_API_ENDPOINTS from unified_api_contracts.registry)"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+done
+
+# ── Extended scan: live/connectors + market_interface/adapters/defi ────────
+# Bare literal host strings that must derive from UAC registry functions:
+#   api.curve.finance  → get_evm_protocol_rest_url("curve")
+#   blue-api.morpho.org → get_evm_protocol_rest_url("morpho")
+#   lite-api.jup.ag    → get_solana_protocol_url("jupiter")
+# Exclude lines that already call the getter on the same line (the fallback
+# string in `get_evm_protocol_rest_url("curve") or "https://api.curve.finance"`
+# appears on the same line as the getter → excluded correctly).
+
+for _SCAN_DIR in "$LIVE_CONNECTORS_DIR" "$ADAPTERS_DEFI_DIR" "$HANDLER_DIR"; do
+    [[ -d "$_SCAN_DIR" ]] || continue
+    if grep -rn '"https://api\.curve\.finance' "$_SCAN_DIR" --include="*.py" 2>/dev/null \
+            | grep -v "get_evm_protocol_rest_url\|#.*noqa\|^\s*#"; then
+        echo "ERROR: api.curve.finance bare literal in $_SCAN_DIR (use get_evm_protocol_rest_url(\"curve\") from unified_api_contracts.registry)"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+    if grep -rn '"https://blue-api\.morpho\.org' "$_SCAN_DIR" --include="*.py" 2>/dev/null \
+            | grep -v "get_evm_protocol_rest_url\|#.*noqa\|^\s*#"; then
+        echo "ERROR: blue-api.morpho.org bare literal in $_SCAN_DIR (use get_evm_protocol_rest_url(\"morpho\") from unified_api_contracts.registry)"
+        VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+    if grep -rn '"https://lite-api\.jup\.ag' "$_SCAN_DIR" --include="*.py" 2>/dev/null \
+            | grep -v "get_solana_protocol_url\|#.*noqa\|^\s*#"; then
+        echo "ERROR: lite-api.jup.ag bare literal in $_SCAN_DIR (use get_solana_protocol_url(\"jupiter\") from unified_api_contracts.registry)"
         VIOLATIONS=$((VIOLATIONS + 1))
     fi
 done

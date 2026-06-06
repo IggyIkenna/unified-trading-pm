@@ -19,7 +19,7 @@ dependencies = [
     "pip-audit>=2.7.0,<3.0.0",
     "bandit>=1.7.0,<2.0.0",
     "duckdb>=1.2.0,<2.0.0",
-    "aiohttp<4.0.0,>=3.14.0",
+    "aiohttp>=3.13.4,<3.14.0",
     "cryptography<47.0.0,>=46.0.7",
     "pygments>=2.20.0",
 ]
@@ -149,6 +149,7 @@ ignore = [
     "scripts/quality_gates/check_pipeline_mode_explicit_at_record_calls.py",
     "scripts/quality_gates/check_removed_symbols.py",
     "scripts/quality_gates/check_uac_hard_required_fields.py",
+    "scripts/quality_gates/check_unrouted_source_returned_zero.py",
     "scripts/quality_gates/qg_audit.py",
     "scripts/sports/migrate_player_mappings_to_canonical.py",
     "scripts/sports/migrate_sports_gcs_to_hive.py",

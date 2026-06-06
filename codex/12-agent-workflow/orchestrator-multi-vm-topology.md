@@ -101,8 +101,8 @@ the topology depends on:
 
 Failure mode if keys get out of sync: workers 401 on every authed proxy call (`/api/vms/<id>/api/state`,
 `/api/backends`, etc.) and the dashboard bounces back to the login screen. Diagnosis: SSH to a worker + check the
-journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the
-GCS URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
+journal for `"Loaded internal central↔worker public key from GCS."` startup line. Absence → `.env.local` missing the GCS
+URI or `GOOGLE_APPLICATION_CREDENTIALS` not set.
 
 ## Per-VM agent shape (epic VMs)
 
@@ -138,7 +138,7 @@ Every epic in `plans/epics/<slug>.md` declares:
 ---
 name: <slug>
 type: epic
-assigned_vm: vm-<id> # planning-vm = humans only; vm-defi / vm-cefi / vm-ml / ... = epic VMs
+assigned_vm: vm-<id> # planning = humans only; vm-defi / vm-cefi / vm-ml / ... = epic VMs
 ---
 ```
 
@@ -232,7 +232,7 @@ URL `/` shows:
 │  │ Account: ikenna@odum  │ │ Account: iggy2london  │ │ Account: harshKw │  │
 │  │ Last activity: 2m ago │ │ Last activity: 30s    │ │ Last activity 12m│  │
 │  └───────────────────────┘ └───────────────────────┘ └──────────────────┘  │
-│  ┌─ planning-vm (Ikenna+Harsh interactive) ─────────────────────────────┐   │
+│  ┌─ planning (Ikenna+Harsh interactive) ─────────────────────────────┐   │
 │  │ Slot 1: Ikenna (active, ctx 65%, last msg 4m ago)                     │   │
 │  │ Slot 2: Harsh  (idle since 2h)                                        │   │
 │  │ Today: 12 plan edits, 3 new audit issues filed                        │   │
@@ -367,7 +367,7 @@ No VM restart. No operator manual intervention beyond the plan edit.
 
 | VM                 | Owns epics                                                                                                                 | Primary account              |
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------- |
-| `planning-vm`      | (none — interactive)                                                                                                       | ikennaigboaka@gmail.com      |
+| `planning`         | (none — interactive)                                                                                                       | ikennaigboaka@gmail.com      |
 | `vm-defi`          | `defi_master` + `manifest_master`                                                                                          | ikenna@odum-research.com     |
 | `vm-cefi`          | `cefi_master` + `instruments_master`                                                                                       | iggy2london@gmail.com        |
 | `vm-tradfi`        | `tradfi_master`                                                                                                            | harshkantariyawork@gmail.com |

@@ -9,7 +9,6 @@ estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 8
 locked_by: live-defi-rollout
 locked_since: 2026-06-03
-type: code
 completion_gates:
   code: C5
   deployment: none
@@ -101,12 +100,13 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       — market-tick-data-service@302e2bf | QG ✓ (49 tests, all 6 venues) | 6 new connectors (binance_futures_book_ticker_ws.py,
       bybit_futures_book_ticker_ws.py, okx_futures_book_ticker_ws.py, deribit_book_ticker_ws.py,
       kraken_futures_book_ticker_ws.py, coinbase_book_ws.py) + factory dispatch updates + 49 unit tests
-- [ ] [BATCH-LIVE] P2. Add a live WS connector for Upbit (currently batch-only, no `live/connectors/` module) — repo:
+- [x] ✅ [BATCH-LIVE] P2. Add a live WS connector for Upbit (currently batch-only, no `live/connectors/` module) — repo:
       market-tick-data-service. owning-epic: cefi_master.
+      — market-tick-data-service@e958732 | QG ✓ (upbit_spot_ws.py + __init__.py + 7 unit tests) | PR#130 auto-merge to staging
 
 ## Phase 3 — Feature wiring (P1)
 
-- [ ] [CODE-BUG] P1. Fix the CeFi funding-feature producer/consumer name+unit mismatch — repos: features-service +
+- [x] ✅ [CODE-BUG] P1. Fix the CeFi funding-feature producer/consumer name+unit mismatch — repos: features-service +
       strategy-service. Producer `features-service/.../delta_one/app/calculators/funding_oi.py:84` emits
       `funding_rate_annualized` = `funding_rate*3*365` (US spelling, **fraction**); consumer
       `strategy-service/.../engine/strategies/v2/carry_and_yield/basis_perp.py:67` reads `funding_rate_annualised_bps`
@@ -115,10 +115,11 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       it (composes with Phase-4 funding_oi registration). Add a test pinning the exact consumed key+unit. cold-start:
       `SUB_AGENT_MANDATORY_RULES.md`; sibling `staked_basis.py:283` reads `funding_rate_apy_bps` correctly. owning-epic:
       features_and_ml_master (vm-ml).
+      — features-service@cfc76836 | strategy-service@80fd1b9e | test_funding_rate_annualised_bps_key_and_unit pins key+unit; 296 delta_one tests pass
 
 ## Phase 4 — Contract hygiene (P2)
 
-- [ ] [CONTRACT] P2. Register the 3 bare-literal venue hosts in UAC + derive at call time — repo:
+- [x] ✅ [CONTRACT] P2. Register the 3 bare-literal venue hosts in UAC + derive at call time — repo:
       market-tick-data-service: `market_interface/adapters/defi/curve_adapter.py:118` (`api.curve.finance`),
       `cli/handlers/_solana_defi_fetch.py:36` (`_JUPITER_QUOTE_API = lite-api.jup.ag`),
       `live/connectors/morpho_defi_ws.py:41` (`blue-api.morpho.org`). Follow the kamino/orca/raydium pattern
@@ -126,13 +127,19 @@ and are explicitly OUT OF SCOPE — do NOT re-add them:**
       NOTE: QG `no_hardcoded_venue_urls.sh` does NOT currently catch these (narrow allowlist + scans only
       `cli/handlers/`) — also widen the QG scan dir + patterns so the contract is actually enforced. owning-epic:
       mtds_mdps_master / instruments_master.
-- [ ] [STUB] P2. Resolve the instruments-service DeFi live `--trigger` dispatcher stub — repo: instruments-service @
+      — uac@789a93a (EVM_DEFI_REST_URLS + get_evm_protocol_rest_url; VCR/aiohttp compat patch; WS cassette map) |
+        mtds@b85b6e4 (curve/morpho/jupiter hosts derived from UAC) |
+        pm@4c6182cd7 (no_hardcoded_venue_urls.sh widened: live/connectors + adapters/defi + 3 new patterns)
+- [x] ✅ [STUB] P2. Resolve the instruments-service DeFi live `--trigger` dispatcher stub — repo: instruments-service @
       `instruments_service/cli/instruments_handler.py:143-149` (`--trigger` parsed→stored→logged, never dispatched; only
       `triggers/sports_fixtures_daily_repoll.py` exists; CLI help advertises `defi.token_lists.refresh`). Nothing
       currently invokes `--trigger` for defi (live DeFi runs via `--mode live`), so this is an unwired forward-flag, NOT
       a breakage. Either (a) implement the defi trigger dispatcher + module if the per-asset-group trigger taxonomy is
       wanted, or (b) remove the advertised-but-unimplemented `defi.*` examples from CLI help and document `--mode live`
       as the live-DeFi path. Operator decision on (a) vs (b). owning-epic: instruments_master.
+      — instruments-service@0809f1fa73be03ae848e6891da9b9644280b763d | option (b) taken: removed defi.token_lists.refresh
+      from CLI help (defi live-mode uses --mode live, not --trigger; DeFi on-chain triggers are defi_master scope);
+      also fixed 3 pre-existing test failures from UTL fixture mock gap (extract_match_lifecycle + FakeClient classmethods)
 
 ## Cross-references (owned elsewhere — do NOT duplicate)
 

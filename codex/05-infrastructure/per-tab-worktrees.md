@@ -605,6 +605,30 @@ LDR. **NEVER `--force` / `--force-with-lease` a shared branch (`live-defi-rollou
   the bot-masquerade, while making `git log --format=%an`, the GitHub author column, and CI `head_commit.author.name`
   correct + slot-aware.
 
+**Per-operator (NOT hardcoded — codified 2026-06-05):** the email + name handle are **the operator's own GitHub
+account**, which DIFFERS per laptop — Ikenna `ikennaigboaka <ikennaigboaka@gmail.com>`, Harsh
+`harshkantariya <harshkantariya.work@gmail.com>`. The three scripts that touch identity — the per-repo
+`fix-commit-identity.sh` pre-commit hook, `setup-tab-worktrees.sh` (provision), and `verify-slot-host-symmetry.sh`
+(assert) — all resolve it the SAME host-stable way (the earlier hardcoded `ikennaigboaka@gmail.com` constant made
+`verify` step 9 unachievable on Harsh's laptop without the hook actively rewriting his commits to Ikenna's identity):
+
+```
+1. env override            SLOT_CANON_EMAIL / SLOT_CANON_NAME
+2. per-machine git config   git config --global slotIdentity.email   /   slotIdentity.name
+3. fleet default            ikennaigboaka@gmail.com / ikennaigboaka   (VMs + Ikenna's laptop, unconfigured)
+```
+
+A **non-Ikenna host declares itself ONCE** (readable by every git invocation incl. the per-repo hook, so no env-plumbing
+or cwd-climbing needed):
+
+```bash
+git config --global slotIdentity.email "harshkantariya.work@gmail.com"
+git config --global slotIdentity.name  "harshkantariya"
+```
+
+VMs leave it unset → fall through to the Ikenna-owned fleet default (VMs commit under the Ikenna GitHub account by
+design). The `tab-mirror-to-ldr.yml` CI bot keeps its own `tab-mirror[bot]` identity (not a per-operator slot identity).
+
 **Set per-worktree — MECHANISM GOTCHA (codified 2026-06-03):** `.tabs/<N>/<repo>` are **git worktrees that SHARE the
 main clone's `.git/config`**, so plain `git config user.name` is shared across ALL worktrees of a repo (last-writer-wins
 — useless for per-slot identity; the 2026-06-03 naive loop made every slot read `[main·laptop]`). Per-slot identity
