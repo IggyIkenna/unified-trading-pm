@@ -99,9 +99,27 @@ column stays (swap-resilience).
 
 ### M2 — Source-capability registry (UAC SSOT) — tag each source with the modes it can run
 
-Per `data_source`: the set of modes it CAN run `{batch, live, replay}` (+ transports). E.g. `databento {batch}` ·
-`massive {batch}` · `tardis {batch, live}` · chain RPC `{batch, live, replay}` · exchange REST `{batch, replay}`. This
-is a NEW registry axis alongside `SOURCE_PRIORITY`.
+Per `data_source`: the set of modes it CAN run `{batch, live, replay}` (+ transports). E.g. `tardis {batch, live}` ·
+chain RPC `{batch, live, replay}` · exchange REST `{batch, replay}`. A NEW registry axis alongside `SOURCE_PRIORITY`.
+
+**DEFINITION — REPLAY (operator 2026-06-05, make this crisp everywhere):** replay = the ability to **retrieve a recent
+window ON DEMAND — specifically "today's data from start-of-day" — to fill an intraday / startup / live-downtime gap.**
+It is **format-agnostic** (tick or bar — the question is availability, not granularity). The test: _"live was down
+09:00–11:00 today; can I fetch that window NOW and backfill it?"_ **Chain-related sources are ALWAYS replay-capable**
+(deterministic — any past block is queryable intraday). A vendor that only ships **end-of-day** archives (no intraday
+retrieval of the current day) is **NOT** replay-capable. `databento` / `massive` intraday-replay = **vendor-doc check
+(open)** — see M2b.
+
+**M2 REFINEMENT — capability is per-`(source × data_type)`, and integrate with the EXISTING `SourceCapability` registry
+(slot-6 finding 2026-06-05).** Hyperliquid is the worked example: it is **live** for `trades`/`l2_book` (`ws_trades` /
+`ws_l2_book`) but **REST/batch** for `funding_rates` — so a flat per-source flag is too coarse; capability is per
+`(source, data_type)` / per-operation. **Do NOT build a parallel registry** — `registry/capability_declarations/`
+already declares
+`SourceCapability(supports_live/supports_batch/supports_historical, operations={market:[…ws_trades, recent_trades…]})`
+per source + per-operation REST/WS. M2 should **derive** the `{batch,live,replay}` capability from `SourceCapability`
+(and add an explicit `supports_replay` + intraday-replay flag there) rather than the standalone draft
+`SOURCE_MODE_CAPABILITY` dict (which is the Phase-0.1 placeholder). Also: `hyperliquid_rest` bakes the transport into
+the source name — the M1 antipattern (target `hyperliquid` + transport).
 
 ### M3 — Per-shard available-sources (UAC SSOT) — and the guardrail
 
