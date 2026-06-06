@@ -85,11 +85,16 @@ related_plans:
       stop the live AWS box to edit its instance user-data**: that user-data runs ONCE at first launch (so editing it
       changes nothing for this instance) and the running box is already `planning` via `.env.local` +
       `.worktree-identity.conf` (survives reboots) — a fresh launch uses the LAUNCHER, not the old instance's user-data,
-      so fixing the launcher is the real durable fix and an outage would be pure cost. **Residual (optional, no
-      urgency):** the live central box is a _repurposed AWS epic instance_ (launched via `launch-epic-vm-aws.sh` as
-      `vm-orchestrator`, not the GCP `launch-planning-vm.sh`); a dedicated **AWS** planning launcher would let a fresh
-      AWS planning VM brand `planning` from scratch — file if/when AWS planning VMs are launched fresh. Repo:
-      `deployment-service`. parent_epic: orchestrator_master.
+      so fixing the launcher is the real durable fix and an outage would be pure cost. **Residual (optional, no urgency)
+      — CORRECTED 2026-06-05:** the live central box is NOT a repurposed epic (earlier note conflated it with the
+      STOPPED epic `vm-orchestrator`/`i-007e8d99`). It is a DEDICATED central box — AWS Name `agent-orchestrator-vm-1`,
+      role tag `ikenna-brain`, `i-0c9b283b…` — with no scripted launcher (provisioned manually/one-off; no
+      `launch-brain.sh`). So an epic-VM launch CANNOT collide with it: `launch-epic-vm-aws.sh --vm-id vm-defi` makes a
+      SEPARATE instance `agent-orch-vm-defi-<date>` (own `ORCHESTRATOR_VM_ID=vm-defi` → `tab/vm-defi/N`),
+      singleton-locked on `agent-orch-vm-defi-*` which never matches `agent-orchestrator-vm-1`. The only genuine gap:
+      there is no canonical AWS launcher for the central/brain box itself — if it ever needs a from-scratch relaunch,
+      write a `launch-central-brain-aws.sh` (export `ORCHESTRATOR_VM_ID=planning` + `--role planning --slots 5`, attach
+      the EIP) rather than hand-provisioning. Repo: `deployment-service`. parent_epic: orchestrator_master.
 - [x] ✅ [DOC] P2. **Align the registry id `planning-vm` → `planning`** to match the running
       `ORCHESTRATOR_VM_ID=planning` + the `tab/planning/N` branches. SHIPPED 2026-06-05: renamed the
       `orchestrator_vm_registry.yaml` `id:` + every live `assigned_vm: planning-vm` ref (this plan +
