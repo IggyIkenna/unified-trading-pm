@@ -253,7 +253,7 @@ jobs:
             || true
 
       # ─────────────────────────────────────────────────────────────────────────
-      # STAGE 1.8: DEP-ORDER GATE (staging → main)
+      # STAGE 1.8: DEP-ORDER GATE (staging → main) — PROMOTE-READY / SKIP-BLOCKED
       # Complement to quickmerge.sh STAGE 1.7 (LDR→staging dep-order gate).
       # Prevents the UTL-before-UAC main race: before promoting repo X to main,
       # every dep D must already be on main (ci_status = MAIN_GREEN or SIT_VALIDATED).
@@ -265,21 +265,33 @@ jobs:
       # dep is already merged to main — so SIT_VALIDATED is always a valid on-main
       # signal during the promotion window.
       #
-      # Safe-defaults (match STAGE 1.7 from quickmerge.sh):
-      #   - manifest file missing       → PASS  (no gate data available)
-      #   - repo not in manifest        → PASS  (repo has no recorded deps)
-      #   - dep not in manifest         → PASS  (dep not tracked; can't assert)
-      #   - dep ci_status unset/None    → PASS  (not configured, treat as external)
-      # A gate error (e.g. Python crash) logs a warning and does NOT block the
-      # promotion — consistent with how the existing readiness gate treats missing
-      # codex YAML (advisory-only).
+      # BACKLOG-DRAIN SEMANTICS (fixed 2026-06-06): this gate is NOT all-or-nothing.
+      # Instead of failing the whole run when *some* pending repos have a dep not
+      # yet on main, it computes the READY set (pending repos whose deps are ALL
+      # MAIN_GREEN/SIT_VALIDATED, or have no deps / no manifest entry) and promotes
+      # ONLY those this run, SKIPPING (with a warning) the blocked ones. Each promoted
+      # tier becomes MAIN_GREEN, unblocking the next tier on a subsequent run — so
+      # successive runs drain a multi-tier backlog bottom-up. The run SUCCEEDS as long
+      # as it promoted the ready subset (or exits 0 cleanly when nothing is ready).
+      # The READY set is exported as READY_REPOS (space-separated) for the promote
+      # loop + manifest-promotion + cascade steps, which all filter to it.
+      #
+      # Safe-defaults (match STAGE 1.7 from quickmerge.sh) — treated as READY:
+      #   - manifest file missing       → all pending READY (no gate data available)
+      #   - repo not in manifest        → READY  (repo has no recorded deps)
+      #   - dep not in manifest         → that dep ignored (not tracked; can't assert)
+      #   - dep ci_status unset/None    → that dep ignored (treat as external)
+      # A gate error (e.g. Python crash) logs a warning and falls back to "all pending
+      # READY" — consistent with how the existing readiness gate treats missing codex
+      # YAML (advisory-only); never hard-fail the whole drain.
       # ─────────────────────────────────────────────────────────────────────────
-      - name: STAGE 1.8 — Dep-order gate (staging → main)
+      - name: STAGE 1.8 — Dep-order gate (staging → main) — promote-ready / skip-blocked
         run: |
           set -euo pipefail
 
           python3 - <<'PYEOF'
           import json
+          import os
           import sys
 
           MANIFEST = "workspace-manifest.json"
@@ -287,11 +299,32 @@ jobs:
           # Statuses that mean dep IS on main (PASS)
           ON_MAIN_STATUSES = {"MAIN_GREEN", "SIT_VALIDATED"}
 
+          def export_ready(repos):
+              """Write the READY set to GITHUB_ENV so downstream steps filter to it.
+
+              Always also writes READY_REPOS_COMPUTED=1 — the explicit signal that the
+              gate ran and the READY set is authoritative (even when EMPTY = nothing
+              ready this run). Downstream steps apply the filter whenever this flag is
+              set, so an empty ready set correctly promotes NOTHING (rather than being
+              mistaken for the fallback "no filter / promote all" path, which leaves the
+              flag unset).
+              """
+              github_env = os.environ.get("GITHUB_ENV", "")
+              value = " ".join(repos)
+              if github_env:
+                  with open(github_env, "a") as ef:
+                      ef.write(f"READY_REPOS={value}\n")
+                      ef.write("READY_REPOS_COMPUTED=1\n")
+              print(f"\nREADY_REPOS={value}")
+              print("READY_REPOS_COMPUTED=1")
+
           try:
               with open(MANIFEST) as f:
                   manifest = json.load(f)
           except Exception as e:
-              print(f"STAGE 1.8: manifest read error ({e}) — gate skipped (safe-default: pass)")
+              print(f"STAGE 1.8: manifest read error ({e}) — gate skipped (safe-default: all pending READY)")
+              # Cannot read manifest → cannot derive a ready subset; let downstream
+              # re-derive the full pending set (READY_REPOS unset = no filter).
               sys.exit(0)
 
           staging_versions = manifest.get("staging_versions", {})
@@ -305,30 +338,34 @@ jobs:
           ]
 
           if not promoting:
-              print("STAGE 1.8: no repos being promoted — gate skipped")
+              print("STAGE 1.8: no repos being promoted — gate skipped (nothing ready this run)")
+              export_ready([])
               sys.exit(0)
 
-          print(f"STAGE 1.8: Dep-Order Gate (staging → main)")
-          print(f"  Checking {len(promoting)} repo(s) for dep-on-main readiness")
+          print("STAGE 1.8: Dep-Order Gate (staging → main) — promote-ready / skip-blocked")
+          print(f"  Evaluating {len(promoting)} pending repo(s) for dep-on-main readiness")
 
-          blocked_pairs: list[str] = []
+          ready: list[str] = []
+          skipped: list[str] = []
 
           for repo in promoting:
               repo_info = repos_data.get(repo)
               if repo_info is None:
-                  print(f"  PASS (no manifest entry): {repo}")
+                  print(f"  ✅ READY (no manifest entry): {repo}")
+                  ready.append(repo)
                   continue
 
               deps = repo_info.get("dependencies", [])
               if not deps:
-                  print(f"  PASS (no deps): {repo}")
+                  print(f"  ✅ READY (no deps): {repo}")
+                  ready.append(repo)
                   continue
 
               repo_blocked: list[str] = []
               for dep in deps:
                   dep_name = dep.get("name", dep) if isinstance(dep, dict) else str(dep)
                   if not dep_name or dep_name not in repos_data:
-                      # Dep not in manifest → safe-default pass
+                      # Dep not in manifest → safe-default pass (ignore this dep)
                       continue
                   dep_status = repos_data[dep_name].get("ci_status") or ""
                   if not dep_status:
@@ -338,50 +375,81 @@ jobs:
                       repo_blocked.append(f"{dep_name}:{dep_status}")
 
               if repo_blocked:
+                  skipped.append(repo)
                   for entry in repo_blocked:
-                      dep_name_only = entry.split(":")[0]
-                      dep_status_only = entry.split(":")[1]
-                      print(f"  ❌ DEP-ORDER BLOCK: {repo} → dep {dep_name_only} is {dep_status_only} (not yet on main).")
-                      print(f"     Fix: promote {dep_name_only} to main first, wait for its QG-on-main to emit MAIN_GREEN,")
-                      print(f"          then re-trigger SIT / staging-validated to promote {repo}.")
-                      blocked_pairs.append(entry)
+                      dep_name_only, dep_status_only = entry.split(":", 1)
+                      print(
+                          f"  ⚠️  SKIPPED (dep not on main yet — will promote next run): "
+                          f"{repo} → dep {dep_name_only} is {dep_status_only}"
+                      )
+                      print(
+                          f"      Once {dep_name_only} promotes to main and its QG-on-main emits "
+                          f"MAIN_GREEN, a subsequent run will promote {repo} (bottom-up drain)."
+                      )
               else:
-                  print(f"  ✅ PASS: {repo} — all deps on main")
-
-          if blocked_pairs:
-              print()
-              print("══════════════════════════════════════════════════════════════")
-              print("❌ STAGE 1.8 DEP-ORDER GATE BLOCKED staging→main promotion.")
-              print(f"   {len(blocked_pairs)} dep(s) are NOT yet on main.")
-              print("   ci_status lifecycle: FEATURE_GREEN → STAGING_GREEN → SIT_VALIDATED → MAIN_GREEN")
-              print("   Required for staging→main: MAIN_GREEN or SIT_VALIDATED")
-              print("══════════════════════════════════════════════════════════════")
-              sys.exit(1)
+                  print(f"  ✅ READY: {repo} — all deps on main")
+                  ready.append(repo)
 
           print()
-          print("STAGE 1.8: ✅ All promoted repos have deps on main — dep-order safe")
+          print("══════════════════════════════════════════════════════════════")
+          print("STAGE 1.8 summary (backlog-drain):")
+          print(f"  READY this run ({len(ready)}): {' '.join(ready) if ready else '(none)'}")
+          print(f"  SKIPPED (blocked, retry next run) ({len(skipped)}): {' '.join(skipped) if skipped else '(none)'}")
+          print("  ci_status lifecycle: FEATURE_GREEN → STAGING_GREEN → SIT_VALIDATED → MAIN_GREEN")
+          print("  Required for staging→main: dep at MAIN_GREEN or SIT_VALIDATED")
+          print("══════════════════════════════════════════════════════════════")
+
+          export_ready(ready)
+
+          if not ready:
+              print(
+                  "\nSTAGE 1.8: nothing ready to promote this run — all pending repos are "
+                  "blocked on a dep not yet on main. Exiting 0 (NOT a failure); a subsequent "
+                  "run drains the next tier once its deps reach main."
+              )
+          else:
+              print(f"\nSTAGE 1.8: ✅ promoting {len(ready)} ready repo(s) this run.")
+          # Always exit 0 — blocked repos are SKIPPED, never a hard failure.
+          sys.exit(0)
           PYEOF
 
-      - name: Merge staging → main for all repos with staging changes
+      - name: Merge staging → main for ready (dep-on-main) repos with staging changes
         id: promote
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
           START_FROM_REPO: ${{ inputs.resume_from_repo || inputs.start_from_repo || '' }}
+          # READY_REPOS is the dep-order-ready subset exported by STAGE 1.8 (space-separated).
+          # READY_REPOS_COMPUTED=1 is the authoritative-set signal: when set, filter to
+          # READY_REPOS (even if EMPTY = nothing ready this run → promote nothing). When
+          # UNSET, STAGE 1.8 fell back (e.g. manifest read error) → do NOT filter; promote
+          # the full pending set (legacy behaviour).
+          READY_REPOS: ${{ env.READY_REPOS }}
+          READY_REPOS_COMPUTED: ${{ env.READY_REPOS_COMPUTED }}
         run: |
           set -euo pipefail
 
           OWNER="${{ github.repository_owner }}"
           MANIFEST="workspace-manifest.json"
 
-          # Get topological order (all tiers, T0 first)
-          REPOS=$(python3 - <<PYEOF
-          import json
+          # Get topological order (all tiers, T0 first), restricted to the dep-order-READY
+          # subset (READY_REPOS from STAGE 1.8). Blocked repos are skipped this run and
+          # drain on a subsequent run once their deps reach main.
+          REPOS=$(READY_REPOS="${READY_REPOS:-}" READY_REPOS_COMPUTED="${READY_REPOS_COMPUTED:-}" python3 - <<PYEOF
+          import json, os
           with open("${MANIFEST}") as f:
               m = json.load(f)
 
           staging_versions = m.get("staging_versions", {})
           stable_versions = m.get("versions", {})
           topo = m.get("topologicalOrder", {}).get("levels", [])
+
+          ready_raw = os.environ.get("READY_REPOS", "")
+          ready_set = {r for r in ready_raw.split() if r}
+          # Apply the filter whenever STAGE 1.8 produced an authoritative set
+          # (READY_REPOS_COMPUTED=1) — even if that set is EMPTY (nothing ready this
+          # run → promote nothing). Only the fallback path (flag unset) promotes all
+          # pending without a filter.
+          apply_filter = os.environ.get("READY_REPOS_COMPUTED", "") == "1"
 
           # Collect repos where staging_versions differs from versions
           changed = set()
@@ -390,6 +458,9 @@ jobs:
                   continue
               if sv != stable_versions.get(repo):
                   changed.add(repo)
+
+          if apply_filter:
+              changed = changed & ready_set
 
           # Emit in topological order
           for level in topo:
@@ -586,7 +657,16 @@ jobs:
 
       # Partial promotion failure Telegram alert migrated to notify-partial-failure job
 
-      - name: Promote staging_versions → versions, clear staging lock
+      - name: Promote staging_versions → versions (ONLY actually-promoted repos), clear staging lock
+        # BACKLOG-DRAIN (2026-06-06): operate ONLY on the repos that actually merged to
+        # main this run (steps.promote.outputs.promoted). Repos that were SKIPPED by the
+        # STAGE 1.8 dep-order gate (or FAILED to merge) keep their staging_versions /
+        # staging_commits entries so the next SIT→staging-validated cycle re-fires and
+        # drains them once their deps reach main (bottom-up). Promoting/clearing ALL of
+        # staging_versions here (the old behaviour) would falsely mark blocked repos as
+        # on-main and wipe their pending state → they'd never drain.
+        env:
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
         run: |
           set -euo pipefail
 
@@ -599,12 +679,18 @@ jobs:
           staging_versions = manifest.get("staging_versions", {})
           stable_versions = manifest.get("versions", {})
 
-          # Capture old→new version pairs BEFORE clearing staging_versions
-          # so the cascade step can compute bump_type correctly.
+          # The repos that actually merged to main this run (space-separated).
+          promoted_repos = [r for r in os.environ.get("PROMOTED", "").split() if r]
+          promoted_set = set(promoted_repos)
+          print(f"Repos actually promoted this run ({len(promoted_set)}): {sorted(promoted_set)}")
+
+          # Capture old→new version pairs for the cascade step (ONLY promoted repos),
+          # BEFORE mutating staging_versions, so cascade computes bump_type correctly.
           promoted_map = {}
-          for repo, new_version in staging_versions.items():
-              if repo.startswith("_"):
+          for repo in promoted_repos:
+              if repo.startswith("_") or repo not in staging_versions:
                   continue
+              new_version = staging_versions[repo]
               old_version = stable_versions.get(repo, "0.0.0")
               promoted_map[repo] = {"old": old_version, "new": new_version}
 
@@ -617,38 +703,53 @@ jobs:
                   ef.write(_json.dumps(promoted_map))
                   ef.write("\nPROMOTED_EOF\n")
 
-          # Promote each staging version to the stable versions map
+          # Promote ONLY the actually-promoted staging versions to the stable versions map.
           promoted = []
-          for repo, version in staging_versions.items():
-              if repo.startswith("_"):
+          for repo in promoted_repos:
+              if repo.startswith("_") or repo not in staging_versions:
                   continue
+              version = staging_versions[repo]
               manifest["versions"][repo] = version
               promoted.append(f"  {repo}={version}")
 
-          # Append current staging_commits to main_commits.history (keep last 5 entries)
+          # Append ONLY the promoted repos' staging_commits to main_commits.history (last 5).
           staging_commits = manifest.get("staging_commits", {})
-          entry = {
-              "promoted_at": datetime.datetime.utcnow().isoformat() + "Z",
-              "commits": {k: v for k, v in staging_commits.items() if not k.startswith("_")}
+          promoted_commits = {
+              k: v for k, v in staging_commits.items()
+              if not k.startswith("_") and k in promoted_set
           }
-          if "main_commits" not in manifest:
-              manifest["main_commits"] = {"history": []}
-          history = manifest["main_commits"].get("history", [])
-          history.insert(0, entry)
-          if len(history) > 5:
-              history = history[:5]
-          manifest["main_commits"]["history"] = history
+          if promoted_commits:
+              entry = {
+                  "promoted_at": datetime.datetime.utcnow().isoformat() + "Z",
+                  "commits": promoted_commits,
+              }
+              if "main_commits" not in manifest:
+                  manifest["main_commits"] = {"history": []}
+              history = manifest["main_commits"].get("history", [])
+              history.insert(0, entry)
+              if len(history) > 5:
+                  history = history[:5]
+              manifest["main_commits"]["history"] = history
 
-          # Clear staging_versions (keep the _note)
-          note = staging_versions.get("_note", "")
-          manifest["staging_versions"] = {"_note": note}
+          # Remove ONLY promoted repos from staging_versions; KEEP blocked/failed repos
+          # so the next SIT cycle re-fires and drains them (preserve the _note + others).
+          new_staging_versions = {
+              repo: ver for repo, ver in staging_versions.items()
+              if repo.startswith("_") or repo not in promoted_set
+          }
+          manifest["staging_versions"] = new_staging_versions
 
-          # Clear staging_commits (keep the _note if present)
-          staging_commits_note = staging_commits.get("_note", "")
-          manifest["staging_commits"] = {"_note": staging_commits_note} if staging_commits_note else {}
+          # Remove ONLY promoted repos from staging_commits; KEEP the rest (+ _note).
+          new_staging_commits = {
+              repo: sha for repo, sha in staging_commits.items()
+              if repo.startswith("_") or repo not in promoted_set
+          }
+          manifest["staging_commits"] = new_staging_commits
 
-          # Reset ci_status for promoted repos: SIT_VALIDATED → FEATURE_GREEN
-          # (main is the new baseline; staging status no longer applies)
+          # Reset ci_status for PROMOTED repos: SIT_VALIDATED/STAGING_GREEN → FEATURE_GREEN
+          # (main is the new baseline; the on-main QG run then emits MAIN_GREEN, which is
+          # what unblocks dependents on a subsequent drain run). Blocked repos are left
+          # untouched so STAGE 1.8 re-evaluates them next run.
           repos_data = manifest.get("repositories", {})
           for repo in promoted:
               repo_name = repo.strip().split("=")[0]  # promoted list has "repo=version" format
@@ -658,17 +759,28 @@ jobs:
                       repos_data[repo_name]["ci_status"] = "FEATURE_GREEN"
                       print(f"  ci_status reset: {repo_name} {old_ci} → FEATURE_GREEN")
 
-          # Clear staging lock (guard against missing field)
+          # Are there still pending repos (blocked/failed) awaiting a future drain run?
+          remaining_pending = [
+              r for r, sv in manifest["staging_versions"].items()
+              if not r.startswith("_") and sv != manifest["versions"].get(r)
+          ]
+
+          # Clear staging lock (guard against missing field). Clearing the lock is correct
+          # even when repos remain pending: this promotion run is done; the next
+          # sit-debounce tick sees the remaining staging_versions and re-locks + re-runs
+          # SIT, which re-dispatches staging-validated to drain the next ready tier.
           if "staging_status" not in manifest:
               manifest["staging_status"] = {"locked": False, "locked_since": None, "locked_reason": None, "lock_version": None}
           manifest["staging_status"]["locked"] = False
           manifest["staging_status"]["locked_since"] = None
           manifest["staging_status"]["locked_reason"] = None
           manifest["staging_status"]["lock_version"] = None
-          # Clear promotion progress tracking (full promotion complete)
+          # Clear per-run promotion progress tracking.
           manifest["staging_status"].pop("promoted_repos", None)
           manifest["staging_status"].pop("failed_repos", None)
           manifest["staging_status"].pop("promotion_updated_at", None)
+          if remaining_pending:
+              print(f"  NOTE: {len(remaining_pending)} repo(s) still pending (drain next run): {sorted(remaining_pending)}")
 
           tmp_path = "workspace-manifest.json.tmp"
           with open(tmp_path, "w") as f:
@@ -680,7 +792,8 @@ jobs:
           print(f"Promoted {len(promoted)} repos to stable versions:")
           for p in promoted:
               print(p)
-          print(f"Appended staging_commits to main_commits.history (history length: {len(history)})")
+          _hist_len = len(manifest.get("main_commits", {}).get("history", []))
+          print(f"main_commits.history length: {_hist_len} (appended {len(promoted_commits)} promoted commit(s))")
           print("staging_status.locked = false")
           PYEOF
           python3 -c "import json; d=json.load(open('workspace-manifest.json')); assert 'versions' in d, 'FATAL: manifest missing versions key'" \
