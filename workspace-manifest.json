@@ -80,7 +80,7 @@
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.2.0",
     "unified-trading-library": "0.3.167",
-    "unified-trading-pm": "1.2.3"
+    "unified-trading-pm": "1.2.4"
   },
   "repositories": {
     "alerting-service": {
@@ -1789,14 +1789,15 @@
     "system-integration-tests": "0.2.0",
     "unified-trading-library": "0.3.167",
     "unified-trading-pm": "1.2.0",
-    "e2e-testing": "0.2.0"
+    "e2e-testing": "0.2.0",
+    "unified-api-contracts": "0.2.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-06T15:40:34.149873Z",
+    "locked_reason": "Breaking MINOR bump cascade: unified-api-contracts=0.2.0 (pre-1.0.0)",
+    "lock_version": "0.2.0",
     "pending_repos": [
       "market-tick-data-service",
       "unified-trading-pm",
@@ -1814,6 +1815,11 @@
     "market-tick-data-service": {
       "version": "0.4.0",
       "sha": "75b48d96f67f48676a3a3a0979533ab5f405958f",
+      "branch": "staging"
+    },
+    "unified-api-contracts": {
+      "version": "0.2.0",
+      "sha": "bf90830b9160f322313ac71a82e654079ce86c6d",
       "branch": "staging"
     }
   },
