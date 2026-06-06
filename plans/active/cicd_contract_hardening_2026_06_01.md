@@ -2720,8 +2720,7 @@ behind the exact drift this whole audit is about.
    bare PYEOF heredoc terminator) → `staging_versions` never bumped → SIT + staging-to-main idle since 06-01 despite
    staging being 13–43 commits ahead of main with real release code. Fixed + merged: `unified-trading-pm` PR **#146**
    (also caught PM main up — 8-file net diff). Pilot revival dispatched (v2 on uac staging → semver-agent →
-   update-repo-version → staging_versions[uac] bump → sit-debounce → SIT → staging-to-main). **VERIFY status: in
-   progress at session checkpoint.**
+   update-repo-version → staging_versions[uac] bump → sit-debounce → SIT → staging-to-main). **✅ VERIFIED 2026-06-06 15:04Z:** semver-agent→update-repo-version (15:04 SUCCESS, was failing)→`staging_versions[uac]` bumped 0.1.20→0.2.0. The version-bump automation is REPAIRED and flowing end-to-end. Next link = SIT (sit-debounce picks up pending=1→sit-gate→SIT→staging-validated→staging-to-main).
 5. **Untracked churning generated DAG SVGs** (root-anchored ignores missed the codex-relocated `*_DAG.svg` +
    `CANONICAL_DEPENDENCY_MANIFEST.svg`) → `unified-trading-pm@749558968`. Flipped plan item ~line 1999.
 6. **Flipped:** pyjwt→2.13.0 (already on LDR fleet-wide, verified all 24 locks), DAG-SVG gitignore. `@3a5f4188e`.
