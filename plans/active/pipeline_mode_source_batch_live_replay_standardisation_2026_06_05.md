@@ -107,8 +107,12 @@ window ON DEMAND — specifically "today's data from start-of-day" — to fill a
 It is **format-agnostic** (tick or bar — the question is availability, not granularity). The test: _"live was down
 09:00–11:00 today; can I fetch that window NOW and backfill it?"_ **Chain-related sources are ALWAYS replay-capable**
 (deterministic — any past block is queryable intraday). A vendor that only ships **end-of-day** archives (no intraday
-retrieval of the current day) is **NOT** replay-capable. `databento` / `massive` intraday-replay = **vendor-doc check
-(open)** — see M2b.
+retrieval of the current day) is **NOT** replay-capable. `databento` / `massive` intraday-replay = **CONFIRMED
+(vendor-doc check 2026-06-05, UAC@8079b884)**: **databento** is replay-capable via the **Live-API 24h intraday replay**
+(its Historical API is 24h-embargoed — so today-since-start backfill rides the LIVE path, not historical); **massive**
+(= Polygon.io) via **REST tick-within-a-time-range** (intraday retrievable) — caveat: Starter-tier "live" is **15-min
+delayed** (true real-time needs a tier upgrade). Both seeded `{BATCH, LIVE, REPLAY}` + locked by
+`test_massive_and_databento_are_live_and_replay_capable`.
 
 **M2 REFINEMENT — capability is per-`(source × data_type)`, and integrate with the EXISTING `SourceCapability` registry
 (slot-6 finding 2026-06-05).** Hyperliquid is the worked example: it is **live** for `trades`/`l2_book` (`ws_trades` /
