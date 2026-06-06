@@ -178,12 +178,33 @@ is green fleet-wide, (4) captures any new finding as a `- [ ]` in the **right so
 >    every staging PR `BLOCKED` despite v2-green + auto-merge-enabled. **Fix applied:** dispatched `staging-unlocked`
 >    `repository_dispatch` to all 22 repos to re-run the Staging Lock Check on the open PR heads. (If that does not
 >    refresh a given PR's head status, close/reopen the PR to re-fire its `pull_request` checks.)
-> 4. **Promoter machinery is ALIVE** (`ldr-to-staging-promote` cascading every ~2min; `ci-status-update`, `sit-debounce`,
->    `cloud-build-router`, `tab-mirror`, `freeze-deferred-build-replay` all firing). The drain is gated only by (3) +
->    the handful of genuinely-DIRTY PRs.
+> 4. **Promoter machinery is ALIVE** (`ldr-to-staging-promote` cascading every ~2min; `ci-status-update`,
+>    `sit-debounce`, `cloud-build-router`, `tab-mirror`, `freeze-deferred-build-replay` all firing). The drain is gated
+>    only by (3) + the handful of genuinely-DIRTY PRs.
 > 5. **staging is AHEAD of main** (5–40 commits) and only slightly behind LDR — the 06-05 `staging-resync-*` PRs are now
 >    largely **redundant/obsolete** (they merged main→staging when staging was behind; staging is now ahead). Close the
 >    redundant DIRTY resync PRs where the plain LDR→staging drain is MERGEABLE; the priority stage is **staging→main**.
+> 6. **✅ FIXED 2026-06-06 (PR #146 → PM main):** the `update-repo-version.yml` crash was a **malformed heredoc
+>    terminator** — line 152 was `PYEOF || exit 1`, which bash does NOT recognise as a heredoc end-delimiter (it must be
+>    a bare `PYEOF` alone on the line). Bash therefore swallowed the entire rest of the step (lines 75→197) as the FIRST
+>    python's stdin, up to the SECOND heredoc's bare `PYEOF`. That python failed on the malformed input (silent — no
+>    output), `/tmp/bump_type.txt` was never written, and the inert `|| exit 1` (now inside the consumed heredoc) let
+>    the script stagger on to `cat: /tmp/bump_type.txt: No such file` + `CURRENT: unbound variable`. Fix: bare `PYEOF`
+>    terminator wrapped in `if ! python3 - <<PYEOF … PYEOF; then exit 1; fi`, plus `CURRENT`/`BUMP_TYPE` guarded under
+>    `set -u`. Verified end-to-end: a `version-bump` dispatch (uac→0.2.0, branch=staging) now bumps
+>    `staging_versions[unified-api-contracts]` and exits 0. See § "ROOT CAUSE" below for the original diagnosis.
+> 7. **🔴 ROOT CAUSE of the dead staging→main automation (THE durable finding 2026-06-06):** the SIT→staging-to-main
+>    chain is **version-delta-driven** — `sit-debounce-trigger` + `staging-to-main` only act on repos where manifest
+>    `staging_versions[repo] != versions[repo]`. Currently `staging_versions == versions` for ALL repos (pending=0), so
+>    the chain is idle **even though staging is 13–43 commits ahead of main with genuine release code** (e.g.
+>    instruments main..LDR = `feat!: v9 sports_reference path` + adapters + 5585 insertions; pyproject still 0.1.22 on
+>    all 3 branches — the code never bumped the version). `staging_versions` is supposed to be bumped by **semver-agent
+>    → `update-repo-version.yml`** on staging merges, BUT **`update-repo-version.yml` is CRASHING every run**
+>    (`cat: /tmp/bump_type.txt: No such file` + `line 27: CURRENT: unbound variable`) while trying to bump e.g.
+>    uac→0.2.0 → `staging_versions` never updates → the whole version-driven promotion is frozen. **Fix = repair
+>    `update-repo-version.yml`** (revives self-sustaining promotion) AND/OR converge main directly per-repo (proven
+>    06-02 method) for the immediate catch-up. NOTE there may be additional broken links downstream (SIT suite is noted
+>    stale at ~line 1189) — verify SIT passes once versions bump. This is the central remaining systemic CI/CD defect.
 >
 > **Continue from the Progress Log appended at the very end of this plan + the todo flips below.**
 
