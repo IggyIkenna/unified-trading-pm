@@ -3,7 +3,6 @@ title:
   semver-agent never commits the version bump → dep-update cascade fans out constraint bumps to a non-existent version →
   dependent v2 FAILING → staging→main dep-order gate jammed
 created: 2026-06-06
-author: ikennaigboaka [slot-1·laptop]
 source:
   - strategy-service quality-gates-v2 run 27065739655 (dep-update/unified-api-contracts-0.2.0)
   - strategy-service quality-gates-v2 run 27065944720 (dep-update/market-tick-data-service-0.4.0)
@@ -12,6 +11,8 @@ source:
   - scripts/propagation/templates/version-bump.yml (RETIRED — had the sed+commit step that was dropped)
 locked_by: live-defi-rollout
 parent_epic: infrastructure_master
+priority: P2
+status: active
 ---
 
 ## What I found
