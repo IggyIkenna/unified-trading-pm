@@ -2738,3 +2738,55 @@ behind the exact drift this whole audit is about.
 - Remaining this-plan machinery todos (WAVE 1/2): default-branch verifier, ci_status Guard 2/3, alert bookends,
   plan-health-gate required check, actionlint [5.5] re-enable, divergence active-host-filter rollout, AO staging/G6,
   orchestrator spawn. See the open `- [ ]` checkboxes above.
+
+## 🏁 SESSION OUTCOME — 2026-06-06 autonomous finish session (slot-1) — pipeline UNFROZEN + PROVEN end-to-end
+
+> **Bottom line: the staging→main promotion pipeline was completely FROZEN (since ~06-01) by two distinct workflow bugs.
+> Both are now fixed + merged to PM main, and the full path is PROVEN end-to-end** (`unified-api-contracts` promoted
+> LDR→staging→main, `versions[uac]=0.2.0` on main, via the revived automation — no manual PR). The fleet now drains
+> bottom-up; remaining repos converge as their tiers reach `MAIN_GREEN`.
+
+### The two root-cause fixes (the pipeline was dead until these landed)
+
+1. **`update-repo-version.yml` crashed every run** (bare-PYEOF heredoc → `/tmp/bump_type.txt` missing + unbound
+   `CURRENT`) → manifest `staging_versions` never bumped → the version-delta-driven SIT/staging-to-main automation saw
+   "nothing to promote" forever. **Fixed: PM PR #146 (merged).** VERIFIED: semver-agent→update-repo-version now green;
+   `staging_versions[uac]` bumped 0.1.20→0.2.0.
+2. **`staging-to-main.yml` was all-or-nothing + Slack-fatal** — the STAGE 1.8 dep-order gate `exit 1`'d the whole run if
+   ANY pending repo had a dep not-yet-on-main (so a mixed batch promoted NOTHING), and a Slack webhook timeout marked the
+   whole promotion failed. **Fixed: PM PR #147 (merged)** — now promotes the READY subset, skips+warns blocked repos
+   (drains bottom-up across runs), and Slack is non-fatal. VERIFIED: run 27066366593 promoted uac→main (PR #85), skipped
+   mtds/e2e (deps not on main), conclusion SUCCESS.
+
+### Also done this session
+
+- LDR greened fleet-wide (UTL codex-ratchet `9a4ddbe9`; features bucket-comment `db32578c`).
+- All DIRTY LDR→staging drains reconciled (ml/uta/fund/greeks/e2e — artifacts-only divergence resync'd to LDR; redundant
+  stale 06-05 resyncs closed; uac drain merged).
+- Generated DAG-SVG churn untracked/gitignored (`749558968`). pyjwt 2.13.0 verified fleet-wide on LDR.
+- staging-lock stale-status mechanism documented (reopen/head-refire clears it).
+
+### REMAINING to fully converge every repo's main (the drain is now WORKING but multi-tier + CI-bound)
+
+The machinery is repaired; full fleet convergence needs these, which the autonomous drain engine + a follow-up agent
+should finish (no more frozen-pipeline blockers, just iteration + 2 known per-layer issues):
+
+1. **Per-tier version-bumps + repeated staging-to-main** — bottom-up: each promoted tier emits `MAIN_GREEN`, unblocking
+   its dependents. Lower tiers (utl, execution, strategy, …) must be version-bumped (dispatch v2 on their `staging` →
+   semver-agent → update-repo-version) to become pending, then staging-to-main drains them. A drain engine is running
+   (cycles staging-to-main); continue dispatching v2-on-staging per tier as needed.
+2. **🔴 dep-update cascade v2 failures** — when a dep bumps (uac→0.2.0), the cascade opens `dep-update/<dep>-<ver>`
+   branches in dependents to bump the constraint, and several are RED on v2 (e.g. strategy/mtds `dep-update/*` v2
+   failure → sets the dependent's ci_status FAILING, which blocks the dep-order gate). Diagnose + green these (likely the
+   dep isn't on main/published yet when the dependent's v2 clones it, OR a real constraint issue) — this is the next
+   layer to unblock the dependent tiers.
+3. **🔴 SIT (system-integration-tests) is RED** — its own v2/checks fail (stale suite, ~line 1189). SIT is the AUTO
+   trigger for staging-to-main (`staging-validated`) AND advances ci_status STAGING_GREEN→SIT_VALIDATED. With SIT broken
+   the pipeline needs MANUAL staging-to-main dispatches (which work) + bottom-up MAIN_GREEN progression. **Green SIT for
+   the pipeline to be fully hands-off self-sustaining.**
+4. The WAVE-1/2 machinery todos in this plan (default-branch verifier, ci_status Guard 2/3, alert bookends,
+   plan-health-gate required check, actionlint [5.5] re-enable, AO staging/G6, divergence active-host-filter rollout).
+
+### Pickup for the next agent
+Read `cursor-configs/AUTONOMOUS_AGENT_RULES.md` + the 📌 2026-06-06 PROGRESS block (top) + this section. The pipeline is
+no longer frozen — work items 1–4 above in order; the version-bump + staging-to-main machinery now functions correctly.
