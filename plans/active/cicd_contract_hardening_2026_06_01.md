@@ -980,7 +980,10 @@ machinery):
 > defect. **e2e-testing main is the one left RED** by this (promoted at the publication moment). Real fix only — do NOT
 > `# noqa` / skip pip-audit.
 
-- [ ] [DEP] P0. **Fleet-wide `pyjwt` → 2.13.0 bump (security; fixes pip-audit PYSEC-2026-175/177/178/179).** Repos:
+- [x] ✅ [DEP] P0. **DONE (verified 2026-06-06) — every fleet `uv.lock` already resolves `pyjwt 2.13.0`** (surveyed all
+      24 repos: all at 2.13.0 on LDR; uac/PM carry no pyjwt in lock). The bump landed on LDR fleet-wide; reaches each
+      `main` via the staging→main drain. No action needed beyond the drain. **Fleet-wide `pyjwt` → 2.13.0 bump
+      (security; fixes pip-audit PYSEC-2026-175/177/178/179).** Repos:
       every repo whose `uv.lock` pins pyjwt < 2.13.0 (unified-trading-library, instruments-service, alerting-service,
       execution-service, features-service, fund-administration-service, market-data-processing-service,
       market-tick-data-service, ml-service, strategy-service, trading-agent-service, client-reporting-api,
@@ -1993,7 +1996,14 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `fix(strategy)` ffill quickmerge. The PM-only generated artifacts (`*_DAG.svg`, `CI-CD-PIPELINE.svg/.html`,
       `derived-dependency-manifest.json`) were already untracked + gitignored in PM 2026-06-03 (see the DONE items
       above). Repo: PM (template) + 8 service repos.
-- [ ] [SCRIPT] P2. **Untrack generated `*_DAG.svg` + move mutable `ci_status` to a sidecar file** — today both live in
+- [x] ✅ [SCRIPT] P2. **DONE (DAG-SVG half, 2026-06-06 `unified-trading-pm@749558968`)** — the prior root-anchored
+      ignore rules (`/WORKSPACE_MANIFEST_DAG.svg`, `/DATA_FLOW_DAG.svg`) silently MISSED the codex-relocated DAGs
+      (`codex/04-architecture/{DATA_FLOW,WORKSPACE_MANIFEST,RUNTIME_DEPLOYMENT_TOPOLOGY}_DAG.svg`) AND
+      `CANONICAL_DEPENDENCY_MANIFEST.svg` → all 4 stayed tracked + byte-churned (hit live this session: the SVG was dirty
+      on a clean checkout). Fixed: non-anchored basename patterns (`*_DAG.svg`, `CANONICAL_DEPENDENCY_MANIFEST.svg`) +
+      `git rm --cached` the 4 files. The `ci_status`-sidecar half remains a no-op (infeasible per the NB below — durable
+      cross-workflow state can't live in a gitignored file). **Untrack generated `*_DAG.svg` + move mutable `ci_status`
+      to a sidecar file** — today both live in
       tracked `workspace-manifest.json`, so every pull is dirty → blocks FF-sync + spawns the prettier-reflow churn.
       repo: unified-trading-pm. operator-decision (structural). **NB (slot-3 2026-06-05):** the `*_DAG.svg` half is
       effectively addressed — both DAG SVGs are already `git rm --cached` + gitignored (DONE items above); the residual
