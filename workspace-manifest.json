@@ -80,7 +80,7 @@
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.2.0",
     "unified-trading-library": "0.3.167",
-    "unified-trading-pm": "1.2.4"
+    "unified-trading-pm": "1.2.8"
   },
   "repositories": {
     "alerting-service": {
@@ -276,7 +276,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/).",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -379,7 +379,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -432,7 +432,7 @@
           "required": true
         }
       ],
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 70,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -702,7 +702,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -875,7 +875,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 72,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1061,7 +1061,7 @@
       "artifact_registry": "asia-northeast1-python.pkg.dev/central-element-323112/unified-libraries/unified-api-contracts",
       "cloud_build_trigger": "unified-api-contracts-build",
       "status": "active",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 85,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1107,7 +1107,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1233,7 +1233,7 @@
       "arch_tier": "T3",
       "version": "0.1.0",
       "dependencies": [],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "testing_level": "unit",
       "status": "active",
       "tier": 3,
@@ -1777,33 +1777,35 @@
   "staging_versions": {
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "batch-live-reconciliation-service": "0.1.0",
-    "deployment-api": "0.1.1",
+    "deployment-api": "0.2.0",
     "deployment-service": "0.1.1",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.1.1",
+    "execution-service": "0.2.0",
     "features-service": "0.0.1",
     "fund-administration-service": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.1.22",
     "market-tick-data-service": "0.4.0",
     "system-integration-tests": "0.2.0",
-    "unified-trading-library": "0.3.167",
+    "unified-trading-library": "0.4.0",
     "unified-trading-pm": "1.2.0",
     "e2e-testing": "0.2.0",
-    "unified-api-contracts": "0.2.0"
+    "unified-api-contracts": "0.2.0",
+    "market-data-processing-service": "0.3.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed \u2014 open for fixes",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [
       "market-tick-data-service",
       "unified-trading-pm",
       "e2e-testing"
     ],
-    "sit_retry_count": 3
+    "sit_retry_count": 3,
+    "locked_alert_sent": true
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
@@ -1820,6 +1822,26 @@
     "unified-api-contracts": {
       "version": "0.2.0",
       "sha": "bf90830b9160f322313ac71a82e654079ce86c6d",
+      "branch": "staging"
+    },
+    "unified-trading-library": {
+      "version": "0.4.0",
+      "sha": "750c7fac052e317cbeeefc0227936813bcec2765",
+      "branch": "staging"
+    },
+    "market-data-processing-service": {
+      "version": "0.3.0",
+      "sha": "fd3ae901befd5ee4126947c52f6162db5a14db2b",
+      "branch": "staging"
+    },
+    "deployment-api": {
+      "version": "0.2.0",
+      "sha": "81c4d316a9a484d3e2c32821b70bc29b9614d171",
+      "branch": "staging"
+    },
+    "execution-service": {
+      "version": "0.2.0",
+      "sha": "7355084fdff2a58b04934b5e017d278449265984",
       "branch": "staging"
     }
   },
