@@ -1,13 +1,14 @@
 ---
 title: major-bump-issue-handler.yml actionlint untrusted-input fails QG step 5.5 fleet-wide (blocks A11c-candle-enum)
 created: 2026-06-07
-author: ikennaigboaka [slot-7·laptop]
 source:
   - plans/active/defi_manifest_canonicalisation_2026_06_01.md (A11c-candle-enum)
   - plans/active/cicd_contract_hardening_2026_06_01.md (live cicd track; successor of the archived
     cicd_hidden_fragility_audit_2026_06_05.md)
   - unified-trading-pm/scripts/quality-gates-base/base-service.sh (§ [5.5] WORKFLOW LINT)
 locked_by:
+priority: P2
+status: active
 ---
 
 ## What I found

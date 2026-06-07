@@ -3,7 +3,6 @@ title:
   "MASTER COORDINATOR — data + manifest + schema migration + IS catalogue + pipeline_mode standardisation (single-pane
   dependency-gated sequencer for the whole data-layer cutover)"
 created: 2026-06-07
-author: ikenna
 parent_epic: epics/manifest_master.md
 assigned_vm: vm-cross-cutting
 status: active
