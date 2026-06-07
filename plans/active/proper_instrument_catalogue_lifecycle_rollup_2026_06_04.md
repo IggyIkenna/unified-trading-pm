@@ -190,6 +190,31 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       **coverage-horizon check** (warn when the latest `by_date` day is > N days stale OR the per-day instrument count
       drops sharply) added to the producer/audit (**NICE-TO-HAVE**, slot-7). Repo: instruments-service (capture) + the
       tradfi vertical. assigned_vm: vm-cross-cutting (catalogue) / slot-6 (tradfi root-cause).
+- [ ] [CODE] P1. **Tradfi instrument-definition capture — diagnose+restore Databento, then add Massive as a DUAL
+      reference source (remediation for the freeze FINDING above).** Repo: instruments-service. assigned_vm: slot-6 /
+      tradfi vertical (`tradfi_master.md` + `tradfi_manifest_canonicalisation_2026_06_01.md`). **Status:
+      BLOCKED-CREDENTIALS on Databento billing (operator, 2026-06-05) → Massive is the PRIMARY restore path, not just
+      resilience.** Two parts: **(A) Databento re-run is BLOCKED — do NOT attempt** (the ~16-18K→~2/day degradation
+      after 2026-05-04 then stop after 2026-05-22 cannot be fixed by re-running Databento: no billing budget right now —
+      operator-gated `BLOCKED-CREDENTIALS`, awaiting [ack] on a Databento subscription/billing ask). Note the
+      degradation diagnosis (is it billing-lapse vs adapter break?) for the record, but the fix is NOT a Databento
+      re-run while billing is unavailable. **(B) PRIMARY — make Massive the tradfi reference source** so `by_date/`
+      refills to today WITHOUT Databento (Massive is already the sanctioned tradfi dual-source market-data vendor → its
+      subscription is live; confirm it covers the `/v3/reference/*` endpoints, which are billed separately from bars).
+      Once Massive feeds `by_date/`, the catalogue producer (`build_instrument_catalogue.py`) rolls it up automatically
+      (re-run the apply; monotonic guard accepts the growth). Massive is **Polygon.io-API compatible** — the existing
+      `instruments-service/.../reference_data/adapters/tradfi/polygon.py` already implements the `/v3/reference/tickers`
+      (equity/ETF/index) + `/v3/reference/options/contracts` (options chains) schemas + pagination, so build a
+      `MassiveReferenceDataAdapter` (or re-point that Polygon-shaped reader at Massive's base URL + Massive
+      Secret-Manager creds — DO NOT revive the **removed Polygon.io vendor**; Massive is the sanctioned vendor). Wire it
+      into the IS reference factory + stamp `source=massive` per the source-provenance contract. **Coverage caveats
+      (from `tradfi_massive_dual_source_2026_05_28.md`)**: equities/ETF/index + options chains are proven on Massive;
+      **futures `/v3/reference/futures/contracts` returned 200+empty as of 2026-05-30** (subscription propagation —
+      investigate the `s3://flatfiles/` path as the futures-reference alternative). Per the External-Data rule: if
+      Massive futures-reference is still blocked, ship the adapter scaffold + unit tests anyway and file a
+      `BLOCKED-CREDENTIALS`/`BLOCKED-UPSTREAM` ping (do not descope). Cloud-agnostic I/O; no `os.getenv`; QG-green
+      before commit; commit+push+flip. Cross-ref: the freeze FINDING above +
+      `data_source_provenance_all_asset_groups_2026_06_01.md`.
 
 ## Phased DAG + gates
 
