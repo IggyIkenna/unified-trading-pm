@@ -1379,6 +1379,17 @@ CF-GREEN-on-real- data + the fleet drain + operator.
       on a VM (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<tag>`; GCS flaky locally) so the raw-tick denominator ==
       could-exist universe; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
       bucket fix are done. parent_epic: mtds_mdps_master.
+- [ ] [DATA] P1. ⑦ sports could-exist league COVERAGE GAP — **GATED with the apply-write above** (slot-4 dry-run
+      2026-06-07): the producer dry-run on the real prod bucket rolled up **1,323** leagues (from 78,860
+      `entity=leagues` parquets), but the canonical `_index` has **1,715** distinct `league_id`s → ~392 manifest leagues
+      are NOT in the api-football `entity=leagues` slice (almost certainly footystats / understat / transfermarkt
+      league-id namespaces, which have their own `entity=sfi_leagues` / `entity=transfermarkt_leagues` listings). So the
+      league-grain could-exist universe currently UNDER-covers: the ~392 non-api-football leagues' UNCAPTURED cells
+      won't be seeded `expected_unattempted` (their CAPTURED cells are unaffected — already counted). Before
+      apply-write, either (a) union the other leagues-type entities into `build_sports_catalogue_dataframe` (per-source
+      league_id namespace), or (b) confirm those 392 are retired/blank league_ids that should NOT be in the denominator.
+      Verify the IS-universe ⊇ manifest-leagues property holds (the unit-test regression asserts it on synthetic data;
+      the REAL gap must be closed/explained here). Repo: instruments-service. parent_epic: mtds_mdps_master.
 - [ ] [PERF] P2. ⑦ sports league-catalogue roll-up list-cost — **NICE-TO-HAVE** (slot-4 2026-06-07): the producer's
       `_iter_sports_by_date_snapshots` must `list_blobs("sports_reference/by_date/")` over the WHOLE tree (17 entities ×
       per-fixture files since 2015 → hundreds of thousands of objects) to filter to the ~3000 tiny `entity=leagues`
