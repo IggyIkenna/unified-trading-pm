@@ -390,7 +390,12 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       on the UI playwright gate (HARD RULE)**: needs `pw:L2 ✓` + a regression spec on a UI-capable slot. Repo:
       unified-trading-system-ui. Owner: a UI-capable slot. **DEFERRED** — provenance: C-TRANSPORT consumer sweep
       2026-06-07 (the Python-side rename landed uac@cc69b123/utl@d0745bde/mtds@c567962e/is@03a93e10; the generated UI
-      mirror regenerates downstream).
+      mirror regenerates downstream). **Determination (vm-cross-cutting 2026-06-07)**: the UAC source artifacts
+      (`unified-api-contracts/ui-reference-data.json` + `openapi/ui-reference-data.json` + the UI repo
+      `context/api-contracts/openapi/ui-reference-data.json`) are ALREADY clean (0 `hyperliquid_rest`); ONLY the synced
+      `lib/registry/ui-reference-data.json` carries the 1 stale token → the regen diff is provably **purely the
+      `batch_hyperliquid_rest`→`batch_hyperliquid` rename**. NOT hand-edited (generated-artifact rule); a UI slot runs
+      the sync (`uac-registry-sync.yml` / `generate_ui_reference_data.py`) + the playwright gate to tick.
 
 ## Operator decisions needed (closed-set forks)
 

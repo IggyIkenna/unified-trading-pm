@@ -121,7 +121,13 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       the roll-up to run after each IS instrument-definition write per AG (event-driven off the IS write, or a frequent
       scheduler keyed to the IS update cadence — pick per the IS update mechanism; do NOT fire-and-forget). The v2
       enumerator's recurring run (cefi Dim-7 P3, currently BLOCKED) then reads an always-fresh catalogue. Repo:
-      deployment-service (terraform) + instruments-service. assigned_vm: vm-cross-cutting.
+      deployment-service (terraform) + instruments-service. assigned_vm: vm-cross-cutting. **TF AUTHORED
+      deployment@98bee4b** — `terraform/gcp/lifecycle_catalogue_scheduler.tf` (NEW): per-AG `for_each`
+      (cefi/defi/tradfi/sports/prediction) Cloud Run Job + Cloud Scheduler running `build_instrument_catalogue.py`
+      (sports `--by-date-prefix`), 01:00 UTC daily (after IS FAST refresh, before downstream regens), bounded job. The
+      two pre-existing schedulers (`catalogue_regen` / `instrument_catalogue`) run DIFFERENT scripts — this is the FIRST
+      to schedule the lifecycle roll-up. **REMAINING (apply-gated)**: `terraform apply` + T+10min per-AG execution
+      verify (infra apply pipeline).
 - [ ] [CODE] P1. **All asset groups adopt the proper catalogue.** cefi / defi / tradfi / **sports (fixtures)** /
       prediction each produce + consume their `{env}/catalog.parquet` via the same roll-up. Verify each AG's
       `_enumerate_v2_*` reads it and emits `expected_unattempted` against the real, current universe. Per-AG slices

@@ -273,8 +273,13 @@ pointer before acting on any of them.
   `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
 - **Shard-granularity SSOT**: shard atom identical across writer/manifest/status/gate/UI; 4-pillar validation. **Live =
   batch / Batch = Live**: same code path, no live-only data_types, no per-asset-group backtest engines.
-- **GCS paths carry `pipeline_mode=batch_*/` left of `asset_group=`**; phantom-audit `--apply` only after `prefix_tpls`
-  cover the new shape (else flips real `captured`→`attempted_failed`). SSOT: `codex/02-data/pipeline-mode-partition.md`.
+- **`pipeline_mode` is SOURCE-AWARE `{mode}_{source}[_{transport}]`** (G0; R4 2026-06-07): `mode ∈ {batch,live,replay}`,
+  `source`=VENDOR only (`hyperliquid` not `hyperliquid_rest`), `transport ∈ {rest,websocket,flat_file}` ALWAYS in a
+  separate manifest COLUMN (suffix in the path key only if a source runs >1 transport/shard — none today);
+  `live_websocket`=transitional alias. **GCS paths carry `pipeline_mode={mode}_{source}/` left of `asset_group=`** —
+  readers PREFIX-MATCH `batch_*`/`live_*`/`replay_*` (+ bare), never coarse; phantom-audit `--apply` only after
+  `prefix_tpls` cover the new shape (else flips real `captured`→`attempted_failed`). SSOT:
+  `codex/02-data/pipeline-mode-partition.md` + `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`.
 - **Data audit RED freezes layer-N+1 work**; only operator-gated `BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/
   `-UPSTREAM-OUTAGE` defer (DEFERRED needs a named successor plan). SSOT:
   `codex/02-data/external-data-always-available-rule.md` + `data-pipeline-correctness-hard-rule.md`.
