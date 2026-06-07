@@ -1796,17 +1796,17 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-07T11:11:49.405229Z",
-    "locked_reason": "Breaking MINOR bump cascade: market-tick-data-service=0.4.0 (pre-1.0.0)",
-    "lock_version": "0.4.0",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
+    "lock_version": null,
     "pending_repos": [
       "market-tick-data-service",
       "unified-trading-pm",
       "e2e-testing"
     ],
     "sit_retry_count": 3,
-    "locked_alert_sent": true
+    "locked_alert_sent": false
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
