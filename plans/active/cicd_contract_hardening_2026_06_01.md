@@ -3313,9 +3313,11 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
   required check `Quality Gates (agent-orchestrator) / quality-gates-v2`, went GREEN, and **auto-merged to `main`**
   (`107ca5422`). One gap found + fixed along the way: the recreated repo's `GH_PAT` secret was non-clone-capable
   (couldn't auth the private dep-repo clone → v2 red at the clone step) — reset it to the canonical fleet token
-  (clones + carries Workflows:write). **Possible follow-up:** mirror the rest of the fleet Actions-secret set to AO if
-  its other workflows need them (`GCP_SA_KEY`/`WIF_*`/`GCP_PROJECT_ID`/`ANTHROPIC_API_KEY`/`TELEGRAM_BOT_TOKEN` —
-  present on uac, absent on AO); v2 itself is green without them. AO is a normal fleet repo now.
+  (clones + carries Workflows:write). **Full fleet Actions-secret set RESTORED to AO 2026-06-07** (operator-asked) —
+  from GCP SM (`github-actions-sa-key`→`GCP_SA_KEY`, `anthropic-api-key`→`ANTHROPIC_API_KEY`, `telegram-bot-token`→
+  `TELEGRAM_BOT_TOKEN`) + `GCP_PROJECT_ID=central-element-323112` + `WIF_PROVIDER`/`WIF_SERVICE_ACCOUNT` (AO's own
+  values from `deploy-dashboard.yml`) + the `TELEGRAM_CHAT_ID` variable. Verified: AO's secret set now `diff`-clean ==
+  the fleet reference (uac). AO is a normal, fully-provisioned fleet repo now.
 - **✅ STOPPED `i-007e8d99` decommissioned — TERMINATED 2026-06-07** (operator-decided; confirmed `terminated` in AWS).
 - **✅ vm-0 recovery-stash — RESOLVED** (operator: drop; the stash was already gone — `git stash list` empty on vm-0).
 
