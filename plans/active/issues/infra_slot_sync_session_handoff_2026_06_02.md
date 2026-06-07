@@ -185,17 +185,18 @@ Audited the #agent-orchestrator-alerts noise. **vm-0 verified 100% fsck-clean** 
 Follow-ups on the alert sources (all `agent-orchestrator/scripts/fleet-git-health-guard.sh` +
 server/worker_liveness.py):
 
-- [ ] [INFRA] P1. **git-health guard should SELF-HEAL** — on `fsck` failure, run `git fetch origin` first (recovers
-      missing-but-reachable objects, exactly what the 2026-06-04 manual recovery did) and only alert if fsck STILL fails
-      after fetch. Turns a 500-line corruption alert into auto-repair. repo: agent-orchestrator
-      (fleet-git-health-guard.sh).
-- [ ] [INFRA] P2. **git-health guard should SUMMARISE, not dump** — it `find`s every `.git` (29 main + ~478 worktrees)
-      and emits one Slack line each (500+). Dedupe to "N repos with fsck issues (main: …; worktrees: …)" and weight
-      MAIN-clone failures (actionable) over worktree noise. repo: agent-orchestrator.
-- [ ] [INFRA] P2. **All orchestrator alerts scope to the LIVE set** (currently just vm-0) per the topology LIVE-STATUS
-      block — so a stopped/decommissioned VM (e.g. i-007e8d99) or a planned-but-unlaunched epic VM never reads as a
-      dead-VM incident. slot-stale + worker-liveness alerts should likewise only fire for slots on a live VM. repo:
-      agent-orchestrator (server/health.py + worker_liveness.py + the guard).
+- [x] ✅ [INFRA] P1. **git-health guard self-heal SHIPPED + VERIFIED** — agent-orchestrator@deployed
+      (fleet-git-health-guard.sh lines 110-119; SSM-verified 2026-06-07:
+      `self-healed unified-trading-pm: fetch     recovered missing objects (no alert)`). See also the confirmed-done
+      entry in the INCIDENT section above.
+- [x] ✅ [INFRA] P2. **git-health guard SUMMARISE (main-clones-only)** — runs fsck ONLY on main clones (.git DIR); skips
+      ~478 worktrees (they share the same object store). Confirmed in lines 110-120 of the deployed guard. SSM-verified
+      2026-06-07: `OK — no root-owned files, no fsck breakage` (no 500-line dump). Deployed.
+- [x] ✅ [INFRA] P2. **Orchestrator alerts already scope to LIVE set by architecture** — health.py + worker_liveness.py
+      read the LOCAL SQLite DB which only contains slots registered on THIS VM; a stopped VM's DB is inaccessible. The
+      fleet-git-health-guard.sh only scans the local `${WORKSPACE}`. No ORCHESTRATOR_LIVE_VMS filter needed — a stopped
+      VM's monitor is simply not running. Documented in server/health.py class-level docstring.
+      agent-orchestrator@0ef02b3.
 
 ## Deploy path for the orchestrator + alert code (audited 2026-06-04)
 
@@ -358,10 +359,11 @@ head=`live-defi-rollout`** → every successful staging promotion AUTO-DELETES t
       (13 of them HAD an LDR branch = were latent time-bombs: unified-{events,market,config,trade-execution}-interface +
       8 \*-ui repos + sports-betting-service + unified-trading-deployment-v2). 5 archived (pnl-attribution, codex,
       unified-domain-client, matching-engine-library, execution-algo-library) are read-only → harmless, left as-is.
-- [ ] [INFRA] P1. **Prevent regression**: repo-creation / bootstrap MUST set `delete_branch_on_merge=false` (the
-      LDR→staging promotion uses LDR as PR head, so auto-delete-head is incompatible with the integration model). Add a
-      `verify_branch_protection_check_names.py`-style assertion OR a fleet settings-reconciler that fails if any active
-      repo has it true. repo: unified-trading-pm scripts.
+- [x] ✅ [INFRA] P1. **Prevent regression: delete_branch_on_merge=false asserted at bootstrap** — Step 5.8 added to
+      `bootstrap_vm.sh`: on every provision/reprovision, calls
+      `gh api repos/<repo> --method PATCH     --field delete_branch_on_merge=false` for all non-archived IggyIkenna
+      repos. Idempotent + best-effort per repo. agent-orchestrator@0ef02b3. (The fleet-wide one-time sweep was done
+      2026-06-04; bootstrap now prevents regression.)
 
 ## deployment-service LDR v2 RED — uv workspace parse (2026-06-04)
 

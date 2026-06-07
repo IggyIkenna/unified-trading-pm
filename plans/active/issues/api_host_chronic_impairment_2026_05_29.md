@@ -605,9 +605,13 @@ this is hardening-against-recurrence, not an active fire. Concrete steps when pi
    `/etc/systemd/system/orchestrator.service.d/memory-cap.conf` exists + effective `MemoryMax` ≤ 56G after every
    reprovision (same class as the symmetric-host-verify cron).
 
-- [ ] [INFRA] P2. **Guard the MemoryMax cap against reprovision-loss** — `bootstrap_vm.sh` (or a verify cron) must
-      (re)write `orchestrator.service.d/memory-cap.conf` + assert effective `MemoryMax` ≤ 56G; today it silently
-      regressed to `infinity` (found 2026-06-07). repo: agent-orchestrator (bootstrap_vm.sh + verify).
-- [ ] [INFRA] P2. **Pin qg-host-governor token floor LOW on the central dispatch host** so worker QG/pytest cannot run a
-      32-57 GB job alongside the orchestrator on vm-0 (per-host override of the fleet floor). repo: unified-trading-pm
-      (qg-host-governor.sh) + agent-orchestrator bootstrap.
+- [x] ✅ [INFRA] P2. **Guard the MemoryMax cap against reprovision-loss** — Step 5.7 added to `bootstrap_vm.sh`:
+      idempotently (re)writes `orchestrator.service.d/memory-cap.conf` (`MemoryMax=56G` + `MemorySwapMax=16G`) + runs
+      `daemon-reload` on every provision, so it can never silently regress. SSM-verified 2026-06-07 on vm-0: effective
+      `MemoryMax=60129542144` (56G) / `MemorySwapMax=17179869184` (16G), service active. agent-orchestrator@0ef02b3.
+      repo: agent-orchestrator (bootstrap_vm.sh).
+- [x] ✅ [INFRA] P2. **Pin qg-host-governor token floor LOW on the central dispatch host** — Step 6.1 added to
+      `bootstrap_vm.sh` (planning role block): writes `QG_HOST_CONCURRENCY=1` to `.env.local` if not already set,
+      limiting the governor to 1 concurrent QG slot on the dispatch host. Applied live on vm-0 via SSM 2026-06-07
+      (`QG_HOST_CONCURRENCY=1` confirmed in `.env.local`). agent-orchestrator@0ef02b3. repo: agent-orchestrator
+      (bootstrap_vm.sh).
