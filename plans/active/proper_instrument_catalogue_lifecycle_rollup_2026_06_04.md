@@ -196,7 +196,7 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       **coverage-horizon check** (warn when the latest `by_date` day is > N days stale OR the per-day instrument count
       drops sharply) added to the producer/audit (**NICE-TO-HAVE**, slot-7). Repo: instruments-service (capture) + the
       tradfi vertical. assigned_vm: vm-cross-cutting (catalogue) / slot-6 (tradfi root-cause).
-- [ ] [CODE] P1. **Tradfi instrument-definition capture — diagnose+restore Databento, then add Massive as a DUAL
+- [x] ✅ [CODE] P1. **Tradfi instrument-definition capture — diagnose+restore Databento, then add Massive as a DUAL
       reference source (remediation for the freeze FINDING above).** Repo: instruments-service. assigned_vm: slot-6 /
       tradfi vertical (`tradfi_master.md` + `tradfi_manifest_canonicalisation_2026_06_01.md`). **Status:
       BLOCKED-CREDENTIALS on Databento billing (operator, 2026-06-05) → Massive is the PRIMARY restore path, not just
@@ -220,7 +220,36 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       Massive futures-reference is still blocked, ship the adapter scaffold + unit tests anyway and file a
       `BLOCKED-CREDENTIALS`/`BLOCKED-UPSTREAM` ping (do not descope). Cloud-agnostic I/O; no `os.getenv`; QG-green
       before commit; commit+push+flip. Cross-ref: the freeze FINDING above +
-      `data_source_provenance_all_asset_groups_2026_06_01.md`.
+      `data_source_provenance_all_asset_groups_2026_06_01.md`. — **✅ SHIPPED 2026-06-07 (slot-6).** Massive is now the
+      tradfi reference source. **Canonicalisation lives in UAC** (operator decision — same canonical schema regardless
+      of source): `unified_api_contracts/external/massive/{schemas,normalize}.py` raw→`InstrumentRecord` normalisers
+      (equities/ETF via `/v3/reference/tickers`; **futures via `/futures/vX/contracts`** — the WORKING path,
+      operator-confirmed; `/v3/reference/futures/*` 404s; FX; CBOE index + **SPX/VIX OPRA index options**),
+      MIC→canonical-venue tagging, `DATA_SOURCE_TO_SECRET[massive]=MASSIVE_API_KEY` + `VENUE_TO_DATA_SOURCE[MASSIVE]`.
+      Thin IS `MassiveReferenceDataAdapter` + factory `--source massive` routing (re-points CME/NASDAQ/NYSE/CBOE/FX off
+      Databento; MASSIVE pseudo-venue key fetch) threaded CLI→handler→orchestrator→URDI→factory.
+      **unified-api-contracts@12974b11 (PR#91) + instruments-service@c0f2f39c (PR#407)**; both `quality-gates.sh` green.
+      **Backfill RUN TO COMPLETION** (`--source massive`, 2026-05-05→2026-06-07, 34 dates, all 5 venues, **~32.7K
+      instruments/day, 0 write-failures**, prod `instruments-store-tradfi-prd`; previously-frozen dates 05-23+ refilled;
+      spot-verified real/unique/typed). **Catalogue re-applied** (`build_instrument_catalogue.py --asset-group tradfi`):
+      monotonic guard **ACCEPT 684,372 rows (was 651,985, +32,387)**, promoted `prod/catalog.parquet`; **liveness
+      restored — 32,711 instruments current** (incl 31,282 SPX/VIX options) vs the freeze's "VIX + KRW-USD only"; v2
+      enumerator parses it (684,372 entries). **C-#6 contract (2026-06-07)**: instrument-definition rows are
+      producer-emitted (`pipeline_mode=BATCH_INSTRUMENTS_SERVICE`) → `source` is NOT vendor-stamped (batch
+      `source⇔pipeline_mode` SSOT); the vendor is the adapter routing concern, not a per-row manifest tag.
+- [ ] [DATA] P1. **FINDING (slot-6, 2026-06-07) — ICE futures + CME futures-OPTIONS not on Massive →
+      BLOCKED-CREDENTIALS.** Massive Futures (Futures Developer plan, live) covers CME-group only (XCME/XNYM/XCEC/XCBT);
+      ICE (Brent/softs, 8 roots) returns 0 contracts. Massive has **no options-on-futures product**
+      (`/futures/vX/options` 404; all 8,000 futures products are `type=single`) — the old databento ~16-18K/day was CME
+      ES _futures-options_. With Databento billing-blocked, both are uncovered (SPX/VIX OPRA _index_ options ARE
+      captured on CBOE as the relevant vol-complex; VX _futures_ also absent on Massive → stays Yahoo-15m/Barchart,
+      synthetic VIX forward derivable from VIX options). **Operator ask**: an ICE-futures + CME-futures-options
+      reference source (or unblock Databento billing). Repo: instruments-service. assigned_vm: vm-tradfi.
+- [ ] [CODE] P2. **FINDING (slot-6, 2026-06-07) — MTDS Massive market-data connector uses the WRONG futures endpoint.**
+      `market-tick-data-service/.../adapters/tradfi/massive_tradfi_rest_connector.py` maps
+      futures→`/v3/reference/futures/contracts` (404s); the working Massive path is **`/futures/vX/contracts`** (+
+      `/futures/vX/products` for contract size / `unit_of_measure_qty`). Fix the MTDS connector's futures endpoint
+      shape. Repo: market-tick-data-service. assigned_vm: vm-tradfi.
 
 ## Phased DAG + gates
 
