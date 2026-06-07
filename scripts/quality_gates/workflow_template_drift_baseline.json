@@ -25,6 +25,7 @@
     "unified-trading-api/update-dependency-version.yml",
     "unified-trading-library/major-bump-issue-handler.yml",
     "unified-trading-library/update-dependency-version.yml",
+    "unified-trading-pm/major-bump-issue-handler.yml",
     "unified-trading-pm/request-major-bump.yml",
     "unified-trading-system-ui/update-dependency-version.yml"
   ]

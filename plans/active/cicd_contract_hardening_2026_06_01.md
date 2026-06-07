@@ -3297,9 +3297,14 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
 
 ### Genuine non-code blockers (documented — not deferrable-by-choice)
 
-- **agent-orchestrator rulesets + auto-merge = GitHub Pro** (private repo) — manual v2-gated merge today.
-  [BLOCKED-BILLING]. **STOPPED `i-007e8d99` decommission + vm-0 recovery-stash drop** — operator-gated destructive ops
-  [BLOCKED-OPERATOR].
+- **agent-orchestrator rulesets + auto-merge** — **ROOT CAUSE corrected by operator 2026-06-07: AO was a MIRROR of an
+  external repo**, so rulesets/auto-merge/etc. could not be configured on it regardless of Pro (NOT a billing block as
+  earlier assumed). **Operator is RECREATING the AO repo** as a first-class repo to fix it. ⚠️ **The new repo MUST carry
+  this session's AO commits** (deployed to vm-0): `agent-orchestrator@0ef02b3` (`bootstrap_vm.sh` MemoryMax=56G +
+  `QG_HOST_CONCURRENCY=1` floor + `delete_branch_on_merge=false`), `@6caa95a` (`backlog.mock.yaml` gitignore), and the
+  prior `@b10af714` (AO main-v2/staging/G6). Once recreated, register the standard `require-quality-gates` ruleset +
+  enable auto-merge so AO follows the normal `tab→LDR→staging→main` flow. [OPERATOR-IN-PROGRESS: repo recreation]
+- **STOPPED `i-007e8d99` decommission + vm-0 recovery-stash drop** — operator-gated destructive ops [BLOCKED-OPERATOR].
 
 ### 🟢 UPDATE (later 2026-06-07) — drain CONVERGING + 3rd new finding + api_host archived
 
