@@ -84,3 +84,42 @@ flat_file, internal}. Confidence: **C**=confirmed (vendor doc / code) · **H**=h
 > Everything not marked ○ above is determined with cited evidence and ready for the M1 enum (the `LIVE_<source>` /
 > `REPLAY_<source>` members + `SOURCE_MODE_CAPABILITY` round-trip). Owner of the M1/M2 code is `vm-cross-cutting` per
 > the standardisation plan; this doc is the ratified-content input.
+
+## RATIFIED (operator 2026-06-07) — residuals closed + corrections
+
+- **R1 — Tardis replay = NO (licence, not technical).** We hold a Tardis **academic licence which does NOT permit
+  replay** (verified); the upgrade is too expensive. So **`SOURCE_MODE_CAPABILITY[tardis] = {batch, live}`** (the
+  original M2 seed was right, for a licence reason — my web finding was the _technical_ capability, which our tier
+  blocks). **Consequence: CeFi replay does NOT come from Tardis — it comes from the EXCHANGES' own REST** (see next
+  blocker).
+- **R2 — massive/Polygon real-time = YES (pay).** `SOURCE_MODE_CAPABILITY[massive] = {batch, live, replay}`; code it all
+  now, **final testing gated on the paid-tier account upgrade** (a deploy-time gate, not a code blocker).
+- **R2 — The Odds API historical = ALREADY HAVE IT.** Secret-Manager API keys + already-downloaded historical odds →
+  `SOURCE_MODE_CAPABILITY[odds_api] = {batch, replay}` (replay-capable now).
+- **R3 — sports = `{batch, replay}`** (no in-play `live_<source>`) until a sports live archetype exists.
+
+## NEXT BLOCKER (introduced by R1) — CeFi per-venue exchange replay model
+
+Because Tardis can't replay (licence), CeFi `replay` must come from **per-venue exchange REST**, and that capability is
+**heterogeneous per (venue, data_type)** — web-verified 2026-06-07:
+
+| Venue           | REST intraday replay (fill today-since-start)                                 | Deep history         |
+| --------------- | ----------------------------------------------------------------------------- | -------------------- |
+| **Binance**     | ✓ futures aggTrades last 24h, **≤1h windows** (enough for a same-day gap)     | flat-file dumps      |
+| **OKX**         | ✓ `history-trades` tick from 2019-07-11 (deep via REST)                       | REST                 |
+| **Deribit**     | ✓ `get_last_trades_by_currency` all-history via REST                          | REST                 |
+| **Kraken**      | ✓ `Trades` REST `since` cursor                                                | REST                 |
+| **Bybit**       | ⚠️ public REST is **recent-only** (no time-range tick) → intraday replay weak | flat-file (next-day) |
+| **Hyperliquid** | ✓ `candleSnapshot(start,end)` (already confirmed)                             | REST                 |
+| **Aster**       | ❓ newer venue — REST replay depth UNVERIFIED                                 | ❓                   |
+
+**The blocker = a design/operator decision for the REST-replay-weak venues (Bybit + Aster):** to guarantee a gap-free
+series at the live-flip (the M6 continuity contract), how do we replay-fill a venue whose REST can't? Closed-set: (a)
+**buffer the live ws to disk** so a restart replays from the local buffer; (b) accept **next-day flat-file** (NOT
+intraday — breaks same-day continuity); (c) **exclude that venue from the live MVP**. This also forces the **source
+model**: CeFi `live`/`replay` are **per-venue** (`live_binance`/`replay_okx`/…), NOT a single generic — so the M2
+registry is keyed `(venue, data_type) → modes`, and the SAME shard carries `source=tardis` in batch but `source=<venue>`
+in live/replay (multi-source-per-shard, which the `source` COLUMN already models).
+
+**Does NOT block the foundation code** — the M1 enum + M2 registry for every SETTLED source can land now; the per-venue
+CeFi `replay_<venue>` rows ship as scaffold with Bybit/Aster flagged, pending this decision.
