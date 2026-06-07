@@ -390,8 +390,25 @@ def copy_setup_sh(repo_path: Path, dry_run: bool) -> bool:
     return True
 
 
+# QG sentinels are generated locally by quality-gates.sh and must never be
+# committed. They were added to the templates on 2026-06-05, so any repo whose
+# .gitignore was created before then never received them (this function used to
+# be create-once). Re-assert them on every rollout so existing files don't drift
+# and leak the sentinels (an untracked sentinel makes the worktree read dirty ->
+# slot-cron-ff-pull.sh skips the repo). SSOT: CLAUDE.md "Generated artifacts + QG
+# sentinels are gitignored" + scripts/propagation/templates/gitignore-python.txt.
+QG_SENTINEL_PATTERNS = (".qg_last_passed_sha", ".qg_content_sentinel")
+QG_SENTINEL_BLOCK = (
+    "\n# QG sentinels — generated locally by quality-gates.sh, NEVER committed\n"
+    '# (CLAUDE.md "Generated artifacts + QG sentinels are gitignored" + cicd_contract_hardening item H)\n'
+    ".qg_last_passed_sha\n"
+    ".qg_content_sentinel\n"
+)
+
+
 def ensure_ignore_files(repo_path: Path, template_type: str, dry_run: bool) -> bool:
-    """Create .cursorignore and .gitignore from templates if missing."""
+    """Create .cursorignore/.gitignore from templates if missing, and re-assert
+    the QG-sentinel ignore block in an existing .gitignore that predates it."""
     if template_type == "typescript":
         cursorignore_src = CURSORIGNORE_NODE
         gitignore_src = GITIGNORE_NODE
@@ -408,6 +425,20 @@ def ensure_ignore_files(repo_path: Path, template_type: str, dry_run: bool) -> b
             else:
                 dest.write_text(src.read_text())
                 print(f"  ✅ Created {name}")
+            updated = True
+
+    # Drift-repair: ensure an existing .gitignore ignores the QG sentinels.
+    gitignore_dest = repo_path / ".gitignore"
+    if gitignore_dest.exists():
+        text = gitignore_dest.read_text()
+        if any(pat not in text for pat in QG_SENTINEL_PATTERNS):
+            if dry_run:
+                print("  [dry-run] Would append QG-sentinel block to .gitignore")
+            else:
+                if text and not text.endswith("\n"):
+                    text += "\n"
+                gitignore_dest.write_text(text + QG_SENTINEL_BLOCK)
+                print("  ✅ Appended QG-sentinel block to .gitignore")
             updated = True
     return updated
 

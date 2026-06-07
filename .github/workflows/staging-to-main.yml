@@ -981,13 +981,23 @@ jobs:
   notify-promotion-complete:
     name: Slack — Staging Promotion
     needs: [promote-staging-to-main]
+    # Posts whenever the partial-failure notifier did NOT (failed_count 0/empty). The
+    # message + severity must be TRUTHFUL to the job RESULT — a job can fail (a step erroring
+    # BEFORE failed_count is set) even with failed_count empty, so a hardcoded "complete" /
+    # INFO would read as success on a failed run (the exact 2026-06-07 bug). notify-slack.yml
+    # also truthful-classifies severity from `conclusion`, but we make the BODY honest too.
     if:
       always() && (needs.promote-staging-to-main.outputs.failed_count == '0' ||
       needs.promote-staging-to-main.outputs.failed_count == '')
     uses: ./.github/workflows/notify-slack.yml
     with:
-      message: "Staging → main promotion complete"
-      severity: "INFO"
+      message:
+        "${{ needs.promote-staging-to-main.result == 'success' && 'Staging → main promotion complete' || format('Staging
+        → main promotion did NOT complete cleanly (job result {0}) — investigate the run',
+        needs.promote-staging-to-main.result) }}"
+      # INFO on a genuine success; notify-slack up-ranks to CRITICAL/WARNING automatically
+      # when conclusion is failure/cancelled, so a failed run never pages at INFO.
+      severity: ${{ needs.promote-staging-to-main.result == 'success' && 'INFO' || 'CRITICAL' }}
       conclusion: ${{ needs.promote-staging-to-main.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

@@ -90,6 +90,25 @@ jobs:
               exit(0)
 
           prev = repos[repo].get("ci_status", "NONE")
+          # No-downgrade guard: do NOT knock an on-main repo (MAIN_GREEN / SIT_VALIDATED)
+          # down to a LOWER green tier just because a non-main (staging/ldr) v2 re-ran.
+          # The live ldr->staging promoter re-runs staging v2 on already-promoted repos;
+          # an unconditional overwrite flapped MAIN_GREEN->STAGING_GREEN, which deadlocked
+          # the staging-to-main dep-order gate (a base dep like uac/utl never stayed
+          # MAIN_GREEN, so its dependents never became promote-ready). Keep the higher tier
+          # UNLESS the incoming is FAILING (a real regression must always surface) or the
+          # update is from the `main` branch itself (the authoritative on-main signal).
+          _GREEN_RANK = {
+              "LOCAL_PASS": 1, "FEATURE_GREEN": 1, "STAGING_PENDING": 2,
+              "STAGING_GREEN": 2, "SIT_VALIDATED": 3, "MAIN_GREEN": 4,
+          }
+          if (
+              status != "FAILING"
+              and branch != "main"
+              and _GREEN_RANK.get(status, 0) < _GREEN_RANK.get(prev, 0)
+          ):
+              print(f"No-downgrade: keeping {repo} ci_status={prev} (ignoring lower non-main {branch} v2 -> {status})")
+              status = prev
           repos[repo]["ci_status"] = status
           # Remove deprecated quality_gate_status from all repos (ci_status is SSOT)
           for r in repos.values():

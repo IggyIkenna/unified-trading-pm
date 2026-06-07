@@ -262,9 +262,9 @@ Triggered by "any escalation agents being called / is everything mirrored to mai
 - [x] ✅ **2 of 3 v2-reds FIXED + VERIFIED green**: unified-trading-system-ui (`canvas@2.11.2` transitive optional
       native-build → `pnpm.neverBuiltDependencies:[canvas]`, ui@7a822bd9, v2 GREEN) + unified-trading-api (pip-audit
       pyjwt 2.12.1 → 4 CVEs → bumped `pyjwt>=2.13.0` + re-lock, uta@cee22b1, v2 GREEN; also fixed uv.lock drift).
-- [ ] [INFRA] P1. **agent-orchestrator v2-red = no `scripts/quality-gates.sh`** (exit 127) — the mid-migration G6 gap
-      (`agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md`, BLOCKED-OPERATOR: creating AO staging/gate
-      fires a fleet restart). Not a one-line fix; build AO's gate as part of G6.
+- [x] ✅ [INFRA] P1. **DONE (verified 2026-06-07)** — AO has `scripts/quality-gates.sh`; AO main-v2 = SUCCESS
+      (06-07 00:27/00:54). G6 landed (AO `staging` + quickmerge + semver-agent re-rendered; AO@b10af714). The exit-127
+      gap is closed. **agent-orchestrator v2-red = no `scripts/quality-gates.sh`** (exit 127) — RESOLVED.
 - [x] ✅ **Semver Agent VALIDATED end-to-end** — UTL ran all steps green (4 compute / 6 dispatch-version-bump / 7
       schema-changed) + cut `v1.2.0`. The release/versioning pipeline (dead fleet-wide since 06-03 from the 2 stacked
       bugs) is restored. Template PM@10645e6b3.

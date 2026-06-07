@@ -88,24 +88,81 @@ jobs:
             *) echo "SLACK_WEBHOOK_URL is not an https URL (unset/masked/misconfigured) — skipping (notify is best-effort)"; exit 0 ;;
           esac
 
-          python3 - <<PYEOF
+          # Quoted heredoc delimiter (<<'PYEOF'): the body is opaque to the shell — no
+          # parameter expansion happens (all inputs arrive via os.environ), and shellcheck
+          # does not try to parse the Python dict/f-string braces as shell (SC1054/SC1073).
+          python3 - <<'PYEOF'
           import json, os, sys, urllib.request
 
-          severity   = os.environ.get("INPUT_SEVERITY", "INFO")
-          conclusion = os.environ.get("INPUT_CONCLUSION", "")
+          severity   = (os.environ.get("INPUT_SEVERITY", "INFO") or "INFO").strip().upper()
+          conclusion = (os.environ.get("INPUT_CONCLUSION", "") or "").strip().lower()
           wf_name    = os.environ.get("INPUT_WORKFLOW_NAME", "")
           run_url    = os.environ.get("INPUT_RUN_URL", "")
           message    = os.environ.get("INPUT_MESSAGE", "")
           webhook    = os.environ["SLACK_WEBHOOK_URL"]
 
-          if conclusion:
-              emoji = {"success": ":white_check_mark:", "failure": ":x:", "cancelled": ":no_entry_sign:"}.get(conclusion, ":information_source:")
+          # ── TRUTHFUL SEVERITY CLASSIFICATION (operator requirement 2026-06-07) ──────
+          # The rendered icon + severity word + status banner MUST match the REAL outcome
+          # — NEVER show ✅ / "success" / a green-tick header when the actual conclusion is
+          # a failure / cancellation. Many callers hardcode `severity: INFO` + an optimistic
+          # body ("… complete" / "… handled") while passing `conclusion: <job>.result`; when
+          # that job FAILED the old code rendered ":x:" but kept the *INFO* word + the
+          # "complete" body, so a failed promotion read as a low-severity success.
+          #
+          # Design = TRUTHFUL CLASSIFICATION, not suppression (we still POST every alert so
+          # "it ran" stays visible while debugging — verbose-while-debugging):
+          #   • A failure/cancelled conclusion OVERRIDES a caller's INFO/WARNING down-rank:
+          #       failure   -> at least CRITICAL  (🔴)
+          #       cancelled/timed_out/startup_failure -> at least WARNING (⚠️)
+          #   • A genuine green conclusion ("success"/"skipped"/"neutral") renders ✅ and
+          #     keeps the caller's severity (INFO/WARNING) — we don't UP-rank a green post.
+          #   • With no conclusion at all, severity alone drives the icon (unchanged).
+          _FAILURE_CONCLUSIONS = {"failure", "startup_failure"}
+          _CAUTION_CONCLUSIONS = {"cancelled", "timed_out", "action_required", "stale"}
+          _GREEN_CONCLUSIONS   = {"success", "skipped", "neutral", ""}
+          _SEV_RANK = {"INFO": 0, "WARNING": 1, "CRITICAL": 2}
+
+          def _truthful_severity(sev, concl):
+              """Never let a green/INFO label mask a non-green conclusion."""
+              if concl in _FAILURE_CONCLUSIONS:
+                  return "CRITICAL"
+              if concl in _CAUTION_CONCLUSIONS:
+                  # at least WARNING; respect a caller that already said CRITICAL
+                  return sev if _SEV_RANK.get(sev, 0) >= _SEV_RANK["WARNING"] else "WARNING"
+              return sev if sev in _SEV_RANK else "INFO"
+
+          severity = _truthful_severity(severity, conclusion)
+
+          # Icon derives from the ACTUAL conclusion first (the ground truth), then severity.
+          # A non-green conclusion can NEVER render the green-tick.
+          if conclusion in _FAILURE_CONCLUSIONS:
+              emoji = ":x:"
+          elif conclusion in _CAUTION_CONCLUSIONS:
+              emoji = ":no_entry_sign:"
+          elif conclusion in ("success", "neutral"):
+              emoji = ":white_check_mark:"
+          elif conclusion == "skipped":
+              emoji = ":fast_forward:"
           else:
+              # No conclusion supplied → severity alone drives the icon.
               emoji = {"CRITICAL": ":rotating_light:", "WARNING": ":warning:"}.get(severity, ":information_source:")
+
+          # Truthful status word shown alongside the conclusion so an optimistic body
+          # ("… complete") can NEVER read as success when the run actually failed.
+          if conclusion in _FAILURE_CONCLUSIONS:
+              status_word = "FAILED"
+          elif conclusion in _CAUTION_CONCLUSIONS:
+              status_word = conclusion.upper().replace("_", " ")
+          elif conclusion in ("success", "neutral"):
+              status_word = "OK"
+          elif conclusion == "skipped":
+              status_word = "SKIPPED"
+          else:
+              status_word = ""
 
           header = f"{emoji} *{severity}*" + (f" — {wf_name}" if wf_name else "")
           if conclusion:
-              header += f"  |  conclusion: *{conclusion}*"
+              header += f"  |  result: *{status_word or conclusion}* (`{conclusion}`)"
 
           blocks = [
               {"type": "section", "text": {"type": "mrkdwn", "text": header}},
