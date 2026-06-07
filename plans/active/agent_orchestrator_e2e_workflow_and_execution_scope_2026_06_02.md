@@ -209,14 +209,14 @@ green-lights a deploy (2026-06-02 directive: "don't restart the running backends
       now on the standard flow. + `scripts/quickmerge.sh` symlinked (agent-orchestrator@fd6ef28).
 - [ ] [INFRA] P0. **BLOCKED-OPERATOR-DECISION (genuine GitHub feature-gate — re-confirmed 2026-06-07)** — pin branch
       protection to require `Quality Gates (agent-orchestrator) / quality-gates-v2`. **This is the ONE part of the AO CI
-      lifecycle an agent cannot complete** (per AUTONOMOUS_AGENT_RULES rule 1, a real impossibility): every
+      lifecycle an agent cannot complete** (per AUTONOMOUS*AGENT_RULES rule 1, a real impossibility): every
       branch-protection / ruleset API call for this repo returns
       `403 "Upgrade to GitHub Pro or make this repository     public"` (re-verified 2026-06-07:
       `GET /repos/.../rulesets`, `GET /repos/.../branches/main/protection`, `GET /commits/.../check-runs` all 403). It
       is a PRIVATE-repo plan feature-gate, NOT an access/decision issue (the session is repo admin via `GH_PAT`).
       **Mitigation already in place:** `quality-gates-v2` RUNS + PASSES on every `main`/`staging` push + PR (so the gate
       is observed; promotion PRs only merge when v2 is green — enforced manually by the promoter/merger since auto-merge
-      is also Pro-gated). What is missing is only the _server-side required-check enforcement_. Resolve by ONE of
+      is also Pro-gated). What is missing is only the \_server-side required-check enforcement*. Resolve by ONE of
       (operator/billing): (a) upgrade the GitHub plan (Pro/Team) — then create the ruleset like the sibling repos via
       `scripts/repo-management/pin_branch_protection_rulesets.py`; (b) make the repo public (rulesets free); (c) accept
       "v2 runs+observed but not a hard-required gate" for this operator-tooling repo. Until then AO ships safely via the
@@ -323,14 +323,22 @@ of cicd plan §"CI/CD Observability + Reconciliation Hardening" B/C
 (`escalate-to-orchestrator.yml`, retiring the API path, auto-merge guard) is owned there. No dual-tracking: **GHA wiring
 = cicd plan; worker + account model = here.**
 
-- [ ] [AGENT] P1. **Conflict-resolver worker template** — a spawn profile/agent prompt the orchestrator dispatches on a
-      Max-plan account for `merge-conflict-detected` / `stuck_promotion_pr` events: clone target repo at the PR head,
-      resolve the conflict, run `quality-gates.sh` (Pass 1, `--no-fix`), and on green enable v2-gated auto-merge (or
-      close-superseded when the PR's content is already on the target). reads `SUB_AGENT_MANDATORY_RULES.md`. repo:
-      agent-orchestrator (`agents/conflict-resolver.md` + dispatch route in `server/`; reuses `escalation.py`).
-- [ ] [AGENT] P1. **Orchestrator spawn route accepts the escalate payload** (repo, source/target branch, PR url, plan
-      refs) from PM `escalate-to-orchestrator.yml` and enqueues the conflict-resolver worker on a free Max-plan account
-      (account-rotation + rate-limit aware, per the existing 4-account health model). repo: agent-orchestrator.
+- [x] ✅ [AGENT] P1. **Conflict-resolver worker template** — DONE 2026-06-07 (agent-orchestrator@fadb38d). Created
+      `agents/conflict-resolver.md`: PR-centric boot prompt that resolves the conflict on the PR's source branch keeping
+      the merged combination, runs `quality-gates.sh --no-fix` (Pass 1), and on green ENABLES v2-gated auto-merge
+      (`gh pr merge --auto --merge`) OR closes-superseded when the PR's content is already on the target. Reads
+      `agents/RULES.md` + `SUB_AGENT_MANDATORY_RULES.md`; one-shot, no loop. `escalation.py` routes `merge_conflict` +
+      the new `stuck_promotion_pr` wall to this template (others keep the generic `escalate` prompt). 4 unit tests
+      (routing both walls + payload forwarding, WALL_TYPES membership, template loads+renders with auto-merge +
+      close-superseded present). Full AO gate green (388 passed).
+- [x] ✅ [AGENT] P1. **Orchestrator spawn route accepts the escalate payload** — DONE 2026-06-07
+      (agent-orchestrator@fadb38d). `EscalateRequest` gains the `source_branch`/`target_branch`/`pr_url` routing payload
+      (optional, back-compatible) + the `stuck_promotion_pr` wall; `escalate()` forwards them as `<SOURCE_BRANCH>`/
+      `<TARGET_BRANCH>`/`<PR_URL>` render vars to the conflict-resolver prompt; `/api/escalate` forwards them; the
+      existing free-slot + `pick_headroom_account` (4-account rotation/rate-limit) model is reused unchanged.
+      `EscalateResponse` exposes `prompt_template` for observability. The GHA-trigger half (PM
+      `escalate-to-orchestrator.yml` emitting `stuck_promotion_pr`) is owned by the cicd plan — no dual-tracking. repo:
+      agent-orchestrator.
 
 ## Related open work (NOT absorbed here)
 
@@ -344,8 +352,14 @@ Fleet is currently consolidated to **2 running VMs** (vm-orchestrator + api-host
 
 ### Audit: VM slot-host crons (slot-cron-ff-pull / slot-git-status-report) are NOT in VM provisioning — slot-5 finding 2026-06-04
 
-- [ ] [INFRA] P1. **The orchestrator VM bootstrap does NOT install the symmetric-worker crons — audit + wire it.**
-      CLAUDE.md § "Local slot host = VM slot host" says EVERY host owning slot worktrees (VM + laptop) runs
+- [x] ✅ [INFRA] P1. **DONE (Action 1) 2026-06-07 — bootstrap_vm.sh now installs the symmetric-worker crons.** Added an
+      idempotent Step 7.5b that runs the canonical `install-slot-cron-ff-pull.sh` as the operator user (registers BOTH
+      the 5-min slot-cron-ff-pull + the symmetry-verify crons), mirroring the vm-disk-guard block — so every NEW/re-
+      bootstrapped VM auto-gets them (agent-orchestrator@dfd6d71). Actions (2)/(3) [audit the live running VMs via
+      `crontab -l` + run verify-slot-host-symmetry per host] need SSH/exec into vm-0 (i-0c9b283b) — **BLOCKED-INFRA from
+      a laptop slot**; the bootstrap fix covers the 9 stopped epic VMs on next launch. Action (4) [@upstream reset in
+      worktree_clean_check FF-path] is the optional belt — left for the runtime owner. Original audit (context, NOT a
+      checkbox): CLAUDE.md § "Local slot host = VM slot host" says EVERY host owning slot worktrees (VM + laptop) runs
       `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min. But `agent-orchestrator/scripts/bootstrap_vm.sh`
       clones PM + runs `setup-tab-worktrees.sh` (provisions worktrees) and installs only the **vm-disk-guard** cron
       (Step 7.5) — it **never installs `slot-cron-ff-pull` or `slot-git-status-report`** (confirmed: grep of
