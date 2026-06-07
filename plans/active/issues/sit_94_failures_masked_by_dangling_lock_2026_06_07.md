@@ -68,6 +68,18 @@ export; stale list → fix test).
       `unified-api-contracts/.../internal/testing/scenarios/`. Renumber dupes + reconcile enum↔YAML. repo:
       unified-api-contracts. (SIT test no longer depends on seed-uniqueness, so non-blocking.)
 
+## Cascade-drain state (2026-06-07, ~20:25Z)
+
+The fixed machinery (PM #169) is draining the long LDR→staging backlog the dangling lock had accrued. Progress per
+`ldr-to-staging-promote` sweep: **UAC fix merged to staging** (PR#94 ✅); SIT fix promoted to staging **PR#30**
+(auto-merge on, machinery updating the BEHIND base). Remaining dep-blocked: \*\*instruments-service
+
+- market-tick-data-service\*_ — these have their OWN staging-PR blockers (PR#410 / PR#144 BLOCKED, separate from the
+  94-failure task — likely their own v2 state; a distinct cascade-drain item to watch, NOT part of this SIT fix). Once
+  SIT PR#30 merges, the Smoke Test Gate runs with UAC+SIT fixes on staging and passes (proven locally), then
+  staging-to-main promotes the validated repos. Convergence is machinery-driven (promote cron @ `17 _/6` + the now
+  auto-cycling SIT); a background monitor is watching for the green Smoke Test Gate.
+
 ## Resolution log (2026-06-07)
 
 - **UAC export gap (85/94)**: added 83 missing canonical classes to `unified_api_contracts/__init__.py` `__all__` +
