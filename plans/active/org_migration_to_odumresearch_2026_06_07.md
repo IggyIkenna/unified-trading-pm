@@ -119,11 +119,23 @@ paths (PROJECT_ID/account-derived) · GCS bucket names (`cloud-providers.yaml`, 
   `require-staging-lock-check`), PM (`require-quality-gates`), uac (same two); **AO has NONE (403)**. Re-create at **org
   level** (rulesets are per-repo, NOT inherited on transfer) → AO finally gated.
 
-### H. OPEN BLOCKER (resolve before transfer)
+### H. AO special-case — RESOLVED (it's a fork; recreate fresh, not transfer)
 
-- **`agent-orchestrator` is "Non-transferrable"** in the move UI (cause undetermined — likely environments/deployments,
-  a GitHub App install, or attached package). MUST diagnose + clear in AO → Settings before the cut, else AO stays
-  personal while the fleet moves (a split worse than either uniform state).
+- **ROOT CAUSE (confirmed 2026-06-07):** `agent-orchestrator` is **`fork=true`, parent `CosmicTrader/orchastrator`,
+  network_count=1** — GitHub blocks transferring a fork out of its network. That is the ONLY reason it showed
+  "Non-transferrable". **All other 23 repos are native → they transfer cleanly.**
+- **RESOLUTION = recreate AO fresh in the new org (operator's call, near-zero cost).** AO has **0 open issues, 0 tags,
+  30 branches, 1 open PR**. A `git push --mirror` preserves all 30 branches + full commit history; the only GitHub-side
+  loss is the 1 open PR (merge/close it first). This detaches the CosmicTrader fork relationship entirely and lands AO
+  **native** in `OdumResearch` — no GitHub Support fork-detach ticket needed.
+  - Procedure: (1) merge/close AO's 1 open PR; (2) create native `OdumResearch/agent-orchestrator` (NOT a fork); (3)
+    `git push --mirror` from the current AO remote to the new one (all 30 branches + tags + history); (4) re-create AO's
+    repo settings/secrets/ruleset in the new org; (5) verify the new AO builds + the WIF binding + bootstrap_vm clone
+    work; (6) **delete the old fork** `IggyIkenna/agent-orchestrator` only AFTER the new one is verified green (keep it
+    as rollback until then).
+- **This de-risks the whole migration:** there is no longer any hard blocker — 23 native transfers + 1 recreate-fresh.
+  Migration urgency is therefore low (nothing is broken today; it is a structural improvement) — schedule the cut window
+  deliberately after Phase 0.
 
 ---
 
@@ -148,8 +160,9 @@ Migrate a GREEN, drained fleet. Gate: the `cicd_contract_hardening_2026_06_01.md
 - [ ] [INFRA] P0. Set **org-level secrets** (`GH_PAT`, `SLACK_WEBHOOK_URL`, `SLACK_CI_WEBHOOK_URL`, `ANTHROPIC_API_KEY`,
       `GCP_SA_KEY`, `TELEGRAM_BOT_TOKEN`, `WIF_PROVIDER`, `WIF_SERVICE_ACCOUNT`, `AWS_ACCESS_KEY_ID/SECRET`) scoped to
       all repos. Do NOT yet delete per-repo copies (keep until Phase 3 verify).
-- [ ] [INFRA] P0. **Resolve AO "Non-transferrable"** (Blocker H): inspect AO → Settings (environments / installed GitHub
-      Apps / packages / deployments); remove/transfer the blocking resource; confirm AO becomes transferrable.
+- [ ] [INFRA] P0. **AO recreate-fresh prep** (Blocker H resolved — it's a fork of `CosmicTrader/orchastrator`): merge/
+      close AO's 1 open PR; confirm 0 issues/0 tags/30 branches; stage the `git push --mirror` plan. (Recreate fresh in
+      Phase 2 instead of transferring — forks can't be transferred.)
 - [ ] [SCRIPT] P0. Build `scripts/migration/org_rename_sweep.py` (idempotent, `--dry-run`/`--apply`,
       `--scope     functional|docs|all`): rewrites `IggyIkenna/` → `OdumResearch/` across the MUST-CHANGE surface (A) —
       manifest 24 urls, `deployment_config.py` github_org + its test, the reusable `uses:` SSOT templates, the ~108
@@ -163,8 +176,12 @@ Migrate a GREEN, drained fleet. Gate: the `cicd_contract_hardening_2026_06_01.md
 
 ### PHASE 2 — THE CUT (transfer + re-point, single window) ⚠️ irreversible-ish (redirects are the net)
 
-- [ ] [INFRA] P0. **Transfer all 24 repos** `IggyIkenna/*` → `OdumResearch/*` (AO last, after Blocker H cleared). GitHub
-      auto-creates owner redirects. Verify each lands + redirect active.
+- [ ] [INFRA] P0. **Transfer the 23 NATIVE repos** `IggyIkenna/*` → `OdumResearch/*`. GitHub auto-creates owner
+      redirects. Verify each lands + redirect active.
+- [ ] [INFRA] P0. **AO recreate-fresh** (it's a fork, can't transfer): create native `OdumResearch/agent-orchestrator` →
+      `git push --mirror` all 30 branches + history → re-create settings/secrets/ruleset → verify build + WIF +
+      bootstrap_vm clone green → **then delete the old fork** `IggyIkenna/agent-orchestrator` (keep as rollback until
+      verified).
 - [ ] [INFRA] P0. Re-point **parent-clone `origin` remotes** to OdumResearch on: both operator laptops + EVERY live VM
       (`git remote set-url origin git@github.com:OdumResearch/<repo>.git`). One per repo covers all its slot worktrees
       (worktrees share `.git/config`). `setup-tab-worktrees.sh` uses `origin` symbolically — no edit.
@@ -237,4 +254,8 @@ org level; redirects retained as net. Every forced-tradeoff + impossibility reco
 
 - 2026-06-07: Plan authored from a 3-agent read-only pre-audit (cloud-trust / deploy-VM / github-config). Surface mapped
   (985 refs/331 files; must-change vs redirect-safe vs unaffected classified). Awaiting: Phase 0 (finish CICD drain)
-  before Phase 1. Open blocker H (AO non-transferrable) to diagnose in Settings.
+  before Phase 1.
+- 2026-06-07 (update): **Blocker H RESOLVED** — AO "Non-transferrable" cause confirmed = it's `fork=true` of
+  `CosmicTrader/orchastrator` (forks can't be transferred). All 23 other repos native/transferrable. Fix = recreate AO
+  fresh (`git push --mirror`, near-zero loss: 0 issues/0 tags/30 branches/1 PR) → no hard blocker remains; migration
+  urgency LOW (improvement, nothing broken). Plan updated: Phase 2 = 23 transfers + 1 AO recreate-fresh.
