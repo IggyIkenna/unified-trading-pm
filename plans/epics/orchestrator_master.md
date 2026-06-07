@@ -146,6 +146,43 @@ orchestrator work lives in the Phase 6/9/11 rows of the table above + the audit-
 
 ## P0 — must complete before next foundation gate
 
+### `auth_failed` was a one-way ratchet → rotation pool collapsed to one account (discovery + fix 2026-06-07)
+
+**status**: 🟢 CODE FIXED (agent-orchestrator, `tab/ikennaigboaka/1` → LDR) — one operator action remaining on the live
+VM. · **provenance**: slot-1 main during account-99%/PM#164-escalation triage, 2026-06-07.
+
+**What I found**: The orchestrator IS designed to auto-rotate across all 4 accounts (cross-operator shared pool;
+`_pick_headroom_account` / `pick_next_account` pick any usable account with headroom). But `auth_failed` was a **one-way
+latch**: the spawn-heartbeat watchdog (`worker_liveness.py:_check_spawn_heartbeat_timeouts`) marks an account
+`auth_failed` on ANY spawn that doesn't `/heartbeat` within ~180 s (cold-start slowness, a custom prompt that skips the
+lifecycle, a transient), `account_is_usable` then excludes it from rotation, and the ONLY clear path (`server.py:~829`)
+was a `/heartbeat` from a worker spawned **on that account** — which can never happen while it's excluded. So every
+transient spawn failure permanently sidelined a healthy account. Over time the usable pool eroded to just
+`sub-a-ikenna`; when it hit 99% weekly, `pick_next_account` returned `None` → the PM#164 escalation reported "no
+headroom account / no escalation_id" even though `sub-b-iggy2london` + `sub-c-ikenna-odum` had valid tokens (good
+to 2027) and full headroom.
+
+**Why it matters**: single-point-of-failure on one account; defeats the entire multi-account failover design; blocks
+escalations + autospawn fleet-wide when the primary rate-limits. Contradicts the epic's "4 accounts, round-robin" SSOT.
+
+**Fix shipped** (agent-orchestrator): added cooldown-based auto-recovery — `AccountUsageRow.auth_failed_at` +
+`auth_failed_retries` columns (ORM + `bootstrap.py` ALTER-TABLE migration); `mark_account_auth_failed` stamps the time +
+increments retries; new `account_in_auth_failed_cooldown()` (exponential backoff `600s·2^(retries-1)`, cap 6 h) gates
+`account_is_usable` so a sidelined account **re-enters the pool for a re-probe** after the window — a successful
+heartbeat fully clears it (`clear_account_auth_failed` resets timestamp+retries), a repeat failure re-marks with a
+longer window. Legacy rows with NULL `auth_failed_at` are treated as cooldown-elapsed → auto-heal the already-latched
+accounts on first deploy. `account_is_auth_failed` kept as the raw-status check for the heartbeat healing path. Tests:
+`tests/test_auth_failed_rotation.py` `TestAuthFailedCooldownAutoRecovery` (+ 78 related rotation/escalation tests
+green).
+
+- [x] ✅ [AGENT] P0. Cooldown auto-recovery for `auth_failed` — code shipped (agent-orchestrator, QG-green).
+- [ ] [OPERATOR] P0. On the LIVE orchestrator (`i-0c9b283b31d6b5ca7`, not SSM-reachable): **(a)** redeploy
+      agent-orchestrator so the new code + migration take effect; the NULL-timestamp auto-heal then un-latches
+      `sub-b-iggy2london` / `sub-c-ikenna-odum` on the next rotation tick. **(b)** Immediate unblock before redeploy:
+      from the dashboard force a spawn with `account_id=sub-b-iggy2london` (explicit `/api/slots/{N}/spawn` bypasses the
+      usable gate) → on heartbeat `server.py` auto-clears its `auth_failed`. Repeat for `sub-c-ikenna-odum`. Confirm
+      `~/.claude-accounts/sub-b-iggy2london.env` is present on the live VM (re-sync from the creds bucket if not).
+
 ### LDR integration has no hard regression-gate (discovery 2026-06-01, fleet code-freeze)
 
 **status**: 🔴 OPEN — surfaced during the 2026-06-01 fleet code-freeze (operator-called to stop agents undoing
