@@ -3005,3 +3005,43 @@ mirror confirmed. SIT smoke-test-gate sibling-clone fixed (`system-integration-t
 fleet-rollout of the fixed semver-agent.yml + tab-mirror to all 24 repos' live workflows (correct tool:
 `scripts/propagation/rollout-agent-workflows.sh`, NOT the `cp`-only `rollout-semver-agent.sh`) — hold until cascade
 settles to avoid adding undrained LDR commits mid-convergence.
+
+### ✅ FLEET CONVERGED — 2026-06-07 (pending=0, MAIN_GREEN=24)
+
+The bottom-up drain completed: **every active repo's released version is on `main`, ci_status=MAIN_GREEN, pending=0.**
+The two final stragglers were cleared by correcting stale manifest version fields to reflect actual main state:
+PM `staging_versions`→1.2.12 (Option-B main-direct; the field was stale at 1.2.0) and AO `versions`→0.8.0 (AO content
+is on main via manual merge — its staging-to-main auto-merge is GitHub-Pro-blocked).
+
+**Two final root-cause fixes that unstuck the bottom-up cascade (it had stalled at MAIN_GREEN=11):**
+
+7. **reconciler Drift-3** (`scripts/cicd/ci_status_reconciler.py`, PR #154, on main) — `decide()` now upgrades ci_status
+   →MAIN_GREEN when the repo's main-v2 is green (it previously left "green↔green tier diffs" alone, so a base repo like
+   uac/utl with a green main-v2 but knocked to STAGING_GREEN never read MAIN_GREEN → the dep-order gate never unblocked
+   its dependents → fleet deadlock). +4 unit tests (8/8 pass).
+8. **ci-status-update no-downgrade guard** (`.github/workflows/ci-status-update.yml`, PR #155) — the unconditional
+   `ci_status = status` overwrite flapped on-main repos MAIN_GREEN→STAGING_GREEN every time the live ldr→staging
+   promoter re-ran staging-v2 on an already-promoted repo. Now only a FAILING regression or a `main`-branch update can
+   lower an on-main repo's tier. (Drift-3 alone already converged the fleet; this makes it permanently stable.)
+
+**Final tally — 8 systemic CI/CD bugs fixed this session, pipeline UNFROZEN → CONVERGED → self-sustaining:**
+update-repo-version crash (#146) · staging-to-main all-or-nothing + fatal-Slack (#147) · semver-agent missing
+version-commit (#149) · SIT smoke-test-gate sibling-clone (SIT@dc00485, SIT main #27) · aiohttp<3.14 cap drained to
+staging fleet-wide · reconciler Drift-3 (#154) · ci-status-update no-downgrade (#155) · AO main-v2/staging/G6 (AO@b10af714).
+Plus all WAVE-1/2 machinery todos (#151/#152/#153). Proven end-to-end (uac→…→all 24 on main).
+
+**Genuine non-code blockers (documented; not deferrable-by-choice):**
+- **agent-orchestrator rulesets + auto-merge = GitHub Pro** — private repo; AO promotes via manual v2-gated merge today.
+  [BLOCKED-BILLING: enable Pro or make AO public]
+- **F7/F13 = live VM-SSH** on the orchestrator VM (vm-0) — not doable from a laptop slot; F8 self-heals the worktree
+  half. [BLOCKED-INFRA]
+
+**Safe operator one-liners / clean follow-ups (gate works; these are hardening):**
+- **plan-health-gate required-check PIN** on PM main — the gate is FIXED + green (#152); the ruleset PATCH was deferred
+  (couldn't verify the exact check-context string safely while the cascade was live-merging PM PRs; a wrong context
+  string would make an unsatisfiable required check). Pin with the verified context once settled.
+- **Fleet-rollout** of the fixed `semver-agent.yml` + `tab-mirror-to-ldr.yml` to all 24 repos' live workflows
+  (`scripts/propagation/rollout-agent-workflows.sh`) — held to avoid adding undrained LDR commits mid-convergence; run
+  as a clean pass now that pending=0.
+- Residual `main`-behind-`LDR` commit lag (non-version docs/CI churn) is BY DESIGN — the version pipeline promotes
+  releases, not every commit; it self-clears as those commits get bundled into the next release bump.
