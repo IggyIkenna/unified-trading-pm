@@ -16,11 +16,18 @@ source:
 
 # GitHub Org Migration — `IggyIkenna` → `OdumResearch`
 
-> **Operator decision (2026-06-07):** move ALL repos to a GitHub **Team org `OdumResearch`**. Reason is structural, not
-> just to unblock AO branch protection: org-level rulesets (define gates ONCE fleet-wide), org-level secrets (one
-> `GH_PAT`/Slack/creds home), team access (Harsh as member), bus-factor (survives one personal account), AND it finally
-> unlocks private-repo branch protection on `agent-orchestrator` (today 403 "Upgrade to Team" — rulesets on a private
-> **personal** repo are no longer available on Pro).
+> **⚠️ 2026-06-07 MAJOR UPDATE — the rulesets justification is GONE; migration is now OPTIONAL/low-priority.** Proven by
+> test (native private repo on Pro created a ruleset fine, id 17369688): **rulesets DO work on private repos under Pro
+> for NATIVE repos.** AO's 403 was because it was a **fork** of `CosmicTrader/orchastrator` (forks can't do rulesets/be
+> transferred), NOT the plan tier — GitHub's "Upgrade to Team" message was fork-specific + misleading. **AO has been
+> recreated native (2026-06-07) and its `require-quality-gates` ruleset is now active** — closing the ONLY hard driver
+> for this migration. Remaining org benefits (org-level secrets consolidation, team access, bus-factor, define-gates-
+> once) are real but **nice-to-have, not unblock**. **Decision pending operator:** still want the org for those, or keep
+> everything under `IggyIkenna`/Pro (which now fully supports fleet rulesets)? This plan stays as the blueprint if/when
+> the org is wanted; it is no longer urgent.
+>
+> **Original operator decision (2026-06-07):** move ALL repos to a GitHub **Team org `OdumResearch`** for: org-level
+> rulesets, org-level secrets, team access (Harsh as member), bus-factor, and (was) unlocking AO branch protection.
 >
 > **Sequencing decision (operator):** get **as much CI/CD hardening done FIRST** (finish `cicd_contract_hardening`
 > drain + greening) so we migrate a GREEN, drained pipeline — never migrate a half-jammed fleet. The org cut is its own
@@ -259,3 +266,13 @@ org level; redirects retained as net. Every forced-tradeoff + impossibility reco
   `CosmicTrader/orchastrator` (forks can't be transferred). All 23 other repos native/transferrable. Fix = recreate AO
   fresh (`git push --mirror`, near-zero loss: 0 issues/0 tags/30 branches/1 PR) → no hard blocker remains; migration
   urgency LOW (improvement, nothing broken). Plan updated: Phase 2 = 23 transfers + 1 AO recreate-fresh.
+- 2026-06-07 (**AO RECREATED NATIVE — done; rulesets justification for the whole migration is now MOOT**): proved
+  native-private+Pro does rulesets (test repo id 17369688). Recreated `IggyIkenna/agent-orchestrator` native: full
+  mirror-backup `/tmp/ao-mirror-backup.git`; renamed old fork → `agent-orchestrator-fork-bak` (kept as rollback);
+  created native repo; `git push --mirror` (30 branches + tags; `refs/pull/*` rejected = expected); restored settings
+  (default=main, auto_merge=on) + `GH_PAT` secret; created **`require-quality-gates` ruleset (active)** requiring
+  `Quality Gates (agent-orchestrator) / quality-gates-v2` + deletion/non-ff; re-created PR #2 → new PR #1; **re-invited
+  CosmicTrader (write, matching old role)**. WIF binding + clone URLs UNCHANGED (same owner/name path). **STILL TODO:**
+  restore `SLACK_WEBHOOK_URL` secret (needs operator value — write-only, not in SM); delete
+  `agent-orchestrator-fork-bak` after a few days' confidence. **Strategic consequence:** the org migration's hard driver
+  (rulesets) is gone — it's now an OPTIONAL improvement (org secrets / team / bus-factor), operator to decide.
