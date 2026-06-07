@@ -83,6 +83,52 @@ apply.
 | **G5** | `mtds_backfill_phase3` · `mdps_backfill_phase3` · `features_backfill_phase3` · `instruments_backfill_phase3` · `aws_cloud_toggle_and_backfill_parity_2026_05_22`                                            | resume backfills → 100% honest coverage; massive/polygon-vs-databento cost-swap                                                         | per-AG                    | **G4 GREEN for that AG**                            |
 | ∥      | `ci_canonical_v2_migration_2026_05_29` · `mdps_pure_polars_migration_2026_05_28` · `global_ledger_pnl_attribution_migration_2026_06_01` · `planning_vm_canonical_bringup_and_topology_reconcile_2026_06_05` | parallel infra/CI/ledger — tracked, NOT on the migration critical path                                                                  | various                   | parallel-safe                                       |
 
+## G1 expanded — IS catalogue is the ROOT of all missing-data understanding (operator 2026-06-07)
+
+> **IS (instruments-service) + UAC together define the could-exist universe — every downstream honest denominator,
+> preflight (⑥/⑦), and `expected_unattempted` seed reads it. If IS or UAC is wrong, EVERY AG's coverage % is wrong.** So
+> G1 is gated, and its catalogue has a full code → dry-run → real-run → schedule lifecycle, tracked per-AG.
+
+**The could-exist universe = (IS instrument lifecycle catalogue) × (UAC availability rules).** The two halves:
+
+- **IS half — the lifecycle catalogue** (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`):
+  `build_instrument_catalogue.py` rolls up the maintained per-date
+  `instrument_availability/by_date/day=…/venue=…/ instruments.parquet` defns into the cumulative
+  `available_from`/`available_to` lifecycle catalogue, which `enumerate_expected_universe.py` (v2) cross-joins × dates ×
+  data_types − existing manifest rows → seeds `record_expected_unattempted` for IS-listed-but-not-yet-backfilled cells.
+- **UAC half — the availability rules**: chain genesis dates, `DEFI_VENUE_LAUNCH_DATES` / per-AG venue launch, listing/
+  delist windows, `SOURCE_PRIORITY`, `expected_coverage()` scope — these tell the enumerator WHEN a listed instrument is
+  genuinely expected to have data (post-genesis, post-launch, in-coverage). UAC accuracy is a HARD G1 input.
+
+**G1 catalogue lifecycle (tracked stages — each per-AG, on a VM where it touches prod GCS):**
+
+- [ ] [CODE] P0. **G1.code — catalogue producer + enumerator GREEN** (`build_instrument_catalogue.py` +
+      `enumerate_expected_universe.py` v2, defi/cefi/tradfi/sports/prediction-capable; `resolve_bucket_name` env-tier
+      fix). Owner: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04` (vm-cross-cutting) + per-AG slices of
+      `instruments_manifest_canonicalisation_2026_06_01`. **DeFi (slot-2): code-ready + denominator regression shipped
+      is@bb8fb203** (⑦-defi). cefi dry-run proven 2026-06-05.
+- [ ] [DATA] P0. **G1.dry-run — per-AG catalogue + enumerate dry-run** (read-only; cefi PROVEN 2026-06-05 on real prod
+      GCS; defi/sports/prediction/tradfi pending — each AG slot runs its own).
+- [ ] [DATA] P0. **G1.run — per-AG `--apply-write` of the could-exist seed against the AG's canonical `_index`** (VM;
+      `MANIFEST_PER_VM_SHARDS=true`). **GATED on**: (a) **IS instrument BACKFILL complete** for that AG
+      (`instruments_backfill_phase3_2026_05_22` — the catalogue can only roll up instruments IS actually fetched); (b)
+      **accurate UAC** (launch/genesis/coverage rules for that AG verified — else the seeded expected set is wrong); (c)
+      **`instruments_manifest_canonicalisation` v9** for the AG's instruments-store `_index`. NOTE: G1.run seeds the
+      manifest **could-exist** rows but the canonical `_index` itself comes from the AG's G2 walk — so G1.run for
+      raw-tick denominators rides AFTER that AG's G4 manifest is canonical (the catalogue-of-record vs the seed are
+      sequenced in the per-AG plan; do not double-walk).
+- [ ] [INFRA] P1. **G1.schedule — daily catalogue-aggregation scheduler live per-AG** keyed to the IS update cadence
+      (`deployment-service/terraform/gcp/catalogue_regen_scheduler.tf` + `instrument_catalogue_scheduler.tf` exist;
+      confirm wired for EVERY AG, not just cefi) so the v2 enumerator always reads a fresh catalogue + the could-exist
+      denominator self-updates as instruments list/delist. NOT fire-and-forget (heartbeat + T+10min verify).
+
+**Cross-AG IS references (each AG owns its instruments-store reference surface — sliced, not duplicated):** defi §H
+`instruments-store-defi` walk · sports `instruments-store-sports` (2.68M rows + the 316-cell legacy→prd data-loss-gated
+migration) · cefi/tradfi/prediction reference surfaces — all sub-items of
+`instruments_manifest_canonicalisation_2026_06_01` (the per-service all-AG plan) + each AG's
+`*_manifest_canonicalisation` §H slice. **G2 (an AG's MTDS/data walk) must NOT be trusted as denominator-complete until
+that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
+
 ## Audit framework — the per-AG readiness gate (the 7-point + 2 NEW checks)
 
 Every AG's G2→G4 transition runs the operator's readiness audit. SSOT for the checklist:

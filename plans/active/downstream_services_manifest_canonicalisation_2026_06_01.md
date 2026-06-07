@@ -24,6 +24,13 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Downstream data-pipeline services manifest canonicalisation (MDPS / features / strategy / execution)
 
+> **⛔ COORDINATED — G2 downstream (2026-06-07)** —
+> `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` gates these MDPS/features/strategy/
+> execution `_index` walks on **G0** (pipeline*mode source-aware `{mode}*{source}[_{transport}]` model) + **G1** (IS
+> catalogue could-exist SSOT) + the upstream per-AG MTDS walks. Readers MUST be union-aware across source-aware pipeline
+> modes (M4 precedence; M5 union view) before any apply. strategy-service additionally hosts the live-flip readiness
+> gate (M6) + batch-live-reconciliation-service hosts the cross-mode union (M4) per the G0 plan.
+
 > **MASTER**: `defi_manifest_canonicalisation_2026_06_01.md` §MASTER (L3, per-service axis). The data pipeline is
 > `instruments → MTDS → MDPS → features → strategy → execution`. The per-AG plans cover MTDS; `instruments_manifest_…`
 > covers the input side. THIS plan covers the four **downstream** services whose `_index`(es) carry the same

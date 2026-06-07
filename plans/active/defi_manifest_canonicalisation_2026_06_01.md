@@ -31,6 +31,14 @@ source:
 
 ## MASTER — cross-plan execution order → single canonical SSOT (no fallback, no dual)
 
+> **⬆️ DEMOTED 2026-06-07 — this §MASTER is now the DeFi EXECUTOR only; the cross-plan/cross-AG coordination role moved
+> UP to `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (the pure data-layer coordinator:
+> sub-plan registry + G0–G5 dependency DAG + audit framework + orphan sweep).** This section's sub-plan registry +
+> layering is retained as DeFi-local context but is SUPERSEDED for cross-AG sequencing by the coordinator's registry.
+> **DeFi `--apply` is GATED on the coordinator's G0+G1+G2+G3 GREEN** (esp. G0: the migrator/`rebuild_defi_manifest.py`/
+> enumerator must stamp source-aware `{mode}_{source}[_{transport}]` — NOT coarse `batch`/blank — per
+> `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`; see M-COORD-5).
+
 > **🔴 CROSS-AG FOUNDATION GATE (filed 2026-06-04, slot-3) — blocks EVERY AG's MTDS `--apply`.** instruments-service is
 > the foundation; before any AG runs its MarketTick-data migration `--apply`, the **proper instrument catalogue** must
 > be GREEN: `plans/active/proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (P0, vm-cross-cutting). It builds
@@ -539,9 +547,9 @@ What to verify/wire (B0 corrected scope):
         unified-api-contracts + unified-trading-library + market-tick-data-service. parent_epic: mtds_mdps_master.
   - [x] ✅ [SCRIPT] P2. **A10c-fleet — DONE (slot-1 2026-06-05). Ratchet generalised fleet-wide + ALL 15 callsites
         migrated/waivered + baseline LOCKED to empty (now zero-tolerance fleet-wide).** Infra: PM@9295ddaa4
-        (`check_unrouted_source_returned_zero.py` + STEP 5.86 + pip PYSEC-2026-196 ignore). Per-AG migrations (each
-        repo green on STEP 5.86; shipped to LDR via the dirty-deps direct-push exception while the workspace's UTL/UAC
-        deps were mid-edit): **mtds@bc83f93f** — `tardis_adapter.py:1769` MIGRATED to
+        (`check_unrouted_source_returned_zero.py` + STEP 5.86 + pip PYSEC-2026-196 ignore). Per-AG migrations (each repo
+        green on STEP 5.86; shipped to LDR via the dirty-deps direct-push exception while the workspace's UTL/UAC deps
+        were mid-edit): **mtds@bc83f93f** — `tardis_adapter.py:1769` MIGRATED to
         `record_zero_rows(was_expected=was_instrument_alive(venue,instrument_id,day), pipeline_mode=BATCH_TARDIS)` (the
         canonical reference) + sports `orchestrator.py:3676` MIGRATED (`was_expected=True`, fixture catalogued);
         tier2/tier3/`websocket_runner`/`_defi_manifest` waivered (oracle/Protocol not wired at those grains — see
@@ -550,24 +558,23 @@ What to verify/wire (B0 corrected scope):
         upstream, not external-source fetches). **unified-trading-library@8c700670** — 2 internal callsites waivered
         (`record-zero-rows-internal`: the library's own `record_captured_from_counts` + `close_candle_writer` write
         paths). Baseline regenerated → `baseline: {}` (PM, exemption-shipped) so any NEW raw
-        `record_empty(SOURCE_RETURNED_ZERO)` anywhere now fails — the DeFi-only A10c backstop is now fleet-wide.
-        SHIP NOTE: PM-side commits (ratchet infra + baseline + this flip) reached LDR via a BLOCKED-OPERATOR-DECISION
+        `record_empty(SOURCE_RETURNED_ZERO)` anywhere now fails — the DeFi-only A10c backstop is now fleet-wide. SHIP
+        NOTE: PM-side commits (ratchet infra + baseline + this flip) reached LDR via a BLOCKED-OPERATOR-DECISION
         exemption because the PM `quality-gates.sh` tree was red ONLY from a concurrent slot's un-gated CI files
         (`scripts/cicd/flow_health.py` + `scripts/repo-management/ldr_ci_monitor.py`, ruff + empty-dict) + the
         operator-accepted pip CVE — none from this change. parent_epic: mtds_mdps_master.
   - [ ] [CODE] P3. **A10c-fleet-followup — REAL oracle/Protocol migration of the conservatively-waivered source-zero
         callsites (DEFERRED, named successor of A10c-fleet).** The A10c-fleet sub-agents added documented `# QG-allow:`
         waivers (not speculative oracles) where a genuine external-source-zero shard COULD route through
-        `record_zero_rows` but the per-grain oracle/Protocol is not yet wired — migrate these once that infra lands:
-        (1) **instruments-service `engine/orchestrator.py:7317,7328`** (`sports-sfi-stats-latency`) — SFI returns 0 rows
-        for a date with match IDs present (code already knows data is expected); wire the sports fixture oracle at the
-        date grain → `record_zero_rows(was_expected=True)`. (2) **mtds `engine/orchestrator.py:3988`** (tier3) — blocked
-        on `instrument_catalog` wiring (writegate Phase 3.D.5 Wave 2/3); `:4040` (tier2) needs a venue-level (no
+        `record_zero_rows` but the per-grain oracle/Protocol is not yet wired — migrate these once that infra lands: (1)
+        **instruments-service `engine/orchestrator.py:7317,7328`** (`sports-sfi-stats-latency`) — SFI returns 0 rows for
+        a date with match IDs present (code already knows data is expected); wire the sports fixture oracle at the date
+        grain → `record_zero_rows(was_expected=True)`. (2) **mtds `engine/orchestrator.py:3988`** (tier3) — blocked on
+        `instrument_catalog` wiring (writegate Phase 3.D.5 Wave 2/3); `:4040` (tier2) needs a venue-level (no
         per-instrument) oracle. (3) **mtds `live/websocket_runner.py:777`** — the `ShardManifestRecorder` Protocol does
         not expose `record_zero_rows`; add it to the Protocol + all impls (MTDSShardManifestRecorder + test doubles),
         then route the live empty-window write. Repos: instruments-service + market-tick-data-service. parent_epic:
-        mtds_mdps_master.
-        **Infra detail (A10c-fleet design record, retained):** the DeFi A10c shell
+        mtds_mdps_master. **Infra detail (A10c-fleet design record, retained):** the DeFi A10c shell
         (`scripts/qg/no_unrouted_source_returned_zero.sh`) is zero-tolerance but DeFi-handler-only (the
         `DefiManifestRecorder` path). This generalises it to the UTL `ManifestWriter.record_zero_rows` (A10b) path that
         any AG/service routes through. **Shipped (PM):** `scripts/quality_gates/check_unrouted_source_returned_zero.py`
@@ -577,15 +584,15 @@ What to verify/wire (B0 corrected scope):
         `# QG-allow: <reason>` waiver). Validated: green per-repo scope; a NEW non-baselined callsite FAILS; a waivered
         one PASSES. **Baseline inventory (the per-AG migration backlog — 15 files):** instruments-service
         `engine/orchestrator.py` ×3; market-tick-data-service `engine/orchestrator.py` ×3 (sports v1-oracle) +
-        `live/websocket_runner.py` + `adapters/tradfi/tardis_adapter.py:1769` + `cli/handlers/_defi_manifest.py` (recorder
-        internal → waiver); features-service `multi_timeframe` ×2 + `sports` ×2 + `commodity`/`cross_instrument`/`onchain`/
-        `delta_one`/`calendar`/`volatility` ×1 each; unified-trading-library `manifest_writer.py` + `streaming/candle_writer.py`
-        (internals → waiver). **DONE only when:** every AG migrates its callsites to `record_zero_rows(was_expected=<oracle>)`
-        (UAC `was_instrument_alive` for cefi/defi/tradfi/prediction; sports fixtures) OR adds a typed-reason `# QG-allow:`,
-        the baseline is regenerated to lock (→ empty), and `quality-gates.sh` is green in every affected repo. **Per-AG
-        migration is dispatched as `- [ ]` todos in each `*_manifest_canonicalisation_2026_06_01.md`** (do NOT mass-migrate
-        another AG's code from this slot). Repos: unified-trading-pm (infra) + all service repos (per-AG). parent_epic:
-        mtds_mdps_master.
+        `live/websocket_runner.py` + `adapters/tradfi/tardis_adapter.py:1769` + `cli/handlers/_defi_manifest.py`
+        (recorder internal → waiver); features-service `multi_timeframe` ×2 + `sports` ×2 +
+        `commodity`/`cross_instrument`/`onchain`/ `delta_one`/`calendar`/`volatility` ×1 each; unified-trading-library
+        `manifest_writer.py` + `streaming/candle_writer.py` (internals → waiver). **DONE only when:** every AG migrates
+        its callsites to `record_zero_rows(was_expected=<oracle>)` (UAC `was_instrument_alive` for
+        cefi/defi/tradfi/prediction; sports fixtures) OR adds a typed-reason `# QG-allow:`, the baseline is regenerated
+        to lock (→ empty), and `quality-gates.sh` is green in every affected repo. **Per-AG migration is dispatched as
+        `- [ ]` todos in each `*_manifest_canonicalisation_2026_06_01.md`** (do NOT mass-migrate another AG's code from
+        this slot). Repos: unified-trading-pm (infra) + all service repos (per-AG). parent_epic: mtds_mdps_master.
 - [ ] [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against legacy/dead
       buckets BEFORE the migrations run** (operator 2026-06-02: "refactor read/write cloud-storage paths across the
       board to match canonical so QG-fed tests don't regress by association with dead buckets; same for data-status in
