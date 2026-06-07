@@ -214,6 +214,19 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > green). **Unblocks slots 2-6 G1.run** (each AG owner still verifies its matrix slice + re-runs its dry-run against the
 > shape-aware producer before `--apply-write`). Original finding ↓ retained for context.
 >
+> **✅ DECISION (operator 2026-06-07) — ERA-B is canonical for `options_chain`/`futures_chain` (cefi + tradfi).** They
+> are **INSTRUMENT_TYPES**, with `data_type=trades`, bundled per-underlying — matching the live writer
+> (`tardis_shared.py` Phase 1.6, which explicitly fixed the data_type/instrument_type overload) and the on-disk object
+> paths. Era-A (these as data_types) in the UAC validity matrix + `SOURCE_PRIORITY` +
+> `capability_declarations/_cefi.py` + the v8 manifest + the `test_cefi_options_chain_bundle` test is **LEGACY/stale** →
+> reconcile UP to Era-B in the v9 migration (the data is already Era-B). This RESOLVES the bundle-grain blocker: the
+> catalogue/enumerate bundle-grain rollup is built Era-B-shaped (one `options_chain`/`futures_chain` candidate per
+> underlying instrument, `data_type=trades`), NOT a per-contract or data_type=options_chain shape. **Coordinated change
+> (owner: vm-cross-cutting)**: matrix + SOURCE_PRIORITY
+>
+> - capability_declarations + catalogue producer + the Era-A test, in lockstep; each AG (cefi slot-3 / tradfi slot-6)
+>   flips its matrix slice + re-runs G2. Gates cefi + tradfi apply-readiness.
+
 > **🔴 G1-ENUM (P0, CROSS-AG, surfaced by slot-3 cefi dry-run 2026-06-07) — the v2 enumerator over-fans → false
 > `expected_unattempted` pollution.** `_enumerate_v2_*` (`enumerate_expected_universe.py`) fans ALL data*types over
 > EVERY instrument with **no `(instrument_type × data_type)` validity filter and no bundle-grain handling**. cefi
