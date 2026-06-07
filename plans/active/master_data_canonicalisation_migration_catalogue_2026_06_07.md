@@ -84,15 +84,27 @@ apply.
 banned second whole-corpus walk); flip the 2 DeFi-scoped readers + the 4 tests to prefix-match `batch_*/`; reconcile the
 coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration is the separate gated tranche.
 
-**Other standardisation findings (still open, owners):**
+**Other standardisation findings:**
 
-- **C-#2 (UTL)** — `ManifestWriter.add():1363` defaults `pipeline_mode=""` while `record_captured()` requires it →
-  require/auto-derive or delete the legacy `add()` (this is what let the DeFi blank-stamp pass silently).
-- **C-#6 (UTL)** — no write-time cross-check `source_string_for(pipeline_mode)==source` for batch → a row can carry
-  `batch_databento` + `source="massive"`; add the assert.
-- **C-TRANSPORT (P0, surfaced by operator 2026-06-07) — the optional `[_{transport}]` suffix is under-specified +
-  inconsistently implemented + undocumented in codex.** The M1 form is `{mode}_{source}[_{transport}]` with
-  `transport ∈ {rest, websocket, flat_file}`, BUT:
+- ✅ **C-#2 (UTL) — RESOLVED 2026-06-07 (utl@d0745bde)**: `ManifestWriter.add()` now AUTO-DERIVES `pipeline_mode` via
+  `derive_pipeline_mode_for_row` for a derivable market-data row (venue+data_type, no feature_group) — blank can no
+  longer pass silently; features/service rows keep `""`. (The DeFi rebuild `#1` stamp itself is still vm-defi's.)
+- ✅ **C-#6 (UTL) — RESOLVED 2026-06-07 (utl@d0745bde)**: `_assert_source_matches_pipeline_mode` raises
+  `PipelineModeSourceMismatchError` when an EXPLICIT batch `source` disagrees with `source_string_for(pipeline_mode)`
+  (`batch_databento` + `source="massive"`), in record_captured / record_captured_from_counts / add() (gated on an
+  explicit caller-provided source — auto-stamped single-source cells are correct-by-construction).
+- ✅ **C-TRANSPORT (P0) — RESOLVED 2026-06-07 (operator R4)**: (1) the `hyperliquid_rest` antipattern is retired in the
+  enum (uac@cc69b123: `BATCH_HYPERLIQUID` + the unified-vendor `LIVE/REPLAY_HYPERLIQUID`; `Transport` enum +
+  `transport_of`
+  - `default_transport_for_source`); the `transport` manifest COLUMN landed (utl@d0745bde) + is stamped by IS seeds
+    (is@03a93e10) + the consumer sweep renamed `hyperliquid_rest`→`hyperliquid` (mtds@c567962e). (2) codex
+    `02-data/pipeline-mode-partition.md` reconciled (pm@9120464fe). (3) R4 ratified by operator. REMAINING: the UI
+    reference-data regen (gated on the UI playwright gate — see the standardisation plan) + the other codex docs
+    (`pipeline-mode-and-batch-live-reconciliation.md` still has `hyperliquid_rest` refs) ride the #7 doc audit. The
+    `live_websocket`→`live_<source>` OBJECT migration stays the separate gated tranche.
+- **C-TRANSPORT (original write-up, surfaced by operator 2026-06-07) — the optional `[_{transport}]` suffix is
+  under-specified + inconsistently implemented + undocumented in codex.** The M1 form is `{mode}_{source}[_{transport}]`
+  with `transport ∈ {rest, websocket, flat_file}`, BUT:
   1. **Antipattern in the SHIPPED enum**: `BATCH_HYPERLIQUID_REST="batch_hyperliquid_rest"` (+ LIVE/REPLAY) glue the
      transport INTO the source name — the standardisation plan (lines 125-126) explicitly names this "the M1
      antipattern; target `hyperliquid` + transport". The new enum (uac@8cafb758/6cd08c89) carried it forward. **Fix**:

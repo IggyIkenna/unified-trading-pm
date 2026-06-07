@@ -300,19 +300,28 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
 - [ ] [CODE] P1. **STANDARDISE the per-AG manifest stamping** — fix #1 (defi rebuild stamp `pipeline_mode`+`source`) +
       #2 (make UTL `add()` require/auto-derive `pipeline_mode` like `record_captured`, OR delete the legacy `add()`
       path) + add a cross-AG regression test asserting every rebuild stamps both. Repos: market-tick-data-service +
-      unified-trading-library. Owner: vm-defi (#1) + UTL.
+      unified-trading-library. Owner: vm-defi (#1) + UTL. **#2 (C-#2) DONE 2026-06-07 — utl@d0745bde**: `add()` now
+      AUTO-DERIVES `pipeline_mode` via `derive_pipeline_mode_for_row` for a derivable market-data row (venue+data_type,
+      no feature_group); blank can no longer pass silently. **REMAINING: #1 (defi rebuild stamp) — vm-defi**, + the
+      cross-AG regression test rides the defi rebuild fix.
 - [ ] [CODE] P1. **features delta_one reader pipeline_mode-aware** (#3) — `_build_blob_path`/`_resolve_blob_paths`
       include the `pipeline_mode=` segment (delegate to UAC `candidate_parquet_paths` or build inline like MDPS), with a
       coverage regression. Repo: features-service. Owner: vm-ml.
-- [ ] [CODE] P1. **enumerate_expected_universe stamps pipeline_mode+source on `record_empty`** (#4) — derive pm/source
-      per seeded cell (the seeded universe is for a known source per (ag,dt)). Repo: instruments-service. Adjacent to
-      the tradfi ⑦ denominator item (slot-6 in-lane).
+- [x] ✅ [CODE] P1. **enumerate_expected_universe stamps pipeline_mode+source on `record_empty`** (#4) — is@03a93e10
+      (2026-06-07). `_derive_pm_source_transport(asset_group, data_type)` derives pm/source/**transport** from the
+      cell's primary external source in UAC `SOURCE_PRIORITY`; seeded `expected_unattempted`/`empty_confirmed` rows now
+      carry all three (computed/unregistered cells exempt-blank). +5 tests asserting non-blank pm+source+transport on
+      seeded cells. (transport added too, per C-TRANSPORT.) Repo: instruments-service.
 - [ ] [DESIGN] P0. **M1 — `{mode}_{source}[_{transport}]` enum** (operator-ratify). **PARTIAL — Phase 0.1 shipped the
-      abstract `Mode{BATCH,LIVE,REPLAY}` enum + `mode_of(PipelineMode)` (UAC@a2eab633).** REMAINING (the BREAKING part,
-      next unit — needs M2 flags ratified first): add the concrete `LIVE_<SOURCE>`/`REPLAY_<SOURCE>` members; round-trip
-      `source_string_for`/`pipeline_mode_for_source` for live+replay; optional transport segment only where a source
-      has >1 transport per shard; migrate `live_websocket` objects + writers + readers + reconciliation-service. Repos:
-      UAC + UTL + MTDS + features + batch-live-reconciliation-service.
+      abstract `Mode{BATCH,LIVE,REPLAY}` enum + `mode_of(PipelineMode)` (UAC@a2eab633).** **C-TRANSPORT tranche DONE
+      2026-06-07 (operator R4)**: source-aware `LIVE_<SOURCE>`/`REPLAY_<SOURCE>` members + round-tripping
+      `source_string_for`/`pipeline_mode_for_source` for batch+live+replay; the `Transport` enum + `transport_of()`
+      (>1-transport suffix parser, None today) + `default_transport_for_source()`; `source_string_for` strips a trailing
+      transport suffix; the **`hyperliquid_rest` antipattern is retired** → `source=hyperliquid` + `transport=rest` (the
+      unified vendor: `batch_hyperliquid` + `live/replay_hyperliquid`); + the manifest `transport` COLUMN (uac@cc69b123,
+      utl@d0745bde, mtds@c567962e). **REMAINING (the BREAKING object migration, separate GATED tranche — see the
+      M1-BREAKING item below): migrate `live_websocket` OBJECTS/writers/readers → `live_<source>`/`replay_<source>` +
+      the reconciliation-service.** Repos: UAC + UTL + MTDS + features + batch-live-reconciliation-service.
 - [x] ✅ [DESIGN] P0. **M2 — source-capability registry in UAC — Phase 0.1 DONE (draft seed) (UAC@a2eab633).**
       `SOURCE_MODE_CAPABILITY` (source→`{Mode}`) + `modes_for_source`/`source_supports`/`sources_supporting`; batch=all
       (certain), live/replay seeded with the operator-stated facts (chain RPCs replay-capable; Tardis live-not-replay),
@@ -334,16 +343,20 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
 - [ ] [CODE] P0. **M7 — autonomous recovery triggers replay** — alerting/auto-recovery detects (batch-stopped +
       no-live + replay-capable) → fires `replay_<source>` autonomously; per-shard "gaps-OK" DR config. Repos:
       alerting-service + MTDS/execution recovery + autonomous-recovery-matrix.
-- [ ] [CODE] P1. **write-time cross-check** `source_string_for(pipeline_mode)==source` for batch (#6) — assert in UTL
-      `_resolve_and_validate_source`. Repo: unified-trading-library.
+- [x] ✅ [CODE] P1. **write-time cross-check** `source_string_for(pipeline_mode)==source` for batch (#6) — utl@d0745bde
+      (2026-06-07). `_assert_source_matches_pipeline_mode` raises `PipelineModeSourceMismatchError` when an EXPLICIT
+      batch source disagrees with its pipeline_mode (`batch_databento` + `source="massive"`), wired into record_captured
+      / record_captured_from_counts / add(); gated on an explicit (caller-provided) source so auto-stamped single-source
+      cells are unaffected (they're correct-by-construction). +tests. Repo: unified-trading-library.
 - [ ] [CODE] P0. **M1-BREAKING — migrate `live_websocket` objects/writers/readers → `live_<source>`** (next tranche,
-      GATED on the M1/M2 foundation UAC@8cafb758+6cd08c89 — do NOT start before downstream readers handle the new
-      members). The UAC enum members + mode-aware round-trip already exist; this is the DATA-side migration: live
-      writers stamp `live_<source>` (not `live_websocket`), the new `replay_<source>` write path lands, readers stratify
-      on the source-aware live/replay values, the reconciliation-service consumes them, and the transitional
-      `LIVE_WEBSOCKET` alias is removed once no object references it. Fixes the live multi-source PATH COLLISION (#5).
-      Repos: UTL (`derive_pipeline_mode_for_row` for live/replay) + market-tick-data-service (live + replay write
-      paths) + market-data-processing-service + features-service (mode-aware union read) +
+      GATED on the M1/M2 foundation UAC@8cafb758+6cd08c89 + the C-TRANSPORT tranche uac@cc69b123/utl@d0745bde — the
+      source-aware `live_<source>`/`replay_<source>` members, the `transport` column + accessor, and the C-#6
+      cross-check now all exist; do NOT start before downstream readers handle the new members). This is the DATA-side
+      migration: live writers stamp `live_<source>` (not `live_websocket`), the new `replay_<source>` write path lands,
+      readers stratify on the source-aware live/replay values, the reconciliation-service consumes them, and the
+      transitional `LIVE_WEBSOCKET` alias is removed once no object references it. Fixes the live multi-source PATH
+      COLLISION (#5). Repos: UTL (`derive_pipeline_mode_for_row` for live/replay) + market-tick-data-service (live +
+      replay write paths) + market-data-processing-service + features-service (mode-aware union read) +
       batch-live-reconciliation-service.
 - [ ] [CODE] P0. **T+1 batch/live reconciliation + `live` TTL** (next tranche, GATED on M4 precedence + M1-breaking live
       writers). The batch-live-reconciliation-service confirms batch≈live within a tolerance, then a TTL clears the
@@ -351,9 +364,12 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       non-blocking): reconciliation tolerance + TTL horizon. Repo: batch-live-reconciliation-service (+ UTL TTL helper).
 - [ ] [DESIGN] P0. **M8 — cadence axis. PARTIAL — Phase 0.1 shipped the `Cadence` enum
       (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live`/`recovery_replay`) in UAC@a2eab633.**
-      REMAINING: wire it as a manifest COLUMN (UTL) + deployment-registry `run_class` (deployment-service) + writer
-      stamp (MTDS/IS) + slice-by-cadence (deployment-api/UI). ORTHOGONAL to `pipeline_mode` (NOT a path key, never
-      fragments the union). Also shipped Phase 0.1: **M9 `MOCK_SOURCE`** (dev-tier-only mock) in the same commit.
+      REMAINING: wire **cadence** as a manifest COLUMN (UTL) + deployment-registry `run_class` (deployment-service) +
+      writer stamp (MTDS/IS) + slice-by-cadence (deployment-api/UI). ORTHOGONAL to `pipeline_mode` (NOT a path key,
+      never fragments the union). Also shipped Phase 0.1: **M9 `MOCK_SOURCE`** (dev-tier-only mock) in the same commit.
+      **NOTE 2026-06-07**: the SIBLING `transport` manifest column (M5b/C-TRANSPORT) is now wired (utl@d0745bde —
+      `AvailabilityRecord.transport`, stamped via `default_transport_for_source`) — it is the model the cadence column
+      should follow (a v9 additive column, not a path key). The cadence column itself remains.
 - [ ] [DOCS] P0. **FULL doc-coherence audit (BEFORE + AFTER), not just a sweep** (#7) — audit EVERY layer for logic that
       CONTRADICTS M1–M8 and reconcile: CLAUDE.md (the `source=` provenance rule, the `pipeline_mode=` partition rule,
       the "Live = batch" rule, the VIX/sports source notes) · codex (`02-data/pipeline-mode-partition.md`,
@@ -364,8 +380,17 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       sub-agents don't inherit it). **Pre-audit already done (2026-06-05, agent E)**: all 4 layers implicitly assume
       `pipeline_mode` encodes source (batch-only assumption); none acknowledge the live asymmetry, the cadence axis, or
       replay. **Post-ratify**: a SECOND pass once M1–M8 land, so the docs match the new contract (no stale
-      "pipeline_mode==source" / "live_websocket" / "live=batch ⇒ identical path" claims). Repo: unified-trading-pm (+
-      codex). Owner: slot-6 can drive the audit; per-repo doc deltas to owners.
+      "pipeline*mode==source" / "live_websocket" / "live=batch ⇒ identical path" claims). Repo: unified-trading-pm (+
+      codex). Owner: slot-6 can drive the audit; per-repo doc deltas to owners. **PARTIAL 2026-06-07 — pm@9120464fe**:
+      codex `02-data/pipeline-mode-partition.md` reconciled to the
+      `{mode}*{source}[_{transport}]` form (documents replay_<source> + the transport suffix-vs-column rule + the     hyperliquid vendor split; DELETED the stale "Don't use replay_*" / "replay writes to live_websocket" lines).     **REMAINING**: the other codex docs (`availability-manifest-and-data-status.md`,     `pipeline-mode-and-batch-live-reconciliation.md`— still has`BATCH_HYPERLIQUID_REST`/`hyperliquid_rest`refs —    `honest-absence-downstream-handling.md`, `external-data-always-available-rule.md`) + CLAUDE.md + per-AG plans +     `SUB_AGENT_MANDATORY_RULES.md`.
+- [ ] [CODE] P1. **UI reference-data registry regen** — `lib/registry/ui-reference-data.json` still lists the stale
+      `batch_hyperliquid_rest` PipelineMode value. It is GENERATED from UAC (`generate_ui_reference_data.py` →
+      `uac-registry-sync.yml`), so regenerate from the now-fixed UAC SSOT (uac@cc69b123) rather than hand-edit. **GATED
+      on the UI playwright gate (HARD RULE)**: needs `pw:L2 ✓` + a regression spec on a UI-capable slot. Repo:
+      unified-trading-system-ui. Owner: a UI-capable slot. **DEFERRED** — provenance: C-TRANSPORT consumer sweep
+      2026-06-07 (the Python-side rename landed uac@cc69b123/utl@d0745bde/mtds@c567962e/is@03a93e10; the generated UI
+      mirror regenerates downstream).
 
 ## Operator decisions needed (closed-set forks)
 
