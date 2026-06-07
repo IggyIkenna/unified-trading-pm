@@ -1379,3 +1379,13 @@ CF-GREEN-on-real- data + the fleet drain + operator.
       on a VM (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<tag>`; GCS flaky locally) so the raw-tick denominator ==
       could-exist universe; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
       bucket fix are done. parent_epic: mtds_mdps_master.
+- [ ] [PERF] P2. ⑦ sports league-catalogue roll-up list-cost — **NICE-TO-HAVE** (slot-4 2026-06-07): the producer's
+      `_iter_sports_by_date_snapshots` must `list_blobs("sports_reference/by_date/")` over the WHOLE tree (17 entities ×
+      per-fixture files since 2015 → hundreds of thousands of objects) to filter to the ~3000 tiny `entity=leagues`
+      parquets, because `day=` precedes `entity=` in the path so GCS can't prefix-match leagues directly. The dry-run is
+      list-bound (>15 min just to list). Acceptable for a nightly scheduler / one-off apply-write, but a day-narrowed
+      two-level list (list `day=` common-prefixes, then `day={d}/entity=leagues/`) would cut it ~100×; blocked on the
+      UTL `StorageClient.list_blobs` wrapper NOT exposing GCS common-prefixes (it yields BlobMetadata only — the
+      `delimiter` arg's `.prefixes` are dropped). Fix = add a `list_prefixes(bucket, prefix, delimiter)` to the
+      `StorageClient` abstraction + GCP/AWS/local providers, then narrow the sports iterator. Repo:
+      unified-trading-library (abstraction) + instruments-service (iterator). parent_epic: mtds_mdps_master.
