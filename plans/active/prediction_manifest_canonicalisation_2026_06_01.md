@@ -921,8 +921,24 @@ venue-override question) + the operator-gated migration walk:**
 > Sampled where noted; the full-corpus counts ride the gated VM `--apply`. Read-only on prod GCS
 > (`central-element-323112`).
 
+> **🟢 APPLY-READY (slot-5, 2026-06-07).** Prediction is CODE-COMPLETE for `--apply`: all G1+G2 dry-runs GREEN + the
+> 7+2-point audit passed (below), re-verified on current LDR (mtds@6370294a · is@2971a064, uac unchanged). The matrix is
+> still prediction-ABSENT → the per-cqg grain-binding path; **functionally re-confirmed post-matrix-state** —
+> `_row_data_types('prediction', grain_bound_entry, [...])` → `['prediction_canonical_question_group']` (matrix never
+> consulted; even an unbound row is bounded to the cqg bundle by the gated run's `--data-types`). **The ONLY remaining
+> gates are OPERATIONAL, not code** (G0 ✓ · **G3 UNION read view now SHIPPED** deployment-api@4dd2575 +
+> deployment-ui@0dc40eb · the per-AG instruments-store-pred v9 walk RUN [tool-ready] · the IS prediction backfill RUN ·
+> pre-migration drain + `_index` snapshot). Do NOT run `--apply` (G4-gated).
+
 - [x] ✅ [AUDIT] P0. **G2 dry-run-green VERIFIED on current LDR (mtds@6370294a · is@2971a064, slot-5 2026-06-07).** The
       four readiness dry-runs + the live data-state read + the 7+2-point audit, all evidence below. `--apply` G4-gated.
+- [x] ✅ [QG] P0. **QG evidence (slot-5 2026-06-07):** **instruments-service `quality-gates.sh --no-fix` = exit 0**
+      (`✅ ALL QUALITY GATES PASSED (223s)`; `.qg_last_passed_sha` == HEAD `2971a064`) — my whole G1 surface (v9
+      store-migrator + cqg catalogue producer + enumerator) is gate-clean. The prediction MTDS migrator + rebuild are
+      **ruff-clean**; the **MTDS** full `--no-fix` stays pre-existing-RED (the rebuild's 954-line >900-cap + argparse
+      `reportAny` strict-config in BOTH my scripts and unrelated handlers — the cross-AG coordinator slot-2 MTDS-QG P2 +
+      my file-split P2 below). These are lint/file-length/strict-config reds, INDEPENDENT of the proven dry-run
+      correctness; they gate the rebuild's eventual quickmerge promotion, not the migration's correctness.
 
 **① MTDS migrator dry-run** — `migrate_prediction_to_pred_prd_v9.py` (default dry), prod GCS, scoped `2025-03-14..15`
 (fast sample): exit 0, **planned=1028** (legacy raw 254 + candles 647 + stale `category=` 127), copied=0. Projected
@@ -998,8 +1014,11 @@ defense-in-depth matrix row is a NICE-TO-HAVE, below.)
 the prediction migrator/rebuild/store-migrator ALREADY stamp source-aware (verified this pass) → code-gate MET; (b)
 **G1** — IS prediction backfill must populate `market_lifecycle/by_canonical_group/` (0 objects today) so the cqg
 could-exist seed is real, + the now-tool-ready instruments-store-prediction v9 walk (③); (c) **G3** — deployment UNION
-view (slot-7); (d) **pre-migration drain** + `_index` snapshot (E3). Then E4-full / E7 / E8 run on a VM (no
-fire-and-forget). MTDS QG caveat below gates the rebuild's quickmerge promotion.
+read view **✅ SHIPPED 2026-06-07** (deployment-api@4dd2575 `data_status_union.union_reduce_to_cells` M5 union +
+per-(pipeline_mode×source) drilldown + deployment-ui@0dc40eb; consumer-side READ-ready before the data migrates); (d)
+**pre-migration drain** + `_index` snapshot (E3). Then E4-full / E7 / E8 run on a VM (no fire-and-forget). MTDS QG
+caveat below gates the rebuild's quickmerge promotion. **Net: every code/dry-run/audit gate is GREEN; the residual is
+purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · drain) — prediction is APPLY-READY.**
 
 - [ ] [CHORE] P2. **MTDS QG file-length RED blocks the rebuild's quickmerge sentinel** —
       `rebuild_prediction_manifest.py` is **954 lines (>900 cap)**, one of the 6 pre-existing >900-line files in the
