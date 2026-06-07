@@ -1812,7 +1812,7 @@
       "trading-agent-service"
     ],
     "sit_retry_count": 3,
-    "locked_alert_sent": false
+    "locked_alert_sent": true
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
