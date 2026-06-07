@@ -1320,10 +1320,42 @@ CF-GREEN-on-real- data + the fleet drain + operator.
 > bucket map was stale for ALL 5 AGs (missing the `-prd-` env tier) → now resolves via `resolve_bucket_name`
 > (instruments-service, ⑦ in `prediction_manifest_canonicalisation_2026_06_01.md`). **Remaining for sports:**
 
-- [ ] [CODE] P1. ⑦ sports could-exist denominator seed — build the `--catalog-path` parquet from the sports IS catalog
-      (per-instrument lifecycle: `instrument_id`/`instrument_type`/`venue`/`available_from`/`available_to`) and run
-      `enumerate_expected_universe.py --asset-group sports --catalog-path <catalog> --apply-write` against the canonical
-      `_index` so the raw-tick denominator == could-exist universe (active-but-uncaptured instruments seeded
-      `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_sports` row-key/data_types
-      match the sports captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The
-      mechanism + bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.
+> **🔴 G1.dry-run FINDING (slot-4, 2026-06-07) — the GENERIC `build_instrument_catalogue.py --asset-group sports`
+> produces a 0-row (empty) catalogue → it CANNOT seed the sports could-exist universe. Confirmed on real prod GCS
+> (`instruments-store-sports-prd-central-element-323112`). Two independent reasons, both proven:**
+>
+> 1. **Raw provider columns, not canonical.** `sports_reference/by_date/day=*/entity=*/` parquets carry RAW provider
+>    schemas — `entity=fixtures` → `af_fixture_id`/`af_league_id`; `entity=leagues` → `league_id`/`name`/`country`;
+>    `entity=teams` → `team_id`/`available_at` — **NONE** has the `instrument_key`/`instrument_id` column the generic
+>    `_row_id`/`build_catalogue_dataframe` (build_instrument_catalogue.py:101,144) requires. Deterministic proof:
+>    `_row_id` → 0 non-null on real fixtures(13)/fixture_events(55) rows;
+>    `build_catalogue_dataframe([fixtures, fixture_events]) → 0 catalogue rows`. `run_rollup` has a `prediction` branch
+>    but **no `sports` branch** (falls into the generic path). A plain run would promote an EMPTY catalogue.
+> 2. **Grain mismatch (bundled-atom — the exact slot-7 concern; ANSWER to "confirm sports grain before a plain run").**
+>    The sports captured atom in the canonical `_index` (586,597 captured rows) is
+>    per-**`(league_id, data_type, date)`** — `league_id` populated 95% (1,614 leagues), `instrument_id` blank 95%,
+>    `venue` blank 93%, `instrument_type` blank ~100%. So **sports could-exist grain = per-LEAGUE, NOT per-fixture**: a
+>    fixture-grain catalog would never match the league-grain manifest present_set → every entry seeds
+>    `expected_unattempted` → massively inflated denominator.
+>
+> **Required producer (gated CODE, repo=instruments-service)**: add a `build_sports_catalogue_dataframe` branch to
+> `build_instrument_catalogue.py` (mirror `build_prediction_catalogue_dataframe`), entity-aware + **league-grain** —
+> roll up `sports_reference/by_date/entity=leagues` → one row per league: `instrument_id=league_id` (or league_id col),
+> `instrument_type="league"`, `venue=<source>`, `available_from`/`available_to` = first/last day the league appears.
+> Then make `_enumerate_v2_sports`'s present_set match league-grain (`present_cols=["data_type","league_id","date"]`,
+> blank-tolerant on venue/instrument_id/instrument_type) so it matches the manifest atom.
+
+- [ ] [CODE] P1. ⑦ sports could-exist denominator seed — **BLOCKED on the league-grain producer above** (the generic
+      producer is empty for sports — slot-4 dry-run 2026-06-07). Add `build_sports_catalogue_dataframe` (league-grain) +
+      fix `_enumerate_v2_sports` present_cols to league-grain, with a unit test (producer → `_catalog_from_dataframe` →
+      `enumerate_v2(asset_group=sports)` emits `expected_unattempted` against a league-grain present_set, skips captured
+      cells). Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [DATA] P1. ⑦ sports apply-write run — **GATED** (do AFTER the producer above + these unmet gates, slot-4
+      2026-06-07): (a) slot-7 PART C G1-foundation code GREEN (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`
+      — 2/7 done at check); (b) sports IS instrument backfill complete (`by_date` capture FROZEN ~2026-05-21 fleet-wide
+      per that plan's FINDING); (c) the canonical `instruments-store-sports-prd` `_index` is v9 (TODAY it is **v8** —
+      v9=735/2,681,044=0.0%; rides the gated E4 single-walk, NOT yet run). When all met: build the catalog →
+      `enumerate_expected_universe.py --asset-group sports --enumerator-version v2 --catalog-path <catalog> --apply-write`
+      on a VM (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<tag>`; GCS flaky locally) so the raw-tick denominator ==
+      could-exist universe; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
+      bucket fix are done. parent_epic: mtds_mdps_master.
