@@ -167,14 +167,16 @@ Every AG's G2→G4 transition runs the operator's readiness audit. SSOT for the 
       `SUB_AGENT_MANDATORY_RULES.md` + **all 5 per-AG plans + downstream + instruments** acknowledge the source-aware
       `{mode}_{source}[_{transport}]` model + the apply-gate. Today the per-AG plans (2026-06-01) PREDATE the standard
       (2026-06-05) → stale. parent_epic: manifest_master.
-- [ ] [DOCS] P0. **M-COORD-2 — retrofit each per-AG + downstream + instruments plan with a G0/G1 gate banner**
-      (coordination link only; each AG slot does its own body migration): "⛔ `--apply` GATED on
-      `master_data_canonicalisation_migration_catalogue_2026_06_07` G0+G1+G2+G3; migrator/rebuild/enumerator must stamp
-      source-aware pipeline_mode (no coarse `batch`) before this AG's apply." Cross-slot edits are additive banners only
-      (slot precedence). parent_epic: manifest_master.
-- [ ] [AUDIT] P1. **M-COORD-3 — add ⑧ (IS-catalogue completeness) + ⑨ (pipeline_mode source-aware upgrade) to the audit
-      SSOT** `canonical_form_cross_service_audit_checklist.md` + each `*_master_audit_instructions.md`, so every AG's
-      readiness audit checks the catalogue root + the source-aware migrator class. parent_epic: manifest_master.
+- [x] ✅ [DOCS] P0. **M-COORD-2 — DONE (2026-06-07): gate banners added** to the DeFi §MASTER (demoted) + all 6
+      cross-AG/ downstream/instruments plans (cefi/sports/prediction/tradfi `--apply` apply-gate; instruments = G1-root;
+      downstream = G2). Additive banners only (slot precedence respected). **Residual (folds into M-COORD-1)**: repoint
+      the `master:` FRONTMATTER field of the plans that point at `defi_manifest…§MASTER` → the coordinator, and the full
+      CLAUDE.md + codex source-aware-model reconcile. parent_epic: manifest_master.
+- [x] ✅ [AUDIT] P1. **M-COORD-3 — DONE (2026-06-07): CF-13 (pipeline_mode source-aware, extends CF-3) + CF-14
+      (IS-catalogue could-exist ROOT, foundation of CF-6) added to `canonical_form_cross_service_audit_checklist.md`** —
+      the ⑨ + ⑧ readiness checks; an AG's audit now fails RED until they hold; cross-AG ownership stays in this
+      coordinator's registry (not duplicated). Residual: cite CF-13/14 in each `*_master_audit_instructions.md`
+      ownership matrix on next touch. parent_epic: manifest_master.
 - [ ] [CHORE] P1. **M-COORD-4 — wire the gate-state board**: a small status block here (G0…G5 = RED/AMBER/GREEN per AG)
       refreshed at each gate promotion, so the orchestrator sees the critical path. Recompute from the registered plans'
       checkboxes (never hand-maintain divergent state). parent_epic: manifest_master.
