@@ -203,11 +203,19 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       `instruments_manifest_canonicalisation_2026_06_01`. **DeFi (slot-2): code-ready + denominator regression shipped
       is@bb8fb203** (⑦-defi). cefi dry-run proven 2026-06-05.
 - [ ] [DATA] P0. **G1.dry-run — per-AG catalogue + enumerate dry-run** (read-only; cefi PROVEN 2026-06-05 on real prod
-      GCS; defi/prediction/tradfi pending — each AG slot runs its own). **sports DRY-RUN DONE (slot-4, 2026-06-07):
-      generic `build_instrument_catalogue --asset-group sports` → 0-row catalogue (raw entity cols lack
+      GCS; defi/tradfi pending — each AG slot runs its own). **sports DRY-RUN DONE (slot-4, 2026-06-07): generic
+      `build_instrument_catalogue --asset-group sports` → 0-row catalogue (raw entity cols lack
       `instrument_key`/`instrument_id`; no `sports` branch in `run_rollup`) AND captured atom is per-LEAGUE not
       per-fixture → needs a league-grain `build_sports_catalogue_dataframe` producer before enumerate v2 can run. Full
-      finding + spec + gate flags in `sports_manifest_canonicalisation_2026_06_01.md` § ⑦.**
+      finding + spec + gate flags in `sports_manifest_canonicalisation_2026_06_01.md` § ⑦.** **prediction DRY-RUN DONE
+      (slot-5, 2026-06-07): found+fixed a crash — `build_instrument_catalogue` resolved the prediction instruments-store
+      via the per-AG dict (no PREDICTION entry → `BucketNamingError`) so the cqg roll-up never ran; fix=flat-kind helper
+      `is@a7fa55a8` (+regression test). With that, `--asset-group prediction --dry-run` runs exit 0 → 0 cqg rows, GATED
+      on the IS prediction backfill (`market_lifecycle/by_canonical_group/`=0 objects;
+      `instrument_availability/by_date/` is `market=`-grain, no `canonical_question_group=`). enumerate rides the
+      catalogue (same gate). cf_manifest_audit(instruments-store-pred): 493 rows 100% v8, CF-1/3/4/8 RED (§H v9 walk
+      gated). G1.schedule WIRED (prediction in both catalogue schedulers). Full finding in
+      `prediction_manifest_canonicalisation_2026_06_01.md` § ⑦ G1-2026-06-07.**
 - [ ] [DATA] P0. **G1.run — per-AG `--apply-write` of the could-exist seed against the AG's canonical `_index`** (VM;
       `MANIFEST_PER_VM_SHARDS=true`). **GATED on**: (a) **IS instrument BACKFILL complete** for that AG
       (`instruments_backfill_phase3_2026_05_22` — the catalogue can only roll up instruments IS actually fetched); (b)
