@@ -77,6 +77,10 @@ jobs:
           manifest["staging_status"]["locked_since"] = datetime.datetime.utcnow().isoformat() + "Z"
           manifest["staging_status"]["locked_reason"] = "SIT running"
           manifest["staging_status"]["lock_version"] = None
+          # Fresh lock cycle → re-arm the starvation alarm (finding H3: sit-starvation-detector sets
+          # locked_alert_sent=True and never resets it, so the dangling-lock alert fires once then is
+          # suppressed fleet-wide forever).
+          manifest["staging_status"]["locked_alert_sent"] = False
 
           # Populate pending_repos from staging_versions that differ from stable versions
           staging_versions = manifest.get("staging_versions", {})

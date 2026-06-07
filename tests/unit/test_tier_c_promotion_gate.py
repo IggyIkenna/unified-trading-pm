@@ -67,11 +67,25 @@ def test_pass_dep_not_in_manifest_is_safe_default():
     assert gate.evaluate_repo(m, "svc").promote is True
 
 
-def test_pass_dep_ci_status_unset_is_safe_default():
+def test_block_tracked_dep_ci_status_unset_fail_closed():
+    # M3: a dep that IS tracked in the manifest but carries no ci_status (never-written /
+    # reset / reconcile-dropped) must BLOCK (fail-closed) — promoting on a blank status would
+    # promote dependents out of order. (Previously this passed via a fail-OPEN safe-default.)
     m = _manifest(
         {
-            "uac": {},  # no ci_status → treat as external/not tracked
+            "uac": {},  # tracked in manifest, but no ci_status → fail-closed BLOCK
             "svc": {"ci_status": "FEATURE_GREEN", "dependencies": [{"name": "uac"}]},
+        }
+    )
+    assert gate.evaluate_repo(m, "svc").promote is False
+
+
+def test_pass_untracked_dep_is_safe_default():
+    # A dep NOT present in the manifest at all (genuinely external / untracked) still
+    # safe-default passes — fail-closed applies ONLY to deps tracked-but-unset.
+    m = _manifest(
+        {
+            "svc": {"ci_status": "FEATURE_GREEN", "dependencies": [{"name": "external-lib"}]},
         }
     )
     assert gate.evaluate_repo(m, "svc").promote is True

@@ -33,24 +33,27 @@ provider "github" {
 }
 
 locals {
-  # repo => QG reusable-job suffix. "quality-gates-v2" once a repo is on
-  # quality-gates-v2.yml; "quality-gates" while still on workspace-qg.yml.
+  # repo => QG reusable-job suffix. ALL repos are on quality-gates-v2.yml now (workspace-qg
+  # retired 2026-05-29), so EVERY suffix is "quality-gates-v2" — verified 2026-06-07 against the
+  # live `require-quality-gates` rulesets (context = "Quality Gates (<repo>) / quality-gates-v2"
+  # fleet-wide). The prior mixed map carried stale "quality-gates" suffixes for 9 repos that, if
+  # applied, would set a DEAD context (no run emits it) → dead-lock non-admin merges (M2).
   # As of 2026-05-30 (see plans/active/issues/ci_v2_ruleset_check_name_drift_2026_05_30.md):
   repo_qg_suffix = {
     "alerting-service"                  = "quality-gates-v2"
-    "batch-live-reconciliation-service" = "quality-gates"
-    "client-reporting-api"              = "quality-gates"
-    "deployment-api"                    = "quality-gates"
+    "batch-live-reconciliation-service" = "quality-gates-v2"
+    "client-reporting-api"              = "quality-gates-v2"
+    "deployment-api"                    = "quality-gates-v2"
     "deployment-service"                = "quality-gates-v2"
-    "deployment-ui"                     = "quality-gates"
+    "deployment-ui"                     = "quality-gates-v2"
     "execution-service"                 = "quality-gates-v2"
-    "ibkr-gateway-infra"                = "quality-gates"
+    "ibkr-gateway-infra"                = "quality-gates-v2"
     "instruments-service"               = "quality-gates-v2"
-    "market-data-processing-service"    = "quality-gates"
+    "market-data-processing-service"    = "quality-gates-v2"
     "market-tick-data-service"          = "quality-gates-v2"
     "strategy-service"                  = "quality-gates-v2"
-    "system-integration-tests"          = "quality-gates"
-    "trading-agent-service"             = "quality-gates"
+    "system-integration-tests"          = "quality-gates-v2"
+    "trading-agent-service"             = "quality-gates-v2"
     "unified-api-contracts"             = "quality-gates-v2"
     "unified-trading-library"           = "quality-gates-v2"
     "unified-trading-pm"                = "quality-gates-v2"

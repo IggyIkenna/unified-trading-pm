@@ -115,7 +115,13 @@ def evaluate_repo(manifest: dict[str, object], repo: str) -> GateResult:
             continue
         dep_status = cast("dict[str, object]", dep_info_obj).get("ci_status")
         if not dep_status:
-            continue  # unset → safe-default pass (external / not tracked)
+            # M3 fail-CLOSED: this dep IS tracked in the manifest (it passed the `name not in repos`
+            # filter above) but carries no ci_status — a never-written / reset / reconcile-dropped
+            # value. Treating it as a pass would promote dependents out of order on a blank status
+            # (amplified by C2/H2, which can blank ci_status). A genuinely-untracked dep already
+            # `continue`d above; here, unset on a TRACKED dep blocks.
+            blocked.append(f"{name}:UNSET")
+            continue
         if dep_status not in ON_STAGING_STATUSES:
             blocked.append(f"{name}:{dep_status}")
 

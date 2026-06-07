@@ -30,7 +30,9 @@ permissions:
 
 # Only one cascade at a time — serialise, never cancel a running cascade.
 concurrency:
-  group: cascade-qg-ordering
+  # manifest-mutating workflow → share the manifest-update group so it serialises with every other
+  # manifest writer and cannot silently lose an update (finding H2). Was `cascade-qg-ordering`.
+  group: manifest-update
   cancel-in-progress: false
 
 jobs:
@@ -323,7 +325,15 @@ jobs:
                            f"{invalidated} downstream repos invalidated [skip ci]"],
                           check=False,
                       )
-                      subprocess.run(["git", "push"], check=False)
+                      # Retry-with-rebase (finding H2): a bare `git push` with check=False silently
+                      # drops the invalidation when a concurrent manifest writer landed first. Rebase + retry.
+                      for _attempt in range(1, 6):
+                          if subprocess.run(["git", "push"]).returncode == 0:
+                              break
+                          print(f"  push rejected (attempt {_attempt}); rebasing onto origin/main and retrying")
+                          subprocess.run(["git", "pull", "--rebase", "--autostash", "origin", "main"], check=False)
+                          if _attempt == 5:
+                              print("  FATAL: could not push cascade invalidation after 5 attempts")
                   break
               else:
                   print(f"  Level {level_num}: ALL {len(repos)} repos passed QG")

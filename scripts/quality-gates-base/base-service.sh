@@ -2674,11 +2674,22 @@ if [[ "${RUN_TESTS}" == "true" ]] && \
     # uses), NOT REPO_ROOT: qg-common.sh resolves REPO_ROOT to PROJECT_ROOT/.. (the WORKSPACE
     # parent), so writing there put .qg_last_passed_sha one level above the repo where
     # `quickmerge --agent` reads it (CWD = repo root) → the agent fast-path always saw it
-    # "missing" and hard-refused, fleet-wide. This block also runs on a green-skip
-    # (sentinel-HIT keeps RUN_TESTS=true), so the SHA sentinel is refreshed on fast-green too.
-    git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
-        echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" || \
-        echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+    # "missing" and hard-refused, fleet-wide.
+    #
+    # H5: do NOT refresh the SHA sentinel on a content-sentinel HIT — a HIT skipped the
+    # tests/typecheck phases (the content hash omits cross-repo dep state), so refreshing
+    # `.qg_last_passed_sha = HEAD` would let `quickmerge --agent` ship a repo whose deps
+    # changed underneath without actually re-running its tests. On a HIT, keep the prior
+    # full-run SHA sentinel: if HEAD is unchanged it still certifies a real test pass; if
+    # HEAD moved (e.g. a sentinel/coverage-only commit), the SHA mismatch correctly forces
+    # a full QG at quickmerge time. The content sentinel below is unaffected (it IS the HIT).
+    if [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
+        git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null && \
+            echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" || \
+            echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+    else
+        echo "SHA sentinel NOT refreshed (content-sentinel HIT → tests skipped; prior full-run SHA sentinel retained)."
+    fi
     # Green content sentinel (qg-repo-green-sentinel): record the content hash so an
     # unchanged tree skips the heavy phases next run. Only here — a COMPLETE green run
     # (this block) — so the sentinel always represents a coverage-inclusive pass.

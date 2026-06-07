@@ -1,4 +1,5 @@
 {
+  "_DEPRECATED_2026_06_07_M2": "CLASSIC branch protection is RETIRED — superseded by the RULESET model (scripts/repo-management/pin_branch_protection_rulesets.py + terraform/github-branch-protection/main.tf). The live required check is the per-repo 'Quality Gates (<repo>) / quality-gates-v2' on main + 'check-staging-lock' on staging — NOT the generic 'quality-gates' below (a DEAD context). Both consumers (apply-branch-protection.sh, set-branch-protection.sh) hard-refuse to run. Kept as a tombstone only.",
   "_comment_purpose": "Canonical GitHub branch protection spec. Applied per-branch by scripts/propagation/apply-branch-protection.sh. Null-valued fields are explicit to clear stale settings from previous ad-hoc configs.",
   "_comment_required_status_checks": "Contexts must match the 'job name' in each repo's GHA workflow (.github/workflows/*.yml) — typically 'quality-gates'. If a repo has no GHA check wired up yet, apply the template WITHOUT the context and add it after the workflow lands.",
 

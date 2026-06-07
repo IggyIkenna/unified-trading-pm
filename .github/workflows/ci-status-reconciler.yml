@@ -78,6 +78,13 @@ jobs:
             gh run list --repo "$OWNER/$1" --branch "$2" --workflow quality-gates-v2.yml \
               --status completed --limit 1 --json conclusion --jq '.[0].conclusion // ""' 2>/dev/null || echo ""
           }
+          latest_v2_green_sha() { # repo branch → headSha of latest SUCCESS v2 run (H1: prove the green is for THIS sha)
+            gh run list --repo "$OWNER/$1" --branch "$2" --workflow quality-gates-v2.yml \
+              --status success --limit 1 --json headSha --jq '.[0].headSha // ""' 2>/dev/null || echo ""
+          }
+          branch_head() { # repo branch → HEAD sha
+            gh api "repos/$OWNER/$1/branches/$2" --jq '.commit.sha' 2>/dev/null || echo ""
+          }
 
           RECONCILED=""; RECONCILED_COUNT=0
           while IFS=$'\t' read -r REPO CUR; do
@@ -95,8 +102,23 @@ jobs:
             # (the merged+green guard). cicd_contract_hardening § "FEATURE→STAGING gap".
             if [ "$CUR" = "FEATURE_GREEN" ] && [ "$STG_C" = "success" ]; then
               AHEAD=$(gh api "repos/${OWNER}/${REPO}/compare/staging...live-defi-rollout" --jq '.ahead_by' 2>/dev/null || echo "-1")
-              if [ "$AHEAD" = "0" ]; then
-                echo "ADVANCE $REPO: FEATURE_GREEN → STAGING_GREEN (staging merged+green)"
+              # H1: only advance if the green v2 ran on the CURRENT staging HEAD. A GITHUB_TOKEN
+              # LDR→staging merge doesn't re-trigger v2, so the latest SUCCESS run can be for the
+              # STALE pre-merge sha → advancing STAGING_GREEN then marks an untested HEAD green
+              # (trusted by the staging-to-main dep-gate). headSha-gate it; on a stale green,
+              # re-trigger v2 on staging HEAD instead of advancing.
+              STG_HEAD=$(branch_head "$REPO" staging)
+              GREEN_SHA=$(latest_v2_green_sha "$REPO" staging)
+              if [ "$AHEAD" = "0" ] && [ -n "$STG_HEAD" ] && [ "$GREEN_SHA" != "$STG_HEAD" ]; then
+                echo "STALE-GREEN $REPO: latest staging v2 green is for $GREEN_SHA, not staging HEAD $STG_HEAD — re-triggering v2 (not advancing)"
+                if [ "$DRY_RUN" != "true" ]; then
+                  gh workflow run quality-gates-v2.yml --repo "$OWNER/$REPO" --ref staging >/dev/null 2>&1 \
+                    && echo "  re-triggered quality-gates-v2 on $REPO@staging" || echo "  WARN: v2 re-trigger failed for $REPO"
+                fi
+                continue
+              fi
+              if [ "$AHEAD" = "0" ] && [ "$GREEN_SHA" = "$STG_HEAD" ]; then
+                echo "ADVANCE $REPO: FEATURE_GREEN → STAGING_GREEN (staging merged + green on HEAD $STG_HEAD)"
                 if [ "$DRY_RUN" != "true" ]; then
                   curl -sf -X POST -H "Authorization: token ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
                     "https://api.github.com/repos/${OWNER}/unified-trading-pm/dispatches" \

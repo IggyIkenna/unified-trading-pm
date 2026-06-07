@@ -50,3 +50,10 @@ test-results.xml
 # "Generated artifacts + QG sentinels are gitignored" + cicd_contract_hardening item H)
 .qg_last_passed_sha
 .qg_content_sentinel
+
+# Agent worktrees — Claude Code / agent worktrees under .claude/worktrees create gitlinks
+# (mode 160000) that, if accidentally added, leak into CI checkout as a phantom submodule
+# (`fatal: No url found for submodule path '.claude/worktrees/<id>' in .gitmodules`) and fail
+# the run on infra unrelated to the code. Never track them. (CI false-positive noise root cause.)
+.claude/worktrees/
+.claude/

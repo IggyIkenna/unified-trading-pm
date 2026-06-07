@@ -196,7 +196,19 @@ jobs:
             # auth/missing-repo), exit non-zero so the workflow surfaces it.
             echo "Cloning $name at branch $BRANCH (fallback)"
             git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
-            echo "WARN: Branch '$BRANCH' clone failed for $name — trying main"
+            # issue#2: DEP_BRANCH absent in this dep + no constraint-derived tag → use the dep's
+            # CURRENT RELEASED version from the manifest (explicit, tested version) BEFORE falling
+            # to `main` HEAD (which can be ahead of the release → tests an unpublished version).
+            local mf mver
+            mf="../unified-trading-pm/workspace-manifest.json"; [ -f "$mf" ] || mf="workspace-manifest.json"
+            mver=$(python3 -c "import json,sys; print(json.load(open('$mf')).get('versions',{}).get('$name','') or '')" 2>/dev/null || echo "")
+            if [ -n "$mver" ]; then
+              echo "WARN: Branch '$BRANCH' clone failed for $name — trying manifest released version v$mver (explicit)"
+              git clone -b "v$mver" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+              echo "WARN: manifest version tag v$mver clone failed for $name — trying main"
+            else
+              echo "WARN: Branch '$BRANCH' clone failed for $name — no manifest version; trying main"
+            fi
             git clone -b main "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
             echo "WARN: 'main' clone failed for $name (repo may have no main branch) — falling back to its default branch"
             git clone "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}"

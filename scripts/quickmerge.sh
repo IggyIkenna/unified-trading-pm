@@ -1165,8 +1165,22 @@ fi
 # formats tree-wide — there the caller owns the whole tree.
 if [ -f ".pre-commit-config.yaml" ] && grep -q "mirrors-prettier\|prettier-autostage" .pre-commit-config.yaml 2>/dev/null; then
   if [ -n "$FILES_ARG" ]; then
+    # M1: the sentinel was verified == HEAD ABOVE, but prettier --write here runs AFTER that
+    # check, so a reformat would make the COMMITTED tree differ from the QG-certified content.
+    # Detect + warn (prettier is format-only, so this is observability not a hard block; the
+    # CLAUDE.md ship rule already mandates `prettier --write` BEFORE Pass-1 QG so this is a no-op
+    # on the happy path). A non-empty diff here means Pass-1 ran on an unformatted tree.
+    _pre_fmt_hash=""; [ "$AGENT_MODE" = true ] && _pre_fmt_hash=$(git diff -- $FILES_ARG | shasum 2>/dev/null | cut -d' ' -f1)
     # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated path list
     npx --yes prettier@3.6.2 --write --ignore-unknown $FILES_ARG >/dev/null 2>&1 || true
+    if [ "$AGENT_MODE" = true ]; then
+      _post_fmt_hash=$(git diff -- $FILES_ARG | shasum 2>/dev/null | cut -d' ' -f1)
+      if [ -n "$_pre_fmt_hash" ] && [ "$_pre_fmt_hash" != "$_post_fmt_hash" ]; then
+        echo "[$REPO_NAME] ⚠️  M1: prettier reformatted --files AFTER the Pass-1 sentinel was certified —"
+        echo "    the committed tree differs from the QG-validated content (format-only, but not gate-checked)."
+        echo "    Pre-format your files (prettier --write) BEFORE running Pass-1 quality-gates.sh to close this."
+      fi
+    fi
   else
     # Unscoped ship (caller owns the whole tree): canonical prettier@3.6.2 tree-wide.
     # (Dropped the dead `pre-commit run prettier` probe — the hook id is prettier-autostage

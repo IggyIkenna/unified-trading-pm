@@ -6,15 +6,18 @@ name: major-bump-issue-handler
 #   1. Parses repo/version metadata from issue body
 #   2. Bumps pyproject.toml version on the staging branch
 #   3. Dispatches version-bump to unified-trading-pm (updates staging_versions)
-#   4. Sends Telegram success alert
+#   4. Sends Slack success alert (#ci-failures)
 #   5. Closes issue as completed
 #
 # When a user with write access comments /reject:
-#   1. Sends Telegram rejection alert
+#   1. Sends Slack rejection alert (#ci-failures)
 #   2. Closes issue as not_planned (no version bump)
 #
 # STAGING ONLY: version bumps NEVER touch main.
 # NO SELF-APPROVAL: agents cannot comment /approve on issues.
+#
+# SSOT: unified-trading-pm/scripts/workflow-templates/major-bump-issue-handler.yml
+# Rollout: bash unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh
 
 on:
   issue_comment:
@@ -23,6 +26,10 @@ on:
 permissions:
   contents: write
   issues: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   handle-major-bump:
@@ -35,7 +42,9 @@ jobs:
       - name: Detect command
         id: cmd
         env:
-          # Untrusted github.event.comment.body via env, not inlined (actionlint injection guard).
+          # Pass untrusted github.event.comment.body via env (NOT inlined into the script) —
+          # avoids the actionlint expression-injection error ([5.5] WORKFLOW LINT) + the
+          # real script-injection risk. https://docs.github.com/actions/security-guides/security-hardening
           COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
           BODY="$COMMENT_BODY"
@@ -74,22 +83,23 @@ jobs:
           echo "Permission: $PERM"
 
           if [[ "$PERM" != "write" && "$PERM" != "maintain" && "$PERM" != "admin" ]]; then
-            echo "ERROR: $COMMENTER has '$PERM' access — write/maintain/admin required to approve/reject"
+            echo "ERROR: $COMMENTER has '$PERM' access -- write/maintain/admin required to approve/reject"
             # Add a comment on the issue explaining the failure
             curl -s -X POST \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/${ORG}/${REPO}/issues/${{ github.event.issue.number }}/comments" \
-              -d "{\"body\":\"❌ Cannot process /${{ steps.cmd.outputs.action }}: @${COMMENTER} has '${PERM}' access. Write/maintain/admin required.\"}" || true
+              -d "{\"body\":\"Cannot process /${{ steps.cmd.outputs.action }}: @${COMMENTER} has '${PERM}' access. Write/maintain/admin required.\"}" || true
             exit 1
           fi
-          echo "✅ $COMMENTER has $PERM access"
+          echo "$COMMENTER has $PERM access -- verified"
 
       - name: Parse issue metadata
         if: steps.cmd.outputs.action != 'none'
         id: meta
         env:
-          # Untrusted github.event.issue.body via env, not inlined (actionlint injection guard).
+          # Untrusted github.event.issue.body via env, not inlined (actionlint expression
+          # injection guard + real script-injection mitigation).
           ISSUE_BODY_RAW: ${{ github.event.issue.body }}
         run: |
           set -euo pipefail
@@ -166,12 +176,12 @@ jobs:
           git config user.name "Semver Agent (major-bump-issue-handler)"
           git add pyproject.toml
           if git diff --staged --quiet; then
-            echo "WARNING: No change in pyproject.toml — version may already be ${VERSION}"
+            echo "WARNING: No change in pyproject.toml -- version may already be ${VERSION}"
             exit 0
           fi
           git commit -m "chore: bump version to ${VERSION} [major-bump approved by ${APPROVER}]"
           git push origin staging
-          echo "✅ Bumped $REPO pyproject.toml to $VERSION on staging"
+          echo "Bumped $REPO pyproject.toml to $VERSION on staging"
 
       - name: Dispatch version-bump to unified-trading-pm
         if: steps.cmd.outputs.action == 'approve'
@@ -184,7 +194,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          echo "Dispatching version-bump to PM: $REPO → $VERSION"
+          echo "Dispatching version-bump to PM: $REPO -> $VERSION"
 
           HTTP_STATUS=$(curl -s -o /tmp/dispatch.json -w "%{http_code}" -X POST \
             -H "Authorization: Bearer $GH_TOKEN" \
@@ -193,14 +203,14 @@ jobs:
             -d "{\"event_type\":\"version-bump\",\"client_payload\":{\"repo\":\"${REPO}\",\"version\":\"${VERSION}\",\"branch\":\"staging\",\"commit_sha\":\"major-bump-approved\",\"approved_by\":\"${APPROVER}\"}}")
 
           if [ "$HTTP_STATUS" = "204" ]; then
-            echo "✅ Dispatched version-bump to unified-trading-pm: $REPO → $VERSION"
+            echo "Dispatched version-bump to unified-trading-pm: $REPO -> $VERSION"
           else
             echo "ERROR: HTTP $HTTP_STATUS dispatching to unified-trading-pm"
             cat /tmp/dispatch.json || true
             exit 1
           fi
 
-      - name: Send Telegram notification
+      - name: Send Slack notification
         if: steps.cmd.outputs.action != 'none'
         env:
           ACTION: ${{ steps.cmd.outputs.action }}
@@ -208,22 +218,21 @@ jobs:
           VERSION: ${{ steps.meta.outputs.version }}
           APPROVER: ${{ github.event.comment.user.login }}
           ISSUE_URL: ${{ github.event.issue.html_url }}
+          # Retired Telegram -> Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
         run: |
-          BOT_TOKEN="${{ secrets.TELEGRAM_BOT_TOKEN }}"
-          CHAT_ID="${{ secrets.TELEGRAM_CHAT_ID }}"
-
-          if [ -n "$BOT_TOKEN" ] && [ -n "$CHAT_ID" ]; then
-            if [ "$ACTION" = "approve" ]; then
-              MSG="✅ Major bump APPROVED: ${REPO} → v${VERSION} on staging (by @${APPROVER})%0A${ISSUE_URL}"
-            else
-              MSG="❌ Major bump REJECTED: ${REPO} → v${VERSION} (by @${APPROVER})%0A${ISSUE_URL}"
-            fi
-            curl -s -X POST "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
-              -d "chat_id=${CHAT_ID}&text=${MSG}&disable_web_page_preview=false" || true
-            echo "Telegram notification sent"
+          if [ "$ACTION" = "approve" ]; then
+            MSG="Major bump APPROVED: ${REPO} -> v${VERSION} on staging (by @${APPROVER})\n${ISSUE_URL}"
           else
-            echo "Telegram secrets not configured — skipping notification"
+            MSG="Major bump REJECTED: ${REPO} -> v${VERSION} (by @${APPROVER})\n${ISSUE_URL}"
           fi
+          # Best-effort -- never fail the run on a missing/misconfigured webhook.
+          case "${SLACK_WEBHOOK_URL:-}" in
+            https://*)
+              curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                --data "$(jq -n --arg t "$MSG" '{text:$t}')" && echo "Slack notification sent" || true ;;
+            *) echo "SLACK_CI_WEBHOOK_URL not set/https -- skipping notification" ;;
+          esac
 
       - name: Update issue and close
         if: steps.cmd.outputs.action != 'none'
@@ -242,11 +251,11 @@ jobs:
           TODAY=$(date +%Y-%m-%d)
 
           if [ "$ACTION" = "approve" ]; then
-            COMMENT="✅ **APPROVED** by @${APPROVER} on ${TODAY}\n\nVersion \`${VERSION}\` has been bumped in \`${REPO}\` pyproject.toml on \`staging\`.\nPM workspace-manifest.json \`staging_versions\` updated via version-bump dispatch."
+            COMMENT="**APPROVED** by @${APPROVER} on ${TODAY}\n\nVersion \`${VERSION}\` has been bumped in \`${REPO}\` pyproject.toml on \`staging\`.\nPM workspace-manifest.json \`staging_versions\` updated via version-bump dispatch."
             STATE_REASON="completed"
             NEW_LABEL="major-bump-approved"
           else
-            COMMENT="❌ **REJECTED** by @${APPROVER} on ${TODAY}\n\nNo version bump was performed. Issue closed."
+            COMMENT="**REJECTED** by @${APPROVER} on ${TODAY}\n\nNo version bump was performed. Issue closed."
             STATE_REASON="not_planned"
             NEW_LABEL="major-bump-rejected"
           fi
@@ -278,3 +287,23 @@ jobs:
             -d "{\"state\":\"closed\",\"state_reason\":\"${STATE_REASON}\"}" || true
 
           echo "Issue #${ISSUE_NUMBER} closed as ${STATE_REASON}"
+
+  notify-failure:
+    name: Slack — Major Bump Handler Failure
+    needs: [handle-major-bump]
+    if: always() && needs.handle-major-bump.result == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack failure alert
+        env:
+          # Retired Telegram -> Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          MSG="❌ Major bump handler FAILED — ${{ github.event.repository.name }} (issue #${{ github.event.issue.number }}). View: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # Best-effort -- never fail the run on a missing/misconfigured webhook.
+          case "${SLACK_WEBHOOK_URL:-}" in
+            https://*)
+              curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                --data "$(jq -n --arg t "$MSG" '{text:$t}')" && echo "Slack failure alert sent" || true ;;
+            *) echo "SLACK_CI_WEBHOOK_URL not set/https -- skipping notification" ;;
+          esac

@@ -35,7 +35,11 @@ name: Semver Agent
 
 on:
   workflow_run:
-    workflows: ["Quality Gates"]
+    # The required check is `quality-gates-v2` (v1 "Quality Gates" retired 2026-05-29). PM is Option-B
+    # (no `staging` branch — it promotes LDR→main directly + bumps its own version via the manifest
+    # `staging_versions → versions` promote path / `update-repo-version.yml`), so this trigger is vestigial
+    # for PM's own bump; the name is kept correct + matching the SSOT `.tmpl` for consistency / no dead ref.
+    workflows: ["quality-gates-v2"]
     types: [completed]
     branches: [staging]
 

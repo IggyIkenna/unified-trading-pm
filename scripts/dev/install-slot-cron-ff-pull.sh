@@ -73,8 +73,14 @@ fi
 # tick by design, so changes ship via PR→QG→LDR, never local. GHA workflows are exempt (fresh checkout).
 PM_DIR="${WORKSPACE_ROOT}/unified-trading-pm"
 INTEGRATION_BRANCH="live-defi-rollout"
-SELF_PULL_FF="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/dev/slot-cron-ff-pull.sh scripts/dev/cron-branch-overrides.txt 2>/dev/null; } || true"
-SELF_PULL_VERIFY="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/verify-slot-host-symmetry.sh 2>/dev/null; } || true"
+# H6: SYNTAX-GATE the self-pull. A bare `git checkout origin/LDR -- <script>` adopts the new
+# script with NO validation → one bad commit to slot-cron-ff-pull.sh / verify-slot-host-symmetry.sh
+# propagates to every host in ≤5 min and stops FF-pull fleet-wide (and the verify cron self-updates
+# identically → disables its own watchdog). Instead: stream the candidate to a temp via `git show`,
+# `bash -n` it, and only `mv` it into place if it parses; on any failure keep the last-good local copy.
+# (cron-branch-overrides.txt is data, not a script → checked out directly.)
+SELF_PULL_FF="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/dev/slot-cron-ff-pull.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/dev/slot-cron-ff-pull.sh; else rm -f \"\$t\"; fi; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/dev/cron-branch-overrides.txt 2>/dev/null; } || true"
+SELF_PULL_VERIFY="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/verify-slot-host-symmetry.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/verify-slot-host-symmetry.sh; else rm -f \"\$t\"; fi; } || true"
 
 # Periodic symmetry verify + Slack-alert-on-drift — ENFORCES the symmetric-host
 # contract (CLAUDE.md § "Local slot host = VM slot host") rather than just documenting

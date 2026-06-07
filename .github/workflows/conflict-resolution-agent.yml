@@ -68,10 +68,36 @@ jobs:
             echo "pr_number=${PR_NUMBER}"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Idempotency gate — skip if the PR was already escalated
+        id: idemp
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          REPO_NAME: ${{ steps.in.outputs.repo_name }}
+          PR_NUMBER: ${{ steps.in.outputs.pr_number }}
+        run: |
+          set -uo pipefail
+          # Shares the `escalation-dispatched` idempotency marker with ci_failure_watcher.py
+          # (scripts/repo-management/ci_failure_watcher.py:143) so the two escalation sources
+          # (this conflict-agent + the */15m watcher) cannot double-dispatch one PR → no
+          # Opus-Max worker storm (finding C3). PR 0 (no PR) cannot be deduped → proceed.
+          SKIP=false
+          if [ "${PR_NUMBER:-0}" != "0" ]; then
+            LABELS=$(gh pr view "${PR_NUMBER}" --repo "IggyIkenna/${REPO_NAME}" --json labels \
+              --jq '.labels[].name' 2>/dev/null || echo "")
+            if printf '%s\n' "$LABELS" | grep -qx "escalation-dispatched"; then
+              echo "::notice::PR ${REPO_NAME}#${PR_NUMBER} already carries escalation-dispatched — skipping re-dispatch."
+              SKIP=true
+            fi
+          fi
+          echo "skip=${SKIP}" >> "$GITHUB_OUTPUT"
+
       - name: Dispatch escalate-to-orchestrator (merge_conflict → Max-plan worker)
+        if: steps.idemp.outputs.skip != 'true'
         env:
           # MUST be GH_PAT: a repository_dispatch fired with GITHUB_TOKEN does NOT trigger workflows.
           GH_TOKEN: ${{ secrets.GH_PAT }}
+          REPO_NAME: ${{ steps.in.outputs.repo_name }}
+          PR_NUMBER: ${{ steps.in.outputs.pr_number }}
         run: |
           set -uo pipefail
           gh api "repos/${GITHUB_REPOSITORY}/dispatches" \
@@ -82,3 +108,9 @@ jobs:
             -f "client_payload[context]=Merge conflict ${{ steps.in.outputs.source_branch }} -> ${{ steps.in.outputs.target_branch }} in ${{ steps.in.outputs.repo_name }} (PR ${{ steps.in.outputs.pr_number }}). Resolve ON live-defi-rollout preserving both sides + active-plan intent; never force-push; quality-gates-v2 re-gates." \
             -f 'client_payload[model]=opus'
           echo "Escalated merge conflict to orchestrator (opus Max-plan worker). escalate-to-orchestrator notifies Slack on dispatch."
+          # Mark idempotent so neither this agent nor the watcher re-dispatches (shared marker).
+          if [ "${PR_NUMBER:-0}" != "0" ]; then
+            gh label create escalation-dispatched --repo "IggyIkenna/${REPO_NAME}" --force \
+              --color B60205 --description "Handed to the orchestrator for conflict resolution" >/dev/null 2>&1 || true
+            gh pr edit "${PR_NUMBER}" --repo "IggyIkenna/${REPO_NAME}" --add-label escalation-dispatched >/dev/null 2>&1 || true
+          fi
