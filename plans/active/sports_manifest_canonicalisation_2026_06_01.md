@@ -1345,11 +1345,21 @@ CF-GREEN-on-real- data + the fleet drain + operator.
 > Then make `_enumerate_v2_sports`'s present_set match league-grain (`present_cols=["data_type","league_id","date"]`,
 > blank-tolerant on venue/instrument_id/instrument_type) so it matches the manifest atom.
 
-- [ ] [CODE] P1. ⑦ sports could-exist denominator seed — **BLOCKED on the league-grain producer above** (the generic
-      producer is empty for sports — slot-4 dry-run 2026-06-07). Add `build_sports_catalogue_dataframe` (league-grain) +
-      fix `_enumerate_v2_sports` present_cols to league-grain, with a unit test (producer → `_catalog_from_dataframe` →
-      `enumerate_v2(asset_group=sports)` emits `expected_unattempted` against a league-grain present_set, skips captured
-      cells). Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P1. ⑦ sports could-exist denominator seed — instruments-service@99a5fbf5 (QG-green, exit 0; on LDR).
+      Added `build_sports_catalogue_dataframe` (league-grain roll-up of `sports_reference/by_date/entity=leagues` → one
+      row per league: `instrument_id=league_id`, `instrument_type="league"`, `venue=""` to match the venue-blank
+      captured atom, `available_from`/`available_to` lifecycle) + `sports` branch in `run_rollup` (default prefix
+      `sports_reference/by_date`). Rewrote `_enumerate_v2_sports` to LEAGUE-grain: present-set match on
+      `(data_type, league_id, date)` ONLY (`_SPORTS_PRESENT_COLS`, blank-tolerant on venue/instrument_id/instrument_type
+      via `_present_cols_for`, applied in `_build_present_set` + v1/v2 main paths), iterates the captured provider
+      data_types (`_sports_data_types()` = `SPORTS_DATA_TYPE_TO_SOURCE` keys, NOT the MTDS odds types), per-data_type
+      `get_source_coverage_start` skips pre-coverage dates (owned by v1, no double-emit), yields the seeded
+      `expected_unattempted` with blank venue/instrument_id/instrument_type so the atom matches captured. Verified on
+      the real prod `_index` (2.68M rows): data_types = STANDINGS/FIXTURES/XG/… (the 17 `SPORTS_DATA_TYPE_TO_SOURCE`
+      keys), league_id nonblank 97.6%, venue/instrument_id/instrument_type ~blank. Unit tests
+      (`test_build_instrument_catalogue.py`: producer league-grain + producer→`enumerate_v2(sports)` emits
+      `expected_unattempted` vs a league-grain present_set + skips captured + skips pre-coverage +
+      superset-never-shrinks regression). Repo: instruments-service. parent_epic: mtds_mdps_master.
 - [ ] [INFRA] P2. ⑦/⑧ sports catalogue-regen scheduler — **NOT LIVE (slot-4 verified 2026-06-07)**: the TF jobs
       `catalogue-regen-nightly` (catalogue_regen_scheduler.tf, sports in `for_each`) +
       `instrument-catalogue-regen-nightly` (instrument_catalogue_scheduler.tf) are absent from the live prod scheduler
@@ -1359,11 +1369,12 @@ CF-GREEN-on-real- data + the fleet drain + operator.
       would emit a 0-row catalogue). Cross-AG infra owned by vm-cross-cutting
       (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` G1.schedule); this row tracks the sports-slice
       verification. Repo: deployment-service (terraform). parent_epic: mtds_mdps_master.
-- [ ] [DATA] P1. ⑦ sports apply-write run — **GATED** (do AFTER the producer above + these unmet gates, slot-4
-      2026-06-07): (a) slot-7 PART C G1-foundation code GREEN (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`
-      — 2/7 done at check); (b) sports IS instrument backfill complete (`by_date` capture FROZEN ~2026-05-21 fleet-wide
-      per that plan's FINDING); (c) the canonical `instruments-store-sports-prd` `_index` is v9 (TODAY it is **v8** —
-      v9=735/2,681,044=0.0%; rides the gated E4 single-walk, NOT yet run). When all met: build the catalog →
+- [ ] [DATA] P1. ⑦ sports apply-write run — **GATED** (producer DONE instruments-service@99a5fbf5; these gates still
+      UNMET as of slot-4 2026-06-07): (a) slot-7 PART C G1-foundation code GREEN
+      (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` — 2/7 done at check); (b) sports IS instrument backfill
+      complete (`by_date` capture FROZEN ~2026-05-21 fleet-wide per that plan's FINDING); (c) the canonical
+      `instruments-store-sports-prd` `_index` is v9 (TODAY it is **v8** — v9=735/2,681,044=0.0%; rides the gated E4
+      single-walk, NOT yet run). When all met: build the catalog →
       `enumerate_expected_universe.py --asset-group sports --enumerator-version v2 --catalog-path <catalog> --apply-write`
       on a VM (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<tag>`; GCS flaky locally) so the raw-tick denominator ==
       could-exist universe; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
