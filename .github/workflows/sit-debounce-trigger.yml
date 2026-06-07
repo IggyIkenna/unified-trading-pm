@@ -36,8 +36,11 @@ on:
           - "true"
 
 concurrency:
-  group: sit-debounce-check
-  cancel-in-progress: true
+  # manifest-mutating workflow → share the manifest-update group (cancel-in-progress:false) so it
+  # serialises with every other manifest writer (sit-gate/staging-to-main/ci-status-*) and cannot
+  # silently lose an update (finding H2). Was the per-poller `sit-debounce-check` group.
+  group: manifest-update
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -192,7 +195,20 @@ jobs:
 
           git add workspace-manifest.json
           git commit -m "chore(manifest): update staging_status.pending_repos [skip ci]"
-          git push
+          # Retry-with-rebase (finding H2): a concurrent manifest writer can land on main between our
+          # checkout and push; a bare push then fails non-fast-forward and the update is lost. Rebase + retry.
+          for attempt in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed manifest update (attempt ${attempt})."
+              break
+            fi
+            echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+            git pull --rebase --autostash origin main
+            if [ "${attempt}" = "5" ]; then
+              echo "FATAL: could not push manifest update after 5 attempts."
+              exit 1
+            fi
+          done
 
       - name: Trigger SIT
         if: steps.check.outputs.trigger == 'true'

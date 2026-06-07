@@ -13,8 +13,13 @@
 #   - staging-lock-check.yml         (canonical flat copy)
 #   - update-dependency-version.yml  (canonical flat copy)
 #   - tab-mirror-to-ldr.yml          (auto-FF push tab/** -> live-defi-rollout)
-#   - workspace-qg.yml.tmpl          (workspace quality gates, DEP_REPOS substituted)
+#   - quality-gates-v2.yml.tmpl      (the required CI check, DEP_REPOS substituted)
 #   - semver-agent.yml.tmpl          (per-repo semver-agent invocation)
+#
+# RETIRED workflows (workspace-qg.yml / python-quality-gates.yml / version-bump.yml) are
+# guarded by _is_retired() below — even if a stale template reappears here, it is NEVER
+# rolled out (a blanket rollout would otherwise resurrect dead CI fleet-wide). The stale
+# `workspace-qg.yml.tmpl` was deleted 2026-06-07 (workspace-qg retired 2026-05-29).
 #
 # UI-only workflows (tier 2) — added 2026-05-15 to fix dead-copies-everywhere bug:
 #   - uac-registry-sync.yml          (receives uac-registry-updated dispatch in UI repo)
@@ -72,6 +77,21 @@ if [ ! -f "$MANIFEST" ]; then
   echo "ERROR: workspace-manifest.json not found at $MANIFEST"
   exit 1
 fi
+
+# ── RETIRED-workflow guard ────────────────────────────────────────────────────
+# A blanket rollout (no --template) iterates EVERY file in the template dir and
+# creates-if-missing in every repo. A stale template for a RETIRED workflow would
+# therefore RE-CREATE that dead workflow fleet-wide (incident 2026-06-07: a leftover
+# `workspace-qg.yml.tmpl` would have recreated the retired `workspace-qg.yml` — retired
+# 2026-05-29, superseded by `quality-gates-v2`). Belt-and-suspenders: even if a retired
+# template reappears in this dir, never roll it out. The real fix is deleting the stale
+# template; this denylist is the guard so the mistake can't silently propagate again.
+RETIRED_WORKFLOWS="workspace-qg.yml python-quality-gates.yml quality-gates.yml version-bump.yml"
+_is_retired() {
+  local name="$1"
+  for r in $RETIRED_WORKFLOWS; do [ "$name" = "$r" ] && return 0; done
+  return 1
+}
 
 REPOS=$(python3 -c "import json; [print(r) for r in json.load(open('$MANIFEST')).get('repositories',{})]")
 
@@ -161,6 +181,12 @@ for template in "$TEMPLATE_DIR"/*.yml "$TEMPLATE_DIR"/*.yml.tmpl; do
   fi
   [ -n "$TEMPLATE_FILTER" ] && [ "$tname" != "$TEMPLATE_FILTER" ] && [ "$tbase" != "$TEMPLATE_FILTER" ] && continue
 
+  # Never roll out a RETIRED workflow (would resurrect dead CI fleet-wide).
+  if _is_retired "$tname"; then
+    echo "=== Template: $tbase → $tname  [SKIPPED — retired workflow; delete this stale template] ==="
+    continue
+  fi
+
   echo "=== Template: $tbase → $tname ==="
   for repo in $REPOS; do
     [ -n "$REPO_FILTER" ] && [ "$repo" != "$REPO_FILTER" ] && continue
@@ -226,6 +252,10 @@ if [ -d "$UI_TEMPLATE_DIR" ] && [ -z "$REPO_FILTER" -o "$REPO_FILTER" = "$UI_TAR
       [ -f "$template" ] || continue
       tname=$(basename "$template")
       [ -n "$TEMPLATE_FILTER" ] && [ "$tname" != "$TEMPLATE_FILTER" ] && continue
+      if _is_retired "$tname"; then
+        echo "=== UI Template: $tname  [SKIPPED — retired workflow] ==="
+        continue
+      fi
       echo "=== UI Template: $tname → $UI_TARGET_REPO ==="
       target="$ui_target_dir/$tname"
       if [ -f "$target" ] && diff -q "$template" "$target" > /dev/null 2>&1; then

@@ -2804,92 +2804,99 @@ behind the exact drift this whole audit is about.
 > they land here as `- [ ]` items so the audit can archive without losing the work. The audit doc retains the full
 > per-finding evidence + file:line + the "plan/doc corrections needed" list (its diagnostic value is in `git` history).
 
-- [ ] [SCRIPT] P1. **C1 — escalations POST to the SPA host, not the API → dead-but-green bridge.** Re-verified live
+- [x] ✅ [SCRIPT] P1. **C1 — escalations POST to the SPA host, not the API → dead-but-green bridge.** Re-verified live
       2026-06-07: `.github/workflows/escalate-to-orchestrator.yml:151`
       `ORCH_URL: ${{ vars.ORCHESTRATOR_URL || 'https://agent-orchestrator.odum-research.com' }}` still defaults to the
       bare SPA host (no `api.`) → POST hits the Vite SPA → HTTP 200 + `<!doctype html>`, no `escalation_id`, job
       concludes success. Every other caller uses `https://api.agent-orchestrator.odum-research.com`. Fix: default URL →
       `https://api.agent-orchestrator.odum-research.com` (or set the `ORCHESTRATOR_URL` Actions var). Repo:
       `unified-trading-pm`.
-- [ ] [SCRIPT] P1. **C2 — PM's own `semver-agent.yml` triggers on the dead `"Quality Gates"` workflow name → PM never
+- [x] ✅ [SCRIPT] P1. **C2 — PM's own `semver-agent.yml` triggers on the dead `"Quality Gates"` workflow name → PM never
       version-bumps.** Re-verified live 2026-06-07: `.github/workflows/semver-agent.yml:38` still
       `workflows: ["Quality Gates"]`; the live workflow is `quality-gates-v2`. (The 06-06/07 convergence corrected PM's
       `staging_versions` manifest field by hand — it did NOT fix the trigger, so PM still won't auto-bump.) Fix: →
       `workflows: ["quality-gates-v2"]`; delete the 2 stale templates `scripts/templates/semver-agent.yml` +
       `scripts/propagation/templates/semver-agent.yml` (both carry the dead name). Also append to `CLAUDE.md` § Version
       the PM exception until fixed. Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P1. **C3 — escalation re-dispatch storm + bypassed idempotency.** Re-verified 2026-06-07:
+- [x] ✅ [SCRIPT] P1. **C3 — escalation re-dispatch storm + bypassed idempotency.** Re-verified 2026-06-07:
       `.github/workflows/conflict-resolution-agent.yml` has **0** `escalation-dispatched` label checks (vs
-      `ci_failure_watcher.py:143` which gates on it) — a second escalation source that bypasses idempotency (live `gh run
-      list` showed bursts of 7 runs/30s). Each conflict dispatch spawns an Opus-Max worker → cost storm + duplicate
-      workers on one PR. Fix: label-gate `conflict-resolution-agent.yml` (+ `deterministic-promotion-conflict-resolve.yml`)
-      or route all escalation through the single gated path. Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P2. **H1 — ci_status FEATURE_GREEN→STAGING_GREEN auto-advance has no headSha check** (advances on a stale
-      green; a non-v2-retriggering merge leaves staging at an untested SHA marked STAGING_GREEN, trusted by the
+      `ci_failure_watcher.py:143` which gates on it) — a second escalation source that bypasses idempotency (live
+      `gh run     list` showed bursts of 7 runs/30s). Each conflict dispatch spawns an Opus-Max worker → cost storm +
+      duplicate workers on one PR. Fix: label-gate `conflict-resolution-agent.yml` (+
+      `deterministic-promotion-conflict-resolve.yml`) or route all escalation through the single gated path. Repo:
+      `unified-trading-pm`.
+- [x] ✅ [SCRIPT] P2. **H1 — ci_status FEATURE_GREEN→STAGING_GREEN auto-advance has no headSha check** (advances on a
+      stale green; a non-v2-retriggering merge leaves staging at an untested SHA marked STAGING_GREEN, trusted by the
       staging-to-main dep-gate). `ci-status-reconciler.yml:96-110`. (Also the mechanism behind the
       `ci_false_positive_alerts` UAC `STAGING_GREEN`-despite-red lead.) Fix: require `headSha == staging HEAD` else
       re-trigger v2. NOTE: partly addressed by the 06-07 reconciler Drift-3 (#154) + no-downgrade guard (#155) — VERIFY
       whether the headSha gap remains after those before closing. Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P2. **H2 — 3 manifest writers outside the `manifest-update` concurrency group → silent lost updates.**
+- [x] ✅ [SCRIPT] P2. **H2 — 3 manifest writers outside the `manifest-update` concurrency group → silent lost updates.**
       Re-verified 2026-06-07: `cascade-qg-ordering.yml` (group `cascade-qg-ordering`), `sit-debounce-trigger.yml` (group
       `sit-debounce-check`), `sit-starvation-detector.yml` (group `sit-starvation-check`) all mutate
       `workspace-manifest.json` but are NOT in `concurrency: group: manifest-update` and lack the 5× rebase-retry the
       unified writers have. Fix: move all three into `manifest-update` + add the rebase-retry loop. Repo:
       `unified-trading-pm`.
-- [ ] [SCRIPT] P2. **H3 — SIT dangling-lock alarm silences itself permanently (`locked_alert_sent` set, never reset).**
-      Re-verified 2026-06-07: `sit-starvation-detector.yml:64` sets `locked_alert_sent = True`, short-circuits on it at
-      :48, and NO workflow ever resets it to False (grep: only this file references it) → after the first alert every
-      future dangling SIT lock is suppressed fleet-wide. Fix: reset `locked_alert_sent = False` when `sit-gate` sets
-      `locked = True` (or on unlock). Repo: `unified-trading-pm`.
+- [x] ✅ [SCRIPT] P2. **H3 — SIT dangling-lock alarm silences itself permanently (`locked_alert_sent` set, never
+      reset).** Re-verified 2026-06-07: `sit-starvation-detector.yml:64` sets `locked_alert_sent = True`, short-circuits
+      on it at :48, and NO workflow ever resets it to False (grep: only this file references it) → after the first alert
+      every future dangling SIT lock is suppressed fleet-wide. Fix: reset `locked_alert_sent = False` when `sit-gate`
+      sets `locked = True` (or on unlock). Repo: `unified-trading-pm`.
 - [ ] [SCRIPT] P2. **H4 — `tab-mirror-to-ldr.yml` template drift + the recurring class** (edit-template-skip-rollout).
-      The 22-repo tab-mirror drift was rolled out + baselined 2026-06-05, but the audit found 63 NEW drift from same-day
-      Telegram→Slack edits to `major-bump-issue-handler` / `request-major-bump` / `update-dependency-version` templates
-      that were NOT rolled out. Fix: run `rollout-workflow-templates.sh` for the drifted templates + confirm
+      🔁 IN PROGRESS 2026-06-07: recurring-class root FIXED (rollout-workflow-templates.sh retired-workflow guard +
+      stale `workspace-qg.yml.tmpl` deleted + M5 baseline-write ratchet-down-only); major-bump rolled out to 7 worktrees
+      → `detect_template_drift --workflows` exits 0. Remaining = COMMIT the 7 sibling repos + the
+      update-dependency-version fleet rollout (issue #2) — held to the fleet-commit pass below. The 22-repo tab-mirror
+      drift was rolled out + baselined 2026-06-05, but the audit found 63 NEW drift from same-day Telegram→Slack edits
+      to `major-bump-issue-handler` / `request-major-bump` / `update-dependency-version` templates that were NOT rolled
+      out. Fix: run `rollout-workflow-templates.sh` for the drifted templates + confirm
       `detect_template_drift.py --workflows` exits 0 (do NOT `--baseline-write` — see M5). Composes with the
       fleet-rollout note in the Progress Log. Repo: `unified-trading-pm` → all repos.
-- [ ] [SCRIPT] P2. **H5 — green-sentinel skip re-stamps the QG SHA sentinel without running tests.** `base-service.sh`
-      skips tests/typecheck on a content-hash sentinel HIT (:322/:497) but the SHA-sentinel write (:2605-2618) is NOT
-      gated on `_QG_SENTINEL_HIT` → a HIT refreshes `.qg_last_passed_sha = HEAD` with tests skipped; during a dep-version
-      migration a consumer whose deps changed underneath (own tree byte-identical) skips tests yet refreshes the
-      sentinel → quickmerge sails through on a repo whose tests would now fail. Soundness hole in the shipped
-      `qg-repo-green-sentinel` (content-hash omits cross-repo dep state). Fix: gate the SHA-sentinel write additionally
-      on `[ "$_QG_SENTINEL_HIT" != true ]`. (Cross-link: `quality_gates_resource_contention_speedup_2026_06_02.md` §
-      `qg-repo-green-sentinel`.) Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P2. **H6 — FF-pull cron self-update is a single-commit fleet kill-switch (no `bash -n` syntax gate).**
+- [x] ✅ [SCRIPT] P2. **H5 — green-sentinel skip re-stamps the QG SHA sentinel without running tests.**
+      `base-service.sh` skips tests/typecheck on a content-hash sentinel HIT (:322/:497) but the SHA-sentinel write
+      (:2605-2618) is NOT gated on `_QG_SENTINEL_HIT` → a HIT refreshes `.qg_last_passed_sha = HEAD` with tests skipped;
+      during a dep-version migration a consumer whose deps changed underneath (own tree byte-identical) skips tests yet
+      refreshes the sentinel → quickmerge sails through on a repo whose tests would now fail. Soundness hole in the
+      shipped `qg-repo-green-sentinel` (content-hash omits cross-repo dep state). Fix: gate the SHA-sentinel write
+      additionally on `[ "$_QG_SENTINEL_HIT" != true ]`. (Cross-link:
+      `quality_gates_resource_contention_speedup_2026_06_02.md` § `qg-repo-green-sentinel`.) Repo: `unified-trading-pm`.
+- [x] ✅ [SCRIPT] P2. **H6 — FF-pull cron self-update is a single-commit fleet kill-switch (no `bash -n` syntax gate).**
       `install-slot-cron-ff-pull.sh:76-77` self-pulls `slot-cron-ff-pull.sh` + `verify-slot-host-symmetry.sh` with no
       at-adoption syntax check → one bad commit propagates to every host in ≤5 min, stopping FF-pull fleet-wide (and the
-      verify cron self-updates identically → disables its own watchdog). Fix: syntax-gate the self-pull (`checkout →
-      tmp; bash -n tmp && mv tmp <path>`). (Cross-link / fold into
+      verify cron self-updates identically → disables its own watchdog). Fix: syntax-gate the self-pull
+      (`checkout →     tmp; bash -n tmp && mv tmp <path>`). (Cross-link / fold into
       `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Cron-executor staleness".) Repo:
       `unified-trading-pm`.
-- [ ] [SCRIPT] P3. **M1 — quickmerge sentinel pins HEAD but `--files` commits a later tree.** The `--agent` fast-path
+- [x] ✅ [SCRIPT] P3. **M1 — quickmerge sentinel pins HEAD but `--files` commits a later tree.** The `--agent` fast-path
       verifies `_SENTINEL_SHA == git rev-parse HEAD` (`quickmerge.sh:1019-1029`) BEFORE running prettier `--write`
       (:1169) + stage+commit (:1184-1218) → the pushed tree can differ from the sentinel-certified HEAD. Fix: in
-      `--agent` mode require a clean working tree at sentinel-check time, or re-verify sentinel == post-commit SHA before
-      push. Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P2. **M2 — stale branch-protection IaC + suffix-blind verifier.** Re-verified 2026-06-07:
+      `--agent` mode require a clean working tree at sentinel-check time, or re-verify sentinel == post-commit SHA
+      before push. Repo: `unified-trading-pm`.
+- [x] ✅ [SCRIPT] P2. **M2 — stale branch-protection IaC + suffix-blind verifier.** Re-verified 2026-06-07:
       `set-branch-protection.sh:65` (`agent-audit`) + `ops/branch-protection-template.json:7` (`["quality-gates"]`) +
       `terraform/github-branch-protection/main.tf:40-57` (9 repos hardcoded to the retired `quality-gates` suffix) all
-      reference dead contexts no run emits → re-running any dead-locks non-admin merges. `verify_branch_protection_check_names.py:73`
-      only `startswith("Quality Gates ({repo})")` → blind to v1↔v2 suffix drift. Fix: sync/delete the stale classic
-      scripts + Terraform; make the verifier assert the full derived context + drive the repo list from
-      `workspace-manifest.json`. (Overlaps the open Phase-1 item at ~L187.) Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P2. **M3 — dep-order gates fail-OPEN on blank/missing `ci_status`.** `tier_c_promotion_gate.py:108-118`
-      (and `staging-to-main.yml`) treat an unset `ci_status` as safe-default-pass → a dep whose ci_status was never
-      written (new repo / reset / dropped by a reconcile path) promotes its dependents out of order. Amplified by C2/H2
-      (which produce blank ci_status). Fix: for a dep present in the manifest, treat unset ci_status as BLOCK
-      (fail-closed); keep fail-open only for deps genuinely absent from the manifest. (Cross-link: the dep-ordering
-      workstream this plan + `fleet_promotion_pipeline_repair`.) Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P3. **M5 — `--baseline-write` can silently loosen the drift ratchet.** `detect_template_drift.py`
+      reference dead contexts no run emits → re-running any dead-locks non-admin merges.
+      `verify_branch_protection_check_names.py:73` only `startswith("Quality Gates ({repo})")` → blind to v1↔v2 suffix
+      drift. Fix: sync/delete the stale classic scripts + Terraform; make the verifier assert the full derived context +
+      drive the repo list from `workspace-manifest.json`. (Overlaps the open Phase-1 item at ~L187.) Repo:
+      `unified-trading-pm`.
+- [x] ✅ [SCRIPT] P2. **M3 — dep-order gates fail-OPEN on blank/missing `ci_status`.**
+      `tier_c_promotion_gate.py:108-118` (and `staging-to-main.yml`) treat an unset `ci_status` as safe-default-pass → a
+      dep whose ci_status was never written (new repo / reset / dropped by a reconcile path) promotes its dependents out
+      of order. Amplified by C2/H2 (which produce blank ci_status). Fix: for a dep present in the manifest, treat unset
+      ci_status as BLOCK (fail-closed); keep fail-open only for deps genuinely absent from the manifest. (Cross-link:
+      the dep-ordering workstream this plan + `fleet_promotion_pipeline_repair`.) Repo: `unified-trading-pm`.
+- [x] ✅ [SCRIPT] P3. **M5 — `--baseline-write` can silently loosen the drift ratchet.** `detect_template_drift.py`
       `--baseline-write` rewrites the baseline to current state with no monotonic-shrinkage enforcement → it can ADD new
       drift (bless breakage) in one line (the H4 hole). Fix: make `--baseline-write` only REMOVE now-clean entries
       (refuse to add), or require a diff + justification. Repo: `unified-trading-pm`.
-- [ ] [SCRIPT] P2. **M6 — `staging-to-main` idempotency guard is dead code.** Re-verified 2026-06-07:
+- [x] ✅ [SCRIPT] P2. **M6 — `staging-to-main` idempotency guard is dead code.** Re-verified 2026-06-07:
       `staging-to-main.yml:87` `echo "idempotent_skip=$?"` — the heredoc Python `sys.exit(0)`s on already-promoted AND
       falls through (implicit 0) on proceed, so `$?` is always 0 and `idempotent_skip` is read by no later `if:` → the
       "skip if already promoted" protection does not exist (a re-dispatch re-merges staging→main, re-appends
       `main_commits.history`, re-clears the lock → can stomp a concurrent sit-gate lock). Fix: `sys.exit(0)` only on
-      already-promoted, distinct exit on proceed, gate the promote steps on `idempotent_skip`. Repo: `unified-trading-pm`.
+      already-promoted, distinct exit on proceed, gate the promote steps on `idempotent_skip`. Repo:
+      `unified-trading-pm`.
 
 ## CI false-positive / infra-noise root causes — migrated from `ci_false_positive_alerts_infra_noise_2026_06_05.md` (archived 2026-06-07)
 
@@ -2899,15 +2906,15 @@ behind the exact drift this whole audit is about.
 > "Still open" infra-noise ROOT-CAUSE reductions (separate, lower priority — noise reduction, not the truthful-severity
 > ask). Migrated so they're not lost on archival.
 
-- [ ] [SCRIPT] P3. **Fix the `.claude/worktrees` submodule-leak checkout-noise root cause.** A CI failure signature
-      `fatal: No url found for submodule path '.claude/worktrees/<id>' in .gitmodules` (seen on deployment-service run
-      27008990509) — an agent worktree path leaked into the CI checkout's submodule resolution; nothing to do with the
-      code under test. Fix: stop the leak at the checkout / `.gitmodules` hygiene step so it stops failing at all. Repo:
-      `unified-trading-pm` (workflow checkout step) + per-repo.
-- [ ] [SCRIPT] P3. **Fix the thin-dep-clone `ModuleNotFoundError` infra-noise.** `ModuleNotFoundError: No module named
-      '<service>'` during a QG dep-clone — CI clones a thin `dep_repos` subset and a transitively-needed service isn't
-      cloned (the documented "thin dep_repos" gotcha in `ci-cd-flow.md`). Fix: widen the clone set OR skip the import
-      under CI; tag `infra-noise` not a code red. Repo: `unified-trading-pm`.
+- [x] ✅ [SCRIPT] P3. **Fix the `.claude/worktrees` submodule-leak checkout-noise root cause.** A CI failure signature
+      `fatal: No url found for submodule path '.claude/worktrees/<id>' in .gitmodules` (seen on deployment-service
+      run 27008990509) — an agent worktree path leaked into the CI checkout's submodule resolution; nothing to do with
+      the code under test. Fix: stop the leak at the checkout / `.gitmodules` hygiene step so it stops failing at all.
+      Repo: `unified-trading-pm` (workflow checkout step) + per-repo.
+- [x] ✅ [SCRIPT] P3. **Fix the thin-dep-clone `ModuleNotFoundError` infra-noise.**
+      `ModuleNotFoundError: No module named     '<service>'` during a QG dep-clone — CI clones a thin `dep_repos` subset
+      and a transitively-needed service isn't cloned (the documented "thin dep_repos" gotcha in `ci-cd-flow.md`). Fix:
+      widen the clone set OR skip the import under CI; tag `infra-noise` not a code red. Repo: `unified-trading-pm`.
 
 ## 🟢 Progress Log — 2026-06-07 WAVE-1/2 machinery hardening (slot-1, append-only)
 
@@ -3105,6 +3112,7 @@ mirror confirmed. SIT smoke-test-gate sibling-clone fixed (`system-integration-t
 (PR #27).
 
 **Genuine blockers (the "no possible alternative" cases — documented, not deferrable-by-choice):**
+
 - **AO branch-protection ruleset / auto-merge = `403 Upgrade to GitHub Pro`** — agent-orchestrator is a private repo
   without GitHub Pro; rulesets+auto-merge are Pro-gated. Mitigation: v2 runs+passes every push, manual v2-gated merge.
   Resolve by GitHub Pro OR making the repo public (operator/billing). [BLOCKED-BILLING]
@@ -3123,9 +3131,9 @@ settles to avoid adding undrained LDR commits mid-convergence.
 ### ✅ FLEET CONVERGED — 2026-06-07 (pending=0, MAIN_GREEN=24)
 
 The bottom-up drain completed: **every active repo's released version is on `main`, ci_status=MAIN_GREEN, pending=0.**
-The two final stragglers were cleared by correcting stale manifest version fields to reflect actual main state:
-PM `staging_versions`→1.2.12 (Option-B main-direct; the field was stale at 1.2.0) and AO `versions`→0.8.0 (AO content
-is on main via manual merge — its staging-to-main auto-merge is GitHub-Pro-blocked).
+The two final stragglers were cleared by correcting stale manifest version fields to reflect actual main state: PM
+`staging_versions`→1.2.12 (Option-B main-direct; the field was stale at 1.2.0) and AO `versions`→0.8.0 (AO content is on
+main via manual merge — its staging-to-main auto-merge is GitHub-Pro-blocked).
 
 **Two final root-cause fixes that unstuck the bottom-up cascade (it had stalled at MAIN_GREEN=11):**
 
@@ -3141,16 +3149,18 @@ is on main via manual merge — its staging-to-main auto-merge is GitHub-Pro-blo
 **Final tally — 8 systemic CI/CD bugs fixed this session, pipeline UNFROZEN → CONVERGED → self-sustaining:**
 update-repo-version crash (#146) · staging-to-main all-or-nothing + fatal-Slack (#147) · semver-agent missing
 version-commit (#149) · SIT smoke-test-gate sibling-clone (SIT@dc00485, SIT main #27) · aiohttp<3.14 cap drained to
-staging fleet-wide · reconciler Drift-3 (#154) · ci-status-update no-downgrade (#155) · AO main-v2/staging/G6 (AO@b10af714).
-Plus all WAVE-1/2 machinery todos (#151/#152/#153). Proven end-to-end (uac→…→all 24 on main).
+staging fleet-wide · reconciler Drift-3 (#154) · ci-status-update no-downgrade (#155) · AO main-v2/staging/G6
+(AO@b10af714). Plus all WAVE-1/2 machinery todos (#151/#152/#153). Proven end-to-end (uac→…→all 24 on main).
 
 **Genuine non-code blockers (documented; not deferrable-by-choice):**
+
 - **agent-orchestrator rulesets + auto-merge = GitHub Pro** — private repo; AO promotes via manual v2-gated merge today.
   [BLOCKED-BILLING: enable Pro or make AO public]
 - **F7/F13 = live VM-SSH** on the orchestrator VM (vm-0) — not doable from a laptop slot; F8 self-heals the worktree
   half. [BLOCKED-INFRA]
 
 **Safe operator one-liners / clean follow-ups (gate works; these are hardening):**
+
 - **plan-health-gate required-check PIN** on PM main — the gate is FIXED + green (#152); the ruleset PATCH was deferred
   (couldn't verify the exact check-context string safely while the cascade was live-merging PM PRs; a wrong context
   string would make an unsatisfiable required check). Pin with the verified context once settled.
@@ -3174,3 +3184,62 @@ that mattered was PM's `update-repo-version.yml`, which is on main). `tab-mirror
 
 - Residual `main`-behind-`LDR` commit lag (non-version docs/CI churn) is BY DESIGN — the version pipeline promotes
   releases, not every commit; it self-clears as those commits get bundled into the next release bump.
+
+## 🟢 Progress Log — 2026-06-07 finish-to-DONE session #2 (slot-1, append-only)
+
+> Operating under `cursor-configs/AUTONOMOUS_AGENT_RULES.md` (incl. NEW Rule 11 — verify blast radius / local-green ≠
+> fleet-green). Operator dispatched: finish the remaining open work to a genuinely-complete, fleet-verified,
+> self-sustaining state. This is the append-only ledger; read it + the index/brief at top to resume after compaction.
+
+### 🔎 GROUND-TRUTH SURVEY at session start (corrects prior over-claims — verified via `gh api` 2026-06-07)
+
+The prior "✅ FLEET CONVERGED (pending=0, MAIN_GREEN=24)" claim was about **`main` release-version convergence**, a
+DIFFERENT axis from the operator's stated success criteria. Authoritative GitHub state at session start:
+
+1. **ci_status is PER-REPO nested** (`repositories[<repo>].ci_status`), NOT a top-level `ci_status` dict (my first probe
+   checked the wrong path). Real committed state: **main = 21 MAIN_GREEN / 3 FAILING (deployment-service,
+   execution-service, market-tick-data-service) / 1 FEATURE_GREEN (market-data-processing-service)**; LDR = 21
+   MAIN_GREEN / 4 FAILING. So the fleet is NOT fully converged — the prior "MAIN_GREEN=24" was a transient peak; 4 repos
+   carry real QG-debt to green (user task #6). (Composes with **M3** — dep-order gates fail-OPEN on blank/missing
+   per-repo ci_status.)
+2. **`staging` is DIVERGED from `live-defi-rollout` across nearly the whole fleet** — `staging==LDR` is NOT met.
+   Per-repo `compare/live-defi-rollout...staging` (status a=ahead-of-LDR b=behind-LDR): alerting d a=8 b=2 · batch-live
+   d a=1 b=2 · client-reporting d a=5 b=3 · deployment-api d a=1 b=2 · deployment-service d a=4 b=4 · deployment-ui d
+   a=9 b=2 · e2e d a=8 b=3 · features d a=11 b=2 · fund-admin d a=8 b=3 · greeks d a=6 b=3 · ibkr d a=7 b=3 ·
+   instruments d a=2 b=2 · mdps d a=4 b=3 · ml d a=8 b=3 · strategy d a=5 b=2 · sit d a=1 b=10 · trading-agent d a=5 b=3
+   · uac d a=1 b=3 · uta d a=6 b=3 · ui d a=5 b=4. **Clean (behind-only, no own commits):** agent-orchestrator b=4,
+   execution b=5, mtds b=2. **PM** has no staging (Option B — correct).
+3. **15 hidden-fragility findings RE-VERIFIED STILL LIVE** in PM workflow files: C1 (escalate URL bare SPA host), C2
+   (`semver-agent.yml:38 workflows:["Quality Gates"]` — the live check is `quality-gates-v2`; the 2 stale templates it
+   named are ALREADY deleted, only `.tmpl` remains), C3 (conflict-resolution-agent has 0 `escalation-dispatched` gates),
+   H2 (cascade-qg-ordering/sit-debounce-trigger/sit-starvation-detector not in `manifest-update` group), H3
+   (`locked_alert_sent` set never reset), M6 (`idempotent_skip=$?` dead), + M2/M5/H5/H6/M1/M3 per the migrated findings
+   section.
+
+**Conclusion:** real remaining work = the 15 fragility findings (PM-local), the fleet LDR→staging drain (kill the
+workflow-file conflict class, Rule-11b), fleet workflow rollout (semver-agent/major-bump/update-dependency-version), the
+3 issue docs' open todos (incl. VM-host items via SSM to vm-0 — SSM access CONFIRMED online), plan-health-gate PIN. SSM
+to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
+
+### ⚠️ Rule-11 BLAST-RADIUS findings (rollout tooling landmines — discovered greening PM QG 2026-06-07)
+
+1. **PM QG was ALREADY RED on LDR** before this session — `detect_template_drift.py --workflows` (a PM-only QG step)
+   flagged **NEW (un-baselined) drift in `major-bump-issue-handler.yml` across 7 repos** (batch-live, client-reporting,
+   deployment-api, ibkr, strategy, trading-agent, ui). Root cause = the H4 finding: the SSOT template got the actionlint
+   expression-injection fix (`04adb3d3b`, env-var indirection for untrusted `github.event.*.body`) + Telegram→Slack
+   (`87c4b2af3`) but was **never rolled out** to those 7 repos. The SSOT
+   (`scripts/workflow-templates/major-bump-issue-handler.yml`) is the correct/newer version → the rollout is the fix.
+2. **`rollout-workflow-templates.sh` run with NO `--template` is a LANDMINE** — its dry-run would **(a) CREATE the
+   RETIRED `workspace-qg.yml`** (`workspace-qg.yml.tmpl` still in the template dir though workspace-qg was retired
+   2026-05-29) in ~24 repos, and **(b) push a drifted `quality-gates-v2.yml` to 13 repos** (could break CI). **NEVER run
+   the blanket rollout** — always `--template <name>` for a verified template. (Fix filed below: delete the stale
+   `workspace-qg.yml.tmpl`.)
+3. **semver-agent fleet-rollout is ESSENTIALLY DONE** —
+   `rollout-workflow-templates.sh --template semver-agent.yml.tmpl --dry-run` shows only **strategy-service** drifts
+   (every other repo's rendered copy already matches). This CONTRADICTS the plan's late-2026-06-07 "Note — semver-agent
+   fleet-rollout BLOCKED on broken tooling" (that note pointed at the wrong tools — `rollout-semver-agent.sh` /
+   `rollout-agent-workflows.sh`; the canonical drift-gate SSOT tool is
+   `scripts/workflow-templates/rollout-workflow-templates.sh`, which renders `semver-agent.yml.tmpl` correctly).
+4. **`scripts/propagation/templates/{major-bump-issue-handler,request-major-bump}.yml` are STALE duplicates** of the
+   `scripts/workflow-templates/` SSOT (issue-#2 multi-copy hazard) — de-drift or delete (only the workflow-templates/
+   copies feed the drift gate + canonical rollout).
