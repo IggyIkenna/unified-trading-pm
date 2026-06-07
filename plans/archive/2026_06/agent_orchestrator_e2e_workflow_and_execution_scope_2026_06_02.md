@@ -2,7 +2,7 @@
 title: Agent-orchestrator end-to-end workflow + execution-scope plan-routing field
 parent_epic: orchestrator_master
 priority: P1
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 1.5
@@ -18,6 +18,15 @@ related_plans:
   - plans/epics/orchestrator_master.md
   - plans/archive/issues/orchestrator_autonomy_residual_findings_2026_06_02.md
 ---
+
+> **✅ ARCHIVED 2026-06-07 [unlock-plan].** All todos complete (0 open). The one "deferred" item (near-instant-ack
+> push-hook) is a documented CLOSED won't-do decision — plan pickup is already ≤30 min (G2 PlanRegenLoop floor + 5-min
+> pm-pull, which the plan itself flagged as "not required"); the true-near-instant hook needs an operator-JWT/internal
+> secret planted as a GHA repo secret (security-sensitive, not worth a sub-30-min latency win). **No deferred work to
+> migrate.** AO repo is now a fresh first-class repo (G6 `staging` + ruleset + auto-merge all in place — see
+> `cicd_contract_hardening_2026_06_01.md` § SESSION OUTCOME 2026-06-07).
+
+## Deferred work — migrated to: _(none — the sole deferral is a closed won't-do, above)_
 
 # Agent-orchestrator e2e workflow + execution-scope field
 
