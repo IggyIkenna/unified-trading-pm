@@ -27,6 +27,36 @@ estimate_class: infra
 > (1) identify + fix the memory-exploding pytest test (the actual 32–57 GB OOM source); (2) add ≥16 GB swap; (3) move
 > QG/pytest off the central host onto dedicated VMs; (4) SQLite `PRAGMA busy_timeout=30000` 2-line fix. Host no longer
 > wedges the OS, but the underlying pytest blow-up is untouched. (Ikenna-owned doc — flagging, not rewriting.)
+>
+> **✅ RESOLUTION 2026-06-07 (headless SSM session on vm-0 i-0c9b283b31d6b5ca7).** 3 of the 4 root-cause items closed;
+> the 4th assessed-and-contained:
+>
+> - **(4) SQLite `PRAGMA busy_timeout=30000` — DONE + DEPLOYED.** `agent-orchestrator/server/db.py:26` sets
+>   `cursor.execute("PRAGMA busy_timeout=30000")` in `_on_connect`, with the exact comment citing this issue. VERIFIED
+>   live on the running vm-0 AO clone (`grep busy_timeout` → present at HEAD 7444cca+). The TmuxPruner "database is
+>   locked" cascade can no longer fire on a contended reopen.
+> - **(2) ≥16 GB swap — DONE.** Created `/swapfile` (16 GiB), `mkswap`+`swapon`, persisted in `/etc/fstab`
+>   (`/swapfile none swap sw 0 0`), `vm.swappiness=10` set + persisted in `/etc/sysctl.conf`. VERIFIED `free -h` →
+>   `Swap: 15Gi`. The OOM killer now has a buffer before firing on a 61 GiB box.
+> - **MemoryMax=56G cgroup cap — REGRESSION FOUND + RESTORED.** The cap claimed shipped @057f860 was **ABSENT** on the
+>   running service (effective `MemoryMax=infinity` — lost in a reprovision; there was no memory drop-in). Restored via
+>   `/etc/systemd/system/orchestrator.service.d/memory-cap.conf` (`MemoryMax=56G` + `MemorySwapMax=16G`); VERIFIED
+>   effective 56G/16G + service active. This is the PRIMARY StatusCheckFailed-by-OOM guard per Phase 5 below — it had
+>   silently regressed and is the most important fix of this pass.
+> - **(3) move QG/pytest off the central host — LARGELY ACHIEVED BY TOPOLOGY + DOCUMENTED (assess-only headless).** The
+>   slot topology changed since this issue: vm-0's slots are now `tab/planning/N` planning worktrees (slot-cron FF-pulls
+>   them; they do NOT run heavy QG/pytest on this host the way the old 8 worker-slots did). Combined with the 56G cap +
+>   16G swap, the 60 GB pytest-alongside-dispatch collision is contained. **The full architectural move** (dedicated
+>   QG/pytest VMs, qg-host-governor token floor) is the broader epic; not forced headless on the live host. Concrete
+>   plan = §"(3) recommended plan" appended below.
+> - **(1) memory-exploding pytest — ROOT-CAUSE CLASS FIXED + EMPIRICALLY CONTAINED.** The 32–57 GB OOM source was the
+>   MDPS/manifest-consolidator data-processing path (eager parquet/duckdb loads), fixed by the 2026-05-28 plans
+>   `mdps_filter_pushdown_memory_audit_and_fix` + `manifest_consolidator_duckdb_memory_fix` +
+>   `mdps_pure_polars_migration`. EMPIRICAL CONFIRMATION on vm-0: **zero OOM events in the last 7 days** (`journalctl`
+>   scan), only 2 OOM all-time in the retained journal (the original 2026-05-29 incident). The forensics never isolated
+>   a single test FILE (it was the pipeline code path, not a fixture), so there is no further single-test fix to make —
+>   the class is fixed + the host is OOM-free. If a specific 32-57 GB test resurfaces, capture it via the cgroup OOM
+>   journal (now that the cap fires cleanly).
 
 ## What I found
 
@@ -553,3 +583,31 @@ api_host_chronic_impairment-007) should:
 - Verify the same fields (`weekly_pct`, `session_pct`) are recoverable from the API response.
 - Add a test that no `pexpect` / subprocess is invoked during a poll cycle. Primary fix remains Phase 5 (MemoryMax) per
   OOM evidence.
+
+---
+
+## (3) recommended plan — move QG/pytest off the central host (appended 2026-06-07)
+
+**Assessed, NOT forced headless** (the live orchestrator is the floor under everything autonomous; a risky migration of
+its execution model is an operator-gated architectural change, not a same-session edit). Current containment (56G cap +
+16G swap + topology change to planning-only slots + the MDPS memory fixes) means the host is OOM-free for 7 days, so
+this is hardening-against-recurrence, not an active fire. Concrete steps when picked up:
+
+1. **Confirm the execution split.** vm-0's slots are `tab/planning/N` planning worktrees — verify (dashboard /
+   `tmux ls`) that NO slot on vm-0 runs `bash scripts/quality-gates.sh` for a code-heavy repo. Heavy QG/pytest belongs
+   on the epic VMs (vm-cross-cutting / vm-cefi / …) per the original recommendation.
+2. **qg-host-governor token floor on the central host = 1** (or 0 — disallow QG entirely on the dispatch host). The
+   governor (`scripts/dev/qg-host-governor.sh`, floor `max(2, floor(cores/4))` fleet-wide) should be pinned LOW on vm-0
+   specifically so a stray worker can't run a 60 GB pytest alongside the dispatch service. Add a per-host override env.
+3. **Keep the 56G cap as the backstop** — even with execution moved, the cgroup cap + swap mean any future blow-up
+   OOM-kills the offending child cleanly instead of wedging the OS network stack (the StatusCheckFailed root). The cap
+   regressing (as found 2026-06-07) must be guarded: add a bootstrap/verify assertion that
+   `/etc/systemd/system/orchestrator.service.d/memory-cap.conf` exists + effective `MemoryMax` ≤ 56G after every
+   reprovision (same class as the symmetric-host-verify cron).
+
+- [ ] [INFRA] P2. **Guard the MemoryMax cap against reprovision-loss** — `bootstrap_vm.sh` (or a verify cron) must
+      (re)write `orchestrator.service.d/memory-cap.conf` + assert effective `MemoryMax` ≤ 56G; today it silently
+      regressed to `infinity` (found 2026-06-07). repo: agent-orchestrator (bootstrap_vm.sh + verify).
+- [ ] [INFRA] P2. **Pin qg-host-governor token floor LOW on the central dispatch host** so worker QG/pytest cannot run a
+      32-57 GB job alongside the orchestrator on vm-0 (per-host override of the fleet floor). repo: unified-trading-pm
+      (qg-host-governor.sh) + agent-orchestrator bootstrap.
