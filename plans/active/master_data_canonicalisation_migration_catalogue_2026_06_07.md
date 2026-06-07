@@ -238,7 +238,16 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 
 **Per-AG G1 status (WAVE-1 dry-runs):**
 
-- **cefi (slot-3)**: enumerate mechanism green; BLOCKED by G1-ENUM (combo/bundle) + G1-V8.
+- **cefi (slot-3)**: **G2 VERIFY RE-RUN DONE on the shape-aware producer (2026-06-07)** — migrator + rebuild +
+  instruments-store-v9 dry-runs GREEN (source-aware `batch_tardis` paths, writer-stamped v9 columns, 30,803 IS rows→100%
+  v9); `enumerate v2` exit 0 = **3,446 plausible candidates** (OPTION 141K + COMBO 64.8K correctly bundle-skipped via
+  `frozenset()` → the G1-ENUM over-fan is FIXED for cefi options/combos; no impossible combos). **2 residual could-exist
+  findings gate G1.run apply-write**: 🔴 **F1** chain `data_type` axis (bundle objects pathed `data_type=trades` but
+  canonical `<chain>` per parquet-column + v8-manifest + UAC-matrix; the "12 phantoms" are stale-axis, not absences) +
+  🔴 **F2** DERIBIT/OKX `FUTURE` captured at `futures_chain` BUNDLE grain but enumerated per-contract (~160/2-day false
+  `expected_unattempted`; venue-specific → catalogue rollup, NOT a matrix flip — BYBIT has per-contract `future`). Same
+  class as tradfi/sports; co-owned slot-7 G1-ENUM producer. Full write-up + P0 todos in
+  `cefi_manifest_canonicalisation_2026_06_01.md` § "G2 VERIFY PASS". gate-c (v9) tool-ready via G1-V8.
 - **sports (slot-4)**: BLOCKED by G1-ENUM (league-grain) + G1-V8 (v8) + needs AG-specific producer.
 - **tradfi (slot-6)**: catalogue + enumerate dry-run mechanism GREEN (588,798 candidates) — BUT this ran on the OLD
   over-fanning producer (predates G1-ENUM) → **re-validate the candidate set against slot-7's shape-aware producer**
@@ -267,8 +276,10 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       fix). Owner: `proper_instrument_catalogue_lifecycle_rollup_2026_06_04` (vm-cross-cutting) + per-AG slices of
       `instruments_manifest_canonicalisation_2026_06_01`. **DeFi (slot-2): code-ready + denominator regression shipped
       is@bb8fb203** (⑦-defi). cefi dry-run proven 2026-06-05.
-- [ ] [DATA] P0. **G1.dry-run — per-AG catalogue + enumerate dry-run** (read-only; cefi PROVEN 2026-06-05 on real prod
-      GCS; defi pending — each AG slot runs its own). **sports DRY-RUN DONE (slot-4, 2026-06-07): generic
+- [ ] [DATA] P0. **G1.dry-run — per-AG catalogue + enumerate dry-run** (read-only; **cefi RE-RUN on shape-aware producer
+      DONE slot-3 2026-06-07** — enumerate v2 exit 0, 3,446 plausible candidates, OPTION/COMBO bundle-skip working;
+      residual F1 chain-`data_type`-axis + F2 FUTURE bundle-grain gate apply-write, see cefi plan § "G2 VERIFY PASS";
+      defi pending — each AG slot runs its own). **sports DRY-RUN DONE (slot-4, 2026-06-07): generic
       `build_instrument_catalogue --asset-group sports` → 0-row catalogue (raw entity cols lack
       `instrument_key`/`instrument_id`; no `sports` branch in `run_rollup`) AND captured atom is per-LEAGUE not
       per-fixture → needs a league-grain `build_sports_catalogue_dataframe` producer before enumerate v2 can run. Full

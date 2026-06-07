@@ -56,6 +56,114 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 > remaining schema signal (`error_reason` for CF-5, object paths for CF-2/3/9) into a **reusable audit tool**, then the
 > walk lands every CF-1…CF-12 fix.
 
+## ✅ G2 VERIFY PASS — re-run on the WAVE-1 shape-aware code (slot-3, 2026-06-07)
+
+> **Scope**: the master coordinator's WAVE-2/G2 verify — prove the cefi migration CODE is dry-run-green on the WAVE-1
+> code (source-aware migrator/rebuild + shape-aware `enumerate_expected_universe` `is@6ea46565` + AG-parametric
+> instruments-store v9 migrator `is@febb899e` + UAC validity matrix `uac@97c26dbe`), all confirmed present on LDR. All
+> dry-runs READ-ONLY on real prod GCS (`-prd-central-element-323112`), `--apply` stays G4-gated. Where I sampled vs
+> walked is stated per step.
+
+**① migrator dry-run (MTDS `migrate_cefi_flat_to_v9_canonical.py`) — GREEN.** Window `2024-06-01` (300 day-tree objs) +
+projected the un-migrated `2024-06-01` objects directly (409 non-canon of 1,114): canonical dst inserts
+`pipeline_mode=batch_tardis/` **LEFT of** `asset_group=cefi/` (SOURCE-AWARE via `PipelineMode.BATCH_TARDIS` /
+`BATCH_HYPERLIQUID`, **not** coarse `batch`) — CF-3/CF-13 ✓. Per-symbol filenames preserved (incl Kraken 2-segment
+`BASE/QUOTE.parquet`); **bundle grain preserved** for `instrument_type=options_chain`/`futures_chain` (the
+`underlying=/quote=/margin=` segments are kept verbatim; pipeline_mode inserted after `day=`) — the BUNDLE-grain combo
+case verified ✓. Already-canonical days (`2026-05-24`) are idempotent no-ops (dst==src).
+`TOTAL planned/moved=0 (DRY-RUN)`.
+
+**② manifest-rebuild dry-run (`rebuild_cefi_manifest.py --dry-run`) — GREEN (exit 0), source-aware.** Window
+`2024-06-01..2024-06-07`. Re-emits via the UTL `record_captured/failed/empty` writer (the live-writer path → batch=live,
+CF-12 ✓), passing source-aware `derive_pipeline_mode_for_row(venue,"cefi",dt)` (CF-13 ✓) + `asset_group=cefi`. The
+writer stamps the v9 COLUMNS (`schema_version=9`/`asset_group`/`source`/`transport`/`available_at`) — NOT path-derived
+(the defi CF-2-gotcha is avoided). `phantom_to_failed=12`/week (matches the post-`mtds@60debbfe` residual). **BUT the 12
+are NOT "honest absence" — see Finding F1.** `unparseable=0`.
+
+**② instruments-store v9 dry-run (`migrate_instruments_store_v9.py --asset-group cefi`) — GREEN (exit 0).** `_index`
+transform projection on the real `-prd` `_index`: **30,803 rows v8→100% v9** (CF-1 ✓); `asset_group=cefi` 30,803/30,803
+(CF-2 ✓); `data_type=instruments` (CF-7 ✓); `pipeline_mode=batch_instruments_service` (reference provenance — NOT the
+market `tardis`; CF-3 ✓); `source=instruments_service` (CF-4 ✓); `transport=rest` (CF-TRANSPORT ✓); `available_at`
+filled 30,803/30,803 (CF-8 ✓); **honest capture_status**: `null_capture_to_captured=12,372` (all `instrument_count>0`),
+0 dishonest-empty (CF-10 ✓). Object-path walk: 28,174 objs →
+`pipeline_mode=batch_instruments_service/asset_group=cefi/venue=…/instruments.parquet`. →
+**cf_manifest_audit(instruments-store-cefi) projects CF-GREEN.** `--apply` G4-gated.
+
+**③ catalogue + enumerate dry-run on the SHAPE-AWARE producer — GREEN mechanism + PLAUSIBLE candidate set, with 2
+material could-exist findings (F1/F2).**
+`enumerate_expected_universe v2 --catalog-path gs://instruments-store-cefi-prd/prod/catalog.parquet --start-date 2024-06-01 --end-date 2024-06-02`
+(catalog 213,990 instruments; manifest present-set 2,639,403) → **3,446 candidates** (3,376 `expected_unattempted` + 70
+`EXPECTED_INSTRUMENT_DELISTED`). **Plausibility ✓**: no single-venue domination (OKX-SPOT/OKX-FUTURES/BINANCE-SPOT/
+OKX-SWAP/COINBASE-SPOT/BINANCE-FUTURES/BYBIT/HYPERLIQUID/DERIBIT/BITFINEX-FUTURES spread); **no impossible combos**
+(SPOT_PAIR→{trades,book,ohlcv} only; PERPETUAL/FUTURE→{trades,book,deriv,liq,ohlcv}); **OPTION (141,259) + COMBO
+(64,850) correctly produce ZERO rows** (matrix `frozenset()` → the G1-ENUM bundle-skip landed for cefi options/combos —
+this is the over-fan the dry-run was meant to catch, and it is FIXED). The candidate set is per-instrument grain
+(PERPETUAL 1,540 / SPOT_PAIR 1,026 / FUTURE 810).
+
+### 🔴 Finding F1 (P0, data-correctness) — cefi chain bundle `data_type` axis inconsistency (PATH is the outlier)
+
+The DERIBIT `options_chain`/`futures_chain` bundle OBJECTS are pathed
+`…/instrument_type=<chain>/data_type=trades/ underlying=U/quote=Q/margin=M/ticks.parquet`, but the **canonical
+`data_type` is `<chain>` (options_chain/futures_chain) per THREE independent sources**: the parquet's own internal
+`data_type` COLUMN (= `futures_chain`), the v8 manifest rows (`data_type=futures_chain`, count>0), and the UAC validity
+matrix (`("cefi","futures_chain")→{futures_chain}`). **Only the object PATH says `data_type=trades`.** The rebuild's
+object classifier (`parse_hive_path`) trusts the PATH → emits canonical captured rows with `data_type=trades`, which
+will NOT match the could-exist universe's expected `data_type=<chain>` cells → the ~169K cefi chain manifest rows
+(options_chain 65,768 + futures_chain 103,160) risk showing UNCAPTURED in the honest denominator. The **"12 residual
+phantoms"** (E5 §) are the SAME root: v8 rows with the canonical `data_type=<chain>` get demoted `→ attempted_failed`
+because objects are pathed under `data_type=trades`. **The E5 claim that the 12 are "verifiably NO object → honest
+absence → CORRECT" is INACCURATE** — I verified the objects DO exist
+(`day=2024-06-01/venue=DERIBIT/instrument_type=futures_chain/data_type=trades/underlying=BTC/…/ ticks.parquet`, 5,292
+trade rows, 7 contracts). Data is NOT lost (the object-scan re-emits a `data_type=trades` captured row), but the demote
+mints phantom `attempted_failed` cells AND the canonical `data_type` for chains is contradictory across writer-path vs
+UAC/manifest/parquet-column. Deribit is a `carry_staked_basis` hedge venue → critical path.
+
+### 🔴 Finding F2 (P0, could-exist denominator) — cefi FUTURE captured at futures_chain BUNDLE grain, enumerated per-contract
+
+DERIBIT futures are captured ONLY at `instrument_type=futures_chain` BUNDLE grain (one `underlying=BTC/ticks.parquet`
+holds all alive BTC futures; `instrument_id=''`), but the IS catalogue lists them as per-contract
+`instrument_type=FUTURE` (`DERIBIT:FUTURE:BTC-14JUN24`) → the enumerate produces per-contract `expected_unattempted`
+(160 in the 2-day sample = 16 contracts × 5 dt × 2 days; corpus-scale ~100K+) that the bundle capture can never match →
+**false coverage gaps**. Same class as slot-6 tradfi (per-contract producer vs bundle capture) + slot-4 sports (league
+grain). **NOT a blanket matrix flip**: capture grain is VENUE-SPECIFIC — DERIBIT = futures_chain bundle only;
+OKX-FUTURES = futures_chain per-symbol; **BYBIT has BOTH `future` (per-contract) AND `futures_chain`** — so
+`("cefi","future")→frozenset()` would WRONGLY skip BYBIT per-contract futures. The matrix is venue-agnostic and cannot
+express this; the correct fix is **catalogue-level (producer) venue-aware bundle rollup** — DERIBIT/OKX FUTURE roll up
+to a `futures_chain` bundle catalogue entry (mirror the options_chain/combo bundle treatment), BYBIT per-contract
+`future` stays. Co-owned with slot-7 (G1-ENUM central producer) per the master coordinator. The matrix row
+`("cefi","future")` is correctly flagged `# UNCERTAIN — cefi-owner verify` — **verified: per-contract is wrong for
+bundle-capture venues.**
+
+**VERDICT — cefi G2 (migrators) DRY-RUN GREEN; cefi G1 could-exist has F1/F2 gating `--apply-write`.** The three
+migrators (`migrate_cefi` paths, `rebuild_cefi_manifest`, `migrate_instruments_store_v9 --asset-group cefi`) are
+dry-run-green and stamp every canonical column correctly (CF-1/2/3/4/5/7/8/9/10/12/13 ✓ projected; CF-14 mechanism
+green). The v9 `--apply` (G4) remains gated on the coordinator's **G0** (pipeline_mode source-aware standard — cefi
+already conforms via `derive_pipeline_mode_for_row`) **∧ G1** (IS catalogue could-exist — **F1+F2 must land first**) **∧
+G3** (deployment UNION view) **∧ pre-migration drain**. F1+F2 are could-exist (G1) concerns, not migrator bugs, and are
+co-owned with slot-7's central G1-ENUM producer.
+
+- [ ] [DATA] P0. **F1 — cefi chain `data_type` axis: PATH `data_type=trades` vs canonical `<chain>`.** Reconcile the
+      writer/migrator/rebuild chain-bundle on-disk `data_type` with the canonical `data_type=<chain>` (parquet column +
+      v8 manifest + UAC matrix agree on `<chain>`; only the object PATH differs). Either (a) the writer/migrator emit
+      the bundle path under `data_type=<chain>` (consistent with the internal column), or (b) the rebuild classifier
+      maps the chain-bundle path `data_type` → the canonical `<chain>` for the covered-key + re-emitted row. **Correct
+      the E5 "12-phantom = honest absence CORRECT" claim** (objects DO exist; they are stale-axis, not absences).
+      Cross-repo (MTDS writer + migrator + rebuild + UAC) → co-owned slot-7; gates cefi G1.run apply-write. Provenance:
+      slot-3 G2 verify 2026-06-07. **Big finding — operator notified.**
+- [ ] [DATA] P0. **F2 — cefi FUTURE bundle-grain: catalogue venue-aware rollup.** DERIBIT/OKX-FUTURES `FUTURE` roll up
+      to a `futures_chain` bundle catalogue entry (one per underlying) so the enumerate produces bundle cells matching
+      the bundle capture; BYBIT per-contract `future` stays per-contract. Producer-level fix in
+      `build_instrument_catalogue.py` (co-owned slot-7 G1-ENUM central producer; mirror the options_chain/combo bundle
+      treatment + slot-6 tradfi). Verified cefi validity-matrix slice: `option/combo→frozenset()` ✓ correct;
+      `("cefi","future")` per-contract is WRONG for bundle-capture venues (venue-specific → not a matrix flip). Gates
+      cefi G1.run apply-write. Provenance: slot-3 G2 verify 2026-06-07.
+- [x] ✅ [DATA] P0. **G2 verify dry-runs (cefi) GREEN on WAVE-1 shape-aware code** — ① `migrate_cefi` (source-aware
+      `batch_tardis` path + bundle-grain preserved) · ② `rebuild_cefi_manifest --dry-run` exit 0 (writer-stamped v9
+      columns, source-aware) · ② `migrate_instruments_store_v9 --asset-group cefi` (30,803 rows→100% v9, all columns +
+      honest capture_status) · ③ `enumerate v2` exit 0, 3,446 plausible candidates (OPTION/COMBO bundle-skip working, no
+      over-fan, no impossible combos). Surfaced F1+F2 (could-exist, gating apply-write). mtds@`is@6ea46565`/
+      `febb899e`/`uac@97c26dbe` present on LDR. Evidence in this § (slot-3 2026-06-07).
+
 ## Slot-3 CeFi master orchestrator — owned + attached plans/issues
 
 > **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot. **Slot 3 = CeFi end-to-end** across every
