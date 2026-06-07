@@ -756,17 +756,23 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
 
 ### AMM matcher coverage (migrated from archived `defi_simulation_realism_2026_05_10`)
 
-- [ ] [AGENT] P1. **`SolidlyCLForkPool` matcher for Velodrome/Aerodrome Slipstream V3-tick CL pools** — register to
-      `PoolShape.SOLIDLY_CL_FORK` (declared enum value; LDR `execution-service` `test_pool_matcher.py` confirms "no
-      registered matcher yet — Phase-2H follow-up"). Reuses Uniswap-V3 tick math + `(chain_id, CLFactory)` discriminator
-      (chain 10 = Optimism/Velodrome, 8453 = Base/Aerodrome). Validation: ≥20-Velodrome + ≥20-Aerodrome historical-swap
-      golden-fixture checks within 5 bps each. **MIGRATED FROM:** `plans/archive/defi_simulation_realism_2026_05_10.md`
-      Phase 2H (DEFERRED P1; lost its active home on archival). **A partial implementation already exists** on
-      orphan-WIP `execution-service@8becdb26` — preserved at branch `wip/solidly-cl-fork-matcher-8becdb26` (adds
-      `SolidlyCLForkPool` + `matching_engine/__init__.py` export + `test_pool_matcher` cases). Needs reconciliation with
-      LDR's current `solidly_fork.py` + the "no matcher yet" assertion in `test_pool_matcher.py`, plus the ≥20+≥20
-      golden-swap validation, before QG + quickmerge. Surfaced 2026-06-07 during execution-service tab-branch drift
-      triage (tab/ikennaigboaka/11 realigned to LDR after preservation).
+- [x] ✅ [AGENT] P1. **`SolidlyCLForkPool` matcher for Velodrome/Aerodrome Slipstream V3-tick CL pools** —
+      execution-service@`e8ecd0d38` (on `live-defi-rollout`; staging promotion auto-sequences behind
+      unified-trading-library per the dep-order gate). Registered to `PoolShape.SOLIDLY_CL_FORK` as a thin
+      `UniswapV3Pool` subclass (Slipstream CL is byte-for-byte V3 tick math) + `(chain_id, factory_address)`
+      discriminator (chain 10 = Optimism/Velodrome, 8453 = Base/Aerodrome); exported from `matching_engine`. Tests:
+      added to `_ALL_POOLS` suite + `test_registry_covers_implemented_shapes`, new `test_solidly_cl_fork_reuses_v3_math`
+      (numeric equivalence to a V3 pool — the correctness proof) +
+      `test_solidly_cl_fork_snapshot_carries_discriminator`, repointed `test_unregistered_shape_raises` to
+      `CURVE_CRYPTO`. QG-green; 60 unit tests pass. **MIGRATED FROM:**
+      `plans/archive/defi_simulation_realism_2026_05_10.md` Phase 2H (DEFERRED P1; lost its home on archival);
+      reconciled from orphan-WIP `execution-service@8becdb26` (preserved at `wip/solidly-cl-fork-matcher-8becdb26`).
+- [ ] [AGENT] P2. **`SolidlyCLForkPool` historical golden-swap validation** — ≥20-Velodrome + ≥20-Aerodrome real
+      on-chain Slipstream `Swap`-event fixtures within 5 bps each (the on-chain-data half of the Phase-2H criterion).
+      Same golden-harness pattern as the real Alchemy-sourced fixtures already on LDR in
+      `tests/integration/fixtures/amm_golden_swaps/`. Lower priority than the matcher itself because Slipstream uses the
+      unaltered Uniswap-V3 `SwapMath` contracts, so the V3-equivalence unit test above already covers the math; this
+      adds on-chain ground-truth confirmation. (execution-service)
 
 ### Custody (Copper + Cloud-KMS for May-23 + Fireblocks June-1)
 
