@@ -75,8 +75,19 @@ def decide(current_status: str, main_concl: Conclusion, staging_concl: Conclusio
     if cur in GREEN_TIERS and expected == "FAILING":
         return Decision(True, "FAILING", f"missed-regression: ci_status={cur} but latest v2 failed → FAILING")
 
-    # Everything else (match, green↔green tier diff, or current is a transient
-    # state like STAGING_PENDING) → leave alone. Not drift this guard corrects.
+    # Drift 3 — missed-MAIN_GREEN: the repo's v2 PASSED on `main` (so it is on-main-
+    # validated) but ci_status shows a LOWER green tier — typically because the live
+    # ldr→staging promoter re-ran v2 on `staging` AFTER the main run and ci-status-update
+    # last-writer-wins'd it down to STAGING_GREEN. MAIN_GREEN is the dep-order-gate
+    # signal staging-to-main reads; without this upgrade the bottom-up fleet drain
+    # DEADLOCKS (a base repo like uac/utl never reads MAIN_GREEN, so none of its
+    # dependents ever become promote-ready). Only ever upgrades UP to MAIN_GREEN, and
+    # only when main v2 is genuinely green — never a downgrade, never invents a pass.
+    if cur in GREEN_TIERS and cur != "MAIN_GREEN" and main_concl == "success":
+        return Decision(True, "MAIN_GREEN", f"missed-main-green: ci_status={cur} but main v2 is green → MAIN_GREEN")
+
+    # Everything else (match, lower green↔green tier diff with no main pass, or current
+    # is a transient state like STAGING_PENDING) → leave alone. Not drift this corrects.
     return Decision(False, cur, f"no actionable drift (current={cur}, expected={expected})")
 
 

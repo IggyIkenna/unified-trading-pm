@@ -36,11 +36,28 @@ def test_no_drift_when_status_matches_v2() -> None:
     assert d.reconcile is False
 
 
-def test_green_to_green_tier_diff_is_not_corrected() -> None:
-    # FEATURE_GREEN current, v2 green on main (→MAIN_GREEN expected): a promotion-state
-    # difference, NOT a drift this guard touches.
-    d = mod.decide("FEATURE_GREEN", main_concl="success", staging_concl="", ldr_concl="success")
+def test_lower_green_to_green_tier_diff_without_main_pass_is_not_corrected() -> None:
+    # FEATURE_GREEN current, v2 green only on staging (no main run): a lower green↔green
+    # promotion-state difference with NO main pass — NOT a drift this guard touches.
+    d = mod.decide("FEATURE_GREEN", main_concl="", staging_concl="success", ldr_concl="success")
     assert d.reconcile is False
+
+
+def test_missed_main_green_upgrades_when_main_v2_passed() -> None:
+    # Drift 3 — the deadlock case. A repo on main with a GREEN main v2 but ci_status
+    # knocked down to a lower green tier (e.g. STAGING_GREEN, from the live ldr→staging
+    # promoter re-running v2 on staging after the main run). MAIN_GREEN is the dep-order
+    # gate signal — without this upgrade the bottom-up fleet drain DEADLOCKS.
+    d = mod.decide("STAGING_GREEN", main_concl="success", staging_concl="success", ldr_concl="success")
+    assert d.reconcile is True
+    assert d.target_status == "MAIN_GREEN"
+    # also upgrades from FEATURE_GREEN when main v2 is green
+    d2 = mod.decide("FEATURE_GREEN", main_concl="success", staging_concl="", ldr_concl="success")
+    assert d2.reconcile is True
+    assert d2.target_status == "MAIN_GREEN"
+    # but NOT when main v2 is absent/not-success (no false upgrade)
+    d3 = mod.decide("STAGING_GREEN", main_concl="", staging_concl="success", ldr_concl="success")
+    assert d3.reconcile is False
 
 
 def test_absent_v2_signal_is_failsafe_noop() -> None:
