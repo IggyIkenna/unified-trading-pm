@@ -200,11 +200,34 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > (central fix) + a verify-slice todo in each AG plan. **Re-scopes WAVE-1 slot-7**: the "generic foundation" must be
 > AG-shape-aware, NOT one-size fan-out.
 >
-> **G1-V8 (P1, cross-AG companion)**: cefi `instruments-store-cefi` `_index` is still **100% v8** (no
-> source/pipeline_mode/asset_group, 40% null `capture_status`, blank `data_type`, 23 legacy cells) — same v8 state
-> slot-4 found for sports. The IS `_index` v8→v9 single-walk (the per-AG slice of
-> `instruments_manifest_canonicalisation`) is a G1 prerequisite NOT yet met for cefi/sports — its `--apply` is gated on
-> coordinator G0. Each AG owner confirms their instruments-store v9 walk before G1.run.
+> **🔴 G1-V8 (P0 — UPGRADED, cross-AG, the SECOND G1 long pole): the instruments-store v9 MIGRATOR DOES NOT EXIST yet.**
+> Confirmed v8 across **cefi (100% v8), sports (v8), tradfi (0.8% v9 / 20,218 rows v8)** — and slot-6 found the fix is
+> "a gated G4-class single-walk `--apply` with **no migrator built yet** (instruments*manifest **E2**,
+> vm-cross-cutting)". So gate-c (v9 `_index`) is UNMET for every AG **because the tool to fix it hasn't been written**.
+> This gates EVERY AG's G1.run apply-write alongside G1-ENUM. **Owner: vm-cross-cutting must BUILD the
+> `instruments_manifest` E2 v9 single-walk migrator** (asset_group=/pipeline_mode=batch*<source>/source/transport/
+> available_at/typed data_type) for the instruments-store buckets — the analogue of the per-AG MTDS migrators, which
+> don't exist for the IS reference surface. Until it lands, no AG's instruments-store goes v9 → no honest G1 seed.
+> Tracked: `instruments_manifest_canonicalisation_2026_06_01` (must spawn the E2 migrator) + each AG plan's §H.
+
+**Two G1 long poles gate every AG's `--apply-write` seed (both cross-cutting, both must land first):**
+
+1. **G1-ENUM** — slot-7's shape-aware `enumerate_expected_universe` producer (validity matrix + bundle-grain).
+2. **G1-V8** — the not-yet-built `instruments_manifest` E2 v9 migrator for the instruments-store buckets
+   (vm-cross-cutting).
+
+**Per-AG G1 status (WAVE-1 dry-runs):**
+
+- **cefi (slot-3)**: enumerate mechanism green; BLOCKED by G1-ENUM (combo/bundle) + G1-V8.
+- **sports (slot-4)**: BLOCKED by G1-ENUM (league-grain) + G1-V8 (v8) + needs AG-specific producer.
+- **tradfi (slot-6)**: catalogue + enumerate dry-run mechanism GREEN (588,798 candidates) — BUT this ran on the OLD
+  over-fanning producer (predates G1-ENUM) → **re-validate the candidate set against slot-7's shape-aware producer**
+  (tradfi is per-contract so less bundle-affected than cefi, but impossible-combo filtering still applies). gate-b
+  (capture FROZEN — catalogue marks ~651K delisted) **remediated**: slot-6 shipped the **Massive IS reference adapter**
+  (uac@12974b11/#91 + is@c0f2f39c/#407, auto-merging to staging) so tradfi reference data is no longer frozen. gate-c
+  (v9) still blocked on G1-V8.
+- **defi (slot-2)**, **prediction (slot-5)**: prediction's per-cqg producer is the G1-ENUM reference; both still owe
+  their v9 walk (G1-V8) + dry-run.
 
 **The could-exist universe = (IS instrument lifecycle catalogue) × (UAC availability rules).** The two halves:
 
