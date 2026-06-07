@@ -2,8 +2,15 @@
 #
 # rollout-agent-workflows.sh — Roll out autonomous agent workflows to all service repos
 #
-# Copies agent-audit.yml, semver-agent.yml, and plan-alignment-agent.yml from templates
-# to each target repo listed in workspace-manifest.json, substituting per-repo values.
+# Copies agent-audit.yml and plan-alignment-agent.yml from templates to each target repo
+# listed in workspace-manifest.json, substituting per-repo values.
+#
+# semver-agent.yml is NOT handled here (2026-06-07). Its canonical SSOT is
+# scripts/workflow-templates/semver-agent.yml.tmpl and the canonical rollout tool is
+# scripts/propagation/rollout-semver-agent.sh — this script used to read the DEAD
+# scripts/templates/semver-agent.yml (since deleted), which would have REGRESSED the
+# already-deployed `quality-gates-v2` trigger back to the dead `"Quality Gates"` check and
+# re-introduced the broken `../unified-trading-pm` checkout. Run the dedicated tool instead.
 #
 # Usage:
 #   bash scripts/rollout-agent-workflows.sh [--dry-run] [--repo REPO_NAME] [--secrets]
@@ -74,7 +81,7 @@ else
     exit 1
 fi
 
-[ -f "$TEMPLATES_DIR/semver-agent.yml" ] && ok "semver-agent.yml template found" || { fail "semver-agent.yml template missing at $TEMPLATES_DIR/semver-agent.yml"; exit 1; }
+# semver-agent.yml is rolled out by scripts/propagation/rollout-semver-agent.sh (canonical SSOT) — not here.
 [ -f "$TEMPLATES_DIR/plan-alignment-agent.yml" ] && ok "plan-alignment-agent.yml template found" || { fail "plan-alignment-agent.yml template missing"; exit 1; }
 
 # ── GET TARGET REPOS FROM MANIFEST ───────────────────────────────────────────
@@ -167,22 +174,6 @@ print('$REPO'.replace('-', '_'))
         echo "  agent-audit.yml unchanged"
     fi
 
-    # ── semver-agent.yml ─────────────────────────────────────────────────────
-    TARGET_SEMVER="$WORKFLOWS_DIR/semver-agent.yml"
-    NEW_CONTENT=$(sed "s|{{SERVICE_NAME}}|$SERVICE_NAME|g; s|{{SOURCE_DIR}}|$SOURCE_DIR|g" "$TEMPLATES_DIR/semver-agent.yml")
-    EXISTING=$(cat "$TARGET_SEMVER" 2>/dev/null || echo "")
-    if [ "$NEW_CONTENT" != "$EXISTING" ]; then
-        if [ "$DRY_RUN" = true ]; then
-            warn "  [DRY RUN] Would update $TARGET_SEMVER"
-        else
-            echo "$NEW_CONTENT" > "$TARGET_SEMVER"
-            ok "  Updated semver-agent.yml"
-        fi
-        CHANGED=true
-    else
-        echo "  semver-agent.yml unchanged"
-    fi
-
     # ── plan-alignment-agent.yml ─────────────────────────────────────────────
     TARGET_PLAN="$WORKFLOWS_DIR/plan-alignment-agent.yml"
     NEW_CONTENT=$(sed "s|{{SERVICE_NAME}}|$SERVICE_NAME|g" "$TEMPLATES_DIR/plan-alignment-agent.yml")
@@ -202,12 +193,12 @@ print('$REPO'.replace('-', '_'))
     # ── COMMIT AND PUSH ───────────────────────────────────────────────────────
     if [ "$CHANGED" = true ] && [ "$DRY_RUN" = false ]; then
         pushd "$REPO_DIR" > /dev/null
-        git add .github/workflows/agent-audit.yml .github/workflows/semver-agent.yml .github/workflows/plan-alignment-agent.yml 2>/dev/null || true
+        git add .github/workflows/agent-audit.yml .github/workflows/plan-alignment-agent.yml 2>/dev/null || true
         if git diff --cached --quiet; then
             echo "  Nothing staged — skipping commit"
         else
-            bash scripts/quickmerge.sh "chore: rollout autonomous agent workflows (agent-audit, semver, plan-alignment)" \
-                --files ".github/workflows/agent-audit.yml .github/workflows/semver-agent.yml .github/workflows/plan-alignment-agent.yml" \
+            bash scripts/quickmerge.sh "chore: rollout autonomous agent workflows (agent-audit, plan-alignment)" \
+                --files ".github/workflows/agent-audit.yml .github/workflows/plan-alignment-agent.yml" \
                 --agent 2>&1 | tail -5 || warn "  quickmerge failed for $REPO — check manually"
         fi
         popd > /dev/null
