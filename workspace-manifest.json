@@ -1802,6 +1802,7 @@
     "locked_reason": "Breaking MINOR bump cascade: unified-api-contracts=0.2.0 (pre-1.0.0)",
     "lock_version": "0.2.0",
     "pending_repos": [
+      "deployment-service",
       "features-service",
       "fund-administration-service",
       "instruments-service",
@@ -1809,7 +1810,7 @@
       "greeks-service",
       "trading-agent-service"
     ],
-    "sit_retry_count": 2,
+    "sit_retry_count": 3,
     "locked_alert_sent": false
   },
   "staging_commits": {
