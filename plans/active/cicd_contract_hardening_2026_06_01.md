@@ -2968,3 +2968,40 @@ now drains main bottom-up via the (now-correct) machinery: version-bump (auto on
 fixed; should green now staging carries the aiohttp cap) → staging-to-main (promote-ready/skip-blocked). Remaining =
 iterative multi-tier drain to converge every repo's `main` + the WAVE-1/2 machinery todos; no frozen-pipeline blockers
 remain. Minor cleanup: a few duplicate open LDR→staging resync PRs (harmless; auto-close as the canonical drain merges).
+
+### 🟢 UPDATE 2 — convergence mechanism nailed + machinery todos worked (2026-06-07)
+
+**Fleet-drain convergence mechanism (was misdiagnosed as SIT-gated; it is NOT):** the dep-order gate needs each dep at
+`ci_status MAIN_GREEN` (or SIT_VALIDATED). **MAIN_GREEN is emitted directly by a repo's `quality-gates-v2` SUCCESS on
+`main`** (per `scripts/cicd/ci_status_reconciler.py::expected_from_v2` — main→MAIN_GREEN, staging→STAGING_GREEN,
+ldr→FEATURE_GREEN; the "SIT_VALIDATED→MAIN_GREEN" comment in ci-status-update is stale). So the fleet converges
+**bottom-up without SIT**: T0 (uac) on main + main-v2-green → `ci-status-reconciler` (Guard 3, `*/10` cron + manual)
+sets uac=MAIN_GREEN → uac's dependents become dep-order-READY → staging-to-main promotes them → their main-v2 →
+MAIN_GREEN → next tier. instruments + alerting already show MAIN_GREEN, proving it works. **The earlier stall was
+self-inflicted:** a drain loop that dispatched `v2-on-staging` every cycle re-bumped versions → reset ci_status to
+FEATURE_GREEN faster than it could advance. **Correct engine (now running): reconciler + staging-to-main only, NO
+v2-on-staging churn** (clean cascade loop). Repos converge tier-by-tier.
+
+**WAVE-1/2 machinery todos — DONE this session** (PM PRs #146/#147/#149/#151/#152/#153; AO @b10af714):
+default-branch-drift verifier (now manifest-sourced), actionlint [5.5] re-enabled (+7 nits fixed), ci-failure alert
+bookends (resolved/SIT-pass/main-severity), plan-health-gate ROOT-CAUSED+FIXED+green (persist-on-PR bug +
+todo-regression TOTAL-count fix), divergence active-host-filter confirmed fleet-current, `uv lock` added to dep-bump
+workflows, AO main-v2 fixed + AO staging/quickmerge/G9-conflict-resolver/F8/F12/bootstrap-cron done + AO auto-rebasing
+mirror confirmed. SIT smoke-test-gate sibling-clone fixed (`system-integration-tests@dc00485`) + promoted to SIT main
+(PR #27).
+
+**Genuine blockers (the "no possible alternative" cases — documented, not deferrable-by-choice):**
+- **AO branch-protection ruleset / auto-merge = `403 Upgrade to GitHub Pro`** — agent-orchestrator is a private repo
+  without GitHub Pro; rulesets+auto-merge are Pro-gated. Mitigation: v2 runs+passes every push, manual v2-gated merge.
+  Resolve by GitHub Pro OR making the repo public (operator/billing). [BLOCKED-BILLING]
+- **F7/F13 (slot-4 WIP recovery; vm-0 dirty-tree hygiene) = live-host SSH ops on the running orchestrator VM** — cannot
+  be done from a laptop slot; the F8 `realign-worktree-branches.sh` self-heals the naming half on next FF-pull.
+  [BLOCKED-INFRA]
+- **plan-health-gate required-check PIN** — my fine-grained PAT HAS admin (can PATCH PM rulesets); deferred to AFTER the
+  cascade converges (adding a required check mid-cascade could block the automated promotion merges). Gate is green +
+  ready to pin.
+
+**Still iterating (the clean cascade loop is driving this):** bottom-up fleet convergence of every repo's `main`. Plus
+fleet-rollout of the fixed semver-agent.yml + tab-mirror to all 24 repos' live workflows (correct tool:
+`scripts/propagation/rollout-agent-workflows.sh`, NOT the `cp`-only `rollout-semver-agent.sh`) — hold until cascade
+settles to avoid adding undrained LDR commits mid-convergence.
