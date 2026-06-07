@@ -1350,6 +1350,15 @@ CF-GREEN-on-real- data + the fleet drain + operator.
       fix `_enumerate_v2_sports` present_cols to league-grain, with a unit test (producer → `_catalog_from_dataframe` →
       `enumerate_v2(asset_group=sports)` emits `expected_unattempted` against a league-grain present_set, skips captured
       cells). Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [INFRA] P2. ⑦/⑧ sports catalogue-regen scheduler — **NOT LIVE (slot-4 verified 2026-06-07)**: the TF jobs
+      `catalogue-regen-nightly` (catalogue_regen_scheduler.tf, sports in `for_each`) +
+      `instrument-catalogue-regen-nightly` (instrument_catalogue_scheduler.tf) are absent from the live prod scheduler
+      (`gcloud scheduler jobs list     --location=asia-northeast1` — only consolidator +
+      `instruments-service-daily-trigger` are ENABLED). So the daily catalogue aggregation is wired in TF for sports but
+      **not deployed** for ANY AG. Blocked behind the league-grain producer regardless (a scheduled sports regen today
+      would emit a 0-row catalogue). Cross-AG infra owned by vm-cross-cutting
+      (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` G1.schedule); this row tracks the sports-slice
+      verification. Repo: deployment-service (terraform). parent_epic: mtds_mdps_master.
 - [ ] [DATA] P1. ⑦ sports apply-write run — **GATED** (do AFTER the producer above + these unmet gates, slot-4
       2026-06-07): (a) slot-7 PART C G1-foundation code GREEN (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`
       — 2/7 done at check); (b) sports IS instrument backfill complete (`by_date` capture FROZEN ~2026-05-21 fleet-wide
