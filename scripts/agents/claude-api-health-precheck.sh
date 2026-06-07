@@ -23,6 +23,19 @@ check_claude_api_health() {
   local org="${GH_ORG:-IggyIkenna}"
   local calling_workflow="${CALLING_WORKFLOW:-unknown}"
 
+  # RETIRED 2026-06-07 — ALWAYS-PASS NO-OP. The fleet no longer uses the pay-per-call Claude API:
+  # every agent escalates to an agent-orchestrator VM worker running on Claude Code session auth
+  # (setup-tokens), so the raw-API billing/health probed by `claude-api-health-monitor.yml` (now
+  # DELETED) is irrelevant — and gating on it FALSE-DAMMED the agentic-CI layer during credit
+  # outages (the documented cascade-dammer). The real "out of capacity" signal is
+  # agent-orchestrator's per-account `account_status`, which fires `notify_all_accounts_unusable`
+  # to #agent-orchestrator-alerts only when ALL Claude Code accounts go unusable. This shim keeps
+  # the workflows that still `source` it working; remove the call sites at leisure. SSOT:
+  # cicd_contract_hardening_2026_06_01 § billing-alert retirement.
+  echo "[claude-health-precheck] RETIRED no-op — Claude API unused (AO account-health is the SSOT); proceeding."
+  return 0
+
+  # --- unreachable below (retained for history) ---
   # Emergency override
   if [ "${SKIP_HEALTH_CHECK:-false}" = "true" ]; then
     echo "[claude-health-precheck] SKIP_HEALTH_CHECK=true — bypassing health check"

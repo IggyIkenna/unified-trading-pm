@@ -1,7 +1,8 @@
 name: ci-status-update
 
-# Receives repository_dispatch from quality-gates workflows (python-quality-gates.yml,
-# ui-quality-gates.yml) when QG completes. Updates workspace-manifest.json ci_status
+# Receives repository_dispatch from the quality-gates workflows (python-quality-gates-v2.yml /
+# ui-quality-gates-v2.yml; the v1 callers/callee were retired 2026-05-29) when QG completes.
+# Updates workspace-manifest.json ci_status
 # for the repo, regenerates the DAG SVG, and commits. ci_status is the single source
 # of truth for QG state — quality_gate_status is removed.
 #
