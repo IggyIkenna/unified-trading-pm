@@ -2080,17 +2080,22 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       Surgical: +`locked_by` on orchestrator_fleet_worker_spawn + planning_vm_canonical (frontmatter);
       `cefi_manifest:125` malformed `- [ ] grep…` → canonical `- [ ] [SCRIPT] P3.` (kept open so todo-regression stays
       green); todo-regression already green in a clean tree. Sweep `--ci` now Hard failures: 0.
-- [ ] [SCRIPT] P1. **Make `plan-health-gate` a REQUIRED status check on PM `main`** (gh ruleset) — ONLY after the gate
-      workflow (`a62a16531`) reaches main + sweep stays green. This is the switch that turns the `exit 1` into a true
-      merge block. repo: unified-trading-pm. **ROOT-CAUSE FOUND + FIXED 2026-06-07 (PM@<sha>), required-check PIN still
-      pending green-confirmation:** the `Plan Health Agent` run was marked `failure` on EVERY PR even though the
-      `plan-health-gate` JOB succeeded — the `persist` job (`needs: [plan-health, notify]`, `if: always()`) ran on PRs
-      where `plan-health`/`notify` are skipped, persisting a meaningless "skipped" conclusion and flipping the whole run
-      to `failure`. Fix: scoped `persist` to `github.event_name != 'pull_request'` (matches `notify`), so a PR run is
-      gate(success)+plan-health(skip)+notify(skip)+persist(skip) = GREEN. (Separately, the daily SCHEDULED `plan-health`
-      job fails at the Claude-API health precheck when the API is unhealthy — that's by-design fail-loud in the LLM
-      path, does NOT affect the PR required-check.) **DO NOT pin as required until** a post-merge PR run of this
-      workflow is observed GREEN end-to-end; pin via `gh api` ruleset add of context `plan-health-gate` once confirmed.
+- [ ] [SCRIPT] P1. [BLOCKED-OPERATOR — token lacks `Administration: write`] **Make `plan-health-gate` a REQUIRED status
+      check on PM `main`** (gh ruleset). **ROOT-CAUSE FIXED + GATE VERIFIED GREEN 2026-06-07 (PM #152, merged):** the
+      `Plan Health Agent` run was marked `failure` on EVERY PR even though the `plan-health-gate` JOB succeeded — the
+      `persist` job (`needs: [plan-health, notify]`, `if: always()`) ran on PRs where `plan-health`/`notify` are
+      skipped, persisting a meaningless "skipped" conclusion and flipping the whole run to `failure`. Fix: scoped
+      `persist` to `github.event_name != 'pull_request'` (matches `notify`). A SECOND blocker surfaced + fixed:
+      `check_todo_regression.sh` counted OPEN-only todos so every mandated `[ ]`→`[x]` flip read as "lost todos" → gate
+      red (fixed to TOTAL-todo invariant, separate todo below). **VERIFIED:** on PM #152 head `f73baf712` the
+      `plan-health-gate` check ran **SUCCESS** (and quality-gates-v2 SUCCESS) → PR auto-merged. So the gate is now
+      reliably green and pinning it will NOT deadlock merges. (Separately, the daily SCHEDULED `plan-health` job fails
+      at the Claude-API health precheck when the API is unhealthy — by-design fail-loud LLM path, NOT the PR gate.)
+      **PIN BLOCKED on token permission:** `gh api     -X PATCH repos/IggyIkenna/unified-trading-pm/rulesets/13647441`
+      (adding context `plan-health-gate` beside `quality-gates-v2`) returns **404 — the available tokens (keyring `gho_`
+      repo-scope + the fine-grained PAT) can READ rulesets but lack `Administration: write` to modify them**.
+      Operator/admin-token action: PATCH ruleset 13647441 to add `plan-health-gate` to `required_status_checks` (payload
+      ready at the GET shape; `strict=false`). repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P1. **`check_todo_regression.sh` false-positived on the MANDATED `[ ]`→`[x]` flip** — FIXED 2026-06-07
       (PM@<sha>). The gate counted OPEN `- [ ]` todos only and failed when current < origin — so every legitimate
       Commit+Push+Flip (which moves a line from `[ ]` to `[x]`, COMPLETING not losing it) read as "N lost open todos"
