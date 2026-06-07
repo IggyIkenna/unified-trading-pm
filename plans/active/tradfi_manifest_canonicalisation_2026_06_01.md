@@ -765,7 +765,16 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
       (CONFLICT-2). **The FIX = the gated single-walk in `instruments_manifest_canonicalisation_2026_06_01.md` §C/E**
       (vm-cross-cutting PRIMARY; E2 "build/extend the instruments migrator" is still `[ ]` — **no non-sports
       instruments-store v9 migrator exists yet**) — a **G4-class `--apply`** gated on G0 (standardisation Phase-0
-      code) + pre-migration drain. **OUT OF SCOPE for this G1 wave (gated apply); flagged as gate-c below.**
+      code) + pre-migration drain. **OUT OF SCOPE for this G1 wave (gated apply); flagged as gate-c below.** - **UPDATE
+      (slot-6 2026-06-07 session-2) — the E2 v9 migrator NOW EXISTS + tradfi DRY-RUN GREEN.** The AG-parametric
+      `instruments-service/scripts/migrate_instruments_store_v9.py` (is@febb899e) is built;
+      `--asset-group tradfi --skip-objects` (read-only) projects the 20,388-row `_index` **v8→v9 100%** (v8_before
+      20,218 + v9_before 170 → v9_after 20,388): CF-1 `schema_version={9:20388}` · CF-2 `asset_group=tradfi` · CF-3
+      `pipeline_mode=batch_instruments_service` · CF-4 `source=instruments_service` · CF-TRANSPORT `transport=rest` ·
+      CF-7 `data_type=instruments` · CF-8 `available_at` filled 20,388 · CF-10 honest 4-state (19,247 captured / 1,141
+      empty_confirmed; 10,647 null→captured, 654 null→empty, 425 captured-but-empty→empty, 1,079 typed reasons). So
+      **gate-c is now TOOL-READY** — the transform is correct; only the gated `--apply` RUN (the v9 WRITE, on a VM after
+      G0 + drain) remains. The Step-1 "no migrator exists yet" text above is SUPERSEDED.
 
 ### Step 2 — catalogue + enumerate DRY-RUN (read-only) → mechanism GREEN
 
@@ -837,20 +846,32 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
     per-contract → ~563K false candidates (grain mismatch).** Gate-(a) needs the **G1-ENUM bundle-grain rollup for
     tradfi** (catalogue emits options_chain/futures_chain bundles + the matrix entries) — see the 🔴 ROOT-CAUSE FINDING
     todo above. Not green until that lands and the re-run drops to a sane count.
+    - **RE-VERIFIED slot-6 2026-06-07 session-2 — gate-(a) STILL RED, PART A still the blocker.** (1) Live UAC accessor
+      confirms the matrix gap: `valid_data_types_for_instrument_type("tradfi", X)` returns **None** for `option` /
+      `combo` / `options_chain` / `futures_chain` / `future`
+      (equity/etf/index/bond/cds/event_contract/commodity/currency ARE mapped). (2) The catalogue instrument_type
+      distribution (sampled day=2026-06-07, 33,258 rows) is **OPTION 31,282 (94%)** · FUTURE 1,163 · EQUITY 197 · ETF 67
+      · INDEX 1 · SPOT_PAIR 1 → the over-fan is per-contract OPTION. (3) `build_instrument_catalogue.py` STILL emits NO
+      `options_chain`/`futures_chain` bundle rows (only prediction multi-grain) and the master coordinator confirms
+      "PART A NOT shipped" — slot-7's `dd7fa100 grain_for_instrument_type SSOT` is progress, not the catalogue emission.
+      The matrix fix (above) MUST co-land with PART A (a lone `option→frozenset()` makes options vanish =
+      false-absence). **Per the operator gate, the enumerate re-validation stays HELD until slot-7 confirms PART A
+      green.** The MTDS migrator + instruments-store v9 prep are GREEN (below).
   - **(b) tradfi IS instrument backfill complete: ❌ UNMET** — IS `by_date` capture **degraded 16-18K→~2/day after
     2026-05-04, stopped after 2026-05-22** (freeze FINDING in
     `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`); the catalogue marks **651,661/684,372 (95%) delisted** →
     liveness PROVISIONAL. Seeding `expected_unattempted` against a frozen catalogue would write a WRONG could-exist
     denominator. **Unblock = the Massive IS reference adapter (gate-b remediation, shipped this session — see below) →
     re-feed `by_date/` → regenerate the catalogue → THEN seed.**
-  - **(c) accurate UAC + v9 indices: ❌ UNMET, BLOCKED ON G1-V8 MIGRATOR BUILD (operator 2026-06-07)** —
-    instruments-store-tradfi `_index` is NOT v9 (Step 1, RED) AND the `market-data-tick-tradfi-prd` `_index` the seed
-    writes is still v8 (CONFLICT-2). The v9 fix is now explicitly blocked on the cross-cutting **instruments_manifest E2
-    migrator BUILD (G1-V8)** — `instruments_manifest_canonicalisation_2026_06_01.md` §C/E2 "build/extend the instruments
-    migrator" is still `[ ]` (vm-cross-cutting); **no non-sports instruments-store v9 migrator exists yet**. Once it
-    exists + G0 is green, run its `--apply` on `instruments-store-tradfi-prd` (pre-migration drain + snapshot first).
-    `--apply-write` must seed the **post-migration v9 `_index`** (seeding the v8 corpus would be rewritten by the walk)
-    — so G1.run rides AFTER that v9 walk. It also hard-requires a VM (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`).
+  - **(c) accurate UAC + v9 indices: ⏳ TOOL-READY (UPDATED slot-6 2026-06-07 session-2) — the G1-V8 migrator is now
+    BUILT (is@febb899e) + tradfi dry-run GREEN (20,388 `_index` rows → v9 100%, all CF stamps; see Step-1 UPDATE).** The
+    `instruments-store-tradfi` `_index` is still v8 ON DISK (the dry-run only PROJECTS v9) AND the
+    `market-data-tick-tradfi-prd` `_index` the seed writes is still v8 (CONFLICT-2). So gate-c is no longer "blocked on
+    a migrator that doesn't exist" — the tool is ready; what remains is the gated `--apply` RUN. Once G0 is green, run
+    `migrate_instruments_store_v9 --asset-group tradfi --apply` on `instruments-store-tradfi-prd` (pre-migration drain +
+    snapshot first). `--apply-write` must seed the **post-migration v9 `_index`** (seeding the v8 corpus would be
+    rewritten by the walk) — so G1.run rides AFTER that v9 walk. It also hard-requires a VM
+    (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`).
   - **Disposition**: dry-run PROVEN (Step 2); the irreversible seed waits on (b)+(c). NOT `DEFERRED` — gated with named
     unblocks (Massive capture-restore + the v9 walks). parent_epic: mtds_mdps_master.
 
@@ -867,6 +888,30 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
       `by_date/` self-perpetuates a stale catalogue) — wire once Massive capture restores `by_date/`. Owner:
       vm-cross-cutting (shared producer scheduler) + slot-6 (confirm tradfi inclusion). Repo: deployment-service
       (terraform). parent_epic: mtds_mdps_master.
+
+### G2 prep status (slot-6 2026-06-07 session-2) — unblocked prep DONE; apply-ready HELD on PART A
+
+> Operator GATE: "do NOT start the enumerate dry-run re-validation until slot-7 confirms the bundle-grain rollup is
+> GREEN." PART A is **not** green (above) → the enumerate re-run + the full bundle-aware audit stay HELD. The non-gated
+> prep is COMPLETE + re-verified on current LDR:
+>
+> - **② MTDS migrator dry-run GREEN** — `migrate_tradfi_to_v9_canonical --start-date 2021-08-16 --end-date 2021-08-17`
+>   (dry, read-only): **planned=1088 L-hive objects, moved=0, 0 errors, exit 0** (path-only `pipeline_mode=` insert; the
+>   v9 COLUMNS are `rebuild_tradfi_manifest`'s, not this script's). Source-aware `pipeline_mode` derivation verified per
+>   venue: CME/NYSE/NASDAQ/CBOE/ICE → `batch_databento`, BARCHART → `batch_barchart`, YAHOO → `batch_yahoo`, EIA →
+>   `batch_eia` (NOT coarse `batch`/blank). The migrator walks `day=` (date-bounded — no defi-style full-bucket-scan
+>   timeout).
+> - **③ instruments-store v9 dry-run GREEN** — 20,388-row `_index` → v9 100%, all CF stamps (see Step-1 UPDATE +
+>   gate-(c)).
+> - **① matrix/grain slice REVIEWED** — the exact missing tradfi rows are grounded (see the ROOT-CAUSE FINDING +
+>   gate-(a) re-verify); the fix is authored-but-HELD (must co-land with PART A to avoid false-absence).
+>
+> **Apply-ready blockers (precise):** gate-(a) bundle-grain = **slot-7 PART A** (catalogue emits options_chain/
+> futures_chain bundles) **+ the co-landing tradfi matrix rows** · gate-(b) capture-freeze = Massive `by_date` re-feed +
+> catalogue regen (adapter SHIPPED, below) · gate-(c) v9 `_index` = the gated `migrate_instruments_store_v9 --apply` RUN
+> (TOOL-READY) · plus G3 (UNION view — SHIPPED pm@822393880) and the operational pre-migration drain. When PART A lands,
+> the remaining tradfi work is: co-land the matrix rows → re-run enumerate (expect the ~563K false-candidate drop) →
+> finish the bundle-aware 7+2 audit → apply-ready verdict.
 
 ### Gate-b remediation — Massive IS reference adapter (shipped this session)
 
