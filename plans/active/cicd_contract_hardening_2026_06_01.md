@@ -744,9 +744,13 @@ machinery):
       `main-backmerge-to-ldr.yml` must NOT carry ci_status BACKWARD to LDR — a `.gitattributes merge=ours` on the
       ci_status region / post-backmerge restore, OR declare LDR's copy non-authoritative. Kills the stale-copy
       round-trip. repo: unified-trading-pm.
-- [ ] [OPERATOR] P0. **🔴 BLOCKED-CREDENTIALS — Anthropic account is OUT OF CREDITS (the systemic root blocker of the
-      entire agentic-CICD self-healing layer).** Found 2026-06-03 (slot-1) tracing the dammed cascade.
-      `claude-api-health-monitor` reports (every run since ~09:47):
+- [x] ✅ [OPERATOR] P0. **RESOLVED + OBSOLETE 2026-06-07 — the Anthropic-out-of-credits blocker no longer applies.** The
+      agentic-CICD self-healing layer runs on **Claude Code session auth (setup-token VM workers), NOT pay-per-call GHA
+      Anthropic API credits** — so a credit balance can no longer dam the cascade. Operator confirmed obsolete
+      2026-06-07. (Historical: it was first top-up-resolved 2026-06-03 below, then the whole dependency was removed by
+      the VM-cutover.) Kept for provenance only; the active blocker is gone. (Original finding, retained for the
+      record:) Found 2026-06-03 (slot-1) tracing the dammed cascade. `claude-api-health-monitor` reports (every run
+      since ~09:47):
       `degraded (billing_credits: "Your credit balance is     too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.")`.
       Cascade chain: **out-of-credits → health-monitor degraded → `claude-api-health-precheck` GATES the
       conflict-resolution-agent (refuses to burn credits on a degraded API) → UAC #67 + every conflicting promotion PR
@@ -3295,16 +3299,19 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
 - **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead; `main-backmerge-to-ldr`
   alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then LDR→main promote.
 
-### Genuine non-code blockers (documented — not deferrable-by-choice)
+### Resolved blockers (were operator-gated; now cleared)
 
-- **agent-orchestrator rulesets + auto-merge** — **ROOT CAUSE corrected by operator 2026-06-07: AO was a MIRROR of an
-  external repo**, so rulesets/auto-merge/etc. could not be configured on it regardless of Pro (NOT a billing block as
-  earlier assumed). **Operator is RECREATING the AO repo** as a first-class repo to fix it. ⚠️ **The new repo MUST carry
-  this session's AO commits** (deployed to vm-0): `agent-orchestrator@0ef02b3` (`bootstrap_vm.sh` MemoryMax=56G +
-  `QG_HOST_CONCURRENCY=1` floor + `delete_branch_on_merge=false`), `@6caa95a` (`backlog.mock.yaml` gitignore), and the
-  prior `@b10af714` (AO main-v2/staging/G6). Once recreated, register the standard `require-quality-gates` ruleset +
-  enable auto-merge so AO follows the normal `tab→LDR→staging→main` flow. [OPERATOR-IN-PROGRESS: repo recreation]
-- **STOPPED `i-007e8d99` decommission + vm-0 recovery-stash drop** — operator-gated destructive ops [BLOCKED-OPERATOR].
+- **✅ agent-orchestrator rulesets + auto-merge — RESOLVED 2026-06-07.** Root cause was AO being a **MIRROR of an
+  external repo** (rulesets/auto-merge un-configurable regardless of Pro — the earlier "billing" framing was wrong).
+  **Operator RECREATED AO as a fresh first-class repo** (verified: `fork:false`, `parent/source:none`, created
+  2026-06-07T14:10Z). Verified healthy: `require-quality-gates` ruleset present with the correct fleet context
+  `Quality Gates (agent-orchestrator) / quality-gates-v2`; `allow_auto_merge:true`; `delete_branch_on_merge:false`;
+  `main`+`staging`+`live-defi-rollout` branches all exist (the long-blocked **G6 `staging`** is now in place → AO
+  follows the standard `tab→LDR→staging→main` flow like every repo); and this session's commits carried over (`0ef02b3`
+  bootstrap/MemoryMax, `6caa95a` backlog.mock gitignore, `b10af714` staging-promote). No further action — AO is a normal
+  fleet repo now.
+- **✅ STOPPED `i-007e8d99` decommissioned — TERMINATED 2026-06-07** (operator-decided; confirmed `terminated` in AWS).
+- **✅ vm-0 recovery-stash — RESOLVED** (operator: drop; the stash was already gone — `git stash list` empty on vm-0).
 
 ### 🟢 UPDATE (later 2026-06-07) — drain CONVERGING + 3rd new finding + api_host archived
 
