@@ -490,15 +490,34 @@ does not require a second whole-corpus walk.
       `instrument_availability/     by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is
       empty). Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic:
       manifest_master.
-- [ ] [UAC] P2. **Era-B follow-up — drop the legacy `options_chain`/`futures_chain` data_type keys after the per-AG v9
-      migration** (surfaced by the Era-B re-key `uac@ae70338d`): the cefi/tradfi
-      `(ag, options_chain)`/`(ag,     futures_chain)` entries in `SOURCE_PRIORITY`, `AVAILABILITY_AT_SEMANTICS`,
-      `expected_coverage` + the Deribit/Bybit `coverage_start[options_chain/futures_chain]` were RETAINED (with Era-B
-      docs) for pre-migration legacy `data_type=options_chain` rows + the bidirectional
-      `SOURCE_PRIORITY ↔ AVAILABILITY_AT_SEMANTICS` closed-set round-trip. Once the per-AG v8→v9 migrators relabel the
-      legacy rows to `trades` (G4, cefi slot-3 / tradfi slot-6), delete these data_type-keyed entries fleet-wide (they
-      cascade across all three closed sets → coordinate as one change). GATED on cefi+tradfi G4 apply complete. Repo:
-      unified-api-contracts. parent_epic: manifest_master.
+- [ ] [UAC+MTDS] P1. **Era-B legacy retirement — the per-AG v8→v9 migrator drops ALL `data_type=options_chain`/
+      `futures_chain` recognition as its FINAL ATOMIC STEP, right after it relabels the on-disk rows to `trades`**
+      (operator 2026-06-07: "break old paths is the point of the migration" — couple-to-G4, do NOT lead the data). The
+      could-exist PRODUCER is already Era-B (`uac@ae70338d`/`is@74df991d`); this retires the legacy-READ surface that
+      still parses un-migrated v8 `data_type=options_chain` rows. **Removing it BEFORE the relabel would loud-fail every
+      read of un-migrated v8 data (deployment-api/preflight KeyError / unknown DataType) — heartbeat break — so it is
+      sequenced AFTER, inside the same migrator walk.** Full surface to drop atomically once an AG's rows are relabeled
+      (all cascade-coupled — a partial purge breaks the closed-set round-trips): - UAC: `SOURCE_PRIORITY` +
+      `AVAILABILITY_AT_SEMANTICS` (4 entries each — bidirectional round-trip) + `expected_coverage` venue lists
+      (DERIBIT/BINANCE-FUTURES/BYBIT) + capability `coverage_start[options_chain/       futures_chain]` +
+      `DATA_TYPES_BY_ASSET_GROUP["cefi"]` + `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` +
+      `BASE_GRANULARITY_BY_DATA_TYPE` + the `DataType` enum `OPTIONS_CHAIN`/`FUTURES_CHAIN` + the snapshot
+      `SchemaContract`s `(ag, options_chain, options_chain)`/`(ag, futures_chain, futures_chain)` +
+      `venue_data_types.yaml` + flip the asserting tests (`test_market_data_asset_groups_use_tick_timestamp` cefi/tradfi
+      options_chain lines, `test_every_datatype_has_at_least_one_schema_contract`, the snapshot-contract tests). - MTDS:
+      `orchestrator.py` chain partition/data_type-merge (lines 44/692-700) — confirm fully Era-B (see the
+      orchestrator.py finding below). GATED on cefi+tradfi G4 apply complete. Repos: unified-api-contracts +
+      market-tick-data-service. parent_epic: manifest_master.
+- [ ] [MTDS] P1. **FINDING (slot-7 2026-06-08) — confirm `orchestrator.py` is uniformly Era-B on disk.** The plan
+      asserts the chain object PATH is `data_type=trades` (slot-3 verified for cefi via `tardis_shared.py` Phase 1.6),
+      but `market_tick_data_service/engine/orchestrator.py` is mid-Era-B: `_classify_symbol` (≈766) correctly separates
+      `instrument_type=options_chain` from `data_type`, yet lines 44/692-700/907 still carry `data_type=options_chain`
+      partition/merge logic + it consumes the UAC `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP` chain data_type config. **Why it
+      matters**: if the LIVE batch writer still puts `data_type=options_chain` on disk for any chain shard, the Era-B
+      could-exist seed (`data_type=trades`, `uac@ae70338d`/`is@74df991d`) will NOT match captured rows → the cell reads
+      as `expected_unattempted` (false-missing) + the captured row is orphaned. Verify the actual on-disk chain
+      `data_type` (GCS probe of a recent cefi/tradfi chain shard) + audit orchestrator.py for any Era-A write path;
+      reconcile to `data_type=trades` if found. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
 - [ ] [UAC] P2. **DeFi `SOURCE_PRIORITY` registry gaps** (surfaced by the C-PATH WRITE derivation):
       `(defi,     dex_pool_swaps)` is UNREGISTERED → falls back to `batch_onchain_rpc` (vs
       `dex_pool_state`→`onchain_subgraph`); non-Hyperliquid perp venues (LIGHTER→tardis via the venue override) are
