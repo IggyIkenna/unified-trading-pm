@@ -208,23 +208,33 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > (central fix) + a verify-slice todo in each AG plan. **Re-scopes WAVE-1 slot-7**: the "generic foundation" must be
 > AG-shape-aware, NOT one-size fan-out.
 >
-> **🔴 G1-V8 (P0 — UPGRADED, cross-AG, the SECOND G1 long pole): the instruments-store v9 MIGRATOR DOES NOT EXIST yet.**
-> Confirmed v8 across **cefi (100% v8), sports (v8), tradfi (0.8% v9 / 20,218 rows v8)** — and slot-6 found the fix is
-> "a gated G4-class single-walk `--apply` with **no migrator built yet** (instruments*manifest **E2**,
-> vm-cross-cutting)". So gate-c (v9 `_index`) is UNMET for every AG **because the tool to fix it hasn't been written**.
-> This gates EVERY AG's G1.run apply-write alongside G1-ENUM. **Owner: vm-cross-cutting must BUILD the
-> `instruments_manifest` E2 v9 single-walk migrator** (asset_group=/pipeline_mode=batch*<source>/source/transport/
-> available_at/typed data_type) for the instruments-store buckets — the analogue of the per-AG MTDS migrators, which
-> don't exist for the IS reference surface. Until it lands, no AG's instruments-store goes v9 → no honest G1 seed.
-> Tracked: `instruments_manifest_canonicalisation_2026_06_01` (must spawn the E2 migrator) + each AG plan's §H.
+> **✅ G1-V8 (P0, cross-AG, the SECOND G1 long pole): the instruments-store v9 MIGRATOR IS BUILT 2026-06-07
+> (`is@febb899e`) + dry-run-green for all 5 AGs — see "Two G1 long poles" item 2 below. The `--apply` RUN stays G4-gated
+> per-AG. Historical context (now RESOLVED):** Confirmed v8 across **cefi (100% v8), sports (v8), tradfi (0.8% v9 /
+> 20,218 rows v8)** — and slot-6 found the fix is "a gated G4-class single-walk `--apply` with **no migrator built yet**
+> (instruments*manifest **E2**, vm-cross-cutting)". So gate-c (v9 `_index`) is UNMET for every AG **because the tool to
+> fix it hasn't been written**. This gates EVERY AG's G1.run apply-write alongside G1-ENUM. **Owner: vm-cross-cutting
+> must BUILD the `instruments_manifest` E2 v9 single-walk migrator**
+> (asset_group=/pipeline_mode=batch*<source>/source/transport/ available_at/typed data_type) for the instruments-store
+> buckets — the analogue of the per-AG MTDS migrators, which don't exist for the IS reference surface. Until it lands,
+> no AG's instruments-store goes v9 → no honest G1 seed. Tracked: `instruments_manifest_canonicalisation_2026_06_01`
+> (must spawn the E2 migrator) + each AG plan's §H.
 
 **Two G1 long poles gate every AG's `--apply-write` seed (both cross-cutting, both must land first):**
 
 1. ✅ **G1-ENUM — CODE DONE 2026-06-07** (`uac@97c26dbe` matrix + `is@6ea46565` shape-aware
    `enumerate_expected_universe` producer; validity filter + bundle-grain; tests green). Per-AG slice verification +
    dry-run re-run still owed by each AG owner before `--apply-write`.
-2. **G1-V8** — the not-yet-built `instruments_manifest` E2 v9 migrator for the instruments-store buckets
-   (vm-cross-cutting).
+2. ✅ **G1-V8 — MIGRATOR BUILT + DRY-RUN GREEN (all 5 AGs) 2026-06-07** (`is@febb899e`,
+   `instruments-service/scripts/migrate_instruments_store_v9.py`). AG-parametric single-walk that rewrites BOTH the
+   instruments-store `_index` rows AND object paths to canonical v9 (CF-1 v9 · CF-2 `asset_group=` · CF-3
+   `pipeline_mode=batch_instruments_service` · CF-4 `source=instruments_service` · CF-TRANSPORT `transport=rest` · CF-5
+   typed reasons · CF-7 `data_type` · CF-8 `available_at` · CF-9 `resolve_bucket_name` · CF-10 honest `capture_status`
+   from `instrument_count`). DRY-RUN validated on all 5 real prod `_index` files (cefi/defi/tradfi/sports/prediction →
+   100% v9 projection). 14 credential-free unit tests; QG `--no-fix` exit 0. The `--apply` RUN stays G4-gated
+   (coordinator G0 + Phase-0 writer-code + pre-migration drain; each AG owner runs its bucket's `--apply`). Sports is
+   structural-only (its `capture_status`/reasons are enumerator-authoritative → sports plan owns the relabel). So gate-c
+   (v9 `_index`) is now **TOOL-READY** for every AG; what remains is each AG's gated `--apply` run.
 
 **Per-AG G1 status (WAVE-1 dry-runs):**
 

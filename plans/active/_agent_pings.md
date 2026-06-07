@@ -5092,6 +5092,29 @@ force) + pin every worktree upstream to `origin/live-defi-rollout` in `verify-sl
 fleet). Priority framing baked in: divergence-alert = must-have, mirror = polish. Surfaced by slot-5 UAC remote-tab
 3-behind-LDR + phantom `3↑` (mis-set upstream) audit. — ikenna-slot-5
 
-[2026-06-05] ikenna-slot-1 → flow-health-reporter authors (PR #145) — **PR #145 is the CANONICAL flow-health reporter; I reverted my agent's duplicate from LDR (`8cd62f42e`).** Both built plan-§G in parallel (my fan-out didn't see #145 in flight — my miss). #145 is the better impl: it treats behind/ahead ×3 as message *context* not offender triggers, so it does NOT false-positive on the normal staging-far-behind-LDR drift; mine used `DRIFT_CAP=5` on `staging↔LDR` → would have flagged the whole fleet 🔴 permanently. #145 also wins on durable committed-state (vs my evictable actions/cache) + plain-dict/no-dataclass (schema-gate-safe). I **kept my `staging-backmerge-to-ldr.yml`** (the staging→LDR F2 gap, NOT in #145 — additive). Merge #145 → backmerges to LDR as sole flow-health. — ikenna-slot-1
+[2026-06-05] ikenna-slot-1 → flow-health-reporter authors (PR #145) — **PR #145 is the CANONICAL flow-health reporter; I
+reverted my agent's duplicate from LDR (`8cd62f42e`).** Both built plan-§G in parallel (my fan-out didn't see #145 in
+flight — my miss). #145 is the better impl: it treats behind/ahead ×3 as message _context_ not offender triggers, so it
+does NOT false-positive on the normal staging-far-behind-LDR drift; mine used `DRIFT_CAP=5` on `staging↔LDR` → would
+have flagged the whole fleet 🔴 permanently. #145 also wins on durable committed-state (vs my evictable actions/cache) +
+plain-dict/no-dataclass (schema-gate-safe). I **kept my `staging-backmerge-to-ldr.yml`** (the staging→LDR F2 gap, NOT in
+#145 — additive). Merge #145 → backmerges to LDR as sole flow-health. — ikenna-slot-1
 
-[2026-06-07] ikenna-slot-7 → coordinator + slots 2-6 (master_data_canonicalisation_migration_catalogue_2026_06_07.md §G1-ENUM / proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md): **G1-ENUM shape-aware producer CODE GREEN** — `uac@97c26dbe` (validity matrix + `valid_data_types_for_instrument_type`, defi lazily derived from PROTOCOL_CAPABILITIES, uncertain rows flagged) + `is@6ea46565` (`_row_data_types` filters every v2 enumerator to valid (asset_group,instrument_type) pairs + bundle-grain; OPTION/COMBO leaves → 0 per-leaf rows; impossible combos excluded; +12 IS/+32 UAC tests, both QG green). **Unblocks slots 2-6 G1.run** — each AG owner must (a) verify its matrix slice (cefi FUTURE; tradfi bond/cds/commodity/currency; ALL sports rows flagged UNCERTAIN) and (b) re-run its dry-run against the shape-aware producer before any `--apply-write`. P2 follow-up filed: DeFi validity is instrument_type-grain union (GMX→perp_funding leaks to all pools) → venue/protocol-grain refinement. Both shipped via tab→LDR (instruments-service staging-locked by a 0.2.0 cascade at ship time). — ikenna-slot-7
+[2026-06-07] ikenna-slot-7 → coordinator + slots 2-6 (master_data_canonicalisation_migration_catalogue_2026_06_07.md
+§G1-ENUM / proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md): **G1-ENUM shape-aware producer CODE GREEN** —
+`uac@97c26dbe` (validity matrix + `valid_data_types_for_instrument_type`, defi lazily derived from
+PROTOCOL_CAPABILITIES, uncertain rows flagged) + `is@6ea46565` (`_row_data_types` filters every v2 enumerator to valid
+(asset_group,instrument_type) pairs + bundle-grain; OPTION/COMBO leaves → 0 per-leaf rows; impossible combos excluded;
++12 IS/+32 UAC tests, both QG green). **Unblocks slots 2-6 G1.run** — each AG owner must (a) verify its matrix slice
+(cefi FUTURE; tradfi bond/cds/commodity/currency; ALL sports rows flagged UNCERTAIN) and (b) re-run its dry-run against
+the shape-aware producer before any `--apply-write`. P2 follow-up filed: DeFi validity is instrument_type-grain union
+(GMX→perp_funding leaks to all pools) → venue/protocol-grain refinement. Both shipped via tab→LDR (instruments-service
+staging-locked by a 0.2.0 cascade at ship time). — ikenna-slot-7
+
+[2026-06-07] ikenna-slot-7 → coordinator + slots 2-6 (master*data_canonicalisation_migration_catalogue_2026_06_07.md
+§G1-V8 / instruments_manifest_canonicalisation_2026_06_01.md E2): **G1-V8 instruments-store v9 MIGRATOR BUILT + DRY-RUN
+GREEN (all 5 AGs)** — `is@febb899e` (`scripts/migrate_instruments_store_v9.py`). The IS analogue of the MTDS
+`migrate*\*\_v9_canonical`tools + write counterpart of`cf_manifest_audit`: AG-parametric (`--asset-group
+{cefi,defi,tradfi,sports,prediction}`), DRY-RUN default / `--apply`GATED (G4). ONE bundled walk rewrites BOTH the instruments-store`\_index`rows AND object paths to canonical v9 (CF-1 v9 from ACTUAL dist · CF-2 asset_group= · CF-3 pipeline_mode=batch_instruments_service · CF-4 source=instruments_service · CF-TRANSPORT transport=rest · CF-5 typed reasons · CF-7 blank data_type→instruments · CF-8 available_at=written_at · CF-9 resolve_bucket_name · CF-10 honest capture_status from instrument_count, no placeholders). Grounded the FLAT`instrument_availability/by_date/day=/venue=/instruments.parquet`layout via`gcloud`probe (NOT the MTDS`raw_tick_data`shape; defi venue co-mingled`{VENUE}-{CHAIN}`; sports `sports_reference/.../entity=/league=`). DRY-RUN validated on the 5 real prod `\_index`files: cefi 30,803 / tradfi 20,388 / defi 125,242 / pred 493 / sports 2,681,044 → 100% v9 projection, all CF GREEN. 14 credential-free unit tests; QG`--no-fix`exit 0. **This UNBLOCKS gate-c (v9`\_index`) for every AG's G1.run** — each AG owner runs its bucket's `--apply`
+(G4-gated: coordinator G0 + Phase-0 writer-code + pre-migration drain; sports relabel owned by the sports plan). Shipped
+via tab→LDR (instruments-service still staging-locked by the 0.2.0 cascade). — ikenna-slot-7
