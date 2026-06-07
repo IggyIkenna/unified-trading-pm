@@ -17,13 +17,25 @@ source:
   - .pre-commit-config.yaml:13 — prettier mirror rev `v3.2.0`; ruff `v0.15.0`
   - scripts/manifest/check-precommit-versions.py — aligns ruff + pre-commit-hooks REVS to workspace-constraints.toml via
     `pre-commit install` (not prek); does NOT cover prettier version; is not run on VMs
-locked_by: live-defi-rollout
+resolved: 2026-06-07
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
 priority: P2
-status: active
+status: RESOLVED
 ---
+
+> ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE)
+>
+> All 4 actionable todos shipped: prek installed + `prek install` per repo in `bootstrap_vm.sh` (+rg/jq apt) +
+> `worker-host-preflight.sh` assertion (agent-orchestrator@7cec71c); AO + UAC pyprojects migrated `pre-commit`→
+> `prek>=0.3.0,<1.0.0` + `check-precommit-versions.py` installs via prek (unified-api-contracts@66d07dfe + PM); the
+> "prettier mirror drift" finding was a MISREAD (the `v3.2.0` rev is conventional-pre-commit, not prettier — no action);
+> quickmerge dropped the dead `pre-commit run prettier` branch → canonical `npx prettier@3.6.2`. Operator decisions
+> (single runner = prek; canonical prettier = 3.6.2) are codified. **DEFERRED sub-item MIGRATED:** dropping the now-
+> orphaned `pre_commit` pin from `workspace-constraints.toml` (re-derive must run from a clean full-checkout host) →
+> `plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "Loose ends" (P3; harmless while present).
+> No codex `SSOTs:` section; no new durable contract.
 
 ## What I found
 

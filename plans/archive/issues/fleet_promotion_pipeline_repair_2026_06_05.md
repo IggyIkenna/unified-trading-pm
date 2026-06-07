@@ -6,10 +6,22 @@ created: 2026-06-05
 source:
   - UI registry-drift fix → discovered staging 192-behind → fleet-wide promotion-pipeline breakage
   - per-repo staging↔main↔LDR topology audit 2026-06-05
-locked_by: live-defi-rollout
+resolved: 2026-06-07
 priority: P2
-status: active
+status: RESOLVED
 ---
+
+> ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-PLAN, superseded by full fleet convergence)
+>
+> The "REMAINING — 7 repos blocked at quality-gates-v2" section is RESOLVED: the fleet CONVERGED 2026-06-07 (**pending=0,
+> MAIN_GREEN=24** — every active repo's released version on `main`, ci_status=MAIN_GREEN). The dependency-ordered
+> promotion pass recommended here was executed via the cicd_contract_hardening autonomous-finish session: the staging→main
+> automation was unfrozen + repaired (PM #146 update-repo-version crash, #147 staging-to-main promote-ready-subset +
+> non-fatal Slack, #149 semver-agent version-commit, SIT@dc00485 smoke-gate sibling-clone, aiohttp<3.14 cap drained to
+> staging fleet-wide, #154 reconciler Drift-3, #155 ci-status-update no-downgrade) and the fleet drained bottom-up. The
+> only genuine non-code blockers remaining are tracked in `cicd_contract_hardening_2026_06_01.md`: agent-orchestrator
+> rulesets/auto-merge = GitHub Pro [BLOCKED-BILLING] (AO promotes via manual v2-gated merge today) + F7/F13 live-VM-SSH
+> [BLOCKED-INFRA]. No DEFERRED code items dropped; no codex `SSOTs:` section; no new durable contract.
 
 ## What I found
 

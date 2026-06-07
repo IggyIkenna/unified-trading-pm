@@ -18,6 +18,12 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # CeFi legacy gap-fill + manifest canonicalisation (L3 owner for cefi)
 
+> **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
+> `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
+> data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
+> `{mode}*{source}[_{transport}]`model + doc coherence — this plan PREDATES the 2026-06-05 standard, reconcile per M-COORD-1/2) + **G1** (IS catalogue could-exist SSOT: IS backfill complete + accurate UAC) + **G2** (scripts + 7+2-point audit + dry-run) + **G3** (deployment UNION view) all GREEN. The migrator/manifest-rebuild/enumerator MUST stamp source-aware pipeline_mode (NOT coarse`batch`/blank)
+> BEFORE apply. Readiness audit adds ⑧ (IS-catalogue) + ⑨ (pipeline_mode source-aware).
+
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
 > discipline: this corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated

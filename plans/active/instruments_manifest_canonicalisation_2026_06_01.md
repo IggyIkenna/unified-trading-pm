@@ -20,6 +20,15 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # Instruments-service manifest + data canonicalisation (L3 owner for the instruments I/O surface)
 
+> **⛔ COORDINATED — you are G1, the ROOT (2026-06-07)** —
+> `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` registers this (with
+> `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`) as the **IS-catalogue / could-exist-universe foundation**
+> that gates every AG's denominator-completeness. IS + UAC together define what COULD exist, so every downstream honest
+> denominator + preflight (⑥/⑦) + `expected_unattempted` seed depends on this being GREEN FIRST. G1 lifecycle = code
+> (`build_instrument_catalogue` + `enumerate_expected_universe` v2) → per-AG dry-run → `--apply-write` seed (GATED on IS
+> backfill complete + accurate UAC + this plan's v9 indices) → daily catalogue scheduler. See the coordinator's "G1
+> expanded" section.
+
 > **🔴 P0 GATE (operator 2026-06-05) — the v9 `--apply` here is BLOCKED until
 > `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` Phase 0 (code) is GREEN.** Single-walk
 > discipline: this corpus walk must carry the new manifest columns — `live_<source>`/`replay_<source>` form, populated

@@ -80,9 +80,36 @@ answer yourself or with common sense, I want to come back to a working <thing>, 
     every tool that gives you signal or control — manual triggers, Slack, `gh run`/`gh pr` polling, monitors — instead
     of blocking on the operator or on a schedule.
 
+11. **Verify the BLAST RADIUS before tightening a gate or rolling fleet-wide — local-green ≠ fleet-green. (Added
+    2026-06-07 after a real regression: re-enabling the `[5.5]` actionlint gate + a shellcheck-default-severity made
+    EVERY repo's QG fail on rolled-out templates that were never checked; and pushing canonical workflow files to LDR
+    only left every repo's `staging` behind → a `semver-agent.yml` conflict class that blocked another agent's PR. Both
+    were "shipped, looked done locally, broke the fleet.")** Two hard sub-rules:
+    - **(a) A gate you make stricter must be one the WHOLE FLEET already passes — prove it first, in the same change.**
+      Before enabling / broadening / re-enabling a check or lowering a ratchet, run that exact check against EVERY repo
+      (and every branch) it will gate — not just PM / your repo. If any repo fails, either fix it in the SAME change, or
+      scope the gate so it can't fail them (e.g. severity floor), or don't ship it. Never enable a gate and "see what
+      goes red" — that IS the regression. A check that runs from an SSOT (`base-service.sh`, a reusable workflow, a
+      rolled-out template) gates the fleet the instant it merges to the ref CI reads.
+    - **(b) A fleet rollout / shared-artifact change is not done until ALL branches + consumers are reconciled.** In the
+      `tab → LDR → staging → main` model, pushing a file to LDR only leaves `staging` (and `main`) behind on that file →
+      a conflict for every staging-based PR until it's promoted. When you roll a workflow/template/base-script to LDR
+      fleet-wide, in the same pass either (i) drive the LDR→staging drain so staging catches up, or (ii) explicitly note
+      - own the resulting conflict class — do NOT walk away and let another agent hit it.
+    - **The closing self-check (every gate/rollout change): re-run the affected gate on ≥1 representative CONSUMER repo
+      (not the SSOT repo) and confirm green, and check the other promotion branches you didn't touch.** If you didn't
+      verify it on a consumer + across branches, you didn't finish it — you just moved the failure to whoever pulls
+      next.
+
 ## The anti-pattern this prevents
 
 > Agent does 60% of a lifecycle, ships it, marks the rest `DEFERRED` / `BLOCKED-OPERATOR`, writes a summary. Next agent
 > reads the summary, re-audits, re-plans, ships another 60% of the _remainder_, defers again. Five sessions later the
 > pipeline still is not self-sustaining and the operator has answered the same question five times. **Converge instead:
 > one agent, full authority, runs it to actually-done, parallelizing as needed, journaling to the plan throughout.**
+>
+> **Second anti-pattern (rule 11) — the silent fleet regression:** an agent ships a gate-tightening or an SSOT/fleet
+> rollout, sees it green LOCALLY (PM / its own repo), declares done — but the change gates or skews the other ~24 repos
+> it never checked, so the next agent's PR breaks on infra the first agent introduced. "Green where I looked" is not
+> "green where it runs." Tightening a gate or rolling fleet-wide is only done once proven across the fleet + all
+> promotion branches.
