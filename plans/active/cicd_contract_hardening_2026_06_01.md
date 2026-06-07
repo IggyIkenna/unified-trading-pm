@@ -3308,8 +3308,14 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
   `Quality Gates (agent-orchestrator) / quality-gates-v2`; `allow_auto_merge:true`; `delete_branch_on_merge:false`;
   `main`+`staging`+`live-defi-rollout` branches all exist (the long-blocked **G6 `staging`** is now in place → AO
   follows the standard `tab→LDR→staging→main` flow like every repo); and this session's commits carried over (`0ef02b3`
-  bootstrap/MemoryMax, `6caa95a` backlog.mock gitignore, `b10af714` staging-promote). No further action — AO is a normal
-  fleet repo now.
+  bootstrap/MemoryMax, `6caa95a` backlog.mock gitignore, `b10af714` staging-promote). **v2 + auto-merge PROVEN
+  END-TO-END 2026-06-07:** a verification PR (#2, `docs/REPO_PROVENANCE.md`) triggered v2, which posted the exact
+  required check `Quality Gates (agent-orchestrator) / quality-gates-v2`, went GREEN, and **auto-merged to `main`**
+  (`107ca5422`). One gap found + fixed along the way: the recreated repo's `GH_PAT` secret was non-clone-capable
+  (couldn't auth the private dep-repo clone → v2 red at the clone step) — reset it to the canonical fleet token
+  (clones + carries Workflows:write). **Possible follow-up:** mirror the rest of the fleet Actions-secret set to AO if
+  its other workflows need them (`GCP_SA_KEY`/`WIF_*`/`GCP_PROJECT_ID`/`ANTHROPIC_API_KEY`/`TELEGRAM_BOT_TOKEN` —
+  present on uac, absent on AO); v2 itself is green without them. AO is a normal fleet repo now.
 - **✅ STOPPED `i-007e8d99` decommissioned — TERMINATED 2026-06-07** (operator-decided; confirmed `terminated` in AWS).
 - **✅ vm-0 recovery-stash — RESOLVED** (operator: drop; the stash was already gone — `git stash list` empty on vm-0).
 
