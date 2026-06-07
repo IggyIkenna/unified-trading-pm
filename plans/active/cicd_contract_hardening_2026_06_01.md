@@ -3554,3 +3554,27 @@ v1 deprecated (greeks #11); billing alert rewired (claude-api-health-monitor ret
 318f252); vestigial claude-api-health-precheck neutralized; strategy #75 dead-resync closed; 7 stuck promote PRs'
 staging-lock re-fired. The enum-migration P0 + execution/mtds code-debt are real and named above for the data/execution
 tracks (out of this CI-machinery dispatch's scope to force on main given the data-correctness implications).
+
+## 🔗 Cross-plan coordination + hygiene (2026-06-07) — read before editing shared CI surfaces
+
+> Added per operator ask ("make conflicts clear so we don't hit collisions") after the cluster archive sweep.
+
+- **⚠️ SHARED SURFACE — `scripts/quality-gates-base/base-service.sh`.** Multiple cluster items edit this one file; an
+  agent picking up any of them MUST coordinate (it's the #1 collision risk in the CI/CD cluster):
+  - THIS plan: the H5 SHA-sentinel gate + the per-repo QG-debt steps.
+  - `infrastructure_master` § "P3 — backlog": the **uv-pin drift-guard** (greps base-service.sh among 4 pin sites) + the
+    **fleet per-repo local-QG-debt sweep** (both MIGRATED from the now-archived `uv_lockfile_determinism`).
+  - `utl_full_quality_gates_green`: T0 QG-green work also runs through base-service.sh. Rule: stage `base-service.sh`
+    edits by NAMED hunk, re-run a consumer repo's QG (Rule 11), and never blanket-format it.
+- **Cross-plan gate-checker is now clean.** `scripts/check-cross-plan-gates.py` had ONE gate
+  (`defi-keys-phase1-blocks-cicd-backfill`) that was permanently false-BLOCKED — both referenced plans are archived and
+  its `source_plan_pattern` had a `.md.md$` double-extension typo. **Removed 2026-06-07** (`GATES=[]`); the checker now
+  exits 0. Re-add an entry only for a genuine live "plan-A-todo blocks plan-B-todo" dependency.
+- **Cluster archive sweep (2026-06-07):** archived (0-open / core-done, deferreds migrated):
+  `api_host_chronic_impairment`, `semver_agent_missing_version_commit_breaks_dep_cascade`,
+  `infra_slot_sync_session_handoff`, `quality_gates_resource_contention_speedup`,
+  `agent_orchestrator_e2e_workflow_and_execution_scope`, `agent_context_and_memory_hygiene`, `uv_lockfile_determinism`,
+  `ci_canonical_v2_migration` (v1 fully removed, fleet is v2-only — operator-confirmed). Remaining active cluster: THIS
+  plan (master), `utl_full_quality_gates_green`, `qg_commit_quality_boundary_and_slot_ff_push`,
+  `codex_vs_repo_docs_ssot_audit`, `harden_grepable_rules_into_ci_gates`, `orchestrator_fleet_worker_spawn_enablement`
+  (2), `issue_docs_remediation_sweep`, `fleet_audit_triad_deferred_followups` (data/operator track).

@@ -40,9 +40,14 @@ jobs:
           staging_versions = manifest.get("staging_versions", {})
           stable_versions = manifest.get("versions", {})
 
+          # Option-B repos (promote LDR→main directly, no staging branch) carry a vestigial
+          # staging_versions entry that never reconciles to versions — exclude them so they do
+          # not become a permanent phantom in pending_repos that blocks the lock from clearing.
+          staging_excluded = {"unified-trading-pm"}
           # Repos that have staging changes
           pending = [r for r, sv in staging_versions.items()
-                     if not r.startswith("_") and sv != stable_versions.get(r)]
+                     if not r.startswith("_") and r not in staging_excluded
+                     and sv != stable_versions.get(r)]
 
           # Check ci_status for each pending repo. A repo is SIT-ready when its ci_status is AT OR
           # ABOVE STAGING_GREEN in the lifecycle hierarchy (STAGING_GREEN | SIT_VALIDATED |
@@ -101,11 +106,15 @@ jobs:
           # suppressed fleet-wide forever).
           manifest["staging_status"]["locked_alert_sent"] = False
 
-          # Populate pending_repos from staging_versions that differ from stable versions
+          # Populate pending_repos from staging_versions that differ from stable versions.
+          # Exclude Option-B repos (LDR→main directly, no staging branch) — their vestigial
+          # staging_versions entry never reconciles and would phantom-block the lock-clear.
+          staging_excluded = {"unified-trading-pm"}
           staging_versions = manifest.get("staging_versions", {})
           stable_versions = manifest.get("versions", {})
           pending = [r for r, sv in staging_versions.items()
-                     if not r.startswith("_") and sv != stable_versions.get(r)]
+                     if not r.startswith("_") and r not in staging_excluded
+                     and sv != stable_versions.get(r)]
           manifest["staging_status"]["pending_repos"] = pending
           print(f"Pending repos for this SIT run: {pending}")
 

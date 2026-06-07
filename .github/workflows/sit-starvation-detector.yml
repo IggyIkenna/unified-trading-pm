@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       stale: ${{ steps.stale-check.outputs.stale }}
+      alert: ${{ steps.stale-check.outputs.alert }}
     steps:
       - name: Checkout PM repo
         uses: actions/checkout@v4
@@ -34,7 +35,7 @@ jobs:
 
           set +e
           python3 << 'PYEOF'
-          import json, sys
+          import json
           from datetime import datetime, timezone, timedelta
 
           with open('workspace-manifest.json') as f:
@@ -44,46 +45,61 @@ jobs:
           locked = staging.get('locked', False)
           locked_alert_sent = staging.get('locked_alert_sent', False)
 
+          def emit(stale, alert):
+              with open('/tmp/starvation.out', 'w') as f:
+                  f.write(f"stale={'true' if stale else 'false'}\n")
+                  f.write(f"alert={'true' if alert else 'false'}\n")
+
           if not locked:
               print("SIT not locked — no starvation")
-              sys.exit(0)
+              emit(False, False)
+              raise SystemExit(0)
 
-          if locked_alert_sent:
-              print("Alert already sent — no duplicate")
-              sys.exit(0)
-
-          # sit-gate.yml writes staging_status.locked_since (NOT locked_at) — read that field.
+          # sit-gate.yml / update-repo-version.yml write staging_status.locked_since — read that.
           locked_since_str = staging.get('locked_since', '')
           if not locked_since_str:
               print("No locked_since timestamp")
-              sys.exit(0)
+              emit(False, False)
+              raise SystemExit(0)
 
           locked_since = datetime.fromisoformat(locked_since_str.replace('Z', '+00:00'))
           age = datetime.now(timezone.utc) - locked_since
+          stale = age > timedelta(minutes=25)
 
-          if age > timedelta(minutes=25):
-              print(f"STALE LOCK: locked for {age} — sending alert")
-              # Mark alert as sent
+          # STALE is independent of locked_alert_sent: a dangling lock stays stale until cleared,
+          # so AUTO-REMEDIATION (the remediate job) keeps re-dispatching the SIT every run until
+          # the lock clears. locked_alert_sent ONLY de-dups the Slack alert (alert_needed) so the
+          # channel isn't spammed every 15 min — it must NOT also suppress remediation. That
+          # coupling was the H3 deadlock: the lock fired one alert, set the flag, then dangled
+          # forever with no further action.
+          alert_needed = stale and not locked_alert_sent
+
+          if stale:
+              print(f"STALE LOCK: locked for {age} (>25m) — remediation will be dispatched")
+          else:
+              print(f"Lock age {age} < 25m — OK")
+
+          if alert_needed:
               m['staging_status']['locked_alert_sent'] = True
               with open('workspace-manifest.json', 'w') as f:
                   json.dump(m, f, indent=2)
-              sys.exit(2)  # exit 2 = send alert
-          else:
-              print(f"Lock age {age} < 25m — OK")
-              sys.exit(0)
-          PYEOF
 
-          EXIT_CODE=$?
+          emit(stale, alert_needed)
+          PYEOF
           set -e
 
-          if [ $EXIT_CODE -eq 2 ]; then
-            echo "stale=true" >> "$GITHUB_OUTPUT"
+          # Surface python's decision to the job outputs.
+          cat /tmp/starvation.out >> "$GITHUB_OUTPUT"
+          ALERT=$(grep '^alert=' /tmp/starvation.out | cut -d= -f2)
+
+          # Persist the locked_alert_sent flag only when an alert was newly raised.
+          if [ "$ALERT" = "true" ]; then
             git config user.email "ci@unified-trading.com"
             git config user.name "CI Bot"
             git add workspace-manifest.json
-            git commit -m "chore: mark SIT starvation alert sent [skip ci]"
-            # Retry-with-rebase (finding H2): a concurrent manifest writer can land between checkout and
-            # push; a bare push fails non-fast-forward and the alert-sent flag is lost. Rebase + retry.
+            git commit -m "chore: mark SIT starvation alert sent [skip ci]" || true
+            # Retry-with-rebase (finding H2): a concurrent manifest writer can land between checkout
+            # and push; a bare push fails non-fast-forward and the alert-sent flag is lost.
             for attempt in 1 2 3 4 5; do
               if git push; then
                 echo "Pushed manifest update (attempt ${attempt})."
@@ -96,20 +112,47 @@ jobs:
                 exit 1
               fi
             done
-          else
-            echo "stale=false" >> "$GITHUB_OUTPUT"
           fi
 
-  # ── SLACK NOTIFY (reusable workflow) ──────────────────────────────────
+  # ── AUTO-REMEDIATE — force the SIT to run so the dangling lock resolves itself ─────────
+  # Fires on EVERY stale run (not just the first), so a dangling lock is actively unstuck rather
+  # than only Slack-alerted-once. It dispatches the NORMAL sit-debounce-trigger (no drain), which —
+  # with the cascade-lock fix in that workflow — fires the SIT on a cascade lock while still
+  # respecting max_sit_retries, so a genuinely-failing SIT halts after 3 attempts instead of being
+  # retried forever. The Slack alert (below, de-duped) still flags a human in parallel.
+  remediate:
+    name: Auto-remediate — re-trigger SIT for dangling lock
+    needs: [check-stale-lock]
+    if: always() && needs.check-stale-lock.outputs.stale == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Checkout PM repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+      - name: Re-trigger SIT (sit-debounce-trigger)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          echo "Lock dangling >25min — re-triggering sit-debounce-trigger to validate+promote pending repos and clear the lock."
+          gh workflow run sit-debounce-trigger.yml --repo "${{ github.repository }}"
+          echo "SIT re-trigger dispatched."
+
+  # ── SLACK NOTIFY (reusable workflow; de-duped via locked_alert_sent) ──────────────────
   notify:
     name: Slack — SIT Starvation Detector
     needs: [check-stale-lock]
-    if: always() && needs.check-stale-lock.outputs.stale == 'true'
+    if: always() && needs.check-stale-lock.outputs.alert == 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
-        "SIT lock stale — staging has been locked for >25min (a SIT run is ~15min, so this lock is dangling and is
-        blocking fleet merges). Check SIT status or force-unlock: gh workflow run sit-unlock.yml"
+        "SIT lock stale — staging locked >25min (a SIT run is ~15min, so this lock is dangling and is blocking fleet
+        merges). Auto-remediation (SIT re-trigger) has been dispatched; if the lock persists across runs, investigate
+        SIT failures or force-drain: gh workflow run sit-debounce-trigger.yml -f drain_pending=true"
       severity: "WARNING"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -118,7 +161,7 @@ jobs:
   persist:
     name: Persist — SIT Starvation Event
     needs: [check-stale-lock, notify]
-    if: always() && needs.check-stale-lock.outputs.stale == 'true'
+    if: always() && needs.check-stale-lock.outputs.alert == 'true'
     uses: ./.github/workflows/persist-cicd-event.yml
     secrets: inherit
     with:

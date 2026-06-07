@@ -517,6 +517,18 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 
 ## P3 — backlog; revisit quarterly
 
+- [ ] [INFRA] P3. **uv-pin drift-guard** (**MIGRATED FROM:** `uv_lockfile_determinism_2026_06_02.md`, archived
+      2026-06-07). Build a PM `quality_gates/` check that greps the 4 uv-pin sites (`setup.sh`, `base-service.sh` +
+      `base-library.sh`, `python-quality-gates-v2.yml`, `../unified-trading-library/Dockerfile`) and fails if their
+      pinned `uv` versions disagree. No active drift today (all `0.10.8`) → low priority. ⚠️ **COORDINATION:** touches
+      `base-service.sh` — a shared QG surface also edited by `cicd_contract_hardening` (H5 sentinel + QG-debt steps);
+      coordinate edits to avoid a collision.
+- [ ] [INFRA] P2. **Fleet per-repo local-QG debt sweep** (**MIGRATED FROM:** `uv_lockfile_determinism_2026_06_02.md`,
+      archived 2026-06-07). The bash-3.2 governor fix unmasked each repo's accumulated stage-5+ local-QG debt (codex /
+      cloudbuild-schema / size-import baselines) that the crash had been hiding. Walk every repo's
+      `quality-gates.sh     --no-fix` locally and clear the surfaced debt. **Overlaps `utl_full_quality_gates_green`**
+      (the T0 QG-green effort) — coordinate the per-repo greening there; most repos already proved green on LDR
+      (2026-06-07 fleet drain), so this is the residual local-only tail.
 - [ ] [INFRA] P3. **VM-side QG-memory baseline** (**MIGRATED FROM:**
       `quality_gates_resource_contention_speedup_2026_06_02.md`, archived 2026-06-07). The per-repo QG resource
       baseline + 2× deviation guard is DONE for the 20-repo LOCAL baseline (`scripts/dev/qg_resource_baseline.json`,
