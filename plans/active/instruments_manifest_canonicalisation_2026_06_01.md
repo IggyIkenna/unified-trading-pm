@@ -119,11 +119,16 @@ VM. Runs behind the pre-migration drain.
 
 ### C — single-walk (bundled CF-1…CF-12) per in-scope instruments bucket
 
-- [ ] [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
-      top-level trees + nested layouts in each in-scope instruments-store bucket (cefi/tradfi/pred) before the walk;
-      classify duplicate (keep freshest) vs complementary (migrate all → canonical v9). Cover every in-scope layout or
-      the walk is incomplete (review-blocking). SSOT: `plans/audit/results/cf_data_state_audit_slot3_2026_06_01.md` §
-      grounded recipe Phase 0.
+- [x] ✅ [DATA] P0. **Phase 0 — layout audit (MANDATORY, blocking — slot-2 DeFi lesson 2026-06-01)**: enumerate ALL
+      top-level trees + nested layouts in each in-scope instruments-store bucket before the walk; classify duplicate vs
+      complementary. — **DONE 2026-06-07 (vm-cross-cutting), instruments-service@febb899e**: probed all 5
+      `instruments-store-{ag}-prd` buckets (`gcloud storage ls`). Data-bearing tree is uniform + FLAT: non-sports =
+      `instrument_availability/by_date/day={D}/venue={V}/instruments.parquet` (NO `asset_group=`/`pipeline_mode=`/
+      `data_type=`; defi venue = co-mingled `{VENUE}-{CHAIN}`); sports =
+      `sports_reference/by_date/day={D}/[pipeline_mode=/]entity={E}/league={L}/{folder}.parquet`. `_index` row counts:
+      cefi 30,803 (100% v8) / tradfi 20,388 (170 v9) / defi 125,242 / pred 493 / sports 2,681,044 (735 v9). NO legacy
+      `category=` PATH variants (paths are flat, not `category=`). SSOT: `cf_data_state_audit_slot3_2026_06_01.md` §
+      Phase 0.
 
 > **Migration-script performance contract (HARD — codified 2026-06-01, defi C0 lesson)**: the walk script MUST be
 > parallel (`ThreadPoolExecutor` — GCS I/O releases the GIL → 5–10×; a bare `for obj` loop is review-blocking) + wire
@@ -157,10 +162,30 @@ VM. Runs behind the pre-migration drain.
 > canonical target (v9, `asset_group=`, pipeline_mode, source, available_at) is CONFIRMED CORRECT at verify. One pass,
 > no confusion.
 
-- [ ] [DATA] P0. E1 Phase-0 layout audit on `instruments-store-{cefi,tradfi,pred}-prd` + their legacy buckets
-      (`cf_layout_audit`); record per-bucket layouts + object counts.
-- [ ] [DATA] P0. E2 Build/extend the instruments migrator (perf-contract) per bucket: `category=`→`asset_group=` +
-      `pipeline_mode=` partition + canonical names; copy legacy-only cells (cefi 23 / tradfi 60 / pred re-diff).
+- [x] ✅ [DATA] P0. E1 Phase-0 layout audit on `instruments-store-{cefi,tradfi,pred}-prd` (+ defi/sports); record
+      per-bucket layouts + object counts. — **DONE 2026-06-07, instruments-service@febb899e** (see C-section Phase 0
+      flip above for the grounded layout map + row counts; no separate legacy-named bucket observed — the `-prd` buckets
+      are canonical-named already).
+- [x] ✅ [DATA] P0. E2 Build/extend the instruments migrator (perf-contract) per bucket: `category=`→`asset_group=` +
+      `pipeline_mode=` partition + canonical names; relabel blank-`data_type` legacy cells (cefi/tradfi/pred). — **DONE
+      2026-06-07, instruments-service@febb899e**: `scripts/migrate_instruments_store_v9.py` — AG-parametric
+      (`--asset-group {cefi,defi,tradfi,sports,prediction}`), DRY-RUN default / `--apply` GATED (G4). ONE bundled walk
+      rewrites BOTH the `_index` rows AND object paths to v9: CF-1 schema_version=9 (reads ACTUAL dist, not the
+      constant) · CF-2 `asset_group` col + `asset_group=` path key (drops `category` col) · CF-3
+      `pipeline_mode=batch_instruments_service` col + path key (reference provenance — a venue _listing_ is reference,
+      not a Tardis tick) · CF-4 `source=instruments_service` col · CF-TRANSPORT `transport=rest` col · CF-5 typed
+      `EmptyConfirmedReason` (blank → `SOURCE_RETURNED_ZERO`; captured-but-`instrument_count==0` → empty) · CF-7 blank
+      `data_type`→`instruments` (pred/sports typed values preserved) · CF-8 `available_at`=`written_at` · CF-9
+      `resolve_bucket_name` (no inline gs://) · CF-10 honest `capture_status` from the writer's own `instrument_count`
+      (null+count>0→captured; count==0→empty — never a silent placeholder). Index rewrite is deterministic from the
+      recorded columns (no GCS probe) → fully offline-testable; object-path rewrite is idempotent server-side
+      `gcs_copy_object`. **sports is structural-only** (its `capture_status`/`data_type`/reasons are
+      enumerator-authoritative — 194k captured cells legitimately carry `instrument_count==0`; the sports owner does the
+      CF-5 relabel via the coverage oracle). Perf-contract: `ThreadPoolExecutor` + `--workers`/`--start-date`/
+      `--end-date` day-shard + per-object isolation. 14 credential-free unit tests
+      (`tests/unit/scripts/test_migrate_instruments_store_v9.py`); QG `--no-fix` exit 0. **DRY-RUN green for all 5 AGs**
+      on the real prod `_index` files (all CF-1/2/3/4/5/7/8 GREEN by construction). `--apply` RUN is E4/G4 (gated on
+      coordinator G0 + Phase-0 writer-code + pre-migration drain; each AG owner runs `--apply`).
 - [ ] [DATA] P0. E3 Confirm instruments writer drained; snapshot each `_index`.
 - [ ] [DATA] P0. E4 Dry-VM → timing → optimise → run (small: 30k/20k/493 rows — likely fast; still no fire-and-forget).
 - [ ] [DATA] P0. E5 Manifest rebuild per bucket: `ManifestWriter` stamping `source` + `pipeline_mode` + `available_at` +
