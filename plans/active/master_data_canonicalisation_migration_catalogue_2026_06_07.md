@@ -266,7 +266,7 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
      UNDER-seeds bundles to zero).
    - **(b) bundle-grain ROLLUP (the real fix) — SHIPPED 2026-06-07 (slot-7)**: `uac@dd7fa100` (GRAIN axis SSOT
      `grain_for_instrument_type`) + `uac@cb3a846b` (`bundle_data_type_for_instrument_type` + tradfi grain) +
-     `is@93866d86` (`enumerate_expected_universe._rollup_bundle_grain` — read-side pre-pass in `enumerate_v2` collapses
+     `is@687d1443` (`enumerate_expected_universe._rollup_bundle_grain` — read-side pre-pass in `enumerate_v2` collapses
      every option/combo LEAF of a `(venue, chain, underlying)` into ONE synthetic per-underlying `options_chain`
      candidate; generalises slot-4's league-grain rollup, NO per-AG special-casing; `underlying` carried on the
      catalogue +`InstrumentCatalogEntry`, derived from instrument*id as fallback) + `is@df15dba2` (contract tests). Net:

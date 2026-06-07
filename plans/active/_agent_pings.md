@@ -5124,7 +5124,7 @@ via tab→LDR (instruments-service still staging-locked by the 0.2.0 cascade). �
 are UN-GATED.** The WAVE-1 `is@6ea46565` shipped ONLY the validity filter, NOT the bundle-grain rollup (that is why
 tradfi only dropped −808: 588,798→587,990, ~563K false per-contract OPTION/COMBO remained; cefi `frozenset()`
 UNDER-seeded bundles to zero). NOW FIXED: `uac@dd7fa100` (GRAIN axis `grain_for_instrument_type`) + `uac@cb3a846b`
-(`bundle_data_type_for_instrument_type` + tradfi grain) + `is@93866d86`
+(`bundle_data_type_for_instrument_type` + tradfi grain) + `is@687d1443`
 (`enumerate_expected_universe._rollup_bundle_grain`: a read-side pre-pass in `enumerate_v2` collapsing every
 option/combo LEAF of a `(venue, chain, underlying)` into ONE synthetic per-underlying `options_chain` candidate —
 generalises slot-4's league-grain rollup, NO per-AG special-casing; `underlying` now carried on the catalogue + derived
