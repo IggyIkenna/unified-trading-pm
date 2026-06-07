@@ -1349,9 +1349,14 @@ walked): the migrator object dry-run used a 2-day window; the instruments-store 
 
 ### Apply-readiness verdict — slot-4 7+2 audit on LDR (2026-06-07, no sports code changed since uac@aff80339)
 
-> **Sports is NOT yet fully apply-ready. The MIGRATION code (CF-1…CF-13) is dry-run GREEN, but CF-14 (the IS-catalogue
-> could-exist denominator) is RED** — and that RED was previously MIS-CHARACTERISED (the "392 missing leagues / union
-> other entities" framing). The re-diagnosis above (the P0 ⑦/CF-14 item) is the true blocker.
+> **Sports migration code is APPLY-READY (CF-1…CF-14 all GREEN under dry-run as of is@cbcf55e8).** The last sports-owned
+> blocker, CF-14 (the IS-catalogue could-exist denominator), is **FIXED + real-prod dry-run-verified** (catalogue 606 ⊇
+> manifest 606, 0 over-seed). Its prior RED was MIS-CHARACTERISED (the "392 missing / union entities" framing); the real
+> root cause (raw-numeric `entity=leagues` vs canonical manifest namespace) is resolved by deriving the universe from
+> the manifest. **The ONLY remaining sports gates are OPERATIONAL** (G0 · G3 union view (slot-7) · the IS
+> instruments-store v9 walk RUN · IS instrument backfill · pre-migration drain) + the staging-lock unblock for
+> is@cbcf55e8. Two data-quality findings (6,869 blank `capture_status`, mdps consolidated-index-reads-0) remain P1 but
+> are not over-seed/correctness-of-denominator blockers.
 
 CF-by-CF (sampled vs walked stated per row):
 
@@ -1363,7 +1368,8 @@ CF-by-CF (sampled vs walked stated per row):
 - **CF-5 typed empty reasons** ◑ — typed reasons wired (E6/keystone), BUT the **6,869 blank `capture_status` IS rows**
   (P1 below) are an open CF-5 gap; mdps rebuild reason-relabel proven by slot-6 (today's read returned 0 — consolidation
   state, P1 below).
-- **CF-6 `expected_unattempted`** 🔴 — blocked by CF-14 (the could-exist seed is the materialiser; see below).
+- **CF-6 `expected_unattempted`** ✅ — unblocked by the CF-14 fix (is@cbcf55e8); the could-exist seed now materialises
+  the namespace-correct league universe (the `--apply-write` RUN is the gated operational step).
 - **CF-7 canonical names** ✅ — IS v9 data_types canonical uppercase (walk); migrator `canonicalize_league_id` wired.
 - **CF-8 `available_at`** ✅ — IS v9 `available_at_filled` 2,667,868 (walk).
 - **CF-9 env-split bucket** ✅ — `resolve_bucket_name` used; `-prd` tier confirmed.
@@ -1372,11 +1378,12 @@ CF-by-CF (sampled vs walked stated per row):
 - **CF-11 fetch-fail→attempted_failed** ✅ — match-day guaranteed-type relabel shipped (mtds@8ffb2acd).
 - **CF-12 batch=live** ✅ — shared `candidate_parquet_paths()` / `pipeline_mode_for_sports_entity` SSOT (prior audit).
 - **CF-13 pipeline_mode source-aware** ✅ — `batch_odds_api`/`batch_<source>` in path+column (sample/walk).
-- **CF-14 IS-catalogue could-exist ROOT** 🔴 **RED** — the sports catalogue emits raw NUMERIC api-football league_ids vs
-  the manifest's canonical namespace → covers only 131/606 manifest current-dt leagues; an `--apply-write` would
-  MASSIVELY OVER-seed false `expected_unattempted`. Full root-cause + correct fix in the P0 ⑦/CF-14 item below. **This
-  gates the sports apply-write — it is the one remaining sports-owned correctness blocker (distinct from the operational
-  gates).**
+- **CF-14 IS-catalogue could-exist ROOT** ✅ **FIXED is@cbcf55e8** — the sports rollup now derives the could-exist
+  league universe from the **manifest** (namespace-correct superset) + the enumerator gates by
+  `get_entity_league_coverage`. Real-prod dry-run verified: catalogue 606 == manifest 606 (⊇, 0 missing), 0 false
+  numeric over-seed, XG within Understat coverage; +3 tests; IS QG green. Was RED (raw-numeric `entity=leagues`, 131/606
+  coverage, over-seed). Staging promotion queued behind the fleet staging-lock. **No remaining sports-owned correctness
+  blocker** — the rest are operational gates.
 
 **Operational gates (not sports-code):** G0 (coordinator) · G3 union view (slot-7) · the IS instruments-store v9 walk
 RUN (G1-V8, VM) · IS instrument backfill (capture freeze) · pre-migration drain. **Sports-code gate:** the CF-14
@@ -1505,9 +1512,21 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       on a VM (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<tag>`; GCS flaky locally) so the raw-tick denominator ==
       could-exist universe; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
       bucket fix are done. parent_epic: mtds_mdps_master.
-- [ ] [DATA] **P0. ⑦/CF-14 sports could-exist catalogue is BROKEN — re-diagnosed 2026-06-07 (slot-4); the prior "392
-      missing / union other entities" framing was WRONG.** The real root cause + the correct fix (GATES the sports
-      apply-write; the migration code itself is unaffected + dry-run-green):
+- [x] ✅ [DATA] **P0. ⑦/CF-14 sports could-exist catalogue — FIXED is@cbcf55e8 (slot-4 2026-06-07; real-prod dry-run
+      verified).** The sports rollup now derives the could-exist league universe from the **manifest** (the
+      namespace-correct superset), and `_enumerate_v2_sports` gates each `(league, data_type)` by
+      `get_entity_league_coverage`. **Real-prod validation**
+      (`build_instrument_catalogue --asset-group sports --dry-run` → 606 rows in ~8s, was >15min; in-process enumerate
+      over a 2-day window): **catalogue 606 == manifest current-dt leagues 606 → catalogue ⊇ manifest, 0 missing**;
+      **every seeded league ∈ the manifest (0 false numeric over-seed**, vs the old 1,228 phantom-numeric leagues); **XG
+      seeds only within Understat coverage**. +3 regression tests; IS `quality-gates.sh --no-fix` exit 0.
+      (Implementation note: the manifest-derived universe lives in the producer `build_sports_catalogue_from_manifest`
+      reading the `_index` directly — not `read_availability_index`, which has returned 0 mid-rewrite — scoped to
+      current `SPORTS_DATA_TYPE_TO_SOURCE` data_types; the old `entity=leagues` `build_sports_catalogue_dataframe` is
+      superseded.) **Residual (honest, NOT a silent drop)**: api-football leagues LISTED but never captured aren't added
+      (needs a numeric→canonical `api_football_id` map; gated on the IS backfill anyway). **Staging promotion of
+      is@cbcf55e8 is queued behind the fleet staging-lock** (UAC 0.2.0 cascade) — committed to LDR, drains via the
+      staging→main automation on unlock. Original diagnosis ↓ retained for context:
   - **The catalogue emits RAW NUMERIC api-football `league_id`s** (`_league_id_of` → `str(row["league_id"])`, e.g.
     `"4"`/`"21"`/`"62"`), but the manifest captured atom uses the **canonical** sports league namespace. Measured on
     real prod (`day=2025-01-01 entity=leagues` × the prod `_index`): `entity=leagues` has 1,228 raw league_ids;
@@ -1539,13 +1558,9 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
     seeded league set == the 606 manifest current-dt leagues (catalogue ⊇ manifest, 0 numeric over-seed) + unit tests on
     synthetic per-source present-sets. parent_epic: mtds_mdps_master. Provenance: slot-4 apply-ready re-diagnosis
     2026-06-07.
-- [ ] [PERF] P2. ⑦ sports league-catalogue roll-up list-cost — **NICE-TO-HAVE** (slot-4 2026-06-07): the producer's
-      `_iter_sports_by_date_snapshots` must `list_blobs("sports_reference/by_date/")` over the WHOLE tree (17 entities ×
-      per-fixture files since 2015 → hundreds of thousands of objects) to filter to the ~3000 tiny `entity=leagues`
-      parquets, because `day=` precedes `entity=` in the path so GCS can't prefix-match leagues directly. The dry-run is
-      list-bound (>15 min just to list). Acceptable for a nightly scheduler / one-off apply-write, but a day-narrowed
-      two-level list (list `day=` common-prefixes, then `day={d}/entity=leagues/`) would cut it ~100×; blocked on the
-      UTL `StorageClient.list_blobs` wrapper NOT exposing GCS common-prefixes (it yields BlobMetadata only — the
-      `delimiter` arg's `.prefixes` are dropped). Fix = add a `list_prefixes(bucket, prefix, delimiter)` to the
-      `StorageClient` abstraction + GCP/AWS/local providers, then narrow the sports iterator. Repo:
-      unified-trading-library (abstraction) + instruments-service (iterator). parent_epic: mtds_mdps_master.
+- [x] ✅ [PERF] P2. ⑦ sports league-catalogue roll-up list-cost — **OBSOLETE as of is@cbcf55e8** (slot-4 2026-06-07):
+      the manifest-derived producer reads the single `_index/availability_index.parquet` (one object) in **~8 s**
+      instead of `list_blobs`-ing the whole `sports_reference/by_date/` tree (>15 min) —
+      `_iter_sports_by_date_snapshots` is no longer on the sports rollup path. The `StorageClient.list_prefixes`
+      common-prefixes enhancement remains a generic UTL nice-to-have for the other AGs' by-date iterators (not
+      sports-blocking) — re-file under the relevant AG if still wanted. parent_epic: mtds_mdps_master.
