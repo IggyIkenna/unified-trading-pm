@@ -73,10 +73,18 @@ jobs:
           PYEOF
 
       - name: Lock staging and record commit SHAs
+        env:
+          # Pass the toJson payload via ENV, never inlined into the Python heredoc: toJson() emits
+          # MULTI-LINE pretty JSON, and a single-quoted Python string literal cannot span lines →
+          # "SyntaxError: unterminated string literal". This step was LATENT-buggy — it was never
+          # reached until the sit-gate precheck (above) was fixed 2026-06-07 to accept MAIN_GREEN
+          # pending repos (the precheck always failed first, so this never ran). Env-var indirection
+          # is heredoc-safe and also avoids any expression-injection surface.
+          COMMIT_SHAS_JSON: ${{ toJson(github.event.client_payload.commit_shas) }}
         run: |
           set -euo pipefail
           python3 - <<PYEOF
-          import json, datetime
+          import json, datetime, os
 
           with open("workspace-manifest.json") as f:
               manifest = json.load(f)
@@ -101,11 +109,13 @@ jobs:
           manifest["staging_status"]["pending_repos"] = pending
           print(f"Pending repos for this SIT run: {pending}")
 
-          # Record commit SHAs from payload
-          payload_shas_raw = '${{ toJson(github.event.client_payload.commit_shas) }}'
+          # Record commit SHAs from payload (read from env — heredoc-safe vs multi-line toJson).
+          # toJson(null) renders the literal "null"; guard for None / non-dict too.
+          payload_shas_raw = os.environ.get("COMMIT_SHAS_JSON", "") or "{}"
           try:
-              import sys
               payload_shas = json.loads(payload_shas_raw)
+              if not isinstance(payload_shas, dict):
+                  payload_shas = {}
           except Exception:
               payload_shas = {}
 
@@ -120,8 +130,7 @@ jobs:
           with open(tmp_path, "w") as f:
               json.dump(manifest, f, indent=2, ensure_ascii=False)
               f.write("\n")
-          import os as _os
-          _os.replace(tmp_path, "workspace-manifest.json")
+          os.replace(tmp_path, "workspace-manifest.json")
 
           print(f"Staging locked. Recorded {len(payload_shas)} commit SHAs.")
           for repo, sha in payload_shas.items():
