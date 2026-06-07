@@ -5118,3 +5118,21 @@ GREEN (all 5 AGs)** — `is@febb899e` (`scripts/migrate_instruments_store_v9.py`
 {cefi,defi,tradfi,sports,prediction}`), DRY-RUN default / `--apply`GATED (G4). ONE bundled walk rewrites BOTH the instruments-store`\_index`rows AND object paths to canonical v9 (CF-1 v9 from ACTUAL dist · CF-2 asset_group= · CF-3 pipeline_mode=batch_instruments_service · CF-4 source=instruments_service · CF-TRANSPORT transport=rest · CF-5 typed reasons · CF-7 blank data_type→instruments · CF-8 available_at=written_at · CF-9 resolve_bucket_name · CF-10 honest capture_status from instrument_count, no placeholders). Grounded the FLAT`instrument_availability/by_date/day=/venue=/instruments.parquet`layout via`gcloud`probe (NOT the MTDS`raw_tick_data`shape; defi venue co-mingled`{VENUE}-{CHAIN}`; sports `sports_reference/.../entity=/league=`). DRY-RUN validated on the 5 real prod `\_index`files: cefi 30,803 / tradfi 20,388 / defi 125,242 / pred 493 / sports 2,681,044 → 100% v9 projection, all CF GREEN. 14 credential-free unit tests; QG`--no-fix`exit 0. **This UNBLOCKS gate-c (v9`\_index`) for every AG's G1.run** — each AG owner runs its bucket's `--apply`
 (G4-gated: coordinator G0 + Phase-0 writer-code + pre-migration drain; sports relabel owned by the sports plan). Shipped
 via tab→LDR (instruments-service still staging-locked by the 0.2.0 cascade). — ikenna-slot-7
+
+[2026-06-07] ikenna-slot-7 → slots 3 (cefi) + 6 (tradfi) + coordinator
+(master*data_canonicalisation_migration_catalogue_2026_06_07.md §G1-ENUM): **G1-ENUM BUNDLE-GRAIN ROLLUP SHIPPED — you
+are UN-GATED.** The WAVE-1 `is@6ea46565` shipped ONLY the validity filter, NOT the bundle-grain rollup (that is why
+tradfi only dropped −808: 588,798→587,990, ~563K false per-contract OPTION/COMBO remained; cefi `frozenset()`
+UNDER-seeded bundles to zero). NOW FIXED: `uac@dd7fa100` (GRAIN axis `grain_for_instrument_type`) + `uac@cb3a846b`
+(`bundle_data_type_for_instrument_type` + tradfi grain) + `is@93866d86`
+(`enumerate_expected_universe._rollup_bundle_grain`: a read-side pre-pass in `enumerate_v2` collapsing every
+option/combo LEAF of a `(venue, chain, underlying)` into ONE synthetic per-underlying `options_chain` candidate —
+generalises slot-4's league-grain rollup, NO per-AG special-casing; `underlying` now carried on the catalogue + derived
+from instrument_id as fallback) + `is@df15dba2` (tests). UAC + IS `quality-gates.sh --no-fix` exit 0; unit acceptance
+green (OPTION/COMBO leaf → 0 per-contract; underlying → exactly ONE `options_chain`; `futures_chain` bundle entry → one;
+impossible `PERPETUAL×options_chain` excluded). **ACTION: re-run your `enumerate` dry-run on the rollup producer** —
+tradfi mass should collapse ~588K → plausible (the ~563K false GONE); cefi DERIBIT no longer dominant. \*\*F2
+(DERIBIT/OKX FUTURE \_leaf* per-contract over-fan) stays a gated venue-specific catalogue-rollup todo\*\* —
+`VENUE_DATA_TYPE_CAPABILITIES` is an unsound bundle-venue discriminator (BYBIT lists `futures_chain` yet captures
+per-contract), so FUTURE-leaf venue-bundling needs a sound registry first; `futures_chain` bundle ENTRIES already roll
+up. Shipped via tab→LDR. — ikenna-slot-7

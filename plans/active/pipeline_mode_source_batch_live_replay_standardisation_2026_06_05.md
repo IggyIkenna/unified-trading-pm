@@ -334,9 +334,13 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
 - [ ] [CODE] P0. **M4 — mode-contextual precedence** — `select_for_mode(consumer_mode, available_modes)`: live-mode
       `live>replay>batch`, batch-mode `batch>replay>live` (replay always middle). A config on the consumer. Repos: UAC
       (resolver) + batch-live-reconciliation-service + features/strategy readers. **NOTE 2026-06-07 (slot-7)**: the
-      **data-status CONSUMER** does NOT need `select_for_mode` — it unions MODE-AGNOSTICALLY (answers "available from
-      ANY mode"), shipped in M5 below (`deployment-api@4dd2575`). This M4 item is the **live read-path resolver** in
-      batch-live-reconciliation-service (live-side track) — still OPEN.
+      **data-status CONSUMER** does NOT need full `select_for_mode` — it unions MODE-AGNOSTICALLY (answers "available
+      from ANY mode"), shipped in M5 below (`deployment-api@4dd2575`). **The M4 mode-precedence TIEBREAK
+      (live>replay>batch) IS now applied in the data-status union** (`deployment-api@46e3d57`): the M5 status-union
+      decides the capture_status (captured wins regardless of mode); M4 only picks the REPRESENTATIVE row
+      (source/error_reason/pipeline_mode) among rows sharing that status — never changes the outcome (`live_websocket`
+      treated as live). The REMAINING-OPEN M4 piece is the **live read-path resolver** `select_for_mode` in
+      batch-live-reconciliation-service (live-side track) — picks which mode's VALUE a live/batch reader CONSUMES.
 - [ ] [CODE] P0. **M5 — data status = UNION + pipeline_mode drilldown** — deployment-api/UI extend the 4-state counts
       with a pipeline_mode dimension (one union view + per-mode breakdown + deltas). Repos: deployment-api +
       unified-trading-system-ui. **PARTIAL 2026-06-07 (slot-7) — CONSUMER SHIPPED**: `deployment-api@4dd2575`

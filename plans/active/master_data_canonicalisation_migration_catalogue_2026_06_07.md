@@ -257,9 +257,26 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 
 **Two G1 long poles gate every AG's `--apply-write` seed (both cross-cutting, both must land first):**
 
-1. ✅ **G1-ENUM — CODE DONE 2026-06-07** (`uac@97c26dbe` matrix + `is@6ea46565` shape-aware
-   `enumerate_expected_universe` producer; validity filter + bundle-grain; tests green). Per-AG slice verification +
-   dry-run re-run still owed by each AG owner before `--apply-write`.
+1. ✅ **G1-ENUM — CODE DONE 2026-06-07** — in TWO parts (the WAVE-1 claim "validity filter + bundle-grain" was
+   inaccurate: `is@6ea46565` shipped ONLY the `(instrument_type × data_type)` VALIDITY FILTER + sports league-grain
+   (`is@99a5fbf5`); the OPTIONS/COMBO BUNDLE-GRAIN ROLLUP did NOT ship — slot-6 re-ran tradfi on `6ea46565` and got only
+   −808, ~563K false per-contract candidates remained):
+   - **(a) validity filter** — `uac@97c26dbe` matrix + `is@6ea46565` producer (impossible
+     `(instrument_type × data_type)` pairs filtered; per-leaf OPTION/COMBO zeroed via `frozenset()` — but that
+     UNDER-seeds bundles to zero).
+   - **(b) bundle-grain ROLLUP (the real fix) — SHIPPED 2026-06-07 (slot-7)**: `uac@dd7fa100` (GRAIN axis SSOT
+     `grain_for_instrument_type`) + `uac@cb3a846b` (`bundle_data_type_for_instrument_type` + tradfi grain) +
+     `is@93866d86` (`enumerate_expected_universe._rollup_bundle_grain` — read-side pre-pass in `enumerate_v2` collapses
+     every option/combo LEAF of a `(venue, chain, underlying)` into ONE synthetic per-underlying `options_chain`
+     candidate; generalises slot-4's league-grain rollup, NO per-AG special-casing; `underlying` carried on the
+     catalogue +`InstrumentCatalogEntry`, derived from instrument*id as fallback) + `is@df15dba2` (contract tests). Net:
+     OPTION/COMBO leaf → ZERO per-contract candidates; underlying → exactly ONE `options_chain` (kills the ~563K tradfi
+     over-fan + cefi DERIBIT dominance). **🔔 slots 3 (cefi) + 6 (tradfi): re-run `enumerate` dry-runs on the rollup
+     producer to confirm (tradfi ~588K → plausible; cefi DERIBIT no longer dominant) — you were gated on this.** **F2
+     residual**: DERIBIT/OKX FUTURE \_leaf* per-contract over-fan stays a gated venue-specific catalogue-rollup todo
+     (futures_chain bundle ENTRIES already roll up; `VENUE_DATA_TYPE_CAPABILITIES` is an unsound bundle-venue
+     discriminator — BYBIT lists `futures_chain` yet captures per-contract — so FUTURE-leaf venue-bundling needs a sound
+     registry first). Per-AG slice verification + dry-run re-run still owed by each AG owner before `--apply-write`.
 2. ✅ **G1-V8 — MIGRATOR BUILT + DRY-RUN GREEN (all 5 AGs) 2026-06-07** (`is@febb899e`,
    `instruments-service/scripts/migrate_instruments_store_v9.py`). AG-parametric single-walk that rewrites BOTH the
    instruments-store `_index` rows AND object paths to canonical v9 (CF-1 v9 · CF-2 `asset_group=` · CF-3
@@ -374,7 +391,14 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       `generate_instrument_catalogue.py`) — NEITHER ran the `build_instrument_catalogue.py` lifecycle roll-up, so this
       is a NEW scheduler, not a per-AG extension of cefi. **REMAINING (apply-gated)**: `terraform apply` + T+10min
       per-AG `gcloud run jobs executions` verify (infra apply pipeline) → then GREEN. Bucket-name `pred`-vs-`prediction`
-      discrepancy flagged in the .tf header.
+      discrepancy flagged in the .tf header. **VERIFIED on LDR 2026-06-07 (slot-7)**: `lifecycle_catalogue_scheduler.tf`
+      carries all 5 AGs (cefi/defi/tradfi/sports/prediction) — the G1 daily catalogue scheduler is AG-complete;
+      `terraform apply` is the only remaining (gated) step.
+- [ ] [INFRA] P2. **catalogue_regen_scheduler.tf is MISSING tradfi** (slot-7 verify 2026-06-07) — the UAC-artefact regen
+      scheduler (`enumerate_envelope`/`availability`/`strategy_instruments`) has cefi/defi/sports/prediction but NOT
+      tradfi (the sibling `lifecycle_catalogue_scheduler.tf` + `instrument_catalogue_scheduler.tf` both DO have tradfi).
+      Distinct from the G1 lifecycle scheduler above (different script); add tradfi to its `for_each`. Repo:
+      deployment-service `terraform/gcp/catalogue_regen_scheduler.tf`.
 
 **Cross-AG IS references (each AG owns its instruments-store reference surface — sliced, not duplicated):** defi §H
 `instruments-store-defi` walk · sports `instruments-store-sports` (2.68M rows + the 316-cell legacy→prd data-loss-gated
