@@ -264,20 +264,26 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
   instruments-store-v9 dry-runs GREEN (source-aware `batch_tardis` paths, writer-stamped v9 columns, 30,803 IS rows→100%
   v9); `enumerate v2` exit 0 = **3,446 plausible candidates** (OPTION 141K + COMBO 64.8K correctly bundle-skipped via
   `frozenset()` → the G1-ENUM over-fan is FIXED for cefi options/combos; no impossible combos). **2 residual could-exist
-  findings gate G1.run apply-write**: 🔴 **F1** chain `data_type` axis (bundle objects pathed `data_type=trades` but
-  canonical `<chain>` per parquet-column + v8-manifest + UAC-matrix; the "12 phantoms" are stale-axis, not absences) +
-  🔴 **F2** DERIBIT/OKX `FUTURE` captured at `futures_chain` BUNDLE grain but enumerated per-contract (~160/2-day false
-  `expected_unattempted`; venue-specific → catalogue rollup, NOT a matrix flip — BYBIT has per-contract `future`). Same
-  class as tradfi/sports; co-owned slot-7 G1-ENUM producer. Full write-up + P0 todos in
-  `cefi_manifest_canonicalisation_2026_06_01.md` § "G2 VERIFY PASS". gate-c (v9) tool-ready via G1-V8.
+  findings gate G1.run apply-write**: 🔴 **F1 RESOLVED via writer SSOT** — `tardis_shared.py` Phase-1.6 makes **Era-B
+  canonical** (chain = `instrument_type`; `data_type` is pure market-data → the object PATH `data_type=trades` + the
+  rebuild are CORRECT; the v8-manifest + UAC-matrix `data_type=<chain>` are the legacy **Era-A** overload Phase-1.6
+  banned; the "12 phantoms" are stale Era-A rows → DROP not demote). It is a **deliberate, TESTED** Era-A↔Era-B conflict
+  (UAC matrix + 2 asserting tests vs writer) spanning **cefi+tradfi+slot-7 catalogue** → operator/slot-7 Era decision,
+  landed as ONE coherent matrix↔catalogue↔manifest change (recommend Era-B). 🔴 **F2** DERIBIT/OKX `FUTURE` captured at
+  `futures_chain` BUNDLE grain but enumerated per-contract (~160/2-day false `expected_unattempted`; venue-specific →
+  catalogue rollup, NOT a matrix flip — BYBIT has per-contract `future`). Same class as tradfi/sports. **Matrix SLICE is
+  AG-owner's; catalogue producer is slot-7 PART A (NOT shipped — no in-flight PR). cefi is NOT apply-ready: BLOCKED on
+  PART A + the Era decision.** Migrators re-confirmed GREEN post `hyperliquid_rest→hyperliquid` rename (mtds@c567962e).
+  Full write-up + P0 todos in `cefi_manifest_canonicalisation_2026_06_01.md` § "G2 VERIFY PASS". 🟢 G3 UNION view
+  SHIPPED (one operational gate cleared). gate-c (v9) tool-ready via G1-V8.
 - **sports (slot-4)**: **WAVE-2 dry-runs GREEN (2026-06-07)** — G1-ENUM league-grain producer DONE (is@99a5fbf5) +
   AG-specific producer present; **fixed a real G1-ENUM bug: the UAC `("sports","league")` validity slice silently
   dropped `ODDS` → now derived from `SPORTS_DATA_TYPE_TO_SOURCE` (uac@aff80339/PR#95)**. G1-V8 instruments-store v9
   dry-run GREEN (2.68M → 100% v9, `asset_group`/`source`/`transport`/`available_at` all stamped,
   `pipeline_mode=batch_<source>`). MTDS migrator object-path dry-run GREEN (source-aware `batch_odds_api`,
   `category`→`asset_group`). `--apply` gated (G0 + IS v9 walk + IS backfill + 2 data-state findings: 6,869 blank
-  `capture_status` + mdps consolidated-index-reads-0). Full verdict: `sports_manifest_canonicalisation_2026_06_01.md`
-  § "G2 WAVE-2 readiness verdict".
+  `capture_status` + mdps consolidated-index-reads-0). Full verdict: `sports_manifest_canonicalisation_2026_06_01.md` §
+  "G2 WAVE-2 readiness verdict".
 - **tradfi (slot-6)**: catalogue + enumerate dry-run mechanism GREEN (588,798 candidates) — BUT this ran on the OLD
   over-fanning producer (predates G1-ENUM) → **re-validate the candidate set against slot-7's shape-aware producer**
   (tradfi is per-contract so less bundle-affected than cefi, but impossible-combo filtering still applies). gate-b
