@@ -3452,16 +3452,105 @@ via **PM #165** (cherry-pick `c61b37f78`). This is the fix that makes the cascad
 
 ### ✅ END-TO-END VERIFIED (Rule 11) — the machinery is proven self-sustaining
 
-Forced a real SIT run (`sit-debounce-trigger -f drain_pending=true`) AFTER the sit-gate fix landed on main, and watched the actual chain:
+Forced a real SIT run (`sit-debounce-trigger -f drain_pending=true`) AFTER the sit-gate fix landed on main, and watched
+the actual chain:
 
-1. **sit-gate precheck now PASSES** for the MAIN_GREEN pending set (the run proceeded PAST the precheck — the exact thing that was unsatisfiable before). ✅ The root-cause fix works on a live cascade.
-2. That **surfaced a latent second bug** in sit-gate's `Lock staging` step (dormant for as long as the precheck always failed): `payload_shas_raw = '${{ toJson(commit_shas) }}'` inlined toJson's MULTI-LINE JSON into a single-quoted Python literal → `SyntaxError: unterminated string literal`. Fixed via env-var indirection (`COMMIT_SHAS_JSON`) + null/non-dict guard — **PM #166** (merged). This is precisely the Rule-11 "verify on a real consumer run" catch: the precheck fix alone would have looked done locally but SIT still couldn't lock.
-3. With BOTH fixes on main, the next SIT cycle ran, **failed honestly** on the genuine staging incoherence (`PipelineMode.BATCH_HYPERLIQUID_REST` — UTL's `pipeline_mode_resolver` fix `d0745bde` is on UTL LDR but not yet promoted to UTL staging), and **correctly auto-unlocked** (`staging_status.locked=False`, reason "SIT failed — open for fixes"). That is the intended fail-safe: SIT runs, validates, and on a real failure unlocks staging for fixes instead of dangling forever. The remaining green-path is purely the LDR→staging drain carrying the UTL fix to staging (utl #249 + peers), after which SIT validates and staging→main promotes — all CI-time-bound and unattended now.
+1. **sit-gate precheck now PASSES** for the MAIN_GREEN pending set (the run proceeded PAST the precheck — the exact
+   thing that was unsatisfiable before). ✅ The root-cause fix works on a live cascade.
+2. That **surfaced a latent second bug** in sit-gate's `Lock staging` step (dormant for as long as the precheck always
+   failed): `payload_shas_raw = '${{ toJson(commit_shas) }}'` inlined toJson's MULTI-LINE JSON into a single-quoted
+   Python literal → `SyntaxError: unterminated string literal`. Fixed via env-var indirection (`COMMIT_SHAS_JSON`) +
+   null/non-dict guard — **PM #166** (merged). This is precisely the Rule-11 "verify on a real consumer run" catch: the
+   precheck fix alone would have looked done locally but SIT still couldn't lock.
+3. With BOTH fixes on main, the next SIT cycle ran, **failed honestly** on the genuine staging incoherence
+   (`PipelineMode.BATCH_HYPERLIQUID_REST` — UTL's `pipeline_mode_resolver` fix `d0745bde` is on UTL LDR but not yet
+   promoted to UTL staging), and **correctly auto-unlocked** (`staging_status.locked=False`, reason "SIT failed — open
+   for fixes"). That is the intended fail-safe: SIT runs, validates, and on a real failure unlocks staging for fixes
+   instead of dangling forever. The remaining green-path is purely the LDR→staging drain carrying the UTL fix to staging
+   (utl #249 + peers), after which SIT validates and staging→main promotes — all CI-time-bound and unattended now.
 
 ### Convergence snapshot at close (2026-06-07 ~17:45 UTC)
 
 - **DIRTY PRs fleet-wide: 0** (every conflicted PR reconciled or closed-as-stale/redundant this session).
-- **9 LDR→staging promote PRs merged** since 15:00 (drain actively flowing); **staging==LDR on 12/24 repos** and climbing as the re-fired check-staging-lock + qg-v2 complete.
+- **9 LDR→staging promote PRs merged** since 15:00 (drain actively flowing); **staging==LDR on 12/24 repos** and
+  climbing as the re-fired check-staging-lock + qg-v2 complete.
 - **Staging lock: self-clearing** via real SIT runs (no longer dangles at retry-exhausted).
-- **All genuinely-v2-red repos green**: SIT (UTL-side fix), PM (credential ratchet), deployment/execution/mtds/features/greeks (were stale ci_status, already green on LDR), AO (green LDR+main).
-- Residual: CI-time-bound cascade convergence (promotes merging → UTL staging fix → SIT green → staging→main), the 3 durable findings captured above (staging-unlock refresh, [skip ci] lock back-merge, 2 baselined template warns), the BLOCKED-UPSTREAM v1-callee delete (GH #4422570), and slot-5's PM #164 docs PR (not mine). Nothing for the operator to pick up beyond those.
+- **All genuinely-v2-red repos green**: SIT (UTL-side fix), PM (credential ratchet),
+  deployment/execution/mtds/features/greeks (were stale ci_status, already green on LDR), AO (green LDR+main).
+- Residual: CI-time-bound cascade convergence (promotes merging → UTL staging fix → SIT green → staging→main), the 3
+  durable findings captured above (staging-unlock refresh, [skip ci] lock back-merge, 2 baselined template warns), the
+  BLOCKED-UPSTREAM v1-callee delete (GH #4422570), and slot-5's PM #164 docs PR (not mine). Nothing for the operator to
+  pick up beyond those.
+
+## 🔔 #ci-failures alert triage + v1-deprecation + billing-alert rewire — 2026-06-07 (slot-1, session #3 cont.)
+
+Operator pasted the 17:16–17:45 #ci-failures stream and asked: deprecate v1 for real, rewire the billing alert to AO's
+all-accounts-out signal (Claude API no longer used), and report what's real vs redundant.
+
+### ✅ v1 quality-gates — DEPRECATED (the BLOCKED-UPSTREAM item is now actionable + done)
+
+The v1 PM callee `python-quality-gates.yml` is **already deleted fleet-wide** (only `python-quality-gates-v2.yml`
+remains; no service repo carries a v1 `workspace-qg.yml` EXCEPT greeks-service). **greeks-service was the last v1
+artifact** → clean removal PR **greeks #11** (deletes `workspace-qg.yml` + rolls out the canonical
+`major-bump-issue-handler.yml` with the actionlint/bash-guard fix; supersedes the bash-guard-tripping #10). Cleaned the
+stale v1 comment in `ci-status-update.yml`. Net: v1 is gone; the GH #4422570 ghost-cache risk is moot now that v2 has
+been the sole required check fleet-wide for weeks.
+
+### ✅ Billing alert — REWIRED to agent-orchestrator all-accounts-out (Claude API retired)
+
+- **Retired `claude-api-health-monitor.yml`** (deleted). It pinged the raw pay-per-call Claude API
+  (`ANTHROPIC_API_KEY_SYSHEALTH`) — which the fleet **no longer uses** (every agent escalates to an AO VM worker on
+  Claude Code session-auth / setup-tokens). Its `:rotating_light: Claude API degraded — billing_credits` alert was pure
+  noise.
+- **Neutralized the vestigial `claude-api-health-precheck`** (the script → always-pass no-op; semver-agent's inline
+  check → no-op) so the ~5 agent workflows that gated on it no longer false-dam during a (now-irrelevant) credit state.
+  Both already fail-OPEN on a missing monitor run, so deleting the monitor is safe.
+- **Added the real signal in AO** (`agent-orchestrator@318f252`): `notify_all_accounts_unusable(...)` in
+  `server/notifications/slack.py` + `usable_account_count()` / `all_accounts_unusable()` in `state_store.py`, wired into
+  `mark_account_rate_limited` / `mark_account_auth_failed` with a **state-transition sentinel** (fires ONCE to
+  #agent-orchestrator-alerts only when ALL Claude Code accounts go unusable — out-of-billing / rate-limited /
+  auth-failed — and re-arms on recovery). This is the meaningful "the fleet can't dispatch any worker" signal the
+  operator asked for.
+
+### 📋 Alert-stream triage — what's real, what's noise, what's solved
+
+| Alert                                                                                     | Verdict                                                                                            | Action                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Claude API degraded — billing_credits` (CRITICAL)                                        | **REDUNDANT** — Claude API unused                                                                  | RETIRED → AO all-accounts-out (done this session)                                                                                                                                                                                                                                                                                                                                      |
+| `Guard 3 reconciled 3 ci_status drift(s)`                                                 | **HEALTHY** — reconciler working as designed                                                       | none                                                                                                                                                                                                                                                                                                                                                                                   |
+| `CI RECOVERED: instruments/mdps/mtds/execution …`                                         | **HEALTHY** — cascade converging                                                                   | none                                                                                                                                                                                                                                                                                                                                                                                   |
+| `sit-unlock: SIT Failed — staging unlocked`                                               | **HEALTHY** — the intended fail-safe (SIT runs, fails on real incoherence, unlocks for fixes)      | none (machinery now correct after the sit-gate fixes #165/#166)                                                                                                                                                                                                                                                                                                                        |
+| `ldr-ci-monitor: unified-trading-pm RED→GREEN`                                            | **HEALTHY** — my PM credential-ratchet fix recovered                                               | none                                                                                                                                                                                                                                                                                                                                                                                   |
+| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                        |
+| `mdps/mtds FAILING — AttributeError BATCH_HYPERLIQUID_REST`                               | **REAL — the #1 blocker**                                                                          | the UAC+UTL `BATCH_HYPERLIQUID` enum migration is coherent on LDR+staging but **main lags for BOTH** (data-value change `batch_hyperliquid_rest`→`batch_hyperliquid`); consumer/SIT QGs that clone UTL@main hit the old name. Needs the **coordinated UAC+UTL staging→main promotion** (data-track; see finding below). Do NOT fix piecemeal (my UTL #250 was closed for exactly this) |
+| `execution #216 QG: STEP 5.21 reportUnknown* warning/none + 5.12b gs:// URI`              | **REAL** — pre-existing execution-service QG-debt surfaced by the dep-update PR                    | execution-service's own plan (basedpyright strict config + replace `gs://` f-string in `evidence_router.py:66` with `resolve_bucket_name`)                                                                                                                                                                                                                                             |
+| `mtds #133 QG: pydantic ValidationError CandleBoundaryCrossedEvent`                       | **REAL** — likely the same enum-value migration touching a UAC event model                         | resolves with the coordinated enum migration; verify the event's `pipeline_mode` field accepts the new value                                                                                                                                                                                                                                                                           |
+| `7 promotion PRs STUCK (auto-merge wedged)`                                               | **MIXED** — stale `check-staging-lock` (re-fired this session) + the enum-skew blocker + 1 dead PR | re-fired the staging-lock checks; closed strategy #75 (dead 23h resync); the rest unblock when the enum migration lands on main                                                                                                                                                                                                                                                        |
+| `tab-branch drift in mtds/uac/execution (hk/4,5,8 · ikennaigboaka/7,9,10,11)`             | **REAL but NOT-MINE** — other operators'/slots' diverged worktrees jamming their tab→LDR mirror    | each must `git rebase origin/live-defi-rollout` on the OWNING host; my own slot-1 worktrees are clean (0 ahead)                                                                                                                                                                                                                                                                        |
+
+### 🆕 Durable findings (track to closure)
+
+- [ ] [DATA] P0. **UAC+UTL `BATCH_HYPERLIQUID` enum migration is half-promoted — main lags coherently.**
+      `BATCH_HYPERLIQUID_REST`→`BATCH_HYPERLIQUID` (incl. the value `batch_hyperliquid_rest`→`batch_hyperliquid`) is
+      complete on LDR+staging for BOTH unified-api-contracts (main 14 behind) AND unified-trading-library (main 8
+      behind), but main still has the old member for both. Because the QG dep-clone resolves deps at
+      **main/manifest-version**, any consumer or SIT run that clones UTL@main hits
+      `AttributeError BATCH_HYPERLIQUID_REST` → mdps/mtds/SIT red. **Fix = the COORDINATED UAC+UTL staging→main
+      promotion (must land together, with data-path verification that no `pipeline_mode=batch_hyperliquid_rest` data is
+      orphaned).** This is a data/features-track migration, NOT a CI patch (my piecemeal UTL #250 was closed). repos:
+      unified-api-contracts, unified-trading-library. Provenance: slot-1 2026-06-07 (Slack #ci-failures 17:26–17:29).
+- [ ] [INFRA] P2. **QG dep-clone ref-determinism.** The dep-clone (`tag → branch → main` fallback) can clone two deps
+      (e.g. UAC + UTL) at INCONSISTENT refs (one staging-new, one main-old) → a coherent staging can still fail a
+      consumer QG. Make the dep-clone resolve ALL deps at the SAME ref as the branch under test (or fail loud on a mixed
+      set). repo: unified-trading-pm (base-service.sh dep-clone). Provenance: slot-1 2026-06-07.
+- [ ] [SCRIPT] P3. **Debounce the FEATURE_GREEN↔FAILING ci-status flap alerts** during active cascade convergence
+      (deployment/execution/mtds flapped CRITICAL↔recovered within minutes) — only alert on a sustained (N-tick)
+      regression, not transient cascade churn. repo: unified-trading-pm (ci-status-update / ci-failure-watcher).
+      Provenance: slot-1 2026-06-07.
+
+### What I solved this session (cont.)
+
+v1 deprecated (greeks #11); billing alert rewired (claude-api-health-monitor retired + AO all-accounts-out shipped
+318f252); vestigial claude-api-health-precheck neutralized; strategy #75 dead-resync closed; 7 stuck promote PRs'
+staging-lock re-fired. The enum-migration P0 + execution/mtds code-debt are real and named above for the data/execution
+tracks (out of this CI-machinery dispatch's scope to force on main given the data-correctness implications).
