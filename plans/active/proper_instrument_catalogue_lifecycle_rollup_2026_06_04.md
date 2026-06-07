@@ -154,10 +154,12 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       prediction/sports need the > granularity-aware producer above. > **tradfi slice (slot-7, 2026-06-05): APPLIED** —
       651,985-row catalogue promoted to > `instruments-store-tradfi-prd-…/prod/catalog.parquet` (guard ACCEPT, exit 0;
       live enumerator ✓). Liveness > PROVISIONAL — see the capture-freeze FINDING below (tradfi recent capture
-      degraded). **defi slice: apply > RE-RUNNING** on the pooled producer (the first single-pool run timed out at 30
-      min on 64,724 parquets). > **Producer perf fix instruments-service@c340f2dc** — `_tune_download_pool` enlarges the
-      GCS HTTP pool to > workers=16 (was throttled to ~8 → the "Connection pool is full" warning); ~2x faster
-      full-corpus walk, verified > live (pool_maxsize 16).
+      degraded). **defi slice: APPLIED 2026-06-05** (4,171-row catalogue →
+      `instruments-store-defi-prd-…/prod/catalog.parquet`, guard ACCEPT, exit 0; live enumerator ✓; 57 protocol-chain
+      venues; frozen 2026-05-07 with a FULL last day = 3,599 active) on the pooled producer (~23 min for 64,724
+      parquets; the prior single-pool run timed out at 30 min). > **Producer perf fix instruments-service@c340f2dc** —
+      `_tune_download_pool` enlarges the GCS HTTP pool to > workers=16 (was throttled to ~8 → the "Connection pool is
+      full" warning); ~2x faster full-corpus walk, verified > live (pool_maxsize 16).
 - [ ] [CODE] P1. **FINDING (slot-7, 2026-06-04) — two divergent catalogue read-paths must be reconciled.** The
       standalone v2 enumerator (`enumerate_expected_universe.py --catalog-path`) + the launcher
       (`launch-expected-universe-v2-vm.sh` L165-174) read **`{env}/catalog.parquet`** (the path this plan's roll-up
@@ -175,19 +177,19 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       roll-up → it exposes the input's coverage horizon). cefi: latest captured day **2026-05-21** (16 days stale as of
       2026-06-05), last day FULL (3,473 active / healthy). tradfi: capture **degraded from ~16-18K instruments/day to
       ~2/day after 2026-05-04** (only `CBOE:INDEX:VIX` + `FX:SPOT_PAIR:KRW-USD` on recent days), then **stopped after
-      2026-05-22**. defi: TBD (apply in flight). **Consequence**: the applied catalogues are honest
-      **snapshots-as-of-the -freeze** — cefi's is usable (full last day); **tradfi's marks ~651K instruments
-      "delisted"** (available*to ≤ 2026-05-04) because recent capture broke, so its liveness is NOT trustworthy until
-      tradfi capture is fixed + the catalogue regenerated (monotonic guard makes the regen safe). The freeze is \_likely
-      the deliberate pre-migration drain* (no instruments backfill until C-GREEN per
-      `instruments_manifest_canonicalisation_2026_06_01.md`), in which case the catalogues refresh when capture resumes
-      post-canonicalisation — BUT the **tradfi 16K→2/day degradation from 2026-05-04 is anomalous** (not a clean freeze)
-      and must be diagnosed by the tradfi slice owner (slot-6 / `tradfi_manifest_canonicalisation` + `tradfi_master`).
-      The completeness audit (capture_status) did NOT catch this (sparse days still `captured`; stopped days have no
-      rows → not `attempted_failed`) — confirms the verdict is PROVISIONAL and motivates a **coverage-horizon check**
-      (warn when the latest `by_date` day is > N days stale OR the per-day instrument count drops sharply) added to the
-      producer/audit (**NICE-TO-HAVE**, slot-7). Repo: instruments-service (capture) + the tradfi vertical. assigned_vm:
-      vm-cross-cutting (catalogue) / slot-6 (tradfi root-cause).
+      2026-05-22**. defi: frozen **2026-05-07** (~31 days stale), last day FULL (3,599/4,171 active → catalogue usable).
+      **Consequence**: the applied catalogues are honest **snapshots-as-of-the -freeze** — cefi's is usable (full last
+      day); **tradfi's marks ~651K instruments "delisted"** (available*to ≤ 2026-05-04) because recent capture broke, so
+      its liveness is NOT trustworthy until tradfi capture is fixed + the catalogue regenerated (monotonic guard makes
+      the regen safe). The freeze is \_likely the deliberate pre-migration drain* (no instruments backfill until C-GREEN
+      per `instruments_manifest_canonicalisation_2026_06_01.md`), in which case the catalogues refresh when capture
+      resumes post-canonicalisation — BUT the **tradfi 16K→2/day degradation from 2026-05-04 is anomalous** (not a clean
+      freeze) and must be diagnosed by the tradfi slice owner (slot-6 / `tradfi_manifest_canonicalisation` +
+      `tradfi_master`). The completeness audit (capture_status) did NOT catch this (sparse days still `captured`;
+      stopped days have no rows → not `attempted_failed`) — confirms the verdict is PROVISIONAL and motivates a
+      **coverage-horizon check** (warn when the latest `by_date` day is > N days stale OR the per-day instrument count
+      drops sharply) added to the producer/audit (**NICE-TO-HAVE**, slot-7). Repo: instruments-service (capture) + the
+      tradfi vertical. assigned_vm: vm-cross-cutting (catalogue) / slot-6 (tradfi root-cause).
 
 ## Phased DAG + gates
 
