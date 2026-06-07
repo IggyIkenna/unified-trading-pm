@@ -1799,7 +1799,7 @@
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "Manually cleared 2026-06-07 (slot-1): stuck breaking-cascade lock — sit_retry_count exhausted at max(3), validator (system-integration-tests v2) red, would not self-clear. Unlock-for-fixes; staging->main still gated on SIT_VALIDATED.",
+    "locked_reason": "SIT failed — open for fixes",
     "lock_version": null,
     "pending_repos": [
       "features-service",
