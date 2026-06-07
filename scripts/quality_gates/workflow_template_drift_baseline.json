@@ -1,6 +1,30 @@
 {
   "drift": [
+    "agent-orchestrator/update-dependency-version.yml",
+    "alerting-service/update-dependency-version.yml",
+    "batch-live-reconciliation-service/update-dependency-version.yml",
+    "client-reporting-api/update-dependency-version.yml",
+    "deployment-api/update-dependency-version.yml",
+    "deployment-service/update-dependency-version.yml",
+    "deployment-ui/update-dependency-version.yml",
+    "e2e-testing/update-dependency-version.yml",
+    "execution-service/update-dependency-version.yml",
+    "features-service/update-dependency-version.yml",
+    "fund-administration-service/update-dependency-version.yml",
+    "greeks-service/update-dependency-version.yml",
+    "ibkr-gateway-infra/update-dependency-version.yml",
+    "instruments-service/update-dependency-version.yml",
+    "market-data-processing-service/update-dependency-version.yml",
+    "market-tick-data-service/update-dependency-version.yml",
+    "ml-service/update-dependency-version.yml",
+    "strategy-service/update-dependency-version.yml",
+    "system-integration-tests/update-dependency-version.yml",
+    "trading-agent-service/update-dependency-version.yml",
+    "unified-api-contracts/update-dependency-version.yml",
+    "unified-trading-api/update-dependency-version.yml",
+    "unified-trading-library/update-dependency-version.yml",
     "unified-trading-pm/major-bump-issue-handler.yml",
-    "unified-trading-pm/request-major-bump.yml"
+    "unified-trading-pm/request-major-bump.yml",
+    "unified-trading-system-ui/update-dependency-version.yml"
   ]
 }

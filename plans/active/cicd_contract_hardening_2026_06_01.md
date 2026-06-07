@@ -2091,6 +2091,14 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       job fails at the Claude-API health precheck when the API is unhealthy — that's by-design fail-loud in the LLM
       path, does NOT affect the PR required-check.) **DO NOT pin as required until** a post-merge PR run of this
       workflow is observed GREEN end-to-end; pin via `gh api` ruleset add of context `plan-health-gate` once confirmed.
+- [x] ✅ [SCRIPT] P1. **`check_todo_regression.sh` false-positived on the MANDATED `[ ]`→`[x]` flip** — FIXED 2026-06-07
+      (PM@<sha>). The gate counted OPEN `- [ ]` todos only and failed when current < origin — so every legitimate
+      Commit+Push+Flip (which moves a line from `[ ]` to `[x]`, COMPLETING not losing it) read as "N lost open todos"
+      and BLOCKED the `plan-health-gate` on the PR (live: this very session's PR #152 — origin=38 open, current=35 after
+      3 flips → "lost=3", though TOTAL todos went 186→187, i.e. nothing lost + one added). Fixed the invariant to TOTAL
+      todos (open+done): a flip is conserved, only a real deletion/collapse shrinks the total. This was blocking ALL
+      flip-PRs fleet-wide, not just this one. repo: unified-trading-pm
+      (`scripts/plan-hygiene/check_todo_regression.sh`).
 - [x] ✅ [AGENT] P2. **Phase 2 — auto-fix + Haiku-via-planning-VM-slot — DONE 2026-06-05.** (a) auto-fix at the gate:
       `plan-health-gate` now runs `fix_frontmatter.py` + commits to the PR head before the sweep, loop-guarded
       (`unified-trading-pm@59588057d`); (b) Haiku→planning-VM slot BUILT: `agent-orchestrator@64c47d4` —

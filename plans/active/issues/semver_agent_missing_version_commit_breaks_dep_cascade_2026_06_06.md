@@ -143,6 +143,13 @@ resolves UTL from the registry rather than the editable clone. UTL promotion PR 
       neither rollout script reads it). Also added the same relock to `.github/workflows/update-repo-version.yml` (PM's
       own pyproject patch-bump path). NB: SC2129 style warnings at the `$GITHUB_OUTPUT` redirect block are pre-existing
       (not from this change) + the template isn't under the PM actionlint gate (`.github/workflows/` only).
+- [ ] [SCRIPT] P1. **Roll out the uv-lock `update-dependency-version.yml` template to the 24 fleet repos** (ratchet the
+      drift baseline back down). The template change above made the rolled-out copy diverge from all 24 repos' live
+      copies → the PM QG `detect_template_drift.py --workflows` ratchet was `--baseline-write`-grandfathered 2026-06-07
+      (24 `update-dependency-version.yml` entries in `workflow_template_drift_baseline.json`) so the template fix could
+      land. The deploy (`rollout-workflow-templates.sh --template update-dependency-version.yml` → per-repo commit) is
+      cross-repo (sibling repos, fleet-drain loop); each rolled-out repo should be REMOVED from the baseline so the
+      ratchet tightens. repo: unified-trading-pm template + 24 sibling repos.
 - [ ] [SCRIPT] P1. Collapse the triple `semver-agent` template drift to ONE SSOT + ONE rollout script; delete the dead
       `scripts/templates/semver-agent.yml`.
 - [ ] [SCRIPT] P2. `python-quality-gates-v2.yml` dep-clone: when `DEP_BRANCH` (the head dep-update branch) does not
