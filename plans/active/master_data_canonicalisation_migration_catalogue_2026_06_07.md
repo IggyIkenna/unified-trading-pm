@@ -418,6 +418,16 @@ does not require a second whole-corpus walk.
       `odds`/`oracle_prices` leak into POOL), but a per-protocol grain would tighten the denominator. Repo:
       unified-api-contracts (`registry/capability_declarations/_defi.py` PROTOCOL_CAPABILITIES). parent_epic:
       manifest_master. Provenance: G2 verify 2026-06-07 (slot-2).
+- [ ] [SCRIPT] P3. **NICE-TO-HAVE — defi migrator `_list_objects` L1 find is a full-bucket scan** (re-verify 2026-06-07,
+      slot-2): `migrate_defi_full_v9_canonical.py:570` always issues `_safe_find(fs, {base}/{dir_name})` for the L1
+      layout, but all 6 dedicated source buckets are `day=`-partitioned today (no top-level `{dir_name}/` or
+      `raw_tick_data/` tree) → that L1 prefix matches nothing yet gcsfs enumerates the whole bucket (a 3-day local
+      dry-run hit a >280 s timeout on it; the L1 `dex_pools` find alone >120 s isolated). NOT a correctness issue
+      (returns the correct empty set; date-scoped runs DO complete — the earlier `day=2024-06-01` dry-run finished
+      0-errors) and laptop-variable, but it wastes a whole-bucket enumeration per bucket on the in-region VM `--apply`
+      too. Gate the L1 find on a cheap existence probe (or drop it) — **validate against the whole corpus on the VM
+      first** so a bucket with a genuine L1 tree is never silently skipped (data-loss risk). Repo:
+      market-tick-data-service. parent_epic: mtds_mdps_master.
 
 ### G2-defi readiness verdict (WAVE 2 verify pass — slot-2, 2026-06-07)
 
