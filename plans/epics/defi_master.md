@@ -754,6 +754,20 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
       2026-05-07: DONE — MTDS@10aa715 (ohlcv_1m); CloudFront 429 quirks documented in MEMORY
       (feedback_lighter_pacifica_cloudfront_quirks)]
 
+### AMM matcher coverage (migrated from archived `defi_simulation_realism_2026_05_10`)
+
+- [ ] [AGENT] P1. **`SolidlyCLForkPool` matcher for Velodrome/Aerodrome Slipstream V3-tick CL pools** — register to
+      `PoolShape.SOLIDLY_CL_FORK` (declared enum value; LDR `execution-service` `test_pool_matcher.py` confirms "no
+      registered matcher yet — Phase-2H follow-up"). Reuses Uniswap-V3 tick math + `(chain_id, CLFactory)` discriminator
+      (chain 10 = Optimism/Velodrome, 8453 = Base/Aerodrome). Validation: ≥20-Velodrome + ≥20-Aerodrome historical-swap
+      golden-fixture checks within 5 bps each. **MIGRATED FROM:** `plans/archive/defi_simulation_realism_2026_05_10.md`
+      Phase 2H (DEFERRED P1; lost its active home on archival). **A partial implementation already exists** on
+      orphan-WIP `execution-service@8becdb26` — preserved at branch `wip/solidly-cl-fork-matcher-8becdb26` (adds
+      `SolidlyCLForkPool` + `matching_engine/__init__.py` export + `test_pool_matcher` cases). Needs reconciliation with
+      LDR's current `solidly_fork.py` + the "no matcher yet" assertion in `test_pool_matcher.py`, plus the ≥20+≥20
+      golden-swap validation, before QG + quickmerge. Surfaced 2026-06-07 during execution-service tab-branch drift
+      triage (tab/ikennaigboaka/11 realigned to LDR after preservation).
+
 ### Custody (Copper + Cloud-KMS for May-23 + Fireblocks June-1)
 
 > **🟢 R9 sub-(a) RESOLVED 2026-05-12** by Ikenna slot 4 per
