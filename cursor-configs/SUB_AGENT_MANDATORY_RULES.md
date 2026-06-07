@@ -102,6 +102,13 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
 3. **The ONLY sanctioned raw `git push origin live-defi-rollout` = dirty deps.** When a dep repo is dirty mid-edit,
    commit + push the dep directly to `live-defi-rollout` (do NOT quickmerge with dirty deps). The other sanctioned raw
    pushes are the ff-pull-in and the cross-repo PM plan-flip in step 5. **Everything else ships via quickmerge.**
+   - **NEVER `[skip ci]` / `[ci skip]` a commit that must later pass a v2-gated promotion PR (HARD RULE 2026-06-07).** A
+     `[skip ci]` commit emits NO check runs; if its head becomes the head of a PR into `staging`/`main` (whose ruleset
+     requires `quality-gates-v2`), the required check is MISSING → PR permanently BLOCKED and even `gh pr merge --admin`
+     refuses ("Repository rule violations found"). `[skip ci]` is safe only for direct-to-`main` machinery commits or
+     LDR commits you re-trigger v2 on before promoting. Recovery: `gh workflow run quality-gates-v2.yml --ref <branch>`
+     on the head → check reports → PR merges. SSOT: `codex/08-workflows/ci-cd-flow.md` § "[skip ci] and required
+     checks".
 4. **Conditional push (multi-agent safety)**: before any push,
    `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
    document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main

@@ -853,6 +853,16 @@ phase — plans omitting this are review-blocking.
 - Pushes to `live-defi-rollout` / `feat/*` → NO remote CI. Quality enforced locally via `quality-gates.sh`.
 - On CI fail: `gh run view <run-id> --log-failed`. Fix root cause. Push again.
 - CI failures are NOT issues to flag — fix in real time.
+- **NEVER `[skip ci]` (or `[ci skip]`) a commit that will become the HEAD of a v2-gated promotion PR (HARD RULE,
+  codified 2026-06-07).** A `[skip ci]` commit produces ZERO check runs on its head; when that head is the head of a PR
+  into a branch whose ruleset requires `quality-gates-v2` (`staging`/`main`), the required check is **MISSING → the PR
+  is permanently BLOCKED, and `gh pr merge --admin` REFUSES** ("Repository rule violations found" — you cannot bypass a
+  never-reported required check). `[skip ci]` is safe ONLY for (a) machinery commits that land **directly** on `main`
+  and don't go through a PR (ci-status-update / manifest writes), or (b) `live-defi-rollout` commits you will
+  **re-trigger v2 on before promoting**. Recovery if you hit it:
+  `gh workflow run quality-gates-v2.yml --repo <r> --ref <branch>` on the PR head → the check reports → the PR merges.
+  (Incident: a `[skip ci]` greeks `workspace-qg.yml` deletion on LDR jammed its LDR→main PR #9.) SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "[skip ci] and required checks".
 
 ---
 

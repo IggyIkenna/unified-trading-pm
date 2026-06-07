@@ -634,3 +634,35 @@ future drift is prevented by the pyproject-BFS contract.
 | Cadence                 | Weekly drift-check (one repo per day across the week)                                                  |
 | Owner                   | vm-cross-cutting (ci_canonical_v2_migration plan)                                                      |
 | Last verified           | 2026-06-01: all 17 repos on v2; semver-agent SHIPPED (24 repos, trigger `quality-gates-v2`)            |
+
+## `[skip ci]` and required checks (codified 2026-06-07)
+
+**Rule: never `[skip ci]` / `[ci skip]` a commit that will become the HEAD of a v2-gated promotion PR.**
+
+A commit whose message contains `[skip ci]` produces **zero check runs** on its head SHA. The branch-protection rulesets
+on `staging` and `main` (`require-quality-gates` / `require-staging-lock-check`) require the
+`Quality Gates (<repo>) / quality-gates-v2` context. When a `[skip ci]` commit is the head of a PR into one of those
+branches, that required context is **never reported** → the PR's `mergeStateStatus` is `BLOCKED` (not `DIRTY` — there is
+no failure, the check is simply absent), and **`gh pr merge --admin` REFUSES it** with
+`Repository rule violations found` (admin cannot bypass a required check that has never run — only a failing/expected
+one can be overridden in some configs; a missing one cannot).
+
+**Where `[skip ci]` IS safe:**
+
+- Machinery commits that land **directly on `main`** without a PR (e.g. `ci-status-update.yml`, manifest version writes,
+  `update-repo-version.yml` `[skip ci]` commits) — no PR, no required-check evaluation.
+- `live-defi-rollout` commits (LDR carries no required-check ruleset) **that you re-trigger v2 on before they are
+  promoted** — i.e. the head gets a `quality-gates-v2` run via push or `gh workflow run` before an LDR→staging/main PR
+  reads it.
+
+**Recovery if you hit the block:** dispatch the gate on the PR head so the required check reports, then the PR merges:
+
+```bash
+gh workflow run quality-gates-v2.yml --repo IggyIkenna/<repo> --ref <pr-head-branch>
+# wait for completed/success, then the armed auto-merge fires (or `gh pr merge <n> --admin --merge`)
+```
+
+**Incident (2026-06-07):** a `[skip ci]` deletion of the retired v1 `greeks-service/.github/workflows/workspace-qg.yml`
+on `live-defi-rollout` jammed its LDR→`main` promotion PR #9 — v2 never ran on the deletion commit, so the required
+check was missing and admin-merge was refused. Fixed by dispatching `quality-gates-v2` on the head. Composes with the
+AUTONOMOUS_AGENT_RULES Rule 11 (verify blast radius / all branches before declaring a fleet/branch change done).
