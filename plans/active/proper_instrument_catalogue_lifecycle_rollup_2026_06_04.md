@@ -167,7 +167,7 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `_tune_download_pool` enlarges the GCS HTTP pool to > workers=16 (was throttled to ~8 → the "Connection pool is
       full" warning); ~2x faster full-corpus walk, verified > live (pool_maxsize 16). > **🟢 G1-ENUM SHAPE-AWARE
       ENUMERATOR DONE 2026-06-07 (vm-cross-cutting / slot-7):** the central fix the cross-AG over-fan FINDING called for
-      — `is@c0f2f39c` `_row_data_types()` filters every `\_enumerate_v2*\*`to valid`(asset_group,
+      — `is@6ea46565` `_row_data_types()` filters every `\_enumerate_v2*\*`to valid`(asset_group,
       instrument_type)`pairs     via the UAC matrix`uac@97c26dbe` (`valid_data_types_for_instrument_type`), preserving prediction grain-binding;     cefi OPTION/COMBO leaves → zero per-leaf rows, impossible combos excluded. Per-AG slices (sports league-grain,     prediction per-cqg) verify their matrix rows + re-run dry-runs before `--apply-write`.
 - [ ] [CODE] P2. **NICE-TO-HAVE (slot-7, 2026-06-07) — DeFi G1-ENUM validity is instrument_type-grain, not
       venue/protocol-grain.** The defi matrix is the UNION across `PROTOCOL_CAPABILITIES` per instrument_type, so a
