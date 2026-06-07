@@ -58,14 +58,14 @@ Slot map: **2=DeFi · 3=CeFi · 4=Sports · 5=Prediction · 6=TradFi · 7=cross-
 
 **WAVE 1 — IN FLIGHT (launched 2026-06-07): close G0 all-AG + launch G1 all-AG.**
 
-| Slot | Gate          | Scope (in flight)                                                                                                                                                                                         |
-| ---- | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 7    | G0 + G1-found | C-PATH READ (features/mdps readers prefix-match) + doc reconcile (#7/M-COORD-1) + G1 FOUNDATION (`build_instrument_catalogue` + `enumerate_expected_universe` v2 all-AG-capable + daily scheduler per AG) |
-| 2    | G0 + G1-defi  | C-PATH WRITE (`migrate_defi`/`rebuild_defi` → `derive_pipeline_mode_for_row`; last coarse writer) + DeFi IS-catalogue (dry-run now; run gated on slot-7 code + DeFi IS backfill)                          |
-| 3    | G1-cefi       | CeFi instruments-store v9 + catalogue run (dry-run proven 2026-06-05) + scheduler                                                                                                                         |
-| 4    | G1-sports     | Sports instruments-store v9 + fixtures/leagues could-exist + catalogue run + scheduler                                                                                                                    |
-| 5    | G1-prediction | Prediction instruments-store v9 + polymarket-market could-exist + catalogue run + scheduler                                                                                                               |
-| 6    | G1-tradfi     | TradFi instruments-store v9 + listed-contracts-per-session could-exist + catalogue run + scheduler                                                                                                        |
+| Slot | Gate          | Scope (in flight)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ---- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 7    | G0 + G1-found | C-PATH READ (features/mdps readers prefix-match) + doc reconcile (#7/M-COORD-1) + G1 FOUNDATION (`build_instrument_catalogue` + `enumerate_expected_universe` v2 all-AG-capable + daily scheduler per AG). **RE-SCOPED 2026-06-07: the v2 producer MUST be instrument-shape-aware — `(instrument_type × data_type)` validity filter + bundle-grain (G1-ENUM, P0) — NOT generic fan-out** (else false `expected_unattempted` pollution; see G1-expanded) |
+| 2    | G0 + G1-defi  | C-PATH WRITE (`migrate_defi`/`rebuild_defi` → `derive_pipeline_mode_for_row`; last coarse writer) + DeFi IS-catalogue (dry-run now; run gated on slot-7 code + DeFi IS backfill)                                                                                                                                                                                                                                                                        |
+| 3    | G1-cefi       | CeFi instruments-store v9 + catalogue run (dry-run proven 2026-06-05) + scheduler                                                                                                                                                                                                                                                                                                                                                                       |
+| 4    | G1-sports     | Sports instruments-store v9 + fixtures/leagues could-exist + catalogue run + scheduler                                                                                                                                                                                                                                                                                                                                                                  |
+| 5    | G1-prediction | Prediction instruments-store v9 + polymarket-market could-exist + catalogue run + scheduler                                                                                                                                                                                                                                                                                                                                                             |
+| 6    | G1-tradfi     | TradFi instruments-store v9 + listed-contracts-per-session could-exist + catalogue run + scheduler                                                                                                                                                                                                                                                                                                                                                      |
 
 Intra-wave gate: slot-7 G1-foundation code is the prerequisite for slots 2–6 catalogue **runs** (dry-runs are
 unblocked); per-AG `--apply-write` seed also gated on that AG's IS backfill complete + accurate UAC. G0 read/docs are
@@ -184,6 +184,28 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > preflight (⑥/⑦), and `expected_unattempted` seed reads it. If IS or UAC is wrong, EVERY AG's coverage % is wrong.** So
 > G1 is gated, and its catalogue has a full code → dry-run → real-run → schedule lifecycle, tracked per-AG.
 
+> **🔴 G1-ENUM (P0, CROSS-AG, surfaced by slot-3 cefi dry-run 2026-06-07) — the v2 enumerator over-fans → false
+> `expected_unattempted` pollution.** `_enumerate_v2_*` (`enumerate_expected_universe.py`) fans ALL data*types over
+> EVERY instrument with **no `(instrument_type × data_type)` validity filter and no bundle-grain handling**. cefi
+> ground-truth: options/futures are captured as per-underlying `options_chain`/`futures_chain` BUNDLES (~0 per-OPTION /
+> per-COMBO rows), yet the catalog has 72,156 OPTION + 17,472 COMBO → `OPTION/COMBO × 7 data_types` never match the
+> present-set + impossible combos (`PERPETUAL × options_chain`). An `--apply-write` now would seed **millions of false
+> `expected_unattempted` rows → distort the exact denominator G1 exists to make honest.** The dry-run caught it
+> pre-write. **This is the SAME root as slot-4's sports finding** (generic producer is fixture-grain, sports atom is
+> league-grain; prediction already solved it with a per-cqg granularity-aware producer). **Cross-AG**: the
+> `for dt in data_types` no-filter pattern is in EVERY
+> `\_enumerate_v2*\*`. **FIX (owner: slot-7 G1-foundation in instruments-service)**: the generic producer becomes instrument-shape-aware — `(instrument_type
+> ×
+> data_type)`validity filter + bundle-grain (mirror the prediction per-cqg producer); **each AG owner (slots 2-6) verifies their slice** before any G1.run apply-write. **Gates every AG's`--apply-write`seed** (a G1 prerequisite). Tracked: P0 in cefi plan + must land in`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`
+> (central fix) + a verify-slice todo in each AG plan. **Re-scopes WAVE-1 slot-7**: the "generic foundation" must be
+> AG-shape-aware, NOT one-size fan-out.
+>
+> **G1-V8 (P1, cross-AG companion)**: cefi `instruments-store-cefi` `_index` is still **100% v8** (no
+> source/pipeline_mode/asset_group, 40% null `capture_status`, blank `data_type`, 23 legacy cells) — same v8 state
+> slot-4 found for sports. The IS `_index` v8→v9 single-walk (the per-AG slice of
+> `instruments_manifest_canonicalisation`) is a G1 prerequisite NOT yet met for cefi/sports — its `--apply` is gated on
+> coordinator G0. Each AG owner confirms their instruments-store v9 walk before G1.run.
+
 **The could-exist universe = (IS instrument lifecycle catalogue) × (UAC availability rules).** The two halves:
 
 - **IS half — the lifecycle catalogue** (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04`):
@@ -257,6 +279,57 @@ Every AG's G2→G4 transition runs the operator's readiness audit. SSOT for the 
    writes; migrators/rebuild/enumerator stamp source-aware `{mode}_{source}[_{transport}]`; readers are union-aware
    across modes; the manifest + data-status carry the pipeline_mode + source + cadence axes. (Catches the verified defi
    `rebuild_defi_manifest.py:302` blank-stamp class for every AG.)
+
+## vm-defi (slot-2) status + findings — 2026-06-07
+
+> Progress on the **G0 C-PATH WRITE** (defi migrator/rebuild source-aware) + **G1-defi IS-catalogue** rows of the gate
+> board. Code-ready facts + the gates verified; ship of the code unit is **blocked on a pre-existing MTDS QG-red** (see
+> the finding below), not on the change itself.
+
+**G0 C-PATH WRITE — CODE-READY (pending ship):** `migrate_defi_full_v9_canonical.py` + `rebuild_defi_manifest.py` now
+derive the SOURCE-AWARE `{batch}_{source}` pipeline_mode PER SHARD via UTL
+`derive_pipeline_mode_for_row(venue,"defi", data_type)` (the cefi/tradfi pattern), stamp `source` (=
+`source_string_for(pm)`, C-#6-consistent) **+ a `transport` column** (`default_transport_for_source`, no path suffix),
+in BOTH the PATH key and the manifest/parquet column. The coarse `DEFAULT_PIPELINE_MODE="batch"` /
+`_DEFAULT_PIPELINE_MODE="batch"` / `_PIPELINE_MODES` are RETIRED; the rebuild day-probe lists `pipeline_mode=` (covers
+every source-aware mode) + bare legacy; bare/legacy-coarse paths auto-derive source-aware; per-shard isolation added to
+the rebuild `add()` loop. Tests rewritten + GREEN (25/25, credential-free). Verified per-shard: DEX
+state→`batch_onchain_subgraph`, perp→`batch_hyperliquid`, oracle CHAINLINK→`batch_chainlink` / PYTH→`batch_pyth_hermes`.
+**Single-walk safety GREEN**: GCS probe confirmed NO coarse `pipeline_mode=batch/` data was ever applied (dest `*-prd-`
+trees are pre-pipeline_mode bare; rebuild bucket 2340 days all bare) — so upgrading the migrator before any G4 apply
+does not require a second whole-corpus walk.
+
+**G1-defi IS-catalogue — gates verified, seed apply correctly GATED (dry-run only):**
+
+- A (slot-7 PART C code) GREEN · B (DeFi IS instrument backfill) GREEN · D (UAC chain-genesis / `*_VENUE_LAUNCH_DATES` /
+  `PROTOCOL_LAUNCH_DATES`) GREEN.
+- **C (defi instruments-store `_index` v9-canonical) 🔴 RED**: the `_index` is **0% v9** — schema_version distribution
+  **v4=33,869 / v8=20,686 / v6=14,330** (68,885 rows), missing `source`/`asset_group`/`transport` columns. The defi
+  instruments-store §H walk (`defi_manifest_canonicalisation` §H + `instruments_manifest_canonicalisation`) has NOT run.
+- Catalogue **dry-run executed** (`build_instrument_catalogue --asset-group defi --dry-run`, read-only, exit 0) but
+  rolled up **0 rows** — `instrument_availability/by_date/` in `instruments-store-defi-prd-*` is EMPTY (the 4,339-row IS
+  backfill + the 68,885-row `_index` live in the NON-prd bucket; env-tier bucket split per
+  `bucket_name_ssot_legacy_dual_write_remediation`). So the G1.run `--apply-write` seed is doubly gated → NOT run.
+
+- [ ] [DATA] P1. **G1.run-defi seed — BLOCKED on GATE C**: do NOT `--apply-write` the defi could-exist seed until (c)
+      the `instruments-store-defi` `_index` is v9-canonical (currently 0% v9) AND the defi
+      `instrument_availability/     by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is
+      empty). Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic:
+      manifest_master.
+- [ ] [UAC] P2. **DeFi `SOURCE_PRIORITY` registry gaps** (surfaced by the C-PATH WRITE derivation):
+      `(defi,     dex_pool_swaps)` is UNREGISTERED → falls back to `batch_onchain_rpc` (vs
+      `dex_pool_state`→`onchain_subgraph`); non-Hyperliquid perp venues (LIGHTER→tardis via the venue override) are
+      absent from `(defi, perp_funding)=     ["hyperliquid"]`. Both derive cleanly today (fallback + per-shard
+      isolation) but should be registered for an explicit per-shard source. Repo: unified-api-contracts
+      (`registry/source_priority.py`). parent_epic: manifest_master.
+- [ ] [INFRA] P2. **MTDS local `--no-fix` QG is pre-existing-RED** (blocks the `.qg_last_passed_sha` sentinel → no clean
+      quickmerge for ANY MTDS change): ~16 `❌` on current LDR — 6 files >900 lines (5 unrelated:
+      `migrate_sports_canonical_v9`/`rebuild_sports_manifest_v9`/`rebuild_prediction_manifest`/`solana_lst_archival`/
+      `websocket_runner`), deep-UAC-imports / asyncio.run-in-loop / raw-response.json / empty-fallbacks in untouched
+      handlers, STEP 5.85 inline-`pipeline_mode=` literals across the migration scripts, + macOS-environmental
+      false-positives (574s>300s timing, BSD `grep -P` errors, no systemd cap). The defi C-PATH WRITE change adds ZERO
+      net-new failures (its 25 unit tests pass; ruff clean; basedpyright-neutral). Repo: market-tick-data-service.
+      parent_epic: mtds_mdps_master.
 
 ## Orphan sweep (2026-06-07) — every active data-layer plan/issue is registered above
 
