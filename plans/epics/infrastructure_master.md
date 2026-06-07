@@ -526,6 +526,15 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
       `vm_launcher_startup_url_migration_2026_05_21.md` Pattern B note) — Consider moving the per-run migration script
       from unified-trading-pm to `CODE_BUCKET/scripts/` to enable a future Pattern A conversion. Low priority; Pattern B
       is correct for now.
+- [ ] [SCRIPT] P3. **VM startup `gsutil -m cp` wheel-cache step deadlocks → boot-hang (make non-blocking / drop `-m`).**
+      **MIGRATED FROM:** `plans/active/issues/running_vm_fleet_status_2026_05_27.md` § C (archived 2026-06-07). The VM
+      startup script's final "Caching compiled wheels to GCS" step runs `gsutil -m -q cp /tmp/wheel-cache/*.whl
+      gs://…/wheels/…`; the snap-bundled `gsutil -m` (multiprocessing) deadlocked (parent gsutil alive, defunct
+      `[python3]` zombie workers) and the **startup script blocks on it** → `market_tick_data_service` never launches
+      (observed on bybit-2024 / hyperliquid-2025 / kraken-2024 — never self-recovers). Also violates the workspace rule
+      that per-object GCS ops use `gcs_copy_object` (REST), not subprocess `gsutil` (codex
+      `gcs-object-operations.md`). Fix: make the wheel-cache step non-blocking / timeout-guarded / drop `-m` (or use the
+      `gcs_copy_object` helper). Repo: `deployment-service` (VM launcher / startup script).
 
 > **MIGRATED FROM:** `aws_migration_defi_first_2026_05_07.md` (archived 2026-05-23) — DeFi S3/Athena/Glue migration
 > complete; remaining items are AWS parity extensions + post-cutover cross-asset-group work.

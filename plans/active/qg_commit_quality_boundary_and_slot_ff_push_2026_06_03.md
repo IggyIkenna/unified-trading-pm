@@ -622,6 +622,14 @@ design).
       by Harsh's tab-mirror active-host-filter (tab-divergence alerts only); this is the VM-liveness-alert side. Low
       urgency — VMs are off + nothing firing.
 
+- [ ] [SCRIPT] P3. **Drop the orphaned `pre_commit` pin from `workspace-constraints.toml`** (re-derive). **MIGRATED
+      FROM:** `plans/active/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md` (archived 2026-06-07).
+      The hook runner is now `prek` fleet-wide (AO + UAC pyprojects migrated `pre-commit`→`prek>=0.3.0,<1.0.0`;
+      `check-precommit-versions.py` installs via prek), so the `pre_commit>=3.0,<4.0.0` pin in `workspace-constraints.toml`
+      is orphaned. Re-deriving it via `resolve-canonical-versions.py` produced a CORRUPT diff in a single-slot worktree
+      (malformed duplicate keys; not all repos aligned locally) → **must run from a clean full-checkout host**. Harmless
+      while present (pre-commit is no longer the invoked runner) → P3. Repo: `unified-trading-pm`.
+
 ### Temporary states (uncommitted fixes preserved in slot-1 worktrees)
 
 - `.tabs/1/strategy-service` (URI noqa), `.tabs/1/deployment-api` (`-prd` test fix) — left UNCOMMITTED for the follow-up
