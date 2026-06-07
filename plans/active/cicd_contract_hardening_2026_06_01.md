@@ -3317,7 +3317,8 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
   blocker; converge autonomously. AO #9 merged manually (Pro-blocked auto-merge).
 - **Cleanup agent DONE** (infra_slot_sync #3/#4/#8): backlog.mock.yaml `git rm --cached`+gitignore
   (`agent-orchestrator@6caa95a`, verified gone on vm-0); AutoSpawn SQLAlchemy not-reproducible (already fixed by WAL +
-  `busy_timeout`); ui-semver checkout confirmed-fixed (GH_PAT added 06-04). `infra_slot_sync` now 4 open =
-  operator-gated (#1 stopped-VM decommission, #2 recovery-stash) + low/drain-dependent (#3 475 nits, #4 close-idle-PRs)
-  → stays ACTIVE honestly per the issue-doc-lifecycle (no false archive).
-- **api_host_chronic_impairment ARCHIVED** (`plans/archive/issues/`, 0 open, `[unlock-plan]`).
+  `busy_timeout`); ui-semver checkout confirmed-fixed (GH_PAT added 06-04).
+- **ALL 3 cluster issues ARCHIVED** (`plans/archive/issues/`): **api_host_chronic_impairment** (0 open),
+  **semver_agent** (cascade-core fixed; residual non-blocking), **infra_slot_sync** (after operator decisions
+  2026-06-07: terminate `i-007e8d99` ✓ + drop stash → already gone ✓; #3 dup-tracked + ongoing-mechanism; #4 moot —
+  ml-inference/ml-training repos are ARCHIVED/read-only). Operator-decided items resolved; no false-archive.
