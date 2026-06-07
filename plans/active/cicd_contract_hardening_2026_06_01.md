@@ -551,8 +551,15 @@ machinery):
       ml-service to manifest **or** drop the `regime_clustering.py` lazy import; dep-graph decision, circular-dep risk →
       owning slot, not a blind edit). (2) Codex compliance FAILED: 1 violation (max 0). Repo stays FEATURE_GREEN-gated
       until both are fixed. repo: features-service.
-- [ ] [TEST] P1. **agent-orchestrator main-v2 RED** — the sole remaining FAILING repo (separate track; AO is
-      mid-staging-migration per the AO E2E plan G6). Diagnose + green on its own track. repo: agent-orchestrator.
+- [x] ✅ [TEST] P1. **agent-orchestrator main-v2 RED** — DONE 2026-06-07. Two root causes: (1) the exit-127 (no
+      `scripts/quality-gates.sh`) was already fixed by the standalone AO gate landed 2026-06-04 (main-v2 green since
+      `6f8764a8`, run 26980823319: 362 passed); (2) the residual RED was the **Semver Agent** job failing 8-10s on
+      `actions/checkout` path `../unified-trading-pm` ("Repository path … is not under …") — AO's per-repo copy was
+      stale vs the PM template's `pm-readiness` fix. Re-rendered AO's `semver-agent.yml` from the PM SSOT
+      (`rollout-workflow-templates.sh --repo agent-orchestrator --template semver-agent.yml`) →
+      agent-orchestrator@fd6ef28, promoted tab→LDR→staging(PR#5)→main(PR#6, main-v2 green run 27078002621). **Verified
+      E2E: semver-agent run 27078070043 = SUCCESS** (reaches Compute-semver; prior runs 27077953898/27077995619 failed).
+      repo: agent-orchestrator.
 - [ ] [SCRIPT] P1. **mdps LDR→staging PR #91 CONFLICTING (DIRTY)** — staging is 2-ahead / 371-behind LDR; the 2 unique
       staging commits are stale promotion/CI-merge artifacts (`feat(workspace-sweep): live-defi-rollout → staging` +
       `ci: merge main into staging — quality-gates-v2 migration #86`) whose content originated on LDR, but a
@@ -1091,9 +1098,14 @@ Full rule: CLAUDE.md § "Git discipline". SSOT: `codex/05-infrastructure/per-tab
       eval: Evaluate an **LDR-deploy option for agent-orchestrator** (fast-coding path, operator ask 2026-06-01): allow
       deploying the dashboard SPA from `live-defi-rollout` (not only `main`) so server + UI iterate on one branch
       without the FF-to-`main` hop. Scope the CI-gate + Firebase-Hosting target implications.
-- [ ] [SCRIPT] P2. **agent-orchestrator `quality-gates-v2` required check is structurally RED on `main` (exit 127)** —
-      discovered 2026-06-03. The shared `python-quality-gates-v2.yml` runs `bash scripts/quality-gates.sh`, but
-      agent-orchestrator has **no `scripts/quality-gates.sh`** (and no local `.venv`) → every `main` run fails with
+- [x] ✅ [SCRIPT] P2. **agent-orchestrator `quality-gates-v2` required check structurally RED on `main` (exit 127)** —
+      DONE (fixed 2026-06-04, re-verified 2026-06-07). The standalone AO `scripts/quality-gates.sh` was added (ruff +
+      basedpyright + pytest on `server/`, no UTL base) — main-v2 has been green since `6f8764a8` (run 26980823319: 362
+      passed / 2 skipped, "✅ agent-orchestrator quality gate PASSED"). The exit-127 root cause (no
+      `scripts/quality-gates.sh`) is resolved. (The separate Semver-Agent RED is flipped at the AO-main-v2 P1 item
+      above.) The original note is preserved for history (NOT a checkbox — discovered 2026-06-03): the shared
+      `python-quality-gates-v2.yml` ran `bash scripts/quality-gates.sh`, but agent-orchestrator had **no
+      `scripts/quality-gates.sh`** (and no local `.venv`) → every `main` run failed with
       `bash: scripts/quality-gates.sh: No such file or directory` (pre-existing: runs 26824357511, 26819893551, and the
       2026-06-03 run all fail identically at the "Run quality gates" step). AO's required check therefore can NEVER go
       green. Fix: add an AO `scripts/quality-gates.sh` (wire the QG base for AO's `server/` package layout) OR make the
@@ -2528,10 +2540,12 @@ Baseline (2026-06-01): `enforce_admins` true on only 6/23 (alerting, execution, 
       clean, `[adopt-rebase]` drops the mirrored dups and FFs local to LDR — non-destructive, never rewrites genuine
       in-flight work or touches dirty WIP. Any other divergence (real new local commits, or dirty tree) stays
       `[skip:diverged]` for manual recovery. repo: unified-trading-pm.
-- [ ] [SCRIPT] P3. **Extend the auto-rebasing mirror to `agent-orchestrator`** — excluded from the 2026-06-04 rollout
-      (it did not previously carry tab-mirror-to-ldr.yml + has a transitional branch model; the GHA hardcodes
-      `live-defi-rollout` which must be confirmed present + clean on AO first). repo: agent-orchestrator. parent_epic:
-      (cicd hardening).
+- [x] ✅ [SCRIPT] P3. **Extend the auto-rebasing mirror to `agent-orchestrator`** — DONE (verified 2026-06-07). AO now
+      carries the current `tab-mirror-to-ldr.yml` (rolled out from PM SSOT 2026-06-05/06): bidirectional (leg A tab→LDR
+      FF/rebase + leg B LDR→tab FF), diverged-tab auto-rebase (`--force-with-lease`, conflict-aborts+alerts), and the
+      operator active-host filter (`ACTIVE_PREFIX_BASES="ikennaigboaka hk planning"`). Confirmed live: my push
+      agent-orchestrator@fd6ef28 was FF'd tab→LDR by run 27077881256 (LDR tip == fd6ef28). repo: agent-orchestrator.
+      parent_epic: (cicd hardening).
 - [ ] [TEST] P2. **Observe ≥3 real diverged-tab cycles auto-heal** (rebased+landed on LDR + local `[adopt-rebase]`)
       before declaring the treadmill closed; watch the orchestrator `/api/mirror-events` for any `outcome=conflict` or
       `race-exhausted` and confirm they reflect genuine conflicts only. repo: unified-trading-pm.
