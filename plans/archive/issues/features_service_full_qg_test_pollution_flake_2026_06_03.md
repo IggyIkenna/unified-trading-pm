@@ -6,13 +6,24 @@ created: 2026-06-03
 source:
   - features-service tests/calendar/unit/test_calendar_orchestrator_capture_status.py
   - features-service tests/cross_instrument/ (global/singleton manifest writer + get_settings mock)
-locked_by: live-defi-rollout
+resolved: 2026-06-07
 priority: P1
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
-status: active
+status: RESOLVED
 ---
+
+> ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE)
+>
+> Vector-1 fix shipped (`features-service@d39d154f` — autouse `_WRITE_BUFFER` + `_LIVE_WRITERS` reset in
+> `tests/conftest.py`; the `atexit … MagicMock get_settings().base_timeframe` leak fingerprint is GONE). The flake was
+> confirmed **macOS-local test-order non-determinism**, never a fleet gate-breaker: `quality-gates-v2` for
+> features-service on the Linux runner is GREEN (verified — main v2 SUCCESS on multiple recent runs; the suite runs to
+> completion under `fork`). The doc's remaining "iteration 2+ / add mock-GCS-store reset" was a CONTINGENCY gated on
+> Linux CI still being red after d39d154f — it is NOT, so no further isolation work is required. The macOS type-check
+> >300s timeout (a separate local-env lever) is tracked in `quality_gates_resource_contention_speedup_2026_06_02.md`. No
+> codex `SSOTs:` section; no new durable contract.
 
 ## What I found
 

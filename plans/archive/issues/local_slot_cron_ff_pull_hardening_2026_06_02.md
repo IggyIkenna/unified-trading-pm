@@ -5,8 +5,8 @@ source:
   - plans/active/cicd_contract_hardening_2026_06_01.md
   - codex/05-infrastructure/per-tab-worktrees.md
   - "CLAUDE.md § Local slot host = VM slot host — symmetric worker model"
-locked_by: live-defi-rollout
-status: RESOLVED — ready to archive once acked
+resolved: 2026-06-07
+status: RESOLVED — archived 2026-06-07
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra

@@ -7,10 +7,22 @@ source:
   - tab-mirror fleet rollout 2026-06-04 (the only repo that failed STEP 5.18 token-check during rollout)
   - unified-trading-system-ui/.github/workflows/ci.yml (registry-drift job)
   - unified-trading-pm/scripts/openapi/generate_ui_reference_data.py (current interface)
-locked_by: live-defi-rollout
+resolved: 2026-06-07
 priority: P2
-status: active
+status: RESOLVED
 ---
+
+> ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE)
+>
+> `registry-drift` is GREEN end-to-end in CI: `test` (5m20s) + `registry-drift` (1m44s) both pass (PR #26, run
+> `26999068427`); all root causes fixed (cross-repo tokens → `GH_PAT`, vestigial UIC checkout removed, generator
+> `--output-dir`/py3.13/UAC+UTL install, PM sibling checkout, `_deps/` layout, generator determinism `sort_keys`,
+> format-insensitive diff, registry content regenerated CI-faithfully). pw:L2 ✓ throughout (regression:
+> `tests/smoke/data-status-pending-backfill.smoke.spec.ts` + the registry-drift job itself). The one residual
+> pre-existing-unrelated item (`codecov/codecov-action@v3` flagged by actionlint as too old) is **NOT a UI-token issue**
+> and is covered by the actionlint re-enable / template hygiene work in `cicd_contract_hardening_2026_06_01.md`. Codex
+> alignment: no codex `SSOTs:` section in this doc; the registry-drift mechanism is described in
+> `codex/08-workflows/ci-cd-flow.md` (no update needed). No new durable workspace contract.
 
 ## What I found
 

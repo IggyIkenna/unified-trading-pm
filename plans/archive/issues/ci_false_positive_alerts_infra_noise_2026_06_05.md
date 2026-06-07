@@ -5,10 +5,23 @@ source:
   - deployment-service quality-gates-v2 run 27008990509 (live-defi-rollout promote PR) — actual job-log read
   - per-run "Notify #ci-failures" step conclusions verified via actions/runs/<id>/jobs API
   - live red-board sweep 2026-06-05 across 26 workspace repos
-locked_by: live-defi-rollout
+resolved: 2026-06-07
 priority: P2
-status: active
+status: RESOLVED
 ---
+
+> ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE + ACKED-INTO-PLAN)
+>
+> The truthful-severity classification work (the operator's 2026-06-07 refined ask — verbose-while-debugging, NOT
+> suppression) SHIPPED on `unified-trading-pm`: `notify-slack.yml` is now the central truthful-severity authority (a
+> `failure`/`startup_failure` conclusion forces ≥CRITICAL `:x:`; `cancelled`/`timed_out`/etc force ≥WARNING; only
+> `success`/`neutral` render ✅) — fixing the whole hardcoded-success class in one place; plus the two concrete bugs
+> (`staging-to-main.yml` hardcoded "complete"+INFO on a failed promote; `update-repo-version.yml` clean body on failure)
+> + an audit confirming the rest already pass `conclusion` and inherit the override. The doc's "Still open" infra-noise
+> ROOT-CAUSE reductions (the `.claude/worktrees` submodule leak + the thin-dep-clone `ModuleNotFoundError`) are **MIGRATED
+> to** `plans/active/cicd_contract_hardening_2026_06_01.md` § "CI false-positive / infra-noise root causes" (P3). The UAC
+> `STAGING_GREEN`-despite-red lead is explained by H1 (also migrated there). No codex `SSOTs:` section; no new durable
+> contract.
 
 > Seeded per Ikenna's 2026-06-05 ask ("help diagnose false positives and missed alerts … start verbose, cut when
 > working"). This records the FIRST **verified** false-positive class. Scope is deliberately limited to what I confirmed

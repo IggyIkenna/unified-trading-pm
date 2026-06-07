@@ -6,13 +6,27 @@ created: 2026-06-03
 source:
   - slot-3 worktree audit 2026-06-03 (git config user.email across .tabs/3/*)
   - codex/05-infrastructure/per-tab-worktrees.md § "Commit attribution"
-locked_by: live-defi-rollout
+resolved: 2026-06-07
 priority: P1
 parent_epic: infrastructure_master
 estimate_calibrated_ai_days: 0.4
 estimate_class: infra
-status: active
+status: RESOLVED
 ---
+
+> ## ✅ RESOLVED 2026-06-07 — archived (ACKED-INTO-CODE)
+>
+> All 6 todos shipped + verified 2026-06-07: (1) commit-time identity hook `fix-commit-identity.sh` built (fail-closed,
+> CI-skip) + wired into all 4 pre-commit templates + PM live config (PM@92223c894); (2) `rollout-pre-commit-configs.sh`
+> deployed the hook to the 7 drifted repos (deployment-service was the only one still lacking it) — fleet now carries
+> `fix-commit-identity` + a single canonical gitleaks block; (3) `setup-tab-worktrees.sh` standardises per-worktree
+> identity at init/add/reset (host-stable CANON resolution); (4) bot-email leak root-caused + closed
+> (`setup-workspace-from-manifest.sh` + `setup-github-auth.sh` writers now guarded; `verify-slot-host-symmetry.sh` is
+> the recurrence detector); (5) slot-1 worktrees verified attributing `ikennaigboaka [slot-1·laptop]
+> <ikennaigboaka@gmail.com>`; the deployed hook self-heals every other slot/VM on next commit. Codex updated in step:
+> `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution" reflects what shipped. The optional
+> `prepare-commit-msg` trailer remains a nice-to-have only (not blocking). No new durable contract beyond the already-in-
+> CLAUDE.md commit-attribution rule.
 
 ## What I found
 
