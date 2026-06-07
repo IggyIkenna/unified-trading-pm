@@ -176,13 +176,17 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F10 — CI conflict-resolution: capacity model (dedicated vs slot-on-existing) [P2]
 
-- [ ] [DESIGN] P2. **Operator framing 2026-06-03.** The CI→orchestrator→delegate path is BUILT this session
-      (`conflict-resolution-agent.yml` / `ci_failure_watcher` / `main-backmerge-to-ldr` →
-      `repository_dispatch     escalate-to-orchestrator` → orchestrator spawns a Max worker via `agents/escalate.md`).
-      It spawns on whatever VM has a free slot (today vm-0). Decide whether to RESERVE a dedicated conflict-resolution
-      VM/slot (guaranteed availability, isolation from epic work) vs the current any-free-slot model. No new mechanism
-      either way — same escalate→spawn path; this is purely a capacity/pinning decision. Repo: agent-orchestrator
-      (slot-role pin) + deployment-service (if a dedicated VM). Composes with F9 (same persistent-role-slot machinery).
+- [x] ✅ [DESIGN] P2. **DECIDED 2026-06-07: keep the any-free-slot model (NO dedicated conflict-resolution VM).**
+      Reserving a dedicated VM/slot adds idle cost + ops surface for a low-frequency event; the escalate→spawn path
+      already lands on whatever VM has a free slot (today vm-0) with no new mechanism. Revisit ONLY if
+      conflict-resolution is observed to starve epic work (it is not today). Original framing 2026-06-03: The
+      CI→orchestrator→delegate path is BUILT this session (`conflict-resolution-agent.yml` / `ci_failure_watcher` /
+      `main-backmerge-to-ldr` → `repository_dispatch     escalate-to-orchestrator` → orchestrator spawns a Max worker
+      via `agents/escalate.md`). It spawns on whatever VM has a free slot (today vm-0). Decide whether to RESERVE a
+      dedicated conflict-resolution VM/slot (guaranteed availability, isolation from epic work) vs the current
+      any-free-slot model. No new mechanism either way — same escalate→spawn path; this is purely a capacity/pinning
+      decision. Repo: agent-orchestrator (slot-role pin) + deployment-service (if a dedicated VM). Composes with F9
+      (same persistent-role-slot machinery).
 
 ### F11 — "backlog won't clear" — diagnosed + fixed (3 root causes) [P1]
 
@@ -213,9 +217,12 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F13 — vm-0 slot worktree hygiene blocking ALL spawn (dirty pyproject + diverged PM) [P1]
 
-- [ ] [INFRA] P1. **BLOCKED-INFRA (live vm-0 host state — needs SSH/exec into i-0c9b283b; re-stated 2026-06-07).** The
-      dirty-pyproject + diverged-PM hygiene cleanup is a live-host op (commit the dirty pyproject as `chore(orphan-wip)`
-      / diagnose+gitignore generated churn; FF the clean repos; rebase the diverged PM) — not doable from a laptop slot.
+- [x] ✅ [INFRA] P1. **DONE 2026-06-07 via AWS SSM into vm-0 (i-0c9b283b).** The AO/alerting dirty-pyproject +
+      diverged-PM items had AUTO-HEALED (F8 self-heal + FF-crons). Residual was slot1/unified-trading-pm
+      (`tab/planning/1`): 27 dirty files (~50h old = dead) + 746 behind. Recovered safely: liveness-guarded
+      `git stash push -u` (preserved as stash@{0}, recoverable) + `pull --ff-only` → now dirty=0 behind/ahead=0/0. All 5
+      vm-0 slots clean. Original detail (live-host op (commit the dirty pyproject as `chore(orphan-wip)` /
+      diagnose+gitignore generated churn; FF the clean repos; rebase the diverged PM) — not doable from a laptop slot.
       PARTIAL AUTO-HEAL shipped 2026-06-07: the F8 self-heal (agent-orchestrator@e66a40a) fixes the worktree-NAMING half
       of the FM7 quarantine on the next FF-pull/restart; the dirty-tree + diverged-PM half still needs a human/agent on
       the VM. Original detail: Original detail (context, NOT a checkbox): surfaced by the F9 verification 2026-06-03 —
@@ -233,17 +240,18 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F7 — slot-4 WIP recovery on the live vm-0 host [P1]
 
-- [ ] [INFRA] P1. **BLOCKED-INFRA (needs SSH/exec into the live vm-0 host — not reachable from a laptop slot; re-stated
-      2026-06-07).** The slot-4 WIP recovery is a live-host op on i-0c9b283b (inspect/commit/stash the 2 feature-branch
-      repos, then relabel to tab/vm-0/4) — it cannot be done from this slot. NOTE the F8 self-heal shipped 2026-06-07
-      (agent-orchestrator@e66a40a) does NOT auto-fix this one BY DESIGN: F8 skips non-`tab/*` feature branches (the
-      slot-4 repos are on `fix/*` WIP), so slot 4 correctly stays quarantined until a human/agent ON the VM recovers the
-      WIP. Original detail: Original detail (context, NOT a checkbox): the only genuine residual quarantine on vm-0
-      (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree realign (see below) deliberately SKIPPED 2 slot-4 repos on feature
-      branches — genuine mid-work WIP, not safe to relabel (inherited-WIP rule): `unified-api-contracts` on
-      `fix/tradfi-exchange-mappings-minimal`, `unified-trading-pm` on `fix/pm-ci-self-clone`. Slot 4 will keep tripping
-      FM7 (correctly) until recovered: inspect each repo's WIP → commit/quickmerge or stash → then
-      `git branch -m … tab/vm-0/4` (or recreate the slot-4 worktrees on `tab/vm-0/4`). Until then slot 4 stays
+- [x] ✅ [INFRA] P1. **DONE 2026-06-07 via AWS SSM.** Re-diagnosed vm-0 slots 1-5: NO slot is on a `fix/*`/`feat/*` WIP
+      branch anymore (the slot-4 `fix/tradfi-exchange-mappings-minimal` + `fix/pm-ci-self-clone` WIP recovered/cleared
+      since the plan was written). No quarantined WIP remains. Original detail (live-host op (inspect/commit/stash the 2
+      feature-branch repos, then relabel to tab/vm-0/4) — it cannot be done from this slot. NOTE the F8 self-heal
+      shipped 2026-06-07 (agent-orchestrator@e66a40a) does NOT auto-fix this one BY DESIGN: F8 skips non-`tab/*` feature
+      branches (the slot-4 repos are on `fix/*` WIP), so slot 4 correctly stays quarantined until a human/agent ON the
+      VM recovers the WIP. Original detail: Original detail (context, NOT a checkbox): the only genuine residual
+      quarantine on vm-0 (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree realign (see below) deliberately SKIPPED 2
+      slot-4 repos on feature branches — genuine mid-work WIP, not safe to relabel (inherited-WIP rule):
+      `unified-api-contracts` on `fix/tradfi-exchange-mappings-minimal`, `unified-trading-pm` on `fix/pm-ci-self-clone`.
+      Slot 4 will keep tripping FM7 (correctly) until recovered: inspect each repo's WIP → commit/quickmerge or stash →
+      then `git branch -m … tab/vm-0/4` (or recreate the slot-4 worktrees on `tab/vm-0/4`). Until then slot 4 stays
       quarantined by design. Repo: agent-orchestrator host (live VM op, no repo change) + the 2 named repos for the WIP
       itself.
 

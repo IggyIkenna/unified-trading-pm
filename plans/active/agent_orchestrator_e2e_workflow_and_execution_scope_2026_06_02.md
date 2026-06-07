@@ -83,11 +83,13 @@ confirmed). 6h is far too much latency: plans are authored continuously, so back
       `server/regen_backlog_from_plan.py`; docstrings updated + comment decoupled from the SQLite-backup cadence. This
       was a code-vs-doc drift — the codex overview already documented `default 1800`.
       `test_default_regen_interval_is_at_most_30min` added. — agent-orchestrator@e21bd41
-- [ ] [DESIGN] P1. _(stretch, optional)_ Near-instant ack. The `POST /api/backlog/regen` endpoint **already exists**
-      (`server/server.py:1581`, AUTHED) — what's missing is a post-push GHA hook in unified-trading-pm that calls it on
-      `plans/active/*.md` changes. Deferred: it needs a GHA→central-orchestrator auth token (the operator JWT /
-      internal-secret) wired as a repo secret — a small auth/secrets task, not required given the 30-min floor from the
-      G2 default + the 5-min `pm-pull` (effective ≤30 min today).
+- [x] ✅ [DESIGN] P1. _(stretch, optional)_ Near-instant ack — **CLOSED 2026-06-07 (effective-today; full hook
+      consciously deferred).** Plan pickup is already **≤30 min today** (G2 30-min `PlanRegenLoop` floor + 5-min
+      `pm-pull`), which the plan itself flagged as "not required." The remaining true-near-instant path (a post-push GHA
+      hook in PM → `POST /api/backlog/regen`) needs the **operator-JWT / internal-secret wired as a GHA repo secret** —
+      a security-sensitive auth-token plant not worth doing for a sub-30-min latency win. **Decision: accept ≤30-min
+      pickup as sufficient; do NOT wire the JWT-into-GHA hook.** (Re-open only if a future need demands instant pickup —
+      then mint a scoped regen-only token, not the operator JWT.)
 
 ### G3 — merge-flow doc drift [P0] _(fix lives in the context-hygiene plan)_
 
