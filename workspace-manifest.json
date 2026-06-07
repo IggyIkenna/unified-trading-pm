@@ -1798,9 +1798,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-07T16:59:29.599938Z",
-    "locked_reason": "Breaking MINOR bump cascade: instruments-service=0.2.0 (pre-1.0.0)",
-    "lock_version": "0.2.0",
+    "locked_since": "2026-06-07T18:32:20.038467Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "features-service",
       "fund-administration-service",
@@ -1811,54 +1811,54 @@
       "trading-agent-service"
     ],
     "sit_retry_count": 1,
-    "locked_alert_sent": true
+    "locked_alert_sent": false
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "unified-api-contracts": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "af8e620550bcd91f6f34bfffd4e3019586fe63f8",
-      "branch": "staging"
+      "version": "0.2.0"
     },
     "agent-orchestrator": {
-      "version": "0.8.1",
+      "branch": "staging",
       "sha": "2d71cd3031cb3dd7c9e2e13bddee21433f939138",
-      "branch": "staging"
+      "version": "0.8.1"
     },
     "unified-trading-library": {
-      "version": "0.4.0",
+      "branch": "staging",
       "sha": "df4bdd45b579934b7ef39b949f6b2ba2e34ba76f",
-      "branch": "staging"
+      "version": "0.4.0"
     },
     "market-tick-data-service": {
-      "version": "0.4.0",
+      "branch": "staging",
       "sha": "481468ea7c231035659c40c3e32426080eb0700e",
-      "branch": "staging"
+      "version": "0.4.0"
     },
     "greeks-service": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "0018976936565d301bf7b298e38b588602c1b822",
-      "branch": "staging"
+      "version": "0.2.0"
     },
     "trading-agent-service": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "3447768237e0527d0a6fd985c23b312d8e5a6b19",
-      "branch": "staging"
+      "version": "0.2.0"
     },
     "instruments-service": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "62bce3955f604f2d02e3da12adbfc73e08394bbe",
-      "branch": "staging"
+      "version": "0.2.0"
     },
     "features-service": {
-      "version": "0.1.0",
+      "branch": "staging",
       "sha": "df6550fc0286508df41999a328cc5948e2daf251",
-      "branch": "staging"
+      "version": "0.1.0"
     },
     "fund-administration-service": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "e3d39acdf3204a4ef5f888e51a8a2d5504ace2cd",
-      "branch": "staging"
+      "version": "0.2.0"
     }
   },
   "main_commits": {
