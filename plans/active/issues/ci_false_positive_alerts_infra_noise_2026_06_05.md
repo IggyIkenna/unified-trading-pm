@@ -45,14 +45,48 @@ A channel that pages on infra noise at the same severity as real reds trains ope
 exact failure mode that let the original CI/CD promotion rot stay silent for months (the reason `ci-failure-watcher`
 exists). Cutting verified false positives is the "cut when it's working" half of Ikenna's verbose-then-trim plan.
 
-## Recommended decision (for Ikenna to convert to a plan)
+## Recommended decision (REVISED 2026-06-07 per operator — truthful severity, verbose-while-debugging, NOT suppression)
 
-1. **Classify, don't silence.** Add the two verified signatures above to the per-run notifier / `ci_failure_watcher.py`
-   classifier so an infra-noise failure is tagged (or routed to a low-priority lane) rather than paging `#ci-failures`
-   at red severity. Grow the catalogue as the red-board is worked.
-2. **Fix the cheap root causes** so they stop failing at all: the `.claude/worktrees` submodule leak (a checkout-hygiene
-   bug) and the thin-dep-clone `ModuleNotFound` (widen the clone set or skip the import under CI).
-3. **Owner**: cicd/dep-security epic (co-locate with the `ci-failure-watcher` / Guard work in
+> **Operator refinement (2026-06-07) — this CHANGES the original "suppression catalogue" framing.** The design is NOT a
+> silencing/suppression gate. While debugging the operator wants **MORE** alerts, not fewer — keep posting
+> success/ran-OK alerts so we know things ran. The fix is **truthful CLASSIFICATION**: every alert's icon + wording +
+> severity MUST be truthful to the REAL outcome.
+>
+> 1. **NEVER render ✅ / green-tick / "success" / "passed" / "complete" / "handled" when the actual conclusion is a
+>    warning, error, or failure.** The rendered icon/word/status banner derives from the ACTUAL `conclusion` — a
+>    non-green conclusion can never produce the green-tick.
+> 2. **Three visibly-distinct severity lanes, all still POSTED** (verbose): real reds → 🔴 CRITICAL (`:x:`); infra /
+>    checkout-noise + cancellations + warnings → a DISTINCT lower lane ⚠️/🚫 WARNING (still posted, visibly different);
+>    genuine green → ✅ INFO only when truly green.
+> 3. **Fix the hardcoded-success class.** Audit every notifier that emits a fixed ✅/INFO/"complete"/"handled" body
+>    while passing a `conclusion` that can be `failure` — make the body + severity derive from the real result.
+
+### SHIPPED 2026-06-07 (truthful classification — `unified-trading-pm`)
+
+- **`.github/workflows/notify-slack.yml` — central truthful-severity authority.** The reusable notifier now
+  truthful-classifies: a `failure`/`startup_failure` conclusion forces severity ≥ CRITICAL (`:x:`); `cancelled`/
+  `timed_out`/`action_required`/`stale` force ≥ WARNING (`:no_entry_sign:`); only `success`/`neutral` render ✅ and
+  `skipped` renders skip. A caller's optimistic `severity: INFO` can no longer mask a non-green conclusion. The header
+  now carries a truthful "result: FAILED (failure)" status word so an optimistic body can never read as success. This
+  fixes the WHOLE class in one place because every caller passes the job's `conclusion`.
+- **`.github/workflows/staging-to-main.yml` — the exact 2026-06-07 bug.** `notify-promotion-complete` previously sent a
+  hardcoded `"Staging → main promotion complete"` + `severity: INFO` even when `promote-staging-to-main.result` was
+  `failure` (a step erroring before `failed_count` is set still satisfies the `failed_count==''` gate). Now the message
+  and severity derive from the job result ("did NOT complete cleanly (job result ...)" + CRITICAL on non-success).
+- **`.github/workflows/update-repo-version.yml`** — the `Version update: …` notifier (INFO + clean body regardless of
+  result) now emits a "FAILED" body + CRITICAL when `update-manifest.result != success`.
+- Audited the remaining notifiers: `ldr-to-staging-promote.yml` / `deterministic-promotion-conflict-resolve.yml` /
+  `escalate-to-orchestrator.yml` already pass `conclusion: …result` and now inherit the central truthful-severity
+  override; `major-bump-approval.yml` is gated `if: result == 'success'` so its INFO/"handled" body is truthful (never
+  posts on failure); `ci_failure_watcher.py::build_report` already derives `:x:`/`:white_check_mark:` from the real
+  transition kind (FAILING→red, RECOVERED→green) — no false-success path.
+
+### Still open (the infra-noise root causes — separate, lower priority)
+
+1. **Fix the cheap root causes** so they stop failing at all: the `.claude/worktrees` submodule leak (a checkout-hygiene
+   bug) and the thin-dep-clone `ModuleNotFound` (widen the clone set or skip the import under CI). (These are noise
+   REDUCTION, not the truthful-severity ask — the alerts are now truthful regardless.)
+2. **Owner**: cicd/dep-security epic (co-locate with the `ci-failure-watcher` / Guard work in
    `cicd_contract_hardening_2026_06_01.md`).
 
 ## Explicitly NOT concluded here (to avoid filing a hunch)
