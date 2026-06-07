@@ -14,11 +14,17 @@ source:
     from operator's IP)
 locked_by: api_host_chronic_impairment_2026_05_29
 priority: P2
-status: active
+status: archived
 parent_epic: orchestrator_master
 estimate_calibrated_ai_days: 0.8
 estimate_class: infra
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-06-07.** All actionable items are DONE (0 open): MemoryMax=56G drop-in + the
+> qg-host-governor LOW floor are now provisioning-persistent in `bootstrap_vm.sh` (Step 5.7 / 6.1,
+> `agent-orchestrator@0ef02b3`) and applied live on vm-0 (SSM-verified `MemoryMax=60129542144`,
+> `QG_HOST_CONCURRENCY=1`). No DEFERRED items; no codex SSOTs needing alignment. `[unlock-plan]` cleared the self-lock.
+> SSOT for the fix: `cicd_contract_hardening_2026_06_01.md` § SESSION OUTCOME 2026-06-07.
 
 > **🔄 VERIFICATION 2026-06-01 (harsh) — KEEP OPEN; plan covered the defensive layer only.** The
 > `api_host_chronic_impairment_2026_05_29` plan (16/16) shipped the workarounds: MemoryMax=56G cgroup cap

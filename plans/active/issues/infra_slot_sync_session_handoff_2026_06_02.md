@@ -373,13 +373,11 @@ head=`live-defi-rollout`** → every successful staging promotion AUTO-DELETES t
 
 ## deployment-service LDR v2 RED — uv workspace parse (2026-06-04)
 
-- [ ] [INFRA] P1. **deployment-service LDR quality-gates-v2 fails at step 12 install**: `uv sync` →
-      `warning: Failed to parse pyproject.toml during settings discovery` ×3 → `error: Failed to parse: pyproject.toml`.
-      main is GREEN (767 behind LDR); isolated, NOT blocking fleet promotion. Diagnosed: all 6 cloned deps' LDR
-      pyprojects (PM/UTL/deployment-api/UAC/strategy/mtds) parse fine individually with tomllib AND uv 0.10.8 → it's a
-      uv WORKSPACE settings-discovery issue specific to the full CI clone layout (siblings + editable [tool.uv.sources]
-      → UTL+UAC). Repro needs running deployment-service `quality-gates.sh` locally with all deps cloned. repo:
-      deployment-service. (PR #18 staging<-LDR stays blocked until fixed.)
+- [x] ✅ [INFRA] P1. **deployment-service LDR quality-gates-v2 fails at step 12 install** — RESOLVED (verified
+      2026-06-07): deployment-service `quality-gates-v2` on `live-defi-rollout` is now **SUCCESS** (latest run); the
+      pyproject/uv workspace-settings-discovery error no longer reproduces (cleared by the fleet pyproject/uv-lock
+      convergence). Its LDR→staging drain PR is unblocked (rides the staging-lock-clear + reopen this session). repo:
+      deployment-service.
 
 ## Fleet promotion FINISHED (2026-06-04 ~21:00) — Semver Agent re-fired with fixed template
 
