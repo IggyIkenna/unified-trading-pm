@@ -839,8 +839,16 @@ machinery):
       `base-library.sh:729`. When aiohttp publishes a patched release in-range (`>=…,<4.0.0`), bump
       `workspace-constraints.toml:8` + `uv lock` re-lock fleet-wide AND remove the two `--ignore-vuln` flags (don't
       leave a fixed CVE ignored). repo: unified-trading-pm. (original blocker finding for history:)
-- [ ] [INFRA] P0. **🔴 NEW DOMINANT BLOCKER — fresh aiohttp CVE fails pip-audit FLEET-WIDE → gates EVERY repo's v2 (and
-      PM #120).** Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run:
+- [x] ✅ [INFRA] P0. **RESOLVED 2026-06-07 (verified) — aiohttp CVE no longer gates the fleet.** Both halves of the
+      operator decision landed and are confirmed in-tree: **(a)** aiohttp is capped `>=3.13.4,<3.14.0` fleet-wide
+      (`workspace-constraints.toml:8` + `canonical-dependency-manifest.json:17`, locked to 3.13.5) — the `<3.14` cap is
+      a deliberate operator decision because aiohttp 3.14 removes `AsyncStreamReaderMixin` which vcrpy 8.1.1 still needs
+      (would break every VCR cassette suite); **(b)** the two CVEs are on the sanctioned `--ignore-vuln` list in BOTH
+      `scripts/quality-gates-base/base-service.sh:930` AND `base-library.sh:729`
+      (`--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265`, non-exploitable: client-only aiohttp, no
+      `CookieJar.load()` on untrusted input). pip-audit therefore no longer fails on these → v2 runs fleet-wide are
+      green on this axis. SSOT: `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`. (Original
+      finding retained:) Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run:
       `aiohttp 3.13.5: CVE-2026-34993 +     CVE-2026-47265` (newly-published 2026 advisories). pip-audit is a
       **BLOCKING** gate (`base-service.sh:907`), so every fresh `quality-gates-v2` run now fails on it → **nothing
       promotes LDR→staging→main** until resolved, and **#120 (the Guard-3 serialization + FEATURE→STAGING auto-advance
@@ -1287,10 +1295,18 @@ by a PR:
       (dropped pre-commit + transitive deps removed from pyproject in 9bad68c). QG green (106s, sentinel
       dc00485-parent). repo: system-integration-tests. **NOTE the gate is still RED until the aiohttp-staging drift
       below is promoted — see next todo.**
-- [ ] [INFRA] P0. **🔴 SIT GATE STILL RED — fleet-wide aiohttp `<3.14` revert landed on LDR but NOT promoted to
-      `staging` (6+ repos) → SIT workspace-assembly (`uv pip install -e .` / `uv sync` over the editable closure) is
-      UNSATISFIABLE → both `smoke-test-gate` code-tests AND `quality-gates-v2` (the required check on every SIT staging
-      PR) fail with
+- [x] ✅ [INFRA] P0. **RESOLVED 2026-06-07 (verified) — the aiohttp staging-drift is cleared fleet-wide.** Re-checked
+      each drifted repo's `staging` `pyproject.toml`: `features-service`, `market-data-processing-service`,
+      `deployment-api`, `strategy-service` now carry `aiohttp>=3.13.4,<3.14.0`; `market-tick-data-service` +
+      `execution-service` carry the `<3.14` comment-pin; `unified-trading-library` has no direct aiohttp `>=3.14` pin.
+      The LDR `<3.14` revert promoted to staging via the (now-unblocked) drain, so the SIT workspace-assembly (`uv sync`
+      over the editable closure) is satisfiable again → `smoke-test-gate` + `quality-gates-v2` no longer fail with
+      `No solution found`. **AND** `system-integration-tests`' own `quality-gates-v2` is green (run 27096189841,
+      2026-06-07, after the UTL `pipeline_mode_resolver` `BATCH_HYPERLIQUID` fix `d0745bde`). The SIT gate can go green;
+      the staging→main drain is driven by the SIT validation that the sit-gate precheck fix (this session) now permits.
+      (Original finding retained:) fleet-wide aiohttp `<3.14` revert landed on LDR but NOT promoted to `staging` (6+
+      repos) → SIT workspace-assembly (`uv pip install -e .` / `uv sync` over the editable closure) is UNSATISFIABLE →
+      both `smoke-test-gate` code-tests AND `quality-gates-v2` (the required check on every SIT staging PR) fail with
       `× No solution found … alerting-service depends on aiohttp>=3.13.4,<3.14.0 … mtds==0.2.0 depends on     aiohttp>=3.14.0,<4.0.0 … unsatisfiable`.**
       Provenance: slot-1 SIT diagnosis 2026-06-06; PR #22 qg-v2 run 27065734898; the operator aiohttp `<3.14` HARD RULE
       (CLAUDE.md — 3.14 removed `AsyncStreamReaderMixin` → breaks vcrpy 8.1.1). The revert (e.g. mtds `de42ced`) is on
@@ -1299,9 +1315,9 @@ by a PR:
       `2a3af45 fix(deps): bump aiohttp>=3.14.0`). Drifted on staging: **unified-trading-library · features-service ·
       strategy-service · execution-service · deployment-api · market-data-processing-service ·
       market-tick-data-service** (UAC/alerting/instruments/client-reporting-api/ deployment-service staging are already
-      `<3.14`). **FIX = promote each drifted repo LDR→staging** (the standard staging-to-main wave; LDR already carries
-      the correct pin so this is promotion, not new code). mtds staging is DIVERGED-by-merge-commits-only from LDR
-      (`b86bae6`/`916f386` are LDR→staging merge PRs #95/#91) so a fresh LDR→staging merge brings `de42ced`'s revert
+      `<3.14`). **FIX = promote each drifted repo LDR→staging\*\* (the standard staging-to-main wave; LDR already
+      carries the correct pin so this is promotion, not new code). mtds staging is DIVERGED-by-merge-commits-only from
+      LDR (`b86bae6`/`916f386` are LDR→staging merge PRs #95/#91) so a fresh LDR→staging merge brings `de42ced`'s revert
       cleanly. Until then the SIT gate cannot go green and staging→main needs manual `staging-to-main.yml` dispatch.
       repos: market-data-processing-service, market-tick-data-service, unified-trading-library, features-service,
       strategy-service, execution-service, deployment-api.
