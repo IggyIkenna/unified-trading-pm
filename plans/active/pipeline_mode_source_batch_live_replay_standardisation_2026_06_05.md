@@ -336,6 +336,19 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       alerting-service + MTDS/execution recovery + autonomous-recovery-matrix.
 - [ ] [CODE] P1. **write-time cross-check** `source_string_for(pipeline_mode)==source` for batch (#6) — assert in UTL
       `_resolve_and_validate_source`. Repo: unified-trading-library.
+- [ ] [CODE] P0. **M1-BREAKING — migrate `live_websocket` objects/writers/readers → `live_<source>`** (next tranche,
+      GATED on the M1/M2 foundation UAC@8cafb758+6cd08c89 — do NOT start before downstream readers handle the new
+      members). The UAC enum members + mode-aware round-trip already exist; this is the DATA-side migration: live
+      writers stamp `live_<source>` (not `live_websocket`), the new `replay_<source>` write path lands, readers stratify
+      on the source-aware live/replay values, the reconciliation-service consumes them, and the transitional
+      `LIVE_WEBSOCKET` alias is removed once no object references it. Fixes the live multi-source PATH COLLISION (#5).
+      Repos: UTL (`derive_pipeline_mode_for_row` for live/replay) + market-tick-data-service (live + replay write
+      paths) + market-data-processing-service + features-service (mode-aware union read) +
+      batch-live-reconciliation-service.
+- [ ] [CODE] P0. **T+1 batch/live reconciliation + `live` TTL** (next tranche, GATED on M4 precedence + M1-breaking live
+      writers). The batch-live-reconciliation-service confirms batch≈live within a tolerance, then a TTL clears the
+      now-redundant `live` cells (long-lived `replay` stays where batch never existed). Config knobs (sensible defaults,
+      non-blocking): reconciliation tolerance + TTL horizon. Repo: batch-live-reconciliation-service (+ UTL TTL helper).
 - [ ] [DESIGN] P0. **M8 — cadence axis. PARTIAL — Phase 0.1 shipped the `Cadence` enum
       (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live`/`recovery_replay`) in UAC@a2eab633.**
       REMAINING: wire it as a manifest COLUMN (UTL) + deployment-registry `run_class` (deployment-service) + writer
