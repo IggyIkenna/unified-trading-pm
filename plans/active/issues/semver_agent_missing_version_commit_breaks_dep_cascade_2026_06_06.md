@@ -122,11 +122,11 @@ resolves UTL from the registry rather than the editable clone. UTL promotion PR 
 
 ## Follow-up todos
 
-- [ ] [SCRIPT] P0. Promote the LDR `aiohttp <3.14` cap to **staging** fleet-wide (strategy-service,
-      market-tick-data-service, execution-service, market-data-processing-service, unified-trading-library — staging
-      lacks the cap; that is why dep-update branches inherit the bad constraint). Drive UTL LDR→staging→main (PR #243) +
-      a UTL version bump > 0.3.167 so the published wheel caps aiohttp; then future dep-update branches need no manual
-      cap.
+- [x] ✅ [SCRIPT] P0. **DONE 2026-06-07** — staging now carries the `aiohttp>=3.13.4,<3.14.0` cap fleet-wide (verified
+      on staging: strategy-service / market-tick-data-service / execution-service / market-data-processing-service /
+      features-service / deployment-api / unified-trading-library all show `aiohttp>=3.13.4,<3.14.0`). All 7 stale-staging
+      repos were drained to LDR; whole fleet then converged (`pending=0`, MAIN_GREEN). The UTL published-wheel cap rides
+      the normal version-bump on its next release. Promote the LDR `aiohttp <3.14` cap to **staging** fleet-wide.
 - [ ] [SCRIPT] P0. **BLOCKED — canonical rollout tooling is broken; must repair BEFORE deploy (verified 2026-06-07,
       slot-1).** Deploy updated `semver-agent.yml` to all fleet repos (verify `contents: write` + the new "Apply version
       bump to staging" step landed on each repo's staging). PM #149 fixed the TEMPLATE(s); the per-repo live workflows
