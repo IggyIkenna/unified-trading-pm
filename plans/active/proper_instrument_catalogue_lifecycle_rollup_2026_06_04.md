@@ -164,6 +164,24 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `instruments_catalog_reader._CATALOG_BLOB` at `{env}/catalog.parquet` (the roll-up output) AND decide
       CatalogueBuilder's fate (retire its all.parquet write, or keep it as a distinct current-snapshot artifact with a
       clearly-different consumer). Repo: unified-trading-library + instruments-service. assigned_vm: vm-cross-cutting.
+- [ ] [DATA] P1. **FINDING (slot-7, 2026-06-05) — IS `by_date` instrument-definition capture is FROZEN ~2026-05-21
+      fleet-wide, and tradfi DEGRADED before the freeze.** Surfaced by the real apply (the catalogue is a faithful
+      roll-up → it exposes the input's coverage horizon). cefi: latest captured day **2026-05-21** (16 days stale as of
+      2026-06-05), last day FULL (3,473 active / healthy). tradfi: capture **degraded from ~16-18K instruments/day to
+      ~2/day after 2026-05-04** (only `CBOE:INDEX:VIX` + `FX:SPOT_PAIR:KRW-USD` on recent days), then **stopped after
+      2026-05-22**. defi: TBD (apply in flight). **Consequence**: the applied catalogues are honest
+      **snapshots-as-of-the -freeze** — cefi's is usable (full last day); **tradfi's marks ~651K instruments
+      "delisted"** (available_to ≤ 2026-05-04) because recent capture broke, so its liveness is NOT trustworthy until
+      tradfi capture is fixed + the catalogue regenerated (monotonic guard makes the regen safe). The freeze is _likely
+      the deliberate pre-migration drain_ (no instruments backfill until C-GREEN per
+      `instruments_manifest_canonicalisation_2026_06_01.md`), in which case the catalogues refresh when capture resumes
+      post-canonicalisation — BUT the **tradfi 16K→2/day degradation from 2026-05-04 is anomalous** (not a clean freeze)
+      and must be diagnosed by the tradfi slice owner (slot-6 / `tradfi_manifest_canonicalisation` + `tradfi_master`).
+      The completeness audit (capture_status) did NOT catch this (sparse days still `captured`; stopped days have no
+      rows → not `attempted_failed`) — confirms the verdict is PROVISIONAL and motivates a **coverage-horizon check**
+      (warn when the latest `by_date` day is > N days stale OR the per-day instrument count drops sharply) added to the
+      producer/audit (**NICE-TO-HAVE**, slot-7). Repo: instruments-service (capture) + the tradfi vertical. assigned_vm:
+      vm-cross-cutting (catalogue) / slot-6 (tradfi root-cause).
 
 ## Phased DAG + gates
 
