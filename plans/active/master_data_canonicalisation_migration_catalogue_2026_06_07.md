@@ -75,6 +75,28 @@ parallel-safe.
 **WAVE 4** G4 per-AG `--apply` (gated G0∧G1∧G2∧G3 + drain) → **WAVE 5** G5 backfills→100% + cost-swap. Live-side
 (M3/M4/M6/M7 · `live_websocket`→`live_<source>` · M8 cadence) = tracked parallel track, after the batch migration.
 
+> **🟢 G3-CONSUMER — deployment-api/UI UNION read path SHIPPED 2026-06-07 (vm-cross-cutting / slot-7)**: the data-status
+> CONSUMER is now honest for the post-migration v9 multi-row manifest (reads the v9 contract; fixture-tested — does NOT
+> need the data migrated yet). **`deployment-api@4dd2575`**: new `data_status_union.union_reduce_to_cells` collapses
+> each cell's multi-(source × pipeline_mode) rows to ONE honest `capture_status` via the **M5 union rule** (≥1
+> source/mode `captured` ⇒ cell `captured`; status precedence captured>empty>failed>expected; known-empty > pending),
+> wired into the panel rollup (`_compute_capture_status_counts`) + the hierarchical `_aggregate_counts` so the 4-state
+> counts are CELL-grain (no double-count across provenance rows; v8 manifests unchanged — guarded on the provenance
+> columns). Coverage % = `captured / (captured+empty+failed+expected_unattempted)` over the could-exist denominator
+> (READ, never re-derived per CF-14). **DRILLDOWN** (`deployment-api@4dd2575`): per-(pipeline_mode × source) breakdown
+> at shard-atom leaves (a cell shows e.g. captured via `batch_databento` + `replay_databento`, missing in
+> `live_databento`) + `pipeline_mode`/`source` as filter AND `group_by` axes + a top-level provenance summary.
+> **deployment-ui** `HierarchicalShardDrilldown` renders the pipeline_mode/source breakdown + the 4-state
+> (**`deployment-ui@0dc40eb`**) — **UI tick stays [BLOCKED-PLAYWRIGHT]** (pw:L2 pending on a UI-capable slot;
+> regression: `src/components/HierarchicalShardDrilldown.test.tsx`). **M5 + the M4 data-status portion (mode-agnostic
+> UNION; the live `select_for_mode` precedence stays OPEN in batch-live-reconciliation-service — live-side track) are
+> DONE on the CONSUMER side** (G0-plan M5 row annotated PARTIAL — the `cadence` dimension + unified-trading-system-ui
+> parity remain). Tests: deployment-api `test_data_status_union.py` + `test_data_status_drilldown_provenance.py`
+> (QG-green) · UI vitest 766 green. **Landed on LDR via the tab-mirror; the LDR→staging promotion is dep-tier-gated on
+> deployment-service reaching STAGING_GREEN — NOT bypassed** (`--skip-dep-tier-gate` is agent-forbidden). Out of scope
+> (gated): the live read-path precedence service M4 in batch-live-reconciliation-service; the actual `--apply`;
+> M3/M6/M7.
+
 ## ⚠️ CONFLICTS SURFACED + RESOLVED (the coordinator's job — track + resolve, do not let them reach `--apply`)
 
 > The whole point of this coordinator is to catch where existing code/docs CONTRADICT the ratified source-aware model

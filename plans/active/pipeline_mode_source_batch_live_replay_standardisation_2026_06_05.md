@@ -333,10 +333,21 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       unified-api-contracts (+ consumers IS/MTDS/features/deployment-api).
 - [ ] [CODE] P0. **M4 — mode-contextual precedence** — `select_for_mode(consumer_mode, available_modes)`: live-mode
       `live>replay>batch`, batch-mode `batch>replay>live` (replay always middle). A config on the consumer. Repos: UAC
-      (resolver) + batch-live-reconciliation-service + features/strategy readers.
+      (resolver) + batch-live-reconciliation-service + features/strategy readers. **NOTE 2026-06-07 (slot-7)**: the
+      **data-status CONSUMER** does NOT need `select_for_mode` — it unions MODE-AGNOSTICALLY (answers "available from
+      ANY mode"), shipped in M5 below (`deployment-api@4dd2575`). This M4 item is the **live read-path resolver** in
+      batch-live-reconciliation-service (live-side track) — still OPEN.
 - [ ] [CODE] P0. **M5 — data status = UNION + pipeline_mode drilldown** — deployment-api/UI extend the 4-state counts
       with a pipeline_mode dimension (one union view + per-mode breakdown + deltas). Repos: deployment-api +
-      unified-trading-system-ui.
+      unified-trading-system-ui. **PARTIAL 2026-06-07 (slot-7) — CONSUMER SHIPPED**: `deployment-api@4dd2575`
+      (`data_status_union.union_reduce_to_cells` UNION read path — ≥1 source/mode captured ⇒ cell captured, cell-grain
+      4-state, no double-count; per-(pipeline_mode × source) drilldown breakdown at leaves + pipeline_mode/source
+      filter + group_by axes + top-level summary; QG-green, `test_data_status_union.py` +
+      `test_data_status_drilldown_provenance.py`) + `deployment-ui@0dc40eb` (`HierarchicalShardDrilldown` renders the
+      breakdown + 4-state; UI **[BLOCKED-PLAYWRIGHT]** — pw:L2 pending, regression:
+      `src/components/HierarchicalShardDrilldown.test.tsx`). **Remaining**: the `cadence` dimension (M5b) +
+      **unified-trading-system-ui** parity. Landed on LDR via tab-mirror; LDR→staging dep-tier-gated on
+      deployment-service STAGING_GREEN (not bypassed).
 - [ ] [CODE] P0. **M6 — capability-driven startup gate** — per shard, from M2×M3: replay-capable → autostart replay over
       `[batch-cutoff → now]`; else live-required → assert live already running; else wait/refuse/configured-gap. Repos:
       batch-live-reconciliation-service + strategy (live-flip gate) + MTDS (startup).
