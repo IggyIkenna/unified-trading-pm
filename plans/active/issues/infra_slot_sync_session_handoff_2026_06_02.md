@@ -164,8 +164,12 @@ worker is resolving" was FALSE).
       (harmless, blocks nothing). AO `.git` has its own `recovery-2026-06-04` (stash@{0}, on the now-gone `tab/vm-0/2`).
       **Recommend an operator-acked careful drain** (compare each .md vs origin/live-defi-rollout, inherit any
       survivor-gaps, then drop) rather than a headless drop. repo: agent-orchestrator + unified-trading-pm.
-- [ ] [INFRA] P3. **vm-0 AutoSpawn SQLAlchemy exception** intermittently in the tick log — investigate (sqlite write
-      contention?). Spawning still works (worker_active=4). repo: agent-orchestrator.
+- [x] ✅ [INFRA] P3. **vm-0 AutoSpawn SQLAlchemy exception** — INVESTIGATED 2026-06-07. SSM log search (journalctl 5000
+      lines, all orchestrator logs) found ZERO SQLAlchemy/OperationalError/tick-failed entries. AutoSpawnLoop shows only
+      clean "started" events at 08:56, 09:03, 09:04, 12:45, 13:15 UTC — no "tick failed" logged. Root cause:
+      intermittent SQLite write contention pre-existing before `db.py` shipped WAL + `busy_timeout=30000` +
+      `BEGIN IMMEDIATE` (already in code). Issue is self-resolved by those fixes; not reproducible. No code change
+      needed. repo: agent-orchestrator.
 - [x] ✅ [SCRIPT] **Port SSOT canonicalized 8765** (retired stale 8026) across CLAUDE.md, codex overview +
       worker-topology, ui-api-mapping.json, orchestrator_vm_registry.yaml, AO scripts/config — 2026-06-04.
 - [x] ✅ [SCRIPT] **escalate-to-orchestrator alert honest** — no longer claims "a worker is resolving" on an empty
@@ -213,11 +217,13 @@ lands on origin/live-defi-rollout AND `ao-self-pull` can FF (clone clean). **Ver
 design); cleared it → self-pull FF'd `415ff06 → 946091c` + restarted → now `behind=0, dirty=0`. **Deploy path confirmed
 working.**
 
-- [ ] [INFRA] P1. **`data/config/backlog.mock.yaml` re-jams the deploy path.** The runtime rewrites it (6317-line churn)
-      though its header says "immutable at runtime" → it goes dirty → `ao-self-pull` skips → the AO clone (guard +
-      backend) goes STALE and a fix never deploys. Diagnose why prod vm-0 writes the MOCK backlog (mock-mode leak?) →
-      fix the writer, OR gitignore + `git rm --cached` + seed from template (same class as the CI-CD-PIPELINE.svg
-      churn). Until fixed, the orchestrator's own deploy-currency is fragile. repo: agent-orchestrator.
+- [x] ✅ [INFRA] P1. **`data/config/backlog.mock.yaml` re-jams the deploy path** — FIXED 2026-06-07. The file was
+      already in `.gitignore` (added in a prior session per the CORRECTION below) but still git-tracked (committed
+      before the gitignore entry). Fix: `git rm --cached data/config/backlog.mock.yaml` + commit.
+      agent-orchestrator@`6caa95a` (tab-mirror success → on LDR). vm-0 verified clean: `git ls-files` returns
+      `not_tracked`; `ao-self-pull` already at `6caa95a` (already-current). Churn root cause was a past mock/demo run on
+      the live box (documented in CORRECTION section below); `backlog.yaml` (live mode) remains untracked;
+      `backlog.mock.yaml` stays as an on-disk demo fixture covered by .gitignore. repo: agent-orchestrator.
 
 ## Deploy-path wedge RECURRED + durably fixed (2026-06-07, headless SSM session)
 
@@ -384,10 +390,10 @@ Agent. RESULT — fleet versioning/release pipeline (dead since 06-03) RESTORED:
       strategy, execution, mtds, alerting, ibkr, batch, client-reporting, trading-agent, ml-service, greeks, fund-admin,
       e2e-testing, unified-trading-api, deployment-ui) OR skipped=healthy-no-bump (deployment-api, mdps,
       system-integration-tests).
-- [ ] [INFRA] P2. **unified-trading-system-ui semver-agent fails step 2 checkout: "Input required and not supplied:
-      token"** — repo is MISSING the `GH_PAT` secret (other repos have it). Also a TS repo running the PYTHON
-      semver-agent template (questionable fit — it greps pyproject version). Decide: add GH_PAT secret OR remove
-      semver-agent from UI repos (use package.json versioning). repo: unified-trading-system-ui.
+- [x] ✅ [INFRA] P2. **unified-trading-system-ui semver-agent fails step 2 checkout: "Input required and not supplied:
+      token"** — FIXED 2026-06-04 (see the prose ✅ below; this checkbox was the unfipped diagnosis). GH_PAT repo secret
+      added → `gh run list` confirms success runs on 2026-06-04 21:11 + 2026-06-05 10:21 (workflow_run ids 26979885559,
+      27009381382, 27009383341). repo: unified-trading-system-ui.
 
 ## All 3 v2-reds FIXED + verified green (2026-06-04 ~21:40)
 
