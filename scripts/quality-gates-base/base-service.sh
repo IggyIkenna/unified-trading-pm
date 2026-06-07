@@ -1513,6 +1513,16 @@ if [ -n "$_WF_LINT_DIR" ]; then
     log_section "[5.5/6] WORKFLOW LINT (actionlint)"
     if command -v actionlint &>/dev/null; then
         WORKFLOW_ERRORS=0
+        # actionlint's OWN rules (undefined outputs, untrusted github.event.* in run:,
+        # the empty-${{ }} parse-breaking class, bad expressions) stay STRICT — those are
+        # the real workflow-correctness errors this gate exists to catch. But its EMBEDDED
+        # shellcheck defaults to reporting info/style nits (SC2086 word-splitting=info,
+        # SC2129 redirect-style=style) in inline `run:` scripts — failing the QG fleet-wide
+        # on shellcheck STYLE is scope-creep beyond the gate's intent and was a regression
+        # of the [5.5] re-enable (deployment-service + others v2-red on pure style nits).
+        # Raise embedded-shellcheck to warning+ so genuine shell bugs still fail but
+        # info/style suggestions don't. (SHELLCHECK_OPTS is read by actionlint's shellcheck.)
+        export SHELLCHECK_OPTS="--severity=warning${SHELLCHECK_OPTS:+ $SHELLCHECK_OPTS}"
         while IFS= read -r -d '' wf; do
             actionlint "$wf" 2>&1 || WORKFLOW_ERRORS=$(( WORKFLOW_ERRORS + 1 ))
         done < <(find "$_WF_LINT_DIR" -name "*.yml" -print0 2>/dev/null)
