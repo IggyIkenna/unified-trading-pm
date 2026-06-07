@@ -3043,5 +3043,20 @@ Plus all WAVE-1/2 machinery todos (#151/#152/#153). Proven end-to-end (uac→…
 - **Fleet-rollout** of the fixed `semver-agent.yml` + `tab-mirror-to-ldr.yml` to all 24 repos' live workflows
   (`scripts/propagation/rollout-agent-workflows.sh`) — held to avoid adding undrained LDR commits mid-convergence; run
   as a clean pass now that pending=0.
+- ### Note — semver-agent fleet-rollout BLOCKED on broken tooling (2026-06-07, documented P0)
+
+Attempted the fleet rollout of the fixed `semver-agent.yml`; STOPPED before apply. The canonical
+`scripts/propagation/rollout-agent-workflows.sh` reads a **dead** template (`scripts/templates/semver-agent.yml`) that
+LACKS the #149 version-commit step AND would REGRESS the trigger `quality-gates-v2`→ the dead `"Quality Gates"` check +
+re-introduce the broken `../unified-trading-pm` checkout (cicd-#504 / f9deb76f7) on 14 repos — and excludes the cascade
+roots uac/utl/deployment-service. There are 4 semver-agent template copies / 3 content states / 2 placeholder
+conventions; the only fully-current SSOT is `scripts/workflow-templates/semver-agent.yml.tmpl` (`__REPO_NAME__`).
+**Repair-first path (P0 in `issues/semver_agent_missing_version_commit_breaks_dep_cascade_2026_06_06.md`):** consolidate
+to ONE SSOT (the `.tmpl`) + point the rollout script at it (or add commit/push to `rollout-semver-agent.sh`, which
+already reads the correct `.tmpl`), delete the dead `scripts/templates/semver-agent.yml`, then deploy to the FULL repo
+set incl. cascade roots. This is FUTURE-correctness hardening (pyproject-vs-manifest version divergence on future bumps)
+— **NOT pipeline-breaking: the fleet converged + is self-sustaining with the current per-repo semver-agents** (the fix
+that mattered was PM's `update-repo-version.yml`, which is on main). `tab-mirror-to-ldr.yml` is already fleet-current.
+
 - Residual `main`-behind-`LDR` commit lag (non-version docs/CI churn) is BY DESIGN — the version pipeline promotes
   releases, not every commit; it self-clears as those commits get bundled into the next release bump.
