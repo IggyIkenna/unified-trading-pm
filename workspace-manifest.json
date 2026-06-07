@@ -136,7 +136,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "batch-live-reconciliation-service": {
       "type": "batch-service",
@@ -189,7 +189,7 @@
       ],
       "coverage_pct": 80,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "client-reporting-api": {
       "type": "api-service",
@@ -247,7 +247,7 @@
         "cefi",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "deployment-api": {
       "type": "api-service",
@@ -311,7 +311,7 @@
         "deployment",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "deployment-service": {
       "type": "infrastructure",
@@ -410,7 +410,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "features-service": {
       "type": "service",
@@ -621,7 +621,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "instruments-service": {
       "type": "service",
@@ -675,7 +675,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "market-data-processing-service": {
       "type": "service",
@@ -734,7 +734,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -787,7 +787,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "ml-service": {
       "type": "service",
@@ -907,7 +907,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "system-integration-tests": {
       "type": "test-harness",
@@ -1046,7 +1046,7 @@
         "standard",
         "tradfi"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-api-contracts": {
       "type": "library",
