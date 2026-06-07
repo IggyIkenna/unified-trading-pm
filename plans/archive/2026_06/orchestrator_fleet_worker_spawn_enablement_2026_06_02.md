@@ -3,7 +3,7 @@ title: Orchestrator fleet worker-spawn enablement (FM7 operator-mismatch + autos
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -14,6 +14,16 @@ related_plans:
   - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
   - plans/epics/orchestrator_master.md
 ---
+
+> **✅ ARCHIVED 2026-06-07 [unlock-plan].** All checkbox todos complete (0 open): F8/F9 self-heal+review-spawn done; F12
+> fleet env; F13 worktree-hygiene RESOLVED (git object-store corruption fixed); F6 pm-pull baked into `bootstrap_vm.sh`
+> (`agent-orchestrator@402fbc3`); the positive "picking up CI work" Slack alert was already shipped + wired
+> (`server/server.py:729-739` → `notify_work_picked_up`).
+>
+> ## Deferred work — migrated to:
+>
+> - **F7 — slot-4 WIP recovery on vm-0** (BLOCKED-INFRA: live-host WIP judgment — unmerged WIP on uac/pm feature
+>   branches, recreate `tab/vm-0/4`) → `plans/epics/orchestrator_master.md` § "P2 — useful; opportunistic".
 
 # Orchestrator fleet worker-spawn enablement
 
@@ -138,12 +148,14 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F6 — pm-pull install on VMs [P1] _(MIGRATED FROM `plan_hygiene_silent_failure_capture_2026_05_29`)_
 
-- [ ] [SCRIPT] P1. **MIGRATED FROM:** `plan_hygiene_silent_failure_capture` (its deferred "audit + install pm-pull on
-      the other 9 epic VMs"). `bootstrap_vm.sh` does **not** install pm-pull — fresh/replacement VMs rely on the
-      separate `scripts/orchestrator/run_fleet_install_pm_pull.sh` post-launch step, so a freshly-bootstrapped VM
-      doesn't auto-pull PM (regen then reads a stale clone). Bake the `pm-pull` timer+service install into
-      `bootstrap_vm.sh` so a fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic
-      VMs when they start (currently off). Composes with F2–F4 (same per-VM rollout).
+- [x] ✅ [SCRIPT] P1. **F6 — pm-pull baked into `bootstrap_vm.sh`** — DONE 2026-06-07 (`agent-orchestrator@402fbc3`,
+      shipped to LDR; CI v2 gates on promotion). Added **Step 5.9** which calls the canonical idempotent
+      `install_pm_pull.sh` (installs `/usr/local/bin/pm-pull-ff.sh` + `pm-pull.{service,timer}` pulling every 5 min +
+      the 30-min regen-interval drop-in) for ALL roles, so a fresh/replacement VM is self-sufficient with no post-launch
+      step. The "9 stopped epic VMs" sub-part is MOOT — the per-epic fleet is post-cutover/decommissioned (vm-0 is the
+      sole live orchestrator; `i-007e8d99` terminated 2026-06-07). (Note: local Pass-1 QG showed a false-negative —
+      local `.venv` missing `pexpect` which IS in AO pyproject+lock + present in CI; shell-only change is `bash -n`
+      clean.)
 
 ### F9 — review-agent auto-spawn per VM (persistent-role keep-alive) [DONE]
 
@@ -318,9 +330,9 @@ green through the execution half (not just discovery).
   — the slot branch was never created / was replaced by these feature branches holding unmerged WIP. Fix = inspect the
   WIP (merged? abandonable?) → merge or set aside → create `tab/vm-0/4` from LDR + recreate the 2 worktrees. Slot-4
   stays quarantined by design (1 of 10) until then. NOT blind-switchable.
-- [ ] [AGENT] P1. **NEW GAP — no positive "picking up CI work" Slack alert.** The orchestrator only Slacks on FAILURES
-      (`notify_spawn_failure`/`slot_stale`/`slot_failed`/`agent_stuck_*`/`git_staleness_red`/`unpushed_plans`). There is
-      NO success/work-pickup alert, so #agent-orchestrator-alerts shows only warnings — an operator cannot SEE the fleet
-      _working_. Add `notify_work_picked_up(slot, repo, task/escalation_id)` fired when a worker boots onto a task (esp.
-      a CI escalation) so CI-pickup is positively visible. repo: agent-orchestrator (server/slack_notify.py + the
-      boot/escalation spawn path). Provenance: 2026-06-04 Slack-observability audit.
+- [x] ✅ [AGENT] P1. **Positive "picking up CI work" Slack alert** — DONE (verified 2026-06-07; already shipped since
+      the 2026-06-04 audit). `notify_work_picked_up(slot_id, repo, task)` EXISTS in `server/notifications/slack.py:400`
+      and is WIRED into the task-dispatch/boot path (`server/server.py:729-739`): on `task_dispatched` it fires a
+      best-effort daemon-thread Slack alert with the slot + repo + task title, so #agent-orchestrator-alerts shows the
+      fleet WORKING, not just failures (covers CI escalations — they boot through the same dispatch path). The checkbox
+      was stale.

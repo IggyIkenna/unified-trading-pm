@@ -250,7 +250,13 @@ All phases done.
 
 ## P2 — useful; opportunistic
 
-### [`agent_orchestrator_cloud_run_deployment_2026_05_19`](../archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md)
+- [ ] [INFRA] P1. **F7 — slot-4 WIP recovery on vm-0** [BLOCKED-INFRA: live-host WIP judgment] (**MIGRATED FROM:**
+      `orchestrator_fleet_worker_spawn_enablement_2026_06_02.md`, archived 2026-06-07). `origin/tab/vm-0/4` does not
+      exist for `unified-api-contracts` (slot-4 worktree on `fix/tradfi-exchange-mappings-minimal`) +
+      `unified-trading-pm` (on `fix/pm-ci-self-clone`) — the slot branch was never created / was replaced by these
+      feature branches holding unmerged WIP. Fix (on the live vm-0 via SSM): inspect each WIP (merged? abandonable?) →
+      merge or set aside → create `tab/vm-0/4` from LDR + recreate the 2 worktrees. Slot-4 stays quarantined by design
+      (1 of 10) until then. NOT blind-switchable — needs per-branch WIP judgment, hence operator/live-host-gated.
 
 **status**: ✅ ARCHIVED 2026-05-21 — Phases 0-4+6 done. Firebase first-deploy + Phase 5 prod cutover DEFERRED-HUMAN-GATE
 (gated on workers-on-vms D3). · **estimate**: 4.8 cal AI-days (class: infra)
