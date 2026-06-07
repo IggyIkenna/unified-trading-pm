@@ -200,9 +200,12 @@ resolves UTL from the registry rather than the editable clone. UTL promotion PR 
       (`scripts/propagation/rollout-semver-agent.sh`). Deleted `scripts/templates/semver-agent.yml` (dead),
       `scripts/propagation/templates/semver-agent.yml` (stale), and the orphaned top-level
       `scripts/rollout-semver-agent.sh`. `rollout-agent-workflows.sh` no longer handles semver.
-- [ ] [SCRIPT] P2. `python-quality-gates-v2.yml` dep-clone: when `DEP_BRANCH` (the head dep-update branch) does not
+- [x] ✅ [SCRIPT] P2. `python-quality-gates-v2.yml` dep-clone: when `DEP_BRANCH` (the head dep-update branch) does not
       exist in a dep repo, fall back to that dep's CURRENT computed version/tag rather than silently to `main` — so the
-      tested dep version is explicit.
+      tested dep version is explicit. **DONE 2026-06-07 (PM main #163 / `9b8c827ee`).** `clone_repo()` now inserts an
+      explicit manifest-`versions[dep]` tag clone (`-b v<ver>`) BETWEEN the failed-DEP_BRANCH clone and the `main`
+      fallback, with a clear log line; falls through to `main` only if the released-version tag is absent. (The
+      version-aware constraint-derived tag clone remains the FIRST attempt, unchanged.)
 - [x] ✅ [SCRIPT] P1. **PM's own `uv.lock` drifts on every PM version bump** — DONE 2026-06-07 (PM@<sha>). Added an
       `Install uv` step + a guarded `uv lock` immediately after the `sed` PM-version bump in
       `.github/workflows/update-repo-version.yml`, and staged `uv.lock` in the manifest commit, so PM's lock tracks the

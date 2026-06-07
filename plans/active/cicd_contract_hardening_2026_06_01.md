@@ -3242,4 +3242,61 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
    `scripts/workflow-templates/rollout-workflow-templates.sh`, which renders `semver-agent.yml.tmpl` correctly).
 4. **`scripts/propagation/templates/{major-bump-issue-handler,request-major-bump}.yml` are STALE duplicates** of the
    `scripts/workflow-templates/` SSOT (issue-#2 multi-copy hazard) — de-drift or delete (only the workflow-templates/
-   copies feed the drift gate + canonical rollout).
+   copies feed the drift gate + canonical rollout). **DE-DRIFTED 2026-06-07 (#163): both synced to the canonical
+   workflow-templates/ copies.**
+
+## 🏁 SESSION OUTCOME — 2026-06-07 finish-to-DONE session #2 (slot-1) — findings closed, pipeline UNFROZEN
+
+> Operated under `AUTONOMOUS_AGENT_RULES.md` (incl. Rule 11). Drove the remaining work to done / in-flight-converging,
+> parallelizing with 5 sub-agents. Honest end-state below.
+
+### DONE + verified
+
+1. **All 15 CI/CD hidden-fragility findings CLOSED** (C1-C3, H1-H6, M1-M3, M5-M6 + 2 noise) + the operator-asked
+   rollout-script retired-workflow guard + the dep-clone explicit-version fallback (issue #2) + propagation de-drift.
+   Shipped to **PM `main` #163 (merged `9b8c827ee`)** + on LDR (`8f56545d5`); v2-green verified. (M-by-M detail: see the
+   migrated-findings checkboxes above, all flipped except H4.) **Operator ask:** `rollout-workflow-templates.sh` deletes
+   the stale `workspace-qg.yml.tmpl` AND `_is_retired()`-guards retired workflows so a full rollout can never resurrect
+   `workspace-qg.yml` — full dry-run verified clean.
+2. **SIT, mtds, mdps green on LDR** (sub-agents): SIT actionlint (`secrets` in step-`if` / SC2155 /
+   `secrets`→`vars.TELEGRAM_CHAT_ID`) → `system-integration-tests@cde3322` v2 SUCCESS. mtds UAC-A11c enum retirement
+   (`dex_swaps`→`dex_pool_swaps`) → mtds #143 v2 SUCCESS. mdps already green.
+3. **VM-host items — 7 done/verified** (sub-agent, SSM→vm-0): `delete_branch_on_merge=false` + MemoryMax=56G drop-in +
+   `QG_HOST_CONCURRENCY=1` floor added to `bootstrap_vm.sh` + applied live (`agent-orchestrator@0ef02b3`→vm-0);
+   git-health self-heal/summarise + LIVE-set alert scoping verified already-correct. **api_host issue = 0 open.**
+4. **🔑 Cleared the STALE staging lock — THE systemic "staging==LDR" blocker.** `staging_status.locked=True` stuck since
+   11:11 (mtds 0.4.0 SIT-serialize) blocked EVERY repo's `check-staging-lock` → all LDR→staging drain PRs BLOCKED
+   despite green staging-v2. Verified fully stale (`versions==staging_versions==lock_version==0.4.0`, no SIT ~5h);
+   cleared on `main` (`1b34d2299` [skip ci]), dispatched `staging-unlocked` ×25, close/reopened the 19 drain PRs. Drain
+   UNBLOCKED + converging (instruments/AO CLEAN; rest CI-time-bound).
+
+### 🆕 New findings (durable — track to closure)
+
+- **`staging-lock-check.yml` `repository_dispatch` path does NOT refresh open PR heads** — runs in default-branch
+  context, so `staging-unlocked` is ineffective; close/reopen is the only reliable refresh (used this session). Durable
+  fix: on dispatch, re-fire each open `base:staging` PR's head check (or a PM workflow that close/reopens on unlock).
+- **`detect_template_drift.py --workflows` is ref-sensitive (local≠CI)** — local reads siblings at LDR; CI checks PM's
+  deps cloned at `main`. A dep's LDR-but-not-main workflow fix is clean locally, NEW-drift in CI. Baselined utl/uac
+  major-bump as transient-pending-promotion (same class as update-dependency-version). Lesson: never `--baseline-write`
+  from local state. Durable fix: clone deps at LDR for the check, or skip cloned-dep repos (check full checkouts only).
+
+### Still in-flight (CI-time-bound / sub-agents) + operator-tracked
+
+- **Fleet staging drain → full `staging==LDR`**: UNBLOCKED + converging per repo as reopened drain-PR v2 completes; no
+  systemic blocker remains (per-repo v2 tails only).
+- **Agent A** — fleet workflow rollout (major-bump→7 repos + update-dependency-version uv-lock fleet-wide + semver):
+  in-flight (issue-#2 line-191 + H4's fleet-commit half — H4 left open pending these commits).
+- **infra_slot_sync remaining**: cleanup sub-agent in-flight (backlog.mock P1, AutoSpawn-SQLAlchemy P3, ui-semver
+  checkout P2); operator-gated #1/#2 stay BLOCKED-OPERATOR.
+- **plan-health-gate PIN — HELD (do NOT pin yet).** Functionally green (#152) but RED on PM PRs due to the pre-existing
+  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated promotion.
+  **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate` (verify via
+  `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
+- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead; `main-backmerge-to-ldr`
+  alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then LDR→main promote.
+
+### Genuine non-code blockers (documented — not deferrable-by-choice)
+
+- **agent-orchestrator rulesets + auto-merge = GitHub Pro** (private repo) — manual v2-gated merge today.
+  [BLOCKED-BILLING]. **STOPPED `i-007e8d99` decommission + vm-0 recovery-stash drop** — operator-gated destructive ops
+  [BLOCKED-OPERATOR].
