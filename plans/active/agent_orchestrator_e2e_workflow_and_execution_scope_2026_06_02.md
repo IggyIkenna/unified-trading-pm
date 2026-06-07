@@ -50,14 +50,14 @@ staging is the **promotion step when a unit is done**; merge-to-`main` is the CI
 
 ## Status snapshot (2026-06-02)
 
-| Bucket                                                              | Gaps                                                                                        | Notes                                                                                                                                                                                                                                                                                                                                                                             |
-| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ✅ **Done + shipped** (slot 2)                                      | **G1**, **G2** (30-min interval), **G4**, **G5**, **G6** v1-ghost-cleanup-on-LDR, **G7 P0** | All flipped with SHA evidence; e2e_demo + check.sh green                                                                                                                                                                                                                                                                                                                          |
-| 🔴 **Deferred — GitHub billing**                                    | **G6** branch-protection (require `…/quality-gates-v2`)                                     | Not an access issue (session is admin via `GH_PAT`); GitHub feature-gates rulesets/branch-protection for this private repo (`403 upgrade-to-Pro`). Unblocks when the billing/credit-card issue clears — then create the ruleset like the sibling repos.                                                                                                                           |
-| 🟡 **Deferred — operator deploy green-light**                       | **G6** create `staging` + remove v1 ghosts from `main` + SIT gate                           | Both fire CICD → a fleet **backend restart**, out of bounds until the operator green-lights a deploy. G5 already made a deploy state-safe.                                                                                                                                                                                                                                        |
-| ➡️ **Owned by another plan**                                        | worker-VM / QG **resourcing + sizing**                                                      | The "do workers need more RAM / dedicated QG+SIT runner" question is tracked in [`quality_gates_resource_contention_speedup_2026_06_02.md`](quality_gates_resource_contention_speedup_2026_06_02.md) — 3 options (A scale-workers / B self-hosted runner pool / C bespoke RPC) documented there, data-gated on `qg-perrepo-baseline` + `qg-cw-memory-agent`. Not duplicated here. |
-| 👤 **Owned by other agent** (boot-prompt / CLAUDE.md context-bloat) | **G3**, **G7 P1**, **G8** (+ residuals)                                                     | Left open intentionally — another agent is doing the boot-prompt + CLAUDE.md de-bloat and will flip these + push when done. Do not touch from this side.                                                                                                                                                                                                                          |
-| ⚪ **Optional, not required**                                       | **G2** push-trigger stretch                                                                 | `POST /api/backlog/regen` endpoint already exists; only an optional GHA hook remains. 30-min floor makes it unnecessary.                                                                                                                                                                                                                                                          |
+| Bucket                                                              | Gaps                                                                                        | Notes                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅ **Done + shipped** (slot 2)                                      | **G1**, **G2** (30-min interval), **G4**, **G5**, **G6** v1-ghost-cleanup-on-LDR, **G7 P0** | All flipped with SHA evidence; e2e_demo + check.sh green                                                                                                                                                                                                                                                                                                                                                                    |
+| 🔴 **BLOCKED — GitHub Pro feature-gate (ONLY remaining gap)**       | **G6** branch-protection (require `…/quality-gates-v2`)                                     | Genuine impossibility (re-confirmed 2026-06-07): all ruleset/branch-protection/check-runs API calls 403 `upgrade-to-Pro` for this PRIVATE repo (not access — session is admin via `GH_PAT`). v2 RUNS+PASSES on every main/staging push+PR + promotion merges only when v2 green (manually, auto-merge also Pro-gated) — only server-side _required-check enforcement_ missing. Unblocks on Pro/Team upgrade OR public repo. |
+| ✅ **Done + shipped** (2026-06-07)                                  | **G6** create `staging` + remove v1 ghosts from `main` + SIT gate + `quickmerge.sh`         | staging exists; v1 ghosts gone from main (404); semver-agent.yml path-fix on main (semver run 27078070043 green E2E); `scripts/quickmerge.sh` symlinked (agent-orchestrator@fd6ef28); full tab→LDR→staging→main promotion cycle proven (fired deploy path, all green). SIT gate wired PM-side. AO on standard flow.                                                                                                         |
+| ➡️ **Owned by another plan**                                        | worker-VM / QG **resourcing + sizing**                                                      | The "do workers need more RAM / dedicated QG+SIT runner" question is tracked in [`quality_gates_resource_contention_speedup_2026_06_02.md`](quality_gates_resource_contention_speedup_2026_06_02.md) — 3 options (A scale-workers / B self-hosted runner pool / C bespoke RPC) documented there, data-gated on `qg-perrepo-baseline` + `qg-cw-memory-agent`. Not duplicated here.                                           |
+| 👤 **Owned by other agent** (boot-prompt / CLAUDE.md context-bloat) | **G3**, **G7 P1**, **G8** (+ residuals)                                                     | Left open intentionally — another agent is doing the boot-prompt + CLAUDE.md de-bloat and will flip these + push when done. Do not touch from this side.                                                                                                                                                                                                                                                                    |
+| ⚪ **Optional, not required**                                       | **G2** push-trigger stretch                                                                 | `POST /api/backlog/regen` endpoint already exists; only an optional GHA hook remains. 30-min floor makes it unnecessary.                                                                                                                                                                                                                                                                                                    |
 
 ## Gaps to close
 
@@ -199,15 +199,28 @@ green-lights a deploy (2026-06-02 directive: "don't restart the running backends
 - [x] ✅ [INFRA] P0. Deleted the stale v1 ghost workflows on LDR (`quality-gates.yml`, `workspace-qg.yml`).
       `workspace-     qg.yml` had still been triggering on every `live-defi-rollout` push (wasted runs); neither carries
       a cloud-build dispatch so removal triggers no deploy. — agent-orchestrator@0249a83
-- [ ] [INFRA] P0. **BLOCKED-OPERATOR** — remove the v1 ghosts from `main` too + create the `staging` branch +
-      `staging-to-main` SIT gate. Both actions trigger CICD → a fleet backend **restart**, so they wait for the operator
-      to green-light a deploy. (LDR-side deletion above promotes to main on that same deploy.)
-- [ ] [INFRA] P0. **BLOCKED-BILLING** — pin branch protection to require
-      `Quality Gates (agent-orchestrator) /     quality-gates-v2`. Not an access problem (session is admin via
-      `GH_PAT`); GitHub **feature-gates** rulesets + branch-protection for this repo (`403 upgrade-to-Pro`), the only
-      repo of the set so gated. Resolve by ONE of: (a) upgrade the GitHub plan (Pro/Team) so a ruleset can be created
-      here, (b) make the repo public (rulesets free for public), or (c) accept "v2 runs but isn't a hard-required gate"
-      (operator tooling). Operator/billing decision.
+- [x] ✅ [INFRA] P0. DONE 2026-06-07 (operator green-lit proceeding) — `staging` branch exists; v1 ghost workflows
+      (`quality-gates.yml`/`workspace-qg.yml`/`python-quality-gates.yml`) are GONE from `main` (all 404); `main`'s
+      workflow set is clean (`quality-gates-v2.yml` + `semver-agent.yml` fixed + `tab-mirror-to-ldr.yml` +
+      `main-backmerge-to-ldr.yml` + deploy/escalate/major-bump). The `staging-to-main` SIT gate is wired PM-side
+      (`ldr-to-staging-promote.yml` → `system-integration-tests` SIT → `staging-to-main.yml`); AO is in the manifest
+      sweep. Verified by driving a full tab→LDR→staging(PR#5)→main(PR#6) promotion cycle 2026-06-07 (fired the deploy
+      path `dispatch-cloud-build`/`cloud-build-router` + `deploy-dashboard` + `main-backmerge-to-ldr`, all green). AO is
+      now on the standard flow. + `scripts/quickmerge.sh` symlinked (agent-orchestrator@fd6ef28).
+- [ ] [INFRA] P0. **BLOCKED-OPERATOR-DECISION (genuine GitHub feature-gate — re-confirmed 2026-06-07)** — pin branch
+      protection to require `Quality Gates (agent-orchestrator) / quality-gates-v2`. **This is the ONE part of the AO CI
+      lifecycle an agent cannot complete** (per AUTONOMOUS*AGENT_RULES rule 1, a real impossibility): every
+      branch-protection / ruleset API call for this repo returns
+      `403 "Upgrade to GitHub Pro or make this repository     public"` (re-verified 2026-06-07:
+      `GET /repos/.../rulesets`, `GET /repos/.../branches/main/protection`, `GET /commits/.../check-runs` all 403). It
+      is a PRIVATE-repo plan feature-gate, NOT an access/decision issue (the session is repo admin via `GH_PAT`).
+      **Mitigation already in place:** `quality-gates-v2` RUNS + PASSES on every `main`/`staging` push + PR (so the gate
+      is observed; promotion PRs only merge when v2 is green — enforced manually by the promoter/merger since auto-merge
+      is also Pro-gated). What is missing is only the \_server-side required-check enforcement*. Resolve by ONE of
+      (operator/billing): (a) upgrade the GitHub plan (Pro/Team) — then create the ruleset like the sibling repos via
+      `scripts/repo-management/pin_branch_protection_rulesets.py`; (b) make the repo public (rulesets free); (c) accept
+      "v2 runs+observed but not a hard-required gate" for this operator-tooling repo. Until then AO ships safely via the
+      green-gated PR-merge path proven 2026-06-07.
 - [x] ✅ [INFRA] P0. merge→CICD restart path confirmed wired: `quality-gates-v2.yml` `dispatch-cloud-build` (staging) +
       main→`cloud-build-router`→`uts-prod`. **Now safe w.r.t. state** since G5 moved the DB off the repo checkout — a
       deploy/restart no longer risks state. Actual enablement = the operator's deploy green-light (above).
@@ -310,14 +323,22 @@ of cicd plan §"CI/CD Observability + Reconciliation Hardening" B/C
 (`escalate-to-orchestrator.yml`, retiring the API path, auto-merge guard) is owned there. No dual-tracking: **GHA wiring
 = cicd plan; worker + account model = here.**
 
-- [ ] [AGENT] P1. **Conflict-resolver worker template** — a spawn profile/agent prompt the orchestrator dispatches on a
-      Max-plan account for `merge-conflict-detected` / `stuck_promotion_pr` events: clone target repo at the PR head,
-      resolve the conflict, run `quality-gates.sh` (Pass 1, `--no-fix`), and on green enable v2-gated auto-merge (or
-      close-superseded when the PR's content is already on the target). reads `SUB_AGENT_MANDATORY_RULES.md`. repo:
-      agent-orchestrator (`agents/conflict-resolver.md` + dispatch route in `server/`; reuses `escalation.py`).
-- [ ] [AGENT] P1. **Orchestrator spawn route accepts the escalate payload** (repo, source/target branch, PR url, plan
-      refs) from PM `escalate-to-orchestrator.yml` and enqueues the conflict-resolver worker on a free Max-plan account
-      (account-rotation + rate-limit aware, per the existing 4-account health model). repo: agent-orchestrator.
+- [x] ✅ [AGENT] P1. **Conflict-resolver worker template** — DONE 2026-06-07 (agent-orchestrator@fadb38d). Created
+      `agents/conflict-resolver.md`: PR-centric boot prompt that resolves the conflict on the PR's source branch keeping
+      the merged combination, runs `quality-gates.sh --no-fix` (Pass 1), and on green ENABLES v2-gated auto-merge
+      (`gh pr merge --auto --merge`) OR closes-superseded when the PR's content is already on the target. Reads
+      `agents/RULES.md` + `SUB_AGENT_MANDATORY_RULES.md`; one-shot, no loop. `escalation.py` routes `merge_conflict` +
+      the new `stuck_promotion_pr` wall to this template (others keep the generic `escalate` prompt). 4 unit tests
+      (routing both walls + payload forwarding, WALL_TYPES membership, template loads+renders with auto-merge +
+      close-superseded present). Full AO gate green (388 passed).
+- [x] ✅ [AGENT] P1. **Orchestrator spawn route accepts the escalate payload** — DONE 2026-06-07
+      (agent-orchestrator@fadb38d). `EscalateRequest` gains the `source_branch`/`target_branch`/`pr_url` routing payload
+      (optional, back-compatible) + the `stuck_promotion_pr` wall; `escalate()` forwards them as `<SOURCE_BRANCH>`/
+      `<TARGET_BRANCH>`/`<PR_URL>` render vars to the conflict-resolver prompt; `/api/escalate` forwards them; the
+      existing free-slot + `pick_headroom_account` (4-account rotation/rate-limit) model is reused unchanged.
+      `EscalateResponse` exposes `prompt_template` for observability. The GHA-trigger half (PM
+      `escalate-to-orchestrator.yml` emitting `stuck_promotion_pr`) is owned by the cicd plan — no dual-tracking. repo:
+      agent-orchestrator.
 
 ## Related open work (NOT absorbed here)
 
@@ -331,8 +352,14 @@ Fleet is currently consolidated to **2 running VMs** (vm-orchestrator + api-host
 
 ### Audit: VM slot-host crons (slot-cron-ff-pull / slot-git-status-report) are NOT in VM provisioning — slot-5 finding 2026-06-04
 
-- [ ] [INFRA] P1. **The orchestrator VM bootstrap does NOT install the symmetric-worker crons — audit + wire it.**
-      CLAUDE.md § "Local slot host = VM slot host" says EVERY host owning slot worktrees (VM + laptop) runs
+- [x] ✅ [INFRA] P1. **DONE (Action 1) 2026-06-07 — bootstrap_vm.sh now installs the symmetric-worker crons.** Added an
+      idempotent Step 7.5b that runs the canonical `install-slot-cron-ff-pull.sh` as the operator user (registers BOTH
+      the 5-min slot-cron-ff-pull + the symmetry-verify crons), mirroring the vm-disk-guard block — so every NEW/re-
+      bootstrapped VM auto-gets them (agent-orchestrator@dfd6d71). Actions (2)/(3) [audit the live running VMs via
+      `crontab -l` + run verify-slot-host-symmetry per host] need SSH/exec into vm-0 (i-0c9b283b) — **BLOCKED-INFRA from
+      a laptop slot**; the bootstrap fix covers the 9 stopped epic VMs on next launch. Action (4) [@upstream reset in
+      worktree_clean_check FF-path] is the optional belt — left for the runtime owner. Original audit (context, NOT a
+      checkbox): CLAUDE.md § "Local slot host = VM slot host" says EVERY host owning slot worktrees (VM + laptop) runs
       `slot-cron-ff-pull.sh` + `slot-git-status-report.sh` every 5 min. But `agent-orchestrator/scripts/bootstrap_vm.sh`
       clones PM + runs `setup-tab-worktrees.sh` (provisions worktrees) and installs only the **vm-disk-guard** cron
       (Step 7.5) — it **never installs `slot-cron-ff-pull` or `slot-git-status-report`** (confirmed: grep of

@@ -203,48 +203,62 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F12 — bake ORCHESTRATOR_REGEN_DB_PATH + the GC fix into the fleet [P1]
 
-- [ ] [INFRA] P1. **Durable fleet rollout of F11 (vm-0 fixed live; other VMs pending).** (a) `bootstrap_vm.sh` must
-      upsert `ORCHESTRATOR_REGEN_DB_PATH=<state.db>` into `.env.local` (same upsert pattern as F2/F3 for
-      VM_ID/AUTOSPAWN) so every VM's loop prunes state.db — without it the zombie accumulation recurs per-VM. (b) The GC
-      code fix (agent-orchestrator@e50b6b9) reaches the 9 stopped epic VMs automatically on their next FF-pull/restart;
-      verify on first start. Composes with F2–F4 (same per-VM rollout). Repo: agent-orchestrator (bootstrap) +
-      deployment-service launchers if the env must be exported at launch.
+- [x] ✅ [INFRA] P1. **DONE 2026-06-07 (agent-orchestrator@e66a40a).** (a) `bootstrap_vm.sh` now upserts
+      `ORCHESTRATOR_REGEN_DB_PATH=/var/lib/orchestrator/state.db` into `.env.local` via the same `_upsert_env` pattern
+      as VM_ID/AUTOSPAWN (path mirrors `ORCH_STATE_DIR`, kept literal so it's correct regardless of the DRY_RUN branch)
+      so every VM's PlanRegenLoop DELETEs orphan rows from state.db, not just backlog.yaml → no per-VM zombie
+      accumulation. (b) The GC code fix (agent-orchestrator@e50b6b9) reaches the 9 stopped epic VMs on their next
+      FF-pull/restart (verify on first start — needs the VM up, no further code). Composes with F2–F4. Repo:
+      agent-orchestrator (bootstrap).
 
 ### F13 — vm-0 slot worktree hygiene blocking ALL spawn (dirty pyproject + diverged PM) [P1]
 
-- [ ] [INFRA] P1. **Surfaced by the F9 verification 2026-06-03 — RC4 class, recurring + systemic.** The branch-state
-      gate quarantines slot 2 (and likely others) for BOTH worker + review spawn: (a) **uncommitted `pyproject.toml`**
-      on `agent-orchestrator` (behind 33) + `alerting-service` (behind 21) → ff-only pull aborts ("local changes would
-      be overwritten") so `slot-cron-ff-pull` can never advance them — this is the chronic worktree-dirty toil (likely
-      uv.lock/version churn or a QG-modified pyproject); (b) **`unified-trading-pm` diverged 11-ahead / 584-behind** →
-      FM5 quarantine (the slot-branch-diverged recipe: check the 11 ahead for unpushed work FIRST, then
-      `git rebase origin/live-defi-rollout` + `push --force-with-lease`). Recipe per inherited-WIP + the diverged-slot
-      CLAUDE.md rules: commit the dirty pyproject as `chore(orphan-wip)` (or diagnose the churn source + gitignore if
-      generated), FF the clean repos, rebase the diverged PM. Composes with F7 (slot-4 WIP) — same class. Until cleared,
-      spawn (worker AND review) stays quarantined on the affected slots **by design** (the gate is correct). Repo:
-      agent-orchestrator host worktrees. Provenance: F9 live-verification log 2026-06-03.
+- [ ] [INFRA] P1. **BLOCKED-INFRA (live vm-0 host state — needs SSH/exec into i-0c9b283b; re-stated 2026-06-07).** The
+      dirty-pyproject + diverged-PM hygiene cleanup is a live-host op (commit the dirty pyproject as `chore(orphan-wip)`
+      / diagnose+gitignore generated churn; FF the clean repos; rebase the diverged PM) — not doable from a laptop slot.
+      PARTIAL AUTO-HEAL shipped 2026-06-07: the F8 self-heal (agent-orchestrator@e66a40a) fixes the worktree-NAMING half
+      of the FM7 quarantine on the next FF-pull/restart; the dirty-tree + diverged-PM half still needs a human/agent on
+      the VM. Original detail: Original detail (context, NOT a checkbox): surfaced by the F9 verification 2026-06-03 —
+      RC4 class, recurring + systemic. The branch-state gate quarantines slot 2 (and likely others) for BOTH worker +
+      review spawn: (a) **uncommitted `pyproject.toml`** on `agent-orchestrator` (behind 33) + `alerting-service`
+      (behind 21) → ff-only pull aborts ("local changes would be overwritten") so `slot-cron-ff-pull` can never advance
+      them — this is the chronic worktree-dirty toil (likely uv.lock/version churn or a QG-modified pyproject); (b)
+      **`unified-trading-pm` diverged 11-ahead / 584-behind** → FM5 quarantine (the slot-branch-diverged recipe: check
+      the 11 ahead for unpushed work FIRST, then `git rebase origin/live-defi-rollout` + `push --force-with-lease`).
+      Recipe per inherited-WIP + the diverged-slot CLAUDE.md rules: commit the dirty pyproject as `chore(orphan-wip)`
+      (or diagnose the churn source + gitignore if generated), FF the clean repos, rebase the diverged PM. Composes with
+      F7 (slot-4 WIP) — same class. Until cleared, spawn (worker AND review) stays quarantined on the affected slots
+      **by design** (the gate is correct). Repo: agent-orchestrator host worktrees. Provenance: F9 live-verification log
+      2026-06-03.
 
 ### F7 — slot-4 WIP recovery on the live vm-0 host [P1]
 
-- [ ] [INFRA] P1. **The only genuine residual quarantine on vm-0** (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree
-      realign (see below) deliberately SKIPPED 2 slot-4 repos on feature branches — genuine mid-work WIP, not safe to
-      relabel (inherited-WIP rule): `unified-api-contracts` on `fix/tradfi-exchange-mappings-minimal`,
-      `unified-trading-pm` on `fix/pm-ci-self-clone`. Slot 4 will keep tripping FM7 (correctly) until recovered: inspect
-      each repo's WIP → commit/quickmerge or stash → then `git branch -m … tab/vm-0/4` (or recreate the slot-4 worktrees
-      on `tab/vm-0/4`). Until then slot 4 stays quarantined by design. Repo: agent-orchestrator host (live VM op, no
-      repo change) + the 2 named repos for the WIP itself.
+- [ ] [INFRA] P1. **BLOCKED-INFRA (needs SSH/exec into the live vm-0 host — not reachable from a laptop slot; re-stated
+      2026-06-07).** The slot-4 WIP recovery is a live-host op on i-0c9b283b (inspect/commit/stash the 2 feature-branch
+      repos, then relabel to tab/vm-0/4) — it cannot be done from this slot. NOTE the F8 self-heal shipped 2026-06-07
+      (agent-orchestrator@e66a40a) does NOT auto-fix this one BY DESIGN: F8 skips non-`tab/*` feature branches (the
+      slot-4 repos are on `fix/*` WIP), so slot 4 correctly stays quarantined until a human/agent ON the VM recovers the
+      WIP. Original detail: Original detail (context, NOT a checkbox): the only genuine residual quarantine on vm-0
+      (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree realign (see below) deliberately SKIPPED 2 slot-4 repos on feature
+      branches — genuine mid-work WIP, not safe to relabel (inherited-WIP rule): `unified-api-contracts` on
+      `fix/tradfi-exchange-mappings-minimal`, `unified-trading-pm` on `fix/pm-ci-self-clone`. Slot 4 will keep tripping
+      FM7 (correctly) until recovered: inspect each repo's WIP → commit/quickmerge or stash → then
+      `git branch -m … tab/vm-0/4` (or recreate the slot-4 worktrees on `tab/vm-0/4`). Until then slot 4 stays
+      quarantined by design. Repo: agent-orchestrator host (live VM op, no repo change) + the 2 named repos for the WIP
+      itself.
 
 ### F8 — self-heal: realign a RUNNING VM's worktrees to its VM_ID without a full re-bootstrap [P1]
 
-- [ ] [SCRIPT] P1. **Gap surfaced 2026-06-03.** F2/F4 bake `tab/<VM_ID>/<slot>` branding into `bootstrap_vm.sh`, but it
-      only applies on (re-)bootstrap. A VM that was already RUNNING when `129dc6a` landed keeps its pre-migration
-      worktree naming and stays 100%-quarantined silently — exactly what happened to vm-0 (api-host): 539 AutoSpawn
-      ticks all `failed=N` for ~? until the manual realign below. Harden so this self-heals: either (a) a `slot-cron`
-      step that detects `HEAD prefix != tab/<ORCHESTRATOR_VM_ID>/` on a `tab/*/<slot>` branch and `git branch -m`s it
-      (skipping non-`tab/*` feature branches = WIP, per F7), or (b) a one-shot on `systemctl restart`/startup. Compose
-      with the existing FF-pull cron. Repo: agent-orchestrator (+ `slot-cron-ff-pull.sh` in unified-trading-pm if the
-      check lands there). Pair with a `verify-slot-host-symmetry.sh` probe that fails a host whose worktrees don't match
-      its VM_ID.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-07 (agent-orchestrator@e66a40a).** Implemented BOTH option (a) + (b) AO-scoped: new
+      idempotent `scripts/realign-worktree-branches.sh` detects a slot worktree on `tab/<other>/<slot>` and
+      `git branch -m`s it to `tab/<ORCHESTRATOR_VM_ID>/<slot>` (content-preserving local rename), SKIPPING non-`tab/*`
+      feature-branch WIP (F7) + existing-target conflicts (logged). Wired as a one-shot into `ao-self-pull.sh` (runs on
+      the VM cron + restart → option b) AND into `bootstrap_vm.sh` post worktree-setup (re-bootstrap → option
+      a-adjacent). So a RUNNING VM un-quarantines its FM7 gate without a manual realign. Smoke-tested against the live
+      workspace: 275 already-aligned worktrees → renamed=0 (correct no-op). The matching `verify-slot-host-symmetry.sh`
+      probe already exists (check 10). Repo: agent-orchestrator. (Kept AO-scoped rather than editing the PM
+      `slot-cron-ff-pull.sh` to avoid cross-repo collision — the AO self-pull cron is the right home for a VM-runtime
+      self-heal.)
 
 ## 2026-06-03 — F4 applied LIVE to the AutoSpawn host vm-0 (i-0c9b283b31d6b5ca7), spawn confirmed
 
@@ -287,18 +301,18 @@ green through the execution half (not just discovery).
 
 ## 2026-06-04 recovery outcomes + Slack-observability gap (slot-1 session)
 
-- **F13 (slot worktree hygiene blocking spawn) — RESOLVED.** Root cause was deeper than dirty trees: **git
-  object-store corruption fleet-wide** (fsck missing/broken objects) → ff-pull failed → quarantine → 0 workers.
-  Fixed via `git fetch` re-download (0 re-clones), reconciled slots 2/3/5/9 (stashed disposable churn), restarted
-  orchestrator. **vm-0 revived: 9/10 slots clean, AutoSpawn `worker_active=4`, live workers on slots 5/9/10.**
+- **F13 (slot worktree hygiene blocking spawn) — RESOLVED.** Root cause was deeper than dirty trees: **git object-store
+  corruption fleet-wide** (fsck missing/broken objects) → ff-pull failed → quarantine → 0 workers. Fixed via `git fetch`
+  re-download (0 re-clones), reconciled slots 2/3/5/9 (stashed disposable churn), restarted orchestrator. **vm-0
+  revived: 9/10 slots clean, AutoSpawn `worker_active=4`, live workers on slots 5/9/10.**
 - **F7 (slot-4 WIP) — still open, confirmed-needs-WIP-recovery.** `origin/tab/vm-0/4` **does not exist** for
   `unified-api-contracts` (on `fix/tradfi-exchange-mappings-minimal`) + `unified-trading-pm` (on `fix/pm-ci-self-clone`)
   — the slot branch was never created / was replaced by these feature branches holding unmerged WIP. Fix = inspect the
   WIP (merged? abandonable?) → merge or set aside → create `tab/vm-0/4` from LDR + recreate the 2 worktrees. Slot-4
   stays quarantined by design (1 of 10) until then. NOT blind-switchable.
-- [ ] [AGENT] P1. **NEW GAP — no positive "picking up CI work" Slack alert.** The orchestrator only Slacks on
-      FAILURES (`notify_spawn_failure`/`slot_stale`/`slot_failed`/`agent_stuck_*`/`git_staleness_red`/`unpushed_plans`).
-      There is NO success/work-pickup alert, so #agent-orchestrator-alerts shows only warnings — an operator cannot SEE
-      the fleet *working*. Add `notify_work_picked_up(slot, repo, task/escalation_id)` fired when a worker boots onto a
-      task (esp. a CI escalation) so CI-pickup is positively visible. repo: agent-orchestrator (server/slack_notify.py
-      + the boot/escalation spawn path). Provenance: 2026-06-04 Slack-observability audit.
+- [ ] [AGENT] P1. **NEW GAP — no positive "picking up CI work" Slack alert.** The orchestrator only Slacks on FAILURES
+      (`notify_spawn_failure`/`slot_stale`/`slot_failed`/`agent_stuck_*`/`git_staleness_red`/`unpushed_plans`). There is
+      NO success/work-pickup alert, so #agent-orchestrator-alerts shows only warnings — an operator cannot SEE the fleet
+      _working_. Add `notify_work_picked_up(slot, repo, task/escalation_id)` fired when a worker boots onto a task (esp.
+      a CI escalation) so CI-pickup is positively visible. repo: agent-orchestrator (server/slack_notify.py + the
+      boot/escalation spawn path). Provenance: 2026-06-04 Slack-observability audit.
