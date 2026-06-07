@@ -586,6 +586,18 @@ No code-correctness blocker remains for the DeFi migrator/rebuild/enumerator. Th
 §H object-migration gate, instruments-service) · P2 `SOURCE_PRIORITY` registry tidy · P3 POOL union-coarse + P3 L1-find
 speed-note (both deferred optimisations, non-blocking).
 
+\*\*Regression re-confirmation (slot-2, 2026-06-07) — STILL APPLY-READY after the shared bundle-grain + sports-catalogue
+
+- matrix changes landed.** Targeted check (the changed surface vs defi, not a blind re-run): the bundle-grain axis
+  (`grain_for_instrument_type`, uac@dd7fa100) returns **`leaf` for ALL 6 defi instrument_types**
+  (POOL/LENDING/SPOT_PAIR/ PERPETUAL/STAKING/YIELD_BEARING) — only cefi `options_chain`/`option` are
+  `bundle_by_underlying`, so defi never collapses to a bundle; the defi validity-matrix slice is **unchanged** (POOL 6 ·
+  LENDING 4 · SPOT_PAIR 2 · PERPETUAL 2 · STAKING 2 · YIELD_BEARING 4 dts, zero over-fan). The sports-league fix
+  (uac@aff80339) is sports-only. The migrator (`migrate_defi_full_v9_canonical.py`) is unchanged at **mtds@f80c50f1**
+  and its derivation deps (`source_string_for`/`default_transport_for_source`/`derive_pipeline_mode_for_row`) were
+  untouched by the recent batch → dry-run output is provably identical to the green run above. **No new code owed; HOLD
+  stands.\*\* Remaining gates remain purely operational (drain + the gated v9 instruments-store walk + IS backfill).
+
 ## Orphan sweep (2026-06-07) — every active data-layer plan/issue is registered above
 
 - Swept `plans/active/*.md` + `plans/active/issues/*.md` for manifest/migration/catalogue/pipeline_mode/backfill/
