@@ -3300,3 +3300,19 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
 - **agent-orchestrator rulesets + auto-merge = GitHub Pro** (private repo) — manual v2-gated merge today.
   [BLOCKED-BILLING]. **STOPPED `i-007e8d99` decommission + vm-0 recovery-stash drop** — operator-gated destructive ops
   [BLOCKED-OPERATOR].
+
+### 🟢 UPDATE (later 2026-06-07) — drain CONVERGING + 3rd new finding + api_host archived
+
+- **Staging drain: 1 → 15/25 staging==LDR after the unblock, climbing.** Two more gaps fixed beyond the stale-lock
+  clear: (a) the `staging-unlocked` dispatch ran on the default ref (didn't refresh open PR heads) → close/reopened the
+  19 drain PRs; (b) **🆕 FINDING — closing a PR DISABLES its auto-merge, and reopen does NOT restore it** → the reopened
+  CLEAN PRs sat unmerged until I **re-enabled auto-merge fleet-wide** (1→15 jump confirmed the mechanism). The
+  staging-unlock playbook (and any close/reopen-based refresh) MUST re-enable auto-merge as a paired step. Remaining
+  stragglers are normal cascade states (v2 running / promoter-reopen / Agent A still churning their LDR) — no systemic
+  blocker; converge autonomously. AO #9 merged manually (Pro-blocked auto-merge).
+- **Cleanup agent DONE** (infra_slot_sync #3/#4/#8): backlog.mock.yaml `git rm --cached`+gitignore
+  (`agent-orchestrator@6caa95a`, verified gone on vm-0); AutoSpawn SQLAlchemy not-reproducible (already fixed by WAL +
+  `busy_timeout`); ui-semver checkout confirmed-fixed (GH_PAT added 06-04). `infra_slot_sync` now 4 open =
+  operator-gated (#1 stopped-VM decommission, #2 recovery-stash) + low/drain-dependent (#3 475 nits, #4 close-idle-PRs)
+  → stays ACTIVE honestly per the issue-doc-lifecycle (no false archive).
+- **api_host_chronic_impairment ARCHIVED** (`plans/archive/issues/`, 0 open, `[unlock-plan]`).
