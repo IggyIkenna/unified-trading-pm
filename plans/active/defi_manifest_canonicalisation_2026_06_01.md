@@ -24,6 +24,18 @@ source:
 > banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.** (DeFi additionally: fix
 > the `rebuild_defi_manifest.py` blank-`pipeline_mode`/`source` bug #1 from that plan in Phase 0.3 before its dry-run.)
 
+> ## 🟢 DeFi APPLY-READY (slot-2, 2026-06-07) — verdict + full 7+2 audit in the coordinator
+>
+> > DeFi is **apply-ready on LDR**: every G1+G2 dry-run is green on the WAVE-1 source-aware code (migrator mtds@f80c50f1
+> > · instruments-store-v9 is@febb899e · shape-aware enumerator is@6ea46565) and the 7+2-point audit (CF-1…CF-14) passes
+> > — **no code change owed before `--apply`**. The ONLY remaining gates are OPERATIONAL: GATE C
+> > (`migrate_instruments_store_v9 --asset-group defi --apply` — the 125,242-row v9 WRITE; dry-run proved 100% v9) · the
+> > gated catalogue/enumerate G1.run VM run · DeFi IS backfill · pre-migration drain. **G0 ✓ and G3 UNION view ✓**
+> > (pm@822393880). Full per-CF verdict + sampled-vs-walked + the 3 deferred todos (P1 doubled-`day=` object-migration
+> > gate · P2 `SOURCE_PRIORITY` tidy · P3 POOL union-coarse + L1-find speed-note) live in
+> > `master_data_canonicalisation_migration_catalogue_2026_06_07.md` § "DeFi APPLY-READY VERDICT". Do NOT run `--apply`
+> > (gated on the operational drain).
+
 > **This file plays two roles** (operator 2026-06-01): (1) the **MASTER coordinator** for the whole "single canonical
 > SSOT — no fallback, no dual" programme (the `## MASTER` section sequences every sub-plan); (2) the **DeFi L3
 > executor** (the `## A`–`## G` sections ARE the DeFi single-walk). An agent drives the MASTER section + delegates the

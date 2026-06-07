@@ -467,7 +467,12 @@ does not require a second whole-corpus walk.
       0-errors) and laptop-variable, but it wastes a whole-bucket enumeration per bucket on the in-region VM `--apply`
       too. Gate the L1 find on a cheap existence probe (or drop it) — **validate against the whole corpus on the VM
       first** so a bucket with a genuine L1 tree is never silently skipped (data-loss risk). Repo:
-      market-tick-data-service. parent_epic: mtds_mdps_master.
+      market-tick-data-service. parent_epic: mtds_mdps_master. **TRIAGED 2026-06-07 (slot-2) → SPEED-NOTE,
+      NON-BLOCKING:** the `--apply` does NOT date-shard `_list_objects` (the `launch-canonical-migration-vm.sh` launcher
+      runs ONE VM over the full date range → exactly ONE `_list_objects` per bucket = 6 wasted whole-bucket scans total,
+      not N×6), and the in-region VM completes whole-bucket scans (the baked-union `discover_union` run over the whole
+      corpus proved it). So the L1 find adds wall-clock to the apply but never blocks it. Per the apply-ready criterion
+      (fix only if it blocks at scale) this stays a **deferred optimisation**, not an apply-gate. Kept P3.
 
 ### G2-defi readiness verdict (WAVE 2 verify pass — slot-2, 2026-06-07)
 
@@ -515,6 +520,52 @@ in-process `_conform` of real dex-pools/dex-swaps objects; instruments-store `_i
 by_date instrument_type coverage sampled across all venues for `day=2025-12-15`+`2026-05-03` (+ a 6-day spread). The
 doubled-`day=` boundary was sampled day-by-day across 2026-05-01…08. The full 64,724-parquet catalogue rollup count +
 the enumerate candidate-count are deferred to the gated G1.run write.
+
+### 🟢 DeFi APPLY-READY VERDICT + completed 7+2-point audit (slot-2, 2026-06-07)
+
+> **VERDICT: DeFi is APPLY-READY on LDR.** Every G1+G2 dry-run is green and the 7+2-point audit passes; the migration
+> CODE is correct and no code change is owed before `--apply`. **The only things between DeFi and the real `--apply` are
+> OPERATIONAL gates** (drain + the gated WRITE runs), not code. No `--apply` run in this pass (gated).
+
+**7+2 audit — per-CF verdict (CF-1…CF-14; data-state reads, not constants):**
+
+| CF         | Invariant                                               | defi verdict    | Evidence (sampled vs walked)                                                                                                                                                                                                                               |
+| ---------- | ------------------------------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| CF-1       | schema_version=9                                        | 🟢              | migrator `_conform` stamps `9` on real ORCA parquet (sampled); IS `_index` transform → `{9:125242}` (WALKED all rows)                                                                                                                                      |
+| CF-2       | `asset_group=` not `category=` (path+row)               | 🟢              | real source `category=defi`→canonical `asset_group=defi/` path key + column; `category` dropped from `_index` (walked)                                                                                                                                     |
+| CF-3/CF-13 | source-aware `pipeline_mode={mode}_{source}` (path+col) | 🟢              | `batch_onchain_subgraph`/`batch_onchain_rpc` per-shard on real paths+cols; coarse `batch`/blank retired; 14-case derivation incl. antipattern-retired `batch_hyperliquid` (sampled)                                                                        |
+| CF-4       | `source` COLUMN every external cell                     | 🟢              | `source=onchain_subgraph` on real rows; IS rows `source=instruments_service` (walked). P2 `SOURCE_PRIORITY` registry-gap todo open (derives cleanly via fallback today)                                                                                    |
+| CF-5       | typed `EmptyConfirmedReason`                            | 🟢              | defi writers use `DefiManifestRecorder.record_zero_rows` + `EXPECTED_PRE_VENUE_LAUNCH`/`EXPECTED_PRE_GENESIS_CHAIN` (code grep)                                                                                                                            |
+| CF-6       | `expected_unattempted` materialised                     | 🟢 (code)       | shape-aware `_enumerate_v2_defi` + `build_instrument_catalogue` produce the could-exist seed; the apply-write RUN is the gated G1.run                                                                                                                      |
+| CF-7       | canonical data_type / flat venue+chain / `{VENUE}_V{N}` | 🟢              | input `dex_pools`→typed `dex_pool_state`; `SUSHISWAP`→`SUSHISWAP_V3` on real paths (sampled)                                                                                                                                                               |
+| CF-8       | per-row `available_at`, no lookahead                    | 🟢              | real ORCA `available_at=2026-05-28T21:21:46` write-time; IS `available_at` filled on all 125,242 rows (walked)                                                                                                                                             |
+| CF-9       | env-split bucket via `resolve_bucket_name`              | 🟢              | migrator/rebuild build buckets via `resolve_bucket_name`; the `gs://` occurrences are docstring/log strings, not f-string bucket construction (grep)                                                                                                       |
+| CF-10      | no phantom/date-impossible captured                     | 🟢 (projection) | IS `_index`: 57,466 null→`captured` from `instrument_count>0`, 0 dishonest captured-but-empty (walked); object-presence phantom sweep is `reconcile_phantom_manifest_rows_all` post-apply                                                                  |
+| CF-11      | fetch-failure → `attempted_failed`                      | 🟢              | defi handlers (mev/evm_defi/perp_funding) call `record_failed(...)`; no `except: return []` swallow (grep)                                                                                                                                                 |
+| CF-12      | batch=live symmetry                                     | 🟢              | one code path (no defi live-only data_types); verified by the 25/25 credential-free unit suite                                                                                                                                                             |
+| CF-14/⑧    | IS-catalogue could-exist ROOT green                     | 🟢 (mechanism)  | `-prd-` by_date POPULATED (64,724 parquets); shape-aware producer runs; validity-matrix slice correct (IS adapters emit `POOL`/`STAKING`/`LENDING`/`SPOT_PAIR`/`YIELD_BEARING`, all matrix-covered). Full rollup candidate-count = gated G1.run (VM-scale) |
+
+**Sampled-vs-walked (audit-level)**: WALKED — the full 125,242-row instruments-store `_index` transform (deterministic,
+no object probe). SAMPLED — MTDS migrator conform on the latest populated day per bucket + a real 14,093-row ORCA
+parquet (the whole-corpus migrator walk runs on the in-region VM); the 64,724-parquet catalogue rollup LISTED but not
+fully rolled up locally (VM-scale). Adapter/handler CF-5/9/11/12 verified by code grep, not a corpus walk. **Remaining
+gaps**: the full catalogue rollup + enumerate candidate-count (gated G1.run VM run) and the object-presence phantom
+sweep (post-apply) — both downstream of the gated WRITE, not code.
+
+**Remaining gates to the real `--apply` — ALL OPERATIONAL (no code owed):**
+
+1. **G0** GREEN ✓ (Phase-0 source-aware writer code landed) · **G3 UNION view SHIPPED ✓** (deployment-api@4dd2575 +
+   deployment-ui@0dc40eb, pm@822393880).
+2. **GATE C — instruments-store-defi `_index` v9 WRITE**: run `migrate_instruments_store_v9 --asset-group defi --apply`
+   (the dry-run proved the 125,242-row transform projects 100% v9; this is the gated WRITE, not a code fix).
+3. **DeFi IS backfill complete** + the gated `build_instrument_catalogue`+`enumerate_expected_universe --apply-write`
+   G1.run VM run (catalogue/enumerate UNAFFECTED by the doubled-`day=` bug; that bug is a §H **object**-migration gate,
+   fixed before the §H object `--apply` only).
+4. **Pre-migration drain** (all GCP+AWS VMs stopped + manifest consolidated + snapshot) before any object `--apply`.
+
+No code-correctness blocker remains for the DeFi migrator/rebuild/enumerator. The 3 open todos are: P1 doubled-`day=` (a
+§H object-migration gate, instruments-service) · P2 `SOURCE_PRIORITY` registry tidy · P3 POOL union-coarse + P3 L1-find
+speed-note (both deferred optimisations, non-blocking).
 
 ## Orphan sweep (2026-06-07) — every active data-layer plan/issue is registered above
 
