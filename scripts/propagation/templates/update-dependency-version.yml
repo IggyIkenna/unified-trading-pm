@@ -4,8 +4,8 @@ name: update-dependency-version
 # Updates pyproject.toml to pin the new minimum version for the changed dependency.
 #
 # Routing logic (based on bump_type in payload):
-#   MAJOR bump → create branch + PR targeting staging (quality gates required — breaking change)
-#   MINOR/PATCH → direct commit to staging with [skip ci] (compatible update, no QG needed)
+#   MAJOR bump -> create branch + PR targeting staging (quality gates required -- breaking change)
+#   MINOR/PATCH -> direct commit to staging with [skip ci] (compatible update, no QG needed)
 #
 # Dispatch payload:
 #   {dep_name, dep_version, constraint, bump_type, is_breaking, chain_depth}
@@ -13,8 +13,11 @@ name: update-dependency-version
 # Constraint capping (Phase 2): if this repo has a dependency_caps entry in the PM manifest
 # for the incoming dep, the constraint update is SKIPPED and a warning is logged. The repo
 # stays pinned to the old version until the cap is manually removed. This mirrors external
-# dep pinning (e.g., "pandas>=1.5,<2.0") — the downstream repo can keep working with the
+# dep pinning (e.g., "pandas>=1.5,<2.0") -- the downstream repo can keep working with the
 # last stable version while fixing code against the new breaking version.
+#
+# SSOT: unified-trading-pm/scripts/workflow-templates/update-dependency-version.yml
+# Rollout: bash unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh
 
 on:
   repository_dispatch:
@@ -23,6 +26,10 @@ on:
 permissions:
   contents: write
   pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   update-dep:
@@ -34,6 +41,10 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
           ref: staging
+
+      # uv is needed to re-lock uv.lock after the constraint bump (lock-drift fix).
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
 
       - name: Update pyproject.toml dependency constraint
         id: update
@@ -55,12 +66,12 @@ jobs:
           fi
 
           if ! grep -q "\"${DEP_NAME}" pyproject.toml; then
-            echo "$DEP_NAME not found in pyproject.toml — skipping."
+            echo "$DEP_NAME not found in pyproject.toml -- skipping."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
-          # ── Constraint cap check (Phase 2) ──
+          # -- Constraint cap check (Phase 2) --
           # If PM manifest has a dependency_caps entry for this repo+dep, skip the constraint update.
           # The repo stays on the old version until the cap is manually removed.
           REPO_NAME="${{ github.event.repository.name }}"
@@ -77,7 +88,7 @@ jobs:
           " 2>/dev/null || echo "")
 
           if [ -n "$CAP" ]; then
-            echo "⚠️  Dependency cap active: $REPO_NAME pins $DEP_NAME to $CAP — skipping constraint update to $CONSTRAINT"
+            echo "Dependency cap active: $REPO_NAME pins $DEP_NAME to $CAP -- skipping constraint update to $CONSTRAINT"
             echo "Remove dependency_caps.$DEP_NAME from $REPO_NAME in workspace-manifest.json to unpin."
             echo "skip=true" >> "$GITHUB_OUTPUT"
             echo "capped=true" >> "$GITHUB_OUTPUT"
@@ -102,8 +113,18 @@ jobs:
               sys.exit(1)
           with open("pyproject.toml", "w") as f:
               f.write(new_content)
-          print(f"Updated {dep} → {constraint} ({count} occurrence(s))")
+          print(f"Updated {dep} -> {constraint} ({count} occurrence(s))")
           PYEOF
+
+          # Re-lock uv.lock so the new constraint is reflected in the lock — otherwise
+          # pyproject/uv.lock drift and the next quality-gates `uv lock --check` fails
+          # with "uv.lock out of sync with pyproject.toml" (the recurring lock-drift class).
+          # Best-effort: do not fail the dep-update on a relock hiccup (a follow-up recovers it).
+          if command -v uv >/dev/null 2>&1; then
+            uv lock || echo "WARN: uv lock failed — uv.lock may drift; relock manually"
+          else
+            echo "WARN: uv not on PATH — skipping uv lock (uv.lock may drift)"
+          fi
 
           echo "dep_name=$DEP_NAME" >> "$GITHUB_OUTPUT"
           echo "dep_version=$DEP_VERSION" >> "$GITHUB_OUTPUT"
@@ -111,7 +132,7 @@ jobs:
           echo "is_breaking=$IS_BREAKING" >> "$GITHUB_OUTPUT"
           echo "skip=false" >> "$GITHUB_OUTPUT"
 
-      - name: Commit (MINOR/PATCH non-breaking — direct commit to staging)
+      - name: Commit (MINOR/PATCH non-breaking -- direct commit to staging)
         if:
           steps.update.outputs.skip != 'true' && steps.update.outputs.bump_type != 'major' &&
           steps.update.outputs.is_breaking != 'true'
@@ -119,16 +140,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet pyproject.toml; then
-            echo "No changes to pyproject.toml. Skipping commit."
+          if git diff --quiet pyproject.toml uv.lock; then
+            echo "No changes to pyproject.toml/uv.lock. Skipping commit."
             exit 0
           fi
 
           git add pyproject.toml
+          # Stage the re-locked uv.lock alongside the constraint bump so they never drift.
+          git add uv.lock 2>/dev/null || true
           git commit -m "chore(deps): pin ${{ steps.update.outputs.dep_name }} to ${{ steps.update.outputs.dep_version }} [skip ci]"
           git push origin staging
 
-      - name: Create PR to staging (MAJOR or breaking — requires quality gates)
+      - name: Create PR to staging (MAJOR or breaking -- requires quality gates)
         if:
           steps.update.outputs.skip != 'true' && (steps.update.outputs.bump_type == 'major' ||
           steps.update.outputs.is_breaking == 'true')
@@ -143,8 +166,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          if git diff --quiet pyproject.toml; then
-            echo "No changes to pyproject.toml. Skipping."
+          if git diff --quiet pyproject.toml uv.lock; then
+            echo "No changes to pyproject.toml/uv.lock. Skipping."
             exit 0
           fi
 
@@ -152,6 +175,8 @@ jobs:
           BRANCH="dep-update/${{ steps.update.outputs.dep_name }}-${{ steps.update.outputs.dep_version }}"
           git checkout -b "$BRANCH"
           git add pyproject.toml
+          # Stage the re-locked uv.lock alongside the constraint bump so they never drift.
+          git add uv.lock 2>/dev/null || true
           git commit -m "feat!: update ${{ steps.update.outputs.dep_name }} to ${{ steps.update.outputs.dep_version }} (breaking)"
           git push origin "$BRANCH"
 
@@ -160,3 +185,23 @@ jobs:
             --body "$PR_BODY" \
             --base staging \
             --head "$BRANCH"
+
+  notify-failure:
+    name: Slack — Dep Update Failure
+    needs: [update-dep]
+    if: always() && needs.update-dep.result == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Slack failure alert
+        env:
+          # Retired Telegram -> Slack #ci-failures (cicd #551). Prefer the dedicated valid webhook.
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL || secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          MSG="❌ Dep update FAILED — ${{ github.event.repository.name }} (${{ github.event.client_payload.dep_name }}). View: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          # Best-effort -- never fail the run on a missing/misconfigured webhook.
+          case "${SLACK_WEBHOOK_URL:-}" in
+            https://*)
+              curl -s -o /dev/null -X POST "$SLACK_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                --data "$(jq -n --arg t "$MSG" '{text:$t}')" && echo "Slack failure alert sent" || true ;;
+            *) echo "SLACK_CI_WEBHOOK_URL not set/https -- skipping notification" ;;
+          esac

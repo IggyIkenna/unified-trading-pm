@@ -127,19 +127,38 @@ resolves UTL from the registry rather than the editable clone. UTL promotion PR 
       lacks the cap; that is why dep-update branches inherit the bad constraint). Drive UTL LDR→staging→main (PR #243) +
       a UTL version bump > 0.3.167 so the published wheel caps aiohttp; then future dep-update branches need no manual
       cap.
-- [ ] [SCRIPT] P0. Deploy updated `semver-agent.yml` to all fleet repos via `scripts/rollout-semver-agent.sh` (verify
-      `contents: write` + the new "Apply version bump to staging" step landed on each repo's staging). PM #149 fixed the
-      TEMPLATE; the per-repo live workflows still lack the step until rolled out.
-- [ ] [SCRIPT] P1. `update-dependency-version.yml`: relock `uv.lock` after the constraint bump (or document why the
-      path-source makes it unnecessary). Target: `scripts/workflow-templates/update-dependency-version.yml` +
-      `scripts/propagation/templates/update-dependency-version.yml` (de-drift the two copies in the same change).
+- [ ] [SCRIPT] P0. Deploy updated `semver-agent.yml` to all fleet repos (verify `contents: write` + the new "Apply
+      version bump to staging" step landed on each repo's staging). PM #149 fixed the TEMPLATE; the per-repo live
+      workflows still lack the step until rolled out. **TOOL CORRECTION (2026-06-07):** use
+      `scripts/propagation/rollout-agent-workflows.sh` (content-aware: substitutes `{{SERVICE_NAME}}`/`{{SOURCE_DIR}}`,
+      diffs content, ships per-repo via quickmerge) — **NOT** `scripts/rollout-semver-agent.sh`, which does a raw `cp`
+      of the placeholder template (no substitution → deploys literal `{{SERVICE_NAME}}`) + a filename-only skip (would
+      skip every stale repo). Verified the deploy is genuinely pending: sampled alerting/uac/utl/execution/strategy/mtds
+      live copies all DIFFER from the fixed template (`contents: read`, missing `concurrency`, pre-#149 content).
+- [x] ✅ [SCRIPT] P1. `update-dependency-version.yml`: relock `uv.lock` after the constraint bump — DONE 2026-06-07
+      (PM@<sha>). Added `Install uv` (astral-sh/setup-uv@v5) + a guarded `uv lock` after the constraint edit + staged
+      `uv.lock` in both the direct-commit and breaking-PR paths, in
+      `scripts/workflow-templates/update-dependency-version.yml` (the canonical rolled-out template) and de-drifted
+      `scripts/propagation/templates/update-dependency-version.yml` to match it (the dead duplicate had no consumer —
+      neither rollout script reads it). Also added the same relock to `.github/workflows/update-repo-version.yml` (PM's
+      own pyproject patch-bump path). NB: SC2129 style warnings at the `$GITHUB_OUTPUT` redirect block are pre-existing
+      (not from this change) + the template isn't under the PM actionlint gate (`.github/workflows/` only).
+- [ ] [SCRIPT] P1. **Roll out the uv-lock `update-dependency-version.yml` template to the 24 fleet repos** (ratchet the
+      drift baseline back down). The template change above made the rolled-out copy diverge from all 24 repos' live
+      copies → the PM QG `detect_template_drift.py --workflows` ratchet was `--baseline-write`-grandfathered 2026-06-07
+      (24 `update-dependency-version.yml` entries in `workflow_template_drift_baseline.json`) so the template fix could
+      land. The deploy (`rollout-workflow-templates.sh --template update-dependency-version.yml` → per-repo commit) is
+      cross-repo (sibling repos, fleet-drain loop); each rolled-out repo should be REMOVED from the baseline so the
+      ratchet tightens. repo: unified-trading-pm template + 24 sibling repos.
 - [ ] [SCRIPT] P1. Collapse the triple `semver-agent` template drift to ONE SSOT + ONE rollout script; delete the dead
       `scripts/templates/semver-agent.yml`.
 - [ ] [SCRIPT] P2. `python-quality-gates-v2.yml` dep-clone: when `DEP_BRANCH` (the head dep-update branch) does not
       exist in a dep repo, fall back to that dep's CURRENT computed version/tag rather than silently to `main` — so the
       tested dep version is explicit.
-- [ ] [SCRIPT] P1. **PM's own `uv.lock` drifts on every PM version bump** (same class as the dep-update relock gap):
-      `update-repo-version.yml` bumps PM `pyproject.toml` (e.g. 1.2.0→1.2.3→1.2.4 on #149 merge) but never relocks
-      `uv.lock`, so `uv lock --check` fails the PM gate fleet-wide until a human relocks. Observed twice this session
-      (relocked 1.2.0→1.2.3, then 1.2.3→1.2.4). Add a `uv lock` + commit step to `update-repo-version.yml` after the
-      `sed` PM version bump.
+- [x] ✅ [SCRIPT] P1. **PM's own `uv.lock` drifts on every PM version bump** — DONE 2026-06-07 (PM@<sha>). Added an
+      `Install uv` step + a guarded `uv lock` immediately after the `sed` PM-version bump in
+      `.github/workflows/update-repo-version.yml`, and staged `uv.lock` in the manifest commit, so PM's lock tracks the
+      pyproject patch bump automatically. Observed a THIRD time this session (1.2.4→1.2.8 drift, relocked) — that was
+      the live blocker this fix prevents recurring. (orig: same class as the dep-update relock gap —
+      `update-repo-version.yml` bumped PM `pyproject.toml` but never relocked `uv.lock`, so `uv lock --check` failed the
+      PM gate until a human relocked.)
