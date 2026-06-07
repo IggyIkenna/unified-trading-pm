@@ -704,7 +704,19 @@ What to verify/wire (B0 corrected scope):
           the candle `DataType` enum next to `DEX_POOL_STATE`; (2) repoint MDPS `models.py:141` `DataType.DEX_SWAPS` →
           `DEX_POOL_SWAPS`; (3) remove the legacy `DEX_POOLS`/`DEX_SWAPS` members (StrEnum-value collision then gone);
           (4) UAC + MDPS QG. Repo: unified-api-contracts + market-data-processing-service. parent_epic:
-          mtds_mdps_master.
+          mtds_mdps_master. **🟡 BLOCKED-CICD (slot-7 2026-06-07, operator-acked): code DONE + verified but NOT
+          shipped.** All 4 steps applied + a 5th the verified-safe scope missed (`DataType.DEX_POOLS` IS referenced by
+          member-name at UAC `tests/internal/unit/test_coverage_gaps_domain.py:329` → updated to `not hasattr`). **UAC
+          `quality-gates.sh` PASSED green**; **MDPS `quality-gates.sh` fails ONLY on a pre-existing, unrelated fatal
+          [5.5] WORKFLOW-LINT** — `actionlint` flags untrusted `${{ github.event.comment.body }}` /
+          `${{ github.event.issue.body }}` in `run:` blocks of the PM-templated `major-bump-issue-handler.yml` (defect
+          in the template SSOT, not my change) → no MDPS sentinel → quickmerge refuses. UAC+MDPS must ship in lockstep
+          (UAC removes `DEX_SWAPS`; MDPS would `AttributeError` against new UAC otherwise), so the workflow-lint blocker
+          blocks the whole item. Named successor / fix-owner:
+          `plans/active/issues/major_bump_template_actionlint_untrusted_input_2026_06_07.md` (coordinate with the
+          pending Telegram→Slack template rollout in `cicd_contract_hardening_2026_06_01.md`). Verified diff parked:
+          slot-7 UAC `stash@{0}` + MDPS `stash@{0}` (msg `A11c-candle-enum WIP (BLOCKED-CICD 2026-06-07)`); recipe also
+          in steps (1)-(4) above + the test fix. UNBLOCK = re-apply, re-QG both, quickmerge lockstep, flip.
   - [x] ✅ [CODE] P1. **A11d — DONE (slot-2 2026-06-04, mtds@aa92be0f).** Grep-then-read corrected the framing: the
         `OPERATIONS` `bucket_type` values (`dex-pools`/`dex-swaps`/`lending-indices`) are the **correct `kind=`
         strings** for `resolve_bucket_name` (hyphen bucket NAMES, not data*types) + the `OPERATIONS` list is dead
