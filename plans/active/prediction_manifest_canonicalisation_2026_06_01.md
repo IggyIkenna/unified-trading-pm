@@ -930,6 +930,26 @@ venue-override question) + the operator-gated migration walk:**
 > deployment-ui@0dc40eb · the per-AG instruments-store-pred v9 walk RUN [tool-ready] · the IS prediction backfill RUN ·
 > pre-migration drain + `_index` snapshot). Do NOT run `--apply` (G4-gated).
 
+- [x] ✅ [AUDIT] P0. **RE-VERIFIED GREEN post bundle-grain landing (slot-5 2026-06-07, HOLD-directive spare-cycle
+      check).** After the shared G1-ENUM **bundle-grain axis** landed (uac@dd7fa100 `grain_for_instrument_type` SSOT;
+      current LDR **is@9a4477be · uac@44c7bf17 · mtds@1c1ae428**), re-ran prediction's dry-runs — ALL STILL GREEN,
+      byte-for-byte unchanged: ① migrator source-aware `pipeline_mode=batch_polymarket_clob` paths · ③ store-migrator
+      493 rows 100% v8→v9 (all CF columns) · ④ catalogue exit 0 / 0 cqg rows (IS-backfill gated). The prediction
+      migrator+rebuild are unchanged (0 commits since 6370294a). The `dd7fa100` change is **purely additive** (+125
+      lines, 0 deletions): `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` is byte-unchanged → prediction still ABSENT →
+      grain-binding path; `valid_data_types_for_instrument_type('prediction',…)=None` and grain-bound `_row_data_types`
+      → `['prediction_canonical_question_group']` (re-confirmed on the NEW UAC). **No regression; APPLY-READY stands.**
+- [ ] [UAC] P3. **FINDING — new `grain_for_instrument_type('prediction','prediction_market')` returns `leaf` (slot-5
+      verify 2026-06-07).** Correct for the INSTRUMENT axis (prediction markets are per-market leaves; no
+      options_chain/futures_chain underlying-bundle), and **INERT today** — prediction's enumerator/catalogue do NOT
+      consume `grain_for_instrument_type`; they drive cqg enumeration via the per-row `instr.data_type` grain-binding
+      (the G1-ENUM reference). **Latent trap**: prediction's MANIFEST/atom grain is the cqg BUNDLE
+      (`prediction_canonical_question_group`), NOT a per-market leaf — so IF a future refactor unifies the grain
+      mechanisms and treats `grain_for_instrument_type` as THE enumeration-grain SSOT for prediction, it would over-fan
+      per-market → the exact false-`expected_unattempted` pollution G1-ENUM prevents. Reconcile then (prediction needs a
+      cqg-bundle grain value OR the unified path must preserve the data_type binding). Owner: the G1-ENUM bundle-grain
+      SSOT (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` / coordinator G1-ENUM). Repo:
+      unified-api-contracts. parent_epic: manifest_master. **Not owed now (HOLD; inert).**
 - [x] ✅ [AUDIT] P0. **G2 dry-run-green VERIFIED on current LDR (mtds@6370294a · is@2971a064, slot-5 2026-06-07).** The
       four readiness dry-runs + the live data-state read + the 7+2-point audit, all evidence below. `--apply` G4-gated.
 - [x] ✅ [QG] P0. **QG evidence (slot-5 2026-06-07):** **instruments-service `quality-gates.sh --no-fix` = exit 0**
