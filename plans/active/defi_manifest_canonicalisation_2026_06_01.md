@@ -571,10 +571,18 @@ What to verify/wire (B0 corrected scope):
         a date with match IDs present (code already knows data is expected); wire the sports fixture oracle at the date
         grain → `record_zero_rows(was_expected=True)`. (2) **mtds `engine/orchestrator.py:3988`** (tier3) — blocked on
         `instrument_catalog` wiring (writegate Phase 3.D.5 Wave 2/3); `:4040` (tier2) needs a venue-level (no
-        per-instrument) oracle. (3) **mtds `live/websocket_runner.py:777`** — the `ShardManifestRecorder` Protocol does
-        not expose `record_zero_rows`; add it to the Protocol + all impls (MTDSShardManifestRecorder + test doubles),
-        then route the live empty-window write. Repos: instruments-service + market-tick-data-service. parent_epic:
-        mtds_mdps_master. **Infra detail (A10c-fleet design record, retained):** the DeFi A10c shell
+        per-instrument) oracle. (3) ✅ **DONE (slot-2 2026-06-07, mtds@759872dd) — mtds `live/websocket_runner.py`
+        Protocol gap closed.** Added `record_zero_rows` to the `ShardManifestRecorder` Protocol +
+        `MTDSShardManifestRecorder` (forwards to UTL `ManifestWriter.record_zero_rows`); `_record_empty_window` now
+        routes the healthy-feed empty window through `record_zero_rows(was_expected=False)` → `empty_confirmed` (the
+        connectivity-GAP case still routes via `record_failed(UPSTREAM_LIVE_GAP)` upstream — more specific than the
+        generic `EmptyFromLiveInstrumentError` backstop, so kept). Waiver
+        `live-empty-window-no-record-zero-rows-in-protocol` removed; `_FakeRecorder` + mock writer +
+        `test_record_empty_window_healthy_writes_empty` / `test_flush_window_captured_and_empty` updated, +2 recorder
+        forwarding tests. mtds QG green (sentinel f6b83bec; A10c ratchet still 0 unrouted). **Sub-items (1)+(2) REMAIN**
+        (per-AG): (1) instruments-service sports-fixture oracle at date/entity grain; (2) mtds tier2 venue-level
+        oracle + tier3 (writegate Phase 3.D.5-blocked). Repos: instruments-service + market-tick-data-service.
+        parent_epic: mtds_mdps_master. **Infra detail (A10c-fleet design record, retained):** the DeFi A10c shell
         (`scripts/qg/no_unrouted_source_returned_zero.sh`) is zero-tolerance but DeFi-handler-only (the
         `DefiManifestRecorder` path). This generalises it to the UTL `ManifestWriter.record_zero_rows` (A10b) path that
         any AG/service routes through. **Shipped (PM):** `scripts/quality_gates/check_unrouted_source_returned_zero.py`
