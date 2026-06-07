@@ -52,6 +52,38 @@ stamp **coarse `pipeline_mode="batch"`** (or blank — defi rebuild `:302`); the
 `{mode}_{source}[_{transport}]`** — so every migrator/rebuild/enumerator MUST be upgraded in G0/G2 BEFORE its AG's G4
 apply.
 
+## ⚠️ CONFLICTS SURFACED + RESOLVED (the coordinator's job — track + resolve, do not let them reach `--apply`)
+
+> The whole point of this coordinator is to catch where existing code/docs CONTRADICT the ratified source-aware model
+> and resolve them BEFORE the irreversible single-walk apply. The standardisation plan's findings table (#1–#6) + these
+> are the live conflicts. **The biggest is the path-key form.**
+
+- **C-PATH (P0, blocks every AG's G4) — coarse `pipeline_mode=batch/` PATH KEY vs source-aware
+  `{mode}_{source}[_{transport}]`.** `pipeline_mode` is a **GCS HIVE PATH KEY**, and the ratified value is
+  `batch_<source>` (+ `live_<source>` / `replay_<source>`, + a `_websocket`/`_rest` transport segment where a source
+  has >1 transport for the same shard) — NOT coarse `batch`/`live`. But the **C0 migrators write coarse**:
+  `migrate_defi_full_v9_canonical.py:70` `DEFAULT_PIPELINE_MODE="batch"` → `:700` stamps the column `"batch"` → `:714`
+  writes the path `…/pipeline_mode=batch/…`. The **readers probe `pipeline_mode=batch/`** and the **codex
+  `02-data/pipeline-mode-partition.md` defines `pipeline_mode={batch|live}/`** — all coarse, all stale vs the model.
+  **RESOLUTION (HARD, single-walk)**: the C0 migrators must write the source-aware
+  `pipeline_mode={mode}_{source}[_{transport}]/` in BOTH the path key AND the column (deriving `source` per shard from
+  `SOURCE_PRIORITY[(ag,data_type)]` → `pipeline_mode_for_source(source, Mode.BATCH)`), in the **SAME C0 walk** (a coarse
+  apply then a later source-aware re-walk = the banned second whole-corpus walk). Every reader/prober + the codex
+  partition doc + the rebuild parsers must move to the source-aware path in lockstep. This is the literal reason G4 is
+  gated on G0. Affected: every AG's C0 migrator + `rebuild_*_manifest` + readers (MTDS/MDPS/features) +
+  `pipeline_mode_partition_migration` + codex.
+- **C-#1 (defi, P0)** — `rebuild_defi_manifest.py:302` stamps blank `pipeline_mode`+`source` (vm-defi) → fix to
+  source-aware (rides C-PATH).
+- **C-#2 (UTL)** — `ManifestWriter.add()` defaults `pipeline_mode=""` while `record_captured()` requires it → require/
+  auto-derive or delete the legacy `add()` (lets C-#1 pass silently).
+- **C-#3 (features, vm-ml)** — features delta_one reader omits `pipeline_mode=` from its path → coverage-miss; make it
+  source-aware-path-aware.
+- **C-#5 (UAC+writers)** — live multi-source PATH COLLISION (two live sources → same `pipeline_mode=live_websocket/`
+  path → silent overwrite); RESOLVED by M1 making live source-aware (`live_<source>`), already landed in the enum
+  (uac@8cafb758) — the OBJECT migration to those paths is the gated next tranche.
+- **C-#6 (UTL)** — no write-time cross-check `source_string_for(pipeline_mode)==source` for batch → a row can carry
+  `batch_databento` + `source="massive"`; add the assert.
+
 ## Sub-plan registry (every data-layer plan, its gate, owner, blocked-until)
 
 > Status is coarse (`see plan` for detail). The value here is the GATE + the BLOCKED-UNTIL edge. Owner = `assigned_vm`.
