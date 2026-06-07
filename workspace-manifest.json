@@ -80,7 +80,7 @@
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.2.0",
     "unified-trading-library": "0.4.0",
-    "unified-trading-pm": "1.2.21",
+    "unified-trading-pm": "1.2.24",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.0",
     "agent-orchestrator": "0.8.0"
@@ -382,7 +382,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "STAGING_GREEN",
       "coverage_pct": 26,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -705,7 +705,7 @@
           "required": true
         }
       ],
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 39,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -760,7 +760,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 73,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1110,7 +1110,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1797,10 +1797,10 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-07T16:59:29.599938Z",
+    "locked_reason": "Breaking MINOR bump cascade: instruments-service=0.2.0 (pre-1.0.0)",
+    "lock_version": "0.2.0",
     "pending_repos": [
       "features-service",
       "fund-administration-service",
@@ -1827,7 +1827,7 @@
     },
     "unified-trading-library": {
       "version": "0.4.0",
-      "sha": "071dee0467291d87c305049db181ff50ff5c6be6",
+      "sha": "df4bdd45b579934b7ef39b949f6b2ba2e34ba76f",
       "branch": "staging"
     },
     "market-tick-data-service": {
@@ -1847,7 +1847,7 @@
     },
     "instruments-service": {
       "version": "0.2.0",
-      "sha": "e24c4bea4948560b27f8040b544bf937d7e44558",
+      "sha": "62bce3955f604f2d02e3da12adbfc73e08394bbe",
       "branch": "staging"
     },
     "features-service": {
