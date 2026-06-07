@@ -11,6 +11,13 @@ priority: P2
 status: active
 ---
 
+> **✅ A11c-PORTION RESOLVED (2026-06-07).** The env-var indirection fix landed: UAC LDR `156fa7c2`
+> (`fix(ci): major-bump-issue-handler env-var indirection for untrusted github.event.*.body`) and the MDPS LDR copy both
+> pass `[5.5] WORKFLOW LINT` now. A11c-candle-enum is unblocked + shipped (uac@d4dacac5 + mdps@9184876). **RESIDUAL
+> (cicd track):** verify the env-var fix is rolled out to ALL repos that carry this template (fleet completeness was
+> indeterminate from a slot-7 working-tree spot-check) — coordinate with the pending Telegram→Slack template rollout in
+> `cicd_contract_hardening_2026_06_01.md`. This doc stays open until that fleet rollout is confirmed.
+
 ## What I found
 
 The PM-templated workflow `major-bump-issue-handler.yml` uses untrusted GitHub event context **directly inside `run:`

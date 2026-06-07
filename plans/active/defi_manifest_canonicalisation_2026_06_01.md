@@ -691,9 +691,9 @@ What to verify/wire (B0 corrected scope):
           features-onchain hits are comments/docstrings + `feature_definitions.yaml` post-C0-CN4; confirm no functional
           `data_type=="dex_pools"` literal break, update docstrings/yaml for accuracy. Repo: features-service.
           parent_epic: features_and_ml_master.
-    - [ ] [CODE] P2. **A11c-candle-enum — UAC `candle_schema.DataType` snapshot-vs-timeseries naming COLLISION** (slot-2
-          found 2026-06-02): `internal/domain/market_data_processing/candle_schema.py` `DataType` enum has BOTH a legacy
-          `DEX_POOLS = "dex_pools"` / `DEX_SWAPS = "dex_swaps"` (candle-input) AND a DISTINCT Phase-2
+    - [x] ✅ [CODE] P2. **A11c-candle-enum — UAC `candle_schema.DataType` snapshot-vs-timeseries naming COLLISION**
+          (slot-2 found 2026-06-02): `internal/domain/market_data_processing/candle_schema.py` `DataType` enum has BOTH
+          a legacy `DEX_POOLS = "dex_pools"` / `DEX_SWAPS = "dex_swaps"` (candle-input) AND a DISTINCT Phase-2
           `DEX_POOL_STATE = "dex_pool_state"` (spot-DEX time-series state, comment: "distinct from the existing
           DEX*POOLS \_snapshot* type"). The operator-locked canonical pool name `dex_pool_state` **collides** with the
           Phase-2 member's value → a StrEnum alias if DEX_POOLS is renamed to it. **Slot-2 left DEX_POOLS/DEX_SWAPS on
@@ -712,19 +712,17 @@ What to verify/wire (B0 corrected scope):
           the candle `DataType` enum next to `DEX_POOL_STATE`; (2) repoint MDPS `models.py:141` `DataType.DEX_SWAPS` →
           `DEX_POOL_SWAPS`; (3) remove the legacy `DEX_POOLS`/`DEX_SWAPS` members (StrEnum-value collision then gone);
           (4) UAC + MDPS QG. Repo: unified-api-contracts + market-data-processing-service. parent_epic:
-          mtds_mdps_master. **🟡 BLOCKED-CICD (slot-7 2026-06-07, operator-acked): code DONE + verified but NOT
-          shipped.** All 4 steps applied + a 5th the verified-safe scope missed (`DataType.DEX_POOLS` IS referenced by
-          member-name at UAC `tests/internal/unit/test_coverage_gaps_domain.py:329` → updated to `not hasattr`). **UAC
-          `quality-gates.sh` PASSED green**; **MDPS `quality-gates.sh` fails ONLY on a pre-existing, unrelated fatal
-          [5.5] WORKFLOW-LINT** — `actionlint` flags untrusted `${{ github.event.comment.body }}` /
-          `${{ github.event.issue.body }}` in `run:` blocks of the PM-templated `major-bump-issue-handler.yml` (defect
-          in the template SSOT, not my change) → no MDPS sentinel → quickmerge refuses. UAC+MDPS must ship in lockstep
-          (UAC removes `DEX_SWAPS`; MDPS would `AttributeError` against new UAC otherwise), so the workflow-lint blocker
-          blocks the whole item. Named successor / fix-owner:
-          `plans/active/issues/major_bump_template_actionlint_untrusted_input_2026_06_07.md` (coordinate with the
-          pending Telegram→Slack template rollout in `cicd_contract_hardening_2026_06_01.md`). Verified diff parked:
-          slot-7 UAC `stash@{0}` + MDPS `stash@{0}` (msg `A11c-candle-enum WIP (BLOCKED-CICD 2026-06-07)`); recipe also
-          in steps (1)-(4) above + the test fix. UNBLOCK = re-apply, re-QG both, quickmerge lockstep, flip.
+          mtds_mdps_master. **✅ DONE (slot-7 2026-06-07): uac@d4dacac5 + mdps@9184876** (UAC PR #89 + MDPS PR #102 →
+          staging, auto-merge, shipped in lockstep). All 4 steps applied + a 5th the verified-safe scope missed
+          (`DataType.DEX_POOLS` WAS referenced by member-name at UAC
+          `tests/internal/unit/test_coverage_gaps_domain.py:329` → switched to `not hasattr`). Value-construction safety
+          grep clean (no `DataType("dex_pools"/"dex_swaps")`). Both `quality-gates.sh` GREEN (UAC 343s; MDPS 172s —
+          [5.5] WORKFLOW-LINT now passes). The earlier BLOCKED-CICD (workflow-lint `actionlint` untrusted-input in
+          PM-templated `major-bump-issue-handler.yml`) was fixed upstream (uac/mdps LDR `156fa7c2`/equiv env-var
+          indirection); blocker doc `plans/active/issues/major_bump_template_actionlint_untrusted_input_2026_06_07.md` →
+          A11c-portion RESOLVED (fleet-rollout completeness still owned by the cicd track). NB library-repo tooling gap
+          surfaced + filed: `plans/active/issues/library_quickmerge_sha_sentinel_mismatch_2026_06_07.md`
+          (base-library.sh writes only `.qg_content_sentinel` but quickmerge `--agent` checks `.qg_last_passed_sha`).
   - [x] ✅ [CODE] P1. **A11d — DONE (slot-2 2026-06-04, mtds@aa92be0f).** Grep-then-read corrected the framing: the
         `OPERATIONS` `bucket_type` values (`dex-pools`/`dex-swaps`/`lending-indices`) are the **correct `kind=`
         strings** for `resolve_bucket_name` (hyphen bucket NAMES, not data*types) + the `OPERATIONS` list is dead
