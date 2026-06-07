@@ -3449,3 +3449,19 @@ via **PM #165** (cherry-pick `c61b37f78`). This is the fix that makes the cascad
   risks re-poisoning the v2 ghost cache). Stays open by design; archive ci_canonical_v2 when the ticket clears.
 - **OdumResearch org migration + AO repo recreation** — OUT OF SCOPE per operator dispatch; left to the operator. AO is
   already green on LDR+main and following the standard flow.
+
+### ✅ END-TO-END VERIFIED (Rule 11) — the machinery is proven self-sustaining
+
+Forced a real SIT run (`sit-debounce-trigger -f drain_pending=true`) AFTER the sit-gate fix landed on main, and watched the actual chain:
+
+1. **sit-gate precheck now PASSES** for the MAIN_GREEN pending set (the run proceeded PAST the precheck — the exact thing that was unsatisfiable before). ✅ The root-cause fix works on a live cascade.
+2. That **surfaced a latent second bug** in sit-gate's `Lock staging` step (dormant for as long as the precheck always failed): `payload_shas_raw = '${{ toJson(commit_shas) }}'` inlined toJson's MULTI-LINE JSON into a single-quoted Python literal → `SyntaxError: unterminated string literal`. Fixed via env-var indirection (`COMMIT_SHAS_JSON`) + null/non-dict guard — **PM #166** (merged). This is precisely the Rule-11 "verify on a real consumer run" catch: the precheck fix alone would have looked done locally but SIT still couldn't lock.
+3. With BOTH fixes on main, the next SIT cycle ran, **failed honestly** on the genuine staging incoherence (`PipelineMode.BATCH_HYPERLIQUID_REST` — UTL's `pipeline_mode_resolver` fix `d0745bde` is on UTL LDR but not yet promoted to UTL staging), and **correctly auto-unlocked** (`staging_status.locked=False`, reason "SIT failed — open for fixes"). That is the intended fail-safe: SIT runs, validates, and on a real failure unlocks staging for fixes instead of dangling forever. The remaining green-path is purely the LDR→staging drain carrying the UTL fix to staging (utl #249 + peers), after which SIT validates and staging→main promotes — all CI-time-bound and unattended now.
+
+### Convergence snapshot at close (2026-06-07 ~17:45 UTC)
+
+- **DIRTY PRs fleet-wide: 0** (every conflicted PR reconciled or closed-as-stale/redundant this session).
+- **9 LDR→staging promote PRs merged** since 15:00 (drain actively flowing); **staging==LDR on 12/24 repos** and climbing as the re-fired check-staging-lock + qg-v2 complete.
+- **Staging lock: self-clearing** via real SIT runs (no longer dangles at retry-exhausted).
+- **All genuinely-v2-red repos green**: SIT (UTL-side fix), PM (credential ratchet), deployment/execution/mtds/features/greeks (were stale ci_status, already green on LDR), AO (green LDR+main).
+- Residual: CI-time-bound cascade convergence (promotes merging → UTL staging fix → SIT green → staging→main), the 3 durable findings captured above (staging-unlock refresh, [skip ci] lock back-merge, 2 baselined template warns), the BLOCKED-UPSTREAM v1-callee delete (GH #4422570), and slot-5's PM #164 docs PR (not mine). Nothing for the operator to pick up beyond those.
