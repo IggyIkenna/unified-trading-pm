@@ -124,14 +124,26 @@ resolves UTL from the registry rather than the editable clone. UTL promotion PR 
 
 - [x] ✅ [SCRIPT] P0. **DONE 2026-06-07** — staging now carries the `aiohttp>=3.13.4,<3.14.0` cap fleet-wide (verified
       on staging: strategy-service / market-tick-data-service / execution-service / market-data-processing-service /
-      features-service / deployment-api / unified-trading-library all show `aiohttp>=3.13.4,<3.14.0`). All 7 stale-staging
-      repos were drained to LDR; whole fleet then converged (`pending=0`, MAIN_GREEN). The UTL published-wheel cap rides
-      the normal version-bump on its next release. Promote the LDR `aiohttp <3.14` cap to **staging** fleet-wide.
-- [ ] [SCRIPT] P0. **BLOCKED — canonical rollout tooling is broken; must repair BEFORE deploy (verified 2026-06-07,
-      slot-1).** Deploy updated `semver-agent.yml` to all fleet repos (verify `contents: write` + the new "Apply version
-      bump to staging" step landed on each repo's staging). PM #149 fixed the TEMPLATE(s); the per-repo live workflows
-      still lack the version-commit step (verified: instruments/strategy/mtds/uac/utl/deployment-service LDR copies all
-      have `version-commit=0`). **The 2026-06-07 "TOOL CORRECTION" naming
+      features-service / deployment-api / unified-trading-library all show `aiohttp>=3.13.4,<3.14.0`). All 7
+      stale-staging repos were drained to LDR; whole fleet then converged (`pending=0`, MAIN_GREEN). The UTL
+      published-wheel cap rides the normal version-bump on its next release. Promote the LDR `aiohttp <3.14` cap to
+      **staging** fleet-wide.
+- [x] ✅ [SCRIPT] P0. **DONE 2026-06-07 (PM@4319fbdc3 + fleet LDR deploy).** Canonical rollout tooling REPAIRED + the
+      canonical `semver-agent.yml` DEPLOYED to all 24 fleet repos on `live-defi-rollout` (incl. the cascade roots
+      unified-api-contracts / unified-trading-library / deployment-service). Verified on live LDR for uac/utl/
+      deployment-service (the 3 the task names) + a sample of
+      instruments/strategy/mtds/execution/features/deployment-api/ unified-trading-system-ui/e2e-testing:
+      `version-commit=1`, `contents:write=1`, `quality-gates-v2`-trigger present, `pm-readiness` checkout present, dead
+      `"Quality Gates"` trigger=0, leftover placeholders=0 (no regression). The fix reaches `staging`/`main` via the
+      normal LDR→staging→main promotion (the staging PR's quality-gates-v2 is the gate). Deploy mechanism: rendered the
+      SSOT `.tmpl` per-repo and committed to each repo's LDR via the GitHub Contents API with `[skip ci]` (LDR carries
+      no remote CI; same mechanism the 2026-06-06 unblock used) — faster + safer than 23× full per-repo QG while still
+      landing on the integration axis. **The earlier "TOOL CORRECTION" naming
+      `scripts/propagation/rollout-agent-workflows.sh` was WRONG — that script rendered REGRESSED output. It was
+      de-semver'd this session (semver block removed; it now only rolls agent-audit + plan-alignment).** Original
+      findings (all verified by reading the scripts + rendering + diffing deployed copies):** 1. **There are FOUR
+      semver-agent template copies, with THREE different content states + TWO placeholder conventions** (worse than the
+      "triple drift" recorded earlier): - `scripts/workflow-templates/semver-agent.yml.tmpl`
       `scripts/propagation/rollout-agent-workflows.sh` is itself WRONG — that script renders REGRESSED output. Do NOT
       run it. Findings (all verified by reading the scripts + rendering + diffing deployed copies):** 1. **There are
       FOUR semver-agent template copies, with THREE different content states + TWO placeholder conventions** (worse than
@@ -157,15 +169,17 @@ resolves UTL from the registry rather than the editable clone. UTL promotion PR 
       version-commit IS the root cause in this issue. - **tab-mirror-to-ldr.yml is NOT stale** — deployed copies are
       byte-identical to the PM template (verified instruments/strategy/mtds, diff exit 0); no rollout needed for it (the
       task's optional tab-mirror item is a no-op).
-- [ ] [SCRIPT] P0. **Repair the canonical rollout path so the deploy above can run** (prereq for the deploy P0). Either
-      (a) point `scripts/propagation/rollout-agent-workflows.sh`'s semver `TEMPLATES_DIR` at a fully-current
-      `{{SERVICE_NAME}}` SSOT and first SYNC that SSOT to match `scripts/workflow-templates/semver-agent.yml.tmpl` (port
-      the `quality-gates-v2` trigger + `pm-readiness` checkout into `scripts/propagation/templates/semver-agent.yml`),
-      OR (b) make `scripts/propagation/rollout-semver-agent.sh` (which already reads the correct `.tmpl` + substitutes
-      `__REPO_NAME__`/`__SOURCE_DIR__` correctly — the "cp-only/literal-placeholder" claim is FALSE, it does `sed`) the
-      canonical tool by adding the per-repo commit/push it currently lacks. Then collapse to ONE SSOT + ONE script (see
-      the P1 consolidation todo below) and delete the dead `scripts/templates/semver-agent.yml`. Roll out to the FULL
-      set incl. uac/utl/deployment-service, not just the 14 service/api repos. repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P0. **DONE 2026-06-07 (PM@4319fbdc3) — chose option (b).** Made
+      `scripts/propagation/rollout-semver-agent.sh` the canonical tool: it reads the correct SSOT
+      `scripts/workflow-templates/semver-agent.yml.tmpl`, substitutes `__REPO_NAME__`/`__SOURCE_DIR__`, ASSERTS the SSOT
+      carries the expected markers (`quality-gates-v2` / `pm-readiness` / `contents: write` — fails loud on a regressed
+      template), iterates EVERY manifest repo (incl. uac/utl/deployment-service, not just service/api), is idempotent
+      (skips a repo already byte-matching the SSOT), and now SHIPS per-repo (two-pass quickmerge where available, direct
+      LDR push on agent_orchestrator). The `--no-commit` legacy mode is retained for local inspection. The dead
+      `scripts/templates/semver-agent.yml` + the stale `scripts/propagation/templates/semver-agent.yml` + the orphaned
+      top-level `scripts/rollout-semver-agent.sh` (read the stale template) were DELETED, and the semver block was
+      removed from `scripts/propagation/rollout-agent-workflows.sh` (it no longer reads the dead template). repo:
+      unified-trading-pm.
 - [x] ✅ [SCRIPT] P1. `update-dependency-version.yml`: relock `uv.lock` after the constraint bump — DONE 2026-06-07
       (PM@<sha>). Added `Install uv` (astral-sh/setup-uv@v5) + a guarded `uv lock` after the constraint edit + staged
       `uv.lock` in both the direct-commit and breaking-PR paths, in
@@ -181,8 +195,11 @@ resolves UTL from the registry rather than the editable clone. UTL promotion PR 
       land. The deploy (`rollout-workflow-templates.sh --template update-dependency-version.yml` → per-repo commit) is
       cross-repo (sibling repos, fleet-drain loop); each rolled-out repo should be REMOVED from the baseline so the
       ratchet tightens. repo: unified-trading-pm template + 24 sibling repos.
-- [ ] [SCRIPT] P1. Collapse the triple `semver-agent` template drift to ONE SSOT + ONE rollout script; delete the dead
-      `scripts/templates/semver-agent.yml`.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-07 (PM@4319fbdc3).** Collapsed the quadruple `semver-agent` template drift to ONE
+      SSOT (`scripts/workflow-templates/semver-agent.yml.tmpl`) + ONE rollout script
+      (`scripts/propagation/rollout-semver-agent.sh`). Deleted `scripts/templates/semver-agent.yml` (dead),
+      `scripts/propagation/templates/semver-agent.yml` (stale), and the orphaned top-level
+      `scripts/rollout-semver-agent.sh`. `rollout-agent-workflows.sh` no longer handles semver.
 - [ ] [SCRIPT] P2. `python-quality-gates-v2.yml` dep-clone: when `DEP_BRANCH` (the head dep-update branch) does not
       exist in a dep repo, fall back to that dep's CURRENT computed version/tag rather than silently to `main` — so the
       tested dep version is explicit.
