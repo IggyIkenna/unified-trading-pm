@@ -92,8 +92,8 @@ parallel-safe.
 | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | WRITE migrator     | `migrate_tradfi_to_v9_canonical.py` (`_pipeline_mode`→`batch_databento`)                                                                                                                                                               | ✓      | reference impl — copy this pattern                                                                                                                                                                      |
 | WRITE rebuild      | `rebuild_{cefi,tradfi,sports,prediction}_manifest*` (`derive_pipeline_mode_for_row`)                                                                                                                                                   | ✓      | reference impl                                                                                                                                                                                          |
-| **WRITE migrator** | **`migrate_defi_full_v9_canonical.py:70/700/714`** `DEFAULT_PIPELINE_MODE="batch"` → coarse path+col                                                                                                                                   | **✅** | **DONE mtds@f80c50f1** — `batch_<source>` per shard via `derive_pipeline_mode_for_row`; source+transport in path+column; coarse retired                                                                  |
-| **WRITE rebuild**  | **`rebuild_defi_manifest.py:88/206/230/250`** `_DEFAULT_PIPELINE_MODE="batch"` (+ `:302` blank — C-#1)                                                                                                                                 | **✅** | **DONE mtds@f80c50f1** — `derive_pipeline_mode_for_row` source-aware (path+col), `pipeline_mode=` day-probe, per-shard isolation; C-#1 `:302` fixed                                                      |
+| **WRITE migrator** | **`migrate_defi_full_v9_canonical.py:70/700/714`** `DEFAULT_PIPELINE_MODE="batch"` → coarse path+col                                                                                                                                   | **✅** | **DONE mtds@f80c50f1** — `batch_<source>` per shard via `derive_pipeline_mode_for_row`; source+transport in path+column; coarse retired                                                                 |
+| **WRITE rebuild**  | **`rebuild_defi_manifest.py:88/206/230/250`** `_DEFAULT_PIPELINE_MODE="batch"` (+ `:302` blank — C-#1)                                                                                                                                 | **✅** | **DONE mtds@f80c50f1** — `derive_pipeline_mode_for_row` source-aware (path+col), `pipeline_mode=` day-probe, per-shard isolation; C-#1 `:302` fixed                                                     |
 | READ (defi)        | features `mtds_canonical_reader.py` — was exact `pipeline_mode=batch/`+`live/` probe                                                                                                                                                   | ✅     | **DONE features@c487e04b** — day-level mode-agnostic listing, prefix-match `batch_*/live_*/replay_*` + bare + legacy `category=`, canonical-over-legacy ranked                                          |
 | READ               | mdps `orchestration_scanner.py` — day-listing already mode-agnostic; FIXED source-aware leak bug                                                                                                                                       | ✅     | **DONE mdps@d59749c (PR#103→staging)** — gated `batch_onchain_rpc` legacy-venue branch on absence of `data_type=` (canonical `dex_pool_state` no longer leaks into `dex_swaps`); +source-aware fixtures |
 | TEST               | mtds `test_migrate_defi_full_v9_canonical.py:53-54` · `test_rebuild_defi_manifest.py:17/72` · mdps `test_orchestration_scanner.py:182-230` · features `test_mtds_canonical_reader.py:63-132`                                           | ◑      | **mtds DONE mtds@f80c50f1** (both defi test files assert `batch_<source>` + source/transport, 25/25 green); mdps/features test updates ride their READ change (features@c487e04b / mdps@d59749c)        |
@@ -225,7 +225,7 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       `instruments_manifest_canonicalisation_2026_06_01`. **DeFi (slot-2): code-ready + denominator regression shipped
       is@bb8fb203** (⑦-defi). cefi dry-run proven 2026-06-05.
 - [ ] [DATA] P0. **G1.dry-run — per-AG catalogue + enumerate dry-run** (read-only; cefi PROVEN 2026-06-05 on real prod
-      GCS; defi/tradfi pending — each AG slot runs its own). **sports DRY-RUN DONE (slot-4, 2026-06-07): generic
+      GCS; defi pending — each AG slot runs its own). **sports DRY-RUN DONE (slot-4, 2026-06-07): generic
       `build_instrument_catalogue --asset-group sports` → 0-row catalogue (raw entity cols lack
       `instrument_key`/`instrument_id`; no `sports` branch in `run_rollup`) AND captured atom is per-LEAGUE not
       per-fixture → needs a league-grain `build_sports_catalogue_dataframe` producer before enumerate v2 can run. Full
@@ -237,7 +237,17 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       `instrument_availability/by_date/` is `market=`-grain, no `canonical_question_group=`). enumerate rides the
       catalogue (same gate). cf_manifest_audit(instruments-store-pred): 493 rows 100% v8, CF-1/3/4/8 RED (§H v9 walk
       gated). G1.schedule WIRED (prediction in both catalogue schedulers). Full finding in
-      `prediction_manifest_canonicalisation_2026_06_01.md` § ⑦ G1-2026-06-07.**
+      `prediction_manifest_canonicalisation_2026_06_01.md` § ⑦ G1-2026-06-07.** **tradfi DRY-RUN DONE (slot-6,
+      2026-06-07): `build_instrument_catalogue --asset-group tradfi` rolls up 11,579 `by_date` parquets (full local run
+      = VM job, timed out ~10min; producer already proven — slot-7 applied `prod/catalog.parquet` = 684,372 instruments,
+      95% delisted = capture-freeze signature). `enumerate_expected_universe v2 --catalog-path <prod/catalog.parquet>`
+      scan-only (2026-06-04..05) exit 0 → **588,798 candidate `expected_unattempted`** (= 32,711 alive × 9 data_types ×
+      2 days; present-set 73,352/144,062), sample-inspected (e.g. `CBOE:INDEX:VIX × {trades,ohlcv_1m,…}`). Mechanism
+      GREEN. cf_manifest_audit(instruments-store-tradfi-prd): 20,388 rows 0.8% v9, CF-1/3/4/8 RED + 60 legacy-only (§
+      Step-1 v9 walk gated). **G1.run apply-write GATED** (b: capture freeze; c: v9 indices) → dry-run only; gate-b
+      remediation Massive IS adapter SHIPPED (UAC@12974b11 PR#91 + IS@c0f2f39c PR#407). **G1.schedule: tradfi MISSING
+      from both catalogue schedulers' instruments-store `for_each` → gated todo filed.** Full finding in
+      `tradfi_manifest_canonicalisation_2026_06_01.md` § G1.**
 - [ ] [DATA] P0. **G1.run — per-AG `--apply-write` of the could-exist seed against the AG's canonical `_index`** (VM;
       `MANIFEST_PER_VM_SHARDS=true`). **GATED on**: (a) **IS instrument BACKFILL complete** for that AG
       (`instruments_backfill_phase3_2026_05_22` — the catalogue can only roll up instruments IS actually fetched); (b)
