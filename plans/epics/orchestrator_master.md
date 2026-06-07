@@ -146,6 +146,32 @@ orchestrator work lives in the Phase 6/9/11 rows of the table above + the audit-
 
 ## P0 — must complete before next foundation gate
 
+### `tab-mirror-to-ldr` crashed every tick on empty assoc-array under `set -u` → fleet-wide no-FF (discovery + SSOT fix 2026-06-07)
+
+**status**: 🟢 SSOT TEMPLATE FIXED (PM `scripts/workflow-templates/tab-mirror-to-ldr.yml`) — fleet rollout + per-repo-main
+reach remain. · **provenance**: slot-1 main, triaging an execution-service "CI REGRESSION on main" + repeated
+`tab-mirror-to-ldr` scheduled-run failures, 2026-06-07.
+
+**What I found**: the mirror's sweep step does `declare -A div_hosts; declare -A stranded_hosts` then expands
+`${#div_hosts[@]}` / `${#stranded_hosts[@]}` under `set -u`. On bash 5.x (the GHA runner; reproduced on bash 5.3.9)
+`${#assoc[@]}` of an **empty** associative array raises `unbound variable` — so on every tick with no active-diverged /
+stranded host, the whole job exits 1 **before** fast-forwarding any behind-only tab. The earlier `declare -A` addition
+was an incomplete fix (it doesn't stop the empty-expansion crash). Net: tab↔LDR FF silently broke fleet-wide every
+~30 min, which is the upstream cause of the recurring tab-branch-drift alerts that had to be hand-reconciled all session.
+The `declare -A` being present on a repo's `main` masked it as "not stale" while it still crashed.
+
+**Fix shipped**: SSOT template counts into plain ints with nounset off (`set +u; n="${#div_hosts[@]}"; set -u`) → empty
+→ 0, no crash. YAML-validated; fix verified on bash 5.3.9.
+
+- [x] ✅ [AGENT] P0. SSOT `tab-mirror-to-ldr.yml` empty-assoc-array crash fixed (PM@`5372b01b6`).
+- [ ] [AGENT] P0. Roll out the fixed template fleet-wide — `bash scripts/workflow-templates/rollout-workflow-templates.sh
+      --template tab-mirror-to-ldr.yml` then commit+push per repo. **Also fix `deployment-service`'s LDR copy** (audited
+      stale 2026-06-07 — missing even the `declare -A` line). (unified-trading-pm + all service repos)
+- [ ] [AGENT] P0. **Reach `main`**: scheduled `tab-mirror-to-ldr` runs from each repo's DEFAULT branch (`main`), so the
+      fix only takes effect once it lands on `main` — either via the normal LDR→staging→main promotion or a direct
+      CI-machinery push of the workflow file to `main` (sanctioned for workflow machinery). Until then the scheduled
+      mirror keeps crashing on repos whose `main` is behind. (all service repos)
+
 ### `auth_failed` was a one-way ratchet → rotation pool collapsed to one account (discovery + fix 2026-06-07)
 
 **status**: 🟢 CODE FIXED (agent-orchestrator, `tab/ikennaigboaka/1` → LDR) — one operator action remaining on the live
