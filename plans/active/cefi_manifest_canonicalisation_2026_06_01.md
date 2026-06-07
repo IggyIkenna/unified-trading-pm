@@ -987,3 +987,94 @@ No cefi backfill until this walk is C-GREEN. L0 tarball-prune blocker
       `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_cefi` row-key/data_types match
       the cefi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
       bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.
+
+## G1 IS-catalogue session — read-only audit + dry-run on real prod GCS (slot-3, 2026-06-07)
+
+> **GOAL (G1 for cefi, per `master_data_canonicalisation_migration_catalogue_2026_06_07.md`):** the cefi slice of the
+> could-exist universe GREEN so downstream denominators/preflight (⑥/⑦, CF-14) are honest. This session ran the
+> **read-only** halves (cf-audit + catalogue/enumerate dry-run); the irreversible `--apply-write` seed is GATED (below)
+> and a **BIG denominator-correctness finding** was surfaced by the dry-run (the value of dry-run-before-apply).
+
+**① `cf_manifest_audit` on `instruments-store-cefi-prd` `_index` (read-only, `gcloud cp` + pandas) — the IS reference
+`_index` is NOT v9-canonical:**
+
+- **CF-1 RED**: `schema_version` 100% **v8** (0/30,803 v9) — same v8-not-v9 state cefi MTDS had.
+- **CF-3 RED**: `pipeline_mode` blank on 100% of rows. **CF-4 RED**: no `source` column. **CF-8 RED**: no `available_at`
+  (only `written_at`/`attempted_at` proxies). **CF-2**: no `asset_group`/`category` column (bucket implies AG; paths are
+  non-hive flat).
+- **Two extra data-state gaps**: **12,372 / 30,803 rows (40%) have NULL `capture_status`** (only 18,431 `captured`); and
+  **`data_type` is blank on every row** (the IS reference cell is venue×date, not data_type-keyed — but the canonical
+  form should still type it). Legacy-vs-prd diff: **23 legacy-only cells** (blank-data_type, 2025-10) — small L6
+  data-loss gate.
+- **Verdict**: the cefi **instruments-store** `_index` needs the same v8→v9 single-walk
+  (source/pipeline_mode/asset_group columns + available_at + capture_status backfill) that the MTDS `_index` needs.
+  **Owner = the cefi slice of `instruments_manifest_canonicalisation_2026_06_01.md`** (master registry G1, per-AG). That
+  walk is an `--apply` op → **GATED on G0** (source-aware pipeline_mode model) per the coordinator. Dry-run/audit only
+  this session. (Tracked todo below.)
+
+**② Catalogue (`build_instrument_catalogue.py`) — APPLIED + present (no action):** `prod/catalog.parquet` exists
+(213,990 rows; 5 instrument_types `COMBO/FUTURE/OPTION/PERPETUAL/SPOT_PAIR`; 17 venues; 3,473 alive). Migration-stable
+per `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`.
+
+**③ `enumerate_expected_universe.py --enumerator-version v2` DRY-RUN (scan-only, no write) — ran end-to-end on real prod
+GCS** (catalog read via local `gcloud cp` workaround — laptop `gcsfs token=cloud` fails; manifest read via UTL/ADC
+worked). 2026-05-01→03 window: catalog 213,990 · manifest 2,640,864 rows · **101,010 candidate rows** (88,025
+blank-reason in-coverage-pending, 6,692 `EXPECTED_INSTRUMENT_DELISTED`, 6,293 `EXPECTED_INSTRUMENT_NOT_LISTED`). The
+machinery WORKS.
+
+**④ 🔴 BIG FINDING (data-correctness, gates the cefi seed) — the v2 enumerator's could-exist universe does NOT match the
+cefi captured atom (answers the pre-existing "confirm row-key/data_types match" check: they DON'T).** Two coupled bugs
+in `instruments-service/scripts/enumerate_expected_universe.py` `_enumerate_v2_cefi:550` (`for dt in data_types:`
+iterates ALL 7 `DATA_TYPES_BY_ASSET_GROUP["cefi"]` for **every** instrument with **no `(instrument_type × data_type)`
+validity filter** and **no bundle-grain handling**):
+
+1. **Impossible combos seeded**: a `PERPETUAL` (`ASTER:PERP:ADAUSDT`) is enumerated `expected_unattempted` for
+   `options_chain` + `futures_chain`; a `SPOT_PAIR` for `derivative_ticker`/`liquidations`/chains — combos that can
+   never be captured. Real captured combos (manifest ground-truth, 1.31M captured rows):
+   `spot_pair`→trades/book_snapshot_5/ ohlcv\*,
+   `perpetual`→trades/derivative_ticker/book_snapshot_5/liquidations/ohlcv\*, `future`→trades/book_snapshot_5/
+   derivative_ticker/liquidations.
+2. **Wrong GRAIN for options/futures bundles**: the catalog carries **72,156 `OPTION` + 17,472 `COMBO`** per-instrument
+   rows, but cefi options/futures are captured as **per-underlying `options_chain`/`futures_chain` BUNDLES**
+   (instrument_type=`options_chain`/`futures_chain` in the manifest; **~0 captured per-`OPTION`/`COMBO` rows**). So
+   every `OPTION`/`COMBO` catalog row × 7 data_types × dates can never match the present-set → all seeded false
+   `expected_unattempted`. This is why **DERIBIT = 92,106 / 101,010 (91%)** of the dry-run candidates. Same bundle-grain
+   class the catalogue plan flagged for prediction/sports — **cefi options/futures need it too** (the catalogue producer
+   assumed a "plain `--asset-group cefi` run", but cefi has the bundle-grain question for options/futures).
+
+**Impact**: an `--apply-write` now would pollute the cefi `_index` with **millions of false `expected_unattempted`
+rows** (impossible combos + wrong-grain options/futures) → badly distort the cefi coverage denominator (⑥/⑦/CF-14) — the
+exact opposite of the honest denominator G1 exists to produce. The dry-run caught it before any write.
+
+**⑤ Scheduler (G1.schedule / step-4): the G1 catalogue+enumerate is NOT wired for cefi.** The two existing TF schedulers
+(`instrument_catalogue_scheduler.tf` → UAC `generate_instrument_catalogue.py` UI artefacts;
+`catalogue_regen_scheduler.tf` → envelope/availability JSON) are the OLD catalogue-**artefact** regens, NOT the
+lifecycle roll-up (`build_instrument_catalogue.py` → `{env}/catalog.parquet`) nor the could-exist seed
+(`enumerate_expected_universe.py`). This is the still-open **Phase-2 trigger-wiring** todo in
+`proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` (INFRA P1, vm-cross-cutting) — cefi slice cross-referenced
+there; no new todo needed beyond the cross-ref.
+
+**G1.run apply-write GATE verdict (cefi) — DRY-RUN ONLY this session. 3 conditions UNMET:**
+
+- (a) IS `_index` canonical (v9) — **UNMET** (cf-audit ① above: 100% v8). Seeding into a pre-canonical `_index` forces a
+  banned second walk (master plan: G1.run rides AFTER the AG's G4 manifest is canonical).
+- (b) Could-exist universe matches the captured atom — **UNMET** (④ combo+grain bug above; would pollute the
+  denominator).
+- (c) `--apply-write` also requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME` (a VM, not this laptop).
+
+- [ ] [CODE] P0. **Fix `_enumerate_v2_cefi` combo-validity + bundle-grain before any cefi could-exist `--apply-write`
+      (GATES the ⑦ seed above).** (a) intersect `data_types` per `instrument_type` against a UAC-sourced valid
+      `(instrument_type → data_types)` map (ground-truth: spot/spot_pair→trades/book_snapshot_5/ohlcv\*;
+      perpetual→+derivative_ticker/liquidations; future→trades/book_snapshot_5/derivative_ticker/liquidations) so no
+      impossible combo (PERPETUAL×options_chain etc.) is seeded; (b) enumerate cefi options/futures at the captured
+      **bundle** grain (`options_chain`/`futures_chain` per underlying), NOT per-`OPTION`/`COMBO` catalog instrument —
+      mirror the prediction per-cqg granularity-aware producer in
+      `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md`. +regression: a `PERPETUAL` yields no
+      options_chain/futures_chain row; an OPTION yields exactly one bundle row; total candidate count drops to the
+      plausible captured-atom universe (not the 91%-DERIBIT inflation). Repo: instruments-service. Provenance: slot-3 G1
+      dry-run sample-inspect 2026-06-07. parent_epic: mtds_mdps_master.
+- [ ] [DATA] P1. **cefi `instruments-store` `_index` v8→v9 single-walk** (CF-1/3/4/8 RED + 40% null `capture_status` +
+      blank `data_type` + 23 legacy-only cells; cf-audit ① above). Owner = the **cefi slice** of
+      `instruments_manifest_canonicalisation_2026_06_01.md`; `--apply` **GATED on coordinator G0** (source-aware
+      pipeline_mode). Re-run `cf_manifest_audit instruments-store-cefi-prd-…` post-walk → all-CF GREEN. Provenance:
+      slot-3 G1 cf-audit 2026-06-07. parent_epic: mtds_mdps_master.
