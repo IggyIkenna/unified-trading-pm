@@ -663,21 +663,42 @@ if [ "$TO_STAGING" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ]
   echo "=========================================="
   echo "STAGE 1.5: Staging Lock Check"
   echo "=========================================="
-  STAGING_LOCKED=$(python3.13 -c "
+  # Guard 2 (single-SSOT-branch discipline): the staging lock lives in workspace-manifest.json on
+  # PM **main** — the authoritative home (sit-gate / sit-unlock / update-repo-version write it
+  # there). The LOCAL / LDR copy DRIFTS because lock writes are committed `[skip ci]`, so the
+  # main→LDR back-merge skips them and the LDR copy never receives the toggle. Reading the local
+  # file therefore false-BLOCKS on a stale lock (and, worse, false-PROCEEDS on a stale unlock).
+  # Read the lock from PM `origin/main`, exactly like the server-side check-staging-lock required
+  # check does. Fall back to the local copy only if main is unreachable (offline / no PM sibling).
+  PM_LOCK_DIR="$(dirname "$MANIFEST_PATH")"
+  git -C "$PM_LOCK_DIR" fetch origin main --quiet 2>/dev/null || true
+  STAGING_LOCKED=$(git -C "$PM_LOCK_DIR" show origin/main:workspace-manifest.json 2>/dev/null | python3.13 -c "
+import json, sys
+try:
+    m = json.load(sys.stdin)
+    ss = m.get('staging_status', {})
+    print(f\"locked={str(ss.get('locked', False)).lower()}\")
+    print(f\"reason={ss.get('locked_reason') or ''}\")
+    print(f\"since={ss.get('locked_since') or ''}\")
+except Exception:
+    print('locked=unknown')
+" 2>/dev/null)
+  # Fallback: PM main unreadable → use the local copy (best-effort).
+  if [ -z "$STAGING_LOCKED" ] || echo "$STAGING_LOCKED" | grep -q 'locked=unknown'; then
+    echo "[$REPO_NAME] ⚠️  Could not read staging lock from PM origin/main — falling back to local copy"
+    STAGING_LOCKED=$(python3.13 -c "
 import json, sys
 try:
     with open('${MANIFEST_PATH}') as f:
         m = json.load(f)
     ss = m.get('staging_status', {})
-    locked = ss.get('locked', False)
-    reason = ss.get('locked_reason') or ''
-    since = ss.get('locked_since') or ''
-    print(f'locked={str(locked).lower()}')
-    print(f'reason={reason}')
-    print(f'since={since}')
-except Exception as e:
-    print(f'locked=false')
+    print(f\"locked={str(ss.get('locked', False)).lower()}\")
+    print(f\"reason={ss.get('locked_reason') or ''}\")
+    print(f\"since={ss.get('locked_since') or ''}\")
+except Exception:
+    print('locked=false')
 " 2>/dev/null)
+  fi
 
   IS_LOCKED=$(echo "$STAGING_LOCKED" | grep 'locked=' | cut -d= -f2)
   LOCK_REASON=$(echo "$STAGING_LOCKED" | grep 'reason=' | cut -d= -f2-)
