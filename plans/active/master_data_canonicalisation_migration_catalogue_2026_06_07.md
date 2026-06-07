@@ -214,18 +214,39 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > green). **Unblocks slots 2-6 G1.run** (each AG owner still verifies its matrix slice + re-runs its dry-run against the
 > shape-aware producer before `--apply-write`). Original finding ↓ retained for context.
 >
-> **✅ DECISION (operator 2026-06-07) — ERA-B is canonical for `options_chain`/`futures_chain` (cefi + tradfi).** They
-> are **INSTRUMENT_TYPES**, with `data_type=trades`, bundled per-underlying — matching the live writer
-> (`tardis_shared.py` Phase 1.6, which explicitly fixed the data_type/instrument_type overload) and the on-disk object
-> paths. Era-A (these as data_types) in the UAC validity matrix + `SOURCE_PRIORITY` +
-> `capability_declarations/_cefi.py` + the v8 manifest + the `test_cefi_options_chain_bundle` test is **LEGACY/stale** →
-> reconcile UP to Era-B in the v9 migration (the data is already Era-B). This RESOLVES the bundle-grain blocker: the
-> catalogue/enumerate bundle-grain rollup is built Era-B-shaped (one `options_chain`/`futures_chain` candidate per
-> underlying instrument, `data_type=trades`), NOT a per-contract or data_type=options_chain shape. **Coordinated change
-> (owner: vm-cross-cutting)**: matrix + SOURCE_PRIORITY
+> **✅ ERA-B SHIPPED 2026-06-07 (vm-cross-cutting / slot-7) — `options_chain`/`futures_chain` are now canonical
+> INSTRUMENT_TYPES (data_type=trades) in the contracts + producer.** `options_chain`/`futures_chain` are
+> INSTRUMENT_TYPES (per-underlying chain bundles) with `data_type=trades`, bundled per-underlying — matching the live
+> writer (`tardis_shared.py` Phase 1.6) + the on-disk object paths + the `CEFI_OPTIONS_CHAIN_TRADES` schema
+> (symbol=underlying). The earlier rollup (item 1(b) below, `uac@cb3a846b`/`is@687d1443`) was **Era-A-shaped** (emitted
+> `data_type=options_chain`); this reconciles it UP to Era-B. **Shipped (each a QG-`--no-fix`-green commit on
+> `tab/ikennaigboaka/7`, prek-green, tab ⊇ LDR):**
 >
-> - capability_declarations + catalogue producer + the Era-A test, in lockstep; each AG (cefi slot-3 / tradfi slot-6)
->   flips its matrix slice + re-runs G2. Gates cefi + tradfi apply-readiness.
+> - **`uac@ae70338d`** — (1) validity matrix: `(cefi/tradfi, options_chain/futures_chain)` → `frozenset({"trades"})`
+>   (was `{options_chain}`/`{futures_chain}`); `(tradfi, option/combo)` → `frozenset()` (was UNMAPPED → None fallback →
+>   the ~563K false candidates); (2) renamed `bundle_data_type_for_instrument_type` → `bundle_instrument_type_for_leaf`
+>   (returns the bundle INSTRUMENT_TYPE; the data_type resolves to `trades` via the matrix); (3) `SOURCE_PRIORITY` +
+>   `capability_declarations/_cefi.py`+`_tradfi.py`: Era-B docs (the bundle resolves source via `(ag, "trades")`; the
+>   legacy data_type-keyed `options_chain`/`futures_chain` entries are RETAINED for pre-migration legacy rows + the
+>   bidirectional `SOURCE_PRIORITY ↔ AVAILABILITY_AT_SEMANTICS` closed-set round-trip — the per-AG v9 migrators own
+>   their removal, see follow-up todo); (4) flipped the Era-A matrix/schema tests to Era-B; `CEFI_OPTIONS_CHAIN_TRADES`
+>   schema unchanged.
+> - **`is@74df991d`** — `enumerate_expected_universe._rollup_bundle_grain`: the synthetic bundle entry now carries
+>   `instrument_type=options_chain`/`futures_chain` + `data_type=None` → the enumerator resolves its data_type from the
+>   validity matrix → emits ONE candidate per underlying with **`data_type=trades`** (NOT `data_type=options_chain`).
+>   Tests flipped to assert `(underlying, options_chain, trades)`.
+>
+> Regression verified by the QG suite (both repos `quality-gates.sh --no-fix` exit 0; UAC 3264 + IS 3267 tests green):
+> OPTION/COMBO leaf → **0** per-contract candidates; underlying → **exactly one** `options_chain`/`futures_chain`
+> candidate with `data_type=trades`; PERPETUAL/SPOT unchanged; **no `data_type=options_chain` emitted**; tradfi
+> option/combo no longer fall through to the all-data_types fallback. **🔔 NOTIFY slots 3 (cefi) + 6 (tradfi): the Era-B
+> shape-aware producer is GREEN — re-run your `enumerate` dry-runs to confirm the prod numbers (tradfi ~588K →
+> plausible, ~563K false GONE; cefi DERIBIT no longer dominant) before `--apply-write`; flip each AG's matrix slice
+> verify row.** **BLOCKED-PROMOTION**: the LDR→`staging` promotion is gated on the workspace **staging lock** (breaking
+> MINOR bump cascade, `instruments-service=0.2.0`, locked since 2026-06-07T16:59Z) — both commits are QG-green on the
+> tab branch (→ LDR via the tab-mirror); the staging→main promotion flows via the automation once the cascade
+> converges + unlocks. **OUT OF SCOPE (per-AG migrators own)**: the v8→v9 manifest relabel of legacy
+> `data_type=options_chain` rows.
 
 > **🔴 G1-ENUM (P0, CROSS-AG, surfaced by slot-3 cefi dry-run 2026-06-07) — the v2 enumerator over-fans → false
 > `expected_unattempted` pollution.** `_enumerate_v2_*` (`enumerate_expected_universe.py`) fans ALL data*types over
@@ -264,19 +285,23 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
    - **(a) validity filter** — `uac@97c26dbe` matrix + `is@6ea46565` producer (impossible
      `(instrument_type × data_type)` pairs filtered; per-leaf OPTION/COMBO zeroed via `frozenset()` — but that
      UNDER-seeds bundles to zero).
-   - **(b) bundle-grain ROLLUP (the real fix) — SHIPPED 2026-06-07 (slot-7)**: `uac@dd7fa100` (GRAIN axis SSOT
+   - **(b) bundle-grain ROLLUP (the real fix) — SHIPPED 2026-06-07 (slot-7); ERA-A-shaped, reconciled to ERA-B by
+     `uac@ae70338d`/`is@74df991d` — see the "✅ ERA-B SHIPPED" block above**: `uac@dd7fa100` (GRAIN axis SSOT
      `grain_for_instrument_type`) + `uac@cb3a846b` (`bundle_data_type_for_instrument_type` + tradfi grain) +
      `is@687d1443` (`enumerate_expected_universe._rollup_bundle_grain` — read-side pre-pass in `enumerate_v2` collapses
      every option/combo LEAF of a `(venue, chain, underlying)` into ONE synthetic per-underlying `options_chain`
      candidate; generalises slot-4's league-grain rollup, NO per-AG special-casing; `underlying` carried on the
      catalogue +`InstrumentCatalogEntry`, derived from instrument*id as fallback) + `is@df15dba2` (contract tests). Net:
-     OPTION/COMBO leaf → ZERO per-contract candidates; underlying → exactly ONE `options_chain` (kills the ~563K tradfi
-     over-fan + cefi DERIBIT dominance). **🔔 slots 3 (cefi) + 6 (tradfi): re-run `enumerate` dry-runs on the rollup
-     producer to confirm (tradfi ~588K → plausible; cefi DERIBIT no longer dominant) — you were gated on this.** **F2
-     residual**: DERIBIT/OKX FUTURE \_leaf* per-contract over-fan stays a gated venue-specific catalogue-rollup todo
-     (futures_chain bundle ENTRIES already roll up; `VENUE_DATA_TYPE_CAPABILITIES` is an unsound bundle-venue
-     discriminator — BYBIT lists `futures_chain` yet captures per-contract — so FUTURE-leaf venue-bundling needs a sound
-     registry first). Per-AG slice verification + dry-run re-run still owed by each AG owner before `--apply-write`.
+     OPTION/COMBO leaf → ZERO per-contract candidates; underlying → exactly ONE chain candidate. **(b) originally
+     emitted `data_type=options_chain` (Era-A); the Era-B reconciliation (`uac@ae70338d`/`is@74df991d`) flips that to
+     `data_type=trades` — the chain name is the instrument_type, the market data_type is trades.** (kills the ~563K
+     tradfi over-fan + cefi DERIBIT dominance). **🔔 slots 3 (cefi) + 6 (tradfi): re-run `enumerate` dry-runs on the
+     Era-B rollup producer to confirm (tradfi ~588K → plausible; cefi DERIBIT no longer dominant) — you were gated on
+     this.** **F2 residual**: DERIBIT/OKX FUTURE \_leaf* per-contract over-fan stays a gated venue-specific
+     catalogue-rollup todo (futures_chain bundle ENTRIES already roll up; `VENUE_DATA_TYPE_CAPABILITIES` is an unsound
+     bundle-venue discriminator — BYBIT lists `futures_chain` yet captures per-contract — so FUTURE-leaf venue-bundling
+     needs a sound registry first). Per-AG slice verification + dry-run re-run still owed by each AG owner before
+     `--apply-write`.
 2. ✅ **G1-V8 — MIGRATOR BUILT + DRY-RUN GREEN (all 5 AGs) 2026-06-07** (`is@febb899e`,
    `instruments-service/scripts/migrate_instruments_store_v9.py`). AG-parametric single-walk that rewrites BOTH the
    instruments-store `_index` rows AND object paths to canonical v9 (CF-1 v9 · CF-2 `asset_group=` · CF-3
@@ -465,6 +490,15 @@ does not require a second whole-corpus walk.
       `instrument_availability/     by_date/` is populated in the bucket the catalogue producer reads (`-prd-` is
       empty). Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic:
       manifest_master.
+- [ ] [UAC] P2. **Era-B follow-up — drop the legacy `options_chain`/`futures_chain` data_type keys after the per-AG v9
+      migration** (surfaced by the Era-B re-key `uac@ae70338d`): the cefi/tradfi
+      `(ag, options_chain)`/`(ag,     futures_chain)` entries in `SOURCE_PRIORITY`, `AVAILABILITY_AT_SEMANTICS`,
+      `expected_coverage` + the Deribit/Bybit `coverage_start[options_chain/futures_chain]` were RETAINED (with Era-B
+      docs) for pre-migration legacy `data_type=options_chain` rows + the bidirectional
+      `SOURCE_PRIORITY ↔ AVAILABILITY_AT_SEMANTICS` closed-set round-trip. Once the per-AG v8→v9 migrators relabel the
+      legacy rows to `trades` (G4, cefi slot-3 / tradfi slot-6), delete these data_type-keyed entries fleet-wide (they
+      cascade across all three closed sets → coordinate as one change). GATED on cefi+tradfi G4 apply complete. Repo:
+      unified-api-contracts. parent_epic: manifest_master.
 - [ ] [UAC] P2. **DeFi `SOURCE_PRIORITY` registry gaps** (surfaced by the C-PATH WRITE derivation):
       `(defi,     dex_pool_swaps)` is UNREGISTERED → falls back to `batch_onchain_rpc` (vs
       `dex_pool_state`→`onchain_subgraph`); non-Hyperliquid perp venues (LIGHTER→tardis via the venue override) are
