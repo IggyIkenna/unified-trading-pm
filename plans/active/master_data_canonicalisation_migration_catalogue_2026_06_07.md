@@ -184,6 +184,14 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 > preflight (⑥/⑦), and `expected_unattempted` seed reads it. If IS or UAC is wrong, EVERY AG's coverage % is wrong.** So
 > G1 is gated, and its catalogue has a full code → dry-run → real-run → schedule lifecycle, tracked per-AG.
 
+> **🟢 G1-ENUM — CODE SHIPPED 2026-06-07 (vm-cross-cutting / slot-7)**: the shape-aware producer is live — UAC validity
+> matrix `uac@97c26dbe` (`valid_data_types_for_instrument_type` + `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`, defi
+> lazily derived from `PROTOCOL_CAPABILITIES`, uncertain rows flagged for AG owners) + instruments-service enumerator
+> `is@c0f2f39c` (`_row_data_types` filters every `_enumerate_v2_*` to valid pairs + preserves prediction grain-binding;
+> cefi OPTION/COMBO leaves → zero per-leaf rows; impossible combos excluded; +12 IS / +32 UAC tests, both repos QG
+> green). **Unblocks slots 2-6 G1.run** (each AG owner still verifies its matrix slice + re-runs its dry-run against the
+> shape-aware producer before `--apply-write`). Original finding ↓ retained for context.
+>
 > **🔴 G1-ENUM (P0, CROSS-AG, surfaced by slot-3 cefi dry-run 2026-06-07) — the v2 enumerator over-fans → false
 > `expected_unattempted` pollution.** `_enumerate_v2_*` (`enumerate_expected_universe.py`) fans ALL data*types over
 > EVERY instrument with **no `(instrument_type × data_type)` validity filter and no bundle-grain handling**. cefi
@@ -212,7 +220,9 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 
 **Two G1 long poles gate every AG's `--apply-write` seed (both cross-cutting, both must land first):**
 
-1. **G1-ENUM** — slot-7's shape-aware `enumerate_expected_universe` producer (validity matrix + bundle-grain).
+1. ✅ **G1-ENUM — CODE DONE 2026-06-07** (`uac@97c26dbe` matrix + `is@c0f2f39c` shape-aware
+   `enumerate_expected_universe` producer; validity filter + bundle-grain; tests green). Per-AG slice verification +
+   dry-run re-run still owed by each AG owner before `--apply-write`.
 2. **G1-V8** — the not-yet-built `instruments_manifest` E2 v9 migrator for the instruments-store buckets
    (vm-cross-cutting).
 

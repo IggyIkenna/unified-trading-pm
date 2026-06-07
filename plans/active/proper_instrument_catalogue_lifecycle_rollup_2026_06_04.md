@@ -137,7 +137,7 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       readiness audit 2026-06-04).** The generic roll-up emits one catalogue row per > `by_date` `instrument_key`, which
       is the WRONG grain for the bundled-atom AGs: **prediction's** captured atom is > the per-**cqg** bundle
       (`data_type=prediction_canonical_question_group`, `instrument_id=canonical_question_group`) > — a
-      condition_id-grain catalogue inflates the denominator by the cqg→condition_id fan-out. The prediction > producer
+      condition*id-grain catalogue inflates the denominator by the cqg→condition_id fan-out. The prediction > producer
       must roll up `market_lifecycle/by_canonical_group/` (the per-cqg lifecycle IS already writes, >
       `orchestrator.py:3380-3456`) → one `CatalogRow` per cqg, and the enumerator must emit ONLY >
       `prediction_canonical_question_group` for prediction. Full spec + the gated-upstream (0-object >
@@ -165,7 +165,18 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       venues; frozen 2026-05-07 with a FULL last day = 3,599 active) on the pooled producer (~23 min for 64,724
       parquets; the prior single-pool run timed out at 30 min). > **Producer perf fix instruments-service@c340f2dc** —
       `_tune_download_pool` enlarges the GCS HTTP pool to > workers=16 (was throttled to ~8 → the "Connection pool is
-      full" warning); ~2x faster full-corpus walk, verified > live (pool_maxsize 16).
+      full" warning); ~2x faster full-corpus walk, verified > live (pool_maxsize 16). > **🟢 G1-ENUM SHAPE-AWARE
+      ENUMERATOR DONE 2026-06-07 (vm-cross-cutting / slot-7):** the central fix the cross-AG over-fan FINDING called for
+      — `is@c0f2f39c` `_row_data_types()` filters every `\_enumerate_v2*\*`to valid`(asset_group,
+      instrument_type)`pairs     via the UAC matrix`uac@97c26dbe` (`valid_data_types_for_instrument_type`), preserving prediction grain-binding;     cefi OPTION/COMBO leaves → zero per-leaf rows, impossible combos excluded. Per-AG slices (sports league-grain,     prediction per-cqg) verify their matrix rows + re-run dry-runs before `--apply-write`.
+- [ ] [CODE] P2. **NICE-TO-HAVE (slot-7, 2026-06-07) — DeFi G1-ENUM validity is instrument_type-grain, not
+      venue/protocol-grain.** The defi matrix is the UNION across `PROTOCOL_CAPABILITIES` per instrument_type, so a
+      hybrid-protocol data_type leaks to every instrument of that type — e.g. GMX (`pool` + `perp_funding`) makes
+      `pool`→`perp_funding` "valid" for ALL pools incl. Uniswap → some residual false `expected_unattempted` for non-GMX
+      pools. Far smaller than the pre-G1-ENUM all-data_types fan-out, but a refinement: key DeFi validity per
+      `(venue/protocol, instrument_type)` (the enumerator already has `instr.venue`). Provenance: G1-ENUM impl
+      2026-06-07. Repo: unified-api-contracts + instruments-service. assigned_vm: vm-cross-cutting. parent_epic:
+      instruments_master.
 - [ ] [CODE] P1. **FINDING (slot-7, 2026-06-04) — two divergent catalogue read-paths must be reconciled.** The
       standalone v2 enumerator (`enumerate_expected_universe.py --catalog-path`) + the launcher
       (`launch-expected-universe-v2-vm.sh` L165-174) read **`{env}/catalog.parquet`** (the path this plan's roll-up
