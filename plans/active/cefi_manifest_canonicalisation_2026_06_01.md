@@ -189,6 +189,50 @@ bundle-grain pending** ⑧catalogue completeness — **BLOCKED on PART A** ⑨pi
 enumerate + 3-day object walk + 1-week rebuild); the v9 `_index` walk + multi-year phantom spot-check remain for the
 apply run.
 
+### 🟡 PREP UPDATE (slot-3, 2026-06-07 turn-3) — gate NOT yet met: slot-7 bundle-grain SSOT landed but NOT wired
+
+> Re-validation gate = "slot-7 confirms the bundle-grain ROLLUP is GREEN." Status: **declarative SSOT shipped, producer
+> NOT wired** → I did the unblocked prep only (instruments-store dry-run + matrix/grain slice review); held the
+> enumerate re-run.
+
+- **Slot-7 progress — `uac@dd7fa100` landed the bundle-grain AXIS SSOT** (`grain_for_instrument_type` +
+  `INSTRUMENT_GRAIN_BY_AG_AND_INSTRUMENT_TYPE` + `GRAIN_BUNDLE_BY_UNDERLYING`/`GRAIN_LEAF`; exported from UAC). cefi
+  grain rows: `("cefi", option|combo|options_chain|futures_chain) → GRAIN_BUNDLE_BY_UNDERLYING`. **But it has ZERO
+  consumers** — grepped `instruments-service/scripts/` (`build_instrument_catalogue.py` +
+  `enumerate_expected_universe.py`): neither imports/uses `grain_for_instrument_type`. `build_instrument_catalogue.py`
+  last touched `99a5fbf5` (sports league), **no cefi/tradfi chain-bundle rollup commit**. So the catalogue still emits
+  per-leaf OPTION/COMBO/FUTURE entries; the positive **per-underlying options_chain/futures_chain bundle candidate is
+  NOT yet emitted**. The NEGATIVE collapse (OPTION/COMBO→`frozenset()`→0 rows) was already green last turn
+  (`is@6ea46565`) and is unchanged → the catalog (`prod/catalog.parquet`) + enumerate are unchanged, so last turn's
+  **3,446-candidate** result still stands; **no re-run performed** (gate not met, and nothing changed to re-measure).
+- **Slot-7 acknowledged F2 in the SSOT comment** (verbatim cite of "F2, slot-3 2026-06-07"): venue-specific FUTURE
+  bundling (DERIBIT/OKX bundle vs BYBIT per-contract) is "NOT expressible in the venue-agnostic matrix → gated todo;
+  `VENUE_DATA_TYPE_CAPABILITIES` is NOT a sound discriminator." So F2 stays a venue-aware **catalogue-rollup** todo
+  (PART A), as filed.
+- **cefi grain slice VERIFIED**: the 4 BUNDLE rows are correct; `("cefi","future")` absent → `GRAIN_LEAF` default =
+  correct for BYBIT, the known F2 gap for DERIBIT/OKX (gated). No grain-slice change needed from me.
+- **🔴 THE APPLY-READINESS CRUX for chains — a `data_type` match requirement PART A must satisfy**: for a bundle
+  candidate to MATCH the captured cell (else permanent false `expected_unattempted`), the candidate's `data_type` MUST
+  equal the captured cell's `data_type`. **Capture is Era-B** (writer `tardis_shared.py` Phase-1.6 + `rebuild`
+  `parse_hive_path` → `data_type=trades`; observed `options_chain→{trades}`,
+  `futures_chain→{trades, book_snapshot_5, derivative_ticker, liquidations}`). **The matrix still returns Era-A**
+  (`options_chain/futures_chain` → itself). PART A must pick ONE of: **(R1, recommended)** fix the matrix rows to the
+  Era-B capture sets (`("cefi","options_chain")→{trades}`,
+  `("cefi","futures_chain")→{trades, book_snapshot_5, derivative_ticker, liquidations}`) + update the 2 asserting tests;
+  **(R2)** the catalogue bundle entry carries `instr.data_type=trades` so `_row_data_types` uses it and BYPASSES the
+  matrix Era-A rows (then the matrix rows are vestigial). Either makes candidate `data_type==trades==capture`. **Until
+  R1/R2 lands, the bundle candidates will not match the capture** — this is the chain apply-readiness blocker, on top of
+  the catalogue rollup wiring. I did NOT flip the matrix (Era pick is coupled to PART A's R1/R2 choice + slot-7 just
+  landed Era-A + the 2 tests + tradfi parity → coordinate, don't collide).
+- **Re-confirmed GREEN (read-only, current LDR)**: `migrate_instruments_store_v9 --asset-group cefi --skip-objects` →
+  30,803 rows v8→**100% v9**, `asset_group=cefi`/`data_type=instruments`/`pipeline_mode=batch_instruments_service`/
+  `source=instruments_service`/`transport=rest`, `available_at` 30,803/30,803, honest `null_capture_to_captured=12,372`
+  (cf_manifest_audit projection **CF-GREEN**). Unchanged from last turn (IS at 0/0 with LDR).
+
+**Apply-readiness verdict UNCHANGED: cefi migrators dry-run-GREEN; NOT apply-ready.** Remaining gates: slot-7 PART A
+(catalogue chain-bundle rollup WIRED to `grain_for_instrument_type` + the R1/R2 `data_type`-match) → then my enumerate
+re-run; the Era decision (recommend R1/Era-B); instruments-store v9 walk RUN; IS backfill; pre-migration drain.
+
 - [ ] [DATA] P0. **F1 (RESOLVED — needs operator/slot-7 Era decision, then a coherent UAC+manifest change) — cefi chain
       `data_type` axis: Era-A (`data_type=<chain>`) vs Era-B (`instrument_type=<chain>`, `data_type=trades`).** Writer
       SSOT `tardis_shared.py` Phase-1.6 = **Era-B is canonical** (chain is instrument_type; `data_type` is pure
