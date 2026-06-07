@@ -734,8 +734,9 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
       `expected_unattempted`). Verify on a VM (GCS flaky locally); confirm `_enumerate_v2_tradfi` row-key/data_types
       match the tradfi captured atom; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The
       mechanism + bucket fix are done; this is the per-AG catalog build + run + verify. parent_epic: mtds_mdps_master.
-      **SLOT-6 NOTE (2026-06-04, atom-alignment VERIFIED):** read
-      `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_tradfi` — it respects
+      **SLOT-6 G1 DRY-RUN PROVEN (2026-06-07) — see the `## G1` section below for full evidence; `--apply-write` stays
+      GATED (gate-b catalogue liveness + gate-c v9 indices).** **SLOT-6 NOTE (2026-06-04, atom-alignment VERIFIED):**
+      read `instruments-service/scripts/enumerate_expected_universe.py::_enumerate_v2_tradfi` — it respects
       available_from/available_to lifecycle (date<af → EXPECTED_INSTRUMENT_NOT_LISTED; date>at →
       EXPECTED_INSTRUMENT_DELISTED; alive + no manifest row → `expected_unattempted`) and builds the row_key from
       `(venue, chain="", data_type, instrument_type, instrument_id, league_id="", date)` = the tradfi per-instrument
@@ -744,3 +745,131 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
       seed the v9 `_index` AFTER the canonical `--apply` migration (seeding the pre-migration v8 corpus would be
       rewritten by the walk). So this rides post-migration on a VM — not a local task. Open work = catalog-parquet
       build + VM `--apply-write` run + the IS-universe⊃manifest regression test.
+
+## G1 — IS catalogue could-exist universe (slot-6 dry-run + gate assessment, 2026-06-07)
+
+> Owner: slot-6 (tradfi). Coordinator: `master_data_canonicalisation_migration_catalogue_2026_06_07.md` G1. This section
+> records the read-only G1 dry-run for tradfi + the per-gate readiness for the irreversible `--apply-write` seed. Sync:
+> instruments-service tab ⊇ LDR (pulled the `enumerate_expected_universe` pipeline_mode+source+transport
+> provenance-stamp @03a93e10 + prediction CF-11 @e674768f). **The `--apply-write` seed is GATED → only dry-runs ran.**
+
+### Step 1 — instruments-store-tradfi `_index` v9-canonical: AUDIT RUN → RED (gate-c UNMET)
+
+- [x] ✅ [DATA] P0. **`cf_manifest_audit_2026_06_01.py instruments-store-tradfi-prd --legacy instruments-store-tradfi`
+      RE-RUN (slot-6 2026-06-07).** Data-state of the **instruments-store** reference `_index` (20,388 rows): **CF-1
+      RED** v9=170/20,388 (0.8% — the constant lied, 20,218 rows still v8) · **CF-3 RED** `pipeline_mode` blank
+      (0/20,388) · **CF-4 RED** `source` column ABSENT · **CF-8 RED** `available_at` absent (only `written_at`) ·
+      **CF-7** `data_type` blank `''` (keyed date+venue) · CF-5 GREEN (EXPECTED_WEEKEND 58 / EXPECTED_HOLIDAY 4) · CF-9
+      GREEN env bucket; paths flat (no `asset_group=`/`pipeline_mode=`). Legacy diff: **60 legacy-only cells** (2026-03
+      NASDAQ/NYSE/CME/ICE, blank data_type) — data-loss-on-delete gate. Identical systemic debt to the MTDS `_index`
+      (CONFLICT-2). **The FIX = the gated single-walk in `instruments_manifest_canonicalisation_2026_06_01.md` §C/E**
+      (vm-cross-cutting PRIMARY; E2 "build/extend the instruments migrator" is still `[ ]` — **no non-sports
+      instruments-store v9 migrator exists yet**) — a **G4-class `--apply`** gated on G0 (standardisation Phase-0
+      code) + pre-migration drain. **OUT OF SCOPE for this G1 wave (gated apply); flagged as gate-c below.**
+
+### Step 2 — catalogue + enumerate DRY-RUN (read-only) → mechanism GREEN
+
+- [x] ✅ [DATA] P0. **`build_instrument_catalogue.py --asset-group tradfi --dry-run` (slot-6 2026-06-07, real prod
+      GCS).** Found **11,579 `by_date` parquet(s)** under
+      `instruments-store-tradfi-prd/instrument_availability/by_date/` (workers=16). The full local rollup is a **VM
+      job** (timed out at ~10 min on the 11,579-parquet concat/groupby — consistent with the producer plan "the full
+      unbounded run belongs on the Phase-2 VM trigger, not a laptop"). The producer is **already PROVEN for tradfi**
+      (slot-7 applied `prod/catalog.parquet` 2026-06-05). Current `prod/catalog.parquet` = **684,372 instruments** (CME
+      637,084 mostly OPTION/COMBO · CBOE 31,283 · ICE 15,513 · NYSE 363 · NASDAQ 128 · FX 1); **651,661 delisted (95%,
+      `available_to ≤ 2026-05-04`) / 32,711 alive** — the capture-freeze signature (gate-b).
+- [x] ✅ [DATA] P0.
+      **`enumerate_expected_universe.py --asset-group tradfi --enumerator-version v2 --catalog-path     <prod/catalog.parquet> --start-date 2026-06-04 --end-date 2026-06-05`
+      (SCAN-ONLY, slot-6 2026-06-07): exit 0.** catalog 684,372 instruments → manifest present-set **73,352** (of
+      144,062 `market-data-tick-tradfi-prd` `_index` rows) → **588,798 candidate rows** (per-instrument grain) = 32,711
+      alive × 9 data_types × 2 days. capture_status: **`expected_unattempted` 588,780** + `empty_confirmed` 18
+      (`EXPECTED_INSTRUMENT_NOT_LISTED`); **0 DELISTED** (delisted-before-window correctly skipped by the lifecycle
+      guard). Report sample-inspected (10 canonical cols; well-formed rows e.g.
+      `CBOE:INDEX:VIX × {trades,ohlcv_1m,ohlcv_15m}` → `expected_unattempted`). **Mechanism GREEN.** Note:
+      `--catalog-path gs://…` fails locally on gcsfs ADC ("Invalid gcloud credentials") → download the catalog with
+      `gcloud storage cp` + pass a local path (the manifest scan uses the working `get_storage_client()`); a VM run
+      reads `gs://` directly. > **⚠️ COUNT IS PROVISIONAL — this ran on the OLD over-fanning producer (PREDATES the
+      G1-ENUM shape-aware fix, > operator 2026-06-07).** The dry-run cross-joins every alive instrument × ALL 9 tradfi
+      data_types with **no > `(instrument_type × data_type)` validity filter** → it over-counts impossible cells (e.g.
+      the sample > `CBOE:INDEX:VIX` emits `tbbo`/`mbp_10`/`futures_chain` rows an INDEX cannot have). So **588,798 is an
+      UPPER > BOUND**, not the true could-exist denominator. tradfi is per-contract (less bundle-grain-affected than
+      cefi), but > the validity slice still trims INDEX/EQUITY/ETF/FUTURE/OPTION × invalid-data_type combos. **RE-RUN
+      gated** on > slot-7's shape-aware v2 producer (G1-ENUM: validity-matrix + bundle-grain) — see the HOLD todo below.
+      Until then > gate-(a) is PROVISIONAL, not green.
+
+- [ ] [DATA] P0. **HOLD — RE-RUN the tradfi enumerate dry-run on slot-7's SHAPE-AWARE v2 producer (G1-ENUM), then
+      re-validate the candidate count (operator 2026-06-07).** The 588,798 above is an UPPER BOUND from the old
+      over-fanning producer. Once slot-7 lands the validity-matrix + bundle-grain producer (G1-ENUM in the master
+      coordinator WAVE-1 slot-7 row), re-run
+      `enumerate_expected_universe v2 --asset-group tradfi --catalog-path     <prod/catalog.parquet>` (scan-only) and
+      confirm the count DROPS as impossible `(instrument_type × data_type)` cells are filtered
+      (INDEX×{tbbo,mbp*10,futures_chain,options_chain}, EQUITY/ETF×futures_chain, etc.). Verify the tradfi validity
+      slice is correct (per-contract tradfi: EQUITY/ETF→{trades,ohlcv_1m,ohlcv_15m,ohlcv_24h,tbbo,mbp_10,
+      corporate_action_confirmed,earnings_result}; INDEX→{ohlcv*\_}; FUTURE→{trades,ohlcv\_\_,tbbo,mbp*10};
+      OPTION→{trades, ohlcv*\*,tbbo}; macro_result is venue/series-level not per-contract — confirm against the UAC
+      validity matrix). Only then is gate-(a) GREEN. parent_epic: mtds_mdps_master.
+
+### Step 3 — `--apply-write` seed: GATED → DRY-RUN ONLY (do NOT run the irreversible seed yet)
+
+- [ ] [DATA] P0. **G1.run `--apply-write` for tradfi — GATED, NOT runnable this wave.** Per-gate readiness:
+  - **(a) Slot-7 PART C G1-foundation code: 🟡 PROVISIONAL (NOT green — operator 2026-06-07)** — the producer parts are
+    shipped (`build_instrument_catalogue.py` AG-agnostic core instruments-service@4026d79e + concurrent walk @d00fe2d9 +
+    pool fix @c340f2dc + `enumerate_expected_universe` v2 provenance-stamp @03a93e10), BUT the dry-run above ran on the
+    **OLD over-fanning enumerate producer** which PREDATES the **G1-ENUM shape-aware fix** (validity-matrix +
+    bundle-grain) slot-7 is still landing. Gate-(a) is not green until that producer lands AND the tradfi enumerate
+    re-run validates the trimmed candidate count (HOLD todo below).
+  - **(b) tradfi IS instrument backfill complete: ❌ UNMET** — IS `by_date` capture **degraded 16-18K→~2/day after
+    2026-05-04, stopped after 2026-05-22** (freeze FINDING in
+    `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`); the catalogue marks **651,661/684,372 (95%) delisted** →
+    liveness PROVISIONAL. Seeding `expected_unattempted` against a frozen catalogue would write a WRONG could-exist
+    denominator. **Unblock = the Massive IS reference adapter (gate-b remediation, shipped this session — see below) →
+    re-feed `by_date/` → regenerate the catalogue → THEN seed.**
+  - **(c) accurate UAC + v9 indices: ❌ UNMET, BLOCKED ON G1-V8 MIGRATOR BUILD (operator 2026-06-07)** —
+    instruments-store-tradfi `_index` is NOT v9 (Step 1, RED) AND the `market-data-tick-tradfi-prd` `_index` the seed
+    writes is still v8 (CONFLICT-2). The v9 fix is now explicitly blocked on the cross-cutting **instruments_manifest E2
+    migrator BUILD (G1-V8)** — `instruments_manifest_canonicalisation_2026_06_01.md` §C/E2 "build/extend the instruments
+    migrator" is still `[ ]` (vm-cross-cutting); **no non-sports instruments-store v9 migrator exists yet**. Once it
+    exists + G0 is green, run its `--apply` on `instruments-store-tradfi-prd` (pre-migration drain + snapshot first).
+    `--apply-write` must seed the **post-migration v9 `_index`** (seeding the v8 corpus would be rewritten by the walk)
+    — so G1.run rides AFTER that v9 walk. It also hard-requires a VM (`MANIFEST_PER_VM_SHARDS=true` + `VM_NAME`).
+  - **Disposition**: dry-run PROVEN (Step 2); the irreversible seed waits on (b)+(c). NOT `DEFERRED` — gated with named
+    unblocks (Massive capture-restore + the v9 walks). parent_epic: mtds_mdps_master.
+
+### Step 4 — daily catalogue scheduler for tradfi: MISSING → gated todo
+
+- [ ] [INFRA] P1. **Wire the tradfi `build_instrument_catalogue.py` daily rollup scheduler (GATED on gate-b capture
+      restore).** FINDING (slot-6 2026-06-07): the G1 lifecycle producer `build_instrument_catalogue.py` has **NO
+      terraform scheduler for ANY asset group** (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` [INFRA] P1
+      "Trigger on every instruments update" is still `[ ]`, owner vm-cross-cutting). The two TFs that DO exist —
+      `deployment-service/terraform/gcp/{catalogue_regen_scheduler,instrument_catalogue_scheduler}.tf` — run a DIFFERENT
+      artefact (`generate_instrument_catalogue.py`, the availability-matrix), and their instruments-store `for_each`
+      **OMITS tradfi** (only cefi/defi/sports/prediction) AND uses legacy no-env bucket names (`-central-element-…` not
+      `-prd-`). So even the matrix regen never reads tradfi. **Gated** behind gate-b (a scheduler over a frozen
+      `by_date/` self-perpetuates a stale catalogue) — wire once Massive capture restores `by_date/`. Owner:
+      vm-cross-cutting (shared producer scheduler) + slot-6 (confirm tradfi inclusion). Repo: deployment-service
+      (terraform). parent_epic: mtds_mdps_master.
+
+### Gate-b remediation — Massive IS reference adapter (shipped this session)
+
+- [x] ✅ [CODE] P1. **Tradfi Massive IS reference adapter — SHIPPED + STAGING-GREEN (slot-6 2026-06-07): UAC@12974b11
+      (PR #91 MERGED→staging, quality-gates-v2 PASS) + IS@c0f2f39c (PR #407 MERGED→staging, quality-gates-v2 PASS); both
+      `external/massive`/`massive.py` confirmed on `origin/staging`.** make Massive the PRIMARY tradfi reference source
+      (gate-b remediation for the capture freeze). Implements `proper_instrument_catalogue_lifecycle_rollup_2026_06_04`
+      [CODE] P1 "(B) PRIMARY — make Massive the tradfi reference source". UAC `external/massive` (8 raw schemas
+      tickers/options/futures + 5 raw→canonical `InstrumentRecord` normalizers equity/index/fx/option/futures +
+      `DATA_SOURCE_TO_SECRET[massive]` / `VENUE_TO_DATA_SOURCE[MASSIVE]`); IS `MassiveReferenceDataAdapter` (Massive =
+      Polygon.io API-compatible, `https://api.polygon.io`; equities/ETF/index via `/v3/reference/tickers`, index options
+      via `/v3/reference/options/contracts`, FX, futures via `/futures/vX/{products,contracts}`); source-aware factory
+      routing (`--source massive` re-points TradFi-Databento venues → Massive + the `MASSIVE_API_KEY` credential);
+      reuses Databento's session-metadata SSOT (`EXCHANGE_HOURS`/`get_session_metadata`); fetch-failure → re-raise
+      (CF-11 honest-absence, no silent universe shrink); refactor `get_adapter_for_canonical_venue` 214→198L (de-dup
+      date-aware databento/massive construction). 14 IS unit tests + factory-routing tests + UAC normalize tests (live
+      test credential-gated); both QG --no-fix exit 0. Repo: instruments-service + unified-api-contracts. parent_epic:
+      mtds_mdps_master. **Coverage caveat (per `tradfi_massive_dual_source`):** Massive futures-reference returned
+      200+empty 2026-05-30 (subscription propagation) — the adapter ships the scaffold per the External-Data rule;
+      futures-reference completeness verified on the next live run.
+- [ ] [DATA] P1. **NEXT — run Massive tradfi reference capture → regenerate catalogue → unblock gate-b (VM, requires
+      live `MASSIVE_API_KEY`).** With the adapter shipped (above), run IS instrument capture with `--source massive` to
+      refill `instrument_availability/by_date/` to today → regenerate the catalogue
+      (`build_instrument_catalogue     --asset-group tradfi --apply`, monotonic guard accepts growth) → liveness no
+      longer marks ~651K instruments delisted → unblocks gate-b → then G1.run `--apply-write` (Step 3) becomes runnable.
+      VM-gated (live creds + per-VM shard isolation). Repo: instruments-service. parent_epic: mtds_mdps_master.

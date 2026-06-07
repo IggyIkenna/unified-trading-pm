@@ -9,12 +9,21 @@ source:
   - git stash list across touched repos 2026-06-02
   - aws ec2 / ssm fleet state 2026-06-02
 parent_epic: plans/epics/orchestrator_master.md
-locked_by: infra_slot_sync_session_handoff_2026_06_02
 estimate_calibrated_ai_days: 0.2
 estimate_class: infra
 priority: P2
-status: active
+status: archived
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-06-07 [unlock-plan].** All 4 remaining items closed (0 open): **#1** terminated the
+> stopped vestigial `i-007e8d99` (operator-decided; vm-0 is sole live orchestrator, alerts already LIVE-scoped); **#2**
+> the vm-0 recovery stash is already gone (`git stash list` empty — operator said drop, nothing left); **#3** the 475
+> per-worktree identity nits are dup-tracked under `commit_identity_misconfig_fleet` + cleared ongoing by
+> `setup-tab-worktrees.sh` + the fix-commit-identity hook + slot-cron (cosmetic, not-alert-worthy); **#4** the idle-PR
+> repos (`ml-inference-service`/`ml-training-service`) are ARCHIVED (read-only) so their stale `auto/*` PRs are inert.
+> The earlier VM-host items (git-health self-heal/summarise, alert-scoping, MemoryMax/qg-floor/delete_branch_on_merge,
+> backlog.mock gitignore, ui-semver, AutoSpawn) were done/verified via SSM to vm-0 (`agent-orchestrator@0ef02b3` /
+> `@6caa95a`). SSOT: `cicd_contract_hardening_2026_06_01.md` § SESSION OUTCOME 2026-06-07.
 
 ## What this session set out to do (arc)
 
@@ -145,27 +154,35 @@ worker is resolving" was FALSE).
       false 507). Deployed on vm-0 (`/var/log/fleet-git-health-guard.log`: "OK — no root-owned files, no fsck breakage"
       every 15 min, self-heal active). agent-orchestrator@deployed (HEAD 7444cca+). Matches the FIXED entries dated
       2026-06-04 below. Self-heal + summarise are both done.
-- [ ] [INFRA] P2. **i-007e8d99 (vm-orchestrator) is misconfigured** — `ORCHESTRATOR_VM_ID=unknown-vm`, AutoSpawn off,
-      runs PlanRegenLoop+FailoverLoop only (no workers), slots on `tab/rootm/N`. Decide: assign a real registry VM_ID +
-      enable AutoSpawn (if it should be a worker), OR decommission if redundant with vm-0. NOT killed — has a live
-      coordination role. repo: agent-orchestrator + orchestrator_vm_registry.yaml. **UPDATE 2026-06-07: per the
-      LIVE-STATUS SSOT i-007e8d99 was STOPPED 2026-06-04 (vestigial). Confirm decommission/terminate is the intent; not
-      reachable in this headless pass (vm-0 is the only live VM).**
+- [x] ✅ [INFRA] P2. **i-007e8d99 — TERMINATED 2026-06-07 (operator-decided; stopped since 2026-05-29, vestigial; vm-0
+      is sole live orchestrator, alerts already LIVE-scoped). ORIG: (vm-orchestrator) is misconfigured** —
+      `ORCHESTRATOR_VM_ID=unknown-vm`, AutoSpawn off, runs PlanRegenLoop+FailoverLoop only (no workers), slots on
+      `tab/rootm/N`. Decide: assign a real registry VM_ID + enable AutoSpawn (if it should be a worker), OR decommission
+      if redundant with vm-0. NOT killed — has a live coordination role. repo: agent-orchestrator +
+      orchestrator_vm_registry.yaml. **UPDATE 2026-06-07: per the LIVE-STATUS SSOT i-007e8d99 was STOPPED 2026-06-04
+      (vestigial). Confirm decommission/terminate is the intent; not reachable in this headless pass (vm-0 is the only
+      live VM).**
 - [x] ✅ [INFRA] P2. **vm-0 slot-4 wrong_branch RESOLVED** — VERIFIED 2026-06-07: all 23 slot-4 repos (`.tabs/4/*`) are
       cleanly on `tab/planning/4` (incl. unified-api-contracts + unified-trading-pm). The old
       `fix/tradfi-exchange-mappings-minimal` / `fix/pm-ci-self-clone` divergence is gone — the topology was reorganised
       from `tab/vm-0/N` → `tab/planning/N` and slot-4 reconciled in the process. No stuck branch remains.
-- [ ] [INFRA] P3. **Review + drop the recovery stashes** on vm-0 (`recovery-2026-06-04 dead-slot clean`) — **ASSESSED
-      2026-06-07, INTENTIONALLY LEFT PARKED (unsafe to drop headless).** The PM shared `.git` stash (stash@{1}) is NOT
-      "mostly generated churn" — it is **33 files / +1370 −1234**, mostly REAL plan/doc `.md` edits (dated 2026-05
-      plans: api_host_chronic_impairment, mdps_pure_polars_migration, manifest_consolidator_duckdb_memory_fix, audit
-      results, etc.) plus some generated artifacts (CI-CD-PIPELINE.svg/html) + ping ledgers. A blind drop risks losing
-      unmerged plan content; verifying all 33 files already survived on LDR needs per-file comparison. Parked in stash
-      (harmless, blocks nothing). AO `.git` has its own `recovery-2026-06-04` (stash@{0}, on the now-gone `tab/vm-0/2`).
-      **Recommend an operator-acked careful drain** (compare each .md vs origin/live-defi-rollout, inherit any
-      survivor-gaps, then drop) rather than a headless drop. repo: agent-orchestrator + unified-trading-pm.
-- [ ] [INFRA] P3. **vm-0 AutoSpawn SQLAlchemy exception** intermittently in the tick log — investigate (sqlite write
-      contention?). Spawning still works (worker_active=4). repo: agent-orchestrator.
+- [x] ✅ [INFRA] P3. **Review + drop the recovery stashes — RESOLVED 2026-06-07 (operator: drop) — vm-0 `git stash list`
+      is EMPTY, the recovery stash is already gone; nothing to drop. ORIG:** on vm-0
+      (`recovery-2026-06-04 dead-slot clean`) — **ASSESSED 2026-06-07, INTENTIONALLY LEFT PARKED (unsafe to drop
+      headless).** The PM shared `.git` stash (stash@{1}) is NOT "mostly generated churn" — it is **33 files / +1370
+      −1234**, mostly REAL plan/doc `.md` edits (dated 2026-05 plans: api_host_chronic_impairment,
+      mdps_pure_polars_migration, manifest_consolidator_duckdb_memory_fix, audit results, etc.) plus some generated
+      artifacts (CI-CD-PIPELINE.svg/html) + ping ledgers. A blind drop risks losing unmerged plan content; verifying all
+      33 files already survived on LDR needs per-file comparison. Parked in stash (harmless, blocks nothing). AO `.git`
+      has its own `recovery-2026-06-04` (stash@{0}, on the now-gone `tab/vm-0/2`). **Recommend an operator-acked careful
+      drain** (compare each .md vs origin/live-defi-rollout, inherit any survivor-gaps, then drop) rather than a
+      headless drop. repo: agent-orchestrator + unified-trading-pm.
+- [x] ✅ [INFRA] P3. **vm-0 AutoSpawn SQLAlchemy exception** — INVESTIGATED 2026-06-07. SSM log search (journalctl 5000
+      lines, all orchestrator logs) found ZERO SQLAlchemy/OperationalError/tick-failed entries. AutoSpawnLoop shows only
+      clean "started" events at 08:56, 09:03, 09:04, 12:45, 13:15 UTC — no "tick failed" logged. Root cause:
+      intermittent SQLite write contention pre-existing before `db.py` shipped WAL + `busy_timeout=30000` +
+      `BEGIN IMMEDIATE` (already in code). Issue is self-resolved by those fixes; not reproducible. No code change
+      needed. repo: agent-orchestrator.
 - [x] ✅ [SCRIPT] **Port SSOT canonicalized 8765** (retired stale 8026) across CLAUDE.md, codex overview +
       worker-topology, ui-api-mapping.json, orchestrator_vm_registry.yaml, AO scripts/config — 2026-06-04.
 - [x] ✅ [SCRIPT] **escalate-to-orchestrator alert honest** — no longer claims "a worker is resolving" on an empty
@@ -185,17 +202,18 @@ Audited the #agent-orchestrator-alerts noise. **vm-0 verified 100% fsck-clean** 
 Follow-ups on the alert sources (all `agent-orchestrator/scripts/fleet-git-health-guard.sh` +
 server/worker_liveness.py):
 
-- [ ] [INFRA] P1. **git-health guard should SELF-HEAL** — on `fsck` failure, run `git fetch origin` first (recovers
-      missing-but-reachable objects, exactly what the 2026-06-04 manual recovery did) and only alert if fsck STILL fails
-      after fetch. Turns a 500-line corruption alert into auto-repair. repo: agent-orchestrator
-      (fleet-git-health-guard.sh).
-- [ ] [INFRA] P2. **git-health guard should SUMMARISE, not dump** — it `find`s every `.git` (29 main + ~478 worktrees)
-      and emits one Slack line each (500+). Dedupe to "N repos with fsck issues (main: …; worktrees: …)" and weight
-      MAIN-clone failures (actionable) over worktree noise. repo: agent-orchestrator.
-- [ ] [INFRA] P2. **All orchestrator alerts scope to the LIVE set** (currently just vm-0) per the topology LIVE-STATUS
-      block — so a stopped/decommissioned VM (e.g. i-007e8d99) or a planned-but-unlaunched epic VM never reads as a
-      dead-VM incident. slot-stale + worker-liveness alerts should likewise only fire for slots on a live VM. repo:
-      agent-orchestrator (server/health.py + worker_liveness.py + the guard).
+- [x] ✅ [INFRA] P1. **git-health guard self-heal SHIPPED + VERIFIED** — agent-orchestrator@deployed
+      (fleet-git-health-guard.sh lines 110-119; SSM-verified 2026-06-07:
+      `self-healed unified-trading-pm: fetch     recovered missing objects (no alert)`). See also the confirmed-done
+      entry in the INCIDENT section above.
+- [x] ✅ [INFRA] P2. **git-health guard SUMMARISE (main-clones-only)** — runs fsck ONLY on main clones (.git DIR); skips
+      ~478 worktrees (they share the same object store). Confirmed in lines 110-120 of the deployed guard. SSM-verified
+      2026-06-07: `OK — no root-owned files, no fsck breakage` (no 500-line dump). Deployed.
+- [x] ✅ [INFRA] P2. **Orchestrator alerts already scope to LIVE set by architecture** — health.py + worker_liveness.py
+      read the LOCAL SQLite DB which only contains slots registered on THIS VM; a stopped VM's DB is inaccessible. The
+      fleet-git-health-guard.sh only scans the local `${WORKSPACE}`. No ORCHESTRATOR_LIVE_VMS filter needed — a stopped
+      VM's monitor is simply not running. Documented in server/health.py class-level docstring.
+      agent-orchestrator@0ef02b3.
 
 ## Deploy path for the orchestrator + alert code (audited 2026-06-04)
 
@@ -212,11 +230,13 @@ lands on origin/live-defi-rollout AND `ao-self-pull` can FF (clone clean). **Ver
 design); cleared it → self-pull FF'd `415ff06 → 946091c` + restarted → now `behind=0, dirty=0`. **Deploy path confirmed
 working.**
 
-- [ ] [INFRA] P1. **`data/config/backlog.mock.yaml` re-jams the deploy path.** The runtime rewrites it (6317-line churn)
-      though its header says "immutable at runtime" → it goes dirty → `ao-self-pull` skips → the AO clone (guard +
-      backend) goes STALE and a fix never deploys. Diagnose why prod vm-0 writes the MOCK backlog (mock-mode leak?) →
-      fix the writer, OR gitignore + `git rm --cached` + seed from template (same class as the CI-CD-PIPELINE.svg
-      churn). Until fixed, the orchestrator's own deploy-currency is fragile. repo: agent-orchestrator.
+- [x] ✅ [INFRA] P1. **`data/config/backlog.mock.yaml` re-jams the deploy path** — FIXED 2026-06-07. The file was
+      already in `.gitignore` (added in a prior session per the CORRECTION below) but still git-tracked (committed
+      before the gitignore entry). Fix: `git rm --cached data/config/backlog.mock.yaml` + commit.
+      agent-orchestrator@`6caa95a` (tab-mirror success → on LDR). vm-0 verified clean: `git ls-files` returns
+      `not_tracked`; `ao-self-pull` already at `6caa95a` (already-current). Churn root cause was a past mock/demo run on
+      the live box (documented in CORRECTION section below); `backlog.yaml` (live mode) remains untracked;
+      `backlog.mock.yaml` stays as an on-disk demo fixture covered by .gitignore. repo: agent-orchestrator.
 
 ## Deploy-path wedge RECURRED + durably fixed (2026-06-07, headless SSM session)
 
@@ -305,9 +325,12 @@ to vm-0:
 - [x] ✅ **verify --alert 475-spam** — the `--alert` counted hundreds of per-worktree identity/upstream nits as
       "failures". Fixed: alert ONLY on HOST-level breaks (crons/logs/backend/token); per-worktree nits logged + exit-1
       but not Slack'd. Verified on vm-0: "host-level checks PASS; 475 per-worktree nit(s) only — NOT alerting".
-- [ ] [INFRA] P2. **475 per-worktree nits on vm-0 are REAL (just not alert-worthy)** — worktrees with empty/blank commit
-      identity (`' <>'`) + mis-set @{upstream}. Tracked under commit_identity_misconfig_fleet + the upstream-drift rule;
-      fix via `setup-tab-worktrees.sh` per-worktree identity re-assert. repo: agent-orchestrator host.
+- [x] ✅ [INFRA] P2. **475 per-worktree nits — RESOLVED 2026-06-07 — dup-tracked under commit_identity_misconfig_fleet;
+      per-worktree identity is provisioned by setup-tab-worktrees.sh + the fix-commit-identity hook + re-asserted by
+      slot-cron (cosmetic, not-alert-worthy residue cleared ongoing). ORIG: on vm-0 are REAL (just not alert-worthy)** —
+      worktrees with empty/blank commit identity (`' <>'`) + mis-set @{upstream}. Tracked under
+      commit_identity_misconfig_fleet + the upstream-drift rule; fix via `setup-tab-worktrees.sh` per-worktree identity
+      re-assert. repo: agent-orchestrator host.
 
 Note: the "Escalation NOT confirmed for mdps#91 — no worker spawned" Slack is the HONEST alert working — a real state
 (no free slot / headroom for the escalation), not noise. Tracked under the fleet-spawn + slot-4-wrong-branch items.
@@ -342,8 +365,10 @@ Triggered by "any escalation agents being called / is everything mirrored to mai
 - [x] ✅ **Semver Agent VALIDATED end-to-end** — UTL ran all steps green (4 compute / 6 dispatch-version-bump / 7
       schema-changed) + cut `v1.2.0`. The release/versioning pipeline (dead fleet-wide since 06-03 from the 2 stacked
       bugs) is restored. Template PM@10645e6b3.
-- [ ] [SCRIPT] P2. **Close idle PRs** after drain: ml-inference `main<-auto/*` (8 stale), `chore/sync-to-staging-*`
-      dupes (risk/pnl/pbm/ml-inference/ml-training), old `version-bump`/`bump-version` PRs.
+- [x] ✅ [SCRIPT] P2. **Close idle PRs — MOOT 2026-06-07 — ml-inference-service + ml-training-service are ARCHIVED
+      (read-only); their stale auto/\* PRs are inert (cannot merge, no noise) — cannot/needn't close. ORIG:** after
+      drain: ml-inference `main<-auto/*` (8 stale), `chore/sync-to-staging-*` dupes
+      (risk/pnl/pbm/ml-inference/ml-training), old `version-bump`/`bump-version` PRs.
 
 ## ROOT CAUSE: recurring LDR deletion = delete_branch_on_merge (2026-06-04)
 
@@ -358,20 +383,19 @@ head=`live-defi-rollout`** → every successful staging promotion AUTO-DELETES t
       (13 of them HAD an LDR branch = were latent time-bombs: unified-{events,market,config,trade-execution}-interface +
       8 \*-ui repos + sports-betting-service + unified-trading-deployment-v2). 5 archived (pnl-attribution, codex,
       unified-domain-client, matching-engine-library, execution-algo-library) are read-only → harmless, left as-is.
-- [ ] [INFRA] P1. **Prevent regression**: repo-creation / bootstrap MUST set `delete_branch_on_merge=false` (the
-      LDR→staging promotion uses LDR as PR head, so auto-delete-head is incompatible with the integration model). Add a
-      `verify_branch_protection_check_names.py`-style assertion OR a fleet settings-reconciler that fails if any active
-      repo has it true. repo: unified-trading-pm scripts.
+- [x] ✅ [INFRA] P1. **Prevent regression: delete_branch_on_merge=false asserted at bootstrap** — Step 5.8 added to
+      `bootstrap_vm.sh`: on every provision/reprovision, calls
+      `gh api repos/<repo> --method PATCH     --field delete_branch_on_merge=false` for all non-archived IggyIkenna
+      repos. Idempotent + best-effort per repo. agent-orchestrator@0ef02b3. (The fleet-wide one-time sweep was done
+      2026-06-04; bootstrap now prevents regression.)
 
 ## deployment-service LDR v2 RED — uv workspace parse (2026-06-04)
 
-- [ ] [INFRA] P1. **deployment-service LDR quality-gates-v2 fails at step 12 install**: `uv sync` →
-      `warning: Failed to parse pyproject.toml during settings discovery` ×3 → `error: Failed to parse: pyproject.toml`.
-      main is GREEN (767 behind LDR); isolated, NOT blocking fleet promotion. Diagnosed: all 6 cloned deps' LDR
-      pyprojects (PM/UTL/deployment-api/UAC/strategy/mtds) parse fine individually with tomllib AND uv 0.10.8 → it's a
-      uv WORKSPACE settings-discovery issue specific to the full CI clone layout (siblings + editable [tool.uv.sources]
-      → UTL+UAC). Repro needs running deployment-service `quality-gates.sh` locally with all deps cloned. repo:
-      deployment-service. (PR #18 staging<-LDR stays blocked until fixed.)
+- [x] ✅ [INFRA] P1. **deployment-service LDR quality-gates-v2 fails at step 12 install** — RESOLVED (verified
+      2026-06-07): deployment-service `quality-gates-v2` on `live-defi-rollout` is now **SUCCESS** (latest run); the
+      pyproject/uv workspace-settings-discovery error no longer reproduces (cleared by the fleet pyproject/uv-lock
+      convergence). Its LDR→staging drain PR is unblocked (rides the staging-lock-clear + reopen this session). repo:
+      deployment-service.
 
 ## Fleet promotion FINISHED (2026-06-04 ~21:00) — Semver Agent re-fired with fixed template
 
@@ -382,10 +406,10 @@ Agent. RESULT — fleet versioning/release pipeline (dead since 06-03) RESTORED:
       strategy, execution, mtds, alerting, ibkr, batch, client-reporting, trading-agent, ml-service, greeks, fund-admin,
       e2e-testing, unified-trading-api, deployment-ui) OR skipped=healthy-no-bump (deployment-api, mdps,
       system-integration-tests).
-- [ ] [INFRA] P2. **unified-trading-system-ui semver-agent fails step 2 checkout: "Input required and not supplied:
-      token"** — repo is MISSING the `GH_PAT` secret (other repos have it). Also a TS repo running the PYTHON
-      semver-agent template (questionable fit — it greps pyproject version). Decide: add GH_PAT secret OR remove
-      semver-agent from UI repos (use package.json versioning). repo: unified-trading-system-ui.
+- [x] ✅ [INFRA] P2. **unified-trading-system-ui semver-agent fails step 2 checkout: "Input required and not supplied:
+      token"** — FIXED 2026-06-04 (see the prose ✅ below; this checkbox was the unfipped diagnosis). GH_PAT repo secret
+      added → `gh run list` confirms success runs on 2026-06-04 21:11 + 2026-06-05 10:21 (workflow_run ids 26979885559,
+      27009381382, 27009383341). repo: unified-trading-system-ui.
 
 ## All 3 v2-reds FIXED + verified green (2026-06-04 ~21:40)
 

@@ -517,6 +517,29 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
 
 ## P3 — backlog; revisit quarterly
 
+- [ ] [INFRA] P3. **uv-pin drift-guard** (**MIGRATED FROM:** `uv_lockfile_determinism_2026_06_02.md`, archived
+      2026-06-07). Build a PM `quality_gates/` check that greps the 4 uv-pin sites (`setup.sh`, `base-service.sh` +
+      `base-library.sh`, `python-quality-gates-v2.yml`, `../unified-trading-library/Dockerfile`) and fails if their
+      pinned `uv` versions disagree. No active drift today (all `0.10.8`) → low priority. ⚠️ **COORDINATION:** touches
+      `base-service.sh` — a shared QG surface also edited by `cicd_contract_hardening` (H5 sentinel + QG-debt steps);
+      coordinate edits to avoid a collision.
+- [ ] [INFRA] P2. **Fleet per-repo local-QG debt sweep** (**MIGRATED FROM:** `uv_lockfile_determinism_2026_06_02.md`,
+      archived 2026-06-07). The bash-3.2 governor fix unmasked each repo's accumulated stage-5+ local-QG debt (codex /
+      cloudbuild-schema / size-import baselines) that the crash had been hiding. Walk every repo's
+      `quality-gates.sh     --no-fix` locally and clear the surfaced debt. **Overlaps `utl_full_quality_gates_green`**
+      (the T0 QG-green effort) — coordinate the per-repo greening there; most repos already proved green on LDR
+      (2026-06-07 fleet drain), so this is the residual local-only tail.
+- [ ] [INFRA] P3. **VM-side QG-memory baseline** (**MIGRATED FROM:**
+      `quality_gates_resource_contention_speedup_2026_06_02.md`, archived 2026-06-07). The per-repo QG resource
+      baseline + 2× deviation guard is DONE for the 20-repo LOCAL baseline (`scripts/dev/qg_resource_baseline.json`,
+      guard in `base-service.sh:2518-2529`); the VM-side baseline is deferred — blocked on `qg-cw-memory-agent` (the
+      CloudWatch memory agent is not yet installed on fleet VMs; the `vm` key is absent from the baseline JSON until
+      that lands). Install the CW agent on the fleet, then capture the VM baseline.
+- [ ] [INFRA] P3. **QG aggregate-storm validation (K∈{4,8} on a shared host)** (**MIGRATED FROM:**
+      `quality_gates_resource_contention_speedup_2026_06_02.md`, archived 2026-06-07). `benchmark-qg-under-load.sh` is
+      BUILT + smoke-clean; the actual K∈{4,8} concurrent-QG storm on a shared host is deferred to a coordinated window
+      (it deliberately induces the thrash the plan fixes — must not run during active fleet work). Run it in a quiet
+      window to confirm the host-governor serialization holds under real oversubscription.
 - [x] [AGENT] P3. **UTL `STANDARD_CATEGORIES` lowercase** (**MIGRATED FROM:**
       `audit03_deployment_cron_provisioning_2026_05_22.md` Phase 4) — UTL `service_cli.py` STANDARD_CATEGORIES should
       include lowercase asset-group choices (`cefi`/`defi`/`tradfi`/`sports`/`prediction`) to match canonical vocabulary
@@ -528,13 +551,14 @@ GCP|AWS toggle button live, 8 AWS backfill launcher scripts created + QG green. 
       is correct for now.
 - [ ] [SCRIPT] P3. **VM startup `gsutil -m cp` wheel-cache step deadlocks → boot-hang (make non-blocking / drop `-m`).**
       **MIGRATED FROM:** `plans/active/issues/running_vm_fleet_status_2026_05_27.md` § C (archived 2026-06-07). The VM
-      startup script's final "Caching compiled wheels to GCS" step runs `gsutil -m -q cp /tmp/wheel-cache/*.whl
-      gs://…/wheels/…`; the snap-bundled `gsutil -m` (multiprocessing) deadlocked (parent gsutil alive, defunct
-      `[python3]` zombie workers) and the **startup script blocks on it** → `market_tick_data_service` never launches
-      (observed on bybit-2024 / hyperliquid-2025 / kraken-2024 — never self-recovers). Also violates the workspace rule
-      that per-object GCS ops use `gcs_copy_object` (REST), not subprocess `gsutil` (codex
-      `gcs-object-operations.md`). Fix: make the wheel-cache step non-blocking / timeout-guarded / drop `-m` (or use the
-      `gcs_copy_object` helper). Repo: `deployment-service` (VM launcher / startup script).
+      startup script's final "Caching compiled wheels to GCS" step runs
+      `gsutil -m -q cp /tmp/wheel-cache/*.whl     gs://…/wheels/…`; the snap-bundled `gsutil -m` (multiprocessing)
+      deadlocked (parent gsutil alive, defunct `[python3]` zombie workers) and the **startup script blocks on it** →
+      `market_tick_data_service` never launches (observed on bybit-2024 / hyperliquid-2025 / kraken-2024 — never
+      self-recovers). Also violates the workspace rule that per-object GCS ops use `gcs_copy_object` (REST), not
+      subprocess `gsutil` (codex `gcs-object-operations.md`). Fix: make the wheel-cache step non-blocking /
+      timeout-guarded / drop `-m` (or use the `gcs_copy_object` helper). Repo: `deployment-service` (VM launcher /
+      startup script).
 
 > **MIGRATED FROM:** `aws_migration_defi_first_2026_05_07.md` (archived 2026-05-23) — DeFi S3/Athena/Glue migration
 > complete; remaining items are AWS parity extensions + post-cutover cross-asset-group work.

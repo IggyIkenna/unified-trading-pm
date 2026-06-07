@@ -31,32 +31,17 @@ PLANS_DIR = PM_ROOT / "plans" / "active"
 #   - blocked_plan_pattern: regex to match the blocked plan filename
 #   - blocked_todo_ids: list of todo IDs that are blocked (informational)
 
-GATES: list[dict[str, str | list[str]]] = [
-    {
-        "name": "defi-keys-phase1-blocks-cicd-backfill",
-        "description": (
-            "Plan 3 (defi_keys_data_integration) Phase 1 (secret provisioning) "
-            "must be complete before Plan 1 (cicd_code_rollout) Phase 5 backfill "
-            "tasks can proceed. Production backfill needs API keys loaded into "
-            "Secret Manager."
-        ),
-        "source_plan_pattern": r"defi_keys_data_integration.*\.md\.md$",
-        "source_todo_ids": [
-            "secrets-verify-tardis",
-            "secrets-http-vendors",
-            "secrets-defi-endpoints",
-            "secrets-ws-vendors",
-        ],
-        "blocked_plan_pattern": r"cicd_code_rollout.*\.md\.md$",
-        "blocked_todo_ids": [
-            "backfill-instruments-metadata",
-            "backfill-tick-data",
-            "backfill-features",
-            "backfill-ml-training",
-            "backfill-validation",
-        ],
-    },
-]
+# Inter-plan gates: a hard dependency where one plan's todos must complete before
+# another's can start. Add an entry per real cross-plan dependency.
+#
+# 2026-06-07: the sole historical gate (`defi-keys-phase1-blocks-cicd-backfill`) was
+# REMOVED — it was permanently BLOCKED/false-positive: both plans it referenced
+# (`defi_keys_data_integration`, `cicd_code_rollout`) are ARCHIVED (the secret
+# provisioning + backfill long since shipped), and its `source_plan_pattern` carried a
+# `.md.md$` double-extension typo so it never matched a live plan anyway. With no real
+# active cross-plan hard-dependency today, GATES is empty (the checker exits 0). Re-add
+# entries here only for a genuine "plan A todo blocks plan B todo" relationship.
+GATES: list[dict[str, str | list[str]]] = []
 
 
 def find_plan_file(pattern: str) -> Path | None:

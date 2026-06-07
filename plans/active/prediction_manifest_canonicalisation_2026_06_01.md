@@ -851,6 +851,39 @@ venue-override question) + the operator-gated migration walk:**
       enumerator emits ONLY `prediction_canonical_question_group` for prediction) + market-tick-data-service.
       parent_epic: mtds_mdps_master. Depends on `proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md` Phase 3
       (all-AG adoption — prediction slice) + the gated IS prediction backfill.
+
+  > **G1 (catalogue could-exist) — slot-5 dry-run + audit + scheduler verification 2026-06-07 (master coordinator
+  > `master_data_canonicalisation_migration_catalogue_2026_06_07.md` G1 lane).** Ran the read-only G1 sequence for
+  > prediction from the slot host (prod GCS reachable):
+  >
+  > - **G1.code — NEW CRASH found + FIXED (instruments-service@a7fa55a8).** The cqg producer could not RUN for
+  >   prediction at all: `build_instrument_catalogue.run_rollup` resolved the write bucket via
+  >   `get_write_bucket_name("instruments", "prediction")` →
+  >   `resolve_bucket_name(kind="instruments-store", asset_group="prediction")` → **`BucketNamingError`** ("no
+  >   PREDICTION entry"; prediction is the dedicated FLAT kind `instruments-store-prediction`). It crashed at bucket
+  >   resolution BEFORE reaching the documented 0-object gate. Fix: new `_instruments_store_bucket_for()` helper (flat
+  >   kind for prediction; per-AG dict otherwise — identical to the prior behaviour for every other AG), mirroring the
+  >   IS engine SSOT `resolve_instruments_store_kind` + `enumerate._default_bucket_for`; dropped the unused
+  >   `get_write_bucket_name` import; +2 regression tests. QG exit 0 (164s). This is the SAME map-vs-flat asymmetry
+  >   already fixed in the IS engine (IS@4105bba3) / MDPS / execution.
+  > - **G1.dry-run — DONE, exit 0, 0 cqg rows (GATED, as expected).** With the crash fixed,
+  >   `build_instrument_catalogue --asset-group prediction --dry-run` runs end-to-end and rolls up **0 cqg catalogue
+  >   rows**: every `instrument_availability/by_date/` blob is `market=`-grain (no `canonical_question_group=` segment)
+  >   and `market_lifecycle/by_canonical_group/` = **0 objects** — i.e. the cqg-grain source does not exist yet. This is
+  >   the operator-gated IS prediction backfill gate documented above, now PROVEN end-to-end (the producer reaches the
+  >   gate instead of crashing). `enumerate_expected_universe` rides this catalogue → 0 expected-universe rows until the
+  >   backfill (same gate; not separately run).
+  > - **instruments-store-prediction `_index` cf_manifest_audit — 493 rows, 100% v8; CF-1/CF-3/CF-4/CF-8 RED** (v9 +
+  >   `pipeline_mode`/`source`/`available_at` columns + path canonicalisation absent; CF-5/CF-9 GREEN, venue/data_type
+  >   clean). The v9 single-walk is the §H instruments-store-prediction slice of
+  >   `instruments_manifest_canonicalisation_2026_06_01` — a GATED `--apply` migration (G2/G4), not run here.
+  > - **G1.schedule — WIRED.** prediction is present in BOTH
+  >   `deployment-service/terraform/gcp/catalogue_regen_scheduler.tf`
+  >   - `instrument_catalogue_scheduler.tf` (for_each over AGs). No gated todo needed.
+  > - **G1.run (`--apply-write` could-exist seed) — GATED, NOT run:** (a) IS prediction backfill incomplete (0 cqg
+  >   blobs), (c) instruments-store-prediction `_index` still v8 (needs the §H v9 walk). Dry-run only until both clear +
+  >   a VM. No regression vs the gated apply.
+
 - [ ] [CODE] P1. **⑦ CROSS-AG ROLLOUT — run the v2 enumerator per AG (ideas filed in each AG plan, slot-5 2026-06-04).**
       The `_enumerate_v2_{cefi,defi,tradfi,sports}` enumerators are built + the default-bucket fix now points them at
       the canonical bucket; the remaining work per AG is to build the catalog (`--catalog-path` from that AG's IS

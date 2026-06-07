@@ -121,7 +121,13 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       the roll-up to run after each IS instrument-definition write per AG (event-driven off the IS write, or a frequent
       scheduler keyed to the IS update cadence — pick per the IS update mechanism; do NOT fire-and-forget). The v2
       enumerator's recurring run (cefi Dim-7 P3, currently BLOCKED) then reads an always-fresh catalogue. Repo:
-      deployment-service (terraform) + instruments-service. assigned_vm: vm-cross-cutting.
+      deployment-service (terraform) + instruments-service. assigned_vm: vm-cross-cutting. **TF AUTHORED
+      deployment@98bee4b** — `terraform/gcp/lifecycle_catalogue_scheduler.tf` (NEW): per-AG `for_each`
+      (cefi/defi/tradfi/sports/prediction) Cloud Run Job + Cloud Scheduler running `build_instrument_catalogue.py`
+      (sports `--by-date-prefix`), 01:00 UTC daily (after IS FAST refresh, before downstream regens), bounded job. The
+      two pre-existing schedulers (`catalogue_regen` / `instrument_catalogue`) run DIFFERENT scripts — this is the FIRST
+      to schedule the lifecycle roll-up. **REMAINING (apply-gated)**: `terraform apply` + T+10min per-AG execution
+      verify (infra apply pipeline).
 - [ ] [CODE] P1. **All asset groups adopt the proper catalogue.** cefi / defi / tradfi / **sports (fixtures)** /
       prediction each produce + consume their `{env}/catalog.parquet` via the same roll-up. Verify each AG's
       `_enumerate_v2_*` reads it and emits `expected_unattempted` against the real, current universe. Per-AG slices
@@ -131,7 +137,7 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       readiness audit 2026-06-04).** The generic roll-up emits one catalogue row per > `by_date` `instrument_key`, which
       is the WRONG grain for the bundled-atom AGs: **prediction's** captured atom is > the per-**cqg** bundle
       (`data_type=prediction_canonical_question_group`, `instrument_id=canonical_question_group`) > — a
-      condition_id-grain catalogue inflates the denominator by the cqg→condition_id fan-out. The prediction > producer
+      condition\*id-grain catalogue inflates the denominator by the cqg→condition_id fan-out. The prediction > producer
       must roll up `market_lifecycle/by_canonical_group/` (the per-cqg lifecycle IS already writes, >
       `orchestrator.py:3380-3456`) → one `CatalogRow` per cqg, and the enumerator must emit ONLY >
       `prediction_canonical_question_group` for prediction. Full spec + the gated-upstream (0-object >
@@ -151,7 +157,28 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       catalogue == a > post-migration one; the monotonic guard makes any regen safe). Follow-up: confirm the producer's
       `by_date/` walk > prefix still resolves once the objects gain the `pipeline_mode=` partition (top prefix + `day=`
       regex are robust; > verify post-migration). defi / tradfi remain plain `--asset-group <ag>` runs;
-      prediction/sports need the > granularity-aware producer above.
+      prediction/sports need the > granularity-aware producer above. > **tradfi slice (slot-7, 2026-06-05): APPLIED** —
+      651,985-row catalogue promoted to > `instruments-store-tradfi-prd-…/prod/catalog.parquet` (guard ACCEPT, exit 0;
+      live enumerator ✓). Liveness > PROVISIONAL — see the capture-freeze FINDING below (tradfi recent capture
+      degraded). **defi slice: APPLIED 2026-06-05** (4,171-row catalogue →
+      `instruments-store-defi-prd-…/prod/catalog.parquet`, guard ACCEPT, exit 0; live enumerator ✓; 57 protocol-chain
+      venues; frozen 2026-05-07 with a FULL last day = 3,599 active) on the pooled producer (~23 min for 64,724
+      parquets; the prior single-pool run timed out at 30 min). > **Producer perf fix instruments-service@c340f2dc** —
+      `_tune_download_pool` enlarges the GCS HTTP pool to > workers=16 (was throttled to ~8 → the "Connection pool is
+      full" warning); ~2x faster full-corpus walk, verified > live (pool_maxsize 16). > **🟢 G1-ENUM SHAPE-AWARE
+      ENUMERATOR DONE 2026-06-07 (vm-cross-cutting / slot-7):** the central fix the cross-AG over-fan FINDING called for
+      — `is@6ea46565` `_row_data_types` filters the v2 enumerators to valid instrument-type/data-type pairs via the UAC
+      matrix `uac@97c26dbe` (`valid_data_types_for_instrument_type`), preserving prediction grain-binding; cefi
+      OPTION/COMBO leaves yield zero per-leaf rows and impossible combos are excluded. Per-AG slices (sports
+      league-grain, prediction per-cqg) verify their matrix rows + re-run dry-runs before apply-write.
+- [ ] [CODE] P2. **NICE-TO-HAVE (slot-7, 2026-06-07) — DeFi G1-ENUM validity is instrument_type-grain, not
+      venue/protocol-grain.** The defi matrix is the UNION across `PROTOCOL_CAPABILITIES` per instrument_type, so a
+      hybrid-protocol data_type leaks to every instrument of that type — e.g. GMX (`pool` + `perp_funding`) makes
+      `pool`→`perp_funding` "valid" for ALL pools incl. Uniswap → some residual false `expected_unattempted` for non-GMX
+      pools. Far smaller than the pre-G1-ENUM all-data_types fan-out, but a refinement: key DeFi validity per
+      `(venue/protocol, instrument_type)` (the enumerator already has `instr.venue`). Provenance: G1-ENUM impl
+      2026-06-07. Repo: unified-api-contracts + instruments-service. assigned_vm: vm-cross-cutting. parent_epic:
+      instruments_master.
 - [ ] [CODE] P1. **FINDING (slot-7, 2026-06-04) — two divergent catalogue read-paths must be reconciled.** The
       standalone v2 enumerator (`enumerate_expected_universe.py --catalog-path`) + the launcher
       (`launch-expected-universe-v2-vm.sh` L165-174) read **`{env}/catalog.parquet`** (the path this plan's roll-up
@@ -164,6 +191,78 @@ and it is correct + self-refreshing, with no separate artifact to drift.
       `instruments_catalog_reader._CATALOG_BLOB` at `{env}/catalog.parquet` (the roll-up output) AND decide
       CatalogueBuilder's fate (retire its all.parquet write, or keep it as a distinct current-snapshot artifact with a
       clearly-different consumer). Repo: unified-trading-library + instruments-service. assigned_vm: vm-cross-cutting.
+- [ ] [DATA] P1. **FINDING (slot-7, 2026-06-05) — IS `by_date` instrument-definition capture is FROZEN ~2026-05-21
+      fleet-wide, and tradfi DEGRADED before the freeze.** Surfaced by the real apply (the catalogue is a faithful
+      roll-up → it exposes the input's coverage horizon). cefi: latest captured day **2026-05-21** (16 days stale as of
+      2026-06-05), last day FULL (3,473 active / healthy). tradfi: capture **degraded from ~16-18K instruments/day to
+      ~2/day after 2026-05-04** (only `CBOE:INDEX:VIX` + `FX:SPOT_PAIR:KRW-USD` on recent days), then **stopped after
+      2026-05-22**. defi: frozen **2026-05-07** (~31 days stale), last day FULL (3,599/4,171 active → catalogue usable).
+      **Consequence**: the applied catalogues are honest **snapshots-as-of-the -freeze** — cefi's is usable (full last
+      day); **tradfi's marks ~651K instruments "delisted"** (available*to ≤ 2026-05-04) because recent capture broke, so
+      its liveness is NOT trustworthy until tradfi capture is fixed + the catalogue regenerated (monotonic guard makes
+      the regen safe). The freeze is \_likely the deliberate pre-migration drain* (no instruments backfill until C-GREEN
+      per `instruments_manifest_canonicalisation_2026_06_01.md`), in which case the catalogues refresh when capture
+      resumes post-canonicalisation — BUT the **tradfi 16K→2/day degradation from 2026-05-04 is anomalous** (not a clean
+      freeze) and must be diagnosed by the tradfi slice owner (slot-6 / `tradfi_manifest_canonicalisation` +
+      `tradfi_master`). The completeness audit (capture_status) did NOT catch this (sparse days still `captured`;
+      stopped days have no rows → not `attempted_failed`) — confirms the verdict is PROVISIONAL and motivates a
+      **coverage-horizon check** (warn when the latest `by_date` day is > N days stale OR the per-day instrument count
+      drops sharply) added to the producer/audit (**NICE-TO-HAVE**, slot-7). Repo: instruments-service (capture) + the
+      tradfi vertical. assigned_vm: vm-cross-cutting (catalogue) / slot-6 (tradfi root-cause).
+- [x] ✅ [CODE] P1. **Tradfi instrument-definition capture — diagnose+restore Databento, then add Massive as a DUAL
+      reference source (remediation for the freeze FINDING above).** Repo: instruments-service. assigned_vm: slot-6 /
+      tradfi vertical (`tradfi_master.md` + `tradfi_manifest_canonicalisation_2026_06_01.md`). **Status:
+      BLOCKED-CREDENTIALS on Databento billing (operator, 2026-06-05) → Massive is the PRIMARY restore path, not just
+      resilience.** Two parts: **(A) Databento re-run is BLOCKED — do NOT attempt** (the ~16-18K→~2/day degradation
+      after 2026-05-04 then stop after 2026-05-22 cannot be fixed by re-running Databento: no billing budget right now —
+      operator-gated `BLOCKED-CREDENTIALS`, awaiting [ack] on a Databento subscription/billing ask). Note the
+      degradation diagnosis (is it billing-lapse vs adapter break?) for the record, but the fix is NOT a Databento
+      re-run while billing is unavailable. **(B) PRIMARY — make Massive the tradfi reference source** so `by_date/`
+      refills to today WITHOUT Databento (Massive is already the sanctioned tradfi dual-source market-data vendor → its
+      subscription is live; confirm it covers the `/v3/reference/*` endpoints, which are billed separately from bars).
+      Once Massive feeds `by_date/`, the catalogue producer (`build_instrument_catalogue.py`) rolls it up automatically
+      (re-run the apply; monotonic guard accepts the growth). Massive is **Polygon.io-API compatible** — the existing
+      `instruments-service/.../reference_data/adapters/tradfi/polygon.py` already implements the `/v3/reference/tickers`
+      (equity/ETF/index) + `/v3/reference/options/contracts` (options chains) schemas + pagination, so build a
+      `MassiveReferenceDataAdapter` (or re-point that Polygon-shaped reader at Massive's base URL + Massive
+      Secret-Manager creds — DO NOT revive the **removed Polygon.io vendor**; Massive is the sanctioned vendor). Wire it
+      into the IS reference factory + stamp `source=massive` per the source-provenance contract. **Coverage caveats
+      (from `tradfi_massive_dual_source_2026_05_28.md`)**: equities/ETF/index + options chains are proven on Massive;
+      **futures `/v3/reference/futures/contracts` returned 200+empty as of 2026-05-30** (subscription propagation —
+      investigate the `s3://flatfiles/` path as the futures-reference alternative). Per the External-Data rule: if
+      Massive futures-reference is still blocked, ship the adapter scaffold + unit tests anyway and file a
+      `BLOCKED-CREDENTIALS`/`BLOCKED-UPSTREAM` ping (do not descope). Cloud-agnostic I/O; no `os.getenv`; QG-green
+      before commit; commit+push+flip. Cross-ref: the freeze FINDING above +
+      `data_source_provenance_all_asset_groups_2026_06_01.md`. — **✅ SHIPPED 2026-06-07 (slot-6).** Massive is now the
+      tradfi reference source. **Canonicalisation lives in UAC** (operator decision — same canonical schema regardless
+      of source): `unified_api_contracts/external/massive/{schemas,normalize}.py` raw→`InstrumentRecord` normalisers
+      (equities/ETF via `/v3/reference/tickers`; **futures via `/futures/vX/contracts`** — the WORKING path,
+      operator-confirmed; `/v3/reference/futures/*` 404s; FX; CBOE index + **SPX/VIX OPRA index options**),
+      MIC→canonical-venue tagging, `DATA_SOURCE_TO_SECRET[massive]=MASSIVE_API_KEY` + `VENUE_TO_DATA_SOURCE[MASSIVE]`.
+      Thin IS `MassiveReferenceDataAdapter` + factory `--source massive` routing (re-points CME/NASDAQ/NYSE/CBOE/FX off
+      Databento; MASSIVE pseudo-venue key fetch) threaded CLI→handler→orchestrator→URDI→factory.
+      **unified-api-contracts@12974b11 (PR#91) + instruments-service@c0f2f39c (PR#407)**; both `quality-gates.sh` green.
+      **Backfill RUN TO COMPLETION** (`--source massive`, 2026-05-05→2026-06-07, 34 dates, all 5 venues, **~32.7K
+      instruments/day, 0 write-failures**, prod `instruments-store-tradfi-prd`; previously-frozen dates 05-23+ refilled;
+      spot-verified real/unique/typed). **Catalogue re-applied** (`build_instrument_catalogue.py --asset-group tradfi`):
+      monotonic guard **ACCEPT 684,372 rows (was 651,985, +32,387)**, promoted `prod/catalog.parquet`; **liveness
+      restored — 32,711 instruments current** (incl 31,282 SPX/VIX options) vs the freeze's "VIX + KRW-USD only"; v2
+      enumerator parses it (684,372 entries). **C-#6 contract (2026-06-07)**: instrument-definition rows are
+      producer-emitted (`pipeline_mode=BATCH_INSTRUMENTS_SERVICE`) → `source` is NOT vendor-stamped (batch
+      `source⇔pipeline_mode` SSOT); the vendor is the adapter routing concern, not a per-row manifest tag.
+- [ ] [DATA] P1. **FINDING (slot-6, 2026-06-07) — ICE futures + CME futures-OPTIONS not on Massive →
+      BLOCKED-CREDENTIALS.** Massive Futures (Futures Developer plan, live) covers CME-group only (XCME/XNYM/XCEC/XCBT);
+      ICE (Brent/softs, 8 roots) returns 0 contracts. Massive has **no options-on-futures product**
+      (`/futures/vX/options` 404; all 8,000 futures products are `type=single`) — the old databento ~16-18K/day was CME
+      ES _futures-options_. With Databento billing-blocked, both are uncovered (SPX/VIX OPRA _index_ options ARE
+      captured on CBOE as the relevant vol-complex; VX _futures_ also absent on Massive → stays Yahoo-15m/Barchart,
+      synthetic VIX forward derivable from VIX options). **Operator ask**: an ICE-futures + CME-futures-options
+      reference source (or unblock Databento billing). Repo: instruments-service. assigned_vm: vm-tradfi.
+- [ ] [CODE] P2. **FINDING (slot-6, 2026-06-07) — MTDS Massive market-data connector uses the WRONG futures endpoint.**
+      `market-tick-data-service/.../adapters/tradfi/massive_tradfi_rest_connector.py` maps
+      futures→`/v3/reference/futures/contracts` (404s); the working Massive path is **`/futures/vX/contracts`** (+
+      `/futures/vX/products` for contract size / `unit_of_measure_qty`). Fix the MTDS connector's futures endpoint
+      shape. Repo: market-tick-data-service. assigned_vm: vm-tradfi.
 
 ## Phased DAG + gates
 

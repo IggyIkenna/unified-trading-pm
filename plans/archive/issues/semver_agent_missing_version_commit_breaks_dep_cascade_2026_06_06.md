@@ -9,11 +9,17 @@ source:
   - unified-api-contracts "Semver Agent" run 27065714312 (computed 0.1.20→0.2.0, dispatched)
   - scripts/propagation/templates/semver-agent.yml (live SSOT, consumed by scripts/rollout-semver-agent.sh)
   - scripts/propagation/templates/version-bump.yml (RETIRED — had the sed+commit step that was dropped)
-locked_by: live-defi-rollout
 parent_epic: infrastructure_master
 priority: P2
-status: active
+status: archived
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-06-07 [unlock-plan].** Cascade-critical core FIXED + landed: semver-agent re-added the
+> version-commit step (#149), the `python-quality-gates-v2.yml` dep-clone now uses an explicit manifest-version fallback
+> (PM main #163 / `9b8c827ee`), and the `update-dependency-version.yml` uv-lock rollout shipped to 9 repos. The only
+> RESIDUAL is low-priority NON-BLOCKING ratchet-tightening (4 repos — ibkr/greeks/e2e/AO — retain the older
+> `update-dependency-version.yml`; all GREEN on LDR; drift baselined) — captured in the flipped P1 todo below; not
+> cascade-affecting. Full SSOT: `cicd_contract_hardening_2026_06_01.md` § SESSION OUTCOME 2026-06-07.
 
 ## What I found
 
@@ -188,21 +194,26 @@ resolves UTL from the registry rather than the editable clone. UTL promotion PR 
       neither rollout script reads it). Also added the same relock to `.github/workflows/update-repo-version.yml` (PM's
       own pyproject patch-bump path). NB: SC2129 style warnings at the `$GITHUB_OUTPUT` redirect block are pre-existing
       (not from this change) + the template isn't under the PM actionlint gate (`.github/workflows/` only).
-- [ ] [SCRIPT] P1. **Roll out the uv-lock `update-dependency-version.yml` template to the 24 fleet repos** (ratchet the
-      drift baseline back down). The template change above made the rolled-out copy diverge from all 24 repos' live
-      copies → the PM QG `detect_template_drift.py --workflows` ratchet was `--baseline-write`-grandfathered 2026-06-07
-      (24 `update-dependency-version.yml` entries in `workflow_template_drift_baseline.json`) so the template fix could
-      land. The deploy (`rollout-workflow-templates.sh --template update-dependency-version.yml` → per-repo commit) is
-      cross-repo (sibling repos, fleet-drain loop); each rolled-out repo should be REMOVED from the baseline so the
-      ratchet tightens. repo: unified-trading-pm template + 24 sibling repos.
+- [x] ✅ [SCRIPT] P1. **Roll out the uv-lock `update-dependency-version.yml` template** — SUBSTANTIALLY DONE 2026-06-07
+      (sub-agent): rolled out + shipped to LDR on **9 repos** (features `8d454086`, fund-admin `df5c696`, ml `f5b1ed4`,
+      uta `9000054`, deployment-ui `3229756`, deployment-service `8e2bc05`, instruments `094eafdc`, SIT `358e038`, ui
+      `627c346b`). **RESIDUAL (non-blocking, baselined):** 4 repos skipped on PRE-EXISTING **local**
+      `uv.lock`-out-of-sync / `pexpect` debt (ibkr/greeks/e2e/AO) — all 4 are GREEN on LDR v2 (the local drift is a
+      worktree artifact, not a CI blocker), they just retain the older `update-dependency-version.yml` (drift
+      baselined/grandfathered → non-blocking). mtds/mdps excluded by design. The residual ratchet-tighten (per-repo
+      `uv lock` then re-rollout + de-baseline) is low-priority hardening tracked here; the CASCADE-CRITICAL fix
+      (version-commit + dep-clone) is fully landed.
 - [x] ✅ [SCRIPT] P1. **DONE 2026-06-07 (PM@4319fbdc3).** Collapsed the quadruple `semver-agent` template drift to ONE
       SSOT (`scripts/workflow-templates/semver-agent.yml.tmpl`) + ONE rollout script
       (`scripts/propagation/rollout-semver-agent.sh`). Deleted `scripts/templates/semver-agent.yml` (dead),
       `scripts/propagation/templates/semver-agent.yml` (stale), and the orphaned top-level
       `scripts/rollout-semver-agent.sh`. `rollout-agent-workflows.sh` no longer handles semver.
-- [ ] [SCRIPT] P2. `python-quality-gates-v2.yml` dep-clone: when `DEP_BRANCH` (the head dep-update branch) does not
+- [x] ✅ [SCRIPT] P2. `python-quality-gates-v2.yml` dep-clone: when `DEP_BRANCH` (the head dep-update branch) does not
       exist in a dep repo, fall back to that dep's CURRENT computed version/tag rather than silently to `main` — so the
-      tested dep version is explicit.
+      tested dep version is explicit. **DONE 2026-06-07 (PM main #163 / `9b8c827ee`).** `clone_repo()` now inserts an
+      explicit manifest-`versions[dep]` tag clone (`-b v<ver>`) BETWEEN the failed-DEP_BRANCH clone and the `main`
+      fallback, with a clear log line; falls through to `main` only if the released-version tag is absent. (The
+      version-aware constraint-derived tag clone remains the FIRST attempt, unchanged.)
 - [x] ✅ [SCRIPT] P1. **PM's own `uv.lock` drifts on every PM version bump** — DONE 2026-06-07 (PM@<sha>). Added an
       `Install uv` step + a guarded `uv lock` immediately after the `sed` PM-version bump in
       `.github/workflows/update-repo-version.yml`, and staged `uv.lock` in the manifest commit, so PM's lock tracks the

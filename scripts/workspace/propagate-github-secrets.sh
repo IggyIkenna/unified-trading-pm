@@ -2,7 +2,14 @@
 # propagate-github-secrets.sh
 #
 # Propagates GitHub Actions secrets to all repos listed in
-# workspace-manifest.json. Propagates SLACK_WEBHOOK_URL (secret) to all repos.
+# workspace-manifest.json. Propagates SLACK_WEBHOOK_URL + SLACK_CI_WEBHOOK_URL
+# (secrets) to all repos so CI alerts route to the right Slack channels:
+#   SLACK_WEBHOOK_URL    → #uts-live-alerts   (general fleet alerts)
+#   SLACK_CI_WEBHOOK_URL → #ci-failures       (CI failure alerts)
+# EXCEPTION (intentional — codified 2026-06-07): agent-orchestrator posts its
+# SLACK_WEBHOOK_URL to its OWN channel #agent-orchestrator-alerts (value =
+# AGENT_ORCHESTRATOR_SLACK_WEBHOOK), NOT #uts-live-alerts. That is why we keep
+# separate channels — do NOT "fix" it to the fleet value.
 #
 # Usage:
 #   # Propagate Slack webhook to all repos (will prompt if not set in env):
@@ -21,7 +28,8 @@
 #   # Secrets only (no variables to set for Slack):
 #   bash unified-trading-pm/scripts/workspace/propagate-github-secrets.sh --secrets-only
 #
-# Secrets set  : SLACK_WEBHOOK_URL    (masked in logs — Slack incoming webhook URL)
+# Secrets set  : SLACK_WEBHOOK_URL    (masked — #uts-live-alerts; agent-orchestrator → #agent-orchestrator-alerts)
+#              : SLACK_CI_WEBHOOK_URL (masked — #ci-failures, all repos)
 #              : GH_PAT               (required for ci-status-update dispatch; from .act-secrets or env)
 #              : GCP_PROJECT_ID       (optional; from .act-secrets or env)
 #              : AWS_ACCOUNT_ID       (optional; from .act-secrets or env)
@@ -103,7 +111,10 @@ if [[ -f "$ACT_SECRETS" ]]; then
     [[ "$line" =~ ^GH_PAT= ]] && [[ -z "${GH_PAT:-}" ]] && export GH_PAT="${line#GH_PAT=}"
     [[ "$line" =~ ^GCP_PROJECT_ID= ]] && [[ -z "${GCP_PROJECT_ID:-}" ]] && export GCP_PROJECT_ID="${line#GCP_PROJECT_ID=}"
     [[ "$line" =~ ^AWS_ACCOUNT_ID= ]] && [[ -z "${AWS_ACCOUNT_ID:-}" ]] && export AWS_ACCOUNT_ID="${line#AWS_ACCOUNT_ID=}"
-  done < <(grep -E '^(GH_PAT|GCP_PROJECT_ID|AWS_ACCOUNT_ID)=' "$ACT_SECRETS" 2>/dev/null || true)
+    [[ "$line" =~ ^SLACK_WEBHOOK_URL= ]] && [[ -z "${SLACK_WEBHOOK_URL:-}" ]] && export SLACK_WEBHOOK_URL="${line#SLACK_WEBHOOK_URL=}"
+    [[ "$line" =~ ^SLACK_CI_WEBHOOK_URL= ]] && [[ -z "${SLACK_CI_WEBHOOK_URL:-}" ]] && export SLACK_CI_WEBHOOK_URL="${line#SLACK_CI_WEBHOOK_URL=}"
+    [[ "$line" =~ ^AGENT_ORCHESTRATOR_SLACK_WEBHOOK= ]] && [[ -z "${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-}" ]] && export AGENT_ORCHESTRATOR_SLACK_WEBHOOK="${line#AGENT_ORCHESTRATOR_SLACK_WEBHOOK=}"
+  done < <(grep -E '^(GH_PAT|GCP_PROJECT_ID|AWS_ACCOUNT_ID|SLACK_WEBHOOK_URL|SLACK_CI_WEBHOOK_URL|AGENT_ORCHESTRATOR_SLACK_WEBHOOK)=' "$ACT_SECRETS" 2>/dev/null || true)
 fi
 
 # ── Collect credentials ───────────────────────────────────────────────────────
@@ -118,6 +129,19 @@ if [[ -z "${SLACK_WEBHOOK_URL:-}" ]]; then
 fi
 if [[ -z "${SLACK_WEBHOOK_URL:-}" ]]; then
   log_error "SLACK_WEBHOOK_URL cannot be empty."
+  exit 1
+fi
+
+# SLACK_CI_WEBHOOK_URL → #ci-failures (all repos)
+if [[ -z "${SLACK_CI_WEBHOOK_URL:-}" ]]; then
+  echo ""
+  echo "Enter SLACK_CI_WEBHOOK_URL (#ci-failures incoming webhook — https://hooks.slack.com/services/...):"
+  echo -n "> "
+  read -rs SLACK_CI_WEBHOOK_URL
+  echo ""
+fi
+if [[ -z "${SLACK_CI_WEBHOOK_URL:-}" ]]; then
+  log_error "SLACK_CI_WEBHOOK_URL cannot be empty."
   exit 1
 fi
 
@@ -146,7 +170,9 @@ echo "  Workspace : $WORKSPACE_ROOT"
 echo "  Repos     : ${#REPO_SLUGS[@]} (from workspace-manifest.json)"
 echo "  Dry-run   : $DRY_RUN"
 [[ -n "$FILTER_REPO" ]] && echo "  Filter    : $FILTER_REPO"
-echo "  Secrets   : SLACK_WEBHOOK_URL"
+echo "  Secrets   : SLACK_WEBHOOK_URL (#uts-live-alerts; agent-orchestrator → #agent-orchestrator-alerts)"
+echo "  Secrets   : SLACK_CI_WEBHOOK_URL (#ci-failures)"
+[[ -n "${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-}" ]] && echo "  Override  : agent-orchestrator SLACK_WEBHOOK_URL → its own channel"
 [[ -n "${GH_PAT:-}" ]] && echo "  Secrets   : + GH_PAT (for ci-status-update)"
 [[ -n "${GCP_PROJECT_ID:-}" ]] && echo "  Secrets   : + GCP_PROJECT_ID"
 [[ -n "${AWS_ACCOUNT_ID:-}" ]] && echo "  Secrets   : + AWS_ACCOUNT_ID"
@@ -168,8 +194,15 @@ for slug in "${REPO_SLUGS[@]}"; do
 
   echo -n "  [$slug] "
 
+  # Per-repo SLACK_WEBHOOK_URL: agent-orchestrator posts to its OWN channel
+  # (#agent-orchestrator-alerts) — intentional exception (see header).
+  case "$repo_name" in
+    agent-orchestrator) THIS_WEBHOOK="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$SLACK_WEBHOOK_URL}"; WH_CHAN="#agent-orchestrator-alerts" ;;
+    *)                  THIS_WEBHOOK="$SLACK_WEBHOOK_URL"; WH_CHAN="#uts-live-alerts" ;;
+  esac
+
   if [[ "$DRY_RUN" == true ]]; then
-    log_dry "would set SLACK_WEBHOOK_URL + GH_PAT (if set) + GCP_PROJECT_ID + AWS_ACCOUNT_ID (if set)"
+    log_dry "would set SLACK_WEBHOOK_URL ($WH_CHAN) + SLACK_CI_WEBHOOK_URL (#ci-failures)"
     ((PASS++))
     continue
   fi
@@ -183,8 +216,8 @@ for slug in "${REPO_SLUGS[@]}"; do
 
   ERR=0
 
-  # Set secret: SLACK_WEBHOOK_URL
-  if printf '%s' "$SLACK_WEBHOOK_URL" | gh secret set SLACK_WEBHOOK_URL \
+  # Set secret: SLACK_WEBHOOK_URL (per-repo channel)
+  if printf '%s' "$THIS_WEBHOOK" | gh secret set SLACK_WEBHOOK_URL \
       --repo "$slug" --body - 2>/dev/null; then
     : # ok
   else
@@ -192,12 +225,26 @@ for slug in "${REPO_SLUGS[@]}"; do
     ERR=1
   fi
 
+  # Set secret: SLACK_CI_WEBHOOK_URL (#ci-failures, all repos)
+  if printf '%s' "$SLACK_CI_WEBHOOK_URL" | gh secret set SLACK_CI_WEBHOOK_URL \
+      --repo "$slug" --body - 2>/dev/null; then
+    : # ok
+  else
+    log_warn "failed to set SLACK_CI_WEBHOOK_URL on $slug"
+    ERR=1
+  fi
+
   if [[ $ERR -eq 0 ]]; then
-    log_info "OK"
+    log_info "OK ($WH_CHAN + #ci-failures)"
     ((PASS++))
   else
     ((FAIL++))
   fi
+
+  # Space out calls — GitHub secondary rate-limits content-mutating bursts.
+  # Without this, a full-fleet run (≈50 secret-sets) silently drops the 2nd
+  # secret on later repos (observed 2026-06-07). Cheap insurance.
+  sleep 0.4
 done
 
 # ── Summary ───────────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@ title: CI canonical v2 migration — ghost-workflow workaround across PM/UAC/UTL
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P0
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 5
@@ -40,6 +40,14 @@ related_plans:
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
+
+> **✅ ARCHIVED 2026-06-07 [unlock-plan].** Migration COMPLETE — the fleet is `quality-gates-v2`-only. Re-verified
+> 2026-06-07: a scan of every repo's `.github/workflows/` found ZERO v1 files (`quality-gates.yml` /
+> `python-quality-gates.yml` / `workspace-qg.yml`); only `quality-gates-v2.yml` exists + PM holds only the v2 reusable
+> callee `python-quality-gates-v2.yml`. The last open item (v1-caller/callee deletion, previously `BLOCKED-UPSTREAM` on
+> GH Support #4422570) is DONE — the v1 files are already gone, the feared v2-registration re-poisoning never
+> materialised, and the operator confirmed "migrated to v2 entirely, never going back" (2026-06-07). No `cleanup_v1_*`
+> successor needed.
 
 # CI canonical v2 migration — ghost-workflow workaround
 
@@ -270,11 +278,13 @@ execution-service, instruments-service, deployment-ui. Order by risk (lowest fir
 
 ### Phase 5 — Cleanup + codex updates (0.25 day)
 
-- [ ] [SCRIPT] P1. **BLOCKED-UPSTREAM (GH Support #4422570 open).** Once all repos run cleanly on v2, delete v1 caller
-      workflow files in each repo (single quickmerge per repo). Keep the v1 PM callee `python-quality-gates.yml` for now
-      to avoid forced GitHub re-validation; remove in a later cleanup once GH Support ticket clears. Named successor:
-      `cleanup_v1_quality_gates_workflows_<TBD>.md` (per § Out of scope). Holds until the ghost cache is confirmed
-      cleared — premature v1 deletion risks re-poisoning the v2 registration.
+- [x] ✅ [SCRIPT] P1. **DONE — v1 fully removed; fleet is v2-only (operator-confirmed 2026-06-07: "migrated to v2
+      entirely, never going back").** Re-verified 2026-06-07: a fleet-wide scan of every repo's `.github/workflows/`
+      found **ZERO** `quality-gates.yml` / `python-quality-gates.yml` / `workspace-qg.yml` files — only
+      `quality-gates-v2.yml` exists, and PM holds only the v2 reusable callee `python-quality-gates-v2.yml` (no v1
+      callee). The v1 caller + callee deletion already happened; the BLOCKED-UPSTREAM hold on GH Support #4422570 was
+      stale over-caution (the feared v2-registration re-poisoning never materialised — v2 is the required check
+      fleet-wide and green). No `cleanup_v1_*` successor needed.
 - [x] ✅ [CODEX] P1. `codex/08-workflows/ci-cd-flow.md` updated this turn (2026-05-29 EOD) with new section "Canonical
       required check name (post-Option-D, 2026-05-29)" — names `quality-gates-v2` as the workspace canonical,
       cross-references the per-repo matrix in feature-branch-workflow.md, documents v1-cleanup-pending.

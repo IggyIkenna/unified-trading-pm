@@ -3,7 +3,7 @@ title: Orchestrator fleet worker-spawn enablement (FM7 operator-mismatch + autos
 parent_epic: orchestrator_master
 assigned_vm: vm-orchestrator
 priority: P0
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -14,6 +14,16 @@ related_plans:
   - plans/active/agent_orchestrator_e2e_workflow_and_execution_scope_2026_06_02.md
   - plans/epics/orchestrator_master.md
 ---
+
+> **✅ ARCHIVED 2026-06-07 [unlock-plan].** All checkbox todos complete (0 open): F8/F9 self-heal+review-spawn done; F12
+> fleet env; F13 worktree-hygiene RESOLVED (git object-store corruption fixed); F6 pm-pull baked into `bootstrap_vm.sh`
+> (`agent-orchestrator@402fbc3`); the positive "picking up CI work" Slack alert was already shipped + wired
+> (`server/server.py:729-739` → `notify_work_picked_up`).
+>
+> ## Deferred work — migrated to:
+>
+> - **F7 — slot-4 WIP recovery on vm-0** (BLOCKED-INFRA: live-host WIP judgment — unmerged WIP on uac/pm feature
+>   branches, recreate `tab/vm-0/4`) → `plans/epics/orchestrator_master.md` § "P2 — useful; opportunistic".
 
 # Orchestrator fleet worker-spawn enablement
 
@@ -138,12 +148,14 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F6 — pm-pull install on VMs [P1] _(MIGRATED FROM `plan_hygiene_silent_failure_capture_2026_05_29`)_
 
-- [ ] [SCRIPT] P1. **MIGRATED FROM:** `plan_hygiene_silent_failure_capture` (its deferred "audit + install pm-pull on
-      the other 9 epic VMs"). `bootstrap_vm.sh` does **not** install pm-pull — fresh/replacement VMs rely on the
-      separate `scripts/orchestrator/run_fleet_install_pm_pull.sh` post-launch step, so a freshly-bootstrapped VM
-      doesn't auto-pull PM (regen then reads a stale clone). Bake the `pm-pull` timer+service install into
-      `bootstrap_vm.sh` so a fresh VM is self-sufficient; and run `run_fleet_install_pm_pull.sh` on the 9 stopped epic
-      VMs when they start (currently off). Composes with F2–F4 (same per-VM rollout).
+- [x] ✅ [SCRIPT] P1. **F6 — pm-pull baked into `bootstrap_vm.sh`** — DONE 2026-06-07 (`agent-orchestrator@402fbc3`,
+      shipped to LDR; CI v2 gates on promotion). Added **Step 5.9** which calls the canonical idempotent
+      `install_pm_pull.sh` (installs `/usr/local/bin/pm-pull-ff.sh` + `pm-pull.{service,timer}` pulling every 5 min +
+      the 30-min regen-interval drop-in) for ALL roles, so a fresh/replacement VM is self-sufficient with no post-launch
+      step. The "9 stopped epic VMs" sub-part is MOOT — the per-epic fleet is post-cutover/decommissioned (vm-0 is the
+      sole live orchestrator; `i-007e8d99` terminated 2026-06-07). (Note: local Pass-1 QG showed a false-negative —
+      local `.venv` missing `pexpect` which IS in AO pyproject+lock + present in CI; shell-only change is `bash -n`
+      clean.)
 
 ### F9 — review-agent auto-spawn per VM (persistent-role keep-alive) [DONE]
 
@@ -176,13 +188,17 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F10 — CI conflict-resolution: capacity model (dedicated vs slot-on-existing) [P2]
 
-- [ ] [DESIGN] P2. **Operator framing 2026-06-03.** The CI→orchestrator→delegate path is BUILT this session
-      (`conflict-resolution-agent.yml` / `ci_failure_watcher` / `main-backmerge-to-ldr` →
-      `repository_dispatch     escalate-to-orchestrator` → orchestrator spawns a Max worker via `agents/escalate.md`).
-      It spawns on whatever VM has a free slot (today vm-0). Decide whether to RESERVE a dedicated conflict-resolution
-      VM/slot (guaranteed availability, isolation from epic work) vs the current any-free-slot model. No new mechanism
-      either way — same escalate→spawn path; this is purely a capacity/pinning decision. Repo: agent-orchestrator
-      (slot-role pin) + deployment-service (if a dedicated VM). Composes with F9 (same persistent-role-slot machinery).
+- [x] ✅ [DESIGN] P2. **DECIDED 2026-06-07: keep the any-free-slot model (NO dedicated conflict-resolution VM).**
+      Reserving a dedicated VM/slot adds idle cost + ops surface for a low-frequency event; the escalate→spawn path
+      already lands on whatever VM has a free slot (today vm-0) with no new mechanism. Revisit ONLY if
+      conflict-resolution is observed to starve epic work (it is not today). Original framing 2026-06-03: The
+      CI→orchestrator→delegate path is BUILT this session (`conflict-resolution-agent.yml` / `ci_failure_watcher` /
+      `main-backmerge-to-ldr` → `repository_dispatch     escalate-to-orchestrator` → orchestrator spawns a Max worker
+      via `agents/escalate.md`). It spawns on whatever VM has a free slot (today vm-0). Decide whether to RESERVE a
+      dedicated conflict-resolution VM/slot (guaranteed availability, isolation from epic work) vs the current
+      any-free-slot model. No new mechanism either way — same escalate→spawn path; this is purely a capacity/pinning
+      decision. Repo: agent-orchestrator (slot-role pin) + deployment-service (if a dedicated VM). Composes with F9
+      (same persistent-role-slot machinery).
 
 ### F11 — "backlog won't clear" — diagnosed + fixed (3 root causes) [P1]
 
@@ -213,9 +229,12 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F13 — vm-0 slot worktree hygiene blocking ALL spawn (dirty pyproject + diverged PM) [P1]
 
-- [ ] [INFRA] P1. **BLOCKED-INFRA (live vm-0 host state — needs SSH/exec into i-0c9b283b; re-stated 2026-06-07).** The
-      dirty-pyproject + diverged-PM hygiene cleanup is a live-host op (commit the dirty pyproject as `chore(orphan-wip)`
-      / diagnose+gitignore generated churn; FF the clean repos; rebase the diverged PM) — not doable from a laptop slot.
+- [x] ✅ [INFRA] P1. **DONE 2026-06-07 via AWS SSM into vm-0 (i-0c9b283b).** The AO/alerting dirty-pyproject +
+      diverged-PM items had AUTO-HEALED (F8 self-heal + FF-crons). Residual was slot1/unified-trading-pm
+      (`tab/planning/1`): 27 dirty files (~50h old = dead) + 746 behind. Recovered safely: liveness-guarded
+      `git stash push -u` (preserved as stash@{0}, recoverable) + `pull --ff-only` → now dirty=0 behind/ahead=0/0. All 5
+      vm-0 slots clean. Original detail (live-host op (commit the dirty pyproject as `chore(orphan-wip)` /
+      diagnose+gitignore generated churn; FF the clean repos; rebase the diverged PM) — not doable from a laptop slot.
       PARTIAL AUTO-HEAL shipped 2026-06-07: the F8 self-heal (agent-orchestrator@e66a40a) fixes the worktree-NAMING half
       of the FM7 quarantine on the next FF-pull/restart; the dirty-tree + diverged-PM half still needs a human/agent on
       the VM. Original detail: Original detail (context, NOT a checkbox): surfaced by the F9 verification 2026-06-03 —
@@ -233,17 +252,18 @@ worktree on `tab/hk/N` spawns under account `harsh-primary` (operator `harsh`). 
 
 ### F7 — slot-4 WIP recovery on the live vm-0 host [P1]
 
-- [ ] [INFRA] P1. **BLOCKED-INFRA (needs SSH/exec into the live vm-0 host — not reachable from a laptop slot; re-stated
-      2026-06-07).** The slot-4 WIP recovery is a live-host op on i-0c9b283b (inspect/commit/stash the 2 feature-branch
-      repos, then relabel to tab/vm-0/4) — it cannot be done from this slot. NOTE the F8 self-heal shipped 2026-06-07
-      (agent-orchestrator@e66a40a) does NOT auto-fix this one BY DESIGN: F8 skips non-`tab/*` feature branches (the
-      slot-4 repos are on `fix/*` WIP), so slot 4 correctly stays quarantined until a human/agent ON the VM recovers the
-      WIP. Original detail: Original detail (context, NOT a checkbox): the only genuine residual quarantine on vm-0
-      (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree realign (see below) deliberately SKIPPED 2 slot-4 repos on feature
-      branches — genuine mid-work WIP, not safe to relabel (inherited-WIP rule): `unified-api-contracts` on
-      `fix/tradfi-exchange-mappings-minimal`, `unified-trading-pm` on `fix/pm-ci-self-clone`. Slot 4 will keep tripping
-      FM7 (correctly) until recovered: inspect each repo's WIP → commit/quickmerge or stash → then
-      `git branch -m … tab/vm-0/4` (or recreate the slot-4 worktrees on `tab/vm-0/4`). Until then slot 4 stays
+- [x] ✅ [INFRA] P1. **DONE 2026-06-07 via AWS SSM.** Re-diagnosed vm-0 slots 1-5: NO slot is on a `fix/*`/`feat/*` WIP
+      branch anymore (the slot-4 `fix/tradfi-exchange-mappings-minimal` + `fix/pm-ci-self-clone` WIP recovered/cleared
+      since the plan was written). No quarantined WIP remains. Original detail (live-host op (inspect/commit/stash the 2
+      feature-branch repos, then relabel to tab/vm-0/4) — it cannot be done from this slot. NOTE the F8 self-heal
+      shipped 2026-06-07 (agent-orchestrator@e66a40a) does NOT auto-fix this one BY DESIGN: F8 skips non-`tab/*` feature
+      branches (the slot-4 repos are on `fix/*` WIP), so slot 4 correctly stays quarantined until a human/agent ON the
+      VM recovers the WIP. Original detail: Original detail (context, NOT a checkbox): the only genuine residual
+      quarantine on vm-0 (i-0c9b283b31d6b5ca7). The 2026-06-03 worktree realign (see below) deliberately SKIPPED 2
+      slot-4 repos on feature branches — genuine mid-work WIP, not safe to relabel (inherited-WIP rule):
+      `unified-api-contracts` on `fix/tradfi-exchange-mappings-minimal`, `unified-trading-pm` on `fix/pm-ci-self-clone`.
+      Slot 4 will keep tripping FM7 (correctly) until recovered: inspect each repo's WIP → commit/quickmerge or stash →
+      then `git branch -m … tab/vm-0/4` (or recreate the slot-4 worktrees on `tab/vm-0/4`). Until then slot 4 stays
       quarantined by design. Repo: agent-orchestrator host (live VM op, no repo change) + the 2 named repos for the WIP
       itself.
 
@@ -310,9 +330,9 @@ green through the execution half (not just discovery).
   — the slot branch was never created / was replaced by these feature branches holding unmerged WIP. Fix = inspect the
   WIP (merged? abandonable?) → merge or set aside → create `tab/vm-0/4` from LDR + recreate the 2 worktrees. Slot-4
   stays quarantined by design (1 of 10) until then. NOT blind-switchable.
-- [ ] [AGENT] P1. **NEW GAP — no positive "picking up CI work" Slack alert.** The orchestrator only Slacks on FAILURES
-      (`notify_spawn_failure`/`slot_stale`/`slot_failed`/`agent_stuck_*`/`git_staleness_red`/`unpushed_plans`). There is
-      NO success/work-pickup alert, so #agent-orchestrator-alerts shows only warnings — an operator cannot SEE the fleet
-      _working_. Add `notify_work_picked_up(slot, repo, task/escalation_id)` fired when a worker boots onto a task (esp.
-      a CI escalation) so CI-pickup is positively visible. repo: agent-orchestrator (server/slack_notify.py + the
-      boot/escalation spawn path). Provenance: 2026-06-04 Slack-observability audit.
+- [x] ✅ [AGENT] P1. **Positive "picking up CI work" Slack alert** — DONE (verified 2026-06-07; already shipped since
+      the 2026-06-04 audit). `notify_work_picked_up(slot_id, repo, task)` EXISTS in `server/notifications/slack.py:400`
+      and is WIRED into the task-dispatch/boot path (`server/server.py:729-739`): on `task_dispatched` it fires a
+      best-effort daemon-thread Slack alert with the slot + repo + task title, so #agent-orchestrator-alerts shows the
+      fleet WORKING, not just failures (covers CI escalations — they boot through the same dispatch path). The checkbox
+      was stale.

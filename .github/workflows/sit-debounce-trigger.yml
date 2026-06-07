@@ -80,10 +80,16 @@ jobs:
           staging_versions = m.get("staging_versions", {})
           stable_versions = m.get("versions", {})
 
+          # Repos that promote LDR→main DIRECTLY (Option B) have no staging branch, so their
+          # staging_versions entry is vestigial and can never converge to versions — leaving them
+          # in pending_repos makes them a PERMANENT phantom that keeps the staging lock from ever
+          # clearing (unified-trading-pm: staging 1.2.12 vs stable 1.2.24, never reconciles).
+          STAGING_EXCLUDED_REPOS = {"unified-trading-pm"}
+
           # Find repos with pending staging changes (staging_versions != versions)
           pending = []
           for repo, sv in staging_versions.items():
-              if repo.startswith("_"):
+              if repo.startswith("_") or repo in STAGING_EXCLUDED_REPOS:
                   continue
               if sv != stable_versions.get(repo):
                   pending.append(repo)
@@ -111,9 +117,17 @@ jobs:
                   f.write(f"retry_count={sit_retry_count}\n")
               sys.exit(0)
 
-          # Check if staging is locked (SIT already running)
-          if staging_status.get("locked", False) and not drain_pending:
-              print("SIT is locked (already running) — skipping debounce trigger")
+          # Check if staging is locked. Distinguish an ACTIVE sit-gate run (locked_reason
+          # "SIT running" — skip to avoid double-triggering a SIT already in flight) from a
+          # CASCADE lock set by update-repo-version on a breaking/major bump (locked_reason
+          # "...bump cascade..."). A cascade lock MUST still trigger the SIT — the SIT is what
+          # validates the pending repos, promotes them, and CLEARS the cascade lock. The old
+          # unconditional skip meant no SIT ever ran while a cascade lock was held, so the lock
+          # dangled forever (the fleet-wide staging→main deadlock this fixes).
+          lock_reason = staging_status.get("locked_reason", "") or ""
+          is_active_sit_run = "SIT running" in lock_reason
+          if staging_status.get("locked", False) and is_active_sit_run and not drain_pending:
+              print("SIT is locked (sit-gate run already in progress) — skipping debounce trigger")
               # Still update pending_repos in manifest for visibility
               staging_status["pending_repos"] = pending
               m["staging_status"] = staging_status

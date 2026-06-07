@@ -565,10 +565,12 @@ line):
 - **Server-side Next.js API routes use `firebase-admin`, never the client SDK** — the client SDK reads
   `NEXT_PUBLIC_FIREBASE_*` and silently no-ops on UAT (route returns 200 with no write / empty `submissionId`). SSOT:
   `codex/08-workflows/client-onboarding.md` + `codex/05-infrastructure/firebase-split-topology.md`.
-- **GCS canonical batch paths carry `pipeline_mode=batch_*/` LEFT of `asset_group=`** (Phase 3 done) — a prober hitting
-  `raw_tick_data/by_date/day=*/asset_group=*/` without `pipeline_mode=` is on the OLD shape; reader-fallback probes both
-  until Phase 8 (~2026-06-15) removes it. Sports uses `candidate_parquet_paths()` (unaffected). SSOT:
-  `codex/02-data/pipeline-mode-partition.md`.
+- **`pipeline_mode` is SOURCE-AWARE `{mode}_{source}[_{transport}]`** (G0 standardisation; operator R4 2026-06-07) —
+  `mode ∈ {batch,live,replay}`, `source` = VENDOR ONLY (`hyperliquid`, NOT `hyperliquid_rest` — the glued-transport
+  antipattern is retired), `[_{transport}]` suffix in the path key ONLY where a source runs >1 transport per shard (none
+  today); `transport ∈ {rest,websocket,flat_file}` is ALWAYS carried in a separate manifest COLUMN
+  (`default_transport_for_source`; tardis=flat*file, else rest). `live_websocket` is a transitional alias → the
+  `live*<source>`/`replay*<source>`object migration is the gated next tranche. **GCS canonical paths carry`pipeline_mode={mode}*{source}/`LEFT of`asset*group=`** (Phase 3 done) — a prober hitting `raw_tick_data/by_date/day=*/asset_group=*/`without`pipeline_mode=`is on the OLD shape; readers PREFIX-MATCH`batch*_`/`live\__`/`replay\_\*`(+ bare fallback), never the coarse literal. Sports uses`candidate_parquet_paths()`(unaffected). SSOT:`codex/02-data/pipeline-mode-partition.md`+`codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`.
 - **Bump `MAX_DURATION=600` over suppressing the QG `<300s` time check** — when a suite organically outgrows the budget,
   raise it (with a `#` comment on what grew); never deselect/skip slow tests (masks runaway regressions).
   `IGNORE_TIMEOUT=true`/`PYRIGHT_TIMEOUT` stay sanctioned for META-gate-only trips. SSOT:
@@ -853,6 +855,16 @@ phase — plans omitting this are review-blocking.
 - Pushes to `live-defi-rollout` / `feat/*` → NO remote CI. Quality enforced locally via `quality-gates.sh`.
 - On CI fail: `gh run view <run-id> --log-failed`. Fix root cause. Push again.
 - CI failures are NOT issues to flag — fix in real time.
+- **NEVER `[skip ci]` (or `[ci skip]`) a commit that will become the HEAD of a v2-gated promotion PR (HARD RULE,
+  codified 2026-06-07).** A `[skip ci]` commit produces ZERO check runs on its head; when that head is the head of a PR
+  into a branch whose ruleset requires `quality-gates-v2` (`staging`/`main`), the required check is **MISSING → the PR
+  is permanently BLOCKED, and `gh pr merge --admin` REFUSES** ("Repository rule violations found" — you cannot bypass a
+  never-reported required check). `[skip ci]` is safe ONLY for (a) machinery commits that land **directly** on `main`
+  and don't go through a PR (ci-status-update / manifest writes), or (b) `live-defi-rollout` commits you will
+  **re-trigger v2 on before promoting**. Recovery if you hit it:
+  `gh workflow run quality-gates-v2.yml --repo <r> --ref <branch>` on the PR head → the check reports → the PR merges.
+  (Incident: a `[skip ci]` greeks `workspace-qg.yml` deletion on LDR jammed its LDR→main PR #9.) SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "[skip ci] and required checks".
 
 ---
 

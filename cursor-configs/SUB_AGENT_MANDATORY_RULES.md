@@ -102,6 +102,13 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
 3. **The ONLY sanctioned raw `git push origin live-defi-rollout` = dirty deps.** When a dep repo is dirty mid-edit,
    commit + push the dep directly to `live-defi-rollout` (do NOT quickmerge with dirty deps). The other sanctioned raw
    pushes are the ff-pull-in and the cross-repo PM plan-flip in step 5. **Everything else ships via quickmerge.**
+   - **NEVER `[skip ci]` / `[ci skip]` a commit that must later pass a v2-gated promotion PR (HARD RULE 2026-06-07).** A
+     `[skip ci]` commit emits NO check runs; if its head becomes the head of a PR into `staging`/`main` (whose ruleset
+     requires `quality-gates-v2`), the required check is MISSING → PR permanently BLOCKED and even `gh pr merge --admin`
+     refuses ("Repository rule violations found"). `[skip ci]` is safe only for direct-to-`main` machinery commits or
+     LDR commits you re-trigger v2 on before promoting. Recovery: `gh workflow run quality-gates-v2.yml --ref <branch>`
+     on the head → check reports → PR merges. SSOT: `codex/08-workflows/ci-cd-flow.md` § "[skip ci] and required
+     checks".
 4. **Conditional push (multi-agent safety)**: before any push,
    `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
    document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main
@@ -266,8 +273,13 @@ pointer before acting on any of them.
   `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`.
 - **Shard-granularity SSOT**: shard atom identical across writer/manifest/status/gate/UI; 4-pillar validation. **Live =
   batch / Batch = Live**: same code path, no live-only data_types, no per-asset-group backtest engines.
-- **GCS paths carry `pipeline_mode=batch_*/` left of `asset_group=`**; phantom-audit `--apply` only after `prefix_tpls`
-  cover the new shape (else flips real `captured`→`attempted_failed`). SSOT: `codex/02-data/pipeline-mode-partition.md`.
+- **`pipeline_mode` is SOURCE-AWARE `{mode}_{source}[_{transport}]`** (G0; R4 2026-06-07): `mode ∈ {batch,live,replay}`,
+  `source`=VENDOR only (`hyperliquid` not `hyperliquid_rest`), `transport ∈ {rest,websocket,flat_file}` ALWAYS in a
+  separate manifest COLUMN (suffix in the path key only if a source runs >1 transport/shard — none today);
+  `live_websocket`=transitional alias. **GCS paths carry `pipeline_mode={mode}_{source}/` left of `asset_group=`** —
+  readers PREFIX-MATCH `batch_*`/`live_*`/`replay_*` (+ bare), never coarse; phantom-audit `--apply` only after
+  `prefix_tpls` cover the new shape (else flips real `captured`→`attempted_failed`). SSOT:
+  `codex/02-data/pipeline-mode-partition.md` + `codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`.
 - **Data audit RED freezes layer-N+1 work**; only operator-gated `BLOCKED-CREDENTIALS`/`-OPERATOR-DECISION`/
   `-UPSTREAM-OUTAGE` defer (DEFERRED needs a named successor plan). SSOT:
   `codex/02-data/external-data-always-available-rule.md` + `data-pipeline-correctness-hard-rule.md`.

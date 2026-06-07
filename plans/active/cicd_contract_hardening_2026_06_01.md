@@ -739,14 +739,26 @@ machinery):
       `tier_c_promotion_gate.py`). **Follow-up (small):** add the CI/PR-context invocation
       (`--baseline-ref origin/<base> --actor "$GITHUB_ACTOR"`) into `python-quality-gates-v2` so the bot-bypass +
       base-diff also enforce server-side on PRs (local layer shipped).
-- [ ] [SCRIPT] P0. **Guard 2 — single-SSOT-branch discipline.** (a) ALL readers (promoter, sit-gate, staging-to-main,
-      dashboard) read ci_status from **main only** (promoter already does — make explicit + audit the rest). (b)
-      `main-backmerge-to-ldr.yml` must NOT carry ci_status BACKWARD to LDR — a `.gitattributes merge=ours` on the
-      ci_status region / post-backmerge restore, OR declare LDR's copy non-authoritative. Kills the stale-copy
-      round-trip. repo: unified-trading-pm.
-- [ ] [OPERATOR] P0. **🔴 BLOCKED-CREDENTIALS — Anthropic account is OUT OF CREDITS (the systemic root blocker of the
-      entire agentic-CICD self-healing layer).** Found 2026-06-03 (slot-1) tracing the dammed cascade.
-      `claude-api-health-monitor` reports (every run since ~09:47):
+- [x] ✅ [SCRIPT] P0. **Guard 2 — single-SSOT-branch discipline — DONE 2026-06-07 (slot-1).** (a) Audited all readers:
+      `check-staging-lock.yml` fetches the lock from PM's **default branch (main)** via the contents API (no `?ref=`),
+      sit-gate/sit-unlock/staging-to-main run in PM-main context, the promoter reads main — all main-authoritative.
+      **Closed the one remaining local-read gap**: `quickmerge.sh` STAGE-1.5 was reading the staging lock from the LOCAL
+      worktree copy (which drifts because lock writes are `[skip ci]` → the main→LDR back-merge skips them) → it
+      false-blocked on a stale lock; now it reads `git show origin/main:workspace-manifest.json` (PM main SSOT) with a
+      local fallback (PM #165, cherry-pick `c61b37f78`). **(b)** verified `main-backmerge-to-ldr.yml` already guards the
+      backward carry: `scripts/cicd/reconcile_manifest_backmerge.py` auto-resolves manifest conflicts main-authoritative
+      and its `_TOPLEVEL_CI_FIELDS` set covers **both `ci_status`-siblings AND `staging_status`** (lines 43-47) — so a
+      back-merge never carries a stale ci_status/lock backward to LDR. **Bonus durable fix shipped same PR**: the
+      `sit-gate` precheck (the actual root cause of the recurring breaking-cascade lock) now accepts
+      `ci_status >= STAGING_GREEN` (MAIN_GREEN/SIT_VALIDATED), since the no-downgrade guard correctly keeps on-main
+      repos at MAIN_GREEN and the old `== STAGING_GREEN` test was unsatisfiable. repo: unified-trading-pm (PR #165).
+- [x] ✅ [OPERATOR] P0. **RESOLVED + OBSOLETE 2026-06-07 — the Anthropic-out-of-credits blocker no longer applies.** The
+      agentic-CICD self-healing layer runs on **Claude Code session auth (setup-token VM workers), NOT pay-per-call GHA
+      Anthropic API credits** — so a credit balance can no longer dam the cascade. Operator confirmed obsolete
+      2026-06-07. (Historical: it was first top-up-resolved 2026-06-03 below, then the whole dependency was removed by
+      the VM-cutover.) Kept for provenance only; the active blocker is gone. (Original finding, retained for the
+      record:) Found 2026-06-03 (slot-1) tracing the dammed cascade. `claude-api-health-monitor` reports (every run
+      since ~09:47):
       `degraded (billing_credits: "Your credit balance is     too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.")`.
       Cascade chain: **out-of-credits → health-monitor degraded → `claude-api-health-precheck` GATES the
       conflict-resolution-agent (refuses to burn credits on a degraded API) → UAC #67 + every conflicting promotion PR
@@ -835,8 +847,16 @@ machinery):
       `base-library.sh:729`. When aiohttp publishes a patched release in-range (`>=…,<4.0.0`), bump
       `workspace-constraints.toml:8` + `uv lock` re-lock fleet-wide AND remove the two `--ignore-vuln` flags (don't
       leave a fixed CVE ignored). repo: unified-trading-pm. (original blocker finding for history:)
-- [ ] [INFRA] P0. **🔴 NEW DOMINANT BLOCKER — fresh aiohttp CVE fails pip-audit FLEET-WIDE → gates EVERY repo's v2 (and
-      PM #120).** Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run:
+- [x] ✅ [INFRA] P0. **RESOLVED 2026-06-07 (verified) — aiohttp CVE no longer gates the fleet.** Both halves of the
+      operator decision landed and are confirmed in-tree: **(a)** aiohttp is capped `>=3.13.4,<3.14.0` fleet-wide
+      (`workspace-constraints.toml:8` + `canonical-dependency-manifest.json:17`, locked to 3.13.5) — the `<3.14` cap is
+      a deliberate operator decision because aiohttp 3.14 removes `AsyncStreamReaderMixin` which vcrpy 8.1.1 still needs
+      (would break every VCR cassette suite); **(b)** the two CVEs are on the sanctioned `--ignore-vuln` list in BOTH
+      `scripts/quality-gates-base/base-service.sh:930` AND `base-library.sh:729`
+      (`--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265`, non-exploitable: client-only aiohttp, no
+      `CookieJar.load()` on untrusted input). pip-audit therefore no longer fails on these → v2 runs fleet-wide are
+      green on this axis. SSOT: `plans/active/issues/aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md`. (Original
+      finding retained:) Surfaced 2026-06-03 (slot-1) on the PM #120 v2 run:
       `aiohttp 3.13.5: CVE-2026-34993 +     CVE-2026-47265` (newly-published 2026 advisories). pip-audit is a
       **BLOCKING** gate (`base-service.sh:907`), so every fresh `quality-gates-v2` run now fails on it → **nothing
       promotes LDR→staging→main** until resolved, and **#120 (the Guard-3 serialization + FEATURE→STAGING auto-advance
@@ -856,14 +876,14 @@ machinery):
       `--ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265` at `base-service.sh:916` (+ base-library/base-ui),
       tracked for removal when patched. Either is one focused change; whole fleet's v2 + #120 + the cascade unblock the
       moment it lands.
-- [ ] [INFRA] P1. **Genuine v2-red repos surfaced by the cascade (NOT drift — need real per-repo fixes; the substance of
-      their own plans).** Distinct from the false-FAILING drift Guard 3 clears: (a) **execution-service** staging v2
-      fails with `ImportError: cannot import name …` (a stale cross-symbol import on staging — likely resolves when the
-      LDR→staging promotion lands LDR's current code, BUT verify LDR itself is import-clean; if LDR has the ImportError
-      it's a real code bug). (b) **agent-orchestrator** main v2 = failure (AO-specific; AO is mid-staging-migration per
-      `agent_orchestrator_e2e § G6`). These correctly DO NOT promote (don't ship red code) — they need per-repo
-      diagnosis + fix, not a ci_status reconcile. Cascade flows around them (their dependents may dep-block on them).
-      repos: execution-service, agent-orchestrator. Surfaced slot-1 2026-06-03.
+- [x] ✅ [INFRA] P1. **RESOLVED 2026-06-07 (verified) — both genuine v2-red repos are green.** (a) **execution-service**
+      `live-defi-rollout` v2 = **success** (run on `fc6ab9fe`) → LDR is import-clean, so the staging `ImportError` was a
+      stale staging-only cross-symbol import that resolves the moment the LDR→staging promotion lands (it is NOT an LDR
+      code bug). (b) **agent-orchestrator** v2 = **success on BOTH `live-defi-rollout` (`dc622486`) AND `main`
+      (`107ca542`)** — AO was recreated as a first-class (non-mirror) repo and now follows the standard
+      tab→LDR→staging→main flow with rulesets + auto-merge. Neither is a per-repo code blocker anymore; the cascade
+      promotes them normally. repos: execution-service, agent-orchestrator. (Original finding retained for provenance:)
+      genuine v2-red repos surfaced by the cascade; verify LDR import-clean before assuming staging-only.
 - [x] ✅ [SCRIPT] P0. **REGRESSION fixed: gitignored DAG-svg froze ci_status fleet-wide** — slot-1 2026-06-03 (PM #119).
       The 2026-06-03 canonical ignore set gitignored `WORKSPACE_MANIFEST_DAG.svg`, but `ci-status-update.yml` still did
       `git add workspace-manifest.json WORKSPACE_MANIFEST_DAG.svg` → `git add` of an ignored path exits 1 → EVERY
@@ -1283,10 +1303,18 @@ by a PR:
       (dropped pre-commit + transitive deps removed from pyproject in 9bad68c). QG green (106s, sentinel
       dc00485-parent). repo: system-integration-tests. **NOTE the gate is still RED until the aiohttp-staging drift
       below is promoted — see next todo.**
-- [ ] [INFRA] P0. **🔴 SIT GATE STILL RED — fleet-wide aiohttp `<3.14` revert landed on LDR but NOT promoted to
-      `staging` (6+ repos) → SIT workspace-assembly (`uv pip install -e .` / `uv sync` over the editable closure) is
-      UNSATISFIABLE → both `smoke-test-gate` code-tests AND `quality-gates-v2` (the required check on every SIT staging
-      PR) fail with
+- [x] ✅ [INFRA] P0. **RESOLVED 2026-06-07 (verified) — the aiohttp staging-drift is cleared fleet-wide.** Re-checked
+      each drifted repo's `staging` `pyproject.toml`: `features-service`, `market-data-processing-service`,
+      `deployment-api`, `strategy-service` now carry `aiohttp>=3.13.4,<3.14.0`; `market-tick-data-service` +
+      `execution-service` carry the `<3.14` comment-pin; `unified-trading-library` has no direct aiohttp `>=3.14` pin.
+      The LDR `<3.14` revert promoted to staging via the (now-unblocked) drain, so the SIT workspace-assembly (`uv sync`
+      over the editable closure) is satisfiable again → `smoke-test-gate` + `quality-gates-v2` no longer fail with
+      `No solution found`. **AND** `system-integration-tests`' own `quality-gates-v2` is green (run 27096189841,
+      2026-06-07, after the UTL `pipeline_mode_resolver` `BATCH_HYPERLIQUID` fix `d0745bde`). The SIT gate can go green;
+      the staging→main drain is driven by the SIT validation that the sit-gate precheck fix (this session) now permits.
+      (Original finding retained:) fleet-wide aiohttp `<3.14` revert landed on LDR but NOT promoted to `staging` (6+
+      repos) → SIT workspace-assembly (`uv pip install -e .` / `uv sync` over the editable closure) is UNSATISFIABLE →
+      both `smoke-test-gate` code-tests AND `quality-gates-v2` (the required check on every SIT staging PR) fail with
       `× No solution found … alerting-service depends on aiohttp>=3.13.4,<3.14.0 … mtds==0.2.0 depends on     aiohttp>=3.14.0,<4.0.0 … unsatisfiable`.**
       Provenance: slot-1 SIT diagnosis 2026-06-06; PR #22 qg-v2 run 27065734898; the operator aiohttp `<3.14` HARD RULE
       (CLAUDE.md — 3.14 removed `AsyncStreamReaderMixin` → breaks vcrpy 8.1.1). The revert (e.g. mtds `de42ced`) is on
@@ -1295,9 +1323,9 @@ by a PR:
       `2a3af45 fix(deps): bump aiohttp>=3.14.0`). Drifted on staging: **unified-trading-library · features-service ·
       strategy-service · execution-service · deployment-api · market-data-processing-service ·
       market-tick-data-service** (UAC/alerting/instruments/client-reporting-api/ deployment-service staging are already
-      `<3.14`). **FIX = promote each drifted repo LDR→staging** (the standard staging-to-main wave; LDR already carries
-      the correct pin so this is promotion, not new code). mtds staging is DIVERGED-by-merge-commits-only from LDR
-      (`b86bae6`/`916f386` are LDR→staging merge PRs #95/#91) so a fresh LDR→staging merge brings `de42ced`'s revert
+      `<3.14`). **FIX = promote each drifted repo LDR→staging\*\* (the standard staging-to-main wave; LDR already
+      carries the correct pin so this is promotion, not new code). mtds staging is DIVERGED-by-merge-commits-only from
+      LDR (`b86bae6`/`916f386` are LDR→staging merge PRs #95/#91) so a fresh LDR→staging merge brings `de42ced`'s revert
       cleanly. Until then the SIT gate cannot go green and staging→main needs manual `staging-to-main.yml` dispatch.
       repos: market-data-processing-service, market-tick-data-service, unified-trading-library, features-service,
       strategy-service, execution-service, deployment-api.
@@ -3242,4 +3270,311 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
    `scripts/workflow-templates/rollout-workflow-templates.sh`, which renders `semver-agent.yml.tmpl` correctly).
 4. **`scripts/propagation/templates/{major-bump-issue-handler,request-major-bump}.yml` are STALE duplicates** of the
    `scripts/workflow-templates/` SSOT (issue-#2 multi-copy hazard) — de-drift or delete (only the workflow-templates/
-   copies feed the drift gate + canonical rollout).
+   copies feed the drift gate + canonical rollout). **DE-DRIFTED 2026-06-07 (#163): both synced to the canonical
+   workflow-templates/ copies.**
+
+## 🏁 SESSION OUTCOME — 2026-06-07 finish-to-DONE session #2 (slot-1) — findings closed, pipeline UNFROZEN
+
+> Operated under `AUTONOMOUS_AGENT_RULES.md` (incl. Rule 11). Drove the remaining work to done / in-flight-converging,
+> parallelizing with 5 sub-agents. Honest end-state below.
+
+### DONE + verified
+
+1. **All 15 CI/CD hidden-fragility findings CLOSED** (C1-C3, H1-H6, M1-M3, M5-M6 + 2 noise) + the operator-asked
+   rollout-script retired-workflow guard + the dep-clone explicit-version fallback (issue #2) + propagation de-drift.
+   Shipped to **PM `main` #163 (merged `9b8c827ee`)** + on LDR (`8f56545d5`); v2-green verified. (M-by-M detail: see the
+   migrated-findings checkboxes above, all flipped except H4.) **Operator ask:** `rollout-workflow-templates.sh` deletes
+   the stale `workspace-qg.yml.tmpl` AND `_is_retired()`-guards retired workflows so a full rollout can never resurrect
+   `workspace-qg.yml` — full dry-run verified clean.
+2. **SIT, mtds, mdps green on LDR** (sub-agents): SIT actionlint (`secrets` in step-`if` / SC2155 /
+   `secrets`→`vars.TELEGRAM_CHAT_ID`) → `system-integration-tests@cde3322` v2 SUCCESS. mtds UAC-A11c enum retirement
+   (`dex_swaps`→`dex_pool_swaps`) → mtds #143 v2 SUCCESS. mdps already green.
+3. **VM-host items — 7 done/verified** (sub-agent, SSM→vm-0): `delete_branch_on_merge=false` + MemoryMax=56G drop-in +
+   `QG_HOST_CONCURRENCY=1` floor added to `bootstrap_vm.sh` + applied live (`agent-orchestrator@0ef02b3`→vm-0);
+   git-health self-heal/summarise + LIVE-set alert scoping verified already-correct. **api_host issue = 0 open.**
+4. **🔑 Cleared the STALE staging lock — THE systemic "staging==LDR" blocker.** `staging_status.locked=True` stuck since
+   11:11 (mtds 0.4.0 SIT-serialize) blocked EVERY repo's `check-staging-lock` → all LDR→staging drain PRs BLOCKED
+   despite green staging-v2. Verified fully stale (`versions==staging_versions==lock_version==0.4.0`, no SIT ~5h);
+   cleared on `main` (`1b34d2299` [skip ci]), dispatched `staging-unlocked` ×25, close/reopened the 19 drain PRs. Drain
+   UNBLOCKED + converging (instruments/AO CLEAN; rest CI-time-bound).
+
+### 🆕 New findings (durable — track to closure)
+
+- **`staging-lock-check.yml` `repository_dispatch` path does NOT refresh open PR heads** — runs in default-branch
+  context, so `staging-unlocked` is ineffective; close/reopen is the only reliable refresh (used this session). Durable
+  fix: on dispatch, re-fire each open `base:staging` PR's head check (or a PM workflow that close/reopens on unlock).
+- **`detect_template_drift.py --workflows` is ref-sensitive (local≠CI)** — local reads siblings at LDR; CI checks PM's
+  deps cloned at `main`. A dep's LDR-but-not-main workflow fix is clean locally, NEW-drift in CI. Baselined utl/uac
+  major-bump as transient-pending-promotion (same class as update-dependency-version). Lesson: never `--baseline-write`
+  from local state. Durable fix: clone deps at LDR for the check, or skip cloned-dep repos (check full checkouts only).
+
+### Still in-flight (CI-time-bound / sub-agents) + operator-tracked
+
+- **Fleet staging drain → full `staging==LDR`**: UNBLOCKED + converging per repo as reopened drain-PR v2 completes; no
+  systemic blocker remains (per-repo v2 tails only).
+- **Agent A** — fleet workflow rollout (major-bump→7 repos + update-dependency-version uv-lock fleet-wide + semver):
+  in-flight (issue-#2 line-191 + H4's fleet-commit half — H4 left open pending these commits).
+- **infra_slot_sync remaining**: cleanup sub-agent in-flight (backlog.mock P1, AutoSpawn-SQLAlchemy P3, ui-semver
+  checkout P2); operator-gated #1/#2 stay BLOCKED-OPERATOR.
+- **plan-health-gate PIN — HELD (do NOT pin yet).** Functionally green (#152) but RED on PM PRs due to the pre-existing
+  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated promotion.
+  **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate` (verify via
+  `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
+- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead; `main-backmerge-to-ldr`
+  alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then LDR→main promote.
+
+### Resolved blockers (were operator-gated; now cleared)
+
+- **✅ agent-orchestrator rulesets + auto-merge — RESOLVED 2026-06-07.** Root cause was AO being a **MIRROR of an
+  external repo** (rulesets/auto-merge un-configurable regardless of Pro — the earlier "billing" framing was wrong).
+  **Operator RECREATED AO as a fresh first-class repo** (verified: `fork:false`, `parent/source:none`, created
+  2026-06-07T14:10Z). Verified healthy: `require-quality-gates` ruleset present with the correct fleet context
+  `Quality Gates (agent-orchestrator) / quality-gates-v2`; `allow_auto_merge:true`; `delete_branch_on_merge:false`;
+  `main`+`staging`+`live-defi-rollout` branches all exist (the long-blocked **G6 `staging`** is now in place → AO
+  follows the standard `tab→LDR→staging→main` flow like every repo); and this session's commits carried over (`0ef02b3`
+  bootstrap/MemoryMax, `6caa95a` backlog.mock gitignore, `b10af714` staging-promote). **v2 + auto-merge PROVEN
+  END-TO-END 2026-06-07:** a verification PR (#2, `docs/REPO_PROVENANCE.md`) triggered v2, which posted the exact
+  required check `Quality Gates (agent-orchestrator) / quality-gates-v2`, went GREEN, and **auto-merged to `main`**
+  (`107ca5422`). One gap found + fixed along the way: the recreated repo's `GH_PAT` secret was non-clone-capable
+  (couldn't auth the private dep-repo clone → v2 red at the clone step) — reset it to the canonical fleet token
+  (clones + carries Workflows:write). **Full fleet Actions-secret set RESTORED to AO 2026-06-07** (operator-asked) —
+  from GCP SM (`github-actions-sa-key`→`GCP_SA_KEY`, `anthropic-api-key`→`ANTHROPIC_API_KEY`, `telegram-bot-token`→
+  `TELEGRAM_BOT_TOKEN`) + `GCP_PROJECT_ID=central-element-323112` + `WIF_PROVIDER`/`WIF_SERVICE_ACCOUNT` (AO's own
+  values from `deploy-dashboard.yml`) + the `TELEGRAM_CHAT_ID` variable. Verified: AO's secret set now `diff`-clean ==
+  the fleet reference (uac). AO is a normal, fully-provisioned fleet repo now.
+- **✅ STOPPED `i-007e8d99` decommissioned — TERMINATED 2026-06-07** (operator-decided; confirmed `terminated` in AWS).
+- **✅ vm-0 recovery-stash — RESOLVED** (operator: drop; the stash was already gone — `git stash list` empty on vm-0).
+
+### 🟢 UPDATE (later 2026-06-07) — drain CONVERGING + 3rd new finding + api_host archived
+
+- **Staging drain: 1 → 15/25 staging==LDR after the unblock, climbing.** Two more gaps fixed beyond the stale-lock
+  clear: (a) the `staging-unlocked` dispatch ran on the default ref (didn't refresh open PR heads) → close/reopened the
+  19 drain PRs; (b) **🆕 FINDING — closing a PR DISABLES its auto-merge, and reopen does NOT restore it** → the reopened
+  CLEAN PRs sat unmerged until I **re-enabled auto-merge fleet-wide** (1→15 jump confirmed the mechanism). The
+  staging-unlock playbook (and any close/reopen-based refresh) MUST re-enable auto-merge as a paired step. Remaining
+  stragglers are normal cascade states (v2 running / promoter-reopen / Agent A still churning their LDR) — no systemic
+  blocker; converge autonomously. AO #9 merged manually (Pro-blocked auto-merge).
+- **Cleanup agent DONE** (infra_slot_sync #3/#4/#8): backlog.mock.yaml `git rm --cached`+gitignore
+  (`agent-orchestrator@6caa95a`, verified gone on vm-0); AutoSpawn SQLAlchemy not-reproducible (already fixed by WAL +
+  `busy_timeout`); ui-semver checkout confirmed-fixed (GH_PAT added 06-04).
+- **ALL 3 cluster issues ARCHIVED** (`plans/archive/issues/`): **api_host_chronic_impairment** (0 open),
+  **semver_agent** (cascade-core fixed; residual non-blocking), **infra_slot_sync** (after operator decisions
+  2026-06-07: terminate `i-007e8d99` ✓ + drop stash → already gone ✓; #3 dup-tracked + ongoing-mechanism; #4 moot —
+  ml-inference/ml-training repos are ARCHIVED/read-only). Operator-decided items resolved; no false-archive.
+
+## 🏁 SESSION OUTCOME — 2026-06-07 finish-to-DONE session #3 (slot-1) — breaking-cascade drain root-caused + unjammed
+
+> Operated under `AUTONOMOUS_AGENT_RULES.md` (incl. Rule 11). Operator dispatch: finish the remaining CI work to a
+> green, self-sustaining fleet (org migration OUT OF SCOPE). The org-migration / AO-recreation were left to the
+> operator. Honest end-state below; nothing left for the operator to "pick up" except the CI-time-bound cascade
+> convergence (now unblocked + self-sustaining) and the named BLOCKED-UPSTREAM item.
+
+### 🔑 THE durable root cause found + fixed this session — the staging→main drain kept re-jamming
+
+**`sit-gate.yml` precheck was UNSATISFIABLE for the breaking cascade.** It required every pending repo to be EXACTLY
+`ci_status==STAGING_GREEN`, but the ci_status no-downgrade guard (correctly) keeps an on-main repo at `MAIN_GREEN` (rank
+4 > STAGING_GREEN rank 2) even when it has fresh staging changes — a green staging v2 cannot knock MAIN_GREEN down. So
+with the uac=0.2.0 / utl=0.4.0 / features=0.1.0 breaking cascade, every pending repo sat at MAIN_GREEN → sit-gate's
+precheck failed → SIT never ran → the breaking-cascade lock (set by `update-repo-version` on each breaking bump) never
+cleared → `sit_retry_count` exhausted at max(3) → auto-retrigger halted → **permanent staging lock → the entire
+LDR→staging→main drain dammed.** Fix: accept `ci_status >= STAGING_GREEN` ({STAGING_GREEN, SIT_VALIDATED, MAIN_GREEN});
+a genuinely-red staging is written FAILING (never suppressed by no-downgrade) so this does not admit red code. Shipped
+via **PM #165** (cherry-pick `c61b37f78`). This is the fix that makes the cascade self-sustaining.
+
+### DONE + verified (this session)
+
+1. **Staging lock cleared** (was stuck, retry-exhausted) on PM main (`ce16ffd0`, then re-cleared `53da20dd` to land the
+   fix) + LDR copy mirrored unlocked (`d7a84c5`). The lock legitimately re-engages on each breaking bump — but with the
+   sit-gate fix it now self-clears via a real SIT run instead of dangling forever.
+2. **45 stale `check-staging-lock` checks re-fired** fleet-wide (they read PM main = unlocked → pass) → unblocked the
+   LDR→staging promote PRs. **Mechanism**: re-run the PR's pull_request-context check run (repository_dispatch does NOT
+   refresh open PR heads — durable finding below).
+3. **WORK#3 Guard 2 — DONE**: audited readers (check-staging-lock reads PM main; sit-gate/staging-to-main/promoter run
+   in main context); closed the one local-read gap — `quickmerge` STAGE-1.5 now reads the lock from `origin/main` (not
+   the drift-prone local copy); confirmed `reconcile_manifest_backmerge.py` already covers ci_status **and**
+   staging_status main-authoritative on back-merge. (PM #165.)
+4. **WORK#2 — SIT green**: the `PipelineMode.BATCH_HYPERLIQUID_REST` AttributeError was a UTL-side stale ref in
+   `pipeline_mode_resolver.py`, already fixed (`d0745bde`); SIT's own v2 = success (run 27096189841). The other "v2-red"
+   repos were STALE ci_status — deployment-service / execution-service / mtds / features / greeks were all already green
+   on LDR. Only PM (credential-orphan ratchet) + SIT were genuinely red, both fixed.
+5. **WORK#7 — stale blockers flipped with verified evidence**: Anthropic-credits (obsolete — Claude Code session auth),
+   aiohttp CVE (`<3.14` cap + `--ignore-vuln` confirmed in base-service.sh:930 + base-library.sh:729), SIT-gate-red
+   (staging aiohttp drift cleared fleet-wide; SIT v2 green). PM credential-orphan ratchet back to baseline (10) → PM v2
+   green.
+6. **WORK#5 — ci_canonical 3 doc P1s flipped** (workspace_qg issue already archived; CLAUDE.md v2 pointer exists L833;
+   pre-archival codex-alignment done). v1-caller deletion stays BLOCKED-UPSTREAM (GH #4422570) — correct, not flipped.
+7. **WORK#4 — UI ui-quality-gates-v2 already migrated** (`quality-gates-v2.yml` + `ui-quality-gates-v2.yml`, main
+   requires `Quality Gates (unified-trading-system-ui) / quality-gates-v2`; commit `c3a5437f`). No-op confirmed.
+8. **WORK#6 — AO code items shipped** (`agent-orchestrator@1008b7f`): F6 pm-pull systemd service+timer (5-min) in
+   `bootstrap_vm.sh`; `notify_work_picked_up(slot,repo,task)` in `server/notifications/slack.py` wired into
+   `server.py boot_slot`. basedpyright clean, 346 tests pass.
+9. **WORK#1b — DIRTY PR reconciliation**: closed 4 superseded `fix/semver-agent-pm-path` PRs (fix already on main via
+   canonical rollout), 6 redundant uac-0.2.0 dep-update PRs (base already at 0.2.0), 3 stale base=main feature/uvlock
+   branches (deployment-ui #4, mtds #94, uta #5). Resolved the 3 GENUINE uac-0.2.0 conflicts via throwaway-clone
+   sub-agents — execution #216 (`ec92e3f8`), utl #244 (`51f8cce4`), mtds #133 (`44f439f`) — all now MERGEABLE (aiohttp
+   kept `<3.14`, uac `>=0.2.0`, uv.lock solvable). **mdps `major-bump-issue-handler.yml` H4 rollout completed**
+   (`mdps@8a4c7dd`) — the actionlint expression-injection fix the SSOT had but mdps never received; this also unblocked
+   PM's workflow-template-parity gate.
+
+### Drain convergence at session end (CI-time-bound, self-sustaining)
+
+- Staging lock: clears via real SIT runs now (sit-gate fix). Promote PRs auto-merge as check-staging-lock + qg-v2 pass:
+  instruments #403, mdps #101 already MERGED this session; staging==LDR up to ~10/24 and climbing.
+- The remaining staging→main promotion is gated on a real SIT (full-workspace-sit) validation run, which the sit-gate
+  fix now PERMITS for the MAIN_GREEN pending set. Once PM #165 merges to main (in-flight, v2 running), the next
+  sit-debounce→sit-gate→SIT cycle validates the cascade and promotes staging→main.
+
+### 🆕 Durable findings captured (track to closure)
+
+- [ ] [SCRIPT] P2. **`staging-unlock` / `check-staging-lock` refresh gap (durable).** A `repository_dispatch`
+      (`staging-unlocked`) runs `check-staging-lock` in DEFAULT-branch context → it does NOT update an open PR head's
+      required-check status; only re-running the PR's `pull_request`-context check run (or close/reopen + re-enable
+      auto-merge) refreshes it. This session re-fired 45 checks by hand. **Durable fix**: a PM workflow that, on staging
+      unlock, iterates open `base:staging` PRs and re-runs each one's `check-staging-lock` run (and re-enables
+      auto-merge). repo: unified-trading-pm. Provenance: slot-1 2026-06-07.
+- [ ] [INFRA] P3. **Lock writes are `[skip ci]` → main→LDR back-merge skips them → the LDR/local manifest copy carries a
+      stale `staging_status`.** quickmerge now reads main (fixed), but other local readers could still see drift.
+      Options: stop `[skip ci]`-ing the lock toggle (noisy), or have the back-merge force-sync `staging_status` from
+      main on a schedule. repo: unified-trading-pm. Provenance: slot-1 2026-06-07.
+- [ ] [INFRA] P3. **2 baselined workflow-template warns remain** (non-blocking) beyond the mdps major-bump NEW-drift
+      fixed this session — finish the H4 fleet rollout for the other warned templates/repos so the baseline ratchets
+      to 0. repo: unified-trading-pm + drifted consumers. Provenance: slot-1 2026-06-07 `detect_template_drift.py`.
+- **NOT MINE (left in place):** PM #164 (`tab/ikennaigboaka/5`, slot-5's `docs(plans)` PR to main) is DIRTY vs main —
+  another operator-slot's in-flight docs PR; resolves via slot-5's rebase / the PM conflict-resolution path, not a
+  cross-slot stomp.
+
+### Genuine non-code blockers (documented — not deferrable-by-choice)
+
+- **v1 PM-callee `python-quality-gates.yml` deletion** — BLOCKED-UPSTREAM on GH Support #4422570 (premature deletion
+  risks re-poisoning the v2 ghost cache). Stays open by design; archive ci_canonical_v2 when the ticket clears.
+- **OdumResearch org migration + AO repo recreation** — OUT OF SCOPE per operator dispatch; left to the operator. AO is
+  already green on LDR+main and following the standard flow.
+
+### ✅ END-TO-END VERIFIED (Rule 11) — the machinery is proven self-sustaining
+
+Forced a real SIT run (`sit-debounce-trigger -f drain_pending=true`) AFTER the sit-gate fix landed on main, and watched
+the actual chain:
+
+1. **sit-gate precheck now PASSES** for the MAIN_GREEN pending set (the run proceeded PAST the precheck — the exact
+   thing that was unsatisfiable before). ✅ The root-cause fix works on a live cascade.
+2. That **surfaced a latent second bug** in sit-gate's `Lock staging` step (dormant for as long as the precheck always
+   failed): `payload_shas_raw = '${{ toJson(commit_shas) }}'` inlined toJson's MULTI-LINE JSON into a single-quoted
+   Python literal → `SyntaxError: unterminated string literal`. Fixed via env-var indirection (`COMMIT_SHAS_JSON`) +
+   null/non-dict guard — **PM #166** (merged). This is precisely the Rule-11 "verify on a real consumer run" catch: the
+   precheck fix alone would have looked done locally but SIT still couldn't lock.
+3. With BOTH fixes on main, the next SIT cycle ran, **failed honestly** on the genuine staging incoherence
+   (`PipelineMode.BATCH_HYPERLIQUID_REST` — UTL's `pipeline_mode_resolver` fix `d0745bde` is on UTL LDR but not yet
+   promoted to UTL staging), and **correctly auto-unlocked** (`staging_status.locked=False`, reason "SIT failed — open
+   for fixes"). That is the intended fail-safe: SIT runs, validates, and on a real failure unlocks staging for fixes
+   instead of dangling forever. The remaining green-path is purely the LDR→staging drain carrying the UTL fix to staging
+   (utl #249 + peers), after which SIT validates and staging→main promotes — all CI-time-bound and unattended now.
+
+### Convergence snapshot at close (2026-06-07 ~17:45 UTC)
+
+- **DIRTY PRs fleet-wide: 0** (every conflicted PR reconciled or closed-as-stale/redundant this session).
+- **9 LDR→staging promote PRs merged** since 15:00 (drain actively flowing); **staging==LDR on 12/24 repos** and
+  climbing as the re-fired check-staging-lock + qg-v2 complete.
+- **Staging lock: self-clearing** via real SIT runs (no longer dangles at retry-exhausted).
+- **All genuinely-v2-red repos green**: SIT (UTL-side fix), PM (credential ratchet),
+  deployment/execution/mtds/features/greeks (were stale ci_status, already green on LDR), AO (green LDR+main).
+- Residual: CI-time-bound cascade convergence (promotes merging → UTL staging fix → SIT green → staging→main), the 3
+  durable findings captured above (staging-unlock refresh, [skip ci] lock back-merge, 2 baselined template warns), the
+  BLOCKED-UPSTREAM v1-callee delete (GH #4422570), and slot-5's PM #164 docs PR (not mine). Nothing for the operator to
+  pick up beyond those.
+
+## 🔔 #ci-failures alert triage + v1-deprecation + billing-alert rewire — 2026-06-07 (slot-1, session #3 cont.)
+
+Operator pasted the 17:16–17:45 #ci-failures stream and asked: deprecate v1 for real, rewire the billing alert to AO's
+all-accounts-out signal (Claude API no longer used), and report what's real vs redundant.
+
+### ✅ v1 quality-gates — DEPRECATED (the BLOCKED-UPSTREAM item is now actionable + done)
+
+The v1 PM callee `python-quality-gates.yml` is **already deleted fleet-wide** (only `python-quality-gates-v2.yml`
+remains; no service repo carries a v1 `workspace-qg.yml` EXCEPT greeks-service). **greeks-service was the last v1
+artifact** → clean removal PR **greeks #11** (deletes `workspace-qg.yml` + rolls out the canonical
+`major-bump-issue-handler.yml` with the actionlint/bash-guard fix; supersedes the bash-guard-tripping #10). Cleaned the
+stale v1 comment in `ci-status-update.yml`. Net: v1 is gone; the GH #4422570 ghost-cache risk is moot now that v2 has
+been the sole required check fleet-wide for weeks.
+
+### ✅ Billing alert — REWIRED to agent-orchestrator all-accounts-out (Claude API retired)
+
+- **Retired `claude-api-health-monitor.yml`** (deleted). It pinged the raw pay-per-call Claude API
+  (`ANTHROPIC_API_KEY_SYSHEALTH`) — which the fleet **no longer uses** (every agent escalates to an AO VM worker on
+  Claude Code session-auth / setup-tokens). Its `:rotating_light: Claude API degraded — billing_credits` alert was pure
+  noise.
+- **Neutralized the vestigial `claude-api-health-precheck`** (the script → always-pass no-op; semver-agent's inline
+  check → no-op) so the ~5 agent workflows that gated on it no longer false-dam during a (now-irrelevant) credit state.
+  Both already fail-OPEN on a missing monitor run, so deleting the monitor is safe.
+- **Added the real signal in AO** (`agent-orchestrator@318f252`): `notify_all_accounts_unusable(...)` in
+  `server/notifications/slack.py` + `usable_account_count()` / `all_accounts_unusable()` in `state_store.py`, wired into
+  `mark_account_rate_limited` / `mark_account_auth_failed` with a **state-transition sentinel** (fires ONCE to
+  #agent-orchestrator-alerts only when ALL Claude Code accounts go unusable — out-of-billing / rate-limited /
+  auth-failed — and re-arms on recovery). This is the meaningful "the fleet can't dispatch any worker" signal the
+  operator asked for.
+
+### 📋 Alert-stream triage — what's real, what's noise, what's solved
+
+| Alert                                                                                     | Verdict                                                                                            | Action                                                                                                                                                                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Claude API degraded — billing_credits` (CRITICAL)                                        | **REDUNDANT** — Claude API unused                                                                  | RETIRED → AO all-accounts-out (done this session)                                                                                                                                                                                                                                                                                                                                      |
+| `Guard 3 reconciled 3 ci_status drift(s)`                                                 | **HEALTHY** — reconciler working as designed                                                       | none                                                                                                                                                                                                                                                                                                                                                                                   |
+| `CI RECOVERED: instruments/mdps/mtds/execution …`                                         | **HEALTHY** — cascade converging                                                                   | none                                                                                                                                                                                                                                                                                                                                                                                   |
+| `sit-unlock: SIT Failed — staging unlocked`                                               | **HEALTHY** — the intended fail-safe (SIT runs, fails on real incoherence, unlocks for fixes)      | none (machinery now correct after the sit-gate fixes #165/#166)                                                                                                                                                                                                                                                                                                                        |
+| `ldr-ci-monitor: unified-trading-pm RED→GREEN`                                            | **HEALTHY** — my PM credential-ratchet fix recovered                                               | none                                                                                                                                                                                                                                                                                                                                                                                   |
+| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                        |
+| `mdps/mtds FAILING — AttributeError BATCH_HYPERLIQUID_REST`                               | **REAL — the #1 blocker**                                                                          | the UAC+UTL `BATCH_HYPERLIQUID` enum migration is coherent on LDR+staging but **main lags for BOTH** (data-value change `batch_hyperliquid_rest`→`batch_hyperliquid`); consumer/SIT QGs that clone UTL@main hit the old name. Needs the **coordinated UAC+UTL staging→main promotion** (data-track; see finding below). Do NOT fix piecemeal (my UTL #250 was closed for exactly this) |
+| `execution #216 QG: STEP 5.21 reportUnknown* warning/none + 5.12b gs:// URI`              | **REAL** — pre-existing execution-service QG-debt surfaced by the dep-update PR                    | execution-service's own plan (basedpyright strict config + replace `gs://` f-string in `evidence_router.py:66` with `resolve_bucket_name`)                                                                                                                                                                                                                                             |
+| `mtds #133 QG: pydantic ValidationError CandleBoundaryCrossedEvent`                       | **REAL** — likely the same enum-value migration touching a UAC event model                         | resolves with the coordinated enum migration; verify the event's `pipeline_mode` field accepts the new value                                                                                                                                                                                                                                                                           |
+| `7 promotion PRs STUCK (auto-merge wedged)`                                               | **MIXED** — stale `check-staging-lock` (re-fired this session) + the enum-skew blocker + 1 dead PR | re-fired the staging-lock checks; closed strategy #75 (dead 23h resync); the rest unblock when the enum migration lands on main                                                                                                                                                                                                                                                        |
+| `tab-branch drift in mtds/uac/execution (hk/4,5,8 · ikennaigboaka/7,9,10,11)`             | **REAL but NOT-MINE** — other operators'/slots' diverged worktrees jamming their tab→LDR mirror    | each must `git rebase origin/live-defi-rollout` on the OWNING host; my own slot-1 worktrees are clean (0 ahead)                                                                                                                                                                                                                                                                        |
+
+### 🆕 Durable findings (track to closure)
+
+- [ ] [DATA] P0. **UAC+UTL `BATCH_HYPERLIQUID` enum migration is half-promoted — main lags coherently.**
+      `BATCH_HYPERLIQUID_REST`→`BATCH_HYPERLIQUID` (incl. the value `batch_hyperliquid_rest`→`batch_hyperliquid`) is
+      complete on LDR+staging for BOTH unified-api-contracts (main 14 behind) AND unified-trading-library (main 8
+      behind), but main still has the old member for both. Because the QG dep-clone resolves deps at
+      **main/manifest-version**, any consumer or SIT run that clones UTL@main hits
+      `AttributeError BATCH_HYPERLIQUID_REST` → mdps/mtds/SIT red. **Fix = the COORDINATED UAC+UTL staging→main
+      promotion (must land together, with data-path verification that no `pipeline_mode=batch_hyperliquid_rest` data is
+      orphaned).** This is a data/features-track migration, NOT a CI patch (my piecemeal UTL #250 was closed). repos:
+      unified-api-contracts, unified-trading-library. Provenance: slot-1 2026-06-07 (Slack #ci-failures 17:26–17:29).
+- [ ] [INFRA] P2. **QG dep-clone ref-determinism.** The dep-clone (`tag → branch → main` fallback) can clone two deps
+      (e.g. UAC + UTL) at INCONSISTENT refs (one staging-new, one main-old) → a coherent staging can still fail a
+      consumer QG. Make the dep-clone resolve ALL deps at the SAME ref as the branch under test (or fail loud on a mixed
+      set). repo: unified-trading-pm (base-service.sh dep-clone). Provenance: slot-1 2026-06-07.
+- [ ] [SCRIPT] P3. **Debounce the FEATURE_GREEN↔FAILING ci-status flap alerts** during active cascade convergence
+      (deployment/execution/mtds flapped CRITICAL↔recovered within minutes) — only alert on a sustained (N-tick)
+      regression, not transient cascade churn. repo: unified-trading-pm (ci-status-update / ci-failure-watcher).
+      Provenance: slot-1 2026-06-07.
+
+### What I solved this session (cont.)
+
+v1 deprecated (greeks #11); billing alert rewired (claude-api-health-monitor retired + AO all-accounts-out shipped
+318f252); vestigial claude-api-health-precheck neutralized; strategy #75 dead-resync closed; 7 stuck promote PRs'
+staging-lock re-fired. The enum-migration P0 + execution/mtds code-debt are real and named above for the data/execution
+tracks (out of this CI-machinery dispatch's scope to force on main given the data-correctness implications).
+
+## 🔗 Cross-plan coordination + hygiene (2026-06-07) — read before editing shared CI surfaces
+
+> Added per operator ask ("make conflicts clear so we don't hit collisions") after the cluster archive sweep.
+
+- **⚠️ SHARED SURFACE — `scripts/quality-gates-base/base-service.sh`.** Multiple cluster items edit this one file; an
+  agent picking up any of them MUST coordinate (it's the #1 collision risk in the CI/CD cluster):
+  - THIS plan: the H5 SHA-sentinel gate + the per-repo QG-debt steps.
+  - `infrastructure_master` § "P3 — backlog": the **uv-pin drift-guard** (greps base-service.sh among 4 pin sites) + the
+    **fleet per-repo local-QG-debt sweep** (both MIGRATED from the now-archived `uv_lockfile_determinism`).
+  - `utl_full_quality_gates_green`: T0 QG-green work also runs through base-service.sh. Rule: stage `base-service.sh`
+    edits by NAMED hunk, re-run a consumer repo's QG (Rule 11), and never blanket-format it.
+- **Cross-plan gate-checker is now clean.** `scripts/check-cross-plan-gates.py` had ONE gate
+  (`defi-keys-phase1-blocks-cicd-backfill`) that was permanently false-BLOCKED — both referenced plans are archived and
+  its `source_plan_pattern` had a `.md.md$` double-extension typo. **Removed 2026-06-07** (`GATES=[]`); the checker now
+  exits 0. Re-add an entry only for a genuine live "plan-A-todo blocks plan-B-todo" dependency.
+- **Cluster archive sweep (2026-06-07):** archived (0-open / core-done, deferreds migrated):
+  `api_host_chronic_impairment`, `semver_agent_missing_version_commit_breaks_dep_cascade`,
+  `infra_slot_sync_session_handoff`, `quality_gates_resource_contention_speedup`,
+  `agent_orchestrator_e2e_workflow_and_execution_scope`, `agent_context_and_memory_hygiene`, `uv_lockfile_determinism`,
+  `ci_canonical_v2_migration` (v1 fully removed, fleet is v2-only — operator-confirmed). Remaining active cluster: THIS
+  plan (master), `utl_full_quality_gates_green`, `qg_commit_quality_boundary_and_slot_ff_push`,
+  `codex_vs_repo_docs_ssot_audit`, `harden_grepable_rules_into_ci_gates`, `orchestrator_fleet_worker_spawn_enablement`
+  (2), `issue_docs_remediation_sweep`, `fleet_audit_triad_deferred_followups` (data/operator track).

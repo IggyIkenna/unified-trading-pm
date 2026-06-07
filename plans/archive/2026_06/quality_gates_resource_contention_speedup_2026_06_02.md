@@ -3,7 +3,7 @@ title: Quality-gates resource-contention speedup — do-less-work + cross-slot g
 parent_epic: infrastructure_master
 assigned_vm: vm-cross-cutting
 priority: P2
-status: active
+status: archived
 execution_scope: local-only
 estimate_class: infra
 estimate_baseline_ai_days: 3.0
@@ -91,6 +91,17 @@ todos:
     status: todo
 isProject: false
 ---
+
+> **✅ ARCHIVED 2026-06-07 [unlock-plan].** All todos complete (the `todos:` block is fully `[x]`). The core shipped:
+> the QG host-governor + do-less-work caching + per-repo resource baseline + 2× deviation guard (`base-service.sh`),
+> validated by the aggregate-load benchmark (K=4 governor serialisation holds, no swap/steal).
+>
+> ## Deferred work — migrated to:
+>
+> - **VM-side QG-memory baseline** (blocked on the CloudWatch memory agent install on fleet VMs) →
+>   `plans/epics/infrastructure_master.md` § "P3 — backlog".
+> - **QG aggregate-storm K∈{4,8} validation** (deferred to a coordinated quiet window) →
+>   `plans/epics/infrastructure_master.md` § "P3 — backlog".
 
 # Quality-gates resource-contention speedup
 

@@ -14,11 +14,17 @@ source:
     from operator's IP)
 locked_by: api_host_chronic_impairment_2026_05_29
 priority: P2
-status: active
+status: archived
 parent_epic: orchestrator_master
 estimate_calibrated_ai_days: 0.8
 estimate_class: infra
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-06-07.** All actionable items are DONE (0 open): MemoryMax=56G drop-in + the
+> qg-host-governor LOW floor are now provisioning-persistent in `bootstrap_vm.sh` (Step 5.7 / 6.1,
+> `agent-orchestrator@0ef02b3`) and applied live on vm-0 (SSM-verified `MemoryMax=60129542144`,
+> `QG_HOST_CONCURRENCY=1`). No DEFERRED items; no codex SSOTs needing alignment. `[unlock-plan]` cleared the self-lock.
+> SSOT for the fix: `cicd_contract_hardening_2026_06_01.md` § SESSION OUTCOME 2026-06-07.
 
 > **🔄 VERIFICATION 2026-06-01 (harsh) — KEEP OPEN; plan covered the defensive layer only.** The
 > `api_host_chronic_impairment_2026_05_29` plan (16/16) shipped the workarounds: MemoryMax=56G cgroup cap
@@ -605,9 +611,13 @@ this is hardening-against-recurrence, not an active fire. Concrete steps when pi
    `/etc/systemd/system/orchestrator.service.d/memory-cap.conf` exists + effective `MemoryMax` ≤ 56G after every
    reprovision (same class as the symmetric-host-verify cron).
 
-- [ ] [INFRA] P2. **Guard the MemoryMax cap against reprovision-loss** — `bootstrap_vm.sh` (or a verify cron) must
-      (re)write `orchestrator.service.d/memory-cap.conf` + assert effective `MemoryMax` ≤ 56G; today it silently
-      regressed to `infinity` (found 2026-06-07). repo: agent-orchestrator (bootstrap_vm.sh + verify).
-- [ ] [INFRA] P2. **Pin qg-host-governor token floor LOW on the central dispatch host** so worker QG/pytest cannot run a
-      32-57 GB job alongside the orchestrator on vm-0 (per-host override of the fleet floor). repo: unified-trading-pm
-      (qg-host-governor.sh) + agent-orchestrator bootstrap.
+- [x] ✅ [INFRA] P2. **Guard the MemoryMax cap against reprovision-loss** — Step 5.7 added to `bootstrap_vm.sh`:
+      idempotently (re)writes `orchestrator.service.d/memory-cap.conf` (`MemoryMax=56G` + `MemorySwapMax=16G`) + runs
+      `daemon-reload` on every provision, so it can never silently regress. SSM-verified 2026-06-07 on vm-0: effective
+      `MemoryMax=60129542144` (56G) / `MemorySwapMax=17179869184` (16G), service active. agent-orchestrator@0ef02b3.
+      repo: agent-orchestrator (bootstrap_vm.sh).
+- [x] ✅ [INFRA] P2. **Pin qg-host-governor token floor LOW on the central dispatch host** — Step 6.1 added to
+      `bootstrap_vm.sh` (planning role block): writes `QG_HOST_CONCURRENCY=1` to `.env.local` if not already set,
+      limiting the governor to 1 concurrent QG slot on the dispatch host. Applied live on vm-0 via SSM 2026-06-07
+      (`QG_HOST_CONCURRENCY=1` confirmed in `.env.local`). agent-orchestrator@0ef02b3. repo: agent-orchestrator
+      (bootstrap_vm.sh).

@@ -1,47 +1,59 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-28
+last_reviewed: 2026-06-07
 ---
 
 # `pipeline_mode` Column — Batch/Live Reconciliation
 
-> **STATUS** — Documents the `pipeline_mode` manifest column. On-disk partition is IN PROGRESS as a named rider per AG
-> L3 walk (see § "On-disk partition" below). Implementation plan:
-> [`plans/active/pipeline_mode_implementation_2026_05_28.md`](../../plans/active/pipeline_mode_implementation_2026_05_28.md).
+> **STATUS** — Documents the `pipeline_mode` manifest column + the source-aware `{mode}_{source}[_{transport}]` model
+> (G0 standardisation 2026-06-05; operator R4 transport rule 2026-06-07). On-disk partition is IN PROGRESS as a named
+> rider per AG L3 walk (see § "On-disk partition" below). Implementation plan:
+> [`plans/active/pipeline_mode_implementation_2026_05_28.md`](../../plans/active/pipeline_mode_implementation_2026_05_28.md);
+> source-aware model SSOT:
+> [`plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`](../../plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md).
 
 ## What `pipeline_mode` is
 
 `pipeline_mode` is a `StrEnum` column on every availability manifest row that identifies **which pipeline wrote it** — a
-batch source (Tardis archive, Databento, onchain RPC, etc.) or the live websocket feed. It enables batch ↔ live
-reconciliation via `GROUP BY pipeline_mode` over the same manifest without a separate table.
+batch source (Tardis archive, Databento, onchain RPC, etc.), the intraday replay gap-fill, or a live feed. It enables
+batch ↔ live reconciliation via `GROUP BY pipeline_mode` over the same manifest without a separate table.
+
+**Canonical form is SOURCE-AWARE (M1 / G0 standardisation):** `{mode}_{source}[_{transport}]` where:
+
+- `mode ∈ {batch, live, replay}` — the reconciliation axis (`Mode` enum). `replay` is the intraday gap-fill tier (always
+  the MIDDLE of mode-contextual precedence — see § precedence below).
+- `source` is the **VENDOR ONLY** (e.g. `databento`, `tardis`, `onchain_rpc`, `hyperliquid`) — transport is **NEVER**
+  glued into it (operator R4 2026-06-07; the retired `hyperliquid_rest` source was that antipattern — now
+  `source=hyperliquid` + `transport=rest`).
+- `[_{transport}]` is an OPTIONAL trailing segment in the `pipeline_mode` value **only where a source genuinely runs
+  more than one transport for the SAME shard** (else omitted — no noise). No registered source does today, so no member
+  carries the suffix yet. The transport itself is ALWAYS carried in a separate `transport` manifest COLUMN regardless
+  (see § "Transport axis" below).
+
+Closed-set rule: a `live_<source>` / `replay_<source>` member exists **iff** that source declares `Mode.LIVE` /
+`Mode.REPLAY` capability (`SOURCE_MODE_CAPABILITY`, enforced by `test_source_mode_capability.py`). `live_websocket` is a
+**TRANSITIONAL alias** kept for the not-yet-migrated live shards — its migration to `live_<source>` is the gated next
+tranche.
 
 The canonical enum is `unified_api_contracts.canonical.crosscutting.pipeline_mode.PipelineMode`:
 
-| Value                                  | Source                           |
-| -------------------------------------- | -------------------------------- |
-| `batch_tardis`                         | Tardis archive (default CeFi)    |
-| `batch_databento`                      | Databento (default TradFi)       |
-| `batch_hyperliquid_rest`               | Hyperliquid REST API             |
-| `batch_onchain_rpc`                    | EVM / Solana native RPC          |
-| `batch_onchain_subgraph`               | DeFi subgraph (Uniswap etc.)     |
-| `batch_polymarket_clob`                | Polymarket CLOB + Kalshi         |
-| `batch_polymarket_gamma_api`           | Polymarket Gamma API             |
-| `batch_api_football`                   | API-Football (sports)            |
-| `batch_barchart`                       | Barchart (TradFi VIX historical) |
-| `batch_yahoo`                          | Yahoo Finance                    |
-| `batch_eia`                            | EIA energy/commodity             |
-| `batch_chainlink`                      | Chainlink oracle                 |
-| `batch_pyth_hermes`                    | Pyth Hermes (Solana)             |
-| `batch_solana_rpc`                     | Solana native RPC                |
-| `batch_helius_rpc`                     | Helius enriched RPC              |
-| `batch_instruments_service`            | Instruments service internal     |
-| `batch_strategy_service`               | Strategy service internal        |
-| `batch_execution_service`              | Execution service internal       |
-| `batch_mdps_odds_horizon_bucket`       | MDPS odds/horizon bucket         |
-| `batch_features_onchain_service`       | Features onchain service         |
-| `batch_cross_instrument`               | Cross-instrument features        |
-| _(…more batch values in PipelineMode)_ |                                  |
-| `live_websocket`                       | Real-time WebSocket feed (MTDS)  |
+| Value                                                                           | Source / meaning                                  |
+| ------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `batch_tardis`                                                                  | Tardis archive (default CeFi; `flat_file`)        |
+| `batch_databento`                                                               | Databento (default TradFi)                        |
+| `batch_hyperliquid`                                                             | Hyperliquid (vendor; `transport=rest` in column)  |
+| `batch_onchain_rpc`                                                             | EVM / Solana native RPC (default DeFi)            |
+| `batch_onchain_subgraph`                                                        | DeFi subgraph (Uniswap etc.)                      |
+| `batch_polymarket_clob`                                                         | Polymarket CLOB + Kalshi                          |
+| `batch_polymarket_gamma_api`                                                    | Polymarket Gamma API                              |
+| `batch_chainlink`                                                               | Chainlink oracle                                  |
+| `batch_pyth_hermes`                                                             | Pyth Hermes (Solana)                              |
+| `batch_solana_rpc` / `batch_helius_rpc`                                         | Solana native / Helius enriched RPC               |
+| `batch_instruments_service`                                                     | Instruments service internal                      |
+| _(…more batch values in PipelineMode)_                                          |                                                   |
+| `live_<source>` (e.g. `live_databento`, `live_onchain_rpc`, `live_hyperliquid`) | source-aware live feed (M1)                       |
+| `replay_<source>` (e.g. `replay_onchain_rpc`, `replay_databento`)               | intraday replay gap-fill (M1)                     |
+| `live_websocket`                                                                | TRANSITIONAL alias — not-yet-migrated live shards |
 
 ## How to resolve `pipeline_mode` at write time
 
@@ -62,11 +74,29 @@ pm = resolve_pipeline_mode(
 
 Resolution order:
 
-1. `mode="live"` → always `LIVE_WEBSOCKET`
-2. Venue override (e.g. `HYPERLIQUID` → `BATCH_HYPERLIQUID_REST`)
+1. `mode="live"` → the source-aware `LIVE_<SOURCE>` if the resolved source declares live capability, else the
+   transitional `LIVE_WEBSOCKET` alias (until the `live_<source>` object migration lands)
+2. Venue override (e.g. `HYPERLIQUID` → `BATCH_HYPERLIQUID` — vendor only, transport in the column)
 3. UAC `read_with_source_priority(asset_group, data_type)` → primary source's mode
 4. Per-service fallback (`instruments-service` → `BATCH_INSTRUMENTS_SERVICE`, etc.)
 5. `ValueError` if nothing matches — add to `_VENUE_OVERRIDES` or UAC SOURCE_PRIORITY
+
+## Transport axis (the `[_{transport}]` segment + the `transport` column)
+
+`transport ∈ {rest, websocket, flat_file}` (`Transport` enum) is a **separate axis from `source`** (the vendor). Two
+ratified rules (operator R4 2026-06-07):
+
+1. **Path-key suffix** — the `[_{transport}]` segment appears in the `pipeline_mode` value (and thus the on-disk
+   `pipeline_mode=` hive key) **only where a source genuinely runs >1 transport for the SAME shard** (else omitted — no
+   noise). No registered source does today, so `transport_of(mode)` returns `None` for every current member.
+2. **`transport` column** — ALWAYS populated on every manifest row, regardless of the suffix, via
+   `default_transport_for_source(source)` unless the writer is passed an explicit value. `tardis` T+1 archives are
+   `flat_file`; every other batch source is REST-family (`rpc` / `graphql` / `sse` all resolve over HTTP → `rest`).
+   Live-websocket transport for the gated `live_<source>` tranche is stamped explicitly by live writers.
+
+Helpers (all in `unified_api_contracts.canonical.crosscutting.pipeline_mode`): `transport_of(mode)`,
+`default_transport_for_source(source)`, `source_string_for(mode)` (strips `{mode}_` prefix AND any transport suffix →
+vendor only), `is_batch` / `is_live` / `is_replay`.
 
 ## How to derive `pipeline_mode` for backfill
 
@@ -89,15 +119,20 @@ The one-shot backfill script lives at `unified-trading-pm/scripts/migration/back
 ## Batch ↔ live reconciliation pattern
 
 Stage 0 of `batch-live-reconciliation-service` compares the batch vs live sides of the manifest for each date by
-filtering on `pipeline_mode`:
+filtering on `pipeline_mode` (use the helpers, not raw string matching):
 
-- **Batch side**: any row where `pipeline_mode.startswith("batch_")`
-- **Live side**: any row where `pipeline_mode == "live_websocket"`
+- **Batch side**: any row where `is_batch(mode)` (`pipeline_mode` starts with `batch_`)
+- **Live side**: any row where `is_live(mode)` — both the transitional `live_websocket` alias AND the source-aware
+  `live_<source>` members
+- **Replay side**: any row where `is_replay(mode)` (`replay_<source>`) — the intraday gap-fill tier, reconciled into
+  whichever mode-contextual precedence the consumer reads (M4: a live consumer reads `live > replay > batch`; a batch
+  consumer reads `batch > replay > live`)
 
 ```
 manifest rows (same bucket, same date)
-├── batch_tardis rows  → batch_status, batch_reason
-└── live_websocket rows → live_status, live_reason
+├── batch_<source> rows  → batch_status, batch_reason
+├── replay_<source> rows → replay_status, replay_reason  (intraday gap-fill)
+└── live_<source> / live_websocket rows → live_status, live_reason
 
 Agreement rules:
   both captured                           → OK
