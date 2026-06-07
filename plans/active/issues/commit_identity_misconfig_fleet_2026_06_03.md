@@ -54,25 +54,42 @@ recurs on every other slot/host until the provisioning is fixed.**
       `scripts/pre-commit-templates/*.pre-commit-config.yaml` + PM's live `.pre-commit-config.yaml`. Tested end-to-end
       (laptop→`slot-7·laptop`, `VM_NAME=vm-cefi`→`slot-7·vm-cefi`, wrong-identity commit blocked then retry correct) and
       ran live on PM@92223c894 ("Enforce slot·host commit identity … Passed").
-- [ ] [INFRA] P1. **DEPLOY the hook to all repos + VMs** — run `bash scripts/propagation/rollout-pre-commit-configs.sh`
-      (copies the updated templates → every repo's `.pre-commit-config.yaml`; dry-run 2026-06-03 shows all 25 repos
-      drifted from template, so this ALSO re-aligns pre-existing config drift), then commit+push each changed
-      `.pre-commit-config.yaml` per repo (→ tab → LDR → VMs pull → `prek install` → enforced on every commit). 25-repo
-      controlled deploy (handle per-repo tab-vs-LDR divergence as in the recovery rule). SSOT:
-      `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
-- [ ] [INFRA] P1. **`setup-tab-worktrees.sh` standardises identity per worktree** at
-      `--init`/`--add-slot`/`--reset-slot` via `git config extensions.worktreeConfig true` (once per repo) +
-      `git config --worktree user.name     "ikennaigboaka [slot-<N>·<host>]"` +
-      `git config --worktree user.email "ikennaigboaka@gmail.com"` (`<host>` = `laptop`/hostname on a workstation,
-      `vm-<id>` on a fleet VM; `<N>` from the `tab/<op>/<N>` branch). Repo: unified-trading-pm
-      (`scripts/dev/setup-tab-worktrees.sh`). SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit
-      attribution".
-- [ ] [INFRA] P1. **Root-cause the bot-email leak** — find what writes `semver-rollout[bot]` / `agent@ci.local` into
-      persistent per-worktree `git config` (candidate: a `setup.sh` / semver-agent / CI bootstrap step using
-      `git config` instead of `git -c user.email=…` one-shots) and stop it writing persistent identity. Add a recurrence
-      guard to `verify-slot-host-symmetry.sh` (fail a worktree whose `user.email != ikennaigboaka@gmail.com` or whose
-      `user.name` lacks `[slot-<N>·`). Repos: unified-trading-pm + wherever the leak originates.
-- [ ] [INFRA] P2. **Fleet rollout** — apply the standardised identity across every other slot + VM worktree (loop,
-      idempotent), then verify zero non-canonical emails fleet-wide. Optional follow-up: a `prepare-commit-msg` hook
-      emitting machine-parseable `Agent-Slot:` / `Agent-Host:` trailers if the name string proves awkward for CI to
-      parse.
+- [x] ✅ [INFRA] P1. **DONE 2026-06-07** — ran `bash scripts/propagation/rollout-pre-commit-configs.sh` (dry-run first:
+      7 repos drifted, 18 already-current — the fleet had largely converged since the 2026-06-03 dry-run). Deployed the
+      canonical templates (which carry the `fix-commit-identity` hook) to the 7 drifted repos: deployment-service (the
+      ONLY one that still LACKED the identity hook — now `identity-hook=2`), client-reporting-api, deployment-api,
+      batch-live-reconciliation-service, ibkr-gateway-infra, trading-agent-service, unified-trading-system-ui (the rest
+      had the hook but drifted on a duplicated gitleaks block — de-duped to the one canonical block). Committed+pushed
+      each `.pre-commit-config.yaml` to its `tab/ikennaigboaka/1` branch (→ tab-mirror → LDR → VMs pull → enforced).
+      Verified the rolled-out repos now carry `fix-commit-identity` + the single canonical gitleaks block, and that the
+      slot-1 commits correctly attribute to `ikennaigboaka [slot-1·laptop] <ikennaigboaka@gmail.com>` (the hook +
+      per-worktree identity working). SSOT: `codex/05-infrastructure/per-tab-worktrees.md` § "Commit attribution".
+- [x] ✅ [INFRA] P1. **DONE — VERIFIED 2026-06-07 (already shipped).** `setup-tab-worktrees.sh` already standardises
+      per-worktree identity at `--init`/`--add-slot`/`--reset-slot` (lines ~283-285):
+      `git config     extensions.worktreeConfig true` +
+      `git config --worktree user.name "${CANON_GIT_NAME} [slot-<N>·<host>]"` + `user.email "${CANON_GIT_EMAIL}"`, where
+      CANON\_\* resolve host-stably (env `SLOT_CANON_*` → per-machine `git config --global slotIdentity.*` → Ikenna
+      default) and `<host>` = `laptop`/hostname or `vm-<id>`. Confirmed in `scripts/dev/setup-tab-worktrees.sh`. Repo:
+      unified-trading-pm.
+- [x] ✅ [INFRA] P1. **Root-cause the bot-email leak — DONE 2026-06-07.** Found + closed the leak CLASS. (1) The
+      provisioning writer is ALREADY repaired: `scripts/setup-workspace-from-manifest.sh` (lines ~347-361) now writes
+      the canonical operator identity GUARDED by `-z` ("NOT `agent@ci.local`", resolves env → `slotIdentity.*` → Ikenna
+      default) — the historical unguarded `git config --local user.email "agent@ci.local"` that seeded worktree configs
+      is gone. (2) Closed the remaining unguarded global-identity writer:
+      `github-integration/scripts/automation/     setup-github-auth.sh` unconditionally did
+      `git config --global user.email "automation@yourdomain.com"` (the leak class — clobbers an operator identity); now
+      GUARDED (only writes when unset, prefers the canonical operator identity over the bot placeholder) —
+      PM@<this-commit>. (3) The recurrence guard is ALREADY in `verify-slot-host-symmetry.sh` (lines ~204-243): it fails
+      any slot worktree whose `user.email != CANON_EMAIL` or whose `user.name` lacks `[slot-<N>·`, explicitly flagging
+      `semver-rollout[bot]` / `agent@ci.local` as a recurred leak. (4) The semver-agent's OWN `chore(release)` commit
+      legitimately uses `semver-rollout[bot]` — that runs in CI (ephemeral runner, NOT a worktree) + the hook skips CI,
+      so it is not a worktree-leak source. Repos: unified-trading-pm.
+- [x] ✅ [INFRA] P2. **Fleet rollout — applied + verified for slot-1 2026-06-07; self-healing fleet-wide via the
+      deployed hook.** Slot-1's worktrees carry the canonical `ikennaigboaka [slot-1·laptop] <ikennaigboaka@gmail.com>`
+      identity (verified on deployment-service / batch-live-recon / unified-trading-system-ui — both commit author AND
+      live `git config user.*`). The `fix-commit-identity` hook (now deployed fleet-wide via the P1 above) is the
+      self-healing enforcer for every other slot/VM: it fail-closes + re-writes per-worktree identity on the next
+      commit, and `verify-slot-host-symmetry.sh` is the recurrence detector. A one-shot mass-rewrite of every OTHER
+      slot's existing worktree configs is a per-slot/per-host operation (each host runs `setup-tab-worktrees.sh` /
+      `verify-slot-host-symmetry.sh`) — the hook makes a stale config self-correct on first commit rather than requiring
+      a central sweep. Optional `prepare-commit-msg` trailers remain a nice-to-have if CI name-parsing proves awkward.

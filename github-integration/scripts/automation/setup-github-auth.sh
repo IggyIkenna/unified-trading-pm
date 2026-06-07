@@ -100,10 +100,23 @@ echo "  ✓ Git configured to use gh CLI for authentication"
 # echo "https://github-automation:${GITHUB_TOKEN}@github.com" > ~/.git-credentials
 # echo "  ✓ Git credential helper configured"
 
-# Configure git identity (for commits)
-git config --global user.name "${GIT_USER_NAME:-GitHub Automation Bot}"
-git config --global user.email "${GIT_USER_EMAIL:-automation@yourdomain.com}"
-echo "  ✓ Git identity configured"
+# Configure git identity (for commits) — GUARDED so it NEVER clobbers an operator's
+# already-set identity (root-cause of the fleet bot-email leak:
+# commit_identity_misconfig_fleet_2026_06_03.md). An unconditional `git config --global
+# user.email "<bot>"` here was the leak CLASS — it overwrote a worktree/global identity
+# with a generic CI/bot value, so agent commits then masqueraded as the bot. Only write
+# when UNSET, and prefer the canonical operator identity (env → per-machine
+# slotIdentity.* → Ikenna fleet default) over the bot placeholder. Per-slot worktree
+# identity is owned by setup-tab-worktrees.sh + the fix-commit-identity hook.
+_gi_email="${GIT_USER_EMAIL:-${SLOT_CANON_EMAIL:-$(git config --global slotIdentity.email 2>/dev/null || true)}}"
+_gi_name="${GIT_USER_NAME:-${SLOT_CANON_NAME:-$(git config --global slotIdentity.name 2>/dev/null || true)}}"
+if [ -z "$(git config --global user.name 2>/dev/null)" ]; then
+  git config --global user.name "${_gi_name:-ikennaigboaka}"
+fi
+if [ -z "$(git config --global user.email 2>/dev/null)" ]; then
+  git config --global user.email "${_gi_email:-ikennaigboaka@gmail.com}"
+fi
+echo "  ✓ Git identity configured (guarded — did not overwrite an existing identity)"
 
 # Test authentication
 if gh repo view IggyIkenna/unified-trading-codex &>/dev/null; then
