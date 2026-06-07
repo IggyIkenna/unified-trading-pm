@@ -1347,6 +1347,43 @@ a VM) + IS instrument backfill (`by_date` capture freeze) + the two findings bel
 walked): the migrator object dry-run used a 2-day window; the instruments-store v9 + manifest reads were full-corpus
 (2.68M / 786K). Remaining gaps = the gated VM `--apply` walks.
 
+### Apply-readiness verdict — slot-4 7+2 audit on LDR (2026-06-07, no sports code changed since uac@aff80339)
+
+> **Sports is NOT yet fully apply-ready. The MIGRATION code (CF-1…CF-13) is dry-run GREEN, but CF-14 (the IS-catalogue
+> could-exist denominator) is RED** — and that RED was previously MIS-CHARACTERISED (the "392 missing leagues / union
+> other entities" framing). The re-diagnosis above (the P0 ⑦/CF-14 item) is the true blocker.
+
+CF-by-CF (sampled vs walked stated per row):
+
+- **CF-1 v9** ✅ projection — instruments-store v9 dry-run = 2,681,044 rows → 100% v9 (full-corpus walk).
+- **CF-2 `asset_group=`** ✅ — migrator path `category`→`asset_group=sports` (2-day sample) + IS v9 column (walk).
+- **CF-3 `pipeline_mode=` partition** ✅ — migrator inserts `pipeline_mode=batch_<source>/` in path (sample).
+- **CF-4 `source` column** ✅ — IS v9 stamps `source` (api*football/footystats/…); MTDS migrator `batch*<source>`
+  (walk/sample).
+- **CF-5 typed empty reasons** ◑ — typed reasons wired (E6/keystone), BUT the **6,869 blank `capture_status` IS rows**
+  (P1 below) are an open CF-5 gap; mdps rebuild reason-relabel proven by slot-6 (today's read returned 0 — consolidation
+  state, P1 below).
+- **CF-6 `expected_unattempted`** 🔴 — blocked by CF-14 (the could-exist seed is the materialiser; see below).
+- **CF-7 canonical names** ✅ — IS v9 data_types canonical uppercase (walk); migrator `canonicalize_league_id` wired.
+- **CF-8 `available_at`** ✅ — IS v9 `available_at_filled` 2,667,868 (walk).
+- **CF-9 env-split bucket** ✅ — `resolve_bucket_name` used; `-prd` tier confirmed.
+- **CF-10 no phantom captured** ◑ — not separately walked this pass (the IS `by_date` capture freeze is the upstream
+  gate).
+- **CF-11 fetch-fail→attempted_failed** ✅ — match-day guaranteed-type relabel shipped (mtds@8ffb2acd).
+- **CF-12 batch=live** ✅ — shared `candidate_parquet_paths()` / `pipeline_mode_for_sports_entity` SSOT (prior audit).
+- **CF-13 pipeline_mode source-aware** ✅ — `batch_odds_api`/`batch_<source>` in path+column (sample/walk).
+- **CF-14 IS-catalogue could-exist ROOT** 🔴 **RED** — the sports catalogue emits raw NUMERIC api-football league_ids vs
+  the manifest's canonical namespace → covers only 131/606 manifest current-dt leagues; an `--apply-write` would
+  MASSIVELY OVER-seed false `expected_unattempted`. Full root-cause + correct fix in the P0 ⑦/CF-14 item below. **This
+  gates the sports apply-write — it is the one remaining sports-owned correctness blocker (distinct from the operational
+  gates).**
+
+**Operational gates (not sports-code):** G0 (coordinator) · G3 union view (slot-7) · the IS instruments-store v9 walk
+RUN (G1-V8, VM) · IS instrument backfill (capture freeze) · pre-migration drain. **Sports-code gate:** the CF-14
+catalogue fix (P0 below) must land + dry-run-prove `seeded leagues == manifest current-dt leagues` (0 numeric over-seed)
+BEFORE the apply-write. No sports migrator/rebuild/UAC code changed since the WAVE-2 pass (uac@aff80339) → CF-1…CF-13
+dry-runs are unchanged-green (instruments-service + market-tick-data-service worktrees clean).
+
 - [ ] [DATA] P1. **6,869 sports instruments-store `_index` rows carry BLANK `capture_status`** (CF-5 honest-absence
       violation) — surfaced by the G1-V8 dry-run
       (`capture_status: {empty_confirmed 1,909,553, captured 586,597,     attempted_failed 178,025, '' 6,869}`). The
@@ -1468,17 +1505,40 @@ walked): the migrator object dry-run used a 2-day window; the instruments-store 
       on a VM (`MANIFEST_PER_VM_SHARDS=true`, `VM_NAME=<tag>`; GCS flaky locally) so the raw-tick denominator ==
       could-exist universe; add a regression (IS-universe ⊃ manifest ⇒ denominator doesn't shrink). The mechanism +
       bucket fix are done. parent_epic: mtds_mdps_master.
-- [ ] [DATA] P1. ⑦ sports could-exist league COVERAGE GAP — **GATED with the apply-write above** (slot-4 dry-run
-      2026-06-07): the producer dry-run on the real prod bucket rolled up **1,323** leagues (from 78,860
-      `entity=leagues` parquets), but the canonical `_index` has **1,715** distinct `league_id`s → ~392 manifest leagues
-      are NOT in the api-football `entity=leagues` slice (almost certainly footystats / understat / transfermarkt
-      league-id namespaces, which have their own `entity=sfi_leagues` / `entity=transfermarkt_leagues` listings). So the
-      league-grain could-exist universe currently UNDER-covers: the ~392 non-api-football leagues' UNCAPTURED cells
-      won't be seeded `expected_unattempted` (their CAPTURED cells are unaffected — already counted). Before
-      apply-write, either (a) union the other leagues-type entities into `build_sports_catalogue_dataframe` (per-source
-      league_id namespace), or (b) confirm those 392 are retired/blank league_ids that should NOT be in the denominator.
-      Verify the IS-universe ⊇ manifest-leagues property holds (the unit-test regression asserts it on synthetic data;
-      the REAL gap must be closed/explained here). Repo: instruments-service. parent_epic: mtds_mdps_master.
+- [ ] [DATA] **P0. ⑦/CF-14 sports could-exist catalogue is BROKEN — re-diagnosed 2026-06-07 (slot-4); the prior "392
+      missing / union other entities" framing was WRONG.** The real root cause + the correct fix (GATES the sports
+      apply-write; the migration code itself is unaffected + dry-run-green):
+  - **The catalogue emits RAW NUMERIC api-football `league_id`s** (`_league_id_of` → `str(row["league_id"])`, e.g.
+    `"4"`/`"21"`/`"62"`), but the manifest captured atom uses the **canonical** sports league namespace. Measured on
+    real prod (`day=2025-01-01 entity=leagues` × the prod `_index`): `entity=leagues` has 1,228 raw league_ids;
+    `canonicalize_league_id()` is a **NO-OP** on them (0% changed — it only strips name-suffixes/aliases, it does NOT
+    map a numeric api_football_id → canonical id); and the canonicalised set covers **only 131 / 606** distinct manifest
+    current-data_type leagues → **475 missing**. So entity=leagues is NOT a reliable superset of the manifest leagues.
+  - **Severity is OVER-seed, not under-seed**: on an `--apply-write`, `_enumerate_v2_sports` iterates the 1,228 numeric
+    catalog leagues × ~17 data_types; none match the canonical present-set → it would seed **millions of FALSE
+    `expected_unattempted`** rows (numeric leagues that have no manifest counterpart) — the exact denominator-distortion
+    CF-14 exists to prevent. (The dry-run is scan-only so prod is untouched.)
+  - **The could-exist universe for CURRENT data_types = 606 leagues across 6 sources** (api_football 542, footystats
+    160, transfermarkt 87, open_meteo 85, soccer_football_info 33, understat 19) — all in the canonical namespace.
+    `LEAGUES`/`TRANSFERMARKT_LEAGUES`/`SFI_LEAGUES` (the numeric/hex namespaces) are **RETIRED data_types** (not in
+    `SPORTS_DATA_TYPE_TO_SOURCE`) → correctly NOT in the current denominator.
+  - **UAC SSOTs found for the fix**: `SPORTS_ENTITY_LEAGUE_COVERAGE` / `get_entity_league_coverage(entity)` (most
+    current entities cover ALL leagues = `None`; `XG`/`XG_SHOTS` cover only understat's ~5 leagues via
+    `does_understat_cover()`); `get_sports_entity_start_date(entity)` (per-entity coverage-start).
+    `_enumerate_v2_sports` currently applies **NEITHER** → it would also seed XG for every league (wrong).
+  - **CORRECT FIX (the reliable superset is the manifest itself)**: derive the sports could-exist league universe from
+    the **manifest present-set per source** (a captured league provably could-exist; namespace-correct by construction;
+    guarantees catalogue ⊇ manifest leagues). The enumerator already loads the full manifest (`_build_present_set`). Two
+    parts: (1) build the sports `catalog` from the distinct manifest `league_id`s (lifecycle = first/last present date),
+    NOT from `entity=leagues` numeric roll-up — so `build_sports_catalogue_dataframe`/the sports v2 catalog source must
+    switch to the manifest-present leagues (the `entity=leagues` listing is only an optional add for api-football
+    listed-but-never-captured leagues, a follow-up refinement); (2) in `_enumerate_v2_sports`, gate each
+    `(league, data_type)` by `get_entity_league_coverage(data_type)` + `get_sports_entity_start_date` (skip XG outside
+    understat's set — `EXPECTED_SOURCE_DOES_NOT_COVER_LEAGUE`). Repo: instruments-service
+    (`build_instrument_catalogue.py` + `enumerate_expected_universe.py`); validate by a real-prod dry-run asserting the
+    seeded league set == the 606 manifest current-dt leagues (catalogue ⊇ manifest, 0 numeric over-seed) + unit tests on
+    synthetic per-source present-sets. parent_epic: mtds_mdps_master. Provenance: slot-4 apply-ready re-diagnosis
+    2026-06-07.
 - [ ] [PERF] P2. ⑦ sports league-catalogue roll-up list-cost — **NICE-TO-HAVE** (slot-4 2026-06-07): the producer's
       `_iter_sports_by_date_snapshots` must `list_blobs("sports_reference/by_date/")` over the WHOLE tree (17 entities ×
       per-fixture files since 2015 → hundreds of thousands of objects) to filter to the ~3000 tiny `entity=leagues`
