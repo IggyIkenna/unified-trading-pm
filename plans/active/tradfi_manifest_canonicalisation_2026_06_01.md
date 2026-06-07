@@ -19,6 +19,13 @@ master: defi_manifest_canonicalisation_2026_06_01.md (cross-plan canonical-SSOT 
 
 # TradFi manifest + data canonicalisation (L3 owner for tradfi)
 
+> **🟢 UNBLOCKED (2026-06-07) — slot-7 Era-B + bundle-grain rollup LANDED** (uac@ae70338d Era-B instrument_types +
+> 687d1443/74df991d per-underlying rollup, flip 6a1e0154c; slots 3/6 notified). Your migrators + instruments-store v9
+> dry-run are already GREEN (gate-c tool-ready, 20,388→v9 100%) — last step: RE-RUN your enumerate validation against
+> the landed rollup (the ~563K false per-contract OPTION/COMBO candidates should be GONE) + do the Era-B
+> `data_type=options_chain`→(instrument_type + `data_type=trades`) v8→v9 manifest relabel in your walk → then flip your
+> apply-ready verdict.
+
 > **⛔ COORDINATED + APPLY-GATED (2026-06-07)** — cross-AG sequencing is owned by
 > `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. This AG's `--apply` (manifest +
 > data/schema) is GATED on the coordinator's **G0** (pipeline*mode source-aware
