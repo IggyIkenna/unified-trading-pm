@@ -90,6 +90,28 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
   require/auto-derive or delete the legacy `add()` (this is what let the DeFi blank-stamp pass silently).
 - **C-#6 (UTL)** — no write-time cross-check `source_string_for(pipeline_mode)==source` for batch → a row can carry
   `batch_databento` + `source="massive"`; add the assert.
+- **C-TRANSPORT (P0, surfaced by operator 2026-06-07) — the optional `[_{transport}]` suffix is under-specified +
+  inconsistently implemented + undocumented in codex.** The M1 form is `{mode}_{source}[_{transport}]` with
+  `transport ∈ {rest, websocket, flat_file}`, BUT:
+  1. **Antipattern in the SHIPPED enum**: `BATCH_HYPERLIQUID_REST="batch_hyperliquid_rest"` (+ LIVE/REPLAY) glue the
+     transport INTO the source name — the standardisation plan (lines 125-126) explicitly names this "the M1
+     antipattern; target `hyperliquid` + transport". The new enum (uac@8cafb758/6cd08c89) carried it forward. **Fix**:
+     split → source=`hyperliquid`, transport=`rest` as a separate trailing segment/column. Owner: vm-cross-cutting
+     (UAC).
+  2. **codex `02-data/pipeline-mode-partition.md` is STALE + silent on transport**: documents only
+     `{batch_*, live_websocket}`, says "Don't use `pipeline_mode=replay_*`" + "replay writes to `live_websocket`" —
+     directly contradicts the M1 source-aware + `replay_<source>` + transport model. Owner: M-COORD-1 (doc reconcile) —
+     rewrite to the `{mode}_{source}[_{transport}]` form incl. replay + the transport-suffix rule.
+  3. **Suffix policy NOT ratified** (operator residual ○): line 95 leaves "transport as a trailing path/enum segment
+     (`live_tardis_websocket`) vs a column" as an "Open fork" with a recommendation only — **carry the transport suffix
+     in the path key ONLY where a source genuinely runs >1 transport for the SAME shard (else noise), AND also as a
+     `transport` column** (line 216). Needs operator ratification before the migrators encode it.
+
+  **Operator residual R4 — ratify the transport rule**: (a) transport suffix in `pipeline_mode` path key only when a
+  source has >1 transport per shard (else omit); (b) always populate a separate `transport` column; (c) split the
+  `hyperliquid_rest` source → `hyperliquid` + transport=`rest`. Recommend yes to all three (matches the M1
+  recommendation + kills the antipattern). Until ratified, the DeFi/per-AG migrators stamp `{mode}_{source}` WITHOUT a
+  transport suffix (safe subset — adding the suffix later for a genuine >1-transport source is additive, not a re-walk).
 
 ## Sub-plan registry (every data-layer plan, its gate, owner, blocked-until)
 
