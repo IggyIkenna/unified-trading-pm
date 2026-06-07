@@ -148,9 +148,9 @@ orchestrator work lives in the Phase 6/9/11 rows of the table above + the audit-
 
 ### `tab-mirror-to-ldr` crashed every tick on empty assoc-array under `set -u` → fleet-wide no-FF (discovery + SSOT fix 2026-06-07)
 
-**status**: 🟢 SSOT TEMPLATE FIXED (PM `scripts/workflow-templates/tab-mirror-to-ldr.yml`) — fleet rollout +
-per-repo-main reach remain. · **provenance**: slot-1 main, triaging an execution-service "CI REGRESSION on main" +
-repeated `tab-mirror-to-ldr` scheduled-run failures, 2026-06-07.
+**status**: ✅ RESOLVED — SSOT + all crashing repos' `main` copies now carry the fix; PM `main` `quality-gates-v2` GREEN
+(parity holds); 8/8 dispatched `tab-mirror` runs on `main` succeed (no crash). · **provenance**: slot-1 main, triaging
+an execution-service "CI REGRESSION on main" + repeated `tab-mirror-to-ldr` scheduled-run failures, 2026-06-07.
 
 **What I found**: the mirror's sweep step does `declare -A div_hosts; declare -A stranded_hosts` then expands
 `${#div_hosts[@]}` / `${#stranded_hosts[@]}` under `set -u`. On bash 5.x (the GHA runner; reproduced on bash 5.3.9)
@@ -174,13 +174,25 @@ The `declare -A` being present on a repo's `main` masked it as "not stale" while
       `gh workflow run quality-gates-v2.yml --repo IggyIkenna/<repo> --ref <pr-head-branch>`. Most repos get newer LDR
       commits before promoting (so my commit won't be the head); the few that don't need this one-liner at promotion
       time.
-- [ ] [AGENT] P0. **Reach `main`** (where the scheduled `tab-mirror` actually runs): direct push to `main` is
-      branch-protected (PR + `quality-gates-v2` required — verified 409 on a direct API PUT), so the fix reaches `main`
-      via the normal LDR→`staging`→`main` promotion now that LDR carries it fleet-wide. NOT fleet-admin-bypassing 24
-      protected mains (against the "never leave protection disabled" rule) nor opening 24 ad-hoc main PRs (bypasses the
-      staging model). Until each repo promotes, its scheduled mirror keeps erroring — but the FF push happens earlier in
-      the job (before the crashed reporting step), so behind-only tabs are still propagated; the crash mainly costs the
-      job-status + the divergence-classification/alert tail. (all service repos — rides promotion)
+- [x] ✅ [AGENT] P0. **Reach `main`** — done via an operator-authorized **Route-B coordinated batch** (the
+      LDR→`staging`→`main` cascade was wedged behind the cascade-infra deadlocks in
+      `plans/active/issues/sit_94_failures_masked_by_dangling_lock_2026_06_07.md`, so promotion couldn't carry it).
+      **Scope was surgical, not "24 ad-hoc PRs":** empirically only **8** repos crashed on the `main` schedule
+      (execution-service, features-service, market-tick-data-service, system-integration-tests, unified-api-contracts,
+      unified-trading-library, unified-trading-pm, unified-trading-system-ui — scheduled workflows run only off the
+      default branch, and the other repos' defaults/copies don't hit the empty-array tick). The workflow-parity gate
+      runs **only in PM's CI** and clones just **2 siblings** (`unified-trading-library` + `unified-api-contracts`, PM's
+      `dep_repos`), so parity binds only PM-SSOT == PM-own == UTL-main == UAC-main. Landed one PR per repo to `main`
+      (byte-identical fixed copy `39e7a220…`), siblings first then **PM last** (PM #173: SSOT + own copy) so the parity
+      gate never saw a fixed-SSOT-vs-buggy-copy mismatch (the failure mode that turned #171 RED). All 7 non-PM PRs
+      merged via their own green `quality-gates-v2`; execution-service merged on a green PR (its earlier main-v2 failure
+      was flaky); unified-trading-system-ui admin-merged past unrelated non-required `e2e`/`registry-drift`/ Vercel
+      failures (workflow-only diff). **Verified**: PM `main`-push `quality-gates-v2` = SUCCESS (run 27108525546 — parity
+      holds); 8/8 `workflow_dispatch` `tab-mirror` runs on `main` = success (no crash). PRs: UTL#252, UAC#99,
+      features#23, MTDS#145, SIT#31, UTS-ui#30, execution#225, PM#173. **Residual** (no action — self- heals): the ~17
+      non-crashing repos still carry the buggy copy on `main` but are NOT in PM's clone set and don't run a scheduled
+      mirror off `main`, so they neither crash nor break parity; they converge to the fixed copy when the LDR→`main`
+      cascade un-wedges. (all service repos — done via authorized Route-B batch, 2026-06-07)
 
 ### `auth_failed` was a one-way ratchet → rotation pool collapsed to one account (discovery + fix 2026-06-07)
 
