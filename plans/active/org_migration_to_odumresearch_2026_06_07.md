@@ -8,10 +8,11 @@ estimate_calibrated_ai_days: 8
 locked_by: live-defi-rollout
 locked_since: 2026-06-07
 created: 2026-06-07
-author: ikennaigboaka [slot-1·laptop]
 source:
   - operator-decision-2026-06-07 (do the org migration; org name = OdumResearch; everything moves)
   - read-only pre-audit 2026-06-07 (3 parallel agents: cloud-trust, deploy/VM, github-config)
+priority: P2
+status: active
 ---
 
 # GitHub Org Migration — `IggyIkenna` → `OdumResearch`
