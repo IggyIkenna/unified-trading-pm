@@ -29,6 +29,16 @@
 
 set -euo pipefail
 
+# ⛔ DEPRECATED (2026-06-07, M2) — DO NOT RUN. This applies CLASSIC branch protection from
+# ops/branch-protection-template.json whose context is the stale generic "quality-gates"
+# (a DEAD context — the live check is the per-repo "Quality Gates (<repo>) / quality-gates-v2").
+# Re-running it would dead-lock non-admin merges fleet-wide. Branch protection is now the RULESET
+# model — use scripts/repo-management/pin_branch_protection_rulesets.py (SSOT) +
+# terraform/github-branch-protection/main.tf. This script is a tombstone and hard-refuses to run.
+echo "⛔ apply-branch-protection.sh is DEPRECATED and disabled (M2, 2026-06-07) — use the ruleset model" >&2
+echo "   (scripts/repo-management/pin_branch_protection_rulesets.py)." >&2
+exit 1
+
 # ----- parse args -----
 DRY_RUN=false
 SINGLE_REPO=""

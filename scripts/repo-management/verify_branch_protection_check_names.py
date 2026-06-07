@@ -76,10 +76,13 @@ def main():
         # require-quality-gates ruleset (m is not None). A repo with no ruleset yet
         # (e.g. agent-orchestrator mid-staging-migration, e2e-testing) is not a failure
         # here — its default-branch is still asserted == main above.
-        m_ok = (m is None) or (len(m) == 1 and m[0].startswith(f"Quality Gates ({repo})"))
-        s_ok = (s is None) or (
-            len(s) == 2 and "check-staging-lock" in s and any(c.startswith(f"Quality Gates ({repo})") for c in s)
-        )
+        # M2: assert the FULL derived context, not just the "Quality Gates (<repo>)" PREFIX —
+        # a prefix match passes a DEAD "… / quality-gates" (retired workspace-qg) suffix, which
+        # blocks merges (no run emits it). The live context is "Quality Gates (<repo>) / quality-gates-v2"
+        # fleet-wide (workspace-qg retired 2026-05-29; verified against live rulesets 2026-06-07).
+        expected_ctx = f"Quality Gates ({repo}) / quality-gates-v2"
+        m_ok = (m is None) or (len(m) == 1 and m[0] == expected_ctx)
+        s_ok = (s is None) or (len(s) == 2 and "check-staging-lock" in s and expected_ctx in s)
         flag = "" if (m_ok and s_ok and db_ok) else "  <-- CHECK" + ("" if db_ok else f" [default_branch={db}!=main]")
         if flag:
             allok = False

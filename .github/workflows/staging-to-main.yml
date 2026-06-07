@@ -59,8 +59,14 @@ jobs:
         id: idempotency
         run: |
           set -euo pipefail
+          # M6: writes idempotent_skip=true/false directly to $GITHUB_OUTPUT. The prior `$?`-based
+          # mechanism was dead — the heredoc Python exits 0 on BOTH skip and proceed (under `set -e`
+          # a non-zero proceed-exit would fail the step), so `$?` was always 0 and no later step read
+          # the flag → a re-dispatch re-merged staging→main, re-appended main_commits.history, and
+          # re-cleared the lock (could stomp a concurrent sit-gate lock). Now every mutating step below
+          # gates on `steps.idempotency.outputs.idempotent_skip != 'true'`.
           python3 - << 'PYEOF'
-          import json, sys
+          import json, os
 
           with open("workspace-manifest.json") as f:
               manifest = json.load(f)
@@ -69,24 +75,22 @@ jobs:
           history = manifest.get("main_commits", {}).get("history", [])
           last_promoted = history[0].get("commits", {}) if history else {}
 
+          skip = False
           if not staging_commits:
-              print("No staging_commits recorded — nothing to promote, exiting early.")
-              sys.exit(0)
-
-          # Check if all staging commits are already in main_commits.history[0]
-          already_promoted = all(
-              last_promoted.get(repo) == sha
-              for repo, sha in staging_commits.items()
-          )
-          if already_promoted:
+              print("No staging_commits recorded — nothing to promote, skipping.")
+              skip = True
+          elif all(last_promoted.get(repo) == sha for repo, sha in staging_commits.items()):
               print("IDEMPOTENT: staging_commits already in main_commits.history[0] — skipping duplicate promotion.")
-              sys.exit(0)
+              skip = True
+          else:
+              print(f"Proceeding with promotion: {len(staging_commits)} repos in staging_commits")
 
-          print(f"Proceeding with promotion: {len(staging_commits)} repos in staging_commits")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as gh:
+              gh.write(f"idempotent_skip={'true' if skip else 'false'}\n")
           PYEOF
-          echo "idempotent_skip=$?" >> "$GITHUB_OUTPUT"
 
       - name: Readiness gate — block if any promoted repo has explicit fail
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
         # Blocks promotion only on EXPLICIT fail status in codex readiness YAML.
         # not_assessed = advisory (promotion proceeds). fail = hard block.
         # Gate checks: cr4_quality_gate and dr4_sit_pass sections.
@@ -161,6 +165,7 @@ jobs:
           PYEOF
 
       - name: SHA verification — ensure staging HEADs match tested SHA set (fix-sha-pinning-toctou)
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
         # Guards against [skip ci] or other commits landing in staging AFTER the debounce
         # but BEFORE staging-validated was dispatched. Such commits would be promoted untested.
         # Only [skip ci] descendants are allowed; non-skip-ci untested commits trigger SIT re-run.
@@ -238,7 +243,7 @@ jobs:
           PYEOF
 
       - name: Re-trigger SIT if SHA verification failed
-        if: failure()
+        if: failure() && steps.idempotency.outputs.idempotent_skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
@@ -286,6 +291,7 @@ jobs:
       # YAML (advisory-only); never hard-fail the whole drain.
       # ─────────────────────────────────────────────────────────────────────────
       - name: STAGE 1.8 — Dep-order gate (staging → main) — promote-ready / skip-blocked
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
         run: |
           set -euo pipefail
 
@@ -414,6 +420,7 @@ jobs:
           PYEOF
 
       - name: Merge staging → main for ready (dep-on-main) repos with staging changes
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
         id: promote
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
@@ -620,7 +627,7 @@ jobs:
           fi
 
       - name: Record promotion progress in manifest
-        if: always()
+        if: always() && steps.idempotency.outputs.idempotent_skip != 'true'
         env:
           PROMOTED: ${{ steps.promote.outputs.promoted }}
           FAILED: ${{ steps.promote.outputs.failed }}
@@ -658,6 +665,7 @@ jobs:
       # Partial promotion failure Telegram alert migrated to notify-partial-failure job
 
       - name: Promote staging_versions → versions (ONLY actually-promoted repos), clear staging lock
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
         # BACKLOG-DRAIN (2026-06-06): operate ONLY on the repos that actually merged to
         # main this run (steps.promote.outputs.promoted). Repos that were SKIPPED by the
         # STAGE 1.8 dep-order gate (or FAILED to merge) keep their staging_versions /
@@ -775,6 +783,8 @@ jobs:
           manifest["staging_status"]["locked_since"] = None
           manifest["staging_status"]["locked_reason"] = None
           manifest["staging_status"]["lock_version"] = None
+          # Unlock → clear the starvation alarm so the next lock cycle can alert again (finding H3).
+          manifest["staging_status"]["locked_alert_sent"] = False
           # Clear per-run promotion progress tracking.
           manifest["staging_status"].pop("promoted_repos", None)
           manifest["staging_status"].pop("failed_repos", None)
@@ -800,6 +810,7 @@ jobs:
             || { git checkout -- workspace-manifest.json; echo "FATAL: manifest corruption detected — reverted"; exit 1; }
 
       - name: Commit manifest update
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -829,6 +840,7 @@ jobs:
           done
 
       - name: Dispatch dependency-update cascade for promoted repos
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
         # Fires dependency-update events to all direct downstream dependents of each promoted repo.
         # version-bump.yml on each repo skips staging→main merge commits (chore(release): prefix),
         # so this step ensures the cascade fires even when version-bump.yml cannot detect the bump.
@@ -939,6 +951,7 @@ jobs:
           PYEOF
 
       - name: Dispatch staging-unlocked to all repos (re-runs Staging Lock Check on open PRs)
+        if: steps.idempotency.outputs.idempotent_skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |

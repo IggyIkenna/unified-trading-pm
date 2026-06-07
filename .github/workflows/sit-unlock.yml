@@ -40,6 +40,8 @@ jobs:
           manifest["staging_status"]["locked_since"] = None
           manifest["staging_status"]["locked_reason"] = "SIT failed — open for fixes"
           manifest["staging_status"]["lock_version"] = None
+          # Unlock → clear the starvation alarm so the next lock cycle can alert again (finding H3).
+          manifest["staging_status"]["locked_alert_sent"] = False
 
           tmp_path = "workspace-manifest.json.tmp"
           with open(tmp_path, "w") as f:

@@ -8,8 +8,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: sit-starvation-check
-  cancel-in-progress: true
+  # manifest-mutating workflow → share the manifest-update group (cancel-in-progress:false) so it
+  # serialises with every other manifest writer and cannot silently lose an update (finding H2).
+  # Was the per-poller `sit-starvation-check` group.
+  group: manifest-update
+  cancel-in-progress: false
 
 jobs:
   check-stale-lock:
@@ -79,7 +82,20 @@ jobs:
             git config user.name "CI Bot"
             git add workspace-manifest.json
             git commit -m "chore: mark SIT starvation alert sent [skip ci]"
-            git push
+            # Retry-with-rebase (finding H2): a concurrent manifest writer can land between checkout and
+            # push; a bare push fails non-fast-forward and the alert-sent flag is lost. Rebase + retry.
+            for attempt in 1 2 3 4 5; do
+              if git push; then
+                echo "Pushed manifest update (attempt ${attempt})."
+                break
+              fi
+              echo "Push rejected (attempt ${attempt}); rebasing onto origin/main and retrying."
+              git pull --rebase --autostash origin main
+              if [ "${attempt}" = "5" ]; then
+                echo "FATAL: could not push manifest update after 5 attempts."
+                exit 1
+              fi
+            done
           else
             echo "stale=false" >> "$GITHUB_OUTPUT"
           fi

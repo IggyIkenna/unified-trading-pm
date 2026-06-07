@@ -406,7 +406,12 @@ def _check_workflows(
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 
-def _report_workflow_drift(reports: list[RepoDriftReport], output_json: bool, write_baseline: bool) -> int:
+def _report_workflow_drift(
+    reports: list[RepoDriftReport],
+    output_json: bool,
+    write_baseline: bool,
+    allow_additions: bool = False,
+) -> int:
     """Baselined ratchet for workflow-template parity: block only NEW drift beyond the baseline."""
     current: set[str] = {
         _drift_key(r.repo_name, it.check.removeprefix("workflow-drift-"))
@@ -416,8 +421,31 @@ def _report_workflow_drift(reports: list[RepoDriftReport], output_json: bool, wr
     }
 
     if write_baseline:
-        WORKFLOW_DRIFT_BASELINE_PATH.write_text(json.dumps({"drift": sorted(current)}, indent=2) + "\n")
-        print(f"Wrote workflow-drift baseline: {len(current)} entries -> {WORKFLOW_DRIFT_BASELINE_PATH.name}")
+        # M5: --baseline-write ratchets DOWN only (removes now-clean entries); it must NOT
+        # silently ADD new drift, which would bless breakage in one line (the H4 hole — a
+        # hand-edited per-repo workflow getting grandfathered instead of rolled out). New
+        # drift must be fixed via rollout-workflow-templates.sh; to deliberately grandfather
+        # it (discouraged), pass --baseline-write-allow-additions.
+        prior = _load_workflow_drift_baseline()
+        if prior:
+            additions = current - prior
+            if additions and not allow_additions:
+                print(f"REFUSED: --baseline-write would ADD {len(additions)} new drift entr(ies) (bless breakage):")
+                for k in sorted(additions):
+                    print(f"  + {k}")
+                print(
+                    "Fix via rollout-workflow-templates.sh, or re-run with"
+                    " --baseline-write-allow-additions to grandfather."
+                )
+                return 1
+            new_baseline = current if allow_additions else (current & prior)
+        else:
+            new_baseline = current  # bootstrap: no prior baseline → capture current
+        removed = prior - new_baseline
+        WORKFLOW_DRIFT_BASELINE_PATH.write_text(json.dumps({"drift": sorted(new_baseline)}, indent=2) + "\n")
+        print(f"Wrote workflow-drift baseline: {len(new_baseline)} entries -> {WORKFLOW_DRIFT_BASELINE_PATH.name}")
+        if removed:
+            print(f"  ratcheted down: removed {len(removed)} now-clean entr(ies)")
         return 0
 
     baseline = _load_workflow_drift_baseline()
@@ -462,6 +490,7 @@ def run(
     check_prek: bool = False,
     check_workflows: bool = False,
     write_baseline: bool = False,
+    allow_additions: bool = False,
 ) -> int:
     if not MANIFEST_PATH.exists():
         print(f"ERROR: workspace manifest not found at {MANIFEST_PATH}", file=sys.stderr)
@@ -499,7 +528,9 @@ def run(
                     report.items.append(item)
 
     if check_workflows:
-        return _report_workflow_drift(reports, output_json=output_json, write_baseline=write_baseline)
+        return _report_workflow_drift(
+            reports, output_json=output_json, write_baseline=write_baseline, allow_additions=allow_additions
+        )
 
     if output_json:
         out: list[dict[str, object]] = [
@@ -556,7 +587,19 @@ def main() -> None:
         "--baseline-write",
         action="store_true",
         dest="write_baseline",
-        help="Rewrite the workflow-drift baseline to current state (implies --workflows)",
+        help=(
+            "Ratchet the workflow-drift baseline DOWN (remove now-clean entries; refuses to ADD"
+            " new drift). Implies --workflows."
+        ),
+    )
+    parser.add_argument(
+        "--baseline-write-allow-additions",
+        action="store_true",
+        dest="allow_additions",
+        help=(
+            "With --baseline-write, also grandfather NEW drift (discouraged — bless breakage)."
+            " Default refuses additions."
+        ),
     )
     args = parser.parse_args()
 
@@ -565,6 +608,7 @@ def main() -> None:
     output_json = cast(bool, args.output_json)
     check_prek = cast(bool, args.check_prek)
     write_baseline = cast(bool, args.write_baseline)
+    allow_additions = cast(bool, args.allow_additions)
     check_workflows = cast(bool, args.check_workflows) or write_baseline  # baseline-write implies workflows
     sys.exit(
         run(
@@ -574,6 +618,7 @@ def main() -> None:
             check_prek=check_prek,
             check_workflows=check_workflows,
             write_baseline=write_baseline,
+            allow_additions=allow_additions,
         )
     )
 

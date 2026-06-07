@@ -140,6 +140,8 @@ jobs:
                   else:
                       manifest["staging_status"]["locked_reason"] = f"Major bump cascade: {repo}={version}"
                   manifest["staging_status"]["lock_version"] = version
+                  # Fresh lock cycle → re-arm the starvation alarm (finding H3).
+                  manifest["staging_status"]["locked_alert_sent"] = False
                   print(f"STAGING LOCKED: {'breaking ' if is_breaking else ''}{bump_type} bump {repo}={version}")
           else:
               manifest["versions"][repo] = version

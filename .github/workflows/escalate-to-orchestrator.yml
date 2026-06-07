@@ -148,7 +148,7 @@ jobs:
         id: post
         env:
           ORCH_SECRET: ${{ secrets.ORCHESTRATOR_INTERNAL_SECRET }}
-          ORCH_URL: ${{ vars.ORCHESTRATOR_URL || 'https://agent-orchestrator.odum-research.com' }}
+          ORCH_URL: ${{ vars.ORCHESTRATOR_URL || 'https://api.agent-orchestrator.odum-research.com' }}
           REPO: ${{ steps.inputs.outputs.repo }}
           PR_NUMBER: ${{ steps.inputs.outputs.pr_number }}
           WALL_TYPE: ${{ steps.inputs.outputs.wall_type }}
@@ -239,10 +239,9 @@ jobs:
         (slot {1}) is resolving {2}#{3} on live-defi-rollout. Verify the worker live on the orchestrator dashboard
         (Agents panel) → <{4}|open dashboard>.', needs.escalate.outputs.escalation_id, needs.escalate.outputs.slot_id,
         needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) || format('⚠️
-        Escalation NOT confirmed for {0}#{1} — NO worker was spawned (orchestrator returned no escalation_id, or no
-        free slot / headroom account, or was unreachable). The wall is STILL OPEN. Check the run log + dashboard →
-        <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
-        needs.escalate.outputs.orch_url) }}
+        Escalation NOT confirmed for {0}#{1} — NO worker was spawned (orchestrator returned no escalation_id, or no free
+        slot / headroom account, or was unreachable). The wall is STILL OPEN. Check the run log + dashboard → <{2}|open
+        dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) }}
       severity: ${{ needs.escalate.outputs.dispatched == 'true' && 'INFO' || 'WARNING' }}
       conclusion: ${{ needs.escalate.result }}
       workflow_name: ${{ github.workflow }}
