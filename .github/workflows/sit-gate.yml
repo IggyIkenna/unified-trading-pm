@@ -44,21 +44,32 @@ jobs:
           pending = [r for r, sv in staging_versions.items()
                      if not r.startswith("_") and sv != stable_versions.get(r)]
 
-          # Check ci_status for each pending repo
+          # Check ci_status for each pending repo. A repo is SIT-ready when its ci_status is AT OR
+          # ABOVE STAGING_GREEN in the lifecycle hierarchy (STAGING_GREEN | SIT_VALIDATED |
+          # MAIN_GREEN). The ci_status no-downgrade guard (ci-status-update.yml) DELIBERATELY keeps
+          # an on-main repo at MAIN_GREEN even when it has fresh staging changes — a green staging v2
+          # cannot knock MAIN_GREEN(rank 4) down to STAGING_GREEN(rank 2). So requiring EXACTLY
+          # STAGING_GREEN here made sit-gate's precheck UNSATISFIABLE for any MAIN_GREEN pending repo
+          # → SIT never ran → the breaking-cascade lock never cleared → the whole staging→main drain
+          # dammed (incident 2026-06-07: uac=0.2.0 / utl=0.4.0 / features=0.1.0 cascade stuck with
+          # every pending repo MAIN_GREEN). Accept rank >= STAGING_GREEN. A repo that genuinely
+          # failed its staging v2 is written FAILING (FAILING is never suppressed by no-downgrade),
+          # so this does not let a red staging in.
+          SIT_READY = {"STAGING_GREEN", "SIT_VALIDATED", "MAIN_GREEN"}
           not_green = []
           for repo in pending:
               ci = repos.get(repo, {}).get("ci_status", "NOT_CONFIGURED")
-              if ci != "STAGING_GREEN":
-                  not_green.append(f"  {repo}: ci_status={ci} (need STAGING_GREEN)")
+              if ci not in SIT_READY:
+                  not_green.append(f"  {repo}: ci_status={ci} (need >= STAGING_GREEN)")
 
           if not_green:
-              print("BLOCKED: SIT cannot run — not all pending repos are STAGING_GREEN:")
+              print("BLOCKED: SIT cannot run — not all pending repos are SIT-ready (>= STAGING_GREEN):")
               for line in not_green:
                   print(line)
               print(f"\n{len(not_green)}/{len(pending)} repos not ready. SIT blocked.")
               sys.exit(1)
 
-          print(f"All {len(pending)} pending repos are STAGING_GREEN. SIT can proceed.")
+          print(f"All {len(pending)} pending repos are SIT-ready (>= STAGING_GREEN). SIT can proceed.")
           PYEOF
 
       - name: Lock staging and record commit SHAs
