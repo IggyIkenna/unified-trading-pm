@@ -734,7 +734,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "market-tick-data-service": {
       "type": "service",
@@ -787,7 +787,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "ml-service": {
       "type": "service",
