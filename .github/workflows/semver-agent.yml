@@ -66,27 +66,15 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
 
     steps:
-      - name: Claude API health precheck
-        env:
-          CALLING_WORKFLOW: "semver-agent/unified-trading-pm"
+      - name: Claude API health precheck (RETIRED — no-op)
         run: |
-          # Inline health check (semver-agent runs in individual repos, not PM)
-          echo "Checking last claude-api-health-monitor.yml run..."
-          LAST_CONCLUSION=$(gh run list \
-            --repo "${GH_ORG}/unified-trading-pm" \
-            --workflow "claude-api-health-monitor.yml" \
-            --limit 1 \
-            --json conclusion,status \
-            --jq '.[0].conclusion // "unknown"' 2>/dev/null || echo "unknown")
-
-          echo "Last health check conclusion: $LAST_CONCLUSION"
-
-          if [ "$LAST_CONCLUSION" != "success" ] && [ "$LAST_CONCLUSION" != "unknown" ] && [ "$LAST_CONCLUSION" != "null" ]; then
-            echo "Claude API unhealthy (conclusion=$LAST_CONCLUSION) — skipping semver agent"
-            # NOTE: Telegram notification handled by the notify job (reusable workflow)
-            # which fires on job failure. No inline curl needed here.
-            exit 1
-          fi
+          # RETIRED 2026-06-07. semver-agent does NOT call the Claude API — it dispatches a
+          # version-bump event and escalates (when needed) to an agent-orchestrator VM worker on
+          # Claude Code session auth (setup-tokens). The old gate on `claude-api-health-monitor.yml`
+          # (now deleted) was vestigial and FALSE-DAMMED the cascade during credit outages. The
+          # real out-of-capacity signal is agent-orchestrator's all-accounts-unusable alert
+          # (notify_all_accounts_unusable → #agent-orchestrator-alerts).
+          echo "Claude API health precheck retired (no-op) — Claude API unused; proceeding."
 
       - name: Checkout repo at staging commit
         uses: actions/checkout@v4
