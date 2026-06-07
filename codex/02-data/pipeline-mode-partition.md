@@ -5,10 +5,17 @@ last_reviewed: 2026-05-19
 
 # `pipeline_mode` Hive Partition
 
-> **STATUS** — Documents the `pipeline_mode={batch_*, live_websocket, ...}` hive partition column added across every
-> parquet on disk during the bundled GCS migration on 2026-05-19. Migration owner:
+> **STATUS** — Documents the `pipeline_mode` hive partition column added across every parquet on disk during the bundled
+> GCS migration on 2026-05-19. Migration owner:
 > [`plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md`](../../plans/active/gcs_migration_bundle_pipeline_mode_2026_05_08.md).
 > If this doc disagrees with the active plan, the plan wins.
+>
+> **CANONICAL FORM (M1/C-TRANSPORT, operator-ratified 2026-06-07)**: `pipeline_mode = {mode}_{source}[_{transport}]`
+> where `mode ∈ {batch, live, replay}`, `source` is the VENDOR only, and `[_{transport}]` is an OPTIONAL trailing
+> segment present in the path key **only** where a source genuinely runs >1 transport for the SAME shard (else omitted).
+> See § "Source-aware modes + transport" below — this SUPERSEDES the earlier batch-only `{batch_*, live_websocket}`
+> framing (`live_websocket` is now a transitional alias, and `replay_<source>` is a real mode). SSOT:
+> [`plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`](../../plans/active/pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md).
 
 ## Shipped progress (updated 2026-05-19 post-Phase-3 run)
 
@@ -27,7 +34,7 @@ last_reviewed: 2026-05-19
 | Axis-10 — Reconciler pipeline_mode= prefix fix              | ✅ shipped    | `instruments-service@8accb30` (2026-05-19) — see pre/post counts below          |
 | 3.6 — Post-migration phantom gate (re-audit w/ Axis-10 fix) | ✅ complete   | prediction ✅ 0 / sports ✅ 0 / tradfi ✅ 0 / defi ✅ 0 / cefi ✅ 0             |
 | 6 — Residual phantom cleanup                                | 🚫 not needed | Axis-10 false positives; parquets exist at new paths. DO NOT run `--apply`.     |
-| 8 — Reader fallback removal (T+30d, ~2026-06-15)            | ⏸ deferred   | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
+| 8 — Reader fallback removal (T+30d, ~2026-06-15)            | ⏸ deferred    | "no double SSOT" rule once `READER_FELL_BACK_TO_LEGACY_PATH` count = 0 / 7d.    |
 | 9 — Final workspace-wide QG sweep                           | ⏳ pending    | Sequential after Phase 3.6 operator sign-off.                                   |
 
 ### Phase 3 migration: pre/post phantom counts (2026-05-19)
@@ -92,8 +99,37 @@ Three reasons:
 | `batch_databento_replay`      | Databento used by the replay-cascade subsystem                               |
 | `live_websocket`              | Live websocket-streaming pipeline (MTDS / MDPS / features-service live mode) |
 
-**Source-of-truth rule**: every UAC `SOURCE_PRIORITY` entry MUST have a corresponding `PipelineMode` value, and vice
-versa. Unit test in `unified-api-contracts/tests/unit/test_pipeline_mode.py` enforces the round-trip.
+**Source-of-truth rule**: every UAC `SOURCE_PRIORITY` entry MUST have a corresponding **batch** `PipelineMode` value,
+and vice versa. Unit test in `unified-api-contracts/tests/unit/test_pipeline_mode.py` enforces the round-trip. (The
+table above is illustrative, not exhaustive — UAC `PipelineMode` is the SSOT.)
+
+## Source-aware modes + transport (M1/C-TRANSPORT, operator-ratified 2026-06-07)
+
+The `pipeline_mode` axis is **source-aware for ALL three modes** — `batch_<source>`, `live_<source>`, and
+`replay_<source>` — not batch-only. The canonical form is `{mode}_{source}[_{transport}]`:
+
+- **`mode ∈ {batch, live, replay}`** — three CAPTURE modes of the SAME logical data / schema / paths:
+  - `batch_<source>` — the T+1 floor (deep history).
+  - `live_<source>` — a live-mode generator streamed to disk as it happens.
+  - `replay_<source>` — an **intraday re-fetch** of a window `live` missed (cold-start / live-service down), same
+    schema, tagged `replay` for the audit trail. Whether a `(source, data_type)` is replay-capable is a FACT in UAC
+    `SOURCE_MODE_CAPABILITY` (M2) — a source that cannot re-fetch intraday simply means a live-downtime gap waits for
+    batch (honest absence), not a decision.
+- **`source` is the VENDOR only** — transport is NEVER glued into the source name (operator R4). The retired
+  `hyperliquid_rest` source was that antipattern; it is now `source=hyperliquid` + `transport=rest`. `hyperliquid` is
+  the one unified vendor that is BOTH a DeFi batch source (`batch_hyperliquid`, REST candleSnapshot) AND a CeFi/DeFi
+  live+replay venue (`live_hyperliquid` / `replay_hyperliquid`).
+- **`[_{transport}]`** — `transport ∈ {rest, websocket, flat_file}`. TWO rules:
+  1. The transport SUFFIX appears in the `pipeline_mode` PATH KEY **only** where a source genuinely runs >1 transport
+     for the SAME shard (else OMITTED — no noise). No source does today, so no member carries a suffix yet.
+  2. A separate **`transport` manifest COLUMN is ALWAYS populated** on every captured row (UAC
+     `default_transport_for_source(source)` unless the writer is passed an explicit value: `tardis` → `flat_file`, every
+     other batch source → `rest`). The column is the always-populated SSOT; the suffix is path-pruning sugar.
+
+**Read precedence is mode-contextual (M4)**: a live consumer reads `live > replay > batch`; a batch consumer reads
+`batch > replay > live`; `replay` is always the middle (gap-fill) tier. (The object-side `live_websocket` →
+`live_<source>` migration + the M4 reader are a separate GATED tranche; until then live still writes the transitional
+`live_websocket` alias.)
 
 ## Reader behaviour
 
@@ -151,12 +187,17 @@ execution:
 ## Anti-patterns
 
 - Don't keep the `category=` reader fallback long-term. Phase 8 of the migration plan deletes it 2026-06-15.
-- Don't introduce a new `pipeline_mode` value without adding a corresponding `SOURCE_PRIORITY` entry. The round-trip
-  unit test will fail.
-- Don't use `pipeline_mode=replay_*`. The replay subsystem writes to `pipeline_mode=live_websocket` with original-time
-  `available_at` (per [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md)).
+- Don't introduce a new batch `pipeline_mode` value without adding a corresponding `SOURCE_PRIORITY` entry. The
+  round-trip unit test will fail.
+- Don't glue a transport into the `source` (the `hyperliquid_rest` antipattern, retired R4 2026-06-07) — `source` is the
+  VENDOR only; transport is the separate `transport` column (+ optional `[_{transport}]` suffix for a genuine
+  > 1-transport source). See § "Source-aware modes + transport".
+- `replay_<source>` is a REAL mode (intraday gap-fill), NOT a `live_websocket` write. (SUPERSEDES the prior "Don't use
+  `pipeline_mode=replay_*`; replay writes to `live_websocket`" rule — that contradicted M1.) The object-side
+  `live_websocket` → `live_<source>` + `replay_<source>` write migration is a separate GATED tranche.
 - Don't write to manifest without the explicit `pipeline_mode=` kwarg post-migration. The default value is removed after
-  Phase 4 sweep is grep-clean — explicit-or-fail.
+  Phase 4 sweep is grep-clean — explicit-or-fail. (UTL `add()` now AUTO-DERIVES it for a derivable market-data row —
+  C-#2 — so a blank tag can't silently pass; features/service rows still keep `""`.)
 
 ## Cross-references
 
@@ -166,5 +207,6 @@ execution:
   schema + 4-state taxonomy + reason taxonomy.
 - Sibling: [`../05-infrastructure/live-pipeline-architecture.md`](../05-infrastructure/live-pipeline-architecture.md) —
   consumer of the new partition for live-mode writes.
-- Sibling: [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md) — replay writes also
-  go to `pipeline_mode=live_websocket`.
+- Sibling: [`../05-infrastructure/replay-subsystem.md`](../05-infrastructure/replay-subsystem.md) — the replay subsystem
+  (the source-aware `replay_<source>` write path lands in a separate gated tranche; see § "Source-aware modes +
+  transport").
