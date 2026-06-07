@@ -1292,6 +1292,95 @@ CF-GREEN-on-real- data + the fleet drain + operator.
       numerator → shows as MISSING (under-coverage), never silently excluded** (no false 100%). UI renders the v9
       4-state sports drilldown.
 
+## G2 WAVE-2 readiness verdict — slot-4 re-verify on WAVE-1 code (2026-06-07)
+
+> Re-ran every sports dry-run against the **current LDR** (post-WAVE-1: source-aware migrators + shape-aware G1-ENUM
+> producer `is@6ea46565` + AG-parametric G1-V8 instruments-store migrator `is@febb899e`). **All read-only on real prod
+> GCS.** Verdict: **sports migration CODE is dry-run GREEN; one code bug found + fixed (UAC); two data-state gaps
+> captured below; `--apply` stays G4-gated.**
+
+**① MTDS migrator dry-run — GREEN** (`migrate_sports_canonical_v9.py --surface mdps --dry-run`, 2026-02-20..21 window,
+real `market-data-tick-sports-prd`): 401 raw + 137 processed objects in scope, copied=0 (dry-run). Projected dest paths
+are canonical + **source-aware**: raw `category=sports/data_source=ODDS_API/…` →
+`pipeline_mode=batch_odds_api/asset_group=sports/venue=…/league_id=…/instrument_type=odds/data_type=trades/` (CF-2
+`category`→`asset_group` ✅, CF-3/CF-13 source-aware `pipeline_mode=batch_<source>` ✅); processed candles →
+`pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/…` ✅. The source-aware `pipeline_mode` values passed
+UAC's closed-set `pipeline_mode_for_source()` (no ValueError).
+
+**② Instruments-store v9 migrator dry-run — GREEN**
+(`migrate_instruments_store_v9.py --asset-group sports --skip-objects`, real `instruments-store-sports-prd` `_index`,
+the G1-V8 tool `is@febb899e`): **2,681,044 rows → 100% v9** (v8_before 2,680,309 + v9_before 735). CF-1 v9 ✅ · CF-2
+`asset_group=sports` (2,667,868 stamped) ✅ · CF-13 source-aware `pipeline_mode` {`batch_api_football` 2.03M,
+`batch_footystats` 352K, `batch_open_meteo` 105K, `batch_transfermarkt` 81K, `batch_soccer_football_info` 77K,
+`batch_understat` 25K, `batch_odds_api` 6.6K} ✅ · CF-4 `source` column (api_football/footystats/…) ✅ · CF-TRANSPORT
+`transport=rest` (100%) ✅ · CF-8 `available_at` filled (2,667,868) ✅ · CF-7 canonical data_types
+(STANDINGS/FIXTURES/INJURIES/…) ✅. Sample row v9-canonical. So cf_manifest_audit(instruments-store-sports) goes
+**CF-GREEN under projection**; the `--apply` RUN stays G4-gated.
+
+**③ Manifest-rebuild dry-run — code proven, data-state gated**
+(`rebuild_sports_manifest_v9.py --surface mdps --dry-run`): the rebuild reads via UTL `read_availability_index`
+(consolidated/per-VM view) and today loaded **0 rows** ("Empty index — nothing to rebuild" — honest, no crash, no
+placeholder). The prd mdps `_index/availability_index.parquet` main file has **786,408 rows** (pandas direct read:
+empty_confirmed 584,177 + captured 202,067 + attempted_failed 164, schema_version 100% v8, columns
+`asset_group`/`source`/`transport` ABSENT, `pipeline_mode` None/blank — the expected PRE-migration v8 state). Slot-6's
+earlier rebuild read the full 786K (its 584,177+202,067 histogram matches this file exactly), so the **rebuild code is
+proven**; today's 0 is a per-VM/consolidation-state gap (the main file was rewritten 2026-06-07T20:45; `_index/per_vm/`
+holds only a 196KB `_legacy_seed`). Captured as a data-state finding below; the `--apply` is already
+E3-drain+consolidate-gated.
+
+**④ Catalogue + enumerate (shape-aware, league-grain) — matrix slice VERIFIED + a CODE BUG FIXED.** The slot-7 G1-ENUM
+producer (`is@6ea46565`) preserved the sports league-grain `_enumerate_v2_sports` / `_SPORTS_PRESENT_COLS` /
+`build_sports_catalogue_dataframe` (`is@99a5fbf5`). **But its new `_row_data_types` validity filter consulted the UAC
+matrix `("sports","league")` slice, which was WRONG** — it listed the lowercase MTDS odds market-data types instead of
+the reference-data `SPORTS_DATA_TYPE_TO_SOURCE` keys, so the producer **silently DROPPED `ODDS`** (it is both a
+`SPORTS_DATA_TYPE_TO_SOURCE` key AND a `DATA_TYPES_BY_ASSET_GROUP["sports"]` member → failed both arms of the filter).
+Empirically confirmed (16/17 league reference data_types kept, `ODDS` dropped). **FIXED** —
+`valid_data_types_for_instrument_type` now DERIVES the sports/league set from `SPORTS_DATA_TYPE_TO_SOURCE` (mirroring
+the DeFi lazy-derivation pattern; eliminates the hand-written-literal drift), the wrong static literal removed, +3
+regression tests; verified all 17 keys kept + impossible odds-types still rejected + 132 IS enumerate/catalogue consumer
+tests green. **Shipped: uac@aff80339 (PR#95 → staging, auto-merge).** The full catalogue+enumerate prod re-run is
+list-bound (>15 min — the existing PERF P2 list-cost finding) → VM/scheduler-class; mechanism is unit-test-proven
+post-fix.
+
+**Remaining gates for the sports `--apply` (G4):** G0 (coordinator) + the instruments-store v9 walk (G1-V8 `--apply` on
+a VM) + IS instrument backfill (`by_date` capture freeze) + the two findings below + pre-migration drain. Sampled (not
+walked): the migrator object dry-run used a 2-day window; the instruments-store v9 + manifest reads were full-corpus
+(2.68M / 786K). Remaining gaps = the gated VM `--apply` walks.
+
+- [ ] [DATA] P1. **6,869 sports instruments-store `_index` rows carry BLANK `capture_status`** (CF-5 honest-absence
+      violation) — surfaced by the G1-V8 dry-run
+      (`capture_status: {empty_confirmed 1,909,553, captured 586,597,     attempted_failed 178,025, '' 6,869}`). The
+      `migrate_instruments_store_v9` migrator PRESERVES the blank → it would ride into v9 unless relabelled. **Diagnosed
+      (slot-4 2026-06-07)**: all 6,869 blanks are `service_name=instruments-service` with **blank `data_type`** + NaN
+      `feature_group` (schema_version 8) — i.e. instrument-definition / reference rows, NOT market-data capture cells.
+      Decide the canonical 4-state for a definition-only row (either a typed `expected_unattempted`/`empty_confirmed`
+      reason, or exclude from the capture-status denominator if reference rows are status-exempt by design) and stamp it
+      in the same single walk. Gates the sports IS `--apply`. Co-owner: slot-7 (the AG-parametric
+      `migrate_instruments_store_v9` central tool) + slot-4 (sports relabel semantics). Repo: instruments-service.
+      parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2 verify 2026-06-07.
+- [ ] [DATA] P1. **prd mdps consolidated `_index` reads 0 via `read_availability_index` despite 786K main-file rows** —
+      the live `_index/availability_index.parquet` (786,408 v8 rows) was rewritten 2026-06-07T20:45 but
+      `read_availability_index` (per-VM-consolidated view) returns 0; `_index/per_vm/` holds only a 196KB
+      `_legacy_seed`. Slot-6's run read the full 786K, so this is a post-20:45 consolidation/per-VM-state regression,
+      NOT rebuild code. Confirm the 20:45 writer (which process?) did not leave the per-VM consolidated view empty; the
+      mdps rebuild `--apply` is E3-drain+consolidate-gated which would refresh it, but verify the main-file 786K rows
+      survive the consolidation (do not lose them). Repo: market-tick-data-service / unified-trading-library
+      (consolidator). Owner: vm-sports + cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2 verify
+      2026-06-07.
+- [ ] [INFRA] P1. **`quickmerge --agent` is structurally broken for LIBRARY repos — sentinel mechanism gap
+      (cross-cutting, surfaced shipping uac@aff80339)**: `base-library.sh` writes ONLY `.qg_content_sentinel`, never
+      `.qg_last_passed_sha` (unlike `base-service.sh:2697`), but `quickmerge.sh` STAGE 3 `--agent` fast-path checks ONLY
+      `.qg_last_passed_sha` (`:1039`, no content-sentinel fallback) → a library QG-green tree always reads
+      `Sentinel: <missing>` and quickmerge `--agent` hard-refuses. Workaround used here: hand-wrote
+      `.qg_last_passed_sha = HEAD` after a verified full green run (safe for a library — no cross-repo dep state; full
+      tests ran, not a content-HIT). **Fix**: either make `base-library.sh` write `.qg_last_passed_sha` on a complete
+      non-HIT green run (mirror `base-service.sh:2696-2702`), OR teach `quickmerge.sh` STAGE 3 to accept
+      `.qg_content_sentinel` for library repos. Blocks EVERY library ship via `quickmerge --agent` (UAC / UTL). Repo:
+      unified-trading-pm (`quality-gates-base/` + `quickmerge.sh`). **Migrate to**
+      `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (the sentinel-contract plan) on next touch — parked
+      here as the surfacing record. Owner: vm-cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2
+      ship 2026-06-07.
+
 ## Success criteria
 
 - Canonical sports `_index` = v9 + `pipeline_mode=` partition + `source` column + canonical venue/league/data_type.

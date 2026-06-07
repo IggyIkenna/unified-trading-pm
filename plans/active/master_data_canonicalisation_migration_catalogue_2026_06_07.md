@@ -270,7 +270,14 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
   `expected_unattempted`; venue-specific → catalogue rollup, NOT a matrix flip — BYBIT has per-contract `future`). Same
   class as tradfi/sports; co-owned slot-7 G1-ENUM producer. Full write-up + P0 todos in
   `cefi_manifest_canonicalisation_2026_06_01.md` § "G2 VERIFY PASS". gate-c (v9) tool-ready via G1-V8.
-- **sports (slot-4)**: BLOCKED by G1-ENUM (league-grain) + G1-V8 (v8) + needs AG-specific producer.
+- **sports (slot-4)**: **WAVE-2 dry-runs GREEN (2026-06-07)** — G1-ENUM league-grain producer DONE (is@99a5fbf5) +
+  AG-specific producer present; **fixed a real G1-ENUM bug: the UAC `("sports","league")` validity slice silently
+  dropped `ODDS` → now derived from `SPORTS_DATA_TYPE_TO_SOURCE` (uac@aff80339/PR#95)**. G1-V8 instruments-store v9
+  dry-run GREEN (2.68M → 100% v9, `asset_group`/`source`/`transport`/`available_at` all stamped,
+  `pipeline_mode=batch_<source>`). MTDS migrator object-path dry-run GREEN (source-aware `batch_odds_api`,
+  `category`→`asset_group`). `--apply` gated (G0 + IS v9 walk + IS backfill + 2 data-state findings: 6,869 blank
+  `capture_status` + mdps consolidated-index-reads-0). Full verdict: `sports_manifest_canonicalisation_2026_06_01.md`
+  § "G2 WAVE-2 readiness verdict".
 - **tradfi (slot-6)**: catalogue + enumerate dry-run mechanism GREEN (588,798 candidates) — BUT this ran on the OLD
   over-fanning producer (predates G1-ENUM) → **re-validate the candidate set against slot-7's shape-aware producer**
   (tradfi is per-contract so less bundle-affected than cefi, but impossible-combo filtering still applies). gate-b
