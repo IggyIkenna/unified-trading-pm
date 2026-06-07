@@ -381,10 +381,15 @@ jobs:
     if: always() && needs.update-manifest.outputs.skip != 'true'
     uses: ./.github/workflows/notify-slack.yml
     with:
+      # Truthful body: a failed update-manifest must NOT read as a clean "Version update".
       message:
-        "Version update: ${{ needs.update-manifest.outputs.repo }} v${{ needs.update-manifest.outputs.version }}
-        (branch: ${{ needs.update-manifest.outputs.branch }}, bump: ${{ needs.update-manifest.outputs.bump_type }})"
-      severity: "INFO"
+        "${{ needs.update-manifest.result == 'success' && format('Version update: {0} v{1} (branch {2}, bump {3})',
+        needs.update-manifest.outputs.repo, needs.update-manifest.outputs.version, needs.update-manifest.outputs.branch,
+        needs.update-manifest.outputs.bump_type) || format('Version update FAILED for {0} v{1} (branch {2}, bump {3}) —
+        job result {4}', needs.update-manifest.outputs.repo, needs.update-manifest.outputs.version,
+        needs.update-manifest.outputs.branch, needs.update-manifest.outputs.bump_type, needs.update-manifest.result) }}"
+      # notify-slack truthful-classifies (failure → CRITICAL); keep INFO only on success.
+      severity: ${{ needs.update-manifest.result == 'success' && 'INFO' || 'CRITICAL' }}
       conclusion: ${{ needs.update-manifest.result }}
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
