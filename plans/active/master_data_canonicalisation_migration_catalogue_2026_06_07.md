@@ -265,12 +265,15 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       = VM job, timed out ~10min; producer already proven — slot-7 applied `prod/catalog.parquet` = 684,372 instruments,
       95% delisted = capture-freeze signature). `enumerate_expected_universe v2 --catalog-path <prod/catalog.parquet>`
       scan-only (2026-06-04..05) exit 0 → **588,798 candidate `expected_unattempted`** (= 32,711 alive × 9 data_types ×
-      2 days; present-set 73,352/144,062), sample-inspected (e.g. `CBOE:INDEX:VIX × {trades,ohlcv_1m,…}`). Mechanism
-      GREEN. cf_manifest_audit(instruments-store-tradfi-prd): 20,388 rows 0.8% v9, CF-1/3/4/8 RED + 60 legacy-only (§
-      Step-1 v9 walk gated). **G1.run apply-write GATED** (b: capture freeze; c: v9 indices) → dry-run only; gate-b
-      remediation Massive IS adapter SHIPPED (UAC@12974b11 PR#91 + IS@c0f2f39c PR#407). **G1.schedule: tradfi MISSING
-      from both catalogue schedulers' instruments-store `for_each` → gated todo filed.** Full finding in
-      `tradfi_manifest_canonicalisation_2026_06_01.md` § G1.**
+      2 days; present-set 73,352/144,062), sample-inspected (e.g. `CBOE:INDEX:VIX × {trades,ohlcv_1m,…}`). **⚠️ count is
+      an UPPER BOUND — ran on the OLD over-fanning producer (PREDATES G1-ENUM); no `(instrument_type × data_type)`
+      validity filter → gate-(a) PROVISIONAL, RE-RUN gated on slot-7's shape-aware v2 producer (operator 2026-06-07).**
+      cf_manifest_audit(instruments-store-tradfi-prd): 20,388 rows 0.8% v9, CF-1/3/4/8 RED + 60 legacy-only (§ Step-1 v9
+      walk **BLOCKED on the G1-V8 instruments_manifest E2 migrator BUILD** + G0). **G1.run apply-write GATED** (a
+      provisional; b: capture freeze; c: v9 indices/migrator-build) → dry-run only; gate-b remediation Massive IS
+      adapter SHIPPED + **STAGING-GREEN** (UAC@12974b11 PR#91 MERGED + IS@c0f2f39c PR#407 MERGED, both quality-gates-v2
+      PASS). **G1.schedule: tradfi MISSING from both catalogue schedulers' instruments-store `for_each` → gated todo
+      filed.** Full finding in `tradfi_manifest_canonicalisation_2026_06_01.md` § G1.**
 - [ ] [DATA] P0. **G1.run — per-AG `--apply-write` of the could-exist seed against the AG's canonical `_index`** (VM;
       `MANIFEST_PER_VM_SHARDS=true`). **GATED on**: (a) **IS instrument BACKFILL complete** for that AG
       (`instruments_backfill_phase3_2026_05_22` — the catalogue can only roll up instruments IS actually fetched); (b)
