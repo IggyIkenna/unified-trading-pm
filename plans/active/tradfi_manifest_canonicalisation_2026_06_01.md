@@ -551,19 +551,23 @@ VM.
       artifact (base-service.sh hard-fails on non-pinned uv, soft-warns on pinned uv 0.10.8; the test's own
       ruff/basedpyright/pytest are clean) — NOT introduced by this change. Cross-repo dep-alignment, owner =
       vm-cross-cutting; flagged for the next strategy-service/UTL dep pass.
-- [ ] [CODE] P2. **strategy allocation guard treats `expected_unattempted` as fail-open→PROCEED (4th honest-absence
-      state not gated at the allocation seam)** (slot-6 finding 2026-06-04, while building the criterion-3 e2e).
-      DIAGNOSIS (both sides read): `strategy_service/manifest_allocation_guard.py::_classify_status` maps only
-      captured/empty_confirmed/attempted_failed; anything else (incl. `expected_unattempted`) → `"unknown"` → fail-open
-      → allocator PROCEEDS. features-service DOES emit `expected_unattempted` rows into the features manifest the guard
-      reads (`features_service/delta_one/cli/handlers/_expected_unattempted.py` → `record_expected_unattempted`), so the
-      state genuinely reaches this seam. So a pending-backfill / out-of-scope cell can be treated as "proceed" rather
-      than absence. **NOT unilaterally changed** — the guard inspects only `matching["capture_status"].iloc[0]` per
-      AG×date, so a blanket `expected_unattempted`→skip risks skipping an entire AG-date on a single out-of-scope
-      instrument (a real allocator-logic regression). Operator decision needed: (a) leave fail-open (current), (b) treat
-      `expected_unattempted`→`expected_gap` (skip-no-alert) AND refine the iloc[0] coarseness to a per-cell decision.
-      Current behaviour is PINNED by `test_expected_unattempted_fail_open_pinned` (a change-detector) so any future flip
-      is deliberate. Repo: strategy-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P2. **strategy allocation guard `expected_unattempted` seam — RESOLVED (operator decision (b), slot-6
+      2026-06-08, strategy-service@4b449711).** Operator chose option (b): `expected_unattempted` (pending-backfill /
+      out-of-scope) now classifies as `expected_gap` → SKIP both modes, NO alert (the prior fail-open
+      `"unknown"`→PROCEED retired); AND the `iloc[0]` AG×date first-row peek is replaced by a **per-cell precedence
+      aggregation** (`attempted_failed > captured > expected_gap > unknown`) — so a lone `expected_unattempted` cell can
+      no longer skip a whole AG-date when real captured data exists, while a genuine `attempted_failed` stays decisive +
+      live-alertable. Both guard test suites re-pinned (`test_manifest_allocation_guard.py` +
+      `test_tradfi_honest_absence_batch_live_parity.py`: `test_expected_unattempted_*` + mixed-cell aggregation tests);
+      strategy-service `quality-gates.sh --no-fix` exit 0 (240s, 4672 passed). Repo: strategy-service. parent_epic:
+      mtds_mdps_master. **STAGING-PROMOTION:** commit on tab→LDR; LDR→staging quickmerge is BLOCKED-DEPENDENCY by the
+      STAGE-1.7 dep-tier gate (unified-trading-library FEATURE_GREEN, not yet on staging — fleet CICD-drain, not a
+      tradfi blocker) → rides the staging-promotion automation once deps drain. ORIGINAL FINDING (slot-6 2026-06-04,
+      while building the criterion-3 e2e): `_classify_status` mapped only captured/empty_confirmed/attempted_failed;
+      `expected_unattempted` → `"unknown"` → fail-open → allocator PROCEEDS. features-service DOES emit
+      `expected_unattempted` rows into the features manifest the guard reads
+      (`features_service/delta_one/cli/handlers/_expected_unattempted.py` → `record_expected_unattempted`), so the state
+      genuinely reaches this seam.
 
 ## 🤝 HANDOFF (slot-6 → next agent, 2026-06-04) — TradFi readiness: ⑦ UI DONE (UI@846c7c67, PR #20→staging); remaining = operator-gated full migration run
 
