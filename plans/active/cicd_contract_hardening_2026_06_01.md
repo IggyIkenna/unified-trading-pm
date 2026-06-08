@@ -198,12 +198,13 @@ what the operator is seeing:
       healthy (local `run_hygiene_sweep.sh` exits 0, 0 hard failures). As of the 06-08 03:08 run the no-op is on `main`
       and the `plan-health` job is GREEN again. Verified 2026-06-08. (Deterministic hard-gate is unaffected — it's the
       separate `plan-health-gate` job, PR-only.)
-- [ ] [SCRIPT] P2. **Plan-health run-badge still shows `failure` with all jobs green (06-08).** Today's run:
-      `plan-health` success, `plan-health-gate` skipped (non-PR), Slack success — yet the run conclusion is `failure`. A
-      skipped gate job shouldn't fail the run; likely a `needs:`/`if:` propagation quirk after the persist-event job was
-      removed between 06-06 and 06-07. A chronically-red scheduled badge erodes trust (looks broken even when plans are
-      healthy). Make the scheduled run conclude green on a healthy sweep (drop/guard the skipped-gate propagation).
-      repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P2. **Plan-health run-badge now green on a healthy sweep.** Today's scheduled run showed `failure`
+      with `plan-health` success + `plan-health-gate` skipped + Slack success — the hidden 4th job `persist`
+      (best-effort GCS/S3 event-log reusable-caller, `needs:[plan-health,notify]`) was failing and gating the run
+      conclusion (it didn't even appear in the jobs list). Fix: marked both telemetry jobs (`notify` + `persist`)
+      `continue-on-error:     true` so the badge reflects the `plan-health` sweep, not a side-channel; real
+      `plan-health` hard failures still redden it. `unified-trading-pm@ca4084244`. **Verify on the next 02:00 UTC
+      scheduled run** that the badge is green. repo: unified-trading-pm.
 
 ## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
 
