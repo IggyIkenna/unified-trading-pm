@@ -397,7 +397,7 @@ What to verify/wire (B0 corrected scope):
   was a wrong-key lookup (flat `LIDO` vs `LIDO-ETHEREUM`). **APPLIED 2026-06-01**:
   `plans/audit/results/defi_venue_launch_relabel_migration_2026_06_01.py --apply` relabeled **1,337** lst-rates rows →
   `EXPECTED_PRE_VENUE_LAUNCH` (ETHENA/ETHERFI/LIDO 353 each + MARINADE 278), UAC-backed + snapshotted.
-- [x] ✅ [CODE] P1. A2a — **perp DEX launch dates DONE (slot-2 2026-06-08, uac@756343ad).** Added the 4 clear on-chain
+- [x] ✅ [CODE] P1. A2a — **perp DEX launch dates DONE (slot-2 2026-06-08, uac@b1835c28).** Added the 4 clear on-chain
       perp DEX venues to `DEFI_VENUE_LAUNCH_DATES` (`HYPERLIQUID` 2023-06-14, `ASTER` 2024-09-25, `LIGHTER-ZKSYNC`
       2024-09-01, `PACIFICA-SOLANA` 2024-04-01 — mirroring `CEFI_VENUE_LAUNCH_DATES`; the DeFi manifest keys perp_funding
       rows for these so the `("defi", venue)` lookup now resolves → pre-launch zero-rows route to
