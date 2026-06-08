@@ -123,17 +123,22 @@ v2**, so re-trigger + scoped-lock clears them (no force).
       v2 + scoped lock-check). Validate via the `ci_failure_watcher` resolved-bookends. NOTE: operator should add
       **Checks: Read** to the fine-grained `GH_PAT` (Secret Manager) first — without it `…/check-runs` 403s and the
       rollout can't be cleanly monitored.
-- [ ] [SCRIPT] P0. **PARTIAL (code done, blocked-on-billing) — #3 tab-mirror leg-A → `GH_PAT` — CODE DONE 2026-06-08
-      (slot-1); FLEET ROLLOUT + LIVE VERIFY BLOCKED-ON-BILLING.** Implemented MORE SURGICALLY than "change checkout
-      `token:`": leg-A (tab→LDR) keeps the `actions/checkout` `token:` on `GITHUB_TOKEN`, but the **LDR pushes** (the
-      `ff` step + the rebase-retry push) now authenticate as `GH_PAT` by swapping the checkout-persisted `GITHUB_TOKEN`
-      `http.https://github.com/.extraheader` for a `GH_PAT` basic-auth header, then **restoring** the `GITHUB_TOKEN`
-      header before the **tab realign force-push** (which MUST stay `GITHUB_TOKEN` — it targets `tab/**` and would
-      recursively re-trigger leg-A; `live-defi-rollout` does NOT match `push: tab/**` so PAT there is loop-safe). The
-      simpler "checkout token: GH_PAT" would have PAT-authed the tab force-push too → recursion. (Tried URL-userinfo
-      `x-access-token:${GH_PAT}@…` first; checkout's extraheader overrides URL userinfo, and clearing it to empty sends
-      a malformed Authorization → the extraheader **swap** is the only reliable override. Auth-swap mechanics
-      unit-checked locally: single-value swap + clean restore, no stacked headers.) Landed on
+- [x] ✅ [SCRIPT] P0. **#3 tab-mirror leg-A → `GH_PAT` — DONE + VERIFIED + ROLLED OUT FLEET-WIDE 2026-06-08 (slot-1).**
+      Canary (PM `tab/ikennaigboaka/1`) leg-A ran GREEN (9 steps) and FF'd PM `live-defi-rollout` to the PAT-swap
+      commit; then rolled out to **all 24 repos** (`unified-trading-pm@1bd99d67b`/`28106739c` SSOT → per-repo `.github`)
+      and **all 24/24 FF'd their LDR via the new PAT-swap leg-A** (24 successful PAT LDR pushes = fleet-wide proof).
+      GH_PAT confirmed present in all 24 repos. The CI runner's own cleanup
+      (`git config --unset-all     http.https://github.com/.extraheader`) confirms the swapped key is exactly right.
+      Reaches each repo's `main` via the now-rebasing promotion cascade. ORIGINAL detail: Implemented MORE SURGICALLY
+      than "change checkout `token:`": leg-A (tab→LDR) keeps the `actions/checkout` `token:` on `GITHUB_TOKEN`, but the
+      **LDR pushes** (the `ff` step + the rebase-retry push) now authenticate as `GH_PAT` by swapping the
+      checkout-persisted `GITHUB_TOKEN` `http.https://github.com/.extraheader` for a `GH_PAT` basic-auth header, then
+      **restoring** the `GITHUB_TOKEN` header before the **tab realign force-push** (which MUST stay `GITHUB_TOKEN` — it
+      targets `tab/**` and would recursively re-trigger leg-A; `live-defi-rollout` does NOT match `push: tab/**` so PAT
+      there is loop-safe). The simpler "checkout token: GH_PAT" would have PAT-authed the tab force-push too →
+      recursion. (Tried URL-userinfo `x-access-token:${GH_PAT}@…` first; checkout's extraheader overrides URL userinfo,
+      and clearing it to empty sends a malformed Authorization → the extraheader **swap** is the only reliable override.
+      Auth-swap mechanics unit-checked locally: single-value swap + clean restore, no stacked headers.) Landed on
       `unified-trading-pm@1bd99d67b` (SSOT template `scripts/workflow-templates/tab-mirror-to-ldr.yml` + PM's own
       `.github/workflows/` copy), staged on `origin/tab/ikennaigboaka/1` as the **canary**. **REMAINING (gated):** (1)
       GitHub Actions is billing-blocked fleet-wide since ~12:30 UTC 2026-06-08 (see the billing P0 below) → leg-A jobs
@@ -153,37 +158,52 @@ BUILT (`ci_failure_watcher.py` detects stuck PRs + `--escalate` dispatches `merg
 `escalate-to-orchestrator.yml` → conflict-resolver worker, which pings the operator on undecidable). Four gaps explain
 what the operator is seeing:
 
-- [ ] [OPERATOR] P0. **🚨 GitHub Actions BILLING-BLOCKED fleet-wide since ~12:30 UTC 2026-06-08 — freezes ALL CI (the
-      dominant current blocker; OPERATOR-ONLY fix).** Discovered 2026-06-08 (slot-1) while testing the #3 PAT-fix: every
-      job across every repo fails at "Set up job" with **0 steps** + check-run annotation _"The job was not started
-      because recent account payments have failed or your spending limit needs to be increased. Please check the
-      'Billing & plans' section in your settings."_ Confirmed GLOBAL: PM (`ldr-ci-monitor`, `plan-health-agent`,
-      `tab-mirror-to-ldr`), `unified-trading-library`, `deployment-service`, `instruments-service` all flip `success`
-      (≤12:17 UTC) → `failure` (≥12:30 UTC). **This — not bot-token suppression — is why promote PRs can't drain at all
-      right now**: no `quality-gates-v2`, no tab-mirror leg-A, no `ldr-to-staging-promote` / `staging-to-main` /
-      backmerge can RUN. So today's manual admin-merges were partly forced by this, and ALL CI-based verification of the
-      A/B/C root-fixes is frozen until it's cleared. **FIX (operator):** raise the Actions spending limit / resolve
-      payment in GitHub **Settings → Billing & plans**. After restore: re-trigger PM leg-A canary, then the #3 fleet
-      rollout + B main-landing + C fleet rollout can proceed and self-verify. repo: ALL (account-level).
-- [ ] [SCRIPT] P1. **PARTIAL (template done, rollout blocked-on-billing) — staging-backmerge-to-ldr promoted to a
-      workflow-template — TEMPLATE DONE 2026-06-08 (slot-1); FLEET ROLLOUT BLOCKED-ON-BILLING.** PM already had
-      `.github/workflows/staging-backmerge-to-ldr.yml` (the staging-axis sibling of `main-backmerge-to-ldr.yml`:
-      `merge --no-ff` then FF-only push, NEVER force-push; conflict → visible PR + orchestrator escalation) but it was
-      NOT a workflow-template, so it 404'd on the service repos → staging-only commits never reconciled back to LDR →
-      staging drifted permanently (e.g. instruments-service was 12-ahead/62-behind). Created
-      `scripts/workflow-templates/staging-backmerge-to-ldr.yml` (= the .github copy), `unified-trading-pm@1bd99d67b`,
-      staged on the canary tab. **REMAINING (gated):**
+- [x] ✅ [OPERATOR] P0. **🚨 GitHub Actions BILLING-BLOCK — RESOLVED by operator 2026-06-08 ("budget is updated"); CI
+      runs again.** Verified: PM canary leg-A + #179 `quality-gates-v2` both ran (9-step jobs, not 0-step setup-fails)
+      after the operator raised the Actions spending limit. Follow-up (separate item below): a billing-block DETECTOR
+      now alerts in #ci-failures so this is never silent again. ORIGINAL incident detail: Discovered 2026-06-08 (slot-1)
+      while testing the #3 PAT-fix: every job across every repo fails at "Set up job" with **0 steps** + check-run
+      annotation _"The job was not started because recent account payments have failed or your spending limit needs to
+      be increased. Please check the 'Billing & plans' section in your settings."_ Confirmed GLOBAL: PM
+      (`ldr-ci-monitor`, `plan-health-agent`, `tab-mirror-to-ldr`), `unified-trading-library`, `deployment-service`,
+      `instruments-service` all flip `success` (≤12:17 UTC) → `failure` (≥12:30 UTC). **This — not bot-token suppression
+      — is why promote PRs can't drain at all right now**: no `quality-gates-v2`, no tab-mirror leg-A, no
+      `ldr-to-staging-promote` / `staging-to-main` / backmerge can RUN. So today's manual admin-merges were partly
+      forced by this, and ALL CI-based verification of the A/B/C root-fixes is frozen until it's cleared. **FIX
+      (operator):** raise the Actions spending limit / resolve payment in GitHub **Settings → Billing & plans**. After
+      restore: re-trigger PM leg-A canary, then the #3 fleet rollout + B main-landing + C fleet rollout can proceed and
+      self-verify. repo: ALL (account-level).
+- [x] ✅ [SCRIPT] P1. **staging-backmerge-to-ldr promoted to a workflow-template + ROLLED OUT 2026-06-08 (slot-1).**
+      Template created (`unified-trading-pm@1bd99d67b`) and rolled out to the **16 `pin_branch_protection_rulesets.py`
+      REPOS-set repos** (repos with a `staging` branch); confirmed present on all 16 LDRs; the 8 non-staging repos
+      correctly have NONE. Reaches each repo's `staging` via LDR→staging promote (closes staging↔LDR drift fleet-wide).
+      ORIGINAL: PM already had `.github/workflows/staging-backmerge-to-ldr.yml` (the staging-axis sibling of
+      `main-backmerge-to-ldr.yml`: `merge --no-ff` then FF-only push, NEVER force-push; conflict → visible PR +
+      orchestrator escalation) but it was NOT a workflow-template, so it 404'd on the service repos → staging-only
+      commits never reconciled back to LDR → staging drifted permanently (e.g. instruments-service was
+      12-ahead/62-behind). Created `scripts/workflow-templates/staging-backmerge-to-ldr.yml` (= the .github copy),
+      `unified-trading-pm@1bd99d67b`, staged on the canary tab. **REMAINING (gated):**
       `rollout-workflow-templates.sh     --template staging-backmerge-to-ldr.yml` to the
       `pin_branch_protection_rulesets.py` REPOS set (repos with a `staging` branch) + per-repo landing — held behind
       billing restore + the same canary discipline. Closes staging↔LDR drift fleet-wide once deployed.
-- [ ] [SCRIPT] P1. **PARTIAL (on LDR, main-landing blocked-on-billing) — Promote via `--auto --rebase` (B) — already on
-      PM LDR (`0a76d0103`); MAIN-LANDING BLOCKED-ON-BILLING.** `ldr-to-staging-promote.yml` + `staging-to-main.yml` use
-      `gh pr merge --auto --rebase` (was `--merge`) so new LDR→staging promotions FF instead of creating staging-only
-      merge nodes (the BEHIND re-jam class). The change is committed on PM `live-defi-rollout` (`0a76d0103`) but the
-      SCHEDULED promote workflows run from PM `main`, where the OLD `--merge` version still lives (PM main is ~217
-      behind LDR). Landing on main needs a targeted PR-to-main whose `quality-gates-v2` gates the merge (PM main stays
-      STRICT — no admin bypass), so it's blocked until Actions billing restores. After restore: open the targeted PR (or
-      let the LDR→main pipeline drain it) so promotes FF. repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P1. **Promote via `--auto --rebase` (B) — LANDED ON PM main 2026-06-08 via PR #179 (slot-1),
+      `quality-gates-v2` GREEN, no admin bypass.** The scheduled `ldr-to-staging-promote.yml` + `staging-to-main.yml`
+      now run `gh pr merge --auto --rebase` from `main` → promotions FF (no staging-only merge nodes). PR reduced to the
+      2 PM-only promote files to avoid transient template-vs-stale-main drift during fleet propagation. ORIGINAL:
+      `ldr-to-staging-promote.yml` + `staging-to-main.yml` use `gh pr merge --auto --rebase` (was `--merge`) so new
+      LDR→staging promotions FF instead of creating staging-only merge nodes (the BEHIND re-jam class). The change is
+      committed on PM `live-defi-rollout` (`0a76d0103`) but the SCHEDULED promote workflows run from PM `main`, where
+      the OLD `--merge` version still lives (PM main is ~217 behind LDR). Landing on main needs a targeted PR-to-main
+      whose `quality-gates-v2` gates the merge (PM main stays STRICT — no admin bypass), so it's blocked until Actions
+      billing restores. After restore: open the targeted PR (or let the LDR→main pipeline drain it) so promotes FF.
+      repo: unified-trading-pm.
+- [x] ✅ [CI] P1. **Billing-block ALERT in #ci-failures (operator request 2026-06-08) — DONE (slot-1).** The Actions
+      spending-limit outage was SILENT (jobs fail at "Set up job" with 0 steps; the transition watcher saw only generic
+      per-workflow failures). `ci_failure_watcher.py` now has `detect_billing_block` (0-step setup-failure + the
+      spending-limit check-run annotation, account-global so short-circuits on first hit) + `_annotation_is_billing`
+      (pure, unit-tested) → `build_report` emits ONE CRITICAL #ci-failures line ("all CI FROZEN — Settings → Billing &
+      plans") above the noise it causes. 7 new unit tests; full PM `quality-gates.sh` GREEN.
+      `unified-trading-pm@a3c1d567b` (on LDR; reaches main via the cascade). repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P1. **instruments-service staging↔LDR reconciled to IDENTICAL (2026-06-08, slot-1).** staging was
       12-ahead/62-behind LDR (`status=diverged`) but the 12 staging-only commits were pure merge-nodes
       (`gh api     compare/live-defi-rollout...staging` = **0 files changed**) — content already on LDR. Reconciled

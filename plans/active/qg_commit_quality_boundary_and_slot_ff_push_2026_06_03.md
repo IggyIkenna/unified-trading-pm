@@ -560,21 +560,24 @@ design).
       tab-mirror push LDR with the workflow-scoped GH_PAT instead of `GITHUB_TOKEN` → `synchronize` fires natively, no
       stale checks ever, no close+reopen needed. Not done here (tab-mirror is the actively-churning active-host-filter
       file; editing = 24-repo re-rollout + concurrent-edit risk).
-- [ ] [SCRIPT] P2. **PARTIAL (code done, blocked-on-billing) — PAT-push root fix for the v2-stale-check gap — CODE DONE
-      2026-06-08 (slot-1, `unified-trading-pm@1bd99d67b`); FLEET ROLLOUT + LIVE VERIFY BLOCKED-ON-BILLING.** Implemented
-      as an extraheader auth-SWAP on the leg-A LDR pushes (FF + rebase-retry) — leaves the `actions/checkout` `token:`
-      on `GITHUB_TOKEN`, swaps the persisted `http.https://github.com/.extraheader` to a `GH_PAT` basic-auth header for
-      the LDR push only, then restores `GITHUB_TOKEN` before the tab realign force-push (which must NOT be PAT-authed →
-      recursion). Tab-mirror SSOT was CLEAN (Harsh's active-host-filter already landed; no open PR touched it). Verified
-      the auth-swap mechanics locally; live `synchronize`-firing verification + the 24-repo rollout are gated on the
-      GitHub Actions billing block (~12:30 UTC 2026-06-08, see `cicd_contract_hardening_2026_06_01.md` §
-      Auto-remediation, billing P0). Makes the close+reopen workaround (PM#144) redundant once deployed. ROOT CAUSE
-      recap: tab-mirror FF's `live-defi-rollout` with `${{ secrets.GITHUB_TOKEN }}`; GitHub suppresses
-      `pull_request:synchronize` on GITHUB_TOKEN-authored pushes → promotion-PR `quality-gates-v2` freezes on the
-      pre-advance SHA. EXACT CHANGE: in `scripts/workflow-templates/tab-mirror-to-ldr.yml`, the **leg-A (tab→LDR) job's
-      `actions/checkout` `token:`** → `${{ secrets.GH_PAT }}` (workflow-scoped PAT, already used by
-      quality-gates-v2/semver/ci-failure-watcher); **LEAVE leg-B (LDR→tab FF + tab force-push) on `GITHUB_TOKEN`** — its
-      no-recursion design is deliberate (file comments ~lines 28/47/168). Then
+- [x] ✅ [SCRIPT] P2. **PAT-push root fix for the v2-stale-check gap — DONE + VERIFIED + ROLLED OUT FLEET-WIDE
+      2026-06-08 (slot-1, `unified-trading-pm@1bd99d67b`/`28106739c`).** Canary leg-A ran GREEN and FF'd PM LDR via the
+      PAT swap; rolled out to all 24 repos, all **24/24 FF'd their LDR via the new PAT-swap leg-A** (fleet-wide proof).
+      Makes the close+reopen workaround (PM#144) redundant. Reaches sibling mains via the now-rebasing promotion
+      cascade. Implemented as an extraheader auth-SWAP on the leg-A LDR pushes (FF + rebase-retry) — leaves the
+      `actions/checkout` `token:` on `GITHUB_TOKEN`, swaps the persisted `http.https://github.com/.extraheader` to a
+      `GH_PAT` basic-auth header for the LDR push only, then restores `GITHUB_TOKEN` before the tab realign force-push
+      (which must NOT be PAT-authed → recursion). Tab-mirror SSOT was CLEAN (Harsh's active-host-filter already landed;
+      no open PR touched it). Verified the auth-swap mechanics locally; live `synchronize`-firing verification + the
+      24-repo rollout are gated on the GitHub Actions billing block (~12:30 UTC 2026-06-08, see
+      `cicd_contract_hardening_2026_06_01.md` § Auto-remediation, billing P0). Makes the close+reopen workaround
+      (PM#144) redundant once deployed. ROOT CAUSE recap: tab-mirror FF's `live-defi-rollout` with
+      `${{ secrets.GITHUB_TOKEN }}`; GitHub suppresses `pull_request:synchronize` on GITHUB_TOKEN-authored pushes →
+      promotion-PR `quality-gates-v2` freezes on the pre-advance SHA. EXACT CHANGE: in
+      `scripts/workflow-templates/tab-mirror-to-ldr.yml`, the **leg-A (tab→LDR) job's `actions/checkout` `token:`** →
+      `${{ secrets.GH_PAT }}` (workflow-scoped PAT, already used by quality-gates-v2/semver/ci-failure-watcher); **LEAVE
+      leg-B (LDR→tab FF + tab force-push) on `GITHUB_TOKEN`** — its no-recursion design is deliberate (file comments
+      ~lines 28/47/168). Then
       `bash scripts/workflow-templates/rollout-workflow-templates.sh --template     tab-mirror-to-ldr.yml` + ship the 24
       repos. **WAIT-FOR-CLEAN GATE**: this is the actively-churning active-host-filter SSOT (Harsh iterating 2026-06-05:
       89f4c0b50 / e8fa1c92e / 0496f96a5) — land ATOMICALLY inside that work (one edit + one re-rollout), never raced,
