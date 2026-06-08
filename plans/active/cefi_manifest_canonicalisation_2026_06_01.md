@@ -320,7 +320,8 @@ _futures_ seed, not the migration). Shas: `uac@ae70338d` · `is@74df991d`/`687d1
       matrix↔catalogue↔manifest as ONE change. **The matrix SLICE (UAC) is the AG-owner's** to fix once the Era is
       decided; the **catalogue producer** is slot-7's. Provenance: slot-3 G2 verify + writer-SSOT follow-up 2026-06-07.
       **Big finding — operator notified.**
-- [ ] [DATA] P0. **F2 — cefi FUTURE bundle-grain: catalogue venue-aware rollup (BLOCKED on slot-7 PART A).**
+- [x] ✅ [DATA] P0. **F2 — cefi FUTURE bundle-grain: catalogue venue-aware rollup — CLOSED + VERIFIED (slot-3 2026-06-08 turn-2).** Venue-aware FUTURE bundle SHIPPED on LDR: `uac@e3dcd868` (`FUTURE_BUNDLE_VENUES={"cefi":{"DERIBIT","OKX"}}` + `_future_bundles_at_venue` overlay) + `is@4f5faae8` (enumerate `_rollup_bundle_grain` threads `instr.venue`). Re-ran `enumerate v2` real-prod (catalog 213,990; present-set 2,639,403) → **2,760 candidates** (was 3,454 pre-F2; −694 = the false DERIBIT/OKX over-seed gone): **0** DERIBIT/OKX per-contract FUTURE; **6 `futures_chain` bundle** (DERIBIT BTC/ETH + OKX-FUTURES, one/underlying, `data_type=trades`); **180 `FUTURE` = ALL BYBIT** per-contract (venue-aware correct); 8 `options_chain` bundle (data_type=trades); **0** Era-A overload; **0** OPTION/COMBO leaf. Provenance: slot-3 enumerate re-run 2026-06-08. See § "F2 CLOSED + PRE-APPLY RE-VERIFICATION". <!-- original spec retained below for trace -->
+  > **F2 (ORIGINAL SPEC — superseded by the ✅ CLOSED row above; retained for trace, NOT an open todo):** cefi FUTURE bundle-grain: catalogue venue-aware rollup (was BLOCKED on slot-7 PART A).
       DERIBIT/OKX-FUTURES bundle-captured `FUTURE` roll up to a `futures_chain` bundle catalogue entry (one per
       underlying) so the enumerate produces bundle cells matching the bundle capture; **BYBIT per-contract `future`
       stays per-contract** (verified: BYBIT writes both `future` AND `futures_chain` shards). Producer-level fix in
@@ -376,6 +377,63 @@ points (⑦/⑧) are honest-coverage-COMPLETENESS gates** (the could-exist denom
 gates (IS backfill + the enumerate `--apply-write` seed) — they make coverage MORE honest (avoid falsely-high), and are
 NOT a regression between the migrated data and the canonicalised code. **cefi G4 migration = APPLY-READY (operator-gated
 run); honest-coverage = blocked on ⑦/⑧ + the named operational gates.**
+
+## ✅ F2 CLOSED + PRE-APPLY RE-VERIFICATION on current real-prod state (slot-3, 2026-06-08 turn-2)
+
+> Autonomous re-run (operator away, `AUTONOMOUS_AGENT_RULES`). Re-confirmed every ①–⑫ point on the **post-drain
+> real-prod data-state** + **CLOSED the last 🟡 residual (F2)**. The migrators/rebuild/enumerate ran clean to dry-run
+> GREEN on this laptop. **VERDICT UNCHANGED: cefi G4 = APPLY-READY, REGRESSION RISK: NONE.** STOP before `--apply`
+> (operator fires it).
+
+**F2 venue-aware FUTURE bundle — CLOSED + VERIFIED** (was the one 🟡 residual on the prior verdict): code shipped on LDR
+(`uac@e3dcd868` + `is@4f5faae8`). Real-prod `enumerate v2` (catalog 213,990; present-set 2,639,403) → **2,760
+candidates** (was 3,454 pre-F2): **0** DERIBIT/OKX per-contract FUTURE (was ~700); **6 `futures_chain` bundle**
+(DERIBIT BTC/ETH + OKX-FUTURES, one/underlying, `data_type=trades`); **180 `FUTURE` = ALL BYBIT** per-contract; 8
+`options_chain` bundle (`data_type=trades`); **0** Era-A `data_type=options_chain/futures_chain`; **0** OPTION/COMBO leaf.
+So the ⑥/⑦/⑧ "F2 over-seed pending" rows are RESOLVED for the FUTURE axis — the over-seed only ever touched the G1.run
+`expected_unattempted` futures seed, never the G4 data/manifest migration.
+
+**① migrate_cefi dry-run GREEN** (real-prod day 2026-01-15): `TOTAL planned=1551 written/moved=0 (DRY-RUN)`, every
+projected dst `…/pipeline_mode=batch_tardis/asset_group=cefi/venue=…/` source-aware. **② rebuild_cefi dry-run GREEN**:
+`total_shards=1551 unparseable=0 distinct_venues=18 phantom_to_failed=0 dropped_malformed_captured=7` (Era-A stale rows
+dropped). **⑩ Era-B byte-probe** (DERIBIT day 2026-01-15): `instrument_type=futures_chain`/`options_chain` →
+`data_type=trades` ONLY; **0** `data_type=(options_chain|futures_chain)` overload. **source auto-stamp = tardis** (rebuild
+`:723` → `add()` auto-resolves cefi→tardis; migrate `:92` → `("batch_tardis","tardis")`). **CF-11 cefi CLOSED**
+(`is@e2008f0` on LDR). **⑧ root-cause** `is@a6bc4d48` on LDR; operational IS-reference backfill = named gate
+(`instruments_backfill_phase3`), NOT a G4 blocker. **cf_manifest_audit baseline** (pre-migration, expected v8): IS
+30,803 rows 0% v9 (12,372 null capture_status); MTDS 2,640,864 rows 0% v9 (failed 1,330,271 / captured 1,310,443 /
+empty 150); MTDS object-paths already CF-3 GREEN (`batch_tardis`).
+
+**Two tooling fixes found while running the cefi dry-runs on a non-GCE laptop (both make these scripts run OFF a VM):**
+
+- [ ] [CODE] P1. **instruments-service `scripts/enumerate_expected_universe.py` — v2 catalog read must use ADC
+      (`storage.Client` download), NOT gcsfs `token="cloud"`.** `token="cloud"` is the GCE **metadata-server** credential
+      only → fails on any non-GCE host (`ValueError: Invalid gcloud credentials`); the v2 enumerate cannot run on a
+      laptop. Fix (verified locally, ruff-clean, runtime-proven by the 2,760-candidate re-run): replace the one `gs://`
+      branch with the in-file canonical `storage.Client(project=PROJECT_ID)` + `download_to_filename` (same as
+      `_download_manifest`) → portable laptop+VM+AWS. **🔴 BLOCKED-SHIP: IS `live-defi-rollout` QG is RED on 2
+      pre-existing failures unrelated to this change** (see broken-LDR finding below) → cannot satisfy the commit-quality
+      boundary until those are fixed. The fix is held in the slot-3 worktree, ready to ship once IS-LDR is green. repo:
+      instruments-service. Provenance: slot-3 F2 verify 2026-06-08.
+- [ ] [CODE] P1. **market-tick-data-service `scripts/rebuild_cefi_manifest.py` — `main()` must call
+      `setup_events(service_name="rebuild-cefi-manifest", mode="local", sink=None)` before scanning.** The CF-11 re-emit
+      pass reads the prior `_index` via UTL `read_availability_index`, whose v8→v9 `_backfill` + the per-VM-shard fallback
+      (fires whenever the consolidated index is stale — e.g. during the pre-migration drain) emit `log_event` → run
+      standalone (no ServiceBootstrap) they raise `RuntimeError: Event logging not initialized`. Fix (verified: top-level
+      `from unified_trading_library import setup_events`, import-pattern 0 violations, basedpyright +0, rebuild dry-run
+      now GREEN). repo: market-tick-data-service@<sha-pending-mtds-qg>. Provenance: slot-3 F2 verify 2026-06-08.
+- [ ] [TEST] P1. **🔴 BROKEN-LDR FINDING (big — blocks ALL instruments-service commits): IS `live-defi-rollout` QG is
+      RED on 2 PRE-EXISTING test failures (confirmed pre-existing — fail on clean LDR with my change stashed).** (1)
+      `tests/unit/scripts/test_enumerate_expected_universe_v2.py::test_enumerate_v2_tradfi_option_leaves_roll_up` —
+      asserts tradfi `options_chain` bundle → `{("ES","options_chain","trades")}` but the code yields BOTH `trades` AND
+      `ohlcv_1m` (the tradfi `options_chain` validity-matrix slice carries `ohlcv_1m`, unlike cefi's Era-B `{trades}`).
+      **Shipped RED by the F2 commit `is@4f5faae8` itself** (last toucher of the test). Decide tradfi semantics
+      (UAC/slot-6 — is tradfi `options_chain`→`{trades}` Era-B parity, fix matrix; or legitimately `{trades,ohlcv_1m}`,
+      fix the test assertion). (2) `tests/unit/test_new_orchestrator.py::test_process_instruments_proceeds_to_write_stage`
+      — orchestrator write-stage (unrelated to enumerate/cefi). **Both block the IS commit-quality boundary fleet-wide.**
+      repo: instruments-service · unified-api-contracts (matrix). Owner: vm-cross-cutting/slot-6 (tradfi+orchestrator).
+      Provenance: slot-3 F2 verify 2026-06-08 (stash-isolated to confirm pre-existing). **Big finding — operator
+      notified.**
 
 - [ ] [DATA] P0. **⑧ — IS cefi REFERENCE-UNIVERSE gap: catalogue not ⊇ manifest present-set (CF-14, falsely-high
       coverage). 🟢 ROOT-CAUSE CODE FIX SHIPPED `is@a6bc4d48`; operational backfill re-run + CLOB sub-part remain.**
@@ -677,7 +735,8 @@ _futures_ seed, not the migration). Shas: `uac@ae70338d` · `is@74df991d`/`687d1
       matrix↔catalogue↔manifest as ONE change. **The matrix SLICE (UAC) is the AG-owner's** to fix once the Era is
       decided; the **catalogue producer** is slot-7's. Provenance: slot-3 G2 verify + writer-SSOT follow-up 2026-06-07.
       **Big finding — operator notified.**
-- [ ] [DATA] P0. **F2 — cefi FUTURE bundle-grain: catalogue venue-aware rollup (BLOCKED on slot-7 PART A).**
+- [x] ✅ [DATA] P0. **F2 — cefi FUTURE bundle-grain: catalogue venue-aware rollup — CLOSED + VERIFIED (slot-3 2026-06-08 turn-2).** Venue-aware FUTURE bundle SHIPPED on LDR: `uac@e3dcd868` (`FUTURE_BUNDLE_VENUES={"cefi":{"DERIBIT","OKX"}}` + `_future_bundles_at_venue` overlay) + `is@4f5faae8` (enumerate `_rollup_bundle_grain` threads `instr.venue`). Re-ran `enumerate v2` real-prod (catalog 213,990; present-set 2,639,403) → **2,760 candidates** (was 3,454 pre-F2; −694 = the false DERIBIT/OKX over-seed gone): **0** DERIBIT/OKX per-contract FUTURE; **6 `futures_chain` bundle** (DERIBIT BTC/ETH + OKX-FUTURES, one/underlying, `data_type=trades`); **180 `FUTURE` = ALL BYBIT** per-contract (venue-aware correct); 8 `options_chain` bundle (data_type=trades); **0** Era-A overload; **0** OPTION/COMBO leaf. Provenance: slot-3 enumerate re-run 2026-06-08. See § "F2 CLOSED + PRE-APPLY RE-VERIFICATION". <!-- original spec retained below for trace -->
+  > **F2 (ORIGINAL SPEC — superseded by the ✅ CLOSED row above; retained for trace, NOT an open todo):** cefi FUTURE bundle-grain: catalogue venue-aware rollup (was BLOCKED on slot-7 PART A).
       DERIBIT/OKX-FUTURES bundle-captured `FUTURE` roll up to a `futures_chain` bundle catalogue entry (one per
       underlying) so the enumerate produces bundle cells matching the bundle capture; **BYBIT per-contract `future`
       stays per-contract** (verified: BYBIT writes both `future` AND `futures_chain` shards). Producer-level fix in
