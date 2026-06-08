@@ -163,7 +163,7 @@ jobs:
 
             if [ -n "$PR_URL" ]; then
               echo "  PR: $PR_URL"
-              gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null \
+              gh pr merge "$PR_URL" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null \
                 || echo "  WARN: auto-merge unavailable for $REPO — merge manually: $PR_URL"
               PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
               continue
@@ -208,7 +208,7 @@ jobs:
                   if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
                     sleep 3
                     gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
-                      && gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+                      && gh pr merge "$PR_NUM" --auto --rebase --repo "$OWNER/$REPO" 2>/dev/null || true
                     echo "    re-triggered (fresh pull_request event → v2 on current head)"
                     PROMOTED="$PROMOTED $REPO"; PROMOTED_COUNT=$((PROMOTED_COUNT + 1))
                   else
