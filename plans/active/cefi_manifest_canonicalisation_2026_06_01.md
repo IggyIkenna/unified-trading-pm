@@ -413,7 +413,8 @@ empty 150); MTDS object-paths already CF-3 GREEN (`batch_tardis`).
       branch with the in-file canonical `storage.Client(project=PROJECT_ID)` + `download_to_filename` (same as
       `_download_manifest`) → portable laptop+VM+AWS. **🔴 BLOCKED-SHIP: IS `live-defi-rollout` QG is RED on 2
       pre-existing failures unrelated to this change** (see broken-LDR finding below) → cannot satisfy the commit-quality
-      boundary until those are fixed. The fix is held in the slot-3 worktree, ready to ship once IS-LDR is green. repo:
+      boundary until those are fixed. **The verified fix is preserved at `origin/wip-preserve/slot-3-enumerate-adc-fix`
+      (`is@80ce815e`)** — cherry-pick / re-apply onto LDR once IS-LDR is green (the 2 broken tests below land). repo:
       instruments-service. Provenance: slot-3 F2 verify 2026-06-08.
 - [x] ✅ [CODE] P1. **market-tick-data-service `scripts/rebuild_cefi_manifest.py` — `main()` inits
       `setup_events(service_name="rebuild-cefi-manifest", mode="local", sink=None)` before scanning — SHIPPED
