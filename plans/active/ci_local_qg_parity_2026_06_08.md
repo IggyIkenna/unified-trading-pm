@@ -16,6 +16,8 @@ related_plans:
   - plans/active/issues/full_cicd_sit_target_state_2026_05_24.md
 source:
   - chat design session 2026-06-08 (operator + vm-planning)
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # CI/local-QG parity — local is the oracle

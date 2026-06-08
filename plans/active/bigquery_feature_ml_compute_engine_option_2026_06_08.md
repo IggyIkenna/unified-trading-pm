@@ -3,7 +3,6 @@ title:
   "BigQuery as an optional feature/ML compute engine over the hive-partitioned GCS corpus — scale path alongside
   in-process polars/DuckDB"
 created: 2026-06-08
-author: ikenna
 parent_epic: epics/features_and_ml_master.md
 assigned_vm: vm-ml
 status: active

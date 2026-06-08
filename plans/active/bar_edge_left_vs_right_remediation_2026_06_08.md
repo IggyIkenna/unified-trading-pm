@@ -1,7 +1,6 @@
 ---
 title: "Bar-edge (open/left vs close/right) systemic remediation — close the gate blind-spot, fix latent pre-agg ingestion, recompute the left-edge features corpus"
 created: 2026-06-08
-author: ikenna
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-cross-cutting
 status: active

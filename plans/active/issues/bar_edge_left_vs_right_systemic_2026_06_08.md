@@ -3,7 +3,6 @@ title:
   SYSTEMIC bar-edge violation — pre-aggregated vendor-bar ingestion stamps the OPEN (left) edge while the canon + MDPS
   grid are CLOSE (right) edge
 created: 2026-06-08
-author: harsh
 source:
   - plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md (§ Cross-cutting bar-edge convention audit)
   - 3-repo read-only sweep 2026-06-08 (instruments-service / market-tick-data-service / market-data-processing-service +
@@ -11,6 +10,8 @@ source:
 locked_by: live-defi-rollout
 supersedes:
   plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md (that bug is one instance of this class)
+priority: P2
+status: active
 ---
 
 # Systemic bar-edge (open vs close) violation across pre-aggregated OHLCV ingestion

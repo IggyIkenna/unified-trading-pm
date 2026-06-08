@@ -3,7 +3,6 @@ title:
   "MVP scope tagging — a rules-derived MVP subset of the could-exist universe (instruments + features + strategies +
   models), toggled in data-status so missing-data only counts what's in-scope"
 created: 2026-06-08
-author: ikenna
 parent_epic: epics/instruments_master.md
 assigned_vm: vm-cross-cutting
 status: active

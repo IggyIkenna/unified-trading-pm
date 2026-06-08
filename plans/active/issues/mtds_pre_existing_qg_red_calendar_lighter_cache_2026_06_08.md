@@ -3,10 +3,11 @@ title:
   "MTDS QG RED on LDR — 6 pre-existing failing unit tests (calendar-boundary future-skip + lighter candles + hyperliquid
   cache TTL)"
 created: 2026-06-08
-author: ikenna-slot-6
 source:
   - "slot-6 tradfi-migration MTDS quality-gate run 2026-06-08 (full suite: 2662 passed / 6 failed / 17 skipped)"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

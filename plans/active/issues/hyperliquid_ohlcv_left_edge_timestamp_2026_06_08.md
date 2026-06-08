@@ -1,10 +1,11 @@
 ---
 title: instruments-service hyperliquid OHLCV reads LEFT (open) bar edge — violates canonical right-edge t_close
 created: 2026-06-08
-author: harsh
 source:
   - plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md (§ Cross-cutting bar-edge convention audit)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # hyperliquid OHLCV reads the LEFT/open bar edge (should be right-edge t_close)

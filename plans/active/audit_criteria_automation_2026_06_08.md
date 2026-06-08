@@ -3,7 +3,6 @@ title:
   "Audit-criteria automation — convert recurring agentic audits into QG steps (code) + a scheduled data-state audit
   (GCS), all asset groups"
 created: 2026-06-08
-author: ikenna
 parent_epic: epics/manifest_master.md
 assigned_vm: vm-cross-cutting
 status: active

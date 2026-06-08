@@ -17,6 +17,8 @@ related_plans:
   - plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md
 source:
   - chat design session 2026-06-08 (operator + vm-planning)
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # Worktree LDR-unification
