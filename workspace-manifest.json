@@ -412,7 +412,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "features-service": {
       "type": "service",
