@@ -43,6 +43,15 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 - [ ] [SCRIPT] P1. Diff `origin/main` vs `origin/live-defi-rollout` for every repo, restricted to `.github/**` + PM
       `scripts/**`. Any main-only content (CI workflow versions not on LDR) → back-merge **to LDR** first (LDR-SSOT), so
       the subsequent force-sync doesn't drop it. Everything else: LDR wins.
+- [ ] [SCRIPT] P1. **Close the steady-state main→LDR drift hole (discovered 2026-06-08).** `main-backmerge-to-ldr.yml`
+      fires `on: push: branches: [main]`, but **`[skip ci]` suppresses ALL GitHub Actions triggers — including the
+      back-merge** — so the very `[skip ci]` machinery commits that go direct-to-main (ci_status writes, manifest bumps,
+      starvation flags) never fire it. `main` chronically drifts ahead by those commits and only catches up when the
+      next _non_-`[skip ci]` main push sweeps them in (observed: PM main ~8 commits ahead, all `[skip ci]` ci_status
+      writes). **Fix (option 1, preferred): add a `schedule:` tick (~every 15–30 min) to `main-backmerge-to-ldr.yml`** —
+      a cron run is not `[skip ci]`-suppressed, so it sweeps accumulated drift with no real commit; roll out fleet-wide
+      via the template. (Option 2: the ci_status/manifest writer co-pushes its `[skip ci]` commit to LDR in the same
+      step.) This makes the "main never ahead of LDR" invariant actually hold, not just eventually-converge.
 
 ## Phase 2 — Stale-PR sweep (#2) (depends: Phase 1)
 
