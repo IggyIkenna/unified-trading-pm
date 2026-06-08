@@ -114,6 +114,47 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       `instrument_type=options_chain`/`futures_chain` plus `data_type=trades`.
 - [ ] (transport) **`transport` column present** alongside `source` on every external cell.
 
+## 4-state condition handling + pre-flight — recurring regression checks (added 2026-06-08)
+
+> The FORM checks (CF-1…CF-14) guard the schema; THESE guard the BEHAVIOUR — that each of the four manifest conditions
+> is WRITTEN to the right state and HANDLED correctly by every consumer. These regress silently (a consumer counts
+> `expected_unattempted` as failed; a writer mislabels a timeout as `empty_confirmed`). Run weekly + on any
+> writer/consumer change. Consumer policy SSOT: `codex/02-data/honest-absence-downstream-handling.md`.
+
+WRITE-SIDE — the producer routes each absence shape to the right 4th-state + typed reason:
+
+- [ ] (w-1) **captured** requires row-count > 0 OR an explicit `record_empty` — never a silent placeholder; cluster
+      validation fires at `record_captured` for bundled data_types.
+- [ ] (w-2) **empty_confirmed carries a TYPED, data-type-dependent reason**: zero-volume → `SOURCE_RETURNED_ZERO`;
+      pre-genesis / pre-launch → `EXPECTED_PRE_*` (DeFi via `record_zero_rows`, venue-launch-date-aware);
+      out-of-coverage → `EXPECTED_OUTSIDE_*`; no-input → `NO_INPUT_AVAILABLE`; sports fixture/season/transfer-window
+      reasons; all-NaN / stale-last-price route to their typed reason, not a blank. Zero blank reasons
+      (`LegacyBlankErrorReasonError` raised, never caught).
+- [ ] (w-3) **attempted_failed is NEVER mislabeled empty_confirmed**: every external-I/O FETCH FAILURE
+      (timeout/auth/RPC/DNS) routes to `record_failed` (`attempted_failed`), never swallowed (`except: return []`) into
+      `empty_confirmed`. The per-adapter swallow audit (CF-11) is green across MTDS + IS.
+- [ ] (w-4) **expected_unattempted is MATERIALISED by the writer/pre-flight, never re-derived**: the IS pre-flight +
+      `enumerate_expected_universe` seed `expected_unattempted` at shard grain for IS-listed-but-not-yet-backfilled
+      cells (the could-exist universe). Confirm it is WRITTEN to the manifest, not computed per-consumer.
+
+PRE-FLIGHT — every service IS → MTDS → MDPS → features → strategy → execution:
+
+- [ ] (pf-1) each service's pre-flight READS the manifest 4-state on its real buckets before running, and LOUD-FAILS on
+      a stale/missing consolidated index (`ManifestConsolidatorStaleError`) instead of silently proceeding.
+- [ ] (pf-2) the pre-flight decision (skip / run / honest-gap) is driven by the 4-state READ — NOT a per-service
+      re-derivation of genesis/launch/IS rules.
+
+READ-SIDE — every downstream consumer handles each of the four states per policy:
+
+- [ ] (r-1) **denominator = captured + empty_confirmed + attempted_failed + expected_unattempted**; coverage % never
+      counts `expected_unattempted` as "failed" nor drops it (deployment-api/UI G3 union + strategy/features
+      pre-flight).
+- [ ] (r-2) `empty_confirmed` = honest-absent (not a gap-to-backfill, not a failure); `attempted_failed` = a real
+      failure to retry/alert; `expected_unattempted` = owed-backfill (instrument exists, data not yet run). Each
+      consumer matches the per-service/per-reason policy in the honest-absence codex.
+- [ ] (r-3) **multi-source UNION**: a cell is `captured` if ≥1 source row is captured; `attempted_failed` only when ALL
+      source rows failed (`select_primary_available_source`).
+
 ## Canonical-form cross-service audit coverage (CF-1…CF-12) — manifest SSOT home
 
 > **This epic is the cross-cutting HOME of the canonical-form checklist at the manifest layer.** The master list is the
