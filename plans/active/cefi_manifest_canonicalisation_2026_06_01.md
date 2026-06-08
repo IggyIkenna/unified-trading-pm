@@ -1389,3 +1389,113 @@ there; no new todo needed beyond the cross-ref.
       `instruments_manifest_canonicalisation_2026_06_01.md`; `--apply` **GATED on coordinator G0** (source-aware
       pipeline_mode). Re-run `cf_manifest_audit instruments-store-cefi-prd-…` post-walk → all-CF GREEN. Provenance:
       slot-3 G1 cf-audit 2026-06-07. parent_epic: mtds_mdps_master.
+
+## Proposed fixes for the deferred-with-reason CODE items (slot-3 spec, 2026-06-08)
+
+> Grounded fix specs (file:line, read-only sub-agent investigation on LDR) for every open `[CODE]` item left deferred in
+> the pre-apply code-clear. Each is dispatch-ready for its OWNER (slot-3 drafts; the owning slot implements to avoid
+> cross-slot collision). None is required before the cefi G4 `--apply`.
+
+### F2 — cefi FUTURE bundle-grain (owner: slot-7 instruments-service) — SMALLER than first scoped
+
+UAC **already ships the venue-aware machinery** (`registry/market_data_categories.py`):
+`FUTURE_BUNDLE_VENUES = {"cefi": frozenset({"DERIBIT","OKX"})}` (:696) + `grain_for_instrument_type(ag, it, venue=)`
+(:740) + `bundle_instrument_type_for_leaf(ag, it, venue=)` (:771) are all venue-aware and correct. So this is NOT a
+"build the rollup from scratch" job — it is two wiring fixes:
+
+- **Change B (minimal, read-side, the urgent one)** — `instruments-service/scripts/enumerate_expected_universe.py`
+  `_rollup_bundle_grain` (~:1162-1166) calls `bundle_instrument_type_for_leaf(asset_group, instr.instrument_type)` and
+  `grain_for_instrument_type(asset_group, instr.instrument_type)` **without `venue=`** → defaults to `GRAIN_LEAF` for
+  every FUTURE → DERIBIT/OKX per-contract futures never collapse → false `expected_unattempted`. **Fix: pass
+  `venue=instr.venue` to both calls.** Then DERIBIT/OKX FUTURE leaves collapse to one `futures_chain` bundle per
+  underlying; BYBIT stays per-contract. ~2-line change.
+- **Change A (producer, secondary)** — `instruments-service/scripts/build_instrument_catalogue.py`
+  `build_catalogue_dataframe` (~:230-304, dispatched in `run_rollup` ~:1047): for cefi `future` instruments at
+  `FUTURE_BUNDLE_VENUES["cefi"]` venues, group per-underlying → emit a `futures_chain` bundle entry
+  (instrument_id=underlying, instrument_type=`futures_chain`, data_type=None, available_from/to = union over contracts)
+  instead of N per-contract rows — mirror the prediction multi-grain `build_prediction_catalogue_dataframe` (:373-466).
+  Import `FUTURE_BUNDLE_VENUES` from UAC (do NOT duplicate the venue list).
+- **Regression**: enumerate tests `test_enumerate_v2_deribit_future_leaves_collapse_to_futures_chain` (one bundle per
+  underlying) + `test_enumerate_v2_bybit_future_leaves_stay_per_contract` + OKX parity, next to the existing
+  `test_enumerate_v2_option_leaves_collapse_to_one_per_underlying`.
+- **Safety pre-apply**: over-seeds ONLY the G1.run _futures_ `expected_unattempted` denominator seed; does NOT touch the
+  G4 manifest/data migration.
+
+### execution-service `data/loaders/defi.py:41,77` legacy DeFi raw reads (owner: slot-2 / defi AG)
+
+Mirror the shipped cefi `canonical_paths.build_candidate_raw_tick_paths` for defi. Calling the cefi helper as-is raises
+`KeyError("chain")` because UAC `candidate_parquet_paths(asset_group="defi", …)` requires a `chain` kwarg
+(`build_defi_partition_path(venue, chain, …)`, partition_paths.py:461-486). **Fix:**
+
+- Add `build_candidate_defi_raw_tick_paths(*, data_type, day, venue, instrument_type, file_stem, legacy_path)` +
+  `_resolve_defi_chain(venue)` to `execution_service/data/canonical_paths.py` (after ~:164). Chain resolves from the
+  venue string via UAC `parse_defi_venue` (`registry/capability_declarations/_defi.py:947`) with `_STATIC_VENUE_CHAINS`
+  fallback for single-chain protocols (LIDO→ETHEREUM, DRIFT→SOLANA). Unresolvable chain → `[legacy_path]` (fail-safe).
+- Call sites: `loaders/defi.py` `load_swaps` (~:38-45, `data_type="swaps"`) + `load_liquidity` (~:74-81,
+  `data_type="liquidity"`, `instrument_type="pool"`), and the SECOND copy in `data/loader.py` `_build_swaps_paths`
+  (~:409-422) + `_build_liquidity_paths` (~:479-492).
+- **Regression**: `tests/unit/test_canonical_paths_defi.py` — canonical-first for `UNISWAP_V3-ETHEREUM`
+  (chain=ETHEREUM), static-chain `LIDO`, unknown-venue → legacy-only (no crash).
+
+### deployment-api FLAG-1 — multi-source UNION + per-source breakdown (owner: deployment-api / downstream)
+
+`deployment_api/services/data_status_service.py` `_mtds_honest_coverage_for_venue` (~:1770-1838) ALREADY unions across
+sources (`dt_rows["date"].unique()`, :1786) + emits a `per_source` `groupby("source")` breakdown (:1803-1811) — shipped
+for tradfi. The only gap: `select_primary_available_source` (UAC `canonical/crosscutting/source_priority.py:869`,
+already implemented) is imported nowhere → the "winning source" is not annotated. **Fix:** import it, and after building
+`per_source`, set `dt_entry["primary_source"] = select_primary_available_source("cefi", dt, available_captured_sources)`
+(guarded by `has_source_priority`). No-op for cefi today (single-source `tardis`) until the v9 walk lands the `source`
+column — so safe pre-apply.
+
+### deployment-api pipeline_mode dedup + drilldown (owner: deployment-api / downstream)
+
+The venue-level cefi numerator already collapses pipeline*mode (date-unique, :1786), but the **per-instrument** branch
+`_per_instrument_coverage` (~:1478+) has no explicit shard-atom dedup → a cell with both `batch_tardis` +
+`live*\*`rows for the same instrument+date could double-count. **Fix:** mirror the DeFi chain-breakdown dedup (:5663-5672) —`drop_duplicates(subset=[c
+for c in ("venue","data_type","instrument_id","date") if c in
+df.columns])`before counting`found_shards`. **Regression**: `test_cefi_pipeline_mode_rows_do_not_double_count`(5 atoms × 2 pipeline_modes → 5, not 10), parity with the DeFi test at`tests/unit/test_chain_breakdown_shards_vs_dates.py:176`. Drilldown filter: `\_apply_pipeline_mode_filter`(:3657) exists but isn't threaded into`\_mtds_honest_coverage_for_venue`— add a`pipeline_modes`
+param + call it before the per-dt loop. Safe pre-apply (dedup already correct for the venue-level path; this hardens the
+per-instrument path + adds a UI-gated filter).
+
+### deployment-api FLAG-3 — UAT health-summary bucket model (owner: deployment-api / downstream — MODEL decision)
+
+`commentary/pipeline_uat.py` reads `instruments-store-{pid}` / `features-store-{pid}` / `ml-store-{pid}` /
+`execution-store-{pid}` (lines ~167/181/195/211, `# CORRECT-LOCAL`) — these are **non-AG aggregate pipeline-health
+summary** buckets (suffix = project_id), NOT the per-AG market-data stores (`instruments-store-cefi-<pid>`). A blind
+`resolve_bucket_name` swap would point them at wrong/nonexistent per-AG buckets. **Proposed fix (Option A,
+SSOT-compliant)**: register 4 flat kinds (`instruments-store-pipeline-health`, …) in
+`deployment-service/configs/cloud-providers.yaml` with a `${PROJECT_ID}` template, then replace the 4 f-strings with
+`resolve_bucket_name(cloud=…, kind="instruments-store-pipeline-health")` (removes the `# CORRECT-LOCAL` carve-outs, QG
+STEP-5.69 clean). Option B = keep the explicit `# CORRECT-LOCAL` exemption + document it. Pure read-side health summary
+→ safe pre-apply either way.
+
+### MDPS GAP-7 — `category`→`asset_group` rename in `dependency_checker` (owner: downstream plan GAP-7)
+
+`market-data-processing-service/.../app/core/dependency_checker.py`: rename param `category`→`asset_group` on the 5
+public methods (`check_upstream_data_granular`/`_per_shard`/`_batch`, `validate_upstream_data_for_date_range`,
+`check_upstream_manifest_has_live_gap`) + `_get_upstream_deps_for_category`→`_for_asset_group` +
+`_resolve_upstream_bucket` param + the two dicts `UPSTREAM_DEPS_BY_CATEGORY*`→`_BY_ASSET_GROUP*`. Call-site `category=`
+→ `asset_group=` keyword updates in `live_workers.py` (:306), `cli/handlers/process_handler.py` (:253/356/403/569),
+`app/core/orchestration_service.py` (:150/264/276/467/545/646/650/667/718/776) + test call sites. **Purely internal to
+MDPS — no other repo calls these (no cross-repo collision).** Vocabulary-only; safe pre-apply.
+
+### rebuild within-bounds precision (slot-3 cefi NICE-TO-HAVE)
+
+`market-tick-data-service/.../scripts/rebuild_cefi_manifest.py` `reemit_cefi_honest_absence_rows` (~:501-534)
+reclassifies within-bounds empties using only a data_type-guarantee + reason heuristic (no instrument-coverage
+awareness). **Fix:** load the IS cefi universe per date (`instruments-store-cefi-prd-{pid}`
+`instrument_availability/by_date/day={d}/`, columns
+`venue`/`instrument_type`/`instrument_id`/`underlying`/`available_from_datetime`/`available_to_datetime`); before the
+`reclassify=` decision, PRESERVE-as-`empty_confirmed` (skip reclassify) when the cell's instrument is outside its IS
+coverage window on that date. **Blocked-on**: there is NO cefi known-gap registry yet (UAC `data_source_continuity.py`
+covers only tradfi VIX; sports has `is_in_known_gap` — cefi needs an analogue) → the known-gap gate is a no-op stub
+until that lands. NICE-TO-HAVE, non-blocking.
+
+### deployment-api per-date denominator (P3) + ⑦ catalog-path seed (operational)
+
+- **per-date denominator (P3)**: `data_status_service` reads ONE current IS snapshot, not per-date `by_date/`
+  definitions → switch the provider to the per-date source once `proper_instrument_catalogue_lifecycle_rollup` ships the
+  per-date contract. Non-blocking refinement.
+- **⑦ catalog-path seed**: the enumerate CODE is DONE (see flipped item); remaining is purely the OPERATIONAL VM run
+  (`enumerate_expected_universe.py --asset-group cefi --catalog-path <catalog> --apply-write` on a VM with
+  `MANIFEST_PER_VM_SHARDS=true`) — bucket-B apply-time, not a code change.
