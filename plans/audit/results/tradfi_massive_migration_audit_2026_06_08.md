@@ -268,9 +268,20 @@ time** — the system is sound at the MDPS layer; the only risks are at the raw-
 **Two findings filed**: (1) the Massive interval-aware conversion requirement is folded into the backfill-ingester
 Phase-4b todo (do NOT inherit the smoke script's `+60s`); (2) the hyperliquid left-edge read is a real bug **outside
 this plan's scope** (instruments-service reference-data, DeFi/CeFi) → filed as
-`plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md`. Note it does NOT pollute the canonical candle
-store (that path is right-edge-enforced by the MDPS gate); it only affects consumers reading `OHLCVRef.timestamp`
-directly. **Window-edge IS preferred right-edge and is centrally enforced — no systemic drift across sources.**
+`plans/active/issues/hyperliquid_ohlcv_left_edge_timestamp_2026_06_08.md`.
+
+> **⚠️ CORRECTION (deeper sweep 2026-06-08, operator-requested) — the "gate-enforced → no systemic drift" read here was
+> WRONG.** A full 3-repo sweep found the left-edge bug is **SYSTEMIC**: ~12 pre-aggregated-bar ingestion sites across
+> instruments-service / MTDS / features-service stamp the OPEN edge, and the MDPS gate does **not** catch a uniform
+> one-interval shift (it checks grid-alignment + `available_at==t_close` only; a left-shifted sub-daily bar stays
+> on-grid). MDPS `ohlcv_passthrough` even ASSUMES the incoming bar is close-edge (`idx=(src_ts−day_start−1)//interval`)
+> → an open-edge source is misplaced one interval early + the midnight bar dropped. **Most consequential: Databento
+> OHLCV `ts_event` = interval START (open)** → the TradFi reference corpus is likely one-interval-early (HIGH-confidence
+> code+schema; data-state confirmation recommended before any fix). Massive `t` is ALSO open-edge, so the two TradFi
+> vendors are mutually consistent but both diverge from the canonical right-edge + every tick-aggregated source. Full
+> register + mechanism + remediation: **`plans/active/issues/bar_edge_left_vs_right_systemic_2026_06_08.md`** (the
+> hyperliquid doc folds into it). Net: right-edge in CONTRACT, systematically open-edge in INGESTION PRACTICE — a real
+> cross-cutting data-correctness gap.
 
 ## Cross-cutting flags for the operator
 

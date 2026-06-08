@@ -9,6 +9,10 @@ locked_by: live-defi-rollout
 
 # hyperliquid OHLCV reads the LEFT/open bar edge (should be right-edge t_close)
 
+> **FOLDED INTO `bar_edge_left_vs_right_systemic_2026_06_08.md`** — the deeper 2026-06-08 sweep found this is one
+> instance of a SYSTEMIC class (~12 sites across instruments-service / MTDS / features-service). Track + remediate via
+> the systemic issue doc; this file documents the original single instance.
+
 ## What I found
 
 Surfaced by the cross-cutting bar-edge audit (operator-requested 2026-06-08) while auditing the Databento→Massive
