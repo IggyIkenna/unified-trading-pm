@@ -69,13 +69,13 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.1.0",
     "deployment-api": "0.2.0",
-    "deployment-service": "0.1.1",
+    "deployment-service": "0.2.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.2.0",
-    "features-service": "0.0.1",
-    "fund-administration-service": "0.1.0",
+    "features-service": "0.1.0",
+    "fund-administration-service": "0.2.0",
     "ibkr-gateway-infra": "0.1.0",
-    "instruments-service": "0.1.22",
+    "instruments-service": "0.2.0",
     "market-tick-data-service": "0.4.0",
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.2.0",
@@ -83,7 +83,9 @@
     "unified-trading-pm": "1.2.31",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.0",
-    "agent-orchestrator": "0.8.0"
+    "agent-orchestrator": "0.8.0",
+    "greeks-service": "0.2.0",
+    "trading-agent-service": "0.2.0"
   },
   "repositories": {
     "alerting-service": {
@@ -1780,27 +1782,21 @@
   "staging_versions": {
     "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` — the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "batch-live-reconciliation-service": "0.1.0",
-    "deployment-service": "0.2.0",
     "deployment-ui": "0.1.0",
-    "features-service": "0.1.0",
-    "fund-administration-service": "0.2.0",
     "ibkr-gateway-infra": "0.1.0",
-    "instruments-service": "0.2.0",
     "system-integration-tests": "0.2.0",
     "unified-trading-pm": "1.2.12",
     "unified-api-contracts": "0.2.0",
     "agent-orchestrator": "0.8.1",
     "unified-trading-library": "0.4.0",
     "market-tick-data-service": "0.4.0",
-    "greeks-service": "0.2.0",
-    "trading-agent-service": "0.2.0",
     "execution-service": "0.2.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [
       "deployment-service",
@@ -1836,36 +1832,6 @@
       "sha": "481468ea7c231035659c40c3e32426080eb0700e",
       "version": "0.4.0"
     },
-    "greeks-service": {
-      "branch": "staging",
-      "sha": "0018976936565d301bf7b298e38b588602c1b822",
-      "version": "0.2.0"
-    },
-    "trading-agent-service": {
-      "branch": "staging",
-      "sha": "3447768237e0527d0a6fd985c23b312d8e5a6b19",
-      "version": "0.2.0"
-    },
-    "instruments-service": {
-      "branch": "staging",
-      "sha": "62bce3955f604f2d02e3da12adbfc73e08394bbe",
-      "version": "0.2.0"
-    },
-    "features-service": {
-      "branch": "staging",
-      "sha": "df6550fc0286508df41999a328cc5948e2daf251",
-      "version": "0.1.0"
-    },
-    "fund-administration-service": {
-      "branch": "staging",
-      "sha": "e3d39acdf3204a4ef5f888e51a8a2d5504ace2cd",
-      "version": "0.2.0"
-    },
-    "deployment-service": {
-      "branch": "staging",
-      "sha": "49e6302a8a32266c01f7de84d8308eaf5974eeb8",
-      "version": "0.2.0"
-    },
     "execution-service": {
       "version": "0.2.0",
       "sha": "994dfd97645603d422f2cf56e5b7aa40fdd12903",
@@ -1875,6 +1841,41 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-08T01:28:56.799760Z",
+        "commits": {
+          "greeks-service": {
+            "branch": "staging",
+            "sha": "0018976936565d301bf7b298e38b588602c1b822",
+            "version": "0.2.0"
+          },
+          "trading-agent-service": {
+            "branch": "staging",
+            "sha": "3447768237e0527d0a6fd985c23b312d8e5a6b19",
+            "version": "0.2.0"
+          },
+          "instruments-service": {
+            "branch": "staging",
+            "sha": "62bce3955f604f2d02e3da12adbfc73e08394bbe",
+            "version": "0.2.0"
+          },
+          "features-service": {
+            "branch": "staging",
+            "sha": "df6550fc0286508df41999a328cc5948e2daf251",
+            "version": "0.1.0"
+          },
+          "fund-administration-service": {
+            "branch": "staging",
+            "sha": "e3d39acdf3204a4ef5f888e51a8a2d5504ace2cd",
+            "version": "0.2.0"
+          },
+          "deployment-service": {
+            "branch": "staging",
+            "sha": "49e6302a8a32266c01f7de84d8308eaf5974eeb8",
+            "version": "0.2.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-07T04:21:34.972787Z",
         "commits": {
