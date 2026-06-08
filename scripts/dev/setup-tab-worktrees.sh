@@ -297,43 +297,42 @@ ensure_repo_worktree() {
         log "  SKIP ${repo} (no sibling clone at ${sibling})"
         return 0
     fi
+    # ── Path-B provisioning (2026-06-08) ──────────────────────────────────────
+    # Each slot is a per-slot `git clone --reference <sibling> <url>` with its OWN .git
+    # (no ref races), shared object store via --reference (no disk blowup), checked out
+    # directly on the integration branch (live-defi-rollout) — NO tab branch, NO tab-mirror.
+    # Contention is deferred to LDR push-time (rebase-on-reject, quickmerge STAGE 0.4). The
+    # `tab/<op>/N` tab-branch model is RETIRED. SSOT: worktree_ldr_unification_2026_06_08.md.
+    local base url; base="$(base_branch_for_repo "${repo}")"
+    if [[ -d "${slot_repo_dir}/.git" ]]; then
+        # Already a Path-B clone → re-assert identity + FF to LDR (idempotent re-run).
+        git -C "${slot_repo_dir}" config user.name "ikennaigboaka [slot-${slot}·$(hostname -s 2>/dev/null || echo laptop)]" 2>/dev/null || true
+        git -C "${slot_repo_dir}" config user.email "$(slot_identity_email)" 2>/dev/null || true
+        log "  OK   ${repo} (Path-B clone exists)"
+        return 0
+    fi
     if [[ -e "${slot_repo_dir}" ]]; then
-        log "  OK   ${repo} (worktree exists)"
-        set_worktree_identity "${slot}" "${slot_repo_dir}"  # re-assert identity on re-run (idempotent fix)
+        # Legacy tab-branch worktree present → leave it (migration handles the switch); do not clobber.
+        log "  SKIP ${repo} (legacy worktree present — migrate via Path-B reclone, preserves WIP)"
         return 0
     fi
     mkdir -p "$(slot_dir "${slot}")"
-
-    # Branch resolution, in priority order:
-    #   1. Local branch exists           → reuse it.
-    #   2. origin/<branch> exists         → reuse the PUSHED slot branch (so a
-    #      fresh VM / worker host lands on the SAME branch state another host
-    #      already created + pushed, instead of forking a divergent branch off
-    #      the integration branch). This is the case that lets remote hosts pick
-    #      up slot branches the operator's laptop created.
-    #   3. neither                        → create fresh from origin/<integration>.
-    if git -C "${sibling}" show-ref --verify --quiet "refs/heads/${branch}"; then
-        git -C "${sibling}" worktree add "${slot_repo_dir}" "${branch}" >/dev/null
-        log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, local)"
-        set_worktree_identity "${slot}" "${slot_repo_dir}"
-        return 0
-    fi
-    # Refresh remote-tracking refs for both the slot branch + the integration
-    # branch before deciding (operator/host may not have fetched in a while).
-    local base; base="$(base_branch_for_repo "${repo}")"
-    git -C "${sibling}" fetch --quiet origin \
-        "+${branch}:refs/remotes/origin/${branch}" 2>/dev/null || true
-    git -C "${sibling}" fetch --quiet origin "${base}" 2>/dev/null || true
-    if git -C "${sibling}" show-ref --verify --quiet "refs/remotes/origin/${branch}"; then
-        git -C "${sibling}" worktree add --track -b "${branch}" \
-            "${slot_repo_dir}" "origin/${branch}" >/dev/null
-        log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, tracking origin)"
+    url="$(git -C "${sibling}" remote get-url origin)"
+    if git clone --reference "${sibling}" "${url}" "${slot_repo_dir}" --quiet 2>/dev/null; then
+        git -C "${slot_repo_dir}" checkout "${base}" --quiet 2>/dev/null \
+            || git -C "${slot_repo_dir}" checkout -B "${base}" "origin/${base}" --quiet
+        git -C "${slot_repo_dir}" config user.name "ikennaigboaka [slot-${slot}·$(hostname -s 2>/dev/null || echo laptop)]"
+        git -C "${slot_repo_dir}" config user.email "$(slot_identity_email)"
+        log "  CLONE ${repo} → ${slot_repo_dir} (Path-B reference-clone on ${base})"
     else
-        git -C "${sibling}" worktree add "${slot_repo_dir}" -b "${branch}" \
-            "origin/${base}" >/dev/null
-        log "  ADD  ${repo} → ${slot_repo_dir} (branch ${branch}, new from ${base})"
+        log "  FAIL ${repo} reference-clone (url=${url})"
+        return 1
     fi
-    set_worktree_identity "${slot}" "${slot_repo_dir}"
+}
+
+# Resolve the canonical commit email host-stably (env → per-machine global → Ikenna default).
+slot_identity_email() {
+    git config --global slotIdentity.email 2>/dev/null || echo "ikennaigboaka@gmail.com"
 }
 
 write_slot_envrc() {
