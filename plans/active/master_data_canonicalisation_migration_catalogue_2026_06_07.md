@@ -931,32 +931,24 @@ this the irreversible single-walk `--apply` would have baked `source=onchain_rpc
 blocked since 2026-06-08T08:26Z, BLOCKED-UPSTREAM, re-quickmerge/automation promotes on unlock). Repo:
 unified-api-contracts.
 
-- [ ] [MTDS+UAC] P1. **DeFi live handlers HARDCODE manifest `pipeline_mode`, diverging from the migrator-derived
-      source-aware value (⑪ live-write track; data NOT corrupted by `--apply`).** The migrator + `rebuild_defi_manifest`
-      RE-DERIVE `pipeline_mode`/`source` via UTL `derive_pipeline_mode_for_row` (correct, source-aware — verified), and
-      UTL `ManifestWriter.add()` only auto-derives when `pipeline_mode` is **blank** (`manifest_writer.py:1937/1943`) —
-      so a NON-blank hardcoded value PERSISTS. Several DeFi live handlers pass a hardcoded `PipelineMode.*` that
-      contradicts the actual fetch source + UAC `SOURCE_PRIORITY` + the migrator: (a)
-      **`dex_pools_handler.py:450/509/517/533`** stamps `BATCH_ONCHAIN_RPC` but fetches via The Graph subgraph (hdr "via
-      The Graph subgraphs"); `SOURCE_PRIORITY(defi,dex_pool_state)=onchain_subgraph`; sibling `dex_swaps_handler`
-      correctly uses `BATCH_ONCHAIN_SUBGRAPH`. → should be `BATCH_ONCHAIN_SUBGRAPH`. (b)
-      **`lending_indices_handler.py:421/478/507/515/526`** stamps `BATCH_ONCHAIN_RPC` but fetches Aave/Spark/Compound
-      via The Graph subgraph; `SOURCE_PRIORITY(defi,lending_indices)=onchain_subgraph`. → `BATCH_ONCHAIN_SUBGRAPH`. (c)
-      **`evm_defi_handler.py:587/606/617`** (data_type=lending_indices, The Graph subgraph) stamps `BATCH_ONCHAIN_RPC`.
-      → `BATCH_ONCHAIN_SUBGRAPH`. (d) **`aggregator_route_handler`** stamps `BATCH_ONCHAIN_RPC` (pinned by
-      `tests/unit/     test_aggregator_route_handler_a12h_pipeline_mode.py:146`) — re-derive + update the pinning test
-      to the derived value. (e) **`oracle_prices_handler.py:709/719/743`** hardcodes `BATCH_CHAINLINK` for ALL rows but
-      ALSO writes **Pyth** rows (`hermes.pyth.network`); `SOURCE_PRIORITY(defi,oracle_prices)=[pyth_hermes,chainlink]`
-      (multi-source) — PYTH rows must derive `BATCH_PYTH_HERMES` per-venue (the migrator does:
-      `derive_pipeline_mode_for_row(PYTH,…)→     batch_pyth_hermes`). **Root-cause fix (makes live==migrator BY
-      CONSTRUCTION)**: handlers must DERIVE per-shard via `derive_pipeline_mode_for_row(venue,"defi",data_type)` (the
-      SAME fn the migrator uses) instead of hardcoding — or pass blank and let `add()` C-#2 auto-derive. **Severity**:
-      live-write path only — `rebuild_defi_manifest` derives from the OBJECTS (re-stamping over the live rows), so the
-      drift self-heals on each rebuild and the `--apply` migrated data is correct; but between a live write and the next
-      rebuild the manifest carries the wrong source/pipeline_mode (C-#6 inconsistency: e.g.
-      `pipeline_mode=batch_onchain_rpc`+auto-stamped `source=onchain_subgraph`, silently uncaught because source is not
-      caller-explicit). Repos: market-tick-data-service (+ unified-api-contracts for the a12h test if it lives there).
-      parent_epic: mtds_mdps_master. Provenance: slot-2 ⑪ pre-apply audit 2026-06-08.
+- [x] ✅ [MTDS] P1. **DeFi subgraph live handlers stamped `BATCH_ONCHAIN_RPC` for The-Graph-subgraph data — FIXED
+      (mtds@2c259101, slot-2 2026-06-08).** The migrator + `rebuild_defi_manifest` RE-DERIVE `pipeline_mode`/`source`
+      via `derive_pipeline_mode_for_row` (correct), and UTL `ManifestWriter.add()` only auto-derives when
+      `pipeline_mode` is **blank** (`manifest_writer.py:1937/1943`) — so a NON-blank hardcoded value PERSISTS. Three
+      handlers stamped `BATCH_ONCHAIN_RPC` while fetching via The Graph subgraph, contradicting `SOURCE_PRIORITY`+the
+      migrator+the sibling `dex_swaps_handler` (correctly `BATCH_ONCHAIN_SUBGRAPH`): (a) `dex_pools_handler`
+      (dex_pool_state), (b) `lending_indices_handler` (lending_indices, Aave/Spark/Compound), (c) `evm_defi_handler`
+      (lending_indices). **Fixed → `BATCH_ONCHAIN_SUBGRAPH`** (all 12 record-call sites; subgraph data matches
+      `SOURCE_PRIORTY=onchain_subgraph` + C-#6 consistent with the auto-stamped `source=onchain_subgraph`). Verified:
+      104 handler tests + 0 basedpyright on the 3 files; no pinning test touched. **(e) `oracle_prices_handler` was a
+      FALSE ALARM — already correct**: CHAINLINK rows use `BATCH_CHAINLINK`+`source="chainlink"` and PYTH rows use
+      `BATCH_PYTH_HERMES`+`source="pyth_hermes"` per venue (oracle_prices_handler.py:758/767/782/791, comment notes the
+      prior mislabel was already corrected). **Still open (folded into the orphan remediation above — those handlers
+      write to NON-migrated orphan buckets, so the stamp-fix rides their bucket REDIRECT)**: (d)
+      `aggregator_route_handler` (`BATCH_ONCHAIN_RPC`, pinned by
+      `test_aggregator_route_handler_a12h_pipeline_mode.py:146`) + the Solana handler stamps → the P1-redirect +
+      P2-Solana (`BATCH_DEFILLAMA`) orphan todos. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+      Provenance: slot-2 ⑪ pre-apply audit 2026-06-08.
 - [ ] [UAC] P2. **`SOURCE_PRIORITY` is CHAIN-AGNOSTIC per `(asset_group, data_type)` → mis-attributes SOLANA DeFi source
       (BLOCKED-OPERATOR-DECISION).** `solana_defi_handler` fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend
       lending via **Solana RPC / Helius / DeFiLlama** (NOT The Graph), but `SOURCE_PRIORITY(defi,dex_pool_state)` /
@@ -992,6 +984,75 @@ residual, P1) does NOT corrupt the `--apply` migrated data — `rebuild_defi_man
 paths and is C-#6-consistent by construction; it self-heals on each rebuild. Remaining gates to the real `--apply` are
 the prior OPERATIONAL ones (GATE C instruments-store v9 WRITE, IS backfill, the doubled-`day=` §H object fix, drain ✓
 done) + the tracked P1/P2 live-track handler-derive remediation (post-migration, not a batch-`--apply` blocker).
+
+### 🗑️ DeFi ORPHAN-COVERAGE DRILLDOWN — GCS data NOT covered by the migrator + delete-after plan (slot-2, 2026-06-08)
+
+> **Operator ask (2026-06-08): no orphaned data.** The `migrate_defi_full_v9_canonical` migrator reads ONLY the **6
+> dedicated SOURCE buckets** (stems `dex-pools` / `dex-swaps` / `lending-indices` / `perp-funding` / `lst-rates` /
+> `oracle-prices`; `base={stem}-{pid}` → `dest={stem}-prd-{pid}`). **Every other DeFi GCS bucket with real market data
+> is OUTSIDE migration scope → orphan-candidate.** Real-prod `gcloud storage` enumeration (slot-2 2026-06-08) found **6
+> data-bearing orphan buckets + 2 empty**. Drilldown + dup-vs-unique + delete-after below so nothing is silently left
+> behind on the irreversible cutover.
+
+**Root cause (the orphan SOURCE):** the live DeFi handlers write to INCONSISTENT buckets — only 5 write to the dedicated
+migrated buckets; **4 write to non-migrated buckets**: `dex_swaps_handler`→`market-data` (=`market-data-tick-defi`),
+`solana_defi_handler`→`market_data`(=`market-data-tick-defi`), `evm_defi_handler`→`evm-defi`,
+`aggregator_route_handler`→`aggregator-routes`. So new writes keep CREATING orphans. (See the handler→bucket map in the
+P1 redirect todo below.)
+
+**Per-bucket drilldown (real-prod, central-element-323112):**
+
+| Bucket                                                                                                                                         | Data / path shape                                                                                                                      | Format                                                                                              | Migrator covers?              | Dup-vs-unique                                                                                                                                                                                                         | Disposition                                                                                                                                                                                                                                                 |
+| ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dex-pools-{,prd-}` · `dex-swaps-{,prd-}` · `lending-indices-{,prd-}` · `perp-funding-{,prd-}` · `lst-rates-{,prd-}` · `oracle-prices-{,prd-}` | `day=/category=defi/venue=` (lst-rates already `asset_group=`)                                                                         | OLD source → migrator normalises to v9 `pipeline_mode={mode}_{source}/asset_group=defi/` in `-prd-` | ✅ YES (MIGRATED-SOURCE→DEST) | n/a                                                                                                                                                                                                                   | KEEP. `-prd-` dest = canonical home. (dex-pools-prd/dex-swaps-prd carry partial prior-apply residue + OLD-format residue → the `--apply` overwrites + the legacy old-format objects are deleted by the migrator's RD4 legacy-delete after a green conform.) |
+| **`market-data-tick-defi-prd`** + `market-data-tick-defi`                                                                                      | `dex_pools/<proto>/<CHAIN>/date=` + `lending_indices/<proto>/` (Solana ORCA/RAYDIUM/KAMINO + lending); **ACTIVELY written 2026-06-08** | LEGACY (no hive `day=`, no `category=`/`asset_group=`, no `pipeline_mode=`; bare `date=`)           | ❌ NO                         | **DUPLICATE** for ORCA/RAYDIUM Solana DEX (present in `dex-pools-` as `venue=ORCA/chain=SOLANA`). ⚠️ **VERIFY KAMINO DEX pools + the Solana `lending_indices`** are in `dex-pools-`/`lending-indices-` before delete. | DELETE-AFTER (post-migration + KAMINO/lending verify). FIRST: stop the writers (redirect `dex_swaps`+`solana` handlers) + migrate any unique KAMINO/Solana-lending shards into `dex-pools-`/`lending-indices-`.                                             |
+| **`evm-defi-prd`** + `evm-defi`                                                                                                                | `raw_tick_data/by_date/day=/asset_group=defi/venue=AAVE_V3/…/instrument_type=a_token/` (Aave V3 EVM)                                   | MID (`asset_group=`, no `pipeline_mode=`); stale index 2026-05-12                                   | ❌ NO                         | **PARTIAL**: post-`2022-11` Aave is DUPLICATE of `lending-indices-` (renamed `instrument_type a_token→lending`); **`2022-03-12…2022-10-31` Aave is UNIQUE** (NOT in `lending-indices-`, which starts 2022-11-01).     | DELETE-AFTER — **but MIGRATE/BACKFILL the unique 2022-03..10 Aave range into `lending-indices-` FIRST** (else ~8 months lost) + redirect `evm_defi_handler`.                                                                                                |
+| **`solana-defi-prd`** + `solana-defi`                                                                                                          | bare `solana_defi/<proto>/<date>/` (orca/raydium/kamino/**marinade**); stale 2026-05-12                                                | LEGACY (no hive keys at all)                                                                        | ❌ NO                         | **DUPLICATE** for orca/raydium/kamino (≈ `market-data-tick-defi` + `dex-pools-`). ⚠️ **`marinade` (mSOL LST) not observed in any migrated bucket → UNIQUE-suspect.**                                                  | DELETE-AFTER (post-migration + marinade verify). Migrate `marinade` LST into `lst-rates-` if unique.                                                                                                                                                        |
+| `market-data-tick-defi-test` · `market-data-tick-test-defi` · `*-test-*` Solana/evm                                                            | (empty — 0 objects)                                                                                                                    | —                                                                                                   | n/a                           | EMPTY                                                                                                                                                                                                                 | DELETE (safe; no data).                                                                                                                                                                                                                                     |
+
+**Delete-after-migration list (track to closure — nothing deleted until its row is GREEN):**
+
+- [ ] [DATA] P1. **VERIFY-then-MIGRATE the UNIQUE orphan gaps into the canonical dedicated buckets BEFORE any legacy
+      delete** (else data loss on the irreversible cutover): (a) `evm-defi-prd` Aave V3 **`2022-03-12…2022-10-31`**
+      range → backfill into `lending-indices-` (confirm absent there first via cf_manifest_audit); (b) `solana-defi-prd`
+      **`marinade`** (mSOL LST) → confirm absent in `lst-rates-`, migrate if unique; (c) `market-data-tick-defi-prd`
+      **KAMINO DEX pools** + the Solana **`lending_indices`** shards → confirm present in
+      `dex-pools-`/`lending-indices-` (sampled ORCA/RAYDIUM are; KAMINO/lending unconfirmed), migrate if unique. Repo:
+      market-tick-data-service (`scripts/migrate_defi_full_v9_canonical.py` could add these as extra source specs, OR a
+      one-off backfill). Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2 orphan audit 2026-06-08.
+- [ ] [SCRIPT] P1. **REDIRECT the 4 DeFi live handlers that write to NON-migrated buckets → the dedicated migrated
+      buckets, so new writes stop creating orphans** (the orphan SOURCE). Handler→current-bucket map:
+      `dex_swaps_handler` (`resolve_bucket_name(kind="market-data")` → `market-data-tick-defi`) → should write
+      `dex-swaps`; `solana_defi_handler` (`get_write_bucket_name("market_data","DEFI")` → `market-data-tick-defi`) →
+      should write the per-data_type dedicated bucket (`dex-pools`/`lending-indices`/`lst-rates`/`perp-funding`) per
+      `_PROTOCOL_TO_DATA_TYPE`; `evm_defi_handler` (`get_write_bucket_name("evm-defi")`) → `lending-indices`;
+      `aggregator_route_handler` (`get_write_bucket_name("aggregator-routes")`) → operator-decision (aggregator-routes
+      is a distinct stream — keep + add to the migrator, OR fold). Until redirected, these buckets keep diverging from
+      the canonical home that features/strategy read. Repo: market-tick-data-service. Owner: vm-defi. parent_epic:
+      mtds_mdps_master.
+- [ ] [DATA] P1. **DELETE the duplicate/legacy DeFi orphan buckets AFTER (1) migration GREEN + (2) the unique-gap
+      migrations above complete + (3) the redirects land + (4) a final cf_manifest_audit confirms 0 unique rows
+      remain**: `market-data-tick-defi{,-prd}` · `solana-defi{,-prd}` · `evm-defi{,-prd}` (post unique-gap migration) ·
+      the 4 empty `*-test-*` DeFi buckets (delete now — 0 objects). Use `gcs_delete_object` / bucket lifecycle, NOT
+      `gsutil` per-object. Snapshot each `_index` to `_index/snapshots/pre_delete_<date>.parquet` first (rollback).
+      Owner: vm-defi (operator sign-off on the bucket deletes — destructive). parent_epic: manifest_master. Provenance:
+      slot-2 orphan audit 2026-06-08.
+- [ ] [UAC+SCRIPT] P2. **Solana DeFi source = actual names (folds the prior P2 + the live-handler Solana stamp).** Once
+      Solana writes land in the dedicated buckets (redirect above), the migrator/rebuild + live handlers must stamp the
+      ACTUAL Solana source, not the chain-agnostic `onchain_subgraph`: add Solana venue overrides to UTL
+      `_VENUE_OVERRIDES` (ORCA/RAYDIUM/PHOENIX/KAMINO/MARINADE/JITO→`BATCH_SOLANA_RPC`; DRIFT→`BATCH_HELIUS_RPC`;
+      MARGINFI/SOLEND→**`BATCH_DEFILLAMA`**) **+ ADD the missing `BATCH_DEFILLAMA`/`LIVE_DEFILLAMA`/`REPLAY_DEFILLAMA`
+      enum members** to UAC `pipeline_mode.py` (+ `source_string_for` `defillama` + `default_transport_for_source`
+      `defillama→rest` + the closed-set symmetry tests). Then drop the handler hardcodes so
+      `derive_pipeline_mode_for_row` is the single SSOT. Repos: unified-trading-library + unified-api-contracts +
+      market-tick-data-service. Owner: vm-defi. parent_epic: manifest_master. Provenance: slot-2 ⑪/P2 audit 2026-06-08.
+
+**Note on the migrated-bucket residue (NOT orphans):** `dex-pools-prd`/`dex-swaps-prd` carry BOTH old-format
+`day=/category=defi/` AND partial prior-apply canonical objects (one sample showed `pipeline_mode=BATCH_ONCHAIN_RPC`
+UPPERCASE — an OLD partial-apply artifact; the current migrator stamps the lowercase `.value` `batch_onchain_subgraph`).
+The `--apply` re-conforms + the RD4 legacy-delete removes the superseded old-format objects in the SAME bucket, so these
+are migration-in-flight residue the apply resolves — NOT a separate orphan. (Flagged for the apply-run to confirm the
+RD4 legacy-delete covers the UPPERCASE residue too.)
 
 ## Orphan sweep (2026-06-07) — every active data-layer plan/issue is registered above
 
