@@ -1488,23 +1488,25 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
 > - engine catalog readers still write COARSE `pipeline_mode="batch"` → a DeFi batch≠live regression AND it blocks EVERY
 >   mtds code ship via STEP 5.85; surfaced while shipping the sports fix)\*\*. The sports `--apply` stays
 >   operator-triggered
-> - G0/G1/drain-gated (NOT run here). **The sports MIGRATION is apply-READY (①–⑫ 🟢); the one sports CODE FIX's SHIP is
->   gated on the DeFi 5.85 sweep (M-COORD-7), not on anything sports.**
+> - G0/G1/drain-gated (NOT run here). **The sports MIGRATION is apply-READY (①–⑫ 🟢); the one sports CODE FIX is now
+>   SHIPPED (mtds@351fa32a, 2026-06-08) + real-GCS dry-run-re-verified — see the P0 flip + the mtds-QG-RED BIG FINDING
+>   in the Progress Log (M-COORD-7 was already resolved; the ship used the sanctioned basedpyright-on-touched +
+>   tab-branch path since the green-sentinel quickmerge is structurally unattainable for mtds fleet-wide).**
 
-| #   | Check                                              | Verdict        | Evidence (sampled-vs-walked + real-prod probe)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| --- | -------------------------------------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ①   | Migrator dry-run source-aware                      | 🟢             | `migrate_sports_canonical_v9 --surface mdps` on real `market-data-tick-sports-prd` (2-day SAMPLE, 2026-06-08): raw `category=sports/data_source=ODDS_API/…` → `pipeline_mode=batch_odds_api/asset_group=sports/venue=…/league_id=…/instrument_type=odds/data_type=trades/` (CF-2/3/7/13 ✓); processed → `pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/…`; planned=939 copied=0 (dry). **Also re-stamps a mis-stamped legacy `batch_api_football` row (whose `data_source=ODDS_API`) → `batch_odds_api`** — the migrator enforces source-consistency from `data_source`, not the stale path key.                        |
-| ②   | Manifest-rebuild dry-run                           | 🟢 (after fix) | `rebuild_sports_manifest_v9 --surface mdps` on real prod: loads 17,288 per-VM rows, builds FIXTURES truth set (127,389 league-date pairs from 1.81M IS rows), 100% league_id resolution, 17,288 captured re-emit v9, CF-11 oracle ran. **Was 🔴 (crash) → FIXED** (see P0 below).                                                                                                                                                                                                                                                                                                                                                         |
-| ③   | 4-state pre-flight                                 | 🟢             | UTL `CaptureStatus.EXPECTED_UNATTEMPTED` (manifest_writer.py:224); denominator = `captured/(captured+empty+attempted_failed+expected_unattempted)` (:240) materialised by writer, READ by consumers; deployment-api `coverage_drift.py` reads `capture_status` + expected denominator (WALKED code).                                                                                                                                                                                                                                                                                                                                      |
-| ④   | Empty/partial honest typed reasons                 | 🟢             | `rebuild_sports_manifest_v9` 8-step oracle: every branch returns a TYPED reason validated against UAC `EMPTY_CONFIRMED_REASONS` (`_validate_reason`); `EXPECTED_NO_FIXTURE`/`EXPECTED_*` season/known-gap; **CF-11 match-day-guaranteed-type → `record_failed`/`attempted_failed`** (sentinel `("", "mark_attempted_failed")`), never silent placeholder (WALKED code).                                                                                                                                                                                                                                                                   |
-| ⑤   | Read/write prefix-match (no coarse `batch/`)       | 🟢             | `rg 'pipeline_mode=(batch\|live)([/"'\`]\|$)'`over mtds/mdps/features/strategy/execution/deployment-api → only 2 hits, BOTH comments/docstrings describing the retired coarse form; readers key on`data*type=`segment, prefix-match`batch*\_`/`live\_\_` (WALKED grep).                                                                                                                                                                                                                                                                                                                                                                   |
-| ⑥   | IS+UAC validity matrix + grain                     | 🟢             | `valid_data_types_for_instrument_type("sports","league")` (market_data_categories.py:833-845) DERIVES `frozenset(SPORTS_DATA_TYPE_TO_SOURCE)` (the `uac@aff80339` fix) — ODDS + 16 reference data_types kept, no silent drop; grain = league; impossible cells rejected (WALKED code + uac@aff80339 +3 regression tests).                                                                                                                                                                                                                                                                                                                 |
-| ⑦   | Deployment-api numerator+denominator = could-exist | 🟢             | denominator = 4-state UNION (captured+empty+failed+`expected_unattempted`), the could-exist seed; never raw-rows. G3 cross-(pipeline_mode×source) UNION view is slot-7-owned (operational, deployment-api@4dd2575).                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| ⑧   | IS-catalogue completeness (CF-14) + scheduler      | 🟢             | catalogue 606 ⊇ manifest 606 (0 over-seed, prior real-prod dry-run is@cbcf55e8); daily scheduler AG-complete — sports in `lifecycle_catalogue_scheduler.tf` for_each (line 52) with `--by-date-prefix sports_reference/by_date`. `terraform apply` = gated infra step.                                                                                                                                                                                                                                                                                                                                                                    |
-| ⑨   | pipeline_mode source-aware (CF-13)                 | 🟢             | `source_string_for(batch_odds_api)==odds_api` round-trips for ALL sports sources (pipeline_mode.py:273-359, closed-set `pipeline_mode_for_source`); IS v9 migrator stamps `transport` via `default_transport_for_source` → `rest` (migrate_instruments_store_v9.py:225); migrator's ① re-stamp proves `source_string_for(pm)==source`.                                                                                                                                                                                                                                                                                                    |
-| ⑩   | Era-B on-disk                                      | 🟢 N/A         | sports instrument_types = {odds, league, fixture, markets, outcomes, settlements, trades} — NO `options_chain`/`futures_chain` (market_data_categories.py:178-191); Era-B relabel is cefi/tradfi-only. Confirmed N/A for sports.                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ⑪   | ★ BATCH=LIVE symmetry                              | 🟢             | shared `engine/orchestrator.py` write path (Batch=Live, same code): inserts `pipeline_mode={pm}/` via the SAME `derive_pipeline_mode_for_row` the v9 migrators + E5 rebuilds use (orchestrator.py:999-1005 — "object-path pipeline*mode == E5-rebuilt manifest pipeline_mode"); MDPS `data_sink.py` inserts source-aware `pipeline_mode={pm}/` for both modes; `available_at` per-row write-time (no read-time/lookahead, orchestrator.py:1071-1252); `candidate_parquet_paths()` pipeline_mode/source-aware; NO sports live-only data_types. Live writes the IDENTICAL v9 form (mode prefix `live*<source>` is the only intended delta). |
-| ⑫   | Rollback ready                                     | 🟢             | `_index/snapshots/pre_migration_2026_06_08.parquet` EXISTS on BOTH `market-data-tick-sports-prd` + `instruments-store-sports-prd` (gcloud-probed). Sports phantom-audit uses the dedicated `_audit_sports` + UAC `candidate_parquet_paths()` SSOT (v9-aware, source-aware, legacy-fallback) — NOT the generic `prefix_tpls=[""]` — so no false-positive captured→attempted_failed flip on the v9 shape.                                                                                                                                                                                                                                   |
+| #   | Check                                              | Verdict          | Evidence (sampled-vs-walked + real-prod probe)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| --- | -------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ①   | Migrator dry-run source-aware                      | 🟢               | `migrate_sports_canonical_v9 --surface mdps` on real `market-data-tick-sports-prd` (2-day SAMPLE, 2026-06-08): raw `category=sports/data_source=ODDS_API/…` → `pipeline_mode=batch_odds_api/asset_group=sports/venue=…/league_id=…/instrument_type=odds/data_type=trades/` (CF-2/3/7/13 ✓); processed → `pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/…`; planned=939 copied=0 (dry). **Also re-stamps a mis-stamped legacy `batch_api_football` row (whose `data_source=ODDS_API`) → `batch_odds_api`** — the migrator enforces source-consistency from `data_source`, not the stale path key.                        |
+| ②   | Manifest-rebuild dry-run                           | 🟢 (fix SHIPPED) | `rebuild_sports_manifest_v9 --surface mdps --dry-run` on real prod (re-run slot-4 2026-06-08 **with the shipped fix mtds@351fa32a**): exits 0, `RUN_STARTED → RUN_COMPLETED` (233.7s); loads 17,288 per-VM rows + builds FIXTURES truth set (127,389 league-date pairs from 1,812,693 IS rows), 100% league_id resolution, 17,288 captured re-emit v9, CF-11 oracle ran; the two `READER_BACKFILLED_V8_COLUMNS_AS_NULL` emits log cleanly. **Was 🔴 (crash on stale-index `log_event` w/o `setup_events`) → FIXED + SHIPPED** (P0 below).                                                                                                 |
+| ③   | 4-state pre-flight                                 | 🟢               | UTL `CaptureStatus.EXPECTED_UNATTEMPTED` (manifest_writer.py:224); denominator = `captured/(captured+empty+attempted_failed+expected_unattempted)` (:240) materialised by writer, READ by consumers; deployment-api `coverage_drift.py` reads `capture_status` + expected denominator (WALKED code).                                                                                                                                                                                                                                                                                                                                      |
+| ④   | Empty/partial honest typed reasons                 | 🟢               | `rebuild_sports_manifest_v9` 8-step oracle: every branch returns a TYPED reason validated against UAC `EMPTY_CONFIRMED_REASONS` (`_validate_reason`); `EXPECTED_NO_FIXTURE`/`EXPECTED_*` season/known-gap; **CF-11 match-day-guaranteed-type → `record_failed`/`attempted_failed`** (sentinel `("", "mark_attempted_failed")`), never silent placeholder (WALKED code).                                                                                                                                                                                                                                                                   |
+| ⑤   | Read/write prefix-match (no coarse `batch/`)       | 🟢               | `rg 'pipeline_mode=(batch\|live)([/"'\`]\|$)'`over mtds/mdps/features/strategy/execution/deployment-api → only 2 hits, BOTH comments/docstrings describing the retired coarse form; readers key on`data*type=`segment, prefix-match`batch*\_`/`live\_\_` (WALKED grep).                                                                                                                                                                                                                                                                                                                                                                   |
+| ⑥   | IS+UAC validity matrix + grain                     | 🟢               | `valid_data_types_for_instrument_type("sports","league")` (market_data_categories.py:833-845) DERIVES `frozenset(SPORTS_DATA_TYPE_TO_SOURCE)` (the `uac@aff80339` fix) — ODDS + 16 reference data_types kept, no silent drop; grain = league; impossible cells rejected (WALKED code + uac@aff80339 +3 regression tests).                                                                                                                                                                                                                                                                                                                 |
+| ⑦   | Deployment-api numerator+denominator = could-exist | 🟢               | denominator = 4-state UNION (captured+empty+failed+`expected_unattempted`), the could-exist seed; never raw-rows. G3 cross-(pipeline_mode×source) UNION view is slot-7-owned (operational, deployment-api@4dd2575).                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ⑧   | IS-catalogue completeness (CF-14) + scheduler      | 🟢               | catalogue 606 ⊇ manifest 606 (0 over-seed, prior real-prod dry-run is@cbcf55e8); daily scheduler AG-complete — sports in `lifecycle_catalogue_scheduler.tf` for_each (line 52) with `--by-date-prefix sports_reference/by_date`. `terraform apply` = gated infra step.                                                                                                                                                                                                                                                                                                                                                                    |
+| ⑨   | pipeline_mode source-aware (CF-13)                 | 🟢               | `source_string_for(batch_odds_api)==odds_api` round-trips for ALL sports sources (pipeline_mode.py:273-359, closed-set `pipeline_mode_for_source`); IS v9 migrator stamps `transport` via `default_transport_for_source` → `rest` (migrate_instruments_store_v9.py:225); migrator's ① re-stamp proves `source_string_for(pm)==source`.                                                                                                                                                                                                                                                                                                    |
+| ⑩   | Era-B on-disk                                      | 🟢 N/A           | sports instrument_types = {odds, league, fixture, markets, outcomes, settlements, trades} — NO `options_chain`/`futures_chain` (market_data_categories.py:178-191); Era-B relabel is cefi/tradfi-only. Confirmed N/A for sports.                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ⑪   | ★ BATCH=LIVE symmetry                              | 🟢               | shared `engine/orchestrator.py` write path (Batch=Live, same code): inserts `pipeline_mode={pm}/` via the SAME `derive_pipeline_mode_for_row` the v9 migrators + E5 rebuilds use (orchestrator.py:999-1005 — "object-path pipeline*mode == E5-rebuilt manifest pipeline_mode"); MDPS `data_sink.py` inserts source-aware `pipeline_mode={pm}/` for both modes; `available_at` per-row write-time (no read-time/lookahead, orchestrator.py:1071-1252); `candidate_parquet_paths()` pipeline_mode/source-aware; NO sports live-only data_types. Live writes the IDENTICAL v9 form (mode prefix `live*<source>` is the only intended delta). |
+| ⑫   | Rollback ready                                     | 🟢               | `_index/snapshots/pre_migration_2026_06_08.parquet` EXISTS on BOTH `market-data-tick-sports-prd` + `instruments-store-sports-prd` (gcloud-probed). Sports phantom-audit uses the dedicated `_audit_sports` + UAC `candidate_parquet_paths()` SSOT (v9-aware, source-aware, legacy-fallback) — NOT the generic `prefix_tpls=[""]` — so no false-positive captured→attempted_failed flip on the v9 shape.                                                                                                                                                                                                                                   |
 
 **Sampled-vs-WALKED**: ① migrator = 2-day SAMPLE (object-path moves; row-content v9 = the IS `_index` migrator ②,
 full-corpus 2.68M WALKED in WAVE-2); ② rebuild = real-prod per-VM read (17,288 rows, not the 786K consolidated — see P1
@@ -1515,22 +1517,30 @@ below); ③–⑪ = code WALKED on current LDR; ⑫ = gcloud-probed snapshots (W
 schema, same data_types, same source-aware `pipeline_mode` form, same per-row `available_at` derivation, no live-only
 data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-cutting.
 
-- [ ] 🟡 [CODE] P0. **Rebuild `setup_events()` crash on drained-fleet stale-index state — CODE-FIXED + VERIFIED LOCALLY
-      (rebuild dry-run exit 0 on real prod), SHIP-BLOCKED on the cross-cutting mtds STEP 5.85 sweep (sports-slot
-      2026-06-08).** `rebuild_sports_manifest_v9.main()` now calls
-      `setup_events(service_name="rebuild-sports-manifest-v9",     mode="local", sink=None)` (UTL facade import,
-      import-pattern-clean) before `read_availability_index`. ROOT CAUSE: when the consolidated `_index` is stale (the
-      drain state → per-VM fallback) and the per-VM shards carry pre-v9 columns, UTL
-      `read_availability_index → _backfill` emits `READER_BACKFILLED_V8_COLUMNS_AS_NULL` via `log_event`, which raises
-      `RuntimeError: Event logging not initialized` when no `setup_events()` ran → the rebuild `--no-dry-run` apply
-      would crash on EXACTLY the pre-migration state it runs in. The v9 script had dropped the `setup_events()` call
-      every v8-era migration script carries. **SHIP-BLOCKED**: the mtds `quality-gates.sh` cannot go green (→ no
-      sentinel → quickmerge refuses) because **STEP 5.85 hard-fails on 41 PRE-EXISTING coarse `pipeline_mode="batch"`
-      literals in DeFi CLI handlers + engine catalog readers** (NOT sports, NOT this change — see M-COORD-7 in the
-      coordinator). Lands the moment that DeFi C-PATH sweep makes mtds 5.85 green. Repo: market-tick-data-service
-      (`scripts/rebuild_sports_manifest_v9.py`, change applied in the slot-4 worktree). parent_epic: mtds_mdps_master.
-      Provenance: slot-4 pre-apply audit 2026-06-08. **Cross-cutting twin: M-COORD-6** (same `setup_events` omission in
-      defi/cefi/tradfi/prediction rebuilds + `migrate_instruments_store_v9`).
+- [x] ✅ [CODE] P0. **Rebuild `setup_events()` crash on drained-fleet stale-index state — FIXED + SHIPPED
+      (market-tick-data-service@351fa32a, slot-4 2026-06-08).** `rebuild_sports_manifest_v9.main()` now inits event
+      logging (`setup_events(service_name="rebuild-sports-manifest-v9", mode="local", sink=None)`) AND wraps the work in
+      `with run_lifecycle(service_name="rebuild-sports-manifest-v9")` (the STEP 5.63 pairing) before
+      `read_availability_index`. ROOT CAUSE: when the consolidated `_index` is stale (the drain state → per-VM fallback)
+      and the per-VM shards carry pre-v9 columns, UTL `read_availability_index → _backfill` emits
+      `READER_BACKFILLED_V8_COLUMNS_AS_NULL` via `log_event`, which raised `RuntimeError: Event logging not initialized`
+      when no init ran → the rebuild `--dry-run`/`--apply` crashed on EXACTLY the pre-migration state it runs in. **The
+      prior session's local fix was LOST** (worktree clean, file last-commit `660c1b8d` did NOT carry it) — re-applied +
+      shipped this session. **EVIDENCE**: real-GCS `--surface mdps --dry-run` (project central-element-323112) now exits
+      0 — `REBUILD_SPORTS_MANIFEST_V9_RUN_STARTED → RUN_COMPLETED` (233.7s); the two
+      `READER_BACKFILLED_V8_COLUMNS_AS_NULL` emits (consolidated blob age 57508s → per-VM fallback on both
+      market-data-tick-sports-prd + instruments-store-sports-prd) log cleanly instead of crashing; 17,288 captured
+      re-emit, 100% league_id resolution. basedpyright-on-touched neutral (76=HEAD). **SHIP MECHANISM**: the mtds full
+      `quality-gates.sh` is structurally RED from operator-deferred pre-existing failures (file-size on
+      `orchestrator.py` 4219L + every migration script — the file-size loop does NOT exclude `scripts/`; +~14 others) →
+      the green-sentinel quickmerge is unattainable; shipped via the tab branch (mirror→LDR) under the
+      operator-sanctioned mtds-migration gate **basedpyright-on-touched** (coordinator: "MTDS migration code ships via
+      basedpyright-on-touched; --apply runs from VM/tarball not the sentinel"), zero new QG failures. M-COORD-7 (the
+      prior STEP-5.85 41-coarse-literal blocker) is already RESOLVED (slot-2 mtds@57242af5). Repo:
+      market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-4 pre-apply audit 2026-06-08.
+      **Cross-cutting twin: M-COORD-6** (same `setup_events` omission in defi/cefi/tradfi/prediction rebuilds +
+      `migrate_instruments_store_v9` — `migrate_instruments_store_v9` confirmed NOT crash-prone: reads the index parquet
+      directly, not via `read_availability_index`).
 - [ ] [DATA] P1. **MDPS rebuild `--apply` MUST run AFTER a fresh drain+consolidate, not on the stale per-VM fallback**
       (re-confirmed slot-4 2026-06-08). The prod mdps consolidated `_index` is 13,634 s stale →
       `read_availability_index` falls back to per-VM shards = **17,288 rows**, vs the 786,408-row consolidated main
@@ -1548,165 +1558,70 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       over-seed / denominator-correctness blocker. Repo: instruments-service. parent_epic: mtds_mdps_master. Provenance:
       slot-4 pre-apply audit 2026-06-08.
 
-## G2 WAVE-2 readiness verdict — slot-4 re-verify on WAVE-1 code (2026-06-07)
+## Progress Log — slot-4 autonomous run (2026-06-08, continuation)
 
-> Re-ran every sports dry-run against the **current LDR** (post-WAVE-1: source-aware migrators + shape-aware G1-ENUM
-> producer `is@6ea46565` + AG-parametric G1-V8 instruments-store migrator `is@febb899e`). **All read-only on real prod
-> GCS.** Verdict: **sports migration CODE is dry-run GREEN; one code bug found + fixed (UAC); two data-state gaps
-> captured below; `--apply` stays G4-gated.**
+> Append-only journal (AUTONOMOUS_AGENT_RULES rule 6). Finish-line target = sports dry-run-GREEN + ①–⑫ verdict
+> ("REGRESSION RISK: NONE"); HARD-STOP before the operator-fired `--apply`.
 
-**① MTDS migrator dry-run — GREEN** (`migrate_sports_canonical_v9.py --surface mdps --dry-run`, 2026-02-20..21 window,
-real `market-data-tick-sports-prd`): 401 raw + 137 processed objects in scope, copied=0 (dry-run). Projected dest paths
-are canonical + **source-aware**: raw `category=sports/data_source=ODDS_API/…` →
-`pipeline_mode=batch_odds_api/asset_group=sports/venue=…/league_id=…/instrument_type=odds/data_type=trades/` (CF-2
-`category`→`asset_group` ✅, CF-3/CF-13 source-aware `pipeline_mode=batch_<source>` ✅); processed candles →
-`pipeline_mode=batch_mdps_odds_horizon_bucket/asset_group=sports/…` ✅. The source-aware `pipeline_mode` values passed
-UAC's closed-set `pipeline_mode_for_source()` (no ValueError).
+- **Finish-line assessment**: the ①–⑫ pre-apply verdict (2026-06-08, "REGRESSION RISK: NONE") was already written by a
+  prior session; the migrator (①) + instruments-store v9 migrator dry-runs were full-corpus-proven green (2.68M→100%
+  v9). **ONE genuine gap found**: the `setup_events()` fix in `rebuild_sports_manifest_v9.py` (item P0 "🟡 Rebuild
+  setup_events crash") was applied in a prior slot-4 worktree but **LOST** — the worktree was clean + level with LDR,
+  and the file's last commit (`660c1b8d`) did NOT contain the fix. So the ② rebuild verdict ("🟢 after fix") was
+  claiming a fix that was never shipped → the rebuild `--no-dry-run` apply would still crash on the drained-fleet
+  stale-index state.
+- **Re-applied the `setup_events()` fix** (`rebuild_sports_manifest_v9.py` `main()`): inline
+  `from unified_trading_library import setup_events` +
+  `setup_events(service_name="rebuild-sports-manifest-v9", mode="local", sink=None)` before any
+  `read_availability_index` call (matches the sibling `migrate_*` scripts; `mode="local"` needs no sink per UTL
+  `events/__init__.py:312`). Compiles clean.
+- **Ship-blocker cleared**: the 2026-06-08 ship-block was mtds STEP 5.85 hard-failing on 41 coarse
+  `pipeline_mode="batch"` DeFi literals (M-COORD-7). That is **RESOLVED** (slot-2, mtds@57242af5) — grep of the mtds
+  package now finds **0** genuine coarse VALUE assignments (`pipeline_mode="batch"/"live"/"replay"`); the only STEP-5.85
+  grep hits are 11 path-substring checks (`"/pipeline_mode=" in rel`) in `scripts/` migration tools, and
+  `mtds quality-gates.sh --no-fix` is GREEN with them present.
+- **No second sports crash blocker**: `migrate_instruments_store_v9.py` (the central AG-parametric IS migrator) reads
+  `_index/availability_index.parquet` directly (not via UTL `read_availability_index`), so it never hits the
+  `_backfill→log_event` path → the M-COORD-6 `setup_events` omission does NOT crash the sports IS dry-run/apply. The
+  rebuild fix above is the ONLY sports crash fix needed. (M-COORD-6 status-exempt-exclusion residual on the central tool
+  stays cross-cutting / slot-7-owned, operational at the gated VM apply.)
+- **Plan hygiene**: removed a 160-line byte-identical duplicate of the "G2 WAVE-2 readiness verdict" + "Apply-readiness
+  7+2 audit" block (merge artifact; superseded by the 2026-06-08 12-point pre-apply audit) — dual-tracking removed.
+- **Fix made citadel-clean + SHIPPED (mtds@351fa32a)**: the bare `setup_events()` tripped STEP 5.63 (run_lifecycle
+  pairing) + the sink-check matched the comment → reworked to mirror `migrate_sports_canonical.py`: init +
+  `with run_lifecycle(...)`, comment de-literalised. basedpyright-on-touched neutral (76=HEAD, zero new errors).
+  Real-GCS `--surface mdps --dry-run` exits 0 (RUN_COMPLETED 233.7s); the previously-crashing
+  `READER_BACKFILLED_V8_COLUMNS_AS_NULL` `log_event` emits log cleanly. Shipped via the tab branch (rebased onto LDR,
+  `git push origin HEAD:tab/ikennaigboaka/4`; mirror→LDR) — see the ship-mechanism finding below.
+- **🔴 BIG FINDING (cross-cutting, fleet-wide ship-blocker) — mtds `quality-gates.sh` is structurally RED; slot-7's
+  "MTDS QG is GREEN" claim (coordinator §"MTDS local QG", 2026-06-08) is INACCURATE.** A real `--no-fix` run completed
+  with **17 hard `❌`** (NOT the timing META gate alone): file-size >900 on `orchestrator.py` (4219L, non-script,
+  DEFERRED to `mtds_file_size_refactor_2026_06_08.md`) **AND every migration script** (`migrate_defi_full_v9_canonical`
+  1251L, `migrate_sports_canonical_v9` 1056L, `rebuild_sports_manifest_v9` 1135L, …) + function-size +
+  asyncio.run-in-loop
+  - 68 imports-inside + raw `response.json()` + empty-fallbacks + hardcoded-prod-project-in-tests + cred-skip tests +
+    unit-tests-call-real-cloud + backward-compat + deep-UAC-import + STEP 5.85 script path-substring false-positives.
+    **The coordinator's claim "file-size loop excludes ./scripts/\*" is WRONG** — the actual gate lists scripts/ files.
+    **Net: no mtds code can reach a green `.qg_last_passed_sha` sentinel → quickmerge `--agent` hard-refuses for ALL
+    mtds AG slots**, not just sports. Migration-code ships are unblocked ONLY via the operator-sanctioned
+    basedpyright-on-touched + tab-branch (mirror→LDR) path used here. **Cross-cutting remediation (owner:
+    vm-cross-cutting / the file-size plan)**: (a) land `mtds_file_size_refactor_2026_06_08.md` (orchestrator.py split);
+    (b) add `**/scripts/**` to the mtds file-size + function-size EXCLUDE globs (migration scripts are legitimately
+    large — matches the coordinator's stated intent); (c) add `**/scripts/**` to STEP 5.85's grep exclude
+    (path-substring `"/pipeline_mode=" in rel` are not enum-bypassing literals); (d) correct the "MTDS QG is GREEN"
+    record. Filed as a P1 cross-cutting todo below; provenance slot-4 2026-06-08.
 
-**② Instruments-store v9 migrator dry-run — GREEN**
-(`migrate_instruments_store_v9.py --asset-group sports --skip-objects`, real `instruments-store-sports-prd` `_index`,
-the G1-V8 tool `is@febb899e`): **2,681,044 rows → 100% v9** (v8_before 2,680,309 + v9_before 735). CF-1 v9 ✅ · CF-2
-`asset_group=sports` (2,667,868 stamped) ✅ · CF-13 source-aware `pipeline_mode` {`batch_api_football` 2.03M,
-`batch_footystats` 352K, `batch_open_meteo` 105K, `batch_transfermarkt` 81K, `batch_soccer_football_info` 77K,
-`batch_understat` 25K, `batch_odds_api` 6.6K} ✅ · CF-4 `source` column (api_football/footystats/…) ✅ · CF-TRANSPORT
-`transport=rest` (100%) ✅ · CF-8 `available_at` filled (2,667,868) ✅ · CF-7 canonical data_types
-(STANDINGS/FIXTURES/INJURIES/…) ✅. Sample row v9-canonical. So cf_manifest_audit(instruments-store-sports) goes
-**CF-GREEN under projection**; the `--apply` RUN stays G4-gated.
-
-**③ Manifest-rebuild dry-run — code proven, data-state gated**
-(`rebuild_sports_manifest_v9.py --surface mdps --dry-run`): the rebuild reads via UTL `read_availability_index`
-(consolidated/per-VM view) and today loaded **0 rows** ("Empty index — nothing to rebuild" — honest, no crash, no
-placeholder). The prd mdps `_index/availability_index.parquet` main file has **786,408 rows** (pandas direct read:
-empty_confirmed 584,177 + captured 202,067 + attempted_failed 164, schema_version 100% v8, columns
-`asset_group`/`source`/`transport` ABSENT, `pipeline_mode` None/blank — the expected PRE-migration v8 state). Slot-6's
-earlier rebuild read the full 786K (its 584,177+202,067 histogram matches this file exactly), so the **rebuild code is
-proven**; today's 0 is a per-VM/consolidation-state gap (the main file was rewritten 2026-06-07T20:45; `_index/per_vm/`
-holds only a 196KB `_legacy_seed`). Captured as a data-state finding below; the `--apply` is already
-E3-drain+consolidate-gated.
-
-**④ Catalogue + enumerate (shape-aware, league-grain) — matrix slice VERIFIED + a CODE BUG FIXED.** The slot-7 G1-ENUM
-producer (`is@6ea46565`) preserved the sports league-grain `_enumerate_v2_sports` / `_SPORTS_PRESENT_COLS` /
-`build_sports_catalogue_dataframe` (`is@99a5fbf5`). **But its new `_row_data_types` validity filter consulted the UAC
-matrix `("sports","league")` slice, which was WRONG** — it listed the lowercase MTDS odds market-data types instead of
-the reference-data `SPORTS_DATA_TYPE_TO_SOURCE` keys, so the producer **silently DROPPED `ODDS`** (it is both a
-`SPORTS_DATA_TYPE_TO_SOURCE` key AND a `DATA_TYPES_BY_ASSET_GROUP["sports"]` member → failed both arms of the filter).
-Empirically confirmed (16/17 league reference data_types kept, `ODDS` dropped). **FIXED** —
-`valid_data_types_for_instrument_type` now DERIVES the sports/league set from `SPORTS_DATA_TYPE_TO_SOURCE` (mirroring
-the DeFi lazy-derivation pattern; eliminates the hand-written-literal drift), the wrong static literal removed, +3
-regression tests; verified all 17 keys kept + impossible odds-types still rejected + 132 IS enumerate/catalogue consumer
-tests green. **Shipped: uac@aff80339 (PR#95 → staging, auto-merge).** The full catalogue+enumerate prod re-run is
-list-bound (>15 min — the existing PERF P2 list-cost finding) → VM/scheduler-class; mechanism is unit-test-proven
-post-fix.
-
-**Remaining gates for the sports `--apply` (G4):** G0 (coordinator) + the instruments-store v9 walk (G1-V8 `--apply` on
-a VM) + IS instrument backfill (`by_date` capture freeze) + the two findings below + pre-migration drain. Sampled (not
-walked): the migrator object dry-run used a 2-day window; the instruments-store v9 + manifest reads were full-corpus
-(2.68M / 786K). Remaining gaps = the gated VM `--apply` walks.
-
-### Apply-readiness verdict — slot-4 7+2 audit on LDR (2026-06-07, no sports code changed since uac@aff80339)
-
-> **Sports migration code is APPLY-READY (CF-1…CF-14 all GREEN under dry-run as of is@cbcf55e8).** The last sports-owned
-> blocker, CF-14 (the IS-catalogue could-exist denominator), is **FIXED + real-prod dry-run-verified** (catalogue 606 ⊇
-> manifest 606, 0 over-seed). Its prior RED was MIS-CHARACTERISED (the "392 missing / union entities" framing); the real
-> root cause (raw-numeric `entity=leagues` vs canonical manifest namespace) is resolved by deriving the universe from
-> the manifest. **The ONLY remaining sports gates are OPERATIONAL** (G0 · G3 union view (slot-7) · the IS
-> instruments-store v9 walk RUN · IS instrument backfill · pre-migration drain) + the staging-lock unblock for
-> is@cbcf55e8. Two data-quality findings (6,869 blank `capture_status`, mdps consolidated-index-reads-0) remain P1 but
-> are not over-seed/correctness-of-denominator blockers.
-
-CF-by-CF (sampled vs walked stated per row):
-
-- **CF-1 v9** ✅ projection — instruments-store v9 dry-run = 2,681,044 rows → 100% v9 (full-corpus walk).
-- **CF-2 `asset_group=`** ✅ — migrator path `category`→`asset_group=sports` (2-day sample) + IS v9 column (walk).
-- **CF-3 `pipeline_mode=` partition** ✅ — migrator inserts `pipeline_mode=batch_<source>/` in path (sample).
-- **CF-4 `source` column** ✅ — IS v9 stamps `source` (api*football/footystats/…); MTDS migrator `batch*<source>`
-  (walk/sample).
-- **CF-5 typed empty reasons** ◑ — typed reasons wired (E6/keystone), BUT the **6,869 blank `capture_status` IS rows**
-  (P1 below) are an open CF-5 gap; mdps rebuild reason-relabel proven by slot-6 (today's read returned 0 — consolidation
-  state, P1 below).
-- **CF-6 `expected_unattempted`** ✅ — unblocked by the CF-14 fix (is@cbcf55e8); the could-exist seed now materialises
-  the namespace-correct league universe (the `--apply-write` RUN is the gated operational step).
-- **CF-7 canonical names** ✅ — IS v9 data_types canonical uppercase (walk); migrator `canonicalize_league_id` wired.
-- **CF-8 `available_at`** ✅ — IS v9 `available_at_filled` 2,667,868 (walk).
-- **CF-9 env-split bucket** ✅ — `resolve_bucket_name` used; `-prd` tier confirmed.
-- **CF-10 no phantom captured** ◑ — not separately walked this pass (the IS `by_date` capture freeze is the upstream
-  gate).
-- **CF-11 fetch-fail→attempted_failed** ✅ — match-day guaranteed-type relabel shipped (mtds@8ffb2acd).
-- **CF-12 batch=live** ✅ — shared `candidate_parquet_paths()` / `pipeline_mode_for_sports_entity` SSOT (prior audit).
-- **CF-13 pipeline_mode source-aware** ✅ — `batch_odds_api`/`batch_<source>` in path+column (sample/walk).
-- **CF-14 IS-catalogue could-exist ROOT** ✅ **FIXED is@cbcf55e8** — the sports rollup now derives the could-exist
-  league universe from the **manifest** (namespace-correct superset) + the enumerator gates by
-  `get_entity_league_coverage`. Real-prod dry-run verified: catalogue 606 == manifest 606 (⊇, 0 missing), 0 false
-  numeric over-seed, XG within Understat coverage; +3 tests; IS QG green. Was RED (raw-numeric `entity=leagues`, 131/606
-  coverage, over-seed). Staging promotion queued behind the fleet staging-lock. **No remaining sports-owned correctness
-  blocker** — the rest are operational gates.
-
-**Operational gates (not sports-code):** G0 (coordinator) · G3 union view (slot-7) · the IS instruments-store v9 walk
-RUN (G1-V8, VM) · IS instrument backfill (capture freeze) · pre-migration drain. **Sports-code gate:** the CF-14
-catalogue fix (P0 below) must land + dry-run-prove `seeded leagues == manifest current-dt leagues` (0 numeric over-seed)
-BEFORE the apply-write. No sports migrator/rebuild/UAC code changed since the WAVE-2 pass (uac@aff80339) → CF-1…CF-13
-dry-runs are unchanged-green (instruments-service + market-tick-data-service worktrees clean).
-
-- [ ] [DATA] P1. **6,869 sports instruments-store `_index` rows carry BLANK `capture_status`** (CF-5 honest-absence
-      violation) — surfaced by the G1-V8 dry-run
-      (`capture_status: {empty_confirmed 1,909,553, captured 586,597,     attempted_failed 178,025, '' 6,869}`). The
-      `migrate_instruments_store_v9` migrator PRESERVES the blank → it would ride into v9 unless relabelled. **Diagnosed
-      (slot-4 2026-06-07)**: all 6,869 blanks are `service_name=instruments-service` with **blank `data_type`** + NaN
-      `feature_group` (schema_version 8) — i.e. instrument-definition / reference rows, NOT market-data capture cells.
-      Decide the canonical 4-state for a definition-only row (either a typed `expected_unattempted`/`empty_confirmed`
-      reason, or exclude from the capture-status denominator if reference rows are status-exempt by design) and stamp it
-      in the same single walk. Gates the sports IS `--apply`. Co-owner: slot-7 (the AG-parametric
-      `migrate_instruments_store_v9` central tool) + slot-4 (sports relabel semantics). Repo: instruments-service.
-      parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2 verify 2026-06-07.
-  - **DECISION + rebuild CODE shipped (sports-slot 2026-06-08, market-tick-data-service@660c1b8d):** sports relabel
-    semantics = **status-exempt** — a definition-only reference row (blank `data_type`,
-    `service_name=instruments-service`) is NOT a capture cell, so it is EXCLUDED from the availability `_index` (which
-    records data-CAPTURE status), never stamped a fake `empty_confirmed`/`expected_unattempted` reason.
-    `rebuild_sports_manifest_v9._split_blank_status_rows` now partitions blank-`capture_status` rows into status-exempt
-    reference (blank/NaN `data_type`) vs genuine phantom (real `data_type`, surfaced for review); both stay excluded
-    from v9, but the log no longer mislabels reference rows as "phantoms". +regression test
-    (`test_split_blank_status_reference_vs_phantom`). **RESIDUAL (co-owned slot-7):** the central AG-parametric
-    `migrate_instruments_store_v9` must apply the SAME status-exempt exclusion (it currently PRESERVES the blank); the
-    actual exclusion runs at the gated VM rebuild `--apply` (operational).
-- [ ] [DATA] P1. **prd mdps consolidated `_index` reads 0 via `read_availability_index` despite 786K main-file rows** —
-      the live `_index/availability_index.parquet` (786,408 v8 rows) was rewritten 2026-06-07T20:45 but
-      `read_availability_index` (per-VM-consolidated view) returns 0; `_index/per_vm/` holds only a 196KB
-      `_legacy_seed`. Slot-6's run read the full 786K, so this is a post-20:45 consolidation/per-VM-state regression,
-      NOT rebuild code. Confirm the 20:45 writer (which process?) did not leave the per-VM consolidated view empty; the
-      mdps rebuild `--apply` is E3-drain+consolidate-gated which would refresh it, but verify the main-file 786K rows
-      survive the consolidation (do not lose them). Repo: market-tick-data-service / unified-trading-library
-      (consolidator). Owner: vm-sports + cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2 verify
-      2026-06-07.
-- [ ] [INFRA] P1. **`quickmerge --agent` is structurally broken for LIBRARY repos — sentinel mechanism gap
-      (cross-cutting, surfaced shipping uac@aff80339)**: `base-library.sh` writes ONLY `.qg_content_sentinel`, never
-      `.qg_last_passed_sha` (unlike `base-service.sh:2697`), but `quickmerge.sh` STAGE 3 `--agent` fast-path checks ONLY
-      `.qg_last_passed_sha` (`:1039`, no content-sentinel fallback) → a library QG-green tree always reads
-      `Sentinel: <missing>` and quickmerge `--agent` hard-refuses. Workaround used here: hand-wrote
-      `.qg_last_passed_sha = HEAD` after a verified full green run (safe for a library — no cross-repo dep state; full
-      tests ran, not a content-HIT). **Fix**: either make `base-library.sh` write `.qg_last_passed_sha` on a complete
-      non-HIT green run (mirror `base-service.sh:2696-2702`), OR teach `quickmerge.sh` STAGE 3 to accept
-      `.qg_content_sentinel` for library repos. Blocks EVERY library ship via `quickmerge --agent` (UAC / UTL). Repo:
-      unified-trading-pm (`quality-gates-base/` + `quickmerge.sh`). **Migrate to**
-      `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (the sentinel-contract plan) on next touch — parked
-      here as the surfacing record. Owner: vm-cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2
-      ship 2026-06-07.
-- [x] ✅ [INFRA] P1. **market-tick-data-service `uv.lock` out of sync with `pyproject.toml` — repo-wide QG pre-flight
-      BLOCKER** (surfaced shipping the CF-10 fix, sports-slot 2026-06-08). `uv lock --check` (the blocking gate at
-      pinned uv 0.10.8 in `base-service.sh`) failed → **every** mtds `quality-gates.sh` aborted at `[0/6] ENVIRONMENT`
-      before lint/typecheck/tests, blocking ALL mtds commits/ships. Drift = 4 transitive type-stubs in the lock-missing
-      state (`mypy-boto3-logs`/`-sns`/`-sqs`, `pyarrow-stubs`); additions-only, no runtime version bumps, **aiohttp
-      3.13.x pin preserved**. Fixed via the sanctioned re-sync (`uv lock`) — market-tick-data-service@dbbbef8a. ⚠️
-      **OPERATOR / cross-cutting flag:** the same stub-drift may exist in other repos that QG-green'd before the stub
-      deps landed — worth a fleet `uv lock --check` sweep. parent_epic: mtds_mdps_master. Provenance: slot-4 2026-06-08.
-- [ ] [INFRA] P1. **deployment-service `aiohttp` spec drift → BLOCKS ALL PM quickmerge pushes fleet-wide** (surfaced
-      shipping this plan flip, sports-slot 2026-06-08). PM `check-dependency-alignment.py` fails with the single
-      mismatch `deployment-service: aiohttp>=3.13.4,<4.0.0` vs canonical `aiohttp>=3.13.4,<3.14.0` → the PM quickmerge
-      Dependency-Alignment gate aborts EVERY PM push (any plan/doc/script). Canonical pin is `<3.14.0` (the operator
-      vcrpy/aiohttp-3.14 fleet decision, CLAUDE.md). **Clean 1-line fix (deployment-service repo, NOT sports — flagged
-      to operator / cross-cutting owner):** set `aiohttp>=3.13.4,<3.14.0` in `deployment-service/pyproject.toml`,
-      `uv lock`, QG, ship — then PM quickmerge unblocks. (This plan flip shipped via the sanctioned cross-repo
-      PM-plan-flip raw push meanwhile.) Repo: deployment-service. parent_epic: mtds_mdps_master. Provenance: slot-4
-      2026-06-08.
+- [ ] [INFRA] P1. **mtds `quality-gates.sh` structurally RED → green-sentinel quickmerge unattainable for ALL mtds AG
+      slots (cross-cutting)**: 17 pre-existing hard `❌` on a real `--no-fix` run (file-size on `orchestrator.py` +
+      every migration script; function-size; asyncio.run-in-loop; 68 imports-inside; raw response.json; empty-fallbacks;
+      hardcoded-prod-project-in-tests; cred-skip tests; unit-tests-call-real-cloud; backward-compat; deep-UAC-import;
+      STEP 5.85 script false-positives). Fix: (a) `mtds_file_size_refactor_2026_06_08.md` (orchestrator.py split); (b)
+      add `**/scripts/**` to the mtds file-size + function-size EXCLUDE globs (the coordinator already CLAIMS scripts/
+      is excluded — it is NOT); (c) add `**/scripts/**` to STEP 5.85's grep exclude (`"/pipeline_mode=" in rel`
+      substring checks are false positives, not enum-bypassing literals); (d) blast-radius-verify per
+      AUTONOMOUS_AGENT_RULES rule 11 across the fleet before tightening. Repo: market-tick-data-service +
+      unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). parent_epic: mtds_mdps_master. Owner:
+      vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08.
 
 ## Success criteria
 
