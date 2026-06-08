@@ -533,8 +533,9 @@ does not require a second whole-corpus walk.
       `market-data-tick-cefi-prd` `day=2025-12-31` DERIBIT shards — `options_chain`/`futures_chain` appear ONLY as
       `instrument_type=`, the data_types are `trades`/`book_snapshot_5`/`derivative_ticker`,
       `pipeline_mode=batch_tardis` (source-aware), and **`data_type=(options_chain|futures_chain)` count = 0** → on-disk
-      is uniformly Era-B, zero Era-A residue. (Superseded line: the GCS byte-probe of a recent cefi+tradfi chain shard
-      (owner with GCS creds — slot-7 lacks them this slot).
+      is uniformly Era-B, zero Era-A residue. **tradfi confirmed too** — `market-data-tick-tradfi-prd` `day=2025-12-31`:
+      `futures_chain`/`options_chain` only as `instrument_type`, `data_type=trades` (722), Era-A chain count = 0. BOTH
+      AGs uniformly Era-B on disk → gate fully closed.
   - **Live TICK-WRITE path = Era-B for cefi+tradfi chains (GOOD).** Both route through `tardis_shared.py` /
     `tradfi_shared.py` `finalise_and_write_cefi_shards`, whose `_LEGAL_DATA_TYPES` (tardis_shared.py:65) EXCLUDES
     `options_chain`/`futures_chain` and **raises** on `data_type=options_chain` (≈652) — it writes
