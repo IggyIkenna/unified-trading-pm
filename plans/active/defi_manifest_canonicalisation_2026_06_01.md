@@ -647,7 +647,17 @@ What to verify/wire (B0 corrected scope):
         to lock (→ empty), and `quality-gates.sh` is green in every affected repo. **Per-AG migration is dispatched as
         `- [ ]` todos in each `*_manifest_canonicalisation_2026_06_01.md`** (do NOT mass-migrate another AG's code from
         this slot). Repos: unified-trading-pm (infra) + all service repos (per-AG). parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against legacy/dead
+- [x] ✅ [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — substantively DONE (slot-2 2026-06-08
+      verify-flip).** All migration-critical sub-items shipped: A11a (MTDS data_manifest_handler mtds@7ebfa749) + A11b/
+      A11b-blocker (deployment-service data-status deployment-service@2e91ab2) + A11c + A11c-UAC/MDPS/deployment-api/MTDS/
+      features/candle-enum (full canonical denominator collapse, the "readers land FIRST" gate, uac@a967121a + mdps@56503c2
+      + deployment-api@14dfe2e + mtds@b986a3e1 + uac@d4dacac5/mdps@9184876) + A11d (mtds@aa92be0f) + A11g (solana_defi
+      lossless union mtds@fbff8cf0) + A11e-schema-validation (verified non-issue) + **A11f (writers verified canonical +
+      stale docstring fixed, mtds@93c3b48f)**. The code no longer reads/writes dead/legacy buckets or data_types on the
+      migration-critical surfaces. Residual = **A11e [~] PARTIAL** (the only open tail — LOWER-VALUE test scaffolding:
+      `test_smoke_matrix.py` mock + a deployment-ui TS test still reference legacy `dex_pools`/`dex_swaps` strings, but
+      their PRODUCTION assertions are already canonical so they mask NO runtime bug; non-blocking for `--apply`). Original
+      spec below. **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against legacy/dead
       buckets BEFORE the migrations run** (operator 2026-06-02: "refactor read/write cloud-storage paths across the
       board to match canonical so QG-fed tests don't regress by association with dead buckets; same for data-status in
       deployment API + UI which resolve many bucket-name / menu / data_type / manifest conventions"). Slot-2 two-front
