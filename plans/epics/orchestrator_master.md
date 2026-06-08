@@ -326,6 +326,25 @@ correctness the freeze protects.
       running stale server code). NB: a `verify_fleet_autonomy_health.sh` gate citing the AO main-checkout behind-count
       is a nice incremental add (the existing script already reports per-VM behind-count vs LDR HEAD).
 
+### slot git-status `404` drift — a remote reporter posts for slots the live VM doesn't have (finding 2026-06-08, slot-1)
+
+**status**: 🟡 OPEN — cosmetic log noise, no outage. · **provenance**: slot-1, auditing live VM (`planning` /
+`i-0c9b283b31d6b5ca7`) health after the data_freshness "stale" false-alarm.
+
+**What I found**: the live planning VM's backend (`127.0.0.1:8765`) logs repeated
+`POST /api/slots/{3,21,22,23,24,25,26,27,28,29,30}/git-status → 404` from **`103.251.212.47`** (a remote operator laptop
+— NOT this laptop `2.101.7.192`, so likely Harsh's), ~3/min/slot. Registered slots (1/2/4/5) return 200. So a remote
+`slot-git-status-report.sh` cron reports for slot IDs that aren't registered on this VM → 404-spam. Health is otherwise
+green (6 live workers, snapshot loop ticking every 30 min on schedule). Benign but real config drift between the remote
+reporter's slot range and the VM registry (adjacent to the auth.py:528 stale-token note).
+
+- [ ] [SCRIPT] P2. Quiet the slot-git-status `404` drift — EITHER (a) fix the reporting host (`103.251.212.47`, Harsh's
+      laptop) so `slot-git-status-report.sh` only POSTs slots that host owns / that are registered, OR (b) harden the
+      orchestrator `POST /api/slots/{id}/git-status` handler to return `204` (no-op) for an unregistered slot id instead
+      of `404` (stops the log-spam without masking real errors). Prefer (a) at the source; (b) is a small server
+      hardening if the drift recurs. repo: agent-orchestrator (+ the remote host's cron). Surfaced 2026-06-08 by slot-1
+      during the live-VM health audit.
+
 ## P1 — important; post-current-gate
 
 ### [`d0_orchestrator_migration_2026_05_20`](../archive/2026_05/d0_orchestrator_migration_2026_05_20.md)
