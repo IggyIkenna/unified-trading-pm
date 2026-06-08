@@ -161,17 +161,35 @@ what the operator is seeing:
       silent. 21 watcher unit tests green + basedpyright 0/0. `unified-trading-pm@<this>`. Composes with slot-capacity
       work (free a slot for escalations: the stale-session reaper + AutoSpawn headroom — if slots are chronically full
       the retries still need a slot to land).
-- [ ] [SCRIPT] P1. **Stuck-PR escalation should cover the v2-on-stale-staging-workflow class.** A promote PR whose v2
-      fails on a STALE staging workflow (a fix that's on LDR but never reached staging, e.g. `major-bump-issue-handler`
-      actionlint) is `BLOCKED` with a failed required check → `blocked_failing_prs_to_escalate` should hand it to a
-      worker that re-rolls the stale staging workflow from SSOT/LDR. Verify this path fires (it didn't for the
-      2026-06-08 batch) + the worker prompt knows "stale staging workflow → re-roll from SSOT/LDR". repo:
-      unified-trading-pm + agent-orchestrator.
-- [ ] [DEVOPS] P2. **MTDS semver-agent failure on staging (pre-SIT)** —
-      `semver-agent | market-tick-data-service |     failure | staging | triggered by QG pass on staging (pre-SIT)`
-      (2026-06-08). MTDS staging `quality-gates-v2` is green now, so this is a version-bump-specific failure
-      (tag/version clash or transient), separate from the deadlock. Triage the semver-agent run; likely a stale
-      release-tag clash → `git fetch origin --tags --force`. repo: market-tick-data-service / semver.
+- [x] ✅ [SCRIPT] P1. **Stuck-PR escalation now covers the v2-on-stale-staging-workflow class.**
+      `blocked_failing_prs_to_escalate` already SELECTS these (BLOCKED + `failed_check`) — the reason it "didn't fire
+      for the 06-08 batch" is the now-fixed escalation no-retry P0 (escalated once → 503 → labelled → never retried).
+      Two fixes shipped: (1) the `_dispatch_escalation` sit_failure CONTEXT now names the failing check + tells the
+      worker to classify (A) genuine code/test break → fix on LDR, vs (B) STALE-STAGING-WORKFLOW / missing-check (e.g.
+      `major-bump-issue-handler` actionlint, or a `[skip ci]` head with zero check runs) → the fix is NOT on LDR;
+      re-roll the workflow from the PM SSOT (`scripts/workflow-templates/` → `rollout-workflow-templates.sh`) onto the
+      PR BASE, or re-run `quality-gates-v2.yml --ref <head>` (`unified-trading-pm@5fccadf56`); (2) `agents/escalate.md`
+      sit_failure section gives the worker the same A/B classify + the (B) remedy, so it never wrongly "fixes LDR" for a
+      stale-staging wall (`agent-orchestrator@8155adb`). basedpyright 0/0, 5 escalate unit tests green.
+- [ ] [DEVOPS] P0 **BLOCKED-OPERATOR-DECISION**. **semver-agent can no longer stamp versions onto `staging` — a
+      branch-protection contradiction from the deadlock-hardening (NOT a tag clash; correcting my earlier triage).**
+      Diagnosed 2026-06-08 from MTDS run 27124736025 failing step "Apply version bump to staging":
+      `remote: error: GH013: Repository rule violations found for refs/heads/staging. 2 of 2 required status checks are     expected. Required status check "quality-gates-v2" is expected. ! [remote rejected] HEAD -> staging`.
+      **Mechanism:** `semver-agent.yml.tmpl` (auth `GH_PAT`) DIRECT-PUSHES the `chore(release)` bump commit to `staging`
+      after QG passes pre-SIT. But `staging` carries CLASSIC branch protection with **`enforce_admins: true`** +
+      required check `quality-gates-v2` + PR-required — so a direct push (no PR, no check run) is rejected AND the admin
+      PAT cannot bypass (`enforce_admins: true`). **Latent FLEET-WIDE** — fires whenever a repo has a real pending bump
+      (today: MTDS + deployment-service FAIL; execution/strategy/instruments PASS only because they had nothing to
+      bump). Began 06-07 ~13:29 (first failure) right after the staging required-checks tightening (prior run 11:11 =
+      success). **The release-stamp content is already QG-green** (semver fires AFTER v2 passes on staging — the bump
+      only edits pyproject version + changelog), so the gate adds no safety here. **Recommended fix (operator call —
+      touches a security gate fleet-wide):** migrate the staging `quality-gates-v2` requirement from CLASSIC protection
+      (`enforce_admins`, no per-actor bypass) to a RULESET with a `bypass_actor` for the semver release bot (GitHub App
+      or the GH_PAT identity), preserving the gate for all normal pushes while letting the sanctioned post-QG bump land.
+      Alternatives: (B) `enforce_admins:false` on staging + admin-PAT bypass (weaker, contradicts the "enforce_admins ON
+      when v2 green" rule); (C) re-route semver to open a `chore(release)` PR (heavy — a version-only commit re-runs
+      full v2). repo: market-tick-data-service + fleet-wide branch protection + `semver-agent.yml.tmpl`. SSOT: this
+      plan.
 - [x] ✅ [SCRIPT] P1. **Plan-hygiene was silently degraded 06-05→06-07 — the "I didn't see plan hygiene" cause; now
       self-resolved.** `plan-health-agent.yml` (scheduled `0 2 * * *` + per-PR gate + Slack notify + GCS/S3 persist) ran
       RED four straight days. Root cause for 06-05/06/07: the `Claude API health precheck` step (now a RETIRED no-op as
