@@ -584,11 +584,28 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       truthset (actual per-day fixtures) to relabel the genuine no-match in-season days → `EXPECTED_NO_FIXTURE` (the
       keystone bites on MDPS too). Either outcome is fine but MUST be DETERMINED + documented — an undiagnosed 584k SRZ
       block is exactly the "blanket reason" the keystone exists to eliminate.
+  - **RESOLVED — case (b) (sports-slot 2026-06-08):** READ the MDPS odds writer. `reprocess_sports_odds.py` iterates
+    EVERY day in the range (`pd.date_range(..., freq="D")`) and records a **coarse** `SOURCE_RETURNED_ZERO` for
+    no-raw-odds days (it has no per-league context at the coarse-empty grain). So it attempts every in-season day → (b).
+    **The write-path-going-forward is ALREADY honest:** the live/batch worker `batch_workers.py` classifies empties via
+    `canonical_writer.classify_sports_empty_reason` (`ln`) — the fixtures-aware oracle (`is_expected_for_source` →
+    `get_league_fixture_calendar` → SRZ) — so future writes emit typed reasons, not blanket SRZ. **The historical coarse
+    SRZ blanks are relabeled by the rebuild step 6.5 FIXTURES truthset join** (MDPS cross-load via
+    `--fixtures-index-bucket`): genuine no-match in-season days → `EXPECTED_NO_FIXTURE`. So the keystone DOES bite on
+    MDPS; the dry-run's "0 MDPS relabels" was only because step 6.5 needs the cross-load bucket the VM run provides.
+    **No new code needed** — CF-5 GREEN on MDPS is gated on the VM-run relabel COUNT (operational), not code.
 - [ ] [DATA] P1. **Unresolved-league residual (CF-7 / NO_MAPPING — before E8)**: ~15,700 instruments-store rows
       (`SCOTTISH_LEAGUE_CUP_185` 15,609 + 86 singleton leagues) failed `get_league()` resolution → stayed SRZ with a
       logged tally. Diagnose: are these canonical leagues missing from the UAC `provider_league_ids` registry (→ add
       mapping so the oracle classifies them) OR provider-league-id artifacts (→ `EXPECTED_NO_MAPPING`)? Resolve so 0
       empties stay SRZ purely because the league didn't resolve.
+  - **CONFIRMED handled by step 6.5 (sports-slot 2026-06-08):** `_classify_empty_row` blanks the `league_id` when
+    `get_league()` fails (steps 4-6), BUT step 6.5 deliberately uses the **RAW** manifest `league_id` for the FIXTURES
+    truthset lookup (code comment `rebuild_sports_manifest_v9.py` L513-519) — so provider-suffixed/cup ids like
+    `SCOTTISH_LEAGUE_CUP_185` DO match the truth set and per-fixture-derived no-fixture days relabel to
+    `EXPECTED_NO_FIXTURE` at the VM run. The residual SRZ-on-unresolved-league count is a VM-run verification, NOT a
+    code gap. (If a non-derived data_type for a truly unmappable league remains SRZ post-run, the `EXPECTED_NO_MAPPING`
+    relabel is the operator-confirmed follow-up; nothing today forces a blanket SRZ purely on resolution failure.)
 - [ ] [DATA] P1. C-source RIDER (`data_source_provenance` Phase 4): path→column migration — read `source` from the path
       segment (`data_source=…`, `pipeline_mode=batch_…`), write it into the `source` column on every row, re-consolidate
       into the `_index` (multi-source `FIXTURES` = two rows). Executed in THIS walk — do NOT run a separate sports
@@ -1229,6 +1246,11 @@ GCP+AWS writers → consolidate → snapshot `_index/snapshots/pre_migration_202
       empties via record_empty; ManifestWriter(per_vm_shards=True).flush()
 - [ ] [DATA] P1. E7 CF-7 relabel: ODDS case-drift (`ODDS`/`ODDS_SNAPSHOT` upper vs `odds_horizon_bucket` lower) + blank
       venue.
+  - **CONFIRMED CODE shipped (sports-slot 2026-06-08):** `migrate_sports_canonical_v9.py` `_CF7_DATA_TYPE_NORMALISE`
+    maps `ODDS`/`ODDS_SNAPSHOT`/`ODDS_MOVEMENT`/`ODDS_HORIZON_BUCKET`/`ARBITRAGE_OPPORTUNITY`/`TRADES` case-drift to
+    canonical lower; blank venue → `_CF7_BLANK_VENUE_SENTINEL` (`UNKNOWN_VENUE`); blank `data_type` skipped + surfaced
+    for E6; `canonicalize_league_id` applied BEFORE dedup. CF-7 normalize-before-dedup is complete in the migrator; the
+    actual relabel runs at the gated VM `--apply` (operational).
 - [ ] [DATA] P0. E8 Verify: `cf_manifest_audit_2026_06_01.py` on both sports surfaces → CF-1…CF-12 GREEN (esp. 0 blanket
       SOURCE_RETURNED_ZERO); flip CF-coverage in `sports_master_audit_instructions.md`. ⚠️ IRREVERSIBLE — only after
       GREEN: hand C-GREEN to L6 → **delete legacy `market-data-tick-sports` permanently**.
@@ -1402,6 +1424,16 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       in the same single walk. Gates the sports IS `--apply`. Co-owner: slot-7 (the AG-parametric
       `migrate_instruments_store_v9` central tool) + slot-4 (sports relabel semantics). Repo: instruments-service.
       parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2 verify 2026-06-07.
+  - **DECISION + rebuild CODE shipped (sports-slot 2026-06-08, market-tick-data-service@660c1b8d):** sports relabel
+    semantics = **status-exempt** — a definition-only reference row (blank `data_type`,
+    `service_name=instruments-service`) is NOT a capture cell, so it is EXCLUDED from the availability `_index` (which
+    records data-CAPTURE status), never stamped a fake `empty_confirmed`/`expected_unattempted` reason.
+    `rebuild_sports_manifest_v9._split_blank_status_rows` now partitions blank-`capture_status` rows into status-exempt
+    reference (blank/NaN `data_type`) vs genuine phantom (real `data_type`, surfaced for review); both stay excluded
+    from v9, but the log no longer mislabels reference rows as "phantoms". +regression test
+    (`test_split_blank_status_reference_vs_phantom`). **RESIDUAL (co-owned slot-7):** the central AG-parametric
+    `migrate_instruments_store_v9` must apply the SAME status-exempt exclusion (it currently PRESERVES the blank); the
+    actual exclusion runs at the gated VM rebuild `--apply` (operational).
 - [ ] [DATA] P1. **prd mdps consolidated `_index` reads 0 via `read_availability_index` despite 786K main-file rows** —
       the live `_index/availability_index.parquet` (786,408 v8 rows) was rewritten 2026-06-07T20:45 but
       `read_availability_index` (per-VM-consolidated view) returns 0; `_index/per_vm/` holds only a 196KB
@@ -1424,6 +1456,23 @@ dry-runs are unchanged-green (instruments-service + market-tick-data-service wor
       `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (the sentinel-contract plan) on next touch — parked
       here as the surfacing record. Owner: vm-cross-cutting. parent_epic: mtds_mdps_master. Provenance: slot-4 WAVE-2
       ship 2026-06-07.
+- [x] ✅ [INFRA] P1. **market-tick-data-service `uv.lock` out of sync with `pyproject.toml` — repo-wide QG pre-flight
+      BLOCKER** (surfaced shipping the CF-10 fix, sports-slot 2026-06-08). `uv lock --check` (the blocking gate at
+      pinned uv 0.10.8 in `base-service.sh`) failed → **every** mtds `quality-gates.sh` aborted at `[0/6] ENVIRONMENT`
+      before lint/typecheck/tests, blocking ALL mtds commits/ships. Drift = 4 transitive type-stubs in the lock-missing
+      state (`mypy-boto3-logs`/`-sns`/`-sqs`, `pyarrow-stubs`); additions-only, no runtime version bumps, **aiohttp
+      3.13.x pin preserved**. Fixed via the sanctioned re-sync (`uv lock`) — market-tick-data-service@dbbbef8a. ⚠️
+      **OPERATOR / cross-cutting flag:** the same stub-drift may exist in other repos that QG-green'd before the stub
+      deps landed — worth a fleet `uv lock --check` sweep. parent_epic: mtds_mdps_master. Provenance: slot-4 2026-06-08.
+- [ ] [INFRA] P1. **deployment-service `aiohttp` spec drift → BLOCKS ALL PM quickmerge pushes fleet-wide** (surfaced
+      shipping this plan flip, sports-slot 2026-06-08). PM `check-dependency-alignment.py` fails with the single
+      mismatch `deployment-service: aiohttp>=3.13.4,<4.0.0` vs canonical `aiohttp>=3.13.4,<3.14.0` → the PM quickmerge
+      Dependency-Alignment gate aborts EVERY PM push (any plan/doc/script). Canonical pin is `<3.14.0` (the operator
+      vcrpy/aiohttp-3.14 fleet decision, CLAUDE.md). **Clean 1-line fix (deployment-service repo, NOT sports — flagged
+      to operator / cross-cutting owner):** set `aiohttp>=3.13.4,<3.14.0` in `deployment-service/pyproject.toml`,
+      `uv lock`, QG, ship — then PM quickmerge unblocks. (This plan flip shipped via the sanctioned cross-repo
+      PM-plan-flip raw push meanwhile.) Repo: deployment-service. parent_epic: mtds_mdps_master. Provenance: slot-4
+      2026-06-08.
 
 ## Success criteria
 
