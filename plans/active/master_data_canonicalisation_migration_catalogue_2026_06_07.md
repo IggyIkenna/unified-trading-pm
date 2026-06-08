@@ -52,6 +52,57 @@ stamp **coarse `pipeline_mode="batch"`** (or blank — defi rebuild `:302`); the
 `{mode}_{source}[_{transport}]`** — so every migrator/rebuild/enumerator MUST be upgraded in G0/G2 BEFORE its AG's G4
 apply.
 
+## 🛑 Pre-migration drain — EXECUTED 2026-06-08 (slot-2) + RESUME runbook (HARD RULE, tracked)
+
+> **Both fleets quiesced before any `--apply`; rollback snapshots in place. The per-AG `--apply` pre-flight gate (1) is
+> SATISFIED.** Resume ONLY after all per-AG `--apply` complete + verified — the exact reverse-commands are below so
+> nothing is left paused.
+
+**What was done (central-element-323112 + AWS 427895769566):**
+
+- **GCP VMs**: `footystats-fwd-*` self-terminated → only `alerting-quietness-*` + `vm-zombie-watchdog-*` (safety,
+  exempt) remain. 0 data writers.
+- **GCP schedulers**: **48 prod writers/consolidators PAUSED** (`gcloud scheduler jobs pause`, `asia-northeast1`).
+- **AWS EventBridge**: **26 `uts-prod-consolidator-*` rules DISABLED** (`ap-northeast-1`); AWS Batch had 0 running jobs.
+- **EXEMPT (stays up)**: GCP alerting + watchdog (fail-toward-safety); AWS `agent-orchestrator-vm-1` (code, not data).
+- **Final consolidation NOT needed**: all AG `availability_index.parquet` = 2026-06-08T04:14–04:15; newest
+  `_index/per_vm/` shard = 2026-05-12 → index ⊇ shards (fully consolidated).
+- **🔁 ROLLBACK SNAPSHOT**: `_index/snapshots/pre_migration_2026_06_08.parquet` written in **10 buckets**
+  (`{market-data-tick,instruments-store}-{cefi,defi,tradfi,sports,pred}-prd-central-element-323112`). The per-AG
+  `--apply` abort path restores from here.
+
+**RESUME runbook — POST-MIGRATION ONLY (after every AG `--apply` complete + verified):**
+
+```bash
+# GCP — resume the 48 paused prod schedulers
+for j in features-onchain-service-daily-trigger features-sports-service-daily-trigger instruments-daily-backfill \
+  instruments-service-daily-trigger market-tick-cefi-daily-download market-tick-daily-trigger \
+  uts-prod-consolidator-liveness-watchdog-cron uts-prod-features-calendar-t1-schedule \
+  uts-prod-features-commodity-t1-schedule uts-prod-features-cross-instrument-t1-schedule \
+  uts-prod-features-delta-one-t1-schedule uts-prod-features-multi-timeframe-t1-schedule \
+  uts-prod-features-onchain-t1-schedule uts-prod-features-sports-t1-schedule uts-prod-features-volatility-t1-schedule \
+  uts-prod-manifest-consolidator-instruments-{cefi,defi,prediction,sports,tradfi}{,-legacy}-cron \
+  uts-prod-manifest-consolidator-market-data-{cefi,defi,prediction,sports,tradfi}{,-legacy}-cron \
+  uts-prod-mtds-collect-{dex-pools,dex-swaps,eigenlayer-rewards,evm-defi,gas-fees,lending-indices,liquidations,lst-rates,oracle-prices,perp-funding,solana-defi}-cron \
+  uts-prod-mtds-paper-smoke-cron uts-prod-mtds-scenario-matrix-cron; do
+  gcloud scheduler jobs resume "$j" --location=asia-northeast1 --project=central-element-323112
+done
+
+# AWS — re-enable the 26 disabled consolidator rules
+for r in uts-prod-consolidator-execution-{cefi,defi,tradfi} uts-prod-consolidator-features-calendar \
+  uts-prod-consolidator-features-delta-one-{cefi,defi,tradfi} uts-prod-consolidator-features-onchain-{cefi,defi} \
+  uts-prod-consolidator-features-sports uts-prod-consolidator-features-volatility-{cefi,tradfi} \
+  uts-prod-consolidator-instruments-{cefi,defi,prediction,sports,tradfi} \
+  uts-prod-consolidator-market-data-{cefi,defi,prediction,sports,tradfi} \
+  uts-prod-consolidator-ml-training-artifacts uts-prod-consolidator-strategy-{cefi,defi,tradfi}; do
+  aws events enable-rule --name "$r" --region ap-northeast-1
+done
+```
+
+> Verify after resume: `gcloud scheduler jobs list --location=asia-northeast1 | grep -c PAUSED` (prod → 0) +
+> `aws events list-rules --region ap-northeast-1 --query "Rules[?State=='DISABLED' && starts_with(Name,'uts-prod-consolidator')]"`
+> (→ empty). Do NOT resume until the migration is verified-complete + the new manifests are consolidated.
+
 ## 🟢 Dispatch waves (live — who owns what NOW)
 
 Slot map: **2=DeFi · 3=CeFi · 4=Sports · 5=Prediction · 6=TradFi · 7=cross-cutting**.
