@@ -61,8 +61,13 @@ source:
       false-positived the verified-correct MDPS tick-aggregators (rule-11 fleet-safety).
 - [ ] [SCRIPT] P0. Add a **cross-source edge fixture** to the QG: the same instrument+window from a tick-aggregated and a
       pre-aggregated source MUST produce the SAME `t_close`. Wire it as a peripheral-script QG (MDPS + features).
-- [ ] [SCRIPT] P1. **Ingestion-time assertion**: where a vendor close field exists (HL/Pacifica `T`, Binance kline `[6]`),
-      assert it matches the stamped edge; raise on mismatch (no silent pass-through of the open edge).
+- [x] ✅ [SCRIPT] P1. **Ingestion-time assertion** — **unified-trading-library@33ef2d31**:
+      `availability_stamping.assert_close_edge(stamped_close, *, vendor_close=None, open_ts=None, timeframe=None)` —
+      Mode 1 asserts the stamped edge == the vendor close field (HL/Pacifica `T`, kline `[6]`); Mode 2 asserts it ==
+      `compute_bar_close_boundary(open_ts, timeframe)` close (catches a left/open stamp); raises
+      `BarBoundaryViolationError` on mismatch / naive-tz. Exported alongside `compute_bar_close_boundary`; 15 tests; QG
+      exit 0. Adapter wiring (pacifica/HL/aster already use the close field directly post-Phase-1) is adoptable
+      defense-in-depth.
 
 ## Phase 1 — fix every pre-aggregated ingestion site to the canonical close edge
 
