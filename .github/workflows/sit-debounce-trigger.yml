@@ -84,7 +84,9 @@ jobs:
           # staging_versions entry is vestigial and can never converge to versions — leaving them
           # in pending_repos makes them a PERMANENT phantom that keeps the staging lock from ever
           # clearing (unified-trading-pm: staging 1.2.12 vs stable 1.2.24, never reconciles).
-          STAGING_EXCLUDED_REPOS = {"unified-trading-pm"}
+          # agent-orchestrator is mid-migration (staging 0.8.1 vs stable 0.8.0, no
+          # version-reconciliation flow yet) → same phantom class; exclude until G6 lands.
+          STAGING_EXCLUDED_REPOS = {"unified-trading-pm", "agent-orchestrator"}
 
           # Find repos with pending staging changes (staging_versions != versions)
           pending = []
