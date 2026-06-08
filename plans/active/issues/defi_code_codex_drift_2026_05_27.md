@@ -85,12 +85,15 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       operator/Ikenna. **The 3 inverse venues (SOLAYER/PICASSO/CAMBRIAN: capability-without-venue) are RESOLVED — fully
       removed 2026-06-02 (operator decision, no usable/decodable data source); UAC capabilities + IS adapters wiped.
       SSOT: `plans/active/issues/issue_docs_remediation_sweep_2026_06_02.md`.**
-- [ ] [CODE] P3. D14 — `dex_pools_handler.py`: manifest records canonical `data_type="dex_pools"` (L62) but parquet
-      writes `data_type="dex_pool_state"` (L569) → manifest≠data divergence. Canonical is `dex_pools`. The write-flip
-      CANNOT be done standalone — it would split forward-writes (`dex_pools/`) from historical (`dex_pool_state/`),
-      violating single-walk discipline. **Bundled into the deferred GCS rename**: `plans/epics/mtds_mdps_master.md`
-      Phase 9 (`dex_pool_state`→`dex_pools`), which now lists the `write_defi_rows(data_type=...)` handler flip
-      alongside the on-disk hive rename so they land together. (diagnosed 2026-05-27)
+- [x] ✅ D14 — RESOLVED / REVERSED 2026-06-08. **This finding's premise is STALE — canonical is `dex_pool_state`, NOT
+      `dex_pools`.** The operator-locked `codex/.../defi-canonical-naming-ssot.md` (2026-06-01) reversed the direction:
+      `dex_pool_state`/`dex_pool_swaps` is canonical at EVERY surface (path + column + manifest + handler const). Live
+      code is consistent end-to-end — `dex_pools_handler.py` writes `dex_pool_state` to BOTH path and manifest (the
+      2-layer split is retired), `migrate_defi_full_v9_canonical.py` stamps `dex_pool_state` with NO remap, features
+      read `data_type=dex_pool_state`. **The walk bakes `dex_pool_state` and code reads `dex_pool_state` — matched, no
+      pre-apply block.** ⚠️ Do NOT "fix" this back to `dex_pools` — the `mtds_mdps_master.md` Phase 9
+      `dex_pool_state→dex_pools` rename is a SUPERSEDED dead-letter (banner added there 2026-06-08). Defi audit guard
+      (`defi-dexpool-name`) pins the canonical name. (reversed per SSOT; verified end-to-end by the 2026-06-08 sweep.)
 - [ ] [CODE] P3. D15 — HYPERLIQUID + ASTER are `DEFI_VENUE_PHASE=pipeline` but `perp_funding_handler` actively collects
       them; reconcile the phase label (→ live, or confirm cefi-axis classification).
 - [ ] [CODE] P3. **DECIDED 2026-05-27 → REMOVE (deferred)** D7 — usage audit found **nil active downstream consumption**

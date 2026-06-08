@@ -593,6 +593,12 @@ plan under `parent_epic: defi_master` immediately (Capture Discoveries HARD RULE
       `source`.
 - [ ] (defi-backstop) **`EmptyFromLiveInstrumentError` backstop wired + enforced** (A10) — defined AND raised, not
       defined-only.
+- [ ] (defi-dexpool-name) **canonical DEX data_type = `dex_pool_state` / `dex_pool_swaps`, NEVER `dex_pools`** (operator
+      SSOT `defi-canonical-naming-ssot.md`, 2026-06-01 — the `→dex_pools` rename was REVERSED). `dex_pools_handler.py`
+      writes `dex_pool_state` to BOTH path AND manifest (no 2-layer split); migrator stamps `dex_pool_state` (no remap);
+      features read `dex_pool_state`. Grep handler/migrator/features for a `data_type="dex_pools"` write or a
+      `dex_pool_state→dex_pools` remap → 0. Guards against a future agent acting on the `mtds_mdps_master.md` Phase 9
+      dead-letter (SUPERSEDED) and re-introducing the manifest≠data split that D14 originally (mis-)reported.
 
 ## Success Criteria
 
