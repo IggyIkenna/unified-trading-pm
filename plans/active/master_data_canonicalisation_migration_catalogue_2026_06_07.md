@@ -126,6 +126,30 @@ parallel-safe.
 **WAVE 4** G4 per-AG `--apply` (gated G0∧G1∧G2∧G3 + drain) → **WAVE 5** G5 backfills→100% + cost-swap. Live-side
 (M3/M4/M6/M7 · `live_websocket`→`live_<source>` · M8 cadence) = tracked parallel track, after the batch migration.
 
+### Dispatch checklist — TRACKED big-job on Ikenna's local slots (2–7), NOT VM auto-dispatch
+
+> **Execution = Ikenna's local slots** (the per-epic VM fleet `vm-defi`/… is post-cutover / NOT running; LIVE
+> orchestrator = `vm-0` only). Slot↔AG map: **2=DeFi · 3=CeFi · 4=Sports · 5=Prediction · 6=TradFi · 7=cross-cutting**.
+> These are the remaining checkboxes so the big job is trackable done-vs-left (the prose table above is the overview).
+> The per-AG plans hold the detailed G1/G2 todos + audit verdicts; these are the WAVE-level rollup.
+
+- [x] ✅ **G0 / G1 / G2 / G3 — GREEN, 5/5 apply-ready** (Era-B on-disk confirmed both probes; drain done + 10-bucket
+      snapshot). Per-AG audit verdicts recorded in each AG plan.
+- [ ] [DATA] P0. **slot 2 (DeFi) — G4 `--apply`**: instruments-store v9 walk → MTDS raw-tick v9 → catalogue seed → IS
+      backfill (Era-B relabel rides the migrator's final step). Operator-fired; on real VM/tarball; rollback =
+      `pre_migration_2026_06_08.parquet`. Repo: market-tick-data-service + instruments-service.
+- [ ] [DATA] P0. **slot 3 (CeFi) — G4 `--apply`** (same sequence; DERIBIT/OKX Era-B chains). Repos: as above.
+- [ ] [DATA] P0. **slot 4 (Sports) — G4 `--apply`** (league-grain; 2.68M-row instruments-store). Repos: as above.
+- [ ] [DATA] P0. **slot 5 (Prediction) — G4 `--apply`** (per-cqg; pred-prd buckets). Repos: as above.
+- [ ] [DATA] P0. **slot 6 (TradFi) — G4 `--apply`** (databento/massive; daily listing). Repos: as above.
+- [ ] [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation**: execute
+      `audit_criteria_automation_2026_06_08.md` (Tier-2 QG steps + Tier-3 scheduled cf_manifest_audit cron). Parallel to
+      the applies (only adds gates).
+- [ ] [CODE] P1. **slot 7 — post-apply consumer cleanups** (the deferred-with-reason items: execution-service defi
+      loader, deployment-api FLAG-1/3/dedup, MDPS GAP-7) — after the per-AG applies.
+- [ ] [CODE] P2. **WAVE 5 / live-side (gated, after batch migration)** — G5 backfills→100% + massive/polygon cost-swap;
+      the live-side tranche (M3/M4/M6/M7 · `live_websocket`→`live_<source>` · M8 cadence). Assign to slots when reached.
+
 > **🟢 G3-CONSUMER — deployment-api/UI UNION read path SHIPPED 2026-06-07 (vm-cross-cutting / slot-7)**: the data-status
 > CONSUMER is now honest for the post-migration v9 multi-row manifest (reads the v9 contract; fixture-tested — does NOT
 > need the data migrated yet). **`deployment-api@4dd2575`**: new `data_status_union.union_reduce_to_cells` collapses
