@@ -4005,3 +4005,20 @@ rollout, never per-repo).
   `peter-evans/repository-dispatch`@v3, `stefanzweifel/git-auto-commit-action`@v5 (1–5 refs each) — all node20; confirm
   each one's node24-major target then bump.
 - `codecov/codecov-action`@v5 = **composite**, UNAFFECTED (no `using: node20`).
+
+### Steps 2-3 DONE + workflows RE-ENABLED — 2026-06-08 (slot-1)
+- **Fleet breaking-detection rollout**: surgical block-replace of the crude `grep '^-'` heuristic with the
+  AST differ-call block in all 23 non-PM repos' LDR `semver-agent.yml` (preserves each repo's other content;
+  differ fetched at runtime from PM). `/tmp/fleet_rollout_result.json` = 23/23 OK.
+- **uts-ui real feature preserved**: backmerged main→LDR (`9aa3f102` pending-backfill feat + `7b97baa9`
+  tab-mirror fix) before force-sync (union merge, `4327f2e4`).
+- **Fleet force-sync (protection-aware)**: relax (disable rulesets + classic allow_force/enforce_admins) →
+  force main+staging→LDR → restore classic + re-enable rulesets, per repo. `/tmp/fleet_protect_sync_result.json`.
+  Content-safe: verified staging/main "ahead" commits were either 0-file-delta promotion SHAs or OLDER
+  workflow copies LDR already superseded (LDR is newest SSOT). **Result: 24/24 main==LDR AND staging==LDR.**
+- **PM main**: merged main→LDR preserving #181/#182 (Node-20 GHA docs), FF main→LDR; reconciled manifest
+  zero-pending (staging_versions=versions; breaking_pending=[]); lock stays cleared. PM main==LDR (`b4e56e6e9`).
+- **PM workflows RE-ENABLED** (all 50 active again) — the pause is OVER. Machinery now runs the HEALED +
+  breaking-gated pipeline (lock clear, zero-pending, content-based is_breaking, drift-tick backmerge).
+- **Drift-tick** (`main-backmerge-to-ldr` schedule every 20min) shipped (PM live + template) so `[skip ci]`
+  main writes sweep back to LDR → main==LDR holds in steady state.
