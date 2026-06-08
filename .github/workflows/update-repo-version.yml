@@ -142,6 +142,14 @@ jobs:
                   manifest["staging_status"]["lock_version"] = version
                   # Fresh lock cycle → re-arm the starvation alarm (finding H3).
                   manifest["staging_status"]["locked_alert_sent"] = False
+                  # Content-based breaking-gate (2026-06-08): record which repos are REAL
+                  # breaking changes so SIT fires ONLY for them. Non-breaking pending repos
+                  # drain LDR->staging->main on QG alone (no SIT, no lock). is_breaking is now
+                  # the AST public-surface verdict from semver-agent (scripts/cicd/detect_breaking_change.py),
+                  # not the 0.x-minor version-phase heuristic.
+                  bp = set(manifest["staging_status"].get("breaking_pending") or [])
+                  bp.add(repo)
+                  manifest["staging_status"]["breaking_pending"] = sorted(bp)
                   print(f"STAGING LOCKED: {'breaking ' if is_breaking else ''}{bump_type} bump {repo}={version}")
           else:
               manifest["versions"][repo] = version

@@ -104,6 +104,37 @@ jobs:
 
           print(f"Pending staging repos ({len(pending)}): {', '.join(pending)}")
 
+          # ── Content-based SIT gate (2026-06-08) ──
+          # SIT (the 30-min assembled cross-repo run) fires ONLY when a pending repo is a
+          # REAL breaking change (public API / schema / contract surface change), tracked in
+          # staging_status.breaking_pending — set by update-repo-version's content-based
+          # is_breaking (the AST differ scripts/cicd/detect_breaking_change.py), NOT the old
+          # 0.x-minor version-phase heuristic. Non-breaking pending repos drain
+          # LDR->staging->main on QG / MAIN_GREEN alone (no SIT, no cascade lock), so the
+          # fleet drain is QG-paced not SIT-paced. QG-v2 still gates every staging PR.
+          # The intersection with `pending` self-cleans (a promoted repo leaves `pending`),
+          # and we prune stale breaking_pending entries here so it never becomes a phantom.
+          breaking_pending = set(staging_status.get("breaking_pending") or [])
+          breaking_in_cohort = [r for r in pending if r in breaking_pending]
+          if not breaking_in_cohort and not drain_pending:
+              print(f"No breaking changes among {len(pending)} pending repos — SIT NOT required; "
+                    "non-breaking promotions drain on QG / MAIN_GREEN alone (no SIT, no cascade lock).")
+              stale = breaking_pending - set(pending)
+              if stale:
+                  staging_status["breaking_pending"] = sorted(breaking_pending & set(pending))
+                  m["staging_status"] = staging_status
+                  tmp_path = "workspace-manifest.json.tmp"
+                  with open(tmp_path, "w") as f:
+                      json.dump(m, f, indent=2, ensure_ascii=False)
+                      f.write("\n")
+                  os.replace(tmp_path, "workspace-manifest.json")
+              with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+                  f.write("trigger=false\n")
+                  if stale:
+                      f.write("manifest_changed=true\n")
+              sys.exit(0)
+          print(f"Breaking pending repos requiring SIT: {breaking_in_cohort}")
+
           # Check SIT retry counter
           sit_retry_count = staging_status.get("sit_retry_count", 0)
 

@@ -1,0 +1,175 @@
+"""Regression guard for the content-based breaking-change differ.
+
+scripts/cicd/detect_breaking_change.py is the SSOT public-surface differ wired into
+semver-agent.yml. It must classify docstring/reformat/reorder/additive changes as
+NON-breaking (the false-positive class that caused spurious cascade locks) and real
+public-API/schema-surface removals/incompatible-changes as breaking.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import sys
+from pathlib import Path
+
+import pytest
+
+_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "cicd" / "detect_breaking_change.py"
+_spec = importlib.util.spec_from_file_location("detect_breaking_change", _SCRIPT)
+assert _spec and _spec.loader
+_mod = importlib.util.module_from_spec(_spec)
+sys.modules["detect_breaking_change"] = _mod
+_spec.loader.exec_module(_mod)
+
+extract_surface = _mod.extract_surface
+diff_surfaces = _mod.diff_surfaces
+
+
+BASE = '''
+__all__ = ["foo", "Bar", "keep"]
+def foo(a, b, c=1):
+    """original docstring"""
+    return a
+class Bar:
+    x: int
+    name: str
+    def method(self, p): ...
+def keep(): ...
+'''
+
+
+def _is_breaking(new_src: str) -> tuple[bool, list[str]]:
+    old = extract_surface(BASE, "m")
+    new = extract_surface(new_src, "m")
+    reasons = diff_surfaces(old, new)
+    return bool(reasons), reasons
+
+
+def test_docstring_reformat_reorder_is_not_breaking():
+    """The false-positive class the old `grep '^-'` heuristic flagged."""
+    src = '''
+__all__ = ["keep", "Bar", "foo"]
+def foo(a, b, c=1):
+    """COMPLETELY rewritten docstring with examples"""
+    # added internal comment
+    result = a
+    return result
+class Bar:
+    x: int
+    name: str
+    def method(self, p):
+        return p
+def keep(): ...
+'''
+    breaking, reasons = _is_breaking(src)
+    assert not breaking, reasons
+
+
+def test_removed_export_is_breaking():
+    src = """
+__all__ = ["foo", "Bar"]
+def foo(a, b, c=1): return a
+class Bar:
+    x: int
+    name: str
+    def method(self, p): ...
+"""
+    breaking, reasons = _is_breaking(src)
+    assert breaking
+    assert any("keep" in r for r in reasons)
+
+
+def test_added_required_param_is_breaking():
+    src = """
+__all__ = ["foo", "Bar", "keep"]
+def foo(a, b, required_new, c=1): return a
+class Bar:
+    x: int
+    name: str
+    def method(self, p): ...
+def keep(): ...
+"""
+    breaking, reasons = _is_breaking(src)
+    assert breaking
+    assert any("required" in r for r in reasons)
+
+
+def test_added_optional_param_is_not_breaking():
+    src = """
+__all__ = ["foo", "Bar", "keep"]
+def foo(a, b, c=1, d=2): return a
+class Bar:
+    x: int
+    name: str
+    def method(self, p): ...
+def keep(): ...
+"""
+    breaking, reasons = _is_breaking(src)
+    assert not breaking, reasons
+
+
+def test_removed_schema_field_is_breaking():
+    src = """
+__all__ = ["foo", "Bar", "keep"]
+def foo(a, b, c=1): return a
+class Bar:
+    x: int
+    def method(self, p): ...
+def keep(): ...
+"""
+    breaking, reasons = _is_breaking(src)
+    assert breaking
+    assert any("name" in r and "field" in r for r in reasons)
+
+
+def test_changed_field_type_is_breaking():
+    src = """
+__all__ = ["foo", "Bar", "keep"]
+def foo(a, b, c=1): return a
+class Bar:
+    x: str
+    name: str
+    def method(self, p): ...
+def keep(): ...
+"""
+    breaking, reasons = _is_breaking(src)
+    assert breaking
+    assert any("field type" in r for r in reasons)
+
+
+def test_added_export_and_field_is_not_breaking():
+    src = """
+__all__ = ["foo", "Bar", "keep", "NEW"]
+def foo(a, b, c=1): return a
+class Bar:
+    x: int
+    name: str
+    added: float
+    def method(self, p): ...
+def keep(): ...
+def NEW(): ...
+"""
+    breaking, reasons = _is_breaking(src)
+    assert not breaking, reasons
+
+
+def test_removed_http_route_is_breaking():
+    base = """
+class Api:
+    @router.get("/health")
+    def health(self): ...
+    @router.post("/orders")
+    def orders(self): ...
+"""
+    new = """
+class Api:
+    @router.get("/health")
+    def health(self): ...
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert reasons
+    assert any("route" in r for r in reasons)
+
+
+if __name__ == "__main__":
+    sys.exit(pytest.main([__file__, "-v"]))
