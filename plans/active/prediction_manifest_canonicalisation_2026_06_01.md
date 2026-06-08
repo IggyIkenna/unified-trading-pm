@@ -536,6 +536,39 @@ verify + the gated delete.
       `record_failed` vs `record_empty(SOURCE_RETURNED_ZERO)` on a recorded fetch-failure. (Distinct from the now-fixed
       None-classifier divergence above, which was about UNCLASSIFIABLE markets, not fetch errors.) RESIDUAL = focused
       instruments-service write-path verify. See cefi plan § CF-11 for the full diagnosis.
+- [ ] [CODE] P1. **MTDS prediction CF-11 — transient TRADES-fetch failure was SWALLOWED to empty; now routes to
+      `attempted_failed` (slot-5 2026-06-08; code DONE locally + basedpyright-clean + 4 regression tests — QG+quickmerge
+      pending host-RAM window).** The prior "MTDS side VERIFIED COMPLIANT" claim above covered the IS UNIVERSE scan
+      (`_fetch_all_raw_clob_markets`/`_fetch_page` raise → record_failed — re-verified
+      `instruments-service/.../prediction/polymarket.py:643/:789`) + the orchestrator `failed_per_dt` sentinel gate, but
+      MISSED the MTDS per-cid TRADES fetch (a genuinely DIFFERENT path). `polymarket_adapter._fetch_trades_page` returns
+      `None` after exhausting retries on a transient error (408/429/5xx/timeout/connection); `get_trades` `break`s; and
+      `download_batch`'s `if not trades: continue` drops the cid with NO failure signal → the cid writes 0 rows →
+      vanishes from `prediction_cluster_counts_by_venue` (orchestrator finalize) → the sentinel pass records
+      `record_empty(SOURCE_RETURNED_ZERO)` or omits the cell. So a transient Polymarket Data-API failure for a LIVE
+      in-window market baked a FALSE `empty_confirmed`/`SOURCE_RETURNED_ZERO` (CF-11/A8: a swallowed failure
+      masquerading as a complete-but-empty universe, zero signal). Traced end-to-end (`download_batch` →
+      `umi_tick_provider` → orch `_fetch_one_venue`/`failed_per_dt_by_venue` → sentinel `orchestrator.py:4027`). **Fix
+      (mirrors the COMPLIANT Databento `failed_per_dt` side-channel):** new `get_trades_with_status()` distinguishes a
+      genuine fetch failure (`_fetch_trades_page→None` = exhausted retries) from a LEGIT empty (a successful
+      `[]`/`{"data":[]}` parse); `get_trades_batch(failed_cids_out=…)` collects failed cids;
+      `download_batch(failed_per_dt=…)` populates the per-venue side-channel (`prediction_canonical_question_group` +
+      `trades` = `TRADES_FETCH_RETRIES_EXHAUSTED`) + emits `ADAPTER_FETCH_FAILED`, so the orchestrator sentinel records
+      `attempted_failed`, never a false empty; `umi_tick_provider.fetch_tick_data_for_venue` now forwards
+      `failed_per_dt` to the prediction branch (it was the ONLY adapter dispatch not forwarding it). Closes the
+      LIVE-side ⑪ batch=live gap (the batch rebuild's within-bounds-zero→`attempted_failed` reclassification already
+      handles the historical 41 `SOURCE_RETURNED_ZERO` rows; this stops NEW silent empties at write-time).
+      Backward-compatible (optional out-params; existing `get_trades_batch` mocks unaffected).
+      **NON-`--apply`-blocking** (live-write-path; the migrator/rebuild operate on existing GCS objects and do NOT
+      import these functions — verified decoupled). Repo: market-tick-data-service
+      (`market_interface/adapters/prediction/polymarket_adapter.py` + `adapters/umi_tick_provider.py` +
+      `tests/unit/test_polymarket_cf11_fetch_failure.py`; no UAC/UTL change). parent_epic: mtds_mdps_master.
+- [ ] [CODE] P3. **NICE-TO-HAVE — `_rebuild_prediction_cf11.py:105` wraps the UTL `get_storage_client` /
+      `read_availability_index` import in a `try/except ImportError` (banned pattern: no fallback imports /
+      fail-loud).** PRE-EXISTING (NOT introduced by the CF-11 fix above); a deliberate test-shim so the pure-function
+      reemit unit tests import the module without UTL. Replace with a lazy import inside the rebuild-time branch (the
+      import only matters at actual rebuild, not in the pure-function tests). Provenance: slot-5 CF-11 pre-apply audit
+      2026-06-08. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
 
 ## Deployment-API/UI prediction v9 data-status alignment (CODE — E2E readiness; slot-5 audit 2026-06-03)
 
