@@ -1505,6 +1505,35 @@ reportMissingParameterType = "error"
 **Template:** `quality-gates-library-template.sh` runs a config check; see `instruments-service/pyproject.toml` for
 reference.
 
+### Restoring strict basedpyright on a library (the UTL campaign pattern, 2026-06-08)
+
+When a library's `reportUnknown*` strict rules surface a large residual (UTL: 965 errors), the canonical order of ops
+(SSOT: `plans/active/utl_full_quality_gates_green_2026_06_01.md`):
+
+1. **Stubs first.** Add type-stub packages to the flat deps + `uv lock` — they auto-resolve a large fraction before any
+   hand-annotation. UTL added `pyarrow-stubs>=20` (pyarrow ships no `py.typed`) + expanded
+   `boto3-stubs[s3,secretsmanager,logs,sns,sqs]` to cover every boto3 service it uses (965→842, no new errors).
+   `pandas-stubs` is already transitive via UAC.
+2. **Annotate the residual** module-by-module: explicit param/return/local annotations + `typing.cast()` at untyped-dep
+   boundaries + a **local structural `Protocol`** for an untyped SDK object (the cleanest fix for
+   `reportUnknownMemberType` on a multi-method client — see `cloud_interface/providers/gcp.py`
+   `_GCSBlob`/`_GCSBucket`/`_GCSClient`). When the Protocol set bloats a file past the 900-line limit, extract it to a
+   sibling `_*_sdk_protocols.py` with `__all__` (the `__all__` suppresses `reportUnusedClass` cleanly — do NOT add a
+   `reportUnusedClass = "none"` global override).
+3. **Exemptions are NARROW + per-line + exact-rule only.** A genuinely stub-limited boundary (pyarrow stubs carry
+   `Unknown` param types; GCP proto-generated methods) may take a single `# pyright: ignore[exactRule]  # <dep> reason`.
+   **Banned:** blanket file-level `# pyright: reportX=false`, broad `# type: ignore` (no rule code), or a global
+   pyproject `"none"` downgrade — these "institutionalise the downgrade." Net-new broad/blanket suppressions must be 0.
+
+### Library SHA-sentinel gap (`quickmerge --agent` on a library) — KNOWN, 2026-06-08
+
+`quickmerge --agent`'s Stage-3 fast-path verifies `.qg_last_passed_sha == HEAD`. **`base-service.sh` writes
+`.qg_last_passed_sha` on a green run; `base-library.sh` writes only `.qg_content_sentinel` and NOT
+`.qg_last_passed_sha`.** So a green local QG on a _library_ leaves quickmerge `--agent` failing Stage 3 ("SHA
+mismatch"). Workaround until base-library is fixed: after a green `quality-gates.sh`,
+`git rev-parse HEAD > .qg_last_passed_sha` (honest — the QG passed on that HEAD's content), then quickmerge. Root-cause
+fix tracked in `plans/active/issues/base_library_qg_sha_sentinel_gap_2026_06_08.md`.
+
 ---
 
 ## STEP 5.22: basedpyright Baseline Suppression [ERROR policy — escalated 2026-03-10]

@@ -19,12 +19,11 @@ locked_since: 2026-05-28
 > `unified-trading-library@cb1f4b5f` (the empty-string codex-compliance violation it introduced is now suppressed
 > `@73209d50`), 3-case unit test green, launcher opt-in landed, codex SSOT updated. **C2/C3/D1/B1 ✅.**
 >
-> **C4 (full `quality-gates.sh` exit 0) ❌ BLOCKED** — NOT by this plan. UTL's full gate is red on a pre-existing
-> repo-wide backlog (STEP 5.21 `reportUnknown*`=none → 962 type errors, ~25 foreign imports-inside-functions,
-> `legacy_reason_classifier` deep imports, `event_sink` fn-size, 80% coverage edge). **Now owned by**
-> **`plans/active/utl_full_quality_gates_green_2026_06_01.md`** (`parent_epic: infrastructure_master`); that plan's
-> Phase 6 flips this C4 ✅. This plan stays active and closes when the UTL-QG-green plan reaches Phase 6. (Not archived
-> — per "Plans Run To Actual Completion": don't archive with an unmet success criterion.)
+> **C4 (full `quality-gates.sh` exit 0) ✅ DONE (2026-06-08)** — the UTL-QG-green backlog was owned + cleared by
+> **`plans/active/utl_full_quality_gates_green_2026_06_01.md`**: `bash scripts/quality-gates.sh` now exits **0**
+> (`✅ ALL QUALITY GATES PASSED`; basedpyright 965→0 strict, B2/B3 imports, B4 size, B5 coverage 80.78%, codex checks
+> all green) — unified-trading-library@9e97e01b, shipped via PR #253 → staging. **All C1-C4 ✅ → this plan is
+> closeable.**
 
 ## What this fixes
 
