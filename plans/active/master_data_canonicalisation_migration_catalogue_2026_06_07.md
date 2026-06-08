@@ -159,13 +159,43 @@ parallel-safe.
       `category=`→`asset_group=` T-OLD fix proven); Era-B count=0; rollback snapshot present. **APPLY-READY — REGRESSION
       RISK: NONE** (tradfi plan ①–⑫). cefi already closed (`e2e008f0`); source-provenance write-path shipped (#4
       non-block). Operator fires `--apply` (`--also-legacy` per R1).
-- [ ] [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation**: execute
-      `audit_criteria_automation_2026_06_08.md` (Tier-2 QG steps + Tier-3 scheduled cf_manifest_audit cron). Parallel to
-      the applies (only adds gates).
+- [x] ✅ [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation DONE** (Tier-2 + Tier-3 + cron all shipped;
+      see the § "Cross-cutting audit verdict (slot-7)" below). Tier-2 STEP 5.92/5.93 (pm@b4245a7dd) + Tier-3
+      cf_manifest_audit CF-1…14 + cross-AG wrapper (pm@2fe982eb1) + daily alert-on-RED cron (deployment@eaff3a7). Only
+      adds gates — parallel to the applies, blocks no AG `--apply`. (Residual: validity-matrix P2 test + bar-edge Phase-0
+      cross-source fixture/assertion in-flight — tracked in their plans.)
 - [ ] [CODE] P1. **slot 7 — post-apply consumer cleanups** (the deferred-with-reason items: execution-service defi
       loader, deployment-api FLAG-1/3/dedup, MDPS GAP-7) — after the per-AG applies.
 - [ ] [CODE] P2. **WAVE 5 / live-side (gated, after batch migration)** — G5 backfills→100% + massive/polygon cost-swap;
       the live-side tranche (M3/M4/M6/M7 · `live_websocket`→`live_<source>` · M8 cadence). Assign to slots when reached.
+
+## Cross-cutting audit verdict (slot-7 / vm-cross-cutting) — 2026-06-08
+
+> **REGRESSION RISK: NONE** for the per-AG `--apply`. All slot-7 cross-cutting work is **gate-only / consumer-side /
+> design / land-the-code** — it adds QG gates, an alert cron, a UAC predicate, codex docs, and un-applied Terraform.
+> **None of it changes any AG's schema / data_type names / GCS path templates / venue·enum names / manifest 4-state
+> routing / production write-path** in a way that would leave code-vs-data mismatched after a walk (the Pre-Apply BLOCK
+> RULE). So slots 2–6 G4 `--apply` are **not gated by any slot-7 item**.
+
+| #     | Area                              | Status                                                                                                                                                                                                                                                                            | Apply-impact |
+| ----- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
+| **A** | Tier-2 QG gates (canonical-model) | ✅ pm@b4245a7dd — STEP 5.93 `check_canonical_model_regressions` (coarse pipeline_mode / exact-coarse reader / Era-A chain-write); AST + baseline-ratchet; fleet-swept green (25 repos per-scope); planted-regression proven (exit 1→0); 3 Era-A write sites baselined (per-AG-migrator). | gate-only — NONE |
+| **B** | Tier-2 QG gate (bar-edge)         | ✅ pm@b4245a7dd — STEP 5.92 `check_bar_edge_open_ingestion`; wired base-service.sh + base-library.sh; 2 latent sites baselined; 21 unit tests; basedpyright 0.                                                                                                                       | gate-only — NONE |
+| **C** | Tier-3 cf_manifest_audit + cron   | ✅ pm@2fe982eb1 (CF-1…14 + Era-B + cross-AG wrapper, JSON, exit-on-RED) + deployment@eaff3a7 (GCP Cloud Run Job+Scheduler+log-alert · AWS Batch+EventBridge+alarm; **NOT applied**).                                                                                                  | continuous-verify — NONE |
+| **D** | bar-edge Phase 1 (ingestion fix)  | ✅ IS@c6969f76 · MTDS@d63b2c4f · MDPS@7d89070 · uniswapv4@747cfce9 — all pre-agg open-edge sites → close edge; Massive left to its own plan (Phase 4b). Candle store was already right-edge (data-verified) → **does not block raw `--apply`**.                                          | feature-layer — NONE on raw apply |
+| **E** | bar-edge Phase 0 (gate/fixture)   | gate ✅ (A/B above); **cross-source equivalence fixture (features) + ingestion-time `assert_close_edge` (UTL) LANDING** (sub-agents running 2026-06-08). P0/P1, gate-only.                                                                                                            | gate-only — NONE |
+| **F** | MVP-scope Phase 1                 | ✅ UAC@d6e0775f — `mvp_scope` config + `is_mvp()` predicate + 56 tests. Pure rule-only, no manifest column, no data touch.                                                                                                                                                           | additive — NONE |
+| **G** | BigQuery Phase 1                  | ✅ design pm@cae98d92d (codex engine tier) + infra deployment@eaff3a7 (hive external tables, **NOT applied**). Reads canonical corpus; gated after per-AG `--apply` for stable schema.                                                                                                | land-the-code — NONE |
+| **H** | G3 deployment-api UNION view      | ✅ VERIFIED green — deployment-api@4dd2575 in HEAD history; `test_data_status_union.py` + `test_data_status_drilldown_provenance.py` = **21 passed**. Consumer-side, fixture-tested, no data migration needed.                                                                       | consumer-side — NONE |
+
+**Rule-11 fleet-safety**: both new gates were swept across all repos BEFORE wiring (no "enable + see what goes red");
+service repos SOURCE base-service.sh from the workspace PM checkout (no per-repo copy → activates fleet-wide the instant
+PM lands on the CI-cloned ref; no template rollout needed) — verified green on 5 consumer repos per-scope
+(mtds/IS/UTL/UAC/deployment-api). **Findings captured**: (1) 3 legacy Era-A `data_type=options_chain/futures_chain`
+WRITE sites (tardis_adapter:2549 + MDPS options/futures_chain adapters) baselined → per-AG-migrator Era-B relabel owns
+them; (2) MDPS `liquidity_adapter._convert_timestamps` periodStartUnix→processing_dt semantics need diagnosis (baselined
+latent); (3) deployment-service has a **pre-existing `uv.lock` out-of-sync** QG failure (unrelated to any slot-7 change;
+TF touches no Python) — flagged for the deployment-service owner.
 
 > **🔴 BAR-EDGE BLOCKER (feature-layer gate, 2026-06-08) — `bar_edge_left_vs_right_remediation_2026_06_08.md`**: a
 > CLOSED candle stamped on the OPEN/left edge = look-ahead → leakage. Data-verified scope (Harsh): the MDPS **processed
