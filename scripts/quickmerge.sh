@@ -1246,11 +1246,18 @@ else
   git add -A
 fi
 
+# Strict-quickmerge lineage trailer (2026-06-08): stamp every quickmerge commit so the
+# strict-quickmerge guard (scripts/cicd/check_strict_quickmerge.py) can distinguish a commit
+# that PASSED THROUGH quickmerge from a direct integration-branch code push that bypassed it.
+# Kept out of COMMIT_MSG (the PR title) — only the git commit message carries it.
+_QM_TRAILER_KIND="human"; [ "$AGENT_MODE" = true ] && _QM_TRAILER_KIND="agent"
+_QM_COMMIT_MSG="$(printf '%s\n\nQuickmerge: %s' "$COMMIT_MSG" "$_QM_TRAILER_KIND")"
+
 if [ -z "$(git diff --cached --name-only)" ] && [ -z "$(git status --porcelain)" ]; then
   # Nothing staged and working tree is clean — changes were already committed
   # in a previous quickmerge run. Skip commit and go straight to push + PR.
   echo "[$REPO_NAME] ℹ️  Working tree clean — changes already committed. Proceeding to push."
-elif ! git commit -m "$COMMIT_MSG" --quiet; then
+elif ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
   # Pre-commit may have modified files (e.g. Prettier). Re-stage and retry once.
   # RE-ASSERT --files SCOPE: a hook that reformats files must NOT let `git add -A`
   # sweep FOREIGN modified files (another agent's WIP, an inventory regen, a concurrent
@@ -1262,7 +1269,7 @@ elif ! git commit -m "$COMMIT_MSG" --quiet; then
   else
     git add -A
   fi
-  if ! git commit -m "$COMMIT_MSG" --quiet; then
+  if ! git commit -m "$_QM_COMMIT_MSG" --quiet; then
     echo "[$REPO_NAME] ❌ Commit failed (pre-commit may have failed). Run: pre-commit run --all-files; git add -A; git commit -m \"...\"" >&2
     exit 1
   fi

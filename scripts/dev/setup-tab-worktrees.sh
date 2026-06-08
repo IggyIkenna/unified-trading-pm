@@ -323,6 +323,7 @@ ensure_repo_worktree() {
             || git -C "${slot_repo_dir}" checkout -B "${base}" "origin/${base}" --quiet
         git -C "${slot_repo_dir}" config user.name "ikennaigboaka [slot-${slot}·$(hostname -s 2>/dev/null || echo laptop)]"
         git -C "${slot_repo_dir}" config user.email "$(slot_identity_email)"
+        install_strict_quickmerge_hook "${slot_repo_dir}"
         log "  CLONE ${repo} → ${slot_repo_dir} (Path-B reference-clone on ${base})"
     else
         log "  FAIL ${repo} reference-clone (url=${url})"
@@ -333,6 +334,16 @@ ensure_repo_worktree() {
 # Resolve the canonical commit email host-stably (env → per-machine global → Ikenna default).
 slot_identity_email() {
     git config --global slotIdentity.email 2>/dev/null || echo "ikennaigboaka@gmail.com"
+}
+
+# Install the strict-quickmerge pre-push hook into a Path-B clone's own .git/hooks.
+install_strict_quickmerge_hook() {
+    local clone_dir="$1"
+    local hook_src="${WORKSPACE_ROOT}/unified-trading-pm/scripts/dev/hooks/pre-push-strict-quickmerge.sh"
+    local hook_dst="${clone_dir}/.git/hooks/pre-push"
+    if [[ -f "${hook_src}" && -d "${clone_dir}/.git/hooks" ]]; then
+        cp "${hook_src}" "${hook_dst}" && chmod +x "${hook_dst}"
+    fi
 }
 
 write_slot_envrc() {
