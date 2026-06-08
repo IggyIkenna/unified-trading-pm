@@ -182,6 +182,28 @@ done
 _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality-gates-base/version-alignment-gate.sh"
 [[ -f "$_VA_GATE" ]] && source "$_VA_GATE" || echo "⚠️  version-alignment-gate.sh not found (skipping)"
 
+# ── DEP-CONTENT SYNC GATE (2026-06-08) ───────────────────────────────────────
+# Local QG builds against the WORKING-TREE copy of every editable dep (tool.uv.sources
+# path=…,editable=true), so a dirty/LDR-divergent dep (same pinned version) is invisible
+# to the version gates yet green locally / red at staging. This gate refuses an INVISIBLE
+# dep: each transitive editable dep must be clean + == its origin/live-defi-rollout ref.
+# WARN by default; set DEP_CONTENT_GATE_BLOCK=1 to hard-fail (rule-11: flip to default-block
+# only once the whole fleet is proven clean — e.g. after the current multi-slot session).
+# Human-only escape: --allow-dirty-deps (taints the sentinel → cannot satisfy a promotion).
+_DEP_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/cicd/check_dep_content_sync.py"
+if [ -z "${CI:-}" ] && [ -z "${GITHUB_ACTIONS:-}" ] && [[ -f "$_DEP_GATE" ]]; then
+    if python3 "$_DEP_GATE" --repo "$REPO_ROOT" ${DEP_CONTENT_ALLOW_DIRTY:+--allow-dirty-deps}; then
+        :
+    else
+        if [ "${DEP_CONTENT_GATE_BLOCK:-0}" = "1" ]; then
+            log_fail "Dep-content gate: a transitive editable dep is dirty or ahead-of-LDR-unpushed (see above)"
+            exit 1
+        else
+            log_warn "Dep-content gate WARN (set DEP_CONTENT_GATE_BLOCK=1 to enforce; --allow-dirty-deps to bypass)"
+        fi
+    fi
+fi
+
 # ── BOOTSTRAP (local only; CI has its own setup) ─────────────────────────────
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
     command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
