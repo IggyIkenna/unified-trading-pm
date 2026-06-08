@@ -15,6 +15,13 @@ supersedes:
 
 # Systemic bar-edge (open vs close) violation across pre-aggregated OHLCV ingestion
 
+> **🔴 SCOPED 2026-06-08 (operator) → remediation wrapper `bar_edge_left_vs_right_remediation_2026_06_08.md`** (parent
+> `mtds_mdps_master`, vm-cross-cutting, P0). This doc remains the SURFACING + site register; the actionable phases
+> (gate-close → fix latent ingestion → purge left-edge `features-*` corpus) live in the wrapper. **Blocking scope
+> (precise): the FEATURE LAYER** (closed-candle-on-the-left = look-ahead leakage) until the gate catches edge errors +
+> the pre-fix corpus is recomputed — it does NOT block the raw/manifest `--apply` (the MDPS processed candle store is
+> data-verified right-edge). This issue archives once the wrapper's phases are acked into execution.
+
 ## What I found
 
 Canonical OHLCV bar timestamp = **RIGHT edge `t_close`** (UAC `bar_boundary.py` `bar_window_for_close`; UTL

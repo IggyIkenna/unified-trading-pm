@@ -266,6 +266,28 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
 - [ ] (v9) **schema_version = v9 (supersedes item (g)'s v8):** read the actual `_index` `schema_version` distribution
       per `market-data-tick-<ag>` bucket; assert ≥95% v9 on real data-state.
 
+## Bar-edge convention — recurring leakage check (added 2026-06-08)
+
+> A CLOSED candle is timestamped on its **RIGHT edge `t_close`** (UAC `bar_boundary.py` / UTL
+> `compute_bar_close_boundary`). Stamping the OPEN/left (vendor bar-start) edge on a closed bar is **look-ahead →
+> leakage** — every PIT join / rolling window / cross-source merge keyed on it sees a bar one interval before it closed.
+> The MDPS write-gate alignment check does NOT catch a uniform one-interval left-shift (it stays on-grid). SSOT:
+> `bar_edge_left_vs_right_remediation_2026_06_08.md` + [[bar_edge_left_vs_right_systemic_2026_06_08]].
+
+- [ ] (edge-1) **No pre-aggregated open-edge ingestion** — every site ingesting a PRE-AGGREGATED vendor bar stamps the
+      close edge: prefer the vendor's explicit close field (HL/Pacifica `T`, Binance kline `[6]`), else
+      `compute_bar_close_boundary(open_ts, tf)`. Grep ingestion adapters for a bar-START field
+      (`t`/`periodStartUnix`/`bar[0]`/DataFrame index) written without conversion → 0 (baseline the known latent sites;
+      NEW ones RED). Covers instruments-service refdata + MTDS pre-agg fetchers, NOT just the MDPS write path.
+- [ ] (edge-2) **Cross-source edge fixture** — the same instrument+window from a tick-aggregated and a pre-aggregated
+      source produces the SAME `t_close`. The MDPS processed candle store is the canonical right-edge grid; never consume
+      raw `ohlcv_*` directly.
+- [ ] (edge-3) **Gate covers the edge** — `check_mdps_bar_boundary_compliance.py` asserts not just grid-alignment +
+      interval width but that a present vendor close field matches the stamped edge (ingestion-time assertion).
+- [ ] (edge-4) **features re-resamplers stay right-edge** — `candle_resampler.resample_ohlcv`
+      (`closed="right", label="right"`) + `flow_interaction` (stamp `truncate+tf` / `compute_bar_close_boundary`); the
+      pre-fix left-edge `features-*` corpus is recomputed (not silently rolled forward).
+
 # Mode 2 — Efficiency Audit (codified 2026-05-28)
 
 ## Scope

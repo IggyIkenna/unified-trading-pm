@@ -56,8 +56,13 @@ source:
       runtime guard; the QG step is the static one).
 - [ ] [SCRIPT] P2. **QG step: validity-matrix completeness** — a UAC test asserting every `(instrument_type, data_type)`
       in `SOURCE_PRIORITY`/the matrix is either valid or explicitly excluded; no impossible pair enumerable.
-- [ ] [SCRIPT] P2. Wire all four into `base-service.sh` / `base-library.sh` (STEP 5.9x) + the PM template; baseline any
-      pre-existing hits (ratchet), so NEW regressions fail the commit for ALL repos/AGs.
+- [ ] [SCRIPT] P1. **QG step: no pre-aggregated open-edge bar ingestion** — extend `check_mdps_bar_boundary_compliance.py`
+      beyond the MDPS write path to reference-data + pre-agg ingestion adapters; flag a vendor bar-START field
+      (`t`/`periodStartUnix`/`bar[0]`/DataFrame index) stamped without a `compute_bar_close_boundary`/explicit-close-field
+      conversion (baseline the known latent sites → NEW open-edge ingestion fails the commit). Owned by
+      `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 0; tracked here as the Tier-2 entry.
+- [ ] [SCRIPT] P2. Wire all of these into `base-service.sh` / `base-library.sh` (STEP 5.9x) + the PM template; baseline
+      any pre-existing hits (ratchet), so NEW regressions fail the commit for ALL repos/AGs.
 
 ## Phase 2 — Tier-3 data-state audit: extend + cross-AG + schedule (the continuous-verification cron)
 

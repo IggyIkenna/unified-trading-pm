@@ -150,6 +150,15 @@ parallel-safe.
 - [ ] [CODE] P2. **WAVE 5 / live-side (gated, after batch migration)** — G5 backfills→100% + massive/polygon cost-swap;
       the live-side tranche (M3/M4/M6/M7 · `live_websocket`→`live_<source>` · M8 cadence). Assign to slots when reached.
 
+> **🔴 BAR-EDGE BLOCKER (feature-layer gate, 2026-06-08) — `bar_edge_left_vs_right_remediation_2026_06_08.md`**: a
+> CLOSED candle stamped on the OPEN/left edge = look-ahead → leakage. Data-verified scope (Harsh): the MDPS **processed
+> candle store is right-edge CORRECT** (so this does NOT block the raw/manifest `--apply` — slots 2–6 G4 proceed), but
+> the **FEATURE LAYER is gated** — the two features-service resamplers (the only realized bugs) are fixed
+> (features-service@7a4fafd9) yet (a) the gate still can't catch edge errors and (b) the pre-fix left-edge `features-*`
+> corpus must be recomputed. **No feature-layer trust / no G5 feature backfill until Phase 0 (gate-close) + Phase 2
+> (corpus purge) land.** Latent pre-agg ingestion sites fixed for correctness-in-depth. SSOT: the wrapper plan +
+> [[bar_edge_left_vs_right_systemic_2026_06_08]].
+
 > **🟢 G3-CONSUMER — deployment-api/UI UNION read path SHIPPED 2026-06-07 (vm-cross-cutting / slot-7)**: the data-status
 > CONSUMER is now honest for the post-migration v9 multi-row manifest (reads the v9 contract; fixture-tested — does NOT
 > need the data migrated yet). **`deployment-api@4dd2575`**: new `data_status_union.union_reduce_to_cells` collapses
