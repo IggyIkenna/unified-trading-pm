@@ -21,8 +21,11 @@ source:
 
 # Worktree LDR-unification
 
-> **Orchestrated by** `cicd_contract_hardening_2026_06_01.md` (CI master). **Independent of the staging-cascade jam** —
-> can proceed in parallel; not gated on the drain healing.
+> **Orchestrated by** `cicd_contract_hardening_2026_06_01.md` (CI master). **SEQUENCED LAST — runbook step 6**
+> (operator-sequenced 2026-06-08): execution is **deferred** until the pipeline is healthy and green end-to-end (runbook
+> steps 0–5 done, `main == LDR` fleet-wide), because **live slot-cron / tab-branch work is ongoing right now** and
+> retiring the branches + crons mid-flight would disrupt it. Design/spike (Phase 0) may be drafted earlier, but the
+> migration itself (Phases 1–3) does NOT start until step 6.
 
 ## Problem (what we found)
 

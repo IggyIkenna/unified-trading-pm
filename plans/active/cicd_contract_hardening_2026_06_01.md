@@ -3835,17 +3835,40 @@ tracks (out of this CI-machinery dispatch's scope to force on main given the dat
 ## Orchestrated sub-plans — CI/CD reform (2026-06-08, operator design session)
 
 This master orchestrates a 4-plan reform set (all `parent_epic: infrastructure_master`, `assigned_vm: vm-cross-cutting`,
-`orchestrated_by:` this plan). Sequencing: the **clean-start/drain** plan is GATED on this master's WAVE 0/1 heal; the
-other three build in parallel. Principle threaded through all four: **LDR is the SSOT; local-QG-green in dep order on an
+`orchestrated_by:` this plan). Principle threaded through all four: **LDR is the SSOT; local-QG-green in dep order on an
 LDR checkout is the staging oracle; CI structure must stay in line with local QG.**
 
-- `worktree_ldr_unification_2026_06_08.md` — drop per-tab branches; Path-B reference-clones on LDR; retire the tab↔LDR
-  sync machinery; quickmerge commits LDR-direct + opens the staging PR. (parallel)
 - `quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md` — dep gate by CONTENT vs LDR (not version);
   dep-chain order locally; strict-quickmerge HARD block except PM-scripts/CI-to-main carve-out; agent-name in CI.
-  (parallel)
 - `ci_local_qg_parity_2026_06_08.md` — the confidence model: parity matrix local-QG vs CI-v2 vs SIT; close every
-  non-SIT-assembly divergence; auto-file an issue doc on a local-green/staging-red event. (parallel)
-- `staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` — reconcile rare main-only CI bits DOWN to LDR; close
-  superseded PRs (empty-diff-vs-LDR); version-aligned force-sync staging+main from LDR; drain the LDR backlog. **GATED
-  on WAVE 0/1 heal.**
+  non-SIT-assembly divergence; auto-file an issue doc on a local-green/staging-red event.
+- `staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` — close superseded staging PRs (empty-diff-vs-LDR, take LDR);
+  reconcile any main-only-not-on-LDR bits DOWN to LDR; version-aligned force-sync; drain LDR→staging→main in dep order.
+- `worktree_ldr_unification_2026_06_08.md` — drop per-tab branches; Path-B reference-clones on LDR; retire the tab↔LDR
+  sync machinery; quickmerge LDR-direct. **SEQUENCED LAST** (see runbook step 6).
+
+### Canonical execution order (operator-sequenced 2026-06-08 — HARD; do not reorder)
+
+> Two tracks: **BUILD the gates** (parallel, independent of the cascade jam) provides the tooling; the **RUNBOOK**
+> (strictly ordered) consumes it. The **worktree refactor is LAST** — deferred while live slot-cron / tab-branch work is
+> ongoing; it must not move until the pipeline is healthy and green end-to-end.
+
+**Build track (parallel, anytime):** dep-content gate + dep-order local QG (`quickmerge_dep_content` Ph1) · parity
+matrix + dep-order sweep command (`ci_local_qg_parity`) · strict-quickmerge enforcement (`quickmerge_dep_content` Ph2).
+
+**Runbook (strict order — each step green before the next):**
+
+0. **Heal gate** — staging lock self-clears, AO phantom drained, promote-bot green (WAVE 0/1, live session owns).
+1. **Stale-PR cleanup to staging, per repo** — close superseded PRs (empty-diff-vs-LDR → take LDR); **then** check each
+   repo's `main` for anything useful NOT on LDR and back-merge it DOWN to LDR. (`staging_clean_start` Ph1–2)
+2. **LDR-vs-local content check** — every editable dep clean + == its LDR ref (the new content gate).
+   (`quickmerge_dep_content` Ph1)
+3. **Dep-order local quality gates** — run QG across the LDR checkout in topological order (T0→dependents→leaves);
+   quickmerge fixing issues until **QG green everywhere**. (`ci_local_qg_parity` Ph3 sweep)
+4. **CI green on feature + staging** — confirm each repo's `quality-gates-v2` is green on its feature/LDR push AND on
+   its staging PR (parity holds — `ci_local_qg_parity`).
+5. **SIT + promotion → main, in dependency order** — verify SIT + the staging→main promotion runs; drive to main
+   starting **PM → UAC → UTL → dependents → leaves**. (`staging_clean_start` Ph3–4)
+6. **LAST — worktree refactor** — only once 0–5 are done and main==LDR fleet-wide: retire per-tab branches + change the
+   slot crons (Path-B reference-clones on LDR). Deferred today because live work is ongoing on those crons/branches.
+   (`worktree_ldr_unification`)
