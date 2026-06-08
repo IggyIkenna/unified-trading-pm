@@ -415,13 +415,14 @@ empty 150); MTDS object-paths already CF-3 GREEN (`batch_tardis`).
       pre-existing failures unrelated to this change** (see broken-LDR finding below) → cannot satisfy the commit-quality
       boundary until those are fixed. The fix is held in the slot-3 worktree, ready to ship once IS-LDR is green. repo:
       instruments-service. Provenance: slot-3 F2 verify 2026-06-08.
-- [ ] [CODE] P1. **market-tick-data-service `scripts/rebuild_cefi_manifest.py` — `main()` must call
-      `setup_events(service_name="rebuild-cefi-manifest", mode="local", sink=None)` before scanning.** The CF-11 re-emit
-      pass reads the prior `_index` via UTL `read_availability_index`, whose v8→v9 `_backfill` + the per-VM-shard fallback
-      (fires whenever the consolidated index is stale — e.g. during the pre-migration drain) emit `log_event` → run
-      standalone (no ServiceBootstrap) they raise `RuntimeError: Event logging not initialized`. Fix (verified: top-level
-      `from unified_trading_library import setup_events`, import-pattern 0 violations, basedpyright +0, rebuild dry-run
-      now GREEN). repo: market-tick-data-service@<sha-pending-mtds-qg>. Provenance: slot-3 F2 verify 2026-06-08.
+- [x] ✅ [CODE] P1. **market-tick-data-service `scripts/rebuild_cefi_manifest.py` — `main()` inits
+      `setup_events(service_name="rebuild-cefi-manifest", mode="local", sink=None)` before scanning — SHIPPED
+      `mtds@d1d91b77` (QG-green, pushed to LDR).** The CF-11 re-emit pass reads the prior `_index` via UTL
+      `read_availability_index`, whose v8→v9 `_backfill` + the per-VM-shard fallback (fires whenever the consolidated
+      index is stale — e.g. during the pre-migration drain) emit `log_event` → run standalone (no ServiceBootstrap) they
+      raised `RuntimeError: Event logging not initialized`. Top-level `from unified_trading_library import setup_events`
+      (import-pattern 0 violations, basedpyright +0, full QG sentinel==HEAD); rebuild `--dry-run` now GREEN
+      (`total_shards=1551 unparseable=0`). Provenance: slot-3 F2 verify 2026-06-08.
 - [ ] [TEST] P1. **🔴 BROKEN-LDR FINDING (big — blocks ALL instruments-service commits): IS `live-defi-rollout` QG is
       RED on 2 PRE-EXISTING test failures (confirmed pre-existing — fail on clean LDR with my change stashed).** (1)
       `tests/unit/scripts/test_enumerate_expected_universe_v2.py::test_enumerate_v2_tradfi_option_leaves_roll_up` —
