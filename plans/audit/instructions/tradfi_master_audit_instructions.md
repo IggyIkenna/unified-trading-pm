@@ -175,6 +175,11 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
 - [ ] (tradfi-listing) **daily listing / could-exist** — instruments expire and list DAILY (CME futures/options); NEVER
       copy instrument definitions between dates; the could-exist universe = listed contracts per session (only static
       exception: CBOE VIX index). `expected_unattempted` for listed-but-not-backfilled contracts.
+- [ ] (tradfi-cf11) **🔴 PRE-APPLY BLOCKER — databento ZERO-signal swallow** (`databento.py:826`): a fetch error /
+      zero-signal returning `[]`/`record_empty` instead of `record_failed` bakes a wrong `empty_confirmed` where the
+      truth is `attempted_failed`. This is a write-path 4-state mislabel → MUST be `record_failed`-on-fetch-error +
+      QG-green BEFORE the tradfi `--apply` (single-walk bakes it). CF-11 swallow audit (mtds_mdps item (i)); owner
+      `downstream_services_manifest_canonicalisation_2026_06_01.md`. cefi already closed (`e2e008f0`).
 
 ## Success Criteria
 

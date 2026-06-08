@@ -140,8 +140,12 @@ parallel-safe.
       `pre_migration_2026_06_08.parquet`. Repo: market-tick-data-service + instruments-service.
 - [ ] [DATA] P0. **slot 3 (CeFi) — G4 `--apply`** (same sequence; DERIBIT/OKX Era-B chains). Repos: as above.
 - [ ] [DATA] P0. **slot 4 (Sports) — G4 `--apply`** (league-grain; 2.68M-row instruments-store). Repos: as above.
-- [ ] [DATA] P0. **slot 5 (Prediction) — G4 `--apply`** (per-cqg; pred-prd buckets). Repos: as above.
-- [ ] [DATA] P0. **slot 6 (TradFi) — G4 `--apply`** (databento/massive; daily listing). Repos: as above.
+- [ ] [DATA] P0. **slot 5 (Prediction) — G4 `--apply`** (per-cqg; pred-prd buckets). Repos: as above. **🔴 GATED on
+      CF-11 close**: polymarket fetch-error swallow must `record_failed` (not `record_empty`/`[]`) — else bakes wrong
+      4-state. See prediction audit (pred-fetch).
+- [ ] [DATA] P0. **slot 6 (TradFi) — G4 `--apply`** (databento/massive; daily listing). Repos: as above. **🔴 GATED on
+      CF-11 close**: `databento.py:826` ZERO-signal swallow must `record_failed`. See tradfi audit (tradfi-cf11). cefi
+      already closed (`e2e008f0`); the source-provenance write-path is shipped (#4 non-block).
 - [ ] [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation**: execute
       `audit_criteria_automation_2026_06_08.md` (Tier-2 QG steps + Tier-3 scheduled cf_manifest_audit cron). Parallel to
       the applies (only adds gates).
