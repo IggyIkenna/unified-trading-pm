@@ -162,6 +162,9 @@ ignore = [
     "scripts/quality_gates/audit_source_column_distribution.py",
     "scripts/plans/audit_model_tier.py",
     "scripts/repo-management/ci_failure_watcher.py",
+    # gh-API/JSON glue (untyped dicts from `gh api` responses) — same class as ci_failure_watcher;
+    # excluded to keep strict-mode reportUnknownMemberType noise off the 1511 ratchet.
+    "scripts/repo-management/pin_branch_protection_rulesets.py",
 ]
 
 # Cross-repo import resolution (ported from deleted pyrightconfig.json extraPaths).

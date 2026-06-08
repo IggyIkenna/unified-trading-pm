@@ -43,6 +43,19 @@ ORG = "IggyIkenna"
 WORKFLOW_REF_DEFAULT = "live-defi-rollout"
 STAGING_LOCK_CONTEXT = "check-staging-lock"
 
+# semver-agent stamps the post-QG `chore(release)` bump by DIRECT-PUSHing to `staging` (as the
+# admin GH_PAT, after quality-gates-v2 already passed pre-SIT). The staging required-checks would
+# reject a direct push (no PR / no check run on the pushed commit), so the bump bot must BYPASS.
+# A ruleset bypass is by ROLE/App/Team — never an individual user — so we bypass the **Repository
+# admin role** (actor_id 5). Only admins (IggyIkenna / the GH_PAT) bypass; `write` collaborators
+# (e.g. CosmicTrader) stay fully gated by quality-gates-v2 + check-staging-lock. A ruleset bypass
+# does NOT bypass CLASSIC protection, so staging classic `enforce_admins` must also be OFF (admins
+# bypass classic; non-admins are unaffected by enforce_admins and stay gated). SSOT:
+# plans/active/cicd_contract_hardening_2026_06_01.md § "semver-agent can no longer stamp versions".
+STAGING_BYPASS_ACTORS = [{"actor_id": 5, "actor_type": "RepositoryRole", "bypass_mode": "always"}]
+# Only the staging ruleset gets the bypass — `require-quality-gates` (main) stays strict.
+STAGING_BYPASS_RULESET = "require-staging-lock-check"
+
 # Repos that carry the two managed rulesets. Keep in sync with
 # verify_branch_protection_check_names.py.
 REPOS = [
@@ -130,16 +143,32 @@ def current_contexts(rs: dict) -> list[str]:
     return []
 
 
-def build_put_body(rs: dict, contexts: list[str]) -> dict:
-    """Rebuild a ruleset PUT body, replacing only the required_status_checks contexts.
+def current_bypass(rs: dict) -> list[dict]:
+    """The ruleset's bypass_actors, normalised to (actor_type, actor_id) for comparison."""
+    return [
+        {"actor_id": a.get("actor_id"), "actor_type": a.get("actor_type")}
+        for a in rs.get("bypass_actors", [])  # noqa: qg-empty-fallback
+    ]
 
-    Preserves enforcement, bypass_actors, conditions, and any non-status-check rules.
+
+def _bypass_matches(rs: dict, desired: list[dict]) -> bool:
+    want = sorted((a["actor_type"], a["actor_id"]) for a in desired)
+    have = sorted((a["actor_type"], a["actor_id"]) for a in current_bypass(rs))
+    return want == have
+
+
+def build_put_body(rs: dict, contexts: list[str], bypass_actors: list[dict] | None = None) -> dict:
+    """Rebuild a ruleset PUT body, replacing the required_status_checks contexts.
+
+    Preserves enforcement, conditions, and non-status-check rules. ``bypass_actors`` overrides the
+    ruleset's bypass list when provided (used to grant the staging admin bypass); otherwise the
+    existing list is preserved.
     """
     body: dict = {
         "name": rs["name"],
         "target": rs["target"],
         "enforcement": rs["enforcement"],
-        "bypass_actors": rs.get("bypass_actors", []),  # noqa: qg-empty-fallback
+        "bypass_actors": bypass_actors if bypass_actors is not None else rs.get("bypass_actors", []),  # noqa: qg-empty-fallback
         "conditions": rs["conditions"],
         "rules": [],
     }
@@ -153,13 +182,35 @@ def build_put_body(rs: dict, contexts: list[str]) -> dict:
     return body
 
 
-def put_ruleset(repo: str, rs: dict, contexts: list[str]) -> tuple[bool, list[str]]:
-    body = build_put_body(rs, contexts)
+def put_ruleset(
+    repo: str, rs: dict, contexts: list[str], bypass_actors: list[dict] | None = None
+) -> tuple[bool, list[str]]:
+    body = build_put_body(rs, contexts, bypass_actors)
     p = gh(["api", "-X", "PUT", f"repos/{ORG}/{repo}/rulesets/{rs['id']}", "--input", "-"], inp=json.dumps(body))
     if p.returncode != 0:
         sys.stderr.write(f"    PUT failed [{repo}/{rs['name']}]: {p.stderr.strip()[:200]}\n")
         return False, []
     return True, current_contexts(json.loads(p.stdout))
+
+
+def classic_enforce_admins(repo: str, branch: str = "staging") -> bool | None:
+    """True/False if staging classic protection has enforce_admins on/off; None if no protection."""
+    r = gh(["api", f"repos/{ORG}/{repo}/branches/{branch}/protection/enforce_admins"])
+    if r.returncode != 0:
+        return None
+    try:
+        return bool(json.loads(r.stdout).get("enabled"))
+    except Exception:
+        return None
+
+
+def disable_classic_enforce_admins(repo: str, branch: str = "staging") -> bool:
+    """DELETE staging classic enforce_admins so admins (the semver GH_PAT) bypass classic too."""
+    r = gh(["api", "-X", "DELETE", f"repos/{ORG}/{repo}/branches/{branch}/protection/enforce_admins"])
+    if r.returncode != 0:
+        sys.stderr.write(f"    enforce_admins DELETE failed [{repo}]: {r.stderr.strip()[:160]}\n")
+        return False
+    return True
 
 
 def main() -> int:
@@ -174,7 +225,9 @@ def main() -> int:
     args = ap.parse_args()
 
     repos = [args.repo] if args.repo else REPOS
-    planned: list[tuple[str, dict, list[str], list[str]]] = []
+    # (repo, ruleset, cur_contexts, desired_contexts, desired_bypass|None)
+    planned: list[tuple[str, dict, list[str], list[str], list[dict] | None]] = []
+    classic_planned: list[str] = []  # repos whose staging classic enforce_admins must be disabled
     warnings: list[str] = []
 
     for repo in repos:
@@ -195,9 +248,16 @@ def main() -> int:
             rs = get_ruleset(repo, rsname)
             if rs is None:
                 continue  # repo doesn't carry this ruleset (e.g. PM has no staging ruleset)
-            cur = current_contexts(rs)
-            if sorted(cur) != sorted(desired):
-                planned.append((repo, rs, cur, desired))
+            # The staging ruleset must carry the admin bypass; the main ruleset stays strict.
+            desired_bypass = STAGING_BYPASS_ACTORS if rsname == STAGING_BYPASS_RULESET else None
+            ctx_drift = sorted(current_contexts(rs)) != sorted(desired)
+            bypass_drift = desired_bypass is not None and not _bypass_matches(rs, desired_bypass)
+            if ctx_drift or bypass_drift:
+                planned.append((repo, rs, current_contexts(rs), desired, desired_bypass))
+            # Staging ruleset present → also ensure classic enforce_admins is OFF (so the admin
+            # bypass actually works; a ruleset bypass does not bypass classic protection).
+            if rsname == STAGING_BYPASS_RULESET and classic_enforce_admins(repo) is True:
+                classic_planned.append(repo)
 
     print(f"Mode: {'APPLY' if args.apply else 'DRY-RUN'}  |  ref={args.ref}  |  repos={len(repos)}")
     if warnings:
@@ -205,28 +265,38 @@ def main() -> int:
         for w in warnings:
             print(f"  ! {w}")
     print(f"\nRuleset changes needed: {len(planned)}")
-    for repo, rs, cur, desired in planned:
+    for repo, rs, cur, desired, desired_bypass in planned:
         print(f"  [{repo}] {rs['name']} id={rs['id']}")
-        print(f"      {cur}  ->  {desired}")
+        print(f"      contexts: {cur}  ->  {desired}")
+        if desired_bypass is not None:
+            print(f"      bypass:   {current_bypass(rs)}  ->  {desired_bypass}")
+    print(f"\nClassic staging enforce_admins to DISABLE: {len(classic_planned)} -> {classic_planned}")
 
     if not args.apply:
         print("\n(dry-run — pass --apply to write)")
         return 0
 
-    if not planned:
+    if not planned and not classic_planned:
         print("\nNothing to apply — already consistent.")
         return 0
 
     print("\nApplying...")
     failures = 0
-    for repo, rs, _cur, desired in planned:
-        ok, got = put_ruleset(repo, rs, desired)
+    for repo, rs, _cur, desired, desired_bypass in planned:
+        ok, got = put_ruleset(repo, rs, desired, desired_bypass)
         if ok and sorted(got) == sorted(desired):
             print(f"  OK   [{repo}] {rs['name']} -> {got}")
         else:
             failures += 1
             print(f"  FAIL [{repo}] {rs['name']} (got {got})")
-    print(f"\nDone. {len(planned) - failures}/{len(planned)} applied; {failures} failures.")
+    for repo in classic_planned:
+        if disable_classic_enforce_admins(repo):
+            print(f"  OK   [{repo}] staging classic enforce_admins -> disabled")
+        else:
+            failures += 1
+            print(f"  FAIL [{repo}] staging classic enforce_admins")
+    total = len(planned) + len(classic_planned)
+    print(f"\nDone. {total - failures}/{total} applied; {failures} failures.")
     return 1 if failures else 0
 
 
