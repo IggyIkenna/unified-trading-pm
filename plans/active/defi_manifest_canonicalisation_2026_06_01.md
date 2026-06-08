@@ -424,8 +424,22 @@ What to verify/wire (B0 corrected scope):
       the fallback empty at L369). Make the freshness check + fallback-empty per-chain so no `chain=''` row is ever
       keyed, THEN restore the `_build_row_key` blank-chain guard so empty/failed markers are also chain-canonical.
       parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. A5 LIGHTER perp_funding adapter fix: `SOURCE_RETURNED_ZERO` across full post-launch life (zkSync
-      endpoint returns nothing) — verify endpoint/auth.
+- [ ] [CODE] P1. A5 LIGHTER perp_funding adapter — **ROOT-CAUSE DIAGNOSED (slot-2 2026-06-08), fix needs a live Tardis
+      probe to validate.** `perp_funding_handler._collect_lighter` (mtds) hand-rolls the Tardis datasets URL
+      `…/lighter-zksync/market_stats/{date}/{SYMBOL}.csv.gz` with **`-USDC`-suffixed symbols**
+      (`_LIGHTER_TOP_SYMBOLS = ("BTC-USDC", "ETH-USDC", "SOL-USDC", "HYPE-USDC", "TON-USDC")`, perp_funding_handler.py
+      ~L115), **bypassing the `TardisAdapter` SSOT** that the verified `umi_tick_provider` path uses — and that path keys
+      Lighter by **bare base asset** (`umi_tick_provider._LIGHTER_TOP_SYMBOLS = ("BTC","ETH","SOL","HYPE",…)`, comment
+      "Lighter canonical key is numeric market_id; **symbol is bare base asset**"). The `-USDC` filenames almost
+      certainly 404 against Tardis → zero across the full post-launch life (matches the symptom). **Recommended fix
+      (the correct, SSOT-aligned one): route `_collect_lighter` through `TardisAdapter.download_batch(exchange=
+      "lighter-zksync", data_types=["market_stats"])` like `umi_tick_provider` does** (eliminates the hand-rolled URL +
+      the symbol-format guess in one move); a stop-gap is to switch the symbols to bare base assets. **WHY SAFE TO DEFER
+      PAST `--apply`:** `_collect_lighter` ALREADY records honest `record_zero_rows`/`SOURCE_RETURNED_ZERO` on a zero
+      response (no fabricated/placeholder rows, no silent lie) — so a Lighter gap is an HONEST absence in the manifest,
+      not a correctness corruption the migration would bake in; fixing it only ADDS data. Validating either fix returns
+      non-zero requires a live Tardis call (Tardis API key + network; tests are `--block-network`) which this slot can't
+      run — needs a credentialled host (`BLOCKED-UPSTREAM-VERIFICATION`, not a scope-defer). parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P0. A6 `expected_unattempted` is ALREADY canonical in UAC (`honest_coverage.py`:
       `EXPECTED_UPSTREAM_EMPTY` + `EXPECTED_OUTSIDE_PROCESSING_SCOPE` reasons; shipped via
       `expected_unattempted_propagation_chain_2026_05_12.md` Phase 0). No new state to add — verified 2026-06-01.
@@ -484,8 +498,15 @@ What to verify/wire (B0 corrected scope):
       Now raises on `data is None`, matching the cascade. MTDS QG green (sentinel 8ffb2acd). (Same commit set unblocked
       a pre-existing foreign import-pattern violation in `migrate_tradfi_to_v9_canonical.py` → facade import,
       mtds@89aff1b1.) Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. A10 **wire the `EmptyFromLiveInstrumentError` backstop — it is DEFINED but never RAISED** (slot-2 audit
-      2026-06-02). The operator-directed (2026-05-07) safety net — `record_empty(SOURCE_RETURNED_ZERO)` must cross-check
+- [x] ✅ [CODE] P1. A10 **wire the `EmptyFromLiveInstrumentError` backstop — DONE (slot-2 2026-06-08 verify-flip).** All
+      sub-items shipped: A10a (UAC `was_instrument_alive` uac@10e69f08) + A10b (UTL `record_zero_rows` routing
+      utl@44d762d9 + uac@daf1888c) + A10c (DeFi QG ratchet `no_unrouted_source_returned_zero.sh` mtds@76d650f0 +
+      PM@4fbc82a6e) + A10c-fleet (fleet-wide ratchet, baseline LOCKED to empty, slot-1) + A10d (31 callsites migrated
+      mtds@fca15304). The backstop is wired (zero-rows + was-expected → `attempted_failed`, else typed `empty_confirmed`)
+      AND un-bypassable (the ratchet hard-fails any new raw `record_empty(SOURCE_RETURNED_ZERO)` fleet-wide). Residual
+      tail = **A10c-fleet-followup** (P3, DEFERRED with named successor below — the conservatively-waivered
+      oracle/Protocol callsites, gated on writegate Phase 3.D.5; NOT part of A10's original backstop scope). The
+      operator-directed (2026-05-07) safety net — `record_empty(SOURCE_RETURNED_ZERO)` must cross-check
       the IS catalog and reject (force `attempted_failed`) when the instrument was ALIVE on that day — exists only as a
       class in `unified-api-contracts/.../honest_coverage.py:979` + `__all__` export; grep finds ZERO raise sites in the
       write path. UTL `record_empty` (`manifest_writer.py:1958`) only guards blank/unknown reason
@@ -772,8 +793,16 @@ What to verify/wire (B0 corrected scope):
         `market_interface/__init__.py` + live manifest recorder `category=` alias. Readers already probe
         canonical→legacy (transitional OK); migrate writers so post-cutover writes are canonical-only. Repo:
         market-tick-data-service.
-- [ ] [CODE] P0. A12 **UPSTREAM-DATA PREFLIGHT CHECKS — every consuming service, every in-scope (DeFi) cell** (operator
-      2026-06-02). Audit + ensure each consuming service runs an upstream-data **preflight** before processing, that:
+- [x] ✅ [CODE] P0. A12 **UPSTREAM-DATA PREFLIGHT CHECKS — DONE (slot-2 2026-06-08 verify-flip).** A12-AUDIT (6-service
+      preflight audit) + A12a/A12a-rollout (IS-catalog freshness gate wired into 11 DeFi handlers, uac@d67d8061 +
+      mtds@e2fc7d51 + mtds@fca15304) + A12b (enumerator-driven owed-cell backstop, confirmed) + A12c (source provenance,
+      confirmed + guard) + A12d/A12e (bucket-SSOT + candle-honesty, confirmed) + A12f (path-match closure mtds@b66b15d2) +
+      A12g (migrator tests) + A12h (`PipelineMode("BATCH")` bug fix mtds@7c577483) ALL shipped. The DeFi preflight reads
+      canonical buckets/paths, gates on data-quality, marks honest-absence, and the live/batch action divergence is
+      wired. Residual = **A12f-col** (P2, decoupled below) — a forward-compat `pipeline_mode` COLUMN vocab reconcile
+      (path-derived coarse at read-time today, so NOT a current-correctness bug; ties to the cross-AG `PipelineMode`
+      vocabulary decision). Original spec retained below. Audit + ensure each consuming service runs an upstream-data
+      **preflight** before processing, that:
       (1) **reads via the post-migration canonical SSOT** — `resolve_bucket_name()` buckets + canonical
       path/`pipeline_mode=`/`data_type` + canonical column schemas (no dead-bucket/legacy-path/legacy-data_type
       assumptions — composes with A11); (2) **gates on data-quality** — 0-volume / NaN-price / all-null / row-count-0 /
