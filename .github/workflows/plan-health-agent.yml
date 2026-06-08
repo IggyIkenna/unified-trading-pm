@@ -342,9 +342,11 @@ jobs:
     needs: [plan-health]
     # Daily/dispatch report only — the PR hard-gate surfaces its result on the PR check itself.
     if: always() && github.event_name != 'pull_request'
-    # Best-effort telemetry — a Slack/webhook hiccup must NOT redden the plan-health badge
-    # (the badge should reflect the `plan-health` sweep, not a notification side-channel).
-    continue-on-error: true
+    # Best-effort telemetry — a Slack/webhook hiccup must NOT redden the plan-health badge.
+    # Tolerance lives INSIDE notify-slack.yml (its step-level error-toleration), NOT on this
+    # caller job: per the GitHub Actions schema a reusable-workflow caller job allows only
+    # name/uses/with/secrets/needs/if/permissions, so error-toleration here is invalid and
+    # would break the whole workflow at startup.
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: "plan-health-agent (daily) | ${{ needs.plan-health.outputs.summary || 'run failed — see logs' }}"
@@ -363,9 +365,10 @@ jobs:
     # `failure` even though the gate passed. Scope persist to non-PR events, like notify.
     if: always() && github.event_name != 'pull_request'
     # Best-effort event-logging (GCS/S3) — a cloud-auth/persist hiccup must NOT redden the
-    # plan-health badge. This is the fix for the 06-05→06-08 "all jobs green but run=failure"
-    # badge: the persist reusable-caller was failing and gating the scheduled run conclusion.
-    continue-on-error: true
+    # plan-health badge. Tolerance lives INSIDE persist-cicd-event.yml (unique concurrency
+    # group + a job-level guard), NOT on this caller job: per the GitHub Actions schema a
+    # reusable-workflow caller allows only name/uses/with/secrets/needs/if/permissions, so
+    # error-toleration here is invalid and broke the whole workflow at startup (2026-06-08).
     uses: ./.github/workflows/persist-cicd-event.yml
     secrets: inherit
     with:

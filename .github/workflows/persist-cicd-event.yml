@@ -55,12 +55,23 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # MUST be unique per run. When this reusable workflow is called, `github.workflow` resolves
+  # to the CALLER's workflow name — so `${{ github.workflow }}-${{ github.ref }}` collides with
+  # the caller's OWN concurrency group and (with cancel-in-progress) SELF-CANCELS the persist
+  # job invisibly, reddening the caller's run (the "all jobs green but run=failure" badge —
+  # root cause of plan #220, hits all 24 callers). Mirror notify-slack.yml: literal prefix +
+  # run_id makes it unique; never cancel a best-effort telemetry write.
+  group: persist-cicd-event-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   persist-event:
     runs-on: ubuntu-latest
+    # Best-effort telemetry — this fire-and-forget CI-event persistence must NEVER fail the
+    # CALLING workflow (24 callers). Valid here (normal job, not a reusable `uses` job). This
+    # is the durable fix for the "all jobs green but run=failure" badge: a persist hiccup
+    # (auth, jq, bucket, network) degrades to a no-op, never reddening the caller's run.
+    continue-on-error: true
     timeout-minutes: 5
     env:
       CLOUD_PROVIDER: ${{ vars.CLOUD_PROVIDER || 'local' }}
@@ -117,6 +128,10 @@ jobs:
       # ── GCP: authenticate and write to GCS ──────────────────────────────────
       - name: Authenticate to GCP
         if: env.CLOUD_PROVIDER == 'gcp'
+        # Best-effort telemetry — a missing/empty GCP_SA_KEY (or unset WIF) must NOT fail the
+        # calling workflow. Valid here (step-level); the persist steps below are already
+        # `|| true`-tolerant, so a failed auth degrades to a no-op event-log, never a red run.
+        continue-on-error: true
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
@@ -144,6 +159,9 @@ jobs:
       # ── AWS: authenticate and write to S3 ───────────────────────────────────
       - name: Configure AWS credentials
         if: env.CLOUD_PROVIDER == 'aws'
+        # Best-effort telemetry — missing AWS creds must NOT fail the calling workflow. Valid
+        # here (step-level); the persist steps below are already `|| true`-tolerant.
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
