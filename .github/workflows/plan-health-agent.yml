@@ -343,9 +343,10 @@ jobs:
     # Daily/dispatch report only — the PR hard-gate surfaces its result on the PR check itself.
     if: always() && github.event_name != 'pull_request'
     # Best-effort telemetry — a Slack/webhook hiccup must NOT redden the plan-health badge.
-    # (NOTE: `continue-on-error` is INVALID on a reusable-workflow `uses` job — it makes the
-    # whole workflow a startup_failure / 0 jobs. The tolerance lives in notify-slack.yml's
-    # step-level `continue-on-error` on the Post-to-Slack step instead.)
+    # Tolerance lives INSIDE notify-slack.yml (its step-level error-toleration), NOT on this
+    # caller job: per the GitHub Actions schema a reusable-workflow caller job allows only
+    # name/uses/with/secrets/needs/if/permissions, so error-toleration here is invalid and
+    # would break the whole workflow at startup.
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: "plan-health-agent (daily) | ${{ needs.plan-health.outputs.summary || 'run failed — see logs' }}"
@@ -364,10 +365,10 @@ jobs:
     # `failure` even though the gate passed. Scope persist to non-PR events, like notify.
     if: always() && github.event_name != 'pull_request'
     # Best-effort event-logging (GCS/S3) — a cloud-auth/persist hiccup must NOT redden the
-    # plan-health badge. (NOTE: `continue-on-error` is INVALID on a reusable-workflow `uses`
-    # job — it made the whole workflow a startup_failure / 0 jobs from 2026-06-08 09:34. The
-    # tolerance now lives in persist-cicd-event.yml's step-level `continue-on-error` on the
-    # cloud-auth steps instead.)
+    # plan-health badge. Tolerance lives INSIDE persist-cicd-event.yml (unique concurrency
+    # group + a job-level guard), NOT on this caller job: per the GitHub Actions schema a
+    # reusable-workflow caller allows only name/uses/with/secrets/needs/if/permissions, so
+    # error-toleration here is invalid and broke the whole workflow at startup (2026-06-08).
     uses: ./.github/workflows/persist-cicd-event.yml
     secrets: inherit
     with:
