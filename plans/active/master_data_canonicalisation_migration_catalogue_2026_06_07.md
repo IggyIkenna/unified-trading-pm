@@ -906,6 +906,92 @@ speed-note (both deferred optimisations, non-blocking).
   untouched by the recent batch → dry-run output is provably identical to the green run above. **No new code owed; HOLD
   stands.\*\* Remaining gates remain purely operational (drain + the gated v9 instruments-store walk + IS backfill).
 
+### 🔵 DeFi PRE-APPLY ①–⑫ AUDIT — slot-2 2026-06-08 (post-drain, fresh real-prod re-verify)
+
+> Re-ran the formal ①–⑫ framework on real-prod GCS (central-element-323112) AFTER the 2026-06-08 drain. **One
+> migrator-output data-correctness BUG found + FIXED** (the dex-swaps source `n`-typo, below); one **live-write-path
+> manifest-stamp drift** found + tracked (does NOT corrupt the `--apply` data — migrator+rebuild re-derive over it).
+
+**🟢 FIXED this pass — dex-swaps source mis-stamp (① ⑨ migrator-output correctness, uac):** `source_priority.py` +
+`availability_semantics.py` registered the dex-swaps source under a **dead literal key `("defi", "n")`** (slot-7
+uac@28114692 typo — even the commit msg said "register defi dex-swaps 'n' source"; "n" matches no real shard). The real
+canonical swaps data_type is **`dex_pool_swaps`** (the migrator bucket-spec `canonical_dt`
+`migrate_defi_full_v9_canonical.py:112`, operator-locked; on-disk `data_type=dex_pool_swaps` in `dex-swaps-*`). So
+`dex_pool_swaps` was UNREGISTERED → fell through the defi asset-group fallback to `batch_onchain_rpc`/`onchain_rpc`,
+while the plan FALSELY claimed "the v9 migrator now derives batch_onchain_subgraph for dex-swaps". **Fixed**:
+`("defi","n")` → `("defi","dex_pool_swaps"): ["onchain_subgraph"]` in BOTH registries (uniswap_v3/curve fetch
+pools+swaps+liquidity from the SAME subgraph → matches `dex_pool_state`). **Verified on real prod**: scoped migrator
+dry-run `--buckets dex-swaps --start-date 2024-05-15` → all 21 swap cells now project
+`pipeline_mode=batch_onchain_subgraph/…/data_type=dex_pool_swaps`, 0 errors (was `batch_onchain_rpc`); UAC 109 targeted
+tests + full suite green (only the `<720s` laptop META-time-gate tripped → `IGNORE_TIMEOUT=true` sanctioned). Without
+this the irreversible single-walk `--apply` would have baked `source=onchain_rpc` into every dex-swaps shard. **Shipped:
+`uac@012ccec1`** (committed + pushed to `tab/ikennaigboaka/2`, tab ⊇ LDR so the tab-mirror FFs it to LDR for the VM
+`--apply`; the LDR→staging PR opens when the UTL breaking-change cascade STAGING LOCK clears — quickmerge STAGE-1.5
+blocked since 2026-06-08T08:26Z, BLOCKED-UPSTREAM, re-quickmerge/automation promotes on unlock). Repo:
+unified-api-contracts.
+
+- [ ] [MTDS+UAC] P1. **DeFi live handlers HARDCODE manifest `pipeline_mode`, diverging from the migrator-derived
+      source-aware value (⑪ live-write track; data NOT corrupted by `--apply`).** The migrator + `rebuild_defi_manifest`
+      RE-DERIVE `pipeline_mode`/`source` via UTL `derive_pipeline_mode_for_row` (correct, source-aware — verified), and
+      UTL `ManifestWriter.add()` only auto-derives when `pipeline_mode` is **blank** (`manifest_writer.py:1937/1943`) —
+      so a NON-blank hardcoded value PERSISTS. Several DeFi live handlers pass a hardcoded `PipelineMode.*` that
+      contradicts the actual fetch source + UAC `SOURCE_PRIORITY` + the migrator: (a)
+      **`dex_pools_handler.py:450/509/517/533`** stamps `BATCH_ONCHAIN_RPC` but fetches via The Graph subgraph (hdr "via
+      The Graph subgraphs"); `SOURCE_PRIORITY(defi,dex_pool_state)=onchain_subgraph`; sibling `dex_swaps_handler`
+      correctly uses `BATCH_ONCHAIN_SUBGRAPH`. → should be `BATCH_ONCHAIN_SUBGRAPH`. (b)
+      **`lending_indices_handler.py:421/478/507/515/526`** stamps `BATCH_ONCHAIN_RPC` but fetches Aave/Spark/Compound
+      via The Graph subgraph; `SOURCE_PRIORITY(defi,lending_indices)=onchain_subgraph`. → `BATCH_ONCHAIN_SUBGRAPH`. (c)
+      **`evm_defi_handler.py:587/606/617`** (data_type=lending_indices, The Graph subgraph) stamps `BATCH_ONCHAIN_RPC`.
+      → `BATCH_ONCHAIN_SUBGRAPH`. (d) **`aggregator_route_handler`** stamps `BATCH_ONCHAIN_RPC` (pinned by
+      `tests/unit/     test_aggregator_route_handler_a12h_pipeline_mode.py:146`) — re-derive + update the pinning test
+      to the derived value. (e) **`oracle_prices_handler.py:709/719/743`** hardcodes `BATCH_CHAINLINK` for ALL rows but
+      ALSO writes **Pyth** rows (`hermes.pyth.network`); `SOURCE_PRIORITY(defi,oracle_prices)=[pyth_hermes,chainlink]`
+      (multi-source) — PYTH rows must derive `BATCH_PYTH_HERMES` per-venue (the migrator does:
+      `derive_pipeline_mode_for_row(PYTH,…)→     batch_pyth_hermes`). **Root-cause fix (makes live==migrator BY
+      CONSTRUCTION)**: handlers must DERIVE per-shard via `derive_pipeline_mode_for_row(venue,"defi",data_type)` (the
+      SAME fn the migrator uses) instead of hardcoding — or pass blank and let `add()` C-#2 auto-derive. **Severity**:
+      live-write path only — `rebuild_defi_manifest` derives from the OBJECTS (re-stamping over the live rows), so the
+      drift self-heals on each rebuild and the `--apply` migrated data is correct; but between a live write and the next
+      rebuild the manifest carries the wrong source/pipeline_mode (C-#6 inconsistency: e.g.
+      `pipeline_mode=batch_onchain_rpc`+auto-stamped `source=onchain_subgraph`, silently uncaught because source is not
+      caller-explicit). Repos: market-tick-data-service (+ unified-api-contracts for the a12h test if it lives there).
+      parent_epic: mtds_mdps_master. Provenance: slot-2 ⑪ pre-apply audit 2026-06-08.
+- [ ] [UAC] P2. **`SOURCE_PRIORITY` is CHAIN-AGNOSTIC per `(asset_group, data_type)` → mis-attributes SOLANA DeFi source
+      (BLOCKED-OPERATOR-DECISION).** `solana_defi_handler` fetches ORCA/RAYDIUM/KAMINO pools + Kamino/Marginfi/Solend
+      lending via **Solana RPC / Helius / DeFiLlama** (NOT The Graph), but `SOURCE_PRIORITY(defi,dex_pool_state)` /
+      `(defi,lending_indices)` resolve to `onchain_subgraph` for ALL chains →
+      `derive_pipeline_mode_for_row(ORCA,defi,     dex_pool_state)` = `batch_onchain_subgraph` (verified). So both the
+      migrator AND a derive-based live handler would stamp `source=onchain_subgraph` on genuinely Solana-RPC/DeFiLlama
+      data — a coarse provenance mislabel (the DATA is correct; only the `source` label is wrong). NOT introduced by the
+      migration (pre-existing model coarseness it bakes). Proper fix needs per-chain (or per-venue) source resolution in
+      `SOURCE_PRIORITY`/`derive_pipeline_mode_for_row` (e.g. a Solana-DEX source `solana_rpc`/`helius`/`defillama`) — an
+      operator/design call (which Solana source is canonical). Repo: unified-api-contracts (`source_priority.py` +
+      `pipeline_mode_resolver.py`). parent_epic: manifest_master. Provenance: slot-2 ⑪ pre-apply audit 2026-06-08.
+
+#### ①–⑫ AUDIT VERDICT — DeFi pre-apply (slot-2, 2026-06-08, real-prod data-state)
+
+| #   | Point                                                   | Verdict             | Evidence (sampled-vs-walked)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| --- | ------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ①   | Migrator dry-run source-aware path+col                  | 🟢                  | scoped real-prod dry-run `migrate_defi_full_v9_canonical --buckets dex-swaps --start-date 2024-05-15` → 21/21 swap cells `pipeline_mode=batch_onchain_subgraph/asset_group=defi/…/data_type=dex_pool_swaps`, 0 errors (SAMPLED day; the prior all-6-bucket dry-run day=2024-06-01 covered pools/oracle/etc.). v9·`asset_group=`·`pipeline_mode=` LEFT of `asset_group`·per-row `available_at`·typed data_type — all confirmed. **Era-B relabel N/A (defi has no option/future chains, see ⑩).**                                                                                                                                                                           |
+| ②   | Rebuild dry-run agrees                                  | 🟢                  | `rebuild_defi_manifest._resolve_pmst:207-217` uses path source-aware pmode verbatim else DERIVES via the SAME `derive_pipeline_mode_for_row` as the migrator; `source=source_string_for(pm)` C-#6-consistent by construction (WALKED the code).                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ③   | 4-state pre-flight (writer-materialised, consumer-read) | 🟢                  | `record_expected_unattempted` (orchestrator.py:3558) + IS `_enumerate_v2_defi`; consumers read 4-state (`dependency_checker.py:199`, `manifest_allocation_guard.py:65` — empty/expected→no-alert, failed→alert).                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ④   | Empty/partial honest + downstream handles               | 🟢                  | `DefiManifestRecorder.record_zero_rows` (\_defi_manifest.py:376) → `EXPECTED_PRE_VENUE_LAUNCH`/`SOURCE_RETURNED_ZERO` venue-launch-aware; `record_failed`→`classify_venue_error`+`ADAPTER_FETCH_FAILED`; no `except: return []` swallow; no silent placeholder.                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ⑤   | Read==write paths, prefix-match `batch_*`               | 🟢                  | features `mtds_output_config._MTDS_OUTPUT_BUCKET_DOMAINS` maps `dex_pool_swaps`→`dex-swaps` / `dex_pool_state`→`dex-pools` → `get_bucket_name` → `dex-swaps-prd-…` = the migrator's `base_prd` write target (READ==WRITE confirmed). `rg 'pipeline_mode=(batch\|live)([/\"'\'']\|$)'` across mtds/mdps/features/strategy/execution/deployment-api → 0 functional coarse hits (2 mtds hits are docstrings of the RETIRED coarse mode).                                                                                                                                                                                                                                     |
+| ⑥   | IS+UAC validity matrix vs impossible cells              | 🟢 (P3)             | defi validity derived from `PROTOCOL_CAPABILITIES` (market_data_categories.py:847-858); grain `leaf` for all defi types; no odds/oracle leak into POOL. Residual: POOL row union-coarse (tracked P3); on-disk `instrument_type=a_token` (Aave) present alongside the 6 enumerated types — minor coverage edge, dominant cells pool/lending.                                                                                                                                                                                                                                                                                                                               |
+| ⑦   | deployment-api/UI numerator+denominator = could-exist   | 🟢                  | G3 UNION read-path SHIPPED (deployment-api@4dd2575 `data_status_union.union_reduce_to_cells` + drilldown; deployment-ui@0dc40eb) — coverage % = captured/(captured+empty+failed+expected_unattempted) over could-exist denominator, READ not re-derived. (UI tick [BLOCKED-PLAYWRIGHT].)                                                                                                                                                                                                                                                                                                                                                                                  |
+| ⑧   | IS-catalogue completeness (CF-14)                       | 🟢 (mechanism)      | `-prd-` by_date populated (64,724 parquets, 2020-01…2026-05); shape-aware `_enumerate_v2_defi`; all 6 defi instrument_types map cleanly. Full rollup candidate-COUNT = gated G1.run VM (VM-scale; downstream of the gated catalogue WRITE).                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ⑨   | pipeline_mode source-aware (CF-13)                      | 🟢                  | deterministic derivation check (14 defi cells): every cell source-aware, `source_string_for(pm)==source` True, transport populated; `dex_pool_swaps`→`batch_onchain_subgraph` after the fix.                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ⑩   | Era-B on-disk                                           | 🟢 N/A              | GCS probe `market-data-tick-defi-prd day=2024-06-01`: instrument_types = pool/lending/a_token/lst/yield_bearing; **zero `data_type=options_chain\|futures_chain`** (chains are cefi/tradfi-only). N/A for defi.                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ⑪   | ★ Batch=live symmetry                                   | 🟢 (migration side) | NO defi live-only data_types (one code path); `available_at` per-row write-time; live writer + migrator both derive via `derive_pipeline_mode_for_row`. **Migrated `--apply` data is correct + source-aware (① verified); `rebuild_defi_manifest` re-derives the manifest from object paths (overwriting any live stamp), `source` always C-#6-consistent → no persistent split.** Residual (tracked P1, NON-`--apply`-corrupting, rebuild-reconciled): several live handlers (dex_pools/lending/evm_defi/aggregator stamp `BATCH_ONCHAIN_RPC` for subgraph data; oracle stamps `BATCH_CHAINLINK` for Pyth rows) — transient live-manifest drift, self-healed by rebuild. |
+| ⑫   | Rollback ready                                          | 🟢                  | `_index/snapshots/pre_migration_2026_06_08.parquet` confirmed in BOTH `market-data-tick-defi-prd` + `instruments-store-defi-prd` (gcloud probe); migrator `base_prd` + `ASSET_GROUP_CONFIG[defi].prefix_tpls` cover the v9 `raw_tick_data/by_date/day=/pipeline_mode=/asset_group=defi/` shape (the doubled-`day=` instruments-store object tail is the open P1 §H object-migration gate, not an index/manifest blocker).                                                                                                                                                                                                                                                 |
+
+**REGRESSION RISK: NONE for the DeFi batch migration `--apply`.** The single migrator-output bug (dex-swaps `n`-typo →
+swaps would bake `source=onchain_rpc`) is FIXED + verified on real prod. The live-handler manifest-stamp drift (⑪
+residual, P1) does NOT corrupt the `--apply` migrated data — `rebuild_defi_manifest` re-derives the manifest from object
+paths and is C-#6-consistent by construction; it self-heals on each rebuild. Remaining gates to the real `--apply` are
+the prior OPERATIONAL ones (GATE C instruments-store v9 WRITE, IS backfill, the doubled-`day=` §H object fix, drain ✓
+done) + the tracked P1/P2 live-track handler-derive remediation (post-migration, not a batch-`--apply` blocker).
+
 ## Orphan sweep (2026-06-07) — every active data-layer plan/issue is registered above
 
 - Swept `plans/active/*.md` + `plans/active/issues/*.md` for manifest/migration/catalogue/pipeline_mode/backfill/
