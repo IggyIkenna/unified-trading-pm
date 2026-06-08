@@ -476,10 +476,20 @@ def _dispatch_escalation(s: dict) -> bool:
             f"conflict on live-defi-rollout, push, and let quality-gates-v2 re-gate it."
         )
     else:
+        failed_check = s.get("failed_check") or "quality-gates-v2"
         context = (
             f"Promotion PR {repo}#{number} ({s.get('head')}→{s.get('base')}) has been BLOCKED for "
-            f"{s.get('age_min')}m by a FAILED required check (quality-gates-v2 RED). Read the failing "
-            f"gate log, fix the root cause on live-defi-rollout, push, and let quality-gates-v2 re-gate."
+            f"{s.get('age_min')}m by a FAILED required check ({failed_check}). Read the failing gate "
+            f"log FIRST to classify: (A) a genuine code/test/lint/type break → fix the root cause on "
+            f"live-defi-rollout, push, let it re-gate; OR (B) a STALE-STAGING-WORKFLOW failure — the "
+            f"failing step is a workflow-DEFINITION error (actionlint/yaml/a step referencing something "
+            f"already removed or fixed on live-defi-rollout) OR the required check is MISSING (a "
+            f"[skip ci] head reported zero check runs). For (B) the fix is NOT on live-defi-rollout (it "
+            f"is already correct there) — the PR base branch ({s.get('base')}) carries a stale copy of "
+            f"the workflow. Re-roll the workflow from the PM SSOT to {s.get('base')} "
+            f"(scripts/workflow-templates/ → rollout-workflow-templates.sh), or re-trigger the check on "
+            f"the PR head (`gh workflow run quality-gates-v2.yml --ref <head>`); do NOT 'fix' "
+            f"live-defi-rollout for a (B) failure."
         )
     payload = {
         "event_type": "escalate-to-orchestrator",
