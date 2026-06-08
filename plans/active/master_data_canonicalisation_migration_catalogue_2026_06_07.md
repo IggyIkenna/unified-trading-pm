@@ -1028,6 +1028,18 @@ P1 redirect todo below.)
       Then a dry-run verify + add to the drain/snapshot/RESUME runbook lists (the `gas-fees` cron + bucket). Repo:
       market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2 gas-fees coverage-gap
       audit 2026-06-08 (operator question).
+- [ ] [DATA] P1. **gas-fees MUST be in the manifest + data-status could-exist denominator (operator 2026-06-08).** gas
+      is already RECORDED in the manifest per chain (`gas_fee_handler` → `DefiManifestRecorder.record_captured/empty`,
+      `venue=ALCHEMY`/`chain=<chain>`, `data_type=gas_fees`, chain-grain) — but two things must follow the 7th-spec
+      migration: (a) the gas-fees `_index` is canonicalised to v9 by the new migrator spec (P0 above), so the manifest
+      rows carry `pipeline_mode=batch_onchain_rpc`/`source=onchain_rpc`/`asset_group=defi`; (b) the **could-exist
+      denominator** (IS `enumerate_expected_universe` + the deployment-api/UI data-status) must include `gas_fees` as a
+      **per-chain expected cell** (one per chain × day in `GAS_FEE_CHAIN_START_DATES` coverage) so coverage % reflects
+      gas presence/absence per chain — gas is chain-grain (NOT per-instrument), so the denominator is the chain set, not
+      the instrument universe. Verify `gas_fees` is in `DATA_TYPES_BY_ASSET_GROUP["defi"]` + the validity matrix
+      (`(defi, SPOT_ASSET, gas_fees)` valid) so it is not dropped as impossible. Repos: instruments-service +
+      unified-api-contracts + deployment-api. Owner: vm-defi. parent_epic: manifest_master. Provenance: slot-2 gas-fees
+      audit 2026-06-08 (operator question).
 - [ ] [STRATEGY] P2. **NICE-TO-HAVE — wire the downstream gas NET-COST consumer if absent.** The gas_fees DATA layer
       (per-chain gas PRICE) exists, but a grep of strategy-service/execution-service/features-service/utl found NO
       `gas_price × gas_units` net-of-gas cost computation (`estimate_gas` × gas_fees) — verify (grep-then-READ) whether
@@ -1052,6 +1064,22 @@ P1 redirect todo below.)
       is a distinct stream — keep + add to the migrator, OR fold). Until redirected, these buckets keep diverging from
       the canonical home that features/strategy read. Repo: market-tick-data-service. Owner: vm-defi. parent_epic:
       mtds_mdps_master.
+- [x] ✅ [MTDS] P0. **M-COORD-7 — 41 coarse `pipeline_mode="batch"` OBJECT-PATH literals in DeFi handlers (batch≠live
+      regression + STEP-5.85 ship-blocker) — FIXED (mtds@57242af5, slot-2 2026-06-08).** Filed by slot-4 while shipping
+      the sports fix: mtds STEP 5.85 hard-failed on 41 pre-existing coarse `pipeline_mode="batch"` literals in 25 DeFi
+      CLI handlers (the `write_defi_rows(...)` OBJECT writes), causing (a) a **batch≠live regression** — DeFi live
+      objects landed coarse `pipeline_mode=batch/` while the migrator (mtds@f80c50f1) writes source-aware — and (b)
+      **blocked every mtds code ship** (no QG-green sentinel). **Root-cause fix (centralised)**: `write_defi_rows`
+      (`canonical_write.py`) now UPGRADES a coarse `"batch"`/`None` `pipeline_mode` to the source-aware
+      `{mode}_{source}` via the SAME `derive_pipeline_mode_for_row` the v9 migrator + `rebuild_defi_manifest` use →
+      live/batch OBJECTS land canonical (`pipeline_mode=batch_<source>/`), byte-identical to the migrated batch data
+      (Batch=Live by construction); all **41 coarse literals removed** from the handler call sites (→ `None` → derive) +
+      the now-stale "coarse ingestion" comments removed. STEP 5.85 = **0 coarse literals** (unblocks mtds ships). **22
+      handler-test path assertions + 4 old-migrator-test assertions updated** to the derived source-aware paths (e.g.
+      dex_pool_state/lending_indices/lst_rates/vault/eigenlayer→`batch_onchain_subgraph`; perp_funding (incl. Solana
+      DRIFT, ASTER, GMX, PACIFICA)→`batch_hyperliquid`; oracle CHAINLINK→`batch_chainlink`, PYTH→`batch_pyth_hermes`).
+      **1359 tests green; 0 coarse literals; basedpyright clean.** Repo: market-tick-data-service. parent_epic:
+      mtds_mdps_master. Provenance: slot-4 M-COORD-7 → slot-2 fix 2026-06-08.
 - [ ] [DATA] P1. **DELETE the duplicate/legacy DeFi orphan buckets AFTER (1) migration GREEN + (2) the unique-gap
       migrations above complete + (3) the redirects land + (4) a final cf_manifest_audit confirms 0 unique rows
       remain**: `market-data-tick-defi{,-prd}` · `solana-defi{,-prd}` · `evm-defi{,-prd}` (post unique-gap migration) ·
@@ -1067,7 +1095,15 @@ P1 redirect todo below.)
       enum members** to UAC `pipeline_mode.py` (+ `source_string_for` `defillama` + `default_transport_for_source`
       `defillama→rest` + the closed-set symmetry tests). Then drop the handler hardcodes so
       `derive_pipeline_mode_for_row` is the single SSOT. Repos: unified-trading-library + unified-api-contracts +
-      market-tick-data-service. Owner: vm-defi. parent_epic: manifest_master. Provenance: slot-2 ⑪/P2 audit 2026-06-08.
+      market-tick-data-service. Owner: vm-defi. parent*epic: manifest_master. Provenance: slot-2 ⑪/P2 audit 2026-06-08.
+      **EXTENDED 2026-06-08 — multi-VENUE perp has the same coarseness**:
+      `SOURCE_PRIORITY(defi, perp_funding)=     [hyperliquid]` (single) so `derive_pipeline_mode_for_row` returns
+      `batch_hyperliquid` for ALL defi perp venues — ASTER, GMX, PACIFICA, **Solana DRIFT** all resolve to
+      `batch_hyperliquid`/`source=hyperliquid` (only LIGHTER has an override → `batch_tardis`). This is CONSISTENT
+      (object==manifest==migrator all derive the same, so the M-COORD-7 fix + the migration are correct) but the source
+      LABEL is wrong for non-Hyperliquid perp DEXs. The accuracy fix is the same as Solana: add per-venue overrides
+      (ASTER→`batch_aster`?, GMX→`batch_gmx`?, DRIFT→`batch_drift`/helius, PACIFICA→…) — needs the operator's per-venue
+      source decision + the corresponding `BATCH*<VENUE>` enum members. Until then perp source is coarse-but-consistent.
 
 **Note on the migrated-bucket residue (NOT orphans):** `dex-pools-prd`/`dex-swaps-prd` carry BOTH old-format
 `day=/category=defi/` AND partial prior-apply canonical objects (one sample showed `pipeline_mode=BATCH_ONCHAIN_RPC`
