@@ -597,7 +597,17 @@ does not require a second whole-corpus walk.
       even run. Mechanical > re-sync (`uv lock` adds the 4 stub pkgs, ~52 LOC; precedent mtds@10930dbd "re-sync uv.lock
       to pyproject"). Until > this lands, NO MTDS `quality-gates.sh` reaches green regardless of the file-length work —
       fix it FIRST in this > slot-2 sweep. (Slot-5 did not fix it: it completes another commit's incomplete dep edit —
-      out of prediction AG + > FM1 foreign-work-bundling risk.)
+      out of prediction AG + > FM1 foreign-work-bundling risk.) **✅ RESOLVED 2026-06-08 (slot-2, operator decision
+      A):** (0) **gate-0 re-locked** (mtds@d544f15c — `uv lock` to current pyproject; `uv lock --check` green) BUT this
+      is **recurring lock-drift** (the type-stubs flip-flop in pyproject between agents; `dbbbef8a` added them, a later
+      commit removed them) → **handed to the dep/CI lane** (slot-1 `update-dependency-version.yml` prevention + settle
+      the type-stub flip-flop); NOT a thing to keep manually re-locking. (1) **file-size = 15 pre-existing
+      non-`scripts/` files** (orchestrator.py 4219 etc.) → **DEFERRED to the named successor
+      `plans/active/mtds_file_size_refactor_2026_06_08.md`** (post-migration; splitting the migration's own
+      `orchestrator.py` pre-apply is high-risk for zero migration benefit). **NOT migration-blocking**: file-size loop
+      excludes `./scripts/*` (migration code clean); MTDS migration code ships via basedpyright-on-touched; `--apply`
+      runs from VM/tarball not the sentinel. (The hollow-sentinel harness finding below is the related ship-hygiene
+      item.)
 - [ ] [INFRA] P2. **🔴 LOCAL QG HARNESS collects the WRONG test suite for some repos — the green sentinel is HOLLOW
       (surfaced slot-7 2026-06-08).** Running `bash scripts/quality-gates.sh --no-fix` for **instruments-service** AND
       **market-tick-data-service** on this host produced a `[3/6] TESTS` run with `rootdir: …/unified-trading-pm`,
