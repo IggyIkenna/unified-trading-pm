@@ -163,6 +163,19 @@ parallel-safe.
 > (corpus purge) land.** Latent pre-agg ingestion sites fixed for correctness-in-depth. SSOT: the wrapper plan +
 > [[bar_edge_left_vs_right_systemic_2026_06_08]].
 
+> **🔴 PRE-APPLY BLOCK RULE (the strict definition — operator 2026-06-08; ALL slots apply before their AG's
+> `--apply`)**: the single-walk bakes data to the canonical schema / data_type names / GCS path templates / venue+enum
+> names per the CURRENT code. An open issue **BLOCKS** the walk if fixing it would change **schema, data_type names,
+> path templates, venue/instrument/enum names, manifest 4-state routing, or production write/read code** such that —
+> applied AFTER the walk — the code would read/write a **different place or shape** than where the walk put the data
+> (orphaned / code-vs-data mismatch). It is **NON-BLOCK** only if (i) the change is already shipped, (ii) the walk
+> itself performs the change (in-walk), or (iii) it is purely consumer-side / CI / dep / a post-migration G5 backfill. A
+> "deferred to a later walk" rename is NON-BLOCK **only if the current walk does not leave code-vs-data mismatched in
+> the interim** — otherwise it blocks. Confirmed blockers so far: **CF-11 swallow (tradfi `databento.py:826` +
+> prediction polymarket)**. Under-review (sweep 2026-06-08): **D14 `dex_pools`(manifest) vs `dex_pool_state`(parquet)**
+> name divergence + any other pending schema/name/path change. NON-BLOCK (verified): Massive shape (never ingested),
+> source-provenance write-path (shipped), D10 unbacked venues (no data), library QG sentinel (CI).
+
 > **🟢 G3-CONSUMER — deployment-api/UI UNION read path SHIPPED 2026-06-07 (vm-cross-cutting / slot-7)**: the data-status
 > CONSUMER is now honest for the post-migration v9 multi-row manifest (reads the v9 contract; fixture-tested — does NOT
 > need the data migrated yet). **`deployment-api@4dd2575`**: new `data_status_union.union_reduce_to_cells` collapses
