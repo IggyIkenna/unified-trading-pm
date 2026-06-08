@@ -11,9 +11,13 @@
 - **Multi-repo workspace** (NOT a monorepo). 27 active sibling repos. Edit only the target repo your task names.
 - **Active branch**: `live-defi-rollout` (read from `workspace-manifest.json:active_feature_branch`). VMs pull from this
   branch.
-- **Per-tab worktrees**: each operator slot runs in `.tabs/<N>/<repo>/` on `tab/<operator>/<N>`. Cross-slot races on
-  `.git/index` are unrepresentable by construction. Within-slot multi-sub-agent fan-out shares one index — pre-commit
-  check below applies.
+- **Per-slot worktrees (Path-B, 2026-06-08)**: each slot runs in `.tabs/<N>/<repo>/` as a `git clone --reference` with
+  its OWN `.git`, checked out on **`live-defi-rollout`** directly (the `tab/<op>/N` tab-branch model is RETIRED — no tab
+  branch, no tab-mirror, no upstream to re-point). Stay current with `git pull --ff-only origin live-defi-rollout`; ship
+  via `quickmerge --agent --files`. The only invariant: HEAD is ancestor-or-equal of `origin/live-defi-rollout`
+  (`scripts/cicd/slot_drift_check.py`). Cross-slot races on `.git/index` are unrepresentable (separate clones);
+  within-slot multi-sub-agent fan-out shares one index — pre-commit check below applies. SSOT:
+  `codex/05-infrastructure/per-tab-worktrees.md`.
 
 ## Quality gates / tests — ONLY way to run them
 

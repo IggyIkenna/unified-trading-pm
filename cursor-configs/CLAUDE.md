@@ -1129,15 +1129,39 @@ are review-blocked.
 
 ---
 
-## Per-Tab Worktrees — 3-tier parallel-agent isolation
+## Per-slot worktrees — Path-B reference-clones on LDR (2026-06-08; supersedes the tab-branch model)
 
-3 tiers: Operator (separate machines) → Slot (`.tabs/<N>/<repo>/` on `tab/<operator>/<N>`) → Sub-agent (within slot,
-shares index).
+**Model: Path-B.** Each slot is a **per-slot `git clone --reference <workspace>/<repo> <url> .tabs/<N>/<repo>`** with
+its **own `.git`** (no ref races), shared object store via `--reference` (no disk blowup), each clone **independently
+checked out on `live-defi-rollout`**. 3 tiers: Operator (separate machines) → Slot (`.tabs/<N>/<repo>/` **on
+`live-defi-rollout`**) → Sub-agent (within slot, shares that clone's index). Per-clone identity is
+`git config user.name "ikennaigboaka [slot-<N>·<host>]"` (set at clone time).
 
-Bootstrap: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8` (also: `--add-slot N`,
-`--reset-slot N`, `--list`). Reconciliation: `bash unified-trading-pm/scripts/dev/slot-master-rebase.sh`.
+**Why Path-B (the tab-branch `tab/<op>/N` model is RETIRED 2026-06-08):** the tab branch was never an architectural
+choice — only a workaround for git's "can't check out the same branch in two worktrees of one clone" constraint. The
+real isolation is worktree-level (separate index/working-tree). Separate clones drop the entire **sync tax**:
+`tab-mirror-to-ldr.yml` (DISABLED fleet-wide), the tab-branch rebase/upstream-self-heal paths in `slot-cron-ff-pull.sh`,
+and the diverged-tab recovery recipes. Contention moves to **LDR push-time** (rebase-on-reject), already handled by
+quickmerge STAGE 0.4. Commit attribution is in the author NAME (`[slot-<N>·<host>]`), independent of branch.
 
-SSOTs: `codex/05-infrastructure/per-tab-worktrees.md` + `plans/active/per_agent_worktrees_2026_05_10.md`.
+- **Stay current**: `git -C .tabs/<N>/<repo> pull --ff-only origin live-defi-rollout` (thin FF; no tab rebase).
+- **Ship**: `quickmerge --agent --files '<paths>'` from the slot (on LDR) → commit + push LDR + open the staging PR.
+- **Drift invariant** (the only one to police): a slot's `HEAD` is ancestor-or-equal of `origin/live-defi-rollout`
+  (`scripts/cicd/slot_drift_check.py`); if not, `git pull --ff-only` or reconcile.
+- **Migration note (2026-06-08)**: slots 2-11 were reclined to Path-B; **all prior uncommitted slot WIP was preserved to
+  `origin/wip-preserve/slot-<N>` branches** (recover with `git show origin/wip-preserve/slot-<N>:<path>` / cherry-pick).
+  Slot-1 stays on its `tab/ikennaigboaka/1` branch only as the live operating slot during the migration — reclined to
+  Path-B on its next `setup-tab-worktrees.sh --reset-slot 1`.
+
+Bootstrap: `bash unified-trading-pm/scripts/dev/setup-tab-worktrees.sh --init --slots 8` (Path-B reference-clones; also
+`--add-slot N`, `--reset-slot N`, `--list`).
+
+SSOTs: `codex/05-infrastructure/per-tab-worktrees.md` + `plans/active/worktree_ldr_unification_2026_06_08.md`.
+
+> **The `tab/<op>/N` tab-branch rules below (upstream-tracking, diverged-tab recovery, tab-mirror, slot-master-rebase)
+> are SUPERSEDED by Path-B** and retained only for slot-1's transitional window + historical context. Under Path-B a
+> slot has no tab branch: it is a clone on `live-defi-rollout`, so there is no upstream to re-point, no tab→LDR mirror,
+> and no diverged-tab class — only the FF-pull + the drift invariant above.
 
 ### Respawn working-tree hygiene (background agents) — liveness-gated, not identity-gated
 

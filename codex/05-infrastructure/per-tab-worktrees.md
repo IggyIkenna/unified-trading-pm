@@ -15,10 +15,24 @@ related_codex:
 
 # Per-tab worktrees — 3-tier isolation for parallel-agent flow
 
-**TL;DR.** Each operator (Ikenna / Harsh) runs N parallel agent "tabs." Each tab gets its own permanent worktree at
-`.tabs/<N>/<repo>/` on a permanent **role-encoded** branch. Cross-tab races on `.git/index` + working tree become
-unrepresentable by construction. Slot is the durable identity; theme (writegate / cefi-master / defi / etc.) is the
-daily assignment via the operator's orchestrator LEDGER slot↔theme table.
+> **⚠️ SUPERSEDED 2026-06-08 → Path-B reference-clones (the `tab/<op>/N` tab-branch model is RETIRED).** Each slot is
+> now a **`git clone --reference <workspace>/<repo> <url> .tabs/<N>/<repo>`** with its OWN `.git`, checked out directly
+> on **`live-defi-rollout`** — separate clones (no ref races), shared object store via `--reference` (no disk blowup).
+> This drops the entire tab-branch sync tax: **`tab-mirror-to-ldr.yml` is DISABLED fleet-wide**, the tab-rebase/upstream
+> self-heal in `slot-cron-ff-pull.sh` is moot, and the diverged-tab recovery class no longer exists. Stay current with
+> `git -C <slot>/<repo> pull --ff-only origin live-defi-rollout`; ship via `quickmerge --agent --files`; the only
+> invariant is HEAD ancestor-or-equal of `origin/live-defi-rollout` (`scripts/cicd/slot_drift_check.py`). Commit
+> attribution is in the author NAME (`[slot-<N>·<host>]`), independent of branch. Migration (2026-06-08): slots 2-11
+> reclined to Path-B; **all prior uncommitted WIP preserved to `origin/wip-preserve/slot-<N>` branches**. SSOT for the
+> new model: `plans/active/worktree_ldr_unification_2026_06_08.md`. **Everything below describing `tab/<op>/N` branches,
+> tab-mirror, upstream tracking, and diverged-tab recovery is HISTORICAL** — retained for the slot-1 transitional window
+>
+> - context, not the current model.
+
+**TL;DR (HISTORICAL — tab-branch model).** Each operator (Ikenna / Harsh) runs N parallel agent "tabs." Each tab gets
+its own permanent worktree at `.tabs/<N>/<repo>/` on a permanent **role-encoded** branch. Cross-tab races on
+`.git/index` + working tree become unrepresentable by construction. Slot is the durable identity; theme (writegate /
+cefi-master / defi / etc.) is the daily assignment via the operator's orchestrator LEDGER slot↔theme table.
 
 ## Slot-number → role → branch-prefix scheme
 
