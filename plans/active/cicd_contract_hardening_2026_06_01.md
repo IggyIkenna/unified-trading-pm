@@ -327,6 +327,37 @@ what the operator is seeing:
       lock-check `failure` as expected-locked-state (not a CI failure) so it doesn't page. repo: unified-trading-pm
       (`ci_failure_watcher.py`).
 
+## 🔧 ROOT FIX — scoped staging-lock + FF-promote (design 2026-06-08, operator-validated)
+
+The `staging→main` promotion deadlock (7 wedged PRs 2026-06-07) has 3 interacting root causes; this is the proper fix
+(supersedes the per-incident close+reopen workaround). Operator insight (2026-06-08): **the lock should only cover the
+repos actually under SIT, not all of staging.**
+
+1. **Global lock vs scoped cohort (PRIMARY).** `sit-gate.yml` sets a single `staging_status.locked=true` and records
+   `pending_repos` (the exact cohort SIT validates), but `staging-lock-check.yml` blocks **every** promote PR on just
+   `locked==true` — ignoring `pending_repos`. So the breaking-cascade re-locking staging re-blocks repos whose SIT
+   already passed → they never reach an unlocked merge window. **Fix (drafted on the SSOT template
+   `scripts/workflow-templates/staging-lock-check.yml`): block iff `locked && repo ∈ pending_repos`; a repo outside the
+   running cohort promotes normally (its own `quality-gates-v2` is the gate).** Fail-safe: unparseable `pending_repos` →
+   default to block. A SIT is an integrated test of its cohort, so only that cohort must be frozen mid-validation;
+   cross-cohort blocking was the deadlock.
+2. **merge-commit → BEHIND.** `ldr-to-staging-promote.yml` + `staging-to-main.yml` use `gh pr merge --merge`, so staging
+   diverges from LDR via a merge commit → the next LDR→staging PR goes BEHIND → "require branches up to date" blocks it.
+   **Fix: promote via `--rebase` (or FF) so `staging == LDR + promoted commit`, never diverged.**
+3. **Stale `check-staging-lock` status / GITHUB_TOKEN-suppressed v2 (already tracked).** tab-mirror leg-A pushes LDR
+   with `GITHUB_TOKEN` → the promote PR head has no `quality-gates-v2` run → close+reopen workaround; and the lock-check
+   status can go stale on an open PR if the `staging-unlocked` dispatch doesn't re-run it. Fixing tab-mirror leg-A to
+   push with `GH_PAT` (the P2 in `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`) removes the workaround;
+   the scoped lock (#1) also reduces reliance on the unlock re-run (fewer repos block in the first place).
+
+- [ ] [SCRIPT] P0. **Scoped staging-lock-check** — land the drafted `staging-lock-check.yml` change (block iff
+      `locked && repo ∈ pending_repos`) as a **coordinated fleet batch** (PM SSOT + all 15 staging-repo copies on `main`
+      together — same parity coupling as the tab-mirror Route-B, else `detect_template_drift` flips PM `main` RED). It
+      is also a **required check on each `staging` ruleset**, so verify the gate name is unchanged. repo: agent does PM
+      template + `rollout-workflow-templates.sh --template staging-lock-check.yml` + the coordinated main rollout.
+- [ ] [SCRIPT] P1. **FF/rebase promote** — switch `ldr-to-staging-promote.yml` + `staging-to-main.yml` from
+      `gh pr merge --merge` to `--rebase` so staging never diverges from LDR (kills the BEHIND class). Roll out with #1.
+
 ## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
 
 > **The chicken-and-egg (operator 2026-06-06):** the corrected CI/CD machinery — `quality-gates-v2` check-contexts,

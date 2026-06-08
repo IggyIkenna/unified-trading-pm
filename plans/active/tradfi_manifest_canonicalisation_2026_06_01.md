@@ -1179,6 +1179,83 @@ pre-migration drain. **`tradfi APPLY-READY — 5/5`.**
       pass, ruff clean). Owner: the schema_version-provider/cefi AG or vm-cross-cutting — align the provider
       schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
 
+### G2 prep status (slot-6 2026-06-07 session-2) — unblocked prep DONE; apply-ready HELD on PART A
+
+> Operator GATE: "do NOT start the enumerate dry-run re-validation until slot-7 confirms the bundle-grain rollup is
+> GREEN." PART A is **not** green (above) → the enumerate re-run + the full bundle-aware audit stay HELD. The non-gated
+> prep is COMPLETE + re-verified on current LDR:
+>
+> - **② MTDS migrator dry-run GREEN** — `migrate_tradfi_to_v9_canonical --start-date 2021-08-16 --end-date 2021-08-17`
+>   (dry, read-only): **planned=1088 L-hive objects, moved=0, 0 errors, exit 0** (path-only `pipeline_mode=` insert; the
+>   v9 COLUMNS are `rebuild_tradfi_manifest`'s, not this script's). Source-aware `pipeline_mode` derivation verified per
+>   venue: CME/NYSE/NASDAQ/CBOE/ICE → `batch_databento`, BARCHART → `batch_barchart`, YAHOO → `batch_yahoo`, EIA →
+>   `batch_eia` (NOT coarse `batch`/blank). The migrator walks `day=` (date-bounded — no defi-style full-bucket-scan
+>   timeout).
+> - **③ instruments-store v9 dry-run GREEN** — 20,388-row `_index` → v9 100%, all CF stamps (see Step-1 UPDATE +
+>   gate-(c)).
+> - **① matrix/grain slice REVIEWED** — the exact missing tradfi rows are grounded (see the ROOT-CAUSE FINDING +
+>   gate-(a) re-verify); the fix is authored-but-HELD (must co-land with PART A to avoid false-absence).
+>
+> **Apply-ready blockers (precise):** gate-(a) bundle-grain = **slot-7 PART A** (catalogue emits options_chain/
+> futures_chain bundles) **+ the co-landing tradfi matrix rows** · gate-(b) capture-freeze = Massive `by_date` re-feed +
+> catalogue regen (adapter SHIPPED, below) · gate-(c) v9 `_index` = the gated `migrate_instruments_store_v9 --apply` RUN
+> (TOOL-READY) · plus G3 (UNION view — SHIPPED pm@822393880) and the operational pre-migration drain. When PART A lands,
+> the remaining tradfi work is: co-land the matrix rows → re-run enumerate (expect the ~563K false-candidate drop) →
+> finish the bundle-aware 7+2 audit → apply-ready verdict.
+
+### 🟢 TradFi APPLY-READY VERDICT (slot-6, 2026-06-08) — 5/5 dry-gate criteria GREEN; remaining gates OPERATIONAL only
+
+> **VERDICT: tradfi is APPLY-READY on LDR.** PART A (Era-B bundle rollup) landed and my last matrix slice fix shipped;
+> every G1+G2 dry-run is green and the 7+2 audit passes. **No code change remains before `--apply`** — the only blockers
+> are operational (the gated WRITE runs + IS backfill + the Era-B relabel that rides G4 + the pre-migration drain).
+
+**The 5 dry-gate criteria (all GREEN):**
+
+1. **① MTDS migrator dry-run** — `migrate_tradfi_to_v9_canonical` (dry): planned=1088 / 0 errors; source-aware
+   `pipeline_mode` (CME/NYSE/NASDAQ/CBOE/ICE→`batch_databento`, BARCHART→`batch_barchart`, YAHOO→`batch_yahoo`,
+   EIA→`batch_eia`); path-only insert — the v9 columns ride `rebuild_tradfi_manifest`.
+2. **② Manifest-rebuild / instruments-store v9** — `migrate_instruments_store_v9 --asset-group tradfi` (is@febb899e):
+   `_index` 20,388 rows → **v9 100%**, all CF stamps (`schema_version=9` · `asset_group=tradfi` ·
+   `pipeline_mode=batch_instruments_service` · `source=instruments_service` · `transport=rest` · `data_type=instruments`
+   · per-row `available_at` · honest 4-state 19,247 captured/1,141 empty_confirmed). cf_manifest_audit projection
+   CF-GREEN (v8→v9).
+3. **③ Enumerate re-validated GREEN on the Era-B bundle producer** (uac@ae70338d + is@74df991d/687d1443 + my
+   uac@576f8fa8): **587,990 → 24,914 (bundle rollup) → 17,928 (future/spot_pair matrix rows)**. Report verified: **0
+   per-contract OPTION/COMBO** (rolled to options_chain/futures_chain bundles, one per underlying, data_type=trades),
+   **0 data_type=options_chain** candidates (Era-B trades model), **0 impossible pairs** (tradfi has no
+   PERPETUAL×chain), FUTURE trimmed to its 6 real data_types (no macro/corp-action/earnings over-fan); 17,928 = exact
+   Σ(alive × valid-dts × 2 days). The ~563K false per-contract candidates are GONE.
+4. **④–⑦ honest-absence / read-write paths / IS+UAC guardrails / numerator-denominator** — ride the WAVE-1 code (rebuild
+   typed reasons + `record_zero_rows`, A7/CF-11 fetch-failure→`attempted_failed`, batch=live single path, env-tier
+   `resolve_bucket_name`); G3 UNION view SHIPPED (pm@822393880); the could-exist denominator is now accurate (enumerate
+   17,928).
+5. **⑧/⑨ catalogue-completeness + source-aware pipeline_mode** — `-prd-` `instrument_availability/by_date/` POPULATED
+   (64,724 parquets), shape-aware + bundle-grain producer GREEN, validity+grain slice CORRECT for every tradfi
+   instrument*type (option/combo→frozenset; options_chain/futures_chain→{trades}, grain=bundle_by_underlying;
+   future/spot_pair→per-contract leaves); migrators stamp source-aware `batch*<source>` (NOT coarse).
+
+**Sampled-vs-walked**: WALKED — the full 20,388-row instruments-store `_index` transform + the full 684,372-instrument
+catalog + 144,062-row manifest scan in enumerate (present-set 73,352). SAMPLED — the MTDS migrator dry-run on
+day=2021-08-16..17 (path+derivation; the whole-corpus walk runs on the in-region VM) + the catalogue instrument_type
+distribution. **Remaining gaps**: none code-side; the candidate-count is for a 2-day window (the full-horizon seed is
+the gated G1.run VM run).
+
+**The ONLY remaining gates — ALL OPERATIONAL (no code owed):** G0 ✓ · G3 UNION view ✓ (pm@822393880) · the v9
+instruments-store walk `migrate_instruments_store_v9 --asset-group tradfi --apply` RUN (TOOL-READY; dry-run proved 100%
+v9) · IS backfill complete (Massive `by_date` re-feed → catalogue regen; adapter SHIPPED) · the **Era-B legacy-row
+relabel rides the G4 migrator as its final atomic step** (operator decision slot-7 edca81b57 — NOT a dry-run blocker) ·
+pre-migration drain. **`tradfi APPLY-READY — 5/5`.**
+
+- [ ] [INFRA] P2. **PRE-EXISTING UAC QG RED (not tradfi; flagged slot-6 2026-06-08) — blocks the UAC `--no-fix` sentinel
+      → no clean UAC quickmerge fleet-wide.** `tests/unit/test_schema_version_matrix.py` 3 failing
+      (`test_green_status_when_versions_match` / `test_na_schema_version_does_not_trigger_red` /
+      `test_load_providers_green_when_versions_match`): assert `binance.computed_status == "green"` but it is `"yellow"`
+      (schema_version provider-status drift). **Proven PRE-EXISTING** (stash-test: fails identically on clean LDR
+      without my matrix change) + **unrelated** to the G1-ENUM data_type validity matrix + **outside the tradfi AG**
+      (the schema_version provider subsystem is cefi/cross-cutting). My `uac@576f8fa8` adds ZERO net-new failures (8,617
+      pass, ruff clean). Owner: the schema_version-provider/cefi AG or vm-cross-cutting — align the provider
+      schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
+
 ### Gate-b remediation — Massive IS reference adapter (shipped this session)
 
 - [x] ✅ [CODE] P1. **Tradfi Massive IS reference adapter — SHIPPED + STAGING-GREEN (slot-6 2026-06-07): UAC@12974b11

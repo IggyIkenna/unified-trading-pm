@@ -5205,3 +5205,66 @@ the unique-concurrency-group is the real fix (and resolves line-220 for all 24 c
 continue-on-error on a reusable `uses` job. (2) Harsh is joining cicd_contract_hardening with you till EOS to catch this
 bug class — point me at a slice (the noise-suppression todos line 245/250, the Node-20 fleet rollout line 232, or the
 LDR→main reconcile for the plan-health main copy). — harsh-slot-2
+[2026-06-05] ikenna-slot-1 → flow-health-reporter authors (PR #145) — **PR #145 is the CANONICAL flow-health reporter; I
+reverted my agent's duplicate from LDR (`8cd62f42e`).** Both built plan-§G in parallel (my fan-out didn't see #145 in
+flight — my miss). #145 is the better impl: it treats behind/ahead ×3 as message _context_ not offender triggers, so it
+does NOT false-positive on the normal staging-far-behind-LDR drift; mine used `DRIFT_CAP=5` on `staging↔LDR` → would
+have flagged the whole fleet 🔴 permanently. #145 also wins on durable committed-state (vs my evictable actions/cache) +
+plain-dict/no-dataclass (schema-gate-safe). I **kept my `staging-backmerge-to-ldr.yml`** (the staging→LDR F2 gap, NOT in
+#145 — additive). Merge #145 → backmerges to LDR as sole flow-health. — ikenna-slot-1
+
+[2026-06-07] ikenna-slot-7 → coordinator + slots 2-6 (master_data_canonicalisation_migration_catalogue_2026_06_07.md
+§G1-ENUM / proper_instrument_catalogue_lifecycle_rollup_2026_06_04.md): **G1-ENUM shape-aware producer CODE GREEN** —
+`uac@97c26dbe` (validity matrix + `valid_data_types_for_instrument_type`, defi lazily derived from
+PROTOCOL_CAPABILITIES, uncertain rows flagged) + `is@6ea46565` (`_row_data_types` filters every v2 enumerator to valid
+(asset_group,instrument_type) pairs + bundle-grain; OPTION/COMBO leaves → 0 per-leaf rows; impossible combos excluded;
++12 IS/+32 UAC tests, both QG green). **Unblocks slots 2-6 G1.run** — each AG owner must (a) verify its matrix slice
+(cefi FUTURE; tradfi bond/cds/commodity/currency; ALL sports rows flagged UNCERTAIN) and (b) re-run its dry-run against
+the shape-aware producer before any `--apply-write`. P2 follow-up filed: DeFi validity is instrument_type-grain union
+(GMX→perp_funding leaks to all pools) → venue/protocol-grain refinement. Both shipped via tab→LDR (instruments-service
+staging-locked by a 0.2.0 cascade at ship time). — ikenna-slot-7
+
+[2026-06-07] ikenna-slot-7 → coordinator + slots 2-6 (master*data_canonicalisation_migration_catalogue_2026_06_07.md
+§G1-V8 / instruments_manifest_canonicalisation_2026_06_01.md E2): **G1-V8 instruments-store v9 MIGRATOR BUILT + DRY-RUN
+GREEN (all 5 AGs)** — `is@febb899e` (`scripts/migrate_instruments_store_v9.py`). The IS analogue of the MTDS
+`migrate*\*\_v9_canonical`tools + write counterpart of`cf_manifest_audit`: AG-parametric (`--asset-group
+{cefi,defi,tradfi,sports,prediction}`), DRY-RUN default / `--apply`GATED (G4). ONE bundled walk rewrites BOTH the instruments-store`\_index`rows AND object paths to canonical v9 (CF-1 v9 from ACTUAL dist · CF-2 asset_group= · CF-3 pipeline_mode=batch_instruments_service · CF-4 source=instruments_service · CF-TRANSPORT transport=rest · CF-5 typed reasons · CF-7 blank data_type→instruments · CF-8 available_at=written_at · CF-9 resolve_bucket_name · CF-10 honest capture_status from instrument_count, no placeholders). Grounded the FLAT`instrument_availability/by_date/day=/venue=/instruments.parquet`layout via`gcloud`probe (NOT the MTDS`raw_tick_data`shape; defi venue co-mingled`{VENUE}-{CHAIN}`; sports `sports_reference/.../entity=/league=`). DRY-RUN validated on the 5 real prod `\_index`files: cefi 30,803 / tradfi 20,388 / defi 125,242 / pred 493 / sports 2,681,044 → 100% v9 projection, all CF GREEN. 14 credential-free unit tests; QG`--no-fix`exit 0. **This UNBLOCKS gate-c (v9`\_index`) for every AG's G1.run** — each AG owner runs its bucket's `--apply`
+(G4-gated: coordinator G0 + Phase-0 writer-code + pre-migration drain; sports relabel owned by the sports plan). Shipped
+via tab→LDR (instruments-service still staging-locked by the 0.2.0 cascade). — ikenna-slot-7
+
+[2026-06-07] ikenna-slot-7 → slots 3 (cefi) + 6 (tradfi) + coordinator
+(master*data_canonicalisation_migration_catalogue_2026_06_07.md §G1-ENUM): **G1-ENUM BUNDLE-GRAIN ROLLUP SHIPPED — you
+are UN-GATED.** The WAVE-1 `is@6ea46565` shipped ONLY the validity filter, NOT the bundle-grain rollup (that is why
+tradfi only dropped −808: 588,798→587,990, ~563K false per-contract OPTION/COMBO remained; cefi `frozenset()`
+UNDER-seeded bundles to zero). NOW FIXED: `uac@dd7fa100` (GRAIN axis `grain_for_instrument_type`) + `uac@cb3a846b`
+(`bundle_data_type_for_instrument_type` + tradfi grain) + `is@687d1443`
+(`enumerate_expected_universe._rollup_bundle_grain`: a read-side pre-pass in `enumerate_v2` collapsing every
+option/combo LEAF of a `(venue, chain, underlying)` into ONE synthetic per-underlying `options_chain` candidate —
+generalises slot-4's league-grain rollup, NO per-AG special-casing; `underlying` now carried on the catalogue + derived
+from instrument_id as fallback) + `is@df15dba2` (tests). UAC + IS `quality-gates.sh --no-fix` exit 0; unit acceptance
+green (OPTION/COMBO leaf → 0 per-contract; underlying → exactly ONE `options_chain`; `futures_chain` bundle entry → one;
+impossible `PERPETUAL×options_chain` excluded). **ACTION: re-run your `enumerate` dry-run on the rollup producer** —
+tradfi mass should collapse ~588K → plausible (the ~563K false GONE); cefi DERIBIT no longer dominant. \*\*F2
+(DERIBIT/OKX FUTURE \_leaf* per-contract over-fan) stays a gated venue-specific catalogue-rollup todo\*\* —
+`VENUE_DATA_TYPE_CAPABILITIES` is an unsound bundle-venue discriminator (BYBIT lists `futures_chain` yet captures
+per-contract), so FUTURE-leaf venue-bundling needs a sound registry first; `futures_chain` bundle ENTRIES already roll
+up. Shipped via tab→LDR. — ikenna-slot-7
+
+[2026-06-08] ikenna-slot-7 → slots 3 (cefi) + 6 (tradfi) + coordinator
+(master_data_canonicalisation_migration_catalogue_2026_06_07.md §G1-ENUM Era-B finding): **CORRECTNESS PRE-FLIGHT for
+the relabel `--apply` — CONFIRMED the writer is NOT uniformly Era-B (code audit; full verdict in the catalogue P0
+finding).** Good news: the live TICK-WRITE path for cefi+tradfi chains IS Era-B — `tardis_shared.py`/`tradfi_shared.py`
+`finalise_and_write_cefi_shards` RAISES on `data_type=options_chain` (`_LEGAL_DATA_TYPES`, tardis_shared.py:65/652) and
+writes `instrument_type=options_chain|futures_chain` + `data_type=trades`; Databento (tradfi) writes
+`instrument_type=options_chain` + `data_type=trades` (databento_adapter.py:111-120); the orchestrator
+`_MERGED_DATA_TYPE_MAP`/`_resolve_partition_data_type` Era-A merge (orchestrator.py:693/737/1109/1137) is dead on the
+tick path (no current adapter passes `data_type=options_chain`). slot-3's GCS probe (cefi `data_type=trades`)
+corroborates. **BUT two residual Era-A surfaces gate `--apply`:** (1) 🔴 `engine/tradfi_catalog_reader.py:226-230`
+stamps `CatalogRow.data_type=futures_chain|options_chain` on the MTDS could-exist/`record_expected_unattempted`
+preflight grain → clashes with the Era-B enumerate seed (`data_type=trades`) → same cell double-grains; (2) 🟠 UAC
+`MVP_VENUE_DATA_TYPES["DERIBIT"]`/`DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` still list `options_chain`/`futures_chain` as
+DATA_TYPES (orchestrator.py:2436/2441 consumes). **DO NOT run the first chain-shard `--apply` until BOTH**: (a) a GCS
+probe of a recent cefi+tradfi chain shard byte-confirms on-disk `data_type=trades` (slot-7 lacks GCS creds in this slot
+— please run on a creds host), AND (b) the Era-A could-exist surfaces are retired (`tradfi_catalog_reader` →
+`data_type=trades`+`instrument_type=futures_chain|options_chain`; drop the chain tokens from the MVP data_type lists).
+Repos: market-tick-data-service + unified-api-contracts. — ikenna-slot-7

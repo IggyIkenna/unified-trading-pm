@@ -419,6 +419,286 @@ run); honest-coverage = blocked on ⑦/⑧ + the named operational gates.**
       to the tracked "per-date denominator (P3)" item but distinct (re-derive-vs-read, not granularity). Gates honest
       coverage POST-seed, NOT the G4 migration. Provenance: slot-3 pre-apply audit 2026-06-08.
 
+## ✅ G2 VERIFY PASS — re-run on the WAVE-1 shape-aware code (slot-3, 2026-06-07)
+
+> **Scope**: the master coordinator's WAVE-2/G2 verify — prove the cefi migration CODE is dry-run-green on the WAVE-1
+> code (source-aware migrator/rebuild + shape-aware `enumerate_expected_universe` `is@6ea46565` + AG-parametric
+> instruments-store v9 migrator `is@febb899e` + UAC validity matrix `uac@97c26dbe`), all confirmed present on LDR. All
+> dry-runs READ-ONLY on real prod GCS (`-prd-central-element-323112`), `--apply` stays G4-gated. Where I sampled vs
+> walked is stated per step.
+
+**① migrator dry-run (MTDS `migrate_cefi_flat_to_v9_canonical.py`) — GREEN.** Window `2024-06-01` (300 day-tree objs) +
+projected the un-migrated `2024-06-01` objects directly (409 non-canon of 1,114): canonical dst inserts
+`pipeline_mode=batch_tardis/` **LEFT of** `asset_group=cefi/` (SOURCE-AWARE via `PipelineMode.BATCH_TARDIS` /
+`BATCH_HYPERLIQUID`, **not** coarse `batch`) — CF-3/CF-13 ✓. Per-symbol filenames preserved (incl Kraken 2-segment
+`BASE/QUOTE.parquet`); **bundle grain preserved** for `instrument_type=options_chain`/`futures_chain` (the
+`underlying=/quote=/margin=` segments are kept verbatim; pipeline_mode inserted after `day=`) — the BUNDLE-grain combo
+case verified ✓. Already-canonical days (`2026-05-24`) are idempotent no-ops (dst==src).
+`TOTAL planned/moved=0 (DRY-RUN)`.
+
+**② manifest-rebuild dry-run (`rebuild_cefi_manifest.py --dry-run`) — GREEN (exit 0), source-aware.** Window
+`2024-06-01..2024-06-07`. Re-emits via the UTL `record_captured/failed/empty` writer (the live-writer path → batch=live,
+CF-12 ✓), passing source-aware `derive_pipeline_mode_for_row(venue,"cefi",dt)` (CF-13 ✓) + `asset_group=cefi`. The
+writer stamps the v9 COLUMNS (`schema_version=9`/`asset_group`/`source`/`transport`/`available_at`) — NOT path-derived
+(the defi CF-2-gotcha is avoided). `phantom_to_failed=12`/week (matches the post-`mtds@60debbfe` residual). **BUT the 12
+are NOT "honest absence" — see Finding F1.** `unparseable=0`.
+
+**② instruments-store v9 dry-run (`migrate_instruments_store_v9.py --asset-group cefi`) — GREEN (exit 0).** `_index`
+transform projection on the real `-prd` `_index`: **30,803 rows v8→100% v9** (CF-1 ✓); `asset_group=cefi` 30,803/30,803
+(CF-2 ✓); `data_type=instruments` (CF-7 ✓); `pipeline_mode=batch_instruments_service` (reference provenance — NOT the
+market `tardis`; CF-3 ✓); `source=instruments_service` (CF-4 ✓); `transport=rest` (CF-TRANSPORT ✓); `available_at`
+filled 30,803/30,803 (CF-8 ✓); **honest capture_status**: `null_capture_to_captured=12,372` (all `instrument_count>0`),
+0 dishonest-empty (CF-10 ✓). Object-path walk: 28,174 objs →
+`pipeline_mode=batch_instruments_service/asset_group=cefi/venue=…/instruments.parquet`. →
+**cf_manifest_audit(instruments-store-cefi) projects CF-GREEN.** `--apply` G4-gated.
+
+**③ catalogue + enumerate dry-run on the SHAPE-AWARE producer — GREEN mechanism + PLAUSIBLE candidate set, with 2
+material could-exist findings (F1/F2).**
+`enumerate_expected_universe v2 --catalog-path gs://instruments-store-cefi-prd/prod/catalog.parquet --start-date 2024-06-01 --end-date 2024-06-02`
+(catalog 213,990 instruments; manifest present-set 2,639,403) → **3,446 candidates** (3,376 `expected_unattempted` + 70
+`EXPECTED_INSTRUMENT_DELISTED`). **Plausibility ✓**: no single-venue domination (OKX-SPOT/OKX-FUTURES/BINANCE-SPOT/
+OKX-SWAP/COINBASE-SPOT/BINANCE-FUTURES/BYBIT/HYPERLIQUID/DERIBIT/BITFINEX-FUTURES spread); **no impossible combos**
+(SPOT_PAIR→{trades,book,ohlcv} only; PERPETUAL/FUTURE→{trades,book,deriv,liq,ohlcv}); **OPTION (141,259) + COMBO
+(64,850) correctly produce ZERO rows** (matrix `frozenset()` → the G1-ENUM bundle-skip landed for cefi options/combos —
+this is the over-fan the dry-run was meant to catch, and it is FIXED). The candidate set is per-instrument grain
+(PERPETUAL 1,540 / SPOT_PAIR 1,026 / FUTURE 810).
+
+### 🔴 Finding F1 (P0, data-correctness) — cefi chain bundle `data_type` axis inconsistency (PATH is the outlier)
+
+The DERIBIT `options_chain`/`futures_chain` bundle OBJECTS are pathed
+`…/instrument_type=<chain>/data_type=trades/ underlying=U/quote=Q/margin=M/ticks.parquet`, but the **canonical
+`data_type` is `<chain>` (options_chain/futures_chain) per THREE independent sources**: the parquet's own internal
+`data_type` COLUMN (= `futures_chain`), the v8 manifest rows (`data_type=futures_chain`, count>0), and the UAC validity
+matrix (`("cefi","futures_chain")→{futures_chain}`). **Only the object PATH says `data_type=trades`.** The rebuild's
+object classifier (`parse_hive_path`) trusts the PATH → emits canonical captured rows with `data_type=trades`, which
+will NOT match the could-exist universe's expected `data_type=<chain>` cells → the ~169K cefi chain manifest rows
+(options_chain 65,768 + futures_chain 103,160) risk showing UNCAPTURED in the honest denominator. The **"12 residual
+phantoms"** (E5 §) are the SAME root: v8 rows with the canonical `data_type=<chain>` get demoted `→ attempted_failed`
+because objects are pathed under `data_type=trades`. **The E5 claim that the 12 are "verifiably NO object → honest
+absence → CORRECT" is INACCURATE** — I verified the objects DO exist
+(`day=2024-06-01/venue=DERIBIT/instrument_type=futures_chain/data_type=trades/underlying=BTC/…/ ticks.parquet`, 5,292
+trade rows, 7 contracts). Data is NOT lost (the object-scan re-emits a `data_type=trades` captured row), but the demote
+mints phantom `attempted_failed` cells AND the canonical `data_type` for chains is contradictory across writer-path vs
+UAC/manifest/parquet-column. Deribit is a `carry_staked_basis` hedge venue → critical path.
+
+### 🔴 Finding F2 (P0, could-exist denominator) — cefi FUTURE captured at futures_chain BUNDLE grain, enumerated per-contract
+
+DERIBIT futures are captured ONLY at `instrument_type=futures_chain` BUNDLE grain (one `underlying=BTC/ticks.parquet`
+holds all alive BTC futures; `instrument_id=''`), but the IS catalogue lists them as per-contract
+`instrument_type=FUTURE` (`DERIBIT:FUTURE:BTC-14JUN24`) → the enumerate produces per-contract `expected_unattempted`
+(160 in the 2-day sample = 16 contracts × 5 dt × 2 days; corpus-scale ~100K+) that the bundle capture can never match →
+**false coverage gaps**. Same class as slot-6 tradfi (per-contract producer vs bundle capture) + slot-4 sports (league
+grain). **NOT a blanket matrix flip**: capture grain is VENUE-SPECIFIC — DERIBIT = futures_chain bundle only;
+OKX-FUTURES = futures_chain per-symbol; **BYBIT has BOTH `future` (per-contract) AND `futures_chain`** — so
+`("cefi","future")→frozenset()` would WRONGLY skip BYBIT per-contract futures. The matrix is venue-agnostic and cannot
+express this; the correct fix is **catalogue-level (producer) venue-aware bundle rollup** — DERIBIT/OKX FUTURE roll up
+to a `futures_chain` bundle catalogue entry (mirror the options_chain/combo bundle treatment), BYBIT per-contract
+`future` stays. Co-owned with slot-7 (G1-ENUM central producer) per the master coordinator. The matrix row
+`("cefi","future")` is correctly flagged `# UNCERTAIN — cefi-owner verify` — **verified: per-contract is wrong for
+bundle-capture venues.**
+
+### ✅ F1/F2 RESOLVED via the WRITER SSOT — it is an Era-A↔Era-B design conflict, NOT a migrator bug (slot-3 follow-up, 2026-06-07)
+
+> **Apply-ready follow-up: read the live-writer SSOT to settle "which `data_type` is canonical for a chain bundle"
+> (Findings-Triage "diagnose before fix — read BOTH sides").** The authoritative answer reverses F1's first read.
+
+**The writer SSOT decides it.** `market-tick-data-service/.../adapters/cefi/tardis_shared.py` — the "single entry-point
+all CeFi adapters must call before any parquet write" (its **Phase 1.6** of `data_canonicalisation_mvp`, docstring bug
+#1) states verbatim: _"`data_type` was being overloaded with instrument-type tokens such as `futures_chain` /
+`options_chain`. **`data_type` is a pure market-data axis (`trades`, `book_snapshot_5`, `derivative_ticker`,
+`liquidations`). The collective-chain concept is carried on `instrument_type` instead.**"_ The
+`finalise_rows_and_path()` shard-type logic confirms: OPTION rows bundled → `instrument_type=options_chain` shard;
+FUTURE rows bundled (multi-symbol, same underlying) → `instrument_type=futures_chain` shard; **`data_type` stays the
+pure market-data axis**. The tradfi Tardis adapter says the same: _"`options_chain`/`futures_chain` are NOT legal
+canonical `data_type` … shard-instrument-type wrappers."_
+
+**So the canonical chain bundle = `instrument_type=options_chain|futures_chain`,
+`data_type ∈ {trades, book_snapshot_5, derivative_ticker, liquidations}` (the object PATH is CORRECT).** Observed
+canonical capture (object walk over 2024-06-01 / 2025-01-15 / 2026-05-20): `options_chain → {trades}` (DERIBIT);
+`futures_chain → {trades, book_snapshot_5, derivative_ticker, liquidations}` (DERIBIT/OKX-FUTURES/BYBIT). **This
+REVERSES F1's first read** (which followed the v8 manifest + matrix + parquet-column): those three are the **legacy
+Era-A** representation (`data_type=<chain>`, instrument_type blank — the exact pre-Phase-1.6 overload the writer
+banned). The **rebuild's `parse_hive_path` is CORRECT** (emits `data_type=trades`, `instrument_type=<chain>`); the **"12
+phantoms" are stale Era-A rows** (not real absences, but also not canonical cells) → cleaner to **DROP** (like the
+existing `dropped_malformed_captured`) than demote. F1's todo-option (b) "map path `data_type`→`<chain>`" is **WRONG**
+(it would re-introduce the banned overload).
+
+**It is a deliberate, TESTED design conflict — not an oversight, so do NOT unilaterally flip it.** The UAC matrix
+encodes the legacy **Era-A** form and `unified-api-contracts/tests/test_valid_data_types_by_instrument_type.py`
+**asserts it**: `test_cefi_options_chain_bundle → frozenset({"options_chain"})`,
+`test_cefi_futures_chain_bundle → frozenset({"futures_chain"})`. The live writer (Phase 1.6) implements **Era-B**. Two
+self-consistent eras disagree across components (UAC matrix + v8 manifest **vs** the MTDS writer SSOT). Picking the
+winner is a design decision spanning **cefi + tradfi (identical conflict) + slot-7's catalogue producer** → an operator
+/ slot-7-coordinated call, landed as ONE coherent change so matrix↔catalogue↔manifest cannot drift. **Recommendation:
+adopt Era-B (the writer SSOT is the newer, deliberate canonical; Phase 1.6 explicitly fixed Era-A as a bug).**
+
+> **🟢 OPERATIONAL GATE CLEARED 2026-06-07**: G3 deployment-api/UI UNION read path **SHIPPED** (deployment-api@4dd2575 +
+> deployment-ui@0dc40eb, master coordinator). So cefi's remaining apply-gates are G1 (PART A + this matrix decision) +
+> the instruments-store v9 walk RUN + IS backfill + pre-migration drain.
+
+**VERDICT — cefi G2 migrators DRY-RUN GREEN (re-confirmed 2026-06-07 post hyperliquid-rename); NOT apply-ready — BLOCKED
+on slot-7 PART A + the Era-A/Era-B operator decision.** The three migrators (`migrate_cefi` paths @mtds c567962e ·
+`rebuild_cefi_manifest` · `migrate_instruments_store_v9 --asset-group cefi`) remain dry-run-green and stamp every
+canonical column correctly (CF-1/2/3/4/5/7/8/9/10/12/13 ✓; `_mode_source_for_venue`→`batch_tardis`/`batch_hyperliquid`
+intact after the `hyperliquid_rest→hyperliquid` rename; IS/UAC unchanged at 0/0). The cefi **matrix slice is verified**:
+`option/combo→frozenset()` ✓ correct; `options_chain/futures_chain` rows are **Era-A-stale** (fix paired with PART A,
+below); `("cefi","future")` per-contract is venue-wrong for bundle-capture venues (catalogue rollup, not a matrix flip).
+The bundle-grain **enumerate re-run + matrix correction are BLOCKED on slot-7 PART A** (catalogue venue-aware chain
+rollup, not yet shipped — no in-flight PR as of 2026-06-07). The v9 `--apply` (G4) remains gated on **G0** (cefi
+conforms ✓) **∧ G1** (PART A + Era decision) **∧ G3** (✓ shipped) **∧ instruments-store v9 walk RUN ∧ IS backfill ∧
+pre-migration drain**. **CF-1…⑨ audit**: ①migrator ✓ ②rebuild ✓ ②IS-v9 ✓ ③4-state ✓ ④honest-empty ✓ ⑤read/write paths ✓
+⑥IS+UAC guardrails — **the chain matrix rows fail ⑥ until the Era decision lands** ⑦numerator/denominator — **F2
+bundle-grain pending** ⑧catalogue completeness — **BLOCKED on PART A** ⑨pipeline_mode source-aware ✓. Sampled (2-day
+enumerate + 3-day object walk + 1-week rebuild); the v9 `_index` walk + multi-year phantom spot-check remain for the
+apply run.
+
+### 🟡 PREP UPDATE (slot-3, 2026-06-07 turn-3) — gate NOT yet met: slot-7 bundle-grain SSOT landed but NOT wired
+
+> Re-validation gate = "slot-7 confirms the bundle-grain ROLLUP is GREEN." Status: **declarative SSOT shipped, producer
+> NOT wired** → I did the unblocked prep only (instruments-store dry-run + matrix/grain slice review); held the
+> enumerate re-run.
+
+- **Slot-7 progress — `uac@dd7fa100` landed the bundle-grain AXIS SSOT** (`grain_for_instrument_type` +
+  `INSTRUMENT_GRAIN_BY_AG_AND_INSTRUMENT_TYPE` + `GRAIN_BUNDLE_BY_UNDERLYING`/`GRAIN_LEAF`; exported from UAC). cefi
+  grain rows: `("cefi", option|combo|options_chain|futures_chain) → GRAIN_BUNDLE_BY_UNDERLYING`. **But it has ZERO
+  consumers** — grepped `instruments-service/scripts/` (`build_instrument_catalogue.py` +
+  `enumerate_expected_universe.py`): neither imports/uses `grain_for_instrument_type`. `build_instrument_catalogue.py`
+  last touched `99a5fbf5` (sports league), **no cefi/tradfi chain-bundle rollup commit**. So the catalogue still emits
+  per-leaf OPTION/COMBO/FUTURE entries; the positive **per-underlying options_chain/futures_chain bundle candidate is
+  NOT yet emitted**. The NEGATIVE collapse (OPTION/COMBO→`frozenset()`→0 rows) was already green last turn
+  (`is@6ea46565`) and is unchanged → the catalog (`prod/catalog.parquet`) + enumerate are unchanged, so last turn's
+  **3,446-candidate** result still stands; **no re-run performed** (gate not met, and nothing changed to re-measure).
+- **Slot-7 acknowledged F2 in the SSOT comment** (verbatim cite of "F2, slot-3 2026-06-07"): venue-specific FUTURE
+  bundling (DERIBIT/OKX bundle vs BYBIT per-contract) is "NOT expressible in the venue-agnostic matrix → gated todo;
+  `VENUE_DATA_TYPE_CAPABILITIES` is NOT a sound discriminator." So F2 stays a venue-aware **catalogue-rollup** todo
+  (PART A), as filed.
+- **cefi grain slice VERIFIED**: the 4 BUNDLE rows are correct; `("cefi","future")` absent → `GRAIN_LEAF` default =
+  correct for BYBIT, the known F2 gap for DERIBIT/OKX (gated). No grain-slice change needed from me.
+- **🔴 THE APPLY-READINESS CRUX for chains — a `data_type` match requirement PART A must satisfy**: for a bundle
+  candidate to MATCH the captured cell (else permanent false `expected_unattempted`), the candidate's `data_type` MUST
+  equal the captured cell's `data_type`. **Capture is Era-B** (writer `tardis_shared.py` Phase-1.6 + `rebuild`
+  `parse_hive_path` → `data_type=trades`; observed `options_chain→{trades}`,
+  `futures_chain→{trades, book_snapshot_5, derivative_ticker, liquidations}`). **The matrix still returns Era-A**
+  (`options_chain/futures_chain` → itself). PART A must pick ONE of: **(R1, recommended)** fix the matrix rows to the
+  Era-B capture sets (`("cefi","options_chain")→{trades}`,
+  `("cefi","futures_chain")→{trades, book_snapshot_5, derivative_ticker, liquidations}`) + update the 2 asserting tests;
+  **(R2)** the catalogue bundle entry carries `instr.data_type=trades` so `_row_data_types` uses it and BYPASSES the
+  matrix Era-A rows (then the matrix rows are vestigial). Either makes candidate `data_type==trades==capture`. **Until
+  R1/R2 lands, the bundle candidates will not match the capture** — this is the chain apply-readiness blocker, on top of
+  the catalogue rollup wiring. I did NOT flip the matrix (Era pick is coupled to PART A's R1/R2 choice + slot-7 just
+  landed Era-A + the 2 tests + tradfi parity → coordinate, don't collide).
+- **Re-confirmed GREEN (read-only, current LDR)**: `migrate_instruments_store_v9 --asset-group cefi --skip-objects` →
+  30,803 rows v8→**100% v9**, `asset_group=cefi`/`data_type=instruments`/`pipeline_mode=batch_instruments_service`/
+  `source=instruments_service`/`transport=rest`, `available_at` 30,803/30,803, honest `null_capture_to_captured=12,372`
+  (cf_manifest_audit projection **CF-GREEN**). Unchanged from last turn (IS at 0/0 with LDR).
+
+**Apply-readiness verdict UNCHANGED: cefi migrators dry-run-GREEN; NOT apply-ready.** Remaining gates: slot-7 PART A
+(catalogue chain-bundle rollup WIRED to `grain_for_instrument_type` + the R1/R2 `data_type`-match) → then my enumerate
+re-run; the Era decision (recommend R1/Era-B); instruments-store v9 walk RUN; IS backfill; pre-migration drain.
+
+## ✅ cefi APPLY-READY — Era-B rollup re-validated GREEN (slot-3, 2026-06-08)
+
+> **UNBLOCKED**: slot-7 landed **Era-B + the bundle-grain rollup** (R1 chosen): `uac@ae70338d`
+> (`("cefi","options_chain")`/`("cefi","futures_chain")` → `frozenset({"trades"})` — NOT `{<chain>}`; the 2 tests
+> updated) + `is@74df991d`/`687d1443` (the enumerate read-side `_rollup_bundle_grain` pre-pass consumes
+> `grain_for_instrument_type` + `BUNDLE_INSTRUMENT_TYPE_BY_AG_AND_LEAF`, collapsing OPTION/COMBO leaves → ONE synthetic
+> per-underlying `options_chain` candidate with `data_type=trades`). All present on LDR. **My F1 Era-B recommendation
+> was adopted.**
+
+**① RE-RUN enumerate dry-run on the Era-B rollup (read-only, real prod GCS).**
+`enumerate v2 --catalog-path gs://instruments-store-cefi-prd/prod/catalog.parquet --start-date 2024-06-01 --end-date 2024-06-02`
+(catalog 213,990; present-set 2,639,403) → **3,454 candidates**. **All gate criteria MET:**
+
+- **No per-contract OPTION/COMBO rows** — `OPTION/COMBO/option/combo` = **0** (was 72K OPTION + 64.8K COMBO leaves
+  pre-G1-ENUM). ✓
+- **One `options_chain` candidate per underlying, `data_type=trades`** — **8** candidates = DERIBIT
+  `{OPTION,COMBO}×{BTC,ETH}` × 2 days, **all `data_type=trades`** (Era-B), NOT `data_type=options_chain`. ✓ (they read
+  `expected_unattempted` only because the v8 manifest isn't Era-B-relabeled yet — the relabel rides G4, not a dry-run
+  blocker per operator).
+- **No `data_type=options_chain`/`futures_chain` candidate** = 0; **no impossible pair** (PERPETUAL×options_chain) = 0.
+  ✓
+- **DERIBIT no longer dominates** — DERIBIT = 396/3,454 = **11.5%** (behind OKX-FUTURES 540, BYBIT 440, OKX-SPOT 402,
+  OKX-SWAP 390). ✓
+
+**Verified MY UAC slice — CORRECT, no change needed**: validity `("cefi", option/combo)→frozenset()`,
+`(options_chain/futures_chain)→{trades}` (Era-B) ✓; grain
+`(option/combo/options_chain/futures_chain)→ GRAIN_BUNDLE_BY_UNDERLYING` ✓; `BUNDLE_INSTRUMENT_TYPE_BY_AG_AND_LEAF`
+`(cefi,option/combo)→options_chain` ✓. The count is NOT inflated → slice is right (the prompt's "fix your slice if
+inflated" did not trigger).
+
+**🟡 ONE residual could-exist gap (F2, slot-7-owned, NOT mine, NOT a migrator/G4 blocker)**: cefi `FUTURE` is **not**
+rolled up (slot-7 DELIBERATELY omits `future→futures_chain` from `BUNDLE_INSTRUMENT_TYPE_BY_AG_AND_LEAF` with the
+comment "venue-specific: DERIBIT/OKX bundle, BYBIT per-contract; F2"). So **880 per-contract FUTURE candidates** remain
+(2-day) — **700 are DERIBIT+OKX-FUTURES = FALSE over-seed** (bundle-captured at `futures_chain`), 180 BYBIT genuine.
+This over-seeds the **G1.run futures `expected_unattempted` seed** only; it does NOT touch the G4 manifest/data
+migration. Fix = slot-7 **venue-aware `build_instrument_catalogue` rollup** (emit per-underlying `futures_chain` bundle
+entries for DERIBIT/OKX; BYBIT stays per-contract) — the matrix is venue-agnostic and cannot express it. Tracked as F2
+P0 below.
+
+**②③ migrators ALREADY GREEN** (re-confirmed): `migrate_cefi` source-aware `batch_tardis`/`batch_hyperliquid` +
+bundle-grain-preserving paths (`mtds@c567962e`); `rebuild_cefi_manifest --dry-run` exit 0 (writer-stamped v9 columns);
+`migrate_instruments_store_v9 --asset-group cefi` 30,803 rows→**100% v9** (all columns + honest
+`null_capture_to_captured=12,372`, re-confirmed 2026-06-08).
+
+**④ 7+2 audit**: ①migrator ✓ ②rebuild ✓ ②IS-v9 ✓ ③4-state ✓ ④honest-empty ✓ ⑤read/write paths ✓ ⑥IS+UAC guardrails ✓
+(Era-B resolved the chain-matrix conflict) ⑦numerator/denominator ✓ for OPTION/COMBO bundle, **F2 FUTURE over-seed
+pending** ⑧catalogue completeness — options bundle ✓, futures bundle pending F2 ⑨pipeline_mode source-aware ✓. Sampled:
+2-day enumerate + 3-day object walk + 1-week rebuild + full IS `_index` v9 projection.
+
+**VERDICT — cefi APPLY-READY.** The G4 manifest/data migration (`migrate_cefi` + `rebuild_cefi_manifest` +
+`migrate_instruments_store_v9`) is dry-run-GREEN and the Era-B OPTION/COMBO bundle could-exist case is re-validated
+GREEN. **The ONLY remaining gates are operational/owned-elsewhere**: G0 ✓ · G3 ✓ (UNION view shipped) · the
+instruments-store v9 walk RUN · IS backfill · the **Era-B legacy-row relabel** (rides G4 migrator, operator
+`slot-7 edca81b57`) · pre-migration drain · **F2 FUTURE venue-aware catalogue rollup** (slot-7; gates only the G1.run
+_futures_ seed, not the migration). Shas: `uac@ae70338d` · `is@74df991d`/`687d1443` (rollup) · `mtds@c567962e`
+(migrator) · enumerate re-run 2026-06-08 (3,454 plausible). No `--apply` run (gated).
+
+- [x] ✅ [DATA] P0. **F1 — Era decision MADE = Era-B; UAC matrix slice + tests LANDED (slot-3 verify 2026-06-08).** The
+      Era-B recommendation was adopted (the writer-SSOT `tardis_shared.py` Phase-1.6 canonical): `uac@ae70338d` sets
+      `("cefi","options_chain")`/`("cefi","futures_chain")` → `frozenset({"trades"})` (NOT `{<chain>}`) and updated the
+      two asserting tests (`test_cefi_options_chain_bundle`/`test_cefi_futures_chain_bundle`); the object PATH + rebuild
+      `parse_hive_path` (Era-B: `instrument_type=<chain>`, `data_type=trades`) are CORRECT and unchanged. **My UAC slice
+      verified correct, no change needed.** The remaining stale Era-A `data_type=<chain>` v8 row DROP/relabel rides the
+      G4 migrator/rebuild re-emit (re-emits Era-B from objects; the old Era-A rows are not re-emitted → effectively
+      dropped) — that is the OPERATIONAL apply-time tranche (operator `slot-7 edca81b57`), not a remaining pre-apply
+      CODE change. The earlier F1 "canonical=`<chain>`" + E5 "12-phantom=honest-absence" reads are formally reversed
+      (Era-A was the legacy overload). Provenance: slot-3 G2 verify + writer-SSOT follow-up 2026-06-07 + Era-B
+      re-validation 2026-06-08. <!-- original F1 spec retained below for trace -->
+- [x] ✅ [DATA] P0. **F1 (RESOLVED — needs operator/slot-7 Era decision, then a coherent UAC+manifest change) — cefi
+      chain `data_type` axis: Era-A (`data_type=<chain>`) vs Era-B (`instrument_type=<chain>`, `data_type=trades`).**
+      Writer SSOT `tardis_shared.py` Phase-1.6 = **Era-B is canonical** (chain is instrument_type; `data_type` is pure
+      market-data — the object PATH + rebuild are CORRECT). **Recommend adopting Era-B**: (1) fix UAC matrix
+      `("cefi","options_chain")→{trades}` +
+      `("cefi","futures_chain")→{trades, book_snapshot_5, derivative_ticker,     liquidations}` (the observed canonical
+      capture) + update the two asserting tests; (2) rebuild/migrate **DROP** the stale Era-A `data_type=<chain>` v8
+      rows (mirror `dropped_malformed_captured`) instead of demoting them (the "12 phantoms"). **Reverses the earlier F1
+      "canonical is `<chain>`" + E5 "12-phantom = honest absence" reads.** DO NOT unilaterally flip — the matrix form is
+      deliberate + TESTED + identical in tradfi → coordinate the Era pick with the operator + slot-7 and land
+      matrix↔catalogue↔manifest as ONE change. **The matrix SLICE (UAC) is the AG-owner's** to fix once the Era is
+      decided; the **catalogue producer** is slot-7's. Provenance: slot-3 G2 verify + writer-SSOT follow-up 2026-06-07.
+      **Big finding — operator notified.**
+- [ ] [DATA] P0. **F2 — cefi FUTURE bundle-grain: catalogue venue-aware rollup (BLOCKED on slot-7 PART A).**
+      DERIBIT/OKX-FUTURES bundle-captured `FUTURE` roll up to a `futures_chain` bundle catalogue entry (one per
+      underlying) so the enumerate produces bundle cells matching the bundle capture; **BYBIT per-contract `future`
+      stays per-contract** (verified: BYBIT writes both `future` AND `futures_chain` shards). Producer-level fix in
+      `build_instrument_catalogue.py` (slot-7 G1-ENUM central producer — PART A; mirror the prediction cqg + sports
+      league rollups + slot-6 tradfi). Verified cefi matrix slice: `option/combo→frozenset()` ✓; `("cefi","future")`
+      per-contract is venue-wrong for bundle-capture venues (venue-specific → catalogue rollup, NOT a matrix flip).
+      Gates cefi G1.run apply-write. Provenance: slot-3 G2 verify 2026-06-07. **🟢 MY SLICE CONFIRMED (slot-3
+      2026-06-08, re-verify) — STAYS OPEN, slot-7-owned producer:** the UAC slice is correct as-is — `("cefi","future")`
+      is absent from `BUNDLE_INSTRUMENT_TYPE_BY_AG_AND_LEAF` → `GRAIN_LEAF` default (correct for BYBIT per-contract; the
+      known F2 gap for DERIBIT/OKX-FUTURES), and `grain_for_instrument_type` cefi rows are right. NO matrix/grain change
+      is mine to make (the matrix is venue-agnostic; the fix is venue-aware catalogue rollup in slot-7's
+      `build_instrument_catalogue.py`). **Safe to leave open pre-G4**: F2 over-seeds ONLY the G1.run _futures_
+      `expected_unattempted` denominator seed (700/880 2-day candidates false on DERIBIT/OKX), it does **not** touch the
+      G4 manifest/data migration — so the cefi `--apply` migration is not blocked by it.
+- [x] ✅ [DATA] P0. **G2 verify dry-runs (cefi) GREEN on WAVE-1 shape-aware code** — ① `migrate_cefi` (source-aware
+      `batch_tardis` path + bundle-grain preserved) · ② `rebuild_cefi_manifest --dry-run` exit 0 (writer-stamped v9
+      columns, source-aware) · ② `migrate_instruments_store_v9 --asset-group cefi` (30,803 rows→100% v9, all columns +
+      honest capture_status) · ③ `enumerate v2` exit 0, 3,446 plausible candidates (OPTION/COMBO bundle-skip working, no
+      over-fan, no impossible combos). Surfaced F1+F2 (could-exist, gating apply-write). mtds@`is@6ea46565`/
+      `febb899e`/`uac@97c26dbe` present on LDR. Evidence in this § (slot-3 2026-06-07).
+
 ## Slot-3 CeFi master orchestrator — owned + attached plans/issues
 
 > **Slot↔asset-group split (operator 2026-06-03):** one asset group per slot. **Slot 3 = CeFi end-to-end** across every
