@@ -171,25 +171,19 @@ what the operator is seeing:
       PR BASE, or re-run `quality-gates-v2.yml --ref <head>` (`unified-trading-pm@5fccadf56`); (2) `agents/escalate.md`
       sit_failure section gives the worker the same A/B classify + the (B) remedy, so it never wrongly "fixes LDR" for a
       stale-staging wall (`agent-orchestrator@8155adb`). basedpyright 0/0, 5 escalate unit tests green.
-- [ ] [DEVOPS] P0 **BLOCKED-OPERATOR-DECISION**. **semver-agent can no longer stamp versions onto `staging` — a
-      branch-protection contradiction from the deadlock-hardening (NOT a tag clash; correcting my earlier triage).**
-      Diagnosed 2026-06-08 from MTDS run 27124736025 failing step "Apply version bump to staging":
-      `remote: error: GH013: Repository rule violations found for refs/heads/staging. 2 of 2 required status checks are     expected. Required status check "quality-gates-v2" is expected. ! [remote rejected] HEAD -> staging`.
-      **Mechanism:** `semver-agent.yml.tmpl` (auth `GH_PAT`) DIRECT-PUSHES the `chore(release)` bump commit to `staging`
-      after QG passes pre-SIT. But `staging` carries CLASSIC branch protection with **`enforce_admins: true`** +
-      required check `quality-gates-v2` + PR-required — so a direct push (no PR, no check run) is rejected AND the admin
-      PAT cannot bypass (`enforce_admins: true`). **Latent FLEET-WIDE** — fires whenever a repo has a real pending bump
-      (today: MTDS + deployment-service FAIL; execution/strategy/instruments PASS only because they had nothing to
-      bump). Began 06-07 ~13:29 (first failure) right after the staging required-checks tightening (prior run 11:11 =
-      success). **The release-stamp content is already QG-green** (semver fires AFTER v2 passes on staging — the bump
-      only edits pyproject version + changelog), so the gate adds no safety here. **Recommended fix (operator call —
-      touches a security gate fleet-wide):** migrate the staging `quality-gates-v2` requirement from CLASSIC protection
-      (`enforce_admins`, no per-actor bypass) to a RULESET with a `bypass_actor` for the semver release bot (GitHub App
-      or the GH_PAT identity), preserving the gate for all normal pushes while letting the sanctioned post-QG bump land.
-      Alternatives: (B) `enforce_admins:false` on staging + admin-PAT bypass (weaker, contradicts the "enforce_admins ON
-      when v2 green" rule); (C) re-route semver to open a `chore(release)` PR (heavy — a version-only commit re-runs
-      full v2). repo: market-tick-data-service + fleet-wide branch protection + `semver-agent.yml.tmpl`. SSOT: this
-      plan.
+- [x] ✅ [DEVOPS] P0. **semver-agent can stamp versions onto `staging` again — admin-role ruleset bypass + classic
+      `enforce_admins` off, FLEET-WIDE (operator chose this approach 2026-06-08).** Was: `semver-agent.yml.tmpl` (auth
+      `GH_PAT`) DIRECT-PUSHES the post-QG `chore(release)` bump to `staging`, but staging's CLASSIC protection
+      (`enforce_admins: true`) + required `quality-gates-v2` (also in the `require-staging-lock-check` ruleset) rejected
+      the direct push and the admin PAT couldn't bypass (`GH013: Repository rule violations`). **Fix:** rulesets bypass
+      by ROLE not user, so `pin_branch_protection_rulesets.py` now grants the **Repository-admin role** (actor_id 5,
+      `bypass_mode: always`) a bypass on `require-staging-lock-check`, AND disables classic staging `enforce_admins` (a
+      ruleset bypass doesn't cover classic protection). **Scope verified:** the only admin is `IggyIkenna` (= the GH_PAT);
+      `CosmicTrader` is `write` → stays fully gated by `quality-gates-v2` + `check-staging-lock`. The `require-quality-gates`
+      (main) ruleset stays strict. **Applied 28/28** (15 ruleset bypass + 13 classic disable; MTDS piloted; idempotent
+      re-run = 0). **Proven:** MTDS semver rerun pushed `chore(release): bump version to 0.4.0` to staging (apply step
+      green). `unified-trading-pm@ee0c3af01`. Composes with the stuck-promotion drain (semver bumps now flow → SIT →
+      main). SSOT: this plan + `pin_branch_protection_rulesets.py`.
 - [x] ✅ [SCRIPT] P1. **Plan-hygiene was silently degraded 06-05→06-07 — the "I didn't see plan hygiene" cause; now
       self-resolved.** `plan-health-agent.yml` (scheduled `0 2 * * *` + per-PR gate + Slack notify + GCS/S3 persist) ran
       RED four straight days. Root cause for 06-05/06/07: the `Claude API health precheck` step (now a RETIRED no-op as
