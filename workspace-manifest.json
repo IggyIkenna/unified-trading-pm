@@ -80,7 +80,7 @@
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.2.0",
     "unified-trading-library": "0.4.0",
-    "unified-trading-pm": "1.2.45",
+    "unified-trading-pm": "1.2.47",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.0",
     "agent-orchestrator": "0.8.0",
@@ -1145,7 +1145,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1794,24 +1794,28 @@
     "execution-service": "0.2.0",
     "instruments-service": "0.2.0",
     "trading-agent-service": "0.2.0",
-    "strategy-service": "0.1.0"
+    "strategy-service": "0.1.0",
+    "market-data-processing-service": "0.3.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": "Clean-start heal 2026-06-08: dangling exec-service=0.2.0 breaking-cascade lock cleared (content-based breaking-detection incoming); SIT retries reset",
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-08T22:37:15.850842Z",
+    "locked_reason": "Breaking MINOR bump cascade: unified-api-contracts=0.2.0 (pre-1.0.0)",
+    "lock_version": "0.2.0",
     "pending_repos": [],
     "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": []
+    "breaking_pending": [
+      "market-data-processing-service",
+      "unified-api-contracts"
+    ]
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "unified-api-contracts": {
       "version": "0.2.0",
-      "sha": "a93b5247436f6b7a23165922784ed972b108a697",
+      "sha": "447f174bdfbc56108c1a22df54e537fbdd29d510",
       "branch": "staging"
     },
     "agent-orchestrator": {
@@ -1852,6 +1856,11 @@
     "batch-live-reconciliation-service": {
       "version": "0.2.0",
       "sha": "4bf1600cf1f50760879078ec144e97a3f9e9fddb",
+      "branch": "staging"
+    },
+    "market-data-processing-service": {
+      "version": "0.3.0",
+      "sha": "b362975b194826245f952cda548bbfea855b4002",
       "branch": "staging"
     }
   },
