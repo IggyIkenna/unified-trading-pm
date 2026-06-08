@@ -147,14 +147,20 @@ what the operator is seeing:
       resolved bookend was never disabled. If "solved" alerts are still not visible, the cause is upstream (the open
       FAILING alert was never posted, or the PR closed >0.5h before the next tick and was skipped), not this flag.
       `unified-trading-pm@<this>`.
-- [ ] [SCRIPT] P0. **Escalation no-retry on capacity failure (the real "vm-planning isn't handling it" cause).**
-      `ci_failure_watcher.py` adds the `_ESCALATION_LABEL` (idempotency) on the dispatch ATTEMPT (`_dispatch_escalation`
-      ~line 519), **before** confirming the orchestrator actually spawned a worker. So when `/api/escalate` returns "no
-      free slot / no headroom" (the PM#174 "Escalation NOT confirmed" alert), the PR is STILL marked escalated → the
-      `*/15m` cron never re-dispatches → it stays stuck forever. FIX: only add the label on a CONFIRMED dispatch
-      (escalation_id returned); on a failed/unconfirmed dispatch leave it unlabeled so the next tick retries (backoff
-      cap + a louder alert if it keeps failing). Composes with slot-capacity work (free a slot for escalations: the
-      stale-session reaper + AutoSpawn headroom). repo: unified-trading-pm.
+- [x] ✅ [SCRIPT] P0. **Escalation no-retry on capacity failure FIXED (the real "vm-planning isn't handling it"
+      cause).** `ci_failure_watcher.py::_dispatch_escalation` added the `_ESCALATION_LABEL` (idempotency) on the
+      dispatch ATTEMPT (`gh api …/dispatches` returncode 0), **before** the orchestrator confirmed a worker spawn. So
+      when `/api/escalate` returned 503 "no free slot / no headroom" (the PM#174 "Escalation NOT confirmed" alert), the
+      PR was STILL marked escalated → the `*/15m` cron never re-dispatched → stuck forever. **FIX (split-brain →
+      confirmed-spawn idempotency):** (1) the watcher now DISPATCHES ONLY — removed the optimistic
+      `gh label`/`gh pr edit --add-label`; (2) `escalate-to-orchestrator.yml` applies `escalation-dispatched` ONLY when
+      `steps.post.outputs.dispatched ==     'true'` (200 + escalation_id == confirmed spawn) and `pr_number != 0`,
+      cross-repo via `GH_PAT`. A 503/no-id leaves the PR UNLABELLED → the next watcher tick re-dispatches until a slot
+      frees (the operator's "escalate after X minutes until handled" behaviour). The workflow's `notify` job already
+      fires the WARNING "wall STILL OPEN" Slack bookend on `dispatched=false`, so a capacity stall is visible, not
+      silent. 21 watcher unit tests green + basedpyright 0/0. `unified-trading-pm@<this>`. Composes with slot-capacity
+      work (free a slot for escalations: the stale-session reaper + AutoSpawn headroom — if slots are chronically full
+      the retries still need a slot to land).
 - [ ] [SCRIPT] P1. **Stuck-PR escalation should cover the v2-on-stale-staging-workflow class.** A promote PR whose v2
       fails on a STALE staging workflow (a fix that's on LDR but never reached staging, e.g. `major-bump-issue-handler`
       actionlint) is `BLOCKED` with a failed required check → `blocked_failing_prs_to_escalate` should hand it to a
@@ -166,6 +172,20 @@ what the operator is seeing:
       (2026-06-08). MTDS staging `quality-gates-v2` is green now, so this is a version-bump-specific failure
       (tag/version clash or transient), separate from the deadlock. Triage the semver-agent run; likely a stale
       release-tag clash → `git fetch origin --tags --force`. repo: market-tick-data-service / semver.
+- [x] ✅ [SCRIPT] P1. **Plan-hygiene was silently degraded 06-05→06-07 — the "I didn't see plan hygiene" cause; now
+      self-resolved.** `plan-health-agent.yml` (scheduled `0 2 * * *` + per-PR gate + Slack notify + GCS/S3 persist) ran
+      RED four straight days. Root cause for 06-05/06/07: the `Claude API health precheck` step (now a RETIRED no-op as
+      of `da81a1414`, comment-documented as the "cascade-dammer") was still failing the `plan-health` job on `main`
+      before the no-op reached it → the LLM contradiction-detection agent was SKIPPED 3 days running while plans WERE
+      healthy (local `run_hygiene_sweep.sh` exits 0, 0 hard failures). As of the 06-08 03:08 run the no-op is on `main`
+      and the `plan-health` job is GREEN again. Verified 2026-06-08. (Deterministic hard-gate is unaffected — it's the
+      separate `plan-health-gate` job, PR-only.)
+- [ ] [SCRIPT] P2. **Plan-health run-badge still shows `failure` with all jobs green (06-08).** Today's run:
+      `plan-health` success, `plan-health-gate` skipped (non-PR), Slack success — yet the run conclusion is `failure`. A
+      skipped gate job shouldn't fail the run; likely a `needs:`/`if:` propagation quirk after the persist-event job was
+      removed between 06-06 and 06-07. A chronically-red scheduled badge erodes trust (looks broken even when plans are
+      healthy). Make the scheduled run conclude green on a healthy sweep (drop/guard the skipped-gate propagation).
+      repo: unified-trading-pm.
 
 ## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
 
