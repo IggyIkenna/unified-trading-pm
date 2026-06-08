@@ -384,15 +384,19 @@ run); honest-coverage = blocked on ⑦/⑧ + the named operational gates.**
       captures **45 venues** ⇒ **29 captured venues absent from IS reference = 108,556 captured rows (8.3%)**. Headline
       genuine gaps: **KRAKEN-SPOT (75,714) + KRAKEN-FUTURES (31,582)** (KRAKEN-FUTURES verified on disk
       `day=2026-05-24`), **BITFINEX-SPOT**, **PACIFICA-SOLANA (309)**, **LIGHTER-ZKSYNC (319)**. Diagnosed: NOT a rollup
-      bug — KRAKEN is absent at the IS SOURCE → the IS cefi reference adapter universe does not enumerate these venues
-      (Tardis provides them; IS doesn't request). **Fix (owner: instruments-service cefi slice — slot-3 drives,
-      vm-cross-cutting `instruments_backfill_phase3` / `proper_instrument_catalogue_lifecycle_rollup` own the run): (1)
-      add KRAKEN-SPOT/KRAKEN-FUTURES/BITFINEX-SPOT/BITGET-*/PACIFICA-SOLANA/LIGHTER-ZKSYNC to the IS cefi reference
-      adapter venue universe; (2) re-run the IS reference backfill so `instrument_availability/by_date/` ⊇ the MTDS
-      captured present-set; (3) diagnose the ~650 `*F0`/`UNKNOWN`-venue manifest-pollution rows (blank
-      instrument_type/instrument_id) — reconcile or demote.** Gates honest coverage denominator (⑦/⑧), NOT the G4
-      data/manifest `--apply`. **Big finding — operator notified 2026-06-08.** Provenance: slot-3 pre-apply audit
-      2026-06-08 (real-prod catalogue vs manifest walk).
+      bug — KRAKEN is absent at the IS SOURCE: `instrument_availability/by_date/day=2026-05-22/` enumerated only 12
+      venues. The IS venue universe is **DYNAMIC, not a hardcoded list** (grep: KRAKEN appears nowhere in IS/UAC source;
+      DERIBIT — a PRESENT IS venue — also appears nowhere ⇒ the reference backfill enumerates venues at runtime from its
+      source/scope) — so this is NOT a "add a constant" fix. **Fix (owner: instruments-service cefi slice — slot-3
+      drives, vm-cross-cutting `instruments_backfill_phase3` / `proper_instrument_catalogue_lifecycle_rollup` own the
+      run): (1) determine WHY the IS reference backfill enumerated only those 12 venues — source naming mismatch (Tardis
+      exchange id vs canonical venue), backfill venue-scope limit, or a missing/unwired reference adapter for
+      KRAKEN/BITFINEX-SPOT/BITGET/PACIFICA-SOLANA/LIGHTER-ZKSYNC; (2) extend the IS reference coverage + re-run the
+      backfill so `instrument_availability/by_date/` ⊇ the MTDS captured present-set (catalogue ⊇ present-set); (3)
+      diagnose the ~650 `*F0`/`UNKNOWN`-venue manifest-pollution rows (blank instrument_type/instrument_id) — reconcile
+      or demote.** Gates honest coverage denominator (⑦/⑧), NOT the G4 data/manifest `--apply`. **Big finding — operator
+      notified 2026-06-08.** Provenance: slot-3 pre-apply audit 2026-06-08 (real-prod catalogue vs manifest walk +
+      IS/UAC source grep).
 - [ ] [CODE] P1. **⑦(a) — deployment-api cefi coverage DENOMINATOR re-derives genesis/launch instead of READING
       `expected_unattempted` (post-seed switch).** `deployment_api/.../data_status_service.py`
       `_apply_mtds_honest_coverage` → `_mtds_honest_coverage_for_venue` (`~:1668`) computes
