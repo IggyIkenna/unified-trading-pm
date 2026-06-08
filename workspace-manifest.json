@@ -1,9 +1,9 @@
 {
   "$schema": "https://json-schema.org/draft-07/schema",
-  "title": "Unified Trading System \u2014 Workspace Manifest v2",
+  "title": "Unified Trading System — Workspace Manifest v2",
   "description": "SSOT for all repos: types, dependencies, doc standards, merge order. Drives CI/CD, completeness checkers, service doc rollout, and quickmerge cascade.",
   "lastUpdated": "2026-05-20",
-  "notes": "Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Workspace clone alignment \u2014 repositories not present under workspace root marked status=archived (rollout/run-all-setup no longer warn on missing dirs). topologicalOrder rebuilt for active repos only; added fund-administration-service + unified-trading-api + user-management-ui to topo levels; workspace_infrastructure.setup_repos=[unified-trading-pm] (codex optional clone). | Updated 2026-03-24: Archive-only sweep \u2014 legacy split UIs, standalone APIs (incl. config/trading-analytics/ml-* -api), npm UI-kit/workspace repos, experimental services, and scratch/root data trees exist only under workspace-root archive/ (see archive/README.md). Manifest repositories = active surface only. | Prior: Archived odum-research-website, logs-dashboard-ui, live-health-monitor-ui, batch-audit-api; removed from manifest. | Prior: Active surface: unified-trading-system-ui + deployment-ui + unified-trading-api + auth-api + deployment-api + domain APIs (see ui-api-mapping). | Prior: 2026-03-13 ci_status sweep \u2014 promoted 4 BASELINE_RECORDED\u2192VALIDATED; 15 FAILING. 2026-03-10 unified-admin-ui (npm monorepo) packa...",
+  "notes": "Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Pruned retired library repos from manifest (no longer cloned); stripped dependency pointers; execution-service uses UTL cloud facades only. | Updated 2026-04-20: Workspace clone alignment — repositories not present under workspace root marked status=archived (rollout/run-all-setup no longer warn on missing dirs). topologicalOrder rebuilt for active repos only; added fund-administration-service + unified-trading-api + user-management-ui to topo levels; workspace_infrastructure.setup_repos=[unified-trading-pm] (codex optional clone). | Updated 2026-03-24: Archive-only sweep — legacy split UIs, standalone APIs (incl. config/trading-analytics/ml-* -api), npm UI-kit/workspace repos, experimental services, and scratch/root data trees exist only under workspace-root archive/ (see archive/README.md). Manifest repositories = active surface only. | Prior: Archived odum-research-website, logs-dashboard-ui, live-health-monitor-ui, batch-audit-api; removed from manifest. | Prior: Active surface: unified-trading-system-ui + deployment-ui + unified-trading-api + auth-api + deployment-api + domain APIs (see ui-api-mapping). | Prior: 2026-03-13 ci_status sweep — promoted 4 BASELINE_RECORDED→VALIDATED; 15 FAILING. 2026-03-10 unified-admin-ui (npm monorepo) packa...",
   "previousPath": ".cursor/plans/code_optimizations_and_ci_cd_alignment/DEPENDENCY-MATRIX-CANONICAL.json",
   "doc_standards": {
     "service-canonical": {
@@ -59,14 +59,14 @@
     }
   },
   "versions_policy": {
-    "rule": "All versions MUST be <1.0.0 until the repo passes a full quickmerge on main via the new CI/CD pipeline (Phase 0-CI complete). Version 1.0.0 is the first STABLE release \u2014 it is only set by the GitHub Action auto-bump on merge to main, never manually. No version in this manifest should be >=1.0.0 until that repo's tier is fully green.",
+    "rule": "All versions MUST be <1.0.0 until the repo passes a full quickmerge on main via the new CI/CD pipeline (Phase 0-CI complete). Version 1.0.0 is the first STABLE release — it is only set by the GitHub Action auto-bump on merge to main, never manually. No version in this manifest should be >=1.0.0 until that repo's tier is fully green.",
     "bump_authority": "GitHub Action (version-bump.yml) on merge to main only. Conventional commit prefix determines bump type.",
     "local_bumps": "FORBIDDEN on branches. Only the GitHub Action bumps versions. Manual bumps cause double-bump (local + CI = skipped semver).",
-    "pre_stable_convention": "0.MINOR.PATCH \u2014 minor reflects architectural evolution; patch reflects fixes. 0.x.x means not yet validated as stable on the new CI/CD pipeline.",
+    "pre_stable_convention": "0.MINOR.PATCH — minor reflects architectural evolution; patch reflects fixes. 0.x.x means not yet validated as stable on the new CI/CD pipeline.",
     "stable_threshold": "1.0.0+ = passed full quickmerge on main with Phase 0-CI infrastructure in place."
   },
   "versions": {
-    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
+    "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.1.0",
     "deployment-api": "0.2.0",
     "deployment-service": "0.2.0",
@@ -80,7 +80,7 @@
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.2.0",
     "unified-trading-library": "0.4.0",
-    "unified-trading-pm": "1.2.31",
+    "unified-trading-pm": "1.2.32",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.0",
     "agent-orchestrator": "0.8.0",
@@ -152,7 +152,7 @@
       "version_source": "pyproject.toml",
       "status": "active",
       "cluster": "batch-services",
-      "notes": "Nightly T+1 orchestrator: replays ML\u2192strategy\u2192execution pipeline vs live events, attributes deviations per stage, writes recon reports to GCS.",
+      "notes": "Nightly T+1 orchestrator: replays ML→strategy→execution pipeline vs live events, attributes deviations per stage, writes recon reports to GCS.",
       "github_url": "https://github.com/IggyIkenna/batch-live-reconciliation-service",
       "completion_path": "cefi",
       "dependencies": [
@@ -256,7 +256,7 @@
       "arch_tier": "devops",
       "status": "active",
       "version": "0.1.1",
-      "description": "Deployment API \u2014 standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
+      "description": "Deployment API — standalone FastAPI service extracted from unified-trading-deployment-v3/api/. Monitors deployments, service status, cloud builds.",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -320,7 +320,7 @@
       "arch_tier": "devops",
       "status": "active",
       "version": "0.1.1",
-      "description": "Deployment orchestration service \u2014 Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
+      "description": "Deployment orchestration service — Python package (orchestrator, catalog, config_loader, backends, deployment/, CLI), Terraform, configs (SSOT). Layer 2: verify_infra.py (infra connectivity gate).",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -371,7 +371,7 @@
       ],
       "version": "0.1.1",
       "version_source": "pyproject.toml",
-      "deployment_note": "Per-client deployment \u2014 holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
+      "deployment_note": "Per-client deployment — holds client order credentials. Category splits: CeFi/DeFi/TradFi.",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -479,7 +479,7 @@
         "features-sports-service",
         "features-volatility-service"
       ],
-      "notes": "Consolidated features service \u2014 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/."
+      "notes": "Consolidated features service — 8 features-* repos merged as sub-packages (calendar/commodity/cross_instrument/delta_one/multi_timeframe/onchain/sports/volatility) under features_service.<family>. ONE Docker image parameterised by --feature-family CLI flag, ONE flat pyproject.toml, ONE Health-API endpoint exposing per-family freshness. New UAC schema column feature_family added 2026-05-08 (Phase 1A). Consolidation plan: plans/active/features_repo_consolidation_2026_05_08.md. Phase 7 archival complete 2026-05-08: the 8 source repos are archived read-only on GitHub with DEPRECATION_NOTICE.md banners and carry status=consolidated-into-features-service + archived_into=features-service + archive_date=2026-05-08 in this manifest. New work / bug fixes go to features-service/features_service/<family>/."
     },
     "fund-administration-service": {
       "type": "service",
@@ -512,7 +512,7 @@
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
       "skipped_gates": [],
-      "notes": "New repo 2026-04-20 \u2014 Phase 2 of fund_administration_service_and_pooled_subscription_redemption plan. Local-only until Phase 6 staging deploy. Subscription + redemption state machines + capital-routing orchestrator using execution-service TransferAdapter with FundTransferContext. Follow-up: promote FundTransferContext to UAC to remove SCHEMA_PROVENANCE_EXEMPT local mirror.",
+      "notes": "New repo 2026-04-20 — Phase 2 of fund_administration_service_and_pooled_subscription_redemption plan. Local-only until Phase 6 staging deploy. Subscription + redemption state machines + capital-routing orchestrator using execution-service TransferAdapter with FundTransferContext. Follow-up: promote FundTransferContext to UAC to remove SCHEMA_PROVENANCE_EXEMPT local mirror.",
       "status": "scaffolded",
       "service_declaration": {
         "mode": "live",
@@ -916,7 +916,7 @@
       "arch_tier": "integration",
       "status": "scaffolded",
       "version": "0.2.0",
-      "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports \u2014 HTTP/GCS/PubSub only.",
+      "description": "Layer 3a (fast smoke, @pytest.mark.smoke, <5 min) + Layer 3b (full e2e, @pytest.mark.full_e2e, 15-30 min). Sequential: 3a must pass before 3b. Triggered by deployment-api post-deploy. Requires GCP sandbox. Zero service imports — HTTP/GCS/PubSub only.",
       "dependencies": [
         {
           "name": "unified-trading-library",
@@ -970,7 +970,7 @@
         }
       ],
       "completion_path": "cefi",
-      "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 \u2014 coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
+      "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 — coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
       "ci_status": "MAIN_GREEN",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -1140,10 +1140,10 @@
       "arch_tier": "devops",
       "status": "active",
       "version": "1.2.0",
-      "description": "Project management SSOT \u2014 workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
+      "description": "Project management SSOT — workspace-manifest.json, setup.sh template, workspace-bootstrap.sh, cursor-rules/, AGENTS.md template, quickmerge.sh template",
       "dependencies": [],
       "completion_path": "all",
-      "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
+      "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
       "ci_status": "MAIN_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
@@ -1259,7 +1259,7 @@
       "arch_tier": "integration",
       "status": "active",
       "version": "0.1.0",
-      "description": "End-to-end testing for DeFi + Sports + Prediction pipelines (instruments \u2192 market data \u2192 features \u2192 strategy). 3-layer architecture across asset_groups. Standalone repo; scripts/<asset_group>/ wired into primary-consumer service QGs per CLAUDE.md.",
+      "description": "End-to-end testing for DeFi + Sports + Prediction pipelines (instruments → market data → features → strategy). 3-layer architecture across asset_groups. Standalone repo; scripts/<asset_group>/ wired into primary-consumer service QGs per CLAUDE.md.",
       "dependencies": [
         {
           "name": "unified-api-contracts",
@@ -1278,7 +1278,7 @@
         }
       ],
       "completion_path": "infrastructure",
-      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 \u2014 absorbed into strategy-service dep.",
+      "notes": "Standalone repo. Not a library or service. scripts/defi/ wired into strategy-service QG; scripts/sports/ wired into features-service QG; scripts/prediction/ wired into mtds QG per CLAUDE.md peripheral-script discipline. risk/position deps removed 2026-05-20 — absorbed into strategy-service dep.",
       "ci_status": "MAIN_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,
@@ -1314,7 +1314,7 @@
       "version": "0.1.0",
       "version_source": "pyproject.toml",
       "status": "active",
-      "notes": "Canonical orchestrator \u2014 IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab\u2192LDR\u2192main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged \u2014 2026-05-24 incident.",
+      "notes": "Canonical orchestrator — IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart; tab→LDR→main promotion); `main` is only the dashboard-SPA deploy branch + CI gate. A `main` slot base reads as diverged — 2026-05-24 incident.",
       "ci_status": "MAIN_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,
@@ -1332,35 +1332,35 @@
     "levels": [
       {
         "level": 0,
-        "description": "Project management \u2014 manifest, templates, scripts, cursor rules.",
+        "description": "Project management — manifest, templates, scripts, cursor rules.",
         "repos": [
           "unified-trading-pm"
         ]
       },
       {
         "level": 1,
-        "description": "Foundation contracts (Tier 0) \u2014 present clone set.",
+        "description": "Foundation contracts (Tier 0) — present clone set.",
         "repos": [
           "unified-api-contracts"
         ]
       },
       {
         "level": 2,
-        "description": "Trading library (Tier 1) \u2014 depends on UAC.",
+        "description": "Trading library (Tier 1) — depends on UAC.",
         "repos": [
           "unified-trading-library"
         ]
       },
       {
         "level": 3,
-        "description": "Instrument registry \u2014 depends on UAC + UTL.",
+        "description": "Instrument registry — depends on UAC + UTL.",
         "repos": [
           "instruments-service"
         ]
       },
       {
         "level": 4,
-        "description": "Core services (batch + live) \u2014 parallel within tier.",
+        "description": "Core services (batch + live) — parallel within tier.",
         "repos": [
           "alerting-service",
           "execution-service",
@@ -1413,27 +1413,27 @@
   "tier_rules": {
     "0": {
       "allowed_from": [],
-      "description": "Pure leaf \u2014 contract packages (e.g. UAC). No inter-library deps."
+      "description": "Pure leaf — contract packages (e.g. UAC). No inter-library deps."
     },
     "1": {
       "allowed_from": [
         "0"
       ],
-      "description": "Trading library tier (UTL) \u2014 imports Tier 0 contracts only."
+      "description": "Trading library tier (UTL) — imports Tier 0 contracts only."
     },
     "2": {
       "allowed_from": [
         "0",
         "1"
       ],
-      "description": "Reserved \u2014 legacy split interface repos removed; consume cloud/config via UTL."
+      "description": "Reserved — legacy split interface repos removed; consume cloud/config via UTL."
     },
     "3": {
       "allowed_from": [
         "0",
         "1"
       ],
-      "description": "Reserved \u2014 legacy domain-client split removed; use UTL storage helpers."
+      "description": "Reserved — legacy domain-client split removed; use UTL storage helpers."
     },
     "service": {
       "allowed_from": [
@@ -1442,33 +1442,33 @@
         "2",
         "3"
       ],
-      "description": "Services \u2014 import from all library tiers. Never import from another service repo."
+      "description": "Services — import from all library tiers. Never import from another service repo."
     },
     "api": {
       "allowed_from": [
         "0",
         "1"
       ],
-      "description": "API gateway services (FastAPI) \u2014 HTTP boundary; deps: UTL + UAC."
+      "description": "API gateway services (FastAPI) — HTTP boundary; deps: UTL + UAC."
     },
     "ui": {
       "allowed_from": [],
-      "description": "TypeScript UIs \u2014 call API services via HTTP/SSE only. Never import Python libraries."
+      "description": "TypeScript UIs — call API services via HTTP/SSE only. Never import Python libraries."
     },
     "infrastructure": {
       "allowed_from": [],
-      "description": "Infrastructure repos \u2014 IaC (Terraform), scripts. Python repos use minimal deps."
+      "description": "Infrastructure repos — IaC (Terraform), scripts. Python repos use minimal deps."
     },
     "devops": {
       "allowed_from": [
         "0",
         "1"
       ],
-      "description": "DevOps/deployment \u2014 deployment-service, deployment-api. Imports UTL + UAC."
+      "description": "DevOps/deployment — deployment-service, deployment-api. Imports UTL + UAC."
     },
     "integration": {
       "allowed_from": [],
-      "description": "Integration test harness \u2014 system-integration-tests. HTTP/GCS/PubSub only, no service imports."
+      "description": "Integration test harness — system-integration-tests. HTTP/GCS/PubSub only, no service imports."
     }
   },
   "futureRepos": {
@@ -1624,13 +1624,13 @@
     ]
   },
   "deployment_topology": {
-    "description": "L0 DAG \u2014 cloud provider, protocol defaults, messaging topology, colocation groups. Libraries own infra decisions; services declare mode + capabilities only.",
+    "description": "L0 DAG — cloud provider, protocol defaults, messaging topology, colocation groups. Libraries own infra decisions; services declare mode + capabilities only.",
     "cloud_provider_env_var": "CLOUD_PROVIDER",
     "service_mode_env_var": "SERVICE_MODE",
     "environments": {
       "local": {
         "cloud_provider": "local",
-        "note": "CI, dev/test \u2014 no cloud SDKs required"
+        "note": "CI, dev/test — no cloud SDKs required"
       },
       "dev": {
         "cloud_provider": "gcp",
@@ -1642,7 +1642,7 @@
       },
       "prod": {
         "cloud_provider": "gcp",
-        "note": "Production \u2014 primary cloud"
+        "note": "Production — primary cloud"
       },
       "prod_aws": {
         "cloud_provider": "aws",
@@ -1741,7 +1741,7 @@
         "deployment-ui"
       ],
       "not_required": [
-        "Legacy split UIs, standalone APIs, npm UI-kit/workspace repos, experimental services, and scratch data trees \u2014 archived under workspace-root archive/ only (see archive/README.md). Not part of the active 1 UI + consolidated API surface."
+        "Legacy split UIs, standalone APIs, npm UI-kit/workspace repos, experimental services, and scratch data trees — archived under workspace-root archive/ only (see archive/README.md). Not part of the active 1 UI + consolidated API surface."
       ]
     },
     "defi": {
@@ -1780,7 +1780,7 @@
     }
   },
   "staging_versions": {
-    "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` \u2014 the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
+    "_note": "Baseline per-repo versions semver-agent compares against (it reads m.get('staging_versions', {})). Restored 2026-06-01 from `versions` — the key had been reset to {} so semver had no baseline even once its trigger was fixed (cicd_contract_hardening_2026_06_01 P1 #6). Mirror of `versions`; semver updates this per staging promotion.",
     "batch-live-reconciliation-service": "0.1.0",
     "deployment-ui": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
@@ -1794,10 +1794,10 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-08T01:38:24.023977Z",
+    "locked_reason": "Breaking MINOR bump cascade: unified-trading-library=0.4.0 (pre-1.0.0)",
+    "lock_version": "0.4.0",
     "pending_repos": [
       "deployment-service",
       "features-service",
@@ -1824,7 +1824,7 @@
     },
     "unified-trading-library": {
       "version": "0.4.0",
-      "sha": "1218d932d7277fe999839fd1c82645d45cd97fdd",
+      "sha": "23109e4fc92d2a7c97cbdd6cebe7dea235ca2b8f",
       "branch": "staging"
     },
     "market-tick-data-service": {
