@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
@@ -43,7 +43,11 @@ jobs:
           # Option-B repos (promote LDR→main directly, no staging branch) carry a vestigial
           # staging_versions entry that never reconciles to versions — exclude them so they do
           # not become a permanent phantom in pending_repos that blocks the lock from clearing.
-          staging_excluded = {"unified-trading-pm"}
+          # agent-orchestrator is mid-migration (no quickmerge/version-reconciliation flow yet,
+          # G6 plan) so its staging_versions (0.8.1) never reconciles to stable (0.8.0) → same
+          # phantom class; exclude until its SIT migration lands. (Incident 2026-06-08: AO
+          # phantom-held the staging lock ~80m, wedging every →staging promotion PR.)
+          staging_excluded = {"unified-trading-pm", "agent-orchestrator"}
           # Repos that have staging changes
           pending = [r for r, sv in staging_versions.items()
                      if not r.startswith("_") and r not in staging_excluded
@@ -109,7 +113,8 @@ jobs:
           # Populate pending_repos from staging_versions that differ from stable versions.
           # Exclude Option-B repos (LDR→main directly, no staging branch) — their vestigial
           # staging_versions entry never reconciles and would phantom-block the lock-clear.
-          staging_excluded = {"unified-trading-pm"}
+          # agent-orchestrator: mid-migration phantom (staging 0.8.1 vs stable 0.8.0), same class.
+          staging_excluded = {"unified-trading-pm", "agent-orchestrator"}
           staging_versions = manifest.get("staging_versions", {})
           stable_versions = manifest.get("versions", {})
           pending = [r for r, sv in staging_versions.items()
