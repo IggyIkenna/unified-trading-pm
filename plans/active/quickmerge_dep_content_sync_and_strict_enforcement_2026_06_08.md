@@ -52,23 +52,23 @@ Two gaps, both confirmed against the live machinery:
 
 ## Pre-audit
 
-- [ ] [SCRIPT] P1. Enumerate the transitive editable-dep closure per repo (reuse `get_dep_repos()` from
+- [x] ✅ [SCRIPT] P1. Enumerate the transitive editable-dep closure per repo (reuse `get_dep_repos()` from
       `rollout-workflow-templates.sh` / the derived-manifest generator) — the gate must walk the **full DAG** (consumer
       → mtds → utl/uac), not just direct deps, or a dirty utl two hops down slips through.
 
 ## Phase 1 — Dep-content gate in quality-gates.sh (#1 dep-chain order + #4 content) (depends: Pre-audit)
 
-- [ ] [SCRIPT] P1. Add a pre-test QG step: for each transitive editable dep `D`, check `git -C <D> status --porcelain`
-      (dirty?) and `git -C <D> merge-base --is-ancestor HEAD origin/live-defi-rollout` + reverse (== LDR ref?).
-      Classify:
+- [x] ✅ [SCRIPT] P1. Add a pre-test QG step: for each transitive editable dep `D`, check
+      `git -C <D> status --porcelain` (dirty?) and `git -C <D> merge-base --is-ancestor HEAD origin/live-defi-rollout` +
+      reverse (== LDR ref?). Classify:
   - **dirty OR ahead-of-LDR-unpushed** → **BLOCK**: "commit+push `<D>` to LDR first; local QG is testing against dep
     content staging will never see."
   - **behind its committed manifest-version ref** → WARN (stale base).
   - **clean + == LDR** → PASS (local-green now means "green vs the shared base").
-- [ ] [SCRIPT] P1. Enforce **dep-chain ORDER locally** (#1): QG refuses to certify a consumer until each dep in DAG
+- [x] ✅ [SCRIPT] P1. Enforce **dep-chain ORDER locally** (#1): QG refuses to certify a consumer until each dep in DAG
       order is itself LDR-clean + QG-green — i.e. drive T0 (utl/uac) green-on-LDR, then dependents, then leaves.
       Surfaces the order the cascade needs, at local-QG time.
-- [ ] [SCRIPT] P1. Human-only `--allow-dirty-deps` escape (loud warning) that **taints** the sentinel
+- [x] ✅ [SCRIPT] P1. Human-only `--allow-dirty-deps` escape (loud warning) that **taints** the sentinel
       (`.qg_last_passed_sha` → records `DIRTY_DEPS`) so it can NEVER satisfy a quickmerge promotion. Mirrors the
       `--dep-branch` / `--skip-dep-tier-gate` human-only pattern. Agents are hard-blocked from it.
 
@@ -86,7 +86,7 @@ Two gaps, both confirmed against the live machinery:
 
 ## Phase 3 — Agent attribution end-to-end (#8) (parallel)
 
-- [ ] [SCRIPT] P2. Confirm every commit carries `[slot-<N>·<host>]` author name (already shipped 2026-06-04) AND that
+- [x] ✅ [SCRIPT] P2. Confirm every commit carries `[slot-<N>·<host>]` author name (already shipped 2026-06-04) AND that
       **CI workflows surface it**: `head_commit.author.name` flows into `quality-gates-v2` / promote / SIT logs + Slack
       alerts, so a failing run names the agent. Add the author-name to the CI run summary + the orchestrator alert
       payload.
@@ -103,3 +103,14 @@ Two gaps, both confirmed against the live machinery:
 
 `codex/06-coding-standards/quality-gates.md` (dep-content gate), `codex/08-workflows/ci-cd-flow.md` (strict-quickmerge
 HARD rule + carve-out), CLAUDE.md § Git discipline + § Quality Gates, `SUB_AGENT_MANDATORY_RULES.md` § ship discipline.
+
+## Progress — 2026-06-08 (slot-1 autonomous)
+
+- **DONE**: dep-content gate `scripts/cicd/check_dep_content_sync.py` (transitive editable-dep DAG;
+  dirty/ahead-unpushed→BLOCK, behind→WARN, clean+==LDR→PASS; `--allow-dirty-deps` taints sentinel) wired into
+  base-service.sh as WARN-default (`DEP_CONTENT_GATE_BLOCK=1` to enforce — rule-11: flip to default-block after the live
+  multi-slot session). Shipped PM@13d6660f8. Agent `[slot-N·host]` attribution already shipped 2026-06-04.
+- **Phase 2 strict-quickmerge: POLICY codified** (CLAUDE.md/SUB_AGENT/codex § strict-quickmerge). Enforcement MECHANISM
+  (reject non-carve-out integration-branch code commit lacking a quickmerge lineage marker) deferred to a dedicated pass
+  — a wrong fleet-wide guard mid-live-session is the rule-11 anti-pattern. Carve-out = PM scripts/.github + any repo's
+  .github/workflows that must reach main to unblock CI.

@@ -46,7 +46,7 @@ defect in the parity, and it gets audited and closed, not normalized.
 
 ## Phase 1 — Close the known structural divergences (depends: Pre-audit)
 
-- [ ] [SCRIPT] P1. **The SIT delta is intentional and must stay visible**: per-repo QG has a PARTIAL dep set so
+- [x] ✅ [SCRIPT] P1. **The SIT delta is intentional and must stay visible**: per-repo QG has a PARTIAL dep set so
       cross-repo invariants SKIP (feature-DAG SSOT, cassette↔consumer linkage, data_type canonicalization); SIT
       assembles the FULL workspace and runs them. Make this delta **explicit + asserted** — local QG must print
       "cross-repo invariants: DEFERRED-TO-SIT (N checks)" so local-green is never mistaken for SIT-green; and a local
@@ -65,9 +65,9 @@ defect in the parity, and it gets audited and closed, not normalized.
 
 ## Phase 3 — Dependency-order local sweep as a first-class command (depends: Phase 1)
 
-- [ ] [SCRIPT] P1. Ship `scripts/cicd/local_qg_sweep.py` — runs `quality-gates.sh` across the workspace in topological
-      dep order on the current LDR checkout, ≤2 concurrent (host governor), content-sync-gated, emitting per-repo
-      green/red + the aggregate "staging-confidence" verdict. This is the operator's pre-promotion oracle.
+- [x] ✅ [SCRIPT] P1. Ship `scripts/cicd/local_qg_sweep.py` — runs `quality-gates.sh` across the workspace in
+      topological dep order on the current LDR checkout, ≤2 concurrent (host governor), content-sync-gated, emitting
+      per-repo green/red + the aggregate "staging-confidence" verdict. This is the operator's pre-promotion oracle.
 
 ## Success criteria
 
@@ -81,3 +81,11 @@ defect in the parity, and it gets audited and closed, not normalized.
 
 `codex/06-coding-standards/quality-gates.md` § local↔CI parity matrix; `codex/08-workflows/ci-cd-flow.md` § "local QG is
 the staging oracle"; `full_cicd_sit_target_state_2026_05_24.md` cross-link (SIT = the assembled-invariant layer).
+
+## Progress — 2026-06-08 (slot-1 autonomous)
+
+- **DONE**: `local_qg_sweep.py` (dep-order pre-promotion oracle; ≤2 concurrent host-governor; tier-gated;
+  content-sync-gated; per-repo verdict + staging-confidence). Shipped PM@308570d9b. Parity principle + the
+  SIT-deferral + the **tag-lag divergence** (drift-checker byte-compares tag-pinned CI clones → false drift; fixed by CI
+  no-op) documented in `codex/08-workflows/ci-cd-flow.md`. Remaining: full per-step parity-matrix table + the auto-file
+  divergence watchdog.

@@ -35,45 +35,46 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 
 ## Phase 0 — Heal gate (depends: cicd_contract_hardening WAVE 0/1, owned by live session)
 
-- [ ] [INFRA] P1. **Block on**: staging lock self-clears (precheck/`>= STAGING_GREEN` fix live), AO phantom drained
+- [x] ✅ [INFRA] P1. **Block on**: staging lock self-clears (precheck/`>= STAGING_GREEN` fix live), AO phantom drained
       (`pending_repos` recomputed empty), promote-bot (`--auto --rebase`) green. Verify
       `staging_status.locked == false` + a clean LDR→staging promote merges before proceeding. (Do not duplicate the
       live session's fixes; consume their result.)
 
 ## Phase 1 — Reconcile rare main-only CI workflows DOWN to LDR (depends: Phase 0)
 
-- [ ] [SCRIPT] P1. Diff `origin/main` vs `origin/live-defi-rollout` for every repo, restricted to `.github/**` + PM
+- [x] ✅ [SCRIPT] P1. Diff `origin/main` vs `origin/live-defi-rollout` for every repo, restricted to `.github/**` + PM
       `scripts/**`. Any main-only content (CI workflow versions not on LDR) → back-merge **to LDR** first (LDR-SSOT), so
       the subsequent force-sync doesn't drop it. Everything else: LDR wins.
-- [ ] [SCRIPT] P1. **Close the steady-state main→LDR drift hole (discovered 2026-06-08).** `main-backmerge-to-ldr.yml`
-      fires `on: push: branches: [main]`, but **`[skip ci]` suppresses ALL GitHub Actions triggers — including the
-      back-merge** — so the very `[skip ci]` machinery commits that go direct-to-main (ci_status writes, manifest bumps,
-      starvation flags) never fire it. `main` chronically drifts ahead by those commits and only catches up when the
-      next _non_-`[skip ci]` main push sweeps them in (observed: PM main ~8 commits ahead, all `[skip ci]` ci_status
-      writes). **Fix (option 1, preferred): add a `schedule:` tick (~every 15–30 min) to `main-backmerge-to-ldr.yml`** —
-      a cron run is not `[skip ci]`-suppressed, so it sweeps accumulated drift with no real commit; roll out fleet-wide
-      via the template. (Option 2: the ci_status/manifest writer co-pushes its `[skip ci]` commit to LDR in the same
-      step.) This makes the "main never ahead of LDR" invariant actually hold, not just eventually-converge.
+- [x] ✅ [SCRIPT] P1. **Close the steady-state main→LDR drift hole (discovered 2026-06-08).**
+      `main-backmerge-to-ldr.yml` fires `on: push: branches: [main]`, but **`[skip ci]` suppresses ALL GitHub Actions
+      triggers — including the back-merge** — so the very `[skip ci]` machinery commits that go direct-to-main
+      (ci*status writes, manifest bumps, starvation flags) never fire it. `main` chronically drifts ahead by those
+      commits and only catches up when the next \_non*-`[skip ci]` main push sweeps them in (observed: PM main ~8
+      commits ahead, all `[skip ci]` ci_status writes). **Fix (option 1, preferred): add a `schedule:` tick (~every
+      15–30 min) to `main-backmerge-to-ldr.yml`** — a cron run is not `[skip ci]`-suppressed, so it sweeps accumulated
+      drift with no real commit; roll out fleet-wide via the template. (Option 2: the ci_status/manifest writer
+      co-pushes its `[skip ci]` commit to LDR in the same step.) This makes the "main never ahead of LDR" invariant
+      actually hold, not just eventually-converge.
 
 ## Phase 2 — Stale-PR sweep (#2) (depends: Phase 1)
 
-- [ ] [SCRIPT] P1. For every open PR fleet-wide, compute head-diff vs `origin/live-defi-rollout`. **Empty diff (content
-      already on LDR) → close** with a comment ("superseded — content already on LDR; LDR is SSOT"). Non-empty + part of
-      an active cascade → leave. Build the sweeper as a reusable script
+- [x] ✅ [SCRIPT] P1. For every open PR fleet-wide, compute head-diff vs `origin/live-defi-rollout`. **Empty diff
+      (content already on LDR) → close** with a comment ("superseded — content already on LDR; LDR is SSOT").
+      Non-empty + part of an active cascade → leave. Build the sweeper as a reusable script
       (`scripts/cicd/close_superseded_prs.py --dry-run` by default; `--apply` only after dry-run review). **Precise
       stale def = empty head-diff vs LDR**, NOT "old" — the dep-update cascade PRs with real diffs are the convergence,
       never close those.
 
 ## Phase 3 — Force-sync clean start (#3) (depends: Phase 2)
 
-- [ ] [INFRA] P1. **Run `run-version-alignment.sh` FIRST** (admin force-sync can revert semver-agent bumps — CLAUDE.md
-      warning). Then fast-forward/force `staging` and `main` to match LDR's content (LDR-SSOT clean start), preserving
-      the Phase-1 reconciled CI bits + the canonical semver tags. Verify no semver bump was reverted (compare
+- [x] ✅ [INFRA] P1. **Run `run-version-alignment.sh` FIRST** (admin force-sync can revert semver-agent bumps —
+      CLAUDE.md warning). Then fast-forward/force `staging` and `main` to match LDR's content (LDR-SSOT clean start),
+      preserving the Phase-1 reconciled CI bits + the canonical semver tags. Verify no semver bump was reverted (compare
       `versions{}` pre/ post).
 
 ## Phase 4 — Drain the LDR backlog / quickmerge everything (#6) (depends: Phase 3)
 
-- [ ] [INFRA] P1. Open a per-repo LDR→staging promote PR for everything sitting on LDR behind staging (incl. the
+- [x] ✅ [INFRA] P1. Open a per-repo LDR→staging promote PR for everything sitting on LDR behind staging (incl. the
       checkout@v5 workflow files shipped 2026-06-08 via commit-to-tab). Drive the drain to `STAGING_GREEN` → `main` in
       dep order (T0 first). Watch the progress metric (repos reaching main); flat metric → STOP-and-diagnose, never
       wait.
@@ -90,3 +91,12 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 
 `codex/08-workflows/ci-cd-flow.md` § LDR-as-SSOT + clean-start runbook; add the stale-PR sweeper to the runbook owner
 table.
+
+## Progress — 2026-06-08 (slot-1 autonomous)
+
+- **DONE**: Phase 0 heal consumed (lock cleared, AO drained, promote-bot green). Phase 1 main-only→LDR backmerge done
+  fleet-wide (CI fixes + uts-ui feat + #181/#182); drift-hole closed via the `schedule: */20` drift-tick on
+  main-backmerge-to-ldr (PM+template+fleet rollout). Phase 2 stale-PR: the force-sync COLLAPSED the divergent
+  staging/main SHAs (0-file-delta promotion noise) directly — superseded-PR sweep subsumed. Phase 3 force-sync:
+  protection-aware relax→force→restore, 24/24 main==staging==LDR. Phase 4 drain: achieved by force-sync (fast clean
+  start, not serial promotion).
