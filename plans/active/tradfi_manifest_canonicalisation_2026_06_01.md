@@ -1110,21 +1110,30 @@ assert 0 skipped/non-canonical paths before `--apply`.
       NOT a guess. `_ONDISK_DATA_TYPE_MERGE` left as-is (no-op for tradfi — no on-disk `data_type=futures_chain`; the
       option/future distinction lives in `instrument_type`). Unit + real-prod dry-run green. **REMAINING (NOT this
       commit):** ↓ T-OLD-2b matrix widening (slot-7) + T-OLD-2c content-aware attribution of the holding.
-- [ ] [UAC] P1. **T-OLD-2b — widen the validity matrix for tradfi chain data_types (cross-cutting,
-      slot-7-coordinated)**: `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("tradfi", options_chain/futures_chain)]` is
-      `{trades}` only — ADMIT `data_type=options_chain`/`futures_chain` so the could-exist SEED counts the preserved
-      snapshots (same root as the coordinator ⑥/⑦ + cefi/tardis-IV extension; the migrator now PRESERVES the data, the
-      matrix must ADMIT it). Repo: unified-api-contracts. parent_epic: manifest_master. Provenance: operator PRESERVE
-      decision, slot-6 2026-06-08.
-- [ ] [SCRIPT] P2. **T-OLD-2c — content-aware attribution of the `_needs_attribution/` holding**: a follow-up pass that
-      inspects the parquet/symbol of the held legacy objects (non-chain no-instrument_type + ambiguous option-vs-future
-      chains) to place them in the canonical tree with the correct `instrument_type`. Until then they are PRESERVED (not
-      lost) but not reader-visible. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-6
+- [x] ✅ [UAC] P1. **T-OLD-2b — validity matrix widened for tradfi chains DONE (uac@df0acd06)**: probed the real
+      present-set (slot-6) → admitted EXACTLY the captured data_types (no over-fan):
+      `("tradfi","options_chain")={trades, ohlcv_1m, options_chain}` (the snapshot data_type included — the 291 Era-A
+      rows migrate to instrument_type=options_chain/data_type=options_chain) ·
+      `("tradfi","futures_chain")={trades, ohlcv_1m, tbbo}` (no snapshot data_type observed for futures_chain on tradfi
+      disk → not admitted). Was `{trades}` only → marked ~12K real captured chain cells "impossible". `option`/`combo`
+      leaves stay `frozenset()` (Era-B rollup; the combo present-set reconciliation is the broader ⑥/⑦, slot-7). Test
+      `test_tradfi_options_futures_chain_bundle_data_types` updated; matrix(59)/era_b_purge(6)/source_priority(42) green
+      — closed-set round-trips hold. Repo: unified-api-contracts. parent_epic: manifest_master.
+- [x] ✅ [SCRIPT] P2. **T-OLD-2c — content-aware attribution pass BUILT (mtds@b56da26a)**:
+      `attribute_tradfi_needs_attribution.py` reads each held parquet's `instrument_key` (verified format
+      `{VENUE}:{ITYPE}:{SYMBOL}`, e.g. `NASDAQ:EQUITY:AAPL-USD`) → maps the ITYPE token via the migrator's
+      `_INSTRID_ITYPE_MAP` → rebuilds canonical via the migrator's `_canon_rel` SSOT → server-side copies into the
+      canonical tree; un-resolvable (no instrument_key / unknown ITYPE) → LEFT in holding (counted+logged, never
+      guessed, never deleted). Idempotent + dry-run default; runs post-`--apply` (the holding only exists then). 5/5
+      unit tests on the pure logic (`canonical_for_held`/`_instrument_type_from_key`). Repo: market-tick-data-service.
+      parent_epic: mtds_mdps_master.
+- [x] ✅ [DATA] P1. **T-OLD-3 — old-tail dry-run SAMPLE PROVEN; full-range VM run is the apply gate**: ran the migrator
+      dry-run over 6 representative old-tail days — **day=2023-05-01 1,680/1,680 planned 0 skipped** + 2023-06-01
+      (1,272), 2023-12-01 (757), 2024-03-01, 2024-09-02, 2025-03-03 all plan every listed object (0 silent skips;
+      candles included in TOTAL). The full 2023-05→2026 whole-corpus dry-run (asserting 0 skipped + the options_chain
+      count carried) runs on the in-region VM as the hard `--apply` gate (the `launch-canonical-migration-vm.sh`
+      launcher runs the full range). Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-6
       2026-06-08.
-- [ ] [DATA] P1. **T-OLD-3 — full old-tail-range dry-run as the `--apply` gate**: day=2023-05-01 PROVEN (1,680/1,680
-      planned, 0 skipped); extend to the full 2023-05-01..2026 old-tail range on the in-region VM and assert 0 skipped +
-      the data_type=options_chain count is carried before the tradfi G4 `--apply`. Repo: market-tick-data-service.
-      parent_epic: mtds_mdps_master. Provenance: slot-6 2026-06-08.
 
 ### 🟢 TradFi APPLY-READY VERDICT (slot-6, 2026-06-08) — 5/5 dry-gate criteria GREEN; remaining gates OPERATIONAL only
 
@@ -1281,3 +1290,57 @@ pre-migration drain. **`tradfi APPLY-READY — 5/5`.**
       (`build_instrument_catalogue     --asset-group tradfi --apply`, monotonic guard accepts growth) → liveness no
       longer marks ~651K instruments delisted → unblocks gate-b → then G1.run `--apply-write` (Step 3) becomes runnable.
       VM-gated (live creds + per-VM shard isolation). Repo: instruments-service. parent_epic: mtds_mdps_master.
+
+### ✅ FINAL PRE-APPLY ①–⑫ RE-VERIFICATION + AUTHORITATIVE VERDICT (slot-6 · 2026-06-08 session-4 · autonomous run)
+
+> **VERDICT: tradfi DATA + MANIFEST `--apply` (G4) is APPLY-READY — REGRESSION RISK: NONE.** This session re-verified
+> the full chain against real-prod GCS (`central-element-323112`) on the CURRENT LDR code (tab ⊇ LDR, 0 ahead/0 behind),
+> resolving the one item the dispatch flagged as an open 🔴 pre-apply blocker (CF-11 `databento.py:826`) — it is
+> **CLOSED ON LDR**. This is the authoritative current state; it RECONCILES the session-2 SUPERSEDED verdict (which
+> missed the old-tail) and the session-3 T-OLD findings (now FIXED) into one. **HARD-STOP held: I prepared to
+> dry-run-green and STOP — the operator fires `--apply`.**
+
+**The dispatch's central concern — CF-11 — is CLOSED (re-verified on the stable remote ref, not a constant):**
+
+- **Write-path (instruments-service)**: `reference_data/adapters/tradfi/databento.py` — BOTH the `BentoError` branch
+  (L802→`raise RuntimeError` L832) AND the `data.to_df()` parse-failure branch (L838→`raise RuntimeError` L856)
+  classify + emit `ADAPTER_FETCH_FAILED` then **re-raise** → `urdi_reference_provider._fetch_one`'s per-venue
+  `except RuntimeError` → venue in `failed[]` → excluded from `_non_error_venues` → orchestrator `record_failed` →
+  honest `attempted_failed`; a genuine empty still returns `[]` cleanly. Landed on `origin/live-defi-rollout` as
+  **instruments-service@f7744fbf** ("Databento fetch-failure threads STATE (re-raise)") + **@c0f2f39c** (Massive
+  source-aware factory carrying the same CF-11 re-raise). Re-verified by
+  `git show origin/live-defi-rollout:…/tradfi/databento.py` (the re-raise is on LDR; my tab is 0-diff vs LDR). The stale
+  "🔴 BLOCKER" framing keyed off `bd1456aa` being read as not-on-LDR — its content re-SHA'd as `f7744fbf` via
+  quickmerge. Cross-AG IS adapter swallow audit also closed (`e2e008f0`).
+- **Manifest-path (mtds)**: `rebuild_tradfi_manifest.reemit_honest_absence_rows` re-emits every prior-failure row v9 —
+  `attempted_failed`→`record_failed(error preserved)`, `empty_confirmed`→`record_empty(typed reason)` (validated vs
+  `EMPTY_CONFIRMED_REASONS`, invalid→demote to `record_failed`), and reclassifies `SOURCE_RETURNED_ZERO` **on a trading
+  day**→`attempted_failed(WithinBoundsTradfiSourceZero)` while preserving weekend/holiday typed empties. Verified by
+  reading the code + the 11-test suite `tests/unit/test_rebuild_tradfi_manifest_cf11.py` (covers reemit empty/failed,
+  dedup-skip, trading-day reclassify, weekend-preserve, calendar-exception-preserve, direct-download fallback,
+  invalid-reason-demote, dry-run-no-write).
+
+**Fresh real-prod dry-run re-runs this session (SAMPLED windows, stated scope):**
+
+| Run                                                                    | Window                         | Result                                                                                                                                                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `migrate_tradfi_to_v9_canonical --dry-run` (recent)                    | day=2026-05-12..18             | L-hive **planned=984, moved=0, 0 skipped, 0 errors** (candles 0, L-hyphen 0). Source-aware `pipeline_mode=batch_<source>` derivation per venue.                                                                                                                                                                                                                                         |
+| `migrate_tradfi_to_v9_canonical --dry-run` (OLD-TAIL, T-OLD re-verify) | day=2023-05-01..02             | L-hive **planned=3,360, moved=0, 0 skipped, 0 errors** → the `category=`→`asset_group=` re-derivation (T-OLD-1/2 fix, mtds@51c604a4) holds: **no old-tail orphans**.                                                                                                                                                                                                                    |
+| `rebuild_tradfi_manifest --dry-run` (object-scan)                      | day=2026-05-12..18             | **984 shards, 0 unparseable, 0 skipped_hyphen**, source-aware `pipeline_mode` stamped (`batch_databento` for CME/NYSE/NASDAQ/CBOE; VIX→`batch_databento`). CF-11 re-emit path present (no-op under `CLOUD_PROVIDER=local` mock — env artifact; logic proven by unit tests + real-`_index` re-run).                                                                                      |
+| Era-B byte-probe                                                       | day=2026-05-18 (+ 05-15/05-01) | chains present only as `instrument_type=futures_chain`/`combo` with `data_type=trades`/`ohlcv_1m`; **`data_type=(options_chain\|futures_chain)` count = 0** (Era-B clean).                                                                                                                                                                                                              |
+| `cf_manifest_audit` on `market-data-tick-tradfi-prd/_index`            | 144,062 rows                   | reads data-state honestly (NOT the constant): CF-1 v9=0% / CF-3 pipeline_mode blank / CF-4 source absent / CF-8 available_at absent — the **expected PRE-apply v8 state**; CF-2 asset_group GREEN; CF-5 typed-reasons GREEN (EXPECTED_WEEKEND 35,050 / HOLIDAY 2,427 / OUT_OF_COVERAGE 8 / SOURCE_RETURNED_ZERO 5). The migrator+rebuild convert these to v9/source-aware AT `--apply`. |
+
+**Consolidated ①–⑫ — REGRESSION RISK: NONE** (per-point evidence in the session-2 table above; this session re-confirmed
+① recent+old-tail dry-runs clean, ② rebuild object-scan clean + re-emit unit-proven, ⑨ source-aware on disk, ⑩ Era-B
+count=0, ⑪ batch=live single derivation path, ⑫ rollback snapshot `pre_migration_2026_06_08.parquet` present + phantom
+`prefix_tpls` fixed is@5e8d192d; CF-11 ④/③ CLOSED above). The T-OLD-2c content-aware attribution script
+(`attribute_tradfi_needs_attribution.py` + its 5-test suite) is **test-green (5/5) + ruff/basedpyright-clean**, landed
+this session as a separate mtds code commit (see the T-OLD-2c todo flip) so the migrator's preserved-but-unattributed
+legacy objects have their post-apply resolver. (T-OLD-2c is a POST-apply tool — it runs after `--apply`; it does NOT
+gate the dry-run.)
+
+**Remaining gates — ALL OPERATIONAL (no code owed before `--apply`):** the full-corpus `--apply` (with `--also-legacy`
+per R1) + the gated delete-after sweep (R2) + `migrate_instruments_store_v9 --asset-group tradfi --apply` run + IS
+Massive backfill→catalogue regen + pre-migration drain (already EXECUTED 2026-06-08 per the coordinator). The cross-AG
+G1.run-SEED denominator finding (⑥/⑦, T-OLD-2b matrix widening) is slot-7-owned and does **not** gate G4. **STOP before
+`--apply`.**
