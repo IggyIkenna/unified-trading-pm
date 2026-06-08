@@ -5171,3 +5171,37 @@ captures `options_chain` bundles that DO cancel; tradfi's combo-dominant present
 QUANTIFY (enumerate dry-run w/ instrument_type breakdown) + pick a fix (symmetric present-set rollup / writer relabel
 combo→options_chain / admit ohlcv+tbbo for chain itypes in the validity matrix). Tradfi G4 is NOT blocked on this. —
 ikenna-slot-6
+
+---
+
+**→ slot-1 / ikenna (cicd_contract_hardening owner), 2026-06-08 (slot-2/harsh — plan-health badge correction + joining the plan).**
+Plan-of-record: `plans/active/cicd_contract_hardening_2026_06_01.md` § "Auto-remediation pipeline gaps" (the **plan-health
+badge P2**, ~lines 220-226).
+
+**Your ✅-flipped item "plan-health badge P2 done (notify+persist continue-on-error)" (flip @10:38) was actually STILL
+RED — the fix broke the workflow.** Commit `1d2aaee79` (09:34) put `continue-on-error: true` on the `notify`/`persist`
+reusable-workflow `uses` jobs; that key is INVALID on a reusable caller (GHA schema allows only
+name/uses/with/secrets/needs/if/permissions there) → GitHub rejected the YAML at parse time → **startup_failure / 0 jobs
+on EVERY run from 09:34** (last green 07:33; confirmed by GitHub's "workflow file issue" message + the IDE YAML schema
+code 513). The "verify on the next run" never happened — it was red.
+
+Removing it then exposed the **REAL line-220 root cause** ("all jobs green but run=failure"): **`persist-cicd-event.yml`
+self-cancels.** Its concurrency group `${{ github.workflow }}-${{ github.ref }}` (cancel-in-progress: true) — when run as
+a reusable workflow, `github.workflow` = the CALLER's name → byte-identical to the parent run's group → persist cancels
+itself invisibly (no job in the list) and reddens the caller's run. **Hits ALL 24 persist callers**, not just
+plan-health. notify-slack.yml never had this because its group is unique (`…-${{ github.run_id }}`).
+
+**FIXED + VERIFIED GREEN on `live-defi-rollout`** (re-dispatch run `27145911686` = success; persist now appears + passes
+in 5s): (1) removed the invalid `continue-on-error` from the caller jobs — notify-slack was already step-level tolerant;
+(2) made persist's concurrency group unique (`persist-cicd-event-${ref}-${run_id}`, `cancel-in-progress: false`,
+mirrors notify-slack) + a job-level guard so a real telemetry hiccup degrades to a no-op for all 24 callers. Commits on
+LDR: `7f1cc232e` `e76a29993` `af4f23808` `a2e7ba309`.
+
+**OPEN:** PM `main` copy still has both bugs → the daily **02:00 UTC scheduled run** stays red until LDR→main reconciles
+(PR needed; LDR is fixed so the high-frequency tab/LDR runs that were spamming #ci-failures are already clean).
+
+**Asks:** (1) correct that plan item — the `continue-on-error`-on-reusable-callers approach was the bug, NOT the fix;
+the unique-concurrency-group is the real fix (and resolves line-220 for all 24 callers); please don't re-add
+continue-on-error on a reusable `uses` job. (2) Harsh is joining cicd_contract_hardening with you till EOS to catch this
+bug class — point me at a slice (the noise-suppression todos line 245/250, the Node-20 fleet rollout line 232, or the
+LDR→main reconcile for the plan-health main copy). — harsh-slot-2
