@@ -62,7 +62,7 @@ jobs:
     timeout-minutes: 8
     steps:
       - name: Checkout unified-trading-pm (PR head branch — auto-fix commits push back to it)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
           # Check out the PR HEAD branch (not the detached merge commit) so the
@@ -70,7 +70,7 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0 # the todo-regression check diffs against origin
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
       # ── Phase 2 (item I): deterministic auto-fix BEFORE the sweep ──────────
@@ -109,10 +109,36 @@ jobs:
           git commit -m "docs(plans): auto-fix plan hygiene at the gate ${LOOP_GUARD_MARKER}"
           git push origin "HEAD:${PR_HEAD_REF}"
           echo "Pushed auto-fix; the re-triggered PR check runs the sweep on the fixed tree."
-      - name: Plan-hygiene hard gate (deterministic, --ci exits 1 on hard failures)
+      - name: Plan-hygiene hard gate + dispatch vm-planning fixer on residue
+        # Step 1 (deterministic auto-fix) already ran above. Here: run the hard gate; if HARD
+        # failures REMAIN (the judgment residue the auto-fixer can't resolve — todo-regression,
+        # orphan plans, contradictions), dispatch the vm-planning `plan_health` fixer worker
+        # (escalate-to-orchestrator → agents/escalate.md § plan_health) which cleans the plans on
+        # live-defi-rollout so they converge; the PR re-gates green + FF's main→LDR. NON-BLOCKING:
+        # plan-health-gate is advisory (only quality-gates-v2 is a required check on main), so a
+        # residue surfaces as a red advisory + a dispatched fix, never a wedged PM→main.
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           echo "PM is staging-less; this is the LDR→main pseudo-staging gate (plan hygiene)."
-          bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci
+          set +e
+          OUT=$(bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci 2>&1)
+          RC=$?
+          echo "$OUT"
+          if [ "$RC" -eq 0 ]; then
+            echo "Plans pristine — no remediation needed."
+            exit 0
+          fi
+          echo "::warning::Plan-hygiene HARD failures remain after deterministic auto-fix — dispatching the vm-planning plan_health fixer (advisory gate; quality-gates-v2 still governs merge)."
+          CTX=$(printf '%s\n' "$OUT" | grep -iE "FAIL|lost todos|orphan|regression|contradiction" | head -40)
+          PAYLOAD=$(jq -n --arg ctx "$CTX" --argjson pr "${PR_NUMBER:-0}" \
+            '{event_type:"escalate-to-orchestrator", client_payload:{repo:"unified-trading-pm", pr_number:$pr, wall_type:"plan_health", context:$ctx, authoring_slot:"ci"}}')
+          printf '%s' "$PAYLOAD" | gh api -X POST "repos/${OWNER}/unified-trading-pm/dispatches" --input - \
+            && echo "Dispatched plan_health fixer." || echo "::warning::plan_health dispatch failed (non-fatal)."
+          # Advisory gate: surface the residue (red) without blocking the merge.
+          exit "$RC"
 
   plan-health:
     if: github.event_name != 'pull_request'
@@ -128,13 +154,13 @@ jobs:
 
     steps:
       - name: Checkout unified-trading-pm
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0 # hygiene sweep's todo-regression check diffs against origin
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -316,6 +342,9 @@ jobs:
     needs: [plan-health]
     # Daily/dispatch report only — the PR hard-gate surfaces its result on the PR check itself.
     if: always() && github.event_name != 'pull_request'
+    # Best-effort telemetry — a Slack/webhook hiccup must NOT redden the plan-health badge
+    # (the badge should reflect the `plan-health` sweep, not a notification side-channel).
+    continue-on-error: true
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: "plan-health-agent (daily) | ${{ needs.plan-health.outputs.summary || 'run failed — see logs' }}"
@@ -333,6 +362,10 @@ jobs:
     # plan-health conclusion would (a) be meaningless and (b) mark the whole PR run
     # `failure` even though the gate passed. Scope persist to non-PR events, like notify.
     if: always() && github.event_name != 'pull_request'
+    # Best-effort event-logging (GCS/S3) — a cloud-auth/persist hiccup must NOT redden the
+    # plan-health badge. This is the fix for the 06-05→06-08 "all jobs green but run=failure"
+    # badge: the persist reusable-caller was failing and gating the scheduled run conclusion.
+    continue-on-error: true
     uses: ./.github/workflows/persist-cicd-event.yml
     secrets: inherit
     with:
