@@ -1040,13 +1040,26 @@ per-(pipeline_mode×source) drilldown + deployment-ui@0dc40eb; consumer-side REA
 caveat below gates the rebuild's quickmerge promotion. **Net: every code/dry-run/audit gate is GREEN; the residual is
 purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · drain) — prediction is APPLY-READY.**
 
-- [ ] [CHORE] P2. **MTDS QG file-length RED blocks the rebuild's quickmerge sentinel** —
-      `rebuild_prediction_manifest.py` is **954 lines (>900 cap)**, one of the 6 pre-existing >900-line files in the
-      coordinator's slot-2 MTDS-QG P2 (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` § vm-defi). Not
-      introduced this pass (dry-runs green; imports resolve; code executes end-to-end). **Split into a
-      `rebuild_prediction_manifest/` package (e.g. `_classify.py` / `_cf11_reemit.py` / `_writer.py`) before the rebuild
-      ships through `quickmerge`** so MTDS `--no-fix` exits 0 and writes `.qg_last_passed_sha`. Repo:
-      market-tick-data-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CHORE] P2. **rebuild file-length SPLIT — DONE (mtds@c571445d, slot-5 2026-06-08).**
+      `rebuild_prediction_manifest.py` **954 → 692 lines (<900 cap)** by extracting the self-contained CF-11
+      honest-absence re-emit (`reemit_honest_absence_rows` + its `SOURCE_RETURNED_ZERO` within-bounds reclassification)
+      into a sibling `_rebuild_prediction_cf11.py` (294 L); the public symbol is **re-exported** so the
+      `scan_and_rebuild` call-site + `test_rebuild_prediction_manifest_force.py` imports are byte-unchanged. Also
+      basedpyright-CLEAN'd all 3 prediction migration scripts (0 errors, from 55): file-level `# pyright:` suppression
+      matching the 11 sibling `migrate_*`/`rebuild_*` scripts (untyped `argparse.Namespace` + pandas/pyarrow/gcsfs);
+      `ts_series.loc[labels]` → `ts_series.loc[pd.Index(labels)]` (typed overload, identical runtime);
+      `derive_pipeline_mode_for_row` ← public `unified_trading_library.pipeline_mode_resolver` submodule (not the
+      `__all__`-less facade) in rebuild + migrator. **File-level QG-green**: basedpyright 0 · ruff clean · 25 prediction
+      tests pass. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. **NB — the repo-level MTDS `--no-fix`
+      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the MTDS
+      LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
+      `uv lock --check` fails → QG aborts at gate 0; mechanical re-sync, precedent mtds@10930dbd) + (1) **17
+      OTHER >900-line files** (orchestrator 4219, tardis 2880, solana/evm/perp/lending/dex/oracle handlers, sports
+      rebuild/migrate, polymarket_adapter 929, …) — both belong to the coordinator's **slot-2 MTDS-QG P2**
+      (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` § vm-defi). Prediction is now removed from
+      blocker-set (1); this commit rides on LDR via the tab-mirror and promotes through staging once slot-2's MTDS-QG
+      green lands. The `uv.lock` desync is annotated as a finding callout on that slot-2 MTDS-QG item in
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (slot-5 2026-06-08).
 - [ ] [UAC] P2. **NICE-TO-HAVE — defense-in-depth prediction row in the G1-ENUM validity matrix.** Prediction is
       correctly handled by `_row_data_types` grain-binding (verified safe ④), so this is NOT a correctness fix — but a
       `("prediction","prediction_market") → frozenset({"prediction_canonical_question_group", …})` entry in UAC

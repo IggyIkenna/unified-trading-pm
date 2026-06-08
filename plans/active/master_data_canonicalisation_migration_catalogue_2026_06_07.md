@@ -550,7 +550,16 @@ does not require a second whole-corpus walk.
       handlers, STEP 5.85 inline-`pipeline_mode=` literals across the migration scripts, + macOS-environmental
       false-positives (574s>300s timing, BSD `grep -P` errors, no systemd cap). The defi C-PATH WRITE change adds ZERO
       net-new failures (its 25 unit tests pass; ruff clean; basedpyright-neutral). Repo: market-tick-data-service.
-      parent_epic: mtds_mdps_master.
+      parent_epic: mtds_mdps_master. > **FINDING (slot-5 prediction, 2026-06-08) — two updates to this MTDS-QG-red
+      item:** > (a) **`rebuild_prediction_manifest.py` is now SPLIT** (954→692 L, mtds@c571445d) → REMOVE it from
+      the >900 list; > the remaining >900 files are non-prediction. (b) **NEW gate-0 blocker not previously listed: a
+      committed > `uv.lock`↔`pyproject.toml` desync on the MTDS LDR HEAD.** `uv lock --check` FAILS — the committed
+      `pyproject.toml` > declares `pyarrow-stubs` + `mypy-boto3-{logs,sns,sqs}` that are absent from the committed
+      `uv.lock`, so the QG > aborts at its FIRST gate (`❌ uv.lock out of sync`) BEFORE file-size/basedpyright/tests
+      even run. Mechanical > re-sync (`uv lock` adds the 4 stub pkgs, ~52 LOC; precedent mtds@10930dbd "re-sync uv.lock
+      to pyproject"). Until > this lands, NO MTDS `quality-gates.sh` reaches green regardless of the file-length work —
+      fix it FIRST in this > slot-2 sweep. (Slot-5 did not fix it: it completes another commit's incomplete dep edit —
+      out of prediction AG + > FM1 foreign-work-bundling risk.)
 - [ ] [DATA] P1. **DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/` prefix on the recent tail**
       (~2026-05-05 onward — `day=2026-05-05/07` confirmed doubled; `day=2026-05-03` and ALL earlier days are single,
       canonical `day={D}/venue={V}/instruments.parquet`). Surfaced by the G2 verify dry-run 2026-06-07 (slot-2). **TWO
