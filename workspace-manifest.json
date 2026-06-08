@@ -1787,7 +1787,7 @@
     "system-integration-tests": "0.2.0",
     "unified-trading-pm": "1.2.12",
     "unified-api-contracts": "0.2.0",
-    "agent-orchestrator": "0.8.1",
+    "agent-orchestrator": "0.8.0",
     "unified-trading-library": "0.4.0",
     "market-tick-data-service": "0.4.0",
     "execution-service": "0.2.0",
@@ -1797,15 +1797,13 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-08T12:32:18.894947Z",
-    "locked_reason": "Breaking MINOR bump cascade: execution-service=0.2.0 (pre-1.0.0)",
-    "lock_version": "0.2.0",
-    "pending_repos": [
-      "agent-orchestrator"
-    ],
-    "sit_retry_count": 3,
-    "locked_alert_sent": true
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": "Clean-start heal 2026-06-08: dangling exec-service=0.2.0 breaking-cascade lock cleared (content-based breaking-detection incoming); SIT retries reset",
+    "lock_version": null,
+    "pending_repos": [],
+    "sit_retry_count": 0,
+    "locked_alert_sent": false
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
