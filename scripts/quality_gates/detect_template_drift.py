@@ -49,6 +49,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import dataclass, field
@@ -366,6 +367,22 @@ def _check_workflows(
     """
     gh_dir = workspace_root / repo_name / ".github" / "workflows"
     report = RepoDriftReport(repo_name=repo_name, repo_type=repo_type, qg_path=gh_dir)
+
+    # CI no-op (documented design): in CI the workspace siblings are assembled by the
+    # dep-clone at the repo's RELEASE TAG (a version snapshot), not the live branch — so a
+    # legitimate template edit + fleet rollout shows as byte-drift against the stale tag
+    # until every repo re-releases (the H4/M5 fragility). Workflow-template parity is a
+    # LOCAL / full-workspace-host gate (live branches), enforced where the copies are the
+    # deployed ones; it must not hard-fail PM CI against tag-pinned snapshots.
+    if os.environ.get("GITHUB_ACTIONS") or os.environ.get("CI"):
+        report.items.append(
+            DriftItem(
+                "warn",
+                "workflow-drift-ci-noop",
+                f"{repo_name} workflow parity skipped in CI (tag-pinned siblings) — enforced locally",
+            )
+        )
+        return report
 
     if not (workspace_root / repo_name).exists():
         report.items.append(
