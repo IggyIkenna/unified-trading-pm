@@ -944,16 +944,31 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
 > the remaining tradfi work is: co-land the matrix rows → re-run enumerate (expect the ~563K false-candidate drop) →
 > finish the bundle-aware 7+2 audit → apply-ready verdict.
 
-### 🟢 TradFi PRE-APPLY 12-POINT AUDIT — ①–⑫ on REAL-PROD data-state (slot-6, 2026-06-08 session-2)
+### 🟠 TradFi PRE-APPLY 12-POINT AUDIT — ①–⑫ on REAL-PROD data-state (slot-6, 2026-06-08 session-2)
 
-> **VERDICT: tradfi DATA/MANIFEST `--apply` (G4) is APPLY-READY — REGRESSION RISK: NONE.** This pass re-verified the
-> full operator ①–⑫ readiness audit against real-prod GCS (`central-element-323112`), not code constants — adding the
-> on-disk Era-B byte-probe (⑩), the batch=live symmetry proof (⑪), and rollback-readiness (⑫) that the prior 5/5
-> dry-gate verdict did not formally cover. One code gap was FOUND + FIXED in my AG (⑫ phantom prefix_tpls). One cross-AG
-> denominator finding (⑥/⑦) was filed to the coordinator for slot-7 — it affects the **gated G1.run could-exist SEED
-> only, NOT the G4 data migration**. **Multi-source confirmed (operator 2026-06-08): tradfi = Databento (primary) +
-> MASSIVE (polygon.io-compatible backfill for series Databento credits no longer cover, IDENTICAL schema,
-> `pipeline_mode` is the differentiator) + Barchart /Yahoo (VIX 15m) + EIA.** The batch=live symmetry IS the
+> **🔴 VERDICT SUPERSEDED (slot-6 2026-06-08 session-3, operator pushback on `options_chain`):** the "REGRESSION RISK:
+> NONE" claim below was **based on recent-day (Era-B) sampling + a migrator dry-run window (day=2021-08-16) that did NOT
+> exercise the OLD `category=` / Era-A `data_type=options_chain` tail**. Probing the OLD tail (day=2023-05-01) surfaced
+> **two real G4 orphan/loss risks** → the corrected verdict is **🟠 NOT apply-clean until the old-data tail is handled**
+> (see the "🔴 OLD-DATA TAIL — ORPHAN/LOSS RISKS" block appended to the orphan drill-down). The ①–⑫ table below stands
+> for the DOMINANT (asset_group=, Era-B) corpus; it does NOT cover the legacy `category=`/Era-A tail. **Headline**: (1)
+> the migrator has **NO `category=`→`asset_group=` rename** — old `category=tradfi` paths (1,627/1,680 on
+> day=2023-05-01, incl. NASDAQ/NYSE/ICE/FX with **no `asset_group=` twin**) migrate to a non-canonical `category=` path
+> that canonical readers ignore → orphan; (2) **`options_chain` is a real schema-backed DATA_TYPE** (UAC
+> `(ag, options_chain, options_chain)` `CEFI/TRADFI_OPTIONS_CHAIN_SNAPSHOT` with `mark_iv`/greeks/`underlying_price`),
+> present on disk (tradfi day=2023-05-01: 14; cefi day=2024-06-03 BYBIT futures_chain shard 12,525 rows) — and the
+> migrator **SKIPS** the Era-A `data_type=options_chain` paths that lack an `instrument_type=` segment
+> (`_canon_hive_rel` returns None) → orphan. So the operator was right: we DO have a `data_type=options_chain` and the
+> current migrator does not safely carry it. ↓ original session-2 verdict retained for context.
+
+> **VERDICT (session-2, SUPERSEDED): tradfi DATA/MANIFEST `--apply` (G4) is APPLY-READY — REGRESSION RISK: NONE.** This
+> pass re-verified the full operator ①–⑫ readiness audit against real-prod GCS (`central-element-323112`), not code
+> constants — adding the on-disk Era-B byte-probe (⑩), the batch=live symmetry proof (⑪), and rollback-readiness (⑫)
+> that the prior 5/5 dry-gate verdict did not formally cover. One code gap was FOUND + FIXED in my AG (⑫ phantom
+> prefix_tpls). One cross-AG denominator finding (⑥/⑦) was filed to the coordinator for slot-7 — it affects the **gated
+> G1.run could-exist SEED only, NOT the G4 data migration**. **Multi-source confirmed (operator 2026-06-08): tradfi =
+> Databento (primary) + MASSIVE (polygon.io-compatible backfill for series Databento credits no longer cover, IDENTICAL
+> schema, `pipeline_mode` is the differentiator) + Barchart /Yahoo (VIX 15m) + EIA.** The batch=live symmetry IS the
 > databento↔massive symmetry.
 
 | #   | Check                                                 | Verdict                        | Evidence (real-prod; sampled-vs-walked)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
@@ -1058,6 +1073,45 @@ concern, NOT data loss. **Tardis/cefi caveat flagged to slot-3 + the matrix owne
 carry `derivative_ticker` (mark IV / greeks) or `book_snapshot_5` as distinct data_types, the SAME matrix-too-narrow gap
 applies there with first-class IV data — folded into the coordinator ⑥/⑦ finding for cefi verification (migration still
 preserves it; the seed must admit it).
+
+#### 🔴 OLD-DATA TAIL — ORPHAN/LOSS RISKS the migrator does NOT handle (slot-6 2026-06-08 session-3) — G4 BLOCKERS
+
+> Surfaced by the operator's `options_chain` pushback. The session-2 drill-down audited the **`asset_group=` / Era-B**
+> corpus; this block audits the **OLD legacy tail** (probed day=2023-05-01: 1,680 parquets). **Both risks are real
+> orphan/data-loss at `--apply`** — they REVISE the verdict to 🟠.
+
+| #       | Finding (real-prod)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Migrator behaviour                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Orphan/loss                                                                                                                                                                                             | Severity                                                                                                                                                 |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| T-OLD-1 | **Legacy `category=tradfi` path key** — 1,627 of 1,680 paths on day=2023-05-01 (only 53 `asset_group=`). Cells under `category=` include venues **FX/ICE/NASDAQ/NYSE with NO `asset_group=` twin** (live un-migrated equities/futures).                                                                                                                                                                                                                                                                                                                                                                                                           | `migrate_tradfi_to_v9_canonical` has **ZERO `category=`→`asset_group=` rename** (grep `category` in the script = 0 hits). `_canon_hive_rel` only string-inserts `pipeline_mode=` after `day=` → a `category=` source migrates to `day=/pipeline_mode=/category=tradfi/…` — **still non-canonical** (canonical readers prefix-match `asset_group=`). The migrator docstring lists only `asset_group=` as L-hive → it ASSUMES a prior category→hive migration that is **incomplete for the old tail**.                            | NASDAQ/NYSE/ICE/FX old equities/futures → migrated to a non-canonical `category=` path readers ignore → **ORPHAN** (+ if the G7 delete removes the source, **lost**)                                    | 🔴 P0                                                                                                                                                    |
+| T-OLD-2 | **`data_type=options_chain` (+ `futures_chain`) is a real schema-backed DATA_TYPE**, not just an instrument*type — UAC `(ag, options_chain, options_chain)` `TRADFI/CEFI_OPTIONS_CHAIN_SNAPSHOT` carry `mark_iv`/`greeks*\*`/`underlying_price`(the tardis timer chain-snapshot). On disk: tradfi day=2023-05-01 = **14**`data_type=options_chain`(category=, **no`instrument_type=`**, real rows e.g. `6AK3.parquet`=17); cefi day=2024-06-03 = a `batch_tardis/.../instrument_type=futures_chain/data_type=options_chain/ticks.parquet`(12,525 rows). 291 tradfi manifest rows`data_type∈{options_chain,futures_chain}` (CME, 2023-05→2026-01). | `_canon_hive_rel` **SKIPS** any path with no `instrument_type=` segment (`if not (day and venue and data_type and instrument_type): return None`, line 174 "CF-7 drift → E6 diagnosis"). The Era-A `data_type=options_chain` paths (no `instrument_type=`) → **None → not copied → orphan**. The migrator also does NOT collapse `data_type=options_chain`→`trades` (it merges `futures_chain`→`options_chain`, the other direction) — so the coordinator-plan's assumed Era-B relabel of these rows is NOT what the code does. | Era-A `data_type=options_chain` objects (the IV/chain-snapshot type) → **ORPHAN/lost**; the Era-B model's "`options_chain` = instrument_type, data_type=trades only" **conflates a distinct data_type** | 🔴 P0 + **BLOCKED-OPERATOR-DECISION** (is `data_type=options_chain` a distinct snapshot to PRESERVE, or superseded by per-contract `derivative_ticker`?) |
+
+**Why the session-2 audit missed it (honest sampled-vs-walked correction):** ⑩/① sampled day=2025-12-31 + day=2021-08-16
+(both `asset_group=`/Era-B clean) — neither exercised the `category=`/Era-A-`options_chain` old tail. The migrator
+dry-run's day-window likewise. **The fix:** the migrator dry-run must be run over an OLD-TAIL day-range (2023-05) and
+assert 0 skipped/non-canonical paths before `--apply`.
+
+- [ ] [SCRIPT] P0. **T-OLD-1 — add `category=`→`asset_group=` canonicalisation to `migrate_tradfi_to_v9_canonical`**
+      (`_canon_hive_rel` + `_canon_rel`): rename the legacy `category=tradfi` path key to `asset_group=tradfi` (the
+      cefi/defi migrators' CF-2 rename — verify whether a PRIOR category→hive migrator is meant to own this and is just
+      incomplete, vs the v9 migrator owning it). Until fixed, the old `category=` tail (NASDAQ/NYSE/ICE/FX, no
+      asset_group= twin) orphans at apply. Re-run the dry-run over day=2023-05-01..2023-06-01 and assert 0 non-canonical
+      / 0 skipped. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: operator pushback +
+      old-tail probe, slot-6 2026-06-08.
+- [ ] [UAC+MTDS] P0. **T-OLD-2 — `data_type=options_chain` (IV/chain-snapshot) carry-through —
+      BLOCKED-OPERATOR-DECISION**: decide whether `data_type=options_chain`/`futures_chain` (UAC
+      `*_OPTIONS_CHAIN_SNAPSHOT`, with `mark_iv`/greeks) is a **distinct data_type to PRESERVE** (migrate Era-A
+      `data_type=options_chain` paths → canonical `instrument_type=options_chain/data_type=options_chain`, KEEPING the
+      snapshot data_type — NOT collapsed to trades), or **superseded** by per-contract `derivative_ticker` (then verify
+      the IV is captured there before any delete). The migrator currently SKIPS the no-`instrument_type=` Era-A paths →
+      orphan either way. Once decided, fix the migrator to carry them (derive `instrument_type=options_chain` from
+      `data_type=options_chain`, preserve the data_type) and widen the validity matrix / Era-B retirement accordingly
+      (this is the same root as the coordinator ⑥/⑦ + cefi/tardis-IV extension). Repos: market-tick-data-service +
+      unified-api-contracts. parent_epic: mtds_mdps_master. Provenance: operator `options_chain` pushback, slot-6
+      2026-06-08.
+- [ ] [DATA] P1. **T-OLD-3 — migrator dry-run MUST cover an OLD-TAIL day-range before `--apply`**: extend the readiness
+      dry-run to day=2023-05-01..2023-06-01 (the category=/Era-A-options_chain tail) and assert 0 skipped + 0
+      non-canonical projected paths + the data_type=options_chain count is carried (not dropped). Gate the tradfi G4
+      `--apply` on this. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-6 2026-06-08.
 
 ### 🟢 TradFi APPLY-READY VERDICT (slot-6, 2026-06-08) — 5/5 dry-gate criteria GREEN; remaining gates OPERATIONAL only
 
