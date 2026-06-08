@@ -291,17 +291,22 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
      `is@687d1443` (`enumerate_expected_universe._rollup_bundle_grain` — read-side pre-pass in `enumerate_v2` collapses
      every option/combo LEAF of a `(venue, chain, underlying)` into ONE synthetic per-underlying `options_chain`
      candidate; generalises slot-4's league-grain rollup, NO per-AG special-casing; `underlying` carried on the
-     catalogue +`InstrumentCatalogEntry`, derived from instrument*id as fallback) + `is@df15dba2` (contract tests). Net:
-     OPTION/COMBO leaf → ZERO per-contract candidates; underlying → exactly ONE chain candidate. **(b) originally
+     catalogue +`InstrumentCatalogEntry`, derived from instrument\*id as fallback) + `is@df15dba2` (contract tests).
+     Net: OPTION/COMBO leaf → ZERO per-contract candidates; underlying → exactly ONE chain candidate. **(b) originally
      emitted `data_type=options_chain` (Era-A); the Era-B reconciliation (`uac@ae70338d`/`is@74df991d`) flips that to
      `data_type=trades` — the chain name is the instrument_type, the market data_type is trades.** (kills the ~563K
      tradfi over-fan + cefi DERIBIT dominance). **🔔 slots 3 (cefi) + 6 (tradfi): re-run `enumerate` dry-runs on the
      Era-B rollup producer to confirm (tradfi ~588K → plausible; cefi DERIBIT no longer dominant) — you were gated on
-     this.** **F2 residual**: DERIBIT/OKX FUTURE \_leaf* per-contract over-fan stays a gated venue-specific
-     catalogue-rollup todo (futures_chain bundle ENTRIES already roll up; `VENUE_DATA_TYPE_CAPABILITIES` is an unsound
-     bundle-venue discriminator — BYBIT lists `futures_chain` yet captures per-contract — so FUTURE-leaf venue-bundling
-     needs a sound registry first). Per-AG slice verification + dry-run re-run still owed by each AG owner before
-     `--apply-write`.
+     this.** ✅ **F2 residual — RESOLVED (uac@e3dcd868 + instruments-service enumerate threading, slot-7 2026-06-08)**:
+     the DERIBIT/OKX FUTURE-leaf per-contract over-fan is fixed by the **sound venue registry** `FUTURE_BUNDLE_VENUES`
+     (`registry/market_data_categories.py`) — `grain_for_instrument_type` / `bundle_instrument_type_for_leaf` now take
+     an optional `venue`: a bare FUTURE leaf bundles to a per-underlying `futures_chain` ONLY at DERIBIT/OKX, and stays
+     per-contract at BYBIT (the unsound `VENUE_DATA_TYPE_CAPABILITIES` discriminator is NOT used). `enumerate_v2`'s
+     `_rollup_bundle_grain` threads `instr.venue`; +8 UAC tests + 3 enumerate tests (DERIBIT/OKX bundle, BYBIT leaf).
+     Kills the ~700 false DERIBIT/OKX per-contract FUTURE candidates while keeping BYBIT honest. **🔔 NOTIFY slots 3
+     (cefi) + 6 (tradfi): re-run your `enumerate` dry-runs on the venue-aware producer — the DERIBIT/OKX FUTURE over-fan
+     is gone (cefi 880→~180 per-underlying).** Per-AG slice verification + dry-run re-run still owed by each AG owner
+     before `--apply-write`.
 2. ✅ **G1-V8 — MIGRATOR BUILT + DRY-RUN GREEN (all 5 AGs) 2026-06-07** (`is@febb899e`,
    `instruments-service/scripts/migrate_instruments_store_v9.py`). AG-parametric single-walk that rewrites BOTH the
    instruments-store `_index` rows AND object paths to canonical v9 (CF-1 v9 · CF-2 `asset_group=` · CF-3
@@ -487,13 +492,18 @@ does not require a second whole-corpus walk.
       empty). Owner: vm-defi, after the defi §H instruments-store walk. Repo: instruments-service. parent_epic:
       manifest_master.
 - [ ] [UAC+MTDS] P1. **Era-B legacy retirement — the per-AG v8→v9 migrator drops ALL `data_type=options_chain`/
-      `futures_chain` recognition as its FINAL ATOMIC STEP, right after it relabels the on-disk rows to `trades`**
-      (operator 2026-06-07: "break old paths is the point of the migration" — couple-to-G4, do NOT lead the data). The
-      could-exist PRODUCER is already Era-B (`uac@ae70338d`/`is@74df991d`); this retires the legacy-READ surface that
-      still parses un-migrated v8 `data_type=options_chain` rows. **Removing it BEFORE the relabel would loud-fail every
-      read of un-migrated v8 data (deployment-api/preflight KeyError / unknown DataType) — heartbeat break — so it is
-      sequenced AFTER, inside the same migrator walk.** Full surface to drop atomically once an AG's rows are relabeled
-      (all cascade-coupled — a partial purge breaks the closed-set round-trips): - UAC: `SOURCE_PRIORITY` +
+      `futures_chain` recognition as its FINAL ATOMIC STEP, right after it relabels the on-disk rows to `trades`** 🟢
+      **SAFETY GUARD SHIPPED (uac@93961df3, slot-7 2026-06-08)**: `assert_era_b_purge_safe()`
+      (`canonical/crosscutting/era_b_legacy_purge.py`) simulates the legacy drop in-memory + asserts every closed-set
+      round-trip survives (SOURCE_PRIORITY↔AVAILABILITY symmetry · PipelineMode · emission latency); the per-AG
+      migrators MUST call it immediately before their atomic drop. Test proves the closed-set is purge-ready TODAY. The
+      actual DROP stays G4-gated (coupled to cefi+tradfi `--apply` complete) — only the GUARD is landed here. (operator
+      2026-06-07: "break old paths is the point of the migration" — couple-to-G4, do NOT lead the data). The could-exist
+      PRODUCER is already Era-B (`uac@ae70338d`/`is@74df991d`); this retires the legacy-READ surface that still parses
+      un-migrated v8 `data_type=options_chain` rows. **Removing it BEFORE the relabel would loud-fail every read of
+      un-migrated v8 data (deployment-api/preflight KeyError / unknown DataType) — heartbeat break — so it is sequenced
+      AFTER, inside the same migrator walk.** Full surface to drop atomically once an AG's rows are relabeled (all
+      cascade-coupled — a partial purge breaks the closed-set round-trips): - UAC: `SOURCE_PRIORITY` +
       `AVAILABILITY_AT_SEMANTICS` (4 entries each — bidirectional round-trip) + `expected_coverage` venue lists
       (DERIBIT/BINANCE-FUTURES/BYBIT) + capability `coverage_start[options_chain/       futures_chain]` +
       `DATA_TYPES_BY_ASSET_GROUP["cefi"]` + `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` +
@@ -505,7 +515,20 @@ does not require a second whole-corpus walk.
       orchestrator.py finding below). GATED on cefi+tradfi G4 apply complete. Repos: unified-api-contracts +
       market-tick-data-service. parent_epic: manifest_master.
 - [ ] [MTDS] P0. **CONFIRMED (slot-7 code audit 2026-06-08) — the writer is NOT uniformly Era-B; residual Era-A surfaces
-      gate the relabel `--apply`.** Verdict from a full read of the cefi/tradfi write + preflight paths:
+      gate the relabel `--apply`.** Verdict from a full read of the cefi/tradfi write + preflight paths: 🟢 **PROGRESS
+      (slot-7 2026-06-08, mtds@<pending>)**: (1) **OBJECT-WRITE path RE-CONFIRMED Era-B** (tardis_shared
+      `_LEGAL_DATA_TYPES` raises on `options_chain`; databento `_PARTITION_INSTRUMENT_TYPE` maps FUTURE→`futures_chain`
+      string + `data_type=trades`). (2) **`tradfi_catalog_reader.py:226-230` Era-A hint FIXED** → `data_type=trades` for
+      FUTURE/OPTION (the chain bundle is carried by the instrument_type partition token, not the data_type) —
+      **zero-risk**: a full read proved `CatalogRow.data_type` is NEVER consumed for seeding (orchestrator uses only
+      `.venue`/`.instrument_id`, and `orchestrator.py:3548-3553` ALREADY SKIPS options_chain/futures_chain as data_types
+      when seeding `record_expected_unattempted` — so NO Era-A data_type ever reached the manifest either). (3) The
+      orchestrator `_MERGED_DATA_TYPE_MAP`/`_DATA_TYPE_TO_INSTRUMENT_TYPE` + `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP`
+      options_chain/futures_chain entries stay **G4-gated** — the MVP config DRIVES the live DERIBIT chain DOWNLOAD
+      (orchestrator.py:2440 filters `venue_data_types` to the DERIBIT_MVP data_type values), so dropping them now breaks
+      DERIBIT capture; they retire atomically with the adapter migration at cefi+tradfi G4 (the era_b_legacy_purge guard
+      enables it). **REMAINING gate (a)**: the GCS byte-probe of a recent cefi+tradfi chain shard (owner with GCS creds
+      — slot-7 lacks them this slot).
   - **Live TICK-WRITE path = Era-B for cefi+tradfi chains (GOOD).** Both route through `tardis_shared.py` /
     `tradfi_shared.py` `finalise_and_write_cefi_shards`, whose `_LEGAL_DATA_TYPES` (tardis_shared.py:65) EXCLUDES
     `options_chain`/`futures_chain` and **raises** on `data_type=options_chain` (≈652) — it writes
@@ -537,12 +560,18 @@ does not require a second whole-corpus walk.
     `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP` as **data_type** values (keep them as instrument_types). Until both, the
     relabel double-grains tradfi/cefi chain cells. Repos: market-tick-data-service + unified-api-contracts. parent_epic:
     mtds_mdps_master.
-- [ ] [UAC] P2. **DeFi `SOURCE_PRIORITY` registry gaps** (surfaced by the C-PATH WRITE derivation):
-      `(defi,     dex_pool_swaps)` is UNREGISTERED → falls back to `batch_onchain_rpc` (vs
-      `dex_pool_state`→`onchain_subgraph`); non-Hyperliquid perp venues (LIGHTER→tardis via the venue override) are
-      absent from `(defi, perp_funding)=     ["hyperliquid"]`. Both derive cleanly today (fallback + per-shard
-      isolation) but should be registered for an explicit per-shard source. Repo: unified-api-contracts
-      (`registry/source_priority.py`). parent_epic: manifest_master.
+- [x] ✅ [UAC] P2. **DeFi `SOURCE_PRIORITY` registry gaps — DONE (uac@28114692, slot-7 2026-06-08)**: registered
+      `(defi, "n")` (the canonical dex-swaps data_type; legacy `dex_pool_swaps` retired) → `["onchain_subgraph"]` (the
+      uniswap_v3/curve adapters read swaps from The Graph subgraph — `uniswap_v3_adapter.py` "primary for pools, swaps,
+      liquidity" — so subgraph, matching `dex_pool_state`; it had fallen to the defi `BATCH_ONCHAIN_RPC` asset-group
+      fallback). Added the matching `AVAILABILITY_AT_SEMANTICS` entry (closed-set symmetry holds; UAC QG green).
+      **Non-Hyperliquid perp venues (LIGHTER→tardis) deliberately NOT added to `(defi, perp_funding)`** — they resolve
+      per-shard via `pipeline_mode_resolver._VENUE_OVERRIDES["LIGHTER"]→BATCH_TARDIS` (BEFORE the SOURCE_PRIORITY
+      lookup); adding tardis would flip `source_required(defi, perp_funding)`→True + break the Hyperliquid-native
+      single-source auto-stamp (documented inline). **🔔 vm-defi (slot-2): the migrator now derives
+      `batch_onchain_subgraph` for dex-swaps (was the `batch_onchain_rpc` fallback) — re-verify your G2 dry-run.** Repo:
+      unified-api-contracts (`canonical/crosscutting/source_priority.py` + `availability_semantics.py`). parent_epic:
+      manifest_master.
 - [ ] [INFRA] P2. **MTDS local `--no-fix` QG is pre-existing-RED** (blocks the `.qg_last_passed_sha` sentinel → no clean
       quickmerge for ANY MTDS change): ~16 `❌` on current LDR — 6 files >900 lines (5 unrelated:
       `migrate_sports_canonical_v9`/`rebuild_sports_manifest_v9`/`rebuild_prediction_manifest`/`solana_lst_archival`/
