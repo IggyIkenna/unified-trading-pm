@@ -412,7 +412,7 @@
         "execution",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "features-service": {
       "type": "service",
@@ -789,7 +789,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "ml-service": {
       "type": "service",
