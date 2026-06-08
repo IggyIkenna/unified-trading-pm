@@ -315,22 +315,18 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
 
 **Per-AG G1 status (WAVE-1 dry-runs):**
 
-- **cefi (slot-3)**: **G2 VERIFY RE-RUN DONE on the shape-aware producer (2026-06-07)** — migrator + rebuild +
-  instruments-store-v9 dry-runs GREEN (source-aware `batch_tardis` paths, writer-stamped v9 columns, 30,803 IS rows→100%
-  v9); `enumerate v2` exit 0 = **3,446 plausible candidates** (OPTION 141K + COMBO 64.8K correctly bundle-skipped via
-  `frozenset()` → the G1-ENUM over-fan is FIXED for cefi options/combos; no impossible combos). **2 residual could-exist
-  findings gate G1.run apply-write**: 🔴 **F1 RESOLVED via writer SSOT** — `tardis_shared.py` Phase-1.6 makes **Era-B
-  canonical** (chain = `instrument_type`; `data_type` is pure market-data → the object PATH `data_type=trades` + the
-  rebuild are CORRECT; the v8-manifest + UAC-matrix `data_type=<chain>` are the legacy **Era-A** overload Phase-1.6
-  banned; the "12 phantoms" are stale Era-A rows → DROP not demote). It is a **deliberate, TESTED** Era-A↔Era-B conflict
-  (UAC matrix + 2 asserting tests vs writer) spanning **cefi+tradfi+slot-7 catalogue** → operator/slot-7 Era decision,
-  landed as ONE coherent matrix↔catalogue↔manifest change (recommend Era-B). 🔴 **F2** DERIBIT/OKX `FUTURE` captured at
-  `futures_chain` BUNDLE grain but enumerated per-contract (~160/2-day false `expected_unattempted`; venue-specific →
-  catalogue rollup, NOT a matrix flip — BYBIT has per-contract `future`). Same class as tradfi/sports. **Matrix SLICE is
-  AG-owner's; catalogue producer is slot-7 PART A (NOT shipped — no in-flight PR). cefi is NOT apply-ready: BLOCKED on
-  PART A + the Era decision.** Migrators re-confirmed GREEN post `hyperliquid_rest→hyperliquid` rename (mtds@c567962e).
-  Full write-up + P0 todos in `cefi_manifest_canonicalisation_2026_06_01.md` § "G2 VERIFY PASS". 🟢 G3 UNION view
-  SHIPPED (one operational gate cleared). gate-c (v9) tool-ready via G1-V8.
+- **cefi (slot-3)**: ✅ **APPLY-READY (2026-06-08)** — Era-B + bundle-grain rollup LANDED (`uac@ae70338d`
+  options_chain/futures_chain → `{trades}` + `is@74df991d`/`687d1443` read-side `_rollup_bundle_grain`; **F1 Era-B
+  recommendation adopted**). **Enumerate RE-RUN GREEN** = **3,454 candidates**: 0 per-leaf OPTION/COMBO; **8
+  `options_chain` candidates, ONE per underlying (DERIBIT BTC/ETH option+combo), all `data_type=trades`** (no
+  `data_type=options_chain`); 0 impossible pairs; **DERIBIT 11.5%** (no longer dominates). Migrators + instruments-store
+  v9 (30,803→100% v9) re-confirmed GREEN; 7+2 audit green (CF-1…13 ✓; CF-14 options-bundle ✓). **UAC slice verified
+  correct — no change.** 🟡 **ONE residual = F2 (slot-7-owned, NOT a G4 blocker)**: `FUTURE` not rolled up (slot-7
+  DELIBERATELY omits `future→futures_chain`, venue-specific: DERIBIT/OKX bundle vs BYBIT per-contract) → 880
+  per-contract FUTURE candidates (700 DERIBIT/OKX = false over-seed) — over-seeds only the **G1.run futures seed**, fix
+  = slot-7 venue-aware `build_instrument_catalogue` rollup. **Remaining gates are OPERATIONAL only**: instruments-store
+  v9 walk RUN · IS backfill · Era-B legacy relabel (rides G4, operator `slot-7 edca81b57`) · pre-migration drain · F2
+  (slot-7). Full verdict in `cefi_manifest_canonicalisation_2026_06_01.md` § "cefi APPLY-READY". 🟢 G3 ✓ · G0 ✓.
 - **sports (slot-4)**: **WAVE-2 dry-runs GREEN (2026-06-07)** — G1-ENUM league-grain producer DONE (is@99a5fbf5) +
   AG-specific producer present; **fixed a real G1-ENUM bug: the UAC `("sports","league")` validity slice silently
   dropped `ODDS` → now derived from `SPORTS_DATA_TYPE_TO_SOURCE` (uac@aff80339/PR#95)**. G1-V8 instruments-store v9
