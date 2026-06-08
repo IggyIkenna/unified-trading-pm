@@ -959,7 +959,13 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
 > present on disk (tradfi day=2023-05-01: 14; cefi day=2024-06-03 BYBIT futures_chain shard 12,525 rows) — and the
 > migrator **SKIPS** the Era-A `data_type=options_chain` paths that lack an `instrument_type=` segment
 > (`_canon_hive_rel` returns None) → orphan. So the operator was right: we DO have a `data_type=options_chain` and the
-> current migrator does not safely carry it. ↓ original session-2 verdict retained for context.
+> current migrator does not safely carry it. **🟢 MIGRATOR FIXED this session (mtds@51c604a4)** — `_canon_hive_rel`
+> rebuilds canonical from parsed dims (renames `category=`→`asset_group=`, derives `instrument_type=options_chain` from
+> the chain data_type + KEEPS `data_type=options_chain`, routes un-attributable legacy objects to `_needs_attribution/`
+> never skip-then-delete); real-prod dry-run day=2023-05-01 = **1,680/1,680 planned, 0 skipped** (was orphaning the
+> `category=`/Era-A tail); 17/17 unit tests (4 new). **Remaining (not migrator-code): T-OLD-2b validity-matrix widening
+> (slot-7) + T-OLD-2c content-aware attribution of the holding + T-OLD-3 full-range dry-run as the apply gate.** ↓
+> original session-2 verdict retained for context.
 
 > **VERDICT (session-2, SUPERSEDED): tradfi DATA/MANIFEST `--apply` (G4) is APPLY-READY — REGRESSION RISK: NONE.** This
 > pass re-verified the full operator ①–⑫ readiness audit against real-prod GCS (`central-element-323112`), not code
@@ -1090,32 +1096,35 @@ preserves it; the seed must admit it).
 dry-run's day-window likewise. **The fix:** the migrator dry-run must be run over an OLD-TAIL day-range (2023-05) and
 assert 0 skipped/non-canonical paths before `--apply`.
 
-- [ ] [SCRIPT] P0. **T-OLD-1 — add `category=`→`asset_group=` canonicalisation to `migrate_tradfi_to_v9_canonical`**
-      (`_canon_hive_rel` + `_canon_rel`): rename the legacy `category=tradfi` path key to `asset_group=tradfi` (the
-      cefi/defi migrators' CF-2 rename — verify whether a PRIOR category→hive migrator is meant to own this and is just
-      incomplete, vs the v9 migrator owning it). Until fixed, the old `category=` tail (NASDAQ/NYSE/ICE/FX, no
-      asset_group= twin) orphans at apply. Re-run the dry-run over day=2023-05-01..2023-06-01 and assert 0 non-canonical
-      / 0 skipped. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: operator pushback +
-      old-tail probe, slot-6 2026-06-08.
-- [ ] [UAC+MTDS] P0. **T-OLD-2 — `data_type=options_chain` (IV/chain-snapshot) carry-through — ✅ OPERATOR DECIDED
-      2026-06-08: PRESERVE as a distinct data_type** (it is schema-backed — `*_OPTIONS_CHAIN_SNAPSHOT` `mark_iv`/greeks/
-      `underlying_price`; NOT collapsed to trades). **Implementation-ready fix (un-blocked):** in the tradfi migrator
-      `_canon_hive_rel`/`_canon_rel`, when an on-disk path has a chain `data_type` (`options_chain`/`futures_chain`) but
-      **no `instrument_type=` segment**, DERIVE `instrument_type = data_type` and KEEP `data_type=options_chain` →
-      canonical `…/instrument_type=options_chain/data_type=options_chain/…`. **Reference = cefi `is_bundle` branch**
-      (`migrate_cefi_flat_to_v9_canonical.py:150` `_CHAIN_BUNDLE_DTYPES` + lines 181-196 — preserves the bundle incl
-      `underlying=`/`quote=`/`margin=`, inserts pipeline_mode, relabels in place; tradfi's `_canon_hive_rel` LACKS this
-      branch). **Re-decide `_ONDISK_DATA_TYPE_MERGE = {"futures_chain":"options_chain"}`** — "preserve distinct" likely
-      means `futures_chain` STAYS `futures_chain` (confirm vs cefi's "match live on-disk" rationale). **Widen the
-      validity matrix** `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("tradfi", options_chain/futures_chain)]` to ADMIT
-      `data_type=options_chain`/`futures_chain` (currently `{trades}` only — the ⑥/⑦ root; cross-cutting, coordinate the
-      matrix change with slot-7). Gate the `--apply` on T-OLD-3 (old-tail dry-run proving 0 dropped options_chain).
-      Repos: market-tick-data-service + unified-api-contracts. parent_epic: mtds_mdps_master. Provenance: operator
-      `options_chain` pushback + PRESERVE decision, slot-6 2026-06-08.
-- [ ] [DATA] P1. **T-OLD-3 — migrator dry-run MUST cover an OLD-TAIL day-range before `--apply`**: extend the readiness
-      dry-run to day=2023-05-01..2023-06-01 (the category=/Era-A-options_chain tail) and assert 0 skipped + 0
-      non-canonical projected paths + the data_type=options_chain count is carried (not dropped). Gate the tradfi G4
-      `--apply` on this. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-6 2026-06-08.
+- [x] ✅ [SCRIPT] P0. **T-OLD-1 — `category=`→`asset_group=` canonicalisation FIXED (mtds@51c604a4)**: `_canon_hive_rel`
+      now REBUILDS the canonical path from parsed dims, renaming legacy `category=tradfi`→ `asset_group=tradfi` (the old
+      string-insert kept `category=` → NASDAQ/NYSE/ICE/FX old paths with no `asset_group=` twin orphaned). Verified:
+      real-prod dry-run day=2023-05-01 → **1,680/1,680 L-hive objects planned, 0 skipped** (was mishandling 1,627
+      `category=` + skipping 20 no-instrument_type); 17/17 unit tests green (4 new). Repo: market-tick-data-service.
+      parent_epic: mtds_mdps_master.
+- [x] ✅ [MTDS] P0. **T-OLD-2 (migrator part) — `data_type=options_chain` carry-through FIXED (mtds@51c604a4)** per the
+      operator PRESERVE decision: `_canon_hive_rel` derives `instrument_type=options_chain` from a chain `data_type`
+      with no `instrument_type=` segment and **KEEPS `data_type=options_chain`** (the schema-backed mark_iv/greeks
+      snapshot, NOT collapsed to trades). Un-path-attributable legacy objects (no instrument_type, non-chain bare-symbol
+      files) route to a **`_needs_attribution/`** holding (preserved, counted, never skip-then-delete — defi pattern),
+      NOT a guess. `_ONDISK_DATA_TYPE_MERGE` left as-is (no-op for tradfi — no on-disk `data_type=futures_chain`; the
+      option/future distinction lives in `instrument_type`). Unit + real-prod dry-run green. **REMAINING (NOT this
+      commit):** ↓ T-OLD-2b matrix widening (slot-7) + T-OLD-2c content-aware attribution of the holding.
+- [ ] [UAC] P1. **T-OLD-2b — widen the validity matrix for tradfi chain data_types (cross-cutting,
+      slot-7-coordinated)**: `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("tradfi", options_chain/futures_chain)]` is
+      `{trades}` only — ADMIT `data_type=options_chain`/`futures_chain` so the could-exist SEED counts the preserved
+      snapshots (same root as the coordinator ⑥/⑦ + cefi/tardis-IV extension; the migrator now PRESERVES the data, the
+      matrix must ADMIT it). Repo: unified-api-contracts. parent_epic: manifest_master. Provenance: operator PRESERVE
+      decision, slot-6 2026-06-08.
+- [ ] [SCRIPT] P2. **T-OLD-2c — content-aware attribution of the `_needs_attribution/` holding**: a follow-up pass that
+      inspects the parquet/symbol of the held legacy objects (non-chain no-instrument_type + ambiguous option-vs-future
+      chains) to place them in the canonical tree with the correct `instrument_type`. Until then they are PRESERVED (not
+      lost) but not reader-visible. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-6
+      2026-06-08.
+- [ ] [DATA] P1. **T-OLD-3 — full old-tail-range dry-run as the `--apply` gate**: day=2023-05-01 PROVEN (1,680/1,680
+      planned, 0 skipped); extend to the full 2023-05-01..2026 old-tail range on the in-region VM and assert 0 skipped +
+      the data_type=options_chain count is carried before the tradfi G4 `--apply`. Repo: market-tick-data-service.
+      parent_epic: mtds_mdps_master. Provenance: slot-6 2026-06-08.
 
 ### 🟢 TradFi APPLY-READY VERDICT (slot-6, 2026-06-08) — 5/5 dry-gate criteria GREEN; remaining gates OPERATIONAL only
 
