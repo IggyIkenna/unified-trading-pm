@@ -130,6 +130,39 @@ v2**, so re-trigger + scoped-lock clears them (no force).
       (Harsh iterating `tab-mirror-to-ldr.yml`) + roll out fleet-wide — do NOT race it. Cross-ref:
       `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "PAT-push root fix".
 
+### Auto-remediation pipeline gaps (operator-surfaced 2026-06-08) — "vm-planning should self-heal stuck PRs + alert on everything"
+
+Operator vision: a `stuck_promotion_pr`/`merge_conflict` should, after X minutes, auto-escalate to vm-planning; the
+worker resolves it autonomously and only asks the operator when genuinely undecidable (not derivable from CLAUDE.md).
+And every alert class — stuck promotion PRs, plan-hygiene, resolved bookends — should be visible. The pipeline is mostly
+BUILT (`ci_failure_watcher.py` detects stuck PRs + `--escalate` dispatches `merge_conflict`/`sit_failure` walls →
+`escalate-to-orchestrator.yml` → conflict-resolver worker, which pings the operator on undecidable). Four gaps explain
+what the operator is seeing:
+
+- [x] ✅ [SCRIPT] P2. **Resolved-bookend alerts were OFF** — `ci-failure-watcher.yml` ran with `--escalate` but no
+      `--resolved-hours`, so `detect_resolved_prs` (the "stuck PR is now SOLVED" bookend) never ran → no "X resolved"
+      alert when a stuck promote PR merges. FIXED: added `--resolved-hours 6` to the watcher invocation.
+      `unified-trading-pm@<this>`.
+- [ ] [SCRIPT] P0. **Escalation no-retry on capacity failure (the real "vm-planning isn't handling it" cause).**
+      `ci_failure_watcher.py` adds the `_ESCALATION_LABEL` (idempotency) on the dispatch ATTEMPT (`_dispatch_escalation`
+      ~line 519), **before** confirming the orchestrator actually spawned a worker. So when `/api/escalate` returns "no
+      free slot / no headroom" (the PM#174 "Escalation NOT confirmed" alert), the PR is STILL marked escalated → the
+      `*/15m` cron never re-dispatches → it stays stuck forever. FIX: only add the label on a CONFIRMED dispatch
+      (escalation_id returned); on a failed/unconfirmed dispatch leave it unlabeled so the next tick retries (backoff
+      cap + a louder alert if it keeps failing). Composes with slot-capacity work (free a slot for escalations: the
+      stale-session reaper + AutoSpawn headroom). repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **Stuck-PR escalation should cover the v2-on-stale-staging-workflow class.** A promote PR whose v2
+      fails on a STALE staging workflow (a fix that's on LDR but never reached staging, e.g. `major-bump-issue-handler`
+      actionlint) is `BLOCKED` with a failed required check → `blocked_failing_prs_to_escalate` should hand it to a
+      worker that re-rolls the stale staging workflow from SSOT/LDR. Verify this path fires (it didn't for the
+      2026-06-08 batch) + the worker prompt knows "stale staging workflow → re-roll from SSOT/LDR". repo:
+      unified-trading-pm + agent-orchestrator.
+- [ ] [DEVOPS] P2. **MTDS semver-agent failure on staging (pre-SIT)** —
+      `semver-agent | market-tick-data-service |     failure | staging | triggered by QG pass on staging (pre-SIT)`
+      (2026-06-08). MTDS staging `quality-gates-v2` is green now, so this is a version-bump-specific failure
+      (tag/version clash or transient), separate from the deadlock. Triage the semver-agent run; likely a stale
+      release-tag clash → `git fetch origin --tags --force`. repo: market-tick-data-service / semver.
+
 ## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
 
 > **The chicken-and-egg (operator 2026-06-06):** the corrected CI/CD machinery — `quality-gates-v2` check-contexts,
