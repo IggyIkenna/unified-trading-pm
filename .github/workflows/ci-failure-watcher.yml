@@ -45,7 +45,7 @@ jobs:
         # --escalate: hand merge-conflict-stuck promotion PRs to the orchestrator
         # (repository_dispatch → escalate-to-orchestrator.yml) instead of only paging.
         # Idempotent per PR label, so the */15m cron does not re-dispatch.
-        run: python3 scripts/repo-management/ci_failure_watcher.py --escalate --resolved-hours 6
+        run: python3 scripts/repo-management/ci_failure_watcher.py --escalate
 
   notify:
     needs: watch

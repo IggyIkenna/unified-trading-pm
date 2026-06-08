@@ -139,9 +139,13 @@ BUILT (`ci_failure_watcher.py` detects stuck PRs + `--escalate` dispatches `merg
 `escalate-to-orchestrator.yml` → conflict-resolver worker, which pings the operator on undecidable). Four gaps explain
 what the operator is seeing:
 
-- [x] ✅ [SCRIPT] P2. **Resolved-bookend alerts were OFF** — `ci-failure-watcher.yml` ran with `--escalate` but no
-      `--resolved-hours`, so `detect_resolved_prs` (the "stuck PR is now SOLVED" bookend) never ran → no "X resolved"
-      alert when a stuck promote PR merges. FIXED: added `--resolved-hours 6` to the watcher invocation.
+- [x] ✅ [SCRIPT] P2. **Resolved-bookend alerts are ON by default — earlier "they're OFF" diagnosis was WRONG.**
+      `--resolved-hours` argparse `default=0.5` (since `da81a1414`), so `detect_resolved_prs` runs even when the GHA
+      omits the flag → resolved bookends already post (0.5h window, matched to the \*/15m cron so each resolution posts
+      exactly once; no posting-layer dedup, so the window MUST track the cron cadence). A transient `--resolved-hours 6`
+      experiment was reverted — at 6h a resolved PR re-posts ~24× over the window. NET: no code change needed; the
+      resolved bookend was never disabled. If "solved" alerts are still not visible, the cause is upstream (the open
+      FAILING alert was never posted, or the PR closed >0.5h before the next tick and was skipped), not this flag.
       `unified-trading-pm@<this>`.
 - [ ] [SCRIPT] P0. **Escalation no-retry on capacity failure (the real "vm-planning isn't handling it" cause).**
       `ci_failure_watcher.py` adds the `_ESCALATION_LABEL` (idempotency) on the dispatch ATTEMPT (`_dispatch_escalation`
