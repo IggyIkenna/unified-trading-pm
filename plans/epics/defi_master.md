@@ -754,6 +754,26 @@ Do this verification BEFORE assuming the VM is producing useful data based on ev
       2026-05-07: DONE — MTDS@10aa715 (ohlcv_1m); CloudFront 429 quirks documented in MEMORY
       (feedback_lighter_pacifica_cloudfront_quirks)]
 
+### AMM matcher coverage (migrated from archived `defi_simulation_realism_2026_05_10`)
+
+- [x] ✅ [AGENT] P1. **`SolidlyCLForkPool` matcher for Velodrome/Aerodrome Slipstream V3-tick CL pools** —
+      execution-service@`e8ecd0d38` (on `live-defi-rollout`; staging promotion auto-sequences behind
+      unified-trading-library per the dep-order gate). Registered to `PoolShape.SOLIDLY_CL_FORK` as a thin
+      `UniswapV3Pool` subclass (Slipstream CL is byte-for-byte V3 tick math) + `(chain_id, factory_address)`
+      discriminator (chain 10 = Optimism/Velodrome, 8453 = Base/Aerodrome); exported from `matching_engine`. Tests:
+      added to `_ALL_POOLS` suite + `test_registry_covers_implemented_shapes`, new `test_solidly_cl_fork_reuses_v3_math`
+      (numeric equivalence to a V3 pool — the correctness proof) +
+      `test_solidly_cl_fork_snapshot_carries_discriminator`, repointed `test_unregistered_shape_raises` to
+      `CURVE_CRYPTO`. QG-green; 60 unit tests pass. **MIGRATED FROM:**
+      `plans/archive/defi_simulation_realism_2026_05_10.md` Phase 2H (DEFERRED P1; lost its home on archival);
+      reconciled from orphan-WIP `execution-service@8becdb26` (preserved at `wip/solidly-cl-fork-matcher-8becdb26`).
+- [ ] [AGENT] P2. **`SolidlyCLForkPool` historical golden-swap validation** — ≥20-Velodrome + ≥20-Aerodrome real
+      on-chain Slipstream `Swap`-event fixtures within 5 bps each (the on-chain-data half of the Phase-2H criterion).
+      Same golden-harness pattern as the real Alchemy-sourced fixtures already on LDR in
+      `tests/integration/fixtures/amm_golden_swaps/`. Lower priority than the matcher itself because Slipstream uses the
+      unaltered Uniswap-V3 `SwapMath` contracts, so the V3-equivalence unit test above already covers the math; this
+      adds on-chain ground-truth confirmation. (execution-service)
+
 ### Custody (Copper + Cloud-KMS for May-23 + Fireblocks June-1)
 
 > **🟢 R9 sub-(a) RESOLVED 2026-05-12** by Ikenna slot 4 per

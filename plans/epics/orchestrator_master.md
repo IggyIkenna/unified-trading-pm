@@ -146,6 +146,91 @@ orchestrator work lives in the Phase 6/9/11 rows of the table above + the audit-
 
 ## P0 — must complete before next foundation gate
 
+### `tab-mirror-to-ldr` crashed every tick on empty assoc-array under `set -u` → fleet-wide no-FF (discovery + SSOT fix 2026-06-07)
+
+**status**: ✅ RESOLVED — SSOT + all crashing repos' `main` copies now carry the fix; PM `main` `quality-gates-v2` GREEN
+(parity holds); 8/8 dispatched `tab-mirror` runs on `main` succeed (no crash). · **provenance**: slot-1 main, triaging
+an execution-service "CI REGRESSION on main" + repeated `tab-mirror-to-ldr` scheduled-run failures, 2026-06-07.
+
+**What I found**: the mirror's sweep step does `declare -A div_hosts; declare -A stranded_hosts` then expands
+`${#div_hosts[@]}` / `${#stranded_hosts[@]}` under `set -u`. On bash 5.x (the GHA runner; reproduced on bash 5.3.9)
+`${#assoc[@]}` of an **empty** associative array raises `unbound variable` — so on every tick with no active-diverged /
+stranded host, the whole job exits 1 **before** fast-forwarding any behind-only tab. The earlier `declare -A` addition
+was an incomplete fix (it doesn't stop the empty-expansion crash). Net: tab↔LDR FF silently broke fleet-wide every ~30
+min, which is the upstream cause of the recurring tab-branch-drift alerts that had to be hand-reconciled all session.
+The `declare -A` being present on a repo's `main` masked it as "not stale" while it still crashed.
+
+**Fix shipped**: SSOT template counts into plain ints with nounset off (`set +u; n="${#div_hosts[@]}"; set -u`) → empty
+→ 0, no crash. YAML-validated; fix verified on bash 5.3.9.
+
+- [x] ✅ [AGENT] P0. SSOT `tab-mirror-to-ldr.yml` empty-assoc-array crash fixed (PM@`5372b01b6`).
+- [x] ✅ [AGENT] P0. Rolled out fleet-wide to `live-defi-rollout` — **24/24 repos** now carry the fixed
+      `tab-mirror-to-ldr.yml` on LDR (committed via the GitHub contents API direct to each repo's `live-defi-rollout`,
+      machinery-justified since the mirror itself was broken; `deployment-service`'s stale copy fixed in the same pass).
+      Verified `set +u` present on all 24. SSOT = PM@`5372b01b6`. - ⚠️ **`[skip ci]` caveat**: those LDR commits carry
+      `[skip ci]`. It's **inert on LDR** (v2 only triggers on push/PR to `main`/`staging`, never LDR), but if such a
+      commit becomes the HEAD of an LDR→`staging` promotion PR its required `quality-gates-v2` is skipped → PR blocks.
+      Recovery (per ci-cd-flow § "[skip ci] and required checks"):
+      `gh workflow run quality-gates-v2.yml --repo IggyIkenna/<repo> --ref <pr-head-branch>`. Most repos get newer LDR
+      commits before promoting (so my commit won't be the head); the few that don't need this one-liner at promotion
+      time.
+- [x] ✅ [AGENT] P0. **Reach `main`** — done via an operator-authorized **Route-B coordinated batch** (the
+      LDR→`staging`→`main` cascade was wedged behind the cascade-infra deadlocks in
+      `plans/active/issues/sit_94_failures_masked_by_dangling_lock_2026_06_07.md`, so promotion couldn't carry it).
+      **Scope was surgical, not "24 ad-hoc PRs":** empirically only **8** repos crashed on the `main` schedule
+      (execution-service, features-service, market-tick-data-service, system-integration-tests, unified-api-contracts,
+      unified-trading-library, unified-trading-pm, unified-trading-system-ui — scheduled workflows run only off the
+      default branch, and the other repos' defaults/copies don't hit the empty-array tick). The workflow-parity gate
+      runs **only in PM's CI** and clones just **2 siblings** (`unified-trading-library` + `unified-api-contracts`, PM's
+      `dep_repos`), so parity binds only PM-SSOT == PM-own == UTL-main == UAC-main. Landed one PR per repo to `main`
+      (byte-identical fixed copy `39e7a220…`), siblings first then **PM last** (PM #173: SSOT + own copy) so the parity
+      gate never saw a fixed-SSOT-vs-buggy-copy mismatch (the failure mode that turned #171 RED). All 7 non-PM PRs
+      merged via their own green `quality-gates-v2`; execution-service merged on a green PR (its earlier main-v2 failure
+      was flaky); unified-trading-system-ui admin-merged past unrelated non-required `e2e`/`registry-drift`/ Vercel
+      failures (workflow-only diff). **Verified**: PM `main`-push `quality-gates-v2` = SUCCESS (run 27108525546 — parity
+      holds); 8/8 `workflow_dispatch` `tab-mirror` runs on `main` = success (no crash). PRs: UTL#252, UAC#99,
+      features#23, MTDS#145, SIT#31, UTS-ui#30, execution#225, PM#173. **Residual** (no action — self- heals): the ~17
+      non-crashing repos still carry the buggy copy on `main` but are NOT in PM's clone set and don't run a scheduled
+      mirror off `main`, so they neither crash nor break parity; they converge to the fixed copy when the LDR→`main`
+      cascade un-wedges. (all service repos — done via authorized Route-B batch, 2026-06-07)
+
+### `auth_failed` was a one-way ratchet → rotation pool collapsed to one account (discovery + fix 2026-06-07)
+
+**status**: 🟢 CODE FIXED (agent-orchestrator, `tab/ikennaigboaka/1` → LDR) — one operator action remaining on the live
+VM. · **provenance**: slot-1 main during account-99%/PM#164-escalation triage, 2026-06-07.
+
+**What I found**: The orchestrator IS designed to auto-rotate across all 4 accounts (cross-operator shared pool;
+`_pick_headroom_account` / `pick_next_account` pick any usable account with headroom). But `auth_failed` was a **one-way
+latch**: the spawn-heartbeat watchdog (`worker_liveness.py:_check_spawn_heartbeat_timeouts`) marks an account
+`auth_failed` on ANY spawn that doesn't `/heartbeat` within ~180 s (cold-start slowness, a custom prompt that skips the
+lifecycle, a transient), `account_is_usable` then excludes it from rotation, and the ONLY clear path (`server.py:~829`)
+was a `/heartbeat` from a worker spawned **on that account** — which can never happen while it's excluded. So every
+transient spawn failure permanently sidelined a healthy account. Over time the usable pool eroded to just
+`sub-a-ikenna`; when it hit 99% weekly, `pick_next_account` returned `None` → the PM#164 escalation reported "no
+headroom account / no escalation_id" even though `sub-b-iggy2london` + `sub-c-ikenna-odum` had valid tokens (good
+to 2027) and full headroom.
+
+**Why it matters**: single-point-of-failure on one account; defeats the entire multi-account failover design; blocks
+escalations + autospawn fleet-wide when the primary rate-limits. Contradicts the epic's "4 accounts, round-robin" SSOT.
+
+**Fix shipped** (agent-orchestrator): added cooldown-based auto-recovery — `AccountUsageRow.auth_failed_at` +
+`auth_failed_retries` columns (ORM + `bootstrap.py` ALTER-TABLE migration); `mark_account_auth_failed` stamps the time +
+increments retries; new `account_in_auth_failed_cooldown()` (exponential backoff `600s·2^(retries-1)`, cap 6 h) gates
+`account_is_usable` so a sidelined account **re-enters the pool for a re-probe** after the window — a successful
+heartbeat fully clears it (`clear_account_auth_failed` resets timestamp+retries), a repeat failure re-marks with a
+longer window. Legacy rows with NULL `auth_failed_at` are treated as cooldown-elapsed → auto-heal the already-latched
+accounts on first deploy. `account_is_auth_failed` kept as the raw-status check for the heartbeat healing path. Tests:
+`tests/test_auth_failed_rotation.py` `TestAuthFailedCooldownAutoRecovery` (+ 78 related rotation/escalation tests
+green).
+
+- [x] ✅ [AGENT] P0. Cooldown auto-recovery for `auth_failed` — code shipped (agent-orchestrator, QG-green).
+- [ ] [OPERATOR] P0. On the LIVE orchestrator (`i-0c9b283b31d6b5ca7`, not SSM-reachable): **(a)** redeploy
+      agent-orchestrator so the new code + migration take effect; the NULL-timestamp auto-heal then un-latches
+      `sub-b-iggy2london` / `sub-c-ikenna-odum` on the next rotation tick. **(b)** Immediate unblock before redeploy:
+      from the dashboard force a spawn with `account_id=sub-b-iggy2london` (explicit `/api/slots/{N}/spawn` bypasses the
+      usable gate) → on heartbeat `server.py` auto-clears its `auth_failed`. Repeat for `sub-c-ikenna-odum`. Confirm
+      `~/.claude-accounts/sub-b-iggy2london.env` is present on the live VM (re-sync from the creds bucket if not).
+
 ### LDR integration has no hard regression-gate (discovery 2026-06-01, fleet code-freeze)
 
 **status**: 🔴 OPEN — surfaced during the 2026-06-01 fleet code-freeze (operator-called to stop agents undoing
@@ -240,6 +325,73 @@ correctness the freeze protects.
       `ao-self-pull cron installed=1`, AO HEAD=589b711 on both). Closes the deploy-currency gap (vm-2 had been 14 behind
       running stale server code). NB: a `verify_fleet_autonomy_health.sh` gate citing the AO main-checkout behind-count
       is a nice incremental add (the existing script already reports per-VM behind-count vs LDR HEAD).
+
+### slot git-status `404` drift — a remote reporter posts for slots the live VM doesn't have (finding 2026-06-08, slot-1)
+
+**status**: ✅ RESOLVED 2026-06-08 (option b shipped) — endpoint now no-ops 204 on unregistered slots; 0 git-status 404s
+since the deploy. · **provenance**: slot-1, auditing live VM (`planning` / `i-0c9b283b31d6b5ca7`) health after the
+data_freshness "stale" false-alarm.
+
+**What I found**: the live planning VM's backend (`127.0.0.1:8765`) logs repeated
+`POST /api/slots/{3,21,22,23,24,25,26,27,28,29,30}/git-status → 404` from **`103.251.212.47`** (a remote operator laptop
+— NOT this laptop `2.101.7.192`, so likely Harsh's), ~3/min/slot. Registered slots (1/2/4/5) return 200. So a remote
+`slot-git-status-report.sh` cron reports for slot IDs that aren't registered on this VM → 404-spam. Health is otherwise
+green (6 live workers, snapshot loop ticking every 30 min on schedule). Benign but real config drift between the remote
+reporter's slot range and the VM registry (adjacent to the auth.py:528 stale-token note).
+
+- [x] ✅ [SCRIPT] P2. Quiet the slot-git-status `404` drift — **DONE via option (b)**: `POST /api/slots/{id}/git-status`
+      now returns `204` (no-op) for an unregistered slot instead of `404` (`agent-orchestrator@b2aa50d`,
+      `response_model=None` to allow the raw `Response` return). AO QG green (393 passed); shipped to LDR; deployed via
+      `ao-self-pull` (FF `e24cee1→b2aa50d` + restart 05:09:53Z); verified — direct POST to an unregistered slot → 204,
+      and **0 git-status 404s since the restart**. Option (a) (fixing Harsh's laptop `slot-git-status-report.sh` slot
+      range) is the cleaner source-side fix and still worth doing on that host, but (b) makes the drift harmless
+      regardless. repo: agent-orchestrator. Done 2026-06-08 by slot-1.
+
+### CI-reconcile loop — plain LDR `quality-gates-v2` failures now auto-dispatch a fixer (built 2026-06-08, slot-1)
+
+**status**: ✅ SHIPPED + DEPLOYED + VERIFIED. · **provenance**: slot-1, after the operator noted the planning VM was
+"doing nothing" — found the planning VM is _for_ ad-hoc CI fixes but had no route for plain LDR test breaks.
+
+**The gap**: the push-based escalation hook (`POST /api/escalate`) only fired for PR/promotion walls (`merge_conflict` /
+`label_mismatch` / `sit_failure` / `stuck_promotion_pr`). A raw `quality-gates-v2` failure on `live-defi-rollout` (a
+test/lint/type break someone pushed — no PR) mapped to NONE of them, so it never became a task → the CI slot sat idle
+while LDR stayed red.
+
+**Shipped** (`agent-orchestrator@1f093a7`, QG green, 12 unit tests):
+
+- New wall type `ldr_qg_failure` (`escalation.WALL_TYPES` + `EscalateRequest.wall_type` Literal + `escalate.md` worker
+  instructions) → routes to the generic `escalate` prompt (diagnose code-vs-test, fix the wrong side, push to LDR).
+- `server/ci_reconcile.py` `CIReconcileLoop`: every 900s sweeps each active repo's latest `quality-gates-v2` conclusion
+  on `live-defi-rollout` (host `gh` CLI) and dispatches an `ldr_qg_failure` escalation per FAILING repo, within the
+  free-slot/headroom capacity gate, with a per-repo 1h cooldown + max 2 dispatches/tick. Env:
+  `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS` (0=disable) / `_COOLDOWN_SECONDS` / `_MAX_PER_TICK`. Wired into server
+  startup/shutdown.
+- **Verified live**: the loop found `execution-service` RED on LDR and dispatched a fixer worker onto `orch-slot-1`
+  (2026-06-08 05:48:59Z) once a slot was free.
+
+- [ ] [SCRIPT] P2 **NICE-TO-HAVE**. Push-path too: have the repo `quality-gates-v2` workflow `POST /api/escalate`
+      `wall_type=ldr_qg_failure` on an LDR failure (event-driven, catches a break the instant it lands instead of within
+      one 900s sweep). The wall type + endpoint already accept it; only the GHA call is missing. repo:
+      agent-orchestrator (workflow templates).
+
+### WorkerLivenessWatchdog did NOT reap 6 stale tmux sessions (4 days idle) (finding 2026-06-08, slot-1)
+
+**status**: 🟡 OPEN — root cause of the "planning VM doing nothing". · **provenance**: slot-1, while verifying the
+CI-reconcile loop (the loop kept hitting "no free slot").
+
+**What I found**: all 6 planning-VM slots (`orch-slot-1/2/4/5/9/10`) held tmux sessions created **Fri Jun 5** with
+`last_activity` still at creation time — **~4 days of zero terminal activity** — while the backlog was empty. So every
+slot read as occupied (`_pick_free_slot` skips a slot with a live `orch-slot-N` session) → nothing could be dispatched.
+`ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true`, yet across ~3 min post-restart the watchdog reaped none of them (they are 4
+_days_ past the 900s heartbeat-silent threshold). I manually `tmux kill-session`'d all 6 (operator-authorised; provably
+dead, empty backlog → no work lost), which freed the slots and let the reconcile loop dispatch. The watchdog NOT reaping
+multi-day-silent sessions is the real "doing nothing" cause and recurs without a fix.
+
+- [ ] [SCRIPT] P1. Diagnose why `WorkerLivenessWatchdog` did not kill 6 sessions that were 4 days terminal-silent
+      (`orch-slot-*`, created Jun 5, empty backlog). Candidates: the kill predicate keys off a slot DB heartbeat the
+      stuck worker still posted (so "not silent") rather than tmux/terminal activity; a per-day kill cap already spent;
+      or a protected (`blocked`/extended-thinking) state mis-latched. Fix so a genuinely-idle multi-day session is
+      reaped → slots self-free. repo: agent-orchestrator (`server/worker_liveness_watchdog.py`). Surfaced 2026-06-08.
 
 ## P1 — important; post-current-gate
 

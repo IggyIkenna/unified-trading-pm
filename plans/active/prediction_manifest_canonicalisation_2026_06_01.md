@@ -911,6 +911,176 @@ venue-override question) + the operator-gated migration walk:**
       `market-data-tick-pred-prd-central-element-323112` (the canonical bucket the MTDS reader/MDPS gate use). No change
       needed; the phantom audit already targets the canonical post-migration bucket. Repo: instruments-service.
 
+## G2 READINESS VERDICT — dry-run verify pass on current LDR (slot-5, 2026-06-07)
+
+> **WAVE-2 / G2 gate (master coordinator `master_data_canonicalisation_migration_catalogue_2026_06_07.md`).** Re-ran ALL
+> prediction migration dry-runs against **current LDR** (mtds@6370294a · is@2971a064) — i.e. AFTER WAVE-1 landed the
+> source-aware MTDS migrator, the shape-aware could-exist producer (is@6ea46565), the v9 instruments-store migrator
+> (is@febb899e), and my prediction-catalogue crash-fix (is@a7fa55a8). All four dry-runs are GREEN; **NO code bug
+> surfaced** (the prior dry-runs predated this code — this pass re-confirms on the live shas). `--apply` stays G4-gated.
+> Sampled where noted; the full-corpus counts ride the gated VM `--apply`. Read-only on prod GCS
+> (`central-element-323112`).
+
+> **🟢 APPLY-READY (slot-5, 2026-06-07).** Prediction is CODE-COMPLETE for `--apply`: all G1+G2 dry-runs GREEN + the
+> 7+2-point audit passed (below), re-verified on current LDR (mtds@6370294a · is@2971a064, uac unchanged). The matrix is
+> still prediction-ABSENT → the per-cqg grain-binding path; **functionally re-confirmed post-matrix-state** —
+> `_row_data_types('prediction', grain_bound_entry, [...])` → `['prediction_canonical_question_group']` (matrix never
+> consulted; even an unbound row is bounded to the cqg bundle by the gated run's `--data-types`). **The ONLY remaining
+> gates are OPERATIONAL, not code** (G0 ✓ · **G3 UNION read view now SHIPPED** deployment-api@4dd2575 +
+> deployment-ui@0dc40eb · the per-AG instruments-store-pred v9 walk RUN [tool-ready] · the IS prediction backfill RUN ·
+> pre-migration drain + `_index` snapshot). Do NOT run `--apply` (G4-gated).
+
+- [x] ✅ [AUDIT] P0. **RE-VERIFIED GREEN post bundle-grain landing (slot-5 2026-06-07, HOLD-directive spare-cycle
+      check).** After the shared G1-ENUM **bundle-grain axis** landed (uac@dd7fa100 `grain_for_instrument_type` SSOT;
+      current LDR **is@9a4477be · uac@44c7bf17 · mtds@1c1ae428**), re-ran prediction's dry-runs — ALL STILL GREEN,
+      byte-for-byte unchanged: ① migrator source-aware `pipeline_mode=batch_polymarket_clob` paths · ③ store-migrator
+      493 rows 100% v8→v9 (all CF columns) · ④ catalogue exit 0 / 0 cqg rows (IS-backfill gated). The prediction
+      migrator+rebuild are unchanged (0 commits since 6370294a). The `dd7fa100` change is **purely additive** (+125
+      lines, 0 deletions): `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` is byte-unchanged → prediction still ABSENT →
+      grain-binding path; `valid_data_types_for_instrument_type('prediction',…)=None` and grain-bound `_row_data_types`
+      → `['prediction_canonical_question_group']` (re-confirmed on the NEW UAC). **No regression; APPLY-READY stands.**
+- [ ] [UAC] P3. **FINDING — new `grain_for_instrument_type('prediction','prediction_market')` returns `leaf` (slot-5
+      verify 2026-06-07).** Correct for the INSTRUMENT axis (prediction markets are per-market leaves; no
+      options_chain/futures_chain underlying-bundle), and **INERT today** — prediction's enumerator/catalogue do NOT
+      consume `grain_for_instrument_type`; they drive cqg enumeration via the per-row `instr.data_type` grain-binding
+      (the G1-ENUM reference). **Latent trap**: prediction's MANIFEST/atom grain is the cqg BUNDLE
+      (`prediction_canonical_question_group`), NOT a per-market leaf — so IF a future refactor unifies the grain
+      mechanisms and treats `grain_for_instrument_type` as THE enumeration-grain SSOT for prediction, it would over-fan
+      per-market → the exact false-`expected_unattempted` pollution G1-ENUM prevents. Reconcile then (prediction needs a
+      cqg-bundle grain value OR the unified path must preserve the data_type binding). Owner: the G1-ENUM bundle-grain
+      SSOT (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` / coordinator G1-ENUM). Repo:
+      unified-api-contracts. parent_epic: manifest_master. **Not owed now (HOLD; inert).**
+- [x] ✅ [AUDIT] P0. **G2 dry-run-green VERIFIED on current LDR (mtds@6370294a · is@2971a064, slot-5 2026-06-07).** The
+      four readiness dry-runs + the live data-state read + the 7+2-point audit, all evidence below. `--apply` G4-gated.
+- [x] ✅ [QG] P0. **QG evidence (slot-5 2026-06-07):** **instruments-service `quality-gates.sh --no-fix` = exit 0**
+      (`✅ ALL QUALITY GATES PASSED (223s)`; `.qg_last_passed_sha` == HEAD `2971a064`) — my whole G1 surface (v9
+      store-migrator + cqg catalogue producer + enumerator) is gate-clean. The prediction MTDS migrator + rebuild are
+      **ruff-clean**; the **MTDS** full `--no-fix` stays pre-existing-RED (the rebuild's 954-line >900-cap + argparse
+      `reportAny` strict-config in BOTH my scripts and unrelated handlers — the cross-AG coordinator slot-2 MTDS-QG P2 +
+      my file-split P2 below). These are lint/file-length/strict-config reds, INDEPENDENT of the proven dry-run
+      correctness; they gate the rebuild's eventual quickmerge promotion, not the migration's correctness.
+
+**① MTDS migrator dry-run** — `migrate_prediction_to_pred_prd_v9.py` (default dry), prod GCS, scoped `2025-03-14..15`
+(fast sample): exit 0, **planned=1028** (legacy raw 254 + candles 647 + stale `category=` 127), copied=0. Projected
+canonical paths SOURCE-AWARE (sample-inspected, NOT coarse `batch`/blank):
+
+- legacy raw →
+  `raw_tick_data/by_date/day=…/pipeline_mode=batch_polymarket_clob/asset_group=prediction/venue=POLYMARKET/instrument_type=prediction_market/data_type=trades/…`
+  (`pipeline_mode=` LEFT of `asset_group=` ✓ CF-3/CF-13);
+- candle → `processed_candles/by_date/day=…/pipeline_mode=batch_polymarket_clob/timeframe=…/data_type=…/venue=…` (✓
+  batch=live candle path-parity, mdps@5e7f075);
+- stale `category=prediction/data_source=POLYMARKET_CLOB/…6-dim…` → canonical
+  `pipeline_mode=batch_polymarket_clob/asset_group=prediction/…/instrument_type=prediction_market/…` (mode derived from
+  authoritative `data_source=`; the 6 legacy dims drop → parquet columns ✓). The `source`/`transport` MANIFEST columns
+  are correctly DEFERRED to the rebuild step.
+
+**② MTDS manifest-rebuild dry-run** — `rebuild_prediction_manifest.py --dry-run` over the EXISTING 1-day canonical
+sample (`2025-03-14`, 85 canonical objects from the prior additive sample; **read-only, NO new `--apply`**): exit 0,
+45.7s. **85 objects parsed · 1 captured cqg-bundle · CF-11 honest-absence 3-way** (`reemit_empty=2321` ·
+`source_returned_zero_preserved=41` as typed `empty_confirmed` · `reemit_invalid_reason_demoted=0` ·
+`failed_zero_row=0`). 84 `failed_unclassified` = the KNOWN `classify_polymarket_to_canonical_group` cqg-mapping coverage
+residual for day-1 condition_ids (a CLASSIFIER DATA gap, **not** a migrator/rebuild code bug). Code-verified stamps:
+`record_captured_from_counts(asset_group="prediction", available_at_envelope=…, pipeline_mode=bundle_pm)` where
+`bundle_pm = derive_pipeline_mode_for_row("POLYMARKET","prediction",…)` → `batch_polymarket_clob`; the UTL
+`ManifestWriter` auto-stamps `schema_version=9` / `source` / `transport`; typed-reason `record_empty` / `record_failed`
+honest 4-state.
+
+**Live `pred-prd` `_index` data-state** (read DATA-STATE, not the constant — 16,812 rows): **100% v8** · `pipeline_mode`
+100% blank · `source`/`transport`/`available_at` columns ABSENT · `asset_group` 86% `None` · old
+`trades`/`prediction_trades` atoms (NOT the canonical `prediction_canonical_question_group` bundle). This is exactly the
+pre-canonical state the GATED G4 rebuild `--apply` resolves — and ② proved the rebuild projects every canonical stamp
+correctly. (CF-1/2/3/4/7/8/13 RED _today on disk_, GREEN _in projection_ → fixed by the gated single-walk, never a
+second walk.)
+
+**③ Instruments-store v9 dry-run** — `migrate_instruments_store_v9.py --asset-group prediction` (is@febb899e tool):
+`_index` **493 rows 100% v8 → 100% v9** (`v9_after=493`); `schema_version={9:493}` (CF-1) ·
+`data_type={prediction_canonical_question_group:493}` (CF-7) · `pipeline_mode={batch_instruments_service:493}` (CF-3/13)
+· `source={instruments_service:493}` (CF-4) · `transport={rest:493}` (CF-TRANSPORT) · `asset_group=prediction` (CF-2) ·
+`available_at_filled=493` (CF-8) · all `captured` (honest 4-state). Object-path walk (scoped): 21 objects →
+`instrument_availability/by_date/day=…/pipeline_mode=batch_instruments_service/asset_group=prediction/venue=POLYMARKET/instruments.parquet`
+(CF-9). **cf_manifest_audit(instruments-store-pred) projection = CF-GREEN** → resolves the prior gate-c (v9 `_index`);
+TOOL-READY, `--apply` G4-gated (§H instruments-store-prediction slice).
+
+**④ Catalogue + enumerate dry-run** (shape-aware producer is@6ea46565 + crash-fix is@a7fa55a8) —
+`build_instrument_catalogue --asset-group prediction --dry-run`: exit_code=0, **0 cqg catalogue rows** —
+`instrument_availability/by_date/` blobs are `market=`-grain (no `canonical_question_group=` segment → honestly SKIPPED
+with warnings) and `market_lifecycle/by_canonical_group/` = **0 objects** (the cqg-grain source does not exist yet).
+This is the documented IS-prediction-backfill gate, reached cleanly (no crash). `enumerate_expected_universe` v2 rides
+the 0-row catalogue (no prior `prod/catalog.parquet` — monotonic guard `no_prior_catalogue`) → 0 expected-universe rows
+(same gate). **Validity-matrix slice (G1-ENUM) — VERIFIED CORRECT-BY-DESIGN:** prediction is intentionally ABSENT from
+UAC `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` (covers cefi/tradfi; defi lazily derived). This is SAFE because
+`enumerate_expected_universe._row_data_types` resolution-order **step 1** returns `[instr.data_type]` (the per-cqg
+grain-binding) BEFORE the matrix lookup — and every prediction catalogue row is grain-bound (the producer emits cqg
+bundle + per-conditionId rows each carrying `data_type`). Prediction is the G1-ENUM **reference grain-binding pattern**
+that the cefi/tradfi bundle-grain fix mirrors; the gated `--apply-write` run also constrains
+`--data-types prediction_canonical_question_group`. No over-fan / false-`expected_unattempted` pollution possible. (A
+defense-in-depth matrix row is a NICE-TO-HAVE, below.)
+
+**7+2-point readiness audit** (`canonical_form_cross_service_audit_checklist.md` CF-1…CF-14 + this AG's slice):
+
+| #   | Check                                          | Verdict                                                                                                                                                                                                               |
+| --- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ①   | Migrator dry-run                               | ✅ exit 0, source-aware paths (above)                                                                                                                                                                                 |
+| ②   | Manifest-rebuild dry-run                       | ✅ exit 0, parses+classifies canonical shape, CF-11 3-way honest (above)                                                                                                                                              |
+| ③   | 4-state pre-flight IS→execution                | ✅ MDPS `assert_consolidator_healthy` generalized to prediction flat-kinds (mdps@b8b515d); features/strategy/execution preflight standing (slot-4/5 2026-06-04/05)                                                    |
+| ④   | Empty/partial honest + downstream batch=live   | ✅ CF-11 typed-empty/expected (not failure); shared MDPS candle finalize (NaN-vol + prior-day carry, deterministic batch==live); SOURCE_RETURNED_ZERO preserved typed (re-verified ② this pass)                       |
+| ⑤   | Read/write paths match post-migration          | ✅ raw orchestrator + candle insert + rebuild on the SAME `derive_pipeline_mode_for_row` SSOT; dual-probe readers (re-verified 2026-06-05 3-agent read)                                                               |
+| ⑥   | IS+UAC guardrails vs impossible instruments    | ✅ universe from IS `instrument_availability`; lifecycle reject; phantom auditor has prediction; grain-binding (④)                                                                                                    |
+| ⑦   | deployment numerator/denominator = could-exist | ◑ read-side GREEN (4-state aggregation + venue-detail asset_group contract fixed deployment-api@318db9b/@f1dd7d5 + UI@f242055, pw:L2✓); WRITE-side (cqg `expected_unattempted` seed) GATED on the IS backfill (CF-14) |
+| ⑧   | CF-14 IS-catalogue could-exist ROOT            | ◑ producer dry-run-green (no crash, is@a7fa55a8); 0 cqg rows GATED on IS backfill (`market_lifecycle/by_canonical_group/`=0); G1.schedule WIRED (both schedulers)                                                     |
+| ⑨   | CF-13 pipeline_mode source-aware               | ✅ migrator+rebuild+store-migrator all stamp `batch_<source>` (path+col), zero coarse `batch`/blank in projection; readers prefix-match                                                                               |
+
+**Remaining gates before `--apply` (G4):** (a) **G0** — source-aware model: codex/CLAUDE.md reconciled (M-COORD-1), and
+the prediction migrator/rebuild/store-migrator ALREADY stamp source-aware (verified this pass) → code-gate MET; (b)
+**G1** — IS prediction backfill must populate `market_lifecycle/by_canonical_group/` (0 objects today) so the cqg
+could-exist seed is real, + the now-tool-ready instruments-store-prediction v9 walk (③); (c) **G3** — deployment UNION
+read view **✅ SHIPPED 2026-06-07** (deployment-api@4dd2575 `data_status_union.union_reduce_to_cells` M5 union +
+per-(pipeline_mode×source) drilldown + deployment-ui@0dc40eb; consumer-side READ-ready before the data migrates); (d)
+**pre-migration drain** + `_index` snapshot (E3). Then E4-full / E7 / E8 run on a VM (no fire-and-forget). MTDS QG
+caveat below gates the rebuild's quickmerge promotion. **Net: every code/dry-run/audit gate is GREEN; the residual is
+purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · drain) — prediction is APPLY-READY.**
+
+- [x] ✅ [CHORE] P2. **rebuild file-length SPLIT — DONE (mtds@c571445d, slot-5 2026-06-08).**
+      `rebuild_prediction_manifest.py` **954 → 692 lines (<900 cap)** by extracting the self-contained CF-11
+      honest-absence re-emit (`reemit_honest_absence_rows` + its `SOURCE_RETURNED_ZERO` within-bounds reclassification)
+      into a sibling `_rebuild_prediction_cf11.py` (294 L); the public symbol is **re-exported** so the
+      `scan_and_rebuild` call-site + `test_rebuild_prediction_manifest_force.py` imports are byte-unchanged. Also
+      basedpyright-CLEAN'd all 3 prediction migration scripts (0 errors, from 55): file-level `# pyright:` suppression
+      matching the 11 sibling `migrate_*`/`rebuild_*` scripts (untyped `argparse.Namespace` + pandas/pyarrow/gcsfs);
+      `ts_series.loc[labels]` → `ts_series.loc[pd.Index(labels)]` (typed overload, identical runtime);
+      `derive_pipeline_mode_for_row` ← public `unified_trading_library.pipeline_mode_resolver` submodule (not the
+      `__all__`-less facade) in rebuild + migrator. **File-level QG-green**: basedpyright 0 · ruff clean · 25 prediction
+      tests pass. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. **NB — the repo-level MTDS `--no-fix`
+      sentinel is STILL blocked (NOT by prediction):** (0) a **committed `uv.lock`↔`pyproject.toml` desync** on the MTDS
+      LDR HEAD (the committed pyproject declares `pyarrow-stubs`/`mypy-boto3-{logs,sns,sqs}` not yet in `uv.lock`;
+      `uv lock --check` fails → QG aborts at gate 0; mechanical re-sync, precedent mtds@10930dbd) + (1) **17
+      OTHER >900-line files** (orchestrator 4219, tardis 2880, solana/evm/perp/lending/dex/oracle handlers, sports
+      rebuild/migrate, polymarket_adapter 929, …) — both belong to the coordinator's **slot-2 MTDS-QG P2**
+      (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` § vm-defi). Prediction is now removed from
+      blocker-set (1); this commit rides on LDR via the tab-mirror and promotes through staging once slot-2's MTDS-QG
+      green lands. The `uv.lock` desync is annotated as a finding callout on that slot-2 MTDS-QG item in
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (slot-5 2026-06-08).
+- [ ] [CODE] P2. **FINDING (slot-6 2026-06-08, surfaced while verifying the tradfi MTDS `--no-fix` gate) — a THIRD MTDS
+      sentinel blocker the note above MISSED: the MTDS `check-import-patterns` gate FAILS on 2 prediction migration
+      scripts** — `rebuild_prediction_manifest.py:410` + `migrate_prediction_to_pred_prd_v9.py:100`, the deliberate deep
+      `from unified_trading_library.pipeline_mode_resolver import derive_pipeline_mode_for_row` (chosen above for the
+      "`__all__`-less facade" reason). **That reasoning does NOT hold for the fix the checker wants**: `__all__` only
+      gates `from pkg import *`, NOT `from pkg import <name>` — and `derive_pipeline_mode_for_row` IS a top-level
+      attribute of `unified_trading_library` (verified: `'derive_pipeline_mode_for_row' in dir(unified_trading_library)`
+      → True), so the checker's fix `from unified_trading_library import derive_pipeline_mode_for_row` imports cleanly.
+      Slot-5's note verified FILE-level (basedpyright/ruff/tests) but the import-patterns check is REPO-wide (604 files)
+      → it was not caught. So MTDS `--no-fix` blocker-set is (0) lock desync + (1) 17 over-length files **+ (2) these 2
+      import-pattern violations**. NOT fixed by slot-6 (cross-AG — these are prediction migration scripts slot-5 may be
+      mid-edit on); 2-line trivial fix (`check-import-patterns.py --fix`) for the prediction owner / slot-2 MTDS-QG.
+      Cross-link: the slot-2 MTDS-QG item in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`. Repo:
+      market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [UAC] P2. **NICE-TO-HAVE — defense-in-depth prediction row in the G1-ENUM validity matrix.** Prediction is
+      correctly handled by `_row_data_types` grain-binding (verified safe ④), so this is NOT a correctness fix — but a
+      `("prediction","prediction_market") → frozenset({"prediction_canonical_question_group", …})` entry in UAC
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` would suppress the "unmapped instrument_type → fall back to all +
+      WARN" log and backstop any future non-grain-bound prediction catalogue row. Repo: unified-api-contracts
+      (`registry/market_data_categories.py`). parent_epic: manifest_master.
+
 ## Success criteria
 
 - [x] ✅ [CODE][UI] P1. **deployment-api turbo response ↔ deployment-ui contract — VERIFIED + FIXED a real mismatch

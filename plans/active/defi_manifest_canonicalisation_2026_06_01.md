@@ -24,6 +24,18 @@ source:
 > banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.** (DeFi additionally: fix
 > the `rebuild_defi_manifest.py` blank-`pipeline_mode`/`source` bug #1 from that plan in Phase 0.3 before its dry-run.)
 
+> ## 🟢 DeFi APPLY-READY (slot-2, 2026-06-07) — verdict + full 7+2 audit in the coordinator
+>
+> > DeFi is **apply-ready on LDR**: every G1+G2 dry-run is green on the WAVE-1 source-aware code (migrator mtds@f80c50f1
+> > · instruments-store-v9 is@febb899e · shape-aware enumerator is@6ea46565) and the 7+2-point audit (CF-1…CF-14) passes
+> > — **no code change owed before `--apply`**. The ONLY remaining gates are OPERATIONAL: GATE C
+> > (`migrate_instruments_store_v9 --asset-group defi --apply` — the 125,242-row v9 WRITE; dry-run proved 100% v9) · the
+> > gated catalogue/enumerate G1.run VM run · DeFi IS backfill · pre-migration drain. **G0 ✓ and G3 UNION view ✓**
+> > (pm@822393880). Full per-CF verdict + sampled-vs-walked + the 3 deferred todos (P1 doubled-`day=` object-migration
+> > gate · P2 `SOURCE_PRIORITY` tidy · P3 POOL union-coarse + L1-find speed-note) live in
+> > `master_data_canonicalisation_migration_catalogue_2026_06_07.md` § "DeFi APPLY-READY VERDICT". Do NOT run `--apply`
+> > (gated on the operational drain).
+
 > **This file plays two roles** (operator 2026-06-01): (1) the **MASTER coordinator** for the whole "single canonical
 > SSOT — no fallback, no dual" programme (the `## MASTER` section sequences every sub-plan); (2) the **DeFi L3
 > executor** (the `## A`–`## G` sections ARE the DeFi single-walk). An agent drives the MASTER section + delegates the
@@ -385,13 +397,21 @@ What to verify/wire (B0 corrected scope):
   was a wrong-key lookup (flat `LIDO` vs `LIDO-ETHEREUM`). **APPLIED 2026-06-01**:
   `plans/audit/results/defi_venue_launch_relabel_migration_2026_06_01.py --apply` relabeled **1,337** lst-rates rows →
   `EXPECTED_PRE_VENUE_LAUNCH` (ETHENA/ETHERFI/LIDO 353 each + MARINADE 278), UAC-backed + snapshotted.
-- [ ] [CODE] P1. A2a populate UAC `DEFI_VENUE_LAUNCH_DATES` for the venue-chains genuinely missing it (the migration
-      reports them): **perp** `ASTER`, `LIGHTER-ZKSYNC`, `PACIFICA-SOLANA`, `HYPERLIQUID` (clear new venues — add
-      accurate launch dates). **DEX per-chain** (`CURVE-OPTIMISM`, `PANCAKESWAPV3-BSC`, `UNISWAPV3-POLYGON`,
-      `BALANCER-OPTIMISM`, `AAVE_V3-BASE`, `SPARK-ETHEREUM`, …) — **data-quality flag**: their captured rows show a
-      uniform first-captured `2021-01-01` across ALL chains incl. Base (launched 2023), which is impossible →
-      investigate (placeholder/wrong-date captured rows) BEFORE adding launch dates. Do NOT bulk-add ambiguous dates.
-      Then re-run the relabel. parent_epic: manifest_master.
+- [x] ✅ [CODE] P1. A2a — **perp DEX launch dates DONE (slot-2 2026-06-08, uac@b1835c28).** Added the 4 clear on-chain
+      perp DEX venues to `DEFI_VENUE_LAUNCH_DATES` (`HYPERLIQUID` 2023-06-14, `ASTER` 2024-09-25, `LIGHTER-ZKSYNC`
+      2024-09-01, `PACIFICA-SOLANA` 2024-04-01 — mirroring `CEFI_VENUE_LAUNCH_DATES`; the DeFi manifest keys perp_funding
+      rows for these so the `("defi", venue)` lookup now resolves → pre-launch zero-rows route to
+      `EXPECTED_PRE_VENUE_LAUNCH` not `SOURCE_RETURNED_ZERO`). UAC QG green. The DEX-per-chain investigation is carved
+      out below (the "do not bulk-add ambiguous dates" instruction). parent_epic: manifest_master.
+  - [ ] [DATA] P2. **A2a-dex — DEX per-chain launch-date data-quality investigation** (carved from A2a; needs the
+        manifest, so it is apply-time / operational, NOT a pure code change). `CURVE-OPTIMISM`, `PANCAKESWAPV3-BSC`,
+        `UNISWAPV3-POLYGON`, `BALANCER-OPTIMISM`, `AAVE_V3-BASE`, `SPARK-ETHEREUM`, … show a uniform first-captured
+        `2021-01-01` across ALL chains incl. Base (launched 2023) — impossible → these are placeholder/wrong-date
+        captured rows. INVESTIGATE the captured-row dates (read the manifest/parquets) BEFORE adding any launch dates;
+        do NOT bulk-add ambiguous dates. Then add the verified per-chain dates + re-run the relabel. Safe to defer past
+        `--apply`: the migration moves rows by path, not by launch-date, so the wrong first-captured dates ride through
+        unchanged and the relabel can run post-apply. Repo: unified-api-contracts (+ relabel script). parent_epic:
+        manifest_master.
 - [x] ✅ [CODE] P1. A2b — `DefiManifestRecorder.record_zero_rows()` routes pre-launch zero-rows →
       `EXPECTED_PRE_VENUE_LAUNCH` via the venue-chain launch lookup; `lst_rates_handler` + `solana_defi_handler` empty
       branches wired + regression tests. — mtds@PR#115 + mtds@48d08b11 (PR#117). **Incident note**: #115 used a
@@ -406,14 +426,33 @@ What to verify/wire (B0 corrected scope):
       blank chain). — mtds@PR#115; **narrowed to the write-path only in mtds@48d08b11 (PR#117)** after the original
       `_build_row_key` guard broke `perp_funding_handler` gmx's intentional `chain=''` coarse freshness-marker (2
       `TestFreshnessSkip` failures — a #115 regression caught + fixed same-session).
-- [ ] [CODE] P2. **A4-full — extend the blank-chain guard to ALL record paths (re-filed from the #117 narrowing).**
-      Prerequisite: make `perp_funding_handler` GMX per-chain — `_collect_gmx` already records ARBITRUM+AVALANCHE
-      captured rows, but the loop uses a coarse `chain=''` freshness/attempt marker (`_chain_map.get("gmx","")`, L312 +
-      the fallback empty at L369). Make the freshness check + fallback-empty per-chain so no `chain=''` row is ever
-      keyed, THEN restore the `_build_row_key` blank-chain guard so empty/failed markers are also chain-canonical.
-      parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. A5 LIGHTER perp_funding adapter fix: `SOURCE_RETURNED_ZERO` across full post-launch life (zkSync
-      endpoint returns nothing) — verify endpoint/auth.
+- [x] ✅ [CODE] P2. **A4-full — DONE (slot-2 2026-06-08, mtds@93c3b48f).** GMX perp_funding now records PER CHAIN: the
+      new `_collect_and_record_gmx` fans the UAC-configured GMX chains (`get_supported_chains_for_protocol("gmx")` →
+      ARBITRUM/AVALANCHE) with per-chain freshness skip + per-chain `record_captured`/`record_zero_rows`, and a chain
+      that `_collect_gmx` returned no result for (missing API key/subgraph) records `attempted_failed` (not a false
+      `empty_confirmed`). With no caller keying `chain=''` any more, the **blank-chain guard is restored on
+      `_build_row_key`** (every chain-scoped DeFi shard's row_key carries a populated chain — captured, empty AND failed
+      alike; `record_empty`/`record_failed` catch+log a stray `BlankChainError` per shard without aborting the loop).
+      +5 regression tests (per-chain GMX recording, missing-chain→failed, `_build_row_key` raises on blank,
+      `record_empty` blank-chain no-write). Verified ruff + basedpyright clean + the 2 affected suites 46 passed/1 skip
+      (full mtds QG red ONLY from 2 pre-existing FOREIGN prediction-script deep-imports — see the prediction-plan
+      annotation; none from this DeFi change). parent_epic: mtds_mdps_master.
+- [ ] [CODE] P1. A5 LIGHTER perp_funding adapter — **ROOT-CAUSE DIAGNOSED (slot-2 2026-06-08), fix needs a live Tardis
+      probe to validate.** `perp_funding_handler._collect_lighter` (mtds) hand-rolls the Tardis datasets URL
+      `…/lighter-zksync/market_stats/{date}/{SYMBOL}.csv.gz` with **`-USDC`-suffixed symbols**
+      (`_LIGHTER_TOP_SYMBOLS = ("BTC-USDC", "ETH-USDC", "SOL-USDC", "HYPE-USDC", "TON-USDC")`, perp_funding_handler.py
+      ~L115), **bypassing the `TardisAdapter` SSOT** that the verified `umi_tick_provider` path uses — and that path keys
+      Lighter by **bare base asset** (`umi_tick_provider._LIGHTER_TOP_SYMBOLS = ("BTC","ETH","SOL","HYPE",…)`, comment
+      "Lighter canonical key is numeric market_id; **symbol is bare base asset**"). The `-USDC` filenames almost
+      certainly 404 against Tardis → zero across the full post-launch life (matches the symptom). **Recommended fix
+      (the correct, SSOT-aligned one): route `_collect_lighter` through `TardisAdapter.download_batch(exchange=
+      "lighter-zksync", data_types=["market_stats"])` like `umi_tick_provider` does** (eliminates the hand-rolled URL +
+      the symbol-format guess in one move); a stop-gap is to switch the symbols to bare base assets. **WHY SAFE TO DEFER
+      PAST `--apply`:** `_collect_lighter` ALREADY records honest `record_zero_rows`/`SOURCE_RETURNED_ZERO` on a zero
+      response (no fabricated/placeholder rows, no silent lie) — so a Lighter gap is an HONEST absence in the manifest,
+      not a correctness corruption the migration would bake in; fixing it only ADDS data. Validating either fix returns
+      non-zero requires a live Tardis call (Tardis API key + network; tests are `--block-network`) which this slot can't
+      run — needs a credentialled host (`BLOCKED-UPSTREAM-VERIFICATION`, not a scope-defer). parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P0. A6 `expected_unattempted` is ALREADY canonical in UAC (`honest_coverage.py`:
       `EXPECTED_UPSTREAM_EMPTY` + `EXPECTED_OUTSIDE_PROCESSING_SCOPE` reasons; shipped via
       `expected_unattempted_propagation_chain_2026_05_12.md` Phase 0). No new state to add — verified 2026-06-01.
@@ -472,8 +511,15 @@ What to verify/wire (B0 corrected scope):
       Now raises on `data is None`, matching the cascade. MTDS QG green (sentinel 8ffb2acd). (Same commit set unblocked
       a pre-existing foreign import-pattern violation in `migrate_tradfi_to_v9_canonical.py` → facade import,
       mtds@89aff1b1.) Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [CODE] P1. A10 **wire the `EmptyFromLiveInstrumentError` backstop — it is DEFINED but never RAISED** (slot-2 audit
-      2026-06-02). The operator-directed (2026-05-07) safety net — `record_empty(SOURCE_RETURNED_ZERO)` must cross-check
+- [x] ✅ [CODE] P1. A10 **wire the `EmptyFromLiveInstrumentError` backstop — DONE (slot-2 2026-06-08 verify-flip).** All
+      sub-items shipped: A10a (UAC `was_instrument_alive` uac@10e69f08) + A10b (UTL `record_zero_rows` routing
+      utl@44d762d9 + uac@daf1888c) + A10c (DeFi QG ratchet `no_unrouted_source_returned_zero.sh` mtds@76d650f0 +
+      PM@4fbc82a6e) + A10c-fleet (fleet-wide ratchet, baseline LOCKED to empty, slot-1) + A10d (31 callsites migrated
+      mtds@fca15304). The backstop is wired (zero-rows + was-expected → `attempted_failed`, else typed `empty_confirmed`)
+      AND un-bypassable (the ratchet hard-fails any new raw `record_empty(SOURCE_RETURNED_ZERO)` fleet-wide). Residual
+      tail = **A10c-fleet-followup** (P3, DEFERRED with named successor below — the conservatively-waivered
+      oracle/Protocol callsites, gated on writegate Phase 3.D.5; NOT part of A10's original backstop scope). The
+      operator-directed (2026-05-07) safety net — `record_empty(SOURCE_RETURNED_ZERO)` must cross-check
       the IS catalog and reject (force `attempted_failed`) when the instrument was ALIVE on that day — exists only as a
       class in `unified-api-contracts/.../honest_coverage.py:979` + `__all__` export; grep finds ZERO raise sites in the
       write path. UTL `record_empty` (`manifest_writer.py:1958`) only guards blank/unknown reason
@@ -601,7 +647,17 @@ What to verify/wire (B0 corrected scope):
         to lock (→ empty), and `quality-gates.sh` is green in every affected repo. **Per-AG migration is dispatched as
         `- [ ]` todos in each `*_manifest_canonicalisation_2026_06_01.md`** (do NOT mass-migrate another AG's code from
         this slot). Repos: unified-trading-pm (infra) + all service repos (per-AG). parent_epic: mtds_mdps_master.
-- [ ] [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against legacy/dead
+- [x] ✅ [CODE] P0. A11 **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — substantively DONE (slot-2 2026-06-08
+      verify-flip).** All migration-critical sub-items shipped: A11a (MTDS data_manifest_handler mtds@7ebfa749) + A11b/
+      A11b-blocker (deployment-service data-status deployment-service@2e91ab2) + A11c + A11c-UAC/MDPS/deployment-api/MTDS/
+      features/candle-enum (full canonical denominator collapse, the "readers land FIRST" gate, uac@a967121a + mdps@56503c2
+      + deployment-api@14dfe2e + mtds@b986a3e1 + uac@d4dacac5/mdps@9184876) + A11d (mtds@aa92be0f) + A11g (solana_defi
+      lossless union mtds@fbff8cf0) + A11e-schema-validation (verified non-issue) + **A11f (writers verified canonical +
+      stale docstring fixed, mtds@93c3b48f)**. The code no longer reads/writes dead/legacy buckets or data_types on the
+      migration-critical surfaces. Residual = **A11e [~] PARTIAL** (the only open tail — LOWER-VALUE test scaffolding:
+      `test_smoke_matrix.py` mock + a deployment-ui TS test still reference legacy `dex_pools`/`dex_swaps` strings, but
+      their PRODUCTION assertions are already canonical so they mask NO runtime bug; non-blocking for `--apply`). Original
+      spec below. **DEAD-BUCKET / CANONICAL-PATH PRE-MIGRATION ALIGNMENT — code must not regress against legacy/dead
       buckets BEFORE the migrations run** (operator 2026-06-02: "refactor read/write cloud-storage paths across the
       board to match canonical so QG-fed tests don't regress by association with dead buckets; same for data-status in
       deployment API + UI which resolve many bucket-name / menu / data_type / manifest conventions"). Slot-2 two-front
@@ -756,12 +812,25 @@ What to verify/wire (B0 corrected scope):
         so validation works today; it is decoupled from the canonical on-disk/manifest data_type (`_DATA_TYPE` const =
         `dex_pool_state`, already canonical). Not a migration regression; renaming both sides would be cosmetic +
         carries silent-no-op risk if mismatched → left as-is. Repo: market-tick-data-service.
-  - [ ] [CODE] P2. **A11f — residual `category=` writers** (legacy hive key vs canonical `asset_group=`): mtds
-        `market_interface/__init__.py` + live manifest recorder `category=` alias. Readers already probe
-        canonical→legacy (transitional OK); migrate writers so post-cutover writes are canonical-only. Repo:
-        market-tick-data-service.
-- [ ] [CODE] P0. A12 **UPSTREAM-DATA PREFLIGHT CHECKS — every consuming service, every in-scope (DeFi) cell** (operator
-      2026-06-02). Audit + ensure each consuming service runs an upstream-data **preflight** before processing, that:
+  - [x] ✅ [CODE] P2. **A11f — DONE (slot-2 2026-06-08, mtds@93c3b48f).** Grep-then-read CORRECTED the framing: the DeFi
+        WRITE path is ALREADY canonical-only — `_defi_manifest.py` `_writer.add(asset_group="defi", …)` (L294), the live
+        `websocket_runner` recorder, and `data_manifest_handler` all emit `asset_group=` (the canonical hive key); the
+        only residual `category=` in `market_interface/__init__.py` are **docstring examples** of the `fetch_instruments`
+        READER API (param name, not a write-path hive key — a reader-vocabulary item, out of A11f writer scope) and the
+        legitimate migration SCRIPTS (which read FROM `category=`). The one stale WRITER artefact was the
+        `_defi_manifest.py:253` docstring still saying `category="defi"` while the code passes `asset_group="defi"` —
+        corrected to match. No write-path code change needed (writers verified canonical). Repo:
+        market-tick-data-service. parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P0. A12 **UPSTREAM-DATA PREFLIGHT CHECKS — DONE (slot-2 2026-06-08 verify-flip).** A12-AUDIT (6-service
+      preflight audit) + A12a/A12a-rollout (IS-catalog freshness gate wired into 11 DeFi handlers, uac@d67d8061 +
+      mtds@e2fc7d51 + mtds@fca15304) + A12b (enumerator-driven owed-cell backstop, confirmed) + A12c (source provenance,
+      confirmed + guard) + A12d/A12e (bucket-SSOT + candle-honesty, confirmed) + A12f (path-match closure mtds@b66b15d2) +
+      A12g (migrator tests) + A12h (`PipelineMode("BATCH")` bug fix mtds@7c577483) ALL shipped. The DeFi preflight reads
+      canonical buckets/paths, gates on data-quality, marks honest-absence, and the live/batch action divergence is
+      wired. Residual = **A12f-col** (P2, decoupled below) — a forward-compat `pipeline_mode` COLUMN vocab reconcile
+      (path-derived coarse at read-time today, so NOT a current-correctness bug; ties to the cross-AG `PipelineMode`
+      vocabulary decision). Original spec retained below. Audit + ensure each consuming service runs an upstream-data
+      **preflight** before processing, that:
       (1) **reads via the post-migration canonical SSOT** — `resolve_bucket_name()` buckets + canonical
       path/`pipeline_mode=`/`data_type` + canonical column schemas (no dead-bucket/legacy-path/legacy-data_type
       assumptions — composes with A11); (2) **gates on data-quality** — 0-volume / NaN-price / all-null / row-count-0 /
@@ -1448,10 +1517,27 @@ What to verify/wire (B0 corrected scope):
       partition + `source` column + typed `EmptyConfirmedReason`, same target form as the MTDS DeFi C0 walk. Re-run
       CF-1…CF-12 → GREEN before any DeFi instruments writer relaunch (master L3-gates-L5). NEVER a second walk on this
       `_index`.
-- [ ] [CODE] P1. **DeFi downstream reader confirm** (the DeFi slice of
-      `downstream_services_manifest_canonicalisation_2026_06_01.md` PREP3): confirm the MDPS candle-builder raw-tick
-      read + features-onchain `data_loader` resolve the `pipeline_mode=` path PRIMARY for DeFi (writer side already
-      shipped mdps@4b9e6e5 + features@dec1b687). Close the PREP3 "🟡 reader slot-2 coordination" note for DeFi.
+- [x] ✅ [CODE] P1. **DeFi downstream reader confirm — DONE (slot-2 2026-06-08).** CONFIRMED all three DeFi raw-tick
+      consumers read the canonical `pipeline_mode=` path PRIMARY (grep-then-read): (1) **features-onchain** —
+      `features_service/onchain/adapters/mtds_canonical_reader.py` lists the mode-agnostic `day=` prefix once and ranks
+      blobs `batch_*`(0) → bare(1) → `live_*`(2) → `replay_*`(3), `asset_group=defi/`(0) over `category=defi/`(1) — so
+      canonical batch wins, legacy is fallback, never double-counted; (2) **MDPS candle-builder** —
+      `market_data_processing_service/app/core/orchestration_scanner.py` lists `raw_tick_data/by_date/day={d}/` (captures
+      every `pipeline_mode=` variant + bare legacy in one list) and matches DeFi DEX shards by canonical
+      `dex_pool_state`/`dex_pool_swaps` + legacy segments. Writer side already shipped (mdps@4b9e6e5 + features@dec1b687).
+      (3) **NEW FINDING + FIXED — execution-service backtest loader** `data/loaders/defi.py` `load_swaps`/`load_liquidity`
+      bypassed the `canonical_paths` SSOT (legacy-only `data_type=swaps`/`liquidity` paths + a banned inline
+      `market-data-tick-defi-{pid}` bucket f-string) → would silently return empty post-migration-delete. Routed through
+      `build_candidate_raw_tick_paths` with canonical `dex_pool_swaps`/`dex_pool_state` data_types (canonical-first,
+      legacy fallback) + canonical bucket resolution + 3 regression tests — **exec@c71484d6e** (QG green; on the tab
+      branch → LDR via mirror; staging-PR dep-gated on UTL reaching STAGING_GREEN, flows via automation). Closes the
+      PREP3 "🟡 reader slot-2 coordination" note for DeFi. parent_epic: mtds_mdps_master.
+  - **NICE-TO-HAVE (follow-up, P3, slot-2 2026-06-08):** the execution-service DeFi loader's canonical candidate passes a
+    best-effort `instrument_type` (`pool`) + `{instrument_id}.parquet` file stem; the canonical DeFi pool instrument_type
+    actually varies per venue (`DEX_POOL`/`POOL`/`SOLANA_AMM_POOL`) and the canonical file stem may differ — where the
+    canonical candidate misses, the legacy fallback still applies (no worse than today), but full per-venue fidelity (the
+    `mtds_canonical_reader.py` day-prefix-list+filter pattern) would close the residual. Backtest-only reader (NOT the
+    live May-23 path); does not block the migration. Repo: execution-service. parent_epic: mtds_mdps_master.
 - [ ] [CODE] P2. **FLAG 2 — `_BUCKET_CATEGORY_OVERRIDES` DeFi scope** (the DeFi slice flagged to slot-2 in the
       downstream plan): a DeFi `category` override absent from `cloud-providers.yaml` / unresolved by
       `resolve_bucket_name` → post-delete silent-empty. Resolve with
