@@ -4090,3 +4090,37 @@ rollout, never per-repo).
   pipeline-green + main==LDR (now true) AND slots-not-live (slots 2-7 are LIVE doing data work — retiring tab branches +
   slot crons mid-flight would disrupt them). Path-B design is captured in `worktree_ldr_unification_2026_06_08.md`; do
   the migration when the multi-slot session ends.
+
+## 🟢 ADDENDUM — 2026-06-08 follow-up (operator-requested, same session)
+
+Three operator follow-ups after the SESSION OUTCOME above — all DONE + shipped:
+
+1. **strict-quickmerge codified in the rule surface** (was missing): HARD RULE added to `cursor-configs/CLAUDE.md`
+   + `SUB_AGENT_MANDATORY_RULES.md` + `codex/08-workflows/ci-cd-flow.md` § strict-quickmerge. Closed carve-out set
+   (dirty-deps · FF-pull-in + PM `docs(plans)` flip · PM `scripts/**`+`.github/**` that must reach main) reconciled
+   with `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (one set, not forked). Shipped PM@5fbfb6849.
+2. **Parity matrix + divergence watchdog "plugged in"**: the local↔CI QG parity-matrix table is in
+   `codex/08-workflows/ci-cd-flow.md` (the 2 intentional gaps: workflow-drift CI no-op + assembled-SIT layer);
+   `scripts/cicd/parity_watchdog.py` auto-files `ci_local_qg_divergence_<repo>_<date>.md` + emits an ORCH_ALERT on a
+   local-green/staging-red event. ci_local_qg watchdog+matrix items flipped. Shipped PM@5fbfb6849.
+3. **Worktree Path-B migration EXECUTED** (operator: "multi-slot session ended, finish now") — **without
+   compromising any uncommitted work**:
+   - **PRESERVE FIRST**: all 12 dirty slot worktrees' real work committed to `origin/wip-preserve/slot-<N>`
+     branches (verified recoverable; junk — node_modules / QG sentinels — excluded). **Zero WIP leaked to LDR.**
+   - **RECLONE**: slots 2-11 → **250/250 Path-B reference-clones** on `live-defi-rollout` (own `.git`, shared
+     objects via `--reference`, `[slot-N·laptop]` identity), 0 residual tab-worktrees. Verified clean + ==LDR + correct
+     identity.
+   - **MACHINERY**: `setup-tab-worktrees.sh` provisions Path-B; `tab-mirror-to-ldr.yml` DISABLED fleet-wide (24 repos);
+     `scripts/cicd/slot_drift_check.py` is the new drift invariant; `slot-cron-ff-pull.sh` + `quickmerge.sh` work
+     UNCHANGED for Path-B (keyed on the integration branch, not tab names). Shipped PM@d22a64b74 + 90abb6a49.
+   - **DOCS**: CLAUDE.md § "Per-slot worktrees — Path-B" + SUB_AGENT + `codex/05-infrastructure/per-tab-worktrees.md`
+     SUPERSEDED-bannered. `worktree_ldr_unification_2026_06_08.md` flipped + Progress note.
+   - **Slot-1** (the live operating slot for this session) stays on `tab/ikennaigboaka/1`; reclines to Path-B on its
+     next `setup-tab-worktrees.sh --reset-slot 1` (it pushes via explicit refspec, unaffected by tab-mirror retirement).
+   - **Recovery for the operator**: any preserved WIP is at `git show origin/wip-preserve/slot-<N>:<path>` /
+     `git cherry-pick origin/wip-preserve/slot-<N>` per repo — QG + quickmerge it when ready.
+
+**Net session result**: pipeline healed + breaking-gated + main==LDR fleet-wide + self-sustaining; strict-quickmerge +
+LDR-SSOT + drift-tick + parity model codified for agents; worktree model migrated to Path-B (sync tax retired) with all
+uncommitted work preserved. Remaining (documented, non-blocking): strict-quickmerge machine-guard enforcement (policy
+shipped; guard is a dedicated pass).
