@@ -163,8 +163,51 @@ aggregation occurs in-process.
 5. **Land the change in one PR per module.** Mixed-engine cleanup is mechanical but error-prone — small PRs let
    reviewers catch the subtle behavioral differences (NaN handling, timezone defaults, group_by-vs-groupby semantics).
 
+## Third tier — BigQuery (the warehouse / corpus-scale engine; OPTION, not default)
+
+Added 2026-06-08 (plan:
+[`bigquery_feature_ml_compute_engine_option_2026_06_08.md`](../../plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md)).
+The in-process tiers above (Polars / Pandas+PyArrow) are for per-shard, live, and low-latency work. For **large batch
+feature recomputes, cross-instrument joins, and ML feature-extraction / training at CORPUS scale**, an in-process pass
+over millions of parquet files is the bottleneck — and the GCS corpus is already **hive-partitioned**
+(`pipeline_mode={mode}_{source}/asset_group=/source=/data_type=/timeframe=/day=`), which is exactly what a warehouse
+engine prunes on. **BigQuery is a third engine tier**, selected by data volume + job type — NOT a replacement and NOT a
+second source of truth.
+
+### Selection (extends the decision tree above)
+
+| Tier                  | When                                                                                 |
+| --------------------- | ------------------------------------------------------------------------------------ |
+| in-process **Polars** | small/live/low-latency; per-shard aggregation (the default for the MDPS shape)       |
+| in-process **DuckDB** | medium, memory-bound single-node SQL over a bounded set of parquet                   |
+| **BigQuery**          | large batch / corpus-scale / cross-instrument joins / ML at scale (read-time pruned) |
+
+Selection is by **data volume + job type, not a hard switch**. The feature/output **CONTRACT is identical regardless of
+engine** — same `formula_version` (the registry stays the SSOT; BQ is an alternate EXECUTOR of the same formula,
+asserted equal to the polars path on a fixture), same canonical v9 schema, same manifest emission (`batch = live`).
+
+### Architecture (boundaries — non-negotiable)
+
+- **External tables over the hive layout** — `google_bigquery_table` with `external_data_configuration` +
+  `hive_partitioning_options` + `source_uri_prefix` → partition pruning on `asset_group/data_type/timeframe/day` (cost =
+  bytes scanned, so pruning = cheap). Read-only over GCS — **no data copy** for the external path. (TF:
+  `deployment-service/terraform/gcp`.)
+- **GCS + the manifest remain SSOT.** BQ READS the canonical corpus and WRITES results back as canonical v9 parquet
+  (same schema / `pipeline_mode` / `source` / manifest emission) so downstream is engine-agnostic — no BQ-only datasets
+  that downstream must special-case.
+- **Not the live/low-latency path** — live feature compute stays in-process (BQ latency + per-query cost are wrong for
+  per-tick).
+- **Cost guardrails** — per-job byte-scanned budget; REJECT an unpruned full-corpus scan (require partition filters);
+  cluster on `(venue, instrument)` within day-partitions.
+- **Cloud-agnostic note** — GCP BigQuery here; the AWS equivalent (Athena / Redshift Spectrum over the same hive layout)
+  is the parallel option — same external-table-over-hive-partitions principle, tracked separately.
+- **Sequencing** — depends on the canonical v9 migration landing (a stable per-`(asset_group, data_type)` schema for the
+  external-table definitions); gated after the per-AG `--apply`.
+
 ## Composes with
 
+- [`read-time-filter-pushdown.md`](read-time-filter-pushdown.md) — partition pruning is the same idea at warehouse
+  scale; the hive layout that enables read-time pushdown in-process is what BigQuery prunes on.
 - [`service-orchestration-patterns.md`](service-orchestration-patterns.md) § 15 "Batch Service Lifecycle: Setup, Work,
   Cleanup" — the per-shard cleanup hook handles Python-level state; single-engine discipline handles C-extension arena
   state. Both are required for stable multi-shard RSS.
