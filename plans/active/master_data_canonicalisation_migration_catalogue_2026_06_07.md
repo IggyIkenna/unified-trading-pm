@@ -132,6 +132,14 @@ parallel-safe.
 > orchestrator = `vm-0` only). Slot↔AG map: **2=DeFi · 3=CeFi · 4=Sports · 5=Prediction · 6=TradFi · 7=cross-cutting**.
 > These are the remaining checkboxes so the big job is trackable done-vs-left (the prose table above is the overview).
 > The per-AG plans hold the detailed G1/G2 todos + audit verdicts; these are the WAVE-level rollup.
+>
+> **🤖 AUTONOMOUS RUN MODEL (operator 2026-06-08) — slots 2–7 run on the LAPTOP per
+> `cursor-configs/AUTONOMOUS_AGENT_RULES.md`, no drip-feed.** Each slot drives its full task-set **to DRY-RUN-GREEN**
+> autonomously (resolve its blockers → migrator/rebuild `--dry-run` exits clean → ①–⑫ audit verdict). **Ship discipline
+> = run `quality-gates.sh` then `quickmerge --agent --files` — do NOT chase staging/main (that promotion lane is
+> automated, not the agent's concern).** **HARD-STOP = the actual `--apply`** (the irreversible single-walk that bakes
+> prod data): agents prepare it dry-run-green and STOP; the operator fires `--apply`. No `DEFERRED`/`BLOCKED-OPERATOR`
+> end-states otherwise; journal to the per-AG plan across compaction; end with a report.
 
 - [x] ✅ **G0 / G1 / G2 / G3 — GREEN, 5/5 apply-ready** (Era-B on-disk confirmed both probes; drain done + 10-bucket
       snapshot). Per-AG audit verdicts recorded in each AG plan.
