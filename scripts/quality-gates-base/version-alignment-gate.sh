@@ -86,15 +86,27 @@ remote_versions = remote.get('versions', {})
 remote_staging = remote.get('staging_versions', {})
 drifted = []
 
+def pv(v):
+    try:
+        parts = [int(x) for x in str(v).split('.')[:3]]
+        return tuple(parts + [0] * (3 - len(parts)))
+    except Exception:
+        return None
+
 for r in check_repos:
     local_v = local_versions.get(r, '')
     staging_v = remote_staging.get(r, '')
     main_v = remote_versions.get(r, '')
     label = '(self)' if r == repo else '(dependency)'
-    if staging_v and not staging_v.startswith('_') and staging_v != local_v:
-        drifted.append(f'  {r} {label}: local={local_v} staging={staging_v}')
-    elif main_v and main_v != local_v:
-        drifted.append(f'  {r} {label}: local={local_v} main={main_v}')
+    # Only flag when local is semver-BEHIND remote; being AHEAD is fine (quickmerge Stage 1.6 invariant).
+    if staging_v and not staging_v.startswith('_'):
+        pl, ps = pv(local_v), pv(staging_v)
+        if pl is not None and ps is not None and pl < ps:
+            drifted.append(f'  {r} {label}: local={local_v} staging={staging_v}')
+    elif main_v:
+        pl, pm = pv(local_v), pv(main_v)
+        if pl is not None and pm is not None and pl < pm:
+            drifted.append(f'  {r} {label}: local={local_v} main={main_v}')
 
 if drifted:
     print('DRIFT')
@@ -106,7 +118,7 @@ if drifted:
         echo -e "${RED}━━━ VERSION ALIGNMENT: Version Drift Detected ━━━${NC}"
         echo "$_ver_drift" | tail -n +2
         echo ""
-        echo "  Versions on remote differ from your local manifest."
+        echo "  Your local version is BEHIND the remote staging/main version."
         echo "  Fix: cd unified-trading-pm && git pull origin main"
         echo "  Then: bash unified-trading-pm/scripts/repo-management/run-version-alignment.sh --fix"
         echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
