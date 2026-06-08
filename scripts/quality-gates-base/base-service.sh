@@ -2429,12 +2429,25 @@ fi
 #
 # Test files are excluded (readers + test helpers legitimately filter by string).
 #
+# The matched quote MUST be followed by a VALUE char ([A-Za-z0-9_{]) so this only
+# flags genuine value ASSIGNMENTS (pipeline_mode="batch_tardis" /
+# pipeline_mode="{pm}") — NOT path-segment string CONSTANTS where pipeline_mode=
+# is the tail of a quoted GCS path key and the matched quote is the CLOSING quote
+# (e.g. `"/pipeline_mode=" in rel`, `f"day=x/pipeline_mode="`, `"pipeline_mode="
+# not in obj`). Those are legitimate partition-path membership checks in the
+# canonicalisation migrators (slots 2-6) + audit tools — there is no PipelineMode
+# enum that helps match a substring, so flagging them was a pure false-positive
+# that red-blocked every MTDS QG fleet-wide once the migrators landed (2026-06-08;
+# verified 0 genuine value-literal violations in any service source, only a UAC
+# docstring example caught identically before+after). Narrowing un-catches nothing
+# real (a real `pipeline_mode="<value>"` still has a value char after the quote).
+#
 # Escape hatch: add '# QG-allow: pipeline-mode-string-literal' on the line.
 #
 # Plan: pipeline_mode_implementation_2026_05_28.md Phase 2.3.
 # SSOT: resolve_pipeline_mode() in unified_trading_library.pipeline_mode_resolver.
 if [ -n "${SOURCE_DIR:-}" ] && [ -d "$SOURCE_DIR" ]; then
-    _PM_STR_HITS=$(grep -rn 'pipeline_mode\s*=\s*["'"'"']' "$SOURCE_DIR" \
+    _PM_STR_HITS=$(grep -rn 'pipeline_mode\s*=\s*["'"'"'][A-Za-z0-9_{]' "$SOURCE_DIR" \
         --include="*.py" | grep -v '# QG-allow: pipeline-mode-string-literal' || true)
     if [ -n "$_PM_STR_HITS" ]; then
         log_fail "STEP 5.85: no-inline-pipeline-mode-string-literal — raw string literal pipeline_mode= value in service source. Use PipelineMode.<MEMBER> or resolve_pipeline_mode():"
