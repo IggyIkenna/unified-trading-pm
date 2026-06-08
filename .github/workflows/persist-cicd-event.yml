@@ -55,8 +55,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # MUST be unique per run. When this reusable workflow is called, `github.workflow` resolves
+  # to the CALLER's workflow name — so `${{ github.workflow }}-${{ github.ref }}` collides with
+  # the caller's OWN concurrency group and (with cancel-in-progress) SELF-CANCELS the persist
+  # job invisibly, reddening the caller's run (the "all jobs green but run=failure" badge —
+  # root cause of plan #220, hits all 24 callers). Mirror notify-slack.yml: literal prefix +
+  # run_id makes it unique; never cancel a best-effort telemetry write.
+  group: persist-cicd-event-${{ github.ref }}-${{ github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   persist-event:
