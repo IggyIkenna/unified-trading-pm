@@ -36,6 +36,97 @@ source:
 > > `master_data_canonicalisation_migration_catalogue_2026_06_07.md` § "DeFi APPLY-READY VERDICT". Do NOT run `--apply`
 > > (gated on the operational drain).
 
+## 🔵 DeFi PRE-APPLY ①–⑫ RE-VERIFY (slot-2, 2026-06-08 PM, autonomous laptop run) — REGRESSION RISK: NONE
+
+> Independent re-verification on **real-prod GCS** (central-element-323112) AFTER the 2026-06-08 drain, on the current
+> source-aware code. Every dry-run is GREEN and the one residual surfaced (cbETH `needs_attr`) was **FIXED + verified**,
+> not deferred. **VERDICT: DeFi migrator + rebuild are DRY-RUN-GREEN; REGRESSION RISK: NONE for the batch `--apply`.**
+> The `--apply` itself remains the operator hard-stop (irreversible single-walk). Detail/duplication lives in the
+> coordinator § "DeFi PRE-APPLY ①–⑫ AUDIT"; this is the AG-plan-local authoritative re-verify.
+
+**Dry-runs executed this session (real prod):**
+
+- **① migrate_defi_full_v9_canonical `--dry-run` (all 6 buckets, window 2024-06-01..03, `--phase migrate`)**:
+  `TOTAL planned_cells=273 errors=0 needs_attr=0` (after the cbETH fix below; was needs_attr=3). Per-bucket all
+  `errors=0`: dex-swaps 63 · dex-pools 87 · oracle-prices 18 (CHAINLINK+PYTH, best=L3/L2) · perp-funding 9 · lst-rates
+  42 · lending-indices 54. Projected paths are canonical + source-aware, e.g.
+  `pipeline_mode=batch_onchain_subgraph/asset_group=defi/…/data_type=dex_pool_swaps` (NOT coarse `batch/`, NOT
+  `dex_swaps`). **dex-swaps now derives `batch_onchain_subgraph` (the `("defi","n")`-typo fix `uac@012ccec1` is LIVE on
+  LDR — verified `("defi","dex_pool_swaps"):["onchain_subgraph"]` in both `source_priority.py` + `availability_semantics.py`).**
+- **🟢 FIXED this pass — cbETH lst-rates `needs_attr` (① ⑨, mtds@\<LST-FIX\>):** the lone unattributable identifier was
+  `{contract:0xBe9895146f7AF43049ca1c1AE358B0541Ea49704, token:cbETH}` (Coinbase Wrapped Staked ETH). cbETH→COINBASE
+  venue resolved, but `_default_chain_for("COINBASE")` returned "" (no EVM `-CHAIN` suffix, not a perp venue) and the
+  cbETH token contract is not an oracle feed → chain blank → row held in `_needs_attribution/`. Added
+  `_LST_DEFAULT_CHAIN` (mirrors `_PERP_DEFAULT_CHAIN`) mapping every canonical LST venue (UAC `LST_VENUE_TO_TOKENS`) to
+  its **deterministic home chain** (all EVM LSTs → ETHEREUM; MARINADE/JITO/BLAZESTAKE/SANCTUM → SOLANA) — a fact, not a
+  guess; consulted ONLY as the all-blank fallback (never overwrites a real chain). **Verified: basedpyright 0/0/0; 20/20
+  unit tests pass (5 new LST home-chain regression tests `tests/unit/scripts/test_migrate_defi_full_v9_canonical.py`);
+  lst-rates re-dry → `needs_attr=0 errors=0`.**
+- **② rebuild_defi_manifest `--dry-run` (2024-06-01..03)**: `write_errors=0`, 1137 shards, 14 venues, 7 data_types —
+  **canonical names only** (`dex_pool_swaps` 453 · `dex_pool_state` 445 · risk_params 78 · rate_indices 58 · utilization
+  58 · oracle_prices 24 · vault_share_price 21; NO `dex_pools`/`dex_swaps`). Source-aware emit confirmed
+  (`ParsedShard(... pipeline_mode='batch_onchain_rpc', source='onchain_rpc', transport='rest')` via the SAME
+  `derive_pipeline_mode_for_row` the migrator uses). **`unparseable=23`** = pre-existing OLD-shape `-prd` blobs from the
+  April-2026 migration (`…/venue={VENUE}-{CHAIN}/ticks_migrated_20260418*.parquet`, venue-chain glued, no
+  `chain=`/`data_type=` segments) — the rebuild SKIPS them cleanly (write_errors=0); captured as a P2 orphan-cleanup
+  todo below (NON-BLOCK — C0 re-derives those cells from the source buckets; the stale copies are orphan-delete, not a
+  code-vs-data mismatch).
+- **GATE C — IS `migrate_instruments_store_v9 --asset-group defi --dry-run` (index-only)**: **100% v9 GREEN** — 125,242
+  rows v8→v9, `asset_group=defi`, `pipeline_mode=batch_instruments_service`, `source=instruments_service`,
+  `transport=rest`, `available_at` filled (125,242), honest `capture_status` (null→captured 57,466). This is the
+  CF-1…CF-14 GREEN **projection** sample.
+- **cf_manifest_audit (live `market-data-tick-defi-prd` `_index`)** = PRE-migration baseline (the state `--apply`
+  fixes): 1,569,805 rows, **schema v8 (99.97%)** → CF-1/CF-3/CF-4/CF-8 RED (v9/pipeline_mode/source/available_at not yet
+  written — EXPECTED pre-apply); CF-2 GREEN (asset_group col, no category), CF-5 GREEN (typed reasons, 0 blank), CF-9
+  GREEN (-prd env). CF-green is demonstrated by the migrator's projected output (① + GATE C above), not the un-migrated
+  live index.
+
+**①–⑫ verdict (real-prod data-state, this session):** ① 🟢 (migrate dry-run errors=0/needs_attr=0, source-aware) · ②
+🟢 (rebuild write_errors=0, canonical data_types, source-aware emit) · ③ 🟢 (`record_expected_unattempted` wired;
+consumers read 4-state) · ④ 🟢 (`record_zero_rows` venue-launch-aware via `get_venue_launch_date` chain-qualified;
+`DEFI_VENUE_LAUNCH_DATES` populated; cf_audit CF-5 typed reasons 0-blank) · ⑤ 🟢 (readers prefix-match `batch_*`; 0
+coarse-exact — prior verdict, unchanged) · ⑥ 🟢 (validity from `PROTOCOL_CAPABILITIES`) · ⑦ 🟢 (G3 UNION shipped;
+denominator READ; **D10** enumerator seeds nothing for unbacked venues) · ⑧ 🟢 mechanism (`-prd` populated; shape-aware
+enumerator; full rollup count gated G1.run VM) · ⑨ 🟢 (source-aware everywhere; `dex_pool_swaps→batch_onchain_subgraph`)
+· ⑩ 🟢 N/A (no defi option/future chains; cf_audit data_type sample has zero `options_chain`/`futures_chain`) · ⑪ 🟢
+migration-side (no defi live-only data_types; rebuild re-derives + C-#6-consistent; live-handler stamp drift is
+rebuild-self-healed, tracked P1) · ⑫ 🟢 (`pre_migration_2026_06_08.parquet` snapshot in both `market-data-tick-defi-prd`
++ `instruments-store-defi-prd`; `ASSET_GROUP_CONFIG[defi].prefix_tpls` cover the v9 path shape).
+
+**Pre-apply gating items resolved this session (all NON-BLOCK to dry-run-green / not re-deferred):**
+
+- **HARD ORDERING — bucket_name_ssot L3 `--manifest-only` seed before C0**: RESOLVED = the DeFi seed was **explicitly
+  abandoned as unsafe** (`bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` Phase 5 "RAW MANIFEST SEED IS
+  UNSAFE, DO NOT RUN") and **superseded by C0** (which reads all 3 legacy layouts + `rebuild_defi_manifest` reconstructs
+  the `_index` from the canonical objects). **No seed prerequisite blocks the C0 `--apply`** (the "no seed mid-walk"
+  pre-flight check is vacuously satisfied).
+- **B0 (`expected_unattempted` chain)**: mechanism confirmed (writer-materialised: `record_expected_unattempted` +
+  `record_zero_rows` venue-launch-aware; `DEFI_VENUE_LAUNCH_DATES` populated incl. A2a perp DEX venues). The B0 RUN is
+  post-C-GREEN / apply-time (needs the canonical structure) — not a dry-run-green blocker.
+- **standardisation #1 (defi rebuild source-aware stamp)**: CONFIRMED in code (`_resolve_pmst` →
+  `derive_pipeline_mode_for_row`; coarse `pipeline_mode=batch/` gone) — checkbox flipped in
+  `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`.
+- **D14 guard**: canonical DEX data_type is `dex_pool_state` (the `→dex_pools` rename was reversed); rebuild emits
+  `dex_pool_state`/`dex_pool_swaps` only — `dex_pools` NOT re-introduced.
+- **D10 (6 unbacked `live` venues)**: NON-BLOCK confirmed — the IS-catalogue-driven v2 enumerator seeds **zero**
+  `expected_unattempted` for unbacked venues (MARGINFI-SOLANA/SOLEND-SOLANA have no IS catalogue entries; the other 4 —
+  EULER_V2/VENUS/BENQI/RADIANT — now have shipped adapters). v1 produces only benign pre-launch `empty_confirmed`.
+
+**Captured findings (Capture-Discoveries):**
+
+- [ ] [DATA] P2. **Orphan-cleanup — OLD-shape `-prd` raw-tick blobs (April-2026 migration)**: `rebuild_defi_manifest`
+      surfaced 23 unparseable objects at `market-data-tick-defi-prd/raw_tick_data/by_date/day=*/pipeline_mode=batch_onchain_rpc/asset_group=defi/venue={VENUE}-{CHAIN}/ticks_migrated_20260418*.parquet`
+      (venue-chain glued, no `chain=`/`instrument_type=`/`data_type=` segments). The rebuild SKIPS them (write_errors=0,
+      not in the rebuilt `_index`). After C0 `--apply` re-derives those cells (LIDO/ETHENA/ETHERFI/CURVE lst+dex from the
+      source buckets) these become **orphan stale copies** → delete-after per the orphan-coverage drilldown. NON-BLOCK
+      for the index/manifest (`_index` is rebuilt from the canonical objects). Repo: market-tick-data-service.
+      parent_epic: mtds_mdps_master. Provenance: slot-2 ② rebuild dry-run 2026-06-08.
+- [ ] [DATA] P3. **needs_attr full-corpus re-confirm at `--apply`**: the dry-run sampled 2024-06-01..03; the operator's
+      `--apply` walks 2020–2026 → the migrator's `_needs_attribution/` diagnostic must read `needs_attr=0` (or be
+      operator-acked) on the full corpus (RD4 gate). The `_LST_DEFAULT_CHAIN` fix closes the LST class; any new
+      unattributable `(contract,feed)`/`(token,protocol)` surfaced by the full walk is held-never-guessed (non-fatal).
+      Repo: market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-2 ① 2026-06-08.
+
 > **This file plays two roles** (operator 2026-06-01): (1) the **MASTER coordinator** for the whole "single canonical
 > SSOT — no fallback, no dual" programme (the `## MASTER` section sequences every sub-plan); (2) the **DeFi L3
 > executor** (the `## A`–`## G` sections ARE the DeFi single-walk). An agent drives the MASTER section + delegates the

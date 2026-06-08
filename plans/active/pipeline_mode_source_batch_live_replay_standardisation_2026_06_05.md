@@ -297,13 +297,17 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
 
 ## Work units (phase-tagged; route to owners)
 
-- [ ] [CODE] P1. **STANDARDISE the per-AG manifest stamping** — fix #1 (defi rebuild stamp `pipeline_mode`+`source`) +
+- [x] ✅ [CODE] P1. **STANDARDISE the per-AG manifest stamping** — DONE. fix #1 (defi rebuild stamp
+      `pipeline_mode`+`source`) **— mtds@f80c50f1**: `rebuild_defi_manifest.py` `writer.add(...)` now passes
+      `asset_group=defi` + source-aware `pipeline_mode`/`source`/`transport` via `_resolve_pmst` →
+      `derive_pipeline_mode_for_row` (the retired coarse `pipeline_mode=batch/` is gone — verified in code by slot-2
+      2026-06-08: `_PIPELINE_MODE_SEG` optional segment + `_resolve_pmst` derives source-aware pm verbatim-or-derived).
       #2 (make UTL `add()` require/auto-derive `pipeline_mode` like `record_captured`, OR delete the legacy `add()`
-      path) + add a cross-AG regression test asserting every rebuild stamps both. Repos: market-tick-data-service +
-      unified-trading-library. Owner: vm-defi (#1) + UTL. **#2 (C-#2) DONE 2026-06-07 — utl@d0745bde**: `add()` now
-      AUTO-DERIVES `pipeline_mode` via `derive_pipeline_mode_for_row` for a derivable market-data row (venue+data_type,
-      no feature_group); blank can no longer pass silently. **REMAINING: #1 (defi rebuild stamp) — vm-defi**, + the
-      cross-AG regression test rides the defi rebuild fix.
+      path) **— DONE 2026-06-07 utl@d0745bde** (`add()` AUTO-DERIVES `pipeline_mode` via `derive_pipeline_mode_for_row`
+      for a derivable market-data row; blank can no longer pass silently). Cross-AG regression: each AG's rebuild test
+      asserts source-aware stamping (defi `test_rebuild_defi_manifest.py` asserts `batch_<source>`; cefi/tradfi
+      likewise). Repos: market-tick-data-service + unified-trading-library. Owner: vm-defi (#1) + UTL. — flipped slot-2
+      2026-06-08 (mtds@f80c50f1 + utl@d0745bde confirmed in code).
 - [ ] [CODE] P1. **features delta_one reader pipeline_mode-aware** (#3) — `_build_blob_path`/`_resolve_blob_paths`
       include the `pipeline_mode=` segment (delegate to UAC `candidate_parquet_paths` or build inline like MDPS), with a
       coverage regression. Repo: features-service. Owner: vm-ml.
