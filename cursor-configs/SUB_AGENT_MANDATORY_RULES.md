@@ -331,6 +331,11 @@ pointer before acting on any of them.
   carries a `schedule:` drift-tick (`[skip ci]` writes suppress the push trigger). A template-only edit to a fleet
   workflow must be rolled out fleet-wide in the SAME change (else the PM drift gate reddens). SSOT:
   `codex/08-workflows/ci-cd-flow.md`.
+- **Strict quickmerge (HARD RULE, 2026-06-08)**: CODE reaches the integration branch ONLY via
+  `quickmerge --agent --files` — a direct `git push` of code to `live-defi-rollout`/`staging`/`main` is BANNED (it
+  dodges the dep gates + silently piles behind main with no staging PR). Closed carve-out set: (1) dirty-deps, (2) the
+  FF-pull-in + cross-repo PM `docs(plans):` flip, (3) PM `scripts/**` + any `.github/**` workflow change that must reach
+  `main` to unblock the pipeline (chicken-and-egg). SSOT: `codex/08-workflows/ci-cd-flow.md` § strict-quickmerge.
 - **Version**: never bump manually (semver-agent owns it); docs/`*.md`/`*.mdc` PR→main, scripts/workflows PR→staging;
   respect `locked_by:`, never unlock autonomously; 5-step plan-archival ritual incl. codex-alignment check.
 - **Post-phase codex audit**: update changed codex contracts / stub new patterns / SUPERSEDED-banner invalidated docs.

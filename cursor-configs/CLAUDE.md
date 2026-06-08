@@ -570,7 +570,7 @@ line):
   antipattern is retired), `[_{transport}]` suffix in the path key ONLY where a source runs >1 transport per shard (none
   today); `transport ∈ {rest,websocket,flat_file}` is ALWAYS carried in a separate manifest COLUMN
   (`default_transport_for_source`; tardis=flat*file, else rest). `live_websocket` is a transitional alias → the
-  `live*<source>`/`replay*<source>`object migration is the gated next tranche. **GCS canonical paths carry`pipeline_mode={mode}*{source}/`LEFT of`asset*group=`** (Phase 3 done) — a prober hitting `raw_tick_data/by_date/day=*/asset*group=*/`without`pipeline_mode=`is on the OLD shape; readers PREFIX-MATCH`batch**`/`live\_\_`/`replay\_\*`(+ bare fallback), never the coarse literal. Sports uses`candidate_parquet_paths()`(unaffected). SSOT:`codex/02-data/pipeline-mode-partition.md`+`codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`.
+  `live*<source>`/`replay*<source>`object migration is the gated next tranche. **GCS canonical paths carry`pipeline_mode={mode}*{source}/`LEFT of`asset*group=`** (Phase 3 done) — a prober hitting `raw_tick_data/by_date/day=*/asset*group=*/`without`pipeline_mode=`is on the OLD shape; readers PREFIX-MATCH`batch\*\*`/`live\_\_`/`replay\_\*`(+ bare fallback), never the coarse literal. Sports uses`candidate_parquet_paths()`(unaffected). SSOT:`codex/02-data/pipeline-mode-partition.md`+`codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`.
 - **Bump `MAX_DURATION=600` over suppressing the QG `<300s` time check** — when a suite organically outgrows the budget,
   raise it (with a `#` comment on what grew); never deselect/skip slow tests (masks runaway regressions).
   `IGNORE_TIMEOUT=true`/`PYRIGHT_TIMEOUT` stay sanctioned for META-gate-only trips. SSOT:
@@ -854,6 +854,27 @@ push trigger — the cron sweeps the drift so "`main` never ahead of LDR" holds 
 fleet workflow drifts every per-repo copy + reddens the PM drift gate — roll out via `rollout-workflow-templates.sh` in
 the SAME change. SSOTs: `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT"; plans
 `staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` + `ci_local_qg_parity_2026_06_08.md`.
+
+## Strict quickmerge — direct integration-branch code pushes are BANNED (HARD RULE, 2026-06-08)
+
+CODE reaches the integration branch **only** through `quickmerge --agent --files` (Pass-1 QG sentinel → Pass-2 commit +
+auto-merging staging PR). A direct `git push` of code to `live-defi-rollout`/`staging`/`main` is banned: it dodges the
+dep-version gate (STAGE 1.6), the dep-tier-readiness gate (STAGE 1.7) and the dep-content gate, and (`quickmerge`
+early-exits "nothing to commit" on a clean tree) silently piles commits on LDR _behind_ main without ever opening a
+staging PR. **The ONLY sanctioned direct pushes** (the closed carve-out set, reconciled with
+`qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` — do not fork these):
+
+1. **Dirty-deps** — when a dep repo is dirty mid-edit, commit+push the dep directly to LDR (never quickmerge with dirty
+   deps).
+2. **The FF-pull-in** + the **cross-repo PM plan-flip** (`docs(plans):`).
+3. **PM `scripts/**`+ any repo's`.github/**`workflow change that must reach`main` to unblock the pipeline** (the
+   chicken-and-egg: a corrected gate/workflow can't pass through the gate it is fixing) — operator/admin authority,
+   relax→do→re-enable.
+
+Everything else is HARD-blocked. Enforcement: policy is the floor; a machine guard (reject a non-carve-out
+integration-branch code commit lacking a quickmerge lineage marker) is the open hardening item in
+`quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md` Phase 2. SSOT: `codex/08-workflows/ci-cd-flow.md` §
+"Two-Pass Workflow Model" + § strict-quickmerge.
 
 ## CI Verification After Every Push (HARD RULE)
 

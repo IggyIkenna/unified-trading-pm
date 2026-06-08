@@ -38,11 +38,11 @@ defect in the parity, and it gets audited and closed, not normalized.
 
 ## Pre-audit — enumerate every place local QG and CI QG/SIT can differ
 
-- [ ] [SCRIPT] P1. Build the parity matrix: for each gate step, does it run identically in (a) local `quality-gates.sh`,
-      (b) `quality-gates-v2.yml` on staging, (c) SIT `full-workspace-sit` cross-repo invariants? Columns: which deps are
-      present (editable-local vs cloned-pinned), Python/tool versions, env (`CLOUD_MOCK_MODE`), test selection
-      (`PYTEST_UNIT_DIR`), `--ignore-vuln` set, the `<300s`/`MAX_DURATION` budget, and which checks are SKIPPED in each.
-      This matrix IS the divergence surface.
+- [x] ✅ [SCRIPT] P1. Build the parity matrix: for each gate step, does it run identically in (a) local
+      `quality-gates.sh`, (b) `quality-gates-v2.yml` on staging, (c) SIT `full-workspace-sit` cross-repo invariants?
+      Columns: which deps are present (editable-local vs cloned-pinned), Python/tool versions, env (`CLOUD_MOCK_MODE`),
+      test selection (`PYTEST_UNIT_DIR`), `--ignore-vuln` set, the `<300s`/`MAX_DURATION` budget, and which checks are
+      SKIPPED in each. This matrix IS the divergence surface.
 
 ## Phase 1 — Close the known structural divergences (depends: Pre-audit)
 
@@ -57,11 +57,11 @@ defect in the parity, and it gets audited and closed, not normalized.
 
 ## Phase 2 — Make divergence self-auditing (depends: Phase 1)
 
-- [ ] [SCRIPT] P1. Add a **parity watchdog**: when a repo is local-QG-green (LDR checkout) but its staging
+- [x] ✅ [SCRIPT] P1. Add a **parity watchdog**: when a repo is local-QG-green (LDR checkout) but its staging
       `quality-gates-v2` is red, auto-file/append an issue doc
       `plans/active/issues/ci_local_qg_divergence_<repo>_<date>.md` with the diff of which step diverged (from the
       matrix) + the run logs. Divergence becomes a tracked defect, per principle.
-- [ ] [SCRIPT] P2. Wire the watchdog signal into the orchestrator alert path (every alert → orchestrator).
+- [x] ✅ [SCRIPT] P2. Wire the watchdog signal into the orchestrator alert path (every alert → orchestrator).
 
 ## Phase 3 — Dependency-order local sweep as a first-class command (depends: Phase 1)
 

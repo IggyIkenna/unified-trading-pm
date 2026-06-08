@@ -289,6 +289,45 @@ the branches force-sync to LDR.
 SSOTs: `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` +
 `plans/active/ci_local_qg_parity_2026_06_08.md` (local LDR-checkout QG in dep order is the staging oracle).
 
+## Strict quickmerge — direct integration-branch code pushes are BANNED (HARD RULE, 2026-06-08)
+
+CODE reaches the integration branch ONLY via `quickmerge --agent --files`. A direct `git push` of code to
+`live-defi-rollout`/`staging`/`main` dodges the dep-version gate (1.6), dep-tier gate (1.7), and dep-content gate, and —
+since quickmerge early-exits "nothing to commit" on a clean tree — silently piles commits on LDR behind `main` with no
+staging PR. The **closed carve-out set** (the only sanctioned direct pushes; reconciled with
+`qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` — one set, do not fork):
+
+1. **Dirty-deps** — a dep repo dirty mid-edit → commit+push the dep directly to LDR (never quickmerge with dirty deps).
+2. **FF-pull-in** + the **cross-repo PM plan-flip** (`docs(plans):`).
+3. **PM `scripts/**`+ any repo's`.github/**` workflow** change that must reach `main` to unblock the pipeline (the
+   chicken-and-egg — a corrected gate can't pass through the gate it's fixing); operator/admin authority.
+
+Everything else is HARD-blocked. **Enforcement**: policy is the floor (CLAUDE.md + `SUB_AGENT_MANDATORY_RULES.md`); the
+machine guard (reject a non-carve-out integration-branch code commit lacking a quickmerge lineage marker, local +
+server-side) is the open Phase-2 hardening in `quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md` — held
+for a dedicated pass (a wrong fleet-wide guard mid-live-session is the rule-11 anti-pattern).
+
+## Local ↔ CI QG parity matrix (the confidence model; codified 2026-06-08)
+
+LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an LDR checkout, content-sync-gated, should
+predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
+normal occurrence. The divergence surface:
+
+| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
+
+The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the
+assembled-SIT cross-repo layer (per-repo QG has a partial dep set) — are the only sanctioned local↔CI gaps. A
+local-green-in-dep-order ⇒ expect staging-v2-green, modulo SIT. Any OTHER local-green/staging-red event is a parity
+defect → auto-file `plans/active/issues/ci_local_qg_divergence_<repo>_<date>.md` (the parity watchdog,
+`scripts/cicd/parity_watchdog.py`) and audit which step diverged. SSOT: `ci_local_qg_parity_2026_06_08.md`.
+
 ## Version Bump Flow (Semver Agent)
 
 Semver is managed entirely by the semver-agent GitHub Action — never bump manually.
