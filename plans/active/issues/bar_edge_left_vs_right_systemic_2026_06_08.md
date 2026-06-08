@@ -66,20 +66,34 @@ that BYPASS the processed layer.**
 - **Databento ohlcv raw open-edge** → **DOWNGRADED to ℹ️ by-design / not-a-downstream-bug** (MDPS converts; consumed
   candle verified right-edge). Keep only as a "raw representation is vendor-open-edge; never consume raw ohlcv directly
   — always the processed candle" note.
-- **STILL 🔴 — features-service re-resamplers** (`candle_resampler.py:159` `closed/label="left"`;
-  `flow_interaction.py:76` `dt.truncate("1m")`): these consume the CORRECT right-edge processed candles and **re-emit
-  LEFT-edge**, bypassing the gate — they DEGRADE correct data. Highest live risk now; not data-verifiable without
-  running, but code is unambiguous.
-- **NEEDS PER-SOURCE DATA CHECK — bypass-MDPS direct-`write_chunk` candle fetchers** (pacifica/lighter/uniswap_v3 in
-  MTDS; instruments-service reference-data hyperliquid/aster/ccxt/polygon): the question is whether their output is ever
-  consumed RAW (open-edge) or always re-built by MDPS into a right-edge processed candle (as dex_swaps is). DeFi day
-  ranges were disjoint (raw 05-26+, processed ≤05-22) + 24h crypto has no auction discriminator, so these are
-  unverified-by-data this pass — flag for a targeted check on an overlapping day.
+- **🔴 CONFIRMED-BY-EXECUTION — features-service re-resamplers (the only realized live bugs).** Ran both functions on a
+  synthetic RIGHT-edge 1m series (features-service venv, polars 1.40):
+  - `candle_resampler.resample_ohlcv(1m→5m)` → output stamped `00:00:00 / 00:05:00 / 00:10:00` (LEFT labels) **and
+    miscomposed**: the "5-minute bar" at `00:00:00` contains only minutes 1–4 (close=104, vol=10) instead of the correct
+    `00:05:00` bar over minutes 1–5 (close=105, vol=15). So `closed="left", label="left"` both **mislabels (open edge)
+    and splits the window** — a real corruption of every coarser-than-base feature timeframe. Feeds features via
+    `_tf_cluster_helper.py`. Fix → `closed="right", label="right"`.
+  - `flow_interaction` `dt.truncate("1m")` → a trade at `00:00:30` lands in bar `00:00:00` (open), vs canonical
+    `00:01:00` (close) — 1-minute-early CVD/imbalance features. Fix → stamp `truncate + 1m` (or
+    `compute_bar_close_boundary`). Both **bypass the MDPS gate** (in-memory, downstream of the right-edge candle store)
+    → they take CORRECT data and degrade it. **These are the actionable bugs.**
+- **bypass-MDPS direct-`write_chunk` candle fetchers — RESOLVED as LATENT (data-checked, not realized in prod).** On the
+  overlapping day 2026-05-21 (defi raw 2020→2026-05-28 vs processed 2024→2026-05-22 — wide overlap; my earlier
+  "disjoint" was just the tails): (1) the only DeFi processed candle type is `dex_swaps`, built from individual swap
+  **events** (UNISWAP_V3 raw `timestamp` = Unix **seconds, per-swap, irregular** — trade-time, not bar edges) → MDPS
+  tick-aggregates to the verified right-edge candle; (2) **no perp venues (hyperliquid/pacifica/lighter) exist in defi
+  raw** on 2026-05-26/27/28 — the pre-aggregated candle fetchers with the `t`/`periodStartUnix` open-edge code are **not
+  writing to prod**, and uniswap's hourly `periodStartUnix` path does not feed the consumed `dex_swaps` candle. So their
+  open-edge bug is a **latent code bug** (would matter only if those sources activate and their pre-agg output is
+  consumed as candles), **NOT a current data corruption.** Instruments-service reference-data (hyperliquid/aster/ccxt/
+  polygon) is reference/universe data, not the candle store. Fix the code for correctness-in-depth, but no prod
+  candle-store corruption exists today.
 
-> **Net:** the systemic open-edge ingestion is real, but the MDPS processed layer is the safety net that DATA confirms
-> works for the tradfi+defi candle store. The actionable bugs are the features-service re-resamplers (corrupt correct
-> data) and any consumer that reads a raw/bypass artifact instead of the processed candle. The "reference corpus is
-> wrong" alarm is RETRACTED at the consumed layer.
+> **Net (post a+b data verification):** the MDPS processed candle store is right-edge CORRECT everywhere verified
+> (tradfi databento ohlcv, defi dex_swaps). The **only realized bugs are the two features-service re-resamplers** — both
+> reproduced by running the real code — which corrupt correct right-edge candles into left-edge downstream of the gate.
+> Everything else (raw open-edge artifacts, instruments-service refdata, inactive pre-agg fetchers) is by-design or
+> latent, not a live data-correctness incident. Remediation priority: fix the two features-service calculators first.
 
 ## The site register (verdicts with file:line)
 
