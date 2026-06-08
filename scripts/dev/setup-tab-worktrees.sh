@@ -306,7 +306,7 @@ ensure_repo_worktree() {
     local base url; base="$(base_branch_for_repo "${repo}")"
     if [[ -d "${slot_repo_dir}/.git" ]]; then
         # Already a Path-B clone → re-assert identity + FF to LDR (idempotent re-run).
-        git -C "${slot_repo_dir}" config user.name "ikennaigboaka [slot-${slot}·$(hostname -s 2>/dev/null || echo laptop)]" 2>/dev/null || true
+        git -C "${slot_repo_dir}" config user.name "${CANON_GIT_NAME} [slot-${slot}·${WORKTREE_HOST}]" 2>/dev/null || true
         git -C "${slot_repo_dir}" config user.email "$(slot_identity_email)" 2>/dev/null || true
         log "  OK   ${repo} (Path-B clone exists)"
         return 0
@@ -321,7 +321,7 @@ ensure_repo_worktree() {
     if git clone --reference "${sibling}" "${url}" "${slot_repo_dir}" --quiet 2>/dev/null; then
         git -C "${slot_repo_dir}" checkout "${base}" --quiet 2>/dev/null \
             || git -C "${slot_repo_dir}" checkout -B "${base}" "origin/${base}" --quiet
-        git -C "${slot_repo_dir}" config user.name "ikennaigboaka [slot-${slot}·$(hostname -s 2>/dev/null || echo laptop)]"
+        git -C "${slot_repo_dir}" config user.name "${CANON_GIT_NAME} [slot-${slot}·${WORKTREE_HOST}]"
         git -C "${slot_repo_dir}" config user.email "$(slot_identity_email)"
         install_strict_quickmerge_hook "${slot_repo_dir}"
         log "  CLONE ${repo} → ${slot_repo_dir} (Path-B reference-clone on ${base})"
