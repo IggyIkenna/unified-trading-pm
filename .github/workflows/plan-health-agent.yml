@@ -316,6 +316,9 @@ jobs:
     needs: [plan-health]
     # Daily/dispatch report only — the PR hard-gate surfaces its result on the PR check itself.
     if: always() && github.event_name != 'pull_request'
+    # Best-effort telemetry — a Slack/webhook hiccup must NOT redden the plan-health badge
+    # (the badge should reflect the `plan-health` sweep, not a notification side-channel).
+    continue-on-error: true
     uses: ./.github/workflows/notify-slack.yml
     with:
       message: "plan-health-agent (daily) | ${{ needs.plan-health.outputs.summary || 'run failed — see logs' }}"
@@ -333,6 +336,10 @@ jobs:
     # plan-health conclusion would (a) be meaningless and (b) mark the whole PR run
     # `failure` even though the gate passed. Scope persist to non-PR events, like notify.
     if: always() && github.event_name != 'pull_request'
+    # Best-effort event-logging (GCS/S3) — a cloud-auth/persist hiccup must NOT redden the
+    # plan-health badge. This is the fix for the 06-05→06-08 "all jobs green but run=failure"
+    # badge: the persist reusable-caller was failing and gating the scheduled run conclusion.
+    continue-on-error: true
     uses: ./.github/workflows/persist-cicd-event.yml
     secrets: inherit
     with:
