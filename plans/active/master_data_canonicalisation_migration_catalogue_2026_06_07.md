@@ -917,6 +917,34 @@ speed-note (both deferred optimisations, non-blocking).
 
 ## Master coordination todos (this plan's OWN work — pure coordination, no execution)
 
+- [ ] [UAC+IS] P1. **G1-ENUM present-set asymmetry — combo/chain underlyings get PHANTOM
+      `(options_chain|futures_chain, trades)` `expected_unattempted` seeds (CROSS-AG: tradfi + cefi; found slot-6
+      2026-06-08 tradfi pre-apply audit).** `enumerate_expected_universe.py` rolls the CATALOG's option/combo leaves up
+      to a per-underlying `options_chain`/`futures_chain` bundle candidate with `data_type=trades`
+      (`_rollup_bundle_grain`, `:1132`), but `_build_present_set` (`:1405`) loads the manifest **VERBATIM** (7-tuple
+      `venue/chain/data_type/instrument_type/instrument_id/league_id/date`, no rollup). So for an underlying the WRITER
+      captured as `instrument_type=combo`/`data_type=ohlcv_1m`, the seed key
+      `(venue,'',trades,options_chain,underlying,'',date)` can NEVER match the present key
+      `(venue,'',ohlcv_1m,combo,instr_id,'',date)` → the set-difference seeds a PHANTOM `expected_unattempted` cell AND
+      the captured combo data is not credited to it → the gated G1.run could-exist denominator INFLATES + the `trades`
+      coverage % DEFLATES (⑥/⑦). Verified against real-prod `market-data-tick-tradfi-prd/_index` (144,062 rows):
+      `('combo','ohlcv_1m')`=50,414 · `('combo','trades')`=7,829 · `('futures_chain','ohlcv_1m')`=8,743 ·
+      `('options_chain','ohlcv_1m')`=1,906. **Deeper model gap**: the validity matrix gives `combo→frozenset()` and
+      `options_chain/futures_chain→{trades}` ONLY, yet the writer captures combo + chains WITH `ohlcv_1m`+`tbbo` too →
+      ~61K real captured tradfi cells the matrix marks "impossible" (no guardrail rejects them today — the matrix is
+      only applied to the catalog seed side, NOT to captured rows — so no data is dropped, but the model + reality
+      disagree). **SCOPE: the gated G1.run `--apply-write` SEED only — NOT the G4 data/manifest `--apply`** (that walk
+      is content-preserving; tradfi/cefi v9 DATA migration has ZERO regression from this; cefi's low candidate count
+      (3,454) means its phantom is small because cefi captures `options_chain` bundles that DO cancel — tradfi's
+      combo-dominant present-set is the exposed case). **Quantify first**: re-run
+      `enumerate --asset-group {tradfi,cefi} --dry-run` with an instrument*type breakdown to count the phantom
+      `(options_chain|futures_chain, trades)` cells. **Fix options (owner decides)**: (a) apply the SAME
+      `_rollup_bundle_grain` normalization to the present-set before the set-difference (symmetric); (b) writer/rebuild
+      relabel `combo`→`options_chain` to match the seed; (c) admit
+      `ohlcv*\*`/`tbbo` for chain instrument_types in the     validity matrix. Owner: vm-cross-cutting / slot-7 (the central enumerate producer). Repos: instruments-service     (`scripts/enumerate_expected_universe.py`) +
+      unified-api-contracts (validity matrix). parent_epic: manifest_master. Provenance: tradfi pre-apply audit, slot-6
+      2026-06-08.
+
 - [ ] [DOCS] P0. **M-COORD-1 — drive the G0 doc-coherence reconcile (the standardisation plan's item 0.8) to GREEN**:
       CLAUDE.md + the codex layer (`pipeline-mode-partition.md`, `availability-manifest-and-data-status.md`) +
       `SUB_AGENT_MANDATORY_RULES.md` + **all 5 per-AG plans + downstream + instruments** acknowledge the source-aware

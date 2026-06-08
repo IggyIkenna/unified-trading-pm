@@ -5155,3 +5155,19 @@ probe of a recent cefi+tradfi chain shard byte-confirms on-disk `data_type=trade
 — please run on a creds host), AND (b) the Era-A could-exist surfaces are retired (`tradfi_catalog_reader` →
 `data_type=trades`+`instrument_type=futures_chain|options_chain`; drop the chain tokens from the MVP data_type lists).
 Repos: market-tick-data-service + unified-api-contracts. — ikenna-slot-7
+
+---
+
+**→ slot-7 / vm-cross-cutting (enumerate producer owner), 2026-06-08 (slot-6 tradfi pre-apply audit).** Plan-of-record:
+`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` § "Master coordination todos" (new
+`[UAC+IS] P1` G1-ENUM present-set asymmetry todo). **G1-ENUM seeds PHANTOM `(options_chain|futures_chain, trades)`
+`expected_unattempted` cells for combo/chain underlyings** because `_rollup_bundle_grain` normalizes the CATALOG seed
+side (combo→options_chain, dt=trades) but `_build_present_set` (`enumerate_expected_universe.py:1405`) reads the
+manifest VERBATIM — so a real-prod tradfi underlying captured as `('combo','ohlcv_1m')` (50,414 rows on
+`market-data-tick-tradfi-prd/_index`) never cancels the `('options_chain','trades')` seed → could-exist denominator
+inflates / `trades` coverage deflates. **Affects the gated G1.run SEED only — NOT the G4 data/manifest `--apply`**
+(content-preserving; tradfi DATA migration has ZERO regression). cefi is the same mechanism but lower-magnitude (it
+captures `options_chain` bundles that DO cancel; tradfi's combo-dominant present-set is the exposed case). Please
+QUANTIFY (enumerate dry-run w/ instrument_type breakdown) + pick a fix (symmetric present-set rollup / writer relabel
+combo→options_chain / admit ohlcv+tbbo for chain itypes in the validity matrix). Tradfi G4 is NOT blocked on this. —
+ikenna-slot-6
