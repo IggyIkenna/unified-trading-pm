@@ -45,7 +45,7 @@ jobs:
       replayed_count: ${{ steps.drain.outputs.replayed_count }}
     steps:
       - name: Checkout PM (freeze calendar)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           sparse-checkout: |
             plans/ops/change-freeze-calendar.csv

@@ -42,7 +42,7 @@ jobs:
     steps:
       # ── CHECKOUT ─────────────────────────────────────────────────────────────
       - name: Checkout unified-trading-pm
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 2 # need HEAD~1 for diff

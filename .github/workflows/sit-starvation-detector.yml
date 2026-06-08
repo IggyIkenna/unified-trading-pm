@@ -22,7 +22,7 @@ jobs:
       alert: ${{ steps.stale-check.outputs.alert }}
     steps:
       - name: Checkout PM repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
 
@@ -130,7 +130,7 @@ jobs:
       contents: read
     steps:
       - name: Checkout PM repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
       - name: Re-trigger SIT (sit-debounce-trigger)

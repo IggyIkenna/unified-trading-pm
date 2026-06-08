@@ -42,14 +42,14 @@ jobs:
       severity: ${{ steps.scan.outputs.severity }}
       report: ${{ steps.scan.outputs.report }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # GH_PAT (carries Workflows:write + fleet read) is needed to dispatch
           # quality-gates-v2 on each repo's LDR ref + commit the manifest ldr_ci_status update.
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.13"
 

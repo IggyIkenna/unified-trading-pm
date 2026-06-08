@@ -44,7 +44,7 @@ jobs:
       skipped_count: ${{ steps.merge.outputs.skipped_count }}
     steps:
       - name: Checkout PM
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
 

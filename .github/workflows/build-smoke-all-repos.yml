@@ -30,7 +30,7 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.json }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Generate repo matrix
         id: matrix
@@ -77,7 +77,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_PAT }}
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/${{ matrix.repo }}
           token: ${{ secrets.GH_PAT }}

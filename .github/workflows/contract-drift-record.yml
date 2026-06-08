@@ -17,12 +17,12 @@ jobs:
 
     steps:
       - name: Checkout unified-trading-pm
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
 
       - name: Checkout unified-api-contracts
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ github.repository_owner }}/unified-api-contracts
           token: ${{ secrets.GH_PAT }}

@@ -131,7 +131,7 @@ jobs:
       kill_switch_halted: ${{ steps.kill-switch-halt.outputs.kill_switch_halted }}
     steps:
       - name: Checkout PM repo (for scripts and manifest)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Determine build target
         id: route

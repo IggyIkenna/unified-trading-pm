@@ -59,7 +59,7 @@ jobs:
       conflicted_count: ${{ steps.promote.outputs.conflicted_count }}
     steps:
       - name: Checkout PM
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0

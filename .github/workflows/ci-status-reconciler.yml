@@ -46,7 +46,7 @@ jobs:
       reconciled_count: ${{ steps.run.outputs.reconciled_count }}
     steps:
       - name: Checkout PM (main — the ci_status SSOT branch)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           ref: main
           token: ${{ secrets.GH_PAT }}
