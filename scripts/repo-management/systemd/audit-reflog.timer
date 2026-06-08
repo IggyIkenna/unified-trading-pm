@@ -1,0 +1,11 @@
+[Unit]
+Description=Run audit-reflog every 10 minutes
+# Linux equivalent of the launchd StartInterval=600 schedule.
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

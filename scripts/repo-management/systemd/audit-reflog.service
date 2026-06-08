@@ -1,0 +1,11 @@
+[Unit]
+Description=Unified Trading — audit reflog resets (periodic)
+# Linux equivalent of launchd com.unified-trading.audit-reflog.plist.
+# Installed to ~/.config/systemd/user/ by install-audit-reflog-guard.sh (WORKSPACE_ROOT_PLACEHOLDER substituted).
+
+[Service]
+Type=oneshot
+WorkingDirectory=WORKSPACE_ROOT_PLACEHOLDER
+ExecStart=/bin/bash WORKSPACE_ROOT_PLACEHOLDER/unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh
+StandardOutput=append:/tmp/audit-reflog.log
+StandardError=append:/tmp/audit-reflog.log

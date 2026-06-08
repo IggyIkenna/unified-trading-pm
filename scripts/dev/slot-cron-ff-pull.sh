@@ -416,4 +416,9 @@ for pid in "${pids[@]}"; do
     wait "${pid}" || true
 done
 
-log_quiet "=== sweep complete ==="
+# Heartbeat: write ONE line every run, even in --quiet on a fully-idle no-op sweep, so the
+# log mtime always refreshes while the cron is alive. verify-slot-host-symmetry.sh check 3
+# ("FF-pull log fresh <10m") reads only the mtime — without this, a quiet idle window (LDR
+# not advancing + all worktrees clean) writes nothing and the check false-fails despite a
+# healthy cron. `log` (not log_quiet) makes check 3 test cron LIVENESS, not "had work to do".
+log "=== sweep complete ==="

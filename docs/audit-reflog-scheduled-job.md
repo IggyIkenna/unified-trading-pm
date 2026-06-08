@@ -1,22 +1,42 @@
 # Audit Reflog — Scheduled Job & Alerts
 
-Weekly check for unintended `git reset --hard` or `reset to origin/main` across all workspace repos. Alerts via macOS
-notification when high-risk resets are found.
+Periodic + event-based check for unintended `git reset --hard` or `reset to origin/main` across all workspace repos.
+Alerts (desktop notification + Telegram) **only** when high-risk resets are found — a clean run is silent on every
+channel. Cross-platform: **macOS** (launchd + osascript/terminal-notifier + fswatch) and **Linux** (systemd-user +
+notify-send + inotifywait).
+
+## Install (canonical, both platforms)
+
+One OS-detecting installer sets up BOTH the periodic audit and the event-based watcher:
+
+```bash
+cd /path/to/unified-trading-system-repos
+bash unified-trading-pm/scripts/repo-management/install-audit-reflog-guard.sh
+# uninstall: ... install-audit-reflog-guard.sh --uninstall
+```
+
+It delegates to launchd on macOS and systemd-user on Linux (details in the per-platform sections below). VM bootstrap
+(`agent-orchestrator/scripts/bootstrap_vm.sh`) calls it so every VM self-installs the guard.
+
+> **Portability pin:** all reflog-guard + slot-cron scripts target the fleet's oldest bash — **macOS /bin/bash 3.2** —
+> and use NO bash-4+ features (`mapfile`/`declare -A`/`${var,,}`), so the same script runs on macOS, the Ubuntu desktop,
+> and the VMs identically. Any OS-divergent tool is `uname`-branched. Do not introduce bash-4+ syntax here.
 
 ## Script locations
 
-| Item                       | Path                                                                               |
-| -------------------------- | ---------------------------------------------------------------------------------- |
-| **Audit script**           | `unified-trading-pm/scripts/repo-management/audit-reflog-resets.sh`                |
-| **Wrapper (with alert)**   | `unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh`        |
-| **Launchd plist**          | `~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist`                    |
-| **Install script**         | `unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog.sh`       |
-| **Log**                    | `/tmp/audit-reflog.log`                                                            |
-| **Ignore list**            | `unified-trading-pm/scripts/repo-management/audit-reflog-ignore.txt`               |
-| **Watch script (fswatch)** | `unified-trading-pm/scripts/repo-management/watch-and-audit-reflog.sh`             |
-| **Watch plist**            | `~/Library/LaunchAgents/com.unified-trading.audit-reflog-watch.plist`              |
-| **Watch install**          | `unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog-watch.sh` |
-| **Watch log**              | `/tmp/audit-reflog-watch.log`                                                      |
+| Item                         | Path                                                                                                      |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| **Audit script**             | `unified-trading-pm/scripts/repo-management/audit-reflog-resets.sh`                                       |
+| **Wrapper (with alert)**     | `unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh`                               |
+| **Cross-platform installer** | `unified-trading-pm/scripts/repo-management/install-audit-reflog-guard.sh`                                |
+| **Log**                      | `/tmp/audit-reflog.log`                                                                                   |
+| **Ignore list**              | `unified-trading-pm/scripts/repo-management/audit-reflog-ignore.txt`                                      |
+| **macOS launchd plists**     | `~/Library/LaunchAgents/com.unified-trading.audit-reflog{,-watch}.plist`                                  |
+| **macOS install scripts**    | `unified-trading-pm/scripts/repo-management/launchd/install-audit-reflog{,-watch}.sh`                     |
+| **macOS watch script**       | `unified-trading-pm/scripts/repo-management/watch-and-audit-reflog.sh` (fswatch)                          |
+| **Linux systemd units**      | `unified-trading-pm/scripts/repo-management/systemd/audit-reflog{,-watch}.service` + `audit-reflog.timer` |
+| **Linux watch script**       | `unified-trading-pm/scripts/repo-management/watch-and-audit-reflog-linux.sh` (inotifywait)                |
+| **Watch log**                | `/tmp/audit-reflog-watch.log`                                                                             |
 
 ## Run manually
 
@@ -91,6 +111,10 @@ This keeps the ignore scoped to that commit — future genuine breaches in the s
 **Legacy:** `repo` only (no colon) = ignore whole repo. Prefer per-commit when possible.
 
 ## Linux setup (systemd)
+
+> **The cross-platform installer (`install-audit-reflog-guard.sh`) automates everything below** — it writes the unit
+> templates from `scripts/repo-management/systemd/`, runs `systemctl --user enable --now`, and prompts for
+> `loginctl enable-linger` on servers. The manual steps here are reference / troubleshooting.
 
 Linux uses `systemd` user timers instead of `launchd`. Notifications use `notify-send` instead of `terminal-notifier`.
 

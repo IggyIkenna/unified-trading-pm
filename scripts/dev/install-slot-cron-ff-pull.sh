@@ -78,9 +78,12 @@ INTEGRATION_BRANCH="live-defi-rollout"
 # propagates to every host in ≤5 min and stops FF-pull fleet-wide (and the verify cron self-updates
 # identically → disables its own watchdog). Instead: stream the candidate to a temp via `git show`,
 # `bash -n` it, and only `mv` it into place if it parses; on any failure keep the last-good local copy.
-# (cron-branch-overrides.txt is data, not a script → checked out directly.)
-SELF_PULL_FF="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/dev/slot-cron-ff-pull.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/dev/slot-cron-ff-pull.sh; else rm -f \"\$t\"; fi; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/dev/cron-branch-overrides.txt 2>/dev/null; } || true"
-SELF_PULL_VERIFY="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/verify-slot-host-symmetry.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/verify-slot-host-symmetry.sh; else rm -f \"\$t\"; fi; } || true"
+# chmod 755 AFTER the mv: mktemp creates 0600, so `mv` would leave the script non-executable AND
+# mode-dirty (100755→100644) vs HEAD → the FF-pull/git-status crons then see the root clone as dirty
+# and SKIP it, so it silently falls behind (the exec-bit-drop drift). Restoring 755 keeps the managed
+# script clean + executable. (cron-branch-overrides.txt is data, not a script → checked out directly.)
+SELF_PULL_FF="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/dev/slot-cron-ff-pull.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/dev/slot-cron-ff-pull.sh && chmod 755 scripts/dev/slot-cron-ff-pull.sh; else rm -f \"\$t\"; fi; git checkout -q origin/${INTEGRATION_BRANCH} -- scripts/dev/cron-branch-overrides.txt 2>/dev/null; } || true"
+SELF_PULL_VERIFY="cd \"${PM_DIR}\" && { git fetch -q origin ${INTEGRATION_BRANCH} 2>/dev/null; t=\$(mktemp); if git show origin/${INTEGRATION_BRANCH}:scripts/verify-slot-host-symmetry.sh > \"\$t\" 2>/dev/null && bash -n \"\$t\" 2>/dev/null; then mv \"\$t\" scripts/verify-slot-host-symmetry.sh && chmod 755 scripts/verify-slot-host-symmetry.sh; else rm -f \"\$t\"; fi; } || true"
 
 # Periodic symmetry verify + Slack-alert-on-drift — ENFORCES the symmetric-host
 # contract (CLAUDE.md § "Local slot host = VM slot host") rather than just documenting

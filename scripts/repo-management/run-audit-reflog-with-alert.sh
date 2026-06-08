@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# Run audit-reflog-resets and show macOS notification on high-risk findings.
-# Used by launchd for weekly scheduled runs. Also run manually to test.
+# Run audit-reflog-resets and show a desktop notification on high-risk findings.
+# Cross-platform: macOS (terminal-notifier/osascript) + Linux (notify-send). Notifications +
+# Telegram fire ONLY on high-risk (exit 1) — a clean run is silent on every channel.
+# Scheduled by launchd (macOS) or systemd-user (Linux); also run manually to test.
+# Install both via: scripts/repo-management/install-audit-reflog-guard.sh
 #
 # Location: unified-trading-pm/scripts/repo-management/run-audit-reflog-with-alert.sh
-# Cancel job: launchctl unload ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist
-# Start job:  launchctl load ~/Library/LaunchAgents/com.unified-trading.audit-reflog.plist
 # Log:        /tmp/audit-reflog.log
 #
 # Notification: Click opens log, plays sound. To keep until acknowledged:
@@ -46,19 +47,38 @@ if [[ $exit_code -eq 1 ]]; then
   HIGH_RISK=$(sed -n '/=== HIGH RISK/,/=== MEDIUM RISK/p' "$RUN_LOG" \
     | grep -v "^===" | grep -v "^$" | sed 's/^  //' | head -10 || true)
 
-  # macOS notification — Use full path (launchd has minimal PATH)
-  NOTIFIER=""
-  for p in /opt/homebrew/bin/terminal-notifier /usr/local/bin/terminal-notifier; do
-    [[ -x "$p" ]] && NOTIFIER="$p" && break
-  done
-  if [[ -n "$NOTIFIER" ]]; then
-    "$NOTIFIER" -title "Audit Reflog" \
-      -message "High-risk reset(s) found. Click to open log." \
-      -sound default \
-      -execute "open $LOG"
-  else
-    osascript -e "display notification \"High-risk reset(s) found. Check $LOG\" with title \"Audit Reflog\" sound name \"Basso\""
-  fi
+  # Desktop notification — cross-platform + BEST-EFFORT. Reached ONLY on high-risk (exit 1),
+  # so success is always silent on every platform (no banner, no Telegram). Every call is
+  # guarded `|| true` so a missing notifier under `set -e` can NEVER abort before the Telegram
+  # alert below. macOS = terminal-notifier (full path; launchd has minimal PATH) else osascript;
+  # Linux = notify-send (libnotify), with a DBUS fallback for SSH/headless sessions; a server
+  # with no notifier just no-ops silently. SSOT: docs/audit-reflog-scheduled-job.md.
+  notify_desktop() {
+    local msg="High-risk reset(s) found. Check ${LOG}"
+    case "$(uname -s)" in
+      Darwin)
+        local notifier=""
+        for p in /opt/homebrew/bin/terminal-notifier /usr/local/bin/terminal-notifier; do
+          [[ -x "$p" ]] && notifier="$p" && break
+        done
+        if [[ -n "$notifier" ]]; then
+          "$notifier" -title "Audit Reflog" -message "${msg}" -sound default -execute "open $LOG" || true
+        else
+          osascript -e "display notification \"${msg}\" with title \"Audit Reflog\" sound name \"Basso\"" || true
+        fi
+        ;;
+      Linux)
+        if command -v notify-send >/dev/null 2>&1; then
+          # Headless/SSH: point libnotify at the user's session bus if not already set.
+          [[ -z "${DBUS_SESSION_BUS_ADDRESS:-}" && -S "/run/user/$(id -u)/bus" ]] \
+            && export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+          notify-send -u critical "Audit Reflog — High Risk" "${msg}" >/dev/null 2>&1 || true
+        fi
+        ;;
+    esac
+    return 0
+  }
+  notify_desktop
 
   # Telegram notification
   if [[ -n "${TELEGRAM_BOT_TOKEN:-}" && -n "${TELEGRAM_CHAT_ID:-}" ]]; then

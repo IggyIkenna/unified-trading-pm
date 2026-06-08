@@ -1,0 +1,16 @@
+[Unit]
+Description=Unified Trading — event-based audit reflog (inotifywait)
+# Linux equivalent of launchd com.unified-trading.audit-reflog-watch.plist (fswatch on macOS).
+# Watches each workspace repo's .git/logs and runs the audit on change (debounced).
+
+[Service]
+Type=simple
+WorkingDirectory=WORKSPACE_ROOT_PLACEHOLDER
+ExecStart=/bin/bash WORKSPACE_ROOT_PLACEHOLDER/unified-trading-pm/scripts/repo-management/watch-and-audit-reflog-linux.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=append:/tmp/audit-reflog-watch.log
+StandardError=append:/tmp/audit-reflog-watch.log
+
+[Install]
+WantedBy=default.target
