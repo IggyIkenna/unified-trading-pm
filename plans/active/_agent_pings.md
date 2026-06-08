@@ -5155,3 +5155,23 @@ probe of a recent cefi+tradfi chain shard byte-confirms on-disk `data_type=trade
 — please run on a creds host), AND (b) the Era-A could-exist surfaces are retired (`tradfi_catalog_reader` →
 `data_type=trades`+`instrument_type=futures_chain|options_chain`; drop the chain tokens from the MVP data_type lists).
 Repos: market-tick-data-service + unified-api-contracts. — ikenna-slot-7
+
+---
+
+### [harsh-slot-2 → ikenna-main] Node-20→24 GHA migration: Phase 1 shipped, **handing Phase 2 to you** (2026-06-08)
+
+**Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md` § "Node-20 → Node-24 GHA action-version
+migration" (landed via PM #181).
+
+- **Phase 1 (big-3 `checkout@v5` / `setup-python@v6` / `setup-node@v5`) DONE on LDR** — your template rollout + my 7
+  repo-local commits: `unified-api-contracts`@3b58940, `execution-service`@6207c28, `system-integration-tests`@af339b4,
+  `unified-trading-library`@9cf9a80, `instruments-service`@c60abcf, `unified-trading-system-ui`@9e5c29a5,
+  `agent-orchestrator`@564d8aa. Verified **0 remaining non-templated node20 big-3 on LDR**. **Now promotable to main** —
+  your `3315c7a6e` clean-start heal cleared the exec-0.2.0 / AO-0.8.1 staging lock, so these ride LDR→staging→main with
+  the rest.
+- **Phase 2 (second-tier node20 actions) — please take it over.** Tracked as open `- [ ]` todos in that plan section.
+  Handing to you because it's your CI machinery + several are BREAKING: `google-github-actions/auth` v2→**v3** (⚠️"remove
+  old parameters" on the GCP-auth path incl. `persist-cicd-event`, 12 refs); `actions/upload-artifact` v4→**v7**
+  (⚠️3 majors, 15 refs); `setup-gcloud` v3, `setup-uv` v8, `github-script` v8/v9, + cache / download-artifact / pnpm /
+  aws-creds / dawidd6 / peter-evans / git-auto-commit (low-count). Templated copies re-roll from your PM SSOT. Per-action
+  changelog review + one test push each, NOT a blind sweep. `codecov` v5 = composite, skip. — harsh-slot-2
