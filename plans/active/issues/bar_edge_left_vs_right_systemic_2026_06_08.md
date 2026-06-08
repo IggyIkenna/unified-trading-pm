@@ -39,6 +39,48 @@ broad and spans cefi/defi/tradfi and 3 repos + features-service.
 
 So: open-edge ingestion → (gate passes) → passthrough misplaces by one interval. Silent, on the heartbeat data path.
 
+## DATA-STATE VERIFICATION (2026-06-08, read actual prod parquets) — REFRAMES the severity
+
+Read raw + processed parquets from `gs://market-data-tick-{tradfi,defi}-prd-central-element-323112` to test the edge
+against real data (not just code). **The headline correction: the CONSUMED candle store (`processed_candles/`) is
+right-edge CORRECT — MDPS normalizes the open-edge raw. The open-edge problem is confined to the RAW artifact + paths
+that BYPASS the processed layer.**
+
+- **Databento RAW `data_type=ohlcv_1m` = OPEN-edge (CONFIRMED).** AAPL 2026-05-15: opening-auction volume spike (36,962)
+  stamped `13:30:00` UTC (regular open), pre-market bars precede it; last regular volume at `19:59:00`. `timestamp`
+  column = `ts_event` ns verbatim. So the raw corpus is open-edge, as the code/schema predicted.
+- **Databento PROCESSED `processed_candles/timeframe=1m` = RIGHT-edge CORRECT (CONFIRMED).** ETHA 2026-01-21, same
+  instrument, raw vs processed: | | opening auction (vol 447,598) | closing auction (vol 446,618) | | - | - | - | | RAW
+  ohlcv_1m | `14:30:00` (open) | `21:00:00` | | PROCESSED 1m candle | `14:31:00` (close) | `21:01:00` | Processed = raw
+  shifted **+1 interval** → MDPS correctly converts open→close `t_close`. Processed store is the canonical dense
+  right-edge grid (1440 rows, `00:01:00 → 00:00:00`). **So the TradFi reference corpus is NOT corrupted for downstream
+  consumers** — my earlier "reference corpus likely one-interval-early" was WRONG at the consumed layer (correct only
+  about the raw artifact). This also means **Massive (also open-edge `t`) will be normalized the same way IF it routes
+  through the same MDPS processed path** — the migration requirement is that Massive raw match Databento raw's
+  representation, MDPS handles the edge.
+- **DeFi PROCESSED candle = right-edge (CONFIRMED).** Balancer-Arbitrum dex_swaps 1m candle 2026-05-22: MDPS-built
+  canonical schema (`timestamp/timestamp_out/available_at/ts_event`), minute-grid, tick-aggregated → right-edge.
+
+### Revised severity (post-data)
+
+- **Databento ohlcv raw open-edge** → **DOWNGRADED to ℹ️ by-design / not-a-downstream-bug** (MDPS converts; consumed
+  candle verified right-edge). Keep only as a "raw representation is vendor-open-edge; never consume raw ohlcv directly
+  — always the processed candle" note.
+- **STILL 🔴 — features-service re-resamplers** (`candle_resampler.py:159` `closed/label="left"`;
+  `flow_interaction.py:76` `dt.truncate("1m")`): these consume the CORRECT right-edge processed candles and **re-emit
+  LEFT-edge**, bypassing the gate — they DEGRADE correct data. Highest live risk now; not data-verifiable without
+  running, but code is unambiguous.
+- **NEEDS PER-SOURCE DATA CHECK — bypass-MDPS direct-`write_chunk` candle fetchers** (pacifica/lighter/uniswap_v3 in
+  MTDS; instruments-service reference-data hyperliquid/aster/ccxt/polygon): the question is whether their output is ever
+  consumed RAW (open-edge) or always re-built by MDPS into a right-edge processed candle (as dex_swaps is). DeFi day
+  ranges were disjoint (raw 05-26+, processed ≤05-22) + 24h crypto has no auction discriminator, so these are
+  unverified-by-data this pass — flag for a targeted check on an overlapping day.
+
+> **Net:** the systemic open-edge ingestion is real, but the MDPS processed layer is the safety net that DATA confirms
+> works for the tradfi+defi candle store. The actionable bugs are the features-service re-resamplers (corrupt correct
+> data) and any consumer that reads a raw/bypass artifact instead of the processed candle. The "reference corpus is
+> wrong" alarm is RETRACTED at the consumed layer.
+
 ## The site register (verdicts with file:line)
 
 ### 🔴 HIGHEST — touches the TradFi reference corpus + live features path

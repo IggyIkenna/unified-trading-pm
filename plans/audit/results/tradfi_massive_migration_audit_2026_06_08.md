@@ -280,8 +280,17 @@ this plan's scope** (instruments-service reference-data, DeFi/CeFi) → filed as
 > code+schema; data-state confirmation recommended before any fix). Massive `t` is ALSO open-edge, so the two TradFi
 > vendors are mutually consistent but both diverge from the canonical right-edge + every tick-aggregated source. Full
 > register + mechanism + remediation: **`plans/active/issues/bar_edge_left_vs_right_systemic_2026_06_08.md`** (the
-> hyperliquid doc folds into it). Net: right-edge in CONTRACT, systematically open-edge in INGESTION PRACTICE — a real
-> cross-cutting data-correctness gap.
+> hyperliquid doc folds into it).
+>
+> **DATA-STATE FOLLOW-UP (2026-06-08, prod parquets read) — partially RETRACTS the alarm:** raw Databento `ohlcv_1m` IS
+> open-edge (AAPL 2026-05-15 opening auction at `13:30:00`), BUT the **consumed `processed_candles/` store is right-edge
+> CORRECT** — ETHA 2026-01-21 raw opening-auction vol 447,598 at `14:30:00` appears in the processed 1m candle at
+> `14:31:00` (raw +1 interval = open→close). MDPS normalizes the open-edge raw to canonical `t_close`; defi dex_swaps
+> processed candle likewise right-edge. **So the TradFi reference corpus is NOT corrupted downstream** (the
+> "one-interval early" claim was true only of the raw artifact, not the consumed candle), and Massive (also open-edge)
+> will be normalized the same way through MDPS. The residual **real** bugs are the features-service re-resamplers
+> (`candle_resampler.py:159` / `flow_interaction.py:76`) that consume correct right-edge candles and RE-emit left-edge,
+> plus any consumer reading a raw/bypass-MDPS artifact directly. See the issue doc § DATA-STATE VERIFICATION.
 
 ## Cross-cutting flags for the operator
 
