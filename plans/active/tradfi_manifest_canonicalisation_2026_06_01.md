@@ -751,7 +751,14 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
       hard-requires `MANIFEST_PER_VM_SHARDS=true` + `VM_NAME=<tag>` (per-VM shard isolation, refuses locally) AND must
       seed the v9 `_index` AFTER the canonical `--apply` migration (seeding the pre-migration v8 corpus would be
       rewritten by the walk). So this rides post-migration on a VM — not a local task. Open work = catalog-parquet
-      build + VM `--apply-write` run + the IS-universe⊃manifest regression test.
+      build + VM `--apply-write` run + the IS-universe⊃manifest regression test. **✅ CODE PIECE DONE (slot-6
+      2026-06-08, is@7ac22635):** the IS-universe⊇manifest regression
+      `test_tradfi_v2_denominator_is_could_exist_universe_not_just_manifest` is shipped (mixed captured/uncaptured
+      tradfi catalog → enumerator seeds `expected_unattempted` for the un-captured instrument + SKIPS (does not drop)
+      the captured one → seeded universe ∪ manifest ⊇ manifest, denominator never shrinks; the tradfi mirror of the
+      proven defi `test_defi_v2_denominator_is_could_exist_universe_not_just_manifest`). IS `quality-gates.sh --no-fix`
+      exit 0 (268s, sentinel 7ac22635). **Item stays `- [ ]` — the catalog-parquet build + the gated VM `--apply-write`
+      seed are OPERATIONAL/apply-time (bucket-B), not code.**
 
 ## G1 — IS catalogue could-exist universe (slot-6 dry-run + gate assessment, 2026-06-07)
 
