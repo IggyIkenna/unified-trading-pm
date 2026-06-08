@@ -485,27 +485,51 @@ migration) · cefi/tradfi/prediction reference surfaces — all sub-items of
 `*_manifest_canonicalisation` §H slice. **G2 (an AG's MTDS/data walk) must NOT be trusted as denominator-complete until
 that AG's G1 (IS catalogue + UAC) is GREEN** — the audit's ⑧ enforces this.
 
-## Audit framework — the per-AG readiness gate (the 7-point + 2 NEW checks)
+## Audit framework — the canonical PRE-APPLY READINESS AUDIT (①–⑫, per-AG, the LAST gate before `--apply`)
 
-Every AG's G2→G4 transition runs the operator's readiness audit. SSOT for the checklist:
-`plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` (CF-1…CF-12) + each
-`*_master_audit_instructions.md`. The audit is **dry-run-green before `--apply`**:
+> **This is the SSOT prompt each slot (2–6) runs on its AG before the real `--apply`.** Per-CF detail:
+> `plans/audit/instructions/canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**) + each AG's
+> `*_master_audit_instructions.md` (all aligned to this audit 2026-06-08). Run on **real-prod data-state** (gcloud
+> storage / cf_manifest_audit), never code constants. Each point GREEN, **sampled-vs-walked stated**, conclusion
+> **"REGRESSION RISK: NONE / \<listed\>"**. The fleet is DRAINED + snapshotted (see drain section) — this is the final
+> gate; a miss corrupts prod data.
 
-1. ① Migrator dry-run · ② Manifest-rebuild dry-run
-2. ③ 4-state pre-flight on every service IS→execution on the buckets used
-3. ④ Empty/partial honest (zero-vol/NaN/last-price, data-type-dependent) + downstream handles
-4. ⑤ Read/write paths match post-migration everywhere
-5. ⑥ IS + UAC guardrail against instruments/fixtures that cannot exist
-6. ⑦ deployment-api/UI numerator/denominator = the **could-exist universe** (IS + UAC + upstream availability; manifest
-   seeds `expected_unattempted` for IS-listed-but-not-yet-backfilled cells)
-7. **⑧ NEW — IS-catalogue completeness (G1 gate)**: the AG's `build_instrument_catalogue` roll-up is GREEN + the daily
-   aggregation scheduler is live + the v2-enumerator recurring run seeds the could-exist universe (this is the root that
-   makes ⑥/⑦ honest). A cefi daily-scheduler exists (`catalogue_regen_scheduler.tf` /
-   `instrument_catalogue_scheduler.tf`) — confirm each AG's is wired, not just cefi.
-8. **⑨ NEW — pipeline_mode source-aware upgrade (G0 gate)**: NO coarse `pipeline_mode="batch"`/blank anywhere the AG
-   writes; migrators/rebuild/enumerator stamp source-aware `{mode}_{source}[_{transport}]`; readers are union-aware
-   across modes; the manifest + data-status carry the pipeline_mode + source + cadence axes. (Catches the verified defi
-   `rebuild_defi_manifest.py:302` blank-stamp class for every AG.)
+1. **① Migrator dry-run** — `migrate_<AG>_v9_canonical --dry-run`: v9 · `asset_group=` · **source-aware
+   `pipeline_mode=batch_<source>/` in PATH + COLUMN** (not coarse `batch`) · `source`+`transport` populated ·
+   `available_at` per-row (no lookahead) · typed `data_type`/`EmptyConfirmedReason` · **Era-B relabel** (legacy
+   `data_type=options_chain/ futures_chain` → `instrument_type=…`+`data_type=trades`; legacy-read retirement = the
+   migrator's FINAL ATOMIC step).
+2. **② Manifest-rebuild dry-run** — `rebuild_<AG>_manifest` via `derive_pipeline_mode_for_row` (no coarse default);
+   agrees with the migrator stamping.
+3. **③ 4-state pre-flight** — on EVERY service IS→MTDS→MDPS→features→strategy→execution, on the AG's real buckets
+   (captured/empty_confirmed[typed]/attempted_failed/expected_unattempted; materialised by writer, READ by consumers).
+4. **④ Empty/partial honest** — zero-vol/NaN/stale-last-price/zero-rows/pre-genesis/pre-launch/out-of-coverage →
+   data-type-dependent TYPED reason (never silent placeholder) + every DOWNSTREAM consumer handles it (no crash, no
+   false-captured).
+5. **⑤ Read/write paths match** — every reader (MTDS/MDPS/features/strategy/execution/deployment-api) **PREFIX-matches
+   `pipeline_mode=batch_*/`** (+ live*\*/replay*\*); NO exact-coarse `batch/` probe survives. `rg` → 0 coarse-exact
+   hits.
+6. **⑥ IS+UAC guardrail vs impossible cells** — the `(instrument_type × data_type)` validity matrix + bundle-grain
+   REJECT cells that cannot exist (PERPETUAL×options_chain, per-leaf OPTION/COMBO, pre-genesis, unscheduled fixture).
+7. **⑦ deployment-api/UI numerator+denominator = COULD-EXIST universe** — denominator = IS×UAC×upstream-availability
+   could-exist (catalogue + `enumerate_expected_universe` seed) incl. `expected_unattempted` where the
+   instrument/fixture EXISTS but its data backfill hasn't run; G3 UNION view computes coverage % from the **4-state
+   union across pipeline_mode × source** (never raw-rows, never re-derived genesis/launch).
+8. **⑧ IS-catalogue completeness (CF-14)** — `build_instrument_catalogue` ⊇ the manifest present-set (no missing
+   instruments/leagues → no falsely-high coverage); daily catalogue scheduler wired for the AG.
+9. **⑨ pipeline_mode source-aware (CF-13)** — no coarse `batch`/blank anywhere the AG writes;
+   `source_string_for(pipeline_mode)==source` (C-#6 cross-check); `transport` column populated; multi-source via union.
+10. **⑩ Era-B on-disk** (cefi/tradfi chains) — GCS byte-probe a recent chain shard: `options_chain`/`futures_chain` only
+    as `instrument_type=`, `data_type=trades`, `pipeline_mode=batch_<source>`,
+    **`data_type=(options_chain|futures_chain)` count = 0**. (defi/sports/prediction: confirm N/A or the AG equivalent.)
+11. **⑪ ★ BATCH = LIVE SYMMETRY — the no-regression keystone**: prove the LIVE writer and the MIGRATED batch data emit
+    the IDENTICAL canonical v9 form (schema · data_types · fields · source-aware pipeline_mode · Era-B
+    instrument_type/data_type split · `available_at` derivation top-source live==batch). NO split between live-written
+    and migrated-batch data, NO live-only data_types, NO read-time `available_at`. Any divergence = a post-migration
+    regression → FIX it.
+12. **⑫ Rollback ready** — `_index/snapshots/pre_migration_2026_06_08.parquet` exists for the AG buckets (drain done);
+    the `--apply` abort path restores it; `ASSET_GROUP_CONFIG[<AG>].prefix_tpls` cover the v9 path shape (phantom-audit
+    rule — uncovered templates flip real captured→attempted_failed on apply).
 
 ## vm-defi (slot-2) status + findings — 2026-06-07
 
