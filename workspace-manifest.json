@@ -1798,10 +1798,10 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-08T00:09:53.259453Z",
-    "locked_reason": "Breaking MINOR bump cascade: unified-trading-library=0.4.0 (pre-1.0.0)",
-    "lock_version": "0.4.0",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": "SIT failed — open for fixes",
+    "lock_version": null,
     "pending_repos": [
       "deployment-service",
       "features-service",
