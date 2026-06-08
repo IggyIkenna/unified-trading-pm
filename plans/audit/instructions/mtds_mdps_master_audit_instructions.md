@@ -23,6 +23,16 @@ codex_ssots_to_check_drift_against:
 
 # MTDS / MDPS Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).** The
+> MTDS migrators/rebuilds/readers and MDPS scanner are now source-aware — `pipeline_mode={mode}_{source}[_{transport}]`
+> in BOTH the path key and the column (not coarse `batch`), with populated `source` and `transport` columns, Era-B
+> (`options_chain`/`futures_chain` as instrument_type plus `data_type=trades`), and readers that prefix-match the
+> `pipeline_mode=batch_*` partition. SSOT = `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**) and the
+> **①–⑫ pre-apply readiness audit** in `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`
+> (esp. ① migrator source-aware + Era-B, ⑤ reader prefix-match, ⑨ source-aware, ⑩ Era-B on-disk, ⑪ batch=live). Any text
+> below assuming coarse `pipeline_mode=batch`, `data_type=options_chain`, or exact-coarse reader probes is STALE — audit
+> against the SSOT.
+
 The single canonical audit doc for everything in the MTDS + MDPS surface. Two audit modes share this doc:
 
 | Mode                                                            | What it checks                                                                   | When to run                                                                                          |
