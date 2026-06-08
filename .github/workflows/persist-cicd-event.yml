@@ -61,6 +61,11 @@ concurrency:
 jobs:
   persist-event:
     runs-on: ubuntu-latest
+    # Best-effort telemetry — this fire-and-forget CI-event persistence must NEVER fail the
+    # CALLING workflow (24 callers). Valid here (normal job, not a reusable `uses` job). This
+    # is the durable fix for the "all jobs green but run=failure" badge: a persist hiccup
+    # (auth, jq, bucket, network) degrades to a no-op, never reddening the caller's run.
+    continue-on-error: true
     timeout-minutes: 5
     env:
       CLOUD_PROVIDER: ${{ vars.CLOUD_PROVIDER || 'local' }}
