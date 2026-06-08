@@ -560,9 +560,16 @@ design).
       tab-mirror push LDR with the workflow-scoped GH_PAT instead of `GITHUB_TOKEN` → `synchronize` fires natively, no
       stale checks ever, no close+reopen needed. Not done here (tab-mirror is the actively-churning active-host-filter
       file; editing = 24-repo re-rollout + concurrent-edit risk).
-- [ ] [SCRIPT] P2. **PAT-push root fix for the v2-stale-check gap — PICK UP WHEN `tab-mirror-to-ldr.yml` IS CLEAN (not
-      being actively edited).** Makes the close+reopen workaround (shipped in PM#144) redundant. ROOT CAUSE recap:
-      tab-mirror FF's `live-defi-rollout` with `${{ secrets.GITHUB_TOKEN }}`; GitHub suppresses
+- [ ] [SCRIPT] P2. **PARTIAL (code done, blocked-on-billing) — PAT-push root fix for the v2-stale-check gap — CODE DONE
+      2026-06-08 (slot-1, `unified-trading-pm@1bd99d67b`); FLEET ROLLOUT + LIVE VERIFY BLOCKED-ON-BILLING.** Implemented
+      as an extraheader auth-SWAP on the leg-A LDR pushes (FF + rebase-retry) — leaves the `actions/checkout` `token:`
+      on `GITHUB_TOKEN`, swaps the persisted `http.https://github.com/.extraheader` to a `GH_PAT` basic-auth header for
+      the LDR push only, then restores `GITHUB_TOKEN` before the tab realign force-push (which must NOT be PAT-authed →
+      recursion). Tab-mirror SSOT was CLEAN (Harsh's active-host-filter already landed; no open PR touched it). Verified
+      the auth-swap mechanics locally; live `synchronize`-firing verification + the 24-repo rollout are gated on the
+      GitHub Actions billing block (~12:30 UTC 2026-06-08, see `cicd_contract_hardening_2026_06_01.md` §
+      Auto-remediation, billing P0). Makes the close+reopen workaround (PM#144) redundant once deployed. ROOT CAUSE
+      recap: tab-mirror FF's `live-defi-rollout` with `${{ secrets.GITHUB_TOKEN }}`; GitHub suppresses
       `pull_request:synchronize` on GITHUB_TOKEN-authored pushes → promotion-PR `quality-gates-v2` freezes on the
       pre-advance SHA. EXACT CHANGE: in `scripts/workflow-templates/tab-mirror-to-ldr.yml`, the **leg-A (tab→LDR) job's
       `actions/checkout` `token:`** → `${{ secrets.GH_PAT }}` (workflow-scoped PAT, already used by
