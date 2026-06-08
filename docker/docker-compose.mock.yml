@@ -65,24 +65,23 @@ services:
       retries: 10
     profiles: ["gcp-emulators", "v1"]
 
-  # ─── T2 Core Services ────────────────────────────────────────────────────────
-  market-data-service:
-    image: unified-trading/market-data-service:mock
-    build:
-      context: ../../market-data-service
-      dockerfile: Dockerfile
-    environment:
-      <<: *mock-env
-      PUBSUB_EMULATOR_HOST: pubsub-emulator:8085
-      STORAGE_EMULATOR_HOST: http://gcs-emulator:4443
-    ports:
-      - "8001:8000"
-    depends_on:
-      pubsub-emulator:
-        condition: service_healthy
-        required: false
-    profiles: ["services", "v1"]
-
+  # ─── T2 Core Services (local-dev `services` profile only) ───────────────────
+  # NOTE (2026-06-07): these are EXCLUDED from the `v1` profile that the SIT
+  # deployment-tests run (`docker compose --profile v1 up`). The SIT CI cannot build
+  # these images: their Dockerfiles `FROM` the PRIVATE Artifact Registry base
+  # (asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/...:latest)
+  # and the deployment-tests job has no docker/GCP registry auth, so `up` fell back to
+  # pulling the nonexistent `unified-trading/*:mock` tags → `pull access denied` → the
+  # whole stack failed to start → every deployment_test failed → the v0.2.0 cascade SIT
+  # never dispatched staging-validated. The deployment_test suite (tests/smoke/) targets
+  # the GCP EMULATORS (pubsub/gcs/bigquery) and skips gracefully when a service container
+  # is absent — it does not connect to :8001/:8002 — so `--profile v1` = emulators-only is
+  # the functional CI stack. `market-data-service` was also REMOVED outright: the repo was
+  # consolidated into `market-tick-data-service`, so its build context never existed.
+  # Follow-up (to restore service-container integration testing): wire GCP Artifact Registry
+  # auth (google-github-actions/auth + configure-docker + PROJECT_ID + pip.conf) into the SIT
+  # deployment-tests job, then re-add the current services to the `v1` profile.
+  # Tracked: plans/active/issues/sit_uac_orphan_cap_stale_consumer_list_2026_06_07.md
   execution-service:
     image: unified-trading/execution-service:mock
     build:
@@ -97,7 +96,7 @@ services:
       pubsub-emulator:
         condition: service_healthy
         required: false
-    profiles: ["services", "v1"]
+    profiles: ["services"]
 
   # trading-analytics-api removed 2026-03: repo archived under workspace-root archive/.
   # Domain routes live on unified-trading-api (local dev: port 8030, see ui-api-mapping.json).
