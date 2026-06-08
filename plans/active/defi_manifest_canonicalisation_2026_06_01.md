@@ -1460,10 +1460,27 @@ What to verify/wire (B0 corrected scope):
       partition + `source` column + typed `EmptyConfirmedReason`, same target form as the MTDS DeFi C0 walk. Re-run
       CF-1…CF-12 → GREEN before any DeFi instruments writer relaunch (master L3-gates-L5). NEVER a second walk on this
       `_index`.
-- [ ] [CODE] P1. **DeFi downstream reader confirm** (the DeFi slice of
-      `downstream_services_manifest_canonicalisation_2026_06_01.md` PREP3): confirm the MDPS candle-builder raw-tick
-      read + features-onchain `data_loader` resolve the `pipeline_mode=` path PRIMARY for DeFi (writer side already
-      shipped mdps@4b9e6e5 + features@dec1b687). Close the PREP3 "🟡 reader slot-2 coordination" note for DeFi.
+- [x] ✅ [CODE] P1. **DeFi downstream reader confirm — DONE (slot-2 2026-06-08).** CONFIRMED all three DeFi raw-tick
+      consumers read the canonical `pipeline_mode=` path PRIMARY (grep-then-read): (1) **features-onchain** —
+      `features_service/onchain/adapters/mtds_canonical_reader.py` lists the mode-agnostic `day=` prefix once and ranks
+      blobs `batch_*`(0) → bare(1) → `live_*`(2) → `replay_*`(3), `asset_group=defi/`(0) over `category=defi/`(1) — so
+      canonical batch wins, legacy is fallback, never double-counted; (2) **MDPS candle-builder** —
+      `market_data_processing_service/app/core/orchestration_scanner.py` lists `raw_tick_data/by_date/day={d}/` (captures
+      every `pipeline_mode=` variant + bare legacy in one list) and matches DeFi DEX shards by canonical
+      `dex_pool_state`/`dex_pool_swaps` + legacy segments. Writer side already shipped (mdps@4b9e6e5 + features@dec1b687).
+      (3) **NEW FINDING + FIXED — execution-service backtest loader** `data/loaders/defi.py` `load_swaps`/`load_liquidity`
+      bypassed the `canonical_paths` SSOT (legacy-only `data_type=swaps`/`liquidity` paths + a banned inline
+      `market-data-tick-defi-{pid}` bucket f-string) → would silently return empty post-migration-delete. Routed through
+      `build_candidate_raw_tick_paths` with canonical `dex_pool_swaps`/`dex_pool_state` data_types (canonical-first,
+      legacy fallback) + canonical bucket resolution + 3 regression tests — **exec@c71484d6e** (QG green; on the tab
+      branch → LDR via mirror; staging-PR dep-gated on UTL reaching STAGING_GREEN, flows via automation). Closes the
+      PREP3 "🟡 reader slot-2 coordination" note for DeFi. parent_epic: mtds_mdps_master.
+  - **NICE-TO-HAVE (follow-up, P3, slot-2 2026-06-08):** the execution-service DeFi loader's canonical candidate passes a
+    best-effort `instrument_type` (`pool`) + `{instrument_id}.parquet` file stem; the canonical DeFi pool instrument_type
+    actually varies per venue (`DEX_POOL`/`POOL`/`SOLANA_AMM_POOL`) and the canonical file stem may differ — where the
+    canonical candidate misses, the legacy fallback still applies (no worse than today), but full per-venue fidelity (the
+    `mtds_canonical_reader.py` day-prefix-list+filter pattern) would close the residual. Backtest-only reader (NOT the
+    live May-23 path); does not block the migration. Repo: execution-service. parent_epic: mtds_mdps_master.
 - [ ] [CODE] P2. **FLAG 2 — `_BUCKET_CATEGORY_OVERRIDES` DeFi scope** (the DeFi slice flagged to slot-2 in the
       downstream plan): a DeFi `category` override absent from `cloud-providers.yaml` / unresolved by
       `resolve_bucket_name` → post-delete silent-empty. Resolve with
