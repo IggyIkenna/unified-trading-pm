@@ -132,11 +132,11 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
   hand-edit `~/.gitconfig`); manual fallback in a slot worktree:
   `git config extensions.worktreeConfig true && git config --worktree user.name "ikennaigboaka [slot-3·laptop]" && git config --worktree user.email "ikennaigboaka@gmail.com"`.
   **Per-operator, NOT hardcoded (codified 2026-06-05)**: the email + name handle are the OPERATOR's own GitHub account —
-  Ikenna `ikennaigboaka@gmail.com`, **Harsh `harshkantariya <harshkantariya.work@gmail.com>`**. All three identity
+  Ikenna `ikennaigboaka@gmail.com`, **Harsh `harshkantariya <harshkantariya@odum-research.com>`**. All three identity
   scripts (`fix-commit-identity.sh` hook · `setup-tab-worktrees.sh` · `verify-slot-host-symmetry.sh`) resolve it
   host-stably: env `SLOT_CANON_EMAIL`/`SLOT_CANON_NAME` → per-machine `git config --global slotIdentity.email`/`.name` →
   Ikenna fleet default (VMs leave it unset). A non-Ikenna laptop declares itself ONCE:
-  `git config --global slotIdentity.email "harshkantariya.work@gmail.com" && git config --global slotIdentity.name "harshkantariya"`.
+  `git config --global slotIdentity.email "harshkantariya@odum-research.com" && git config --global slotIdentity.name "harshkantariya"`.
   The prior hardcoded `ikennaigboaka@gmail.com` constant made Harsh's `verify` step 9 unachievable without the hook
   rewriting his commits to Ikenna's identity. SSOT + root-cause hunt: `codex/05-infrastructure/per-tab-worktrees.md` §
   "Commit attribution".

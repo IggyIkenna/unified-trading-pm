@@ -607,7 +607,7 @@ LDR. **NEVER `--force` / `--force-with-lease` a shared branch (`live-defi-rollou
 
 **Per-operator (NOT hardcoded — codified 2026-06-05):** the email + name handle are **the operator's own GitHub
 account**, which DIFFERS per laptop — Ikenna `ikennaigboaka <ikennaigboaka@gmail.com>`, Harsh
-`harshkantariya <harshkantariya.work@gmail.com>`. The three scripts that touch identity — the per-repo
+`harshkantariya <harshkantariya@odum-research.com>`. The three scripts that touch identity — the per-repo
 `fix-commit-identity.sh` pre-commit hook, `setup-tab-worktrees.sh` (provision), and `verify-slot-host-symmetry.sh`
 (assert) — all resolve it the SAME host-stable way (the earlier hardcoded `ikennaigboaka@gmail.com` constant made
 `verify` step 9 unachievable on Harsh's laptop without the hook actively rewriting his commits to Ikenna's identity):
@@ -622,7 +622,7 @@ A **non-Ikenna host declares itself ONCE** (readable by every git invocation inc
 or cwd-climbing needed):
 
 ```bash
-git config --global slotIdentity.email "harshkantariya.work@gmail.com"
+git config --global slotIdentity.email "harshkantariya@odum-research.com"
 git config --global slotIdentity.name  "harshkantariya"
 ```
 

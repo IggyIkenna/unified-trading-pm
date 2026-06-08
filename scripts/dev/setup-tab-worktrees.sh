@@ -67,7 +67,7 @@ INTEGRATION_BRANCH="live-defi-rollout"
 # WORKTREE_HOST is resolved AFTER arg-parse + persisted-identity read-back (below),
 # from the canonical short host id (ORCHESTRATOR_VM_ID-first) so the commit host
 # AGREES with the branch prefix — see the DURABLE-IDENTITY block.
-# Per-operator (NOT hardcoded — Harsh's laptop commits as harshkantariya.work@gmail.com, not
+# Per-operator (NOT hardcoded — Harsh's laptop commits as harshkantariya@odum-research.com, not
 # Ikenna's). Resolution: env SLOT_CANON_EMAIL/SLOT_CANON_NAME → per-machine `git config --global
 # slotIdentity.email`/`.name` → fleet default (VMs + Ikenna laptop). Mirrors the per-repo
 # fix-commit-identity.sh hook so the hook is a silent no-op after provisioning. A non-Ikenna

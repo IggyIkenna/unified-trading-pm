@@ -26,7 +26,7 @@ if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
 fi
 
 # Canonical per-host identity (per-operator). The GitHub-attributed email + name handle DIFFER
-# per operator (Ikenna `ikennaigboaka@gmail.com` vs Harsh `harshkantariya.work@gmail.com`), so
+# per operator (Ikenna `ikennaigboaka@gmail.com` vs Harsh `harshkantariya@odum-research.com`), so
 # they MUST NOT be hardcoded — a hardcoded constant rewrote every non-Ikenna slot's commits to
 # Ikenna's identity (the bug that made Harsh's verify-slot-host-symmetry step 4 unachievable).
 # Resolution order (host-stable + readable from this per-repo pre-commit hook):
@@ -34,7 +34,7 @@ fi
 #   2. per-machine git config   `git config --global slotIdentity.email` / `slotIdentity.name`
 #   3. fleet default            ikennaigboaka@gmail.com / ikennaigboaka  (VMs + Ikenna laptop)
 # A non-Ikenna host declares itself ONCE (Harsh's laptop):
-#   git config --global slotIdentity.email "harshkantariya.work@gmail.com"
+#   git config --global slotIdentity.email "harshkantariya@odum-research.com"
 #   git config --global slotIdentity.name  "harshkantariya"
 # SSOT: CLAUDE.md § "Commit attribution" + codex/05-infrastructure/per-tab-worktrees.md.
 CANON_EMAIL="${SLOT_CANON_EMAIL:-$(git config --global slotIdentity.email 2>/dev/null || true)}"
