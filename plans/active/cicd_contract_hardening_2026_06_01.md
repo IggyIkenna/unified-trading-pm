@@ -3829,3 +3829,23 @@ tracks (out of this CI-machinery dispatch's scope to force on main given the dat
   plan (master), `utl_full_quality_gates_green`, `qg_commit_quality_boundary_and_slot_ff_push`,
   `codex_vs_repo_docs_ssot_audit`, `harden_grepable_rules_into_ci_gates`, `orchestrator_fleet_worker_spawn_enablement`
   (2), `issue_docs_remediation_sweep`, `fleet_audit_triad_deferred_followups` (data/operator track).
+
+---
+
+## Orchestrated sub-plans — CI/CD reform (2026-06-08, operator design session)
+
+This master orchestrates a 4-plan reform set (all `parent_epic: infrastructure_master`, `assigned_vm: vm-cross-cutting`,
+`orchestrated_by:` this plan). Sequencing: the **clean-start/drain** plan is GATED on this master's WAVE 0/1 heal; the
+other three build in parallel. Principle threaded through all four: **LDR is the SSOT; local-QG-green in dep order on an
+LDR checkout is the staging oracle; CI structure must stay in line with local QG.**
+
+- `worktree_ldr_unification_2026_06_08.md` — drop per-tab branches; Path-B reference-clones on LDR; retire the tab↔LDR
+  sync machinery; quickmerge commits LDR-direct + opens the staging PR. (parallel)
+- `quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md` — dep gate by CONTENT vs LDR (not version);
+  dep-chain order locally; strict-quickmerge HARD block except PM-scripts/CI-to-main carve-out; agent-name in CI.
+  (parallel)
+- `ci_local_qg_parity_2026_06_08.md` — the confidence model: parity matrix local-QG vs CI-v2 vs SIT; close every
+  non-SIT-assembly divergence; auto-file an issue doc on a local-green/staging-red event. (parallel)
+- `staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` — reconcile rare main-only CI bits DOWN to LDR; close
+  superseded PRs (empty-diff-vs-LDR); version-aligned force-sync staging+main from LDR; drain the LDR backlog. **GATED
+  on WAVE 0/1 heal.**
