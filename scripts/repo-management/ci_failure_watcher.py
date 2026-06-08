@@ -144,6 +144,31 @@ _ESCALATION_LABEL = "escalation-dispatched"
 # escalate-to-orchestrator.yml lives in the PM repo and is fired via repository_dispatch.
 _PM_DISPATCH_REPO = "unified-trading-pm"
 
+# GitHub Actions BILLING / spending-limit block. When the account's Actions spend is
+# exhausted, EVERY job fleet-wide fails at "Set up job" with ZERO steps and a check-run
+# annotation carrying one of these phrases. It looks like a normal failure to the
+# transition detector but is a SINGLE account-level outage that freezes ALL CI (incident
+# 2026-06-08: the whole promotion pipeline silently wedged for ~hours). We detect the
+# signature and emit ONE unmissable alert pointing at the operator fix, instead of N noisy
+# per-workflow "started failing" lines. SSOT: cicd_contract_hardening_2026_06_01.md
+# § "Auto-remediation pipeline gaps" (billing P0).
+_BILLING_PHRASES = (
+    "spending limit",
+    "account payments have failed",
+    "recent account payments",
+    "billing & plans",
+)
+
+
+def _annotation_is_billing(messages: list[str]) -> bool:
+    """Pure: True if any check-run annotation message is the Actions billing-block text.
+
+    Network-free so it is unit-testable. Case-insensitive substring match against the
+    known GitHub spending-limit / failed-payment phrasing.
+    """
+    blob = " ".join(m for m in messages if m).lower()
+    return any(p in blob for p in _BILLING_PHRASES)
+
 
 def gh_json(args: list[str]) -> list[dict] | dict | None:
     """Run a gh command expecting JSON on stdout; return parsed value or None."""
@@ -354,8 +379,80 @@ def detect_resolved_prs(repo: str, resolved_hours: float, now: _dt.datetime) -> 
     return resolved
 
 
+def _run_is_billing_block(repo: str, run_id: int) -> bool:
+    """True if a failed run's first job failed at setup with the billing annotation.
+
+    Cheap signature first (a job with ZERO steps = it never started → "Set up job"
+    failure), then confirm via the check-run annotation text so we don't false-positive
+    on other startup failures. Network errors → False (never raises, never pages wrongly).
+    """
+    jobs = gh_json(["api", f"repos/{ORG}/{repo}/actions/runs/{run_id}/jobs"])
+    if not isinstance(jobs, dict):
+        return False
+    job_list = jobs.get("jobs")
+    if not isinstance(job_list, list):
+        return False
+    for job in job_list:
+        if not isinstance(job, dict):
+            continue
+        steps = job.get("steps")
+        # 0 steps == the job never reached its first real step (setup-phase failure).
+        if isinstance(steps, list) and len(steps) > 0:
+            continue
+        job_id = job.get("id")
+        if not job_id:
+            continue
+        anns = gh_json(["api", f"repos/{ORG}/{repo}/check-runs/{job_id}/annotations"])
+        messages = [(a.get("message") or "") for a in anns if isinstance(a, dict)] if isinstance(anns, list) else []
+        if _annotation_is_billing(messages):
+            return True
+    return False
+
+
+def detect_billing_block(repos: list[str], now: _dt.datetime, fresh_hours: float) -> dict | None:
+    """Detect the account-level GitHub Actions billing/spending-limit outage.
+
+    Billing exhaustion fails EVERY job fleet-wide, so this is a single global condition —
+    we scan repos' most-recent failed runs and SHORT-CIRCUIT on the first billing-signature
+    match, returning ONE alert record (not one per repo/workflow). Bounded to runs within
+    ``fresh_hours`` so a long-resolved outage doesn't re-page. Returns None when CI is
+    billing-healthy. Best-effort: any gh error is swallowed (returns None).
+    """
+    cutoff = now - _dt.timedelta(hours=fresh_hours)
+    for repo in repos:
+        runs = gh_json(
+            [
+                "run",
+                "list",
+                "--repo",
+                f"{ORG}/{repo}",
+                "--limit",
+                "8",
+                "--json",
+                "databaseId,conclusion,status,createdAt,url,workflowName",
+            ]
+        )
+        if not isinstance(runs, list):
+            continue
+        for run in runs:
+            if run.get("status") != "completed" or run.get("conclusion") not in _FAIL_CONCLUSIONS:
+                continue
+            if _parse_ts(run["createdAt"]) < cutoff:
+                continue
+            if _run_is_billing_block(repo, int(run["databaseId"])):
+                return {
+                    "repo": repo,
+                    "workflow": run.get("workflowName") or "",
+                    "url": run.get("url") or "",
+                }
+    return None
+
+
 def build_report(
-    transitions: list[dict], stuck: list[dict], resolved: list[dict] | None = None
+    transitions: list[dict],
+    stuck: list[dict],
+    resolved: list[dict] | None = None,
+    billing: dict | None = None,
 ) -> tuple[bool, str, str]:
     """Return (alert, severity, mrkdwn_report)."""
     resolved = resolved or []
@@ -363,6 +460,15 @@ def build_report(
     recovered = [t for t in transitions if t["kind"] == "recovered"]
 
     lines: list[str] = []
+    if billing:
+        # One unmissable, operator-actionable line. Billing exhaustion freezes ALL CI, so
+        # surface it ABOVE the noisy per-workflow failures it causes.
+        lines.append(
+            ":rotating_light: *GitHub Actions BILLING BLOCK — all CI is FROZEN fleet-wide.* "
+            "Every job fails at 'Set up job' (spending limit / failed payment). "
+            "FIX: GitHub → Settings → Billing & plans (raise the Actions spending limit). "
+            f"Evidence: `{billing['repo']}` {billing['workflow']} <{billing['url']}|run>."
+        )
     if failing:
         lines.append(f":x: *{len(failing)} workflow(s) STARTED FAILING:*")
         for t in failing:
@@ -389,8 +495,8 @@ def build_report(
             verb = "merged" if r["merged"] else "closed"
             lines.append(f"  • `{r['repo']}` #{r['number']} {r['head']}→{r['base']} {verb} <{r['url']}|PR>")
 
-    alert = bool(failing or stuck)  # recoveries/resolutions alone post as INFO, not a page
-    severity = "CRITICAL" if (failing or stuck) else "INFO"
+    alert = bool(failing or stuck or billing)  # recoveries/resolutions alone post as INFO, not a page
+    severity = "CRITICAL" if (failing or stuck or billing) else "INFO"
     report = "\n".join(lines) if lines else "No CI transitions, stuck PRs, or resolutions detected."
     return (alert or bool(recovered) or bool(resolved)), severity, report
 
@@ -579,6 +685,10 @@ def main() -> int:
     repos = [args.repo] if args.repo else REPOS
     now = _parse_ts(args.now) if args.now else _dt.datetime.now(_dt.UTC)
 
+    # Global, account-level: scan first (short-circuits on first hit) so a billing outage
+    # is surfaced as ONE alert above the per-workflow failures it would otherwise spam.
+    billing = detect_billing_block(repos, now, args.fresh_hours)
+
     transitions: list[dict] = []
     stuck: list[dict] = []
     resolved: list[dict] = []
@@ -589,7 +699,7 @@ def main() -> int:
         if args.resolved_hours > 0:
             resolved.extend(detect_resolved_prs(repo, args.resolved_hours, now))
 
-    alert, severity, report = build_report(transitions, stuck, resolved)
+    alert, severity, report = build_report(transitions, stuck, resolved, billing)
     print(report)
     write_github_output(alert, severity, report)
 
