@@ -1081,14 +1081,21 @@ RD4 legacy-delete covers the UPPERCASE residue too.)
       `options_chain/futures_chain→{trades}` ONLY, yet the writer captures combo + chains WITH `ohlcv_1m`+`tbbo` too →
       ~61K real captured tradfi cells the matrix marks "impossible" (no guardrail rejects them today — the matrix is
       only applied to the catalog seed side, NOT to captured rows — so no data is dropped, but the model + reality
-      disagree). **SCOPE: the gated G1.run `--apply-write` SEED only — NOT the G4 data/manifest `--apply`** (that walk
-      is content-preserving; tradfi/cefi v9 DATA migration has ZERO regression from this; cefi's low candidate count
-      (3,454) means its phantom is small because cefi captures `options_chain` bundles that DO cancel — tradfi's
-      combo-dominant present-set is the exposed case). **Quantify first**: re-run
-      `enumerate --asset-group {tradfi,cefi} --dry-run` with an instrument*type breakdown to count the phantom
-      `(options_chain|futures_chain, trades)` cells. **Fix options (owner decides)**: (a) apply the SAME
-      `_rollup_bundle_grain` normalization to the present-set before the set-difference (symmetric); (b) writer/rebuild
-      relabel `combo`→`options_chain` to match the seed; (c) admit
+      disagree). **🔔 CEFI/TARDIS extension (operator 2026-06-08): tardis options_chain bundles may carry
+      `derivative_ticker` (mark IV / greeks) + `book_snapshot_5` as DISTINCT data_types beyond `trades` — the SAME
+      matrix-too-narrow gap but with FIRST-CLASS IV data. The path-only migrator preserves it byte-for-byte (no loss),
+      but the could-exist SEED + any matrix-driven consumer must ADMIT these chain data_types, not just `trades`. slot-3
+      (cefi) verify: probe `market-data-tick-cefi-prd` chain shards for `data_type=derivative_ticker` under
+      `instrument_type=options_chain/futures_chain` and widen
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE[("cefi",     options_chain/futures_chain)]` accordingly. tradfi
+      (Databento) chains carry only `{trades, ohlcv_1m}` (no IV) — so the IV slice is cefi-specific.** **SCOPE: the
+      gated G1.run `--apply-write` SEED only — NOT the G4 data/manifest `--apply`** (that walk is content-preserving;
+      tradfi/cefi v9 DATA migration has ZERO regression from this; cefi's low candidate count (3,454) means its phantom
+      is small because cefi captures `options_chain` bundles that DO cancel — tradfi's combo-dominant present-set is the
+      exposed case). **Quantify first**: re-run `enumerate --asset-group {tradfi,cefi} --dry-run` with an
+      instrument*type breakdown to count the phantom `(options_chain|futures_chain, trades)` cells. **Fix options (owner
+      decides)**: (a) apply the SAME `_rollup_bundle_grain` normalization to the present-set before the set-difference
+      (symmetric); (b) writer/rebuild relabel `combo`→`options_chain` to match the seed; (c) admit
       `ohlcv*\*`/`tbbo` for chain instrument_types in the     validity matrix. Owner: vm-cross-cutting / slot-7 (the central enumerate producer). Repos: instruments-service     (`scripts/enumerate_expected_universe.py`) +
       unified-api-contracts (validity matrix). parent_epic: manifest_master. Provenance: tradfi pre-apply audit, slot-6
       2026-06-08.

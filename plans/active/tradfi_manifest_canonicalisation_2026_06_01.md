@@ -991,6 +991,74 @@ G1.run-SEED denominator finding (⑥/⑦), owned by slot-7, which does **not** g
       `batch_massive` presence; the live re-run is gated on the apply. Repo: instruments-service. parent_epic:
       manifest_master.
 
+### 🗂️ ORPHAN-COVERAGE DRILL-DOWN (slot-6, 2026-06-08) — every tradfi GCS prefix: covered / not-migrated / DELETE-AFTER
+
+> **Operator ask 2026-06-08: prove the dry-run + apply leave NO orphaned data — enumerate every old-format prefix
+> already in the tradfi buckets, what the migrator copies to canonical, and what we expect to DELETE afterward, so
+> nothing lingers orphaned (storage waste + reader confusion) and nothing is deleted prematurely (data loss).** The
+> migrator is **COPY-only** (server-side `gcs_copy_object`, idempotent) — it writes canonical paths but does NOT delete
+> the old ones. Deletion of the old-format source paths is a **separate, gated step** (MTDS E7/G7 verify-then-delete;
+> instruments-store E6) — so the "delete-after" set below is what must be tracked + swept post-verify. **VERDICT: with
+> the two runbook requirements honoured (R1 `--also-legacy`, R2 the gated delete), tradfi has NO orphan path.**
+
+**Buckets in scope** (`-central-element-323112`): `market-data-tick-tradfi-prd` (canonical dest) ·
+`market-data-tick-tradfi` (NO-ENV LEGACY source) · `instruments-store-tradfi-prd`.
+
+| Prefix (real-prod)                                                                                        | Shape on disk TODAY                                                             | Scale                                | Migrator coverage                                                                                                          | Canonical dest                                                            | DELETE-AFTER?                                                                                                                                                                                                     |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `…-prd/raw_tick_data/by_date/day=*/asset_group=tradfi/venue=/instrument_type=/data_type=/[underlying=]/…` | L-hive (asset_group=, **MISSING pipeline_mode=**)                               | **1,996** `day=` dirs                | ✅ `_process_hive` inserts `pipeline_mode=batch_<source>/` after `day=` (path-only)                                        | `…/day=D/pipeline_mode=batch_<source>/asset_group=tradfi/…`               | **YES** — the bare `day=D/asset_group=` paths (old) deleted at the gated G7 sweep once the canonical copy is verified                                                                                             |
+| `…-prd/raw_tick_data/by_date/day-*/data_type-*/{equities\|etf\|futures_chain}/{VENUE}/…`                  | L-hyphen (non-hive, per-contract)                                               | **12** `day-` dirs (~110K objs)      | ✅ `_process_hyphen` → canonical rebuild, dedup vs L-hive (L-hive wins overlap); **0-row guard skips placeholders**        | canonical hive (complementary equities/etf migrated; CME overlap deduped) | **YES** — all 12 `day-*` dirs (verified **0-row Massive dry-run placeholders** → footer-skipped, then E7 Pattern-1 deletes them; the equities/etf "data" is the REAL never-ingested gap, NOT migrated as empties) |
+| `…-prd/processed_candles/by_date/day=*/…`                                                                 | MDPS candles (day=, no pipeline_mode)                                           | 2020-01-01→                          | ✅ `_process_candles` inserts `pipeline_mode=`                                                                             | `…/processed_candles/by_date/day=D/pipeline_mode=…/`                      | **YES** — old bare-candle paths swept at G7                                                                                                                                                                       |
+| **`market-data-tick-tradfi/` (NO `-prd`) `raw_tick_data` + `processed_candles`**                          | legacy pre-prd corpus                                                           | **2,008** `day*` dirs                | ⚠️ **ONLY with `--also-legacy`** — main() loops `sources=[canon]+([legacy] if also_legacy)`, full 3-layout walk per source | dedup-copied into `…-prd` canonical                                       | **YES — DECOMMISSION the whole legacy bucket** after the copy is verified (this is the largest delete-after set)                                                                                                  |
+| `…-prd/databento-batch-registry/`                                                                         | databento job-dedup registry                                                    | —                                    | 🚫 **NOT migrated, NOT deleted** (job registry, not market data — migrator docstring explicit)                             | n/a                                                                       | NO (keep)                                                                                                                                                                                                         |
+| `…-prd/_vm_staging/` (`migrate_tradfi_to_hive.py`, `logs/`, `mtds_backfill/`)                             | transient staging                                                               | `mtds_backfill/` = **0 parquet**     | 🚫 not data                                                                                                                | n/a                                                                       | optional cleanup (no canonical data; safe to leave or sweep)                                                                                                                                                      |
+| `…-prd/backfill-logs/`, `…-prd/configs/`                                                                  | logs + config                                                                   | —                                    | 🚫 not data                                                                                                                | n/a                                                                       | NO (keep)                                                                                                                                                                                                         |
+| `…-prd/_index/availability_index.parquet` + `_index/per_vm/`                                              | v8 manifest + per-VM shards                                                     | 144,062 rows                         | ✅ REBUILT by `rebuild_tradfi_manifest` (re-derives v9 from the canonical disk)                                            | v9 `_index`                                                               | per_vm shards consolidated→cleaned by the consolidator (not the migrator)                                                                                                                                         |
+| `…-prd/_index/snapshots/`                                                                                 | rollback snapshots                                                              | `pre_migration_2026_06_08.parquet` ✓ | 🚫 keep (rollback)                                                                                                         | n/a                                                                       | NO (keep — ⑫)                                                                                                                                                                                                     |
+| `instruments-store-tradfi-prd/_index/availability_index.parquet`                                          | v8 (20,388 rows, 0.8% v9)                                                       | —                                    | ✅ `migrate_instruments_store_v9` rewrites v9                                                                              | v9 `_index`                                                               | n/a (in-place rewrite)                                                                                                                                                                                            |
+| `instruments-store-tradfi-prd/instrument_availability/by_date/day=*/venue=*/instruments.parquet`          | reference defns (single `day=`, **clean — no doubled-`day=` bug**, unlike defi) | 11,579+ parquets                     | ✅ `canonical_object_rel` inserts `pipeline_mode=/asset_group=`                                                            | canonical                                                                 | **YES** — old bare paths deleted at the gated **E6** step                                                                                                                                                         |
+| `instruments-store-tradfi-prd/prod/catalog.parquet`, `_catalogue/`                                        | GENERATED rollup artifacts                                                      | —                                    | 🚫 not migrated — **REGENERATED** by `build_instrument_catalogue` post-migration                                           | n/a                                                                       | NO (regenerate, don't migrate)                                                                                                                                                                                    |
+
+**Orphan verdict + 2 runbook requirements (HARD):**
+
+- **R1 — `--apply` MUST pass `--also-legacy`** (or the **2,008-day** no-env `market-data-tick-tradfi` corpus orphans —
+  the canonical readers prefix-match only the `-prd` bucket). Then **decommission the legacy bucket** after verify.
+- **R2 — the old-format source paths are deleted by a SEPARATE gated step, NOT the migrator** (MTDS G7
+  verify-then-delete · instruments-store E6). The migrator's only auto-delete is the E7 0-row-placeholder cleanup. So
+  the "delete-after" set (every **YES** row above) must be swept post-verify — tracked here so it is neither forgotten
+  (orphan) nor run early (data loss). **Do NOT blanket-delete `day=*/asset_group=tradfi/` without `pipeline_mode=` until
+  the canonical copy of that exact cell is byte-verified** (G7 cross-shard sample).
+- **No uncovered shape**: every prefix holding market/reference DATA maps to a migrator branch; the un-migrated prefixes
+  are registries/logs/configs/generated-artifacts (correctly excluded) or rollback snapshots (kept). SAMPLED top-level +
+  the 3 raw-tick layouts WALKED-by-count; the legacy bucket's per-layout split + the full delete-set enumeration run on
+  the in-region VM at apply time (the migrator's dry-run prints planned-copy counts per source/branch — capture them in
+  the G7 ledger).
+
+- [ ] [DATA] P1. **R1 RUNBOOK — the tradfi `migrate_tradfi_to_v9_canonical --apply` MUST include `--also-legacy`** to
+      cover the 2,008-day no-env `market-data-tick-tradfi` corpus, then decommission that legacy bucket after the
+      canonical copy is G7-verified. Without the flag, 2,008 legacy days orphan. Repo: market-tick-data-service.
+      parent_epic: mtds_mdps_master. Provenance: orphan-coverage drill-down, slot-6 2026-06-08.
+- [ ] [DATA] P1. **R2 DELETE-AFTER sweep — after the tradfi v9 `--apply` + G7 byte-verify, run the gated delete of the
+      old-format source paths** (every **DELETE-AFTER=YES** row in the drill-down: bare `day=*/asset_group=tradfi/`
+      without `pipeline_mode=`, the 12 `day-*` hyphen dirs, old processed_candles, the whole legacy bucket, the
+      instruments-store E6 bare paths). Capture the migrator dry-run's planned-copy counts per source/branch into a G7
+      ledger so the delete set == the verified copy set (no orphan, no premature delete). Repos:
+      market-tick-data-service + instruments-service. parent_epic: mtds_mdps_master. Provenance: orphan-coverage
+      drill-down, slot-6 2026-06-08.
+
+**Chain data_types beyond `trades` (operator's tardis/implied-vol question, 2026-06-08):** the migrator is **path-only —
+it copies EVERY object under a day regardless of `data_type`** (`_list_day` lists all `.parquet`; `_canon_rel` preserves
+`instrument_type`+`data_type`), so **NO `data_type` is ever dropped by the migration** — whatever a chain bundle carries
+survives byte-for-byte. **tradfi (Databento) chains carry only `{trades, ohlcv_1m}`** (probed
+`instrument_type=options_chain` → trades 19 / ohlcv_1m 3; `futures_chain` → trades 9 / ohlcv_1m 13; Databento does NOT
+compute implied vols) — so there is no IV data at risk in tradfi. The ONLY place a chain's non-`trades` data_types
+matter is the **validity matrix could-exist SEED** (`options_chain/futures_chain → {trades}`), which is exactly the ⑥/⑦
+G1.run-seed finding (the matrix is too narrow for chain bundles that also hold `ohlcv_1m`/`tbbo`) — a denominator
+concern, NOT data loss. **Tardis/cefi caveat flagged to slot-3 + the matrix owner**: if tardis options_chain bundles
+carry `derivative_ticker` (mark IV / greeks) or `book_snapshot_5` as distinct data_types, the SAME matrix-too-narrow gap
+applies there with first-class IV data — folded into the coordinator ⑥/⑦ finding for cefi verification (migration still
+preserves it; the seed must admit it).
+
 ### 🟢 TradFi APPLY-READY VERDICT (slot-6, 2026-06-08) — 5/5 dry-gate criteria GREEN; remaining gates OPERATIONAL only
 
 > **VERDICT: tradfi is APPLY-READY on LDR.** PART A (Era-B bundle rollup) landed and my last matrix slice fix shipped;
