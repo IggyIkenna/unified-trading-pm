@@ -59,8 +59,12 @@ source:
       repos per-scope), 8 unit tests + planted-regression proven (exit 1 → exit 0). NOTE: the broad `bar[0]`/`.index`
       heuristics are deliberately left to the runtime ingestion-time assertion (P1 below) — static-flagging them
       false-positived the verified-correct MDPS tick-aggregators (rule-11 fleet-safety).
-- [ ] [SCRIPT] P0. Add a **cross-source edge fixture** to the QG: the same instrument+window from a tick-aggregated and a
-      pre-aggregated source MUST produce the SAME `t_close`. Wire it as a peripheral-script QG (MDPS + features).
+- [x] ✅ [SCRIPT] P0. **Cross-source edge fixture** — **features-service@438c2c30**:
+      `tests/delta_one/unit/test_cross_source_bar_edge_equivalence.py` — Path A (tick-aggregated `resample_ohlcv`) and
+      Path B (pre-agg vendor open-edge bar via `compute_bar_close_boundary`) produce IDENTICAL `t_close` across 15s→1m +
+      1m→5m (6 tests / 3 guards: t_close equivalence, right-edge labels, volume-grouping). Paths AGREED — confirms the
+      `closed="right",label="right"` fix (features-service@7a4fafd9). Runs in features `quality-gates.sh` (the peripheral
+      QG wiring); QG exit 0.
 - [x] ✅ [SCRIPT] P1. **Ingestion-time assertion** — **unified-trading-library@33ef2d31**:
       `availability_stamping.assert_close_edge(stamped_close, *, vendor_close=None, open_ts=None, timeframe=None)` —
       Mode 1 asserts the stamped edge == the vendor close field (HL/Pacifica `T`, kline `[6]`); Mode 2 asserts it ==
