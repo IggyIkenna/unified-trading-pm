@@ -397,13 +397,21 @@ What to verify/wire (B0 corrected scope):
   was a wrong-key lookup (flat `LIDO` vs `LIDO-ETHEREUM`). **APPLIED 2026-06-01**:
   `plans/audit/results/defi_venue_launch_relabel_migration_2026_06_01.py --apply` relabeled **1,337** lst-rates rows →
   `EXPECTED_PRE_VENUE_LAUNCH` (ETHENA/ETHERFI/LIDO 353 each + MARINADE 278), UAC-backed + snapshotted.
-- [ ] [CODE] P1. A2a populate UAC `DEFI_VENUE_LAUNCH_DATES` for the venue-chains genuinely missing it (the migration
-      reports them): **perp** `ASTER`, `LIGHTER-ZKSYNC`, `PACIFICA-SOLANA`, `HYPERLIQUID` (clear new venues — add
-      accurate launch dates). **DEX per-chain** (`CURVE-OPTIMISM`, `PANCAKESWAPV3-BSC`, `UNISWAPV3-POLYGON`,
-      `BALANCER-OPTIMISM`, `AAVE_V3-BASE`, `SPARK-ETHEREUM`, …) — **data-quality flag**: their captured rows show a
-      uniform first-captured `2021-01-01` across ALL chains incl. Base (launched 2023), which is impossible →
-      investigate (placeholder/wrong-date captured rows) BEFORE adding launch dates. Do NOT bulk-add ambiguous dates.
-      Then re-run the relabel. parent_epic: manifest_master.
+- [x] ✅ [CODE] P1. A2a — **perp DEX launch dates DONE (slot-2 2026-06-08, uac@756343ad).** Added the 4 clear on-chain
+      perp DEX venues to `DEFI_VENUE_LAUNCH_DATES` (`HYPERLIQUID` 2023-06-14, `ASTER` 2024-09-25, `LIGHTER-ZKSYNC`
+      2024-09-01, `PACIFICA-SOLANA` 2024-04-01 — mirroring `CEFI_VENUE_LAUNCH_DATES`; the DeFi manifest keys perp_funding
+      rows for these so the `("defi", venue)` lookup now resolves → pre-launch zero-rows route to
+      `EXPECTED_PRE_VENUE_LAUNCH` not `SOURCE_RETURNED_ZERO`). UAC QG green. The DEX-per-chain investigation is carved
+      out below (the "do not bulk-add ambiguous dates" instruction). parent_epic: manifest_master.
+  - [ ] [DATA] P2. **A2a-dex — DEX per-chain launch-date data-quality investigation** (carved from A2a; needs the
+        manifest, so it is apply-time / operational, NOT a pure code change). `CURVE-OPTIMISM`, `PANCAKESWAPV3-BSC`,
+        `UNISWAPV3-POLYGON`, `BALANCER-OPTIMISM`, `AAVE_V3-BASE`, `SPARK-ETHEREUM`, … show a uniform first-captured
+        `2021-01-01` across ALL chains incl. Base (launched 2023) — impossible → these are placeholder/wrong-date
+        captured rows. INVESTIGATE the captured-row dates (read the manifest/parquets) BEFORE adding any launch dates;
+        do NOT bulk-add ambiguous dates. Then add the verified per-chain dates + re-run the relabel. Safe to defer past
+        `--apply`: the migration moves rows by path, not by launch-date, so the wrong first-captured dates ride through
+        unchanged and the relabel can run post-apply. Repo: unified-api-contracts (+ relabel script). parent_epic:
+        manifest_master.
 - [x] ✅ [CODE] P1. A2b — `DefiManifestRecorder.record_zero_rows()` routes pre-launch zero-rows →
       `EXPECTED_PRE_VENUE_LAUNCH` via the venue-chain launch lookup; `lst_rates_handler` + `solana_defi_handler` empty
       branches wired + regression tests. — mtds@PR#115 + mtds@48d08b11 (PR#117). **Incident note**: #115 used a
@@ -418,12 +426,17 @@ What to verify/wire (B0 corrected scope):
       blank chain). — mtds@PR#115; **narrowed to the write-path only in mtds@48d08b11 (PR#117)** after the original
       `_build_row_key` guard broke `perp_funding_handler` gmx's intentional `chain=''` coarse freshness-marker (2
       `TestFreshnessSkip` failures — a #115 regression caught + fixed same-session).
-- [ ] [CODE] P2. **A4-full — extend the blank-chain guard to ALL record paths (re-filed from the #117 narrowing).**
-      Prerequisite: make `perp_funding_handler` GMX per-chain — `_collect_gmx` already records ARBITRUM+AVALANCHE
-      captured rows, but the loop uses a coarse `chain=''` freshness/attempt marker (`_chain_map.get("gmx","")`, L312 +
-      the fallback empty at L369). Make the freshness check + fallback-empty per-chain so no `chain=''` row is ever
-      keyed, THEN restore the `_build_row_key` blank-chain guard so empty/failed markers are also chain-canonical.
-      parent_epic: mtds_mdps_master.
+- [x] ✅ [CODE] P2. **A4-full — DONE (slot-2 2026-06-08, mtds@93c3b48f).** GMX perp_funding now records PER CHAIN: the
+      new `_collect_and_record_gmx` fans the UAC-configured GMX chains (`get_supported_chains_for_protocol("gmx")` →
+      ARBITRUM/AVALANCHE) with per-chain freshness skip + per-chain `record_captured`/`record_zero_rows`, and a chain
+      that `_collect_gmx` returned no result for (missing API key/subgraph) records `attempted_failed` (not a false
+      `empty_confirmed`). With no caller keying `chain=''` any more, the **blank-chain guard is restored on
+      `_build_row_key`** (every chain-scoped DeFi shard's row_key carries a populated chain — captured, empty AND failed
+      alike; `record_empty`/`record_failed` catch+log a stray `BlankChainError` per shard without aborting the loop).
+      +5 regression tests (per-chain GMX recording, missing-chain→failed, `_build_row_key` raises on blank,
+      `record_empty` blank-chain no-write). Verified ruff + basedpyright clean + the 2 affected suites 46 passed/1 skip
+      (full mtds QG red ONLY from 2 pre-existing FOREIGN prediction-script deep-imports — see the prediction-plan
+      annotation; none from this DeFi change). parent_epic: mtds_mdps_master.
 - [ ] [CODE] P1. A5 LIGHTER perp_funding adapter — **ROOT-CAUSE DIAGNOSED (slot-2 2026-06-08), fix needs a live Tardis
       probe to validate.** `perp_funding_handler._collect_lighter` (mtds) hand-rolls the Tardis datasets URL
       `…/lighter-zksync/market_stats/{date}/{SYMBOL}.csv.gz` with **`-USDC`-suffixed symbols**
@@ -789,10 +802,15 @@ What to verify/wire (B0 corrected scope):
         so validation works today; it is decoupled from the canonical on-disk/manifest data_type (`_DATA_TYPE` const =
         `dex_pool_state`, already canonical). Not a migration regression; renaming both sides would be cosmetic +
         carries silent-no-op risk if mismatched → left as-is. Repo: market-tick-data-service.
-  - [ ] [CODE] P2. **A11f — residual `category=` writers** (legacy hive key vs canonical `asset_group=`): mtds
-        `market_interface/__init__.py` + live manifest recorder `category=` alias. Readers already probe
-        canonical→legacy (transitional OK); migrate writers so post-cutover writes are canonical-only. Repo:
-        market-tick-data-service.
+  - [x] ✅ [CODE] P2. **A11f — DONE (slot-2 2026-06-08, mtds@93c3b48f).** Grep-then-read CORRECTED the framing: the DeFi
+        WRITE path is ALREADY canonical-only — `_defi_manifest.py` `_writer.add(asset_group="defi", …)` (L294), the live
+        `websocket_runner` recorder, and `data_manifest_handler` all emit `asset_group=` (the canonical hive key); the
+        only residual `category=` in `market_interface/__init__.py` are **docstring examples** of the `fetch_instruments`
+        READER API (param name, not a write-path hive key — a reader-vocabulary item, out of A11f writer scope) and the
+        legitimate migration SCRIPTS (which read FROM `category=`). The one stale WRITER artefact was the
+        `_defi_manifest.py:253` docstring still saying `category="defi"` while the code passes `asset_group="defi"` —
+        corrected to match. No write-path code change needed (writers verified canonical). Repo:
+        market-tick-data-service. parent_epic: mtds_mdps_master.
 - [x] ✅ [CODE] P0. A12 **UPSTREAM-DATA PREFLIGHT CHECKS — DONE (slot-2 2026-06-08 verify-flip).** A12-AUDIT (6-service
       preflight audit) + A12a/A12a-rollout (IS-catalog freshness gate wired into 11 DeFi handlers, uac@d67d8061 +
       mtds@e2fc7d51 + mtds@fca15304) + A12b (enumerator-driven owed-cell backstop, confirmed) + A12c (source provenance,
