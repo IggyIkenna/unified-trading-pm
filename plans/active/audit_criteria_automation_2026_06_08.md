@@ -54,8 +54,20 @@ source:
 - [x] ✅ [SCRIPT] P1. **QG step: no Era-A `data_type=options_chain`/`futures_chain` WRITE** — same checker,
       `era-a-chain-write` pattern (UAC registry/declaration trees excluded; 3 legacy write sites baselined →
       per-AG-migrator-owned Era-B relabel). The `_LEGAL_DATA_TYPES` raise stays the runtime guard.
-- [ ] [SCRIPT] P2. **QG step: validity-matrix completeness** — a UAC test asserting every `(instrument_type, data_type)`
-      in `SOURCE_PRIORITY`/the matrix is either valid or explicitly excluded; no impossible pair enumerable.
+- [x] ✅ [SCRIPT] P2. **QG step: validity-matrix completeness** — **unified-api-contracts@d087a468**:
+      `tests/test_validity_matrix_completeness.py` (27 tests / 4 classes) asserts every `(instrument_type, data_type)`
+      in `SOURCE_PRIORITY`/the matrix is valid or explicitly excluded, no impossible pair enumerable, Era-B chain
+      bundles = trades-only, and **no silent all-data_types fallback** (unknown instrument_type → None, leaf bundles →
+      empty frozenset). QG exit 0. **Surfaced REAL GAPS (pinned in the test exclusion list, not weakened) — see finding
+      below.**
+- [ ] [FINDING] P2. **Validity-matrix / SOURCE_PRIORITY orphans (surfaced by the completeness test 2026-06-08, UAC)** —
+      reconcile or formally exclude each: (1) `(cefi, ohlcv_15m)` in SOURCE_PRIORITY but no cefi instrument_type produces
+      it; (2) Era-B data_type-key orphans `(cefi, options_chain)`/`(cefi, futures_chain)`/`(tradfi, futures_chain)` (the
+      per-AG-migrator Era-B relabel owns these); (3) 11 DeFi data_types (`bridge_events`/`staking_yields`/…) with no
+      `PROTOCOL_CAPABILITIES` instrument_type → BLOCKED-UPSTREAM (capability not yet declared); (4) 11 sports
+      reference/classification data_types (`LEAGUES`/`PLAYERS`/`VENUES`/`ARBITRAGE`/…) not reachable via the `league`
+      instrument_type. Owner: UAC + per-AG. Each is currently in the test's documented exclusion list so the gate is
+      green; clear an exclusion when the pair is wired or formally retired.
 - [x] ✅ [SCRIPT] P1. **QG step: no pre-aggregated open-edge bar ingestion** — **unified-trading-pm@b4245a7dd**
       `check_bar_edge_open_ingestion.py` (STEP 5.92); built as a dedicated AST checker (not folded into
       check_mdps_bar_boundary) — see `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 0. 2 latent sites
