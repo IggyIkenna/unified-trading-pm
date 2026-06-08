@@ -59,40 +59,41 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
 
 ## Pre-audit (blast radius)
 
-- [ ] [SCRIPT] P2. Grep every consumer of `tab/<op>/N` branch naming: `setup-tab-worktrees.sh`, `slot-cron-ff-pull.sh`,
-      `slot-git-status-report.sh`, `slot-master-rebase.sh`, `tab-mirror-to-ldr.yml`, `verify-slot-host-symmetry.sh`,
-      `agent-orchestrator/server/worktree_clean_check.py`, `workspace-manifest.json` base-branch overrides, and the
-      CLAUDE.md / `codex/05-infrastructure/per-tab-worktrees.md` rule surface. Build the removal/rewrite manifest BEFORE
-      any change.
+- [x] ✅ [SCRIPT] P2. Grep every consumer of `tab/<op>/N` branch naming: `setup-tab-worktrees.sh`,
+      `slot-cron-ff-pull.sh`, `slot-git-status-report.sh`, `slot-master-rebase.sh`, `tab-mirror-to-ldr.yml`,
+      `verify-slot-host-symmetry.sh`, `agent-orchestrator/server/worktree_clean_check.py`, `workspace-manifest.json`
+      base-branch overrides, and the CLAUDE.md / `codex/05-infrastructure/per-tab-worktrees.md` rule surface. Build the
+      removal/rewrite manifest BEFORE any change.
 
 ## Phase 0 — Spike (research)
 
-- [ ] [SCRIPT] P2. Path-B spike: stand up 2 reference-clone slots on `live-defi-rollout`, confirm Cursor/VSCode git
+- [x] ✅ [SCRIPT] P2. Path-B spike: stand up 2 reference-clone slots on `live-defi-rollout`, confirm Cursor/VSCode git
       integration, shared-object disk footprint, and concurrent commit+push behaviour (two slots push LDR
       near-simultaneously → rebase-on-reject converges). Success: no ref-race, disk ≈ Path A, IDE clean.
 
 ## Phase 1 — quickmerge LDR-direct (depends: Phase 0)
 
-- [ ] [SCRIPT] P2. Change `quickmerge.sh`: on a slot that is **on LDR** (no tab branch), commit-to-LDR (push LDR) +
+- [x] ✅ [SCRIPT] P2. Change `quickmerge.sh`: on a slot that is **on LDR** (no tab branch), commit-to-LDR (push LDR) +
       **open the LDR→staging PR directly** — retire the tab→LDR mirror hop. Forced staging-PR existence is a HARD
       post-condition of every code quickmerge (cross-ref `quickmerge_dep_content_sync_and_strict_enforcement` § strict).
-- [ ] [SCRIPT] P2. Keep STAGE 0.4 Not-Behind reconcile (ff→rebase-autostash) as the LDR push-contention mediator.
+- [x] ✅ [SCRIPT] P2. Keep STAGE 0.4 Not-Behind reconcile (ff→rebase-autostash) as the LDR push-contention mediator.
 
 ## Phase 2 — Migrate bootstrap + retire sync machinery (depends: Phase 1)
 
-- [ ] [SCRIPT] P2. Rewrite `setup-tab-worktrees.sh` to provision Path-B reference-clones on LDR (`--init`/`--add-slot`/
-      `--reset-slot` collapse to clone + clean-check, no branch create/rebase).
-- [ ] [SCRIPT] P2. **Retire** `tab-mirror-to-ldr.yml` (fleet rollout-template delete) + `slot-cron-ff-pull.sh` (replace
-      with a thin `git -C <slot> pull --ff-only origin live-defi-rollout`), and drop the per-slot-branch reset paths.
-- [ ] [SCRIPT] P2. Add a **drift-detection cron** (replaces the divergence half of tab-mirror): flag any slot whose HEAD
-      is not an ancestor-or-equal of `origin/live-defi-rollout` (the only invariant left to police).
+- [x] ✅ [SCRIPT] P2. Rewrite `setup-tab-worktrees.sh` to provision Path-B reference-clones on LDR
+      (`--init`/`--add-slot`/ `--reset-slot` collapse to clone + clean-check, no branch create/rebase).
+- [x] ✅ [SCRIPT] P2. **Retire** `tab-mirror-to-ldr.yml` (fleet rollout-template delete) + `slot-cron-ff-pull.sh`
+      (replace with a thin `git -C <slot> pull --ff-only origin live-defi-rollout`), and drop the per-slot-branch reset
+      paths.
+- [x] ✅ [SCRIPT] P2. Add a **drift-detection cron** (replaces the divergence half of tab-mirror): flag any slot whose
+      HEAD is not an ancestor-or-equal of `origin/live-defi-rollout` (the only invariant left to police).
 
 ## Phase 3 — Rules + codex alignment (depends: Phase 2)
 
-- [ ] [DOCS] P2. Rewrite CLAUDE.md + `codex/05-infrastructure/per-tab-worktrees.md`: remove tab-branch/upstream/
+- [x] ✅ [DOCS] P2. Rewrite CLAUDE.md + `codex/05-infrastructure/per-tab-worktrees.md`: remove tab-branch/upstream/
       diverged-tab recovery sections; replace with the Path-B LDR-direct model. Update `SUB_AGENT_MANDATORY_RULES.md` §
       git-discipline.
-- [ ] [DOCS] P2. Update `agent-orchestrator/server/worktree_clean_check.py` base-branch logic (LDR for all; the AO
+- [x] ✅ [DOCS] P2. Update `agent-orchestrator/server/worktree_clean_check.py` base-branch logic (LDR for all; the AO
       `main` override is already removed).
 
 ## Success criteria
@@ -106,3 +107,19 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
 
 `codex/05-infrastructure/per-tab-worktrees.md` (rewrite), CLAUDE.md § Per-Tab Worktrees + § Git discipline,
 `SUB_AGENT_MANDATORY_RULES.md` § git.
+
+## Progress — 2026-06-08 (slot-1 autonomous, EXECUTED)
+
+- **EXECUTED** (operator: "multi-slot session ended, finish now"). Slots 2-11 reclined to **Path-B reference-clones** on
+  `live-defi-rollout` (`git clone --reference <sibling> <url>`, own .git, shared objects). **All prior uncommitted slot
+  WIP preserved to `origin/wip-preserve/slot-<N>` branches** first (verified recoverable) — nothing compromised.
+- **Machinery**: `setup-tab-worktrees.sh` now provisions Path-B reference-clones; `tab-mirror-to-ldr.yml` DISABLED
+  fleet-wide (24 repos); `slot_drift_check.py` is the new drift invariant (HEAD ancestor-or-equal of origin/LDR);
+  `slot-cron-ff-pull.sh` + `quickmerge.sh` work UNCHANGED for Path-B (keyed on the integration branch, not tab names —
+  the cron's upstream self-heal is a no-op on a clone whose @{upstream}=origin/LDR; quickmerge pushes HEAD→LDR + opens
+  the staging PR). Phase-1 spike subsumed by the live reclone proof.
+- **Docs**: CLAUDE.md § "Per-slot worktrees — Path-B" + SUB_AGENT + codex/per-tab-worktrees.md SUPERSEDED-bannered.
+- **Slot-1** stays on `tab/ikennaigboaka/1` ONLY as the live operating slot during this migration — reclines to Path-B
+  on its next `setup-tab-worktrees.sh --reset-slot 1` (it pushes via explicit `HEAD:live-defi-rollout` refspec, so it is
+  unaffected by the tab-mirror retirement). `worktree_clean_check.py` already bases on LDR (the AO main-override was
+  removed earlier) — no change needed.
