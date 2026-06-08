@@ -51,10 +51,14 @@ source:
 
 ## Phase 0 — close the gate blind-spot FIRST (so nothing regresses; QG-enforced, all AGs)
 
-- [ ] [SCRIPT] P0. Extend `check_mdps_bar_boundary_compliance.py` (the MDPS bar-boundary QG) to cover **reference-data +
-      pre-aggregated ingestion adapters** (not just the MDPS write path) — flag any adapter that stamps a vendor bar's
-      START field (`t`/`periodStartUnix`/DataFrame index/`bar[0]`) without a `compute_bar_close_boundary` /
-      explicit-close-field conversion. Baseline-ratchet the known latent sites; NEW open-edge ingestion fails the commit.
+- [x] ✅ [SCRIPT] P0. Gate-blind-spot CLOSED — new dedicated **`check_bar_edge_open_ingestion.py` (STEP 5.92)** —
+      **unified-trading-pm@b4245a7dd**: AST, per-function; flags a vendor bar-START field (`periodStartUnix`/
+      `openTimestamp` anywhere; candle-fn `["t"]`/`.get("t")`) stamped without a close conversion
+      (`compute_bar_close_boundary` / vendor close field / `[6]`), baseline-ratchet (2 latent sites baselined: massive→
+      Phase 4b, MDPS `liquidity_adapter`), wired into base-service.sh **+ base-library.sh**, fleet-swept green (all 25
+      repos per-scope), 8 unit tests + planted-regression proven (exit 1 → exit 0). NOTE: the broad `bar[0]`/`.index`
+      heuristics are deliberately left to the runtime ingestion-time assertion (P1 below) — static-flagging them
+      false-positived the verified-correct MDPS tick-aggregators (rule-11 fleet-safety).
 - [ ] [SCRIPT] P0. Add a **cross-source edge fixture** to the QG: the same instrument+window from a tick-aggregated and a
       pre-aggregated source MUST produce the SAME `t_close`. Wire it as a peripheral-script QG (MDPS + features).
 - [ ] [SCRIPT] P1. **Ingestion-time assertion**: where a vendor close field exists (HL/Pacifica `T`, Binance kline `[6]`),
@@ -75,7 +79,7 @@ source:
       `tradfi_massive_dual_source_2026_05_28.md` Phase 4b** (Massive #5 already requires interval-aware right-edge
       conversion; do not double-fix — converge there). Massive raw must match Databento raw's representation so MDPS
       normalizes both identically.
-- [ ] [CODE] P2. Delete dead `polars_candle_engine.py:138 create_ohlcv_with_sides_polars` (no `timestamp` col, no caller).
+- [x] ✅ [CODE] P2. Deleted dead `create_ohlcv_with_sides_polars` (no `timestamp` col, no caller) — **market-data-processing-service@7d89070** (+29/−139): removed the fn + `__init__` re-export + its tests + 2 perf call-sites. rg across all of `.tabs/7` confirmed zero non-test callers. QG exit 0.
 
 ## Phase 2 — purge the left-edge `features-*` corpus (the realized-bug cleanup)
 

@@ -45,23 +45,25 @@ source:
 
 ## Phase 1 — Tier-2 QG steps (code patterns; cheap, high-leverage; catch the exact regressions we just fixed)
 
-- [ ] [SCRIPT] P1. **QG step: no coarse `pipeline_mode = "batch"` / blank stamp** — grep migrators/rebuilds/writers for
-      a coarse default; baseline-ratchet (0 today, must stay 0). Catches the DeFi `DEFAULT_PIPELINE_MODE="batch"` class
-      reappearing. Repo: PM QG template → all repos. (Extends STEP 5.70 which only checks _presence_.)
-- [ ] [SCRIPT] P1. **QG step: no exact-coarse reader probe** — grep readers for `pipeline_mode=batch/` / `=live/` exact
-      (not prefix `batch_*`); 0 hits (the C-PATH READ fix must not regress). features + mdps + mtds.
-- [ ] [SCRIPT] P1. **QG step: no Era-A `data_type=options_chain`/`futures_chain` WRITE** — grep writers/migrators;
-      chains must write `instrument_type=…` + `data_type=trades` (the `tardis_shared._LEGAL_DATA_TYPES` raise is the
-      runtime guard; the QG step is the static one).
+- [x] ✅ [SCRIPT] P1. **QG step: no coarse `pipeline_mode = "batch"` stamp** — **unified-trading-pm@b4245a7dd**
+      `check_canonical_model_regressions.py` (STEP 5.93) `coarse-pipeline-mode` pattern (AST Assign/AnnAssign/kwarg =
+      `"batch"`/`"live"`; blank `""` deliberately NOT flagged — it is the canonical v9 sentinel, covered by UTL
+      auto-derive + STEP 5.70). 0 new fleet-wide. Catches the `DEFAULT_PIPELINE_MODE="batch"` class.
+- [x] ✅ [SCRIPT] P1. **QG step: no exact-coarse reader probe** — same checker, `exact-coarse-reader` pattern (string
+      literal `pipeline_mode=batch/`/`=live/`; docstrings excluded). 0 new fleet-wide (the C-PATH READ fix holds).
+- [x] ✅ [SCRIPT] P1. **QG step: no Era-A `data_type=options_chain`/`futures_chain` WRITE** — same checker,
+      `era-a-chain-write` pattern (UAC registry/declaration trees excluded; 3 legacy write sites baselined →
+      per-AG-migrator-owned Era-B relabel). The `_LEGAL_DATA_TYPES` raise stays the runtime guard.
 - [ ] [SCRIPT] P2. **QG step: validity-matrix completeness** — a UAC test asserting every `(instrument_type, data_type)`
       in `SOURCE_PRIORITY`/the matrix is either valid or explicitly excluded; no impossible pair enumerable.
-- [ ] [SCRIPT] P1. **QG step: no pre-aggregated open-edge bar ingestion** — extend `check_mdps_bar_boundary_compliance.py`
-      beyond the MDPS write path to reference-data + pre-agg ingestion adapters; flag a vendor bar-START field
-      (`t`/`periodStartUnix`/`bar[0]`/DataFrame index) stamped without a `compute_bar_close_boundary`/explicit-close-field
-      conversion (baseline the known latent sites → NEW open-edge ingestion fails the commit). Owned by
-      `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 0; tracked here as the Tier-2 entry.
-- [ ] [SCRIPT] P2. Wire all of these into `base-service.sh` / `base-library.sh` (STEP 5.9x) + the PM template; baseline
-      any pre-existing hits (ratchet), so NEW regressions fail the commit for ALL repos/AGs.
+- [x] ✅ [SCRIPT] P1. **QG step: no pre-aggregated open-edge bar ingestion** — **unified-trading-pm@b4245a7dd**
+      `check_bar_edge_open_ingestion.py` (STEP 5.92); built as a dedicated AST checker (not folded into
+      check_mdps_bar_boundary) — see `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 0. 2 latent sites
+      baselined; planted-regression proven.
+- [x] ✅ [SCRIPT] P2. Wired both into `base-service.sh` + `base-library.sh` (STEP 5.92/5.93) — **@b4245a7dd**. Service
+      repos SOURCE base-service.sh from the workspace PM checkout (no per-repo copy → no template rollout needed; gate
+      activates fleet-wide the instant PM lands on the CI-cloned ref). Pre-existing hits baselined (ratchet); verified
+      green on 5 representative consumer repos per-scope (mtds/IS/UTL/UAC/deployment-api).
 
 ## Phase 2 — Tier-3 data-state audit: extend + cross-AG + schedule (the continuous-verification cron)
 

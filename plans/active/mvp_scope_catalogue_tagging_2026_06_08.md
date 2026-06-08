@@ -93,11 +93,14 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
 
 ## Phases
 
-- [ ] [DESIGN] P1. **Finalise the `mvp_scope` rule schema in UAC** — the axes per asset_group (venue/instrument_type/
-      data_type/base_ccy/league/market_group/source), the everything-or-nothing grain, and the per-registry sections
-      (data/features/strategy/models). Operator sign-off on the actual MVP membership lists.
-- [ ] [CODE] P1. **UAC `is_mvp(...)` predicate + `mvp_scope` config** (pure, rule-only) + unit tests (a non-MVP venue is
-      excluded; all expiries of an MVP future are included; a config edit changes membership with no data touch).
+- [x] ✅ [DESIGN] P1. **`mvp_scope` rule schema FINALISED in UAC** — **unified-api-contracts@d6e0775f**: typed frozen
+      dataclasses per AG (CeFi/DeFi/TradFi/Sports/Prediction) + everything-or-nothing grain + `FeaturesModelsMvpStub`
+      for the per-registry sections. Concrete MVP membership has conservative defaults + `# TODO(mvp-scope): operator
+      sign-off` markers (config edit, no data touch — not a blocker).
+- [x] ✅ [CODE] P1. **UAC `is_mvp(...)` predicate + `mvp_scope` config + tests** — **unified-api-contracts@d6e0775f**:
+      `is_mvp(asset_group, venue, instrument_type, data_type, *, base_ccy, league, market_group, source)` pure rule-only;
+      exported `from unified_api_contracts import is_mvp, MVP_SCOPE`; 56 tests (non-MVP venue excluded, all expiries of
+      an MVP future via grain, absent/impossible→False, config-edit-changes-membership). QG exit 0.
 - [ ] [CODE] P1. **IS MVP-tagged catalogue view** — apply `is_mvp` over the rolled-up catalogue; serve `mvp: bool` (or a
       filtered endpoint). On-the-fly; optional cached `mvp_view` refreshed with the catalogue scheduler.
 - [ ] [CODE] P1. **deployment-api `scope=mvp|could_exist|all`** on the data-status coverage endpoint (denominator =
