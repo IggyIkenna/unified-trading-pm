@@ -1794,9 +1794,9 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
+    "locked": true,
+    "locked_since": "2026-06-08T03:26:24.686487Z",
+    "locked_reason": "SIT running",
     "lock_version": null,
     "pending_repos": [
       "agent-orchestrator"
