@@ -139,6 +139,31 @@ BUILT (`ci_failure_watcher.py` detects stuck PRs + `--escalate` dispatches `merg
 `escalate-to-orchestrator.yml` → conflict-resolver worker, which pings the operator on undecidable). Four gaps explain
 what the operator is seeing:
 
+- [x] ✅ [SCRIPT] P0. **SIT staging-lock phantom — `agent-orchestrator` held the lock indefinitely (incident 2026-06-08,
+      ~80m, wedged every →staging PR).** After the semver-bypass fix let MTDS `0.4.0` land, the breaking-MINOR SIT
+      cascade locked staging with `pending=['agent-orchestrator']`. AO is mid-migration (staging 0.8.1 vs stable 0.8.0,
+      no version-reconciliation flow) → never reconciles → permanent phantom (the exact failure mode the code comments
+      warn about for PM). Fix: added `agent-orchestrator` to `STAGING_EXCLUDED` in `sit-gate.yml` +
+      `sit-debounce-trigger.yml` (mirrors the PM exclusion; `unified-trading-pm@<sit-fix>`, landed on main via targeted
+      PR #177), then cleared the live lock via the sanctioned `sit-failed` dispatch (sit-unlock 11:49 → `locked=False`).
+      Remove AO from the exclusion once its SIT migration (G6) lands.
+- [x] ✅ [CI] P1. **Plan-health gate auto-remediation — run script → dispatch vm-planning `plan_health` fixer → FF-back
+      to LDR (operator design 2026-06-08).** The PM→main `plan-health-gate` hard-failed on "todo regression vs
+      origin/LDR" (a `main`-behind-LDR false-positive) with no self-heal. Built: gate runs the deterministic auto-fix
+      then, on remaining HARD residue, dispatches a `plan_health` escalation → the vm-planning worker (live orchestrator
+      vm-0) runs `run_hygiene_sweep.sh`, reconciles plans against `origin/live-defi-rollout` (never deletes todos),
+      commits to LDR so they converge + the PR re-gates green + `main-backmerge-to-ldr.yml` FF's main→LDR.
+      **Non-blocking** (advisory gate; only `quality-gates-v2` governs merge) so residue self-heals without wedging
+      PM→main. Shipped: `plan_health` wall type in `agent-orchestrator@03017c4` (escalation.py + models.py +
+      escalate.md) + the gate dispatch in `unified-trading-pm` (plan-health-agent.yml + escalate-to-orchestrator.yml; on
+      main via PR #178).
+- [ ] [DEVOPS] P1. **ACTIVATION: redeploy orchestrator (vm-0) with the new `escalation.py` so it accepts `plan_health`
+      dispatches.** The running orchestrator is `version 0.6.0` and validates `wall_type` against its DEPLOYED
+      `WALL_TYPES` — a `plan_health` (or `ldr_qg_failure`) dispatch is REJECTED until vm-0 redeploys with
+      `agent-orchestrator@03017c4`. The PM-side wiring + the AO code are committed; the feature goes fully live on the
+      next AO deploy cycle. Until then the gate dispatch will no-op-reject (advisory gate stays red, no wedge). repo:
+      agent-orchestrator (deploy).
+
 - [x] ✅ [SCRIPT] P2. **Resolved-bookend alerts are ON by default — earlier "they're OFF" diagnosis was WRONG.**
       `--resolved-hours` argparse `default=0.5` (since `da81a1414`), so `detect_resolved_prs` runs even when the GHA
       omits the flag → resolved bookends already post (0.5h window, matched to the \*/15m cron so each resolution posts
@@ -178,12 +203,12 @@ what the operator is seeing:
       the direct push and the admin PAT couldn't bypass (`GH013: Repository rule violations`). **Fix:** rulesets bypass
       by ROLE not user, so `pin_branch_protection_rulesets.py` now grants the **Repository-admin role** (actor_id 5,
       `bypass_mode: always`) a bypass on `require-staging-lock-check`, AND disables classic staging `enforce_admins` (a
-      ruleset bypass doesn't cover classic protection). **Scope verified:** the only admin is `IggyIkenna` (= the GH_PAT);
-      `CosmicTrader` is `write` → stays fully gated by `quality-gates-v2` + `check-staging-lock`. The `require-quality-gates`
-      (main) ruleset stays strict. **Applied 28/28** (15 ruleset bypass + 13 classic disable; MTDS piloted; idempotent
-      re-run = 0). **Proven:** MTDS semver rerun pushed `chore(release): bump version to 0.4.0` to staging (apply step
-      green). `unified-trading-pm@ee0c3af01`. Composes with the stuck-promotion drain (semver bumps now flow → SIT →
-      main). SSOT: this plan + `pin_branch_protection_rulesets.py`.
+      ruleset bypass doesn't cover classic protection). **Scope verified:** the only admin is `IggyIkenna` (= the
+      GH_PAT); `CosmicTrader` is `write` → stays fully gated by `quality-gates-v2` + `check-staging-lock`. The
+      `require-quality-gates` (main) ruleset stays strict. **Applied 28/28** (15 ruleset bypass + 13 classic disable;
+      MTDS piloted; idempotent re-run = 0). **Proven:** MTDS semver rerun pushed `chore(release): bump version to 0.4.0`
+      to staging (apply step green). `unified-trading-pm@ee0c3af01`. Composes with the stuck-promotion drain (semver
+      bumps now flow → SIT → main). SSOT: this plan + `pin_branch_protection_rulesets.py`.
 - [x] ✅ [SCRIPT] P1. **Plan-hygiene was silently degraded 06-05→06-07 — the "I didn't see plan hygiene" cause; now
       self-resolved.** `plan-health-agent.yml` (scheduled `0 2 * * *` + per-PR gate + Slack notify + GCS/S3 persist) ran
       RED four straight days. Root cause for 06-05/06/07: the `Claude API health precheck` step (now a RETIRED no-op as
