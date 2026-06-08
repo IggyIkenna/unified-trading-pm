@@ -9,6 +9,14 @@ last_updated: 2026-06-01
 
 # Manifest Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).** The
+> v9 manifest now carries source-aware `pipeline_mode={mode}_{source}[_{transport}]` (path key + column), `source` +
+> `transport` columns, the 4-state with `expected_unattempted` seeded from the IS×UAC could-exist universe, and Era-B
+> instrument_type/data_type. SSOT = `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**, incl. **CF-13**
+> source-aware + **CF-14** catalogue root) + the **①–⑫ pre-apply readiness audit** in
+> `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`. Any text below assuming coarse
+> `pipeline_mode=batch`/blank or a non-source-aware `_index` is STALE — audit against the SSOT.
+
 ## Epic Scope
 
 Manifest **v9** schema (`MANIFEST_SCHEMA_VERSION = 9` — v9 added the tradfi `source` column), 4-state `capture_status`
@@ -89,6 +97,22 @@ Codex SSOTs: `codex/02-data/availability-manifest-and-data-status.md`,
       `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; consumer policy:
       `codex/02-data/honest-absence-downstream-handling.md` § multi-source; write-time gate: `mtds_mdps_master` item
       (j).
+
+## CF-13 + CF-14 + Era-B — recurring regression checks (added 2026-06-08)
+
+> The canonical set is now **CF-1…CF-14** (the section below still says CF-1…CF-12). CF-13 = source-aware pipeline_mode,
+> CF-14 = IS-catalogue could-exist root. SSOT: `canonical_form_cross_service_audit_checklist.md`.
+
+- [ ] (CF-13) **source-aware pipeline_mode is a PATH KEY, not coarse.** Every `_index` carries
+      `pipeline_mode=batch_<source>` (not coarse `batch`/blank) in BOTH the object-path partition AND the column;
+      `source_string_for(pm) == source`. Read the `pipeline_mode` distribution per AG `_index` → 0 coarse `batch`/blank.
+- [ ] (CF-14) **could-exist denominator from the IS catalogue.** `expected_unattempted` is seeded from
+      `build_instrument_catalogue` × UAC (genesis/launch/coverage), and the catalogue is a superset of the manifest
+      present-set (no under-count → no falsely-high coverage). Verify the seed exists and the catalogue covers the
+      present-set per AG.
+- [ ] (erab) **Era-B in the `_index`:** no `data_type=options_chain`/`futures_chain` rows; chains carry
+      `instrument_type=options_chain`/`futures_chain` plus `data_type=trades`.
+- [ ] (transport) **`transport` column present** alongside `source` on every external cell.
 
 ## Canonical-form cross-service audit coverage (CF-1…CF-12) — manifest SSOT home
 

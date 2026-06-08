@@ -9,6 +9,12 @@ last_updated: 2026-06-03
 
 # Batch=Live Symmetry Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — batch=live symmetry is now ⑪, the no-regression KEYSTONE of the per-AG pre-apply audit.**
+> Each AG must PROVE the LIVE writer and the MIGRATED batch data emit the IDENTICAL canonical v9 form: schema ·
+> data*types · fields · source-aware
+> `pipeline_mode={mode}*{source}[_{transport}]` · **Era-B** (`options_chain`/`futures_chain`= instrument_type+`data_type=trades`) · `available_at`top-source live==batch — NO split, NO live-only data_types, NO read-time`available_at`. SSOT: the **①–⑫ pre-apply readiness audit** in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`+ **CF-1…CF-14** in`canonical_form_cross_service_audit_checklist.md`
+> (CF-12 = batch=live, CF-13 = source-aware). Guidance below predating the source-aware/Era-B model is STALE.
+
 ## Epic Scope
 
 Per-service batch=live audit across all 19 epic code surfaces. Reconciliation scripts. The invariant: batch and live are
@@ -112,6 +118,23 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
   → run live adapter → confirm same schema row. Requires only one working adapter pair, not all.
 - (mock-upstream) **Independent audit**: cross-cutting audits MUST be runnable with `CLOUD_MOCK_MODE=true` to test
   infrastructure, error classification, and isolation patterns without real cloud access.
+
+## ⑪ Live-writer == migrator-output FORM — the no-regression check (added 2026-06-08)
+
+> The keystone for the migration: after `--apply`, batch-migrated data and live-written data MUST be the SAME pipeline.
+> Prove the LIVE writer and the MIGRATOR emit the IDENTICAL canonical v9 form — any divergence is a post-migration
+> regression. Run per AG before its `--apply` and weekly thereafter.
+
+- [ ] (form-1) **Same schema + data_types + fields** — diff the live-writer output schema vs the
+      `migrate_<AG>_v9_canonical` output schema per AG: identical column set, dtypes, and data_type values. NO live-only
+      data_types.
+- [ ] (form-2) **Same source-aware pipeline_mode** — both stamp `pipeline_mode={mode}_{source}[_{transport}]`; live
+      `live_<source>` mirrors batch `batch_<source>` on the same source axis (NOT the legacy `live_websocket`).
+- [ ] (form-3) **Same Era-B split** — both treat options_chain/futures_chain as `instrument_type` with
+      `data_type=trades`.
+- [ ] (form-4) **`available_at` parity** — live `available_at` equals the top-`SOURCE_PRIORITY` source's write-time;
+      NEVER read-time/derived in either path; `record_captured` asserts presence.
+- [ ] (form-5) **Same 4-state + typed reasons** — both use the same `EmptyConfirmedReason` set; zero `DIVERGENT_EMPTY`.
 
 ## Success Criteria
 

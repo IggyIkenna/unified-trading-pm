@@ -9,6 +9,16 @@ last_updated: 2026-05-22
 
 # Instruments Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model + IS-catalogue could-exist ROOT.** IS
+> is the foundation of ⑥/⑦/⑧: the `(instrument_type × data_type)` validity matrix + bundle-grain guard impossible cells,
+> and `build_instrument_catalogue` + `enumerate_expected_universe` define the could-exist denominator (⊇ manifest
+> present-set). The instruments-store `_index` migrates to v9 via `migrate_instruments_store_v9.py` (source-aware
+> `pipeline_mode={mode}_{source}[_{transport}]`, Era-B instrument_types). SSOT =
+> `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**, esp. **CF-14**) + the **①–⑫ pre-apply readiness
+> audit** in `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (esp. ⑥
+> validity/bundle-grain, ⑧ catalogue completeness). Any text below assuming coarse `pipeline_mode=batch`,
+> `options_chain`-as-data_type, or a non-catalogue denominator is STALE — audit against the SSOT.
+
 ## Epic Scope
 
 instruments-service as the reference data SSOT: venue URL ownership, instrument universe management, `InstrumentRecord`
@@ -155,6 +165,23 @@ constant said v8 while 0% of 7.4M rows were v8).
       read-time. GREEN = batch and live emit identical schema/data_types per AG. **Cross-reference**: composes with the
       Batch vs Live Parity subsection above (`(batch-live)` / `(live-adapter)`) — CF-12 is the schema/data_type-set
       equality assertion across the whole reference corpus, those items are the per-adapter parity checks.
+
+## CF-13/CF-14 + validity-matrix + catalogue — recurring regression checks (added 2026-06-08; instruments is the could-exist ROOT)
+
+> instruments-service now also owns **CF-13** (source-aware pipeline_mode) + **CF-14** (IS-catalogue could-exist root).
+> SSOT: `canonical_form_cross_service_audit_checklist.md`.
+
+- [ ] (CF-13) instruments-store `_index` carries source-aware `pipeline_mode=batch_<source>` (path + column) post
+      `migrate_instruments_store_v9`; 0 coarse `batch`/blank.
+- [ ] (CF-14) **`build_instrument_catalogue` is a superset of the manifest present-set** per AG (no missing
+      instruments/leagues → honest denominator); the daily catalogue scheduler is wired for EVERY AG (not just cefi).
+- [ ] (validity) the UAC `(instrument_type × data_type)` validity matrix REJECTS impossible cells (e.g. PERPETUAL ×
+      options_chain, pre-genesis); `enumerate_expected_universe` emits NO impossible or over-fanned cell.
+- [ ] (bundle-grain) options_chain/futures_chain enumerate ONE candidate per UNDERLYING (instrument_type +
+      `data_type=trades`), NOT per-leaf OPTION/COMBO; sports = league-grain; prediction = per-cqg. Re-run the enumerate
+      dry-run; confirm the candidate count is plausible (no single-venue domination).
+- [ ] (expected) instrument-exists-but-data-not-backfilled → `expected_unattempted` (via `was_instrument_alive` +
+      genesis/launch), never silently absent.
 
 ## Success Criteria
 

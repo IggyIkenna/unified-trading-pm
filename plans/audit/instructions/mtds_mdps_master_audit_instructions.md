@@ -26,12 +26,9 @@ codex_ssots_to_check_drift_against:
 > **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).** The
 > MTDS migrators/rebuilds/readers and MDPS scanner are now source-aware — `pipeline_mode={mode}_{source}[_{transport}]`
 > in BOTH the path key and the column (not coarse `batch`), with populated `source` and `transport` columns, Era-B
-> (`options_chain`/`futures_chain` as instrument_type plus `data_type=trades`), and readers that prefix-match the
-> `pipeline_mode=batch_*` partition. SSOT = `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**) and the
-> **①–⑫ pre-apply readiness audit** in `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`
-> (esp. ① migrator source-aware + Era-B, ⑤ reader prefix-match, ⑨ source-aware, ⑩ Era-B on-disk, ⑪ batch=live). Any text
-> below assuming coarse `pipeline_mode=batch`, `data_type=options_chain`, or exact-coarse reader probes is STALE — audit
-> against the SSOT.
+> (`options_chain`/`futures_chain` as instrument*type plus `data_type=trades`), and readers that prefix-match the
+> `pipeline_mode=batch*\*`partition. SSOT =`canonical_form_cross_service_audit_checklist.md`(**CF-1…CF-14**) and the **①–⑫ pre-apply readiness audit** in`plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`(esp. ① migrator source-aware + Era-B, ⑤ reader prefix-match, ⑨ source-aware, ⑩ Era-B on-disk, ⑪ batch=live). Any text below assuming coarse`pipeline_mode=batch`, `data_type=options_chain`,
+> or exact-coarse reader probes is STALE — audit against the SSOT.
 
 The single canonical audit doc for everything in the MTDS + MDPS surface. Two audit modes share this doc:
 
@@ -241,6 +238,31 @@ not a code constant** (the manifest-v8 lesson: a constant said v8 while 0% of 7.
 Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same structure as per `../README.md`.
 
 ---
+
+## Source-aware pipeline_mode + Era-B — recurring regression checks (added 2026-06-08; the migration extras)
+
+> Guard the post-migration form against silent regression. Run weekly and after ANY migrator/reader/writer change. These
+> supersede item (g)'s stale "v8" target — the canonical schema version is now **v9**.
+
+- [ ] (src-1) **Migrators stamp SOURCE-AWARE pipeline_mode, never coarse.** `migrate_*_v9_canonical` and
+      `rebuild_*_manifest` stamp `pipeline_mode=batch_<source>` in BOTH the path key and the column via UTL
+      `derive_pipeline_mode_for_row` — no coarse `batch` default. Grep `market-tick-data-service/` (excluding tests) for
+      a literal `DEFAULT_PIPELINE_MODE = "batch"` or `pipeline_mode = "batch"` assignment → must be 0 (DeFi was the last
+      coarse writer; it must STAY 0).
+- [ ] (src-2) **Readers prefix-match `batch_<source>`, no exact-coarse probe.** features `mtds_canonical_reader`, mdps
+      `orchestration_scanner`, and every reader match the `pipeline_mode=batch_` prefix (plus `live_`/`replay_`), not an
+      exact `pipeline_mode=batch/` path. Grep MTDS + MDPS + features for an exact-coarse `pipeline_mode=batch/` or
+      `pipeline_mode=live/` probe → 0 hits (the C-PATH READ fix; must not regress).
+- [ ] (src-3) **`transport` column populated** on every captured cell (rest/websocket/flat_file via M2
+      `default_transport_for_source`) — 0 blank on external cells.
+- [ ] (src-4) **C-#6 cross-check holds:** `source_string_for(pipeline_mode) == source` for batch rows; UTL raises
+      `PipelineModeSourceMismatchError` on a mismatch. Verify the guard fires in tests.
+- [ ] (erab) **Era-B on disk:** `options_chain`/`futures_chain` appear ONLY as `instrument_type`, with
+      `data_type=trades`. Byte-probe a recent cefi+tradfi chain shard and count objects whose path has
+      `data_type=options_chain` or `data_type=futures_chain` → must be 0. The live writer (`tardis_shared.py`
+      `_LEGAL_DATA_TYPES`) raises on `data_type=options_chain`.
+- [ ] (v9) **schema_version = v9 (supersedes item (g)'s v8):** read the actual `_index` `schema_version` distribution
+      per `market-data-tick-<ag>` bucket; assert ≥95% v9 on real data-state.
 
 # Mode 2 — Efficiency Audit (codified 2026-05-28)
 
