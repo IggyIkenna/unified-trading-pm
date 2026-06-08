@@ -322,6 +322,15 @@ pointer before acting on any of them.
   ending a session. **Every active ping references a plan-of-record** or it's removed.
 - **CI**: after a main/PR push verify `gh run list`; required check is `quality-gates-v2`; on fail
   `gh run view --log-failed` + fix root cause (CI failures are NOT issues to flag). LDR has no remote CI.
+- **Breaking-detection is CONTENT-based (2026-06-08)**: SIT + cascade-lock fire only on a real public
+  API/schema/contract surface change (AST differ `scripts/cicd/detect_breaking_change.py`), NOT on a 0.x-minor /
+  docstring / reformat / internal refactor. `quality-gates-v2` still gates EVERY staging PR. Never re-add the
+  `grep '^-' __init__.py` heuristic. SSOT: `codex/08-workflows/ci-cd-flow.md` § "Breaking = public-surface change".
+- **LDR is the SSOT**: `staging`/`main` are projections of `live-defi-rollout`; zero-content-delta divergence is noise
+  to collapse (force-sync), real main/staging-only content is back-merged DOWN to LDR first. `main-backmerge-to-ldr`
+  carries a `schedule:` drift-tick (`[skip ci]` writes suppress the push trigger). A template-only edit to a fleet
+  workflow must be rolled out fleet-wide in the SAME change (else the PM drift gate reddens). SSOT:
+  `codex/08-workflows/ci-cd-flow.md`.
 - **Version**: never bump manually (semver-agent owns it); docs/`*.md`/`*.mdc` PR→main, scripts/workflows PR→staging;
   respect `locked_by:`, never unlock autonomously; 5-step plan-archival ritual incl. codex-alignment check.
 - **Post-phase codex audit**: update changed codex contracts / stub new patterns / SUPERSEDED-banner invalidated docs.

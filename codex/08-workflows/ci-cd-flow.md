@@ -237,6 +237,58 @@ Step 4: Promote to main
 
 ---
 
+## Breaking = public-surface change, NOT version phase (SIT scope; codified 2026-06-08)
+
+**SIT and the cascade-lock fire ONLY on a real breaking change** — an actual change to the public API / schema /
+contract surface that affects how a consumer imports or calls a symbol. They do **NOT** fire on a 0.x MINOR bump, a
+docstring edit, an internal refactor, reformatting, or an added-optional kwarg. **`quality-gates-v2` still runs on EVERY
+staging PR** (the breaking-gate narrows SIT, never QG).
+
+- **Differ (SSOT)**: `scripts/cicd/detect_breaking_change.py` — a stdlib-only AST diff of the public surface
+  (export-name set anchored on the package `__init__.py`, bare-name keyed so a symbol MOVED between internal modules is
+  not a false "removed", changed-files-only for speed). **Breaking** = removed/renamed public export, removed public
+  class/method, incompatible signature change (added-required / removed / reordered param, dropped `**kwargs`),
+  removed/renamed/retyped Pydantic/dataclass field (the UAC schema case), or removed HTTP route. **Not breaking** =
+  additive, docstring, comment, reformat, reorder, move-across-modules. Regression-guarded by
+  `tests/unit/test_detect_breaking_change.py`.
+- **Wiring**: each repo's `semver-agent.yml` (rolled out from `scripts/workflow-templates/semver-agent.yml.tmpl`) calls
+  the differ — non-PM repos fetch it at runtime from `unified-trading-pm`. The differ verdict sets `is_breaking`
+  (replacing the old `git diff __init__.py | grep '^-'` text heuristic that flagged ANY removed line). `feat!:` stays an
+  explicit human-declared breaking override.
+- **Lock + SIT gating**: `update-repo-version.yml` locks staging only on `bump_type == major or is_breaking`, and
+  records the breaking repos in `staging_status.breaking_pending`. `sit-debounce-trigger.yml` dispatches SIT **only**
+  when a pending repo is in `breaking_pending`; non-breaking promotions drain `LDR→staging→main` on QG / `MAIN_GREEN`
+  alone (no SIT, no cascade lock) → the fleet drain is QG-paced, not SIT-paced. `breaking_pending` self-cleans (a
+  promoted repo leaves the pending set; stale entries are pruned).
+- **Why**: the dangling-lock fleet deadlock (2026-06-07/08) was a `feat`-level 0.x MINOR on `execution-service` mis-read
+  as breaking → permanent "Breaking MINOR bump cascade" lock + failing SIT. Content-based detection is the root fix.
+
+SSOT: `plans/active/sit_breaking_detection_content_based_2026_06_08.md`.
+
+## LDR is the SSOT — clean-start force-sync + drift-tick (codified 2026-06-08)
+
+`live-defi-rollout` is the integration source of truth and the live accumulator (slots push there). `staging` and `main`
+are **downstream projections** of LDR. When they diverge by promotion artifacts (merge nodes, re-applied `[skip ci]`
+writes, superseded workflow copies), the divergent commits are **noise to collapse, not work to merge** — verified by a
+zero-file-content-delta `compare` (`ahead_by` > 0 but `files: []`). The **only** preserve-rule: genuinely-newer
+main/staging-only content (a real feature, or a CI-workflow fix LDR lacks) is **back-merged DOWN to LDR first**, then
+the branches force-sync to LDR.
+
+- **Clean-start force-sync** (fast bulk alignment, not a 30-repo serial promotion): version-align → for each repo relax
+  protection (disable rulesets + classic `enforce_admins`/`allow_force_pushes`) → force `main` + `staging` to the LDR
+  tip → **restore protection + re-enable rulesets in the same per-repo step** (crash exposure = 1 repo). Operator-gated
+  authority (force-push main/staging, relax→do→re-enable rulesets). Real main/staging-only content is backmerged to LDR
+  before the force.
+- **Drift-tick**: `main-backmerge-to-ldr.yml` runs `on: push: branches:[main]` **plus a `schedule: */20`** — because
+  `[skip ci]` commits to `main` (ci_status / staging_status / manifest-version writes) suppress ALL Actions triggers
+  including the push trigger, so `main` chronically drifts ahead. A scheduled run is not `[skip ci]`-suppressed and
+  sweeps the accumulated drift, so "`main` never ahead of LDR" holds in steady state (modulo the ≤20-min window), not
+  just eventually-converges. (Edit the SSOT template + `rollout-workflow-templates.sh` fleet-wide — a template-only edit
+  drifts every per-repo copy and reddens the PM drift gate.)
+
+SSOTs: `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` +
+`plans/active/ci_local_qg_parity_2026_06_08.md` (local LDR-checkout QG in dep order is the staging oracle).
+
 ## Version Bump Flow (Semver Agent)
 
 Semver is managed entirely by the semver-agent GitHub Action — never bump manually.

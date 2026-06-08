@@ -570,7 +570,7 @@ line):
   antipattern is retired), `[_{transport}]` suffix in the path key ONLY where a source runs >1 transport per shard (none
   today); `transport ∈ {rest,websocket,flat_file}` is ALWAYS carried in a separate manifest COLUMN
   (`default_transport_for_source`; tardis=flat*file, else rest). `live_websocket` is a transitional alias → the
-  `live*<source>`/`replay*<source>`object migration is the gated next tranche. **GCS canonical paths carry`pipeline_mode={mode}*{source}/`LEFT of`asset*group=`** (Phase 3 done) — a prober hitting `raw_tick_data/by_date/day=*/asset_group=*/`without`pipeline_mode=`is on the OLD shape; readers PREFIX-MATCH`batch*_`/`live\__`/`replay\_\*`(+ bare fallback), never the coarse literal. Sports uses`candidate_parquet_paths()`(unaffected). SSOT:`codex/02-data/pipeline-mode-partition.md`+`codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`.
+  `live*<source>`/`replay*<source>`object migration is the gated next tranche. **GCS canonical paths carry`pipeline_mode={mode}*{source}/`LEFT of`asset*group=`** (Phase 3 done) — a prober hitting `raw_tick_data/by_date/day=*/asset*group=*/`without`pipeline_mode=`is on the OLD shape; readers PREFIX-MATCH`batch**`/`live\_\_`/`replay\_\*`(+ bare fallback), never the coarse literal. Sports uses`candidate_parquet_paths()`(unaffected). SSOT:`codex/02-data/pipeline-mode-partition.md`+`codex/02-data/pipeline-mode-and-batch-live-reconciliation.md`.
 - **Bump `MAX_DURATION=600` over suppressing the QG `<300s` time check** — when a suite organically outgrows the budget,
   raise it (with a `#` comment on what grew); never deselect/skip slow tests (masks runaway regressions).
   `IGNORE_TIMEOUT=true`/`PYRIGHT_TIMEOUT` stay sanctioned for META-gate-only trips. SSOT:
@@ -827,6 +827,33 @@ After every major phase: (1) phase changed a codex contract? update the doc. (2)
 phase — plans omitting this are review-blocking.
 
 ---
+
+## Breaking-detection is CONTENT-based — SIT fires only on a real public-surface change (HARD RULE, 2026-06-08)
+
+`is_breaking` (which locks staging + triggers the 30-min SIT) is the verdict of the AST public-surface differ
+`scripts/cicd/detect_breaking_change.py` (SSOT in PM; non-PM `semver-agent.yml` fetches it at runtime), **NOT** the
+version phase. A 0.x MINOR / docstring / reformat / internal refactor / added-optional-kwarg / module-move is **NOT
+breaking**; a removed-or-renamed public export, incompatible signature, removed/renamed/retyped schema field, or removed
+HTTP route **is**. `feat!:` is an explicit human override. **`quality-gates-v2` still runs on EVERY staging PR** (the
+breaking-gate narrows SIT, never QG). SIT dispatches only for repos in `staging_status.breaking_pending`; non-breaking
+promotions drain `LDR→staging→main` on QG/`MAIN_GREEN` alone. Never re-introduce the old
+`git diff __init__.py | grep '^-'` heuristic (it flagged any removed line → spurious cascade locks). SSOT:
+`codex/08-workflows/ci-cd-flow.md` § "Breaking = public-surface change"; plan
+`sit_breaking_detection_content_based_2026_06_08.md`.
+
+## LDR is the SSOT — staging/main are projections; clean-start force-sync + drift-tick (2026-06-08)
+
+`live-defi-rollout` is the integration SSOT + live accumulator; `staging`/`main` are downstream projections. Divergent
+promotion SHAs with **zero file-content delta** (`compare` shows `ahead_by>0` but `files:[]`) are noise to collapse, not
+work to merge. Only genuinely-newer main/staging-only content (a real feature, or a CI-workflow fix LDR lacks) is
+**back-merged DOWN to LDR first**, then `main`+`staging` force-sync to LDR. **Clean-start force-sync** (operator-gated):
+version-align → per-repo relax protection (disable rulesets + classic `enforce_admins`/`allow_force_pushes`) → force
+`main`+`staging` to LDR → **restore protection + re-enable rulesets in the SAME per-repo step**. **Drift-tick**:
+`main-backmerge-to-ldr.yml` carries a `schedule: */20` (besides `on: push`) because `[skip ci]` main writes suppress the
+push trigger — the cron sweeps the drift so "`main` never ahead of LDR" holds in steady state. A template-only edit to a
+fleet workflow drifts every per-repo copy + reddens the PM drift gate — roll out via `rollout-workflow-templates.sh` in
+the SAME change. SSOTs: `codex/08-workflows/ci-cd-flow.md` § "LDR is the SSOT"; plans
+`staging_clean_start_and_stale_pr_hygiene_2026_06_08.md` + `ci_local_qg_parity_2026_06_08.md`.
 
 ## CI Verification After Every Push (HARD RULE)
 
