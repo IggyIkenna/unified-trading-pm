@@ -76,9 +76,11 @@ source:
 - [x] ✅ [CODE] P1. **Cross-AG wrapper** — **unified-trading-pm@2fe982eb1** `cf_manifest_audit_all.py`: one invocation
       runs all 5 AGs × {market-data-tick, instruments-store} = 10 buckets, per-AG GREEN/RED rollup + a machine-readable
       JSON summary, exits non-zero on any RED (the `cf-manifest-audit-all --all-ags --json-out` cron entrypoint).
-- [ ] [INFRA] P1. **Schedule it** — a daily Cloud Run Job + Scheduler (per the consolidator pattern) that runs the
-      cross-AG audit and **alerts on any RED** (the master plan's "Continuous Verification" column, finally wired). NOT
-      fire-and-forget; emits a CF-status artifact.
+- [x] ✅ [INFRA] P1. **Scheduled** — **deployment-service@eaff3a7**: `terraform/gcp/cf_manifest_audit_scheduler.tf`
+      (Cloud Run Job `uts-prod-cf-manifest-audit` + Scheduler `0 6 * * *` UTC, after the consolidator; GCS output bucket
+      90-day lifecycle; `google_monitoring_alert_policy` log-based **alert-on-RED** = severity=ERROR for the job) +
+      `terraform/aws/cf_manifest_audit_scheduler.tf` (Batch-Fargate + EventBridge `cron(0 6 * * ? *)` + `FailedJobCount
+      >= 1` CloudWatch alarm). Emits the CF-status JSON artifact; alerts on any RED. **NOT applied** (operator applies).
 - [ ] [DATA] P2. **Wire into QG-smoke where feasible** — a fast subset (schema_version/source/pipeline_mode-form
       distribution on a sampled day) as a peripheral-script QG so a per-repo gate catches the grossest data-state drift
       too.

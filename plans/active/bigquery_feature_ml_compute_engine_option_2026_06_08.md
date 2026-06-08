@@ -42,14 +42,17 @@ source:
 
 ## Design — a third engine tier (toggle), not a fork
 
-- [ ] [DESIGN] P1. **Engine-selection extension** — add `BIGQUERY` to the engine selector (codex
-      `data-engine-selection.md`): in-process polars (small/live) → DuckDB (medium, memory-bound) → **BigQuery (large
-      batch / corpus-scale / cross-instrument)**. Selection by data volume + job type, not a hard switch; same
-      feature/output CONTRACT regardless of engine (batch=live + canonical schema unchanged).
-- [ ] [INFRA] P1. **Hive-partitioned external tables** — Terraform + a registration script that defines a BQ external
-      table per `(asset_group, data_type)` over the canonical GCS prefix with `hive_partition_uri_prefix` + partition
-      schema; verify pruning (a 1-day query scans ~1 day of bytes, not the corpus). Read-only over GCS — no data copy
-      for the external path.
+- [x] ✅ [DESIGN] P1. **Engine-selection extension** — **unified-trading-pm@cae98d92d**: added the BigQuery third tier
+      to `codex/06-coding-standards/data-engine-selection.md` (in-process polars → DuckDB → BigQuery; selection by volume
+      + job type; same `formula_version`/canonical-v9 CONTRACT regardless of engine; external-tables-over-hive + GCS-SSOT
+      + cost-guardrail + cloud-agnostic boundaries; sequenced after the per-AG `--apply`).
+- [x] ✅ [INFRA] P1. **Hive-partitioned external tables** — **deployment-service@eaff3a7**:
+      `terraform/gcp/bigquery_feature_external_tables.tf` — dataset `uts_feature_external` + a `for_each` BQ external
+      table per `(asset_group, data_type)` (6-entry seed: cefi/tradfi/defi trades/ohlcv_1m/dex_swaps + 3 feature groups),
+      `source_format=PARQUET` + `hive_partitioning_options` over the canonical `{pipeline_mode}/{asset_group}/{data_type}/
+      {timeframe}/{day}` prefix, `require_partition_filter=true` (cost guardrail). Read-only over GCS — no copy. Full
+      `(asset_group, data_type)` set rides the canonical v9 migration landing (stable schema). **NOT applied** (land-the-
+      code; operator applies post-migration).
 - [ ] [CODE] P2. **Feature compute on BQ** — a BQ-SQL expression path for the delta_one feature registry (start with the
       windowed/aggregation groups that translate cleanly; the registry's `formula_version` stays the SSOT — BQ is an
       alternate executor of the SAME formula, asserted equal to the polars path on a fixture). NOT all 1,382 specs day-1
