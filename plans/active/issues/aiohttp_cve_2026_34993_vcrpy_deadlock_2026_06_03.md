@@ -74,7 +74,15 @@ decision + the successor.
    dangling edge was dropped (no current dep needs it). See the ✅ successor todo for the full recipe. Item (1) (aiohttp
    CVE) remains the only open blocker in this doc.
 
-## AUDIT UPDATE 2026-06-05 (harsh [hk]) — fleet moved to the CORRECT aiohttp 3.14.0, but without the vcrpy shim → VCR break
+## AUDIT UPDATE 2026-06-05 (harsh [hk]) — the brief aiohttp 3.14.0 excursion, since REVERTED to 3.13.5 (see SUPERSEDED banner below)
+
+> ↩️ **REVERTED / RESOLVED 2026-06-08 (harsh [hk]):** the 3.14.0 state described in this section was a brief excursion;
+> the fleet was reverted to `aiohttp>=3.13.4,<3.14.0` (locked **3.13.5**) and that is the canonical SSOT — see the ⛔
+> SUPERSEDED banner below + the CLAUDE.md KNOWN EXCEPTION. **Constraining dep = vcrpy 8.1.1** (needs aiohttp <3.14; the
+> aiohttp consumers ccxt/databento/tardis-client are unbounded). Verified 2026-06-08: all 4 VCR repos locked
+> aiohttp=3.13.5 + vcrpy=8.1.1 on `origin/live-defi-rollout`, `quality-gates-v2` GREEN fleet-wide — the deadlock is
+> closed by staying on 3.13.5 + the sanctioned `--ignore-vuln CVE-2026-34993` (no shim needed; lift the cap only when
+> vcrpy ships 3.14 support). The 3.14 table + shim direction below are kept as the historical record only.
 
 While diagnosing the live CI red-board, I found the fleet has moved to **aiohttp 3.14.0** (the genuinely-patched,
 operator-confirmed-correct version — this **supersedes** the doc's earlier interim "vcrpy repos stay on 3.13.5" stance).
