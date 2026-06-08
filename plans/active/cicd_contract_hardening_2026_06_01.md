@@ -3921,3 +3921,37 @@ dep-order sweep (`ci_local_qg_parity`) · strict-quickmerge (`quickmerge_dep_con
 7. **Promotion → main, in dependency order** — quickmerge each through; SIT only on breaking; drive to main **PM → UAC →
    UTL → dependents → leaves**; verify it lands. (`staging_clean_start` Ph4)
 8. **LAST — worktree refactor** — only once 0–7 done and main==LDR fleet-wide. (`worktree_ldr_unification`)
+
+## 🟢 Progress Log — 2026-06-08 autonomous CI/CD reform (slot-1, append-only)
+
+> Operating under `cursor-configs/AUTONOMOUS_AGENT_RULES.md`. Operator: pause workflows freely (rapid dev,
+> nothing live), goal = best combo of LDR/main/staging + main==LDR fleet-wide + self-sustaining. Update
+> CLAUDE.md + codex from the plans so agents abide. **Concurrent slots 2-7 doing data-pipeline work push to
+> LDR through QG — non-destructive (I force staging+main TO LDR; never overwrite LDR).**
+
+### ⚠️ CRITICAL STATE FOR FUTURE-ME — PM workflows are PAUSED (must re-enable at end)
+- I disabled **all PM workflows except `quality-gates-v2`, `python-quality-gates-v2`, `ldr-ci-monitor`** for a
+  deterministic clean-start cutover (main was moving every few sec via `ci-status-update` [skip ci] writes).
+- Re-enable list saved at `/tmp/pm_to_reenable.json` (50 workflows). **If that tmp file is gone**, re-enable
+  every PM workflow that is `disabled_manually` EXCEPT none — all of them should be active in steady state.
+  Recipe: `gh workflow list --all` then `gh workflow enable <id>` for each disabled one.
+- **DO NOT declare done until PM workflows are re-enabled + a clean test commit flows LDR→staging→main.**
+
+### Step 0 — heal (DONE)
+- Reconciled PM main→LDR (main was +52 of real CI fixes incl. promote-bot `--auto --rebase` `649aae52c`,
+  exclude-AO-from-SIT `14fa3ed41`; LDR was +245 docs). Merged main→LDR (union-merge plan logs, took main's
+  canonical manifest), pushed LDR `e4d67b097`.
+- Healed manifest on BOTH LDR + main (`origin/main` `3315c7a6e`): `staging_status.locked=false`,
+  `pending_repos=[]`, `sit_retry_count=0`, drained AO phantom `staging_versions[ao] 0.8.1→0.8.0`.
+- promote-bot (ldr-to-staging-promote + staging-to-main) confirmed green (recent runs SUCCESS).
+
+### Step 1 — content-based breaking-detection (DONE, shipped LDR `1f9260ebc`)
+- Root cause of the dangling lock: `is_breaking` came from `git diff __init__.py | grep '^-'` → ANY removed
+  line (reformat/reorder/docstring) = "breaking" → spurious "Breaking MINOR bump cascade" lock + SIT.
+- Fix: `scripts/cicd/detect_breaking_change.py` AST public-surface differ (export-anchored, bare-name keyed,
+  changed-files-only). Wired into semver-agent.yml + .tmpl. SIT now fires ONLY on `breaking_pending` repos
+  (sit-debounce-trigger); non-breaking drains on QG/MAIN_GREEN. QG-v2 unchanged. 8 unit tests; rule-11 on UTL+UAC.
+
+### Remaining (this session): build-track (dep-content gate, strict-quickmerge, parity matrix, local_qg_sweep)
+### + Steps 2-8 (stale-PR sweep, force-sync staging+main→LDR fleet, dep-order QG, CI green, promote, worktree refactor LAST)
+### + CLAUDE.md/codex/SUB_AGENT rule updates + RE-ENABLE PM workflows.

@@ -48,29 +48,29 @@ heuristic.
 
 ## Pre-audit
 
-- [ ] [SCRIPT] P1. Read `system-integration-tests/.github/workflows/semver-agent.yml` + `update-repo-version.yml` +
+- [x] ✅ [SCRIPT] P1. Read `system-integration-tests/.github/workflows/semver-agent.yml` + `update-repo-version.yml` +
       `sit-gate.yml`: find exactly where `is_breaking` is computed and where SIT is dispatched. Confirm whether
       semver-agent's API-diff is already a usable signal (griffe / public-symbol diff / UAC schema-cassette diff) or
       must be built. Document the real current source of `is_breaking`.
 
 ## Phase 1 — Content-based `is_breaking` (depends: Pre-audit)
 
-- [ ] [SCRIPT] P1. Define the public-surface differ per repo type:
+- [x] ✅ [SCRIPT] P1. Define the public-surface differ per repo type:
   - **Python libs (utl, services):** diff exported public symbols + signatures (e.g. `griffe`) between the promoted ref
     and the new ref; backward-incompatible removal/rename/signature-change → breaking; added-optional / internal /
     docstring → NOT breaking.
   - **UAC (contracts):** diff the schema/contract surface (cassette-schema-parity already exists) — field
     removal/rename/type-change/serialization-change → breaking.
-- [ ] [SCRIPT] P1. Set `is_breaking` from the differ verdict (not version phase). `feat!` stays an explicit
+- [x] ✅ [SCRIPT] P1. Set `is_breaking` from the differ verdict (not version phase). `feat!` stays an explicit
       human-declared breaking override. A 0.x MINOR with no public-surface change → `is_breaking=false` → **no SIT, no
       cascade lock** → fast drain.
 
 ## Phase 2 — Gate SIT + lock on the new verdict (depends: Phase 1)
 
-- [ ] [SCRIPT] P1. `update-repo-version.yml` / `sit-gate.yml`: lock staging + dispatch SIT **only** when
+- [x] ✅ [SCRIPT] P1. `update-repo-version.yml` / `sit-gate.yml`: lock staging + dispatch SIT **only** when
       `is_breaking == true` (real surface change) OR an explicit `feat!`/major. Non-breaking promotions go
       LDR→staging→main on QG-only (no SIT, no lock). **QG-v2 still required on every staging PR** (do not weaken that).
-- [ ] [SCRIPT] P1. **Rule-11 fleet proof**: before flipping the gate, replay the new `is_breaking` against the last N
+- [x] ✅ [SCRIPT] P1. **Rule-11 fleet proof**: before flipping the gate, replay the new `is_breaking` against the last N
       fleet promotions and confirm it classifies the known-breaking ones as breaking and the docstring/internal ones as
       non-breaking — in the SAME change. Never "flip it and see what skips SIT."
 
@@ -86,3 +86,9 @@ heuristic.
 
 `codex/08-workflows/ci-cd-flow.md` § "breaking = public-surface change, not version phase; SIT scope"; cross-link
 `ci_local_qg_parity` (SIT = the assembled-invariant layer, now breaking-gated).
+
+## Progress / evidence (2026-06-08, slot-1 autonomous)
+
+- **DONE + shipped to LDR** — PM@1f9260ebc (scripts/cicd/detect_breaking_change.py AST differ + 8 unit tests; semver-agent.yml + .tmpl + update-repo-version + sit-debounce-trigger wired; rule-11 proven on UTL+UAC: internal-refactor/docstring=non-breaking, removed-export/sig/field/route=breaking).
+- Differ scans CHANGED files + the package `__init__.py` only (fast: UAC 6.7s); export-anchored + bare-name keyed so a class MOVED between modules is NOT a false 'removed'. QG-v2 unchanged (still every staging PR). SIT now breaking-gated via `staging_status.breaking_pending`.
+- Codex SSOT update: see `codex/08-workflows/ci-cd-flow.md` § breaking=public-surface (folded in the docs pass).
