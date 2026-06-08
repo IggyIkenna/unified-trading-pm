@@ -972,6 +972,40 @@ speed-note (both deferred optimisations, non-blocking).
       `writer.add(...)` now passes `asset_group=defi` + the source-aware `pipeline_mode` + `source` + `transport` (no
       more blank `pipeline_mode`/`source` — standardisation finding #1 resolved); migrator likewise stamps source-aware
       in path+column. Tests green 25/25. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [CROSS-CUTTING] P1. **M-COORD-6 — every AG `rebuild_*_manifest*` / `migrate_*_v9` script must `setup_events()`
+      before reading the manifest (surfaced + fixed-locally for sports by slot-4 pre-apply audit 2026-06-08; sports ship
+      gated on M-COORD-7).** ROOT CAUSE: `read_availability_index()` → `_backfill()` emits
+      `READER_BACKFILLED_V8_COLUMNS_AS_NULL` via `log_event` whenever the per-VM fallback shards carry pre-v9 columns —
+      the **GUARANTEED drained-fleet pre-migration state** (consolidated index stale → per-VM fallback → v8 shards).
+      Without an events init, `log_event` raises `RuntimeError: Event logging not initialized` and **crashes the rebuild
+      `--no-dry-run` apply**. The v8-era migration scripts ALL call `setup_events(mode="local", sink=None)` in `main()`
+      (`migrate_sports_canonical` / `migrate_defi_canonical` / `migrate_tradfi_canonical` /
+      `migrate_polymarket_canonical` / `migrate_sports_hive_key`); the **newer v9 scripts dropped it**. Confirmed
+      MISSING in: `rebuild_defi_manifest.py`, `rebuild_cefi_manifest*`, `rebuild_tradfi_manifest*`,
+      `rebuild_prediction_manifest.py`, `migrate_defi_full_v9_canonical.py`, `migrate_tradfi_to_v9_canonical.py`, and IS
+      `migrate_instruments_store_v9.py` (the ones that call `read_availability_index`). **Fix per AG-slot**: add
+      `setup_events(service_name="...",     mode="local", sink=None)` at the top of `main()` (mirror the sports fix;
+      migrators that do pure object-path moves and never read the manifest — e.g. `migrate_sports_canonical_v9` — do NOT
+      need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service + instruments-service.
+      parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
+- [ ] [DEFI/CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
+      `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
+      (surfaced by slot-4 sports pre-apply audit 2026-06-08).** The C-PATH inventory above marked the DeFi **migrator +
+      rebuild** ✅ source-aware (mtds@f80c50f1) but the **41 inline `pipeline_mode="batch"` literals in the DeFi LIVE
+      WRITE path** were NOT swept: ~29 `cli/handlers/*` (perp*funding/position_data/lst_rates/gas_fee/liquidations/
+      flash_loan_events/native_staking/eigenlayer_rewards/bridge_events/jupiter_quote/oracle_prices/orca_whirlpool/
+      phoenix_orderbook/raydium_classic_amm/solana_defi/staking_yields/token_transfers/vault_share_price/
+      websocket_streaming/mev_events/governance*_/lending_indices/aggregator_route/protocol_outage_detector/…), the 5
+      `engine/__catalog_reader.py`, + tradfi `massive_tradfi_rest_connector`/`tardis_adapter` + clients
+      (`alchemy_\*`/`extended*base`/`tardis_base`/`thegraph_base`). Each is commented "Coarse ingestion mode → canonical     pipeline_mode= path segment (Live=Batch)". **TWO consequences**: (1) **batch≠live REGRESSION for DeFi** — DeFi     live-written data lands at `pipeline_mode=batch/`(coarse) while migrated DeFi batch data lands at    `pipeline_mode=batch*<source>/` (source-aware mtds@f80c50f1) → the migration CREATES a split the audit's ⑪     keystone forbids; (2) **STEP 5.85 (`no-inline-pipeline-mode-string-literal`, added pm@28698c856 2026-05-28)     hard-fails → mtds `quality-gates.sh`exits non-zero → NO`.qg_last_passed_sha`written →`quickmerge
+      --agent`    refuses → NO mtds code (any AG) can ship** (it currently blocks slot-4's verified sports`setup_events`fix).     **FIX (slot-2 DeFi + cross-cutting)**: each handler/reader must pass the SOURCE-AWARE`PipelineMode.<BATCH_SOURCE>`    (or`derive_pipeline_mode_for_row(venue,
+      ag,
+      data_type)`/`resolve_pipeline_mode()`), the SAME value the v9     migrator + the shared `engine/orchestrator.py`
+      write path use, so DeFi live == DeFi migrated-batch. Per-handler source derivation is DeFi-domain (the handler
+      knows its venue/source) — slot-4 did NOT edit (collision + correctness risk across 41 DeFi sites). Repo:
+      market-tick-data-service. parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08
+      (this is a NEW DeFi readiness blocker — it is NOT in the DeFi APPLY-READY verdict above, which covered
+      migrator/rebuild but not the live handlers).
 
 ## Demotion + linkage record
 
