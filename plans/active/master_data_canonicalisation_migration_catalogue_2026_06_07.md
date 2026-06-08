@@ -515,21 +515,26 @@ does not require a second whole-corpus walk.
       `orchestrator.py` chain partition/data_type-merge (lines 44/692-700) — confirm fully Era-B (see the
       orchestrator.py finding below). GATED on cefi+tradfi G4 apply complete. Repos: unified-api-contracts +
       market-tick-data-service. parent_epic: manifest_master.
-- [ ] [MTDS] P0. **CONFIRMED (slot-7 code audit 2026-06-08) — the writer is NOT uniformly Era-B; residual Era-A surfaces
-      gate the relabel `--apply`.** Verdict from a full read of the cefi/tradfi write + preflight paths: 🟢 **PROGRESS
-      (slot-7 2026-06-08, mtds@<pending>)**: (1) **OBJECT-WRITE path RE-CONFIRMED Era-B** (tardis_shared
-      `_LEGAL_DATA_TYPES` raises on `options_chain`; databento `_PARTITION_INSTRUMENT_TYPE` maps FUTURE→`futures_chain`
-      string + `data_type=trades`). (2) **`tradfi_catalog_reader.py:226-230` Era-A hint FIXED** → `data_type=trades` for
-      FUTURE/OPTION (the chain bundle is carried by the instrument_type partition token, not the data_type) —
-      **zero-risk**: a full read proved `CatalogRow.data_type` is NEVER consumed for seeding (orchestrator uses only
-      `.venue`/`.instrument_id`, and `orchestrator.py:3548-3553` ALREADY SKIPS options_chain/futures_chain as data_types
-      when seeding `record_expected_unattempted` — so NO Era-A data_type ever reached the manifest either). (3) The
-      orchestrator `_MERGED_DATA_TYPE_MAP`/`_DATA_TYPE_TO_INSTRUMENT_TYPE` + `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP`
+- [x] ✅ [MTDS] P0. **CLOSED 2026-06-08 (slot-2 GCS byte-probe) — the writer IS uniformly Era-B (code audit + on-disk
+      confirmed).** Slot-7's code audit + the byte-probe below agree; the relabel `--apply` is no longer gated by Era-A
+      residue. Original audit retained: 🟢 **PROGRESS (slot-7 2026-06-08, mtds@<pending>)**: (1) **OBJECT-WRITE path
+      RE-CONFIRMED Era-B** (tardis_shared `_LEGAL_DATA_TYPES` raises on `options_chain`; databento
+      `_PARTITION_INSTRUMENT_TYPE` maps FUTURE→`futures_chain` string + `data_type=trades`). (2)
+      **`tradfi_catalog_reader.py:226-230` Era-A hint FIXED** → `data_type=trades` for FUTURE/OPTION (the chain bundle
+      is carried by the instrument_type partition token, not the data_type) — **zero-risk**: a full read proved
+      `CatalogRow.data_type` is NEVER consumed for seeding (orchestrator uses only `.venue`/`.instrument_id`, and
+      `orchestrator.py:3548-3553` ALREADY SKIPS options_chain/futures_chain as data_types when seeding
+      `record_expected_unattempted` — so NO Era-A data_type ever reached the manifest either). (3) The orchestrator
+      `_MERGED_DATA_TYPE_MAP`/`_DATA_TYPE_TO_INSTRUMENT_TYPE` + `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP`
       options_chain/futures_chain entries stay **G4-gated** — the MVP config DRIVES the live DERIBIT chain DOWNLOAD
       (orchestrator.py:2440 filters `venue_data_types` to the DERIBIT_MVP data_type values), so dropping them now breaks
       DERIBIT capture; they retire atomically with the adapter migration at cefi+tradfi G4 (the era_b_legacy_purge guard
-      enables it). **REMAINING gate (a)**: the GCS byte-probe of a recent cefi+tradfi chain shard (owner with GCS creds
-      — slot-7 lacks them this slot).
+      enables it). **✅ gate (a) CLOSED — GCS byte-probe (slot-2, 2026-06-08, central-element-323112)**: real-prod
+      `market-data-tick-cefi-prd` `day=2025-12-31` DERIBIT shards — `options_chain`/`futures_chain` appear ONLY as
+      `instrument_type=`, the data_types are `trades`/`book_snapshot_5`/`derivative_ticker`,
+      `pipeline_mode=batch_tardis` (source-aware), and **`data_type=(options_chain|futures_chain)` count = 0** → on-disk
+      is uniformly Era-B, zero Era-A residue. (Superseded line: the GCS byte-probe of a recent cefi+tradfi chain shard
+      (owner with GCS creds — slot-7 lacks them this slot).
   - **Live TICK-WRITE path = Era-B for cefi+tradfi chains (GOOD).** Both route through `tardis_shared.py` /
     `tradfi_shared.py` `finalise_and_write_cefi_shards`, whose `_LEGAL_DATA_TYPES` (tardis_shared.py:65) EXCLUDES
     `options_chain`/`futures_chain` and **raises** on `data_type=options_chain` (≈652) — it writes
