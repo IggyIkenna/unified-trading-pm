@@ -32,7 +32,7 @@ on:
         required: true
         type: number
       wall_type:
-        description: "merge_conflict | label_mismatch | sit_failure"
+        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health"
         required: true
         type: string
       context:
@@ -60,10 +60,10 @@ on:
         required: true
         type: number
       wall_type:
-        description: "merge_conflict | label_mismatch | sit_failure"
+        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health"
         required: true
         type: choice
-        options: [merge_conflict, label_mismatch, sit_failure]
+        options: [merge_conflict, label_mismatch, sit_failure, ldr_qg_failure, plan_health]
       context:
         description: "Free-text context for the worker"
         required: true
@@ -122,9 +122,9 @@ jobs:
 
           # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
           case "$IN_WALL" in
-            merge_conflict | label_mismatch | sit_failure) ;;
+            merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health) ;;
             *)
-              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure)"
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health)"
               exit 1
               ;;
           esac
@@ -226,6 +226,26 @@ jobs:
               exit 1
               ;;
           esac
+
+      - name: Mark PR escalated (idempotency) — ONLY on confirmed spawn
+        # This is the spawn-confirmed idempotency marker the stuck-PR watcher
+        # (ci_failure_watcher.py::_pr_has_escalation_label) gates on. It is applied HERE — not
+        # in the watcher — so it reflects an ACTUAL worker spawn (dispatched=true ⇒ 200 +
+        # escalation_id), not a mere dispatch-accept. A 503/no-slot leaves dispatched=false ⇒
+        # the PR stays UNLABELLED ⇒ the next */15m watcher tick re-dispatches until a slot frees.
+        # Cross-repo (target PR lives in another repo) ⇒ needs GH_PAT, not GITHUB_TOKEN.
+        if: steps.post.outputs.dispatched == 'true' && steps.inputs.outputs.pr_number != '0'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ steps.inputs.outputs.repo }}
+          PR_NUMBER: ${{ steps.inputs.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          gh label create escalation-dispatched --repo "${OWNER}/${REPO}" --force \
+            --color B60205 --description "Handed to the orchestrator for conflict resolution" || true
+          gh pr edit "${PR_NUMBER}" --repo "${OWNER}/${REPO}" --add-label escalation-dispatched
+          echo "Labelled ${OWNER}/${REPO}#${PR_NUMBER} escalation-dispatched (spawn confirmed)."
 
   # ── SLACK NOTIFY ──────────────────────────────────────────────────────────
   notify:
