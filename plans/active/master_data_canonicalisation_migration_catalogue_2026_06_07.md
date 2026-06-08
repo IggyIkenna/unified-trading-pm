@@ -151,9 +151,14 @@ parallel-safe.
 - [ ] [DATA] P0. **slot 5 (Prediction) — G4 `--apply`** (per-cqg; pred-prd buckets). Repos: as above. **🔴 GATED on
       CF-11 close**: polymarket fetch-error swallow must `record_failed` (not `record_empty`/`[]`) — else bakes wrong
       4-state. See prediction audit (pred-fetch).
-- [ ] [DATA] P0. **slot 6 (TradFi) — G4 `--apply`** (databento/massive; daily listing). Repos: as above. **🔴 GATED on
-      CF-11 close**: `databento.py:826` ZERO-signal swallow must `record_failed`. See tradfi audit (tradfi-cf11). cefi
-      already closed (`e2e008f0`); the source-provenance write-path is shipped (#4 non-block).
+- [ ] [DATA] P0. **slot 6 (TradFi) — G4 `--apply`** (databento/massive; daily listing). Repos: as above. **🟢 CF-11
+      CLOSED + DRY-RUN-GREEN (slot-6, 2026-06-08)** — the `databento.py:826` (+ L802) ZERO-signal swallow re-raises →
+      `attempted_failed` ON LDR (instruments-service@f7744fbf + @c0f2f39c, re-verified
+      `git show origin/live-defi-rollout`; the prior "🔴 GATED" was stale — keyed off `bd1456aa` read as not-on-LDR, its
+      content re-SHA'd as f7744fbf). Migrator + rebuild `--dry-run` clean on real-prod GCS (recent 984/0-err; old-tail
+      `category=`→`asset_group=` T-OLD fix proven); Era-B count=0; rollback snapshot present. **APPLY-READY — REGRESSION
+      RISK: NONE** (tradfi plan ①–⑫). cefi already closed (`e2e008f0`); source-provenance write-path shipped (#4
+      non-block). Operator fires `--apply` (`--also-legacy` per R1).
 - [ ] [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation**: execute
       `audit_criteria_automation_2026_06_08.md` (Tier-2 QG steps + Tier-3 scheduled cf_manifest_audit cron). Parallel to
       the applies (only adds gates).
@@ -179,9 +184,11 @@ parallel-safe.
 > (orphaned / code-vs-data mismatch). It is **NON-BLOCK** only if (i) the change is already shipped, (ii) the walk
 > itself performs the change (in-walk), or (iii) it is purely consumer-side / CI / dep / a post-migration G5 backfill. A
 > "deferred to a later walk" rename is NON-BLOCK **only if the current walk does not leave code-vs-data mismatched in
-> the interim** — otherwise it blocks. Confirmed blockers so far: **CF-11 swallow (tradfi `databento.py:826` +
-> prediction polymarket)**. Under-review (sweep 2026-06-08): **D14 `dex_pools`(manifest) vs `dex_pool_state`(parquet)**
-> name divergence + any other pending schema/name/path change. NON-BLOCK (verified): Massive shape (never ingested),
+> the interim** — otherwise it blocks. Confirmed blockers so far: **CF-11 swallow** — **tradfi `databento.py:826` ✅
+> CLOSED (slot-6 2026-06-08: re-raises on LDR, instruments-service@f7744fbf+@c0f2f39c, re-verified
+> `git show origin/live-defi-rollout`; the stale framing keyed off `bd1456aa`)**; **prediction polymarket still OPEN
+> (slot-5)**. Under-review (sweep 2026-06-08): **D14 `dex_pools`(manifest) vs `dex_pool_state`(parquet)** name
+> divergence + any other pending schema/name/path change. NON-BLOCK (verified): Massive shape (never ingested),
 > source-provenance write-path (shipped), D10 unbacked venues (no data), library QG sentinel (CI).
 
 > **🟢 G3-CONSUMER — deployment-api/UI UNION read path SHIPPED 2026-06-07 (vm-cross-cutting / slot-7)**: the data-status
@@ -1228,27 +1235,26 @@ P1 redirect todo below.)
 UPPERCASE — an OLD partial-apply artifact; the current migrator stamps the lowercase `.value` `batch_onchain_subgraph`).
 The `--apply` re-conforms + the RD4 legacy-delete removes the superseded old-format objects in the SAME bucket, so these
 are migration-in-flight residue the apply resolves — NOT a separate orphan. (Flagged for the apply-run to confirm the
-RD4 legacy-delete covers the UPPERCASE residue too.)
-      parent_epic: mtds_mdps_master. > **FINDING (slot-5 prediction, 2026-06-08) — two updates to this MTDS-QG-red
-      item:** > (a) **`rebuild_prediction_manifest.py` is now SPLIT** (954→692 L, mtds@c571445d) → REMOVE it from
-      the >900 list; > the remaining >900 files are non-prediction. (b) **NEW gate-0 blocker not previously listed: a
-      committed > `uv.lock`↔`pyproject.toml` desync on the MTDS LDR HEAD.** `uv lock --check` FAILS — the committed
-      `pyproject.toml` > declares `pyarrow-stubs` + `mypy-boto3-{logs,sns,sqs}` that are absent from the committed
-      `uv.lock`, so the QG > aborts at its FIRST gate (`❌ uv.lock out of sync`) BEFORE file-size/basedpyright/tests
-      even run. Mechanical > re-sync (`uv lock` adds the 4 stub pkgs, ~52 LOC; precedent mtds@10930dbd "re-sync uv.lock
-      to pyproject"). Until > this lands, NO MTDS `quality-gates.sh` reaches green regardless of the file-length work —
-      fix it FIRST in this > slot-2 sweep. (Slot-5 did not fix it: it completes another commit's incomplete dep edit —
-      out of prediction AG + > FM1 foreign-work-bundling risk.) **✅ RESOLVED 2026-06-08 (slot-2, operator decision
-      A):** (0) **gate-0 re-locked** (mtds@d544f15c — `uv lock` to current pyproject; `uv lock --check` green) BUT this
-      is **recurring lock-drift** (the type-stubs flip-flop in pyproject between agents; `dbbbef8a` added them, a later
-      commit removed them) → **handed to the dep/CI lane** (slot-1 `update-dependency-version.yml` prevention + settle
-      the type-stub flip-flop); NOT a thing to keep manually re-locking. (1) **file-size = 15 pre-existing
-      non-`scripts/` files** (orchestrator.py 4219 etc.) → **DEFERRED to the named successor
-      `plans/active/mtds_file_size_refactor_2026_06_08.md`** (post-migration; splitting the migration's own
-      `orchestrator.py` pre-apply is high-risk for zero migration benefit). **NOT migration-blocking**: file-size loop
-      excludes `./scripts/*` (migration code clean); MTDS migration code ships via basedpyright-on-touched; `--apply`
-      runs from VM/tarball not the sentinel. (The hollow-sentinel harness finding below is the related ship-hygiene
-      item.)
+RD4 legacy-delete covers the UPPERCASE residue too.) parent_epic: mtds_mdps_master. > **FINDING (slot-5 prediction,
+2026-06-08) — two updates to this MTDS-QG-red item:** > (a) **`rebuild_prediction_manifest.py` is now SPLIT** (954→692
+L, mtds@c571445d) → REMOVE it from the >900 list; > the remaining >900 files are non-prediction. (b) **NEW gate-0
+blocker not previously listed: a committed > `uv.lock`↔`pyproject.toml` desync on the MTDS LDR HEAD.** `uv lock --check`
+FAILS — the committed `pyproject.toml` > declares `pyarrow-stubs` + `mypy-boto3-{logs,sns,sqs}` that are absent from the
+committed `uv.lock`, so the QG > aborts at its FIRST gate (`❌ uv.lock out of sync`) BEFORE file-size/basedpyright/tests
+even run. Mechanical > re-sync (`uv lock` adds the 4 stub pkgs, ~52 LOC; precedent mtds@10930dbd "re-sync uv.lock to
+pyproject"). Until > this lands, NO MTDS `quality-gates.sh` reaches green regardless of the file-length work — fix it
+FIRST in this > slot-2 sweep. (Slot-5 did not fix it: it completes another commit's incomplete dep edit — out of
+prediction AG + > FM1 foreign-work-bundling risk.) **✅ RESOLVED 2026-06-08 (slot-2, operator decision A):** (0)
+**gate-0 re-locked** (mtds@d544f15c — `uv lock` to current pyproject; `uv lock --check` green) BUT this is **recurring
+lock-drift** (the type-stubs flip-flop in pyproject between agents; `dbbbef8a` added them, a later commit removed them)
+→ **handed to the dep/CI lane** (slot-1 `update-dependency-version.yml` prevention + settle the type-stub flip-flop);
+NOT a thing to keep manually re-locking. (1) **file-size = 15 pre-existing non-`scripts/` files** (orchestrator.py 4219
+etc.) → **DEFERRED to the named successor `plans/active/mtds_file_size_refactor_2026_06_08.md`** (post-migration;
+splitting the migration's own `orchestrator.py` pre-apply is high-risk for zero migration benefit). **NOT
+migration-blocking**: file-size loop excludes `./scripts/*` (migration code clean); MTDS migration code ships via
+basedpyright-on-touched; `--apply` runs from VM/tarball not the sentinel. (The hollow-sentinel harness finding below is
+the related ship-hygiene item.)
+
 - [ ] [INFRA] P2. **🔴 LOCAL QG HARNESS collects the WRONG test suite for some repos — the green sentinel is HOLLOW
       (surfaced slot-7 2026-06-08).** Running `bash scripts/quality-gates.sh --no-fix` for **instruments-service** AND
       **market-tick-data-service** on this host produced a `[3/6] TESTS` run with `rootdir: …/unified-trading-pm`,

@@ -155,9 +155,12 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
 
 ## TradFi-specific standing checks (added 2026-06-08) — Era-B chains + databento/massive dual-source + daily listing
 
-- [ ] (tradfi-erab) **Era-B on disk** — byte-probe a recent databento futures/options chain shard in
-      `market-data-tick-tradfi-prd`: `options_chain`/`futures_chain` only as `instrument_type=`, `data_type=trades`,
-      `data_type=(options_chain|futures_chain)` count = 0 (confirmed 2026-06-08).
+- [x] ✅ (tradfi-erab) **Era-B on disk — RE-CONFIRMED (slot-6, 2026-06-08)** — byte-probe `market-data-tick-tradfi-prd`
+      `day=2026-05-18`: chains present only as `instrument_type=futures_chain`/`combo` with
+      `data_type=trades`/`ohlcv_1m`; **`data_type=(options_chain|futures_chain)` count = 0** across the sampled recent
+      days (Era-B clean, zero Era-A residue in the dominant corpus). The pre-migration legacy `category=`/Era-A
+      `data_type=options_chain` tail is handled by the migrator (T-OLD-1/2 fix, mtds@51c604a4 PRESERVE) — see tradfi
+      plan ⑩.
 - [ ] (tradfi-shape) **Massive routes through the canonical writer + cross-source row-schema parity** (added 2026-06-08
       after audit found the gap). Every TradFi adapter (incl. Massive) MUST emit via
       `tradfi_shared.finalise_tradfi_rows_and_path`/`write_tradfi_shard` (the SSOT for the on-disk column set +
@@ -175,11 +178,20 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
 - [ ] (tradfi-listing) **daily listing / could-exist** — instruments expire and list DAILY (CME futures/options); NEVER
       copy instrument definitions between dates; the could-exist universe = listed contracts per session (only static
       exception: CBOE VIX index). `expected_unattempted` for listed-but-not-backfilled contracts.
-- [ ] (tradfi-cf11) **🔴 PRE-APPLY BLOCKER — databento ZERO-signal swallow** (`databento.py:826`): a fetch error /
-      zero-signal returning `[]`/`record_empty` instead of `record_failed` bakes a wrong `empty_confirmed` where the
-      truth is `attempted_failed`. This is a write-path 4-state mislabel → MUST be `record_failed`-on-fetch-error +
-      QG-green BEFORE the tradfi `--apply` (single-walk bakes it). CF-11 swallow audit (mtds_mdps item (i)); owner
-      `downstream_services_manifest_canonicalisation_2026_06_01.md`. cefi already closed (`e2e008f0`).
+- [x] ✅ (tradfi-cf11) **CLOSED — databento ZERO-signal swallow FIXED ON LDR (re-verified slot-6, 2026-06-08).** Both
+      the `databento.py` `BentoError` branch (L802→L832) AND the `data.to_df()` parse-failure branch (L838→L856) now
+      **classify + emit `ADAPTER_FETCH_FAILED` then `raise RuntimeError`** → caught by
+      `urdi_reference_provider._fetch_one`'s per-venue `except RuntimeError` (shard-isolation boundary) → venue lands in
+      `failed[]` → excluded from `_non_error_venues` → orchestrator `record_failed` → honest `attempted_failed` (a
+      genuine empty still returns `[]` cleanly). Landed on `origin/live-defi-rollout` via
+      **instruments-service@f7744fbf** ("Databento fetch-failure threads STATE (re-raise)") + **@c0f2f39c** (Massive
+      source-aware factory, CF-11 re-raise carried) — VERIFIED on LDR
+      (`git show origin/live-defi-rollout:…/tradfi/databento.py` shows the re-raise; tab==LDR, 0-diff). Manifest side:
+      the E5 rebuild routes trading-day zeros → `attempted_failed` via `reemit_honest_absence_rows`
+      (`WithinBoundsTradfiSourceZero`) — 11 unit tests green (`test_rebuild_tradfi_manifest_cf11.py`). The cross-AG IS
+      adapter swallow audit is also closed (`e2e008f0`). **NOT a pre-apply blocker — the fix predates this apply.** The
+      original stale "🔴 PRE-APPLY BLOCKER" framing (and the coordinator's matching entry) was based on commit
+      `bd1456aa` being read as "not on LDR" — its content re-SHA'd onto LDR via quickmerge as `f7744fbf`.
 
 ## Success Criteria
 
