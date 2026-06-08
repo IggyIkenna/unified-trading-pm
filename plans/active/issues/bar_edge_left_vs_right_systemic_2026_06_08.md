@@ -66,8 +66,16 @@ that BYPASS the processed layer.**
 - **Databento ohlcv raw open-edge** → **DOWNGRADED to ℹ️ by-design / not-a-downstream-bug** (MDPS converts; consumed
   candle verified right-edge). Keep only as a "raw representation is vendor-open-edge; never consume raw ohlcv directly
   — always the processed candle" note.
-- **🔴 CONFIRMED-BY-EXECUTION — features-service re-resamplers (the only realized live bugs).** Ran both functions on a
-  synthetic RIGHT-edge 1m series (features-service venv, polars 1.40):
+- **✅ FIXED 2026-06-08 (features-service@7a4fafd9, QG green) — features-service re-resamplers (the only realized live
+  bugs).** Both shipped right-edge: `candle_resampler.resample_ohlcv` → `closed="right", label="right"`;
+  `flow_interaction` → bar stamped `truncate("1m") + 1m` (close). Regression guards added
+  (`test_resample_right_edge_close_labels` asserts `00:05:00/00:10:00` labels + correct grouping; right-edge assertion
+  in `test_flow_interaction_basic_cvd`); test inputs corrected to the real right-edge convention; `test_1m_to_1h_ratio`
+  origin fixed. **⚠️ FOLLOW-UP (open): existing `features-*` parquets computed BEFORE this fix carry the old left-edge
+  timestamps** — the fix only corrects NEW computes. A feature recompute over the affected history is required to purge
+  the left-edge corpus (scope = every coarser-than-base delta_one tf + cross_instrument `flow_interaction` outputs).
+  Tracked here; size + sequencing TBD (recompute vs let-it-roll-forward) — operator/Ikenna call. Original evidence (ran
+  both functions on a synthetic RIGHT-edge 1m series, features-service venv polars 1.40):
   - `candle_resampler.resample_ohlcv(1m→5m)` → output stamped `00:00:00 / 00:05:00 / 00:10:00` (LEFT labels) **and
     miscomposed**: the "5-minute bar" at `00:00:00` contains only minutes 1–4 (close=104, vol=10) instead of the correct
     `00:05:00` bar over minutes 1–5 (close=105, vol=15). So `closed="left", label="left"` both **mislabels (open edge)
@@ -93,7 +101,18 @@ that BYPASS the processed layer.**
 > (tradfi databento ohlcv, defi dex_swaps). The **only realized bugs are the two features-service re-resamplers** — both
 > reproduced by running the real code — which corrupt correct right-edge candles into left-edge downstream of the gate.
 > Everything else (raw open-edge artifacts, instruments-service refdata, inactive pre-agg fetchers) is by-design or
-> latent, not a live data-correctness incident. Remediation priority: fix the two features-service calculators first.
+> latent, not a live data-correctness incident.
+>
+> **STATUS 2026-06-08:** the two features-service calculators (the only realized bugs) are **FIXED**
+> (features-service@7a4fafd9, QG green; awaiting staging-unlock to promote — see below). REMAINING: (1) recompute the
+> pre-fix left-edge `features-*` corpus; (2) optional correctness-in-depth fixes for the latent pre-agg fetchers +
+> instruments-service refdata so they can't bite if activated. Neither is a live incident.
+
+## Shipping status
+
+- **features-service@7a4fafd9** on `live-defi-rollout` (QG exit 0). Promotion to staging→main is **pending the staging
+  lock** (`workspace-manifest.json.staging_status` — execution-service breaking-bump cascade, unrelated); it joins the
+  committed-LDR backlog that drains via the staging→main automation / a per-repo staging PR when the lock clears.
 
 ## The site register (verdicts with file:line)
 
