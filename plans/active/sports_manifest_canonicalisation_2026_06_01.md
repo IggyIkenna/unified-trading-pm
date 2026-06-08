@@ -1623,6 +1623,26 @@ data_types. The one code gap (rebuild crash) is FIXED for sports + filed cross-c
       unified-trading-pm (`scripts/quality-gates-base/base-service.sh`). parent_epic: mtds_mdps_master. Owner:
       vm-cross-cutting. Provenance: slot-4 sports pre-apply ship 2026-06-08.
 
+### 🏁 FINISH-LINE REPORT — slot-4 autonomous run (2026-06-08)
+
+**Sports is DRY-RUN-GREEN + ①–⑫ verdict GREEN (REGRESSION RISK: NONE). STOPPED before `--apply` (operator-fired).**
+
+- **Pre-apply blockers resolved**: the one open sports-owned code blocker (the rebuild `setup_events` crash on the
+  drained-fleet stale-index state) is FIXED + SHIPPED to LDR (`mtds@351fa32a`, confirmed `merge-base --is-ancestor` of
+  `origin/live-defi-rollout`). All other open plan items are OPERATIONAL/gated (the VM `--apply` walk, E3
+  drain+consolidate, IS instruments-store v9 walk RUN, IS backfill, catalogue scheduler `terraform apply`) — none
+  bypassable by an interactive slot; they execute at/after the operator's `--apply`.
+- **Migrator + rebuild `--dry-run` exit clean**: ① migrator dry-run green (full-corpus 2.68M→100% v9, prior, unchanged);
+  ② rebuild dry-run NOW green on real prod GCS with the shipped fix (exit 0, `RUN_COMPLETED` 233.7s). ③–⑫ green per the
+  12-point audit; ⑫ rollback snapshots independently re-confirmed on both sports buckets.
+- **①–⑫ verdict** written + accurate (the ② evidence now cites the shipped sha + this session's re-verify).
+- **Forced-tradeoff decision (AUTONOMOUS_AGENT_RULES rule 1)**: the mtds full `quality-gates.sh` green-sentinel is
+  structurally unattainable (operator-deferred file-size on `orchestrator.py` + every migration script). Per the
+  operator-documented record ("MTDS migration code ships via basedpyright-on-touched; --apply runs from VM/tarball not
+  the sentinel"), the verified fix shipped via basedpyright-on-touched (76=HEAD neutral, zero new QG failures) + the
+  tab-branch path (mirror→LDR). The fleet-wide QG-RED condition is filed as the P1 cross-cutting todo above (NOT a
+  sports gate). No DEFERRED/BLOCKED end-states left for sports.
+
 ## Success criteria
 
 - Canonical sports `_index` = v9 + `pipeline_mode=` partition + `source` column + canonical venue/league/data_type.
