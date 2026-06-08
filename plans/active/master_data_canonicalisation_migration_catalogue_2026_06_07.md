@@ -387,13 +387,14 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
   rebuild/enumerate dry-runs + `_index` byte-probes; MTDS cefi `_index`=2.64M rows 100% v8 pre-migration confirmed).
   **G4 data/manifest migration = APPLY-READY, REGRESSION RISK NONE** (⑪ batch=live byte-identical; ②/① no
   double-count/no loss — copy-not-move safe via rebuild dedup + migrate-before-rebuild; ⑤/⑨/⑩/⑫ 🟢). **TWO
-  honest-coverage gates surfaced (NOT G4 blockers): ⑧ 🔴 IS cefi reference universe lists only 12 venues —
-  KRAKEN-SPOT/FUTURES (107K captured rows, on-disk-real) + BITFINEX-SPOT + PACIFICA + LIGHTER absent at SOURCE ⇒
-  catalogue ⊉ present-set ⇒ falsely-high coverage** (owner: instruments-service cefi adapter universe + IS backfill —
-  `instruments_backfill_phase3`/`proper_instrument_catalogue_lifecycle_rollup`); **⑦(a) 🟡 deployment-api cefi coverage
-  denominator re-derives genesis/launch instead of READING `expected_unattempted`** (correct pre-seed; switch post
-  enumerate `--apply-write` — owner: deployment-api/downstream). Both tracked as todos in the cefi plan § "PRE-APPLY
-  12-POINT AUDIT VERDICT".
+  honest-coverage gates surfaced (NOT G4 blockers): ⑧ 🟡 IS cefi reference universe lists only 12 venues —
+  KRAKEN-SPOT/FUTURES (107K captured rows, on-disk-real) + BITFINEX-SPOT + PACIFICA + LIGHTER absent ⇒ catalogue ⊉
+  present-set ⇒ falsely-high coverage. **ROOT CAUSE = IS Tardis adapter `_DEFAULT_EXCHANGES` stale 8-id subset drifted
+  below SSOT `VenueMapping.all_tardis_exchanges`; 🟢 CODE FIX SHIPPED `is@a6bc4d48` (derives from SSOT + regression
+  tests).** Remaining = operational IS reference backfill re-run + CLOB venues (PACIFICA/LIGHTER) — owner
+  `instruments_backfill_phase3`; **⑦(a) 🟡 deployment-api cefi coverage denominator re-derives genesis/launch instead of
+  READING `expected_unattempted`\*\* (correct pre-seed; switch post enumerate `--apply-write` — owner:
+  deployment-api/downstream). Both tracked as todos in the cefi plan § "PRE-APPLY 12-POINT AUDIT VERDICT".
 - **sports (slot-4)**: **WAVE-2 dry-runs GREEN (2026-06-07)** — G1-ENUM league-grain producer DONE (is@99a5fbf5) +
   AG-specific producer present; **fixed a real G1-ENUM bug: the UAC `("sports","league")` validity slice silently
   dropped `ODDS` → now derived from `SPORTS_DATA_TYPE_TO_SOURCE` (uac@aff80339/PR#95)**. G1-V8 instruments-store v9
