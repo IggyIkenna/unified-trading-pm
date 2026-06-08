@@ -217,6 +217,22 @@ what the operator is seeing:
       per-repo workflows need a fleet sweep (same sed: `checkout@v4→v5`, `setup-python@v5→v6`, `setup-node@v4→v5`). Then
       verify each repo's next workflow run has no Node-20 deprecation warning. repo: ALL (fleet-wide branch of cicd
       hardening).
+- [x] ✅ [DEVOPS] P1. **deployment-service tab-mirror `div_hosts: unbound variable` on main — fix PR opened (CI-watcher
+      alert 2026-06-08 10:09).** REAL: deployment-service `main` still ran the pre-fix tab-mirror (raw
+      `${#div_hosts[@]}` under `set -u`) — the `set +u`/`div_hosts_n` guard was on `live-defi-rollout` but
+      deadlock-blocked from promoting (a concrete instance of the stale-staging/fix-stuck-on-LDR class). Landed just the
+      workflow file onto main via targeted PR `deployment-service#32` (base main ← LDR content, auto-merge `--rebase`
+      ON, `quality-gates-v2` running). Stops the recurring scheduled crash + restores LDR→tab FF-sync once green.
+- [ ] [DEVOPS] P2. **PM `cloud-build-router` fails on main — `google-github-actions/auth` empty WIF input** (CI-watcher
+      2026-06-08). `auth failed: must specify exactly one of workload_identity_provider or credentials_json` → the WIF
+      provider var/secret is empty/unset on PM. Decide: (a) PM should not run cloud-build-router at all (it is not a
+      deployed package — gate the trigger to repos that build), or (b) set the missing WIF var on PM. Lower urgency (no
+      service impact). repo: unified-trading-pm.
+- [ ] [CI] P2. **CI-watcher should suppress the staging-lock-check `repository_dispatch` "locked" run from the FAILING
+      alert** (CI-watcher 2026-06-08 flagged MTDS Staging Lock Check as a new failure). That run exits 1 BY DESIGN to
+      report "staging is locked"; the latest `pull_request` run was green. Treat a `repository_dispatch`-triggered
+      lock-check `failure` as expected-locked-state (not a CI failure) so it doesn't page. repo: unified-trading-pm
+      (`ci_failure_watcher.py`).
 
 ## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
 
