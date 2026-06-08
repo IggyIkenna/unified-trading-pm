@@ -137,13 +137,17 @@ jobs:
               continue
             fi
 
-            # Search cursor-rules/
-            RULES_HITS=$(grep -rl "$SYMBOL" cursor-rules/ 2>/dev/null | wc -l | tr -d ' ')
+            # Search cursor-rules/ — swallow grep's exit-1-on-no-match BEFORE the pipe:
+            # under `set -euo pipefail` a no-match grep (exit 1) makes the whole pipe fail and
+            # aborts the step on the first unmatched symbol (incident 2026-06-07: 55 symbols
+            # extracted but the step crashed on symbol #1, so the notify job fell back to the
+            # misleading "0 symbols changed, refs_found=false" default).
+            RULES_HITS=$({ grep -rl "$SYMBOL" cursor-rules/ 2>/dev/null || true; } | wc -l | tr -d ' ')
 
             # Search codex/ (folded into this repo)
             CODEX_HITS=0
             if [ -d "codex" ]; then
-              CODEX_HITS=$(grep -rl "$SYMBOL" codex/ 2>/dev/null | wc -l | tr -d ' ')
+              CODEX_HITS=$({ grep -rl "$SYMBOL" codex/ 2>/dev/null || true; } | wc -l | tr -d ' ')
             fi
 
             TOTAL_HITS=$((RULES_HITS + CODEX_HITS))
