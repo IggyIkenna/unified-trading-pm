@@ -532,17 +532,17 @@ design).
       deployment-service staging is v2 only (the non-required AWS CodeBuild check was red but did not block — see the
       separate CodeBuild item below; it is NOT the deployment_api cause). **Note: a workflow RE-RUN pins the old
       reusable-workflow SHA — a FRESH run (close+reopen / new push) is required to pick up a reusable-workflow change.**
-- [ ] [CICD] P2. **deployment-service AWS CodeBuild gate red — BUILD-phase exit 127 (infra, NOT deployment_api;
-      found 2026-06-05).** CodeBuild `deployment-service` fails at the BUILD phase:
+- [ ] [CICD] P2. **deployment-service AWS CodeBuild gate red — BUILD-phase exit 127 (infra, NOT deployment_api; found
+      2026-06-05).** CodeBuild `deployment-service` fails at the BUILD phase:
       `docker run … $ECR_REPO:$VERSION … "scripts/quality-gates.sh --no-fix --quick"` → **exit 127** (command/image not
       found), and POST_BUILD `uv pip install build twine` → **exit 127** (`uv` not on the CodeBuild host PATH). Exit 127
       = the command/image isn't found, NOT a test failure (which is exit 1) — so this is unrelated to the deployment_api
       v2 regression fixed above. Likely `$ECR_REPO`/`$VERSION` unresolved (image never pushed for this SHA) and/or `uv`
-      missing from the CodeBuild image. **Non-blocking**: CodeBuild is NOT a required check for deployment-service staging
-      (v2 + check-staging-lock are), so #21 merged fine; this is informational red. Pre-existing (was red on the earlier
-      #21 runs too). Belongs to the CodeBuild-gate track (same surface as the strategy-service #67 CodeBuild-vs-v2
-      branch-protection item). Repo: deployment-service (`buildspec.aws.yaml` + the ECR image pipeline / CodeBuild project
-      env). Provenance: #21 promotion-PR check audit, slot-1.
+      missing from the CodeBuild image. **Non-blocking**: CodeBuild is NOT a required check for deployment-service
+      staging (v2 + check-staging-lock are), so #21 merged fine; this is informational red. Pre-existing (was red on the
+      earlier #21 runs too). Belongs to the CodeBuild-gate track (same surface as the strategy-service #67
+      CodeBuild-vs-v2 branch-protection item). Repo: deployment-service (`buildspec.aws.yaml` + the ECR image pipeline /
+      CodeBuild project env). Provenance: #21 promotion-PR check audit, slot-1.
 - [ ] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
       **Harsh's**, confirm before closing), mtds #94 (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
 
@@ -573,6 +573,18 @@ design).
       89f4c0b50 / e8fa1c92e / 0496f96a5) — land ATOMICALLY inside that work (one edit + one re-rollout), never raced,
       else the 24 copies re-drift. Verify after: a fix landing on LDR auto-re-runs the promotion PR's v2 with NO
       close+reopen.
+- [ ] [SCRIPT] P2. **FINDING (2026-06-08, slot-1): `quickmerge --agent` STAGE-3 sha-sentinel fast-path is unusable for
+      LIBRARY repos (`unified-api-contracts`, `unified-trading-library`).** `base-library.sh` only writes
+      `.qg_content_sentinel` and NEVER `.qg_last_passed_sha` (that `git rev-parse HEAD > .qg_last_passed_sha` block
+      lives only in `base-service.sh:~2693`). But `quickmerge.sh:1039` agent-path reads `.qg_last_passed_sha` and
+      hard-refuses on `!= HEAD` ("Pass 1 quality-gates.sh not run on current HEAD (SHA mismatch)") → a library repo's
+      stale sentinel can never match, so the agent fast-path always blocks even after a full green QG. Surfaced shipping
+      the UAC `test_schema_version_matrix` time-bomb fix (had to `git rev-parse HEAD > .qg_last_passed_sha` by hand,
+      which is truthful — full QG passed on that exact content — then push the tab branch since quickmerge then
+      early-exits "nothing to commit" on the already-committed tree). EXACT FIX: add the same COMPLETE-green-run
+      sha-sentinel write block from `base-service.sh` to `base-library.sh` (guard on `_QG_SENTINEL_HIT != true`
+      identically), then re-rollout the QG bases. Composes with the QG-sentinel gitignore item. repos: PM
+      `scripts/quality-gates-base/`.
 - [x] ✅ [DEPS] P0. **RESOLVED 2026-06-05 (Ikenna [slot-1]) — fleet aiohttp UNIFIED at `>=3.13.4,<3.14.0`, NOT bumped to
       3.14.** This todo originally prescribed "bump UP to 3.14 fleet-wide" — **reversed by operator override**: aiohttp
       3.14 breaks vcrpy 8.1.1 (removed `AsyncStreamReaderMixin`) → jams every VCR repo's promotion, and no compatible
@@ -616,19 +628,20 @@ design).
       `cicd_contract_hardening_2026_06_01.md` Phase 6.
 - [ ] [INFRA] P2. **VM registry `active:` flag for alert-suppression (hybrid topology, operator 2026-06-05).** Fleet is
       hybrid (1 always-on `agent-orchestrator-vm-1` + epic VMs on-demand, currently stopped for local CI/CD work —
-      INTENTIONAL, `assigned_vm` stays on epic VMs, NOT re-pointed). To stop alerts firing for intentionally-stopped VMs,
-      add a per-VM `active: true|false` flag to `orchestrator_vm_registry.yaml` (+ `regen_vm_registry.py`) that the VM-level
-      alerters (zombie-watchdog / host-offline / dead-man-switch) read to suppress non-active hosts. Partly covered today
-      by Harsh's tab-mirror active-host-filter (tab-divergence alerts only); this is the VM-liveness-alert side. Low
-      urgency — VMs are off + nothing firing.
+      INTENTIONAL, `assigned_vm` stays on epic VMs, NOT re-pointed). To stop alerts firing for intentionally-stopped
+      VMs, add a per-VM `active: true|false` flag to `orchestrator_vm_registry.yaml` (+ `regen_vm_registry.py`) that the
+      VM-level alerters (zombie-watchdog / host-offline / dead-man-switch) read to suppress non-active hosts. Partly
+      covered today by Harsh's tab-mirror active-host-filter (tab-divergence alerts only); this is the VM-liveness-alert
+      side. Low urgency — VMs are off + nothing firing.
 
 - [ ] [SCRIPT] P3. **Drop the orphaned `pre_commit` pin from `workspace-constraints.toml`** (re-derive). **MIGRATED
-      FROM:** `plans/active/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md` (archived 2026-06-07).
-      The hook runner is now `prek` fleet-wide (AO + UAC pyprojects migrated `pre-commit`→`prek>=0.3.0,<1.0.0`;
-      `check-precommit-versions.py` installs via prek), so the `pre_commit>=3.0,<4.0.0` pin in `workspace-constraints.toml`
-      is orphaned. Re-deriving it via `resolve-canonical-versions.py` produced a CORRUPT diff in a single-slot worktree
-      (malformed duplicate keys; not all repos aligned locally) → **must run from a clean full-checkout host**. Harmless
-      while present (pre-commit is no longer the invoked runner) → P3. Repo: `unified-trading-pm`.
+      FROM:** `plans/active/issues/hook_tooling_version_alignment_across_environments_2026_06_03.md` (archived
+      2026-06-07). The hook runner is now `prek` fleet-wide (AO + UAC pyprojects migrated
+      `pre-commit`→`prek>=0.3.0,<1.0.0`; `check-precommit-versions.py` installs via prek), so the
+      `pre_commit>=3.0,<4.0.0` pin in `workspace-constraints.toml` is orphaned. Re-deriving it via
+      `resolve-canonical-versions.py` produced a CORRUPT diff in a single-slot worktree (malformed duplicate keys; not
+      all repos aligned locally) → **must run from a clean full-checkout host**. Harmless while present (pre-commit is
+      no longer the invoked runner) → P3. Repo: `unified-trading-pm`.
 
 ### Temporary states (uncommitted fixes preserved in slot-1 worktrees)
 
