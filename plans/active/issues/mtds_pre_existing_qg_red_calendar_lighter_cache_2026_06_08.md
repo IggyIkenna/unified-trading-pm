@@ -44,7 +44,7 @@ contributors (ComsicTrader 2026-05-15, the lighter bot 2026-05-07):
 - Owner = the capture/calendar + adapters maintainer (ComsicTrader's new-queue items 9/10) + the lighter maintainer.
   Diagnose each (test-wrong vs code-regressed — read both sides) and fix on LDR.
 - Independent of the tradfi migration: the tradfi migrator + attribution + matrix changes (mtds@51c604a4 / mtds@b56da26a
-  / uac@<pending>) are content-clean (their own tests are in the 2662 passed) and do not touch these surfaces, so they
+  / uac@df0acd06) are content-clean (their own tests are in the 2662 passed) and do not touch these surfaces, so they
   ship onto the already-red repo without worsening it.
 
 - [ ] [TEST] P1. Diagnose + fix `test_calendar_boundaries.py` future-date-skip (returns `{}` under freeze_time —
