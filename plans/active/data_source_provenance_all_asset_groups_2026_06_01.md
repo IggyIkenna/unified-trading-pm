@@ -312,12 +312,15 @@ column is RED, not exempt.
       `source` is universal across ALL asset groups") + `honest-absence-downstream-handling.md` (§ "Multi-source cell
       consumer policy" banner generalised to all groups + read-path-finding note) — PM slot ref. Documents auto-stamp +
       computed-exempt + the generic resolver/read-path status.
-- [ ] [MTDS] P1. **Prediction — stamp `source` on every cell NOW** (`polymarket_clob` / `polymarket_gamma_api` /
-      `kalshi_*`): single-source today but stamp for swap-resilience (a future Polymarket data-provider change).
-      Required by the universal Phase 1 gate. `market-tick-data-service/.../engine/orchestrator.py`
-      (`record_captured_from_counts`). **Historical backfill/re-consolidation folds into
-      `prediction_manifest_canonicalisation_2026_06_01.md` C-source rider** (its single bundled walk owns the prediction
-      `_index` — do NOT open a separate prediction source walk).
+- [x] ✅ [MTDS] P1. **Prediction — stamp `source` on every cell — CODE DONE (mtds@8c9ed259; re-verified slot-5
+      2026-06-08).** Both write paths pass `asset_group="prediction"` → the UTL `ManifestWriter` auto-stamps the sole
+      UAC source (`polymarket_clob`) for the single-source cqg bundle (zero blank source, swap-resilient): the LIVE
+      writer `orchestrator.py:3298-3305` (`record_captured_from_counts(..., asset_group="prediction")`) AND the BATCH
+      `rebuild_prediction_manifest.py:456` (re-confirmed this session by the ⑪ keystone commit mtds@202f5e0b, which
+      reads the same emit). `MARKET_LIFECYCLE` resolves `polymarket_gamma_api` via SOURCE*PRIORITY (utl@01ca49ea removed
+      the POLYMARKET venue-override). Kalshi lands born-canonical
+      (`kalshi*\*`) as a venue addition. **Historical `\_index`    re-consolidation folds into`prediction_manifest_canonicalisation_2026_06_01.md`C-source rider** (its single     bundled walk owns the prediction`\_index`, GATED `--apply`
+      — do NOT open a separate prediction source walk).
 - [x] ✅ [CODEX] P2. **Document the prediction invariant precisely — DONE (slot-5 2026-06-04).** Added a "Source vs
       Venue invariant (HARD)" section to `codex/02-data/prediction-data-types-catalog.md`: stamping `source` ≠ treating
       venues as sources — Polymarket/Kalshi stay separate **venues** (cross-venue dispersion is a feature-layer concern,
