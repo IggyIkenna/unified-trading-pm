@@ -420,11 +420,12 @@ coarse doc stragglers (M-COORD-1). The live→`live_<source>` object migration i
       discrepancy flagged in the .tf header. **VERIFIED on LDR 2026-06-07 (slot-7)**: `lifecycle_catalogue_scheduler.tf`
       carries all 5 AGs (cefi/defi/tradfi/sports/prediction) — the G1 daily catalogue scheduler is AG-complete;
       `terraform apply` is the only remaining (gated) step.
-- [ ] [INFRA] P2. **catalogue_regen_scheduler.tf is MISSING tradfi** (slot-7 verify 2026-06-07) — the UAC-artefact regen
-      scheduler (`enumerate_envelope`/`availability`/`strategy_instruments`) has cefi/defi/sports/prediction but NOT
-      tradfi (the sibling `lifecycle_catalogue_scheduler.tf` + `instrument_catalogue_scheduler.tf` both DO have tradfi).
-      Distinct from the G1 lifecycle scheduler above (different script); add tradfi to its `for_each`. Repo:
-      deployment-service `terraform/gcp/catalogue_regen_scheduler.tf`.
+- [x] ✅ [INFRA] P2. **catalogue_regen_scheduler.tf MISSING tradfi — DONE (deployment-service@a27b05a, slot-7
+      2026-06-08)**: added `instruments-store-tradfi-central-element-323112` to the `catalogue_regen_instruments_reader`
+      `for_each` IAM grant (+ the doc comment) so the regen job's `strategy_instruments` join can read the tradfi
+      instruments-store parquet (the sibling `lifecycle_catalogue_scheduler.tf` + `instrument_catalogue_scheduler.tf`
+      already had it). `terraform fmt -check` clean. The `terraform apply` is the gated infra step (out of scope here).
+      Repo: deployment-service `terraform/gcp/catalogue_regen_scheduler.tf`.
 
 **Cross-AG IS references (each AG owns its instruments-store reference surface — sliced, not duplicated):** defi §H
 `instruments-store-defi` walk · sports `instruments-store-sports` (2.68M rows + the 316-cell legacy→prd data-loss-gated
@@ -572,8 +573,16 @@ does not require a second whole-corpus walk.
       `batch_onchain_subgraph` for dex-swaps (was the `batch_onchain_rpc` fallback) — re-verify your G2 dry-run.** Repo:
       unified-api-contracts (`canonical/crosscutting/source_priority.py` + `availability_semantics.py`). parent_epic:
       manifest_master.
-- [ ] [INFRA] P2. **MTDS local `--no-fix` QG is pre-existing-RED** (blocks the `.qg_last_passed_sha` sentinel → no clean
-      quickmerge for ANY MTDS change): ~16 `❌` on current LDR — 6 files >900 lines (5 unrelated:
+- [x] ✅ [INFRA] P2. **MTDS local `--no-fix` QG pre-existing-RED — ROOT-CAUSED + RESOLVED (slot-7 2026-06-08)**: the
+      gate-0 blocker was the committed **`uv.lock`↔`pyproject.toml` desync** (slot-5 finding (b) below) —
+      `uv lock --check` FAILED so QG aborted at its FIRST gate before file-size/basedpyright/tests ran. **FIX: `uv lock`
+      (adds the 4 stub pkgs pyarrow-stubs + mypy-boto3-{logs,sns,sqs}, +52 LOC) — landed on LDR (mtds@dbbbef8a, peer;
+      slot-7's identical re-lock dropped as a patch-id duplicate on rebase).** With it,
+      **`bash scripts/quality-gates.sh --no-fix` now exits 0 and WRITES `.qg_last_passed_sha`** (verified slot-7: "All
+      checks passed!", sentinel==HEAD) — the ~16 `❌` list was STALE (the >900 files were already split + the rest gated
+      behind the uv.lock abort). The e2e-testing prediction basedpyright errors are a PERIPHERAL-consumer warning,
+      non-blocking. MTDS QG is GREEN. Repo: market-tick-data-service. parent*epic: mtds_mdps_master. *(Original finding
+      retained below for provenance.)\_ ~16 `❌` on current LDR — 6 files >900 lines (5 unrelated:
       `migrate_sports_canonical_v9`/`rebuild_sports_manifest_v9`/`rebuild_prediction_manifest`/`solana_lst_archival`/
       `websocket_runner`), deep-UAC-imports / asyncio.run-in-loop / raw-response.json / empty-fallbacks in untouched
       handlers, STEP 5.85 inline-`pipeline_mode=` literals across the migration scripts, + macOS-environmental
