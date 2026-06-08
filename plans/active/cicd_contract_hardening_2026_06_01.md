@@ -3609,3 +3609,53 @@ tracks (out of this CI-machinery dispatch's scope to force on main given the dat
   plan (master), `utl_full_quality_gates_green`, `qg_commit_quality_boundary_and_slot_ff_push`,
   `codex_vs_repo_docs_ssot_audit`, `harden_grepable_rules_into_ci_gates`, `orchestrator_fleet_worker_spawn_enablement`
   (2), `issue_docs_remediation_sweep`, `fleet_audit_triad_deferred_followups` (data/operator track).
+
+---
+
+## 🟢 Node-20 → Node-24 GHA action-version migration (audited + Phase-1 shipped 2026-06-08, harsh slot-2)
+
+**Plan-of-record gap closed:** this fleet-wide work had NO tracked todo before now — Ikenna's template rollout +
+Phase-1 repo-local both shipped untracked (verified 2026-06-08: 0 open todos / 0 done-items across all active plans).
+This section is the SSOT for the Node-20 deprecation migration + per-action runtime table.
+
+**Deadline (GitHub Node-20 deprecation):** runners default to Node 24 on **2026-06-16** — SOFT (node20 actions auto-run
+on node24 + emit a deprecation warning; opt-out env `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true`). Node 20 **removed
+fall 2026** — HARD cliff. Big-3 warnings clear now; the breaking second-tier (esp. `auth` v3) must land before fall.
+
+**Audit (harsh slot-2 2026-06-08) — risk classes that do NOT apply to us:** runners 100% `ubuntu-latest` (zero
+self-hosted / macOS-13.4 / ARM32 → the OS/ARM compat class is N/A), zero local custom actions (`using: node20`), zero
+SHA-pins (clean tag bumps), `setup-node@v5` auto-cache safe (no `packageManager` field fleet-wide; explicit `cache:`
+workflows behave identically in v5).
+
+### Phase 1 — big 3 (`checkout@v5` / `setup-python@v6` / `setup-node@v5`): ✅ DONE on `live-defi-rollout`
+
+- [x] [SCRIPT] P1. Templated workflows (`tab-mirror`, `semver-agent`, `staging-lock-check`, `*-backmerge`,
+  `quality-gates-v2`, `update-dependency-version`, `request-major-bump`, UI `ui-quality-gates-v2` /
+  `uac-registry-sync` / `uic-openapi-sync`) → bumped via **PM SSOT rollout** (slot-1 Ikenna); on LDR fleet-wide. Edit
+  the TEMPLATE source + re-roll, never per-repo copies (a per-repo edit is reverted by the next rollout).
+- [x] [SCRIPT] P1. Repo-local (non-templated) workflows → **7 repos bumped + pushed to LDR** (harsh slot-2 2026-06-08):
+  `unified-api-contracts`@3b58940, `execution-service`@6207c28, `system-integration-tests`@af339b4,
+  `unified-trading-library`@9cf9a80, `instruments-service`@c60abcf, `unified-trading-system-ui`@9e5c29a5,
+  `agent-orchestrator`@564d8aa. Verified **0 remaining non-templated node20 big-3 on LDR**. Pending promotion to `main`
+  (rides LDR→staging→main once the breaking-cascade staging lock clears).
+
+### Phase 2 — second-tier node20 actions: ⬜ OPEN (per-action review, before fall 2026)
+
+Bumping only the big-3 does NOT clear Node-20 warnings — ~10 more JS actions are still `node20` (each verified via its
+`action.yml` `runs.using`). Several carry BREAKING changes → per-action changelog review + ONE test push per action, NOT
+a blind sweep. Method per action: bump named files → verify diff → prek-gated commit → SSH push (templated copies via PM
+rollout, never per-repo).
+
+- [ ] [SCRIPT] P1. `google-github-actions/auth` v2→**v3** (12 refs) — ⚠️ BREAKING (release note: "Bump to Node 24 and
+  remove old parameters"); GCP-auth critical path (incl. `persist-cicd-event`). Review removed params + smoke GCP auth
+  before the fleet bump.
+- [ ] [SCRIPT] P1. `actions/upload-artifact` v4→**v7** (15 refs) — ⚠️ 3 major jumps (artifact immutability + naming
+  changed across v5–v7). Read v5/v6/v7 changelogs; `v3.2.2-node20` is the escape hatch if a v7 break blocks.
+- [ ] [SCRIPT] P2. `google-github-actions/setup-gcloud` v2→**v3** (7 refs) — likely breaking (mirrors `auth`).
+- [ ] [SCRIPT] P2. `astral-sh/setup-uv` v5→**v8** (7 refs).
+- [ ] [SCRIPT] P2. `actions/github-script` v7→**v8/v9** (5 refs) — node24 since v8; verify `script:` arg compat.
+- [ ] [SCRIPT] P2. `actions/cache`@v4, `actions/download-artifact`@v4, `pnpm/action-setup`@v2/v4,
+  `aws-actions/configure-aws-credentials`@v4, `dawidd6/action-download-artifact`@v6,
+  `peter-evans/repository-dispatch`@v3, `stefanzweifel/git-auto-commit-action`@v5 (1–5 refs each) — all node20; confirm
+  each one's node24-major target then bump.
+- `codecov/codecov-action`@v5 = **composite**, UNAFFECTED (no `using: node20`).
