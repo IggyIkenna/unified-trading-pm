@@ -1,7 +1,6 @@
 ---
 title: "execution-service DeFi backtest loader — canonical path candidate missing (LDR v2 RED)"
 created: 2026-06-08
-author: ikennaigboaka [slot-1·laptop]
 assigned_vm: planning
 parent_epic: master_to_live_defi_2026_05_23
 estimate_class: refactor
@@ -12,6 +11,8 @@ source:
   - "introduced by execution-service@c71484d6 (slot-2·laptop): fix(execution): DeFi backtest loader reads canonical
     pipeline_mode-aware path first"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

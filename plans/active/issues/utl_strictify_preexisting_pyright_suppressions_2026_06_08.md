@@ -3,11 +3,12 @@ title:
   "unified-trading-library: strict-ify the ~116 pre-existing pyright/type suppressions (out of scope of the QG-green
   plan)"
 created: 2026-06-08
-author: ikennaigboaka [slot-1·laptop]
 source:
   - plans/active/utl_full_quality_gates_green_2026_06_01.md
   - unified-trading-library (committed HEAD, pre-2026-06-08)
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

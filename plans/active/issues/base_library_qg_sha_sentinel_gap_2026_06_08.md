@@ -1,13 +1,14 @@
 ---
 title: "base-library.sh does not write .qg_last_passed_sha → quickmerge --agent Stage-3 fails on every library"
 created: 2026-06-08
-author: ikennaigboaka [slot-1·laptop]
 source:
   - plans/active/utl_full_quality_gates_green_2026_06_01.md
   - scripts/quality-gates-base/base-library.sh
   - scripts/quality-gates-base/base-service.sh
   - scripts/quickmerge.sh
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found

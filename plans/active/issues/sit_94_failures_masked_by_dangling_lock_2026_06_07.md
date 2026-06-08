@@ -1,11 +1,12 @@
 ---
 title: "SIT 94 failures — accumulated regression masked by the dangling staging lock"
 created: 2026-06-07
-author: ikennaigboaka [slot-1·laptop]
 source:
   - "cicd_contract_hardening_2026_06_01.md (staging-lock deadlock root-cause)"
   - "system-integration-tests SIT run 27101141832 (94 failed, 4527 passed)"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
