@@ -32,7 +32,7 @@ on:
         required: true
         type: number
       wall_type:
-        description: "merge_conflict | label_mismatch | sit_failure"
+        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health"
         required: true
         type: string
       context:
@@ -60,10 +60,10 @@ on:
         required: true
         type: number
       wall_type:
-        description: "merge_conflict | label_mismatch | sit_failure"
+        description: "merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health"
         required: true
         type: choice
-        options: [merge_conflict, label_mismatch, sit_failure]
+        options: [merge_conflict, label_mismatch, sit_failure, ldr_qg_failure, plan_health]
       context:
         description: "Free-text context for the worker"
         required: true
@@ -122,9 +122,9 @@ jobs:
 
           # wall_type must be in the orchestrator's closed set (server/escalation.py WALL_TYPES).
           case "$IN_WALL" in
-            merge_conflict | label_mismatch | sit_failure) ;;
+            merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health) ;;
             *)
-              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure)"
+              echo "::error::invalid wall_type '$IN_WALL' (valid: merge_conflict | label_mismatch | sit_failure | ldr_qg_failure | plan_health)"
               exit 1
               ;;
           esac
