@@ -205,6 +205,18 @@ what the operator is seeing:
       `continue-on-error:     true` so the badge reflects the `plan-health` sweep, not a side-channel; real
       `plan-health` hard failures still redden it. `unified-trading-pm@ca4084244`. **Verify on the next 02:00 UTC
       scheduled run** that the badge is green. repo: unified-trading-pm.
+- [x] ✅ [DEVOPS] P1. **Node.js 20 action deprecation — PM + template SSOT bumped (operator-surfaced 2026-06-08 from the
+      LDR monitor warning).** GitHub forces Node 24 on 2026-06-16 + removes Node 20 on 2026-09-16;
+      `actions/checkout@v4` + `actions/setup-python@v5` run on Node 20. Bumped to the Node24 majors
+      `actions/checkout@v5` + `actions/setup-python@v6` across all 40 PM workflows (57 checkout + 10 setup-python refs)
+      AND the workflow-template SSOT (`scripts/workflow-templates/`), all yaml valid. `unified-trading-pm@<node-bump>`.
+- [ ] [DEVOPS] P1. **Node.js 20 action deprecation — FLEET ROLLOUT to all ~25 repos (before 2026-06-16).** Every repo's
+      `.github/workflows/*.yml` still carries `actions/checkout@v4` / `actions/setup-python@v5` (+ possibly
+      `actions/setup-node@v4`). The PM templates are now bumped, so
+      `bash scripts/workflow-templates/rollout-workflow-templates.sh` propagates the templated ones; the NON-templated
+      per-repo workflows need a fleet sweep (same sed: `checkout@v4→v5`, `setup-python@v5→v6`, `setup-node@v4→v5`). Then
+      verify each repo's next workflow run has no Node-20 deprecation warning. repo: ALL (fleet-wide branch of cicd
+      hardening).
 
 ## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
 
