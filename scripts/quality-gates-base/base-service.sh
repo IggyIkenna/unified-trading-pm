@@ -2603,6 +2603,81 @@ else
     log_success "STEP 5.91: skipped (checker absent or REPO_ROOT not set)"
 fi
 
+# ── STEP 5.92: bar-edge open-edge (left) ingestion detector ───────────────────
+#
+# A CLOSED OHLCV candle MUST be timestamped on its RIGHT (close) edge. Stamping
+# the vendor bar-START (open/left) edge is look-ahead → leakage, and the MDPS
+# bar-boundary gate (STEP 5.74) does NOT catch a uniform one-interval left shift
+# (it stays grid-aligned). This AST gate flags an ingestion/adapter function
+# that consumes a vendor bar-START field (periodStartUnix / openTimestamp / a
+# candle-fn "t" key) WITHOUT a close conversion (compute_bar_close_boundary /
+# vendor close field). SHRINKING ratchet: `bar_edge_open_ingestion_baseline.yaml`
+# entries are WARNINGS (exit-clean); a NEW open-edge site fails CI. Escape:
+# `# noqa: bar-boundary-open-edge`.
+#
+# SSOT: bar_edge_left_vs_right_remediation_2026_06_08.md Phase 0 +
+# audit_criteria_automation_2026_06_08.md Tier-2.
+_BAR_EDGE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_bar_edge_open_ingestion.py"
+if [ -f "$_BAR_EDGE_CHECKER" ]; then
+    _BE_REPO=$(basename "$PROJECT_ROOT")
+    _BE_WS="$REPO_ROOT"
+    _BE_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BE_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_BAR_EDGE_CHECKER" \
+            --workspace-root "$_BE_WS" --scope "$_BE_REPO" "${_BE_SRC_ARG[@]}" >/tmp/bar_edge_open_ingestion_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/bar_edge_open_ingestion_qg.log 2>/dev/null; then
+            log_warn "STEP 5.92: $(grep -c '^\[WARN\]' /tmp/bar_edge_open_ingestion_qg.log) baselined latent open-edge ingestion site(s); 0 new"
+        else
+            log_success "STEP 5.92: No open-edge (left) bar ingestion — closed candles stamped on the right/close edge"
+        fi
+    else
+        log_fail "STEP 5.92: NEW open-edge (left) bar ingestion site (not in unified-trading-pm/scripts/quality_gates/bar_edge_open_ingestion_baseline.yaml). Use the vendor close field or compute_bar_close_boundary(open_ts, timeframe) → t_close (bar_edge_left_vs_right_remediation_2026_06_08.md):"
+        cat /tmp/bar_edge_open_ingestion_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_bar_edge_open_ingestion.py --workspace-root $_BE_WS --scope $_BE_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.92: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
+# ── STEP 5.93: canonical data-model regression detector ───────────────────────
+#
+# AST gate for three recurring canonicalisation regressions: (a) coarse
+# `pipeline_mode = "batch"/"live"` stamps (canonical is source-aware
+# `batch_<source>`); (b) exact-coarse reader path probes `pipeline_mode=batch/`
+# (readers MUST prefix-match `batch_*`); (c) Era-A `data_type=options_chain/
+# futures_chain` writes (Era-B: chains are instrument_types written with
+# `data_type=trades`). Docstrings, the blank-sentinel `pipeline_mode=""`, and
+# UAC registry/declaration trees are excluded. SHRINKING ratchet:
+# `canonical_model_regressions_baseline.yaml` entries are WARNINGS; a NEW one
+# fails CI. Escape: `# QG-allow: canonical-model-regression`.
+#
+# SSOT: audit_criteria_automation_2026_06_08.md Tier-2 +
+# master_data_canonicalisation_migration_catalogue_2026_06_07.md (the C-PATH /
+# pipeline_mode source-aware + Era-B model).
+_CANON_MODEL_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_canonical_model_regressions.py"
+if [ -f "$_CANON_MODEL_CHECKER" ]; then
+    _CM_REPO=$(basename "$PROJECT_ROOT")
+    _CM_WS="$REPO_ROOT"
+    _CM_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _CM_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if $PYTHON_CMD "$_CANON_MODEL_CHECKER" \
+            --workspace-root "$_CM_WS" --scope "$_CM_REPO" "${_CM_SRC_ARG[@]}" >/tmp/canonical_model_regressions_qg.log 2>&1; then
+        if grep -q '^\[WARN\]' /tmp/canonical_model_regressions_qg.log 2>/dev/null; then
+            log_warn "STEP 5.93: $(grep -c '^\[WARN\]' /tmp/canonical_model_regressions_qg.log) baselined canonical-model occurrence(s); 0 new"
+        else
+            log_success "STEP 5.93: No coarse pipeline_mode / exact-coarse reader / Era-A chain-write regressions"
+        fi
+    else
+        log_fail "STEP 5.93: NEW canonical-model regression (not in unified-trading-pm/scripts/quality_gates/canonical_model_regressions_baseline.yaml). Use source-aware batch_<source> / prefix-match readers / Era-B data_type=trades for chains:"
+        cat /tmp/canonical_model_regressions_qg.log
+        log_fail "         Recheck: $PYTHON_CMD unified-trading-pm/scripts/quality_gates/check_canonical_model_regressions.py --workspace-root $_CM_WS --scope $_CM_REPO"
+        V=$(( V + 1 ))
+    fi
+else
+    log_success "STEP 5.93: skipped (checker not yet provisioned in this repo's PM checkout)"
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 # SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)

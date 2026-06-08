@@ -1,0 +1,19 @@
+# Baseline for check_bar_edge_open_ingestion.py (STEP 5.92) — KNOWN LATENT open-edge
+# bar-ingestion sites tolerated as WARNINGS (exit-clean). NEW (non-baselined) sites
+# fail the commit. Clear an entry by fixing the site to the close edge
+# (compute_bar_close_boundary / vendor close field) then deleting its row.
+#
+# SSOT: bar_edge_left_vs_right_remediation_2026_06_08.md
+# These are LATENT (not prod-corrupting per the issue's data-state verification —
+# the consumed MDPS candle store is right-edge correct); the gate exists so a NEW
+# open-edge ingestion can't regress us.
+default_successor: bar_edge_left_vs_right_remediation_2026_06_08.md Phase 1
+entries:
+  - repo: market-tick-data-service
+    file: market_tick_data_service/market_interface/adapters/tradfi/massive_tradfi_rest_connector.py
+    function: _normalise_ohlcv
+    reason: "Massive `t` open-edge — owned by tradfi_massive_dual_source_2026_05_28.md Phase 4b (Massive #5: interval-aware right-edge conversion). DO-NOT-DOUBLE-FIX; converge there."
+  - repo: market-data-processing-service
+    file: market_data_processing_service/app/adapters/defi/liquidity_adapter.py
+    function: _convert_timestamps
+    reason: "periodStartUnix -> processing_dt (a processing-time field w/ synthetic delay, not obviously the candle close edge). DIAGNOSE semantics before fixing — see bar_edge plan Phase 1 follow-up todo."

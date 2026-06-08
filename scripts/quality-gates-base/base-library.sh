@@ -910,6 +910,45 @@ if [ -d "$SOURCE_DIR/" ]; then
     fi
 fi
 
+# ── STEP 5.92: bar-edge open-edge (left) ingestion detector ───────────────────
+# Library-repo parity with base-service.sh STEP 5.92. A closed OHLCV candle must
+# be stamped on its RIGHT/close edge; a vendor bar-START (open/left) field stamped
+# without a close conversion is look-ahead leakage. Baseline-ratchet.
+# SSOT: bar_edge_left_vs_right_remediation_2026_06_08.md Phase 0.
+_BAR_EDGE_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_bar_edge_open_ingestion.py"
+if [ -f "$_BAR_EDGE_CHECKER" ]; then
+    _BE_REPO=$(basename "$PROJECT_ROOT")
+    _BE_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _BE_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if "${PYTHON_CMD:-python3}" "$_BAR_EDGE_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_BE_REPO" "${_BE_SRC_ARG[@]}" >/tmp/bar_edge_open_ingestion_qg.log 2>&1; then
+        log_ok "STEP 5.92: No NEW open-edge (left) bar ingestion (closed candles stamped on the right/close edge)"
+    else
+        log_fail "STEP 5.92: NEW open-edge (left) bar ingestion site (not baselined). Use the vendor close field or compute_bar_close_boundary(open_ts, timeframe) → t_close:"
+        cat /tmp/bar_edge_open_ingestion_qg.log
+        exit 1
+    fi
+fi
+
+# ── STEP 5.93: canonical data-model regression detector ───────────────────────
+# Library-repo parity with base-service.sh STEP 5.93 (coarse pipeline_mode /
+# exact-coarse reader probe / Era-A chain write). Baseline-ratchet.
+# SSOT: audit_criteria_automation_2026_06_08.md Tier-2.
+_CANON_MODEL_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_canonical_model_regressions.py"
+if [ -f "$_CANON_MODEL_CHECKER" ]; then
+    _CM_REPO=$(basename "$PROJECT_ROOT")
+    _CM_SRC_ARG=()
+    [ -n "${SOURCE_DIR:-}" ] && [ -d "${SOURCE_DIR}" ] && _CM_SRC_ARG=(--source-dir "$SOURCE_DIR")
+    if "${PYTHON_CMD:-python3}" "$_CANON_MODEL_CHECKER" \
+            --workspace-root "$REPO_ROOT" --scope "$_CM_REPO" "${_CM_SRC_ARG[@]}" >/tmp/canonical_model_regressions_qg.log 2>&1; then
+        log_ok "STEP 5.93: No NEW coarse pipeline_mode / exact-coarse reader / Era-A chain-write regressions"
+    else
+        log_fail "STEP 5.93: NEW canonical-model regression (not baselined). Use source-aware batch_<source> / prefix-match readers / Era-B data_type=trades for chains:"
+        cat /tmp/canonical_model_regressions_qg.log
+        exit 1
+    fi
+fi
+
 # ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
 log_section "[6/6] PRODUCTION READINESS VALIDATORS"
 VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
