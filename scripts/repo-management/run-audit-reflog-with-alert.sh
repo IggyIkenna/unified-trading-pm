@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 # Run audit-reflog-resets and show a desktop notification on high-risk findings.
-# Cross-platform: macOS (terminal-notifier/osascript) + Linux (notify-send). Notifications +
-# Telegram fire ONLY on high-risk (exit 1) — a clean run is silent on every channel.
+# Cross-platform: macOS (terminal-notifier/osascript) + Linux (notify-send). Desktop +
+# Telegram + Slack (#ci-failures) fire ONLY on high-risk (exit 1) — a clean run is silent
+# on every channel. Slack uses the same AGENT_ORCHESTRATOR_SLACK_WEBHOOK secret as the
+# verify-slot-host-symmetry --alert path, so hard-reset alerts land in the same channel as
+# slot-host drift alerts.
 # Scheduled by launchd (macOS) or systemd-user (Linux); also run manually to test.
 # Install both via: scripts/repo-management/install-audit-reflog-guard.sh
 #
@@ -87,6 +90,23 @@ if [[ $exit_code -eq 1 ]]; then
       -d chat_id="${TELEGRAM_CHAT_ID}" \
       -d text="${MSG}" \
       -d parse_mode="Markdown" > /dev/null
+  fi
+
+  # Slack notification (#ci-failures) — same webhook source as verify-slot-host-symmetry --alert,
+  # so hard-reset alerts land beside slot-host-drift alerts. Best-effort + guarded so `set -e`
+  # never aborts; fires ONLY on high-risk (exit 1). JSON-escaped via python3 -c (small string,
+  # no regex) because git reflog/branch text can carry quotes/backslashes/newlines that would
+  # break raw JSON inlining. SSOT: docs/audit-reflog-scheduled-job.md.
+  _slack_wh="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null || true)}"
+  if [[ -n "${_slack_wh}" ]]; then
+    _host="$(hostname -s 2>/dev/null || hostname || echo unknown)"
+    _slack_payload=$(SUMMARY="${SUMMARY}" HIGH_RISK="${HIGH_RISK}" HOST="${_host}" python3 -c '
+import json, os
+txt = ":rotating_light: *Audit Reflog — High Risk* on `%s`\n\n%s\n\n```\n%s\n```\nSee /tmp/audit-reflog.log on the host for the full report." % (
+    os.environ.get("HOST", ""), os.environ.get("SUMMARY", ""), os.environ.get("HIGH_RISK", ""))
+print(json.dumps({"text": txt}))' 2>/dev/null || true)
+    [[ -n "${_slack_payload}" ]] && curl -s -X POST -H 'Content-Type: application/json' \
+      --data "${_slack_payload}" "${_slack_wh}" > /dev/null 2>&1 || true
   fi
 fi
 
