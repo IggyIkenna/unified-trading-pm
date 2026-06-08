@@ -5136,3 +5136,22 @@ tradfi mass should collapse ~588K → plausible (the ~563K false GONE); cefi DER
 `VENUE_DATA_TYPE_CAPABILITIES` is an unsound bundle-venue discriminator (BYBIT lists `futures_chain` yet captures
 per-contract), so FUTURE-leaf venue-bundling needs a sound registry first; `futures_chain` bundle ENTRIES already roll
 up. Shipped via tab→LDR. — ikenna-slot-7
+
+[2026-06-08] ikenna-slot-7 → slots 3 (cefi) + 6 (tradfi) + coordinator
+(master_data_canonicalisation_migration_catalogue_2026_06_07.md §G1-ENUM Era-B finding): **CORRECTNESS PRE-FLIGHT for
+the relabel `--apply` — CONFIRMED the writer is NOT uniformly Era-B (code audit; full verdict in the catalogue P0
+finding).** Good news: the live TICK-WRITE path for cefi+tradfi chains IS Era-B — `tardis_shared.py`/`tradfi_shared.py`
+`finalise_and_write_cefi_shards` RAISES on `data_type=options_chain` (`_LEGAL_DATA_TYPES`, tardis_shared.py:65/652) and
+writes `instrument_type=options_chain|futures_chain` + `data_type=trades`; Databento (tradfi) writes
+`instrument_type=options_chain` + `data_type=trades` (databento_adapter.py:111-120); the orchestrator
+`_MERGED_DATA_TYPE_MAP`/`_resolve_partition_data_type` Era-A merge (orchestrator.py:693/737/1109/1137) is dead on the
+tick path (no current adapter passes `data_type=options_chain`). slot-3's GCS probe (cefi `data_type=trades`)
+corroborates. **BUT two residual Era-A surfaces gate `--apply`:** (1) 🔴 `engine/tradfi_catalog_reader.py:226-230`
+stamps `CatalogRow.data_type=futures_chain|options_chain` on the MTDS could-exist/`record_expected_unattempted`
+preflight grain → clashes with the Era-B enumerate seed (`data_type=trades`) → same cell double-grains; (2) 🟠 UAC
+`MVP_VENUE_DATA_TYPES["DERIBIT"]`/`DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES` still list `options_chain`/`futures_chain` as
+DATA_TYPES (orchestrator.py:2436/2441 consumes). **DO NOT run the first chain-shard `--apply` until BOTH**: (a) a GCS
+probe of a recent cefi+tradfi chain shard byte-confirms on-disk `data_type=trades` (slot-7 lacks GCS creds in this slot
+— please run on a creds host), AND (b) the Era-A could-exist surfaces are retired (`tradfi_catalog_reader` →
+`data_type=trades`+`instrument_type=futures_chain|options_chain`; drop the chain tokens from the MVP data_type lists).
+Repos: market-tick-data-service + unified-api-contracts. — ikenna-slot-7

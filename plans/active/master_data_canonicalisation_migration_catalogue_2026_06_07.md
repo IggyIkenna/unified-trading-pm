@@ -504,16 +504,39 @@ does not require a second whole-corpus walk.
       `orchestrator.py` chain partition/data_type-merge (lines 44/692-700) — confirm fully Era-B (see the
       orchestrator.py finding below). GATED on cefi+tradfi G4 apply complete. Repos: unified-api-contracts +
       market-tick-data-service. parent_epic: manifest_master.
-- [ ] [MTDS] P1. **FINDING (slot-7 2026-06-08) — confirm `orchestrator.py` is uniformly Era-B on disk.** The plan
-      asserts the chain object PATH is `data_type=trades` (slot-3 verified for cefi via `tardis_shared.py` Phase 1.6),
-      but `market_tick_data_service/engine/orchestrator.py` is mid-Era-B: `_classify_symbol` (≈766) correctly separates
-      `instrument_type=options_chain` from `data_type`, yet lines 44/692-700/907 still carry `data_type=options_chain`
-      partition/merge logic + it consumes the UAC `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP` chain data_type config. **Why it
-      matters**: if the LIVE batch writer still puts `data_type=options_chain` on disk for any chain shard, the Era-B
-      could-exist seed (`data_type=trades`, `uac@ae70338d`/`is@74df991d`) will NOT match captured rows → the cell reads
-      as `expected_unattempted` (false-missing) + the captured row is orphaned. Verify the actual on-disk chain
-      `data_type` (GCS probe of a recent cefi/tradfi chain shard) + audit orchestrator.py for any Era-A write path;
-      reconcile to `data_type=trades` if found. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+- [ ] [MTDS] P0. **CONFIRMED (slot-7 code audit 2026-06-08) — the writer is NOT uniformly Era-B; residual Era-A surfaces
+      gate the relabel `--apply`.** Verdict from a full read of the cefi/tradfi write + preflight paths:
+  - **Live TICK-WRITE path = Era-B for cefi+tradfi chains (GOOD).** Both route through `tardis_shared.py` /
+    `tradfi_shared.py` `finalise_and_write_cefi_shards`, whose `_LEGAL_DATA_TYPES` (tardis_shared.py:65) EXCLUDES
+    `options_chain`/`futures_chain` and **raises** on `data_type=options_chain` (≈652) — it writes
+    `instrument_type=options_chain|futures_chain` + a legal `data_type` (`trades`). The tradfi Databento adapter writes
+    via `PartitionedTickWriter` with `_PARTITION_INSTRUMENT_TYPE` setting
+    **instrument_type**=options_chain/futures_chain
+    - `data_type=trades` (databento_adapter.py:111-120). The orchestrator `_MERGED_DATA_TYPE_MAP`
+      (orchestrator.py:693) + `_resolve_partition_data_type` (:737) + write path (:1109/:1137) Era-A merge fires ONLY if
+      a caller passes `data_type∈{options_chain,futures_chain}` — **no current tick adapter does**, so it is
+      dead/defensive on the tick path. slot-3's GCS probe (cefi on-disk `data_type=trades`) corroborates. So the tick
+      objects are Era-B.
+  - **BUT residual Era-A surfaces remain → NOT a clean "uniformly Era-B" sign-off:**
+    1. 🔴 **`market_tick_data_service/engine/tradfi_catalog_reader.py:226-230`** stamps
+       `CatalogRow.data_type = "futures_chain"|"options_chain"` (FUTURE/OPTION) — this is the **MTDS could-exist /
+       `record_expected_unattempted` preflight grain**, so it seeds expected rows at `data_type=options_chain` (Era-A)
+       that DIRECTLY clash with the Era-B enumerate seed (`data_type=trades`, `uac@ae70338d`/`is@74df991d`) → the same
+       cell double-grains (Era-A preflight row + Era-B enumerate row). **This is the concrete relabel-inconsistency
+       risk.**
+    2. 🟠 **UAC `MVP_VENUE_DATA_TYPES["DERIBIT"]` + `DERIBIT_MVP_INSTRUMENT_TYPE_DATA_TYPES`**
+       (market_data_categories.py:485/493) still list `options_chain`/`futures_chain` as **data_types** (consumed by
+       orchestrator.py:2436/2441) — the config that, if fed to the Era-A merge, re-introduces `data_type=options_chain`.
+    3. 🟠 **orchestrator.py:693/737/1109/1137** Era-A merge map + `:44` docstring — dead-but-live; should be retired so
+       a future caller can't re-introduce Era-A. `tardis_adapter.py:2541/2549` passes inbound
+       `data_type="futures_chain"` (canonicalised to Era-B by finalise, but Era-A-shaped at the boundary).
+  - **GATING before first `--apply` (BOTH required):** (a) **GCS probe** a recent cefi+tradfi chain shard to
+    byte-confirm the on-disk `data_type=` dir (slot-7 lacks GCS creds in this slot — owner with creds runs it); (b)
+    **retire the Era-A could-exist surface** — fix `tradfi_catalog_reader.py:226-230` to `data_type=trades` +
+    `instrument_type=futures_chain|options_chain` (match the Era-B seed) and drop `options_chain`/`futures_chain` from
+    `MVP_VENUE_DATA_TYPES`/`DERIBIT_MVP` as **data_type** values (keep them as instrument_types). Until both, the
+    relabel double-grains tradfi/cefi chain cells. Repos: market-tick-data-service + unified-api-contracts. parent_epic:
+    mtds_mdps_master.
 - [ ] [UAC] P2. **DeFi `SOURCE_PRIORITY` registry gaps** (surfaced by the C-PATH WRITE derivation):
       `(defi,     dex_pool_swaps)` is UNREGISTERED → falls back to `batch_onchain_rpc` (vs
       `dex_pool_state`→`onchain_subgraph`); non-Hyperliquid perp venues (LIGHTER→tardis via the venue override) are
