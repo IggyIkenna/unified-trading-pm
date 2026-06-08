@@ -1060,6 +1060,20 @@ purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · dra
       blocker-set (1); this commit rides on LDR via the tab-mirror and promotes through staging once slot-2's MTDS-QG
       green lands. The `uv.lock` desync is annotated as a finding callout on that slot-2 MTDS-QG item in
       `master_data_canonicalisation_migration_catalogue_2026_06_07.md` (slot-5 2026-06-08).
+- [ ] [CODE] P2. **FINDING (slot-6 2026-06-08, surfaced while verifying the tradfi MTDS `--no-fix` gate) — a THIRD MTDS
+      sentinel blocker the note above MISSED: the MTDS `check-import-patterns` gate FAILS on 2 prediction migration
+      scripts** — `rebuild_prediction_manifest.py:410` + `migrate_prediction_to_pred_prd_v9.py:100`, the deliberate deep
+      `from unified_trading_library.pipeline_mode_resolver import derive_pipeline_mode_for_row` (chosen above for the
+      "`__all__`-less facade" reason). **That reasoning does NOT hold for the fix the checker wants**: `__all__` only
+      gates `from pkg import *`, NOT `from pkg import <name>` — and `derive_pipeline_mode_for_row` IS a top-level
+      attribute of `unified_trading_library` (verified: `'derive_pipeline_mode_for_row' in dir(unified_trading_library)`
+      → True), so the checker's fix `from unified_trading_library import derive_pipeline_mode_for_row` imports cleanly.
+      Slot-5's note verified FILE-level (basedpyright/ruff/tests) but the import-patterns check is REPO-wide (604 files)
+      → it was not caught. So MTDS `--no-fix` blocker-set is (0) lock desync + (1) 17 over-length files **+ (2) these 2
+      import-pattern violations**. NOT fixed by slot-6 (cross-AG — these are prediction migration scripts slot-5 may be
+      mid-edit on); 2-line trivial fix (`check-import-patterns.py --fix`) for the prediction owner / slot-2 MTDS-QG.
+      Cross-link: the slot-2 MTDS-QG item in `master_data_canonicalisation_migration_catalogue_2026_06_07.md`. Repo:
+      market-tick-data-service. parent_epic: mtds_mdps_master.
 - [ ] [UAC] P2. **NICE-TO-HAVE — defense-in-depth prediction row in the G1-ENUM validity matrix.** Prediction is
       correctly handled by `_row_data_types` grain-binding (verified safe ④), so this is NOT a correctness fix — but a
       `("prediction","prediction_market") → frozenset({"prediction_canonical_question_group", …})` entry in UAC
