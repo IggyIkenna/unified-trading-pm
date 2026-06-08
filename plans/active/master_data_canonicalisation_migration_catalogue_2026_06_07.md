@@ -1031,15 +1031,33 @@ P1 redirect todo below.)
 - [ ] [DATA] P1. **gas-fees MUST be in the manifest + data-status could-exist denominator (operator 2026-06-08).** gas
       is already RECORDED in the manifest per chain (`gas_fee_handler` → `DefiManifestRecorder.record_captured/empty`,
       `venue=ALCHEMY`/`chain=<chain>`, `data_type=gas_fees`, chain-grain) — but two things must follow the 7th-spec
-      migration: (a) the gas-fees `_index` is canonicalised to v9 by the new migrator spec (P0 above), so the manifest
-      rows carry `pipeline_mode=batch_onchain_rpc`/`source=onchain_rpc`/`asset_group=defi`; (b) the **could-exist
-      denominator** (IS `enumerate_expected_universe` + the deployment-api/UI data-status) must include `gas_fees` as a
-      **per-chain expected cell** (one per chain × day in `GAS_FEE_CHAIN_START_DATES` coverage) so coverage % reflects
-      gas presence/absence per chain — gas is chain-grain (NOT per-instrument), so the denominator is the chain set, not
-      the instrument universe. Verify `gas_fees` is in `DATA_TYPES_BY_ASSET_GROUP["defi"]` + the validity matrix
-      (`(defi, SPOT_ASSET, gas_fees)` valid) so it is not dropped as impossible. Repos: instruments-service +
-      unified-api-contracts + deployment-api. Owner: vm-defi. parent_epic: manifest_master. Provenance: slot-2 gas-fees
-      audit 2026-06-08 (operator question).
+      migration: (a) the gas-fees `_index` MANIFEST is rebuilt to reflect the migrated objects — **NOT automatic**: the
+      migrator writes OBJECTS ONLY (it `_keep`-excludes `/_index/`), so the v9 manifest for the migrated gas objects
+      requires a separate manifest rebuild over `gas-fees-prd` (see the manifest-rebuild-scope P1 below); (b) the
+      **could-exist denominator** (IS `enumerate_expected_universe` + the deployment-api/UI data-status) must include
+      `gas_fees` as a **per-chain expected cell** (one per chain × day in `GAS_FEE_CHAIN_START_DATES` coverage) so
+      coverage % reflects gas presence/absence per chain — gas is chain-grain (NOT per-instrument), so the denominator
+      is the chain set, not the instrument universe. Verify `gas_fees` is in `DATA_TYPES_BY_ASSET_GROUP["defi"]` + the
+      validity matrix (`(defi, SPOT_ASSET, gas_fees)` valid) so it is not dropped as impossible. Repos:
+      instruments-service + unified-api-contracts + deployment-api. Owner: vm-defi. parent_epic: manifest_master.
+      Provenance: slot-2 gas-fees audit 2026-06-08 (operator question).
+- [ ] [SCRIPT] P1. **MANIFEST-REBUILD SCOPE GAP — the migrator migrates OBJECTS but NOTHING rebuilds the dedicated
+      `-prd-` bucket MANIFESTS over the migrated data (operator question 2026-06-08).** `migrate_defi_full_v9_canonical`
+      writes OBJECTS only (excludes `/_index/`). `rebuild_defi_manifest.py` (the object→manifest rebuilder) is HARDCODED
+      to `BUCKET_TEMPLATE="market-data-tick-defi-{project_id}"` (line 76; no `--bucket` arg) — it scans the LEGACY
+      market-data-tick-defi bucket, **NOT** the 6+1 dedicated `-prd-` buckets the migrator writes (`dex-pools-prd` /
+      `dex-swaps-prd` / `lending-indices-prd` / `perp-funding-prd` / `lst-rates-prd` / `oracle-prices-prd` /
+      `gas-fees-prd`). The dedicated-bucket manifests today are built from LIVE handler per-VM shards + the per-bucket
+      consolidator (reflecting live captures, NOT the migrated historical backfill). **Consequence**: after the object
+      `--apply`, the migrated HISTORICAL rows are present as OBJECTS but ABSENT from the manifest → the deployment-api
+      coverage % undercounts (objects exist, manifest blind) until a manifest rebuild runs over the dedicated bucket.
+      **Fix**: generalise `rebuild_defi_manifest` to accept a `--bucket`/per-stem target (so it can rebuild each
+      dedicated `-prd-` bucket's `_index` from the migrated objects, deriving source-aware pipeline_mode as it already
+      does), and run it per dedicated bucket as the post-`--apply` step (paired with the consolidator). Confirm whether
+      `market-data-tick-defi` is still a live manifest home or fully superseded by the dedicated buckets (the
+      BUCKET_TEMPLATE hardcode suggests an unfinished cutover). This applies to ALL 7 dedicated DeFi market buckets, not
+      just gas. Repo: market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2
+      object-vs-manifest scope audit 2026-06-08 (operator question).
 - [ ] [STRATEGY] P2. **NICE-TO-HAVE — wire the downstream gas NET-COST consumer if absent.** The gas_fees DATA layer
       (per-chain gas PRICE) exists, but a grep of strategy-service/execution-service/features-service/utl found NO
       `gas_price × gas_units` net-of-gas cost computation (`estimate_gas` × gas_fees) — verify (grep-then-READ) whether
