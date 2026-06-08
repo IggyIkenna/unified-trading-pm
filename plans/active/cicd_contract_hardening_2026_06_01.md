@@ -99,13 +99,36 @@ repos actually under SIT, not all of staging.**
    push with `GH_PAT` (the P2 in `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`) removes the workaround;
    the scoped lock (#1) also reduces reliance on the unlock re-run (fewer repos block in the first place).
 
-- [ ] [SCRIPT] P0. **Scoped staging-lock-check** — land the drafted `staging-lock-check.yml` change (block iff
-      `locked && repo ∈ pending_repos`) as a **coordinated fleet batch** (PM SSOT + all 15 staging-repo copies on `main`
-      together — same parity coupling as the tab-mirror Route-B, else `detect_template_drift` flips PM `main` RED). It
-      is also a **required check on each `staging` ruleset**, so verify the gate name is unchanged. repo: agent does PM
-      template + `rollout-workflow-templates.sh --template staging-lock-check.yml` + the coordinated main rollout.
-- [ ] [SCRIPT] P1. **FF/rebase promote** — switch `ldr-to-staging-promote.yml` + `staging-to-main.yml` from
-      `gh pr merge --merge` to `--rebase` so staging never diverges from LDR (kills the BEHIND class). Roll out with #1.
+### Execution status + findings (2026-06-08, slot-1)
+
+**Root cause RE-ORDERED after live forensics.** The PRIMARY current blocker is **#3 (bot-token suppression)**, not the
+lock: the 7 stuck promote-PR heads were pushed to LDR by the tab-mirror with `GITHUB_TOKEN`, so their required
+`quality-gates-v2` + `check-staging-lock` **never ran** (`gh pr checks` shows only `AWS CodeBuild`; the two GH-Actions
+checks are absent) → blocked on never-reported required checks. The scoped lock (#1) is **necessary but secondary** — it
+only matters once the checks run. **Validation that #1 is correct:** at audit time `staging_status.locked=true` with
+`pending_repos=['agent-orchestrator']` — a 1-repo cohort — yet the GLOBAL lock blocked all 7. With the scoped logic, the
+6 non-`agent-orchestrator` PRs pass; agent-orchestrator legitimately waits. All 6 non-cohort repos have **GREEN LDR
+v2**, so re-trigger + scoped-lock clears them (no force).
+
+- [x] ✅ [SCRIPT] P1. **FF/rebase promote (#2)** — DONE: `ldr-to-staging-promote.yml` + `staging-to-main.yml` now
+      `gh pr merge --auto --rebase` (was `--merge`). v2 still gates auto-merge (merge method ≠ check ordering).
+      `unified-trading-pm@0a76d0103`.
+- [ ] [SCRIPT] P0. **Scoped staging-lock-check (#1)** — SOURCE DONE + tested (cohort logic + fail-safe: `pending_repos`
+      None/missing → block) on the SSOT template. **ROLLOUT is the remaining step + is CIRCULAR**: deploying the changed
+      required-check workflow to each repo's `main` is gated by that repo's own required checks (the broken machinery) —
+      a deploy-PR can't merge where the repo's `main` v2 is independently red (e.g. alerting). So the rollout is a
+      deliberate **admin-bootstrap** (workflow-only deploy PRs are safe to admin-merge past an unrelated red v2 — a
+      _failed_ required check is admin-bypassable, unlike a never-reported one), coordinated for parity (PM SSOT + UTL +
+      UAC move together; non-clone repos follow). Then **re-trigger the stuck heads** (close+reopen under PAT → fires
+      v2 + scoped lock-check). Validate via the `ci_failure_watcher` resolved-bookends. NOTE: operator should add
+      **Checks: Read** to the fine-grained `GH_PAT` (Secret Manager) first — without it `…/check-runs` 403s and the
+      rollout can't be cleanly monitored.
+- [ ] [SCRIPT] P0. **#3 tab-mirror leg-A → `GH_PAT`** (the actual primary fix) — change the leg-A (tab→LDR)
+      `actions/checkout` `token:` to `secrets.GH_PAT` (LEAVE leg-B on `GITHUB_TOKEN` — its no-recursion design is
+      deliberate) so every LDR advance fires `pull_request: synchronize` on the reused promote PR → checks re-run on the
+      current head → merges naturally, no close+reopen. **Coordinate atomically with the active-host-filter work**
+      (Harsh iterating `tab-mirror-to-ldr.yml`) + roll out fleet-wide — do NOT race it. Cross-ref:
+      `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` § "PAT-push root fix".
 
 ## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
 
