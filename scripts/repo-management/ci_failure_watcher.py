@@ -456,11 +456,13 @@ def _pr_has_escalation_label(repo: str, number: int) -> bool:
 
 
 def _dispatch_escalation(s: dict) -> bool:
-    """Fire escalate-to-orchestrator for one conflict-stuck PR + mark it idempotent.
+    """Fire escalate-to-orchestrator for one conflict-stuck PR (dispatch only).
 
-    Returns True iff the repository_dispatch POST succeeded. Best-effort labels the PR
-    with ``_ESCALATION_LABEL`` (creating the label if missing) so the next cron tick
-    skips it. The orchestrator's ``escalate`` agent then resolves the conflict on
+    Returns True iff the repository_dispatch POST was ACCEPTED by GitHub (NOT that a worker
+    spawned). The ``_ESCALATION_LABEL`` idempotency marker is applied DOWNSTREAM by
+    escalate-to-orchestrator.yml ONLY when /api/escalate confirms a spawn (200 + escalation_id);
+    a 503/no-slot leaves the PR unlabelled so the next cron tick re-dispatches (retry until a
+    slot frees). The orchestrator's ``escalate`` agent then resolves the conflict on
     live-defi-rollout (see escalate-to-orchestrator.yml + server/escalation.py).
     """
     repo = s["repo"]
@@ -498,30 +500,16 @@ def _dispatch_escalation(s: dict) -> bool:
     if proc.returncode != 0:
         print(f"  ! escalate dispatch failed for {repo}#{number}: {proc.stderr.strip()[:200]}", file=sys.stderr)
         return False
-    # Mark idempotent (label create is --force so it's a no-op if it already exists).
-    subprocess.run(
-        [
-            "gh",
-            "label",
-            "create",
-            _ESCALATION_LABEL,
-            "--repo",
-            f"{ORG}/{repo}",
-            "--force",
-            "--color",
-            "B60205",
-            "--description",
-            "Handed to the orchestrator for conflict resolution",
-        ],
-        capture_output=True,
-        text=True,
-    )
-    subprocess.run(
-        ["gh", "pr", "edit", str(number), "--repo", f"{ORG}/{repo}", "--add-label", _ESCALATION_LABEL],
-        capture_output=True,
-        text=True,
-    )
-    print(f"  -> escalated {repo}#{number} ({s.get('state')}) to orchestrator ({wall_type})")
+    # NOTE: do NOT label the PR here. A successful `repository_dispatch` only means GitHub
+    # ACCEPTED the event — NOT that the orchestrator spawned a worker. The actual spawn
+    # confirmation happens downstream in escalate-to-orchestrator.yml (POST /api/escalate →
+    # 200 + escalation_id == confirmed; 503/no-id == no free slot, RETRYABLE). The
+    # `_ESCALATION_LABEL` idempotency marker is therefore applied by that workflow ONLY on a
+    # CONFIRMED spawn, so a capacity failure leaves the PR UNLABELLED and the next */15m tick
+    # re-dispatches (the "escalate after X minutes until a slot frees" behaviour). Labelling
+    # here on dispatch-accepted was the no-retry bug: a 503 still suppressed all future ticks.
+    # SSOT: cicd_contract_hardening_2026_06_01 § "Auto-remediation pipeline gaps".
+    print(f"  -> dispatched {repo}#{number} ({s.get('state')}) to orchestrator ({wall_type}); awaiting spawn-confirm")
     return True
 
 
