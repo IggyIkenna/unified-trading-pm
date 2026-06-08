@@ -20,6 +20,13 @@ codex_ssots_to_check_drift_against:
 
 # DeFi Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).**
+> Data-form SSOT = `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**, incl. **CF-13** source-aware
+> `pipeline_mode={mode}_{source}[_{transport}]` + **CF-14** IS-catalogue could-exist root) + the **①–⑫ pre-apply
+> readiness audit** in `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (esp. ⑪
+> **batch=live / no-regression**; ⑧ catalogue completeness; ⑨ source-aware pipeline_mode; ⑫ rollback snapshot). Any text
+> below assuming coarse `pipeline_mode=batch` or a non-source-aware manifest is STALE — audit against the SSOT.
+
 ## Epic Scope
 
 DeFi adapters, on-chain execution, Copper custody path, and the DeFi MVP archetypes. Two audit dimensions share this
@@ -27,7 +34,7 @@ doc:
 
 | Dimension                                                              | What it checks                                                                                                                                                                              | Section                                                                                                 |
 | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **Code ↔ codex correctness**                                          | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                  | [Checklist](#checklist) items (a)–(n)                                                                   |
+| **Code ↔ codex correctness**                                           | Adapter parity, error codes, RPC templates, data_type/venue naming SSOT, code↔codex drift                                                                                                   | [Checklist](#checklist) items (a)–(n)                                                                   |
 | **Strategy data-coverage** (the operator's data-availability question) | _For each MVP strategy_: honest coverage per data_type × venue/chain (CeFi perp venues **in totality**), over the required history — what's present, what's missing, what needs downloading | [Strategy Data-Coverage Audit](#strategy-data-coverage-audit-data-availability-dimension) items (o)–(z) |
 
 ### Archetypes / strategies in scope (operator's words → codebase archetype)
@@ -570,6 +577,23 @@ plan under `parent_epic: defi_master` immediately (Capture Discoveries HARD RULE
       (`dex_pools`/`lst_rates`/`lending_indices`/`oracle_prices`/`perp_funding`) + flat `venue` + populated `chain` +
       `{VENUE}_V{N}` (`UNISWAP_V3`/`TRADER_JOE_V2`/`VELODROME_V2`).
 
+## DeFi-specific standing checks (added 2026-06-08) — source-aware migrator + venue-launch honesty
+
+- [ ] (defi-srcaware) **migrator + rebuild stamp source-aware pipeline_mode** — `migrate_defi_full_v9_canonical` and
+      `rebuild_defi_manifest` stamp `pipeline_mode=batch_<source>` via `derive_pipeline_mode_for_row` (DeFi was the LAST
+      coarse writer — the C-PATH WRITE fix). Regression guard: `rebuild_defi_manifest.py` never re-introduces the
+      blank/coarse stamp (the `:302` class); grep MTDS for `DEFAULT_PIPELINE_MODE = "batch"` → 0.
+- [ ] (defi-zero) **`record_zero_rows` is venue-launch-date-aware** — DeFi zero-row shards route through
+      `DefiManifestRecorder.record_zero_rows` (pre-launch → `EXPECTED_PRE_VENUE_LAUNCH`, not `SOURCE_RETURNED_ZERO`);
+      the A10c QG ratchet enforces routing.
+- [ ] (defi-launch) **`DEFI_VENUE_LAUNCH_DATES` populated** for every venue-chain (A2a) — the genesis/launch rules that
+      drive `expected_unattempted` honesty; no venue-chain missing its launch date.
+- [ ] (defi-sources) **per-data_type sources** — `onchain_subgraph`/`onchain_rpc` (DEX/gas) · `pyth_hermes` (Solana
+      oracle) · `chainlink` (EVM oracle) · `hyperliquid` (perp; NOT `hyperliquid_rest`); every cell a non-blank
+      `source`.
+- [ ] (defi-backstop) **`EmptyFromLiveInstrumentError` backstop wired + enforced** (A10) — defined AND raised, not
+      defined-only.
+
 ## Success Criteria
 
 - All code-correctness checklist items GREEN (incl. code↔codex drift items j–n)
@@ -609,4 +633,4 @@ Result file at `plans/audit/results/defi_master_audit_YYYY_MM_DD.md` must contai
 | Date       | Result file                                                                                                       | Status                                                                                                                                                                          |
 | ---------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 2026-06-01 | [`results/defi_master_audit_2026_06_01.md`](../results/defi_master_audit_2026_06_01.md)                           | **AMBER** — strategy data-coverage (o–v): data EXISTS 79–96% in dedicated buckets; real issues are wrong-form (phantom grid + alias dupes + v4–v8 schema). Genesis of Step 1.5. |
-| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n)                                                                                                                                           |
+| 2026-05-27 | [`results/defi_pipeline_code_codex_drift_2026_05_27.md`](../results/defi_pipeline_code_codex_drift_2026_05_27.md) | active (code↔codex drift, items j–n)                                                                                                                                            |

@@ -9,6 +9,14 @@ last_updated: 2026-06-01
 
 # TradFi Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).**
+> Data-form SSOT = `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**, incl. **CF-13** source-aware
+> `pipeline_mode={mode}_{source}[_{transport}]` + **CF-14** IS-catalogue could-exist root) + the **①–⑫ pre-apply
+> readiness audit** in `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (esp. ⑩ **Era-B**:
+> `options_chain`/`futures_chain`=instrument_type+`data_type=trades` (byte-probe confirmed on disk); ⑪ **batch=live /
+> no-regression**; the databento/massive dual-source; ⑫ rollback snapshot). Any text below assuming coarse
+> `pipeline_mode=batch` or `data_type=options_chain` is STALE — audit against the SSOT.
+
 ## Epic Scope
 
 TradFi adapters (Databento + MASSIVE — the dual-source pair; Polygon.io is a REMOVED TradFi provider per CLAUDE.md, do
@@ -144,6 +152,20 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
 - [ ] (CF-7 tradfi names) underscore data_type
       (`trades`/`tbbo`/`ohlcv_1m`/`ohlcv_15m`/`options_chain`/`futures_chain`) + canonical ticker/exchange-symbol
       `venue`.
+
+## TradFi-specific standing checks (added 2026-06-08) — Era-B chains + databento/massive dual-source + daily listing
+
+- [ ] (tradfi-erab) **Era-B on disk** — byte-probe a recent databento futures/options chain shard in
+      `market-data-tick-tradfi-prd`: `options_chain`/`futures_chain` only as `instrument_type=`, `data_type=trades`,
+      `data_type=(options_chain|futures_chain)` count = 0 (confirmed 2026-06-08).
+- [ ] (tradfi-dual) **databento + massive dual-source** — both stamp a non-blank `source` (`databento`/`massive`); the
+      Massive (Polygon-compatible) reference adapter unfreezes the tradfi catalogue (uac#91/is#407); resolution via
+      `SOURCE_PRIORITY` (massive slotted after databento).
+- [ ] (tradfi-vix) **VIX 15m** — Barchart preload + Yahoo rolling 60d + honest gap; Massive does NOT cover VIX/VX
+      futures → the gap remains Barchart+Yahoo (UAC `data_source_continuity.py`).
+- [ ] (tradfi-listing) **daily listing / could-exist** — instruments expire and list DAILY (CME futures/options); NEVER
+      copy instrument definitions between dates; the could-exist universe = listed contracts per session (only static
+      exception: CBOE VIX index). `expected_unattempted` for listed-but-not-backfilled contracts.
 
 ## Success Criteria
 

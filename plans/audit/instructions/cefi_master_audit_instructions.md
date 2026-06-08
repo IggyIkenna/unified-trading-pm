@@ -9,6 +9,14 @@ last_updated: 2026-06-01
 
 # CeFi Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware/Era-B model (SSOT wins where this differs).**
+> Data-form SSOT = `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**, incl. **CF-13** source-aware
+> `pipeline_mode={mode}_{source}[_{transport}]` + **CF-14** IS-catalogue could-exist root) + the **①–⑫ pre-apply
+> readiness audit** in `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (esp. ⑩ **Era-B**:
+> `options_chain`/`futures_chain`=instrument_type+`data_type=trades`; ⑪ **batch=live / no-regression**; ⑧ catalogue
+> completeness; ⑫ rollback snapshot). Any text below assuming coarse `pipeline_mode=batch`, `data_type=options_chain`,
+> or a non-source-aware manifest is STALE — audit against the SSOT.
+
 ## Epic Scope
 
 CeFi adapters for all supported venues, CCXT adapter layer, CEFFU custody (June-1), perp funding adapters, spot price
@@ -122,6 +130,22 @@ MTDS, perp funding readers, spot price readers, CeFi archetype definitions.
 - [ ] (CF-7 cefi names) underscore data*type
       (`book_snapshot_5`/`trades`/`derivative_ticker`/`liquidations`/`ohlcv*\*`) +     flat venue (`BINANCE-SPOT`/`UPBIT`/`COINBASE-SPOT`/…)
       canonical.
+
+## CeFi-specific standing checks (added 2026-06-08) — Era-B chains + venue source model
+
+- [ ] (cefi-erab) **Era-B on disk** — byte-probe a recent DERIBIT/OKX chain shard in `market-data-tick-cefi-prd`:
+      `options_chain`/`futures_chain` appear ONLY as `instrument_type=`, with `data_type=trades`, and
+      `data_type=(options_chain|futures_chain)` count = 0. The live writer (`tardis_shared.py` `_LEGAL_DATA_TYPES`)
+      raises on `data_type=options_chain`.
+- [ ] (cefi-grain) **venue-aware bundle-grain (F2)** — `options_chain`/`futures_chain` enumerate ONE could-exist
+      candidate per UNDERLYING (`data_type=trades`), NOT per-leaf OPTION/COMBO; venues that bundle (DERIBIT/OKX) vs any
+      per-contract venue handled correctly; DERIBIT no longer dominates the candidate count.
+- [ ] (cefi-source) **source model** — batch `source` = `tardis` (the archive); live/replay `source` = the venue
+      (binance/okx/deribit/kraken/bybit/hyperliquid/aster). Tardis = {batch, live}, NO replay (academic licence). Every
+      cell carries a non-blank `source` from `SOURCE_PRIORITY`.
+- [ ] (cefi-venues) **MVP venue coverage** — perp funding + spot across
+      binance/bybit/okx/deribit/hyperliquid/aster/kraken either green or `BLOCKED-CREDENTIALS` with a named ask (no
+      silent drop).
 
 ## Success Criteria
 

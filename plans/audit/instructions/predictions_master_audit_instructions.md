@@ -9,6 +9,14 @@ last_updated: 2026-06-01
 
 # Predictions Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware model (SSOT wins where this differs).** Data-form
+> SSOT = `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**, incl. **CF-13** source-aware
+> `pipeline_mode={mode}_{source}[_{transport}]` + **CF-14** IS-catalogue could-exist root) + the **①–⑫ pre-apply
+> readiness audit** in `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (esp. ⑥ **per-cqg
+> grain** could-exist; ⑨ source = `polymarket_clob`/`polymarket_gamma_api`; ⑪ **batch=live / no-regression**; ⑫ rollback
+> snapshot). Any text below assuming coarse `pipeline_mode=batch` or a non-source-aware manifest is STALE — audit
+> against the SSOT.
+
 ## Epic Scope
 
 Prediction market adapters (Polymarket, Kalshi), binary-outcome archetype definitions, and the Polymarket vs Kalshi
@@ -106,6 +114,18 @@ spread strategy. Key invariant: binary resolution events handled correctly; no h
       `EXPECTED_KNOWN_SOURCE_GAP`; 0 blank.
 - [ ] (CF-7 prediction names) underscore data*type
       (`prediction_canonical_question_group`/`ohlcv*\*`) + canonical venue     (`POLYMARKET`/`KALSHI`).
+
+## Prediction-specific standing checks (added 2026-06-08) — per-cqg grain + polymarket source model
+
+- [ ] (pred-grain) **per-cqg grain could-exist** — the enumerator emits could-exist at per-condition/question (cqg)
+      grain (the reference pattern the other AGs' bundle-grain mirrors); no over-fan.
+- [ ] (pred-source) **source = `polymarket_clob` / `polymarket_gamma_api`** — single-source today → the writer
+      auto-stamps via `default_source`; UAC `SOURCE_PRIORITY` carries the prediction pairs; 0 blank `source`.
+- [ ] (pred-venue) **venue ≠ source** — Polymarket-vs-Kalshi dispersion is a FEATURE-layer concern, NOT a source merge;
+      `MARKET_LIFECYCLE` (created/resolution/settlement) comes from the gamma API `/markets/{conditionId}`.
+- [ ] (pred-fetch) **honest fetch-failure** — `_fetch_page` / `_fetch_all_raw_clob_markets` RAISE after
+      `ADAPTER_FETCH_FAILED` (CF-11), never return `[]` (a transient live-mode Gamma page failure must not truncate the
+      universe to a silent-complete empty).
 
 ## Success Criteria
 

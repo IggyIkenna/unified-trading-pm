@@ -136,6 +136,41 @@ work and any future asset_group that needs pipeline_mode column-fill / manifest 
       NEVER read-time/derived in either path; `record_captured` asserts presence.
 - [ ] (form-5) **Same 4-state + typed reasons** — both use the same `EmptyConfirmedReason` set; zero `DIVERGENT_EMPTY`.
 
+## Mode × source × transport capability + mode-contextual precedence (M2/M4/M6) — recurring checks (added 2026-06-08)
+
+> The `{mode}_{source}[_{transport}]` model is more than batch=live: each source has a CAPABILITY (which of
+> batch/live/replay it can do) and a TRANSPORT (websocket/rest/flat_file), and the READ path is mode-contextual. **batch
+> = floor for every source.** **replay = intraday on-demand fill for when LIVE is unavailable** (cold start, or a
+> live-server gap mid-session). SSOT: `plans/audit/results/source_mode_capability_matrix_2026_06_07.md` (the ratified
+> matrix) + the standardisation plan M2/M3/M4/M6.
+
+NOW — the capability + transport contract (feeds the catalogue/enumerate + the stamped form):
+
+- [ ] (cap-1) **`SOURCE_MODE_CAPABILITY` matches the ratified matrix** — each source's {batch, live, replay} set is
+      correct: Tardis = {batch, live} (NO replay — academic-licence, R1); massive/Polygon = {batch, live, replay}
+      (real-time = paid tier, R2); odds_api = {batch, replay} (historical already held); databento / pyth_hermes /
+      hyperliquid / chain-RPCs / polymarket_clob = {batch, live, replay}; sports vendors = {batch, replay};
+      yahoo/barchart/polymarket_gamma = {batch}. **Source = vendor only** (`hyperliquid`, never `hyperliquid_rest`).
+- [ ] (cap-2) **transport axis** — the `transport` column (rest/websocket/flat_file) is populated per cell; the
+      transport SUFFIX appears in `pipeline_mode` ONLY where a source runs >1 transport for the SAME shard (R4), else
+      omitted. CeFi live/replay `source` = the venue while batch `source` = tardis (same shard, different source per
+      mode).
+
+GATED — LIVE/REPLAY tranche (post-batch-migration; STANDING checks for when M4/M6/M7 land — NOT blockers for the batch
+`--apply`):
+
+- [ ] (prec-1) **mode-contextual precedence (M4)** — a LIVE-mode read tries **live → replay → batch**; a BATCH-mode read
+      tries **batch → replay** (intraday gap-fill). The union picks the highest-precedence AVAILABLE source/mode per
+      cell (`batch-live-reconciliation-service`). Reconciliation tests cover BOTH orderings.
+- [ ] (replay-1) **replay semantics** — replay rows carry the SAME schema as live but are tagged `replay_<source>` for
+      audit (the cell records it was not a true live capture); only replay-capable sources (per cap-1) can replay;
+      replay fills the `[batch-cutoff → now]` tail.
+- [ ] (replay-2) **M6 startup gate / M7 autonomous replay** — on cold start, if the `[batch-cutoff → now]` tail isn't
+      covered by on-disk live, autostart replay for replay-capable sources (else honest-gap); a live-server gap triggers
+      replay, then auto-resumes live. A source that can't replay (Tardis, Bybit-REST) → its gap waits for batch.
+- [ ] (gate) the `live_websocket → live_<source>` object migration + the M3 per-shard available-sources registry are the
+      gated next tranche — confirm they're tracked in the coordinator, not lost.
+
 ## Success Criteria
 
 - All 11 checklist items (a)–(k) GREEN

@@ -9,6 +9,14 @@ last_updated: 2026-06-01
 
 # Sports Master — Audit Instructions
 
+> **🔄 ALIGNED 2026-06-08 — pre-apply readiness audit + source-aware model (SSOT wins where this differs).** Data-form
+> SSOT = `canonical_form_cross_service_audit_checklist.md` (**CF-1…CF-14**, incl. **CF-13** source-aware
+> `pipeline_mode={mode}_{source}[_{transport}]` + **CF-14** IS-catalogue/league could-exist root) + the **①–⑫ pre-apply
+> readiness audit** in `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md` (esp. ⑥
+> **league-grain** could-exist + fixture/season/transfer-window typed reasons; ⑦ catalogue ⊇ manifest-league
+> present-set; ⑪ **batch=live / no-regression**; ⑫ rollback snapshot). Any text below assuming coarse
+> `pipeline_mode=batch` or a non-source-aware manifest is STALE — audit against the SSOT.
+
 ## Epic Scope
 
 Sports adapters (Sportradar, Footystats, The-Odds-API), GBP settlement path, sports archetypes (odds dispersion), GCS
@@ -118,6 +126,19 @@ Key invariants: GCS paths always from `candidate_parquet_paths()`; date coverage
       `_CANCELLED` · `EXPECTED_KNOWN_SOURCE_GAP` · `EXPECTED_NO_MAPPING`; 0 blank/mislabeled `SOURCE_RETURNED_ZERO`.
 - [ ] (CF-7 sports names) underscore data_type (`FIXTURES`/`FIXTURE_EVENTS`/`INJURIES`/`ODDS`/`XG`/`PLAYER_VALUES`/… 20
       canonical; retired `TRANSFERMARKT_LEAGUES`/`SFI_LEAGUES` absent) + canonical `league=` + flat bookmaker `venue`.
+
+## Sports-specific standing checks (added 2026-06-08) — league-grain could-exist + fixture reasons
+
+- [ ] (sports-grain) **league-grain could-exist** — `build_instrument_catalogue` derives the sports could-exist universe
+      at LEAGUE grain from the manifest present-set (namespace-correct, `entity=leagues`), and the catalogue is a
+      SUPERSET of the manifest leagues (no under-count → no over-seed; the 1,323-vs-1,715 gap must stay closed).
+- [ ] (sports-reasons) **fixture/season/transfer-window typed reasons** — empty cells route to the sports CF-5 set
+      (fixture-not-scheduled / out-of-season / transfer-window / genesis via the sports coverage oracle), never blank.
+- [ ] (sports-paths) **GCS paths via `candidate_parquet_paths()`** — sports uses
+      `unified_api_contracts.sports.candidate_parquet_paths()` + `clip_dates_to_source_coverage()` + `is_in_known_gap()`
+      (NOT the generic raw-tick path); confirm readers/writers use it.
+- [ ] (sports-store) **instruments-store-sports hygiene** — the ~2.68M-row store has 0 non-canonical free-text
+      `error_reason`, 0 `capture_status=None` phantom rows, 0 blank `data_type` post-v9 walk.
 
 ## Success Criteria
 
