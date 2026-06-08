@@ -598,6 +598,24 @@ does not require a second whole-corpus walk.
       to pyproject"). Until > this lands, NO MTDS `quality-gates.sh` reaches green regardless of the file-length work —
       fix it FIRST in this > slot-2 sweep. (Slot-5 did not fix it: it completes another commit's incomplete dep edit —
       out of prediction AG + > FM1 foreign-work-bundling risk.)
+- [ ] [INFRA] P2. **🔴 LOCAL QG HARNESS collects the WRONG test suite for some repos — the green sentinel is HOLLOW
+      (surfaced slot-7 2026-06-08).** Running `bash scripts/quality-gates.sh --no-fix` for **instruments-service** AND
+      **market-tick-data-service** on this host produced a `[3/6] TESTS` run with `rootdir: …/unified-trading-pm`,
+      `configfile: unified-trading-pm/pyproject.toml`, **`collected 6 items`** — it ran only PM's 6
+      `tests/integration/test_pm_scripts_integration.py` tests, NOT the repo's own suite (IS has ~3,267 tests; its own
+      `pyproject.toml` declares `[tool.pytest.ini_options] testpaths=["tests"]`). The QG still **exits 0 + writes
+      `.qg_last_passed_sha`**, so the commit-quality-boundary sentinel for those repos is hollow — a code change can
+      ship "QG-green" without its tests ever running (the peer's `mtds@67786887` tradfi-reader change passed this same
+      hollow gate). **Contrast**: the UAC QG ran its FULL suite (8,617 passed / 3 pre-existing
+      `test_schema_version_matrix.py` failures / 550 skipped) — so it is IS/MTDS-specific (possibly the
+      qg-governor-queued subprocess cwd, or a `PROJECT_ROOT`/rootdir mis-resolution when run under contention).
+      **Impact**: undermines QG confidence for the migration code on the apply critical path. **Mitigation used this
+      session**: slot-7 ran the touched tests directly in each repo `.venv` (IS `enumerate` 88 passed · UAC
+      F2+era_b+source_priority 106 passed) to verify before shipping. **Owner: vm-cross-cutting / QG-harness** —
+      root-cause the rootdir/cwd resolution (likely `quality-gates-base/base-service.sh` `cd "$PROJECT_ROOT"` vs the
+      governed subprocess) so per-repo QGs collect their own suite. Repos: unified-trading-pm
+      (`scripts/quality-gates-base/base-service.sh`) + per-repo `quality-gates.sh`. parent_epic: manifest_master.
+      Provenance: slot-7 cross-cutting sweep 2026-06-08.
 - [ ] [DATA] P1. **DeFi instruments-store `by_date` has a DOUBLED `day={D}/day={D}/` prefix on the recent tail**
       (~2026-05-05 onward — `day=2026-05-05/07` confirmed doubled; `day=2026-05-03` and ALL earlier days are single,
       canonical `day={D}/venue={V}/instruments.parquet`). Surfaced by the G2 verify dry-run 2026-06-07 (slot-2). **TWO
