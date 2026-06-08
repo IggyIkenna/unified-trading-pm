@@ -949,7 +949,12 @@ venue-override question) + the operator-gated migration walk:**
       per-market → the exact false-`expected_unattempted` pollution G1-ENUM prevents. Reconcile then (prediction needs a
       cqg-bundle grain value OR the unified path must preserve the data_type binding). Owner: the G1-ENUM bundle-grain
       SSOT (`proper_instrument_catalogue_lifecycle_rollup_2026_06_04` / coordinator G1-ENUM). Repo:
-      unified-api-contracts. parent_epic: manifest_master. **Not owed now (HOLD; inert).**
+      unified-api-contracts. parent_epic: manifest_master. **Not owed now (HOLD; inert) — and NOT a deferred fix:**
+      `leaf` is the CORRECT value for the instrument axis (changing it would be wrong), and the trap is already guarded
+      by the existing grain-bound round-trip test (is@ec75c4e9) that asserts every prediction catalogue row carries
+      `data_type` (so the `_row_data_types` short-circuit can't be silently bypassed). There is nothing to safely change
+      today; this is a CONDITIONAL note for IF a future refactor ever unifies the two grain mechanisms (owned by the
+      cross-cutting G1-ENUM SSOT, not prediction).
 - [x] ✅ [AUDIT] P0. **G2 dry-run-green VERIFIED on current LDR (mtds@6370294a · is@2971a064, slot-5 2026-06-07).** The
       four readiness dry-runs + the live data-state read + the 7+2-point audit, all evidence below. `--apply` G4-gated.
 - [x] ✅ [QG] P0. **QG evidence (slot-5 2026-06-07):** **instruments-service `quality-gates.sh --no-fix` = exit 0**
@@ -1075,12 +1080,17 @@ purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · dra
       re-synced (`uv lock --check` clean), (1) 19 over-length files remain = the foreign slot-2 MTDS-QG P2 (prediction's
       `rebuild_prediction_manifest.py` is 707L, NOT a contributor). Repos: unified-trading-library +
       market-tick-data-service. parent_epic: mtds_mdps_master.
-- [ ] [UAC] P2. **NICE-TO-HAVE — defense-in-depth prediction row in the G1-ENUM validity matrix.** Prediction is
-      correctly handled by `_row_data_types` grain-binding (verified safe ④), so this is NOT a correctness fix — but a
-      `("prediction","prediction_market") → frozenset({"prediction_canonical_question_group", …})` entry in UAC
-      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` would suppress the "unmapped instrument_type → fall back to all +
-      WARN" log and backstop any future non-grain-bound prediction catalogue row. Repo: unified-api-contracts
-      (`registry/market_data_categories.py`). parent_epic: manifest_master.
+- [x] ✅ [UAC] P2. **Explicit prediction_market slice in the G1-ENUM validity matrix — DONE (uac@27e973e9, slot-5
+      2026-06-08).** Added
+      `("prediction","prediction_market"): frozenset({"trades",     "prediction_canonical_question_group", "market_lifecycle", "MARKET_LIFECYCLE"})`
+      to `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` for **slice-parity** with cefi/tradfi/sports (every other AG's
+      instrument_types are explicit). **NOT a correctness fix** (re-confirmed: the sole functional consumer
+      `_row_data_types` short-circuits prediction on `instr.data_type` and NEVER consults the matrix; grain — per-market
+      leaf vs per-cqg bundle — is orthogonal to the matrix's cross-product filtering, so a row can't prevent the grain
+      over-fan). Valid set = the canonical prediction data_types → it never filters a real cell; it only suppresses the
+      "unmapped → fall back to all + WARN" path for a hypothetical non-grain-bound prediction row. +1 test
+      (`test_prediction_market_slice_present`); 59 matrix tests green, ruff clean. Repo: unified-api-contracts.
+      parent_epic: manifest_master.
 
 ## PRE-APPLY READINESS AUDIT VERDICT — ①–⑫ (slot-5, 2026-06-08, post-drain real-prod)
 
@@ -1110,6 +1120,22 @@ purely OPERATIONAL (IS backfill RUN · instruments-store-pred v9 walk RUN · dra
 G1; ⑩ Era-B is N/A by design; ⑫ rollback snapshot + phantom-prefix coverage confirmed on real prod. The migrator /
 rebuild / store-migrator are all source-aware and basedpyright-0; the only remaining steps are the operator-gated
 `--apply` run (E4-full / E7 / E8) + the IS backfill + the instruments-store-pred v9 walk (all OPERATIONAL).
+
+**SEQUENTIAL vs BLOCKING — the residual is NEXT-IN-DAG, not a code/readiness blocker (slot-5 2026-06-08).** Of the 12
+points, **0 are code blockers** (the one real code gap, ⑪, is fixed). Everything still open is **SEQUENTIAL** — a later
+step in the coordinator's migration DAG that cannot and should not run before the operator fires the `--apply` during
+the active drain window:
+
+| Residual                                                          | Why it's SEQUENTIAL, not blocking                                                                                                                                                                                                                                                                                                                                  |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ⑦/⑧ cqg `expected_unattempted` seed (IS prediction backfill)      | The read-side is GREEN now; the seed needs `market_lifecycle/by_canonical_group/` populated. That IS backfill is a **G5 (post-`--apply`) step** — the fleet is currently DRAINED (48 GCP + 26 AWS writers paused, incl. `instruments-daily-backfill`); running it now would write during the freeze. Runs once the operator fires `--apply` and the fleet resumes. |
+| instruments-store-pred v9 walk (§H)                               | TOOL-READY (is@febb899e dry-run 100% v9). It is a **G4 `--apply`** — operator-triggered + drain-gated, same window as the tick `--apply`.                                                                                                                                                                                                                          |
+| downstream MDPS/features/strategy/execution `_index` (vm-ml plan) | **Layer-N+1** (foundation-completion-gate): can only run after the upstream prediction tick `_index` is C-GREEN (post my `--apply`). vm-ml's `downstream_services_manifest_canonicalisation` plan owns it; my `--apply` is its upstream dependency.                                                                                                                |
+| E4-full / E7 / E8 (the prediction `--apply` itself)               | The operator-triggered irreversible migration — the mission's explicit "do NOT run `--apply`". This is THE sequential head everything else waits on.                                                                                                                                                                                                               |
+
+So the prediction vertical is **code-complete + APPLY-READY**; the open items are a strictly-ordered operational
+sequence (`--apply` → IS backfill + cqg seed → downstream walks), each gated on the prior + on the operator un-draining
+the fleet — none is a code gap or a readiness blocker.
 
 - [x] ✅ [CODE] P0. **⑪ keystone — batch==live `available_at` (rebuild adds emission latency) — DONE (mtds@202f5e0b +
       utl@fae6c23d, slot-5 2026-06-08).** See the verdict ⑪ row above. The rebuild's `available_at_envelope` now equals
