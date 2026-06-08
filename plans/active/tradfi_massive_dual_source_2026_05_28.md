@@ -56,15 +56,16 @@ for any TradFi cell to legitimately list two sources.
 
 ## Status snapshot
 
-| Layer                                              | Status                       | Note                                                               |
-| -------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------ |
-| UAC SOURCE_PRIORITY registry                       | 🟡 single-source seeds today | Append `"massive"` to 6 TradFi cells                               |
-| Multi-source merge logic                           | 🔴 deferred (named)          | Unblocks any two-entry list — this plan lands it                   |
-| MTDS Massive REST connector                        | 🔴 missing                   | Mirror `databento_tradfi_ws_connector.py` REST path                |
-| MTDS Massive WS connector                          | ⚪ out of scope              | Deferred — see `tradfi_massive_live_ws_<TBD>.md` (named successor) |
-| Schema: `source` column on TradFi parquets         | 🔴 missing                   | New required column; backfill plan in Phase 4                      |
-| Manifest `record_captured(source=...)` integration | 🟡 partial                   | `available_at` per-row exists; `source` per-row new                |
-| Databento backfill with `source='databento'`       | 🔴 missing                   | One-shot rewrite of existing TradFi corpus                         |
+| Layer                                              | Status                       | Note                                                                                                      |
+| -------------------------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| UAC SOURCE_PRIORITY registry                       | 🟡 single-source seeds today | Append `"massive"` to 6 TradFi cells                                                                      |
+| Multi-source merge logic                           | 🔴 deferred (named)          | Unblocks any two-entry list — this plan lands it                                                          |
+| MTDS Massive REST connector                        | 🔴 missing                   | Mirror `databento_tradfi_ws_connector.py` REST path                                                       |
+| MTDS Massive WS connector                          | ⚪ out of scope              | Deferred — see `tradfi_massive_live_ws_<TBD>.md` (named successor)                                        |
+| Schema: `source` column on TradFi parquets         | 🔴 missing                   | New required column; backfill plan in Phase 4                                                             |
+| **Massive write-path integration + shape parity**  | 🔴 **RE-OPENED (Phase 4b)**  | Connector is dead code (0 non-test refs) + bypasses `tradfi_shared` → shape ≠ databento. Audit 2026-06-08 |
+| Manifest `record_captured(source=...)` integration | 🟡 partial                   | `available_at` per-row exists; `source` per-row new                                                       |
+| Databento backfill with `source='databento'`       | 🔴 missing                   | One-shot rewrite of existing TradFi corpus                                                                |
 
 ## Coverage matrix (Massive vs Databento, MVP cells)
 
@@ -252,6 +253,96 @@ NOT covered.** Resolved by existing Yahoo + Barchart layering on `ohlcv_15m` per
 - [x] ✅ [MTDS] P1. 31 unit tests (test_massive_tradfi_rest_connector.py): 200 happy path per data_type, 401/429/500
       error paths, normalisation round-trips, symbol helpers, dispatch. MTDS@e6b5fca.
 - [x] ✅ [MTDS] P1. 2 integration tests @pytest.mark.requires_credentials — gated, deselected in CI. MTDS@e6b5fca.
+
+### Phase 4b — Massive write-path integration + shape parity (RE-OPENED 2026-06-08 audit — P0)
+
+> **Phase 4 above shipped the connector as a STANDALONE REST fetcher with unit tests; it did NOT integrate it into the
+> canonical write path or prove shape parity.** Audit `plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md`
+> found `MassiveTradfiRestConnector` has **zero non-test references** (not in any orchestrator/factory/dispatch) and —
+> unlike every other TradFi adapter (databento/openbb/yahoo/ecb/ibkr/fred/ofr all
+> `from .tradfi_shared import write_tradfi_shard`) — imports **only** `BaseTradfiAdapter`, never routing through
+> `tradfi_shared.finalise_tradfi_rows_and_path`. Its hand-rolled dict (ISO-string `timestamp`, no
+> `instrument_id`/`symbol`/`venue`/`market_state`/`trade_count`, extra `vwap`/`transactions`) does NOT match the
+> Databento on-disk shape. This defeats the operator's core requirement (consumers can't tell the source). **Must land
+> BEFORE the paid backfill.**
+
+- [ ] [MTDS] P0. Rebuild `MassiveTradfiRestConnector` to emit the SAME canonical columns/dtypes `tradfi_shared` writes
+      for Databento (per data_type), and route its output through `tradfi_shared.finalise_tradfi_rows_and_path` /
+      `write_tradfi_shard` — OR define a shared canonical `TRADFI_ROW_COLUMNS` contract in UAC/UTL and conform BOTH
+      adapters to it. Repo: market-tick-data-service (+ unified-api-contracts if a shared row schema).
+- [ ] [MTDS] P0. Wire `MassiveTradfiRestConnector` into the TradFi adapter orchestrator/factory so it is actually
+      reachable in the collect path (today it is dead code outside tests). Repo: market-tick-data-service.
+- [ ] [TEST] P0. Cross-source row-schema PARITY test: same instrument + window from databento vs massive → identical
+      column set + dtypes per data_type (trades/tbbo/ohlcv_1m/ohlcv_15m + Era-B options/futures chain). This is the
+      regression guard for "consumers don't care about source". Repo: market-tick-data-service.
+- [ ] [MTDS] P1. Add retry/backoff/rate-limit handling to `_get`/`_get_paginated` (429 is classified but never retried)
+      — a multi-million-row paid-tier backfill will fail-fast on throttle without it. Repo: market-tick-data-service.
+- [ ] [MTDS] P0. **Fix the futures endpoint paths — ROOT CAUSE of the 404 is a WRONG PATH, not the API key**
+      (live-confirmed + docs-verified 2026-06-08). The connector uses Polygon's equities-style reference path
+      `/v3/reference/futures/{contracts,products}` which **does not exist** → plain-text `404 page not found` (NOT a
+      JSON `NOT_AUTHORIZED` — contrast `/v3/trades/AAPL` which returns JSON `403 NOT_AUTHORIZED`, the real entitlement
+      gate). The current `MASSIVE_API_KEY` **HAS full futures entitlement** — the dedicated Futures REST API (docs:
+      `massive.com/docs/rest/futures/*`) all return **200** on it. Re-map every futures cell to `/futures/v1/` (GA;
+      `/futures/vX/` is an accepted alias):
+  - `futures_chain` reference → `/futures/v1/contracts` (+ `/futures/v1/products`, `/futures/v1/schedules`) — NOT
+    `/v3/reference/futures/*`. Fields:
+    `ticker,product_code,group_code,name,active,first_trade_date,last_trade_date,trading_venue,date`.
+  - futures `ohlcv_1m`/`ohlcv_15m` → `/futures/v1/aggs/{ticker}?resolution=1min` / `15min` (resolution = `{mult}{unit}`,
+    units `min`/`hour`/`session`/`day`/…; `1_minute`/`15_minute` underscore-form also accepted live). Fields:
+    `ticker,window_start(ns,left-edge),open,high,low,close,volume,transactions,dollar_volume,session_end_date,settlement_price`.
+  - futures `trades` → `/futures/v1/trades/{ticker}`; futures `tbbo` → `/futures/v1/quotes/{ticker}` — **both 200 on the
+    current key** (futures trades+quotes do NOT need a tier upgrade, unlike equity ticks). NOTE the futures-API field
+    set differs from the standard `/v3/{trades,quotes}` schema (e.g. `ask_price`/`bid_price` may be absent on one-sided
+    quotes; carries `channel`/`sequence_number`/`session_end_date`) — normalise to the same canonical columns.
+  - Flat-files (`us_futures_*/`) remain a viable bulk-history alternative, but REST is NOT blocked — drop the earlier
+    "must use flat-files because REST 404s" framing. Repo: market-tick-data-service.
+- [ ] [MTDS] P1. **Equity/ETF tick-level `trades` + `tbbo` — OPERATOR DECISION RESOLVED (Harsh 2026-06-08): NOT needed
+      for the TradFi MVP.** 1-minute candles (`ohlcv_1m`) are sufficient for current TradFi needs — full equity trades +
+      ticks are too much data with no current use case. So: (1) the connector MUST still IMPLEMENT the `trades` + `tbbo`
+      fetch methods (code-ready, so we can turn them on when a use case appears) — keep them, do NOT delete; (2) we do
+      **NOT** backfill equity/ETF trades+tbbo now, and the current free-tier gating (REST `/v3/trades`+`/v3/quotes` =
+      JSON `403 NOT_AUTHORIZED`; flat-files `us_stocks_sip/trades_v1`+`quotes_v1` = `403 Forbidden`) is **ACCEPTABLE —
+      no tier upgrade required for the MVP**; (3) the equity/ETF backfill scope is **OHLCV-only**. (Futures + options
+      trades/quotes are accessible on the current key anyway, via `/futures/v1/*` + `us_options_opra/trades_v1` +
+      `us_futures_*/{trades,quotes}_v1` — unaffected by this decision.) Re-open the equity-tick entitlement only if/when
+      a tick-consuming archetype lands. Repo: market-tick-data-service.
+- [ ] [UAC/UTL] P1. **EXTRA Massive fields — DECISION FOR IKENNA (flag at plan-push).** Massive returns fields Databento
+      does NOT, surfaced by the 2026-06-08 live probe. Decide per field: (A) DROP on normalize to hold strict
+      Databento-parity, (B) ADD as new canonical column(s) on BOTH sources (Databento backfills/computes them where
+      possible), or (C) keep as Massive-only optional columns (consumers ignore unknown cols — breaks strict parity but
+      is additive). Candidates:
+  - `vwap` — REST aggs `vw` (volume-weighted avg price). Present on Massive REST minute bars; **absent** from
+    `us_stocks_sip/minute_aggs_v1` flat-files; Databento has no vwap (computable from trades). Likely (A) drop or (C)
+    optional.
+  - `dollar_volume` — futures aggs (REST + `us_futures_*/minute_aggs_v1` flat-files). Futures-only. Trivially derivable
+    (≈ vwap×volume); likely (A)/(C).
+  - options `greeks` (delta/gamma/theta/vega), `implied_volatility`, `open_interest`, `break_even_price` — from
+    `/v3/snapshot/options/{u}`. **These are genuinely valuable for options strategies** (not noise) — lean (B) ADD to
+    the canonical options schema if any options archetype will consume them, else (C). NOT a trivial drop.
+  - `transactions`/`n` is NOT extra — it maps to the canonical `trade_count` (Databento has it). Keep the mapping. Owner
+    of the call: Ikenna (canonical-schema authority). Until decided, the connector rebuild (Phase 4b #1) holds strict
+    parity (option A) so it ships unblocked; widening to (B)/(C) is a follow-on once Ikenna picks.
+- [ ] [SCRIPT] P1. Build the **S3 flat-files bulk-backfill ingester** the plan prescribes
+      (`s3://flatfiles/us_stocks_sip/`) as PRODUCTION code: `resolve_bucket_name` +
+      `record_captured(source="massive")` + `get_secret_client` (NOT boto3/os.environ/hardcoded `/tmp`/inline `s3://` —
+      the current `massive_flat_files_smoke.py` is a `/tmp` smoke test only). **Bar-edge: Massive `window_start` is the
+      LEFT/open edge (ns); convert to the canonical RIGHT-edge `t_close` INTERVAL-AWARELY** via UTL
+      `compute_bar_close_boundary(ts, timeframe)` / `BAR_TIMEFRAME_SECONDS[tf]` — do NOT copy the smoke script's
+      hardcoded `+ NS_PER_MINUTE` (`+60s`), which is correct only for 1m and silently misaligns 15m/hourly/daily by one
+      interval. (The MDPS write-gate `assert_bar_boundary_contract` is the cross-cutting backstop, but the ingester must
+      land it right.) Repo: market-tick-data-service.
+- [ ] [SCRIPT] P1. Fix `backfill_tradfi_source_column.py` walk prefix to include the `pipeline_mode=` segment (currently
+      `…/day={D}/asset_group=tradfi/` misses canonical Phase-3 paths → under-stamps legacy rows); switch
+      `google.cloud.storage` → UTL `gcs_*` ops. Repo: market-tick-data-service.
+- [ ] [UTL] P0. **Manifest consolidator dedup key omits `source`** (`manifest_consolidator.py:179-193`
+      `_BASE_DEDUP_COLS` + `_OPTIONAL_DEDUP_COLS`) → two source rows for one cell collapse last-write-wins, silently
+      dropping the per-source manifest row the moment databento+massive co-mingle. Must land WITH the read-path resolver
+      (changes consolidation cardinality fleet-wide). Cross-ref `data_source_provenance_all_asset_groups_2026_06_01.md`
+      Phase 5 (same finding, open `- [ ]` P1). Repo: unified-trading-library.
+- [ ] [MTDS] P2. Wire `MASSIVE_API_KEY` into `UnifiedCloudConfig`/`AliasChoices`/`ApiKeyReloader` (today direct SM-name
+      fetch bypasses the typed-config + hot-reload contract, STEP 5.34). Fix stale connector docstrings
+      (`tradfi_il_dual_source`/`"il"` source / nonexistent `PipelineMode.BATCH_MASSIVE` import). Repo:
+      market-tick-data-service.
 
 ### Phase 5 — Backfill Databento corpus with source column (1 day + run-to-completion)
 

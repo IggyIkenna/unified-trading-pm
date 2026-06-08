@@ -158,6 +158,15 @@ disambiguated by a row-level `source` column (see § "Dual-source provenance").
 - [ ] (tradfi-erab) **Era-B on disk** — byte-probe a recent databento futures/options chain shard in
       `market-data-tick-tradfi-prd`: `options_chain`/`futures_chain` only as `instrument_type=`, `data_type=trades`,
       `data_type=(options_chain|futures_chain)` count = 0 (confirmed 2026-06-08).
+- [ ] (tradfi-shape) **Massive routes through the canonical writer + cross-source row-schema parity** (added 2026-06-08
+      after audit found the gap). Every TradFi adapter (incl. Massive) MUST emit via
+      `tradfi_shared.finalise_tradfi_rows_and_path`/`write_tradfi_shard` (the SSOT for the on-disk column set +
+      `pipeline_mode=` path) — RED-flag any adapter that hand-rolls its parquet shape OR is not referenced by an
+      orchestrator/factory (`rg -n "MassiveTradfiRestConnector" -t py -g '!*test*'` returning 0 non-self hits = dead
+      code = RED). A cross-source parity test asserts databento vs massive emit an identical column set + dtypes per
+      data_type for the same instrument/window. SSOT: `tradfi_massive_dual_source_2026_05_28.md` Phase 4b. (As of
+      2026-06-08 this is RED — connector is standalone REST-fetch dead code; see
+      `plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md`.)
 - [ ] (tradfi-dual) **databento + massive dual-source** — both stamp a non-blank `source` (`databento`/`massive`); the
       Massive (Polygon-compatible) reference adapter unfreezes the tradfi catalogue (uac#91/is#407); resolution via
       `SOURCE_PRIORITY` (massive slotted after databento).
@@ -186,6 +195,6 @@ Result file at `plans/audit/results/tradfi_master_audit_YYYY_MM_DD.md`. Same str
 
 ## Linked Results
 
-| Date                      | Result file | Status |
-| ------------------------- | ----------- | ------ |
-| (populated as audits run) |             |        |
+| Date       | Result file                                                        | Status                                                                                                                  |
+| ---------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-08 | `plans/audit/results/tradfi_massive_migration_audit_2026_06_08.md` | complete — Axis 1/4 RED (Massive write-path integration + shape parity), Axis 2/3 GREEN, Axis 5 NOT-READY (4 code gaps) |
