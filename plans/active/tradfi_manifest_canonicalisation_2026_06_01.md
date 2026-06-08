@@ -819,19 +819,26 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
       INDEX (9→3), EQUITY (9→8), ETF (9→6) — the small per-contract types. The G1-ENUM log shows the dominant types
       **fall back to NO filter (unmapped → all 9 data_types)**: `OPTION` 31,282 instruments, `FUTURE` 1,163, `SPOT_PAIR`
       1 (99.2% of the alive set). So the over-fan persists for the types that matter.
-- [ ] [DATA] P0. **🔴 ROOT-CAUSE FINDING (slot-6 2026-06-07) — gate-(a) is BLOCKED on G1-ENUM BUNDLE-GRAIN for tradfi
-      options/combos, NOT just the validity matrix. The 587,990 is still inflated by ~563K false candidates.** Verified
-      against the live `market-data-tick-tradfi-prd` `_index` (144,062 rows / 100,536 captured): **captured `OPTION`
-      rows = 0**; tradfi captures options at **BUNDLE grain** — `options_chain` 3,262 + `combo` 58,292 + `futures_chain`
-      15,600 (per-underlying), plus per-contract `future` 7,224 / `equity` 4,449 / `spot_pair` 1,967 / `index` 22. BUT
-      the IS catalogue + `_enumerate_v2_tradfi` treat OPTION (622,740) + COMBO (56,841) **per-contract** → the 31,282
-      alive per-contract OPTIONs × 9 dts × 2 days = **~563K candidates that can NEVER match the bundle-grain manifest**
-      → false `expected_unattempted` (grain mismatch, exactly the cefi `option`→`frozenset()`+`options_chain` bundle
-      pattern, which tradfi is MISSING). **THE FIX (mirror cefi, mtds_mdps_master):** (1) tradfi catalogue producer
-      (`build_instrument_catalogue` / its tradfi grain) must emit `options_chain` / `futures_chain` BUNDLE-grain rows
-      (roll per-contract leaves → one per underlying), matching the manifest capture atom — co-owned slot-6 + slot-7
-      (G1-ENUM bundle-grain mechanism). (2) UAC `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`: add
-      `("tradfi","option")     → frozenset()`, `("tradfi","combo") → frozenset()` (leaf → no per-contract rows),
+- [x] ✅ [DATA] P0. **RESOLVED 2026-06-08 (slot-6) — gate-(a) GREEN. Era-B bundle rollup (slot-7 uac@ae70338d +
+      is@74df991d/687d1443) + my tradfi `future`/`spot_pair` matrix rows (uac, see below) collapsed the enumerate
+      587,990 → 24,914 → 17,928 (−570,062): the ~563K false per-contract OPTION/COMBO candidates are GONE (rolled to
+      `options_chain`/`futures_chain` bundles, data_type=trades) and the residual FUTURE/SPOT_PAIR over-fan is fixed
+      (FUTURE now 6 data_types, NO impossible macro/corp/earnings). Verified on the report: 0 per-contract OPTION/COMBO,
+      0 data_type=options_chain, 0 impossible pairs; 17,928 = exact Σ(alive × valid-dts × 2 days). Original finding ↓
+      retained for context.** 🔴 ROOT-CAUSE FINDING (slot-6 2026-06-07) — gate-(a) is BLOCKED on G1-ENUM BUNDLE-GRAIN
+      for tradfi options/combos, NOT just the validity matrix. The 587,990 is still inflated by ~563K false candidates.
+      Verified against the live `market-data-tick-tradfi-prd` `_index` (144,062 rows / 100,536 captured): **captured
+      `OPTION` rows = 0**; tradfi captures options at **BUNDLE grain** — `options_chain` 3,262 + `combo` 58,292 +
+      `futures_chain` 15,600 (per-underlying), plus per-contract `future` 7,224 / `equity` 4,449 / `spot_pair` 1,967 /
+      `index` 22. BUT the IS catalogue + `_enumerate_v2_tradfi` treat OPTION (622,740) + COMBO (56,841) **per-contract**
+      → the 31,282 alive per-contract OPTIONs × 9 dts × 2 days = **~563K candidates that can NEVER match the
+      bundle-grain manifest** → false `expected_unattempted` (grain mismatch, exactly the cefi
+      `option`→`frozenset()`+`options_chain` bundle pattern, which tradfi is MISSING). **THE FIX (mirror cefi,
+      mtds_mdps_master):** (1) tradfi catalogue producer (`build_instrument_catalogue` / its tradfi grain) must emit
+      `options_chain` / `futures_chain` BUNDLE-grain rows (roll per-contract leaves → one per underlying), matching the
+      manifest capture atom — co-owned slot-6 + slot-7 (G1-ENUM bundle-grain mechanism). (2) UAC
+      `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`: add `("tradfi","option")     → frozenset()`,
+      `("tradfi","combo") → frozenset()` (leaf → no per-contract rows),
       `("tradfi","options_chain") →     {"options_chain"}`, `("tradfi","futures_chain") → {"futures_chain"}`, and the
       per-contract `("tradfi","future") →     {trades,ohlcv_1m,ohlcv_15m,ohlcv_24h,tbbo,mbp_10}` +
       `("tradfi","spot_pair") →     {trades,ohlcv_1m,ohlcv_15m,ohlcv_24h,tbbo}` (manifest confirms `future`/`spot_pair`
@@ -846,13 +853,19 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
 ### Step 3 — `--apply-write` seed: GATED → DRY-RUN ONLY (do NOT run the irreversible seed yet)
 
 - [ ] [DATA] P0. **G1.run `--apply-write` for tradfi — GATED, NOT runnable this wave.** Per-gate readiness:
-  - **(a) Slot-7 PART C G1-foundation code: 🔴 RED (re-validated 2026-06-07)** — the G1-ENUM shape-aware producer LANDED
-    (@6ea46565) and I RE-RAN tradfi enumerate on it, but the count barely moved (588,798→587,990) because tradfi's
-    dominant types (OPTION/COMBO/FUTURE/SPOT_PAIR) are UNMAPPED in the validity matrix AND — the real blocker — **tradfi
-    options/combos are captured at BUNDLE grain (options_chain/combo/futures_chain) while the catalogue + enumerate are
-    per-contract → ~563K false candidates (grain mismatch).** Gate-(a) needs the **G1-ENUM bundle-grain rollup for
-    tradfi** (catalogue emits options_chain/futures_chain bundles + the matrix entries) — see the 🔴 ROOT-CAUSE FINDING
-    todo above. Not green until that lands and the re-run drops to a sane count.
+  - **(a) Slot-7 PART C G1-foundation code: 🟢 GREEN (RESOLVED 2026-06-08, slot-6).** Era-B bundle rollup LANDED
+    (uac@ae70338d options_chain/futures_chain are instrument_types→{trades} + is@74df991d/687d1443 per-underlying
+    rollup) + my tradfi `future`/`spot_pair` validity rows (uac@576f8fa8). Enumerate re-run (scan-only, 2026-06-04..05):
+    **587,990 → 24,914 (Era-B bundle) → 17,928 (matrix fix)** — the ~563K false per-contract OPTION/COMBO candidates are
+    GONE; report verified 0 per-contract OPTION/COMBO, 0 data_type=options_chain (Era-B trades model), 0 impossible
+    pairs, FUTURE now 6 data_types; 17,928 = exact Σ(alive × valid-dts × 2 days). Original RED ↓ retained for context.
+  - **(a-orig) Slot-7 PART C G1-foundation code: 🔴 RED (re-validated 2026-06-07)** — the G1-ENUM shape-aware producer
+    LANDED (@6ea46565) and I RE-RAN tradfi enumerate on it, but the count barely moved (588,798→587,990) because
+    tradfi's dominant types (OPTION/COMBO/FUTURE/SPOT_PAIR) are UNMAPPED in the validity matrix AND — the real blocker —
+    **tradfi options/combos are captured at BUNDLE grain (options_chain/combo/futures_chain) while the catalogue +
+    enumerate are per-contract → ~563K false candidates (grain mismatch).** Gate-(a) needs the **G1-ENUM bundle-grain
+    rollup for tradfi** (catalogue emits options_chain/futures_chain bundles + the matrix entries) — see the 🔴
+    ROOT-CAUSE FINDING todo above. Not green until that lands and the re-run drops to a sane count.
     - **RE-VERIFIED slot-6 2026-06-07 session-2 — gate-(a) STILL RED, PART A still the blocker.** (1) Live UAC accessor
       confirms the matrix gap: `valid_data_types_for_instrument_type("tradfi", X)` returns **None** for `option` /
       `combo` / `options_chain` / `futures_chain` / `future`
@@ -919,6 +932,59 @@ The 7 criteria are the **pre-run readiness gate** (code + dry-runs). To execute 
 > (TOOL-READY) · plus G3 (UNION view — SHIPPED pm@822393880) and the operational pre-migration drain. When PART A lands,
 > the remaining tradfi work is: co-land the matrix rows → re-run enumerate (expect the ~563K false-candidate drop) →
 > finish the bundle-aware 7+2 audit → apply-ready verdict.
+
+### 🟢 TradFi APPLY-READY VERDICT (slot-6, 2026-06-08) — 5/5 dry-gate criteria GREEN; remaining gates OPERATIONAL only
+
+> **VERDICT: tradfi is APPLY-READY on LDR.** PART A (Era-B bundle rollup) landed and my last matrix slice fix shipped;
+> every G1+G2 dry-run is green and the 7+2 audit passes. **No code change remains before `--apply`** — the only blockers
+> are operational (the gated WRITE runs + IS backfill + the Era-B relabel that rides G4 + the pre-migration drain).
+
+**The 5 dry-gate criteria (all GREEN):**
+
+1. **① MTDS migrator dry-run** — `migrate_tradfi_to_v9_canonical` (dry): planned=1088 / 0 errors; source-aware
+   `pipeline_mode` (CME/NYSE/NASDAQ/CBOE/ICE→`batch_databento`, BARCHART→`batch_barchart`, YAHOO→`batch_yahoo`,
+   EIA→`batch_eia`); path-only insert — the v9 columns ride `rebuild_tradfi_manifest`.
+2. **② Manifest-rebuild / instruments-store v9** — `migrate_instruments_store_v9 --asset-group tradfi` (is@febb899e):
+   `_index` 20,388 rows → **v9 100%**, all CF stamps (`schema_version=9` · `asset_group=tradfi` ·
+   `pipeline_mode=batch_instruments_service` · `source=instruments_service` · `transport=rest` · `data_type=instruments`
+   · per-row `available_at` · honest 4-state 19,247 captured/1,141 empty_confirmed). cf_manifest_audit projection
+   CF-GREEN (v8→v9).
+3. **③ Enumerate re-validated GREEN on the Era-B bundle producer** (uac@ae70338d + is@74df991d/687d1443 + my
+   uac@576f8fa8): **587,990 → 24,914 (bundle rollup) → 17,928 (future/spot_pair matrix rows)**. Report verified: **0
+   per-contract OPTION/COMBO** (rolled to options_chain/futures_chain bundles, one per underlying, data_type=trades),
+   **0 data_type=options_chain** candidates (Era-B trades model), **0 impossible pairs** (tradfi has no
+   PERPETUAL×chain), FUTURE trimmed to its 6 real data_types (no macro/corp-action/earnings over-fan); 17,928 = exact
+   Σ(alive × valid-dts × 2 days). The ~563K false per-contract candidates are GONE.
+4. **④–⑦ honest-absence / read-write paths / IS+UAC guardrails / numerator-denominator** — ride the WAVE-1 code (rebuild
+   typed reasons + `record_zero_rows`, A7/CF-11 fetch-failure→`attempted_failed`, batch=live single path, env-tier
+   `resolve_bucket_name`); G3 UNION view SHIPPED (pm@822393880); the could-exist denominator is now accurate (enumerate
+   17,928).
+5. **⑧/⑨ catalogue-completeness + source-aware pipeline_mode** — `-prd-` `instrument_availability/by_date/` POPULATED
+   (64,724 parquets), shape-aware + bundle-grain producer GREEN, validity+grain slice CORRECT for every tradfi
+   instrument*type (option/combo→frozenset; options_chain/futures_chain→{trades}, grain=bundle_by_underlying;
+   future/spot_pair→per-contract leaves); migrators stamp source-aware `batch*<source>` (NOT coarse).
+
+**Sampled-vs-walked**: WALKED — the full 20,388-row instruments-store `_index` transform + the full 684,372-instrument
+catalog + 144,062-row manifest scan in enumerate (present-set 73,352). SAMPLED — the MTDS migrator dry-run on
+day=2021-08-16..17 (path+derivation; the whole-corpus walk runs on the in-region VM) + the catalogue instrument_type
+distribution. **Remaining gaps**: none code-side; the candidate-count is for a 2-day window (the full-horizon seed is
+the gated G1.run VM run).
+
+**The ONLY remaining gates — ALL OPERATIONAL (no code owed):** G0 ✓ · G3 UNION view ✓ (pm@822393880) · the v9
+instruments-store walk `migrate_instruments_store_v9 --asset-group tradfi --apply` RUN (TOOL-READY; dry-run proved 100%
+v9) · IS backfill complete (Massive `by_date` re-feed → catalogue regen; adapter SHIPPED) · the **Era-B legacy-row
+relabel rides the G4 migrator as its final atomic step** (operator decision slot-7 edca81b57 — NOT a dry-run blocker) ·
+pre-migration drain. **`tradfi APPLY-READY — 5/5`.**
+
+- [ ] [INFRA] P2. **PRE-EXISTING UAC QG RED (not tradfi; flagged slot-6 2026-06-08) — blocks the UAC `--no-fix` sentinel
+      → no clean UAC quickmerge fleet-wide.** `tests/unit/test_schema_version_matrix.py` 3 failing
+      (`test_green_status_when_versions_match` / `test_na_schema_version_does_not_trigger_red` /
+      `test_load_providers_green_when_versions_match`): assert `binance.computed_status == "green"` but it is `"yellow"`
+      (schema_version provider-status drift). **Proven PRE-EXISTING** (stash-test: fails identically on clean LDR
+      without my matrix change) + **unrelated** to the G1-ENUM data_type validity matrix + **outside the tradfi AG**
+      (the schema_version provider subsystem is cefi/cross-cutting). My `uac@576f8fa8` adds ZERO net-new failures (8,617
+      pass, ruff clean). Owner: the schema_version-provider/cefi AG or vm-cross-cutting — align the provider
+      schema_version registry so binance reads green. Repo: unified-api-contracts. parent_epic: manifest_master.
 
 ### Gate-b remediation — Massive IS reference adapter (shipped this session)
 
