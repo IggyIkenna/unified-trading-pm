@@ -67,12 +67,15 @@ source:
 
 ## Phase 2 — Tier-3 data-state audit: extend + cross-AG + schedule (the continuous-verification cron)
 
-- [ ] [CODE] P1. **Extend `cf_manifest_audit` to CF-1…CF-14**: add CF-13 (pipeline*mode matches
-      `batch*<source>`    source-aware FORM, not just populated;`source_string_for(pm)==source`), CF-14 (`build_instrument_catalogue`⊇     manifest present-set), Era-B (chains as instrument_type +`data_type=trades`, count `data_type=(options_chain|
-      futures_chain)`==0), CF-6 (expected_unattempted present for IS-listed-not-backfilled), CF-10 (object-backed
-      captured only). Emit per-CF GREEN/RED with evidence + a machine-readable summary (JSON) for alerting.
-- [ ] [CODE] P1. **Cross-AG wrapper** — one invocation runs all 5 AGs × {market-data-tick, instruments-store} buckets
-      (the 10 buckets), per-AG GREEN/RED rollup.
+- [x] ✅ [CODE] P1. **`cf_manifest_audit` extended to CF-1…CF-14 + Era-B** — **unified-trading-pm@2fe982eb1**: `audit()`
+      now returns a structured per-CF results dict + JSON-able; added CF-13 (pipeline_mode SOURCE-AWARE prefix form
+      `batch_*`/`live_*`/`replay_*`, not just populated), Era-B (`data_type in {options_chain,futures_chain}` count == 0),
+      CF-6 (4-state/expected_unattempted vocabulary present + canonical), and CF-10 + CF-14 as honest SKIP-with-reason
+      (CF-10 → reconcile_phantom_manifest_rows_all.py; CF-14 → catalogue artifact when materialised, else SKIP since the
+      G1 build_instrument_catalogue roll-up is pending). per-CF GREEN/RED with evidence; ruff-clean.
+- [x] ✅ [CODE] P1. **Cross-AG wrapper** — **unified-trading-pm@2fe982eb1** `cf_manifest_audit_all.py`: one invocation
+      runs all 5 AGs × {market-data-tick, instruments-store} = 10 buckets, per-AG GREEN/RED rollup + a machine-readable
+      JSON summary, exits non-zero on any RED (the `cf-manifest-audit-all --all-ags --json-out` cron entrypoint).
 - [ ] [INFRA] P1. **Schedule it** — a daily Cloud Run Job + Scheduler (per the consolidator pattern) that runs the
       cross-AG audit and **alerts on any RED** (the master plan's "Continuous Verification" column, finally wired). NOT
       fire-and-forget; emits a CF-status artifact.
