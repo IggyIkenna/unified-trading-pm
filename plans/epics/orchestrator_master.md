@@ -347,6 +347,52 @@ reporter's slot range and the VM registry (adjacent to the auth.py:528 stale-tok
       range) is the cleaner source-side fix and still worth doing on that host, but (b) makes the drift harmless
       regardless. repo: agent-orchestrator. Done 2026-06-08 by slot-1.
 
+### CI-reconcile loop — plain LDR `quality-gates-v2` failures now auto-dispatch a fixer (built 2026-06-08, slot-1)
+
+**status**: ✅ SHIPPED + DEPLOYED + VERIFIED. · **provenance**: slot-1, after the operator noted the planning VM was
+"doing nothing" — found the planning VM is _for_ ad-hoc CI fixes but had no route for plain LDR test breaks.
+
+**The gap**: the push-based escalation hook (`POST /api/escalate`) only fired for PR/promotion walls (`merge_conflict` /
+`label_mismatch` / `sit_failure` / `stuck_promotion_pr`). A raw `quality-gates-v2` failure on `live-defi-rollout` (a
+test/lint/type break someone pushed — no PR) mapped to NONE of them, so it never became a task → the CI slot sat idle
+while LDR stayed red.
+
+**Shipped** (`agent-orchestrator@1f093a7`, QG green, 12 unit tests):
+
+- New wall type `ldr_qg_failure` (`escalation.WALL_TYPES` + `EscalateRequest.wall_type` Literal + `escalate.md` worker
+  instructions) → routes to the generic `escalate` prompt (diagnose code-vs-test, fix the wrong side, push to LDR).
+- `server/ci_reconcile.py` `CIReconcileLoop`: every 900s sweeps each active repo's latest `quality-gates-v2` conclusion
+  on `live-defi-rollout` (host `gh` CLI) and dispatches an `ldr_qg_failure` escalation per FAILING repo, within the
+  free-slot/headroom capacity gate, with a per-repo 1h cooldown + max 2 dispatches/tick. Env:
+  `ORCHESTRATOR_CI_RECONCILE_INTERVAL_SECONDS` (0=disable) / `_COOLDOWN_SECONDS` / `_MAX_PER_TICK`. Wired into server
+  startup/shutdown.
+- **Verified live**: the loop found `execution-service` RED on LDR and dispatched a fixer worker onto `orch-slot-1`
+  (2026-06-08 05:48:59Z) once a slot was free.
+
+- [ ] [SCRIPT] P2 **NICE-TO-HAVE**. Push-path too: have the repo `quality-gates-v2` workflow `POST /api/escalate`
+      `wall_type=ldr_qg_failure` on an LDR failure (event-driven, catches a break the instant it lands instead of within
+      one 900s sweep). The wall type + endpoint already accept it; only the GHA call is missing. repo:
+      agent-orchestrator (workflow templates).
+
+### WorkerLivenessWatchdog did NOT reap 6 stale tmux sessions (4 days idle) (finding 2026-06-08, slot-1)
+
+**status**: 🟡 OPEN — root cause of the "planning VM doing nothing". · **provenance**: slot-1, while verifying the
+CI-reconcile loop (the loop kept hitting "no free slot").
+
+**What I found**: all 6 planning-VM slots (`orch-slot-1/2/4/5/9/10`) held tmux sessions created **Fri Jun 5** with
+`last_activity` still at creation time — **~4 days of zero terminal activity** — while the backlog was empty. So every
+slot read as occupied (`_pick_free_slot` skips a slot with a live `orch-slot-N` session) → nothing could be dispatched.
+`ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true`, yet across ~3 min post-restart the watchdog reaped none of them (they are 4
+_days_ past the 900s heartbeat-silent threshold). I manually `tmux kill-session`'d all 6 (operator-authorised; provably
+dead, empty backlog → no work lost), which freed the slots and let the reconcile loop dispatch. The watchdog NOT reaping
+multi-day-silent sessions is the real "doing nothing" cause and recurs without a fix.
+
+- [ ] [SCRIPT] P1. Diagnose why `WorkerLivenessWatchdog` did not kill 6 sessions that were 4 days terminal-silent
+      (`orch-slot-*`, created Jun 5, empty backlog). Candidates: the kill predicate keys off a slot DB heartbeat the
+      stuck worker still posted (so "not silent") rather than tmux/terminal activity; a per-day kill cap already spent;
+      or a protected (`blocked`/extended-thinking) state mis-latched. Fix so a genuinely-idle multi-day session is
+      reaped → slots self-free. repo: agent-orchestrator (`server/worker_liveness_watchdog.py`). Surfaced 2026-06-08.
+
 ## P1 — important; post-current-gate
 
 ### [`d0_orchestrator_migration_2026_05_20`](../archive/2026_05/d0_orchestrator_migration_2026_05_20.md)
