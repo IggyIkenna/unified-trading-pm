@@ -165,10 +165,17 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
+          # The PR's TARGET tier (staging/main) — empty on a push event. A consumer PR into
+          # `staging` must resolve its deps from the deps' `staging` (same promotion tier), else a
+          # dep version that has reached the dep's staging but not yet main is unresolvable and the
+          # range gate red-herrings (incident 2026-06-09: exec-service PR→staging pinned UAC>=0.5.0
+          # which lived only on UAC/staging → clone fell back to main=0.3.0 → false range FAIL).
+          DEP_BASE_REF: ${{ github.base_ref }}
           DEP_REPOS: ${{ inputs.dep_repos }}
           SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
         run: |
           BRANCH="${DEP_BRANCH:-main}"
+          BASE_REF="${DEP_BASE_REF:-}"
           OWNER="${GITHUB_REPOSITORY_OWNER}"
 
           # Version-aware clone: read pyproject.toml constraint for each dep,
@@ -250,6 +257,18 @@ jobs:
             # auth/missing-repo), exit non-zero so the workflow surfaces it.
             echo "Cloning $name at branch $BRANCH (fallback)"
             git clone -b "$BRANCH" "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+            # DEFECT-2 fix (2026-06-09): try the consumer-PR's BASE tier (staging/main) BEFORE the
+            # manifest-release / main fallbacks. A consumer PR into `staging` is validating against
+            # the deps AS THEY WILL BE post-promotion — i.e. the deps' `staging` — so a dep version
+            # already on the dep's staging (but not yet main/tagged) must resolve here. Without this
+            # the clone fell through to main (older) and the range gate produced a FALSE failure
+            # (incident: exec-service PR→staging pinned UAC>=0.5.0, which lived only on UAC/staging).
+            # Guard: only when BASE_REF is set (PR event) and differs from the head BRANCH already tried.
+            if [ -n "$BASE_REF" ] && [ "$BASE_REF" != "$BRANCH" ]; then
+              echo "WARN: Branch '$BRANCH' clone failed for $name — trying PR base tier '$BASE_REF' (same-tier dep resolution)"
+              git clone -b "$BASE_REF" --depth=1 "https://x-access-token:${GH_PAT}@github.com/${OWNER}/${name}.git" "../${name}" && return
+              echo "WARN: base-tier '$BASE_REF' clone failed for $name — trying manifest released version"
+            fi
             # issue#2: DEP_BRANCH absent in this dep + no constraint-derived tag → use the dep's
             # CURRENT RELEASED version from the manifest (explicit, tested version) BEFORE falling
             # to `main` HEAD (which can be ahead of the release → tests an unpublished version).
