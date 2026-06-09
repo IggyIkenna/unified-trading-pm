@@ -5,7 +5,9 @@ name: update-dependency-version
 #
 # Routing logic (based on bump_type in payload):
 #   MAJOR bump -> create branch + PR targeting staging (quality gates required -- breaking change)
-#   MINOR/PATCH -> direct commit to staging with [skip ci] (compatible update, no QG needed)
+#   MINOR/PATCH -> direct commit to staging (compatible update; the reusable QG fast-paths this
+#                  metadata-only pin to GREEN so it carries a check for the promotion PR without
+#                  a full run -- NO [skip ci]; plan semver_version_bump_skip_ci_promotion_block)
 #
 # Dispatch payload:
 #   {dep_name, dep_version, constraint, bump_type, is_breaking, chain_depth}
