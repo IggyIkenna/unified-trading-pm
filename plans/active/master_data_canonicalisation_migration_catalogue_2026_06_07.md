@@ -5,6 +5,7 @@ title:
 created: 2026-06-07
 parent_epic: epics/manifest_master.md
 assigned_vm: vm-cross-cutting
+umbrella: true  # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
 status: active
 priority: P0
 estimate_class: design

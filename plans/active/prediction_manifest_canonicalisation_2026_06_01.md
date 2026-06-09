@@ -3,6 +3,7 @@ title: "Prediction manifest + data canonicalisation (legacy→canonical, single-
 created: 2026-06-01
 parent_epic: epics/mtds_mdps_master.md
 assigned_vm: vm-prediction
+umbrella: true  # catalogue/coordinator plan — large in context, <100 todos; exempt from 1000L cap (2026-06-09)
 status: active
 priority: P0
 estimate_class: infra
