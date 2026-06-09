@@ -1807,9 +1807,9 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-09T12:49:37.350954Z",
-    "locked_reason": "SIT running",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [
       "unified-api-contracts",
