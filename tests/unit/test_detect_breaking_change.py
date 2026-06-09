@@ -233,5 +233,31 @@ class Config:
     assert not reasons, reasons
 
 
+def test_module_to_package_move_preserves_surface_is_not_breaking():
+    """Incident 2026-06-09 (UAC 0.5.0 spurious breaking-cascade regression guard).
+
+    Deleting a DEPRECATED re-export SHIM module (``from .real import *``) while a sibling
+    package provides the same public names must classify NON-breaking. A star-import
+    contributes no parseable exports, and the differ keys exports by BARE name across the
+    MERGED surface, so a name still exported anywhere is never counted as "removed". (The
+    actual root cause of that incident was the semver-agent's baseline-commit resolution, not
+    the differ — but this locks in the differ's correct module->package behaviour so a future
+    coarsening can't re-introduce the false positive.)
+    """
+    merge = _mod.merge
+    # OLD: package __init__ exports {A, B}; a deprecated shim module star-imports (no exports).
+    old = merge(
+        extract_surface('__all__ = ["A", "B"]\nclass A: ...\nclass B: ...', "pkg"),
+        extract_surface("from .real import *  # deprecated compat shim", "pkg.validation.instruction"),
+    )
+    # NEW: shim module deleted; __init__ unchanged; a new sub-package provides the same names.
+    new = merge(
+        extract_surface('__all__ = ["A", "B"]\nclass A: ...\nclass B: ...', "pkg"),
+        extract_surface("class A: ...\nclass B: ...", "pkg.validation.instruction"),
+    )
+    reasons = diff_surfaces(old, new)
+    assert not reasons, reasons
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
