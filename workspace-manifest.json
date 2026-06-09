@@ -1808,15 +1808,15 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-09T09:27:09.035331Z",
-    "locked_reason": "Breaking MINOR bump cascade: execution-service=0.3.0 (pre-1.0.0)",
-    "lock_version": "0.3.0",
+    "locked_since": "2026-06-09T10:38:51.640123Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "unified-api-contracts",
       "execution-service"
     ],
     "sit_retry_count": 1,
-    "locked_alert_sent": true,
+    "locked_alert_sent": false,
     "breaking_pending": [
       "execution-service"
     ]
@@ -1824,9 +1824,9 @@
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "unified-api-contracts": {
-      "version": "0.2.1",
+      "branch": "staging",
       "sha": "c8e6f370a822a597134e7c591a4d97a6de4f60b7",
-      "branch": "staging"
+      "version": "0.2.1"
     },
     "agent-orchestrator": {
       "branch": "staging",
@@ -1834,44 +1834,44 @@
       "version": "0.8.1"
     },
     "unified-trading-library": {
-      "version": "0.4.0",
+      "branch": "staging",
       "sha": "beddc15f084bb753d8ca50259f962dafadf2f59b",
-      "branch": "staging"
+      "version": "0.4.0"
     },
     "market-tick-data-service": {
-      "version": "0.4.0",
+      "branch": "staging",
       "sha": "f81d6c82cb42b2d43e4ebbd51d213f81e32dad7b",
-      "branch": "staging"
+      "version": "0.4.0"
     },
     "execution-service": {
-      "version": "0.3.0",
+      "branch": "staging",
       "sha": "7fb2e5cd94791bee48200af7ec0d1242d64a7fa2",
-      "branch": "staging"
+      "version": "0.3.0"
     },
     "instruments-service": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "5763f159f1936e4bd9058d85b551425fb8803289",
-      "branch": "staging"
+      "version": "0.2.0"
     },
     "trading-agent-service": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "f695f6936f1652759cd95561aacd108101aa1627",
-      "branch": "staging"
+      "version": "0.2.0"
     },
     "strategy-service": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "3fc31bffd388f62d89e2ee98fce2ee16aebae6f4",
-      "branch": "staging"
+      "version": "0.2.0"
     },
     "batch-live-reconciliation-service": {
-      "version": "0.2.0",
+      "branch": "staging",
       "sha": "4bf1600cf1f50760879078ec144e97a3f9e9fddb",
-      "branch": "staging"
+      "version": "0.2.0"
     },
     "market-data-processing-service": {
-      "version": "0.3.0",
+      "branch": "staging",
       "sha": "b362975b194826245f952cda548bbfea855b4002",
-      "branch": "staging"
+      "version": "0.3.0"
     }
   },
   "main_commits": {
