@@ -54,6 +54,20 @@ surfaced while triaging the Slack #ci-failures burst:
    the dep-clone fallback prefer the manifest-pinned release tag over upstream `main`. Composes with
    `cicd_contract_hardening_2026_06_01.md`.
 
+5. **UAC QG is RED on LDR tip + MTDS slot diverged — blocks all UAC/MTDS commits (surfaced 2026-06-09 shipping defi-drift
+   D8)** — while shipping two trivial `defi_code_codex_drift` D8 cleanups, `quality-gates.sh --no-fix` on
+   `unified-api-contracts` LDR tip (`4a491916`) fails on PRE-EXISTING checks unrelated to the change: (a) `STEP 5.86`
+   orphan cassette `fear_greed/mocks/stub.yaml` (self-evident `stub-placeholder`, `interactions: []`, contract
+   `UAC@7ae9daee`) — fixable via the allowlist (entry prepared locally); (b) `Hardcoded project ID in production`; (c)
+   `Backward-compat pattern found` — intentional shims in `internal/modes.py` ("kept for backward-compat with 6 consumer
+   call-sites") + `registry/chain_env.py` ("ghost no-underscore protocol tokens") that the `no-backward-compat-shims`
+   gate rejects but which need a real refactor + owner judgment (removing them touches 6 consumers). Separately, **MTDS
+   slot is diverged from LDR** — an unpushed feature commit `01fda7ce` (`feat(defi): migrator gas-fees + liquidations
+   specs`) + a rebase conflict in `tests/unit/test_collect_handler_schema.py` (foreign file) blocks `quickmerge`
+   STAGE 0.4. Net: the D8 edits are made + correct but cannot pass the per-repo commit gate without unrelated
+   remediation. (Also observed during this work: a host-resource crisis — load ~247 on 10 cores, ~46 concurrent
+   QG-family procs, QGs OOM-killed/governor-queued; self-cleared to load ~12.)
+
 ## Why it matters
 
 (1) keeps a required-ish check red (noise + can gate). (2) is a real observability gap (silent no-sync). (3) means stuck
@@ -78,3 +92,12 @@ clean consumer repo, costing triage time chasing a ref that exists in no current
       (or promote a breaking UAC rename atomically-with / after the UTL consumer fix) so a cross-repo rename can't
       transiently redden every UTL consumer's CI during the promotion-lag window. Repo: `unified-trading-pm` (+ the CI
       dep-clone scripts). Composes with `cicd_contract_hardening_2026_06_01.md`.
+- [ ] [CODE] P2. Finding 5a — `unified-api-contracts` QG-RED on LDR: remove/relocate the intentional backward-compat
+      shims the `no-backward-compat-shims` gate now rejects (`internal/modes.py` 6-call-site shim + `registry/chain_env.py`
+      ghost no-underscore protocol tokens) and the `Hardcoded project ID in production` hit. Real refactor + owner
+      judgment (touches 6 consumers); blocks ALL UAC commits. Repo: `unified-api-contracts`. (`fear_greed` orphan
+      cassette already allowlisted locally — ship with the next UAC commit.)
+- [ ] [SCRIPT] P2. Finding 5b — reconcile the diverged **market-tick-data-service** slot: unpushed feature commit
+      `01fda7ce` (`feat(defi): migrator gas-fees + liquidations specs`) rebased onto LDR with the
+      `tests/unit/test_collect_handler_schema.py` conflict resolved (owner of `01fda7ce`), so the slot is
+      ancestor-or-equal of LDR again and `quickmerge` STAGE 0.4 passes. Repo: `market-tick-data-service`.

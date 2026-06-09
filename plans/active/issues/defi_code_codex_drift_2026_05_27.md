@@ -102,10 +102,17 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       on `origin/live-defi-rollout`. Usage audit found **nil active downstream consumption** of bloxroute/`mev_events`
       relay data (bloxroute already removed as the mempool feed; `sandwich_theoretical.py` is a theoretical-only tracer).
       — 2026-06-09.
-- [ ] [CODE] P3. **DECIDED 2026-05-27 → REMOVE (deferred)** D8 — **infura already decommissioned workspace-wide
-      2026-05-22** (execution `chain_config.yaml:14`); remaining refs are stale. Remove the Starknet `infura_compatible`
-      template (`_defi_chain_data.py:734`) + the `gas_fee_handler.py:78` comment. No Ikenna; codex docs already mark
-      Infura "removed/banned".
+- [ ] [CODE] P3. D8 — **EDITS APPLIED & CORRECT, BLOCKED FROM SHIPPING (2026-06-09)** — remove the Starknet
+      `infura_compatible` template (`_defi_chain_data.py`, now ~line 711) + de-Infura the `gas_fee_handler.py:78` comment
+      (Infura decommissioned workspace-wide 2026-05-22, execution `chain_config.yaml:14`). Both edits are made locally and
+      verified safe (UAC: no consumer references the `infura_compatible` key; MTDS: comment-only). **NOT shipped — blocked
+      by PRE-EXISTING repo-health issues unrelated to D8** (see ci_incident_findings_2026_06_09 Finding 5): (a) **UAC QG is
+      RED on LDR tip** — `STEP 5.86` orphan cassette `fear_greed/mocks/stub.yaml` (fixed locally via allowlist), PLUS
+      pre-existing `Hardcoded project ID in production` + `Backward-compat pattern` failures (intentional shims in
+      `internal/modes.py` 6-call-site + `registry/chain_env.py` ghost tokens) that need a real refactor + owner judgment;
+      (b) **MTDS slot is DIVERGED from LDR** — unpushed feature commit `01fda7ce` (migrator gas-fees/liquidations) + a
+      rebase conflict in `tests/unit/test_collect_handler_schema.py` (foreign file). Ship once UAC QG is green on LDR +
+      the MTDS slot is reconciled.
 - [x] [CODE] P3. **DECIDED 2026-05-27 → KEEP** D13 — `governance_proposals` is an intentional unregistered scaffold for
       the Phase-4B simulation harness (not wired in `cli/main.py`), so it is NOT an active parallel path vs
       `governance_events`. No change; documented in the catalog § "Additional data types".
