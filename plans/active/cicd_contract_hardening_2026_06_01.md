@@ -270,7 +270,24 @@ what the operator is seeing:
       PR BASE, or re-run `quality-gates-v2.yml --ref <head>` (`unified-trading-pm@5fccadf56`); (2) `agents/escalate.md`
       sit_failure section gives the worker the same A/B classify + the (B) remedy, so it never wrongly "fixes LDR" for a
       stale-staging wall (`agent-orchestrator@8155adb`). basedpyright 0/0, 5 escalate unit tests green.
-- [ ] [SCRIPT] P1. **PERMANENT FIX for the `[skip ci]`-bump-head `(B)` class above — stop semver-agent producing the
+- [x] ✅ [SCRIPT] P1. **LANDED + ROLLED OUT FLEET-WIDE 2026-06-09.** (a) `semver-agent.yml.tmpl` drops `[skip ci]` from
+      the bump commit (verified no-`[skip ci]` on the `main` of all 11 release repos: execution-service,
+      unified-api-contracts, unified-trading-library, market-tick-data-service, deployment-service, features-service,
+      greeks-service, deployment-api, fund-administration-service, ml-service, trading-agent-service). (b) the
+      version-only short-circuit is the reusable `python-quality-gates-v2.yml` `metadata_only`/vcheck path (reports the
+      required `quality-gates-v2` context green in seconds for a `pyproject.toml`-version-only diff). **CURRENT [skip ci]
+      heads cleared by a one-time chicken-and-egg break** — Option C had to reach each repo's `main` (the semver-agent
+      runs `workflow_run` from the DEFAULT branch, so a `[skip ci]` bump persists until main carries Option C), but the
+      `[skip ci]` head blocked the very staging→main PR that would land it (even `gh pr merge --admin` refuses — required
+      context "expected"). Broke it via the sanctioned admin relax→merge→restore (force-push-vs-CI rule: "landing the fix
+      that unblocks the branch"): per repo, temporarily disable the `require-quality-gates` ruleset + `enforce_admins`,
+      admin-merge the promote (exec #231 staging→main; the other 10 via LDR→main since their staging lacked Option C),
+      then RESTORE both — verified all rulesets `active` + `enforce_admins` restored (or n/a on ruleset-only repos).
+      Net: every release repo's `main` now emits non-`[skip ci]` bumps → bump commits carry their own v2 check → the
+      deadlock cannot recur. **Anti-pattern avoided** (operator flag 2026-06-09): the iterative manual
+      `chore(ci): re-trigger v2` commits / `workflow_dispatch` re-fires do NOT stick (outrun by the next `[skip ci]`
+      bump, land on other SHAs) — the durable fix is Option C ON MAIN, done here, not re-triggering.
+- [ ] [SCRIPT] P1. **(superseded — historical)** PERMANENT FIX for the `[skip ci]`-bump-head `(B)` class above — stop semver-agent producing the
       v2-never-reported promotion deadlock at the source (Option C, migrated from
       `plans/active/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md`).** The bump lands as a separate
       `chore(release): bump version to X [skip ci]` commit on `staging`; because staging→main is a
