@@ -4124,3 +4124,36 @@ Three operator follow-ups after the SESSION OUTCOME above — all DONE + shipped
 LDR-SSOT + drift-tick + parity model codified for agents; worktree model migrated to Path-B (sync tax retired) with all
 uncommitted work preserved. Remaining (documented, non-blocking): strict-quickmerge machine-guard enforcement (policy
 shipped; guard is a dedicated pass).
+
+## 🟠 CORRECTION + ADDENDUM — 2026-06-09: "main==LDR fleet-wide / full QG green" was OVERSTATED (operator caught it)
+
+The "main==LDR fleet-wide + self-sustaining" claim above was **mechanism-level** (promotion automation flowing + branch
+content reconciled at that time), NOT a fleet-wide per-repo **QG-green** attestation — and it was stated as if it were.
+Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment drift** (the 6 flagged tests PASS, exit 0
+— not a code/test failure; the dep-version-coherence gate is correctly flagging a real split). Root-caused:
+
+- **UAC `main` stranded at 0.1.20** while `staging`/`LDR` = **0.2.1** (`staging` +5 ahead of `main`, real content incl.
+  the version bumps). So the canonical UAC version is SPLIT three ways (main 0.1.20 / staging 0.2.1 / MTDS-resolved 0.2.0)
+  → every UAC consumer's version-alignment check goes red. The MTDS red is a SYMPTOM; the stuck UAC promotion is the cause.
+- **Why stuck — a RECURRING trap**: UAC `staging` HEAD is `chore(release): bump version to 0.2.1 [skip ci]`. A `[skip ci]`
+  head emits ZERO check runs, and UAC `main` requires `quality-gates-v2` → any `staging→main` PR is permanently BLOCKED on
+  the never-reported required check (the documented v2-never-reported deadlock). EVERY semver minor bump reproduces this,
+  because the bump commit is the promotion-PR head and it carries `[skip ci]`.
+- **Fix in flight (2026-06-09)**: opened UAC `staging→main` PR #108 (auto-merge) + re-fired v2 via
+  `gh workflow run quality-gates-v2.yml --ref staging` (workflow_dispatch IGNORES `[skip ci]`, so the required check
+  reports on the bump head → PR merges → UAC main = 0.2.1).
+
+- [ ] [INFRA] P1. **`ci-failure-watcher --auto-recover` close+reopen does NOT fix the `[skip ci]`-HEAD deadlock variant**
+      (only the token-suppressed-`pull_request` variant). `[skip ci]` suppresses BOTH `push` AND `pull_request` events, so
+      reopening a `[skip ci]`-head PR still emits no v2 run. Refine `auto_recover_stuck_prs()`: when the stuck PR's head
+      commit message contains `[skip ci]`/`[ci skip]`, recover via `gh workflow run quality-gates-v2.yml --ref <head-branch>`
+      (workflow_dispatch) INSTEAD of close+reopen. Add a unit test for the `[skip ci]`-head branch.
+- [ ] [INFRA] P1. **Semver minor bumps recurrently deadlock `staging→main`** because the `[skip ci]` bump commit becomes
+      the promotion-PR head. Durable fix options: (a) the version-bump flow auto-fires v2 on the bump head, or (b)
+      `staging-to-main`/`ldr-to-staging-promote` detect a `[skip ci]` head and `workflow_dispatch` v2 (mirror of the
+      `ldr-to-main-promote` self-recover, but workflow_dispatch not close+reopen). Pick one, wire fleet-wide.
+- [ ] [INFRA] P2. **MTDS consumer re-lock**: after UAC main = 0.2.1, confirm MTDS (and other UAC consumers showing the
+      `local 0.2.0 vs canonical 0.2.1` alignment red) re-resolve UAC to 0.2.1 (`run-version-alignment.sh --fix` /
+      re-`uv pip install`); re-run MTDS QG to GREEN. Then the "full QG green" claim is actually true for the UAC chain.
+- [ ] [INFRA] P2. **Audit the rest of the fleet for the same split** — `gh api compare/main...staging --jq .ahead_by` per
+      repo to find other deployed packages whose `[skip ci]` version bump is stranded on staging (same deadlock class).
