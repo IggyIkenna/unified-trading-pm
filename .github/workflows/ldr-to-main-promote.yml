@@ -94,7 +94,7 @@ jobs:
               [ -z "$PR_NUM" ] && { echo "WARN: PR create failed and none found"; { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"; exit 0; }
             else
               echo "  opened $PR_URL ($FILES changed file(s))"
-              gh pr merge "$PR_URL" --auto --squash --repo "$OWNER/$REPO" 2>/dev/null \
+              gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null \
                 || echo "  WARN: auto-merge unavailable — merge manually: $PR_URL"
               { echo "action=opened"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
               exit 0
@@ -105,7 +105,7 @@ jobs:
           # ── deadlock (required check ABSENT on the current head → close+reopen re-fires v2).     ──
           PR="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
           echo "  existing open LDR→main PR #$PR_NUM ($PR)"
-          gh pr merge "$PR_NUM" --auto --squash --repo "$OWNER/$REPO" 2>/dev/null || true
+          gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
 
           MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
           if [ "$MSTATE" = "blocked" ]; then
@@ -116,7 +116,7 @@ jobs:
               echo "  v2-never-reported on head ${HEAD_SHA:0:8} — close+reopen to re-fire quality-gates-v2"
               gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null && sleep 3 \
                 && gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
-                && gh pr merge "$PR_NUM" --auto --squash --repo "$OWNER/$REPO" 2>/dev/null || true
+                && gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
               ACTION="recovered"
             else
               echo "  PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving it"

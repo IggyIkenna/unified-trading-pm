@@ -1371,9 +1371,15 @@ if [ -n "$PR_NUM" ]; then
       fi
     fi
   else
-    # [skip ci] automation path: direct to main
-    gh pr merge "$PR_NUM" --auto --squash --delete-branch 2>/dev/null || true
-    echo "[$REPO_NAME] ✅ PR created targeting main: $PR_URL (auto-merge enabled — [skip ci] automation)"
+    # PM/codex Option-B main-direct path (PR_BASE=main). MERGE-COMMIT, not squash (2026-06-09):
+    # squash lands LDR's content on main under a NEW sha → main never shares LDR's history → the
+    # main→LDR back-merge perpetually conflicts ("same content, different history") and strands LDR
+    # behind main (the recurring version-alignment block). A merge commit makes main a DESCENDANT of
+    # LDR, so the back-merge is always a clean fast-forward. main allows merge commits
+    # (required_linear_history=false, allow_merge_commit=true); v2 still gates the PR either way.
+    # SSOT: plans/active/cicd_contract_hardening_2026_06_01.md § "FINDING — PM main→LDR backmerge stuck".
+    gh pr merge "$PR_NUM" --auto --merge --delete-branch 2>/dev/null || true
+    echo "[$REPO_NAME] ✅ PR created targeting main: $PR_URL (auto-merge enabled — merge-commit, keeps main↔LDR history connected)"
     echo "[$REPO_NAME] Staying on branch $BRANCH — PR will auto-merge when CI passes"
     echo "[$REPO_NAME] To sync with main after merge: git checkout main && git pull"
   fi

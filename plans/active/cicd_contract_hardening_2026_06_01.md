@@ -4080,8 +4080,8 @@ rollout, never per-repo).
 
 ### Genuine remaining (P1 hardening, design captured — NOT blocking; policy/docs already shipped)
 
-- **strict-quickmerge HARD enforcement** (quickmerge_dep_content Ph2) — POLICY codified (CLAUDE.md/SUB_AGENT); the
-  enforcement _mechanism_ (reject a non-carve-out code commit on the integration branch lacking a quickmerge lineage
+- **strict-quickmerge HARD enforcement** (quickmerge*dep_content Ph2) — POLICY codified (CLAUDE.md/SUB_AGENT); the
+  enforcement \_mechanism* (reject a non-carve-out code commit on the integration branch lacking a quickmerge lineage
   marker) is deliberately NOT auto-enforced mid-live-session (a wrong fleet-wide guard = the rule-11 anti-pattern just
   hit with the drift gate). Build as a quickmerge-trailer check in a dedicated pass.
 - **parity matrix** (ci_local_qg Ph1) — principle + SIT-deferral + the tag-lag divergence documented in codex; a full
@@ -4096,19 +4096,19 @@ rollout, never per-repo).
 Three operator follow-ups after the SESSION OUTCOME above — all DONE + shipped:
 
 1. **strict-quickmerge codified in the rule surface** (was missing): HARD RULE added to `cursor-configs/CLAUDE.md`
-   + `SUB_AGENT_MANDATORY_RULES.md` + `codex/08-workflows/ci-cd-flow.md` § strict-quickmerge. Closed carve-out set
-   (dirty-deps · FF-pull-in + PM `docs(plans)` flip · PM `scripts/**`+`.github/**` that must reach main) reconciled
-   with `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (one set, not forked). Shipped PM@5fbfb6849.
+   - `SUB_AGENT_MANDATORY_RULES.md` + `codex/08-workflows/ci-cd-flow.md` § strict-quickmerge. Closed carve-out set
+     (dirty-deps · FF-pull-in + PM `docs(plans)` flip · PM `scripts/**`+`.github/**` that must reach main) reconciled
+     with `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (one set, not forked). Shipped PM@5fbfb6849.
 2. **Parity matrix + divergence watchdog "plugged in"**: the local↔CI QG parity-matrix table is in
    `codex/08-workflows/ci-cd-flow.md` (the 2 intentional gaps: workflow-drift CI no-op + assembled-SIT layer);
    `scripts/cicd/parity_watchdog.py` auto-files `ci_local_qg_divergence_<repo>_<date>.md` + emits an ORCH_ALERT on a
    local-green/staging-red event. ci_local_qg watchdog+matrix items flipped. Shipped PM@5fbfb6849.
-3. **Worktree Path-B migration EXECUTED** (operator: "multi-slot session ended, finish now") — **without
-   compromising any uncommitted work**:
-   - **PRESERVE FIRST**: all 12 dirty slot worktrees' real work committed to `origin/wip-preserve/slot-<N>`
-     branches (verified recoverable; junk — node_modules / QG sentinels — excluded). **Zero WIP leaked to LDR.**
-   - **RECLONE**: slots 2-11 → **250/250 Path-B reference-clones** on `live-defi-rollout` (own `.git`, shared
-     objects via `--reference`, `[slot-N·laptop]` identity), 0 residual tab-worktrees. Verified clean + ==LDR + correct
+3. **Worktree Path-B migration EXECUTED** (operator: "multi-slot session ended, finish now") — **without compromising
+   any uncommitted work**:
+   - **PRESERVE FIRST**: all 12 dirty slot worktrees' real work committed to `origin/wip-preserve/slot-<N>` branches
+     (verified recoverable; junk — node_modules / QG sentinels — excluded). **Zero WIP leaked to LDR.**
+   - **RECLONE**: slots 2-11 → **250/250 Path-B reference-clones** on `live-defi-rollout` (own `.git`, shared objects
+     via `--reference`, `[slot-N·laptop]` identity), 0 residual tab-worktrees. Verified clean + ==LDR + correct
      identity.
    - **MACHINERY**: `setup-tab-worktrees.sh` provisions Path-B; `tab-mirror-to-ldr.yml` DISABLED fleet-wide (24 repos);
      `scripts/cicd/slot_drift_check.py` is the new drift invariant; `slot-cron-ff-pull.sh` + `quickmerge.sh` work
@@ -4129,25 +4129,27 @@ shipped; guard is a dedicated pass).
 
 The "main==LDR fleet-wide + self-sustaining" claim above was **mechanism-level** (promotion automation flowing + branch
 content reconciled at that time), NOT a fleet-wide per-repo **QG-green** attestation — and it was stated as if it were.
-Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment drift** (the 6 flagged tests PASS, exit 0
-— not a code/test failure; the dep-version-coherence gate is correctly flagging a real split). Root-caused:
+Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment drift** (the 6 flagged tests PASS, exit
+0 — not a code/test failure; the dep-version-coherence gate is correctly flagging a real split). Root-caused:
 
 - **UAC `main` stranded at 0.1.20** while `staging`/`LDR` = **0.2.1** (`staging` +5 ahead of `main`, real content incl.
-  the version bumps). So the canonical UAC version is SPLIT three ways (main 0.1.20 / staging 0.2.1 / MTDS-resolved 0.2.0)
-  → every UAC consumer's version-alignment check goes red. The MTDS red is a SYMPTOM; the stuck UAC promotion is the cause.
-- **Why stuck — a RECURRING trap**: UAC `staging` HEAD is `chore(release): bump version to 0.2.1 [skip ci]`. A `[skip ci]`
-  head emits ZERO check runs, and UAC `main` requires `quality-gates-v2` → any `staging→main` PR is permanently BLOCKED on
-  the never-reported required check (the documented v2-never-reported deadlock). EVERY semver minor bump reproduces this,
-  because the bump commit is the promotion-PR head and it carries `[skip ci]`.
+  the version bumps). So the canonical UAC version is SPLIT three ways (main 0.1.20 / staging 0.2.1 / MTDS-resolved
+  0.2.0) → every UAC consumer's version-alignment check goes red. The MTDS red is a SYMPTOM; the stuck UAC promotion is
+  the cause.
+- **Why stuck — a RECURRING trap**: UAC `staging` HEAD is `chore(release): bump version to 0.2.1 [skip ci]`. A
+  `[skip ci]` head emits ZERO check runs, and UAC `main` requires `quality-gates-v2` → any `staging→main` PR is
+  permanently BLOCKED on the never-reported required check (the documented v2-never-reported deadlock). EVERY semver
+  minor bump reproduces this, because the bump commit is the promotion-PR head and it carries `[skip ci]`.
 - **Fix in flight (2026-06-09)**: opened UAC `staging→main` PR #108 (auto-merge) + re-fired v2 via
   `gh workflow run quality-gates-v2.yml --ref staging` (workflow_dispatch IGNORES `[skip ci]`, so the required check
   reports on the bump head → PR merges → UAC main = 0.2.1).
 
-- [ ] [INFRA] P1. **`ci-failure-watcher --auto-recover` close+reopen does NOT fix the `[skip ci]`-HEAD deadlock variant**
-      (only the token-suppressed-`pull_request` variant). `[skip ci]` suppresses BOTH `push` AND `pull_request` events, so
-      reopening a `[skip ci]`-head PR still emits no v2 run. Refine `auto_recover_stuck_prs()`: when the stuck PR's head
-      commit message contains `[skip ci]`/`[ci skip]`, recover via `gh workflow run quality-gates-v2.yml --ref <head-branch>`
-      (workflow_dispatch) INSTEAD of close+reopen. Add a unit test for the `[skip ci]`-head branch.
+- [ ] [INFRA] P1. **`ci-failure-watcher --auto-recover` close+reopen does NOT fix the `[skip ci]`-HEAD deadlock
+      variant** (only the token-suppressed-`pull_request` variant). `[skip ci]` suppresses BOTH `push` AND
+      `pull_request` events, so reopening a `[skip ci]`-head PR still emits no v2 run. Refine
+      `auto_recover_stuck_prs()`: when the stuck PR's head commit message contains `[skip ci]`/`[ci skip]`, recover via
+      `gh workflow run quality-gates-v2.yml --ref <head-branch>` (workflow_dispatch) INSTEAD of close+reopen. Add a unit
+      test for the `[skip ci]`-head branch.
 - [ ] [INFRA] P1. **Semver minor bumps recurrently deadlock `staging→main`** because the `[skip ci]` bump commit becomes
       the promotion-PR head. Durable fix options: (a) the version-bump flow auto-fires v2 on the bump head, or (b)
       `staging-to-main`/`ldr-to-staging-promote` detect a `[skip ci]` head and `workflow_dispatch` v2 (mirror of the
@@ -4155,8 +4157,9 @@ Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment 
 - [ ] [INFRA] P2. **MTDS consumer re-lock**: after UAC main = 0.2.1, confirm MTDS (and other UAC consumers showing the
       `local 0.2.0 vs canonical 0.2.1` alignment red) re-resolve UAC to 0.2.1 (`run-version-alignment.sh --fix` /
       re-`uv pip install`); re-run MTDS QG to GREEN. Then the "full QG green" claim is actually true for the UAC chain.
-- [ ] [INFRA] P2. **Audit the rest of the fleet for the same split** — `gh api compare/main...staging --jq .ahead_by` per
-      repo to find other deployed packages whose `[skip ci]` version bump is stranded on staging (same deadlock class).
+- [ ] [INFRA] P2. **Audit the rest of the fleet for the same split** — `gh api compare/main...staging --jq .ahead_by`
+      per repo to find other deployed packages whose `[skip ci]` version bump is stranded on staging (same deadlock
+      class).
 
 ## 🔴 FINDING 2026-06-09 — PM main→LDR backmerge is STUCK on a squash-merge history conflict (root of the recurring version-alignment block)
 
@@ -4166,15 +4169,18 @@ Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment 
 recurring friction the operator has hit repeatedly.
 
 **Root cause (runtime log, run 27208060791):**
+
 ```
 [backmerge:conflict] main and LDR conflict — human resolution required (no auto-resolve)
 [backmerge] could not open PR (may already exist / perms)
 [backmerge] escalated conflict to orchestrator (opus worker)
 ```
+
 1. **Genuine (non-ci_status) conflict** on 5 files: `codex/08-workflows/ci-cd-flow.md`, `cursor-configs/CLAUDE.md`,
    `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
-   `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md`, `workspace-manifest.json` (the latter beyond the
-   ci_status-only fields Guard 2 auto-resolves). The backmerge's `--no-ff merge origin/main` cannot auto-resolve → aborts.
+   `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md`, `workspace-manifest.json` (the latter beyond
+   the ci_status-only fields Guard 2 auto-resolves). The backmerge's `--no-ff merge origin/main` cannot auto-resolve →
+   aborts.
 2. **It's a SQUASH-MERGE + BACKMERGE history-divergence loop** (systemic, recurs every cycle): PM Option-B promotes
    LDR→main by **squash** (#184-#187 etc.), which lands the same CONTENT on main under a NEW SHA. The main→LDR backmerge
    then sees "same content, different history" and textually conflicts on any file edited on both sides since the split
@@ -4184,15 +4190,24 @@ recurring friction the operator has hit repeatedly.
    conflict PR is never opened, and the orchestrator escalation isn't resolving it → LDR stays stuck behind main
    indefinitely. So neither the auto path nor the human path drains it.
 
-- [ ] [INFRA] P1. **One-time reconcile**: bring LDR current with main (resolve the 5-file conflict keeping BOTH sides'
-      genuine work per the ALIGN rule; for the doc files where content matches via the squash, take the unified version),
-      push to LDR so `version-alignment` clears. Verify `compare live-defi-rollout...main ahead_by` → 0 and LDR version == main.
-- [ ] [INFRA] P0. **Fix the systemic squash+backmerge loop** — pick ONE: (a) promote PM LDR→main with a **merge commit**
-      (not squash) so main shares LDR's history and the backmerge is always a clean FF; OR (b) have `main-backmerge-to-ldr`
-      reconcile docs/plans with a content-aware 3-way (it already does for `workspace-manifest.json` via
-      `reconcile_manifest_backmerge.py` — extend the auto-resolve to "same-content-different-history" doc/plan hunks); OR
-      (c) for PM specifically, make main↔LDR a single branch (Option-B already makes main the reconciliation point — the
-      back-and-forth squash/backmerge is the avoidable cost). Squash is the likely culprit; (a) is the smallest fix.
-- [ ] [INFRA] P1. **Fix the backmerge's PR-creation perms** so the human-resolution fallback actually opens a
-      `main → live-defi-rollout` PR when auto-resolve fails (currently "could not open PR — may already exist / perms"),
-      and confirm the orchestrator escalation has a worker that resolves it (else conflicts strand forever).
+- [x] ✅ [INFRA] P1. DONE 2026-06-09 (PM@6ee726399) — **one-time reconcile**: merged origin/main→LDR resolving the
+      5-file both-ways conflict (LDR was +61 / main +42 — kept BOTH sides: manifest via
+      `reconcile_manifest_backmerge.py`, the doc/plan files took the newer LDR superset, e.g. FIX 2 reframed / FIX 3
+      sharpened were deliberate evolutions, not losses; main's `1.2.51` + UAC `0.3.0` version bumps landed). Pushed to
+      LDR. **Verified**: `main...LDR ahead_by → 0`, LDR version == `1.2.51` == main. version-alignment block CLEARED.
+- [x] ✅ [INFRA] P0. DONE 2026-06-09 — **systemic fix = option (a), merge-commit promotion.** PM LDR→main now merges
+      with a **merge commit** not squash, so main is a DESCENDANT of LDR and the back-merge is always a clean FF (kills
+      the squash "same content, different history" conflict at the source). Changed: `quickmerge.sh` (the
+      `else`/PR_BASE=main Option-B branch → `--auto --merge`; the staging branch stays `--squash`),
+      `ldr-to-main-promote.yml` (3 sites → `--merge`). main allows it (`required_linear_history=false`,
+      `allow_merge_commit=true`).
+- [ ] [INFRA] P1. **READY (not yet shipped — needs fleet rollout) — backmerge PR-creation perms.** The `bm` step's
+      `GH_TOKEN` is the default `GITHUB_TOKEN`, which cannot create PRs (→ "could not open PR — perms"), silently
+      breaking the human-resolution fallback. **The one-line fix**: in
+      `scripts/workflow-templates/main-backmerge-to-ldr.yml` step `bm` env, `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` →
+      `GH_TOKEN: ${{ secrets.GH_PAT }}` (git push still uses the checkout's GITHUB_TOKEN, so the LDR push stays
+      workflow-non-triggering). NOT shipped inline because editing the template flags all 24 per-repo copies as drift →
+      it must go via `rollout-workflow-templates.sh --template     main-backmerge-to-ldr.yml` (a deliberate fleet pass:
+      rollout + per-repo commit/push, then each takes effect on its default branch). **Lower urgency now**: the
+      merge-commit fix above makes the PM backmerge a clean FF, so the conflict→PR-create fallback is rarely hit. Do
+      this in the next template-rollout pass on the planning VM.
