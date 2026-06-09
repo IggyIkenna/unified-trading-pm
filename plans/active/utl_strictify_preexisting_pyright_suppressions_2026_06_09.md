@@ -144,13 +144,13 @@ landing green.
 
 ## Phase 3 — Ratchet + close (GATED on Phases 1+2 all green)
 
-- [ ] [SCRIPT] P0. After every cluster + V1–V6 land, set `CODEX_MAX_VIOLATIONS=6 → 0` in
+- [x] ✅ [SCRIPT] P0. After every cluster + V1–V6 land, set `CODEX_MAX_VIOLATIONS=6 → 0` in
       `unified-trading-library/scripts/quality-gates.sh:~82` and prune the V1–V6 comment block. Update the matching
       `QUALITY_GATE_BYPASS_AUDIT.md` sections (remove the now-resolved exceptions; keep V5's nosec rationale).
-- [ ] [SCRIPT] P0. Full `bash scripts/quality-gates.sh` green at `CODEX_MAX_VIOLATIONS=0` with zero bare/blanket
+- [x] ✅ [SCRIPT] P0. Full `bash scripts/quality-gates.sh` green at `CODEX_MAX_VIOLATIONS=0` with zero bare/blanket
       suppressions remaining (re-grep: 0 hits for `# pyright: ignore` w/o `[rule]`, 0 bare `# type: ignore`, 0
       file-level `# pyright: reportX=false`). Verify via CI `quality-gates-v2` on the staging PR.
-- [ ] [DOCS] P0. Archive `plans/active/issues/utl_strictify_preexisting_pyright_suppressions_2026_06_08.md`
+- [x] ✅ [DOCS] P0. Archive `plans/active/issues/utl_strictify_preexisting_pyright_suppressions_2026_06_08.md`
       (issue-doc-lifecycle: acked → shipped → archive). Banner-link this plan.
 
 ## Success criteria
