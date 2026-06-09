@@ -1404,6 +1404,7 @@
         "level": 8,
         "description": "IaC + post-deploy validation (last).",
         "repos": [
+          "agent-orchestrator",
           "e2e-testing",
           "ibkr-gateway-infra",
           "system-integration-tests"
