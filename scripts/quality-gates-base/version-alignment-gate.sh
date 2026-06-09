@@ -83,7 +83,6 @@ try:
 except Exception: sys.exit(0)
 
 remote_versions = remote.get('versions', {})
-remote_staging = remote.get('staging_versions', {})
 drifted = []
 
 def pv(v):
@@ -95,15 +94,19 @@ def pv(v):
 
 for r in check_repos:
     local_v = local_versions.get(r, '')
-    staging_v = remote_staging.get(r, '')
     main_v = remote_versions.get(r, '')
     label = '(self)' if r == repo else '(dependency)'
-    # Only flag when local is semver-BEHIND remote; being AHEAD is fine (quickmerge Stage 1.6 invariant).
-    if staging_v and not staging_v.startswith('_'):
-        pl, ps = pv(local_v), pv(staging_v)
-        if pl is not None and ps is not None and pl < ps:
-            drifted.append(f'  {r} {label}: local={local_v} staging={staging_v}')
-    elif main_v:
+    # Compare LIKE-FOR-LIKE: local main-line 'versions' vs remote main-line
+    # 'versions' (origin/main). Do NOT compare local 'versions' against remote
+    # 'staging_versions' — staging legitimately LEADS main during every in-flight
+    # LDR->staging->main promotion, so a cross-line compare false-blocked EVERY
+    # dependent repo's local QG for the whole promotion window (e.g. uac 0.2.1 on
+    # staging while 0.2.0 on main blocked all uac-dependent repos). Being behind
+    # staging-but-current-with-main is normal: you build against main-line releases
+    # / editable local path-source checkouts. The real signal we still catch: local
+    # main-version behind the RELEASED main version => your local PM checkout is
+    # stale, pull it. Only flag BEHIND; AHEAD is fine (quickmerge Stage 1.6 invariant).
+    if main_v:
         pl, pm = pv(local_v), pv(main_v)
         if pl is not None and pm is not None and pl < pm:
             drifted.append(f'  {r} {label}: local={local_v} main={main_v}')
