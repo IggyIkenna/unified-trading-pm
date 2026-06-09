@@ -452,7 +452,7 @@ jobs:
       # staging→main promotion PR the required `quality-gates-v2` context is permanently MISSING
       # → the PR is BLOCKED (and the unreleased change re-bumps in a loop: 0.2→0.3→0.4). We let
       # the bump commit trigger quality-gates-v2 normally; the reusable python-quality-gates-v2
-      # short-circuits a version-only diff to GREEN in seconds (nothing to test), so the required
+      # short-circuits a metadata-only diff to GREEN in seconds (nothing to test), so the required
       # check reports without a wasteful full run. The re-trigger loop is ALREADY prevented by the
       # chore-skip in the compute step (a `chore(release):` commit yields skip=true), so dropping
       # `[skip ci]` is loop-safe.
