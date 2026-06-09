@@ -1,7 +1,6 @@
 ---
 title: "Harsh host setup — align with the 2026-06-08/09 CI/CD reform + Path-B worktrees"
 created: 2026-06-09
-author: ikennaigboaka [slot-1·laptop]
 source:
   - plans/active/cicd_contract_hardening_2026_06_01.md (§ SESSION OUTCOME + ADDENDUM)
   - plans/active/worktree_ldr_unification_2026_06_08.md

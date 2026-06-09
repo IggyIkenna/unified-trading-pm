@@ -2,7 +2,6 @@
 title:
   "CI incident findings 2026-06-09 — readiness-verifier missing script + dirty-skip not alerted + orchestrator headroom"
 created: 2026-06-09
-author: ikennaigboaka [slot-1·laptop]
 locked_by: live-defi-rollout
 priority: P2
 status: active
