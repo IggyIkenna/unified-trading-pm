@@ -115,9 +115,13 @@ clean fix is to relax it.
       (`if: always() && needs.cascade.result == 'failure'`) that dispatches `escalate-to-orchestrator`
       (`wall_type=sit_failure`, target = first failed dependent, context = failed repos + source major). A **GREEN**
       cascade skips this job → the major promotes automatically with NO vm-planning involvement (operator's refinement).
-      Mechanical `[skip ci]`-bump-head deadlocks are still cleared first by `ci-failure-watcher --auto-recover`
-      (workflow_dispatch re-fire); this fires only for a GENUINE QG failure. **Pending live verification** (a real
-      failing cascade must confirm the escalation reaches vm-planning).
+      Mechanical `[skip ci]`-bump-head deadlocks are TODAY cleared by `ci-failure-watcher --auto-recover` (close+reopen
+      re-fires v2); their PERMANENT fix (stop semver-agent emitting `[skip ci]` + version-only QG fast-path so the bump
+      head carries its required check) is tracked in `cicd_contract_hardening_2026_06_01.md` § "Auto-remediation
+      pipeline gaps" (Option C). That fix does NOT retire the watcher — `--escalate` (genuine merge-conflict /
+      sit_failure walls) and `--auto-recover` (as a backstop for any non-semver v2-never-reported head) both stay; the
+      escalate path above fires only for a GENUINE QG failure. **Pending live verification** (a real failing cascade
+      must confirm the escalation reaches vm-planning).
 
 ### Phase 4 — MAJOR/MINOR classification matrix refinement — P2
 

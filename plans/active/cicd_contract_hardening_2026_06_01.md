@@ -270,6 +270,72 @@ what the operator is seeing:
       PR BASE, or re-run `quality-gates-v2.yml --ref <head>` (`unified-trading-pm@5fccadf56`); (2) `agents/escalate.md`
       sit_failure section gives the worker the same A/B classify + the (B) remedy, so it never wrongly "fixes LDR" for a
       stale-staging wall (`agent-orchestrator@8155adb`). basedpyright 0/0, 5 escalate unit tests green.
+- [ ] [SCRIPT] P1. **PERMANENT FIX for the `[skip ci]`-bump-head `(B)` class above — stop semver-agent producing the
+      v2-never-reported promotion deadlock at the source (Option C, migrated from
+      `plans/active/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md`).** The bump lands as a separate
+      `chore(release): bump version to X [skip ci]` commit on `staging`; because staging→main is a
+      `quality-gates-v2`-required PR and `[skip ci]` yields zero check runs, that commit (as the PR head) makes the
+      required context MISSING → PR permanently BLOCKED → re-bump loop (`0.2→0.3→0.4`, observed execution-service PR
+      #231 with the staging head escalating `0.3.0→0.4.0` mid-investigation, 2026-06-09). **Two PM-template edits (never
+      per-repo copies):** (a) `scripts/workflow-templates/semver-agent.yml.tmpl` — drop `[skip ci]` from the bump commit
+      message (`semver-agent.yml.tmpl:480`); (b) `scripts/workflow-templates/quality-gates-v2.yml.tmpl` — add a first
+      step that short-circuits a **version-only** commit (diff is solely the `pyproject.toml` `version =` line) to GREEN
+      in seconds, INSIDE the `quality-gates-v2` job (so it reports the exact required context
+      `Quality Gates (<repo>) / quality-gates-v2`) and WITHOUT dispatching `qg-passed`/image-build (the real image
+      builds on the `main` QG after promotion). **Loop-safety VERIFIED:** the bump commit is `chore(release)` with no
+      feat:/fix: prefix and no public-surface change, so `semver-agent.yml.tmpl:267-271` resolves `BUMP=""` →
+      `skip=true` → no re-bump, INDEPENDENT of `[skip ci]` — the `[skip ci]` is redundant for loop-prevention. Keep the
+      `"bump version to X"` message verbatim (baseline grep is load-bearing, `:176/:232`). **Image stays
+      VERSION-tagged** (bump on staging → promote to main → main build = bumped version), no SHA/crypto coupling broken
+      (verified — no cosign/sigstore/gpg in the release path). **IMPL NUANCE — a bare `exit 0` in the first QG step does
+      NOT skip later steps in the same job**; gate every subsequent step on a
+      `steps.<id>.outputs.version_only != 'true'` guard (or make the short-circuit its own early-exit job that still
+      reports the required context). Rollout: `rollout-workflow-templates.sh` (align PM's own `.github/` copies —
+      hand-maintained) → land via the sanctioned PM `scripts/**` + `.github/**` carve-out (chicken-and-egg: a corrected
+      gate can't pass through the gate it fixes). Verify on the next real release: (i) bump commit reports v2 green in
+      seconds, (ii) staging→main merges with no manual recovery, (iii) no version escalation, (iv) `main` image carries
+      the bumped version. repo: unified-trading-pm. **DEFERRED FUTURE (Option B, not now):** fold the bump into the
+      LDR→staging promotion content (zero separate commit) — cleaner but moves the bump pre-SIT + re-wires the
+      breaking-cascade/lock timing (large blast radius); keep as a follow-up cleanup, not the asap fix.
+- [ ] [SCRIPT] P2. **`ci-failure-watcher` disposition once Option C lands — do NOT retire the watcher (corrects the
+      proposal's §8/open-Q3 overreach).** The watcher has TWO independent flags: `--escalate`
+      (`conflict_prs_to_escalate` / `blocked_failing_prs_to_escalate`, `ci_failure_watcher.py:527/545`) hands genuine
+      `CONFLICTING`/`DIRTY` merge-conflict PRs + `BLOCKED`-with-failed-check `sit_failure` walls to the orchestrator —
+      **a separate concern Option C does not touch; it MUST stay running.** `--auto-recover` (`auto_recover_stuck_prs`,
+      `:666`) close+reopens the v2-never-reported deadlock; Option C removes its _dominant_ producer (semver bump heads)
+      but `--auto-recover` is keyed on the _signature_ (v2-never-reported), not the bump message, so it still backstops
+      any OTHER `[skip ci]`-on-a-promotion-head (manual hotfix / other automation) where there is nothing for
+      `--escalate` to rebase → **leave `--auto-recover` in place as a now-rarely-triggered backstop; it is NOT dead
+      code.** Net change here = the `(B)` re-roll/re-run remedy in the item above stops being the routine path for
+      semver bumps. repo: unified-trading-pm.
+- [ ] [SCRIPT] P1. **LIVE FINDING 2026-06-09: `--auto-recover` close+reopen is INEFFECTIVE against a `[skip ci]` head —
+      reinforces that Option C is the ONLY real fix.** Investigating the staging-locked cascade, execution-service PR
+      #231 (staging→main, head `chore(deps): pin unified-api-contracts to 0.3.0 [skip ci]`) was the textbook
+      v2-never-reported deadlock (`MERGEABLE` + `BLOCKED`, 0 checks, stuck 222m). Ran
+      `ci-failure-watcher --auto-recover --repo     execution-service`: it close+reopened #231, but **NO
+      `quality-gates-v2` re-fired** — because **GitHub's `[skip ci]` directive suppresses BOTH `push` AND `pull_request`
+      events at the commit level**, so the reopen's `pull_request` event is skipped. i.e. the `--auto-recover` band-aid
+      CANNOT re-fire a `[skip ci]` head — exactly the semver-bump-head case it was designed for. Consequence: the
+      close+reopen remedy in `auto_recover_stuck_prs` (`:666`) is a no-op for the dominant signature; the real unblock
+      is (a) Option C above (drop `[skip ci]` at the source so `push`/`pull_request` runs v2 + produces the
+      required-context check), or (b) a fresh non-`[skip ci]` commit on the head branch (e.g. a backmerge / promotion
+      advancing staging HEAD). A `workflow_dispatch` on the ref is NOT reliable (the proposal already observed it
+      "doesn't stick" — branch-protection required-context matching). **Action:** either fix `auto_recover` to detect a
+      `[skip ci]` head and `git commit --amend`-off the marker (needs branch-push perms on a protected branch — risky)
+      OR document that `--auto-recover` only handles NON-`[skip ci]` never-reported cases and Option C is mandatory for
+      the semver path. repo: unified-trading-pm. Composes with the Option C + watcher-disposition todos above.
+- [ ] [INFRA] P1. **vm-planning escalation target is DOWN — failing cascades currently have NOWHERE to auto-route (fix
+      later; manual stand-in for now).** The dependency_promotion Phase 3 path ("MAJOR/breaking cascade FAILS → escalate
+      to vm-planning") and `ci-failure-watcher --escalate` (`sit_failure` / `merge_conflict` walls) both dispatch
+      `escalate-to-orchestrator` to vm-planning — but vm-planning is not running (operator 2026-06-09), so a failing
+      breaking-cascade silently parks (observed: UAC 0.5.0 → execution-service #232 `quality-gates-v2` FAILED, SIT
+      `sit_retry_count=3`, staging locked since 13:48Z with no worker picking it up). **Until vm-planning is restored, a
+      human/slot must stand in** (this incident was handled by a manually-dispatched execution-service worker prompt).
+      **Fix:** (a) restore/redeploy the vm-planning orchestrator VM, OR (b) repoint the `escalate-to-orchestrator`
+      target (PM `escalate-to-orchestrator.yml` + `cascade-qg-ordering.yml` `escalate-on-failure`) to the LIVE
+      orchestrator (`vm-0`/`agent-orchestrator-vm-1`) so failing cascades reach an AutoSpawn-capable host; add a
+      watchdog alert when a `sit_failure` escalation finds no live target. repo: unified-trading-pm (+
+      agent-orchestrator). Composes with `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
 - [x] ✅ [DEVOPS] P0. **semver-agent can stamp versions onto `staging` again — admin-role ruleset bypass + classic
       `enforce_admins` off, FLEET-WIDE (operator chose this approach 2026-06-08).** Was: `semver-agent.yml.tmpl` (auth
       `GH_PAT`) DIRECT-PUSHES the post-QG `chore(release)` bump to `staging`, but staging's CLASSIC protection
@@ -4201,13 +4267,21 @@ recurring friction the operator has hit repeatedly.
       `else`/PR_BASE=main Option-B branch → `--auto --merge`; the staging branch stays `--squash`),
       `ldr-to-main-promote.yml` (3 sites → `--merge`). main allows it (`required_linear_history=false`,
       `allow_merge_commit=true`).
-- [ ] [INFRA] P1. **READY (not yet shipped — needs fleet rollout) — backmerge PR-creation perms.** The `bm` step's
-      `GH_TOKEN` is the default `GITHUB_TOKEN`, which cannot create PRs (→ "could not open PR — perms"), silently
-      breaking the human-resolution fallback. **The one-line fix**: in
-      `scripts/workflow-templates/main-backmerge-to-ldr.yml` step `bm` env, `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` →
-      `GH_TOKEN: ${{ secrets.GH_PAT }}` (git push still uses the checkout's GITHUB_TOKEN, so the LDR push stays
-      workflow-non-triggering). NOT shipped inline because editing the template flags all 24 per-repo copies as drift →
-      it must go via `rollout-workflow-templates.sh --template     main-backmerge-to-ldr.yml` (a deliberate fleet pass:
-      rollout + per-repo commit/push, then each takes effect on its default branch). **Lower urgency now**: the
-      merge-commit fix above makes the PM backmerge a clean FF, so the conflict→PR-create fallback is rarely hit. Do
-      this in the next template-rollout pass on the planning VM.
+- [ ] [INFRA] P1. **backmerge PR-creation perms — FIX COMMITTED to `live-defi-rollout` (unified-trading-pm@e0e954bc9),
+      main-promotion QUEUED behind the staging lock; fleet rollout still deferred.** Committed direct to LDR (quickmerge
+      was staging-locked by the UAC 0.5.0 breaking cascade 2026-06-09; the `ldr-to-staging-promote` auto-drain carries
+      it to staging→main once the lock clears). The `bm` step's `GH_TOKEN` was the default `GITHUB_TOKEN`, which cannot
+      create PRs (→ "could not open PR — perms"), silently breaking the human-resolution fallback. **DONE
+      (actionlint-clean, on LDR@e0e954bc9):** changed `GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}` →
+      `GH_TOKEN: ${{ secrets.GH_PAT }}` in the `bm` env of BOTH `scripts/workflow-templates/main-backmerge-to-ldr.yml`
+      (SSOT) AND `.github/workflows/main-backmerge-to-ldr.yml` (PM's hand-maintained copy), with an inline rationale
+      comment; the LDR `git push` keeps using the checkout-persisted GITHUB_TOKEN (stays workflow-non-triggering), only
+      `gh pr create`/`gh pr list` move to the PAT (which also makes the conflict PR trigger its own checks). GH_PAT
+      bypasses both the workflow `permissions:` limit and the "Actions-can't-create-PRs" repo setting — no
+      `permissions:` block change needed. **REMAINING (deliberate planning-VM fleet pass — NOT done here):**
+      `rollout-workflow-templates.sh --template main-backmerge-to-ldr.yml` copies the SSOT into all **24** sibling
+      repos' working trees (dry-run confirmed all 24 are `[dry-update]`, PM-self skipped) but commits/pushes NOTHING —
+      each repo then needs a per-repo commit/push to take effect on its default branch. **Lower urgency**: the
+      merge-commit promotion fix above makes the PM backmerge a clean FF, so the conflict→PR-create fallback is rarely
+      hit; PM's own copy (the repo that actually hit the incident) is fixed, so the residual fleet pass is hardening for
+      the other 23. Not marked ✅ until pushed (Commit+Push+Flip: pushed = real).

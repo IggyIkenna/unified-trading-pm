@@ -13,6 +13,14 @@ priority: P1
 
 # semver-agent `[skip ci]` version-bump blocks promotion — root cause + recommended fix
 
+> **✅ MIGRATED 2026-06-09 → `plans/active/cicd_contract_hardening_2026_06_01.md` § "Auto-remediation pipeline gaps"
+> (Option C is now a dispatchable `[SCRIPT] P1` todo there, target repo `unified-trading-pm`).** The watcher-disposition
+> open question (§10 Q3) is RESOLVED: do NOT retire `ci-failure-watcher` — `--escalate` (merge-conflict / sit_failure
+> walls) is untouched and `--auto-recover` stays as a backstop for any non-semver v2-never-reported head (it is
+> signature-keyed, not dead code); §8's "retire the band-aid" wording over-reached. This doc remains as the design
+> rationale; ARCHIVE CANDIDATE once Option C ships. The cross-link is also recorded in
+> `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md` Phase 3.
+
 > **For review by Ikenna + Harsh.** This is a fleet-wide CI/CD design decision (touches the rolled-out
 > `semver-agent.yml` + `quality-gates-v2.yml` templates). No code has been changed by this doc — it is a proposal. The
 > immediate incident has a manual recovery; this doc is about the **permanent** fix.
