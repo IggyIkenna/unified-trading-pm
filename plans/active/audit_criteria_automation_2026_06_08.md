@@ -60,14 +60,18 @@ source:
       bundles = trades-only, and **no silent all-data_types fallback** (unknown instrument_type → None, leaf bundles →
       empty frozenset). QG exit 0. **Surfaced REAL GAPS (pinned in the test exclusion list, not weakened) — see finding
       below.**
-- [ ] [FINDING] P2. **Validity-matrix / SOURCE_PRIORITY orphans (surfaced by the completeness test 2026-06-08, UAC)** —
-      reconcile or formally exclude each: (1) `(cefi, ohlcv_15m)` in SOURCE_PRIORITY but no cefi instrument_type produces
-      it; (2) Era-B data_type-key orphans `(cefi, options_chain)`/`(cefi, futures_chain)`/`(tradfi, futures_chain)` (the
-      per-AG-migrator Era-B relabel owns these); (3) 11 DeFi data_types (`bridge_events`/`staking_yields`/…) with no
-      `PROTOCOL_CAPABILITIES` instrument_type → BLOCKED-UPSTREAM (capability not yet declared); (4) 11 sports
-      reference/classification data_types (`LEAGUES`/`PLAYERS`/`VENUES`/`ARBITRAGE`/…) not reachable via the `league`
-      instrument_type. Owner: UAC + per-AG. Each is currently in the test's documented exclusion list so the gate is
-      green; clear an exclusion when the pair is wired or formally retired.
+- [x] ✅ [FINDING] P2. **Validity-matrix / SOURCE_PRIORITY orphans RESOLVED into a typed closed-set** —
+      **unified-api-contracts@fec77f5d**: the ad-hoc exclusion list became `_SOURCE_PRIORITY_EXCLUSION_REASONS` (every
+      orphan → one of 7 closed-set reason constants) + a new `test_every_exclusion_has_typed_reason` (no anonymous skip
+      possible; 28 tests green). Per-orphan decisions (evidence-based, conservative — wiring a capability with no real
+      producer would re-seed false `expected_unattempted`, so genuine gaps stay NAMED, not guessed): (1)
+      `(cefi, ohlcv_15m)` → `CEFI_MATRIX_GAP` (tardis cefi archive exposes 1m only — no 15m producer; wire if/when cefi
+      15m capture is confirmed); (2) Era-B keys → `ERA_B_LEGACY_RETAINED` (untouched, per-AG-migrator owns removal); (3)
+      11 DeFi data_types → `BLOCKED_UPSTREAM_CAPABILITY` (named gap — wire once `_ProtocolCapability.data_types` declares
+      a producer); (4) 11 sports → `REFERENCE_NOT_INSTRUMENT_GRAIN` (entity/competition metadata + computed outputs, not
+      instrument-grain). Plus `COMPUTED_SERVICE_OUTPUT` / `CEFI_LEGACY_KEY` / `REFERENCE_AG_NO_MATRIX` for the
+      service-output + legacy-token + reference-AG cases. The matrix is now complete-or-typed-excluded; clearing a named
+      gap (wire its producer) removes its reason entry.
 - [x] ✅ [SCRIPT] P1. **QG step: no pre-aggregated open-edge bar ingestion** — **unified-trading-pm@b4245a7dd**
       `check_bar_edge_open_ingestion.py` (STEP 5.92); built as a dedicated AST checker (not folded into
       check_mdps_bar_boundary) — see `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 0. 2 latent sites
