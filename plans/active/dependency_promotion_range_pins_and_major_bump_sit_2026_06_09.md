@@ -73,30 +73,47 @@ gates pass, the major promotes automatically with no human/vm-planning involveme
 
 ## Phases
 
-### Phase 1 — (RETIRED) lockfile gate change — NOT NEEDED
+### Phase 1 — `uv lock --check` gate vs internal editable drift — RE-OPENED pending verification (P0)
 
-`uv.lock` already does the right thing (editable internal / exact external) and the version-aware clone is
-range-honoring via its loud-fail. There is no lockfile/gate change to make. Healing a current internal-version SPLIT
-(e.g. UAC #108) is the only "fix" and is the normal promotion, not a code change. Left here as a tombstone so the
-non-problem isn't re-opened.
+**Status reconciliation (2026-06-09):** this was tombstoned after the operator clarified "`uv.lock` is already correct"
+(editable internal / exact external — the lock FORMAT has no exact-pin bug). But a hands-on agent then re-reported that
+the `uv lock --check` **gate** still reds on internal editable drift (the recorded `version =` snapshot, e.g. `0.1.20`,
+goes stale vs the source). Those aren't contradictory — the lock FORMAT is correct AND the staleness CHECK can still
+trip. So re-opened with a verification gate first (don't build on a false premise either way):
+
+- [ ] [SCRIPT] P0. **VERIFY**: does `uv lock --check` actually exit non-zero on a pure internal editable version-field
+      drift (source bumped, no external dep moved)? Reproduce in a sandbox consumer. If NO (uv treats editable version
+      leniently) → re-tombstone, the version-aware-clone loud-fail is the only mechanism (already closed). If YES →
+      implement the exempt-gate below.
+- [ ] [SCRIPT] P0 (only if VERIFY=yes). Write `scripts/cicd/check_lock_internal_only_drift.py` (PM): on
+      `uv lock --check` failure, regenerate to a temp lock + diff; **PASS** if the only changed `[[package]]` entries
+      are internal editable deps (name in the workspace-manifest internal set AND `source={editable=…}`), **FAIL** if
+      any EXTERNAL dep version moved (reproducibility preserved). NEVER recommit the lock (no fleet churn). Unit tests:
+      internal-only → pass; external → fail; no drift → pass; mixed → fail.
+- [ ] [SCRIPT] P0 (only if VERIFY=yes). Wire into `base-service.sh:215` + `base-library.sh:105` (replace the raw
+      `uv lock --check … || exit 1`); keep the pinned-uv-only blocking behavior; roll out via `rollout-*.sh` (never
+      hand-edit per-repo copies). Then reconcile `CLAUDE.md` / `SUB_AGENT` / `ci-cd-flow.md` (which currently state the
+      gate is a non-problem) — update them to "FORMAT correct; the CHECK exempts internal editable drift".
 
 ### Phase 2 — MAJOR bump triggers a CASCADE of quality gates (full SIT in dependency order) — P1
 
-- [ ] [SCRIPT] P1. When `detect_breaking_change.py` classifies a bump as MAJOR (public-surface break), the promotion
-      path MUST trigger a **full-workspace SIT run in dependency (topological) order** before promoting the major to
-      main — verifying every dependent still passes QG against the new major. Wire into semver-agent / the staging→main
-      promoter.
-- [ ] [SCRIPT] P1. minor/patch bumps DO NOT trigger SIT or consumer rebuilds (they ride the range) — assert the negative
-      (no SIT fan-out on a non-breaking bump) so the CI-noise reduction actually holds.
+- [x] 🟡 [SCRIPT] P1. WIRED 2026-06-09 — `update-repo-version.yml` now dispatches `cascade-qg-trigger` to
+      `cascade-qg-ordering.yml` when `bump_type == major || is_breaking` (the cascade was orphaned before — nothing
+      dispatched the trigger). `cascade-qg-ordering.yml` already runs QG across transitively-affected repos in
+      **topological level order** (parallel within level, sequential across, fail-fast + invalidate downstream).
+      **Pending live verification**: a real MAJOR bump must exercise it end-to-end (can't tick fully ✅ on smoke alone).
+- [x] 🟡 [SCRIPT] P1. WIRED — the trigger's `if:` excludes minor/patch (`bump_type == major || is_breaking` only), so a
+      non-breaking bump fires NO cascade/SIT fan-out (rides the consumer's range pin). Pending live verification.
 
 ### Phase 3 — Escalate to vm-planning ONLY IF the cascade FAILS (pass → auto-promote) — P1
 
-- [ ] [SCRIPT] P1. Wire the cascade outcome: if the MAJOR-bump dep-order cascade's quality gates **PASS**, the major
-      **promotes automatically** — NO vm-planning involvement (the operator's explicit refinement: don't pull in the
-      orchestrator on a green cascade). Only on **FAIL** (a dependent's QG goes red against the new major, or the
-      staging workflow jams) escalate to **vm-planning** via `escalate-to-orchestrator` to resolve. Mechanical deadlocks
-      (the `[skip ci]`-bump-head) are first handled in-band by `ci-failure-watcher --auto-recover` (workflow_dispatch
-      re-fire, not a human); genuine QG failures are the vm-planning case.
+- [x] 🟡 [SCRIPT] P1. WIRED 2026-06-09 — `cascade-qg-ordering.yml` gained an `escalate-on-failure` job
+      (`if: always() && needs.cascade.result == 'failure'`) that dispatches `escalate-to-orchestrator`
+      (`wall_type=sit_failure`, target = first failed dependent, context = failed repos + source major). A **GREEN**
+      cascade skips this job → the major promotes automatically with NO vm-planning involvement (operator's refinement).
+      Mechanical `[skip ci]`-bump-head deadlocks are still cleared first by `ci-failure-watcher --auto-recover`
+      (workflow_dispatch re-fire); this fires only for a GENUINE QG failure. **Pending live verification** (a real
+      failing cascade must confirm the escalation reaches vm-planning).
 
 ### Phase 4 — MAJOR/MINOR classification matrix refinement — P2
 
@@ -104,6 +121,23 @@ non-problem isn't re-opened.
       surface, manifest schema_version, event contracts) — what is a breaking (major) change vs a backward-compatible
       (minor/patch) one — so `detect_breaking_change.py` + semver-agent classify correctly. SSOT:
       `codex/08-workflows/ci-cd-flow.md` § "Breaking = public-surface change".
+
+### Phase 5 — Version-resolution bug fixes (agent field reports, 2026-06-09)
+
+A hands-on agent fixing the version-aware-clone loud-fail surfaced a class of silent-no-op bugs where `packaging` is
+imported at a point in CI BEFORE `uv sync` runs (so `packaging` isn't installed yet → the import fails silently →
+version comparison no-ops → the guard never fires). Captured here:
+
+- [x] [SCRIPT] P0. **DONE (agent-fixed) — verify it shipped**: the version-aware-clone loud-fail's first version used
+      `from packaging.version import Version`, which silently no-op'd in CI (clone step runs before `uv sync` →
+      `packaging` absent) → the loud-fail stayed silent. Fixed to a **stdlib tuple-compare**. Confirm the fix is on
+      `live-defi-rollout` + main and add a regression note so it isn't reintroduced.
+- [ ] [SCRIPT] P2. **`get_version_tag` has the SAME latent defect** — it imports `packaging` at the same pre-`uv sync`
+      point, so it can **never resolve a release tag** and **always falls back to the branch**; this is why the phantom
+      manifest row stayed silent. Fix it to a stdlib version compare too. **Deliberate rollout, NOT a drive-by** — it
+      changes fleet dep-resolution behavior (tag-vs-branch clone selection), so: locate every consumer of
+      `get_version_tag`, fix the import/compare, dry-run the resolution change across the fleet, then roll out. Find the
+      definition + call sites first (`rg get_version_tag`), embed the consumer manifest in the todo before changing it.
 
 ## Success criteria
 
