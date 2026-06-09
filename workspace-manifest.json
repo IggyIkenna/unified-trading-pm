@@ -80,7 +80,7 @@
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.3.0",
     "unified-trading-library": "0.4.0",
-    "unified-trading-pm": "1.2.51",
+    "unified-trading-pm": "1.2.52",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.0",
     "agent-orchestrator": "0.8.0",
@@ -790,7 +790,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "ml-service": {
       "type": "service",
@@ -815,7 +815,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 0,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -972,7 +972,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Standalone repo. Not a library or service. SSOT: 06-coding-standards/integration-testing-layers.md. risk/position/pnl deps removed 2026-05-20 — coverage absorbed into strategy-service dep (strategy_service/{risk,position,pnl}/ sub-packages).",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 3,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1113,7 +1113,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1145,7 +1145,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos — cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "MAIN_GREEN",
+      "ci_status": "FAILING",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1795,7 +1795,7 @@
     "ibkr-gateway-infra": "0.1.0",
     "system-integration-tests": "0.2.0",
     "unified-trading-pm": "1.2.45",
-    "unified-api-contracts": "0.3.0",
+    "unified-api-contracts": "0.5.0",
     "agent-orchestrator": "0.8.0",
     "unified-trading-library": "0.4.0",
     "market-tick-data-service": "0.4.0",
@@ -1807,10 +1807,10 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-09T13:48:50.987344Z",
+    "locked_reason": "Breaking MINOR bump cascade: unified-api-contracts=0.5.0 (pre-1.0.0)",
+    "lock_version": "0.5.0",
     "pending_repos": [
       "unified-api-contracts",
       "execution-service"
@@ -1818,15 +1818,16 @@
     "sit_retry_count": 3,
     "locked_alert_sent": false,
     "breaking_pending": [
-      "execution-service"
+      "execution-service",
+      "unified-api-contracts"
     ]
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
     "unified-api-contracts": {
-      "branch": "staging",
-      "sha": "844257fe7df23c309f7a6ab583b77d6526daa5be",
-      "version": "0.3.0"
+      "version": "0.5.0",
+      "sha": "77c6f220c9cc24f67f543e37ef459ea7d33df125",
+      "branch": "staging"
     },
     "agent-orchestrator": {
       "branch": "staging",
