@@ -90,28 +90,32 @@ _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scr
 [[ -f "$_VA_GATE" ]] && source "$_VA_GATE" || echo "⚠️  version-alignment-gate.sh not found (skipping)"
 
 # ── BOOTSTRAP (local only; CI has its own setup) ─────────────────────────────
-# Prefer .venv-workspace when available (single Python for all repos)
+# QG MUST audit/test the repo's OWN .venv, NOT the shared .venv-workspace (2026-06-09 fix).
+# The workspace venv carries tooling/agent deps (anthropic/uv/curl-cffi/pillow/twisted/…) that
+# are NOT this repo's runtime deps, so activating it made pip-audit audit the WRONG env →
+# spurious vuln fails for CODEX_MAX_VIOLATIONS=0 repos (the pip-audit V++ tipped them over).
+# Always build + use the repo .venv (venv-split rule; mirrors base-service.sh). Test tooling
+# (pytest/basedpyright/ruff/pip-audit/bandit) is in [project.dependencies] (flat deps), so
+# `uv pip install -e .` yields a COMPLETE .venv — no missing-tooling regression. CI has no
+# .venv-workspace so this only corrects LOCAL runs (CI already builds the repo .venv).
 WORKSPACE_VENV="${REPO_ROOT}/.venv-workspace"
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
-    if [ -f "$WORKSPACE_VENV/bin/activate" ]; then
-        source "$WORKSPACE_VENV/bin/activate"
-    else
-        command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
-        # uv.lock freshness — WARN-ONLY, never blocking (2026-06-09). Nothing installs FROM the lock
-        # (every path is `uv pip install -e .`, no `uv sync`/`--frozen`/`--locked`), so the lock is a
-        # RECORD, not an enforced pin: the real dependency contract is the pyproject RANGE, which `uv pip
-        # install` enforces at install (an out-of-range MAJOR fails to resolve = the signal). Blocking here
-        # only added churn on the cosmetic internal-editable `version =` snapshot. Do NOT mutate uv.lock
-        # here either (it dirtied trees + jammed the FF-pull cron). SSOT:
-        # plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.
-        uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml (non-blocking — lock is a record, not a pin; pyproject range is the contract). Run 'uv lock' to refresh the record."
-        [ ! -d ".venv" ] && uv venv .venv
-        [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
-        for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
-            [ -d "${REPO_ROOT}/$lib" ] && uv pip install -e "${REPO_ROOT}/$lib" --quiet 2>/dev/null || :
-        done
-        uv pip install -e . --quiet 2>/dev/null || :
-    fi
+    unset VIRTUAL_ENV   # never inherit an activated workspace venv from the parent shell
+    command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
+    # uv.lock freshness — WARN-ONLY, never blocking (2026-06-09). Nothing installs FROM the lock
+    # (every path is `uv pip install -e .`, no `uv sync`/`--frozen`/`--locked`), so the lock is a
+    # RECORD, not an enforced pin: the real dependency contract is the pyproject RANGE, which `uv pip
+    # install` enforces at install (an out-of-range MAJOR fails to resolve = the signal). Blocking here
+    # only added churn on the cosmetic internal-editable `version =` snapshot. Do NOT mutate uv.lock
+    # here either (it dirtied trees + jammed the FF-pull cron). SSOT:
+    # plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.
+    uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml (non-blocking — lock is a record, not a pin; pyproject range is the contract). Run 'uv lock' to refresh the record."
+    [ ! -d ".venv" ] && uv venv .venv
+    [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
+    for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
+        [ -d "${REPO_ROOT}/$lib" ] && uv pip install -e "${REPO_ROOT}/$lib" --quiet 2>/dev/null || :
+    done
+    uv pip install -e . --quiet 2>/dev/null || :
 fi
 if [ -f ".venv/bin/python" ]; then
     PYTHON_CMD=".venv/bin/python"

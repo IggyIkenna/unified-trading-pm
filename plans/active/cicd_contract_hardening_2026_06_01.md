@@ -40,15 +40,17 @@ source:
 >
 > **FLEET STATUS (server quality-gates-v2 on `main`; 18:50Z):**
 >
-> | Repo                            | verdict   | Notes                                                                                                                                                    |
-> | ------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-> | unified-api-contracts (T0)      | 🟢 GREEN  | main+staging success                                                                                                                                     |
-> | unified-trading-library (T0)    | 🟢 GREEN  | main now 0.4.0, v2 success (was in-progress = the 0.4.0 promotion)                                                                                       |
-> | unified-trading-pm (L0)         | 🟢 GREEN  | main success (staging "fail" is a stale pre-deletion artifact; PM has no staging)                                                                        |
-> | 17 others                       | 🟢 GREEN  | ao, alerting, blrs, cra, deployment-{api,service,ui}, e2e, execution, greeks, ibkr, mtds, mdps, ml, strategy, sit, trading-agent, uta, ui                |
-> | **features-service**            | 🔴→re-run | dep-clone loud-fail: pinned `UTL>=0.4.0` but cloned UTL main 0.3.167 (promotion-lag); UTL main now 0.4.0 → re-triggered v2                               |
-> | **fund-administration-service** | 🔴→re-run | identical to features-service                                                                                                                            |
-> | **instruments-service**         | 🔴→re-run | 06-08 stale: `ImportError MassiveFuturesContractsResponse from unified_api_contracts` — UAC main NOW exports it (**init**.py:930/1815) → re-triggered v2 |
+> | Repo                            | verdict  | Notes                                                                                                                                            |
+> | ------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+> | unified-api-contracts (T0)      | 🟢 GREEN | main+staging success                                                                                                                             |
+> | unified-trading-library (T0)    | 🟢 GREEN | main now 0.4.0, v2 success (was in-progress = the 0.4.0 promotion)                                                                               |
+> | unified-trading-pm (L0)         | 🟢 GREEN | main success (staging "fail" is a stale pre-deletion artifact; PM has no staging)                                                                |
+> | 17 others                       | 🟢 GREEN | ao, alerting, blrs, cra, deployment-{api,service,ui}, e2e, execution, greeks, ibkr, mtds, mdps, ml, strategy, sit, trading-agent, uta, ui        |
+> | **features-service**            | 🟢 GREEN | re-run success — promotion-lag (UTL main now 0.4.0 satisfies the `>=0.4.0` pin; clone uses main)                                                 |
+> | **fund-administration-service** | 🟢 GREEN | re-run success — same as features-service                                                                                                        |
+> | **instruments-service**         | 🟢 GREEN | sub-agent: test fix was on staging but STUCK by the semver-agent spurious-breaking bug → forced PR #423 staging→main, v2 green (run 27233588374) |
+>
+> ## ✅ RESULT (20:30Z): ENTIRE FLEET GREEN on server quality-gates-v2 — all 25 repos. Success criterion MET.
 >
 > **Append-only event log:**
 >
@@ -62,8 +64,57 @@ source:
 > - 18:55Z — re-triggered v2 on main for the 3 reds (deps now satisfied on main). Monitoring. RISK: if the dep-clone
 >   prefers `staging`, UTL staging is still 0.3.167 → may need UTL staging promoted to 0.4.0. Watching the re-run
 >   verdict.
-> - NOTE/TODO: UTL `main=0.4.0` but `staging=0.3.167` (main AHEAD of staging — promotion ran main-direct or staging
->   stale); reconcile UTL staging→0.4.0 so the LDR→staging→main axis is consistent.
+> - 20:05Z — fund-administration-service re-run GREEN (confirms clone uses UTL main 0.4.0, not staging).
+>   features-service re-run GREEN. UTL staging concern MOOT — recheck shows UTL main=staging=LDR=0.4.0 (the 0.3.167 was
+>   a mid-promotion stale read); staging↔main content-identical (0 files). UTL PR #258 (LDR→staging) is a content-free
+>   auto-drain.
+> - 20:25Z — instruments-service: re-run surfaced ONE real test failure
+>   (`test_enumerate_v2_tradfi_option_leaves_roll_up` — stale expected set). Sub-agent found the fix was ALREADY on
+>   staging (`ec67401f`) but STUCK by the semver-agent spurious-breaking bug → forced PR #423 staging→main → v2 GREEN
+>   (run 27233588374).
+> - 20:30Z — **ROOT-CAUSE CLOSURE confirmed**: the semver-agent bounded-scan fail-safe (fixes the "scan ALL history →
+>   ancient feat! → spurious breaking cascade" bug behind the UAC 0.5.0 false lock + the stuck instruments fix) is on
+>   the PM main SSOT template (`semver-agent.yml.tmpl:178-249`) AND rolled out to execution-service main. Staging lock
+>   clear. **FLEET ALL GREEN.**
+> - 21:30Z — **Residual TODOs 1 + 3 CLOSED:** (1) QG `.venv` artifact FIXED — `base-library.sh` now always builds/uses
+>   the repo `.venv` (unset VIRTUAL_ENV; mirrors base-service.sh), committed PM@5814e65ac; VERIFIED on UTL (local QG
+>   1→0, pip-audit audits real deps, codex PASSED). Slot-1 venvs pre-built (22 repos; e2e-testing partial-warnings). (3)
+>   semver-agent bounded-scan + Option-C fleet rollout COMPLETED to the 10 missing repos (sub-agent: ao/alerting/
+>   blrs/cra/e2e/ibkr/mdps/strategy/sit/uta — all DONE-on-main, PRs merged) → all 23 main-flow repos now carry both
+>   fixes. **RESIDUAL GAP (handed to the other agent — collision-avoidance):** the bounded-scan fix only patched the
+>   non-zero baseline branch; the `BASELINE=0.0.0`/"no prior staging version" branch still scans all-history → a fresh
+>   spurious lock on **deployment-api** (differ-confirmed non-breaking). Other agent owns: patch the 0.0.0 branch +
+>   clear that lock + RE-ROLL the patched `semver-agent.yml.tmpl` to the fleet. I am OFF the semver-template + lock
+>   surface. TODO 2 (drain) HELD until their re-roll finishes (drain promotes repos → would collide).
+> - 21:35Z — launching slots 2-11 venv pre-build (honor "all slot repos"; additive + untracked `.venv`, skips existing,
+>   warm uv cache). The `.venv` fix also makes every slot self-build lazily on first QG run, so no slot is broken.
+> - 21:45Z — **VENV PRE-BUILD COMPLETE across all 11 slots**: slot-1 (22) + slots 2-11 (204 built + 16 existing) = ~242
+>   repo venvs. Sole anomaly: **e2e-testing** `uv pip install -e .` fails in EVERY slot — "Multiple top-level packages
+>   discovered in a flat-layout" (setuptools package-discovery config gap). NON-blocking: the 278 deps install fine, the
+>   `.venv`+python exist, pytest uses rootdir imports, and e2e-testing **server v2 is GREEN (@20:54)**. TODO below.
+>   **Asks 1-3 DONE; ask 4 (drain) held on the peer agent's semver re-roll.**
+>
+> ### Residual follow-ups (captured; NOT blocking — fleet is green)
+>
+> - [ ] [SCRIPT] P3. **e2e-testing editable self-install** — add explicit package discovery to its `pyproject.toml`
+>       (`[tool.setuptools.packages.find]`) so `uv pip install -e .` can build the editable wheel (currently "Multiple
+>       top-level packages in a flat-layout"). Non-blocking (deps install; server v2 green; pytest rootdir imports
+>       work). Repo: e2e-testing.
+> - [ ] [SCRIPT] P2. **Local QG `.venv` artifact** — Path-B slot clones lack a repo `.venv`, so `quality-gates.sh`
+>       pip-audit audits `.venv-workspace` (tooling deps) → spurious fails for `CODEX_MAX_VIOLATIONS=0` repos. Either
+>       have `quality-gates.sh` create/require the repo `.venv` (uv venv + uv pip install -e .) before pip-audit, or
+>       unset `VIRTUAL_ENV` so it can't bind the workspace venv. Repo: unified-trading-pm (base scripts) +
+>       setup-tab-worktrees.
+> - [ ] [INFRA] P2. **15 repos have un-promoted LDR content (green on last promotion, NOT yet gated)** — drain via their
+>       LDR→staging promotes so the new content is v2-gated: agent-orchestrator (27f), market-data-processing-service
+>       (7f), alerting/blrs/cra/e2e/strategy/ui (2f), deployment-api/deployment-ui/ibkr/mtds/sit/trading-agent/uta (1f).
+>       Most are small (ci_status/minor); ao + mdps are real. Not a current red — flagged for completeness. Repo: each
+>       named repo.
+> - [ ] [SCRIPT] P2. **Fleet rollout of the semver-agent bounded-scan + Option-C fixes to ALL 24 consumer repos** —
+>       confirmed on PM SSOT + execution-service; sweep the other 23
+>       (`rollout-workflow-templates.sh --template semver-agent.yml.tmpl` + `quality-gates-v2.yml.tmpl`) so no repo
+>       re-hits the spurious-cascade / `[skip ci]`-deadlock class on its next bump. Repo: unified-trading-pm (+ per-repo
+>       land).
 
 ## 🧭 CI/CD MASTER INDEX (this plan is the master; 2026-06-03 audit)
 
@@ -320,20 +371,20 @@ what the operator is seeing:
       unified-api-contracts, unified-trading-library, market-tick-data-service, deployment-service, features-service,
       greeks-service, deployment-api, fund-administration-service, ml-service, trading-agent-service). (b) the
       version-only short-circuit is the reusable `python-quality-gates-v2.yml` `metadata_only`/vcheck path (reports the
-      required `quality-gates-v2` context green in seconds for a `pyproject.toml`-version-only diff). **CURRENT [skip ci]
-      heads cleared by a one-time chicken-and-egg break** — Option C had to reach each repo's `main` (the semver-agent
-      runs `workflow_run` from the DEFAULT branch, so a `[skip ci]` bump persists until main carries Option C), but the
-      `[skip ci]` head blocked the very staging→main PR that would land it (even `gh pr merge --admin` refuses — required
-      context "expected"). Broke it via the sanctioned admin relax→merge→restore (force-push-vs-CI rule: "landing the fix
-      that unblocks the branch"): per repo, temporarily disable the `require-quality-gates` ruleset + `enforce_admins`,
-      admin-merge the promote (exec #231 staging→main; the other 10 via LDR→main since their staging lacked Option C),
-      then RESTORE both — verified all rulesets `active` + `enforce_admins` restored (or n/a on ruleset-only repos).
-      Net: every release repo's `main` now emits non-`[skip ci]` bumps → bump commits carry their own v2 check → the
-      deadlock cannot recur. **Anti-pattern avoided** (operator flag 2026-06-09): the iterative manual
-      `chore(ci): re-trigger v2` commits / `workflow_dispatch` re-fires do NOT stick (outrun by the next `[skip ci]`
-      bump, land on other SHAs) — the durable fix is Option C ON MAIN, done here, not re-triggering.
-- [ ] [SCRIPT] P1. **(superseded — historical)** PERMANENT FIX for the `[skip ci]`-bump-head `(B)` class above — stop semver-agent producing the
-      v2-never-reported promotion deadlock at the source (Option C, migrated from
+      required `quality-gates-v2` context green in seconds for a `pyproject.toml`-version-only diff). **CURRENT [skip
+      ci] heads cleared by a one-time chicken-and-egg break** — Option C had to reach each repo's `main` (the
+      semver-agent runs `workflow_run` from the DEFAULT branch, so a `[skip ci]` bump persists until main carries Option
+      C), but the `[skip ci]` head blocked the very staging→main PR that would land it (even `gh pr merge --admin`
+      refuses — required context "expected"). Broke it via the sanctioned admin relax→merge→restore (force-push-vs-CI
+      rule: "landing the fix that unblocks the branch"): per repo, temporarily disable the `require-quality-gates`
+      ruleset + `enforce_admins`, admin-merge the promote (exec #231 staging→main; the other 10 via LDR→main since their
+      staging lacked Option C), then RESTORE both — verified all rulesets `active` + `enforce_admins` restored (or n/a
+      on ruleset-only repos). Net: every release repo's `main` now emits non-`[skip ci]` bumps → bump commits carry
+      their own v2 check → the deadlock cannot recur. **Anti-pattern avoided** (operator flag 2026-06-09): the iterative
+      manual `chore(ci): re-trigger v2` commits / `workflow_dispatch` re-fires do NOT stick (outrun by the next
+      `[skip ci]` bump, land on other SHAs) — the durable fix is Option C ON MAIN, done here, not re-triggering.
+- [ ] [SCRIPT] P1. **(superseded — historical)** PERMANENT FIX for the `[skip ci]`-bump-head `(B)` class above — stop
+      semver-agent producing the v2-never-reported promotion deadlock at the source (Option C, migrated from
       `plans/active/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md`).** The bump lands as a separate
       `chore(release): bump version to X [skip ci]` commit on `staging`; because staging→main is a
       `quality-gates-v2`-required PR and `[skip ci]` yields zero check runs, that commit (as the PR head) makes the
@@ -353,12 +404,11 @@ what the operator is seeing:
       NOT skip later steps in the same job**; gate every subsequent step on a
       `steps.<id>.outputs.version_only != 'true'` guard (or make the short-circuit its own early-exit job that still
       reports the required context). Rollout: `rollout-workflow-templates.sh` (align PM's own `.github/` copies —
-      hand-maintained) → land via the sanctioned PM `scripts/**` + `.github/**` carve-out (chicken-and-egg: a corrected
-      gate can't pass through the gate it fixes). Verify on the next real release: (i) bump commit reports v2 green in
-      seconds, (ii) staging→main merges with no manual recovery, (iii) no version escalation, (iv) `main` image carries
-      the bumped version. repo: unified-trading-pm. **DEFERRED FUTURE (Option B, not now):** fold the bump into the
-      LDR→staging promotion content (zero separate commit) — cleaner but moves the bump pre-SIT + re-wires the
-      breaking-cascade/lock timing (large blast radius); keep as a follow-up cleanup, not the asap fix.
+      hand-maintained) → land via the sanctioned PM
+      `scripts/**`+`.github/**`carve-out (chicken-and-egg: a corrected     gate can't pass through the gate it fixes). Verify on the next real release: (i) bump commit reports v2 green in     seconds, (ii) staging→main merges with no manual recovery, (iii) no version escalation, (iv)`main`
+      image carries the bumped version. repo: unified-trading-pm. **DEFERRED FUTURE (Option B, not now):\*\* fold the
+      bump into the LDR→staging promotion content (zero separate commit) — cleaner but moves the bump pre-SIT + re-wires
+      the breaking-cascade/lock timing (large blast radius); keep as a follow-up cleanup, not the asap fix.
 - [ ] [SCRIPT] P2. **`ci-failure-watcher` disposition once Option C lands — do NOT retire the watcher (corrects the
       proposal's §8/open-Q3 overreach).** The watcher has TWO independent flags: `--escalate`
       (`conflict_prs_to_escalate` / `blocked_failing_prs_to_escalate`, `ci_failure_watcher.py:527/545`) hands genuine
