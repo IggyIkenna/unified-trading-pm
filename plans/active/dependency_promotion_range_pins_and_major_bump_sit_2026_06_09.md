@@ -139,15 +139,62 @@ version comparison no-ops → the guard never fires). Captured here:
       `get_version_tag`, fix the import/compare, dry-run the resolution change across the fleet, then roll out. Find the
       definition + call sites first (`rg get_version_tag`), embed the consumer manifest in the todo before changing it.
 
+### Phase 6 — Reproducibility + dep-provenance: base-image digest pinning (5.79) + deployment BoM — P1 (PRIORITIZED)
+
+**Why here (2026-06-09 design review):** the same operator question — "how do I reverse-engineer what code went into a
+build / pin deps for safe rollback?" — has ONE answer, and it is NOT `uv.lock`. Cloud builds never read the lock
+(service Dockerfiles do `uv pip install -e . --no-deps`; the UTL base image does `uv pip install` against ranges, not
+`uv sync --frozen`). So reproducibility AND internal-dep provenance both ride the base **image**, via two levers with
+two gaps:
+
+- ✅ **Service-code provenance EXISTS today.** Every service image is tagged `:$SHORT_SHA` (+ optional `:$VERSION`;
+  `cloudbuild.yaml:125,245`) and Cloud Run pins the digest at deploy → running service → image digest → `:$SHORT_SHA` →
+  exact service commit. No work needed.
+- ❌ **Internal-dep (UTL/UAC) provenance + rebuild determinism is BROKEN.** Service Dockerfiles use
+  `FROM unified-trading-library:latest` (floating) → the service image never records WHICH UTL/UAC it baked; today you
+  can only correlate by build-time vs Artifact Registry push history (indirect, ambiguous under concurrent pushes; UAC
+  is one hop worse — baked editable into the UTL image).
+
+The fix is already scoped as **QG STEP 5.79 (`dockerfile-base-pin`, `base-service.sh:2221`, currently PENDING-RATCHET)**.
+Reframe + prioritize it: pinning `FROM …@sha256:<digest>` is simultaneously the **reproducible-build** lever AND the
+**dep-provenance** lever — one change, both payoffs. Once landed: service commit → its Dockerfile pins
+`unified-trading-library@sha256:…` → that digest = a specific UTL build = UTL version+commit → UAC commit baked in = a
+deterministic single-SHA provenance chain, with zero `uv.lock` dependency.
+
+- [ ] [INFRA] P1. **Complete the 5.79 FROM-digest ratchet** — drive every production Dockerfile's `FROM` from
+      `:latest`/`:tag` → `@sha256:<digest>` and flip STEP 5.79 from PENDING-RATCHET to BLOCKING
+      (`base-service.sh:2221-2264`). Resolve the digest at build time (cloudbuild reads the freshly-pushed base image's
+      `RepoDigests` / Cloud Run revision digest, injects via `--build-arg BASE_IMAGE_DIGEST`). Done = rebuilding any
+      service commit yields a byte-identical image (reproducibility) AND the Dockerfile records exactly which UTL/UAC
+      went in (provenance). This is the operator's answer to both "reproducible cloud builds" and "reverse-engineer the
+      code version in a build".
+- [ ] [CODE] P1. **Deployment-registry bill-of-materials — record digest + commit + dep-versions** (deployment-service).
+      TODAY the registry persists ONLY a mutable `image_tag` (`monitor.py:39` / `live_deployment.py:42,63` /
+      `backends/base.py:135`); the `git_commit` field exists (`monitor.py:40`) but its writer
+      `VersionRegistry.register_version` (`monitor.py:540`) has ZERO callers (dead/unwired), and NO image-digest /
+      internal-dep-version is stored anywhere — so "what code is in prod right now" is NOT queryable. On the **live**
+      deploy path (`DeploymentRegistryEntry`/heartbeat extras, `deployments_registry.py:146-169`, OR wire up the dead
+      `VersionRegistry`): (a) resolve the deployed tag → immutable `@sha256:` digest (Cloud Run revision / Artifact
+      Registry `RepoDigests`) into a new `image_digest` field; (b) stamp `git_commit` from `$SHORT_SHA`; (c) stamp
+      `dep_versions: dict` (UTL/UAC + base-image digest). Store: GCS `gs://deployment-metadata-{pid}/versions/…` (the
+      existing VersionRegistry target) / `gs://deployment-scripts-{pid}/deployments/…`; expose via deployment-api
+      `GET /api/deployments`. Done = "what's deployed in prod + exactly what code is in it" is a single queryable BoM.
+
 ## Success criteria
 
 - A UAC (or any internal lib) minor/patch bump reds ZERO consumer QGs and triggers ZERO consumer rebuilds.
 - A MAJOR bump triggers a full SIT in dep order; on stuck staging it escalates to vm-planning (never silently jams).
 - External-dep reproducibility unchanged (external drift still hard-fails `uv lock --check`).
 - The major/minor boundary is matrix/contract-driven, not a version-phase heuristic.
+- Every production Dockerfile `FROM` is `@sha256:<digest>` (5.79 BLOCKING) → rebuilding any service commit is
+  byte-deterministic AND records its exact UTL/UAC provenance.
+- "What code is deployed in prod" is a single queryable BoM (image digest + git commit + UTL/UAC dep versions) via
+  deployment-api `GET /api/deployments`.
 
 ## Codex SSOT updates
 
 `codex/08-workflows/ci-cd-flow.md` (dependency-promotion model + the lock-gate internal-exemption),
-`codex/06-coding-standards/quality-gates.md` (uv.lock gate behavior), CLAUDE.md § Dependencies+builds (range pins absorb
-minor/patch; only major forces rebuild).
+`codex/06-coding-standards/quality-gates.md` (uv.lock gate behavior + STEP 5.79 dockerfile-base-pin as the
+reproducibility/provenance lever), CLAUDE.md § Dependencies+builds (range pins absorb minor/patch; only major forces
+rebuild; base-image `@sha256` digest — not `uv.lock` — is the rollback/provenance pin),
+`codex/05-infrastructure/vm-tarball-deployment.md` (deployment-registry BoM: image digest + git commit + dep versions).
