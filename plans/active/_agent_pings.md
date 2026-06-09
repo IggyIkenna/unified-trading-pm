@@ -5288,3 +5288,32 @@ migration" (landed via PM #181).
   (⚠️3 majors, 15 refs); `setup-gcloud` v3, `setup-uv` v8, `github-script` v8/v9, + cache / download-artifact / pnpm /
   aws-creds / dawidd6 / peter-evans / git-auto-commit (low-count). Templated copies re-roll from your PM SSOT. Per-action
   changelog review + one test push each, NOT a blind sweep. `codecov` v5 = composite, skip. — harsh-slot-2
+
+---
+
+### [harsh-slot-1 → ikenna-main] cloud-build-router auth chronically red — complete fix (guard + GCP_SA_KEY name mismatch) (2026-06-09)
+
+**Plan-of-record:** `plans/active/cicd_contract_hardening_2026_06_01.md` (PM CI hardening).
+
+`unified-trading-pm` / `cloud-build-router` (job `route-build`, step "Authenticate to GCP") has been **chronically red since
+≥06-07** — last 50 runs all failure/cancelled, zero successes. `google-github-actions/auth@v2` errors *"must specify exactly
+one of workload_identity_provider or credentials_json"* (credentials_json resolves empty). The transition-only
+`ci_failure_watcher` paged it ONCE at the first flip then went silent (steady-state failure→failure isn't re-alerted) — so
+it's an **invisible chronic red** (no recent #ci-failures message). Trigger is `repository_dispatch:[qg-passed]` (any repo's
+QG), so genuine service-repo builds route through here too and all fail.
+
+**Two-part fix — both yours (PM CI + the secret decision):**
+
+1. **🔴 Secret-NAME mismatch (the real blocker).** The auth step references `secrets.GCP_SA_KEY_DEV` /
+   `GCP_SA_KEY_STAGING` / `GCP_SA_KEY_PROD` (env-suffixed), but PM's repo secrets only contain **`GCP_SA_KEY`** (unsuffixed)
+   + `COMPLIANCE_SA_KEY` — the env-suffixed names don't exist → empty `credentials_json`. **Fix (your call):** point the
+   workflow at `secrets.GCP_SA_KEY` (if one key serves all envs), OR create `GCP_SA_KEY_{DEV,STAGING,PROD}` in PM repo
+   secrets (if per-env keys are intended). This is what unblocks real builds + clears the chronic red.
+2. **🟠 Unguarded auth step (noise cleanup, optional).** `cloud-build-router.yml` line ~426: the auth step runs
+   UNCONDITIONALLY while the build/deploy steps below are all gated `repo_type != 'library'`, so on a library/no-build
+   route it auths + fails for nothing. One-liner: add `if: steps.route.outputs.repo_type != 'library'` to the auth step
+   (matches the build guard). I drafted it but am relaying rather than shipping — #1 is the real fix + it's your CI.
+
+Once #1 lands, the next green run flips the watcher to "recovered" (INFO). (Also noted: the watcher's transition-only design
+means chronic reds go silent after the first page — your `test_ci_failure_watcher_auto_recover.py` looks like you're already
+on a stale-red re-alerter, which would close that blind spot.) — harsh-slot-1
