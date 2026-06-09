@@ -2,33 +2,40 @@
 """QG STEP — canonical data-model regression detector (AST, baseline-ratchet).
 
 Per ``audit_criteria_automation_2026_06_08.md`` Phase 1 (Tier-2 "code PATTERN
-(NEW model)" steps) — converts three recurring agentic-grep audits into a
-static gate that catches the *exact* regressions the 2026-06 canonicalisation
-fixed. AST-based so docstrings / comments / string-example paths do NOT
-false-positive (a naive grep flagged only docstrings + tests in the fleet
-sweep). Each pattern carries a ``(repo, file, line, pattern)`` baseline; a
-NON-baselined hit is an ERROR (exit 1), a baselined one a WARNING (exit-clean).
+(NEW model)" steps) — converts recurring agentic-grep audits into a static gate
+that catches the *exact* regressions the 2026-06 canonicalisation fixed.
+AST-based so docstrings / comments / string-example paths do NOT false-positive
+(a naive grep flagged only docstrings + tests in the fleet sweep). Each pattern
+carries a ``(repo, file, line, pattern)`` baseline; a NON-baselined hit is an
+ERROR (exit 1), a baselined one a WARNING (exit-clean).
 
 Patterns
 --------
 * ``coarse-pipeline-mode`` — a ``pipeline_mode`` / ``*_PIPELINE_MODE`` target (or
   ``pipeline_mode=`` kwarg) assigned the bare coarse literal ``"batch"`` /
-  ``"live"`` / ``""``. The canonical model is source-aware
-  ``{mode}_{source}[_{transport}]`` (``batch_databento`` …). Catches the DeFi
-  ``DEFAULT_PIPELINE_MODE="batch"`` class reappearing. (Extends STEP 5.85 which
-  only bans inline literals in SOURCE_DIR — this also covers ``scripts/``
-  migrators/rebuilds + the coarse VALUE specifically + blank.)
+  ``"live"``. The canonical model is source-aware ``{mode}_{source}[_{transport}]``
+  (``batch_databento`` …). Catches the DeFi ``DEFAULT_PIPELINE_MODE="batch"``
+  class reappearing. (Extends STEP 5.85 which only bans inline literals in
+  SOURCE_DIR — this also covers ``scripts/`` migrators/rebuilds + the coarse
+  VALUE specifically.)
 * ``exact-coarse-reader`` — a string literal containing the exact coarse path
   segment ``pipeline_mode=batch/`` or ``pipeline_mode=live/`` (trailing slash =
   a path probe). Readers MUST prefix-match ``batch_*``/``live_*``/``replay_*``,
   never the coarse literal (the C-PATH READ fix must not regress).
-* ``era-a-chain-write`` — a ``data_type`` target / ``data_type=`` kwarg assigned
-  the literal ``"options_chain"`` / ``"futures_chain"``. Era-B: chains are
-  INSTRUMENT_TYPES written with ``data_type=trades``; ``data_type=options_chain``
-  is the retired Era-A write shape. UAC registry/declaration files (which
-  legitimately RETAIN legacy data_type-keyed entries for pre-migration coverage
-  lookups, per the coordinator) are path-excluded; genuinely pre-existing write
-  sites are baselined (owned by the per-AG v8→v9 migrators).
+
+NOTE — there is deliberately NO ``data_type=options_chain`` static pattern.
+``options_chain`` / ``futures_chain`` are a NAME COLLISION: each is both an
+INSTRUMENT_TYPE (the per-underlying chain bundle, trades written as
+``data_type=trades``) AND a genuine DATA_TYPE (the IV/greeks/mark chain SNAPSHOT
+— ``CEFI/TRADFI_OPTIONS_CHAIN_SNAPSHOT``; e.g. Deribit ``mark_iv``). The matrix
+``("tradfi","options_chain") → {trades, ohlcv_1m, options_chain}`` confirms the
+instrument_type produces ``data_type=options_chain``. So the literal
+``data_type="options_chain"`` is a LEGITIMATE Era-B snapshot write — BOTH Era-A
+(flat) and Era-B (nested under ``instrument_type=options_chain``) write that same
+literal, and a static check on the literal cannot tell them apart. The genuine
+Era-A enforcement (flat vs nested) is the RUNTIME ``_LEGAL_DATA_TYPES`` +
+bundle-grain guard, which has the instrument_type context this static checker
+lacks.
 
 Whitelist: ``# QG-allow: canonical-model-regression`` on the line.
 
@@ -59,20 +66,9 @@ import yaml
 # legitimate sentinel default. The bad-blank-WRITE-for-a-derivable-row case is
 # covered by the UTL auto-derive + the STEP 5.70 explicit-pipeline_mode ratchet.
 COARSE_PM_VALUES: Final[frozenset[str]] = frozenset({"batch", "live"})
-ERA_A_CHAIN_VALUES: Final[frozenset[str]] = frozenset({"options_chain", "futures_chain"})
 COARSE_READER_SEGMENTS: Final[tuple[str, ...]] = ("pipeline_mode=batch/", "pipeline_mode=live/")
 
 WHITELIST_MARKER: Final[str] = "QG-allow: canonical-model-regression"
-
-#: UAC registry / declaration trees that legitimately RETAIN legacy
-#: data_type-keyed options_chain/futures_chain entries (coverage lookups +
-#: required-input + snapshot-schema declarations) — NOT parquet/manifest
-#: writes. Path-excluded from the era-a-chain-write pattern.
-ERA_A_EXCLUDE_PATH_FRAGMENTS: Final[tuple[str, ...]] = (
-    "unified_api_contracts/registry/",
-    "unified_api_contracts/canonical/domain/",
-    "unified_api_contracts/internal/",
-)
 
 EXCLUDE_DIR_NAMES: Final[frozenset[str]] = frozenset(
     {
@@ -171,7 +167,6 @@ def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
         return []
     rel = str(path.relative_to(repo_root)).replace("\\", "/")
     lines = src.splitlines()
-    era_a_excluded = any(frag in rel for frag in ERA_A_EXCLUDE_PATH_FRAGMENTS)
     findings: list[Finding] = []
 
     # Collect docstring / bare-string-statement Constant nodes — these are prose
@@ -196,7 +191,7 @@ def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
         return WHITELIST_MARKER in _snippet(lineno)
 
     for node in ast.walk(tree):
-        # --- coarse-pipeline-mode + era-a-chain-write: assignments ---
+        # --- coarse-pipeline-mode: assignments ---
         if isinstance(node, ast.Assign):
             names = _target_names(node.targets)
             val = _const_str(node.value)
@@ -207,8 +202,6 @@ def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
                     and not _flagged(node.lineno)
                 ):
                     findings.append(Finding(repo, rel, node.lineno, "coarse-pipeline-mode", _snippet(node.lineno)))
-                if nm == "data_type" and val in ERA_A_CHAIN_VALUES and not era_a_excluded and not _flagged(node.lineno):
-                    findings.append(Finding(repo, rel, node.lineno, "era-a-chain-write", _snippet(node.lineno)))
         elif isinstance(node, ast.AnnAssign) and isinstance(node.target, (ast.Name, ast.Attribute)):
             nm = node.target.id if isinstance(node.target, ast.Name) else node.target.attr
             val = _const_str(node.value)
@@ -218,10 +211,8 @@ def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
                 and not _flagged(node.lineno)
             ):
                 findings.append(Finding(repo, rel, node.lineno, "coarse-pipeline-mode", _snippet(node.lineno)))
-            if nm == "data_type" and val in ERA_A_CHAIN_VALUES and not era_a_excluded and not _flagged(node.lineno):
-                findings.append(Finding(repo, rel, node.lineno, "era-a-chain-write", _snippet(node.lineno)))
 
-        # --- kwargs: pipeline_mode= / data_type= ---
+        # --- kwargs: pipeline_mode= ---
         if isinstance(node, ast.Call):
             for kw in node.keywords:
                 val = _const_str(kw.value)
@@ -229,13 +220,6 @@ def _scan_file(path: Path, repo: str, repo_root: Path) -> list[Finding]:
                     findings.append(
                         Finding(repo, rel, kw.value.lineno, "coarse-pipeline-mode", _snippet(kw.value.lineno))
                     )
-                if (
-                    kw.arg == "data_type"
-                    and val in ERA_A_CHAIN_VALUES
-                    and not era_a_excluded
-                    and not _flagged(kw.value.lineno)
-                ):
-                    findings.append(Finding(repo, rel, kw.value.lineno, "era-a-chain-write", _snippet(kw.value.lineno)))
 
         # --- exact-coarse-reader: any string constant w/ the coarse path seg
         #     (docstrings / bare-string statements are prose, not reader code) ---
@@ -299,8 +283,8 @@ def main(argv: Iterable[str] | None = None) -> int:
     for f in errors:
         print(
             f"[ERROR] {f.repo}/{f.file}:{f.line} [{f.pattern}]\n         {f.snippet}\n"
-            f"         Canonical model is source-aware (batch_<source>) / Era-B (data_type=trades for chains) / "
-            f"prefix-match readers. Fix it, add '# {WHITELIST_MARKER}', or baseline in "
+            f"         Canonical model is source-aware (batch_<source>) / prefix-match readers. "
+            f"Fix it, add '# {WHITELIST_MARKER}', or baseline in "
             f"canonical_model_regressions_baseline.yaml (successor: {successor}).",
             file=sys.stderr,
         )

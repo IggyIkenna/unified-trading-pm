@@ -2642,13 +2642,14 @@ fi
 
 # ── STEP 5.93: canonical data-model regression detector ───────────────────────
 #
-# AST gate for three recurring canonicalisation regressions: (a) coarse
+# AST gate for two recurring canonicalisation regressions: (a) coarse
 # `pipeline_mode = "batch"/"live"` stamps (canonical is source-aware
 # `batch_<source>`); (b) exact-coarse reader path probes `pipeline_mode=batch/`
-# (readers MUST prefix-match `batch_*`); (c) Era-A `data_type=options_chain/
-# futures_chain` writes (Era-B: chains are instrument_types written with
-# `data_type=trades`). Docstrings, the blank-sentinel `pipeline_mode=""`, and
-# UAC registry/declaration trees are excluded. SHRINKING ratchet:
+# (readers MUST prefix-match `batch_*`). (There is deliberately NO
+# data_type=options_chain check — that literal is a legitimate Era-B snapshot
+# data_type, name-collided with the instrument_type; Era-A is a runtime
+# _LEGAL_DATA_TYPES concern.) Docstrings + the blank-sentinel `pipeline_mode=""`
+# are excluded. SHRINKING ratchet:
 # `canonical_model_regressions_baseline.yaml` entries are WARNINGS; a NEW one
 # fails CI. Escape: `# QG-allow: canonical-model-regression`.
 #
