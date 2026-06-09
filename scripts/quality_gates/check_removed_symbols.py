@@ -59,6 +59,7 @@ EXCLUDE_DIR_NAMES: Final[frozenset[str]] = frozenset(
         ".pytest_cache",
         "htmlcov",
         ".tox",
+        ".tabs",  # per-slot reference clones — duplicates of the repos; never scan them
         "site-packages",
     }
 )

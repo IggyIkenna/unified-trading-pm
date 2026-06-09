@@ -178,6 +178,18 @@ for arg in "$@"; do
     esac
 done
 
+# ── QG_PROFILE forces a COMPLETE, no-skip run ────────────────────────────────
+# Profiling must measure EVERY path, so all bypass flags (--no-fix / --quick /
+# --skip-tests / --skip-lint / --skip-typecheck / --skip-codex) are overridden and the
+# green content-sentinel is disabled. The <MAX_DURATION> meta-gate is the one thing relaxed
+# (the wall-time IS the measurement — a slow single-core profile run must not false-fail).
+if [[ "${QG_PROFILE:-}" == "1" ]]; then
+    FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false
+    unset SKIP_CODEX_FLAG
+    export QG_SENTINEL_DISABLE=true
+    IGNORE_TIMEOUT=true
+fi
+
 # ── VERSION ALIGNMENT GATE ────────────────────────────────────────────────────
 _VA_GATE="${WORKSPACE_ROOT:-$(cd "$REPO_ROOT/.." && pwd)}/unified-trading-pm/scripts/quality-gates-base/version-alignment-gate.sh"
 [[ -f "$_VA_GATE" ]] && source "$_VA_GATE" || echo "⚠️  version-alignment-gate.sh not found (skipping)"
@@ -296,6 +308,7 @@ BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}'
 # See: 06-coding-standards/quality-gates.md § Formatter Conflict Resolution
 if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     log_section "[1/6] AUTO-FIX"
+    qg_prof start autofix
     # Pre-format non-Python files with prettier to avoid pre-commit hook conflicts
     if command -v npx &>/dev/null; then
         _BASE_IGNORE="${WORKSPACE_ROOT}/unified-trading-pm/scripts/quality-gates-base/.prettierignore-base"
@@ -307,13 +320,16 @@ if [ "$RUN_LINT" = true ] && [ "$FIX_MODE" = true ]; then
     fi
     run_timeout 30 $RUFF_CMD format $SOURCE_DIRS >/dev/null 2>&1 || :
     run_timeout 30 $RUFF_CMD check --fix $SOURCE_DIRS >/dev/null 2>&1 || :
+    qg_prof end autofix
     log_ok "Auto-fix complete"
 fi
 
 # ── [2] LINT (ruff, 30s) ──────────────────────────────────────────────────────
 if [ "$RUN_LINT" = true ]; then
     log_section "[2/6] LINT"
+    qg_prof start lint
     _lint_out=$(run_timeout 30 $RUFF_CMD check $SOURCE_DIRS 2>&1) || { echo "$_lint_out"; log_fail "Lint FAILED"; exit 1; }
+    qg_prof end lint
 fi
 
 # ── GREEN SENTINEL: skip heavy phases when content is byte-identical to last full green ──
@@ -341,6 +357,7 @@ fi
 # ── [3] TESTS (pytest, timeout, xdist, coverage) ──────────────────────────────
 if [ "$RUN_TESTS" = true ] && [ "$_QG_SENTINEL_HIT" != true ]; then
     log_section "[3/6] TESTS"
+    qg_prof start tests
     # Coverage floor governance (add-coverage-floor-governance)
     # Use PROJECT_ROOT (set by qg-common.sh from the caller stub's location) so we read
     # the CALLING repo's quality-gates.sh, not base-service.sh's own parent directory.
@@ -490,6 +507,7 @@ PYEOF
 )
     [[ -n "$SKIP_NO_REASON" ]] && { log_fail "pytest.mark.skip without reason comment — add '# reason: ...' above"; echo "$SKIP_NO_REASON" | head -3; exit 1; }
     log_ok "All pytest.mark.skip have reason comments"
+    qg_prof end tests
 fi
 
 # ── [3.5] IMPORT PATTERN STANDARDS ───────────────────────────────────────────
@@ -564,9 +582,11 @@ if [ "$SKIP_TYPECHECK" != "true" ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; 
     # [OOM MITIGATION 2026-05-15] MEM_WRAP wraps basedpyright in cgroup mem cap (Linux only).
     # OLD: run_timeout "${PYRIGHT_TIMEOUT:-120}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
     # TO REVERT: drop the `"${MEM_WRAP[@]}"` prefix below.
+    qg_prof start typecheck
     run_timeout "${PYRIGHT_TIMEOUT:-120}" "${MEM_WRAP[@]}" "$BASEDPYRIGHT_CMD" "$SOURCE_DIR/" > "$_bp_out" 2>&1 &
     BP_PID=$!
     PYRIGHT_EXIT=0; wait $BP_PID || PYRIGHT_EXIT=$?  # 2026-05-26: fix || true bug that swallowed exit code
+    qg_prof end typecheck
     trap - INT TERM
     PYRIGHT_OUT=$(cat "$_bp_out" 2>/dev/null); rm -f "$_bp_out"
     ERROR_COUNT=$(echo "$PYRIGHT_OUT" | grep -c " error:" || :)
@@ -613,6 +633,7 @@ fi
 # All checks are blocking unless excluded via QUALITY_GATE_BYPASS_AUDIT.md.
 # Add inline --glob exclusions below only for bypasses documented in that file.
 log_section "[5/6] CODEX COMPLIANCE"
+qg_prof start codex
 V=0
 
 # PRINT_EXCLUDE_GLOBS: per-repo array of --glob exclusions (e.g. Rich console.print, bash template strings)
@@ -891,6 +912,7 @@ SWALLOWED=$(rg "except Exception:" --type py --glob "!tests/**" "$SOURCE_DIR/" -
 
 # File size — tests excluded (test files are often long due to fixtures/assertions)
 # FUNCTION_SIZE_EXTRA_EXCLUDES also applies here for consistency (same variable, same dirs to skip)
+qg_prof start size-checks
 SVIOL=""
 for f in $(find . -name "*.py" ! -path "./.venv/*" ! -path "./scripts/*" ! -path "./.git/*" ! -path "./build/*" ! -path "./.venv-workspace/*" ! -path "*/site-packages/*" ! -path "./tests/*" "${FUNCTION_SIZE_EXTRA_EXCLUDES[@]}" 2>/dev/null); do
     lines=$(wc -l < "$f" 2>/dev/null || echo 0)
@@ -923,9 +945,11 @@ except: pass
     [[ -n "$out" ]] && FSIZES="${FSIZES}\n${out}"
 done
 [[ -n "$FSIZES" ]] && { log_fail "Function/class/method size exceeded:$FSIZES"; V=$(( V + 1 )); } || log_success "Function/class/method size OK"
+qg_prof end size-checks
 
 # Security: pip-audit (BLOCKING — OSV vulnerability database check)
 # Use venv pip-audit to skip internal/editable packages that are not on PyPI.
+qg_prof start pip-audit
 _PIPAUDIT="${PYTHON_CMD%python*}pip-audit"
 if [ ! -x "$_PIPAUDIT" ]; then _PIPAUDIT="pip-audit"; fi
 if command -v "$_PIPAUDIT" &>/dev/null; then
@@ -985,15 +1009,18 @@ except Exception as e:
 else
     log_fail "pip-audit required: uv pip install pip-audit"; V=$(( V + 1 ))
 fi
+qg_prof end pip-audit
 
 # Security: bandit
 # BANDIT_EXTRA_ARGS: optional per-repo override (e.g. BANDIT_EXTRA_ARGS="-c pyproject.toml")
+qg_prof start bandit
 if command -v bandit &>/dev/null; then
     _bandit_out=$(run_timeout 30 bandit -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
         || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
 else
     log_fail "bandit required: uv pip install bandit"; V=$(( V + 1 ))
 fi
+qg_prof end bandit
 
 
 # CI/CD hygiene: ||true bypasses in quality gate scripts
@@ -1485,6 +1512,7 @@ else
     log_success "STEP 5.38: No local domain event models (use UAC inter_service_events)"
 fi
 
+qg_prof end codex
 # CODEX_MAX_VIOLATIONS: repos with pre-existing violations can set a ceiling.
 # The goal is to ratchet this down to 0 over time.
 _max_v=${CODEX_MAX_VIOLATIONS:-0}
@@ -1720,12 +1748,18 @@ fi
 # `unified-trading-pm/scripts/quality_gates/removed_symbols_manifest.yaml`
 # — required keys, status enum, when-to-add discipline.
 _REMOVED_SYMBOLS_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_removed_symbols.py"
+qg_prof start removed-symbols
 if [ -f "$_REMOVED_SYMBOLS_CHECKER" ]; then
     # Run scoped to the calling repo so per-repo QG only sees its own
     # consumers; the workspace-wide sweep is run separately (e.g. via
     # the CI cron, or `python <checker>` from workspace root).
-    _REPO_REL_TO_WORKSPACE=$(basename "$REPO_ROOT")
-    _WORKSPACE_ROOT="$(dirname "$REPO_ROOT")"
+    # FIX 2026-06-09: REPO_ROOT IS the workspace root (qg-common sets it to PROJECT_ROOT/..),
+    # so the old basename/dirname-of-REPO_ROOT scanned the ENTIRE workspace (incl. every .tabs
+    # slot clone) on every repo's gate → ~286s single-threaded. Match STEP 5.67's correct wiring:
+    # scope = this repo (PROJECT_ROOT), workspace-root = REPO_ROOT. The cross-repo workspace-wide
+    # sweep runs separately (cron/CI) — see quality_gates_speed_and_config_ssot_2026_06_09.md.
+    _REPO_REL_TO_WORKSPACE=$(basename "$PROJECT_ROOT")
+    _WORKSPACE_ROOT="$REPO_ROOT"
     if python "$_REMOVED_SYMBOLS_CHECKER" \
             --workspace-root "$_WORKSPACE_ROOT" \
             --scope "$_REPO_REL_TO_WORKSPACE" \
@@ -1741,6 +1775,7 @@ if [ -f "$_REMOVED_SYMBOLS_CHECKER" ]; then
 else
     log_success "STEP 5.65: skipped (checker not yet provisioned in this repo's PM checkout)"
 fi
+qg_prof end removed-symbols
 
 # STEP 5.67 — Banned NaN-placeholder / bypass-record_captured method AST-walk
 #
