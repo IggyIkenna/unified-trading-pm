@@ -16,7 +16,7 @@
 #
 # Identity resolution mirrors setup-tab-worktrees.sh. A non-Ikenna host MUST declare itself ONCE
 # before running:  git config --global slotIdentity.name <handle> ; git config --global slotIdentity.email <email>
-# (Harsh: handle=harshkantariya, email=harshkantariya.work@gmail.com).
+# (Harsh: handle=harshkantariya, email=harshkantariya@odum-research.com).
 #
 # Usage:
 #   migrate-slots-to-pathb.sh [--slots 1-11] [--exclude <N>/<repo>] [--dry-run]

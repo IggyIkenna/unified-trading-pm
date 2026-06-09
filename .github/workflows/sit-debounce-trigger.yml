@@ -98,8 +98,47 @@ jobs:
 
           if not pending:
               print("No pending staging changes — nothing to trigger")
+              # ── Auto-clear a DANGLING cascade lock (ROOT FIX 2026-06-09) ──
+              # A breaking-bump lock (locked_reason "...bump cascade...") set by update-repo-version
+              # only clears via SIT-validate or sit-unlock. But once every breaking repo has PROMOTED
+              # (versions caught up → `pending` empty) NO SIT fires (nothing pending to validate), so
+              # the lock dangles forever — wedging every LDR→staging promote (incident 2026-06-08/09:
+              # uac=0.2.0 locked staging 7h+ with pending_repos=[]). The lock's REASON is resolved the
+              # moment nothing is pending, so clear it here. Guarded: only a STALE (>10 min) CASCADE
+              # lock — never an in-flight "SIT running" lock (that clears itself when SIT completes).
+              import datetime as _dt
+              _ss = m.get("staging_status", {})
+              _lr = _ss.get("locked_reason") or ""
+              _manifest_changed = False
+              if _ss.get("locked") and "bump cascade" in _lr:
+                  _stale = True
+                  _since = _ss.get("locked_since")
+                  if _since:
+                      try:
+                          _age = (_dt.datetime.now(_dt.timezone.utc)
+                                  - _dt.datetime.fromisoformat(str(_since).replace("Z", "+00:00"))).total_seconds()
+                          _stale = _age > 600
+                      except ValueError:
+                          _stale = True
+                  if _stale:
+                      _ss.update({
+                          "locked": False, "locked_since": None,
+                          "locked_reason": "Auto-cleared: breaking cascade resolved (no pending repos)",
+                          "lock_version": None, "breaking_pending": [],
+                          "pending_repos": [], "sit_retry_count": 0, "locked_alert_sent": False,
+                      })
+                      m["staging_status"] = _ss
+                      _tmp = "workspace-manifest.json.tmp"
+                      with open(_tmp, "w") as _f:
+                          json.dump(m, _f, indent=2, ensure_ascii=False)
+                          _f.write("\n")
+                      os.replace(_tmp, "workspace-manifest.json")
+                      _manifest_changed = True
+                      print(f"AUTO-UNLOCK: cleared dangling cascade lock ({_lr!r}) — no pending repos, cascade resolved")
               with open(os.environ["GITHUB_OUTPUT"], "a") as f:
                   f.write("trigger=false\n")
+                  if _manifest_changed:
+                      f.write("manifest_changed=true\n")
               sys.exit(0)
 
           print(f"Pending staging repos ({len(pending)}): {', '.join(pending)}")

@@ -1,7 +1,6 @@
 ---
 title: "Harsh host setup — align with the 2026-06-08/09 CI/CD reform + Path-B worktrees"
 created: 2026-06-09
-author: ikennaigboaka [slot-1·laptop]
 source:
   - plans/active/cicd_contract_hardening_2026_06_01.md (§ SESSION OUTCOME + ADDENDUM)
   - plans/active/worktree_ldr_unification_2026_06_08.md
@@ -13,7 +12,7 @@ status: active
 # Prompt for Harsh — finish setting up your host (Path-B worktrees + CI/CD reform)
 
 > Hand this whole block to Harsh's agent/session. Run it on **Harsh's laptop** (handle `hk`,
-> committer `harshkantariya <harshkantariya.work@gmail.com>`). It's safe + idempotent and
+> committer `harshkantariya <harshkantariya@odum-research.com>`). It's safe + idempotent and
 > **preserves all uncommitted work** before changing anything.
 
 ## What changed on Ikenna's side (2026-06-08/09) that you need to align with
@@ -44,7 +43,7 @@ cd <YOUR_WORKSPACE_ROOT>            # the dir that contains the per-repo main cl
 
 # 0. Declare your identity ONCE (so commits attribute to you, not Ikenna):
 git config --global slotIdentity.name  harshkantariya
-git config --global slotIdentity.email harshkantariya.work@gmail.com
+git config --global slotIdentity.email harshkantariya@odum-research.com
 
 # 1. Workflow-scoped GH token (carries workflow scope; the keyring gho_ token does NOT):
 source unified-trading-pm/scripts/workspace/load-gh-token.sh

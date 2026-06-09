@@ -932,7 +932,9 @@ fi
 
 # ── STEP 5.93: canonical data-model regression detector ───────────────────────
 # Library-repo parity with base-service.sh STEP 5.93 (coarse pipeline_mode /
-# exact-coarse reader probe / Era-A chain write). Baseline-ratchet.
+# exact-coarse reader probe). Baseline-ratchet. (No data_type=options_chain
+# check — it's a legitimate Era-B snapshot data_type, name-collided with the
+# instrument_type; Era-A is a runtime _LEGAL_DATA_TYPES concern.)
 # SSOT: audit_criteria_automation_2026_06_08.md Tier-2.
 _CANON_MODEL_CHECKER="${REPO_ROOT}/unified-trading-pm/scripts/quality_gates/check_canonical_model_regressions.py"
 if [ -f "$_CANON_MODEL_CHECKER" ]; then

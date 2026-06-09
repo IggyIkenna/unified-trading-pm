@@ -1,7 +1,7 @@
 """Unit tests for check_canonical_model_regressions.py (QG STEP 5.93).
 
 Pure-Python — no GCS/network. Proves the three canonical-model regression
-patterns (coarse pipeline_mode / exact-coarse reader probe / Era-A chain write)
+patterns (coarse pipeline_mode / exact-coarse reader probe)
 fire on planted regressions (exit 1) and pass a canonical tree (exit 0), and
 that the documented exclusions (docstrings, blank sentinel, UAC declaration
 paths) do NOT false-positive.
@@ -76,27 +76,20 @@ def test_prefix_match_reader_not_flagged(tmp_path: Path) -> None:
     assert _patterns(p) == []
 
 
-# ── era-a-chain-write ────────────────────────────────────────────────────────
+# ── data_type=options_chain is NOT flagged (name-collision; legit snapshot) ──
 
 
-def test_era_a_data_type_kwarg_flagged(tmp_path: Path) -> None:
+def test_data_type_options_chain_not_flagged(tmp_path: Path) -> None:
+    # `options_chain`/`futures_chain` are a name collision — also a genuine DATA_TYPE
+    # (the IV/greeks snapshot, CEFI/TRADFI_OPTIONS_CHAIN_SNAPSHOT). `data_type="options_chain"`
+    # is a LEGITIMATE Era-B snapshot write; there is no static `era-a-chain-write` pattern.
     p = _write(tmp_path / "w.py", 'write_shards(data_type="options_chain")\n')
-    assert _patterns(p) == ["era-a-chain-write"]
-
-
-def test_era_b_trades_not_flagged(tmp_path: Path) -> None:
-    p = _write(tmp_path / "w.py", 'write_shards(data_type="trades", instrument_type="options_chain")\n')
     assert _patterns(p) == []
 
 
-def test_uac_declaration_path_excluded(tmp_path: Path) -> None:
-    # legacy data_type-keyed entries are RETAINED in UAC registry/declaration trees.
-    # repo_root = tmp_path so the relative path carries the excluded prefix.
-    p = _write(
-        tmp_path / "unified_api_contracts" / "registry" / "x.py",
-        'InputReq(data_type="options_chain")\n',
-    )
-    assert [f.pattern for f in _scan_file(p, "r", tmp_path)] == []
+def test_data_type_futures_chain_not_flagged(tmp_path: Path) -> None:
+    p = _write(tmp_path / "w.py", 'self.data_type = "futures_chain"\n')
+    assert _patterns(p) == []
 
 
 # ── main() end-to-end (planted regression) ──────────────────────────────────

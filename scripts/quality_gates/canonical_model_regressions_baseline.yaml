@@ -2,26 +2,16 @@
 # canonical-model occurrences tolerated as WARNINGS (exit-clean). NEW ones fail.
 # SSOT: audit_criteria_automation_2026_06_08.md (Tier-2).
 #
-# The 3 entries below are GENUINE pre-existing Era-A `data_type=options_chain/
-# futures_chain` WRITE sites. Era-B (uac@ae70338d / is@74df991d) makes chains
-# INSTRUMENT_TYPES written with data_type=trades; the v8->v9 relabel of these
-# legacy WRITE paths is owned by the per-AG migrators (coordinator: "OUT OF
-# SCOPE (per-AG migrators own)"). Clear each row when its writer is migrated to
-# the Era-B shape. Captured as a finding in the audit-criteria-automation plan.
-default_successor: the per-AG *_manifest_canonicalisation_2026_06_01.md migrators (Era-B v8->v9 write relabel)
-entries:
-  - repo: market-tick-data-service
-    file: market_tick_data_service/market_interface/adapters/tradfi/tardis_adapter.py
-    line: 2549
-    pattern: era-a-chain-write
-    reason: "finalise_and_write_cefi_shards(data_type='futures_chain') — legacy Era-A write; Era-B migration is per-AG-migrator-owned."
-  - repo: market-data-processing-service
-    file: market_data_processing_service/app/adapters/cefi/options_chain_adapter.py
-    line: 56
-    pattern: era-a-chain-write
-    reason: "MDPS options_chain adapter class data_type attr — legacy Era-A; per-AG-migrator-owned relabel."
-  - repo: market-data-processing-service
-    file: market_data_processing_service/app/adapters/cefi/futures_chain_adapter.py
-    line: 50
-    pattern: era-a-chain-write
-    reason: "MDPS futures_chain adapter class data_type attr — legacy Era-A; per-AG-migrator-owned relabel."
+# The `era-a-chain-write` pattern was REMOVED 2026-06-09 (operator clarification):
+# `options_chain`/`futures_chain` are a NAME COLLISION — each is both an
+# INSTRUMENT_TYPE (the per-underlying chain bundle, trades = data_type=trades)
+# AND a genuine DATA_TYPE (the IV/greeks/mark chain SNAPSHOT,
+# CEFI/TRADFI_OPTIONS_CHAIN_SNAPSHOT; matrix ("tradfi","options_chain") →
+# {trades, ohlcv_1m, options_chain}). So `data_type="options_chain"` is a
+# LEGITIMATE Era-B snapshot write; a static literal check can't tell flat-Era-A
+# from nested-Era-B. The 3 formerly-baselined sites (tardis_adapter +
+# MDPS options/futures_chain adapters) are the LEGIT snapshot writers, not
+# violations. Era-A (flat vs nested) is enforced at RUNTIME by _LEGAL_DATA_TYPES
+# + bundle-grain, which has the instrument_type context this static gate lacks.
+default_successor: n/a
+entries: []

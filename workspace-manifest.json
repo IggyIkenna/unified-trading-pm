@@ -1325,6 +1325,13 @@
         "infrastructure",
         "monitoring",
         "supporting"
+      ],
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        }
       ]
     }
   },
@@ -1404,6 +1411,7 @@
         "level": 8,
         "description": "IaC + post-deploy validation (last).",
         "repos": [
+          "agent-orchestrator",
           "e2e-testing",
           "ibkr-gateway-infra",
           "system-integration-tests"
