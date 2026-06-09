@@ -71,6 +71,11 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       CLAUDE.md warning). Then fast-forward/force `staging` and `main` to match LDR's content (LDR-SSOT clean start),
       preserving the Phase-1 reconciled CI bits + the canonical semver tags. Verify no semver bump was reverted (compare
       `versions{}` pre/ post).
+- [ ] [INFRA] P1. **REOPENED — the "no semver bump reverted" verification MISSED unified-trading-library
+      (found 2026-06-09).** The force-sync reverted UTL source `0.4.0`→`0.3.167` while the manifest stayed `0.4.0` (see
+      Phase 5 FIX 1). Audit EVERY repo for the same manifest-vs-source split (`versions{}[repo]` ≠ source
+      `pyproject.version`), not just UTL — the force-sync clobbered LDR-behind source for any repo whose semver bump
+      hadn't reached LDR. This is the missing teeth on the Phase-3 verification.
 
 ## Phase 4 — Drain the LDR backlog / quickmerge everything (#6) (depends: Phase 3)
 
@@ -100,11 +105,19 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       alerting-service #31, instruments-service #400, deployment-service #26. Cross-ref:
       `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` + `cicd_contract_hardening_2026_06_01.md`.
 
-- [ ] [INFRA] P1. **FIX 1 — republish UTL on the 0.x line with the corrected aiohttp pin (unified-trading-library).**
-      **UTL is NOT graduated (operator 2026-06-09) — it stays on 0.x (source `0.3.167`).** Tag-publish a fresh 0.x patch
-      (e.g. `v0.3.168`) carrying `aiohttp>=3.13.4,<3.14.0` so an installable artifact with the CORRECT metadata exists
-      and supersedes the stale published `0.3.167`. **NEVER bump aiohttp to 3.14** (operator decision 2026-06-05; vcrpy
-      8.1.1 deadlock).
+- [ ] [INFRA] P1. **FIX 1 — restore the force-sync-REVERTED UTL `0.4.0` forward (unified-trading-library).**
+      **Sharper root cause (2026-06-09):** UTL legitimately reached `0.4.0` — PM `workspace-manifest.json`
+      `versions{}` AND `staging_versions{}` both say `0.4.0`, the 40 downstream dep PRs all pin `>=0.4.0`, and UTL git
+      history shows commit `5983adeb chore: align version to staging remote` setting `version="0.4.0"`. But **current
+      UTL source is back at `0.3.167`** — the **2026-06-08 LDR-SSOT clean-start force-sync (Phase 3) reverted UTL's
+      `0.4.0` source bump to LDR's `0.3.167`**, while the manifest kept `0.4.0` → a manifest/source split with no `v0.4.0`
+      tag or installable `0.4.0` artifact anywhere. So the fix is **FORWARD** (match the manifest + the 40 PRs), not a
+      fresh 0.3.x: restore UTL source `pyproject` to `0.4.0` (current source ALREADY carries the correct
+      `aiohttp>=3.13.4,<3.14.0` via revert `5f58be77`) → push `v0.4.0` → `publish-package.yml` publishes an installable
+      `0.4.0` with correct metadata, superseding the stale `0.3.167`. **Tension to clear: "NEVER bump version manually —
+      semver-agent handles all" (CLAUDE.md).** The bump already HAPPENED in the manifest; this is reconciling a
+      force-sync clobber, not a fresh bump — but it still hand-produces the tag the semver-agent normally emits, so it
+      needs explicit operator authorization OR a clean semver-agent re-emit. **NEVER bump aiohttp to 3.14.**
 
 - [ ] [INFRA] P1. **FIX 1b — delete the spurious pre-regime `v1.x` tags + fleet tag audit (unified-trading-library +
       others).** UTL's `v1.0.0`/`v1.2.0` tags are ANCIENT bootstrap-era artifacts from **2025-11-13** (commit msgs
