@@ -100,16 +100,31 @@ source:
 >       (`[tool.setuptools.packages.find]`) so `uv pip install -e .` can build the editable wheel (currently "Multiple
 >       top-level packages in a flat-layout"). Non-blocking (deps install; server v2 green; pytest rootdir imports
 >       work). Repo: e2e-testing.
-> - [ ] [SCRIPT] P2. **Local QG `.venv` artifact** — Path-B slot clones lack a repo `.venv`, so `quality-gates.sh`
->       pip-audit audits `.venv-workspace` (tooling deps) → spurious fails for `CODEX_MAX_VIOLATIONS=0` repos. Either
->       have `quality-gates.sh` create/require the repo `.venv` (uv venv + uv pip install -e .) before pip-audit, or
->       unset `VIRTUAL_ENV` so it can't bind the workspace venv. Repo: unified-trading-pm (base scripts) +
->       setup-tab-worktrees.
-> - [ ] [INFRA] P2. **15 repos have un-promoted LDR content (green on last promotion, NOT yet gated)** — drain via their
->       LDR→staging promotes so the new content is v2-gated: agent-orchestrator (27f), market-data-processing-service
->       (7f), alerting/blrs/cra/e2e/strategy/ui (2f), deployment-api/deployment-ui/ibkr/mtds/sit/trading-agent/uta (1f).
->       Most are small (ci_status/minor); ao + mdps are real. Not a current red — flagged for completeness. Repo: each
->       named repo.
+> - [x] ✅ [SCRIPT] P2. **Local QG `.venv` artifact — FIXED** (PM@5814e65ac): `base-library.sh` now always builds/uses
+>       the repo `.venv` (`unset VIRTUAL_ENV`; mirrors base-service.sh). Verified on UTL (1→0). Slot venvs pre-built
+>       across all 11 slots (~242).
+> - [ ] [INFRA] P1. **🔴 BIG FINDING — fleet-wide time-triggered pip-audit blocks fresh promotions for
+>       `CODEX_MAX_VIOLATIONS=0` repos (surfaced 2026-06-09 by the drain).** UTL's LDR→main PR #262 (delta = ONLY the
+>       semver workflow file) FAILS its fresh server v2 on `❌ pip-audit vulnerabilities` +
+>       `Codex compliance: 1 violation` — NEW CVE advisories published since UTL's last green main v2
+>       (anthropic/pillow/pyjwt/lxml/twisted/urllib3/uv…). This is the "BIG FINDING 2026-06-02 PyJWT time-triggered"
+>       class materializing: any CMV=0 repo's NEXT v2 reds even on a clean/workflow-only change → blocks promotions
+>       fleet-wide. FIX (operator-judgment): bump the vulnerable deps to fix-versions fleet-wide
+>       (workspace-constraints + per-repo) OR add the new CVE IDs to the sanctioned `--ignore-vuln` set (non-exploitable
+>       ones). Substantial + partly a security call — NOT auto-fixed this session. Repo: unified-trading-pm
+>       (workspace-constraints + base scripts) + fleet.
+> - [ ] [CODE] P1. **🔴 FastAPI `response_model` route failures block draining deployment-service + ml-service** — their
+>       un-promoted LDR content fails fresh v2:
+>       `FastAPIError: Invalid args for response field — starlette.requests.Request     | None is not a valid Pydantic field`
+>       (test_api_routes / test_training_control_api). A FastAPI strictness bump exposes routes whose return annotation
+>       isn't a valid response model → add `response_model=None` to those path ops (or fix the annotation).
+>       features-service drained clean (NOT universal — repo-specific routes). Repo: deployment-service + ml-service.
+> - [ ] [INFRA] P2. **Drain the remaining un-promoted LDR content** — re-roll PRs incidentally drained
+>       features-service + deployment-api + greeks (merged). BLOCKED by the two BIG findings above: UTL/execution
+>       (pip-audit time-trigger), deployment-service/ml-service (FastAPI). Others (agent-orchestrator 27f, mdps 7f,
+>       alerting/blrs/cra/ibkr/mtds/ strategy/sit/uta/deployment-ui/ui) still pending — drain after the pip-audit +
+>       FastAPI findings are resolved (else each fresh v2 re-reds on the same pip-audit time-trigger). Repo: each named
+>       repo.
 > - [ ] [SCRIPT] P2. **Fleet rollout of the semver-agent bounded-scan + Option-C fixes to ALL 24 consumer repos** —
 >       confirmed on PM SSOT + execution-service; sweep the other 23
 >       (`rollout-workflow-templates.sh --template semver-agent.yml.tmpl` + `quality-gates-v2.yml.tmpl`) so no repo
