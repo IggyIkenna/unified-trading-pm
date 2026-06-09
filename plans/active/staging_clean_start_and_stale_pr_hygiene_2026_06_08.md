@@ -105,7 +105,19 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       alerting-service #31, instruments-service #400, deployment-service #26. Cross-ref:
       `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` + `cicd_contract_hardening_2026_06_01.md`.
 
-- [ ] [INFRA] P1. **FIX 1 — restore the force-sync-REVERTED UTL `0.4.0` forward (unified-trading-library).**
+- [x] ✅ [INFRA] P1. **FIX 1 DONE (2026-06-09) — UTL `0.4.0` published + tagged + source-coherent; systemic resolution
+      blocker VERIFIED fixed.** Committed UTL source `0.3.167`→`0.4.0` to LDR (`fd8c37a6`), pushed tag `v0.4.0` →
+      `publish-package.yml` run `27193522340` **succeeded** (publishes `0.4.0` with the correct `aiohttp<3.14.0` pin to
+      GitHub Packages; the Nov-2025 publish failures were stale). **Verification**: re-ran QG on the previously-BLOCKED
+      `deployment-service` #26 + `alerting-service` #31 — the "Install dependencies" step that used to die with
+      `No solution found … only unified-trading-library==0.3.167 … aiohttp>=3.14.0` now **resolves cleanly** (`Resolved
+      207/277 packages`). UTL is now `source==tag==published==manifest==0.4.0`. **Remaining dep-PR failures are
+      INDEPENDENT + pre-existing** (the dep-update branches are STALE — cut from old commits carrying e.g.
+      `PipelineMode.BATCH_HYPERLIQUID_REST`, renamed to `BATCH_HYPERLIQUID` by the 2026-06-07 G0 standardisation and
+      already fixed on LDR) — NOT the version cascade. **Note**: `unified-api-contracts` has the SAME phantom-tag gap (no
+      `v0.2.x` tag; manifest `0.2.0` vs source `0.2.1`) but resolution falls back to its `main` clone OK, so it is not a
+      hard blocker — fold its version-state reconcile into the fleet-split todo below. **Original task text below:**
+      **FIX 1 — restore the force-sync-REVERTED UTL `0.4.0` forward (unified-trading-library).**
       **Sharper root cause (2026-06-09):** UTL legitimately reached `0.4.0` — PM `workspace-manifest.json`
       `versions{}` AND `staging_versions{}` both say `0.4.0`, the 40 downstream dep PRs all pin `>=0.4.0`, and UTL git
       history shows commit `5983adeb chore: align version to staging remote` setting `version="0.4.0"`. But **current
@@ -119,8 +131,11 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       force-sync clobber, not a fresh bump — but it still hand-produces the tag the semver-agent normally emits, so it
       needs explicit operator authorization OR a clean semver-agent re-emit. **NEVER bump aiohttp to 3.14.**
 
-- [ ] [INFRA] P1. **FIX 1b — delete the spurious pre-regime `v1.x` tags + fleet tag audit (unified-trading-library +
-      others).** UTL's `v1.0.0`/`v1.2.0` tags are ANCIENT bootstrap-era artifacts from **2025-11-13** (commit msgs
+- [x] ✅ [INFRA] P1. **FIX 1b DONE (2026-06-09) — deleted 5 spurious pre-regime `v1.x` tags.** unified-trading-library
+      `v1.0.0`+`v1.2.0`, instruments-service `v1.1.0`+`v1.2.0`+`v1.3.0` (all HTTP 204). Confirmed garbage by the manifest
+      `_note`: "All versions reset to 0.x.x (2026-02-28); versions >=1.0.0 were aspirational." Fleet audit: only those
+      two repos carried `v1.x`; all others clean. **Original task text below:**
+      **FIX 1b — delete the spurious pre-regime `v1.x` tags + fleet tag audit (unified-trading-library + others).** UTL's `v1.0.0`/`v1.2.0` tags are ANCIENT bootstrap-era artifacts from **2025-11-13** (commit msgs
       "Add automatic publishing on tag push" / "Use github.repository variable for GitHub Packages URL";
       `pyproject@tag` = 1.0.0/1.2.0) — created while first wiring `publish-package.yml`, **NOT a graduation**. They are
       the repo's "latest tags" → they corrupt the PM version-aware clone's tag resolution AND likely drove the
@@ -130,16 +145,39 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       Audit EVERY repo for the same class: **instruments-service carries `v1.1.0`/`v1.2.0`/`v1.3.0`** (same 2025-11 era);
       uac/execution/deployment have none. Any 0.x repo carrying `v1.x` tags = spurious → clean up.
 
-- [ ] [INFRA] P1. **FIX 2 — propagation must never emit a constraint for an unreleased version (unified-trading-pm).**
-      The semver-agent / `update-dependency-version.yml` cascade dispatched `>=0.4.0` for UTL (and `>=0.2.0` for uac)
-      when no such version was ever tag-published. Gate the dep-bump dispatch on the target version actually existing as
-      a published tag/artifact (or clamp to the latest real published version) so a phantom version can never enter a
-      downstream `pyproject.toml`.
+- [ ] [INFRA] P1. **FIX 2 — force-sync must NOT silently revert a published version below the manifest (unified-trading-pm).**
+      Reframed 2026-06-09: the propagation was NOT wrong — it correctly emitted `UTL>=0.4.0` when `0.4.0` WAS the
+      semver-agent value. The bug was the **clean-start force-sync (Phase 3) reverting source `version` fleet-wide to
+      LDR's older value while the manifest kept the higher one** → a published-then-unpublished phantom. **Correct
+      preventive**: add a coherence GATE to the force-sync / clean-start runbook (and a standalone check) that, AFTER any
+      force-sync, asserts `versions{}[repo]` == source `pyproject.version` == latest published `vX` tag for EVERY repo,
+      and BLOCKS / loud-flags any split (this is the teeth the Phase-3 "verify no semver bump reverted" check was
+      missing). Cheap first step (read-only, ship now-safe): a `scripts/cicd/assert_version_coherence.py` that prints the
+      fleet split table (the 13-repo audit under FIX 4). **Defense-in-depth** (secondary): the version-aware clone's
+      index fallback should fail LOUD when a pinned version is unresolvable instead of silently surfacing a stale lower
+      version's metadata.
 
-- [ ] [SCRIPT] P1. **FIX 3 — regenerate / reconcile the wedged dep PR cohort (all consumer repos).** After FIX 1+2 land,
-      re-trigger propagation so the ~40 `BLOCKED`/`DIRTY` dep PRs regenerate against the real published versions (or
-      auto-close as superseded). Verify the cohort goes green via `gh pr checks`; the `DIRTY` ones' `pyproject.toml`
-      conflicts resolve in regeneration. This is the actual unblock — NOT 40 manual rebases.
+- [ ] [SCRIPT] P1. **FIX 3 — reconcile the dep cohort onto LDR (sharpened 2026-06-09; the resolution blocker is GONE).**
+      Now that UTL `0.4.0` resolves, the cohort splits three ways, NOT "make 40 stale PRs green": (a) the constraint
+      bumps (`UTL>=0.4.0`, `uac>=0.2.0`) are mostly **NOT on LDR yet** (deployment/alerting/execution LDR still pin
+      `>=0.1.0`; instruments has `uac>=0.2.0` only) → they carry REAL diffs and must LAND on LDR (LDR-SSOT); (b) the
+      existing dep-update PR **branches are STALE** (old code, pre-`BATCH_HYPERLIQUID` rename) → close as superseded once
+      the bump is on LDR; (c) some repos will surface **independent pre-existing failures** on re-run (already-fixed on
+      LDR) — out of scope for the cascade. **Cleanest path: re-trigger the propagation** (`update-repo-version.yml`
+      version-bump for `unified-trading-library@0.4.0` + `unified-api-contracts@0.2.x`) so it re-emits fresh
+      dependency-update events against CURRENT LDR (fresh PRs/commits, not the stale branches), then close the stale
+      cohort. **STRATEGIC FORK (operator):** old PR-to-staging flow vs new LDR-SSOT direct-to-LDR — pick before
+      mass-mutating ~20 consumer repos. Verify each via `gh pr checks` / QG; treat independent failures as separate
+      findings.
+
+- [ ] [INFRA] P1. **FIX 4 — reconcile the FLEET-WIDE manifest-vs-source version split (13 repos; found 2026-06-09).**
+      The 2026-06-08 clean-start force-sync reverted source `pyproject.version` fleet-wide while the manifest kept the
+      semver-agent values → 13 repos split: deployment-api/deployment-service `0.2.0`vs`0.1.1`, execution `0.2.0`vs`0.1.1`,
+      instruments `0.2.0`vs`0.1.22`, mtds `0.3.0`vs`0.2.0`, fund-admin/greeks/trading-agent/e2e `0.2.0`vs`0.1.0`,
+      mtdseervice `0.4.0`vs`0.4.1` (source AHEAD), uac `0.2.0`vs`0.2.1` (source ahead), UTL fixed by FIX 1. Reconcile
+      each FORWARD to the manifest (the SSOT) so `versions{}`==source==published tag per repo. `run-version-alignment.sh`
+      handles dependency-constraint alignment only — NOT the repo's own `version` field — so this needs the
+      version-bump/tag flow per repo (or the semver-agent re-run), not that script.
 
 ## Success criteria
 
@@ -172,6 +210,13 @@ table.
   tag-published) compounded by a stale published UTL `0.3.167` carrying `aiohttp>=3.14.0` (violates the fleet pin).
   Concrete 3-step fix (republish UTL → gate propagation on real versions → regenerate cohort) drafted as Phase 5 todos.
   No code/version changes made — fix is operator/pipeline-gated.
+- **EXECUTED 2026-06-09 (slot-1, operator-authorized full forward repair)**: FIX 1b ✅ (5 spurious `v1.x` tags deleted),
+  FIX 1 ✅ (UTL `0.4.0` committed `fd8c37a6` + tag `v0.4.0` + `publish-package.yml` success → systemic resolution
+  blocker VERIFIED gone: blocked PR re-runs now `Resolved 207/277 packages`, no `No solution found`). Remaining dep-PR
+  failures are INDEPENDENT/pre-existing (stale branches carrying pre-`BATCH_HYPERLIQUID`-rename code, already fixed on
+  LDR) — NOT the cascade. FIX 2 reframed (force-sync coherence gate, not propagation), FIX 3 sharpened (per-repo LDR
+  reconciliation + strategic fork), FIX 4 added (fleet-wide 13-repo manifest/source split). 2/4 keystone items done; the
+  rest are the larger reconciliation, scoped as todos.
 - **Operator correction (2026-06-09): UTL is NOT graduated** — it stays on 0.x. The `v1.0.0`/`v1.2.0` tags are spurious
   2025-11-13 bootstrap-era artifacts (initial `publish-package.yml` wiring), not a graduation; instruments-service has
   the same (`v1.1.0`–`v1.3.0`). Added FIX 1b to delete them + audit the fleet — likely the reason the semver-agent
