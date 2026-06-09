@@ -1033,6 +1033,18 @@ QG_END=$(date +%s); DUR=$((QG_END - QG_START))
 [ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
+# ── QG SENTINEL (SHA fingerprint for quickmerge --agent fast-path) — mirror of
+# base-service.sh. Library repos were MISSING this write (only the content sentinel
+# below), so `quickmerge --agent` always saw .qg_last_passed_sha "missing" and hard-refused
+# every LIBRARY repo fleet-wide. H5: do NOT refresh on a content-sentinel HIT (a HIT skipped
+# the tests/typecheck phases; refreshing would let quickmerge ship without re-running tests).
+# Written to PROJECT_ROOT (the gated repo root — where quickmerge --agent reads it), same dir
+# as the content sentinel below. Guarded identically to that write (full green: tests ran, not quick).
+if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
+    git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null \
+        && echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" \
+        || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+fi
 # Green content sentinel (qg-repo-green-sentinel): record on a full green so an
 # unchanged tree skips the heavy phases next run. See base-service.sh for rationale.
 if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ]; then
