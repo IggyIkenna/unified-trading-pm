@@ -1513,6 +1513,23 @@ else
 fi
 
 qg_prof end codex
+
+# STEP 5.24 — No `# type: ignore` (OPT-IN: ENFORCE_NO_TYPE_IGNORE=true in repo quality-gates.sh).
+# `# type: ignore` is a BLANKET suppress-all — basedpyright ignores the bracketed codes and
+# hides EVERY error on the line, masking future bugs. Use precise `# pyright: ignore[reportX]`.
+# Banned workspace-wide (CLAUDE.md "No # type: ignore"); enforced per-repo once converted so it
+# does not break un-converted fleet repos. Scope mirrors basedpyright (excludes tests/ + **/testing/**).
+if [[ "${ENFORCE_NO_TYPE_IGNORE:-false}" == "true" ]]; then
+  _TYPE_IGNORE_HITS=$(rg -n '# type: ignore' "$SOURCE_DIR/" --type py --glob '!tests/**' --glob '!**/testing/**' 2>/dev/null || :)
+  if [[ -n "$_TYPE_IGNORE_HITS" ]]; then
+    log_fail "STEP 5.24: # type: ignore is banned (blanket suppress-all) — use precise # pyright: ignore[reportX]"
+    echo "$_TYPE_IGNORE_HITS" | head -10
+    V=$(( V + 1 ))
+  else
+    log_success "STEP 5.24: No # type: ignore (precise # pyright: ignore[rule] only)"
+  fi
+fi
+
 # CODEX_MAX_VIOLATIONS: repos with pre-existing violations can set a ceiling.
 # The goal is to ratchet this down to 0 over time.
 _max_v=${CODEX_MAX_VIOLATIONS:-0}
