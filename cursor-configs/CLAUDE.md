@@ -158,12 +158,14 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
     quickmerge opens a STANDING `live-defi-rollout → main` PR whose head tracks the WHOLE LDR branch — so docs(plans)/
     scripts you direct-push to LDR (the carve-out pushes) ride that PR to `main` too. But PM has no `ldr-to-staging`/
     `staging-to-main` drain (no staging), so the MOMENT that PR squash-merges, any LATER direct push **piles up on LDR
-    with no path to `main`** until the next quickmerge opens a fresh one. After a direct push when no LDR→main PR is
-    open, OPEN one: `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash` (v2-gated).
-    Verify a push actually landed on `main`:
-    `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` — but note squash-merges keep LDR
-    perpetually `ahead_by=N / behind_by=0` by COMMIT count even when CONTENT matches, so check content, not the count.
-    SSOT: `codex/08-workflows/ci-cd-flow.md` § "PM Option-B standing LDR→main PR".
+    with no path to `main`** until the next quickmerge opens a fresh one. **Automated since 2026-06-09**:
+    `ldr-to-main-promote.yml` (PM-only, `*/30`) opens/reuses the standing PR whenever LDR has real content (changed-file
+    count, not squash-accounting `ahead_by`) ahead of main — so direct pushes drain within the 1-hour SLA without a
+    manual PR. The manual fallback when you don't want to wait ≤30 min:
+    `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash` (v2-gated). Verify a push
+    actually landed on `main`: `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` — but note
+    squash-merges keep LDR perpetually `ahead_by=N / behind_by=0` by COMMIT count even when CONTENT matches, so check
+    content, not the count. SSOT: `codex/08-workflows/ci-cd-flow.md` § "PM Option-B standing LDR→main PR".
 - **Quality gates BEFORE COMMIT — the commit IS the per-repo quality boundary (HARD RULE; tightened 2026-06-03,
   supersedes "before quickmerge")**: a **code** commit to the integration branch must be made from a
   `quality-gates.sh`-green tree — never on the strength of the light prek hook alone
