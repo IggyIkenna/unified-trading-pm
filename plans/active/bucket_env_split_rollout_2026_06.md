@@ -83,7 +83,7 @@ the env-tiered shape.
 
 ### Phase 4 — Codex alignment
 
-- [ ] [DOCS] P4.1. Update [bucket-isolation-model.md](../../codex/05-infrastructure/bucket-isolation-model.md): tier set
+- [ ] [DOCS] P3. Update [bucket-isolation-model.md](../../codex/05-infrastructure/bucket-isolation-model.md): tier set
       = `dev`/`stg`/`prd` (+`test`) via `resolve_bucket_name`; staging is its own `-stg-` tier; `mock` is mode-based.
       Reconcile the stale `get_bucket_environment` 3-tier framing.
 
