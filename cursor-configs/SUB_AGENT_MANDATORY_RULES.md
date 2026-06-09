@@ -113,6 +113,13 @@ live model 2026-06-02) — NEVER a raw `git push` of code:**
      LDR commits you re-trigger v2 on before promoting. Recovery: `gh workflow run quality-gates-v2.yml --ref <branch>`
      on the head → check reports → PR merges. SSOT: `codex/08-workflows/ci-cd-flow.md` § "[skip ci] and required
      checks".
+   - **PM (`unified-trading-pm`) is Option-B main-direct, no staging** — a direct LDR push reaches `main` ONLY while an
+     open `live-defi-rollout → main` PR exists (quickmerge opens this standing PR; its head tracks the whole LDR
+     branch). Once it merges, a LATER direct push piles up with no drain → open a fresh one:
+     `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash`. (Squash keeps LDR
+     `ahead_by=N/behind_by=0` by commit-count even when content matches — check content, not the count.)
+   - **A workflow `.yml` change fires only from the DEFAULT branch** — editing a `schedule:`/trigger and landing it only
+     on LDR is INERT until it reaches `main`. Promote it to take effect.
 4. **Conditional push (multi-agent safety)**: before any push,
    `git fetch origin <branch> && git log <branch>..origin/<branch>`. Zero incoming → push freely. Any incoming → STOP,
    document blocker in plan-of-record `## Open questions`, ping `_agent_pings.md`, continue with what you CAN do; main
