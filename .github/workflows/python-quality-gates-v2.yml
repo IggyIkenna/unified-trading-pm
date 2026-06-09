@@ -23,6 +23,10 @@ on:
           Space-separated list of sibling repos to clone (e.g. "unified-trading-library unified-api-contracts")
         type: string
         default: ""
+    outputs:
+      version_only:
+        description: "true when this run fast-pathed a version-only (chore release bump) commit"
+        value: ${{ jobs.quality-gates-v2.outputs.version_only }}
     secrets:
       GH_PAT:
         required: false
@@ -36,6 +40,10 @@ on:
 jobs:
   quality-gates-v2:
     runs-on: ubuntu-latest
+    outputs:
+      # Consumed by the caller (quality-gates-v2.yml) to skip the qg-passed/image dispatch
+      # for a version-only bump commit. SSOT: plan semver_version_bump_skip_ci_promotion_block.
+      version_only: ${{ steps.vcheck.outputs.version_only }}
     # Backstop so a hung/runaway QG is killed cleanly (and the failure()||cancelled()
     # notify below fires) instead of silently burning a 6h default + never alerting.
     # 135m covers the slowest repo (execution ~120m tests) + margin; genuinely-slow
@@ -49,6 +57,39 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # depth 2 so the version-only fast-path can diff the pushed commit vs its parent
+          fetch-depth: 2
+
+      - name: Detect version-only bump commit (fast-path)
+        # A `chore(release): bump version to X` commit (semver-agent) touches ONLY the
+        # pyproject version line — nothing for the gate to validate. Detect it and skip the
+        # expensive steps so the required `quality-gates-v2` check reports GREEN fast, instead
+        # of a wasteful ~12-min run. The bump MUST still produce a check, else the staging→main
+        # promotion PR whose HEAD is this commit is permanently BLOCKED (required context
+        # missing). Push events only; a promotion PR's diff vs main is the whole code change →
+        # not version-only → full QG. SSOT: plan semver_version_bump_skip_ci_promotion_block.
+        id: vcheck
+        if: github.event_name == 'push'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1 || BEFORE="HEAD~1"
+          if ! git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1; then
+            echo "version_only=false" >> "$GITHUB_OUTPUT"
+            echo "base commit unavailable (shallow / multi-commit push) → full QG"
+            exit 0
+          fi
+          CHANGED="$(git diff --name-only "${BEFORE}" HEAD)"
+          NONVER="$(git diff "${BEFORE}" HEAD -- pyproject.toml | grep -E '^[+-]' | grep -vE '^(\+\+\+|---) ' | grep -vE '^[+-]version = ' || true)"
+          if [ "${CHANGED}" = "pyproject.toml" ] && [ -z "${NONVER}" ]; then
+            echo "version_only=true" >> "$GITHUB_OUTPUT"
+            echo "✓ version-only commit (chore release bump) — skipping heavy gates, reporting GREEN."
+          else
+            echo "version_only=false" >> "$GITHUB_OUTPUT"
+            echo "not version-only (changed: ${CHANGED:-none}) → full QG"
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -108,6 +149,7 @@ jobs:
         run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
 
       - name: Clone unified-trading-pm and dependencies
+        if: steps.vcheck.outputs.version_only != 'true'
         shell: bash
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
@@ -280,6 +322,7 @@ jobs:
           done
 
       - name: Install dependencies
+        if: steps.vcheck.outputs.version_only != 'true'
         shell: bash
         env:
           DEP_REPOS: ${{ inputs.dep_repos }}
@@ -304,6 +347,7 @@ jobs:
           done
 
       - name: Run quality gates
+        if: steps.vcheck.outputs.version_only != 'true'
         shell: bash
         run: |
           export PATH="$(pwd)/.venv/bin:$PATH"
