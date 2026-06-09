@@ -208,6 +208,17 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       handles dependency-constraint alignment only — NOT the repo's own `version` field — so this needs the
       version-bump/tag flow per repo (or the semver-agent re-run), not that script.
 
+- [ ] [INFRA] P2. **FINDING (2026-06-09) — `get_version_tag` in `python-quality-gates-v2.yml` is silently degraded:
+      the Clone step runs BEFORE `uv sync`, so `from packaging.version import Version` fails → it returns "" → the
+      "version-aware" clone ALWAYS falls back to a branch/main clone, never actually resolving to a published tag.** This
+      is WHY the phantom could happen silently (no tag resolution + no range check). Discovered while fixing FIX-2's
+      `assert_dep_in_range` (which now uses stdlib tuple-compare to avoid the same trap + loud-fails on out-of-range —
+      validated green on alerting-service run 27199812587: `dep unified-trading-library: OK 0.3.167 satisfies
+      >=0.1.0,<1.0.0`). **Fix (deferred — behavior change, blast radius):** port `get_version_tag` to the same
+      stdlib tuple-compare so it actually resolves the latest IN-RANGE published tag (floor AND upper), making the clone
+      genuinely version-aware. Risk: repos would then test against the published tag instead of branch HEAD — needs a
+      deliberate rollout, not a drive-by.
+
 ## Success criteria
 
 - `staging` and `main` content == LDR for every repo (modulo the reconciled main-only CI bits, now also on LDR).
