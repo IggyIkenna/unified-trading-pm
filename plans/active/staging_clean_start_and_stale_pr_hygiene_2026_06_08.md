@@ -79,6 +79,43 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       dep order (T0 first). Watch the progress metric (repos reaching main); flat metric → STOP-and-diagnose, never
       wait.
 
+## Phase 5 — Dep-update cascade PRs wedged on a PHANTOM version + stale aiohttp metadata (discovered 2026-06-09)
+
+> **Gap in Phase 2**: Phase 2 correctly kept "dep-update PRs with real diffs" as the convergence and closed only the
+> empty-diff noise. But the kept real-diff cascade has NOT converged — ~40 dep-update PRs fleet-wide are still
+> `BLOCKED`/`DIRTY`, wedged on an **unsatisfiable constraint**, NOT on anything rebaseable. Phase 2's "leave the cascade
+> PRs, they're the convergence" assumed they would self-resolve; they cannot until the upstream publish/version state is
+> fixed. Root cause from the slot-1 investigation 2026-06-09 (interactive, with operator):
+
+- [ ] [INFRA] P1. **ROOT CAUSE — phantom version + stale published artifact (unified-trading-library + PM propagation).**
+      The dep PRs bump consumer constraints to `unified-trading-library>=0.4.0,<1.0.0` and
+      `unified-api-contracts>=0.2.0,<1.0.0`, but **no 0.4.x / 0.2.x artifact was ever published.** UTL source is
+      `0.3.167`; its only git tags are `v1.0.0`/`v1.2.0` (abandoned-graduation leftovers); UTL `publish-package.yml`
+      publishes ONLY on a `v*` tag push → the 0.3.x line was never tag-published. PM's version-aware clone in
+      `.github/workflows/python-quality-gates-v2.yml` finds no tag in `[0.4.0,1.0.0)` → falls back to the index, where
+      the only resolvable UTL `0.3.167` is a STALE build declaring `aiohttp>=3.14.0,<4.0.0` — violating the fleet pin
+      `aiohttp>=3.13.4,<3.14.0` (CLAUDE.md known exception). uv fails: `No solution found … only
+      unified-trading-library==0.3.167 is available … depends on aiohttp>=3.14.0`. Confirmed identical on
+      alerting-service #31, instruments-service #400, deployment-service #26. Cross-ref:
+      `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` + `cicd_contract_hardening_2026_06_01.md`.
+
+- [ ] [INFRA] P1. **FIX 1 — republish UTL with the corrected aiohttp pin under a real tag (unified-trading-library).**
+      Reconcile the version state FIRST: source version (`0.3.167`) vs tags (`v1.0.0`/`v1.2.0`) are incoherent — decide
+      the canonical line (still 0.3.x, or graduated to 1.x?) and align source==tag==published. Then tag-publish a fresh
+      UTL patch carrying `aiohttp>=3.13.4,<3.14.0` so an installable artifact with the CORRECT metadata exists.
+      **NEVER bump aiohttp to 3.14** (operator decision 2026-06-05; vcrpy 8.1.1 deadlock).
+
+- [ ] [INFRA] P1. **FIX 2 — propagation must never emit a constraint for an unreleased version (unified-trading-pm).**
+      The semver-agent / `update-dependency-version.yml` cascade dispatched `>=0.4.0` for UTL (and `>=0.2.0` for uac)
+      when no such version was ever tag-published. Gate the dep-bump dispatch on the target version actually existing as
+      a published tag/artifact (or clamp to the latest real published version) so a phantom version can never enter a
+      downstream `pyproject.toml`.
+
+- [ ] [SCRIPT] P1. **FIX 3 — regenerate / reconcile the wedged dep PR cohort (all consumer repos).** After FIX 1+2 land,
+      re-trigger propagation so the ~40 `BLOCKED`/`DIRTY` dep PRs regenerate against the real published versions (or
+      auto-close as superseded). Verify the cohort goes green via `gh pr checks`; the `DIRTY` ones' `pyproject.toml`
+      conflicts resolve in regeneration. This is the actual unblock — NOT 40 manual rebases.
+
 ## Success criteria
 
 - `staging` and `main` content == LDR for every repo (modulo the reconciled main-only CI bits, now also on LDR).
@@ -86,6 +123,8 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 - No semver bump reverted by the force-sync.
 - The checkout@v5 workflow files reach `main` fleet-wide (closes the 2026-06-08 commit-to-tab tail).
 - A fresh test commit flows LDR→staging→main cleanly (the parity proof — see `ci_local_qg_parity`).
+- **The dep-update cascade PRs resolve against REAL published versions** — no `pyproject.toml` carries a constraint for
+  an unreleased version; the ~40-PR cohort goes green or auto-closes as superseded (Phase 5).
 
 ## Codex SSOT updates
 
@@ -100,3 +139,15 @@ table.
   staging/main SHAs (0-file-delta promotion noise) directly — superseded-PR sweep subsumed. Phase 3 force-sync:
   protection-aware relax→force→restore, 24/24 main==staging==LDR. Phase 4 drain: achieved by force-sync (fast clean
   start, not serial promotion).
+
+## Progress — 2026-06-09 (slot-1 interactive, with operator)
+
+- **GAP FOUND + filed as Phase 5**: the real-diff dep-update cascade PRs Phase 2 deliberately kept are still wedged
+  (~40 `BLOCKED`/`DIRTY`). Investigation traced it to a phantom propagated version (`UTL>=0.4.0` / `uac>=0.2.0` never
+  tag-published) compounded by a stale published UTL `0.3.167` carrying `aiohttp>=3.14.0` (violates the fleet pin).
+  Concrete 3-step fix (republish UTL → gate propagation on real versions → regenerate cohort) drafted as Phase 5 todos.
+  No code/version changes made — fix is operator/pipeline-gated.
+- **Adjacent GitHub-issue hygiene done same session** (not part of this plan's scope, logged for traceability): closed
+  the 13 abandoned `major-bump-pending` 1.0.0-graduation issues (deferred), 15 superseded uac cassette-drift issues,
+  6 PM SIT-Plan-Sync issues, 324 Feb-19 `[DATA-IO-PROD]` auto-task issues (superseded by the plan-driven backlog), and
+  the stale mtds PR #79.
