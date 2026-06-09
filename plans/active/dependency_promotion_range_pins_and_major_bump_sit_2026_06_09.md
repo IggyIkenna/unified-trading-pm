@@ -123,6 +123,74 @@ clean fix is to relax it.
       escalate path above fires only for a GENUINE QG failure. **Pending live verification** (a real failing cascade
       must confirm the escalation reaches vm-planning).
 
+### Phase 3.5 — LIVE INCIDENT 2026-06-09: SPURIOUS breaking-cascade on a NON-breaking UAC minor bump (vm-planning manual stand-in)
+
+> **🟡 IN-FLIGHT INCIDENT — UAC 0.5.0 staging-lock.** Manually triaged by an execution-service worker standing in for
+> the DOWN vm-planning VM (the Phase 3 escalation target — see `cicd_contract_hardening_2026_06_01.md` § "vm-planning
+> escalation target is DOWN", already filed). Root cause is NOT an execution-service code break — there is no code to
+> fix. **Two coupled defects below.**
+
+- [ ] [SCRIPT] P0. **DEFECT 1 — `is_breaking=true` was stamped for a bump the canonical differ calls NON-breaking → the
+      cascade + fleet staging-lock fired SPURIOUSLY.** On 2026-06-09 13:48Z `update-repo-version.yml` locked staging
+      with `locked_reason="Breaking MINOR bump cascade: unified-api-contracts=0.5.0 (pre-1.0.0)"`,
+      `breaking_pending=[execution-service, unified-api-contracts]`, `sit_retry_count=3` (retry-exhausted). But the SSOT
+      AST differ `scripts/cicd/detect_breaking_change.py --source-dir unified_api_contracts` returns
+      **`is_breaking:     false`** for BOTH `origin/main(0.3.0)→origin/staging(0.5.0)` (exports 960→960) AND
+      `origin/live-defi-rollout(0.4.0)→origin/staging(0.5.0)` (exports 881→881, ONLY the `pyproject.toml` version line
+      differs — staging content == LDR content). The only content delta main→staging is a deleted **deprecated shim**
+      (`internal/validation/instruction.py`, which was just `from .instruction import *` — surface fully preserved by
+      the `internal/validation/instruction/` package that replaced it) + one removed Infura Starknet RPC dict entry (per
+      the "removed providers: Infura" rule). Neither is a public-surface removal; the differ correctly says
+      non-breaking. **PRECISE TRACE (run logs):** UAC semver-agent run **27210686735** (13:47Z) `Resolved bump category:
+      breaking` on commit `77c6f220` ("chore(uac): delete dead instruction.py re-export stub") and dispatched
+      `version-bump … is_breaking=true` — there is NO `feat!:`/`BREAKING CHANGE` label in the range (all `chore(`/
+      `feat(scope):`/`fix(`), so the "breaking" verdict came from the **differ at bump-time**, NOT a label. PM
+      `update-repo-version.yml` run **27210707308** (13:48Z) then printed `STAGING LOCKED: breaking minor bump
+      unified-api-contracts=0.5.0` (`bump_type=minor` + `is_breaking=true` → the line-138 "Breaking MINOR bump cascade"
+      path) and fanned `is_breaking: true`, `constraint: >=0.5.0,<1.0.0` dependency-update dispatches to all **18**
+      dependents (→ execution-service PR #232 et al.). **So the bump-time differ verdict (breaking) is contradicted by
+      the CURRENT differ (non-breaking) for the same comparison** — a differ FALSE-POSITIVE on the shim-FILE deletion:
+      the bump-time run fetched the differ from PM `main` at runtime and ran it against the semver-agent's `DIFF_BASE`
+      (a staging baseline / `HEAD~1` / empty-tree fallback), which read the deleted `instruction.py` MODULE's
+      `from .instruction import *` re-exports as REMOVED exports because that narrow base predates / doesn't span the
+      `instruction/` PACKAGE that preserves them (the full main→staging comparison, which DOES span both, correctly
+      nets 960→960). **The cascade then CHURNED**: at 14:35Z a routine SIT `0.2.0→0.3.0` LDR→staging bump (pure
+      version+dep-pin, zero source change, differ=`is_breaking:false`) RE-LOCKED staging (`lock_reason` now
+      `system-integration-tests=0.3.0`, `breaking_pending` grown to `[execution-service, system-integration-tests,
+      unified-api-contracts]`) — the spurious-cascade is systemic, re-firing on every minor promotion and damming the
+      whole fleet (all `quickmerge`s now blocked by STAGE-1.5 staging-lock-check, incl. PM docs). **Fix:** make the
+      semver-agent's emitted `is_breaking` EXACTLY the differ verdict computed against the SAME promotion-base the lock
+      cares about (compare the promoted ref against the PREVIOUS promoted ref / released tag — never `HEAD~1`/empty-tree
+      — so a file-move/shim-deletion-with-package-replacement nets non-breaking), AND make the differ robust to a
+      module→package move (count exports at the package boundary, not per-file). Add a regression asserting a
+      deprecated-shim-file deletion whose surface is preserved by a sibling package classifies non-breaking. repo:
+      unified-api-contracts (`semver-agent.yml` DIFF_BASE) + unified-trading-pm (`detect_breaking_change.py` + tests).
+      Per the model a non-breaking minor must drain LDR→staging→main on QG alone — NO lock, NO SIT, NO consumer
+      pin-push.
+- [ ] [SCRIPT] P0. **DEFECT 2 — even IF it were breaking, the SIT could not converge: the consumer was pinned to a UAC
+      version stranded on `staging`, unresolvable from where its CI clones.** The cascade auto-opened execution-service
+      dep-update PR #232 (`feat!: update unified-api-contracts to 0.5.0`, head `dep-update/unified-api-contracts-0.5.0`
+      → `staging`) which is a PURE pin bump `unified-api-contracts>=0.3.0` → `>=0.5.0` (no code change). Its
+      `quality-gates-v2` FAILS at the **dep-clone range gate BEFORE any test/typecheck**: `check_version_constraint()`
+      clones UAC by branch-fallback (head-branch-name → manifest-tag v0.2.0 → **main=0.3.0**) and never tries the PR's
+      BASE branch (`staging`, where 0.5.0 actually lives) nor a v0.5.0 tag (none exists) → `assert_dep_in_range` fails
+      `resolved 0.3.0 < floor 0.5.0`. This is the dependency-ORDER violation: the cascade pinned the CONSUMER
+      (execution-service) to a UAC version that the DEPENDENCY (UAC) had not yet promoted to a resolvable location
+      (main/tag). Per `cicd_contract_hardening` § ROOT FIX line ~122 ("UAC move together; non-clone repos follow; then
+      re-trigger the stuck heads") the dependency must converge FIRST. UAC has a 3-way version split (main 0.3.0 / LDR
+      0.4.0 / staging 0.5.0) and NO open UAC `staging→main` PR. **Fix (when a breaking cascade IS genuine):** the
+      version-aware clone must resolve the dependency from the consumer-PR's BASE branch (or the cascade must promote
+      the dep dependency-first + tag) before pinning + re-triggering consumers. repo: unified-trading-pm
+      (`setup-workspace-from-manifest.sh check_version_constraint` + cascade ordering).
+- [ ] [SCRIPT] P0. **RESOLUTION for THIS incident (pending operator confirmation — fleet control-plane action):** clear
+      the spurious staging-lock (retry-exhausted + differ says non-breaking) exactly as the 2026-06-07 session-#3
+      precedent did, and close execution-service PR #232 (revert the unnecessary pin — the existing `>=0.3.0,<1.0.0`
+      range already absorbs 0.5.0; promotion is PULL not PUSH for non-breaking minors). UAC then promotes
+      LDR→staging→main normally via its range (PR #112 LDR→staging is open + MERGEABLE). Provenance: execution-service
+      consumes NONE of the changed UAC symbols (`rg` verified — it imports the `unified_api_contracts.instruction` root
+      facade, not the deleted `internal/validation/instruction` subtree; the Infura refs are local script/test strings,
+      not the removed dict key).
+
 ### Phase 4 — MAJOR/MINOR classification matrix refinement — P2
 
 - [x] ✅ [SCRIPT+DOCS] P2. DONE 2026-06-09 (PM@<this commit>) — closed the highest-value schema-contract gap: the differ
