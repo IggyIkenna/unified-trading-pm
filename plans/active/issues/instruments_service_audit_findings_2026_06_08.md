@@ -22,11 +22,18 @@ noted.
 > a swallow is **invisible to `failed_venues`** → orchestrator `_non_error_venues` includes it →
 > `empty_ok_venues = (_non_error_venues − written_venues) − validation_failed_venues` (`orchestrator.py:2998`) →
 > **`expected_venues -= empty_ok_venues` (`:3006`)** → the venue is **silently EXCLUDED from the expected denominator**
-> (NOT recorded `attempted_failed`, NOT retried, coverage % inflated). [Earlier wording "records a clean empty" was >
+> (NOT recorded `attempted_failed`, NOT retried, coverage % inflated). [Earlier wording "records a clean empty" was > >
 > imprecise — it's exclusion-from-denominator, same root, slightly different effect.] **Reachability matters**:
 > `_TRADFI_VENUES = [CME, NASDAQ, NYSE, CBOE, ICE, FX]` — neither `polygon` nor `ibkr` is a live venue, so their
 > adapters are **dead-registered (never invoked)** → their swallow is UNREACHABLE today. Only **kalshi** (prediction
 > enumeration) is on a reachable path.
+
+> **STATUS 2026-06-09:** kalshi CF-11 fix is **CODE-COMPLETE + QG-GREEN** (sentinel written), changes staged in the IS
+> tree, but the **quickmerge is BLOCKED on a fresh staging lock** (`execution-service=0.3.0` breaking cascade, since
+> 2026-06-09T09:27 — unrelated to this fix). Direct-push of code to LDR is banned (strict-quickmerge), so it WAITS for
+> staging to clear, then quickmerge opens the staging PR. **The recurring version-alignment false-block that was
+> blocking it is now FIXED** (PM gate fix `unified-trading-pm@a428a3515` — `version-alignment-gate.sh` now compares
+> like-for-like instead of local-main vs remote-staging).
 
 ### 🔴 P0 — fetch error swallowed into not-failed (CF-11) — kalshi (the one REACHABLE case)
 
