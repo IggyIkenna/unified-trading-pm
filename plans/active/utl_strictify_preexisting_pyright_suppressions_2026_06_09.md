@@ -89,8 +89,14 @@ landing green.
   resolved; V5 bandit B608 is low-severity (the `-ll` gate doesn't flag it); V6 no deep UAC imports. The **only** real
   codex trigger was a false-positive: the QG `Any`-check grep matched the literal `[Any]` inside 3 rationale
   **comments** (e.g. `# numpy stub: ... returns list[Any]`) — reworded, so V=0 genuinely.
-- **Phase 3 (ratchet) — commit 2, in-flight**: `CODEX_MAX_VIOLATIONS 6→0` in `scripts/quality-gates.sh` (verified-safe,
-  V=0).
+- **Phase 3 (ratchet) — `unified-trading-library@c9741f82`** on `live-defi-rollout`: `CODEX_MAX_VIOLATIONS 6→0` in
+  `scripts/quality-gates.sh`. Full `quality-gates.sh --no-fix` GREEN at `CMV=0` (verified-safe, V=0).
+- **🟡 PROMOTION BLOCKED (pre-existing, NOT this change) — staging PR #258 `quality-gates-v2` red on a dep-readiness
+  gate**: `unified-api-contracts: resolved 0.2.1 < floor 0.3.0`. UTL pins UAC `>=0.1.0,<1.0.0` (untouched here); the
+  gate enforces the staging-promoted floor (0.3.0), but UAC versions are incoherent across branches (**LDR=0.2.1,
+  staging=0.3.0, main=0.1.20**). This fails for ANY UTL commit on current LDR — a type-only change can't affect dep
+  resolution. **Both commits are correct + locally QG-green + on LDR**; #258 promotes automatically once UAC 0.3.0
+  reaches LDR (fleet version-alignment / cascade reconciliation — operator/automation, outside this plan's scope).
 
 ## Phase 0 — Baseline capture (DO FIRST)
 
