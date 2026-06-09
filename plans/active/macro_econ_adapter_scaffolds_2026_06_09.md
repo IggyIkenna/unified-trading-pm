@@ -8,7 +8,6 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 created: 2026-06-09
-author: ikennaigboaka [slot-3·laptop]
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
 source:

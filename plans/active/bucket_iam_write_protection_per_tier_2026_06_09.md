@@ -9,7 +9,6 @@ estimate_class: infra
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 2.4
 created: 2026-06-09
-author: ikenna
 locked_by: live-defi-rollout
 locked_since: 2026-06-09
 related_plans:

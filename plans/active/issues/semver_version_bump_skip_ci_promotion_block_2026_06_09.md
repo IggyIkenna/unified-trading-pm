@@ -2,7 +2,6 @@
 title:
   "semver-agent version-bump `[skip ci]` blocks staging→main promotion (+ re-bump loop) — root cause + recommended fix"
 created: 2026-06-09
-author: harshkantariya
 source:
   - plans/active/issues/ci_incident_findings_2026_06_09.md
   - plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md

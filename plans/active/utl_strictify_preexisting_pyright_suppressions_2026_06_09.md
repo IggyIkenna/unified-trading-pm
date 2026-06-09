@@ -7,7 +7,6 @@ estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
 created: 2026-06-09
-author: ikennaigboaka [slot-6·laptop]
 status: active
 priority: P2
 locked_by: live-defi-rollout
