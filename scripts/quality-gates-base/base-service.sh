@@ -2503,7 +2503,8 @@ fi
 # SSOT: resolve_pipeline_mode() in unified_trading_library.pipeline_mode_resolver.
 if [ -n "${SOURCE_DIR:-}" ] && [ -d "$SOURCE_DIR" ]; then
     _PM_STR_HITS=$(grep -rn 'pipeline_mode\s*=\s*["'"'"'][A-Za-z0-9_{]' "$SOURCE_DIR" \
-        --include="*.py" | grep -v '# QG-allow: pipeline-mode-string-literal' || true)
+        --include="*.py" --exclude-dir=tests --exclude='test_*.py' --exclude='*_test.py' \
+        | grep -v '# QG-allow: pipeline-mode-string-literal' || true)
     if [ -n "$_PM_STR_HITS" ]; then
         log_fail "STEP 5.85: no-inline-pipeline-mode-string-literal — raw string literal pipeline_mode= value in service source. Use PipelineMode.<MEMBER> or resolve_pipeline_mode():"
         echo "$_PM_STR_HITS"

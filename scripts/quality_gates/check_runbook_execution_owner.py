@@ -47,7 +47,9 @@ REQUIRED_FIELDS = ("owner", "cadence", "verifier", "last_executed")
 # `unified-trading-pm/codex/`, which IS enforced here. Excluding the read-only
 # mirrors prevents a stale copy (e.g. a pre-frontmatter sit-runbook.md) from
 # failing the gate in full-workspace checkouts while the canonical is compliant.
-EXCLUDED_DIRS = ("plans/archive/", ".venv", ".venv-workspace", "build/", "dist/", "node_modules/", "context/codex/")
+# `.extra/` = local-only archived/scratch trees (e.g. .extra/unified-trading-codex/ — an
+# archived codex mirror) that are NOT a tracked repo; same stale-mirror class as context/codex/.
+EXCLUDED_DIRS = ("plans/archive/", ".venv", ".venv-workspace", "build/", "dist/", "node_modules/", "context/codex/", ".extra/")
 DEFAULT_BASELINE_PATH = Path(__file__).parent / "runbook_execution_owner_baseline.yaml"
 
 
