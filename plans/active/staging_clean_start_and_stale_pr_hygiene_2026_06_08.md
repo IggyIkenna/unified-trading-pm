@@ -89,8 +89,9 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 
 - [ ] [INFRA] P1. **ROOT CAUSE — phantom version + stale published artifact (unified-trading-library + PM propagation).**
       The dep PRs bump consumer constraints to `unified-trading-library>=0.4.0,<1.0.0` and
-      `unified-api-contracts>=0.2.0,<1.0.0`, but **no 0.4.x / 0.2.x artifact was ever published.** UTL source is
-      `0.3.167`; its only git tags are `v1.0.0`/`v1.2.0` (abandoned-graduation leftovers); UTL `publish-package.yml`
+      `unified-api-contracts>=0.2.0,<1.0.0`, but **no 0.4.x / 0.2.x artifact was ever published.** UTL is NOT graduated
+      (operator 2026-06-09) — source is `0.3.167`; its only git tags `v1.0.0`/`v1.2.0` are spurious **2025-11 bootstrap
+      artifacts, NOT a graduation** (see FIX 1b); UTL `publish-package.yml`
       publishes ONLY on a `v*` tag push → the 0.3.x line was never tag-published. PM's version-aware clone in
       `.github/workflows/python-quality-gates-v2.yml` finds no tag in `[0.4.0,1.0.0)` → falls back to the index, where
       the only resolvable UTL `0.3.167` is a STALE build declaring `aiohttp>=3.14.0,<4.0.0` — violating the fleet pin
@@ -99,11 +100,22 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       alerting-service #31, instruments-service #400, deployment-service #26. Cross-ref:
       `aiohttp_cve_2026_34993_vcrpy_deadlock_2026_06_03.md` + `cicd_contract_hardening_2026_06_01.md`.
 
-- [ ] [INFRA] P1. **FIX 1 — republish UTL with the corrected aiohttp pin under a real tag (unified-trading-library).**
-      Reconcile the version state FIRST: source version (`0.3.167`) vs tags (`v1.0.0`/`v1.2.0`) are incoherent — decide
-      the canonical line (still 0.3.x, or graduated to 1.x?) and align source==tag==published. Then tag-publish a fresh
-      UTL patch carrying `aiohttp>=3.13.4,<3.14.0` so an installable artifact with the CORRECT metadata exists.
-      **NEVER bump aiohttp to 3.14** (operator decision 2026-06-05; vcrpy 8.1.1 deadlock).
+- [ ] [INFRA] P1. **FIX 1 — republish UTL on the 0.x line with the corrected aiohttp pin (unified-trading-library).**
+      **UTL is NOT graduated (operator 2026-06-09) — it stays on 0.x (source `0.3.167`).** Tag-publish a fresh 0.x patch
+      (e.g. `v0.3.168`) carrying `aiohttp>=3.13.4,<3.14.0` so an installable artifact with the CORRECT metadata exists
+      and supersedes the stale published `0.3.167`. **NEVER bump aiohttp to 3.14** (operator decision 2026-06-05; vcrpy
+      8.1.1 deadlock).
+
+- [ ] [INFRA] P1. **FIX 1b — delete the spurious pre-regime `v1.x` tags + fleet tag audit (unified-trading-library +
+      others).** UTL's `v1.0.0`/`v1.2.0` tags are ANCIENT bootstrap-era artifacts from **2025-11-13** (commit msgs
+      "Add automatic publishing on tag push" / "Use github.repository variable for GitHub Packages URL";
+      `pyproject@tag` = 1.0.0/1.2.0) — created while first wiring `publish-package.yml`, **NOT a graduation**. They are
+      the repo's "latest tags" → they corrupt the PM version-aware clone's tag resolution AND likely drove the
+      semver-agent to compute the phantom `0.4.0` (next-version logic keys off latest tag). Delete them
+      (**operator-gated** — tag deletion is destructive + outward-facing; but these are pre-semver-agent garbage, NOT
+      canonical semver-agent tags, so the "remote-canonical-tags / never-force-push-tags" rule does not protect them).
+      Audit EVERY repo for the same class: **instruments-service carries `v1.1.0`/`v1.2.0`/`v1.3.0`** (same 2025-11 era);
+      uac/execution/deployment have none. Any 0.x repo carrying `v1.x` tags = spurious → clean up.
 
 - [ ] [INFRA] P1. **FIX 2 — propagation must never emit a constraint for an unreleased version (unified-trading-pm).**
       The semver-agent / `update-dependency-version.yml` cascade dispatched `>=0.4.0` for UTL (and `>=0.2.0` for uac)
@@ -147,6 +159,10 @@ table.
   tag-published) compounded by a stale published UTL `0.3.167` carrying `aiohttp>=3.14.0` (violates the fleet pin).
   Concrete 3-step fix (republish UTL → gate propagation on real versions → regenerate cohort) drafted as Phase 5 todos.
   No code/version changes made — fix is operator/pipeline-gated.
+- **Operator correction (2026-06-09): UTL is NOT graduated** — it stays on 0.x. The `v1.0.0`/`v1.2.0` tags are spurious
+  2025-11-13 bootstrap-era artifacts (initial `publish-package.yml` wiring), not a graduation; instruments-service has
+  the same (`v1.1.0`–`v1.3.0`). Added FIX 1b to delete them + audit the fleet — likely the reason the semver-agent
+  computed the phantom `0.4.0` (next-version keys off latest tag). FIX 1 reframed: republish on the 0.x line.
 - **Adjacent GitHub-issue hygiene done same session** (not part of this plan's scope, logged for traceability): closed
   the 13 abandoned `major-bump-pending` 1.0.0-graduation issues (deferred), 15 superseded uac cassette-drift issues,
   6 PM SIT-Plan-Sync issues, 324 Feb-19 `[DATA-IO-PROD]` auto-task issues (superseded by the plan-driven backlog), and
