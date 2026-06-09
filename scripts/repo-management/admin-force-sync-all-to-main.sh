@@ -735,5 +735,28 @@ if [[ $fail -gt 0 ]]; then
   echo "============================================================"
   exit 1
 fi
+
+# ---------------------------------------------------------------------------
+# Version-coherence gate (2026-06-09 — FIX 2). A force-sync overwrites source with the
+# synced branch's content and can REVERT a semver bump — leaving source pyproject.version
+# BELOW the manifest value (the UTL-0.4.0 phantom incident: manifest 0.4.0, source reverted
+# to 0.3.167, no installable 0.4.0 → fleet dep cascade jam). Assert source==manifest for
+# every repo BEFORE declaring success; BLOCK on any split.
+# ---------------------------------------------------------------------------
+if [[ "$DRY_RUN" != "true" ]]; then
+  echo "Verifying version coherence (source pyproject.version == manifest) post-force-sync..."
+  COH_PY="${WORKSPACE_ROOT}/.venv-workspace/bin/python3"
+  [[ -x "$COH_PY" ]] || COH_PY="python3"
+  if ! "$COH_PY" "$PM_ROOT/scripts/cicd/assert_version_coherence.py"; then
+    echo "============================================================"
+    echo " ❌ VERSION-COHERENCE GATE FAILED — the force-sync reverted a semver bump."
+    echo "    Reconcile source pyproject.version FORWARD to the manifest (see table above),"
+    echo "    re-run, and do NOT promote until coherent (FIX 2 /"
+    echo "    plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md)."
+    echo "============================================================"
+    exit 1
+  fi
+  echo "  ✅ Version coherence OK (source == manifest fleet-wide)."
+fi
 echo "============================================================"
 exit 0

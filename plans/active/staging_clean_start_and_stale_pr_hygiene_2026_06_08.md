@@ -150,9 +150,17 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 - [x] ✅ [INFRA] P1. **FIX 2 DONE (2026-06-09) — shipped `scripts/cicd/assert_version_coherence.py`** (read-only gate:
       asserts `versions{}`==`staging_versions{}`==source `pyproject.version` per repo; `--tags` also requires a matching
       published `vX` tag; exits 1 on any split). ruff+basedpyright clean. Run it AFTER any force-sync / clean-start —
-      this is the teeth the Phase-3 "verify no semver bump reverted" check was missing. **Still TODO (follow-up):** wire
-      it into the clean-start/force-sync runbook as a blocking step, and the loud-fail-on-unresolvable defense-in-depth
-      in the version-aware clone. **Original task text below:**
+      this is the teeth the Phase-3 "verify no semver bump reverted" check was missing.
+      **Follow-ups DONE (2026-06-09):** (1) wired the gate into `admin-force-sync-all-to-main.sh` as a BLOCKING
+      post-sync step (exits 1 + loud message on any split — catches a force-sync reverting a bump before it ships);
+      (2) defense-in-depth `assert_dep_in_range()` added to the reusable `python-quality-gates-v2.yml` clone step — after
+      cloning each dep it FAILS LOUD (`::error::` + exit 1) when the resolved version falls OUTSIDE the pinned RANGE
+      (>=floor AND <upper, honoring the full range, not an exact tag) instead of silently surfacing a stale lower
+      version, **with a dedicated #ci-failures Slack alert** (`SLACK_CI_WEBHOOK_URL`). YAML/bash/range-logic validated.
+      **uv.lock finding (no action needed):** internal deps are already `source = { editable = "../<dep>" }` (path, NOT
+      exact-pinned) + pyproject ranges; only external deps lock exact (correct reproducible-build behavior). So the
+      "ranges not exact pins" concern was already satisfied for internal deps — the real gap was the clone honoring the
+      range, now fixed. **Original task text below:**
       **FIX 2 — force-sync must NOT silently revert a published version below the manifest (unified-trading-pm).**
       Reframed 2026-06-09: the propagation was NOT wrong — it correctly emitted `UTL>=0.4.0` when `0.4.0` WAS the
       semver-agent value. The bug was the **clean-start force-sync (Phase 3) reverting source `version` fleet-wide to
