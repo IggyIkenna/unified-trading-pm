@@ -233,26 +233,32 @@ jobs:
             local name="$1"
             [ -f "../${name}/pyproject.toml" ] || return 0
             local verdict
+            # STDLIB ONLY — this step runs BEFORE `uv sync`, so `packaging` is NOT installed;
+            # importing it here silently fails (the get_version_tag fallback bug). Tuple compare.
             verdict=$(DEP_NAME="$name" DEP_PYPROJECT="../${name}/pyproject.toml" python3 -c "
           import os, re
-          from packaging.version import Version
+          def _v(s):
+              return tuple(int(re.match(r'[0-9]+', p).group()) for p in s.split('.') if re.match(r'[0-9]+', p))
+          def _lt(a, b):
+              ta, tb = _v(a), _v(b); n = max(len(ta), len(tb))
+              return ta + (0,)*(n-len(ta)) < tb + (0,)*(n-len(tb))
           name = os.environ['DEP_NAME']
           consumer = open('pyproject.toml').read()
           m = re.search(r'\"' + re.escape(name) + r'([^\"]*)\"', consumer)
           if not m:
               print('OK no-constraint'); raise SystemExit
           spec = m.group(1)
-          lb = re.search(r'>=\s*(\d+\.\d+\.\d+)', spec)
-          ub = re.search(r'<\s*(\d+\.\d+\.\d+)', spec)
+          lb = re.search(r'>=\s*([0-9]+\.[0-9]+\.[0-9]+)', spec)
+          ub = re.search(r'<\s*([0-9]+\.[0-9]+\.[0-9]+)', spec)
           dm = re.search(r'^version\s*=\s*\"([^\"]+)\"', open(os.environ['DEP_PYPROJECT']).read(), re.M)
           if not dm:
               print('OK no-dep-version'); raise SystemExit
-          v = Version(dm.group(1))
-          if lb and v < Version(lb.group(1)):
-              print(f'FAIL resolved {v} < floor {lb.group(1)} (pin {spec.strip()})'); raise SystemExit
-          if ub and v >= Version(ub.group(1)):
-              print(f'FAIL resolved {v} >= upper {ub.group(1)} (pin {spec.strip()})'); raise SystemExit
-          print(f'OK {v} satisfies {spec.strip()}')
+          ver = dm.group(1)
+          if lb and _lt(ver, lb.group(1)):
+              print(f'FAIL resolved {ver} < floor {lb.group(1)} (pin {spec.strip()})'); raise SystemExit
+          if ub and not _lt(ver, ub.group(1)):
+              print(f'FAIL resolved {ver} >= upper {ub.group(1)} (pin {spec.strip()})'); raise SystemExit
+          print(f'OK {ver} satisfies {spec.strip()}')
           " 2>/dev/null || echo "OK parse-error")
             case "$verdict" in
               FAIL*)
