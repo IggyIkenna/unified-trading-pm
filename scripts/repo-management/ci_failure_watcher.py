@@ -349,7 +349,9 @@ def detect_resolved_prs(repo: str, resolved_hours: float, now: _dt.datetime) -> 
                 "--limit",
                 "30",
                 "--json",
-                "number,title,state,merged,closedAt,headRefName,url",
+                # NOTE: `merged` is NOT a valid `gh pr list` JSON field (it 404s the whole query →
+                # resolved bookends silently never fired). Use `mergedAt` (non-null ⟺ merged).
+                "number,title,state,mergedAt,closedAt,headRefName,url",
             ]
         )
         if not isinstance(prs, list):
@@ -372,7 +374,7 @@ def detect_resolved_prs(repo: str, resolved_hours: float, now: _dt.datetime) -> 
                     "number": pr["number"],
                     "title": pr.get("title") or "",
                     "head": pr.get("headRefName") or "",
-                    "merged": bool(pr.get("merged")),
+                    "merged": bool(pr.get("mergedAt")),
                     "url": pr.get("url") or "",
                 }
             )
