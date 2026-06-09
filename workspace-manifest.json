@@ -1813,7 +1813,7 @@
     "lock_version": "0.3.0",
     "pending_repos": [],
     "sit_retry_count": 0,
-    "locked_alert_sent": false,
+    "locked_alert_sent": true,
     "breaking_pending": [
       "execution-service"
     ]
