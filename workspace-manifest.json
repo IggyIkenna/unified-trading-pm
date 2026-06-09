@@ -1808,9 +1808,9 @@
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": true,
-    "locked_since": "2026-06-09T11:19:43.185664Z",
-    "locked_reason": "Breaking MINOR bump cascade: execution-service=0.4.0 (pre-1.0.0)",
-    "lock_version": "0.4.0",
+    "locked_since": "2026-06-09T11:47:11.972020Z",
+    "locked_reason": "SIT running",
+    "lock_version": null,
     "pending_repos": [
       "unified-api-contracts",
       "execution-service"
@@ -1869,9 +1869,9 @@
       "version": "0.3.0"
     },
     "execution-service": {
-      "version": "0.4.0",
+      "branch": "staging",
       "sha": "2d8c0ce5bce6476e191945e70fc368efa48d522f",
-      "branch": "staging"
+      "version": "0.4.0"
     }
   },
   "main_commits": {
