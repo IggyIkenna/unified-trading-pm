@@ -64,14 +64,17 @@ source:
       **unified-api-contracts@fec77f5d**: the ad-hoc exclusion list became `_SOURCE_PRIORITY_EXCLUSION_REASONS` (every
       orphan → one of 7 closed-set reason constants) + a new `test_every_exclusion_has_typed_reason` (no anonymous skip
       possible; 28 tests green). Per-orphan decisions (evidence-based, conservative — wiring a capability with no real
-      producer would re-seed false `expected_unattempted`, so genuine gaps stay NAMED, not guessed): (1)
-      `(cefi, ohlcv_15m)` → `CEFI_MATRIX_GAP` (tardis cefi archive exposes 1m only — no 15m producer; wire if/when cefi
-      15m capture is confirmed); (2) Era-B keys → `ERA_B_LEGACY_RETAINED` (untouched, per-AG-migrator owns removal); (3)
-      11 DeFi data_types → `BLOCKED_UPSTREAM_CAPABILITY` (named gap — wire once `_ProtocolCapability.data_types` declares
-      a producer); (4) 11 sports → `REFERENCE_NOT_INSTRUMENT_GRAIN` (entity/competition metadata + computed outputs, not
-      instrument-grain). Plus `COMPUTED_SERVICE_OUTPUT` / `CEFI_LEGACY_KEY` / `REFERENCE_AG_NO_MATRIX` for the
-      service-output + legacy-token + reference-AG cases. The matrix is now complete-or-typed-excluded; clearing a named
-      gap (wire its producer) removes its reason entry.
+      producer would re-seed false `expected_unattempted`, so genuine gaps stay NAMED, not guessed). **Operator-directed
+      follow-through 2026-06-09 (unified-api-contracts@f5e6b0c2 + @fec77f5d):** (1) `(cefi, ohlcv_15m)` → **RETIRED**
+      (operator confirmed cefi has no 15m candles — removed from SOURCE_PRIORITY + AVAILABILITY_AT_SEMANTICS); (2) the
+      Era-A name-collision was a checker bug — `data_type=options_chain` is a LEGIT Era-B SNAPSHOT data_type, so STEP
+      5.93's `era-a-chain-write` pattern was REMOVED (pm@361e548e1) and `(cefi/tradfi, options_chain/futures_chain)` →
+      **`PENDING_SNAPSHOT_SLICE`** (the snapshot slice slot-3 widens), not legacy-retained; (3) **9 of 11 DeFi data_types
+      WIRED** into PROTOCOL_CAPABILITIES from `defi_venue_capabilities.py` producer evidence (+18 protocols, 37→55) —
+      `native_staking_rates`/`vault_share_price` honestly stay `BLOCKED_UPSTREAM_CAPABILITY` (no producer in venue_caps);
+      (4) 11 sports → `REFERENCE_NOT_INSTRUMENT_GRAIN`. Plus `COMPUTED_SERVICE_OUTPUT`/`CEFI_LEGACY_KEY`/
+      `REFERENCE_AG_NO_MATRIX`. Matrix complete-or-typed-excluded; 28 tests green. **→ slot-2 re-verify enumerate before
+      G4** (the DeFi could-exist universe grew — B0-PRE todo in `defi_manifest_canonicalisation_2026_06_01.md`).
 - [x] ✅ [SCRIPT] P1. **QG step: no pre-aggregated open-edge bar ingestion** — **unified-trading-pm@b4245a7dd**
       `check_bar_edge_open_ingestion.py` (STEP 5.92); built as a dedicated AST checker (not folded into
       check_mdps_bar_boundary) — see `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 0. 2 latent sites

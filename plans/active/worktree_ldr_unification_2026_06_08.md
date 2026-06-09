@@ -158,6 +158,11 @@ should be redeployed as part of this. Worker-topology SSOT: `codex/05-infrastruc
 - [ ] [INFRA] P1. Redeploy the orchestrator on the VM to current `live-defi-rollout` (it reports v0.6.0 +
       `data_freshness.stale: true`); confirm `/health` version advances + `stale: false`, and AutoSpawn headroom is
       healthy so `--escalate` dispatches actually spawn a worker (the "no worker spawned" symptom clears).
+- [ ] [INFRA] P2. **agent-orchestrator drift-tick is STAGED on LDR pending ao's LDR→main promotion** (ao@ad76dda synced
+      `main-backmerge-to-ldr.yml` from the PM SSOT, 2026-06-09). Scheduled workflows fire only from the DEFAULT branch
+      (ao default = `main`), so the ao drift-tick is INERT until it reaches ao `main`. ao `main` is `ahead_by=22 /
+      behind_by=0` of LDR (strictly behind, clean FF) but draining it deploys in-flight ao work + is G6-gated — so it
+      activates when ao's LDR→main promotion is enabled (this section's P1 redeploy), NOT by a unilateral FF now.
 - [ ] [INFRA] P2. End-to-end smoke: force a genuine merge-conflict promotion PR (or wait for a real one), confirm
       `ci-failure-watcher --auto-recover --escalate` auto-recovers v2-never-reported PRs in-band AND escalates the true
       conflict → the VM spawns a Path-B worker that rebases on LDR + re-quickmerges. Archive this section when green.

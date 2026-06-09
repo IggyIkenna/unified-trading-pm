@@ -24,6 +24,21 @@ source:
 > banned second whole-corpus walk. **Dry-runs are NOT gated; only the irreversible `--apply`.** (DeFi additionally: fix
 > the `rebuild_defi_manifest.py` blank-`pipeline_mode`/`source` bug #1 from that plan in Phase 0.3 before its dry-run.)
 
+> ## 🟡 RE-VERIFY ENUMERATE BEFORE G4 — DeFi could-exist universe EXPANDED 2026-06-09 (slot-7 → slot-2)
+>
+> > **PROTOCOL_CAPABILITIES grew from 37 → 55 protocols (unified-api-contracts@f5e6b0c2)** — operator-directed wiring of
+> > 9 previously-orphan DeFi data_types (`bridge_events`/`eigenlayer_rewards`/`flash_loan_events`/`governance_events`/
+> > `liquidation_events`/`mev_events`/`position_data`/`staking_yields`/`token_transfers`) to their genuine venue
+> > producers from `defi_venue_capabilities.py` (+18 protocol entries: across/stargate/eigenlayer/flashbots/
+> > alchemy_onchain/*_governance + yearn_v3/convex/beefy/pendle/idle/symbiotic/karak/renzo/kelpdao/puffer/jito). The
+> > validity matrix now DERIVES these as valid `(instrument_type × data_type)` defi cells → the **could-exist universe +
+> > `expected_unattempted` seeding + coverage denominator GREW**. `native_staking_rates` + `vault_share_price` stay
+> > `BLOCKED_UPSTREAM_CAPABILITY` (no producer in venue_caps). **Additive (NON-BLOCK per the Pre-Apply BLOCK RULE — no
+> > rename / no code-vs-data mismatch), but slot-2 MUST re-run the DeFi `enumerate_expected_universe` dry-run on
+> > `f5e6b0c2`+ and confirm the 18 new venues are intended capture targets BEFORE G4 `--apply`** (coverage % will drop
+> > as the honest denominator grows — that is correct, not a regression). See the [DATA] re-verify todo below + the
+> > slot-7 verdict in the coordinator.
+>
 > ## 🟢 DeFi APPLY-READY (slot-2, 2026-06-07) — verdict + full 7+2 audit in the coordinator
 >
 > > DeFi is **apply-ready on LDR**: every G1+G2 dry-run is green on the WAVE-1 source-aware code (migrator mtds@f80c50f1
@@ -962,6 +977,17 @@ What to verify/wire (B0 corrected scope):
 
 ## B. Manifest consolidation + data-status (owner code) — honest by default
 
+- [ ] [DATA] P0. **B0-PRE (slot-7→slot-2 2026-06-09): re-verify enumerate after the PROTOCOL_CAPABILITIES expansion.**
+      `unified-api-contracts@f5e6b0c2` wired 9 DeFi data_types (bridge/eigenlayer/flash_loan/governance/liquidation/mev/
+      position/staking_yields/token_transfers) to genuine venue producers → +18 protocols (37→55), so the could-exist
+      universe + `expected_unattempted` seeding + coverage denominator GREW. Before B0 / G4 `--apply`: (1) re-run the
+      DeFi `enumerate_expected_universe` dry-run on `f5e6b0c2`+ and diff the candidate count vs the pre-expansion run;
+      (2) confirm the 18 new venues (across/stargate/eigenlayer/flashbots/alchemy_onchain/*_governance + the restaking/
+      vault protocols) are intended DeFi capture targets (a venue declared in `defi_venue_capabilities.py` but with no
+      live capture path is still HONEST could-exist → its cells seed `expected_unattempted`, which is correct — coverage
+      % drops, not a regression); narrow PROTOCOL_CAPABILITIES only if a venue is genuinely out-of-scope. `native_staking_rates`
+      + `vault_share_price` remain `BLOCKED_UPSTREAM_CAPABILITY` (no producer). Additive ⇒ NON-BLOCK per the Pre-Apply
+      BLOCK RULE, but the seed must reflect the new universe. parent_epic: manifest_master.
 - [ ] [DATA] P0. B0 (CORRECTED — do NOT build a consolidator step) RUN the existing expected_unattempted chain for DeFi:
       confirm the DeFi MTDS batch orchestrator goes through the instruments-service pre-flight that calls
       `record_expected_unattempted` (wire the DeFi handlers onto it if not), then run a prod DeFi MTDS batch so the owed

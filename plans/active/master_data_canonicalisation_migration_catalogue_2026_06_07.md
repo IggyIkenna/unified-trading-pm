@@ -191,11 +191,17 @@ parallel-safe.
 **Rule-11 fleet-safety**: both new gates were swept across all repos BEFORE wiring (no "enable + see what goes red");
 service repos SOURCE base-service.sh from the workspace PM checkout (no per-repo copy → activates fleet-wide the instant
 PM lands on the CI-cloned ref; no template rollout needed) — verified green on 5 consumer repos per-scope
-(mtds/IS/UTL/UAC/deployment-api). **Findings captured**: (1) 3 legacy Era-A `data_type=options_chain/futures_chain`
-WRITE sites (tardis_adapter:2549 + MDPS options/futures_chain adapters) baselined → per-AG-migrator Era-B relabel owns
-them; (2) MDPS `liquidity_adapter._convert_timestamps` periodStartUnix→processing_dt semantics need diagnosis (baselined
-latent); (3) deployment-service has a **pre-existing `uv.lock` out-of-sync** QG failure (unrelated to any slot-7 change;
-TF touches no Python) — flagged for the deployment-service owner.
+(mtds/IS/UTL/UAC/deployment-api). **Findings captured + resolved 2026-06-09 (operator clarifications)**: (1) ~~3 Era-A
+`data_type=options_chain/futures_chain` write sites~~ — CORRECTED: `options_chain`/`futures_chain` are a NAME COLLISION
+(both an instrument_type AND a genuine SNAPSHOT data_type, `*_OPTIONS_CHAIN_SNAPSHOT`); the STEP 5.93 `era-a-chain-write`
+pattern was a checker bug (it false-positived legit snapshot writers) → REMOVED (pm@361e548e1); the validity-matrix
+entries re-categorized to `PENDING_SNAPSHOT_SLICE` (slot-3 widens). (2) MDPS `liquidity_adapter._convert_timestamps`
+periodStartUnix→processing_dt — still baselined-latent (diagnose). (3) deployment-service **pre-existing `uv.lock`
+out-of-sync** QG failure (unrelated; TF touches no Python) — for the deployment-service owner. (4) **validity-matrix
+orphans resolved** (uac@fec77f5d typed closed-set + uac@f5e6b0c2): `(cefi, ohlcv_15m)` RETIRED (no producer); **9/11
+DeFi data_types WIRED** to genuine venue producers (+18 protocols, 37→55) — `native_staking_rates`/`vault_share_price`
+honestly stay BLOCKED_UPSTREAM_CAPABILITY. **→ DeFi could-exist universe EXPANDED: slot-2 must re-run enumerate before
+G4** (B0-PRE todo in the defi plan; additive ⇒ NON-BLOCK, coverage % drops honestly).
 
 > **🔴 BAR-EDGE BLOCKER (feature-layer gate, 2026-06-08) — `bar_edge_left_vs_right_remediation_2026_06_08.md`**: a
 > CLOSED candle stamped on the OPEN/left edge = look-ahead → leakage. Data-verified scope (Harsh): the MDPS **processed
