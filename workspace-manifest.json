@@ -1821,7 +1821,7 @@
       "deployment-api"
     ],
     "sit_retry_count": 1,
-    "locked_alert_sent": false,
+    "locked_alert_sent": true,
     "breaking_pending": [
       "deployment-api"
     ]
