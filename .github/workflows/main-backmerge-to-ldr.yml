@@ -33,11 +33,10 @@ on:
   push:
     branches:
       - main
-  # Drift-tick (2026-06-08): `[skip ci]` commits to main (ci_status / staging_status /
-  # manifest-version writes) suppress ALL Actions triggers — including this push trigger —
-  # so main chronically drifts ahead of LDR by those automation commits. A scheduled run is
-  # NOT `[skip ci]`-suppressed, so it sweeps accumulated drift with no real commit, making the
-  # "main never ahead of LDR" invariant actually hold (not just eventually-converge).
+  # Drift-tick (2026-06-08): `[skip ci]` commits to main suppress ALL Actions triggers —
+  # including this push trigger — so main drifts ahead of LDR by automation commits. A
+  # scheduled run is NOT `[skip ci]`-suppressed, so it sweeps accumulated drift with no real
+  # commit, making "main never ahead of LDR" actually hold (not just eventually-converge).
   schedule:
     - cron: "*/20 * * * *"
   workflow_dispatch: {}

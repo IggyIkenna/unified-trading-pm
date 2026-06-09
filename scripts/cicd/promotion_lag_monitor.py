@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import json
+import os.path
 import subprocess
 import sys
 from typing import cast
@@ -49,7 +50,6 @@ def _gh_json(path: str) -> object:
 
 
 def _repos() -> list[str]:
-    import os.path
     here = os.path.dirname(os.path.abspath(__file__))
     mpath = os.path.join(here, "..", "..", "workspace-manifest.json")
     with open(mpath) as _mf:
