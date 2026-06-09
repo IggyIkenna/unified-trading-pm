@@ -60,7 +60,19 @@ SECRET_NAME_RE = re.compile(r"\b[a-z][a-z0-9-]+-(api-key|api-secret|secret-key|p
 
 BLOCKED_RE = re.compile(r"BLOCKED-CREDENTIALS")
 
+# A line that enumerates MULTIPLE distinct BLOCKED-* status tokens is DEFINING the status
+# taxonomy / restating the rule (e.g. "set (BLOCKED-CREDENTIALS / BLOCKED-OPERATOR-DECISION / …)"
+# or "BLOCKED-CREDENTIALS/BLOCKED-UPSTREAM ping (do not descope)") — it is documentation, not a
+# credential ASK, so it can never cite a ping and must NOT count as an orphan (added 2026-06-09 to
+# de-false-positive the ratchet). A genuine ask names exactly one blocked status for one cell.
+BLOCKED_STATUS_TOKEN_RE = re.compile(r"BLOCKED-[A-Z][A-Z-]+")
+
 CONTEXT_LINES = 5
+
+
+def _is_status_taxonomy_line(line: str) -> bool:
+    """True if the line enumerates ≥2 distinct BLOCKED-* status tokens (a rule/taxonomy doc line)."""
+    return len(set(BLOCKED_STATUS_TOKEN_RE.findall(line))) >= 2
 
 
 def _has_ask_evidence(lines: list[str], lineno: int) -> bool:
@@ -82,6 +94,8 @@ def _scan_plan(path: Path) -> list[tuple[int, str]]:
     for i, line in enumerate(lines):
         if not BLOCKED_RE.search(line):
             continue
+        if _is_status_taxonomy_line(line):
+            continue  # rule/taxonomy doc line, not a credential ask
         if _has_ask_evidence(lines, i):
             continue
         orphans.append((i + 1, line.strip()))
