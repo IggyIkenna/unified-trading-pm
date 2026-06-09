@@ -41,9 +41,9 @@ def _staging_v2(repo: str) -> tuple[str, str, str]:
         return "none", "", ""
     r = runs[0]
     if r.get("status") != "completed":
-        return "in_progress", str(r.get("url", "")), ""
-    conclusion = str(r.get("conclusion", "unknown"))
-    url = str(r.get("url", ""))
+        return "in_progress", str(r.get("url") or ""), ""
+    conclusion = str(r.get("conclusion") or "unknown")
+    url = str(r.get("url") or "")
     step = ""
     if conclusion == "failure":
         log = subprocess.run(
