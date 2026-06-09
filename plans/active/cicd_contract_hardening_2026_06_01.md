@@ -20,6 +20,51 @@ source:
 
 # CI/CD contract hardening — workspace-wide gate enforcement + build provenance
 
+## 🔁 PROGRESS LOG — fleet QG audit + green-up (autonomous run started 2026-06-09 ~18:40Z, slot-1)
+
+> **Dispatch (operator, away ~3h):** check every repo's `quality-gates.sh` one-by-one; the 3 foundation repos
+> (`unified-api-contracts`, `unified-trading-library`, `unified-trading-pm`) FIRST — everything imports/depends on them,
+> so if they're red ALL dependents are red. Fix the 3 → get to LDR. Then check the other 22, report each. Running under
+> AUTONOMOUS_AGENT_RULES (no partial states, no operator questions, journal here, parallelize with sub-agents). This log
+> is the memory-of-record across context compression.
+>
+> **Why all-must-pass:** a repo whose `quality-gates-v2` is red can't promote LDR→staging→main, and any breaking-cascade
+> SIT against it fails → jams the cascade fleet-wide. T0 (UAC/UTL) red → every dependent's QG red (they import T0).
+>
+> **METHOD PIVOT (18:50Z):** local `quality-gates.sh` has a `.venv`-missing artifact — Path-B slot clones lack a repo
+> `.venv`, so pip-audit audits `.venv-workspace` (tooling deps: anthropic/uv/curl-cffi/pillow/twisted — NOT the repo's
+> runtime deps) → spurious pip-audit fails for repos with `CODEX_MAX_VIOLATIONS=0` (the pip-audit V++ tips them over).
+> The AUTHORITATIVE "does QG pass for promotion" signal is the **server `quality-gates-v2`** (builds each repo's own
+> Docker venv = real deps). So the audit uses server v2 verdicts, not 25 local runs. (Local QG still valid for
+> tests/typecheck/lint/codex — those ran against the workspace venv which has all deps.)
+>
+> **FLEET STATUS (server quality-gates-v2 on `main`; 18:50Z):**
+>
+> | Repo                            | verdict   | Notes                                                                                                                                                    |
+> | ------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | unified-api-contracts (T0)      | 🟢 GREEN  | main+staging success                                                                                                                                     |
+> | unified-trading-library (T0)    | 🟢 GREEN  | main now 0.4.0, v2 success (was in-progress = the 0.4.0 promotion)                                                                                       |
+> | unified-trading-pm (L0)         | 🟢 GREEN  | main success (staging "fail" is a stale pre-deletion artifact; PM has no staging)                                                                        |
+> | 17 others                       | 🟢 GREEN  | ao, alerting, blrs, cra, deployment-{api,service,ui}, e2e, execution, greeks, ibkr, mtds, mdps, ml, strategy, sit, trading-agent, uta, ui                |
+> | **features-service**            | 🔴→re-run | dep-clone loud-fail: pinned `UTL>=0.4.0` but cloned UTL main 0.3.167 (promotion-lag); UTL main now 0.4.0 → re-triggered v2                               |
+> | **fund-administration-service** | 🔴→re-run | identical to features-service                                                                                                                            |
+> | **instruments-service**         | 🔴→re-run | 06-08 stale: `ImportError MassiveFuturesContractsResponse from unified_api_contracts` — UAC main NOW exports it (**init**.py:930/1815) → re-triggered v2 |
+>
+> **Append-only event log:**
+>
+> - 18:40Z — launched UAC + UTL `quality-gates.sh --no-fix` local (≤2 host cap). Foundation FF'd to current LDR.
+> - 18:50Z — local UTL QG exit 1 = pip-audit V++ vs CODEX_MAX_VIOLATIONS=0; UAC exit 0 (tolerance 7). Root: `.venv`
+>   artifact (see PIVOT). Switched to server-v2 verdicts. UAC/PM green; UTL main promoted to 0.4.0 (v2 success).
+> - 18:52Z — fleet server-v2 scan: 17 green + UAC/UTL/PM green; deployment-api went green; **3 reds**:
+>   features-service + fund-administration-service (UTL>=0.4.0 vs main-was-0.3.167 promotion-lag — UTL main now 0.4.0) +
+>   instruments-service (stale UAC-symbol ImportError — symbol now on UAC main). All 3 = promotion-lag/stale, NOT code
+>   bugs.
+> - 18:55Z — re-triggered v2 on main for the 3 reds (deps now satisfied on main). Monitoring. RISK: if the dep-clone
+>   prefers `staging`, UTL staging is still 0.3.167 → may need UTL staging promoted to 0.4.0. Watching the re-run
+>   verdict.
+> - NOTE/TODO: UTL `main=0.4.0` but `staging=0.3.167` (main AHEAD of staging — promotion ran main-direct or staging
+>   stale); reconcile UTL staging→0.4.0 so the LDR→staging→main axis is consistent.
+
 ## 🧭 CI/CD MASTER INDEX (this plan is the master; 2026-06-03 audit)
 
 > **This plan is the master for all CI/CD-infra work** — GHA, agent-orchestrator, quality-gates, Slack-alerting,
