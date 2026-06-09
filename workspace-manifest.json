@@ -1325,6 +1325,13 @@
         "infrastructure",
         "monitoring",
         "supporting"
+      ],
+      "dependencies": [
+        {
+          "name": "unified-trading-library",
+          "version": ">=0.3.0,<1.0.0",
+          "required": true
+        }
       ]
     }
   },
