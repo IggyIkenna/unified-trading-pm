@@ -1,0 +1,70 @@
+name: promotion-lag-monitor
+
+# Time-based LDR ↔ staging ↔ main promotion-lag alert (operator-requested 2026-06-09).
+#
+# Under Path-B / LDR-SSOT the IDE's local-vs-upstream is ~always 0, so the diff that matters is a
+# PIPELINE property: commits stuck on one branch that haven't propagated to another. This pages
+# #ci-failures when, for any repo, the OLDEST un-propagated commit is older than the threshold (60 min):
+#   LDR→main / LDR→staging  (forward promotion lag — a green LDR commit that hasn't promoted)
+#   main→LDR / staging→LDR  (backmerge lag — the drift-tick should sweep these within 20 min)
+# `[skip ci]` commits are excluded from forward lag (not meant to promote) but counted in backmerge lag.
+#
+# SSOT: scripts/cicd/promotion_lag_monitor.py. Companion to ci-failure-watcher (stuck-PR pager).
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 min (threshold is 60 min)
+  workflow_dispatch:
+    inputs:
+      threshold_min:
+        description: "Lag threshold in minutes"
+        default: "60"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: promotion-lag-monitor
+  cancel-in-progress: true
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    outputs:
+      lag: ${{ steps.scan.outputs.lag }}
+      report: ${{ steps.scan.outputs.report }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Scan promotion lag
+        id: scan
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          THRESH: ${{ github.event.inputs.threshold_min || '60' }}
+        run: |
+          set +e
+          REPORT=$(python3 scripts/cicd/promotion_lag_monitor.py --threshold-min "$THRESH")
+          RC=$?
+          echo "$REPORT"
+          {
+            if [ "$RC" -eq 1 ]; then echo "lag=true"; else echo "lag=false"; fi
+            echo "report<<__EOR__"
+            echo "$REPORT"
+            echo "__EOR__"
+          } >> "$GITHUB_OUTPUT"
+
+  notify:
+    needs: monitor
+    if: needs.monitor.outputs.lag == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: |
+        Promotion lag detected — branches out of sync beyond the threshold (LDR↔staging↔main):
+        ${{ needs.monitor.outputs.report }}
+      severity: WARNING
+      workflow_name: promotion-lag-monitor
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
