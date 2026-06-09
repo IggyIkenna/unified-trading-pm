@@ -96,11 +96,12 @@ Code (DEFERRED-UNTIL-PIPELINE-DONE; other agents are correcting code — re-veri
       (`defi-dexpool-name`) pins the canonical name. (reversed per SSOT; verified end-to-end by the 2026-06-08 sweep.)
 - [ ] [CODE] P3. D15 — HYPERLIQUID + ASTER are `DEFI_VENUE_PHASE=pipeline` but `perp_funding_handler` actively collects
       them; reconcile the phase label (→ live, or confirm cefi-axis classification).
-- [ ] [CODE] P3. **DECIDED 2026-05-27 → REMOVE (deferred)** D7 — usage audit found **nil active downstream consumption**
-      of bloxroute/`mev_events` relay data: bloxroute already removed as the mempool feed (`sandwich_theoretical.py` is
-      a theoretical-only tracer, not a live engine). Remove the 2 bloxroute URLs from `mev_events_handler.py:42-43`
-      `MEV_BOOST_RELAYS` (keep Flashbots/agnostic/ultra_sound) + delete `mev_events_handler.py.bak`. No Ikenna; codex
-      docs already mark Bloxroute "removed".
+- [x] ✅ [CODE] P3. D7 — **SHIPPED** MTDS@d3e02228 (`fix(mev): remove banned bloxroute relays + stale .bak from
+      mev_events_handler`): the 2 bloxroute URLs are gone from `mev_events_handler.py` `MEV_BOOST_RELAYS` (Flashbots /
+      agnostic / ultra_sound retained, comment cites this finding) and `mev_events_handler.py.bak` is deleted — verified
+      on `origin/live-defi-rollout`. Usage audit found **nil active downstream consumption** of bloxroute/`mev_events`
+      relay data (bloxroute already removed as the mempool feed; `sandwich_theoretical.py` is a theoretical-only tracer).
+      — 2026-06-09.
 - [ ] [CODE] P3. **DECIDED 2026-05-27 → REMOVE (deferred)** D8 — **infura already decommissioned workspace-wide
       2026-05-22** (execution `chain_config.yaml:14`); remaining refs are stale. Remove the Starknet `infura_compatible`
       template (`_defi_chain_data.py:734`) + the `gas_fee_handler.py:78` comment. No Ikenna; codex docs already mark
