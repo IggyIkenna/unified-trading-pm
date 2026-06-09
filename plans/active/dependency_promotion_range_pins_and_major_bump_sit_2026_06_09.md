@@ -121,10 +121,18 @@ clean fix is to relax it.
 
 ### Phase 4 — MAJOR/MINOR classification matrix refinement — P2
 
-- [ ] [DOCS] P2. Refine the plan-documented major-vs-minor matrix based on **schemas + API contracts** (UAC public
-      surface, manifest schema_version, event contracts) — what is a breaking (major) change vs a backward-compatible
-      (minor/patch) one — so `detect_breaking_change.py` + semver-agent classify correctly. SSOT:
-      `codex/08-workflows/ci-cd-flow.md` § "Breaking = public-surface change".
+- [x] ✅ [SCRIPT+DOCS] P2. DONE 2026-06-09 (PM@<this commit>) — closed the highest-value schema-contract gap: the differ
+      only captured **annotated** class attrs (`ast.AnnAssign`), so **Enum members** (plain `FOO = "foo"` assigns — the
+      UAC StrEnum contracts) were invisible → removing/renaming a member or changing its serialized VALUE classified as
+      NON-breaking. Added `_is_enum_base()` + enum-member capture into `fields` (keyed `Class.MEMBER`, value = the
+      literal), so member removal AND value-change now trip the removed/changed-field breaking checks; a NEW member
+      stays additive (non-breaking), and a non-Enum class constant is NOT tracked (no false trips). 4 regression tests
+      added (`test_detect_breaking_change.py`, 12 pass). Matrix documented in `codex/08-workflows/ci-cd-flow.md` §
+      "Breaking = public-surface change".
+- [ ] [DOCS] P3. (Residual) Non-code contract surfaces still out of the differ's scope by design — **manifest
+      `schema_version`** (data, handled by the manifest canonicalisation walk) and **GCS path/partition keys** — are
+      governed by their own SSOTs, not semver. Cross-link them in the matrix doc so the boundary is explicit; no differ
+      change (the differ is a CODE public-surface tool).
 
 ### Phase 5 — Version-resolution bug fixes (agent field reports, 2026-06-09)
 
@@ -136,12 +144,20 @@ version comparison no-ops → the guard never fires). Captured here:
       `from packaging.version import Version`, which silently no-op'd in CI (clone step runs before `uv sync` →
       `packaging` absent) → the loud-fail stayed silent. Fixed to a **stdlib tuple-compare**. Confirm the fix is on
       `live-defi-rollout` + main and add a regression note so it isn't reintroduced.
-- [ ] [SCRIPT] P2. **`get_version_tag` has the SAME latent defect** — it imports `packaging` at the same pre-`uv sync`
-      point, so it can **never resolve a release tag** and **always falls back to the branch**; this is why the phantom
-      manifest row stayed silent. Fix it to a stdlib version compare too. **Deliberate rollout, NOT a drive-by** — it
-      changes fleet dep-resolution behavior (tag-vs-branch clone selection), so: locate every consumer of
-      `get_version_tag`, fix the import/compare, dry-run the resolution change across the fleet, then roll out. Find the
-      definition + call sites first (`rg get_version_tag`), embed the consumer manifest in the todo before changing it.
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-09 (PM@<this commit>) — found + fixed the concrete defect: it is
+      **`check_version_constraint()` in `setup-workspace-from-manifest.sh`** (the version-aware-clone PREFLIGHT version
+      check — `get_version_tag` was the agent's shorthand; no function by that literal name exists in PM, and
+      `clone_repo` only ever clones by BRANCH, never a tag, which is the "always branch-falls-back" the agent meant).
+      Its `from packaging.version import Version` wrapped in `except Exception: sys.exit(0)` SILENTLY passed every
+      constraint when `packaging` was absent at clone time → wrong versions went undetected. Replaced with a
+      **stdlib-only PEP440- subset comparator** (no third-party import; no silent exit(0) on parse failure). Verified:
+      in-range→0, MAJOR out-of-range→**1** (now detected at preflight), boundary→0, below→1, `any`→0, unparseable→**1**
+      (was silently 0).
+- [ ] [SCRIPT] P3. **Fleet sweep for the same packaging-no-op pattern in OTHER repos** —
+      `rg "from packaging" $(setup     scripts)` across all 25 repos' `setup.sh` / clone-time scripts; any that import
+      `packaging` BEFORE `uv sync` with an `except: pass/exit(0)` mask have the same latent silent-no-op.
+      (`check-internal-advisories.sh` in PM imports `packaging` too but runs post-install — verify install-order before
+      touching it.) Fix each to stdlib; deliberate per-repo (changes resolution behavior).
 
 ### Phase 6 — Reproducibility + dep-provenance: base-image digest pinning (5.79) + deployment BoM — P1 (PRIORITIZED)
 

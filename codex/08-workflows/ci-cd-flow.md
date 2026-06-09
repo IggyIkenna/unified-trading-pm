@@ -275,9 +275,12 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   (export-name set anchored on the package `__init__.py`, bare-name keyed so a symbol MOVED between internal modules is
   not a false "removed", changed-files-only for speed). **Breaking** = removed/renamed public export, removed public
   class/method, incompatible signature change (added-required / removed / reordered param, dropped `**kwargs`),
-  removed/renamed/retyped Pydantic/dataclass field (the UAC schema case), or removed HTTP route. **Not breaking** =
-  additive, docstring, comment, reformat, reorder, move-across-modules. Regression-guarded by
-  `tests/unit/test_detect_breaking_change.py`.
+  removed/renamed/retyped Pydantic/dataclass field (the UAC schema case), **removed/renamed Enum member or changed Enum
+  member VALUE** (StrEnum/IntEnum contracts — the serialized value IS the contract; added 2026-06-09 Phase 4 — consumers
+  match on the member, so dropping `ORACLE_STALE` or flipping `"databento"`→`"databento_v2"` is breaking; a plain
+  non-Enum class constant is NOT tracked), or removed HTTP route. **Not breaking** = additive (incl. a NEW Enum member),
+  docstring, comment, reformat, reorder, move-across-modules. Regression-guarded by
+  `tests/unit/test_detect_breaking_change.py` (incl. enum add/remove/value cases).
 - **Wiring**: each repo's `semver-agent.yml` (rolled out from `scripts/workflow-templates/semver-agent.yml.tmpl`) calls
   the differ — non-PM repos fetch it at runtime from `unified-trading-pm`. The differ verdict sets `is_breaking`
   (replacing the old `git diff __init__.py | grep '^-'` text heuristic that flagged ANY removed line). `feat!:` stays an

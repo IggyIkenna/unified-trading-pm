@@ -171,5 +171,67 @@ class Api:
     assert any("route" in r for r in reasons)
 
 
+def test_removed_enum_member_is_breaking():
+    # Enum members are a contract surface (consumers match on them) — removing one is breaking,
+    # even though it's a plain (non-annotated) assignment. (Phase 4, dependency_promotion plan.)
+    base = """
+class DefiErrorCode(StrEnum):
+    AAVE_HEALTH_FACTOR = "aave_hf"
+    ORACLE_STALE = "oracle_stale"
+"""
+    new = """
+class DefiErrorCode(StrEnum):
+    AAVE_HEALTH_FACTOR = "aave_hf"
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert reasons
+    assert any("ORACLE_STALE" in r for r in reasons)
+
+
+def test_changed_enum_member_value_is_breaking():
+    # The serialized value IS the contract for a StrEnum — changing it breaks consumers.
+    base = """
+class Source(StrEnum):
+    DATABENTO = "databento"
+"""
+    new = """
+class Source(StrEnum):
+    DATABENTO = "databento_v2"
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert reasons
+    assert any("DATABENTO" in r for r in reasons)
+
+
+def test_added_enum_member_is_not_breaking():
+    # Adding a member is additive — consumers that don't know it are unaffected.
+    base = """
+class Source(StrEnum):
+    DATABENTO = "databento"
+"""
+    new = """
+class Source(StrEnum):
+    DATABENTO = "databento"
+    MASSIVE = "massive"
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert not reasons, reasons
+
+
+def test_plain_class_constant_change_is_not_enum_tracked():
+    # A non-Enum class's plain constant is NOT a contract surface — changing it must NOT flag
+    # (only Enum members are tracked; otherwise every internal constant tweak would trip SIT).
+    base = """
+class Config:
+    DEFAULT_TIMEOUT = 30
+"""
+    new = """
+class Config:
+    DEFAULT_TIMEOUT = 60
+"""
+    reasons = diff_surfaces(extract_surface(base, "m"), extract_surface(new, "m"))
+    assert not reasons, reasons
+
+
 if __name__ == "__main__":
     sys.exit(pytest.main([__file__, "-v"]))
