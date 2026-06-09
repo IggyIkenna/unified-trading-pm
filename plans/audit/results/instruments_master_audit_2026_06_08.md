@@ -21,44 +21,50 @@ ROOT, owns CF-1…CF-14). Four read-only sub-agents + first-hand verification of
 
 **The production runtime is mostly sound** — the canonical-form core (schema_version, expected_unattempted, multi-source
 FIXTURES, validity-matrix, Era-B bundle-grain, daily-listing) is well-engineered and the bar-edge bugs from this
-morning's sweep were already fixed by a teammate. The real issues are **(1) three adapters still swallow fetch errors
-into honest-empty** (CF-11 gap a prior pass missed), **(2) a removed provider (`polygon.py`) is still wired alongside
-its replacement (`massive.py`)**, **(3) silent `except: pass` in the orchestrator masks GCS errors as absence**, and a
-broad tail of **hygiene debt concentrated in one 8,192-line god-module + a 96-script repair sprawl**. Nothing here is a
-live trading-data-corruption incident; the CF-11 swallows are the highest-priority correctness items.
+morning's sweep were already fixed by a teammate. After a **closer-look pass (traced end-to-end to avoid false
+positives)** the actionable set narrowed to: **(1) ONE reachable CF-11 swallow — `kalshi`** (polygon + ibkr swallows are
+**dead-registered/unreachable** — not in `_TRADFI_VENUES`); **(2) `polygon.py` is dead-registered alongside live
+`massive.py` → delete (safe)**; **(3) the orchestrator `except: pass` sites are weather/migration helpers, low blast
+radius — DOWNGRADED 🔴→🟡** (`:7673` is a benign safe-fallback, not a bug). Plus a hygiene tail (8,192-line god-module +
+96-script repair sprawl). **Nothing here is a live trading-data-corruption incident.**
 
 ## Angle coverage + verdict
 
-| Angle                                                       | Verdict                                                                                                                   |
-| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| Download / adapters (error handling, auth, edge, isolation) | 🟡 — 3 CF-11 swallows remain; bar-edge FIXED; auth/isolation clean                                                        |
-| Manifest + schema versions                                  | 🟢 core clean (v9 migrator + schema_version read actual distribution) / 🟡 script sprawl + systemic schema-drift band-aid |
-| Catalogue / universe / IS→MTDS contract                     | 🟢 catalogue+enumerate correct / 🟡 URDI naming, dead duplicate catalogue, hardcoded universe dup, CLAUDE.md over-claim   |
-| Standards / hygiene / bucket naming                         | 🟡 — one 8,192-line god-module + 3 silent excepts; scripts carry the cloud-SDK/`/tmp` tail                                |
+| Angle                                                       | Verdict                                                                                                                          |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| Download / adapters (error handling, auth, edge, isolation) | 🟡 — 1 REACHABLE CF-11 swallow (kalshi); polygon/ibkr swallows dead-registered/unreachable; bar-edge FIXED; auth/isolation clean |
+| Manifest + schema versions                                  | 🟢 core clean (v9 migrator + schema_version read actual distribution) / 🟡 script sprawl + systemic schema-drift band-aid        |
+| Catalogue / universe / IS→MTDS contract                     | 🟢 catalogue+enumerate correct / 🟡 URDI naming, dead duplicate catalogue, hardcoded universe dup, CLAUDE.md over-claim          |
+| Standards / hygiene / bucket naming                         | 🟡 — one 8,192-line god-module + 3 silent excepts; scripts carry the cloud-SDK/`/tmp` tail                                       |
 
 ---
 
-## 🔴 Findings (correctness — fix first)
+## 🔴 Findings (correctness — fix first) — refined by the closer-look pass
 
-1. **CF-11 swallow — `prediction/kalshi.py` (verified).** `_fetch_markets_page` emits `ADAPTER_FETCH_FAILED` on 401 /
-   `aiohttp.ClientError` but `return [], None`; `get_instruments` (`:130-133`) just `extend([])` + breaks → returns `[]`
-   with **NO raise**. A Kalshi outage/auth-fail records a **clean empty** in the IS manifest → MTDS trusts it as
-   `expected_unattempted`/skip. Kalshi is the one prediction/cefi adapter the 2026-06-03 CF-11 pass missed. Fix:
-   re-raise when all pages failed (the tardis/deribit_combo "raise iff `not results and failures`" pattern).
-2. **CF-11 swallow — `tradfi/ibkr.py:337-348` (per-agent).** `except Exception: … return []` per symbol — no
-   classify/event/raise; a mid-batch IB socket death silently shrinks the equity universe with zero failure signal.
-3. **CF-11 swallow + REMOVED-PROVIDER — `tradfi/polygon.py:286-354` (verified wired).**
-   `aiohttp.ClientError → return []`/`None` with no classify, no event, no raise. **AND** `polygon.py` is a **removed
-   TradFi provider** (CLAUDE.md: "Polygon.io REMOVED, do NOT reference") yet is **still wired** — `factory.py:75`
-   imports `PolygonReferenceDataAdapter`, `:314` registers `"polygon"`, `:130` maps `"POLYGON"`, `router.py` imports it
-   — and its rebrand replacement **`massive.py` exists alongside it** (parallel old+new path, banned). The 2026-05-22
-   commit _patched_ polygon.py ("replace deleted UAC external/polygon types with local models") instead of deleting it.
-   Fix: **delete `polygon.py` + its factory/router wiring** (massive.py supersedes it); this also moots the swallow.
-4. **Silent `except Exception: pass` — `engine/orchestrator.py:3794, 7673, 7821` (per-agent).** `:3794` swallows ALL
-   exceptions while probing canonical-vs-legacy GCS blob existence then silently returns the legacy path; `:7673/:7821`
-   swallow on weather merge. Masks real GCS/auth/schema errors as absence (counter to honest-absence +
-   no-silent-failure). Fix: catch `NotFound` specifically, let unexpected raise. (`:3791` has a related
-   `# type: ignore[union-attr]` hiding a possibly-`None` storage client.)
+> **Swallow→manifest chain (traced):** adapter swallows + `return []` → `urdi_reference_provider._fetch_one` only
+> records `failed[]` on a RAISE → a swallow is invisible to `failed_venues` → orchestrator `_non_error_venues` includes
+> it → `empty_ok_venues = (_non_error_venues − written_venues) − validation_failed_venues` (`orchestrator.py:2998`) →
+> **`expected_venues -= empty_ok_venues` (`:3006`)** = the venue is **silently EXCLUDED from the expected denominator**
+> (no `attempted_failed`, no retry, coverage % inflated). **Reachability**
+> (`_TRADFI_VENUES = [CME,NASDAQ,NYSE,CBOE,ICE,FX]`): polygon + ibkr are NOT venues → dead-registered → their swallow is
+> UNREACHABLE.
+
+1. **CF-11 swallow — `prediction/kalshi.py` (REACHABLE — the real one).** `_fetch_markets_page` emits
+   `ADAPTER_FETCH_FAILED` on 401/`aiohttp.ClientError` then `return [], None`; `get_instruments:130-133` returns `[]`
+   with **NO raise** → not in `failed_venues` → excluded from the expected denominator (per the chain above). The one
+   prediction/cefi adapter the 2026-06-03 CF-11 pass missed. Fix: re-raise on all-failed (tardis/deribit pattern).
+   Caveat: kalshi may be pre-activation as an active venue — fix is correct regardless.
+2. **REMOVED-PROVIDER dead code — `tradfi/polygon.py` → DELETE (safe).** Polygon.io is REMOVED (CLAUDE.md); live
+   replacement is `massive.py`. Registered in `factory.py` (`:75,130,314,346`) + `router.py` but **NOT in
+   `_TRADFI_VENUES`** → **never invoked** = pure dead registration (so its CF-11 swallow + bar-edge fallback are
+   unreachable, not live bugs). Delete the adapter + wiring (low-risk; nothing resolves to it). 2026-05-22 commit
+   patched it instead of deleting — should have deleted.
+3. _(was a 🔴; now 🟡 — see below)_ `tradfi/ibkr.py` swallow is **LATENT** (ibkr not in `_TRADFI_VENUES` → not invoked;
+   per-symbol `except: return []` is correct isolation). Harden only if IBKR becomes a live reference venue.
+4. _(was a 🔴; now 🟡 — DOWNGRADED)_ `engine/orchestrator.py` `except: pass` — **low blast radius, not the heartbeat**:
+   `:3794` is a Phase-E8 migration read-helper (silent legacy fallback — narrow to `NotFound`); `:7821` weather
+   merge-skip; **`:7673` is a benign safe-fallback** ("couldn't read existing weather → fetch all" — NOT a bug).
+   Sports/weather enrichment, not market data.
 
 ## 🟡 Findings (smells / risk)
 

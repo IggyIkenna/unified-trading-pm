@@ -16,34 +16,51 @@ noted.
 
 ## What I found / Why it matters / Recommended decision
 
-### 🔴 P0 — fetch errors swallowed into honest-empty (CF-11 gap a prior pass missed)
+> **⚠️ CLOSER-LOOK CORRECTION (2026-06-08, traced end-to-end to avoid false positives).** The swallow→manifest chain is:
+> adapter swallows + `return []` → `engine/urdi_reference_provider._fetch_one` only appends to `failed[]` on a RAISE, so
+> a swallow is **invisible to `failed_venues`** → orchestrator `_non_error_venues` includes it →
+> `empty_ok_venues = (_non_error_venues − written_venues) − validation_failed_venues` (`orchestrator.py:2998`) →
+> **`expected_venues -= empty_ok_venues` (`:3006`)** → the venue is **silently EXCLUDED from the expected denominator**
+> (NOT recorded `attempted_failed`, NOT retried, coverage % inflated). [Earlier wording "records a clean empty" was >
+> imprecise — it's exclusion-from-denominator, same root, slightly different effect.] **Reachability matters**:
+> `_TRADFI_VENUES = [CME, NASDAQ, NYSE, CBOE, ICE, FX]` — neither `polygon` nor `ibkr` is a live venue, so their
+> adapters are **dead-registered (never invoked)** → their swallow is UNREACHABLE today. Only **kalshi** (prediction
+> enumeration) is on a reachable path.
 
-A swallowed fetch error mislabeled as `empty_confirmed` pollutes the IS manifest → MTDS reads it and wrongly treats the
-cell as `expected_unattempted`/skip. The 2026-06-03 cross-AG CF-11 pass fixed cefi/sports/defi but missed these:
+### 🔴 P0 — fetch error swallowed into not-failed (CF-11) — kalshi (the one REACHABLE case)
 
 - [ ] [MTDS] P0. `prediction/kalshi.py` — `_fetch_markets_page` emits `ADAPTER_FETCH_FAILED` then `return [], None`;
-      `get_instruments:130-133` returns `[]` with no raise. Re-raise when all pages failed (tardis/deribit_combo "raise
-      iff `not results and failures`" pattern) so an outage/auth-fail writes `attempted_failed`, not empty. Repo:
-      instruments-service.
-- [ ] [MTDS] P0. `tradfi/ibkr.py:337-348` — `except Exception: … return []` per symbol with no classify/event/raise.
-      Classify via `classify_venue_error`, emit `ADAPTER_FETCH_FAILED`, re-raise on all-failed so a mid-batch IB socket
-      death surfaces as `attempted_failed` not a silently-shrunk universe. Repo: instruments-service.
+      `get_instruments:130-133` returns `[]` with no raise → not in `failed_venues` → excluded from the expected
+      denominator (no `attempted_failed`, no retry). Re-raise when all pages failed (tardis/deribit_combo "raise iff
+      `not results and failures`" pattern). Repo: instruments-service. (Caveat: kalshi may be pre-activation as an
+      active prediction venue — the fix is correct regardless and prevents a silent gap once it activates.)
 
-### 🔴 P0 — removed provider still wired alongside its replacement
+### 🔴 P0 — removed provider dead-registered alongside its replacement → DELETE
 
-- [ ] [MTDS] P0. **Delete `tradfi/polygon.py` + its wiring.** Polygon.io is a REMOVED TradFi provider (CLAUDE.md) and
-      its rebrand `tradfi/massive.py` exists alongside it (parallel old+new path, banned). `polygon.py` is still
-      imported + registered in `reference_data/factory.py:75,130,314,346` + `router.py`, and it ALSO swallows fetch
-      errors (`:286-354` `aiohttp.ClientError → return []`/`None`, no classify/event/raise). Remove the adapter +
-      factory/router entries; confirm no consumer resolves `"polygon"`/`"POLYGON"` (massive is the replacement). Repo:
-      instruments-service. (Deleting it moots the swallow.)
+- [ ] [MTDS] P0. **Delete `tradfi/polygon.py` + its wiring (dead code, safe).** Polygon.io is a REMOVED TradFi provider
+      (CLAUDE.md); its rebrand `tradfi/massive.py` is the live adapter. CLOSER LOOK: `polygon` is registered in
+      `factory.py` `ADAPTER_DATA_SOURCES` (`:346`) + the class map (`:314`) but **NOT in `_TRADFI_VENUES`** (which is
+      the live tradfi enumeration → databento/massive only) → `polygon.py` is **never invoked** = pure dead
+      registration. Delete the adapter + `factory.py:75,130,314,346` + `router.py` import. Deletion is low-risk (nothing
+      resolves to it) and moots its (unreachable) swallow + bar-edge-fallback. Repo: instruments-service.
 
-### 🔴 P1 — silent `except: pass` masks GCS errors as absence
+### 🟡 P2 — ibkr swallow (LATENT — dead-registered) + adapter hardening
 
-- [ ] [MTDS] P1. `engine/orchestrator.py:3794, 7673, 7821` — `except Exception: pass` swallows ALL exceptions on the
-      canonical-vs-legacy GCS blob-existence probe (`:3794` then silently returns the legacy path) + weather merge.
-      Catch `NotFound` specifically; let unexpected raise (honest-absence / no-silent-failure). Also resolve the related
-      `:3791` `# type: ignore[union-attr]` hiding a possibly-`None` storage client. Repo: instruments-service.
+- [ ] [MTDS] P2. `tradfi/ibkr.py:337-348` — per-symbol `except Exception: return []` is CORRECT shard-isolation; the gap
+      is only the systemic case (`_ib is None` / all-symbols-fail → `get_instruments` returns `[]` with no raise → same
+      exclusion-from-denominator). **LATENT**: `IBKR` is not in `_TRADFI_VENUES` → the adapter is not invoked in the
+      live tradfi path today. Harden (classify + re-raise on systemic failure) when/if IBKR becomes a live reference
+      venue; not urgent. Repo: instruments-service.
+
+### 🟡 P2 — too-broad `except Exception: pass` (DOWNGRADED from 🔴 — low blast radius, not heartbeat)
+
+- [ ] [MTDS] P2. `engine/orchestrator.py:3794, 7821` — narrow the broad excepts: `:3794` swallows all exceptions on a
+      canonical-vs-legacy GCS blob-existence probe (Phase-E8 migration read-helper) then silently returns the legacy
+      path — catch `NotFound` specifically, let auth/network raise (also fix the `:3791` `# type: ignore[union-attr]`
+      possibly-`None` client); `:7821` swallows weather-merge errors then writes new-only (possible merge-skip). **NOTE:
+      `:7673` is NOT a bug** — "couldn't read existing weather → fetch everything" is a safe fallback (worst case: a
+      redundant fetch), leave it. These are sports/weather-enrichment + a transitional read-helper, not the market-data
+      heartbeat. Repo: instruments-service.
 
 ### 🟡 P2 — smells / risk
 
