@@ -45,6 +45,27 @@ ruleset → skip/pass). Downstream service repos building on `staging` still get
 fallback (`clone -b staging` → `-b main`). For PM, **`main` is the reconciliation point** — it does for plans exactly
 what `staging` does for service repos.
 
+#### PM Option-B standing LDR→main PR (codified 2026-06-09)
+
+PM has no `ldr-to-staging-promote` / `staging-to-main` drain (those need a `staging` branch). The ONLY path LDR→`main`
+is the PR `quickmerge` opens — and because its head is the **branch ref** `live-defi-rollout` (not a fixed SHA), that PR
+is a **standing sweep**: every commit on LDR (a quickmerge unit AND any sanctioned direct push — docs(plans) flips,
+scripts/`.github` carve-out) rides it to `main` while it is open. Consequence (the foot-gun): the **moment that PR
+squash-merges, the standing sweep is gone** — a LATER direct push to LDR has no open PR and **piles up on LDR with no
+path to `main`** until the next quickmerge opens a new one.
+
+- **After a direct LDR push when no LDR→main PR is open, OPEN one:**
+  `gh pr create --base main --head live-defi-rollout --title "chore(promote): LDR→main sweep …" && gh pr merge <n> --auto --squash`
+  (v2-gated, auto-merges when green). This re-establishes the standing sweep and drains the accumulated direct pushes.
+- **Verify a push actually reached `main` by CONTENT, not commit count:** a squash-merge lands all the changes as ONE
+  new commit on `main` but does NOT preserve the LDR commit SHAs as ancestors, so
+  `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` reports LDR perpetually
+  `ahead_by=N / behind_by=0` even when content is identical. Trust a content/path check (`git cat-file -e main:<path>` /
+  inspect the merged PR), not `ahead_by`.
+- **Prefer quickmerge** for anything substantive — it opens the PR for you. Reserve direct LDR pushes for the carve-out
+  (docs(plans) flips, scripts/`.github`, dirty-deps), and remember to leave (or open) a standing LDR→main PR so they
+  land on `main`.
+
 ### Convergence + conflict-resolution model (the LDR ↔ reconciliation loop)
 
 - **LDR = the fast live integration axis** — agents commit here (tab→LDR), allowed to be _temporarily inconsistent_; no
@@ -438,6 +459,28 @@ gh run view <run-id> --log-failed
 
 Pushes to `feat/*` / `live-defi-rollout` → **no remote CI**. Quality enforced locally via `quality-gates.sh`. Pushes to
 `main` / PRs → CI runs. Always verify CI green before reporting "shipped".
+
+### Central CI watcher — auto-recover vs escalate, and the RESOLVED bookend (codified 2026-06-09)
+
+`scripts/repo-management/ci_failure_watcher.py` (cron `ci-failure-watcher.yml`, `*/15`) runs `--auto-recover --escalate`
+and distinguishes **two** classes of stuck promotion PR so it never hands a code-fixable problem to a human/worker:
+
+- **v2-never-reported deadlock** (mechanical) — signature `BLOCKED + failed_check==false + v2_present==false`: the
+  required `quality-gates-v2` check never _fired_ on the PR head (e.g. the head was pushed with `[skip ci]` or by a
+  token that suppresses the `pull_request` event). `auto_recover_stuck_prs()` does `gh pr close` + `gh pr reopen`,
+  re-firing `pull_request` → v2 runs. **No worker, no orchestrator dependency.** Idempotent: once reopened, v2 is in the
+  rollup (`v2_present==true`) so the next tick won't re-fire — no loop. Runs BEFORE escalate.
+- **genuine conflict wall** (CONFLICTING/DIRTY) — `conflict_prs_to_escalate()` repository-dispatches to
+  `escalate-to-orchestrator.yml` so a worker rebases on LDR. Escalation REQUIRES a healthy, headroom-having
+  orchestrator; escalating a mechanical deadlock there only yields "no worker spawned". So keep escalate rare —
+  auto-recover absorbs the deadlock class.
+
+**RESOLVED/recovered bookend → Slack (so the operator doesn't have to click the PR):** `detect_resolved_prs()` posts
+`:ballot_box_with_check: N promotion PR(s) RESOLVED (merged/closed)` at INFO severity (the watcher's notify still fires
+on resolved/recovered alone). **Gotcha that killed this for months:** `gh pr list --json merged` is an INVALID field
+(404s the whole query → the bookend silently never fired) — use **`mergedAt`** (non-null ⟺ merged). Companion:
+`scripts/cicd/promotion_lag_monitor.py` (`promotion-lag-monitor.yml`, `*/30`) pages time-based LDR↔staging↔main lag
+(oldest un-propagated commit > 60 min), the diff that matters under Path-B (where local-vs-upstream is ~always 0).
 
 ---
 

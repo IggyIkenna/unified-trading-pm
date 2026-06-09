@@ -154,6 +154,16 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
     PM is the live SSOT. Convergence + 3-layer conflict model (textual=conflict-resolution-agent /
     semantic=reviewer+overlap-detector / hygiene=plan-health; **every alert → the orchestrator, not Slack-only**) SSOT:
     `codex/08-workflows/ci-cd-flow.md` § "Convergence + conflict-resolution model".
+  - **A direct LDR push reaches PM `main` ONLY while an open LDR→main PR exists (HARD RULE, codified 2026-06-09)**: PM
+    quickmerge opens a STANDING `live-defi-rollout → main` PR whose head tracks the WHOLE LDR branch — so docs(plans)/
+    scripts you direct-push to LDR (the carve-out pushes) ride that PR to `main` too. But PM has no `ldr-to-staging`/
+    `staging-to-main` drain (no staging), so the MOMENT that PR squash-merges, any LATER direct push **piles up on LDR
+    with no path to `main`** until the next quickmerge opens a fresh one. After a direct push when no LDR→main PR is
+    open, OPEN one: `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash` (v2-gated).
+    Verify a push actually landed on `main`:
+    `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` — but note squash-merges keep LDR
+    perpetually `ahead_by=N / behind_by=0` by COMMIT count even when CONTENT matches, so check content, not the count.
+    SSOT: `codex/08-workflows/ci-cd-flow.md` § "PM Option-B standing LDR→main PR".
 - **Quality gates BEFORE COMMIT — the commit IS the per-repo quality boundary (HARD RULE; tightened 2026-06-03,
   supersedes "before quickmerge")**: a **code** commit to the integration branch must be made from a
   `quality-gates.sh`-green tree — never on the strength of the light prek hook alone
@@ -913,6 +923,28 @@ integration-branch code commit lacking a quickmerge lineage marker) is the open 
   `gh workflow run quality-gates-v2.yml --repo <r> --ref <branch>` on the PR head → the check reports → the PR merges.
   (Incident: a `[skip ci]` greeks `workspace-qg.yml` deletion on LDR jammed its LDR→main PR #9.) SSOT:
   `codex/08-workflows/ci-cd-flow.md` § "[skip ci] and required checks".
+- **The v2-never-reported deadlock auto-recovers in-band — do NOT escalate it (codified 2026-06-09)**:
+  `ci-failure-watcher` runs `--auto-recover --escalate`; `--auto-recover`
+  (`scripts/repo-management/ci_failure_watcher.py::auto_recover_stuck_prs`) close+reopens ONLY the exact signature
+  `BLOCKED + no failed check + v2 absent from rollup` → re-fires `pull_request` → v2 runs, **no worker needed**.
+  `--escalate` is reserved for a GENUINE conflict wall (CONFLICTING/DIRTY) a worker must rebase — escalating a
+  mechanical deadlock to a headroom-less orchestrator only yields "no worker spawned". Don't hand a code-fixable
+  deadlock to a human/worker; if a stuck PR has `v2_present==false` it's the mechanical case.
+- **A scheduled/`push`-triggered workflow fires ONLY from the DEFAULT branch (gotcha, 2026-06-09)**: a workflow `.yml`
+  change on `live-defi-rollout` is INERT until it reaches the repo's default branch (`main`). So editing a `schedule:`/
+  trigger and only landing it on LDR does nothing — it must be promoted to `main` to take effect (relevant for the
+  `main-backmerge-to-ldr` drift-tick: live on PM `main`; staged-on-LDR-inert on agent-orchestrator until ao's LDR→main
+  promotion lands). SSOT: `codex/08-workflows/ci-cd-flow.md`.
+- **Resolved/recovered CI events must reach Slack as INFO, not force a PR click (codified 2026-06-09)**: the watcher
+  posts a `:ballot_box_with_check: N promotion PR(s) RESOLVED` bookend (INFO severity, still triggers the notify) so the
+  channel reflects closure. `gh pr list --json merged` is an **INVALID** field (404s the whole query → silently kills
+  the bookend) — use `mergedAt` (non-null ⟺ merged). Companion: `scripts/cicd/promotion_lag_monitor.py` pages time-based
+  LDR↔staging↔main lag. Both in `ci-failure-watcher.yml` / `promotion-lag-monitor.yml`.
+- **Never hand-edit a per-repo workflow copy; the SSOT is the template (2026-06-09)**: editing
+  `scripts/workflow-templates/<wf>.yml` re-flags ALL 24 per-repo copies as drift — to sync a subset use
+  `rollout-workflow-templates.sh --repo <name> --template <wf>` (PM's OWN copy is hand-maintained — rollout skips it, so
+  align it to the template by hand). `detect_template_drift.py` is a local-only post-gate (CI no-op); `--baseline-write`
+  re-baselines intentional drift.
 
 ---
 
