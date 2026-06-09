@@ -2,10 +2,11 @@
 title:
   instruments-service audit findings (download→manifest) — CF-11 swallows, removed-provider still wired, silent excepts
 created: 2026-06-08
-author: harsh
 source:
   - plans/audit/results/instruments_master_audit_2026_06_08.md
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # instruments-service audit findings — actionable remediation
