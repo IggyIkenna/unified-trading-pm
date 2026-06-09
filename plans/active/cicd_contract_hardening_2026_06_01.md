@@ -4157,3 +4157,42 @@ Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment 
       re-`uv pip install`); re-run MTDS QG to GREEN. Then the "full QG green" claim is actually true for the UAC chain.
 - [ ] [INFRA] P2. **Audit the rest of the fleet for the same split** — `gh api compare/main...staging --jq .ahead_by` per
       repo to find other deployed packages whose `[skip ci]` version bump is stranded on staging (same deadlock class).
+
+## 🔴 FINDING 2026-06-09 — PM main→LDR backmerge is STUCK on a squash-merge history conflict (root of the recurring version-alignment block)
+
+**Symptom:** PM `main` is +40 commits / 3 versions ahead of `live-defi-rollout` (main `1.2.51` vs LDR `1.2.48`). The
+`main-backmerge-to-ldr` drift-tick runs **"success" every ~hour but LDR never advances**, so the local QG
+**version-alignment gate** ("your local version is BEHIND remote staging/main") keeps BLOCKING every PM QG run — the
+recurring friction the operator has hit repeatedly.
+
+**Root cause (runtime log, run 27208060791):**
+```
+[backmerge:conflict] main and LDR conflict — human resolution required (no auto-resolve)
+[backmerge] could not open PR (may already exist / perms)
+[backmerge] escalated conflict to orchestrator (opus worker)
+```
+1. **Genuine (non-ci_status) conflict** on 5 files: `codex/08-workflows/ci-cd-flow.md`, `cursor-configs/CLAUDE.md`,
+   `plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md`,
+   `plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md`, `workspace-manifest.json` (the latter beyond the
+   ci_status-only fields Guard 2 auto-resolves). The backmerge's `--no-ff merge origin/main` cannot auto-resolve → aborts.
+2. **It's a SQUASH-MERGE + BACKMERGE history-divergence loop** (systemic, recurs every cycle): PM Option-B promotes
+   LDR→main by **squash** (#184-#187 etc.), which lands the same CONTENT on main under a NEW SHA. The main→LDR backmerge
+   then sees "same content, different history" and textually conflicts on any file edited on both sides since the split
+   (docs/plans actively edited on LDR are the worst case). So every LDR→main squash makes the next main→LDR backmerge
+   more likely to conflict.
+3. **The human-resolution fallback is ALSO broken**: `[backmerge] could not open PR (may already exist / perms)` — the
+   conflict PR is never opened, and the orchestrator escalation isn't resolving it → LDR stays stuck behind main
+   indefinitely. So neither the auto path nor the human path drains it.
+
+- [ ] [INFRA] P1. **One-time reconcile**: bring LDR current with main (resolve the 5-file conflict keeping BOTH sides'
+      genuine work per the ALIGN rule; for the doc files where content matches via the squash, take the unified version),
+      push to LDR so `version-alignment` clears. Verify `compare live-defi-rollout...main ahead_by` → 0 and LDR version == main.
+- [ ] [INFRA] P0. **Fix the systemic squash+backmerge loop** — pick ONE: (a) promote PM LDR→main with a **merge commit**
+      (not squash) so main shares LDR's history and the backmerge is always a clean FF; OR (b) have `main-backmerge-to-ldr`
+      reconcile docs/plans with a content-aware 3-way (it already does for `workspace-manifest.json` via
+      `reconcile_manifest_backmerge.py` — extend the auto-resolve to "same-content-different-history" doc/plan hunks); OR
+      (c) for PM specifically, make main↔LDR a single branch (Option-B already makes main the reconciliation point — the
+      back-and-forth squash/backmerge is the avoidable cost). Squash is the likely culprit; (a) is the smallest fix.
+- [ ] [INFRA] P1. **Fix the backmerge's PR-creation perms** so the human-resolution fallback actually opens a
+      `main → live-defi-rollout` PR when auto-resolve fails (currently "could not open PR — may already exist / perms"),
+      and confirm the orchestrator escalation has a worker that resolves it (else conflicts strand forever).
