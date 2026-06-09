@@ -37,10 +37,29 @@ surfaced while triaging the Slack #ci-failures burst:
    Switch reported the orchestrator "did not complete". Capacity / overnight-run issue on vm-0, not an unreachable VM —
    needs an operator look at slot headroom + the overnight job.
 
+4. **Cross-repo promotion-lag reddened consumer CI on the R4 `BATCH_HYPERLIQUID_REST` rename (transient, self-healed)**
+   — at 08:24Z the alerting-service dep-update PR #31 (`feat!: update unified-api-contracts to 0.2.0`) QG failed at
+   conftest import: `AttributeError: PipelineMode has no attribute 'BATCH_HYPERLIQUID_REST'. Did you mean:
+   'BATCH_HYPERLIQUID'?`. The bad ref was **not** in alerting-service — chain is
+   `tests/conftest.py:6 → unified_trading_library/__init__.py:950 → pipeline_mode_resolver.py:39`. The R4 rename
+   (`BATCH_HYPERLIQUID_REST` → `BATCH_HYPERLIQUID`; transport is a manifest COLUMN, not the source name — UTL@d0745bde,
+   2026-06-07) was already on UAC + UTL **LDR**, but CI's dep-clone fallback cloned UTL **`main`** (the manifest-pinned
+   `v0.4.0` tag was re-cut at 09:23Z — *after* the run), and UTL-`main` had not yet received the rename promotion → UAC-`main`
+   ahead of UTL-`main` for that window. **Self-healed ~09:23Z** (UTL `main` now clean of the stale member); PR #31 was
+   **closed** 08:54Z as redundant (alerting pins UAC via a path source + range `>=0.1.0,<1.0.0` already admitting 0.2.0);
+   alerting-service LDR is green. **Root cause is not alerting-specific** — any repo whose CI imports UTL in that window
+   would have hit it. **Systemic gap**: the CI dependency-clone fallback to `main` exposes consumers to *in-flight
+   breaking renames* that have landed on the upstream's `main` before the downstream consumer's `main`/release catches
+   up. Preventive options: promote a breaking UAC rename to `main` atomically-with / after the UTL consumer fix, or have
+   the dep-clone fallback prefer the manifest-pinned release tag over upstream `main`. Composes with
+   `cicd_contract_hardening_2026_06_01.md`.
+
 ## Why it matters
 
 (1) keeps a required-ish check red (noise + can gate). (2) is a real observability gap (silent no-sync). (3) means stuck
-promotion PRs don't get auto-escalated workers — they wait on a human.
+promotion PRs don't get auto-escalated workers — they wait on a human. (4) any cross-repo breaking rename can transiently
+redden **every** UTL consumer's CI during the upstream→downstream `main` promotion lag — invisible-looking failures on a
+clean consumer repo, costing triage time chasing a ref that exists in no current source.
 
 ## Todos
 
@@ -55,3 +74,7 @@ promotion PRs don't get auto-escalated workers — they wait on a human.
       (extend `verify-slot-host-symmetry.sh --alert` or add a check). Repo: `unified-trading-pm`.
 - [ ] [OPERATOR] P2. Finding 3 — vm-0 slot headroom / Overnight Dead Man Switch did-not-complete needs an operator look
       (capacity, not unreachable). **BLOCKED-OPERATOR-DECISION.**
+- [ ] [SCRIPT] P3. Finding 4 — CI dep-clone fallback should prefer the manifest-pinned release tag over upstream `main`
+      (or promote a breaking UAC rename atomically-with / after the UTL consumer fix) so a cross-repo rename can't
+      transiently redden every UTL consumer's CI during the promotion-lag window. Repo: `unified-trading-pm` (+ the CI
+      dep-clone scripts). Composes with `cicd_contract_hardening_2026_06_01.md`.
