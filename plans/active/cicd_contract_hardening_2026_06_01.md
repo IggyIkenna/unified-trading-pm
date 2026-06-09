@@ -103,22 +103,62 @@ source:
 > - [x] ✅ [SCRIPT] P2. **Local QG `.venv` artifact — FIXED** (PM@5814e65ac): `base-library.sh` now always builds/uses
 >       the repo `.venv` (`unset VIRTUAL_ENV`; mirrors base-service.sh). Verified on UTL (1→0). Slot venvs pre-built
 >       across all 11 slots (~242).
-> - [ ] [INFRA] P1. **🔴 BIG FINDING — fleet-wide time-triggered pip-audit blocks fresh promotions for
->       `CODEX_MAX_VIOLATIONS=0` repos (surfaced 2026-06-09 by the drain).** UTL's LDR→main PR #262 (delta = ONLY the
->       semver workflow file) FAILS its fresh server v2 on `❌ pip-audit vulnerabilities` +
->       `Codex compliance: 1 violation` — NEW CVE advisories published since UTL's last green main v2
->       (anthropic/pillow/pyjwt/lxml/twisted/urllib3/uv…). This is the "BIG FINDING 2026-06-02 PyJWT time-triggered"
->       class materializing: any CMV=0 repo's NEXT v2 reds even on a clean/workflow-only change → blocks promotions
->       fleet-wide. FIX (operator-judgment): bump the vulnerable deps to fix-versions fleet-wide
->       (workspace-constraints + per-repo) OR add the new CVE IDs to the sanctioned `--ignore-vuln` set (non-exploitable
->       ones). Substantial + partly a security call — NOT auto-fixed this session. Repo: unified-trading-pm
->       (workspace-constraints + base scripts) + fleet.
-> - [ ] [CODE] P1. **🔴 FastAPI `response_model` route failures block draining deployment-service + ml-service** — their
->       un-promoted LDR content fails fresh v2:
->       `FastAPIError: Invalid args for response field — starlette.requests.Request     | None is not a valid Pydantic field`
->       (test_api_routes / test_training_control_api). A FastAPI strictness bump exposes routes whose return annotation
->       isn't a valid response model → add `response_model=None` to those path ops (or fix the annotation).
->       features-service drained clean (NOT universal — repo-specific routes). Repo: deployment-service + ml-service.
+> - [x] ✅ [INFRA] P1. **🔴 BIG FINDING RESOLVED via BUMP (2026-06-09) — the ACTUAL fleet pip-audit blocker is a SINGLE
+>       transitive dep: `pip` itself.** Root-caused on the UTL canary (CMV=0): a fresh server v2 builds the repo `.venv`
+>       via `uv sync` (NOT `uv pip install -e .` — CI line 360-361 of `python-quality-gates-v2.yml`), so it installs the
+>       **lock-pinned** transitive `pip` (a dep of pip-audit via pip-api). UTL's lock pinned `pip==26.0.1`, which
+>       `PYSEC-2026-196` flags (fix=26.1.2) → pip-audit's `V+=1` → "Codex compliance: 1 violation" (V is the SAME
+>       counter; there is NO separate codex violation — the `PricingViolationPayload` log line was an unrelated
+>       info-emit). The anthropic/urllib3/python-multipart/pyjwt floors named in the original diagnosis were ALREADY
+>       fixed in prior sessions (UTL's pyproject + lock already carry urllib3 2.7.0 / PyJWT 2.13.0 / aiohttp 3.13.5;
+>       anthropic + python-multipart aren't even UTL deps). **MECHANISM of "constraint not honored"**: a plain `uv lock`
+>       does NOT upgrade an existing transitive pin — `pip` stayed 26.0.1 until forced. **FIX (bump, not ignore — pip
+>       26.1.2 is a clean drop-in build-tool with no consumer breakage):** (1) UTL — added `pip>=26.1.2` to
+>       `[tool.uv]     override-dependencies` + `uv lock` (→ pip 26.1.2). (2) execution-service + ml-service —
+>       `uv lock --upgrade-package     pip` (→ 26.1.2; no pyproject churn). (3) SSOT floors bumped
+>       `pip>=26.1`→`pip>=26.1.2` in `workspace-constraints.toml` + `canonical-dependency-manifest.json`. **Note:
+>       `base-service.sh` ALREADY carries `--ignore-vuln PYSEC-2026-196`** (a prior agent), so SERVICE repos never red
+>       on pip — only `base-library.sh` (UTL, CMV=0) lacked it, hence UTL was the sole pip-audit red. **PROVEN**:
+>       CI-equivalent `uv venv + uv sync` on UTL → pip 26.1.2 → `pip-audit: No known vulnerabilities found, 4 ignored`
+>       (exit 0); UTL full `quality-gates.sh     --no-fix` green. **SHIPPED in UTL** (pip override + SSOT floors in PM).
+>       execution-service/ml-service uv.lock pip bumps were prepared + reverted (hygiene-only — base-service.sh already
+>       ignores PYSEC-2026-196 so they were never blocking, and shipping them would have required a coupled UAC>=0.5.0
+>       floor bump for already-green repos → scope creep); captured as the fleet-hygiene P2 below. **Residual fleet
+>       hygiene (P2 below)**: 18 other repos still lock-pin a vulnerable pip (26.0.1/26.1.1) but their base-service.sh
+>       ignore covers it → not promotion-blocking; bump on next touch. Repo: unified-trading-library +
+>       unified-trading-pm (constraints).
+> - [x] ✅ [CODE] P1. **🔴 FastAPIError RESOLVED at the SHARED ROOT in UTL (2026-06-09) — NOT a per-route response_model
+>       fix.** Root cause: UTL `cloud_interface/s2s_auth.py::create_s2s_auth_dependency` declared the dependency param
+>       `request: Request | None = None`. Under `fastapi>=0.136` / `starlette>=1.0` an OPTIONAL `Request | None`
+>       parameter is no longer recognised as the special request-injection param → at app construction (`add_api_route`
+>       / `include_router`) FastAPI tries to treat `starlette.requests.Request | None` as a response-model field →
+>       `FastAPIError: Invalid args for response field`. This is FLEET-WIDE: 13+ services mount this exact dependency
+>       (deployment-service, ml-service, features-service ×8, strategy-service ×2, mtds, trading-agent, alerting, blrs,
+>       …) — so it jammed every S2S-auth consumer, not just the two named. **FIX**: changed the param to the canonical
+>       NON-optional `request: Request` (FastAPI always injects the live Request for an HTTP-bound dependency; the
+>       `| None` guards on `request.client`/`request.url` simplified accordingly). **PROVEN** on real consumers (UTL
+>       editable): deployment-service `tests/unit/test_api_routes.py` 31 passed (was FastAPIError at construction);
+>       ml-service `tests/training/unit/test_training_control_api.py` 12 passed; UTL `tests/unit/test_s2s_auth.py` 8
+>       passed incl. a NEW regression `test_s2s_dependency_mounts_in_fastapi_app` that mounts the dep on an APIRouter +
+>       builds a TestClient (the exact app-construction path the old direct-call unit tests never exercised). Repo:
+>       unified-trading-library (the fix unblocks deployment-service + ml-service + all S2S consumers on their next
+>       promote, range-pinned editable).
+> - [ ] [CODE] P2. **NICE-TO-HAVE (provenance: s2s_auth fix 2026-06-09) — collapse the LOCAL `verify_service_token`
+>       copies onto the UTL factory.** execution-service (`execution_service/auth_s2s.py:44`), strategy-service
+>       (`strategy_service/risk/auth_s2s.py:41`), client-reporting-api (`client_reporting_api/auth.py`), deployment-api
+>       (`deployment_api/auth.py`) maintain their OWN `verify_service_token` instead of `create_s2s_auth_dependency`.
+>       execution-service's copy carries the SAME latent `request: Request | None = None` pattern but is NOT triggered
+>       (it's called manually inside a route handler, not mounted via `Depends(...)`, so FastAPI never introspects it) →
+>       not currently blocking, but a per-repo duplicate that will rot. Migrate each to import the UTL factory (delete
+>       the local copy — no shim). Repo: execution-service + strategy-service + client-reporting-api + deployment-api.
+> - [ ] [DEP] P2. **NICE-TO-HAVE — fleet pip-lock hygiene (provenance: pip PYSEC-2026-196 fix 2026-06-09).** 18 repos
+>       still lock-pin a vulnerable transitive `pip` (13 at 26.0.1, 5 at 26.1.1; fix=26.1.2) but their `base-service.sh`
+>       already `--ignore-vuln PYSEC-2026-196` → not promotion-blocking. Bump each on next touch via
+>       `uv lock --upgrade-package pip` (matches the SSOT floor `pip>=26.1.2` now in workspace-constraints.toml +
+>       canonical-dependency-manifest.json) so the ignore can eventually be dropped. Repos: alerting / blrs / cra / ibkr
+>       / instruments / mdps / mtds / strategy / sit / trading-agent / uta / fund-administration / client-reporting-api
+>       (26.0.1) + agent-orchestrator / deployment-api / e2e-testing / features / greeks / unified-api-contracts
+>       (26.1.1).
 > - [ ] [INFRA] P2. **Drain the remaining un-promoted LDR content** — re-roll PRs incidentally drained
 >       features-service + deployment-api + greeks (merged). BLOCKED by the two BIG findings above: UTL/execution
 >       (pip-audit time-trigger), deployment-service/ml-service (FastAPI). Others (agent-orchestrator 27f, mdps 7f,
@@ -837,13 +877,14 @@ coverage-gaming). `ibkr` also has a `MIN_COVERAGE=0` config bug to fix first.
       deps); pyproject re-adds it editable for the 14 test files importing deployment_api.routes/utils/main. staging
       clears via promotion. I diagnosed identically but did not push a competing fix.] deployment-service LDR + staging
       v2 RED — orphaned cross-repo test import after the circular-dep cut.** `tests/mocks.py:10` hard-imports
-      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the deployment-api↔deployment-service
-      circular-dep removal dropped `deployment-api` from deployment-service's pyproject **on LDR** (main still declares
-      it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the STALE side; LDR @2ab4cce5 = RED, run
-      26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is already guarded
-      (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard top-level import. Fix
-      on LDR (the correct post-cut side): make the import resilient OR relocate `CombinatoricEntry` to a shared contract
-      — do NOT re-add deployment-api as a dep (re-creates the just-removed cycle). repo: deployment-service.
+      `from deployment_api.utils.path_combinatorics import CombinatoricEntry`, but the
+      deployment-api↔deployment-service circular-dep removal dropped `deployment-api` from deployment-service's
+      pyproject **on LDR** (main still declares it at pyproject:9 + `[tool.uv.sources]` → main GREEN @36d24833, the
+      STALE side; LDR @2ab4cce5 = RED, run 26803497154). The `_CombinatoricEntry` usage at `tests/mocks.py:95` is
+      already guarded (`if _CombinatoricEntry is not None`) → the type is optional-by-design; the bug is the hard
+      top-level import. Fix on LDR (the correct post-cut side): make the import resilient OR relocate
+      `CombinatoricEntry` to a shared contract — do NOT re-add deployment-api as a dep (re-creates the just-removed
+      cycle). repo: deployment-service.
 - [x] ✅ [LINT] P2. **[PROMOTION-LAG, not fresh debt — re-audit 2026-06-02: the 14 QG-scope ruff errors are ALREADY
       FIXED on LDR @eabdf05 "fix(lint): green all 14 ruff errors in QG scope (tests/ lint pass)"; e2e LDR is 10 commits
       ahead of main. main red (run 26796774457 @b526b5eb) clears via the LDR→main promotion campaign (P1 below), NOT a
@@ -2481,8 +2522,8 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
 **F. Drift / reconciliation gaps:**
 
 - [x] ✅ [SCRIPT] P2. **behind/ahead reporter — DONE via PR #145** (flow-health reporter computes all 3 pairs as message
-      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR is
-      watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
+      context). ORIG:**behind/ahead reporter for main↔staging + staging↔LDR (both directions)** — today only main→LDR
+      is watched (`main-backmerge-to-ldr.yml`); staging↔LDR drift is invisible. repo: unified-trading-pm.
 - [x] ✅ [SCRIPT] P2. **staging→LDR backmerge — DONE 2026-06-05** (`unified-trading-pm@8cd62f42e` retains
       `.github/workflows/staging-backmerge-to-ldr.yml`: staging→LDR no-ff merge, 5× FF-retry, conflict PR + escalation;
       shares backmerge-to-ldr concurrency w/ main-backmerge). ORIG: staging→LDR backmerge — only main-backmerge existed.
@@ -2687,8 +2728,8 @@ past a red gate. That is the same class of hole that let `staging` drift ~1 mont
 > - **Safety**: every ruleset verified `active`; `enforce_admins` toggles during admin-merges were all re-enabled.
 >
 > **Remaining (tracked below):** instruments-service main coverage (0.18% short); enforce_admins on `staging` (optional
-> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1 workflow
-> FILE deletion (separate held plan).
+> Phase-2 tail); mdps↔UAC lending_indices divergence + mdps pyright debt; PM main↔LDR back-merge (Phase 5); v1
+> workflow FILE deletion (separate held plan).
 
 > **🔑 PREREQUISITE (discovered 2026-06-01 — RESOLVED via provisioning, not a missing credential).** The migrations edit
 > `.github/workflows/*.yml`, which the gh **keyring login token (`gho_…`) cannot do** (no `workflow` scope). But the
@@ -3792,11 +3833,12 @@ to `i-0c9b283b31d6b5ca7` verified Online (AWS admin `admin_od`).
 - **infra_slot_sync remaining**: cleanup sub-agent in-flight (backlog.mock P1, AutoSpawn-SQLAlchemy P3, ui-semver
   checkout P2); operator-gated #1/#2 stay BLOCKED-OPERATOR.
 - **plan-health-gate PIN — HELD (do NOT pin yet).** Functionally green (#152) but RED on PM PRs due to the pre-existing
-  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated promotion.
-  **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate` (verify via
-  `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
-- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead; `main-backmerge-to-ldr`
-  alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then LDR→main promote.
+  **PM `main`↔LDR todo drift** (`check_todo_regression`); pinning now jams all PM main merges incl. automated
+  promotion. **Pin after** PM `main`==LDR on plan todos (Phase-5 reconcile). Context to register: `plan-health-gate`
+  (verify via `gh api .../commits/<main-sha>/check-runs` before the ruleset PATCH).
+- **PM `main`↔LDR drift (Phase 5)**: 38 main-only (37 `[skip ci]` churn +1 doc) + ~42 LDR-ahead;
+  `main-backmerge-to-ldr` alive but lagging. Benign churn, not feature-blocking; full reconcile = backmerge then
+  LDR→main promote.
 
 ### Resolved blockers (were operator-gated; now cleared)
 
@@ -3996,7 +4038,7 @@ been the sole required check fleet-wide for weeks.
 | `CI RECOVERED: instruments/mdps/mtds/execution …`                                         | **HEALTHY** — cascade converging                                                                   | none                                                                                                                                                                                                                                                                                                                                                                                   |
 | `sit-unlock: SIT Failed — staging unlocked`                                               | **HEALTHY** — the intended fail-safe (SIT runs, fails on real incoherence, unlocks for fixes)      | none (machinery now correct after the sit-gate fixes #165/#166)                                                                                                                                                                                                                                                                                                                        |
 | `ldr-ci-monitor: unified-trading-pm RED→GREEN`                                            | **HEALTHY** — my PM credential-ratchet fix recovered                                               | none                                                                                                                                                                                                                                                                                                                                                                                   |
-| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                        |
+| `CI REGRESSION: deployment-service/execution-service FAILING (was FEATURE_GREEN)` on main | **TRANSIENT** — cascade in flux; both recovered minutes later (execution→FEATURE_GREEN 17:43)      | self-resolving; consider debouncing FEATURE_GREEN↔FAILING flaps                                                                                                                                                                                                                                                                                                                       |
 | `mdps/mtds FAILING — AttributeError BATCH_HYPERLIQUID_REST`                               | **REAL — the #1 blocker**                                                                          | the UAC+UTL `BATCH_HYPERLIQUID` enum migration is coherent on LDR+staging but **main lags for BOTH** (data-value change `batch_hyperliquid_rest`→`batch_hyperliquid`); consumer/SIT QGs that clone UTL@main hit the old name. Needs the **coordinated UAC+UTL staging→main promotion** (data-track; see finding below). Do NOT fix piecemeal (my UTL #250 was closed for exactly this) |
 | `execution #216 QG: STEP 5.21 reportUnknown* warning/none + 5.12b gs:// URI`              | **REAL** — pre-existing execution-service QG-debt surfaced by the dep-update PR                    | execution-service's own plan (basedpyright strict config + replace `gs://` f-string in `evidence_router.py:66` with `resolve_bucket_name`)                                                                                                                                                                                                                                             |
 | `mtds #133 QG: pydantic ValidationError CandleBoundaryCrossedEvent`                       | **REAL** — likely the same enum-value migration touching a UAC event model                         | resolves with the coordinated enum migration; verify the event's `pipeline_mode` field accepts the new value                                                                                                                                                                                                                                                                           |
@@ -4244,8 +4286,8 @@ rollout, never per-repo).
 
 ### What shipped (all to LDR; PM Option-B → main)
 
-1. **Step 0 heal** — reconciled PM main↔LDR (brought promote-bot `--auto --rebase` + exclude-AO-from-SIT + CI fixes DOWN
-   to LDR), cleared the dangling `execution-service=0.2.0` breaking-cascade lock + drained AO phantom.
+1. **Step 0 heal** — reconciled PM main↔LDR (brought promote-bot `--auto --rebase` + exclude-AO-from-SIT + CI fixes
+   DOWN to LDR), cleared the dangling `execution-service=0.2.0` breaking-cascade lock + drained AO phantom.
 2. **Step 1 content-based breaking-detection** — `scripts/cicd/detect_breaking_change.py` (AST public-surface differ; 8
    unit tests; rule-11 proven on UTL+UAC) replaces the crude `grep '^-' __init__.py` heuristic; wired into
    semver-agent.yml + .tmpl + **rolled out to all 23 repos' LDR**; SIT now breaking-gated via `breaking_pending`

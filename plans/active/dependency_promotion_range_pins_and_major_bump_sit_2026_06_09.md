@@ -96,6 +96,19 @@ clean fix is to relax it.
 - [ ] [DOCS] P2. (Forward-insurance) IF the fleet ever adopts `uv sync --frozen` (install FROM the lock for reproducible
       builds), re-introduce a lock-freshness gate — but as an **external-only** check (internal editable deps stay
       exempt), since the editable `version =` snapshot is always cosmetic. Until then, not needed.
+- [ ] [DOCS] P1. **🔴 CORRECTION (2026-06-09) — Phase-1's "nothing installs FROM `uv.lock`" claim is FALSE for CI.** The
+      claim was verified only against the LOCAL scripts (`base-service.sh` / `base-library.sh` use `uv pip install -e .`
+      → range-resolve, lock irrelevant). But the **CI reusable workflow
+      `unified-trading-pm/.github/workflows/python-quality-gates-v2.yml` runs `uv venv .venv` + `uv sync` (lines
+      360-361)** — and `uv sync` installs EXACTLY the `uv.lock` pins. So in CI the lock DOES pin (every transitive dep
+      too), while locally it doesn't → a CI-vs-local divergence that hid a real vuln: UTL's lock pinned the vulnerable
+      transitive `pip==26.0.1` (PYSEC-2026-196), which only CI's `uv sync` installed → CI pip-audit red, local clean.
+      This is why the "constraint not honored" symptom was CI-only. Implication: **the lock is NOT purely a record — for
+      CI it is the install manifest**, so a fix-version bump must reach the LOCK (a pyproject floor alone is
+      insufficient until `uv lock` is re-run; a plain `uv lock` won't upgrade an existing transitive pin — use
+      `uv lock --upgrade-package <name>` or an override floor). Decision for a future agent: either (a) align local + CI
+      to the SAME install path, or (b) keep the divergence but treat the lock as CI-authoritative for transitive
+      security pins. Repo: unified-trading-pm (docs/ci-cd-flow.md + this plan).
 - [x] [DOCS] P1. Docs already consistent — `CLAUDE.md` / `SUB_AGENT` / `ci-cd-flow.md` say "uv.lock is correct, no
       exact-pin fix needed," which this resolution confirms (the only delta is relaxing the gratuitous freshness gate).
 
@@ -141,27 +154,28 @@ clean fix is to relax it.
       (`internal/validation/instruction.py`, which was just `from .instruction import *` — surface fully preserved by
       the `internal/validation/instruction/` package that replaced it) + one removed Infura Starknet RPC dict entry (per
       the "removed providers: Infura" rule). Neither is a public-surface removal; the differ correctly says
-      non-breaking. **PRECISE TRACE (run logs):** UAC semver-agent run **27210686735** (13:47Z) `Resolved bump category:
-      breaking` on commit `77c6f220` ("chore(uac): delete dead instruction.py re-export stub") and dispatched
-      `version-bump … is_breaking=true` — there is NO `feat!:`/`BREAKING CHANGE` label in the range (all `chore(`/
-      `feat(scope):`/`fix(`), so the "breaking" verdict came from the **differ at bump-time**, NOT a label. PM
-      `update-repo-version.yml` run **27210707308** (13:48Z) then printed `STAGING LOCKED: breaking minor bump
-      unified-api-contracts=0.5.0` (`bump_type=minor` + `is_breaking=true` → the line-138 "Breaking MINOR bump cascade"
-      path) and fanned `is_breaking: true`, `constraint: >=0.5.0,<1.0.0` dependency-update dispatches to all **18**
-      dependents (→ execution-service PR #232 et al.). **So the bump-time differ verdict (breaking) is contradicted by
-      the CURRENT differ (non-breaking) for the same comparison** — a differ FALSE-POSITIVE on the shim-FILE deletion:
-      the bump-time run fetched the differ from PM `main` at runtime and ran it against the semver-agent's `DIFF_BASE`
-      (a staging baseline / `HEAD~1` / empty-tree fallback), which read the deleted `instruction.py` MODULE's
-      `from .instruction import *` re-exports as REMOVED exports because that narrow base predates / doesn't span the
-      `instruction/` PACKAGE that preserves them (the full main→staging comparison, which DOES span both, correctly
-      nets 960→960). **The cascade then CHURNED**: at 14:35Z a routine SIT `0.2.0→0.3.0` LDR→staging bump (pure
-      version+dep-pin, zero source change, differ=`is_breaking:false`) RE-LOCKED staging (`lock_reason` now
-      `system-integration-tests=0.3.0`, `breaking_pending` grown to `[execution-service, system-integration-tests,
-      unified-api-contracts]`) — the spurious-cascade is systemic, re-firing on every minor promotion and damming the
-      whole fleet (all `quickmerge`s now blocked by STAGE-1.5 staging-lock-check, incl. PM docs). **Fix:** make the
-      semver-agent's emitted `is_breaking` EXACTLY the differ verdict computed against the SAME promotion-base the lock
-      cares about (compare the promoted ref against the PREVIOUS promoted ref / released tag — never `HEAD~1`/empty-tree
-      — so a file-move/shim-deletion-with-package-replacement nets non-breaking), AND make the differ robust to a
+      non-breaking. **PRECISE TRACE (run logs):** UAC semver-agent run **27210686735** (13:47Z)
+      `Resolved bump category:     breaking` on commit `77c6f220` ("chore(uac): delete dead instruction.py re-export
+      stub") and dispatched `version-bump … is_breaking=true` — there is NO `feat!:`/`BREAKING CHANGE` label in the
+      range (all `chore(`/ `feat(scope):`/`fix(`), so the "breaking" verdict came from the **differ at bump-time**, NOT
+      a label. PM `update-repo-version.yml` run **27210707308** (13:48Z) then printed
+      `STAGING LOCKED: breaking minor bump     unified-api-contracts=0.5.0` (`bump_type=minor` + `is_breaking=true` →
+      the line-138 "Breaking MINOR bump cascade" path) and fanned `is_breaking: true`, `constraint: >=0.5.0,<1.0.0`
+      dependency-update dispatches to all **18** dependents (→ execution-service PR #232 et al.). **So the bump-time
+      differ verdict (breaking) is contradicted by the CURRENT differ (non-breaking) for the same comparison** — a
+      differ FALSE-POSITIVE on the shim-FILE deletion: the bump-time run fetched the differ from PM `main` at runtime
+      and ran it against the semver-agent's `DIFF_BASE` (a staging baseline / `HEAD~1` / empty-tree fallback), which
+      read the deleted `instruction.py` MODULE's `from .instruction import *` re-exports as REMOVED exports because that
+      narrow base predates / doesn't span the `instruction/` PACKAGE that preserves them (the full main→staging
+      comparison, which DOES span both, correctly nets 960→960). **The cascade then CHURNED**: at 14:35Z a routine SIT
+      `0.2.0→0.3.0` LDR→staging bump (pure version+dep-pin, zero source change, differ=`is_breaking:false`) RE-LOCKED
+      staging (`lock_reason` now `system-integration-tests=0.3.0`, `breaking_pending` grown to
+      `[execution-service, system-integration-tests,     unified-api-contracts]`) — the spurious-cascade is systemic,
+      re-firing on every minor promotion and damming the whole fleet (all `quickmerge`s now blocked by STAGE-1.5
+      staging-lock-check, incl. PM docs). **Fix:** make the semver-agent's emitted `is_breaking` EXACTLY the differ
+      verdict computed against the SAME promotion-base the lock cares about (compare the promoted ref against the
+      PREVIOUS promoted ref / released tag — never `HEAD~1`/empty-tree — so a
+      file-move/shim-deletion-with-package-replacement nets non-breaking), AND make the differ robust to a
       module→package move (count exports at the package boundary, not per-file). Add a regression asserting a
       deprecated-shim-file deletion whose surface is preserved by a sibling package classifies non-breaking. repo:
       unified-api-contracts (`semver-agent.yml` DIFF_BASE) + unified-trading-pm (`detect_breaking_change.py` + tests).
@@ -203,14 +217,14 @@ clean slate). End state:
       against the real UAC 0.3.0→0.5.0 scenario: scan range now contains zero `feat!:` → differ runs → correct
       non-breaking verdict → no spurious lock. PM@`0cfac845e` (on `main` via #187). **Differ regression test added**
       (`tests/unit/test_detect_breaking_change.py::test_module_to_package_move_preserves_surface_is_not_breaking`, 13
-      pass). **Rolled out fleet-wide** — `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` regenerated all
-      24 repos' `.github/workflows/semver-agent.yml`; pushed to each repo's LDR (24/24 ok), draining to staging→main.
-      (Logic-correcting change — loosens, can't newly-fail any repo → rule-11a safe.)
+      pass). **Rolled out fleet-wide** — `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` regenerated
+      all 24 repos' `.github/workflows/semver-agent.yml`; pushed to each repo's LDR (24/24 ok), draining to
+      staging→main. (Logic-correcting change — loosens, can't newly-fail any repo → rule-11a safe.)
 - [x] ✅ [SCRIPT] P0. **Lock HEALED** — `staging_status` cleared (`locked=false`, `breaking_pending=[]`,
-      `pending_repos=[]`, `sit_retry_count=0`) on `origin/main` (the ref quickmerge STAGE-1.5 + check-staging-lock read).
-      Reached main by admin-merging the standing LDR→main drain PR #187 (after fixing two PRE-EXISTING gate failures that
-      had dammed it — see PM-hygiene finding below). `main locked=false` confirmed; re-fired stale `check-staging-lock`
-      checks on the LDR→staging promote PRs (now PASS).
+      `pending_repos=[]`, `sit_retry_count=0`) on `origin/main` (the ref quickmerge STAGE-1.5 + check-staging-lock
+      read). Reached main by admin-merging the standing LDR→main drain PR #187 (after fixing two PRE-EXISTING gate
+      failures that had dammed it — see PM-hygiene finding below). `main locked=false` confirmed; re-fired stale
+      `check-staging-lock` checks on the LDR→staging promote PRs (now PASS).
 - [x] ✅ [SCRIPT] P0. **18 spurious dep-update fan-out PRs CLOSED** (+branches deleted): execution-service#232,
       system-integration-tests#39/#40/#41, unified-trading-library#259, market-tick-data#162, deployment-service#40,
       features#26, strategy#82, alerting#38, instruments#419, greeks#15, deployment-api#29, client-reporting-api#27,
@@ -226,16 +240,16 @@ clean slate). End state:
       commits behind — the `plan-health-gate` HARD + `quality-gates-v2` post-checks failed on accumulated debt unrelated
       to any one change). Fixes: **(a) over-1000L plans** — the per-asset-group manifest-canonicalisation plans (cefi
       1942L / defi 1623L / prediction 1427L / tradfi 1346L / master_data_catalogue 1647L) are catalogue / cross-plan
-      coordinator / L3-owner plans (titles literally say "MASTER COORDINATOR" / "L3 owner") that are large in CONTEXT but
-      carry <100 todos, so the locked-AND->100-todos umbrella proxy missed them. Added an explicit auditable
+      coordinator / L3-owner plans (titles literally say "MASTER COORDINATOR" / "L3 owner") that are large in CONTEXT
+      but carry <100 todos, so the locked-AND->100-todos umbrella proxy missed them. Added an explicit auditable
       `umbrella: true` frontmatter exemption to `check_line_caps.sh` and marked those 5 plans (sports already exempt via
       the >100 heuristic). `check_line_caps: no hard violations`. **(b) credential-orphan ratchet 12-vs-11** — the
       checker greps the bare `BLOCKED-CREDENTIALS` token, so it counted status-TAXONOMY/rule-doc lines (e.g.
       `> set (BLOCKED-CREDENTIALS / BLOCKED-OPERATOR-DECISION / …)`) as orphan asks; added an `_is_status_taxonomy_line`
-      exclusion (≥2 distinct `BLOCKED-*` tokens on a line ⇒ documentation, not an ask) → 10 ≤ baseline 11, passes without
-      raising the ceiling. Two trivial blockers also fixed to drain #187 (E501 in `check_runbook_execution_owner.py`,
-      invalid `P4.1` priority in `bucket_env_split_rollout`). Composes with `cicd_contract_hardening_2026_06_01.md` §
-      "stale-main-manifest dams the fleet".
+      exclusion (≥2 distinct `BLOCKED-*` tokens on a line ⇒ documentation, not an ask) → 10 ≤ baseline 11, passes
+      without raising the ceiling. Two trivial blockers also fixed to drain #187 (E501 in
+      `check_runbook_execution_owner.py`, invalid `P4.1` priority in `bucket_env_split_rollout`). Composes with
+      `cicd_contract_hardening_2026_06_01.md` § "stale-main-manifest dams the fleet".
 - [ ] [PLAN-HYGIENE] P3. **(Residual, NICE-TO-HAVE)** the credential-orphan checker still counts COMPLETED (`[x] ✅`)
       credential items + plain prose mentions as orphans (10 remain, all grandfathered under baseline 11). A tighter
       version would count only OPEN `- [ ]` credential-ask todos; deferred (not blocking — passes baseline). repo:
