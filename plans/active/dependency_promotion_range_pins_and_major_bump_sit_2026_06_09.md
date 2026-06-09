@@ -191,6 +191,47 @@ clean fix is to relax it.
       facade, not the deleted `internal/validation/instruction` subtree; the Infura refs are local script/test strings,
       not the removed dict key).
 
+#### 🏁 RESOLUTION LOG — 2026-06-09 (autonomous finish, vm-planning stand-in, operator-authorized admin)
+
+All three Phase 3.5 P0s above are RESOLVED (operator chose "full fix: clear + durable" + authorized admin-push for a
+clean slate). End state:
+
+- [x] ✅ [SCRIPT] P0. **DEFECT 1 FIXED** — semver-agent baseline-commit resolution rewritten in
+      `scripts/workflow-templates/semver-agent.yml.tmpl` (both the Step-2 commit-range AND the Step-3 differ DIFF_BASE):
+      pickaxe on the pyproject `version = "X"` string (message-agnostic, resolves admin-set versions), **HEAD-ancestry
+      only** (never `--all`), with a **bounded fail-safe** (most-recent release commit, never all-history). Verified
+      against the real UAC 0.3.0→0.5.0 scenario: scan range now contains zero `feat!:` → differ runs → correct
+      non-breaking verdict → no spurious lock. PM@`0cfac845e` (on `main` via #187). **Differ regression test added**
+      (`tests/unit/test_detect_breaking_change.py::test_module_to_package_move_preserves_surface_is_not_breaking`, 13
+      pass). **Rolled out fleet-wide** — `rollout-workflow-templates.sh --template semver-agent.yml.tmpl` regenerated all
+      24 repos' `.github/workflows/semver-agent.yml`; pushed to each repo's LDR (24/24 ok), draining to staging→main.
+      (Logic-correcting change — loosens, can't newly-fail any repo → rule-11a safe.)
+- [x] ✅ [SCRIPT] P0. **Lock HEALED** — `staging_status` cleared (`locked=false`, `breaking_pending=[]`,
+      `pending_repos=[]`, `sit_retry_count=0`) on `origin/main` (the ref quickmerge STAGE-1.5 + check-staging-lock read).
+      Reached main by admin-merging the standing LDR→main drain PR #187 (after fixing two PRE-EXISTING gate failures that
+      had dammed it — see PM-hygiene finding below). `main locked=false` confirmed; re-fired stale `check-staging-lock`
+      checks on the LDR→staging promote PRs (now PASS).
+- [x] ✅ [SCRIPT] P0. **18 spurious dep-update fan-out PRs CLOSED** (+branches deleted): execution-service#232,
+      system-integration-tests#39/#40/#41, unified-trading-library#259, market-tick-data#162, deployment-service#40,
+      features#26, strategy#82, alerting#38, instruments#419, greeks#15, deployment-api#29, client-reporting-api#27,
+      fund-admin#16, ml-service#16, trading-agent#26, batch-live-reconciliation#24. Non-breaking minors are absorbed by
+      consumers' existing `>=0.x` ranges (pull, not push).
+- [ ] [SCRIPT] P1. **DEFECT 2 residual (consumer dep-clone base) — STILL OPEN.** The `check_version_constraint` clone
+      that resolves a consumer-PR's dep from `main`/manifest-tag (never the PR's BASE branch) is unfixed; it only bit
+      because the spurious cascade pinned a consumer to a staging-only version. With the spurious cascade fixed it can't
+      trigger today, but a GENUINE future major needs the dependency promoted (main/tag) before consumers pin. Track for
+      the next genuine major. repo: unified-trading-pm (`setup-workspace-from-manifest.sh`).
+- [ ] [PLAN-HYGIENE] P1. **PRE-EXISTING debt dams the PM LDR→main drain (discovered 2026-06-09; root of `main` 82
+      commits behind).** The `plan-health-gate` (HARD) + `quality-gates-v2` post-checks fail on accumulated debt
+      unrelated to any one change: (a) **5 manifest-canonicalisation plans over the 1000L hard cap** (cefi 1941L / defi
+      1622L / prediction 1426L / master_data_canonicalisation 1646L; umbrella-exempt: cicd_contract_hardening,
+      master_to_live_defi) — need splitting; (b) **credential-ask-orphan ratchet at 12 vs baseline 11** (one uncited
+      `BLOCKED-CREDENTIALS` line in the Kalshi/Databento/Massive/Tardis set). Two trivial blockers fixed this session to
+      drain #187 (E501 in `check_runbook_execution_owner.py`, invalid `P4.1` priority in `bucket_env_split_rollout`), but
+      the structural debt remains and will re-dam the next PM→main PR. **Fix:** split the 4 over-cap canonicalisation
+      plans (or mark umbrella if genuinely umbrella), and resolve/re-baseline the +1 credential orphan with a ping. repo:
+      unified-trading-pm. Composes with `cicd_contract_hardening_2026_06_01.md` § "stale-main-manifest dams the fleet".
+
 ### Phase 4 — MAJOR/MINOR classification matrix refinement — P2
 
 - [x] ✅ [SCRIPT+DOCS] P2. DONE 2026-06-09 (PM@<this commit>) — closed the highest-value schema-contract gap: the differ
