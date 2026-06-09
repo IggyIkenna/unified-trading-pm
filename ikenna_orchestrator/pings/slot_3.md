@@ -1,3 +1,36 @@
+## [Slot 3 → Operator] 2026-06-09 — CREDENTIAL APPROVAL REQUEST: EIA API key (energy macro)
+
+### CREDENTIAL APPROVAL REQUEST — EIA (U.S. Energy Information Administration) adapter
+
+**Status**: `BLOCKED-CREDENTIALS`
+
+**Plan-of-record**: `plans/active/macro_econ_adapter_scaffolds_2026_06_09.md` § Phase 4 (parent_epic: mtds_mdps_master);
+audit `plans/active/issues/macro_micro_econ_data_capture_audit_2026_06_05.md` Category C.
+
+**Vendor**: EIA Open Data API v2 (`api.eia.gov`) · weekly energy inventories (natural-gas storage, crude stocks) +
+energy price series · **FREE tier** (no cost; key gates rate-limit/attribution only).
+
+**What I need**:
+
+- A free EIA API key — register at https://www.eia.gov/opendata/register.php (email-only, instant).
+- Store as Secret Manager secret `eia-api-key` (the adapter reads it via `get_api_key("eia-api-key")`), or hand me the
+  key to store. Account: operator email of choice.
+
+**Unblocks**:
+
+- `EIAAdapter` live fetch (`market-tick-data-service/.../adapters/tradfi/eia_adapter.py::fetch_series`).
+- The live integration test `tests/integration/test_macro_adapters_integration.py::test_eia_live` (skips without
+  `EIA_API_KEY` today).
+- EIA energy-macro backfill RUN (gated additionally on the `altdata` asset-group decision — audit Open Question #1).
+
+**Without it**: the EIA adapter **scaffold + mock unit tests ship in this same unit** (already green); only the live
+fetch + cassette recording wait. Status is `BLOCKED-CREDENTIALS`, NOT `DEFERRED`.
+
+**Note**: the sibling free macro adapters in the same plan (fear_greed, CFTC COT, Baker Hughes) need **no** credentials
+and are live-capable now.
+
+---
+
 > **🟢 2026-05-22 UPDATE** — IS backfill (Wave 2) handled from slot 1; continue Wave 1 AWS migration.
 
 > **✅ [2026-05-23 ~20:15 UTC slot-3] DONE — all 3 operator-approved actions shipped + VMs killed** Plan:
