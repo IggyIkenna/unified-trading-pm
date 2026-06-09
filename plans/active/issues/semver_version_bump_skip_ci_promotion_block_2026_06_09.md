@@ -191,3 +191,56 @@ Implementation requirements (get these exactly right):
 - **SHA coupling is metadata + a commit status only** (PM manifest records `commit_sha`; semver-agent posts a SHA-keyed
   label-vs-API-diff status) — neither is cryptographic, neither pins the artifact.
 - Conclusion: relocating/retreating the bump commit (Option B or C) breaks **no** signature, hash, or pin.
+
+---
+
+## 11. Implementation status (2026-06-09, Harsh — Option C, BROADENED to metadata-only)
+
+### New finding: the `[skip ci]` flaw has a **second source** (dep pins), not just semver bumps
+
+When validating on the live blocker, the actual `execution-service` staging→main PR **#231** head was **not** a semver
+bump — it was **`dd24b100 chore(deps): pin unified-api-contracts to 0.3.0 [skip ci]`**, produced by
+`update-dependency-version.yml` (MINOR/PATCH dep bump → `[skip ci]` direct commit, "compatible update, no QG needed").
+**Identical structural flaw, sibling source.** So the fix must cover BOTH `[skip ci]` producers, not just semver-agent.
+
+### What shipped (broadened: "version-only" → **metadata-only**)
+
+- **`python-quality-gates-v2.yml`** (reusable, `@live-defi-rollout` → all repos immediately): fast-path now matches a
+  commit whose message is **`chore(release): bump version to …`** OR **`chore(deps): pin …`** AND whose diff is confined
+  to **`pyproject.toml`/`uv.lock`** → skips clone/sync/run, reports `quality-gates-v2` GREEN in seconds, emits output
+  `metadata_only`. Fires on **`push` and `workflow_dispatch`** (so manual recovery of a stuck head is fast too). A MAJOR
+  dep update is a `feat!:` PR with full QG (not matched).
+- **`semver-agent.yml.tmpl`**: bump commit drops `[skip ci]` (loop-safe; chore-skip prevents re-trigger).
+- **`update-dependency-version.yml`**: MINOR/PATCH pin commit drops `[skip ci]` (preserves the existing "no QG needed"
+  decision via the fast-path).
+- **`quality-gates-v2.yml.tmpl`** caller: skips the `qg-passed`/image dispatch when `metadata_only == 'true'`.
+
+**Landed:** PM LDR `86013a1d2` → `6cbaa92b9` → `303d62d21` (SSOT + templates). Rolled out to **execution-service only**
+(operator decision) on its LDR `c63f6c09`. Reusable fast-path is **live for all repos** now (via `@live-defi-rollout`).
+
+### Validated (deterministic, no live CI)
+
+Ran the reusable's detection logic against #231's exact head `dd24b100`: message matches `chore(deps): pin …`, changed
+files = `pyproject.toml` only → **`metadata_only=TRUE`** → the fast-path would report `quality-gates-v2` GREEN on that
+commit. So once active, #231 unblocks without a wasteful full run.
+
+### NOT yet done — entangled live recovery (needs a decision)
+
+The live `execution-service` recovery is **not** a clean apply: `staging` carries a tangle of stacked `[skip ci]`
+commits with a version escalation (`0.2.0→0.3.0→0.4.0`) and a manifest mismatch (`versions=0.3.0` vs
+`staging_versions=0.4.0`, while `pyproject` reads `0.1.1` after a clean-start force-sync). To recover #231 so it
+**sticks**, the new `semver-agent.yml` (no `[skip ci]`) must first reach `execution-service` **main** (admin
+`.github/**` carve-out) — otherwise the still-old main semver-agent can re-bump on the next QG-green (whack-a-mole).
+Merging the tangled staging to main also needs the escalation artifacts reconciled. **This is live-incident untangling
+in the CICD domain → coordinate before executing.**
+
+### Updated open questions for Ikenna
+
+1. **Live recovery of `execution-service` #231**: OK to (a) admin-push the 3 fixed workflows to `execution-service`
+   `main`, then (b) reconcile the staging version-escalation tangle + recover #231 via the fast-path? Or do you want to
+   drive the untangle?
+2. **Full 24-repo rollout**: the per-repo rollout also carries 3 of your pending template changes (checkout@v5/
+   setup-python@v6, content-based breaking-detection, chore-release-before-dispatch) — proceed fleet-wide, or sequence
+   them yourself?
+3. **C now, B later?** (unchanged — fold the bump into the promotion content as a future cleanup).
+4. **Retire the `ci-failure-watcher` close+reopen band-aid** for this signature once the fleet has the fast-path?
