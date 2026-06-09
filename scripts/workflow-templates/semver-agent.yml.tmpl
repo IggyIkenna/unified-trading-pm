@@ -173,13 +173,29 @@ jobs:
             COMMITS=$(git log --oneline 2>/dev/null || echo "")
             echo "No prior staging version — scanning all commits"
           else
-            BASELINE_SHA=$(git log --oneline --all | grep -m1 "bump version to ${BASELINE}" | awk '{print $1}' 2>/dev/null || echo "")
+            # Resolve the baseline-version commit ROBUSTLY (incident 2026-06-09): UAC 0.3.0 was set by an
+            # admin `chore(version): align ... to 0.3.0` commit, NOT a `bump version to 0.3.0` message, so the
+            # message grep MISSED it and fell back to scanning ALL history → an ancient `feat!:` in history
+            # flipped BUMP=breaking (the differ is skipped once BUMP=breaking) → a SPURIOUS staging-lock
+            # cascade fleet-wide. Fix: pickaxe the authoritative, message-agnostic signal — the
+            # `version = "X"` string in pyproject.toml — HEAD-ancestry ONLY (never `--all`, which can match a
+            # divergent branch's release commit and poison both the label scan and the differ base). Keep the
+            # message grep as a secondary, also HEAD-ancestry.
+            BASELINE_SHA=$(git log -1 --format=%H -S"version = \"${BASELINE}\"" -- pyproject.toml 2>/dev/null || echo "")
+            [ -z "$BASELINE_SHA" ] && BASELINE_SHA=$(git log --oneline | grep -m1 "bump version to ${BASELINE}" | awk '{print $1}' 2>/dev/null || echo "")
             if [ -n "$BASELINE_SHA" ]; then
               COMMITS=$(git log --oneline "${BASELINE_SHA}..HEAD" 2>/dev/null || echo "")
               echo "Scanning commits from $BASELINE_SHA (version $BASELINE) to HEAD"
             else
-              COMMITS=$(git log --oneline 2>/dev/null || echo "")
-              echo "WARNING: Could not find commit for baseline $BASELINE — scanning all commits"
+              # FAIL-SAFE (incident 2026-06-09): baseline commit unresolvable → do NOT scan ALL history (it
+              # catches ancient `feat!:` commits → spurious breaking + poisons the differ base). Bound to the
+              # most recent release/version commit reachable from HEAD; if none, the last commit only. Erring
+              # toward a BOUNDED scan is safe — at worst we under-bump (caught at the next promote), never a
+              # spurious fleet-locking breaking verdict off unrelated ancient history.
+              BASELINE_SHA=$(git log --oneline | grep -m1 -E "chore\((release|version)\):" | awk '{print $1}' 2>/dev/null || echo "")
+              [ -z "$BASELINE_SHA" ] && BASELINE_SHA="HEAD~1"
+              COMMITS=$(git log --oneline "${BASELINE_SHA}..HEAD" 2>/dev/null || git log --oneline -1 2>/dev/null || echo "")
+              echo "WARNING: baseline $BASELINE commit unresolvable — BOUNDED scan from $BASELINE_SHA to HEAD (fail-safe; was all-history, the 2026-06-09 spurious-cascade bug)"
             fi
           fi
 
@@ -229,7 +245,11 @@ jobs:
               CHANGED_FILES=$(git diff-tree --no-commit-id --name-only -r HEAD)
             fi
           else
-            BASELINE_SHA_FOR_DIFF=$(git log --oneline --all | grep -m1 "bump version to ${BASELINE}" | awk '{print $1}' 2>/dev/null || echo "HEAD~1")
+            # Reuse the baseline commit resolved robustly in Step 2 (same run-block scope) — pickaxe on the
+            # `version = "X"` pyproject string, HEAD-ancestry, with a bounded fail-safe — instead of the old
+            # `git log --all | grep "bump version to ${BASELINE}"` which missed admin-set versions and poisoned
+            # the differ base with a cross-branch commit (incident 2026-06-09 spurious-cascade root cause).
+            BASELINE_SHA_FOR_DIFF="${BASELINE_SHA:-HEAD~1}"
             DIFF_BASE="${BASELINE_SHA_FOR_DIFF}"
             CHANGED_FILES=$(git diff --name-only "${BASELINE_SHA_FOR_DIFF}..HEAD" 2>/dev/null || echo "")
           fi
