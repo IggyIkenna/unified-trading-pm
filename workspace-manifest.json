@@ -650,7 +650,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1145,7 +1145,7 @@
       "dependencies": [],
       "completion_path": "all",
       "notes": "Pure root (L0). Contains workspace SSOT, CI/CD templates, cursor rules, AI plans. CI infrastructure dep for ALL repos \u2014 cloned alongside target repo in quality-gates.yml.",
-      "ci_status": "FAILING",
+      "ci_status": "FEATURE_GREEN",
       "coverage_pct": 93,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "none",
@@ -1164,7 +1164,7 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "unified-trading-api": {
       "github_url": "https://github.com/IggyIkenna/unified-trading-api",
@@ -1807,17 +1807,14 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-08T22:37:15.850842Z",
-    "locked_reason": "Breaking MINOR bump cascade: unified-api-contracts=0.2.0 (pre-1.0.0)",
-    "lock_version": "0.2.0",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": "Clean-start heal 2026-06-09: dangling uac=0.2.0 breaking-cascade lock cleared (uac already promoted, versions==staging, pending empty); breaking_pending pruned",
+    "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
-    "locked_alert_sent": true,
-    "breaking_pending": [
-      "market-data-processing-service",
-      "unified-api-contracts"
-    ]
+    "locked_alert_sent": false,
+    "breaking_pending": []
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
