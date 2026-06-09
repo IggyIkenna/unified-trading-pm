@@ -195,6 +195,6 @@ Result file at `plans/audit/results/instruments_master_audit_YYYY_MM_DD.md`. Sam
 
 ## Linked Results
 
-| Date                      | Result file | Status |
-| ------------------------- | ----------- | ------ |
-| (populated as audits run) |             |        |
+| Date       | Result file                                                  | Status                                                                                                                                                                                                                          |
+| ---------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-06-08 | `plans/audit/results/instruments_master_audit_2026_06_08.md` | complete — runtime mostly sound; 3 CF-11 swallows (kalshi/ibkr/polygon) + polygon removed-provider still wired + orchestrator silent-excepts; findings → `plans/active/issues/instruments_service_audit_findings_2026_06_08.md` |

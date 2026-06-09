@@ -42,10 +42,13 @@ jobs:
           # Cross-repo run/PR reads need fleet-wide access; the default GITHUB_TOKEN is
           # scoped to this repo only. GH_PAT carries the fleet read scope.
           GH_TOKEN: ${{ secrets.GH_PAT }}
-        # --escalate: hand merge-conflict-stuck promotion PRs to the orchestrator
-        # (repository_dispatch → escalate-to-orchestrator.yml) instead of only paging.
-        # Idempotent per PR label, so the */15m cron does not re-dispatch.
-        run: python3 scripts/repo-management/ci_failure_watcher.py --escalate
+        # --auto-recover: deterministically fix the v2-NEVER-REPORTED deadlock in-band by
+        #   close+reopen (re-fires pull_request → quality-gates-v2). No worker needed, so it
+        #   does not depend on the orchestrator being up. Runs BEFORE --escalate.
+        # --escalate: hand the remaining merge-conflict-stuck promotion PRs (a real conflict
+        #   wall a worker must rebase) to the orchestrator (repository_dispatch →
+        #   escalate-to-orchestrator.yml). Idempotent per PR label, so */15m never re-dispatches.
+        run: python3 scripts/repo-management/ci_failure_watcher.py --auto-recover --escalate
 
   notify:
     needs: watch

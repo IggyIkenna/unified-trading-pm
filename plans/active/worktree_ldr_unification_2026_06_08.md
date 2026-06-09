@@ -123,3 +123,41 @@ time, mediated by remote atomicity). The sound form is **Path B** (documented + 
   on its next `setup-tab-worktrees.sh --reset-slot 1` (it pushes via explicit `HEAD:live-defi-rollout` refspec, so it is
   unaffected by the tab-mirror retirement). `worktree_clean_check.py` already bases on LDR (the AO main-override was
   removed earlier) — no change needed.
+
+## Open — orchestrator/planning VM host migration to Path-B (2026-06-09, operator-directed)
+
+> Operator 2026-06-09: "the vm-planning vm needs to be redone to use the new cron with the remote remotes and agents
+> using their worktree tabs to offer their commits." The laptop hosts are on Path-B; the **LIVE orchestrator VM is
+> NOT** — it is still the symmetric-worker host that spawns VM workers, and those workers must offer commits the SAME
+> Path-B way (reference-clone slots on `live-defi-rollout`, ff-pull cron, `quickmerge --agent --files`), not the retired
+> tab-branch model. **Why it matters now:** the `ci-failure-watcher --escalate` path repository-dispatches genuine
+> merge-conflict promotion PRs to this VM to spawn a worker that rebases on LDR — if its workers are on the stale
+> worktree model (or it is running behind), escalation degrades to "no worker spawned". The new `--auto-recover` path
+> (shipped 2026-06-09) removes the v2-never-reported deadlock from the escalate load, so escalations are now RARE and
+> genuinely need a healthy, Path-B-correct worker host.
+
+**Target host (LIVE, audited 2026-06-09):** AWS `i-0c9b283b31d6b5ca7` = `vm-0` / `agent-orchestrator-vm-1`, `m8i.4xlarge`,
+running, `api.agent-orchestrator.odum-research.com → 13.113.200.22`. `/health` reports **version 0.6.0** (CLAUDE.md
+references v0.7+ for `assigned_vm`) and `data_freshness.stale: true` → the deployed orchestrator is also BEHIND and
+should be redeployed as part of this. Worker-topology SSOT: `codex/05-infrastructure/agent-orchestrator-worker-topology.md`.
+
+- [ ] [INFRA] P1. On `i-0c9b283b31d6b5ca7`: pull the new PM tooling (`setup-tab-worktrees.sh` Path-B,
+      `migrate-slots-to-pathb.sh`, `slot_drift_check.py`, the strict-quickmerge pre-push hook, updated CLAUDE.md +
+      SUB_AGENT + codex) onto its main clones via `git pull --ff-only origin live-defi-rollout`, then **DRY-RUN**
+      `migrate-slots-to-pathb.sh --slots 1-<N> --dry-run` (declare VM identity first:
+      `git config --global slotIdentity.name <vm-id>` / `…email` — VMs leave email at the Ikenna fleet default per
+      CLAUDE.md § Commit attribution; `VM_NAME` env supplies the `[slot-N·<vm>]` host tag). Preserves all WIP to
+      `origin/wip-preserve/<vm>-slot-<N>` first.
+- [ ] [INFRA] P1. Execute the Path-B reclone of every orchestrator worker slot on the VM
+      (`migrate-slots-to-pathb.sh --slots 1-<N>`); verify `slot_drift_check.py --tabs-root <tabs>` exits 0 and each slot
+      is a clone on `live-defi-rollout` (HEAD ancestor-or-equal of `origin/LDR`), identity reads `<vm-id> [slot-N·<vm>]`.
+- [ ] [INFRA] P1. Install/refresh the symmetric-worker crons on the VM (`slot-cron-ff-pull.sh` +
+      `slot-git-status-report.sh` every 5 min) so VM workers stay current on LDR and offer commits via
+      `quickmerge --agent --files` from their own reference-clone worktree — confirm `verify-slot-host-symmetry.sh`
+      exits 0 on the VM (both crons installed + ran <10 min + report posted).
+- [ ] [INFRA] P1. Redeploy the orchestrator on the VM to current `live-defi-rollout` (it reports v0.6.0 +
+      `data_freshness.stale: true`); confirm `/health` version advances + `stale: false`, and AutoSpawn headroom is
+      healthy so `--escalate` dispatches actually spawn a worker (the "no worker spawned" symptom clears).
+- [ ] [INFRA] P2. End-to-end smoke: force a genuine merge-conflict promotion PR (or wait for a real one), confirm
+      `ci-failure-watcher --auto-recover --escalate` auto-recovers v2-never-reported PRs in-band AND escalates the true
+      conflict → the VM spawns a Path-B worker that rebases on LDR + re-quickmerges. Archive this section when green.

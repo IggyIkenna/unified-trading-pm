@@ -306,6 +306,14 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                 isinstance(c, dict) and (c.get("conclusion") in _FAIL_CONCLUSIONS_UPPER or c.get("state") == "FAILURE")
                 for c in rollup
             )
+            # Is the required quality-gates-v2 check present in the rollup at all? When it is
+            # ABSENT (never reported) the PR is BLOCKED on an "expected" check — the v2-never-fired
+            # deadlock (promote PR head pushed by a token that suppresses pull_request). That case
+            # is deterministically auto-recoverable (close+reopen re-fires pull_request → v2 runs).
+            v2_present = any(
+                isinstance(c, dict) and "quality-gates-v2" in str(c.get("name") or c.get("context") or "")
+                for c in rollup
+            )
             stuck.append(
                 {
                     "repo": repo,
@@ -318,6 +326,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "age_min": int(age_min),
                     "url": pr.get("url") or "",
                     "failed_check": failed_check,
+                    "v2_present": v2_present,
                 }
             )
     return stuck
@@ -349,7 +358,9 @@ def detect_resolved_prs(repo: str, resolved_hours: float, now: _dt.datetime) -> 
                 "--limit",
                 "30",
                 "--json",
-                "number,title,state,merged,closedAt,headRefName,url",
+                # NOTE: `merged` is NOT a valid `gh pr list` JSON field (it 404s the whole query →
+                # resolved bookends silently never fired). Use `mergedAt` (non-null ⟺ merged).
+                "number,title,state,mergedAt,closedAt,headRefName,url",
             ]
         )
         if not isinstance(prs, list):
@@ -372,7 +383,7 @@ def detect_resolved_prs(repo: str, resolved_hours: float, now: _dt.datetime) -> 
                     "number": pr["number"],
                     "title": pr.get("title") or "",
                     "head": pr.get("headRefName") or "",
-                    "merged": bool(pr.get("merged")),
+                    "merged": bool(pr.get("mergedAt")),
                     "url": pr.get("url") or "",
                 }
             )
@@ -652,6 +663,46 @@ def escalate_stuck_prs(stuck: list[dict], *, dry_run: bool = True) -> list[dict]
     return dispatched
 
 
+def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[dict]:
+    """Deterministically recover a v2-NEVER-REPORTED promotion-PR deadlock by close+reopen.
+
+    A promotion PR sits BLOCKED forever when the required quality-gates-v2 check never reported
+    on its head SHA (e.g. the LDR head was pushed by a token that suppresses the pull_request
+    event). There is nothing for a worker to 'resolve' — the escalate path returns 'no worker
+    spawned'. The fix is MECHANICAL: close + reopen so the pull_request event fires and v2 runs.
+    Gated to the EXACT deadlock signature — BLOCKED + no failed check + v2 ABSENT from the rollup —
+    so it never touches a genuinely-failing PR (v2 ran red → escalate instead) or one whose v2 is
+    in-flight (v2 present). Once reopened, v2 appears in the rollup, so the next tick won't re-fire
+    (no loop). This is the better fix than escalating a deterministic deadlock to a busy orchestrator.
+    """
+    recovered: list[dict] = []
+    for s in stuck:
+        if s.get("state") != "BLOCKED" or s.get("failed_check") or s.get("v2_present"):
+            continue
+        if s.get("head") not in _PROMOTION_HEADS:
+            continue
+        repo, number = s["repo"], int(s["number"])
+        if dry_run:
+            recovered.append(s)
+            continue
+        closed = (
+            subprocess.run(
+                ["gh", "pr", "close", str(number), "--repo", f"{ORG}/{repo}"], capture_output=True, text=True
+            ).returncode
+            == 0
+        )
+        reopened = (
+            subprocess.run(
+                ["gh", "pr", "reopen", str(number), "--repo", f"{ORG}/{repo}"], capture_output=True, text=True
+            ).returncode
+            == 0
+        )
+        if closed and reopened:
+            print(f"  auto-recovered {repo}#{number}: close+reopen → quality-gates-v2 re-fired (v2-never-reported)")
+            recovered.append(s)
+    return recovered
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", help="Watch a single repo instead of the full fleet.")
@@ -680,6 +731,13 @@ def main() -> int:
         "escalate-to-orchestrator (idempotent per PR label). Default OFF — only the cron passes "
         "it, so --repo/--now diagnostic runs never dispatch.",
     )
+    parser.add_argument(
+        "--auto-recover",
+        action="store_true",
+        help="Deterministically recover the v2-never-reported promotion-PR deadlock by close+reopen "
+        "(no worker needed). Runs BEFORE --escalate so the mechanical deadlock is fixed in-band and "
+        "only genuine conflicts/failures escalate. Default OFF — only the cron passes it.",
+    )
     args = parser.parse_args()
 
     repos = [args.repo] if args.repo else REPOS
@@ -707,6 +765,10 @@ def main() -> int:
     # (resolve) rather than only paging. Idempotent per PR label so the */15m cron does
     # not re-dispatch. Disabling auto-merge on a DIRTY PR is pointless (operator note) —
     # the lever is resolution, gated by the REQUIRED quality-gates-v2 check.
+    # Auto-recover the deterministic v2-never-reported deadlock FIRST (close+reopen re-fires v2);
+    # then escalate only what's left genuinely conflicting/failing to the orchestrator.
+    if args.auto_recover and stuck:
+        auto_recover_stuck_prs(stuck, dry_run=False)
     if args.escalate and stuck:
         escalate_stuck_prs(stuck, dry_run=False)
     return 0

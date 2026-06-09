@@ -132,7 +132,12 @@ that BYPASS the processed layer.**
 | 2   | **features candle_resampler** `features-service/.../delta_one/app/core/candle_resampler.py:159`                                                            | `group_by_dynamic("timestamp", every, closed="left", label="left")` → resamples right-edge MDPS candles to **left-edge** coarse bars (docstring falsely claims byte-equivalence to MDPS) | LIVE on DeFi/features critical path; coarse-tf feature values misalign one bar vs natively-read MDPS files                                                                                                                                                                                                                                        | **BYPASSES gate** (in-memory)        |
 | 3   | **features flow_interaction** `features-service/.../cross_instrument/app/calculators/flow_interaction.py:76,80`                                            | `dt.truncate("1m")` (floors to minute open) then renames `minute`→`timestamp`                                                                                                            | per-minute CVD/imbalance features stamped left-edge; PIT-join on `timestamp` vs right-edge candles off by one minute                                                                                                                                                                                                                              | **BYPASSES gate**                    |
 
-### 🔴 instruments-service reference-data adapters (bypass MDPS gate entirely)
+### ✅ instruments-service reference-data adapters — FIXED 2026-06-08 (Ikenna slot-7)
+
+> `fix(bar-edge): stamp close/right edge on pre-agg OHLCV ingestion in IS refdata adapters` (commit 2026-06-08 21:28).
+> hyperliquid/aster/ccxt/polygon now stamp the CLOSE edge. Residual fallback-to-open holes (hyperliquid `T or t` when
+> `T`=0/missing; ccxt/polygon `interval not in BAR_TIMEFRAMES` → open) tracked in
+> `instruments_service_audit_findings_2026_06_08.md` (P2). The rows below are the ORIGINAL (now-fixed) findings.
 
 | site                       | edge                                                                          | note                                                                                 |
 | -------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
