@@ -87,10 +87,12 @@ Therefore the earlier "diff-exempt gate" (and the "does `uv lock --check` red on
 `base-library.sh:105`) is a gratuitous _freshness_ gate that only adds churn on the cosmetic `version =` snapshot. The
 clean fix is to relax it.
 
-- [ ] [SCRIPT] P1. Relax `uv lock --check` from BLOCKING → warn-only in `base-service.sh:215` + `base-library.sh:105`
-      (the warn variant already exists at :218 / :108 for the non-pinned-uv branch — make the pinned-uv branch warn
-      too). Rationale comment: nothing installs `--frozen`, so the lock isn't a pin; the real contract is the
-      `pyproject` range enforced by `uv pip install`. Roll out via `rollout-*.sh` (never hand-edit per-repo copies).
+- [x] ✅ [SCRIPT] P1. DONE 2026-06-09 (PM@a89e234ee) — `uv lock --check` is now WARN-ONLY in `base-service.sh` +
+      `base-library.sh` (collapsed the pinned-uv blocking branch to a single warn; rationale comment added).
+      **Fleet-wide immediately, no rollout** — repos `source` the PM base scripts
+      (`source …/unified-trading-pm/scripts/quality-gates-base/base-service.sh`), they are not copied per-repo. Also
+      note the gate is local-only (guarded by `if [ -z GITHUB_ACTIONS ]`), so CI was never affected. The real contract —
+      the pyproject range — is enforced by `uv pip install -e .` (out-of-range MAJOR fails to resolve).
 - [ ] [DOCS] P2. (Forward-insurance) IF the fleet ever adopts `uv sync --frozen` (install FROM the lock for reproducible
       builds), re-introduce a lock-freshness gate — but as an **external-only** check (internal editable deps stay
       exempt), since the editable `version =` snapshot is always cosmetic. Until then, not needed.
