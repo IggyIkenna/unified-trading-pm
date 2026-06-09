@@ -1808,9 +1808,9 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": "SIT failed — open for fixes",
+    "locked": true,
+    "locked_since": "2026-06-09T23:15:21.007226Z",
+    "locked_reason": "SIT running",
     "lock_version": null,
     "pending_repos": [
       "system-integration-tests",
