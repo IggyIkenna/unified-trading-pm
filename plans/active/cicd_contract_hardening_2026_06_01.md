@@ -76,6 +76,18 @@ source:
 >   ancient feat! → spurious breaking cascade" bug behind the UAC 0.5.0 false lock + the stuck instruments fix) is on
 >   the PM main SSOT template (`semver-agent.yml.tmpl:178-249`) AND rolled out to execution-service main. Staging lock
 >   clear. **FLEET ALL GREEN.**
+> - 21:30Z — **Residual TODOs 1 + 3 CLOSED:** (1) QG `.venv` artifact FIXED — `base-library.sh` now always builds/uses
+>   the repo `.venv` (unset VIRTUAL_ENV; mirrors base-service.sh), committed PM@5814e65ac; VERIFIED on UTL (local QG
+>   1→0, pip-audit audits real deps, codex PASSED). Slot-1 venvs pre-built (22 repos; e2e-testing partial-warnings). (3)
+>   semver-agent bounded-scan + Option-C fleet rollout COMPLETED to the 10 missing repos (sub-agent: ao/alerting/
+>   blrs/cra/e2e/ibkr/mdps/strategy/sit/uta — all DONE-on-main, PRs merged) → all 23 main-flow repos now carry both
+>   fixes. **RESIDUAL GAP (handed to the other agent — collision-avoidance):** the bounded-scan fix only patched the
+>   non-zero baseline branch; the `BASELINE=0.0.0`/"no prior staging version" branch still scans all-history → a fresh
+>   spurious lock on **deployment-api** (differ-confirmed non-breaking). Other agent owns: patch the 0.0.0 branch +
+>   clear that lock + RE-ROLL the patched `semver-agent.yml.tmpl` to the fleet. I am OFF the semver-template + lock
+>   surface. TODO 2 (drain) HELD until their re-roll finishes (drain promotes repos → would collide).
+> - 21:35Z — launching slots 2-11 venv pre-build (honor "all slot repos"; additive + untracked `.venv`, skips existing,
+>   warm uv cache). The `.venv` fix also makes every slot self-build lazily on first QG run, so no slot is broken.
 >
 > ### Residual follow-ups (captured; NOT blocking — fleet is green)
 >
