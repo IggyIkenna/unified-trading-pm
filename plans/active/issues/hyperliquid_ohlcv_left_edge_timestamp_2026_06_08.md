@@ -10,9 +10,14 @@ status: active
 
 # hyperliquid OHLCV reads the LEFT/open bar edge (should be right-edge t_close)
 
+> **✅ FIXED 2026-06-08 (Ikenna slot-7) —
+> `fix(bar-edge): stamp close/right edge on pre-agg OHLCV ingestion in IS refdata adapters`.** `cefi/hyperliquid.py:257`
+> now reads `candle.get("T") or candle.get("t")` (close edge, with an explicit "always stamp the close edge" comment).
+> Residual: falls to the open edge only if `T` is 0/missing — tracked in
+> `instruments_service_audit_findings_2026_06_08.md` (P2). This single-instance doc is RESOLVED.
+>
 > **FOLDED INTO `bar_edge_left_vs_right_systemic_2026_06_08.md`** — the deeper 2026-06-08 sweep found this is one
-> instance of a SYSTEMIC class (~12 sites across instruments-service / MTDS / features-service). Track + remediate via
-> the systemic issue doc; this file documents the original single instance.
+> instance of a SYSTEMIC class. Track residuals there + in the IS audit-findings doc.
 
 ## What I found
 
