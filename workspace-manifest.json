@@ -80,7 +80,7 @@
     "system-integration-tests": "0.2.0",
     "unified-api-contracts": "0.3.0",
     "unified-trading-library": "0.4.0",
-    "unified-trading-pm": "1.2.55",
+    "unified-trading-pm": "1.2.58",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.0",
     "agent-orchestrator": "0.8.0",
@@ -650,7 +650,7 @@
           "required": true
         }
       ],
-      "ci_status": "FAILING",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 53,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1798,23 +1798,26 @@
     "unified-api-contracts": "0.5.0",
     "agent-orchestrator": "0.8.0",
     "unified-trading-library": "0.4.0",
-    "market-tick-data-service": "0.4.0",
+    "market-tick-data-service": "0.5.0",
     "instruments-service": "0.2.0",
-    "trading-agent-service": "0.2.0",
+    "trading-agent-service": "0.2.3",
     "strategy-service": "0.1.0",
     "market-data-processing-service": "0.3.0",
-    "execution-service": "0.5.1"
+    "execution-service": "0.5.1",
+    "deployment-api": "0.3.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": "Heal 2026-06-09: SPURIOUS breaking-cascade cleared. UAC 0.5.0 + SIT 0.3.0 are NON-breaking per the SSOT differ (detect_breaking_change.py is_breaking=false, exports unchanged); the lock fired because semver-agent's baseline-commit resolution missed admin-set versions (UAC 0.3.0 via 'chore(version): align', not 'bump version to') and fell back to scanning ALL history, catching an ancient feat!: -> spurious breaking (differ skipped). Root-caused + fixed (pickaxe baseline resolution, fail-safe bounded scan). breaking_pending pruned; consumers absorb 0.5.0/0.3.0 via their >=0.x ranges (pull, not push). SSOT: plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md Phase 3.5.",
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-09T20:25:51.681766Z",
+    "locked_reason": "Breaking MINOR bump cascade: deployment-api=0.3.0 (pre-1.0.0)",
+    "lock_version": "0.3.0",
     "pending_repos": [],
     "sit_retry_count": 0,
     "locked_alert_sent": false,
-    "breaking_pending": []
+    "breaking_pending": [
+      "deployment-api"
+    ]
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
@@ -1834,9 +1837,9 @@
       "version": "0.4.0"
     },
     "market-tick-data-service": {
-      "branch": "staging",
-      "sha": "f81d6c82cb42b2d43e4ebbd51d213f81e32dad7b",
-      "version": "0.4.0"
+      "version": "0.5.0",
+      "sha": "e23d96cf6e067399383482724e8bfe2152250c6e",
+      "branch": "staging"
     },
     "instruments-service": {
       "branch": "staging",
@@ -1844,9 +1847,9 @@
       "version": "0.2.0"
     },
     "trading-agent-service": {
-      "branch": "staging",
-      "sha": "f695f6936f1652759cd95561aacd108101aa1627",
-      "version": "0.2.0"
+      "version": "0.2.3",
+      "sha": "f491340a7081da1457e49af21a0cd2391899a8fd",
+      "branch": "staging"
     },
     "strategy-service": {
       "branch": "staging",
@@ -1871,6 +1874,11 @@
     "system-integration-tests": {
       "version": "0.3.0",
       "sha": "e673a1910882abe86e6e84f8748493ff582e1596",
+      "branch": "staging"
+    },
+    "deployment-api": {
+      "version": "0.3.0",
+      "sha": "4c070670166ea09a3396336c10ebe8d80a2cd906",
       "branch": "staging"
     }
   },
