@@ -92,12 +92,23 @@ clean consumer repo, costing triage time chasing a ref that exists in no current
       (or promote a breaking UAC rename atomically-with / after the UTL consumer fix) so a cross-repo rename can't
       transiently redden every UTL consumer's CI during the promotion-lag window. Repo: `unified-trading-pm` (+ the CI
       dep-clone scripts). Composes with `cicd_contract_hardening_2026_06_01.md`.
-- [ ] [CODE] P2. Finding 5a — `unified-api-contracts` QG-RED on LDR: remove/relocate the intentional backward-compat
-      shims the `no-backward-compat-shims` gate now rejects (`internal/modes.py` 6-call-site shim + `registry/chain_env.py`
-      ghost no-underscore protocol tokens) and the `Hardcoded project ID in production` hit. Real refactor + owner
-      judgment (touches 6 consumers); blocks ALL UAC commits. Repo: `unified-api-contracts`. (`fear_greed` orphan
-      cassette already allowlisted locally — ship with the next UAC commit.)
-- [ ] [SCRIPT] P2. Finding 5b — reconcile the diverged **market-tick-data-service** slot: unpushed feature commit
-      `01fda7ce` (`feat(defi): migrator gas-fees + liquidations specs`) rebased onto LDR with the
-      `tests/unit/test_collect_handler_schema.py` conflict resolved (owner of `01fda7ce`), so the slot is
-      ancestor-or-equal of LDR again and `quickmerge` STAGE 0.4 passes. Repo: `market-tick-data-service`.
+- [x] ✅ [CODE] P2. Finding 5a — **RESOLVED 2026-06-09 (UAC@8a117153)**. UAC QG green on LDR: the
+      `no-backward-compat-shims` hits were a phrase-grep over legitimate code — driven to **0** by deleting the one real
+      re-export STUB (`internal/validation/instruction.py`, shadowed by its package) + rewording 8 false-positive
+      docstrings/comments (exempt `__init__` re-exports, functional legacy-name alias dicts, the DEPRECATED `TestingStage`
+      enum — not stubs). `Hardcoded project ID` resolved by genericizing the `sports/gcs_paths` docstring example.
+      `fear_greed` orphan cassette allowlisted. **0 backward-compat hits + 0 basedpyright baseline** in UAC. Also: UAC
+      version-aligned to 0.3.0 (main=LDR=staging, admin) + the `base-library.sh` SHA-sentinel gap fixed (PM@091378337) so
+      library agent-quickmerge works.
+- [x] ✅ [SCRIPT] P2. Finding 5b — **RESOLVED 2026-06-09 (MTDS@8fffc73b)**. The diverged MTDS slot reconciled:
+      `01fda7ce` (migrator gas-fees+liquidations → defi coverage 6→8, rebuild `--bucket`) rebased onto LDR, the
+      `test_collect_handler_schema.py` conflict resolved by taking LDR's mappings (mine were redundant — LDR added the
+      same 7 via the uac feat(defi-caps) expansion), and shipped via quickmerge. Slot is ancestor-or-equal of LDR;
+      STAGE 0.4 passes. (Surfaced a quickmerge `--files` gap: it can't stage a pure deletion — `instruction.py` deletion
+      had to be direct-pushed; worth a follow-up to make `--files` handle tracked deletions.)
+- [ ] [SCRIPT] P3. Finding 6 — `quickmerge.sh` `--files` cannot ship a pure file DELETION: the staging loop guards on
+      `[ -e "$f" ]` and skips a deleted path (`⚠️ Path not found`), so a removed-but-tracked file silently never reaches
+      the commit (hit shipping UAC 5a — `instruction.py` deletion had to be direct-pushed). Fix: also stage tracked
+      deletions, e.g. `if [ -e "$f" ] || git ls-files --error-unmatch -- "$f" >/dev/null 2>&1; then git add -A -- "$f"`.
+      SSOT is the PM template `scripts/workflow-templates/` → roll out via `rollout-workflow-templates.sh`. Repo:
+      `unified-trading-pm` (+ per-repo `scripts/quickmerge.sh` rollout).
