@@ -78,7 +78,7 @@
     "instruments-service": "0.2.0",
     "market-tick-data-service": "0.4.1",
     "system-integration-tests": "0.2.0",
-    "unified-api-contracts": "0.3.0",
+    "unified-api-contracts": "0.5.0",
     "unified-trading-library": "0.4.0",
     "unified-trading-pm": "1.2.58",
     "market-data-processing-service": "0.3.0",
@@ -1795,7 +1795,6 @@
     "ibkr-gateway-infra": "0.1.0",
     "system-integration-tests": "0.3.0",
     "unified-trading-pm": "1.2.45",
-    "unified-api-contracts": "0.5.0",
     "agent-orchestrator": "0.8.0",
     "unified-trading-library": "0.4.0",
     "market-tick-data-service": "0.5.0",
@@ -1808,9 +1807,9 @@
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": true,
-    "locked_since": "2026-06-09T21:15:04.045052Z",
-    "locked_reason": "SIT running",
+    "locked": false,
+    "locked_since": null,
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [
       "system-integration-tests",
@@ -1820,19 +1819,14 @@
       "execution-service",
       "deployment-api"
     ],
-    "sit_retry_count": 1,
-    "locked_alert_sent": true,
+    "sit_retry_count": 2,
+    "locked_alert_sent": false,
     "breaking_pending": [
       "deployment-api"
     ]
   },
   "staging_commits": {
     "_note": "Exact commit SHAs under test in the current SIT run. Written by update-repo-version.yml when branch=staging. Locked by sit-gate.yml at SIT start. Cleared by staging-to-main.yml after promotion.",
-    "unified-api-contracts": {
-      "branch": "staging",
-      "sha": "77c6f220c9cc24f67f543e37ef459ea7d33df125",
-      "version": "0.5.0"
-    },
     "agent-orchestrator": {
       "branch": "staging",
       "sha": "2d71cd3031cb3dd7c9e2e13bddee21433f939138",
@@ -1892,6 +1886,16 @@
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-09T23:22:03.674881Z",
+        "commits": {
+          "unified-api-contracts": {
+            "branch": "staging",
+            "sha": "77c6f220c9cc24f67f543e37ef459ea7d33df125",
+            "version": "0.5.0"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-09T10:45:28.230553Z",
         "commits": {
@@ -1968,16 +1972,6 @@
           "execution-service": {
             "version": "0.2.0",
             "sha": "7355084fdff2a58b04934b5e017d278449265984",
-            "branch": "staging"
-          }
-        }
-      },
-      {
-        "promoted_at": "2026-06-07T01:07:03.400857Z",
-        "commits": {
-          "unified-trading-library": {
-            "version": "0.4.0",
-            "sha": "750c7fac052e317cbeeefc0227936813bcec2765",
             "branch": "staging"
           }
         }
