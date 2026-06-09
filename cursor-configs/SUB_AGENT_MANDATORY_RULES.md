@@ -27,7 +27,10 @@ cd <repo> && bash scripts/quality-gates.sh --no-fix    # DIAGNOSTIC mode: check-
 ```
 
 **Never** run `pytest` directly — it picks the wrong venv. **Never** `pip install` — use `uv pip install`. **Never**
-activate `.venv-workspace` for tests (that's the IDE / general-Python venv).
+activate `.venv-workspace` for tests (that's the IDE / general-Python venv). **Never** "fix" / re-lock internal-dep
+version drift in `uv.lock` — internal deps are editable path sources (`source={editable="../…"}`) + range-pinned
+(`>=0.x,<1.0.0`), so a minor/patch bump is absorbed by design (no rebuild); recommitting the lock just churns the fleet.
+Only a MAJOR bump (crosses `<1.0.0`) forces action. SSOT: `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion".
 
 ### Ship mode vs diagnostic mode (HARD RULE — choose intentionally)
 

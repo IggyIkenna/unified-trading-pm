@@ -97,6 +97,15 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 
 - Flat deps only — one `[project.dependencies]` per `pyproject.toml`. No extras.
 - `uv pip install` not `pip install`.
+- **Range pins absorb minor/patch; only MAJOR forces a consumer rebuild (codified 2026-06-09)**: internal deps are
+  range-pinned (`>=0.x,<1.0.0`) with editable path sources, so a minor/patch internal bump stays in range → NO consumer
+  rebuild / NO CI noise (consumer picks it up on its own next promote — pull, not push). `uv.lock` is already correct
+  (internal = `source={editable=…}`, external = exact) — there is **no exact-pin bug to fix** (range-honoring is the
+  version-aware clone's loud-fail, already live). A **MAJOR** bump crosses `<1.0.0` → forces a re-pin → triggers a
+  **cascade of QGs (full SIT in dep order)**; **escalate to vm-planning ONLY IF the cascade fails** (green →
+  auto-promote, no human). Major-vs-minor = the breaking-change matrix (`detect_breaking_change.py`). SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion" +
+  `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
 - **KNOWN EXCEPTION — `aiohttp` pinned `<3.14` fleet-wide (do NOT bump to 3.14 / "fix the CVE" — operator decision
   2026-06-05):** the canonical range is `aiohttp>=3.13.4,<3.14.0` in `workspace-constraints.toml` +
   `canonical-dependency-manifest.json` + all 18 repos that declare it (locked to 3.13.5). aiohttp 3.14.0 removed
