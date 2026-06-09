@@ -678,7 +678,7 @@
         "data-ingestion",
         "standard"
       ],
-      "ldr_ci_status": "RED"
+      "ldr_ci_status": "GREEN"
     },
     "market-data-processing-service": {
       "type": "service",
