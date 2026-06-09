@@ -159,11 +159,11 @@ parallel-safe.
       `category=`→`asset_group=` T-OLD fix proven); Era-B count=0; rollback snapshot present. **APPLY-READY — REGRESSION
       RISK: NONE** (tradfi plan ①–⑫). cefi already closed (`e2e008f0`); source-provenance write-path shipped (#4
       non-block). Operator fires `--apply` (`--also-legacy` per R1).
-- [x] ✅ [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation DONE** (Tier-2 + Tier-3 + cron all shipped;
-      see the § "Cross-cutting audit verdict (slot-7)" below). Tier-2 STEP 5.92/5.93 (pm@b4245a7dd) + Tier-3
+- [x] ✅ [CODE] P1. **slot 7 (cross-cutting) — audit-criteria automation DONE** (Tier-2 + Tier-3 + cron all shipped; see
+      the § "Cross-cutting audit verdict (slot-7)" below). Tier-2 STEP 5.92/5.93 (pm@b4245a7dd) + Tier-3
       cf_manifest_audit CF-1…14 + cross-AG wrapper (pm@2fe982eb1) + daily alert-on-RED cron (deployment@eaff3a7). Only
-      adds gates — parallel to the applies, blocks no AG `--apply`. (Residual: validity-matrix P2 test + bar-edge Phase-0
-      cross-source fixture/assertion in-flight — tracked in their plans.)
+      adds gates — parallel to the applies, blocks no AG `--apply`. (Residual: validity-matrix P2 test + bar-edge
+      Phase-0 cross-source fixture/assertion in-flight — tracked in their plans.)
 - [ ] [CODE] P1. **slot 7 — post-apply consumer cleanups** (the deferred-with-reason items: execution-service defi
       loader, deployment-api FLAG-1/3/dedup, MDPS GAP-7) — after the per-AG applies.
 - [ ] [CODE] P2. **WAVE 5 / live-side (gated, after batch migration)** — G5 backfills→100% + massive/polygon cost-swap;
@@ -177,31 +177,32 @@ parallel-safe.
 > routing / production write-path** in a way that would leave code-vs-data mismatched after a walk (the Pre-Apply BLOCK
 > RULE). So slots 2–6 G4 `--apply` are **not gated by any slot-7 item**.
 
-| #     | Area                              | Status                                                                                                                                                                                                                                                                            | Apply-impact |
-| ----- | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------ |
-| **A** | Tier-2 QG gates (canonical-model) | ✅ pm@b4245a7dd — STEP 5.93 `check_canonical_model_regressions` (coarse pipeline_mode / exact-coarse reader / Era-A chain-write); AST + baseline-ratchet; fleet-swept green (25 repos per-scope); planted-regression proven (exit 1→0); 3 Era-A write sites baselined (per-AG-migrator). | gate-only — NONE |
-| **B** | Tier-2 QG gate (bar-edge)         | ✅ pm@b4245a7dd — STEP 5.92 `check_bar_edge_open_ingestion`; wired base-service.sh + base-library.sh; 2 latent sites baselined; 21 unit tests; basedpyright 0.                                                                                                                       | gate-only — NONE |
-| **C** | Tier-3 cf_manifest_audit + cron   | ✅ pm@2fe982eb1 (CF-1…14 + Era-B + cross-AG wrapper, JSON, exit-on-RED) + deployment@eaff3a7 (GCP Cloud Run Job+Scheduler+log-alert · AWS Batch+EventBridge+alarm; **NOT applied**).                                                                                                  | continuous-verify — NONE |
+| #     | Area                              | Status                                                                                                                                                                                                                                                                                   | Apply-impact                      |
+| ----- | --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+| **A** | Tier-2 QG gates (canonical-model) | ✅ pm@b4245a7dd — STEP 5.93 `check_canonical_model_regressions` (coarse pipeline_mode / exact-coarse reader / Era-A chain-write); AST + baseline-ratchet; fleet-swept green (25 repos per-scope); planted-regression proven (exit 1→0); 3 Era-A write sites baselined (per-AG-migrator). | gate-only — NONE                  |
+| **B** | Tier-2 QG gate (bar-edge)         | ✅ pm@b4245a7dd — STEP 5.92 `check_bar_edge_open_ingestion`; wired base-service.sh + base-library.sh; 2 latent sites baselined; 21 unit tests; basedpyright 0.                                                                                                                           | gate-only — NONE                  |
+| **C** | Tier-3 cf_manifest_audit + cron   | ✅ pm@2fe982eb1 (CF-1…14 + Era-B + cross-AG wrapper, JSON, exit-on-RED) + deployment@eaff3a7 (GCP Cloud Run Job+Scheduler+log-alert · AWS Batch+EventBridge+alarm; **NOT applied**).                                                                                                     | continuous-verify — NONE          |
 | **D** | bar-edge Phase 1 (ingestion fix)  | ✅ IS@c6969f76 · MTDS@d63b2c4f · MDPS@7d89070 · uniswapv4@747cfce9 — all pre-agg open-edge sites → close edge; Massive left to its own plan (Phase 4b). Candle store was already right-edge (data-verified) → **does not block raw `--apply`**.                                          | feature-layer — NONE on raw apply |
-| **E** | bar-edge Phase 0 (gate/fixture)   | ✅ COMPLETE — gate (A/B); cross-source `t_close` equivalence fixture features@438c2c30 (6 tests, paths agree); ingestion-time `assert_close_edge` UTL@33ef2d31 (15 tests). All gate-only.                                                                                              | gate-only — NONE |
-| **F** | MVP-scope Phase 1                 | ✅ UAC@d6e0775f — `mvp_scope` config + `is_mvp()` predicate + 56 tests. Pure rule-only, no manifest column, no data touch.                                                                                                                                                           | additive — NONE |
-| **G** | BigQuery Phase 1                  | ✅ design pm@cae98d92d (codex engine tier) + infra deployment@eaff3a7 (hive external tables, **NOT applied**). Reads canonical corpus; gated after per-AG `--apply` for stable schema.                                                                                                | land-the-code — NONE |
-| **H** | G3 deployment-api UNION view      | ✅ VERIFIED green — deployment-api@4dd2575 in HEAD history; `test_data_status_union.py` + `test_data_status_drilldown_provenance.py` = **21 passed**. Consumer-side, fixture-tested, no data migration needed.                                                                       | consumer-side — NONE |
+| **E** | bar-edge Phase 0 (gate/fixture)   | ✅ COMPLETE — gate (A/B); cross-source `t_close` equivalence fixture features@438c2c30 (6 tests, paths agree); ingestion-time `assert_close_edge` UTL@33ef2d31 (15 tests). All gate-only.                                                                                                | gate-only — NONE                  |
+| **F** | MVP-scope Phase 1                 | ✅ UAC@d6e0775f — `mvp_scope` config + `is_mvp()` predicate + 56 tests. Pure rule-only, no manifest column, no data touch.                                                                                                                                                               | additive — NONE                   |
+| **G** | BigQuery Phase 1                  | ✅ design pm@cae98d92d (codex engine tier) + infra deployment@eaff3a7 (hive external tables, **NOT applied**). Reads canonical corpus; gated after per-AG `--apply` for stable schema.                                                                                                   | land-the-code — NONE              |
+| **H** | G3 deployment-api UNION view      | ✅ VERIFIED green — deployment-api@4dd2575 in HEAD history; `test_data_status_union.py` + `test_data_status_drilldown_provenance.py` = **21 passed**. Consumer-side, fixture-tested, no data migration needed.                                                                           | consumer-side — NONE              |
 
 **Rule-11 fleet-safety**: both new gates were swept across all repos BEFORE wiring (no "enable + see what goes red");
 service repos SOURCE base-service.sh from the workspace PM checkout (no per-repo copy → activates fleet-wide the instant
 PM lands on the CI-cloned ref; no template rollout needed) — verified green on 5 consumer repos per-scope
 (mtds/IS/UTL/UAC/deployment-api). **Findings captured + resolved 2026-06-09 (operator clarifications)**: (1) ~~3 Era-A
 `data_type=options_chain/futures_chain` write sites~~ — CORRECTED: `options_chain`/`futures_chain` are a NAME COLLISION
-(both an instrument_type AND a genuine SNAPSHOT data_type, `*_OPTIONS_CHAIN_SNAPSHOT`); the STEP 5.93 `era-a-chain-write`
-pattern was a checker bug (it false-positived legit snapshot writers) → REMOVED (pm@361e548e1); the validity-matrix
-entries re-categorized to `PENDING_SNAPSHOT_SLICE` (slot-3 widens). (2) MDPS `liquidity_adapter._convert_timestamps`
-periodStartUnix→processing_dt — still baselined-latent (diagnose). (3) deployment-service **pre-existing `uv.lock`
-out-of-sync** QG failure (unrelated; TF touches no Python) — for the deployment-service owner. (4) **validity-matrix
-orphans resolved** (uac@fec77f5d typed closed-set + uac@f5e6b0c2): `(cefi, ohlcv_15m)` RETIRED (no producer); **9/11
-DeFi data_types WIRED** to genuine venue producers (+18 protocols, 37→55) — `native_staking_rates`/`vault_share_price`
-honestly stay BLOCKED_UPSTREAM_CAPABILITY. **→ DeFi could-exist universe EXPANDED: slot-2 must re-run enumerate before
-G4** (B0-PRE todo in the defi plan; additive ⇒ NON-BLOCK, coverage % drops honestly).
+(both an instrument_type AND a genuine SNAPSHOT data_type, `*_OPTIONS_CHAIN_SNAPSHOT`); the STEP 5.93
+`era-a-chain-write` pattern was a checker bug (it false-positived legit snapshot writers) → REMOVED (pm@361e548e1); the
+validity-matrix entries re-categorized to `PENDING_SNAPSHOT_SLICE` (slot-3 widens). (2) MDPS
+`liquidity_adapter._convert_timestamps` periodStartUnix→processing_dt — still baselined-latent (diagnose). (3)
+deployment-service **pre-existing `uv.lock` out-of-sync** QG failure (unrelated; TF touches no Python) — for the
+deployment-service owner. (4) **validity-matrix orphans resolved** (uac@fec77f5d typed closed-set + uac@f5e6b0c2):
+`(cefi, ohlcv_15m)` RETIRED (no producer); **9/11 DeFi data_types WIRED** to genuine venue producers (+18 protocols,
+37→55) — `native_staking_rates`/`vault_share_price` honestly stay BLOCKED_UPSTREAM_CAPABILITY. **→ DeFi could-exist
+universe EXPANDED: slot-2 must re-run enumerate before G4** (B0-PRE todo in the defi plan; additive ⇒ NON-BLOCK,
+coverage % drops honestly).
 
 > **🔴 BAR-EDGE BLOCKER (feature-layer gate, 2026-06-08) — `bar_edge_left_vs_right_remediation_2026_06_08.md`**: a
 > CLOSED candle stamped on the OPEN/left edge = look-ahead → leakage. Data-verified scope (Harsh): the MDPS **processed
@@ -1128,6 +1129,64 @@ paths and is C-#6-consistent by construction; it self-heals on each rebuild. Rem
 the prior OPERATIONAL ones (GATE C instruments-store v9 WRITE, IS backfill, the doubled-`day=` §H object fix, drain ✓
 done) + the tracked P1/P2 live-track handler-derive remediation (post-migration, not a batch-`--apply` blocker).
 
+### 📊 DeFi data_type MIGRATION-COVERAGE MATRIX — ALL 25 accounted (slot-2, 2026-06-09)
+
+> Operator 2026-06-09: "did we account for the remaining data types not migrated?" — full accounting of every
+> `DATA_TYPES_BY_ASSET_GROUP["defi"]` entry (25) vs the migrator `_SPECS`. Each row: migrator-covered? + has-data? +
+> disposition. Verdict: **8 MIGRATED · 3 DATA-BEARING-ORPHAN (fold) · 14 NO-DATA scaffolds (collection gaps)** — nothing
+> unaccounted. (Migrator specs went 6→8 this turn: gas-fees + liquidations added, mtds@01fda7ce.)
+
+| data_type               | migrator spec        | data on disk?                                               | disposition                                                              |
+| ----------------------- | -------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------ |
+| dex_pool_state          | ✅ dex-pools         | yes                                                         | **MIGRATED**                                                             |
+| dex_pool_swaps          | ✅ dex-swaps         | yes                                                         | **MIGRATED** (source fixed: `n`→dex_pool_swaps→subgraph)                 |
+| lending_indices         | ✅ lending-indices   | yes                                                         | **MIGRATED**                                                             |
+| perp_funding            | ✅ perp-funding      | yes                                                         | **MIGRATED**                                                             |
+| lst_rates               | ✅ lst-rates         | yes                                                         | **MIGRATED**                                                             |
+| oracle_prices           | ✅ oracle-prices     | yes (incl LST/LRT: stETH/wstETH/weETH/cbETH/rETH)           | **MIGRATED** — LST/LRT prices ride this existing data_type               |
+| gas_fees                | ✅ gas-fees ⬅NEW     | yes (`gas-fees-central`)                                    | **MIGRATED** (this turn, mtds@01fda7ce)                                  |
+| liquidations            | ✅ liquidations ⬅NEW | yes (`liquidations-central`)                                | **MIGRATED** (this turn, mtds@01fda7ce)                                  |
+| vault_share_price       | ❌                   | YES — in `market-data-tick-defi` orphan (active 2026-05-01) | **ORPHAN-FOLD** (P1) — fold into a dedicated bucket + migrate            |
+| risk_params             | ❌                   | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                     |
+| utilization             | ❌                   | YES — in `market-data-tick-defi` orphan                     | **ORPHAN-FOLD** (P1)                                                     |
+| eigenlayer_rewards      | ❌                   | NO (`eigenlayer-rewards{,-prd}` EMPTY)                      | **COLLECTION GAP** — adapter exists, not producing; spec when data lands |
+| staking_yields          | ❌                   | NO (`staking-yields` empty)                                 | **COLLECTION GAP**                                                       |
+| native_staking_rates    | ❌                   | NO                                                          | **COLLECTION GAP** (multi-source solana_rpc/helius)                      |
+| bridge_events           | ❌                   | NO                                                          | scaffold (no data; no dedicated/tick-data bucket exists)                 |
+| flash_loan_events       | ❌                   | NO                                                          | scaffold                                                                 |
+| flash_loan_availability | ❌                   | NO                                                          | scaffold                                                                 |
+| governance_events       | ❌                   | NO                                                          | scaffold                                                                 |
+| liquidation_events      | ❌                   | NO                                                          | scaffold (distinct from `liquidations`)                                  |
+| mev_events              | ❌                   | NO                                                          | scaffold                                                                 |
+| position_data           | ❌                   | NO                                                          | scaffold                                                                 |
+| token_transfers         | ❌                   | NO                                                          | scaffold                                                                 |
+| rewards                 | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
+| vault_apy               | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
+| vault_tvl               | ❌                   | NO                                                          | scaffold / computed-downstream                                           |
+
+**So no data_type is silently dropped:** the migrator now covers all 8 data-bearing DEDICATED-bucket data_types; the 3
+data-bearing-in-the-orphan-bucket ones (`vault_share_price`/`risk_params`/`utilization`) ride the market-data-tick-defi
+FOLD (P1 below — they're written to the orphan bucket by `vault_share_price_handler` + Solana/legacy writers, so they
+migrate once that bucket is folded into dedicated buckets); the remaining 14 have **NO GCS data** (adapters scaffolded
+but not producing) → **collection gaps** (external-data-always-available: wire the source / operator credential-ask, NOT
+a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick-defi` day-samples (2024-06-01 +
+2026-05-01); `tick-data-*` buckets 404 (the scaffold handlers' `kind="tick-data"` has no bucket → no data).
+
+- [ ] [DATA] P1. **FOLD the 3 data-bearing orphan data_types into dedicated buckets + migrate** (vault_share_price /
+      risk_params / utilization — data ONLY in `market-data-tick-defi` (orphan), so they ride the market-data-tick-defi
+      redirect+fold below; either give each a dedicated bucket + spec, OR add market-data-tick-defi as a per-data_type
+      migrator source routing to dedicated dests). vault_share_price is MVP-relevant (carry vault NAV). Repo:
+      market-tick-data-service. Owner: vm-defi. parent_epic: mtds_mdps_master. Provenance: slot-2 coverage matrix
+      2026-06-09.
+- [ ] [DATA] P2. **DeFi collection gaps — 14 scaffolded data_types with NO GCS data** (eigenlayer_rewards,
+      staking_yields, native_staking_rates, bridge_events, flash_loan_events, flash_loan_availability,
+      governance_events, liquidation_events, mev_events, position_data, token_transfers, rewards, vault_apy, vault_tvl).
+      Handlers exist but produce nothing — per external-data-always-available these are COLLECTION gaps (wire the source
+      / credential-ask to the operator), NOT migration gaps. Triage: MVP-relevant (eigenlayer_rewards restaking yield +
+      native_staking_rates for carry_staked_basis) → BLOCKED-CREDENTIALS source-ask; the rest → confirm in/out of MVP
+      scope. Each gets a migrator spec ONLY once it produces data. Repo: market-tick-data-service + UAC. Owner: vm-defi.
+      parent_epic: defi_master. Provenance: slot-2 coverage matrix 2026-06-09.
+
 ### 🗑️ DeFi ORPHAN-COVERAGE DRILLDOWN — GCS data NOT covered by the migrator + delete-after plan (slot-2, 2026-06-08)
 
 > **Operator ask (2026-06-08): no orphaned data.** The `migrate_defi_full_v9_canonical` migrator reads ONLY the **6
@@ -1157,8 +1216,15 @@ P1 redirect todo below.)
 
 **Delete-after-migration list (track to closure — nothing deleted until its row is GREEN):**
 
-- [ ] [SCRIPT] P0. **ADD `gas-fees` as the 7th migrator spec — it is currently OMITTED from
-      `migrate_defi_full_v9_canonical.py` `_SPECS` (only 6) so `gas-fees-prd` is EMPTY (un-migrated).** gas is on the
+- [x] ✅ [SCRIPT] P0. **DONE (mtds@01fda7ce, slot-2 2026-06-09) — added `gas-fees` (7th) + `liquidations` (8th) migrator
+      specs.** `gas-fees`: row_split, `venue_const="ALCHEMY"`, `chain_col="chain"` (canonicalises the venue-era split →
+      ALCHEMY/`batch_onchain_rpc`). `liquidations`: path-grain (`batch_onchain_subgraph`). Both were data-bearing
+      dedicated buckets the migrator omitted; now migrate to v9. union derives on-the-fly (`--phase discover` to bake
+      for the VM apply). Verified: migrator tests 15 green, basedpyright + ruff clean, full mtds QG green (2679 passed).
+      The real-prod dry-run (union footer-scan over 22933 gas objects) is VM-scale, gated with the apply. Original
+      finding ↓.
+- [x] ✅ [SCRIPT] P0. **(DONE — see ✅ row above; full context retained) `gas-fees` was OMITTED from
+      `migrate_defi_full_v9_canonical.py` `_SPECS` (only 6) so `gas-fees-prd` was EMPTY (un-migrated).** gas is on the
       DeFi arb/carry critical path (net-of-gas profitability), so this is a P0 coverage gap, not optional. Add
       `"gas-fees": BucketSpec("gas-fees", "gas_fees", "spot_asset", grain="path")` to `_SPECS` (source shape matches the
       path-cell buckets: `day=/venue=/chain=/instrument_type=spot_asset/data_type=gas_fees/`). gas is CHAIN-grain (one
@@ -1184,10 +1250,13 @@ P1 redirect todo below.)
       validity matrix (`(defi, SPOT_ASSET, gas_fees)` valid) so it is not dropped as impossible. Repos:
       instruments-service + unified-api-contracts + deployment-api. Owner: vm-defi. parent_epic: manifest_master.
       Provenance: slot-2 gas-fees audit 2026-06-08 (operator question).
-- [ ] [SCRIPT] P1. **MANIFEST-REBUILD SCOPE GAP — the migrator migrates OBJECTS but NOTHING rebuilds the dedicated
-      `-prd-` bucket MANIFESTS over the migrated data (operator question 2026-06-08).** `migrate_defi_full_v9_canonical`
-      writes OBJECTS only (excludes `/_index/`). `rebuild_defi_manifest.py` (the object→manifest rebuilder) is HARDCODED
-      to `BUCKET_TEMPLATE="market-data-tick-defi-{project_id}"` (line 76; no `--bucket` arg) — it scans the LEGACY
+- [x] ✅ [SCRIPT] P1. **TOOL DONE (mtds@01fda7ce, slot-2 2026-06-09): `rebuild_defi_manifest` now takes `--bucket`** so
+      it rebuilds each dedicated `-prd-` bucket's manifest from the migrated objects (run per dedicated bucket as the
+      post-`--apply` step — the RUN itself is gated with the apply). Original gap ↓ retained. **MANIFEST-REBUILD SCOPE
+      GAP — the migrator migrates OBJECTS but NOTHING rebuilt the dedicated `-prd-` bucket MANIFESTS over the migrated
+      data (operator question 2026-06-08).** `migrate_defi_full_v9_canonical` writes OBJECTS only (excludes `/_index/`).
+      `rebuild_defi_manifest.py` (the object→manifest rebuilder) is HARDCODED to
+      `BUCKET_TEMPLATE="market-data-tick-defi-{project_id}"` (line 76; no `--bucket` arg) — it scans the LEGACY
       market-data-tick-defi bucket, **NOT** the 6+1 dedicated `-prd-` buckets the migrator writes (`dex-pools-prd` /
       `dex-swaps-prd` / `lending-indices-prd` / `perp-funding-prd` / `lst-rates-prd` / `oracle-prices-prd` /
       `gas-fees-prd`). The dedicated-bucket manifests today are built from LIVE handler per-VM shards + the per-bucket

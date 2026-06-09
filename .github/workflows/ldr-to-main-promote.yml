@@ -1,0 +1,129 @@
+name: ldr-to-main-promote
+
+# PM-ONLY LDR→main auto-drain bot (codified 2026-06-09; the LDR→main analogue of ldr-to-staging-promote).
+#
+# WHY: unified-trading-pm is Option-B main-direct with NO staging, so the ldr-to-staging / staging-to-main
+# drain does not apply. The ONLY path LDR→main is the PR quickmerge opens — a STANDING sweep whose head is
+# the live-defi-rollout branch ref. The moment that PR squash-merges, the sweep is gone, and any LATER
+# sanctioned direct push (docs(plans) flips, scripts/.github carve-out) piles up on LDR with no path to main
+# until the next quickmerge. This bot closes that gap: whenever PM's LDR has real content ahead of main and
+# no LDR→main PR is open, it opens one and enables v2-gated auto-merge — so direct pushes drain within the
+# operator's 1-hour SLA instead of relying on the next quickmerge.
+#
+# SAFETY: never force-pushes; opens a PR and enables auto-merge → quality-gates-v2 on the main PR is what
+# actually merges it (a red gate leaves the PR open + BLOCKED, surfaced by ci-failure-watcher). Idempotent:
+# reuses an existing open LDR→main PR (incl. quickmerge's) rather than opening a duplicate. `dry_run` lists
+# what WOULD promote.
+#
+# CONTENT, not commit-count: a squash-merge keeps LDR perpetually ahead_by=N/behind_by=0 even when content
+# matches, so the drift gate is the CHANGED-FILE count of compare/main...LDR (0 files → nothing to drain).
+#
+# SSOT: codex/08-workflows/ci-cd-flow.md § "PM Option-B standing LDR→main PR".
+
+on:
+  schedule:
+    - cron: "*/30 * * * *" # every 30 min → drains within the 1-hour LDR→main SLA
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Report the drift decision without opening a PR"
+        type: boolean
+        required: false
+        default: false
+  repository_dispatch:
+    types: [ldr-to-main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ldr-to-main-promote
+  cancel-in-progress: false
+
+jobs:
+  promote-ldr-to-main:
+    runs-on: ubuntu-latest
+    outputs:
+      action: ${{ steps.promote.outputs.action }}
+      pr: ${{ steps.promote.outputs.pr }}
+    steps:
+      - name: Checkout PM
+        uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
+
+      - name: Drain LDR → main (content-gated, reuse open PR, self-recover v2-never-reported)
+        id: promote
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+        run: |
+          set -euo pipefail
+          ACTION="noop"; PR=""
+
+          # ── Reuse an existing open LDR→main PR (quickmerge's standing sweep or a prior bot run) ──
+          PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+            --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+
+          if [ -z "$PR_NUM" ] || [ "$PR_NUM" = "null" ]; then
+            # ── No open PR → only open one if there is REAL content drift (changed files), ──
+            # ── not squash-accounting noise (ahead_by>0 with 0 changed files).            ──
+            FILES=$(gh api "repos/$OWNER/$REPO/compare/main...live-defi-rollout" --jq '.files | length' 2>/dev/null || echo "0")
+            if [ -z "$FILES" ] || [ "$FILES" = "0" ]; then
+              echo "✅ main is content-current with LDR (0 changed files) — nothing to drain"
+              { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "DRY-RUN: would open LDR→main PR ($FILES changed file(s))"
+              { echo "action=would-open"; echo "pr="; } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            BODY="PM Option-B auto-drain: live-defi-rollout → main ($FILES changed file(s)). Sweeps sanctioned direct pushes (docs(plans) flips, scripts/.github carve-out) to main. Merges when quality-gates-v2 passes. SSOT: ldr-to-main-promote.yml."
+            PR_URL=$(gh pr create --repo "$OWNER/$REPO" \
+              --title "chore(promote): LDR → main (Option-B auto-drain)" \
+              --body "$BODY" --base main --head live-defi-rollout 2>/dev/null || true)
+            if [ -z "$PR_URL" ]; then
+              # Race: another run/quickmerge opened it between the list and the create.
+              PR_NUM=$(gh pr list --repo "$OWNER/$REPO" --base main --head live-defi-rollout \
+                --state open --json number --jq '.[0].number' 2>/dev/null || echo "")
+              [ -z "$PR_NUM" ] && { echo "WARN: PR create failed and none found"; { echo "action=noop"; echo "pr="; } >> "$GITHUB_OUTPUT"; exit 0; }
+            else
+              echo "  opened $PR_URL ($FILES changed file(s))"
+              gh pr merge "$PR_URL" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null \
+                || echo "  WARN: auto-merge unavailable — merge manually: $PR_URL"
+              { echo "action=opened"; echo "pr=$PR_URL"; } >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+          fi
+
+          # ── An open PR exists → ensure auto-merge is on, and self-recover the v2-never-reported ──
+          # ── deadlock (required check ABSENT on the current head → close+reopen re-fires v2).     ──
+          PR="https://github.com/$OWNER/$REPO/pull/$PR_NUM"
+          echo "  existing open LDR→main PR #$PR_NUM ($PR)"
+          gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+
+          MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
+          if [ "$MSTATE" = "blocked" ]; then
+            HEAD_SHA=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.head.sha' 2>/dev/null || echo "")
+            HAS_V2=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" \
+              --jq '[.check_runs[]|select(.name|test("quality-gates-v2"))]|length' 2>/dev/null || echo "0")
+            if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ] && [ "$DRY_RUN" != "true" ]; then
+              echo "  v2-never-reported on head ${HEAD_SHA:0:8} — close+reopen to re-fire quality-gates-v2"
+              gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null && sleep 3 \
+                && gh pr reopen "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null \
+                && gh pr merge "$PR_NUM" --auto --merge --repo "$OWNER/$REPO" 2>/dev/null || true
+              ACTION="recovered"
+            else
+              echo "  PR #$PR_NUM blocked but v2 present on head (genuine gate fail or in-progress) — leaving it"
+              ACTION="blocked"
+            fi
+          else
+            echo "  PR #$PR_NUM mergeable_state=${MSTATE:-unknown} (auto-merge pending)"
+            ACTION="pending"
+          fi
+          { echo "action=$ACTION"; echo "pr=$PR"; } >> "$GITHUB_OUTPUT"

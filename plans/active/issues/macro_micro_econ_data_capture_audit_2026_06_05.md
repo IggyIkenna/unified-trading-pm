@@ -20,6 +20,15 @@ locked_since: 2026-05-21
 
 # Macro + micro economic data capture — coverage audit (2026-06-05)
 
+> **🟢 2026-06-09 — Phase 2 (free Category-C adapter scaffolds) BEING ADDRESSED via wrapper plan
+> `plans/active/macro_econ_adapter_scaffolds_2026_06_09.md`** (parent_epic: mtds_mdps_master). Built: fear_greed UAC
+> contract (was an empty stub) + `FearGreedAdapter`/`CFTCCOTAdapter`/`BakerHughesAdapter`/`EIAAdapter` in MTDS
+> `adapters/tradfi/` (fetch → parse-via-UAC → `CanonicalOnChainMetric` + `classify_venue_error()` +
+> `ADAPTER_FETCH_FAILED` + mock unit tests). EIA live fetch is `BLOCKED-CREDENTIALS` (free key ask in
+> `ikenna_orchestrator/pings/slot_3.md`). **This audit STAYS ACTIVE** — the backfill RUN, paid sources (Glassnode/
+> CoinGlass/CryptoQuant), and the `altdata` asset-group / honest-coverage-gate / GCS-shard-write wiring (Open Questions
+> #1–#4, Phases 3–6) remain operator-blocked and are tracked on the wrapper plan + here.
+
 > **Framing (operator, 2026-06-05):** "It's possible we haven't done the backfill on this, but that doesn't mean we
 > don't have the capacity." This audit therefore separates **capability** (does an adapter/pipeline exist that _can_
 > capture the source?) from **backfill/population** (have we actually _run_ it and do rows exist in the manifest?). A

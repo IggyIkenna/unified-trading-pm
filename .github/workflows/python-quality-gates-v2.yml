@@ -23,6 +23,10 @@ on:
           Space-separated list of sibling repos to clone (e.g. "unified-trading-library unified-api-contracts")
         type: string
         default: ""
+    outputs:
+      metadata_only:
+        description: "true when this run fast-pathed a metadata-only commit (chore(release) version bump OR chore(deps) pin)"
+        value: ${{ jobs.quality-gates-v2.outputs.metadata_only }}
     secrets:
       GH_PAT:
         required: false
@@ -36,6 +40,10 @@ on:
 jobs:
   quality-gates-v2:
     runs-on: ubuntu-latest
+    outputs:
+      # Consumed by the caller (quality-gates-v2.yml) to skip the qg-passed/image dispatch
+      # for a metadata-only commit. SSOT: plan semver_version_bump_skip_ci_promotion_block.
+      metadata_only: ${{ steps.vcheck.outputs.metadata_only }}
     # Backstop so a hung/runaway QG is killed cleanly (and the failure()||cancelled()
     # notify below fires) instead of silently burning a 6h default + never alerting.
     # 135m covers the slowest repo (execution ~120m tests) + margin; genuinely-slow
@@ -49,6 +57,50 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          # depth 2 so the version-only fast-path can diff the pushed commit vs its parent
+          fetch-depth: 2
+
+      - name: Detect metadata-only commit (fast-path)
+        # A bot metadata commit whose entire diff is pyproject.toml needs NO gate work:
+        #   chore(release): bump version to X   (semver-agent — version line)
+        #   chore(deps): pin X to Y             (dependency-update minor/patch — dep pin line)
+        # Both are trusted no-QG-needed metadata changes (the prior design [skip ci]'d them for
+        # exactly that reason); they only need a check to ride the staging→main promotion PR
+        # (whose HEAD is this commit) — without one the required `quality-gates-v2` context is
+        # MISSING and the PR is permanently BLOCKED. So we DROP [skip ci] (in semver-agent +
+        # update-dependency-version) and short-circuit here to GREEN in seconds instead of a
+        # wasteful ~12-min run. A MAJOR dep update is a `feat!:` PR with full QG (not matched).
+        # push = the auto bump/pin; workflow_dispatch = manual recovery of a stuck head.
+        # SSOT: plan semver_version_bump_skip_ci_promotion_block.
+        id: vcheck
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          set -euo pipefail
+          BEFORE="${{ github.event.before }}"
+          git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1 || BEFORE="HEAD~1"
+          if ! git rev-parse --verify -q "${BEFORE}^{commit}" >/dev/null 2>&1; then
+            echo "metadata_only=false" >> "$GITHUB_OUTPUT"
+            echo "base commit unavailable (shallow / multi-commit push) → full QG"
+            exit 0
+          fi
+          MSG="$(git log -1 --format=%s HEAD)"
+          CHANGED="$(git diff --name-only "${BEFORE}" HEAD)"
+          META=false
+          case "${MSG}" in
+            "chore(release): bump version to "*|"chore(deps): pin "*) META=true ;;
+          esac
+          # metadata-only iff every changed file is pyproject.toml or uv.lock (a dep pin stages
+          # both; a version bump only pyproject.toml). Any other path (e.g. a .py) → full QG.
+          EXTRA="$(printf '%s\n' "${CHANGED}" | grep -vE '^(pyproject\.toml|uv\.lock)$' || true)"
+          if [ "${META}" = true ] && [ -n "${CHANGED}" ] && [ -z "${EXTRA}" ]; then
+            echo "metadata_only=true" >> "$GITHUB_OUTPUT"
+            echo "✓ metadata-only commit — skipping heavy gates, reporting GREEN: ${MSG}"
+          else
+            echo "metadata_only=false" >> "$GITHUB_OUTPUT"
+            echo "not metadata-only (msg='${MSG}', changed='$(printf '%s' "${CHANGED:-none}" | tr '\n' ' ')') → full QG"
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v6
@@ -108,11 +160,13 @@ jobs:
         run: echo "$HOME/.local/act-tools/bin" >> "$GITHUB_PATH"
 
       - name: Clone unified-trading-pm and dependencies
+        if: steps.vcheck.outputs.metadata_only != 'true'
         shell: bash
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           DEP_BRANCH: ${{ github.head_ref || github.ref_name }}
           DEP_REPOS: ${{ inputs.dep_repos }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
         run: |
           BRANCH="${DEP_BRANCH:-main}"
           OWNER="${GITHUB_REPOSITORY_OWNER}"
@@ -221,12 +275,65 @@ jobs:
           else
             clone_repo unified-trading-pm
           fi
-          # Clone declared deps
+          assert_dep_in_range() {
+            # Defense-in-depth (2026-06-09): after cloning a dep, FAIL LOUD if the cloned
+            # version does NOT satisfy this repo's full constraint RANGE (>=floor,<upper).
+            # The version-aware clone + its branch/main fallbacks can silently land on a stale
+            # LOWER version (e.g. a force-sync-reverted / unpublished source) that violates the
+            # pin — that produced the UTL-0.4.0 phantom (uv surfaced a cryptic "No solution
+            # found" much later). We honor the RANGE (floor AND upper), never an exact tag, and
+            # surface it HERE with a clear message + a #ci-failures Slack alert.
+            local name="$1"
+            [ -f "../${name}/pyproject.toml" ] || return 0
+            local verdict
+            # STDLIB ONLY — this step runs BEFORE `uv sync`, so `packaging` is NOT installed;
+            # importing it here silently fails (the get_version_tag fallback bug). Tuple compare.
+            verdict=$(DEP_NAME="$name" DEP_PYPROJECT="../${name}/pyproject.toml" python3 -c "
+          import os, re
+          def _v(s):
+              return tuple(int(re.match(r'[0-9]+', p).group()) for p in s.split('.') if re.match(r'[0-9]+', p))
+          def _lt(a, b):
+              ta, tb = _v(a), _v(b); n = max(len(ta), len(tb))
+              return ta + (0,)*(n-len(ta)) < tb + (0,)*(n-len(tb))
+          name = os.environ['DEP_NAME']
+          consumer = open('pyproject.toml').read()
+          m = re.search(r'\"' + re.escape(name) + r'([^\"]*)\"', consumer)
+          if not m:
+              print('OK no-constraint'); raise SystemExit
+          spec = m.group(1)
+          lb = re.search(r'>=\s*([0-9]+\.[0-9]+\.[0-9]+)', spec)
+          ub = re.search(r'<\s*([0-9]+\.[0-9]+\.[0-9]+)', spec)
+          dm = re.search(r'^version\s*=\s*\"([^\"]+)\"', open(os.environ['DEP_PYPROJECT']).read(), re.M)
+          if not dm:
+              print('OK no-dep-version'); raise SystemExit
+          ver = dm.group(1)
+          if lb and _lt(ver, lb.group(1)):
+              print(f'FAIL resolved {ver} < floor {lb.group(1)} (pin {spec.strip()})'); raise SystemExit
+          if ub and not _lt(ver, ub.group(1)):
+              print(f'FAIL resolved {ver} >= upper {ub.group(1)} (pin {spec.strip()})'); raise SystemExit
+          print(f'OK {ver} satisfies {spec.strip()}')
+          " 2>/dev/null || echo "OK parse-error")
+            case "$verdict" in
+              FAIL*)
+                echo "::error::dependency ${name}: ${verdict#FAIL } — version-aware clone landed OUTSIDE the pinned range"
+                if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
+                  MSG=":rotating_light: *QG dep-pin UNRESOLVABLE* — \`${GITHUB_REPOSITORY}\` on \`${BRANCH}\`: dependency \`${name}\` ${verdict#FAIL }. The version-aware clone fell back to a version OUTSIDE the pinned range (force-sync-reverted / unpublished version — the UTL-0.4.0 phantom class). Fix: publish the pinned version, or run assert_version_coherence.py. ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+                  BODY=$(MSG="$MSG" python3 -c 'import json,os; print(json.dumps({"text": os.environ["MSG"]}))')
+                  curl -s -X POST "${SLACK_CI_WEBHOOK_URL}" -H "Content-Type: application/json" -d "${BODY}" >/dev/null && echo "Slack alert sent to #ci-failures" || true
+                fi
+                exit 1
+                ;;
+              *) echo "dep ${name}: ${verdict}" ;;
+            esac
+          }
+          # Clone declared deps, then assert each satisfies its pinned RANGE (loud-fail, no silent stale)
           for repo in $DEP_REPOS; do
             clone_repo "$repo"
+            assert_dep_in_range "$repo"
           done
 
       - name: Install dependencies
+        if: steps.vcheck.outputs.metadata_only != 'true'
         shell: bash
         env:
           DEP_REPOS: ${{ inputs.dep_repos }}
@@ -251,6 +358,7 @@ jobs:
           done
 
       - name: Run quality gates
+        if: steps.vcheck.outputs.metadata_only != 'true'
         shell: bash
         run: |
           export PATH="$(pwd)/.venv/bin:$PATH"

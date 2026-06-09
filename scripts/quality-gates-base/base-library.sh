@@ -97,16 +97,14 @@ if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]
         source "$WORKSPACE_VENV/bin/activate"
     else
         command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
-        # Read-only freshness gate — do NOT mutate uv.lock here (mutating it dirtied trees +
-        # jammed the FF-pull cron). BLOCKING only on the pinned uv (else a different uv's
-        # serializer reformatting false-fails); warn otherwise. SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
-        _uvver=$(uv --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-        if [ "$_uvver" = "0.10.8" ]; then
-            uv lock --check 2>/dev/null || { echo "❌ uv.lock out of sync with pyproject.toml — run 'uv lock' && commit"; exit 1; }
-        else
-            echo "⚠️  uv $_uvver != pinned 0.10.8 — run setup.sh to pin; skipping blocking uv.lock check (warn only)"
-            uv lock --check 2>/dev/null || echo "⚠️  uv.lock may be out of sync — re-check on pinned uv 0.10.8"
-        fi
+        # uv.lock freshness — WARN-ONLY, never blocking (2026-06-09). Nothing installs FROM the lock
+        # (every path is `uv pip install -e .`, no `uv sync`/`--frozen`/`--locked`), so the lock is a
+        # RECORD, not an enforced pin: the real dependency contract is the pyproject RANGE, which `uv pip
+        # install` enforces at install (an out-of-range MAJOR fails to resolve = the signal). Blocking here
+        # only added churn on the cosmetic internal-editable `version =` snapshot. Do NOT mutate uv.lock
+        # here either (it dirtied trees + jammed the FF-pull cron). SSOT:
+        # plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.
+        uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml (non-blocking — lock is a record, not a pin; pyproject range is the contract). Run 'uv lock' to refresh the record."
         [ ! -d ".venv" ] && uv venv .venv
         [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
         for lib in ${LOCAL_DEPS[@]+"${LOCAL_DEPS[@]}"}; do
@@ -768,6 +766,23 @@ else
   log_success "STEP 5.23: UAC import surface (exempt repo)"
 fi
 
+# STEP 5.24 — No `# type: ignore` (OPT-IN: ENFORCE_NO_TYPE_IGNORE=true in repo quality-gates.sh).
+# `# type: ignore` is a BLANKET suppress-all — basedpyright ignores the bracketed codes and
+# hides EVERY error on the line (proven), so it masks future bugs. Use precise
+# `# pyright: ignore[reportX]` (suppresses only the named rule). Banned workspace-wide
+# (CLAUDE.md "No # type: ignore"); enforced per-repo once converted so it does not break
+# un-converted fleet repos. Scope mirrors basedpyright (excludes tests/ + **/testing/**).
+if [[ "${ENFORCE_NO_TYPE_IGNORE:-false}" == "true" ]]; then
+  _TYPE_IGNORE_HITS=$(rg -n '# type: ignore' "$SOURCE_DIR/" --type py --glob '!tests/**' --glob '!**/testing/**' 2>/dev/null || :)
+  if [[ -n "$_TYPE_IGNORE_HITS" ]]; then
+    log_fail "STEP 5.24: # type: ignore is banned (blanket suppress-all) — use precise # pyright: ignore[reportX]"
+    echo "$_TYPE_IGNORE_HITS" | head -10
+    V=$(( V + 1 ))
+  else
+    log_success "STEP 5.24: No # type: ignore (precise # pyright: ignore[rule] only)"
+  fi
+fi
+
 # CODEX_MAX_VIOLATIONS: repos with pre-existing violations can set a ceiling.
 # The goal is to ratchet this down to 0 over time.
 _max_v=${CODEX_MAX_VIOLATIONS:-0}
@@ -1035,6 +1050,18 @@ QG_END=$(date +%s); DUR=$((QG_END - QG_START))
 [ $DUR -gt $MAX_DURATION ] && { log_fail "Quality gates must complete in <${MAX_DURATION}s (took ${DUR}s)"; exit 1; }
 echo -e "\n${GREEN}======================================================================"
 echo -e "✅ ALL QUALITY GATES PASSED (${DUR}s)${NC}"
+# ── QG SENTINEL (SHA fingerprint for quickmerge --agent fast-path) — mirror of
+# base-service.sh. Library repos were MISSING this write (only the content sentinel
+# below), so `quickmerge --agent` always saw .qg_last_passed_sha "missing" and hard-refused
+# every LIBRARY repo fleet-wide. H5: do NOT refresh on a content-sentinel HIT (a HIT skipped
+# the tests/typecheck phases; refreshing would let quickmerge ship without re-running tests).
+# Written to PROJECT_ROOT (the gated repo root — where quickmerge --agent reads it), same dir
+# as the content sentinel below. Guarded identically to that write (full green: tests ran, not quick).
+if [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ] && [ "${_QG_SENTINEL_HIT:-false}" != true ]; then
+    git rev-parse HEAD > "${PROJECT_ROOT}/.qg_last_passed_sha" 2>/dev/null \
+        && echo "Sentinel written: .qg_last_passed_sha=$(cat "${PROJECT_ROOT}/.qg_last_passed_sha")" \
+        || echo "Warning: could not write .qg_last_passed_sha (non-git dir?)"
+fi
 # Green content sentinel (qg-repo-green-sentinel): record on a full green so an
 # unchanged tree skips the heavy phases next run. See base-service.sh for rationale.
 if [ "${#_QG_CONTENT_HASH}" -eq 64 ] && [ "${QUICK_MODE:-false}" = false ] && [ "${RUN_TESTS:-false}" = true ]; then

@@ -54,7 +54,13 @@ scripts/`.github` carve-out) rides it to `main` while it is open. Consequence (t
 squash-merges, the standing sweep is gone** — a LATER direct push to LDR has no open PR and **piles up on LDR with no
 path to `main`** until the next quickmerge opens a new one.
 
-- **After a direct LDR push when no LDR→main PR is open, OPEN one:**
+- **Automated drain (codified 2026-06-09): `ldr-to-main-promote.yml`** — the PM-only analogue of
+  `ldr-to-staging-promote`. Every 30 min (+ `workflow_dispatch` + `repository_dispatch: ldr-to-main`) it opens (or
+  reuses) the standing LDR→main PR with v2-gated auto-merge **whenever PM's LDR has real content ahead of main** — gated
+  on the CHANGED-FILE count of `compare/main...live-defi-rollout` (0 files → no-op, immune to squash-accounting noise),
+  reusing any open PR (incl. quickmerge's) so it never duplicates, and self-recovering the v2-never-reported deadlock
+  (close+reopen). So direct pushes now drain within the 1-hour SLA without waiting on the next quickmerge.
+- **Manual immediate drain (the bot's fallback — when you don't want to wait up to 30 min):**
   `gh pr create --base main --head live-defi-rollout --title "chore(promote): LDR→main sweep …" && gh pr merge <n> --auto --squash`
   (v2-gated, auto-merges when green). This re-establishes the standing sweep and drains the accumulated direct pushes.
 - **Verify a push actually reached `main` by CONTENT, not commit count:** a squash-merge lands all the changes as ONE
@@ -269,9 +275,12 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   (export-name set anchored on the package `__init__.py`, bare-name keyed so a symbol MOVED between internal modules is
   not a false "removed", changed-files-only for speed). **Breaking** = removed/renamed public export, removed public
   class/method, incompatible signature change (added-required / removed / reordered param, dropped `**kwargs`),
-  removed/renamed/retyped Pydantic/dataclass field (the UAC schema case), or removed HTTP route. **Not breaking** =
-  additive, docstring, comment, reformat, reorder, move-across-modules. Regression-guarded by
-  `tests/unit/test_detect_breaking_change.py`.
+  removed/renamed/retyped Pydantic/dataclass field (the UAC schema case), **removed/renamed Enum member or changed Enum
+  member VALUE** (StrEnum/IntEnum contracts — the serialized value IS the contract; added 2026-06-09 Phase 4 — consumers
+  match on the member, so dropping `ORACLE_STALE` or flipping `"databento"`→`"databento_v2"` is breaking; a plain
+  non-Enum class constant is NOT tracked), or removed HTTP route. **Not breaking** = additive (incl. a NEW Enum member),
+  docstring, comment, reformat, reorder, move-across-modules. Regression-guarded by
+  `tests/unit/test_detect_breaking_change.py` (incl. enum add/remove/value cases).
 - **Wiring**: each repo's `semver-agent.yml` (rolled out from `scripts/workflow-templates/semver-agent.yml.tmpl`) calls
   the differ — non-PM repos fetch it at runtime from `unified-trading-pm`. The differ verdict sets `is_breaking`
   (replacing the old `git diff __init__.py | grep '^-'` text heuristic that flagged ANY removed line). `feat!:` stays an
@@ -285,6 +294,33 @@ staging PR** (the breaking-gate narrows SIT, never QG).
   as breaking → permanent "Breaking MINOR bump cascade" lock + failing SIT. Content-based detection is the root fix.
 
 SSOT: `plans/active/sit_breaking_detection_content_based_2026_06_08.md`.
+
+### Dependency promotion — range pins absorb minor/patch; only MAJOR forces a consumer rebuild (codified 2026-06-09)
+
+The consequence of "breaking = major" for the **dependency graph**: internal-dep version churn must NOT cascade rebuilds
+fleet-wide. The model (operator 2026-06-09):
+
+- **Declared pins are RANGES** (`unified-api-contracts>=0.1.0,<1.0.0`) with **editable path sources**
+  (`[tool.uv.sources] path = "../unified-api-contracts"`). A **minor/patch** internal bump stays inside `<1.0.0` → the
+  range absorbs it → **no consumer rebuild, no CI noise**. A consumer picks up the newer dep only when IT next runs its
+  own promote workflow (pull, not push) — its build may lag the latest dep; the upside is a stable prod + no thrashing.
+- **`uv.lock` is already correct — do NOT "fix" it.** Internal deps are recorded as `source = { editable = "../…" }`
+  (the `version =` is a snapshot; the install resolves from the source PATH, not the recorded version), external deps
+  lock exact (reproducibility). There is **no exact-pin bug** and no "range-aware lock gate" to build (a 2026-06-09
+  false-start — tombstoned in `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`). The real "honor
+  ranges" mechanism is the **version-aware clone**, already closed by the loud-fail preflight
+  (`setup-workspace-from-manifest.sh:139/305` hard-fails a required dep clone; quickmerge fallback
+  `clone -b staging → -b main`, `quickmerge.sh:1301`).
+- **A MAJOR bump (crosses `<1.0.0`) FORCES the consumer to re-pin** → it must **trigger a cascade of quality gates (full
+  SIT in dependency order)** across dependents. **vm-planning is escalated ONLY IF that cascade FAILS** — a GREEN
+  cascade promotes the major automatically with **no human/orchestrator involvement**. Mechanical jams (the
+  `[skip ci]`-version- bump-head deadlock) are first cleared in-band by `ci-failure-watcher --auto-recover`
+  (workflow_dispatch re-fire), not a human; only a genuine QG failure is the vm-planning case.
+- **What is major vs minor** is the breaking-change matrix above (`detect_breaking_change.py` + the schema/API-contract
+  rules), refined deliberately — never a version-phase guess.
+
+Status: model + version-aware-clone loud-fail are LIVE; the MAJOR→cascade→escalate-only-on-fail wiring is the open work.
+SSOT: `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
 
 ## LDR is the SSOT — clean-start force-sync + drift-tick (codified 2026-06-08)
 

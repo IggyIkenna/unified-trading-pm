@@ -97,6 +97,15 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
 
 - Flat deps only — one `[project.dependencies]` per `pyproject.toml`. No extras.
 - `uv pip install` not `pip install`.
+- **Range pins absorb minor/patch; only MAJOR forces a consumer rebuild (codified 2026-06-09)**: internal deps are
+  range-pinned (`>=0.x,<1.0.0`) with editable path sources, so a minor/patch internal bump stays in range → NO consumer
+  rebuild / NO CI noise (consumer picks it up on its own next promote — pull, not push). `uv.lock` is already correct
+  (internal = `source={editable=…}`, external = exact) — there is **no exact-pin bug to fix** (range-honoring is the
+  version-aware clone's loud-fail, already live). A **MAJOR** bump crosses `<1.0.0` → forces a re-pin → triggers a
+  **cascade of QGs (full SIT in dep order)**; **escalate to vm-planning ONLY IF the cascade fails** (green →
+  auto-promote, no human). Major-vs-minor = the breaking-change matrix (`detect_breaking_change.py`). SSOT:
+  `codex/08-workflows/ci-cd-flow.md` § "Dependency promotion" +
+  `plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md`.
 - **KNOWN EXCEPTION — `aiohttp` pinned `<3.14` fleet-wide (do NOT bump to 3.14 / "fix the CVE" — operator decision
   2026-06-05):** the canonical range is `aiohttp>=3.13.4,<3.14.0` in `workspace-constraints.toml` +
   `canonical-dependency-manifest.json` + all 18 repos that declare it (locked to 3.13.5). aiohttp 3.14.0 removed
@@ -158,12 +167,14 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
     quickmerge opens a STANDING `live-defi-rollout → main` PR whose head tracks the WHOLE LDR branch — so docs(plans)/
     scripts you direct-push to LDR (the carve-out pushes) ride that PR to `main` too. But PM has no `ldr-to-staging`/
     `staging-to-main` drain (no staging), so the MOMENT that PR squash-merges, any LATER direct push **piles up on LDR
-    with no path to `main`** until the next quickmerge opens a fresh one. After a direct push when no LDR→main PR is
-    open, OPEN one: `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash` (v2-gated).
-    Verify a push actually landed on `main`:
-    `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` — but note squash-merges keep LDR
-    perpetually `ahead_by=N / behind_by=0` by COMMIT count even when CONTENT matches, so check content, not the count.
-    SSOT: `codex/08-workflows/ci-cd-flow.md` § "PM Option-B standing LDR→main PR".
+    with no path to `main`** until the next quickmerge opens a fresh one. **Automated since 2026-06-09**:
+    `ldr-to-main-promote.yml` (PM-only, `*/30`) opens/reuses the standing PR whenever LDR has real content (changed-file
+    count, not squash-accounting `ahead_by`) ahead of main — so direct pushes drain within the 1-hour SLA without a
+    manual PR. The manual fallback when you don't want to wait ≤30 min:
+    `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash` (v2-gated). Verify a push
+    actually landed on `main`: `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` — but note
+    squash-merges keep LDR perpetually `ahead_by=N / behind_by=0` by COMMIT count even when CONTENT matches, so check
+    content, not the count. SSOT: `codex/08-workflows/ci-cd-flow.md` § "PM Option-B standing LDR→main PR".
 - **Quality gates BEFORE COMMIT — the commit IS the per-repo quality boundary (HARD RULE; tightened 2026-06-03,
   supersedes "before quickmerge")**: a **code** commit to the integration branch must be made from a
   `quality-gates.sh`-green tree — never on the strength of the light prek hook alone

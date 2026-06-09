@@ -95,17 +95,47 @@ check_version_constraint() {
     local installed="$1"
     local constraint="$2"
     python3 - "$installed" "$constraint" <<'PYEOF'
+import re
 import sys
-try:
-    from packaging.version import Version
-    from packaging.specifiers import SpecifierSet
-    installed, constraint = sys.argv[1], sys.argv[2]
-    if constraint in ("any", "", "latest"):
-        sys.exit(0)
-    spec = SpecifierSet(constraint)
-    sys.exit(0 if Version(installed) in spec else 1)
-except Exception:
-    sys.exit(0)  # packaging not available — skip constraint check
+
+# STDLIB-ONLY PEP440-subset comparator (2026-06-09 fix). This runs at CLONE time, BEFORE `uv sync`,
+# so `packaging` is NOT installed yet — the old `from packaging…` version wrapped in
+# `except Exception: sys.exit(0)` SILENTLY no-op'd the whole check, letting any version through (the
+# phantom-stays-silent defect). No third-party import + no silent exit(0) on parse failure.
+installed, constraint = sys.argv[1], sys.argv[2]
+if constraint in ("any", "", "latest"):
+    sys.exit(0)
+
+
+def _ver(v):
+    m = re.match(r"\s*v?(\d+(?:\.\d+)*)", v)
+    return tuple(int(x) for x in m.group(1).split(".")) if m else None
+
+
+def _pad(a, b):
+    n = max(len(a), len(b))
+    return a + (0,) * (n - len(a)), b + (0,) * (n - len(b))
+
+
+iv = _ver(installed)
+if iv is None:
+    print(f"check_version_constraint: cannot parse installed version {installed!r}", file=sys.stderr)
+    sys.exit(1)
+
+clauses = re.findall(r"(>=|<=|==|!=|>|<)\s*([0-9][0-9.]*)", constraint)
+if not clauses:
+    print(f"check_version_constraint: unrecognized constraint {constraint!r}", file=sys.stderr)
+    sys.exit(1)
+for op, ver in clauses:
+    cv = _ver(ver)
+    if cv is None:
+        print(f"check_version_constraint: bad version in constraint {constraint!r}", file=sys.stderr)
+        sys.exit(1)
+    a, b = _pad(iv, cv)
+    ok = {">=": a >= b, "<=": a <= b, ">": a > b, "<": a < b, "==": a == b, "!=": a != b}[op]
+    if not ok:
+        sys.exit(1)
+sys.exit(0)
 PYEOF
 }
 

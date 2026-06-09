@@ -94,9 +94,7 @@ class Signature:
         required = positional[: len(positional) - ndef] if ndef else positional
         # drop conventional self/cls for methods
         required = [r for r in required if r not in ("self", "cls")]
-        kwonly_required = [
-            p.arg for p, d in zip(a.kwonlyargs, a.kw_defaults, strict=False) if d is None
-        ]
+        kwonly_required = [p.arg for p, d in zip(a.kwonlyargs, a.kw_defaults, strict=False) if d is None]
         return cls(
             posonly=posonly,
             args=[x for x in args if x not in ("self", "cls")],
@@ -154,11 +152,15 @@ def _annotation_str(node: ast.AST | None) -> str:
         return "?"
 
 
+def _is_enum_base(b: ast.expr) -> bool:
+    """True if a class base looks like an Enum (Enum / StrEnum / IntEnum / IntFlag / Flag / ReprEnum)."""
+    name = b.id if isinstance(b, ast.Name) else (b.attr if isinstance(b, ast.Attribute) else "")
+    return name.endswith("Enum") or name in ("Flag", "IntFlag", "ReprEnum")
+
+
 def _route_decorators(node: ast.AST) -> set[str]:
     routes: set[str] = set()
-    decorators: list[ast.expr] = cast(
-        "list[ast.expr]", getattr(node, "decorator_list", [])
-    )
+    decorators: list[ast.expr] = cast("list[ast.expr]", getattr(node, "decorator_list", []))
     for dec in decorators:
         if (
             isinstance(dec, ast.Call)
@@ -195,9 +197,7 @@ def extract_surface(source: str, module: str) -> PublicSurface:
                 and isinstance(node.value, (ast.List, ast.Tuple, ast.Set))
             ):
                 declared_all = {
-                    e.value
-                    for e in node.value.elts
-                    if isinstance(e, ast.Constant) and isinstance(e.value, str)
+                    e.value for e in node.value.elts if isinstance(e, ast.Constant) and isinstance(e.value, str)
                 }
 
     # Keyed by BARE name (not module-qualified) so a symbol MOVED between internal
@@ -215,6 +215,12 @@ def extract_surface(source: str, module: str) -> PublicSurface:
                 continue
             surf.classes.add(node.name)
             surf.exports.add(node.name)
+            # Enum members are a CONTRACT surface (consumers match on the member + its serialized
+            # value — e.g. UAC StrEnums like DefiErrorCode). They are PLAIN `ast.Assign` (FOO = "foo"),
+            # NOT annotated, so the AnnAssign branch below misses them. Capture them into `fields`
+            # (keyed Class.MEMBER, value = the literal) so a removed/renamed member OR a changed value
+            # trips the removed-field / changed-field-value breaking checks. Gate on an Enum base.
+            is_enum = any(_is_enum_base(b) for b in node.bases)
             for item in node.body:
                 if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     if not item.name.startswith("_") or item.name in ("__init__",):
@@ -224,6 +230,12 @@ def extract_surface(source: str, module: str) -> PublicSurface:
                     fname = item.target.id
                     if not fname.startswith("_"):
                         surf.fields[f"{node.name}.{fname}"] = _annotation_str(item.annotation)
+                elif is_enum and isinstance(item, ast.Assign):
+                    _val = item.value
+                    val_repr = repr(_val.value) if isinstance(_val, ast.Constant) else "<enum member>"
+                    for tgt in item.targets:
+                        if isinstance(tgt, ast.Name) and not tgt.id.startswith("_"):
+                            surf.fields[f"{node.name}.{tgt.id}"] = val_repr
         elif isinstance(node, ast.Assign):
             for tgt in node.targets:
                 if isinstance(tgt, ast.Name) and not tgt.id.startswith("_") and tgt.id != "__all__":

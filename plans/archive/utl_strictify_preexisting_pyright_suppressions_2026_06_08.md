@@ -8,8 +8,16 @@ source:
   - unified-trading-library (committed HEAD, pre-2026-06-08)
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: resolved
 ---
+
+> **✅ RESOLVED 2026-06-09 — acked into plan + shipped.** Wrapper plan:
+> `plans/active/utl_strictify_preexisting_pyright_suppressions_2026_06_09.md`. Shipped on `live-defi-rollout`:
+> `unified-trading-library@2423946a` (all bare/blanket suppressions strict-ified → **0 bare `# pyright: ignore`, 0 bare
+> `# type: ignore`**; 2 documented-irreducible file-level residuals: lazy-`__getattr__` + pyarrow Pydantic schema) +
+> `@c9741f82` (`CODEX_MAX_VIOLATIONS 6→0`). basedpyright **0 errors** under the canonical repo `.venv`; full
+> `quality-gates.sh` GREEN at `CMV=0`. The `=6` ceiling was a stale comment — the real codex-violation count was already
+> 0 (V1–V6 pass via `# noqa`/`# nosec`/low-severity). Promoting via standing LDR→staging PR #258.
 
 ## What I found
 

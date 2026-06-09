@@ -361,6 +361,41 @@ jobs:
             "cascade-qg-ordering" \
             "source=${{ steps.run.outputs.result || 'unknown' }} affected=${{ steps.run.outputs.total_affected || '0' }} levels=${{ steps.run.outputs.levels_processed || '0' }}"
 
+  # ── PHASE 3 ESCALATION — vm-planning ONLY IF the cascade FAILED ──────────────
+  # Operator model (dependency_promotion_…_2026_06_09): a GREEN cascade auto-promotes with NO
+  # human/orchestrator involvement (this job is skipped). Only a FAILED cascade — a dependent's
+  # QG went red against the new MAJOR, or a level timed out — escalates to vm-planning to resolve
+  # the stuck staging workflow. Mechanical [skip ci]-bump-head deadlocks are first cleared in-band
+  # by `ci-failure-watcher --auto-recover`; this fires for a GENUINE QG failure.
+  escalate-on-failure:
+    name: Escalate to vm-planning — cascade FAILED
+    needs: [cascade]
+    if: always() && needs.cascade.result == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch escalate-to-orchestrator (wall_type=sit_failure)
+        env:
+          TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          SRC_REPO: ${{ github.event.client_payload.source_repo || inputs.source_repo }}
+          SRC_VER: ${{ github.event.client_payload.source_version || inputs.source_version }}
+          FAILED_REPOS: ${{ needs.cascade.outputs.failed_repos }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "$TOKEN" ]; then echo "GH_PAT not set — cannot escalate."; exit 1; fi
+          # Target the FIRST failed dependent (the wall a worker must resolve); fall back to the source repo.
+          TARGET="$(echo "$FAILED_REPOS" | cut -d, -f1)"; TARGET="${TARGET:-$SRC_REPO}"
+          export TARGET
+          export CONTEXT="MAJOR bump ${SRC_REPO}=${SRC_VER} broke the dep-order QG cascade. Failed repos: ${FAILED_REPOS:-unknown}. Downstream repos invalidated (ci_status=STAGING_PENDING). Resolve so the cascade re-greens + the major promotes. Cascade run: ${RUN_URL}"
+          echo "Escalating cascade failure → vm-planning (target=$TARGET, wall_type=sit_failure)"
+          PAYLOAD=$(python3 -c "import json,os; print(json.dumps({'event_type':'escalate-to-orchestrator','client_payload':{'repo':os.environ['TARGET'],'pr_number':'0','wall_type':'sit_failure','context':os.environ['CONTEXT'],'authoring_slot':'ci','model':'sonnet'}}))")
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+            -d "$PAYLOAD")
+          if [ "$HTTP" = "204" ]; then echo "  ✅ escalated to vm-planning"; else echo "::error::escalate dispatch HTTP $HTTP"; exit 1; fi
+
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify-success:

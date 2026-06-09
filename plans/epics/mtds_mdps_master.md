@@ -294,6 +294,17 @@ operator-acked
 > non-DeFi first. Invoke: `bash launch-mdps-backfill-vm.sh --force <ag> <start> <end> full`. (`[DATA] P1` stays OPEN —
 > reprocess not yet run.)
 
+- [ ] [DATA] P1. **MDPS leading-NaN historical densify reprocess** (migrated from
+      `plans/archive/issues/mdps_state_adapter_leading_nan_audit_2026_05_29.md`, archived 2026-06-09 — code+tests shipped
+      @5a5e989/4fd962d/23d7add/56202b0, only the operational backfill remains). Repo: `deployment-service` (launcher) +
+      `market-data-processing-service` (finalizer). Force-reprocess already-`captured` candle cells so legacy
+      leading-NaN / NaN-OHLC parquets densify — `VM_FORCE=true`, scoped to the asset_groups × date-windows that backtest
+      + features-onchain actually read (NO standalone whole-corpus walk, per single-walk discipline). Force-launch path
+      shipped @deployment-service@709f845. Invoke `bash launch-mdps-backfill-vm.sh --force <ag> <start> <end> full`;
+      non-DeFi first, DeFi gates on `defi_manifest` C0-GREEN `_index` single-walk. **Handed to slot-1-main** (operator
+      2026-06-02). Done = manifest-verified dense candles + sample parquets show no leading-NaN for the reprocessed
+      windows.
+
 ## Phase 1 — bucket-name symmetry (AWS ↔ GCP)
 
 **Current asymmetry** (illustrated for MTDS DeFi):

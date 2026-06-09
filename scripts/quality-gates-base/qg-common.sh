@@ -76,6 +76,21 @@ if [[ -z "${QG_BANNER_SUPPRESS:-}" ]]; then
 fi
 unset _QG_CALLER QG_SCRIPT_DIR QG_PROJECT_ROOT
 
+# ── QG PROFILER (opt-in; inactive unless QG_PROFILE=1) ────────────────────────
+# No-op by default — zero behaviour change for normal runs across all repos. When
+# QG_PROFILE=1, qg_prof appends one JSONL marker per phase/check boundary to
+# $QG_PROFILE_FILE; an external profiler (scripts/quality_gates/profile_qg_resources.py)
+# pairs start/end markers + samples RSS to produce a per-span wall+RAM JSON report.
+# Output lives under .qg_profile/ (gitignored) so it never churns the worktree.
+if [[ "${QG_PROFILE:-}" == "1" ]]; then
+    QG_PROFILE_FILE="${QG_PROFILE_FILE:-${PROJECT_ROOT}/.qg_profile/markers.jsonl}"
+    mkdir -p "$(dirname "$QG_PROFILE_FILE")" 2>/dev/null || true
+    : > "$QG_PROFILE_FILE" 2>/dev/null || true
+    qg_prof() { printf '{"ts":%s,"event":"%s","name":"%s"}\n' "$(date +%s.%N)" "${1:-}" "${2:-}" >> "$QG_PROFILE_FILE" 2>/dev/null || true; }
+else
+    qg_prof() { :; }
+fi
+
 # ── CI_STATUS HANDLER (shared, locked) ───────────────────────────────────────
 # SSOT: _ci-status-updater.sh — unified name resolution + fcntl locking for all base scripts.
 source "$(dirname "${BASH_SOURCE[0]}")/_ci-status-updater.sh"

@@ -1,0 +1,269 @@
+---
+title: Quality-gates speed (change-scoped, single-core) + config SSOT centralisation (toml as single home)
+parent_epic: infrastructure_master
+assigned_vm: vm-cross-cutting
+priority: P1
+status: active
+execution_scope: local-only
+estimate_class: infra
+estimate_baseline_ai_days: 4.0
+estimate_calibrated_ai_days: 3.2
+created: 2026-06-09
+locked_by: live-defi-rollout
+related_plans:
+  - plans/active/qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md
+  - plans/active/ci_local_qg_parity_2026_06_08.md
+  - plans/active/cicd_contract_hardening_2026_06_01.md
+  - plans/archive/2026_06/quality_gates_resource_contention_speedup_2026_06_02.md
+source:
+  - operator design discussion 2026-06-09 (Harsh) — single-core wall-time + change-scoped gate + config-SSOT drift
+  - discovery: MTDS MIN_COVERAGE=28 (stub) vs fail_under=71 (pyproject) — toml silently shadowed by --cov-fail-under
+---
+
+# Quality-gates: faster (change-scoped, single-core) + one config home (toml)
+
+> Two axes, one effort. **Axis A — speed**: lower per-repo WALL-TIME on a SINGLE core by doing only the work a change
+> actually requires, NOT by adding parallelism (parallelism gives false wall-time, doesn't help the 20-repo case, and
+> OOMs the host — see archived `quality_gates_resource_contention_speedup_2026_06_02.md`). **Axis B — config SSOT**:
+> collapse every QG setting that today lives in BOTH `scripts/quality-gates.sh` (stub) AND `pyproject.toml` into a
+> single home (toml), the same way `pyrightconfig.json` + standalone ruff config were already folded into toml. The two
+> axes met because the speed audit surfaced the dual-SSOT drift (MTDS coverage 28-vs-71).
+>
+> **Hard invariant across everything below: no speedup may drop measured coverage or let a real violation through.**
+> Every fast path is a LOCAL ITERATION convenience; the merge boundary (quickmerge Pass-1 / CI `quality-gates-v2`)
+> always runs the FULL gate with FULL coverage. Speed is bought by scoping the _iteration loop_, never by weakening the
+> _gate_.
+
+## Problem statement
+
+1. A 2-line change in a repo with 1000s of files triggers a full QG run — all tests, full basedpyright over
+   `SOURCE_DIR/`, ~60 codex grep/AST checks over the whole tree, pip-audit (OSV network, 180s timeout), bandit,
+   actionlint. Baseline wall times are ~4.5–7 min/repo (`scripts/dev/qg_resource_baseline.json`: alerting 319s,
+   deployment-api 401s, …). That is the iterate→quality-gates→quickmerge loop tax.
+2. Parallelism is the wrong lever: it hides true single-core cost, and at 20-repo fan-out it OOMs (incident history) —
+   the host governor already exists to _prevent_ over-parallelism, not encourage it.
+3. The green content-sentinel (`.qg_content_sentinel`) already handles "tree UNCHANGED → skip heavy phases." The gap is
+   "tree changed SLIGHTLY → run only the impacted subset," with coverage preserved.
+4. Config drift: the same logical setting lives in the stub AND in toml and silently diverges. Confirmed: MTDS
+   `MIN_COVERAGE=28` (stub) vs `[tool.coverage.report] fail_under=71` (toml), where base-service.sh's
+   `--cov-fail-under=$MIN_COVERAGE` SHADOWS the toml value. 7 of 22 repos' stub-vs-toml coverage numbers already differ;
+   other tool configs (pytest testpaths, bandit skips, tool-version pins, exclude lists) are duplicated too.
+
+## Non-goals
+
+- Adding test parallelism / raising `PYTEST_WORKERS` / raising the host-governor K as the primary speed lever.
+- Weakening any gate, lowering any coverage floor to "go faster," or skipping a check at the MERGE boundary.
+- Re-doing the shipped resource work (governor / mem-cap / sentinel) — extend it, don't duplicate it.
+
+---
+
+## Phase 0 — MEASURE FIRST (data before any change)
+
+> Per operator: "we are discussing and auditing first … conclusion when we have the data backing us." Phase 0 produces
+> the datasets that decide every later phase. NO behaviour change in this phase. **We need, per PHASE, per REPO:
+> wall-time AND peak/mean RAM (RSS).** The existing `profile_qg_steps.py` only measures per-phase WALL time (parsed from
+> `log_section` headers), runs repos SERIALLY, does NO RAM tracking, and no core-pinning — so it must be
+> extended/replaced.
+
+### Measurement methodology (the harness must enforce all of these — else the numbers lie)
+
+- **Per-phase RAM**: a sampler thread polls the QG process-TREE RSS (sum across the subtree, e.g. `/proc/<pid>/statm` or
+  `smaps_rollup`) at ~5 Hz, timestamped; bucket each sample into the active phase by the `log_section` boundary
+  timestamps → per-phase `peak_rss_mb` + `mean_rss_mb`. (cgroup `memory.peak` via systemd-run only covers the wrapped
+  pytest/typecheck phases — the sampler is the general solution.)
+- **Single-core semantics**: pin each repo's run to ONE core (`taskset -c <core>`), force `QG_THREAD_CAP=1`,
+  `PYTEST_WORKERS=1`. Goal is true single-core wall-time, not parallel speedup.
+- **Parallel measurement, not parallel execution**: run N repos AT ONCE, each pinned to its own core, with
+  `QG_GOVERNOR_DISABLE=true` (else the flock token-bucket serializes them). Machine is 24-core / ~46 GB free → safe at
+  ~8–10 concurrent service repos; gate concurrency on a RAM budget (sum of expected peaks < ~36 GB headroom; UTL peaks
+  5.27 GB — schedule the heavy ones (UTL/UAC) without piling them together).
+- **Make every phase actually run**: `QG_SENTINEL_DISABLE=true` (else an unchanged tree skips tests+typecheck → bogus ~0
+  s), `QG_MEM_CAP=0` (else a >10 GB phase is SIGKILLed and you measure the cap, not the peak), and `--no-fix` (don't
+  reformat/dirty trees during measurement).
+- **Interference caveat**: parallel-pinned wall-time ≈ isolated single-core only if RAM doesn't swap and
+  mem-bandwidth/disk contention is low. Confirm the heaviest repos (UTL, UAC) with a second ISOLATED single-run pass and
+  compare.
+- **Repeatability**: ≥2 runs per repo, report median; record host, core map, timestamp, git SHA per repo.
+
+### Output (machine-readable, for analysis)
+
+- Per-repo JSON: `{repo, total_wall_s, exit_code, sha, phases:[{name, wall_s, pct, peak_rss_mb, mean_rss_mb, status}]}`.
+- One combined CSV (`repo,phase,wall_s,peak_rss_mb,mean_rss_mb,status`) for pivoting across all repos.
+- Land raw under `plans/audit/results/qg_profile_2026_06_09/` + a written summary
+  `plans/audit/results/qg_step_profile_2026_06_09.md`.
+
+### Phase 0 todos
+
+- [ ] [SCRIPT] P0. Build/extend the profiler harness to capture **per-phase peak+mean RSS** (sampler thread) alongside
+      the existing per-phase wall-time, emit the per-repo JSON + combined CSV schema above. (`profile_qg_steps.py` today
+      does wall-only/serial/no-RAM — extend it or add a `profile_qg_resources.py` companion.)
+- [ ] [SCRIPT] P0. Add the **parallel-pinned measurement runner**: schedule all 22 repos across pinned single cores with
+      a RAM-budget concurrency cap, exporting
+      `QG_GOVERNOR_DISABLE=true QG_SENTINEL_DISABLE=true QG_THREAD_CAP=1     PYTEST_WORKERS=1 QG_MEM_CAP=0` and
+      `taskset -c`, running `bash scripts/quality-gates.sh --no-fix`. Write per-repo JSON + the combined CSV.
+- [ ] [TEST] P0. **Smoke-test on ONE repo first** (e.g. MTDS or a small service) — verify the RAM sampler attributes
+      peaks to the right phase and every phase actually ran (sentinel disabled), BEFORE fanning out to all 22.
+      (smoke-then-scale.)
+- [ ] [AUDIT] P0. Run the full sweep across all 22 repos; produce the per-phase wall+RAM table. Confirm/refute the
+      hypotheses: pytest + basedpyright dominate wall-time; pip-audit OSV network is a fixed tax; basedpyright/pytest
+      dominate RAM. Land `plans/audit/results/qg_step_profile_2026_06_09.md`.
+- [ ] [AUDIT] P0. **Phase scopability classification** (drives Phase 2): tag each phase NON-OPTIONAL-FULL (must run over
+      the whole tree even for a 2-file change — e.g. ruff*, basedpyright*) vs SCOPABLE-TO-CHANGED-FILES (codex 5.x
+      grep/AST, coverage-bearing tests via impact selection) vs FIXED-COST-CACHEABLE (pip-audit/bandit/actionlint). (\*
+      the data may show even basedpyright can be changed-file-scoped on the fast tier with full at merge — let the
+      numbers decide.)
+- [ ] [AUDIT] P0. Dual-SSOT matrix across all 22 repos: for every QG-relevant concept (coverage threshold, coverage
+      source/omit/branch, pytest testpaths/addopts/markers, bandit skips, ruff/basedpyright/python version pins, exclude
+      lists) record (a) toml location, (b) stub/base location, (c) does base pass a CLI flag that overrides toml?, (d)
+      verdict ∈ {agree, drift, shadowed, bash-only}. Seed from the MTDS findings already gathered. Land as
+      `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md`.
+- [ ] [AUDIT] P1. Verify the bandit-`-c` question definitively: does base-service.sh `bandit -r … -ll` (no
+      `-c pyproject.toml`) actually read `[tool.bandit]`? If not, the per-repo `[tool.bandit] skips` are DEAD config (a
+      shadowed-by-absence case).
+- [ ] [AUDIT] P1. Classify every knob into TIER-A (tool-native — toml is the home) vs TIER-B (bash-orchestration —
+      governor/mem-cap/MAX_DURATION/PYTEST_WORKERS/codex-exclude-globs/pip-audit-ignores/size-limits — toml has no
+      native home). This classification decides Phase 1's mechanism.
+
+---
+
+## Phase 0 findings + immediate fixes (2026-06-09, from instruments-service smoke)
+
+Profiler capability SHIPPED (opt-in, gitignored): `qg_prof` hook in `qg-common.sh` + 9 instrumented spans in
+`base-service.sh` (autofix/lint/tests/typecheck/codex/size-checks/pip-audit/bandit/removed-symbols), forced full-no-skip
+run under `QG_PROFILE=1`, harness `scripts/quality_gates/profile_qg_resources.py` (per-phase wall + peak/mean RSS,
+single-core pinned), output under gitignored `.qg_profile/`.
+
+- [x] [SCRIPT] P0. `qg_prof` profiler hook + base-service instrumentation + `QG_PROFILE=1` full-run override +
+      `profile_qg_resources.py` (markers→spans + RSS) + `.qg_profile/` gitignored. — unified-trading-pm (local)
+- [x] [SCRIPT] P0. **FIX: STEP 5.65 removed-symbols mis-scope** — it used `basename/dirname "$REPO_ROOT"`, but
+      `REPO_ROOT` IS the workspace root, so it AST-scanned the ENTIRE workspace (~146k `.py` incl. all `.tabs/` slot
+      clones) single-threaded on EVERY repo's gate → **~286 s = 64% of wall-time, fleet-wide**. Fixed to
+      `basename "$PROJECT_ROOT"` + `REPO_ROOT` (matches the already-correct STEP 5.67). + added `.tabs` to the checker's
+      `EXCLUDE_DIR_NAMES`. Expected: 286 s → sub-second per gate. — base-service.sh + check_removed_symbols.py
+- [ ] [INFRA] P0. **Part 3 — add the workspace-wide removed-symbols sweep** (cron/CI, `.tabs` excluded, run ONCE) to
+      preserve the cross-repo guarantee that the per-repo scope narrows away. NO such sweep exists today (the mis-scope
+      was accidentally serving as it). SSOT: check_removed_symbols.py docstring "run separately via CI cron".
+- [ ] [INFRA] P0. **pip-audit = 38 s (8%) OSV network** (now visible after decomposing the codex blob). Cache OSV
+      results and/or move pip-audit to a deps-change/cron trigger instead of every gate run. Advisory gate → safe to
+      move off the hot path.
+- [ ] [SCRIPT] P0. **Instrument base-library.sh** with the same `qg_prof` spans + `QG_PROFILE` full-run override
+      (UTL/UAC are libraries — the heaviest repos, 5.27 GB peak — and currently have NO span instrumentation). Needed
+      before the full 22-repo sweep covers libraries.
+- [ ] [AUDIT] P1. Typecheck numbers are **warm-cache** (~11 s); report BOTH cold (clear `BASEDPYRIGHT_CACHE_DIR`) and
+      warm in the sweep so basedpyright isn't under-counted.
+
+## Phase 1 — CONFIG SSOT: one home (toml), no shadowing
+
+> Conclusion to validate with Phase 0 data: **toml is the single home for both tiers** — TIER-A via the tools' own
+> tables, TIER-B via a new `[tool.quality-gates]` table that base-service.sh parses — so the per-repo stub collapses
+> toward a one-line `source base-service.sh`.
+
+- [ ] [DESIGN] P0. Decide the TIER-A rule: base-service.sh must STOP passing CLI flags that shadow toml
+      (`--cov-fail-under`, explicit pytest test dir vs `testpaths`, bandit without `-c`). For each, either drop the
+      override (let the tool read toml) or pass the tool its own config explicitly. Reconcile each of the 7 drifting
+      repos to ONE honest value FIRST (a flip with no reconciliation reds MTDS/MDPS/alerting and silently loosens
+      uta/SIT — see Phase 0 matrix).
+- [ ] [DESIGN] P0. Design `[tool.quality-gates]` table schema for TIER-B knobs (e.g. `min_coverage`, `run_integration`,
+      `pytest_workers`, `max_duration`, `codex_max_violations`, `pytest_unit_dir`, exclude-package lists,
+      pip-audit-ignores). base-service.sh reads it (single toml parse) instead of stub bash vars. Keep a back-compat
+      read of the stub var during migration, warn on divergence, then remove.
+- [ ] [INFRA] P1. Implement base-service.sh + base-library.sh to read the `[tool.quality-gates]` table; make
+      `MIN_COVERAGE` derive from `fail_under` (or the table) so the coverage number lives in exactly ONE place. Update
+      coverage-floor-guard.sh to read the authoritative source and keep enforcing the system floor (70) + the
+      signed-exception path.
+- [ ] [REFACTOR] P1. Per-repo: move TIER-A duplicates out of the stub (rely on toml), collapse the duplicated exclude
+      intent (e.g. "exclude market_interface" expressed in ~7 places) to the minimum each tool genuinely needs.
+      Reconcile honest coverage values (MTDS: settle 28-vs-71 per the Axis-A outcome — likely 28 now, ratchet to 71 as
+      ISS-031 tests land).
+- [ ] [DOCS] P1. Update `codex/06-coding-standards/quality-gates.md` § config-SSOT: toml is the single home, the
+      `[tool.quality-gates]` contract, the "base must never shadow toml on the CLI" rule.
+
+---
+
+## Phase 2 — CHANGE-SCOPED FAST TIER (the single-core wall-time win)
+
+> Two-tier model. **Fast/iterative tier** = scoped to changed files + impacted tests; for the local dev loop; does NOT
+> write the sentinel and is NOT sufficient to merge. **Full/merge tier** = today's complete gate with full coverage;
+> writes the sentinel; runs at quickmerge Pass-1 / CI. The fast tier turns a 2-file edit from minutes into seconds
+> without touching the gate's strength.
+
+- [ ] [DESIGN] P0. Specify the two-tier contract + the trigger: a new `--fast` (or `--scoped`) mode that diffs
+      HEAD/worktree, computes the changed file set, and runs only impacted work. Reuse the existing green-sentinel
+      (unchanged→skip) as the degenerate case; this adds the "small change → impacted subset" case between "unchanged"
+      and "full."
+- [ ] [DESIGN] P0. Coverage-preservation design (THE hard part). Options to evaluate with Phase 0 data: (a)
+      `pytest-testmon` to select only tests impacted by changed code; (b) maintain a coverage cache/DB so the fast tier
+      reports combined (cached + delta) coverage; (c) fast tier runs impacted tests WITHOUT the coverage gate, and the
+      coverage floor is enforced ONLY at the merge tier. **Invariant: the merge tier always recomputes full coverage**,
+      so the floor can never silently drop regardless of which option we pick.
+- [ ] [INFRA] P1. Test impact selection: wire pytest-testmon (or coverage-map equivalent) so the fast tier runs only
+      tests that touch the changed files + their importers. Single-core; the win is fewer tests, not more cores.
+- [ ] [INFRA] P1. basedpyright fast path: type-check changed files + their reverse-dependents only (full `SOURCE_DIR/`
+      stays on the merge tier). Warm `BASEDPYRIGHT_CACHE_DIR` (already set) so incremental runs are cheap.
+- [ ] [INFRA] P1. Codex STEP 5.x fast path: scope the grep/AST checks to the changed file set for the fast tier (several
+      are already git-aware via `STAGED`; generalise). Full-tree scan stays on the merge tier.
+- [ ] [TEST] P0. Differential correctness harness: for a corpus of known-bad commits (each violating one specific
+      check/coverage), assert the fast tier catches anything WITHIN the changed files AND the full/merge tier catches
+      everything. This is the proof that scoping never lets a regression through.
+
+---
+
+## Phase 3 — PER-STEP COST REDUCTION (helps single-core full gate too)
+
+- [ ] [INFRA] P1. pip-audit: it is advisory + has an 180s OSV network timeout. Move to cached OSV results and/or a
+      periodic cron (e.g. on dependency change only) instead of every gate run. Big fixed-cost removal from the hot
+      loop.
+- [ ] [INFRA] P2. bandit + actionlint: cache results keyed by content hash; scope bandit to changed files on the fast
+      tier.
+- [ ] [INFRA] P2. Coverage instrumentation is already off the `--quick` hot path; confirm the fast tier inherits that
+      and measure the per-line-instrumentation cost the profile (Phase 0) attributes to `--cov`.
+- [ ] [INFRA] P2. Re-profile after Phases 1–3 and re-baseline `qg_resource_baseline.json`; the 2× resource-drift guard
+      keys off it.
+
+---
+
+## Phase 4 — VALIDATION & BACKSTOP (no coverage drop, no missed violation)
+
+- [ ] [TEST] P0. Coverage-floor invariant test: prove the MERGE tier still enforces each repo's real floor after the
+      Phase-1 SSOT change (no repo silently dropped to pytest-cov default 0; no repo silently loosened).
+- [ ] [TEST] P1. Run the Phase-2 differential harness in CI as a recurring guard so a future change to the fast tier
+      can't regress its catch-rate.
+- [ ] [INFRA] P1. Periodic FULL sweep (cron) across all repos as the backstop: even if the fast tier ever under-scopes,
+      the sweep guarantees a full gate (incl. full coverage + full codex) runs within an SLA, so scoping can never let a
+      regression persist undetected.
+
+---
+
+## Phase 5 — ROLLOUT & CODEX
+
+- [ ] [INFRA] P1. Land base-service.sh / base-library.sh changes in PM (SSOT — no per-repo rollout needed; repos source
+      it).
+- [ ] [REFACTOR] P1. Per-repo stub slimming + toml reconciliation, repo-by-repo, each behind its own QG-green +
+      quickmerge (do NOT mass-sweep — collision risk per Findings-Triage; ratchet, don't bulk-edit).
+- [ ] [DOCS] P1. Codex SSOT updates: `codex/06-coding-standards/quality-gates.md` (two-tier model,
+      `[tool.quality-gates]` table, "merge tier is authoritative" invariant, per-step cost notes). Add
+      SUPERSEDED/extends banner cross-ref to the archived resource-contention plan.
+
+---
+
+## Open questions (resolve with Phase 0 data, not before)
+
+- Coverage preservation mechanism: testmon vs coverage-cache vs floor-only-at-merge — pick after measuring testmon
+  overhead and how often the merge tier runs anyway.
+- Is pip-audit's network cost big enough to justify the cron move, or is caching sufficient?
+- For the 7 drifting repos: which honest value per repo (keep-green-now vs raise-to-target-and-fix-tests)? MTDS is the
+  template case (28 now → 71 as ISS-031 lands).
+- `[tool.quality-gates]` table vs keeping a few genuinely-bash-only knobs in the stub — where exactly is the line?
+
+## Codex SSOT updates (required)
+
+- `codex/06-coding-standards/quality-gates.md` — config-SSOT rule, two-tier gate, `[tool.quality-gates]` contract,
+  per-step cost guidance.
+
+## Success criteria
+
+- Single-core wall-time for a small (≤2 file) change drops to seconds via the fast tier, on a single core, no
+  parallelism.
+- Every QG setting has exactly ONE home (toml); the dual-SSOT matrix shows zero `drift`/`shadowed` rows.
+- Differential harness proves: fast tier catches in-scope violations; merge tier catches everything; no coverage floor
+  silently changed.

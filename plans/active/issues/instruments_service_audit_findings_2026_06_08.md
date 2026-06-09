@@ -22,19 +22,30 @@ noted.
 > a swallow is **invisible to `failed_venues`** → orchestrator `_non_error_venues` includes it →
 > `empty_ok_venues = (_non_error_venues − written_venues) − validation_failed_venues` (`orchestrator.py:2998`) →
 > **`expected_venues -= empty_ok_venues` (`:3006`)** → the venue is **silently EXCLUDED from the expected denominator**
-> (NOT recorded `attempted_failed`, NOT retried, coverage % inflated). [Earlier wording "records a clean empty" was >
-> imprecise — it's exclusion-from-denominator, same root, slightly different effect.] **Reachability matters**:
+> (NOT recorded `attempted_failed`, NOT retried, coverage % inflated). [Earlier wording "records a clean empty" was > >
+> > imprecise — it's exclusion-from-denominator, same root, slightly different effect.] **Reachability matters**:
 > `_TRADFI_VENUES = [CME, NASDAQ, NYSE, CBOE, ICE, FX]` — neither `polygon` nor `ibkr` is a live venue, so their
 > adapters are **dead-registered (never invoked)** → their swallow is UNREACHABLE today. Only **kalshi** (prediction
 > enumeration) is on a reachable path.
 
+> **STATUS 2026-06-09 — SHIPPED:** kalshi CF-11 fix landed on LDR via quickmerge once staging unlocked
+> (`instruments-service@229dcc4`); riding the LDR→staging drain PR #418 to staging → main. The recurring
+> version-alignment false-block that delayed it is FIXED (`unified-trading-pm@a428a3515` — `version-alignment-gate.sh`
+> now compares like-for-like). The deeper semver-agent `[skip ci]` promotion-block root cause (which kept staging
+> re-locking) is written up for review in [[semver_version_bump_skip_ci_promotion_block_2026_06_09]]
+> (`plans/active/issues/`).
+
 ### 🔴 P0 — fetch error swallowed into not-failed (CF-11) — kalshi (the one REACHABLE case)
 
-- [ ] [MTDS] P0. `prediction/kalshi.py` — `_fetch_markets_page` emits `ADAPTER_FETCH_FAILED` then `return [], None`;
+- [x] ✅ [MTDS] P0. `prediction/kalshi.py` — `_fetch_markets_page` emits `ADAPTER_FETCH_FAILED` then `return [], None`;
       `get_instruments:130-133` returns `[]` with no raise → not in `failed_venues` → excluded from the expected
       denominator (no `attempted_failed`, no retry). Re-raise when all pages failed (tardis/deribit_combo "raise iff
       `not results and failures`" pattern). Repo: instruments-service. (Caveat: kalshi may be pre-activation as an
-      active prediction venue — the fix is correct regardless and prevents a silent gap once it activates.)
+      active prediction venue — the fix is correct regardless and prevents a silent gap once it activates.) —
+      `instruments-service@229dcc4` | `_fetch_markets_page` raises RuntimeError on 401/transport; `get_instruments`
+      re-raises on all-failed | regression: `tests/unit/test_kalshi_adapter.py` (401 + transport-error raise) +
+      `tests/unit/test_prediction_adapters_comprehensive.py` (TestKalshiFetchMarketsPage raise) | QG green (sentinel
+      79d1acb).
 
 ### 🔴 P0 — removed provider dead-registered alongside its replacement → DELETE
 

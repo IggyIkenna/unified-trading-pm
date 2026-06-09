@@ -383,6 +383,29 @@ jobs:
             fi
           done < /tmp/dependents.txt
 
+      # ── Phase 2 (dependency_promotion_…_2026_06_09): a MAJOR / breaking bump triggers the
+      #    full dep-order QG cascade (cascade-qg-ordering.yml runs QG across transitively-affected
+      #    repos in topological level order, fail-fast). minor/patch bumps are absorbed by the
+      #    consumer's range pin → NO cascade, NO consumer rebuild (the `if` below excludes them).
+      - name: Trigger dep-order QG cascade on MAJOR / breaking bump (Phase 2)
+        if:
+          steps.update.outputs.skip != 'true' && (steps.update.outputs.bump_type == 'major' ||
+          steps.update.outputs.is_breaking == 'true')
+        env:
+          OWNER: ${{ github.repository_owner }}
+          TOKEN: ${{ secrets.GH_PAT }}
+          SRC_REPO: ${{ steps.update.outputs.repo }}
+          SRC_VER: ${{ steps.update.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "$TOKEN" ]; then echo "GH_PAT not set — skipping cascade trigger."; exit 0; fi
+          echo "MAJOR/breaking bump ${SRC_REPO}=${SRC_VER} → dispatching cascade-qg-trigger (full dep-order QG cascade)"
+          HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$OWNER/unified-trading-pm/dispatches" \
+            -d "{\"event_type\": \"cascade-qg-trigger\", \"client_payload\": {\"source_repo\": \"${SRC_REPO}\", \"source_version\": \"${SRC_VER}\"}}")
+          if [ "$HTTP" = "204" ]; then echo "  ✅ cascade-qg-trigger dispatched"; else echo "  ⚠️  HTTP $HTTP dispatching cascade-qg-trigger"; fi
+
   # ── TELEGRAM NOTIFICATIONS (reusable workflow) ───────────────────────────
 
   notify:

@@ -4,9 +4,12 @@ name: cloud-build-router
 # Triggered by repository_dispatch from any repo's quality-gates.yml on QG success.
 #
 # Routing logic:
-#   feat/*   → uts-dev-ikenna     (tag: {semver}-{branch-slug})
-#   staging  → uts-staging-ikenna (tag: {semver}-staging)
-#   main     → uts-prod-ikenna    (tag: {semver})
+#   Single project: central-element-323112. Env isolation is by image tag +
+#   Cloud Run service name + bucket tier (NOT separate projects).
+#   feat/*   → tag: {semver}-{branch-slug}  (ENV=dev)
+#   staging  → tag: {semver}-staging         (ENV=staging)
+#   main     → tag: {semver}                 (ENV=prod)
+#   Auth: WIF (OIDC) preferred, GCP_SA_KEY fallback — see codex/07-security/gha-wif-migration.md
 #
 # Library repos: build Python wheel (not Docker image) and push to Artifact Registry.
 # Service/API/UI repos: build Docker image.
@@ -35,6 +38,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write # Required for GCP Workload Identity Federation (OIDC) auth
 
 # Serialize with other manifest-mutating workflows (update manifest on build success step writes workspace-manifest.json)
 concurrency:
@@ -101,7 +105,9 @@ jobs:
       - name: Upload deferred-build artifact (drained by freeze-deferred-build-replay.yml)
         uses: actions/upload-artifact@v4
         with:
-          name: deferred-build-${{ github.event.client_payload.repo }}-${{ github.event.client_payload.version }}-${{ github.run_id }}
+          name:
+            deferred-build-${{ github.event.client_payload.repo }}-${{ github.event.client_payload.version }}-${{
+            github.run_id }}
           path: _deferred/payload.json
           retention-days: 7
 
@@ -150,16 +156,18 @@ jobs:
           # Slugify branch: lowercase alphanumeric+hyphen, max 30 chars (enforce-branch-slug-convention)
           BRANCH_SLUG=$(echo "$BRANCH" | tr '[:upper:]' '[:lower:]' | sed 's|[^a-z0-9-]|-|g' | cut -c1-30)
 
+          # Single GCP project (central-element-323112); env isolation is by image
+          # tag + Cloud Run service name + bucket tier, NOT by separate projects.
+          # (The former uts-{prod,staging,dev}-ikenna split was never provisioned;
+          #  see codex/05-infrastructure/bucket-isolation-model.md for the tier model.)
+          GCP_PROJECT="central-element-323112"
           if [ "$BRANCH" = "main" ]; then
-            GCP_PROJECT="uts-prod-ikenna"
             IMAGE_TAG="${VERSION}"
             ENV="prod"
           elif [ "$BRANCH" = "staging" ]; then
-            GCP_PROJECT="uts-staging-ikenna"
             IMAGE_TAG="${VERSION}-staging"
             ENV="staging"
           else
-            GCP_PROJECT="uts-dev-ikenna"
             IMAGE_TAG="${VERSION}-${BRANCH_SLUG}"
             ENV="dev"
           fi
@@ -423,13 +431,27 @@ jobs:
           echo "snapshot_taken=true" >> "$GITHUB_OUTPUT"
           echo "service_url=$SERVICE_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Authenticate to GCP
-        id: auth
+      # Auth is dual-path: WIF (keyless OIDC) preferred, SA-key fallback.
+      # Both are guarded for non-library routes (libraries build wheels, no GCP).
+      # WIF impersonates github-actions-deploy@central-element-323112; the
+      # workload_identity_provider/service_account secrets gate it. If WIF fails
+      # (e.g. pool not yet provisioned), it falls through to the GCP_SA_KEY path.
+      # SSOT: codex/07-security/gha-wif-migration.md
+      - name: Authenticate to GCP via WIF (preferred)
+        id: auth-wif
+        if: steps.route.outputs.repo_type != 'library'
+        continue-on-error: true
         uses: google-github-actions/auth@v2
         with:
-          credentials_json:
-            ${{ steps.route.outputs.env == 'dev' && secrets.GCP_SA_KEY_DEV || steps.route.outputs.env == 'staging' &&
-            secrets.GCP_SA_KEY_STAGING || secrets.GCP_SA_KEY_PROD }}
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (fallback)
+        id: auth-key
+        if: steps.route.outputs.repo_type != 'library' && steps.auth-wif.outcome != 'success'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v2
