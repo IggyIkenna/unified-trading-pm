@@ -13,7 +13,9 @@ locked_by: live-defi-rollout
 estimate_calibrated_ai_days: 0.2
 estimate_class: infra
 priority: P2
-status: active
+status: resolved
+resolved: 2026-06-09
+resolution: ACKED-INTO-CODE — utl@2bfb6a16 (lifecycle/uploader.py grow-threshold gate min_growth_bytes); test tests/unit/lifecycle/test_uploader.py; soft-delete cleared + lifecycle rules + tarball reaper + TF codified (all boxes flipped)
 ---
 
 > **🟡 PROCESS NOTE (Ikenna 2026-06-02) — `deployment-service #15` is the wrong delivery vehicle for this work.** PR #15

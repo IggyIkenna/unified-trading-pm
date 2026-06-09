@@ -12,7 +12,9 @@ source:
     pipeline_mode-aware path first"
 locked_by: live-defi-rollout
 priority: P2
-status: active
+status: resolved
+resolved: 2026-06-09
+resolution: ACKED-INTO-CODE — execution-service@abfadd803 (loaders/defi.py:70 adds chain= kwarg, fixes StopIteration); regression tests tests/unit/test_loaders_defi_canonical_paths.py::test_{swaps,liquidity}_canonical_path_precedes_legacy
 ---
 
 ## What I found

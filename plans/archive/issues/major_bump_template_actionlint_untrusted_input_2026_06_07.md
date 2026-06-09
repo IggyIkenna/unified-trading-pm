@@ -8,7 +8,9 @@ source:
   - unified-trading-pm/scripts/quality-gates-base/base-service.sh (§ [5.5] WORKFLOW LINT)
 locked_by:
 priority: P2
-status: active
+status: resolved
+resolved: 2026-06-09
+resolution: ACKED-INTO-CODE — workflow-template env-var indirection @04adb3d3b + Telegram→Slack rollout @87c4b2af3; guarded by QG [5.5a] empty-expr parse-break + workflow-template parity drift gate (detect_template_drift.py)
 ---
 
 > **✅ A11c-PORTION RESOLVED (2026-06-07).** The env-var indirection fix landed: UAC LDR `156fa7c2`
