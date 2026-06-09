@@ -73,27 +73,29 @@ gates pass, the major promotes automatically with no human/vm-planning involveme
 
 ## Phases
 
-### Phase 1 — `uv lock --check` gate vs internal editable drift — RE-OPENED pending verification (P0)
+### Phase 1 — RESOLVED: nothing pins from `uv.lock` → relax `uv lock --check` to non-blocking (P1)
 
-**Status reconciliation (2026-06-09):** this was tombstoned after the operator clarified "`uv.lock` is already correct"
-(editable internal / exact external — the lock FORMAT has no exact-pin bug). But a hands-on agent then re-reported that
-the `uv lock --check` **gate** still reds on internal editable drift (the recorded `version =` snapshot, e.g. `0.1.20`,
-goes stale vs the source). Those aren't contradictory — the lock FORMAT is correct AND the staleness CHECK can still
-trip. So re-opened with a verification gate first (don't build on a false premise either way):
+**Resolution (operator 2026-06-09, verified):** the range check we want already exists — **`uv pip install -e .`
+resolves against the `pyproject.toml` ranges at install time**, so an in-range version installs and a MAJOR that crosses
+`<1.0.0` fails to resolve (the signal, for free). And **nothing installs FROM `uv.lock`**: every path is `uv venv` +
+`uv pip install -e .` — there is NO `uv sync` / `--frozen` / `--locked` anywhere in `base-service.sh` (220-225) /
+`base-library.sh` (113-115) / Dockerfiles. So `uv.lock` pins nothing (internal deps editable; external deps also
+range-resolved at install, not pinned from the lock) — it's a _record_, not an enforced pin.
 
-- [ ] [SCRIPT] P0. **VERIFY**: does `uv lock --check` actually exit non-zero on a pure internal editable version-field
-      drift (source bumped, no external dep moved)? Reproduce in a sandbox consumer. If NO (uv treats editable version
-      leniently) → re-tombstone, the version-aware-clone loud-fail is the only mechanism (already closed). If YES →
-      implement the exempt-gate below.
-- [ ] [SCRIPT] P0 (only if VERIFY=yes). Write `scripts/cicd/check_lock_internal_only_drift.py` (PM): on
-      `uv lock --check` failure, regenerate to a temp lock + diff; **PASS** if the only changed `[[package]]` entries
-      are internal editable deps (name in the workspace-manifest internal set AND `source={editable=…}`), **FAIL** if
-      any EXTERNAL dep version moved (reproducibility preserved). NEVER recommit the lock (no fleet churn). Unit tests:
-      internal-only → pass; external → fail; no drift → pass; mixed → fail.
-- [ ] [SCRIPT] P0 (only if VERIFY=yes). Wire into `base-service.sh:215` + `base-library.sh:105` (replace the raw
-      `uv lock --check … || exit 1`); keep the pinned-uv-only blocking behavior; roll out via `rollout-*.sh` (never
-      hand-edit per-repo copies). Then reconcile `CLAUDE.md` / `SUB_AGENT` / `ci-cd-flow.md` (which currently state the
-      gate is a non-problem) — update them to "FORMAT correct; the CHECK exempts internal editable drift".
+Therefore the earlier "diff-exempt gate" (and the "does `uv lock --check` red on internal drift?" verification) is
+**MOOT**: even if the check reds, it enforces nothing real. `uv lock --check` (`base-service.sh:215`,
+`base-library.sh:105`) is a gratuitous _freshness_ gate that only adds churn on the cosmetic `version =` snapshot. The
+clean fix is to relax it.
+
+- [ ] [SCRIPT] P1. Relax `uv lock --check` from BLOCKING → warn-only in `base-service.sh:215` + `base-library.sh:105`
+      (the warn variant already exists at :218 / :108 for the non-pinned-uv branch — make the pinned-uv branch warn
+      too). Rationale comment: nothing installs `--frozen`, so the lock isn't a pin; the real contract is the
+      `pyproject` range enforced by `uv pip install`. Roll out via `rollout-*.sh` (never hand-edit per-repo copies).
+- [ ] [DOCS] P2. (Forward-insurance) IF the fleet ever adopts `uv sync --frozen` (install FROM the lock for reproducible
+      builds), re-introduce a lock-freshness gate — but as an **external-only** check (internal editable deps stay
+      exempt), since the editable `version =` snapshot is always cosmetic. Until then, not needed.
+- [x] [DOCS] P1. Docs already consistent — `CLAUDE.md` / `SUB_AGENT` / `ci-cd-flow.md` say "uv.lock is correct, no
+      exact-pin fix needed," which this resolution confirms (the only delta is relaxing the gratuitous freshness gate).
 
 ### Phase 2 — MAJOR bump triggers a CASCADE of quality gates (full SIT in dependency order) — P1
 
@@ -155,11 +157,11 @@ two gaps:
   can only correlate by build-time vs Artifact Registry push history (indirect, ambiguous under concurrent pushes; UAC
   is one hop worse — baked editable into the UTL image).
 
-The fix is already scoped as **QG STEP 5.79 (`dockerfile-base-pin`, `base-service.sh:2221`, currently PENDING-RATCHET)**.
-Reframe + prioritize it: pinning `FROM …@sha256:<digest>` is simultaneously the **reproducible-build** lever AND the
-**dep-provenance** lever — one change, both payoffs. Once landed: service commit → its Dockerfile pins
-`unified-trading-library@sha256:…` → that digest = a specific UTL build = UTL version+commit → UAC commit baked in = a
-deterministic single-SHA provenance chain, with zero `uv.lock` dependency.
+The fix is already scoped as **QG STEP 5.79 (`dockerfile-base-pin`, `base-service.sh:2221`, currently
+PENDING-RATCHET)**. Reframe + prioritize it: pinning `FROM …@sha256:<digest>` is simultaneously the
+**reproducible-build** lever AND the **dep-provenance** lever — one change, both payoffs. Once landed: service commit →
+its Dockerfile pins `unified-trading-library@sha256:…` → that digest = a specific UTL build = UTL version+commit → UAC
+commit baked in = a deterministic single-SHA provenance chain, with zero `uv.lock` dependency.
 
 - [ ] [INFRA] P1. **Complete the 5.79 FROM-digest ratchet** — drive every production Dockerfile's `FROM` from
       `:latest`/`:tag` → `@sha256:<digest>` and flip STEP 5.79 from PENDING-RATCHET to BLOCKING

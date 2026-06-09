@@ -207,16 +207,14 @@ fi
 # ── BOOTSTRAP (local only; CI has its own setup) ─────────────────────────────
 if [ -z "${GITHUB_ACTIONS:-}" ] && [ -z "${CI:-}" ] && [ -z "${CLOUD_BUILD:-}" ]; then
     command -v uv &>/dev/null || pip install "uv==0.10.8" --quiet
-    # Read-only freshness gate — do NOT mutate uv.lock here (mutating it dirtied trees + jammed
-    # the FF-pull cron). BLOCKING only when on the pinned uv (else a different uv's serializer
-    # reformatting would false-fail); warn otherwise. SSOT: plans/active/uv_lockfile_determinism_2026_06_02.md
-    _uvver=$(uv --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -1)
-    if [ "$_uvver" = "0.10.8" ]; then
-        uv lock --check 2>/dev/null || { echo "❌ uv.lock out of sync with pyproject.toml — run 'uv lock' && commit"; exit 1; }
-    else
-        echo "⚠️  uv $_uvver != pinned 0.10.8 — run setup.sh to pin; skipping blocking uv.lock check (warn only)"
-        uv lock --check 2>/dev/null || echo "⚠️  uv.lock may be out of sync — re-check on pinned uv 0.10.8"
-    fi
+    # uv.lock freshness — WARN-ONLY, never blocking (2026-06-09). Nothing installs FROM the lock
+    # (every path is `uv pip install -e .`, no `uv sync`/`--frozen`/`--locked`), so the lock is a
+    # RECORD, not an enforced pin: the real dependency contract is the pyproject RANGE, which `uv pip
+    # install` enforces at install (an out-of-range MAJOR fails to resolve = the signal). Blocking here
+    # only added churn on the cosmetic internal-editable `version =` snapshot. Do NOT mutate uv.lock here
+    # either (it dirtied trees + jammed the FF-pull cron). SSOT:
+    # plans/active/dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md § Phase 1.
+    uv lock --check 2>/dev/null || echo "⚠️  uv.lock out of sync with pyproject.toml (non-blocking — lock is a record, not a pin; pyproject range is the contract). Run 'uv lock' to refresh the record."
     [ ! -d ".venv" ] && uv venv .venv
     [ -f ".venv/bin/activate" ] && source .venv/bin/activate || :
     for lib in "${LOCAL_DEPS[@]}"; do
