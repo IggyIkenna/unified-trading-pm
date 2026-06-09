@@ -88,9 +88,18 @@ source:
 >   surface. TODO 2 (drain) HELD until their re-roll finishes (drain promotes repos → would collide).
 > - 21:35Z — launching slots 2-11 venv pre-build (honor "all slot repos"; additive + untracked `.venv`, skips existing,
 >   warm uv cache). The `.venv` fix also makes every slot self-build lazily on first QG run, so no slot is broken.
+> - 21:45Z — **VENV PRE-BUILD COMPLETE across all 11 slots**: slot-1 (22) + slots 2-11 (204 built + 16 existing) = ~242
+>   repo venvs. Sole anomaly: **e2e-testing** `uv pip install -e .` fails in EVERY slot — "Multiple top-level packages
+>   discovered in a flat-layout" (setuptools package-discovery config gap). NON-blocking: the 278 deps install fine, the
+>   `.venv`+python exist, pytest uses rootdir imports, and e2e-testing **server v2 is GREEN (@20:54)**. TODO below.
+>   **Asks 1-3 DONE; ask 4 (drain) held on the peer agent's semver re-roll.**
 >
 > ### Residual follow-ups (captured; NOT blocking — fleet is green)
 >
+> - [ ] [SCRIPT] P3. **e2e-testing editable self-install** — add explicit package discovery to its `pyproject.toml`
+>       (`[tool.setuptools.packages.find]`) so `uv pip install -e .` can build the editable wheel (currently "Multiple
+>       top-level packages in a flat-layout"). Non-blocking (deps install; server v2 green; pytest rootdir imports
+>       work). Repo: e2e-testing.
 > - [ ] [SCRIPT] P2. **Local QG `.venv` artifact** — Path-B slot clones lack a repo `.venv`, so `quality-gates.sh`
 >       pip-audit audits `.venv-workspace` (tooling deps) → spurious fails for `CODEX_MAX_VIOLATIONS=0` repos. Either
 >       have `quality-gates.sh` create/require the repo `.venv` (uv venv + uv pip install -e .) before pip-audit, or
