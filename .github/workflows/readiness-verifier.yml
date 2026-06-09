@@ -39,12 +39,20 @@ jobs:
       # so the script does not look for a sibling unified-trading-codex/.
 
       - name: Checkout workspace repos for the specified tier
-        # Clone only the repos in the tier being verified using the
-        # setup-workspace-from-manifest.sh script with a tier filter.
+        # Best-effort + NON-FATAL: a clone failure must never red the whole
+        # verifier (Finding 1, plans/active/issues/ci_incident_findings_2026_06_09.md).
+        # There is no tier-bulk-clone script: setup-workspace-from-manifest.sh is
+        # per-<service> (clones that service's deps), and setup-workspace-root.sh
+        # only sets the workspace-root path. When a single repo_filter is given we
+        # clone its deps via the real (scripts/, not scripts/workspace/) script;
+        # tier-mode runs check-repo-readiness.py against repos already present
+        # (PM + the in-repo codex/). A dedicated tier-clone helper is a follow-up.
+        continue-on-error: true
         run: |
-          bash scripts/workspace/setup-workspace-from-manifest.sh \
-            --tier "${{ github.event.inputs.tier || 'all' }}" \
-            --skip-fresh
+          if [ -n "${{ github.event.inputs.repo_filter }}" ]; then
+            bash scripts/setup-workspace-from-manifest.sh \
+              "${{ github.event.inputs.repo_filter }}" --skip-install || true
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v6
