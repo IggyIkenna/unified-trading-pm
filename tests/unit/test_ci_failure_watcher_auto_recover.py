@@ -121,8 +121,10 @@ class TestAutoRecoverMechanism:
             joined = " ".join(str(c) for c in cmd)
             if "git/commits/" in joined:  # GET head commit (tree lookup)
                 r.stdout = '{"sha": "headsha", "tree": {"sha": "tree1"}, "message": "x"}'
-            elif joined.endswith("git/commits") or "git/commits -f" in joined or (
-                "git/commits" in joined and "message=" in joined
+            elif (
+                joined.endswith("git/commits")
+                or "git/commits -f" in joined
+                or ("git/commits" in joined and "message=" in joined)
             ):  # POST create empty commit
                 r.stdout = '{"sha": "newsha"}'
             elif "git/refs/heads/" in joined:  # PATCH advance branch ref
