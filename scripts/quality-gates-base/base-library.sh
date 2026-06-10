@@ -73,7 +73,13 @@ MAX_FILE_LINES=900; FILE_WARN_LINES=700
 MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES:-900}; MAX_METHOD_LINES=${MAX_METHOD_LINES:-50}
 
 # ── MODE ──────────────────────────────────────────────────────────────────────
-FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; SKIP_VERSION_ALIGNMENT=false
+# FIX_MODE DEFAULTS TO FALSE (2026-06-10): AUTO-FIX runs a TREE-WIDE `prettier --write "**/*"`
+# (the [1] AUTO-FIX block), which reformats files OUTSIDE the caller's commit — a stray
+# default-mode run (cron / forgotten flag) then leaves foreign reformats as worktree dirt,
+# jamming the FF-pull. The canonical agent path is already `--no-fix`; making it the DEFAULT
+# closes the foot-gun so a bare run can't churn the tree. Per-commit formatting is handled by
+# the SCOPED prettier-autostage pre-commit hook; opt into a deliberate tree reformat with `--fix`.
+FIX_MODE=false; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
     case $arg in
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;

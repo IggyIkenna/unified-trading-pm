@@ -165,7 +165,12 @@ MAX_FILE_LINES=${MAX_FILE_LINES:-900}; FILE_WARN_LINES=${FILE_WARN_LINES:-700}
 MAX_FUNCTION_LINES=${MAX_FUNCTION_LINES:-200}; MAX_CLASS_LINES=${MAX_CLASS_LINES:-900}; MAX_METHOD_LINES=${MAX_METHOD_LINES:-50}
 
 # ── MODE ──────────────────────────────────────────────────────────────────────
-FIX_MODE=true; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; IGNORE_TIMEOUT=${IGNORE_TIMEOUT:-false}; SKIP_VERSION_ALIGNMENT=false
+# FIX_MODE DEFAULTS TO FALSE (2026-06-10): AUTO-FIX's tree-wide `prettier --write "**/*"`
+# reformats files outside the caller's commit → a stray default-mode run leaves foreign
+# reformats as worktree dirt + jams the FF-pull. Canonical agent path is already `--no-fix`;
+# default it so a bare run can't churn. Per-commit formatting = scoped prettier-autostage hook;
+# opt into a deliberate tree reformat with `--fix`. (QG_PROFILE branch below keeps fix-mode on.)
+FIX_MODE=false; QUICK_MODE=false; RUN_LINT=true; RUN_TESTS=true; SKIP_TYPECHECK=false; ACT_MODE=false; IGNORE_TIMEOUT=${IGNORE_TIMEOUT:-false}; SKIP_VERSION_ALIGNMENT=false
 for arg in "$@"; do
     case $arg in
         --no-fix) FIX_MODE=false ;;   --quick) QUICK_MODE=true ;;
