@@ -82,10 +82,14 @@ page) — P2, after both v1s ship.
 
 ## Smart extras (P2/P3 — tracked here so they are not chat-summary vapor; promote to sub-plans when picked up)
 
-- [ ] [CODE] P2. **Alert-history mirror** — every Slack alert the watchers post (`ci-failure-watcher`,
-      `promotion-lag-monitor`, git-health guard) also lands in a queryable store surfaced on the CI dashboard, so
-      false-positive triage has a ledger and "did this alert before?" is answerable without Slack scrollback. Repo:
-      unified-trading-pm (emit side) + deployment-api/deployment-ui (read side).
+- [x] ✅ [CODE] P2→v1 DONE 2026-06-10 — SHIPPED as the Alerts tab: notify-slack.yml persists every alert to
+      gs://unified-trading-cicd-events/cicd/alerts (PM@794b1e3a7); deployment-api@5bde81a GET /api/repo-ci/alerts
+      derives (repo,workflow) lifecycle streams with CURRENT vs PREVIOUS state; deployment-ui@e71c2e0+c7407d7 Alerts
+      home-shell tab (URL-synced /alerts) | pw:L2 ✓ 171/171 | regression: tests/smoke/alerts-page.spec.ts; live-verified
+      (real ledger entry rendered). Was: **Alert-history mirror** — every Slack alert the watchers post
+      (`ci-failure-watcher`, `promotion-lag-monitor`, git-health guard) also lands in a queryable store surfaced on the
+      CI dashboard, so false-positive triage has a ledger and "did this alert before?" is answerable without Slack
+      scrollback. Repo: unified-trading-pm (emit side) + deployment-api/deployment-ui (read side).
 - [ ] [CODE] P2. **Promotion-pipeline visualization** — per-repo horizontal pipeline (LDR → staging PR → SIT → main →
       image) rendered from the overview payload; the v2-never-reported deadlock + `[skip ci]` jam states get explicit
       badges (data already in the PR panel of sub-plan A). Repo: deployment-ui.
