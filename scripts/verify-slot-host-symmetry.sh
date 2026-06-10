@@ -200,6 +200,28 @@ fi
 # that's fully symmetric doesn't spam "475 failed" every 30 min over per-worktree nits.
 host_fail=${fail}
 
+# Transient-failure DEBOUNCE for the --alert Slack page (codified 2026-06-10). Three of the
+# host-level checks are LIVE-NETWORK probes — backend HTTP /api/mode (transient 502 on a gateway
+# blip), the GitHub workflow-capability PUT (401/403 on a token-loader/SM/network hiccup), and the
+# 10-min log-freshness windows (trip if one cron tick slips). On a */15 cron alerting on ANY single
+# failure, each blip paged Slack even though the host was actually compliant (incident 2026-06-10:
+# 4×backend-502 + 2×GH-403 + 1×GH-401, all transient, host green on the next tick). So we now require
+# the host-level failure to PERSIST across consecutive runs before paging. A real outage persists
+# (≥SYMMETRY_ALERT_THRESHOLD ticks → pages); a single blip clears next tick (counter resets, no page).
+# The check stays a full diagnostic regardless — still logged + still exit 1 for interactive/manual
+# use; only the auto-page is debounced. State is a tiny per-host counter file in tmp.
+SYMMETRY_ALERT_THRESHOLD="${SYMMETRY_ALERT_THRESHOLD:-2}"
+_streak_file="$(dirname "${FF_LOG}")/.slot-host-symmetry-fail-streak"
+if [[ ${host_fail} -gt 0 ]]; then
+    _prev_streak=$(cat "${_streak_file}" 2>/dev/null || echo 0)
+    [[ "${_prev_streak}" =~ ^[0-9]+$ ]] || _prev_streak=0
+    host_fail_streak=$((_prev_streak + 1))
+    echo "${host_fail_streak}" > "${_streak_file}" 2>/dev/null || true
+else
+    host_fail_streak=0
+    rm -f "${_streak_file}" 2>/dev/null || true
+fi
+
 # 9. Per-worktree commit identity (recurrence guard for commit_identity_misconfig_fleet_2026_06_03).
 #    Every slot worktree must carry the canonical identity — user.email == the GitHub-
 #    attributed account AND user.name == "ikennaigboaka [slot-<N>·…". A bot/CI email
@@ -329,17 +351,21 @@ if [[ ${fail} -gt 0 ]]; then
     # --alert (periodic-cron mode): post a Slack drift alert ONLY on HOST-level breaks
     # (crons/logs/backend/token/.tabs) — NOT per-worktree nits (#9/#10), which can number in
     # the hundreds and would spam. Per-worktree drift is logged + exit-1'd, just not alerted.
-    if [[ ${ALERT} -eq 1 && ${host_fail:-0} -gt 0 ]]; then
+    if [[ ${ALERT} -eq 1 && ${host_fail:-0} -gt 0 && ${host_fail_streak:-0} -ge ${SYMMETRY_ALERT_THRESHOLD} ]]; then
+        # Persisted across ≥SYMMETRY_ALERT_THRESHOLD consecutive runs → a real outage, page it.
         _wt_fail=$(( fail - host_fail ))
         _wh="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null || true)}"
         if [[ -n "${_wh}" ]]; then
             _host="$(hostname)"
             curl -sS -X POST "${_wh}" -H 'Content-Type: application/json' \
-                -d "{\"text\":\":warning: slot-host-symmetry DRIFT on \`${_host}\` — ${host_fail} HOST-level check(s) failed (crons/logs/backend/token)$([ ${_wt_fail} -gt 0 ] && echo " + ${_wt_fail} per-worktree nit(s)"). Run verify-slot-host-symmetry.sh on that host. SSOT: CLAUDE.md § 'Local slot host = VM slot host'.\"}" \
-                >/dev/null 2>&1 && echo "[alert] posted host-level symmetry-drift alert to Slack" || echo "[alert] WARN: Slack post failed"
+                -d "{\"text\":\":warning: slot-host-symmetry DRIFT on \`${_host}\` — ${host_fail} HOST-level check(s) failed for ${host_fail_streak} consecutive runs (crons/logs/backend/token)$([ ${_wt_fail} -gt 0 ] && echo " + ${_wt_fail} per-worktree nit(s)"). Run verify-slot-host-symmetry.sh on that host. SSOT: CLAUDE.md § 'Local slot host = VM slot host'.\"}" \
+                >/dev/null 2>&1 && echo "[alert] posted host-level symmetry-drift alert to Slack (streak=${host_fail_streak})" || echo "[alert] WARN: Slack post failed"
         else
             echo "[alert] WARN: no Slack webhook — host-level drift NOT alerted"
         fi
+    elif [[ ${ALERT} -eq 1 && ${host_fail:-0} -gt 0 ]]; then
+        # Host-level fail but streak below threshold → likely a transient blip. Logged + exit-1, NOT paged.
+        echo "[alert] host-level fail #${host_fail_streak}/${SYMMETRY_ALERT_THRESHOLD} (${host_fail} check(s)) — below alert threshold, treating as transient (logged + exit-1, NOT paging)"
     elif [[ ${ALERT} -eq 1 ]]; then
         echo "[alert] host-level checks PASS; $(( fail - host_fail )) per-worktree nit(s) only — NOT alerting (logged + exit-1)"
     fi
