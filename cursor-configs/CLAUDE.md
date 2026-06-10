@@ -168,8 +168,11 @@ Two DeFi archetypes (`carry_staked_basis` + `arbitrage_price_dispersion`) live o
     scripts you direct-push to LDR (the carve-out pushes) ride that PR to `main` too. But PM has no `ldr-to-staging`/
     `staging-to-main` drain (no staging), so the MOMENT that PR squash-merges, any LATER direct push **piles up on LDR
     with no path to `main`** until the next quickmerge opens a fresh one. **Automated since 2026-06-09**:
-    `ldr-to-main-promote.yml` (PM-only, `*/30`) opens/reuses the standing PR whenever LDR has real content (changed-file
-    count, not squash-accounting `ahead_by`) ahead of main — so direct pushes drain within the 1-hour SLA without a
+    `ldr-to-main-promote.yml` (PM-only, **`*/15`** — tightened from `*/30` 2026-06-10) opens/reuses the standing PR
+    whenever LDR has real content (changed-file count, not squash-accounting `ahead_by`) ahead of main, ensures
+    auto-merge is on, and self-recovers the v2-never-reported deadlock (head missing the required check → close+reopen
+    re-fires v2; a genuine v2 *failure* is left blocked until the bad content is fixed on LDR, then it auto-merges on the
+    next green) — so direct pushes drain within a **~30-min SLA** (≤2 ticks) without a
     manual PR. The manual fallback when you don't want to wait ≤30 min:
     `gh pr create --base main --head live-defi-rollout … && gh pr merge <n> --auto --squash` (v2-gated). Verify a push
     actually landed on `main`: `gh api repos/IggyIkenna/unified-trading-pm/compare/main...live-defi-rollout` — but note
