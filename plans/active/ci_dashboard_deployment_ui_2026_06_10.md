@@ -228,6 +228,17 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       the GCP_PROJECT_ID launcher todo in quality_gates_speed_and_config_ssot). Until then: Image=unknown locally is
       HONEST degradation, not fake data; the deployed instance shows real build data.
 
+- [ ] [CODE] P1. **Epics tab v2 — live PM epics with plan drilldown (operator add 2026-06-10)**: REPLACE the current
+      Epics view, which reads the ARCHIVED `unified-trading-codex` epic yamls (4 stale asset-class epics — dead source
+      per CLAUDE.md; finding: the tab has been showing archived data). New: deployment-api `GET /api/epics/plans` reads
+      PM `main` via the contents API (mirror `_repo_ci_manifest.py` TTL pattern, cache ~300 s): (a) `plans/epics/*.md`
+      frontmatter → epic cards (name, tier, priority, assigned_vm, status); (b) `plans/active/*.md` frontmatter
+      `parent_epic:` + checkbox counts (`- [x]` done vs `- [ ]` open, per PLAN_FORMAT) → per-epic drilldown: associated
+      active plans, each with completion % + open-P0/P1 count + estimate fields; orphans (no parent_epic) surface as a
+      review-blocking strip. UI: epic cards → expand to plan rows → plan row links the file on GitHub. Same
+      severity-first sort + LIVE/MOCK badge idioms as Repos CI. Repo: deployment-api + deployment-ui. Tests:
+      fixture-frontmatter unit tests + smoke spec (epic card → drilldown renders plan rows).
+
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 
 - [x] ✅ [TEST] P1. [UI] DONE 2026-06-10 — deployment-ui@3998a4d | pw:L2 ✓ (164/164 smoke) | regression:
