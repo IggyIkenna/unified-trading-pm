@@ -169,7 +169,7 @@
           "required": true
         }
       ],
-      "ci_status": "STAGING_GREEN",
+      "ci_status": "FAILING",
       "testing_level": "integration",
       "skipped_gates": [],
       "service_declaration": {
