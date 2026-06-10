@@ -80,7 +80,7 @@
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.6.0",
     "unified-trading-library": "0.5.0",
-    "unified-trading-pm": "1.2.71",
+    "unified-trading-pm": "1.2.75",
     "market-data-processing-service": "0.3.0",
     "e2e-testing": "0.2.1",
     "agent-orchestrator": "0.9.0",
@@ -1114,7 +1114,7 @@
         }
       ],
       "notes": "Renamed from unified-trading-services to unified-trading-library (2026-03-02). Directory, package, and all imports now use unified-trading-library / unified_trading_library. Quality gates (base-library.sh) run vulture for dead-code; PyPI range is in workspace-constraints.toml and canonical-dependency-manifest.json.",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 78,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "integration",
@@ -1794,19 +1794,26 @@
     "deployment-ui": "0.1.0",
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
-    "market-data-processing-service": "0.3.0"
+    "market-data-processing-service": "0.3.0",
+    "market-tick-data-service": "0.6.0",
+    "batch-live-reconciliation-service": "0.3.0",
+    "features-service": "0.1.2",
+    "execution-service": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
-    "locked": false,
-    "locked_since": null,
-    "locked_reason": null,
-    "lock_version": null,
+    "locked": true,
+    "locked_since": "2026-06-10T10:57:04.878822Z",
+    "locked_reason": "Breaking MINOR bump cascade: execution-service=0.6.0 (pre-1.0.0)",
+    "lock_version": "0.6.0",
     "pending_repos": [],
     "sit_retry_count": 0,
     "locked_alert_sent": false,
     "breaking_pending": [
+      "batch-live-reconciliation-service",
+      "execution-service",
       "greeks-service",
+      "market-tick-data-service",
       "unified-trading-library"
     ]
   },
@@ -1816,6 +1823,26 @@
       "branch": "staging",
       "sha": "b362975b194826245f952cda548bbfea855b4002",
       "version": "0.3.0"
+    },
+    "market-tick-data-service": {
+      "version": "0.6.0",
+      "sha": "3a113ab5bfa0a80ffcd83f0c01c00a0f42153ee2",
+      "branch": "staging"
+    },
+    "batch-live-reconciliation-service": {
+      "version": "0.3.0",
+      "sha": "67734304b333b7931780ef131bb1b612a9b536b3",
+      "branch": "staging"
+    },
+    "features-service": {
+      "version": "0.1.2",
+      "sha": "1a67c96862defe16ff6ebe4cb5fe8a19701b66d2",
+      "branch": "staging"
+    },
+    "execution-service": {
+      "version": "0.6.0",
+      "sha": "5dffa138887987c3591ce2e016c5587922b1c053",
+      "branch": "staging"
     }
   },
   "main_commits": {
