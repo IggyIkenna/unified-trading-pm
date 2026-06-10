@@ -73,16 +73,16 @@ All on `origin/live-defi-rollout`; full detail in
 - [x] ✅ [SCRIPT] P2. **DONE 2026-06-10 — fleet-wide: 0 repos track a sentinel, all carry the ignore pattern.** Verified
       2026-06-10: the canonical template `scripts/propagation/templates/gitignore-python.txt` NOW carries both
       `.qg_last_passed_sha` + `.qg_content_sentinel` (lines 51-52, with the CLAUDE.md item-H rationale comment);
-      `git ls-files | grep qg_` returns ZERO tracked sentinels across all 25 repos (the `git rm --cached` cleanup already
-      landed fleet-wide); only `unified-trading-system-ui` lacked the ignore pattern (a TS repo that doesn't run the
-      Python QG, so N/A) — added it for uniformity (`unified-trading-system-ui@c5b27e61`). Item closed. ORIGINAL: **QG
-      sentinels not gitignored fleet-wide → per-QG-run drift (TWO failure modes)** —
-      `.qg_last_passed_sha` (and `.qg_content_sentinel`) are local caches written by `quality-gates.sh`. (a)
-      **untracked** in most repos → reappear as `??` after every QG run; (b) **already committed/tracked** in some repos
-      (found: `agent-orchestrator`, `unified-api-contracts` — a machine-specific HEAD SHA was committed) → **gitignore
-      alone does NOTHING, needs `git rm --cached`**. Both re-dirty slot trees + jam `slot-cron-ff-pull.sh` (observed:
-      alerting-service, 2026-06-03). Fix: add both patterns to the **canonical `.gitignore` template**
-      (`scripts/templates/`, the workspace SSOT) + roll out to all repos; AND for each repo run
+      `git ls-files | grep qg_` returns ZERO tracked sentinels across all 25 repos (the `git rm --cached` cleanup
+      already landed fleet-wide); only `unified-trading-system-ui` lacked the ignore pattern (a TS repo that doesn't run
+      the Python QG, so N/A) — added it for uniformity (`unified-trading-system-ui@c5b27e61`). Item closed. ORIGINAL:
+      **QG sentinels not gitignored fleet-wide → per-QG-run drift (TWO failure modes)** — `.qg_last_passed_sha` (and
+      `.qg_content_sentinel`) are local caches written by `quality-gates.sh`. (a) **untracked** in most repos → reappear
+      as `??` after every QG run; (b) **already committed/tracked** in some repos (found: `agent-orchestrator`,
+      `unified-api-contracts` — a machine-specific HEAD SHA was committed) → **gitignore alone does NOTHING, needs
+      `git rm --cached`**. Both re-dirty slot trees + jam `slot-cron-ff-pull.sh` (observed: alerting-service,
+      2026-06-03). Fix: add both patterns to the **canonical `.gitignore` template** (`scripts/templates/`, the
+      workspace SSOT) + roll out to all repos; AND for each repo run
       `git ls-files | grep -E 'qg_last_passed_sha|qg_content_sentinel'` → `git rm --cached` any tracked instance. **Done
       this session (slot branches)**: `alerting-service` (gitignore — was untracked), `agent-orchestrator` +
       `unified-api-contracts` (`rm --cached` + gitignore — were tracked); **`unified-trading-pm` `.qg_content_sentinel`
@@ -136,21 +136,23 @@ All on `origin/live-defi-rollout`; full detail in
 
 ### FF-push slot→LDR — PROPOSED, ratify before shipping (loosens a HARD RULE)
 
-- [ ] [INFRA] P2. **[NEEDS-RATIFICATION]** Extend `scripts/dev/slot-cron-ff-pull.sh` to FF-push clean / >1h-old /
-      ahead-only (0-behind) slot commits to LDR (generalize the ping-flush block; FF-only; retry-on-race). Makes the
-      uta-style straggler self-resolve. **Placement = the symmetric slot-host cron stack** (per the "Local slot host =
-      VM slot host" HARD RULE): one SSOT script in PM, run every 5 min on EVERY slot host — the agent-orchestrator's VM
-      worker slots, the operator laptop, Harsh's laptop — so each host drains its OWN slots' stranded QG-green commits
-      (no central pusher; symmetric, verified by `verify-slot-host-symmetry.sh`). Composes with agent_orchestrator_e2e
-      (worker-slot model) + the per-tab-worktrees SSOT. **Makes the slot-host cron bidirectional**: today it is
-      pull-only (`slot-cron-ff-pull.sh` FF-pulls incoming); background/spawned worker agents need the PUSH side too —
-      FF-pull to stay current AND FF-push the QG-green work they commit, else their commits strand on the worker's tab
-      branch exactly like the uta re-lock did. A background worker that finishes + moves on (no interactive operator to
-      quickmerge) is the canonical strander this closes.
-- [ ] [DOC] P2. **[NEEDS-RATIFICATION]** Reconcile the "Never raw `git push` for CODE" HARD RULE in CLAUDE.md +
-      SUB_AGENT_MANDATORY_RULES.md + ci-cd-flow.md to carve out the cron FF-push of QG-green committed work (exact
-      wording drafted; gap-analysis line anchors in the session notes). **Do NOT edit the HARD RULE until operator
-      ratifies decision 3.**
+- [x] ❌ REJECTED at ratification (operator 2026-06-10) — a cron auto-pushing local commits to LDR bypasses the
+      strict-quickmerge lineage guard (LIVE since 2026-06-10) and can push foreign/un-gated WIP; also written pre-Path-B
+      (tab branches retired). Do NOT build. Was: [INFRA] P2. **[NEEDS-RATIFICATION]** Extend
+      `scripts/dev/slot-cron-ff-pull.sh` to FF-push clean / >1h-old / ahead-only (0-behind) slot commits to LDR
+      (generalize the ping-flush block; FF-only; retry-on-race). Makes the uta-style straggler self-resolve. **Placement
+      = the symmetric slot-host cron stack** (per the "Local slot host = VM slot host" HARD RULE): one SSOT script in
+      PM, run every 5 min on EVERY slot host — the agent-orchestrator's VM worker slots, the operator laptop, Harsh's
+      laptop — so each host drains its OWN slots' stranded QG-green commits (no central pusher; symmetric, verified by
+      `verify-slot-host-symmetry.sh`). Composes with agent_orchestrator_e2e (worker-slot model) + the per-tab-worktrees
+      SSOT. **Makes the slot-host cron bidirectional**: today it is pull-only (`slot-cron-ff-pull.sh` FF-pulls
+      incoming); background/spawned worker agents need the PUSH side too — FF-pull to stay current AND FF-push the
+      QG-green work they commit, else their commits strand on the worker's tab branch exactly like the uta re-lock did.
+      A background worker that finishes + moves on (no interactive operator to quickmerge) is the canonical strander
+      this closes.
+- [x] ❌ MOOT — closed with the rejection of decision 3 (operator 2026-06-10). The cron FF-push it would have
+      carved out was REJECTED at ratification (conflicts with the LIVE strict-quickmerge lineage guard + pre-Path-B
+      premises), so no HARD-RULE carve-out is needed; the carve-out set stays closed as-is.
 
 ### Remote tab branch stays current with LDR — server-side `LDR→tab` FF mirror (operator-chosen 2026-06-04, host-independent)
 
@@ -184,7 +186,8 @@ All on `origin/live-defi-rollout`; full detail in
   (`setup-tab-worktrees.sh --reset-slot N`) using the now-fixed script, then delete each stale `tab/rootm/<N>` once
   empty. Can't action from this host (those VMs are down per operator 2026-06-04); the fix lands automatically on their
   next re-provision. Repos: `unified-trading-pm` (`scripts/dev/setup-tab-worktrees.sh` +
-  `scripts/verify-slot-host-symmetry.sh`). parent_epic: (per-tab-worktrees / cicd master).
+  `scripts/verify-slot-host-symmetry.sh`). parent_epic: (per-tab-worktrees / cicd master). **[SUPERSEDED-BY-PATH-B
+  2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
 - [x] ✅ [INFRA] P1. **Make the VM-scoped prefix DURABLE across bare re-runs + align it on `ORCHESTRATOR_VM_ID` (closes
       the residual `rootm`-regression hole left by item above).** SHIPPED 2026-06-05 — `unified-trading-pm@852040bb9`:
       (a) `setup-tab-worktrees.sh` now resolves `HOST_ID="${ORCHESTRATOR_VM_ID:-${VM_NAME:-}}"` (== bootstrap `VM_ID`)
@@ -239,7 +242,15 @@ All on `origin/live-defi-rollout`; full detail in
       `verify-slot-host-symmetry.sh` that asserts `git rev-parse --abbrev-ref @{upstream} == origin/live-defi-rollout`
       for every worktree (fix + warn on mismatch) so the only thing the arrows ever show fleet-wide is genuine LDR
       drift. Repos: `unified-trading-pm` (`scripts/verify-slot-host-symmetry.sh` +
-      `scripts/dev/setup-tab-worktrees.sh`). parent_epic: (per-tab-worktrees / cicd master).
+      `scripts/dev/setup-tab-worktrees.sh`). parent_epic: (per-tab-worktrees / cicd master). **[SUPERSEDED-BY-PATH-B
+      2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
+- [ ] [SCRIPT] P2. **Drift-telemetry keep-list under Path-B (operator 2026-06-10)** — the tab-era mechanics are retired
+      but the DETECTION class stays mandatory: (a) dirty-worktree-vs-LDR duration (slot-cron-ff-pull [skip:dirty] + the
+      open dirty-slot consecutive-skip alert in issues/ci_incident_findings_2026_06_09.md); (b) committed-ahead-vs-LDR
+      duration (slot_drift_check.py ancestor invariant + slot-git-status-report.sh ahead/behind POST + worker-liveness
+      any_red_15m — verify all three fire for Path-B clones; the 2026-06-10 BoM/ao committed-ahead-for-hours case is the
+      class); (c) LDR-vs-staging/main promotion lag (promotion_lag_monitor.py — verify thresholds page). Async code that
+      hasn't gone through promotion must always be VISIBLE somewhere with a duration.
 
 ### Quickmerge behind/diverge error contract — agents self-serve recovery (operator design 2026-06-03; many-parallel-agents driver)
 
@@ -368,7 +379,8 @@ design).
 
 - [ ] [SCRIPT] P0. `setup-tab-worktrees.sh:258-261` — after `worktree add --track … origin/${branch}`, force
       `git -C <slot_dir> branch --set-upstream-to=origin/live-defi-rollout ${branch}` so upstream = LDR even when the
-      worktree is created from an existing remote tab branch (closes the drift-at-source gap).
+      worktree is created from an existing remote tab branch (closes the drift-at-source gap). **[SUPERSEDED-BY-PATH-B
+      2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
 - [ ] [SCRIPT] P1. Install scripts (`install-slot-cron-ff-pull.sh` + siblings) — abort if `WORKSPACE_ROOT` resolves
       inside `/.tabs/` (install MUST run from the root clone, else it bakes wrong `ROOT_PM`/`SLOT_DIR` absolute paths —
       protects Harsh + VM installs).
@@ -378,8 +390,10 @@ design).
 - [ ] [SCRIPT] P1. `slot-cron-ff-pull.sh` Step 0 — replace the IMMEDIATE upstream reset with a **10-min grace**: marker
       `$TMPDIR/slot-upstream-drift/<host>-<slot>-<repo>` records first-seen; `--set-upstream-to=LDR` only once the
       marker is ≥10 min old (room for intentional temporary switches); clear marker when aligned.
+      **[SUPERSEDED-BY-PATH-B 2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
 - [ ] [SCRIPT] P1. `verify-slot-host-symmetry.sh` — **Slack-alert if a drift marker is ≥15 min old** (auto-fix-failed
-      signal; expected no-op since the 10-min fix clears it). Reuses the same marker dir.
+      signal; expected no-op since the 10-min fix clears it). Reuses the same marker dir. **[SUPERSEDED-BY-PATH-B
+      2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
 
 ### Phase F — fleet rollout + verification (Harsh + VM)
 

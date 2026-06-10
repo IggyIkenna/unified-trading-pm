@@ -33,7 +33,8 @@ commit to PM `live-defi-rollout`. Two costs:
 
 The lifecycle ranking + no-downgrade guard already exist (`ci-status-update.yml:94`: `MAIN_GREEN`=4 can't be knocked to
 `STAGING_GREEN`=2 by a later green-staging; `FAILING` is never suppressed). We keep that semantics — only the STORAGE
-+ CONCURRENCY model changes.
+
+- CONCURRENCY model changes.
 
 ## Approved design (operator 2026-06-10)
 
@@ -59,8 +60,8 @@ record. Per-repo document id ⇒ two repos updating concurrently touch DISJOINT 
 retries, no push wars). Same principle as the per-VM manifest shards (`MANIFEST_PER_VM_SHARDS`) — partition the write
 surface, consolidate on read.
 
-**Layer 2 — same-repo ordering** (one repo firing `STAGING_GREEN` then `MAIN_GREEN` ms apart, possibly out of order)
-via a **Firestore transaction (compare-and-set)**:
+**Layer 2 — same-repo ordering** (one repo firing `STAGING_GREEN` then `MAIN_GREEN` ms apart, possibly out of order) via
+a **Firestore transaction (compare-and-set)**:
 
 - write iff `new_rank > stored_rank`, OR (`new.branch == stored.branch` AND `new.updated_at > stored.updated_at`);
 - **`FAILING` is written UNCONDITIONALLY** (a genuine failure must never be suppressed by the no-downgrade rule — same
@@ -85,18 +86,32 @@ the git copy is a cache.
 
 ### Phase 1 — Firestore writer + the CAS (P2)
 
-- [x] ✅ [CODE] P2. DONE 2026-06-10 — `scripts/cicd/ci_status_store.py` (`resolve_status` pure CAS decision + `set_status` Firestore txn + `get_all`); 10 unit tests green (rank/no-downgrade/FAILING-unconditional/main-authoritative), ruff + basedpyright clean. Was: `set_status(repo, status, branch, sha)` doing the Layer-2 CAS
-      in a Firestore transaction (rank map + the `FAILING`-unconditional carve-out), and `get_all() -> dict[repo,...]`
-      for readers. Cloud-agnostic via `get_firestore_client()`; unit-tested (mock Firestore) incl. the out-of-order +
-      `FAILING` cases.
-- [x] ✅ [CI] P2. DONE 2026-06-10 — `ci-status-update.yml` dual-write wired (gated behind `vars.CI_STATUS_FIRESTORE_DUALWRITE`, `continue-on-error` so it can never redden the run / block the git commit; mirrors the persist-cicd-event GCP-auth pattern). Was: `ci-status-update.yml` (+ the `Recording ci_status` step the reusable `python-quality-gates-v2.yml`
-      dispatches) **DUAL-WRITE**: keep the existing git commit AND call `ci_status_store.set_status(...)`. No reader
-      change yet — pure additive, lets us validate Firestore mirrors git before cutover.
+- [x] ✅ [CODE] P2. DONE 2026-06-10 — `scripts/cicd/ci_status_store.py` (`resolve_status` pure CAS decision +
+      `set_status` Firestore txn + `get_all`); 10 unit tests green
+      (rank/no-downgrade/FAILING-unconditional/main-authoritative), ruff + basedpyright clean. Was:
+      `set_status(repo, status, branch, sha)` doing the Layer-2 CAS in a Firestore transaction (rank map + the
+      `FAILING`-unconditional carve-out), and `get_all() -> dict[repo,...]` for readers. Cloud-agnostic via
+      `get_firestore_client()`; unit-tested (mock Firestore) incl. the out-of-order + `FAILING` cases.
+- [x] ✅ [CI] P2. DONE 2026-06-10 — `ci-status-update.yml` dual-write wired (gated behind
+      `vars.CI_STATUS_FIRESTORE_DUALWRITE`, `continue-on-error` so it can never redden the run / block the git commit;
+      mirrors the persist-cicd-event GCP-auth pattern). Was: `ci-status-update.yml` (+ the `Recording ci_status` step
+      the reusable `python-quality-gates-v2.yml` dispatches) **DUAL-WRITE**: keep the existing git commit AND call
+      `ci_status_store.set_status(...)`. No reader change yet — pure additive, lets us validate Firestore mirrors git
+      before cutover.
 - [ ] [VERIFY] P2. Run a drain / a few transitions; assert the Firestore docs match the manifest `ci_status` (rank +
       no-downgrade behaviour identical). Confirm concurrent multi-repo transitions produce NO contention (vs the git
       push-retries today).
 
 ### Phase 2 — migrate readers to Firestore (P2) — the inventory (verified 2026-06-10)
+
+> **[CONFLICT-GUARD 2026-06-10 — operator-ratified, SAFETY-CRITICAL SEQUENCING]**: the manifest dual-write must OUTLIVE
+> the LAST manifest reader. Known manifest ci_status readers that must each cut over to Firestore (or be verified
+> non-blocking) BEFORE the manifest write stops: (1) quickmerge STAGE 1.7 dep-tier gate (reads repositories{}.ci_status
+> from PM origin/main — gated EVERY fleet promotion on it today); (2) ldr-to-staging-promote.yml +
+> ldr-to-main-promote.yml; (3) cascade-qg-ordering.yml's per-level ci_status poll; (4) sit-debounce-trigger.yml.
+> Premature write-cutover makes the dep-order gate read stale/absent → blocks all ships or waves them through ungated.
+> NOTE this side-store is also the structural fix for the manifest-update concurrency-group contention that the DEFECT-2
+> resolve-gate's ≤5-min group hold worsens (dependency_promotion plan, item 9 tension) — sequencing matters doubly.
 
 Cut each reader from "parse `workspace-manifest.json.ci_status`" to `ci_status_store.get_all()`:
 
@@ -140,8 +155,8 @@ Cut each reader from "parse `workspace-manifest.json.ci_status`" to `ci_status_s
 
 `codex/08-workflows/ci-cd-flow.md` (ci_status is a Firestore side store, doc-per-repo + CAS-on-rank; manifest copy is a
 snapshot), `codex/04-architecture/agent-orchestrator-overview.md` (dashboard reads the store),
-`codex/05-infrastructure/manifest-consolidator-ssot.md` (the snapshot consolidator reuses this infra). CLAUDE.md §
-"CI Verification" / "ci_status" pointer.
+`codex/05-infrastructure/manifest-consolidator-ssot.md` (the snapshot consolidator reuses this infra). CLAUDE.md § "CI
+Verification" / "ci_status" pointer.
 
 ## Out of scope (named successors)
 

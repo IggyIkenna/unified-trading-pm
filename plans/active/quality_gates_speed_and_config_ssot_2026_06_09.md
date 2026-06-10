@@ -211,7 +211,11 @@ single-core pinned), output under gitignored `.qg_profile/`.
 - [ ] [REFACTOR] P1. Per-repo: move TIER-A duplicates out of the stub (rely on toml), collapse the duplicated exclude
       intent (e.g. "exclude market_interface" expressed in ~7 places) to the minimum each tool genuinely needs.
       Reconcile honest coverage values (MTDS: settle 28-vs-71 per the Axis-A outcome — likely 28 now, ratchet to 71 as
-      ISS-031 tests land).
+      ISS-031 tests land). **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: when syncing canonical [tool.ruff]
+      sections into per-repo pyprojects, the DTZ + TID251 select entries must be EXCLUDED (they stay ratchet-only via
+      STEP 5.95) OR per-repo per-file-ignores baselines must ship FIRST — otherwise every repo's plain ruff lint step
+      hard-fails on the ~180 DTZ + ~211 TID251 pre-existing sites (instant fleet redness; the exact failure mode the
+      ratchet design exists to avoid).
 - [ ] [DOCS] P1. Update `codex/06-coding-standards/quality-gates.md` § config-SSOT: toml is the single home, the
       `[tool.quality-gates]` contract, the "base must never shadow toml on the CLI" rule.
 
@@ -227,7 +231,12 @@ single-core pinned), output under gitignored `.qg_profile/`.
 - [ ] [DESIGN] P0. Specify the two-tier contract + the trigger: a new `--fast` (or `--scoped`) mode that diffs
       HEAD/worktree, computes the changed file set, and runs only impacted work. Reuse the existing green-sentinel
       (unchanged→skip) as the degenerate case; this adds the "small change → impacted subset" case between "unchanged"
-      and "full."
+      and "full." **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: the fast tier must NEVER write
+      .qg_last_passed_sha (that sentinel = "COMPLETE green run" and is what quickmerge ships on — a fast write silently
+      dissolves the commit-quality boundary). Design REQUIRES: (a) its own .qg_fast_sentinel; (b) an explicit quickmerge
+      policy decision for what a fast-sentinel permits (likely: nothing on the promote path; fast = inner-loop only);
+      (c) the base scripts ALREADY hard-exclude QG_FAST from the full-sentinel write (defense-in-depth shipped
+      2026-06-10) — the tier must set QG_FAST=1.
 - [ ] [DESIGN] P0. Coverage-preservation design (THE hard part). Options to evaluate with Phase 0 data: (a)
       `pytest-testmon` to select only tests impacted by changed code; (b) maintain a coverage cache/DB so the fast tier
       reports combined (cached + delta) coverage; (c) fast tier runs impacted tests WITHOUT the coverage gate, and the

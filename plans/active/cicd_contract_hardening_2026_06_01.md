@@ -337,12 +337,12 @@ v2**, so re-trigger + scoped-lock clears them (no force).
       live and GitHub's fine-grained-token permission picker **offers NO "Checks" permission at all** (full picker list
       verified: Actions…Workflows — no Checks entry), so the `…/check-runs` 403 is **not grantable**; GraphQL
       `statusCheckRollup` ALSO 403s per-CheckRun-node with the PAT (earlier in-session successes rode the gh keyring's
-      OAuth token, which doesn't exist in CI). **Fix shipped instead**: (a) both promote workflows'
-      `HAS_V2` probes (`ldr-to-main-promote.yml` + `ldr-to-staging-promote.yml`) now use the **Actions-API run lookup**
+      OAuth token, which doesn't exist in CI). **Fix shipped instead**: (a) both promote workflows' `HAS_V2` probes
+      (`ldr-to-main-promote.yml` + `ldr-to-staging-promote.yml`) now use the **Actions-API run lookup**
       (`gh run list --workflow quality-gates-v2.yml` filtered by head SHA — works with the PAT's Actions permission;
       live-verified) **with ERR≠0 distinction** — the old `|| echo 0` made every 403 read as "v2 never reported" →
-      **every blocked PR was being close+reopened spuriously on every tick** (live churn defect, now fail-safe);
-      (b) `ci_failure_watcher._run_is_billing_block` gains a structural fallback (annotations unreadable + ALL jobs
+      **every blocked PR was being close+reopened spuriously on every tick** (live churn defect, now fail-safe); (b)
+      `ci_failure_watcher._run_is_billing_block` gains a structural fallback (annotations unreadable + ALL jobs
       zero-step → billing signature) — annotation-403 had silently disabled billing-outage detection entirely.
 - [x] ✅ [SCRIPT] P0. **#3 tab-mirror leg-A → `GH_PAT` — DONE + VERIFIED + ROLLED OUT FLEET-WIDE 2026-06-08 (slot-1).**
       Canary (PM `tab/ikennaigboaka/1`) leg-A ran GREEN (9 steps) and FF'd PM `live-defi-rollout` to the PAT-swap
@@ -2358,20 +2358,23 @@ by a PR:
       authoring slot. Auth: GHA→orchestrator via `ORCHESTRATOR_INTERNAL_SECRET`; orchestrator→GitHub via the
       workflow-capable PAT/SSH; worker→Claude via setup-token. Needs an orchestrator endpoint/job-type + the GHA
       dispatch + a worker prompt; build + e2e-test on one repo before fleet-wide.
-- [ ] [SCRIPT] P1. **Wire the ci-failure-watcher stuck-PR output INTO the orchestrator-dispatch escalation (auto-triage,
-      not just a Slack page).** Today the watcher's auto-merge-stuck poller (`ci_failure_watcher.py` →
-      `detect_stuck_prs`) only pages `#ci-failures`; a human/agent then manually triages **close-superseded vs
-      resolve-conflict-on-LDR** — done by hand 2026-06-01 for 7 wedged PRs (execution#176, mtds#65, deployment-api#9,
-      deployment-ui#8, batch-live#5, uac#54, ibkr#7 — all stale, each superseded by a newer merged promotion into the
-      same base; closed-with-"superseded by #N"- comment, branches retained). **Automate via the now-built escalation**
-      (`agent-orchestrator/server/escalation.py` + `.github/workflows/escalate-to-orchestrator.yml` +
-      `agents/escalate.md`): (1) add a `stuck_promotion_pr` member to `WALL_TYPES` (today
-      `merge_conflict|label_mismatch|sit_failure`); (2) extend `agents/escalate.md` with the stuck-PR triage rubric —
-      **FIRST check supersession** (a newer merged PR into the same base, or head fully behind base → **close with a
-      `superseded by #N` comment**, retain branch), **ELSE resolve the conflict ON `live-defi-rollout`** per the
-      force-rule + re-enable auto-merge (never a throwaway branch); **never unilaterally close a FOREIGN slot's PR**
-      (`tab/hk/*`) → ping the authoring slot/Harsh instead; (3) have the watcher (or a thin companion) dispatch
-      `escalate-to-orchestrator.yml` once per stuck PR it surfaces (pass `repo`, `pr_number`,
+- [x] ✅ DONE-BY-OTHER-MEANS / superseded (2026-06-10) — the codified auto-recover-vs-escalate split (CLAUDE.md
+      2026-06-09) already routes mechanical deadlocks in-band and genuine conflict walls via --escalate; today's
+      Actions-API fix made the recovery probes fail-safe. Wiring stuck-PRs into escalation as written would
+      double-handle and re-create headroom-exhaustion noise. Was: [SCRIPT] P1. **Wire the ci-failure-watcher stuck-PR
+      output INTO the orchestrator-dispatch escalation (auto-triage, not just a Slack page).** Today the watcher's
+      auto-merge-stuck poller (`ci_failure_watcher.py` → `detect_stuck_prs`) only pages `#ci-failures`; a human/agent
+      then manually triages **close-superseded vs resolve-conflict-on-LDR** — done by hand 2026-06-01 for 7 wedged PRs
+      (execution#176, mtds#65, deployment-api#9, deployment-ui#8, batch-live#5, uac#54, ibkr#7 — all stale, each
+      superseded by a newer merged promotion into the same base; closed-with-"superseded by #N"- comment, branches
+      retained). **Automate via the now-built escalation** (`agent-orchestrator/server/escalation.py` +
+      `.github/workflows/escalate-to-orchestrator.yml` + `agents/escalate.md`): (1) add a `stuck_promotion_pr` member to
+      `WALL_TYPES` (today `merge_conflict|label_mismatch|sit_failure`); (2) extend `agents/escalate.md` with the
+      stuck-PR triage rubric — **FIRST check supersession** (a newer merged PR into the same base, or head fully behind
+      base → **close with a `superseded by #N` comment**, retain branch), **ELSE resolve the conflict ON
+      `live-defi-rollout`** per the force-rule + re-enable auto-merge (never a throwaway branch); **never unilaterally
+      close a FOREIGN slot's PR** (`tab/hk/*`) → ping the authoring slot/Harsh instead; (3) have the watcher (or a thin
+      companion) dispatch `escalate-to-orchestrator.yml` once per stuck PR it surfaces (pass `repo`, `pr_number`,
       `wall_type=stuck_promotion_pr`, `context`=mergeStateStatus+age+supersession-candidate, `authoring_slot` parsed
       from the `tab/<op>/<N>` head), gated to auto-merge-ON / promotion-contract heads exactly like the poller, with
       **per-PR dedup so it dispatches once, not every 15-min tick**. This is the DETERMINISTIC-detect →

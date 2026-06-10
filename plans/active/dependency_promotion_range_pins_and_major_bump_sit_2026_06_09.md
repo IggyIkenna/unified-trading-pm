@@ -149,16 +149,17 @@ clean fix is to relax it.
       staging-to-main already does) OR a queue-tolerant re-dispatch/retry so eviction is not silent loss. The H2
       serialise-with-manifest-writers intent must not cost the cascade its execution. Repo: unified-trading-pm
       (`.github/workflows/cascade-qg-ordering.yml:32-36`).
-- [x] ✅ [SCRIPT] P1. **DEFECT-2 (separated out 2026-06-10): dependency-FIRST ordering** — DONE 2026-06-10 — unified-trading-pm@c4e9f3c9c. Mechanism: `update-repo-version.yml` gained a **bounded resolvability gate** (`resolve-gate` step) between
-      the digest-resolution steps and the consumer dispatch loop. It polls (10 × 30 s ≈ 5 min — kept under 10 min
-      because the run HOLDS the `manifest-update` concurrency group and a long hold risks the DEFECT-1 pending-slot
-      eviction of sibling version-bump runs) until the bumped version is resolvable **the way consumers resolve it**
-      (clone_repo() order: exact tag `v{VERSION}` via `git/ref/tags`, OR the dep's `{branch}` pyproject carrying
-      `version = "{VERSION}"` via the contents API — NO workflow creates release tags today, so the branch pyproject is
-      the canonical fresh-bump location). Success → fan-out + cascade dispatch proceed (both `if:`-gated on
-      `resolve-gate.outputs.resolvable`). Timeout → NO blind dispatch: `::warning` + re-dispatch of the SAME
-      `version-bump` event with `fanout_retry: N+1` (max 3, chain-depth loop-breaker idiom; `chain_depth` preserved;
-      original `bump_type` rides the retry payload so the retry run doesn't recompute it as "patch" off the
+- [x] ✅ [SCRIPT] P1. **DEFECT-2 (separated out 2026-06-10): dependency-FIRST ordering** — DONE 2026-06-10 —
+      unified-trading-pm@c4e9f3c9c. Mechanism: `update-repo-version.yml` gained a **bounded resolvability gate**
+      (`resolve-gate` step) between the digest-resolution steps and the consumer dispatch loop. It polls (10 × 30 s ≈ 5
+      min — kept under 10 min because the run HOLDS the `manifest-update` concurrency group and a long hold risks the
+      DEFECT-1 pending-slot eviction of sibling version-bump runs) until the bumped version is resolvable **the way
+      consumers resolve it** (clone_repo() order: exact tag `v{VERSION}` via `git/ref/tags`, OR the dep's `{branch}`
+      pyproject carrying `version = "{VERSION}"` via the contents API — NO workflow creates release tags today, so the
+      branch pyproject is the canonical fresh-bump location). Success → fan-out + cascade dispatch proceed (both
+      `if:`-gated on `resolve-gate.outputs.resolvable`). Timeout → NO blind dispatch: `::warning` + re-dispatch of the
+      SAME `version-bump` event with `fanout_retry: N+1` (max 3, chain-depth loop-breaker idiom; `chain_depth`
+      preserved; original `bump_type` rides the retry payload so the retry run doesn't recompute it as "patch" off the
       already-updated manifest — a `bump_override` hook in the manifest python honors it, and retry runs skip the PM
       self-bump so they never mint extra PM versions). Retries exhausted (or retry-dispatch HTTP failure) →
       `retries_exhausted=true` → new `notify-fanout-unresolvable` Slack job (CRITICAL, notify-slack.yml pattern).
@@ -167,6 +168,12 @@ clean fix is to relax it.
       Verified: yaml.safe_load OK, actionlint exit 0, `bash -n` on all 3 modified run scripts, both python heredocs
       compile. Residual: a retry dispatch itself can be evicted by the `manifest-update` pending-slot race — that is the
       DEFECT-1 concurrency item above, not re-tracked here. Repo: unified-trading-pm (`update-repo-version.yml`).
+      **[KNOWN TENSION 2026-06-10]**: the resolve-gate's <=5-min hold of the manifest-update concurrency group increases
+      pending-slot eviction pressure on sibling manifest writers (one pending slot per group) — frequent ci-status
+      writers can evict each other during the hold → stale ci_status → dep-order gate friction. Structural fix = the
+      ci_status Firestore side-store (per-repo document partitioning,
+      plans/active/ci_status_firestore_side_store_2026_06_10.md) — its dual-write sequencing guard is therefore doubly
+      important.
 
 ### Phase 3 — Escalate to vm-planning ONLY IF the cascade FAILS (pass → auto-promote) — P1
 
@@ -404,7 +411,9 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       deployment-service (c5f589d: Dockerfile + the BoM feature) are COMMITTED-AHEAD locally — ship each via
       `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` (quickmerge's ahead-of-main path pushes the
       existing commit; no re-commit). After ALL 15 ship: flip STEP 5.79's legacy `${`-skip to hard-fail (the final
-      ratchet).
+      ratchet). **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: the final 5.79 hard-fail flip is GATED on a REAL
+      cloud build (Cloud Build / buildspec) proving the @${BASE_IMAGE_DIGEST} FROM path end-to-end — docker build
+      --check is NOT sufficient; flipping first could block the fleet on an unproven build shape.
 - [ ] [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
       an image rebuild with no version bump (infra-only rebuild) never refreshes consumer digests. Add a `*/6h` PM
       workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL consumers
