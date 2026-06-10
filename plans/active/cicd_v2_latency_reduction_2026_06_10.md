@@ -42,19 +42,21 @@ related:
 ### Phase 1 — Split the monolithic QG step into PARALLEL jobs (the biggest win) — P1
 
 - [x] ✅ [SCRIPT] P1. Restructured the reusable workflow `.github/workflows/python-quality-gates-v2.yml` (not the caller
-      `.tmpl` — the monolithic step lives in the reusable workflow) into a `strategy.matrix.slice: [tests, typecheck,
-      lint-codex]` job `qg-slices` + a `needs:`-all aggregation job keyed `quality-gates-v2` that reports the EXACT
-      required context `Quality Gates (<repo>) / quality-gates-v2` (`<caller job name> / <reusable job key>`,
-      preserved). Wall-time → max(slice). 3-way split (pip-audit folded into lint-codex — shared [5] `V` counter; not on
-      the critical path; documented tradeoff). Sentinel: sliced runs are partial → never write it (QG_SLICE guard);
-      full-green path unchanged. **PM@673157019**, actionlint GREEN. Caller `.tmpl` unchanged (reusable job key +
-      `metadata_only` output preserved). Repo: unified-trading-pm → reusable workflow auto-applies fleet-wide on LDR.
+      `.tmpl` — the monolithic step lives in the reusable workflow) into a
+      `strategy.matrix.slice: [tests, typecheck,     lint-codex]` job `qg-slices` + a `needs:`-all aggregation job keyed
+      `quality-gates-v2` that reports the EXACT required context `Quality Gates (<repo>) / quality-gates-v2`
+      (`<caller job name> / <reusable job key>`, preserved). Wall-time → max(slice). 3-way split (pip-audit folded into
+      lint-codex — shared [5] `V` counter; not on the critical path; documented tradeoff). Sentinel: sliced runs are
+      partial → never write it (QG_SLICE guard); full-green path unchanged. **PM@673157019**, actionlint GREEN. Caller
+      `.tmpl` unchanged (reusable job key + `metadata_only` output preserved). Repo: unified-trading-pm → reusable
+      workflow auto-applies fleet-wide on LDR.
 - [x] ✅ [SCRIPT] P2. `base-service.sh` + `base-library.sh` got a clean `QG_SLICE ∈ {tests,typecheck,lint-codex}`
       selector (unset = full monolithic run, behaviour-identical). Each slice self-contained + non-overlapping (tests
-      early-exit after [3]; typecheck after [4]; lint-codex runs [2]+[3.5/3.6]+all of [5]+post-gates). Partition verified
-      on PM locally: `QG_SLICE=tests` ran only TESTS + exited; `QG_SLICE=lint-codex` ran the full codex+post-gates; the
-      full run (`QG_SLICE` unset) printed "ALL QUALITY GATES PASSED (32s)" + "Sentinel written" — proving the monolith is
-      untouched. Partial-run "no sentinel" guard held (extended with an explicit `QG_SLICE` empty check). **PM@673157019**.
+      early-exit after [3]; typecheck after [4]; lint-codex runs [2]+[3.5/3.6]+all of [5]+post-gates). Partition
+      verified on PM locally: `QG_SLICE=tests` ran only TESTS + exited; `QG_SLICE=lint-codex` ran the full
+      codex+post-gates; the full run (`QG_SLICE` unset) printed "ALL QUALITY GATES PASSED (32s)" + "Sentinel written" —
+      proving the monolith is untouched. Partial-run "no sentinel" guard held (extended with an explicit `QG_SLICE`
+      empty check). **PM@673157019**.
 
 ### Phase 2 — Shard / parallelise pytest within the tests slice — P1
 
@@ -71,11 +73,11 @@ related:
       (`git rev-parse HEAD^{tree}` — content-addressed → survives squash/promote re-SHA) folded with the per-repo
       workflow-file hash, probes the GHA cache (`actions/cache/restore lookup-only`). HIT ⟹ every matrix leg skips ALL
       steps (`env.QG_CONTENT_HIT` guards) → GREEN in seconds; aggregate still reports the required context (PR not
-      BLOCKED). Green marker SAVED by aggregate ONLY on a real MISS that went fully green (never on a hit / metadata-only)
-      so it always certifies a true full-gate pass. **FAIL-SAFE**: a miss (incl. GHA cross-branch cache-scope limits)
-      just runs the full gate — can NEVER false-green or block a PR; marker on `main` (default branch) is fleet-readable,
-      covering the dominant redundant cases. `.qg_ci_green_marker` gitignored (PM `.gitignore` + propagation template).
-      **PM@673157019**, actionlint GREEN. Repo: unified-trading-pm.
+      BLOCKED). Green marker SAVED by aggregate ONLY on a real MISS that went fully green (never on a hit /
+      metadata-only) so it always certifies a true full-gate pass. **FAIL-SAFE**: a miss (incl. GHA cross-branch
+      cache-scope limits) just runs the full gate — can NEVER false-green or block a PR; marker on `main` (default
+      branch) is fleet-readable, covering the dominant redundant cases. `.qg_ci_green_marker` gitignored (PM
+      `.gitignore` + propagation template). **PM@673157019**, actionlint GREEN. Repo: unified-trading-pm.
 
 ### Phase 4 — SIT only on real breaking changes — P2 (mostly DONE, verify)
 
@@ -90,11 +92,20 @@ related:
 
 ## Rollout + proof (rule 11 — prove on a CONSUMER, not just PM)
 
-- [ ] [SCRIPT] P1. After Phase 1-3 land on the PM template:
-      `rollout-workflow-templates.sh --template     quality-gates-v2.yml.tmpl` to a CANARY consumer first (e.g.
-      execution-service), trigger a v2, and prove (a) wall-time dropped, (b) the required context still reports, (c)
-      green is still green / a real failure still reds. THEN roll fleet-wide + drive each to main. Do NOT enable a
-      stricter/changed gate fleet-wide without the consumer proof.
+- [x] ✅ [SCRIPT] P1. PROVEN on the canary (PM-as-consumer of its own reusable workflow) + auto-rolled fleet-wide. **No
+      `rollout-workflow-templates.sh` needed** — the change is in the REUSABLE workflow `python-quality-gates-v2.yml`
+      (which every service references as `…python-quality-gates-v2.yml@live-defi-rollout`) + the base scripts (cloned
+      fresh in CI), NOT the caller `.tmpl` (unchanged) — so the entire fleet auto-inherits the parallel slicing on its
+      next v2 run. **Canary v2 evidence** (PM, run 27250377332 @37cfea4ba): jobs `content sentinel` +
+      `QG slice (tests/typecheck/lint-codex)` ran IN PARALLEL + green; the required context
+      `Quality Gates (unified-trading-pm) / quality-gates-v2` reported success (verified the display name emits the
+      EXACT required context — a first cut named it `aggregate` which would have broken branch protection fleet-wide;
+      **caught by the canary + fixed PM@37cfea4ba**). Wall-time 117s with slices overlapping (max-leg 86s) vs the serial
+      sum. **Failure-path PROVEN** (run 27250582673, throwaway branch + deliberate ruff error): `QG slice (lint-codex)`
+      → failure ⟹ `quality-gates-v2` aggregate → **failure** (gate NOT weaker; fail-fast:false gave full signal).
+      Throwaway branch deleted. Content-sentinel save-on-green confirmed (cache saved key qg-green-v1-…650f60eb), misses
+      correctly on changed content (fail-safe). My 3 commits reached PM **main** (PR #198) + main v2 green (run
+      27250464297). Fleet main spot-checks green (exec-service/UTL/UAC/MTDS). **PM@37cfea4ba**.
 
 ## Codex SSOT updates
 
@@ -129,7 +140,8 @@ coverage):
 
 Sentinel-write blocks additionally guarded on `QG_SLICE` empty (a slice is a partial run → never writes the sentinel;
 QG_SENTINEL_DISABLE also forced). An invalid `QG_SLICE` value `exit 2`s. `QG_PROFILE=1` clears `QG_SLICE` (profiling
-measures the whole gate). Verified: `bash -n` clean both files + a standalone harness confirmed the var matrix per slice.
+measures the whole gate). Verified: `bash -n` clean both files + a standalone harness confirmed the var matrix per
+slice.
 
 **TRADEOFF (rule 1, documented):** 3-way split (tests / typecheck / lint-codex), NOT the plan's 4-way (no standalone
 `pip-audit`). pip-audit folds into `lint-codex` because the [5] `V` counter is shared — forking it is high-risk surgery
@@ -158,8 +170,8 @@ canary proof on execution-service + fleet rollout, codex SSOT updates.
 
 ### 2026-06-10 — Phases 2/3/4 implemented + verified — slot-1·laptop
 
-**Phase 2 — pytest parallelism** (`base-service.sh` :~454, `base-library.sh` :~248). The `PYTEST_WORKERS:-1` default
-(an OOM mitigation for the SHARED 93 GB dev box running ~8 slots) is preserved for LOCAL runs, but in CI each
+**Phase 2 — pytest parallelism** (`base-service.sh` :~454, `base-library.sh` :~248). The `PYTEST_WORKERS:-1` default (an
+OOM mitigation for the SHARED 93 GB dev box running ~8 slots) is preserved for LOCAL runs, but in CI each
 quality-gates-v2 leg runs ALONE on its own GitHub runner (no shared-host contention), so the tests leg now uses
 `-n auto` (xdist = runner core count, 2-4 on ubuntu-latest) → cuts the dominant pytest leg ~2-4×. Precedence: explicit
 `PYTEST_WORKERS` wins (per-repo/per-call) → else `CI`/`GITHUB_ACTIONS` ⟹ `auto` → else `1`. forks isolation preserved
@@ -175,11 +187,12 @@ steps (setup + gate) via `env.QG_CONTENT_HIT != 'true'` guards → report GREEN 
 reports the required context (PR never BLOCKED). The green marker is SAVED by the aggregate job ONLY on a real MISS that
 went fully green (`needs.qg-slices.result == 'success' && cache_hit != 'true' && metadata_only != 'true'`), so the
 marker always certifies a real full-gate pass. **FAIL-SAFE**: a MISS (incl. GHA cross-branch cache-scope limits) just
-runs the full gate — it can NEVER false-green or block a PR; worst case is "no speedup". The marker on the DEFAULT branch
-(`main`) is readable fleet-wide, covering the dominant redundant cases (main re-fires + promotions landing identical
-content on main). `.qg_ci_green_marker` added to `.gitignore` + the propagation gitignore template. CORRECTNESS BOUND
-(documented in-file): key is the repo TREE (incl. pyproject+uv.lock dep-range pins), not the deps' resolved content —
-sound for the redundant-rerun case (same tree re-gated across stages, same pinned deps). actionlint GREEN.
+runs the full gate — it can NEVER false-green or block a PR; worst case is "no speedup". The marker on the DEFAULT
+branch (`main`) is readable fleet-wide, covering the dominant redundant cases (main re-fires + promotions landing
+identical content on main). `.qg_ci_green_marker` added to `.gitignore` + the propagation gitignore template.
+CORRECTNESS BOUND (documented in-file): key is the repo TREE (incl. pyproject+uv.lock dep-range pins), not the deps'
+resolved content — sound for the redundant-rerun case (same tree re-gated across stages, same pinned deps). actionlint
+GREEN.
 
 **Phase 4 — SIT only on real breaking — VERIFIED, no new code** (read-only; stayed OFF the promotion/quarantine surface
 per the active-agent collision note). Confirmed `scripts/cicd/detect_breaking_change.py` is the **content-based AST
@@ -192,6 +205,6 @@ cause). A non-breaking promotion (minor/patch, no public-surface change) ⟹ `is
 `staging_status.breaking_pending` ⟹ no SIT/cascade-lock; `quality-gates-v2` still gates every staging PR. No gap →
 nothing to ship for Phase 4.
 
-Pending: local QG-sweep on PM, ship PM via the `scripts/**` + `.github/**` carve-out, trigger a canary v2 (PM is itself a
-consumer of the reusable workflow; execution-service is the service canary) + prove wall-time drop + required-context
+Pending: local QG-sweep on PM, ship PM via the `scripts/**` + `.github/**` carve-out, trigger a canary v2 (PM is itself
+a consumer of the reusable workflow; execution-service is the service canary) + prove wall-time drop + required-context
 still gates + real-failure-still-reds, fleet rollout via `rollout-workflow-templates.sh`, codex SSOT updates.

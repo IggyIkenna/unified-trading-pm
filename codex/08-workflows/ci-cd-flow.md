@@ -370,13 +370,13 @@ LDR is the staging oracle: local `quality-gates.sh --no-fix` in dep order on an 
 predict staging-`quality-gates-v2`. Where they differ is a **bug to audit** (`ci_local_qg_parity_2026_06_08.md`), not a
 normal occurrence. The divergence surface:
 
-| Gate step                                                                        | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
-| -------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
-| ruff / format / basedpyright                                                     | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
-| pytest (unit) + coverage                                                         | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
-| codex compliance (STEP 5.x)                                                      | yes                               | yes                                | n/a                                  | identical                                        |
-| editable deps                                                                    | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
-| **workflow-template drift**                                                      | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
+| Gate step                                                                         | local `quality-gates.sh --no-fix` | staging `quality-gates-v2`         | assembled SIT (`full-workspace-sit`) | Parity verdict                                   |
+| --------------------------------------------------------------------------------- | --------------------------------- | ---------------------------------- | ------------------------------------ | ------------------------------------------------ |
+| ruff / format / basedpyright                                                      | yes (touched + repo)              | yes (`--no-fix`, identical)        | n/a                                  | **byte-identical** (same pins, same config)      |
+| pytest (unit) + coverage                                                          | yes                               | yes                                | n/a                                  | identical (`PYTEST_UNIT_DIR` honored both sides) |
+| codex compliance (STEP 5.x)                                                       | yes                               | yes                                | n/a                                  | identical                                        |
+| editable deps                                                                     | working-tree (content-sync-gated) | cloned-pinned (tag→branch)         | full workspace assembled             | gated equal via `check_dep_content_sync`         |
+| **workflow-template drift**                                                       | hard gate (live branch copies)    | **CI no-op** (tag-pinned snapshot) | n/a                                  | **intentional**: local/full-host only (tag lag)  |
 | **cross-repo invariants** (feature-DAG SSOT, cassette↔consumer, data_type canon) | DEFERRED-TO-SIT (partial dep set) | DEFERRED-TO-SIT                    | **runs here** (full assembly)        | **intentional SIT-assembly delta**               |
 
 The two **intentional** deltas — the workflow-drift CI no-op (CI clones tag snapshots, not the deployed copy) and the
@@ -529,6 +529,17 @@ ghost workflow registration that fired startup_failure on every subsequent push 
 (Option D, shipped 2026-05-29 via `ci_canonical_v2_migration_2026_05_29` plan) renames the entire caller+callee chain to
 new file paths (`quality-gates-v2.yml` + `python-quality-gates-v2.yml`) and a new job key (`quality-gates-v2`) so GitHub
 registers a fresh validation context that bypasses the cached ghost.
+
+**Parallel slicing preserves the required context (2026-06-10).** The reusable workflow's single gate job was fanned
+into a `strategy.matrix.slice: [tests, typecheck, lint-codex]` job (`QG slice (...)` legs, NOT required) + a
+`needs:`-all aggregation job that is **both keyed AND `name:`-d `quality-gates-v2`** — so the required context stays
+exactly `Quality Gates (<repo>) / quality-gates-v2` (= caller job name `/` reusable job display name)
+green-iff-all-legs-pass. **The aggregation job's `name:` is load-bearing**: a friendly label (e.g. `aggregate`) emits
+`… / aggregate` instead → the required context never reports → every PR permanently BLOCKED (caught live by the PM
+canary). Wall-time → `max(slice)` not `sum`. A `content-gate` job (git-tree-hash GHA cache) short-circuits redundant
+byte-identical re-runs to GREEN (fail-safe: a miss runs the full gate; never false-greens). Coverage + the required
+check are unchanged; only the within-repo wall-time drops (cross-repo was already parallel). SSOT: `quality-gates.md` §
+"CI parallel slice jobs + `QG_SLICE`" + `plans/active/cicd_v2_latency_reduction_2026_06_10.md`.
 
 **Status across workspace** (per `codex/06-coding-standards/feature-branch-workflow.md` § "Per-repo required-check
 matrix"):
