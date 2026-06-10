@@ -65,6 +65,16 @@ source:
       transaction, so the wait holds the write lock; staying under the 30s `busy_timeout` avoids re-triggering the lock
       cascade (Phase 2 removes that cap).
 
+  > **VALIDATED ON vm-0 2026-06-10 (deployed fbad424):** the watchdog reclaim WORKS — on restart it logged
+  > `reclaiming orphan session orch-slot-{1,2} (status=killed + live, spawn_age=infs)` and tore every zombie down →
+  > **permanent HEADROOM-EXHAUSTED wedge is eliminated (self-healing).** BUT a fresh escalation spawn STILL did not boot
+  > (slot-2 sat at the empty prompt, `do_spawn` failed, `tmux_session=NULL`): **claude's cold-start on this VM exceeds
+  > the 20s readiness window** (real spawns reach "bypass permissions on" but past the boot-paste window). The 20s cap
+  > is CONFIRMED INSUFFICIENT — and it cannot simply be raised because the wait holds the DB write lock. **So Phase 2
+  > (move spawn out of the transaction, then a 60–90s readiness wait) is REQUIRED for workers to actually boot, not
+  > optional.** Net state: the orchestrator no longer permanently wedges, but spawned workers churn (zombie → reclaim →
+  > respawn) without booting until Phase 2 lands; interactive operator/dashboard sessions are unaffected.
+
 ## Phase 2 — durable follow-ups (the DB-lock ROOT + deterministic startup) [P0/P1]
 
 - [ ] [CODE] P0. **Move the slow spawn OUT of the write transaction** (`escalation.escalate` + `autospawn._tick_once`):
