@@ -1,11 +1,15 @@
 name: sit-unlock
 
-# Triggered by system-integration-tests when SIT FAILS.
-# Clears staging_status.locked so queued PRs can merge and engineers can push fixes.
+# Triggered by system-integration-tests when the SIT completes.
+# sit-failed: clears staging_status.locked so engineers can push fixes (breaking_pending kept —
+#   the breaking set still needs a green SIT before promotion).
+# sit-passed (MISSING LINK FIX 2026-06-10): there was NO success consumer at all — a green SIT
+#   left staging locked forever ("SIT running" dangled until auto-clear/human). On sit-passed we
+#   unlock AND clear breaking_pending (the set is validated).
 
 on:
   repository_dispatch:
-    types: [sit-failed]
+    types: [sit-failed, sit-passed]
 
 permissions:
   contents: write
@@ -24,7 +28,9 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
-      - name: Unlock staging on SIT failure
+      - name: Unlock staging on SIT completion
+        env:
+          SIT_EVENT: ${{ github.event.action }}
         run: |
           set -euo pipefail
           python3 - <<PYEOF
@@ -36,10 +42,18 @@ jobs:
           if "staging_status" not in manifest:
               manifest["staging_status"] = {}
 
+          import os
+          event = os.environ.get("SIT_EVENT", "sit-failed")
           manifest["staging_status"]["locked"] = False
           manifest["staging_status"]["locked_since"] = None
-          manifest["staging_status"]["locked_reason"] = "SIT failed — open for fixes"
           manifest["staging_status"]["lock_version"] = None
+          if event == "sit-passed":
+              manifest["staging_status"]["locked_reason"] = "SIT passed — validated + unlocked"
+              manifest["staging_status"]["breaking_pending"] = []
+              manifest["staging_status"]["pending_repos"] = []
+              manifest["staging_status"]["sit_retry_count"] = 0
+          else:
+              manifest["staging_status"]["locked_reason"] = "SIT failed — open for fixes"
           # Unlock → clear the starvation alarm so the next lock cycle can alert again (finding H3).
           manifest["staging_status"]["locked_alert_sent"] = False
 
@@ -66,7 +80,7 @@ jobs:
           fi
 
           git add workspace-manifest.json
-          git commit -m "chore(manifest): SIT unlock — staging_status.locked=false (SIT failed) [skip ci]"
+          git commit -m "chore(manifest): SIT unlock — staging_status.locked=false (${{ github.event.action }}) [skip ci]"
 
           # Retry-with-rebase: sit-gate/staging-to-main may push a concurrent manifest commit to
           # main between our checkout and push (lock/unlock race). A bare `git push` then fails
@@ -86,6 +100,7 @@ jobs:
           done
 
       - name: Open SIT-failure GH Issue (add-sit-rollback)
+        if: github.event.action == 'sit-failed'
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
