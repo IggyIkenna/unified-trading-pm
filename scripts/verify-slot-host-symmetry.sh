@@ -59,9 +59,22 @@ GS_LOG=/tmp/slot-git-status-report.log
 
 pass=0
 fail=0
+soft_fail=0
 
 ok() { [[ ${QUIET} -eq 0 ]] && echo "  ✓ $1"; pass=$((pass+1)); }
 bad() { echo "  ✗ $1" >&2; fail=$((fail+1)); }
+# soft_bad — a DIAGNOSTIC failure that must NOT trigger the --alert Slack page (codified
+# 2026-06-10). Reserved for the two checks that are not host-SYMMETRY properties and that flap
+# or persistently fail for reasons outside this host's slot contract: (a) orchestrator backend
+# reachability (an EXTERNAL service with its own health monitoring — transient 502s), and
+# (b) the GitHub workflow-capability PUT (a push CAPABILITY, persistently 403 when no
+# workflow-scoped PAT is loadable on this host — surfaced loudly at actual push time by
+# quickmerge/gh/CI, not a recurring per-host incident). It still prints ✗ and counts toward the
+# overall exit code (so a manual/interactive run + the log stay fully informative), but it is
+# subtracted from host_fail so the */15 cron never PAGES on it. SSOT: CLAUDE.md § "Local slot
+# host = VM slot host" + the symmetry-alert-scope incident 2026-06-10 (9h of GH-403/backend-502
+# pages on the hk laptop, which has no workflow-capable token to mint locally).
+soft_bad() { echo "  ✗ $1 [soft — diagnostic, NOT paged]" >&2; fail=$((fail+1)); soft_fail=$((soft_fail+1)); }
 section() { [[ ${QUIET} -eq 0 ]] && echo; [[ ${QUIET} -eq 0 ]] && echo "=== $1 ==="; }
 
 section "host: $(hostname -s) | workspace: ${WORKSPACE_ROOT}"
@@ -164,7 +177,7 @@ if [[ -r "${TOKEN_FILE}" ]]; then
         mode=$(python3 -c 'import json, sys; print(json.load(sys.stdin).get("mode","?"))' < /tmp/.symcheck.$$ 2>/dev/null || echo "?")
         ok "backend reachable @ ${ORCH_URL} (mode=${mode})"
     else
-        bad "backend HTTP ${code} @ ${ORCH_URL}/api/mode"
+        soft_bad "backend HTTP ${code} @ ${ORCH_URL}/api/mode (external service — has its own health monitoring)"
     fi
     rm -f /tmp/.symcheck.$$
 fi
@@ -180,7 +193,7 @@ if [[ -z "${_ghtok}" ]] && [[ -f "${WORKSPACE_ROOT}/unified-trading-pm/scripts/w
     _ghtok="${GH_TOKEN:-}"
 fi
 if [[ -z "${_ghtok}" ]]; then
-    bad "no GH_TOKEN — gh/HTTPS workflow edits will be refused (run: source scripts/workspace/load-gh-token.sh)"
+    soft_bad "no GH_TOKEN — gh/HTTPS workflow edits will be refused (run: source scripts/workspace/load-gh-token.sh)"
 else
     _code=$(curl -s -o /dev/null -w '%{http_code}' -X PUT \
         -H "Authorization: token ${_ghtok}" -H "Accept: application/vnd.github+json" \
@@ -188,28 +201,36 @@ else
         -d '{"message":"symcheck probe","content":"eA==","sha":"0000000000000000000000000000000000000000","branch":"live-defi-rollout"}' 2>/dev/null || echo "000")
     case "${_code}" in
         409|422) ok "GH_TOKEN is workflow-capable (Workflows:write)" ;;
-        403)     bad "GH_TOKEN lacks Workflows:write (HTTP 403) — workflow migrations will block" ;;
-        *)       bad "GH_TOKEN workflow-capability probe inconclusive (HTTP ${_code})" ;;
+        403)     soft_bad "GH_TOKEN lacks Workflows:write (HTTP 403) — workflow migrations will block (no workflow-scoped PAT loadable on this host; surfaced at push time)" ;;
+        *)       soft_bad "GH_TOKEN workflow-capability probe inconclusive (HTTP ${_code})" ;;
     esac
 fi
 
-# Snapshot HOST-level failures (checks 1-8: crons, logs, backend, token, .tabs) BEFORE the
-# per-worktree checks below. The per-worktree checks (#9 identity, #10 upstream) iterate
-# hundreds of worktrees and can report hundreds of nits — real, but commit-hygiene/drift
-# concerns, NOT host symmetry. The --alert Slack post fires ONLY on host_fail>0 so a host
-# that's fully symmetric doesn't spam "475 failed" every 30 min over per-worktree nits.
-host_fail=${fail}
+# Snapshot the PAGE-WORTHY host-SYMMETRY failures BEFORE the per-worktree checks below. Two
+# categories are deliberately EXCLUDED from this snapshot so the */15 cron never pages on them:
+#   • soft_fail (backend reachability + GH workflow-capability) — external-service liveness and a
+#     push-capability, NOT host-symmetry; they flap or persistently fail for reasons outside this
+#     host's slot contract (incident 2026-06-10: 9h of GH-403 + backend-502 pages on the hk laptop,
+#     which has no workflow-scoped PAT to mint locally). Still logged + still exit-1, just not paged.
+#   • per-worktree nits (#9 identity, #10 upstream) — iterate hundreds of worktrees; commit-hygiene
+#     /drift concerns, added to `fail` only AFTER this snapshot.
+# What REMAINS page-worthy: crons installed, logs fresh (cron actually running), .tabs present,
+# orch-token readable — the genuinely stable signals that, if broken, mean the slot-host contract
+# is actually violated and stays violated until a human fixes THIS host. The --alert post fires
+# ONLY on host_fail>0 AND a sustained streak (debounce below).
+host_fail=$(( fail - soft_fail ))
 
-# Transient-failure DEBOUNCE for the --alert Slack page (codified 2026-06-10). Three of the
-# host-level checks are LIVE-NETWORK probes — backend HTTP /api/mode (transient 502 on a gateway
-# blip), the GitHub workflow-capability PUT (401/403 on a token-loader/SM/network hiccup), and the
-# 10-min log-freshness windows (trip if one cron tick slips). On a */15 cron alerting on ANY single
-# failure, each blip paged Slack even though the host was actually compliant (incident 2026-06-10:
-# 4×backend-502 + 2×GH-403 + 1×GH-401, all transient, host green on the next tick). So we now require
-# the host-level failure to PERSIST across consecutive runs before paging. A real outage persists
-# (≥SYMMETRY_ALERT_THRESHOLD ticks → pages); a single blip clears next tick (counter resets, no page).
-# The check stays a full diagnostic regardless — still logged + still exit 1 for interactive/manual
-# use; only the auto-page is debounced. State is a tiny per-host counter file in tmp.
+# Transient-failure DEBOUNCE for the --alert Slack page (codified 2026-06-10). Even after the
+# flaky external/capability probes are demoted to soft_fail above, a page-worthy check can still
+# trip on a single slipped cron tick — most realistically the 10-min log-freshness windows (#3/#4)
+# if a FF-pull / status-report tick runs a little late. So before paging we require the host-level
+# failure to PERSIST across ≥SYMMETRY_ALERT_THRESHOLD consecutive runs: a genuinely-stopped cron /
+# missing .tabs / unreadable token stays failing every tick → pages; a one-tick slip clears on the
+# next run (counter resets, no page). The check stays a full diagnostic regardless — still logged +
+# still exit 1 for interactive/manual use; only the auto-page is debounced. State is a tiny per-host
+# counter file in tmp. NOTE: the 9h hk incident was a PERSISTENT GH-403 (no workflow PAT) that
+# debounce alone could NOT silence — that is fixed by the soft_fail demotion above, not the debounce;
+# debounce remains the second layer for genuine single-tick flaps in the page-worthy set.
 SYMMETRY_ALERT_THRESHOLD="${SYMMETRY_ALERT_THRESHOLD:-2}"
 _streak_file="$(dirname "${FF_LOG}")/.slot-host-symmetry-fail-streak"
 if [[ ${host_fail} -gt 0 ]]; then
@@ -353,7 +374,7 @@ if [[ ${fail} -gt 0 ]]; then
     # the hundreds and would spam. Per-worktree drift is logged + exit-1'd, just not alerted.
     if [[ ${ALERT} -eq 1 && ${host_fail:-0} -gt 0 && ${host_fail_streak:-0} -ge ${SYMMETRY_ALERT_THRESHOLD} ]]; then
         # Persisted across ≥SYMMETRY_ALERT_THRESHOLD consecutive runs → a real outage, page it.
-        _wt_fail=$(( fail - host_fail ))
+        _wt_fail=$(( fail - host_fail - soft_fail ))
         _wh="${AGENT_ORCHESTRATOR_SLACK_WEBHOOK:-$(gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112 2>/dev/null || true)}"
         if [[ -n "${_wh}" ]]; then
             _host="$(hostname)"
@@ -367,7 +388,7 @@ if [[ ${fail} -gt 0 ]]; then
         # Host-level fail but streak below threshold → likely a transient blip. Logged + exit-1, NOT paged.
         echo "[alert] host-level fail #${host_fail_streak}/${SYMMETRY_ALERT_THRESHOLD} (${host_fail} check(s)) — below alert threshold, treating as transient (logged + exit-1, NOT paging)"
     elif [[ ${ALERT} -eq 1 ]]; then
-        echo "[alert] host-level checks PASS; $(( fail - host_fail )) per-worktree nit(s) only — NOT alerting (logged + exit-1)"
+        echo "[alert] host-level checks PASS; ${soft_fail} soft diagnostic(s) + $(( fail - host_fail - soft_fail )) per-worktree nit(s) — NOT alerting (logged + exit-1)"
     fi
     [[ ${QUIET} -eq 0 ]] && cat <<EOF
 
