@@ -347,12 +347,15 @@ what the operator is seeing:
       transactionally at spawn — the 2026-06-08 NULL-last_ping watchdog fix added a `last_spawned_at` fallback that
       nothing on this spawn path actually SETS; (2) watchdog falls back to `session_name(slot_id)` + `has_session()`
       when the row's `tmux_session` is NULL (symmetry with `_pick_free_slot`); (3) review/escalate boot prompts carry
-      the lifecycle posts (or are exempted from slot occupancy). Regression test: spawn → worker dies pre-`/boot` →
-      watchdog reaps within 2 ticks → escalate finds a free slot. MANUAL RECOVERY already applied 2026-06-10 (slot-1
-      laptop, via SSM): `UPDATE slots SET     tmux_session='orch-slot-N'` for finished slots 1/2/4/5/9 → watchdog reaped
-      them; slot-10 (active escalation worker) left protected; VM PM clone was 60 behind on auto-inventory churn →
-      stash + ff-pull → PlanRegenLoop unblocked. Also killed 5 orphaned claude procs from May-29/Jun-01 (not panes of
-      any session).
+      the lifecycle posts (or are exempted from slot occupancy); (4) **`tmux_spawn.has_session` PREFIX-MATCH bug**:
+      `tmux has-session -t orch-slot-1` matches `orch-slot-10` (tmux `-t` is a prefix/fnmatch target) → slot-1 reads
+      OCCUPIED to `_pick_free_slot` whenever slot-10 has a session — use exact-match `-t "=<name>"` (and audit every
+      other `-t` call in `tmux_spawn.py`/`tmux_pruner.py` for the same gotcha). Regression test: spawn → worker dies
+      pre-`/boot` → watchdog reaps within 2 ticks → escalate finds a free slot; plus has_session("orch-slot-1") is False
+      while only orch-slot-10 exists. MANUAL RECOVERY already applied 2026-06-10 (slot-1 laptop, via SSM):
+      `UPDATE slots SET     tmux_session='orch-slot-N'` for finished slots 1/2/4/5/9 → watchdog reaped them; slot-10
+      (active escalation worker) left protected; VM PM clone was 60 behind on auto-inventory churn → stash + ff-pull →
+      PlanRegenLoop unblocked. Also killed 5 orphaned claude procs from May-29/Jun-01 (not panes of any session).
 - [x] ✅ [OPERATOR] P0. **🚨 GitHub Actions BILLING-BLOCK — RESOLVED by operator 2026-06-08 ("budget is updated"); CI
       runs again.** Verified: PM canary leg-A + #179 `quality-gates-v2` both ran (9-step jobs, not 0-step setup-fails)
       after the operator raised the Actions spending limit. Follow-up (separate item below): a billing-block DETECTOR
