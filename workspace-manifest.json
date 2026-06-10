@@ -68,15 +68,15 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD \u2014 versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.2.0",
-    "deployment-api": "0.3.0",
+    "deployment-api": "0.4.0",
     "deployment-service": "0.7.0",
     "deployment-ui": "0.1.0",
     "execution-service": "0.5.1",
-    "features-service": "0.1.0",
+    "features-service": "0.1.2",
     "fund-administration-service": "0.2.0",
     "ibkr-gateway-infra": "0.1.0",
     "instruments-service": "0.30.0",
-    "market-tick-data-service": "0.5.0",
+    "market-tick-data-service": "0.6.0",
     "system-integration-tests": "0.3.2",
     "unified-api-contracts": "0.6.0",
     "unified-trading-library": "0.5.0",
@@ -283,7 +283,7 @@
       ],
       "completion_path": "cefi",
       "notes": "Fully extracted from unified-trading-deployment-v3 on 2026-03-01. 27 route modules, gunicorn config, Google OAuth. position-balance-monitor-service dep removed 2026-05-20 (merged into strategy-service/strategy_service/position/).",
-      "ci_status": "FEATURE_GREEN",
+      "ci_status": "MAIN_GREEN",
       "coverage_pct": 71,
       "bypass_audit_path": "QUALITY_GATE_BYPASS_AUDIT.md",
       "testing_level": "unit",
@@ -1795,17 +1795,14 @@
     "ibkr-gateway-infra": "0.1.0",
     "unified-trading-pm": "1.2.45",
     "market-data-processing-service": "0.3.0",
-    "market-tick-data-service": "0.6.0",
     "batch-live-reconciliation-service": "0.3.0",
-    "features-service": "0.1.2",
-    "execution-service": "0.6.0",
-    "deployment-api": "0.4.0"
+    "execution-service": "0.6.0"
   },
   "active_feature_branch": "live-defi-rollout",
   "staging_status": {
     "locked": false,
     "locked_since": null,
-    "locked_reason": "SIT passed \u2014 validated + unlocked",
+    "locked_reason": null,
     "lock_version": null,
     "pending_repos": [],
     "sit_retry_count": 0,
@@ -1819,35 +1816,40 @@
       "sha": "b362975b194826245f952cda548bbfea855b4002",
       "version": "0.3.0"
     },
-    "market-tick-data-service": {
-      "branch": "staging",
-      "sha": "3a113ab5bfa0a80ffcd83f0c01c00a0f42153ee2",
-      "version": "0.6.0"
-    },
     "batch-live-reconciliation-service": {
       "branch": "staging",
       "sha": "67734304b333b7931780ef131bb1b612a9b536b3",
       "version": "0.3.0"
     },
-    "features-service": {
-      "branch": "staging",
-      "sha": "1a67c96862defe16ff6ebe4cb5fe8a19701b66d2",
-      "version": "0.1.2"
-    },
     "execution-service": {
       "branch": "staging",
       "sha": "5dffa138887987c3591ce2e016c5587922b1c053",
       "version": "0.6.0"
-    },
-    "deployment-api": {
-      "version": "0.4.0",
-      "sha": "8fc067fc1bfc450e666d7f08c9d3317578f3a834",
-      "branch": "staging"
     }
   },
   "main_commits": {
     "_note": "Rolling history of last 5 staging sets promoted to main. Used for rollback reference.",
     "history": [
+      {
+        "promoted_at": "2026-06-10T13:08:30.912681Z",
+        "commits": {
+          "market-tick-data-service": {
+            "branch": "staging",
+            "sha": "3a113ab5bfa0a80ffcd83f0c01c00a0f42153ee2",
+            "version": "0.6.0"
+          },
+          "features-service": {
+            "branch": "staging",
+            "sha": "1a67c96862defe16ff6ebe4cb5fe8a19701b66d2",
+            "version": "0.1.2"
+          },
+          "deployment-api": {
+            "version": "0.4.0",
+            "sha": "8fc067fc1bfc450e666d7f08c9d3317578f3a834",
+            "branch": "staging"
+          }
+        }
+      },
       {
         "promoted_at": "2026-06-10T09:52:44.277054Z",
         "commits": {
@@ -1952,16 +1954,6 @@
             "version": "0.3.0"
           }
         }
-      },
-      {
-        "promoted_at": "2026-06-09T23:22:03.674881Z",
-        "commits": {
-          "unified-api-contracts": {
-            "branch": "staging",
-            "sha": "77c6f220c9cc24f67f543e37ef459ea7d33df125",
-            "version": "0.5.0"
-          }
-        }
       }
     ]
   },
@@ -1976,6 +1968,9 @@
       "unified-trading-pm"
     ]
   },
-  "promotion_failures": {},
+  "promotion_failures": {
+    "execution-service": 1,
+    "batch-live-reconciliation-service": 1
+  },
   "promotion_quarantine": {}
 }
