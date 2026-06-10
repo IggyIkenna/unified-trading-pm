@@ -413,6 +413,78 @@ def detect_resolved_prs(repo: str, resolved_hours: float, now: _dt.datetime) -> 
     return resolved
 
 
+def detect_superseded_prs(repo: str) -> list[dict]:
+    """Open LDR→{base} promote PRs whose CONTENT is already fully in the base — superseded by a
+    prior merge/rebase/squash (D3, ldr_trunk_promotion_decoupling_2026_06_10 — Level-3 cleanup).
+
+    The drain rebases/squashes, so staging/main SHAs differ from the LDR commits and a SHA-membership
+    check never matches. Use the compare API's changed-file count instead: **0 changed files in
+    `{base}...live-defi-rollout` ⇒ the trunk content is already in base ⇒ the open promote PR has
+    nothing left to promote ⇒ it is stale** (e.g. a later quickmerge incorporated the same commits).
+    Content equivalence, not commit identity.
+    """
+    out: list[dict] = []
+    for base in PROMOTION_BASES:
+        prs = gh_json(
+            [
+                "pr", "list", "--repo", f"{ORG}/{repo}", "--base", base, "--head", "live-defi-rollout",
+                "--state", "open", "--limit", "30", "--json", "number,title,url,createdAt",
+            ]
+        )
+        if not isinstance(prs, list):
+            continue
+        for pr in prs:
+            cmp = gh_json(["api", f"repos/{ORG}/{repo}/compare/{base}...live-defi-rollout"])
+            if not isinstance(cmp, dict):
+                continue
+            files = cmp.get("files")
+            if isinstance(files, list) and len(files) == 0:  # content already in base → superseded
+                out.append(
+                    {
+                        "repo": repo,
+                        "base": base,
+                        "number": pr.get("number"),
+                        "title": pr.get("title") or "",
+                        "url": pr.get("url") or "",
+                    }
+                )
+    return out
+
+
+def close_superseded_prs(superseded: list[dict], *, dry_run: bool = False) -> list[dict]:
+    """Close stale promote PRs (content already in base). Idempotent — a closed PR drops out of the
+    open-PR list next tick; comments first so the closure is auditable."""
+    closed: list[dict] = []
+    for pr in superseded:
+        repo, number, base = pr["repo"], pr.get("number"), pr["base"]
+        if number is None:
+            continue
+        if dry_run:
+            print(f"  [dry-run] would close superseded {repo}#{number} (LDR→{base}: content already in {base})")
+            closed.append(pr)
+            continue
+        body = (
+            f":broom: Auto-closing this LDR→{base} promote PR — its content is already in `{base}` "
+            f"(0 changed files in `{base}...live-defi-rollout`), so it is superseded/stale (a later "
+            f"quickmerge/rebase incorporated the same content). No action needed."
+        )
+        subprocess.run(
+            ["gh", "pr", "comment", str(number), "--repo", f"{ORG}/{repo}", "--body", body],
+            capture_output=True,
+            text=True,
+        )
+        ok = (
+            subprocess.run(
+                ["gh", "pr", "close", str(number), "--repo", f"{ORG}/{repo}"], capture_output=True, text=True
+            ).returncode
+            == 0
+        )
+        if ok:
+            print(f"  closed superseded {repo}#{number} (LDR→{base}: content already in {base})")
+            closed.append(pr)
+    return closed
+
+
 def _run_is_billing_block(repo: str, run_id: int) -> bool:
     """True if a failed run's first job failed at setup with the billing annotation.
 
@@ -853,6 +925,13 @@ def main() -> int:
         "(no worker needed). Runs BEFORE --escalate so the mechanical deadlock is fixed in-band and "
         "only genuine conflicts/failures escalate. Default OFF — only the cron passes it.",
     )
+    parser.add_argument(
+        "--close-superseded",
+        action="store_true",
+        help="Auto-close stale LDR→staging/main promote PRs whose content is already in base (0 "
+        "changed files in base...live-defi-rollout — superseded by a later quickmerge/rebase). "
+        "Level-3 cleanup of the LDR-trunk model. Default OFF — only the cron passes it.",
+    )
     args = parser.parse_args()
 
     repos = [args.repo] if args.repo else REPOS
@@ -865,12 +944,15 @@ def main() -> int:
     transitions: list[dict] = []
     stuck: list[dict] = []
     resolved: list[dict] = []
+    superseded: list[dict] = []
     for repo in repos:
         for branch in WATCHED_BRANCHES:
             transitions.extend(detect_transitions(repo, branch, args.limit, now, args.fresh_hours))
         stuck.extend(detect_stuck_prs(repo, args.stuck_minutes, now))
         if args.resolved_hours > 0:
             resolved.extend(detect_resolved_prs(repo, args.resolved_hours, now))
+        if args.close_superseded:
+            superseded.extend(detect_superseded_prs(repo))
 
     alert, severity, report = build_report(transitions, stuck, resolved, billing)
     print(report)
@@ -886,6 +968,8 @@ def main() -> int:
         auto_recover_stuck_prs(stuck, dry_run=False)
     if args.escalate and stuck:
         escalate_stuck_prs(stuck, dry_run=False)
+    if args.close_superseded and superseded:
+        close_superseded_prs(superseded, dry_run=False)
     return 0
 
 

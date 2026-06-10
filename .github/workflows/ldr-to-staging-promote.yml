@@ -95,6 +95,7 @@ jobs:
           OWNER: ${{ github.repository_owner }}
           DRY_RUN: ${{ inputs.dry_run || 'false' }}
           ONLY_REPO: ${{ inputs.only_repo || '' }}
+          SLACK_CI_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
         run: |
           set -euo pipefail
           MANIFEST="workspace-manifest.json"
@@ -180,6 +181,13 @@ jobs:
                   echo "  ⛔ provenance: $REPO has non-quickmerge CODE on LDR — NOT arming auto-merge (PR left open)"
                   printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
                   gh pr comment "$PR_URL" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Tier-C drain)** — this LDR→staging promote carries code that bypassed quickmerge (no \`Quickmerge:\` trailer, not a carve-out). Auto-merge is **not** armed. Re-ship the change via \`quickmerge --agent --files '<paths>'\` (or revert it on \`live-defi-rollout\`); the next drain tick promotes once LDR is clean." 2>/dev/null || true
+                  # Level-2 WARN: surface the bypass to #ci-failures so we understand WHY/WHO (drain-time
+                  # detection ≤15min; the block above is the enforcement). Best-effort, never fails the drain.
+                  if [ -n "${SLACK_CI_WEBHOOK_URL:-}" ]; then
+                    PROV_DETAIL="$(printf '%s' "$PROV_OUT" | grep -- '- ' | head -5 | sed 's/"/'"'"'/g')"
+                    curl -s -X POST "$SLACK_CI_WEBHOOK_URL" -H 'Content-Type: application/json' \
+                      -d "{\"text\":\":no_entry: *Provenance gate BLOCKED a promotion* — \`$REPO\` LDR→staging carries code that bypassed quickmerge (auto-merge NOT armed; PR left open). Re-ship via quickmerge or revert on live-defi-rollout.\n\`\`\`$PROV_DETAIL\`\`\`\n$PR_URL\"}" >/dev/null 2>&1 || true
+                  fi
                   BLOCKED="$BLOCKED $REPO"; BLOCKED_COUNT=$((BLOCKED_COUNT + 1))
                   rm -rf "$PROV_TMP"; continue
                 elif [ "${PROV_RC:-0}" -ne 0 ]; then
