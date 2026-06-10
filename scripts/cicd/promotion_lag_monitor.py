@@ -100,6 +100,45 @@ def _lag(
     return len(relevant), age, omsg
 
 
+def _lock_dangle(now: dt.datetime, dangle_min: int = 30) -> str | None:
+    """Flag a DANGLING staging lock: `locked` held with `locked_since` older than dangle_min.
+
+    A staging lock should clear within one SIT cycle (~15 min); a longer hold means the
+    unlock mechanism (`sit-debounce-trigger`) stalled — the exact liveness gap behind the
+    2026-06-10 ~1.5h dangle (the `*/5` cron is GitHub-throttled to ~75 min and was being
+    displaced out of the `manifest-update` concurrency group). This check runs independently
+    of that workflow, so it pages even when the unlock path is wedged. Returns a finding
+    string (which triggers the Slack alert + non-zero exit) or None.
+    """
+    here = os.path.dirname(os.path.abspath(__file__))
+    mpath = os.path.join(here, "..", "..", "workspace-manifest.json")
+    try:
+        with open(mpath) as _mf:
+            m = cast("dict[str, object]", json.load(_mf))
+    except (OSError, json.JSONDecodeError):
+        return None
+    ss = cast("dict[str, object]", m.get("staging_status") or {})
+    if not ss.get("locked"):
+        return None
+    reason = str(ss.get("locked_reason") or "?")
+    pending = cast("list[object]", ss.get("pending_repos") or [])
+    since = ss.get("locked_since")
+    if not since:
+        return f"staging lock HELD with NO locked_since timestamp (reason: {reason}; pending={pending})"
+    try:
+        when = dt.datetime.fromisoformat(str(since).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    age_min = (now - when).total_seconds() / 60.0
+    if age_min < dangle_min:
+        return None
+    return (
+        f"staging lock DANGLING {int(age_min)}m (> {dangle_min}m) — reason: {reason}; "
+        f"pending_repos={pending}. Unlock mechanism (sit-debounce-trigger) likely stalled; "
+        "recover via `gh workflow run sit-debounce-trigger.yml -f drain_pending=true`."
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--threshold-min", type=int, default=60)
@@ -119,9 +158,7 @@ def main() -> int:
         for line in r.stdout.splitlines():
             if line.lower().startswith("date:"):
                 try:
-                    now = dt.datetime.strptime(
-                        line[5:].strip(), "%a, %d %b %Y %H:%M:%S GMT"
-                    ).replace(tzinfo=dt.UTC)
+                    now = dt.datetime.strptime(line[5:].strip(), "%a, %d %b %Y %H:%M:%S GMT").replace(tzinfo=dt.UTC)
                 except ValueError:
                     now = None
                 break
@@ -144,6 +181,12 @@ def main() -> int:
             if res:
                 n, age, omsg = res
                 findings.append(f"{repo} {label}: {n} commit(s), oldest {int(age // 60)}m old — “{omsg[:60]}”")
+
+    # Dangling staging-lock check — defense-in-depth for unlock liveness, independent of the
+    # cron-throttled/displaceable sit-debounce workflow. A lock held past one SIT cycle is an incident.
+    dangle = _lock_dangle(now)
+    if dangle:
+        findings.append("🔒 " + dangle)
 
     if not findings:
         print(f"✅ promotion-lag: all branches in sync within {int(thresh_s // 60)}m")

@@ -121,6 +121,15 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       zero-warning; build smoke green). Was: Vitest unit tests for the stuck/SIT chip logic + data mappers;
       `tsc --noEmit` + ESLint zero warnings; `NEXT_PUBLIC_MOCK_API`-equivalent mock-mode build smoke.
 
+- [ ] [CODE] P1. [UI] **Per-service "CI" tab (operator add 2026-06-10)** — reuse the repo drill-down panel inside the
+      home per-service tab system (next to Builds/Data Status), so a selected service shows its branches/PRs/SIT without
+      leaving the service context. Note: some deployment service names ≠ repo names (e.g. features-delta-one-service vs
+      features-service) — map or degrade honestly.
+- [ ] [CODE] P1. **Fleet git-health INTO deployment-ui (operator decision v2)** — deployment-api proxy of the
+      orchestrator's `/api/fleet/git-health` (server-side token) + a deployment-ui page rendering hosts×slots×repos;
+      lands when sub-plan B's endpoint ships. Repo: deployment-api + deployment-ui (+ cross-ref
+      fleet_git_health_orchestrator_2026_06_10.md Phase 2 note).
+
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 
 - [x] ✅ [TEST] P1. [UI] DONE 2026-06-10 — deployment-ui@3998a4d | pw:L2 ✓ (164/164 smoke) | regression:
