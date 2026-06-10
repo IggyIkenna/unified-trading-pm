@@ -113,7 +113,11 @@ Refresh cadence: main-orchestrator runs the script at morning ledger sweep + EOD
 stale — re-run before any planning decision that depends on this table.
 
 <!-- AUTO-INVENTORY-START -->
+<<<<<<< Updated upstream
 _Last regenerated: 2026-06-10 08:26 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+=======
+_Last regenerated: 2026-06-10 08:28 UTC via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted by `cal_left` desc. TBD = baseline not yet filled by owner agent. Orphan = plan not referenced by master or any epic — should be folded into the appropriate epic._
+>>>>>>> Stashed changes
 
 | Plan | Owner | Class | Checkboxes | % done | Cal left | Deadline |
 |---|---|---|---|---|---|---|

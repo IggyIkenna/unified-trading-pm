@@ -1613,7 +1613,11 @@ speed-note (both deferred optimisations, non-blocking).
       migrators that do pure object-path moves and never read the manifest — e.g. `migrate_sports_canonical_v9` — do NOT
       need it). Each AG slot owns its own script's one-liner. Repos: market-tick-data-service + instruments-service.
       parent_epic: mtds_mdps_master. Provenance: slot-4 sports pre-apply audit 2026-06-08.
+<<<<<<< Updated upstream
 - [ ] [DEFI] [CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
+=======
+- [ ] [DEFI-CROSS-CUTTING] P0. **M-COORD-7 — DeFi LIVE handlers + engine catalog readers still write COARSE
+>>>>>>> Stashed changes
       `pipeline_mode="batch"` (NOT source-aware) → batch≠live for DeFi AND blocks EVERY mtds code ship via STEP 5.85
       (surfaced by slot-4 sports pre-apply audit 2026-06-08).** The C-PATH inventory above marked the DeFi **migrator +
       rebuild** ✅ source-aware (mtds@f80c50f1) but the **41 inline `pipeline_mode="batch"` literals in the DeFi LIVE
