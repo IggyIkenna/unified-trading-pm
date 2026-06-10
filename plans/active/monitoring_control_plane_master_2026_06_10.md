@@ -144,6 +144,30 @@ pin the UI contract, but the completion bar is the LIVE signal path: trigger →
 - Both sub-plans carry playwright/pytest evidence per the UI gate (`pw:L2 ✓` for deployment-ui; pytest + tsc for the
   orchestrator dashboard which is outside the playwright-gate repo set).
 
+- **2026-06-10 (slot-3, session wrap)** — CI dashboard LIVE on the operator dev stack (http://localhost:5183/repos,
+  playwright-verified): real SIT panel (cascade success 1h38m), real stuck triage queue (12 entries: 10 conflict walls +
+  2 auto-merge-stuck incl. PM#145 at 5d), 25-repo matrix with severity sort + squash-skew detection. The dashboard
+  surfaced its own ship's remaining blockers (deployment-api#44 bump PR, main 13-files-behind) — working as designed.
+  **Nine CI/CD defects found+fixed while shipping** (all in `cicd_contract_hardening_2026_06_01.md` § "SIT-loop +
+  cascade-poll repairs" + § "Squash-body [skip ci]"): cascade t=0 stale-read; cascade git-identity; harness
+  MANIFEST_ALIGNMENT_SKIP ×2 repos; PASSING_STATUSES missing MAIN_GREEN/SIT_VALIDATED; sit-gate never dispatched the
+  SIT; SIT never reported back; no sit-passed unlock consumer (+ Slack unlock bookend); no staging-validated dispatch on
+  green SIT; base-ui.sh never wrote the quickmerge sentinel (UI repos could never quickmerge). Plus: squash-body [skip
+  ci] suppression FILED (fix pending), cloud-builds best-effort boundary broadened after a live 500.
+
+## Deferred work after 2026-06-10 (slot-3 session)
+
+| Item                                                                                                                                      | Where tracked                                     | State                          |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------ |
+| deployment-api/deployment-ui/e2e content → `main` (drain converging; mtds#177/features#36/exec#250 PRs open; dep-api waits on bump PR#44) | this plan + dashboard stuck panel                 | IN-FLIGHT (pipeline-automatic) |
+| Squash-body `[skip ci]` sanitization in Tier C promote                                                                                    | cicd_contract_hardening § bug #7                  | `- [ ]` P1                     |
+| Failure-injection verification matrix (every alert class fake-triggered + seen on monitor)                                                | this plan § matrix                                | `- [ ]` P1–P3                  |
+| Fleet git-health page (sub-plan B)                                                                                                        | fleet_git_health_orchestrator_2026_06_10.md       | orchestrator backlog           |
+| GH_PAT `Checks: read` permission                                                                                                          | ci_dashboard plan + pings/slot_3.md               | BLOCKED-CREDENTIALS            |
+| AWS/CodeBuild cloud-toggle parity for image signal                                                                                        | ci_dashboard plan                                 | `- [ ]` P1                     |
+| `restart-deployment-stack.sh` must export GCP_PROJECT_ID (live 500 root cause on stack)                                                   | quality_gates_speed_and_config_ssot (filed below) | `- [ ]` P2                     |
+| sit-repo full-workspace-sit report-back is LDR-only (inert until its main promotion)                                                      | cicd_contract_hardening conflict notes            | `- [ ]` P2                     |
+
 ## Codex SSOT updates (post-phase audit obligations)
 
 - NEW `codex/03-observability/monitoring-control-plane.md` — the division-of-surfaces contract above + data-source

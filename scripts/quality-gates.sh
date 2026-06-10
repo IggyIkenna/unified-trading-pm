@@ -2,10 +2,9 @@
 # Repo-specific settings only. Body: unified-trading-pm/scripts/quality-gates-base/base-service.sh
 SERVICE_NAME="unified-trading-pm"
 SOURCE_DIR="scripts"
-# PM is a docs+plans+scripts repo (not a service). Coverage gate disabled —
-# scripts/ is operational tooling, not application code; aligns with
-# pyproject.toml `fail_under = 0` deviation already documented there.
-MIN_COVERAGE=0
+# PM scripts/ run in prod CI/CD pipelines (ci_failure_watcher, detect_breaking_change, etc.).
+# Baseline 2026-06-10: 74.5% across 24 measured scripts. Floor = 70% (regression guard).
+MIN_COVERAGE=70
 RUN_INTEGRATION=true
 PYTEST_WORKERS=${PYTEST_WORKERS:-}  # default: max(1, cpu_count//4) computed by base script
 LOCAL_DEPS=("unified-api-contracts" "unified-trading-library")
@@ -354,17 +353,19 @@ if [ -f "$RUNBOOK_OWNER_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
-# ── Post-gates: Coverage targets enforcement (Phase 8.D of deployment_and_qg_strategy) — warn-only ──
+# ── Post-gates: Coverage targets enforcement (Phase 8.D of deployment_and_qg_strategy) ──────────
 # SSOT: scripts/quality_gates/coverage_targets.yaml + per-repo coverage_targets_local.yaml.
 # Walks each repo's coverage.xml + computes aggregate per surface; compares vs target_pct.
-# Currently warn-only — surface failures must be triaged per-repo before flipping to error mode.
-# Per plan: ratchet starting 2026-05-18 (post-warn-only window).
 COV_TARGETS_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_coverage_targets.py"
 if [ -f "$COV_TARGETS_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
-    echo "Running Coverage-targets enforcement (warn-only)..."
+    # Workspace-wide: warn-only (other repos still in ratchet window).
     python3 "$COV_TARGETS_CHECKER" --workspace-root "$WORKSPACE_ROOT" --warn-only >/dev/null \
-        && log_success "Coverage-targets check completed (warn-only)" \
         || log_warn "Coverage-targets checker errored (non-blocking)"
+    # PM-specific pm_prod_scripts surface: BLOCKING (2026-06-10 — scripts run in prod CI/CD).
+    echo "Running PM prod-scripts coverage gate (blocking)..."
+    python3 "$COV_TARGETS_CHECKER" --workspace-root "$WORKSPACE_ROOT" --repo unified-trading-pm \
+        && log_success "PM coverage-targets check passed" \
+        || { log_fail "PM coverage-targets FAILED — pm_prod_scripts surface below 70% target"; exit 1; }
 fi
 
 # ── Post-gates: Architectural ratchets (Group C — ST-19 + PB-19 + UI-18) — baselined ratchet ──
