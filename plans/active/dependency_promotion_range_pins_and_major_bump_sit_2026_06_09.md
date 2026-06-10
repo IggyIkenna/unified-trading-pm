@@ -400,18 +400,26 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       (d) STEP 5.79 narrowed MONOTONICALLY (converted Dockerfile → strict @digest enforcement; unconverted → legacy
       skip + warn — no fleet redness); (e) PILOT converted: deployment-service/Dockerfile @ sha256:058d589f… (docker
       build --check green). Current digest resolved live via gcloud.
-- [ ] [INFRA] P1. **FROM-digest per-repo conversion ships — CONVERSION DONE 15/15 + QG-GREEN; only the SHIP leg remains,
-      parked behind the live breaking convergence (state as of 2026-06-10 ~11:05Z).** All 15 repos (16 Dockerfiles incl.
-      deployment-api ×2) are converted in their slot-1 trees with fresh QG sentinels; quickmerge correctly refused
-      promotion mid-convergence (first the UTL dep-order gate, then the 10:57Z staging lock — `execution-service=0.6.0`
-      cascade; breaking_pending: blr/exec/greeks/mtds/UTL). **To finish once the lock clears + UTL ≥ STAGING_GREEN: run
-      `bash /tmp/dockerfile_digest_fleet_rollout.sh`** (pass-2-aware: ships dirty-only-Dockerfile trees directly, re-QGs
-      only stale sentinels; log → /tmp/digest_rollout_results.log; if /tmp was cleaned, re-run the converter per repo —
-      idempotent). agent-orchestrator (4f60485: Dockerfile + the QG-stub venv-on-PATH fix it surfaced) and
-      deployment-service (c5f589d: Dockerfile + the BoM feature) are COMMITTED-AHEAD locally — ship each via
-      `bash scripts/quickmerge.sh "<msg>" --agent --files '<paths>'` (quickmerge's ahead-of-main path pushes the
-      existing commit; no re-commit). After ALL 15 ship: flip STEP 5.79's legacy `${`-skip to hard-fail (the final
-      ratchet). **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: the final 5.79 hard-fail flip is GATED on a REAL
+- [ ] [INFRA] P1. **FROM-digest ships — 14/16 LANDED on LDR (2026-06-10 ~13:30Z); 2 parked on live-peer collision.**
+      LANDED (digest pin verified on each repo's `origin/live-defi-rollout`): alerting, blr, client-reporting,
+      execution, features, fund-admin(×2 FROMs), greeks, instruments, mtds, ml, trading-agent, strategy, mdps,
+      agent-orchestrator (6343874 — incl. the QG-stub venv-on-PATH fix it surfaced). REMAINING TWO (both blocked by a
+      CONCURRENT LIVE SESSION doing a ci(aws)/QG sweep in the same slot clones — do NOT race it):
+      1. **deployment-service**: the peer hard-reset the clone and DISCARDED the locally-rebased BoM+pilot commit —
+         **work PRESERVED at `origin/wip-preserve/bom-deployment-service-2026-06-10` (= 3eeb824**, carries
+         `deployment_service/bom.py` + registry fields + heartbeat writers + wired VersionRegistry + 11 test files +
+         the Dockerfile pilot pin; QG-certified pre-rebase @c5f589d). RE-LAND when the clone is quiet:
+         `git cherry-pick 3eeb824` onto fresh LDR (or `git checkout origin/wip-preserve/bom-deployment-service-2026-06-10 -- <paths>`
+         on conflicts) → `quality-gates.sh --no-fix` → `quickmerge --agent --files 'Dockerfile deployment_service/bom.py
+         deployment_service/deployments_registry.py deployment_service/deployment_config.py
+         deployment_service/live_deployment.py deployment_service/backends/cloud_run.py deployment_service/backends/vm.py
+         deployment_service/vm/heartbeat_cli.py scripts/vm/deployment_heartbeat.py tests/unit/test_bom.py
+         tests/unit/test_deployments_registry.py'`.
+      2. **deployment-api**: both converted Dockerfiles sit dirty in its tree, ship blocked by the peer's uncommitted
+         UTL WIP (`unified-trading-library/scripts/quality-gates.sh` modified — theirs, protected). When UTL is clean:
+         `bash scripts/quality-gates.sh --no-fix && quickmerge --agent --files 'Dockerfile Dockerfile.dashboard'`.
+      After BOTH land: flip STEP 5.79's legacy `${`-skip to hard-fail (the final ratchet).
+      **[CONFLICT-GUARD 2026-06-10 — operator-ratified]**: the final 5.79 hard-fail flip is GATED on a REAL
       cloud build (Cloud Build / buildspec) proving the @${BASE_IMAGE_DIGEST} FROM path end-to-end — docker build
       --check is NOT sufficient; flipping first could block the fleet on an unproven build shape.
 - [ ] [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
