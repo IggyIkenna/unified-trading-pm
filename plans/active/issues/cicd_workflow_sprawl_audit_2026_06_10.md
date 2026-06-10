@@ -24,13 +24,24 @@ Verified on **slot-4, all 25 repos freshly FF-pulled to `origin/live-defi-rollou
 2026-06-10. Every "dead emitter / no consumer / no caller" claim was re-checked **across all 25 repos'
 `.github/workflows/` AND `scripts/`** (not just PM), because:
 
-- repository_dispatch **emitters** routinely live in a _different_ repo (e.g. every service's `semver-agent.yml` emits
+- repository*dispatch **emitters** routinely live in a \_different* repo (e.g. every service's `semver-agent.yml` emits
   `version-bump` / `schema-changed`), or in Python/bash under `scripts/`, or in a **propagation template** not yet
   rolled out.
 - the real dispatch syntax is `{\"event_type\": \"<ev>\", \"client_payload\": …}` (escaped quotes) — a naive
   `event_type=<ev>` grep silently misses every emitter. The corrected matcher was validated against known-live controls
   (`version-bump` → lights up 25 `semver-agent.yml`; `qg-passed` → 25 `quality-gates-v2.yml`; `tier-ab-green` →
   `ci-status-update.yml`) before trusting any "0 hits = dead" result.
+- **Variable-indirected emits are a blind spot** for an `event_type=<ev>` grep: e.g. `full-workspace-sit.yml` sets
+  `EVENT="sit-passed"` then dispatches `-f event_type="$EVENT"`. So every "dead" conclusion was re-confirmed against the
+  **bare literal string in any context** — only a type whose _sole_ fleet-wide occurrence is the consumer's own
+  `types:[…]` line (no assignment, no dispatch) is treated as dead. (`sit-passed` initially looked dead under the
+  `event_type=` grep and is in fact LIVE — it is excluded from the dead list below.)
+- **Completeness sweep, not just the flagged subset:** every `workflow_call` callee in PM was checked for a caller (only
+  `contract-replay` + `request-major-bump-reusable` have zero), and every `repository_dispatch` consumer type was
+  checked for an emitter. No dead callee/type beyond those listed below was found.
+- **Branch caveat closed:** workflows fire from the **default branch (`main`)**, not LDR. PM `main` and
+  `live-defi-rollout` are byte-identical under `.github/workflows/` (verified
+  `git diff origin/main origin/live-defi-rollout`), so the LDR-clone analysis holds for the branch that actually runs.
 
 **Template footprint** (edit via `scripts/workflow-templates/` SSOT + `rollout-workflow-templates.sh`, then commit
 per-repo fleet-wide — never hand-edit one repo's copy):
