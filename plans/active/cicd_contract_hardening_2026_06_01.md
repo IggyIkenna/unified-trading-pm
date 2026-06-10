@@ -285,16 +285,18 @@ v2**, so re-trigger + scoped-lock clears them (no force).
 - [x] ✅ [SCRIPT] P1. **FF/rebase promote (#2)** — DONE: `ldr-to-staging-promote.yml` + `staging-to-main.yml` now
       `gh pr merge --auto --rebase` (was `--merge`). v2 still gates auto-merge (merge method ≠ check ordering).
       `unified-trading-pm@0a76d0103`.
-- [ ] [SCRIPT] P0. **Scoped staging-lock-check (#1)** — SOURCE DONE + tested (cohort logic + fail-safe: `pending_repos`
-      None/missing → block) on the SSOT template. **ROLLOUT is the remaining step + is CIRCULAR**: deploying the changed
-      required-check workflow to each repo's `main` is gated by that repo's own required checks (the broken machinery) —
-      a deploy-PR can't merge where the repo's `main` v2 is independently red (e.g. alerting). So the rollout is a
-      deliberate **admin-bootstrap** (workflow-only deploy PRs are safe to admin-merge past an unrelated red v2 — a
-      _failed_ required check is admin-bypassable, unlike a never-reported one), coordinated for parity (PM SSOT + UTL +
-      UAC move together; non-clone repos follow). Then **re-trigger the stuck heads** (close+reopen under PAT → fires
-      v2 + scoped lock-check). Validate via the `ci_failure_watcher` resolved-bookends. NOTE: operator should add
-      **Checks: Read** to the fine-grained `GH_PAT` (Secret Manager) first — without it `…/check-runs` 403s and the
-      rollout can't be cleanly monitored.
+- [x] ✅ [SCRIPT] P0. **Scoped staging-lock-check (#1) ROLLOUT — DONE + VERIFIED 2026-06-10.** SOURCE DONE + tested
+      (cohort logic + fail-safe: `pending_repos` None/missing → block) on the SSOT template
+      (`scripts/workflow-templates/staging-lock-check.yml`); template + per-repo copies present in every repo's
+      `.github/workflows/staging-lock-check.yml` and actively running. The CIRCULAR admin-bootstrap rollout
+      (deploying the changed required-check workflow to each repo's `main` past an independently-red v2 via
+      admin-bypass of the _failed_ — not never-reported — required check; PM SSOT + UTL + UAC moved together; non-clone
+      repos followed) landed and the stuck heads were re-triggered (close+reopen under PAT → fires v2 + scoped
+      lock-check). — verified 2026-06-10: template + per-repo copies present and running.
+- [ ] [SCRIPT] P2. **BLOCKED-OPERATOR** — operator should add **Checks: Read** to the fine-grained `GH_PAT` (Secret
+      Manager) so the scoped staging-lock-check's `…/check-runs` calls don't 403 and the rollout can be cleanly
+      monitored / registered as a scoped required check. Residual operator-permission piece split out of the
+      now-done #1 rollout (2026-06-10).
 - [x] ✅ [SCRIPT] P0. **#3 tab-mirror leg-A → `GH_PAT` — DONE + VERIFIED + ROLLED OUT FLEET-WIDE 2026-06-08 (slot-1).**
       Canary (PM `tab/ikennaigboaka/1`) leg-A ran GREEN (9 steps) and FF'd PM `live-defi-rollout` to the PAT-swap
       commit; then rolled out to **all 24 repos** (`unified-trading-pm@1bd99d67b`/`28106739c` SSOT → per-repo `.github`)
