@@ -45,6 +45,13 @@ jobs:
       failed: ${{ steps.promote.outputs.failed }}
       promoted_count: ${{ steps.promote.outputs.promoted_count }}
       failed_count: ${{ steps.promote.outputs.failed_count }}
+      # Quarantine-cap outputs (steps.quarantine): partition the promote step's FAILED list into
+      # (a) genuinely-actionable failures NOT yet quarantined → drive the CRITICAL alert, and
+      # (b) repos newly hitting PROMOTION_MAX_ATTEMPTS → one-shot WARNING + single escalation.
+      unquarantined_failed_count: ${{ steps.quarantine.outputs.unquarantined_failed_count }}
+      unquarantined_failed: ${{ steps.quarantine.outputs.unquarantined_failed }}
+      newly_quarantined: ${{ steps.quarantine.outputs.newly_quarantined }}
+      quarantine_threshold: ${{ steps.quarantine.outputs.quarantine_threshold }}
     steps:
       - name: Checkout PM
         uses: actions/checkout@v5
@@ -106,10 +113,19 @@ jobs:
           staging = manifest.get("staging_versions", {})
           stable = manifest.get("versions", {})
 
+          # Main-direct repos have NO staging branch (Option-B): their staging_versions can
+          # drift from versions purely because nothing ever promotes them through staging, so
+          # they would be perpetually "pending" and counted as a FAILED promotion every run
+          # (false-CRITICAL Slack alert). Exclude them from the promotion set — mirrors
+          # promotion_lag_monitor.py's `repo == "unified-trading-pm" and "staging" in label`
+          # skip. agent-orchestrator joins this set ONLY until its `staging` branch + quickmerge
+          # land (CLAUDE.md § agent-orchestrator branch model); drop it here once it does.
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+
           # Repos being promoted in this run
           promoting = [
               r for r, sv in staging.items()
-              if not r.startswith("_") and sv != stable.get(r)
+              if not r.startswith("_") and r not in MAIN_DIRECT_REPOS and sv != stable.get(r)
           ]
 
           codex = pathlib.Path("codex/10-audit/repos")
@@ -337,10 +353,15 @@ jobs:
           stable_versions = manifest.get("versions", {})
           repos_data = manifest.get("repositories", {})
 
+          # Main-direct repos (Option-B, no staging branch) are never promoted via staging→main —
+          # excluding them keeps them out of the dep-order READY set + the false-failure path
+          # (mirrors the readiness gate + promotion_lag_monitor.py PM-staging skip).
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+
           # Collect repos being promoted in this run (staging_versions differs from stable)
           promoting = [
               r for r, sv in staging_versions.items()
-              if not r.startswith("_") and sv != stable_versions.get(r)
+              if not r.startswith("_") and r not in MAIN_DIRECT_REPOS and sv != stable_versions.get(r)
           ]
 
           if not promoting:
@@ -458,10 +479,33 @@ jobs:
           # pending without a filter.
           apply_filter = os.environ.get("READY_REPOS_COMPUTED", "") == "1"
 
+          # Main-direct repos (Option-B, no staging branch) are never promoted via staging→main.
+          # Excluding them at the set-build is the authoritative fix for the false-CRITICAL
+          # "Partial Staging Promotion Failure | Failed: unified-trading-pm" alert: PM has no
+          # staging branch, so a `gh pr create --base main --head staging` cannot succeed and the
+          # repo was counted as FAILED every run. (Mirrors the readiness gate + STAGE 1.8 +
+          # promotion_lag_monitor.py.)
+          MAIN_DIRECT_REPOS = {"unified-trading-pm"}
+
+          # Quarantined repos (hit PROMOTION_MAX_ATTEMPTS consecutive failures) are SKIPPED this
+          # + every future run until they next promote successfully — they never re-enter the
+          # FAILED list, so a single permanently-stuck repo can no longer re-fire the CRITICAL
+          # partial-failure alert forever (it was escalated + downgraded to a one-shot WARNING by
+          # the counter step). Auto-cleared on the next success (counter step resets the entry).
+          quarantine = {
+              r for r in m.get("promotion_quarantine", {})
+              if not r.startswith("_")
+          }
+
           # Collect repos where staging_versions differs from versions
           changed = set()
           for repo, sv in staging_versions.items():
               if repo.startswith("_"):
+                  continue
+              if repo in MAIN_DIRECT_REPOS:
+                  continue
+              if repo in quarantine:
+                  print(f"# QUARANTINED (skipped, needs attention): {repo}", file=__import__("sys").stderr)
                   continue
               if sv != stable_versions.get(repo):
                   changed.add(repo)
@@ -625,6 +669,156 @@ jobs:
             echo "These repos may need manual merge conflict resolution."
             echo "To resume: re-run with start_from_repo set to the first failed repo."
           fi
+
+      # ─────────────────────────────────────────────────────────────────────────
+      # QUARANTINE CAP — bound the retry/alert cost of a permanently-stuck repo.
+      #
+      # Problem: the promote step `continue`s past a failed repo (never blocks the queue) and
+      # supports `start_from_repo` resume, but NOTHING stopped a repo that fails EVERY run from
+      # (a) being retried forever AND (b) re-firing the CRITICAL "Partial Staging Promotion
+      # Failure" Slack alert on every run.
+      #
+      # Fix: track CONSECUTIVE promotion failures per repo in the manifest
+      # (`promotion_failures: {repo: count}`). Each run: increment for every repo in the promote
+      # step's FAILED list, reset to 0 for every repo that PROMOTED successfully (auto-clear). On
+      # hitting PROMOTION_MAX_ATTEMPTS (env, default 3) a repo is QUARANTINED
+      # (`promotion_quarantine: {repo: {since, attempts, escalated}}`): the promote-loop builder
+      # SKIPS it on this + every future run (drains the queue, never blocks the rest), it is
+      # escalated to the orchestrator ONCE (idempotent via the per-repo `escalated` flag), and
+      # the recurring CRITICAL alert is DOWNGRADED to a SINGLE one-shot WARNING. Quarantine +
+      # counter auto-clear on the repo's next successful promotion.
+      #
+      # Output partition for the notify jobs:
+      #   unquarantined_failed[_count] = FAILED repos NOT (yet) quarantined → CRITICAL (genuine).
+      #   newly_quarantined            = repos that crossed the threshold THIS run → one WARNING.
+      # ─────────────────────────────────────────────────────────────────────────
+      - name: Quarantine cap — bound consecutive-failure retries + alerts
+        if: always() && steps.idempotency.outputs.idempotent_skip != 'true'
+        id: quarantine
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+          OWNER: ${{ github.repository_owner }}
+          PROMOTED: ${{ steps.promote.outputs.promoted }}
+          FAILED: ${{ steps.promote.outputs.failed }}
+          # Threshold = consecutive failed promotions before a repo is quarantined (skipped +
+          # escalated-once + alert-downgraded). Documented default 3; override via repo/org var.
+          PROMOTION_MAX_ATTEMPTS: ${{ vars.PROMOTION_MAX_ATTEMPTS || '3' }}
+        run: |
+          set -euo pipefail
+
+          python3 - <<'PYEOF'
+          import json, os, subprocess, datetime, sys
+
+          MAX = int(os.environ.get("PROMOTION_MAX_ATTEMPTS", "3") or "3")
+          owner = os.environ.get("OWNER", "IggyIkenna")
+          token = os.environ.get("GH_TOKEN", "")
+          promoted = [r for r in os.environ.get("PROMOTED", "").split() if r]
+          failed = [r for r in os.environ.get("FAILED", "").split() if r]
+
+          with open("workspace-manifest.json") as f:
+              manifest = json.load(f)
+
+          failures = manifest.get("promotion_failures") or {}
+          quarantine = manifest.get("promotion_quarantine") or {}
+          now = datetime.datetime.utcnow().isoformat() + "Z"
+
+          # AUTO-CLEAR: a successful promotion clears both the consecutive-failure counter and any
+          # standing quarantine for that repo (it's healthy again).
+          for repo in promoted:
+              if repo in failures:
+                  print(f"  reset counter (promoted): {repo} ({failures[repo]} → 0)")
+                  failures.pop(repo, None)
+              if repo in quarantine:
+                  print(f"  CLEARED quarantine (promoted): {repo}")
+                  quarantine.pop(repo, None)
+
+          newly_quarantined: list[str] = []
+          # INCREMENT consecutive failures; cross-threshold → quarantine + escalate-once.
+          for repo in failed:
+              # Already quarantined repos are SKIPPED by the promote-loop builder, so they should
+              # not normally re-appear in FAILED — but guard anyway: keep them quarantined, do not
+              # re-escalate, do not double-count.
+              prev = int(failures.get(repo, 0))
+              cur = prev + 1
+              failures[repo] = cur
+              print(f"  consecutive promotion failures: {repo} = {cur}/{MAX}")
+              if cur >= MAX and repo not in quarantine:
+                  quarantine[repo] = {"since": now, "attempts": cur, "escalated": False}
+                  newly_quarantined.append(repo)
+                  print(f"  *** QUARANTINED {repo} after {cur} consecutive failed promotions ***")
+
+          # ESCALATE-ONCE: fire escalate-to-orchestrator (repository_dispatch to PM) for any
+          # quarantined repo whose `escalated` flag is still False. Set the flag ONLY on a dispatch
+          # accepted by GitHub so a transient API failure retries next run (mirrors the watcher's
+          # retry-until-spawn idempotency, but flag lives in the manifest since the workflow is the
+          # actor here, not the stateless watcher).
+          for repo, q in quarantine.items():
+              if q.get("escalated"):
+                  continue
+              context = (
+                  f"staging→main promotion for {repo} has FAILED "
+                  f"{q.get('attempts', MAX)} consecutive runs and is now QUARANTINED (skipped on "
+                  f"future runs to stop blocking the queue + re-firing the partial-failure alert). "
+                  f"Diagnose the staging→main PR for {repo}: most likely a content merge conflict "
+                  f"(staging diverged from main) or a stuck/failing required check. Resolve on "
+                  f"live-defi-rollout, let quality-gates-v2 re-gate, and the next successful "
+                  f"promotion auto-clears the quarantine."
+              )
+              payload = json.dumps({
+                  "event_type": "escalate-to-orchestrator",
+                  "client_payload": {
+                      "repo": repo,
+                      "pr_number": 0,
+                      "wall_type": "sit_failure",
+                      "context": context,
+                      "authoring_slot": "ci",
+                  },
+              })
+              if not token:
+                  print(f"  ! no GH_TOKEN — cannot escalate quarantine for {repo} (retry next run)")
+                  continue
+              proc = subprocess.run(
+                  ["gh", "api", f"repos/{owner}/unified-trading-pm/dispatches", "--input", "-"],
+                  input=payload, capture_output=True, text=True,
+              )
+              if proc.returncode == 0:
+                  q["escalated"] = True
+                  print(f"  -> escalated quarantine for {repo} to orchestrator (once)")
+              else:
+                  print(f"  ! escalate dispatch failed for {repo}: {proc.stderr.strip()[:160]} (retry next run)")
+
+          manifest["promotion_failures"] = failures
+          manifest["promotion_quarantine"] = quarantine
+
+          tmp = "workspace-manifest.json.tmp"
+          with open(tmp, "w") as f:
+              json.dump(manifest, f, indent=2, ensure_ascii=False)
+              f.write("\n")
+          os.replace(tmp, "workspace-manifest.json")
+
+          # Partition the FAILED list for the notify jobs:
+          #   - newly_quarantined → one-shot WARNING (this run only).
+          #   - already-quarantined failures → suppressed entirely (alerted once when they crossed).
+          #   - everything else → genuine actionable failure → CRITICAL.
+          quarantined_set = set(quarantine)
+          unquarantined_failed = [r for r in failed if r not in quarantined_set]
+
+          gh_out = os.environ.get("GITHUB_OUTPUT", "")
+          if gh_out:
+              with open(gh_out, "a") as out:
+                  out.write(f"unquarantined_failed={' '.join(unquarantined_failed)}\n")
+                  out.write(f"unquarantined_failed_count={len(unquarantined_failed)}\n")
+                  out.write(f"newly_quarantined={' '.join(newly_quarantined)}\n")
+                  out.write(f"quarantine_threshold={MAX}\n")
+
+          print()
+          print("=== Quarantine summary ===")
+          print(f"  threshold (PROMOTION_MAX_ATTEMPTS): {MAX}")
+          print(f"  consecutive-failure counters: {failures}")
+          print(f"  quarantined repos: {sorted(quarantined_set)}")
+          print(f"  newly quarantined this run: {newly_quarantined}")
+          print(f"  genuine (unquarantined) failures → CRITICAL: {unquarantined_failed}")
+          PYEOF
 
       - name: Record promotion progress in manifest
         if: always() && steps.idempotency.outputs.idempotent_skip != 'true'
@@ -976,16 +1170,48 @@ jobs:
   notify-partial-failure:
     name: Slack — Partial Promotion Failure
     needs: [promote-staging-to-main]
+    # CRITICAL only on GENUINE, NOT-yet-quarantined failures (steps.quarantine partitions the
+    # promote step's FAILED list). A repo that has hit PROMOTION_MAX_ATTEMPTS is escalated +
+    # downgraded to the one-shot WARNING below — it no longer re-fires this CRITICAL every run.
+    # Falls back to the raw failed_count when the quarantine step produced no output (e.g. it
+    # didn't run / errored before writing) so a real failure is never silently swallowed.
     if:
-      always() && needs.promote-staging-to-main.outputs.failed_count != '0' &&
-      needs.promote-staging-to-main.outputs.failed_count != ''
+      always() && ((needs.promote-staging-to-main.outputs.unquarantined_failed_count != '0' &&
+      needs.promote-staging-to-main.outputs.unquarantined_failed_count != '') ||
+      (needs.promote-staging-to-main.outputs.unquarantined_failed_count == '' &&
+      needs.promote-staging-to-main.outputs.failed_count != '0' && needs.promote-staging-to-main.outputs.failed_count !=
+      ''))
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
         "Partial Staging Promotion Failure | Promoted: ${{ needs.promote-staging-to-main.outputs.promoted_count }} |
-        Failed: ${{ needs.promote-staging-to-main.outputs.failed_count }} | Failed repos: ${{
-        needs.promote-staging-to-main.outputs.failed }}"
+        Failed (unquarantined): ${{ needs.promote-staging-to-main.outputs.unquarantined_failed_count ||
+        needs.promote-staging-to-main.outputs.failed_count }} | Failed repos: ${{
+        needs.promote-staging-to-main.outputs.unquarantined_failed || needs.promote-staging-to-main.outputs.failed }}"
       severity: "CRITICAL"
+      conclusion: "failure"
+      workflow_name: ${{ github.workflow }}
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    secrets: inherit
+
+  notify-quarantine:
+    name: Slack — Repo Quarantined
+    needs: [promote-staging-to-main]
+    # ONE-SHOT WARNING the run a repo crosses PROMOTION_MAX_ATTEMPTS. It is now SKIPPED on every
+    # future run (queue unblocked) + escalated once to the orchestrator — so the recurring
+    # CRITICAL is replaced by this single, actionable WARNING. Fires only when at least one repo
+    # was newly quarantined this run.
+    if:
+      always() && needs.promote-staging-to-main.outputs.newly_quarantined != '' &&
+      needs.promote-staging-to-main.outputs.newly_quarantined != ' '
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message:
+        "Repo quarantined after ${{ needs.promote-staging-to-main.outputs.quarantine_threshold }} failed staging→main
+        promotions, needs attention | Quarantined: ${{ needs.promote-staging-to-main.outputs.newly_quarantined }} |
+        Skipped on future runs (queue unblocked) + escalated to orchestrator once. Auto-clears on next successful
+        promotion."
+      severity: "WARNING"
       conclusion: "failure"
       workflow_name: ${{ github.workflow }}
       run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
@@ -994,14 +1220,18 @@ jobs:
   notify-promotion-complete:
     name: Slack — Staging Promotion
     needs: [promote-staging-to-main]
-    # Posts whenever the partial-failure notifier did NOT (failed_count 0/empty). The
-    # message + severity must be TRUTHFUL to the job RESULT — a job can fail (a step erroring
-    # BEFORE failed_count is set) even with failed_count empty, so a hardcoded "complete" /
-    # INFO would read as success on a failed run (the exact 2026-06-07 bug). notify-slack.yml
-    # also truthful-classifies severity from `conclusion`, but we make the BODY honest too.
+    # Posts whenever there are NO genuine (unquarantined) failures. The message + severity must be
+    # TRUTHFUL to the job RESULT — a job can fail (a step erroring BEFORE failed_count is set) even
+    # with failed_count empty, so a hardcoded "complete" / INFO would read as success on a failed
+    # run (the exact 2026-06-07 bug). notify-slack.yml also truthful-classifies severity from
+    # `conclusion`, but we make the BODY honest too. Uses the SAME partition as the CRITICAL job
+    # (unquarantined first, raw failed_count fallback) so the two are mutually exclusive: a
+    # quarantine-only run (no genuine failures) reports complete here, the WARNING fires separately.
     if:
-      always() && (needs.promote-staging-to-main.outputs.failed_count == '0' ||
-      needs.promote-staging-to-main.outputs.failed_count == '')
+      always() && ((needs.promote-staging-to-main.outputs.unquarantined_failed_count == '0') ||
+      (needs.promote-staging-to-main.outputs.unquarantined_failed_count == '' &&
+      (needs.promote-staging-to-main.outputs.failed_count == '0' || needs.promote-staging-to-main.outputs.failed_count
+      == '')))
     uses: ./.github/workflows/notify-slack.yml
     with:
       message:
@@ -1018,7 +1248,7 @@ jobs:
 
   persist:
     name: Persist — Staging Promotion Event
-    needs: [promote-staging-to-main, notify-partial-failure, notify-promotion-complete]
+    needs: [promote-staging-to-main, notify-partial-failure, notify-quarantine, notify-promotion-complete]
     if: always()
     uses: ./.github/workflows/persist-cicd-event.yml
     secrets: inherit
