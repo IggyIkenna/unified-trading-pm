@@ -116,7 +116,7 @@ jobs:
 
       - name: Cache tools (ripgrep, shellcheck, bats, actionlint)
         id: tools-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.local/act-tools
           key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4

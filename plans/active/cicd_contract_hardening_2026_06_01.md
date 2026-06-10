@@ -438,7 +438,7 @@ what the operator is seeing:
       their own v2 check → the deadlock cannot recur. **Anti-pattern avoided** (operator flag 2026-06-09): the iterative
       manual `chore(ci): re-trigger v2` commits / `workflow_dispatch` re-fires do NOT stick (outrun by the next
       `[skip ci]` bump, land on other SHAs) — the durable fix is Option C ON MAIN, done here, not re-triggering.
-- [ ] [SCRIPT] P1. **(superseded — historical)** PERMANENT FIX for the `[skip ci]`-bump-head `(B)` class above — stop
+- [x] ✅ [SCRIPT] P1. **(superseded — historical) — SUPERSEDED BY the Option-C item above (semver `[skip ci]`-drop + `metadata_only` short-circuit) which LANDED + ROLLED OUT FLEET-WIDE 2026-06-09; verified 2026-06-10.** PERMANENT FIX for the `[skip ci]`-bump-head `(B)` class above — stop
       semver-agent producing the v2-never-reported promotion deadlock at the source (Option C, migrated from
       `plans/active/issues/semver_version_bump_skip_ci_promotion_block_2026_06_09.md`).** The bump lands as a separate
       `chore(release): bump version to X [skip ci]` commit on `staging`; because staging→main is a
@@ -475,7 +475,7 @@ what the operator is seeing:
       `--escalate` to rebase → **leave `--auto-recover` in place as a now-rarely-triggered backstop; it is NOT dead
       code.** Net change here = the `(B)` re-roll/re-run remedy in the item above stops being the routine path for
       semver bumps. repo: unified-trading-pm.
-- [ ] [SCRIPT] P1. **LIVE FINDING 2026-06-09: `--auto-recover` close+reopen is INEFFECTIVE against a `[skip ci]` head —
+- [x] ✅ [SCRIPT] P1. **SUPERSEDED BY the canonical `auto_recover_stuck_prs` `[skip ci]`-head refine item (line ~4380), where this finding is the design rationale; dedup/verified 2026-06-10.** LIVE FINDING 2026-06-09: `--auto-recover` close+reopen is INEFFECTIVE against a `[skip ci]` head —
       reinforces that Option C is the ONLY real fix.** Investigating the staging-locked cascade, execution-service PR
       #231 (staging→main, head `chore(deps): pin unified-api-contracts to 0.3.0 [skip ci]`) was the textbook
       v2-never-reported deadlock (`MERGEABLE` + `BLOCKED`, 0 checks, stuck 222m). Ran
@@ -536,13 +536,13 @@ what the operator is seeing:
       `actions/checkout@v4` + `actions/setup-python@v5` run on Node 20. Bumped to the Node24 majors
       `actions/checkout@v5` + `actions/setup-python@v6` across all 40 PM workflows (57 checkout + 10 setup-python refs)
       AND the workflow-template SSOT (`scripts/workflow-templates/`), all yaml valid. `unified-trading-pm@<node-bump>`.
-- [ ] [DEVOPS] P1. **Node.js 20 action deprecation — FLEET ROLLOUT to all ~25 repos (before 2026-06-16).** Every repo's
-      `.github/workflows/*.yml` still carries `actions/checkout@v4` / `actions/setup-python@v5` (+ possibly
-      `actions/setup-node@v4`). The PM templates are now bumped, so
-      `bash scripts/workflow-templates/rollout-workflow-templates.sh` propagates the templated ones; the NON-templated
-      per-repo workflows need a fleet sweep (same sed: `checkout@v4→v5`, `setup-python@v5→v6`, `setup-node@v4→v5`). Then
-      verify each repo's next workflow run has no Node-20 deprecation warning. repo: ALL (fleet-wide branch of cicd
-      hardening).
+- [x] ✅ [DEVOPS] P1. **DONE 2026-06-10 — big-3 fleet sweep complete; 0 node20 big-3 refs remain fleet-wide.** Bumped the
+      remaining 15 non-templated per-repo workflows (`checkout@v4→v5`, `setup-python@v5→v6`, `setup-node@v4→v5`) across
+      9 repos (deployment-ui@f110ca5, execution-service@c637f7d, features-service@5540640, fund-administration@94d01f1,
+      instruments-service@e2bf38d, market-data-processing@22c83db, market-tick-data@557a3bf, strategy-service@f687b50,
+      unified-trading-system-ui@e14089b) — templated workflows + 7 repos were done earlier (2026-06-08). actionlint clean
+      on all; `grep checkout@v4|setup-python@v5|setup-node@v4` = 0 fleet-wide. All node24 majors, input-compatible
+      (setup-node auto-cache safe — no `packageManager` field). repo: ALL.
 - [x] ✅ [DEVOPS] P1. **deployment-service tab-mirror `div_hosts: unbound variable` on main — fix PR opened (CI-watcher
       alert 2026-06-08 10:09).** REAL: deployment-service `main` still ran the pre-fix tab-mirror (raw
       `${#div_hosts[@]}` under `set -u`) — the `set +u`/`div_hosts_n` guard was on `live-defi-rollout` but
@@ -583,12 +583,12 @@ repos actually under SIT, not all of staging.**
    push with `GH_PAT` (the P2 in `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md`) removes the workaround;
    the scoped lock (#1) also reduces reliance on the unlock re-run (fewer repos block in the first place).
 
-- [ ] [SCRIPT] P0. **Scoped staging-lock-check** — land the drafted `staging-lock-check.yml` change (block iff
+- [x] ✅ [SCRIPT] P0. **SUPERSEDED BY item #1 (line ~267, "Scoped staging-lock-check (#1)") which is the same work + tracks the remaining circular admin-bootstrap rollout; dedup 2026-06-10.** Scoped staging-lock-check — land the drafted `staging-lock-check.yml` change (block iff
       `locked && repo ∈ pending_repos`) as a **coordinated fleet batch** (PM SSOT + all 15 staging-repo copies on `main`
       together — same parity coupling as the tab-mirror Route-B, else `detect_template_drift` flips PM `main` RED). It
       is also a **required check on each `staging` ruleset**, so verify the gate name is unchanged. repo: agent does PM
       template + `rollout-workflow-templates.sh --template staging-lock-check.yml` + the coordinated main rollout.
-- [ ] [SCRIPT] P1. **FF/rebase promote** — switch `ldr-to-staging-promote.yml` + `staging-to-main.yml` from
+- [x] ✅ [SCRIPT] P1. **SUPERSEDED BY item #2 (line ~264, "FF/rebase promote (#2) — DONE", `unified-trading-pm@0a76d0103`); dedup 2026-06-10.** FF/rebase promote — switch `ldr-to-staging-promote.yml` + `staging-to-main.yml` from
       `gh pr merge --merge` to `--rebase` so staging never diverges from LDR (kills the BEHIND class). Roll out with #1.
 
 ## 🎯 ONE-PROMOTE-CYCLE STRATEGY — land ALL code-doable CI/CD work, then a single fleet promote (operator 2026-06-06)
@@ -1357,7 +1357,7 @@ machinery):
       `base-library.sh:729` (joining the 4 already curated) — on PM **main**, so every repo's dep-cloned v2 sees it →
       pip-audit unblocked fleet-wide → v2 passes → promotions resume + **PM #120 MERGED** (Guard-3 serialization +
       FEATURE→STAGING auto-advance now LIVE on main). Cascade resumed (≥STAGING_GREEN 10→12).
-- [ ] [INFRA] P2. **TRACKED-FOR-REMOVAL: drop the aiohttp `--ignore-vuln` entries when a patched aiohttp 3.13.x ships.**
+- [ ] [INFRA] P2. **[BLOCKED-UPSTREAM — standing operator pin; LEAVE OPEN until a patched aiohttp 3.13.x in-range ships, per the CLAUDE.md "aiohttp <3.14 KNOWN EXCEPTION". Not actionable in the 2026-06-10 autonomous cycle — no in-range fix exists yet.] TRACKED-FOR-REMOVAL: drop the aiohttp `--ignore-vuln` entries when a patched aiohttp 3.13.x ships.**
       CVE-2026-34993 + CVE-2026-47265 are ignored (no fix at 2026-06-04) in `base-service.sh:926` +
       `base-library.sh:729`. When aiohttp publishes a patched release in-range (`>=…,<4.0.0`), bump
       `workspace-constraints.toml:8` + `uv lock` re-lock fleet-wide AND remove the two `--ignore-vuln` flags (don't
@@ -2324,9 +2324,10 @@ CI/CD target state (`full_cicd_sit_target_state_2026_05_24.md` Tiers A–E) is t
 embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays owned by
 `defi_manifest_canonicalisation_2026_06_01.md` (already tracked there).
 
-- [ ] [AGENT] P0. Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks) — per-repo CI on LDR green +
-      a real signal (audit i5). **→ consolidated into § "CI/CD Observability + Reconciliation Hardening" D; track
-      there.**
+- [x] ✅ [AGENT] P0. Tier A: LDR-CI-red monitoring/ping (so red is fixed in hours, not weeks) — per-repo CI on LDR green +
+      a real signal (audit i5). **CONSOLIDATED INTO + DONE via § "CI/CD Observability + Reconciliation Hardening" item D
+      (line ~2479, already `[x] ✅`): `ldr-ci-monitor.yml` live + `ci-status-reconciler.yml` (\*/10m) reconciles LDR drift
+      → Slack `#ci-failures`. Verified 2026-06-10.**
 - [~] Tier B: full-workspace cross-repo SIT job **BUILT** (`system-integration-tests@f881579`: nightly 03:00 UTC +
   `workflow_dispatch` + `repository_dispatch[full-workspace-sit]`). Remaining: confirm the workflow on a live trigger;
   wire the Tier-C promotion-gate to read its result (audit j2).
@@ -3951,7 +3952,7 @@ via **PM #165** (cherry-pick `c61b37f78`). This is the fix that makes the cascad
       stale `staging_status`.** quickmerge now reads main (fixed), but other local readers could still see drift.
       Options: stop `[skip ci]`-ing the lock toggle (noisy), or have the back-merge force-sync `staging_status` from
       main on a schedule. repo: unified-trading-pm. Provenance: slot-1 2026-06-07.
-- [ ] [INFRA] P3. **2 baselined workflow-template warns remain** (non-blocking) beyond the mdps major-bump NEW-drift
+- [x] ✅ [INFRA] P3. **SUPERSEDED BY H4 (line ~3388, `tab-mirror-to-ldr.yml` template drift) which owns the remaining template-drift fleet rollout that ratchets the baseline to 0; dedup 2026-06-10.** 2 baselined workflow-template warns remain (non-blocking) beyond the mdps major-bump NEW-drift
       fixed this session — finish the H4 fleet rollout for the other warned templates/repos so the baseline ratchets
       to 0. repo: unified-trading-pm + drifted consumers. Provenance: slot-1 2026-06-07 `detect_template_drift.py`.
 - **NOT MINE (left in place):** PM #164 (`tab/ikennaigboaka/5`, slot-5's `docs(plans)` PR to main) is DIRTY vs main —
@@ -4045,7 +4046,7 @@ been the sole required check fleet-wide for weeks.
 
 ### 🆕 Durable findings (track to closure)
 
-- [ ] [DATA] P0. **UAC+UTL `BATCH_HYPERLIQUID` enum migration is half-promoted — main lags coherently.**
+- [ ] [DATA] P0. **[OUT-OF-SCOPE for this CI/CD-hardening track — this is a data/features enum-migration promotion owned by the data track; explicitly NOT dispatched by the 2026-06-10 autonomous cicd cycle. Left OPEN (not flipped) because the data is genuinely not yet promoted; do NOT mark done from this track.] UAC+UTL `BATCH_HYPERLIQUID` enum migration is half-promoted — main lags coherently.**
       `BATCH_HYPERLIQUID_REST`→`BATCH_HYPERLIQUID` (incl. the value `batch_hyperliquid_rest`→`batch_hyperliquid`) is
       complete on LDR+staging for BOTH unified-api-contracts (main 14 behind) AND unified-trading-library (main 8
       behind), but main still has the old member for both. Because the QG dep-clone resolves deps at
@@ -4230,18 +4231,38 @@ Bumping only the big-3 does NOT clear Node-20 warnings — ~10 more JS actions a
 a blind sweep. Method per action: bump named files → verify diff → prek-gated commit → SSH push (templated copies via PM
 rollout, never per-repo).
 
-- [ ] [SCRIPT] P1. `google-github-actions/auth` v2→**v3** (12 refs) — ⚠️ BREAKING (release note: "Bump to Node 24 and
-      remove old parameters"); GCP-auth critical path (incl. `persist-cicd-event`). Review removed params + smoke GCP
-      auth before the fleet bump.
-- [ ] [SCRIPT] P1. `actions/upload-artifact` v4→**v7** (15 refs) — ⚠️ 3 major jumps (artifact immutability + naming
-      changed across v5–v7). Read v5/v6/v7 changelogs; `v3.2.2-node20` is the escape hatch if a v7 break blocks.
-- [ ] [SCRIPT] P2. `google-github-actions/setup-gcloud` v2→**v3** (7 refs) — likely breaking (mirrors `auth`).
-- [ ] [SCRIPT] P2. `astral-sh/setup-uv` v5→**v8** (7 refs).
-- [ ] [SCRIPT] P2. `actions/github-script` v7→**v8/v9** (5 refs) — node24 since v8; verify `script:` arg compat.
-- [ ] [SCRIPT] P2. `actions/cache`@v4, `actions/download-artifact`@v4, `pnpm/action-setup`@v2/v4,
-      `aws-actions/configure-aws-credentials`@v4, `dawidd6/action-download-artifact`@v6,
-      `peter-evans/repository-dispatch`@v3, `stefanzweifel/git-auto-commit-action`@v5 (1–5 refs each) — all node20;
-      confirm each one's node24-major target then bump.
+> **✅ DONE 2026-06-10 (Opus autonomous session) — all second-tier bumps landed fleet-wide on LDR + STATICALLY PROVEN
+> SAFE + LIVE-SMOKED.** Method per RULE 11a: for EACH action I diffed `action.yml` inputs across the version gap
+> (`gh api repos/<a>/compare/<v_old>...<v_new>`) and audited EVERY fleet usage against the removed inputs. Result: the
+> ONLY removed inputs across all actions are `auth`={`retries`,`backoff`,`backoff_limit`} and
+> `setup-gcloud`={`skip_tool_cache`} — **NONE used by any of the 13/7/… fleet usages** (every `auth` call passes only
+> `workload_identity_provider`+`service_account` or `credentials_json`; no usage passes the removed retry/cache params).
+> upload-artifact names are all run-id/version-unique (no immutability collision). So the bump CANNOT fail any repo on a
+> removed input — RULE-11a "can't fail them" satisfied. actionlint clean on all 48 changed workflow files. **LIVE SMOKE
+> (real CI runs on LDR):** auth@v3 — execution-service `benchmarks` "Authenticate to GCP (SA key) = success";
+> upload-artifact@v7 — "Upload = success" on execution-service + strategy-service `agent-audit`; github-script@v9 +
+> setup-uv@v8 — PM `cassette-drift-check` SUCCESS. Pushed to all consumer repos' LDR (per-repo shas in the session log).
+
+- [x] ✅ [SCRIPT] P1. `google-github-actions/auth` v2→**v3** — DONE (13 refs). Removed inputs (retries/backoff/
+      backoff_limit) unused fleet-wide; WIF + credentials_json params unchanged in v3. SMOKED green (execution-service
+      benchmarks `Authenticate to GCP = success`).
+- [x] ✅ [SCRIPT] P1. `actions/upload-artifact` v4→**v7** — DONE (15 refs). No inputs removed (only `archive:` added);
+      all artifact names run-id/version-unique → no immutability collision. SMOKED green (3 runs `Upload = success`).
+- [x] ✅ [SCRIPT] P2. `google-github-actions/setup-gcloud` v2→**v3** — DONE (7 refs). Removed `skip_tool_cache` not used
+      by any of the 7 usages.
+- [x] ✅ [SCRIPT] P2. `astral-sh/setup-uv` v5→**v8** — DONE (template `update-dependency-version.yml` via rollout to 24
+      repos + PM `update-repo-version.yml`). No inputs removed; usages pass no inputs. SMOKED green (PM `Install uv`).
+- [x] ✅ [SCRIPT] P2. `actions/github-script` v7→**v9** — DONE (4 refs). No inputs removed; node24. SMOKED green (PM
+      cassette-drift `github-script` step ran, workflow SUCCESS).
+- [x] ✅ [SCRIPT] P2. `actions/cache`@v4→**v5**, `actions/download-artifact`@v4→**v8** — DONE (no inputs removed,
+      node24).
+- [ ] [SCRIPT] P3. **Misc-tail actions — NOT blind-bumped (need per-action breaking review; deliberately scoped out of
+      the 2026-06-10 sweep per "confirm each one's node24-major target then bump, NOT a blind sweep").** Live refs +
+      latest majors identified 2026-06-10: `pnpm/action-setup`@v2/@v4→v6 (5 refs); `aws-actions/configure-aws-credentials`@v4→v6
+      (1, deploy path); `dawidd6/action-download-artifact`@v6→**v21** (2 — 15-major jump, must read changelog);
+      `peter-evans/repository-dispatch`@v3→v4 (1); `stefanzweifel/git-auto-commit-action`@v5→v7 (2, modifies commits).
+      Low-count P2/P3 tail — NOT on the node20-cliff critical path (the big-3 + main second-tier cleared the bulk +
+      smoked). Each needs a changelog read + single test push before bumping. repo: per-repo workflows.
 - `codecov/codecov-action`@v5 = **composite**, UNAFFECTED (no `using: node20`).
 
 ### Steps 2-3 DONE + workflows RE-ENABLED — 2026-06-08 (slot-1)
@@ -4377,13 +4398,16 @@ Operator 2026-06-09 surfaced the gap: **MTDS QG is RED on UAC version-alignment 
   `gh workflow run quality-gates-v2.yml --ref staging` (workflow_dispatch IGNORES `[skip ci]`, so the required check
   reports on the bump head → PR merges → UAC main = 0.2.1).
 
-- [ ] [INFRA] P1. **`ci-failure-watcher --auto-recover` close+reopen does NOT fix the `[skip ci]`-HEAD deadlock
-      variant** (only the token-suppressed-`pull_request` variant). `[skip ci]` suppresses BOTH `push` AND
-      `pull_request` events, so reopening a `[skip ci]`-head PR still emits no v2 run. Refine
-      `auto_recover_stuck_prs()`: when the stuck PR's head commit message contains `[skip ci]`/`[ci skip]`, recover via
-      `gh workflow run quality-gates-v2.yml --ref <head-branch>` (workflow_dispatch) INSTEAD of close+reopen. Add a unit
-      test for the `[skip ci]`-head branch.
-- [ ] [INFRA] P1. **Semver minor bumps recurrently deadlock `staging→main`** because the `[skip ci]` bump commit becomes
+- [x] ✅ [INFRA] P1. **LANDED 2026-06-10 (PM@9ad60ee07).** `ci-failure-watcher --auto-recover` close+reopen does NOT
+      fix the `[skip ci]`-HEAD deadlock variant (only the token-suppressed-`pull_request` variant). `[skip ci]`
+      suppresses BOTH `push` AND `pull_request` events, so reopening a `[skip ci]`-head PR still emits no v2 run. FIX:
+      `detect_stuck_prs()` now captures the head commit message (added `commits` to the `gh pr list --json`);
+      `auto_recover_stuck_prs()` branches — a `[skip ci]`/`[ci skip]` head recovers via
+      `gh workflow run quality-gates-v2.yml --ref <head-branch>` (workflow_dispatch, not subject to `[skip ci]`) INSTEAD
+      of the ineffective close+reopen; non-skip-ci heads keep close+reopen. +4 unit tests (skip-ci-qualifies,
+      dispatch-not-reopen, ci-skip-variant, normal-head-still-close-reopen) → 10/10 green; ruff + basedpyright clean.
+      This automates the manual `gh workflow run` recovery performed ~4× by hand during the 2026-06-10 incident.
+- [x] ✅ [INFRA] P1. **SUPERSEDED BY the canonical `[skip ci]`-head fix (line ~4380, `auto_recover_stuck_prs` workflow_dispatch) + Option C (semver `[skip ci]`-drop, landed+rolled-out 2026-06-09); dedup 2026-06-10.** Semver minor bumps recurrently deadlock `staging→main` because the `[skip ci]` bump commit becomes
       the promotion-PR head. Durable fix options: (a) the version-bump flow auto-fires v2 on the bump head, or (b)
       `staging-to-main`/`ldr-to-staging-promote` detect a `[skip ci]` head and `workflow_dispatch` v2 (mirror of the
       `ldr-to-main-promote` self-recover, but workflow_dispatch not close+reopen). Pick one, wire fleet-wide.
@@ -4461,7 +4485,7 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
 
 - [x] **Task 1 — exclude PM (main-direct) from the staging→main promotion set.** Root-caused from run `27243592803`
       (conclusion=success but `notify-partial-failure` RAN → CRITICAL): the promote step logged
-      `Failed (1):     unified-trading-pm`. PM is Option-B (no `staging` branch — `gh api .../branches/staging` → 404
+      `Failed (1): unified-trading-pm`. PM is Option-B (no `staging` branch — `gh api .../branches/staging` → 404
       confirmed), yet its `staging_versions` (1.2.45) ≠ `versions` (1.2.58) put it in the `promoting`/`changed` set; the
       `gh pr create --base main --head staging` then could not succeed → counted as FAILED every run. **Fix:** a
       `MAIN_DIRECT_REPOS = {"unified-trading-pm"}` exclusion added in ALL THREE places that build the promote set — the
@@ -4487,3 +4511,88 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       **Proven:** unit-tested the exact counter/skip/ escalate-once/auto-clear logic across 5 simulated runs
       (fail×3→quarantine+escalate-once→skip-forever→success- auto-clears); CRITICAL goes silent once quarantined,
       WARNING fires once. `actionlint .github/workflows/     staging-to-main.yml` exit 0. — unified-trading-pm@2ebd75b9b
+
+> **Tasks 1+2 ON MAIN (confirmed 2026-06-10):** the `staging-to-main.yml` change rode the PM Option-B standing LDR→main
+> PR (merged by `ldr-to-main-promote` run @01:18Z) → PM `main` now carries all 3 `MAIN_DIRECT_REPOS` exclusions + the
+> `Quarantine cap` step + the `notify-quarantine` job (`promotion_quarantine`/`unquarantined_failed_count` present on
+> `main`; LDR==main for this file, no drift). The fixed promoter runs on the next `staging-validated` dispatch — the
+> false-CRITICAL `Failed: unified-trading-pm` no longer fires. — unified-trading-pm@2ebd75b9b (on main)
+
+### Tasks 3+4 — same session (2026-06-10, slot-1)
+
+- [x] **Task 3 — RESOLVED bookend VERIFIED firing (no fix needed).** Ran
+      `ci_failure_watcher.py --repo <ui-repo>     --resolved-hours 2` as a local dry-run (no `GITHUB_OUTPUT` → prints
+      report, posts nothing; no `--escalate` → no dispatch). Both UI promotion PRs merged ~00:59–01:03Z rendered the
+      bookend:
+      `:ballot_box_with_check: 1 promotion PR(s) RESOLVED (merged/closed): deployment-ui #35 live-defi-rollout→main     merged`
+      and `unified-trading-system-ui #32 live-defi-rollout→main merged`. The `mergedAt` fix (line ~362, was the invalid
+      `merged` field that 404'd the whole query) is live and the merged/closed verb resolves correctly. The bookend
+      posts as INFO + still triggers the notify (build_report returns alert-or-resolved True). No code change.
+- [ ] **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard path).** Marker
+      state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard `ldr-to-staging-promote` had already
+      opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they were stuck: ml-service #15 had
+      **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but the v2 `workflow_dispatch` run
+      on the SAME SHA `766207b8` SUCCEEDED, confirming the code is green, just dep-clone WARN noise on the PR-event
+      run); deployment-service #39 had auto-merge ON but **v2 had never reported on its head `3313121c`** (empty rollup
+      = v2-never-reported deadlock; AWS CodeBuild was the only status and it is NOT a required context — only
+      `Quality Gates (deployment-service) / quality-gates-v2` is required on staging, confirmed via ruleset + classic).
+      **Actions (standard-path unstick, NOT hand-merge):** re-triggered `quality-gates-v2.yml --ref live-defi-rollout`
+      on both heads; enabled auto-merge (`gh pr merge 15 --auto --squash`) on ml-service #15. **Result so far:**
+      ml-service #15 **MERGED** → `SPURIOUS=1` now on **ml-service staging** (✓ LDR→staging done); deployment-service
+      #39 still OPEN + auto-merge ON with v2 in-progress on `3313121c` (will merge on green). **Remaining:** both still
+      need staging→main (SIT-driven `staging-validated` → `staging-to-main.yml`) to land the marker on `main`.
+      Monitoring the marker reach `main` for both. (deployment-api already had it on main per dispatch context.)
+
+#### Task 4 — drain progress (2026-06-10 01:28Z)
+
+Both LDR→staging legs now DONE → `SPURIOUS 0.0.0` on **staging** for BOTH repos (deployment-service + ml-service =1
+each, `grep -cF`). How each cleared:
+
+- **ml-service #15 (LDR→staging)**: enabling auto-merge (`gh pr merge 15 --auto --squash`) merged it once the green
+  required `quality-gates-v2` (the `workflow_dispatch` v2 run on the head was SUCCESS — the earlier `pull_request` v2
+  failures were dep-clone WARN noise, not a real break) was recognised. → staging=1.
+- **deployment-service #39 (LDR→staging)**: was `BLOCKED` with auto-merge ON but v2 had never reported on the head + a
+  NON-required `AWS CodeBuild ap-northeast-1` legacy status was `failure` (kept mergeStateStatus=BLOCKED). Re-triggered
+  `quality-gates-v2.yml --ref live-defi-rollout` → it reported SUCCESS on the head; the ONLY required check on
+  deployment-service `staging` is `Quality Gates (deployment-service) / quality-gates-v2` (classic protection,
+  `strict=false`, `enforce_admins=false`; the `require-quality-gates` RULESET targets `~DEFAULT_BRANCH`=main, not
+  staging) — AWS CodeBuild is non-required noise. With the required gate green I admin-merged
+  (`gh pr merge 39 --squash --admin`, sanctioned under autonomous rule 10: drive the machinery when the required gate is
+  green). → staging=1. **NOTE for future drains: deployment-service's AWS CodeBuild check is failing (pre-existing,
+  non-required) — out of this task's scope but worth a look.**
+
+**staging→main (final leg, IN-FLIGHT):** manifest `staging_status.locked=True` (reason "Breaking MINOR bump cascade:
+deployment-service=0.7.0") with BOTH repos in `staging_versions` (deployment-service 0.7.0≠0.2.0, ml-service
+0.2.0≠None). Per autonomous rule 10 (don't wait passively for the debounce cron), manually triggered the SIT
+`smoke-test-gate.yml` (workflow_dispatch, started 01:28:17Z) — on pass it dispatches `staging-validated` →
+`staging-to-main.yml` (the FIXED version now on PM main, so it no longer false-fails on PM) → marker lands on `main`.
+Background monitor `/tmp/marker_monitor.sh` watches `SPURIOUS 0.0.0` reach `main` for both (progress metric:
+staging→main counts).
+
+## 🟢 Progress Log — 2026-06-10 autonomous finish-to-DONE session (Opus, slot-1, append-only)
+
+Operator dispatched an autonomous finish-to-DONE pass over the CI/CD + QG + orchestrator plan cluster. PHASE 0
+bookkeeping reconciliation for THIS plan (verify-then-flip / dedup, per the dispatch's Phase-0 map):
+
+- **Dedup/superseded flips (0b)** — verified the canonical item is done/tracked, flipped the duplicate to `[x] ✅` with a
+  `SUPERSEDED BY …` pointer (NO re-implementation):
+  - line ~441 `(superseded — historical)` PERMANENT-FIX → SUPERSEDED BY the Option-C item (landed+rolled-out 2026-06-09).
+  - line ~478 `--auto-recover INEFFECTIVE` finding → SUPERSEDED BY the canonical `auto_recover_stuck_prs` `[skip ci]`-head
+    refine item (~4380), where the finding is the design rationale.
+  - line ~586 `Scoped staging-lock-check` (dup) → SUPERSEDED BY item #1 (~267, same work + tracks the circular rollout).
+  - line ~591 `FF/rebase promote` (dup) → SUPERSEDED BY item #2 (~264, DONE `unified-trading-pm@0a76d0103`).
+  - line ~3954 `2 baselined template warns` → SUPERSEDED BY H4 (~3388, owns the template-drift fleet rollout).
+  - line ~4386 `Semver minor bumps deadlock` → SUPERSEDED BY the `[skip ci]`-head fix (~4380) + Option C.
+- **Tier-A consolidated-pointer flip (0a)** — line ~2327 `Tier A: LDR-CI-red monitoring/ping → consolidated into D`:
+  verified item D (~2479) is already `[x] ✅` AND `ldr-ci-monitor.yml` + `ci-status-reconciler.yml` (\*/10m) are live in
+  `.github/workflows/`. Flipped to `[x] ✅` (CONSOLIDATED INTO + DONE via D).
+- **Left OPEN with honesty annotations (NOT flipped):**
+  - line ~1360 aiohttp `--ignore-vuln` removal → `[BLOCKED-UPSTREAM — standing operator pin]`; no in-range aiohttp 3.13.x
+    fix exists, so per the CLAUDE.md "aiohttp <3.14 KNOWN EXCEPTION" it correctly stays open. Not actionable this cycle.
+  - line ~4048 `BATCH_HYPERLIQUID` enum migration → `[OUT-OF-SCOPE for the CI/CD-hardening track — data/features owns it]`.
+    Left OPEN (data genuinely not yet promoted); deliberately NOT marked done from this track.
+
+Remaining genuinely-open cicd items are gated on **live infra this laptop slot cannot reach** (vm-planning DOWN; vm-0
+non-SSM redeploy; admin-bootstrap fleet rollouts) or are tracked under their canonical item — see the session-end
+completion report. Code-doable residual (e.g. `auto_recover_stuck_prs` `[skip ci]`-head refine ~4380, GHA version bumps
+~4233-4241) handled in the same session's Phase 1/2 — flipped there with `repo@sha`.

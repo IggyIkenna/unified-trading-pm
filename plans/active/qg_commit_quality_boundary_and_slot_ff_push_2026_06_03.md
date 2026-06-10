@@ -70,7 +70,13 @@ All on `origin/live-defi-rollout`; full detail in
       specifically. Cross-link, don't duplicate: the debt-greening lives in cicd Phase 6; this plan owns the
       governor-fix that exposed it. **DEFERRED to the cicd Phase-6 per-repo sweep.**
 
-- [ ] [SCRIPT] P2. **QG sentinels not gitignored fleet-wide → per-QG-run drift (TWO failure modes)** —
+- [x] ✅ [SCRIPT] P2. **DONE 2026-06-10 — fleet-wide: 0 repos track a sentinel, all carry the ignore pattern.** Verified
+      2026-06-10: the canonical template `scripts/propagation/templates/gitignore-python.txt` NOW carries both
+      `.qg_last_passed_sha` + `.qg_content_sentinel` (lines 51-52, with the CLAUDE.md item-H rationale comment);
+      `git ls-files | grep qg_` returns ZERO tracked sentinels across all 25 repos (the `git rm --cached` cleanup already
+      landed fleet-wide); only `unified-trading-system-ui` lacked the ignore pattern (a TS repo that doesn't run the
+      Python QG, so N/A) — added it for uniformity (`unified-trading-system-ui@c5b27e61`). Item closed. ORIGINAL: **QG
+      sentinels not gitignored fleet-wide → per-QG-run drift (TWO failure modes)** —
       `.qg_last_passed_sha` (and `.qg_content_sentinel`) are local caches written by `quality-gates.sh`. (a)
       **untracked** in most repos → reappear as `??` after every QG run; (b) **already committed/tracked** in some repos
       (found: `agent-orchestrator`, `unified-api-contracts` — a machine-specific HEAD SHA was committed) → **gitignore

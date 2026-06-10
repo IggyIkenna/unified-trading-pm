@@ -252,3 +252,46 @@ in the CICD domain → coordinate before executing.**
    them yourself?
 3. **C now, B later?** (unchanged — fold the bump into the promotion content as a future cleanup).
 4. **Retire the `ci-failure-watcher` close+reopen band-aid** for this signature once the fleet has the fast-path?
+
+---
+
+## 12. Recurrence 2026-06-10 — fleet rollout still pending, 17 repos re-jammed (Ikenna, slot-1)
+
+**Confirms OQ #2 is the live gap.** A day after §11's fix landed on PM templates + `execution-service`, the
+`update-dependency-version.yml` `[skip ci]` producer is **still active on every other repo**, so the
+`unified-api-contracts 0.5.0` promotion wave (dep-pin commits dispatched ~23:57 UTC 2026-06-09) re-created the exact
+deadlock fleet-wide.
+
+### Evidence (swept 2026-06-10 ~01:1x UTC)
+
+- **17 repos** had a `[skip ci]` staging tip with **`status=pending`, 0 check-runs** (the unsatisfiable-required-check
+  state): `agent-orchestrator` (a `chore(release)` bump), and 16 `chore(deps): pin … [skip ci]` tips on
+  `alerting-service · batch-live-reconciliation-service · client-reporting-api · deployment-api · deployment-service ·
+  features-service · fund-administration-service · greeks-service · instruments-service · market-data-processing-service ·
+  market-tick-data-service · ml-service · strategy-service · system-integration-tests · trading-agent-service ·
+  unified-trading-api`.
+- Surfaced via **`deployment-api#36` `chore(release): promote staging to main` = BLOCKED** (head
+  `a79715e7 chore(deps): pin unified-api-contracts to 0.5.0 [skip ci]`, required `Quality Gates (deployment-api) /
+  quality-gates-v2` = MISSING). `trading-agent-service#31` / `system-integration-tests#46` were masked as BEHIND (same
+  latent block, behind main first).
+- Root cause line still present: `update-dependency-version.yml:151` — `git commit -m "chore(deps): pin … [skip ci]"`
+  (the MINOR/PATCH path). The reusable `python-quality-gates-v2.yml` metadata-only fast-path **is** live fleet-wide via
+  `@live-defi-rollout`, but `[skip ci]` suppresses the trigger entirely, so the fast-path never gets a chance on the
+  push — confirming the fix is incomplete until the per-repo `update-dependency-version.yml` edit (drop `[skip ci]`)
+  reaches each repo.
+
+### Immediate recovery performed (slot-1, 2026-06-10)
+
+- Dispatched `gh workflow run quality-gates-v2.yml --ref staging` on **all 17** affected repos (workflow_dispatch is not
+  suppressed by `[skip ci]`). Verified on the `deployment-api` canary: `quality-gates-v2` now `completed/success` on
+  `a79715e7`, so the required context reports on the staging tip. This is the documented manual recovery from §1,
+  now fast via the reusable fast-path. (Note: `deployment-api#36` had already been closed by semver-agent at 01:10 — the
+  dispatch keeps the staging tip promotable for the next promotion PR rather than recovering that specific closed PR.)
+
+### Residual action (the actual fix — tracked, not yet done)
+
+- **Complete the fleet rollout** of the `update-dependency-version.yml` (drop `[skip ci]`) + `quality-gates-v2.yml`
+  caller edits to the remaining ~17 repos (only `execution-service` got them per §11's operator decision). Until then,
+  **every future dep-pin re-jams that repo's staging→main promotion and needs a manual dispatch** — manual recovery is a
+  band-aid against a recurring producer. This is OQ #2 / the `[SCRIPT] P1` rollout todo in
+  `plans/active/cicd_contract_hardening_2026_06_01.md` § "Auto-remediation pipeline gaps".
