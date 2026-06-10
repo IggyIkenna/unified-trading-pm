@@ -60,9 +60,23 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       lock state (`locked`/`locked_since`/`locked_reason`), last `cascade-qg-ordering`/SIT workflow run (status + age
       via GitHub runs API on unified-trading-pm), and `stuck_in_sit: true` when `ci_status == STAGING_GREEN` and
       time-in-state > threshold (default 2 h) without `SIT_VALIDATED`/`MAIN_GREEN`.
+- [ ] [CODE] P1. **Live SIT run panel (operator add 2026-06-10 — alert-parity)** — the LAST cascade/SIT run's per-repo
+      job breakdown, always visible (not just on failure):
+      `sit_last_run {url, status, conclusion, age_min,     jobs: [{name, status, conclusion}]}` from the GitHub jobs API
+      on the newest `cascade-qg-ordering` run — answers "which repos were in the last SIT run, which passed/failed,
+      what's in progress" continuously.
+- [ ] [CODE] P2. **Repo drill-down cross-links (operator add 2026-06-10 — don't redo existing tabs)** — repo detail
+      panel deep-links the EXISTING surfaces for the same repo: data-status tab (domain/service), deployments/monitor
+      tab (is it running), VM logs tab, and the orchestrator fleet git-health page filtered to the repo ("is this repo
+      in anyone's worktree" — live data when sub-plan B's endpoint ships).
 - [ ] [CODE] P1. **Image deploy signal (image-level v1)** — reuse `_cloud_builds_*` plumbing: last build per repo
       (status, sha, branch) + manifest `deployed_versions`; flag
       `image_stale: main_head_sha != last_successful_build_sha`.
+- [ ] [CODE] P1. **AWS/GCP cloud-toggle parity for the build signal (operator add 2026-06-10)** — the image/build half
+      of the aggregator must follow the deployment-ui cloud toggle like the existing Cloud Builds tab: GCP path reuses
+      `_cloud_builds_trigger/_cloud_builds_history`; AWS path reuses `_code_builds_aws.py` (CodeBuild). The
+      GitHub/manifest half is cloud-agnostic (no toggle). `_latest_builds_by_repo` returns honestly-unknown (None) for
+      the inactive/unavailable provider — never fabricated.
 - [ ] [TEST] P1. Unit tests: manifest accessor (fixture manifest), stuck-PR classifier (one case per signature),
       SIT-state derivation (pending/locked/stuck threshold), mocked-GitHub branch/compare shapes. Credential-free
       (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`); `pytest --block-network`.

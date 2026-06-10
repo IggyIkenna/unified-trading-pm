@@ -66,17 +66,15 @@ defect in the parity, and it gets audited and closed, not normalized.
       ratchet → local GREEN at HEAD). Fixed: `_qg_slice_done` now phase-aware — unified-trading-pm@71a2e103b |
       verified 2026-06-10. Expect first post-fix CI typecheck legs ~3-4 min (real basedpyright).
 
-- [ ] [SCRIPT] P2. **Manifest-import-alignment check is local-only + self-contradictory (parity gap, found 2026-06-10
-      via the deployment-service FROM-digest pilot)**: `check_manifest_import_alignment.py`'s docstring says
-      "Excludes: tests/" but `EXCLUDE_SEGMENTS` does NOT contain "tests" (line-26 comment says tests/ INCLUDED by
-      design — flat-deps rule), so it flags deployment-service's tests-only `deployment_api` imports locally, while
-      CI is GREEN on the same content because the QG step is gated on `[[ -n "${WORKSPACE_ROOT:-}" ]]`
-      (base-service.sh) and CI has no workspace → silently skipped. Three fixes needed: (1) reconcile
-      docstring-vs-code on tests/ scope; (2) decide the deployment-service answer (tests importing the sibling
-      `deployment_api` package — declare the dep, move the tests, or scope them out); (3) make the CI skip LOUD
-      (log_warn "alignment skipped: no workspace") so local-vs-CI divergence on this step is visible. Until then a
-      pre-existing local-only red blocks quickmerge ships from slot clones (it blocked the FROM-digest pilot ship).
-      — unified-trading-pm + deployment-service
+- [x] ✅ [SCRIPT] P2. **Manifest-import-alignment parity gap — FIXED 2026-06-10.** (1) Code reconciled to the
+      docstring: `tests` added to `EXCLUDE_SEGMENTS` — the prior in-code "tests included" comment conflated EXTERNAL
+      flat-deps with INTERNAL manifest edges; a tests-only sibling import must not force a manifest `dependencies[]`
+      edge (false DAG edges / reverse-edge cycles). (2) The deployment-service answer falls out: its tests-only
+      `deployment_api` imports no longer flag (verified exit=0); source-tree scanning unchanged (real misalignments
+      still caught — UI `unified_internal_contracts` + e2e stale-declared deps surfaced in the same sweep,
+      pre-existing, owners' repos). (3) CI skip is LOUD: base-service.sh `log_warn`s "no WORKSPACE_ROOT/PM checkout"
+      instead of silently skipping. Unblocks the FROM-digest pilot + BoM ship. — unified-trading-pm | verified
+      2026-06-10
 
 ## Phase 2 — Make divergence self-auditing (depends: Phase 1)
 

@@ -57,6 +57,14 @@ jobs:
           token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
+      # Without this the invalidation commit dies with `fatal: empty ident name` and the
+      # push silently no-ops ("Everything up-to-date") — observed live run 27271453887
+      # (2026-06-10): the downstream-invalidation manifest write was LOST.
+      - name: Configure git identity
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Run topological cascade
         id: run
         env:
@@ -199,10 +207,18 @@ jobs:
           PASSING_STATUSES = {"FEATURE_GREEN", "STAGING_GREEN", "LOCAL_PASS", "VALIDATED"}
           FAILING_STATUSES = {"FAILING", "BROKEN"}
 
-          def poll_level(repos: list[str]) -> tuple[bool, list[str]]:
+          def poll_level(repos: list[str], baseline: dict[str, str]) -> tuple[bool, list[str]]:
               """
               Poll ci_status for all repos in a level until all pass, any fail, or timeout.
               Returns (success, list_of_failed_repos).
+
+              STALE-READ GUARD (root-cause fix 2026-06-10, live run 27271453887): ci_status is
+              the repo's CURRENT lifecycle state, not the result of THIS dispatch — a repo that
+              was already FAILING before we dispatched would instantly fail the cascade at t=0s
+              (e2e-testing: cascade died at 0s; the freshly dispatched QG PASSED 2 min later).
+              A pre-dispatch-FAILING repo therefore counts as PENDING until its status changes
+              (the new run flips it green or it stays red to TIMEOUT — then it genuinely failed).
+              Only a repo that FLIPS to FAILING during our poll fails the level fast.
               """
               if dry_run:
                   print(f"  [DRY RUN] Would poll {len(repos)} repos for up to {LEVEL_TIMEOUT}s")
@@ -231,7 +247,11 @@ jobs:
                       if ci_status in PASSING_STATUSES:
                           passed.append(repo_name)
                       elif ci_status in FAILING_STATUSES:
-                          failed.append(repo_name)
+                          if baseline.get(repo_name) in FAILING_STATUSES:
+                              # Stale pre-dispatch redness — the dispatched run hasn't reported yet.
+                              pending.append(repo_name)
+                          else:
+                              failed.append(repo_name)
                       else:
                           pending.append(repo_name)
 
@@ -246,7 +266,7 @@ jobs:
 
                   time.sleep(POLL_INTERVAL)
 
-              # Timeout: treat all non-passed repos as failed
+              # Timeout: treat all non-passed repos as failed (incl. stale-red repos that never flipped)
               timed_out = [r for r in repos if r not in passed]
               print(f"  TIMEOUT: {len(timed_out)} repos did not reach green: {timed_out}")
               return False, timed_out
@@ -293,6 +313,17 @@ jobs:
               print(f"Level {level_num}: dispatching QG to {len(repos)} repos: {repos}")
               print(f"{'='*60}")
 
+              # Snapshot PRE-DISPATCH ci_status per repo (the stale-read guard baseline) —
+              # read fresh so a prior level's writes are reflected.
+              subprocess.run(["git", "pull", "--ff-only", "origin", "main"], capture_output=True, text=True)
+              with open("workspace-manifest.json") as f:
+                  pre_manifest = json.load(f)
+              pre_repos = pre_manifest.get("repositories", {})
+              baseline = {r: pre_repos.get(r, {}).get("ci_status", "NOT_CONFIGURED") for r in repos}
+              stale_red = [r for r, s in baseline.items() if s in FAILING_STATUSES]
+              if stale_red:
+                  print(f"  Pre-dispatch FAILING (stale — treated as pending until they flip): {stale_red}")
+
               # Dispatch to all repos in this level (parallel execution)
               dispatch_failures: list[str] = []
               for repo_name in repos:
@@ -311,7 +342,7 @@ jobs:
 
               # Poll for completion
               print(f"  Polling for level {level_num} completion (timeout: {LEVEL_TIMEOUT}s)...")
-              success, failed_repos = poll_level(repos)
+              success, failed_repos = poll_level(repos, baseline)
               levels_processed += 1
 
               if not success:
