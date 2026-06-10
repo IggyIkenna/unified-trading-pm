@@ -59,9 +59,15 @@ local; one trivial LOW stub only).
   (custody secret-fetch + Solana GCS → UTL), instruments-service@66165f2e (VenueError → UAC VenueErrorClassification),
   client-reporting-api@9cd77cc (dead auth.py + google.oauth2 deleted), deployment-service@6710f26 (VM scripts → UTL
   get_storage_client). Remaining split-out: deployment-api routes half (#12b).
-- **PENDING** Wave B (UTL/UAC T0 extensions — serialize, one repo): deployments_registry→UTL, treasury NAV→UTL,
-  `create_api_auth` X-API-Key path, `ModelRegistry` writegate/manifest/allowlist, UTL retry helper, sports
-  FunctionBuilderEntry, MDPS classifier→UTL/UAC. Then Wave C consumers. Then Phase 1b risk. Dead-gate enable LAST.
+- **SHIPPED** Wave A.2 (parallel sub-agents): MTDS secrets→UTL `mtds@696249df`, alerting AlertSeverity
+  `alerting@39181c7`, unified-trading-api ANTHROPIC key→secret-client `uta@e3fbd8d`, greeks stub delete
+  `greeks@b119b5b`.
+- **SHIPPED** Wave B part 1 (UTL additive, MINOR) `unified-trading-library@20c8ae8d`: `create_api_auth` X-API-Key legacy
+  path (unblocks alerting/uta auth dedup) + `utils.retry`/`with_retry` helper (unblocks MTDS/IS adapter consolidation).
+- **PENDING** Wave B part 2 (still need UTL/UAC work): `ModelRegistry` writegate/manifest/allowlist (Phase 3),
+  extractions deployments_registry→UTL + treasury NAV→UTL + MDPS classifier→UTL/UAC (Phase 9), sports
+  FunctionBuilderEntry (Phase 4). **Wave C consumers now unblocked**: alerting/uta `create_api_auth` migration, MTDS/IS
+  retry adapters. Then Phase 1b risk. Dead-gate enable LAST (rule 11 fleet proof).
 
 ---
 
@@ -179,10 +185,11 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 > migrate the services. client-reporting-api (#3) is unaffected — it is pure dead-code deletion (already on the JWT/S2S
 > path).
 
-- [ ] [AGENT] P0. **UTL extension FIRST**: add an `X-API-Key` (legacy) branch to `cloud_interface/api_auth.py`
-      `create_api_auth` — read the `X-API-Key` header, validate against `UnifiedCloudConfig().api_key`, return an
-      internal/admin `AuthContext` (set `is_api_key=True`), 401 on missing/invalid. Preserves the existing JWT + S2S +
-      DISABLE_AUTH paths. Ship as a UTL MINOR bump. (Prevents the prod-auth regression on the two X-API-Key services.)
+- [x] ✅ [AGENT] P0. **UTL extension FIRST** — DONE `unified-trading-library@20c8ae8d` (6081 tests ✓, 4 new auth tests,
+      QG 0). Added the `X-API-Key` (legacy) branch to `create_api_auth` (validates against
+      `UnifiedCloudConfig().api_key`, returns `AuthContext(is_api_key=True, is_internal=True, role="admin")`, 401 on
+      mismatch; ordered after S2S, before Bearer JWT; existing paths byte-preserved). **Unblocks alerting-service +
+      unified-trading-api auth migration.**
 - [ ] [AGENT] P0. **alerting-service** (depends on UTL extension above): delete `alerting_service/auth.py`
       (`verify_api_key` + DISABLE_AUTH guard); change `api/main.py` to depend on UTL
       `create_api_auth("alerting-service")`. Verify an `X-API-Key` caller still authenticates (it is **wired in
@@ -264,12 +271,10 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `get_storage_client()` (already cloud-agnostic incl. S3). `server/auth.py:99` gs:// secret fetch → UTL
       `get_storage_client()`/`get_secret_client()`. **Keep the HS256/ES256 JWT signing logic** (intentional custom per
       orchestrator-auth SSOT — touch only the cloud-fetch).
-- [ ] [AGENT] P1. **market-tick-data-service**: replace the raw `secretmanager.SecretManagerServiceClient()` + bare
-      `except Exception` in the 11 CLI handlers (`perp_funding_handler.py:214,225`, `dex_swaps_handler.py:345`,
-      `gas_fee_handler.py:110,447`, `evm_defi_handler.py:459`, `dex_pools_handler.py:364`,
-      `aggregator_route_handler.py:385`, `lending_indices_handler.py:333`, `lst_rates_handler.py:687`,
-      `liquidations_handler.py:218`) with UTL `get_secret()` (cloud-agnostic, no swallow, matches the documented adapter
-      convention).
+- [x] ✅ [AGENT] P1. **market-tick-data-service** — DONE `market-tick-data-service@696249df` (988 handler tests ✓, QG
+      0). Replaced the raw `secretmanager.SecretManagerServiceClient()` + bare-`except` across 9 CLI handlers (11 sites)
+      with `from unified_trading_library import get_secret_client` → `.get_secret(name)` (cloud-agnostic, no swallow).
+      Tests repointed to the UTL mock.
 - [x] ✅ [AGENT] P2. **deployment-service** (scripts half) — DONE `deployment-service@6710f26` (QG 0).
       `scripts/vm/{vm_log_archival_cron,vm_serial_capture_cron,vm_zombie_watchdog,validate_vm_prefix_mapping}.py`
       `storage.Client()` → UTL `get_storage_client()`/`upload_to_storage`/`storage_exists`/`gcs_copy_object`;
@@ -288,27 +293,30 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
 - [ ] [AGENT] P2. **execution-service**: fold the second hand-rolled `/health`+`/ready`+`/readiness` in `api/app.py:209`
       onto UTL `make_health_router(...)` with a `data_freshness` callback (QG STEP 5.62), so the service has ONE health
       surface (the canonical `api/main.py` already uses it).
-- [ ] [AGENT] P2. **Add a UTL retry helper** (none exists today) — a single `unified_trading_library.utils` exponential
-      backoff-on-(429/5xx/Connection/Timeout/OSError) helper — then consolidate the two near-identical hand-rolled
-      base-adapter retries: MTDS `market_interface/base_adapter.py:29-100` and instruments-service
-      `reference_data/base_adapter.py:39-160`. Ship the UTL helper (MINOR) first.
+- [x] ✅ (UTL helper half) **Add a UTL retry helper** — DONE `unified-trading-library@20c8ae8d`: `retry` (decorator) +
+      `with_retry` (callable), stdlib-only, exp backoff + jitter, 429/5xx-aware, exported from
+      `unified_trading_library.utils.retry` / `.utils` / top-level. 9 new tests.
+- [ ] [AGENT] P2. **Consume the UTL retry helper** (REMAINING): consolidate the two hand-rolled base-adapter retries —
+      MTDS `market_interface/base_adapter.py:29-100` + instruments-service `reference_data/base_adapter.py:39-160` —
+      onto `unified_trading_library.utils.retry`/`with_retry`. Preserve each adapter's classify-on-give-up behaviour.
 - [ ] [VERIFY] P1. Adapter retry behaviour unchanged (mock 429 → N retries → classify); health endpoints respond;
       `quality-gates.sh` green; quickmerge.
 
 ## Phase 7 — LOW + lint tail (findings #14–#19)
 
-- [ ] [AGENT] P2. **alerting-service**: replace `Literal["WARNING","CRITICAL"]` in `rules/connectivity_rules.py:58`,
-      `rules/reconciliation_rules.py:81,163,251` with UAC `AlertSeverity` (already imported elsewhere in the service).
+- [x] ✅ [AGENT] P2. **alerting-service** — DONE `alerting-service@39181c7` (348 tests ✓, QG 0). Replaced
+      `Literal["WARNING","CRITICAL"]` in `rules/connectivity_rules.py` + `rules/reconciliation_rules.py` with UAC
+      `AlertSeverity` (`.WARN`/`.CRITICAL`); also fixed a dropped `"delivered": False` found in passing.
 - [ ] [AGENT] P2. **agent-orchestrator**: migrate the ~30 `os.environ.get` config reads to a `UnifiedCloudConfig`
       subclass; move secret-bearing ones (`TELEGRAM_BOT_TOKEN`, JWT secret) to `get_secret_client()`; add UTL
       `setup_events`/`log_event` lifecycle emission (the repo emits none today). Local `utcnow()`/`to_utc()` may stay
       (thin tz-aware wrappers) but replace `logging.basicConfig` call sites. **Scope-flag:** orchestrator is partly
       intentionally standalone — migrate config/secrets/events, do not blanket-rewrite the custom dashboard auth.
-- [ ] [AGENT] P3. **unified-trading-api**: move `routes/chat.py:258 ANTHROPIC_API_KEY` off `os.environ` to
-      `get_secret_client()`. The `# config-bootstrap`-marked `os.environ` reads in `main.py`/health/reporting are
-      sanctioned bootstrap — leave.
-- [ ] [AGENT] P3. **greeks-service**: delete the `greeks_service/events.py` 3-line re-export stub; import `log_event`
-      from UTL at the call sites.
+- [x] ✅ [AGENT] P3. **unified-trading-api** — DONE `unified-trading-api@e3fbd8d` (QG 0). `routes/chat.py`
+      `ANTHROPIC_API_KEY` now via `UnifiedCloudConfig().get_secret("anthropic-api-key")` (name confirmed from
+      `credentials-registry.yaml`); the `# config-bootstrap` os.environ reads left as sanctioned.
+- [x] ✅ [AGENT] P3. **greeks-service** — DONE `greeks-service@b119b5b` (QG 0). Deleted `greeks_service/events.py`
+      re-export stub; the single importer now imports `log_event` from UTL directly.
 - [ ] [AGENT] P3. **strategy-service**: noqa-with-reason (or `UnifiedCloudConfig`) the un-annotated `os.environ.get` in
       `recovery_event_helper.py:41,90` and `pnl/engine/mock_data_provider.py:38` (mirror the existing
       `position/engine/mock_data_provider.py` noqa pattern).
