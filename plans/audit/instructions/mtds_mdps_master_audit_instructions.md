@@ -280,8 +280,8 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
       (`t`/`periodStartUnix`/`bar[0]`/DataFrame index) written without conversion → 0 (baseline the known latent sites;
       NEW ones RED). Covers instruments-service refdata + MTDS pre-agg fetchers, NOT just the MDPS write path.
 - [ ] (edge-2) **Cross-source edge fixture** — the same instrument+window from a tick-aggregated and a pre-aggregated
-      source produces the SAME `t_close`. The MDPS processed candle store is the canonical right-edge grid; never consume
-      raw `ohlcv_*` directly.
+      source produces the SAME `t_close`. The MDPS processed candle store is the canonical right-edge grid; never
+      consume raw `ohlcv_*` directly.
 - [ ] (edge-3) **Gate covers the edge** — `check_mdps_bar_boundary_compliance.py` asserts not just grid-alignment +
       interval width but that a present vendor close field matches the stamped edge (ingestion-time assertion).
 - [ ] (edge-4) **features re-resamplers stay right-edge** — `candle_resampler.resample_ohlcv`
@@ -291,17 +291,17 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
 ## Canonical-form coverage CF-18 + CF-19 — mtds_mdps owns schema-attribute completeness + candle-edge (added 2026-06-10)
 
 > Concrete re-runnable steady-state checks for the migration-verification CF-18 (schema-attribute completeness) + CF-19
-> (candle edge-timestamp convention) added by `migration_verification_orphan_safety_2026_06_10.md` (V7). Written to audit
-> a corpus ALREADY migrated to v9 — a new adapter that reintroduces the candle-edge bug or drops a source attribute is
-> caught by re-running these. SSOT: `canonical_form_cross_service_audit_checklist.md` CF-18 / CF-19.
+> (candle edge-timestamp convention) added by `migration_verification_orphan_safety_2026_06_10.md` (V7). Written to
+> audit a corpus ALREADY migrated to v9 — a new adapter that reintroduces the candle-edge bug or drops a source
+> attribute is caught by re-running these. SSOT: `canonical_form_cross_service_audit_checklist.md` CF-18 / CF-19.
 
 - [ ] (CF-18) **schema-attribute completeness — no silent column truncation** — sample recent source/legacy parquets per
-      `(asset_group, data_type, venue)`; union their parquet FOOTER columns and diff vs the v9 UAC canonical contract for
-      that data_type. Any column the source/legacy parquet physically carries that is NOT represented in the v9 contract
-      is **RED until carried** (extend the canonical schema before apply) **or explicitly operator-acked-dropped** — zero
-      silent attribute loss (a dropped attribute is invisible to row-count / schema-presence checks, so this MUST union
-      footers, not just confirm the contract columns exist). Green: every source column is carried into v9 or acked; 0
-      silent truncation across mtds · mdps · instruments · features.
+      `(asset_group, data_type, venue)`; union their parquet FOOTER columns and diff vs the v9 UAC canonical contract
+      for that data_type. Any column the source/legacy parquet physically carries that is NOT represented in the v9
+      contract is **RED until carried** (extend the canonical schema before apply) **or explicitly
+      operator-acked-dropped** — zero silent attribute loss (a dropped attribute is invisible to row-count /
+      schema-presence checks, so this MUST union footers, not just confirm the contract columns exist). Green: every
+      source column is carried into v9 or acked; 0 silent truncation across mtds · mdps · instruments · features.
 
 - [ ] (CF-19) **candle edge-timestamp convention is a STANDING check** — per external OHLCV/candle source × timeframe,
       confirm the STORED timestamp edge (left=open / right=close) matches
@@ -595,6 +595,7 @@ Avoid:
 
 ## Linked Results
 
-| Date       | Result file                                                          | Status                                                                      |
-| ---------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| 2026-05-28 | `mdps_long_running_efficiency_SUMMARY_2026_05_28.md` (+ 7 axis docs) | Mode 2 first run; checklist items E1–E9 unticked, waiting on implementation |
+| Date       | Result file                                                          | Status                                                                                                                                                                                         |
+| ---------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 2026-05-28 | `mdps_long_running_efficiency_SUMMARY_2026_05_28.md` (+ 7 axis docs) | Mode 2 first run; checklist items E1–E9 unticked, waiting on implementation                                                                                                                    |
+| 2026-06-09 | `mtds_mdps_master_audit_2026_06_09.md`                               | Mode 1 (MTDS adapters/manifest); **re-verified 2026-06-10** (adversarial caller-chain pass): 9 genuine active clusters (databento ohlcv bar-edge laundering UPGRADED to top P0 — live leakage into the MDPS candle grid; tardis streaming 5xx→empty_confirmed; 5 defi-handler swallows; chain-bundle blank source), 5 false-positives retracted, 9 latent/dead-code (one disposition todo), source-on-non-captured → UTL gap, +10 new adjacent findings. CF/prod-state items BLOCKED-DATA. Gap items unticked. |
