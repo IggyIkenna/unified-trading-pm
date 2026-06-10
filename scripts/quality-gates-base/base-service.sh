@@ -87,7 +87,7 @@ _qg_content_hash() {
         # untracked files — but EXCLUDE QG artifacts that change every run (else the
         # hash self-references and the sentinel can never hit).
         git ls-files --others --exclude-standard 2>/dev/null \
-            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
+            | grep -vE '(^|/)(\.qg_content_sentinel|\.qg_last_passed_sha|\.qg_cache/|coverage\.xml|\.coverage|\.pytest_cache/|\.ruff_cache/|__pycache__/)' \
             | sort | while IFS= read -r _f; do
                 [ -f "$_f" ] && sha256sum "$_f" 2>/dev/null
             done
@@ -1072,17 +1072,31 @@ if command -v "$_PIPAUDIT" &>/dev/null; then
     #   the pinned vcrpy (operator-accepted 2026-06-05). Exploit surface nil — the fleet never pip-installs untrusted
     #   packages at runtime. SUCCESSOR (remove this ignore): the same vcrpy-unblock that lets aiohttp reach 3.14.0.
     _pa_extra="${PIP_AUDIT_EXTRA_ARGS:-} --ignore-vuln CVE-2026-4539 --ignore-vuln CVE-2026-45409 --ignore-vuln CVE-2026-3219 --ignore-vuln CVE-2026-6357 --ignore-vuln CVE-2026-34993 --ignore-vuln CVE-2026-47265 --ignore-vuln PYSEC-2026-196"
-    # run_timeout 180: OSV API can stall indefinitely in Cloud Build (no connection-level timeout
-    # in pip-audit itself). Exit 124 = timeout → warn-only; image still passes (advisory gate).
-    _pa_rc=0
-    run_timeout 180 "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null || _pa_rc=$?
-    if [[ $_pa_rc -eq 0 ]]; then
-        log_success "pip-audit clean"
-    elif [[ $_pa_rc -eq 124 ]]; then
-        log_warn "pip-audit: OSV query timed out after 180s (Cloud Build network) — skipping vulnerability gate (advisory)"
+    # DEPS-CHANGE/CRON TRIGGER (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
+    # the OSV query is a fixed ~30-40s network tax whose verdict only changes when the
+    # dependency inputs change OR new advisories publish. Key = pyproject.toml + uv.lock
+    # contents + the ignore set + pip-audit version, cached at .qg_cache/pip_audit_deps_hash.
+    # Unchanged key AND younger than QG_PIP_AUDIT_MAX_AGE_HOURS (default 24h — the
+    # cron-equivalent freshness bound for newly-published advisories) → skip the query.
+    # ONLY a clean (rc=0) audit is cached; vulnerabilities/timeouts always re-run. The
+    # internal-advisories check below stays OUTSIDE the cache (its input is a PM yaml,
+    # not this repo's deps). Bypass: QG_NO_CACHE=1 forces the full OSV query.
+    _pa_key=$({ cat pyproject.toml uv.lock 2>/dev/null || :; echo "$_pa_extra"; "$_PIPAUDIT" --version 2>/dev/null || :; } | _qg_hash)
+    if qg_cache_hit pip_audit_deps_hash "$_pa_key" "${QG_PIP_AUDIT_MAX_AGE_HOURS:-24}"; then
+        log_success "pip-audit: cached (deps unchanged, age $(_qg_cache_age_hours pip_audit_deps_hash || echo '?')h)"
     else
-        log_fail "pip-audit vulnerabilities found"
-        python3 -c "
+        # run_timeout 180: OSV API can stall indefinitely in Cloud Build (no connection-level timeout
+        # in pip-audit itself). Exit 124 = timeout → warn-only; image still passes (advisory gate).
+        _pa_rc=0
+        run_timeout 180 "$_PIPAUDIT" --format json --skip-editable $_pa_extra -o /tmp/pip-audit-output.json 2>/dev/null || _pa_rc=$?
+        if [[ $_pa_rc -eq 0 ]]; then
+            log_success "pip-audit clean"
+            qg_cache_store pip_audit_deps_hash "$_pa_key"
+        elif [[ $_pa_rc -eq 124 ]]; then
+            log_warn "pip-audit: OSV query timed out after 180s (Cloud Build network) — skipping vulnerability gate (advisory)"
+        else
+            log_fail "pip-audit vulnerabilities found"
+            python3 -c "
 import json, sys
 try:
     data = json.load(open('/tmp/pip-audit-output.json'))
@@ -1093,11 +1107,13 @@ try:
 except Exception as e:
     print(f'  (could not parse pip-audit output: {e})')
 " 2>/dev/null || :
-        V=$(( V + 1 ))
+            V=$(( V + 1 ))
+        fi
+        # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build).
+        # Inside the cache-miss branch: on a cache hit /tmp holds another repo's stale output.
+        SERVICE_NAME="$SERVICE_NAME" python3 "$REPO_ROOT/unified-trading-pm/scripts/sbom-store.py" \
+            /tmp/pip-audit-output.json 2>/dev/null || :
     fi
-    # Store SBOM audit trail in GCS (non-blocking — upload failure does not fail the build)
-    SERVICE_NAME="$SERVICE_NAME" python3 "$REPO_ROOT/unified-trading-pm/scripts/sbom-store.py" \
-        /tmp/pip-audit-output.json 2>/dev/null || :
     # Internal advisory check (BLOCKING — checks unified-trading-pm/security/internal-advisories.yaml)
     if [[ -f "$REPO_ROOT/unified-trading-pm/scripts/validation/check-internal-advisories.sh" ]]; then
         bash "$REPO_ROOT/unified-trading-pm/scripts/validation/check-internal-advisories.sh" \
@@ -1113,10 +1129,22 @@ qg_prof end pip-audit
 
 # Security: bandit
 # BANDIT_EXTRA_ARGS: optional per-repo override (e.g. BANDIT_EXTRA_ARGS="-c pyproject.toml")
+# CONTENT-HASH CACHE (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
+# bandit's verdict is a pure function of scanned source content + tool version + config.
+# Key = _qg_src_content_key over SOURCE_DIR + pyproject.toml (covers [tool.bandit] when
+# `-c pyproject.toml` is passed) + `bandit --version` + BANDIT_EXTRA_ARGS, cached at
+# .qg_cache/bandit_content_hash. ONLY a clean run is cached — issues always re-print.
+# Bypass: QG_NO_CACHE=1 forces a full scan.
 qg_prof start bandit
 if command -v bandit &>/dev/null; then
-    _bandit_out=$(run_timeout 30 bandit -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
-        || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
+    _bandit_key=$({ _qg_src_content_key "$SOURCE_DIR" pyproject.toml; bandit --version 2>/dev/null || :; echo "${BANDIT_EXTRA_ARGS:-}"; } | _qg_hash)
+    if qg_cache_hit bandit_content_hash "$_bandit_key"; then
+        log_success "bandit: cached (source content unchanged)"
+    else
+        _bandit_out=$(run_timeout 30 bandit -r "$SOURCE_DIR/" -ll ${BANDIT_EXTRA_ARGS:-} 2>&1) \
+            && qg_cache_store bandit_content_hash "$_bandit_key" \
+            || { echo "$_bandit_out"; log_fail "bandit issues"; V=$(( V + 1 )); }
+    fi
 else
     log_fail "bandit required: uv pip install bandit"; V=$(( V + 1 ))
 fi
@@ -1677,6 +1705,21 @@ done
 if [ -n "$_WF_LINT_DIR" ]; then
     log_section "[5.5/6] WORKFLOW LINT (actionlint)"
     if command -v actionlint &>/dev/null; then
+        # CONTENT-HASH CACHE (plan quality_gates_speed_and_config_ssot_2026_06_09 Phase 3):
+        # key = .github/workflows/*.yml file names + contents (plain cat, NOT git blobs —
+        # _WF_LINT_DIR may resolve outside the repo's pathspec in the CI reusable-workflow
+        # context) + actionlint version + SHELLCHECK_OPTS, cached at
+        # .qg_cache/actionlint_content_hash. ONLY a 0-findings run is cached — findings
+        # always re-print. Bypass: QG_NO_CACHE=1 forces a full lint.
+        _al_key=$({
+            while IFS= read -r -d '' _wf; do printf '%s\n' "$_wf"; cat "$_wf" 2>/dev/null || :; done \
+                < <(find "$_WF_LINT_DIR" -name "*.yml" -type f -print0 2>/dev/null | LC_ALL=C sort -z)
+            actionlint --version 2>/dev/null || :
+            echo "${SHELLCHECK_OPTS:-}"
+        } | _qg_hash)
+        if qg_cache_hit actionlint_content_hash "$_al_key"; then
+            log_success "Workflow lint: cached (workflows unchanged)"
+        else
         WORKFLOW_ERRORS=0
         # actionlint's OWN rules (undefined outputs, untrusted github.event.* in run:,
         # the empty-${{ }} parse-breaking class, bad expressions) stay STRICT — those are
@@ -1701,8 +1744,13 @@ if [ -n "$_WF_LINT_DIR" ]; then
         # fixed workflow templates have propagated to all repos' main+staging (the LDR→main
         # drain) and the fleet provably passes. SSOT: codex/08-workflows/ci-cd-flow.md +
         # cursor-configs/AUTONOMOUS_AGENT_RULES.md Rule 11.
-        [ $WORKFLOW_ERRORS -gt 0 ] && log_warn "Workflow lint: $WORKFLOW_ERRORS file(s) with actionlint findings (NON-FATAL transitional — see [5.5a] for the hard parse-break guard; re-harden after templates propagate to all mains)"
+        if [ $WORKFLOW_ERRORS -gt 0 ]; then
+            log_warn "Workflow lint: $WORKFLOW_ERRORS file(s) with actionlint findings (NON-FATAL transitional — see [5.5a] for the hard parse-break guard; re-harden after templates propagate to all mains)"
+        else
+            qg_cache_store actionlint_content_hash "$_al_key"
+        fi
         log_ok "Workflow lint checked (broad actionlint = warn; parse-break = hard in [5.5a])"
+        fi
     else
         log_warn "actionlint not found — skipping workflow lint (install: brew install actionlint)"
     fi

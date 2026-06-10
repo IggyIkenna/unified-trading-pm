@@ -52,6 +52,7 @@ test-results.xml
 .qg_content_sentinel
 .qg_ci_green_marker
 .qg_profile/
+.qg_cache/
 
 # Agent worktrees — Claude Code / agent worktrees under .claude/worktrees create gitlinks
 # (mode 160000) that, if accidentally added, leak into CI checkout as a phantom submodule

@@ -35,6 +35,9 @@ central-element-323112-*.json
 # --- QG profiler output (opt-in QG_PROFILE=1; local-only, share explicitly via --outdir) ---
 .qg_profile/
 
+# --- QG step-result cache (pip-audit/bandit/actionlint content-hash skip cache; local-only) ---
+.qg_cache/
+
 # --- Generated artifacts: regenerated on every QG/quickmerge run from tracked SSOTs;
 #     tracking them only churns the worktree (item H, cicd_contract_hardening_2026_06_01).
 #     SVG/HTML ← docs/repo-management/cicd-pipeline-definition.yaml (generate-cicd-diagram.py)

@@ -1,25 +1,36 @@
 #!/usr/bin/env python3
 """Profile quality-gates.sh per-phase WALL-TIME + RAM (peak/mean RSS).
 
-Dependency-free (Linux /proc only). Drives a FULL, no-skip run by setting QG_PROFILE=1
-(which base-service.sh honours: it overrides every bypass flag --no-fix/--quick/--skip-*,
-disables the green sentinel, and relaxes only the <MAX_DURATION> meta-gate). The run is
-pinned to a single core with single-core thread/worker caps so the numbers reflect one core.
+Dependency-free. Drives a FULL, no-skip run by setting QG_PROFILE=1 (which
+base-service.sh AND base-library.sh honour: it overrides every bypass flag
+--no-fix/--quick/--skip-*, disables the green sentinel, and relaxes only the
+<MAX_DURATION> meta-gate). The run is pinned to a single core with single-core
+thread/worker caps so the numbers reflect one core.
 
 Two data sources, both reported:
-  - spans  : precise per-phase/per-check timing from the qg_prof markers base-service emits
+  - spans  : precise per-phase/per-check timing from the qg_prof markers the bases emit
              to $QG_PROFILE_FILE (authoritative; decomposes the codex block into pip-audit /
              bandit / size-checks / removed-symbols, and measures auto-fix).
   - phases : coarse timeline parsed from stdout [N/6] / STEP headers (full list incl. the
              uninstrumented bits: env, import-patterns, workflow-lint, IS-MTDS, duration).
 
-RAM: a sampler thread sums RSS across the run's process tree (process group) via /proc at
-~5 Hz; each sample is bucketed into the span/phase whose [start,end] window contains it.
+RAM: a sampler thread sums RSS across the run's process tree (process group) at ~5 Hz —
+via /proc on Linux (canonical sweep host), via `ps -o pgid,rss` on macOS (portable
+fallback; indicative only). Each sample is bucketed into the span/phase whose
+[start,end] window contains it. Core pinning uses taskset when available (Linux);
+on hosts without taskset the run is UNPINNED and the report says so — treat those
+numbers as indicative, the canonical 22-repo sweep runs on a pinned Linux host.
 
 Usage
 -----
     python3 scripts/quality_gates/profile_qg_resources.py --repo instruments-service --core 2
-    python3 scripts/quality_gates/profile_qg_resources.py --repo X --outdir <dir>   # share via --outdir
+    python3 scripts/quality_gates/profile_qg_resources.py --repos a,b,c          # SERIAL sweep
+    python3 scripts/quality_gates/profile_qg_resources.py --repo X --outdir <dir>
+
+--repos runs the named repos SERIALLY (one full gate at a time — host-capacity safe) and
+writes per-repo JSON + the plan's combined CSV (repo,phase,wall_s,peak_rss_mb,mean_rss_mb,
+status). The parallel-pinned RAM-budget scheduler across all 22 repos is a SEPARATE plan
+item (quality_gates_speed_and_config_ssot_2026_06_09.md Phase 0) — not this script's job.
 
 Output defaults to .qg_profile/ (gitignored). Pass --outdir to write somewhere shareable.
 """
@@ -30,12 +41,14 @@ import argparse
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import threading
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import cast
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 PM_ROOT = SCRIPT_DIR.parent.parent
@@ -60,7 +73,10 @@ MEASURE_ENV = {
 }
 
 
-def pgid_tree_rss(pgid: int) -> int:
+HAS_PROC = os.path.isdir("/proc")
+
+
+def _pgid_tree_rss_proc(pgid: int) -> int:
     total = 0
     for entry in os.listdir("/proc"):
         if not entry.isdigit():
@@ -76,6 +92,30 @@ def pgid_tree_rss(pgid: int) -> int:
         except (FileNotFoundError, ProcessLookupError, ValueError, IndexError):
             continue
     return total
+
+
+def _pgid_tree_rss_ps(pgid: int) -> int:
+    """macOS/BSD fallback: sum `ps` RSS (KiB) across the process group."""
+    try:
+        out = subprocess.run(
+            ["ps", "-ax", "-o", "pgid=,rss="], capture_output=True, text=True, timeout=5, check=False
+        ).stdout
+    except (subprocess.SubprocessError, OSError):
+        return 0
+    total = 0
+    want = str(pgid)
+    for ln in out.splitlines():
+        parts = ln.split()
+        if len(parts) == 2 and parts[0] == want:
+            try:
+                total += int(parts[1]) * 1024
+            except ValueError:
+                continue
+    return total
+
+
+def pgid_tree_rss(pgid: int) -> int:
+    return _pgid_tree_rss_proc(pgid) if HAS_PROC else _pgid_tree_rss_ps(pgid)
 
 
 def _status_of(line: str) -> str:
@@ -138,9 +178,9 @@ def _spans_from_markers(markers_path: Path, samples: list[tuple[float, int]]) ->
         if not ln:
             continue
         try:
-            d = json.loads(ln)
-            ts, ev, name = float(d["ts"]), str(d["event"]), str(d["name"])
-        except (ValueError, KeyError):
+            rec = cast("dict[str, object]", json.loads(ln))
+            ts, ev, name = float(str(rec["ts"])), str(rec["event"]), str(rec["name"])
+        except (ValueError, KeyError, TypeError):
             continue
         if ev == "start":
             open_starts[name] = ts
@@ -168,7 +208,13 @@ def profile(repo: Path, core: int, markers_path: Path) -> dict[str, object]:
     if markers_path.exists():
         markers_path.unlink()
     env = {**os.environ, **MEASURE_ENV, "QG_PROFILE_FILE": str(markers_path)}
-    cmd = ["taskset", "-c", str(core), "stdbuf", "-oL", "-eL", "bash", str(qg)]  # NO --no-fix: full run
+    # taskset = Linux-only; without it (macOS) the run is UNPINNED (indicative numbers only).
+    # stdbuf = GNU coreutils; optional — without it stdout phase timestamps are slightly coarser.
+    pinned = shutil.which("taskset") is not None
+    cmd: list[str] = ["taskset", "-c", str(core)] if pinned else []
+    if shutil.which("stdbuf"):
+        cmd += ["stdbuf", "-oL", "-eL"]
+    cmd += ["bash", str(qg)]  # NO --no-fix: full run
 
     samples: list[tuple[float, int]] = []  # (epoch_ts, rss_bytes) — epoch so it aligns with qg_prof markers
     stdout_markers: list[tuple[float, str, str, str]] = []  # (ts, token, kind, status)
@@ -231,6 +277,7 @@ def profile(repo: Path, core: int, markers_path: Path) -> dict[str, object]:
         "repo": repo.name,
         "sha": git_sha(repo),
         "core": core,
+        "pinned": pinned,
         "exit_code": proc.returncode,
         "total_wall_s": round(t_end - t0, 2),
         "overall_peak_rss_mb": round(overall_peak / 1024 / 1024, 1),
@@ -242,8 +289,9 @@ def profile(repo: Path, core: int, markers_path: Path) -> dict[str, object]:
 
 def render(report: dict[str, object]) -> str:
     total = report["total_wall_s"] or 1  # type: ignore[index]
+    pin = f"core {report['core']}" if report.get("pinned") else "UNPINNED (no taskset — indicative)"
     out = [
-        f"\nQG profile — {report['repo']} @ {report['sha']}  (core {report['core']}, exit {report['exit_code']})",
+        f"\nQG profile — {report['repo']} @ {report['sha']}  ({pin}, exit {report['exit_code']})",
         f"total wall {report['total_wall_s']}s   overall peak RSS {report['overall_peak_rss_mb']} MB   "
         f"({report['rss_samples']} samples)",
     ]
@@ -270,22 +318,69 @@ def render(report: dict[str, object]) -> str:
     return "\n".join(out)
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--repo", required=True)
-    ap.add_argument("--core", type=int, default=2)
-    ap.add_argument("--outdir", type=Path, default=PM_ROOT / ".qg_profile")  # gitignored by default
-    args = ap.parse_args()
+def csv_rows(report: dict[str, object]) -> list[str]:
+    """Plan-schema rows: repo,phase,wall_s,peak_rss_mb,mean_rss_mb,status.
 
-    repo = WORKSPACE_ROOT / args.repo
-    args.outdir.mkdir(parents=True, exist_ok=True)
-    markers_path = args.outdir / f"{args.repo}.markers.jsonl"
-    report = profile(repo, args.core, markers_path)
+    Span rows (authoritative, instrumented) are prefixed `span:`; coarse stdout
+    phases keep their banner token as the phase name and carry the parsed status.
+    """
+    rows: list[str] = []
+    repo = str(report["repo"])
+    for s in report["spans"]:  # type: ignore[index,union-attr]
+        rows.append(f"{repo},span:{s['name']},{s['wall_s']},{s['peak_rss_mb']},{s['mean_rss_mb']},-")  # type: ignore[index]
+    for p in report["phases"]:  # type: ignore[index,union-attr]
+        name = str(p["name"]).replace(",", ";")  # type: ignore[index]
+        rows.append(f"{repo},{name},{p['wall_s']},{p['peak_rss_mb']},{p['mean_rss_mb']},{p['status']}")  # type: ignore[index]
+    return rows
+
+
+def run_one(repo_name: str, core: int, outdir: Path) -> dict[str, object]:
+    repo = WORKSPACE_ROOT / repo_name
+    markers_path = outdir / f"{repo_name}.markers.jsonl"
+    report = profile(repo, core, markers_path)
     table = render(report)
     print(table)
-    (args.outdir / f"{args.repo}.json").write_text(json.dumps(report, indent=2))
-    (args.outdir / f"{args.repo}.txt").write_text(table + "\n")
-    print(f"\nwrote {args.outdir / (args.repo + '.json')}")
+    (outdir / f"{repo_name}.json").write_text(json.dumps(report, indent=2))
+    (outdir / f"{repo_name}.txt").write_text(table + "\n")
+    print(f"\nwrote {outdir / (repo_name + '.json')}")
+    return report
+
+
+class _Args(argparse.Namespace):
+    repo: str | None = None
+    repos: str | None = None
+    core: int = 2
+    outdir: Path = PM_ROOT / ".qg_profile"  # gitignored by default
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    grp = ap.add_mutually_exclusive_group(required=True)
+    grp.add_argument("--repo", help="single repo name (directory under the workspace root)")
+    grp.add_argument(
+        "--repos",
+        help="comma-separated repo names, profiled SERIALLY (one full gate at a time; "
+        "the parallel-pinned RAM-budget sweep is a separate plan item)",
+    )
+    ap.add_argument("--core", type=int, default=2)
+    ap.add_argument("--outdir", "--output", dest="outdir", type=Path, default=PM_ROOT / ".qg_profile")
+    args = ap.parse_args(namespace=_Args())
+
+    raw = args.repos.split(",") if args.repos else [args.repo or ""]
+    names = [n.strip() for n in raw if n.strip()]
+    args.outdir.mkdir(parents=True, exist_ok=True)
+    all_rows: list[str] = []
+    failures: list[str] = []
+    for name in names:
+        report = run_one(name, args.core, args.outdir)
+        all_rows += csv_rows(report)
+        if report["exit_code"] != 0:
+            failures.append(name)
+    csv_path = args.outdir / "combined.csv"
+    csv_path.write_text("repo,phase,wall_s,peak_rss_mb,mean_rss_mb,status\n" + "\n".join(all_rows) + "\n")
+    print(f"wrote {csv_path} ({len(all_rows)} rows, {len(names)} repo(s))")
+    if failures:
+        print(f"non-zero gate exit for: {', '.join(failures)} (profile still captured)")
 
 
 if __name__ == "__main__":
