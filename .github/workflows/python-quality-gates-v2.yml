@@ -569,23 +569,31 @@ jobs:
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
           TRIGGER_BRANCH: ${{ github.head_ref || github.ref_name }}
+          BASE_REF: ${{ github.base_ref }}
           SLICES_RESULT: ${{ needs.qg-slices.result }}
         run: |
           [ -z "${GH_PAT}" ] && echo "GH_PAT not set — skipping ci-status-update" && exit 0
           # Branch→status mapping mirrors the ci_status lifecycle in ci-status-update.yml:
           #   main → MAIN_GREEN ; staging → STAGING_GREEN ; other → FEATURE_GREEN ; any fail → FAILING
+          # A1 (ldr_trunk_promotion_decoupling): a green PR *into* staging INHERITS STAGING_GREEN
+          # — the promote PR's v2 IS the staging gate (same tree, base_ref=staging dep resolution),
+          # so STAGING_GREEN no longer needs the redundant push:[staging] run (which A3 will drop).
+          # Only staging is inherited here (NOT main) — MAIN_GREEN stays a real on-main push, so we
+          # never prematurely mark a repo as on-main from an unmerged staging→main PR.
+          EFFECTIVE_BRANCH="$TRIGGER_BRANCH"
+          [ "$BASE_REF" = "staging" ] && EFFECTIVE_BRANCH="staging"
           if [ "${SLICES_RESULT}" != "success" ]; then
             STATUS="FAILING"
-          elif [ "$TRIGGER_BRANCH" = "main" ]; then
+          elif [ "$EFFECTIVE_BRANCH" = "main" ]; then
             STATUS="MAIN_GREEN"
-          elif [ "$TRIGGER_BRANCH" = "staging" ]; then
+          elif [ "$EFFECTIVE_BRANCH" = "staging" ]; then
             STATUS="STAGING_GREEN"
           else
             STATUS="FEATURE_GREEN"
           fi
-          echo "Recording ci_status=${STATUS} for ${GITHUB_REPOSITORY#*/} (branch=${TRIGGER_BRANCH})"
+          echo "Recording ci_status=${STATUS} for ${GITHUB_REPOSITORY#*/} (trigger=${TRIGGER_BRANCH} base=${BASE_REF:-none} effective=${EFFECTIVE_BRANCH})"
           curl -s -X POST \
             -H "Authorization: token ${GH_PAT}" \
             -H "Accept: application/vnd.github.v3+json" \
             "https://api.github.com/repos/${GITHUB_REPOSITORY_OWNER}/unified-trading-pm/dispatches" \
-            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${TRIGGER_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"\"}}"
+            -d "{\"event_type\": \"ci-status-update\", \"client_payload\": {\"repo\": \"${GITHUB_REPOSITORY#*/}\", \"status\": \"${STATUS}\", \"branch\": \"${EFFECTIVE_BRANCH}\", \"sha\": \"${GITHUB_SHA}\", \"failure_excerpt_b64\": \"\"}}"

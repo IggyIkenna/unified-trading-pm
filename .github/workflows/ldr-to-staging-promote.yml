@@ -163,6 +163,34 @@ jobs:
 
             if [ -n "$PR_URL" ]; then
               echo "  PR: $PR_URL"
+              # ── Provenance gate (D1, ldr_trunk_promotion_decoupling_2026_06_10): the promote bot
+              # promotes ONLY quickmerge-provenanced content. Fetch the target repo's staging + LDR
+              # into a temp repo and run PM's check_strict_quickmerge.py over the promote range; on a
+              # CLEAR violation (a non-carve-out CODE commit lacking the `Quickmerge:` trailer) do NOT
+              # arm auto-merge — leave the PR open + comment. FAIL-OPEN on a fetch/checker error (the
+              # drain's gates fail-open on a missing signal; a checker bug must never jam promotion).
+              PROV_TMP="$(mktemp -d)"
+              if git -C "$PROV_TMP" init -q && git -C "$PROV_TMP" fetch -q --no-tags \
+                   "https://x-access-token:${GH_TOKEN}@github.com/$OWNER/$REPO" \
+                   "+refs/heads/staging:refs/remotes/origin/staging" \
+                   "+refs/heads/live-defi-rollout:refs/remotes/origin/live-defi-rollout" 2>/dev/null; then
+                PROV_OUT="$( cd "$PROV_TMP" && python3 "$GITHUB_WORKSPACE/scripts/cicd/check_strict_quickmerge.py" \
+                  --range "origin/staging..origin/live-defi-rollout" --block 2>&1 )" && PROV_RC=0 || PROV_RC=$?
+                if [ "${PROV_RC:-0}" -ne 0 ] && printf '%s' "$PROV_OUT" | grep -q 'bypassed quickmerge'; then
+                  echo "  ⛔ provenance: $REPO has non-quickmerge CODE on LDR — NOT arming auto-merge (PR left open)"
+                  printf '%s\n' "$PROV_OUT" | sed 's/^/    /'
+                  gh pr comment "$PR_URL" --repo "$OWNER/$REPO" --body "⛔ **Provenance gate (Tier-C drain)** — this LDR→staging promote carries code that bypassed quickmerge (no \`Quickmerge:\` trailer, not a carve-out). Auto-merge is **not** armed. Re-ship the change via \`quickmerge --agent --files '<paths>'\` (or revert it on \`live-defi-rollout\`); the next drain tick promotes once LDR is clean." 2>/dev/null || true
+                  BLOCKED="$BLOCKED $REPO"; BLOCKED_COUNT=$((BLOCKED_COUNT + 1))
+                  rm -rf "$PROV_TMP"; continue
+                elif [ "${PROV_RC:-0}" -ne 0 ]; then
+                  echo "  WARN: provenance checker errored (rc=$PROV_RC) — failing OPEN. Output: $PROV_OUT"
+                else
+                  echo "  ✅ provenance: promote-range is quickmerge-clean (or carve-outs only)"
+                fi
+              else
+                echo "  WARN: provenance fetch failed for $REPO — failing OPEN (arming anyway)"
+              fi
+              rm -rf "$PROV_TMP"
               # --rebase fails to ARM when LDR is merge-laden ("This branch can't be rebased": backmerge
               # bot / resolved backmerges) → auto-merge silently never arms → promote PR piles up. Fall
               # back to --squash (always armable) with an EXPLICIT sanitized subject/body so no inherited
