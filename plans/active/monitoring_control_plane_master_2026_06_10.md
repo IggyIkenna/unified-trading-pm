@@ -45,6 +45,15 @@ per-slot badges or by SSHing around.
    built into the latest image"). Runtime-level (what's RUNNING — deployment registry / Cloud Run revisions) is a named
    v2 successor, NOT silently dropped.
 
+## Alert-parity principle (operator add 2026-06-10 — the design rule for ALL of this)
+
+**Anything we alert on generically must be a continuously observable STATE in the UI** — an alert is the transition of a
+state the dashboard always shows, never the only way to see it. Concretely: instead of "alert on SIT failure + a
+recovery bookend", the dashboard always shows the SIT layer state (which repos were in the last run, which passed/
+failed, in-progress live); same for promotion lock, promotion lag, stuck PRs, git-health/cron liveness. Slack pages on
+transitions; the dashboard answers "what is the state right now". New watcher alert classes added later MUST land with a
+paired dashboard state element (review gate for alerting changes).
+
 ## Division of surfaces (the contract)
 
 | Surface              | Home                           | Question it answers                                                                     |
@@ -79,6 +88,13 @@ page) — P2, after both v1s ship.
       digest-pin conversion status per repo. Repo: deployment-api + deployment-ui.
 - [ ] [CODE] P3. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
       Cloud Run revisions / VM heartbeats) and diff its SHA vs `main` HEAD. Repo: deployment-api + deployment-ui.
+- [ ] [CODE] P2. **Repo detail ⇄ fleet worktree presence (operator add 2026-06-10)** — the CI dashboard's repo
+      drill-down shows "is this repo dirty/checked-out in anyone's worktree" from the orchestrator's
+      `/api/fleet/git-health` (sub-plan B endpoint) filtered by repo. v1 ships a deep-link; live data lands when B's
+      endpoint exists. Repo: deployment-api (proxy or UI-direct read) + deployment-ui.
+- [ ] [CODE] P3. **Alert-parity audit** — walk every watcher/alert class (`ci-failure-watcher`, `promotion-lag-monitor`,
+      git-health guard, billing block, consolidator watchdog) and verify each has a paired live state element on one of
+      the two surfaces; file gaps as todos here. Repo: unified-trading-pm (audit) + the owning surface.
 
 ## Success criteria (master)
 
