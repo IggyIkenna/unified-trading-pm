@@ -456,3 +456,11 @@ correct, or redirect to a different resolution (e.g. use the existing `architect
 it, or rename the existing one).
 
 **Next**: Phases 2/3/4 are now unblocked (parallel). A4/A5/A6 background agents spawning.
+
+## CREDENTIAL APPROVAL REQUEST — 2026-06-10 (slot-3)
+
+- **Vendor/tier+cost**: GitHub fine-grained PAT permission toggle — free.
+- **What's needed**: add **Checks: read** to the `GH_PAT` secret's fine-grained token (Secret Manager `GH_PAT`, GCP + AWS).
+- **Account**: IggyIkenna org PAT used by CI + deployment-api.
+- **What it unblocks**: per-SHA `quality-gates-v2` conclusions on the Repos CI dashboard
+  (`plans/active/ci_dashboard_deployment_ui_2026_06_10.md` — live 403 on /check-runs today, degraded to unknown).

@@ -81,6 +81,16 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       SIT-state derivation (pending/locked/stuck threshold), mocked-GitHub branch/compare shapes. Credential-free
       (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`); `pytest --block-network`.
 
+### Live-verify findings (2026-06-10, slot-3)
+
+- [ ] [CREDS] P2. **BLOCKED-CREDENTIALS — GH_PAT lacks `Checks: read`**: live run returns 403 "Resource not accessible
+      by personal access token" on `/commits/{sha}/check-runs` → per-SHA `quality-gates-v2` conclusions degrade to
+      unknown (handled gracefully — shard-level isolation, never response-fatal). Operator ask: add **Checks: read** to
+      the fine-grained GH_PAT (Secret Manager `GH_PAT`, both clouds). Ping: `ikenna_orchestrator/pings/slot_3.md`
+      2026-06-10.
+- [ ] [CODE] P3. Overview response surfaces per-repo aggregation errors (an `errors[]` block) instead of silently
+      dropping a degraded row — found during live verify (rows degrade on per-repo GitHub 5xx; currently log-only).
+
 ## Phase 2 — deployment-ui "Repos" page
 
 - [ ] [CODE] P1. [UI] API client additions in `src/api/client.ts` (typed: `RepoCiOverview`, `RepoCiDetail`,

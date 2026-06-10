@@ -332,9 +332,17 @@ BUILT (`ci_failure_watcher.py` detects stuck PRs + `--escalate` dispatches `merg
 `escalate-to-orchestrator.yml` → conflict-resolver worker, which pings the operator on undecidable). Four gaps explain
 what the operator is seeing:
 
-- [ ] [BUG] P1. **agent-orchestrator: escalation slot-starvation — spawn never persists
-      `tmux_session`/`last_spawned_at`, so WorkerLivenessWatchdog is BLIND to sessions whose worker skips `/boot`
-      (incident 2026-06-10, central VM).** Symptom: all 6 slots `status=stale` with live `orch-slot-N` tmux sessions;
+- [x] ✅ [BUG] P1. **agent-orchestrator: escalation slot-starvation — FIXED + DEPLOYED 2026-06-10 (slot-1 laptop):
+      `agent-orchestrator@caa7b1b` (4 fixes + 6 regression tests, QG 414-green) + `@a014ab7` (escalate/conflict-resolver
+      templates now post mandatory `/progress` heartbeats — with spawn stamping anchors, silent one-shot workers would
+      otherwise be heartbeat-silent-killed mid-work at 15 min). Deployed to vm-0 11:12Z+11:4xZ via SSM pull+restart;
+      VERIFIED: watchdog reaped invisible slot-10 twelve seconds after restart (`silence=427082s`), free-slot probe
+      returns [1,4,9,10] (was ∅ → every `/api/escalate` 503'd), `_pick_free_slot` now reuses killed slots + exact-match
+      tmux targets. Fix (5) = a NEW bug found during verify: `status="killed"` slots were skipped by `_pick_free_slot`
+      while AutoSpawn's `_should_spawn` has no status filter — every watchdog reap permanently shrank the escalation
+      pool. ON LDR pending promotion (staging was locked during the carve-out push; rides the normal v2-gated promote).
+      ORIGINAL FINDING:** spawn never persisted `tmux_session`/`last_spawned_at`, so WorkerLivenessWatchdog was BLIND to
+      sessions whose worker skips `/boot`. Symptom: all 6 slots `status=stale` with live `orch-slot-N` tmux sessions;
       `POST /api/escalate` 503'd "no free configured slot" from 09:50Z while 5 stuck promotion PRs waited; watchdog made
       ZERO kills. Mechanism: the watchdog tick skips rows with NULL `tmux_session`
       (`server/worker_liveness_watchdog.py::_tick_once`), while `escalation._pick_free_slot` checks PHYSICAL tmux
@@ -356,6 +364,20 @@ what the operator is seeing:
       `UPDATE slots SET     tmux_session='orch-slot-N'` for finished slots 1/2/4/5/9 → watchdog reaped them; slot-10
       (active escalation worker) left protected; VM PM clone was 60 behind on auto-inventory churn → stash + ff-pull →
       PlanRegenLoop unblocked. Also killed 5 orphaned claude procs from May-29/Jun-01 (not panes of any session).
+- [ ] [DEVOPS] P1. **`sit-debounce-trigger` \*/5 cron is effectively DEAD + `staging-changed` repository_dispatch not
+      arriving — the ONLY staging-unlock mechanism silently stalls (found 2026-06-10, slot-1).** The 10:57Z
+      execution-service v0.6.0 cascade lock dangled 1.5h+ because sit-debounce-trigger (owner of both the SIT dispatch
+      AND the dangling-lock auto-clear) last ran 10:02Z — run history shows sparse event-triggered runs
+      (06:47/07:07/08:33/10:02), NOT \*/5 cron firings, and the 11:44–11:57Z staging pushes produced ZERO
+      `staging-changed` dispatches. Manual `gh workflow run sit-debounce-trigger.yml` (run 27272500217, 11:17Z) was the
+      unblock. FIX (repo: `unified-trading-pm`): (1) diagnose why the `schedule:` isn't firing (GitHub silently disables
+      schedules in some states; check the workflow-enabled bit + actor) and why `staging-changed` dispatch senders
+      stopped; (2) `promotion_lag_monitor.py` should page when `staging_status.locked` age > 30 min with no
+      sit-debounce-trigger run since lock-set (the lock-dangle signature); (3) consider folding the dangling-lock
+      auto-clear into `ci-failure-watcher` (which provably runs every 15 min) so unlock liveness doesn't depend on a
+      single stallable workflow. Context: the cascade stale-read mis-read (run 27271453887 — pre-dispatch FAILING repos
+      counted as cascade failures at t=0s) was already root-fixed on main (STALE-READ GUARD in
+      `cascade-qg-ordering.yml`); the remaining gap is unlock LIVENESS, not cascade correctness.
 - [x] ✅ [OPERATOR] P0. **🚨 GitHub Actions BILLING-BLOCK — RESOLVED by operator 2026-06-08 ("budget is updated"); CI
       runs again.** Verified: PM canary leg-A + #179 `quality-gates-v2` both ran (9-step jobs, not 0-step setup-fails)
       after the operator raised the Actions spending limit. Follow-up (separate item below): a billing-block DETECTOR
