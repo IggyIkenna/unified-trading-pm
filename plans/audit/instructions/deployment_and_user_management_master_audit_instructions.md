@@ -53,24 +53,6 @@ post-cutover; ratchet baseline from 27 → 0 cloud-locked references).
 - (mock-upstream) **Staging-only audit**: deployment and promote workflows MUST be auditable on staging without
   affecting prod. Document the staging invocation.
 
-## Canonical-form coverage CF-20 — deployment-api/UI renders the v9 manifest (added 2026-06-10)
-
-> Concrete re-runnable steady-state check for the migration-verification CF-20 added by
-> `migration_verification_orphan_safety_2026_06_10.md` (V7). deployment-api + deployment-ui own the proof that
-> data-status renders coverage from a CLEAN read of the canonical (or projected) v9 `_index` — no re-derived
-> genesis/launch denominator. SSOT: `canonical_form_cross_service_audit_checklist.md` CF-20.
-
-- [ ] (CF-20) **data-status / deployment-UI render the v9 manifest correctly** — point data-status at the canonical (or
-      the projected `--beta-manifest-out`) v9 `_index`; run
-      `bash unified-trading-pm/scripts/dev/restart-deployment-stack.sh --api` (with `DEPLOYMENT_ENV_SHORT=dev` for a
-      projected `_index`) and assert that coverage %, the 4-state breakdown
-      (`captured`/`empty_confirmed`/`attempted_failed`/`expected_unattempted`), the could-exist denominator, and the
-      `pipeline_mode` / `source` drilldowns ALL render from a clean read of the `_index`. Assert the denominator COUNTS
-      the materialised `expected_unattempted` 4-state
-      (`% = captured / (captured + empty + failed + expected_unattempted)`) — it does NOT re-derive genesis/launch per
-      consumer. Composes with the G3 UNION view. Green: coverage %, 4-state, could-exist denominator, and drilldowns
-      match the manifest with no re-derived genesis/launch; the projected dev `_index` is deleted after the eyeball.
-
 ## Success Criteria
 
 - All 6 checklist items GREEN

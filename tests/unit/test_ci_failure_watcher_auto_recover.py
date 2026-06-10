@@ -37,7 +37,15 @@ MOD = _load_module()
 _recover = MOD.auto_recover_stuck_prs  # type: ignore[attr-defined]
 
 
-def _pr(number: int, *, state: str, failed_check: bool, v2_present: bool, head: str = "live-defi-rollout") -> dict:
+def _pr(
+    number: int,
+    *,
+    state: str,
+    failed_check: bool,
+    v2_present: bool,
+    head: str = "live-defi-rollout",
+    head_message: str = "ci: real change",
+) -> dict:
     return {
         "repo": "mtds",
         "number": number,
@@ -47,6 +55,7 @@ def _pr(number: int, *, state: str, failed_check: bool, v2_present: bool, head: 
         "head": head,
         "base": "staging",
         "age_min": 40,
+        "head_message": head_message,
     }
 
 
@@ -76,3 +85,55 @@ class TestAutoRecoverStuckPrs:
 
     def test_empty_input_is_noop(self) -> None:
         assert _recover([], dry_run=True) == []
+
+    def test_skip_ci_head_still_qualifies(self) -> None:
+        # A [skip ci] head is still the v2-absent deadlock signature → it must be recovered.
+        out = _recover(
+            [_pr(6, state="BLOCKED", failed_check=False, v2_present=False, head_message="pin x [skip ci]")],
+            dry_run=True,
+        )
+        assert {s["number"] for s in out} == {6}
+
+
+class TestAutoRecoverMechanism:
+    """The recovery COMMAND must differ by head kind (the 2026-06-10 refinement)."""
+
+    def _capture_gh_calls(self, monkeypatch, stuck: list[dict]) -> list[list[str]]:
+        calls: list[list[str]] = []
+
+        class _R:
+            returncode = 0
+
+        def _fake_run(cmd, *args, **kwargs):
+            calls.append(cmd)
+            return _R()
+
+        monkeypatch.setattr(MOD.subprocess, "run", _fake_run)
+        _recover(stuck, dry_run=False)
+        return calls
+
+    def test_skip_ci_head_uses_workflow_dispatch_not_reopen(self, monkeypatch) -> None:
+        calls = self._capture_gh_calls(
+            monkeypatch,
+            [_pr(7, state="BLOCKED", failed_check=False, v2_present=False, head_message="pin y [skip ci]")],
+        )
+        assert len(calls) == 1
+        assert calls[0][:4] == ["gh", "workflow", "run", "quality-gates-v2.yml"]
+        assert "--ref" in calls[0] and "live-defi-rollout" in calls[0]
+        # never close+reopen a [skip ci] head — it would not re-fire v2.
+        assert not any(c[:3] == ["gh", "pr", "close"] for c in calls)
+
+    def test_ci_skip_marker_variant_also_dispatches(self, monkeypatch) -> None:
+        calls = self._capture_gh_calls(
+            monkeypatch,
+            [_pr(8, state="BLOCKED", failed_check=False, v2_present=False, head_message="release [ci skip]")],
+        )
+        assert calls[0][:4] == ["gh", "workflow", "run", "quality-gates-v2.yml"]
+
+    def test_normal_head_still_close_reopen(self, monkeypatch) -> None:
+        calls = self._capture_gh_calls(
+            monkeypatch,
+            [_pr(9, state="BLOCKED", failed_check=False, v2_present=False, head_message="feat: a real commit")],
+        )
+        assert [c[:3] for c in calls] == [["gh", "pr", "close"], ["gh", "pr", "reopen"]]
+        assert not any("workflow" in c for c in calls)

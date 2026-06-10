@@ -260,43 +260,6 @@ READ-SIDE — every downstream consumer handles each of the four states per poli
       `_index` rows carry the identical schema + data_type set per AG; zero live-only data_types; zero `DIVERGENT_EMPTY`
       between modes.
 
-### Canonical-form coverage CF-15…CF-21 — manifest_master owns CF-15 / CF-17 / CF-21 (added 2026-06-10)
-
-> Concrete, re-runnable steady-state checks for the migration-verification / orphan-safety CF items added by
-> `migration_verification_orphan_safety_2026_06_10.md` (V7). Written to audit a corpus that has ALREADY migrated to v9 —
-> "assert the v9 corpus holds X", so a future regression (a new writer creating orphans, a hand-maintained `prefix_tpls`
-> list drifting from the templates, a delete-without-twin) is caught by re-running this checklist. The full CF table is
-> the SSOT (`canonical_form_cross_service_audit_checklist.md`) — these are the manifest-layer concrete checks, not a
-> duplicate of that table. CF-16/CF-18/CF-19/CF-20 are owned by `instruments_master` / `mtds_mdps_master` /
-> `deployment_and_user_management_master` (cross-ref only here).
-
-- [ ] **(CF-15) possible-manifest registry is the single could-exist SSOT** — assert
-      `unified_api_contracts/registry/possible_manifest.py` exists and is the ONLY import for could-exist enumeration:
-      `python -c 'from unified_api_contracts import enumerate_possible_shard_keys, is_valid_shard_key, canonical_path_templates'`.
-      Grep-verify the consumers derive from it with NO hand-maintained cross-product:
-      `reconcile_phantom_manifest_rows_all.py` derives `prefix_tpls` from `canonical_path_templates(asset_group)` (no
-      literal prefix list); `enumerate_expected_universe.py` reads the registry's validity matrix; the deployment-api
-      denominator reads `get_chain_genesis_date` / `get_protocol_launch_date` from UAC (no bespoke genesis/launch
-      cross-product). Green: module is the single import, `rg "prefix_tpls\s*=\s*\["` / bespoke cross-products return 0
-      hits across instruments-service · mtds · mdps · deployment-api.
-
-- [ ] **(CF-17) bidirectional manifest ≡ GCS + bucket prefix taxonomy + sizing** — per asset*group run the orphan sweep
-      `migration_orphan_sweep.py --asset-group <ag>` (GCS→manifest) AND the phantom reconciler
-      `reconcile_phantom_manifest_rows_all.py --asset-group <ag> --dry-run` (manifest→GCS); assert `orphan_class_E==0`
-      (real data with no manifest row) AND `phantom_count==0`. Assert the bucket prefix taxonomy reports **0 `unknown`
-      prefixes** (every top-level prefix labelled {service-data, manifest-infra, logs, run-artifact, terraform,
-      tarball}); assert the sizing rollup parquet
-      `\_index/audit/data_sizing*<ag>.parquet`was produced (bytes + object-count per    `(asset_group, data_type, venue,
-      pipeline_mode)`). **Class (E) → `record_captured`backfill, NEVER delete** (it is     the "v10 hole"); non-data paths (VM logs, terraform, tarballs) are understood + NEVER deleted. Green: both counts     0, 0`unknown`
-      prefixes, sizing published, every AG.
-
-- [ ] **(CF-21) verified-delete safety for legacy/duplicate objects** — dry-run the legacy-twin cleanup
-      `cleanup_legacy_twins_<ag>.py --asset-group <ag> --dry-run`; assert EVERY delete candidate passes the gate: its
-      canonical twin is in the manifest as `captured` AND `crc32c(legacy)==crc32c(canonical)`. Assert 0 deletes of class
-      (C) manifest-infra / (C2) non-data / (E) orphan-real-data (never delete the only copy of real data). After a
-      `--apply`, re-run the CF-17 orphan sweep and assert `orphan_class_E==0` still holds. Green: 0 candidates fail the
-      in-manifest + crc32c-identity gate; 0 class-(C)/(C2)/(E) deletes; orphan-E still 0 post-apply.
-
 ### Batch vs Live Parity
 
 - (batch-live) **Batch adapter output**: confirm each adapter in scope produces manifest rows with

@@ -126,6 +126,9 @@ _FAIL_CONCLUSIONS = {"failure", "startup_failure", "timed_out"}
 # statusCheckRollup conclusions are UPPERCASE. A BLOCKED PR is escalatable as a CI failure
 # ONLY when a required check actually FAILED (not merely pending / a transient staging-lock).
 _FAIL_CONCLUSIONS_UPPER = {"FAILURE", "TIMED_OUT", "STARTUP_FAILURE"}
+# A head commit carrying either marker tells GitHub Actions to skip push+pull_request runs for
+# that SHA — so close+reopen never re-fires v2; the recovery must be a workflow_dispatch instead.
+_SKIP_CI_MARKERS = ("[skip ci]", "[ci skip]")
 _STUCK_STATES = {"CONFLICTING", "DIRTY", "BLOCKED"}
 
 # Heads that are part of the promotion contract (LDR -> staging -> main). A stuck PR
@@ -284,7 +287,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                 "--limit",
                 "30",
                 "--json",
-                "number,title,mergeStateStatus,isDraft,autoMergeRequest,createdAt,headRefName,url,statusCheckRollup",
+                "number,title,mergeStateStatus,isDraft,autoMergeRequest,createdAt,headRefName,url,statusCheckRollup,commits",
             ]
         )
         if not isinstance(prs, list):
@@ -314,6 +317,14 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                 isinstance(c, dict) and "quality-gates-v2" in str(c.get("name") or c.get("context") or "")
                 for c in rollup
             )
+            # The head commit message decides the auto-recovery MECHANISM (see auto_recover_stuck_prs):
+            # a `[skip ci]` head suppresses BOTH push and pull_request, so close+reopen cannot re-fire
+            # v2 — it must be re-fired via workflow_dispatch. `commits` is PR-ordered; the head is last.
+            commits = pr.get("commits") or []
+            head_message = ""
+            if commits and isinstance(commits[-1], dict):
+                _last = commits[-1]
+                head_message = f"{_last.get('messageHeadline') or ''}\n{_last.get('messageBody') or ''}".strip()
             stuck.append(
                 {
                     "repo": repo,
@@ -327,6 +338,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "url": pr.get("url") or "",
                     "failed_check": failed_check,
                     "v2_present": v2_present,
+                    "head_message": head_message,
                 }
             )
     return stuck
@@ -674,6 +686,13 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
     so it never touches a genuinely-failing PR (v2 ran red → escalate instead) or one whose v2 is
     in-flight (v2 present). Once reopened, v2 appears in the rollup, so the next tick won't re-fire
     (no loop). This is the better fix than escalating a deterministic deadlock to a busy orchestrator.
+
+    TWO mechanisms by head-commit kind (both within the same gate):
+      - default → close+reopen, which re-fires the ``pull_request`` event (token-suppressed variant).
+      - ``[skip ci]``/``[ci skip]`` head → close+reopen is INEFFECTIVE (the marker suppresses BOTH
+        ``push`` and ``pull_request``, so a reopened PR still emits no v2 run). Recover via
+        ``gh workflow run quality-gates-v2.yml --ref <head-branch>`` (``workflow_dispatch`` is NOT
+        subject to ``[skip ci]``), which reports v2 on the head SHA and unblocks auto-merge.
     """
     recovered: list[dict] = []
     for s in stuck:
@@ -681,9 +700,26 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
             continue
         if s.get("head") not in _PROMOTION_HEADS:
             continue
-        repo, number = s["repo"], int(s["number"])
+        repo, number, head = s["repo"], int(s["number"]), s["head"]
+        skip_ci_head = any(m in (s.get("head_message") or "").lower() for m in _SKIP_CI_MARKERS)
         if dry_run:
             recovered.append(s)
+            continue
+        if skip_ci_head:
+            dispatched = (
+                subprocess.run(
+                    ["gh", "workflow", "run", "quality-gates-v2.yml", "--repo", f"{ORG}/{repo}", "--ref", head],
+                    capture_output=True,
+                    text=True,
+                ).returncode
+                == 0
+            )
+            if dispatched:
+                print(
+                    f"  auto-recovered {repo}#{number}: workflow_dispatch quality-gates-v2 on {head} "
+                    f"([skip ci]-head deadlock — close+reopen would not re-fire)"
+                )
+                recovered.append(s)
             continue
         closed = (
             subprocess.run(

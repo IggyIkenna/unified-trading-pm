@@ -113,42 +113,6 @@ deployment-api/UI so EVERY "what's missing" surface (data, features, strategies,
       catalogued instruments as missing; with MVP OFF, the full could-exist universe is shown (the gap is honest, not
       hidden).
 
-## Config versioning (config_version) — per-config, metadata-not-path-axis
-
-> **MIGRATED FROM:** `migration_verification_orphan_safety_2026_06_10.md` § B (config_version design todo, audit §B3) —
-> folded here because this is the first config-as-data surface (`MVP_SCOPE` + the parallel leagues / prediction-markets
-> configs).
-
-**The gap (audit §B3)**: there is no concept of config versioning distinct from code/semver today. Features have
-`formula_version` (a _formula_ version, baked into the GCS partition key), but **pure config** — which families are MVP,
-which leagues, which market-groups — has no independent version.
-
-- **Config change ≠ code change.** Changing `MVP_SCOPE` (e.g. adding a venue to MVP) is **data, not logic** — it must
-  **NOT** force a repo semver bump.
-- **But it must be TRACKED** so coverage history is interpretable: "coverage dropped because we ADDED scope, not because
-  data regressed." Without a version stamp, a scope expansion is indistinguishable from a data regression in the
-  coverage timeline.
-- **Mechanism**: a monotonic `config_version` integer **+** a `config_content_hash` string stamped on the `MVP_SCOPE`
-  config (and on the sports-leagues + prediction-markets configs), surfaced in the manifest / data-status response so a
-  coverage delta attributes to a **scope change vs a data change**.
-- **NO GCS partition key** — unlike `formula_version` (which IS a path axis), `config_version` is **metadata only**
-  (manifest/response field), never a hive path segment. Changing the config does not re-bake a single object path.
-- **DECISION (operator recommend, audit §B3 + Open-decision 3): PER-CONFIG**, not a single global int — one
-  `config_version` each for `MVP_SCOPE`, leagues, and prediction-markets, because they change **independently** (a leagues
-  edit must not bump the MVP_SCOPE version and falsely flag an MVP coverage delta).
-
-- [ ] [CODE] P1. **Add `config_version: int` + `config_content_hash: str` to each config module** — per-config monotonic
-      `config_version` (int, bumped on every content change) + a stable `config_content_hash` (content-addressed) on the
-      `MVP_SCOPE` config and on the sports-leagues + prediction-markets configs (per-config, NOT a single global int).
-      Metadata only — no GCS partition key.
-- [ ] [CODE] P1. **Surface `config_version` + `config_content_hash` in the deployment-api data-status response** — so a
-      coverage delta attributes to a scope-change (config_version bumped) vs a data-change (config_version stable). Carry
-      the per-config triple (config name, version, hash) alongside the `scope=mvp|could_exist|all` coverage payload.
-- [ ] [CODE] P1. **Unit test: config_version is monotonic + the hash changes when the config changes** — assert
-      `config_version` only ever increases (never decreases/reused) and that `config_content_hash` changes iff the config
-      content changes (and is stable across unrelated edits) — one such test per config (MVP_SCOPE / leagues /
-      prediction-markets).
-
 ## Open questions (operator)
 
 1. **Rule home — UAC vs IS?** UAC (global config, IS applies it) keeps the rule SSOT with the contracts; IS owns the

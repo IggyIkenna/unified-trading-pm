@@ -288,29 +288,6 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
       (`closed="right", label="right"`) + `flow_interaction` (stamp `truncate+tf` / `compute_bar_close_boundary`); the
       pre-fix left-edge `features-*` corpus is recomputed (not silently rolled forward).
 
-## Canonical-form coverage CF-18 + CF-19 — mtds_mdps owns schema-attribute completeness + candle-edge (added 2026-06-10)
-
-> Concrete re-runnable steady-state checks for the migration-verification CF-18 (schema-attribute completeness) + CF-19
-> (candle edge-timestamp convention) added by `migration_verification_orphan_safety_2026_06_10.md` (V7). Written to audit
-> a corpus ALREADY migrated to v9 — a new adapter that reintroduces the candle-edge bug or drops a source attribute is
-> caught by re-running these. SSOT: `canonical_form_cross_service_audit_checklist.md` CF-18 / CF-19.
-
-- [ ] (CF-18) **schema-attribute completeness — no silent column truncation** — sample recent source/legacy parquets per
-      `(asset_group, data_type, venue)`; union their parquet FOOTER columns and diff vs the v9 UAC canonical contract for
-      that data_type. Any column the source/legacy parquet physically carries that is NOT represented in the v9 contract
-      is **RED until carried** (extend the canonical schema before apply) **or explicitly operator-acked-dropped** — zero
-      silent attribute loss (a dropped attribute is invisible to row-count / schema-presence checks, so this MUST union
-      footers, not just confirm the contract columns exist). Green: every source column is carried into v9 or acked; 0
-      silent truncation across mtds · mdps · instruments · features.
-
-- [ ] (CF-19) **candle edge-timestamp convention is a STANDING check** — per external OHLCV/candle source × timeframe,
-      confirm the STORED timestamp edge (left=open / right=close) matches
-      `codex/02-data/bar-boundary-candle-edge-convention.md` AND an independent reference bar; assert ONE normalization
-      point and that batch == live agree on the edge. This is the steady-state CF-19 alias of the `(edge-1)…(edge-4)`
-      leakage checks above — re-running it catches a NEW adapter reintroducing the open-edge ingestion bug (a uniform
-      one-interval left-shift stays on-grid and is invisible to the MDPS alignment gate). Green: every external candle
-      source is right-edge (`t_close`) per the SSOT, one normalization point, batch and live agree.
-
 # Mode 2 — Efficiency Audit (codified 2026-05-28)
 
 ## Scope
