@@ -376,3 +376,67 @@ runs from `main`).
 
 Complete the fleet rollout of `update-dependency-version.yml` (drop `[skip ci]`) — the watcher correction makes
 recurrences self-heal, but the producer is still live on ~17 repos' `main`.
+
+## 15. Incident 2026-06-10 (Harsh, slot-3) — baseline-writer outage → runaway 1-bump/min MINOR loop; §5's chore-skip claim FALSIFIED under it
+
+Two coupled failures, surfaced ~07:1x–07:35Z; **the no-`[skip ci]` Option-C bump commit is loop-FUEL whenever the
+baseline writer is down.**
+
+### Failure A — `update-repo-version` dead on a non-existent action tag
+
+The node24 GHA bump (PM `81b1a2dca`) moved `astral-sh/setup-uv` v5→**v8** — but astral-sh stopped publishing floating
+major tags after v5 (only exact `v8.2.0`-style exist). Every `version-bump` `repository_dispatch` died at job **setup**
+(`Unable to resolve action astral-sh/setup-uv@v8`) — zero steps ran, hence the blank-field
+`:x: CRITICAL — Version update FAILED for v (branch , bump )` Slack pages. All other pins in that commit verified
+resolvable (checkout@v5 / setup-python@v6 / auth@v3 / setup-gcloud@v3 / upload-artifact@v7 / github-script@v9 /
+cache@v5) — setup-uv was the only phantom tag. **Fleet near-miss**: the same `@v8` was already in the
+`scripts/workflow-templates/update-dependency-version.yml` template but NOT yet rolled out (per-repo copies verified
+still `@v5`).
+
+### Failure B — instruments-service runaway re-bump loop (28 bumps, 0.3.0→0.30.0, 1/min)
+
+Loop anatomy: semver-agent Step-1 reads its baseline from PM `staging_versions['instruments-service']` → the dead writer
+froze it at `0.2.0` → Step-2's scan range (`baseline-SHA..HEAD`) always contains real feat/refactor commits → **the
+chore-skip never fires (it is RANGE-based, not HEAD-commit-based)** → bump → the no-`[skip ci]` bump commit triggers v2
+on staging → green → `workflow_run` re-fires semver-agent → repeat. 07:09Z `0.3.0` (legitimate — the polygon-removal
+promotion) then 27 artifact bumps to `0.30.0` until `gh workflow disable semver-agent.yml` at ~07:35Z. **This falsifies
+§5's enabling claim** ("removing `[skip ci]` does not loop: the chore-skip catches the re-trigger") — true only while
+the baseline writer is healthy. Option C needs a baseline-independent re-entry brake.
+
+### Recovery performed (slot-3)
+
+1. `gh workflow disable semver-agent.yml --repo IggyIkenna/instruments-service` (reversible brake; loop stopped at
+   `0.30.0`; no other repo looping — fleet-wide bump scan clean).
+2. Pin fix `setup-uv@v8 → @v8.2.0` in PM `.github/workflows/update-repo-version.yml` + the
+   `update-dependency-version.yml` template (pre-rollout) — PM LDR `5a8882ffd`, riding drain PR #201 to `main`
+   (direct-to-main push was ruleset-rejected; in-band v2-gated drain used instead). The drain was itself blocked twice
+   by RUF003/E501 + committed stash-pop conflict markers in the concurrent slot-2 watcher work (§14) — fixed in real
+   time (`d7bf5bcba`, superseded by slot-2's `5a16d09f1`/`58f9a0824`).
+
+### Open items
+
+- [ ] [SCRIPT] P1. **HEAD-commit chore-skip guard in semver-agent** — skip immediately when the triggering
+      `workflow_run.head_commit` message starts `chore(release): bump version` (re-entry brake independent of baseline
+      state); keep the range-based classification for the genuine-bump path. Repo: `unified-trading-pm`
+      (`semver-agent.yml` template) + fleet rollout.
+- [ ] [SCRIPT] P1. **Bump-rate circuit breaker** — semver-agent refuses (+ pages CRITICAL) when the repo already has ≥3
+      `chore(release):` commits on staging in the last hour; a runaway must self-halt, not wait for a human to notice
+      version 0.30.0. Repo: `unified-trading-pm` (template) + fleet.
+- [ ] [SCRIPT] P2. **Baseline-writer SPOF**: when the PM `version-bump` dispatch fails (non-2xx) or
+      `update-repo-version` reports failure, semver-agent must treat the baseline as UNRELIABLE and halt further bumps
+      for that repo until a successful manifest write — the writer's health gates the loop's fuel line. Repo:
+      `unified-trading-pm`.
+- [ ] [SCRIPT] P2. **Action-pin existence gate** — a QG/template-rollout step that resolves every
+      `uses: owner/action@ref` against the action repo's tags before a workflow change lands (the node24 bump assumed
+      floating major tags universally exist). Repo: `unified-trading-pm` (`scripts/quality_gates/` + template rollout
+      pre-flight).
+- [ ] [SCRIPT] P2. **Manifest catch-up re-dispatches** (after the pin fix is live on main): `version-bump` for
+      `batch-live-reconciliation-service@13e5762a6` (0.2.0) + `strategy-service@a0880bf0b` (0.2.0), `branch=staging`,
+      `is_breaking=false` (their 01:13Z dispatches were lost to a CANCELLED `update-repo-version` run at 01:15Z despite
+      `cancel-in-progress: false` — investigate that cancellation separately). `agent-orchestrator=0.8.1` drift is
+      June-7 `[skip ci]`-era + mid-migration — reconcile in the AO G6 plan, not here.
+- [ ] [OPERATOR] P1. **instruments-service staging version decision**: accept `0.30.0` + sync the manifest baseline to
+      it (cheapest; pre-1.0 numbers are free; avoids surgery on a protected branch) vs roll staging back to the correct
+      `0.3.0` (clean history; needs an admin-gated staging edit + consumers never re-pinned the artifact versions since
+      the dependency-update dispatches died with the writer). Then re-enable the IS semver-agent (safe once baseline ==
+      staging version: the next scan range is chore-only → skip fires).
