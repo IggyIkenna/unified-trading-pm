@@ -266,14 +266,11 @@ deadlock fleet-wide.
 
 - **17 repos** had a `[skip ci]` staging tip with **`status=pending`, 0 check-runs** (the unsatisfiable-required-check
   state): `agent-orchestrator` (a `chore(release)` bump), and 16 `chore(deps): pin … [skip ci]` tips on
-  `alerting-service · batch-live-reconciliation-service · client-reporting-api · deployment-api · deployment-service ·
-  features-service · fund-administration-service · greeks-service · instruments-service · market-data-processing-service ·
-  market-tick-data-service · ml-service · strategy-service · system-integration-tests · trading-agent-service ·
-  unified-trading-api`.
+  `alerting-service · batch-live-reconciliation-service · client-reporting-api · deployment-api · deployment-service · features-service · fund-administration-service · greeks-service · instruments-service · market-data-processing-service · market-tick-data-service · ml-service · strategy-service · system-integration-tests · trading-agent-service · unified-trading-api`.
 - Surfaced via **`deployment-api#36` `chore(release): promote staging to main` = BLOCKED** (head
-  `a79715e7 chore(deps): pin unified-api-contracts to 0.5.0 [skip ci]`, required `Quality Gates (deployment-api) /
-  quality-gates-v2` = MISSING). `trading-agent-service#31` / `system-integration-tests#46` were masked as BEHIND (same
-  latent block, behind main first).
+  `a79715e7 chore(deps): pin unified-api-contracts to 0.5.0 [skip ci]`, required
+  `Quality Gates (deployment-api) / quality-gates-v2` = MISSING). `trading-agent-service#31` /
+  `system-integration-tests#46` were masked as BEHIND (same latent block, behind main first).
 - Root cause line still present: `update-dependency-version.yml:151` — `git commit -m "chore(deps): pin … [skip ci]"`
   (the MINOR/PATCH path). The reusable `python-quality-gates-v2.yml` metadata-only fast-path **is** live fleet-wide via
   `@live-defi-rollout`, but `[skip ci]` suppresses the trigger entirely, so the fast-path never gets a chance on the
@@ -284,8 +281,8 @@ deadlock fleet-wide.
 
 - Dispatched `gh workflow run quality-gates-v2.yml --ref staging` on **all 17** affected repos (workflow_dispatch is not
   suppressed by `[skip ci]`). Verified on the `deployment-api` canary: `quality-gates-v2` now `completed/success` on
-  `a79715e7`, so the required context reports on the staging tip. This is the documented manual recovery from §1,
-  now fast via the reusable fast-path. (Note: `deployment-api#36` had already been closed by semver-agent at 01:10 — the
+  `a79715e7`, so the required context reports on the staging tip. This is the documented manual recovery from §1, now
+  fast via the reusable fast-path. (Note: `deployment-api#36` had already been closed by semver-agent at 01:10 — the
   dispatch keeps the staging tip promotable for the next promotion PR rather than recovering that specific closed PR.)
 
 ### Residual action (the actual fix — tracked, not yet done)
@@ -295,3 +292,39 @@ deadlock fleet-wide.
   **every future dep-pin re-jams that repo's staging→main promotion and needs a manual dispatch** — manual recovery is a
   band-aid against a recurring producer. This is OQ #2 / the `[SCRIPT] P1` rollout todo in
   `plans/active/cicd_contract_hardening_2026_06_01.md` § "Auto-remediation pipeline gaps".
+
+## 13. Incident 2026-06-10 — cascade SIT parked ~5 h on a 1-char lint error in the harness repo (Harsh, slot-3)
+
+A **third, distinct promotion-block class** (≠ the `[skip ci]` producer of §1–12): the cascade validation **conflates
+SIT-harness repo hygiene with cohort integration validity**.
+
+### Mechanism
+
+- `ml-service=0.3.0` breaking cascade locked staging at 01:41Z. Each validation attempt = `workflow_dispatch`
+  `quality-gates-v2` on **system-integration-tests LDR**.
+- SIT LDR HEAD `e712ab1` (slot-1, 02:47Z, `fix(sit): UAC adoption …`) carried a Unicode `∪` in a COMMENT
+  (`tests/integration/test_uac_completeness.py:44`) → ruff **RUF003** → lint-codex slice fails → v2 fails → cascade
+  cannot validate. Tests + typecheck slices were green throughout.
+- 3 retries exhausted (`sit_retry_count` = cap) → **parked**; `locked_alert_sent=true` but no actor picked it up for ~5
+  h; meanwhile ci-failure-watcher kept re-dispatching v2 on the **same broken SHA** (03:03 / 04:59 / 06:35Z) —
+  re-fire-without-root-cause burn.
+
+### Recovery performed (slot-3, 2026-06-10 ~06:45Z)
+
+1-char fix `∪`→`+`, local QG green (191 s), direct LDR push `system-integration-tests@429cc26` under the chicken-and-egg
+carve-out (quickmerge STAGE 1.5 hard-blocks on the very lock the fix clears), then `sit-debounce-trigger`
+`drain_pending=true` (resets the retry counter + re-dispatches). Retries reset 3→1, `pending_repos` shrank to
+`['ml-service']`, v2 re-ran on the fixed SHA.
+
+### Open items
+
+- [ ] [SCRIPT] P2. Decouple harness hygiene from cascade validity — the cascade unlock should not hinge on the SIT
+      repo's OWN lint/codex slice (route a harness lint failure to a fix-task; gate the unlock on the
+      tests/cross-repo-invariants slices). Repos: `unified-trading-pm` (`sit-debounce-trigger.yml`/`sit-gate.yml`) +
+      `system-integration-tests`.
+- [ ] [SCRIPT] P2. Retry-cap parking is alert-only — `locked_alert_sent` fired and nothing acted for ~5 h. Teach
+      `ci_failure_watcher.py` (or the debounce) to diff the failing slice log on retry-cap and dispatch a fix task /
+      orchestrator ping with the extracted error, instead of re-firing v2 on an unchanged SHA. Repo:
+      `unified-trading-pm`.
+- [ ] [PROCESS] P3. A lint-red commit reached SIT LDR at all — QG-before-commit should have caught RUF003 locally. Audit
+      the producing path (direct push without Pass-1 QG, or ruff version/config skew on the producing host).
