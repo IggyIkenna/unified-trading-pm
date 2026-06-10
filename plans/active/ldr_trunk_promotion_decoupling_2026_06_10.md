@@ -140,6 +140,16 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
 - [ ] [TEST] P2. **First-use watch.** After PM ships: confirm (a) a normal `quickmerge --agent` lands on LDR with no
       staging PR + a clean message, (b) the 30min drain opens the LDR→staging PR and it auto-merges on v2-green, (c)
       `--hotfix` still hits the lock when staging is locked. Record evidence here.
+- [x] ✅ [CI] P0. **Tier-C drain auto-merge was SILENTLY DEAD — `--auto --rebase` cannot ARM on a merge-laden LDR**
+      (GraphQL `This branch can't be rebased`; LDR carries merge commits from the backmerge-bot + resolved backmerges) →
+      every promote PR opens but never auto-merges → the LDR→staging pile-up (the "treadmill"). The arm failure was
+      swallowed (`2>/dev/null` / `|| true`). **FIX (PM@84fe257ae):** `--auto --rebase || --auto --squash` fallback
+      (squash always arms) at BOTH merge sites (line 166 primary + line 220 close-reopen), with an explicit **sanitized
+      subject/body** so no inherited `[skip ci]` poisons the staging push — pre-emptively closing @4941 for the drain's
+      NEW squash path (the separate `ldr-to-main`/`staging-to-main` squash paths still need @4941). Validated:
+      `--auto --squash` arms + merges (execution-service #254 merged via the probe). **VERIFY end-to-end** once it
+      reaches PM `main` (Option-B) + the next :13/:43 tick auto-merges a promote via the squash fallback. Finding + fix:
+      harsh slot, 2026-06-10.
 
 ## Success criteria
 
