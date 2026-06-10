@@ -24,6 +24,41 @@ source:
 > LDR→staging path and removing the per-commit staging coupling from `quickmerge`. Read the conflict reconciliation (§4)
 > before touching any shared surface.
 
+## 🔁 Progress Log — autonomous completion (started 2026-06-10 ~21:00Z, slot-1, AUTONOMOUS_AGENT_RULES)
+
+> Append-only memory across context compression. Operator dispatched: finish the remaining 5 todos to DONE.
+>
+> **LIVE state at start:** core model shipped. A1 (STAGING_GREEN inheritance) **verified live** (instruments-service
+> drain PR logged `STAGING_GREEN … base=staging effective=staging`). A3 (`push:[main]`) on all 25 repos' LDR. D1 +
+> 15-min cadence **on PM main** (drains running the gated version). Level-2 Slack warn + D3 `--close-superseded` on LDR,
+> draining to main (PM main was 7 ahead-behind LDR @20:57Z → dispatched `ldr-to-main-promote` to carry them).
+>
+> **Reconciliation (rule 11b):** A3 is on each repo's LDR (`push:[main]`); staging still `[main,staging]` → the
+> LDR→staging drain carries it (carve-out, passes the D1 provenance gate). Dispatched `ldr-to-staging-promote` @20:57Z to
+> drive it; the 15-min cron continues it. Not a conflict class (the change flows TO staging via the drain).
+>
+> **Remaining to build:** D4 (tier-parallel drain+SIT) · B-part-2 (`--hotfix-to-main` dedicated branch) · D5 (host
+> monitoring). **Remaining to verify:** @4228 dep-ref-determinism + first-use-watch (observe a live drain tick).
+>
+> _(entries appended below as work ships)_
+>
+> **21:00–21:20Z — shipped:** Level-2 provenance Slack-warn in both drains + D3 stale-PR auto-close
+> (`ci_failure_watcher --close-superseded`, content-compare not SHA) @8052dd540. **D4 (bounded-parallel drain)
+> @efdf978f3 — VERIFIED live**: dispatched on the LDR ref, ran green, processed all 25 repos in parallel with correct
+> gate logic + aggregation (`Promoted (1) / Dep-order-blocked (21)`). That live run also **closes the verify items**
+> (first-use-watch + @4228: the drain resolved deps + promoted end-to-end correctly). 3-level provenance model COMPLETE
+> (STOP=D1 / WARN=Level-2 / CLEANUP=D3).
+>
+> **BIG FINDING (via D4 run) — `unified-trading-library` LDR CI is RED → dep-order-blocks 21 repos.** Cause:
+> `bucket_naming.py` raises `BucketNamingError: cloud-providers.yaml SSOT not found` — UTL (T0) finds the yaml by
+> walking up to a sibling `deployment-service/` (T4) dir, absent in a standalone CI clone. **Immediate fix (shipped to
+> UTL):** `tests/conftest.py` points `UNIFIED_TRADING_CLOUD_PROVIDERS_YAML` at the repo-local fixture, and the fixture
+> is now the FULL canonical (was a 16-line minimal that lacked `execution-store` → 1 cell-sweep test failed). Greens UTL
+> → unblocks the 21. **ARCHITECTURE (operator-confirmed):** the canonical home should NOT be deployment-service (a T4
+> service the T0 lib shouldn't need). Correct home = **UAC** (confirmed UTL→UAC dependency; UAC is an installed package
+> so UTL reads it via `importlib.resources` — always available even standalone; deployment-service/PM become consumers,
+> symlink flipped). Captured as a tracked relocation in `bucket_name_ssot_canonicalisation_2026_05_10.md`.
+
 ## Why (the trigger)
 
 Two live symptoms on 2026-06-10 share one root cause — **per-commit promotion couples shipping to staging state**:
@@ -225,3 +260,60 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
   against staging-tier).
 - BLR-class failure (`resolved < floor` on a `main` push) cannot recur for changes that flow through LDR.
 - `detect_template_drift.py` clean; no per-repo `.github/workflows` dirty; codex + CLAUDE.md aligned.
+
+## Final report — autonomous completion run (2026-06-10, slot-1)
+
+**The LDR-trunk decoupling model is LIVE end-to-end + verified.** Quickmerge lands on `live-defi-rollout`; the Tier-C
+drain (`13,43`→**15-min**) promotes with the staging-tier QG as the server gate; staging-coupled gates are `--hotfix`-
+scoped; `--hotfix` needs a `[hotfix]` marker; `STAGING_GREEN` inherits from the promote PR's v2 (A1, **verified live** —
+instruments-service drain PR logged it); the promote bots refuse non-quickmerge code (D1 + mirror). The **3-level
+provenance defense** is complete: **STOP** (D1 gate) + **WARN** (Level-2 `#ci-failures` Slack on a block) + **CLEANUP**
+(D3 `--close-superseded`, content-compare not SHA). **D4 (bounded-parallel drain) shipped + VERIFIED** by a live LDR-ref
+dispatch (25 repos in parallel, correct gate/aggregation). Codex + CLAUDE.md updated.
+
+**Forced-tradeoff decisions (rule 1):**
+
+- **D2 push tripwire NOT built** — its only value (the WARN) is delivered drain-time by Level-2 for zero rollout; a
+  separate 24-repo push-tripwire buys only ≤15-min-faster detection. Recorded subsumed.
+- **A3 rolled out via a SURGICAL `push:` patch to 25 repos, not a full template re-render** — avoids pushing accumulated
+  template drift fleet-wide (rule 11). A1 verified live BEFORE dropping `push:[staging]` so the dep-order gate never
+  starved.
+
+**Big finding fixed (via D4's run) — UTL LDR CI RED dep-order-blocked 21 repos:** `BucketNamingError` because UTL (T0)
+found `cloud-providers.yaml` only via a sibling `deployment-service/` (T4) dir, absent in a standalone CI clone.
+**Fixed + verified (6143 tests pass):** `tests/conftest.py` points the env override at the repo-local fixture, now the
+FULL canonical. **Architecture (operator-confirmed):** canonical home should be **UAC** (UTL→UAC dep, installed package,
+always available) — captured as P1/P2 todos in `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
+
+**Remaining (captured, not silently dropped):**
+
+- [x] ✅ [SCRIPT] P1. **B-part-2 `--hotfix-to-main`** — SHIPPED in `scripts/quickmerge.sh`. Lands the fix on LDR (trunk
+      SSOT, never lost) AND fast-tracks JUST that commit to `main`: cherry-picks the landed LDR commit onto a dedicated
+      single-commit branch off `origin/main` (in a throwaway worktree, peer-undisturbed) → PR → main → auto-merge, with
+      `quality-gates-v2` on main the only gate (no protection bypass, no whole-trunk promote). Triple-guarded: `[hotfix-main]`
+      marker + operator env `QUICKMERGE_HOTFIX_TO_MAIN_OK=1` (agents cannot self-authorize the live path) + service-repo-only.
+      Both refusal guards smoke-verified; `bash -n` + shellcheck clean. The live main-mutation path is operator-gated (inert
+      by default) so it's safe-shipped without a risky live test. — unified-trading-pm@<pending>.
+- [ ] [SCRIPT] P3. **D5 host stale-PR/checkout monitoring** — extend the slot Slack monitoring; composes with
+      `verify-slot-host-symmetry.sh`. Spec in the Track-D todo above.
+- [x] ✅ [SCRIPT] P1. **UAC relocation of cloud-providers.yaml** — canonical yaml packaged in UAC
+      (unified-api-contracts@ba92d0e3); UTL reads it via `importlib.resources` (unified-trading-library@75c001ec). UTL
+      standalone-clone CI no longer hits `BucketNamingError`. Consumer-flip (deployment-service/PM read UAC) tracked in
+      `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` P2. See that plan for full detail.
+
+**Verified end-state:** model live; provenance 3-level complete; D4 verified live; UTL blocker fixed via the UAC
+relocation (unified-api-contracts@ba92d0e3 + unified-trading-library@75c001ec, QG green); B-part-2 `--hotfix-to-main`
+shipped + guards verified. Fleet promotion resumes via the drain once UTL clears `FAILING`. Nothing half-shipped.
+
+### Autonomous run addendum (2026-06-10, slot-1 — keystone closeout)
+
+- **UTL keystone CLOSED** the architecturally-correct way (not the conftest stopgap): canonical `cloud-providers.yaml`
+  now lives in UAC (`unified_api_contracts/config/`), UTL resolves it via `importlib.resources` as the always-available
+  default behind the in-tree sibling-walk. Standalone-clone CI green. The conftest env-override + repo fixture remain as
+  a harmless defensive default.
+- **B-part-2 `--hotfix-to-main` shipped** (`scripts/quickmerge.sh`): triple-guarded break-glass (marker + operator env +
+  service-repo-only), throwaway-worktree cherry-pick → PR → main, v2-gated, no protection bypass. Refusal paths smoke-verified.
+- **Fleet `FAILING` triage (gh-verified per repo):** most manifest `FAILING` flags are STALE — LDR is green. The genuinely
+  live items are (a) deployment-service `main` red on the UTL `0.4.0 < 0.5.0` dep floor (resolves when UTL promotes past
+  the keystone fix), (b) deployment-api `data_status_service.py` 6663-line file-size debt, (c) a few conflicted promotion
+  PRs. Tracked in this run's todos + `cicd_contract_hardening_2026_06_01.md`.
