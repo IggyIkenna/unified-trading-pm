@@ -438,12 +438,14 @@ what the operator is seeing:
   - ❌ **CORRECTION to original fix #3:** `ci-failure-watcher` is throttled to ~75 min IDENTICALLY (NOT "provably every
     15 min" — verified its actual run cadence) AND is `contents: read` (cannot write the manifest), so folding the
     dangling-lock auto-clear into it would NOT help. Superseded by the de-group + lag-paging above.
-  - [ ] **REMAINING — the real-time trigger is DEAD CODE (no sender):** sit-debounce listens for
-    `repository_dispatch: [staging-changed]`, but a fleet grep shows the only `staging-changed` sends target
-    `system-integration-tests`; every PM-targeted dispatch uses `promotion-conflict`/`tier-ab-green`/etc. So unlock has
-    relied ENTIRELY on the ~75-min throttled cron. FIX: dispatch `staging-changed` to PM from `update-repo-version.yml`
-    (template) when it writes `staging_versions` (branch=staging) — the precise "a repo promoted to staging" signal →
-    near-instant unlock. Template change → fleet rollout. repo: unified-trading-pm.
+  - [x] ✅ **REMAINING → DONE 2026-06-10 (harsh slot-1, `update-repo-version.yml@d2dd1f673`):** the real-time trigger was
+    DEAD CODE (no sender) — sit-debounce listens for `repository_dispatch: [staging-changed]`, but a fleet grep showed the
+    only `staging-changed` sends target `system-integration-tests`; every PM-targeted dispatch used
+    `promotion-conflict`/`tier-ab-green`/etc. So unlock relied ENTIRELY on the ~75-min throttled cron. FIX (turned out
+    **PM-only — NO fleet rollout**, since `update-repo-version.yml` is a PM workflow, not a per-repo template): added a
+    `staging-changed` dispatch to PM right after `update-repo-version.yml` records `staging_versions` (branch=staging) —
+    the precise "a repo promoted to staging" signal → sit-debounce wakes in seconds. Loop-free (sit-debounce forwards to
+    SIT, never `version-bump`; update-repo-version only listens for `version-bump`). yaml-valid. repo: unified-trading-pm.
 - [x] ✅ [OPERATOR] P0. **🚨 GitHub Actions BILLING-BLOCK — RESOLVED by operator 2026-06-08 ("budget is updated"); CI
       runs again.** Verified: PM canary leg-A + #179 `quality-gates-v2` both ran (9-step jobs, not 0-step setup-fails)
       after the operator raised the Actions spending limit. Follow-up (separate item below): a billing-block DETECTOR
