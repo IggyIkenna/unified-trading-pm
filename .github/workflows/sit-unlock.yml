@@ -99,6 +99,20 @@ jobs:
             fi
           done
 
+      # FINAL CHAIN LINK (2026-06-10): a green SIT must also DRIVE the promotion — PM's
+      # staging-to-main.yml listens for `staging-validated`, which nothing sent on success
+      # (only manual workflow_dispatch runs ever promoted). sit-passed → validate → promote.
+      - name: Dispatch staging-validated (drives staging-to-main promotion)
+        if: github.event.action == 'sit-passed'
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          gh api "repos/IggyIkenna/unified-trading-pm/dispatches" \
+            -X POST -f event_type="staging-validated" \
+            && echo "Dispatched staging-validated → staging-to-main promotes" \
+            || echo "::error::failed to dispatch staging-validated — staging→main will not auto-promote"
+
       - name: Open SIT-failure GH Issue (add-sit-rollback)
         if: github.event.action == 'sit-failed'
         env:
