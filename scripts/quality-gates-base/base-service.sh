@@ -2577,7 +2577,13 @@ while IFS= read -r -d '' _df_579; do
                 fi
                 [[ "$_digest_ok_579" -eq 1 ]] || _DF_VIOLATIONS_579+=("$_df_579: $_line_579")
             else
-                log_warn "STEP 5.79: FROM not digest-pinned (5.79 ratchet pending rollout — convert via add-dockerfile-digest-arg.py): $_df_579: $_line_579"
+                # HARD-FAIL (flipped 2026-06-10 — the final FROM-digest ratchet): the legacy
+                # warn-only path is closed. Gate was operator-ratified to flip ONLY after a
+                # REAL cloud build proved the @digest path end-to-end: proof = mtds build
+                # fc2d4b07 SUCCESS through FROM @${BASE_IMAGE_DIGEST} with the digest-aware
+                # pre-pull; all 16 consumer Dockerfiles converted (16/16 on LDR). Convert a
+                # new/regressed Dockerfile via scripts/propagation/add-dockerfile-digest-arg.py.
+                _DF_VIOLATIONS_579+=("$_df_579 (registry FROM without ARG BASE_IMAGE_DIGEST pin): $_line_579")
             fi
             continue
         fi
