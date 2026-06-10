@@ -11,7 +11,7 @@ estimate_calibrated_ai_days: 2.4
 created: 2026-06-08
 orchestrated_by: plans/active/cicd_contract_hardening_2026_06_01.md
 related_plans:
-  - plans/active/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md
+  - plans/archive/2026_06/quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md
   - plans/active/staging_clean_start_and_stale_pr_hygiene_2026_06_08.md
   - plans/active/issues/full_cicd_sit_target_state_2026_05_24.md
 source:

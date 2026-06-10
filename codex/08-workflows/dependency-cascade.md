@@ -42,6 +42,17 @@ graph TD
     O --> R[Human /approve → PR merges → re-run QG]
 ```
 
+## Concurrency + manifest-write safety (codified 2026-06-10)
+
+`cascade-qg-ordering.yml` runs in its **own** `concurrency.group: cascade-qg-ordering` with `cancel-in-progress: false`
+(serialise cascades, never kill a running one). It must **NEVER share the high-frequency `manifest-update` group**:
+GitHub holds only ONE pending run per concurrency group, so group-sharing evicted every queued cascade before it
+executed — live evidence 2026-06-10: run 27264972415 (UTL 0.5.0 breaking cascade) cancelled in 4s with 0 jobs, and ALL
+prior cascade runs had been cancelled the same way (the cascade had never executed a level live). Fixed PM@b6576fc27.
+The manifest-write-loss concern (finding H2) that motivated the sharing is handled **in-code** by the workflow's
+retry-with-rebase manifest push step, not by concurrency-group serialisation — group-sharing was redundant for safety
+and fatal for liveness.
+
 ## Topological Fail-Fast Algorithm
 
 1. Read `topologicalOrder.levels` from workspace-manifest.json
@@ -110,15 +121,18 @@ The PR auto-merges without human intervention. MAJOR/breaking fixes always requi
 
 ## Breaking Change Detection (Pre-1.0.0)
 
-All repos are <1.0.0. Per semver, `feat!:` bumps MINOR (not MAJOR). The `is_breaking` flag in the dispatch payload
-distinguishes breaking MINORs from non-breaking features:
+All repos are <1.0.0. Per semver, `feat!:` bumps MINOR (not MAJOR). **Since 2026-06-08, `is_breaking` is
+CONTENT-based**: the verdict of the AST public-surface differ `scripts/cicd/detect_breaking_change.py` (removed/renamed
+public export, incompatible signature, removed/renamed/retyped schema field, removed HTTP route = breaking;
+additive/docstring/internal-refactor = NOT) — see `ci-cd-flow.md` § "Breaking = public-surface change". `feat!:` stays
+an explicit human-declared breaking override; the commit type alone no longer determines `is_breaking`:
 
-| Commit Type         | Pre-1.0.0 Bump | is_breaking | Route                                 |
-| ------------------- | -------------- | ----------- | ------------------------------------- |
-| `fix:`              | PATCH          | false       | Direct commit, [skip ci]              |
-| `feat:`             | MINOR          | false       | Direct commit, [skip ci]              |
-| `feat!:`            | MINOR          | true        | PR path, staging lock, QG forced      |
-| Post-1.0.0 `feat!:` | MAJOR          | true        | PR path, staging lock, approval issue |
+| Commit Type         | Pre-1.0.0 Bump | is_breaking                                              | Route                                                         |
+| ------------------- | -------------- | -------------------------------------------------------- | ------------------------------------------------------------- |
+| `fix:`              | PATCH          | differ verdict (typically false)                         | Direct commit, [skip ci]                                      |
+| `feat:`             | MINOR          | differ verdict (false unless real public-surface change) | Direct commit, [skip ci] when false; PR path + lock when true |
+| `feat!:`            | MINOR          | true (explicit override)                                 | PR path, staging lock, QG forced                              |
+| Post-1.0.0 `feat!:` | MAJOR          | true                                                     | PR path, staging lock, approval issue                         |
 
 ## Dependency Caps
 
