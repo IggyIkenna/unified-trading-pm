@@ -2,7 +2,6 @@
 title:
   "CI/CD GitHub-Actions workflow sprawl audit — dead/duplicate/band-aid workflows fleet-wide (verified across 25 repos)"
 created: 2026-06-10
-author: harshkantariya [slot-4·laptop]
 source:
   - codex/08-workflows/ci-cd-flow.md
   - scripts/workflow-templates/
