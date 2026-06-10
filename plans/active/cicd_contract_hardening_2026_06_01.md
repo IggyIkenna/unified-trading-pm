@@ -333,10 +333,17 @@ v2**, so re-trigger + scoped-lock clears them (no force).
       _failed_ — not never-reported — required check; PM SSOT + UTL + UAC moved together; non-clone repos followed)
       landed and the stuck heads were re-triggered (close+reopen under PAT → fires v2 + scoped lock-check). — verified
       2026-06-10: template + per-repo copies present and running.
-- [ ] [SCRIPT] P2. **BLOCKED-OPERATOR** — operator should add **Checks: Read** to the fine-grained `GH_PAT` (Secret
-      Manager) so the scoped staging-lock-check's `…/check-runs` calls don't 403 and the rollout can be cleanly
-      monitored / registered as a scoped required check. Residual operator-permission piece split out of the now-done #1
-      rollout (2026-06-10).
+- [x] ✅ [SCRIPT] P2. **Checks: Read — PREMISE DEAD, resolved code-side 2026-06-10.** The operator attempted the grant
+      live and GitHub's fine-grained-token permission picker **offers NO "Checks" permission at all** (full picker list
+      verified: Actions…Workflows — no Checks entry), so the `…/check-runs` 403 is **not grantable**; GraphQL
+      `statusCheckRollup` ALSO 403s per-CheckRun-node with the PAT (earlier in-session successes rode the gh keyring's
+      OAuth token, which doesn't exist in CI). **Fix shipped instead**: (a) both promote workflows'
+      `HAS_V2` probes (`ldr-to-main-promote.yml` + `ldr-to-staging-promote.yml`) now use the **Actions-API run lookup**
+      (`gh run list --workflow quality-gates-v2.yml` filtered by head SHA — works with the PAT's Actions permission;
+      live-verified) **with ERR≠0 distinction** — the old `|| echo 0` made every 403 read as "v2 never reported" →
+      **every blocked PR was being close+reopened spuriously on every tick** (live churn defect, now fail-safe);
+      (b) `ci_failure_watcher._run_is_billing_block` gains a structural fallback (annotations unreadable + ALL jobs
+      zero-step → billing signature) — annotation-403 had silently disabled billing-outage detection entirely.
 - [x] ✅ [SCRIPT] P0. **#3 tab-mirror leg-A → `GH_PAT` — DONE + VERIFIED + ROLLED OUT FLEET-WIDE 2026-06-08 (slot-1).**
       Canary (PM `tab/ikennaigboaka/1`) leg-A ran GREEN (9 steps) and FF'd PM `live-defi-rollout` to the PAT-swap
       commit; then rolled out to **all 24 repos** (`unified-trading-pm@1bd99d67b`/`28106739c` SSOT → per-repo `.github`)

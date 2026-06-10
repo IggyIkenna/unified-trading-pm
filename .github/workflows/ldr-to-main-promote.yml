@@ -110,8 +110,17 @@ jobs:
           MSTATE=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.mergeable_state' 2>/dev/null || echo "")
           if [ "$MSTATE" = "blocked" ]; then
             HEAD_SHA=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.head.sha' 2>/dev/null || echo "")
-            HAS_V2=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" \
-              --jq '[.check_runs[]|select(.name|test("quality-gates-v2"))]|length' 2>/dev/null || echo "0")
+            # Actions-API run lookup, NOT REST /check-runs and NOT GraphQL rollup (2026-06-10):
+            # fine-grained PATs can never hold a "Checks" permission (GitHub's picker doesn't
+            # offer one) → BOTH check-read paths 403, and the old `|| echo 0` made EVERY blocked
+            # PR read as v2-never-reported → spurious close+reopen churn. The Actions API works
+            # with the PAT ("Actions" permission), and "a v2 RUN exists for this head SHA" is the
+            # same signal. ERR ≠ 0: on query failure we fail-SAFE (leave the PR alone).
+            HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+              --json headSha --jq "[.[]|select(.headSha==\"$HEAD_SHA\")]|length" 2>/dev/null || echo "ERR")
+            if [ "$HAS_V2" = "ERR" ]; then
+              echo "  WARN: statusCheckRollup query failed for PR #$PR_NUM — leaving it (no blind recovery)"
+            fi
             if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ] && [ "$DRY_RUN" != "true" ]; then
               echo "  v2-never-reported on head ${HEAD_SHA:0:8} — close+reopen to re-fire quality-gates-v2"
               gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null && sleep 3 \

@@ -419,13 +419,23 @@ def _run_is_billing_block(repo: str, run_id: int) -> bool:
     Cheap signature first (a job with ZERO steps = it never started → "Set up job"
     failure), then confirm via the check-run annotation text so we don't false-positive
     on other startup failures. Network errors → False (never raises, never pages wrongly).
+
+    Annotation reads can be PERMANENTLY unavailable (2026-06-10): the ``/check-runs/{id}/
+    annotations`` REST endpoint 403s for fine-grained PATs — GitHub's token picker offers
+    no "Checks" permission at all, so this is not grantable. When annotations are
+    unreadable we fall back to the STRUCTURAL run-level signature: billing exhaustion
+    fails EVERY job at setup, so a failed run where ALL jobs (≥1) have zero steps is
+    treated as billing-blocked. Slightly weaker (a total runner outage could mimic it)
+    but the alternative was detection silently disabled (annotations 403 → always False).
     """
     jobs = gh_json(["api", f"repos/{ORG}/{repo}/actions/runs/{run_id}/jobs"])
     if not isinstance(jobs, dict):
         return False
     job_list = jobs.get("jobs")
-    if not isinstance(job_list, list):
+    if not isinstance(job_list, list) or not job_list:
         return False
+    zero_step_jobs = 0
+    annotations_readable = False
     for job in job_list:
         if not isinstance(job, dict):
             continue
@@ -433,14 +443,19 @@ def _run_is_billing_block(repo: str, run_id: int) -> bool:
         # 0 steps == the job never reached its first real step (setup-phase failure).
         if isinstance(steps, list) and len(steps) > 0:
             continue
+        zero_step_jobs += 1
         job_id = job.get("id")
         if not job_id:
             continue
         anns = gh_json(["api", f"repos/{ORG}/{repo}/check-runs/{job_id}/annotations"])
-        messages = [(a.get("message") or "") for a in anns if isinstance(a, dict)] if isinstance(anns, list) else []
-        if _annotation_is_billing(messages):
-            return True
-    return False
+        if isinstance(anns, list):
+            annotations_readable = True
+            messages = [(a.get("message") or "") for a in anns if isinstance(a, dict)]
+            if _annotation_is_billing(messages):
+                return True
+    # Annotations unreadable (fine-grained-PAT 403 class) + EVERY job died at setup
+    # → structural billing signature.
+    return not annotations_readable and zero_step_jobs == len(job_list)
 
 
 def detect_billing_block(repos: list[str], now: _dt.datetime, fresh_hours: float) -> dict | None:

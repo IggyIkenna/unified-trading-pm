@@ -201,8 +201,17 @@ jobs:
                 # CONSERVATIVE re-trigger: only if v2 is ABSENT on the CURRENT head SHA (the stale-trigger
                 # signature). If v2 IS present on head (genuine gate failure, or a run in progress), leave it.
                 HEAD_SHA=$(gh api "repos/$OWNER/$REPO/pulls/$PR_NUM" --jq '.head.sha' 2>/dev/null || echo "")
-                HAS_V2=$(gh api "repos/$OWNER/$REPO/commits/$HEAD_SHA/check-runs" \
-                  --jq '[.check_runs[]|select(.name|test("quality-gates-v2"))]|length' 2>/dev/null || echo "0")
+                # Actions-API run lookup, NOT REST /check-runs and NOT GraphQL rollup (2026-06-10):
+                # fine-grained PATs can never hold "Checks" (GitHub offers no such permission) →
+                # both check-read paths 403, and the old `|| echo 0` made every blocked PR read as
+                # stale → spurious close+reopen churn. The Actions API works with the PAT; "a v2
+                # RUN exists for this head SHA" is the same stale-check signal. ERR ≠ 0: on query
+                # failure leave the PR alone (fail-safe), never recover blind.
+                HAS_V2=$(gh run list --repo "$OWNER/$REPO" --workflow quality-gates-v2.yml --limit 50 \
+                  --json headSha --jq "[.[]|select(.headSha==\"$HEAD_SHA\")]|length" 2>/dev/null || echo "ERR")
+                if [ "$HAS_V2" = "ERR" ]; then
+                  echo "  WARN: statusCheckRollup query failed for PR #$PR_NUM — leaving it (no blind recovery)"
+                fi
                 if [ -n "$HEAD_SHA" ] && [ "${HAS_V2:-0}" = "0" ]; then
                   echo "  STALE-CHECK on PR #$PR_NUM — quality-gates-v2 absent on current head ${HEAD_SHA:0:8} (GITHUB_TOKEN-push didn't fire synchronize); close+reopen to re-trigger"
                   if gh pr close "$PR_NUM" --repo "$OWNER/$REPO" 2>/dev/null; then
