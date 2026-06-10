@@ -90,10 +90,16 @@ page) — P2, after both v1s ship.
 
 ## Sub-plans (the execution units)
 
-- [ ] [PLAN] P1. `ci_dashboard_deployment_ui_2026_06_10.md` — repo dropdown + fleet overview + per-repo branch×SHA
-      matrix + QG/check status + promotion PRs + image-level deploy signal. Owner: slot-3 (laptop, playwright-capable).
-- [ ] [PLAN] P1. `fleet_git_health_orchestrator_2026_06_10.md` — fleet-wide hosts×slots×repos git-health page +
-      reporter/cron-liveness aggregation endpoint. Owner: orchestrator backlog (repo: agent-orchestrator).
+- [x] ✅ [PLAN] P1. v1 SHIPPED 2026-06-10 — `ci_dashboard_deployment_ui_2026_06_10.md`: repo dropdown + 25-repo overview
+      matrix + branch×SHA + QG/check status + stuck-PR classifier + SIT panel + image deploy signal + Alerts tab +
+      errors[] strip + GitHub/AO click-throughs + repo cross-links + Fleet Git tab (deployment-api@2b6b424 +
+      deployment-ui@816f920; pw:L2 182/182). Open remainders are P2/P3 smart-extras + 2 BLOCKED-CREDENTIALS (GH_PAT
+      Checks:read, ORCHESTRATOR_API_TOKEN — pinged) — tracked in-sub-plan, not v1 blockers.
+- [x] ✅ [PLAN] P1. v1 SHIPPED 2026-06-10 — `fleet_git_health_orchestrator_2026_06_10.md`: `GET /api/fleet/git-health`
+      (hosts/slots/repos + reporter_stale + ff_cron_stale + drift_violation + 14 pytest) + orchestrator `/fleet-git`
+      page + cron-liveness reporter + deployment-ui `/fleet` single-pane tab + codex (agent-orchestrator@0ab7c84 + PM
+      docs). Open remainder: live cross-host cycle VERIFY (gated on `ORCHESTRATOR_API_TOKEN` + a 2nd host) + a P3 vitest
+      harness — tracked in-sub-plan.
 
 ## Smart extras (P2/P3 — tracked here so they are not chat-summary vapor; promote to sub-plans when picked up)
 
