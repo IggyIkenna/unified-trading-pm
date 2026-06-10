@@ -112,7 +112,12 @@ unchanged:
 
 ## Phase 0 — Per-repo violation census (do FIRST; cheap, unblocks everything)
 
-- [ ] [AUDIT] P1. For EVERY service+library repo, run `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` (now
+- [x] ✅ [AUDIT] P1. DONE 2026-06-10 (slot live-defi-rollout) — census written to
+      `plans/audit/results/codex_violation_census_2026_06_10.md`: 25 repos run, 5 over-ceiling (deployment-api 24,
+      execution-service 22, MTDS 15, strategy 10, MDPS 7), 3 immediate no-code ratchets (deployment-service 8→1,
+      ibkr 4→1, ml 5→3), `none`-budget repos all at 0 current violations (agent-orchestrator runs a custom gate with
+      no codex section — budget-pin todo stays in Phase 4). Original: For EVERY service+library repo, run
+      `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` (now
       honest post-parity-fix) and record the per-class breakdown (which of the ~24 check-classes fire, and the file/line
       offenders for each) into `plans/audit/results/codex_violation_census_2026_06_10.md`. This is the remediation
       matrix: it converts each repo's opaque budget number into a concrete fix-list. Capture the `none`-budget repos'
