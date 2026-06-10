@@ -45,6 +45,14 @@ per-slot badges or by SSHing around.
    built into the latest image"). Runtime-level (what's RUNNING — deployment registry / Cloud Run revisions) is a named
    v2 successor, NOT silently dropped.
 
+## Operator decision REVISION (2026-06-10 v2 — single devops pane)
+
+**deployment-ui is THE devops surface — one host/port, fewer panes.** Supersedes the v1 split for the FRONTEND only:
+fleet git-health (sub-plan B) still ingests/aggregates in the agent-orchestrator backend (it owns slot/host state), but
+its primary OPERATOR view moves INTO deployment-ui (deployment-api proxies `/api/fleet/git-health`; the orchestrator
+dashboard keeps its per-slot badges for worker-ops use). All CI/CD + fleet concerns in one app: Repos CI page
+(`/repos`), per-service CI tab, fleet git-health page.
+
 ## Alert-parity principle (operator add 2026-06-10 — the design rule for ALL of this)
 
 **Anything we alert on generically must be a continuously observable STATE in the UI** — an alert is the transition of a
