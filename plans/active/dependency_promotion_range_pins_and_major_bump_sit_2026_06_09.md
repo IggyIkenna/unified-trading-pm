@@ -143,7 +143,7 @@ clean fix is to relax it.
 > escalation target is DOWN", already filed). Root cause is NOT an execution-service code break — there is no code to
 > fix. **Two coupled defects below.**
 
-- [ ] [SCRIPT] P0. **DEFECT 1 — `is_breaking=true` was stamped for a bump the canonical differ calls NON-breaking → the
+- [x] ✅ [SCRIPT] P0. **RESOLVED 2026-06-09 — see "RESOLUTION LOG — 2026-06-09" below (DEFECT 1 FIXED, `unified-trading-pm@0cfac845e`, semver-agent.yml.tmpl pickaxe baseline-resolution + module→package-move regression test, rolled out 24/24); verified 2026-06-10 (commit + test + template all in-tree). DEFECT 1 — `is_breaking=true` was stamped for a bump the canonical differ calls NON-breaking → the
       cascade + fleet staging-lock fired SPURIOUSLY.** On 2026-06-09 13:48Z `update-repo-version.yml` locked staging
       with `locked_reason="Breaking MINOR bump cascade: unified-api-contracts=0.5.0 (pre-1.0.0)"`,
       `breaking_pending=[execution-service, unified-api-contracts]`, `sit_retry_count=3` (retry-exhausted). But the SSOT
@@ -181,7 +181,7 @@ clean fix is to relax it.
       unified-api-contracts (`semver-agent.yml` DIFF_BASE) + unified-trading-pm (`detect_breaking_change.py` + tests).
       Per the model a non-breaking minor must drain LDR→staging→main on QG alone — NO lock, NO SIT, NO consumer
       pin-push.
-- [ ] [SCRIPT] P0. **DEFECT 2 — even IF it were breaking, the SIT could not converge: the consumer was pinned to a UAC
+- [x] ✅ [SCRIPT] P0. **RESOLVED 2026-06-09 — see "RESOLUTION LOG" below (incident cleared: 18 spurious dep-update fan-out PRs CLOSED incl. execution-service#232, lock healed; the durable dependency-first-ordering fix tracked in Phase 6.x — see line ~320 FROM-digest ratchet + cascade-ordering items); verified 2026-06-10. DEFECT 2 — even IF it were breaking, the SIT could not converge: the consumer was pinned to a UAC
       version stranded on `staging`, unresolvable from where its CI clones.** The cascade auto-opened execution-service
       dep-update PR #232 (`feat!: update unified-api-contracts to 0.5.0`, head `dep-update/unified-api-contracts-0.5.0`
       → `staging`) which is a PURE pin bump `unified-api-contracts>=0.3.0` → `>=0.5.0` (no code change). Its
@@ -196,7 +196,7 @@ clean fix is to relax it.
       version-aware clone must resolve the dependency from the consumer-PR's BASE branch (or the cascade must promote
       the dep dependency-first + tag) before pinning + re-triggering consumers. repo: unified-trading-pm
       (`setup-workspace-from-manifest.sh check_version_constraint` + cascade ordering).
-- [ ] [SCRIPT] P0. **RESOLUTION for THIS incident (pending operator confirmation — fleet control-plane action):** clear
+- [x] ✅ [SCRIPT] P0. **DONE 2026-06-09 (operator chose "full fix: clear + durable" + authorized admin) — see "RESOLUTION LOG" below; verified 2026-06-10. RESOLUTION for THIS incident:** clear
       the spurious staging-lock (retry-exhausted + differ says non-breaking) exactly as the 2026-06-07 session-#3
       precedent did, and close execution-service PR #232 (revert the unnecessary pin — the existing `>=0.3.0,<1.0.0`
       range already absorbs 0.5.0; promotion is PULL not PUSH for non-breaking minors). UAC then promotes
