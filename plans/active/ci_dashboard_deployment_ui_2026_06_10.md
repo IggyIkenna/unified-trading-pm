@@ -112,13 +112,14 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       still surfaced globally), `get_overview` splits rows from `errors[]`, `OverviewResponseDict.errors` added,
       `_mock_overview` seeds one sample. Layered onto #46's AWS/GCP build-signal parity (reconciled — duplicate AWS WIP
       dropped). **Follow-up below: deployment-ui errors[] panel consumes this.**
-- [ ] [CODE] P3. [UI] **deployment-ui errors[] panel** — consume the new `OverviewResponseDict.errors[]` (deployment-api@62bbec1)
-      on the Repos CI dashboard: a small "degraded repos" strip listing each `{repo, error}` so a per-repo GitHub-5xx
-      degradation is VISIBLE, not just present in the payload. Repo: deployment-ui (add `errors` to `RepoCiOverview`
-      client type + render). Pairs with the failure-injection matrix billing-block/rate-limit honest-degrade verify.
+- [ ] [CODE] P3. [UI] **deployment-ui errors[] panel** — consume the new `OverviewResponseDict.errors[]`
+      (deployment-api@62bbec1) on the Repos CI dashboard: a small "degraded repos" strip listing each `{repo, error}` so
+      a per-repo GitHub-5xx degradation is VISIBLE, not just present in the payload. Repo: deployment-ui (add `errors`
+      to `RepoCiOverview` client type + render). Pairs with the failure-injection matrix billing-block/rate-limit
+      honest-degrade verify.
 - [x] ✅ [TEST] P2. DONE 2026-06-10 — deployment-api@3521b95 (QG green; reproductions 13 & 57 passed, were 2/6 failed).
-      **Pre-existing deployment-api test pollution fixed** (found while shipping the errors[] reconcile, unrelated to it):
-      `test_lifespan.py` runs the real FastAPI lifespan whose `fastapi_uei_lifespan` else-branch calls
+      **Pre-existing deployment-api test pollution fixed** (found while shipping the errors[] reconcile, unrelated to
+      it): `test_lifespan.py` runs the real FastAPI lifespan whose `fastapi_uei_lifespan` else-branch calls
       `setup_service_observability(mode=<non-test>)` and never restores the shared `unified_trading_library.events`
       `_mode`/`_writer` globals → later `log_event` callers (tarball `trigger_refresh`/`ensure_fresh`, `vm_events`
       real-mode) raised "Event logging not initialized", surfacing under `pytest -n` work-stealing as deterministic
@@ -128,15 +129,16 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       fix**: the data-status canonical-coverage gate flagged `data_status_tardis_windows.py`, which returns Tardis
       free-tier access RULES + key status (no bucket, no manifest, no coverage) — forcing the coverage helper would
       fabricate a meaningless ratio (a banned pattern). Taught STEP 5.90 (`check_data_status_endpoint_canonical.sh`) to
-      honor an additive `# QG-allow: data-status-no-coverage` marker (negative-tested: still fails real unmarked coverage
-      endpoints, exempts marked); annotated the Tardis endpoint + dropped a dead `_cfg`; documented the exemption in
-      `codex/06-coding-standards/data-status-endpoint-contract.md`. Diagnosed gate-wrong (not code-wrong); QG green.
-- [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@6d6fdce (`tests/conftest.py`). **Flaky-test isolation fix**: 6 tests
-      (`test_tarball_staleness` ×5, `test_vm_events::test_malformed_jsonl_skipped`) failed order-dependently in the full
-      suite but passed in isolation — `trigger_refresh`/`_parse_event_jsonl` call `log_event()`, which hard-raises
-      `RuntimeError: Event logging not initialized` when the UTL events global is nulled mid-suite. Added an autouse
-      `setup_events` fixture in conftest → suite is now order-independent (6 failed → **3994 passed, 0 failed**).
-      Surfaced when slot-2's test-count change shifted xdist ordering; fix benefits the whole repo.
+      honor an additive `# QG-allow: data-status-no-coverage` marker (negative-tested: still fails real unmarked
+      coverage endpoints, exempts marked); annotated the Tardis endpoint + dropped a dead `_cfg`; documented the
+      exemption in `codex/06-coding-standards/data-status-endpoint-contract.md`. Diagnosed gate-wrong (not code-wrong);
+      QG green.
+- [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@6d6fdce (`tests/conftest.py`). **Flaky-test isolation fix**: 6
+      tests (`test_tarball_staleness` ×5, `test_vm_events::test_malformed_jsonl_skipped`) failed order-dependently in
+      the full suite but passed in isolation — `trigger_refresh`/`_parse_event_jsonl` call `log_event()`, which
+      hard-raises `RuntimeError: Event logging not initialized` when the UTL events global is nulled mid-suite. Added an
+      autouse `setup_events` fixture in conftest → suite is now order-independent (6 failed → **3994 passed, 0
+      failed**). Surfaced when slot-2's test-count change shifted xdist ordering; fix benefits the whole repo.
 
 ## Phase 2 — deployment-ui "Repos" page
 
@@ -177,6 +179,11 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       orchestrator's `/api/fleet/git-health` (server-side token) + a deployment-ui page rendering hosts×slots×repos;
       lands when sub-plan B's endpoint ships. Repo: deployment-api + deployment-ui (+ cross-ref
       fleet_git_health_orchestrator_2026_06_10.md Phase 2 note).
+
+- [ ] [CI] P1. **Alert-ledger fleet rollout** — notify-slack.yml is a fleet template; the alert-persist step
+      (PM@794b1e3a7) must roll out via `rollout-workflow-templates.sh --template notify-slack.yml` + per-repo commits
+      (rollout-is-not-done-until-committed HARD RULE) so per-repo alerts (v2 failures etc.) also reach the ledger.
+      PM-side alerts (SIT/cascade/lock/watcher/promotion — the CI lifecycle set) are covered as of PM main.
 
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 
