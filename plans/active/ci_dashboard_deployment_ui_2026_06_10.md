@@ -192,6 +192,15 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       (rollout-is-not-done-until-committed HARD RULE) so per-repo alerts (v2 failures etc.) also reach the ledger.
       PM-side alerts (SIT/cascade/lock/watcher/promotion — the CI lifecycle set) are covered as of PM main.
 
+- [ ] [INFRA] P2. **Image column unknown on the LOCAL dev stack — Cloud Build API 400s from the laptop env** (found
+      2026-06-10 verifying operator trust): even with GCP_PROJECT_ID + GCS_REGION=asia-northeast1 exported,
+      `ListBuildTriggers` returns `400 InvalidArgument` from the dev process — the LEGACY `/api/cloud-builds/triggers`
+      route 500s on the same call (no degradation), while repo-ci degrades to honest-unknown. Likely ADC-user-vs-SA or
+      quota-project shape; works on the deployed API. Diagnose `gcloud builds triggers list` works from the same shell
+      (it does) vs the python client call; fix the dev-stack env recipe in `restart-deployment-stack.sh` (compose with
+      the GCP_PROJECT_ID launcher todo in quality_gates_speed_and_config_ssot). Until then: Image=unknown locally is
+      HONEST degradation, not fake data; the deployed instance shows real build data.
+
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 
 - [x] ✅ [TEST] P1. [UI] DONE 2026-06-10 — deployment-ui@3998a4d | pw:L2 ✓ (164/164 smoke) | regression:
