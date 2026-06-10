@@ -1223,7 +1223,7 @@ self-recovers. Done:
 Remaining genuine reds (correctly **gated** by the now-working cascade — pre-existing per-repo code debt, NOT
 machinery):
 
-- [ ] [TEST] P1. **features-service staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports
+- [x] ✅ [RESOLVED-STALE verified 2026-06-11: features-service LDR+staging v2 GREEN] [TEST] P1. **features-service staging v2 RED — 2 genuine gate failures.** (1) Manifest import alignment: imports
       `ml_service` but does not declare it (the SAME finding as the Wave-1 cleanup todo above — canonical fix = add
       ml-service to manifest **or** drop the `regime_clustering.py` lazy import; dep-graph decision, circular-dep risk →
       owning slot, not a blind edit). (2) Codex compliance FAILED: 1 violation (max 0). Repo stays FEATURE_GREEN-gated
@@ -1237,7 +1237,7 @@ machinery):
       agent-orchestrator@fd6ef28, promoted tab→LDR→staging(PR#5)→main(PR#6, main-v2 green run 27078002621). **Verified
       E2E: semver-agent run 27078070043 = SUCCESS** (reaches Compute-semver; prior runs 27077953898/27077995619 failed).
       repo: agent-orchestrator.
-- [ ] [SCRIPT] P1. **mdps LDR→staging PR #91 CONFLICTING (DIRTY)** — staging is 2-ahead / 371-behind LDR; the 2 unique
+- [x] ✅ [RESOLVED-STALE: mdps PR #91 merged 2026-06-05] [SCRIPT] P1. **mdps LDR→staging PR #91 CONFLICTING (DIRTY)** — staging is 2-ahead / 371-behind LDR; the 2 unique
       staging commits are stale promotion/CI-merge artifacts (`feat(workspace-sweep): live-defi-rollout → staging` +
       `ci: merge main into staging — quality-gates-v2 migration #86`) whose content originated on LDR, but a
       delete/modify conflict means `-X ours` take-LDR aborts. Because staging has unique non-merge commits this is the
@@ -1280,7 +1280,7 @@ machinery):
       PR#108 was MERGEABLE but BLOCKED. Re-pointed classic→full via
       `gh api -X PATCH .../branches/main/protection/required_status_checks`. THIS drift likely persists on OTHER repos'
       main — fix per-repo before any auto-merge promotion.
-- [ ] [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2 — SERVICE-REPO PROMOTION EFFECTIVELY COMPLETE. Authoritative
+- [x] ✅ [RESOLVED-STALE: PM main==LDR content-parity (ahead_by=1/files=0); fleet promotion effectively complete] [SCRIPT] P1. **[RE-AUDIT 2026-06-02 slot-2 — SERVICE-REPO PROMOTION EFFECTIVELY COMPLETE. Authoritative
       `gh compare main...live-defi-rollout`:
       UAC/instruments/execution/strategy/mtds/deployment-service/deployment-api/SIT are all `ahead=0 behind=1-4` → main
       is CURRENT-or-AHEAD of LDR (green LDR code already on main; the 1-4 main-only commits are [skip ci]/reconcile).
@@ -2556,7 +2556,7 @@ embedded MTDS `configs/venue_data_types.yaml` legacy-alias data finding stays ow
       `unified-trading-pm@47a597ac4` → LDR-direct** (gate machinery; operator-authorized direct push). Now writes to
       `${PROJECT_ROOT}` (the repo root, matching the content sentinel) + verified: sentinel lands at the PM repo root ==
       HEAD on a full green run AND on a green-skip (sentinel-HIT keeps `RUN_TESTS=true`). Two-pass restored fleet-wide.
-- [ ] [SCRIPT] P1. **LDR PM gate was RED — direct evidence for item D (Tier A).** While shipping A,
+- [x] ✅ [RESOLVED-STALE: PM LDR v2 GREEN (3x 2026-06-10)] [SCRIPT] P1. **LDR PM gate was RED — direct evidence for item D (Tier A).** While shipping A,
       `quality-gates.sh     --no-fix` on LDR HEAD failed: (1) `scripts/cicd/tier_c_promotion_gate.py` (STAGE-1.8,
       `157df99ff`) had unbaselined `.get(...,"")/{}/[]` manifest-parse defaults; (2) `.code-workspace` listed
       `status=future` repos (greeks-service, fund-administration-service); (3)
@@ -4711,7 +4711,7 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       and `unified-trading-system-ui #32 live-defi-rollout→main merged`. The `mergedAt` fix (line ~362, was the invalid
       `merged` field that 404'd the whole query) is live and the merged/closed verb resolves correctly. The bookend
       posts as INFO + still triggers the notify (build_report returns alert-or-resolved True). No code change.
-- [ ] [CICD] P1. **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard
+- [x] ✅ [RESOLVED-STALE: deployment-service main=0.8.0 + ml-service main=0.4.0 (both >0.0.0; no spurious)] [CICD] P1. **Task 4 — drain `SPURIOUS 0.0.0` to deployment-service + ml-service main (IN-FLIGHT via standard
       path).** Marker state at start: both `live-defi-rollout=1, staging=0, main=0`. The standard
       `ldr-to-staging-promote` had already opened the LDR→staging PRs (deployment-service #39, ml-service #15) but they
       were stuck: ml-service #15 had **auto-merge OFF** (a transient earlier v2 `pull_request` FAILURE on the head — but
@@ -4886,7 +4886,7 @@ remaining ~30 min was three defects, each repaired by hand mid-probe and then fi
 
 Both template fixes need `rollout-workflow-templates.sh` to the fleet (same change set).
 
-- [ ] [OPERATOR] P1. Enable `allow_auto_merge` on **greeks-service** (Settings → General → "Allow auto-merge") — both
+- [x] ✅ [RESOLVED-STALE: greeks-service allow_auto_merge already true] [OPERATOR] P1. Enable `allow_auto_merge` on **greeks-service** (Settings → General → "Allow auto-merge") — both
       available tokens lack admin on that repo (404 on PATCH). Until flipped, greeks promote PRs take the direct-merge
       fallback path. — provenance: probe 2026-06-10
 - [ ] [SCRIPT] P2. 4 repos lack `scripts/quickmerge.sh` (greeks-service ✅ fixed via probe commit, ml-service,

@@ -1,0 +1,207 @@
+---
+title:
+  "Codex-violation ratchet to ≤5 fleet-wide + split the egregious oversized files (registry.py 18k, orchestrator.py 8k,
+  …)"
+parent_epic: infrastructure_master
+assigned_vm: vm-cross-cutting
+priority: P2
+status: active
+estimate_class: refactor
+estimate_baseline_ai_days: 18.0
+estimate_calibrated_ai_days: 7.2
+created: 2026-06-10
+source:
+  - operator direction 2026-06-10 ("take codex violations down to max 5; we have a ~10k-line file in instruments-service
+    that's way too much — make a PM active plan")
+  - slot-3 fleet audit 2026-06-10 (the grep -P parity fix exposed the true counts; budgets had sprawled to 24)
+related_plans:
+  - plans/active/ci_local_qg_parity_2026_06_08.md
+  - plans/active/cicd_contract_hardening_2026_06_01.md
+locked_by: live-defi-rollout
+locked_since: 2026-06-10
+---
+
+# Codex-violation ratchet to ≤5 fleet-wide
+
+## Problem
+
+`CODEX_MAX_VIOLATIONS` (the per-repo lint-codex budget in each `scripts/quality-gates.sh`) is a **ratchet-DOWN**
+mechanism — a temporary ceiling for PRE-EXISTING violations that must only ever shrink toward 0. Instead it has
+**sprawled to 24** on the worst repos, normalising real debt: banned `os.getenv`, local schema definitions, deep UAC
+imports, `Any` types, empty-fallbacks, backward-compat shims, and **files that are maintainability hazards**
+(`features-service/registry.py` is **18,328 lines**; `instruments-service/orchestrator.py` **8,192**;
+`deployment-api/data_status_service.py` **6,663**; `unified-trading-api/seed.py` **5,169**;
+`agent-orchestrator/server.py` **4,470**; `market-tick-data-service/orchestrator.py` **4,219**).
+
+**Why now**: until 2026-06-10 the `grep -P` portability bug (`ci_local_qg_parity_2026_06_08.md`, FIXED) made every macOS
+slot **false-pass** the deep-import lint-codex check — so local QG under-counted and the budgets were never trustworthy
+locally. With local now the honest oracle (local count == CI count), a ratchet-down is **enforceable + verifiable on the
+slot** before CI.
+
+**Target (operator 2026-06-10): every repo's `CODEX_MAX_VIOLATIONS` ≤ 5** (0 is the ideal; 5 is the hard ceiling), and
+**no source file > 900 lines** without a documented, time-boxed exception. Budgets only ratchet DOWN from here — a bump
+is review-blocking (the sole sanctioned exception was deployment-api 23→24 on 2026-06-10 to unblock the promotion while
+this plan lands; that is itself a P1 item below).
+
+## Principle (the ratchet contract)
+
+1. A budget is the count of CURRENTLY-failing lint-codex check-classes (each check is a binary `V += 1`). The list of
+   classes is the SSOT in `scripts/quality-gates-base/base-service.sh` (os.getenv / deep-imports / Any / raw-json /
+   empty-fallbacks / schema-provenance / file-size / function-size / backward-compat / hardcoded-project-id / …).
+2. **Every fix ratchets the budget DOWN in the same commit** — fix a class, drop `CODEX_MAX_VIOLATIONS` by the number of
+   classes you cleared, update the in-file comment with what was fixed. Never leave a fixed violation with a stale
+   higher budget.
+3. **File-size + function-size are first-class violations**, not exempted by a glob forever. An oversized file
+   `FUNCTION_SIZE_EXTRA_EXCLUDES`-excluded today (e.g. `features-service/registry.py`) is HIDDEN debt — Phase 1 splits
+   it and removes the exclude.
+4. **No new violations**: a repo at ≤5 must not regress; CI v2 + the now-honest local gate enforce it.
+
+## Prerequisite (DONE)
+
+- [x] ✅ `ci_local_qg_parity` grep-P → rg --pcre2 fix (PM@7427ade8a) — local macOS now counts identically to CI, so a
+      slot can prove a ratchet-down before pushing. Verified 2026-06-10.
+
+## Per-repo current state (slot-3 audit 2026-06-10)
+
+| Repo                           | Budget | Over 5? | Worst file (lines)                 | Notes                                                |
+| ------------------------------ | ------ | ------- | ---------------------------------- | ---------------------------------------------------- |
+| deployment-api                 | 24     | ⬛ +19  | data_status_service.py (6,663)     | also data_status_drilldown 2,586 / data_status 2,550 |
+| execution-service              | 24     | ⬛ +19  | kraken_rest_adapter.py (1,299)     | many adapters >1k; deep imports (34 raw)             |
+| market-tick-data-service       | 16     | ⬛ +11  | orchestrator.py (4,219)            | tardis_adapter 2,880 / solana_defi_handler 2,125     |
+| strategy-service               | 11     | ⬛ +6   | catalog.py (2,371)                 | batch_handler 1,570                                  |
+| market-data-processing-service | 10     | ⬛ +5   | canonical_writer.py (2,412)        | live_workers 1,731                                   |
+| deployment-service             | 8      | ⬛ +3   | —                                  | violation classes (no >900 file in top-3)            |
+| unified-api-contracts (lib)    | 7      | ⬛ +2   | —                                  | library — schema-provenance/import classes           |
+| ml-service                     | 5      | ✅ =5   | cloud_feature_provider.py (1,202)  | at ceiling — hold + split the >1k files              |
+| instruments-service            | 4      | ✅      | **orchestrator.py (8,192)**        | budget OK but the 8k file is excluded HIDDEN debt    |
+| ibkr-gateway-infra             | 4      | ✅      | —                                  |                                                      |
+| batch-live-reconciliation      | 1      | ✅      | —                                  |                                                      |
+| features-service               | 0      | ✅      | **registry.py (18,328)**           | budget 0 but registry.py EXCLUDED = HIDDEN debt      |
+| unified-trading-api            | none   | ?       | seed.py (5,169)                    | get budget; split seed.py                            |
+| agent-orchestrator             | none   | ?       | server.py (4,470)                  | get budget; split server.py (worker_liveness 1,215)  |
+| unified-trading-library (lib)  | 0      | ✅      | —                                  |                                                      |
+| unified-trading-pm             | 0      | ✅      | generate-ui-vision-pptx.py (1,717) | script-dir; lower priority                           |
+
+> "none" = no `CODEX_MAX_VIOLATIONS` override (uses the base default). Phase 0 pins the real number per repo.
+
+## Phase 0 — Per-repo violation census (do FIRST; cheap, unblocks everything)
+
+- [ ] [AUDIT] P1. For EVERY service+library repo, run `QG_SLICE=lint-codex bash scripts/quality-gates.sh --no-fix` (now
+      honest post-parity-fix) and record the per-class breakdown (which of the ~24 check-classes fire, and the file/line
+      offenders for each) into `plans/audit/results/codex_violation_census_2026_06_10.md`. This is the remediation
+      matrix: it converts each repo's opaque budget number into a concrete fix-list. Capture the `none`-budget repos'
+      real counts. Repo: unified-trading-pm (audit doc) — read-only across the fleet.
+
+## Phase 1 — Split the egregious oversized files (biggest maintainability win; each is its own dispatchable unit)
+
+> Rule: decompose by COHESION (one concern per module), keep the public import surface stable (re-export from the
+> original module's `__init__`/facade so consumers don't churn), add no behaviour change, QG-green + tests-green per
+> split, and REMOVE any `FUNCTION_SIZE_EXTRA_EXCLUDES` glob that was hiding the file. Ratchet the repo's file-size
+> violation away in the same commit.
+
+- [ ] [REFACTOR] P1. **features-service `registry.py` (18,328 L) — it's DATA, not code (operator 2026-06-10).** The file
+      is **1,382 `FeatureSpec(...)` literals + only 11 functions** — a declarative data table living in a `.py`. Do NOT
+      "split into per-group .py modules" (still code-shaped data). Instead **separate the data from the loader**: - Move
+      the 1,382 specs into a **data file** — `registry/specs.yaml` (human-editable SSOT; one block per spec:
+      name/group/period/formula_version/implementation/status/…) OR a generated `specs.parquet` if a generator is
+      preferred. "Adding a feature = add a row" stays true, in YAML not Python. - `registry.py` shrinks to a **~80-line
+      loader+validator**: read the data file → build the `FeatureSpec` objects → run the closed-set validation the
+      docstring describes (group ∈ CALCULATOR_REGISTRY, status ∈ enum, version is int) at import → expose
+      `get_specs_by_group` / `max(formula_version)` unchanged. Tests 2.2–2.5 keep parametrising over the loaded specs
+      (public surface identical). - If round-tripping by hand is error-prone, ship a one-shot
+      `scripts/dump_registry_to_yaml.py` that emits the data file from the current literals (the migration), then delete
+      the literals. Remove the `FUNCTION_SIZE_EXTRA_EXCLUDES` glob. Repo: features-service.
+- [ ] [REFACTOR] P1. **instruments-service `orchestrator.py` (8,192 L / 89 functions) — abstract by asset-group +
+      core.** The module mixes per-asset-group logic with venue/date core + sink. Suggested package
+      `engine/orchestrator/`: `defi.py`
+      (`_build_defi_venues`/`clear_defi_universe_cache`/`_get_defi_manifest_high_watermarks`/
+      `_enforce_defi_monotonicity`/`filter_defi_instruments_by_relevance`/`_normalize_wrapped_token`), `sports.py`
+      (`_canonical_league_id`/`_af_id_from_canonical`/`_lifecycle_columns_from_af_response`/
+      `_flatten_canonical_fixture_for_disk`/league-team-standings caches/`_should_skip_date_for_per_league`),
+      `prediction.py` (`_extract_prediction_canonical_group`/`_compute_prediction_shards`), `venue_core.py`
+      (`_get_venue_epoch`/`_should_skip_shard`/`get_venues_for_asset_groups`/`is_venue_available`/`earliest_venue_date`/
+      `filter_instruments_by_date`), `sink.py` (`_gated_sink_write`/`_coerce_adapter_output`), `failure.py`
+      (`_classify_adapter_failure`). `orchestrator.py` becomes the thin coordinator that imports + sequences these.
+      Repo: instruments-service.
+- [ ] [REFACTOR] P1. **deployment-api `data_status_service.py` (6,663 L / 69-method `DataStatusService` god-class) —
+      abstract the domain logic out (operator 2026-06-10).** Suggested package `services/data_status/`: `defi.py`
+      (`_is_legacy_defi_venue_row`/`_read_defi_merged_index`/`_allowed_defi_venue_chain_pairs`/
+      `_filter_to_canonical_defi_venues`/`_filter_legacy_defi_rows`), `sports.py` (`_is_sports_reference_venue`/
+      `_is_understat_venue`/`_is_transfer_window_venue`/`_is_sparse_sports_entity`/`_get_reference_expected_dates`),
+      `coverage.py`
+      (`get_coverage_summary`+`_resolve_coverage_cat_list`/`_select_coverage_group_axis`/`_pack_row_filters`/
+      `_apply_row_filters`/`_build_breakdowns`/`_calculate_completion_rate`), `manifest.py` (`get_manifest_status`/
+      `_get_manifest_status_sync`/`_scan_category_manifest`), `missing_shards.py` (`calculate_missing_shards`+sync+
+      `_tally_missing_venues`), `venue_resolution.py` (`_resolve_venue_start`/`_resolve_expected_dates`/
+      `_build_venue_breakdown`/`_apply_mtds_honest_coverage`), `cli.py` (`_build_cli_cmd`/`run_data_status_cli`). The
+      `DataStatusService` becomes a thin **facade** that composes these (mixins or delegation) — same public methods, no
+      caller churn. `data_status_drilldown.py` (2,586) + `data_status.py` (2,550) get the same treatment. Repo:
+      deployment-api.
+- [ ] [REFACTOR] P1. **unified-trading-api `seed.py` (5,169 L)** — if it's seed DATA (fixtures/records), same pattern as
+      registry.py: move the data to a data file + a thin seeding loader; if it's seed LOGIC, split by domain. Census
+      (Phase 0) confirms which. Repo: unified-trading-api.
+- [ ] [REFACTOR] P1. **agent-orchestrator `server.py` (4,470 L)** — split the FastAPI route module by surface into
+      `server/routes/*.py` (slots / git-status+fleet / vms+proxy / accounts / backlog / agents), each an `APIRouter`
+      mounted on the app; the view-helpers (`_slot_to_view`/`_build_local_git_health`/`_summarise_git_health`) move with
+      their routes. `worker_liveness.py` (1,215) + `state_store.py` (1,118) reviewed for method-size too. Repo:
+      agent-orchestrator.
+- [ ] [REFACTOR] P1. **market-tick-data-service `orchestrator.py` (4,219 L)** + `tardis_adapter.py` (2,880) +
+      `solana_defi_handler.py` (2,125) — decompose by venue/transport. Repo: market-tick-data-service.
+- [ ] [REFACTOR] P2. **strategy-service `catalog.py` (2,371)** + **market-data-processing `canonical_writer.py`
+      (2,412)** + **execution-service** adapters >1k (`kraken_rest_adapter` 1,299 / `uniswap` 1,245 / `aave` 1,136) —
+      split each below 900. Repos: strategy-service / market-data-processing-service / execution-service.
+- [ ] [REFACTOR] P3. **ml-service** (`cloud_feature_provider` 1,202 / `training_orchestrator` 1,027) +
+      **unified-trading-pm** scripts (`generate-ui-vision-pptx` 1,717 / `gcs_migration_bundle` 1,143) — split the >900
+      tail. Repos: ml-service / unified-trading-pm.
+
+## Phase 2 — Deep-import facade (the 8 repos the parity audit flagged)
+
+- [ ] [REFACTOR] P2. Re-export the two-level `from unified_api_contracts.registry.<X> import` symbols at the UAC
+      one-level facade (`unified_api_contracts/registry/__init__.py`) for every symbol consumed two-level fleet-wide
+      ({market_data_categories, data_status_axis_matrix, chain_env, defi_venues, withdrawal_approval_rules,
+      tardis_free_coverage, …}), then switch the call sites to `from unified_api_contracts.registry import <X>` and drop
+      each repo's deep-import violation. Affected services (per the 2026-06-10 audit): deployment-api,
+      execution-service, instruments-service, market-data-processing-service, market-tick-data-service,
+      strategy-service, system-integration-tests. Repo: unified-api-contracts (facade) + the 7 consumers (call sites +
+      ratchet).
+- [ ] [CODE] P1. **deployment-api budget 23→24 revert** — the 24 was the parity-fix unblock (deployment-api@3a579f1b);
+      once Phase 2 clears its deep-import violation, ratchet 24→23 (then keep going under this plan toward ≤5). Repo:
+      deployment-api.
+
+## Phase 3 — Schema provenance (local types → UAC)
+
+- [ ] [REFACTOR] P2. Move local `BaseModel`/`TypedDict`/`dataclass` domain types out of service source into
+      `unified_api_contracts` domain modules (or `unified_api_contracts.internal`) per the schema-provenance check — the
+      `# CORRECT-LOCAL:` marker is for genuine response-shape DTOs only; real domain contracts must live in UAC.
+      Per-repo; biggest contributors first (per the Phase-0 census). Repos: UAC + the offending services.
+
+## Phase 4 — Residual violation classes
+
+- [ ] [CODE] P2. Per repo, clear the remaining check-classes the census surfaces — `os.getenv` → `UnifiedCloudConfig`,
+      `Any` → specific types, empty-string/dict/list fallbacks → fail-fast, backward-compat shims → delete,
+      function/method-size > limits → extract. Ratchet `CODEX_MAX_VIOLATIONS` down to ≤5 per repo as classes clear.
+      Repos: all over-5 (deployment-api, execution-service, market-tick-data-service, strategy-service,
+      market-data-processing-service, deployment-service, unified-api-contracts).
+
+## Success criteria
+
+- Every service + library repo's `CODEX_MAX_VIOLATIONS` ≤ 5 (verified:
+  `grep CODEX_MAX_VIOLATIONS */scripts/quality-gates.sh` shows no value > 5), and every repo's lint-codex slice is green
+  on a now-honest LOCAL run + CI v2.
+- No source file > 900 lines without a `# QG-allow:` exception carrying a named successor plan + date; the four
+  > 4,000-line files (registry 18k / orchestrator 8k / data_status 6.6k / seed 5.1k / server 4.4k) are split.
+- No `FUNCTION_SIZE_EXTRA_EXCLUDES` glob hides an oversized file (every exclude removed or justified in-file).
+- Budgets only ratcheted DOWN; a bump is review-blocking (enforce in the PR template / reviewer checklist).
+
+## Codex SSOT updates
+
+- `codex/06-coding-standards/quality-gates.md` § "CODEX_MAX_VIOLATIONS is a ratchet-down, ≤5 ceiling" + the file-size /
+  function-size limits as first-class (not glob-exempt-forever).
+- `codex/06-coding-standards/README.md` § file-size discipline (900 max / 700 warn) — cross-link the worst-offender
+  split plan.
+
+## Out of scope (named)
+
+- Changing the lint-codex CHECK definitions / adding new classes — that is `harden_grepable_rules_into_ci_gates`
+  territory; this plan only DRIVES THE COUNTS DOWN against the existing checks.
+- The `ci_local_qg_parity` grep-P fix (DONE — prerequisite, not part of this plan's scope).
