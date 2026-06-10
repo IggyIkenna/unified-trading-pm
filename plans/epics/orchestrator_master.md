@@ -387,11 +387,16 @@ _days_ past the 900s heartbeat-silent threshold). I manually `tmux kill-session`
 dead, empty backlog → no work lost), which freed the slots and let the reconcile loop dispatch. The watchdog NOT reaping
 multi-day-silent sessions is the real "doing nothing" cause and recurs without a fix.
 
-- [ ] [SCRIPT] P1. Diagnose why `WorkerLivenessWatchdog` did not kill 6 sessions that were 4 days terminal-silent
-      (`orch-slot-*`, created Jun 5, empty backlog). Candidates: the kill predicate keys off a slot DB heartbeat the
-      stuck worker still posted (so "not silent") rather than tmux/terminal activity; a per-day kill cap already spent;
-      or a protected (`blocked`/extended-thinking) state mis-latched. Fix so a genuinely-idle multi-day session is
-      reaped → slots self-free. repo: agent-orchestrator (`server/worker_liveness_watchdog.py`). Surfaced 2026-06-08.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-10 — `agent-orchestrator@68116f7` (on LDR).** Root cause = candidate (d), NULL
+      `last_ping`: trigger-3 was guarded `if last_ping is not None`, so a worker that never posted `/progress` (NULL
+      `last_ping`) OR whose row was stamped once at spawn-time then went silent for days **skipped the heartbeat-silent
+      kill branch entirely** → every slot read occupied → dispatch stalled. Fix: new `_effective_silence_seconds(now,
+      last_ping, last_spawned_at, assigned_at)` = `now − max(non-None anchors)`; ALL-None ⇒ `inf` (genuinely-idle zombie =
+      MAX silence, never "just pinged"). Trigger-3 now runs unconditionally; `blocked`/actively-thinking shields +
+      per-day cap (20/VM) + per-slot cooldown preserved (a multi-day-silent slot is no longer permanently shielded — it
+      waits its turn under the cap). 9 new unit tests (NULL-ping-4-day-spawn reaped, no-anchor zombie reaped, stale-at-
+      creation reaped, `blocked` NULL-ping NOT reaped, thinking-pane NOT killed, NULL-ping respects daily cap);
+      basedpyright 0/0; AO QG green (405 passed). repo: agent-orchestrator (`server/worker_liveness_watchdog.py`).
 
 ## P1 — important; post-current-gate
 
