@@ -56,6 +56,32 @@ this plan lands; that is itself a P1 item below).
    it and removes the exclude.
 4. **No new violations**: a repo at ≤5 must not regress; CI v2 + the now-honest local gate enforce it.
 
+## Public-API + cross-repo safety contract (HARD — every split/move obeys this)
+
+**Established fact (slot-3 audit 2026-06-10):** the big-file targets are **service-internal** — no other repo imports
+`DataStatusService`, the instruments `engine.orchestrator` functions, or `features.registry` (verified: cross-repo
+service-import grep is EMPTY; the no-service↔service-deps rule holds — services integrate via UAC contracts + HTTP/GCS,
+NOT Python imports). So Phase-1 splits change **only in-repo callers**, and the contract is to keep even those
+unchanged:
+
+1. **Pre-audit before moving any symbol** (Citadel #6): `rg "<symbol>" --type py` across the WORKSPACE (not just the
+   repo) to enumerate every importer + caller. 0 cross-repo hits is the expected + required state for service internals;
+   a cross-repo hit on a service internal is itself a bug to surface (it violates no-service↔service).
+2. **Default = preserve the surface.** The original module (or its `__init__`) **re-exports** every moved public symbol,
+   and the facade class keeps every public method (thin delegation/mixins). Result: `from x.orchestrator import foo` and
+   `service.get_manifest_status()` resolve unchanged → **no caller edits, no QG regression**. Tests-green + a clean
+   `basedpyright` on the repo prove the surface held.
+3. **If a symbol genuinely must move/rename** (rare; only when the old name is wrong), migrate **ALL callers in the same
+   unit** (the pre-audit list) — never leave a dangling import. For a service internal that's all in-repo; there is no
+   cross-repo caller to chase.
+4. **Phase 2 (the ONE cross-repo surface — UAC) is ADDITIVE-FIRST:** UAC re-exports the symbol at the one-level facade
+   WITHOUT removing the deep path, so every existing two-level consumer keeps working; each consumer repo then migrates
+   its own call sites + ratchets its own budget as a separate tracked todo; the deep path is removed only after the
+   pre-audit shows zero remaining importers fleet-wide. No consumer ever breaks mid-flight.
+5. **Data-file moves (registry.py / seed.py) keep the LOADED object identical** — the loader must produce byte-equal
+   `FeatureSpec`/seed objects (assert in a migration test), so `get_specs_by_group` / pinned `formula_version` consumers
+   (ML/strategy) see no change.
+
 ## Prerequisite (DONE)
 
 - [x] ✅ `ci_local_qg_parity` grep-P → rg --pcre2 fix (PM@7427ade8a) — local macOS now counts identically to CI, so a

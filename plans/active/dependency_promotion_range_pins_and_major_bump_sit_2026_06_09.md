@@ -140,7 +140,7 @@ clean fix is to relax it.
       **Pending live verification**: a real MAJOR bump must exercise it end-to-end (can't tick fully ✅ on smoke alone).
 - [x] 🟡 [SCRIPT] P1. WIRED — the trigger's `if:` excludes minor/patch (`bump_type == major || is_breaking` only), so a
       non-breaking bump fires NO cascade/SIT fan-out (rides the consumer's range pin). Pending live verification.
-- [ ] [SCRIPT] P1. **DEFECT (live-found 2026-06-10): cascade-qg-ordering runs are evicted from the queue by the shared
+- [x] ✅ [RESOLVED-STALE: cascade-qg-ordering own concurrency group, fixed 2026-06-10] [SCRIPT] P1. **DEFECT (live-found 2026-06-10): cascade-qg-ordering runs are evicted from the queue by the shared
       `manifest-update` concurrency group before any job starts** — UTL 0.5.0 dispatch fired (run 27264972415,
       08:54:52Z) but was cancelled in 4 s with zero jobs; all 5 most-recent cascade runs are cancelled/failure, so the
       cascade has never executed a level live. `cancel-in-progress: false` only protects a RUNNING run — GitHub keeps a

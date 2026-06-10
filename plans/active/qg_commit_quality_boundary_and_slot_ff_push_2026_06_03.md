@@ -234,7 +234,7 @@ All on `origin/live-defi-rollout`; full detail in
       cron FF-push of QG-green \_committed_ agent work above (that's the `ahead`/push-agent-work-up leg; this is the
       `behind`/keep-tabs- current-down leg). Repo: `unified-trading-pm` (workflow-templates →
       `rollout-workflow-templates.sh`). parent_epic: (cicd master — cross-link `cicd_contract_hardening_2026_06_01.md`).
-- [ ] [INFRA] P2. **Pin every tab worktree's upstream to `origin/live-defi-rollout` + assert it in
+- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [INFRA] P2. **Pin every tab worktree's upstream to `origin/live-defi-rollout` + assert it in
       `verify-slot-host-symmetry.sh`.** Root cause of the misleading `N↑` display: a `git push -u` (or
       `branch --set-upstream-to=origin/tab/...`) re-points a worktree's upstream to its (stale) remote tab branch, so VS
       Code's ahead/behind reads against the stale tab instead of LDR (phantom-ahead footgun, already documented in
@@ -323,7 +323,7 @@ All on `origin/live-defi-rollout`; full detail in
 
 ### Residual
 
-- [ ] [DEPS] P3. **unified-trading-api** re-lock commit (1 trivial metadata-sync, 0 version moves) — race-blocked by the
+- [x] ✅ [RESOLVED-STALE: re-lock commits on uta LDR] [DEPS] P3. **unified-trading-api** re-lock commit (1 trivial metadata-sync, 0 version moves) — race-blocked by the
       ci_status bot on uta's LDR; lands via the FF-push cron (once shipped) or a quiet-window FF push.
 
 ## Cron-executor staleness → e2e self-pull rollout (operator design 2026-06-05)
@@ -343,7 +343,7 @@ All on `origin/live-defi-rollout`; full detail in
       `/tmp/rescue_slot2_defi_provenance_2026_06_05.patch`), FF'd root clone 195 commits → current code, ran one manual
       tick → `[adopt-rebase]` healed slot-1 IS (`51de1ce4`) + mtds (`76d650f0`) to LDR (0/0); `[upstream-fix]` reset all
       drifted upstreams (UTL/UAC/mtds/mdps, tabs 1·3·4·5·6·7) → `origin/live-defi-rollout`.
-- [ ] [PLAN] P1. **Land slot-2's rescued edit** (DeFi provenance `A12c ✅` flip + `A12a` remaining-handlers todo, in
+- [x] ✅ [RESOLVED-STALE: A12c flipped in provenance plan] [PLAN] P1. **Land slot-2's rescued edit** (DeFi provenance `A12c ✅` flip + `A12a` remaining-handlers todo, in
       `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`) onto LDR via a slot quickmerge
       `docs(plans):` — it currently lives ONLY in `stash@{0}` + the `/tmp` patch on the laptop root clone (unique, not
       on LDR).
@@ -377,21 +377,21 @@ design).
 
 ### Phase D — bootstrap enforcement so drift never re-plants
 
-- [ ] [SCRIPT] P0. `setup-tab-worktrees.sh:258-261` — after `worktree add --track … origin/${branch}`, force
+- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P0. `setup-tab-worktrees.sh:258-261` — after `worktree add --track … origin/${branch}`, force
       `git -C <slot_dir> branch --set-upstream-to=origin/live-defi-rollout ${branch}` so upstream = LDR even when the
       worktree is created from an existing remote tab branch (closes the drift-at-source gap). **[SUPERSEDED-BY-PATH-B
       2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
-- [ ] [SCRIPT] P1. Install scripts (`install-slot-cron-ff-pull.sh` + siblings) — abort if `WORKSPACE_ROOT` resolves
+- [x] ✅ [RESOLVED-STALE: install-slot-cron .tabs guard present] [SCRIPT] P1. Install scripts (`install-slot-cron-ff-pull.sh` + siblings) — abort if `WORKSPACE_ROOT` resolves
       inside `/.tabs/` (install MUST run from the root clone, else it bakes wrong `ROOT_PM`/`SLOT_DIR` absolute paths —
       protects Harsh + VM installs).
 
 ### Phase E — debounced upstream auto-fix + escalation (operator refinement 2026-06-05)
 
-- [ ] [SCRIPT] P1. `slot-cron-ff-pull.sh` Step 0 — replace the IMMEDIATE upstream reset with a **10-min grace**: marker
+- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P1. `slot-cron-ff-pull.sh` Step 0 — replace the IMMEDIATE upstream reset with a **10-min grace**: marker
       `$TMPDIR/slot-upstream-drift/<host>-<slot>-<repo>` records first-seen; `--set-upstream-to=LDR` only once the
       marker is ≥10 min old (room for intentional temporary switches); clear marker when aligned.
       **[SUPERSEDED-BY-PATH-B 2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
-- [ ] [SCRIPT] P1. `verify-slot-host-symmetry.sh` — **Slack-alert if a drift marker is ≥15 min old** (auto-fix-failed
+- [x] ✅ [SUPERSEDED-BY-PATH-B 2026-06-10 — cancelled] [SCRIPT] P1. `verify-slot-host-symmetry.sh` — **Slack-alert if a drift marker is ≥15 min old** (auto-fix-failed
       signal; expected no-op since the 10-min fix clears it). Reuses the same marker dir. **[SUPERSEDED-BY-PATH-B
       2026-06-10]**: tab branches are retired (Path-B clones on LDR) — do not implement.
 
@@ -563,7 +563,7 @@ design).
       earlier #21 runs too). Belongs to the CodeBuild-gate track (same surface as the strategy-service #67
       CodeBuild-vs-v2 branch-protection item). Repo: deployment-service (`buildspec.aws.yaml` + the ECR image pipeline /
       CodeBuild project env). Provenance: #21 promotion-PR check audit, slot-1.
-- [ ] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
+- [x] ✅ [RESOLVED-STALE: deployment-service #15 merged 2026-06-05] [QG] P2. **Stale tab→staging PRs** (likely close, not resolve): deployment-service #15 (tab/hkm/3, ~65h —
       **Harsh's**, confirm before closing), mtds #94 (tab/ikennaigboaka/3) — superseded by the LDR→staging promotion.
 
 ### CI-mechanism findings (permanent fixes worth landing)
@@ -603,7 +603,7 @@ design).
       89f4c0b50 / e8fa1c92e / 0496f96a5) — land ATOMICALLY inside that work (one edit + one re-rollout), never raced,
       else the 24 copies re-drift. Verify after: a fix landing on LDR auto-re-runs the promotion PR's v2 with NO
       close+reopen.
-- [ ] [SCRIPT] P2. **FINDING (2026-06-08, slot-1): `quickmerge --agent` STAGE-3 sha-sentinel fast-path is unusable for
+- [x] ✅ [RESOLVED-STALE: base-library.sh sentinel block present] [SCRIPT] P2. **FINDING (2026-06-08, slot-1): `quickmerge --agent` STAGE-3 sha-sentinel fast-path is unusable for
       LIBRARY repos (`unified-api-contracts`, `unified-trading-library`).** `base-library.sh` only writes
       `.qg_content_sentinel` and NEVER `.qg_last_passed_sha` (that `git rev-parse HEAD > .qg_last_passed_sha` block
       lives only in `base-service.sh:~2693`). But `quickmerge.sh:1039` agent-path reads `.qg_last_passed_sha` and
