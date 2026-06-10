@@ -53,6 +53,24 @@ per-repo fleet-wide — never hand-edit one repo's copy):
 
 ---
 
+## Independent re-verification (slot-2 @ LDR, 2026-06-10, PM `bbf89da05`)
+
+A second reviewer re-ran every claim below against all 25 freshly-FF'd worktrees. **Findings: the audit is accurate.**
+Specifically re-confirmed: (A) all four deletes are genuinely dead — `contract-drift-record` even pings Slack nightly
+via 3 echo stubs + `notify-slack.yml`; (B1) `major-bump-approval.yml` does a *full* staging version bump + dispatch
+(not just a label) so the double-run is real; (D) the `ldr-to-staging` references in `ci-status-update`/`quickmerge.sh`/
+`tier_c_promotion_gate.py` are **filename mentions in comments, not emitters** — the prune holds; (E) the
+`publish-package` emitter exists only as the propagation template (`event_type: "publish-package"` line 49) with no live
+emitter; (F) `tab-mirror` `*/15` cron is live and even **auto-rebases + force-pushes diverged tabs** and POSTs an
+orchestrator webhook every run (the audit if anything *understates* it). **Completeness re-checked:** the 7 consumer
+types the audit did not flag (`cascade-qg-trigger`, `ci-status-update`, `merge-conflict-detected`, `promotion-conflict`,
+`sit-lock`, `staging-changed`, `staging-validated`) each have a live emitter — no additional dead type exists.
+
+**One correction — B2 severity is downgraded** (see B2 below): both backmerge workflows push **FF-only with 5× retry +
+never-force**, so the divergent concurrency groups cannot actually clobber LDR. B2 is a *contract violation + avoidable
+retry churn*, not the data-correctness defect the original "race LDR writes" wording implied. The trivial fix still
+applies. Everything else stands as written.
+
 ## What I found
 
 ### A. Confirmed DEAD — safe to delete (PM-only, verified 0 emitters/callers fleet-wide)
@@ -72,12 +90,24 @@ per-repo fleet-wide — never hand-edit one repo's copy):
    → two version bumps, two `version-bump` dispatches, two close attempts. Their concurrency groups differ
    (`workflow-ref` vs `manifest-update`) so they do **not** serialize → genuine double-run. **Scope correction:**
    `major-bump-approval.yml` is **PM-only**; `major-bump-issue-handler.yml` is templated to all 25. So the
-   double-execution happens **only in PM** — every service repo has just the one handler and is fine.
+   double-execution happens **only in PM** — every service repo has just the one handler and is fine. **Latent but real
+   (low-frequency / high-impact):** it only fires on the rare human `/approve` of a MAJOR-bump issue (a 1.0.0-graduation
+   class event), but both handlers then independently extract the same metadata, bump `pyproject` on `staging`,
+   dispatch `version-bump`, and close the issue (verified `major-bump-approval.yml` L101 "Handle /approve — bump version
+   and dispatch"). Because PM is the version-surface SSOT, a double `version-bump` there is exactly where it most
+   matters. The fix is a safe single-file delete.
 
-2. **`main` and `staging` backmerge can race the same LDR push.** `main-backmerge-to-ldr.yml` (group
-   `main-backmerge-to-ldr`) and `staging-backmerge-to-ldr.yml` (group `backmerge-to-ldr`) use **different concurrency
-   groups**, so they do not serialize — contradicting staging-backmerge's own header comment ("shared so the two never
-   race"). Both push to LDR. Both templated (main ×25, staging ×17).
+2. **`main` and `staging` backmerge use divergent concurrency groups — contract violation, not a clobber risk
+   (severity corrected on re-verification).** `main-backmerge-to-ldr.yml` (group `main-backmerge-to-ldr`) and
+   `staging-backmerge-to-ldr.yml` (group `backmerge-to-ldr`) use **different concurrency groups**, so GitHub does not
+   serialize them — directly contradicting staging-backmerge's own header comment ("Concurrency: keyed on the
+   destination ref so simultaneous back-merges serialize (shared with main-backmerge so the two never race the same LDR
+   push)"). **However, both push to LDR `--ff-only` with a 5× retry-on-race loop and never force-push** (verified:
+   main-backmerge L144–150, staging-backmerge L102–108), so a genuine concurrent push cannot corrupt or overwrite LDR —
+   the loser of the race retries, and on retry-exhaustion opens a visible PR per the safety contract. So the real cost
+   is **avoidable retry churn + a self-contradicting documented invariant**, not lost writes. The fix (align the groups
+   to the documented `backmerge-to-ldr`) is trivial and worth doing, but this is a P2 maintainability/noise item, not a
+   P1 correctness defect. Both templated (main ×25, staging ×17).
 
 ### C. No-op — emits into the void (decide: wire a consumer, or delete)
 
@@ -131,9 +161,13 @@ noise-generating, not silently inert.
 
 ## Why it matters
 
-- **Correctness:** the duplicate `/approve` handlers (B1) and the backmerge concurrency race (B2) are live defects, not
-  cosmetics — they double-bump versions / race LDR writes.
-- **Noise & cost:** tab-mirror (F) runs ~2,400×/day fleet-wide as a no-op and can page on orphaned branches;
+- **Correctness:** the duplicate `/approve` handlers (B1) are a real (if low-frequency) defect — a human `/approve` on
+  a MAJOR-bump issue double-bumps the version + double-dispatches `version-bump` on PM, the version SSOT. (B2 is **not**
+  a correctness defect after re-verification — FF-only + 5× retry + never-force means it cannot clobber LDR; it is a
+  contract violation + retry churn, folded into Noise below.)
+- **Noise & cost:** the B2 backmerge groups (contradicting their own documented "shared" invariant) cause avoidable
+  retry churn; tab-mirror (F) runs ~2,400×/day fleet-wide as a no-op, auto-rebases/force-pushes orphaned `tab/*`
+  branches, and POSTs an orchestrator webhook every run;
   `downstream-fix-agent` (A) burns paid API on a manual-only path; `schema-changed-handler` (C) Slack-pings on a no-op.
 - **Maintainability:** every extra workflow is one more thing to keep green during a node24/action bump (the 2026-06-08
   / 2026-06-10 bumps each touched ~all of these mechanically). Fewer, consolidated workflows = less drift surface.
@@ -153,15 +187,17 @@ Sequence lowest-risk → highest-value. **All deletes are PM-only / in-place exc
 - [ ] [SCRIPT] P1. Delete `request-major-bump-reusable.yml` (`unified-trading-pm`) — 0 `uses:` callers; identical to
       `request-major-bump.yml`.
 
-### Tier 2 — fix the two live bugs
+### Tier 2 — fix B1 (real defect) + align the backmerge concurrency contract
 
 - [ ] [SCRIPT] P1. Resolve the duplicate `/approve` handler (`unified-trading-pm`, PM-only) — delete
       `major-bump-approval.yml` to restore the single fleet-standard `major-bump-issue-handler.yml`, OR (if its richer
       `notify`+`persist`+`major-bump-approved` label behaviour is wanted) port that into the templated handler and
       delete the templated one's redundancy. **Operator pick required** — flag which handler is canonical.
-- [ ] [SCRIPT] P1. Give `main-backmerge-to-ldr.yml` + `staging-backmerge-to-ldr.yml` the **same concurrency group** (or
-      merge into one parameterized `backmerge-to-ldr.yml`) so they cannot race the same LDR push. **Templated** — edit
-      `scripts/workflow-templates/` SSOT + `rollout-workflow-templates.sh` + commit fleet-wide.
+- [ ] [SCRIPT] P2. Align `main-backmerge-to-ldr.yml`'s concurrency group to the documented `backmerge-to-ldr` (the
+      value staging-backmerge already uses and both headers claim is "shared") so the two serialize as designed. **Not a
+      correctness fix** — both already push FF-only + 5× retry + never-force, so this only removes avoidable retry churn
+      and makes the code match its own stated invariant. **Templated** — edit `scripts/workflow-templates/` SSOT +
+      `rollout-workflow-templates.sh` + commit fleet-wide.
 
 ### Tier 3 — no-op + vestigial cleanup
 
