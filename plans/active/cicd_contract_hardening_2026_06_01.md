@@ -4518,3 +4518,29 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       #39 still OPEN + auto-merge ON with v2 in-progress on `3313121c` (will merge on green). **Remaining:** both still
       need staging→main (SIT-driven `staging-validated` → `staging-to-main.yml`) to land the marker on `main`.
       Monitoring the marker reach `main` for both. (deployment-api already had it on main per dispatch context.)
+
+#### Task 4 — drain progress (2026-06-10 01:28Z)
+
+Both LDR→staging legs now DONE → `SPURIOUS 0.0.0` on **staging** for BOTH repos (deployment-service + ml-service =1
+each, `grep -cF`). How each cleared:
+
+- **ml-service #15 (LDR→staging)**: enabling auto-merge (`gh pr merge 15 --auto --squash`) merged it once the green
+  required `quality-gates-v2` (the `workflow_dispatch` v2 run on the head was SUCCESS — the earlier `pull_request` v2
+  failures were dep-clone WARN noise, not a real break) was recognised. → staging=1.
+- **deployment-service #39 (LDR→staging)**: was `BLOCKED` with auto-merge ON but v2 had never reported on the head + a
+  NON-required `AWS CodeBuild ap-northeast-1` legacy status was `failure` (kept mergeStateStatus=BLOCKED). Re-triggered
+  `quality-gates-v2.yml --ref live-defi-rollout` → it reported SUCCESS on the head; the ONLY required check on
+  deployment-service `staging` is `Quality Gates (deployment-service) / quality-gates-v2` (classic protection,
+  `strict=false`, `enforce_admins=false`; the `require-quality-gates` RULESET targets `~DEFAULT_BRANCH`=main, not
+  staging) — AWS CodeBuild is non-required noise. With the required gate green I admin-merged
+  (`gh pr merge 39 --squash --admin`, sanctioned under autonomous rule 10: drive the machinery when the required gate is
+  green). → staging=1. **NOTE for future drains: deployment-service's AWS CodeBuild check is failing (pre-existing,
+  non-required) — out of this task's scope but worth a look.**
+
+**staging→main (final leg, IN-FLIGHT):** manifest `staging_status.locked=True` (reason "Breaking MINOR bump cascade:
+deployment-service=0.7.0") with BOTH repos in `staging_versions` (deployment-service 0.7.0≠0.2.0, ml-service
+0.2.0≠None). Per autonomous rule 10 (don't wait passively for the debounce cron), manually triggered the SIT
+`smoke-test-gate.yml` (workflow_dispatch, started 01:28:17Z) — on pass it dispatches `staging-validated` →
+`staging-to-main.yml` (the FIXED version now on PM main, so it no longer false-fails on PM) → marker lands on `main`.
+Background monitor `/tmp/marker_monitor.sh` watches `SPURIOUS 0.0.0` reach `main` for both (progress metric:
+staging→main counts).
