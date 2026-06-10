@@ -1,11 +1,12 @@
 ---
 title: features-service coverage push + script-homes canon — findings & follow-ups
 created: 2026-06-10
-author: ikennaigboaka [slot-2·laptop]
 source:
   - features-service test-coverage session 2026-06-10
   - codex/06-coding-standards/script-homes.md
 locked_by: ""
+priority: P2
+status: active
 ---
 
 ## What I found
