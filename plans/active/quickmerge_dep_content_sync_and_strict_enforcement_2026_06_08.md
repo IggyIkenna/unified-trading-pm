@@ -74,15 +74,25 @@ Two gaps, both confirmed against the live machinery:
 
 ## Phase 2 — Strict-quickmerge HARD enforcement (#5) (depends: Phase 1)
 
-- [x] ✅ [SCRIPT] P1. Add a server-side + local guard: a **code** commit reaching the integration branch that did not pass
-      through quickmerge is rejected. Carve-out allowlist (the ONLY direct-push class): PM `scripts/**` + `.github/**`
-      and any repo's `.github/workflows/**` **when the change must reach `main` to unblock CI** (the chicken-and-egg).
-      Everything else: HARD block.
+- [x] ✅ [SCRIPT] P1. Add a server-side + local guard: a **code** commit reaching the integration branch that did not
+      pass through quickmerge is rejected. Carve-out allowlist (the ONLY direct-push class): PM `scripts/**` +
+      `.github/**` and any repo's `.github/workflows/**` **when the change must reach `main` to unblock CI** (the
+      chicken-and-egg). Everything else: HARD block.
 - [x] ✅ [DOCS] P1. Codify in CLAUDE.md + `SUB_AGENT_MANDATORY_RULES.md` + `codex/08-workflows/ci-cd-flow.md`: "Strict
       quickmerge is a HARD RULE. Direct integration-branch code pushes are banned except PM-scripts / CI-workflow
       changes that must sync to `main` to unblock the pipeline." Replace the looser FF-push exception language;
       **reconcile with** `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03.md` (do not fork — merge the two
       exception sets into one).
+- [ ] [SCRIPT] P1. **quickmerge `--files` cannot ship a DELETION (or the delete-side of a rename)** — the staging loop
+      guards each path with `[ -e "$f" ]` before `git add` (quickmerge.sh ~:1222), so a deleted path is skipped with
+      `⚠️ Path not found` and the commit lands HALF-SHIPPED (incident 2026-06-10: instruments-service polygon removal —
+      `@3872848` carried the 8 modifications but silently dropped both deletions, leaving the deleted module + a
+      duplicated test file live on LDR; completed via `@effa781`). And the recovery is also blocked: a pre-committed
+      deletion makes the tree clean → quickmerge early-exits "No changes to commit" without pushing. Fix in the PM
+      template (SSOT) + roll out to all repo copies: stage when the path exists **OR is tracked**
+      (`[ -e "$f" ] || git ls-files --error-unmatch "$f" >/dev/null 2>&1`), and use `git add -- "$f"` (handles
+      tracked-deleted paths). Add a regression test: quickmerge a worktree whose only change is a tracked-file deletion
+      → the deletion must reach the commit. Repo: unified-trading-pm (template host) + fleet rollout.
 
 ## Phase 3 — Agent attribution end-to-end (#8) (parallel)
 
@@ -117,4 +127,10 @@ HARD rule + carve-out), CLAUDE.md § Git discipline + § Quality Gates, `SUB_AGE
 
 ## Progress — strict-quickmerge enforcement (2026-06-08)
 
-- **DONE**: quickmerge stamps a `Quickmerge: agent|human` lineage trailer; `scripts/cicd/check_strict_quickmerge.py` flags a CODE-source commit (`*.py/*.ts` outside scripts/tests/.github) reaching the integration branch without that trailer that is not a carve-out (docs/plans/codex/.github/scripts/config/merge/[skip ci]/bot). WARN-default, `STRICT_QUICKMERGE_BLOCK=1` to enforce. Installed as a `pre-push` hook (`scripts/dev/hooks/pre-push-strict-quickmerge.sh`) in all 250 Path-B clones + wired into `setup-tab-worktrees.sh` for new clones; the staging-PR `quality-gates-v2` is the server backstop (LDR has no remote CI). Agent attribution (`[slot-N·host]`) confirmed carried + surfaced.
+- **DONE**: quickmerge stamps a `Quickmerge: agent|human` lineage trailer; `scripts/cicd/check_strict_quickmerge.py`
+  flags a CODE-source commit (`*.py/*.ts` outside scripts/tests/.github) reaching the integration branch without that
+  trailer that is not a carve-out (docs/plans/codex/.github/scripts/config/merge/[skip ci]/bot). WARN-default,
+  `STRICT_QUICKMERGE_BLOCK=1` to enforce. Installed as a `pre-push` hook
+  (`scripts/dev/hooks/pre-push-strict-quickmerge.sh`) in all 250 Path-B clones + wired into `setup-tab-worktrees.sh` for
+  new clones; the staging-PR `quality-gates-v2` is the server backstop (LDR has no remote CI). Agent attribution
+  (`[slot-N·host]`) confirmed carried + surfaced.

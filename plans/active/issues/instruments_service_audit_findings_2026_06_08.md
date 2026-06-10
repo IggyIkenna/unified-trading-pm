@@ -23,10 +23,11 @@ noted.
 > `empty_ok_venues = (_non_error_venues − written_venues) − validation_failed_venues` (`orchestrator.py:2998`) →
 > **`expected_venues -= empty_ok_venues` (`:3006`)** → the venue is **silently EXCLUDED from the expected denominator**
 > (NOT recorded `attempted_failed`, NOT retried, coverage % inflated). [Earlier wording "records a clean empty" was > >
+>
 > > imprecise — it's exclusion-from-denominator, same root, slightly different effect.] **Reachability matters**:
-> `_TRADFI_VENUES = [CME, NASDAQ, NYSE, CBOE, ICE, FX]` — neither `polygon` nor `ibkr` is a live venue, so their
-> adapters are **dead-registered (never invoked)** → their swallow is UNREACHABLE today. Only **kalshi** (prediction
-> enumeration) is on a reachable path.
+> > `_TRADFI_VENUES = [CME, NASDAQ, NYSE, CBOE, ICE, FX]` — neither `polygon` nor `ibkr` is a live venue, so their
+> > adapters are **dead-registered (never invoked)** → their swallow is UNREACHABLE today. Only **kalshi** (prediction
+> > enumeration) is on a reachable path.
 
 > **STATUS 2026-06-09 — SHIPPED:** kalshi CF-11 fix landed on LDR via quickmerge once staging unlocked
 > (`instruments-service@229dcc4`); riding the LDR→staging drain PR #418 to staging → main. The recurring
@@ -49,12 +50,18 @@ noted.
 
 ### 🔴 P0 — removed provider dead-registered alongside its replacement → DELETE
 
-- [ ] [MTDS] P0. **Delete `tradfi/polygon.py` + its wiring (dead code, safe).** Polygon.io is a REMOVED TradFi provider
-      (CLAUDE.md); its rebrand `tradfi/massive.py` is the live adapter. CLOSER LOOK: `polygon` is registered in
+- [x] ✅ [MTDS] P0. **Delete `tradfi/polygon.py` + its wiring (dead code, safe).** Polygon.io is a REMOVED TradFi
+      provider (CLAUDE.md); its rebrand `tradfi/massive.py` is the live adapter. CLOSER LOOK: `polygon` is registered in
       `factory.py` `ADAPTER_DATA_SOURCES` (`:346`) + the class map (`:314`) but **NOT in `_TRADFI_VENUES`** (which is
       the live tradfi enumeration → databento/massive only) → `polygon.py` is **never invoked** = pure dead
       registration. Delete the adapter + `factory.py:75,130,314,346` + `router.py` import. Deletion is low-risk (nothing
-      resolves to it) and moots its (unreachable) swallow + bar-edge-fallback. Repo: instruments-service.
+      resolves to it) and moots its (unreachable) swallow + bar-edge-fallback. Repo: instruments-service. — **SHIPPED
+      instruments-service@3872848 (wiring + tests: factory/router/6 test files,
+      `test_betfair_polygon_polymarket_adapter.py` → `test_betfair_polymarket_adapter.py`) + @effa781 (the 2 file
+      deletions — split because quickmerge `--files`'s `[ -e path ]` guard cannot stage deletions; bug filed in
+      `quickmerge_dep_content_sync_and_strict_enforcement_2026_06_08.md` Phase 2). QG green (full suite incl. 3232
+      tests); guardrails held: Beefy Polygon-L2 entries + Massive's polygon.io-compatible base URL untouched.
+      2026-06-10.**
 
 ### 🟡 P2 — ibkr swallow (LATENT — dead-registered) + adapter hardening
 
