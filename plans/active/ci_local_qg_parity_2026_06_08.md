@@ -54,6 +54,12 @@ defect in the parity, and it gets audited and closed, not normalized.
 - [ ] [SCRIPT] P1. Any divergence found in the Pre-audit matrix that is NOT the intentional SIT-assembly delta → fix so
       the step is byte-identical local vs CI (same selection, env, tool versions, ignore-sets). Drive to: "local QG
       green in dep order ⇒ staging-v2 green" with the only residual being the assembled-SIT layer.
+- [ ] [SCRIPT] P1. **PM basedpyright count skew (concrete instance, slot-4 2026-06-10)**: local `quality-gates.sh` on PM
+      LDR `294f1a1b1` counts **1548** basedpyright errors (> ratchet `BASEDPYRIGHT_MAX_ERRORS=1511` → local QG RED),
+      while CI `quality-gates-v2` is GREEN on the same content (run 27258752391, 1m55s) — same pinned
+      `basedpyright==1.38.2`, so the delta is env (python minor / venv dep resolution / scan scope), not tool version.
+      Diagnose which side counts wrong + either fix the env divergence or re-baseline the ratchet from the CI count;
+      until then PM docs-only ships can false-block on the local sentinel. — unified-trading-pm
 
 ## Phase 2 — Make divergence self-auditing (depends: Phase 1)
 
@@ -79,8 +85,8 @@ defect in the parity, and it gets audited and closed, not normalized.
 
 ## Codex SSOT updates
 
-`codex/06-coding-standards/quality-gates.md` § local↔CI parity matrix; `codex/08-workflows/ci-cd-flow.md` § "local QG is
-the staging oracle"; `full_cicd_sit_target_state_2026_05_24.md` cross-link (SIT = the assembled-invariant layer).
+`codex/06-coding-standards/quality-gates.md` § local↔CI parity matrix; `codex/08-workflows/ci-cd-flow.md` § "local QG
+is the staging oracle"; `full_cicd_sit_target_state_2026_05_24.md` cross-link (SIT = the assembled-invariant layer).
 
 ## Progress — 2026-06-08 (slot-1 autonomous)
 

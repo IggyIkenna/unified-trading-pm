@@ -128,7 +128,12 @@ _FAIL_CONCLUSIONS = {"failure", "startup_failure", "timed_out"}
 _FAIL_CONCLUSIONS_UPPER = {"FAILURE", "TIMED_OUT", "STARTUP_FAILURE"}
 # A head commit carrying either marker tells GitHub Actions to skip push+pull_request runs for
 # that SHA — so close+reopen never re-fires v2; the recovery must be a workflow_dispatch instead.
-_SKIP_CI_MARKERS = ("[skip ci]", "[ci skip]")
+# GitHub's full CI-suppression token set (substring match ANYWHERE in the message — even a
+# descriptive mention suppresses: incident 2026-06-10, a manual recovery commit titled
+# "advance past [skip ci] bump head" itself got zero push/pull_request runs).
+_SKIP_CI_MARKERS = ("[skip ci]", "[ci skip]", "[no ci]", "[skip actions]", "[actions skip]")
+# Subject marker of our own recovery commits — never stack a second recovery on one.
+_RECOVERY_MARKER = "ci: re-fire quality-gates-v2"
 _STUCK_STATES = {"CONFLICTING", "DIRTY", "BLOCKED"}
 
 # Heads that are part of the promotion contract (LDR -> staging -> main). A stuck PR
@@ -319,12 +324,17 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
             )
             # The head commit message decides the auto-recovery MECHANISM (see auto_recover_stuck_prs):
             # a `[skip ci]` head suppresses BOTH push and pull_request, so close+reopen cannot re-fire
-            # v2 — it must be re-fired via workflow_dispatch. `commits` is PR-ordered; the head is last.
+            # v2 — and a workflow_dispatch run is NOT associated with the PR, so its green does NOT
+            # satisfy the required check (verified live 2026-06-10: 3x green dispatch runs on the
+            # exact head SHA, PR stayed BLOCKED). The only working lever is superseding the head with
+            # a fresh clean-message EMPTY commit. `commits` is PR-ordered; the head is last.
             commits = pr.get("commits") or []
             head_message = ""
+            head_oid = ""
             if commits and isinstance(commits[-1], dict):
                 _last = commits[-1]
                 head_message = f"{_last.get('messageHeadline') or ''}\n{_last.get('messageBody') or ''}".strip()
+                head_oid = _last.get("oid") or ""
             stuck.append(
                 {
                     "repo": repo,
@@ -339,6 +349,7 @@ def detect_stuck_prs(repo: str, stuck_minutes: int, now: _dt.datetime) -> list[d
                     "failed_check": failed_check,
                     "v2_present": v2_present,
                     "head_message": head_message,
+                    "head_oid": head_oid,
                 }
             )
     return stuck
@@ -675,24 +686,73 @@ def escalate_stuck_prs(stuck: list[dict], *, dry_run: bool = True) -> list[dict]
     return dispatched
 
 
+def _refire_v2_with_empty_commit(repo: str, branch: str, head_sha: str) -> bool:
+    """Supersede a CI-suppressed promotion-branch head with an EMPTY clean-message commit.
+
+    Pure git-data API (no clone): read the head commit's tree, create a commit with the SAME
+    tree on top of it, fast-forward the branch ref. The new head's message carries no
+    suppression token, so the ref update fires real ``push`` + ``pull_request`` runs whose
+    quality-gates-v2 check IS associated with the PR — the only re-trigger that satisfies the
+    required check (close+reopen and workflow_dispatch both verified ineffective, 2026-06-10).
+    Same-tree means the suppressed content itself finally gets a counting CI validation.
+    Requires the PAT to bypass the staging push ruleset (repo-admin bypass — true for GH_PAT).
+    """
+    head = gh_json(["api", f"repos/{ORG}/{repo}/git/commits/{head_sha}"])
+    tree = (head.get("tree") or {}).get("sha") if isinstance(head, dict) else None
+    if not tree:
+        return False
+    msg = (
+        f"{_RECOVERY_MARKER} — supersede CI-suppressed head so the required check can report\n\n"
+        "The prior head commit carried a CI-suppression token, so quality-gates-v2 never reported\n"
+        "on it and the promotion PR was permanently BLOCKED (required context missing).\n"
+        "close+reopen re-fires pull_request — equally suppressed on such a head; a\n"
+        "workflow_dispatch run is not associated with the PR, so its green does not satisfy the\n"
+        "required check (both verified live 2026-06-10). Empty commit, same tree: the suppressed\n"
+        "content gets a real, counting CI run.\n"
+        "Plan: semver_version_bump_skip_ci_promotion_block_2026_06_09."
+    )
+    new = gh_json(
+        [
+            "api",
+            f"repos/{ORG}/{repo}/git/commits",
+            "-f",
+            f"message={msg}",
+            "-f",
+            f"tree={tree}",
+            "-f",
+            f"parents[]={head_sha}",
+        ]
+    )
+    new_sha = new.get("sha") if isinstance(new, dict) else None
+    if not new_sha:
+        return False
+    res = gh_json(["api", "-X", "PATCH", f"repos/{ORG}/{repo}/git/refs/heads/{branch}", "-f", f"sha={new_sha}"])
+    return isinstance(res, dict) and (res.get("object") or {}).get("sha") == new_sha
+
+
 def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[dict]:
-    """Deterministically recover a v2-NEVER-REPORTED promotion-PR deadlock by close+reopen.
+    """Deterministically recover a v2-NEVER-REPORTED promotion-PR deadlock (no worker needed).
 
     A promotion PR sits BLOCKED forever when the required quality-gates-v2 check never reported
-    on its head SHA (e.g. the LDR head was pushed by a token that suppresses the pull_request
-    event). There is nothing for a worker to 'resolve' — the escalate path returns 'no worker
-    spawned'. The fix is MECHANICAL: close + reopen so the pull_request event fires and v2 runs.
-    Gated to the EXACT deadlock signature — BLOCKED + no failed check + v2 ABSENT from the rollup —
-    so it never touches a genuinely-failing PR (v2 ran red → escalate instead) or one whose v2 is
-    in-flight (v2 present). Once reopened, v2 appears in the rollup, so the next tick won't re-fire
-    (no loop). This is the better fix than escalating a deterministic deadlock to a busy orchestrator.
+    on its head SHA. Gated to the EXACT deadlock signature — BLOCKED + no failed check + v2
+    ABSENT from the rollup — so it never touches a genuinely-failing PR (v2 ran red → escalate
+    instead) or one whose v2 is in-flight (v2 present). Better than escalating a deterministic
+    deadlock to a busy orchestrator.
 
     TWO mechanisms by head-commit kind (both within the same gate):
-      - default → close+reopen, which re-fires the ``pull_request`` event (token-suppressed variant).
-      - ``[skip ci]``/``[ci skip]`` head → close+reopen is INEFFECTIVE (the marker suppresses BOTH
-        ``push`` and ``pull_request``, so a reopened PR still emits no v2 run). Recover via
-        ``gh workflow run quality-gates-v2.yml --ref <head-branch>`` (``workflow_dispatch`` is NOT
-        subject to ``[skip ci]``), which reports v2 on the head SHA and unblocks auto-merge.
+      - default (head pushed by a workflow-suppressing token, message clean) → close+reopen,
+        which re-fires the ``pull_request`` event. Once reopened, v2 appears in the rollup, so
+        the next tick won't re-fire (no loop).
+      - CI-suppression-token head (``[skip ci]``/``[ci skip]``/… anywhere in the message — the
+        semver bump / dep pin / a manual recovery commit that merely MENTIONS the token) →
+        close+reopen is INEFFECTIVE (the re-fired pull_request is equally suppressed) and a
+        ``workflow_dispatch`` run does NOT satisfy the PR's required check (its check suite is
+        not associated with the PR — verified live 2026-06-10: 3x green dispatch runs on the
+        exact head SHA, PR stayed BLOCKED). Recover by SUPERSEDING the head with an empty
+        clean-message commit (same tree) via the git-data API → real push/pull_request runs
+        fire and count. The new head changes the PR head SHA, so the next tick sees v2
+        in-flight/green (no loop); a head already carrying our recovery marker is never
+        stacked with a second recovery commit.
     """
     recovered: list[dict] = []
     for s in stuck:
@@ -701,25 +761,29 @@ def auto_recover_stuck_prs(stuck: list[dict], *, dry_run: bool = False) -> list[
         if s.get("head") not in _PROMOTION_HEADS:
             continue
         repo, number, head = s["repo"], int(s["number"]), s["head"]
-        skip_ci_head = any(m in (s.get("head_message") or "").lower() for m in _SKIP_CI_MARKERS)
+        head_message = (s.get("head_message") or "").lower()
+        if _RECOVERY_MARKER in head_message:
+            # We already superseded this head once and its v2 hasn't reported yet (in-flight,
+            # or it failed → the failed_check/escalate paths own it). Never stack recoveries.
+            continue
+        skip_ci_head = any(m in head_message for m in _SKIP_CI_MARKERS)
         if dry_run:
             recovered.append(s)
             continue
         if skip_ci_head:
-            dispatched = (
-                subprocess.run(
-                    ["gh", "workflow", "run", "quality-gates-v2.yml", "--repo", f"{ORG}/{repo}", "--ref", head],
-                    capture_output=True,
-                    text=True,
-                ).returncode
-                == 0
-            )
-            if dispatched:
+            head_oid = s.get("head_oid") or ""
+            if head_oid and _refire_v2_with_empty_commit(repo, head, head_oid):
                 print(
-                    f"  auto-recovered {repo}#{number}: workflow_dispatch quality-gates-v2 on {head} "
-                    f"([skip ci]-head deadlock — close+reopen would not re-fire)"
+                    f"  auto-recovered {repo}#{number}: superseded CI-suppressed head {head_oid[:8]} on {head} "
+                    f"with an empty clean commit → push/pull_request v2 fires and counts"
                 )
                 recovered.append(s)
+            else:
+                print(
+                    f"  ! auto-recover {repo}#{number}: empty-commit re-fire failed "
+                    f"(head_oid={head_oid[:8] or 'MISSING'}) — will retry next tick",
+                    file=sys.stderr,
+                )
             continue
         closed = (
             subprocess.run(

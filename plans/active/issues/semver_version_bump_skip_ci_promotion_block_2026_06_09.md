@@ -328,3 +328,115 @@ carve-out (quickmerge STAGE 1.5 hard-blocks on the very lock the fix clears), th
       `unified-trading-pm`.
 - [ ] [PROCESS] P3. A lint-red commit reached SIT LDR at all — QG-before-commit should have caught RUF003 locally. Audit
       the producing path (direct push without Pass-1 QG, or ruff version/config skew on the producing host).
+
+## 14. CORRECTION 2026-06-10 (Harsh, slot-2) — workflow_dispatch greens do NOT unblock an open PR; verified mechanism = empty-commit supersede
+
+> **Corrects §11's "fires on workflow_dispatch (manual recovery fast)" and §12's recovery claim, and the `9ad60ee07`
+> watcher mechanism — all relied on `workflow_dispatch` satisfying the PR's required check. Live evidence shows it does
+> not.**
+
+### Disproof (live, two repos)
+
+- `deployment-service#46` (BLOCKED, head `44d4b560`): **three** `workflow_dispatch` `quality-gates-v2` runs on that
+  exact head SHA, all `completed/success` (03:47 / 05:33 / 07:10Z) — PR stayed **BLOCKED** with `gh pr checks` = "no
+  checks reported". A dispatch run's check suite is **not associated with the PR**, so its green never satisfies the
+  required context on an open PR.
+- `market-tick-data-service#167` (BLOCKED 7 h, head `435802ae` `chore(deps): pin … [skip ci]`): close+reopened **twice**
+  by the watcher (01:28, 02:26Z) — futile (the re-fired `pull_request` is equally suppressed by the token head); a fresh
+  dispatch green (06:45Z, fast-path, ~20 s) also did **not** unblock it.
+- **Foot-gun within the foot-gun**: #46's head was itself a _manual recovery commit_ titled
+  `chore(ci): re-trigger v2 — advance past [skip ci] bump head…` — GitHub matches the token **anywhere** in the message,
+  so the recovery commit **self-suppressed** (zero push/pull_request runs on it). Recovery commit messages must never
+  contain the literal bracketed tokens.
+
+### Verified working mechanism (piloted, then encoded in the watcher)
+
+**Supersede the suppressed head with an EMPTY clean-message commit (same tree) via the git-data API** —
+`GET git/commits/<head>` (tree) → `POST git/commits` (same tree, clean message) → `PATCH git/refs/heads/<branch>`. The
+ref update fires real `push` + `pull_request` runs whose v2 **counts**; same-tree means the suppressed content itself
+finally gets a counting CI validation. Requires the PAT to bypass the staging push ruleset (repo-admin bypass — true for
+the fleet `GH_PAT`; an SSH push as a non-admin operator is rejected).
+
+- Pilot: `market-tick-data-service#167` — empty commit `110f8c16` → v2 green on **both** `push` and `pull_request` → PR
+  **BLOCKED → CLEAN**.
+- Sweep: `deployment-service#46` — superseded `44d4b560` with `6f812144` via the fixed watcher → v2 in-flight on both
+  events at time of writing.
+
+### Watcher corrected (PM LDR `038182d48`, corrects `9ad60ee07`)
+
+`auto_recover_stuck_prs` now: clean-message token-suppressed head → close+reopen (unchanged, proven for that class);
+**CI-suppression-token head → empty-commit supersede** (the verified lever); never stacks a second recovery on its own
+marker commit (`ci: re-fire quality-gates-v2`); `_SKIP_CI_MARKERS` extended to GitHub's full token set (5 bracketed
+tokens + the `skip-checks: true` trailer) so mid-message mentions are matched too. Converges by construction: the new
+head's v2 appears in the rollup → next tick sees `v2_present` (the dispatch mechanism never converged — it re-fired on
+the same head every 15-min tick forever). 12 hermetic unit tests. **Takes effect when PM LDR→main promotes** (the cron
+runs from `main`).
+
+### Still the real fix (unchanged, §12 residual action)
+
+Complete the fleet rollout of `update-dependency-version.yml` (drop `[skip ci]`) — the watcher correction makes
+recurrences self-heal, but the producer is still live on ~17 repos' `main`.
+
+## 15. Incident 2026-06-10 (Harsh, slot-3) — baseline-writer outage → runaway 1-bump/min MINOR loop; §5's chore-skip claim FALSIFIED under it
+
+Two coupled failures, surfaced ~07:1x–07:35Z; **the no-`[skip ci]` Option-C bump commit is loop-FUEL whenever the
+baseline writer is down.**
+
+### Failure A — `update-repo-version` dead on a non-existent action tag
+
+The node24 GHA bump (PM `81b1a2dca`) moved `astral-sh/setup-uv` v5→**v8** — but astral-sh stopped publishing floating
+major tags after v5 (only exact `v8.2.0`-style exist). Every `version-bump` `repository_dispatch` died at job **setup**
+(`Unable to resolve action astral-sh/setup-uv@v8`) — zero steps ran, hence the blank-field
+`:x: CRITICAL — Version update FAILED for v (branch , bump )` Slack pages. All other pins in that commit verified
+resolvable (checkout@v5 / setup-python@v6 / auth@v3 / setup-gcloud@v3 / upload-artifact@v7 / github-script@v9 /
+cache@v5) — setup-uv was the only phantom tag. **Fleet near-miss**: the same `@v8` was already in the
+`scripts/workflow-templates/update-dependency-version.yml` template but NOT yet rolled out (per-repo copies verified
+still `@v5`).
+
+### Failure B — instruments-service runaway re-bump loop (28 bumps, 0.3.0→0.30.0, 1/min)
+
+Loop anatomy: semver-agent Step-1 reads its baseline from PM `staging_versions['instruments-service']` → the dead writer
+froze it at `0.2.0` → Step-2's scan range (`baseline-SHA..HEAD`) always contains real feat/refactor commits → **the
+chore-skip never fires (it is RANGE-based, not HEAD-commit-based)** → bump → the no-`[skip ci]` bump commit triggers v2
+on staging → green → `workflow_run` re-fires semver-agent → repeat. 07:09Z `0.3.0` (legitimate — the polygon-removal
+promotion) then 27 artifact bumps to `0.30.0` until `gh workflow disable semver-agent.yml` at ~07:35Z. **This falsifies
+§5's enabling claim** ("removing `[skip ci]` does not loop: the chore-skip catches the re-trigger") — true only while
+the baseline writer is healthy. Option C needs a baseline-independent re-entry brake.
+
+### Recovery performed (slot-3)
+
+1. `gh workflow disable semver-agent.yml --repo IggyIkenna/instruments-service` (reversible brake; loop stopped at
+   `0.30.0`; no other repo looping — fleet-wide bump scan clean).
+2. Pin fix `setup-uv@v8 → @v8.2.0` in PM `.github/workflows/update-repo-version.yml` + the
+   `update-dependency-version.yml` template (pre-rollout) — PM LDR `5a8882ffd`, riding drain PR #201 to `main`
+   (direct-to-main push was ruleset-rejected; in-band v2-gated drain used instead). The drain was itself blocked twice
+   by RUF003/E501 + committed stash-pop conflict markers in the concurrent slot-2 watcher work (§14) — fixed in real
+   time (`d7bf5bcba`, superseded by slot-2's `5a16d09f1`/`58f9a0824`).
+
+### Open items
+
+- [ ] [SCRIPT] P1. **HEAD-commit chore-skip guard in semver-agent** — skip immediately when the triggering
+      `workflow_run.head_commit` message starts `chore(release): bump version` (re-entry brake independent of baseline
+      state); keep the range-based classification for the genuine-bump path. Repo: `unified-trading-pm`
+      (`semver-agent.yml` template) + fleet rollout.
+- [ ] [SCRIPT] P1. **Bump-rate circuit breaker** — semver-agent refuses (+ pages CRITICAL) when the repo already has ≥3
+      `chore(release):` commits on staging in the last hour; a runaway must self-halt, not wait for a human to notice
+      version 0.30.0. Repo: `unified-trading-pm` (template) + fleet.
+- [ ] [SCRIPT] P2. **Baseline-writer SPOF**: when the PM `version-bump` dispatch fails (non-2xx) or
+      `update-repo-version` reports failure, semver-agent must treat the baseline as UNRELIABLE and halt further bumps
+      for that repo until a successful manifest write — the writer's health gates the loop's fuel line. Repo:
+      `unified-trading-pm`.
+- [ ] [SCRIPT] P2. **Action-pin existence gate** — a QG/template-rollout step that resolves every
+      `uses: owner/action@ref` against the action repo's tags before a workflow change lands (the node24 bump assumed
+      floating major tags universally exist). Repo: `unified-trading-pm` (`scripts/quality_gates/` + template rollout
+      pre-flight).
+- [ ] [SCRIPT] P2. **Manifest catch-up re-dispatches** (after the pin fix is live on main): `version-bump` for
+      `batch-live-reconciliation-service@13e5762a6` (0.2.0) + `strategy-service@a0880bf0b` (0.2.0), `branch=staging`,
+      `is_breaking=false` (their 01:13Z dispatches were lost to a CANCELLED `update-repo-version` run at 01:15Z despite
+      `cancel-in-progress: false` — investigate that cancellation separately). `agent-orchestrator=0.8.1` drift is
+      June-7 `[skip ci]`-era + mid-migration — reconcile in the AO G6 plan, not here.
+- [ ] [OPERATOR] P1. **instruments-service staging version decision**: accept `0.30.0` + sync the manifest baseline to
+      it (cheapest; pre-1.0 numbers are free; avoids surgery on a protected branch) vs roll staging back to the correct
+      `0.3.0` (clean history; needs an admin-gated staging edit + consumers never re-pinned the artifact versions since
+      the dependency-update dispatches died with the writer). Then re-enable the IS semver-agent (safe once baseline ==
+      staging version: the next scan range is chore-only → skip fires).

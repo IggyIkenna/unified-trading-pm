@@ -42,9 +42,13 @@ jobs:
           # Cross-repo run/PR reads need fleet-wide access; the default GITHUB_TOKEN is
           # scoped to this repo only. GH_PAT carries the fleet read scope.
           GH_TOKEN: ${{ secrets.GH_PAT }}
-        # --auto-recover: deterministically fix the v2-NEVER-REPORTED deadlock in-band by
-        #   close+reopen (re-fires pull_request → quality-gates-v2). No worker needed, so it
-        #   does not depend on the orchestrator being up. Runs BEFORE --escalate.
+        # --auto-recover: deterministically fix the v2-NEVER-REPORTED deadlock in-band. Two
+        #   mechanisms by head kind: clean-message token-suppressed head → close+reopen
+        #   (re-fires pull_request → quality-gates-v2); CI-suppression-token head ([skip ci]
+        #   et al — bump/pin commits) → supersede with an empty clean commit via the git-data
+        #   API (close+reopen is equally suppressed there, and a workflow_dispatch green is
+        #   not associated with the PR so it never satisfies the required check — verified
+        #   2026-06-10). No worker needed either way. Runs BEFORE --escalate.
         # --escalate: hand the remaining merge-conflict-stuck promotion PRs (a real conflict
         #   wall a worker must rebase) to the orchestrator (repository_dispatch →
         #   escalate-to-orchestrator.yml). Idempotent per PR label, so */15m never re-dispatches.
