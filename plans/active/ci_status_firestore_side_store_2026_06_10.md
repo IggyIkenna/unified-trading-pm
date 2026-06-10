@@ -12,6 +12,8 @@ source:
   - operator design direction 2026-06-10 ("ci_status commit noise — what's a side store + how are races handled")
   - inspection 2026-06-10: ~57% of an 80-commit PM-LDR window was bot/CI churn; `ci: update ci_status …[skip ci]`
     was the single biggest class (21/80), each a commit per repo per CI-status transition.
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # CI-status side store — Firestore doc-per-repo, CAS-on-rank
