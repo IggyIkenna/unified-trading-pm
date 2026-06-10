@@ -1255,6 +1255,30 @@ mapping: `e2e-testing/scripts/defi/` → strategy-service QG; `e2e-testing/scrip
 
 ---
 
+## Script Homes — repo `scripts/` vs deployment-service vs e2e-testing (canonical layout)
+
+Where every executable/one-off lives (decision tree, top-down, first match wins). SSOT:
+`codex/06-coding-standards/script-homes.md`.
+
+1. **Production runtime** (the service doing its job — compute/fetch/validate/serve) → a **service CLI subcommand**
+   (`<svc>/cli`, `--operation`/`--mode`/`--asset-group`) or API route, **NOT a script** (batch=live, one path).
+2. **Provision / launch / schedule cloud runtime** (VM, Cloud Run job, scheduler, image, terraform) →
+   **deployment-service** (`scripts/vm/launch-*-vm.sh` etc). The launcher lives here; the compute logic stays a CLI
+   subcommand.
+3. **Cross-repo / e2e orchestration or a CLI verification harness** (smoke matrix, pipeline driver, e2e backfill) →
+   **e2e-testing** (`e2e-testing/scripts/<domain>/`), wired to the primary-consumer service QG (STEP 5.65 above).
+4. **One-off single-repo op** (migration / manifest backfill / codegen-from-this-repo's-SSOT / dev-CI mock seeder) →
+   repo **`scripts/`**. One-offs are **TEMPORARY** — delete once the op ran in prod + a GCS orphan-sweep shows 0 stale
+   data (a recurring need gets a named CLI successor, retired when it lands). Repo scripts MUST obey repo SSOTs
+   (`resolve_bucket_name` / UCI `get_storage_client` / env-short buckets / UTC) — `scripts/` is outside the main gate so
+   bypasses rot silently. **Banned**: recurring ops as loose scripts; hardcoded buckets/`PROJECT_ID`/`google.cloud`/
+   `boto3` (incident 2026-06-10: deleted `migrate_dash_separator_paths.py` + `backfill_fixture_features_manifest.py` —
+   pre-env-short buckets, 0 GCS targets); dead migrations left in-tree; production logic in a script. An agent can sweep
+   every repo's `scripts/` against this canon — see the SSOT's "Per-repo cleanup sweep". Composes with
+   `cli-convention.md` + Peripheral-Script QG + Delete-deprecated-code + Temporary-state-named-successor.
+
+---
+
 ## Master Plan Continuous-Verification Column (HARD RULE)
 
 Every success criterion (Groups A-G, 23 items) MUST declare continuous-verification path. Column:

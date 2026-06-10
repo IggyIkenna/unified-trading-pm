@@ -341,6 +341,14 @@ pointer before acting on any of them.
 - **GCS object ops**: use `unified_trading_library.cloud_interface.gcs_copy_object`/`gcs_delete_object`/
   `gcs_describe_object` — never subprocess `gcloud`/`gsutil` per-object. SSOT:
   `codex/05-infrastructure/gcs-object-operations.md`.
+- **Script homes** (where every executable lives, first match wins): production runtime verb → **service CLI
+  subcommand** (`<svc>/cli`, NOT a script); provision/launch/schedule cloud → **deployment-service**
+  (`scripts/vm/launch-*-vm.sh`); cross-repo/e2e/smoke verification harness → **e2e-testing**
+  (`e2e-testing/scripts/<domain>/`, under primary-consumer QG); one-off single-repo op / dev-CI seeder / codegen → repo
+  **`scripts/`** (one-offs are TEMPORARY — delete after prod-run + GCS orphan-sweep=0; obey
+  `resolve_bucket_name`/UCI/env-short/UTC since `scripts/` is outside the main gate). Banned: recurring ops as loose
+  scripts; hardcoded buckets/`PROJECT_ID`/`google.cloud`/`boto3`; dead migrations left in-tree. SSOT:
+  `codex/06-coding-standards/script-homes.md`.
 - **Manifest consolidator** is Cloud Run / Batch-Fargate (NOT a VM); read path loud-fails on a stale index. Per-VM
   shards: `VM_NAME=<tag>` + `MANIFEST_PER_VM_SHARDS=true`. Pre-migration: drain ALL VMs + consolidate + snapshot first.
 - **Orchestrator**: backlog auto-derives from plan `- [ ]` checkboxes (never hand-edit `backlog.yaml`); AutoSpawn/

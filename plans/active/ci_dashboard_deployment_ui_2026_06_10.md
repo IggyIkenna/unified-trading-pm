@@ -74,10 +74,12 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       `sit_last_run {url, status, conclusion, age_min,     jobs: [{name, status, conclusion}]}` from the GitHub jobs API
       on the newest `cascade-qg-ordering` run — answers "which repos were in the last SIT run, which passed/failed,
       what's in progress" continuously.
-- [ ] [CODE] P2. **Repo drill-down cross-links (operator add 2026-06-10 — don't redo existing tabs)** — repo detail
-      panel deep-links the EXISTING surfaces for the same repo: data-status tab (domain/service), deployments/monitor
-      tab (is it running), VM logs tab, and the orchestrator fleet git-health page filtered to the repo ("is this repo
-      in anyone's worktree" — live data when sub-plan B's endpoint ships).
+- [x] ✅ [CODE] P2. DONE 2026-06-10 — deployment-ui@816f920 | pw:L2 ✓ (182/182) | regression:
+      tests/smoke/repos-tab.spec.ts ("repo drill-down cross-links to GitHub / data-status / fleet"). **Repo drill-down
+      cross-links** — the repo detail panel (`repo-detail-crosslinks`) deep-links the EXISTING surfaces for the repo:
+      GitHub repo, `/service/<repo>/data-status`, `/service/<repo>/monitor` (deployments), and the `/fleet` Fleet Git
+      page (the orchestrator git-health surface; per-repo-filter is live when the `ORCHESTRATOR_API_TOKEN` lands).
+      Don't-redo-those-tabs honored (react-router `Link`, no surface re-build).
 - [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@093f80a (trigger-list + latest-builds reuse, 300 s cache,
       image*stale; AWS side = honest-unknown pending cloud-toggle todo). Was: **Image deploy signal (image-level v1)** —
       reuse
@@ -227,6 +229,17 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       (it does) vs the python client call; fix the dev-stack env recipe in `restart-deployment-stack.sh` (compose with
       the GCP_PROJECT_ID launcher todo in quality_gates_speed_and_config_ssot). Until then: Image=unknown locally is
       HONEST degradation, not fake data; the deployed instance shows real build data.
+
+- [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@d651526 + deployment-ui@1616774 | pw:L2 ✓ (185/185) | regression:
+      tests/smoke/epics-tab.spec.ts. **Epics tab v2 — live PM epics + plan drilldown**: deployment-api
+      `GET /api/epics/plans` (`_epics_plans.py`, declared BEFORE `/{epic_id}`) reads PM `main` via the GitHub contents
+      API (300 s TTL, semaphore-bounded): `plans/epics/*.md` frontmatter → epic cards (name/title/tier/priority/
+      assigned_vm/status, tier→priority sorted); `plans/active/*.md` frontmatter `parent_epic:` + `- [x]`/`- [ ]` +
+      open-P0/P1 counts → per-epic drilldown (completion %, estimate_class, GitHub link); orphans (no parent_epic) →
+      review-blocking strip; 5 unit tests (parsers + mock route ordering). deployment-ui `EpicsPlansContent` replaces
+      the stale `EpicReadinessView` (which read the ARCHIVED `unified-trading-codex` asset-class yamls — DELETED the
+      dead view + `useEpics` hook, no parallel paths) in the Epics landing tab: epic cards → expand → plan rows → GitHub
+      links; LIVE/MOCK badge. mock-api fixture mirrors the deployment-api mock.
 
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 

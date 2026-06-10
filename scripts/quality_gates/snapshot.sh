@@ -90,9 +90,11 @@ run_one_repo() {
         printf '{"repo":"%s","qg_status":"green","pull_sha":"%s","failing_step":null,"first_error_line":null,"duration_seconds":%d,"snapshot_at":"%s"}\n' \
             "$repo" "$pull_sha" "$duration_seconds" "$snapshot_at" > "$result_file"
     else
-        # Extract the last STEP marker seen (pattern: "STEP N.N" or "[STEP N.N]")
+        # Extract the last STEP marker seen (pattern: "STEP N.N" or "[STEP N.N]").
+        # Use `rg --pcre2` not `grep -oP` — macOS BSD grep has no `-P` (ci_local_qg_parity
+        # 2026-06-10), which would silently make this report "unknown" on every macOS slot.
         local failing_step first_error
-        failing_step="$(grep -oP '(STEP\s+\d+\.\d+|\[\d+\.\d+\])' "$log_file" 2>/dev/null | tail -1 || echo "unknown")"
+        failing_step="$(rg --pcre2 -o '(STEP\s+\d+\.\d+|\[\d+\.\d+\])' "$log_file" 2>/dev/null | tail -1 || echo "unknown")"
         # First line containing ERROR/FAILED/error: (capped to 200 chars, escaped for JSON)
         first_error="$(grep -m1 -iE 'error|FAILED' "$log_file" 2>/dev/null | head -c 200 | \
             python3 -c "import sys,json; print(json.dumps(sys.stdin.read().strip()))" 2>/dev/null || echo '""')"
