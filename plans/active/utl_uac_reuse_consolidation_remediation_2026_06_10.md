@@ -121,21 +121,16 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `evaluate_rule` so the threshold **numbers** have one SSOT (UAC caps), not `RiskLimits` config + UAC rules
       diverging. Preserve local: notional math (`_compute_notional_for_qty` inverse/linear), staleness, market-hours,
       cash-reserve, VaR (`_normal_quantile`), single-instrument + venue caps, `LimitCheckResult` reject contract.
-- [x] ✅ [AGENT] P0. **Fix the local quality bug found in passing**: `pre_trade_check_engine.py:579` used a hardcoded
-      `equity = new_position_value / Decimal("5")` proxy → made leverage a **constant 5.0** for every book, so
-      `leverage > max_leverage` could never fire. **Shipped (CODE VERIFIED, ship pending — see status note below):**
-      extracted `account_equity_proxy()` in `risk_calculator.py` as the equity-formula SSOT (`value/maxlev + uPnL`,
-      floored at 1); both `RiskCalculator.estimate_account_equity` and the pre-trade engine now use it; pre-trade bases
-      equity on the **post-trade** value (neutral uPnL → `leverage == max_leverage` baseline preserved; negative uPnL →
-      higher leverage → can breach). Added uPnL-sensitivity regression test. Evidence: 60 risk tests green, basedpyright
-      0 errors, full `quality-gates.sh` exit 0. **This also delivers the first slice of the P0 "dedupe twin equity
-      helper" above** (the equity-proxy formula is now single-sourced).
-
-> **🟡 STATUS 2026-06-10:** the leverage-fix code is committed-ready and fully verified on `strategy-service`, but the
-> `quickmerge` ship is **BLOCKED**: `market-tick-data-service` (a path-dependency of strategy-service) carries active
-> foreign uncommitted WIP in this slot (an in-progress migration-scripts refactor — 50+ dirty files). quickmerge's dep
-> pre-flight refuses while a dep is dirty, and the rules forbid committing another session's WIP. Ship + flip to `[x]`
-> lands the moment MTDS is clean.
+- [x] ✅ [AGENT] P0. **Fix the local quality bug found in passing** — SHIPPED `strategy-service@67ecc156` | 60 risk
+      tests ✓ | basedpyright 0 ✓ | full `quality-gates.sh` exit 0 ✓ | regression:
+      `tests/risk/unit/test_pre_trade_check_engine.py::test_leverage_estimate_is_upnl_sensitive_not_constant`.
+      `pre_trade_check_engine.py:579` used a hardcoded `equity = new_position_value / Decimal("5")` proxy → made
+      leverage a **constant 5.0** for every book, so `leverage > max_leverage` could never fire. Extracted
+      `account_equity_proxy()` in `risk_calculator.py` as the equity-formula SSOT (`value/maxlev + uPnL`, floored at 1);
+      both `RiskCalculator.estimate_account_equity` and the pre-trade engine now use it; pre-trade bases equity on the
+      **post-trade** value (neutral uPnL → `leverage == max_leverage` baseline preserved; negative uPnL → higher
+      leverage → can breach). **This also delivers the first slice of the P0 "dedupe twin equity helper" above** (the
+      equity-proxy formula is now single-sourced).
 
 - [ ] [AGENT] P1. **Extract one local `equity_curve_drawdown()` helper** for the duplicated peak/max-drawdown loop in
       `engine/core/components/pnl_monitor.py:214-222` and `engine/core/output_builders.py:153-158`. Keep it **local**
