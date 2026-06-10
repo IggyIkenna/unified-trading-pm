@@ -132,6 +132,15 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       drill-down panel inside the home per-service tab system (next to Builds/Data Status), so a selected service shows
       its branches/PRs/SIT without leaving the service context. Note: some deployment service names ≠ repo names (e.g.
       features-delta-one-service vs features-service) — map or degrade honestly.
+- [x] ✅ [CODE] P1. [UI] DONE 2026-06-10 — deployment-ui@dd7efab | pw:L2 ✓ (repos-tab.spec 7/7; full smoke 170 passed,
+      lone failure stateful-flows:326 is pre-existing + unrelated — fails identically on original source) | regression:
+      tests/smoke/repos-tab.spec.ts ("Repos CI is a landing tab in the home shell" + "deep-link to /repos opens the
+      Repos CI landing tab"). Was: **Repos CI as a home-shell TAB, not a separate page (operator add 2026-06-10)** —
+      `/repos` rendered as a standalone full-page route (own `<main>`, header-link only) so it read as a separate UI;
+      now a first-class `LandingTabs` tab (Overview / Epics / Repos CI) inside the deployment-ui home shell, URL-synced
+      to `/repos` (header link + deep-links preserved). `RepoCi` page refactored → embeddable `RepoCiContent`;
+      standalone route dropped (falls through to the shell catch-all); `playwright.config` honors `PLAYWRIGHT_BASE_URL`
+      for mock-mode runs when 5183 is a live stack.
 - [ ] [CODE] P1. **Fleet git-health INTO deployment-ui (operator decision v2)** — deployment-api proxy of the
       orchestrator's `/api/fleet/git-health` (server-side token) + a deployment-ui page rendering hosts×slots×repos;
       lands when sub-plan B's endpoint ships. Repo: deployment-api + deployment-ui (+ cross-ref
