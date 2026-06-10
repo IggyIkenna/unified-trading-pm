@@ -470,6 +470,24 @@ if [ -f "$WORKFLOW_PARITY_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: STEP 5.64 — PM script path-reference ratchet (blocking) ──
+# SSOT: CLAUDE.md § "Grep-Then-Read, Not Grep-Then-Conclude" + scripts/quality_gates/check_pm_script_path_refs.py.
+# Scans workflow templates, GHA workflows, and operator bash scripts for references to PM script
+# paths (relative `scripts/` refs and workspace-absolute `$WORKSPACE_ROOT/unified-trading-pm/scripts/` refs)
+# and asserts every referenced path exists. Catches silent regressions where a script is renamed/deleted
+# but its callers (CI workflows, operator runbooks) still reference the old path.
+PM_SCRIPT_REF_CHECKER="${REPO_ROOT}/scripts/quality_gates/check_pm_script_path_refs.py"
+if [ -f "$PM_SCRIPT_REF_CHECKER" ]; then
+    echo "Running PM script path-reference ratchet (STEP 5.64)..."
+    if python3 "$PM_SCRIPT_REF_CHECKER"; then
+        log_success "PM script path-reference ratchet passed"
+    else
+        echo "❌ PM script path-reference ratchet FAILED — broken script reference(s) in workflows or operator scripts" >&2
+        echo "   Fix: ensure the referenced script exists, or prefix documentation-only lines with '#'" >&2
+        exit 1
+    fi
+fi
+
 # ── Post-gates: Credential-ask orphan scanner — baselined ratchet ──
 # SSOT: CLAUDE.md § "External Data Is Always Available — Never Silently Defer Adapters" (HARD RULE).
 # Every BLOCKED-CREDENTIALS plan item MUST cite an operator credential-ask ping (filed in
