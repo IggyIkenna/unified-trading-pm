@@ -230,16 +230,16 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       the GCP_PROJECT_ID launcher todo in quality_gates_speed_and_config_ssot). Until then: Image=unknown locally is
       HONEST degradation, not fake data; the deployed instance shows real build data.
 
-- [ ] [CODE] P1. **Epics tab v2 — live PM epics with plan drilldown (operator add 2026-06-10)**: REPLACE the current
-      Epics view, which reads the ARCHIVED `unified-trading-codex` epic yamls (4 stale asset-class epics — dead source
-      per CLAUDE.md; finding: the tab has been showing archived data). New: deployment-api `GET /api/epics/plans` reads
-      PM `main` via the contents API (mirror `_repo_ci_manifest.py` TTL pattern, cache ~300 s): (a) `plans/epics/*.md`
-      frontmatter → epic cards (name, tier, priority, assigned_vm, status); (b) `plans/active/*.md` frontmatter
-      `parent_epic:` + checkbox counts (`- [x]` done vs `- [ ]` open, per PLAN_FORMAT) → per-epic drilldown: associated
-      active plans, each with completion % + open-P0/P1 count + estimate fields; orphans (no parent_epic) surface as a
-      review-blocking strip. UI: epic cards → expand to plan rows → plan row links the file on GitHub. Same
-      severity-first sort + LIVE/MOCK badge idioms as Repos CI. Repo: deployment-api + deployment-ui. Tests:
-      fixture-frontmatter unit tests + smoke spec (epic card → drilldown renders plan rows).
+- [x] ✅ [CODE] P1. DONE 2026-06-10 — deployment-api@d651526 + deployment-ui@1616774 | pw:L2 ✓ (185/185) | regression:
+      tests/smoke/epics-tab.spec.ts. **Epics tab v2 — live PM epics + plan drilldown**: deployment-api
+      `GET /api/epics/plans` (`_epics_plans.py`, declared BEFORE `/{epic_id}`) reads PM `main` via the GitHub contents
+      API (300 s TTL, semaphore-bounded): `plans/epics/*.md` frontmatter → epic cards (name/title/tier/priority/
+      assigned_vm/status, tier→priority sorted); `plans/active/*.md` frontmatter `parent_epic:` + `- [x]`/`- [ ]` +
+      open-P0/P1 counts → per-epic drilldown (completion %, estimate_class, GitHub link); orphans (no parent_epic) →
+      review-blocking strip; 5 unit tests (parsers + mock route ordering). deployment-ui `EpicsPlansContent` replaces
+      the stale `EpicReadinessView` (which read the ARCHIVED `unified-trading-codex` asset-class yamls — DELETED the
+      dead view + `useEpics` hook, no parallel paths) in the Epics landing tab: epic cards → expand → plan rows → GitHub
+      links; LIVE/MOCK badge. mock-api fixture mirrors the deployment-api mock.
 
 ## Phase 3 — playwright gate (pw:L2 — HARD, deployment-ui is in the gated repo set)
 
