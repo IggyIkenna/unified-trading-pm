@@ -66,6 +66,18 @@ defect in the parity, and it gets audited and closed, not normalized.
       ratchet → local GREEN at HEAD). Fixed: `_qg_slice_done` now phase-aware — unified-trading-pm@71a2e103b |
       verified 2026-06-10. Expect first post-fix CI typecheck legs ~3-4 min (real basedpyright).
 
+- [ ] [SCRIPT] P2. **Manifest-import-alignment check is local-only + self-contradictory (parity gap, found 2026-06-10
+      via the deployment-service FROM-digest pilot)**: `check_manifest_import_alignment.py`'s docstring says
+      "Excludes: tests/" but `EXCLUDE_SEGMENTS` does NOT contain "tests" (line-26 comment says tests/ INCLUDED by
+      design — flat-deps rule), so it flags deployment-service's tests-only `deployment_api` imports locally, while
+      CI is GREEN on the same content because the QG step is gated on `[[ -n "${WORKSPACE_ROOT:-}" ]]`
+      (base-service.sh) and CI has no workspace → silently skipped. Three fixes needed: (1) reconcile
+      docstring-vs-code on tests/ scope; (2) decide the deployment-service answer (tests importing the sibling
+      `deployment_api` package — declare the dep, move the tests, or scope them out); (3) make the CI skip LOUD
+      (log_warn "alignment skipped: no workspace") so local-vs-CI divergence on this step is visible. Until then a
+      pre-existing local-only red blocks quickmerge ships from slot clones (it blocked the FROM-digest pilot ship).
+      — unified-trading-pm + deployment-service
+
 ## Phase 2 — Make divergence self-auditing (depends: Phase 1)
 
 - [x] ✅ [SCRIPT] P1. Add a **parity watchdog**: when a repo is local-QG-green (LDR checkout) but its staging
