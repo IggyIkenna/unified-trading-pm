@@ -773,6 +773,10 @@ elif [[ -n "${WORKSPACE_ROOT:-}" && -f "${WORKSPACE_ROOT}/unified-trading-pm/scr
     python3 "${WORKSPACE_ROOT}/unified-trading-pm/scripts/validation/check_manifest_import_alignment.py" --repo "$(pwd)" --workspace-root "${WORKSPACE_ROOT}" \
         && log_success "Manifest import alignment: OK" \
         || { log_fail "Manifest import alignment: declare deps you import, import deps you declare"; V=$(( V + 1 )); }
+else
+    # LOUD skip (parity, 2026-06-10): CI runs without a workspace → this check silently never ran
+    # there, masking local-vs-CI divergence (ci_local_qg_parity P2). Warn so the gap is visible.
+    log_warn "Manifest import alignment: SKIPPED — no WORKSPACE_ROOT/PM checkout (CI without workspace); local runs DO check this"
 fi
 
 rg "datetime\.now\(\)|datetime\.utcnow\(\)" --type py --glob "!tests/**" "$SOURCE_DIR/" 2>/dev/null \

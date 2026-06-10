@@ -23,8 +23,15 @@ import re
 import sys
 from pathlib import Path
 
-# tests/ included because flat deps means test-only deps are in [project.dependencies]
-EXCLUDE_SEGMENTS = {"scripts", ".github", ".venv", "venv", "__pycache__", "build"}
+# tests/ EXCLUDED (2026-06-10, reconciling the code with the docstring which always said
+# "Excludes: tests/"): the prior in-code comment ("tests/ included because flat deps means
+# test-only deps are in [project.dependencies]") conflated EXTERNAL pip deps (where flat-deps
+# does put test deps in [project.dependencies]) with INTERNAL manifest repo edges — a
+# tests-only import of a workspace SIBLING (e.g. deployment-service tests importing
+# deployment_api fixtures) must NOT force a manifest dependencies[] edge: it would create
+# false build/DAG edges (and reverse edges = cycles). Source-tree imports remain fully scanned.
+# Incident: the parity gap blocked the FROM-digest pilot ship (ci_local_qg_parity P2).
+EXCLUDE_SEGMENTS = {"tests", "scripts", ".github", ".venv", "venv", "__pycache__", "build"}
 EXCLUDE_FILENAMES = {"conftest.py"}
 
 # Patterns for Python imports

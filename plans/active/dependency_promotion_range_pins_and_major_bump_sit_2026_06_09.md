@@ -399,6 +399,19 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       `dep_versions: dict` (UTL/UAC + base-image digest). Store: GCS `gs://deployment-metadata-{pid}/versions/…` (the
       existing VersionRegistry target) / `gs://deployment-scripts-{pid}/deployments/…`; expose via deployment-api
       `GET /api/deployments`. Done = "what's deployed in prod + exactly what code is in it" is a single queryable BoM.
+      **[IMPLEMENTED 2026-06-10 — in deployment-service tree, ship parked on the UTL dep-order gate]**:
+      `DeploymentRegistryEntry` +3 typed fields (legacy-safe loads); new `deployment_service/bom.py` (resolution SSOT:
+      config passthrough `GIT_COMMIT`/`IMAGE_DIGEST`/`BASE_IMAGE_DIGEST` + importlib.metadata dep versions +
+      digest-from-pinned-ref only — omits-not-fabricates); BoM stamped at both registry writers
+      (`deployment_heartbeat.py cmd_register` + `heartbeat_cli.py` daemon, round-trips via HeartbeatEntry.metadata);
+      dead `VersionRegistry.register_version` WIRED on the live deploy path (`LiveDeployer.deploy` →
+      `_register_deployed_version()` post-health-gate, best-effort). 33/33 new+touched tests, 239 adjacent green,
+      0 new basedpyright errors. Cloud Run live services: `run_v2` exposes no tag→digest resolve — provenance =
+      FROM-digest ratchet + passthrough (documented in code).
+- [ ] [CODE] P2. **BoM follow-up: surface the three fields in `GET /api/deployments`** — deployment-api's
+      `VmDeploymentEntryModel` (`deployment_api/routes/vm_deployments.py:42`) builds from `asdict(entry)` and pydantic
+      silently DROPS unknown keys, so BoM reaches the GCS rows but not the API response until the model adds
+      `image_digest` / `git_commit` / `dep_versions` (3-line change). repo: deployment-api.
 
 ## Success criteria
 
