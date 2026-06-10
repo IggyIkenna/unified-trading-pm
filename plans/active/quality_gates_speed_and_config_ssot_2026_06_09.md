@@ -94,16 +94,26 @@ source:
 
 ### Phase 0 todos
 
-- [ ] [SCRIPT] P0. Build/extend the profiler harness to capture **per-phase peak+mean RSS** (sampler thread) alongside
+- [x] [SCRIPT] P0. Build/extend the profiler harness to capture **per-phase peak+mean RSS** (sampler thread) alongside
       the existing per-phase wall-time, emit the per-repo JSON + combined CSV schema above. (`profile_qg_steps.py` today
-      does wall-only/serial/no-RAM — extend it or add a `profile_qg_resources.py` companion.)
+      does wall-only/serial/no-RAM — extend it or add a `profile_qg_resources.py` companion.) ✅ —
+      `profile_qg_resources.py` (existed) extended 2026-06-10: combined CSV
+      (`repo,phase,wall_s,peak_rss_mb,mean_rss_mb,status`; span rows prefixed `span:`), `--repos a,b,c` SERIAL
+      multi-repo mode, `--output` alias for `--outdir`, macOS portability (ps-pgid RSS fallback + unpinned-when-no-
+      taskset, flagged in report) so smokes run on operator laptops. — unified-trading-pm (unified-trading-pm@779dc3683)
 - [ ] [SCRIPT] P0. Add the **parallel-pinned measurement runner**: schedule all 22 repos across pinned single cores with
       a RAM-budget concurrency cap, exporting
       `QG_GOVERNOR_DISABLE=true QG_SENTINEL_DISABLE=true QG_THREAD_CAP=1     PYTEST_WORKERS=1 QG_MEM_CAP=0` and
       `taskset -c`, running `bash scripts/quality-gates.sh --no-fix`. Write per-repo JSON + the combined CSV.
-- [ ] [TEST] P0. **Smoke-test on ONE repo first** (e.g. MTDS or a small service) — verify the RAM sampler attributes
+      _(2026-06-10: the SERIAL `--repos` mode + combined CSV shipped inside `profile_qg_resources.py` — this item is now
+      ONLY the parallel-pinned RAM-budget scheduler layered on top.)_
+- [x] [TEST] P0. **Smoke-test on ONE repo first** (e.g. MTDS or a small service) — verify the RAM sampler attributes
       peaks to the right phase and every phase actually ran (sentinel disabled), BEFORE fanning out to all 22.
-      (smoke-then-scale.)
+      (smoke-then-scale.) ✅ — 2× smoked: instruments-service (2026-06-09, Linux-style /proc path — see findings
+      below) + ibkr-gateway-infra full profiled gate 2026-06-10 on macOS (exit 0, 25.73 s total, 111 RSS samples, all 9
+      spans present incl. autofix/tests/typecheck — sentinel-disabled full run confirmed; peaks attributed: codex 259 MB
+      / tests 140 MB / pip-audit 92 MB; combined.csv 73 rows). macOS numbers are UNPINNED/indicative; the 22-repo
+      canonical sweep still runs pinned on Linux. — unified-trading-pm (unified-trading-pm@779dc3683)
 - [ ] [AUDIT] P0. Run the full sweep across all 22 repos; produce the per-phase wall+RAM table. Confirm/refute the
       hypotheses: pytest + basedpyright dominate wall-time; pip-audit OSV network is a fixed tax; basedpyright/pytest
       dominate RAM. Land `plans/audit/results/qg_step_profile_2026_06_09.md`.
@@ -112,17 +122,30 @@ source:
       grep/AST, coverage-bearing tests via impact selection) vs FIXED-COST-CACHEABLE (pip-audit/bandit/actionlint). (\*
       the data may show even basedpyright can be changed-file-scoped on the fast tier with full at merge — let the
       numbers decide.)
-- [ ] [AUDIT] P0. Dual-SSOT matrix across all 22 repos: for every QG-relevant concept (coverage threshold, coverage
+- [x] [AUDIT] P0. Dual-SSOT matrix across all 22 repos: for every QG-relevant concept (coverage threshold, coverage
       source/omit/branch, pytest testpaths/addopts/markers, bandit skips, ruff/basedpyright/python version pins, exclude
       lists) record (a) toml location, (b) stub/base location, (c) does base pass a CLI flag that overrides toml?, (d)
       verdict ∈ {agree, drift, shadowed, bash-only}. Seed from the MTDS findings already gathered. Land as
-      `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md`.
-- [ ] [AUDIT] P1. Verify the bandit-`-c` question definitively: does base-service.sh `bandit -r … -ll` (no
+      `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md`. ✅ — landed 2026-06-10 (unified-trading-pm@779dc3683): all concepts
+      classified (a)–(d); per-repo NUMERIC sweep complete for coverage (5 confirmed drifts: alerting 76/78 · mdps 70/77
+      · mtds 28/71 · SIT 2/0 · uta 77/70 — uta/SIT are the silent-loosen direction) + `[tool.bandit]` presence (~20
+      repos, ALL dead — see next item). Residual depth (per-repo testpaths/omit/version-pin value columns) only needed
+      if Phase 1 hits a repo-specific surprise — concept-level verdicts already decide the mechanism.
+- [x] [AUDIT] P1. Verify the bandit-`-c` question definitively: does base-service.sh `bandit -r … -ll` (no
       `-c pyproject.toml`) actually read `[tool.bandit]`? If not, the per-repo `[tool.bandit] skips` are DEAD config (a
-      shadowed-by-absence case).
-- [ ] [AUDIT] P1. Classify every knob into TIER-A (tool-native — toml is the home) vs TIER-B (bash-orchestration —
+      shadowed-by-absence case). ✅ — VERDICT: **DEAD (shadowed-by-absence)**, verified empirically on bandit 1.9.4 /
+      py3.13: without `-c` a toml-skipped B602 is still reported (exit 1); with `-c pyproject.toml` the skip is honoured
+      (exit 0); `-c pyproject.toml` is safe even when the file has NO `[tool.bandit]` section (normal scan, no error) →
+      the bases can add it unconditionally. Full transcript in the matrix doc. (unified-trading-pm@779dc3683)
+- [ ] [AUDIT] P1. Per-repo `[tool.bandit] skips` audit BEFORE the bases add `-c pyproject.toml` — the ~20 repos' skips
+      have been DEAD config (never enforced); re-activating them un-audited may silently suppress real findings (e.g.
+      MTDS skips B608/B104/B108/B310). Review each list, prune, THEN flip the invocation. (discovered by the bandit
+      verdict above, 2026-06-10)
+- [x] [AUDIT] P1. Classify every knob into TIER-A (tool-native — toml is the home) vs TIER-B (bash-orchestration —
       governor/mem-cap/MAX_DURATION/PYTEST_WORKERS/codex-exclude-globs/pip-audit-ignores/size-limits — toml has no
-      native home). This classification decides Phase 1's mechanism.
+      native home). This classification decides Phase 1's mechanism. ✅ — **13 TIER-A / 27 TIER-B**, full tables with
+      per-knob migration notes in `plans/audit/results/qg_config_ssot_matrix_2026_06_09.md`; headline: `SOURCE_DIR` is
+      the deepest duplication (5 declarations), QG\_\* env knobs stay host/session-scoped (NOT toml). (unified-trading-pm@779dc3683)
 
 ---
 
@@ -143,12 +166,25 @@ single-core pinned), output under gitignored `.qg_profile/`.
 - [ ] [INFRA] P0. **Part 3 — add the workspace-wide removed-symbols sweep** (cron/CI, `.tabs` excluded, run ONCE) to
       preserve the cross-repo guarantee that the per-repo scope narrows away. NO such sweep exists today (the mis-scope
       was accidentally serving as it). SSOT: check_removed_symbols.py docstring "run separately via CI cron".
-- [ ] [INFRA] P0. **pip-audit = 38 s (8%) OSV network** (now visible after decomposing the codex blob). Cache OSV
+- [x] [INFRA] P0. ✅ **pip-audit = 38 s (8%) OSV network** (now visible after decomposing the codex blob). Cache OSV
       results and/or move pip-audit to a deps-change/cron trigger instead of every gate run. Advisory gate → safe to
-      move off the hot path.
-- [ ] [SCRIPT] P0. **Instrument base-library.sh** with the same `qg_prof` spans + `QG_PROFILE` full-run override
+      move off the hot path. — unified-trading-pm base-service.sh + base-library.sh (unified-trading-pm@779dc3683): ONE mechanism
+      covers both halves — deps-change trigger (key = pyproject.toml + uv.lock + ignore-set + pip-audit version →
+      `.qg_cache/pip_audit_deps_hash`) + 24h freshness bound (`QG_PIP_AUDIT_MAX_AGE_HOURS`, the cron-equivalent for
+      newly-published advisories). Clean-run-only caching (vulns/timeouts never cached); internal-advisories check stays
+      uncached (PM-yaml input, not deps); SBOM upload moved inside the miss branch (a hit must not re-upload another
+      repo's stale /tmp output); `QG_NO_CACHE=1` bypass; `.qg_cache/` gitignored (PM + canonical template) + excluded
+      from the green-sentinel untracked hash. Verified in isolation: cold=MISS / unchanged+fresh=HIT / deps-change=MISS
+      / 25h-stale=MISS / bypass=MISS.
+- [x] [SCRIPT] P0. **Instrument base-library.sh** with the same `qg_prof` spans + `QG_PROFILE` full-run override
       (UTL/UAC are libraries — the heaviest repos, 5.27 GB peak — and currently have NO span instrumentation). Needed
-      before the full 22-repo sweep covers libraries.
+      before the full 22-repo sweep covers libraries. ✅ — 2026-06-10 (unified-trading-pm@779dc3683): 8 span pairs
+      (autofix/lint/tests/typecheck/codex/size-checks/pip-audit/bandit — base-library has no removed-symbols step) + the
+      `QG_PROFILE=1` full-no-skip override block + `IGNORE_TIMEOUT` honour on the duration meta-gate (was missing in
+      base-library — a profile run would have false-failed `<MAX_DURATION`). `bash -n` clean; zero behaviour change when
+      `QG_PROFILE` unset (qg_prof is a no-op function; override inside the `== "1"` guard). End-to-end exercise rides
+      the library legs of the 22-repo sweep (running a full UTL/UAC gate locally just for smoke exceeds host budget);
+      the span mechanism itself is unit-verified + identical to the service base's, which passed the ibkr smoke.
 - [ ] [AUDIT] P1. Typecheck numbers are **warm-cache** (~11 s); report BOTH cold (clear `BASEDPYRIGHT_CACHE_DIR`) and
       warm in the sweep so basedpyright isn't under-counted.
 
@@ -210,11 +246,21 @@ single-core pinned), output under gitignored `.qg_profile/`.
 
 ## Phase 3 — PER-STEP COST REDUCTION (helps single-core full gate too)
 
-- [ ] [INFRA] P1. pip-audit: it is advisory + has an 180s OSV network timeout. Move to cached OSV results and/or a
+- [x] [INFRA] P1. ✅ pip-audit: it is advisory + has an 180s OSV network timeout. Move to cached OSV results and/or a
       periodic cron (e.g. on dependency change only) instead of every gate run. Big fixed-cost removal from the hot
-      loop.
-- [ ] [INFRA] P2. bandit + actionlint: cache results keyed by content hash; scope bandit to changed files on the fast
-      tier.
+      loop. — unified-trading-pm@779dc3683; same unit as the Phase-0 pip-audit item above (deps-hash trigger + 24h freshness bound,
+      both bases in parity).
+- [x] [INFRA] P2. ✅ bandit + actionlint: cache results keyed by content hash. — unified-trading-pm base-service.sh +
+      base-library.sh + qg-common.sh helpers (unified-trading-pm@779dc3683). bandit key = content (`git ls-files -s` index blobs +
+      `git diff` worktree delta + untracked contents) over SOURCE_DIR + pyproject.toml + bandit version +
+      BANDIT_EXTRA_ARGS → `.qg_cache/bandit_content_hash`; actionlint key = workflow file names+contents (plain cat —
+      `_WF_LINT_DIR` can resolve outside the repo pathspec in CI) + actionlint version + SHELLCHECK_OPTS →
+      `.qg_cache/actionlint_content_hash`. Clean-run-only store; `QG_NO_CACHE=1` bypass; CI-safe (no `.qg_cache` in a
+      fresh checkout → first run full). Measured (PM, isolation): bandit MISS 2.53s → HIT 0.13s; actionlint (55 wf) MISS
+      3.99s → HIT 0.10s; content-bust verified for new/changed/removed files (mtime-independent, deterministic).
+- [ ] [INFRA] P2. bandit fast-tier scoping: scope bandit to changed files on the `--fast` tier (residual from the cache
+      item above — depends on the Phase-2 fast-tier mechanism landing; the content-hash cache already covers the
+      unchanged-tree case).
 - [ ] [INFRA] P2. Coverage instrumentation is already off the `--quick` hot path; confirm the fast tier inherits that
       and measure the per-line-instrumentation cost the profile (Phase 0) attributes to `--cov`.
 - [ ] [INFRA] P2. Re-profile after Phases 1–3 and re-baseline `qg_resource_baseline.json`; the 2× resource-drift guard
