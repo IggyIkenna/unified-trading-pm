@@ -10,6 +10,8 @@ priority: P2
 status: active
 ---
 
+> **✅ RESOLVED 2026-06-10.** All three test fixes landed (calendar ← 14d212a3, rate-limit/cache ← b1360a59, lighter OHLCV ← 0aebc2e7); commits are ancestors of main + LDR. ARCHIVE CANDIDATE.
+
 ## What I found
 
 A full `market-tick-data-service` `quality-gates.sh --no-fix` run (2026-06-08, surfaced while gating the tradfi
@@ -48,8 +50,8 @@ contributors (ComsicTrader 2026-05-15, the lighter bot 2026-05-07):
   / uac@df0acd06) are content-clean (their own tests are in the 2662 passed) and do not touch these surfaces, so they
   ship onto the already-red repo without worsening it.
 
-- [ ] [TEST] P1. Diagnose + fix `test_calendar_boundaries.py` future-date-skip (returns `{}` under freeze_time —
+- [x] ✅ [TEST] P1. Diagnose + fix `test_calendar_boundaries.py` future-date-skip (returns `{}` under freeze_time —
       regression in the future-skip logic OR a stale test). Repo: market-tick-data-service. parent_epic:
-      mtds_mdps_master.
-- [ ] [TEST] P2. Fix `test_adapter_rate_limit_and_cache.py` hyperliquid cache TTL-expiry + `test_lighter_candles.py`
-      canonical OHLCV schema. Repo: market-tick-data-service. parent_epic: mtds_mdps_master.
+      mtds_mdps_master. — mtds@14d212a3 | verified 2026-06-10
+- [x] ✅ [TEST] P2. Fix `test_adapter_rate_limit_and_cache.py` hyperliquid cache TTL-expiry + `test_lighter_candles.py`
+      canonical OHLCV schema. Repo: market-tick-data-service. parent_epic: mtds_mdps_master. — mtds@b1360a59 (rate-limit/cache) + mtds@0aebc2e7 (lighter OHLCV) | verified 2026-06-10

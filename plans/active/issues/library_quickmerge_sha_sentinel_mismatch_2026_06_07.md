@@ -11,6 +11,8 @@ priority: P2
 status: active
 ---
 
+> **✅ RESOLVED 2026-06-10 — ARCHIVE CANDIDATE (dup of base_library_qg_sha_sentinel_gap).** Fixed by base-library.sh:1130 writing `.qg_last_passed_sha` on green. Verified on origin/main.
+
 ## What I found
 
 `quickmerge.sh` STAGE 3 in `--agent` mode strictly verifies `.qg_last_passed_sha == HEAD` (`quickmerge.sh:1018-1028`).

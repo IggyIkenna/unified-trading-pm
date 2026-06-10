@@ -11,6 +11,8 @@ priority: P2
 status: active
 ---
 
+> **✅ RESOLVED 2026-06-10 — ARCHIVE CANDIDATE.** base-library.sh:1130 writes `.qg_last_passed_sha` on green (parity with base-service.sh:2950); UTL sources the template directly so the fix propagates fleet-wide with no per-repo rollout. Verified on origin/main. Move to plans/archive/ next sweep.
+
 ## What I found
 
 `quickmerge.sh` Stage 3 (`AGENT FAST-PATH`, ~line 1039) verifies the Pass-1 sentinel by reading

@@ -93,6 +93,9 @@ Two gaps, both confirmed against the live machinery:
       (`[ -e "$f" ] || git ls-files --error-unmatch "$f" >/dev/null 2>&1`), and use `git add -- "$f"` (handles
       tracked-deleted paths). Add a regression test: quickmerge a worktree whose only change is a tracked-file deletion
       → the deletion must reach the commit. Repo: unified-trading-pm (template host) + fleet rollout.
+      [VERIFIED-OPEN 2026-06-10: bug live at quickmerge.sh:1219-1227 on BOTH main + LDR — `[ -e "$f" ]` guard, no
+      `git ls-files --error-unmatch` fallback; deleted paths silently dropped. Root cause of instruments-service polygon
+      removal half-shipping. P1.]
 
 ## Phase 3 — Agent attribution end-to-end (#8) (parallel)
 
