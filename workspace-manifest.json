@@ -995,7 +995,7 @@
         "monitoring",
         "standard"
       ],
-      "ldr_ci_status": "GREEN"
+      "ldr_ci_status": "RED"
     },
     "trading-agent-service": {
       "type": "service",
