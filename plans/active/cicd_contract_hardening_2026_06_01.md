@@ -4914,3 +4914,21 @@ Open follow-ups:
       Repos-CI dashboard SIT panel). Lock duration becomes the longest cone, not the sum. Requires: per-cone
       staging_status partitions + sit-debounce batching by cone + overlap detection (overlapping cones still serialize).
       Design doc before code; interacts with `staging_status` being a single manifest object.
+
+### Squash-body [skip ci] suppression of the staging drain (bug #7, found live 2026-06-10 slot-3)
+
+- [ ] [CI] P1. **Sanitize the Tier C auto-drain squash body**: the LDR→staging promote PR squash-merges with the default
+      body (= list of squashed commit subjects). Any squashed commit whose SUBJECT merely MENTIONS a CI-suppression
+      token poisons the squash message — observed live: subject `ci: drop [skip ci] from dep-pin     commit…` (a fix
+      ABOUT removing [skip ci]) suppressed ALL workflows on the staging push for deployment-ui#41 / deployment-api#43 /
+      e2e-testing#26 → v2-on-staging never ran → semver never fired → staging→main dead, silently. Fix in
+      `ldr-to-staging-promote` template (and PM `ldr-to-main-promote.yml`): set an explicit squash commit message/body
+      at auto-merge-arm time (`gh pr merge --squash --subject … --body "Squash of N commits — see PR"`) OR strip the
+      token set (`[skip ci] [ci skip] [no ci] [skip actions] [actions skip]`) from the body. Recovery used 2026-06-10:
+      `gh workflow run quality-gates-v2.yml --ref staging` per repo.
+- [ ] [CODE] P2. Dashboard alert-parity: the Repos-CI overview should flag a staging head with ZERO check runs (the
+      silent-suppression signature) — composes with the failure-injection matrix in
+      `monitoring_control_plane_master_2026_06_10.md`.
+- [ ] [DOCS] P2. ci_local_qg_parity evidence: local QG green ×3 while CI lint-codex red on the same tree (deployment-api
+      2026-06-10, budget 24>23 counted differently local-vs-CI) — add reproducer to `ci_local_qg_parity_2026_06_08.md`
+      scope.
