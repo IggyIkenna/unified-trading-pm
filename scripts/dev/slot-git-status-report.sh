@@ -128,6 +128,30 @@ epoch_to_iso() {
 
 NOW_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
+# Cron-liveness attestation (fleet_git_health_orchestrator_2026_06_10.md Phase 3).
+# slot-cron-ff-pull.sh writes a host-global result file each sweep; read it here so
+# every slot's POST carries ff_pull_last_run/ff_pull_last_result → the orchestrator
+# flags a dead FF-pull cron (ff_cron_stale) as a first-class fleet state. Absent /
+# unreadable file → empty strings (the server treats absence as honest-unknown, the
+# payload stays backward-compatible).
+FF_RESULT_FILE="${SLOT_FF_PULL_RESULT_FILE:-${TMPDIR:-/tmp}/slot-cron-ff-pull.result.json}"
+FF_LAST_RUN=""
+FF_LAST_RESULT=""
+if [[ -f "${FF_RESULT_FILE}" ]]; then
+    FF_LAST_RUN=$(python3 -c 'import json,sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(d.get("ff_pull_last_run", ""))
+except Exception:
+    print("")' "${FF_RESULT_FILE}" 2>/dev/null || echo "")
+    FF_LAST_RESULT=$(python3 -c 'import json,sys
+try:
+    d = json.load(open(sys.argv[1]))
+    print(d.get("ff_pull_last_result", ""))
+except Exception:
+    print("")' "${FF_RESULT_FILE}" 2>/dev/null || echo "")
+fi
+
 # Classify one repo worktree → emits TAB-separated row to stdout:
 #   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans
 #
@@ -293,8 +317,15 @@ for line in sys.stdin:
     if unpushed_raw:
         repo["unpushed_plans"] = [p for p in unpushed_raw.split("|") if p]
     repos.append(repo)
-print(json.dumps({"reported_at": reported_at, "host": host, "repos": repos}))
-' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}")
+ff_last_run = sys.argv[4] if len(sys.argv) > 4 else ""
+ff_last_result = sys.argv[5] if len(sys.argv) > 5 else ""
+out = {"reported_at": reported_at, "host": host, "repos": repos}
+if ff_last_run:
+    out["ff_pull_last_run"] = ff_last_run
+if ff_last_result:
+    out["ff_pull_last_result"] = ff_last_result
+print(json.dumps(out))
+' "${slot_id}" "${HOSTNAME_SHORT}" "${NOW_ISO}" "${FF_LAST_RUN}" "${FF_LAST_RESULT}")
     if [[ -z "${payload}" ]]; then
         log "[skip:empty-payload] slot ${slot_id}"
         return 0

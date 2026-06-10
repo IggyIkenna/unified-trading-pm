@@ -38,8 +38,8 @@ vitest/tsc (dashboard).
 ## Phase 1 — backend fleet aggregation (repo: agent-orchestrator)
 
 - [x] ✅ [CODE] P1. DONE 2026-06-10 — agent-orchestrator@0ab7c84 (`get_fleet_git_health` + `_build_local_git_health` +
-      `_group_slots_by_host` + `_summarise_git_health`; `scope=fleet` fans out to registered VMs via the existing
-      proxy, `scope=local` is the per-VM leaf). Was: `GET /api/fleet/git-health` — aggregate every slot's stored
+      `_group_slots_by_host` + `_summarise_git_health`; `scope=fleet` fans out to registered VMs via the existing proxy,
+      `scope=local` is the per-VM leaf). Was: `GET /api/fleet/git-health` — aggregate every slot's stored
       `SlotGitStatus` across ALL hosts (central + proxied VMs via the existing `/api/vms/<vm_id>/*` pattern): grouped by
       host → slot → repos, each repo with state, dirty-file count, ahead/behind, `not_clean_since`, unpushed plans.
       Per-slot `reporter_stale: reported_at older than 10 min` so a dead reporter cron is a first-class state, not a
@@ -74,21 +74,29 @@ vitest/tsc (dashboard).
 
 ## Phase 3 — reporter additions (repo: unified-trading-pm)
 
-- [ ] [SCRIPT] P2. `slot-git-status-report.sh`: include `ff_pull_last_run`/`ff_pull_last_result` in the POST payload
-      (read from a result file `slot-cron-ff-pull.sh` writes per run — add that write too, atomic tmp+mv). Keep the
-      payload backward-compatible (server accepts both shapes).
-- [ ] [VERIFY] P2. One full cron cycle on the laptop + one AWS VM: fleet page shows both hosts, states match
-      `git status` ground truth on 3 spot-checked repos, killing the reporter cron flips `reporter_stale` within 15 min.
+- [x] ✅ [SCRIPT] P2. DONE 2026-06-10 — unified-trading-pm (this commit; scripts/dev/) (`slot-cron-ff-pull.sh` writes a
+      host-global `${TMPDIR:-/tmp}/slot-cron-ff-pull.result.json` each sweep — `_ff_record` per-repo tokens
+      (ok/skip:dirty/conflict/ fail) aggregated worst-of, atomic tmp+mv via `_write_ff_result` in BOTH single-slot +
+      all-slots paths; `slot-git-status-report.sh` reads it + adds `ff_pull_last_run`/`ff_pull_last_result` to the POST
+      only when present — payload stays backward-compatible). Smoke-verified: dry-run sweep wrote
+      `{"ff_pull_last_run":...,     "ff_pull_last_result":"skip:dirty"}`, reporter round-trip emits the enriched
+      payload. `bash -n` clean both.
+- [ ] [VERIFY] P2. **PARTIAL** — laptop single-slot smoke done 2026-06-10 (result write + reporter read round-trip
+      verified). Remaining: one full `*/5` cron cycle on the laptop + one AWS VM with the orchestrator live — fleet page
+      shows both hosts, states match `git status` ground truth on 3 spot-checked repos, killing the reporter cron flips
+      `reporter_stale` within 15 min, killing the FF-pull cron flips `ff_cron_stale`. (Needs the orchestrator running +
+      a second host; do on the live orchestrator VM.)
 
 ## Phase 4 — ship + docs
 
 - [ ] [DOCS] P2. `codex/04-architecture/agent-orchestrator-overview.md` § new "Fleet git-health page"; contribute the
       fleet-surface section to `codex/03-observability/monitoring-control-plane.md` (master obligation).
 - [ ] [TEST] P3. **NICE-TO-HAVE — add a vitest harness to the orchestrator dashboard** (provenance: slot-3 2026-06-10
-      fleet-git-health ship). The `agent-orchestrator/dashboard` repo has NO vitest/eslint installed (only `tsc`+`vite
-      build`+prettier), so the FleetGit pure mappers (`repoStateColor`/`slotBadges`/`summaryChips`, written test-ready)
-      have tsc+build coverage but no unit tests. Adding vitest (+ jsdom-free for pure fns) is its own infra unit; do it
-      once and backfill specs for FleetGit + any future mapper. Repo: agent-orchestrator (dashboard).
+      fleet-git-health ship). The `agent-orchestrator/dashboard` repo has NO vitest/eslint installed (only
+      `tsc`+`vite     build`+prettier), so the FleetGit pure mappers (`repoStateColor`/`slotBadges`/`summaryChips`,
+      written test-ready) have tsc+build coverage but no unit tests. Adding vitest (+ jsdom-free for pure fns) is its
+      own infra unit; do it once and backfill specs for FleetGit + any future mapper. Repo: agent-orchestrator
+      (dashboard).
 
 ## Success criteria
 

@@ -53,6 +53,21 @@ its primary OPERATOR view moves INTO deployment-ui (deployment-api proxies `/api
 dashboard keeps its per-slot badges for worker-ops use). All CI/CD + fleet concerns in one app: Repos CI page
 (`/repos`), per-service CI tab, fleet git-health page.
 
+## Click-through to the existing UIs principle (operator add 2026-06-10 — design rule for ALL surfaces)
+
+**Every status atom is a deep-link to the authoritative existing UI — never a dead-end label.** The monitor is a
+roll-up/triage surface; the detail lives in GitHub and the agent-orchestrator UI, which already exist. So:
+
+- Anything GitHub-authoritative → **link to GitHub directly**: a SHA → `…/commit/<sha>`; a `quality-gates-v2`/check
+  conclusion ("feature green") → the check-run/workflow-run page `…/runs/<id>` (or `…/commits/<sha>/checks`); a PR →
+  `…/pull/<n>`; a branch → `…/tree/<branch>`; a workflow run → its run URL.
+- Anything fleet/worktree/git-health/slot-related (dirty, behind, diverged, reporter/ff-cron liveness) → **link to the
+  agent-orchestrator UI**: the Fleet Git-Health page (`/fleet-git`) or the per-slot view, so the operator clicks through
+  to the live slot detail the orchestrator already renders.
+
+Applies to the Repos CI overview + drill-down, the per-service CI tab, the Stuck panel, the SIT-run panel, and the Fleet
+Git page. A status chip with no click-through is review-blocking for these surfaces.
+
 ## Alert-parity principle (operator add 2026-06-10 — the design rule for ALL of this)
 
 **Anything we alert on generically must be a continuously observable STATE in the UI** — an alert is the transition of a
