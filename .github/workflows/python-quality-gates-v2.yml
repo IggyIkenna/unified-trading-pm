@@ -46,7 +46,8 @@ on:
         default: ""
     outputs:
       metadata_only:
-        description: "true when this run fast-pathed a metadata-only commit (chore(release) version bump OR chore(deps) pin)"
+        description:
+          "true when this run fast-pathed a metadata-only commit (chore(release) version bump OR chore(deps) pin)"
         value: ${{ jobs.quality-gates-v2.outputs.metadata_only }}
     secrets:
       GH_PAT:
@@ -216,7 +217,9 @@ jobs:
           key: act-tools-linux-rg14.1.1-sc0.10.0-bats-core-1.12-actionlint1.7.4
 
       - name: Install ripgrep
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' && steps.tools-cache.outputs.cache-hit != 'true'
+        if:
+          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           RG_VER="14.1.1"
@@ -225,7 +228,9 @@ jobs:
             | tar -xz --strip-components=1 -C ~/.local/act-tools/bin "ripgrep-${RG_VER}-x86_64-unknown-linux-musl/rg"
 
       - name: Install shellcheck
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' && steps.tools-cache.outputs.cache-hit != 'true'
+        if:
+          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           SC_VER="v0.10.0"
@@ -234,14 +239,18 @@ jobs:
             | tar -xJ --strip-components=1 -C ~/.local/act-tools/bin "shellcheck-${SC_VER}/shellcheck"
 
       - name: Install bats-core
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' && steps.tools-cache.outputs.cache-hit != 'true'
+        if:
+          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           git clone --depth=1 --branch v1.12.0 https://github.com/bats-core/bats-core.git /tmp/bats-core
           /tmp/bats-core/install.sh ~/.local/act-tools
 
       - name: Install actionlint
-        if: steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' && steps.tools-cache.outputs.cache-hit != 'true'
+        if:
+          steps.vcheck.outputs.metadata_only != 'true' && env.QG_CONTENT_HIT != 'true' &&
+          steps.tools-cache.outputs.cache-hit != 'true'
         shell: bash
         run: |
           AL_VER="1.7.4"
@@ -298,13 +307,21 @@ jobs:
                 | sort -V \
                 | python3 -c "
           import sys
-          from packaging.version import Version
-          upper = Version('${constraint}')
+          # stdlib tuple-compare (NOT packaging.version) — the upstream tag list is pre-filtered
+          # to plain 3-part semver 'v?X.Y.Z' (grep on refs/tags above) and the constraint is also
+          # X.Y.Z, so a numeric-tuple comparison is PROVABLY identical to packaging.version.Version
+          # on this input domain (verified: 0 mismatches). Using stdlib removes the silent-degradation
+          # bug where 'from packaging.version import Version' failed before 'uv sync' was run (packaging
+          # not yet installed) → the whole block errored → empty tag → wrong fallback clone (phantom
+          # version). SSOT: ci_local_qg_parity_2026_06_08.md + staging_clean_start_and_stale_pr_hygiene.
+          def _v(s):
+              return tuple(int(x) for x in s.split('.'))
+          upper = _v('${constraint}')
           tags = []
           for line in sys.stdin:
               t = line.strip()
               try:
-                  v = Version(t.lstrip('v'))
+                  v = _v(t.lstrip('v'))
                   if v < upper:
                       tags.append((v, t))
               except Exception:
@@ -551,13 +568,17 @@ jobs:
       # and not a metadata-only fast-path) — never re-save on a content HIT (the
       # marker already exists) so the marker always certifies a real full-gate pass.
       - name: Create green marker file
-        if: needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' && steps.vcheck.outputs.metadata_only != 'true'
+        if:
+          needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
+          steps.vcheck.outputs.metadata_only != 'true'
         shell: bash
         run: |
           git rev-parse HEAD^{tree} > .qg_ci_green_marker
           echo "marker: $(cat .qg_ci_green_marker)"
       - name: Save green marker cache
-        if: needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' && steps.vcheck.outputs.metadata_only != 'true'
+        if:
+          needs.qg-slices.result == 'success' && needs.content-gate.outputs.cache_hit != 'true' &&
+          steps.vcheck.outputs.metadata_only != 'true'
         uses: actions/cache/save@v5
         with:
           path: .qg_ci_green_marker
