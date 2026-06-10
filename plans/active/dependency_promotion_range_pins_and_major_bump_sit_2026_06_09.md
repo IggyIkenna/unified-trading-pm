@@ -70,6 +70,10 @@ gates pass, the major promotes automatically with no human/vm-planning involveme
 - ✅ UAC `main(0.1.20)`-vs-`staging(0.2.1)` split healed by PR #108 (the actual cause of the MTDS loud-fail).
 - ❌ No "MAJOR bump → cascade of quality gates (full SIT in dep order) → escalate to vm-planning ONLY IF the cascade
   fails" wiring. **This is the remaining work.**
+  [STATUS CORRECTION 2026-06-10: the cascade IS wired — update-repo-version.yml:132-153+387-407 dispatches
+  cascade-qg-trigger → cascade-qg-ordering.yml (per-consumer QG in manifest topologicalOrder levels,
+  escalate-on-failure → orchestrator) since PM@cb44b85d4. Remaining: live verification on a real MAJOR bump +
+  DEFECT-2 dependency-FIRST ordering (promote dep + tag before consumer pin fan-out).]
 
 ## Phases
 
@@ -324,6 +328,14 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       service commit yields a byte-identical image (reproducibility) AND the Dockerfile records exactly which UTL/UAC
       went in (provenance). This is the operator's answer to both "reproducible cloud builds" and "reverse-engineer the
       code version in a build".
+      [DESIGN SHARPENED 2026-06-10: STEP 5.79 (base-service.sh:2361-2413) is currently TOOTHLESS against the canonical
+      FROM lines — the line-2395 `${` exemption skips every FROM that uses `${PROJECT_ID}`. Sound mechanism: (1) each
+      consumer Dockerfile carries a checked-in `ARG BASE_IMAGE_DIGEST=sha256:<digest>` default consumed in FROM;
+      (2) digest freshness rides the existing dependency-update fan-out (update-repo-version.yml → per-repo
+      update-dependency-version.yml PRs rewrite the ARG line on base-image publish); (3) THEN narrow 5.79: registry
+      FROMs must carry @sha256 literally or via an ARG BASE_IMAGE_DIGEST default in the same Dockerfile — closing the
+      blanket `${` skip. Sequencing hard requirement: Dockerfile ARG rollout lands fleet-wide BEFORE the 5.79
+      narrowing, else every repo QG reddens.]
 - [ ] [CODE] P1. **Deployment-registry bill-of-materials — record digest + commit + dep-versions** (deployment-service).
       TODAY the registry persists ONLY a mutable `image_tag` (`monitor.py:39` / `live_deployment.py:42,63` /
       `backends/base.py:135`); the `git_commit` field exists (`monitor.py:40`) but its writer

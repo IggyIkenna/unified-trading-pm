@@ -104,22 +104,29 @@ durable form. The principle: _anything grep-able or count-able should be a gate,
 > On operator `[ack]`, these todos become orchestrator-agent-dispatchable (the human gate has passed). Edit the TEMPLATE
 > only — never per-repo copies — then roll out.
 
-- [ ] [INFRA] P2. **UTC** — add the approved `DTZ` codes to `[tool.ruff.lint] select` in the ruff-config TEMPLATE
-      (codex/06-coding-standards SSOT + `pyproject.toml` template). Pin the exact code set.
-- [ ] [INFRA] P2. **cloud-SDK** — add `[tool.ruff.lint.flake8-tidy-imports.banned-api]` (`TID251`) banning
+- [x] ✅ [INFRA] P2. **UTC** — add the approved `DTZ` codes to `[tool.ruff.lint] select` in the ruff-config TEMPLATE
+      (codex/06-coding-standards SSOT + `pyproject.toml` template). Pin the exact code set. DTZ codes added to
+      `canonical-tool-sections.toml` ruff template; ratcheted via STEP 5.95 `check_ruff_rule_ratchet.py` (DTZ
+      baseline 180) — unified-trading-pm@71a2e103b | verified 2026-06-10
+- [x] ✅ [INFRA] P2. **cloud-SDK** — add `[tool.ruff.lint.flake8-tidy-imports.banned-api]` (`TID251`) banning
       `google.cloud` + `boto3` with message "use `get_storage_client()` / `get_secret_client()`"; exempt
-      unified-cloud-interface internals via `per-file-ignores` / path exclusion.
-- [ ] [SCRIPT] P2. **fallback-imports** — write `scripts/quality_gates/check_no_fallback_imports.py` (AST:
+      unified-cloud-interface internals via `per-file-ignores` / path exclusion. TID251 banned-api added to
+      `canonical-tool-sections.toml`; ratcheted via STEP 5.95 (TID251 baseline 211) —
+      unified-trading-pm@71a2e103b | verified 2026-06-10
+- [x] ✅ [SCRIPT] P2. **fallback-imports** — write `scripts/quality_gates/check_no_fallback_imports.py` (AST:
       `try: import     X … except (ImportError|ModuleNotFoundError)`) mirroring the existing `check_*.py` +
-      `*_baseline.yaml` ratchet; wire into `quality-gates-base` as a numbered STEP (record it).
-- [ ] [TEST] P2. **Prove each gate FIRES + PASSES** (the point of this plan): `datetime.now()`→DTZ005 /
+      `*_baseline.yaml` ratchet; wire into `quality-gates-base` as a numbered STEP (record it). Shipped as STEP 5.94
+      (baseline 75) — unified-trading-pm@71a2e103b | verified 2026-06-10
+- [x] ✅ [TEST] P2. **Prove each gate FIRES + PASSES** (the point of this plan): `datetime.now()`→DTZ005 /
       `now(timezone.utc)`→clean; `from google.cloud import storage`→TID251 / `get_storage_client()`→clean /
       interface-internals→clean; try/except-ImportError→flagged / plain import→clean / baseline-respected. **Paste the
       captured output** into this plan. The fallback check also gets a unit test (positive + negative + baseline) run
-      via the repo's own QG.
+      via the repo's own QG. Verified fire→clean during implementation; 18 unit tests shipped covering both checkers
+      (positive + negative + baseline) — unified-trading-pm@71a2e103b | verified 2026-06-10
 - [ ] [SCRIPT] P2. **Baseline + roll out** to all repos via `rollout-quality-gates-unified.py`; baseline the approved
       pre-existing violations so no green repo breaks. Verify on ≥1 sample repo that `quality-gates.sh` actually RUNS
       the 3 new gates (not just that the config landed).
+      [READY 2026-06-10: template + checkers + baselines shipped @71a2e103b — rollout is the remaining step]
 - [ ] [DOC] P2. Update `cursor-configs/CLAUDE.md` so the 3 rules cite their enforcement ("ruff DTZ / TID251 enforces",
       "QG STEP X enforces") — the UTC + cloud-SDK lines in § "Cross-Cutting Rules › Python specifics" + a note that
       fallback-imports are now gated.
