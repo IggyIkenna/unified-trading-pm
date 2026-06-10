@@ -339,3 +339,6 @@ Operator direction: if fundamental deps don't change, the build cache should be 
       disk + N× cold reads). Decision item — changes lockfile format + CI install steps.
 - [ ] [SCRIPT] P3. base-ui.sh: one automatic retry on the build-timeout class (cold-trip passes on retry; a genuine hang
       fails twice) — removes the human re-run without weakening the budget.
+- [ ] [SCRIPT] P2. `restart-deployment-stack.sh` must export `GCP_PROJECT_ID`/`PROJECT_ID` (env-inline launcher sets
+      provider but no project → Secret-Manager paths malformed → live 500 on any secret-reading route; found shipping
+      the Repos-CI dashboard 2026-06-10; interim: operator exports inline).
