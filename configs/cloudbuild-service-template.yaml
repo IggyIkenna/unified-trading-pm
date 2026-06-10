@@ -102,9 +102,27 @@ steps:
     waitFor: ["-"]
 
   # ── STEP 3: Pull UTL base image (required for authenticated access) ───────
+  # DIGEST-AWARE (FROM-digest ratchet, 2026-06-10): when the Dockerfile carries a pinned
+  # `ARG BASE_IMAGE_DIGEST=sha256:<64-hex>` default, pre-pull THAT digest (authenticated CLI
+  # pull → docker caches the manifest under the digest ref → the in-build FROM @${...} hits
+  # cache). Without this, a pin one generation behind :latest forces a daemon-side registry
+  # pull which is UNAUTHENTICATED → "denied" (live incident: mtds builds a18c2981/bb37c7b9,
+  # 2026-06-10 — the very first digest-pinned builds). :latest is ALSO pulled so unpinned /
+  # legacy Dockerfiles keep working and the freshness comparison stays observable in logs.
   - name: "gcr.io/cloud-builders/docker"
     id: "pull-base-image"
-    args: ["pull", "asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-library/unified-trading-library:latest"]
+    entrypoint: "bash"
+    args:
+      - "-c"
+      - |
+        set -euo pipefail
+        BASE="asia-northeast1-docker.pkg.dev/$PROJECT_ID/unified-trading-library/unified-trading-library"
+        PIN=$(sed -n 's/^ARG BASE_IMAGE_DIGEST=\(sha256:[0-9a-f]\{64\}\).*/\1/p' Dockerfile | head -1 || true)
+        if [ -n "$PIN" ]; then
+          echo "pinned base digest: $PIN — pre-pulling the PINNED manifest"
+          docker pull "${BASE}@${PIN}"
+        fi
+        docker pull "${BASE}:latest" || true
     waitFor: ["configure-docker"]
 
   # ── STEP 4: Build Docker image ────────────────────────────────────────────

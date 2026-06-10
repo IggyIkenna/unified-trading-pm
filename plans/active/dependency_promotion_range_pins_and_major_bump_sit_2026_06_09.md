@@ -173,7 +173,13 @@ clean fix is to relax it.
       writers can evict each other during the hold → stale ci_status → dep-order gate friction. Structural fix = the
       ci_status Firestore side-store (per-repo document partitioning,
       plans/active/ci_status_firestore_side_store_2026_06_10.md) — its dual-write sequencing guard is therefore doubly
-      important.
+      important. **[OBSERVED LIVE ~19:50Z same day — eviction is eating version-bump runs THEMSELVES]**:
+      update-repo-version runs CANCELLED at 13:34(×4)/14:57/17:38 — so the digest fan-out for UTL's new image
+      (`d41011e1…`, built 17:06) NEVER dispatched and consumers' pins stayed at the morning's `058d589f…` (a direct
+      cause of the first digest-pinned build failures, alongside the unauthenticated-pull defect — the latter fixed in
+      `cloudbuild-service-template.yaml`'s digest-aware pre-pull, which makes stale-but-existing pins build correctly
+      and demotes this eviction class from build-breaking to staleness-lag). Raises the side-store's priority and/or a
+      dedicated concurrency group for version-bump runs (mirror of the cascade's own-group fix).
 
 ### Phase 3 — Escalate to vm-planning ONLY IF the cascade FAILS (pass → auto-promote) — P1
 
