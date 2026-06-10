@@ -536,13 +536,13 @@ what the operator is seeing:
       `actions/checkout@v4` + `actions/setup-python@v5` run on Node 20. Bumped to the Node24 majors
       `actions/checkout@v5` + `actions/setup-python@v6` across all 40 PM workflows (57 checkout + 10 setup-python refs)
       AND the workflow-template SSOT (`scripts/workflow-templates/`), all yaml valid. `unified-trading-pm@<node-bump>`.
-- [ ] [DEVOPS] P1. **Node.js 20 action deprecation — FLEET ROLLOUT to all ~25 repos (before 2026-06-16).** Every repo's
-      `.github/workflows/*.yml` still carries `actions/checkout@v4` / `actions/setup-python@v5` (+ possibly
-      `actions/setup-node@v4`). The PM templates are now bumped, so
-      `bash scripts/workflow-templates/rollout-workflow-templates.sh` propagates the templated ones; the NON-templated
-      per-repo workflows need a fleet sweep (same sed: `checkout@v4→v5`, `setup-python@v5→v6`, `setup-node@v4→v5`). Then
-      verify each repo's next workflow run has no Node-20 deprecation warning. repo: ALL (fleet-wide branch of cicd
-      hardening).
+- [x] ✅ [DEVOPS] P1. **DONE 2026-06-10 — big-3 fleet sweep complete; 0 node20 big-3 refs remain fleet-wide.** Bumped the
+      remaining 15 non-templated per-repo workflows (`checkout@v4→v5`, `setup-python@v5→v6`, `setup-node@v4→v5`) across
+      9 repos (deployment-ui@f110ca5, execution-service@c637f7d, features-service@5540640, fund-administration@94d01f1,
+      instruments-service@e2bf38d, market-data-processing@22c83db, market-tick-data@557a3bf, strategy-service@f687b50,
+      unified-trading-system-ui@e14089b) — templated workflows + 7 repos were done earlier (2026-06-08). actionlint clean
+      on all; `grep checkout@v4|setup-python@v5|setup-node@v4` = 0 fleet-wide. All node24 majors, input-compatible
+      (setup-node auto-cache safe — no `packageManager` field). repo: ALL.
 - [x] ✅ [DEVOPS] P1. **deployment-service tab-mirror `div_hosts: unbound variable` on main — fix PR opened (CI-watcher
       alert 2026-06-08 10:09).** REAL: deployment-service `main` still ran the pre-fix tab-mirror (raw
       `${#div_hosts[@]}` under `set -u`) — the `set +u`/`div_hosts_n` guard was on `live-defi-rollout` but
@@ -4231,18 +4231,38 @@ Bumping only the big-3 does NOT clear Node-20 warnings — ~10 more JS actions a
 a blind sweep. Method per action: bump named files → verify diff → prek-gated commit → SSH push (templated copies via PM
 rollout, never per-repo).
 
-- [ ] [SCRIPT] P1. `google-github-actions/auth` v2→**v3** (12 refs) — ⚠️ BREAKING (release note: "Bump to Node 24 and
-      remove old parameters"); GCP-auth critical path (incl. `persist-cicd-event`). Review removed params + smoke GCP
-      auth before the fleet bump.
-- [ ] [SCRIPT] P1. `actions/upload-artifact` v4→**v7** (15 refs) — ⚠️ 3 major jumps (artifact immutability + naming
-      changed across v5–v7). Read v5/v6/v7 changelogs; `v3.2.2-node20` is the escape hatch if a v7 break blocks.
-- [ ] [SCRIPT] P2. `google-github-actions/setup-gcloud` v2→**v3** (7 refs) — likely breaking (mirrors `auth`).
-- [ ] [SCRIPT] P2. `astral-sh/setup-uv` v5→**v8** (7 refs).
-- [ ] [SCRIPT] P2. `actions/github-script` v7→**v8/v9** (5 refs) — node24 since v8; verify `script:` arg compat.
-- [ ] [SCRIPT] P2. `actions/cache`@v4, `actions/download-artifact`@v4, `pnpm/action-setup`@v2/v4,
-      `aws-actions/configure-aws-credentials`@v4, `dawidd6/action-download-artifact`@v6,
-      `peter-evans/repository-dispatch`@v3, `stefanzweifel/git-auto-commit-action`@v5 (1–5 refs each) — all node20;
-      confirm each one's node24-major target then bump.
+> **✅ DONE 2026-06-10 (Opus autonomous session) — all second-tier bumps landed fleet-wide on LDR + STATICALLY PROVEN
+> SAFE + LIVE-SMOKED.** Method per RULE 11a: for EACH action I diffed `action.yml` inputs across the version gap
+> (`gh api repos/<a>/compare/<v_old>...<v_new>`) and audited EVERY fleet usage against the removed inputs. Result: the
+> ONLY removed inputs across all actions are `auth`={`retries`,`backoff`,`backoff_limit`} and
+> `setup-gcloud`={`skip_tool_cache`} — **NONE used by any of the 13/7/… fleet usages** (every `auth` call passes only
+> `workload_identity_provider`+`service_account` or `credentials_json`; no usage passes the removed retry/cache params).
+> upload-artifact names are all run-id/version-unique (no immutability collision). So the bump CANNOT fail any repo on a
+> removed input — RULE-11a "can't fail them" satisfied. actionlint clean on all 48 changed workflow files. **LIVE SMOKE
+> (real CI runs on LDR):** auth@v3 — execution-service `benchmarks` "Authenticate to GCP (SA key) = success";
+> upload-artifact@v7 — "Upload = success" on execution-service + strategy-service `agent-audit`; github-script@v9 +
+> setup-uv@v8 — PM `cassette-drift-check` SUCCESS. Pushed to all consumer repos' LDR (per-repo shas in the session log).
+
+- [x] ✅ [SCRIPT] P1. `google-github-actions/auth` v2→**v3** — DONE (13 refs). Removed inputs (retries/backoff/
+      backoff_limit) unused fleet-wide; WIF + credentials_json params unchanged in v3. SMOKED green (execution-service
+      benchmarks `Authenticate to GCP = success`).
+- [x] ✅ [SCRIPT] P1. `actions/upload-artifact` v4→**v7** — DONE (15 refs). No inputs removed (only `archive:` added);
+      all artifact names run-id/version-unique → no immutability collision. SMOKED green (3 runs `Upload = success`).
+- [x] ✅ [SCRIPT] P2. `google-github-actions/setup-gcloud` v2→**v3** — DONE (7 refs). Removed `skip_tool_cache` not used
+      by any of the 7 usages.
+- [x] ✅ [SCRIPT] P2. `astral-sh/setup-uv` v5→**v8** — DONE (template `update-dependency-version.yml` via rollout to 24
+      repos + PM `update-repo-version.yml`). No inputs removed; usages pass no inputs. SMOKED green (PM `Install uv`).
+- [x] ✅ [SCRIPT] P2. `actions/github-script` v7→**v9** — DONE (4 refs). No inputs removed; node24. SMOKED green (PM
+      cassette-drift `github-script` step ran, workflow SUCCESS).
+- [x] ✅ [SCRIPT] P2. `actions/cache`@v4→**v5**, `actions/download-artifact`@v4→**v8** — DONE (no inputs removed,
+      node24).
+- [ ] [SCRIPT] P3. **Misc-tail actions — NOT blind-bumped (need per-action breaking review; deliberately scoped out of
+      the 2026-06-10 sweep per "confirm each one's node24-major target then bump, NOT a blind sweep").** Live refs +
+      latest majors identified 2026-06-10: `pnpm/action-setup`@v2/@v4→v6 (5 refs); `aws-actions/configure-aws-credentials`@v4→v6
+      (1, deploy path); `dawidd6/action-download-artifact`@v6→**v21** (2 — 15-major jump, must read changelog);
+      `peter-evans/repository-dispatch`@v3→v4 (1); `stefanzweifel/git-auto-commit-action`@v5→v7 (2, modifies commits).
+      Low-count P2/P3 tail — NOT on the node20-cliff critical path (the big-3 + main second-tier cleared the bulk +
+      smoked). Each needs a changelog read + single test push before bumping. repo: per-repo workflows.
 - `codecov/codecov-action`@v5 = **composite**, UNAFFECTED (no `using: node20`).
 
 ### Steps 2-3 DONE + workflows RE-ENABLED — 2026-06-08 (slot-1)
