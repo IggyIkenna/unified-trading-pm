@@ -4975,3 +4975,14 @@ Open follow-ups:
       silent-forever again.
 - [ ] [INFRA] P3. Confirm the GHA runner SA (GCP_SA_KEY) has objectAdmin on the new bucket — first real persist after
       bucket creation is the proof (check cicd/events/ fills on the next workflow completion).
+
+### staging_commits only populated on SIT-locked cycles (bug #11, found 2026-06-10 slot-3)
+
+- [ ] [CI] P1. **Non-breaking staging merges are INVISIBLE to the staging→main drain**: `staging-to-main.yml` iterates
+      `staging_status`/`staging_commits`, which only sit-gate's LOCK step records — a non-breaking squash-merge to
+      staging (the common case!) never registers, so the drain never promotes it (observed:
+      deployment-api/deployment-ui/e2e-testing repo-ci ships sat in staging with no path to main; drained manually via
+      per-repo staging→main PRs #51/#43/#28 — the CLAUDE.md-sanctioned fallback). Fix direction: either (a) record
+      staging merges into staging_commits on EVERY staging push (a light workflow or the staging-backmerge hook), or (b)
+      make staging-to-main enumerate repos by `compare(main...staging).files > 0` instead of the manifest record.
+      Composes with bug #7 (squash-body [skip ci]) — both hit the same drain.
