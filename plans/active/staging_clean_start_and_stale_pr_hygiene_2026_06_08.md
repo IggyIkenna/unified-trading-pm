@@ -94,7 +94,7 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
 > PRs, they're the convergence" assumed they would self-resolve; they cannot until the upstream publish/version state is
 > fixed. Root cause from the slot-1 investigation 2026-06-09 (interactive, with operator):
 
-- [ ] [INFRA] P1. **ROOT CAUSE — phantom version + stale published artifact (unified-trading-library + PM
+- [x] ✅ [DONE 2026-06-11: get_version_tag ported to stdlib tuple-compare, PM@d293ddde — silent pre-uv-sync degradation removed; provably identical on X.Y.Z domain] [INFRA] P1. **ROOT CAUSE — phantom version + stale published artifact (unified-trading-library + PM
       propagation).** The dep PRs bump consumer constraints to `unified-trading-library>=0.4.0,<1.0.0` and
       `unified-api-contracts>=0.2.0,<1.0.0`, but **no 0.4.x / 0.2.x artifact was ever published.** UTL is NOT graduated
       (operator 2026-06-09) — source is `0.3.167`; its only git tags `v1.0.0`/`v1.2.0` are spurious **2025-11 bootstrap
@@ -228,7 +228,7 @@ merged. The **only** exception: `main` may carry CI-workflow versions not yet on
       SATISFIABILITY (floor ≤ versions{}[dep] < ceiling — explicitly NOT floor==latest), and (3) wire it `--warn-only`
       into PM QG post-gates (today it only runs inside `admin-force-sync-all-to-main.sh:750`).
 
-- [ ] [INFRA] P2. **FINDING (2026-06-09) — `get_version_tag` in `python-quality-gates-v2.yml` is silently degraded: the
+- [x] ✅ [DONE 2026-06-11: get_version_tag stdlib port, PM@d293ddde — companion to L97] [INFRA] P2. **FINDING (2026-06-09) — `get_version_tag` in `python-quality-gates-v2.yml` is silently degraded: the
       Clone step runs BEFORE `uv sync`, so `from packaging.version import Version` fails → it returns "" → the
       "version-aware" clone ALWAYS falls back to a branch/main clone, never actually resolving to a published tag.**
       This is WHY the phantom could happen silently (no tag resolution + no range check). Discovered while fixing
