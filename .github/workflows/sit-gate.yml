@@ -182,6 +182,20 @@ jobs:
             fi
           done
 
+      # MISSING LINK FIX (2026-06-10): sit-gate previously locked staging ("SIT running") but
+      # NEVER dispatched the SIT itself — full-workspace-sit only ran on its nightly schedule, so
+      # every lock dangled until a failure event / auto-clear / human (root cause of the chronic
+      # "staging is always locked"). Lock → RUN the thing the lock is waiting for.
+      - name: Dispatch full-workspace-sit (the actual SIT this lock waits for)
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set -euo pipefail
+          gh api "repos/IggyIkenna/system-integration-tests/dispatches" \
+            -X POST -f event_type="full-workspace-sit" \
+            && echo "Dispatched full-workspace-sit" \
+            || echo "::error::failed to dispatch full-workspace-sit — staging lock will dangle"
+
       - name: Dispatch staging-locked to all repos (re-runs Staging Lock Check on open PRs)
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
