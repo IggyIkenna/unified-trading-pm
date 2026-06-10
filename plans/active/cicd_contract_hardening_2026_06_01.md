@@ -411,7 +411,7 @@ what the operator is seeing:
       `UPDATE slots SET     tmux_session='orch-slot-N'` for finished slots 1/2/4/5/9 → watchdog reaped them; slot-10
       (active escalation worker) left protected; VM PM clone was 60 behind on auto-inventory churn → stash + ff-pull →
       PlanRegenLoop unblocked. Also killed 5 orphaned claude procs from May-29/Jun-01 (not panes of any session).
-- [ ] [DEVOPS] P1. **`sit-debounce-trigger` \*/5 cron is effectively DEAD + `staging-changed` repository_dispatch not
+- [~] [DEVOPS] P1. **`sit-debounce-trigger` \*/5 cron is effectively DEAD + `staging-changed` repository_dispatch not
       arriving — the ONLY staging-unlock mechanism silently stalls (found 2026-06-10, slot-1).** The 10:57Z
       execution-service v0.6.0 cascade lock dangled 1.5h+ because sit-debounce-trigger (owner of both the SIT dispatch
       AND the dangling-lock auto-clear) last ran 10:02Z — run history shows sparse event-triggered runs
@@ -425,6 +425,25 @@ what the operator is seeing:
       single stallable workflow. Context: the cascade stale-read mis-read (run 27271453887 — pre-dispatch FAILING repos
       counted as cascade failures at t=0s) was already root-fixed on main (STALE-READ GUARD in
       `cascade-qg-ordering.yml`); the remaining gap is unlock LIVENESS, not cascade correctness.
+      **PARTIAL FIX 2026-06-10 (harsh slot-2) — diagnosis CORRECTED + 2 of 3 parts landed (`unified-trading-pm`):**
+  - ✅ **De-grouped `sit-debounce-trigger` from the shared `manifest-update` concurrency group → its OWN
+    `sit-debounce-trigger` group.** ROOT CAUSE was NOT "schedule disabled": the `schedule:` DOES fire, but (a) GitHub
+    THROTTLES the `*/5` cron to ~75 min, and (b) the near-continuous `ci-status-update` (same `manifest-update` group)
+    DISPLACED the queued sit-debounce run — GitHub keeps ONE queued run per concurrency group, so each ci-status arrival
+    cancelled it (live evidence: the 08:33Z run `completed/cancelled`). IDENTICAL defect+fix as `staging-to-main` (own
+    group). The 5-attempt rebase-retry loop already guards the manifest write, so de-grouping cannot lose an update.
+  - ✅ **Lock-dangle paging added to `promotion_lag_monitor.py`** (`_lock_dangle`): pages when `staging_status.locked`
+    with `locked_since` age > 30 min — independent of the throttled sit-debounce workflow, so it fires even when the
+    unlock path is wedged. ruff + basedpyright clean, runtime-smoked.
+  - ❌ **CORRECTION to original fix #3:** `ci-failure-watcher` is throttled to ~75 min IDENTICALLY (NOT "provably every
+    15 min" — verified its actual run cadence) AND is `contents: read` (cannot write the manifest), so folding the
+    dangling-lock auto-clear into it would NOT help. Superseded by the de-group + lag-paging above.
+  - [ ] **REMAINING — the real-time trigger is DEAD CODE (no sender):** sit-debounce listens for
+    `repository_dispatch: [staging-changed]`, but a fleet grep shows the only `staging-changed` sends target
+    `system-integration-tests`; every PM-targeted dispatch uses `promotion-conflict`/`tier-ab-green`/etc. So unlock has
+    relied ENTIRELY on the ~75-min throttled cron. FIX: dispatch `staging-changed` to PM from `update-repo-version.yml`
+    (template) when it writes `staging_versions` (branch=staging) — the precise "a repo promoted to staging" signal →
+    near-instant unlock. Template change → fleet rollout. repo: unified-trading-pm.
 - [x] ✅ [OPERATOR] P0. **🚨 GitHub Actions BILLING-BLOCK — RESOLVED by operator 2026-06-08 ("budget is updated"); CI
       runs again.** Verified: PM canary leg-A + #179 `quality-gates-v2` both ran (9-step jobs, not 0-step setup-fails)
       after the operator raised the Actions spending limit. Follow-up (separate item below): a billing-block DETECTOR
