@@ -56,6 +56,12 @@ budgeting means a second PAT for the same account does **not** help (it correlat
       (separate 1000/hr/repo pool), not the PAT. Target repos: `agent-orchestrator`, `unified-trading-pm` (workflow
       templates).
 
+- [ ] [CODE] P2. **Persist the CIReconcile ETag cache across restarts** (small JSON under `data/`). The cache is
+      in-memory today, so a service restart while `core` is already at 0 can't make the first (un-conditioned) 200 to
+      capture an ETag → that cold sweep 403s until the hourly reset (observed 2026-06-10 right after deploy). A
+      disk-persisted cache survives restarts so 304s keep flowing even through an exhausted window. Target repo:
+      `agent-orchestrator`.
+
 ## Recommended decision
 
 The ETag win + free rate monitor are the big easy wins (shipped). The durable structural fix is the GitHub App token (a
