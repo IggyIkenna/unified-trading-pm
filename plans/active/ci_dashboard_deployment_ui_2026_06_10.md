@@ -197,10 +197,27 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
       click-through). Covers overview + drill-down + per-service CI tab + Fleet Git page. Remaining atoms (Stuck-panel
       PR links already present; branch-label → tree helper added, not yet wired into a label) tracked as P3 polish
       below.
-- [ ] [CI] P1. **Alert-ledger fleet rollout** — notify-slack.yml is a fleet template; the alert-persist step
-      (PM@794b1e3a7) must roll out via `rollout-workflow-templates.sh --template notify-slack.yml` + per-repo commits
-      (rollout-is-not-done-until-committed HARD RULE) so per-repo alerts (v2 failures etc.) also reach the ledger.
-      PM-side alerts (SIT/cascade/lock/watcher/promotion — the CI lifecycle set) are covered as of PM main.
+- [x] ✅ [CI] P1. DONE 2026-06-10 (DIAGNOSED — no per-repo rollout needed). **Alert-ledger fleet coverage** — the
+      original premise ("notify-slack.yml is a fleet template needing per-repo rollout") was FALSE: `notify-slack.yml`
+      is a **PM-only reusable workflow** (`on: workflow_call`) — there are no per-repo copies, and it ALREADY carries
+      the "Persist alert to ledger (best-effort)" step (GCP auth + gsutil → `cicd/alerts/<date>/alerts.jsonl`). **Every
+      CI lifecycle alert routes through it**: `ci-failure-watcher.yml` (fleet-wide — scans ALL repos' failing
+      transitions + stuck PRs + v2 failures) and `promotion-lag-monitor.yml` both
+      `uses: ./.github/workflows/notify-slack.yml`, so per-repo v2/CI failures DO reach the ledger via the central
+      watcher. Verified: `grep -l notify-slack     .github/workflows/{ci-failure-watcher,promotion-lag-monitor}.yml` →
+      both; notify-slack.yml lines 196-228 = the persist step. **The one un-persisted tail** (scoped below) is the
+      per-repo `semver-agent.yml` inline-curl circuit-breaker / dispatch-fail PAGES (rare; on the promotion-critical
+      workflow which has no GCP auth step).
+- [ ] [CI] P3. **Persist the per-repo semver-agent inline-curl pages to the ledger (tail, scoped 2026-06-10)** — the
+      bump-rate circuit-breaker + dispatch-fail CRITICAL pages in `scripts/workflow-templates/semver-agent.yml.tmpl`
+      `curl` the Slack webhook directly (no ledger write) because semver-agent has no GCP-auth step (unlike
+      notify-slack.yml). To close: add a best-effort `google-github-actions/auth@v3` (`continue-on-error`, guarded
+      `if: vars.CLOUD_PROVIDER=='gcp'`) + a gsutil append step mirroring notify-slack.yml lines 188-228, restructured so
+      the page no longer lives only inside a `set -euo pipefail` `run:` that `exit 1`s; then
+      `rollout-workflow-templates.sh --template semver-agent.yml` to all 24 repos + per-repo commit (workflow
+      `.github/**` carve-out) — **actionlint EVERY generated copy before pushing** (semver-agent drives all promotions;
+      a malformed bump is fleet-breaking, cf. the setup-uv@v8 incident). Rare alert class → P3; common classes already
+      covered above. Repo: unified-trading-pm (template) + 24 per-repo `.github/workflows/semver-agent.yml`.
 
 - [ ] [INFRA] P2. **Image column unknown on the LOCAL dev stack — Cloud Build API 400s from the laptop env** (found
       2026-06-10 verifying operator trust): even with GCP_PROJECT_ID + GCS_REGION=asia-northeast1 exported,
