@@ -68,19 +68,37 @@ stack of latent harness failures, fixed/relaxed in sequence to unblock the v0.2.
 
 ## Recommended decision / follow-up todos
 
-- [ ] [SCRIPT] P1. Update `TERMINAL_CONSUMER_SERVICES` in `unified-api-contracts/scripts/check_uac_adoption.py` to
-      current manifest names (derive from `workspace-manifest.json` `repositories` where
-      `type ∈ {service,batch-service,api-service}` and `status==active`, mirroring smoke-test-gate.yml's own `SERVICES`
-      derivation — ideally STOP hardcoding and read the manifest). Then re-harden the SIT adoption-check step (`exit 1`)
-      and re-lower the pytest cap. Target repos: unified-api-contracts + system-integration-tests.
-- [ ] [TEST] P1. Re-measure the honest orphan count with the corrected consumer list, then recalibrate `ORPHAN_CAP` (and
-      `EXEMPTION_CAP`) in `system-integration-tests/tests/integration/test_uac_completeness.py` to observed + ~20%
-      headroom, re-lowering from the 400 stopgap. Target repo: system-integration-tests.
-- [ ] [INFRA] P0. Repair the SIT `Deployment Tests` docker-compose mock stack:
-      `unified-trading-pm/docker/docker-compose.mock.yml` references the obsolete `market-data-service` (remove or
-      replace with `market-tick-data-service`); add `--build` to the `Start mock docker-compose stack` step in
-      `system-integration-tests/.github/workflows/smoke-test-gate.yml` (or pre-`docker compose build`) so the `build:`
-      contexts are used instead of pulling nonexistent images; then verify the mock stack comes up healthy and the
-      deployment integration suite passes. **This is the sole remaining blocker preventing the full SIT from dispatching
-      `staging-validated` → the v0.2.0 cascade's 7 staging→main promotions.** Target repos: unified-trading-pm
-      (docker/) + system-integration-tests.
+- [x] ✅ [SCRIPT] P1. **DONE 2026-06-10 — `unified-api-contracts@302971b8`.** `TERMINAL_CONSUMER_SERVICES` is no longer
+      hardcoded: `get_terminal_consumer_services()` reads `workspace-manifest.json` `repositories` where
+      `type ∈ {service,batch-service,api-service}` AND `status==active` (11 services), mirroring smoke-test-gate.yml's
+      `SERVICES` derivation. `_resolve_manifest()`/`_resolve_uac_init()` handle both local (`--workspace`) and CI
+      (cloned to /tmp) layouts → also fixes the prior `get_uac_all()` FileNotFoundError-in-CI crash. SIT adoption step
+      re-hardened to a **CAP-based regression guard** (not exit-1-on-any — see item below for why) + pytest cap set
+      honestly. Repos: unified-api-contracts (`302971b8`) + system-integration-tests (`e712ab1`).
+- [x] ✅ [TEST] P1. **DONE 2026-06-10 — `system-integration-tests@e712ab1`. KEY CORRECTION: the honest count is ~328,
+      NOT 0.** Re-measured with the corrected manifest-derived 11-service list via
+      `check_uac_adoption.py --orphans-only` → **328 orphans** (fixing the stale list trimmed only 364→328, NOT →0). The
+      issue's premise ("364 is a pure measurement artifact → ~0 after the fix") was WRONG: UAC carries hundreds of
+      internal/registry/enum schemas that terminal services consume **transitively** via unified-trading-library
+      re-exports / facade imports, which the by-class-name grep cannot see → they score "orphaned". So `ORPHAN_CAP` is
+      held at **400** (measured 328 + ~22% headroom), NOT lowered to 20 — a cap of 20 (or exit-1-on-any) would FAIL the
+      SIT gate on the 328 and **re-block the entire promotion cascade**. `EXEMPTION_CAP` left at 80 (union 65, ~23%
+      headroom — already correct). **(An earlier sub-agent draft mis-set cap=20 from a misread `exit 0`; caught + reverted
+      by independent re-measurement before any commit.)** Repo: system-integration-tests.
+- [ ] [SCRIPT] P2 **NICE-TO-HAVE / follow-up (surfaced 2026-06-10)**. Drive the 328 genuinely down: the
+      terminal-consumer set excludes `unified-trading-library` (a T0 lib that re-exports many UAC schemas) and
+      `grep_service()` matches by class name only (misses `from unified_api_contracts import X` facade re-exports). Decide
+      whether (a) to add UTL to the scanned consumer set, and/or (b) follow facade/`__all__` re-exports so a schema
+      imported via a facade counts as adopted. Then the orphan count reflects genuinely-dead schemas and the cap can drop.
+      Repo: unified-api-contracts (`scripts/check_uac_adoption.py`).
+- [x] ✅ [INFRA] P0. **RESOLVED — no change needed (verified 2026-06-10; this issue doc predates the fix).** The obsolete
+      `market-data-service` was already REMOVED from `unified-trading-pm/docker/docker-compose.mock.yml` (commit
+      013c5203a / #176, 2026-06-07) — it now appears only in an explanatory comment; `docker-compose.single.yml` has no
+      ref either. **`--build` deliberately NOT added**: the `v1` profile that the SIT deployment-tests actually run is
+      **emulators-only** (no service image pulled), and the only `build:` context (`execution-service`) is under
+      `profiles:["services"]`, NOT `v1` — so `--build` would be a no-op for v1 AND would re-introduce the private
+      Artifact-Registry pull failure the #176 fix removed. `docker compose -f docker-compose.mock.yml config` validates
+      (docker 28.5.1). **Residual (needs a real CI run, not a code change):** the live `repository_dispatch` SIT
+      mock-stack health against actual remote staging clones — locally config-validated + CI-layout-simulated green, but
+      the actual SIT run is the final confirmation. Repos: unified-trading-pm (docker/, no change) +
+      system-integration-tests (workflow script-runs fixes landed in `e712ab1`).
