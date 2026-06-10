@@ -102,6 +102,12 @@ jobs:
       orch_url: ${{ steps.post.outputs.orch_url }}
       repo: ${{ steps.inputs.outputs.repo }}
       pr_number: ${{ steps.inputs.outputs.pr_number }}
+      # outcome classifies a non-dispatch so the Slack notify can name the ACTUAL cause:
+      # `no_headroom` (orchestrator at capacity → the wall is PARKED) is the distinct, actionable
+      # alert the single-live-orchestrator case needs — there is no separate vm-planning VM to
+      # "restore"; vm-0 IS the orchestrator, and a flat 503 means it has no free slot, not that a
+      # host is down. `dispatched` / `no_escalation_id` / `no_headroom` is the closed set reaching notify.
+      outcome: ${{ steps.post.outputs.outcome }}
     steps:
       - name: Resolve inputs (workflow_call / dispatch / repository_dispatch)
         id: inputs
@@ -195,19 +201,26 @@ jobs:
               if [ -n "$ESC_ID" ]; then
                 echo "✅ Escalation dispatched (escalation_id=${ESC_ID}, slot=${SLOT_ID})."
                 echo "dispatched=true" >> "$GITHUB_OUTPUT"
+                echo "outcome=dispatched" >> "$GITHUB_OUTPUT"
               else
                 # 200 but NO escalation_id → the orchestrator did NOT create a real escalation
                 # (e.g. stale deploy / unexpected body). Do NOT claim a worker is resolving the
                 # wall — that is the false-success this guard fixes. Treat as not-dispatched.
                 echo "::warning::Orchestrator returned 200 but NO escalation_id — escalation NOT confirmed; no worker spawned. Body above."
                 echo "dispatched=false" >> "$GITHUB_OUTPUT"
+                echo "outcome=no_escalation_id" >> "$GITHUB_OUTPUT"
               fi
               ;;
             503)
-              # No free slot / no headroom setup-token account — transient capacity, retryable.
-              # Soft-fail so a re-fire (or the next cron tick) retries rather than marking a hard error.
-              echo "::warning::Orchestrator has no free slot / headroom account right now (503) — escalation NOT dispatched. Retryable."
+              # No free slot / no headroom setup-token account — capacity exhaustion on the single
+              # live orchestrator (vm-0). Soft-fail so a re-fire (or the next cron tick) retries; but
+              # tag outcome=no_headroom so the Slack notify raises a DISTINCT, actionable "wall PARKED
+              # — stand in a worker if it persists" alert. A repeated 503 across ticks is the exact
+              # silent-park that left a cascade stuck ~5h (2026-06-10) — it must read as headroom
+              # exhaustion, NOT a generic failure, and NOT "vm-planning is down" (no such VM).
+              echo "::warning::Orchestrator has no free slot / headroom account right now (503) — escalation NOT dispatched (wall PARKED). Retryable."
               echo "dispatched=false" >> "$GITHUB_OUTPUT"
+              echo "outcome=no_headroom" >> "$GITHUB_OUTPUT"
               ;;
             401)
               echo "::error::Orchestrator rejected the shared secret (401) — check ORCHESTRATOR_INTERNAL_SECRET."
@@ -254,14 +267,24 @@ jobs:
     if: always()
     uses: ./.github/workflows/notify-slack.yml
     with:
+      # 3-way: dispatched ✅ | headroom-exhausted ⚠️ (distinct + actionable) | generic-not-confirmed ⚠️.
+      # The headroom branch is the alert for a PARKED wall on the single live orchestrator (vm-0):
+      # a flat 503 won't self-resolve until a slot frees, so it names the manual stand-in explicitly
+      # and kills the "restore vm-planning" misdiagnosis (there is no separate vm-planning VM).
       message:
         ${{ needs.escalate.outputs.dispatched == 'true' && format('✅ Escalation `{0}` dispatched → a Max-plan worker
         (slot {1}) is resolving {2}#{3} on live-defi-rollout. Verify the worker live on the orchestrator dashboard
         (Agents panel) → <{4}|open dashboard>.', needs.escalate.outputs.escalation_id, needs.escalate.outputs.slot_id,
-        needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) || format('⚠️
-        Escalation NOT confirmed for {0}#{1} — NO worker was spawned (orchestrator returned no escalation_id, or no free
-        slot / headroom account, or was unreachable). The wall is STILL OPEN. Check the run log + dashboard → <{2}|open
-        dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) }}
+        needs.escalate.outputs.repo, needs.escalate.outputs.pr_number, needs.escalate.outputs.orch_url) ||
+        (needs.escalate.outputs.outcome == 'no_headroom' && format('⚠️ HEADROOM EXHAUSTED — the live orchestrator (vm-0,
+        api.agent-orchestrator) has NO free slot, so {0}#{1} is PARKED with no worker. It re-fires every ~15 min but will
+        NOT self-resolve until a slot frees — if it persists across ticks, manually stand in a worker on the dashboard.
+        (No separate vm-planning VM to restore; vm-0 IS the orchestrator — this is capacity, not a host being down.) →
+        <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
+        needs.escalate.outputs.orch_url) || format('⚠️ Escalation NOT confirmed for {0}#{1} — NO worker was spawned
+        (orchestrator returned no escalation_id, or was unreachable). The wall is STILL OPEN. Check the run log +
+        dashboard → <{2}|open dashboard>.', needs.escalate.outputs.repo, needs.escalate.outputs.pr_number,
+        needs.escalate.outputs.orch_url)) }}
       severity: ${{ needs.escalate.outputs.dispatched == 'true' && 'INFO' || 'WARNING' }}
       conclusion: ${{ needs.escalate.result }}
       workflow_name: ${{ github.workflow }}
