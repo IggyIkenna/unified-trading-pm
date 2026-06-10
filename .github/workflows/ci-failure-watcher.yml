@@ -52,7 +52,10 @@ jobs:
         # --escalate: hand the remaining merge-conflict-stuck promotion PRs (a real conflict
         #   wall a worker must rebase) to the orchestrator (repository_dispatch →
         #   escalate-to-orchestrator.yml). Idempotent per PR label, so */15m never re-dispatches.
-        run: python3 scripts/repo-management/ci_failure_watcher.py --auto-recover --escalate
+        # --close-superseded: Level-3 cleanup (ldr_trunk_promotion_decoupling) — auto-close stale
+        #   LDR→staging/main promote PRs whose content is already in base (0 changed files in
+        #   base...live-defi-rollout). Content-equivalence, not SHA. Idempotent.
+        run: python3 scripts/repo-management/ci_failure_watcher.py --auto-recover --escalate --close-superseded
 
   notify:
     needs: watch

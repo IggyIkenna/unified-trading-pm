@@ -56,14 +56,42 @@ response; ONLY rate-limit (503) propagates. Checks-API 403 (PAT missing `Checks:
 pinned against the UI contract); deployment-ui `src/lib/repoCi.test.ts` + playwright `tests/smoke/repos-tab.spec.ts` +
 `tests/e2e/repos-stuck-panel.spec.ts` (regression: all five stuck classes + stuck-in-SIT + SIT-run jobs).
 
-## Fleet git-health (agent-orchestrator)
+## Fleet git-health (agent-orchestrator) — SHIPPED 2026-06-10
 
 Extends the existing per-slot ingestion (`POST/GET /api/slots/{id}/git-status`, 5-min `slot-git-status-report.sh` cron)
-with a fleet page: hosts × slots × repos dirty/behind/diverged matrix, `reporter_stale` + `ff_cron_stale` as first-class
-red states (a dead cron is itself visible), Path-B drift-violation rollup. Dispatched via
-`fleet_git_health_orchestrator_2026_06_10.md` (orchestrator backlog; repo: agent-orchestrator).
+with a fleet surface (`fleet_git_health_orchestrator_2026_06_10.md`, agent-orchestrator@0ab7c84):
+
+- **Backend** `GET /api/fleet/git-health?scope=fleet|local` (`server/server.py`) — aggregates every slot's stored
+  `SlotGitStatus` into hosts → slots → repos; `scope=fleet` fans out to registered VMs via the existing
+  `/api/vms/<id>/*` proxy (each VM answers `scope=local`); honest per-VM `vm_errors[]` on a proxy failure (never a
+  silent gap). Per-slot `reporter_stale` (reported_at > 10 min) + `ff_cron_stale` (ff_pull_last_run > 15 min, **only
+  when attested** — un-attested = honest-unknown, never falsely "dead") + per-repo `drift_violation` (Path-B invariant:
+  state `ahead`/`diverged` vs LDR; rolled up to `drift_violations[]`). Summary block + 14 pytest
+  (`tests/test_fleet_git_health.py`).
+- **Cron-liveness ingestion**: `GitStatusPostRequest.ff_pull_last_run`/`ff_pull_last_result` (optional,
+  backward-compat); `slot-cron-ff-pull.sh` writes a host-global `${TMPDIR}/slot-cron-ff-pull.result.json` each sweep
+  (per-repo ok/skip:dirty/conflict/fail tokens, worst-of, atomic tmp+mv); `slot-git-status-report.sh` reads it + posts
+  it.
+- **Orchestrator dashboard** `/fleet-git` page (`dashboard/src/FleetGit.tsx`) — summary chips, per-host slot rows with
+  worst-first badges (reporter-dead / ff-pull-dead / N drift / N dirty / N behind), expandable per-repo detail.
+- **Single-pane (operator decision v2)**: deployment-api `GET /api/repo-ci/fleet-git-health` (`_repo_ci_fleet.py`,
+  deployment-api@2b6b424) proxies the orchestrator endpoint server-side (SM token `ORCHESTRATOR_API_TOKEN`; honest
+  degradation `available=False`+reason+`orchestrator_url` deep-link when unreachable/untokened) → deployment-ui `/fleet`
+  Fleet Git landing tab (deployment-ui@8a9d1bd). The orchestrator dashboard keeps its own `/fleet-git` page for
+  worker-ops use.
+
+## Click-through to the existing UIs (operator add 2026-06-10)
+
+Every status atom is a deep-link to the authoritative existing UI — never a dead-end label (the monitor is roll-up/
+triage; detail lives in GitHub + the AO UI). **GitHub-authoritative atoms → GitHub**: SHA → `…/commit/<sha>`,
+`quality-gates-v2`/v2 conclusion ("feature green") → `…/commit/<sha>/checks`, PR → `…/pull/<n>`, branch →
+`…/tree/<branch>` (`deployment-ui/src/lib/repoCi.ts` `githubCommitUrl`/`githubChecksUrl`/`githubBranchUrl`,
+vitest-covered). **Fleet/ git-health atoms → the agent-orchestrator UI**: dirty/behind/diverged/reporter/ff-cron → the
+orchestrator Fleet Git-Health page (the Fleet Git tab's "Open in Agent-Orchestrator" deep-link). A status chip with no
+click-through is review-blocking for these surfaces.
 
 ## Cross-links (P2)
 
 Repo row ⇄ fleet git-health filtered by repo ("is this repo in anyone's worktree"); repo detail deep-links the EXISTING
-data-status / deployments-monitor / VM-logs tabs — never redo those surfaces.
+data-status / deployments-monitor / VM-logs tabs — never redo those surfaces. (Repo-detail → existing-tab cross-links
+are the remaining P2 in `ci_dashboard_deployment_ui_2026_06_10.md`.)
