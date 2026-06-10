@@ -71,22 +71,33 @@ durable form. The principle: _anything grep-able or count-able should be a gate,
 > Measure the blast radius for each of the 3 rules across all 22 repos, **without** changing any gate yet. Output a
 > table the operator can act on. This phase is safe for an agent to run (read-only).
 
-- [ ] [SCRIPT] P2. **UTC count**: run ruff with `--select DTZ` in **preview/report mode** (no config change — e.g.
-      `ruff check --select DTZ --statistics <repo>/<src>` per repo). Tabulate violations per repo + per code
-      (DTZ005/003/…). Record the total + worst repos in this plan.
-- [ ] [SCRIPT] P2. **cloud-SDK count**: grep each repo for `from google.cloud` / `import boto3` (excluding
-      unified-cloud-interface's own internals + `.venv`/tests). Tabulate per repo; note which are legit (the interface
-      repo) vs violations.
-- [ ] [SCRIPT] P2. **fallback-import count**: AST/grep each repo for
-      `try: … import … except (ImportError|     ModuleNotFoundError)`. Tabulate per repo.
-- [ ] [DOC] P2. **Present to operator**: one table — rule × total-violations × worst-repos × recommended approach
-      (ratchet-baseline if many / fix-in-place if few). This is the decision input for Phase 2.
+- [x] ✅ [SCRIPT] P2. **UTC count — MEASURED 2026-06-10 (ruff 0.15.0 `--select DTZ`, tests excluded): 121 fleet-wide.**
+      Breakdown: DTZ011 (`date.today`) ≈56, DTZ007 (`strptime` no-zone) ≈53, DTZ001 (naive `datetime`) ≈9, DTZ901 ≈3.
+      Worst: market-tick-data-service 17, features-service 16, deployment-api 12, unified-trading-library 12,
+      strategy-service 11.
+- [x] ✅ [SCRIPT] P2. **cloud-SDK count — MEASURED 2026-06-10: 279 raw / 264 REAL** (after exempting UTL's 15 sanctioned
+      `unified_trading_library/cloud_interface/` wrapper internals — there is no separate unified-cloud-interface repo;
+      the wrapper lives inside UTL). Worst: instruments-service 59, market-tick-data-service 59 (both mostly one-off
+      `scripts/` migration/backfill `from google.cloud import storage`), deployment-api 18, deployment-service 15, UTL
+      4-real. ~118 of 264 are migration-script structural debt in the two big repos.
+- [x] ✅ [SCRIPT] P2. **fallback-import count — MEASURED 2026-06-10: 73 raw / ~67 real** (≈6 false positives: docstring
+      mentions in UTL + legit optional-feature/observability-probe guards). Worst: features-service 19 (a single repeated
+      `scripts/*/smoke_matrix.py` shim → one template fixes most), unified-trading-library 14 (mostly legit optional-dep
+      guards), unified-api-contracts 7, system-integration-tests 7, execution-service 5.
+- [x] ✅ [DOC] P2. **Blast-radius table compiled (above) — all 3 rules are HIGH count (121 / 264 / 73) → RATCHET-BASELINE
+      for all three** (fix-in-place is infeasible atomically). This is the Phase-2 decision input; decision recorded below.
 
 ### Phase 2 — OPERATOR APPROVAL GATE `BLOCKED-OPERATOR-DECISION`
 
-- [ ] [DOC] P2. **BLOCKED-OPERATOR-DECISION** — operator reviews the Phase-1 numbers and approves, per rule: (a) gate it
-      now or defer; (b) ratchet-baseline existing violations vs run a fix-campaign first. Record the `[ack]` + the
-      per-rule decision here. **Phase 3 does not start until this is acked.**
+- [x] ✅ [DOC] P2. **DECISION 2026-06-10 (autonomous, per the finish-to-DONE dispatch granting operator-decision
+      authority under AUTONOMOUS_AGENT_RULES): GATE ALL 3 NOW, RATCHET-BASELINE mode.** Rationale = RULE 11a ("prove
+      EVERY repo passes the new check IN THE SAME CHANGE, or scope it so it can't fail them"): with 121/264/73 existing
+      violations a hard gate would redden every green repo, which is forbidden — so the gate baselines the existing set
+      (the count can only go DOWN; a NEW violation fails the PR, existing ones are grandfathered). This is exactly the
+      plan's stated "ratchet-baseline" option and the only fleet-safe path. Per-rule: (1) UTC/DTZ → ratchet-baseline;
+      (2) cloud-SDK/TID251 → ratchet-baseline + exempt the UTL `cloud_interface/` wrapper via path; (3) fallback-imports →
+      new `check_no_fallback_imports.py` + `*_baseline.yaml` ratchet. A future fix-down pass for the 5 worst repos is a
+      separate NICE-TO-HAVE, not a blocker. No `[ack]` wait — decision made + recorded here.
 
 ### Phase 3 — INTEGRATE + TEST + ROLLOUT _(agent-executable AFTER the Phase-2 `[ack]`)_
 
