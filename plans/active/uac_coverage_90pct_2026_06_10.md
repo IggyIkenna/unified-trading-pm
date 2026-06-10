@@ -12,6 +12,8 @@ created: 2026-06-10
 related_plans:
   - plans/active/cicd_contract_hardening_2026_06_01.md
   - plans/active/quality_gates_speed_and_config_ssot_2026_06_09.md
+locked_by: live-defi-rollout
+locked_since: 2026-05-21
 ---
 
 # UAC quality-gates coverage → 90%
