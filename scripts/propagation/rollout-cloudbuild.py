@@ -57,6 +57,7 @@ SKIP_REPOS = {
 
 REGISTRY_REPO = "unified-trading-system"
 DEPLOY_VIA_DISPATCH_COMMENT = "# deploy-via-dispatch — deployed via central deployment-service, not inline\n"
+SUBSTITUTION_CHECKER_PATH = PM_ROOT / "scripts" / "quality_gates" / "check_cloudbuild_substitutions.py"
 
 # type -> template filename (without path)
 TYPE_TO_TEMPLATE: dict[str, str] = {
@@ -85,6 +86,25 @@ def load_manifest() -> dict:
 
 def get_repos(manifest: dict) -> dict:
     return manifest.get("repositories", manifest.get("repos", {}))  # noqa: qg-empty-fallback
+
+
+def load_substitution_checker():
+    """Load check_cloudbuild_substitutions.py by file path (it is not a package).
+
+    Raises LOUDLY if the checker cannot be loaded — a render that cannot be
+    substitution-validated must never be written (Cloud Build silently rejects
+    configs with unescaped $VARs; incident 2026-06-10, see plans/active/issues/
+    cloudbuild_silent_failures_no_alerting_no_validation_2026_06_10.md).
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location("check_cloudbuild_substitutions", SUBSTITUTION_CHECKER_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load substitution checker at {SUBSTITUTION_CHECKER_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
 
 
 def validate_yaml(content: str, path_label: str) -> bool:
@@ -182,7 +202,12 @@ def main() -> int:
             return 1
         repos = {args.repo: repos[args.repo]}
 
+    # Loud-fail if the substitution checker is unavailable — never roll out
+    # un-validated configs (Cloud Build rejects them SILENTLY).
+    subst_checker = load_substitution_checker()
+
     modified = 0
+    failed_validation = 0
     for repo_name, repo_info in sorted(repos.items()):
         if repo_name in SKIP_REPOS:
             continue
@@ -202,6 +227,22 @@ def main() -> int:
         if content is None:
             continue
         if not validate_yaml(content, repo_name):
+            failed_validation += 1
+            continue
+        # Post-render substitution validation: an unescaped $VAR in the RENDERED
+        # output means Cloud Build would SILENTLY reject the config on push —
+        # abort this repo's write rather than ever writing an invalid config.
+        violations = subst_checker.scan_cloudbuild_text(content, label=f"{repo_name}/cloudbuild.yaml")
+        if violations:
+            print(
+                f"  SUBSTITUTION VALIDATION FAILED ({repo_name}) — rendered config would be"
+                " SILENTLY rejected by Cloud Build; refusing to write (file:step-id:varname):",
+                file=sys.stderr,
+            )
+            for violation in violations:
+                print(f"    {violation.render()}", file=sys.stderr)
+            print(f"    Remedy: {subst_checker.REMEDY}", file=sys.stderr)
+            failed_validation += 1
             continue
         out_path = WORKSPACE_ROOT / repo_name / "cloudbuild.yaml"
         if args.dry_run:
@@ -213,6 +254,12 @@ def main() -> int:
             modified += 1
 
     print(f"Done. {'Would modify' if args.dry_run else 'Modified'} {modified} file(s).")
+    if failed_validation:
+        print(
+            f"ERROR: {failed_validation} repo(s) failed render validation — their cloudbuild.yaml was NOT written.",
+            file=sys.stderr,
+        )
+        return 1
     return 0
 
 
