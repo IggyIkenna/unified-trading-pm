@@ -1,11 +1,12 @@
 ---
 title: "QG sentinel is SHA-based → unwinnable race vs concurrent LDR writers; content-hash + slicing would restore fast-ship"
 created: 2026-06-10
-author: ikennaigboaka [slot-3·laptop]
 source:
   - slot-3 live experience 2026-06-10 shipping deployment-api data-status STEP 5.90 fix + flaky-test fix
   - deployment-api QG ran ~5× and lost the sentinel race each time to unrelated slot-2 commits
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 ## What I found
