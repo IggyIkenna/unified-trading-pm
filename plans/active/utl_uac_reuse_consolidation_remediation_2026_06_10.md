@@ -327,12 +327,14 @@ range-pin pull — no consumer rebuild unless they cross `<1.0.0`.
       `# noqa:     qg-deep-import`). Relocate the shared `databento_classifier` to UTL/UAC (it is
       reference-classification logic, a library concern), or have MDPS consume the classification via the contract.
       Removes the cross-service deep-import.
-- [ ] [AGENT] P2. **strategy-service → market-tick-data-service** (test-only:
-      `tests/position/integration/     test_split_libraries.py`
-      `importorskip("market_tick_data_service.market_interface")`). Per the contract-test rule, rewrite the integration
-      test to assert against the UAC `market_interface` contract + a mock/fake, then **drop the
-      `market-tick-data-service` path-dep from strategy-service `pyproject.toml`** — removing the test-only dep that
-      gates every strategy-service ship (the root cause of the 2026-06-10 dirty-MTDS ship-block).
+- [x] ✅ [AGENT] P2. **strategy-service → market-tick-data-service** — DONE: `strategy-service@d1f5a6a8` (test +
+      pyproject + uv.lock) + `unified-trading-pm@4af80fd83` (manifest edge). The sole coupling was
+      `test_split_libraries.py::test_market_interface_import`, which only asserted MTDS's `get_market_adapter` is
+      importable — i.e. it tested MTDS, not strategy (verified 0 MTDS imports in strategy source). Deleted that test +
+      removed the `[project.dependencies]` entry + `[tool.uv.sources]` block + re-locked (dropped MTDS and its
+      transitive-only `websocket-client`/`yfinance`) + removed the manifest dependency edge (alignment: True). Removes
+      the service→service violation AND the test-only path-dep that gated every strategy ship (the 2026-06-10 dirty-MTDS
+      ship-block root cause). QG exit 0 both repos.
 - [ ] [VERIFY] P1. After all four edges are resolved + classifications fixed, enable the gate (todo 1) and confirm
       `check-no-service-deps.py` exits 0 fleet-wide; add a regression unit test per fixed edge.
 
