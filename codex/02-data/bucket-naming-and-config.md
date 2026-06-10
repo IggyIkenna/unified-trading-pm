@@ -28,7 +28,11 @@ bucket = resolve_bucket_name(
 )
 ```
 
-- **Canonical config**: `deployment-service/configs/cloud-providers.yaml`.
+- **Canonical config**: `unified_api_contracts/config/cloud-providers.yaml` (UAC-packaged — the always-available SSOT,
+  since UTL is T0 and reads it via `importlib.resources`; relocated 2026-06-10 to fix the T0→T4 sibling-walk that broke
+  standalone CI clones). The `deployment-service/configs/cloud-providers.yaml` copy is the authoring location + the
+  local `deployment_service.env_substitutor` read; `unified-trading-pm/configs/cloud-providers.yaml` is a byte-identical
+  mirror. All three stay in sync. SSOT: `plans/active/bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md`.
 - **Env tier** (`${DEPLOYMENT_ENV}` → staging/prod/development) extends to ALL buckets across both clouds.
 - **`pipeline_mode` lives in PATH**, NOT in bucket name.
 - **Region-pinned**: GCP `asia-northeast1`, AWS `ap-northeast-1` (Tokyo same-metro, ~5× cheaper egress).

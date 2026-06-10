@@ -37,6 +37,11 @@
 #   --to-staging       No-op (kept for backwards compat). All human commits now route to staging by default.
 #   --hotfix           Routes to staging with abbreviated SIT (<2 min). Use for production incidents only.
 #                      Agent still validates semver label. Adds 'hotfix' label to the staging PR.
+#                      Requires a [hotfix] marker in the commit message (auditable break-glass).
+#   --hotfix-to-main   Break-glass: land on LDR AND fast-track JUST this commit to main (cherry-pick onto a
+#                      dedicated branch off main → PR → main; v2-on-main is the only gate; no trunk promote,
+#                      no protection bypass). Requires a [hotfix-main] marker AND operator env
+#                      QUICKMERGE_HOTFIX_TO_MAIN_OK=1 (agents cannot self-authorize the live path).
 #   --quick            Skip only act simulation (Stage 4); all other checks run
 #   --skip-tests       Pass --skip-tests to quality-gates.sh (lint+type+codex only)
 #   --skip-typecheck   Pass --skip-typecheck to quality-gates.sh (skips basedpyright only)
@@ -95,6 +100,7 @@ FILES_ARG=""
 DEP_BRANCH=""
 TO_STAGING=true
 HOTFIX=false
+HOTFIX_TO_MAIN=false
 SKIP_CI=false
 SKIP_TESTS=""
 SKIP_TYPECHECK=""
@@ -122,6 +128,13 @@ while [[ $# -gt 0 ]]; do
       ;;
     --hotfix)
       HOTFIX=true
+      shift
+      ;;
+    --hotfix-to-main)
+      # B-part-2 (ldr_trunk_promotion_decoupling_2026_06_10): break-glass single-fix-to-main.
+      # Cherry-picks the landed LDR commit onto a dedicated branch off main → PR → main (v2-gated).
+      # Operator-gated (QUICKMERGE_HOTFIX_TO_MAIN_OK=1) + [hotfix-main] marker; does NOT bypass protection.
+      HOTFIX_TO_MAIN=true
       shift
       ;;
     --skip-tests)
@@ -219,6 +232,30 @@ if [ "$HOTFIX" = true ]; then
     echo "❌ --hotfix requires a [hotfix] marker in the commit message (auditable break-glass)."
     echo "   --hotfix jumps the Tier-C drain queue → opens an immediate staging PR + respects the staging lock."
     echo "   Add [hotfix], e.g.: quickmerge.sh 'fix: <incident> [hotfix]' --hotfix --files '<paths>'"
+    exit 1
+  fi
+fi
+
+# B-part-2 (ldr_trunk_promotion_decoupling_2026_06_10): --hotfix-to-main is the rarest break-glass —
+# it lands a SINGLE fix on `main` immediately (cherry-pick onto a dedicated branch off main → PR → main,
+# v2-on-main the only gate) WITHOUT promoting the whole LDR trunk. It does NOT script a protection bypass:
+# the PR still requires quality-gates-v2 green. Three guards (all must pass), so it can never be silent or
+# agent-self-authorized:
+#   1. a [hotfix-main] marker in the commit message (auditable),
+#   2. operator env QUICKMERGE_HOTFIX_TO_MAIN_OK=1 (agents cannot set this — it gates the live path),
+#   3. not the PM repo (PM is already Option-B main-direct; --hotfix-to-main is for service repos).
+if [ "$HOTFIX_TO_MAIN" = true ]; then
+  if ! echo "$COMMIT_MSG" | grep -q '\[hotfix-main\]'; then
+    echo "❌ --hotfix-to-main requires a [hotfix-main] marker in the commit message (auditable break-glass)."
+    echo "   It cherry-picks the fix onto a dedicated branch off main → PR → main (v2-gated; no trunk promote)."
+    echo "   Add [hotfix-main], e.g.: quickmerge.sh 'fix: <incident> [hotfix-main]' --hotfix-to-main --files '<paths>'"
+    exit 1
+  fi
+  if [ "${QUICKMERGE_HOTFIX_TO_MAIN_OK:-}" != "1" ]; then
+    echo "❌ --hotfix-to-main is operator-gated: set QUICKMERGE_HOTFIX_TO_MAIN_OK=1 to authorize."
+    echo "   Agents cannot self-authorize a direct-to-main promotion. This is a human break-glass for"
+    echo "   incidents where the LDR→staging→main drain is too slow. (The manual relax→push→re-enable"
+    echo "   path remains the fallback.)"
     exit 1
   fi
 fi
@@ -1396,6 +1433,50 @@ fi
 # --hotfix opens an immediate staging PR (break-glass, respects the lock above).
 # PM (Option B) and [skip ci] keep their direct-to-main PR below.
 # ============================================================================
+# B-part-2 (ldr_trunk_promotion_decoupling_2026_06_10): --hotfix-to-main. The fix has ALREADY landed on
+# LDR (the trunk SSOT — never lost). Now ALSO fast-track JUST this commit to `main` by cherry-picking it
+# onto a dedicated single-commit branch off origin/main and opening a PR → main (v2-on-main is the only
+# gate; no protection bypass, no whole-trunk promote). Done in a throwaway worktree so the LDR working
+# tree (and any peer agent) is undisturbed. Guards were validated at flag-parse time.
+if [ "$HOTFIX_TO_MAIN" = true ] && [ "$PR_BASE" = "staging" ]; then
+  HOTFIX_SHA=$(git rev-parse HEAD)
+  HOTFIX_SHORT=$(git rev-parse --short HEAD)
+  HOTFIX_BRANCH="hotfix-main/${REPO_NAME}-${HOTFIX_SHORT}"
+  echo "[$REPO_NAME] ⚡ --hotfix-to-main: fast-tracking $HOTFIX_SHORT to main (LDR trunk untouched)."
+  git fetch origin main -q || { echo "[$REPO_NAME] ❌ could not fetch origin/main"; exit 1; }
+  HOTFIX_WT=$(mktemp -d "${TMPDIR:-/tmp}/qm-hotfix-main.XXXXXX")
+  # Throwaway detached worktree off origin/main; create the dedicated branch there + cherry-pick.
+  if ! git worktree add -q --detach "$HOTFIX_WT" origin/main; then
+    echo "[$REPO_NAME] ❌ could not create worktree off origin/main"; rmdir "$HOTFIX_WT" 2>/dev/null; exit 1
+  fi
+  HOTFIX_RC=0
+  git -C "$HOTFIX_WT" checkout -q -b "$HOTFIX_BRANCH"
+  if git -C "$HOTFIX_WT" cherry-pick "$HOTFIX_SHA"; then
+    if git -C "$HOTFIX_WT" push -f origin "HEAD:$HOTFIX_BRANCH"; then
+      HOTFIX_PR_URL=$(gh pr create --base main --head "$HOTFIX_BRANCH" \
+        --title "$COMMIT_MSG" \
+        --body "⚡ HOTFIX-TO-MAIN single-commit fast-track (cherry-pick of ${HOTFIX_SHORT} from live-defi-rollout). v2-on-main is the gate; the fix is already on LDR. ${ISSUE_REFS}" 2>&1) || HOTFIX_RC=1
+      if [ "$HOTFIX_RC" = 0 ] && [ -n "$HOTFIX_PR_URL" ]; then
+        HOTFIX_PR_NUM=$(echo "$HOTFIX_PR_URL" | grep -oE '[0-9]+$' || echo "")
+        [ -n "$HOTFIX_PR_NUM" ] && gh pr merge "$HOTFIX_PR_NUM" --auto --squash --delete-branch 2>/dev/null || true
+        echo "[$REPO_NAME] ⚡ hotfix-to-main PR opened (auto-merge, v2-gated): $HOTFIX_PR_URL"
+      else
+        echo "[$REPO_NAME] ⚠️  hotfix-to-main: branch pushed but PR create failed: $HOTFIX_PR_URL"
+        echo "[$REPO_NAME]    Open it manually: gh pr create --base main --head $HOTFIX_BRANCH"
+      fi
+    else
+      echo "[$REPO_NAME] ❌ hotfix-to-main: push of $HOTFIX_BRANCH failed"; HOTFIX_RC=1
+    fi
+  else
+    echo "[$REPO_NAME] ❌ hotfix-to-main: cherry-pick of $HOTFIX_SHORT onto main conflicts — resolve manually."
+    git -C "$HOTFIX_WT" cherry-pick --abort 2>/dev/null || true
+    HOTFIX_RC=1
+  fi
+  git worktree remove --force "$HOTFIX_WT" 2>/dev/null || true
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk). hotfix-to-main path complete (rc=$HOTFIX_RC)."
+  exit "$HOTFIX_RC"
+fi
+
 if [ "$PR_BASE" = "staging" ] && [ "$HOTFIX" != true ]; then
   echo "[$REPO_NAME] ✅ Landed on $BRANCH. Tier-C drain (≤30min) promotes LDR→staging (v2-gated, dep-order-checked)."
   echo "[$REPO_NAME]    Need it on staging now? re-run with --hotfix (opens a staging PR; respects the staging lock)."
