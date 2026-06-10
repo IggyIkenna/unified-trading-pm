@@ -464,3 +464,12 @@ it, or rename the existing one).
 - **Account**: IggyIkenna org PAT used by CI + deployment-api.
 - **What it unblocks**: per-SHA `quality-gates-v2` conclusions on the Repos CI dashboard
   (`plans/active/ci_dashboard_deployment_ui_2026_06_10.md` — live 403 on /check-runs today, degraded to unknown).
+
+## CREDENTIAL APPROVAL REQUEST — 2026-06-10 (slot-3, fleet-git-health proxy)
+
+- **Vendor/tier+cost**: agent-orchestrator API token — free (a `claude setup-token`-style long-lived setup-token minted on the orchestrator).
+- **What's needed**: store the orchestrator API token in Secret Manager as **`ORCHESTRATOR_API_TOKEN`** (GCP + AWS).
+- **Account**: agent-orchestrator (`api.agent-orchestrator.odum-research.com`), `AUTHED_DEPS`-gated endpoints.
+- **What it unblocks**: deployment-api `GET /api/repo-ci/fleet-git-health` calling the orchestrator's `/api/fleet/git-health`
+  so the deployment-ui Fleet Git tab shows LIVE fleet data (`plans/active/ci_dashboard_deployment_ui_2026_06_10.md` +
+  `fleet_git_health_orchestrator_2026_06_10.md`). Until then the proxy degrades honestly (available=False) + deep-links to the AO UI.
