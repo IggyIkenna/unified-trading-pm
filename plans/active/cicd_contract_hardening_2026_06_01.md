@@ -248,6 +248,46 @@ source:
 > **Hygiene status (2026-06-03 audit):** all 25 cluster plans/issues are now `parent_epic`-attached + estimated. Epics:
 > `infrastructure_master`, `orchestrator_master`, `plan_hygiene_master`. No orphans remain in the CI/CD cluster.
 
+### 🔄 MASTER-INDEX REFRESH — live tracked-reference set (audit 2026-06-10, slot-1)
+
+> The WAVE tables above are the **2026-06-03 snapshot** (several rows since archived:
+> `agent_orchestrator_e2e_workflow_and_execution_scope` + `orchestrator_fleet_worker_spawn_enablement` →
+> `plans/archive/2026_06/`; `ci_canonical_v2_migration` / `harden_grepable_rules_into_ci_gates` shipped). **This table
+> is the LIVE set** — every active plan/issue carrying open CI/CD · quality-gates · escalation · plan-health/hygiene ·
+> ci_status work, so this plan remains the single master tracking all of them by reference. Re-audit cadence: refresh
+> this table whenever a CI/CD-domain plan is opened/archived (the orphan check + plan-hygiene sweep catch misses).
+
+| open | plan / issue (active unless noted)                                | domain               | scope one-liner                                                                                                  |
+| ---- | ----------------------------------------------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| ~48  | **this plan**                                                     | master               | stuck-PR reconcile · ci_status guards · Slack/watcher pipeline · sit-debounce-cron-dead P1 · QG-debt drain       |
+| 35   | `qg_commit_quality_boundary_and_slot_ff_push_2026_06_03`          | quality-gates        | QG-as-commit-boundary + FF-push carve-outs + structured `QUICKMERGE_BLOCKED` contract                            |
+| 33   | `quality_gates_speed_and_config_ssot_2026_06_09`                  | quality-gates        | QG latency reduction + per-repo QG config SSOT (successor to `quality_gates_resource_contention_speedup`)        |
+| 21   | `ci_dashboard_deployment_ui_2026_06_10`                           | ci_status            | CI/promotion dashboard in deployment-ui (ci_status + promotion-lag surfacing)                                    |
+| 18   | `stash_pile_workspace_cleanup_2026_06_03`                         | hygiene              | stash/worktree pile cleanup (jams `slot-cron-ff-pull`) — WAVE-0 row, still open                                  |
+| 12   | `ci_status_firestore_side_store_2026_06_10`                       | ci_status            | ci_status → Firestore side-store (ends manifest-write contention; the sqlite/manifest churn class)               |
+| 12   | `issues/issue_docs_remediation_sweep_2026_06_02`                  | plan-hygiene         | issue-doc lifecycle cleanup — WAVE-3 row, still open                                                             |
+| 11   | `dependency_promotion_range_pins_and_major_bump_sit_2026_06_09`   | promotion/SIT        | range-pins absorb minor/patch; MAJOR-bump SIT cascade; FROM-digest ratchet (Phase 6)                             |
+| 9    | `fleet_git_health_orchestrator_2026_06_10`                        | ci/cd · orchestrator | fleet git-health guard → orchestrator alerts (stale clones / dirty trees / diverged slots)                       |
+| 9    | `monitoring_control_plane_master_2026_06_10`                      | alerting (adjacent)  | monitoring/alert control plane — owns the Slack-alert taxonomy the CI watcher feeds                              |
+| 27   | `org_migration_to_odumresearch_2026_06_07`                        | ci/cd (adjacent)     | GitHub org move — remotes/tokens/workflows/branch-protection all re-point (CI/CD blast radius)                   |
+| 4    | `worktree_ldr_unification_2026_06_08`                             | ci/cd                | Path-B reference-clones on LDR (quickmerge contention model)                                                     |
+| 4    | `epics/orchestrator_master`                                       | escalation           | orchestrator epic — escalation/autospawn/watchdog P-blocks (slot-starvation fix shipped 2026-06-10 ✅, see flip) |
+| 3    | `issues/plan_hygiene_precommit_and_agentic_resolution_2026_06_10` | plan-hygiene         | plan-hygiene pre-commit gate + agentic auto-resolution of hygiene failures                                       |
+| 6    | `issues/semver_version_bump_skip_ci_promotion_block_2026_06_09`   | promotion            | semver `[skip ci]` bump → v2-never-reported promotion block (auto-recover shipped; residuals)                    |
+| 4    | `issues/ci_incident_findings_2026_06_09`                          | ci/cd                | 2026-06-09 incident findings (unacked residuals → fold into waves or archive)                                    |
+| 2    | `staging_clean_start_and_stale_pr_hygiene_2026_06_08`             | promotion            | staging force-sync clean-start + stale promote-PR hygiene                                                        |
+| 1    | `ci_local_qg_parity_2026_06_08`                                   | quality-gates        | local QG ↔ CI v2 parity (drift-tick + backmerge cron)                                                            |
+| 1    | `issues/sit_uac_orphan_cap_stale_consumer_list_2026_06_07`        | SIT                  | SIT UAC orphan-cap + stale consumer list                                                                         |
+| 1    | `issues/harsh_pathb_and_cicd_reform_setup_2026_06_09`             | ci/cd                | Harsh-laptop Path-B + CI/CD reform setup parity                                                                  |
+| 0    | `issues/orphan_rootm_branch_unmerged_work_2026_06_05`             | hygiene              | 0 open checkboxes — **archive-candidate** per issue-doc lifecycle (verify content acked, then archive)           |
+
+> Escalation-domain note: the former WAVE-2 escalation plans are archived; live escalation work = this plan (escalation
+> endpoint P1 #7 ✅ · slot-starvation fix ✅ · sit-debounce-cron-dead P1 open) + `epics/orchestrator_master`.
+> Plan-health agent (`plan-health-agent.yml`) + hygiene sweep todos live in
+> `issues/plan_hygiene_precommit_and_agentic_resolution`
+>
+> - `issues/issue_docs_remediation_sweep`.
+
 ## 🔧 ROOT FIX — scoped staging-lock + FF-promote (design 2026-06-08, operator-validated)
 
 The `staging→main` promotion deadlock (7 wedged PRs 2026-06-07) has 3 interacting root causes; this is the proper fix
