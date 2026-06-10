@@ -196,14 +196,17 @@ Checked all ~50 open todos. **No hard conflicts.** Interactions:
         PM-only so mostly carve-outs. — unified-trading-pm@3cae03cf5. (Optional stronger variant: a true v2-RED
         hard-block would need the checker fetched into the per-repo v2 job — deferred; the drain gate is sufficient for
         "bot promotes only provenanced content".)
-- [ ] [CI] P2. **Push tripwire (faster detection — optional, build after P1).** Non-blocking `push: live-defi-rollout`
-      GHA running the SAME `check_strict_quickmerge.py`; a violation fires a `#ci-failures` alert (+ optional QG) so a
-      bypass is caught at push, not ≤30 min later at the drain. Latency-reduction only — the promote-PR gate (above) is
-      the actual safety. **LDR never runs QG on a clean (trailered) push.**
-- [ ] [SCRIPT] P2. **Auto-close stale/superseded promote PRs (no manual cleanup).** Extend `ci_failure_watcher.py`:
-      close any LDR→staging (or →main) PR whose commits are already in the base by **`git patch-id`/`git cherry` content
-      equivalence — NOT SHA membership** (the drain rebases/squashes → staging SHAs differ; SHA checks never match → PRs
-      never close → the pile-up). Composes with the now-fixed `--squash` auto-merge arming (line 143 todo).
+- [x] ✅ [CI] P2. **Push tripwire → the WARN is delivered by the drain gate (3-level model, operator 2026-06-10).** The
+      separate per-repo `push: live-defi-rollout` tripwire is **NOT built** — it would need a 2nd 24-repo rollout + the
+      PM-script-fetch for only ≤15-min-faster detection. Instead the **Level-2 WARN folds into D1**: when a drain's
+      provenance gate BLOCKS a promotion it now fires a `#ci-failures` Slack alert (both `ldr-to-staging-promote` +
+      `ldr-to-main-promote`) so we see WHY/WHO — drain-time ≤15min, zero rollout. **Three levels: STOP (D1 gate) + WARN
+      (Level-2 Slack) + CLEANUP (D3 below).** — unified-trading-pm@8052dd540
+- [x] ✅ [SCRIPT] P2. **Auto-close stale/superseded promote PRs (no manual cleanup) — DONE.** `ci_failure_watcher.py`
+      gains `detect_superseded_prs` + `close_superseded_prs` + a `--close-superseded` flag (wired into the `*/15` cron).
+      Uses **content equivalence via the compare API** (`{base}...live-defi-rollout` → **0 changed files** ⇒ content
+      already in base ⇒ superseded) — NOT SHA membership (the drain rebases/squashes so SHAs differ). Comments then
+      closes; idempotent. — unified-trading-pm@8052dd540
 - [ ] [SCRIPT] P2. **Parallelize the drain + SIT within a tier.** `ldr-to-staging-promote.yml` reads
       `topologicalOrder.levels[]` (correct order) but iterates **serially** in a bash for-loop — repos in the same tier
       with no inter-dep (e.g. instruments-service ∥ MTDS) run one-after-another. Fan them out (background jobs + a
