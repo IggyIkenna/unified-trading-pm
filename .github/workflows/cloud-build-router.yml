@@ -968,8 +968,15 @@ jobs:
   notify-build-not-configured:
     name: Slack — Build Trigger Not Configured
     needs: [route-build]
+    # PROD-only (2026-06-10): a missing PROD Cloud Build trigger genuinely blocks a release → alert.
+    # But staging/dev feature-build triggers are NOT yet provisioned fleet-wide (deployment infra is
+    # still being built out — Tier-D Cloud Run is open), so a missing staging trigger fired this WARNING
+    # on EVERY staging QG pass for every non-library service (alerting-service, etc.) = pure noise about a
+    # known-incomplete state. Gate to env=='prod' so the channel only pages when it's actionable; provision
+    # staging triggers deliberately via `scripts/create-cloud-build-feature-triggers.sh <repo>` when ready.
     if: |
       always() &&
+      needs.route-build.outputs.env == 'prod' &&
       needs.route-build.outputs.repo_type != 'library' &&
       needs.route-build.outputs.build_triggered == 'false' &&
       needs.route-build.outputs.build_failure_reason == 'not-configured'
