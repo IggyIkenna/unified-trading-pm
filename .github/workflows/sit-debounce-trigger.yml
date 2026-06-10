@@ -36,10 +36,15 @@ on:
           - "true"
 
 concurrency:
-  # manifest-mutating workflow → share the manifest-update group (cancel-in-progress:false) so it
-  # serialises with every other manifest writer (sit-gate/staging-to-main/ci-status-*) and cannot
-  # silently lose an update (finding H2). Was the per-poller `sit-debounce-check` group.
-  group: manifest-update
+  # OWN group (2026-06-10) — de-grouped from the shared `manifest-update` group. Sharing it let the
+  # near-continuous `ci-status-update` DISPLACE this workflow: GitHub keeps at most ONE queued run per
+  # concurrency group, so each ci-status arrival cancelled the pending sit-debounce run (live evidence:
+  # the 08:33Z run `completed/cancelled`). That starved the ONLY staging-unlock mechanism and a cascade
+  # lock dangled ~1.5h (2026-06-10). Identical defect + fix as `staging-to-main` (its own group). Manifest
+  # -write safety here is preserved by the 5-attempt rebase-retry loop in the commit step below, NOT by
+  # group serialisation — so de-grouping cannot silently lose an update (a concurrent writer just forces
+  # one rebase-retry). NEVER re-fold into `manifest-update`.
+  group: sit-debounce-trigger
   cancel-in-progress: false
 
 permissions:
