@@ -93,6 +93,15 @@ source:
       the TUI dropped it.
 - [ ] [TEST] P1. Unit/integration test for the watchdog orphan-reclaim (killed + live session + stale spawn → session
       reclaimed) and the paste-retry (transient pane-miss → eventual success). Target: agent-orchestrator tests.
+- [x] ✅ [CODE] P0. **State-transition dedup for the slot-stale / "Worker heartbeat loop dead" Slack alerts** —
+      `health.py:check_once` re-fired `notify_slot_failed`/`notify_slot_stale` every 60s tick because the flag had no
+      per-episode dedup and slot status thrashes idle↔stale↔killed as the watchdog kills + AutoSpawn respawns (incident
+      2026-06-10: operator saw "Slot 4/5 FAILED" spam every minute; slot 5 had cleanly `/done`-exited so its idle slot
+      sat in the alert window forever). Fix: `HealthMonitor._stale_alerted` / `_idle_failed_alerted` sets — alert ONCE
+      per episode, cleared by a recovery sweep (status=working + heartbeat < STALE_THRESHOLD) and pruned for
+      removed/re-themed slots. Regression: `tests/test_health_alert_dedup.py` (4 tests — fires-once / recovery-re-alerts
+      / removed-slot-prune / working-stale-dedup). agent-orchestrator@93ca070 | QG 457 passed | deployed vm-0 (service
+      restarted, dedup verified live).
 
 ## Success criteria
 
