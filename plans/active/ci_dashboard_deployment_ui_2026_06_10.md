@@ -72,6 +72,11 @@ so the Firestore side-store (Phase 2 of `ci_status_firestore_side_store_2026_06_
 - [ ] [CODE] P1. **Image deploy signal (image-level v1)** — reuse `_cloud_builds_*` plumbing: last build per repo
       (status, sha, branch) + manifest `deployed_versions`; flag
       `image_stale: main_head_sha != last_successful_build_sha`.
+- [ ] [CODE] P1. **AWS/GCP cloud-toggle parity for the build signal (operator add 2026-06-10)** — the image/build half
+      of the aggregator must follow the deployment-ui cloud toggle like the existing Cloud Builds tab: GCP path reuses
+      `_cloud_builds_trigger/_cloud_builds_history`; AWS path reuses `_code_builds_aws.py` (CodeBuild). The
+      GitHub/manifest half is cloud-agnostic (no toggle). `_latest_builds_by_repo` returns honestly-unknown (None) for
+      the inactive/unavailable provider — never fabricated.
 - [ ] [TEST] P1. Unit tests: manifest accessor (fixture manifest), stuck-PR classifier (one case per signature),
       SIT-state derivation (pending/locked/stuck threshold), mocked-GitHub branch/compare shapes. Credential-free
       (`CLOUD_PROVIDER=local CLOUD_MOCK_MODE=true`); `pytest --block-network`.
