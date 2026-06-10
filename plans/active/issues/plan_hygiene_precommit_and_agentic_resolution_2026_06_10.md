@@ -1,12 +1,14 @@
 ---
 title: Plan-hygiene → prek (staged-only) + fold-to-QG + 24h agentic contradiction RESOLUTION
 created: 2026-06-10
-author: ikennaigboaka [slot-1·laptop]
 source:
   - operator-design-decision-2026-06-10
   - .github/workflows/plan-health-agent.yml
   - scripts/plan-hygiene/run_hygiene_sweep.sh
 locked_by: live-defi-rollout
+parent_epic: plan_hygiene_master
+priority: P2
+status: active
 ---
 
 ## What I found
