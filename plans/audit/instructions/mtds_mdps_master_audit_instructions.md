@@ -101,21 +101,32 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
       (`empty_confirmed`) — a swallowed timeout/DNS/RPC error mislabeled as honest-empty corrupts the manifest + every
       downstream consumer. Grep:
       `rg -U "except\b[^\n]*:\s*\n(\s*[^\n]*\n)?\s*return (\[\]|None|\{\}|pd\.DataFrame\(\))" market-tick-data-service/ --include="*.py" -g '!*test*'`
-      then read each adapter's outer fetch try/except. **Closed per-adapter checklist — check EVERY adapter.** Fix =
-      re-raise / typed failure sentinel so the caller's `record_failed` fires. 2026-06-01: fixed `lst_rates_handler`
-      L697 + `oracle_prices_handler` L820/L948; OPEN `lending_indices_handler` L989. Full spec:
-      `defi_master_audit_instructions.md` item (aa).
+      then read each adapter's outer fetch try/except — **and trace the CALLER CHAIN to the manifest call** (the
+      2026-06-10 lesson: handlers have correct `record_failed` routing that inner collectors starve; an empty return
+      indistinguishable from honest-zero is the bug shape). **Closed per-adapter checklist — check EVERY adapter,
+      classified per item (l) reachability first.** Fix = re-raise / typed failure sentinel so the caller's
+      `record_failed` fires. State as of 2026-06-10 re-verification (full verdicts:
+      `results/mtds_mdps_master_audit_2026_06_09.md` § Re-verification): `lst_rates` FIXED; `oracle_prices` outer
+      write-path FIXED but inner Pyth helpers still swallow (`:828/:956` — the `:757` `record_failed` branch is dead
+      code); `lending_indices` STILL OPEN (now `:768`, was L989; + GraphQL-body `:1182-1194` + GCS-upload-in-try
+      `:741`); NEW: `solana_defi:932,973,1051,1120`, `liquidations:781` + file-wide `:510-517`,
+      `perp_funding:963,1017` (`rows or []` collapse), `tardis_adapter:833-835` (streaming non-404 → Tier-3 false
+      `empty_confirmed`), Solend backfill `_solana_defi_fetch:251`. Full spec: `defi_master_audit_instructions.md` item
+      (aa).
 
 - [ ] (j) **Source provenance stamped at write time — UNIVERSAL (codified 2026-06-01, operator)**: **every** MTDS
       adapter/handler MUST pass a non-blank `source=` (a closed-set string from `SOURCE_PRIORITY`) to `record_captured`
       — on every cell, all asset groups, **even single-source ones** (operator: "I may find an alternative for Tardis,
-      so it's the same issue" — stamp now so a future source swap is distinguishable). NOT gated on cardinality. Today
-      only `category=="tradfi"` is gated; cefi (`tardis`)/defi/sports/prediction write `source=""`, and DeFi handlers
-      route via `DefiManifestRecorder` → legacy `ManifestWriter.add()` which drops `source` entirely (defi multi-source
-      cells additionally collapse last-write-wins). Verify by reading ACTUAL prod rows — **RED on any blank `source`**.
-      Grep callsites: `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg "source="`. SSOT:
-      `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home: `manifest_master` item
-      (i).
+      so it's the same issue" — stamp now so a future source swap is distinguishable). NOT gated on cardinality.
+      **CORRECTED 2026-06-10 (the prior "DefiManifestRecorder → add() drops source entirely" claim was STALE)**:
+      `record_captured` DOES propagate `source` through the v9 path (`_defi_manifest.py:304` → UTL `add():1921`
+      `_resolve_and_validate_source` → row; verified all three hops). The REAL residuals: (1) NON-captured rows
+      (`record_empty`/`record_failed`/zero-rows) carry no source — a **UTL API gap** (no `source` kwarg; `_record_status`
+      drops it), fix lands in UTL first; (2) the cefi chain-bundle `record_captured_from_counts` callsite passes no
+      `asset_group=` → blank source (item (n)). Verify by reading ACTUAL prod rows — **RED on any blank `source` on a
+      captured cell**. Grep callsites: `rg "record_captured\(" market-tick-data-service/ --include="*.py" -A8 | rg
+      "source="`. SSOT: `plans/active/data_source_provenance_all_asset_groups_2026_06_01.md`; manifest-schema home:
+      `manifest_master` item (i).
 
 - [ ] (k) **Per-venue acquisition-METHOD registry + verification (codified 2026-06-03)**: items (a)–(j) prove a cell is
       _recorded_ honestly; this item proves the _fetch itself_ is the right + complete method for every live venue ×
@@ -137,6 +148,29 @@ absence taxonomy, batch=live adapter parity, single-engine discipline, per-shard
       GREEN = every live venue × data_type matches the matrix with pagination + rate-limit + SM-auth verified and zero
       stub-emit. Cross-ref: `defi_master` (Solana basis MVP source-of-truth note — Drift Velocity API), `cefi_master`
       (Tardis-vs-venue-WS).
+
+- [ ] (l) **Production-reachability classification BEFORE severity (codified 2026-06-10)**: every item (a)/(i)/(k)
+      finding MUST be classified `production-reachable` vs `factory-only / dead-facade` before a RED is assigned — 9 of
+      the 06-09 findings reclassified LATENT because the only instantiation path
+      (`market_interface/factory.py` `VENUE_REGISTRY` via `get_adapter()`) has no production caller (the
+      `market_interface/api.py` facades have 0 callers; `umi_tick_provider.py:163-170` hard-blocks DeFi venues from the
+      `download` op). Trace: CLI operations map (`cli/main.py:433-470`) / engine orchestrator → handler → adapter. A
+      finding in dead code files as code-debt/disposition (delete-or-loud-fail per the delete-deprecated-code rule),
+      NOT a manifest-corruption RED. The dead-facade surface register lives in the 2026-06-09 result § P2.
+
+- [ ] (m) **`failed_per_dt` side-channel parity (CF-11) on every download-path adapter**: every adapter wired into
+      `umi_tick_provider.download_batch` must ACCEPT + POPULATE `failed_per_dt` so transient fetch failures reach the
+      orchestrator sentinel as `attempted_failed`. Polymarket = reference (`polymarket_adapter.py:572,624-659`); Kalshi
+      = OPEN gap (no param at all — venue disabled at `engine/orchestrator.py:1783`; enabling it today TypeErrors
+      loudly, so wire CF-11 BEFORE enabling). Grep:
+      `rg -l "failed_per_dt" market_tick_data_service/market_interface/adapters/` — every download-path adapter must
+      hit.
+
+- [ ] (n) **Bundled `record_captured_from_counts` passes `asset_group=`**: UTL resolves `source` on the bundled-shard
+      path ONLY when `asset_group` is supplied ("`asset_group=None` preserves the legacy blank-source behaviour" — UTL
+      `manifest_writer.py:3376-3387`). Grep every `record_captured_from_counts(` callsite in `engine/orchestrator.py`
+      and assert `asset_group=` is passed (prediction `:3302` ✓; cefi chain-bundle `:3141` OPEN as of 2026-06-10 —
+      blank source on every options_chain/futures_chain bundle row).
 
 ### Batch vs Live Parity
 
@@ -287,6 +321,15 @@ Result file at `plans/audit/results/mtds_mdps_master_audit_YYYY_MM_DD.md`. Same 
 - [ ] (edge-4) **features re-resamplers stay right-edge** — `candle_resampler.resample_ohlcv`
       (`closed="right", label="right"`) + `flow_interaction` (stamp `truncate+tf` / `compute_bar_close_boundary`); the
       pre-fix left-edge `features-*` corpus is recomputed (not silently rolled forward).
+- [ ] (edge-5) **No bar-start LAUNDERING via column alias (METASTABLE class, codified 2026-06-10)**: no blind rename may
+      map a vendor bar-START column (databento `ts_event` on `ohlcv_*`) onto the canonical right-edge column name
+      (`timestamp`) without interval-aware conversion — MDPS's protective start→end shift keys on the LITERAL column
+      name `ts_event` (`ohlcv_passthrough.py:280`, preference order prefers `timestamp`), so the MTDS
+      `_COLUMN_ALIASES` rename (`engine/orchestrator.py:613-616`) defeats it and the corruption fires on the next
+      reprocess, invisibly (a uniform shift stays on-grid). Check: (1) MTDS alias application converts (not renames)
+      for `ohlcv_*` data_types; (2) MDPS shift is content/source-aware, not name-keyed; (3) raw column-name census
+      (`ts_event` vs `timestamp`) before ANY tradfi candle rebuild. SSOT:
+      `bar_edge_left_vs_right_remediation_2026_06_08.md` Phase 1 P0.
 
 ## Canonical-form coverage CF-18 + CF-19 — mtds_mdps owns schema-attribute completeness + candle-edge (added 2026-06-10)
 
