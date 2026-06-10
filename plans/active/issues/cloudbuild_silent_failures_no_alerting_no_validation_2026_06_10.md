@@ -1,11 +1,12 @@
 ---
 title: "Cloud Build: silent config rejection, zero failure alerting, zero pre-push validation (3 gaps, fleet-wide)"
 created: 2026-06-10
-author: slot-1 (operator session, Ikenna)
 source:
   - "FROM-digest proof-build incident 2026-06-10 evening — two config pushes fired ZERO builds with no signal"
   - "gcloud builds list 2026-06-10: 6+ FAILURE builds (16:25, 18:34, 18:47, 19:18, 19:48, 19:49) — zero pages"
 locked_by: live-defi-rollout
+priority: P2
+status: active
 ---
 
 # Cloud Build: three stacked observability/validation gaps
