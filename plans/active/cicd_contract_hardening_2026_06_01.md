@@ -4461,7 +4461,7 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
 
 - [x] **Task 1 — exclude PM (main-direct) from the staging→main promotion set.** Root-caused from run `27243592803`
       (conclusion=success but `notify-partial-failure` RAN → CRITICAL): the promote step logged
-      `Failed (1):     unified-trading-pm`. PM is Option-B (no `staging` branch — `gh api .../branches/staging` → 404
+      `Failed (1): unified-trading-pm`. PM is Option-B (no `staging` branch — `gh api .../branches/staging` → 404
       confirmed), yet its `staging_versions` (1.2.45) ≠ `versions` (1.2.58) put it in the `promoting`/`changed` set; the
       `gh pr create --base main --head staging` then could not succeed → counted as FAILED every run. **Fix:** a
       `MAIN_DIRECT_REPOS = {"unified-trading-pm"}` exclusion added in ALL THREE places that build the promote set — the
@@ -4487,6 +4487,12 @@ promoter. All work in `.github/workflows/staging-to-main.yml` (PM-only orchestra
       **Proven:** unit-tested the exact counter/skip/ escalate-once/auto-clear logic across 5 simulated runs
       (fail×3→quarantine+escalate-once→skip-forever→success- auto-clears); CRITICAL goes silent once quarantined,
       WARNING fires once. `actionlint .github/workflows/     staging-to-main.yml` exit 0. — unified-trading-pm@2ebd75b9b
+
+> **Tasks 1+2 ON MAIN (confirmed 2026-06-10):** the `staging-to-main.yml` change rode the PM Option-B standing LDR→main
+> PR (merged by `ldr-to-main-promote` run @01:18Z) → PM `main` now carries all 3 `MAIN_DIRECT_REPOS` exclusions + the
+> `Quarantine cap` step + the `notify-quarantine` job (`promotion_quarantine`/`unquarantined_failed_count` present on
+> `main`; LDR==main for this file, no drift). The fixed promoter runs on the next `staging-validated` dispatch — the
+> false-CRITICAL `Failed: unified-trading-pm` no longer fires. — unified-trading-pm@2ebd75b9b (on main)
 
 ### Tasks 3+4 — same session (2026-06-10, slot-1)
 
