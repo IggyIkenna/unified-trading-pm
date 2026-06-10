@@ -4987,3 +4987,12 @@ Open follow-ups:
       staging merges into staging_commits on EVERY staging push (a light workflow or the staging-backmerge hook), or (b)
       make staging-to-main enumerate repos by `compare(main...staging).files > 0` instead of the manifest record.
       Composes with bug #7 (squash-body [skip ci]) — both hit the same drain.
+
+### Vercel strip (operator 2026-06-10: "we don't use them anymore")
+
+- [ ] [INFRA] P2. **BLOCKED-OPERATOR (one-click, UI-only)**: uninstall the Vercel GitHub App from the IggyIkenna account
+      — https://github.com/settings/installations → Vercel → Uninstall (or Configure → remove repos). App installation
+      management 403s for every CI token class (verified 2026-06-10), so this is operator-browser-only. Effect: the
+      noise "Vercel / Vercel Preview Comments" checks disappear from deployment-ui (+ any other repo) PRs. Code side
+      already clean: zero vercel.json / .vercel directories fleet-wide (verified). After uninstall, confirm a fresh
+      deployment-ui PR shows no Vercel checks.
