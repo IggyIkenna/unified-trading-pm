@@ -941,11 +941,17 @@ for g in ${DEEP_IMPORT_EXCLUDE_GLOBS[@]+"${DEEP_IMPORT_EXCLUDE_GLOBS[@]}"}; do D
 # import X` passes, while two-level `from unified_api_contracts.registry.chain_env import X` stays flagged (the
 # `[a-z_]+ import` clause only matches a single segment before ` import`). STEP 5.23 (uac-import-surface-enforcement)
 # is the precise enforcement for the internal namespaces. Q4 + Q4b fix per features_service_qg_cleanup_2026_05_11.md.
+# PORTABILITY (ci_local_qg_parity 2026-06-10): the negative-lookahead filter MUST run under
+# ripgrep's bundled PCRE2 (`rg --pcre2`), NOT `grep -P`. macOS `/usr/bin/grep` (BSD) does NOT
+# support `-P` → `grep -vP` exits 2 + emits nothing → with `|| :` the whole DI collapses to ""
+# → this check FALSE-PASSES on every macOS slot ("No deep imports") while CI (Linux GNU grep)
+# correctly flags. That single +1 divergence is what made deployment-api local-green / CI-red
+# (V=23 vs 24). `rg --pcre2` is byte-identical local↔CI. NEVER reintroduce `grep -P` in the gate.
 DI=$(rg 'from unified_[a-z_]+\.[a-zA-Z0-9_.]+\s+import' --type py --glob "!tests/**" --glob "!**/__init__.py" \
     "${DI_EXTRA[@]}" "$SOURCE_DIR/" 2>/dev/null \
     | grep -v "# noqa" \
     | grep -v 'from unified_api_contracts\.internal' \
-    | grep -vP 'from unified_api_contracts\.(?!canonical|normalize_utils|config|shared|schemas|external)[a-z_]+ import' || :)
+    | rg --pcre2 -v 'from unified_api_contracts\.(?!canonical|normalize_utils|config|shared|schemas|external)[a-z_]+ import' || :)
 [[ -n "$DI" ]] && { log_fail "Deep unified lib imports — use top-level"; echo "$DI" | head -3; V=$(( V + 1 )); } || log_success "No deep imports"
 
 # Old event logging pattern — flag obsolete cloud logging helpers only.
