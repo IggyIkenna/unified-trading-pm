@@ -309,9 +309,59 @@ jobs:
             --triggering-repo "${{ steps.update.outputs.repo }}"
           echo "DAG cycle check passed — safe to dispatch cascade"
 
+      # ── Base-image digest resolution (FROM-digest ratchet, 2026-06-10) ──
+      # When the bumped repo is the base image (unified-trading-library), resolve the freshly-built
+      # :latest digest and attach it to the dependency-update fan-out so each consumer's
+      # update-dependency-version.yml rewrites its checked-in `ARG BASE_IMAGE_DIGEST=` default
+      # (idempotent sed; digest-only change produces a digest-refresh PR). Non-fatal end-to-end:
+      # missing GCP secrets or a registry miss → empty digest → consumers skip the digest step.
+      # Edge not covered here (tracked in dependency_promotion plan): an image rebuild WITHOUT a
+      # version bump never enters this path — that is the */6h registry-poller follow-up.
+      - name: Authenticate to GCP via WIF (digest resolution)
+        id: digest-auth-wif
+        if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Authenticate to GCP via SA key (digest resolution fallback)
+        id: digest-auth-key
+        if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' && steps.digest-auth-wif.outcome != 'success'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK (digest resolution)
+        if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' && (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Resolve base-image digest
+        id: base-digest
+        if: steps.update.outputs.skip != 'true' && steps.update.outputs.repo == 'unified-trading-library' && (steps.digest-auth-wif.outcome == 'success' || steps.digest-auth-key.outcome == 'success')
+        continue-on-error: true
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          PROJECT_ID="${GCP_PROJECT_ID:-central-element-323112}"
+          IMAGE="asia-northeast1-docker.pkg.dev/${PROJECT_ID}/unified-trading-library/unified-trading-library:latest"
+          DIGEST=$(gcloud artifacts docker images describe "$IMAGE" --format='value(image_summary.digest)' 2>/dev/null || echo "")
+          if echo "$DIGEST" | grep -qE '^sha256:[0-9a-f]{64}$'; then
+            echo "Resolved base-image digest: $DIGEST"
+            echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+          else
+            echo "Could not resolve a valid digest (got: '$DIGEST') — fan-out proceeds without digest refresh."
+            echo "digest=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Dispatch dependency-update to downstream repos
         id: dispatch
         if: steps.update.outputs.skip != 'true'
+        env:
+          BASE_IMAGE_DIGEST: ${{ steps.base-digest.outputs.digest }}
         run: |
           set -euo pipefail
 
@@ -360,11 +410,18 @@ jobs:
 
             echo "Dispatching dependency-update to $DEPENDENT_REPO: $DEP_NAME=$DEP_VERSION (constraint: $CONSTRAINT, is_breaking: $IS_BREAKING, chain_depth: $NEXT_DEPTH)"
 
+            # Attach base_image_digest only when resolved (UTL bumps with GCP auth available);
+            # consumers validate the sha256 format and skip the digest step when absent.
+            DIGEST_FIELD=""
+            if [ -n "${BASE_IMAGE_DIGEST:-}" ]; then
+              DIGEST_FIELD=", \"base_image_digest\": \"$BASE_IMAGE_DIGEST\""
+            fi
+
             HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
               -H "Authorization: Bearer $TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "https://api.github.com/repos/$OWNER/$DEPENDENT_REPO/dispatches" \
-              -d "{\"event_type\": \"dependency-update\", \"client_payload\": {\"dep_name\": \"$DEP_NAME\", \"dep_version\": \"$DEP_VERSION\", \"constraint\": \"$CONSTRAINT\", \"bump_type\": \"$BUMP_TYPE\", \"is_breaking\": \"$IS_BREAKING\", \"chain_depth\": $NEXT_DEPTH, \"cascade_depth\": $NEXT_DEPTH}}")
+              -d "{\"event_type\": \"dependency-update\", \"client_payload\": {\"dep_name\": \"$DEP_NAME\", \"dep_version\": \"$DEP_VERSION\", \"constraint\": \"$CONSTRAINT\", \"bump_type\": \"$BUMP_TYPE\", \"is_breaking\": \"$IS_BREAKING\", \"chain_depth\": $NEXT_DEPTH, \"cascade_depth\": $NEXT_DEPTH$DIGEST_FIELD}}")
 
             if [ "$HTTP_STATUS" = "204" ]; then
               echo "  ✅ Dispatched to $DEPENDENT_REPO (chain_depth=$NEXT_DEPTH)"

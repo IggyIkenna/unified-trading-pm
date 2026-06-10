@@ -74,6 +74,22 @@ gates pass, the major promotes automatically with no human/vm-planning involveme
   cascade-qg-trigger → cascade-qg-ordering.yml (per-consumer QG in manifest topologicalOrder levels,
   escalate-on-failure → orchestrator) since PM@cb44b85d4. Remaining: live verification on a real MAJOR bump +
   DEFECT-2 dependency-FIRST ordering (promote dep + tag before consumer pin fan-out).]
+  [LIVE-RUN OBSERVED 2026-06-10 — PARTIAL: UTL 0.5.0 breaking-MINOR exercised the LOCK + fan-out legs but NOT the
+  cascade-QG leg. Evidence: update-repo-version run 27264928435 success 08:54:04Z → manifest 843e3ebcc 08:54:38Z
+  engaged lock ("Breaking MINOR bump cascade: unified-trading-library=0.5.0 (pre-1.0.0)"); consumer fan-out fired
+  green at 08:54:47-48Z (update-dependency-version success in mtds + execution-service + features-service; no pin
+  PRs expected — 0.5.0 stays in the `<1.0.0` range); cascade-qg-trigger dispatch DID fire (cascade-qg-ordering run
+  27264972415, repository_dispatch 08:54:52Z) but was CANCELLED 4 s later (08:54:56Z) with ZERO jobs — displaced in
+  the shared `manifest-update` concurrency group (the H2 fix; `cancel-in-progress: false` protects a RUNNING run but
+  GitHub keeps only ONE pending run per group, so a newer queued manifest writer evicts a queued cascade). All 5
+  most-recent cascade-qg-ordering runs are cancelled/failure — the cascade has never completed a level live. The
+  lock was cleared NOT by the cascade but by staging-to-main.yml run 27265597852 (workflow_dispatch, success
+  09:05:58Z) → 786c71d79 "chore(manifest): promote staging_versions → versions, clear staging lock" 09:06:40Z +
+  staging-unlocked dispatch 09:06:58Z. UNPROVEN LEG: per-level dep-order QG execution + escalate-on-failure
+  skip-on-green. breaking_pending residual `['unified-trading-library']` post-unlock is an EXPECTED transient —
+  staging-to-main clears only the lock; sit-debounce-trigger.yml:156-163 prunes stale entries (breaking_pending −
+  pending) on its next tick, and a stale entry is fail-safe meanwhile (worst case forces an extra SIT if the repo
+  re-enters pending). Do NOT flip this item until a cascade run survives the concurrency group and runs its levels.]
 
 ## Phases
 
@@ -125,6 +141,19 @@ clean fix is to relax it.
       **Pending live verification**: a real MAJOR bump must exercise it end-to-end (can't tick fully ✅ on smoke alone).
 - [x] 🟡 [SCRIPT] P1. WIRED — the trigger's `if:` excludes minor/patch (`bump_type == major || is_breaking` only), so a
       non-breaking bump fires NO cascade/SIT fan-out (rides the consumer's range pin). Pending live verification.
+- [ ] [SCRIPT] P1. **DEFECT (live-found 2026-06-10): cascade-qg-ordering runs are evicted from the queue by the shared
+      `manifest-update` concurrency group before any job starts** — UTL 0.5.0 dispatch fired (run 27264972415,
+      08:54:52Z) but was cancelled in 4 s with zero jobs; all 5 most-recent cascade runs are cancelled/failure, so the
+      cascade has never executed a level live. `cancel-in-progress: false` only protects a RUNNING run — GitHub keeps
+      a single PENDING slot per group, so any newer manifest writer (version-bump, ci_status) evicts a queued cascade.
+      Fix: give the cascade its own concurrency group (manifest mutation can be made atomic via retry-with-rebase as
+      staging-to-main already does) OR a queue-tolerant re-dispatch/retry so eviction is not silent loss. The H2
+      serialise-with-manifest-writers intent must not cost the cascade its execution. Repo: unified-trading-pm
+      (`.github/workflows/cascade-qg-ordering.yml:32-36`).
+- [ ] [SCRIPT] P1. **DEFECT-2 (separated out 2026-06-10): dependency-FIRST ordering** — promote the dep + tag BEFORE
+      the consumer pin fan-out, so consumer dep-update PRs/QGs resolve against the already-promoted dep (today the
+      fan-out can race the dep's own promotion; see Phase 3.5 incident + line ~188 resolution log). Repo:
+      unified-trading-pm (`update-repo-version.yml` ordering).
 
 ### Phase 3 — Escalate to vm-planning ONLY IF the cascade FAILS (pass → auto-promote) — P1
 
@@ -336,6 +365,29 @@ commit baked in = a deterministic single-SHA provenance chain, with zero `uv.loc
       FROMs must carry @sha256 literally or via an ARG BASE_IMAGE_DIGEST default in the same Dockerfile — closing the
       blanket `${` skip. Sequencing hard requirement: Dockerfile ARG rollout lands fleet-wide BEFORE the 5.79
       narrowing, else every repo QG reddens.]
+      **[MACHINERY SHIPPED 2026-06-10 — remaining = per-repo conversion ships]** Landed in PM: (a)
+      `scripts/propagation/add-dockerfile-digest-arg.py` (idempotent Dockerfile rewriter, handles direct-UTL +
+      instruments `ARG BASE_IMAGE=` shapes; `--dry-run/--repo/--digest`); (b) `update-dependency-version.yml`
+      template+propagation copy: digest-refresh step (validates optional `base_image_digest` payload, sed-rewrites the
+      ARG, digest-only PRs); (c) `update-repo-version.yml`: on a unified-trading-library bump, WIF/SA-key auth →
+      resolve `:latest` digest → attach `base_image_digest` to every dependency-update dispatch (non-fatal when
+      unresolvable); (d) STEP 5.79 narrowed MONOTONICALLY (converted Dockerfile → strict @digest enforcement;
+      unconverted → legacy skip + warn — no fleet redness); (e) PILOT converted: deployment-service/Dockerfile @
+      sha256:058d589f… (docker build --check green). Current digest resolved live via gcloud.
+- [ ] [INFRA] P1. **FROM-digest per-repo conversion ships (15 repos / 16 Dockerfiles)** — run
+      `python3 unified-trading-pm/scripts/propagation/add-dockerfile-digest-arg.py --repo <name>` then ship via that
+      repo's `quickmerge --agent --files Dockerfile*` (Dockerfile is gate-checked source — full Pass-1 QG per repo;
+      slot clones need a `git pull --ff-only` first to clear the stale-version drift block). Repos (dry-run verified
+      2026-06-10): agent-orchestrator, alerting-service, batch-live-reconciliation-service, client-reporting-api,
+      deployment-api (×2 Dockerfiles), execution-service, features-service, fund-administration-service, greeks-service,
+      instruments-service, market-data-processing-service, market-tick-data-service, ml-service, strategy-service,
+      trading-agent-service. deployment-service pilot already converted. After ALL 15 ship: flip STEP 5.79's legacy
+      `${`-skip to hard-fail (the final ratchet).
+- [ ] [SCRIPT] P2. **Registry-poller for the rebuild-without-bump edge** — the digest fan-out hooks UTL VERSION bumps;
+      an image rebuild with no version bump (infra-only rebuild) never refreshes consumer digests. Add a `*/6h` PM
+      workflow: gcloud-resolve `:latest` digest → dispatch `dependency-update` with `base_image_digest` to UTL
+      consumers (stateless — consumer sed is idempotent, unchanged digest → no PR). Reuse the WIF/SA-key auth pattern
+      from `update-repo-version.yml`.
 - [ ] [CODE] P1. **Deployment-registry bill-of-materials — record digest + commit + dep-versions** (deployment-service).
       TODAY the registry persists ONLY a mutable `image_tag` (`monitor.py:39` / `live_deployment.py:42,63` /
       `backends/base.py:135`); the `git_commit` field exists (`monitor.py:40`) but its writer

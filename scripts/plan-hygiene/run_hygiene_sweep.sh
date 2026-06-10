@@ -2,13 +2,42 @@
 # Plan hygiene sweep — run by Ikenna and Harsh on the planning VM as a morning step.
 # Runs all checks in sequence; prints a PASS/FAIL table.
 # Hard checks: todo regression, frontmatter. Soft checks: line caps, archive candidates.
-# Usage: bash scripts/plan-hygiene/run_hygiene_sweep.sh [--ci]
-#   --ci: exit 1 on any hard failure (for cron/CI); default is interactive (always exits 0)
+# Usage: bash scripts/plan-hygiene/run_hygiene_sweep.sh [--ci|--precommit]
+#   --ci:        exit 1 on any hard failure (for cron/CI); default is interactive (always exits 0)
+#   --precommit: lean, fast, LOCAL-only gate for the prek hook (fires on staged plans/**) —
+#                runs ONLY the three local hard checks (frontmatter / todo-format / runbook-fields),
+#                NO origin fetch (todo-regression), NO soft/advisory checks, NO inventory regen, so a
+#                plan-touching commit is gated in <1s. The origin-compare + advisory checks stay at
+#                the daily cron / CI sweep, never pre-commit. Exit 1 on any hard failure.
 
 set -uo pipefail
 CI_MODE="${1:-}"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PM_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+# ── --precommit: lean STAGED-FILES-ONLY local gate (prek hook) — bypass the heavy sweep body ──
+# Validates ONLY the plan files THIS commit stages, so a pre-existing violation in an unrelated
+# plan (e.g. another agent's WIP) never blocks your commit (RULE-11 blast-radius safety). Portable
+# for macOS bash 3.2 (no mapfile). Currently gates the staged-capable HARD check (frontmatter);
+# todo-format + runbook-fields join once they accept a file list (tracked follow-up).
+if [ "$CI_MODE" = "--precommit" ]; then
+  STAGED=()
+  while IFS= read -r line; do
+    case "$line" in *.md) STAGED+=("$PM_DIR/$line") ;; esac
+  done < <(git -C "$PM_DIR" diff --cached --name-only --diff-filter=ACM -- plans/ 2>/dev/null)
+  if [ "${#STAGED[@]}" -eq 0 ]; then
+    echo "plan-hygiene pre-commit: no staged plan files — skip."
+    exit 0
+  fi
+  PF=0
+  "$SCRIPT_DIR/check_frontmatter.sh" --quiet "${STAGED[@]}" && echo "  ✅ Frontmatter (staged plans)" || { echo "  ❌ Frontmatter validity (staged plans)"; PF=$(( PF + 1 )); }
+  if [ "$PF" -gt 0 ]; then
+    echo "❌ plan-hygiene pre-commit: $PF hard failure(s) in STAGED plans — fix before commit (fixable frontmatter: python3 scripts/plan-hygiene/fix_frontmatter.py)."
+    exit 1
+  fi
+  echo "✅ plan-hygiene pre-commit: staged plans clean."
+  exit 0
+fi
 
 HARD_FAIL=0
 SOFT_WARN=0

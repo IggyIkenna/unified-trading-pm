@@ -17,11 +17,24 @@ repo it compares three numbers and flags any that disagree:
 With ``--tags`` it also checks that the highest of those has a matching published ``vX.Y.Z`` git
 tag (a published, installable artifact) — the exact gap that bit UTL.
 
-Read-only. Stdlib + ``gh`` only. Exit 1 if any split is found (so a force-sync runbook step or a
-scheduled check can gate). Run AFTER any force-sync / clean-start.
+Two further manifest version surfaces are checked (2026-06-10, P2 of
+``staging_clean_start_and_stale_pr_hygiene_2026_06_08.md``):
+
+  * ``VESTIGIAL_SCALAR_DRIFT`` — ``repositories{}[repo].version`` is a vestigial display scalar
+    (written only opportunistically by ``run-version-alignment.sh --fix``, read only as a display
+    fallback by ``generate_workspace_dag.py``); when present it must equal ``versions{}[repo]``.
+  * ``DEP_FLOOR_UNSATISFIABLE`` — every internal dep edge
+    (``repositories{}[repo].dependencies[].version``, e.g. ``>=0.3.167,<1.0.0``) must be
+    SATISFIABLE by the dep's current ``versions{}[dep]`` (floor ≤ current < ceiling). Floors are
+    INTENTIONAL range-pin floors — floor==latest is explicitly NOT required (that would defeat
+    the pull-not-push promotion model; see CLAUDE.md § "Range pins absorb minor/patch").
+
+Read-only. Stdlib + ``packaging`` + ``gh`` only. Exit 1 if any violation is found (so a
+force-sync runbook step or a scheduled check can gate); ``--warn-only`` reports all violation
+classes but always exits 0 (the PM QG post-gate wiring). Run AFTER any force-sync / clean-start.
 
 Usage:
-    assert_version_coherence.py                 # report + exit 1 on any split
+    assert_version_coherence.py                 # report + exit 1 on any violation
     assert_version_coherence.py --tags          # also require a matching published tag
     assert_version_coherence.py --warn-only      # report only, always exit 0
 """
@@ -35,6 +48,9 @@ import os.path
 import subprocess
 import sys
 from typing import cast
+
+from packaging.specifiers import InvalidSpecifier, SpecifierSet
+from packaging.version import InvalidVersion, Version
 
 OWNER = "IggyIkenna"
 LDR = "live-defi-rollout"
@@ -86,6 +102,69 @@ def _has_tag(repo: str, version: str) -> bool:
     return raw is not None and '"ref"' in raw
 
 
+def _check_vestigial_scalars(repositories: dict[str, object], versions: dict[str, object]) -> list[str]:
+    """VESTIGIAL_SCALAR_DRIFT — ``repositories{}.version`` (display scalar) must == ``versions{}``.
+
+    The scalar is only checked when BOTH it and the ``versions{}`` entry exist (UI repos and
+    other non-version-tracked repos have no ``versions{}`` row — nothing to compare).
+    """
+    drift: list[str] = []
+    for name in sorted(repositories):
+        entry = repositories.get(name)
+        if not isinstance(entry, dict):
+            continue
+        scalar = cast("dict[str, object]", entry).get("version")
+        current = versions.get(name)
+        if scalar is None or current is None:
+            continue
+        if str(scalar) != str(current):
+            drift.append(f"{name}: repositories{{}}.version={scalar} != versions{{}}={current}")
+    return drift
+
+
+def _range_unsatisfied_reason(range_spec: str, current: str) -> str | None:
+    """None when ``current`` satisfies ``range_spec``; else a human-readable reason (loud-fail)."""
+    try:
+        spec = SpecifierSet(range_spec)
+        ver = Version(current)
+    except (InvalidSpecifier, InvalidVersion) as _err:
+        return f"unparsable range/version ({range_spec!r} vs {current!r}): {_err}"
+    if ver in spec:
+        return None
+    return f"versions{{}}={current} does not satisfy declared range '{range_spec}'"
+
+
+def _check_dep_floors(repositories: dict[str, object], versions: dict[str, object]) -> list[str]:
+    """DEP_FLOOR_UNSATISFIABLE — every internal dep edge's range must admit the dep's current version.
+
+    Floors are intentional range-pin floors: the check is floor ≤ current < ceiling,
+    explicitly NOT floor == latest.
+    """
+    violations: list[str] = []
+    for name in sorted(repositories):
+        entry = repositories.get(name)
+        if not isinstance(entry, dict):
+            continue
+        deps = cast("dict[str, object]", entry).get("dependencies")
+        if not isinstance(deps, list):
+            continue
+        for dep in cast("list[object]", deps):
+            if not isinstance(dep, dict):
+                continue
+            dep_t = cast("dict[str, object]", dep)
+            dep_name = dep_t.get("name")
+            dep_range = dep_t.get("version")
+            if not isinstance(dep_name, str) or not isinstance(dep_range, str):
+                continue
+            current = versions.get(dep_name)
+            if current is None:
+                continue  # dep not version-tracked in versions{} — nothing to satisfy against
+            reason = _range_unsatisfied_reason(dep_range, str(current))
+            if reason is not None:
+                violations.append(f"{name} -> {dep_name}: {reason}")
+    return violations
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--tags", action="store_true", help="also require a matching published vX tag")
@@ -121,13 +200,37 @@ def main() -> int:
             splits.append(r)
         print(f"{r:38} {v:10} {s:10} {src:10} {tagcol:5}{flag}")
 
+    repositories = cast("dict[str, object]", m.get("repositories") or {})
+    scalar_drift = _check_vestigial_scalars(repositories, versions)
+    floor_violations = _check_dep_floors(repositories, versions)
+
     print()
     if splits:
-        print(f"❌ {len(splits)} repo(s) with a version split: {', '.join(splits)}")
+        print(f"❌ VERSION_SPLIT — {len(splits)} repo(s) with a version split: {', '.join(splits)}")
         print("   Reconcile source pyproject.version FORWARD to the manifest SSOT (never downgrade);")
         print("   for source-ahead repos bump the manifest. A split = a force-sync revert (FIX 4).")
+    if scalar_drift:
+        print(f"❌ VESTIGIAL_SCALAR_DRIFT — {len(scalar_drift)} repo(s) where the vestigial display")
+        print("   scalar repositories{}.version disagrees with versions{} (the SSOT):")
+        for line in scalar_drift:
+            print(f"   - {line}")
+        print("   Remedy: run run-version-alignment.sh --fix (updates the display scalar) or delete the field.")
+    if floor_violations:
+        print(f"❌ DEP_FLOOR_UNSATISFIABLE — {len(floor_violations)} dep edge(s) whose declared range")
+        print("   is not satisfied by the dep's current versions{} value (floor ≤ current < ceiling):")
+        for line in floor_violations:
+            print(f"   - {line}")
+        print("   NOTE: floors are intentional range-pin floors — floor==latest is explicitly NOT required.")
+
+    if splits or scalar_drift or floor_violations:
+        total = len(splits) + len(scalar_drift) + len(floor_violations)
+        print(
+            f"\n{'⚠️ ' if warn_only else '❌'} {total} violation(s) across "
+            f"{sum(1 for v in (splits, scalar_drift, floor_violations) if v)} class(es)"
+            f"{' — warn-only, exiting 0' if warn_only else ''}."
+        )
         return 0 if warn_only else 1
-    print("✅ All repo versions coherent (source == manifest).")
+    print("✅ All repo versions coherent (source == manifest; scalars + dep-edge floors OK).")
     return 0
 
 

@@ -2441,8 +2441,20 @@ fi
 # before checking, multi-stage alias re-references (`FROM build-stage AS ...`
 # within the same file) are exempt.
 #
+# ARG-interpolated FROMs (NARROWED 2026-06-10 — closes the blanket `${` skip,
+# plan dependency_promotion_range_pins_and_major_bump_sit_2026_06_09.md Phase 6):
+#   - CONVERTED Dockerfile (carries a checked-in `ARG BASE_IMAGE_DIGEST=sha256:<hex>`
+#     default) → enforce STRICTLY: every `${`-interpolated registry FROM must consume
+#     the digest — `@${BASE_IMAGE_DIGEST}` inline (or a literal `@sha256:`), or be a
+#     pure `${VAR}` reference whose `ARG VAR=` default embeds the digest
+#     (instruments-service `${BASE_IMAGE}` shape).
+#   - UNCONVERTED Dockerfile (still `:latest` + `${PROJECT_ID}`) → keep the legacy
+#     skip but log_warn "ratchet pending rollout" — conversion is monotonic, no fleet
+#     redness before add-dockerfile-digest-arg.py lands repo-by-repo.
+#
 # Date-gated ratchet: WARN before 2026-05-15, FAIL (exit 1) from 2026-05-15.
-# Remediation: pin base images per Phase 5 (deployment_and_qg_strategy_implementation_2026_05_13.md).
+# Remediation: pin base images per Phase 5 (deployment_and_qg_strategy_implementation_2026_05_13.md)
+# + convert via unified-trading-pm/scripts/propagation/add-dockerfile-digest-arg.py.
 _RATCHET_579="2026-05-15"
 _TODAY_579=$(date +%Y-%m-%d)
 _DF_VIOLATIONS_579=()
@@ -2463,8 +2475,33 @@ while IFS= read -r -d '' _df_579; do
             [[ "$_img_579" == "$_a_579" ]] && _is_alias_579=1 && break
         done
         [[ "$_is_alias_579" -eq 1 ]] && continue
-        # Skip build ARG interpolations (${...}) — consistent with deployment-service/scripts/audit/dockerfile-base-pin.sh
-        [[ "$_img_579" == *'${'* ]] && continue
+        # ARG-interpolated image (${...}): narrowed ratchet (2026-06-10) — strict for
+        # converted Dockerfiles (ARG BASE_IMAGE_DIGEST=sha256: default present), legacy
+        # skip + pending-rollout warn for unconverted ones (monotonic conversion).
+        if [[ "$_img_579" == *'${'* ]]; then
+            if grep -qE '^[[:space:]]*ARG[[:space:]]+BASE_IMAGE_DIGEST=sha256:[0-9a-f]{64}[[:space:]]*$' "$_df_579"; then
+                _digest_ok_579=0
+                if [[ "$_img_579" == *'@${BASE_IMAGE_DIGEST}'* ]] || [[ "$_img_579" == *"@sha256:"* ]]; then
+                    # FROM consumes the digest inline.
+                    _digest_ok_579=1
+                else
+                    # Pure ${VAR} reference (e.g. FROM ${BASE_IMAGE}) — accept when the
+                    # ARG VAR= default embeds the digest (instruments-service shape).
+                    _ref_re_579='^\$\{([A-Za-z_][A-Za-z0-9_]*)\}$'
+                    if [[ "$_img_579" =~ $_ref_re_579 ]]; then
+                        _ref_579="${BASH_REMATCH[1]}"
+                        if grep -E "^[[:space:]]*ARG[[:space:]]+${_ref_579}=" "$_df_579" \
+                            | grep -qF '@${BASE_IMAGE_DIGEST}'; then
+                            _digest_ok_579=1
+                        fi
+                    fi
+                fi
+                [[ "$_digest_ok_579" -eq 1 ]] || _DF_VIOLATIONS_579+=("$_df_579: $_line_579")
+            else
+                log_warn "STEP 5.79: FROM not digest-pinned (5.79 ratchet pending rollout — convert via add-dockerfile-digest-arg.py): $_df_579: $_line_579"
+            fi
+            continue
+        fi
         [[ "$_img_579" == *"@sha256:"* ]] || _DF_VIOLATIONS_579+=("$_df_579: $_line_579")
     done < "$_df_579"
 done < <(find . \( -name "Dockerfile" -o -name "Dockerfile.*" \) \

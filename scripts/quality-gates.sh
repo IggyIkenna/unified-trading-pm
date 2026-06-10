@@ -526,6 +526,21 @@ if [ -f "$WS_DRIFT_CHECKER" ] && [ -n "${WORKSPACE_ROOT:-}" ]; then
     fi
 fi
 
+# ── Post-gates: Workspace-manifest version coherence (warn-only — non-blocking) ──
+# SSOT: scripts/cicd/assert_version_coherence.py docstring + plans/active/
+# staging_clean_start_and_stale_pr_hygiene_2026_06_08.md (P2 version-surface reconciliation).
+# Three violation classes: VERSION_SPLIT (versions{} vs source pyproject vs staging_versions{}),
+# VESTIGIAL_SCALAR_DRIFT (repositories{}.version display scalar != versions{}), and
+# DEP_FLOOR_UNSATISFIABLE (dep-edge range-pin floor ≤ versions{}[dep] < ceiling — explicitly
+# NOT floor==latest). Warn-only first per the plan; flipping to blocking is a later ratchet.
+VERSION_COHERENCE_CHECKER="${REPO_ROOT}/scripts/cicd/assert_version_coherence.py"
+if [ -f "$VERSION_COHERENCE_CHECKER" ]; then
+    echo "Running workspace-manifest version coherence check (warn-only)..."
+    python3 "$VERSION_COHERENCE_CHECKER" --warn-only \
+        && log_success "Version coherence check completed (warn-only)" \
+        || log_warn "Version coherence checker errored (non-blocking)"
+fi
+
 # ── Post-gates: UI/API flow coverage checker (warning-only — non-blocking) ──
 FLOW_CHECKER="${REPO_ROOT}/scripts/checkers/check_ui_api_flow_coverage.py"
 if [ -f "$FLOW_CHECKER" ]; then

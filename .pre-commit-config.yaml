@@ -40,6 +40,23 @@ repos:
         pass_filenames: false
         fail_fast: true # behind-origin -> STOP before any formatter mutates (no reflow residue that breaks slot FF-sync)
 
+  # Plan hygiene — STAGED-FILES-ONLY frontmatter gate on plan commits (incl. docs(plans): flips
+  # that skip full QG). The sweep computes the staged plans itself and validates only those, so a
+  # pre-existing violation in an unrelated plan never blocks your commit (RULE-11 blast-radius
+  # safety). Fast (<4s), local, no origin fetch, no sentinel needed (files:^plans/ is the skip).
+  # The origin-compare (todo-regression) + LLM contradiction checks stay at CI, not pre-commit.
+  - repo: local
+    hooks:
+      - id: plan-hygiene
+        name: Plan hygiene (staged plans — frontmatter)
+        entry:
+          bash -c 'SWEEP="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." &&
+          pwd)}/unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh"; [ -f "$SWEEP" ] && bash "$SWEEP"
+          --precommit || exit 0'
+        language: system
+        files: ^plans/
+        pass_filenames: false
+
   # Ruff - Python linter/formatter for scripts
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.15.0
